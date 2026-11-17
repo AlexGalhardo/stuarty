@@ -152,7 +152,7 @@ func (c *Context) keyframeT(it *timeline.Item, at Time) (int, *Error) {
 type keyframeSetArgs struct {
 	ItemID   string  `json:"item_id"`
 	Property string  `json:"property"         enum:"x,y,scale,rotation,opacity,volume,brightness,contrast,saturation,temperature,tint,hue"`
-	At       Time    `json:"at"                                                                                                            desc:"Absolute position inside the item, inclusive of its end."`
+	At       Time    `json:"at"                                                                                                            desc:"Position on the project timeline, from the item start to its end inclusive."`
 	Value    float64 `json:"value"                                                                                                         desc:"Valid for the property: scale above 0 up to 20, opacity 0 to 1, volume 0 to 4."`
 	Easing   string  `json:"easing,omitempty" enum:"linear,ease_in,ease_out,ease_in_out,hold"                                              desc:"From this keyframe to the next. Default linear."`
 }
@@ -231,7 +231,7 @@ func dropKeyframes(it *timeline.Item, prop string, value float64) {
 type keyframeRemoveArgs struct {
 	ItemID   string `json:"item_id"`
 	Property string `json:"property" enum:"x,y,scale,rotation,opacity,volume,brightness,contrast,saturation,temperature,tint,hue"`
-	At       Time   `json:"at"                                                                                                    desc:"Absolute position of the keyframe."`
+	At       Time   `json:"at"                                                                                                    desc:"Position of the keyframe on the project timeline, from the item start to its end inclusive."`
 }
 
 func applyKeyframeRemove(c *Context, a *keyframeRemoveArgs) error {

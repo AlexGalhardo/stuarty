@@ -2201,7 +2201,7 @@
 						"additionalProperties": false,
 						"properties": {
 							"speed": {
-								"description": "\"1.5x\" (up to 3 decimals), 1/4 to 4.",
+								"description": "Text like \"0.5x\" (up to 3 decimals, 1/4 to 4), never a bare number.",
 								"oneOf": [
 									{
 										"examples": [
@@ -2297,7 +2297,7 @@
 			],
 			"type": "object"
 		},
-		"description": "Sets either speed, from 0.25x to 4x, or curve, 2 to 8 points {t, speed} with t the fraction of the item from 0 to 1 (first 0, last 1) and a linear ramp between points; a speed clears the curve. Rescales the duration, the fades, the transitions and the keyframes by the ratio of the old to the new mean speed. With ripple track the later items of the track follow the change in length. Captions linked to the clip are listed, not changed. reverse true plays the same source range backwards (false restores it), alone or with a speed or a curve.",
+		"description": "Sets either speed, from 0.25x to 4x, or curve, 2 to 8 points {t, speed} (speed is text like \"0.5x\") with t the fraction of the item from 0 to 1 (first 0, last 1) and a linear ramp between points; a speed clears the curve. Rescales the duration, the fades, the transitions and the keyframes by the ratio of the old to the new mean speed. With ripple track the later items of the track follow the change in length. Captions linked to the clip are listed, not changed. reverse true plays the same source range backwards (false restores it), alone or with a speed or a curve.",
 		"errors": [
 			"E_VALIDATION",
 			"E_NOT_FOUND",
@@ -3341,7 +3341,7 @@
 			"additionalProperties": false,
 			"properties": {
 				"at": {
-					"description": "Absolute position of the keyframe.",
+					"description": "Position of the keyframe on the project timeline, from the item start to its end inclusive.",
 					"type": "string",
 					"x-vv-kind": "time"
 				},
@@ -3397,7 +3397,7 @@
 			"additionalProperties": false,
 			"properties": {
 				"at": {
-					"description": "Absolute position inside the item, inclusive of its end.",
+					"description": "Position on the project timeline, from the item start to its end inclusive.",
 					"type": "string",
 					"x-vv-kind": "time"
 				},

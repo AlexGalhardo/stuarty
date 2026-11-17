@@ -8,7 +8,7 @@
         "additionalProperties": false,
         "properties": {
           "speed": {
-            "description": "\"1.5x\" (up to 3 decimals), 1/4 to 4.",
+            "description": "Text like \"0.5x\" (up to 3 decimals, 1/4 to 4), never a bare number.",
             "oneOf": [
               {
                 "examples": [

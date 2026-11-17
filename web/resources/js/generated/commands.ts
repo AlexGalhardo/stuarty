@@ -946,7 +946,7 @@ export interface ClipSetSpeedArgs {
    */
   curve?: {
     /**
-     * "1.5x" (up to 3 decimals), 1/4 to 4.
+     * Text like "0.5x" (up to 3 decimals, 1/4 to 4), never a bare number.
      */
     speed:
       | string
@@ -1794,7 +1794,7 @@ export interface KeyframeClearArgs {
 
 export interface KeyframeRemoveArgs {
   /**
-   * Absolute position of the keyframe.
+   * Position of the keyframe on the project timeline, from the item start to its end inclusive.
    */
   at: string;
   item_id: string;
@@ -1815,7 +1815,7 @@ export interface KeyframeRemoveArgs {
 
 export interface KeyframeSetArgs {
   /**
-   * Absolute position inside the item, inclusive of its end.
+   * Position on the project timeline, from the item start to its end inclusive.
    */
   at: string;
   /**
