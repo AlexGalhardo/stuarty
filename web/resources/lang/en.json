@@ -176,6 +176,14 @@
         "track_visual": "Video track",
         "track_audio": "Audio track",
         "item_summary": "{type}, {name}",
+        "row_summary": {
+          "one": "{name}, {count} item",
+          "other": "{name}, {count} items"
+        },
+        "row_summary_listed": {
+          "one": "{name}, {count} item",
+          "other": "{name}, {count} items, {shown} listed near the playhead; the arrow keys reach the others"
+        },
         "snap": "Snap",
         "magnet": "Magnet",
         "magnet_hint": "Magnet (P): keep the items of the track packed with no gap",

@@ -51,7 +51,7 @@ export default function FontsSection(): ReactNode {
 		a.localeCompare(b),
 	);
 	return (
-		<Section title={t("ui.editor.fonts.title")}>
+		<Section title={t("ui.editor.fonts.title")} defaultOpen={false}>
 			<ul className="flex flex-col gap-1">
 				{families.map(([name, font]) => (
 					<li key={name} className="flex items-center gap-1">

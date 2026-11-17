@@ -176,6 +176,14 @@
         "track_visual": "Faixa de vídeo",
         "track_audio": "Faixa de áudio",
         "item_summary": "{type}, {name}",
+        "row_summary": {
+          "one": "{name}, {count} item",
+          "other": "{name}, {count} itens"
+        },
+        "row_summary_listed": {
+          "one": "{name}, {count} item",
+          "other": "{name}, {count} itens, {shown} listados perto do cabeçote; as setas alcançam os demais"
+        },
         "snap": "Encaixar",
         "magnet": "Ímã",
         "magnet_hint": "Ímã (P): mantém os itens da faixa juntos, sem espaços",

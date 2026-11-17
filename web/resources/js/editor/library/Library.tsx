@@ -136,7 +136,12 @@ export default function Library({
 				</Button>
 			</form>
 			{!(pick || drops) && (
-				<p id="library-path-why" className="text-xs text-muted-foreground">
+				<p
+					id="library-path-why"
+					// Read as the description of the field; the text is not repeated in the tree.
+					aria-hidden="true"
+					className="text-xs text-muted-foreground"
+				>
 					{t("ui.editor.library.path_why")}
 				</p>
 			)}
