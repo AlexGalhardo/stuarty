@@ -313,6 +313,15 @@ var Endpoints = []Endpoint{
 		Summary: "Download the audio peaks of an asset",
 	},
 	{
+		ID:        "media.lut",
+		Method:    http.MethodGet,
+		Path:      "/projects/{id}/media/{asset_id}/lut",
+		Service:   "OpenFile",
+		Scope:     service.ScopeRead,
+		Uncounted: true, Status: 200,
+		Summary: "Download the parsed lookup table of a lut asset",
+	},
+	{
 		ID:        "media.chunks",
 		Method:    http.MethodGet,
 		Path:      "/projects/{id}/media/{asset_id}/chunks",

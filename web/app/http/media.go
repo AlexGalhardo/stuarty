@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"bytes"
 	"encoding/json"
 	"net/http"
 	"net/url"
@@ -196,6 +197,12 @@ func (h *apiHandler) serveAsset(c *web.Ctx, kind, projectID, assetID, variant st
 	}
 
 	hd.Set("Cache-Control", cache)
+
+	if f.Body != nil {
+		http.ServeContent(c.Writer(), c.Request(), "", f.ModTime, bytes.NewReader(f.Body))
+
+		return noIn{}, nil
+	}
 
 	if err := c.File(os.DirFS(string(h.Workspace)), f.Path); err != nil {
 		return noIn{}, err

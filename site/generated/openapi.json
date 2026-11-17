@@ -1871,6 +1871,18 @@
         },
         "type": "object"
       },
+      "LutSpec": {
+        "properties": {
+          "asset": {
+            "type": "string"
+          },
+          "intensity": {
+            "format": "double",
+            "type": "number"
+          }
+        },
+        "type": "object"
+      },
       "Marker": {
         "properties": {
           "frame": {
@@ -3924,6 +3936,16 @@
           },
           "last": {
             "type": "integer"
+          },
+          "lut": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LutSpec"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "mask": {
             "anyOf": [
@@ -9259,6 +9281,51 @@
           }
         ],
         "summary": "Download the chunk index of the video proxy of an asset"
+      }
+    },
+    "/api/v1/projects/{id}/media/{asset_id}/lut": {
+      "get": {
+        "operationId": "media.lut",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "asset_id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Download the parsed lookup table of a lut asset"
       }
     },
     "/api/v1/projects/{id}/media/{asset_id}/peaks": {

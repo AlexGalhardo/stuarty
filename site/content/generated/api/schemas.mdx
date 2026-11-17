@@ -606,6 +606,13 @@ The types named in the tables of the operations. The arguments of each editing c
 | `asset` | `string` | no |  |
 | `intensity` | `number (double)` | no |  |
 
+### LutSpec
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `asset` | `string` | no |  |
+| `intensity` | `number (double)` | no |  |
+
 ### Marker
 
 | Name | Type | Required | Description |
@@ -1274,6 +1281,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `item` | `string` | no |  |
 | `kind` | `string` | no |  |
 | `last` | `integer` | no |  |
+| `lut` | [`LutSpec`](/docs/api/schemas#lutspec) or `any` or `null` or `null` | no |  |
 | `mask` | [`MaskSpec`](/docs/api/schemas#maskspec) or `any` or `null` or `null` | no |  |
 | `natural` | array of `number (double)` or `null` | no |  |
 | `opacity` | `any` | no |  |
