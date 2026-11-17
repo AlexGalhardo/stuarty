@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { useT } from "@/lib/i18n";
 import { ApiError } from "../api/errors";
-import { useRuntime } from "../state/EditorContext";
+import { useDocumentState, useRuntime } from "../state/EditorContext";
 import { errorHeadline } from "../ui/errorHeadline";
 
 // "Inspect" of a card: the text the core makes of `inspectMedia` (SDD-012
@@ -28,6 +28,7 @@ export default function AssetDetails({
 }): ReactNode {
 	const t = useT();
 	const runtime = useRuntime();
+	const hash = useDocumentState((s) => s.document?.assets[assetId]?.hash);
 	const [state, setState] = useState<
 		| { kind: "loading" }
 		| { kind: "text"; text: string }
@@ -71,6 +72,19 @@ export default function AssetDetails({
 				{state.kind === "error" && (
 					<p role="alert" className="text-sm text-destructive">
 						{errorHeadline(t, state.code)}
+					</p>
+				)}
+				{hash !== undefined && (
+					<p className="text-xs">
+						<span className="text-muted-foreground">
+							{t("ui.editor.library.hash")}{" "}
+						</span>
+						<code
+							data-testid="asset-hash"
+							className="font-mono break-all select-all"
+						>
+							{hash}
+						</code>
 					</p>
 				)}
 				{state.kind === "text" && (
