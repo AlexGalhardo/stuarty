@@ -93,6 +93,9 @@ var requiredCases = []string{
 	"transition-dip",
 	"transition-wipe-left",
 	"transition-wipe-up",
+	"transition-spin",
+	"transition-shrink",
+	"transition-grow",
 }
 
 const (
@@ -559,8 +562,11 @@ var alphaCases = map[string]func() alphaCase{
 	"effect-rgb-split": func() alphaCase {
 		return effectCase(timeline.Effect{Kind: timeline.EffectRGBSplit, Amount: new(0.5), Angle: new(30.0)})
 	},
-	"effects-combined": combinedEffects,
-	"transition-zoom":  func() alphaCase { return transitionCase("zoom") },
+	"effects-combined":  combinedEffects,
+	"transition-zoom":   func() alphaCase { return transitionCase("zoom") },
+	"transition-spin":   func() alphaCase { return transitionCase("spin") },
+	"transition-shrink": func() alphaCase { return transitionCase("shrink") },
+	"transition-grow":   func() alphaCase { return transitionCase("grow") },
 	"transition-whip": func() alphaCase {
 		return transitionOf(timeline.Transition{Kind: "whip", Duration: 8, Direction: "right"})
 	},
