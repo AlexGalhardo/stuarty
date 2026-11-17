@@ -76,9 +76,13 @@ function isEditable(target: EventTarget | null): boolean {
 export default function Preview({
 	port,
 	parseTime,
+	trailing,
 }: {
 	port: CanvasPort;
 	parseTime: (text: string) => number | null;
+	// The aspect ratio selector at the right of the transport row, passed in by
+	// the shell because it sends a command and the preview does not.
+	trailing?: ReactNode;
 }): ReactNode {
 	const t = useT();
 	const runtime = useRuntime();
@@ -490,162 +494,179 @@ export default function Preview({
 			<div
 				role="toolbar"
 				aria-label={t("ui.editor.preview.transport")}
-				className="flex flex-wrap items-center justify-center gap-1"
+				className="flex flex-wrap items-center gap-x-3 gap-y-1"
 			>
-				<Button
-					type="button"
-					variant="ghost"
-					size="icon-sm"
-					disabled={!ready}
-					aria-label={t("ui.editor.preview.to_start")}
-					onClick={() => seekTo(0)}
-				>
-					<SkipBack aria-hidden="true" />
-				</Button>
-				<Button
-					type="button"
-					variant="ghost"
-					size="icon-sm"
-					disabled={!ready}
-					aria-label={t("ui.editor.preview.step_back")}
-					onClick={() => seekTo(live - 1)}
-				>
-					<StepBack aria-hidden="true" />
-				</Button>
-				<Button
-					type="button"
-					variant="ghost"
-					size="icon-sm"
-					disabled={!ready || unsupported}
-					aria-label={
-						playing ? t("ui.editor.preview.pause") : t("ui.editor.preview.play")
-					}
-					onClick={togglePlay}
-				>
-					{playing ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}
-				</Button>
-				<Button
-					type="button"
-					variant="ghost"
-					size="icon-sm"
-					disabled={!ready}
-					aria-label={t("ui.editor.preview.step_forward")}
-					onClick={() => seekTo(live + 1)}
-				>
-					<StepForward aria-hidden="true" />
-				</Button>
-				<Button
-					type="button"
-					variant="ghost"
-					size="icon-sm"
-					disabled={!ready}
-					aria-label={t("ui.editor.preview.to_end")}
-					onClick={() => seekTo(endFrame)}
-				>
-					<SkipForward aria-hidden="true" />
-				</Button>
-				<Button
-					type="button"
-					variant={safeVisible ? "secondary" : "ghost"}
-					size="icon-sm"
-					aria-pressed={safeVisible}
-					aria-label={t("ui.editor.preview.safe_area")}
-					onClick={runtime.uiWriter.toggleSafeArea}
-				>
-					<Frame aria-hidden="true" />
-				</Button>
-				<Button
-					type="button"
-					variant="ghost"
-					size="icon-sm"
-					aria-pressed={muted}
-					aria-label={
-						muted ? t("ui.editor.preview.unmute") : t("ui.editor.preview.mute")
-					}
-					onClick={runtime.uiWriter.togglePreviewMuted}
-				>
-					{muted ? (
-						<VolumeX aria-hidden="true" />
-					) : (
-						<Volume2 aria-hidden="true" />
-					)}
-				</Button>
-				<input
-					type="range"
-					min={0}
-					max={1}
-					step={0.05}
-					value={muted ? 0 : volume}
-					aria-label={t("ui.editor.preview.volume")}
-					className="h-6 w-20 accent-primary"
-					onChange={(event) => {
-						runtime.uiWriter.setPreviewVolume(
-							Number(event.currentTarget.value),
-						);
-						if (muted) runtime.uiWriter.togglePreviewMuted();
-					}}
-				/>
-				{/* biome-ignore lint/a11y/useSemanticElements: a fieldset would draw a border and legend around buttons in a toolbar. */}
-				<div
-					role="group"
-					aria-label={t("ui.editor.preview.size")}
-					className="ml-2 flex items-center gap-0.5"
-				>
-					{SIZES.map(([value, key]) => (
-						<Button
-							key={value}
-							type="button"
-							variant={previewSize === value ? "secondary" : "ghost"}
-							size="sm"
-							aria-pressed={previewSize === value}
-							onClick={() => runtime.uiWriter.setPreviewSize(value)}
-						>
-							{t(key)}
-						</Button>
-					))}
+				<div className="flex shrink-0 items-center">
+					<span className="flex items-center gap-1 text-muted-foreground">
+						<LiveTimecode
+							initial={live}
+							subscribe={subscribe}
+							fps={fps}
+							label={t("ui.editor.preview.current")}
+							parse={parseTime}
+							onSeek={(frame) => seekTo(Math.min(frame, endFrame))}
+						/>
+						<span aria-hidden="true">/</span>
+						<Timecode
+							frame={endFrame}
+							fps={fps}
+							label={t("ui.editor.preview.total")}
+						/>
+					</span>
 				</div>
-				{canFullscreen() && (
+				<div className="mx-auto flex shrink-0 items-center gap-1">
 					<Button
 						type="button"
 						variant="ghost"
 						size="icon-sm"
-						aria-pressed={fullscreen}
-						aria-label={
-							fullscreen
-								? t("ui.editor.preview.exit_fullscreen")
-								: t("ui.editor.preview.fullscreen")
-						}
-						onClick={() => {
-							if (document.fullscreenElement !== null) {
-								void document.exitFullscreen();
-							} else {
-								void shell.current?.requestFullscreen().catch(() => undefined);
-							}
-						}}
+						disabled={!ready}
+						aria-label={t("ui.editor.preview.to_start")}
+						onClick={() => seekTo(0)}
 					>
-						{fullscreen ? (
-							<Minimize aria-hidden="true" />
+						<SkipBack aria-hidden="true" />
+					</Button>
+					<Button
+						type="button"
+						variant="ghost"
+						size="icon-sm"
+						disabled={!ready}
+						aria-label={t("ui.editor.preview.step_back")}
+						onClick={() => seekTo(live - 1)}
+					>
+						<StepBack aria-hidden="true" />
+					</Button>
+					<Button
+						type="button"
+						variant="ghost"
+						size="icon-sm"
+						disabled={!ready || unsupported}
+						aria-label={
+							playing
+								? t("ui.editor.preview.pause")
+								: t("ui.editor.preview.play")
+						}
+						onClick={togglePlay}
+					>
+						{playing ? (
+							<Pause aria-hidden="true" />
 						) : (
-							<Maximize aria-hidden="true" />
+							<Play aria-hidden="true" />
 						)}
 					</Button>
-				)}
-				<span className="ml-3 flex items-center gap-1 text-muted-foreground">
-					<LiveTimecode
-						initial={live}
-						subscribe={subscribe}
-						fps={fps}
-						label={t("ui.editor.preview.current")}
-						parse={parseTime}
-						onSeek={(frame) => seekTo(Math.min(frame, endFrame))}
+					<Button
+						type="button"
+						variant="ghost"
+						size="icon-sm"
+						disabled={!ready}
+						aria-label={t("ui.editor.preview.step_forward")}
+						onClick={() => seekTo(live + 1)}
+					>
+						<StepForward aria-hidden="true" />
+					</Button>
+					<Button
+						type="button"
+						variant="ghost"
+						size="icon-sm"
+						disabled={!ready}
+						aria-label={t("ui.editor.preview.to_end")}
+						onClick={() => seekTo(endFrame)}
+					>
+						<SkipForward aria-hidden="true" />
+					</Button>
+				</div>
+				<div className="ml-auto flex shrink-0 items-center gap-1">
+					{trailing}
+					<Button
+						type="button"
+						variant={safeVisible ? "secondary" : "ghost"}
+						size="icon-sm"
+						aria-pressed={safeVisible}
+						aria-label={t("ui.editor.preview.safe_area")}
+						onClick={runtime.uiWriter.toggleSafeArea}
+					>
+						<Frame aria-hidden="true" />
+					</Button>
+					<Button
+						type="button"
+						variant="ghost"
+						size="icon-sm"
+						aria-pressed={muted}
+						aria-label={
+							muted
+								? t("ui.editor.preview.unmute")
+								: t("ui.editor.preview.mute")
+						}
+						onClick={runtime.uiWriter.togglePreviewMuted}
+					>
+						{muted ? (
+							<VolumeX aria-hidden="true" />
+						) : (
+							<Volume2 aria-hidden="true" />
+						)}
+					</Button>
+					<input
+						type="range"
+						min={0}
+						max={1}
+						step={0.05}
+						value={muted ? 0 : volume}
+						aria-label={t("ui.editor.preview.volume")}
+						className="h-6 w-20 accent-primary"
+						onChange={(event) => {
+							runtime.uiWriter.setPreviewVolume(
+								Number(event.currentTarget.value),
+							);
+							if (muted) runtime.uiWriter.togglePreviewMuted();
+						}}
 					/>
-					<span aria-hidden="true">/</span>
-					<Timecode
-						frame={endFrame}
-						fps={fps}
-						label={t("ui.editor.preview.total")}
-					/>
-				</span>
+					{/* biome-ignore lint/a11y/useSemanticElements: a fieldset would draw a border and legend around buttons in a toolbar. */}
+					<div
+						role="group"
+						aria-label={t("ui.editor.preview.size")}
+						className="ml-2 flex items-center gap-0.5"
+					>
+						{SIZES.map(([value, key]) => (
+							<Button
+								key={value}
+								type="button"
+								variant={previewSize === value ? "secondary" : "ghost"}
+								size="sm"
+								aria-pressed={previewSize === value}
+								onClick={() => runtime.uiWriter.setPreviewSize(value)}
+							>
+								{t(key)}
+							</Button>
+						))}
+					</div>
+					{canFullscreen() && (
+						<Button
+							type="button"
+							variant="ghost"
+							size="icon-sm"
+							aria-pressed={fullscreen}
+							aria-label={
+								fullscreen
+									? t("ui.editor.preview.exit_fullscreen")
+									: t("ui.editor.preview.fullscreen")
+							}
+							onClick={() => {
+								if (document.fullscreenElement !== null) {
+									void document.exitFullscreen();
+								} else {
+									void shell.current
+										?.requestFullscreen()
+										.catch(() => undefined);
+								}
+							}}
+						>
+							{fullscreen ? (
+								<Minimize aria-hidden="true" />
+							) : (
+								<Maximize aria-hidden="true" />
+							)}
+						</Button>
+					)}
+				</div>
 			</div>
 		</div>
 	);

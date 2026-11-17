@@ -267,6 +267,7 @@
         "step_forward": "Avançar um quadro",
         "current": "Tempo atual",
         "total": "Duração total",
+        "ratio": "Proporção",
         "size": "Tamanho da prévia",
         "size_fit": "Ajustar",
         "size_50": "Metade (50%)",
