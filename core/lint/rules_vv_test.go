@@ -109,7 +109,9 @@ func TestLoudnessEstimateIsCappedByPeaks(t *testing.T) {
 		peaks[i] = 0.5 // -6 dBFS
 	}
 
-	arts := fakeArtifacts{envSpec{Peaks: map[string][]float64{astVideo: peaks}, Loudness: map[string]float64{astVideo: -50}}}
+	arts := fakeArtifacts{
+		envSpec{Peaks: map[string][]float64{astVideo: peaks}, Loudness: map[string]float64{astVideo: -50}},
+	}
 
 	got := has(Lint(d, Env{Artifacts: arts}, Full), CodeLoudness)
 	if len(got) != 1 || !strings.Contains(got[0].Message, "gain of +16.5 dB") {
