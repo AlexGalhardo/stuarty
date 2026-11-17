@@ -72,6 +72,8 @@ type WindowLayer struct {
 
 	Grade *GradeSpec `json:"grade,omitempty"`
 
+	Lut *LutSpec `json:"lut,omitempty"`
+
 	Blend string `json:"blend,omitempty"`
 
 	FlipX bool `json:"flip_x,omitempty"`
@@ -206,6 +208,7 @@ func newLayerAcc(p *planner, t, room int, first *Layer) *layerAcc {
 		Blur:      first.Blur,
 		ChromaKey: first.ChromaKey,
 		Grade:     first.Grade,
+		Lut:       first.Lut,
 		Blend:     first.Blend,
 		Mask:      first.Mask,
 		FlipX:     first.FlipX,
