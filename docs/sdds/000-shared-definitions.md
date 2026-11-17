@@ -33,6 +33,7 @@
 | `MediaList` | `media_inspect` called without an asset | `media:list` | `GET /projects/{id}/media` (every asset of the project, including those still ingesting or failed, which are not in the document) | read | P |
 | `JobList` | `job_get` called with a project and no job | `job:list` | `GET /projects/{id}/jobs` | read | P |
 | `SnapPoints` | none | none | `GET /projects/{id}/snap-points` (SDD-012 §7.8) | read | A |
+| `AssetList` | none | none | `GET /assets` (the ready files of the workspace by content hash, `kind` image, video or audio; the picker of a brand logo) | read | A |
 | `FontList` | none | `fonts` | `GET /fonts` (families and weights available, and the imported font files with their hash) | read | A |
 | `OpenFile` | none | none (the job result gives the path to local callers; with a remote server the CLI downloads the file) | `GET /jobs/{job_id}/file` and the byte-serving routes listed below | read | P |
 | `AuditList` | none | `audit` | `GET /audit` | admin | A |

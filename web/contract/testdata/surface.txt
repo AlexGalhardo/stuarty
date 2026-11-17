@@ -42,6 +42,7 @@ command undo
 command version
 command view
 route DELETE /keys/{}
+route GET /assets
 route GET /audit
 route GET /brand-kit
 route GET /commands

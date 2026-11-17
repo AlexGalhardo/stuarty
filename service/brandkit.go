@@ -171,7 +171,8 @@ func (s *svc) BrandKitSet(ctx context.Context, req BrandKitSetRequest) (*BrandKi
 func normalizeBrandKit(req *BrandKitSetRequest) (*BrandKit, *Error) {
 	if req.Logo != "" && !isFontHash(req.Logo) {
 		return nil, newError(command.CodeValidation, "logo is not a sha256 hash.").withPath("logo").
-			withHint(`use "sha256:" and 64 lower-case hex characters of an image asset`)
+			withHint(`use "sha256:" and 64 lower-case hex characters of an image asset; the hash is in the answer of ` +
+				`media:import and in the list of GET /api/v1/assets`)
 	}
 
 	if len(req.Colors) > maxBrandColors {

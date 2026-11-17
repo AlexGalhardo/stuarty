@@ -73,6 +73,23 @@
         },
         "type": "object"
       },
+      "AssetListResult": {
+        "properties": {
+          "assets": {
+            "items": {
+              "$ref": "#/components/schemas/LibraryAsset"
+            },
+            "type": "array"
+          },
+          "text": {
+            "type": "string"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "AuditEntry": {
         "properties": {
           "action": {
@@ -1171,6 +1188,9 @@
               }
             ]
           },
+          "hash": {
+            "type": "string"
+          },
           "job_id": {
             "type": "string"
           },
@@ -1835,6 +1855,34 @@
           "value": {
             "format": "double",
             "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "LibraryAsset": {
+        "properties": {
+          "bytes": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "hash": {
+            "type": "string"
+          },
+          "height": {
+            "type": "integer"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "projects": {
+            "type": "integer"
+          },
+          "width": {
+            "type": "integer"
           }
         },
         "type": "object"
@@ -7702,6 +7750,48 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/assets": {
+      "get": {
+        "operationId": "assets.list",
+        "parameters": [
+          {
+            "description": "image, video or audio; omit it for every kind.",
+            "in": "query",
+            "name": "kind",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetListResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the files of the workspace by content hash"
+      }
+    },
     "/api/v1/audit": {
       "get": {
         "operationId": "audit.list",

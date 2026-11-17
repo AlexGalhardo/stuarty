@@ -28,6 +28,7 @@
     {
       "tag": "Media",
       "pages": [
+        "assets.list",
         "media.list",
         "media.import",
         "media.inspect",

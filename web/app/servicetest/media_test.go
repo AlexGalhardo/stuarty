@@ -757,3 +757,28 @@ func TestMediaImportChecksEveryAssetIDBeforeImporting(t *testing.T) {
 		t.Errorf("the other file was imported: %+v, %v", list, lerr)
 	}
 }
+
+// VV-117: an import answers the content hash, and the library lists the files by hash with an optional kind.
+func TestAssetListShowsTheFilesByHash(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{})
+	project := m.newProject("p")
+	a := m.importOne(project, m.write("a.mp4", clipBytes)).Assets[0]
+
+	if !strings.HasPrefix(a.Hash, "sha256:") || len(a.Hash) != len("sha256:")+64 {
+		t.Fatalf("the import answered no content hash: %+v", a)
+	}
+
+	all, err := m.svc.AssetList(m.as(ui), service.AssetListRequest{})
+	if err != nil || len(all.Assets) != 1 || all.Assets[0].Hash != a.Hash || all.Assets[0].Projects != 1 {
+		t.Fatalf("library = %+v, %v", all, err)
+	}
+
+	images, err := m.svc.AssetList(m.as(ui), service.AssetListRequest{Kind: "image"})
+	if err != nil || len(images.Assets) != 0 {
+		t.Errorf("images = %+v, %v", images, err)
+	}
+
+	if _, err := m.svc.AssetList(m.as(ui), service.AssetListRequest{Kind: "gif"}); code(err) != command.CodeValidation {
+		t.Errorf("an unknown kind = %v", err)
+	}
+}

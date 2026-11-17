@@ -70,6 +70,8 @@ type Service interface {
 	// editor and of the administrator (SDD-000 section 1).
 	SnapPoints(ctx context.Context, req SnapPointsRequest) (*SnapPointsResult, error)
 	FontList(ctx context.Context, req FontListRequest) (*FontListResult, error)
+	// AssetList lists the files the projects hold, by content hash, for the picker of a brand logo (VV-117).
+	AssetList(ctx context.Context, req AssetListRequest) (*AssetListResult, error)
 	ExportFile(ctx context.Context, req ExportFileRequest) (*File, error)
 	AuditList(ctx context.Context, req AuditListRequest) (*AuditListResult, error)
 

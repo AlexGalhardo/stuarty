@@ -10,6 +10,7 @@ var Provenance = map[string]string{
 	"service.ProjectCreateResult.Name":         SourceProjectText,
 	"service.ProjectGetResult.Name":            SourceProjectText,
 	"service.ImportedAsset.Name":               SourceAssetName,
+	"service.LibraryAsset.Name":                SourceAssetName,
 	"service.UntrustedData.Metadata":           SourceMetadata,
 	"service.TranscriptLine.Text":              SourceTranscript,
 	"service.MediaEntry.Name":                  SourceAssetName,

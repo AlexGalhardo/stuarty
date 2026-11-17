@@ -24,6 +24,14 @@ The types named in the tables of the operations. The arguments of each editing c
 | `sample_count` | `integer` | no |  |
 | `width` | `integer` | no |  |
 
+### AssetListResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `assets` | array of [`LibraryAsset`](/docs/api/schemas#libraryasset) | no |  |
+| `text` | `string` | no |  |
+| `untrusted_notice` | `string` | no |  |
+
 ### AuditEntry
 
 | Name | Type | Required | Description |
@@ -403,6 +411,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `asset_id` | `string` | no |  |
 | `deduplicated` | `boolean` | no |  |
 | `error` | [`Error`](/docs/api/schemas#error) or `any` or `null` or `null` | no |  |
+| `hash` | `string` | no |  |
 | `job_id` | `string` | no |  |
 | `kind` | `string` | no |  |
 | `name` | `string` | no |  |
@@ -590,6 +599,18 @@ The types named in the tables of the operations. The arguments of each editing c
 | --- | --- | --- | --- |
 | `code` | `string` | no | A one-time code, valid for 120 seconds. |
 | `url` | `string` | no | The address that exchanges the code for a browser session. |
+
+### LibraryAsset
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `bytes` | `integer (int64)` | no |  |
+| `hash` | `string` | no |  |
+| `height` | `integer` | no |  |
+| `kind` | `string` | no |  |
+| `name` | `string` | no |  |
+| `projects` | `integer` | no |  |
+| `width` | `integer` | no |  |
 
 ### LintResult
 

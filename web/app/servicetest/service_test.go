@@ -165,6 +165,10 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.FontList(ctx, service.FontListRequest{})
 			return err
 		},
+		"AssetList": func() error {
+			_, err := e.svc.AssetList(ctx, service.AssetListRequest{})
+			return err
+		},
 		"ExportFile": func() error {
 			_, err := e.svc.ExportFile(ctx, service.ExportFileRequest{JobID: "job_0000000001"})
 			return err
