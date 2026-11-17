@@ -237,3 +237,24 @@ func TestJobCancelStopsARunningExport(t *testing.T) {
 		t.Errorf("an unknown job: %s", textOf(t, missing))
 	}
 }
+
+// An import that brought in nothing is an error result, and the text keeps the
+// hint of each failed file (VV-208).
+func TestMediaImportIsAnErrorWhenNothingWasImported(t *testing.T) {
+	t.Parallel()
+
+	env := testenv.New(t, testenv.Options{})
+	cs := connect(t, env.Service, Options{}, "claude-code")
+	project, _ := structured(t, ok(t, call(t, cs, "project_create", map[string]any{"name": "M"})))["project_id"].(string)
+
+	missing := env.WriteFile(t, "x.mov", "x") + ".gone"
+
+	res := call(t, cs, "media_import", map[string]any{"project_id": project, "paths": []any{missing}})
+	if !res.IsError {
+		t.Fatalf("nothing was imported but isError is false: %s", textOf(t, res))
+	}
+
+	if text := textOf(t, res); !strings.Contains(text, "hint:") {
+		t.Errorf("the text must carry the hint of the failed file: %q", text)
+	}
+}

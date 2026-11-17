@@ -28,6 +28,8 @@ type toolOutput struct {
 	// image and mime are the picture of view, the only tool that returns one.
 	image []byte
 	mime  string
+	// isError marks a result that carries data but failed as a whole (media_import with nothing imported).
+	isError bool
 }
 
 // parseArguments validates the arguments against the inputSchema of the tool
@@ -208,7 +210,7 @@ func successResult(out *toolOutput, bulk map[string]bool) (*sdk.CallToolResult, 
 		content = append(content, &sdk.ImageContent{Data: out.image, MIMEType: out.mime})
 	}
 
-	return &sdk.CallToolResult{Content: content, StructuredContent: doc}, nil
+	return &sdk.CallToolResult{Content: content, StructuredContent: doc, IsError: out.isError}, nil
 }
 
 // Caps of SDD-003 section 1.3: an error block is at most 6,000 characters, 2,000

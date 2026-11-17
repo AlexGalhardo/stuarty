@@ -292,7 +292,7 @@ func mediaImport(ctx context.Context, svc service.Service, raw json.RawMessage) 
 		return nil, err
 	}
 
-	return &toolOutput{value: res, text: res.Text}, nil
+	return &toolOutput{value: res, text: res.Text, isError: len(res.Assets) > 0 && res.Imported == 0}, nil
 }
 
 // defaultImportWaitMS is the default of wait_ms in the media_import definition.

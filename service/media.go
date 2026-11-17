@@ -184,7 +184,7 @@ func (s *svc) MediaImport(ctx context.Context, req MediaImportRequest) (*MediaIm
 		}
 
 		if a.Error != nil {
-			lines[i].ErrorCode, lines[i].ErrorMessage = a.Error.Code, a.Error.Message
+			lines[i].ErrorCode, lines[i].ErrorMessage, lines[i].ErrorHint = a.Error.Code, a.Error.Message, a.Error.Hint
 		}
 	}
 
