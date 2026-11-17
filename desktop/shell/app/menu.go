@@ -33,8 +33,10 @@ func buildMenu(app *application.App, win *application.WebviewWindow, ws workspac
 
 	help := menu.AddSubmenu(tr(shell.TextHelp))
 	help.Add(tr(shell.TextCheckUpdates)).OnClick(func(*application.Context) { up.checkNow() })
-	help.AddCheckbox(tr(shell.TextCheckAtStart), up.launcher.AutoCheck()).
-		OnClick(func(ctx *application.Context) { up.setAutoCheck(ctx.ClickedMenuItem().Checked()) })
+	auto := help.AddCheckbox(tr(shell.TextCheckAtStart), up.launcher.AutoCheck())
+	auto.OnClick(func(ctx *application.Context) { up.setAutoCheck(ctx.ClickedMenuItem().Checked()) })
+	// A build without a feed has nothing to check: the item says so by being disabled (VV-073).
+	auto.SetEnabled(up.launcher.CanUpdate())
 	help.AddSeparator()
 	help.Add(tr(shell.TextAbout)).OnClick(func(*application.Context) {
 		app.Dialog.Info().SetTitle(tr(shell.TextAboutTitle)).SetMessage("Vukem Video " + version).Show()

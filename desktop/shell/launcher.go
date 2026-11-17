@@ -123,6 +123,10 @@ func (l *Launcher) Start(ctx context.Context) {
 // SetAutoCheck records the answer, saves it and starts or stops the schedule at once. The first check
 // of a Yes happens immediately.
 func (l *Launcher) SetAutoCheck(ctx context.Context, on bool) error {
+	if on && l.cfg.Client == nil {
+		return nil
+	}
+
 	l.mu.Lock()
 	l.settings = l.settings.WithAutoCheck(on)
 	next := l.settings
@@ -140,6 +144,10 @@ func (l *Launcher) SetAutoCheck(ctx context.Context, on bool) error {
 
 	return l.cfg.Save(next)
 }
+
+// CanUpdate tells whether this build has an update client. Without one there is nothing to check
+// and the automatic check cannot be turned on.
+func (l *Launcher) CanUpdate() bool { return l.cfg.Client != nil }
 
 // AutoCheck is the current state of the setting.
 func (l *Launcher) AutoCheck() bool {
