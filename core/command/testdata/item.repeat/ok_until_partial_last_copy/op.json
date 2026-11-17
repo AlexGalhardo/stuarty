@@ -1,0 +1,11 @@
+{
+  "op": "item.repeat",
+  "args": {
+    "item_id": "itm_m1n2p3q4r5",
+    "until": "200f",
+    "new_ids": [
+      "itm_g9h8j7k6m5",
+      "itm_n1p2q3r4s5"
+    ]
+  }
+}

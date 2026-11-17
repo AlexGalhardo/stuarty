@@ -3064,6 +3064,74 @@
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"additionalProperties": false,
 			"properties": {
+				"copies": {
+					"description": "How many extra copies to add after the item (2 plays it three times). Give copies or until.",
+					"maximum": 200,
+					"minimum": 1,
+					"type": "integer"
+				},
+				"item_id": {
+					"description": "The item to repeat.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+					"type": "string"
+				},
+				"link": {
+					"description": "Link the item and its copies so they move, trim and split together; default false.",
+					"type": "boolean"
+				},
+				"new_ids": {
+					"description": "Ids for the copies, in order; the rest are generated.",
+					"items": {
+						"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+						"type": "string"
+					},
+					"type": "array"
+				},
+				"ripple": {
+					"description": "none (default) or track: the later items of the track move later by the length added.",
+					"enum": [
+						"none",
+						"track"
+					],
+					"type": "string"
+				},
+				"until": {
+					"description": "Absolute time the sequence ends at; the last copy is trimmed to end there. Give copies or until.",
+					"type": "string",
+					"x-vv-kind": "time"
+				}
+			},
+			"required": [
+				"item_id"
+			],
+			"type": "object"
+		},
+		"description": "Adds copies of the item one after the other on its track, starting at its end: give copies (1 to 200 extra plays) or until (an absolute time; the last copy is trimmed to end exactly there). Keyframes, words and the name are copied; the slot mark is not. With ripple none (default) it fails when a copy would overlap an item of the track; with ripple track the later items of the track move later by the length added. With link the item and its copies are linked, so they move, trim and split together (up to 20 items).",
+		"errors": [
+			"E_VALIDATION",
+			"E_INVALID_TIME",
+			"E_NOT_FOUND",
+			"E_INVALID_STATE",
+			"E_ID_EXISTS",
+			"E_LIMIT",
+			"E_OVERLAP"
+		],
+		"example": {
+			"item_id": "itm_m1n2p3q4r5",
+			"ripple": "track",
+			"until": "120s"
+		},
+		"internal": false,
+		"name": "item.repeat",
+		"phase": "beta",
+		"scope": "edit",
+		"summary": "Repeats an item back to back, a number of times or until a time, such as a looping background."
+	},
+	{
+		"args_schema": {
+			"$schema": "https://json-schema.org/draft/2020-12/schema",
+			"additionalProperties": false,
+			"properties": {
 				"audio_muted": {
 					"description": "Drop the audio of a clip.",
 					"type": "boolean"

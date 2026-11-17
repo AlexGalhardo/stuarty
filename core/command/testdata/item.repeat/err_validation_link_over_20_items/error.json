@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.link would link 21 items; a group holds at most 20.",
+  "hint": "Repeat without link, or with fewer copies.",
+  "retryable": false,
+  "path": "args.link"
+}

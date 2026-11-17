@@ -1,0 +1,7 @@
+{
+  "op": "item.repeat",
+  "args": {
+    "item_id": "itm_zzzzzzzzzz",
+    "copies": 1
+  }
+}

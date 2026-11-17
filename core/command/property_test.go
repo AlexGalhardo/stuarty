@@ -423,6 +423,12 @@ var alphaOps = map[string]func(p *docPick) string{
 			p.clip(), p.oneOf("rect", "ellipse"), 0.1, 0.2, 0.5, 0.6, p.n(201), p.oneOf("true", "false"),
 		)
 	},
+	"item.repeat": func(p *docPick) string {
+		if p.n(2) == 0 {
+			return fmt.Sprintf(`{"item_id":%q,"copies":%d}`, p.clip(), 1+p.n(3))
+		}
+		return fmt.Sprintf(`{"item_id":%q,"until":%q}`, p.clip(), p.frames(600))
+	},
 	"clip.set_shadow": func(p *docPick) string {
 		if p.n(4) == 0 {
 			return fmt.Sprintf(`{"item_id":%q,"shadow":null}`, p.clip())

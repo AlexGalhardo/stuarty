@@ -1,6 +1,6 @@
 # SDD-002: Command catalogue of the core
 
-- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen for ALPHA: all 48 commands have golden cases and pass the registry-wide gates (P2-ENG-018). BETA adds `clip.set_filter` and `clip.set_blur` (C.49, C.50; P3-ENG-001), `audio.duck` and `audio.mark_beats` (C.51, C.52; P3-ENG-002), `font.add` and `font.remove` (C.53, C.54; P3-ENG-005), 54 in the BETA build; after BETA `clip.set_chroma_key` (C.55, VV-015) and the marker commands `marker.add`, `marker.set` and `marker.remove` (C.56 to C.58, VV-035) make 58; `item.slip` and `settings.reframe` (C.59, C.60, VV-036 and VV-038) make 60; `clip.set_blend` (C.61, VV-015) makes 61; `clip.set_mask` (C.62, VV-015) makes 62; `clip.set_flip` (C.63, TASK-0233) makes 63; `item.set_enabled` (C.64, TASK-0233) makes 64; `item.link`, `item.unlink` and `item.extract_audio` (C.65 to C.67, TASK-0277) make 67; `clip.set_effects` (C.68, TASK-0278) makes 68; `item.paste_attributes` (C.69, TASK-0254) makes 69; `item.freeze_frame` (C.70, TASK-0254) makes 70; `caption.import_subtitles` (C.71, TASK-0254) makes 71. `clip.set_shadow` and `clip.set_outline` (C.72, C.73, VV-122) make 73. The binary exposes the BETA build (`command.Build` is `Beta`, switched on 2026-11-15): 73 commands, 72 public, of which 16 are Prototype, 32 ALPHA and 25 BETA; `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
+- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen for ALPHA: all 48 commands have golden cases and pass the registry-wide gates (P2-ENG-018). BETA adds `clip.set_filter` and `clip.set_blur` (C.49, C.50; P3-ENG-001), `audio.duck` and `audio.mark_beats` (C.51, C.52; P3-ENG-002), `font.add` and `font.remove` (C.53, C.54; P3-ENG-005), 54 in the BETA build; after BETA `clip.set_chroma_key` (C.55, VV-015) and the marker commands `marker.add`, `marker.set` and `marker.remove` (C.56 to C.58, VV-035) make 58; `item.slip` and `settings.reframe` (C.59, C.60, VV-036 and VV-038) make 60; `clip.set_blend` (C.61, VV-015) makes 61; `clip.set_mask` (C.62, VV-015) makes 62; `clip.set_flip` (C.63, TASK-0233) makes 63; `item.set_enabled` (C.64, TASK-0233) makes 64; `item.link`, `item.unlink` and `item.extract_audio` (C.65 to C.67, TASK-0277) make 67; `clip.set_effects` (C.68, TASK-0278) makes 68; `item.paste_attributes` (C.69, TASK-0254) makes 69; `item.freeze_frame` (C.70, TASK-0254) makes 70; `caption.import_subtitles` (C.71, TASK-0254) makes 71. `clip.set_shadow` and `clip.set_outline` (C.72, C.73, VV-122) make 73; `item.repeat` (C.74, VV-123) makes 74. The binary exposes the BETA build (`command.Build` is `Beta`, switched on 2026-11-15): 74 commands, 73 public, of which 16 are Prototype, 32 ALPHA and 26 BETA; `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
 - Depends on: SDD-001 (document), ADR-0002 (command core), ADR-0004 (time), ADR-0006 (log, concurrency, undo), ADR-0014 (JSON Schema)
 - Implements: RF-010 to RF-016, RF-020 to RF-026, RF-030 to RF-036, RF-040, RF-041, RF-050, RF-051, RF-100, RF-105, RF-107, RF-112 to RF-115, RF-119, NFR-001, NFR-025
 - Owner area: senior-a (command core and schema)
@@ -271,6 +271,7 @@ Scope is `edit` unless stated. Phase: `P` Prototype, `A` ALPHA. "Time" marks arg
 | `clip.set_color` | A | `item_id`, `brightness?`, `contrast?`, `saturation?`, `temperature?`, `tint?`, `hue?` | Sets colour adjustment; after BETA also white balance and hue rotation (TASK-0233). See C.26 |
 | `clip.set_filter` | B | `item_id`, `filter?`, `amount?` | BETA (RF-027). Sets the colour filter of a clip and how much of it is mixed in |
 | `clip.set_blur` | B | `item_id`, `radius` | BETA (RF-027). Sets the blur radius of a clip in pixels; 0 removes it |
+| `item.repeat` | B | `item_id`, `copies?` or `until?` (exactly one), `ripple?` (`none` default, `track`), `link?`, `new_ids?` | Repeats an item back to back after its end, a number of times or until a time, such as a looping background (VV-123). See C.74 |
 | `clip.set_shadow` | B | `item_id`, `shadow` (`{color?, opacity?, dx?, dy?, blur?}` or null) | Gives a clip a drop shadow that follows its visible shape (VV-122); null removes it. See C.72 |
 | `clip.set_outline` | B | `item_id`, `outline` (`{color?, width?}` or null) | Gives a clip an outline that follows its visible shape (VV-122); null removes it. See C.73 |
 | `clip.set_chroma_key` | B | `item_id`, `color` (`#RRGGBB` or null), `similarity?`, `smoothness?`, `spill?` | Keys out one colour of a clip (a green screen); null removes the key. See C.55 |
@@ -5962,3 +5963,79 @@ Sets or removes the outline of a clip (VV-122, SDD-001 §3.5): a contour around 
 - `err_validation_bad_colour`
 - `err_not_found`
 - `err_type_mismatch_text_item`
+
+### C.74 `item.repeat` (phase B)
+
+Repeats an item back to back after its end (VV-123): a looping background, a sticker that plays again. Each copy is made like `item.duplicate`, at the end of the one before.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | yes | none | any item |
+| `copies` | integer | one of `copies`, `until` | none | 1 to 200 extra copies (2 plays the item three times) |
+| `until` | time | one of `copies`, `until` | none | absolute; after the end of the item and at most frame 108,000. Whole copies are added until the sequence reaches it; the last one is trimmed (as `item.trim` of the end edge does) to end exactly there. At most 200 copies |
+| `ripple` | `"none"`, `"track"` | no | `none` | `none` fails with `E_OVERLAP` when a copy meets an item of the track; `track` moves every item of the track that starts at or after the end of the item later by the length added |
+| `link` | boolean | no | false | links the item and its copies in one group (SDD-001 §3.4, `item.link`); at most 20 items, and the item must not be linked already |
+| `new_ids` | list of item ids | no | generated | ids of the copies in order; at most one per copy |
+
+**Preconditions.**
+
+1. Exactly one of `copies` and `until` is given and valid (`E_VALIDATION`, `E_INVALID_TIME`, `E_LIMIT` for more than 200 copies); `new_ids` are well formed, distinct and at most one per copy (`E_VALIDATION`).
+2. The item exists (`E_NOT_FOUND`).
+3. With `link`, the item is not linked and the group has at most 20 items (`E_INVALID_STATE`, `E_VALIDATION`).
+4. The project stays within 500 items (`E_LIMIT`), every copy ends at or before frame 108,000 (`E_INVALID_TIME`) and the new ids are unused (`E_ID_EXISTS`).
+5. With ripple `none`, no copy overlaps an item of the track (`E_OVERLAP`).
+
+**Postconditions.**
+
+1. Copy `k` starts where copy `k - 1` (the item for `k = 1`) ends and is a clone of the item: keyframes, markers, words, speed, effects and the name are copied; the slot mark is not and the link is the new group's or none. A trimmed last copy follows the rules of `item.trim` for its edge (keyframes and words cut, fades and transitions must still fit).
+2. With ripple `track`, the later items of the track are moved first.
+3. `diff` has one `item.added` per copy, then the `item.updated` of the shifted and of the linked items. `effective` has `new_ids`, `end` (the A.4 triple of the end of the last copy) and, with `link`, `link`.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | neither or both of `copies` and `until`, `copies` out of range, too many `new_ids`, a link group over 20 | `args: give exactly one of copies and until.` | `Use {"copies": 3} or {"until": "120s"}.` |
+| `E_INVALID_TIME` | `until` not after the end of the item, or past frame 108,000 | `args.until "90f" is frame 90; the item already ends at frame 90.` | `Use an until after "90f" (3.000s).` |
+| `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
+| `E_INVALID_STATE` | `link` on an item that is linked already | `Item itm_m1n2p3q4r5 is already linked (lnk_a1b2c3d4e5).` | `Unlink it with item.unlink first, or repeat without link.` |
+| `E_ID_EXISTS` | a supplied id is used | `Item id itm_c3d4e5f6g7 already exists.` | `Omit id or use an unused id.` |
+| `E_LIMIT` | more than 200 copies, or more than 500 items | `Repeating itm_m1n2p3q4r5 until 1500f needs 299 copies; the limit is 200.` | `Use a later start of the sequence, a longer item, or two item.repeat calls.` |
+| `E_OVERLAP` | a copy meets an item of the track (ripple `none`) | `Item itm_n1p2q3r4s5 would occupy frames 180-269 on track trk_f6g7h8j9k0, where item itm_c3d4e5f6g7 already is (frames 120-149).` | `Use ripple track, or move the item first.` |
+
+**Inverse.** The `remove` of every added item, and a `patch` of the moved and linked items.
+
+**Idempotency.** Error when applied again: the copies now occupy the place of the next ones (`E_OVERLAP`, or more copies with ripple `track`).
+
+**Example.** Clip `itm_m1n2p3q4r5`, 90 frames at 30 fps, alone on its track.
+
+```json
+{"op": "item.repeat", "args": {"item_id": "itm_m1n2p3q4r5", "until": "9s", "new_ids": ["itm_g9h8j7k6m5", "itm_n1p2q3r4s5"]}}
+```
+
+The copies start at frames 90 and 180; the sequence ends at frame 270 (`effective.end`).
+
+**Golden cases.**
+
+- `ok_copies_one`
+- `ok_copies_three_with_ids`
+- `ok_until_whole_copies`
+- `ok_until_partial_last_copy`
+- `ok_ripple_track_moves_later_items`
+- `ok_link_the_copies`
+- `ok_keyframes_are_copied`
+- `ok_text_item`
+- `err_validation_neither_copies_nor_until`
+- `err_validation_both_copies_and_until`
+- `err_validation_copies_zero`
+- `err_validation_new_ids_more_than_copies`
+- `err_validation_link_over_20_items`
+- `err_invalid_time_until_not_after_the_item`
+- `err_invalid_time_until_past_the_limit`
+- `err_not_found`
+- `err_invalid_state_already_linked`
+- `err_limit_until_needs_over_200_copies`
+- `err_overlap_next_item`
+- `err_id_exists`
