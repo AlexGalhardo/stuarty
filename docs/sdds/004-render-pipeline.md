@@ -29,7 +29,7 @@
 flowchart TB
   DOC[Project document at revision R] --> PLAN["core/plan.Frame(doc, t)<br/>pure, integers and floats only"]
   PLAN --> FP[Frame plan: ordered layers + audio sources]
-  FP --> RAST["engine/raster<br/>text and shape bitmaps, cached by hash"]
+  FP --> RAST["engine/rasterize<br/>text and shape bitmaps from the Rust rasterizer, cached by hash"]
   FP --> COMP["engine/compositor (Go)<br/>draws layers into an RGBA frame"]
   RAST --> COMP
   DEC["ffmpeg decode of normalized media<br/>raw RGBA frames over a pipe"] --> COMP
@@ -43,7 +43,7 @@ flowchart TB
 Three rules hold everywhere:
 
 1. `core/plan` decides what a frame contains. Nothing else interpolates, picks a source frame or lays out a caption.
-2. `engine/raster` is the only code that draws text and shapes. Both executors use its bitmaps.
+2. The Rust rasterizer (`renderer/vukem-renderer-text`, run by the renderer module and reached from Go through `engine/rasterize`) is the only code that draws text and shapes. Both executors use its bitmaps.
 3. The Go compositor is the **export executor** and the truth. FFmpeg decodes media into raw frames and encodes the composed frames; it places nothing. This removes dependence on FFmpeg filters that are GPL-only (`eq`, `boxblur`) and on filter behaviour that the first spike showed is not pixel-stable (the same scene placed through `overlay` expressions differed from the piped version in 630 of 900 frames).
 
 ## 2. The frame plan
@@ -100,8 +100,8 @@ type Layer struct {
 
 **How `core/plan` implements this section (P1-ENG-003).**
 
-- `core/` cannot lay text out, so the natural size of a text or caption bitmap comes from a `plan.Measurer` (the rasterizer, in `engine/raster`) passed in `plan.Options`. `FrameWith(doc, t, opts)` and `WindowWith(doc, from, to, opts)` take it; `Frame` and `Window` are the same with no Measurer, which gives bitmap layers size 0 and anchors a bottom or top caption by its centre on the edge. A caption at `bottom` or `top` is placed with its scaled box's edge on the safe area's edge.
-- `BitmapSpec`, `ResolvedStyle` and `ShapeSpec` are defined in `core/plan`, not in `engine/raster`, so that the plan, the rasterizer and the browser name one thing. `BitmapSpec.Key()` is the SHA-256 of the JSON of the spec plus `plan.BitmapVersion`, which `raster.Version` of §5 must equal.
+- `core/` cannot lay text out, so the natural size of a text or caption bitmap comes from a `plan.Measurer` (the rasterizer, `rasterize.Measure` in `engine/rasterize`) passed in `plan.Options`. `FrameWith(doc, t, opts)` and `WindowWith(doc, from, to, opts)` take it; `Frame` and `Window` are the same with no Measurer, which gives bitmap layers size 0 and anchors a bottom or top caption by its centre on the edge. A caption at `bottom` or `top` is placed with its scaled box's edge on the safe area's edge.
+- `BitmapSpec`, `ResolvedStyle` and `ShapeSpec` are defined in `core/plan`, not in the rasterizer, so that the plan, the rasterizer and the browser name one thing. `BitmapSpec.Key()` is the SHA-256 of the JSON of the spec plus `plan.BitmapVersion` (2 since the Rust rasterizer became the reference, §5.1 item 1).
 - `SafeArea(width, height)` returns a `Rect` rounded to whole pixels: `{65, 269, 950, 979}` for 1080×1920. `Layer.Bitmap` is a pointer and `Layer.Crop` a value, so a media layer has no bitmap and a bitmap layer no crop.
 - `WindowPlan.Revision` is set by the caller. `Window` cuts a window to 300 frames. The per-frame arrays of §10 are `plan.Series`, which encodes as one number when constant. `bitmaps.index` is chosen by the active word, the only thing that changes a bitmap between frames of one item. `audio.gain` is one value per frame.
 - `Audio(doc, from, to)` clips each source to the frames asked for. The gain envelope has a point at each volume keyframe and fade edge, eight straight segments inside a curved easing, and a point one sample before the next keyframe for `hold`. Gain points count output samples from the start of the clipped range.
@@ -434,7 +434,7 @@ With `highlight: "word"`, the active word at frame `r` is the last word whose `s
 ## 5. The rasterizer
 
 ```go
-package raster
+package rasterize // engine/rasterize, the Go client of renderer/vukem-renderer-text
 
 type BitmapSpec struct {
     Kind        string  // "text", "caption", "shape"
@@ -461,10 +461,10 @@ type Bitmap struct {
     WordBoxes      []Rect // captions: box of each word at PixelScale 1, in bitmap coordinates, for the lint and the UI
 }
 
-const Version = 1 // bumped on any change that alters output bytes
+// plan.BitmapVersion is bumped on any change that alters output bytes
 ```
 
-As built (P1-RND-003, aligned with `core/plan` by the follow-up): `BitmapSpec`, `ResolvedStyle` and `ShapeSpec` are defined in `core/plan` (`plan.BitmapSpec` and so on), so the plan, the rasterizer and the browser name one type, and `Key` is `plan.BitmapSpec.Key()`. `raster.Version` must equal `plan.BitmapVersion`; a test fails when they differ. Colours in the spec are strings, `"#RRGGBB"` or `"#RRGGBBAA"`; an empty `BackgroundColor` or `HighlightBackground` means none; a `Highlight` of `"none"` draws the active word like the others. `Kind` is `"text"`, `"caption"` or `"shape"`; for a caption `Text` is ignored and the text is `Words` joined by one space, with a line break before every index of `Breaks`. `Measure(fonts)` is the `plan.Measurer`: it lays the text out and returns exactly the `NaturalW` and `NaturalH` that `Render` gives the same spec, without drawing, and 0 by 0 for a spec `Render` would refuse (a test compares the two for every golden case). `Render` returns `ErrInvalidSpec` for a colour that is not hex, a pixel scale outside (0, 8], a non-positive size, line height or width, a caption with no words or an active word out of range, an unknown kind or shape, and a bitmap over `MaxPixels` (33.5 million). `FontSet.Lookup(family, weight)` returns a `*FontError` with `Code` `E_FONT_UNKNOWN` and the weights that exist. `Bitmap.PNG()` encodes the bitmap as a PNG with straight alpha; the encoding is deterministic. `Cache` (`NewCache(fonts, bytes)`, `Get(spec)`) is the in-process layer of §5.4: an LRU over the pixels, default budget 64 MiB, safe for concurrent use.
+As built (P1-RND-003, aligned with `core/plan` by the follow-up): `BitmapSpec`, `ResolvedStyle` and `ShapeSpec` are defined in `core/plan` (`plan.BitmapSpec` and so on), so the plan, the rasterizer and the browser name one type, and `Key` is `plan.BitmapSpec.Key()`. The version in the key is `plan.BitmapVersion`. Colours in the spec are strings, `"#RRGGBB"` or `"#RRGGBBAA"`; an empty `BackgroundColor` or `HighlightBackground` means none; a `Highlight` of `"none"` draws the active word like the others. `Kind` is `"text"`, `"caption"` or `"shape"`; for a caption `Text` is ignored and the text is `Words` joined by one space, with a line break before every index of `Breaks`. `Measure(fonts)` is the `plan.Measurer`: it lays the text out and returns exactly the `NaturalW` and `NaturalH` that `Render` gives the same spec, without drawing, and 0 by 0 for a spec `Render` would refuse (a test compares the two for every golden case). `Render` returns `ErrInvalidSpec` for a colour that is not hex, a pixel scale outside (0, 8], a non-positive size, line height or width, a caption with no words or an active word out of range, an unknown kind or shape, and a bitmap over `MaxPixels` (33.5 million). `Render` returns a `*FontError` with `Code` `E_FONT_UNKNOWN` and the weights that exist for a family or weight the set does not have. `Bitmap.PNG()` encodes the bitmap as a PNG with straight alpha; the encoding is deterministic. `Cache` (`NewCache(fonts, bytes)`, `Get(spec)`) is the in-process layer of §5.4: an LRU over the pixels, default budget 64 MiB, safe for concurrent use.
 
 ### 5.1 Layout rules
 
@@ -496,7 +496,7 @@ Details fixed by the implementation, where the items above leave room (P1-RND-00
 
 ### 5.2 Fonts
 
-Fonts come only from the bundled set, embedded in the binary under `engine/raster/fonts/` (the files, their weights, sources and checksums are in `FONTS.md` there, the licences in `licenses/fonts/`), and from the project's `fonts` map (BETA). `FontSet.Lookup(family, weight)` returns `E_FONT_UNKNOWN` data for a missing pair. System fonts are never read.
+Fonts come only from the bundled set, embedded in the renderer module from `renderer/fonts/` (the files, their weights, sources and checksums are in `FONTS.md` there, the licences in `licenses/fonts/`), and from the project's `fonts` map (BETA), whose files the host reads by hash and hands to the module (SDD-013 §4.2.1). A missing family, weight or file is `E_FONT_UNKNOWN` data (`*rasterize.FontError`). System fonts are never read.
 
 ### 5.3 Oversampling
 
@@ -517,7 +517,7 @@ func (c *Compositor) Compose(dst *image.RGBA, fp plan.FramePlan, outScale float6
 // The pixels of a layer come from two functions the caller sets: those of a media layer, and the
 // bitmap of a text, caption or shape layer.
 type MediaSource func(l *plan.Layer) (Image, error)
-type BitmapSource func(spec plan.BitmapSpec) (raster.Bitmap, error)
+type BitmapSource func(spec plan.BitmapSpec) (bitmap.Bitmap, error)
 ```
 
 The compositor is `engine/compositor` (pure Go, no I/O, no FFmpeg); `engine/export` owns the decoders that feed it. An `Image` is RGBA with premultiplied alpha and an `Opaque` flag that lets a copy skip blending (a decoded video frame). The frame of a video asset with `has_alpha` (SDD-001 3.2) is not opaque: the decoder reads it as RGBA and premultiplies each frame as it arrives, so it is composed over the layers below (VV-013). `dst` is the project's frame: it is filled with the opaque background first, so it stays opaque.
@@ -705,7 +705,7 @@ The executor, in `web/resources/js/editor/preview/`:
 | Compositor against stored reference frames, same pinned FFmpeg | identical bytes of the composed RGBA frame | `engine/export` golden test: for each case in `engine/export/testdata/golden/<case>/` (a document, tiny media fixtures and `frame-<n>.png` references), compose the listed frames and compare SHA-256 |
 | Compositor on two runs | identical | the same test run twice in one process and across two processes |
 | Compositor with a different FFmpeg build | PSNR at least 50 dB per frame | a CI job that runs the golden cases with the PATH FFmpeg when it differs from the pinned one; reported, not blocking |
-| Rasterizer | identical bytes | `engine/raster/testdata/golden/<case>.png`, one per layout rule of section 5.1, plus right-to-left text, an emoji sequence and a missing glyph (15 cases in `golden_test.go`). The test compares the decoded pixel bytes, not the PNG bytes, because the compressor may change between Go versions; regenerate with `go test ./engine/raster -run Golden -update` |
+| Rasterizer | identical bytes | `engine/rasterize/testdata/golden/<case>.png`, one per layout rule of section 5.1, plus right-to-left text, an emoji sequence and a missing glyph (15 cases in `golden_test.go`). The test compares the decoded pixel bytes, not the PNG bytes, because the compressor may change between Go versions; regenerate with `go test ./engine/rasterize -run Golden -update` (reviewed: a regeneration is a change of output and of `plan.BitmapVersion`) |
 | Preview executor against compositor, during playback | SSIM at least 0.97 on luma per frame at preview resolution; no layer centre displaced by more than 1 pixel | Playwright test: load each golden case in the editor, step the preview to the listed frames without the truth-on-pause overlay, capture the canvas, compare with `ViewFrame` at the same width |
 | Exported file | passes the verification of section 8 step 7; its frames, decoded, have SSIM at least 0.95 against the composed frames | `TestExportReferenceScenes`: each of the three reference scenes with `libopenh264` (`engine/export/testdata/scenes/<name>/` holds the document and the description of the generated media; the golden hashes of 30 frames per scene are in `testdata/golden/<name>.json`) |
 | Audio mix | sample-exact for cases without speed change; within 1 dB RMS per 100 ms window for cases with `atempo` | `engine/audio`: the float WAV of a three-source case with envelopes is pinned by SHA-256 (`TestMixEqualsItsGoldenHash`), the same claim as a stored WAV without committing one; the `atempo` clip is exercised by the `two-clips-cut` export |
@@ -741,7 +741,7 @@ Rules that follow from the measurements:
 
 Fallback, kept in reserve and not needed for the Prototype: exchange frames with FFmpeg as YUV 4:2:0 instead of RGBA (halving the bytes moved and removing the conversion that dominates), with bitmaps blended in YUV; then let FFmpeg overlay a cropped bitmap region for unanimated full-frame clips, the path the first spike proved identical frame by frame to full-frame piping. Either fallback changes only `engine/export`; the plan, the rasterizer and every contract in this document stay.
 
-Rasterizer (P1-RND-003, `engine/raster`, same machine, Go 1.27.4, `go test -bench Caption`): the caption of the reference scene (six words on two lines, Inter 700 at 64 px, stroke 5, shadow blur 6, one highlighted word with its box, 1080 wide frame) takes **3.7 ms** on a cache miss (4.9 ms with one core, 10.8 ms at `PixelScale` 2) and **6 µs** on a hit (hashing the spec and finding the bitmap). The budgets are 5 ms and 0.1 ms. The Linux and macOS numbers are recorded here after the first CI run of the benchmark.
+Rasterizer (P1-RND-003, measured on the Go rasterizer that the Rust one replaced, same machine, Go 1.27.4, `go test -bench Caption`; the Rust rasterizer under `wazero` is measured again on an idle machine, TASK-0226): the caption of the reference scene (six words on two lines, Inter 700 at 64 px, stroke 5, shadow blur 6, one highlighted word with its box, 1080 wide frame) takes **3.7 ms** on a cache miss (4.9 ms with one core, 10.8 ms at `PixelScale` 2) and **6 µs** on a hit (hashing the spec and finding the bitmap). The budgets are 5 ms and 0.1 ms. The Linux and macOS numbers are recorded here after the first CI run of the benchmark.
 
 The measurements came from one Windows machine with other processes running. The Prototype repeats the first row on the Linux and macOS runners and records the numbers here; the first row is also a benchmark in CI (`BenchmarkExportCommonCase`) that fails below 1.5 times real time on the reference runner, `ubuntu-latest` (the job sets `VUKEM_VIDEO_BENCH_MIN_RT=1.5` there; the Windows and macOS runners only report their number, since the Windows runner measured 1.10 times on the same build in the first run of release v0.21.0).
 
@@ -823,7 +823,7 @@ The BETA scenes are new benchmarks in `engine/export/bench_release_test.go` (`go
 ## 13. Acceptance
 
 1. `go test ./core/plan/...` passes with at least 90% statement coverage, including table tests for every formula of section 3 at the boundary frames (first, last, and the frames around each keyframe and transition edge).
-2. `go test ./engine/raster/...` passes; every golden bitmap matches byte for byte on Linux, macOS and Windows runners.
+2. `go test ./engine/rasterize/...` passes; every golden bitmap matches byte for byte on Linux, macOS and Windows runners.
 3. `go test ./engine/export/...` passes the golden frame, audio and export tests of section 11 with the pinned FFmpeg.
 4. The Playwright preview comparison passes for every golden case.
 5. An export of the 60 s reference project completes within NFR-006 and the process stays within NFR-007, measured by the benchmark `go test -bench Export ./engine/export` on the reference machine and recorded in the pull request.

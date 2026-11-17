@@ -13,7 +13,7 @@ import (
 )
 
 // fontDir is where the font files the renderer module embeds live.
-const fontDir = "../raster/fonts"
+const fontDir = "../../renderer/fonts"
 
 // bundledFamily is one bundled family as SDD-004 section 5.1 lists it: a variable font covers every
 // weight from min to max in steps of 100, a static one the weight in min.

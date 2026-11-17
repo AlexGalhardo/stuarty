@@ -38,7 +38,7 @@ jobs:
       matrix:
         include:
           - { pkg: ./core/timeval, target: FuzzParse }
-          - { pkg: ./engine/raster, target: FuzzFontHeader }
+          - { pkg: ./engine/rasterize, target: FuzzFontHeader }
           - { pkg: ./service, target: FuzzTemplateArchive }
           - { pkg: ./web/app/servicetest, target: FuzzBundleArchive }
           - { pkg: ./service/pathguard, target: FuzzCanonicalizeImportPath }
@@ -103,7 +103,7 @@ jobs:
           - { target: FuzzApplyBatch, pkg: ./core/command }
           - { target: FuzzSniffMedia, pkg: ./engine/ffmpeg }
           - { target: FuzzFFArgsCheck, pkg: ./engine/ffmpeg }
-          - { target: FuzzFontHeader, pkg: ./engine/raster }
+          - { target: FuzzFontHeader, pkg: ./engine/rasterize }
     env:
       LONG_FUZZTIME: ${{ inputs.long_fuzztime || '30m' }}
     defaults:

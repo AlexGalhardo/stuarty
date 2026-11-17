@@ -12,7 +12,7 @@ import (
 	"github.com/AlexGalhardo/vukem-video/core/plan"
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
 	"github.com/AlexGalhardo/vukem-video/engine/ingest"
-	"github.com/AlexGalhardo/vukem-video/engine/raster"
+	"github.com/AlexGalhardo/vukem-video/engine/rasterize"
 	"github.com/AlexGalhardo/vukem-video/service"
 )
 
@@ -25,7 +25,7 @@ type rasterMeasurer struct{ workspace string }
 var _ lint.Measurer = rasterMeasurer{}
 
 func (m rasterMeasurer) Measure(doc *timeline.Document, it *timeline.Item) (lint.Rect, bool) {
-	fp := plan.FrameWith(doc, it.Start, plan.Options{Measure: raster.Measure(service.FontSetFor(m.workspace, doc))})
+	fp := plan.FrameWith(doc, it.Start, plan.Options{Measure: rasterize.Measure(service.FontSetFor(m.workspace, doc))})
 
 	for i := range fp.Layers {
 		l := &fp.Layers[i]

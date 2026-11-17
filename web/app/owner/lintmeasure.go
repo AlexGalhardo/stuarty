@@ -7,7 +7,7 @@ import (
 	"github.com/AlexGalhardo/vukem-video/core/lint"
 	"github.com/AlexGalhardo/vukem-video/core/plan"
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/engine/raster"
+	"github.com/AlexGalhardo/vukem-video/engine/rasterize"
 	"github.com/AlexGalhardo/vukem-video/service"
 )
 
@@ -24,7 +24,7 @@ var _ lint.DocumentMeasurer = lintMeasurer{}
 // Measure plans the frame of the item on its own: the fallback for a document that
 // was not prepared with ForDocument.
 func (m lintMeasurer) Measure(doc *timeline.Document, it *timeline.Item) (lint.Rect, bool) {
-	fp := plan.FrameWith(doc, it.Start, plan.Options{Measure: raster.Measure(service.FontSetFor(m.workspace, doc))})
+	fp := plan.FrameWith(doc, it.Start, plan.Options{Measure: rasterize.Measure(service.FontSetFor(m.workspace, doc))})
 
 	return boxInPlan(&fp, it.ID)
 }
@@ -32,7 +32,7 @@ func (m lintMeasurer) Measure(doc *timeline.Document, it *timeline.Item) (lint.R
 // ForDocument prepares the font set and the frame planner once; the returned
 // measurer also remembers each frame and box it computed. It serves one lint run.
 func (m lintMeasurer) ForDocument(doc *timeline.Document) lint.Measurer {
-	measure := memoMeasure(raster.Measure(service.FontSetFor(m.workspace, doc)))
+	measure := memoMeasure(rasterize.Measure(service.FontSetFor(m.workspace, doc)))
 
 	return &docMeasurer{
 		fallback: m,

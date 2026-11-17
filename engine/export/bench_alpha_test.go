@@ -15,7 +15,7 @@ import (
 	"github.com/AlexGalhardo/vukem-video/core/plan"
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
 	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
-	"github.com/AlexGalhardo/vukem-video/engine/raster"
+	"github.com/AlexGalhardo/vukem-video/engine/rasterize"
 )
 
 // The benchmarks of the ALPHA phase run on the project of NFR-009: 5 minutes at 30 fps, 200 items and
@@ -64,7 +64,7 @@ func scaleDoc(tb testing.TB) *timeline.Document {
 			useAsset(doc, id, in)
 		case timeline.AssetAudio:
 			delete(doc.Assets, id)
-		case timeline.AssetImage:
+		case timeline.AssetImage, timeline.AssetLUT:
 		}
 	}
 
@@ -160,7 +160,7 @@ func BenchmarkPlanWindow300Scale(b *testing.B) {
 	setup(b)
 
 	doc := scaleDoc(b)
-	opts := plan.Options{Measure: raster.Measure(raster.Bundled())}
+	opts := plan.Options{Measure: rasterize.Measure(rasterize.Bundled())}
 
 	b.ReportAllocs()
 

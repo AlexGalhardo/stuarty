@@ -211,7 +211,7 @@ TextStyle:
 | `max_width` | number | 0.86 × frame width | pixels; lines wrap at this width |
 | `uppercase` | boolean | false | render in upper case |
 
-The names of the bundled families are fixed by the font task of the ROADMAP and listed in `engine/raster/fonts/FONTS.md`; `"Inter"` is the default and must be part of the set.
+The names of the bundled families are fixed by the font task of the ROADMAP and listed in `renderer/fonts/FONTS.md`; `"Inter"` is the default and must be part of the set.
 
 A `shape` item:
 
@@ -297,7 +297,7 @@ When a property has keyframes they define its value: before the first keyframe t
 | key | string | the family name used in styles |
 | `files` | array of `{"weight": int, "hash": "sha256:..."}` | font files, stored in the workspace `fonts/` directory by hash |
 
-The weights of the bundled families are those of `engine/raster/fonts/FONTS.md`: for example Anton ships 400 only, so a style with `font_family` Anton needs `font_weight` 400. User fonts are a BETA feature (RF-053, the brand kit). In the Prototype and ALPHA the map had to be empty; BETA relaxes exactly that rule. The rules of an entry:
+The weights of the bundled families are those of `renderer/fonts/FONTS.md`: for example Anton ships 400 only, so a style with `font_family` Anton needs `font_weight` 400. User fonts are a BETA feature (RF-053, the brand kit). In the Prototype and ALPHA the map had to be empty; BETA relaxes exactly that rule. The rules of an entry:
 
 - the key must not be the name of a bundled family (`V_FONT`);
 - `files` has at least one entry, each `weight` is 100 to 900 in steps of 100, and no weight appears twice in one family (`V_FONT`);
@@ -346,7 +346,7 @@ TemplateInfo, at the top of a template document: `{"description": string, "color
 | `V_KEYFRAMES` | keyframe rules of section 3.8 hold |
 | `V_WORDS` | caption word rules of section 3.7 hold |
 | `V_MARKERS` | marker rules of section 3.4 hold: at most 200, each frame inside the item, frames strictly increasing; the same for the `markers` of the document, whose frames lie from 0 to the frame limit |
-| `V_FONT` | every `font_family` and weight exists in the bundled set or in `fonts`; no key of `fonts` is a bundled family and no family repeats a weight (section 3.9); the effective weight (the given one, else 700) must be one the family ships, as listed in `engine/raster/fonts/FONTS.md` and kept in `timeline.BundledWeights` by a test |
+| `V_FONT` | every `font_family` and weight exists in the bundled set or in `fonts`; no key of `fonts` is a bundled family and no family repeats a weight (section 3.9); the effective weight (the given one, else 700) must be one the family ships, as listed in `renderer/fonts/FONTS.md` and kept in `timeline.BundledWeights` by a test |
 | `V_SLOT` | slot names are unique and each slot kind matches its item type |
 | `V_COLOR_REF` | every `"$name"` colour reference exists in `template.colors` |
 | `V_LIMITS` | at most 50 tracks, 500 items, 200 assets and 5,000 caption words in the document |

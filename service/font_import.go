@@ -20,7 +20,7 @@ import (
 	"github.com/AlexGalhardo/vukem-video/core/plan"
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
 	"github.com/AlexGalhardo/vukem-video/engine/frame"
-	"github.com/AlexGalhardo/vukem-video/engine/raster"
+	"github.com/AlexGalhardo/vukem-video/engine/rasterize"
 	enginestore "github.com/AlexGalhardo/vukem-video/engine/store"
 )
 
@@ -28,16 +28,16 @@ import (
 // of the document, read by hash from the font store of the workspace (SDD-007 section 7.7). A
 // document without user fonts gets the shared bundled set. The set is never shared between
 // documents, so two projects that name a family alike never see each other's files.
-func FontSetFor(workspace string, doc *timeline.Document) *raster.FontSet {
+func FontSetFor(workspace string, doc *timeline.Document) *rasterize.FontSet {
 	if workspace == "" || doc == nil || len(doc.Fonts) == 0 {
-		return raster.Bundled()
+		return rasterize.Bundled()
 	}
 
-	return raster.NewFontSet(doc.Fonts, enginestore.NewFonts(workspace).Source())
+	return rasterize.NewFontSet(doc.Fonts, enginestore.NewFonts(workspace).Source())
 }
 
 // fontSet is FontSetFor for the workspace of the service.
-func (s *svc) fontSet(doc *timeline.Document) *raster.FontSet {
+func (s *svc) fontSet(doc *timeline.Document) *rasterize.FontSet {
 	return FontSetFor(s.workspace, doc)
 }
 
@@ -63,9 +63,9 @@ func (s *svc) hasFont(hash string) bool {
 }
 
 func fromFont(err error) *Error {
-	if ife, ok := errors.AsType[*raster.InvalidFontError](err); ok {
+	if ife, ok := errors.AsType[*rasterize.InvalidFontError](err); ok {
 		return newError(ife.Code(), "the font file is refused: %s.", ife.Message).
-			withHint("use a TrueType or OpenType font of at most %d MiB", raster.MaxFontBytes>>20).
+			withHint("use a TrueType or OpenType font of at most %d MiB", rasterize.MaxFontBytes>>20).
 			withDetail("reason", ife.Reason)
 	}
 
@@ -332,7 +332,7 @@ func (s *svc) copyBundleFont(p *bundleParts, f bundleFile) *Error {
 
 	defer func() { _ = rc.Close() }()
 
-	data, err := io.ReadAll(io.LimitReader(rc, raster.MaxFontBytes+1))
+	data, err := io.ReadAll(io.LimitReader(rc, rasterize.MaxFontBytes+1))
 	if err != nil {
 		return bundleRefused("a file cannot be read").withDetail("hash", f.hash)
 	}
@@ -353,7 +353,7 @@ func (s *svc) copyBundleFont(p *bundleParts, f bundleFile) *Error {
 // font cap, so an oversized font is refused before it is hashed to the end.
 func (s *svc) bundleFileLimit(f bundleFile) int64 {
 	if f.isFont() {
-		return min(s.limits.MaxImportBytes, raster.MaxFontBytes)
+		return min(s.limits.MaxImportBytes, rasterize.MaxFontBytes)
 	}
 
 	return s.limits.MaxImportBytes
@@ -432,17 +432,17 @@ func (s *svc) FontImport(ctx context.Context, req FontImportRequest) (*FontImpor
 		return nil, newError("E_FILE_NOT_FOUND", "the file cannot be read.").withPath("path")
 	}
 
-	if st.Size() > raster.MaxFontBytes {
+	if st.Size() > rasterize.MaxFontBytes {
 		return nil, newError(
-			raster.CodeFontInvalid,
+			rasterize.CodeFontInvalid,
 			"the font file is refused: it is over %d MiB.",
-			raster.MaxFontBytes>>20,
+			rasterize.MaxFontBytes>>20,
 		).
-			withHint("use a TrueType or OpenType font of at most %d MiB", raster.MaxFontBytes>>20).
+			withHint("use a TrueType or OpenType font of at most %d MiB", rasterize.MaxFontBytes>>20).
 			withDetail("reason", "too_large")
 	}
 
-	data, rerr := io.ReadAll(io.LimitReader(file, raster.MaxFontBytes+1))
+	data, rerr := io.ReadAll(io.LimitReader(file, rasterize.MaxFontBytes+1))
 	if rerr != nil {
 		return nil, newError("E_FILE_NOT_FOUND", "the file cannot be read.").withPath("path")
 	}

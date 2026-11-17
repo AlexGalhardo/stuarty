@@ -12,7 +12,7 @@ import (
 	"github.com/AlexGalhardo/vukem-video/core/plan"
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
 	"github.com/AlexGalhardo/vukem-video/engine/cache"
-	"github.com/AlexGalhardo/vukem-video/engine/raster"
+	"github.com/AlexGalhardo/vukem-video/engine/rasterize"
 )
 
 // PlanWindowRequest asks for the render plan of frames From up to, not
@@ -61,15 +61,15 @@ type bitmaps struct {
 	mu     sync.Mutex
 	specs  map[bitmapID]knownBitmap
 	order  []bitmapID
-	cache  *raster.Cache
-	caches map[string]*raster.Cache // by font fingerprint, user fonts only
+	cache  *rasterize.Cache
+	caches map[string]*rasterize.Cache // by font fingerprint, user fonts only
 }
 
 type bitmapID struct{ project, key string }
 
 type knownBitmap struct {
 	spec        plan.BitmapSpec
-	fonts       *raster.FontSet
+	fonts       *rasterize.FontSet
 	fingerprint string // of every user font of the document; empty with none
 }
 
@@ -78,7 +78,12 @@ const (
 	fontCacheBudget = 16 << 20
 )
 
-func (b *bitmaps) remember(project, key string, spec plan.BitmapSpec, doc *timeline.Document, fonts *raster.FontSet) {
+func (b *bitmaps) remember(
+	project, key string,
+	spec plan.BitmapSpec,
+	doc *timeline.Document,
+	fonts *rasterize.FontSet,
+) {
 	id := bitmapID{project, key}
 
 	b.mu.Lock()
@@ -112,13 +117,13 @@ func (b *bitmaps) known(project, key string) (knownBitmap, bool) {
 
 // rasterCache returns the in-process cache that draws bitmaps of documents with the same user
 // font files as k.
-func (b *bitmaps) rasterCache(k *knownBitmap) *raster.Cache {
+func (b *bitmaps) rasterCache(k *knownBitmap) *rasterize.Cache {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
 	if k.fingerprint == "" {
 		if b.cache == nil {
-			b.cache = raster.NewCache(raster.Bundled(), 0)
+			b.cache = rasterize.NewCache(rasterize.Bundled(), 0)
 		}
 
 		return b.cache
@@ -129,10 +134,10 @@ func (b *bitmaps) rasterCache(k *knownBitmap) *raster.Cache {
 	}
 
 	if b.caches == nil || len(b.caches) >= maxFontCaches {
-		b.caches = map[string]*raster.Cache{}
+		b.caches = map[string]*rasterize.Cache{}
 	}
 
-	c := raster.NewCache(k.fonts, fontCacheBudget)
+	c := rasterize.NewCache(k.fonts, fontCacheBudget)
 	b.caches[k.fingerprint] = c
 
 	return c
@@ -186,7 +191,7 @@ func (s *svc) PlanWindow(ctx context.Context, req PlanWindowRequest) (*PlanWindo
 	}
 
 	fonts := s.fontSet(doc)
-	opts := plan.Options{Measure: raster.Measure(fonts)}
+	opts := plan.Options{Measure: rasterize.Measure(fonts)}
 
 	scale, werr := planOutputScale(req.Width, doc.Settings.Width)
 	if werr != nil {
@@ -212,7 +217,7 @@ func (s *svc) registerBitmaps(
 	ctx context.Context,
 	row *ProjectRow,
 	doc *timeline.Document,
-	fonts *raster.FontSet,
+	fonts *rasterize.FontSet,
 	opts plan.Options,
 	w *plan.WindowPlan,
 	from, until int,

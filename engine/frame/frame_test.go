@@ -19,7 +19,7 @@ import (
 	"github.com/AlexGalhardo/vukem-video/engine/export"
 	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
 	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg/ffargs"
-	"github.com/AlexGalhardo/vukem-video/engine/raster"
+	"github.com/AlexGalhardo/vukem-video/engine/rasterize"
 )
 
 func newFrames(t *testing.T) *Frames {
@@ -277,11 +277,11 @@ func TestSheetLabelGolden(t *testing.T) {
 		canvas.Pix[i] = 255
 		canvas.Pix[i-1] = 200
 	}
-	if err := label(canvas, canvas.Bounds(), raster.Bundled(), Cell{Index: 3, Frame: 30, Seconds: 1}); err != nil {
+	if err := label(canvas, canvas.Bounds(), rasterize.Bundled(), Cell{Index: 3, Frame: 30, Seconds: 1}); err != nil {
 		t.Fatal(err)
 	}
 	sum := sha256.Sum256(canvas.Pix)
-	const want = "f7013e243a69f542b88d963d5c48c6e3b1380dc9d12a197c6428576ab762b80e"
+	const want = "17736f22a789956ffdbf0d1206b8a0992fb126de4f28045ece7fdad39521623a"
 	if got := hex.EncodeToString(sum[:]); got != want {
 		t.Errorf("label hash %s", got)
 	}

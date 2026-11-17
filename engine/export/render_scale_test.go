@@ -10,7 +10,7 @@ import (
 	"github.com/AlexGalhardo/vukem-video/core/plan"
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
 	"github.com/AlexGalhardo/vukem-video/engine/compositor"
-	"github.com/AlexGalhardo/vukem-video/engine/raster"
+	"github.com/AlexGalhardo/vukem-video/engine/rasterize"
 )
 
 // TestRenderPlansTextAtTheOutputScale: a frame asked for at 2.5 times the project size draws the text
@@ -38,13 +38,13 @@ func TestRenderPlansTextAtTheOutputScale(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	fp := plan.FrameWith(doc, 0, plan.Options{Measure: raster.Measure(raster.Bundled()), OutputScale: outScale})
+	fp := plan.FrameWith(doc, 0, plan.Options{Measure: rasterize.Measure(rasterize.Bundled()), OutputScale: outScale})
 	if len(fp.Layers) != 1 || fp.Layers[0].Bitmap == nil || fp.Layers[0].Bitmap.PixelScale != outScale {
 		t.Fatalf("the plan for the text is %+v, want one bitmap rasterized at %v", fp.Layers, outScale)
 	}
 
 	want := image.NewRGBA(got.Bounds())
-	comp := &compositor.Compositor{Bitmaps: raster.NewCache(raster.Bundled(), 0).Get}
+	comp := &compositor.Compositor{Bitmaps: rasterize.NewCache(rasterize.Bundled(), 0).Get}
 	if err := comp.Compose(want, fp, outScale); err != nil {
 		t.Fatal(err)
 	}

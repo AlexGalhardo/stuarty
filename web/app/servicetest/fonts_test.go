@@ -19,7 +19,7 @@ import (
 func bundledFontFile(t *testing.T, name string) []byte {
 	t.Helper()
 
-	data, err := os.ReadFile(filepath.Join("..", "..", "..", "engine", "raster", "fonts", name))
+	data, err := os.ReadFile(filepath.Join("..", "..", "..", "renderer", "fonts", name))
 	if err != nil {
 		t.Fatal(err)
 	}

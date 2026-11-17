@@ -8,7 +8,7 @@ import (
 
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
 	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
-	"github.com/AlexGalhardo/vukem-video/engine/raster"
+	"github.com/AlexGalhardo/vukem-video/engine/rasterize"
 )
 
 // RenderConfig is what a Renderer needs: the same inputs as an export, without the output.
@@ -17,7 +17,7 @@ type RenderConfig struct {
 	Doc          *timeline.Document
 	JobID        string
 	ArtifactsDir string
-	Fonts        *raster.FontSet // the bundled fonts when nil
+	Fonts        *rasterize.FontSet // the bundled fonts when nil
 	Bands        int
 }
 

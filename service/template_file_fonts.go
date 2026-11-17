@@ -7,7 +7,7 @@ import (
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/engine/raster"
+	"github.com/AlexGalhardo/vukem-video/engine/rasterize"
 )
 
 // templateFontFiles reads the font files a template document names, for its template file (ADR-0022
@@ -94,7 +94,7 @@ func (s *svc) storeTemplateFonts(entries map[string][]byte, dryRun bool) ([]stri
 			return nil, archiveRefused("a font does not match its name")
 		}
 
-		if err := raster.ValidateFont(data); err != nil {
+		if err := rasterize.ValidateFont(data); err != nil {
 			return nil, fromFont(err)
 		}
 	}

@@ -28,7 +28,7 @@ func hostLocked(ctx context.Context) (*renderhost.Host, error) {
 		return engine.host, nil
 	}
 
-	h, err := renderhost.New(ctx, renderhost.Config{})
+	h, err := renderhost.New(ctx, renderhost.Config{Uncancellable: true})
 	if err != nil {
 		return nil, fmt.Errorf("rasterize: starting the renderer module: %w", err)
 	}

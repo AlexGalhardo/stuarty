@@ -13,7 +13,7 @@ import (
 	"golang.org/x/image/math/f64"
 
 	"github.com/AlexGalhardo/vukem-video/core/plan"
-	"github.com/AlexGalhardo/vukem-video/engine/raster"
+	"github.com/AlexGalhardo/vukem-video/engine/rasterize"
 )
 
 // pattern is an opaque image whose pixels are all different enough to expose a misplaced one.
@@ -173,16 +173,18 @@ func TestColourMatrix(t *testing.T) {
 func TestBitmapLayerIsCentredOnTheBlockAndPremultiplied(t *testing.T) {
 	t.Parallel()
 	spec := plan.BitmapSpec{
-		Kind: raster.KindShape, ActiveWord: -1, PixelScale: 1,
-		Shape: &plan.ShapeSpec{Shape: raster.ShapeRect, Width: 40, Height: 20, Fill: "#FF0000", StrokeColor: "#000000"},
+		Kind: rasterize.KindShape, ActiveWord: -1, PixelScale: 1,
+		Shape: &plan.ShapeSpec{
+			Shape: rasterize.ShapeRect, Width: 40, Height: 20, Fill: "#FF0000", StrokeColor: "#000000",
+		},
 	}
-	bm, err := raster.Render(spec, raster.Bundled())
+	bm, err := rasterize.Render(spec, rasterize.Bundled())
 	if err != nil {
 		t.Fatal(err)
 	}
 	c := &Compositor{
 		Bands:   1,
-		Bitmaps: func(plan.BitmapSpec) (raster.Bitmap, error) { return bm, nil },
+		Bitmaps: func(plan.BitmapSpec) (rasterize.Bitmap, error) { return bm, nil },
 	}
 	dst := image.NewRGBA(image.Rect(0, 0, 100, 100))
 	l := plan.Layer{

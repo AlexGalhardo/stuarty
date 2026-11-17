@@ -140,7 +140,7 @@ vv cli-bundle-export bundle:export --project "$project" --out "$work/project.vvb
 vv cli-bundle-import bundle:import "$work/project.vvbundle" --as-new
 
 log "CLI session: font import, template, brand kit"
-vv cli-font-import font:import "$root/engine/raster/fonts/Anton-Regular.ttf" --json
+vv cli-font-import font:import "$root/renderer/fonts/Anton-Regular.ttf" --json
 font_hash="$(json_field hash "$work/cli-font-import.out")"
 [ -n "$font_hash" ] || die "font:import printed no hash"
 # A template carries no media, so it comes from an empty project.

@@ -12,7 +12,7 @@ type Rect struct{ X0, Y0, X1, Y1 float64 }
 
 // Measurer gives the box of a visual item: for text and captions every line of the
 // widest layout, with rotation and scale applied (SDD-004 §5). The rasterizer of
-// engine/raster implements it for the service; core/lint does not import engine, so a
+// engine/rasterize implements it for the service; core/lint does not import engine, so a
 // test supplies a fake. ok is false when the item cannot be measured, and the rules
 // that need the box then say nothing.
 type Measurer interface {

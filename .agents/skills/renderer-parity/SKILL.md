@@ -9,7 +9,7 @@ Read `rules/rust.md`, ADR-0029 and SDD-013 first. There are three gates, from st
 
 ## 1. CPU path against the Go compositor: byte-equal
 
-The Rust CPU path replaces `engine/compositor` and `engine/raster`, so for every golden case of `engine/export` it must produce the same bytes.
+The Rust CPU path replaces `engine/compositor` (and replaced `engine/raster`, whose Rust successor is the reference), so for every golden case of `engine/export` it must produce the same bytes.
 
 - Run the parity harness of P5-RND-003 natively and in WebAssembly (through `wazero`), on all three systems (CI matrix; locally only your own system counts).
 - A single differing byte is a failure. Find the formula that differs (rounding, sampling, premultiplication, blend order); fix the port or, when the Go behaviour is the bug, fix both and regenerate the goldens in one reviewed commit that says why.

@@ -19,7 +19,6 @@ Linked into the `vukem-video` binary, collected for the six release targets.
 | github.com/go-logr/logr | v1.4.4 | Apache-2.0 | copyright notice that is included in or attached to the work | [LICENSE](<licenses/go-modules/github.com/go-logr/logr@v1.4.4/LICENSE>) | - |
 | github.com/go-logr/stdr | v1.2.2 | Apache-2.0 | copyright notice that is included in or attached to the work | [LICENSE](<licenses/go-modules/github.com/go-logr/stdr@v1.2.2/LICENSE>) | - |
 | github.com/go-ole/go-ole | v1.3.0 | MIT | Copyright © 2013-2017 Yasuhiro Matsumoto, <mattn.jp@gmail.com> | [LICENSE](<licenses/go-modules/github.com/go-ole/go-ole@v1.3.0/LICENSE>) | - |
-| github.com/go-text/typesetting | v0.3.5 | Unlicense | Copyright 2021 The go-text authors | [LICENSE](<licenses/go-modules/github.com/go-text/typesetting@v0.3.5/LICENSE>) | - |
 | github.com/godbus/dbus/v5 | v5.2.2 | BSD-2-Clause | Copyright (c) 2013, Georg Reinke (\<guelfey at gmail dot com\>), Google | [LICENSE](<licenses/go-modules/github.com/godbus/dbus/v5@v5.2.2/LICENSE>) | - |
 | github.com/google/jsonschema-go | v0.4.3 | MIT | Copyright (c) 2025 JSON Schema Go Project Authors | [LICENSE](<licenses/go-modules/github.com/google/jsonschema-go@v0.4.3/LICENSE>) | - |
 | github.com/google/uuid | v1.6.0 | BSD-3-Clause | Copyright (c) 2009,2014 Google Inc. All rights reserved. | [LICENSE](<licenses/go-modules/github.com/google/uuid@v1.6.0/LICENSE>) | - |
@@ -46,7 +45,6 @@ Linked into the `vukem-video` binary, collected for the six release targets.
 | go.opentelemetry.io/otel/trace | v1.47.0 | Apache-2.0 | copyright notice that is included in or attached to the work | [LICENSE](<licenses/go-modules/go.opentelemetry.io/otel/trace@v1.47.0/LICENSE>) | - |
 | go.opentelemetry.io/proto/otlp | v1.11.0 | Apache-2.0 | copyright notice that is included in or attached to the work | [LICENSE](<licenses/go-modules/go.opentelemetry.io/proto/otlp@v1.11.0/LICENSE>) | - |
 | golang.org/x/crypto | v0.59.0 | BSD-3-Clause | Copyright 2009 The Go Authors. | [LICENSE](<licenses/go-modules/golang.org/x/crypto@v0.59.0/LICENSE>) | - |
-| golang.org/x/image | v0.38.0 | BSD-3-Clause | Copyright 2009 The Go Authors. | [LICENSE](<licenses/go-modules/golang.org/x/image@v0.38.0/LICENSE>) | - |
 | golang.org/x/net | v0.62.0 | BSD-3-Clause | Copyright 2009 The Go Authors. | [LICENSE](<licenses/go-modules/golang.org/x/net@v0.62.0/LICENSE>) | - |
 | golang.org/x/oauth2 | v0.36.0 | BSD-3-Clause | Copyright 2009 The Go Authors. | [LICENSE](<licenses/go-modules/golang.org/x/oauth2@v0.36.0/LICENSE>) | - |
 | golang.org/x/sync | v0.25.0 | BSD-3-Clause | Copyright 2009 The Go Authors. | [LICENSE](<licenses/go-modules/golang.org/x/sync@v0.25.0/LICENSE>) | - |
@@ -278,7 +276,7 @@ Source copied into this repository.
 
 | Name | Version | Licence | Copyright | Licence text | Notes |
 | --- | --- | --- | --- | --- | --- |
-| golang.org/x/image/vector (rasterizer, floating-point path) | v0.23.0 | BSD-3-Clause | Copyright 2009 The Go Authors | [x-image-vector-BSD-3-Clause.txt](<licenses/vendored/x-image-vector-BSD-3-Clause.txt>) | shipped in: archive, image; copied, with changes, as engine/raster/internal/scan |
+| golang.org/x/image/vector (rasterizer, floating-point path) | v0.23.0 | BSD-3-Clause | Copyright 2009 The Go Authors | [x-image-vector-BSD-3-Clause.txt](<licenses/vendored/x-image-vector-BSD-3-Clause.txt>) | shipped in: archive, image; ported to Rust as renderer/vukem-renderer-text/src/scan.rs (it was engine/raster/internal/scan) |
 
 ## External programs
 

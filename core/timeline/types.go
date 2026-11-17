@@ -439,7 +439,7 @@ type TemplateInfo struct {
 }
 
 // BundledFamilies are the font families shipped in the binary (ADR-0012). The
-// weights shipped per family are listed in engine/raster/fonts/FONTS.md; until that
+// weights shipped per family are listed in renderer/fonts/FONTS.md; until that
 // file exists Validate checks the weight only for user fonts.
 var BundledFamilies = []string{"Inter", "Montserrat", "Anton", "Bebas Neue", "Playfair Display", "JetBrains Mono"}
 

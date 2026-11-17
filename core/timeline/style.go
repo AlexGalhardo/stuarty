@@ -7,7 +7,7 @@ import (
 )
 
 // BundledWeights lists the weights shipped for each bundled family, as in
-// engine/raster/fonts/FONTS.md (a test keeps the two in step). The variable fonts
+// renderer/fonts/FONTS.md (a test keeps the two in step). The variable fonts
 // cover every multiple of 100 in their range.
 var BundledWeights = map[string][]int{
 	"Inter":            {100, 200, 300, 400, 500, 600, 700, 800, 900},
