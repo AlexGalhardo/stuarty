@@ -30,6 +30,7 @@ import {
 	type Catalog,
 	catalogFixtureProblems,
 	compareCatalogs,
+	duplicateKeys,
 	flatten,
 	type Leaf,
 	missingKeys,
@@ -85,6 +86,16 @@ function isExempt(file: string): boolean {
 
 function loadCatalog(name: string): Catalog {
 	return JSON.parse(readFileSync(join(webRoot, "resources/lang", name), "utf8")) as Catalog;
+}
+
+function catalogDuplicates(name: string): Finding[] {
+	const text = readFileSync(join(webRoot, "resources/lang", name), "utf8");
+	return duplicateKeys(text, `resources/lang/${name}`).map((p) => ({
+		file: `resources/lang/${name}`,
+		line: 0,
+		rule: p.rule,
+		message: p.message,
+	}));
 }
 
 function literalText(n: Node): string | null {
@@ -301,7 +312,7 @@ function checkFixtures(catalog: Map<string, Leaf>): string[] {
 		}
 	}
 	for (const name of cases) {
-		const [rule, kind] = name.split("-");
+		const [rule, kind] = [name.split("-")[0] as string, name.split("-").pop() as string];
 		if (existsSync(join(dir, name, "en.json"))) {
 			const own = catalogFixtureProblems(join(dir, name), SAME_IN_PORTUGUESE_FIXTURE).map((p) => p.rule);
 			if (kind === "fail" && !own.includes(rule.toUpperCase())) {
@@ -356,6 +367,7 @@ const usage: Usage = { keys: [], prefixes: [] };
 const tree = scan(webRoot, join(webRoot, "tsconfig.json"), en, usage, (file) =>
 	file.includes("/resources/js/"),
 );
+tree.push(...catalogDuplicates("en.json"), ...catalogDuplicates("pt-BR.json"));
 tree.push(...checkUsage(en, usage), ...unusedKeys(en, usage), ...registryTitles(en));
 for (const p of [
 	...compareCatalogs(en, pt, "pt-BR"),

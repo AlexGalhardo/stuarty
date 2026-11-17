@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 
 import {
 	compareCatalogs,
+	duplicateKeys,
 	flatten,
 	placeholders,
 	untranslated,
@@ -63,5 +64,27 @@ describe("untranslated (I7)", () => {
 	test("passes when the same text is on the allowlist or translated", () => {
 		const pt = flatten({ title: "Exportar", name: "Vukem", n: { one: "1 tarefa", other: "{count} tarefas" } });
 		expect(untranslated(en, pt, "pt-BR", new Set(["name"]))).toEqual([]);
+	});
+});
+
+describe("duplicateKeys (I1)", () => {
+	test("reports a repeated key with its path and both lines", () => {
+		const text = '{\n"a": {\n"x": "1",\n"y": "2",\n"x": "3"\n},\n"b": "4"\n}';
+		const problems = duplicateKeys(text, "en.json");
+		expect(problems).toHaveLength(1);
+		expect(problems[0]?.rule).toBe("I1");
+		expect(problems[0]?.message).toBe("en.json: duplicate key a.x on lines 3 and 5");
+	});
+
+	test("the same key in different objects, and values equal to keys, pass", () => {
+		const text = '{"a": {"x": "x"}, "b": {"x": "a"}, "c": ["x", {"x": 1}, {"x": 2}]}';
+		expect(duplicateKeys(text, "en.json")).toEqual([]);
+	});
+
+	test("a repeated top-level key and escaped quotes", () => {
+		const text = '{"k": "say \\"k\\"", "k": "b"}';
+		expect(duplicateKeys(text, "f").map((p) => p.message)).toEqual([
+			"f: duplicate key k on lines 1 and 1",
+		]);
 	});
 });

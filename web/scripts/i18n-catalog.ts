@@ -103,6 +103,87 @@ export function compareCatalogs(
 	return problems;
 }
 
+// JSON.parse keeps only the last of two equal keys in one object, so a repeated
+// key is invisible after parsing. This scans the text, one key set per object,
+// and reports the key path with both line numbers (rule I1).
+export function duplicateKeys(text: string, file: string): Problem[] {
+	const problems: Problem[] = [];
+	interface Frame {
+		isObject: boolean;
+		path: string;
+		seen: Map<string, number>;
+		expectKey: boolean;
+	}
+	const stack: Frame[] = [];
+	let line = 1;
+	let i = 0;
+	let pendingKey: { name: string; line: number } | null = null;
+	const readString = (): string => {
+		let out = "";
+		i++;
+		while (i < text.length && text[i] !== '"') {
+			if (text[i] === "\\") {
+				out += text.slice(i, i + 2);
+				i += 2;
+				continue;
+			}
+			out += text[i];
+			i++;
+		}
+		i++;
+		return out;
+	};
+	const open = (isObject: boolean): void => {
+		const parent = stack[stack.length - 1];
+		const path = pendingKey === null ? "" : parent?.path ? `${parent.path}.${pendingKey.name}` : pendingKey.name;
+		pendingKey = null;
+		stack.push({ isObject, path, seen: new Map(), expectKey: isObject });
+	};
+	while (i < text.length) {
+		const c = text[i] as string;
+		if (c === "\n") {
+			line++;
+			i++;
+		} else if (c === '"') {
+			const startLine = line;
+			const value = readString();
+			const top = stack[stack.length - 1];
+			if (top?.isObject && top.expectKey) {
+				const first = top.seen.get(value);
+				const keyPath = top.path === "" ? value : `${top.path}.${value}`;
+				if (first !== undefined) {
+					problems.push({
+						rule: "I1",
+						message: `${file}: duplicate key ${keyPath} on lines ${first} and ${startLine}`,
+					});
+				} else {
+					top.seen.set(value, startLine);
+				}
+				top.expectKey = false;
+				pendingKey = { name: value, line: startLine };
+			}
+		} else if (c === "{") {
+			open(true);
+			i++;
+		} else if (c === "[") {
+			open(false);
+			i++;
+		} else if (c === "}" || c === "]") {
+			stack.pop();
+			pendingKey = null;
+			i++;
+		} else if (c === ",") {
+			const top = stack[stack.length - 1];
+			if (top?.isObject) top.expectKey = true;
+			pendingKey = null;
+			i++;
+		} else {
+			i++;
+		}
+	}
+	return problems;
+}
+
 // I7 (proposed, not yet in SDD-012 section 16.4): a key whose text is the same
 // in both locales is an untranslated placeholder unless it is on the
 // allowlist, which holds names, codes and formats that read the same in
@@ -142,13 +223,17 @@ export const RULES: readonly string[] = ["I1", "I2", "I3", "I4", "I5", "I7"];
 // Fixtures of the catalogue rules hold en.json and pt-BR.json (I1, I2, I7) or
 // en.json and expected.json, the list of keys the registry must have (I5).
 export function catalogFixtureProblems(dir: string, allowed: ReadonlySet<string>): Problem[] {
-	const read = (name: string): Map<string, Leaf> =>
-		flatten(JSON.parse(readFileSync(join(dir, name), "utf8")) as Catalog);
+	const duplicates: Problem[] = [];
+	const read = (name: string): Map<string, Leaf> => {
+		const text = readFileSync(join(dir, name), "utf8");
+		duplicates.push(...duplicateKeys(text, name));
+		return flatten(JSON.parse(text) as Catalog);
+	};
 	const en = read("en.json");
 	if (existsSync(join(dir, "expected.json"))) {
 		const expected = JSON.parse(readFileSync(join(dir, "expected.json"), "utf8")) as string[];
 		return missingKeys(en, expected);
 	}
 	const pt = read("pt-BR.json");
-	return [...compareCatalogs(en, pt, "pt-BR"), ...untranslated(en, pt, "pt-BR", allowed)];
+	return [...duplicates, ...compareCatalogs(en, pt, "pt-BR"), ...untranslated(en, pt, "pt-BR", allowed)];
 }
