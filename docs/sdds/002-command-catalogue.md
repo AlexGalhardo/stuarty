@@ -264,8 +264,8 @@ Scope is `edit` unless stated. Phase: `P` Prototype, `A` ALPHA. "Time" marks arg
 
 | Command | Phase | Arguments | Effect |
 | --- | --- | --- | --- |
-| `clip.add` | P | `track_id`, `asset_id`, `start` (time), `source_in?` (time, offset into the asset; default 0), `duration?` (time, as a length; default: the rest of the asset from `source_in`, or `"5s"` for an image), `fit?`, `id?` | Places a video or image asset on a visual track |
-| `audio.add` | A | `track_id`, `asset_id`, `start`, `source_in?`, `duration?`, `id?` | Places an audio asset, or the audio of a video asset, on an audio track |
+| `clip.add` | P | `track_id`, `asset_id`, `start?` (time; default the end of the last item of the track), `source_in?` (time, offset into the asset; default 0), `duration?` (time, as a length; default: the rest of the asset from `source_in`, or `"5s"` for an image), `fit?`, `id?` | Places a video or image asset on a visual track |
+| `audio.add` | A | `track_id`, `asset_id`, `start?` (default the end of the last item of the track), `source_in?`, `duration?`, `id?` | Places an audio asset, or the audio of a video asset, on an audio track |
 | `clip.set_framing` | A | `item_id`, `fit?`, `crop?` | Sets fit and crop |
 | `clip.set_speed` | A | `item_id`, `speed` (`"1.5x"`, `"0.5x"` or a rational object) or `curve` (2 to 8 `{t, speed}` points), `ripple?` (`"none"` default, `"track"`) | Changes speed keeping the same source range: the new duration is `ceil(duration × old / new)`, reduced by the rounding excess if that would read past the end of the asset. Keyframe times and transition and fade lengths are scaled by the same ratio and rounded. With `ripple: "track"`, later items on the track shift by the change in length; otherwise a resulting overlap is `E_OVERLAP`. Captions linked to the clip are not changed; the lint reports them as out of sync until `caption.retime_from_clip` runs |
 | `clip.set_color` | A | `item_id`, `brightness?`, `contrast?`, `saturation?`, `temperature?`, `tint?`, `hue?` | Sets colour adjustment; after BETA also white balance and hue rotation (TASK-0233). See C.26 |
@@ -2085,7 +2085,7 @@ Places a video or image asset on a visual track. An animated image (BETA, RF-028
 | --- | --- | --- | --- | --- |
 | `track_id` | track id | yes | none | a visual track |
 | `asset_id` | asset id | yes | none | an asset of kind `video` or `image`, or the reserved literal `ast_placeholder` (R6): the item is created with the placeholder, the asset checks of preconditions 2, 3 and 5 are skipped, and `duration` is then required (`E_VALIDATION`) |
-| `start` | time | yes | none | absolute |
+| `start` | time | no | the end of the last item of the track (`"0s"` on an empty track) | absolute (VV-158). Omitted, the item goes to the first free position at or after the end of the track, so it never overlaps |
 | `source_in` | time | no | `"0s"` | offset into the asset; for an image it must be omitted or 0 (`E_VALIDATION`) |
 | `duration` | time, as a length | no | rest of the asset from `source_in`; `"5s"` for an image | at least 1 frame |
 | `fit` | `"cover"`, `"contain"`, `"none"` | no | `"cover"`; for an image on a track with a visual track below it (a larger `order`): `"none"` when the image fits the frame, `"contain"` when it does not | a logo or sticker enters at its natural size instead of filling the frame (VV-039) |
@@ -2150,6 +2150,8 @@ Places a video or image asset on a visual track. An animated image (BETA, RF-028
 - `err_validation_source_in_on_animated_image`
 - `ok_fit_contain`
 - `ok_fit_none`
+- `ok_start_omitted_goes_to_the_end_of_the_track`
+- `ok_start_omitted_on_empty_track_is_0`
 - `ok_start_frame_0_on_empty_track`
 - `ok_touching_neighbour`
 - `ok_ends_exactly_at_108000`
@@ -2183,7 +2185,7 @@ Places an audio asset, or the audio of a video asset, on an audio track.
 | --- | --- | --- | --- | --- |
 | `track_id` | track id | yes | none | an audio track |
 | `asset_id` | asset id | yes | none | kind `audio`, or kind `video` with `has_audio` true, or the reserved literal `ast_placeholder` (R6, as in C.22: the asset checks are skipped and `duration` is required) |
-| `start` | time | yes | none | absolute |
+| `start` | time | no | the end of the last item of the track (`"0s"` on an empty track) | absolute (VV-158). Omitted, the item goes to the first free position at or after the end of the track, so it never overlaps |
 | `source_in` | time | no | `"0s"` | offset into the asset |
 | `duration` | time, as a length | no | rest of the asset from `source_in` | at least 1 frame |
 | `id` | item id | no | generated | R6 |
@@ -2232,6 +2234,7 @@ Places an audio asset, or the audio of a video asset, on an audio track.
 **Golden cases.**
 
 - `ok_audio_asset_default_duration`
+- `ok_start_omitted_goes_to_the_end_of_the_track`
 - `ok_audio_asset_explicit_duration_and_source_in`
 - `ok_video_with_audio_asset`
 - `ok_ends_exactly_at_asset_end`

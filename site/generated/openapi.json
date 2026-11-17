@@ -4232,7 +4232,7 @@
             "x-vv-kind": "time"
           },
           "start": {
-            "description": "Absolute position.",
+            "description": "Absolute position; omitted, the end of the last item of the track (0s on an empty track).",
             "type": "string",
             "x-vv-kind": "time"
           },
@@ -4244,8 +4244,7 @@
         },
         "required": [
           "track_id",
-          "asset_id",
-          "start"
+          "asset_id"
         ],
         "type": "object"
       },
@@ -4342,6 +4341,12 @@
       "args.audio.mark_beats": {
         "additionalProperties": false,
         "properties": {
+          "bpm": {
+            "description": "Manual tempo in beats per minute, 20 to 400, for music whose pulse the analysis cannot find; replaces the detected grid.",
+            "maximum": 400,
+            "minimum": 20,
+            "type": "number"
+          },
           "every": {
             "description": "Mark every nth beat of the visible part, from the first; default 1.",
             "maximum": 64,
@@ -4357,6 +4362,11 @@
             "description": "Label of every marker, up to 60 characters; default none.",
             "maxLength": 60,
             "type": "string"
+          },
+          "offset": {
+            "description": "With bpm: the time of the first beat on the asset's time axis, from its start; default \"0s\".",
+            "type": "string",
+            "x-vv-kind": "time"
           },
           "replace": {
             "description": "true (default) replaces the item's markers; false keeps them and adds the beats.",
@@ -5000,7 +5010,7 @@
             "x-vv-kind": "time"
           },
           "start": {
-            "description": "Absolute position.",
+            "description": "Absolute position; omitted, the end of the last item of the track (0s on an empty track).",
             "type": "string",
             "x-vv-kind": "time"
           },
@@ -5012,8 +5022,7 @@
         },
         "required": [
           "track_id",
-          "asset_id",
-          "start"
+          "asset_id"
         ],
         "type": "object"
       },

@@ -55,6 +55,16 @@ func init() {
 	ca("ok_image_explicit_duration", imageArgs(`, "start": "0s", "duration": "3s"`), base)
 	ca("ok_fit_contain", clipArgs(`, "fit": "contain"`), base)
 	ca("ok_fit_none", clipArgs(`, "fit": "none"`), base)
+	ca(
+		"ok_start_omitted_goes_to_the_end_of_the_track",
+		`{"track_id": "`+vidTr+`", "asset_id": "`+vidAsset+`", "id": "`+itemA+`", "duration": "1s"}`,
+		func() *B { return base().clip(itemB, vidTr, 10, 90, 0) },
+	)
+	ca(
+		"ok_start_omitted_on_empty_track_is_0",
+		`{"track_id": "`+vidTr+`", "asset_id": "`+vidAsset+`", "id": "`+itemA+`", "duration": "1s"}`,
+		base,
+	)
 	ca("ok_start_frame_0_on_empty_track", clipArgs(`, "duration": "1s"`), base)
 	ca(
 		"ok_touching_neighbour",
