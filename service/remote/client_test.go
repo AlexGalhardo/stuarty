@@ -368,3 +368,23 @@ func TestDecodeErrorGivesTheHintInToolNames(t *testing.T) {
 		t.Errorf("hint = %q", se.Hint)
 	}
 }
+
+// VV-200: the text of a job relayed from an HTTP server names the tool, not the HTTP route.
+func TestJobTextGivesTheNextCallInToolNames(t *testing.T) {
+	t.Parallel()
+
+	var got seen
+
+	body := `{"job_id":"job_a","kind":"export","state":"running",` +
+		`"text":"job_a export running\nstill running: call GET /api/v1/jobs/{id} again"}`
+	c := server(t, 202, body, &got)
+
+	res, err := c.JobStart(asCLI("mcp"), service.JobStartRequest{ProjectID: "prj_a", Kind: "export"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !strings.Contains(res.Text, "call job_get again") || strings.Contains(res.Text, "/api/v1") {
+		t.Errorf("text = %q", res.Text)
+	}
+}
