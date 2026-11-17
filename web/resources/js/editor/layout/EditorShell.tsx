@@ -1,5 +1,6 @@
 import { type ReactNode, useCallback, useEffect, useState } from "react";
 
+import ReleaseMark from "@/components/ReleaseMark";
 import { Button } from "@/components/ui/button";
 import { useLocale, useT } from "@/lib/i18n";
 import LiveRegion from "../a11y/LiveRegion";
@@ -170,6 +171,7 @@ export default function EditorShell({
 					undoRedo={<UndoRedo />}
 				/>
 			</div>
+			<ReleaseMark />
 			<Notices />
 			<FindBar />
 			<LiveRegion />
