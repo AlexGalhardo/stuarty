@@ -691,13 +691,13 @@
         {
           "name": "since",
           "type": "integer",
-          "usage": "replay the revisions after this one"
+          "usage": "replay the revisions after this one (without it only new events arrive, so --count waits for them)"
         },
         {
           "name": "count",
           "type": "integer",
           "default": "0",
-          "usage": "stop after n events (0: until interrupted)"
+          "usage": "stop after n events (past ones only with --since or --from-id; 0: until interrupted)"
         }
       ],
       "globals": [
