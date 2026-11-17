@@ -1,4 +1,4 @@
-import type { CaptionStyle, Word } from "@/generated/timeline";
+import type { CaptionStyle, Item, Word } from "@/generated/timeline";
 import type { EditRequest } from "../api/types";
 
 // Builds the operations of the gestures of SDD-012 section 8.2 from values the
@@ -137,6 +137,31 @@ export function freezeFrameOperations(
 					args: { item_id: item.id, at: frames(playhead) },
 				},
 			];
+}
+
+// One `item.repeat`: `copies` extra copies after the item, or the sequence
+// cut at `until` (a time string). The core judges the rest.
+export function repeatOperations(
+	itemId: string,
+	input: {
+		copies?: number;
+		until?: string;
+		ripple?: "none" | "track";
+		link?: boolean;
+	},
+): Operations {
+	return [
+		{
+			op: "item.repeat",
+			args: {
+				item_id: itemId,
+				...(input.copies === undefined ? {} : { copies: input.copies }),
+				...(input.until === undefined ? {} : { until: input.until }),
+				...(input.ripple === undefined ? {} : { ripple: input.ripple }),
+				...(input.link === true ? { link: true } : {}),
+			},
+		},
+	];
 }
 
 // One `item.trim` per item that the playhead lies strictly inside.
@@ -488,7 +513,46 @@ export const KEYFRAME_COLOUR_PROPERTIES = [
 ] as const;
 export type ColourKeyframeProperty =
 	(typeof KEYFRAME_COLOUR_PROPERTIES)[number];
-export type AnyKeyframeProperty = KeyframeProperty | ColourKeyframeProperty;
+
+// The mask box and the crop sides `keyframe.set` also animates: the mask ones
+// need the item to have a mask, the crop ones are for clips.
+export const KEYFRAME_MASK_PROPERTIES = [
+	"mask_x",
+	"mask_y",
+	"mask_width",
+	"mask_height",
+	"mask_feather",
+] as const;
+export const KEYFRAME_CROP_PROPERTIES = [
+	"crop_left",
+	"crop_top",
+	"crop_right",
+	"crop_bottom",
+] as const;
+export const KEYFRAME_FRAMING_PROPERTIES = [
+	...KEYFRAME_MASK_PROPERTIES,
+	...KEYFRAME_CROP_PROPERTIES,
+] as const;
+export type FramingKeyframeProperty =
+	(typeof KEYFRAME_FRAMING_PROPERTIES)[number];
+export type AnyKeyframeProperty =
+	| KeyframeProperty
+	| ColourKeyframeProperty
+	| FramingKeyframeProperty;
+
+// The stored value of a mask or crop property, undefined when the item has
+// none of it.
+export function framingStored(
+	item: Pick<Item, "mask" | "crop">,
+	property: FramingKeyframeProperty,
+): number | undefined {
+	if (property.startsWith("mask_")) {
+		const key = property.slice(5) as "x" | "y" | "width" | "height" | "feather";
+		return item.mask?.[key];
+	}
+	const side = property.slice(5) as "left" | "top" | "right" | "bottom";
+	return item.crop?.[side] ?? 0;
+}
 
 // What the core uses for a colour property the item stores nothing for.
 export const COLOUR_FALLBACK: Readonly<Record<ColourKeyframeProperty, number>> =
@@ -1724,6 +1788,36 @@ export function chromaKeyOperations(
 			args: { item_id: itemId, color, ...changes },
 		},
 	];
+}
+
+export type ShadowArgs = {
+	color?: string;
+	opacity?: number;
+	dx?: number;
+	dy?: number;
+	blur?: number;
+};
+
+// A shadow object turns the shadow on or changes it (settings not sent keep
+// their value); null removes it (`clip.set_shadow`).
+export function shadowOperations(
+	itemId: string,
+	shadow: ShadowArgs | null,
+): Operations {
+	return [{ op: "clip.set_shadow", args: { item_id: itemId, shadow } }];
+}
+
+export type OutlineArgs = {
+	color?: string;
+	width?: number;
+};
+
+// As the shadow: an object sets, null removes (`clip.set_outline`).
+export function outlineOperations(
+	itemId: string,
+	outline: OutlineArgs | null,
+): Operations {
+	return [{ op: "clip.set_outline", args: { item_id: itemId, outline } }];
 }
 
 export function markerAddOperations(frame: number): Operations {
