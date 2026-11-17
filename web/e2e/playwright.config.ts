@@ -80,7 +80,8 @@ const networkHome = `${home}-network`;
 export default defineConfig({
 	testDir: "./specs",
 	fullyParallel: true,
-	retries: process.env.CI ? 1 : 0,
+	// Never retry: a test that passes on a second try is a flaky test, which is a defect (REVIEW.md).
+	retries: 0,
 	reporter: process.env.CI ? [["github"], ["list"]] : "list",
 	use: {
 		baseURL: `http://127.0.0.1:${port}`,
