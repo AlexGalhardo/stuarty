@@ -312,3 +312,19 @@ func TestSecurity_T04_SecretsNeverAppear(t *testing.T) {
 		}
 	}
 }
+
+func TestSystemLaunchRefusesABodyThatIsNotJSON(t *testing.T) {
+	t.Parallel()
+
+	h := newHarness(t)
+
+	if got := h.post("/api/v1/system/launch", "not json"); got.status != http.StatusBadRequest {
+		t.Fatalf("non-JSON body = %d %s, want 400", got.status, got.body)
+	}
+
+	for _, body := range []string{"", "{}"} {
+		if got := h.post("/api/v1/system/launch", body); got.status != http.StatusOK {
+			t.Fatalf("body %q = %d %s, want 200", body, got.status, got.body)
+		}
+	}
+}

@@ -1,6 +1,9 @@
 package httpapi
 
 import (
+	"bytes"
+	"encoding/json"
+	"io"
 	"net/http"
 
 	"github.com/AlexGalhardo/vukem/web"
@@ -49,6 +52,10 @@ func (h *apiHandler) launch(c *web.Ctx) error {
 // proves the launcher secret gets a code whose session has the browser-only privileges (section
 // 5.3); `vukem-video open` and any other bearer caller get a session without them.
 func (h *apiHandler) systemLaunch(c *web.Ctx, _ noIn) (launchOut, error) {
+	if err := requireJSONOrEmptyBody(c.Request()); err != nil {
+		return launchOut{}, err
+	}
+
 	privileged := auth.IsLauncher(h.LauncherSecret, c.Request().Header.Get(auth.LauncherHeader))
 
 	code, err := h.Launch.Issue(privileged)
@@ -57,4 +64,28 @@ func (h *apiHandler) systemLaunch(c *web.Ctx, _ noIn) (launchOut, error) {
 	}
 
 	return launchOut{Code: code, URL: "http://127.0.0.1:" + listenPort(c.Request()) + "/auth/launch?code=" + code}, nil
+}
+
+// requireJSONOrEmptyBody refuses a body that is not JSON on a route that takes no input: the framework
+// binds nothing for it, so a body such as `not json` would otherwise pass unseen (VV-141).
+func requireJSONOrEmptyBody(r *http.Request) error {
+	raw, err := io.ReadAll(http.MaxBytesReader(nil, r.Body, 1<<20))
+	if err != nil {
+		return &service.Error{
+			Code:    "E_VALIDATION",
+			Message: "the request body could not be read.",
+			Hint:    "send a JSON object or no body",
+		}
+	}
+
+	raw = bytes.TrimSpace(raw)
+	if len(raw) == 0 || json.Valid(raw) {
+		return nil
+	}
+
+	return &service.Error{
+		Code:    "E_VALIDATION",
+		Message: "the request body is not valid JSON.",
+		Hint:    "send a JSON object or no body",
+	}
 }
