@@ -235,6 +235,10 @@ export interface AudioDuckArgs {
 
 export interface AudioMarkBeatsArgs {
   /**
+   * Manual tempo in beats per minute, 20 to 400, for music whose pulse the analysis cannot find; replaces the detected grid.
+   */
+  bpm?: number;
+  /**
    * Mark every nth beat of the visible part, from the first; default 1.
    */
   every?: number;
@@ -246,6 +250,10 @@ export interface AudioMarkBeatsArgs {
    * Label of every marker, up to 60 characters; default none.
    */
   label?: string;
+  /**
+   * With bpm: the time of the first beat on the asset's time axis, from its start; default "0s".
+   */
+  offset?: string;
   /**
    * true (default) replaces the item's markers; false keeps them and adds the beats.
    */

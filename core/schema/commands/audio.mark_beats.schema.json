@@ -2,6 +2,12 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
   "properties": {
+    "bpm": {
+      "description": "Manual tempo in beats per minute, 20 to 400, for music whose pulse the analysis cannot find; replaces the detected grid.",
+      "maximum": 400,
+      "minimum": 20,
+      "type": "number"
+    },
     "every": {
       "description": "Mark every nth beat of the visible part, from the first; default 1.",
       "maximum": 64,
@@ -17,6 +23,11 @@
       "description": "Label of every marker, up to 60 characters; default none.",
       "maxLength": 60,
       "type": "string"
+    },
+    "offset": {
+      "description": "With bpm: the time of the first beat on the asset's time axis, from its start; default \"0s\".",
+      "type": "string",
+      "x-vv-kind": "time"
     },
     "replace": {
       "description": "true (default) replaces the item's markers; false keeps them and adds the beats.",

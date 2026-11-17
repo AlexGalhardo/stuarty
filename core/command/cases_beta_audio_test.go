@@ -164,9 +164,14 @@ func beatCases() {
 	mb("ok_beat_on_the_last_visible_frame", ma(beats(60, 179)), scene())
 	mb("ok_video_asset_audio", ma(grid), scene(func(it *timeline.Item) { it.Asset = vidAsset }))
 
+	mb("ok_manual_tempo_with_offset", ma(`"bpm": 120, "offset": "0.25s"`), scene())
+	mb("ok_manual_tempo_when_the_grid_is_empty", ma(`"bpm": 90, `+beats()), scene())
+
 	mb("err_validation_resolved_missing", ma(`"every": 2`), scene())
 	mb("err_validation_beats_not_increasing", ma(beats(60, 90, 90)), scene())
 	mb("err_validation_beat_negative", ma(beats(-1, 90)), scene())
+	mb("err_validation_offset_without_bpm", ma(`"offset": "1s", `+grid), scene())
+	mb("err_validation_bpm_10", ma(`"bpm": 10`), scene())
 	mb("err_validation_every_0", ma(`"every": 0, `+grid), scene())
 	mb("err_validation_every_65", ma(`"every": 65, `+grid), scene())
 	mb("err_validation_label_over_60_characters", ma(`"label": "`+strings.Repeat("a", 61)+`", `+grid), scene())

@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "The value of args.bpm is 10, outside the accepted range.",
+  "hint": "Use a value between 20 and 400.",
+  "retryable": false,
+  "path": "args.bpm"
+}
