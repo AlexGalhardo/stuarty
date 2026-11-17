@@ -64,3 +64,27 @@ test.describe("saved indicator", () => {
 		);
 	});
 });
+
+test.describe("timeline toolbar groups", () => {
+	test("the blade is in the tools group, snap and zoom in the modes group", async ({
+		page,
+		request,
+	}) => {
+		const seeded = await seedProject(request, {
+			tracks: 1,
+			perTrack: 1,
+			clipDuration: "4s",
+		});
+		await page.goto(`/editor/${seeded.id}?debug=1`);
+		const tools = page.getByRole("group", { name: "Edit tools" });
+		const modes = page.getByRole("group", { name: "Modes and zoom" });
+		await expect(tools.getByRole("button", { name: "Blade" })).toBeVisible();
+		await expect(
+			modes.getByRole("button", { name: "Snap", exact: true }),
+		).toBeVisible();
+		await expect(modes.getByRole("button", { name: "Zoom in" })).toBeVisible();
+		const toolsBox = await tools.boundingBox();
+		const modesBox = await modes.boundingBox();
+		expect((toolsBox?.x ?? 1) < (modesBox?.x ?? 0)).toBe(true);
+	});
+});

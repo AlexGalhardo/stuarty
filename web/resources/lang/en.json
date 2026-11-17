@@ -152,6 +152,8 @@
       "timeline": {
         "label": "Timeline",
         "empty": "The timeline is empty",
+        "group_tools": "Edit tools",
+        "group_modes": "Modes and zoom",
         "zoom_in": "Zoom in",
         "zoom_out": "Zoom out",
         "fit": "Fit",
