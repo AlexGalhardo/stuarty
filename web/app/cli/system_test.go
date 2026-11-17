@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
 	"github.com/AlexGalhardo/vukem-video/engine/transcribe"
 	"github.com/AlexGalhardo/vukem-video/service"
 )
@@ -312,6 +313,34 @@ func TestCLIToolsInstall(t *testing.T) {
 
 		if doc := decodeOut(t, h); doc["state"] != "idle" || doc["download_bytes"] != float64(10) || s.installs != 1 {
 			t.Fatalf("document %v", doc)
+		}
+	})
+
+	t.Run("openh264 is announced from the manifest of the own FFmpeg build", func(t *testing.T) {
+		t.Parallel()
+
+		manifest, err := ffmpeg.DefaultOpenH264Manifest()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if entry, ok := manifest.For(runtime.GOOS, runtime.GOARCH); !ok || !entry.Published {
+			t.Skipf("no published OpenH264 library for %s/%s", runtime.GOOS, runtime.GOARCH)
+		}
+
+		h, s := newSysHarness(t)
+
+		if code := h.run("tools:install", "openh264", "--json"); code != ExitFailure || s.installs != 0 {
+			t.Fatalf("exit %d, installs %d", code, s.installs)
+		}
+
+		doc := decodeOut(t, h)
+		if msg, _ := doc["message"].(string); doc["path"] != "yes" || !strings.Contains(msg, "ciscobinary.openh264.org") {
+			t.Fatalf("document %v", doc)
+		}
+
+		if code := h.run("tools:install", "openh264", "--yes", "--json"); code != ExitOK || s.installed.Name != "openh264" {
+			t.Fatalf("exit %d, request %+v", code, s.installed)
 		}
 	})
 
