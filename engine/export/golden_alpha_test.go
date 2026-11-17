@@ -101,6 +101,8 @@ var requiredCases = []string{
 	"transition-grow",
 	"shadow",
 	"outline",
+	"transparent",
+	"opaque-control",
 }
 
 const (
@@ -657,6 +659,23 @@ var alphaCases = map[string]func() alphaCase{
 			})
 		return b.build(0)
 	},
+	// A landscape clip contained in the portrait frame leaves the corner uncovered. Fit none would
+	// spill past the frame and the export would scale only the visible window, whose pixels the
+	// parity harness cannot place. The picture is fully opaque, so the PNG round trip keeps every
+	// byte (a soft alpha edge would not: the encoder stores straight alpha).
+	"transparent": func() alphaCase {
+		return uncoveredClip("a clip on a transparent frame", timeline.BackgroundTransparent)
+	},
+	"opaque-control": func() alphaCase {
+		return uncoveredClip("a clip on an opaque frame", "#202020")
+	},
+}
+
+func uncoveredClip(name, background string) alphaCase {
+	b := newCase(name, rate(30, 1))
+	b.doc.Settings.Background = timeline.Color(background)
+	b.clip(b.track(), b.video(landscape), 0, 1, func(it *timeline.Item) { it.Fit = "contain" })
+	return b.build(0)
 }
 
 func goldenDir(name string) string { return filepath.Join("testdata", "golden", name) }
@@ -682,7 +701,7 @@ func readFrames(tb testing.TB, dir string) []int {
 	return frames
 }
 
-// readPNG decodes a reference into the pixels of an opaque RGBA frame.
+// readPNG decodes a reference into the pixels of an RGBA frame.
 func readPNG(tb testing.TB, path string) []byte {
 	tb.Helper()
 	f, err := os.Open(path)
@@ -817,6 +836,7 @@ func TestCompositorBandsEqualBlurAndFilter(t *testing.T) {
 			!strings.HasPrefix(name, "blend-") && !strings.HasPrefix(name, "mask-") &&
 			!strings.HasPrefix(name, "crop-") &&
 			!strings.HasPrefix(name, "shadow") && !strings.HasPrefix(name, "outline") &&
+			!strings.HasPrefix(name, "transparent") && !strings.HasPrefix(name, "opaque") &&
 			!strings.HasPrefix(
 				name,
 				"flip-",

@@ -86,7 +86,8 @@ func (c *Compositor) bands() int {
 }
 
 // Compose draws one frame plan into dst, scaling every position and size by outScale. dst is RGBA,
-// 8 bits, with no stride padding; it is filled with the background first, so it ends opaque.
+// 8 bits, with no stride padding. It is filled with the background first. A transparent plan fills
+// with alpha 0, so a pixel no layer covers stays clear; any other plan ends opaque.
 func (c *Compositor) Compose(dst *image.RGBA, fp plan.FramePlan, outScale float64) error {
 	b := dst.Bounds()
 	if b.Min != (image.Point{}) || dst.Stride != 4*b.Dx() {
@@ -96,7 +97,7 @@ func (c *Compositor) Compose(dst *image.RGBA, fp plan.FramePlan, outScale float6
 		return fmt.Errorf("compositor: output scale %v", outScale)
 	}
 
-	fill(dst.Pix, parseColour(fp.Background))
+	fill(dst.Pix, frameFill(fp))
 
 	for i := range fp.Layers {
 		l := &fp.Layers[i]
@@ -478,7 +479,17 @@ func abs(v float64) float64 {
 	return v
 }
 
-// fill paints the whole frame with an opaque colour.
+// frameFill is the colour of uncovered pixels. The planner names black for a transparent project so
+// an executor that ignores the flag stays black; this one paints that colour with alpha 0 (SDD-004 §6).
+func frameFill(fp plan.FramePlan) [4]uint8 {
+	c := parseColour(fp.Background)
+	if fp.Transparent {
+		c[3] = 0
+	}
+	return c
+}
+
+// fill paints the whole frame with c, which is opaque unless the plan is transparent.
 func fill(pix []byte, c [4]uint8) {
 	if len(pix) < 4 {
 		return

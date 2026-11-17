@@ -34,11 +34,12 @@ type jsonLayer struct {
 }
 
 type jsonPlan struct {
-	Frame      int         `json:"frame"`
-	Width      int         `json:"width"`
-	Height     int         `json:"height"`
-	Background string      `json:"background"`
-	Layers     []jsonLayer `json:"layers"`
+	Frame       int         `json:"frame"`
+	Width       int         `json:"width"`
+	Height      int         `json:"height"`
+	Background  string      `json:"background"`
+	Transparent bool        `json:"transparent,omitempty"`
+	Layers      []jsonLayer `json:"layers"`
 }
 
 type jsonOutput struct {
@@ -73,7 +74,7 @@ func (in RenderInput) MarshalJSON() ([]byte, error) {
 		Output:  out,
 		Plan: jsonPlan{
 			Frame: in.Plan.Frame, Width: in.Plan.Width, Height: in.Plan.Height,
-			Background: in.Plan.Background, Layers: layers,
+			Background: in.Plan.Background, Transparent: in.Plan.Transparent, Layers: layers,
 		},
 	})
 }

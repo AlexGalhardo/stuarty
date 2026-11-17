@@ -85,6 +85,8 @@ pub struct LayerSpec {
 pub struct RenderInput {
 	pub output: Output,
 	pub background: String,
+	/// True when uncovered pixels stay clear (SDD-004 section 6, VV-172).
+	pub transparent: bool,
 	/// The plan's frame number and the project's size: the grain and the whip depend on them.
 	pub frame: FrameInfo,
 	pub layers: Vec<LayerSpec>,
@@ -562,6 +564,11 @@ pub fn decode(input: &[u8]) -> Result<RenderInput, Error> {
 		Some(Value::Str(s)) => s,
 		Some(_) => return Err(invalid("plan: background is not a string")),
 	};
+	let transparent = match plan.take("transparent") {
+		None | Some(Value::Null) => false,
+		Some(Value::Bool(b)) => b,
+		Some(_) => return Err(invalid("plan: transparent is not a boolean")),
+	};
 	let layers = match plan.take("layers") {
 		None | Some(Value::Null) => Vec::new(),
 		Some(Value::Arr(items)) => {
@@ -580,6 +587,7 @@ pub fn decode(input: &[u8]) -> Result<RenderInput, Error> {
 	Ok(RenderInput {
 		output,
 		background,
+		transparent,
 		frame,
 		layers,
 	})
@@ -729,9 +737,25 @@ mod tests {
 			(540, 960, 0..960)
 		);
 		assert_eq!(r.background, "#112233");
+		assert!(!r.transparent);
 		assert_eq!(r.layers.len(), 1);
 		assert_eq!(r.layers[0].pixels, Pixels::Media("itm_a".into()));
 		assert_eq!(r.layers[0].opacity, 1.0);
+	}
+
+	#[test]
+	fn decodes_a_transparent_plan() {
+		let s = GOOD.replace(
+			"\"background\":\"#112233\"",
+			"\"background\":\"#000000\",\"transparent\":true",
+		);
+		let r = decode(s.as_bytes()).unwrap();
+		assert!(r.transparent);
+		let bad = GOOD.replace(
+			"\"background\":\"#112233\"",
+			"\"background\":\"#000000\",\"transparent\":1",
+		);
+		assert_eq!(reason(&bad), Reason::InvalidPlan);
 	}
 
 	#[test]

@@ -83,7 +83,7 @@ func TestFormatGIFWriterDecodes(t *testing.T) {
 	write := func() []byte {
 		var b bytes.Buffer
 
-		g := newGIFWriter(&b, w, h, 0)
+		g := newGIFWriter(&b, w, h, 0, false)
 		for i, c := range colours {
 			if err := g.frame(flat(c), 3+i); err != nil {
 				t.Fatal(err)
@@ -124,12 +124,74 @@ func TestFormatGIFWriterDecodes(t *testing.T) {
 	}
 }
 
+// A transparent GIF reserves index 255, restores to that background before each frame, and does not
+// keep a previous colour in a hole. An opaque GIF keeps disposal 1 and background index 0.
+func TestFormatGIFTransparentHolesStayClear(t *testing.T) {
+	t.Parallel()
+
+	const w, h = 4, 4
+	solid := func(c color.RGBA) *image.RGBA {
+		img := image.NewRGBA(image.Rect(0, 0, w, h))
+		for i := 0; i < len(img.Pix); i += 4 {
+			img.Pix[i], img.Pix[i+1], img.Pix[i+2], img.Pix[i+3] = c.R, c.G, c.B, c.A
+		}
+		return img
+	}
+	write := func(transparent bool, frames ...*image.RGBA) []byte {
+		t.Helper()
+		var b bytes.Buffer
+		g := newGIFWriter(&b, w, h, 0, transparent)
+		for _, fr := range frames {
+			if err := g.frame(fr, 4); err != nil {
+				t.Fatal(err)
+			}
+		}
+		if err := g.finish(); err != nil {
+			t.Fatal(err)
+		}
+		return b.Bytes()
+	}
+
+	red := solid(color.RGBA{255, 0, 0, 255})
+	hole := image.NewRGBA(image.Rect(0, 0, w, h))
+	hole.SetRGBA(1, 1, color.RGBA{0, 255, 0, 255})
+	raw := write(true, red, hole)
+	if raw[11] != 255 {
+		t.Fatalf("background index %d, want 255", raw[11])
+	}
+	dec, err := gif.DecodeAll(bytes.NewReader(raw))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if dec.Disposal[0] != gif.DisposalBackground || dec.Disposal[1] != gif.DisposalBackground {
+		t.Fatalf("disposal %v, want restore to background", dec.Disposal)
+	}
+	if _, _, _, a := dec.Image[1].At(0, 0).RGBA(); a != 0 {
+		t.Fatalf("a hole over the previous red has alpha %d", a)
+	}
+	if _, _, _, a := dec.Image[1].At(1, 1).RGBA(); a == 0 {
+		t.Fatal("the opaque pixel of the second frame was stored as a hole")
+	}
+
+	opaque := write(false, red)
+	if opaque[11] != 0 {
+		t.Fatalf("opaque background index %d, want 0", opaque[11])
+	}
+	one, err := gif.DecodeAll(bytes.NewReader(opaque))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if one.Disposal[0] != gif.DisposalNone {
+		t.Fatalf("opaque disposal %d, want do not dispose", one.Disposal[0])
+	}
+}
+
 func TestFormatGIFWriterSizeLimit(t *testing.T) {
 	t.Parallel()
 
 	var b bytes.Buffer
 
-	g := newGIFWriter(&b, 64, 64, 900)
+	g := newGIFWriter(&b, 64, 64, 900, false)
 	img := image.NewRGBA(image.Rect(0, 0, 64, 64))
 	for i := range img.Pix {
 		img.Pix[i] = byte(i * 7)
@@ -266,7 +328,7 @@ func TestFormatGIFVerifyRefusesTruncation(t *testing.T) {
 
 	var b bytes.Buffer
 
-	g := newGIFWriter(&b, 16, 16, 0)
+	g := newGIFWriter(&b, 16, 16, 0, false)
 	if err := g.frame(image.NewRGBA(image.Rect(0, 0, 16, 16)), 4); err != nil {
 		t.Fatal(err)
 	}
@@ -573,7 +635,7 @@ func TestEstimateGIF(t *testing.T) {
 
 	var b bytes.Buffer
 
-	g := newGIFWriter(&b, 480, 270, 0)
+	g := newGIFWriter(&b, 480, 270, 0, false)
 
 	for range 3 {
 		if err := g.frame(img, 6); err != nil {

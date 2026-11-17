@@ -4,7 +4,7 @@
 
 use std::collections::BTreeMap;
 
-use crate::compose::{Layer, Source, Target, compose, layer_opacity, parse_colour, premultiply};
+use crate::compose::{Layer, Source, Target, compose, frame_fill, layer_opacity, premultiply};
 use crate::error::{Error, Reason};
 use crate::image::Image;
 use crate::lut::{Lut, lut_mix};
@@ -172,7 +172,7 @@ impl Renderer {
 		};
 		compose(
 			&mut target,
-			parse_colour(&r.background),
+			frame_fill(&r.background, r.transparent),
 			&layers,
 			r.output.scale,
 		);

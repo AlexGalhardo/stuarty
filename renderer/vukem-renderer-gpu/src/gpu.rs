@@ -4,7 +4,7 @@ use core::fmt;
 use std::mem::size_of;
 
 use vukem_renderer::blend::BlendMode;
-use vukem_renderer::compose::{Layer, Prepared, Target, copy_origin, parse_colour, prepare_layer};
+use vukem_renderer::compose::{Layer, Prepared, Target, copy_origin, frame_fill, prepare_layer};
 use vukem_renderer::effects::Direction;
 use vukem_renderer::error::{Error, Reason};
 use vukem_renderer::host::Renderer;
@@ -193,7 +193,7 @@ impl GpuRenderer {
 		};
 		self.compose(
 			&mut target,
-			parse_colour(&r.background),
+			frame_fill(&r.background, r.transparent),
 			&layers,
 			r.output.scale,
 		)
@@ -306,7 +306,7 @@ impl GpuRenderer {
 				r: f64::from(bg[0]) / 255.0,
 				g: f64::from(bg[1]) / 255.0,
 				b: f64::from(bg[2]) / 255.0,
-				a: 1.0,
+				a: f64::from(bg[3]) / 255.0,
 			}),
 		));
 		for ((group, vertices), p) in drawn.iter().zip(&prepared) {
