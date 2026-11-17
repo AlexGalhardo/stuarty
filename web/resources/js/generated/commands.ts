@@ -1954,7 +1954,7 @@ export interface ShapeAddArgs {
    */
   fill?: string;
   /**
-   * Pixels before scale, above 0.
+   * Pixels before scale, above 0 and at most 32768.
    */
   height: number;
   id?: string;
@@ -1980,7 +1980,7 @@ export interface ShapeAddArgs {
    */
   track_id?: string;
   /**
-   * Pixels before scale, above 0.
+   * Pixels before scale, above 0 and at most 32768.
    */
   width: number;
   x?: number;
@@ -1993,7 +1993,7 @@ export interface ShapeSetArgs {
    */
   fill?: string;
   /**
-   * Pixels before scale, above 0.
+   * Pixels before scale, above 0 and at most 32768.
    */
   height?: number;
   /**
@@ -2014,7 +2014,7 @@ export interface ShapeSetArgs {
    */
   stroke_width?: number;
   /**
-   * Pixels before scale, above 0.
+   * Pixels before scale, above 0 and at most 32768.
    */
   width?: number;
 }

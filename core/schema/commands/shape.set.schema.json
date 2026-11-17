@@ -7,7 +7,7 @@
       "type": "string"
     },
     "height": {
-      "description": "Pixels before scale, above 0.",
+      "description": "Pixels before scale, above 0 and at most 32768.",
       "type": "number"
     },
     "item_id": {
@@ -35,7 +35,7 @@
       "type": "number"
     },
     "width": {
-      "description": "Pixels before scale, above 0.",
+      "description": "Pixels before scale, above 0 and at most 32768.",
       "type": "number"
     }
   },
