@@ -4,7 +4,8 @@ import { join } from "node:path";
 import type { Page } from "@playwright/test";
 import { caller, expect, seedProject, test } from "./helpers";
 
-test.describe.configure({ timeout: 120_000 });
+// The tests share one brand kit per workspace, so they run one after the other.
+test.describe.configure({ timeout: 120_000, mode: "serial" });
 
 // The font of the test: a bundled file copied under a name of its own, so the
 // workspace imports it by path like a font the person brought.
@@ -95,6 +96,16 @@ test.describe("brand-kit", () => {
 		await page.goto(`/editor/${seeded.id}?debug=1`);
 		await expect(page.getByRole("toolbar", { name: "Editing" })).toBeVisible();
 
+		// VV-183: with the text selected, the font select says where the brand
+		// kit families come from while the project does not hold them.
+		await page.locator("[data-item-id]").click();
+		const hint = page.getByText(
+			"The brand kit has fonts that are not in this project yet.",
+		);
+		await expect(hint).toBeVisible();
+		await page.keyboard.press("Escape");
+		await expect(hint).toHaveCount(0);
+
 		// The family is not in the project yet: the Fonts section offers it.
 		await page
 			.getByRole("button", {
@@ -114,6 +125,7 @@ test.describe("brand-kit", () => {
 			.toBe(1);
 
 		await page.locator("[data-item-id]").click();
+		await expect(hint).toHaveCount(0);
 		await expect
 			.poll(async () => (await bitmapKeys(page)).length)
 			.toBeGreaterThan(0);

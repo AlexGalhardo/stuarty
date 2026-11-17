@@ -1090,6 +1090,7 @@
         "text_content": "Content",
         "style": {
           "default": "Default",
+          "brand_fonts_hint": "The brand kit has fonts that are not in this project yet. Bring them in with Use in project, in the Project panel, Fonts.",
           "font_family": "Font",
           "font_weight": "Weight",
           "size": "Size",
