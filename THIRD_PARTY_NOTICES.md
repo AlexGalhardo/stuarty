@@ -192,8 +192,10 @@ Compiled into the WebAssembly renderer of `renderer/` (`Cargo.lock`, normal depe
 | dispatch2 | 0.3.1 | Zlib OR Apache-2.0 OR MIT | Copyright 2026 Mads Marquart | [LICENSE-MIT.txt](<licenses/crates/dispatch2@0.3.1/LICENSE-MIT.txt>), [LICENSE-ZLIB.txt](<licenses/crates/dispatch2@0.3.1/LICENSE-ZLIB.txt>) | - |
 | equivalent | 1.0.3 | Apache-2.0 OR MIT | Copyright (c) 2016--2023 | [LICENSE-APACHE](<licenses/crates/equivalent@1.0.3/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/equivalent@1.0.3/LICENSE-MIT>) | - |
 | foldhash | 0.2.0 | Zlib | Copyright (c) 2024 Orson Peters | [LICENSE](<licenses/crates/foldhash@0.2.0/LICENSE>) | - |
+| font-types | 0.12.7 | MIT OR Apache-2.0 | Copyright (c) 2019 Fontations Developers | [LICENSE-APACHE](<licenses/crates/font-types@0.12.7/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/font-types@0.12.7/LICENSE-MIT>) | - |
 | gpu-allocator | 0.28.0 | MIT OR Apache-2.0 | Copyright (c) 2021 Traverse Research B.V. | [LICENSE-APACHE](<licenses/crates/gpu-allocator@0.28.0/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/gpu-allocator@0.28.0/LICENSE-MIT>) | - |
 | half | 2.7.1 | MIT OR Apache-2.0 | - | [LICENSE-APACHE](<licenses/crates/half@2.7.1/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/half@2.7.1/LICENSE-MIT>) | - |
+| harfrust | 0.16.0 | MIT | Copyright (c) HarfBuzz developers | [LICENSE](<licenses/crates/harfrust@0.16.0/LICENSE>) | - |
 | hashbrown | 0.16.1 | MIT OR Apache-2.0 | Copyright (c) 2016 Amanieu d'Antras | [LICENSE-APACHE](<licenses/crates/hashbrown@0.16.1/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/hashbrown@0.16.1/LICENSE-MIT>) | - |
 | hashbrown | 0.17.1 | MIT OR Apache-2.0 | Copyright (c) 2016 Amanieu d'Antras | [LICENSE-APACHE](<licenses/crates/hashbrown@0.17.1/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/hashbrown@0.17.1/LICENSE-MIT>) | - |
 | indexmap | 2.14.2 | Apache-2.0 OR MIT | Copyright (c) 2016--2017 | [LICENSE-APACHE](<licenses/crates/indexmap@2.14.2/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/indexmap@2.14.2/LICENSE-MIT>) | - |
@@ -222,14 +224,20 @@ Compiled into the WebAssembly renderer of `renderer/` (`Cargo.lock`, normal depe
 | range-alloc | 0.1.5 | MIT OR Apache-2.0 | Copyright (c) 2023 The gfx-rs developers | [LICENSE.APACHE](<licenses/crates/range-alloc@0.1.5/LICENSE.APACHE>), [LICENSE.MIT](<licenses/crates/range-alloc@0.1.5/LICENSE.MIT>) | - |
 | raw-window-handle | 0.6.2 | MIT OR Apache-2.0 OR Zlib | Copyright (c) 2019 Osspial | [LICENSE-APACHE.md](<licenses/crates/raw-window-handle@0.6.2/LICENSE-APACHE.md>), [LICENSE-MIT.md](<licenses/crates/raw-window-handle@0.6.2/LICENSE-MIT.md>), [LICENSE-ZLIB.md](<licenses/crates/raw-window-handle@0.6.2/LICENSE-ZLIB.md>) | - |
 | raw-window-metal | 1.1.0 | MIT OR Apache-2.0 | - | [LICENSE-APACHE](<licenses/crates/raw-window-metal@1.1.0/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/raw-window-metal@1.1.0/LICENSE-MIT>) | - |
+| read-fonts | 0.47.0 | MIT OR Apache-2.0 | Copyright (c) 2019 Fontations Developers | [LICENSE-APACHE](<licenses/crates/read-fonts@0.47.0/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/read-fonts@0.47.0/LICENSE-MIT>) | - |
 | renderdoc-sys | 1.1.0 | MIT OR Apache-2.0 | Copyright (c) 2022 Eyal Kalderon | [LICENSE-APACHE](<licenses/crates/renderdoc-sys@1.1.0/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/renderdoc-sys@1.1.0/LICENSE-MIT>) | - |
 | rustc-hash | 1.1.0 | Apache-2.0 OR MIT | - | [LICENSE-APACHE](<licenses/crates/rustc-hash@1.1.0/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/rustc-hash@1.1.0/LICENSE-MIT>) | - |
 | scopeguard | 1.2.0 | MIT OR Apache-2.0 | Copyright (c) 2016-2019 Ulrik Sverdrup "bluss" and scopeguard developers | [LICENSE-APACHE](<licenses/crates/scopeguard@1.2.0/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/scopeguard@1.2.0/LICENSE-MIT>) | - |
+| skrifa | 0.50.0 | MIT OR Apache-2.0 | Copyright (c) 2019 Fontations Developers | [LICENSE-APACHE](<licenses/crates/skrifa@0.50.0/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/skrifa@0.50.0/LICENSE-MIT>) | - |
 | smallvec | 1.16.5 | MIT OR Apache-2.0 | Copyright (c) 2018 The Servo Project Developers | [LICENSE-APACHE](<licenses/crates/smallvec@1.16.5/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/smallvec@1.16.5/LICENSE-MIT>) | - |
 | spirv | 0.4.0+sdk-1.4.341.0 | Apache-2.0 | - | [LICENSE](<licenses/crates/spirv@0.4.0+sdk-1.4.341.0/LICENSE>) | - |
+| stable_deref_trait | 1.2.1 | MIT OR Apache-2.0 | Copyright (c) 2017 Robert Grosse | [LICENSE-APACHE](<licenses/crates/stable_deref_trait@1.2.1/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/stable_deref_trait@1.2.1/LICENSE-MIT>) | - |
 | static_assertions | 1.1.0 | MIT OR Apache-2.0 | Copyright (c) 2017 Nikolai Vazquez | [LICENSE-APACHE](<licenses/crates/static_assertions@1.1.0/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/static_assertions@1.1.0/LICENSE-MIT>) | - |
 | thiserror | 2.0.21 | MIT OR Apache-2.0 | - | [LICENSE-APACHE](<licenses/crates/thiserror@2.0.21/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/thiserror@2.0.21/LICENSE-MIT>) | - |
+| unicode-bidi | 0.3.18 | MIT OR Apache-2.0 | Copyright (c) 2015 The Rust Project Developers | [LICENSE-APACHE](<licenses/crates/unicode-bidi@0.3.18/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/unicode-bidi@0.3.18/LICENSE-MIT>) | - |
 | unicode-ident | 1.0.27 | (MIT OR Apache-2.0) AND Unicode-3.0 | COPYRIGHT AND PERMISSION NOTICE | [LICENSE-APACHE](<licenses/crates/unicode-ident@1.0.27/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/unicode-ident@1.0.27/LICENSE-MIT>), [LICENSE-UNICODE](<licenses/crates/unicode-ident@1.0.27/LICENSE-UNICODE>) | - |
+| unicode-linebreak | 0.1.5 | Apache-2.0 | - | [LICENSE](<licenses/crates/unicode-linebreak@0.1.5/LICENSE>) | - |
+| unicode-script | 0.5.9 | MIT OR Apache-2.0 | Copyright (c) 2019 Manish Goregaokar | [LICENSE-APACHE](<licenses/crates/unicode-script@0.5.9/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/unicode-script@0.5.9/LICENSE-MIT>) | - |
 | unicode-width | 0.2.3 | MIT OR Apache-2.0 | Copyright (c) 2015 The Rust Project Developers | [LICENSE-APACHE](<licenses/crates/unicode-width@0.2.3/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/unicode-width@0.2.3/LICENSE-MIT>) | - |
 | wgpu | 30.0.2 | MIT OR Apache-2.0 | Copyright (c) 2025 The gfx-rs developers | [LICENSE.APACHE](<licenses/crates/wgpu@30.0.2/LICENSE.APACHE>), [LICENSE.MIT](<licenses/crates/wgpu@30.0.2/LICENSE.MIT>) | - |
 | wgpu-core | 30.0.2 | MIT OR Apache-2.0 | Copyright (c) 2025 The gfx-rs developers | [LICENSE.APACHE](<licenses/crates/wgpu-core@30.0.2/LICENSE.APACHE>), [LICENSE.MIT](<licenses/crates/wgpu-core@30.0.2/LICENSE.MIT>) | - |
@@ -247,7 +255,9 @@ Compiled into the WebAssembly renderer of `renderer/` (`Cargo.lock`, normal depe
 | windows-result | 0.4.1 | MIT OR Apache-2.0 | Copyright (c) Microsoft Corporation. | [license-apache-2.0](<licenses/crates/windows-result@0.4.1/license-apache-2.0>), [license-mit](<licenses/crates/windows-result@0.4.1/license-mit>) | - |
 | windows-strings | 0.5.1 | MIT OR Apache-2.0 | Copyright (c) Microsoft Corporation. | [license-apache-2.0](<licenses/crates/windows-strings@0.5.1/license-apache-2.0>), [license-mit](<licenses/crates/windows-strings@0.5.1/license-mit>) | - |
 | windows-threading | 0.2.1 | MIT OR Apache-2.0 | Copyright (c) Microsoft Corporation. | [license-apache-2.0](<licenses/crates/windows-threading@0.2.1/license-apache-2.0>), [license-mit](<licenses/crates/windows-threading@0.2.1/license-mit>) | - |
+| yoke | 0.8.4 | Unicode-3.0 | COPYRIGHT AND PERMISSION NOTICE | [LICENSE](<licenses/crates/yoke@0.8.4/LICENSE>) | - |
 | zerocopy | 0.8.63 | BSD-2-Clause OR Apache-2.0 OR MIT | Copyright 2019 The Fuchsia Authors. | [LICENSE-APACHE](<licenses/crates/zerocopy@0.8.63/LICENSE-APACHE>), [LICENSE-BSD](<licenses/crates/zerocopy@0.8.63/LICENSE-BSD>), [LICENSE-MIT](<licenses/crates/zerocopy@0.8.63/LICENSE-MIT>) | - |
+| zerofrom | 0.1.8 | Unicode-3.0 | COPYRIGHT AND PERMISSION NOTICE | [LICENSE](<licenses/crates/zerofrom@0.1.8/LICENSE>) | - |
 
 ## Fonts
 
