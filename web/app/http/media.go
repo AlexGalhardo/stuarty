@@ -143,11 +143,16 @@ func (h *apiHandler) jobStart(c *web.Ctx, in jobStartIn) (service.Job, error) {
 		status = http.StatusOK
 	}
 
+	res.Text = service.TextFor(service.SurfaceHTTP, res.Text)
+
 	return service.Job{}, c.JSON(status, res)
 }
 
 func (h *apiHandler) jobGet(c *web.Ctx, in jobGetIn) (service.Job, error) {
 	res, err := h.Service.JobGet(c.Context(), service.JobGetRequest{JobID: in.JobID, WaitMS: in.WaitMS})
+	if res != nil {
+		res.Text = service.TextFor(service.SurfaceHTTP, res.Text)
+	}
 
 	return deref(res), err
 }
