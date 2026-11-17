@@ -91,6 +91,65 @@ fn a_frame_is_what_the_cpu_path_draws() {
 	assert_eq!(replies[2], (0, want));
 }
 
+fn lut_message(id: &str, size: u32, entries: &[u8]) -> Vec<u8> {
+	let mut p = vec![id.len() as u8];
+	p.extend(id.as_bytes());
+	p.extend(size.to_le_bytes());
+	p.extend(entries);
+	msg(5, &p)
+}
+
+/// A table that inverts every colour: two points on a side.
+fn inverting_table() -> Vec<u8> {
+	(0..8_u16)
+		.flat_map(|i| [i & 1, i >> 1 & 1, i >> 2 & 1])
+		.flat_map(|v| (65535 - v * 65535).to_le_bytes())
+		.collect()
+}
+
+#[test]
+fn a_lookup_table_is_uploaded_and_drawn_by_the_layer_that_names_it() {
+	let input = INPUT.replace(
+		"\"opacity\":1",
+		"\"opacity\":1,\"lut\":{\"asset\":\"ast_lut\",\"intensity\":1}",
+	);
+	let mut req = init();
+	req.extend(texture("a", 4, 4, &pixels()));
+	req.extend(lut_message("ast_lut", 2, &inverting_table()));
+	req.extend(msg(4, input.as_bytes()));
+	let (replies, end) = run(&Cpu, &req);
+	end.unwrap();
+	assert_eq!(replies.len(), 4);
+	assert_eq!(replies[2], (0, vec![]));
+
+	let mut host = Renderer::new(Default::default());
+	host.put_texture("a", 4, 4, &pixels(), true).unwrap();
+	host.put_lut("ast_lut", 2, &inverting_table()).unwrap();
+	let mut want = vec![0_u8; 8 * 8 * 4];
+	host.render(input.as_bytes(), &mut want).unwrap();
+	assert_eq!(replies[3], (0, want));
+
+	// Without the upload the layer names a table the host does not have.
+	let mut req = init();
+	req.extend(texture("a", 4, 4, &pixels()));
+	req.extend(msg(4, input.as_bytes()));
+	let (replies, _) = run(&Cpu, &req);
+	assert_eq!(
+		replies[2].0,
+		vukem_renderer::error::Reason::MissingTexture as u8
+	);
+
+	// A table that is not size^3 x 3 entries is refused and the child goes on.
+	let mut req = init();
+	req.extend(lut_message("ast_lut", 2, &[0; 10]));
+	let (replies, end) = run(&Cpu, &req);
+	end.unwrap();
+	assert_eq!(
+		replies[1].0,
+		vukem_renderer::error::Reason::InvalidArgument as u8
+	);
+}
+
 #[test]
 fn a_refused_request_is_answered_and_the_child_goes_on() {
 	let mut req = init();

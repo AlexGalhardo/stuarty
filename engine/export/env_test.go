@@ -146,6 +146,8 @@ type fixtureSpec struct {
 	NoisyTone bool `json:"noisy_tone,omitempty"`
 	// OneClick makes the fixture a WAV of silence with one 10 ms burst at 0.5 s.
 	OneClick bool `json:"one_click,omitempty"`
+	// LUT makes the fixture a lookup table (lutFixture: "warm" or "teal"); the asset has no media.
+	LUT string `json:"lut,omitempty"`
 }
 
 // generate writes the media file of the spec into the fixtures folder.
@@ -244,6 +246,10 @@ func loadDir(tb testing.TB, dir string) *timeline.Document {
 		tb.Fatal(err)
 	}
 	for id, spec := range specs {
+		if spec.LUT != "" {
+			useLUT(tb, doc, id, spec)
+			continue
+		}
 		useAsset(doc, id, ingestClip(tb, spec))
 	}
 	return doc

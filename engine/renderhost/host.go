@@ -14,6 +14,7 @@ import (
 	"github.com/tetratelabs/wazero/api"
 
 	"github.com/AlexGalhardo/vukem-video/engine/bitmap"
+	"github.com/AlexGalhardo/vukem-video/engine/lut"
 )
 
 // Default budgets of vr_init (SDD-013 section 7.2).
@@ -343,7 +344,32 @@ func (h *Host) PutBitmap(ctx context.Context, key string, bm bitmap.Bitmap) erro
 		uint64(px.ptr))
 }
 
-// Release forgets the texture or bitmap with that id or key; an unknown one is not an error.
+// PutLUT uploads the lookup table of a lut asset under the asset id, replacing the table of that id (SDD-004
+// section 3.6): the entries are the little-endian 16-bit values of the table (lut.Table.Bytes).
+func (h *Host) PutLUT(ctx context.Context, asset string, t *lut.Table) error {
+	if len(asset) > maxIDBytes || t == nil || t.Size < lut.MinSize || t.Size > lut.MaxSize ||
+		len(t.Data) != 3*t.Size*t.Size*t.Size {
+		return &Error{InvalidArgument, "PutLUT"}
+	}
+
+	id, err := h.put(ctx, []byte(asset))
+	if err != nil {
+		return err
+	}
+
+	data, err := h.put(ctx, t.Bytes())
+	if err != nil {
+		h.release(ctx, id)
+
+		return err
+	}
+
+	defer h.release(ctx, id, data)
+
+	return h.status(ctx, "vr_put_lut", uint64(id.ptr), uint64(id.n), uint64(t.Size), uint64(data.ptr), uint64(data.n))
+}
+
+// Release forgets the texture, bitmap or lookup table with that id or key; an unknown one is not an error.
 func (h *Host) Release(ctx context.Context, id string) error {
 	if len(id) > maxIDBytes {
 		return &Error{InvalidArgument, "Release"}

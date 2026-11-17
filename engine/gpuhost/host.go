@@ -21,6 +21,7 @@ import (
 
 	"github.com/AlexGalhardo/vukem-video/engine/bitmap"
 	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
+	"github.com/AlexGalhardo/vukem-video/engine/lut"
 	"github.com/AlexGalhardo/vukem-video/engine/renderhost"
 )
 
@@ -31,6 +32,7 @@ const (
 	kindBitmap  = 2
 	kindRelease = 3
 	kindRender  = 4
+	kindLUT     = 5
 )
 
 // Statuses of a reply that are not the reasons of SDD-013 section 7.1 (1 to 7).
@@ -205,7 +207,24 @@ func (h *Host) PutBitmap(key string, bm bitmap.Bitmap) error {
 	return err
 }
 
-// Release forgets the texture or bitmap with that id or key; an unknown one is not an error.
+// PutLUT uploads the lookup table of a lut asset under the asset id (SDD-004 section 3.6).
+func (h *Host) PutLUT(asset string, t *lut.Table) error {
+	if len(asset) > maxIDBytes || t == nil || t.Size < lut.MinSize || t.Size > lut.MaxSize ||
+		len(t.Data) != 3*t.Size*t.Size*t.Size {
+		return &renderhost.Error{Reason: renderhost.InvalidArgument, Detail: "PutLUT"}
+	}
+
+	p := make([]byte, 0, 1+len(asset)+4+2*len(t.Data))
+	p = append(p, byte(len(asset))) //nolint:gosec // G115: bounded to 64 above
+	p = append(p, asset...)
+	p = binary.LittleEndian.AppendUint32(p, uint32(t.Size))
+	p = append(p, t.Bytes()...)
+	_, err := h.call(kindLUT, p)
+
+	return err
+}
+
+// Release forgets the texture, bitmap or lookup table with that id or key; an unknown one is not an error.
 func (h *Host) Release(id string) error {
 	if len(id) > maxIDBytes {
 		return &renderhost.Error{Reason: renderhost.InvalidArgument, Detail: "Release"}

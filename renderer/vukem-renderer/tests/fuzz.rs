@@ -16,6 +16,7 @@ use vukem_renderer::error::Reason;
 use vukem_renderer::grade::{CurvePoint, GradeSpec, HslBand, Wheel};
 use vukem_renderer::host::{BitmapMetrics, Limits, Renderer};
 use vukem_renderer::image::Image;
+use vukem_renderer::lut::Lut;
 use vukem_renderer::mask::{MaskShape, MaskSpec, MaskState};
 use vukem_renderer::plan::{MAX_LAYERS, MAX_OUTPUT_SIDE, Pixels, decode};
 
@@ -430,6 +431,14 @@ fn grade(rng: &mut Rng) -> Option<GradeSpec> {
 	})
 }
 
+fn random_lut(rng: &mut Rng) -> Lut {
+	let size = 2 + rng.below(4);
+	let data = (0..size * size * size * 3)
+		.map(|_| rng.next() as u16)
+		.collect();
+	Lut::new(size, data).unwrap()
+}
+
 fn matrix(rng: &mut Rng) -> Option<[f64; 12]> {
 	rng.chance(3)
 		.then(|| core::array::from_fn(|_| extreme(rng)))
@@ -442,6 +451,7 @@ fn the_composition_survives_extreme_numbers() {
 		let images: Vec<Image> = (0..1 + rng.below(3))
 			.map(|_| random_image(&mut rng, true))
 			.collect();
+		let tables: Vec<Lut> = (0..2).map(|_| random_lut(&mut rng)).collect();
 		let layers: Vec<Layer<'_>> = images
 			.iter()
 			.map(|img| {
@@ -466,6 +476,9 @@ fn the_composition_survives_extreme_numbers() {
 					color_matrix: matrix(&mut rng),
 					filter: matrix(&mut rng),
 					grade: grade(&mut rng),
+					lut: rng
+						.chance(3)
+						.then(|| (&tables[rng.below(2)], extreme(&mut rng))),
 					chroma_key: chroma_key(&mut rng),
 					blend: *rng.pick(&BLENDS),
 					mask: rng.chance(2).then(|| mask(&mut rng)),

@@ -5,10 +5,11 @@
 //! every case through [`Renderer`] and writes the frames, one after the other, to the output file.
 //! It reads and writes files named on the command line and nothing else.
 //!
-//! Corpus, little endian: `"VVPC"`, `u32` version 1, `u32` cases; a case is `u32` renders, that
+//! Corpus, little endian: `"VVPC"`, `u32` version 2, `u32` cases; a case is `u32` renders, that
 //! many (`u32` length, JSON), `u32` textures, each `u8` id length, id, `u32` w, `u32` h, `u8`
 //! opaque, pixels; `u32` bitmaps, each `u8` key length, key, `u32` w, `u32` h, four `f64` (natural
-//! w and h, centre dx and dy), pixels. The renders of a case draw into one frame in order, which
+//! w and h, centre dx and dy), pixels; `u32` lookup tables, each `u8` id length, id, `u32` size, then
+//! `size^3 x 3` little-endian `u16` entries. The renders of a case draw into one frame in order, which
 //! is how a band split is expressed (`output.y0`, `output.y1`).
 
 use std::fs::File;
@@ -40,8 +41,8 @@ fn run(corpus: &str, output: &str) -> Result<(), String> {
 
 	let mut magic = [0_u8; 4];
 	r.read_exact(&mut magic).map_err(io)?;
-	if &magic != b"VVPC" || u32_of(&mut r).map_err(io)? != 1 {
-		return Err("not a parity corpus of version 1".into());
+	if &magic != b"VVPC" || u32_of(&mut r).map_err(io)? != 2 {
+		return Err("not a parity corpus of version 2".into());
 	}
 	let cases = u32_of(&mut r).map_err(io)?;
 	for case in 0..cases {
@@ -87,6 +88,19 @@ fn one_case(r: &mut impl Read) -> Result<Vec<u8>, String> {
 		let pix = bytes(r, w * h * 4).map_err(io)?;
 		host.put_bitmap(&key, w, h, &pix, m)
 			.map_err(|e| e.to_string())?;
+	}
+
+	for _ in 0..u32_of(r).map_err(io)? {
+		let id = name(r).map_err(io)?;
+		let size = u32_of(r).map_err(io)? as usize;
+		let data = bytes(
+			r,
+			size.saturating_mul(size)
+				.saturating_mul(size)
+				.saturating_mul(6),
+		)
+		.map_err(io)?;
+		host.put_lut(&id, size, &data).map_err(|e| e.to_string())?;
 	}
 
 	let first = inputs.first().ok_or("a case without a render")?;

@@ -9,11 +9,13 @@ import (
 	"math/rand/v2"
 	"os"
 	"path/filepath"
+	"strconv"
 	"testing"
 
 	"github.com/AlexGalhardo/vukem-video/core/plan"
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
 	"github.com/AlexGalhardo/vukem-video/engine/bitmap"
+	"github.com/AlexGalhardo/vukem-video/engine/lut"
 )
 
 // The Rust renderer (renderer/, SDD-013 section 3) is held byte for byte to this compositor. These
@@ -30,6 +32,8 @@ type vecLayer struct {
 	w, h   int
 	opaque bool
 	bitmap *bitmap.Bitmap
+	// table is the lookup table that layer.Lut names.
+	table *lut.Table
 }
 
 type vecCase struct {
@@ -168,6 +172,7 @@ func rendererVectorCases() []vecCase {
 
 	with := func(l vecLayer, f func(*plan.Layer)) vecLayer { f(&l.layer); return l }
 	cube := colourCube()
+	table5, table17 := mixTable(5), mixTable(17)
 	hsl := []timeline.HslBand{
 		{Range: "red", Hue: 0.5, Saturation: 0.4, Lightness: -0.2},
 		{Range: "yellow", Hue: -0.8, Lightness: 0.5},
@@ -668,6 +673,21 @@ func rendererVectorCases() []vecCase {
 				l.Grade = &plan.GradeSpec{Hsl: hsl[:2], Curves: &timeline.Curves{Master: curves.Master}}
 			}),
 		}},
+		{name: "lut-5", w: 64, h: 64, scale: 1, bg: "#000000", layers: []vecLayer{
+			withLUT(vm("a", cube, 32, 32, 64, 64, 0, 1), table5, 1),
+		}},
+		{name: "lut-17-mixed", w: 64, h: 64, scale: 1, bg: "#000000", layers: []vecLayer{
+			withLUT(vm("a", cube, 32, 32, 64, 64, 0, 1), table17, 0.37),
+		}},
+		{name: "lut-stacked", w: 96, h: 72, scale: 1, bg: "#202838", layers: []vecLayer{
+			vm("a", big, 48, 36, 96, 72, 0, 1),
+			with(withLUT(vm("b", soft, 40, 36, 40, 28, 12, 0.9), table17, 0.8), func(l *plan.Layer) {
+				l.ColorMatrix = bright
+				l.Grade = &plan.GradeSpec{Hsl: hsl, Curves: &timeline.Curves{Master: curves.Master}}
+				l.Filter = sepia
+			}),
+			withLUT(vm("c", greenScreen(31), 70, 40, 40, 30, -8, 1), table5, 0.5),
+		}},
 		{name: "stack", w: 64, h: 48, scale: 1, bg: "#0a0a0a", layers: []vecLayer{
 			vm("a", big, 32, 24, 64, 48, 0, 1),
 			vm("b", soft, 20, 20, 20, 14, 12, 0.6),
@@ -682,10 +702,14 @@ func (c vecCase) compose(t *testing.T, bands int) []byte {
 	t.Helper()
 	imgs := map[string]Image{}
 	bms := map[string]bitmap.Bitmap{}
+	tables := map[string]*lut.Table{}
 	var layers []plan.Layer
 	for i := range c.layers {
 		l := &c.layers[i]
 		layers = append(layers, l.layer)
+		if l.table != nil {
+			tables[l.layer.Lut.Asset] = l.table
+		}
 		if l.layer.Kind == plan.Bitmap {
 			bms[l.layer.Bitmap.Key()] = *l.bitmap
 		} else {
@@ -696,6 +720,7 @@ func (c vecCase) compose(t *testing.T, bands int) []byte {
 		Bands:   bands,
 		Media:   func(l *plan.Layer) (Image, error) { return imgs[l.ItemID], nil },
 		Bitmaps: func(s plan.BitmapSpec) (bitmap.Bitmap, error) { return bms[s.Key()], nil },
+		LUTs:    func(asset string) (*lut.Table, error) { return tables[asset], nil },
 	}
 	dst := image.NewRGBA(image.Rect(0, 0, c.w, c.h))
 	if err := comp.Compose(
@@ -756,6 +781,35 @@ func sincosHash() uint64 {
 	return h.Sum64()
 }
 
+// withLUT gives the layer the table, as the asset "lut-<size>", mixed in by the intensity.
+func withLUT(l vecLayer, t *lut.Table, intensity float64) vecLayer {
+	l.table = t
+	l.layer.Lut = &plan.LutSpec{Asset: "lut-" + strconv.Itoa(t.Size), Intensity: intensity}
+
+	return l
+}
+
+// mixTable is a table of n points on a side that mixes the three channels, so that the interpolation sees
+// entries that differ on every axis.
+func mixTable(n int) *lut.Table {
+	t := &lut.Table{Size: n, Data: make([]uint16, 0, 3*n*n*n)}
+	v := n - 1
+
+	for b := range n {
+		for g := range n {
+			for r := range n {
+				t.Data = append(t.Data,
+					uint16((7*r+2*g+b)*65535/(10*v)),
+					uint16((r+6*g+3*b)*65535/(10*v)),
+					uint16(65535-(3*r+3*g+4*b)*65535/(10*v)),
+				)
+			}
+		}
+	}
+
+	return t
+}
+
 // colourCube is an opaque 64 by 64 image of the 4096 colours of a 16 step grid on each channel.
 func colourCube() Image {
 	pix := make([]byte, 64*64*4)
@@ -776,7 +830,7 @@ func encodeVectors(t *testing.T) []byte {
 		}
 	}
 	buf.WriteString("VVCV")
-	w(uint32(7))
+	w(uint32(8))
 	w(sincosHash())
 	cases := rendererVectorCases()
 	w(uint32(len(cases)))
@@ -896,6 +950,15 @@ func encodeVectors(t *testing.T) []byte {
 			}
 
 			encodeGrade(&buf, pl.Grade)
+
+			if pl.Lut == nil {
+				w(uint8(0))
+			} else {
+				w(uint8(1))
+				w(uint32(l.table.Size))
+				w(pl.Lut.Intensity)
+				w(l.table.Data)
+			}
 		}
 		buf.Write(c.compose(t, 1))
 	}

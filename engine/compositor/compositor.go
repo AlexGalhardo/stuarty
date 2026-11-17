@@ -51,6 +51,8 @@ var ErrSource = errors.New("compositor: a layer has no pixels")
 type Compositor struct {
 	Media   MediaSource
 	Bitmaps BitmapSource
+	// LUTs returns the lookup table of a lut asset; it is needed only when a layer has a lut.
+	LUTs LUTSource
 	// Bands is the number of bands for per-pixel work; zero is DefaultBands.
 	Bands int
 
@@ -163,6 +165,13 @@ func (c *Compositor) layer(dst *image.RGBA, l *plan.Layer, fp *plan.FramePlan, o
 	}
 	if g := newGrade(l.Grade); g != nil {
 		src = c.applyGrade(src, g)
+	}
+	table, mix, err := c.lutOf(l)
+	if err != nil {
+		return err
+	}
+	if table != nil {
+		src = c.applyLUT(src, table, mix)
 	}
 	if l.Filter != nil {
 		src = c.applyMatrix(src, l.Filter)

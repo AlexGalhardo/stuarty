@@ -53,6 +53,9 @@ var requiredCases = []string{
 	"grade-wheels",
 	"grade-curves",
 	"grade-all",
+	"lut-warm",
+	"lut-teal-half",
+	"lut-with-grade",
 	"speed-half",
 	"speed-double",
 	"fps-30000-1001",
@@ -459,6 +462,9 @@ var alphaCases = map[string]func() alphaCase{
 	"grade-wheels":    func() alphaCase { return gradeCase("grade wheels", gradeWheels) },
 	"grade-curves":    func() alphaCase { return gradeCase("grade curves", gradeCurves) },
 	"grade-all":       func() alphaCase { return gradeCase("grade all", gradeAll) },
+	"lut-warm":        func() alphaCase { return lutCase("lut warm", "warm", 1, nil) },
+	"lut-teal-half":   func() alphaCase { return lutCase("lut teal half", "teal", 0.5, nil) },
+	"lut-with-grade":  func() alphaCase { return lutCase("lut with grade", "teal", 0.8, gradeAll) },
 	"speed-half":      func() alphaCase { return speedCase("speed 0.5", rate(1, 2), 40, 0, 13, 26, 39) },
 	"speed-double":    func() alphaCase { return speedCase("speed 2", rate(2, 1), 30, 0, 10, 20, 29) },
 	"fps-30000-1001": func() alphaCase {
@@ -741,7 +747,7 @@ func TestCompositorBandsEqualBlurAndFilter(t *testing.T) {
 			!strings.HasPrefix(
 				name,
 				"flip-",
-			) && !strings.HasPrefix(name, "grade-") && !strings.HasPrefix(name, "effect") &&
+			) && !strings.HasPrefix(name, "grade-") && !strings.HasPrefix(name, "lut-") && !strings.HasPrefix(name, "effect") &&
 			!strings.HasPrefix(name, "transition-") {
 			continue
 		}

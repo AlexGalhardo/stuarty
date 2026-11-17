@@ -21,6 +21,7 @@ import (
 	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
 	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg/ffargs"
 	"github.com/AlexGalhardo/vukem-video/engine/ingest"
+	"github.com/AlexGalhardo/vukem-video/engine/lut"
 )
 
 // layerInfo is what the pre-pass learns about a media layer over its whole item: whether its drawn
@@ -66,6 +67,8 @@ type frameSource struct {
 	images map[string]compositor.Image // decoded PNG by asset id
 	placed map[string]compositor.Image // an image cropped and scaled for its item
 
+	luts map[string]*lut.Table // parsed lookup tables by asset id
+
 	anims      map[string]*ingest.Anim      // open frame sequence of an animated image by asset id
 	animFrames map[animKey]compositor.Image // its frames cropped and scaled for their item
 	animBytes  int64
@@ -76,6 +79,7 @@ func newFrameSource(s *state, infos map[string]*layerInfo) *frameSource {
 		s: s, infos: infos,
 		vids: map[string]*videoDecoder{}, used: map[string]bool{},
 		images: map[string]compositor.Image{}, placed: map[string]compositor.Image{},
+		luts:  map[string]*lut.Table{},
 		anims: map[string]*ingest.Anim{}, animFrames: map[animKey]compositor.Image{},
 	}
 }

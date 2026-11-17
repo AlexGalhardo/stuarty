@@ -7,6 +7,7 @@ use std::collections::BTreeMap;
 use crate::compose::{Layer, Source, Target, compose, layer_opacity, parse_colour, premultiply};
 use crate::error::{Error, Reason};
 use crate::image::Image;
+use crate::lut::{Lut, lut_mix};
 use crate::plan::{MAX_ID_BYTES, Pixels, RenderInput, decode};
 
 /// The largest side of a texture or bitmap.
@@ -15,6 +16,9 @@ pub const MAX_TEXTURE_SIDE: usize = 8192;
 pub const DEFAULT_MAX_TEXTURE_BYTES: usize = 512 << 20;
 /// The default budget of bitmaps in memory.
 pub const DEFAULT_MAX_BITMAP_BYTES: usize = 128 << 20;
+/// The most lookup tables held at once, and the memory they may take (65 points on a side is 1.6 MiB).
+pub const MAX_LUTS: usize = 32;
+pub const MAX_LUT_BYTES: usize = 64 << 20;
 
 /// The two budgets of `vr_init`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -51,6 +55,7 @@ pub struct Renderer {
 	limits: Limits,
 	textures: BTreeMap<String, Image>,
 	bitmaps: BTreeMap<String, StoredBitmap>,
+	luts: BTreeMap<String, Lut>,
 	texture_bytes: usize,
 	bitmap_bytes: usize,
 }
@@ -62,6 +67,7 @@ impl Renderer {
 			limits,
 			textures: BTreeMap::new(),
 			bitmaps: BTreeMap::new(),
+			luts: BTreeMap::new(),
 			texture_bytes: 0,
 			bitmap_bytes: 0,
 		}
@@ -116,8 +122,26 @@ impl Renderer {
 		Ok(())
 	}
 
-	/// Forgets the texture or the bitmap with this id or key; an unknown one is not an error.
+	/// Stores a lookup table under the id of its asset, replacing the one of that id: `size` points on a side and
+	/// `size^3 x 3` little-endian 16-bit entries (red varies fastest). At most `MAX_LUTS` tables and
+	/// `MAX_LUT_BYTES` are held.
+	pub fn put_lut(&mut self, id: &str, size: usize, entries: &[u8]) -> Result<(), Error> {
+		check_id(id)?;
+		let lut = Lut::from_bytes(size, entries)?;
+		let old = self.luts.get(id).map_or(0, Lut::byte_len);
+		let held: usize = self.luts.values().map(Lut::byte_len).sum();
+		if (self.luts.len() >= MAX_LUTS && !self.luts.contains_key(id))
+			|| held - old + lut.byte_len() > MAX_LUT_BYTES
+		{
+			return Err(Error::new(Reason::LimitExceeded, "render_luts"));
+		}
+		self.luts.insert(id.to_string(), lut);
+		Ok(())
+	}
+
+	/// Forgets the texture, the bitmap or the lookup table with this id or key; an unknown one is not an error.
 	pub fn release(&mut self, id: &str) {
+		self.luts.remove(id);
 		if let Some(t) = self.textures.remove(id) {
 			self.texture_bytes -= t.pix.len();
 		}
@@ -180,6 +204,14 @@ impl Renderer {
 					None => return Err(Error::new(Reason::MissingTexture, key.clone())),
 				},
 			};
+			let lut = match &l.lut {
+				// A table mixed in at no thousandth is not drawn, so the host need not have uploaded it.
+				Some(r) if lut_mix(r.intensity) > 0 => match self.luts.get(&r.asset) {
+					Some(t) => Some((t, r.intensity)),
+					None => return Err(Error::new(Reason::MissingTexture, r.asset.clone())),
+				},
+				_ => None,
+			};
 			layers.push(Layer {
 				source,
 				cx: l.cx,
@@ -191,6 +223,7 @@ impl Renderer {
 				color_matrix: l.color_matrix,
 				filter: l.filter,
 				grade: l.grade.clone(),
+				lut,
 				blur: l.blur,
 				chroma_key: l.chroma_key.clone(),
 				blend: l.blend,

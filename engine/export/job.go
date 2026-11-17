@@ -137,7 +137,11 @@ func (s *state) newRenderer(bands int) *renderer {
 	}
 	fs := newFrameSource(s, infos)
 	cache := rasterize.NewCache(s.fonts, 0)
-	rd := &renderer{s: s, fs: fs, comp: &compositor.Compositor{Media: fs.media, Bitmaps: cache.Get, Bands: bands}}
+	rd := &renderer{
+		s:    s,
+		fs:   fs,
+		comp: &compositor.Compositor{Media: fs.media, Bitmaps: cache.Get, LUTs: fs.lut, Bands: bands},
+	}
 	if s.job.PixelRenderer == PixelRendererRust || s.job.PixelRenderer == PixelRendererGPU {
 		rd.rust = newRustRenderer(s, fs, cache.Get, bands)
 	}

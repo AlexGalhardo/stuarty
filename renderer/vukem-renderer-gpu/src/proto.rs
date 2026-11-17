@@ -17,6 +17,7 @@
 //! | 2 bitmap | `u8` key length, key, `u32` w, `u32` h, four `f64` (natural w and h, centre dx and dy), straight RGBA8 | empty |
 //! | 3 release | `u8` id length, id | empty |
 //! | 4 render | the render input JSON of SDD-013 section 2 | `width x height x 4` bytes |
+//! | 5 lut | `u8` id length, id (the lut asset), `u32` size, `size^3 x 3` little-endian `u16` entries | empty |
 //!
 //! End of input at a message boundary ends the child cleanly.
 
@@ -39,6 +40,7 @@ const TEXTURE: u8 = 1;
 const BITMAP: u8 = 2;
 const RELEASE: u8 = 3;
 const RENDER: u8 = 4;
+const LUT: u8 = 5;
 
 /// Status of a failed device.
 pub const STATUS_DEVICE: u8 = 8;
@@ -83,6 +85,7 @@ pub fn serve(
 			(TEXTURE, Some(h)) => texture(h, &payload).map(|()| Vec::new()),
 			(BITMAP, Some(h)) => bitmap(h, &payload).map(|()| Vec::new()),
 			(RELEASE, Some(h)) => release(h, &payload).map(|()| Vec::new()),
+			(LUT, Some(h)) => lut(h, &payload).map(|()| Vec::new()),
 			(RENDER, Some(h)) => match render(draw, h, &payload) {
 				Ok(frame) => Ok(frame),
 				Err(GpuError::Render(e)) => Err(e),
@@ -211,6 +214,13 @@ fn bitmap(host: &mut Renderer, payload: &[u8]) -> Result<(), Error> {
 		center_dy: r.f64()?,
 	};
 	host.put_bitmap(key, w, h, r.rest(), metrics)
+}
+
+fn lut(host: &mut Renderer, payload: &[u8]) -> Result<(), Error> {
+	let mut r = Reader(payload);
+	let id = r.name()?;
+	let size = r.u32()?;
+	host.put_lut(id, size, r.rest())
 }
 
 fn release(host: &mut Renderer, payload: &[u8]) -> Result<(), Error> {

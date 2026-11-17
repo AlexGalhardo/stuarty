@@ -19,6 +19,7 @@ import (
 	"github.com/AlexGalhardo/vukem-video/core/plan"
 	"github.com/AlexGalhardo/vukem-video/engine/bitmap"
 	"github.com/AlexGalhardo/vukem-video/engine/compositor"
+	"github.com/AlexGalhardo/vukem-video/engine/lut"
 	"github.com/AlexGalhardo/vukem-video/engine/renderhost"
 )
 
@@ -33,7 +34,7 @@ const (
 	parityBands   = 8
 	rendererRoot  = "../../renderer"
 	corpusMagic   = "VVPC"
-	corpusVersion = 1
+	corpusVersion = 2
 )
 
 // parityTexture and parityBitmap are what the Go compositor was given for one frame.
@@ -54,6 +55,7 @@ type parityFrame struct {
 	bands    [][]byte
 	textures []parityTexture
 	bitmaps  map[string]bitmap.Bitmap
+	luts     map[string]*lut.Table
 	want     []byte
 }
 
@@ -118,8 +120,9 @@ func recordFrames(t *testing.T, dir, name string, frames []int) []parityFrame {
 	var (
 		textures []parityTexture
 		bitmaps  map[string]bitmap.Bitmap
+		luts     map[string]*lut.Table
 	)
-	media, bm := rd.comp.Media, rd.comp.Bitmaps
+	media, bm, lutOf := rd.comp.Media, rd.comp.Bitmaps, rd.comp.LUTs
 	rd.comp.Media = func(l *plan.Layer) (compositor.Image, error) {
 		img, err := media(l)
 		if err == nil {
@@ -138,18 +141,35 @@ func recordFrames(t *testing.T, dir, name string, frames []int) []parityFrame {
 		return b, err
 	}
 
+	rd.comp.LUTs = func(asset string) (*lut.Table, error) {
+		t, err := lutOf(asset)
+		if err == nil {
+			luts[asset] = t
+		}
+		return t, err
+	}
+
 	w, h := doc.Settings.Width, doc.Settings.Height
 	dst := image.NewRGBA(image.Rect(0, 0, w, h))
 	var out []parityFrame
 	for _, f := range frames {
-		textures, bitmaps = nil, map[string]bitmap.Bitmap{}
+		textures, bitmaps, luts = nil, map[string]bitmap.Bitmap{}, map[string]*lut.Table{}
 		if err := rd.render(dst, f); err != nil {
 			t.Fatalf("%s frame %d: %v", name, f, err)
 		}
 		fp := plan.FrameWith(doc, f, s.opts)
 		pf := parityFrame{
-			name: name, frame: f, w: w, h: h, textures: textures, bitmaps: bitmaps, want: bytes.Clone(dst.Pix),
-			plan: fp, scale: s.scale, input: renderInput(t, fp, w, h, s.scale, 0, 0),
+			name:     name,
+			frame:    f,
+			w:        w,
+			h:        h,
+			textures: textures,
+			bitmaps:  bitmaps,
+			luts:     luts,
+			want:     bytes.Clone(dst.Pix),
+			plan:     fp,
+			scale:    s.scale,
+			input:    renderInput(t, fp, w, h, s.scale, 0, 0),
 		}
 		for i := range parityBands {
 			pf.bands = append(pf.bands, renderInput(t, fp, w, h, s.scale, h*i/parityBands, h*(i+1)/parityBands))
@@ -211,6 +231,13 @@ func writeCorpus(t *testing.T, path string, frames []parityFrame, banded bool) {
 				le(&b, v)
 			}
 			b.Write(bm.Pix[:bm.Width*bm.Height*4])
+		}
+		le(&b, uint32(len(fr.luts)))
+		for asset, tb := range fr.luts {
+			b.WriteByte(byte(len(asset)))
+			b.WriteString(asset)
+			le(&b, uint32(tb.Size))
+			b.Write(tb.Bytes())
 		}
 		if _, err := w.Write(b.Bytes()); err != nil {
 			t.Fatal(err)
@@ -293,6 +320,11 @@ func wasmFrame(t *testing.T, fr *parityFrame, banded bool) []byte {
 		}
 		for key, bm := range fr.bitmaps {
 			if err := h.PutBitmap(ctx, key, bm); err != nil {
+				t.Fatalf("%s frame %d: %v", fr.name, fr.frame, err)
+			}
+		}
+		for asset, tb := range fr.luts {
+			if err := h.PutLUT(ctx, asset, tb); err != nil {
 				t.Fatalf("%s frame %d: %v", fr.name, fr.frame, err)
 			}
 		}

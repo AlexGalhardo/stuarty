@@ -156,8 +156,13 @@ func (r *rustRenderer) compose(dst *image.RGBA, fp plan.FramePlan, scale float64
 
 	fp.Layers = kept
 
+	luts, err := r.frameLUTs(kept)
+	if err != nil {
+		return err
+	}
+
 	if g := r.gpuHost(); g != nil {
-		return rendererError(r.gpuFrame(g, dst, fp, scale, textures, bitmaps))
+		return rendererError(r.gpuFrame(g, dst, fp, scale, textures, bitmaps, luts))
 	}
 
 	w, h := dst.Rect.Dx(), dst.Rect.Dy()
@@ -179,7 +184,7 @@ func (r *rustRenderer) compose(dst *image.RGBA, fp plan.FramePlan, scale float64
 
 	for i := range n {
 		wg.Go(func() {
-			errs[i] = r.band(r.hosts[i], dst, fp, scale, textures, bitmaps, h*i/n, h*(i+1)/n)
+			errs[i] = r.band(r.hosts[i], dst, fp, scale, textures, bitmaps, luts, h*i/n, h*(i+1)/n)
 		})
 	}
 
@@ -212,7 +217,7 @@ func (r *rustRenderer) gpuHost() *gpuhost.Host {
 // gpuFrame draws the whole frame in the child and releases what it uploaded.
 func (r *rustRenderer) gpuFrame(
 	g *gpuhost.Host, dst *image.RGBA, fp plan.FramePlan, scale float64,
-	textures []textureUpload, bitmaps []bitmapUpload,
+	textures []textureUpload, bitmaps []bitmapUpload, luts []lutUpload,
 ) error {
 	var ids []string
 
@@ -239,6 +244,14 @@ func (r *rustRenderer) gpuFrame(
 		}
 	}
 
+	for i := range luts {
+		ids = append(ids, luts[i].asset)
+
+		if err := g.PutLUT(luts[i].asset, luts[i].table); err != nil {
+			return err
+		}
+	}
+
 	out := renderhost.Output{Width: dst.Rect.Dx(), Height: dst.Rect.Dy(), Scale: scale}
 
 	return g.Render(renderhost.RenderInput{Output: out, Plan: fp}, dst)
@@ -260,7 +273,7 @@ func (r *rustRenderer) ensureHosts(n int) error {
 // band draws rows [y0, y1) of the frame on one instance and releases what it uploaded.
 func (r *rustRenderer) band(
 	h *renderhost.Host, dst *image.RGBA, fp plan.FramePlan, scale float64,
-	textures []textureUpload, bitmaps []bitmapUpload, y0, y1 int,
+	textures []textureUpload, bitmaps []bitmapUpload, luts []lutUpload, y0, y1 int,
 ) error {
 	ctx := r.s.ctx
 
@@ -285,6 +298,14 @@ func (r *rustRenderer) band(
 		ids = append(ids, bitmaps[i].key)
 
 		if err := h.PutBitmap(ctx, bitmaps[i].key, bitmaps[i].bm); err != nil {
+			return err
+		}
+	}
+
+	for i := range luts {
+		ids = append(ids, luts[i].asset)
+
+		if err := h.PutLUT(ctx, luts[i].asset, luts[i].table); err != nil {
 			return err
 		}
 	}
