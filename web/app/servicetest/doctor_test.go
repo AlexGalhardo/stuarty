@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -367,6 +368,16 @@ func TestDoctorRefusesANetworkMemberTheMachineDetails(t *testing.T) {
 	}
 }
 
+// limitsMechanism is how the report names the limits of the platform: prlimit(1) on Unix, a Job Object on
+// Windows (VV-110).
+func limitsMechanism() string {
+	if runtime.GOOS == "windows" {
+		return "available: a Job Object"
+	}
+
+	return "available: prlimit"
+}
+
 // SDD-007 sections 6.5 and 6.7: doctor says whether the limits and the sandbox are
 // available, and never prints the path of the sandbox.
 func TestDoctorReportsTheChildPolicy(t *testing.T) {
@@ -379,7 +390,7 @@ func TestDoctorReportsTheChildPolicy(t *testing.T) {
 				Limits:  true,
 				Sandbox: "/usr/bin/bwrap",
 			},
-			"available: prlimit",
+			limitsMechanism(),
 			"available: every FFmpeg run",
 		},
 		"neither": {
@@ -412,6 +423,30 @@ func TestDoctorReportsTheChildPolicy(t *testing.T) {
 
 		if strings.Contains(res.Text, "/usr/bin/bwrap") {
 			t.Errorf("%s: the report prints the sandbox path", name)
+		}
+	}
+}
+
+// VV-110: a missing transcription helper is optional, and a report without checks says how to get them.
+func TestDoctorMarksTheHelperOptionalAndSaysWhenNoCheckRan(t *testing.T) {
+	e := newEnvWith(t, func(e *env, o *service.Options) {
+		o.Workspace = string(e.dir)
+		o.Doctor = service.DoctorOptions{Mode: service.ModeLocal}
+	})
+
+	short, err := e.svc.Doctor(e.as(ui), service.DoctorRequest{})
+	if err != nil || !strings.Contains(short.Text, "--full") {
+		t.Fatalf("short report = %+v, %v", short, err)
+	}
+
+	full, err := e.svc.Doctor(e.as(ui), service.DoctorRequest{Full: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, c := range full.Checks {
+		if strings.HasPrefix(c.Name, "transcribe.") && c.Name != "transcribe.provider" && !c.OK && !c.Optional {
+			t.Errorf("%s is missing and not optional", c.Name)
 		}
 	}
 }

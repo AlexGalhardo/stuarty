@@ -561,6 +561,9 @@
           },
           "ok": {
             "type": "boolean"
+          },
+          "optional": {
+            "type": "boolean"
           }
         },
         "type": "object"

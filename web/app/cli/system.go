@@ -58,7 +58,7 @@ var doctorCmd = &spec{
 
 		for i := range res.Checks {
 			ck := &res.Checks[i]
-			if ck.OK {
+			if ck.OK || ck.Optional {
 				continue
 			}
 
