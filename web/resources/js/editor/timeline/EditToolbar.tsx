@@ -35,6 +35,7 @@ import {
 	useCanEdit,
 	useHasSelection,
 } from "../commands/useActions";
+import { useShortcutLabel } from "../commands/useShortcutLabel";
 
 const DEFAULT_CAPTION_DURATION = "3s";
 
@@ -118,6 +119,7 @@ export default function EditToolbar({
 	onCaptionOpenChange(open: boolean): void;
 }): ReactNode {
 	const t = useT();
+	const tip = useShortcutLabel();
 	const actions = useActions();
 	const canCut = useCanCut();
 	const ready = useCanEdit();
@@ -133,6 +135,7 @@ export default function EditToolbar({
 				variant="ghost"
 				size="sm"
 				disabled={!canCut}
+				title={tip(t("ui.editor.edit.split"), "split")}
 				onClick={() => void actions.splitAtPlayhead()}
 			>
 				<Scissors aria-hidden="true" />
@@ -143,6 +146,7 @@ export default function EditToolbar({
 				variant="ghost"
 				size="sm"
 				disabled={!canCut}
+				title={tip(t("ui.editor.edit.trim_start"), "trim_start")}
 				onClick={() => void actions.trimToPlayhead("start")}
 			>
 				<StepForward aria-hidden="true" />
@@ -153,6 +157,7 @@ export default function EditToolbar({
 				variant="ghost"
 				size="sm"
 				disabled={!canCut}
+				title={tip(t("ui.editor.edit.trim_end"), "trim_end")}
 				onClick={() => void actions.trimToPlayhead("end")}
 			>
 				<StepBack aria-hidden="true" />
@@ -173,6 +178,7 @@ export default function EditToolbar({
 				variant="ghost"
 				size="sm"
 				disabled={!hasSelection}
+				title={tip(t("ui.editor.edit.delete"), "delete")}
 				onClick={() => void actions.deleteSelection()}
 			>
 				<Trash2 aria-hidden="true" />
@@ -183,6 +189,7 @@ export default function EditToolbar({
 				variant="ghost"
 				size="sm"
 				disabled={!ready}
+				title={tip(t("ui.editor.edit.caption"), "add_caption")}
 				onClick={() => onCaptionOpenChange(true)}
 			>
 				<Captions aria-hidden="true" />
@@ -193,6 +200,7 @@ export default function EditToolbar({
 				variant="ghost"
 				size="sm"
 				disabled={!ready}
+				title={tip(t("ui.editor.edit.text"), "add_text")}
 				onClick={() => void actions.addText(t("ui.editor.defaults.text"))}
 			>
 				<Type aria-hidden="true" />

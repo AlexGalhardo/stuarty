@@ -340,3 +340,24 @@ export function comboFromEvent(event: ComboEvent): string | null {
 export function displayCombo(combo: string, mac: boolean): string {
 	return combo.replace(/\bMod\b/g, mac ? "Cmd" : "Ctrl");
 }
+
+export const IS_MAC: boolean =
+	typeof navigator !== "undefined" &&
+	/Mac|iPhone|iPad/.test(navigator.userAgent);
+
+// "Split (Ctrl+B)": the label with the first key of the row that is current
+// now, so a tooltip never states a key that was rebound. A row that does not
+// exist, or has no key, leaves the label alone.
+export function labelWithKey(
+	label: string,
+	id: string,
+	bindings: Bindings,
+	mac: boolean,
+): string {
+	const row = SHORTCUTS.find((candidate) => candidate.id === id);
+	if (row === undefined) return label;
+	const keys = isBindingId(id) ? bindings[id] : row.keys.split(", ")[0];
+	return keys === undefined || keys === ""
+		? label
+		: `${label} (${displayCombo(keys, mac)})`;
+}
