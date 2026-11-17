@@ -550,3 +550,36 @@ func TestUndoOversizedBodyKeepsTheRouteLimit(t *testing.T) {
 		t.Errorf("oversized undo body = %d %.200s, want 413", res.status, res.body)
 	}
 }
+
+// A validation error may quote a short excerpt of the value. It must not send
+// the value back whole (SDD-003 section 1.2 rule 9), and the refusal must not
+// create a project.
+func TestValidationErrorDoesNotEchoTheSubmittedValue(t *testing.T) {
+	t.Parallel()
+
+	h := newHarness(t)
+	huge := strings.Repeat("p", 100_000)
+
+	for _, c := range []struct {
+		name string
+		r    req
+	}{
+		{"preset", req{method: http.MethodPost, path: "/api/v1/projects", body: `{"name":"n","preset":"` + huge + `"}`}},
+		{"state", req{path: "/api/v1/projects?state=" + huge[:4000]}},
+	} {
+		res := h.do(c.r)
+		body := string(res.body)
+		if res.status != http.StatusBadRequest || !strings.Contains(body, `"code":"E_VALIDATION"`) {
+			t.Errorf("%s = %d %s, want 400 E_VALIDATION", c.name, res.status, body[:min(len(body), 200)])
+		}
+
+		if strings.Contains(body, "E_INTERNAL") || strings.Contains(body, huge[:300]) || len(body) > 4000 {
+			t.Errorf("%s echoed the value: %d bytes", c.name, len(body))
+		}
+	}
+
+	list := h.get("/api/v1/projects")
+	if list.status != http.StatusOK || strings.Contains(string(list.body), `"name":"n"`) {
+		t.Errorf("a refused create left a project: %d %s", list.status, list.body)
+	}
+}
