@@ -1,0 +1,7 @@
+{
+  "op": "caption.import_subtitles",
+  "args": {
+    "track_id": "trk_m1n2p3q4r5",
+    "text": "1\n00:00:01,000 --> 00:00:02,000\nx\n"
+  }
+}

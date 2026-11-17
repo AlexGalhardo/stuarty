@@ -635,6 +635,68 @@
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "additionalProperties": false,
       "properties": {
+        "format": {
+          "description": "srt or vtt; default: vtt when the text starts with WEBVTT.",
+          "enum": [
+            "srt",
+            "vtt"
+          ],
+          "type": "string"
+        },
+        "new_ids": {
+          "description": "Ids for the created captions, in cue order.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "start": {
+          "description": "A length added to every cue; default 0.",
+          "type": "string",
+          "x-vv-kind": "time"
+        },
+        "text": {
+          "description": "The SRT or WebVTT text.",
+          "type": "string"
+        },
+        "track_id": {
+          "description": "A visual track that receives the captions.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "track_id",
+        "text"
+      ],
+      "type": "object"
+    },
+    "description": "Reads the subtitle text (the service or the caller reads the file) and adds one caption for each cue on a visual track: the cue time is the caption time, rounded to frames, and its words share the duration in proportion to their character counts. Markup tags and line breaks are dropped. start moves every cue later by that length. The cues must not overlap each other or the items of the track.",
+    "errors": [
+      "E_VALIDATION",
+      "E_INVALID_TIME",
+      "E_NOT_FOUND",
+      "E_TYPE_MISMATCH",
+      "E_INVALID_STATE",
+      "E_ID_EXISTS",
+      "E_LIMIT",
+      "E_OVERLAP"
+    ],
+    "example": {
+      "format": "srt",
+      "text": "1\n00:00:01,000 --> 00:00:02,500\nHello there\n",
+      "track_id": "trk_a1b2c3d4e5"
+    },
+    "internal": false,
+    "name": "caption.import_subtitles",
+    "phase": "beta",
+    "scope": "edit",
+    "summary": "Creates one caption per cue of an SRT or WebVTT text."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
         "item_ids": {
           "description": "Exactly two distinct captions of one track, in any order.",
           "items": {

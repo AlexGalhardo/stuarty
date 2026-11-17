@@ -148,6 +148,7 @@
       "caption.add",
       "caption.edit_word",
       "caption.from_transcript",
+      "caption.import_subtitles",
       "caption.merge",
       "caption.retime_from_clip",
       "caption.set_breaks",

@@ -2211,6 +2211,7 @@
               "caption.add",
               "caption.edit_word",
               "caption.from_transcript",
+              "caption.import_subtitles",
               "caption.merge",
               "caption.retime_from_clip",
               "caption.set_breaks",
@@ -2303,6 +2304,9 @@
           },
           "caption.from_transcript": {
             "$ref": "#/components/schemas/args.caption.from_transcript"
+          },
+          "caption.import_subtitles": {
+            "$ref": "#/components/schemas/args.caption.import_subtitles"
           },
           "caption.merge": {
             "$ref": "#/components/schemas/args.caption.merge"
@@ -4401,6 +4405,44 @@
         "required": [
           "clip_item_id",
           "track_id"
+        ],
+        "type": "object"
+      },
+      "args.caption.import_subtitles": {
+        "additionalProperties": false,
+        "properties": {
+          "format": {
+            "description": "srt or vtt; default: vtt when the text starts with WEBVTT.",
+            "enum": [
+              "srt",
+              "vtt"
+            ],
+            "type": "string"
+          },
+          "new_ids": {
+            "description": "Ids for the created captions, in cue order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "start": {
+            "description": "A length added to every cue; default 0.",
+            "type": "string",
+            "x-vv-kind": "time"
+          },
+          "text": {
+            "description": "The SRT or WebVTT text.",
+            "type": "string"
+          },
+          "track_id": {
+            "description": "A visual track that receives the captions.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "track_id",
+          "text"
         ],
         "type": "object"
       },

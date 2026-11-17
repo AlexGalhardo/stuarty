@@ -446,6 +446,9 @@
           "from_transcript": {
             "title": "Captions from transcript"
           },
+          "import_subtitles": {
+            "title": "Import subtitles (SRT, VTT)"
+          },
           "merge": {
             "title": "Merge captions"
           },

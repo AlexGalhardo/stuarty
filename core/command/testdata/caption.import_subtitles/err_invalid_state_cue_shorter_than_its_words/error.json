@@ -1,0 +1,7 @@
+{
+  "code": "E_INVALID_STATE",
+  "message": "Cue 1 lasts 1 frames but has 3 words; each word needs 1 frame.",
+  "hint": "Lengthen the cue in the file or use a higher frame rate.",
+  "retryable": false,
+  "path": "args.text"
+}

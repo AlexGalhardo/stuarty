@@ -243,6 +243,7 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 		{ kind: "toolbar", action: "timeline.freeze_frame", phase: "B" },
 		palette,
 	],
+	"caption.import_subtitles": [palette],
 	"marker.add": [
 		{ kind: "key", action: "timeline.marker", phase: "B" },
 		palette,

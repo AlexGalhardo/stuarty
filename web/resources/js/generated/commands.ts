@@ -360,6 +360,29 @@ export interface CaptionFromTranscriptArgs {
   track_id: string;
 }
 
+export interface CaptionImportSubtitlesArgs {
+  /**
+   * srt or vtt; default: vtt when the text starts with WEBVTT.
+   */
+  format?: "srt" | "vtt";
+  /**
+   * Ids for the created captions, in cue order.
+   */
+  new_ids?: string[];
+  /**
+   * A length added to every cue; default 0.
+   */
+  start?: string;
+  /**
+   * The SRT or WebVTT text.
+   */
+  text: string;
+  /**
+   * A visual track that receives the captions.
+   */
+  track_id: string;
+}
+
 export interface CaptionMergeArgs {
   /**
    * Exactly two distinct captions of one track, in any order.
@@ -2319,7 +2342,7 @@ export interface TrackUpdateArgs {
   volume?: number;
 }
 
-export type CommandName = "asset.add" | "asset.remove" | "audio.add" | "audio.duck" | "audio.mark_beats" | "caption.add" | "caption.edit_word" | "caption.from_transcript" | "caption.merge" | "caption.retime_from_clip" | "caption.set_breaks" | "caption.set_style" | "caption.set_words" | "caption.split" | "clip.add" | "clip.remove_silences" | "clip.set_blend" | "clip.set_blur" | "clip.set_chroma_key" | "clip.set_color" | "clip.set_effects" | "clip.set_filter" | "clip.set_flip" | "clip.set_framing" | "clip.set_mask" | "clip.set_speed" | "font.add" | "font.remove" | "item.crossfade" | "item.delete" | "item.duplicate" | "item.extract_audio" | "item.freeze_frame" | "item.link" | "item.move" | "item.paste_attributes" | "item.rename" | "item.set_audio" | "item.set_enabled" | "item.set_transform" | "item.set_transition" | "item.slip" | "item.split" | "item.trim" | "item.unlink" | "keyframe.clear" | "keyframe.remove" | "keyframe.set" | "marker.add" | "marker.remove" | "marker.set" | "project.rename" | "settings.reframe" | "settings.set" | "settings.set_fps" | "shape.add" | "shape.set" | "slot.fill" | "slot.mark" | "slot.unmark" | "template.set_info" | "text.add" | "text.apply_preset" | "text.set" | "timeline.close_gap" | "track.add" | "track.move" | "track.remove" | "track.set_caption_style" | "track.update";
+export type CommandName = "asset.add" | "asset.remove" | "audio.add" | "audio.duck" | "audio.mark_beats" | "caption.add" | "caption.edit_word" | "caption.from_transcript" | "caption.import_subtitles" | "caption.merge" | "caption.retime_from_clip" | "caption.set_breaks" | "caption.set_style" | "caption.set_words" | "caption.split" | "clip.add" | "clip.remove_silences" | "clip.set_blend" | "clip.set_blur" | "clip.set_chroma_key" | "clip.set_color" | "clip.set_effects" | "clip.set_filter" | "clip.set_flip" | "clip.set_framing" | "clip.set_mask" | "clip.set_speed" | "font.add" | "font.remove" | "item.crossfade" | "item.delete" | "item.duplicate" | "item.extract_audio" | "item.freeze_frame" | "item.link" | "item.move" | "item.paste_attributes" | "item.rename" | "item.set_audio" | "item.set_enabled" | "item.set_transform" | "item.set_transition" | "item.slip" | "item.split" | "item.trim" | "item.unlink" | "keyframe.clear" | "keyframe.remove" | "keyframe.set" | "marker.add" | "marker.remove" | "marker.set" | "project.rename" | "settings.reframe" | "settings.set" | "settings.set_fps" | "shape.add" | "shape.set" | "slot.fill" | "slot.mark" | "slot.unmark" | "template.set_info" | "text.add" | "text.apply_preset" | "text.set" | "timeline.close_gap" | "track.add" | "track.move" | "track.remove" | "track.set_caption_style" | "track.update";
 
 export interface CommandArgsMap {
 	"asset.add": AssetAddArgs;
@@ -2330,6 +2353,7 @@ export interface CommandArgsMap {
 	"caption.add": CaptionAddArgs;
 	"caption.edit_word": CaptionEditWordArgs;
 	"caption.from_transcript": CaptionFromTranscriptArgs;
+	"caption.import_subtitles": CaptionImportSubtitlesArgs;
 	"caption.merge": CaptionMergeArgs;
 	"caption.retime_from_clip": CaptionRetimeFromClipArgs;
 	"caption.set_breaks": CaptionSetBreaksArgs;
@@ -2405,6 +2429,7 @@ export const COMMANDS: Record<CommandName, { summary: string; scope: "edit" | "m
 	"caption.add": { summary: "Adds a caption item with timed words.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_ID_EXISTS","E_LIMIT","E_OVERLAP"] },
 	"caption.edit_word": { summary: "Changes the text of one word of a caption, or removes the word.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE"] },
 	"caption.from_transcript": { summary: "Creates captions for the speech of a clip from its transcript.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_ID_EXISTS","E_LIMIT","E_OVERLAP"] },
+	"caption.import_subtitles": { summary: "Creates one caption per cue of an SRT or WebVTT text.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_ID_EXISTS","E_LIMIT","E_OVERLAP"] },
 	"caption.merge": { summary: "Joins two captions of one track into one that spans both.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_LIMIT"] },
 	"caption.retime_from_clip": { summary: "Retimes the captions linked to a clip after the clip was moved, trimmed or sped up.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_OVERLAP"] },
 	"caption.set_breaks": { summary: "Sets the forced line breaks of a caption.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
