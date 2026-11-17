@@ -82,6 +82,8 @@ Every number is a JSON number read as an IEEE 754 double (`f64`, correctly round
 | `blend` | string | the blend mode of SDD-004 §3.8: `multiply`, `screen`, `overlay` or `add`; absent means normal (source-over of §3.7) |
 | `flip_x`, `flip_y` | boolean | mirror the layer across its own vertical or horizontal axis (SDD-004 §3.10); absent means false |
 | `mask` | `{shape, x, y, width, height, feather, invert}` or `null` | the mask of SDD-004 §3.9: `shape` is `rect` or `ellipse`, `x`, `y`, `width`, `height` are fractions of the layer rectangle, `feather` is in project pixels (an integer), `invert` is a boolean and may be absent; absent or `null` means none |
+| `shadow` | `{color, opacity, dx, dy, blur}` or `null` | the drop shadow of SDD-004 §3.15; every member is required when the object is present; absent or `null` means none |
+| `outline` | `{color, width}` or `null` | the outline of SDD-004 §3.15; both members are required when the object is present; absent or `null` means none |
 | `blur` | number | the standard deviation of the Gaussian of SDD-004 §3.6 in project pixels; 0 or absent for none |
 | `cx`, `cy` | number | the centre of the drawn rectangle in project pixels |
 | `w`, `h` | number | its size before rotation, in project pixels, scale already included |
@@ -93,7 +95,7 @@ Rules of reading:
 
 1. **Order is the stacking order**: the first layer is the bottom. The renderer draws in array order and never sorts.
 2. **Unknown fields are refused** (`invalid_plan`), not ignored: an ignored field is a pixel the renderer silently does not draw. The exception is the informational fields of the table (`asset`, `asset_kind`, `source_frame`, `scale`), which must be accepted and may be absent.
-3. **Absent is zero or null**: `blur`, `color_matrix`, `filter`, `crop` and `bitmap` absent mean none. `opacity` has no default: a layer without it is `invalid_plan`. A number that is `NaN`, infinite or outside the double range cannot occur in JSON and is refused if a host builds the text by hand.
+3. **Absent is zero or null**: `blur`, `color_matrix`, `filter`, `crop`, `bitmap`, `shadow` and `outline` absent mean none. `opacity` has no default: a layer without it is `invalid_plan`. A number that is `NaN`, infinite or outside the double range cannot occur in JSON and is refused if a host builds the text by hand.
 4. **Counts are bounded** (§7): at most 64 layers and exactly 12 numbers in a matrix, else `limit_exceeded` and `invalid_plan` respectively.
 
 ### 2.3 What is not in the plan

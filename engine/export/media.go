@@ -42,7 +42,8 @@ type layerInfo struct {
 }
 
 func isPlain(l *plan.Layer) bool {
-	return !l.FlipX && !l.FlipY && l.Blur == 0 && l.Mask == nil && l.Transition == nil && len(l.Effects) == 0
+	return !l.FlipX && !l.FlipY && l.Blur == 0 && l.Mask == nil && l.Transition == nil && len(l.Effects) == 0 &&
+		l.Shadow == nil && l.Outline == nil
 }
 
 // scanLayers plans every frame once and records, for each media item, whether its size, rotation and

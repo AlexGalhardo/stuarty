@@ -99,6 +99,8 @@ var requiredCases = []string{
 	"transition-spin",
 	"transition-shrink",
 	"transition-grow",
+	"shadow",
+	"outline",
 }
 
 const (
@@ -632,6 +634,29 @@ var alphaCases = map[string]func() alphaCase{
 		b.clip(b.track(), b.video(portrait24), 0, 60, nil)
 		return b.build(0, 7, 22, 45, 59)
 	},
+	// One frame of a still with alpha, centred, so the pad is on the picture and the corner stays the background.
+	"shadow": func() alphaCase {
+		b := newCase("a sticker with a drop shadow", rate(30, 1))
+		b.doc.Settings.Background = "#202020"
+		b.clip(b.track(), b.image(fixtureSpec{Name: "gold-sticker.png", Width: 120, Height: 120, Sticker: true}), 0, 1,
+			func(it *timeline.Item) {
+				it.Fit = "none"
+				it.X, it.Y = new(90.0), new(160.0)
+				it.Shadow = &timeline.Shadow{Color: "#00AAFF", Opacity: 0.8, DX: 8, DY: 6, Blur: 4}
+			})
+		return b.build(0)
+	},
+	"outline": func() alphaCase {
+		b := newCase("a sticker with an outline", rate(30, 1))
+		b.doc.Settings.Background = "#202020"
+		b.clip(b.track(), b.image(fixtureSpec{Name: "gold-sticker.png", Width: 120, Height: 120, Sticker: true}), 0, 1,
+			func(it *timeline.Item) {
+				it.Fit = "none"
+				it.X, it.Y = new(90.0), new(160.0)
+				it.Outline = &timeline.Outline{Color: "#FFFFFF", Width: 3}
+			})
+		return b.build(0)
+	},
 }
 
 func goldenDir(name string) string { return filepath.Join("testdata", "golden", name) }
@@ -791,6 +816,7 @@ func TestCompositorBandsEqualBlurAndFilter(t *testing.T) {
 			!strings.HasPrefix(name, "sticker-") && !strings.HasPrefix(name, "chroma-") &&
 			!strings.HasPrefix(name, "blend-") && !strings.HasPrefix(name, "mask-") &&
 			!strings.HasPrefix(name, "crop-") &&
+			!strings.HasPrefix(name, "shadow") && !strings.HasPrefix(name, "outline") &&
 			!strings.HasPrefix(
 				name,
 				"flip-",

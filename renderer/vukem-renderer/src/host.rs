@@ -233,6 +233,8 @@ impl Renderer {
 				effects: l.effects.clone(),
 				transition: l.transition,
 				frame: r.frame,
+				shadow: l.shadow.clone(),
+				outline: l.outline.clone(),
 			});
 		}
 		Ok(layers)

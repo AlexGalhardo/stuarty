@@ -5,7 +5,7 @@
 
 use crate::blend::BlendMode;
 use crate::chroma::ChromaKeySpec;
-use crate::compose::parse_colour;
+use crate::compose::{OutlineSpec, ShadowSpec, parse_colour};
 use crate::effects::{Direction, Effect, FrameInfo, Transition, TransitionKind};
 use crate::error::{Error, Reason};
 use crate::grade::{CurvePoint, GradeSpec, HSL_RANGES, HslBand, Wheel};
@@ -76,6 +76,8 @@ pub struct LayerSpec {
 	pub flip_y: bool,
 	pub effects: Vec<Effect>,
 	pub transition: Option<Transition>,
+	pub shadow: Option<ShadowSpec>,
+	pub outline: Option<OutlineSpec>,
 }
 
 /// A decoded render input.
@@ -339,6 +341,35 @@ fn flag(v: Option<Value>, name: &str) -> Result<bool, Error> {
 		Some(Value::Bool(b)) => Ok(b),
 		Some(_) => Err(invalid(format!("layer: {name} is not a boolean"))),
 	}
+}
+
+fn shadow(v: Option<Value>) -> Result<Option<ShadowSpec>, Error> {
+	let Some(v) = v.filter(|v| !matches!(v, Value::Null)) else {
+		return Ok(None);
+	};
+	let mut f = Fields::of(v, "shadow")?;
+	let spec = ShadowSpec {
+		color: f.string("color")?,
+		opacity: f.num("opacity")?,
+		dx: f.num("dx")?,
+		dy: f.num("dy")?,
+		blur: f.num("blur")?,
+	};
+	f.finish()?;
+	Ok(Some(spec))
+}
+
+fn outline(v: Option<Value>) -> Result<Option<OutlineSpec>, Error> {
+	let Some(v) = v.filter(|v| !matches!(v, Value::Null)) else {
+		return Ok(None);
+	};
+	let mut f = Fields::of(v, "outline")?;
+	let spec = OutlineSpec {
+		color: f.string("color")?,
+		width: f.num("width")?,
+	};
+	f.finish()?;
+	Ok(Some(spec))
 }
 
 fn mask(v: Option<Value>) -> Result<Option<MaskSpec>, Error> {
@@ -668,6 +699,8 @@ fn decode_layer(v: Value) -> Result<LayerSpec, Error> {
 		flip_y: flag(f.take("flip_y"), "flip_y")?,
 		effects: effects(f.take("effects"))?,
 		transition: transition(f.take("transition"))?,
+		shadow: shadow(f.take("shadow"))?,
+		outline: outline(f.take("outline"))?,
 		item,
 	};
 	f.finish()?;

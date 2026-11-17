@@ -308,6 +308,36 @@ func TestAnimatedCropAndMaskFramesDiffer(t *testing.T) {
 	}
 }
 
+// A shadow and an outline change pixels of the export compositor, and the bands stay equal. The corner of
+// the frame stays the opaque background, so the pad is the layer's and not a full-frame fill.
+func TestShadowAndOutlineChangeThePicture(t *testing.T) {
+	setup(t)
+	for _, name := range []string{"shadow", "outline"} {
+		t.Run(name, func(t *testing.T) {
+			c := alphaCases[name]()
+			for id, spec := range c.fixtures {
+				useAsset(c.doc, id, ingestClip(t, spec))
+			}
+			one := renderDoc(t, c.doc, name, 1, c.frames)
+			eight := renderDoc(t, c.doc, name, 8, c.frames)
+			if len(one) != 1 || len(eight) != 1 || !bytes.Equal(one[0], eight[0]) {
+				t.Fatal("1 band and 8 bands differ")
+			}
+			if !bytes.Equal(one[0][:4], []byte{0x20, 0x20, 0x20, 255}) {
+				t.Fatalf("corner %v, want the opaque background", one[0][:4])
+			}
+			for id, it := range c.doc.Items {
+				it.Shadow, it.Outline = nil, nil
+				c.doc.Items[id] = it
+			}
+			plain := renderDoc(t, c.doc, name+"-plain", 1, c.frames)
+			if bytes.Equal(one[0], plain[0]) {
+				t.Fatal("removing the shadow and the outline changed no pixel")
+			}
+		})
+	}
+}
+
 // The encoder that detection picks on this machine (a hardware one where there is one) also produces a
 // file that passes verification.
 func TestExportWithTheDetectedEncoder(t *testing.T) {
