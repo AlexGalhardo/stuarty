@@ -427,6 +427,12 @@ func TestImportingATextFileRenamedMp4(t *testing.T) {
 		t.Fatalf("entry = %+v", a)
 	}
 
+	// VV-193: the bytes are now in the store, but a file that did not enter is not "deduplicated" the
+	// second time it is refused.
+	if again := m.importOne(m.newProject("q"), text).Assets[0]; again.Deduplicated || again.Error == nil {
+		t.Errorf("second refusal = %+v", again)
+	}
+
 	// VV-004: a failed ingest counts, so the CLI exits 1.
 	if res.Failed != 1 {
 		t.Errorf("failed = %d, want 1", res.Failed)

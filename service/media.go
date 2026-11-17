@@ -160,6 +160,12 @@ func (s *svc) MediaImport(ctx context.Context, req MediaImportRequest) (*MediaIm
 		s.refreshImported(ctx, c, &row, &res.Assets[i])
 
 		if res.Assets[i].Error != nil {
+			// A file that did not enter this project was not deduplicated, even when its bytes were already
+			// in the store from an earlier refused import; a retry of an asset the project has stays one (VV-193).
+			if res.Assets[i].newInProject {
+				res.Assets[i].Deduplicated = false
+			}
+
 			res.Failed++
 		}
 	}
@@ -247,6 +253,7 @@ func (s *svc) importFile(ctx context.Context, c Caller, project *ProjectRow, f I
 		addNow *ProjectAssetRow
 		asset  AssetRow
 		pa     ProjectAssetRow
+		fresh  bool
 	)
 
 	werr := s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
@@ -267,6 +274,9 @@ func (s *svc) importFile(ctx context.Context, c Caller, project *ProjectRow, f I
 
 			ar.IngestState, ar.Progress, ar.IngestError = IngestPending, 0, nil
 		}
+
+		_, ferr := tx.Assets().FindProjectAssetByHash(ctx, project.ID, hash)
+		fresh = ferr != nil
 
 		row, perr := s.linkProjectAsset(ctx, tx, project.ID, hash, out.Name, f.AssetID, c.Actor, now)
 		if perr != nil {
@@ -302,6 +312,7 @@ func (s *svc) importFile(ctx context.Context, c Caller, project *ProjectRow, f I
 	}
 
 	out.AssetID, out.JobID, out.Kind, out.Hash = pa.AssetID, jobID, asset.Kind, hash
+	out.newInProject = fresh
 
 	if addNow != nil {
 		if aerr := s.addAsset(ctx, project, *addNow, asset, ""); aerr != nil {

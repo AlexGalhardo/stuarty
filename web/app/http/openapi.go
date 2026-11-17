@@ -183,6 +183,11 @@ func describeReturnedStatuses(doc *openapi.Document) {
 				op.Responses["404"] = problem
 			}
 
+			// A batch with a refused file answers 200 with the body of the 202 (SDD-003 section 2.6, VV-193).
+			if ep.ID == "media.import" {
+				op.Responses["200"] = op.Responses["202"]
+			}
+
 			if ep.ID == "projects.bundle.export" {
 				op.Responses["200"] = op.Responses["202"]
 			}
