@@ -3,6 +3,7 @@ import { Video } from "lucide-react";
 import { type ReactNode, useEffect } from "react";
 
 import LocaleSwitcher from "@/components/LocaleSwitcher";
+import ReleaseMark from "@/components/ReleaseMark";
 import ThemeToggle from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -72,6 +73,7 @@ function Shell({ children }: { children: ReactNode }) {
 					{page.props.auth?.user != null && <Account />}
 				</div>
 			</header>
+			<ReleaseMark />
 			<main className="flex-1 p-4 md:p-6">
 				{typeof message === "string" && (
 					<p

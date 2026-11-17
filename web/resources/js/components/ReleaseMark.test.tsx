@@ -1,0 +1,26 @@
+import { renderToString } from "react-dom/server";
+import { describe, expect, test } from "vitest";
+
+import { ReleaseMarkView, releaseLabel } from "./ReleaseMark";
+
+describe("releaseLabel", () => {
+	test("prefixes the server version", () => {
+		expect(releaseLabel("0.28.0")).toBe("v0.28.0");
+		expect(releaseLabel("v0.28.0")).toBe("v0.28.0");
+		expect(releaseLabel("  ")).toBe("");
+	});
+});
+
+describe("ReleaseMarkView", () => {
+	test("draws the release at the bottom left", () => {
+		const html = renderToString(<ReleaseMarkView version="0.28.0" />);
+		expect(html).toContain('data-testid="release-mark"');
+		expect(html).toContain("v0.28.0");
+		expect(html).toContain("bottom-1");
+		expect(html).toContain("left-2");
+	});
+
+	test("draws nothing until the server answers", () => {
+		expect(renderToString(<ReleaseMarkView version="" />)).toBe("");
+	});
+});
