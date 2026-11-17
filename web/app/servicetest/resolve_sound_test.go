@@ -107,3 +107,23 @@ func TestMarkBeatsWithAManualTempoResolvesNothing(t *testing.T) {
 		t.Errorf("stored operation = %s, want no resolved beats with a manual tempo", args)
 	}
 }
+
+// VV-206: `resolved` is internal to the service; a caller that sends it is refused, never obeyed.
+func TestCallerCannotSupplyResolved(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{beta: true})
+	project, clip, _, _ := m.speechProject()
+	music := m.musicOnClipAsset(project, clip)
+
+	for name, o := range map[string]string{
+		"clip.remove_silences":     fmt.Sprintf(`{"item_id":%q,"resolved":{"silences":[]}}`, music),
+		"caption.retime_from_clip": fmt.Sprintf(`{"clip_item_id":%q,"resolved":{"words":[]}}`, clip),
+		"audio.duck": fmt.Sprintf(
+			`{"item_id":%q,"speech_item_ids":[%q],"resolved":{"speech":[]}}`, music, clip),
+		"audio.mark_beats": fmt.Sprintf(`{"item_id":%q,"resolved":{"beats":[0]}}`, music),
+	} {
+		_, err := m.edit(ui, project, m.head(project).Revision, op(name, o))
+		if code(err) != "E_VALIDATION" || !strings.Contains(err.Error(), "resolved") {
+			t.Errorf("%s: %v, want E_VALIDATION naming resolved", name, err)
+		}
+	}
+}

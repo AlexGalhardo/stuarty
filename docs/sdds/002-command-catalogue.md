@@ -176,7 +176,7 @@ Three commands depend on data the core cannot compute because it needs media: si
 | `audio.mark_beats {...}` | `resolved.beats`: the beats of the music asset as strictly increasing asset frames, taken from the beat grid of the asset (SDD-011); at most 108,000. Not used when `bpm` is given |
 | `asset.add` | issued only by the import flow, with the facts measured on the verified normalized media, never copied from the probe (SDD-011 §4.9) (`internal: true`) |
 
-A caller may also supply `resolved` itself, which is how golden tests run without media.
+`resolved` is internal: the service refuses a caller that sends it on these commands with `E_VALIDATION` (`path` `operations[i].args.resolved`), so a caller cannot inject silences, words or beats that the analysis did not produce (VV-206). Golden tests that run without media call the core directly with `resolved`.
 
 **OpenTimelineIO import (BETA, RF-065).** `core/otio` import adds no command and no operation: it returns a batch of existing operations (`track.add`, `clip.add`, `audio.add`, `item.rename`, `item.set_transition`) that the caller applies like any other batch, so conflicts, limits and undo behave as everywhere else. The file is never opened by the core (SDD-001 section 9).
 
