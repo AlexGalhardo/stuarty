@@ -187,7 +187,7 @@ func (rt *Runtime) Execute(ctx context.Context, name string, args []string) int 
 
 	out, err := s.run(ctx, c)
 	if err != nil {
-		return writeError(rt, asJSON, err)
+		return writeError(rt, asJSON, namingWorkspace(err, conn))
 	}
 
 	if s.stream {
@@ -559,3 +559,25 @@ func RejectArgs(name string, args []string, stdout, stderr io.Writer) (code int,
 
 // IsCommand reports whether name is a product command.
 func IsCommand(name string) bool { return lookup(name) != nil }
+
+// namingWorkspace adds the workspace this process opened to a not-found answer when no server owns it.
+// Without VUKEM_VIDEO_HOME or --workspace that is the default ~/.vukem-video, which may not be the
+// workspace of a running server, so a project that exists there looks missing (VV-151).
+func namingWorkspace(err error, conn *Connection) error {
+	se := asServiceError(err)
+	if !conn.InProcess || conn.Workspace == "" || se.Code != command.CodeNotFound {
+		return err
+	}
+
+	out := *se
+	note := fmt.Sprintf("this command read the workspace %s, which no server owns; "+
+		"to read another one use --workspace <dir> or set VUKEM_VIDEO_HOME", conn.Workspace)
+
+	if out.Hint == "" {
+		out.Hint = note
+	} else {
+		out.Hint += "; " + note
+	}
+
+	return &out
+}
