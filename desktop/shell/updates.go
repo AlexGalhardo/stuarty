@@ -105,14 +105,20 @@ type UpdateOutcome struct {
 	Offer   *update.Offer
 }
 
-const updateTitle = "Check for updates"
-
 // CheckForUpdates runs the check the person asked for and turns every result into text for a dialog.
 // client is nil when the build could not create one; buildErr says why. It never fails: a missing
 // feed, a network error and a bad signature each become a message.
-func CheckForUpdates(ctx context.Context, client UpdateChecker, buildErr error, current string) UpdateOutcome {
+func CheckForUpdates(
+	ctx context.Context,
+	language string,
+	client UpdateChecker,
+	buildErr error,
+	current string,
+) UpdateOutcome {
+	title := Text(language, TextCheckUpdates)
+
 	if client == nil {
-		return failedOutcome(buildErr)
+		return failedOutcome(language, buildErr)
 	}
 
 	offer, err := client.CheckNow(ctx)
@@ -120,21 +126,21 @@ func CheckForUpdates(ctx context.Context, client UpdateChecker, buildErr error, 
 	switch {
 	case err == nil:
 		return UpdateOutcome{
-			Title:   updateTitle,
-			Message: OfferMessage(offer, current),
+			Title:   title,
+			Message: OfferMessage(language, offer, current),
 			Offer:   offer,
 		}
 	case errors.Is(err, update.ErrNotNewer):
-		return UpdateOutcome{Title: updateTitle, Message: fmt.Sprintf("Vukem Video %s is up to date.", current)}
+		return UpdateOutcome{Title: title, Message: fmt.Sprintf(Text(language, TextUpToDate), current)}
 	default:
-		return failedOutcome(err)
+		return failedOutcome(language, err)
 	}
 }
 
 // OfferMessage is the text of the dialog that offers a verified newer version, with its release notes
 // when the feed carries them.
-func OfferMessage(offer *update.Offer, current string) string {
-	msg := fmt.Sprintf("Version %s is available (this is %s). Download and install it?", offer.Version, current)
+func OfferMessage(language string, offer *update.Offer, current string) string {
+	msg := fmt.Sprintf(Text(language, TextOffer), offer.Version, current)
 	if notes := strings.TrimSpace(offer.Notes); notes != "" {
 		msg += "\n\n" + notes
 	}
@@ -142,19 +148,17 @@ func OfferMessage(offer *update.Offer, current string) string {
 	return msg
 }
 
-func failedOutcome(err error) UpdateOutcome {
+func failedOutcome(language string, err error) UpdateOutcome {
+	title := Text(language, TextCheckUpdates)
+
 	if err == nil || errors.Is(err, update.ErrNotConfigured) {
-		return UpdateOutcome{
-			Title: updateTitle,
-			Message: "This build has no update feed or signing key, so it cannot check for updates. " +
-				"Download new versions from " + ReleasePageURL,
-		}
+		return UpdateOutcome{Title: title, Message: fmt.Sprintf(Text(language, TextNoFeed), ReleasePageURL)}
 	}
 
-	return UpdateOutcome{Title: updateTitle, Message: "Could not check for updates: " + err.Error()}
+	return UpdateOutcome{Title: title, Message: Text(language, TextCheckFailed) + err.Error()}
 }
 
 // InstallFailedMessage is the text of the dialog shown when an accepted update could not be applied.
-func InstallFailedMessage(err error) string {
-	return "The update was not installed and this version is unchanged: " + err.Error()
+func InstallFailedMessage(language string, err error) string {
+	return Text(language, TextInstallFailed) + err.Error()
 }

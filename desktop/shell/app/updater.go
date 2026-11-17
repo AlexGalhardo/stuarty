@@ -45,7 +45,7 @@ func newUpdater(app *application.App) *updater {
 	cfg, buildErr := update.FromBuild(version, filepath.Join(staging, "vukem-video", "updates"),
 		settings.AutoCheck(), shell.InstallerFor(runtime.GOOS, app.Quit))
 
-	lc := shell.LauncherConfig{Settings: settings, UI: u.ui, Current: version}
+	lc := shell.LauncherConfig{Settings: settings, UI: u.ui, Current: version, Language: shell.SystemLanguage()}
 
 	if dir, err := shell.UpdateStateDir(); err == nil {
 		if failed, ok := shell.LoadFailed(dir); ok {
@@ -111,7 +111,7 @@ func (n *nativeUI) AskConsent(answer func(yes bool)) {
 func (n *nativeUI) OfferUpdate(offer *update.Offer, current string, decide func(install bool)) {
 	application.InvokeSync(func() {
 		d := n.app.Dialog.Question().SetTitle(tr(shell.TextCheckUpdates)).
-			SetMessage(shell.OfferMessage(offer, current))
+			SetMessage(shell.OfferMessage(shell.SystemLanguage(), offer, current))
 		install := d.AddButton(tr(shell.TextInstall))
 		install.OnClick(func() { decide(true) })
 		later := d.AddButton(tr(shell.TextNotNow))

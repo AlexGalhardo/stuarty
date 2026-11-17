@@ -88,7 +88,7 @@ func TestCheckForUpdatesWithoutAClientSaysNotConfigured(t *testing.T) {
 	}
 
 	for _, err := range []error{buildErr, nil} {
-		out := CheckForUpdates(context.Background(), nil, err, "0.15.0")
+		out := CheckForUpdates(context.Background(), "en", nil, err, "0.15.0")
 		if out.Offer != nil || !strings.Contains(out.Message, "no update feed or signing key") ||
 			!strings.Contains(out.Message, ReleasePageURL) {
 			t.Errorf("message %q", out.Message)
@@ -121,7 +121,7 @@ func TestCheckForUpdatesOutcomes(t *testing.T) {
 		},
 	}
 	for _, c := range cases {
-		out := CheckForUpdates(context.Background(), c.check, nil, "0.15.0")
+		out := CheckForUpdates(context.Background(), "en", c.check, nil, "0.15.0")
 		if !strings.Contains(out.Message, c.want) || (out.Offer != nil) != c.offer || c.check.calls != 1 {
 			t.Errorf("%s: %+v", c.name, out)
 		}
@@ -159,5 +159,22 @@ func TestSetupInstallerQuitsOnlyAfterTheSetupStarted(t *testing.T) {
 
 	if err := bad.Install(context.Background(), art); !errors.Is(err, boom) || quits != 1 {
 		t.Errorf("failed: %v, quits %d", err, quits)
+	}
+}
+
+func TestUpdateMessagesFollowTheLanguage(t *testing.T) {
+	out := CheckForUpdates(context.Background(), "pt-BR", nil, update.ErrNotConfigured, "0.15.0")
+	if out.Title != "Verificar atualizações" || !strings.Contains(out.Message, "não tem endereço de atualizações") {
+		t.Errorf("title %q message %q", out.Title, out.Message)
+	}
+
+	if got := InstallFailedMessage(
+		"pt-BR",
+		errors.New("disk"),
+	); !strings.HasPrefix(
+		got,
+		"A atualização não foi instalada",
+	) {
+		t.Errorf("message %q", got)
 	}
 }
