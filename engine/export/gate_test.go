@@ -122,10 +122,12 @@ func TestExportSizeLimit(t *testing.T) {
 func TestExportStopsComposingWhenTheEncoderDies(t *testing.T) {
 	doc := loadScene(t, "contain-text")
 
-	// The size watchdog polls every 2 s, so the project must take longer than that to compose.
+	// The size watchdog polls every 2 s. 300 frames of this scene can be composed
+	// before that tick, so the clip is long enough that the encoder is still
+	// reading when the file passes the cap.
 	for id, it := range doc.Items {
 		if it.Type == timeline.ItemClip {
-			it.Duration = 300
+			it.Duration = 900
 			doc.Items[id] = it
 		}
 	}
