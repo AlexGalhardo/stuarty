@@ -6,10 +6,12 @@
 package mcp
 
 import (
+	"bytes"
 	"context"
 	"crypto/rand"
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"runtime/debug"
 	"slices"
@@ -135,9 +137,128 @@ func Handler(svc service.Service, o Options) (http.Handler, error) {
 		return nil, err
 	}
 
-	return sdk.NewStreamableHTTPHandler(func(*http.Request) *sdk.Server { return srv }, &sdk.StreamableHTTPOptions{
-		Stateless: true, JSONResponse: true,
-	}), nil
+	return jsonRPCUnknownMethod(
+		sdk.NewStreamableHTTPHandler(func(*http.Request) *sdk.Server { return srv }, &sdk.StreamableHTTPOptions{
+			Stateless: true, JSONResponse: true,
+		}),
+	), nil
+}
+
+// notHandledPrefix starts the text the SDK answers to a method it does not know.
+const notHandledPrefix = "JSON RPC not handled"
+
+// idCaptureLimit bounds what is kept of a request body to find its id.
+const idCaptureLimit = 1 << 20
+
+// jsonRPCUnknownMethod turns the plain text 400 that the SDK answers to a
+// method it does not know into the JSON-RPC error -32601 with the id of the
+// request (VV-195); the SDK does that only for protocol versions newer than
+// the ones clients speak today.
+func jsonRPCUnknownMethod(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost || r.Body == nil {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		var seen bytes.Buffer
+
+		r.Body = &teeBody{ReadCloser: r.Body, buf: &seen}
+		rw := &unknownMethodWriter{ResponseWriter: w}
+
+		next.ServeHTTP(rw, r)
+
+		if rw.held && !strings.HasPrefix(rw.body.String(), notHandledPrefix) {
+			w.WriteHeader(http.StatusBadRequest)
+			_, _ = w.Write(rw.body.Bytes())
+
+			return
+		}
+
+		if rw.held {
+			var req struct {
+				ID json.RawMessage `json:"id"`
+			}
+
+			_ = json.Unmarshal(seen.Bytes(), &req)
+
+			if len(req.ID) == 0 {
+				req.ID = json.RawMessage("null")
+			}
+
+			h := w.Header()
+			h.Del("Content-Length")
+			h.Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+
+			out, _ := json.Marshal(map[string]any{
+				"jsonrpc": "2.0",
+				"id":      req.ID,
+				"error":   map[string]any{"code": -32601, "message": strings.TrimSpace(rw.body.String())},
+			})
+			_, _ = w.Write(out)
+		}
+	})
+}
+
+// teeBody keeps the first idCaptureLimit bytes that are read.
+type teeBody struct {
+	io.ReadCloser
+
+	buf *bytes.Buffer
+}
+
+func (t *teeBody) Read(p []byte) (int, error) {
+	n, err := t.ReadCloser.Read(p)
+	if room := idCaptureLimit - t.buf.Len(); room > 0 {
+		t.buf.Write(p[:min(n, room)])
+	}
+
+	return n, err
+}
+
+// unknownMethodWriter holds back the answer of the SDK to an unknown method
+// and passes every other answer through.
+type unknownMethodWriter struct {
+	http.ResponseWriter
+
+	started bool
+	held    bool
+	body    bytes.Buffer
+}
+
+func (u *unknownMethodWriter) WriteHeader(status int) {
+	if u.started {
+		return
+	}
+
+	u.started = true
+
+	// Every plain text 400 is held until its text says what it is.
+	if status == http.StatusBadRequest && strings.HasPrefix(u.Header().Get("Content-Type"), "text/plain") {
+		u.held = true
+		return
+	}
+
+	u.ResponseWriter.WriteHeader(status)
+}
+
+func (u *unknownMethodWriter) Write(b []byte) (int, error) {
+	if !u.started {
+		u.WriteHeader(http.StatusOK)
+	}
+
+	if u.held {
+		return u.body.Write(b)
+	}
+
+	return u.ResponseWriter.Write(b)
+}
+
+func (u *unknownMethodWriter) Flush() {
+	if f, ok := u.ResponseWriter.(http.Flusher); ok && !u.held {
+		f.Flush()
+	}
 }
 
 // RunStdio serves one client on standard input and output until it closes them.

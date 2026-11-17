@@ -1,6 +1,7 @@
 package mcp
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -133,4 +134,91 @@ func TestHTTPIsStateless(t *testing.T) {
 
 	cs := httpClient(t, srv, "key:a")
 	ok(t, call(t, cs, "project_list", map[string]any{}))
+}
+
+// TestHTTPUnknownMethodIsJSONRPC (VV-195): a method the server does not know is
+// a JSON-RPC -32601 error that carries the id of the request, not plain text.
+func TestHTTPUnknownMethodIsJSONRPC(t *testing.T) {
+	t.Parallel()
+
+	h, err := Handler(newService(t), Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	srv := httptest.NewServer(authenticate(h))
+	defer srv.Close()
+
+	body := `{"jsonrpc":"2.0","id":7,"method":"bogus/method"}`
+
+	req, err := http.NewRequestWithContext(t.Context(), http.MethodPost, srv.URL, strings.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.Header.Set("X-Test-Actor", "key:a")
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json, text/event-stream")
+
+	res, err := srv.Client().Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer res.Body.Close()
+
+	if ct := res.Header.Get("Content-Type"); !strings.HasPrefix(ct, "application/json") {
+		t.Fatalf("content type = %q", ct)
+	}
+
+	var out struct {
+		JSONRPC string          `json:"jsonrpc"`
+		ID      json.RawMessage `json:"id"`
+		Error   struct {
+			Code    int    `json:"code"`
+			Message string `json:"message"`
+		} `json:"error"`
+	}
+
+	if err := json.NewDecoder(res.Body).Decode(&out); err != nil {
+		t.Fatal(err)
+	}
+
+	if out.JSONRPC != "2.0" || string(out.ID) != "7" || out.Error.Code != -32601 ||
+		!strings.Contains(out.Error.Message, "bogus/method") {
+		t.Fatalf("answer = %+v (status %d)", out, res.StatusCode)
+	}
+}
+
+// TestHTTPMalformedBodyKeepsItsAnswer: only the unknown method is rewritten.
+func TestHTTPMalformedBodyKeepsItsAnswer(t *testing.T) {
+	t.Parallel()
+
+	h, err := Handler(newService(t), Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	srv := httptest.NewServer(authenticate(h))
+	defer srv.Close()
+
+	req, err := http.NewRequestWithContext(t.Context(), http.MethodPost, srv.URL, strings.NewReader("{not json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.Header.Set("X-Test-Actor", "key:a")
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json, text/event-stream")
+
+	res, err := srv.Client().Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusBadRequest {
+		t.Fatalf("status = %d, want 400", res.StatusCode)
+	}
 }
