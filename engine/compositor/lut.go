@@ -95,32 +95,6 @@ func (k *lutKernel) pixel(r, g, b int64) (int64, int64, int64) {
 	return int64(mr), int64(mg), int64(mb) //nolint:gosec // G115: at most 255
 }
 
-// lutMemo remembers the last colours of a band: video has runs and areas of one colour, and the table is a pure
-// function of the colour, so a hit is the same integers as the interpolation.
-type lutMemo struct {
-	key [lutMemoSize]uint32
-	val [lutMemoSize]uint32
-}
-
-const lutMemoSize = 4096
-
-func (m *lutMemo) pixel(k *lutKernel, r, g, b int64) (int64, int64, int64) {
-	// The key has a bit above the colour, so an empty slot (0) never matches.
-	key := uint32(r)<<16 | uint32(g)<<8 | uint32(b) | 1<<24 //nolint:gosec // G115: channels are 0 to 255
-	h := (key * 2654435761) >> (32 - 12)
-
-	if m.key[h] == key {
-		v := m.val[h]
-
-		return int64(v >> 16), int64(v >> 8 & 255), int64(v & 255)
-	}
-
-	nr, ng, nb := k.pixel(r, g, b)
-	m.key[h], m.val[h] = key, uint32(nr)<<16|uint32(ng)<<8|uint32(nb) //nolint:gosec // G115: channels are 0 to 255
-
-	return nr, ng, nb
-}
-
 // lutPixel is the colour of one pixel through a table that is used once; a frame prepares the table once instead.
 func lutPixel(t *lut.Table, im, r, g, b int64) (int64, int64, int64) {
 	return newLUTKernel(t, im).pixel(r, g, b)
@@ -138,7 +112,7 @@ func (c *Compositor) applyLUT(src Image, t *lut.Table, im int64) Image {
 	k := newLUTKernel(t, im)
 
 	c.runBands(0, src.H, src.W, func(y0, y1 int) {
-		var memo lutMemo
+		var memo colourMemo
 
 		for i := y0 * src.W * 4; i < y1*src.W*4; i += 4 {
 			a := int64(src.Pix[i+3])
@@ -153,7 +127,7 @@ func (c *Compositor) applyLUT(src Image, t *lut.Table, im int64) Image {
 				r, g, b = min((r*255+a/2)/a, 255), min((g*255+a/2)/a, 255), min((b*255+a/2)/a, 255)
 			}
 
-			nr, ng, nb := memo.pixel(k, r, g, b)
+			nr, ng, nb := memo.pixel(k.pixel, r, g, b)
 			if a != 255 {
 				nr, ng, nb = div255(nr*a), div255(ng*a), div255(nb*a)
 			}

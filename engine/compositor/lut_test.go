@@ -198,3 +198,28 @@ func TestLUTKernelEqualsThePlainInterpolation(t *testing.T) {
 		}
 	}
 }
+
+// The memory of colours gives back what the function gives, for colours that collide and for black, whose slot starts
+// empty.
+func TestColourMemoEqualsTheFunction(t *testing.T) {
+	fn := func(r, g, b int64) (int64, int64, int64) { return 255 - r, (g*3 + 1) % 256, b ^ 0x55 }
+
+	var m colourMemo
+
+	seed := uint32(7)
+
+	for i := range 200000 {
+		r, g, b := int64(i%2)*0, int64(i%3)*0, int64(0)
+		if i%5 != 0 {
+			seed = seed*1664525 + 1013904223
+			r, g, b = int64(seed>>24), int64(seed>>16&255), int64(seed>>8&255)
+		}
+
+		x, y, z := m.pixel(fn, r, g, b)
+		wx, wy, wz := fn(r, g, b)
+
+		if x != wx || y != wy || z != wz {
+			t.Fatalf("%d %d %d: %d %d %d, want %d %d %d", r, g, b, x, y, z, wx, wy, wz)
+		}
+	}
+}

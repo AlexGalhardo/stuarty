@@ -420,6 +420,8 @@ func (c *Compositor) applyGrade(src Image, g *grade) Image {
 	out := Image{Pix: c.scratch[:n], W: src.W, H: src.H, Opaque: src.Opaque}
 
 	c.runBands(0, src.H, src.W, func(y0, y1 int) {
+		var memo colourMemo
+
 		for i := y0 * src.W * 4; i < y1*src.W*4; i += 4 {
 			a := int64(src.Pix[i+3])
 			r, gr, b := int64(src.Pix[i]), int64(src.Pix[i+1]), int64(src.Pix[i+2])
@@ -433,7 +435,7 @@ func (c *Compositor) applyGrade(src Image, g *grade) Image {
 				r, gr, b = min((r*255+a/2)/a, 255), min((gr*255+a/2)/a, 255), min((b*255+a/2)/a, 255)
 			}
 
-			nr, ng, nb := g.pixel(r, gr, b)
+			nr, ng, nb := memo.pixel(g.pixel, r, gr, b)
 			if a != 255 {
 				nr, ng, nb = div255(nr*a), div255(ng*a), div255(nb*a)
 			}
