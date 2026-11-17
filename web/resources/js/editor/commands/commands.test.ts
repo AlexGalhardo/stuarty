@@ -156,6 +156,27 @@ describe("gestures send one request and wait for the answer", () => {
 		expect(h.runtime.documents.getState().revision).toBe((before ?? 0) + 1);
 	});
 
+	test("paste attributes remembers the source across separate action sets (VV-091)", async () => {
+		const h = await startHarness();
+		const items = Object.values(h.server.document.items);
+		const [from, to] = items;
+		if (from === undefined || to === undefined)
+			throw new Error("fixture needs two items");
+		const sent = scripted(h, () => ({
+			status: 200,
+			body: h.server.commit([bump(h)]).result,
+		}));
+		h.runtime.uiWriter.select([from.id]);
+		// The context menu builds its actions anew each time it opens.
+		expect(createActions(h.runtime).copyAttributes()).toBe(true);
+		h.runtime.uiWriter.select([to.id]);
+		await createActions(h.runtime).pasteAttributes();
+		expect(sent[0]?.request.operations[0]).toMatchObject({
+			op: "item.paste_attributes",
+			args: { from_item_id: from.id, item_ids: [to.id] },
+		});
+	});
+
 	test("split with the playhead outside the item sends nothing", async () => {
 		const h = await startHarness();
 		const item = firstItem(h);

@@ -255,6 +255,11 @@ function nextFree(error: ApiError): number | null {
 	return typeof value === "number" ? value : null;
 }
 
+// The item whose look was copied, one per editor runtime: the menu and the keys each build their own
+// actions, so a variable inside `createActions` would be forgotten between "Copy attributes" and
+// "Paste attributes" (VV-091).
+const attributeSources = new WeakMap<EditorRuntime, string>();
+
 export function createActions(runtime: EditorRuntime): Actions {
 	const { documents, ui, noticeWriter, uiWriter } = runtime;
 
@@ -267,9 +272,6 @@ export function createActions(runtime: EditorRuntime): Actions {
 	}
 
 	const firstVisualTrack = (): string | null => firstTrackOfKind("visual");
-
-	// The item Mod+Shift+C took the look from; UI state, not project data.
-	let attributeSource: string | null = null;
 
 	function selectedRanges(): ItemRange[] {
 		return rangesOf(ui.getState().selection.items);
@@ -704,12 +706,12 @@ export function createActions(runtime: EditorRuntime): Actions {
 		copyAttributes() {
 			const [first] = actedIds();
 			if (first === undefined) return false;
-			attributeSource = first;
+			attributeSources.set(runtime, first);
 			return true;
 		},
 		pasteAttributes() {
-			if (attributeSource === null) return Promise.resolve(null);
-			const from = attributeSource;
+			const from = attributeSources.get(runtime);
+			if (from === undefined) return Promise.resolve(null);
 			return send(
 				pasteAttributesOperations(
 					from,
