@@ -1,6 +1,7 @@
 package export
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"os"
@@ -253,6 +254,57 @@ func TestScanLayersFindsConstantAndAnimatedLayers(t *testing.T) {
 	s = testState(t, job, "scan2")
 	if in := s.scanLayers()["itm_m1n2p3q4r5"]; in == nil || !in.constant {
 		t.Errorf("the plain clip was not constant: %+v", in)
+	}
+}
+
+// A changing crop is recorded like a changing size, so nothing pre-scales one rectangle for the item. A
+// static crop stays constant. A sliding mask does not change the crop.
+func TestScanLayersTreatsAChangingCropLikeAChangingSize(t *testing.T) {
+	check := func(name string, vary, constant bool) {
+		t.Helper()
+		c := alphaCases[name]()
+		s := &state{job: &Job{Doc: c.doc}, frames: endFrame(c.doc)}
+		infos := s.scanLayers()
+		if len(infos) != 1 {
+			t.Fatalf("%s: %d media items", name, len(infos))
+		}
+		for id, in := range infos {
+			if in.cropVaries != vary || in.constant != constant {
+				t.Errorf("%s %s: cropVaries %v constant %v, want %v and %v",
+					name, id, in.cropVaries, in.constant, vary, constant)
+			}
+		}
+	}
+	check("crop", false, true)
+	check("crop-animated", true, false)
+	check("crop-still", true, false)
+	check("mask-animated", false, true)
+}
+
+// Frame 0 and frame 10 of a frozen source differ only when the crop or the mask of that frame is the one
+// that is drawn. The same bytes at 1 and 8 bands are the rule of SDD-004 section 12.
+func TestAnimatedCropAndMaskFramesDiffer(t *testing.T) {
+	setup(t)
+	for _, name := range []string{"crop-animated", "crop-still", "mask-animated"} {
+		t.Run(name, func(t *testing.T) {
+			c := alphaCases[name]()
+			for id, spec := range c.fixtures {
+				useAsset(c.doc, id, ingestClip(t, spec))
+			}
+			one := renderDoc(t, c.doc, name, 1, c.frames)
+			eight := renderDoc(t, c.doc, name, 8, c.frames)
+			if len(one) != 2 || len(eight) != 2 {
+				t.Fatalf("frames %d and %d", len(one), len(eight))
+			}
+			for i := range one {
+				if !bytes.Equal(one[i], eight[i]) {
+					t.Fatalf("frame %d differs between 1 band and 8 bands", c.frames[i])
+				}
+			}
+			if bytes.Equal(one[0], one[1]) {
+				t.Fatal("the two frames are the same picture")
+			}
+		})
 	}
 }
 

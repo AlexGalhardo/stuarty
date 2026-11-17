@@ -32,6 +32,8 @@ import (
 var requiredCases = []string{
 	"contain-background",
 	"crop",
+	"crop-animated",
+	"crop-still",
 	"pip-opacity",
 	"rotation",
 	"transition-fade",
@@ -77,6 +79,7 @@ var requiredCases = []string{
 	"blend-overlay",
 	"blend-add",
 	"mask-rect",
+	"mask-animated",
 	"mask-ellipse-feather",
 	"mask-invert-rotated",
 	"flip-x",
@@ -376,6 +379,31 @@ var alphaCases = map[string]func() alphaCase{
 		})
 		return b.build(0, 20, 39)
 	},
+	// A frozen source, so frame 0 and frame 10 differ only when each frame keeps its own crop. The window
+	// keeps a constant size (the two sides swap), which is what makes a baked first crop identical.
+	"crop-animated": func() alphaCase {
+		b := newCase("an animated crop", rate(30, 1))
+		b.clip(b.track(), b.video(portrait), 0, 11, func(it *timeline.Item) {
+			it.Freeze, it.Fit = true, "none"
+			it.Keyframes = timeline.Keyframes{
+				"crop_left":  {timeline.NewKeyframe(0, 0), timeline.NewKeyframe(10, 0.4)},
+				"crop_right": {timeline.NewKeyframe(0, 0.4), timeline.NewKeyframe(10, 0)},
+			}
+		})
+		return b.build(0, 10)
+	},
+	"crop-still": func() alphaCase {
+		b := newCase("an animated crop of a still", rate(30, 1))
+		b.clip(b.track(), b.image(fixtureSpec{Name: "gold-sticker.png", Width: 120, Height: 120, Sticker: true}), 0, 11,
+			func(it *timeline.Item) {
+				it.Fit = "none"
+				it.Keyframes = timeline.Keyframes{
+					"crop_left":  {timeline.NewKeyframe(0, 0), timeline.NewKeyframe(10, 0.5)},
+					"crop_right": {timeline.NewKeyframe(0, 0.5), timeline.NewKeyframe(10, 0)},
+				}
+			})
+		return b.build(0, 10)
+	},
 	"pip-opacity": func() alphaCase {
 		b := newCase("picture in picture", rate(30, 1))
 		b.backdrop(30)
@@ -526,6 +554,18 @@ var alphaCases = map[string]func() alphaCase{
 	"blend-add":      func() alphaCase { return blendCase("add") },
 	"mask-rect": func() alphaCase {
 		return maskCase("rect", timeline.Mask{Shape: "rect", X: 0.2, Y: 0.1, Width: 0.6, Height: 0.7}, nil)
+	},
+	// The source is frozen, so the two frames differ only when each frame draws its own mask.
+	"mask-animated": func() alphaCase {
+		b := newCase("an animated mask", rate(30, 1))
+		b.clip(b.track(), b.video(portrait), 0, 11, func(it *timeline.Item) {
+			it.Freeze = true
+			it.Mask = &timeline.Mask{Shape: "rect", X: 0, Y: 0, Width: 0.5, Height: 1}
+			it.Keyframes = timeline.Keyframes{
+				"mask_x": {timeline.NewKeyframe(0, 0), timeline.NewKeyframe(10, 0.5)},
+			}
+		})
+		return b.build(0, 10)
 	},
 	"mask-ellipse-feather": func() alphaCase {
 		return maskCase(
@@ -750,6 +790,7 @@ func TestCompositorBandsEqualBlurAndFilter(t *testing.T) {
 		if !strings.HasPrefix(name, "blur-") && !strings.HasPrefix(name, "filter-") &&
 			!strings.HasPrefix(name, "sticker-") && !strings.HasPrefix(name, "chroma-") &&
 			!strings.HasPrefix(name, "blend-") && !strings.HasPrefix(name, "mask-") &&
+			!strings.HasPrefix(name, "crop-") &&
 			!strings.HasPrefix(
 				name,
 				"flip-",
