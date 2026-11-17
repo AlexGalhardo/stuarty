@@ -223,6 +223,10 @@ func applyClipSetSpeed(c *Context, a *clipSpeedArgs) error {
 		c.SetEffective("curve_points", len(curve))
 	}
 	c.SetEffective("duration", map[string]any{"before": oldDur, "after": newDur})
+	c.SetEffective("result_duration", newDur)
+	if gap := c.speedGap(&it, a.Ripple == "track", oldEnd); gap != nil {
+		c.SetEffective("gap", gap)
+	}
 	c.SetEffective("shift", shift)
 	c.SetEffective("clamped", clamped)
 	c.SetEffective("adjusted", adjusted)
@@ -318,6 +322,28 @@ func rescaleForSpeed(it *timeline.Item, r rescaler) []adjustment {
 		it.Keyframes = ks
 	}
 	return adjusted
+}
+
+// speedGap describes the gap that a shorter item leaves before the next item of its track
+// when ripple is off (VV-163); nil when there is none.
+func (c *Context) speedGap(it *timeline.Item, ripple bool, oldEnd int) map[string]any {
+	if ripple || itemEnd(it) >= oldEnd {
+		return nil
+	}
+	next := -1
+	for _, id := range c.trackItems(it.Track) {
+		if o := c.Doc.Items[id]; id != it.ID && o.Start >= oldEnd && (next < 0 || o.Start < next) {
+			next = o.Start
+		}
+	}
+	if next < 0 {
+		return nil
+	}
+	return map[string]any{
+		"start":  itemEnd(it),
+		"frames": next - itemEnd(it),
+		"hint":   `The item got shorter and left a gap before the next item; use ripple "track" to close it, or timeline.close_gap.`,
+	}
 }
 
 // rippleSpeed shifts the later items of the track when asked, then refuses what the

@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/AlexGalhardo/vukem-video/core/lint"
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
@@ -229,5 +230,31 @@ func TestSetSpeedCurvePointErrorPath(t *testing.T) {
 	ce := AsError(err)
 	if ce == nil || ce.Path != "args.curve[1].speed" || !strings.Contains(ce.Message, "args.curve[1].speed") {
 		t.Fatalf("got %+v", ce)
+	}
+}
+
+// A curve that shortens a clip with ripple none leaves a gap: the result says so and the
+// linter reports the black frames (VV-163).
+func TestSetSpeedCurveShortenLeavesReportedGap(t *testing.T) {
+	doc := base().clip(itemA, vidTr, 0, 90, 0).clip(itemB, vidTr, 150, 30, 0).d
+	res, err := Default().Apply(doc, op2("clip.set_speed", fmt.Sprintf(
+		`{"item_id": %q, "curve": [{"t": 0, "speed": "1x"}, {"t": 0.5, "speed": "3x"}, {"t": 1, "speed": "1x"}]}`,
+		itemA,
+	)), Env{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := res.Effective["result_duration"]; !ok {
+		t.Errorf("no effective.result_duration in %+v", res.Effective)
+	}
+	if _, ok := res.Effective["gap"]; !ok {
+		t.Errorf("no effective.gap in %+v", res.Effective)
+	}
+	found := false
+	for _, f := range lint.Lint(res.Doc, lint.Env{}, lint.Fast) {
+		found = found || f.Code == lint.CodeBlackFrames || f.Code == lint.CodeGap
+	}
+	if !found {
+		t.Error("the linter does not report the gap")
 	}
 }
