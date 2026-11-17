@@ -73,7 +73,7 @@ func isHex(s string) bool {
 }
 
 // checkStyleValue checks one value against its rule; caption says whether the
-// caption-only keys are allowed; the Prototype build accepts only highlight "none".
+// caption-only keys are allowed.
 func (c *Context) checkStyleValue(path, key string, v any, rule styleRule) *Error {
 	bad := func(format string, a ...any) *Error {
 		return Errorf(CodeValidation, format, a...).WithPath(path)
