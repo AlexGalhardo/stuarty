@@ -17,25 +17,27 @@ test.describe("library tab rail", () => {
 		const rail = page.getByRole("tablist", { name: "Material panels" });
 		await expect(rail).toHaveAttribute("aria-orientation", "vertical");
 		expect((await rail.boundingBox())?.width).toBeCloseTo(40, 0);
-		const media = page.getByRole("tab", { name: "Media" });
-		const history = page.getByRole("tab", { name: "History" });
-		await expect(media).toHaveAttribute("aria-selected", "true");
+		const tabs = rail.getByRole("tab");
+		await expect(tabs.first()).toHaveAccessibleName("Media");
+		await expect(tabs.first()).toHaveAttribute("aria-selected", "true");
 		await expect(page.getByRole("region", { name: "Media" })).toBeVisible();
+		const last = tabs.last();
+		await expect(last).toHaveAccessibleName("History");
 
-		await media.focus();
+		await tabs.first().focus();
 		await page.keyboard.press("ArrowDown");
-		await expect(history).toBeFocused();
-		await expect(history).toHaveAttribute("aria-selected", "true");
-		await expect(page.getByRole("region", { name: "History" })).toBeVisible();
+		await expect(tabs.nth(1)).toBeFocused();
+		await expect(tabs.nth(1)).toHaveAttribute("aria-selected", "true");
 		await page.keyboard.press("ArrowUp");
-		await expect(media).toBeFocused();
+		await expect(tabs.first()).toBeFocused();
 		await page.keyboard.press("End");
-		await expect(history).toBeFocused();
+		await expect(last).toBeFocused();
+		await expect(last).toHaveAttribute("aria-selected", "true");
+		await expect(page.getByRole("region", { name: "History" })).toBeVisible();
 		await page.keyboard.press("Home");
-		await expect(media).toBeFocused();
-		await expect(media).toHaveAttribute("aria-selected", "true");
-		// A rail tab is one tab stop: the other one is not in the tab order.
-		await expect(history).toHaveAttribute("tabindex", "-1");
+		await expect(tabs.first()).toBeFocused();
+		// A rail tab is one tab stop: the others are not in the tab order.
+		await expect(last).toHaveAttribute("tabindex", "-1");
 	});
 
 	test("Alt+1 hides the whole panel and keeps the rail", async ({
@@ -98,11 +100,26 @@ test.describe("library tab rail", () => {
 				const seeded = await seedProject(request, { tracks: 1, perTrack: 1 });
 				await page.goto(`/editor/${seeded.id}`);
 				await expect(page.getByRole("tablist")).toBeVisible();
-				const { violations } = await new AxeBuilder({ page })
-					.include("aside[data-landmark='2']")
-					.withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"])
-					.analyze();
-				expect(violations.map((v) => v.id)).toEqual([]);
+				// Every panel of the rail, one after the other.
+				const tabs = page.locator("[data-rail-tab]");
+				const count = await tabs.count();
+				expect(count).toBeGreaterThan(1);
+				for (let i = 0; i < count; i++) {
+					await tabs.nth(i).click();
+					await expect(tabs.nth(i)).toHaveAttribute("aria-selected", "true");
+					await page.evaluate(() =>
+						Promise.all(
+							document
+								.getAnimations()
+								.map((a) => a.finished.catch(() => undefined)),
+						),
+					);
+					const { violations } = await new AxeBuilder({ page })
+						.include("aside[data-landmark='2']")
+						.withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"])
+						.analyze();
+					expect(violations.map((v) => v.id)).toEqual([]);
+				}
 			});
 		}
 	}

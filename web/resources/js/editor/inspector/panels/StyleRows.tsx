@@ -3,15 +3,15 @@ import { Fragment, type ReactNode } from "react";
 import type { CaptionStyle } from "@/generated/timeline";
 import { useT } from "@/lib/i18n";
 import type { StyleChanges, StyleValue } from "../../commands/builders";
+import { fontFamilyChanges } from "../../commands/fontWeight";
+import { useFonts } from "../../commands/useFonts";
 import { useDocumentState } from "../../state/EditorContext";
 import ColorField from "../fields/ColorField";
 import type { CommitResult } from "../fields/commitField";
 import NumberField from "../fields/NumberField";
 import SelectField from "../fields/SelectField";
 import ToggleField from "../fields/ToggleField";
-import { fontFamilyChanges } from "../fontWeight";
 import { useBrandKit } from "../useBrandKit";
-import { useFonts } from "../useFonts";
 
 export type StyleRow =
 	| { key: string; kind: "font" }

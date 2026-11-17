@@ -3,19 +3,18 @@ import { type ReactNode, useState } from "react";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
-import { duckOperations } from "../../commands/builders";
+import {
+	DEFAULT_ATTACK,
+	DEFAULT_GAIN_DB,
+	DEFAULT_RELEASE,
+	duckOperations,
+} from "../../commands/builders";
 import { useActions, useCanEdit } from "../../commands/useActions";
 import { useCommandsExposed } from "../../commands/useExposedCommands";
 import { useDocumentState } from "../../state/EditorContext";
 import NumberField from "../fields/NumberField";
 import TimeCommitField from "../fields/TimeCommitField";
 import Section from "../Section";
-
-// What the core uses when a request names no gain, attack or release
-// (SDD-002 C.51); the fields start there and the choices go with the button.
-const DEFAULT_GAIN_DB = -12;
-const DEFAULT_ATTACK = "0.2s";
-const DEFAULT_RELEASE = "0.5s";
 
 // The Ducking section of an audio item (SDD-012 section 12.1, BETA): the
 // person picks the speech items and the choices, and one button sends
