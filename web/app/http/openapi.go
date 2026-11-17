@@ -20,7 +20,7 @@ import (
 func Info() openapi.Info {
 	return openapi.Info{
 		Title:       "Vukem Video",
-		Description: "The HTTP API of Vukem Video. Every operation is the HTTP form of one service operation.",
+		Description: "The HTTP API of Vukem Video. Every operation is the HTTP form of one service operation. This document needs the same Bearer token as the API.",
 		PathPrefix:  BasePath,
 		ProblemExtensions: map[string]openapi.Schema{
 			"code":      {"type": "string", "description": "A stable error code, for example E_OVERLAP."},
@@ -43,6 +43,11 @@ func (h *apiHandler) serveOpenAPI(c *web.Ctx) error {
 	}
 
 	h.completeOpenAPI(doc)
+
+	// The framework fills servers with its APP_URL default, which is not where this server
+	// listens. Without servers, OpenAPI resolves the paths against the address the document
+	// was fetched from.
+	doc.Servers = nil
 
 	return c.JSON(http.StatusOK, doc)
 }
@@ -85,6 +90,7 @@ func (h *apiHandler) completeOpenAPI(doc *openapi.Document) {
 
 	markUntrusted(doc)
 	describeJobStartArgs(doc)
+	describeErrorStatuses(doc)
 
 	op, ok := doc.Components.Schemas["Operation"]
 	if !ok {
@@ -98,6 +104,40 @@ func (h *apiHandler) completeOpenAPI(doc *openapi.Document) {
 	}
 
 	op["x-args-by-op"] = byOp
+}
+
+// describeErrorStatuses replaces the 422 the framework declares for a validation failure with the
+// statuses the server sends (service.Error.HTTPStatus, SDD-000 section 8): E_VALIDATION is 400,
+// a missing project, asset or track is 404, a refused state or revision is 409, and a domain
+// rule (E_SLOT, E_UNSUPPORTED_MEDIA, E_TYPE_MISMATCH, ...) is 422.
+func describeErrorStatuses(doc *openapi.Document) {
+	problem := openapi.Response{Ref: "#/components/responses/Problem"}
+
+	for path, item := range doc.Paths {
+		for method, op := range item {
+			if op == nil {
+				continue
+			}
+
+			validation, ok := op.Responses["422"]
+			if !ok {
+				continue
+			}
+
+			delete(op.Responses, "422")
+
+			op.Responses["400"] = validation
+
+			if strings.Contains(path, "{") {
+				op.Responses["404"] = problem
+			}
+
+			if method == "post" {
+				op.Responses["409"] = problem
+				op.Responses["422"] = problem
+			}
+		}
+	}
 }
 
 // describeJobStartArgs lists the members of args in the body of POST /projects/{id}/jobs, with the

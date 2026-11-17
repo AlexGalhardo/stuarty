@@ -238,3 +238,42 @@ func TestOpenAPIMarksUntrustedPaths(t *testing.T) {
 		t.Error("ProjectSummary.id is marked x-untrusted")
 	}
 }
+
+// VV-096: the document has no servers entry (it would be the framework default, not the address
+// the server listens on) and declares the statuses the server sends: 400 for E_VALIDATION, never 422
+// as a validation failure.
+func TestOpenAPIDeclaresTheRealStatuses(t *testing.T) {
+	t.Parallel()
+
+	h := newHarness(t)
+	doc := h.openapi()
+
+	if servers, ok := doc["servers"]; ok {
+		t.Errorf("servers = %v, want none", servers)
+	}
+
+	paths, _ := doc["paths"].(map[string]any)
+
+	for path, item := range paths {
+		for method, raw := range item.(map[string]any) {
+			responses, _ := raw.(map[string]any)["responses"].(map[string]any)
+
+			r422, _ := responses["422"].(map[string]any)
+
+			if ref, _ := r422["$ref"].(string); strings.HasSuffix(ref, "/ValidationError") {
+				t.Errorf("%s %s declares 422 as ValidationError", strings.ToUpper(method), path)
+			}
+		}
+	}
+
+	create, _ := paths["/api/v1/projects"].(map[string]any)["post"].(map[string]any)
+	responses, _ := create["responses"].(map[string]any)
+
+	if _, ok := responses["400"]; !ok {
+		t.Errorf("POST /api/v1/projects responses = %v, want 400", responses)
+	}
+
+	if res := h.post("/api/v1/projects", `{"name":""}`); res.status != http.StatusBadRequest {
+		t.Errorf("empty name = %d, want 400", res.status)
+	}
+}

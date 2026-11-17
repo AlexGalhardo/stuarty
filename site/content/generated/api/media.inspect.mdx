@@ -56,15 +56,21 @@ Content type `application/json`. Schema: [`MediaInspectResult`](/docs/api/schema
 | `untrusted` | [`UntrustedData`](/docs/api/schemas#untrusteddata) or `any` or `null` or `null` | no |  |
 | `untrusted_notice` | `string` | no |  |
 
+### 400
+
+Validation failed; errors maps each field to its messages and issues lists each problem with its code, key and params
+
+Content type `application/problem+json`. Schema: [`Problem`](/docs/api/schemas#problem).
+
 ### 401 Unauthorized
 
 Error (RFC 9457 problem details)
 
 Content type `application/problem+json`. Schema: [`Problem`](/docs/api/schemas#problem).
 
-### 422 Unprocessable Content
+### 404
 
-Validation failed; errors maps each field to its messages and issues lists each problem with its code, key and params
+Error (RFC 9457 problem details)
 
 Content type `application/problem+json`. Schema: [`Problem`](/docs/api/schemas#problem).
 
@@ -283,6 +289,35 @@ puts "#{response.code} #{response.body}"
 }
 ```
 
+```json title="400"
+{
+  "code": "string",
+  "detail": "string",
+  "details": {},
+  "errors": {},
+  "hint": "string",
+  "instance": "string",
+  "issues": [
+    {
+      "code": "string",
+      "key": "string",
+      "message": "string",
+      "on": "string",
+      "params": {},
+      "path": "string"
+    }
+  ],
+  "message": "string",
+  "op_index": 0,
+  "path": "string",
+  "request_id": "string",
+  "retryable": false,
+  "status": 0,
+  "title": "string",
+  "type": "string"
+}
+```
+
 ```json title="401"
 {
   "code": "E_UNAUTHORIZED",
@@ -312,9 +347,9 @@ puts "#{response.code} #{response.body}"
 }
 ```
 
-```json title="422"
+```json title="404"
 {
-  "code": "E_VALIDATION",
+  "code": "string",
   "detail": "string",
   "details": {},
   "errors": {},
@@ -335,7 +370,7 @@ puts "#{response.code} #{response.body}"
   "path": "string",
   "request_id": "string",
   "retryable": false,
-  "status": 422,
+  "status": 0,
   "title": "string",
   "type": "string"
 }

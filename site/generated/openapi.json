@@ -7529,7 +7529,7 @@
     }
   },
   "info": {
-    "description": "The HTTP API of Vukem Video. Every operation is the HTTP form of one service operation.",
+    "description": "The HTTP API of Vukem Video. Every operation is the HTTP form of one service operation. This document needs the same Bearer token as the API.",
     "title": "Vukem Video",
     "version": "1.0.0"
   },
@@ -7575,11 +7575,11 @@
             },
             "description": "OK"
           },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
-          },
-          "422": {
-            "$ref": "#/components/responses/ValidationError"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -7664,11 +7664,11 @@
             },
             "description": "OK"
           },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
-          },
-          "422": {
-            "$ref": "#/components/responses/ValidationError"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -7736,11 +7736,14 @@
             },
             "description": "OK"
           },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
           },
-          "422": {
-            "$ref": "#/components/responses/ValidationError"
+          "404": {
+            "$ref": "#/components/responses/Problem"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -7815,11 +7818,17 @@
             },
             "description": "Created"
           },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
           },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
           "422": {
-            "$ref": "#/components/responses/ValidationError"
+            "$ref": "#/components/responses/Problem"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -7859,11 +7868,11 @@
             },
             "description": "OK"
           },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
-          },
-          "422": {
-            "$ref": "#/components/responses/ValidationError"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -7910,11 +7919,14 @@
             },
             "description": "OK"
           },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
           },
-          "422": {
-            "$ref": "#/components/responses/ValidationError"
+          "404": {
+            "$ref": "#/components/responses/Problem"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -7964,11 +7976,20 @@
             },
             "description": "OK"
           },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
           },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
           "422": {
-            "$ref": "#/components/responses/ValidationError"
+            "$ref": "#/components/responses/Problem"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -8000,11 +8021,14 @@
           "200": {
             "description": "OK"
           },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
           },
-          "422": {
-            "$ref": "#/components/responses/ValidationError"
+          "404": {
+            "$ref": "#/components/responses/Problem"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -8095,11 +8119,17 @@
             },
             "description": "Created"
           },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
           },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
           "422": {
-            "$ref": "#/components/responses/ValidationError"
+            "$ref": "#/components/responses/Problem"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -8138,11 +8168,14 @@
             },
             "description": "OK"
           },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
           },
-          "422": {
-            "$ref": "#/components/responses/ValidationError"
+          "404": {
+            "$ref": "#/components/responses/Problem"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -8196,11 +8229,11 @@
             },
             "description": "OK"
           },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
-          },
-          "422": {
-            "$ref": "#/components/responses/ValidationError"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -8261,11 +8294,17 @@
             },
             "description": "Created"
           },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
           },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
           "422": {
-            "$ref": "#/components/responses/ValidationError"
+            "$ref": "#/components/responses/Problem"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -8320,11 +8359,17 @@
             },
             "description": "Created"
           },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
           },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
           "422": {
-            "$ref": "#/components/responses/ValidationError"
+            "$ref": "#/components/responses/Problem"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -8387,11 +8432,14 @@
             },
             "description": "OK"
           },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
           },
-          "422": {
-            "$ref": "#/components/responses/ValidationError"
+          "404": {
+            "$ref": "#/components/responses/Problem"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -8432,11 +8480,14 @@
           "200": {
             "description": "OK"
           },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
           },
-          "422": {
-            "$ref": "#/components/responses/ValidationError"
+          "404": {
+            "$ref": "#/components/responses/Problem"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -8498,11 +8549,20 @@
             },
             "description": "Accepted"
           },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
           },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
           "422": {
-            "$ref": "#/components/responses/ValidationError"
+            "$ref": "#/components/responses/Problem"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -8577,11 +8637,20 @@
             },
             "description": "OK"
           },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
           },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
           "422": {
-            "$ref": "#/components/responses/ValidationError"
+            "$ref": "#/components/responses/Problem"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -8621,11 +8690,14 @@
           "200": {
             "description": "OK"
           },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
           },
-          "422": {
-            "$ref": "#/components/responses/ValidationError"
+          "404": {
+            "$ref": "#/components/responses/Problem"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -8688,11 +8760,14 @@
           "200": {
             "description": "OK"
           },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
           },
-          "422": {
-            "$ref": "#/components/responses/ValidationError"
+          "404": {
+            "$ref": "#/components/responses/Problem"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -8755,11 +8830,14 @@
             },
             "description": "OK"
           },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
           },
-          "422": {
-            "$ref": "#/components/responses/ValidationError"
+          "404": {
+            "$ref": "#/components/responses/Problem"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -8822,11 +8900,14 @@
             },
             "description": "OK"
           },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
           },
-          "422": {
-            "$ref": "#/components/responses/ValidationError"
+          "404": {
+            "$ref": "#/components/responses/Problem"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -8939,11 +9020,20 @@
             },
             "description": "Accepted"
           },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
           },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
           "422": {
-            "$ref": "#/components/responses/ValidationError"
+            "$ref": "#/components/responses/Problem"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -9006,11 +9096,14 @@
             },
             "description": "OK"
           },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
           },
-          "422": {
-            "$ref": "#/components/responses/ValidationError"
+          "404": {
+            "$ref": "#/components/responses/Problem"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -9065,11 +9158,14 @@
             },
             "description": "OK"
           },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
           },
-          "422": {
-            "$ref": "#/components/responses/ValidationError"
+          "404": {
+            "$ref": "#/components/responses/Problem"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -9136,11 +9232,20 @@
             },
             "description": "Accepted"
           },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
           },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
           "422": {
-            "$ref": "#/components/responses/ValidationError"
+            "$ref": "#/components/responses/Problem"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -9220,11 +9325,14 @@
             },
             "description": "OK"
           },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
           },
-          "422": {
-            "$ref": "#/components/responses/ValidationError"
+          "404": {
+            "$ref": "#/components/responses/Problem"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -9265,11 +9373,14 @@
           "200": {
             "description": "OK"
           },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
           },
-          "422": {
-            "$ref": "#/components/responses/ValidationError"
+          "404": {
+            "$ref": "#/components/responses/Problem"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -9310,11 +9421,14 @@
           "200": {
             "description": "OK"
           },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
           },
-          "422": {
-            "$ref": "#/components/responses/ValidationError"
+          "404": {
+            "$ref": "#/components/responses/Problem"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -9355,11 +9469,14 @@
           "200": {
             "description": "OK"
           },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
           },
-          "422": {
-            "$ref": "#/components/responses/ValidationError"
+          "404": {
+            "$ref": "#/components/responses/Problem"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -9400,11 +9517,14 @@
           "200": {
             "description": "OK"
           },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
           },
-          "422": {
-            "$ref": "#/components/responses/ValidationError"
+          "404": {
+            "$ref": "#/components/responses/Problem"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -9467,11 +9587,20 @@
             },
             "description": "OK"
           },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
           },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
           "422": {
-            "$ref": "#/components/responses/ValidationError"
+            "$ref": "#/components/responses/Problem"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -9512,11 +9641,14 @@
           "200": {
             "description": "OK"
           },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
           },
-          "422": {
-            "$ref": "#/components/responses/ValidationError"
+          "404": {
+            "$ref": "#/components/responses/Problem"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -9565,11 +9697,14 @@
           "200": {
             "description": "OK"
           },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
           },
-          "422": {
-            "$ref": "#/components/responses/ValidationError"
+          "404": {
+            "$ref": "#/components/responses/Problem"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -9632,11 +9767,20 @@
             },
             "description": "OK"
           },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
           },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
           "422": {
-            "$ref": "#/components/responses/ValidationError"
+            "$ref": "#/components/responses/Problem"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -9675,11 +9819,14 @@
             },
             "description": "OK"
           },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
           },
-          "422": {
-            "$ref": "#/components/responses/ValidationError"
+          "404": {
+            "$ref": "#/components/responses/Problem"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -9744,11 +9891,20 @@
             },
             "description": "OK"
           },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
           },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
           "422": {
-            "$ref": "#/components/responses/ValidationError"
+            "$ref": "#/components/responses/Problem"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -9828,11 +9984,14 @@
             },
             "description": "OK"
           },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
           },
-          "422": {
-            "$ref": "#/components/responses/ValidationError"
+          "404": {
+            "$ref": "#/components/responses/Problem"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -9886,11 +10045,20 @@
             },
             "description": "OK"
           },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
           },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
           "422": {
-            "$ref": "#/components/responses/ValidationError"
+            "$ref": "#/components/responses/Problem"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -9944,11 +10112,20 @@
             },
             "description": "OK"
           },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
           },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
           "422": {
-            "$ref": "#/components/responses/ValidationError"
+            "$ref": "#/components/responses/Problem"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -10040,11 +10217,14 @@
           "200": {
             "description": "OK"
           },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
           },
-          "422": {
-            "$ref": "#/components/responses/ValidationError"
+          "404": {
+            "$ref": "#/components/responses/Problem"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -10100,11 +10280,14 @@
             },
             "description": "OK"
           },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
           },
-          "422": {
-            "$ref": "#/components/responses/ValidationError"
+          "404": {
+            "$ref": "#/components/responses/Problem"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -10158,11 +10341,20 @@
             },
             "description": "OK"
           },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
           },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
           "422": {
-            "$ref": "#/components/responses/ValidationError"
+            "$ref": "#/components/responses/Problem"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -10216,11 +10408,20 @@
             },
             "description": "OK"
           },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
           },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
           "422": {
-            "$ref": "#/components/responses/ValidationError"
+            "$ref": "#/components/responses/Problem"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -10266,11 +10467,11 @@
             },
             "description": "OK"
           },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
-          },
-          "422": {
-            "$ref": "#/components/responses/ValidationError"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -10380,11 +10581,17 @@
             },
             "description": "Accepted"
           },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
           },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
           "422": {
-            "$ref": "#/components/responses/ValidationError"
+            "$ref": "#/components/responses/Problem"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -10430,11 +10637,11 @@
             },
             "description": "OK"
           },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
-          },
-          "422": {
-            "$ref": "#/components/responses/ValidationError"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -10490,11 +10697,17 @@
             },
             "description": "Created"
           },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
           },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
           "422": {
-            "$ref": "#/components/responses/ValidationError"
+            "$ref": "#/components/responses/Problem"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -10545,11 +10758,17 @@
             },
             "description": "Created"
           },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
           },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
           "422": {
-            "$ref": "#/components/responses/ValidationError"
+            "$ref": "#/components/responses/Problem"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -10599,11 +10818,20 @@
             },
             "description": "OK"
           },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
           },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
           "422": {
-            "$ref": "#/components/responses/ValidationError"
+            "$ref": "#/components/responses/Problem"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -10635,11 +10863,14 @@
           "200": {
             "description": "OK"
           },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
           },
-          "422": {
-            "$ref": "#/components/responses/ValidationError"
+          "404": {
+            "$ref": "#/components/responses/Problem"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -10725,11 +10956,20 @@
             },
             "description": "Created"
           },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
           },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
           "422": {
-            "$ref": "#/components/responses/ValidationError"
+            "$ref": "#/components/responses/Problem"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -10777,11 +11017,17 @@
             },
             "description": "OK"
           },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
           },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
           "422": {
-            "$ref": "#/components/responses/ValidationError"
+            "$ref": "#/components/responses/Problem"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -10866,11 +11112,17 @@
             },
             "description": "Created"
           },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
           },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
           "422": {
-            "$ref": "#/components/responses/ValidationError"
+            "$ref": "#/components/responses/Problem"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -10935,11 +11187,14 @@
             },
             "description": "OK"
           },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
           },
-          "422": {
-            "$ref": "#/components/responses/ValidationError"
+          "404": {
+            "$ref": "#/components/responses/Problem"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -10953,10 +11208,5 @@
         "summary": "Change the role of a user or disable or enable them (an administrator session only; network mode)"
       }
     }
-  },
-  "servers": [
-    {
-      "url": "http://localhost:3000"
-    }
-  ]
+  }
 }
