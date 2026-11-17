@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.0] - 2026-11-17
+
+### Added
+
+- **ui:** Set a transparent project background ([66bb72b](https://github.com/AlexGalhardo/vukem-video/commit/66bb72bbe4a6f371a725963ece586e5e60c48587))
+- **engine:** Crop each export frame when the crop changes ([0f56e5a](https://github.com/AlexGalhardo/vukem-video/commit/0f56e5a5363ea60c6e9769c1e4d870448111e425))
+- **engine:** Draw a clip shadow and outline ([1e71b5d](https://github.com/AlexGalhardo/vukem-video/commit/1e71b5dd22cd20f8e1227e359a5752d01714c182))
+- **engine:** Keep uncovered pixels transparent in GIF and PNG ([bd34956](https://github.com/AlexGalhardo/vukem-video/commit/bd34956a49d6cd7ce7192bf1329185e46326897a))
+- **ui:** Draw a clip shadow and outline in the preview ([0a42e2b](https://github.com/AlexGalhardo/vukem-video/commit/0a42e2b55c89585737b80a592fd3b1890c57f0d1))
+- **ui:** Show the release version at the bottom left ([99182f9](https://github.com/AlexGalhardo/vukem-video/commit/99182f9d1162388880ed54707347be01c0f8f089))
+- **installers:** Name downloads with the dashed release version ([5b6bae6](https://github.com/AlexGalhardo/vukem-video/commit/5b6bae6484683d5de563c19fb196df4fad35a8ea))
+
+### Fixed
+
+- **repo:** Check a nested Go module inside its own module in the verify skill ([26a4ea4](https://github.com/AlexGalhardo/vukem-video/commit/26a4ea4c0423dcbe13834f77aeb6d5e96ddea45e))
+- **service:** Return E_FFMPEG_MISSING when ffprobe is absent ([e17c50f](https://github.com/AlexGalhardo/vukem-video/commit/e17c50f43023e1f8ff1b31279a9d798acd248c47))
+- **ui:** Send ripple track when Q or W trims to the playhead ([17482d3](https://github.com/AlexGalhardo/vukem-video/commit/17482d340e0bd3719cdb0216f92a71af28403d28))
+- **ui:** Draw the per-frame mask and crop in the preview ([e301375](https://github.com/AlexGalhardo/vukem-video/commit/e3013758372f666dcd44fead1ca484a74bf9c881))
+- **service:** Truncate values quoted by validation errors ([c694faa](https://github.com/AlexGalhardo/vukem-video/commit/c694faab413385b22bb1d3ee9970f8e9db71f262))
+- **cli:** Keep the import hint when a wait redraws the text ([ccf4989](https://github.com/AlexGalhardo/vukem-video/commit/ccf4989a68cfa3c353e93c5c431ff19e6baa1e37))
+- **cli:** Do not repeat a flag value in a validation error ([01996fb](https://github.com/AlexGalhardo/vukem-video/commit/01996fb25ae317c47cf45aa226e89b76876d0f7d))
+- **command:** Name the target before a missing resolved argument ([4172545](https://github.com/AlexGalhardo/vukem-video/commit/4172545f4f4697b7294dcbaa2304dc3ce1a0116c))
+- **http:** Reject dry_run text that would apply a write ([e9b1ad7](https://github.com/AlexGalhardo/vukem-video/commit/e9b1ad727aee963ca64d100438a57428dc002dbd))
+- **engine:** Let overlapping ffmpeg runs finish ([8ba0c50](https://github.com/AlexGalhardo/vukem-video/commit/8ba0c5052a98270ac43b911e02ad7344f18f985a))
+- **engine:** Satisfy the linter on the scaled deadline and the shadow blend ([157d351](https://github.com/AlexGalhardo/vukem-video/commit/157d351a6f878188a32ffd57931cb3505812ec7d))
+- **ui:** Crop a still preview to the frame crop ([f91f1cb](https://github.com/AlexGalhardo/vukem-video/commit/f91f1cbe9e6d699efe9c0f80b4ad3d2b714552af))
+
 ## [0.27.0] - 2026-11-17
 
 ### Added
@@ -1315,7 +1342,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/vukem-video/compare/v0.27.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/vukem-video/compare/v0.28.0...HEAD
+[0.28.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.27.0...v0.28.0
 [0.27.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.26.0...v0.27.0
 [0.26.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.25.0...v0.26.0
 [0.25.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.24.0...v0.25.0
