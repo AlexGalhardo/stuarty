@@ -99,6 +99,7 @@ type ImportLine struct {
 	JobID        string
 	ErrorCode    string
 	ErrorMessage string
+	ErrorHint    string
 }
 
 // Import renders the answer of an import: the note, the count of failures
@@ -125,6 +126,10 @@ func Import(lines []ImportLine) string {
 
 		if l.ErrorCode != "" {
 			fmt.Fprintf(&b, "\nFAILED %s: %s %s", Quote(l.Name, 80), l.ErrorCode, oneLine(l.ErrorMessage, 160))
+
+			if l.ErrorHint != "" {
+				fmt.Fprintf(&b, "\n  hint: %s", oneLine(l.ErrorHint, 200))
+			}
 
 			continue
 		}
