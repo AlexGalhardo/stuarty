@@ -15,7 +15,8 @@ v[0-9]*.[0-9]*.[0-9]*) ;;
 esac
 
 branch="release/$version"
-previous="$(git describe --tags --abbrev=0)"
+# Only release tags count: a build tag such as ffmpeg-9.0.2-2 on the branch is not a release.
+previous="$(git describe --tags --abbrev=0 --match 'v[0-9]*')"
 count="$(git rev-list --count "$previous..HEAD")"
 body="$(mktemp)"
 trap 'rm -f "$body"' EXIT
