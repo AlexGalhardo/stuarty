@@ -411,6 +411,128 @@ The editor is a compact tool; the Inertia pages use shadcn's comfortable default
 
 Every target is at least 24 by 24 CSS px (WCAG 2.2 target size minimum, SDD-012 §18.1 item 7); timeline handles are 8 px wide visually with a 24 px hit area.
 
+### 3.4 Editor layout familiar to users of other editors
+
+Decision D-038: a person who already edits short videos in a popular desktop editor should find each thing in the same place here. This section describes, screen by screen, the regions, the components inside them, the menus and the flows of that familiar layout, using only the tokens of section 2 and the components of section 4. It adds no token. The behaviour, the commands and the phases are those of SDD-012 §6.4 (the layout) and §6.5 (which familiar patterns are adopted now, later, or not at all); where this section and SDD-012 differ, SDD-012 wins and this section is fixed. No asset, icon, colour, name or text of another product is used: icons are lucide (section 5.1), labels come from the catalogues (section 6).
+
+Rules that hold on every screen below:
+
+- A control whose command does not exist in the registry is not drawn (absent, not disabled); a control whose command exists but cannot act on the current selection is `aria-disabled` with the reason in a tooltip (section 4.1).
+- Lists of effects, transitions, filters, presets and fonts are read from the core, never written in the UI (P1).
+- The page never scrolls; each panel body scrolls on its own (SDD-012 §6.3).
+- Every composite widget (tab rail, tab strip, toolbar, menu) is one tab stop with arrow keys inside; `F6` moves between regions in the order top bar, library, preview, timeline, inspector (section 7.1).
+
+#### 3.4.1 Screens
+
+| Screen | Where | Regions and components | Primary action |
+| --- | --- | --- | --- |
+| Start | `/projects` (Inertia page) | page title; a full-width `Button` `default` `lg` "Create project"; the project grid (`repeat(auto-fill, minmax(240px, 1fr))`, section 3.2) of `Card`s: thumbnail box `aspect-video` on `--ed-preview-surround`, name (`UntrustedText`), meta line "edited 2 h ago · 00:30.000" in `text-xs tabular-nums text-muted-foreground`, and a `DropdownMenu` (Rename, Duplicate when the API has it, Delete with an `AlertDialog`) | Create project |
+| Editor | `/editor/{project_id}` | top bar, library with tab rail, preview with transport row, inspector with tab strip, timeline with its toolbar (3.4.2 to 3.4.7) | Export (top bar) |
+| Export | `Dialog` over the editor (section 4.3.10, SDD-012 §14) | name and destination at the top, then one group per output the engine supports (video; others only when the engine lists them), lint findings, progress | Start export |
+| Shortcuts and settings | `Dialog` opened by `?` or Help > Keyboard shortcuts (SDD-012 §18.2) | the cheat sheet (grouped by context, Timeline, Player and General, when SDD-012 §6.5 row 10 brings contexts), rebind and reset per row with the conflict named inline; below, language, theme, "Show tips again" and the version | Close (`Esc` closes it) |
+| Palette | `Dialog` (section 4.3.11) | unchanged | Run |
+
+There is no separate settings window and no second browser window: the export and every dialog stay inside the page (SDD-012 §6.5, what to avoid).
+
+#### 3.4.2 Editor regions
+
+```text
+┌ TopBar (48) ─ [Menu▾] [<] Project name · Saved automatically: 14:32 · [Undo][Redo] · activity ······ [Jobs] [Export] ┐
+├ Library ──────────────────┬ Preview ─────────────────────────────────────┬ Inspector ──────────────────────────────┤
+│ rail │ Panel header (36)  │                                              │ Panel header (36): selection name        │
+│ 40px │ Panel body          │          canvas box (16 px padding)          │ Tab strip (36): Video Audio Speed ...    │
+│ [▣]  │ (asset cards,       │                                              │ Sections of the tab (scroll)             │
+│ [♪]  │  text presets,      │                                              │  Field row: label | control | ◇ | ↺      │
+│ [T]  │  caption actions,   │                                              │                                          │
+│ ...  │  ...)               │ Transport (40): time · [⏮][◀][▶][▶][⏭] · ratio fit safe full │                          │
+├──────┴─────────────────────┴──────────────────────────────────────────────┴──────────────────────────────────────────┤
+│ Timeline toolbar (40):  [Edit tools: select blade · undo redo · split trim delete · caption freeze] ··· [Modes and zoom: snap magnet link · − slider + fit] │
+│ Ruler (28) · track headers (176) · rows                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+The grid, sizes and breakpoints are those of sections 3.1 and 3.2; this layout keeps them. At 1600 px wide the library is 320 px (40 px rail and a 280 px panel), the inspector 360 px and the timeline 300 px high; at 1280 px they are 240 (40 and 200), 280 and 240 px. The player is wider than in the reference layout on purpose: a wider player serves vertical video, and the panels are resizable (SDD-012 §6.5 row 1).
+
+| Region | Surface | Border | Text tokens on it |
+| --- | --- | --- | --- |
+| Top bar | `--ed-panel` | bottom `--border` | `--foreground`, `--muted-foreground` (save time, revision) |
+| Library rail and panel | `--ed-panel` | right `--border`; the rail has its own right `--border` | `--foreground`, `--muted-foreground` |
+| Preview | `--ed-preview-surround` (both themes) | none | the surround text colours of section 2.5 |
+| Transport row | `--ed-panel` | top `--border` | `--foreground`; total time `--muted-foreground` |
+| Inspector | `--ed-panel` | left `--border` | `--foreground`, `--muted-foreground` (labels, units) |
+| Timeline toolbar | `--ed-panel` | top and bottom `--border` | `--foreground` |
+| Timeline body | `--ed-timeline` | rows `--ed-track-line` | section 4.3.6 |
+
+#### 3.4.3 Top bar
+
+Left to right: **Menu** (`Button` `ghost` `sm` with a `Menu` icon and the label, web only; in the desktop shell the same items are the native menu bar, section 8.3), back to projects, project name, **save indicator** ("Saved automatically: 14:32", `text-xs tabular-nums text-muted-foreground`, a `Check` icon before it, hidden while the editor is not live), revision and connection state (section 4.3.3), Undo and Redo, activity indicator, flexible space, palette, jobs chip, **Export** (`Button` `default`, the one primary action of the editor). The theme and language controls of SDD-012 §6.2 stay in the bar and are also reachable from the View menu and the Shortcuts and settings dialog.
+
+The menu (`DropdownMenu`, level 1 elevation) has the groups and actions of SDD-012 §6.4 Menu: File, Edit, Clip, Timeline, View, Help. Each item shows its key at the right from `SHORTCUTS`, in `text-xs text-muted-foreground`; submenus open with `Right`, close with `Left` or `Esc`. A group with no drawable item is not drawn. Context menus of a clip and of an empty part of the timeline (`ContextMenu`) repeat the Clip group plus Copy, Cut, Paste, Duplicate, Delete and Ripple delete, and stay short: no item is shown disabled only to advertise a feature.
+
+#### 3.4.4 Library: tab rail and panel
+
+- **Tab rail**, 40 px wide, at the left edge of the library region: `role="tablist"`, `aria-orientation="vertical"`, one `IconButton` `icon` (32 px) per tab with `aria-label` and a tooltip from `t()`, roving `tabindex` with `Up`, `Down`, `Home` and `End`. Tabs in this order, each drawn only when its command exists (SDD-012 §6.4): Media (`Film`), Audio (`AudioLines`), Text (`Type`), Captions (`Captions`), Effects (`Sparkles`), Transitions (`ArrowLeftRight`), Filters (`SlidersHorizontal`), Templates (`LayoutTemplate`), History (`History`).
+- **Selected tab:** `bg-accent`, icon `--foreground`, and a 2 px leading bar in `--ring` at the rail's left edge, with `aria-selected="true"`. The bar, not the fill, carries the state (3:1 rule for state indicators, section 7.6).
+- **Panel:** `ui/Panel` (section 4.3.2) with the tab's name as the header title. Bodies:
+
+| Tab | Body |
+| --- | --- |
+| Media | the import bar and asset cards (section 4.3.9); the empty state of section 4.3.15 |
+| Audio | asset cards of kind audio, then ducking and beat markers for the selection |
+| Text | "Add text" (`Button` `secondary`), the text presets as a list of rows, the fonts, "Add shape" |
+| Captions | "Generate captions", "Import subtitles", caption styles, track style |
+| Effects, Transitions, Filters | a grid of cards (two columns at 280 px, one at 200 px): name, optional thumbnail from the same frame request as the player, and an amount `Slider` for filters. With nothing selected the cards are `aria-disabled` with the reason "Select a clip first" |
+| Templates | slots of the project and the template info |
+| History | history rows (section 4.3.16) |
+
+`Alt+1` toggles the whole region; the collapsed region keeps the rail visible, so the tabs stay one click away.
+
+#### 3.4.5 Preview and transport
+
+The canvas box is unchanged (section 4.3.7). The transport row (40 px) is laid out in three groups: at the left the timecode `current / total`; in the centre go to start, step back, Play and Pause (`icon-lg`), step forward, go to end; at the right the aspect-ratio `Select` `sm` (the size presets of the core), Fit, the Safe area `Toggle` and Full screen. In full screen the canvas fills the screen on `--ed-preview-surround` and `Esc` leaves. Controls drawn over the surround use `--ed-handle` for focus (section 2.10).
+
+#### 3.4.6 Inspector: tab strip and property rows
+
+- **With no selection:** the project panel (name, size preset, frame rate, duration, the template info), no tab strip.
+- **With a selection:** the panel header names the selection; under it a **tab strip** of 36 px (`Tabs`, horizontal, automatic activation) with the tabs of SDD-012 §6.4 (Video, Audio, Speed, Animation, Adjust, Text), each drawn only when the selection has its sections; a multi-selection shows the tabs the items share. The selected tab has `--foreground` text and a 2 px bottom bar in `--ring`; the others `--muted-foreground`. When the labels do not fit (pt-BR runs longer, section 6.5) the strip scrolls horizontally inside itself with the focused tab kept in view; labels never truncate.
+- **Property row:** the field of section 4.3.8 followed by the keyframe diamond (`aria-pressed`) and a **reset** `IconButton` `icon-xs` (`RotateCcw`, `aria-label` "Reset `<property>`"), present only where the core documents a clearing value and `aria-disabled` at the default (SDD-012 §6.5 row 4). Each pair keeps the 24 px target size and 24 px between centres.
+- Sections inside a tab stack and scroll; a section header is collapsible (section 4.3.8).
+
+#### 3.4.7 Timeline toolbar and tracks
+
+The toolbar (40 px, `ui/Toolbar`) has two labelled groups (`role="group"`, SDD-012 §6.5 row 5): **Edit tools** at the left (Select and Blade as a `ToggleGroup`, Undo, Redo, Split, Trim start, Trim end, Delete, Add caption, Freeze frame when it exists) and **Modes and zoom** at the right (Snap, Magnet and Link as `Toggle`s, then zoom out, the slider, zoom in, Fit). Text buttons keep a visible label and collapse to icons only when the toolbar is narrow (section 4.3.1); every tooltip names the current key ("Split (S)"). A pressed toggle shows `bg-accent`, a border of at least 3:1 against `--ed-panel` and `aria-pressed="true"` (see open point 13 of section 10).
+
+Track headers (176 px) and items follow section 4.3.6. Empty timeline: the empty state of section 4.3.15 inside the rows area, with the toolbar still visible.
+
+#### 3.4.8 Flows
+
+| Flow | Steps on screen |
+| --- | --- |
+| First edit | Start > Create project (size preset) > editor opens on the Media tab with the library empty state > paste a path and Import > the asset card shows Ingesting then Ready > "Add to timeline" or drag to a track > the clip is selected and the inspector opens on Video |
+| Add text or captions | rail Text or Captions > "Add text" or "Generate captions" > the new item is selected > inspector Text tab |
+| Apply a look | select a clip > rail Effects, Transitions or Filters > a card > the inspector shows the new section, with reset and keyframe on its rows |
+| Cut at the playhead | place the playhead (ruler, arrows) > Split in the toolbar, the Clip menu or `S` > a short notice in the timeline if the core refuses |
+| Export | top bar Export > the dialog checks the project > Start export > progress in the dialog and the jobs chip > Succeeded with path, size and Download |
+| Find a shortcut | `?` or Help > Keyboard shortcuts > the context group > rebind or reset |
+
+#### 3.4.9 Contrast and focus of this layout
+
+Every pair below is WCAG 2.2 AA, computed with the method of section 2.6 (light / dark):
+
+| Pair | Need | Light | Dark |
+| --- | --- | --- | --- |
+| `foreground` on `ed-panel` (labels, tab names, menu items) | 4.5 | 19.79 | 17.34 |
+| `muted-foreground` on `ed-panel` (save time, units, shortcut hints, unselected inspector tabs) | 4.5 | 6.00 | 6.98 |
+| `foreground` on `accent` (selected rail tab, pressed toggle, highlighted menu row) | 4.5 | 18.15 | 14.48 |
+| `muted-foreground` on `accent` (shortcut hint in a highlighted menu row) | 4.5 | 5.50 | 5.83 |
+| `ring` on `ed-panel` (focus outline; selected rail and tab bars) | 3 | 7.25 | 11.56 |
+| `ring` on `accent` (focus outline on a selected tab) | 3 | 6.65 | 9.66 |
+| `ring` on `ed-bg` (focus outline crossing a region edge) | 3 | 6.65 | 12.40 |
+| `primary-foreground` on `primary` (Export, Create project, Start export) | 4.5 | 17.16 | 14.22 |
+| `ed-handle` on `ed-preview-surround` (focus in the preview and full screen) | 3 | 11.56 | 11.56 |
+
+Focus is the 2 px `--ring` outline with 2 px offset everywhere (section 2.10); inside the preview it is `--ed-handle`, inside the timeline grid `--ed-selection`. A selected tab is shown by the bar and `aria-selected`, a pressed toggle by the fill, the border and `aria-pressed`, never by colour alone.
+
 ## 4. Components
 
 ### 4.1 The state model
@@ -446,7 +568,7 @@ Kept unchanged in `components/ui/` (SDD-012 §3.1). This section says how the pr
 | `Sheet` | `left` (library drawer), `right` (inspector drawer) | focus trap, `Esc` closes, focus returns to the opener | only at 1024 to 1279 px (section 3.2) and in the mobile Inertia sidebar |
 | `Sidebar` | `collapsible="icon"`, 16 rem / 3 rem | `Ctrl+B` toggles (kept) | Inertia pages only; navigation reduced to Projects and Settings (SDD-012 §3.1) |
 | `Skeleton` | default | `aria-hidden`; the region has `aria-busy` | first load of the project list and of the document; never longer than the request; no shimmer animation |
-| `Tabs` | default | Radix: arrows move, `Home` and `End`, automatic activation | Library and History in the left panel; inspector sub-panels when a type has many sections is not allowed (sections stack and scroll) |
+| `Tabs` | default | Radix: arrows move, `Home` and `End`, automatic activation | the vertical tab rail of the library and the tab strip of the inspector (section 3.4, SDD-012 §6.4); inside one inspector tab the sections stack and scroll, with no further level of tabs |
 | `Tooltip` | default | opens on hover and on focus, `Esc` closes | every icon-only button; text is the label plus the shortcut in `<kbd>` style (`Split (S)`); never the only place of essential information |
 
 Components the specifications need that are not in `components/ui/` yet. They are added with `bunx shadcn add <name>` in the same `radix-nova` style; they import from `radix-ui`, which is already a dependency, so no new package is added. Each needs a line in SDD-012 §3.1.
@@ -778,7 +900,7 @@ Tokens and both themes; typography (bundled, not system fonts); layout and break
 | --- | --- | --- |
 | Window chrome | the browser's | native title bar and decorations of the operating system; no custom title bar, no draggable CSS region (`app-region`), so the web UI needs no desktop-only layout |
 | Window size | any; section 3.2 notices below 1280 px | minimum inner size 1280 by 640 (section 3.2) |
-| Menus | none; the top bar and the palette | native menu bar: File (Import files, Export), Edit (Undo, Redo, Select all), View (toggle panels, zoom, theme, language), Help (documentation, version). Each item calls the same action as its in-page control through `window.vukemDesktop.onMenuAction(cb)`. **`Mod+Z`, `Mod+Shift+Z` and `Mod+A` are shown in the menu but not registered as native accelerators** (D-030), so text fields keep their native undo and select-all and project undo applies elsewhere (SDD-012 §18.2, §21.3) |
+| Menus | the "Menu" button of the top bar (section 3.4.3), the top bar and the palette | native menu bar, with the same items as the in-page Menu button, which is then not drawn (SDD-012 §6.4): File (Import files, Export), Edit (Undo, Redo, Select all), View (toggle panels, zoom, theme, language), Help (documentation, version). Each item calls the same action as its in-page control through `window.vukemDesktop.onMenuAction(cb)`. **`Mod+Z`, `Mod+Shift+Z` and `Mod+A` are shown in the menu but not registered as native accelerators** (D-030), so text fields keep their native undo and select-all and project undo applies elsewhere (SDD-012 §18.2, §21.3) |
 | File choice | path field only (SDD-012 §13.1 item 1) | "Choose files" button through `window.vukemDesktop.pickFiles()`; the path field stays |
 | Drag and drop from the OS | drop shows the "cannot see the path" message | drop imports through `onDropPaths`; the library shows the drop target of section 4.3.9 |
 | Context menu | the in-app Radix menus; the browser's own menu elsewhere | the in-app Radix menus; the webview's native menu is kept only in editable fields (cut, copy, paste) |
@@ -861,6 +983,7 @@ Decisions taken here (each is cheap to undo). "Recorded in" names where the spec
 | DS-9 | Toast placement, durations and the persistent conflict notice | 4.3.13, 4.3.14 | this document only |
 | DS-10 | shadcn components to add (`Dialog`, `AlertDialog`, `Popover`, `DropdownMenu`, `ContextMenu`, `Slider`, `Switch`, `Checkbox`, `RadioGroup`, `Progress`, `Toggle`, `ToggleGroup`), all from `radix-ui` | 4.2 | SDD-012 §3.1 |
 | DS-11 | Native menus show `Mod+Z`, `Mod+Shift+Z` and `Mod+A` without registering them as accelerators; menu items and the title-bar theme go through `onMenuAction` and `setTheme` | 8.3 | decided by D-030; SDD-012 §13.1, §21.3 |
+| DS-12 | The familiar layout (D-038): a 40 px tab rail inside the library width, a 36 px tab strip in the inspector, a selected tab shown by a 2 px `--ring` bar, a save indicator and a Menu button in the top bar, the timeline toolbar in two labelled groups; no new token | 3.4 | SDD-012 §6.4, §6.5 |
 
 Open points found in the specifications while writing this document, and how each was closed:
 
@@ -876,3 +999,4 @@ Open points found in the specifications while writing this document, and how eac
 10. **The site's theme default.** Decided: SDD-010 §1.1 keeps the copied shell's behaviour (section 8.4).
 11. **Light `--ed-safe-area` on the preview surround is 3.03:1**, the smallest margin of the whole set. Open: since the surround is the same in both themes, the overlay colours drawn on it could be theme-independent (the dark value, 9.65:1).
 12. **The error envelope** is specified in SDD-002 A.8; SDD-003 §1.4 carries it across surfaces. A note for briefings, no change needed.
+13. **The border of a pressed toggle in the light theme.** `Button` draws a pressed toggle with `border-foreground/40` over `--accent`; against `--ed-panel` that border is 2.92:1 in light (4.27:1 in dark), just under the 3:1 of a state indicator (WCAG 1.4.11). Open: raise the alpha until the border reaches 3:1, or use `--input` (3.64:1) for the pressed border in light. The `--accent` fill alone cannot carry the state (it is barely lighter or darker than the panel), so this is a fix to make before the toolbar of section 3.4.7 ships.
