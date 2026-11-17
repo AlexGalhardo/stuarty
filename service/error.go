@@ -93,12 +93,17 @@ func (e *Error) ExitCode() int {
 	return 1
 }
 
-// newError builds an error whose retryable flag follows the code.
+// newError builds an error whose retryable flag follows the code. String
+// arguments are shortened the same way as command.Errorf, so a validation
+// message cannot send back a value the caller submitted (SDD-003 section 1.2
+// rule 9).
 func newError(code, format string, args ...any) *Error {
 	retryable := code == command.CodeRevisionConflict || code == CodeQueueFull || code == CodeRateLimited ||
 		code == CodeWorkspaceLocked || code == "E_ASSET_NOT_READY"
 
-	return &Error{Code: code, Message: fmt.Sprintf(format, args...), Retryable: retryable}
+	return &Error{
+		Code: code, Message: command.Errorf(code, format, args...).Message, Retryable: retryable,
+	}
 }
 
 func (e *Error) withHint(format string, args ...any) *Error {
