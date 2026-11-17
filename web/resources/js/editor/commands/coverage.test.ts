@@ -11,6 +11,7 @@ import {
 	captionBreaksOperations,
 	captionEditWordOperations,
 	captionFromTranscriptOperations,
+	captionImportSubtitlesOperations,
 	captionMergeOperations,
 	captionOperations,
 	captionRetimeOperations,
@@ -487,6 +488,10 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 			})
 				.concat(keyframeRemoveOperations("itm_a", "hue", 10))
 				.map((o) => o.op),
+			"inspector.import_subtitles": captionImportSubtitlesOperations({
+				trackId: "trk_a",
+				text: "1\n00:00:01,000 --> 00:00:02,000\nHi\n",
+			}).map((o) => o.op),
 			"inspector.silences": silenceOperations("itm_a", {
 				minSilence: "0.4s",
 				padding: "0.1s",

@@ -89,6 +89,7 @@ export const ACTIONS: Readonly<Record<string, readonly string[]>> = {
 	"timeline.unlink": ["item.unlink"],
 	"timeline.extract_audio": ["item.extract_audio", "track.add"],
 	"inspector.color": ["clip.set_color"],
+	"inspector.import_subtitles": ["caption.import_subtitles"],
 	"inspector.color_keyframe": ["keyframe.set", "keyframe.remove"],
 	"inspector.silences": ["clip.remove_silences"],
 	"inspector.filter": ["clip.set_filter"],
@@ -244,7 +245,10 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 		{ kind: "toolbar", action: "timeline.freeze_frame", phase: "B" },
 		palette,
 	],
-	"caption.import_subtitles": [palette],
+	"caption.import_subtitles": [
+		{ kind: "inspector", action: "inspector.import_subtitles", phase: "B" },
+		palette,
+	],
 	"marker.add": [
 		{ kind: "key", action: "timeline.marker", phase: "B" },
 		palette,

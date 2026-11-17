@@ -281,6 +281,36 @@ export function captionRetimeOperations(clipId: string): Operations {
 	return [{ op: "caption.retime_from_clip", args: { clip_item_id: clipId } }];
 }
 
+export type SubtitleFormat = "srt" | "vtt";
+
+// The format a file name says (`.srt`, `.vtt`), or none: the core then reads a
+// WEBVTT header, else SRT.
+export function subtitleFormatOf(fileName: string): SubtitleFormat | undefined {
+	const name = fileName.toLowerCase();
+	if (name.endsWith(".srt")) return "srt";
+	if (name.endsWith(".vtt")) return "vtt";
+	return undefined;
+}
+
+// "Import subtitles": the text of the file the person picked, read by the
+// browser; the core parses it and judges the cues.
+export function captionImportSubtitlesOperations(input: {
+	trackId: string;
+	text: string;
+	format?: SubtitleFormat;
+}): Operations {
+	return [
+		{
+			op: "caption.import_subtitles",
+			args: {
+				track_id: input.trackId,
+				text: input.text,
+				...(input.format === undefined ? {} : { format: input.format }),
+			},
+		},
+	];
+}
+
 export function captionBreaksOperations(
 	itemId: string,
 	breaks: readonly number[],

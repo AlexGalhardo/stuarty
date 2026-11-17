@@ -1186,6 +1186,13 @@
           "copy_details": "Copy details"
         }
       },
+      "subtitles": {
+        "title": "Import subtitles",
+        "hint": "Import a subtitle file (SRT or WebVTT). Each cue becomes a caption on this track.",
+        "file": "Subtitle file (.srt or .vtt)",
+        "import": "Import subtitles...",
+        "read_failed": "Could not read {name}."
+      },
       "keyframes": {
         "title": "Keyframes",
         "property": "Property",

@@ -11,6 +11,7 @@ import { useCanEdit } from "../commands/useActions";
 import { useDocumentState } from "../state/EditorContext";
 import TextField from "./fields/TextField";
 import ToggleField from "./fields/ToggleField";
+import ImportSubtitles from "./panels/ImportSubtitles";
 import StyleRows, { CAPTION_STYLE_ROWS } from "./panels/StyleRows";
 import Section from "./Section";
 import { useFieldCommit } from "./useFieldCommit";
@@ -108,6 +109,7 @@ export default function TrackPanel({
 					</>
 				)}
 			</Section>
+			{track.kind === "visual" && <ImportSubtitles trackId={trackId} />}
 		</div>
 	);
 }
