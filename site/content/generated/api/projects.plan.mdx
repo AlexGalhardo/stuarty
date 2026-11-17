@@ -27,8 +27,8 @@ Send the secret in the header `Authorization: Bearer <secret>`: the local token 
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
-| `from` | `integer` | no | The first frame of the window; default 0. |
-| `until` | `integer` | no | The end of the window, not included; at most 300 frames after from. Required. |
+| `from` | `integer` | no | The first frame of the window, as a whole number of frames (not a time such as 1s); default 0. |
+| `until` | `integer` | no | The end of the window in whole frames (not a time such as 1s), not included; at most 300 frames after from. Required. |
 | `to` | `integer` | no | Deprecated alias of until, removed at 1.0. |
 | `rev` | `integer (int64)` | no | Must be the current revision when given. |
 | `width` | `integer` | no | The width in pixels the preview draws at, 16 to 4096; bitmaps are rasterized at that scale. Default: the project width. |

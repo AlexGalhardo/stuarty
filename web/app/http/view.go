@@ -145,8 +145,8 @@ func untilAlias[T comparable](until, to T) (T, error) {
 
 type planIn struct {
 	ID    string `json:"id"              validate:"required"`
-	From  int    `json:"from,omitempty"                      doc:"The first frame of the window; default 0."`
-	Until int    `json:"until,omitempty"                     doc:"The end of the window, not included; at most 300 frames after from. Required."`
+	From  int    `json:"from,omitempty"                      doc:"The first frame of the window, as a whole number of frames (not a time such as 1s); default 0."`
+	Until int    `json:"until,omitempty"                     doc:"The end of the window in whole frames (not a time such as 1s), not included; at most 300 frames after from. Required."`
 	To    int    `json:"to,omitempty"                        doc:"Deprecated alias of until, removed at 1.0."`
 	Rev   int64  `json:"rev,omitempty"                       doc:"Must be the current revision when given."`
 	Width int    `json:"width,omitempty"                     doc:"The width in pixels the preview draws at, 16 to 4096; bitmaps are rasterized at that scale. Default: the project width."`

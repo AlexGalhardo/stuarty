@@ -10116,7 +10116,7 @@
         "operationId": "projects.plan",
         "parameters": [
           {
-            "description": "The first frame of the window; default 0.",
+            "description": "The first frame of the window, as a whole number of frames (not a time such as 1s); default 0.",
             "in": "query",
             "name": "from",
             "schema": {
@@ -10124,7 +10124,7 @@
             }
           },
           {
-            "description": "The end of the window, not included; at most 300 frames after from. Required.",
+            "description": "The end of the window in whole frames (not a time such as 1s), not included; at most 300 frames after from. Required.",
             "in": "query",
             "name": "until",
             "schema": {
