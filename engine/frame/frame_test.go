@@ -408,3 +408,41 @@ func TestStillIsTheProjectSizePNG(t *testing.T) {
 		t.Errorf("a time past the end: %v", err)
 	}
 }
+
+// Still encodes the compositor's pixels. A transparent project keeps an uncovered pixel at alpha 0;
+// an opaque project keeps it opaque.
+func TestStillKeepsATransparentBackground(t *testing.T) {
+	f := newFrames(t)
+	st := timeline.DefaultSettings()
+	st.Width, st.Height = 32, 32
+	st.Background = timeline.BackgroundTransparent
+	doc := &timeline.Document{
+		SchemaVersion: timeline.CurrentSchemaVersion,
+		ID:            "prj_gg00000000",
+		Name:          "transparent still",
+		Settings:      st,
+		Assets:        map[string]timeline.Asset{},
+		Tracks:        map[string]timeline.Track{},
+		Items:         map[string]timeline.Item{},
+	}
+	corner := func(background timeline.Color) []byte {
+		t.Helper()
+		doc.Settings.Background = background
+		b, err := f.Still(context.Background(), doc, 0)
+		if err != nil {
+			t.Fatal(err)
+		}
+		im, err := png.Decode(bytes.NewReader(b))
+		if err != nil {
+			t.Fatal(err)
+		}
+		r, g, bl, a := im.At(0, 0).RGBA()
+		return []byte{uint8(r >> 8), uint8(g >> 8), uint8(bl >> 8), uint8(a >> 8)}
+	}
+	if got := corner(timeline.BackgroundTransparent); !bytes.Equal(got, []byte{0, 0, 0, 0}) {
+		t.Fatalf("transparent still corner %v", got)
+	}
+	if got := corner("#202020"); !bytes.Equal(got, []byte{0x20, 0x20, 0x20, 255}) {
+		t.Fatalf("opaque still corner %v", got)
+	}
+}

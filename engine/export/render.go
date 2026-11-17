@@ -50,8 +50,9 @@ func NewRenderer(ctx context.Context, cfg RenderConfig) (*Renderer, error) {
 	return &Renderer{s: s, rd: s.newRenderer(cfg.Bands)}, nil
 }
 
-// Render composes frame t at outScale times the project's size. The result is opaque RGBA of
-// round(width*outScale) by round(height*outScale) pixels.
+// Render composes frame t at outScale times the project's size. The result is RGBA of
+// round(width*outScale) by round(height*outScale) pixels. Uncovered pixels are opaque unless the
+// plan is transparent, in which case their alpha is 0.
 func (r *Renderer) Render(ctx context.Context, t int, outScale float64) (*image.RGBA, error) {
 	st := r.s.job.Doc.Settings
 	w, h := max(round(float64(st.Width)*outScale), 1), max(round(float64(st.Height)*outScale), 1)

@@ -4,6 +4,9 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"image"
+	"image/gif"
+	"image/png"
 	"os"
 	"path/filepath"
 	"strings"
@@ -335,6 +338,83 @@ func TestShadowAndOutlineChangeThePicture(t *testing.T) {
 				t.Fatal("removing the shadow and the outline changed no pixel")
 			}
 		})
+	}
+}
+
+// A transparent project leaves the uncovered corner at alpha 0 in the composed frame, in a PNG of
+// those pixels and in the GIF export. The opaque control stays opaque, including its GIF.
+func TestTransparentExportLeavesUncoveredPixels(t *testing.T) {
+	setup(t)
+	render := func(name string) (pix []byte, doc *timeline.Document) {
+		t.Helper()
+		c := alphaCases[name]()
+		for id, spec := range c.fixtures {
+			useAsset(c.doc, id, ingestClip(t, spec))
+		}
+		one := renderDoc(t, c.doc, name, 1, c.frames)
+		eight := renderDoc(t, c.doc, name, 8, c.frames)
+		if len(one) != 1 || !bytes.Equal(one[0], eight[0]) {
+			t.Fatalf("%s: 1 band and 8 bands differ", name)
+		}
+		return one[0], c.doc
+	}
+	pngCorner := func(pix []byte, doc *timeline.Document) []byte {
+		t.Helper()
+		w, h := doc.Settings.Width, doc.Settings.Height
+		var buf bytes.Buffer
+		if err := png.Encode(&buf, &image.RGBA{
+			Pix: pix, Stride: w * 4, Rect: image.Rect(0, 0, w, h),
+		}); err != nil {
+			t.Fatal(err)
+		}
+		im, err := png.Decode(&buf)
+		if err != nil {
+			t.Fatal(err)
+		}
+		r, g, b, a := im.At(0, 0).RGBA()
+		return []byte{uint8(r >> 8), uint8(g >> 8), uint8(b >> 8), uint8(a >> 8)}
+	}
+	gifCorner := func(name string, doc *timeline.Document) (alpha uint32, disposal byte) {
+		t.Helper()
+		job := newJob(t, doc, "gif-"+name, name+".gif")
+		job.Format = FormatGIF
+		res, err := Run(context.Background(), job)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer func() { _ = os.Remove(res.Path) }()
+		raw, err := os.ReadFile(res.Path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		dec, err := gif.DecodeAll(bytes.NewReader(raw))
+		if err != nil {
+			t.Fatal(err)
+		}
+		_, _, _, a := dec.Image[0].At(0, 0).RGBA()
+		return a, dec.Disposal[0]
+	}
+
+	pix, doc := render("transparent")
+	if !bytes.Equal(pix[:4], []byte{0, 0, 0, 0}) {
+		t.Fatalf("composed corner %v, want alpha 0", pix[:4])
+	}
+	if got := pngCorner(pix, doc); !bytes.Equal(got, []byte{0, 0, 0, 0}) {
+		t.Fatalf("png corner %v, want alpha 0", got)
+	}
+	if a, disposal := gifCorner("transparent", doc); a != 0 || disposal != gif.DisposalBackground {
+		t.Fatalf("gif alpha %d disposal %d, want 0 and restore to background", a, disposal)
+	}
+
+	pix, doc = render("opaque-control")
+	if !bytes.Equal(pix[:4], []byte{0x20, 0x20, 0x20, 255}) {
+		t.Fatalf("opaque composed corner %v", pix[:4])
+	}
+	if got := pngCorner(pix, doc); !bytes.Equal(got, []byte{0x20, 0x20, 0x20, 255}) {
+		t.Fatalf("opaque png corner %v", got)
+	}
+	if a, disposal := gifCorner("opaque-control", doc); a>>8 != 255 || disposal != gif.DisposalNone {
+		t.Fatalf("opaque gif alpha %d disposal %d, want opaque and do not dispose", a, disposal)
 	}
 }
 

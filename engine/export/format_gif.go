@@ -14,12 +14,15 @@ import (
 	"slices"
 	"strconv"
 	"time"
+
+	"github.com/AlexGalhardo/vukem-video/core/plan"
 )
 
 // The GIF the export writes is made here, not by FFmpeg (SDD-004 section 8): the palette is a fixed
 // 6x6x6 colour cube, each frame is dithered with Floyd-Steinberg in integer arithmetic, and the frames
 // are written one after the other, so the same frames give the same bytes (NFR-010) and the memory
-// is one frame, not the whole animation. Every frame is a full frame, with no transparency (VV-172: the project has no transparent background to export).
+// is one frame, not the whole animation. A plan that is not transparent writes opaque frames. A
+// transparent plan (VV-172) reserves palette index 255 for pixels of alpha 0.
 
 // gifLevels is the number of levels of each channel of the palette; the palette has 216 of its 256 entries in use.
 const gifLevels = 6
@@ -46,21 +49,25 @@ var errGIFLimit = errors.New("the GIF passed the size limit")
 // gifWriter writes a GIF89a stream: the header, the global palette, an infinite loop and one frame
 // at a time. limit is the size cap in bytes, 0 for none.
 type gifWriter struct {
-	w          *bufio.Writer
-	n          int64
-	limit      int64
-	err        error
-	width      int
-	height     int
-	frames     int
-	errRow     [2][]int16 // the Floyd-Steinberg error of the row above and of this row, three channels per pixel
-	idx        []byte
-	finished   bool
-	blockBytes [256]byte
+	w           *bufio.Writer
+	n           int64
+	limit       int64
+	err         error
+	width       int
+	height      int
+	frames      int
+	errRow      [2][]int16 // the Floyd-Steinberg error of the row above and of this row, three channels per pixel
+	idx         []byte
+	finished    bool
+	transparent bool
+	blockBytes  [256]byte
 }
 
-func newGIFWriter(w io.Writer, width, height int, limit int64) *gifWriter {
-	g := &gifWriter{w: bufio.NewWriterSize(w, 64<<10), width: width, height: height, limit: limit}
+func newGIFWriter(w io.Writer, width, height int, limit int64, transparent bool) *gifWriter {
+	g := &gifWriter{
+		w: bufio.NewWriterSize(w, 64<<10), width: width, height: height, limit: limit,
+		transparent: transparent,
+	}
 	g.errRow[0] = make([]int16, (width+2)*3)
 	g.errRow[1] = make([]int16, (width+2)*3)
 	g.idx = make([]byte, width*height)
@@ -68,8 +75,13 @@ func newGIFWriter(w io.Writer, width, height int, limit int64) *gifWriter {
 	g.put([]byte("GIF89a"))
 	g.put16(width)
 	g.put16(height)
-	// global colour table of 256 entries (size field 7), colour resolution 8 bits, background index 0
-	g.put([]byte{0xF7, 0, 0})
+	// global colour table of 256 entries (size field 7), colour resolution 8 bits.
+	// A transparent GIF names index 255 as the background; an opaque one keeps index 0.
+	bg := byte(0)
+	if transparent {
+		bg = 255
+	}
+	g.put([]byte{0xF7, bg, 0})
 
 	for i := range 256 {
 		var r, gr, b int
@@ -115,6 +127,10 @@ func (g *gifWriter) quantize(img *image.RGBA) {
 
 		row := img.Pix[y*img.Stride : y*img.Stride+g.width*4]
 		for x := range g.width {
+			if g.transparent && row[x*4+3] == 0 {
+				g.idx[y*g.width+x] = 255
+				continue
+			}
 			var lv [3]int
 
 			for c := range 3 {
@@ -140,8 +156,14 @@ func (g *gifWriter) quantize(img *image.RGBA) {
 func (g *gifWriter) frame(img *image.RGBA, delayCS int) error {
 	g.quantize(img)
 
-	// graphic control: disposal "do not dispose", no transparency
-	g.put([]byte{0x21, 0xF9, 0x04, 0x04, byte(delayCS & 0xFF), byte(delayCS >> 8 & 0xFF), 0, 0})
+	// graphic control. Opaque: disposal 1 (do not dispose), no transparent index.
+	// Transparent: disposal 2 (restore to the background, which is the transparent index) so a hole
+	// in a later frame does not show the previous picture, and index 255 is transparent.
+	packed, trans := byte(0x04), byte(0)
+	if g.transparent {
+		packed, trans = 0x09, 255
+	}
+	g.put([]byte{0x21, 0xF9, 0x04, packed, byte(delayCS & 0xFF), byte(delayCS >> 8 & 0xFF), trans, 0})
 	// image descriptor: the whole canvas, no local table, not interlaced
 	g.put([]byte{0x2C, 0, 0, 0, 0})
 	g.put16(g.width)
@@ -240,7 +262,7 @@ func (s *state) buildGIF(ctx context.Context, rd *renderer) (built, error) {
 
 	step := gifStep(st.FPS)
 	delays := gifDelaysCS(st.FPS, s.frames)
-	g := newGIFWriter(f, width, height, s.job.MaxBytes)
+	g := newGIFWriter(f, width, height, s.job.MaxBytes, plan.Frame(s.job.Doc, 0).Transparent)
 	buf := image.NewRGBA(image.Rect(0, 0, width, height))
 	last := time.Now()
 

@@ -125,7 +125,18 @@ pub fn premultiply(pix: &[u8], w: usize, h: usize) -> Image {
 	}
 }
 
-/// Reads `#RRGGBB`; an alpha, if any, is ignored (the frame is opaque). Anything else is black.
+/// The colour uncovered pixels are filled with. A transparent plan keeps the named colour and
+/// sets alpha to 0 (SDD-004 section 6). Any other plan is opaque.
+pub fn frame_fill(colour: &str, transparent: bool) -> [u8; 4] {
+	let mut bg = parse_colour(colour);
+	if transparent {
+		bg[3] = 0;
+	}
+	bg
+}
+
+/// Reads `#RRGGBB`; an alpha, if any, is ignored (the frame fill forces 255, then [`frame_fill`]
+/// clears it when the plan is transparent). Anything else is black.
 pub fn parse_colour(s: &str) -> [u8; 4] {
 	let black = [0, 0, 0, 255];
 	let b = s.as_bytes();
@@ -161,7 +172,7 @@ pub struct Target<'a> {
 }
 
 /// Draws one frame plan into `dst`, scaling every position and size by `out_scale`. The rows of
-/// `dst` end opaque.
+/// `dst` are filled with `background` first, which is opaque unless the plan is transparent.
 pub fn compose(dst: &mut Target<'_>, background: [u8; 4], layers: &[Layer<'_>], out_scale: f64) {
 	dst.rows = dst.rows.start.min(dst.height)..dst.rows.end.min(dst.height);
 	if dst.pix.len() < dst.width * dst.height * 4 || dst.rows.is_empty() {
