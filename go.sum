@@ -1,7 +1,7 @@
-github.com/AlexGalhardo/vukem v0.45.0 h1:kdx42CcArLZ0A/DFL+/y0uHgkANt/op586A6YMe+olw=
-github.com/AlexGalhardo/vukem v0.45.0/go.mod h1:l6kl1qNA/ROwsDymXx9NQfjs37bfBXnj4EZmScRW/sQ=
-github.com/AlexGalhardo/vukem/contrib/engine v0.2.0 h1:CnvbxmaXn7uWnZ+ZvnXLpt/HJz7NZRkXU3wAj3VQkZE=
-github.com/AlexGalhardo/vukem/contrib/engine v0.2.0/go.mod h1:EtfJ/EJph8VBY8QDEJbwngpsZKJEUHbDaNYLtH4CHSk=
+github.com/AlexGalhardo/vukem v0.46.0 h1:kxINozJMH/d7IBvQafXyV3GSvl6Letw6/+vmNXmlaIc=
+github.com/AlexGalhardo/vukem v0.46.0/go.mod h1:l6kl1qNA/ROwsDymXx9NQfjs37bfBXnj4EZmScRW/sQ=
+github.com/AlexGalhardo/vukem/contrib/engine v0.2.1-0.20261117155947-c84bd713f586 h1:jLexkG1HZGLTtUfL3ueHIPdW7k5NM5tuJgknDQr3Cnw=
+github.com/AlexGalhardo/vukem/contrib/engine v0.2.1-0.20261117155947-c84bd713f586/go.mod h1:EtfJ/EJph8VBY8QDEJbwngpsZKJEUHbDaNYLtH4CHSk=
 github.com/AlexGalhardo/vukem/drivers/otel v0.4.5 h1:UK3JjJOZNsYENiUY4tr+OJEd0hsl9YFeoHNmERYkIPM=
 github.com/AlexGalhardo/vukem/drivers/otel v0.4.5/go.mod h1:OOw36zbB6f+tu2Qc6pBRFQEokJNgy2wEY9f4aaqURIg=
 github.com/cenkalti/backoff/v5 v5.0.3 h1:ZN+IMa753KfX5hd8vVaMixjnqRZ3y8CuJKRKj1xcsSM=
