@@ -89,7 +89,7 @@ var Scopes = map[string]string{
 	"ExportFile":          ScopeRead,
 	"AuditList":           ScopeAdmin,
 	"ToolsInstall":        ScopeAdmin,
-	"ToolsStatus":         ScopeAdmin,
+	"ToolsStatus":         ScopeRead,
 	"PlanWindow":          ScopeRead,
 	"ViewFrame":           ScopeRead,
 	"ViewSheet":           ScopeRead,

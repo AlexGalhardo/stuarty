@@ -191,6 +191,27 @@ func TestSecurity_T26_DownloadNeverTriggeredByAgentCall(t *testing.T) {
 	}
 }
 
+// VV-080: listing what is installed is a read; an agent reads it before it asks for a transcript.
+func TestToolsStatusIsReadableByTheLocalTokenAndAReadKey(t *testing.T) {
+	ts := newToolsServer(t)
+	m := newMediaEnv(t, mediaCfg{tools: ts.tools(t.TempDir())})
+
+	for name, c := range map[string]service.Caller{
+		"the local token": {Actor: "local:cli", Scopes: service.AllScopes},
+		"a read key":      {Actor: "key:r", Scopes: []string{service.ScopeRead}},
+	} {
+		st, err := m.svc.ToolsStatus(service.WithCaller(context.Background(), c), service.ToolsStatusRequest{})
+		if err != nil || st.State != "idle" {
+			t.Errorf("%s: %+v, %v", name, st, err)
+		}
+	}
+
+	_, err := m.svc.ToolsStatus(context.Background(), service.ToolsStatusRequest{})
+	if code(err) != service.CodeUnauthorized {
+		t.Errorf("no caller = %v, want E_UNAUTHORIZED", err)
+	}
+}
+
 func TestToolsInstallVerifiesBeforeItKeepsAnything(t *testing.T) {
 	ts := newToolsServer(t)
 	dir := filepath.Join(t.TempDir(), "tools")
@@ -332,7 +353,7 @@ func TestToolsInstallRefusesWhatTheManifestDoesNotPin(t *testing.T) {
 }
 
 // The install step is system-level: an admin key limited to one project is
-// refused like any other agent caller, for the install and for the status.
+// refused like any other agent caller. The status is a read (VV-080).
 func TestToolsInstallRefusesAProjectLimitedAdminKey(t *testing.T) {
 	ts := newToolsServer(t)
 	m := newMediaEnv(t, mediaCfg{tools: ts.tools(t.TempDir())})
@@ -351,8 +372,8 @@ func TestToolsInstallRefusesAProjectLimitedAdminKey(t *testing.T) {
 		t.Errorf("install by a limited admin key = %v, want E_FORBIDDEN", err)
 	}
 
-	if _, err := m.svc.ToolsStatus(limited, service.ToolsStatusRequest{}); code(err) != service.CodeForbidden {
-		t.Errorf("status by a limited admin key = %v, want E_FORBIDDEN", err)
+	if _, err := m.svc.ToolsStatus(limited, service.ToolsStatusRequest{}); err != nil {
+		t.Errorf("status by a limited key = %v, want it readable", err)
 	}
 
 	if ts.requests.Load() != 0 {

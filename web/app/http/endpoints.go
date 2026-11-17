@@ -216,14 +216,16 @@ var Endpoints = []Endpoint{
 	},
 	{
 		ID: "trash.empty", Method: http.MethodPost, Path: "/trash/empty", Scope: service.ScopeAdmin,
-		Service: "TrashEmpty", Status: 200, Summary: "Empty the trash for good",
+		Service: "TrashEmpty", Status: 200,
+		Summary: "Empty the trash for good (a browser session or an admin key only; the local token gets 403)",
 	},
 	{
 		ID: "system.tools.install", Method: http.MethodPost, Path: "/system/tools/install", Scope: service.ScopeAdmin,
-		Service: "ToolsInstall", Status: 202, Summary: "Install the transcription helper",
+		Service: "ToolsInstall", Status: 202,
+		Summary: "Install the transcription helper (a browser session or an admin key only; the local token gets 403)",
 	},
 	{
-		ID: "system.tools", Method: http.MethodGet, Path: "/system/tools", Scope: service.ScopeAdmin,
+		ID: "system.tools", Method: http.MethodGet, Path: "/system/tools", Scope: service.ScopeRead,
 		Service: "ToolsStatus", Status: 200, Summary: "List the installed helpers and the install progress",
 	},
 	{
