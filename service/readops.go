@@ -96,6 +96,12 @@ func (s *svc) SnapPoints(ctx context.Context, req SnapPointsRequest) (*SnapPoint
 		return nil, err
 	}
 
+	if req.Revision < 0 {
+		return nil, newError(command.CodeValidation, "the revision %d is not valid.", req.Revision).
+			withPath("revision").
+			withHint("send a revision of 1 or more, or none")
+	}
+
 	row, lerr := s.loadProject(ctx, c, req.ProjectID)
 	if lerr != nil {
 		return nil, lerr

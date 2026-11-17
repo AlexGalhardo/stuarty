@@ -53,6 +53,11 @@ func TestSnapPoints(t *testing.T) {
 		t.Errorf("a stale revision = %v", err)
 	}
 
+	negative := service.SnapPointsRequest{ProjectID: project, Revision: -1}
+	if _, err := e.svc.SnapPoints(e.as(ui), negative); code(err) != command.CodeValidation {
+		t.Errorf("a negative revision = %v, want E_VALIDATION", err)
+	}
+
 	current := service.SnapPointsRequest{ProjectID: project, Revision: 2}
 	if _, err := e.svc.SnapPoints(e.as(ui), current); err != nil {
 		t.Errorf("the current revision = %v", err)
