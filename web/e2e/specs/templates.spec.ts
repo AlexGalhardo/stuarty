@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Page } from "@playwright/test";
 import { caller, expect, seedProject, test } from "./helpers";
+import { openSection } from "./sections";
 
 interface Posted {
 	operations: { op: string; args: Record<string, unknown> }[];
@@ -178,6 +179,7 @@ test.describe("templates", () => {
 		]);
 
 		await item.click({ modifiers: ["Control"] });
+		await openSection(page, "Template");
 		const info = page.getByLabel("Template description", { exact: true });
 		await expect(info).toBeVisible();
 		await info.fill("A short template");
@@ -204,6 +206,7 @@ test.describe("templates", () => {
 		await page.getByLabel("Template slot", { exact: true }).check();
 		await item.click({ modifiers: ["Control"] });
 		const name = `Saved ${Date.now()}`;
+		await openSection(page, "Save as template");
 		await page.getByLabel("Template name", { exact: true }).fill(name);
 		await page
 			.getByRole("button", { name: "Save template", exact: true })

@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Page } from "@playwright/test";
 import { caller, expect, seedProject, test } from "./helpers";
+import { openSection } from "./sections";
 
 // The tests share one brand kit per workspace, so they run one after the other.
 test.describe.configure({ timeout: 120_000, mode: "serial" });
@@ -107,6 +108,7 @@ test.describe("brand-kit", () => {
 		await expect(hint).toHaveCount(0);
 
 		// The family is not in the project yet: the Fonts section offers it.
+		await openSection(page, "Fonts");
 		await page
 			.getByRole("button", {
 				name: "Use in project: brand kit font family Brand Anton",
@@ -201,6 +203,7 @@ test.describe("brand-kit", () => {
 
 		await page.goto(`/editor/${seeded.id}?debug=1`);
 		await expect(page.getByRole("toolbar", { name: "Editing" })).toBeVisible();
+		await openSection(page, "Fonts");
 		const pick = page.getByLabel("Imported font file");
 		await expect(pick.locator(`option[value='${stored.hash}']`)).toHaveCount(1);
 		await pick.selectOption(stored.hash);

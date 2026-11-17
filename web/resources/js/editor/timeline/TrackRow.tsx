@@ -14,13 +14,14 @@ import {
 	useRuntime,
 	useUiState,
 } from "../state/EditorContext";
-import { selectTrack } from "../state/selectors";
+import { selectOrderedTrackIds, selectTrack } from "../state/selectors";
+import { trackLabel } from "../ui/trackLabel";
 import GapContextMenuItems from "./GapContextMenu";
 import { clientXToFrame } from "./geometry";
 import ItemContextMenuItems from "./ItemContextMenu";
 import { TimelineItem } from "./items/TimelineItem";
 import { selectTrackItems } from "./trackItems";
-import { mountedIds } from "./virtualize";
+import { LISTED_BUCKET_FRAMES, listedIds, mountedIds } from "./virtualize";
 import { TimelineWindowContext } from "./windowContext";
 
 // The height of the rows of one kind of track: the default or what the person
@@ -39,6 +40,8 @@ export const TrackRow = memo(function TrackRow({
 	const track = useDocumentState((s) => selectTrack(s, id));
 	const rowPx = useRowHeight(track?.kind === "audio" ? "audio" : "visual");
 	const items = useDocumentState((s) => selectTrackItems(s, id));
+	const order = useDocumentState(selectOrderedTrackIds);
+	const tracks = useDocumentState((s) => s.document?.tracks);
 	const frames = useContext(TimelineWindowContext);
 	// Items that stay mounted outside the window: selected, focused, renamed,
 	// the one a move is outlining.
@@ -51,13 +54,28 @@ export const TrackRow = memo(function TrackRow({
 		| { kind: "item"; id: string; word: number | null }
 		| { kind: "gap"; frame: number }
 	>({ kind: "gap", frame: 0 });
-	const mounted = useMemo(() => {
+	// The playhead at a coarse step: it picks which clips the accessibility
+	// tree lists without rendering the row on every frame of a playback.
+	const anchor = useUiState(
+		(s) =>
+			Math.floor(s.playheadFrame / LISTED_BUCKET_FRAMES) * LISTED_BUCKET_FRAMES,
+	);
+	const { mounted, listed } = useMemo(() => {
 		const pinned = new Set<string>(selected);
 		for (const extra of [focused, renaming, conflicting]) {
 			if (extra !== null) pinned.add(extra);
 		}
-		return mountedIds(items, frames, pinned);
-	}, [items, frames, selected, focused, renaming, conflicting]);
+		const ids = mountedIds(items, frames, pinned);
+		return {
+			mounted: ids,
+			listed: listedIds(
+				ids,
+				new Map(items.map((item) => [item.id, item])),
+				anchor,
+				pinned,
+			),
+		};
+	}, [items, frames, selected, focused, renaming, conflicting, anchor]);
 	if (track === undefined) return null;
 	// A right-click picks the menu: an item (selected first when it was not
 	// part of the selection) or the empty place under the pointer.
@@ -97,6 +115,22 @@ export const TrackRow = memo(function TrackRow({
 				{/* biome-ignore lint/a11y/useSemanticElements: the row sits in a CSS-positioned grid (SDD-012 section 7.1). */}
 				<div
 					role="row"
+					// A short name: the one computed from the cells repeats every clip.
+					aria-label={t(
+						listed.size < items.length
+							? "ui.editor.timeline.row_summary_listed"
+							: "ui.editor.timeline.row_summary",
+						{
+							shown: listed.size,
+							name:
+								track.name === undefined || track.name === ""
+									? trackLabel(id, order, (other) =>
+											tracks?.[other]?.kind === "audio" ? "audio" : "visual",
+										)
+									: track.name,
+							count: items.length,
+						},
+					)}
 					tabIndex={-1}
 					data-track-id={id}
 					style={{ height: rowPx }}
@@ -107,7 +141,11 @@ export const TrackRow = memo(function TrackRow({
 					onContextMenu={onContextMenu}
 				>
 					{mounted.map((itemId) => (
-						<TimelineItem key={itemId} id={itemId} />
+						<TimelineItem
+							key={itemId}
+							id={itemId}
+							listed={listed.has(itemId)}
+						/>
 					))}
 					{mounted.length === 0 && (
 						// A row needs a cell (aria-required-children); an empty track keeps one.

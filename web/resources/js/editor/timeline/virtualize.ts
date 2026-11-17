@@ -1,4 +1,4 @@
-import { endsAfter, startsAtOrAfter } from "../commands/units";
+import { endsAfter, startDistance, startsAtOrAfter } from "../commands/units";
 
 // Windowed rendering of a track (SDD-012 section 7.9). Pure: the read model
 // and the UI state go in, the ids to mount come out.
@@ -31,7 +31,13 @@ export function frameWindow(
 	return { from: fromPx / pxPerFrame, to: toPx / pxPerFrame };
 }
 
-interface Timed {
+// How many cells of a row the accessibility tree lists, and how coarsely the
+// playhead moves the listed ones (about every five seconds at 30 fps), so a
+// playing video does not render the rows again (VV-191).
+export const LISTED_PER_ROW = 6;
+export const LISTED_BUCKET_FRAMES = 150;
+
+export interface Timed {
 	id: string;
 	start: number;
 	duration: number;
@@ -72,4 +78,29 @@ export function mountedIds(
 		}
 	}
 	return ids;
+}
+
+// The cells of a row that the accessibility tree lists: the pinned ones
+// (selected, focused, being renamed) and the few nearest to `anchor`, the
+// playhead at a coarse step. The rest stay on the screen and in the keyboard
+// order, hidden from assistive technology, so an assistive client reads a
+// summary of the row instead of every clip (VV-191).
+export function listedIds(
+	mounted: readonly string[],
+	byId: ReadonlyMap<string, Timed>,
+	anchor: number,
+	pinned: ReadonlySet<string>,
+	limit: number = LISTED_PER_ROW,
+): Set<string> {
+	const listed = new Set<string>();
+	for (const id of mounted) if (pinned.has(id)) listed.add(id);
+	const rest = mounted
+		.filter((id) => !listed.has(id) && byId.has(id))
+		.map((id) => ({ id, d: startDistance(byId.get(id) as Timed, anchor) }))
+		.sort((a, b) => a.d - b.d || (a.id < b.id ? -1 : 1));
+	for (const { id } of rest) {
+		if (listed.size >= Math.max(limit, 1)) break;
+		listed.add(id);
+	}
+	return listed;
 }

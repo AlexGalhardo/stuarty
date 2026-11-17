@@ -10,6 +10,7 @@ import {
 	test,
 	testClip,
 } from "./helpers";
+import { openSection } from "./sections";
 
 interface Posted {
 	operations: { op: string; args: Record<string, unknown> }[];
@@ -164,6 +165,7 @@ test.describe("beta-commands", () => {
 
 		await page.keyboard.press("Escape");
 		await dismissNotices(page);
+		await openSection(page, "Fonts");
 		await page.getByLabel("Family name", { exact: true }).fill("Brand Sans");
 		await page
 			.getByLabel("Font file hash (sha256:...)", { exact: true })

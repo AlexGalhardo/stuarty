@@ -93,6 +93,11 @@ export const endsAfter = (item: TimedItem, frame: number): boolean =>
 export const startsAtOrAfter = (item: TimedItem, frame: number): boolean =>
 	item.start >= frame;
 
+// How far the item starts from `frame`, to choose the clips of a row that the
+// accessibility tree lists; it orders and displays nothing else.
+export const startDistance = (item: TimedItem, frame: number): number =>
+	Math.abs(item.start - frame);
+
 type Fps = { num: number; den: number };
 
 // The frame rate of the document as a rational; a project without `fps` runs

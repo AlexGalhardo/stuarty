@@ -1,6 +1,11 @@
 import { describe, expect, test } from "vitest";
 
-import { frameWindow, mountedIds, VIRTUALIZE_ABOVE } from "./virtualize";
+import {
+	frameWindow,
+	listedIds,
+	mountedIds,
+	VIRTUALIZE_ABOVE,
+} from "./virtualize";
 
 // 40 one-second clips of 30 frames, back to back.
 const track = Array.from({ length: 40 }, (_, i) => ({
@@ -73,5 +78,34 @@ describe("mountedIds", () => {
 
 	test("an empty track mounts nothing", () => {
 		expect(mountedIds([], { from: 0, to: 100 }, none)).toEqual([]);
+	});
+});
+
+describe("listedIds", () => {
+	const items = Array.from({ length: 20 }, (_, i) => ({
+		id: `itm_${i}`,
+		start: i * 30,
+		duration: 30,
+	}));
+	const byId = new Map(items.map((item) => [item.id, item]));
+	const ids = items.map((item) => item.id);
+
+	test("lists the clips nearest to the anchor, up to the limit", () => {
+		expect([...listedIds(ids, byId, 300, new Set(), 3)].sort()).toEqual([
+			"itm_10",
+			"itm_11",
+			"itm_9",
+		]);
+	});
+
+	test("always lists the pinned clips, even far from the anchor", () => {
+		const listed = listedIds(ids, byId, 0, new Set(["itm_19"]), 2);
+		expect(listed.has("itm_19")).toBe(true);
+		expect(listed.has("itm_0")).toBe(true);
+		expect(listed.size).toBe(2);
+	});
+
+	test("lists every clip of a short row", () => {
+		expect(listedIds(ids.slice(0, 3), byId, 0, new Set()).size).toBe(3);
 	});
 });

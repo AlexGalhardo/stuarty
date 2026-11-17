@@ -6,12 +6,18 @@ import type { ReactNode } from "react";
 export default function UntrustedText({
 	children,
 	className = "",
+	"aria-hidden": ariaHidden,
 }: {
 	children: ReactNode;
 	className?: string;
+	"aria-hidden"?: "true";
 }) {
 	return (
-		<span dir="auto" className={`[unicode-bidi:isolate] ${className}`}>
+		<span
+			dir="auto"
+			aria-hidden={ariaHidden}
+			className={`[unicode-bidi:isolate] ${className}`}
+		>
 			{children}
 		</span>
 	);

@@ -82,8 +82,12 @@ function RenameField({
 // localized type (SDD-012 section 7.4).
 export const TimelineItem = memo(function TimelineItem({
 	id,
+	listed = true,
 }: {
 	id: string;
+	// False when the row lists only a few clips to assistive technology: the
+	// cell stays on the screen and in the keyboard order (VV-191).
+	listed?: boolean;
 }): ReactNode {
 	countRender("TimelineItem");
 	const t = useT();
@@ -107,10 +111,10 @@ export const TimelineItem = memo(function TimelineItem({
 		item.name ?? asset?.name ?? item.text?.split("\n")[0] ?? typeName;
 
 	return (
-		// biome-ignore lint/a11y/useKeyWithClickEvents: the keyboard selects with Enter, handled by the grid (SDD-012 section 7.10).
 		// biome-ignore lint/a11y/useSemanticElements: the cell sits in a CSS-positioned grid (SDD-012 section 7.1).
 		<div
 			role="gridcell"
+			aria-hidden={listed ? undefined : true}
 			tabIndex={tabStop ? 0 : -1}
 			aria-selected={selected}
 			aria-label={t("ui.editor.timeline.item_summary", {
@@ -204,6 +208,8 @@ export const TimelineItem = memo(function TimelineItem({
 				<CaptionItem id={id} />
 			) : (
 				<UntrustedText
+					// The cell already carries the name; the text would be read twice.
+					aria-hidden="true"
 					className={cn(
 						"relative z-10 truncate",
 						(item.type === "clip" || item.type === "audio") &&

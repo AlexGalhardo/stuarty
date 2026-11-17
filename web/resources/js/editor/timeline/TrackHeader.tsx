@@ -113,6 +113,7 @@ export default function TrackHeader({ id }: { id: string }): ReactNode {
 		// biome-ignore lint/a11y/useSemanticElements: the header sits in a CSS-positioned grid (SDD-012 section 7.1).
 		<div
 			role="rowheader"
+			aria-label={name}
 			tabIndex={-1}
 			data-header-for={id}
 			onClick={() => runtime.uiWriter.selectTrack(id)}

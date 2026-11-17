@@ -53,7 +53,7 @@ function SaveAsTemplate(): ReactNode {
 	}
 
 	return (
-		<Section title={t("ui.editor.template.save_title")}>
+		<Section title={t("ui.editor.template.save_title")} defaultOpen={false}>
 			<div className="flex flex-col gap-1">
 				<Label htmlFor="template-save-name" className="text-xs">
 					{t("ui.editor.template.save_name")}
@@ -120,7 +120,7 @@ export default function TemplateInfoSection(): ReactNode {
 
 	return (
 		<>
-			<Section title={t("ui.editor.template.info_title")}>
+			<Section title={t("ui.editor.template.info_title")} defaultOpen={false}>
 				<TextField
 					label={t("ui.editor.template.info_description")}
 					stored={template?.description ?? ""}
