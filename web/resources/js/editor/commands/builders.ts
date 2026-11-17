@@ -164,17 +164,24 @@ export function repeatOperations(
 	];
 }
 
-// One `item.trim` per item that the playhead lies strictly inside.
+// One `item.trim` per item that the playhead lies strictly inside. `ripple` is
+// omitted unless the caller names it: the core default stays none.
 export function trimOperations(
 	items: readonly ItemRange[],
 	edge: "start" | "end",
 	playhead: number,
+	ripple?: "none" | "track",
 ): Operations {
 	return items
 		.filter((item) => containsStrictly(item, playhead))
 		.map((item) => ({
 			op: "item.trim",
-			args: { item_id: item.id, edge, to: frames(playhead) },
+			args: {
+				item_id: item.id,
+				edge,
+				to: frames(playhead),
+				...(ripple === undefined ? {} : { ripple }),
+			},
 		}));
 }
 

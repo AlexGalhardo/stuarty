@@ -251,7 +251,12 @@ describe("gestures send one request and wait for the answer", () => {
 		expect(sent[0]?.request.operations).toEqual([
 			{
 				op: "item.trim",
-				args: { item_id: item.id, edge: "start", to: `${item.start + 5}f` },
+				args: {
+					item_id: item.id,
+					edge: "start",
+					to: `${item.start + 5}f`,
+					ripple: "track",
+				},
 			},
 		]);
 	});
