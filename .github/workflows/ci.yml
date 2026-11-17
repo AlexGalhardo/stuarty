@@ -178,6 +178,17 @@ jobs:
         run: |
           bin_dir="$(bash scripts/install-ffmpeg.sh)"
           echo "VUKEM_VIDEO_TEST_FFMPEG_DIR=${bin_dir}" >> "$GITHUB_ENV"
+      # The own build has no H.264 encoder until the user installs Cisco OpenH264 (D-017): the engine
+      # suites install it the way a user does and point the tests at the tools folder. No effect while
+      # the BtbN build is pinned.
+      - name: Install OpenH264 (own FFmpeg build)
+        shell: bash
+        run: |
+          if [ "$(. .config/ffmpeg.env && echo "${FFMPEG_SOURCE:-btbn}")" = own ]; then
+            home="${RUNNER_TEMP}/vukem-video-tools-home"
+            go run ./web/cmd/app tools:install openh264 --workspace "$home" --yes
+            echo "VUKEM_VIDEO_TEST_TOOLS_DIR=${home}/tools" >> "$GITHUB_ENV"
+          fi
       - name: go test
         # Non-blocking for the export shards while the golden frames diverge on the runners
         # (CPU-dependent bytes, under investigation): the author asked on 2026-11-16 to keep the
