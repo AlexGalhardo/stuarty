@@ -138,7 +138,8 @@
         "text": "Texto",
         "captions": "Legendas",
         "transitions": "Transições",
-        "filters": "Filtros"
+        "filters": "Filtros",
+        "templates": "Modelos"
       },
       "activity": {
         "you": "você",
@@ -381,7 +382,8 @@
         "select_text_first": "Selecione um item de texto antes.",
         "fonts": "Fontes",
         "captions_select_clip": "Selecione um clipe de vídeo com áudio para gerar legendas.",
-        "select_clip_first": "Selecione um clipe antes."
+        "select_clip_first": "Selecione um clipe antes.",
+        "templates_select": "Selecione um item de clipe, áudio, texto ou legenda para marcá-lo como slot."
       },
       "edit": {
         "label": "Edição",

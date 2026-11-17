@@ -4,6 +4,7 @@ import {
 	Captions,
 	Film,
 	History,
+	LayoutTemplate,
 	type LucideIcon,
 	SlidersHorizontal,
 	Type,
@@ -19,6 +20,7 @@ import TextPanel from "../library/TextPanel";
 import TransitionsPanel from "../library/TransitionsPanel";
 import type { LeftTab } from "../state/uiStore";
 import CaptionsTab from "./CaptionsTab";
+import TemplatesTab from "./TemplatesTab";
 
 export interface LibraryTabDef {
 	id: LeftTab;
@@ -83,6 +85,14 @@ export const LIBRARY_TABS: readonly LibraryTabDef[] = [
 		commands: ["clip.set_filter"],
 		bodyClass: "*:flex-1",
 		render: () => <FiltersPanel />,
+	},
+	{
+		id: "templates",
+		labelKey: "ui.editor.panels.templates",
+		icon: LayoutTemplate,
+		commands: ["slot.mark"],
+		bodyClass: "*:flex-1",
+		render: () => <TemplatesTab />,
 	},
 	{
 		id: "history",

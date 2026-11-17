@@ -43,3 +43,29 @@ test.describe("library captions tab", () => {
 		).toBeVisible();
 	});
 });
+
+// TASK-0287: the Templates tab marks the selected item as a slot and shows the
+// slots of the project, with the sections of the inspector.
+test.describe("library templates tab", () => {
+	test.use({ viewport: { width: 1600, height: 900 } });
+
+	test("marking the selected clip sends slot.mark and lists the slot", async ({
+		page,
+		request,
+	}) => {
+		const seeded = await seedProject(request, { tracks: 1, perTrack: 1 });
+		await page.goto(`/editor/${seeded.id}`);
+		await page.getByRole("tab", { name: "Templates" }).click();
+		const panel = page.getByRole("region", { name: "Templates" });
+		await expect(panel).toContainText("Select one clip");
+		await page.locator(`[data-item-id="${seeded.itemIds[0]}"]`).click();
+		const edit = page.waitForRequest(
+			(r) => r.method() === "POST" && r.url().endsWith("/edit"),
+		);
+		await panel.getByRole("checkbox", { name: "Template slot" }).click();
+		const body = (await edit).postDataJSON() as {
+			operations: { op: string }[];
+		};
+		expect(body.operations[0]?.op).toBe("slot.mark");
+	});
+});
