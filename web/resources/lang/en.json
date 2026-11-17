@@ -58,6 +58,16 @@
         "imported_again": "A template with this name was already in the list, so there are now two.",
         "use_brand": "Use the brand kit colours and fonts"
       },
+      "card": {
+        "menu": "Actions for project",
+        "rename": "Rename",
+        "rename_title": "Rename project",
+        "save": "Save",
+        "cancel": "Cancel",
+        "delete": "Delete",
+        "delete_title": "Delete this project?",
+        "delete_body": "The project moves to the trash, where you can restore it."
+      },
       "trash": {
         "title": "Trash",
         "move": "Move to trash",
