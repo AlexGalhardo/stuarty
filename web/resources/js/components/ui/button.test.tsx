@@ -16,6 +16,6 @@ describe("Button", () => {
 		);
 		expect(html).toContain('aria-pressed="true"');
 		expect(html).toContain("aria-pressed:bg-accent");
-		expect(html).toContain("aria-pressed:border-foreground/40");
+		expect(html).toContain("aria-pressed:border-foreground/50");
 	});
 });
