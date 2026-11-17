@@ -7,6 +7,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.24.0] - 2026-11-17
+
+### Added
+
+- **engine:** Port the shape rasterizer to the Rust renderer, byte-equal with engine/raster ([11f56a0](https://github.com/AlexGalhardo/vukem-video/commit/11f56a03496f9c3472ed5cf03750e61ebfa53aed))
+- **core:** Add a magnet flag to track.update that keeps a track packed ([609d66b](https://github.com/AlexGalhardo/vukem-video/commit/609d66b77470d0bc6237d8c2eff7c0ab651d5e37))
+- **core:** Add a lookup table (LUT) to clip.set_color and the lut asset kind ([9d852e4](https://github.com/AlexGalhardo/vukem-video/commit/9d852e43b86b7071ea8f1cb92b563abb50f748aa))
+- **core:** Add the item.freeze_frame command ([15061ab](https://github.com/AlexGalhardo/vukem-video/commit/15061abc66cd8b9b4e2d4b943e94b3fa5fc7385c))
+- **repo:** Record the detection page on Chromium and Edge on Windows ([dacbbd4](https://github.com/AlexGalhardo/vukem-video/commit/dacbbd4be329a2bde5a9ace7e4ef5ae058c54932))
+- **engine:** Add the approved text crates to the renderer with their Unicode-3.0 exceptions ([5331407](https://github.com/AlexGalhardo/vukem-video/commit/53314078f1ae37124b1ecc3fe270ecc47728d398))
+- **engine:** Port the text layout, shaping and drawing of engine/raster to the Rust renderer ([ba5baa4](https://github.com/AlexGalhardo/vukem-video/commit/ba5baa45bb7bd5240c3c9dc55f5c2768bfbce0df))
+- **ui:** Add the magnet toggle, the freeze frame action and the LUT picker ([2b92fe2](https://github.com/AlexGalhardo/vukem-video/commit/2b92fe276b43455fc0cb956152c1506c862dab19))
+- **ui:** Add the voice filter select to the Audio section ([8fd2a79](https://github.com/AlexGalhardo/vukem-video/commit/8fd2a7945b01600d903523ea6ab13586a8241e41))
+- **ui:** Add copy and paste attributes with Mod+Shift+C and Mod+Shift+V ([d917a5f](https://github.com/AlexGalhardo/vukem-video/commit/d917a5fd865446791573b583ef962f88e81dd304))
+- **ui:** Add the markers section to the item and project inspectors ([7f1afab](https://github.com/AlexGalhardo/vukem-video/commit/7f1afabf5592c5a46f7d62e0b35bff459a80f2d0))
+- **ui:** Export only the range between the in and out points ([22e3240](https://github.com/AlexGalhardo/vukem-video/commit/22e32405978363d8f2a7541817b1e60625cb7a90))
+- **ui:** Export a single PNG frame at the playhead from the export dialog ([fc92d31](https://github.com/AlexGalhardo/vukem-video/commit/fc92d31448b7a2fbadbc5cf809e8e28846fb47e7))
+- **core:** Carry the track magnet, lookup table and freeze frame through OTIO ([63981c5](https://github.com/AlexGalhardo/vukem-video/commit/63981c5e3378041d242487ac400fac1c04f936b8))
+- **core:** Add HSL bands, colour wheels and curves to clip.set_color ([89b5a66](https://github.com/AlexGalhardo/vukem-video/commit/89b5a66d829794bd95b6a4aef1151d5692c4be0f))
+- **core:** Animate the colour properties of a clip with keyframe.set ([b48221a](https://github.com/AlexGalhardo/vukem-video/commit/b48221ac86d1caf870993547b561ea39b37efd92))
+- **core:** Add the spin, shrink and grow transitions and carry every kind through OTIO ([33c9ae3](https://github.com/AlexGalhardo/vukem-video/commit/33c9ae38822b50939b310c6395e7c0104c0d9712))
+- **core:** Add caption.import_subtitles and the core/subtitle SRT and WebVTT parser ([7c39d17](https://github.com/AlexGalhardo/vukem-video/commit/7c39d17054385815106c8a329069f5bd7e9de68a))
+- **engine:** Move the shared math of the text rasterizer so the renderer can link it ([2d7670e](https://github.com/AlexGalhardo/vukem-video/commit/2d7670e92f5b297b0ce021c4d4fab408aaf76680))
+- **engine:** Add the text exports to the renderer module and the wazero host ([6a5fce7](https://github.com/AlexGalhardo/vukem-video/commit/6a5fce79df951b46825ec1f24a55f119141253d4))
+- **engine:** Make the Rust text rasterizer the reference of every bitmap ([f9340e8](https://github.com/AlexGalhardo/vukem-video/commit/f9340e87fc8c514869f8838e67118ebef4d22b6f))
+- **engine:** Switch every caller to the Rust rasterizer and remove engine/raster ([9516ad5](https://github.com/AlexGalhardo/vukem-video/commit/9516ad53a057df7ace6185af24b1f8c61b1c86e5))
+- **engine:** Compile the renderer module at service start, not at the first text ([959fc74](https://github.com/AlexGalhardo/vukem-video/commit/959fc74c258632d2a113165ad1c044afb9e9bae2))
+- **ui:** Add HSL, colour wheels and curves to the Colour section ([cdc3126](https://github.com/AlexGalhardo/vukem-video/commit/cdc31262bc7e6da172e5d14d412cd29362621f38))
+- **ui:** Add colour keyframes to the Colour section ([2417dc3](https://github.com/AlexGalhardo/vukem-video/commit/2417dc38a5373bbda39ef46c1a3b23d06c6c4835))
+- **ui:** Add the Import subtitles file picker for SRT and WebVTT ([31c091e](https://github.com/AlexGalhardo/vukem-video/commit/31c091e674824172c4a567a1b61fa53378ec3e5f))
+- **service:** Allow the lut asset kind in the assets table ([14170a0](https://github.com/AlexGalhardo/vukem-video/commit/14170a0a0514a3e0e160dd08cf7575d6b5d5d8bf))
+- **service:** Ingest a .cube file as an asset of kind lut ([46a4dfd](https://github.com/AlexGalhardo/vukem-video/commit/46a4dfd28b02c369bb66e28cdb83f0a2f20e45ef))
+
+### Fixed
+
+- **auth:** Treat only an admin browser session as privileged for doctor and tools ([23bc005](https://github.com/AlexGalhardo/vukem-video/commit/23bc005f5624c098037eb7c5d6e095cdcf13b783))
+- **http:** Key the frames-in-flight cap by the credential, not the client label ([693d289](https://github.com/AlexGalhardo/vukem-video/commit/693d289cd5e7094af5ca850eb95402e40d4ddb33))
+- **cli:** Announce the OpenH264 install from its own manifest ([e1ae786](https://github.com/AlexGalhardo/vukem-video/commit/e1ae786e493ac80537b8a18e577ed9f4104cef37))
+- **service:** Split the .cube checker and list a lut asset in the project view ([daad534](https://github.com/AlexGalhardo/vukem-video/commit/daad5345dc4fcbcef7886bdd5da50b71f3fd0a0a))
+
+### Security
+
+- **security:** Add the independent 1.0 security review ([d3e9318](https://github.com/AlexGalhardo/vukem-video/commit/d3e9318a9ee53641c5336170259abef7e573991c))
+
 ## [0.23.0] - 2026-11-16
 
 ### Added
@@ -1077,7 +1121,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/vukem-video/compare/v0.23.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/vukem-video/compare/v0.24.0...HEAD
+[0.24.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.23.0...v0.24.0
 [0.23.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.22.0...v0.23.0
 [0.22.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.21.0...v0.22.0
 [0.21.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.20.0...v0.21.0
