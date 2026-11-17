@@ -65,7 +65,14 @@ interface GoldenItem {
 	brightness?: number;
 	contrast?: number;
 	saturation?: number;
+	hue?: number;
+	temperature?: number;
+	tint?: number;
+	hsl?: Record<string, unknown>[];
+	wheels?: Record<string, unknown>;
+	curves?: Record<string, unknown>;
 	filter?: string;
+	filter_amount?: number;
 	blur?: number;
 	speed?: { num: number; den: number };
 	keyframes?: Record<string, { t: number; value: number; easing?: string }[]>;
@@ -239,25 +246,33 @@ function buildOperations(
 					args: { item_id: id, crop: item.crop },
 				});
 			}
-			if (
-				item.brightness !== undefined ||
-				item.contrast !== undefined ||
-				item.saturation !== undefined
-			) {
+			const color = {
+				brightness: item.brightness,
+				contrast: item.contrast,
+				saturation: item.saturation,
+				hue: item.hue,
+				temperature: item.temperature,
+				tint: item.tint,
+				hsl: item.hsl,
+				wheels: item.wheels,
+				curves: item.curves,
+			};
+			if (Object.values(color).some((v) => v !== undefined)) {
 				ops.push({
 					op: "clip.set_color",
-					args: {
-						item_id: id,
-						brightness: item.brightness,
-						contrast: item.contrast,
-						saturation: item.saturation,
-					},
+					args: { item_id: id, ...color },
 				});
 			}
 			if (item.filter) {
 				ops.push({
 					op: "clip.set_filter",
-					args: { item_id: id, filter: item.filter },
+					args: {
+						item_id: id,
+						filter: item.filter,
+						...(item.filter_amount === undefined
+							? {}
+							: { amount: item.filter_amount }),
+					},
 				});
 			}
 			if (item.blur !== undefined) {
@@ -369,6 +384,17 @@ function needsImageFixtures(name: string): boolean {
 		readFileSync(join(GOLDEN, name, "fixtures.json"), "utf8"),
 	) as Record<string, Fixture>;
 	return Object.values(fixtures).some((f) => f.sticker || f.delays_cs);
+}
+
+// A lookup table asset (`lut` in the fixtures): the preview has no route to
+// fetch the .cube of the asset yet (the proxy route serves only the "proxy"
+// artifact, and a lut asset has no artifact), so it draws the clip without the
+// table and the case cannot match the export.
+function needsLutRoute(name: string): boolean {
+	const fixtures = JSON.parse(
+		readFileSync(join(GOLDEN, name, "fixtures.json"), "utf8"),
+	) as Record<string, { lut?: string }>;
+	return Object.values(fixtures).some((f) => f.lut !== undefined);
 }
 
 // Loads a golden case into a new project and returns its id and listed frames.
@@ -697,6 +723,10 @@ test.describe("preview-vs-export", () => {
 			test.skip(
 				needsImageFixtures(name),
 				"the fixtures are an alpha PNG or a GIF with delays that only the Go suite generates",
+			);
+			test.skip(
+				needsLutRoute(name),
+				"the preview has no route to the .cube of a lookup table asset yet (TASK-0254, senior-c)",
 			);
 			test.fail(name in KNOWN_DIVERGENCES, KNOWN_DIVERGENCES[name]);
 			const loaded = await loadCase(request, name);
