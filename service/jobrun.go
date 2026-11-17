@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"crypto/sha256"
+	hexenc "encoding/hex"
 	"encoding/json"
 	"errors"
 	"io"
@@ -446,15 +448,91 @@ func (s *svc) ingestLUT(ctx context.Context, hash string) (bool, error) {
 		}
 	}
 
+	art, err := s.publishCube(hash)
+	if err != nil {
+		return false, err
+	}
+
 	now := s.nowMs()
+	art.CreatedMs = now
 
 	return true, s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
+		if err := tx.Assets().PutArtifact(ctx, art); err != nil {
+			return err
+		}
+
 		if err := tx.Assets().SetFacts(ctx, hash, AssetFacts{Kind: string(timeline.AssetLUT)}, now); err != nil {
 			return err
 		}
 
 		return tx.Assets().SetIngest(ctx, hash, IngestReady, 1, nil, now)
 	})
+}
+
+// publishCube writes the checked table as the normalized artifact of the asset, the file the export
+// reads (engine/export lutExt): a byte copy of the original, saved read-only under its final name by a
+// rename, so a concurrent job that wrote it first leaves an identical file.
+func (s *svc) publishCube(hash string) (ArtifactRow, error) {
+	id := strings.TrimPrefix(hash, "sha256:")
+	name := ingest.ArtifactName("normalized", ingest.ProfileNormalized, "", "cube")
+	dir := filepath.Join(s.workspace, "artifacts", id)
+	dst := filepath.Join(dir, name)
+	row := ArtifactRow{
+		AssetHash: hash, Kind: "normalized", Profile: ingest.ProfileNormalized, Ext: "cube",
+		RelPath: "artifacts/" + id + "/" + name,
+	}
+
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		return row, err
+	}
+
+	src, err := s.media.Content.Open(id)
+	if err != nil {
+		return row, err
+	}
+
+	defer func() { _ = src.Close() }()
+
+	part := filepath.Join(dir, "."+name+".part")
+
+	out, err := os.OpenFile(part, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o600)
+	if err != nil {
+		return row, err
+	}
+
+	sum := sha256.New()
+
+	size, err := io.Copy(io.MultiWriter(out, sum), src)
+	if err == nil {
+		err = out.Sync()
+	}
+
+	if cerr := out.Close(); err == nil {
+		err = cerr
+	}
+
+	if err == nil {
+		err = os.Chmod(part, 0o400)
+	}
+
+	if err == nil {
+		if rerr := os.Rename(part, dst); rerr != nil {
+			if _, serr := os.Stat(dst); serr != nil {
+				err = rerr
+			}
+		}
+	}
+
+	if err != nil {
+		_ = os.Chmod(part, 0o600)
+		_ = os.Remove(part)
+
+		return row, err
+	}
+
+	row.SizeBytes, row.SHA256 = size, hexenc.EncodeToString(sum.Sum(nil))
+
+	return row, nil
 }
 
 // registerIngest records the artifacts and the facts and makes the asset

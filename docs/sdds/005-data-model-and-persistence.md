@@ -728,7 +728,7 @@ Behaviour is in section 10.
 
 ### 5.5 `assets`, `project_assets`, `artifacts`
 
-`assets` is the content store's catalogue: one row per original file, by hash, shared by every project (ADR-0010 item 2). `project_assets` maps a project's asset identifier (`ast_...`, SDD-001 §3.2, per project) to a hash and carries the trash state of that use (ADR-0020). `artifacts` lists derived files (ADR-0010 item 3). An asset of kind `lut` (a `.cube` colour table, SDD-011 section 7.1) has no artifact and no picture facts; the migration `20261116130000_assets_lut_kind` rebuilds `assets` for the wider check, with foreign keys off, keeping every row.
+`assets` is the content store's catalogue: one row per original file, by hash, shared by every project (ADR-0010 item 2). `project_assets` maps a project's asset identifier (`ast_...`, SDD-001 §3.2, per project) to a hash and carries the trash state of that use (ADR-0020). `artifacts` lists derived files (ADR-0010 item 3). An asset of kind `lut` (a `.cube` colour table, SDD-011 section 7.1) has one artifact, the validated table kept as `normalized` (`artifacts/<hash>/normalized-1.cube`, a byte copy of the original that the export reads), and no picture facts; the migration `20261116130000_assets_lut_kind` rebuilds `assets` for the wider check, with foreign keys off, keeping every row.
 
 ```sql
 CREATE TABLE assets (

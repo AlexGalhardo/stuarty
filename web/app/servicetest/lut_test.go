@@ -1,11 +1,20 @@
 package servicetest
 
 import (
+	"bytes"
+	"context"
 	"fmt"
+	"image"
+	"image/color"
+	"image/gif"
+	stdpng "image/png"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/engine/ingest"
 	"github.com/AlexGalhardo/vukem-video/service"
 )
 
@@ -101,5 +110,108 @@ func TestATextFileIsNotACubeTable(t *testing.T) {
 	a := m.importOne(project, m.write("notes.cube", "this is a text file that is not a lookup table at all\n")).Assets[0]
 	if a.State != "failed" || a.Error == nil || a.Error.Code != "E_UNSUPPORTED_MEDIA" {
 		t.Fatalf("entry = %+v", a)
+	}
+}
+
+// invertingCube is a 2x2x2 table that maps every colour to its complement (red varies fastest).
+func invertingCube() string {
+	var b strings.Builder
+
+	b.WriteString("TITLE \"invert\"\nLUT_3D_SIZE 2\n")
+
+	for blue := range 2 {
+		for green := range 2 {
+			for red := range 2 {
+				fmt.Fprintf(&b, "%d %d %d\n", 1-red, 1-green, 1-blue)
+			}
+		}
+	}
+
+	return b.String()
+}
+
+// exportedGIFCentre exports the project as a GIF and returns the colour of the middle of its first frame.
+func (m *mediaEnv) exportedGIFCentre(project string) color.Color {
+	m.t.Helper()
+
+	job, err := m.startFormat(project, "gif")
+	if err != nil || job.State != service.JobSucceeded || job.Result == nil || job.Result.Export == nil {
+		m.t.Fatalf("export: %v, %s", err, jobSummary(job))
+	}
+
+	f, err := os.Open(job.Result.Export.Path)
+	if err != nil {
+		m.t.Fatal(err)
+	}
+
+	defer func() { _ = f.Close() }()
+
+	g, err := gif.DecodeAll(f)
+	if err != nil || len(g.Image) == 0 {
+		m.t.Fatalf("decode: %v", err)
+	}
+
+	b := g.Image[0].Bounds()
+
+	return g.Image[0].At((b.Min.X+b.Max.X)/2, (b.Min.Y+b.Max.Y)/2)
+}
+
+// TASK-0254: the table a real import keeps is the one the export reads, so a clip graded with an
+// imported .cube changes in the exported picture.
+func TestAnImportedCubeGradesTheExport(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{realExport: true, ingest: ingest.Run})
+	project, track := m.withTrack()
+
+	m.mustEdit(ui, project, m.head(project).Revision, op("settings.set", `{"width":64,"height":48}`))
+
+	img := image.NewRGBA(image.Rect(0, 0, 64, 48))
+	for i := 0; i < len(img.Pix); i += 4 {
+		img.Pix[i], img.Pix[i+1], img.Pix[i+2], img.Pix[i+3] = 220, 40, 40, 255
+	}
+
+	var png bytes.Buffer
+	if err := stdpng.Encode(&png, img); err != nil {
+		t.Fatal(err)
+	}
+
+	pic := m.importOne(project, m.write("red.png", png.String())).Assets[0].AssetID
+	lutID := m.importOne(project, m.write("invert.cube", invertingCube())).Assets[0].AssetID
+
+	hash := ""
+
+	doc, err := timeline.Decode(m.document(project))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	hash = strings.TrimPrefix(doc.Assets[lutID].Hash, "sha256:")
+
+	if _, err := os.Stat(filepath.Join(m.ws, "artifacts", hash, "normalized-1.cube")); err != nil {
+		t.Fatalf("the lut has no normalized artifact: %v", err)
+	}
+
+	arts, err := m.store.Assets().Artifacts(context.Background(), doc.Assets[lutID].Hash)
+	if err != nil || len(arts) != 1 || arts[0].Kind != "normalized" || arts[0].Ext != "cube" {
+		t.Fatalf("artifacts = %+v, %v", arts, err)
+	}
+
+	added := m.mustEdit(ui, project, m.head(project).Revision, op("clip.add", fmt.Sprintf(
+		`{"track_id":%q,"asset_id":%q,"start":"0s","duration":"1s"}`, track, pic,
+	)))
+	clip := added.Created[0]
+
+	plain := m.exportedGIFCentre(project)
+
+	m.mustEdit(ui, project, m.head(project).Revision, op("clip.set_color", fmt.Sprintf(
+		`{"item_id":%q,"lut_asset":%q,"lut_intensity":1}`, clip, lutID,
+	)))
+
+	graded := m.exportedGIFCentre(project)
+
+	pr, _, _, _ := plain.RGBA()
+	gr, _, _, _ := graded.RGBA()
+
+	if pr>>8 < 150 || gr>>8 > 110 {
+		t.Errorf("centre red: without the table %d, with the inverting table %d", pr>>8, gr>>8)
 	}
 }
