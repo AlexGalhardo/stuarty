@@ -189,6 +189,24 @@ describe("gestures send one request and wait for the answer", () => {
 		);
 	});
 
+	test("add to timeline enters the track of the selected item (VV-092)", async () => {
+		const h = await startHarness();
+		const doc = h.server.document;
+		const titles = Object.values(doc.items).find((i) => i.type === "text");
+		const asset = Object.keys(doc.assets)[0];
+		if (titles === undefined || asset === undefined) throw new Error("fixture");
+		const sent = scripted(h, () => ({
+			status: 200,
+			body: h.server.commit([bump(h)]).result,
+		}));
+		h.runtime.uiWriter.select([titles.id]);
+		await createActions(h.runtime).addToTimeline(asset);
+		expect(sent[0]?.request.operations[0]).toMatchObject({
+			op: "clip.add",
+			args: { track_id: titles.track },
+		});
+	});
+
 	test("split with the playhead outside the item sends nothing", async () => {
 		const h = await startHarness();
 		const item = firstItem(h);

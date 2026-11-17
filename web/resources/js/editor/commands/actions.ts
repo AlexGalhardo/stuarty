@@ -271,7 +271,18 @@ export function createActions(runtime: EditorRuntime): Actions {
 		return null;
 	}
 
-	const firstVisualTrack = (): string | null => firstTrackOfKind("visual");
+	// Where "Add to timeline" puts a clip: the track of the selected item when it is of the right kind,
+	// else the first one (VV-092).
+	function destinationTrack(kind: "visual" | "audio"): string | null {
+		const state = documents.getState();
+		for (const id of ui.getState().selection.items) {
+			const track = state.document?.items[id]?.track;
+			if (track !== undefined && selectTrack(state, track)?.kind === kind) {
+				return track;
+			}
+		}
+		return firstTrackOfKind(kind);
+	}
 
 	function selectedRanges(): ItemRange[] {
 		return rangesOf(ui.getState().selection.items);
@@ -522,7 +533,7 @@ export function createActions(runtime: EditorRuntime): Actions {
 					addAudioOperations({
 						assetId,
 						playhead: ui.getState().playheadFrame,
-						firstAudioTrack: firstTrackOfKind("audio"),
+						firstAudioTrack: destinationTrack("audio"),
 						newTrackId: () => newId("trk"),
 					}),
 				);
@@ -531,7 +542,7 @@ export function createActions(runtime: EditorRuntime): Actions {
 				addClipOperations({
 					assetId,
 					playhead: ui.getState().playheadFrame,
-					firstVisualTrack: firstVisualTrack(),
+					firstVisualTrack: destinationTrack("visual"),
 					newTrackId: () => newId("trk"),
 				}),
 			);
