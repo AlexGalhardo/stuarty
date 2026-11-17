@@ -185,9 +185,19 @@ func (h *apiHandler) authenticate(next http.Handler) http.Handler {
 
 			caller = service.Caller{Actor: "local:" + auth.UILabel, Scopes: service.AllScopes, Browser: privileged}
 		} else {
+			// A browser that opens a page with no session is told how to get in (VV-157):
+			// the page is plain HTML and carries no secret, since the launch code is
+			// issued only to a caller that proves the token (SDD-007 section 3.4).
+			if isPageNavigation(r) {
+				w.Header().Set("WWW-Authenticate", "Bearer")
+				writeSignInPage(w)
+
+				return
+			}
+
 			h.unauthorized(w, r, &service.Error{
 				Code: service.CodeUnauthorized, Message: "the request carries no credentials.",
-				Hint: "send the local token as Authorization: Bearer <token>",
+				Hint: signInHint,
 			})
 
 			return

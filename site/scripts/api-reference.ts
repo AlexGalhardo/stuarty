@@ -283,7 +283,7 @@ function problemExample(status: string, schemas: Record<string, Schema>): unknow
 					status: 401,
 					code: "E_UNAUTHORIZED",
 					message: "the request carries no credentials.",
-					hint: "send the local token as Authorization: Bearer <token>",
+					hint: "send the local token as Authorization: Bearer <token>, or run `vukem-video open` to open the editor in a browser",
 					retryable: false,
 				}
 			: status === "422"
