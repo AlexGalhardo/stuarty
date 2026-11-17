@@ -59,7 +59,7 @@ func init() {
 		Name:    "track.set_caption_style",
 		Summary: "Merges a partial caption style into a track, or replaces it.",
 		Description: "Sets the caption style of a visual track. The style is stored exactly as given, including keys equal " +
-			"to the default. A null value removes a key when merging. In this build highlight accepts only \"none\".",
+			"to the default. A null value removes a key when merging. highlight is \"none\" or \"word\" (the active word is coloured with highlight_color).",
 		Example: `{"track_id": "trk_a1b2c3d4e5", "style": {"size": 72, "position": "middle"}}`,
 		Errors:  []string{CodeValidation, CodeNotFound, CodeTypeMismatch, CodeFontUnknown},
 		Scope:   ScopeEdit,

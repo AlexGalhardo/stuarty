@@ -4924,7 +4924,7 @@
       ],
       "type": "object"
     },
-    "description": "Sets the caption style of a visual track. The style is stored exactly as given, including keys equal to the default. A null value removes a key when merging. In this build highlight accepts only \"none\".",
+    "description": "Sets the caption style of a visual track. The style is stored exactly as given, including keys equal to the default. A null value removes a key when merging. highlight is \"none\" or \"word\" (the active word is coloured with highlight_color).",
     "errors": [
       "E_VALIDATION",
       "E_NOT_FOUND",
