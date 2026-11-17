@@ -236,6 +236,39 @@ func TestToolsInstallVerifiesBeforeItKeepsAnything(t *testing.T) {
 	}
 }
 
+// VV-077: the person at the terminal installs while a server owns the workspace, from a process with no
+// store, into the same tools directory; the same installer still refuses the local token.
+func TestToolsInstallerOfTheTerminalInstallsWithoutAStore(t *testing.T) {
+	ts := newToolsServer(t)
+	dir := filepath.Join(t.TempDir(), "tools")
+	inst := service.NewToolsInstaller(ts.tools(dir))
+	req := service.ToolsInstallRequest{Name: "whisper", Model: "tiny"}
+
+	if _, err := inst.ToolsInstall(service.WithCaller(context.Background(), service.Caller{
+		Actor: "local:cli", Scopes: service.AllScopes,
+	}), req); code(err) != service.CodeForbidden {
+		t.Fatalf("the local token = %v, want E_FORBIDDEN", err)
+	}
+
+	operator := service.WithCaller(context.Background(), service.Caller{
+		Actor: "local:cli", Scopes: service.AllScopes, Operator: true,
+	})
+
+	if _, err := inst.ToolsInstall(operator, req); err != nil {
+		t.Fatal(err)
+	}
+
+	eventually(t, "the install to finish", func() bool {
+		st, err := inst.ToolsStatus(operator, service.ToolsStatusRequest{})
+
+		return err == nil && st.State == "idle" && len(st.Installed) == 2
+	})
+
+	if _, ok := service.VerifiedTool(dir, "whisper", transcribe.KindHelper, ""); !ok {
+		t.Fatal("the installed helper does not verify")
+	}
+}
+
 func TestToolsInstallDeletesAFileThatIsNotTheOnePinned(t *testing.T) {
 	ts := newToolsServer(t)
 	dir := filepath.Join(t.TempDir(), "tools")

@@ -17,6 +17,7 @@ import (
 	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
 	"github.com/AlexGalhardo/vukem-video/engine/transcribe"
 	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/vukem-video/web/app/owner"
 )
 
 // asOperator marks the caller as the person at the terminal of the owner
@@ -240,7 +241,18 @@ func runToolsInstall(ctx context.Context, c *call) (*output, error) {
 
 	ctx = c.asOperator(ctx)
 
-	start, err := c.svc.ToolsInstall(ctx, service.ToolsInstallRequest{Name: name, Model: model})
+	inst, here, err := c.installer()
+	if err != nil {
+		return nil, err
+	}
+
+	if here {
+		caller, _ := service.CallerFrom(ctx)
+		caller.Operator = true
+		ctx = service.WithCaller(ctx, caller)
+	}
+
+	start, err := inst.ToolsInstall(ctx, service.ToolsInstallRequest{Name: name, Model: model})
 	if err != nil {
 		return nil, err
 	}
@@ -248,7 +260,7 @@ func runToolsInstall(ctx context.Context, c *call) (*output, error) {
 	deadline := time.Now().Add(c.args.timeout())
 	p := c.progress()
 
-	st, err := c.svc.ToolsStatus(ctx, service.ToolsStatusRequest{})
+	st, err := inst.ToolsStatus(ctx, service.ToolsStatusRequest{})
 	for err == nil && st.State == "running" && time.Now().Before(deadline) {
 		p.download(st.Done, st.Total)
 
@@ -258,7 +270,7 @@ func runToolsInstall(ctx context.Context, c *call) (*output, error) {
 		case <-time.After(250 * time.Millisecond):
 		}
 
-		st, err = c.svc.ToolsStatus(ctx, service.ToolsStatusRequest{})
+		st, err = inst.ToolsStatus(ctx, service.ToolsStatusRequest{})
 	}
 
 	if err != nil {
@@ -286,6 +298,29 @@ func runToolsInstall(ctx context.Context, c *call) (*output, error) {
 	}
 
 	return &output{value: doc, text: doc.Text}, nil
+}
+
+// installer is where the install runs. Against a server that owns a local workspace the server
+// refuses every caller that holds only the local token, so the person at the terminal installs from
+// this process into the same tools directory; the server reads it on its next use (VV-077). Against a
+// remote server the server decides, and in process the Service is the owner.
+func (c *call) installer() (inst service.ToolsInstaller, here bool, err error) {
+	if c.inProcess || c.workspace == "" {
+		return c.svc, false, nil
+	}
+
+	if c.rt.Installer != nil {
+		inst, err = c.rt.Installer(c.workspace)
+
+		return inst, true, err
+	}
+
+	t, err := owner.InstallTools(c.workspace)
+	if err != nil {
+		return nil, false, err
+	}
+
+	return service.NewToolsInstaller(t), true, nil
 }
 
 // installAnnouncement states what a confirmed install will download, from the

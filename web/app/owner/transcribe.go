@@ -20,25 +20,12 @@ const installTimeout = 30 * time.Minute
 // directory under the workspace and the one client that may download. A build
 // whose manifest pins no helper for this platform gets no install step.
 func (o *Owner) tools(model string, explicit bool) (*service.Tools, transcribe.Provider, error) {
-	manifest, err := transcribe.DefaultManifest()
+	t, err := InstallTools(string(o.Dir))
 	if err != nil {
 		return nil, nil, err
 	}
 
-	openh264, err := ffmpeg.DefaultOpenH264Manifest()
-	if err != nil {
-		return nil, nil, err
-	}
-
-	dir := filepath.Join(string(o.Dir), "tools")
-
-	// One client downloads for both manifests, over the union of their hosts; each manifest may
-	// name only its own (SDD-007 section 6.8).
-	hosts := slices.Concat(manifest.Hosts, openh264.Hosts)
-
-	t := &service.Tools{
-		Dir: dir, Manifest: manifest, OpenH264: openh264, Client: outbound.HelperDownload(hosts, installTimeout),
-	}
+	manifest, dir := t.Manifest, t.Dir
 
 	entries, ok := manifest.For("whisper", model, runtime.GOOS, runtime.GOARCH)
 	if !ok {
@@ -46,6 +33,29 @@ func (o *Owner) tools(model string, explicit bool) (*service.Tools, transcribe.P
 	}
 
 	return t, &whisperProvider{dir: dir, model: model, explicit: explicit, manifest: manifest, entries: entries}, nil
+}
+
+// InstallTools is the install step of the workspace directory workspaceDir. The CLI builds it to
+// install while a server owns the workspace.
+func InstallTools(workspaceDir string) (*service.Tools, error) {
+	manifest, err := transcribe.DefaultManifest()
+	if err != nil {
+		return nil, err
+	}
+
+	openh264, err := ffmpeg.DefaultOpenH264Manifest()
+	if err != nil {
+		return nil, err
+	}
+
+	// One client downloads for both manifests, over the union of their hosts; each manifest may
+	// name only its own (SDD-007 section 6.8).
+	hosts := slices.Concat(manifest.Hosts, openh264.Hosts)
+
+	return &service.Tools{
+		Dir: filepath.Join(workspaceDir, "tools"), Manifest: manifest, OpenH264: openh264,
+		Client: outbound.HelperDownload(hosts, installTimeout),
+	}, nil
 }
 
 // modelPreference is the order in which an installed model is taken when

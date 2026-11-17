@@ -111,6 +111,7 @@ func newSysHarness(t *testing.T) (*harness, *sysService) {
 	s := &sysService{status: []service.ToolsStatusResult{{State: "idle", Text: "idle"}}}
 	h.res.svc = s
 	h.rt.Manifest = testManifest
+	h.rt.Installer = func(string) (service.ToolsInstaller, error) { return s, nil }
 
 	return h, s
 }
@@ -299,6 +300,29 @@ func TestCLIToolsInstall(t *testing.T) {
 
 		if s.installs != 1 || s.installed.Model != "small" || !s.caller.Operator || s.polls != 2 {
 			t.Fatalf("installs %d request %+v caller %+v polls %d", s.installs, s.installed, s.caller, s.polls)
+		}
+	})
+
+	t.Run("the terminal installs while a server owns the workspace (VV-077)", func(t *testing.T) {
+		t.Parallel()
+
+		h, server := newSysHarness(t)
+		here := &sysService{status: []service.ToolsStatusResult{{State: "idle", Text: "idle"}}}
+		h.rt.Installer = func(dir string) (service.ToolsInstaller, error) {
+			if dir != "/ws" {
+				t.Errorf("installer built over %q", dir)
+			}
+
+			return here, nil
+		}
+
+		if code := h.run("tools:install", "whisper", "--yes", "--json"); code != ExitOK {
+			t.Fatalf("exit %d: %s", code, h.stdout.String())
+		}
+
+		if here.installs != 1 || !here.caller.Operator || server.installs != 0 {
+			t.Fatalf("terminal installs %d operator %v, server installs %d",
+				here.installs, here.caller.Operator, server.installs)
 		}
 	})
 

@@ -81,9 +81,7 @@ func (s *svc) installOpenH264(ctx context.Context, c Caller) (*ToolsInstallResul
 		s.endInstall(fromEngine(err))
 	}()
 
-	_ = s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
-		return appendAudit(ctx, tx, s.nowMs(), c.Actor, "tools.install", "", ffmpeg.OpenH264Tool)
-	})
+	s.auditInstall(ctx, c.Actor, ffmpeg.OpenH264Tool)
 
 	return res, nil
 }

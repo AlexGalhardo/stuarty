@@ -16,6 +16,7 @@ import (
 	"slices"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
 	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
@@ -126,8 +127,34 @@ func humanForTools(c Caller) bool {
 
 func installDenied() *Error {
 	return newError(CodeForbidden, "only a person can install the transcription helper.").
-		withHint("use the install button of the editor or run vukem-video tools:install; the local token and " +
-			"the agent surfaces cannot start a download")
+		withHint("the local token and the agent surfaces cannot start a download; ask the person to run " +
+			"vukem-video tools:install whisper in a terminal of this machine (it works while the server " +
+			"runs) or to use the install button of the editor")
+}
+
+// ToolsInstaller is the install step alone, over a directory of tools and no store. The CLI uses it
+// to install while a server owns the workspace: the process that runs the command is the person at
+// the terminal, and the server finds the files on its next read of tools/installed.json (SDD-007
+// section 6.8). The server itself still refuses the local token and the agent surfaces.
+type ToolsInstaller interface {
+	ToolsInstall(ctx context.Context, req ToolsInstallRequest) (*ToolsInstallResult, error)
+	ToolsStatus(ctx context.Context, req ToolsStatusRequest) (*ToolsStatusResult, error)
+}
+
+// NewToolsInstaller returns the install step over t.
+func NewToolsInstaller(t *Tools) ToolsInstaller {
+	return &svc{tools: t, now: time.Now}
+}
+
+// auditInstall records the start of an install; the installer without a store records nothing.
+func (s *svc) auditInstall(ctx context.Context, actor, name string) {
+	if s.store == nil {
+		return
+	}
+
+	_ = s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
+		return appendAudit(ctx, tx, s.nowMs(), actor, "tools.install", "", name)
+	})
 }
 
 // ToolsInstall announces what will be downloaded and starts the download in the
@@ -203,9 +230,7 @@ func (s *svc) ToolsInstall(ctx context.Context, req ToolsInstallRequest) (*Tools
 		s.endInstall(ierr)
 	}()
 
-	_ = s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
-		return appendAudit(ctx, tx, s.nowMs(), c.Actor, "tools.install", "", req.Name)
-	})
+	s.auditInstall(ctx, c.Actor, req.Name)
 
 	return res, nil
 }

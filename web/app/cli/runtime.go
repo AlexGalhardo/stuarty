@@ -77,6 +77,9 @@ type Runtime struct {
 	// Manifest returns the pins of the helpers this build may install; the one
 	// embedded in the binary when nil.
 	Manifest func() (transcribe.Manifest, error)
+	// Installer builds the install step over a local workspace directory, for tools:install while a
+	// server owns it; owner.InstallTools when nil.
+	Installer func(workspaceDir string) (service.ToolsInstaller, error)
 
 	// resolved are the paths abs made absolute in this run, so that a missing
 	// file is reported with the path that was looked for (VV-048 b).

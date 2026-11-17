@@ -30,7 +30,7 @@ In the editor, select a clip that has audio and open **Auto captions** in the in
 <Tab title="CLI">
 
 ```bash
-vukem-video tools:install whisper --model small
+vukem-video tools:install whisper --model small   # a person, in a terminal; works while the server runs
 vukem-video transcribe --project prj_7k2m9x4q1b --asset ast_3c5v8n2w6d --language en
 vukem-video edit --project prj_7k2m9x4q1b caption.from_transcript \
   clip_item_id=itm_m1n2p3q4r5 track_id=trk_f6g7h8j9k0 max_words:=4
