@@ -319,6 +319,9 @@ func (rt *Runtime) connect(ctx context.Context, s *spec, p *parsed) (*Connection
 	return conn, nil
 }
 
+// idRuleHelp states the form of an id for the commands that take one (VV-147).
+const idRuleHelp = "ids: a prefix (prj_, ast_, trk_, itm_) and 10 characters from 0-9 and a-z without i, l, o and u, such as trk_k3m9x4q1bz"
+
 // help renders --help in at most 40 lines: description, usage, flags, one example.
 func (s *spec) help() string {
 	var b strings.Builder
@@ -342,6 +345,10 @@ func (s *spec) help() string {
 
 	if s.pending != "" {
 		fmt.Fprintf(&b, "\nnot available yet: arrives with task %s\n", s.pending)
+	}
+
+	if s.project {
+		b.WriteString("\n" + idRuleHelp + "\n")
 	}
 
 	if s.example != "" {
