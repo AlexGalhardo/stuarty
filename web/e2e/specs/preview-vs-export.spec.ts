@@ -40,6 +40,10 @@ import {
 // after downscaling both to a thumbnail the SSIM of the same frame falls to 0.96.
 const MIN_SSIM = 0.97;
 const MAX_DISPLACEMENT = 1;
+// The colour cases (lookup tables, grade, animated colour) also compare the mean
+// colour per channel, in levels of 255; the float shaders may differ by a rounding step.
+const COLOUR_CASE = /^(lut-|grade-|color-keyframes)/;
+const MAX_MEAN_COLOUR_DIFF = 4;
 // Below this much edge per pixel (see globalShift) the offset of the whole
 // picture is noise and the markers give the displacement instead.
 const MIN_TEXTURE = 0.05;
@@ -863,16 +867,32 @@ test.describe("preview-vs-export", () => {
 						? markerDistance(exported, canvas)
 						: edges;
 				const markers = markerShifts(name, canvas, exported);
-				const mean = (p: Pixels): string => {
+				const meanRgb = (p: Pixels): number[] => {
 					const sum = [0, 0, 0];
 					for (let i = 0; i < p.data.length; i += 4) {
 						for (let c = 0; c < 3; c++) sum[c] += p.data[i + c];
 					}
-					return sum.map((v) => (v / (p.data.length / 4)).toFixed(1)).join("/");
+					return sum.map((v) => v / (p.data.length / 4));
 				};
+				const canvasMean = meanRgb(canvas);
+				const exportMean = meanRgb(exported);
+				const fmt = (m: number[]): string =>
+					m.map((v) => v.toFixed(1)).join("/");
 				console.log(
-					`preview-vs-export ${name} frame ${frame}: mean RGB canvas ${mean(canvas)} export ${mean(exported)}`,
+					`preview-vs-export ${name} frame ${frame}: mean RGB canvas ${fmt(canvasMean)} export ${fmt(exportMean)}`,
 				);
+				// SSIM on luma cannot see a missing lookup table or a wrong grade (the
+				// luma barely moves), so the colour cases also compare the mean colour.
+				if (COLOUR_CASE.test(name)) {
+					for (let c = 0; c < 3; c++) {
+						expect
+							.soft(
+								Math.abs(canvasMean[c] - exportMean[c]),
+								`${name} frame ${frame}: mean ${"RGB"[c]} difference`,
+							)
+							.toBeLessThanOrEqual(MAX_MEAN_COLOUR_DIFF);
+					}
+				}
 				console.log(
 					`preview-vs-export ${name} frame ${frame}: SSIM(luma) ${ssim.toFixed(4)}, shift ${shift.distance.toFixed(2)} px (${shift.dx.toFixed(2)}, ${shift.dy.toFixed(2)}) texture ${edges.texture.toFixed(3)}${markers.map((m) => `, ${m.label} ${m.distance.toFixed(2)} px`).join("")}`,
 				);
