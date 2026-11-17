@@ -487,6 +487,10 @@ func (s *svc) JobList(ctx context.Context, req JobListRequest) (*JobListResult, 
 		}
 	}
 
+	if err := checkLimit(req.Limit); err != nil {
+		return nil, err
+	}
+
 	limit := clampLimit(req.Limit, defJobLimit, maxJobLimit)
 
 	rows, total, jerr := s.listJobs(ctx, row.ID, req.State, off, limit)

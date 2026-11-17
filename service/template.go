@@ -255,6 +255,10 @@ func (s *svc) TemplateList(ctx context.Context, req TemplateListRequest) (*Templ
 		return nil, err
 	}
 
+	if err := checkLimit(req.Limit); err != nil {
+		return nil, err
+	}
+
 	rows, next, lerr := s.store.Templates().
 		List(ctx, clampLimit(req.Limit, defaultTemplateLimit, maxTemplateLimit), req.Cursor, c.OwnerUserID)
 	if lerr != nil {

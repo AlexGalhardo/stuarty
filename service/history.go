@@ -41,6 +41,10 @@ func (s *svc) HistoryList(ctx context.Context, req HistoryListRequest) (*History
 		return nil, cerr
 	}
 
+	if err := checkLimit(req.Limit); err != nil {
+		return nil, err
+	}
+
 	limit := clampLimit(req.Limit, defaultHistoryLimit, maxHistoryLimit)
 
 	// "cli" stands for "local:cli": a filter with no kind prefix is a local actor,
@@ -496,6 +500,10 @@ func (s *svc) Lint(ctx context.Context, req LintRequest) (*LintResult, error) {
 		}
 
 		from, _ = strconv.Atoi(cur.K)
+	}
+
+	if err := checkLimit(req.Limit); err != nil {
+		return nil, err
 	}
 
 	fps := timeval.FPS{Num: int64(doc.Settings.FPS.Num), Den: int64(doc.Settings.FPS.Den)}

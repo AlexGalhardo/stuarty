@@ -131,3 +131,19 @@ func TestJSONProblemNamesTheMemberAndTheExpectedKind(t *testing.T) {
 		}
 	}
 }
+
+func TestLimitFlagBelowOneIsRefused(t *testing.T) {
+	t.Parallel()
+
+	defs := []flagDef{{Name: "limit", Kind: kindInt, Default: "50"}}
+
+	for _, v := range []string{"0", "-3"} {
+		if _, err := parseArgs(defs, []string{"--limit", v}); err == nil {
+			t.Errorf("--limit %s was accepted", v)
+		}
+	}
+
+	if _, err := parseArgs(defs, []string{"--limit", "1"}); err != nil {
+		t.Errorf("--limit 1: %v", err)
+	}
+}

@@ -459,3 +459,25 @@ func TestProjectCreateRefusesAnUnknownField(t *testing.T) {
 		t.Fatalf("a known body = %d %s", res.status, res.body)
 	}
 }
+
+// VV-104: a limit or a count below 1 is a validation error on every route, not a quiet 200.
+func TestLimitAndCountBelowOneAreRefused(t *testing.T) {
+	t.Parallel()
+
+	h := newHarness(t)
+	id := h.newProject("p")
+
+	for _, path := range []string{
+		"/api/v1/projects?limit=0", "/api/v1/projects?limit=-1", "/api/v1/projects/" + id + "/history?limit=-1",
+		"/api/v1/projects/" + id + "/media?limit=0", "/api/v1/audit?limit=-3", "/api/v1/templates?limit=-5",
+		"/api/v1/projects/" + id + "/sheet?count=0",
+	} {
+		if res := h.get(path); res.status != http.StatusBadRequest || res.json(t)["code"] != "E_VALIDATION" {
+			t.Errorf("GET %s = %d %s, want 400 E_VALIDATION", path, res.status, res.body)
+		}
+	}
+
+	if res := h.get("/api/v1/projects?limit=1"); res.status != http.StatusOK {
+		t.Errorf("limit=1 = %d", res.status)
+	}
+}

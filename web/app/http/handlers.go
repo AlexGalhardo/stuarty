@@ -141,6 +141,10 @@ func register[In, Out any](h *apiHandler, id string, fn func(*web.Ctx, In) (Out,
 	return api.Register(h.r, ep.Method+" "+ep.FullPath(), h.op(id), func(c *web.Ctx, in In) (Out, error) {
 		var zero Out
 
+		if err := explicitSize(c); err != nil {
+			return zero, err
+		}
+
 		if err := need(c, ep.Scope); err != nil {
 			if ep.AlsoScope == "" {
 				return zero, err
@@ -153,6 +157,27 @@ func register[In, Out any](h *apiHandler, id string, fn func(*web.Ctx, In) (Out,
 
 		return fn(c, in)
 	})
+}
+
+// explicitSize refuses a limit or a count that the request names and that is below 1: the Service cannot
+// tell limit=0 from an absent limit, and a page of zero items is never what the caller meant (VV-104).
+func explicitSize(c *web.Ctx) error {
+	for _, name := range []string{"limit", "count"} {
+		raw := c.Query(name)
+		if raw == "" {
+			continue
+		}
+
+		if n, err := strconv.Atoi(raw); err == nil && n < 1 {
+			return &service.Error{
+				Code: command.CodeValidation, Path: name,
+				Message: name + " is " + raw + "; it must be at least 1.",
+				Hint:    "omit " + name + " for the default",
+			}
+		}
+	}
+
+	return nil
 }
 
 // pending registers an operation whose Service method arrives with a later task.

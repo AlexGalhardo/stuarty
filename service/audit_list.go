@@ -64,6 +64,10 @@ func (s *svc) AuditList(ctx context.Context, req AuditListRequest) (*AuditListRe
 		return nil, cerr
 	}
 
+	if err := checkLimit(req.Limit); err != nil {
+		return nil, err
+	}
+
 	limit := clampLimit(req.Limit, defAuditLimit, maxAuditLimit)
 	scoped := project != "" || c.OwnerUserID != ""
 	res := &AuditListResult{Entries: make([]AuditEntry, 0, limit)}

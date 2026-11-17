@@ -170,7 +170,11 @@ func checkValue(def flagDef, value string) error {
 	case kindBool:
 		_, err = strconv.ParseBool(value)
 	case kindInt:
-		_, err = strconv.Atoi(value)
+		var n int
+
+		if n, err = strconv.Atoi(value); err == nil && def.Name == "limit" && n < 1 {
+			return validation("limit", "flag --limit: %d is below 1; omit it for the default page size", n)
+		}
 	case kindDuration:
 		_, err = time.ParseDuration(value)
 	case kindString:
