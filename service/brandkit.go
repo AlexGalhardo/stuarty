@@ -39,7 +39,8 @@ type BrandFont struct {
 // BrandKitGetRequest has no members.
 type BrandKitGetRequest struct{}
 
-// BrandKitSetRequest replaces the brand kit (SDD-005 section 5.11). Every member is optional.
+// BrandKitSetRequest replaces the brand kit (SDD-005 section 5.11). Every member is optional, but at least one must
+// be present: an empty member (an empty map) clears it, a body with none is refused.
 type BrandKitSetRequest struct {
 	Logo   string               `json:"logo,omitempty"` // sha256: and 64 hex digits of an image asset
 	Colors map[string]string    `json:"colors,omitempty"`
@@ -169,6 +170,15 @@ func (s *svc) BrandKitSet(ctx context.Context, req BrandKitSetRequest) (*BrandKi
 
 // normalizeBrandKit checks the form of every member and returns the kit with upper-case colours.
 func normalizeBrandKit(req *BrandKitSetRequest) (*BrandKit, *Error) {
+	// A body with no member would silently empty the kit; clearing it is asked for with an explicit
+	// empty member, such as {"colors": {}}.
+	if req.Logo == "" && req.Colors == nil && req.Fonts == nil {
+		return nil, newError(
+			command.CodeValidation,
+			`the brand kit body has none of logo, colors or fonts; to clear the kit send an explicit empty member, such as {"colors": {}}.`,
+		)
+	}
+
 	if req.Logo != "" && !isFontHash(req.Logo) {
 		return nil, newError(command.CodeValidation, "logo is not a sha256 hash.").withPath("logo").
 			withHint(`use "sha256:" and 64 lower-case hex characters of an image asset; the hash is in the answer of ` +

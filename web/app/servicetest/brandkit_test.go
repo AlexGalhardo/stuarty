@@ -132,6 +132,7 @@ func TestBrandKitSetValidatesAndRoundTrips(t *testing.T) {
 		},
 		"logo form": {Logo: "nope"},
 	}
+	bad["no member"] = service.BrandKitSetRequest{}
 	for name, req := range bad {
 		if _, err := m.setKit(ctx, req); !isCode(err, command.CodeValidation) {
 			t.Errorf("%s: %v, want E_VALIDATION", name, err)
@@ -153,6 +154,11 @@ func TestBrandKitSetValidatesAndRoundTrips(t *testing.T) {
 	got, err := kit.BrandKitGet(ctx, service.BrandKitGetRequest{})
 	if err != nil || got.Colors["accent"] != "#FF3366" || len(got.Fonts["Brand"].Files) != 1 {
 		t.Fatalf("get = %+v, %v", got, err)
+	}
+
+	cleared, err := m.setKit(ctx, service.BrandKitSetRequest{Colors: map[string]string{}})
+	if err != nil || len(cleared.Colors) != 0 || len(cleared.Fonts) != 0 {
+		t.Fatalf("an explicit empty kit = %+v, %v", cleared, err)
 	}
 }
 
