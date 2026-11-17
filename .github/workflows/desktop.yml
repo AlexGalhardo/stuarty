@@ -111,7 +111,7 @@ jobs:
         shell: bash
         run: |
           iscc="$(bash scripts/fetch-installer-tool.sh inno)"
-          MSYS2_ARG_CONV_EXCL='*' "$iscc" "/DAppVersion=${VERSION}" \
+          MSYS2_ARG_CONV_EXCL='*' "$iscc" "/DAppVersion=${VERSION}" "/DFileVersion=${VERSION//./-}" \
             "/DDesktopBinary=$(cygpath -w "$PWD/out/vukem-video-desktop.exe")" \
             "/DServerBinary=$(cygpath -w "$PWD/binaries/windows_amd64/vukem-video.exe")" \
             "/DOutputDir=$(cygpath -w "$PWD/installer")" \
@@ -119,11 +119,11 @@ jobs:
           ls -l installer
       - name: Test the installer
         shell: pwsh
-        run: ./desktop/packaging/windows/smoke-test.ps1 -Installer (Get-ChildItem installer/*_setup.exe).FullName
+        run: ./desktop/packaging/windows/smoke-test.ps1 -Installer (Get-ChildItem installer/vukem-video-desktop-*.exe).FullName
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: desktop-windows
-          path: installer/*_setup.exe
+          path: installer/vukem-video-desktop-*.exe
           if-no-files-found: error
 
   linux:
@@ -171,7 +171,7 @@ jobs:
       - name: Check the AppImage
         run: |
           set -euo pipefail
-          appimage="$(ls package/vukem-video-desktop_*_linux_amd64.AppImage)"
+          appimage="$(ls package/vukem-video-desktop-*.AppImage)"
           chmod +x "$appimage"
           dir="$(mktemp -d)"
           (cd "$dir" && APPIMAGE_EXTRACT_AND_RUN=1 "$OLDPWD/$appimage" --appimage-extract >/dev/null)
@@ -225,7 +225,7 @@ jobs:
       # macos-latest is an Apple silicon machine: only the arm64 image is mounted and its server run here.
       - name: Test the disk image
         if: matrix.arch == 'arm64'
-        run: bash desktop/packaging/macos/smoke-test.sh image/*_darwin_arm64.dmg
+        run: bash desktop/packaging/macos/smoke-test.sh image/*-arm64.dmg
       # The launcher refuses a zip that does not hold exactly one Vukem Video.app (SDD-009 section 10.5).
       - name: Check the app zip
         run: |

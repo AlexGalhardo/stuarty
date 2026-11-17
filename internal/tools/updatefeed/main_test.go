@@ -87,6 +87,40 @@ func checksumsOf(t *testing.T, files []string) string {
 	return p
 }
 
+func TestClassifyFriendlyDownloadNames(t *testing.T) {
+	cases := []struct {
+		name     string
+		platform string
+		launcher bool
+	}{
+		{"vukem-video-desktop-0-28-0.exe", "windows-amd64", false},
+		{"vukem-video-desktop-0-28-0.AppImage", "linux-amd64", true},
+		{"vukem-video-desktop-0-28-0-arm64.dmg", "darwin-arm64", false},
+		{"vukem-video-desktop-0-28-0-amd64.dmg", "darwin-amd64", false},
+		{winInstaller, "windows-amd64", false},
+		{"vukem-video-desktop_0.15.0_linux_amd64.AppImage", "linux-amd64", true},
+	}
+	for _, c := range cases {
+		version := "0.28.0"
+		if strings.Contains(c.name, "0.15.0") {
+			version = "0.15.0"
+		}
+
+		got, ok := classify(c.name, version)
+		if !ok || got.platform != c.platform || got.launcher != c.launcher {
+			t.Errorf("%s: got %+v ok=%v", c.name, got, ok)
+		}
+	}
+
+	if _, ok := classify("vukem-video-desktop-0-28-0.exe", "0.27.0"); ok {
+		t.Error("a file of another version was accepted")
+	}
+
+	if _, ok := classify("vukem-video-desktop-0-28-0-arm64.exe", "0.28.0"); ok {
+		t.Error("an exe must not carry an architecture suffix")
+	}
+}
+
 func TestPubkeyMatchesTheTestFixture(t *testing.T) {
 	want := useTestKey(t)
 

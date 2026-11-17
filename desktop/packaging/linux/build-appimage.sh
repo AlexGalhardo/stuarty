@@ -4,7 +4,8 @@
 #
 #   build-appimage.sh <vukem-video-desktop> <vukem-video> <version> <output directory>
 #
-# The file is vukem-video-desktop_<version>_linux_amd64.AppImage, the name the update feed expects
+# The file is vukem-video-desktop-<version with dashes>.AppImage (0.28.0 becomes
+# vukem-video-desktop-0-28-0.AppImage), the name the update feed expects
 # (internal/tools/updatefeed). Both programs go to usr/bin, so the application finds the server next to its
 # own executable. appimagetool is the pinned one of .config/installers/tools.env, fetched and verified by
 # scripts/fetch-installer-tool.sh (set APPIMAGETOOL to use another path). It is not signed (D-033).
@@ -32,7 +33,7 @@ install -m 0644 "$repo/LICENSE.md" "$appdir/LICENSE.md"
 install -m 0644 "$repo/THIRD_PARTY_NOTICES.md" "$appdir/THIRD_PARTY_NOTICES.md"
 cp -R "$repo/licenses" "$appdir/licenses"
 
-file="$out/vukem-video-desktop_${version}_linux_amd64.AppImage"
+file="$out/vukem-video-desktop-${version//./-}.AppImage"
 # Runners have no FUSE: appimagetool is itself an AppImage, so it extracts itself and runs.
 ARCH=x86_64 APPIMAGE_EXTRACT_AND_RUN=1 "$tool" --no-appstream "$appdir" "$file" >&2
 echo "$file"

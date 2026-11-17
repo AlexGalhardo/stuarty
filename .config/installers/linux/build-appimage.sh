@@ -5,7 +5,8 @@
 #
 # appimagetool is the pinned one of .config/installers/tools.env, fetched by
 # scripts/fetch-installer-tool.sh (set APPIMAGETOOL to use another path). The output is
-# <output directory>/vukem-video_<version>_linux_amd64.AppImage. The AppImage carries the
+# <output directory>/vukem-video-<version with dashes>.AppImage (vukem-video-0-28-0.AppImage).
+# The AppImage carries the
 # icon and the desktop entry, and starts "vukem-video open" when it is run with no argument.
 set -euo pipefail
 
@@ -30,5 +31,6 @@ install -m 0644 "$repo/THIRD_PARTY_NOTICES.md" "$appdir/THIRD_PARTY_NOTICES.md"
 cp -R "$repo/licenses" "$appdir/licenses"
 
 # Runners have no FUSE: appimagetool is itself an AppImage, so it extracts itself and runs.
-ARCH=x86_64 APPIMAGE_EXTRACT_AND_RUN=1 "$tool" --no-appstream "$appdir" "$out/vukem-video_${version}_linux_amd64.AppImage"
-echo "$out/vukem-video_${version}_linux_amd64.AppImage"
+file="$out/vukem-video-${version//./-}.AppImage"
+ARCH=x86_64 APPIMAGE_EXTRACT_AND_RUN=1 "$tool" --no-appstream "$appdir" "$file"
+echo "$file"

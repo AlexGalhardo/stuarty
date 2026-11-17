@@ -17,9 +17,11 @@ v[0-9]*.[0-9]*.[0-9]*) ;;
 esac
 [ -f "$file" ] || die "usage: desktop-verify.sh vX.Y.Z <installer>"
 name="$(basename "$file")"
+dashed="${version#v}"
+dashed="${dashed//./-}"
 case "$name" in
-vukem-video-desktop_"${version#v}"_*) ;;
-*) die "$name is not a desktop installer of $version (vukem-video-desktop_${version#v}_...)" ;;
+vukem-video-desktop_"${version#v}"_*|vukem-video-desktop-"${dashed}"*) ;;
+*) die "$name is not a desktop installer of $version (vukem-video-desktop-${dashed}... or vukem-video-desktop_${version#v}_...)" ;;
 esac
 
 repo="${REPO:-AlexGalhardo/vukem-video}"

@@ -42,7 +42,11 @@ SetupIconFile=..\assets\vukem-video.ico
 UninstallDisplayIcon={app}\vukem-video.ico
 UninstallDisplayName={#AppName}
 OutputDir={#OutputDir}
-OutputBaseFilename=vukem-video_{#AppVersion}_windows_amd64_setup
+#ifndef FileVersion
+  #define FileVersion "0-0-0"
+#endif
+; FileVersion is AppVersion with dots replaced by dashes: vukem-video-0-15-0.exe.
+OutputBaseFilename=vukem-video-{#FileVersion}
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern

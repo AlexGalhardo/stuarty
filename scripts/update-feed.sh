@@ -30,7 +30,8 @@ sign)
 	case "$version" in *-*) die "$version is a pre-release: it never reaches the feed" ;; esac
 	[ -d "$dir" ] || die "not a directory: $dir"
 	files=()
-	for f in "$dir"/vukem-video-desktop_"${version}"_*; do
+	dashed="${version//./-}"
+	for f in "$dir"/vukem-video-desktop_"${version}"_* "$dir"/vukem-video-desktop-"${dashed}"*; do
 		case "$f" in *.sbom.json) continue ;; esac
 		[ -e "$f" ] && files+=("$f")
 	done
