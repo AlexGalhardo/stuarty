@@ -2,6 +2,7 @@ import { fromResponse, networkError } from "./errors";
 import { type RetryDeps, withRetry } from "./retry";
 import { type Transport, TransportError } from "./transport";
 import type {
+	AssetListResult,
 	AuditListResult,
 	AuditQuery,
 	BrandKit,
@@ -120,6 +121,8 @@ export interface ApiClient {
 		query?: SnapPointsQuery,
 	): Promise<SnapPointsResult>;
 	getFonts(): Promise<FontListResult>;
+	// The ready files of the workspace by content hash (VV-117); `kind` keeps one kind.
+	listAssets(kind?: "image" | "video" | "audio"): Promise<AssetListResult>;
 	// `path` is an absolute path to a font file on the machine of the service.
 	importFont(path: string): Promise<FontImportResult>;
 	getBrandKit(): Promise<BrandKit>;
@@ -307,6 +310,8 @@ export function createClient(
 				READ_TIMEOUT_MS,
 			),
 		getFonts: () => call("GET", "/fonts", READ_TIMEOUT_MS),
+		listAssets: (kind) =>
+			call("GET", `/assets${query({ kind })}`, READ_TIMEOUT_MS),
 		importFont: (path) => call("POST", "/fonts", EDIT_TIMEOUT_MS, { path }),
 		getBrandKit: () => call("GET", "/brand-kit", READ_TIMEOUT_MS),
 		setBrandKit: (kit) => call("PUT", "/brand-kit", EDIT_TIMEOUT_MS, kit),

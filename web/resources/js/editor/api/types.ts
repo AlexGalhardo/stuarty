@@ -603,8 +603,31 @@ export interface FontFamily {
 	weights: number[];
 }
 
+// A font file of the font store, named by the hash `font.add` takes (VV-094).
+export interface ImportedFont {
+	hash: string;
+	bytes: number;
+}
+
 export interface FontListResult {
 	fonts: FontFamily[];
+	imported: ImportedFont[];
+}
+
+// GET /assets: one file of the workspace by content (VV-117).
+export interface LibraryAsset {
+	hash: string;
+	name: string;
+	kind: string;
+	bytes: number;
+	width?: number;
+	height?: number;
+	projects: number;
+}
+
+export interface AssetListResult {
+	assets: LibraryAsset[];
+	text: string;
 }
 
 // GET /system (Doctor).
@@ -756,6 +779,8 @@ export interface TemplateListResult {
 
 export interface TemplateResult {
 	template: TemplateSummary;
+	// True when an import found the same content already stored (VV-128).
+	deduplicated?: boolean;
 	text: string;
 }
 

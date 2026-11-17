@@ -16,7 +16,7 @@ import { Label } from "@/components/ui/label";
 import { useT } from "@/lib/i18n";
 import { createClient } from "../../editor/api/client";
 import { HttpTransport } from "../../editor/api/http";
-import type { BrandFont, BrandKit } from "../../editor/api/types";
+import type { BrandFont, BrandKit, LibraryAsset } from "../../editor/api/types";
 
 const WEIGHTS = [100, 200, 300, 400, 500, 600, 700, 800, 900] as const;
 const NAME_MAX = 40;
@@ -29,6 +29,14 @@ interface ColorRow {
 
 function fileName(path: string): string {
 	return path.split(/[\\/]/).pop() ?? path;
+}
+
+// The label of an image of the workspace in the logo picker: its name and, when the service knows
+// them, its dimensions.
+export function logoLabel(asset: LibraryAsset): string {
+	return asset.width && asset.height
+		? `${asset.name} (${asset.width}x${asset.height})`
+		: asset.name;
 }
 
 // The brand kit of the workspace (SDD-012 section 12.1, SDD-005 section 5.11):
@@ -45,6 +53,7 @@ export default function BrandKitPage(): ReactNode {
 	const [saved, setSaved] = useState(false);
 	const [saving, setSaving] = useState(false);
 	const [logo, setLogo] = useState("");
+	const [images, setImages] = useState<readonly LibraryAsset[]>([]);
 	const [colors, setColors] = useState<ColorRow[]>([]);
 	const [fonts, setFonts] = useState<{ [family: string]: BrandFont }>({});
 	const [names, setNames] = useState<{ [hash: string]: string }>({});
@@ -79,6 +88,13 @@ export default function BrandKitPage(): ReactNode {
 			.catch(() => {
 				if (live) setLoaded("failed");
 			});
+		// The picker is a convenience: a refused or failed list leaves the hash field alone (VV-117).
+		createClient(new HttpTransport("/api/v1"))
+			.listAssets("image")
+			.then((result) => {
+				if (live) setImages(result.assets);
+			})
+			.catch(() => {});
 		return () => {
 			live = false;
 		};
@@ -174,6 +190,28 @@ export default function BrandKitPage(): ReactNode {
 							<h2 id="brand-logo" className="text-lg font-semibold">
 								{t("ui.brand.logo")}
 							</h2>
+							<Label htmlFor="brand-logo-pick">{t("ui.brand.logo_pick")}</Label>
+							<select
+								id="brand-logo-pick"
+								value={images.some((a) => a.hash === logo) ? logo : ""}
+								disabled={images.length === 0}
+								className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm dark:bg-input/30"
+								onChange={(event) => {
+									touch();
+									setLogo(event.target.value);
+								}}
+							>
+								<option value="">
+									{images.length === 0
+										? t("ui.brand.logo_none")
+										: t("ui.brand.logo_choose")}
+								</option>
+								{images.map((asset) => (
+									<option key={asset.hash} value={asset.hash}>
+										{logoLabel(asset)}
+									</option>
+								))}
+							</select>
 							<Label htmlFor="brand-logo-hash">{t("ui.brand.logo_hash")}</Label>
 							<Input
 								id="brand-logo-hash"
