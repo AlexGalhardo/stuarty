@@ -249,7 +249,7 @@ CaptionStyle has every field of TextStyle (with `size` defaulting to 64 and `max
 
 | Field | Type | Default | Meaning |
 | --- | --- | --- | --- |
-| `position` | `"bottom"`, `"middle"`, `"top"`, `"custom"` | `"bottom"` | vertical anchor inside the safe area; `custom` uses the item's `x`, `y` |
+| `position` | `"bottom"`, `"middle"`, `"top"`, `"custom"` | `"bottom"` | vertical anchor inside the safe area, not the frame: in a 9:16 frame the safe area ends at 65% of the height (y 1248 of 1920), so `bottom` puts the caption's lower edge there; for a caption lower than that use `custom` with `y` (SDD-004 section 4.1); `custom` uses the item's `x`, `y` |
 | `highlight` | `"none"`, `"word"` | `"none"` | `word` draws the word being spoken in the highlight colours. In a Prototype build only `"none"` is accepted; any other value is `E_VALIDATION` (SDD-002 §A.10) |
 | `highlight_color` | colour | `#FFE600` | text colour of the highlighted word |
 | `highlight_background` | colour | none | box behind the highlighted word |
