@@ -37,6 +37,16 @@ func TestLicenseCheckNamesTheFlavourAndTheProblems(t *testing.T) {
 	if c := licenseCheck(user, false); !c.OK || !strings.Contains(c.Detail, "flavour other") {
 		t.Errorf("a user build with GPL is the user's choice = %+v", c)
 	}
+
+	c := licenseCheck(user, false)
+	if !strings.Contains(c.Hint, "--enable-gpl") || !strings.Contains(c.Hint, "VUKEM_VIDEO_FFMPEG") {
+		t.Errorf("the GPL hint = %q", c.Hint)
+	}
+
+	text := doctorText(&DoctorResult{Checks: []DoctorCheck{c}})
+	if !strings.Contains(text, "warn ffmpeg.license") {
+		t.Errorf("a GPL build prints %q", text)
+	}
 }
 
 // SDD-011 section 8.6: ffmpeg.openh264 exists for the own build only; it is ok when the library is
