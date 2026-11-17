@@ -92,7 +92,7 @@ func Errorf(code, format string, args ...any) *Error {
 
 // quotedMax is the longest string a message quotes back to the caller (SDD-003 section 1.2 rule 9):
 // a value of 100 KB sent in an argument must not come back whole.
-const quotedMax = 80
+const quotedMax = 256
 
 // quoted shortens the string arguments of a message, keeping its first runes and marking the cut.
 func quoted(args []any) []any {
@@ -125,7 +125,7 @@ func quoted(args []any) []any {
 
 // WithHint sets the hint.
 func (e *Error) WithHint(format string, args ...any) *Error {
-	e.Hint = fmt.Sprintf(format, quoted(args)...)
+	e.Hint = fmt.Sprintf(format, args...)
 	return e
 }
 
