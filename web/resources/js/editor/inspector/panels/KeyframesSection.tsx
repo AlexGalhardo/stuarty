@@ -184,7 +184,9 @@ export default function KeyframesSection({
 					disabled={!canEdit}
 					className="h-8 px-2 font-mono text-sm"
 					aria-invalid={addError === null ? undefined : true}
-					aria-describedby={addError === null ? undefined : `kf-add-${itemId}-message`}
+					aria-describedby={
+						addError === null ? undefined : `kf-add-${itemId}-message`
+					}
 					onChange={(event) => {
 						setValueText(event.target.value);
 						setAddError(null);
