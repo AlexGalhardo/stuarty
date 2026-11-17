@@ -132,6 +132,17 @@ type Loudness struct {
 	TruePeakDBTP   *float64 `json:"true_peak_dbtp"`
 }
 
+// BeatGrid is the detected beat grid of the audio of an asset (RF-044). An empty grid has TempoBPM 0 and
+// a reason: audio without a steady pulse (speech, ambience) has no beats, and audio.mark_beats refuses it.
+type BeatGrid struct {
+	TempoBPM   float64 `json:"tempo_bpm"`
+	Confidence float64 `json:"confidence"`
+	Count      int     `json:"count"`
+	// FirstMS are the first beats, in milliseconds of the asset.
+	FirstMS []int64 `json:"first_ms"`
+	Reason  string  `json:"reason,omitempty"`
+}
+
 // TimeRange is a range of project frames, the end exclusive.
 type TimeRange struct {
 	Start TimeValue `json:"start"`
@@ -159,6 +170,7 @@ type MediaInspectResult struct {
 	Probe      *ProbeSummary  `json:"probe,omitempty"`
 	Silences   []TimeRange    `json:"silences,omitempty"`
 	Loudness   *Loudness      `json:"loudness,omitempty"`
+	Beats      *BeatGrid      `json:"beats,omitempty"`
 	Untrusted  *UntrustedData `json:"untrusted,omitempty"`
 	Error      *Error         `json:"error,omitempty"`
 	NextCursor *string        `json:"next_cursor"`

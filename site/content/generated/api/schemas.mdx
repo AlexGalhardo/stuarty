@@ -43,6 +43,16 @@ The types named in the tables of the operations. The arguments of each editing c
 | `entries` | array of [`AuditEntry`](/docs/api/schemas#auditentry) | no |  |
 | `next_cursor` | `string` or `null` | no |  |
 
+### BeatGrid
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `confidence` | `number (double)` | no |  |
+| `count` | `integer` | no |  |
+| `first_ms` | array of `integer (int64)` | no |  |
+| `reason` | `string` | no |  |
+| `tempo_bpm` | `number (double)` | no |  |
+
 ### BrandFont
 
 | Name | Type | Required | Description |
@@ -687,6 +697,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | --- | --- | --- | --- |
 | `asset_id` | `string` | no |  |
 | `available` | array of `string` | no |  |
+| `beats` | [`BeatGrid`](/docs/api/schemas#beatgrid) or `any` or `null` or `null` | no |  |
 | `error` | [`Error`](/docs/api/schemas#error) or `any` or `null` or `null` | no |  |
 | `kind` | `string` | no |  |
 | `loudness` | [`Loudness`](/docs/api/schemas#loudness) or `any` or `null` or `null` | no |  |

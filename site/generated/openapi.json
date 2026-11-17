@@ -115,6 +115,32 @@
         },
         "type": "object"
       },
+      "BeatGrid": {
+        "properties": {
+          "confidence": {
+            "format": "double",
+            "type": "number"
+          },
+          "count": {
+            "type": "integer"
+          },
+          "first_ms": {
+            "items": {
+              "format": "int64",
+              "type": "integer"
+            },
+            "type": "array"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "tempo_bpm": {
+            "format": "double",
+            "type": "number"
+          }
+        },
+        "type": "object"
+      },
       "BrandFont": {
         "properties": {
           "files": {
@@ -2081,6 +2107,16 @@
               "type": "string"
             },
             "type": "array"
+          },
+          "beats": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BeatGrid"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "error": {
             "anyOf": [
@@ -9420,7 +9456,7 @@
         "operationId": "media.inspect",
         "parameters": [
           {
-            "description": "Comma separated: probe (default), transcript, silences, loudness.",
+            "description": "Comma separated: probe (default), transcript, silences, loudness, beats.",
             "in": "query",
             "name": "sections",
             "schema": {

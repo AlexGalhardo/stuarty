@@ -403,7 +403,7 @@
           "name": "sections",
           "type": "string",
           "default": "probe",
-          "usage": "probe, transcript, silences, loudness"
+          "usage": "probe, transcript, silences, loudness, beats"
         },
         {
           "name": "min-silence",
