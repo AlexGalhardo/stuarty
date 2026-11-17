@@ -6,7 +6,7 @@
 #   bash scripts/ffmpeg-verify.sh signatures <dir>               cosign verify-blob and gh attestation verify for every asset
 # `binary` fails when: the configure line is not LGPL safe (internal/tools/ffmpegconf), -buildconf
 # or -version names --enable-gpl, --enable-nonfree, libx264, libx265, libfdk_aac, the linker
-# listing shows an OpenH264 library, the libopenh264 encoder (the dlopen patch) is missing, the h264_qsv, hevc_qsv, h264_amf, hevc_amf, h264_nvenc or hevc_nvenc encoders (D-034) are missing on linux and windows x86_64, or a filter the engine references is missing (FILTERS_FILE,
+# listing shows an OpenH264 library, the libopenh264, libmp3lame, libvorbis, libwebp or libwebp_anim encoder is missing, the h264_qsv, hevc_qsv, h264_amf, hevc_amf, h264_nvenc or hevc_nvenc encoders (D-034) are missing on linux and windows x86_64, or a filter the engine references is missing (FILTERS_FILE,
 # default scripts/ffmpeg-filters.txt; eq and boxblur must be absent).
 # `signatures` needs cosign and gh, and REPO (owner/name) or GITHUB_REPOSITORY.
 set -euo pipefail
@@ -45,6 +45,10 @@ check_binary() {
 	encoders="$("$ffmpeg" -hide_banner -encoders)"
 	# No grep -q on a pipe from ffmpeg: grep exits at the first match and ffmpeg dies of SIGPIPE, which pipefail turns into a failure.
 	grep libopenh264 <<<"$encoders" >/dev/null || die "the libopenh264 encoder (the run time loader patch) is missing"
+	# The audio and image encoders the engine fixtures and exports use (libmp3lame, libvorbis, libwebp).
+	for e in libmp3lame libvorbis libwebp libwebp_anim; do
+		printf '%s\n' "$encoders" | awk '{print $2}' | grep -x "$e" >/dev/null || die "the $e encoder is missing"
+	done
 
 	# Hardware encoders (D-034): the flags are on where the build is for linux or windows on x86 (the arm64 linux build keeps NVENC only),
 	# and every encoder a flag promises must be listed.
