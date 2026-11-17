@@ -610,7 +610,8 @@ func TestToolsInstallOfWhatIsInstalledDownloadsNothing(t *testing.T) {
 	first := ts.requests.Load()
 
 	res, err := m.svc.ToolsInstall(person, service.ToolsInstallRequest{Name: "whisper", Model: "tiny"})
-	if err != nil || res.State != "installed" || res.DownloadBytes != 0 || !strings.Contains(res.Text, "already installed") {
+	if err != nil || res.State != "installed" || res.DownloadBytes != 0 ||
+		!strings.Contains(res.Text, "already installed") {
 		t.Fatalf("second install = %+v, %v", res, err)
 	}
 
