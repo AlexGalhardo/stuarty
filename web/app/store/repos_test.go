@@ -1141,6 +1141,14 @@ func TestFontOwnersAndBrandKit(t *testing.T) {
 		t.Error("another user owns the font")
 	}
 
+	if owned, err := s.Fonts().Owned(ctx, "usr_1"); err != nil || len(owned) != 1 || owned[0] != hash {
+		t.Errorf("Owned(usr_1) = %v, %v", owned, err)
+	}
+
+	if owned, _ := s.Fonts().Owned(ctx, "usr_2"); len(owned) != 0 {
+		t.Errorf("Owned(usr_2) = %v", owned)
+	}
+
 	if _, err := s.BrandKit().Get(ctx, ""); !errors.Is(err, service.ErrNotFound) {
 		t.Fatalf("Get of no kit = %v, want ErrNotFound", err)
 	}

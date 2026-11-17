@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"os"
 	"sort"
 	"sync"
 
@@ -35,9 +36,17 @@ type FontFamily struct {
 // FontListRequest has no members.
 type FontListRequest struct{}
 
-// FontListResult is the bundled set (SDD-001 section 3.9), by family name.
+// ImportedFont is a font file of the font store, named by the hash that font.add and the brand kit take.
+type ImportedFont struct {
+	Hash  string `json:"hash"`
+	Bytes int64  `json:"bytes"`
+}
+
+// FontListResult is the bundled set (SDD-001 section 3.9), by family name, and the fonts imported into the
+// font store with their hash (VV-094). In network mode only the fonts the caller owns are listed.
 type FontListResult struct {
-	Fonts []FontFamily `json:"fonts"`
+	Fonts    []FontFamily   `json:"fonts"`
+	Imported []ImportedFont `json:"imported"`
 }
 
 // maxSnapEntries bounds the cache of snap structures; it is cleared when full.
@@ -118,11 +127,15 @@ func (s *svc) SnapPoints(ctx context.Context, req SnapPointsRequest) (*SnapPoint
 }
 
 func (s *svc) FontList(ctx context.Context, _ FontListRequest) (*FontListResult, error) {
-	if _, err := authorize(ctx, "FontList", ""); err != nil {
+	c, err := authorize(ctx, "FontList", "")
+	if err != nil {
 		return nil, err
 	}
 
-	res := &FontListResult{Fonts: make([]FontFamily, 0, len(timeline.BundledWeights))}
+	res := &FontListResult{
+		Fonts:    make([]FontFamily, 0, len(timeline.BundledWeights)),
+		Imported: s.importedFonts(ctx, c),
+	}
 
 	for family, weights := range timeline.BundledWeights {
 		res.Fonts = append(res.Fonts, FontFamily{Family: family, Weights: append([]int(nil), weights...)})
@@ -131,4 +144,46 @@ func (s *svc) FontList(ctx context.Context, _ FontListRequest) (*FontListResult,
 	sort.Slice(res.Fonts, func(i, j int) bool { return res.Fonts[i].Family < res.Fonts[j].Family })
 
 	return res, nil
+}
+
+// importedFonts lists the stored font files the caller may name: every file in local mode, and in network
+// mode the files the caller imported or brought, never another user's.
+func (s *svc) importedFonts(ctx context.Context, c Caller) []ImportedFont {
+	out := []ImportedFont{}
+
+	if s.fonts == nil {
+		return out
+	}
+
+	var owned map[string]bool
+
+	if c.OwnerUserID != "" {
+		owned = map[string]bool{}
+
+		hashes, _ := s.store.Fonts().Owned(ctx, c.OwnerUserID)
+		for _, h := range hashes {
+			owned[h] = true
+		}
+	}
+
+	entries, err := os.ReadDir(s.fonts.Dir())
+	if err != nil {
+		return out
+	}
+
+	for _, e := range entries {
+		hash := "sha256:" + e.Name()
+		if !e.Type().IsRegular() || !isFontHash(hash) || owned != nil && !owned[hash] {
+			continue
+		}
+
+		info, err := e.Info()
+		if err != nil {
+			continue
+		}
+
+		out = append(out, ImportedFont{Hash: hash, Bytes: info.Size()})
+	}
+
+	return out
 }

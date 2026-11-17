@@ -520,6 +520,8 @@ type FontRepo interface {
 	// Record adds owner to the owners of hash; recording twice changes nothing.
 	Record(ctx context.Context, owner, hash string, atMs int64) error
 	Owns(ctx context.Context, owner, hash string) (bool, error)
+	// Owned lists the hashes owner imported or brought, oldest first.
+	Owned(ctx context.Context, owner string) ([]string, error)
 }
 
 // BrandKitRow is the brand kit of one owner, "" in local mode.

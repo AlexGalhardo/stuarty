@@ -325,6 +325,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `fonts` | array of [`FontFamily`](/docs/api/schemas#fontfamily) | no |  |
+| `imported` | array of [`ImportedFont`](/docs/api/schemas#importedfont) | no |  |
 
 ### GradeSpec
 
@@ -397,6 +398,13 @@ The types named in the tables of the operations. The arguments of each editing c
 | `probe` | [`ProbeSummary`](/docs/api/schemas#probesummary) or `any` or `null` or `null` | no |  |
 | `progress` | `number (double)` | no |  |
 | `state` | `string` | no |  |
+
+### ImportedFont
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `bytes` | `integer (int64)` | no |  |
+| `hash` | `string` | no |  |
 
 ### importFileIn
 
