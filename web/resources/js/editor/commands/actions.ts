@@ -73,7 +73,13 @@ import { formatTime, fpsOf } from "./units";
 // through the edit queue. None of them touches the read model; it changes when
 // the answer or the event arrives (rule T2).
 export interface Actions {
-	addToTimeline(assetId: string): Promise<EditOutcome | null>;
+	// `track` chooses the destination: an existing track id, or null for a new
+	// track added in the same batch; left out, it is the track of the selected
+	// item, else the first track of the kind (VV-092). `start` is never sent.
+	addToTimeline(
+		assetId: string,
+		track?: string | null,
+	): Promise<EditOutcome | null>;
 	splitAtPlayhead(): Promise<EditOutcome | null>;
 	// The blade tool: one item cut at the frame under the pointer.
 	splitItemAt(itemId: string, frame: number): Promise<EditOutcome | null>;
@@ -522,7 +528,7 @@ export function createActions(runtime: EditorRuntime): Actions {
 	}
 
 	return {
-		addToTimeline: (assetId) => {
+		addToTimeline: (assetId, track) => {
 			const state = documents.getState();
 			// Placement is offered only for an asset the read model has: the
 			// asset.updated event and the asset.add batch are not ordered.
@@ -533,7 +539,8 @@ export function createActions(runtime: EditorRuntime): Actions {
 				return send(
 					addAudioOperations({
 						assetId,
-						firstAudioTrack: destinationTrack("audio"),
+						firstAudioTrack:
+							track === undefined ? destinationTrack("audio") : track,
 						newTrackId: () => newId("trk"),
 					}),
 				);
@@ -541,7 +548,8 @@ export function createActions(runtime: EditorRuntime): Actions {
 			return send(
 				addClipOperations({
 					assetId,
-					firstVisualTrack: destinationTrack("visual"),
+					firstVisualTrack:
+						track === undefined ? destinationTrack("visual") : track,
 					newTrackId: () => newId("trk"),
 				}),
 			);

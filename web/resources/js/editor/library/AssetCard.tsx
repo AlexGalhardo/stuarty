@@ -13,12 +13,14 @@ import { cn } from "@/lib/cn";
 import { useT } from "@/lib/i18n";
 import type { MediaEntry } from "../api/types";
 import { thumbnailUrl } from "../api/urls";
+import ErrorBody from "../commands/ErrorBody";
 import { formatSeconds } from "../commands/units";
 import { useActions, useCanEdit } from "../commands/useActions";
 import { useDocumentState, useRuntime } from "../state/EditorContext";
 import { readTimeDisplay } from "../state/prefs";
 import { errorHeadline } from "../ui/errorHeadline";
 import AssetDetails from "./AssetDetails";
+import TrackChooser from "./TrackChooser";
 import { hasThumbnail } from "./thumbnail";
 
 // One card of the library (SDD-012 section 13.2). "Add to timeline" is enabled
@@ -121,14 +123,7 @@ export default function AssetCard({
 			{entry.state === "failed" && entry.error !== undefined && (
 				<div role="alert" className="text-xs text-destructive">
 					<p className="font-medium">{errorHeadline(t, entry.error.code)}</p>
-					<p lang="en">
-						<UntrustedText>{entry.error.message}</UntrustedText>
-					</p>
-					{entry.error.hint !== undefined && (
-						<p lang="en" className="text-muted-foreground">
-							<UntrustedText>{entry.error.hint}</UntrustedText>
-						</p>
-					)}
+					<ErrorBody error={entry.error} />
 					<div className="mt-1 flex gap-1">
 						{path !== undefined && (
 							<Button
@@ -164,6 +159,14 @@ export default function AssetCard({
 						<Plus aria-hidden="true" />
 						{t("ui.editor.library.add")}
 					</Button>
+				)}
+				{!trashed && (
+					<TrackChooser
+						assetId={entry.asset_id}
+						name={entry.name}
+						kind={entry.kind === "audio" ? "audio" : "visual"}
+						disabled={!canPlace}
+					/>
 				)}
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
