@@ -10,10 +10,10 @@ import {
 import { registryLimits } from "../../commands/registryLimits";
 import { useCanEdit } from "../../commands/useActions";
 import { useDocumentState } from "../../state/EditorContext";
-import NumberField from "../fields/NumberField";
 import SelectField from "../fields/SelectField";
 import Section from "../Section";
 import { useFieldCommit } from "../useFieldCommit";
+import KeyframedNumberField from "./KeyframedNumberField";
 
 // The side that shares an axis with each side: the core refuses a crop where
 // the two add up to 1 or more (`clip.set_framing`), and the field keeps the person
@@ -58,16 +58,17 @@ export default function FramingSection({
 				}
 			/>
 			{CROP_SIDES.map((side) => (
-				<NumberField
+				<KeyframedNumberField
 					key={side}
+					itemId={itemId}
+					property={`crop_${side}`}
 					label={t(`ui.editor.clip.crop_${side}`)}
-					stored={String(item.crop?.[side] ?? 0)}
-					disabled={!canEdit}
+					stored={item.crop?.[side] ?? 0}
 					step={0.01}
 					{...registryLimits("clip.set_framing", "crop", side)}
 					below={1 - (item.crop?.[OPPOSITE[side]] ?? 0)}
-					commit={(value) =>
-						send(framingOperations(itemId, { crop: { [side]: value } }))
+					staticOperations={(value) =>
+						framingOperations(itemId, { crop: { [side]: value } })
 					}
 				/>
 			))}

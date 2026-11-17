@@ -11,8 +11,13 @@ import {
 	COLOUR_FALLBACK,
 	type ColourKeyframeProperty,
 	containsInclusive,
+	type FramingKeyframeProperty,
+	framingStored,
 	KEYFRAME_COLOUR_PROPERTIES,
+	KEYFRAME_CROP_PROPERTIES,
 	KEYFRAME_EASINGS,
+	KEYFRAME_FRAMING_PROPERTIES,
+	KEYFRAME_MASK_PROPERTIES,
 	KEYFRAME_PROPERTIES,
 	type KeyframeEasing,
 	keyframeClearOperations,
@@ -40,16 +45,31 @@ const SELECT_CLASS =
 	"h-8 min-w-0 rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30";
 
 // The properties a keyframe may animate on an item of each type.
-function propertiesOf(type: string): readonly AnyKeyframeProperty[] {
+// The mask ones need the item to have a mask, the crop ones are for clips.
+function propertiesOf(
+	type: string,
+	hasMask: boolean,
+): readonly AnyKeyframeProperty[] {
 	if (type === "audio") return ["volume"];
-	if (type === "clip")
-		return [...KEYFRAME_PROPERTIES, ...KEYFRAME_COLOUR_PROPERTIES];
-	return KEYFRAME_PROPERTIES.filter((property) => property !== "volume");
+	const mask = hasMask ? KEYFRAME_MASK_PROPERTIES : [];
+	if (type === "clip") {
+		return [
+			...KEYFRAME_PROPERTIES,
+			...KEYFRAME_COLOUR_PROPERTIES,
+			...mask,
+			...KEYFRAME_CROP_PROPERTIES,
+		];
+	}
+	return [
+		...KEYFRAME_PROPERTIES.filter((property) => property !== "volume"),
+		...mask,
+	];
 }
 
 const ALL_PROPERTIES: readonly AnyKeyframeProperty[] = [
 	...KEYFRAME_PROPERTIES,
 	...KEYFRAME_COLOUR_PROPERTIES,
+	...KEYFRAME_FRAMING_PROPERTIES,
 ];
 
 const isProperty = (name: string): name is AnyKeyframeProperty =>
@@ -57,6 +77,11 @@ const isProperty = (name: string): name is AnyKeyframeProperty =>
 
 const isColour = (name: AnyKeyframeProperty): name is ColourKeyframeProperty =>
 	(KEYFRAME_COLOUR_PROPERTIES as readonly string[]).includes(name);
+
+const isFraming = (
+	name: AnyKeyframeProperty,
+): name is FramingKeyframeProperty =>
+	(KEYFRAME_FRAMING_PROPERTIES as readonly string[]).includes(name);
 
 const isEasing = (name: string): name is KeyframeEasing =>
 	(KEYFRAME_EASINGS as readonly string[]).includes(name);
@@ -120,7 +145,7 @@ export default function KeyframesSection({
 	}
 
 	const fps = fpsOf(rate);
-	const offered = propertiesOf(item.type);
+	const offered = propertiesOf(item.type, item.mask !== undefined);
 	const target =
 		property !== null && offered.includes(property)
 			? property
@@ -135,13 +160,18 @@ export default function KeyframesSection({
 
 	// With no value typed, the keyframe takes the value the field shows now:
 	// the stored one, or the plan's for a property already animated.
+	const framed = isFraming(target) ? framingStored(item, target) : undefined;
 	const current = isColour(target)
 		? round3(item[target] ?? COLOUR_FALLBACK[target])
-		: target === "volume"
-			? item.volume === undefined
+		: isFraming(target)
+			? framed === undefined
 				? ""
-				: round3(item.volume)
-			: shown(item, target, { width, height }, effective);
+				: round3(framed)
+			: target === "volume"
+				? item.volume === undefined
+					? ""
+					: round3(item.volume)
+				: shown(item, target, { width, height }, effective);
 	const raw = valueText.trim() === "" ? current : valueText.trim();
 	const value = raw === "" ? Number.NaN : Number(raw);
 	const canAdd = canEdit && inside && Number.isFinite(value);

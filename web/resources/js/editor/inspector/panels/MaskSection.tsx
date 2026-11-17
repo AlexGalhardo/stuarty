@@ -6,11 +6,11 @@ import { registryLimits } from "../../commands/registryLimits";
 import { useCanEdit } from "../../commands/useActions";
 import { useCommandsExposed } from "../../commands/useExposedCommands";
 import { useDocumentState } from "../../state/EditorContext";
-import NumberField from "../fields/NumberField";
 import SelectField from "../fields/SelectField";
 import ToggleField from "../fields/ToggleField";
 import Section from "../Section";
 import { useFieldCommit } from "../useFieldCommit";
+import KeyframedNumberField from "./KeyframedNumberField";
 
 // What a mask starts with when a shape is picked: an inset box, hard edged.
 const DEFAULT_MASK: MaskArgs = {
@@ -49,17 +49,18 @@ export default function MaskSection({ itemId }: { itemId: string }): ReactNode {
 		key: "x" | "y" | "width" | "height",
 		mask: MaskArgs,
 	): ReactNode => (
-		<NumberField
+		<KeyframedNumberField
+			itemId={itemId}
+			property={`mask_${key}`}
 			label={t(label)}
-			stored={String(mask[key])}
-			disabled={!canEdit}
+			stored={mask[key]}
 			step={0.05}
 			min={box.min}
 			max={box.max}
 			percentInput
 			suffix={t("ui.editor.clip.mask_unit")}
-			commit={(value) =>
-				send(maskOperations(itemId, { ...mask, [key]: value }))
+			staticOperations={(value) =>
+				maskOperations(itemId, { ...mask, [key]: value })
 			}
 		/>
 	);
@@ -91,16 +92,17 @@ export default function MaskSection({ itemId }: { itemId: string }): ReactNode {
 					{number("ui.editor.clip.mask_y", "y", current)}
 					{number("ui.editor.clip.mask_width", "width", current)}
 					{number("ui.editor.clip.mask_height", "height", current)}
-					<NumberField
+					<KeyframedNumberField
+						itemId={itemId}
+						property="mask_feather"
 						label={t("ui.editor.clip.mask_feather")}
-						stored={String(current.feather)}
-						disabled={!canEdit}
+						stored={current.feather}
 						step={1}
 						min={feather.min}
 						max={feather.max}
 						suffix="px"
-						commit={(value) =>
-							send(maskOperations(itemId, { ...current, feather: value }))
+						staticOperations={(value) =>
+							maskOperations(itemId, { ...current, feather: value })
 						}
 					/>
 					<ToggleField
