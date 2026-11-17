@@ -234,7 +234,11 @@ func (c *Context) silenceClip(id string) (timeline.Item, *Error) {
 	if err != nil {
 		return it, err
 	}
-	err = c.speechSource(&it, "only a clip or an audio item can be cut by its silences.", "there is nothing to analyse.")
+	err = c.speechSource(
+		&it,
+		"only a clip or an audio item can be cut by its silences.",
+		"there is nothing to analyse.",
+	)
 	return it, err
 }
 
