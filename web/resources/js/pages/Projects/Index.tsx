@@ -2,21 +2,19 @@ import { Head, router, useForm, usePage } from "@inertiajs/react";
 import { type FormEvent, useState } from "react";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
-import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { formatDateTime } from "@/lib/format";
 import { useLocale, useT } from "@/lib/i18n";
 import {
-	type ProjectSummary,
 	type ProjectsIndexProps,
 	SIZE_PRESETS,
 	type SizePreset,
 } from "@/types";
 import { createClient } from "../../editor/api/client";
 import { HttpTransport } from "../../editor/api/http";
-import { BundleExport, BundleImport } from "./Bundles";
+import { BundleImport } from "./Bundles";
+import ProjectCard from "./ProjectCard";
 import Templates from "./Templates";
 import Trash from "./Trash";
 
@@ -70,7 +68,7 @@ export default function ProjectsIndex() {
 	return (
 		<>
 			<Head title={t("ui.projects.title")} />
-			<div className="mx-auto flex max-w-4xl flex-col gap-10">
+			<div className="mx-auto flex max-w-6xl flex-col gap-10">
 				<h1 className="text-2xl font-semibold">{t("ui.projects.title")}</h1>
 				<section aria-labelledby="new-project">
 					<h2 id="new-project" className="text-lg font-semibold">
@@ -156,13 +154,14 @@ export default function ProjectsIndex() {
 							{t("ui.projects.empty")}
 						</p>
 					) : (
-						<ul className="mt-4 divide-y rounded-xl border bg-card text-card-foreground">
+						<ul className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
 							{projects.map((project) => (
-								<ProjectRow
+								<ProjectCard
 									key={project.id}
 									project={project}
 									locale={locale}
 									onTrash={() => void moveToTrash(project.id)}
+									onChanged={() => router.reload({ only: ["projects"] })}
 								/>
 							))}
 						</ul>
@@ -178,57 +177,5 @@ export default function ProjectsIndex() {
 				<BundleImport />
 			</div>
 		</>
-	);
-}
-
-function ProjectRow({
-	project,
-	locale,
-	onTrash,
-}: {
-	project: ProjectSummary;
-	locale: string;
-	onTrash(): void;
-}) {
-	const t = useT();
-	return (
-		<li className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 p-4">
-			<div className="min-w-0 flex-1 basis-48">
-				<p className="truncate font-medium">
-					<UntrustedText>{project.name}</UntrustedText>
-				</p>
-				<p className="text-xs text-muted-foreground">
-					{t("ui.projects.summary", {
-						width: project.width,
-						height: project.height,
-						fps: project.fps,
-					})}
-					{" · "}
-					{t("ui.projects.updated", {
-						date: formatDateTime(project.updated_at, locale),
-					})}
-				</p>
-			</div>
-			{/* The editor is another document, so this is a plain link, not an Inertia visit (SDD-012 section 2.2). */}
-			<div className="flex max-w-md flex-wrap justify-end gap-2">
-				<BundleExport projectId={project.id} />
-				<Button asChild variant="outline">
-					<a href={`/editor/${project.id}`}>
-						{t("ui.projects.open")}
-						<span className="sr-only">
-							{" "}
-							<UntrustedText>{project.name}</UntrustedText>
-						</span>
-					</a>
-				</Button>
-				<Button type="button" variant="ghost" onClick={onTrash}>
-					{t("ui.projects.trash.move")}
-					<span className="sr-only">
-						{" "}
-						<UntrustedText>{project.name}</UntrustedText>
-					</span>
-				</Button>
-			</div>
-		</li>
 	);
 }

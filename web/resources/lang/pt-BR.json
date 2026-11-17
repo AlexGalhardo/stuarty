@@ -58,6 +58,16 @@
         "imported_again": "Já havia um modelo com este nome na lista, então agora são dois.",
         "use_brand": "Usar as cores e fontes do kit de marca"
       },
+      "card": {
+        "menu": "Ações do projeto",
+        "rename": "Renomear",
+        "rename_title": "Renomear projeto",
+        "save": "Salvar",
+        "cancel": "Cancelar",
+        "delete": "Excluir",
+        "delete_title": "Excluir este projeto?",
+        "delete_body": "O projeto vai para a lixeira, de onde você pode restaurá-lo."
+      },
       "trash": {
         "title": "Lixeira",
         "move": "Mover para a lixeira",

@@ -23,7 +23,14 @@ test.describe("network-mode-pages", () => {
 		});
 		await expect(openLink).toBeVisible();
 		await page
-			.getByRole("button", { name: new RegExp(`Move to trash.*${label}`) })
+			.getByRole("button", {
+				name: new RegExp(`Actions for project.*${label}`),
+			})
+			.click();
+		await page.getByRole("menuitem", { name: "Delete" }).click();
+		await page
+			.getByRole("alertdialog")
+			.getByRole("button", { name: "Move to trash" })
 			.click();
 		await expect(openLink).toHaveCount(0);
 		const trashed = page.locator(`[data-trashed-id='${seeded.id}']`);
