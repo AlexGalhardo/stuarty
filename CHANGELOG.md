@@ -7,6 +7,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.27.0] - 2026-11-17
+
+### Added
+
+- **ui:** Word the server errors in the language of the page from their code and details ([d81ed76](https://github.com/AlexGalhardo/vukem-video/commit/d81ed76bc744369d4f07300b77f7b7dd2c8d0d2c))
+- **ui:** Choose the destination track of Add to timeline ([2dcb3a5](https://github.com/AlexGalhardo/vukem-video/commit/2dcb3a5e7ef5117b7947438fa6355518740d84a2))
+- **ui:** Shrink the accessibility tree of the editor for agents that read it ([7e9833a](https://github.com/AlexGalhardo/vukem-video/commit/7e9833ab1ab28908d48608f57db53dd6fe6cb8a8))
+- **core:** Keyframe the mask and the crop sides of an item ([9e41cc4](https://github.com/AlexGalhardo/vukem-video/commit/9e41cc4f7900356fa5f5562e4b50e8765f501912))
+- **core:** Accept a transparent project background ([9db7dc8](https://github.com/AlexGalhardo/vukem-video/commit/9db7dc8c0018e21cb94132927a471c57a82ffacb))
+- **core:** Add a drop shadow and an outline to clips ([e454682](https://github.com/AlexGalhardo/vukem-video/commit/e454682ed80062ab8d9f336e394beff02ff72a3b))
+- **core:** Repeat an item back to back with item.repeat ([c39e300](https://github.com/AlexGalhardo/vukem-video/commit/c39e30083389f374e22e993821ad09fca317f6fa))
+- **ui:** Library tab rail and media panel ([faa0e41](https://github.com/AlexGalhardo/vukem-video/commit/faa0e412842a36c146f6d79d0bea8518d5beeb11))
+- **ui:** Audio and text panels ([835d41b](https://github.com/AlexGalhardo/vukem-video/commit/835d41bc70fcbdf6052d4bafd96014523d503027))
+- **ui:** Captions panel ([1629ebd](https://github.com/AlexGalhardo/vukem-video/commit/1629ebd777a3331f92de99ec79e925e38a833ddb))
+- **ui:** Transitions and filters panels ([4577514](https://github.com/AlexGalhardo/vukem-video/commit/4577514166e96af0fc8cd9f36d05a49225eeb4ea))
+- **ui:** Templates panel ([f44dcd0](https://github.com/AlexGalhardo/vukem-video/commit/f44dcd04c8af8ef3fccd1af9519be286b854842d))
+- **ui:** Effects panel ([8cf11aa](https://github.com/AlexGalhardo/vukem-video/commit/8cf11aa9c2240293b1d1fda928d446b4d2766828))
+- **ui:** Inspector tabs ([23b18c7](https://github.com/AlexGalhardo/vukem-video/commit/23b18c793aae4e5dfe8e122318a1030d2ca3f472))
+- **ui:** Keyframe the mask box, feather and crop sides ([318c577](https://github.com/AlexGalhardo/vukem-video/commit/318c5772c07e41f416f71acbb84104b468f0f8f4))
+- **ui:** Add the Shadow and Outline sections and the Repeat item action ([30140ef](https://github.com/AlexGalhardo/vukem-video/commit/30140effa32d3bb450e1a4125204a1809977b1d7))
+- **ui:** Read the per-frame masks and crops of a plan layer ([5124d20](https://github.com/AlexGalhardo/vukem-video/commit/5124d2045cd21424ffd5047aa6c2562f3baf9ab1))
+- **mcp:** Accept detail document in project_get, as the API and the CLI do ([bc906d6](https://github.com/AlexGalhardo/vukem-video/commit/bc906d6b91fb379e02391cd91308b74e577c5856))
+- **ui:** Timeline toolbar tools ([10e671d](https://github.com/AlexGalhardo/vukem-video/commit/10e671d9155038c6186ab87857dbc50d30c13cc6))
+- **ui:** Player row controls ([e25a8e0](https://github.com/AlexGalhardo/vukem-video/commit/e25a8e060fce5e33e4c48bc6b439a278c3ac1161))
+- **ui:** Editor menu and clip context menu ([0c3708d](https://github.com/AlexGalhardo/vukem-video/commit/0c3708d394337311823fec2e526ffa14647c34d8))
+- **ui:** Projects grid ([3e7cd7f](https://github.com/AlexGalhardo/vukem-video/commit/3e7cd7ff9aa50116d029014bde37648074bffaa2))
+- **ui:** Shortcuts dialog footer ([55fb22f](https://github.com/AlexGalhardo/vukem-video/commit/55fb22fe01b4d6465b05450f00356f3b6d3edd97))
+- **desktop:** Native menu bar ([01725f7](https://github.com/AlexGalhardo/vukem-video/commit/01725f73db9b02ba6dc0ae19f6b87d367198bfb4))
+
+### Fixed
+
+- **mcp:** Answer an unknown method of POST /mcp with a JSON-RPC -32601 error ([3f3de93](https://github.com/AlexGalhardo/vukem-video/commit/3f3de93961ccda9b889de9ab3dab03bb4032499c))
+- **mcp:** Accept a numeric fps in project_create as the CLI and the API do ([ccbd3d4](https://github.com/AlexGalhardo/vukem-video/commit/ccbd3d413ff2c3996e73ceb74e83db02b54aba56))
+- **service:** Mark the lint of an edit result as lint_scope fast ([28e7496](https://github.com/AlexGalhardo/vukem-video/commit/28e7496bf9a5984a2fc95b56cdd22a1817905805))
+- **service:** Report media matched by name on OTIO import and keep track lock, solo and volume ([788ffd2](https://github.com/AlexGalhardo/vukem-video/commit/788ffd2690f80a91656779fc380965125b49b59a))
+- **core:** Do not echo a long value back in an error message ([874ded1](https://github.com/AlexGalhardo/vukem-video/commit/874ded1be4ee774a3350dc6a6e13db7f9c88f62b))
+- **service:** Name the job_get tool in the text of a job relayed over HTTP ([7566474](https://github.com/AlexGalhardo/vukem-video/commit/75664747c3489e2a8793dc92fbd694bbddf74d9a))
+- **http:** Refuse a limit that is not an integer on GET /assets ([4d0b08a](https://github.com/AlexGalhardo/vukem-video/commit/4d0b08afef4a91df9b728cbee387538587b17054))
+- **http:** Declare the 200 of a media import with a refused file and clear deduplicated on it ([823a696](https://github.com/AlexGalhardo/vukem-video/commit/823a69682733707664d575a8ee0fe6ec979bfe3a))
+- **service:** Say that until is the missing parameter of a plan window ([657db90](https://github.com/AlexGalhardo/vukem-video/commit/657db90b029e02a2b0ca79bc141e754e2e4f8c06))
+- **core:** Keep hints whole and quote up to 256 characters of a value ([6672696](https://github.com/AlexGalhardo/vukem-video/commit/66726968f106a52fede98b2d26318693b6ec2c73))
+- **core:** Name the call that makes the speech in the audio.duck hint ([83e7a97](https://github.com/AlexGalhardo/vukem-video/commit/83e7a9792984292363e147f52dada71c8f243658))
+- **service:** List the reference of a media matched by name in the provenance table ([b247511](https://github.com/AlexGalhardo/vukem-video/commit/b247511b7c311036257cd4a8232dfaf1bb487b68))
+- **core:** Count every copy of a caption against the document word limit in item.repeat ([d4ea79f](https://github.com/AlexGalhardo/vukem-video/commit/d4ea79ff6688eae81597f236cc5ea6f563fef12d))
+- **core:** Do not flag a fade out at the end of the picture when a title or bar runs on ([aa182ab](https://github.com/AlexGalhardo/vukem-video/commit/aa182abdb0d65d1b432dc30d2cc3f9e6665e36f5))
+- **core:** Move the timeline markers with a ripple all ([95ef2ca](https://github.com/AlexGalhardo/vukem-video/commit/95ef2ca171d8a51a3e0ea09b03e7823b9bfb455d))
+- **ui:** Name the shadow, outline and repeat commands in the palette ([003b539](https://github.com/AlexGalhardo/vukem-video/commit/003b5394403f89d6acd3c4a99ad56520d5ef066f))
+- **service:** Refuse a caller-supplied resolved argument on analysis commands ([994af21](https://github.com/AlexGalhardo/vukem-video/commit/994af2163021d33ae408bc89ac7cee20d6d91fd4))
+- **http:** Refuse a text dry_run in a JSON body ([e66cb19](https://github.com/AlexGalhardo/vukem-video/commit/e66cb1990d96c70c0bc07cab036f10cf9083d40f))
+- **api:** Declare the dry-run 200 of jobs.start and the 409 of rev reads ([fb0d06e](https://github.com/AlexGalhardo/vukem-video/commit/fb0d06e60a18d6428f7b86ca14a6e02d183cdfdc))
+- **http:** Check dry_run of undo and redo in the binding, not in a middleware ([7e473fb](https://github.com/AlexGalhardo/vukem-video/commit/7e473fb36949774a7b3ae7fe03041eeaf34f431c))
+- **service:** Report a cancelled plan window as client closed, not internal ([29cc698](https://github.com/AlexGalhardo/vukem-video/commit/29cc698e0bb8e189d78f4c075e499279cbec25b0))
+- **mcp:** Answer the requests already read when stdin closes ([4999b95](https://github.com/AlexGalhardo/vukem-video/commit/4999b958acdb573d11bc6198e294a2ab6a4eb2da))
+- **mcp:** Mark media_import as an error when nothing was imported, keep the hint ([d93289e](https://github.com/AlexGalhardo/vukem-video/commit/d93289e82232da911231ae0ef13cdc2c05685967))
+- **cli:** Give each doctor check a status field that matches the text ([d36d528](https://github.com/AlexGalhardo/vukem-video/commit/d36d52811607fe6d8eb7df67d9a239ee61950802))
+- **repo:** Read the added test lines in one pass and ignore timeout limits in the flaky check ([6b3e1ee](https://github.com/AlexGalhardo/vukem-video/commit/6b3e1ee129316b91d81ab9fa1fc1bd7e1030eb06))
+
 ## [0.26.0] - 2026-11-17
 
 ### Added
@@ -1258,7 +1315,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/vukem-video/compare/v0.26.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/vukem-video/compare/v0.27.0...HEAD
+[0.27.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.26.0...v0.27.0
 [0.26.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.25.0...v0.26.0
 [0.25.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.24.0...v0.25.0
 [0.24.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.23.0...v0.24.0
