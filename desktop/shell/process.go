@@ -45,6 +45,7 @@ const (
 	ReasonExited    Reason = "exited"
 	ReasonTimeout   Reason = "timeout"
 	ReasonRuntime   Reason = "runtime"
+	ReasonInUse     Reason = "workspace-in-use"
 )
 
 // StartupError is a failed start. Message is plain text for a dialog.
@@ -139,6 +140,17 @@ func Start(ctx context.Context, cfg Config) (*Server, error) {
 	// A stale runtime.json of a dead owner must not be taken for ours; one of a live owner stays (VV-006).
 	if err := cfg.Workspace.RemoveStaleRuntime(); err != nil {
 		return nil, &StartupError{Reason: ReasonRuntime, Message: "Cannot prepare the workspace", Err: err}
+	}
+	// A server that is alive owns the workspace lock, so ours would stop at once with a lock error. Attaching
+	// to it would give a window without the browser-only privileges (SDD-007 3.4 item 7) and without owning
+	// its life, so the person is told what to do instead (VV-146).
+	if rt, err := cfg.Workspace.ReadRuntime(); err == nil && workspace.ProcessAlive(rt.PID) {
+		return nil, &StartupError{
+			Reason: ReasonInUse,
+			Message: fmt.Sprintf("Another Vukem Video server (process %d, %s) is already running on this workspace. "+
+				"Open it in the browser with `vukem-video open`, stop that server, or start the application with "+
+				"VUKEM_VIDEO_HOME set to another folder.", rt.PID, rt.Addr),
+		}
 	}
 
 	launcher, err := newLauncherSecret()

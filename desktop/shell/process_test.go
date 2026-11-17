@@ -207,3 +207,26 @@ func TestBoundChildDiesWithTheShell(t *testing.T) {
 		t.Fatal("the child survived the close of the job")
 	}
 }
+
+func TestWorkspaceOfARunningServerIsReportedWithWhatToDo(t *testing.T) {
+	cfg := newConfig(t, "ok")
+	rt := workspace.Runtime{PID: os.Getpid(), Addr: "127.0.0.1:3490", Mode: workspace.ModeLocal, StartedAt: time.Now()}
+	if err := cfg.Workspace.WriteRuntime(rt); err != nil {
+		t.Fatal(err)
+	}
+
+	_, err := Start(context.Background(), cfg)
+	assertReason(t, err, ReasonInUse)
+
+	if se, ok := errors.AsType[*StartupError](err); ok {
+		for _, want := range []string{strconv.Itoa(os.Getpid()), "127.0.0.1:3490", "vukem-video open", "VUKEM_VIDEO_HOME"} {
+			if !strings.Contains(se.Message, want) {
+				t.Errorf("message %q lacks %q", se.Message, want)
+			}
+		}
+	}
+
+	if _, err := cfg.Workspace.ReadRuntime(); err != nil {
+		t.Errorf("the runtime.json of the running server must stay: %v", err)
+	}
+}
