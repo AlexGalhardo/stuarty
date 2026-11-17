@@ -90,3 +90,20 @@ func TestResolveSilencesOfAnAudioItem(t *testing.T) {
 		t.Errorf("stored operation = %s, want resolved silences", args)
 	}
 }
+
+// VV-153: a manual tempo builds the grid in the core, so the service resolves no beats and an
+// asset that was never analysed does not stop the edit.
+func TestMarkBeatsWithAManualTempoResolvesNothing(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{beta: true})
+	project, clip, _, _ := m.speechProject()
+	music := m.musicOnClipAsset(project, clip)
+
+	m.mustEdit(ui, project, m.head(project).Revision, op(
+		"audio.mark_beats", fmt.Sprintf(`{"item_id":%q,"bpm":120,"offset":"0s"}`, music),
+	))
+
+	args := string(storedOps(t, m, project, m.head(project).Revision)[0].Args)
+	if strings.Contains(args, `"resolved"`) {
+		t.Errorf("stored operation = %s, want no resolved beats with a manual tempo", args)
+	}
+}

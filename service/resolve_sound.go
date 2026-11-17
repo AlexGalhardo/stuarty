@@ -125,6 +125,15 @@ func (s *svc) resolveBeats(
 		return nil, nil //nolint:nilnil // nothing to resolve
 	}
 
+	// A manual tempo builds the grid in the core and ignores resolved (VV-153), so an asset
+	// that was never analysed must not stop it.
+	var manual struct {
+		BPM *float64 `json:"bpm"`
+	}
+	if json.Unmarshal(op.Args, &manual) == nil && manual.BPM != nil {
+		return nil, nil //nolint:nilnil // the core builds the grid from bpm
+	}
+
 	asset, ok := clipAsset(doc, a.ItemID)
 	if !ok {
 		return nil, nil //nolint:nilnil // the command answers E_NOT_FOUND
