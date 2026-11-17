@@ -83,6 +83,23 @@ type DoctorCheck struct {
 	// Optional marks a check whose failure does not stop the product from working (the transcription
 	// helper and its model): it does not make the CLI exit non-zero (VV-110).
 	Optional bool `json:"optional,omitempty"`
+	// Status is what the text shows for the check: ok, warn (it passed with a hint), missing (an
+	// optional check failed) or fail. A reader of the JSON sees the same as a reader of the text.
+	Status string `json:"status"`
+}
+
+// status is the one place that decides the state of a check, for the text and for the JSON.
+func (c *DoctorCheck) status() string {
+	switch {
+	case !c.OK && c.Optional:
+		return "missing"
+	case !c.OK:
+		return "fail"
+	case c.Hint != "":
+		return "warn"
+	default:
+		return "ok"
+	}
 }
 
 // DoctorResult is the report.
@@ -220,6 +237,10 @@ func (s *svc) Doctor(ctx context.Context, req DoctorRequest) (*DoctorResult, err
 		res.Checks = append(res.Checks, DoctorCheck{Name: "workspace.sweep", OK: true, Detail: sweepText(sweep)})
 	}
 
+	for i := range res.Checks {
+		res.Checks[i].Status = res.Checks[i].status()
+	}
+
 	res.Text = doctorText(res)
 
 	if req.Bundle {
@@ -257,15 +278,9 @@ func doctorText(r *DoctorResult) string {
 	fmt.Fprintf(&b, "vukem-video %s (%s, pid %d)\n", r.Version, r.Mode, r.PID)
 
 	for _, c := range r.Checks {
-		state := "ok"
-
-		switch {
-		case !c.OK && c.Optional:
-			state = "missing"
-		case !c.OK:
+		state := c.status()
+		if state == "fail" {
 			state = "FAIL"
-		case c.Hint != "":
-			state = "warn"
 		}
 
 		fmt.Fprintf(&b, "%s %s: %s\n", state, c.Name, c.Detail)

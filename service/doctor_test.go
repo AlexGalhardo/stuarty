@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/AlexGalhardo/vukem-video/internal/ffmpegpins"
@@ -138,5 +139,31 @@ func TestDoctorSaysWhenTheGPUHostIsMissing(t *testing.T) {
 	s.doctor.GPURenderer = GPURenderer{}
 	if got := s.rendererChecks(true); len(got) != 0 {
 		t.Fatalf("not requested: %+v", got)
+	}
+}
+
+// The JSON status of a check is the word the text shows for it (VV-212).
+func TestDoctorStatusAgreesWithTheText(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		check DoctorCheck
+		want  string
+		word  string
+	}{
+		{DoctorCheck{Name: "a", OK: true}, "ok", "ok a"},
+		{DoctorCheck{Name: "b", OK: true, Hint: "h"}, "warn", "warn b"},
+		{DoctorCheck{Name: "c"}, "fail", "FAIL c"},
+		{DoctorCheck{Name: "d", Optional: true}, "missing", "missing d"},
+	}
+
+	for _, tc := range cases {
+		if got := tc.check.status(); got != tc.want {
+			t.Errorf("%s: status %q, want %q", tc.check.Name, got, tc.want)
+		}
+
+		if text := doctorText(&DoctorResult{Checks: []DoctorCheck{tc.check}}); !strings.Contains(text, tc.word) {
+			t.Errorf("%s: text %q lacks %q", tc.check.Name, text, tc.word)
+		}
 	}
 }
