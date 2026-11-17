@@ -165,6 +165,7 @@
         "magnet_hint": "Ímã (P): mantém os itens da faixa juntos, sem espaços",
         "blade": "Lâmina",
         "blade_hint": "Ferramenta lâmina (B): clique num item para cortá-lo ali. A ou Esc volta à seleção.",
+        "word_label": "Palavra {n}: {text}",
         "caption_words": {
           "one": "{count} palavra",
           "other": "{count} palavras"
