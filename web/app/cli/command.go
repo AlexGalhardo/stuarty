@@ -128,7 +128,7 @@ func (rt *Runtime) Execute(ctx context.Context, name string, args []string) int 
 	if s == nil {
 		return writeError(rt, jsonRequested(args), &service.Error{
 			Code: command.CodeUnknownCommand, Message: fmt.Sprintf("there is no command %q.", name),
-			Hint: "run vukem-video with no arguments to list the commands",
+			Hint: unknownHint(name),
 		})
 	}
 
@@ -358,6 +358,8 @@ func (s *spec) help() string {
 type processCommand struct {
 	name, summary, example string
 	usage                  []string
+	// noArgs is true for a command that takes no flag and no argument: its configuration is the environment.
+	noArgs bool
 }
 
 var processCommands = []processCommand{
@@ -366,12 +368,14 @@ var processCommands = []processCommand{
 		summary: "run the server that owns the workspace, configured by environment variables (see the configuration reference)",
 		usage:   []string{"vukem-video serve"},
 		example: "VUKEM_VIDEO_ADDR=127.0.0.1:7878 vukem-video serve",
+		noArgs:  true,
 	},
 	{
 		name:    "open",
 		summary: "open the editor in the browser of the running server",
 		usage:   []string{"vukem-video open"},
 		example: "vukem-video open",
+		noArgs:  true,
 	},
 	{
 		name:    "user:create",
@@ -469,6 +473,81 @@ func helpFor(name string, stdout, stderr io.Writer) int {
 	fmt.Fprintf(stderr, "error E_VALIDATION: unknown command %q; run vukem-video help to list the commands\n", name)
 
 	return ExitFailure
+}
+
+// unknownHint names the closest command, when one is near, and where the list is.
+func unknownHint(name string) string {
+	best, bestDist := "", 3
+
+	names := make([]string, 0, len(registry())+len(processCommands))
+	for _, s := range registry() {
+		names = append(names, s.name)
+	}
+
+	for i := range processCommands {
+		names = append(names, processCommands[i].name)
+	}
+
+	for _, n := range names {
+		if d := editDistance(name, n); d < bestDist {
+			best, bestDist = n, d
+		}
+	}
+
+	if best == "" {
+		return "run vukem-video help to list the commands"
+	}
+
+	return fmt.Sprintf("did you mean %q? run vukem-video help to list the commands", best)
+}
+
+// editDistance is the Levenshtein distance of two short command names.
+func editDistance(a, b string) int {
+	prev := make([]int, len(b)+1)
+	for j := range prev {
+		prev[j] = j
+	}
+
+	for i := 1; i <= len(a); i++ {
+		cur := make([]int, len(b)+1)
+		cur[0] = i
+
+		for j := 1; j <= len(b); j++ {
+			cost := 1
+			if a[i-1] == b[j-1] {
+				cost = 0
+			}
+
+			cur[j] = min(prev[j]+1, cur[j-1]+1, prev[j-1]+cost)
+		}
+
+		prev = cur
+	}
+
+	return prev[len(b)]
+}
+
+// RejectArgs answers a command of the process that takes no flag or argument and was given one, with the
+// same E_VALIDATION document as every other command, before the command opens or locks anything
+// (VV-078). --help and -h are the business of Help.
+func RejectArgs(name string, args []string, stdout, stderr io.Writer) (code int, rejected bool) {
+	p := lookupProcess(name)
+	if p == nil || !p.noArgs || len(args) == 0 {
+		return ExitOK, false
+	}
+
+	msg := fmt.Sprintf("%s takes no argument, got %q.", name, args[0])
+	if strings.HasPrefix(args[0], "-") {
+		msg = fmt.Sprintf("unknown flag %q for %s.", args[0], name)
+	}
+
+	rt := &Runtime{Stdout: stdout, Stderr: stderr}
+	err := &service.Error{
+		Code: command.CodeValidation, Message: msg,
+		Hint: fmt.Sprintf("%s is configured by environment variables: run vukem-video help %s", name, name),
+	}
+
+	return writeError(rt, jsonRequested(args), err), true
 }
 
 // IsCommand reports whether name is a product command.
