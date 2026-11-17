@@ -22,7 +22,7 @@ const CodeMethodNotAllowed = service.CodeMethodNotAllowed
 // 1.4: application/problem+json with the members of RFC 9457 and, next to
 // them, code, message, hint, retryable, op_index, path and details.
 func installErrors(s *web.Services) {
-	web.MapError(s, func(_ *web.Ctx, e *service.Error) error { return httpError(e) })
+	web.MapError(s, func(_ *web.Ctx, e *service.Error) error { return httpError(e.ForSurface(service.SurfaceHTTP)) })
 	s.ProblemDecorator = decorate
 }
 

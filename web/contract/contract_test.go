@@ -156,6 +156,16 @@ func normalizeText(d driver, text string) string {
 	return mcpSession.ReplaceAllString(text, "$1")
 }
 
+// surfaceNames and toolNames are the words a hint uses for the commands of a surface (service.Surface).
+var (
+	surfaceNames = regexp.MustCompile(
+		`project:(list|show|create|trash)|command:help|media:(import|inspect)|job:(show|cancel)|font:import|` +
+			`(GET|POST) /api/v1|go back to the projects page|with transcribe `)
+	toolNames = regexp.MustCompile(
+		`(project_list|project_create|project_get|project_trash|command_help|media_import|media_inspect|` +
+			`job_start|job_get|job_cancel|font_import)`)
+)
+
 func errorLine(doc *service.ErrorDocument) string {
 	if doc == nil {
 		return ""
@@ -171,6 +181,14 @@ func errorLine(doc *service.ErrorDocument) string {
 	var generic any
 	if err := json.Unmarshal(raw, &generic); err != nil {
 		return err.Error()
+	}
+
+	// The hint names the commands of the surface that answered (VV-101, SDD-003 section 1.4), so only
+	// its presence is compared; code, message and details are equal on every surface.
+	if m, ok := generic.(map[string]any); ok {
+		if h, _ := m["hint"].(string); surfaceNames.MatchString(h) || toolNames.MatchString(h) {
+			m["hint"] = "<hint>"
+		}
 	}
 
 	canonical, err := json.Marshal(generic)

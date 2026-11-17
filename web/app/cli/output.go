@@ -63,9 +63,9 @@ func asServiceError(err error) *service.Error {
 }
 
 // forCLI adapts a shared error to this surface without changing the original: a
-// missing file names the path that was looked for. Hints stay as the core emits them.
+// missing file names the path that was looked for. The hint names the commands of the CLI.
 func forCLI(se *service.Error, resolved []string) *service.Error {
-	out := *se
+	out := *se.ForSurface(service.SurfaceCLI)
 	if se.Code == "E_FILE_NOT_FOUND" && len(resolved) > 0 {
 		out.Message = strings.TrimRight(se.Message, ".") + ": " + resolved[len(resolved)-1] + "."
 	}

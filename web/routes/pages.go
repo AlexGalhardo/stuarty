@@ -242,6 +242,7 @@ func editorFailure(c *web.Ctx, err error) error {
 		return err
 	}
 
+	se = se.ForSurface(service.SurfaceUI)
 	status := se.HTTPStatus()
 	// RenderStatus refuses 409, which the Inertia protocol keeps for version and location replies.
 	if status == http.StatusConflict {
