@@ -1867,7 +1867,7 @@ Example (the text of §3.8; `structuredContent` has `asset_id`, `kind`, `availab
     "properties":{
       "project_id":{"type":"string","pattern":"^prj_[0-9a-hjkmnp-tv-z]{10}$"},
       "mode":{"enum":["frame","sheet"],"default":"frame"},
-      "at":{"type":"string","description":"Time: 12.5s, 375f or 00:00:12.500"},
+      "at":{"type":"string","description":"Time: 12.5s, 375f or 00:00:12.500. Required in mode frame (the default)."},
       "times":{"type":"array","minItems":2,"maxItems":16,"items":{"type":"string"}},
       "from":{"type":"string"},
       "until":{"type":"string"},

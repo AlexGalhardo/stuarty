@@ -5,10 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"slices"
 	"strings"
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/santhosh-tekuri/jsonschema/v6"
+	"github.com/santhosh-tekuri/jsonschema/v6/kind"
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
 	"github.com/AlexGalhardo/vukem-video/service"
@@ -81,10 +83,41 @@ func validationFailure(err error) error {
 	}
 
 	return &service.Error{
-		Code: code, Path: path,
-		Message: fmt.Sprintf("the argument %q breaks the constraint %q.", path, constraint),
-		Hint:    "check the tool definition; command_help lists the operations",
+		Code: code,
+		Path: path,
+		Message: fmt.Sprintf(
+			"the argument %q breaks the constraint %q%s.",
+			path,
+			constraint,
+			expectation(leaf.ErrorKind),
+		),
+		Hint: "check the tool definition; command_help lists the operations",
 	}
+}
+
+// expectation says what the failed constraint accepts: the values of an enum and the JSON type. It
+// never repeats the value that was sent (SDD-003 section 1.2 rule 9).
+func expectation(k jsonschema.ErrorKind) string {
+	switch k := k.(type) {
+	case *kind.Enum:
+		values := make([]string, len(k.Want))
+
+		for i, v := range k.Want {
+			values[i] = fmt.Sprint(v)
+		}
+
+		return ": use one of " + strings.Join(values, ", ")
+	case *kind.Type:
+		want := strings.Join(k.Want, " or ")
+
+		if slices.Contains(k.Want, "array") {
+			return ": expected an array, such as [\"a\",\"b\"], not a comma-separated string"
+		}
+
+		return ": expected " + want
+	}
+
+	return ""
 }
 
 // formatPath writes an instance location as operations[2].op.

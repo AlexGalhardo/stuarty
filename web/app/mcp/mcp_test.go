@@ -598,3 +598,27 @@ func TestSessionLabelFitsTheActorLabelRule(t *testing.T) {
 		t.Error("two session ids are equal")
 	}
 }
+
+// VV-112: a validation failure says what the constraint accepts, never the value that was sent.
+func TestValidationSaysWhatIsAccepted(t *testing.T) {
+	t.Parallel()
+
+	cs := connect(t, newService(t), Options{}, "x")
+	made, _ := structured(t, ok(t, call(t, cs, "project_create", map[string]any{"name": "P"})))["project_id"].(string)
+
+	for name, tc := range map[string]struct {
+		tool string
+		args map[string]any
+		want string
+	}{
+		"enum":  {"project_get", map[string]any{"project_id": made, "detail": "document"}, "use one of concise, full"},
+		"array": {"media_inspect", map[string]any{"project_id": made, "asset_id": "ast_0000000001", "sections": "probe,loudness"}, "expected an array"},
+		"type":  {"project_list", map[string]any{"limit": "ten"}, "expected integer"},
+	} {
+		text := textOf(t, call(t, cs, tc.tool, tc.args))
+
+		if !strings.Contains(text, tc.want) {
+			t.Errorf("%s: %q does not say %q", name, text, tc.want)
+		}
+	}
+}
