@@ -43,3 +43,30 @@ func (c *Compositor) applyMatrix(src Image, m *[12]float64) Image {
 }
 
 func clamp8(v int64) int64 { return min(max(v, 0), 255) }
+
+// colourMemo remembers the last colours a band of a frame went through a pure per-pixel colour function: video has
+// runs and areas of one colour, so a hit returns the same integers as calling the function.
+type colourMemo struct {
+	key [colourMemoSize]uint32
+	val [colourMemoSize]uint32
+}
+
+const colourMemoSize = 4096
+
+// pixel is fn(r, g, b), where fn returns channels of 0 to 255.
+func (m *colourMemo) pixel(fn func(r, g, b int64) (int64, int64, int64), r, g, b int64) (int64, int64, int64) {
+	// The key has a bit above the colour, so an empty slot (0) never matches.
+	key := uint32(r)<<16 | uint32(g)<<8 | uint32(b) | 1<<24 //nolint:gosec // G115: channels are 0 to 255
+	h := (key * 2654435761) >> (32 - 12)
+
+	if m.key[h] == key {
+		v := m.val[h]
+
+		return int64(v >> 16), int64(v >> 8 & 255), int64(v & 255)
+	}
+
+	nr, ng, nb := fn(r, g, b)
+	m.key[h], m.val[h] = key, uint32(nr)<<16|uint32(ng)<<8|uint32(nb) //nolint:gosec // G115: channels are 0 to 255
+
+	return nr, ng, nb
+}
