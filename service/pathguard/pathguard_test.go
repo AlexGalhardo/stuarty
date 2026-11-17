@@ -446,3 +446,56 @@ func TestNetworkRefusalNamesNoPath(t *testing.T) {
 		t.Errorf("Roots = %v, want [%s]", got, root)
 	}
 }
+
+// VV-081: the files the server writes under exports/ and templates/ can be imported back without a copy,
+// and nothing else of the workspace can.
+func TestOpenExportedAcceptsOnlyTheFolderOfTheFilesTheServerWrote(t *testing.T) {
+	ws := t.TempDir()
+	write := func(parts ...string) string {
+		p := filepath.Join(append([]string{ws}, parts...)...)
+		if err := os.MkdirAll(filepath.Dir(p), 0o700); err != nil {
+			t.Fatal(err)
+		}
+
+		if err := os.WriteFile(p, []byte("x"), 0o600); err != nil {
+			t.Fatal(err)
+		}
+
+		return p
+	}
+
+	bundle := write("exports", "prj_1", "bundle.vvbundle")
+	tmpl := write("templates", "t.vvtemplate")
+	secret := write("token")
+
+	g, err := New(Config{Workspace: ws})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, p := range []string{bundle, tmpl} {
+		f, err := g.OpenExported(p)
+		if err != nil {
+			t.Fatalf("OpenExported(%s) = %v", p, err)
+		}
+
+		_ = f.Close()
+
+		if _, err := g.OpenImport(p); code(err) != CodePathNotAllowed {
+			t.Errorf("OpenImport(%s) = %v, a medium must still be refused", p, err)
+		}
+	}
+
+	if _, err := g.OpenExported(secret); code(err) != CodePathNotAllowed {
+		t.Errorf("OpenExported(token) = %v, want E_PATH_NOT_ALLOWED", err)
+	}
+
+	net, err := New(Config{Workspace: ws, Network: true, Roots: []string{t.TempDir()}})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := net.OpenExported(bundle); code(err) != CodePathNotAllowed {
+		t.Errorf("network mode: %v, want E_PATH_NOT_ALLOWED", err)
+	}
+}
