@@ -11,6 +11,8 @@ export interface DesktopBridge {
 	onDropPaths?: (callback: (paths: string[]) => void) => Unsubscribe;
 	pickTemplate?: () => Promise<string[]>;
 	showInFolder?: (path: string) => Promise<unknown>;
+	// The native menu calls an action id of the editor menu (SDD-012 section 6.4).
+	onMenuAction?: (callback: (action: string) => void) => Unsubscribe;
 }
 
 // The shell runs its script after the page loads, so the bridge can appear
@@ -44,6 +46,10 @@ export function canPickTemplate(bridge: DesktopBridge | null): boolean {
 
 export function canDropPaths(bridge: DesktopBridge | null): boolean {
 	return typeof bridge?.onDropPaths === "function";
+}
+
+export function canMenuAction(bridge: DesktopBridge | null): boolean {
+	return typeof bridge?.onMenuAction === "function";
 }
 
 export function canShowInFolder(bridge: DesktopBridge | null): boolean {

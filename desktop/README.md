@@ -8,7 +8,7 @@ editing logic or renderer code, and nothing imports `core/` or `engine/`.
 | `detect/` | The feature-detection page and its server (SDD-012 section 21.2) | built; see its README |
 | `results/` | One results file per tested webview | filled by P3-DSK-001 |
 | `shell/` | Package `shell`, with no window toolkit: the bridge `window.vukemDesktop` (`bridge.go`: message parsing, the page script, the answer script), starts and stops `vukem-video serve` on a free loopback port, reads `runtime.json` and the local token, waits for `/up`, reports a startup failure as a typed error (`process.go`), obtains the one-time launch address after a handshake (`launch.go`); the navigation policy `Allowed(url, port)` and `GuardScript` (`navigate.go`) | built, tested with a fake server |
-| `shell/app/` | The window: Wails v3 v3.1.0, one window on the local address, native menu (Quit, Reload, About, Open workspace folder, Toggle full screen on F11), the native file dialog and file drops of the bridge, a dialog for a startup failure. A Go module of its own | builds on the three systems; run on Windows 11 (screenshot in `results/windows/`) |
+| `shell/app/` | The window: Wails v3 v3.1.0, one window on the local address, native menu (File, Edit, Clip, Timeline, View and Help, Quit, Reload, About, Open workspace folder, Toggle full screen on F11), the native file dialog and file drops of the bridge, a dialog for a startup failure. A Go module of its own | builds on the three systems; run on Windows 11 (screenshot in `results/windows/`) |
 | `update/` | The auto-update client (SDD-009 section 10.5): off by default, one https GET of a signed feed from one host, SHA-256 and signature of the artifact checked before the shell's `Installer` is called. The feed URL and the public key are build-time values (`-X`) that `desktop.yml` sets from the repository variable `UPDATE_FEED_PUBLIC_KEY`; a build without them has no client. The release signs and publishes the feed (SDD-009 section 10.6) | built, tested against a local https feed |
 | `packaging/` | The unsigned installers of the release (D-033, SDD-009 section 10.6): `windows/` (Inno Setup script and smoke test), `linux/` (`.deb` with `dpkg-deb`), `macos/` (`.dmg` with `hdiutil`), built by `.github/workflows/desktop.yml` | built by CI; not run locally |
 
@@ -60,15 +60,22 @@ while WebView2 starts. The shell:
    `Pdeathsig` on Linux, and on macOS (no parent-death signal) a small watcher in `/bin/sh` that
    ends the server when the shell is gone.
 
-Menu: File (Open workspace folder, Quit), View (Reload, Toggle full screen), Help (About, with the
-version set by `-X main.version`).
+Menu: File (Open project, Import files, Export, Open workspace folder, Quit), Edit, Clip, Timeline,
+View (the panels, Reload, Toggle full screen) and Help (Keyboard shortcuts, updates, About, with the
+version set by `-X main.version`). The editor items come from `shell/menu.go` and are the items of the
+menu table of the page (`web/resources/js/editor/commands/menu.ts`): a click sends the action id to the
+page through `window.vukemDesktop.onMenuAction`, and the page runs the same action as its own control, so
+the shell decides nothing about editing. No editor item is a native accelerator: Undo, Redo and Select
+all only show `Ctrl+Z`, `Ctrl+Shift+Z` and `Ctrl+A` (`Cmd` on macOS), because the key reaches the webview,
+where the editor decides between the undo of a field and the project's (SDD-012 section 21.3 item 4).
+A test of the web unit suite fails when the two tables name different actions.
 
 ## The bridge
 
 After every page load the shell defines `window.vukemDesktop` on the editor page
 (SDD-012 section 13.1 item 2): `pickFiles()` opens the native file dialog and
 resolves with absolute paths, `onDropPaths(cb)` delivers the paths of dropped
-files. The editor sends them to the import API; it never reads the bytes. The
+files, `onMenuAction(cb)` delivers the action id of a clicked menu item. The editor sends them to the import API; it never reads the bytes. The
 shell accepts a message only from the main frame of its own server origin, and
 the only operation it knows is `pickFiles`. Without the object (a browser) the
 editor keeps the pasted-path behaviour.

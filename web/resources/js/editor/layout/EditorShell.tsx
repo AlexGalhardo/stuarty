@@ -25,6 +25,7 @@ import LeftPanel from "./LeftPanel";
 import PlayerRatioSelect from "./PlayerRatioSelect";
 import TopBar from "./TopBar";
 import TrashedBanner from "./TrashedBanner";
+import { useDesktopMenu } from "./useDesktopMenu";
 import { usePanelShortcuts } from "./usePanelShortcuts";
 
 // Panel sizes by viewport width (SDD-012 section 6.3); below 1280 the drawers
@@ -81,6 +82,7 @@ export default function EditorShell({
 	useShellShortcuts();
 	const [captionOpen, setCaptionOpen] = useState(false);
 	useShortcuts(() => setCaptionOpen(true));
+	useDesktopMenu();
 	const openCaption = useCallback(() => setCaptionOpen(true), []);
 	useSurfaceRequest("add_caption", openCaption);
 
