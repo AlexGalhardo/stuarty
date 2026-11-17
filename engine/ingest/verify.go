@@ -240,7 +240,7 @@ func faststart(path string) (bool, error) {
 // verifyVideo is SDD-011 5.1 for a video asset: it decodes what was produced and compares it with the plan.
 func (j *job) verifyVideo(ctx context.Context, plan VideoPlan, frames int, samples int64) error {
 	c := &checks{}
-	deadline := ffmpeg.IngestDeadline(time.Duration(j.durationMS) * time.Millisecond)
+	deadline := ffmpeg.IngestDeadlineFor(time.Duration(j.durationMS)*time.Millisecond, j.res.Summary.SizeBytes)
 	hasAudio := j.res.Facts.HasAudio
 	err := parallel(
 		func() error { return j.checkNormalizedVideo(ctx, c, plan, frames, deadline) },
@@ -524,7 +524,7 @@ func (j *job) checkAudioArtifacts(c *checks, samples int64) {
 // verifyAudioOnly is SDD-011 5.1 for an audio asset.
 func (j *job) verifyAudioOnly(ctx context.Context) error {
 	c := &checks{}
-	deadline := ffmpeg.IngestDeadline(time.Duration(j.durationMS) * time.Millisecond)
+	deadline := ffmpeg.IngestDeadlineFor(time.Duration(j.durationMS)*time.Millisecond, j.res.Summary.SizeBytes)
 	samples := j.res.Facts.SampleCount
 	f, err := os.Open(j.path("normalized.wav"))
 	if err != nil {

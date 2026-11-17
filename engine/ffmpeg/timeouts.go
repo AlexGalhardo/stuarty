@@ -32,6 +32,12 @@ func IngestDeadline(media time.Duration) time.Duration {
 	return capped(60*time.Second+3*media, 4*time.Hour)
 }
 
+// IngestDeadlineFor is IngestDeadline plus 1 s per MiB of the source file: a heavy intermediate codec
+// (ProRes 4444 with alpha) takes time in proportion to its bytes, not to its duration.
+func IngestDeadlineFor(media time.Duration, sizeBytes int64) time.Duration {
+	return capped(60*time.Second+3*media+time.Duration(max(sizeBytes, 0)>>20)*time.Second, 4*time.Hour)
+}
+
 // ExportDeadline is 120 s + 6 x timeline duration, at most 2 h.
 func ExportDeadline(timeline time.Duration) time.Duration {
 	return capped(120*time.Second+6*timeline, 2*time.Hour)

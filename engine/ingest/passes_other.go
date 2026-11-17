@@ -31,7 +31,7 @@ func (j *job) audioOnly(ctx context.Context) error {
 	j.res.Plan = struct {
 		StreamIndex int `json:"stream_index"`
 	}{sum.Audio.StreamIndex}
-	deadline := ffmpeg.IngestDeadline(time.Duration(sum.DurationMS) * time.Millisecond)
+	deadline := ffmpeg.IngestDeadlineFor(time.Duration(sum.DurationMS)*time.Millisecond, sum.SizeBytes)
 	err := j.timed(StepAudio, func() error {
 		cmd := ffargs.Cmd{
 			Progress: true, LogErrorOnly: true, Inputs: []ffargs.Input{ffargs.FileInput(j.original)},

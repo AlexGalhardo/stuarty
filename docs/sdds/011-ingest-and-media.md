@@ -864,7 +864,7 @@ Without a step the remaining weights are renormalized to sum to 1. Updates are w
 
 NFR-005 (PRD 001): ingest of a 60 s 1080p phone clip completes within 30 s. **How it is measured (A-23):** wall time from the call to `MediaImport` to the `asset.updated` event with `state: "ready"`, on the reference machine of the spikes, idle (CPU load below 20% over the minute before), with the fixture `ingest-60s-1080p.mp4` of 11.2. The benchmark prints the per-step `timings_ms` from the job result. From the parts measured in this SDD the expected total is 17 to 19 s, so a machine twice as slow still meets 30 s; under load the same work took up to seven times longer (1.4).
 
-Deadlines (SDD-007 §6.5): every FFmpeg run of ingest gets `60 s + 3 x media duration`, at most 4 h; the deadline of the job handler is that ceiling plus 10 min (SDD-005 §14). Expiry is `E_INGEST_FAILED` with `reason: timeout`.
+Deadlines (SDD-007 §6.5): every FFmpeg run of ingest gets `60 s + 3 x media duration + 1 s per MiB of the source file`, at most 4 h (the size term is for intermediate codecs such as ProRes 4444, whose decode time follows the bytes); the deadline of the job handler is that ceiling plus 10 min (SDD-005 §14). Expiry is `E_INGEST_FAILED` with `reason: timeout`.
 
 ### 7.6 Concurrency
 

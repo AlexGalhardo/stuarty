@@ -50,7 +50,7 @@ func (j *job) video(ctx context.Context) error {
 	plan := PlanVideo(sum, j.in.Caps)
 	j.res.Plan = plan
 	hasAudio := sum.Audio != nil
-	deadline := ffmpeg.IngestDeadline(time.Duration(sum.DurationMS) * time.Millisecond)
+	deadline := ffmpeg.IngestDeadlineFor(time.Duration(sum.DurationMS)*time.Millisecond, sum.SizeBytes)
 
 	var frames int
 	if err := j.timed(StepVideo, func() error {
