@@ -130,3 +130,17 @@ func TestEditHelpShowsTheBatchFormat(t *testing.T) {
 		}
 	}
 }
+
+// VV-114: the mcp command names the workspace and the server in serverInfo.
+func TestMCPDescription(t *testing.T) {
+	t.Parallel()
+
+	if got, want := mcpDescription("/w", "http://127.0.0.1:3401"),
+		"Vukem Video MCP server for the workspace /w, server http://127.0.0.1:3401"; got != want {
+		t.Errorf("description = %q, want %q", got, want)
+	}
+
+	if got := mcpDescription("", ""); got != "Vukem Video MCP server" {
+		t.Errorf("description = %q", got)
+	}
+}

@@ -622,3 +622,14 @@ func TestValidationSaysWhatIsAccepted(t *testing.T) {
 		}
 	}
 }
+
+// VV-114: serverInfo says which workspace and server the tools act on.
+func TestServerInfoCarriesTheDescription(t *testing.T) {
+	t.Parallel()
+
+	cs := connect(t, newService(t), Options{Description: "Vukem Video MCP server for the workspace W"}, "x")
+
+	if got := cs.InitializeResult().ServerInfo.Description; got != "Vukem Video MCP server for the workspace W" {
+		t.Errorf("serverInfo.description = %q", got)
+	}
+}

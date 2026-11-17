@@ -43,6 +43,8 @@ type Connection struct {
 	InProcess bool
 	// Workspace is the directory the human note names.
 	Workspace string
+	// Server is the address of the server the Service talks to; empty when this process is the owner.
+	Server string
 	// Close releases the workspace lock of an in-process connection; may be nil.
 	Close func() error
 	// Events opens the event stream of a project on the server; nil when no

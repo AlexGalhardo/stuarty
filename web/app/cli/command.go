@@ -25,6 +25,8 @@ type call struct {
 	// inProcess is true when this process owns the workspace: the person at the
 	// terminal of the owner machine, who may install helpers and sweep the workspace.
 	inProcess bool
+	// workspace and server say which workspace and which server answer (the mcp command reports them).
+	workspace, server string
 }
 
 type handler func(ctx context.Context, c *call) (*output, error)
@@ -176,6 +178,7 @@ func (rt *Runtime) Execute(ctx context.Context, name string, args []string) int 
 	c.events = conn.Events
 	c.download = conn.Download
 	c.inProcess = conn.InProcess
+	c.workspace, c.server = conn.Workspace, conn.Server
 
 	if !s.stream {
 		label, _ := actorFrom(p.str("actor"))

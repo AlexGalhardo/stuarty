@@ -319,6 +319,22 @@ var version = &spec{
 	},
 }
 
+// mcpDescription tells the client which workspace and server its tools act on, because a server
+// started without VUKEM_VIDEO_HOME or VUKEM_VIDEO_ADDR opens the default workspace of the user (VV-114).
+func mcpDescription(workspace, server string) string {
+	text := "Vukem Video MCP server"
+
+	if workspace != "" {
+		text += " for the workspace " + workspace
+	}
+
+	if server != "" {
+		text += ", server " + server
+	}
+
+	return text
+}
+
 // mcpCmd serves the MCP tools on standard input and output (SDD-003 section
 // 4.5). The Service is the one the resolver found: the owner of the workspace
 // over HTTP, or this process. It stops when the client closes standard input.
@@ -332,7 +348,7 @@ var mcpCmd = &spec{
 	example: "claude mcp add vukem-video -- vukem-video mcp",
 	stream:  true,
 	run: func(ctx context.Context, c *call) (*output, error) {
-		o := mcp.Options{}
+		o := mcp.Options{Description: mcpDescription(c.workspace, c.server)}
 		if c.args.has("actor") {
 			o.Actor = c.args.str("actor")
 		}
