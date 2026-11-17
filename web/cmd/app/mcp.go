@@ -97,7 +97,13 @@ func becomeOwner(
 			return nil, err
 		}
 
-		return &cli.Connection{Service: ow.Service, InProcess: true, Workspace: string(ow.Dir), Close: stop}, nil
+		conn := &cli.Connection{Service: ow.Service, InProcess: true, Workspace: string(ow.Dir), Close: stop}
+
+		if rt, err := ow.Dir.ReadRuntime(); err == nil {
+			conn.Server = "http://" + rt.Addr
+		}
+
+		return conn, nil
 	}
 }
 

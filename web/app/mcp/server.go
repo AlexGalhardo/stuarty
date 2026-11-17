@@ -31,6 +31,8 @@ type Options struct {
 	// Session is the id of the MCP session in the actor label; empty makes a random one.
 	// A stdio server serves one client for the life of the process, so this is that client.
 	Session string
+	// Description is shown in serverInfo: which workspace and server the tools act on.
+	Description string
 	// Registry is the command registry of the build, which decides the operations
 	// edit offers; default command.Default().
 	Registry *command.Registry
@@ -65,14 +67,17 @@ func New(svc service.Service, o Options) (*sdk.Server, error) {
 		return nil, err
 	}
 
-	srv := sdk.NewServer(&sdk.Implementation{Name: "vukem-video", Version: o.Version}, &sdk.ServerOptions{
-		Instructions: agentdocs.Instructions(),
-		SetCacheable: func(_ context.Context, req sdk.Request, c *sdk.Cacheable) {
-			if req.GetParams() != nil && isToolsList(req) {
-				c.TTLMs, c.CacheScope = listTTLMs, "public"
-			}
+	srv := sdk.NewServer(
+		&sdk.Implementation{Name: "vukem-video", Version: o.Version, Description: o.Description},
+		&sdk.ServerOptions{
+			Instructions: agentdocs.Instructions(),
+			SetCacheable: func(_ context.Context, req sdk.Request, c *sdk.Cacheable) {
+				if req.GetParams() != nil && isToolsList(req) {
+					c.TTLMs, c.CacheScope = listTTLMs, "public"
+				}
+			},
 		},
-	})
+	)
 
 	srv.AddReceivingMiddleware(inTableOrder)
 
