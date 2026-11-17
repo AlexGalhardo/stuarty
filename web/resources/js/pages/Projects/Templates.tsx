@@ -20,7 +20,11 @@ import {
 import { useT } from "@/lib/i18n";
 import { createClient } from "../../editor/api/client";
 import { HttpTransport } from "../../editor/api/http";
-import type { BrandKit, TemplateSummary } from "../../editor/api/types";
+import type {
+	BrandKit,
+	TemplateResult,
+	TemplateSummary,
+} from "../../editor/api/types";
 import { templateFileUrl } from "../../editor/api/urls";
 import { clearOtherAlerts, useClearAlertOnOtherSubmit } from "./formAlerts";
 
@@ -30,6 +34,21 @@ type Loaded =
 	| { state: "loading" }
 	| { state: "failed" }
 	| { state: "ready"; templates: TemplateSummary[] };
+
+export type ImportOutcome = "new" | "same_file" | "same_name";
+
+// What an import brought, from the answer of the service and the list shown before it. The service
+// says when the same content was already stored and created nothing (VV-128); a template of the
+// same name with other content is a second one, and the person is told so.
+export function importOutcome(
+	result: TemplateResult,
+	known: readonly TemplateSummary[],
+): ImportOutcome {
+	if (result.deduplicated === true) return "same_file";
+	return known.some((item) => item.name === result.template.name)
+		? "same_name"
+		: "new";
+}
 
 function TemplateRow({
 	template,
@@ -176,7 +195,7 @@ export default function Templates(): ReactNode {
 	const [importing, setImporting] = useState(false);
 	const [imported, setImported] = useState<{
 		name: string;
-		duplicate: boolean;
+		outcome: ImportOutcome;
 	} | null>(null);
 	const [kit, setKit] = useState<BrandKit | null>(null);
 	const bridge = useSyncExternalStore(
@@ -231,12 +250,11 @@ export default function Templates(): ReactNode {
 			const result = await createClient(
 				new HttpTransport("/api/v1"),
 			).importTemplate(path.trim());
-			// The list is read again below; a template of the same name already on it says the file
-			// was imported before (VV-128).
-			const duplicate =
-				loaded.state === "ready" &&
-				loaded.templates.some((known) => known.name === result.template.name);
-			setImported({ name: result.template.name, duplicate });
+			const outcome = importOutcome(
+				result,
+				loaded.state === "ready" ? loaded.templates : [],
+			);
+			setImported({ name: result.template.name, outcome });
 			setPath("");
 			await load();
 		} catch (error) {
@@ -256,11 +274,15 @@ export default function Templates(): ReactNode {
 				<p role="status" className="mt-2 text-sm">
 					{t("ui.projects.templates.imported")}{" "}
 					<UntrustedText>{imported.name}</UntrustedText>
-					{imported.duplicate && (
+					{imported.outcome !== "new" && (
 						<>
 							{" "}
 							<span className="text-muted-foreground">
-								{t("ui.projects.templates.imported_again")}
+								{t(
+									imported.outcome === "same_file"
+										? "ui.projects.templates.imported_same_file"
+										: "ui.projects.templates.imported_again",
+								)}
 							</span>
 						</>
 					)}

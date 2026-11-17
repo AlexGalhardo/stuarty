@@ -1,3 +1,6 @@
+import { mkdirSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import type { Page } from "@playwright/test";
 import { caller, expect, seedProject, test } from "./helpers";
 
@@ -259,5 +262,36 @@ test.describe("templates", () => {
 		await expect(page.getByRole("button", { name: "Choose file" })).toHaveCount(
 			0,
 		);
+	});
+
+	// VV-128: importing the same file again says so and adds no second template.
+	test("importing the same template file twice says it was already imported", async ({
+		page,
+	}) => {
+		await page.goto("/projects");
+		const rows = page.locator("[data-template-id]");
+		await expect(rows.first()).toBeVisible();
+		const id = (await rows.first().getAttribute("data-template-id")) as string;
+		const file = await page.request.get(`/api/v1/templates/${id}/file`);
+		expect(file.ok()).toBe(true);
+		const dir = join(tmpdir(), "vukem-video-e2e-template-import");
+		mkdirSync(dir, { recursive: true });
+		const path = join(dir, `again-${Date.now()}.vukem-template.zip`);
+		writeFileSync(path, await file.body());
+
+		const field = page.getByLabel("Path of a template file on this computer");
+		await field.fill(path);
+		await page.getByRole("button", { name: "Import template" }).click();
+		await expect(
+			page.getByRole("status").filter({ hasText: "Imported:" }),
+		).toBeVisible();
+		const count = await rows.count();
+
+		await field.fill(path);
+		await page.getByRole("button", { name: "Import template" }).click();
+		await expect(
+			page.getByText("This file was already imported, so nothing was added."),
+		).toBeVisible();
+		await expect(rows).toHaveCount(count);
 	});
 });
