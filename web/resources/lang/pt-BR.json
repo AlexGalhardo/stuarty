@@ -413,7 +413,8 @@
         "copy_attributes": "Copiar atributos",
         "paste_attributes": "Colar atributos",
         "enable": "Ativar",
-        "disable": "Desativar"
+        "disable": "Desativar",
+        "repeat": "Repetir…"
       },
       "caption": {
         "title": "Adicionar legenda",
@@ -1108,7 +1109,19 @@
         "silences_title": "Silêncios",
         "min_silence": "Silêncio mínimo",
         "padding": "Margem",
-        "remove_silences": "Remover silêncios"
+        "remove_silences": "Remover silêncios",
+        "shadow_title": "Sombra",
+        "shadow_on": "Sombra",
+        "shadow_color": "Cor da sombra",
+        "shadow_dx": "Deslocamento X da sombra",
+        "shadow_dy": "Deslocamento Y da sombra",
+        "shadow_blur": "Desfoque da sombra",
+        "shadow_opacity": "Opacidade da sombra",
+        "outline_title": "Contorno",
+        "outline_on": "Contorno",
+        "outline_color": "Cor do contorno",
+        "outline_width": "Espessura do contorno",
+        "framing_keyframed": "{property} tem quadros-chave"
       },
       "inspector": {
         "name": "Nome",
@@ -1318,7 +1331,16 @@
           "saturation": "Saturação",
           "temperature": "Temperatura",
           "tint": "Tonalidade",
-          "hue": "Matiz"
+          "hue": "Matiz",
+          "mask_x": "Máscara X",
+          "mask_y": "Máscara Y",
+          "mask_width": "Largura da máscara",
+          "mask_height": "Altura da máscara",
+          "mask_feather": "Suavização da máscara",
+          "crop_left": "Corte à esquerda",
+          "crop_top": "Corte em cima",
+          "crop_right": "Corte à direita",
+          "crop_bottom": "Corte embaixo"
         },
         "easing_name": {
           "linear": "Linear",
@@ -1476,6 +1498,21 @@
         },
         "dismiss": "Entendi",
         "show_again": "Mostrar as dicas de novo"
+      },
+      "repeat": {
+        "title": "Repetir item",
+        "hint": "Adiciona cópias do item logo depois dele.",
+        "mode": "Repetir por",
+        "mode_copies": "Número de cópias",
+        "mode_until": "Até um tempo",
+        "copies": "Cópias",
+        "until": "Termina em",
+        "ripple": "Mover os itens seguintes",
+        "link": "Vincular as cópias",
+        "invalid_copies": "Digite um número inteiro de cópias.",
+        "invalid_until": "Digite um tempo como 12s, 90f ou 00:00:12.",
+        "cancel": "Cancelar",
+        "confirm": "Repetir"
       }
     },
     "login": {

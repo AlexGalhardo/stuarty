@@ -13,6 +13,7 @@ import { selectFps } from "../state/selectors";
 import EditToolbar from "../timeline/EditToolbar";
 import { useCanvasPort } from "../timeline/gestures/transformDrag";
 import Notices from "../timeline/Notices";
+import RepeatDialog from "../timeline/RepeatDialog";
 import Timeline from "../timeline/Timeline";
 import { useShortcuts } from "../timeline/useShortcuts";
 import { FailureView } from "../ui/FailureView";
@@ -162,6 +163,7 @@ export default function EditorShell({
 			<FindBar />
 			<LiveRegion />
 			<InUseHost />
+			<RepeatDialog />
 		</div>
 	);
 }

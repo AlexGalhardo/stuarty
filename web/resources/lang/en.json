@@ -413,7 +413,8 @@
         "copy_attributes": "Copy attributes",
         "paste_attributes": "Paste attributes",
         "enable": "Turn on",
-        "disable": "Turn off"
+        "disable": "Turn off",
+        "repeat": "Repeat…"
       },
       "caption": {
         "title": "Add caption",
@@ -1108,7 +1109,19 @@
         "silences_title": "Silences",
         "min_silence": "Minimum silence",
         "padding": "Padding",
-        "remove_silences": "Remove silences"
+        "remove_silences": "Remove silences",
+        "shadow_title": "Shadow",
+        "shadow_on": "Shadow",
+        "shadow_color": "Shadow colour",
+        "shadow_dx": "Shadow X offset",
+        "shadow_dy": "Shadow Y offset",
+        "shadow_blur": "Shadow blur",
+        "shadow_opacity": "Shadow opacity",
+        "outline_title": "Outline",
+        "outline_on": "Outline",
+        "outline_color": "Outline colour",
+        "outline_width": "Outline width",
+        "framing_keyframed": "{property} has keyframes"
       },
       "inspector": {
         "name": "Name",
@@ -1318,7 +1331,16 @@
           "saturation": "Saturation",
           "temperature": "Temperature",
           "tint": "Tint",
-          "hue": "Hue"
+          "hue": "Hue",
+          "mask_x": "Mask X",
+          "mask_y": "Mask Y",
+          "mask_width": "Mask width",
+          "mask_height": "Mask height",
+          "mask_feather": "Mask feather",
+          "crop_left": "Crop left",
+          "crop_top": "Crop top",
+          "crop_right": "Crop right",
+          "crop_bottom": "Crop bottom"
         },
         "easing_name": {
           "linear": "Linear",
@@ -1476,6 +1498,21 @@
         },
         "dismiss": "Got it",
         "show_again": "Show tips again"
+      },
+      "repeat": {
+        "title": "Repeat item",
+        "hint": "Adds copies of the item right after it.",
+        "mode": "Repeat by",
+        "mode_copies": "Number of copies",
+        "mode_until": "Until a time",
+        "copies": "Copies",
+        "until": "Ends at",
+        "ripple": "Move later items",
+        "link": "Link the copies",
+        "invalid_copies": "Enter a whole number of copies.",
+        "invalid_until": "Enter a time such as 12s, 90f or 00:00:12.",
+        "cancel": "Cancel",
+        "confirm": "Repeat"
       }
     },
     "login": {

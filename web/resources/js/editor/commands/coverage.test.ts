@@ -46,16 +46,19 @@ import {
 	markerSetOperations,
 	maskOperations,
 	moveOperations,
+	outlineOperations,
 	pasteAttributesOperations,
 	presetOperations,
 	projectRenameOperations,
 	reframeOperations,
 	removeAssetOperations,
 	renameOperations,
+	repeatOperations,
 	reverseOperations,
 	rollOperations,
 	settingsFpsOperations,
 	settingsSetOperations,
+	shadowOperations,
 	shapeAddOperations,
 	shapeSetOperations,
 	silenceOperations,
@@ -156,10 +159,10 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 		expect(coverageProblems(commands, COVERAGE, BUILD)).toEqual([]);
 	});
 
-	test("every non-internal command has a key: 47 of ALPHA and the 22 of BETA", () => {
+	test("every non-internal command has a key: 47 of ALPHA and the 25 of BETA", () => {
 		const keys = commands.filter((c) => !c.internal).map((c) => c.name);
 		expect(Object.keys(COVERAGE).sort()).toEqual(keys.sort());
-		expect(keys).toHaveLength(70);
+		expect(keys).toHaveLength(73);
 	});
 
 	test("the full BETA phase rule holds: every command has a BETA entry point and a palette entry", () => {
@@ -322,6 +325,11 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 			"timeline.toggle_enabled": enabledOperations("itm_a", false).map(
 				(o) => o.op,
 			),
+			"timeline.repeat": repeatOperations("itm_a", { copies: 2 }).map(
+				(o) => o.op,
+			),
+			"inspector.shadow": shadowOperations("itm_a", null).map((o) => o.op),
+			"inspector.outline": outlineOperations("itm_a", null).map((o) => o.op),
 			"inspector.enabled": enabledOperations("itm_a", true).map((o) => o.op),
 			"inspector.blend": blendOperations("itm_a", "screen").map((o) => o.op),
 			"inspector.mask": maskOperations("itm_a", null).map((o) => o.op),
