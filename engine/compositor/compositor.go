@@ -33,6 +33,12 @@ type Image struct {
 	W, H int
 	// Opaque says every alpha is 255, which lets a copy skip blending (a decoded video frame).
 	Opaque bool
+	// FullW and FullH, when not zero, say the pixels are only the visible window of a layer drawn FullW by
+	// FullH, whose top-left corner is at (OffX, OffY) of that full image. The decoder delivers a window when
+	// a cover fit lets most of the layer fall outside the frame, so it does not scale pixels nobody sees.
+	// The compositor copies a window only for a layer that is not rotated, flipped, blurred, masked or
+	// changed by an effect; the frame source gives a window to no other.
+	FullW, FullH, OffX, OffY int
 }
 
 // MediaSource returns the pixels of a media layer: the decoded frame of the source or the decoded
@@ -154,6 +160,9 @@ func (c *Compositor) layer(dst *image.RGBA, l *plan.Layer, fp *plan.FramePlan, o
 	if !(p.w > 0 && p.h > 0) || src.W <= 0 || src.H <= 0 || len(src.Pix) < src.W*src.H*4 {
 		return nil
 	}
+	if src.FullW != 0 && !windowDrawable(src, l, p) {
+		return fmt.Errorf("%w: a window of a layer that is transformed", ErrSource)
+	}
 	if l.Kind == plan.Bitmap {
 		src = c.shrunk(l.Bitmap.Key(), src, round(p.w), round(p.h))
 	}
@@ -204,6 +213,13 @@ func (c *Compositor) layer(dst *image.RGBA, l *plan.Layer, fp *plan.FramePlan, o
 	return nil
 }
 
+// windowDrawable says a windowed source can be copied as it is: the layer is drawn at the size of the
+// full image, not turned, and nothing reads the pixels outside the window.
+func windowDrawable(src Image, l *plan.Layer, p placement) bool {
+	return l.Kind == plan.Media && p.rot == 0 && src.FullW == round(p.w) && src.FullH == round(p.h) &&
+		!l.FlipX && !l.FlipY && l.Blur == 0 && l.Mask == nil && l.Transition == nil && len(l.Effects) == 0
+}
+
 // shrunk is src box-filtered down to w by h when it is at least twice as large in both directions, as a
 // bitmap is when a small frame (an agent's view) is composed from the full-size spec: bilinear alone
 // would point-sample the text and make it shimmer. The result is cached with the bitmap.
@@ -225,6 +241,10 @@ func (c *Compositor) shrunk(key string, src Image, w, h int) Image {
 func round(v float64) int { return int(math.Floor(v + 0.5)) }
 
 func (c *Compositor) draw(dst *image.RGBA, src Image, p placement, op uint32, mode blendMode, mask *maskState) {
+	if src.FullW != 0 {
+		c.blit(dst, src, round(p.cx-p.w/2)+src.OffX, round(p.cy-p.h/2)+src.OffY, op, mode, mask)
+		return
+	}
 	if p.rot == 0 && src.W == round(p.w) && src.H == round(p.h) {
 		c.blit(dst, src, round(p.cx-p.w/2), round(p.cy-p.h/2), op, mode, mask)
 		return

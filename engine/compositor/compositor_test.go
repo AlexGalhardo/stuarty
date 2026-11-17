@@ -387,3 +387,52 @@ func BenchmarkSampleRotatedFullFrame8Bands(b *testing.B) { benchSample(b, 8, 3) 
 
 // The copy path: a full-frame layer at the same size.
 func BenchmarkCopyFullFrame(b *testing.B) { benchSample(b, 1, 0) }
+
+// A window of a layer that reaches outside the frame draws the same pixels as the whole layer cut by the
+// frame (VV-162), and a window of a layer that is turned is refused.
+func TestWindowedSourceEqualsTheWholeLayer(t *testing.T) {
+	t.Parallel()
+
+	full := benchTestImage(300, 200)
+	const fw, fh = 100, 200
+
+	// The layer is 300 by 200, centred in a 100 by 200 frame: columns 100 to 199 are visible.
+	whole := image.NewRGBA(image.Rect(0, 0, fw, fh))
+	layer := plan.Layer{ItemID: "a", Kind: plan.Media, CX: 50, CY: 100, W: 300, H: 200, Opacity: 1}
+	fp := plan.FramePlan{Background: "#000000", Layers: []plan.Layer{layer}}
+
+	c := &Compositor{Media: func(*plan.Layer) (Image, error) { return full, nil }}
+	if err := c.Compose(whole, fp, 1); err != nil {
+		t.Fatal(err)
+	}
+
+	win := Image{W: fw, H: fh, Opaque: true, FullW: 300, FullH: 200, OffX: 100, OffY: 0, Pix: make([]byte, fw*fh*4)}
+	for y := range fh {
+		copy(win.Pix[y*fw*4:(y+1)*fw*4], full.Pix[(y*300+100)*4:(y*300+200)*4])
+	}
+
+	got := image.NewRGBA(image.Rect(0, 0, fw, fh))
+	c = &Compositor{Media: func(*plan.Layer) (Image, error) { return win, nil }}
+
+	if err := c.Compose(got, fp, 1); err != nil {
+		t.Fatal(err)
+	}
+
+	if !bytes.Equal(got.Pix, whole.Pix) {
+		t.Error("the windowed layer differs from the whole layer")
+	}
+
+	fp.Layers[0].FlipX = true
+	if err := c.Compose(got, fp, 1); err == nil {
+		t.Error("a flipped layer drew a window")
+	}
+}
+
+func benchTestImage(w, h int) Image {
+	pix := make([]byte, w*h*4)
+	for i := 0; i < len(pix); i += 4 {
+		pix[i], pix[i+1], pix[i+2], pix[i+3] = byte(i/4%251), byte(i/4/7%241), byte(i/4/13%239), 255
+	}
+
+	return Image{Pix: pix, W: w, H: h, Opaque: true}
+}

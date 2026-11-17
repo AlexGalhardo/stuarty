@@ -29,7 +29,16 @@ import (
 // (SDD-004 section 6, pre-scaling, and section 12 rule 1).
 type layerInfo struct {
 	w, h, rot float64
+	cx, cy    float64
 	constant  bool
+	// plain says no frame of the item flips, blurs, masks, transitions or applies an effect to it, and the
+	// centre never moves: the visible part of the layer is the same on every frame, so the decoder may
+	// deliver only that part (compositor.Image.FullW).
+	plain bool
+}
+
+func isPlain(l *plan.Layer) bool {
+	return !l.FlipX && !l.FlipY && l.Blur == 0 && l.Mask == nil && l.Transition == nil && len(l.Effects) == 0
 }
 
 // scanLayers plans every frame once and records, for each media item, whether its size and rotation are
@@ -45,11 +54,17 @@ func (s *state) scanLayers() map[string]*layerInfo {
 			}
 			in, ok := infos[l.ItemID]
 			if !ok {
-				infos[l.ItemID] = &layerInfo{w: l.W, h: l.H, rot: l.Rotation, constant: l.Rotation == 0}
+				infos[l.ItemID] = &layerInfo{
+					w: l.W, h: l.H, rot: l.Rotation, cx: l.CX, cy: l.CY,
+					constant: l.Rotation == 0, plain: isPlain(l),
+				}
 				continue
 			}
 			if l.W != in.w || l.H != in.h || l.Rotation != in.rot {
 				in.constant = false
+			}
+			if l.CX != in.cx || l.CY != in.cy || !isPlain(l) {
+				in.plain = false
 			}
 		}
 	}
@@ -189,7 +204,58 @@ func (f *frameSource) video(l *plan.Layer, a *timeline.Asset) (compositor.Image,
 	if err != nil {
 		return compositor.Image{}, err
 	}
-	return compositor.Image{Pix: pix, W: d.w, H: d.h, Opaque: !a.HasAlpha}, nil
+	img := compositor.Image{Pix: pix, W: d.w, H: d.h, Opaque: !a.HasAlpha}
+	if d.win.full {
+		img.FullW, img.FullH, img.OffX, img.OffY = d.win.fullW, d.win.fullH, d.win.x, d.win.y
+	}
+
+	return img, nil
+}
+
+// visibleWindow is the part of a drawn layer that lies inside the frame, and the part of the (already
+// cropped) source that covers it.
+type visibleWindow struct {
+	full         bool // false: deliver the whole drawn size
+	fullW, fullH int  // the drawn size
+	x, y, w, h   int  // the window in drawn pixels
+	sx, sy       int  // the source rectangle that covers it, in pixels of the cropped source
+	sw, sh       int
+}
+
+// window is the visible window of a layer the decoder delivers at its drawn size w by h, when the layer
+// is static for its whole item and more than a fifth of it falls outside the frame. The window is
+// scaled from the source pixels under it, so the pixels differ from scaling the whole layer and cutting
+// it only in the sub-pixel phase of the scaler.
+func (f *frameSource) window(l *plan.Layer, cw, ch, w, h int) visibleWindow {
+	in := f.infos[l.ItemID]
+	if f.s.single || in == nil || !in.constant || !in.plain || f.s.job.PixelRenderer == PixelRendererRust ||
+		f.s.job.PixelRenderer == PixelRendererGPU || w < 1 || h < 1 {
+		return visibleWindow{}
+	}
+
+	st := f.s.job.Doc.Settings
+	fw, fh := max(round(float64(st.Width)*f.s.scale), 1), max(round(float64(st.Height)*f.s.scale), 1)
+	x0 := round(l.CX*f.s.scale - float64(w)/2)
+	y0 := round(l.CY*f.s.scale - float64(h)/2)
+	vx0, vy0 := max(-x0, 0), max(-y0, 0)
+	vx1, vy1 := min(w, fw-x0), min(h, fh-y0)
+
+	if vx1 <= vx0 || vy1 <= vy0 || 5*(vx1-vx0)*(vy1-vy0) > 4*w*h {
+		return visibleWindow{}
+	}
+
+	kx, ky := float64(w)/float64(cw), float64(h)/float64(ch)
+	sx0, sx1 := round(float64(vx0)/kx), min(round(float64(vx1)/kx), cw)
+	sy0, sy1 := round(float64(vy0)/ky), min(round(float64(vy1)/ky), ch)
+
+	if sx1 <= sx0 || sy1 <= sy0 {
+		return visibleWindow{}
+	}
+
+	return visibleWindow{
+		full: true, fullW: w, fullH: h, x: vx0, y: vy0, w: vx1 - vx0, h: vy1 - vy0,
+		sx: sx0, sy: sy0, sw: sx1 - sx0, sh: sy1 - sy0,
+	}
 }
 
 // decoder is the decoder of the clip of the layer, made on the first use.
@@ -199,6 +265,7 @@ func (f *frameSource) decoder(l *plan.Layer, a *timeline.Asset) (*videoDecoder, 
 	if d == nil {
 		cx, cy, cw, ch := cropRect(l, a)
 		w, h, _ := f.target(l, cw, ch)
+		win := f.window(l, cw, ch, w, h)
 		path, err := f.s.artifact(a, "mov")
 		if err != nil {
 			return nil, err
@@ -207,12 +274,19 @@ func (f *frameSource) decoder(l *plan.Layer, a *timeline.Asset) (*videoDecoder, 
 		if cx != 0 || cy != 0 || cw != a.Width || ch != a.Height {
 			vf = append(vf, ffargs.CropRect(cw, ch, cx, cy)...)
 		}
+		if win.full {
+			// Scaling the whole drawn size costs in proportion to its pixels (a landscape clip covering a
+			// portrait frame is 2.5 times the frame), so only the visible part of the source is scaled.
+			vf = append(vf, ffargs.CropRect(win.sw, win.sh, win.sx, win.sy)...)
+			w, h = win.w, win.h
+		}
 		vf = append(vf, ffargs.ScaleFrameToRGBA(w, h), ffargs.Format("rgba"))
 		d = &videoDecoder{
 			s:     f.s,
 			path:  path,
 			w:     w,
 			h:     h,
+			win:   win,
 			vf:    ffargs.Chain1(vf...),
 			rate:  a.FrameRate,
 			item:  l.ItemID,
@@ -286,6 +360,7 @@ type videoDecoder struct {
 	rate timeline.Rational
 	// alpha says the decoded pixels carry an alpha channel: they are premultiplied as they arrive.
 	alpha bool
+	win   visibleWindow
 
 	cancel context.CancelFunc
 	out    chan []byte
