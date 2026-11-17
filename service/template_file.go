@@ -19,6 +19,35 @@ import (
 // workspace. It is not under exports/, whose directories are named by project.
 const templateFileDir = "templates"
 
+// findTemplateByContent looks for a template the caller can see whose canonical document has the hash.
+func (s *svc) findTemplateByContent(ctx context.Context, c Caller, sha string) (TemplateRow, bool) {
+	var after string
+
+	for range maxTemplateScanPages {
+		rows, next, err := s.store.Templates().List(ctx, maxTemplateLimit, after, c.OwnerUserID)
+		if err != nil {
+			return TemplateRow{}, false
+		}
+
+		for i := range rows {
+			if rows[i].DocSHA256 == sha {
+				return rows[i], true
+			}
+		}
+
+		if next == "" {
+			break
+		}
+
+		after = next
+	}
+
+	return TemplateRow{}, false
+}
+
+// maxTemplateScanPages bounds the templates read to find a duplicate.
+const maxTemplateScanPages = 20
+
 // TemplateImportRequest reads a template file from the machine of the server.
 type TemplateImportRequest struct {
 	Path   string `json:"path"` // absolute
@@ -240,6 +269,15 @@ func (s *svc) TemplateImport(ctx context.Context, req TemplateImportRequest) (*T
 	if c.OwnerUserID != "" {
 		owner := c.OwnerUserID
 		row.OwnerUserID = &owner
+	}
+
+	// The same file twice is the same template: the existing one is answered and no copy is made (VV-128).
+	if existing, found := s.findTemplateByContent(ctx, c, row.DocSHA256); found {
+		res := &TemplateResult{Template: templateSummary(&existing, doc), Deduplicated: true}
+		res.UntrustedNotice = UntrustedNotice
+		res.Text = "template " + existing.ID + " already imported (same content): " + templateLine(&res.Template)
+
+		return res, nil
 	}
 
 	res := &TemplateResult{Template: templateSummary(&row, doc)}

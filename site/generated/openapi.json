@@ -3390,6 +3390,9 @@
       },
       "TemplateResult": {
         "properties": {
+          "deduplicated": {
+            "type": "boolean"
+          },
           "template": {
             "$ref": "#/components/schemas/TemplateSummary"
           },
