@@ -7,7 +7,7 @@ description: "How an edit is a batch of named operations, how revisions protect 
 
 An edit is a **<Term id="batch">batch</Term>**: a list of **operations**, each one a named command such as `track.add` or `item.move`, with its arguments. The whole batch applies or none of it does, and it becomes one <Term id="revision">revision</Term> and one undo step.
 
-Every batch names the `base_revision` it was planned against. If the project moved on, the core tries to replay your batch on top of the newer revisions. When the changes overlap, it answers `E_REVISION_CONFLICT` with a text diff of what changed, so you can read it and plan again.
+Every batch names the `base_revision` it was planned against. If the project moved on, the batch is replayed on the newer revision unless it touches objects another actor changed; then it answers `E_REVISION_CONFLICT` with a text diff of what changed, so you can read it and plan again.
 
 ## Quick start
 

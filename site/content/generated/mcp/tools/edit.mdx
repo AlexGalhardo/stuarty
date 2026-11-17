@@ -143,7 +143,7 @@ An operation that fails adds the code of that operation: the `op_index` of the e
 
 - A batch is atomic: all of it applies as one undo step, or none of it does.
 - `dry_run` checks a batch and changes nothing. Use it before a large batch.
-- `base_revision` is the revision you read last. When someone else changed the project since, the batch is refused with `E_REVISION_CONFLICT` and changes nothing; read again and retry.
+- `base_revision` is the revision you read last. When the project moved on, the batch is replayed on the newer revision unless it touches objects another actor changed; then it fails with `E_REVISION_CONFLICT` and changes nothing, so read again and retry.
 - `idempotency_key` makes a retry safe: the same key with the same batch returns the first result with `replayed` true.
 - There is no operation that deletes a project or sends data anywhere. See [Safety](/docs/agents/safety).
 

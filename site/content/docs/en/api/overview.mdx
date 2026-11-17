@@ -73,7 +73,7 @@ The optional header `Vukem-Video-Client` names the actor of your edits, so the h
 
 ## Conventions
 
-- **Revisions.** A project has a revision that grows with every committed batch. An edit sends the `base_revision` it was planned against. If the project moved on, the edit is refused with `E_REVISION_CONFLICT` and changes nothing; read again and retry. See [Batches, revisions and idempotency](/docs/agents/batches).
+- **Revisions.** A project has a revision that grows with every committed batch. An edit sends the `base_revision` it was planned against. If the project moved on, the batch is replayed on the newer revision unless it touches objects another actor changed; then it fails with `E_REVISION_CONFLICT` and changes nothing, so read again and retry. See [Batches, revisions and idempotency](/docs/agents/batches).
 - **Retries.** An edit may carry an `idempotency_key` (8 to 64 characters), or the same value in the `Idempotency-Key` header. A repeated key with the same batch returns the first result.
 - **Dry runs.** Operations that change something accept `dry_run: true` and check without changing.
 - **Pages.** A list takes `cursor` and `limit` and answers with `next_cursor`; pass it back as `cursor` for the next page. It is `null` on the last page.

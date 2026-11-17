@@ -34,7 +34,7 @@ To caption speech instead of typing the words, see "Captions from a transcript" 
 
 ## Recover from a conflict
 
-When another actor changed the project after your plan, an edit with a stale `--base` fails with `E_REVISION_CONFLICT` and exit code `2`. Here the project is at revision 1 and another actor changes the track first, which moves it to revision 2.
+When another actor changed the objects your batch touches after your plan, an edit with a stale `--base` fails with `E_REVISION_CONFLICT` and exit code `2`. Here the project is at revision 1 and another actor changes the track first, which moves it to revision 2.
 
 ```bash
 vukem-video edit --project prj_7k2m9x4q1b --actor other track.update track_id=trk_f6g7h8j9k0 name=Theirs
