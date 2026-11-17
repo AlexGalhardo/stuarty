@@ -96,6 +96,7 @@ func (h *apiHandler) completeOpenAPI(doc *openapi.Document) {
 	describeReturnedStatuses(doc)
 	describeIDFormats(doc)
 	describeHeavyOperations(doc)
+	describeStepBodies(doc)
 
 	op, ok := doc.Components.Schemas["Operation"]
 	if !ok {
@@ -211,6 +212,27 @@ func describeDryRunAndRevision(op *openapi.Operation, id string, problem openapi
 
 	if slices.ContainsFunc(op.Parameters, func(p openapi.Parameter) bool { return p.Name == "rev" }) {
 		op.Responses["409"] = problem
+	}
+}
+
+// describeStepBodies restores the boolean type of dry_run on undo and redo: the field is read untyped by the
+// handler so that text is refused (VV-210), and the document still says what a caller may send.
+func describeStepBodies(doc *openapi.Document) {
+	for _, item := range doc.Paths {
+		for _, op := range item {
+			if op == nil || op.RequestBody == nil {
+				continue
+			}
+
+			if op.OperationID != "projects.undo" && op.OperationID != "projects.redo" {
+				continue
+			}
+
+			props, _ := op.RequestBody.Content["application/json"].Schema["properties"].(map[string]any)
+			if _, ok := props["dry_run"]; ok {
+				props["dry_run"] = map[string]any{"type": "boolean"}
+			}
+		}
 	}
 }
 

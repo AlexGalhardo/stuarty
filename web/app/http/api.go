@@ -105,7 +105,7 @@ func Routes(d *Deps) func(r *router.Router, app *vukem.App) error {
 			limits: newLimits(d.RateLimits, d.Now),
 		}
 
-		r.Use(h.preAuthLimit, h.authenticate, middleware.AccessLog, h.credentialLimit, strictDryRun)
+		r.Use(h.preAuthLimit, h.authenticate, middleware.AccessLog, h.credentialLimit)
 		h.registerAll()
 
 		if h.MCP != nil {

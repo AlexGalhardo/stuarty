@@ -525,3 +525,28 @@ func TestUndoRedoDryRunTakesOnlyJSONBooleans(t *testing.T) {
 		}
 	}
 }
+
+func TestUndoDryRunQueryAliasStillWorks(t *testing.T) {
+	t.Parallel()
+
+	h := newHarness(t)
+	id := h.newProject("a")
+
+	res := h.post("/api/v1/projects/"+id+"/undo?dry_run=true", `{}`)
+	if res.status != http.StatusConflict || res.json(t)["code"] != "E_NOTHING_TO_UNDO" {
+		t.Errorf("undo ?dry_run=true = %d %s", res.status, res.body)
+	}
+}
+
+// VV-210: the body of undo keeps the normal limit of the route; nothing reads it twice.
+func TestUndoOversizedBodyKeepsTheRouteLimit(t *testing.T) {
+	t.Parallel()
+
+	h := newHarness(t)
+	id := h.newProject("a")
+
+	res := h.post("/api/v1/projects/"+id+"/undo", `{"dry_run":false,"pad":"`+strings.Repeat("x", 11<<20)+`"}`)
+	if res.status != http.StatusRequestEntityTooLarge {
+		t.Errorf("oversized undo body = %d %.200s, want 413", res.status, res.body)
+	}
+}
