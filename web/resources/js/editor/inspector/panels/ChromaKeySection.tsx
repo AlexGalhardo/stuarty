@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
 import { chromaKeyOperations } from "../../commands/builders";
+import { registryRange } from "../../commands/registryLimits";
 import { useCanEdit } from "../../commands/useActions";
 import { useCommandsExposed } from "../../commands/useExposedCommands";
 import {
@@ -10,7 +11,6 @@ import {
 	useUiState,
 } from "../../state/EditorContext";
 import ColorField from "../fields/ColorField";
-import { registryRange } from "../fields/registryLimits";
 import SliderField from "../fields/SliderField";
 import ToggleField from "../fields/ToggleField";
 import Section from "../Section";

@@ -2,11 +2,11 @@ import type { ReactNode } from "react";
 
 import { useT } from "@/lib/i18n";
 import { type MaskArgs, maskOperations } from "../../commands/builders";
+import { registryLimits } from "../../commands/registryLimits";
 import { useCanEdit } from "../../commands/useActions";
 import { useCommandsExposed } from "../../commands/useExposedCommands";
 import { useDocumentState } from "../../state/EditorContext";
 import NumberField from "../fields/NumberField";
-import { registryLimits } from "../fields/registryLimits";
 import SelectField from "../fields/SelectField";
 import ToggleField from "../fields/ToggleField";
 import Section from "../Section";

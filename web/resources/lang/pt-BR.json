@@ -136,7 +136,9 @@
         "inspector": "Inspetor",
         "audio": "Áudio",
         "text": "Texto",
-        "captions": "Legendas"
+        "captions": "Legendas",
+        "transitions": "Transições",
+        "filters": "Filtros"
       },
       "activity": {
         "you": "você",
@@ -378,7 +380,8 @@
         "select_first": "Selecione um item antes.",
         "select_text_first": "Selecione um item de texto antes.",
         "fonts": "Fontes",
-        "captions_select_clip": "Selecione um clipe de vídeo com áudio para gerar legendas."
+        "captions_select_clip": "Selecione um clipe de vídeo com áudio para gerar legendas.",
+        "select_clip_first": "Selecione um clipe antes."
       },
       "edit": {
         "label": "Edição",

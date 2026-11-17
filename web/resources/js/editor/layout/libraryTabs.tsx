@@ -1,9 +1,11 @@
 import {
+	ArrowLeftRight,
 	AudioLines,
 	Captions,
 	Film,
 	History,
 	type LucideIcon,
+	SlidersHorizontal,
 	Type,
 } from "lucide-react";
 import type { ReactNode } from "react";
@@ -11,8 +13,10 @@ import type { ReactNode } from "react";
 import HistoryPanel from "../history/HistoryPanel";
 import type { AssetDragStart } from "../library/AssetCard";
 import AudioPanel from "../library/AudioPanel";
+import FiltersPanel from "../library/FiltersPanel";
 import Library from "../library/Library";
 import TextPanel from "../library/TextPanel";
+import TransitionsPanel from "../library/TransitionsPanel";
 import type { LeftTab } from "../state/uiStore";
 import CaptionsTab from "./CaptionsTab";
 
@@ -63,6 +67,22 @@ export const LIBRARY_TABS: readonly LibraryTabDef[] = [
 		commands: ["caption.from_transcript"],
 		bodyClass: "*:flex-1",
 		render: () => <CaptionsTab />,
+	},
+	{
+		id: "transitions",
+		labelKey: "ui.editor.panels.transitions",
+		icon: ArrowLeftRight,
+		commands: ["item.set_transition"],
+		bodyClass: "*:flex-1",
+		render: () => <TransitionsPanel />,
+	},
+	{
+		id: "filters",
+		labelKey: "ui.editor.panels.filters",
+		icon: SlidersHorizontal,
+		commands: ["clip.set_filter"],
+		bodyClass: "*:flex-1",
+		render: () => <FiltersPanel />,
 	},
 	{
 		id: "history",
