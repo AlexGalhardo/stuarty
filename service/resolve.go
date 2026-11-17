@@ -18,8 +18,8 @@ import (
 // audio.mark_beats. It reads artifacts and starts nothing: when the
 // artifact is missing the batch fails with E_INVALID_STATE and a hint that
 // names the job to run. The stored operation carries `resolved`, so replaying
-// the log gives the same document. A caller may supply `resolved` itself, as
-// the golden tests do; it is left alone.
+// the log gives the same document. A caller of the service may not supply `resolved`
+// (checkBatch refuses it); only the core golden tests do.
 func (s *svc) resolveOps(
 	ctx context.Context,
 	tx Tx,

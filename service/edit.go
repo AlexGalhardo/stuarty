@@ -283,6 +283,21 @@ func (s *svc) checkBatch(c Caller, req *EditRequest, allowInternal bool) (string
 			return "", s.unknownOp(i)
 		}
 
+		if !allowInternal && analysisOps[op.Op] && callerSuppliedResolved(op.Args) {
+			idx := i
+
+			rerr := newError(
+				command.CodeValidation,
+				"%s does not take a resolved argument: the service fills it from the analysis of the media.",
+				op.Op,
+			).
+				withHint("remove resolved from the arguments").
+				withPath(fmt.Sprintf("operations[%d].args.resolved", i))
+			rerr.OpIndex = &idx
+
+			return "", rerr
+		}
+
 		if need := string(cmd.Scope); !slices.Contains(c.Scopes, need) {
 			idx := i
 
@@ -671,4 +686,25 @@ func createdBy(effective map[string]any, created []string) []string {
 	}
 
 	return out
+}
+
+// analysisOps are the commands whose `resolved` argument only the service may fill (SDD-002 section A.9).
+var analysisOps = map[string]bool{
+	"clip.remove_silences":     true,
+	"caption.from_transcript":  true,
+	"caption.retime_from_clip": true,
+	"audio.duck":               true,
+	"audio.mark_beats":         true,
+}
+
+// callerSuppliedResolved reports whether the arguments carry the internal `resolved` member.
+func callerSuppliedResolved(args json.RawMessage) bool {
+	var m map[string]json.RawMessage
+	if json.Unmarshal(args, &m) != nil {
+		return false
+	}
+
+	_, ok := m["resolved"]
+
+	return ok
 }
