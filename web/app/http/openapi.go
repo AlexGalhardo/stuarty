@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"reflect"
 	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/AlexGalhardo/vukem/openapi"
@@ -93,6 +94,7 @@ func (h *apiHandler) completeOpenAPI(doc *openapi.Document) {
 	describeJobStartArgs(doc)
 	describeErrorStatuses(doc)
 	describeIDFormats(doc)
+	describeHeavyOperations(doc)
 
 	op, ok := doc.Components.Schemas["Operation"]
 	if !ok {
@@ -137,6 +139,28 @@ func describeErrorStatuses(doc *openapi.Document) {
 			if method == "post" {
 				op.Responses["409"] = problem
 				op.Responses["422"] = problem
+			}
+		}
+	}
+}
+
+// heavyOperations are the operations that spend the heavy-call limit; service.heavyLimit is called by
+// exactly these (TestHeavyLimitCallSites in service keeps the count).
+var heavyOperations = []string{
+	"jobs.start", "media.import", "templates.import", "fonts.import",
+	"projects.bundle.import", "projects.bundle.export", "projects.otio.import",
+}
+
+// describeHeavyOperations says on each heavy operation that it shares the heavy-call limit, so
+// the document marks the same routes as the documentation pages (VV-115).
+func describeHeavyOperations(doc *openapi.Document) {
+	note := "Heavy call: shares the limit of " + strconv.Itoa(service.HeavyPerMinute) +
+		" a minute per credential (E_RATE_LIMITED with Retry-After)."
+
+	for _, item := range doc.Paths {
+		for _, op := range item {
+			if op != nil && slices.Contains(heavyOperations, op.OperationID) {
+				op.Description = strings.TrimSpace(op.Description + " " + note)
 			}
 		}
 	}

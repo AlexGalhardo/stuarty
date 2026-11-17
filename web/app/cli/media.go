@@ -34,6 +34,7 @@ var mediaImport = &spec{
 	summary: "import media files into a project",
 	usage: []string{
 		"vukem-video media:import <path>... --project <id> [--asset-id ast_...] [--wait] [--timeout d]",
+		"formats: MP4, MOV, MKV, WebM, AVI, MP3, WAV, FLAC, OGG, PNG, JPEG, WebP, GIF and .cube; not SVG",
 	},
 	example:    "vukem-video media:import clip.mov --project prj_7k2m9x4q1b --json",
 	project:    true,
