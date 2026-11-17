@@ -145,7 +145,13 @@ export default function Preview({
 	// The executor lives as long as the editor; the project info and revision
 	// are pushed to it as they change.
 	useEffect(() => {
-		const instance = new PixiExecutor(runtime.client);
+		const instance = new PixiExecutor(runtime.client, undefined, (asset) => {
+			const found = runtime.documents.getState().document?.assets[asset];
+			if (found?.width === undefined || found.height === undefined) {
+				return null;
+			}
+			return { width: found.width, height: found.height };
+		});
 		executor.current = instance;
 		const overlay = truth.current;
 		const frames = new PausedFrame({
