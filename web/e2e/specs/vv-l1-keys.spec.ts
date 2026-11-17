@@ -140,4 +140,19 @@ test.describe("palette Escape, documented keys and the attributes menu", () => {
 		await expect(field).toHaveAttribute("aria-invalid", "true");
 		await expect(playhead).toHaveAttribute("aria-valuenow", "150");
 	});
+
+	// VV-124: the pages link an icon, so no request ends in a 404.
+	test("the projects page has no failing request", async ({
+		page,
+		request,
+	}) => {
+		const failed: string[] = [];
+		page.on("response", (r) => {
+			if (r.status() >= 400) failed.push(`${r.status()} ${r.url()}`);
+		});
+		await page.goto("/projects");
+		await page.waitForLoadState("networkidle");
+		expect((await request.get("/icon.svg")).status()).toBe(200);
+		expect(failed).toEqual([]);
+	});
 });
