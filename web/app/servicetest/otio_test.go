@@ -131,8 +131,21 @@ func TestOtioImportReportsUnresolvedMediaAndLostItems(t *testing.T) {
 	// The target has no asset of that name: every clip is left out.
 	target := m.newProject("target")
 
-	// The tracks still import; the clips are reported.
-	res, err := m.otioImport(target, m.head(target).Revision, m.write("a.otio", content))
+	// Without allow_partial nothing is applied and the missing media is listed (VV-133).
+	file := m.write("a.otio", content)
+	if _, err := m.otioImport(target, m.head(target).Revision, file); code(err) != command.CodeInvalidState ||
+		!strings.Contains(err.Error(), "does not have") {
+		t.Fatalf("a file whose media is missing = %v, want E_INVALID_STATE", err)
+	}
+
+	if m.head(target).Revision != 0 {
+		t.Fatal("a refused import applied something")
+	}
+
+	// The tracks still import when the caller allows it; the clips are reported.
+	res, err := m.svc.ProjectOtioImport(m.as(ui), service.ProjectOtioImportRequest{
+		ProjectID: target, BaseRevision: m.head(target).Revision, Path: file, AllowPartial: true,
+	})
 	if err != nil {
 		t.Fatalf("a file with tracks and no media imports the tracks: %v", err)
 	}
@@ -150,6 +163,26 @@ func TestOtioImportReportsUnresolvedMediaAndLostItems(t *testing.T) {
 	if !strings.Contains(res.Text, "no clip was placed") || !strings.Contains(res.Text, "media:import") ||
 		!strings.HasPrefix(res.Text, "imported ") {
 		t.Errorf("text = %q", res.Text)
+	}
+}
+
+// VV-108: the answer of the export, saved as it came, is accepted as the file.
+func TestOtioImportAcceptsTheSavedAnswerOfTheExport(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{})
+	source := m.otioSource()
+	exported := m.otioExport(source)
+
+	raw, err := json.Marshal(exported)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	target := m.newProject("target")
+	m.importOne(target, m.write("clip.mp4", clipBytes))
+
+	res, err := m.otioImport(target, m.head(target).Revision, m.write("envelope.json", string(raw)))
+	if err != nil || !res.Applied {
+		t.Fatalf("the saved export answer was not accepted: %+v, %v", res, err)
 	}
 }
 

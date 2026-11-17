@@ -10053,6 +10053,10 @@
             "application/json": {
               "schema": {
                 "properties": {
+                  "allow_partial": {
+                    "description": "Import what the project can take when media is missing; default: refuse.",
+                    "type": "boolean"
+                  },
                   "base_revision": {
                     "description": "The revision the import is applied to.",
                     "format": "int64",

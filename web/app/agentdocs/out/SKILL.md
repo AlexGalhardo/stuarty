@@ -96,7 +96,7 @@ Prefix each with `vukem-video`.
 - `brand:show`
 - `brand:set --kit <file|->`
 - `otio:export --project <id> [--out f] [--force]`
-- `otio:import <path> --project <id> [--base-revision n]`
+- `otio:import <path> --project <id> [--base-revision n] [--allow-partial]`
 
 Batches: `--ops <file|->` reads a JSON array; `edit --project <id> item.move item_id=itm_x start=2s` is one operation (`k=v` string, `k:=json` any JSON). `--dry-run` saves nothing; `--key <k>` makes retries safe. `--out f` copies the result file out of the workspace (`--force` replaces).
 

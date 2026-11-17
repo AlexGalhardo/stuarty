@@ -102,7 +102,9 @@ func TestSecurity_T08_OtioImportNamesAreCleanedAndTagged(t *testing.T) {
 	file := m.write("hostile.otio", m.craftedOtio(m.otioExport(source).Content))
 	target := m.newProject("target")
 
-	res, err := m.otioImport(target, m.head(target).Revision, file)
+	res, err := m.svc.ProjectOtioImport(m.as(ui), service.ProjectOtioImportRequest{
+		ProjectID: target, BaseRevision: m.head(target).Revision, Path: file, AllowPartial: true,
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
