@@ -3,14 +3,17 @@ package shell
 import (
 	"path/filepath"
 	"strings"
+
+	"github.com/AlexGalhardo/vukem-video/desktop/shell/webviewenv"
 )
 
 // WebviewArgsEnv and WebviewDataEnv are the variables WebView2 documents for extra browser flags and
-// for the profile folder. The Wails shell builds the browser environment itself, and that replaces what
-// the variables say, so the shell reads them and hands the values on (VV-076).
+// for the profile folder. The Wails shell builds the browser environment itself, and its loader blanks
+// the variables before main runs, so the shell reads them through webviewenv and hands the values on
+// (VV-076, VV-144).
 const (
-	WebviewArgsEnv = "WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS"
-	WebviewDataEnv = "WEBVIEW2_USER_DATA_FOLDER"
+	WebviewArgsEnv = webviewenv.ArgsName
+	WebviewDataEnv = webviewenv.DataName
 )
 
 // WebviewArgs is the list of extra browser flags the person asked for, for example

@@ -18,6 +18,7 @@ import (
 	"github.com/wailsapp/wails/v3/pkg/events"
 
 	"github.com/AlexGalhardo/vukem-video/desktop/shell"
+	"github.com/AlexGalhardo/vukem-video/desktop/shell/webviewenv"
 	"github.com/AlexGalhardo/vukem-video/service/workspace"
 )
 
@@ -62,8 +63,8 @@ func run() error {
 		RawMessageHandler: br.handle,
 		Mac:               application.MacOptions{ApplicationShouldTerminateAfterLastWindowClosed: true},
 		Windows: application.WindowsOptions{
-			WebviewUserDataPath:   shell.WebviewDataPath(os.Getenv, string(ws)),
-			AdditionalBrowserArgs: shell.WebviewArgs(os.Getenv),
+			WebviewUserDataPath:   shell.WebviewDataPath(webviewenv.Getenv, string(ws)),
+			AdditionalBrowserArgs: shell.WebviewArgs(webviewenv.Getenv),
 		},
 	})
 
