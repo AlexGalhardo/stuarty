@@ -1,7 +1,9 @@
 package command
 
 import (
+	"cmp"
 	"fmt"
+	"math"
 	"slices"
 
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
@@ -14,7 +16,9 @@ func init() {
 		Description: "Places a marker at each beat of the visible part of the item, or at every nth beat, so that " +
 			"cuts and transitions can be aligned to the music. Beats are frames of the asset and come from the beat " +
 			"grid of the asset, supplied by the service in resolved; the command never starts a job. Markers have " +
-			"no effect on the picture or the sound.",
+			"no effect on the picture or the sound. When the analysis finds no steady pulse, give bpm (and offset, the " +
+			"time of the first beat on the asset's own time axis, default 0) and the beats are those of that tempo; " +
+			"the grid of the asset is then not used, for example {\"item_id\": \"itm_s6t7v8w9x0\", \"bpm\": 120, \"offset\": \"0.25s\"}.",
 		Example: `{"item_id": "itm_s6t7v8w9x0", "every": 2, "label": "beat"}`,
 		Errors: []string{
 			CodeValidation, CodeNotFound, CodeTypeMismatch, CodeInvalidState, CodeLimit,
@@ -34,9 +38,11 @@ type ResolvedBeats struct {
 }
 
 type markBeatsArgs struct {
-	ItemID   string         `json:"item_id"            desc:"An audio item of an audio asset, or of a video asset with audio."                 pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
-	Every    int            `json:"every,omitempty"    desc:"Mark every nth beat of the visible part, from the first; default 1."                                                                     min:"1" max:"64"`
-	Label    string         `json:"label,omitempty"    desc:"Label of every marker, up to 60 characters; default none."                                                                                       max:"60"`
+	ItemID   string         `json:"item_id"            desc:"An audio item of an audio asset, or of a video asset with audio."                                                         pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	Every    int            `json:"every,omitempty"    desc:"Mark every nth beat of the visible part, from the first; default 1."                                                                                                             min:"1"  max:"64"`
+	Label    string         `json:"label,omitempty"    desc:"Label of every marker, up to 60 characters; default none."                                                                                                                                max:"60"`
+	BPM      *float64       `json:"bpm,omitempty"      desc:"Manual tempo in beats per minute, 20 to 400, for music whose pulse the analysis cannot find; replaces the detected grid."                                                        min:"20" max:"400"`
+	Offset   Time           `json:"offset,omitempty"   desc:"With bpm: the time of the first beat on the asset's time axis, from its start; default \"0s\"."`
 	Replace  *bool          `json:"replace,omitempty"  desc:"true (default) replaces the item's markers; false keeps them and adds the beats."`
 	Resolved *ResolvedBeats `json:"resolved,omitempty" desc:"Filled by the service from the beat grid of the asset; never sent by a caller."`
 }
@@ -94,6 +100,48 @@ func assetHasAudio(a timeline.Asset) bool {
 	return a.Kind == timeline.AssetAudio || (a.Kind == timeline.AssetVideo && a.HasAudio)
 }
 
+// beatGrid returns the beats, in asset frames, that the command marks: the manual grid of
+// bpm and offset when given (VV-153), otherwise the grid the service resolved.
+func (c *Context) beatGrid(a *markBeatsArgs, it *timeline.Item) ([]int, *Error) {
+	if a.BPM == nil {
+		if a.Offset != "" {
+			return nil, Errorf(CodeValidation, "args.offset needs args.bpm.").
+				WithHint("Send bpm with offset, or omit offset.").WithPath("args.offset")
+		}
+		if err := checkBeats(a.Resolved); err != nil {
+			return nil, err
+		}
+		return a.Resolved.Beats, nil
+	}
+	bpm := *a.BPM
+	if !(bpm >= 20 && bpm <= 400) {
+		return nil, Errorf(CodeValidation, "args.bpm is %v, not between 20 and 400.", bpm).
+			WithHint("Send the tempo in beats per minute, like 120.").WithPath("args.bpm")
+	}
+	offset, err := c.length("args.offset", cmp.Or(string(a.Offset), "0f"), true)
+	if err != nil {
+		return nil, err
+	}
+	fps := c.FPS()
+	srcEnd := it.SourceIn + ceilDiv(it.Duration*it.Speed.Num, it.Speed.Den)
+	// A beat is at offset + k*60/bpm seconds; the tempo is taken to the milli-bpm so the
+	// rounding is integer arithmetic.
+	milli := int64(math.Round(bpm * 1000))
+	var beats []int
+	for k := int64(0); len(beats) < maxBeats; k++ {
+		num := k * 60000 * fps.Num
+		den := fps.Den * milli
+		f := offset + int((2*num+den)/(2*den))
+		if f >= srcEnd {
+			break
+		}
+		if len(beats) == 0 || f > beats[len(beats)-1] {
+			beats = append(beats, f)
+		}
+	}
+	return beats, nil
+}
+
 func applyMarkBeats(c *Context, a *markBeatsArgs) error {
 	if err := idForm("args.item_id", timeline.PrefixItem, a.ItemID); err != nil {
 		return err
@@ -108,10 +156,11 @@ func applyMarkBeats(c *Context, a *markBeatsArgs) error {
 	if err := rejectRemap(&it, "beat markers"); err != nil {
 		return err
 	}
-	if err := checkBeats(a.Resolved); err != nil {
+	grid, err := c.beatGrid(a, &it)
+	if err != nil {
 		return err
 	}
-	if len(a.Resolved.Beats) == 0 {
+	if len(grid) == 0 {
 		return Errorf(CodeInvalidState, "The asset of item %s has no beats: its beat grid is empty.", a.ItemID).
 			WithHint("Beats exist only in music with a steady rhythm; a sound effect or speech has none. " +
 				"Choose another item, or place cuts by time.").
@@ -121,7 +170,7 @@ func applyMarkBeats(c *Context, a *markBeatsArgs) error {
 	sp := it.Speed
 
 	var frames []int
-	for _, b := range a.Resolved.Beats {
+	for _, b := range grid {
 		if b < it.SourceIn {
 			continue
 		}

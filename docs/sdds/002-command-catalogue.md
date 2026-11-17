@@ -173,7 +173,7 @@ Three commands depend on data the core cannot compute because it needs media: si
 | `clip.remove_silences {min_silence, padding, threshold_db}` | `resolved.silences`: ranges in asset frames, taken from the set of the silence artifact measured at `threshold_db` (SDD-011 §9.1) |
 | `caption.from_transcript {...}`, `caption.retime_from_clip {...}` | `resolved.words`: words with times in asset frames |
 | `audio.duck {speech_item_ids, ...}` | `resolved.speech`: one entry per speech item, `{item_id, ranges}`, with the speech ranges of that item's asset in asset frames, half-open, taken from the speech map of the asset (SDD-011) |
-| `audio.mark_beats {...}` | `resolved.beats`: the beats of the music asset as strictly increasing asset frames, taken from the beat grid of the asset (SDD-011); at most 108,000 |
+| `audio.mark_beats {...}` | `resolved.beats`: the beats of the music asset as strictly increasing asset frames, taken from the beat grid of the asset (SDD-011); at most 108,000. Not used when `bpm` is given |
 | `asset.add` | issued only by the import flow, with the facts measured on the verified normalized media, never copied from the probe (SDD-011 §4.9) (`internal: true`) |
 
 A caller may also supply `resolved` itself, which is how golden tests run without media.
@@ -288,7 +288,7 @@ Scope is `edit` unless stated. Phase: `P` Prototype, `A` ALPHA. "Time" marks arg
 | `marker.add` | B | `item_id?`, `at`, `label?` | Puts a marker at a frame of the timeline, or of an item with `item_id` (TASK-0254); see C.56 |
 | `marker.set` | B | `item_id?`, `at`, `to?`, `label?` | Moves or relabels the marker at a frame, of the timeline or of an item; see C.57 |
 | `marker.remove` | B | `item_id?`, `at` or `all` | Removes the marker at a frame, or every marker, of the timeline or of an item; see C.58 |
-| `audio.mark_beats` | B | `item_id`, `every?` (1 to 64, default 1), `label?`, `replace?` (default true) | BETA (RF-044). Writes markers on a music item at the beats of the visible part of its audio; the beats come through `resolved` (A.9) |
+| `audio.mark_beats` | B | `item_id`, `every?` (1 to 64, default 1), `label?`, `replace?` (default true), `bpm?` (20 to 400), `offset?` | BETA (RF-044). Writes markers on a music item at the beats of the visible part of its audio; the beats come through `resolved` (A.9), or from the manual tempo `bpm` and `offset` when the analysis finds no pulse (VV-153) |
 
 ### B.6 Text and shapes
 
@@ -4529,13 +4529,15 @@ Writes markers on a music item at the beats of its audio (RF-044), so that cuts 
 | `every` | integer | no | 1 | 1 to 64; marks the 1st, the (1 + every)th, ... beat of the visible part |
 | `label` | string | no | none | up to 60 characters; the label of every marker |
 | `replace` | boolean | no | true | true replaces the markers of the item; false keeps them and adds the beats (at a frame that has a marker, the existing one stays) |
-| `resolved` | object | filled by the service | none | `{"beats": [frame, ...]}`: strictly increasing asset frames from 0, at most 108,000. Missing is `E_VALIDATION` |
+| `bpm` | number | no | none | 20 to 400 beats per minute (VV-153). The manual tempo for music whose pulse the analysis cannot find: the beat grid is then `offset + k × 60 / bpm` seconds, `k = 0, 1, ...`, each rounded to the nearest frame, up to the end of the visible source range; `resolved` is ignored |
+| `offset` | time, as a length (may be 0) | no | `"0s"` | only with `bpm` (`E_VALIDATION` without it): the time of the first beat on the asset's own time axis, from its start |
+| `resolved` | object | filled by the service | none | `{"beats": [frame, ...]}`: strictly increasing asset frames from 0, at most 108,000. Missing is `E_VALIDATION` unless `bpm` is given |
 
 **Preconditions.**
 
-1. The arguments are valid and `resolved` is present with increasing beats (`E_VALIDATION`).
+1. The arguments are valid and, without `bpm`, `resolved` is present with increasing beats (`E_VALIDATION`).
 2. The item exists (`E_NOT_FOUND`) and is an audio item with audio (`E_TYPE_MISMATCH`); these are checked before `resolved`.
-3. The beat grid is not empty and at least one beat lies inside the visible part of the item (`E_INVALID_STATE`).
+3. The beat grid (the detected one, or the manual one of `bpm`) is not empty and at least one beat lies inside the visible part of the item (`E_INVALID_STATE`).
 4. The markers fit the limit of 200 per item (`E_LIMIT`; the command never truncates).
 
 **Postconditions.**
@@ -4576,9 +4578,13 @@ Markers at item frames 0, 30, 60 and 90.
 - `ok_speed_2_beats_on_the_same_frame_once`
 - `ok_beat_on_the_last_visible_frame`
 - `ok_video_asset_audio`
+- `ok_manual_tempo_with_offset`
+- `ok_manual_tempo_when_the_grid_is_empty`
 - `err_validation_resolved_missing`
 - `err_validation_beats_not_increasing`
 - `err_validation_beat_negative`
+- `err_validation_offset_without_bpm`
+- `err_validation_bpm_10`
 - `err_validation_every_0`
 - `err_validation_every_65`
 - `err_validation_label_over_60_characters`

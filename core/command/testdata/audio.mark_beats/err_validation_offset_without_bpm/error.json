@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.offset needs args.bpm.",
+  "hint": "Send bpm with offset, or omit offset.",
+  "retryable": false,
+  "path": "args.offset"
+}

@@ -10,15 +10,17 @@ wide: true
 
 <RefMain>
 
-Places a marker at each beat of the visible part of the item, or at every nth beat, so that cuts and transitions can be aligned to the music. Beats are frames of the asset and come from the beat grid of the asset, supplied by the service in resolved; the command never starts a job. Markers have no effect on the picture or the sound.
+Places a marker at each beat of the visible part of the item, or at every nth beat, so that cuts and transitions can be aligned to the music. Beats are frames of the asset and come from the beat grid of the asset, supplied by the service in resolved; the command never starts a job. Markers have no effect on the picture or the sound. When the analysis finds no steady pulse, give bpm (and offset, the time of the first beat on the asset's own time axis, default 0) and the beats are those of that tempo; the grid of the asset is then not used, for example \{"item_id": "itm_s6t7v8w9x0", "bpm": 120, "offset": "0.25s"\}.
 
 ## Arguments
 
 | Argument | Type | Required | Notes |
 | --- | --- | --- | --- |
+| `bpm` | `number` | no | Manual tempo in beats per minute, 20 to 400, for music whose pulse the analysis cannot find; replaces the detected grid.; min 20; max 400 |
 | `every` | `integer` | no | Mark every nth beat of the visible part, from the first; default 1.; min 1; max 64 |
 | `item_id` | `string` | yes | An audio item of an audio asset, or of a video asset with audio.; pattern `^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
 | `label` | `string` | no | Label of every marker, up to 60 characters; default none.; max length 60 |
+| `offset` | `string` | no | With bpm: the time of the first beat on the asset's time axis, from its start; default "0s". |
 | `replace` | `boolean` | no | True (default) replaces the item's markers; false keeps them and adds the beats. |
 | `resolved` | `object` | no | Filled by the service from the beat grid of the asset; never sent by a caller. |
 
