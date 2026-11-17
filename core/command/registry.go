@@ -256,6 +256,9 @@ func (r *Registry) Help(name string) (string, error) {
 		}
 	}
 	fmt.Fprintf(&b, "\nExample: {\"op\": %q, \"args\": %s}\n", c.Name, c.Example)
+	b.WriteString(
+		"The ids in the example are placeholders; replace them with ids from the project before editing, or the command fails with E_NOT_FOUND.\n",
+	)
 	fmt.Fprintf(&b, "Errors: %s\nScope: %s, phase: %s\n", strings.Join(c.Errors, ", "), c.Scope, c.Phase)
 	if schema, err := r.Schema(name); err == nil {
 		fmt.Fprintf(&b, "JSON Schema: %s\n", schema)
