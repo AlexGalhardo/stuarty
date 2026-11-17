@@ -21,6 +21,7 @@ import {
 } from "react";
 
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/cn";
 import { useT } from "@/lib/i18n";
 import { frameUrl } from "../api/urls";
 import {
@@ -121,6 +122,7 @@ export default function Preview({
 	const selection = useUiState((s) => s.selection.items);
 	const safeVisible = useUiState((s) => s.safeAreaVisible);
 	const editingText = useUiState((s) => s.editingText);
+	const eyedropper = useUiState((s) => s.eyedropper);
 	const editedText = useDocumentState((s) =>
 		editingText === null ? undefined : s.document?.items[editingText]?.text,
 	);
@@ -345,6 +347,20 @@ export default function Preview({
 		return () => window.removeEventListener("keydown", onKey);
 	}, []);
 
+	// Esc cancels the eyedropper pick only: the capture phase keeps it from also
+	// clearing the selection the pick belongs to.
+	useEffect(() => {
+		const onKey = (event: KeyboardEvent): void => {
+			if (event.key !== "Escape" || runtime.ui.getState().eyedropper === null)
+				return;
+			event.preventDefault();
+			event.stopPropagation();
+			runtime.uiWriter.setEyedropper(null);
+		};
+		window.addEventListener("keydown", onKey, true);
+		return () => window.removeEventListener("keydown", onKey, true);
+	}, [runtime]);
+
 	const seekTo = (frame: number): void => {
 		executor.current?.pause();
 		runtime.uiWriter.setPlayhead(Math.max(frame, 0));
@@ -385,7 +401,10 @@ export default function Preview({
 					{/* biome-ignore lint/a11y/noStaticElementInteractions lint/a11y/useKeyWithClickEvents: picking on the canvas is a pointer affordance; the keyboard selects in the timeline. */}
 					<div
 						data-testid="canvas-overlay"
-						className="absolute inset-0"
+						className={cn(
+							"absolute inset-0",
+							eyedropper !== null && "cursor-crosshair",
+						)}
 						onDoubleClick={(event) => {
 							if (scale === 0) return;
 							const rect = event.currentTarget.getBoundingClientRect();
@@ -406,6 +425,17 @@ export default function Preview({
 						onClick={(event) => {
 							if (scale === 0 || port.consumeClick()) return;
 							const rect = event.currentTarget.getBoundingClientRect();
+							if (eyedropper !== null) {
+								// The eyedropper (VV-186): read the colour under the pointer
+								// and hand it to the inspector, which sends the chroma key command.
+								const hex = executor.current?.readColour(
+									(event.clientX - rect.left) / scale,
+									(event.clientY - rect.top) / scale,
+								);
+								runtime.uiWriter.setEyedropper(null);
+								if (hex !== null && hex !== undefined) eyedropper.onPick(hex);
+								return;
+							}
 							const hit = hitTest(layers, {
 								x: (event.clientX - rect.left) / scale,
 								y: (event.clientY - rect.top) / scale,

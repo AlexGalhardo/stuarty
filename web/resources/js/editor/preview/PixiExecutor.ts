@@ -382,6 +382,29 @@ export class PixiExecutor implements PreviewExecutor {
 		return this.windows.peek(frame)?.safe_area ?? null;
 	}
 
+	readColour(x: number, y: number): string | null {
+		const app = this.app;
+		const info = this.info;
+		if (app === null || info === null || this.buffer === null) return null;
+		const ratio = this.buffer.width / info.width;
+		const px = Math.min(
+			this.buffer.width - 1,
+			Math.max(0, Math.floor(x * ratio)),
+		);
+		const py = Math.min(
+			this.buffer.height - 1,
+			Math.max(0, Math.floor(y * ratio)),
+		);
+		const { pixels } = app.renderer.extract.pixels({
+			target: this.stage,
+			frame: new Rectangle(px, py, 1, 1),
+			resolution: 1,
+		});
+		const hex = (n: number | undefined): string =>
+			(n ?? 0).toString(16).padStart(2, "0");
+		return `#${hex(pixels[0])}${hex(pixels[1])}${hex(pixels[2])}`.toUpperCase();
+	}
+
 	whenPlan(frame: number): Promise<void> {
 		return this.windows.ensure(frame).then(
 			() => undefined,

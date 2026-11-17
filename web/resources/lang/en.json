@@ -1030,6 +1030,8 @@
         "chroma_key_title": "Chroma key",
         "chroma_key_on": "Chroma key",
         "chroma_key_color": "Chroma key colour",
+        "chroma_pick": "Pick the colour from the preview",
+        "chroma_pick_hint": "Click the preview to pick the colour. Esc cancels.",
         "chroma_similarity": "Similarity",
         "chroma_smoothness": "Smoothness",
         "chroma_spill": "Spill",
