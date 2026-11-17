@@ -1,4 +1,11 @@
-import { AudioLines, Film, History, type LucideIcon, Type } from "lucide-react";
+import {
+	AudioLines,
+	Captions,
+	Film,
+	History,
+	type LucideIcon,
+	Type,
+} from "lucide-react";
 import type { ReactNode } from "react";
 
 import HistoryPanel from "../history/HistoryPanel";
@@ -7,6 +14,7 @@ import AudioPanel from "../library/AudioPanel";
 import Library from "../library/Library";
 import TextPanel from "../library/TextPanel";
 import type { LeftTab } from "../state/uiStore";
+import CaptionsTab from "./CaptionsTab";
 
 export interface LibraryTabDef {
 	id: LeftTab;
@@ -47,6 +55,14 @@ export const LIBRARY_TABS: readonly LibraryTabDef[] = [
 		commands: ["text.add"],
 		bodyClass: "*:flex-1",
 		render: () => <TextPanel />,
+	},
+	{
+		id: "captions",
+		labelKey: "ui.editor.panels.captions",
+		icon: Captions,
+		commands: ["caption.from_transcript"],
+		bodyClass: "*:flex-1",
+		render: () => <CaptionsTab />,
 	},
 	{
 		id: "history",

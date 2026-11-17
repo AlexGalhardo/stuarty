@@ -135,7 +135,8 @@
         "preview": "Pré-visualização",
         "inspector": "Inspetor",
         "audio": "Áudio",
-        "text": "Texto"
+        "text": "Texto",
+        "captions": "Legendas"
       },
       "activity": {
         "you": "você",
@@ -376,7 +377,8 @@
         "presets": "Predefinições de animação",
         "select_first": "Selecione um item antes.",
         "select_text_first": "Selecione um item de texto antes.",
-        "fonts": "Fontes"
+        "fonts": "Fontes",
+        "captions_select_clip": "Selecione um clipe de vídeo com áudio para gerar legendas."
       },
       "edit": {
         "label": "Edição",
