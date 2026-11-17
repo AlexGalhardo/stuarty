@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"regexp"
 	"slices"
+	"strconv"
 	"strings"
 )
 
@@ -86,12 +87,45 @@ func (e *Error) Error() string {
 
 // Errorf returns an error with the given code; Retryable follows the code.
 func Errorf(code, format string, args ...any) *Error {
-	return &Error{Code: code, Message: fmt.Sprintf(format, args...), Retryable: codeTable[code]}
+	return &Error{Code: code, Message: fmt.Sprintf(format, quoted(args)...), Retryable: codeTable[code]}
+}
+
+// quotedMax is the longest string a message quotes back to the caller (SDD-003 section 1.2 rule 9):
+// a value of 100 KB sent in an argument must not come back whole.
+const quotedMax = 80
+
+// quoted shortens the string arguments of a message, keeping its first runes and marking the cut.
+func quoted(args []any) []any {
+	var out []any
+
+	for i, a := range args {
+		s, ok := a.(string)
+		if !ok || len(s) <= quotedMax {
+			continue
+		}
+
+		r := []rune(s)
+		if len(r) <= quotedMax {
+			continue
+		}
+
+		if out == nil {
+			out = slices.Clone(args)
+		}
+
+		out[i] = string(r[:quotedMax]) + "... (" + strconv.Itoa(len(r)) + " characters)"
+	}
+
+	if out == nil {
+		return args
+	}
+
+	return out
 }
 
 // WithHint sets the hint.
 func (e *Error) WithHint(format string, args ...any) *Error {
-	e.Hint = fmt.Sprintf(format, args...)
+	e.Hint = fmt.Sprintf(format, quoted(args)...)
 	return e
 }
 

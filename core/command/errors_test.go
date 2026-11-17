@@ -130,3 +130,19 @@ func TestCheckError(t *testing.T) {
 		t.Errorf("E_INTERNAL needs no hint: %v", err)
 	}
 }
+
+// VV-196: a validation error does not give back the whole value that was sent.
+func TestErrorfDoesNotEchoALongValue(t *testing.T) {
+	long := strings.Repeat("x", 100_000)
+	e := Errorf(CodeValidation, "args.mode %q is not a blend mode.", long)
+
+	if len(e.Message) > 300 || !strings.Contains(e.Message, "is not a blend mode.") ||
+		!strings.Contains(e.Message, "100000 characters") {
+		t.Errorf("message = %d bytes: %.120s", len(e.Message), e.Message)
+	}
+
+	short := Errorf(CodeValidation, "args.mode %q is not a blend mode.", "nope")
+	if short.Message != `args.mode "nope" is not a blend mode.` {
+		t.Errorf("short message = %q", short.Message)
+	}
+}
