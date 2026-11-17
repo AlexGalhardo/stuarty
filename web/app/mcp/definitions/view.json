@@ -17,7 +17,7 @@
    },
    "at": {
     "type": "string",
-    "description": "Time: 12.5s, 375f or 00:00:12.500"
+    "description": "Time: 12.5s, 375f or 00:00:12.500. Required in mode frame (the default)."
    },
    "times": {
     "type": "array",
