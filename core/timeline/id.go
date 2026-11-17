@@ -2,6 +2,7 @@ package timeline
 
 import (
 	"crypto/rand"
+	"strconv"
 	"strings"
 )
 
@@ -26,6 +27,12 @@ func NewID(prefix string) string {
 		sb.WriteByte(idAlphabet[c&31]) // 256 is a multiple of 32: no modulo bias
 	}
 	return sb.String()
+}
+
+// IDPattern is the regular expression of the ids ValidID accepts for prefix, for the JSON Schema
+// "pattern" keyword: the schema and the validator cannot drift.
+func IDPattern(prefix string) string {
+	return "^" + prefix + "_[" + idAlphabet + "]{" + strconv.Itoa(idLen) + "}$"
 }
 
 // ValidID reports whether id is "<prefix>_<10 Crockford base32 characters>".

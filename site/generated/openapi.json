@@ -7483,6 +7483,7 @@
         "properties": {
           "asset_id": {
             "description": "An id of your own; ignored for a duplicate.",
+            "pattern": "^ast_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
             "type": "string"
           },
           "path": {
@@ -7853,6 +7854,7 @@
             "required": true,
             "schema": {
               "minLength": 1,
+              "pattern": "^[0-9a-f]{32}$",
               "type": "string"
             }
           }
@@ -8257,11 +8259,22 @@
                     "type": "boolean"
                   },
                   "fps": {
-                    "description": "30 (default); n or n/1001.",
-                    "type": "string"
+                    "description": "30 (default); n or n/1001, as text or as a number.",
+                    "oneOf": [
+                      {
+                        "maximum": 999999,
+                        "minimum": 1,
+                        "type": "integer"
+                      },
+                      {
+                        "pattern": "^[0-9]{1,6}(/(1|1001))?$",
+                        "type": "string"
+                      }
+                    ]
                   },
                   "id": {
                     "description": "An id of your own; E_ID_EXISTS when taken.",
+                    "pattern": "^prj_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
                     "type": "string"
                   },
                   "name": {

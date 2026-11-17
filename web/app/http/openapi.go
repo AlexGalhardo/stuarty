@@ -10,6 +10,7 @@ import (
 	"github.com/AlexGalhardo/vukem/openapi"
 	"github.com/AlexGalhardo/vukem/web"
 
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 	"github.com/AlexGalhardo/vukem-video/engine/transcribe"
 	"github.com/AlexGalhardo/vukem-video/service"
 	"github.com/AlexGalhardo/vukem-video/service/untrusted"
@@ -91,6 +92,7 @@ func (h *apiHandler) completeOpenAPI(doc *openapi.Document) {
 	markUntrusted(doc)
 	describeJobStartArgs(doc)
 	describeErrorStatuses(doc)
+	describeIDFormats(doc)
 
 	op, ok := doc.Components.Schemas["Operation"]
 	if !ok {
@@ -135,6 +137,49 @@ func describeErrorStatuses(doc *openapi.Document) {
 			if method == "post" {
 				op.Responses["409"] = problem
 				op.Responses["422"] = problem
+			}
+		}
+	}
+}
+
+// describeIDFormats adds the "pattern" of the ids and of the handshake nonce to the schemas of the
+// requests of this package, which are plain strings for the framework (VV-103). The id forms come
+// from timeline.IDPattern, the one the validator uses.
+func describeIDFormats(doc *openapi.Document) {
+	pattern := func(schema openapi.Schema, prop, re string) {
+		props, _ := schema["properties"].(map[string]any)
+
+		if p, ok := props[prop].(map[string]any); ok {
+			p["pattern"] = re
+		}
+	}
+
+	pattern(doc.Components.Schemas["importFileIn"], "asset_id", timeline.IDPattern(timeline.PrefixAsset))
+
+	for path, item := range doc.Paths {
+		post, get := item["post"], item["get"]
+
+		if post != nil && post.RequestBody != nil && strings.HasSuffix(path, "/projects") {
+			schema := post.RequestBody.Content["application/json"].Schema
+
+			pattern(schema, "id", timeline.IDPattern(timeline.PrefixProject))
+
+			if props, _ := schema["properties"].(map[string]any); props != nil {
+				if fps, ok := props["fps"].(map[string]any); ok {
+					delete(fps, "type")
+					fps["oneOf"] = []any{
+						map[string]any{"type": "integer", "minimum": 1, "maximum": 999999},
+						map[string]any{"type": "string", "pattern": `^[0-9]{1,6}(/(1|1001))?$`},
+					}
+				}
+			}
+		}
+
+		if get != nil && strings.HasSuffix(path, "/handshake") {
+			for _, p := range get.Parameters {
+				if p.Name == "nonce" {
+					p.Schema["pattern"] = "^[0-9a-f]{32}$"
+				}
 			}
 		}
 	}

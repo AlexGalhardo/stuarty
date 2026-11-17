@@ -9,6 +9,7 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -513,6 +514,16 @@ func TestEveryViolationCodeHasAnInvalidExample(t *testing.T) {
 	} {
 		if !covered[code] {
 			t.Errorf("%s has no example in testdata/invalid", code)
+		}
+	}
+}
+
+func TestIDPatternMatchesValidID(t *testing.T) {
+	re := regexp.MustCompile(IDPattern(PrefixTrack))
+
+	for _, id := range []string{NewID(PrefixTrack), "trk_v1", "trk_0123456789", "trk_ilou012345", "itm_0123456789", "trk_s6t7v8w9x0"} {
+		if got, want := re.MatchString(id), ValidID(PrefixTrack, id); got != want {
+			t.Errorf("pattern(%q) = %v, ValidID = %v", id, got, want)
 		}
 	}
 }

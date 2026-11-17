@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 	"github.com/AlexGalhardo/vukem-video/service/untrusted"
 	httpapi "github.com/AlexGalhardo/vukem-video/web/app/http"
 )
@@ -275,5 +276,51 @@ func TestOpenAPIDeclaresTheRealStatuses(t *testing.T) {
 
 	if res := h.post("/api/v1/projects", `{"name":""}`); res.status != http.StatusBadRequest {
 		t.Errorf("empty name = %d, want 400", res.status)
+	}
+}
+
+// VV-103: the document gives the form of the ids, of the nonce and of the frame rate, and the API
+// takes a numeric fps as the CLI does.
+func TestOpenAPIGivesTheFormats(t *testing.T) {
+	t.Parallel()
+
+	h := newHarness(t)
+	doc := h.openapi()
+	schemas := doc["components"].(map[string]any)["schemas"].(map[string]any)
+
+	asset, _ := schemas["importFileIn"].(map[string]any)["properties"].(map[string]any)["asset_id"].(map[string]any)
+	if got, _ := asset["pattern"].(string); got != timeline.IDPattern(timeline.PrefixAsset) {
+		t.Errorf("importFileIn.asset_id pattern = %q", got)
+	}
+
+	paths, _ := doc["paths"].(map[string]any)
+	create, _ := paths["/api/v1/projects"].(map[string]any)["post"].(map[string]any)
+	body, _ := create["requestBody"].(map[string]any)["content"].(map[string]any)["application/json"].(map[string]any)
+	props, _ := body["schema"].(map[string]any)["properties"].(map[string]any)
+
+	if fps, _ := props["fps"].(map[string]any); fps["oneOf"] == nil {
+		t.Errorf("fps = %v, want oneOf number or text", fps)
+	}
+
+	if id, _ := props["id"].(map[string]any); id["pattern"] == nil {
+		t.Errorf("project id = %v, want a pattern", id)
+	}
+
+	hs, _ := paths["/api/v1/handshake"].(map[string]any)["get"].(map[string]any)
+	params, _ := hs["parameters"].([]any)
+
+	if len(params) != 1 || params[0].(map[string]any)["schema"].(map[string]any)["pattern"] == nil {
+		t.Errorf("nonce parameter = %v, want a pattern", params)
+	}
+
+	for _, fps := range []string{`60`, `"30000/1001"`} {
+		res := h.post("/api/v1/projects", `{"name":"f","fps":`+fps+`}`)
+		if res.status != http.StatusCreated {
+			t.Errorf("fps %s = %d %.200s", fps, res.status, res.body)
+		}
+	}
+
+	if res := h.post("/api/v1/projects", `{"name":"f","fps":true}`); res.status != http.StatusBadRequest {
+		t.Errorf("fps true = %d, want 400", res.status)
 	}
 }
