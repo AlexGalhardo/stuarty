@@ -598,6 +598,9 @@
           "minimum": 0,
           "type": "number"
         },
+        "outline": {
+          "$ref": "#/$defs/Outline"
+        },
         "radius": {
           "minimum": 0,
           "type": "number"
@@ -619,6 +622,9 @@
           "exclusiveMinimum": 0,
           "maximum": 20,
           "type": "number"
+        },
+        "shadow": {
+          "$ref": "#/$defs/Shadow"
         },
         "shape": {
           "enum": [
@@ -857,6 +863,24 @@
       ],
       "type": "object"
     },
+    "Outline": {
+      "properties": {
+        "color": {
+          "pattern": "^(#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?|\\$[a-z][a-z0-9_]{0,39})$",
+          "type": "string"
+        },
+        "width": {
+          "maximum": 100,
+          "minimum": 0.5,
+          "type": "number"
+        }
+      },
+      "required": [
+        "color",
+        "width"
+      ],
+      "type": "object"
+    },
     "ProjectFont": {
       "properties": {
         "files": {
@@ -942,6 +966,42 @@
           "type": "integer"
         }
       },
+      "type": "object"
+    },
+    "Shadow": {
+      "properties": {
+        "blur": {
+          "maximum": 100,
+          "minimum": 0,
+          "type": "number"
+        },
+        "color": {
+          "pattern": "^(#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?|\\$[a-z][a-z0-9_]{0,39})$",
+          "type": "string"
+        },
+        "dx": {
+          "maximum": 500,
+          "minimum": -500,
+          "type": "number"
+        },
+        "dy": {
+          "maximum": 500,
+          "minimum": -500,
+          "type": "number"
+        },
+        "opacity": {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        }
+      },
+      "required": [
+        "blur",
+        "color",
+        "dx",
+        "dy",
+        "opacity"
+      ],
       "type": "object"
     },
     "Slot": {

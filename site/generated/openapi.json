@@ -1468,6 +1468,16 @@
             "format": "double",
             "type": "number"
           },
+          "outline": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Outline"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "radius": {
             "format": "double",
             "type": "number"
@@ -1486,6 +1496,16 @@
           "scale": {
             "format": "double",
             "type": "number"
+          },
+          "shadow": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Shadow"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "shape": {
             "enum": [
@@ -2352,6 +2372,8 @@
               "clip.set_flip",
               "clip.set_framing",
               "clip.set_mask",
+              "clip.set_outline",
+              "clip.set_shadow",
               "clip.set_speed",
               "font.add",
               "font.remove",
@@ -2481,6 +2503,12 @@
           },
           "clip.set_mask": {
             "$ref": "#/components/schemas/args.clip.set_mask"
+          },
+          "clip.set_outline": {
+            "$ref": "#/components/schemas/args.clip.set_outline"
+          },
+          "clip.set_shadow": {
+            "$ref": "#/components/schemas/args.clip.set_shadow"
           },
           "clip.set_speed": {
             "$ref": "#/components/schemas/args.clip.set_speed"
@@ -2662,6 +2690,30 @@
           },
           "status": {
             "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "Outline": {
+        "properties": {
+          "color": {
+            "type": "string"
+          },
+          "width": {
+            "format": "double",
+            "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "OutlineSpec": {
+        "properties": {
+          "color": {
+            "type": "string"
+          },
+          "width": {
+            "format": "double",
+            "type": "number"
           }
         },
         "type": "object"
@@ -3124,6 +3176,54 @@
           },
           "width": {
             "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "Shadow": {
+        "properties": {
+          "blur": {
+            "format": "double",
+            "type": "number"
+          },
+          "color": {
+            "type": "string"
+          },
+          "dx": {
+            "format": "double",
+            "type": "number"
+          },
+          "dy": {
+            "format": "double",
+            "type": "number"
+          },
+          "opacity": {
+            "format": "double",
+            "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "ShadowSpec": {
+        "properties": {
+          "blur": {
+            "format": "double",
+            "type": "number"
+          },
+          "color": {
+            "type": "string"
+          },
+          "dx": {
+            "format": "double",
+            "type": "number"
+          },
+          "dy": {
+            "format": "double",
+            "type": "number"
+          },
+          "opacity": {
+            "format": "double",
+            "type": "number"
           }
         },
         "type": "object"
@@ -4044,6 +4144,16 @@
               "null"
             ]
           },
+          "crops": {
+            "items": {
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "type": "array"
+            },
+            "type": "array"
+          },
           "cx": {},
           "cy": {},
           "effects": {
@@ -4111,6 +4221,19 @@
               }
             ]
           },
+          "masks": {
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/MaskSpec"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array"
+          },
           "natural": {
             "items": {
               "format": "double",
@@ -4122,8 +4245,28 @@
             ]
           },
           "opacity": {},
+          "outline": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OutlineSpec"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "rotation": {},
           "scale": {},
+          "shadow": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ShadowSpec"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "source_frames": {
             "items": {
               "type": "integer"
@@ -4193,6 +4336,9 @@
           },
           "to": {
             "type": "integer"
+          },
+          "transparent": {
+            "type": "boolean"
           },
           "width": {
             "type": "integer"
@@ -5792,6 +5938,96 @@
         ],
         "type": "object"
       },
+      "args.clip.set_outline": {
+        "additionalProperties": false,
+        "properties": {
+          "item_id": {
+            "description": "A clip.",
+            "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          },
+          "outline": {
+            "additionalProperties": false,
+            "description": "The outline, or null to remove it.",
+            "properties": {
+              "color": {
+                "description": "#RRGGBB, #RRGGBBAA or $name; default #000000.",
+                "type": "string"
+              },
+              "width": {
+                "description": "Width in pixels; default 4.",
+                "maximum": 100,
+                "minimum": 0.5,
+                "type": "number"
+              }
+            },
+            "required": [],
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "item_id",
+          "outline"
+        ],
+        "type": "object"
+      },
+      "args.clip.set_shadow": {
+        "additionalProperties": false,
+        "properties": {
+          "item_id": {
+            "description": "A clip.",
+            "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          },
+          "shadow": {
+            "additionalProperties": false,
+            "description": "The shadow, or null to remove it.",
+            "properties": {
+              "blur": {
+                "description": "Soft edge in pixels; default 12.",
+                "maximum": 100,
+                "minimum": 0,
+                "type": "number"
+              },
+              "color": {
+                "description": "#RRGGBB, #RRGGBBAA or $name; default #000000.",
+                "type": "string"
+              },
+              "dx": {
+                "description": "Horizontal offset in pixels; default 8.",
+                "maximum": 500,
+                "minimum": -500,
+                "type": "number"
+              },
+              "dy": {
+                "description": "Vertical offset in pixels; default 8.",
+                "maximum": 500,
+                "minimum": -500,
+                "type": "number"
+              },
+              "opacity": {
+                "description": "0 to 1; default 0.5.",
+                "maximum": 1,
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [],
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "item_id",
+          "shadow"
+        ],
+        "type": "object"
+      },
       "args.clip.set_speed": {
         "additionalProperties": false,
         "properties": {
@@ -6504,7 +6740,16 @@
               "saturation",
               "temperature",
               "tint",
-              "hue"
+              "hue",
+              "mask_x",
+              "mask_y",
+              "mask_width",
+              "mask_height",
+              "mask_feather",
+              "crop_left",
+              "crop_top",
+              "crop_right",
+              "crop_bottom"
             ],
             "type": "string"
           }
@@ -6539,7 +6784,16 @@
               "saturation",
               "temperature",
               "tint",
-              "hue"
+              "hue",
+              "mask_x",
+              "mask_y",
+              "mask_width",
+              "mask_height",
+              "mask_feather",
+              "crop_left",
+              "crop_top",
+              "crop_right",
+              "crop_bottom"
             ],
             "type": "string"
           }
@@ -6587,7 +6841,16 @@
               "saturation",
               "temperature",
               "tint",
-              "hue"
+              "hue",
+              "mask_x",
+              "mask_y",
+              "mask_width",
+              "mask_height",
+              "mask_feather",
+              "crop_left",
+              "crop_top",
+              "crop_right",
+              "crop_bottom"
             ],
             "type": "string"
           },
@@ -6726,7 +6989,7 @@
         "additionalProperties": false,
         "properties": {
           "background": {
-            "description": "A hex colour, or $name from template.colors.",
+            "description": "A hex colour, $name from template.colors, or transparent (no background colour; formats with alpha keep it).",
             "type": "string"
           },
           "height": {

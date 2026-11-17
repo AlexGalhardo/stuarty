@@ -201,6 +201,11 @@ type Item struct {
 	// Visual items, optional and additive (SDD-001 §3.4): the shape that limits where the item is drawn.
 	Mask *Mask `json:"mask,omitempty"`
 
+	// Clip only, optional and additive (SDD-001 §3.5, VV-122): a drop shadow and an outline drawn around
+	// the visible (alpha) shape of the clip. Absent means none.
+	Shadow  *Shadow  `json:"shadow,omitempty"`
+	Outline *Outline `json:"outline,omitempty"`
+
 	// Clip and audio.
 	Asset      string   `json:"asset,omitempty"       pattern:"^ast_([0-9a-hjkmnp-tv-z]{10}|placeholder)$"`
 	SourceIn   int      `json:"source_in,omitempty"                                                        min:"0"`
@@ -307,6 +312,24 @@ type Mask struct {
 	Feather int     `json:"feather"                              min:"0"     max:"200"`
 	Invert  bool    `json:"invert,omitempty"`
 	Extra   Extra   `json:"-"`
+}
+
+// Shadow is a drop shadow of a clip (SDD-004 §3.15): the silhouette of the picture in Color, moved by
+// DX and DY pixels and blurred by Blur pixels, drawn below it at Opacity. Lengths are project pixels.
+type Shadow struct {
+	Color   Color   `json:"color"`
+	Opacity float64 `json:"opacity" min:"0"    max:"1"`
+	DX      float64 `json:"dx"      min:"-500" max:"500"`
+	DY      float64 `json:"dy"      min:"-500" max:"500"`
+	Blur    float64 `json:"blur"    min:"0"    max:"100"`
+	Extra   Extra   `json:"-"`
+}
+
+// Outline is a contour of a clip (SDD-004 §3.15): Width project pixels of Color around the silhouette.
+type Outline struct {
+	Color Color   `json:"color"`
+	Width float64 `json:"width" min:"0.5" max:"100"`
+	Extra Extra   `json:"-"`
 }
 
 // Word is one timed word of a caption; Start is relative to the item.

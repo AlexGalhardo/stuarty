@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "The value of args.shadow.blur is 101, outside the accepted range.",
+  "hint": "Use a value between 0 and 100.",
+  "retryable": false,
+  "path": "args.shadow.blur"
+}

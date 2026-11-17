@@ -702,3 +702,38 @@ func TestValidateTransparentBackground(t *testing.T) {
 		t.Errorf("an unknown background keyword gives %v, want only %s", got, VShape)
 	}
 }
+
+func TestValidateShadowAndOutline(t *testing.T) {
+	cases := []invalidCase{
+		{"shadow opacity above 1", func(d *Document) {
+			editItem(d, clipID, func(i *Item) { i.Shadow = &Shadow{Color: "#000000", Opacity: 2} })
+		}, VShape},
+		{"outline too thin", func(d *Document) {
+			editItem(d, clipID, func(i *Item) { i.Outline = &Outline{Color: "#000000", Width: 0.1} })
+		}, VShape},
+		{"outline colour unknown", func(d *Document) {
+			editItem(d, clipID, func(i *Item) { i.Outline = &Outline{Color: "red", Width: 2} })
+		}, VShape},
+		{"shadow on a text item", func(d *Document) {
+			editItem(d, capItemID, func(i *Item) { i.Shadow = &Shadow{Color: "#000000", Opacity: 0.5} })
+		}, VShape},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			d := base(t)
+			c.edit(d)
+			if got := codesOf(Validate(d)); len(got) != 1 || got[0] != c.want {
+				t.Errorf("codes %v, want only %s\n%v", got, c.want, Validate(d))
+			}
+		})
+	}
+
+	d := base(t)
+	editItem(d, clipID, func(i *Item) {
+		i.Shadow = &Shadow{Color: "#000000", Opacity: 0.5, DX: 8, DY: 8, Blur: 12}
+		i.Outline = &Outline{Color: "#FFFFFF", Width: 4}
+	})
+	if vs := Validate(d); len(vs) != 0 {
+		t.Fatalf("a shadow and an outline on a clip are valid, got %v", vs)
+	}
+}

@@ -1,0 +1,7 @@
+{
+  "op": "clip.set_shadow",
+  "args": {
+    "item_id": "itm_zzzzzzzzzz",
+    "shadow": {}
+  }
+}

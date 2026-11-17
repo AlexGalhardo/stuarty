@@ -78,6 +78,10 @@ type Layer struct {
 	// Mask limits where the layer is drawn (SDD-004 §3.9); nil means no mask.
 	Mask *MaskSpec `json:"mask,omitempty"`
 
+	// Shadow and Outline are the drop shadow and the contour of a media layer (SDD-004 §3.15); nil means none.
+	Shadow  *ShadowSpec  `json:"shadow,omitempty"`
+	Outline *OutlineSpec `json:"outline,omitempty"`
+
 	// Effects change the layer's pixels, in order, after the filter and the blur (SDD-004 §3.13); shake is
 	// not here, it has already moved the layer. Transition is the whip, dip or wipe in progress (§3.2).
 	Effects    []timeline.Effect `json:"effects,omitempty"`
@@ -95,6 +99,22 @@ type Layer struct {
 	Rotation float64 `json:"rotation"` // degrees clockwise
 	Scale    float64 `json:"scale"`    // effective scale: keyframes and static value, before W and H are derived
 	Opacity  float64 `json:"opacity"`
+}
+
+// ShadowSpec is the drop shadow of a layer with the colour resolved to #RRGGBB or #RRGGBBAA; the lengths
+// are project pixels.
+type ShadowSpec struct {
+	Color   string  `json:"color"`
+	Opacity float64 `json:"opacity"`
+	DX      float64 `json:"dx"`
+	DY      float64 `json:"dy"`
+	Blur    float64 `json:"blur"`
+}
+
+// OutlineSpec is the contour of a layer, with the colour resolved; Width is in project pixels.
+type OutlineSpec struct {
+	Color string  `json:"color"`
+	Width float64 `json:"width"`
 }
 
 // LutSpec names the lookup table asset of a layer and how much of it is mixed in (0 to 1, never 0 in a plan).

@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.outline.color must be a string, but got a number.",
+  "hint": "Send a string for args.outline.color.",
+  "retryable": false,
+  "path": "args.outline.color"
+}

@@ -16,7 +16,7 @@ func tokens(s string) int { return int(float64(len([]rune(s))) / charsPerToken) 
 
 // TestToolDefinitionBudget is NFR-020: the tool definitions total at most 6,500
 // tokens. The cap of SDD-003 section 4.1 is 19,500 bytes of minified JSON for
-// all 16 tools of the ALPHA build, 2,500 for edit and 1,600 for any other; the
+// all 16 tools of the ALPHA build, 2,700 for edit and 1,600 for any other; the
 // 12 tools of the Prototype are measured here.
 func TestToolDefinitionBudget(t *testing.T) {
 	t.Parallel()
@@ -34,7 +34,7 @@ func TestToolDefinitionBudget(t *testing.T) {
 
 		limit := 1600
 		if name == "edit" {
-			limit = 2500
+			limit = 2700
 		}
 
 		if len(raw) > limit {

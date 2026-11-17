@@ -162,6 +162,17 @@ func (p *planner) layerBase(it *timeline.Item, r int) (Layer, bool) {
 
 	l.Mask = maskAt(it, r)
 
+	if s := it.Shadow; s != nil {
+		l.Shadow = &ShadowSpec{
+			Color: resolveColor(p.doc, string(s.Color)), Opacity: round3(s.Opacity),
+			DX: round3(s.DX), DY: round3(s.DY), Blur: round3(s.Blur),
+		}
+	}
+
+	if o := it.Outline; o != nil {
+		l.Outline = &OutlineSpec{Color: resolveColor(p.doc, string(o.Color)), Width: round3(o.Width)}
+	}
+
 	if k := it.ChromaKey; k != nil {
 		l.ChromaKey = &ChromaKeySpec{
 			Color: resolveColor(p.doc, string(k.Color)), Similarity: round3(k.Similarity),

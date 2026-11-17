@@ -948,6 +948,58 @@ export interface ClipSetMaskArgs {
   } | null;
 }
 
+export interface ClipSetOutlineArgs {
+  /**
+   * A clip.
+   */
+  item_id: string;
+  /**
+   * The outline, or null to remove it.
+   */
+  outline: {
+    /**
+     * #RRGGBB, #RRGGBBAA or $name; default #000000.
+     */
+    color?: string;
+    /**
+     * Width in pixels; default 4.
+     */
+    width?: number;
+  } | null;
+}
+
+export interface ClipSetShadowArgs {
+  /**
+   * A clip.
+   */
+  item_id: string;
+  /**
+   * The shadow, or null to remove it.
+   */
+  shadow: {
+    /**
+     * Soft edge in pixels; default 12.
+     */
+    blur?: number;
+    /**
+     * #RRGGBB, #RRGGBBAA or $name; default #000000.
+     */
+    color?: string;
+    /**
+     * Horizontal offset in pixels; default 8.
+     */
+    dx?: number;
+    /**
+     * Vertical offset in pixels; default 8.
+     */
+    dy?: number;
+    /**
+     * 0 to 1; default 0.5.
+     */
+    opacity?: number;
+  } | null;
+}
+
 export interface ClipSetSpeedArgs {
   /**
    * Speed ramp: 2 to 8 points, linear between them, first t 0 and last t 1. Not with speed.
@@ -2377,7 +2429,7 @@ export interface TrackUpdateArgs {
   volume?: number;
 }
 
-export type CommandName = "asset.add" | "asset.remove" | "audio.add" | "audio.duck" | "audio.mark_beats" | "caption.add" | "caption.edit_word" | "caption.from_transcript" | "caption.import_subtitles" | "caption.merge" | "caption.retime_from_clip" | "caption.set_breaks" | "caption.set_style" | "caption.set_words" | "caption.split" | "clip.add" | "clip.remove_silences" | "clip.set_blend" | "clip.set_blur" | "clip.set_chroma_key" | "clip.set_color" | "clip.set_effects" | "clip.set_filter" | "clip.set_flip" | "clip.set_framing" | "clip.set_mask" | "clip.set_speed" | "font.add" | "font.remove" | "item.crossfade" | "item.delete" | "item.duplicate" | "item.extract_audio" | "item.freeze_frame" | "item.link" | "item.move" | "item.paste_attributes" | "item.rename" | "item.set_audio" | "item.set_enabled" | "item.set_transform" | "item.set_transition" | "item.slip" | "item.split" | "item.trim" | "item.unlink" | "keyframe.clear" | "keyframe.remove" | "keyframe.set" | "marker.add" | "marker.remove" | "marker.set" | "project.rename" | "settings.reframe" | "settings.set" | "settings.set_fps" | "shape.add" | "shape.set" | "slot.fill" | "slot.mark" | "slot.unmark" | "template.set_info" | "text.add" | "text.apply_preset" | "text.set" | "timeline.close_gap" | "track.add" | "track.move" | "track.remove" | "track.set_caption_style" | "track.update";
+export type CommandName = "asset.add" | "asset.remove" | "audio.add" | "audio.duck" | "audio.mark_beats" | "caption.add" | "caption.edit_word" | "caption.from_transcript" | "caption.import_subtitles" | "caption.merge" | "caption.retime_from_clip" | "caption.set_breaks" | "caption.set_style" | "caption.set_words" | "caption.split" | "clip.add" | "clip.remove_silences" | "clip.set_blend" | "clip.set_blur" | "clip.set_chroma_key" | "clip.set_color" | "clip.set_effects" | "clip.set_filter" | "clip.set_flip" | "clip.set_framing" | "clip.set_mask" | "clip.set_outline" | "clip.set_shadow" | "clip.set_speed" | "font.add" | "font.remove" | "item.crossfade" | "item.delete" | "item.duplicate" | "item.extract_audio" | "item.freeze_frame" | "item.link" | "item.move" | "item.paste_attributes" | "item.rename" | "item.set_audio" | "item.set_enabled" | "item.set_transform" | "item.set_transition" | "item.slip" | "item.split" | "item.trim" | "item.unlink" | "keyframe.clear" | "keyframe.remove" | "keyframe.set" | "marker.add" | "marker.remove" | "marker.set" | "project.rename" | "settings.reframe" | "settings.set" | "settings.set_fps" | "shape.add" | "shape.set" | "slot.fill" | "slot.mark" | "slot.unmark" | "template.set_info" | "text.add" | "text.apply_preset" | "text.set" | "timeline.close_gap" | "track.add" | "track.move" | "track.remove" | "track.set_caption_style" | "track.update";
 
 export interface CommandArgsMap {
 	"asset.add": AssetAddArgs;
@@ -2406,6 +2458,8 @@ export interface CommandArgsMap {
 	"clip.set_flip": ClipSetFlipArgs;
 	"clip.set_framing": ClipSetFramingArgs;
 	"clip.set_mask": ClipSetMaskArgs;
+	"clip.set_outline": ClipSetOutlineArgs;
+	"clip.set_shadow": ClipSetShadowArgs;
 	"clip.set_speed": ClipSetSpeedArgs;
 	"font.add": FontAddArgs;
 	"font.remove": FontRemoveArgs;
@@ -2482,6 +2536,8 @@ export const COMMANDS: Record<CommandName, { summary: string; scope: "edit" | "m
 	"clip.set_flip": { summary: "Mirrors a visual item horizontally, vertically or both.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"clip.set_framing": { summary: "Sets how the asset of a clip is fitted into the frame and how much of each side is cropped.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE"] },
 	"clip.set_mask": { summary: "Limits where a visual item is drawn to a rectangle or an ellipse.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
+	"clip.set_outline": { summary: "Gives a clip an outline that follows its visible shape.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
+	"clip.set_shadow": { summary: "Gives a clip a drop shadow that follows its visible shape.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"clip.set_speed": { summary: "Changes the speed of a clip or audio item, constant or along a curve, or plays it backwards.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_OUT_OF_SOURCE","E_INVALID_TIME","E_OVERLAP"] },
 	"font.add": { summary: "Adds a user font family to the project, or more weights to one it already has.", scope: "media", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND"] },
 	"font.remove": { summary: "Removes a user font family from the project.", scope: "media", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_IN_USE"] },

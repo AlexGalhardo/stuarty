@@ -1,6 +1,6 @@
 # SDD-002: Command catalogue of the core
 
-- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen for ALPHA: all 48 commands have golden cases and pass the registry-wide gates (P2-ENG-018). BETA adds `clip.set_filter` and `clip.set_blur` (C.49, C.50; P3-ENG-001), `audio.duck` and `audio.mark_beats` (C.51, C.52; P3-ENG-002), `font.add` and `font.remove` (C.53, C.54; P3-ENG-005), 54 in the BETA build; after BETA `clip.set_chroma_key` (C.55, VV-015) and the marker commands `marker.add`, `marker.set` and `marker.remove` (C.56 to C.58, VV-035) make 58; `item.slip` and `settings.reframe` (C.59, C.60, VV-036 and VV-038) make 60; `clip.set_blend` (C.61, VV-015) makes 61; `clip.set_mask` (C.62, VV-015) makes 62; `clip.set_flip` (C.63, TASK-0233) makes 63; `item.set_enabled` (C.64, TASK-0233) makes 64; `item.link`, `item.unlink` and `item.extract_audio` (C.65 to C.67, TASK-0277) make 67; `clip.set_effects` (C.68, TASK-0278) makes 68; `item.paste_attributes` (C.69, TASK-0254) makes 69; `item.freeze_frame` (C.70, TASK-0254) makes 70; `caption.import_subtitles` (C.71, TASK-0254) makes 71. The binary exposes the BETA build (`command.Build` is `Beta`, switched on 2026-11-15): 71 commands, 70 public, of which 16 are Prototype, 32 ALPHA and 23 BETA; `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
+- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen for ALPHA: all 48 commands have golden cases and pass the registry-wide gates (P2-ENG-018). BETA adds `clip.set_filter` and `clip.set_blur` (C.49, C.50; P3-ENG-001), `audio.duck` and `audio.mark_beats` (C.51, C.52; P3-ENG-002), `font.add` and `font.remove` (C.53, C.54; P3-ENG-005), 54 in the BETA build; after BETA `clip.set_chroma_key` (C.55, VV-015) and the marker commands `marker.add`, `marker.set` and `marker.remove` (C.56 to C.58, VV-035) make 58; `item.slip` and `settings.reframe` (C.59, C.60, VV-036 and VV-038) make 60; `clip.set_blend` (C.61, VV-015) makes 61; `clip.set_mask` (C.62, VV-015) makes 62; `clip.set_flip` (C.63, TASK-0233) makes 63; `item.set_enabled` (C.64, TASK-0233) makes 64; `item.link`, `item.unlink` and `item.extract_audio` (C.65 to C.67, TASK-0277) make 67; `clip.set_effects` (C.68, TASK-0278) makes 68; `item.paste_attributes` (C.69, TASK-0254) makes 69; `item.freeze_frame` (C.70, TASK-0254) makes 70; `caption.import_subtitles` (C.71, TASK-0254) makes 71. `clip.set_shadow` and `clip.set_outline` (C.72, C.73, VV-122) make 73. The binary exposes the BETA build (`command.Build` is `Beta`, switched on 2026-11-15): 73 commands, 72 public, of which 16 are Prototype, 32 ALPHA and 25 BETA; `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
 - Depends on: SDD-001 (document), ADR-0002 (command core), ADR-0004 (time), ADR-0006 (log, concurrency, undo), ADR-0014 (JSON Schema)
 - Implements: RF-010 to RF-016, RF-020 to RF-026, RF-030 to RF-036, RF-040, RF-041, RF-050, RF-051, RF-100, RF-105, RF-107, RF-112 to RF-115, RF-119, NFR-001, NFR-025
 - Owner area: senior-a (command core and schema)
@@ -271,6 +271,8 @@ Scope is `edit` unless stated. Phase: `P` Prototype, `A` ALPHA. "Time" marks arg
 | `clip.set_color` | A | `item_id`, `brightness?`, `contrast?`, `saturation?`, `temperature?`, `tint?`, `hue?` | Sets colour adjustment; after BETA also white balance and hue rotation (TASK-0233). See C.26 |
 | `clip.set_filter` | B | `item_id`, `filter?`, `amount?` | BETA (RF-027). Sets the colour filter of a clip and how much of it is mixed in |
 | `clip.set_blur` | B | `item_id`, `radius` | BETA (RF-027). Sets the blur radius of a clip in pixels; 0 removes it |
+| `clip.set_shadow` | B | `item_id`, `shadow` (`{color?, opacity?, dx?, dy?, blur?}` or null) | Gives a clip a drop shadow that follows its visible shape (VV-122); null removes it. See C.72 |
+| `clip.set_outline` | B | `item_id`, `outline` (`{color?, width?}` or null) | Gives a clip an outline that follows its visible shape (VV-122); null removes it. See C.73 |
 | `clip.set_chroma_key` | B | `item_id`, `color` (`#RRGGBB` or null), `similarity?`, `smoothness?`, `spill?` | Keys out one colour of a clip (a green screen); null removes the key. See C.55 |
 | `clip.set_blend` | B | `item_id`, `mode` (`normal`, `multiply`, `screen`, `overlay`, `add`) | Sets how a visual item is mixed with what is below it. See C.61 |
 | `clip.set_mask` | B | `item_id`, `mask` (`{shape, x, y, width, height, feather?, invert?}` or null) | Limits where a visual item is drawn to a rectangle or an ellipse in the item's own frame; null removes it. See C.62 |
@@ -5841,3 +5843,122 @@ Creates one caption item for each cue of an SRT or WebVTT text (TASK-0254, NEW-3
 - `err_id_exists`
 - `err_invalid_state_cue_shorter_than_its_words`
 - `err_limit_500_items`
+
+### C.72 `clip.set_shadow` (phase B)
+
+Sets or removes the drop shadow of a clip (VV-122, SDD-001 §3.5): the silhouette of its picture, moved, blurred and tinted, drawn below it. The pixels are in SDD-004 §3.15.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | yes | none | a `clip` (video or still image) |
+| `shadow` | object or null | yes | none | the whole shadow, which replaces the current one; null removes it |
+| `shadow.color` | colour | no | `#000000` | |
+| `shadow.opacity` | number | no | 0.5 | 0 to 1 |
+| `shadow.dx`, `shadow.dy` | number | no | 8 | -500 to 500 pixels |
+| `shadow.blur` | number | no | 12 | 0 to 100 pixels |
+
+**Preconditions.**
+
+1. `shadow` is present, an object or null, and each member given is in range (`E_VALIDATION`); a colour is `#RRGGBB`, `#RRGGBBAA` or a `$name` of `template.colors`.
+2. The item exists (`E_NOT_FOUND`).
+3. The item is a `clip` (`E_TYPE_MISMATCH`).
+
+**Postconditions.**
+
+1. `shadow` is set to the stored object, every member filled in (hex colours upper case, numbers rounded to 3 decimals); null removes the field.
+2. `diff` has one `item.updated`; empty when unchanged. `effective.shadow` is the stored object, or null.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | `shadow` missing, a member out of range or not a colour | `The value of args.shadow.opacity is 1.5, outside the accepted range.` | `Use a value between 0 and 1.` |
+| `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
+| `E_TYPE_MISMATCH` | not a clip | `Item itm_s6t7v8w9x0 is a text item; a shadow applies to clips.` | `Use item.set_transform to size other items.` |
+
+**Inverse.** `patch {collection: "items", id, set: <old value>, unset: <field if it was absent>}`.
+
+**Idempotency.** Same result.
+
+**Example.** Clip `itm_m1n2p3q4r5` with no shadow.
+
+```json
+{"op": "clip.set_shadow", "args": {"item_id": "itm_m1n2p3q4r5", "shadow": {"color": "#000000", "opacity": 0.6, "dx": 10, "dy": 12, "blur": 16}}}
+```
+
+**Golden cases.**
+
+- `ok_defaults`
+- `ok_full`
+- `ok_replaces_shadow`
+- `ok_null_removes_shadow`
+- `ok_null_without_shadow_noop`
+- `ok_same_shadow_noop`
+- `ok_image_clip`
+- `err_validation_no_shadow`
+- `err_validation_opacity_above_1`
+- `err_validation_blur_above_100`
+- `err_validation_bad_colour`
+- `err_validation_unknown_template_colour`
+- `err_not_found`
+- `err_type_mismatch_text_item`
+
+### C.73 `clip.set_outline` (phase B)
+
+Sets or removes the outline of a clip (VV-122, SDD-001 §3.5): a contour around the visible shape of its picture. The pixels are in SDD-004 §3.15.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | yes | none | a `clip` (video or still image) |
+| `outline` | object or null | yes | none | the whole outline, which replaces the current one; null removes it |
+| `outline.color` | colour | no | `#000000` | |
+| `outline.width` | number | no | 4 | 0.5 to 100 pixels |
+
+**Preconditions.**
+
+1. `outline` is present, an object or null, and each member given is in range (`E_VALIDATION`); a colour is `#RRGGBB`, `#RRGGBBAA` or a `$name` of `template.colors`.
+2. The item exists (`E_NOT_FOUND`).
+3. The item is a `clip` (`E_TYPE_MISMATCH`).
+
+**Postconditions.**
+
+1. `outline` is set to the stored object, every member filled in (hex colours upper case, numbers rounded to 3 decimals); null removes the field.
+2. `diff` has one `item.updated`; empty when unchanged. `effective.outline` is the stored object, or null.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | `outline` missing, a member out of range or not a colour | `The value of args.outline.width is 0.1, outside the accepted range.` | `Use a width between 0.5 and 100.` |
+| `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
+| `E_TYPE_MISMATCH` | not a clip | `Item itm_s6t7v8w9x0 is a text item; an outline applies to clips.` | `Use item.set_transform to size other items.` |
+
+**Inverse.** `patch {collection: "items", id, set: <old value>, unset: <field if it was absent>}`.
+
+**Idempotency.** Same result.
+
+**Example.** Clip `itm_m1n2p3q4r5` with no outline.
+
+```json
+{"op": "clip.set_outline", "args": {"item_id": "itm_m1n2p3q4r5", "outline": {"color": "#FFFFFF", "width": 6}}}
+```
+
+**Golden cases.**
+
+- `ok_defaults`
+- `ok_full`
+- `ok_replaces_outline`
+- `ok_null_removes_outline`
+- `ok_null_without_outline_noop`
+- `ok_same_outline_noop`
+- `ok_image_clip`
+- `err_validation_no_outline`
+- `err_validation_width_below_half`
+- `err_validation_width_above_100`
+- `err_validation_bad_colour`
+- `err_not_found`
+- `err_type_mismatch_text_item`

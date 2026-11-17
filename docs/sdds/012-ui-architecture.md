@@ -938,6 +938,8 @@ Phase of the entry point is the phase in which that entry point is built. Every 
 | `item.set_enabled` | `V`, item menu "Turn off" and "Turn on", the On switch of the Name section | B |
 | `clip.set_blend` | inspector Blend section | A |
 | `clip.set_mask` | inspector Mask section | A |
+| `clip.set_shadow` | inspector Shadow section of a clip (VV-122) | B |
+| `clip.set_outline` | inspector Outline section of a clip (VV-122) | B |
 | `clip.remove_silences` | inspector button "Remove silences" with minimum silence and padding fields | A |
 | `text.add` | toolbar "Add text" (`T`) | A |
 | `text.set` | inspector Text section, inline canvas editor | A |

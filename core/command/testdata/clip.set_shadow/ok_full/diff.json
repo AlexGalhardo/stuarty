@@ -1,0 +1,18 @@
+[
+  {
+    "kind": "item.updated",
+    "id": "itm_m1n2p3q4r5",
+    "changes": {
+      "shadow": [
+        null,
+        {
+          "blur": 30,
+          "color": "#FF8800",
+          "dx": -10,
+          "dy": 14.5,
+          "opacity": 0.8
+        }
+      ]
+    }
+  }
+]

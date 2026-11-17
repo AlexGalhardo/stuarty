@@ -437,7 +437,7 @@ func (v *validator) itemFieldsForType(path, key string, it Item) {
 		bad("asset")
 	}
 	if it.Type != ItemClip &&
-		(it.Crop != nil || it.Lut != nil || it.Brightness != 0 || it.Temperature != 0 || it.Tint != 0 || it.Hue != 0 || it.AudioMuted ||
+		(it.Crop != nil || it.Shadow != nil || it.Outline != nil || it.Lut != nil || it.Brightness != 0 || it.Temperature != 0 || it.Tint != 0 || it.Hue != 0 || it.AudioMuted ||
 			len(it.Hsl) > 0 || it.Wheels != nil || it.Curves != nil) {
 		bad("crop")
 	}

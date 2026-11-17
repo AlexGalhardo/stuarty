@@ -604,6 +604,8 @@ func lostProperties(it *timeline.Item) []Lost {
 		{it.Brightness != 0 || it.Contrast != 1 || it.Saturation != 1 || it.Temperature != 0 || it.Tint != 0 || it.Hue != 0, "colour adjustment"},
 		{(it.Filter != "none" && it.Filter != "") || it.Blur != 0, "filter and blur"},
 		{it.ChromaKey != nil, "chroma key"},
+		{it.Shadow != nil, "drop shadow"},
+		{it.Outline != nil, "outline"},
 		{it.Lut != nil, "lookup table"},
 		{len(it.Hsl) > 0 || it.Wheels != nil || it.Curves != nil, "advanced colour"},
 		{it.Freeze, "freeze frame"},

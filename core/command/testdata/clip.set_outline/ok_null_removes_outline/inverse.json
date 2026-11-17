@@ -1,0 +1,13 @@
+[
+  {
+    "type": "patch",
+    "collection": "items",
+    "id": "itm_m1n2p3q4r5",
+    "set": {
+      "outline": {
+        "color": "#000000",
+        "width": 4
+      }
+    }
+  }
+]

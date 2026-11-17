@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "The required argument args.shadow is missing.",
+  "hint": "Add \"shadow\" (an object) to the arguments.",
+  "retryable": false,
+  "path": "args.shadow"
+}

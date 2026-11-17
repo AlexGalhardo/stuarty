@@ -124,11 +124,13 @@ export interface Item {
   mask?: Mask;
   name?: string;
   opacity?: number;
+  outline?: Outline;
   radius?: number;
   reverse?: boolean;
   rotation?: number;
   saturation?: number;
   scale?: number;
+  shadow?: Shadow;
   shape?: "rect" | "rounded_rect" | "ellipse";
   slot?: Slot;
   source_in?: number;
@@ -272,6 +274,17 @@ export interface Mask {
   width: number;
   x: number;
   y: number;
+}
+export interface Outline {
+  color: string;
+  width: number;
+}
+export interface Shadow {
+  blur: number;
+  color: string;
+  dx: number;
+  dy: number;
+  opacity: number;
 }
 export interface Slot {
   description?: string;
