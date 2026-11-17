@@ -7,6 +7,7 @@ import {
 	LayoutTemplate,
 	type LucideIcon,
 	SlidersHorizontal,
+	Sparkles,
 	Type,
 } from "lucide-react";
 import type { ReactNode } from "react";
@@ -14,6 +15,7 @@ import type { ReactNode } from "react";
 import HistoryPanel from "../history/HistoryPanel";
 import type { AssetDragStart } from "../library/AssetCard";
 import AudioPanel from "../library/AudioPanel";
+import EffectsPanel from "../library/EffectsPanel";
 import FiltersPanel from "../library/FiltersPanel";
 import Library from "../library/Library";
 import TextPanel from "../library/TextPanel";
@@ -69,6 +71,14 @@ export const LIBRARY_TABS: readonly LibraryTabDef[] = [
 		commands: ["caption.from_transcript"],
 		bodyClass: "*:flex-1",
 		render: () => <CaptionsTab />,
+	},
+	{
+		id: "effects",
+		labelKey: "ui.editor.panels.effects",
+		icon: Sparkles,
+		commands: ["clip.set_effects"],
+		bodyClass: "*:flex-1",
+		render: () => <EffectsPanel />,
 	},
 	{
 		id: "transitions",

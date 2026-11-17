@@ -68,3 +68,40 @@ test.describe("library transitions and filters tabs", () => {
 		await expect(amount).toBeEnabled();
 	});
 });
+
+// TASK-0288: the Effects tab lists the kinds of clip.set_effects and a card
+// sends that one command; the thumbnail is optional, so the card shows a name.
+test.describe("library effects tab", () => {
+	test.use({ viewport: { width: 1600, height: 900 } });
+
+	test("an effect card adds and removes its effect on the selected clip", async ({
+		page,
+		request,
+	}) => {
+		const seeded = await seedProject(request, { tracks: 1, perTrack: 1 });
+		await page.goto(`/editor/${seeded.id}`);
+		await page.getByRole("tab", { name: "Effects" }).click();
+		const panel = page.getByRole("region", { name: "Effects" });
+		const glow = panel.getByRole("button", { name: "Glow" });
+		await expect(glow).toHaveAttribute("aria-disabled", "true");
+		await expect(glow).toHaveAccessibleDescription("Select a clip first.");
+
+		await page.locator(`[data-item-id="${seeded.itemIds[0]}"]`).click();
+		const edit = page.waitForRequest(
+			(r) => r.method() === "POST" && r.url().endsWith("/edit"),
+		);
+		await glow.click();
+		const body = (await edit).postDataJSON() as {
+			operations: { op: string; args: Record<string, unknown> }[];
+		};
+		expect(body.operations).toEqual([
+			{
+				op: "clip.set_effects",
+				args: { item_id: seeded.itemIds[0], effects: [{ kind: "glow" }] },
+			},
+		]);
+		await expect(glow).toHaveAttribute("aria-pressed", "true");
+		await glow.click();
+		await expect(glow).toHaveAttribute("aria-pressed", "false");
+	});
+});

@@ -102,8 +102,9 @@ test.describe("library tab rail", () => {
 				await expect(page.getByRole("tablist")).toBeVisible();
 				// Every panel of the rail, one after the other.
 				const tabs = page.locator("[data-rail-tab]");
+				// The rail fills in when the registry answers.
+				await expect(tabs).toHaveCount(9);
 				const count = await tabs.count();
-				expect(count).toBeGreaterThan(1);
 				for (let i = 0; i < count; i++) {
 					await tabs.nth(i).click();
 					await expect(tabs.nth(i)).toHaveAttribute("aria-selected", "true");
