@@ -1,0 +1,25 @@
+[
+  {
+    "type": "patch",
+    "collection": "items",
+    "id": "itm_m1n2p3q4r5",
+    "set": {
+      "keyframes": {
+        "mask_x": [
+          {
+            "t": 30,
+            "value": 0.4
+          }
+        ]
+      },
+      "mask": {
+        "feather": 4,
+        "height": 0.5,
+        "shape": "rect",
+        "width": 0.5,
+        "x": 0,
+        "y": 0
+      }
+    }
+  }
+]

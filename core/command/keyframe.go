@@ -13,13 +13,14 @@ func init() {
 	Register(Define(Spec{
 		Name:    "keyframe.set",
 		Summary: "Adds or replaces a keyframe of one animated property of an item.",
-		Description: "Sets the value of x, y, scale, rotation, opacity, (clips and audio) volume or (clips) brightness, contrast, saturation, temperature, tint or hue at an absolute " +
+		Description: "Sets the value of x, y, scale, rotation, opacity, (clips and audio) volume, (clips) brightness, contrast, saturation, temperature, tint or hue, " +
+			"(items with a mask, set it first with clip.set_mask) mask_x, mask_y, mask_width, mask_height or mask_feather, or (clips) crop_left, crop_top, crop_right or crop_bottom at an absolute " +
 			"position inside the item, from its start to its end inclusive. When the property had no keyframe " +
 			"and at is after the start, its current static value becomes the first keyframe. The easing applies " +
 			"from this keyframe to the next. At most 100 keyframes per property.",
 		Example: `{"item_id": "itm_s6t7v8w9x0", "property": "scale", "at": "2s", "value": 1.2, "easing": "ease_out"}`,
 		Errors: []string{
-			CodeValidation, CodeInvalidTime, CodeNotFound, CodeTypeMismatch, CodeLimit,
+			CodeValidation, CodeInvalidTime, CodeNotFound, CodeTypeMismatch, CodeLimit, CodeInvalidState,
 		},
 		Scope: ScopeEdit,
 		Phase: Alpha,
@@ -66,6 +67,16 @@ func propApplies(it *timeline.Item, prop string) *Error {
 		).
 			WithHint("Use opacity, scale, x, y or rotation.").
 			WithPath("args.property")
+	case isCropProp(prop) && it.Type != timeline.ItemClip:
+		return Errorf(
+			CodeTypeMismatch,
+			"Property %s applies to clips; item %s is %s item.",
+			prop,
+			it.ID,
+			article(it.Type),
+		).
+			WithHint("Use opacity, scale, x, y or rotation.").
+			WithPath("args.property")
 	case prop != "volume" && it.Type == timeline.ItemAudio:
 		return Errorf(CodeTypeMismatch, "Property %s does not apply to audio item %s.", prop, it.ID).
 			WithHint("Use property volume for audio items.").WithPath("args.property")
@@ -95,7 +106,23 @@ func (c *Context) staticValue(it *timeline.Item, prop string) float64 {
 	case "volume":
 		return it.Volume
 	}
+	if isMaskProp(prop) {
+		return it.MaskValue(prop)
+	}
+	if isCropProp(prop) {
+		return it.CropValue(prop)
+	}
 	return it.ColourValue(prop)
+}
+
+func isMaskProp(prop string) bool {
+	_, _, ok := timeline.MaskRange(prop)
+	return ok
+}
+
+func isCropProp(prop string) bool {
+	_, _, ok := timeline.CropRange(prop)
+	return ok
 }
 
 func isColourProp(prop string) bool {
@@ -120,8 +147,12 @@ func checkKeyframeValue(prop string, v float64) *Error {
 	case prop == "volume" && (v < 0 || v > 4):
 		return bad("from 0 to 4")
 	}
-	if lo, hi, ok := timeline.ColourRange(prop); ok && (v < lo || v > hi) {
-		return bad("from " + trimFloat(lo) + " to " + trimFloat(hi))
+	for _, rng := range []func(string) (float64, float64, bool){
+		timeline.ColourRange, timeline.MaskRange, timeline.CropRange,
+	} {
+		if lo, hi, ok := rng(prop); ok && (v < lo || v > hi) {
+			return bad("from " + trimFloat(lo) + " to " + trimFloat(hi))
+		}
 	}
 	return nil
 }
@@ -151,10 +182,10 @@ func (c *Context) keyframeT(it *timeline.Item, at Time) (int, *Error) {
 
 type keyframeSetArgs struct {
 	ItemID   string  `json:"item_id"          pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
-	Property string  `json:"property"                                                                enum:"x,y,scale,rotation,opacity,volume,brightness,contrast,saturation,temperature,tint,hue"`
-	At       Time    `json:"at"                                                                                                                                                                   desc:"Position on the project timeline, from the item start to its end inclusive."`
-	Value    float64 `json:"value"                                                                                                                                                                desc:"Valid for the property: scale above 0 up to 20, opacity 0 to 1, volume 0 to 4."`
-	Easing   string  `json:"easing,omitempty"                                                        enum:"linear,ease_in,ease_out,ease_in_out,hold"                                              desc:"From this keyframe to the next. Default linear."`
+	Property string  `json:"property"                                                                enum:"x,y,scale,rotation,opacity,volume,brightness,contrast,saturation,temperature,tint,hue,mask_x,mask_y,mask_width,mask_height,mask_feather,crop_left,crop_top,crop_right,crop_bottom"`
+	At       Time    `json:"at"                                                                                                                                                                                                                                                               desc:"Position on the project timeline, from the item start to its end inclusive."`
+	Value    float64 `json:"value"                                                                                                                                                                                                                                                            desc:"Valid for the property: scale above 0 up to 20, opacity 0 to 1, volume 0 to 4."`
+	Easing   string  `json:"easing,omitempty"                                                        enum:"linear,ease_in,ease_out,ease_in_out,hold"                                                                                                                                          desc:"From this keyframe to the next. Default linear."`
 }
 
 func applyKeyframeSet(c *Context, a *keyframeSetArgs) error {
@@ -178,6 +209,10 @@ func applyKeyframeSet(c *Context, a *keyframeSetArgs) error {
 		if err := c.stillImageNoAudio(&it, "has no volume to animate"); err != nil {
 			return err.WithPath("args.property")
 		}
+	}
+	if isMaskProp(a.Property) && it.Mask == nil {
+		return Errorf(CodeInvalidState, "Item %s has no mask to animate.", a.ItemID).
+			WithHint("Set one with clip.set_mask first.").WithPath("args.property")
 	}
 	t, err := c.keyframeT(&it, a.At)
 	if err != nil {
@@ -230,8 +265,8 @@ func dropKeyframes(it *timeline.Item, prop string, value float64) {
 
 type keyframeRemoveArgs struct {
 	ItemID   string `json:"item_id"  pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
-	Property string `json:"property"                                                        enum:"x,y,scale,rotation,opacity,volume,brightness,contrast,saturation,temperature,tint,hue"`
-	At       Time   `json:"at"                                                                                                                                                           desc:"Position of the keyframe on the project timeline, from the item start to its end inclusive."`
+	Property string `json:"property"                                                        enum:"x,y,scale,rotation,opacity,volume,brightness,contrast,saturation,temperature,tint,hue,mask_x,mask_y,mask_width,mask_height,mask_feather,crop_left,crop_top,crop_right,crop_bottom"`
+	At       Time   `json:"at"                                                                                                                                                                                                                                                       desc:"Position of the keyframe on the project timeline, from the item start to its end inclusive."`
 }
 
 func applyKeyframeRemove(c *Context, a *keyframeRemoveArgs) error {
@@ -300,7 +335,7 @@ func abs(v int) int { return max(v, -v) }
 
 type keyframeClearArgs struct {
 	ItemID   string `json:"item_id"            pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
-	Property string `json:"property,omitempty"                                                        desc:"One property; default every animated property." enum:"x,y,scale,rotation,opacity,volume,brightness,contrast,saturation,temperature,tint,hue"`
+	Property string `json:"property,omitempty"                                                        desc:"One property; default every animated property." enum:"x,y,scale,rotation,opacity,volume,brightness,contrast,saturation,temperature,tint,hue,mask_x,mask_y,mask_width,mask_height,mask_feather,crop_left,crop_top,crop_right,crop_bottom"`
 }
 
 func applyKeyframeClear(c *Context, a *keyframeClearArgs) error {

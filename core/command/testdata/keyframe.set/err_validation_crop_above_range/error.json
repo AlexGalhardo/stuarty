@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.value must be from 0 to 1 for crop_top, got 1.2.",
+  "hint": "Use a value in range.",
+  "retryable": false,
+  "path": "args.value"
+}

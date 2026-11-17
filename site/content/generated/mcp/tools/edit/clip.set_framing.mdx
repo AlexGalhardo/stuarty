@@ -10,7 +10,7 @@ wide: true
 
 <RefMain>
 
-Sets fit (cover, contain or none) and merges the given crop sides with the current ones. Each side is a fraction of the asset from 0 to 1; left plus right and top plus bottom must stay below 1.
+Sets fit (cover, contain or none) and merges the given crop sides with the current ones. Each side is a fraction of the asset from 0 to 1; left plus right and top plus bottom must stay below 1. A side that has keyframes (crop_left, crop_top, crop_right, crop_bottom; see keyframe.set) cannot be set here.
 
 ## Arguments
 
@@ -25,6 +25,7 @@ Sets fit (cover, contain or none) and merges the given crop sides with the curre
 - [`E_VALIDATION`](/docs/reference/error-codes#e_validation)
 - [`E_NOT_FOUND`](/docs/reference/error-codes#e_not_found)
 - [`E_TYPE_MISMATCH`](/docs/reference/error-codes#e_type_mismatch)
+- [`E_INVALID_STATE`](/docs/reference/error-codes#e_invalid_state)
 
 ## Scope and phase
 

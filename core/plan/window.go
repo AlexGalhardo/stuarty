@@ -49,9 +49,12 @@ type WindowLayer struct {
 
 	// Media layers: the time in the proxy at which each frame starts, the
 	// crop in source pixels [x, y, w, h], and the colour matrix (null when neutral).
-	SourceSeconds []float64       `json:"source_seconds,omitempty"`
-	Crop          *[4]float64     `json:"crop,omitempty"`
-	ColorMatrix   json.RawMessage `json:"color_matrix,omitempty"`
+	SourceSeconds []float64   `json:"source_seconds,omitempty"`
+	Crop          *[4]float64 `json:"crop,omitempty"`
+	// Crops is the crop of each frame of the window, present only when a crop side is animated; then it
+	// replaces crop (SDD-004 §3.4).
+	Crops       [][4]float64    `json:"crops,omitempty"`
+	ColorMatrix json.RawMessage `json:"color_matrix,omitempty"`
 	// ColorMatrices is the matrix of each frame of the window, present only when a colour property is
 	// animated and the matrix changes (SDD-004 §3.5); then it replaces color_matrix.
 	ColorMatrices []json.RawMessage `json:"color_matrices,omitempty"`
@@ -80,6 +83,9 @@ type WindowLayer struct {
 	FlipY bool `json:"flip_y,omitempty"`
 
 	Mask *MaskSpec `json:"mask,omitempty"`
+	// Masks is the mask of each frame of the window, present only when a mask property is animated; then it
+	// replaces mask (SDD-004 §3.9).
+	Masks []*MaskSpec `json:"masks,omitempty"`
 
 	// Constant over the item: the pixel effects (SDD-004 §3.13). Transition is the whip, dip or wipe at
 	// each frame of the window, null where there is none; absent when no frame has one.
@@ -180,6 +186,8 @@ type layerAcc struct {
 	asset     timeline.Asset // media layers
 	keyByWord map[int]int    // bitmap layers: active word -> index in the keys
 	colourKF  bool           // media layers: a colour property has keyframes
+	maskKF    bool           // a mask property has keyframes
+	cropKF    bool           // media layers: a crop side has keyframes
 }
 
 func newLayerAcc(p *planner, t, room int, first *Layer) *layerAcc {
@@ -190,6 +198,14 @@ func newLayerAcc(p *planner, t, room int, first *Layer) *layerAcc {
 	for _, name := range timeline.ColourProps {
 		a.colourKF = a.colourKF || len(it.Keyframes[name]) > 0
 	}
+	for _, name := range timeline.MaskProps {
+		a.maskKF = a.maskKF || len(it.Keyframes[name]) > 0
+	}
+
+	for _, name := range timeline.CropProps {
+		a.cropKF = a.cropKF || len(it.Keyframes[name]) > 0
+	}
+
 	a.wl = WindowLayer{
 		Item:      first.ItemID,
 		Kind:      first.Kind,
@@ -273,7 +289,15 @@ func (a *layerAcc) add(t int, l *Layer) {
 	wl.Scale = append(wl.Scale, l.Scale)
 	a.transition(l)
 
+	if a.maskKF {
+		wl.Masks = append(wl.Masks, l.Mask)
+	}
+
 	if l.Kind == Media {
+		if a.cropKF {
+			wl.Crops = append(wl.Crops, [4]float64{l.Crop.X, l.Crop.Y, l.Crop.W, l.Crop.H})
+		}
+
 		sec := 0.0
 		if a.asset.FrameRate.Num > 0 {
 			sec = float64(l.SourceFrame) * float64(a.asset.FrameRate.Den) / float64(a.asset.FrameRate.Num)

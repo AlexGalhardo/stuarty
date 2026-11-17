@@ -75,3 +75,44 @@ func TestValidateColourKeyframes(t *testing.T) {
 		t.Fatalf("a colour keyframe on a clip is valid, got %v", vs)
 	}
 }
+
+func TestValidateMaskAndCropKeyframes(t *testing.T) {
+	keys := func(prop string, v float64) func(*Item) {
+		return func(i *Item) { i.Keyframes = Keyframes{prop: {{T: 0, Value: v, Easing: "linear"}}} }
+	}
+	masked := func(i *Item) { i.Mask = &Mask{Shape: "rect", Width: 0.5, Height: 0.5} }
+	cases := []invalidCase{
+		{"mask keyframe without a mask", func(d *Document) { editItem(d, clipID, keys("mask_x", 0.1)) }, VKeyframes},
+		{"mask width below 0.001", func(d *Document) {
+			editItem(d, clipID, masked)
+			editItem(d, clipID, keys("mask_width", 0))
+		}, VKeyframes},
+		{"mask feather above 200", func(d *Document) {
+			editItem(d, clipID, masked)
+			editItem(d, clipID, keys("mask_feather", 201))
+		}, VKeyframes},
+		{"crop keyframe above 1", func(d *Document) { editItem(d, clipID, keys("crop_left", 1.5)) }, VKeyframes},
+		{"crop keyframe on a text item", func(d *Document) { editItem(d, capItemID, keys("crop_top", 0.1)) }, VKeyframes},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			d := base(t)
+			c.edit(d)
+			if got := codesOf(Validate(d)); len(got) != 1 || got[0] != c.want {
+				t.Errorf("codes %v, want only %s\n%v", got, c.want, Validate(d))
+			}
+		})
+	}
+
+	d := base(t)
+	editItem(d, clipID, func(i *Item) {
+		masked(i)
+		i.Keyframes = Keyframes{
+			"mask_x":    {{T: 0, Value: 0.1, Easing: "linear"}},
+			"crop_left": {{T: 0, Value: 0.2, Easing: "linear"}},
+		}
+	})
+	if vs := Validate(d); len(vs) != 0 {
+		t.Fatalf("mask and crop keyframes on a masked clip are valid, got %v", vs)
+	}
+}

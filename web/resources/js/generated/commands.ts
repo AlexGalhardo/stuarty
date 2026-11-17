@@ -1797,7 +1797,16 @@ export interface KeyframeClearArgs {
     | "saturation"
     | "temperature"
     | "tint"
-    | "hue";
+    | "hue"
+    | "mask_x"
+    | "mask_y"
+    | "mask_width"
+    | "mask_height"
+    | "mask_feather"
+    | "crop_left"
+    | "crop_top"
+    | "crop_right"
+    | "crop_bottom";
 }
 
 export interface KeyframeRemoveArgs {
@@ -1818,7 +1827,16 @@ export interface KeyframeRemoveArgs {
     | "saturation"
     | "temperature"
     | "tint"
-    | "hue";
+    | "hue"
+    | "mask_x"
+    | "mask_y"
+    | "mask_width"
+    | "mask_height"
+    | "mask_feather"
+    | "crop_left"
+    | "crop_top"
+    | "crop_right"
+    | "crop_bottom";
 }
 
 export interface KeyframeSetArgs {
@@ -1843,7 +1861,16 @@ export interface KeyframeSetArgs {
     | "saturation"
     | "temperature"
     | "tint"
-    | "hue";
+    | "hue"
+    | "mask_x"
+    | "mask_y"
+    | "mask_width"
+    | "mask_height"
+    | "mask_feather"
+    | "crop_left"
+    | "crop_top"
+    | "crop_right"
+    | "crop_bottom";
   /**
    * Valid for the property: scale above 0 up to 20, opacity 0 to 1, volume 0 to 4.
    */
@@ -2453,7 +2480,7 @@ export const COMMANDS: Record<CommandName, { summary: string; scope: "edit" | "m
 	"clip.set_effects": { summary: "Sets the visual effects of a clip: motion blur, glow, vignette, grain, RGB split and shake.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"clip.set_filter": { summary: "Sets the colour filter of a visual item and how much of it is mixed in.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"clip.set_flip": { summary: "Mirrors a visual item horizontally, vertically or both.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
-	"clip.set_framing": { summary: "Sets how the asset of a clip is fitted into the frame and how much of each side is cropped.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
+	"clip.set_framing": { summary: "Sets how the asset of a clip is fitted into the frame and how much of each side is cropped.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE"] },
 	"clip.set_mask": { summary: "Limits where a visual item is drawn to a rectangle or an ellipse.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"clip.set_speed": { summary: "Changes the speed of a clip or audio item, constant or along a curve, or plays it backwards.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_OUT_OF_SOURCE","E_INVALID_TIME","E_OVERLAP"] },
 	"font.add": { summary: "Adds a user font family to the project, or more weights to one it already has.", scope: "media", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND"] },
@@ -2477,7 +2504,7 @@ export const COMMANDS: Record<CommandName, { summary: string; scope: "edit" | "m
 	"item.unlink": { summary: "Removes items from their link group.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_INVALID_STATE"] },
 	"keyframe.clear": { summary: "Removes all keyframes of one property, or of every property.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"keyframe.remove": { summary: "Removes the keyframe of a property at a frame.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH"] },
-	"keyframe.set": { summary: "Adds or replaces a keyframe of one animated property of an item.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_LIMIT"] },
+	"keyframe.set": { summary: "Adds or replaces a keyframe of one animated property of an item.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_LIMIT","E_INVALID_STATE"] },
 	"marker.add": { summary: "Puts a marker on the timeline, or on one item.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_INVALID_STATE","E_LIMIT"] },
 	"marker.remove": { summary: "Removes a marker of the timeline or of an item.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND"] },
 	"marker.set": { summary: "Moves or relabels a marker of the timeline or of an item.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_INVALID_STATE"] },

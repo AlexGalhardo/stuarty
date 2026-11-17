@@ -463,8 +463,12 @@ func keyframeValueOK(prop string, v float64) bool {
 		return v >= 0 && v <= 4
 	}
 
-	if lo, hi, ok := timeline.ColourRange(prop); ok {
-		return v >= lo && v <= hi
+	for _, rng := range []func(string) (float64, float64, bool){
+		timeline.ColourRange, timeline.MaskRange, timeline.CropRange,
+	} {
+		if lo, hi, ok := rng(prop); ok {
+			return v >= lo && v <= hi
+		}
 	}
 
 	return true
@@ -534,7 +538,8 @@ func keyframeList(name string, raw any, mode itemMode, dur int) ([]keyframeAt, b
 	switch {
 	case name == "volume" && mode == modeText, name != "volume" && mode == modeAudio:
 		return nil, false
-	case !slices.Contains([]string{"x", "y", "scale", "rotation", "opacity", "volume"}, name) && !isColourKey(name, mode):
+	case !slices.Contains([]string{"x", "y", "scale", "rotation", "opacity", "volume"}, name) && !isColourKey(name, mode) &&
+		!isMaskCropKey(name, mode):
 		return nil, false
 	}
 
@@ -705,6 +710,17 @@ func colourArgs(p *propReader, props map[string]any, lose func(string)) map[stri
 // isColourKey is true for the colour properties a clip can animate.
 func isColourKey(name string, mode itemMode) bool {
 	_, _, ok := timeline.ColourRange(name)
+
+	return ok && mode == modeClip
+}
+
+// isMaskCropKey is true for the mask properties a visual item can animate and the crop sides a clip can.
+func isMaskCropKey(name string, mode itemMode) bool {
+	if _, _, ok := timeline.MaskRange(name); ok {
+		return mode != modeAudio
+	}
+
+	_, _, ok := timeline.CropRange(name)
 
 	return ok && mode == modeClip
 }

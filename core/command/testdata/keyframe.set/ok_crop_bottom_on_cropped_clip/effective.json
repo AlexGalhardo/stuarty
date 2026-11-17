@@ -1,0 +1,10 @@
+{
+  "at": {
+    "frame": 60,
+    "requested": "60f",
+    "seconds": 2
+  },
+  "auto_first_keyframe": true,
+  "replaced": false,
+  "t": 60
+}

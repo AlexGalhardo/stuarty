@@ -15,7 +15,8 @@ func init() {
 		Summary: "Limits where a visual item is drawn to a rectangle or an ellipse.",
 		Description: "Sets a mask in the item's own frame: x, y, width and height are fractions of the item (0 to 1, " +
 			"x plus width and y plus height at most 1), feather is the soft edge in pixels (0 to 200, default 0) and " +
-			"invert keeps the outside instead. Replaces the current mask. Works on clip, text, caption and shape " +
+			"invert keeps the outside instead. Replaces the current mask and clears its keyframes (mask_x, mask_y, " +
+			"mask_width, mask_height, mask_feather; see keyframe.set). Works on clip, text, caption and shape " +
 			"items. mask null removes it.",
 		Example: `{"item_id": "itm_m1n2p3q4r5", "mask": {"shape": "ellipse", "x": 0.1, "y": 0.1, "width": 0.8, "height": 0.8, "feather": 12}}`,
 		Errors:  []string{CodeValidation, CodeNotFound, CodeTypeMismatch},
@@ -50,6 +51,12 @@ func applyClipSetMask(c *Context, a *clipMaskArgs) error {
 	if it.Type == timeline.ItemAudio {
 		return Errorf(CodeTypeMismatch, "Item %s is an audio item; a mask applies to visual items.", a.ItemID).
 			WithHint("Use item.set_audio for audio items.").WithPath("args.item_id")
+	}
+	// The keyframes of a mask that is replaced or removed do not apply to the new one.
+	for _, p := range timeline.MaskProps {
+		if len(it.Keyframes[p]) > 0 {
+			dropKeyframes(&it, p, 0)
+		}
 	}
 	if a.Mask == nil {
 		it.Mask = nil
