@@ -67,11 +67,33 @@ func projectList(ctx context.Context, svc service.Service, raw json.RawMessage) 
 	return &toolOutput{value: res, text: res.Text}, nil
 }
 
+// fpsArg is a frame rate written as text ("30", "30000/1001") or as a number
+// (30), as the CLI and the HTTP API take it (VV-198); the Service sees text.
+type fpsArg string
+
+func (f *fpsArg) UnmarshalJSON(b []byte) error {
+	var n json.Number
+	if err := json.Unmarshal(b, &n); err == nil {
+		*f = fpsArg(n.String())
+
+		return nil
+	}
+
+	var s string
+	if err := json.Unmarshal(b, &s); err != nil {
+		return err
+	}
+
+	*f = fpsArg(s)
+
+	return nil
+}
+
 func projectCreate(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolOutput, error) {
 	in, err := decode[struct {
 		Name   string `json:"name"`
 		Preset string `json:"preset"`
-		FPS    string `json:"fps"`
+		FPS    fpsArg `json:"fps"`
 		ID     string `json:"id"`
 	}](raw)
 	if err != nil {
@@ -80,7 +102,7 @@ func projectCreate(ctx context.Context, svc service.Service, raw json.RawMessage
 
 	res, err := svc.ProjectCreate(
 		ctx,
-		service.ProjectCreateRequest{Name: in.Name, Preset: in.Preset, FPS: in.FPS, ID: in.ID},
+		service.ProjectCreateRequest{Name: in.Name, Preset: in.Preset, FPS: string(in.FPS), ID: in.ID},
 	)
 	if err != nil {
 		return nil, err
