@@ -128,6 +128,16 @@ func supplyFont(ctx context.Context, h *renderhost.Host, fonts *FontSet, hash st
 	return nil
 }
 
+// Warm compiles the renderer module and starts the instance that draws bitmaps, so that the first text of the
+// process does not wait for it (about a second for the optimizing compiler of wazero). It is safe to call
+// from a goroutine at start-up and more than once; a failure is reported by the first Render.
+func Warm() {
+	engine.mu.Lock()
+	defer engine.mu.Unlock()
+
+	_, _ = hostLocked(context.Background())
+}
+
 // Render draws the bitmap of the spec. It is deterministic: the same spec gives
 // the same bytes on every platform.
 func Render(spec plan.BitmapSpec, fonts *FontSet) (Bitmap, error) {

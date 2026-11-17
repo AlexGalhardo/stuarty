@@ -13,6 +13,7 @@ import (
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
 	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
 	"github.com/AlexGalhardo/vukem-video/engine/ingest"
+	"github.com/AlexGalhardo/vukem-video/engine/rasterize"
 	enginestore "github.com/AlexGalhardo/vukem-video/engine/store"
 	"github.com/AlexGalhardo/vukem-video/engine/transcribe"
 	"github.com/AlexGalhardo/vukem-video/service/workspace"
@@ -222,6 +223,10 @@ func New(o Options) (Service, error) {
 	if o.Store == nil {
 		return nil, errors.New("service: Options.Store is required")
 	}
+
+	// The first text of the process would wait for the renderer module to compile (SDD-013 section 4.6), which
+	// is a one-time cost of about a second; starting it now keeps it out of the first view (NFR-004).
+	go rasterize.Warm()
 
 	s := &svc{
 		store:       o.Store,

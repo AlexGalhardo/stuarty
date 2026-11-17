@@ -10,6 +10,7 @@ import (
 
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
 	"github.com/AlexGalhardo/vukem-video/engine/ingest"
+	"github.com/AlexGalhardo/vukem-video/engine/rasterize"
 )
 
 // phoneDoc is the clip-caption scene on a 1080x1920 portrait clip of the given length, the shape of the
@@ -71,6 +72,9 @@ func phoneDoc(tb testing.TB, seconds float64) *timeline.Document {
 // coldRun asks for count different frames at the UI width with no cache and returns the time of each.
 func coldRun(tb testing.TB, doc *timeline.Document, count int) []time.Duration {
 	tb.Helper()
+
+	// The renderer module compiles once per server start, which service.New does ahead of the first view.
+	rasterize.Warm()
 
 	f := &Frames{Runner: shared.runner, ArtifactsDir: artifactsDir()}
 	last := lastFrame(doc)

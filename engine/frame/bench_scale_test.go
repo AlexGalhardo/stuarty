@@ -10,6 +10,7 @@ import (
 
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
 	"github.com/AlexGalhardo/vukem-video/engine/ingest"
+	"github.com/AlexGalhardo/vukem-video/engine/rasterize"
 )
 
 // The ViewFrame and ViewSheet benchmarks of the ALPHA phase (P2-RND-014) run on the project of NFR-009:
@@ -119,6 +120,9 @@ func scaleDoc(tb testing.TB) *timeline.Document {
 // coldAt asks for count different frames at a width with no cache and returns the time of each.
 func coldAt(tb testing.TB, doc *timeline.Document, count, width int) []time.Duration {
 	tb.Helper()
+
+	// The renderer module compiles once per server start, which service.New does ahead of the first view.
+	rasterize.Warm()
 
 	f := &Frames{Runner: shared.runner, ArtifactsDir: artifactsDir()}
 	out := make([]time.Duration, 0, count)
