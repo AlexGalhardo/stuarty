@@ -280,8 +280,9 @@ func TestErrorEnvelope(t *testing.T) {
 			400,
 			"E_VALIDATION",
 		},
-		"missing member": {req{method: http.MethodPost, path: "/api/v1/projects", body: `{}`}, 400, "E_VALIDATION"},
-		"bad limit":      {req{path: "/api/v1/projects?limit=abc"}, 400, "E_VALIDATION"},
+		"missing member":   {req{method: http.MethodPost, path: "/api/v1/projects", body: `{}`}, 400, "E_VALIDATION"},
+		"bad limit":        {req{path: "/api/v1/projects?limit=abc"}, 400, "E_VALIDATION"},
+		"bad assets limit": {req{path: "/api/v1/assets?limit=abc"}, 400, "E_VALIDATION"},
 		"too large": {
 			req{
 				method: http.MethodPost,

@@ -197,12 +197,13 @@ func (h *apiHandler) fontList(c *web.Ctx, _ noIn) (service.FontListResult, error
 }
 
 type assetListIn struct {
-	Kind string `json:"kind,omitempty" doc:"image, video or audio; omit it for every kind."`
+	Limit int    `json:"limit,omitempty" doc:"Keep the first files of the list; the default and the largest are 500."`
+	Kind  string `json:"kind,omitempty"  doc:"image, video or audio; omit it for every kind."`
 }
 
 // assetList is GET /assets: the files of the workspace by content hash (VV-117).
 func (h *apiHandler) assetList(c *web.Ctx, in assetListIn) (service.AssetListResult, error) {
-	res, err := h.Service.AssetList(c.Context(), service.AssetListRequest{Kind: in.Kind})
+	res, err := h.Service.AssetList(c.Context(), service.AssetListRequest{Kind: in.Kind, Limit: in.Limit})
 
 	return deref(res), err
 }
