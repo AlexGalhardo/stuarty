@@ -152,6 +152,8 @@
       "timeline": {
         "label": "Linha do tempo",
         "empty": "A linha do tempo está vazia",
+        "group_tools": "Ferramentas de edição",
+        "group_modes": "Modos e zoom",
         "zoom_in": "Aumentar o zoom",
         "zoom_out": "Diminuir o zoom",
         "fit": "Ajustar",

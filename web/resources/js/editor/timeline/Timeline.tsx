@@ -392,73 +392,87 @@ export default function Timeline(): ReactNode {
 			className="flex h-full min-h-0 flex-col bg-ed-timeline"
 		>
 			<div className="flex h-10 shrink-0 items-center gap-2 border-b border-ed-track-line bg-ed-panel px-3">
-				<Button
-					type="button"
-					variant="ghost"
-					size="icon-sm"
-					aria-label={t("ui.editor.timeline.zoom_out")}
-					title={tip(t("ui.editor.timeline.zoom_out"), "zoom_out")}
-					onClick={() => zoomStep(-1)}
+				{/* biome-ignore lint/a11y/useSemanticElements: a fieldset would draw a border and legend around buttons in a toolbar. */}
+				<div
+					role="group"
+					aria-label={t("ui.editor.timeline.group_tools")}
+					className="flex items-center gap-2"
 				>
-					<ZoomOut aria-hidden="true" />
-				</Button>
-				<Button
-					type="button"
-					variant="ghost"
-					size="icon-sm"
-					aria-label={t("ui.editor.timeline.zoom_in")}
-					title={tip(t("ui.editor.timeline.zoom_in"), "zoom_in")}
-					onClick={() => zoomStep(1)}
+					<Button
+						type="button"
+						variant={blade ? "secondary" : "ghost"}
+						size="sm"
+						aria-pressed={blade}
+						title={t("ui.editor.timeline.blade_hint")}
+						onClick={() => runtime.uiWriter.setTool(blade ? "select" : "blade")}
+					>
+						<Scissors aria-hidden="true" />
+						{t("ui.editor.timeline.blade")}
+					</Button>
+					<span className="font-mono text-xs text-muted-foreground tabular-nums">
+						{formatTime(playhead, fps, readTimeDisplay())}
+					</span>
+				</div>
+				{/* biome-ignore lint/a11y/useSemanticElements: a fieldset would draw a border and legend around buttons in a toolbar. */}
+				<div
+					role="group"
+					aria-label={t("ui.editor.timeline.group_modes")}
+					className="ml-auto flex items-center gap-2"
 				>
-					<ZoomIn aria-hidden="true" />
-				</Button>
-				<Button
-					type="button"
-					variant="ghost"
-					size="sm"
-					title={tip(t("ui.editor.timeline.fit"), "zoom_fit")}
-					onClick={fitToView}
-				>
-					<Maximize2 aria-hidden="true" />
-					{t("ui.editor.timeline.fit")}
-				</Button>
-				<Button
-					type="button"
-					variant={snapEnabled ? "secondary" : "ghost"}
-					size="sm"
-					aria-pressed={snapEnabled}
-					title={tip(t("ui.editor.timeline.snap"), "toggle_snap")}
-					onClick={runtime.uiWriter.toggleSnap}
-				>
-					<Magnet aria-hidden="true" />
-					{t("ui.editor.timeline.snap")}
-				</Button>
-				<Button
-					type="button"
-					variant={magnetOn ? "secondary" : "ghost"}
-					size="sm"
-					aria-pressed={magnetOn}
-					title={t("ui.editor.timeline.magnet_hint")}
-					disabled={!canEdit}
-					onClick={() => void actions.toggleMagnet()}
-				>
-					<AlignHorizontalJustifyStart aria-hidden="true" />
-					{t("ui.editor.timeline.magnet")}
-				</Button>
-				<Button
-					type="button"
-					variant={blade ? "secondary" : "ghost"}
-					size="sm"
-					aria-pressed={blade}
-					title={t("ui.editor.timeline.blade_hint")}
-					onClick={() => runtime.uiWriter.setTool(blade ? "select" : "blade")}
-				>
-					<Scissors aria-hidden="true" />
-					{t("ui.editor.timeline.blade")}
-				</Button>
-				<span className="ml-auto font-mono text-xs text-muted-foreground tabular-nums">
-					{formatTime(playhead, fps, readTimeDisplay())}
-				</span>
+					<Button
+						type="button"
+						variant={snapEnabled ? "secondary" : "ghost"}
+						size="sm"
+						aria-pressed={snapEnabled}
+						title={tip(t("ui.editor.timeline.snap"), "toggle_snap")}
+						onClick={runtime.uiWriter.toggleSnap}
+					>
+						<Magnet aria-hidden="true" />
+						{t("ui.editor.timeline.snap")}
+					</Button>
+					<Button
+						type="button"
+						variant={magnetOn ? "secondary" : "ghost"}
+						size="sm"
+						aria-pressed={magnetOn}
+						title={t("ui.editor.timeline.magnet_hint")}
+						disabled={!canEdit}
+						onClick={() => void actions.toggleMagnet()}
+					>
+						<AlignHorizontalJustifyStart aria-hidden="true" />
+						{t("ui.editor.timeline.magnet")}
+					</Button>
+					<Button
+						type="button"
+						variant="ghost"
+						size="icon-sm"
+						aria-label={t("ui.editor.timeline.zoom_out")}
+						title={tip(t("ui.editor.timeline.zoom_out"), "zoom_out")}
+						onClick={() => zoomStep(-1)}
+					>
+						<ZoomOut aria-hidden="true" />
+					</Button>
+					<Button
+						type="button"
+						variant="ghost"
+						size="icon-sm"
+						aria-label={t("ui.editor.timeline.zoom_in")}
+						title={tip(t("ui.editor.timeline.zoom_in"), "zoom_in")}
+						onClick={() => zoomStep(1)}
+					>
+						<ZoomIn aria-hidden="true" />
+					</Button>
+					<Button
+						type="button"
+						variant="ghost"
+						size="sm"
+						title={tip(t("ui.editor.timeline.fit"), "zoom_fit")}
+						onClick={fitToView}
+					>
+						<Maximize2 aria-hidden="true" />
+						{t("ui.editor.timeline.fit")}
+					</Button>
+				</div>
 			</div>
 
 			{/* biome-ignore lint/a11y/useSemanticElements: SDD-012 section 7.1 specifies a CSS-positioned grid, which a table cannot express. */}
