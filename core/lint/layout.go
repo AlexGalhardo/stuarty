@@ -136,6 +136,10 @@ func (c *check) safeAreaText(it *timeline.Item, b, safe box) (msg, hint string) 
 	), "move the item inside the safe area with item.set_transform x."
 }
 
+// offFrameHint is the hint of an L_OFF_FRAME finding (the catalog keeps the short form, SKILL.md has a size cap): the origin is the top-left
+// corner, which an agent that expects a centred origin gets wrong (VV-179).
+const offFrameHint = "reposition it with item.set_transform; x and y are the item centre from the top-left corner"
+
 // offFrame reports a visible item whose box lies partly or wholly outside the frame:
 // any pixel for text and captions; wholly outside, or more than half outside, for clips
 // and shapes, unless the box covers the whole frame (fit "cover") or the item is animated
@@ -184,7 +188,7 @@ func (c *check) offFrame() {
 		c.add(CodeOffFrame, it.ID, itemRange(it),
 			fmt.Sprintf("the %s box spans x %.0f-%.0f and y %.0f-%.0f; the frame is %d by %d.",
 				it.Type, b.x0, b.x1, b.y0, b.y1, st.Width, st.Height),
-			"reposition it with item.set_transform")
+			offFrameHint)
 	}
 }
 
