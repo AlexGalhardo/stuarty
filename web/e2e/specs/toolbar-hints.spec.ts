@@ -26,3 +26,24 @@ test.describe("toolbar tooltips and toggles", () => {
 		).toHaveAttribute("title", "Snap (N)");
 	});
 });
+
+test.describe("toggle buttons", () => {
+	test("a pressed toggle looks different from an unpressed one", async ({
+		page,
+		request,
+	}) => {
+		const seeded = await seedProject(request, {
+			tracks: 1,
+			perTrack: 1,
+			clipDuration: "4s",
+		});
+		await page.goto(`/editor/${seeded.id}?debug=1`);
+		await expect(page.locator("[data-item-id]")).toHaveCount(1);
+		const snap = page.getByRole("button", { name: "Snap", exact: true });
+		const border = (): Promise<string> =>
+			snap.evaluate((el) => getComputedStyle(el).borderTopColor);
+		const before = await border();
+		await snap.click();
+		await expect.poll(border).not.toBe(before);
+	});
+});
