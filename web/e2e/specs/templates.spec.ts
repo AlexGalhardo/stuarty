@@ -188,6 +188,32 @@ test.describe("templates", () => {
 		]);
 	});
 
+	// VV-132: the project panel saves the project as a template, and shows the answer.
+	test("the project panel saves the project as a template", async ({
+		page,
+		request,
+	}) => {
+		const seeded = await seedText(request);
+		await page.goto(`/editor/${seeded.id}`);
+		const item = page.locator("[data-item-id]");
+		await expect(item).toHaveCount(1);
+		await item.click();
+		await page.getByLabel("Template slot", { exact: true }).check();
+		await item.click({ modifiers: ["Control"] });
+		const name = `Saved ${Date.now()}`;
+		await page.getByLabel("Template name", { exact: true }).fill(name);
+		await page
+			.getByRole("button", { name: "Save template", exact: true })
+			.click();
+		await expect(
+			page.getByRole("status").filter({ hasText: name }),
+		).toBeVisible();
+		await page.goto("/projects");
+		await expect(
+			page.locator("[data-template-id]", { hasText: name }),
+		).toBeVisible();
+	});
+
 	test("the projects page lists the starter templates and makes a project from one", async ({
 		page,
 	}) => {
