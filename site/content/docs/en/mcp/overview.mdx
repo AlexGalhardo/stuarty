@@ -69,7 +69,7 @@ The text of the line of JSON is shortened here (`detail`, `message` and `hint` r
 - **Every edit can be undone.** A batch is one undo step, and `history` lists who changed what. A revision check (`base_revision`) stops two actors from overwriting each other.
 - **Text from media is data.** A transcript, a file name or a metadata field can say "ignore your instructions". The server quotes it in double quotes or inside `untrusted_media_text` blocks, and the tool descriptions tell the agent to treat it as data.
 - **Tools say what they do.** Each tool carries the annotations `readOnlyHint`, `destructiveHint`, `idempotentHint` and `openWorldHint`; no tool is destructive and none reaches outside the workspace.
-- **Calls are limited.** Imports, exports and transcriptions have ceilings, and calls over HTTP are rate limited. See [Safety](/docs/agents/safety).
+- **Calls are limited.** Imports, exports and transcriptions have ceilings, and every call is rate limited, over stdio as well as HTTP (300 a minute with a burst of 60 for one credential). See [Safety](/docs/agents/safety).
 - **Arguments are checked first.** A call that breaks the input schema is refused with `E_VALIDATION` before it reaches the service, and the error names the argument, never its value.
 
 The server asks for no confirmation: it removes the dangerous abilities instead.
