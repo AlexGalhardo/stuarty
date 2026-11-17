@@ -56,6 +56,12 @@ func colourUses(d *timeline.Document, name string) (users []string, uses []strin
 		if string(it.StrokeColor) == ref {
 			add(id, "stroke_color")
 		}
+		if it.Shadow != nil && string(it.Shadow.Color) == ref {
+			add(id, "shadow.color")
+		}
+		if it.Outline != nil && string(it.Outline.Color) == ref {
+			add(id, "outline.color")
+		}
 	}
 	for _, id := range slices.Sorted(maps.Keys(d.Tracks)) {
 		styleUses(id, "caption_style", d.Tracks[id].CaptionStyle)

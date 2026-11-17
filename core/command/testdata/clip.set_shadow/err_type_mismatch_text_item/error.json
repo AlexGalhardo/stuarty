@@ -1,0 +1,7 @@
+{
+  "code": "E_TYPE_MISMATCH",
+  "message": "Item itm_m1n2p3q4r5 is a text item; a shadow applies to clips.",
+  "hint": "Use item.set_transform to size other items.",
+  "retryable": false,
+  "path": "args.item_id"
+}

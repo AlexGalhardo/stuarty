@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "The required argument args.outline is missing.",
+  "hint": "Add \"outline\" (an object) to the arguments.",
+  "retryable": false,
+  "path": "args.outline"
+}

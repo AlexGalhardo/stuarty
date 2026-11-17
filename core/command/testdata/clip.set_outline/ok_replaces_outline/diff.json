@@ -1,0 +1,18 @@
+[
+  {
+    "kind": "item.updated",
+    "id": "itm_m1n2p3q4r5",
+    "changes": {
+      "outline": [
+        {
+          "color": "#000000",
+          "width": 4
+        },
+        {
+          "color": "#000000",
+          "width": 10
+        }
+      ]
+    }
+  }
+]

@@ -423,6 +423,19 @@ var alphaOps = map[string]func(p *docPick) string{
 			p.clip(), p.oneOf("rect", "ellipse"), 0.1, 0.2, 0.5, 0.6, p.n(201), p.oneOf("true", "false"),
 		)
 	},
+	"clip.set_shadow": func(p *docPick) string {
+		if p.n(4) == 0 {
+			return fmt.Sprintf(`{"item_id":%q,"shadow":null}`, p.clip())
+		}
+		return fmt.Sprintf(`{"item_id":%q,"shadow":{"opacity":%.2f,"dx":%d,"dy":%d,"blur":%d}}`,
+			p.clip(), float64(p.n(101))/100, p.n(1001)-500, p.n(1001)-500, p.n(101))
+	},
+	"clip.set_outline": func(p *docPick) string {
+		if p.n(4) == 0 {
+			return fmt.Sprintf(`{"item_id":%q,"outline":null}`, p.clip())
+		}
+		return fmt.Sprintf(`{"item_id":%q,"outline":{"width":%d}}`, p.clip(), 1+p.n(100))
+	},
 	"clip.set_chroma_key": func(p *docPick) string {
 		color := p.oneOf(`"#00FF00"`, `"#0000FF"`, "null")
 		if color == "null" {

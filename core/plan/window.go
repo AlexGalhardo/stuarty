@@ -84,6 +84,10 @@ type WindowLayer struct {
 	FlipY bool `json:"flip_y,omitempty"`
 
 	Mask *MaskSpec `json:"mask,omitempty"`
+
+	// Constant over the item: the drop shadow and the outline (SDD-004 §3.15).
+	Shadow  *ShadowSpec  `json:"shadow,omitempty"`
+	Outline *OutlineSpec `json:"outline,omitempty"`
 	// Masks is the mask of each frame of the window, present only when a mask property is animated; then it
 	// replaces mask (SDD-004 §3.9).
 	Masks []*MaskSpec `json:"masks,omitempty"`
@@ -237,6 +241,8 @@ func newLayerAcc(p *planner, t, room int, first *Layer) *layerAcc {
 		Lut:       first.Lut,
 		Blend:     first.Blend,
 		Mask:      first.Mask,
+		Shadow:    first.Shadow,
+		Outline:   first.Outline,
 		FlipX:     first.FlipX,
 		FlipY:     first.FlipY,
 		Effects:   first.Effects,

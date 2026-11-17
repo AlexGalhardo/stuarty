@@ -168,6 +168,8 @@
       "clip.set_flip",
       "clip.set_framing",
       "clip.set_mask",
+      "clip.set_outline",
+      "clip.set_shadow",
       "clip.set_speed",
       "font.add",
       "font.remove",

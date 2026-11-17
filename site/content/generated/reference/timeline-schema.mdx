@@ -166,11 +166,13 @@ A project is one JSON document. Times are whole frames at the frame rate of the 
 | `mask` | `Mask` | no |  |
 | `name` | `string` | no |  |
 | `opacity` | `number` | no | min 0; max 1; default `1` |
+| `outline` | `Outline` | no |  |
 | `radius` | `number` | no | min 0 |
 | `reverse` | `boolean` | no |  |
 | `rotation` | `number` | no |  |
 | `saturation` | `number` | no | min 0; max 2; default `1` |
 | `scale` | `number` | no | max 20; default `1` |
+| `shadow` | `Shadow` | no |  |
 | `shape` | `rect`, `rounded_rect`, `ellipse` | no |  |
 | `slot` | `Slot` | no |  |
 | `source_in` | `integer` | no | min 0 |
@@ -229,6 +231,13 @@ A project is one JSON document. Times are whole frames at the frame rate of the 
 | `x` | `number` | yes | min 0; max 1 |
 | `y` | `number` | yes | min 0; max 1 |
 
+## Outline
+
+| Property | Type | Required | Description |
+| --- | --- | --- | --- |
+| `color` | `string` | yes | pattern `^(#[0-9A-Fa-f]\{6\}([0-9A-Fa-f]\{2\})?\\\|\\\\$[a-z][a-z0-9_]\{0,39\})$` |
+| `width` | `number` | yes | min 0.5; max 100 |
+
 ## ProjectFont
 
 | Property | Type | Required | Description |
@@ -246,11 +255,21 @@ A project is one JSON document. Times are whole frames at the frame rate of the 
 
 | Property | Type | Required | Description |
 | --- | --- | --- | --- |
-| `background` | `string` | no | pattern `^(#[0-9A-Fa-f]\{6\}([0-9A-Fa-f]\{2\})?\\\|\\\\$[a-z][a-z0-9_]\{0,39\})$`; default `"#000000"` |
+| `background` | `string` | no | pattern `^(#[0-9A-Fa-f]\{6\}([0-9A-Fa-f]\{2\})?\\\|\\\\$[a-z][a-z0-9_]\{0,39\}\\\|transparent)$`; default `"#000000"` |
 | `fps` | `any` | no | den is 1 or 1001; num/den between 1 and 120. default `\{"den":1,"num":30\}` |
 | `height` | `integer` | no | min 16; max 4096; default `1920` |
 | `loudness_target` | `number` | no | min -30; max -5; default `-14` |
 | `width` | `integer` | no | min 16; max 4096; default `1080` |
+
+## Shadow
+
+| Property | Type | Required | Description |
+| --- | --- | --- | --- |
+| `blur` | `number` | yes | min 0; max 100 |
+| `color` | `string` | yes | pattern `^(#[0-9A-Fa-f]\{6\}([0-9A-Fa-f]\{2\})?\\\|\\\\$[a-z][a-z0-9_]\{0,39\})$` |
+| `dx` | `number` | yes | min -500; max 500 |
+| `dy` | `number` | yes | min -500; max 500 |
+| `opacity` | `number` | yes | min 0; max 1 |
 
 ## Slot
 

@@ -1,0 +1,13 @@
+{
+  "op": "clip.set_shadow",
+  "args": {
+    "item_id": "itm_m1n2p3q4r5",
+    "shadow": {
+      "color": "#ff8800",
+      "opacity": 0.8,
+      "dx": -10,
+      "dy": 14.5,
+      "blur": 30
+    }
+  }
+}

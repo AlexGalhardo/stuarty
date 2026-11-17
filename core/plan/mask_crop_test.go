@@ -99,3 +99,33 @@ func TestAnimatedCropGivesEachFrameItsRect(t *testing.T) {
 		}
 	}
 }
+
+func TestShadowAndOutlineReachTheLayerAndTheWindow(t *testing.T) {
+	t.Parallel()
+
+	d := newDoc()
+	it := clip("itm_a", trkBottom, 0, 10)
+	it.Shadow = &timeline.Shadow{Color: "#112233", Opacity: 0.6, DX: 4.1234, DY: -3, Blur: 9}
+	it.Outline = &timeline.Outline{Color: "#FFFFFF", Width: 5}
+	put(d, it)
+
+	l := Frame(d, 2).Layers[0]
+	if l.Shadow == nil || *l.Shadow != (ShadowSpec{Color: "#112233", Opacity: 0.6, DX: 4.123, DY: -3, Blur: 9}) {
+		t.Errorf("layer shadow %+v", l.Shadow)
+	}
+
+	if l.Outline == nil || *l.Outline != (OutlineSpec{Color: "#FFFFFF", Width: 5}) {
+		t.Errorf("layer outline %+v", l.Outline)
+	}
+
+	if w := Window(d, 0, 10).Layers[0]; w.Shadow == nil || w.Outline == nil {
+		t.Errorf("window lost the shadow or the outline: %+v %+v", w.Shadow, w.Outline)
+	}
+
+	plain := newDoc()
+	put(plain, clip("itm_p", trkBottom, 0, 10))
+
+	if l := Frame(plain, 0).Layers[0]; l.Shadow != nil || l.Outline != nil {
+		t.Error("a clip with neither must give none")
+	}
+}

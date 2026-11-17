@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "The value of args.outline.width is 0.1, outside the accepted range.",
+  "hint": "Use a value between 0.5 and 100.",
+  "retryable": false,
+  "path": "args.outline.width"
+}

@@ -2245,6 +2245,141 @@
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"additionalProperties": false,
 			"properties": {
+				"item_id": {
+					"description": "A clip.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+					"type": "string"
+				},
+				"outline": {
+					"additionalProperties": false,
+					"description": "The outline, or null to remove it.",
+					"properties": {
+						"color": {
+							"description": "#RRGGBB, #RRGGBBAA or $name; default #000000.",
+							"type": "string"
+						},
+						"width": {
+							"description": "Width in pixels; default 4.",
+							"maximum": 100,
+							"minimum": 0.5,
+							"type": "number"
+						}
+					},
+					"required": [],
+					"type": [
+						"object",
+						"null"
+					]
+				}
+			},
+			"required": [
+				"item_id",
+				"outline"
+			],
+			"type": "object"
+		},
+		"description": "Sets a contour of width pixels (0.5 to 100, default 4) in color (default #000000) around the visible shape of the clip, so a keyed subject gets a sticker-like border. Width is in project pixels. Replaces the current outline; outline null removes it. Works on clips and still images.",
+		"errors": [
+			"E_VALIDATION",
+			"E_NOT_FOUND",
+			"E_TYPE_MISMATCH"
+		],
+		"example": {
+			"item_id": "itm_m1n2p3q4r5",
+			"outline": {
+				"color": "#FFFFFF",
+				"width": 6
+			}
+		},
+		"internal": false,
+		"name": "clip.set_outline",
+		"phase": "beta",
+		"scope": "edit",
+		"summary": "Gives a clip an outline that follows its visible shape."
+	},
+	{
+		"args_schema": {
+			"$schema": "https://json-schema.org/draft/2020-12/schema",
+			"additionalProperties": false,
+			"properties": {
+				"item_id": {
+					"description": "A clip.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+					"type": "string"
+				},
+				"shadow": {
+					"additionalProperties": false,
+					"description": "The shadow, or null to remove it.",
+					"properties": {
+						"blur": {
+							"description": "Soft edge in pixels; default 12.",
+							"maximum": 100,
+							"minimum": 0,
+							"type": "number"
+						},
+						"color": {
+							"description": "#RRGGBB, #RRGGBBAA or $name; default #000000.",
+							"type": "string"
+						},
+						"dx": {
+							"description": "Horizontal offset in pixels; default 8.",
+							"maximum": 500,
+							"minimum": -500,
+							"type": "number"
+						},
+						"dy": {
+							"description": "Vertical offset in pixels; default 8.",
+							"maximum": 500,
+							"minimum": -500,
+							"type": "number"
+						},
+						"opacity": {
+							"description": "0 to 1; default 0.5.",
+							"maximum": 1,
+							"minimum": 0,
+							"type": "number"
+						}
+					},
+					"required": [],
+					"type": [
+						"object",
+						"null"
+					]
+				}
+			},
+			"required": [
+				"item_id",
+				"shadow"
+			],
+			"type": "object"
+		},
+		"description": "Sets a shadow drawn below the clip: the silhouette of its picture (a keyed subject keeps its cut-out shape) in color (default #000000), at opacity (0 to 1, default 0.5), moved by dx and dy pixels (-500 to 500, default 8) and softened by blur pixels (0 to 100, default 12). Lengths are project pixels. Replaces the current shadow; shadow null removes it. Works on clips and still images.",
+		"errors": [
+			"E_VALIDATION",
+			"E_NOT_FOUND",
+			"E_TYPE_MISMATCH"
+		],
+		"example": {
+			"item_id": "itm_m1n2p3q4r5",
+			"shadow": {
+				"blur": 16,
+				"color": "#000000",
+				"dx": 10,
+				"dy": 12,
+				"opacity": 0.6
+			}
+		},
+		"internal": false,
+		"name": "clip.set_shadow",
+		"phase": "beta",
+		"scope": "edit",
+		"summary": "Gives a clip a drop shadow that follows its visible shape."
+	},
+	{
+		"args_schema": {
+			"$schema": "https://json-schema.org/draft/2020-12/schema",
+			"additionalProperties": false,
+			"properties": {
 				"curve": {
 					"description": "Speed ramp: 2 to 8 points, linear between them, first t 0 and last t 1. Not with speed.",
 					"items": {

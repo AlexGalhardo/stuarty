@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "item_id": {
+      "description": "A clip.",
+      "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+      "type": "string"
+    },
+    "shadow": {
+      "additionalProperties": false,
+      "description": "The shadow, or null to remove it.",
+      "properties": {
+        "blur": {
+          "description": "Soft edge in pixels; default 12.",
+          "maximum": 100,
+          "minimum": 0,
+          "type": "number"
+        },
+        "color": {
+          "description": "#RRGGBB, #RRGGBBAA or $name; default #000000.",
+          "type": "string"
+        },
+        "dx": {
+          "description": "Horizontal offset in pixels; default 8.",
+          "maximum": 500,
+          "minimum": -500,
+          "type": "number"
+        },
+        "dy": {
+          "description": "Vertical offset in pixels; default 8.",
+          "maximum": 500,
+          "minimum": -500,
+          "type": "number"
+        },
+        "opacity": {
+          "description": "0 to 1; default 0.5.",
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        }
+      },
+      "required": [],
+      "type": [
+        "object",
+        "null"
+      ]
+    }
+  },
+  "required": [
+    "item_id",
+    "shadow"
+  ],
+  "type": "object"
+}

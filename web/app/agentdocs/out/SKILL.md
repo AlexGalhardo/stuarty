@@ -36,7 +36,7 @@ Check with `project:list`. Workspace: `~/.vukem-video` or `$VUKEM_VIDEO_HOME`; `
 - `asset`: remove*
 - `audio`: add*, duck*, mark_beats*
 - `caption`: add, edit_word*, from_transcript*, import_subtitles*, merge*, retime_from_clip*, set_breaks*, set_style*, set_words*, split*
-- `clip`: add, remove_silences*, set_blend*, set_blur*, set_chroma_key*, set_color*, set_effects*, set_filter*, set_flip*, set_framing*, set_mask*, set_speed*
+- `clip`: add, remove_silences*, set_blend*, set_blur*, set_chroma_key*, set_color*, set_effects*, set_filter*, set_flip*, set_framing*, set_mask*, set_outline*, set_shadow*, set_speed*
 - `font`: add*, remove*
 - `item`: crossfade*, delete, duplicate*, extract_audio*, freeze_frame*, link*, move, paste_attributes*, rename*, set_audio*, set_enabled*, set_transform*, set_transition*, slip*, split, trim, unlink*
 - `keyframe`: clear*, remove*, set*

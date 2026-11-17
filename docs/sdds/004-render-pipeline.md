@@ -419,6 +419,12 @@ Added after BETA (TASK-0254, NEW-09b). A clip with `hsl`, `wheels` or `curves` (
 
 Golden cases `grade-hsl`, `grade-wheels`, `grade-curves` and `grade-all` (`testdata/golden/`) and the vectors of the same names hold the pixels; the Go compositor and the Rust renderer draw them with the same bytes. The GPU path receives the pixels the CPU prepares (SDD-013 section 3.8), so it needs no shader.
 
+### 3.15 Drop shadow and outline
+
+Added after BETA (VV-122). A clip with `shadow` or `outline` (SDD-001 §3.5, set by `clip.set_shadow` and `clip.set_outline`) has `Layer.Shadow` (`{color, opacity, dx, dy, blur}`) and `Layer.Outline` (`{color, width}`), colours resolved by the planner to `#RRGGBB` or `#RRGGBBAA`, numbers rounded to 3 decimals; each is absent when the clip has none, and the window carries each once per layer (`shadow`, `outline`) because they are constant over the item. Lengths are project pixels, like a mask feather: an executor multiplies them by `outScale`.
+
+The silhouette of a layer is its alpha after the crop, the chroma key and the flip, so a keyed subject casts the shadow of the subject and a still image with transparency the shadow of its opaque part. The **outline** is the silhouette dilated by `width` (a disc of that radius), painted in `color`, drawn below the picture and above the shadow. The **shadow** is the silhouette of the picture together with its outline, moved by (`dx`, `dy`), blurred like section 3.6 with `σ = blur / 2`, multiplied by `opacity` (and by the alpha of an 8-digit colour) and painted in `color`, drawn below the outline. Both stay under the picture, so the picture is never tinted; the layer is padded by what they reach (`width` plus `blur × 1.5` plus the offset) like a blurred layer and the placement grows by the same amount around the same centre. They come after the pixel effects and before the mask of section 3.9 and the opacity, so the mask, a transition's coverage and the opacity cut the picture, its outline and its shadow together. The exact integer arithmetic belongs to the renderer change that draws them (the Go compositor, the Rust renderer, the preview); until then an executor that does not know the fields draws the picture without them. The plan is what core owns: the fields above, their rounding and the colour resolution.
+
 ## 4. Layout of text, captions and shapes
 
 ### 4.1 Safe area

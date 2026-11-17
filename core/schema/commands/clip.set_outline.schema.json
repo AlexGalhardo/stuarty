@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "item_id": {
+      "description": "A clip.",
+      "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+      "type": "string"
+    },
+    "outline": {
+      "additionalProperties": false,
+      "description": "The outline, or null to remove it.",
+      "properties": {
+        "color": {
+          "description": "#RRGGBB, #RRGGBBAA or $name; default #000000.",
+          "type": "string"
+        },
+        "width": {
+          "description": "Width in pixels; default 4.",
+          "maximum": 100,
+          "minimum": 0.5,
+          "type": "number"
+        }
+      },
+      "required": [],
+      "type": [
+        "object",
+        "null"
+      ]
+    }
+  },
+  "required": [
+    "item_id",
+    "outline"
+  ],
+  "type": "object"
+}

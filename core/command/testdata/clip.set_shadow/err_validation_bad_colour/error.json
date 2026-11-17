@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.shadow.color \"red\" is not a colour.",
+  "hint": "Send \"#RRGGBB\" or \"#RRGGBBAA\".",
+  "retryable": false,
+  "path": "args.shadow.color"
+}

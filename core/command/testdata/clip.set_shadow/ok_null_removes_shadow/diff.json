@@ -1,0 +1,18 @@
+[
+  {
+    "kind": "item.updated",
+    "id": "itm_m1n2p3q4r5",
+    "changes": {
+      "shadow": [
+        {
+          "blur": 12,
+          "color": "#000000",
+          "dx": 8,
+          "dy": 8,
+          "opacity": 0.5
+        },
+        null
+      ]
+    }
+  }
+]

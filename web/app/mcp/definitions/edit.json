@@ -54,6 +54,8 @@
         "clip.set_chroma_key",
         "clip.set_blend",
         "clip.set_mask",
+        "clip.set_shadow",
+        "clip.set_outline",
         "clip.set_flip",
         "clip.set_effects",
         "item.set_enabled",
