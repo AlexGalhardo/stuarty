@@ -144,3 +144,34 @@ func TestMCPDescription(t *testing.T) {
 		t.Errorf("description = %q", got)
 	}
 }
+
+func TestUnknownCommandNamesTheNearestOne(t *testing.T) {
+	t.Parallel()
+
+	if h := unknownHint("project:lst"); !strings.Contains(h, `"project:list"`) {
+		t.Fatalf("hint = %q", h)
+	}
+
+	if h := unknownHint("projetos"); strings.Contains(h, "did you mean") {
+		t.Fatalf("a far name got a suggestion: %q", h)
+	}
+}
+
+func TestRejectArgsOnlyForTheCommandsWithoutArguments(t *testing.T) {
+	t.Parallel()
+
+	var out, errOut bytes.Buffer
+
+	if code, rejected := RejectArgs("serve", []string{"--nope"}, &out, &errOut); !rejected || code != ExitFailure ||
+		!strings.Contains(errOut.String(), "E_VALIDATION") {
+		t.Fatalf("serve --nope: %d %v %q", code, rejected, errOut.String())
+	}
+
+	if _, rejected := RejectArgs("serve", nil, &out, &errOut); rejected {
+		t.Fatal("serve with no argument was rejected")
+	}
+
+	if _, rejected := RejectArgs("user:create", []string{"a@b.c"}, &out, &errOut); rejected {
+		t.Fatal("user:create takes arguments")
+	}
+}

@@ -6,6 +6,8 @@ import (
 	"context"
 	"os"
 	"os/signal"
+	"slices"
+	"strings"
 	"syscall"
 
 	vukem "github.com/AlexGalhardo/vukem"
@@ -20,6 +22,12 @@ func main() {
 	if len(args) > 1 {
 		// Help comes from the product table, never from the framework (VV-029).
 		if code, handled := cli.Help(args[1:], os.Stdout, os.Stderr); handled {
+			os.Exit(code)
+		}
+	}
+
+	if len(args) > 1 {
+		if code, rejected := cli.RejectArgs(args[1], args[2:], os.Stdout, os.Stderr); rejected {
 			os.Exit(code)
 		}
 	}
@@ -47,7 +55,9 @@ func main() {
 		code := runMCP(ctx, args[2:], os.Stderr)
 		stop()
 		os.Exit(code)
-	case cli.IsCommand(args[1]):
+	case cli.IsCommand(args[1]) || !isFrameworkCommand(args[1]):
+		// A name no product table and no framework command knows is answered by the product, in its own
+		// error format, without building the application (VV-078).
 		os.Exit(runProduct(args[1], args[2:]))
 	}
 
@@ -59,6 +69,19 @@ func main() {
 	}
 
 	os.Exit(vukem.Main(build))
+}
+
+// frameworkCommands are the first words of the commands vukem adds to the binary (about, migrate:status,
+// route:list ...). They need the application built; any other name is a mistake of the person.
+var frameworkCommands = []string{
+	"about", "api", "bench", "boost", "cache", "codegen", "db", "hash", "key", "migrate", "openapi", "queue",
+	"route", "schedule", "session", "ssg",
+}
+
+func isFrameworkCommand(name string) bool {
+	first, _, _ := strings.Cut(name, ":")
+
+	return slices.Contains(frameworkCommands, first)
 }
 
 // runProduct runs a product command (SDD-003 section 5). It does not go through

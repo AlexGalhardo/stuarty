@@ -110,6 +110,33 @@ func TestProductCommandsThroughTheBinary(t *testing.T) {
 	}
 }
 
+// TestUnknownCommandAndFlagsAnswerInTheProductFormat checks VV-078: a name nobody knows, and a flag a
+// process command does not take, are E_UNKNOWN_COMMAND and E_VALIDATION documents (no APP_KEY complaint, no
+// usage line), with --json on standard output.
+func TestUnknownCommandAndFlagsAnswerInTheProductFormat(t *testing.T) {
+	bin := buildBinary(t)
+	home := filepath.Join(t.TempDir(), "ws")
+
+	stdout, stderr, code := runBinary(t, bin, home, "projetos", "--json")
+	if code != 1 || stderr != "" || !strings.Contains(stdout, "E_UNKNOWN_COMMAND") ||
+		!strings.Contains(stdout, "project:list") && !strings.Contains(stdout, "help") {
+		t.Fatalf("an unknown command: exit %d, %q, %q", code, stdout, stderr)
+	}
+
+	if _, stderr, code = runBinary(t, bin, home, "projetos"); code != 1 || strings.Contains(stderr, "APP_KEY") ||
+		!strings.Contains(stderr, "E_UNKNOWN_COMMAND") {
+		t.Fatalf("an unknown command in text: exit %d, %q", code, stderr)
+	}
+
+	for _, name := range []string{"open", "serve"} {
+		stdout, stderr, code = runBinary(t, bin, home, name, "--no-such-flag", "--json")
+		if code != 1 || stderr != "" || !strings.Contains(stdout, "E_VALIDATION") ||
+			!strings.Contains(stdout, "--no-such-flag") {
+			t.Fatalf("%s with a bad flag: exit %d, %q, %q", name, code, stdout, stderr)
+		}
+	}
+}
+
 // TestHelpThroughTheBinaryIsTheProductHelp checks VV-029: the root help, help
 // <command> and serve --help come from the product table, need no APP_KEY and
 // start nothing.
