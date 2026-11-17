@@ -547,7 +547,13 @@
               "scale",
               "rotation",
               "opacity",
-              "volume"
+              "volume",
+              "brightness",
+              "contrast",
+              "saturation",
+              "temperature",
+              "tint",
+              "hue"
             ]
           },
           "type": "object"

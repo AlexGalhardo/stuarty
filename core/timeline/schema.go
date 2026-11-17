@@ -30,7 +30,7 @@ const (
 )
 
 var (
-	keyframeProperties = []string{"x", "y", "scale", "rotation", "opacity", "volume"}
+	keyframeProperties = append([]string{"x", "y", "scale", "rotation", "opacity", "volume"}, ColourProps...)
 	rationalType       = reflect.TypeFor[Rational]()
 	keyframesType      = reflect.TypeFor[Keyframes]()
 	colorTypeOf        = reflect.TypeFor[Color]()

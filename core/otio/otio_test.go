@@ -1337,3 +1337,32 @@ func TestImportReportsABadAdvancedColour(t *testing.T) {
 		t.Errorf("got %v and lost %v, want nothing kept and two losses", got, lost)
 	}
 }
+
+func TestRoundTripKeepsColourKeyframes(t *testing.T) {
+	d := sampleDoc()
+	c1 := d.Items["itm_c000000001"]
+	c1.Keyframes = timeline.Keyframes{"hue": {
+		{T: 0, Value: 0, Easing: "linear"}, {T: 30, Value: 90, Easing: "ease_out"},
+	}}
+	d.Items[c1.ID] = c1
+
+	first, _, err := Export(d)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	im, err := Parse(first)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	doc := build(t, im, newDoc(im.FPS))
+
+	for _, it := range doc.Items {
+		if it.Name == "intro" {
+			if kfs := it.Keyframes["hue"]; len(kfs) != 2 || kfs[1].Value != 90 || kfs[1].T != 30 {
+				t.Errorf("hue keyframes did not come back: %+v", it.Keyframes)
+			}
+		}
+	}
+}

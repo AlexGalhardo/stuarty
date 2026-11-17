@@ -914,22 +914,31 @@ func effectInRange(name string, v float64) bool {
 	return inRange(v, lo, hi)
 }
 
+// keyframeRange is the range of the value of an animatable property, and whether it is one.
+func keyframeRange(prop string) (lo, hi float64, ok bool) {
+	switch prop {
+	case "x", "y", "rotation":
+		return -math.MaxFloat64, math.MaxFloat64, true
+	case "scale":
+		return math.SmallestNonzeroFloat64, 20, true
+	case "opacity":
+		return 0, 1, true
+	case "volume":
+		return 0, 4, true
+	}
+	return ColourRange(prop)
+}
+
 func (v *validator) keyframes(path, key string, it Item) {
 	for _, prop := range sortedKeys(it.Keyframes) {
 		pp := path + ".keyframes." + prop
-		var lo, hi float64
-		switch prop {
-		case "x", "y", "rotation":
-			lo, hi = -math.MaxFloat64, math.MaxFloat64
-		case "scale":
-			lo, hi = math.SmallestNonzeroFloat64, 20
-		case "opacity":
-			lo, hi = 0, 1
-		case "volume":
-			lo, hi = 0, 4
-		default:
+		lo, hi, known := keyframeRange(prop)
+		if !known {
 			v.add(VKeyframes, pp, key, "%q is not an animatable property", prop)
 			continue
+		}
+		if _, _, colour := ColourRange(prop); colour && it.Type != ItemClip {
+			v.add(VKeyframes, pp, key, "%s applies to clips", prop)
 		}
 		switch {
 		case prop == "volume" && it.Type != ItemClip && it.Type != ItemAudio:

@@ -44,7 +44,7 @@ var visualTypes = []timeline.ItemType{
 }
 
 var pasteGroups = []pasteGroup{
-	{"color", []timeline.ItemType{timeline.ItemClip}, nil, func(d, s *timeline.Item) {
+	{"color", []timeline.ItemType{timeline.ItemClip}, timeline.ColourProps, func(d, s *timeline.Item) {
 		d.Brightness, d.Contrast, d.Saturation = s.Brightness, s.Contrast, s.Saturation
 		d.Temperature, d.Tint, d.Hue = s.Temperature, s.Tint, s.Hue
 		d.Lut = s.Lut

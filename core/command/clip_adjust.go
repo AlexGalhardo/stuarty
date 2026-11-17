@@ -29,7 +29,7 @@ func init() {
 			"wheels (shadows, midtones, highlights: hue 0 to 360, amount 0 to 1, luma -1 to 1) and curves (master, red, " +
 			"green, blue: 2 to 8 points of x and y from 0 to 1) each replace what they name and a neutral one removes it.",
 		Example: `{"item_id": "itm_m1n2p3q4r5", "brightness": 0.1, "temperature": 0.3}`,
-		Errors:  []string{CodeValidation, CodeNotFound, CodeTypeMismatch},
+		Errors:  []string{CodeValidation, CodeNotFound, CodeTypeMismatch, CodeInvalidState},
 		Scope:   ScopeEdit,
 		Phase:   Alpha,
 	}, applyClipSetColor))
@@ -221,6 +221,9 @@ func applyClipSetColor(c *Context, a *clipColorArgs) error {
 	if err != nil {
 		return err
 	}
+	if err := colourNotAnimated(&it, a); err != nil {
+		return err
+	}
 	if a.Brightness != nil {
 		it.Brightness = round3(*a.Brightness)
 	}
@@ -259,6 +262,35 @@ func applyClipSetColor(c *Context, a *clipColorArgs) error {
 		c.SetEffective("lut", nil)
 	}
 	return nil
+}
+
+// colourNotAnimated refuses to set the static value of a colour property that has keyframes: they
+// define its value, as for item.set_transform.
+func colourNotAnimated(it *timeline.Item, a *clipColorArgs) *Error {
+	var animated []string
+	for _, p := range []struct {
+		name  string
+		given *float64
+	}{
+		{"brightness", a.Brightness},
+		{"contrast", a.Contrast},
+		{"saturation", a.Saturation},
+		{"temperature", a.Temperature},
+		{"tint", a.Tint},
+		{"hue", a.Hue},
+	} {
+		if p.given != nil && len(it.Keyframes[p.name]) > 0 {
+			animated = append(animated, p.name)
+		}
+	}
+	if len(animated) == 0 {
+		return nil
+	}
+	first := animated[0]
+	return Errorf(CodeInvalidState, "Property %s of %s has %d keyframes, which define its value.",
+		first, it.ID, len(it.Keyframes[first])).
+		WithHint("Use keyframe.set to change a keyframe, or keyframe.clear to remove them first.").
+		WithDetail("properties", animated).WithPath("args." + first)
 }
 
 // setLut applies lut_asset and lut_intensity: the asset must be a lut asset of the project, the

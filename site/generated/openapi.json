@@ -3856,6 +3856,10 @@
               }
             ]
           },
+          "color_matrices": {
+            "items": {},
+            "type": "array"
+          },
           "color_matrix": {},
           "crop": {
             "items": {
@@ -6190,7 +6194,13 @@
               "scale",
               "rotation",
               "opacity",
-              "volume"
+              "volume",
+              "brightness",
+              "contrast",
+              "saturation",
+              "temperature",
+              "tint",
+              "hue"
             ],
             "type": "string"
           }
@@ -6218,7 +6228,13 @@
               "scale",
               "rotation",
               "opacity",
-              "volume"
+              "volume",
+              "brightness",
+              "contrast",
+              "saturation",
+              "temperature",
+              "tint",
+              "hue"
             ],
             "type": "string"
           }
@@ -6259,7 +6275,13 @@
               "scale",
               "rotation",
               "opacity",
-              "volume"
+              "volume",
+              "brightness",
+              "contrast",
+              "saturation",
+              "temperature",
+              "tint",
+              "hue"
             ],
             "type": "string"
           },

@@ -222,3 +222,34 @@ func TestLayerCarriesTheGrade(t *testing.T) {
 		t.Error("an item with no grade must give none")
 	}
 }
+
+func TestAnimatedColourGivesEachFrameItsMatrix(t *testing.T) {
+	t.Parallel()
+
+	d := newDoc()
+	it := clip("itm_a", trkBottom, 0, 10)
+	it.Keyframes = timeline.Keyframes{"brightness": {
+		{T: 0, Value: 0, Easing: "linear"}, {T: 10, Value: 0.5, Easing: "linear"},
+	}}
+	put(d, it)
+
+	if m := Frame(d, 0).Layers[0].ColorMatrix; m != nil {
+		t.Errorf("frame 0 has matrix %v, want none while brightness is 0", m)
+	}
+
+	if m := Frame(d, 5).Layers[0].ColorMatrix; m == nil || m[3] != 0.25 {
+		t.Errorf("frame 5 matrix %v, want the offset of brightness 0.25", m)
+	}
+
+	w := Window(d, 0, 10).Layers[0]
+	if len(w.ColorMatrices) != 10 || string(w.ColorMatrices[0]) != "null" || string(w.ColorMatrices[9]) == "null" {
+		t.Errorf("window series %s, want 10 entries from null to a matrix", w.ColorMatrices)
+	}
+
+	still := newDoc()
+	put(still, clip("itm_s", trkBottom, 0, 10))
+
+	if w := Window(still, 0, 10).Layers[0]; w.ColorMatrices != nil {
+		t.Error("a clip with no animated colour must carry no series")
+	}
+}

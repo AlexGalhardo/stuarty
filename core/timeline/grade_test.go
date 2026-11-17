@@ -49,3 +49,29 @@ func TestValidateGrade(t *testing.T) {
 		t.Fatalf("a valid grade is accepted, got %v", vs)
 	}
 }
+
+func TestValidateColourKeyframes(t *testing.T) {
+	keys := func(prop string, v float64) func(*Item) {
+		return func(i *Item) { i.Keyframes = Keyframes{prop: {{T: 0, Value: v, Easing: "linear"}}} }
+	}
+	cases := []invalidCase{
+		{"contrast keyframe above 2", func(d *Document) { editItem(d, clipID, keys("contrast", 2.5)) }, VKeyframes},
+		{"hue keyframe below -180", func(d *Document) { editItem(d, clipID, keys("hue", -181)) }, VKeyframes},
+		{"colour keyframe on a text item", func(d *Document) { editItem(d, capItemID, keys("tint", 0.1)) }, VKeyframes},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			d := base(t)
+			c.edit(d)
+			if got := codesOf(Validate(d)); len(got) != 1 || got[0] != c.want {
+				t.Errorf("codes %v, want only %s\n%v", got, c.want, Validate(d))
+			}
+		})
+	}
+
+	d := base(t)
+	editItem(d, clipID, keys("saturation", 1.5))
+	if vs := Validate(d); len(vs) != 0 {
+		t.Fatalf("a colour keyframe on a clip is valid, got %v", vs)
+	}
+}

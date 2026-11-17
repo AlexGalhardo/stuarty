@@ -145,3 +145,36 @@ func GradeProblem(hsl []HslBand, w *Wheels, c *Curves) (path, msg string) {
 	}
 	return "", ""
 }
+
+// ColourProps are the colour properties of a clip that keyframe.set can animate (SDD-001 §3.8).
+var ColourProps = []string{"brightness", "contrast", "saturation", "temperature", "tint", "hue"}
+
+// ColourRange is the range of a colour property, and whether it is one.
+func ColourRange(prop string) (lo, hi float64, ok bool) {
+	switch prop {
+	case "brightness", "temperature", "tint":
+		return -1, 1, true
+	case "contrast", "saturation":
+		return 0, 2, true
+	case "hue":
+		return -180, 180, true
+	}
+	return 0, 0, false
+}
+
+// ColourValue is the static value of a colour property of an item.
+func (it *Item) ColourValue(prop string) float64 {
+	switch prop {
+	case "brightness":
+		return it.Brightness
+	case "contrast":
+		return it.Contrast
+	case "saturation":
+		return it.Saturation
+	case "temperature":
+		return it.Temperature
+	case "tint":
+		return it.Tint
+	}
+	return it.Hue
+}
