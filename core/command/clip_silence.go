@@ -15,7 +15,7 @@ func init() {
 		Description: "Replaces the clip or audio item by one item per non-silent stretch of its source range. Silences shorter than " +
 			"min_silence are kept; padding of speech is kept on each side of a cut. With ripple track the pieces " +
 			"close up and the later items of the track follow. The silences come from the analysis of the asset " +
-			"and are supplied by the service in resolved; the command never starts a job.",
+			"and are supplied by the service in resolved; the command never starts a job. Captions linked to the clip move their link to the piece that holds their first word.",
 		Example: `{"item_id": "itm_m1n2p3q4r5", "min_silence": "0.4s", "padding": "0.1s", "ripple": "track"}`,
 		Errors: []string{
 			CodeValidation, CodeInvalidTime, CodeNotFound, CodeTypeMismatch, CodeIDExists, CodeInvalidState, CodeLimit,
@@ -276,6 +276,28 @@ func silencePieces(it *timeline.Item, pieces []piece, ids []string, ripple bool)
 	return out
 }
 
+// relinkCaptions moves the link of each caption of the cut clip to the piece that holds
+// its first word, so that caption.retime_from_clip finds them on every piece (VV-152).
+func (c *Context) relinkCaptions(orig *timeline.Item, pieces []piece, out []timeline.Item) {
+	for _, id := range c.sortedItemIDs() {
+		capt := c.Doc.Items[id]
+		if capt.Type != timeline.ItemCaption || capt.LinkedItem != orig.ID || len(capt.Words) == 0 {
+			continue
+		}
+		src := orig.SourceIn + (capt.Start+capt.Words[0].Start-orig.Start)*orig.Speed.Num/orig.Speed.Den
+		target := 0
+		for i, pc := range pieces {
+			if pc.a <= src {
+				target = i
+			}
+		}
+		if out[target].ID != capt.LinkedItem {
+			capt.LinkedItem = out[target].ID
+			c.Doc.Items[id] = capt
+		}
+	}
+}
+
 func applyRemoveSilences(c *Context, a *removeSilencesArgs) error {
 	sp, err := parseSilenceArgs(c, a)
 	if err != nil {
@@ -321,6 +343,7 @@ func applyRemoveSilences(c *Context, a *removeSilencesArgs) error {
 		for i := range out {
 			c.Doc.Items[out[i].ID] = out[i]
 		}
+		c.relinkCaptions(&it, pieces, out)
 	} else {
 		ids, unused = []string{}, append([]string{}, a.NewIDs...)
 	}
