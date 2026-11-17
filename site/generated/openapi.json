@@ -9488,6 +9488,7 @@
               "schema": {
                 "properties": {
                   "dry_run": {
+                    "description": "Checks the paths and limits only: the format is probed on the real import, so a file that is refused there (SVG, for one) still answers 202.",
                     "type": "boolean"
                   },
                   "files": {

@@ -24,7 +24,7 @@ type mediaImportIn struct {
 	ID     string         `json:"id"                validate:"required"`
 	Files  []importFileIn `json:"files"             validate:"required,min=1,max=50"`
 	WaitMS int            `json:"wait_ms,omitempty"                                  doc:"0 to 25000: hold the call until the assets are ready."`
-	DryRun bool           `json:"dry_run,omitempty"`
+	DryRun bool           `json:"dry_run,omitempty"                                  doc:"Checks the paths and limits only: the format is probed on the real import, so a file that is refused there (SVG, for one) still answers 202."`
 }
 
 type mediaListIn struct {
