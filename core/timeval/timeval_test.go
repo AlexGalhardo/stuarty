@@ -113,6 +113,16 @@ func TestParseBareNumberMessage(t *testing.T) {
 	}
 }
 
+func TestParseUnsupportedUnitMessage(t *testing.T) {
+	for _, s := range []string{"800ms", "5xs"} {
+		_, err := Parse(s, FPS{30, 1})
+		if err == nil || !strings.Contains(err.Error(), "is not supported") ||
+			strings.Contains(err.Error(), "not a decimal") {
+			t.Errorf("Parse(%q) = %v, want an unsupported unit message", s, err)
+		}
+	}
+}
+
 func TestParseInvalidFPS(t *testing.T) {
 	for _, f := range []FPS{{}, {0, 1}, {30, 0}, {-30, 1}, {1, 2}, {2000, 1}, {2_000_000, 1_000_000}} {
 		if _, err := Parse("1s", f); !errors.Is(err, ErrInvalidFPS) {
