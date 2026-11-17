@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -223,6 +224,16 @@ func TestMediaInspectSections(t *testing.T) {
 		if !strings.Contains(res.Text, want) {
 			t.Errorf("text lacks %q:\n%s", want, res.Text)
 		}
+	}
+
+	// VV-097: the beat grid is visible, with the tempo and the first beats (0, 0.5, 1 and 1.5 s).
+	beats, err := m.svc.MediaInspect(m.as(ui), service.MediaInspectRequest{
+		ProjectID: project, AssetID: a.AssetID, Sections: []string{"beats"},
+	})
+	if err != nil || beats.Beats == nil || beats.Beats.TempoBPM != 120 || beats.Beats.Count != 4 ||
+		!slices.Equal(beats.Beats.FirstMS, []int64{0, 500, 1000, 1500}) ||
+		!strings.Contains(beats.Text, "beats: 120.0 BPM") {
+		t.Errorf("beats = %+v, %v %s", beats.Beats, err, beats.Text)
 	}
 
 	if _, err := m.svc.MediaInspect(m.as(ui), service.MediaInspectRequest{

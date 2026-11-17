@@ -189,7 +189,7 @@ var mediaInspect = &spec{
 	project:    true,
 	positional: true,
 	flags: append([]flagDef{
-		{Name: "sections", Kind: kindString, Default: "probe", Usage: "probe, transcript, silences, loudness"},
+		{Name: "sections", Kind: kindString, Default: "probe", Usage: "probe, transcript, silences, loudness, beats"},
 		{Name: "min-silence", Kind: kindString, Default: "0.4s", Usage: "shortest silence to report"},
 	}, pageFlags("")...),
 	run: func(ctx context.Context, c *call) (*output, error) {

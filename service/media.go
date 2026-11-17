@@ -893,7 +893,7 @@ func stripOf(arts []ArtifactRow) *Strip {
 	return &Strip{TileW: l.TileW, TileH: l.TileH, Columns: l.Columns, Count: l.Count, IntervalMS: l.IntervalMS}
 }
 
-var inspectSections = []string{"probe", "transcript", "silences", "loudness"}
+var inspectSections = []string{"probe", "transcript", "silences", "loudness", "beats"}
 
 func (s *svc) MediaInspect(ctx context.Context, req MediaInspectRequest) (*MediaInspectResult, error) {
 	c, err := authorize(ctx, "MediaInspect", req.ProjectID)
@@ -909,7 +909,7 @@ func (s *svc) MediaInspect(ctx context.Context, req MediaInspectRequest) (*Media
 	for _, sec := range sections {
 		if !slices.Contains(inspectSections, sec) {
 			return nil, newError(command.CodeValidation, "the section %q is not known.", sec).
-				withPath("sections").withHint("use probe, transcript, silences or loudness")
+				withPath("sections").withHint("use probe, transcript, silences, loudness or beats")
 		}
 	}
 
@@ -969,6 +969,8 @@ func (s *svc) MediaInspect(ctx context.Context, req MediaInspectRequest) (*Media
 			} else {
 				text.WriteString("\nloudness: none (the asset has no audio)")
 			}
+		case "beats":
+			text.WriteString(s.beatsSection(arts, res))
 		case "silences":
 			text.WriteString(s.silencesSection(arts, &row, req.MinSilence, res))
 		case "transcript":
@@ -1065,6 +1067,51 @@ func loudnessText(l *Loudness) string {
 		l.RangeLU,
 		f(l.TruePeakDBTP),
 	)
+}
+
+// maxBeatsShown is how many beats of the grid the section lists.
+const maxBeatsShown = 16
+
+// beatsSection fills res.Beats from beats-1.json: the tempo, how sure the detector is and the first beats.
+// A grid without beats says why, so an agent knows audio.mark_beats will refuse the asset.
+func (s *svc) beatsSection(arts []ArtifactRow, res *MediaInspectResult) string {
+	raw := s.readArtifact(arts, "beats", "")
+	if raw == nil {
+		return "\nbeats: none (the asset has no audio, or it is not analysed yet)"
+	}
+
+	var doc struct {
+		SampleRate int     `json:"sample_rate"`
+		TempoBPM   float64 `json:"tempo_bpm"`
+		Confidence float64 `json:"confidence"`
+		Beats      []int64 `json:"beats"`
+	}
+
+	if json.Unmarshal(raw, &doc) != nil || doc.SampleRate < 1 {
+		return "\nbeats: none (the asset has no audio, or it is not analysed yet)"
+	}
+
+	grid := &BeatGrid{TempoBPM: doc.TempoBPM, Confidence: doc.Confidence, Count: len(doc.Beats), FirstMS: []int64{}}
+
+	for i, b := range doc.Beats {
+		if i == maxBeatsShown {
+			break
+		}
+
+		grid.FirstMS = append(grid.FirstMS, b*1000/int64(doc.SampleRate))
+	}
+
+	res.Beats = grid
+	res.Available = append(res.Available, "beats")
+
+	if len(doc.Beats) == 0 {
+		grid.Reason = "no steady pulse was found (speech, ambience, silence or a very irregular rhythm)"
+
+		return "\nbeats: none, " + grid.Reason + "; audio.mark_beats needs a grid"
+	}
+
+	return fmt.Sprintf("\nbeats: %.1f BPM, confidence %.2f, %d beats; first at %v ms",
+		grid.TempoBPM, grid.Confidence, grid.Count, grid.FirstMS)
 }
 
 // silencesSection fills res.Silences from silence-1.json: the ranges of the

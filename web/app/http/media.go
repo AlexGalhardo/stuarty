@@ -35,7 +35,7 @@ type mediaListIn struct {
 type mediaInspectIn struct {
 	ID         string `json:"id"                    validate:"required"`
 	AssetID    string `json:"asset_id"              validate:"required"`
-	Sections   string `json:"sections,omitempty"                        doc:"Comma separated: probe (default), transcript, silences, loudness."`
+	Sections   string `json:"sections,omitempty"                        doc:"Comma separated: probe (default), transcript, silences, loudness, beats."`
 	MinSilence string `json:"min_silence,omitempty"                     doc:"The shortest silence to list, as a time; default 0.4s."`
 	pageIn
 }

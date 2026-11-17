@@ -28,7 +28,7 @@ Send the secret in the header `Authorization: Bearer <secret>`: the local token 
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
-| `sections` | `string` | no | Comma separated: probe (default), transcript, silences, loudness. |
+| `sections` | `string` | no | Comma separated: probe (default), transcript, silences, loudness, beats. |
 | `min_silence` | `string` | no | The shortest silence to list, as a time; default 0.4s. |
 | `cursor` | `string` | no | The next_cursor of the previous page. |
 | `limit` | `integer` | no | The page size; the default depends on the operation. |
@@ -43,6 +43,7 @@ Content type `application/json`. Schema: [`MediaInspectResult`](/docs/api/schema
 | --- | --- | --- | --- |
 | `asset_id` | `string` | no |  |
 | `available` | array of `string` | no |  |
+| `beats` | [`BeatGrid`](/docs/api/schemas#beatgrid) or `any` or `null` or `null` | no |  |
 | `error` | [`Error`](/docs/api/schemas#error) or `any` or `null` or `null` | no |  |
 | `kind` | `string` | no |  |
 | `loudness` | [`Loudness`](/docs/api/schemas#loudness) or `any` or `null` or `null` | no |  |
@@ -229,6 +230,15 @@ puts "#{response.code} #{response.body}"
   "available": [
     "string"
   ],
+  "beats": {
+    "confidence": 0,
+    "count": 0,
+    "first_ms": [
+      0
+    ],
+    "reason": "string",
+    "tempo_bpm": 0
+  },
   "error": {
     "code": "string",
     "details": {},
