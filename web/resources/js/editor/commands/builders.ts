@@ -450,7 +450,7 @@ export const KEYFRAME_PROPERTIES = [
 ] as const;
 export type KeyframeProperty = (typeof KEYFRAME_PROPERTIES)[number];
 
-// The colour properties of a clip that `keyframe.set` also animates; the inspector does not offer them yet.
+// The colour properties of a clip that `keyframe.set` also animates (clips only).
 export const KEYFRAME_COLOUR_PROPERTIES = [
 	"brightness",
 	"contrast",
@@ -459,6 +459,50 @@ export const KEYFRAME_COLOUR_PROPERTIES = [
 	"tint",
 	"hue",
 ] as const;
+export type ColourKeyframeProperty =
+	(typeof KEYFRAME_COLOUR_PROPERTIES)[number];
+export type AnyKeyframeProperty = KeyframeProperty | ColourKeyframeProperty;
+
+// What the core uses for a colour property the item stores nothing for.
+export const COLOUR_FALLBACK: Readonly<Record<ColourKeyframeProperty, number>> =
+	{
+		brightness: 0,
+		contrast: 1,
+		saturation: 1,
+		temperature: 0,
+		tint: 0,
+		hue: 0,
+	};
+
+export interface StoredKeyframe {
+	t: number;
+	value: number;
+	easing?: KeyframeEasing;
+}
+
+// The keyframe a list holds at a frame of the timeline, if any.
+export function keyframeAt(
+	keys: readonly StoredKeyframe[],
+	itemStart: number,
+	frame: number,
+): StoredKeyframe | undefined {
+	return keys.find((key) => itemStart + key.t === frame);
+}
+
+// What a colour slider of an animated property shows: the keyframe at the
+// playhead, else the latest one before it, else the first. A keyframe of the
+// document, never a value worked out between two (the plan does not report
+// colour, so the page has nothing else to show).
+export function shownColourKeyframe(
+	keys: readonly StoredKeyframe[],
+	itemStart: number,
+	frame: number,
+): StoredKeyframe | undefined {
+	const exact = keyframeAt(keys, itemStart, frame);
+	if (exact !== undefined) return exact;
+	const before = keys.filter((key) => itemStart + key.t < frame);
+	return before[before.length - 1] ?? keys[0];
+}
 
 // The spellings of the registry (`keyframe.set` easing).
 export const KEYFRAME_EASINGS = [
@@ -485,10 +529,10 @@ export const keyframeFrame = (itemStart: number, t: number): number =>
 // what the person chose; the core judges them.
 export function keyframeSetOperations(input: {
 	itemId: string;
-	property: KeyframeProperty;
+	property: AnyKeyframeProperty;
 	frame: number;
 	value: number;
-	easing: KeyframeEasing;
+	easing?: KeyframeEasing;
 }): Operations {
 	return [
 		{
@@ -498,7 +542,7 @@ export function keyframeSetOperations(input: {
 				property: input.property,
 				at: frames(input.frame),
 				value: input.value,
-				easing: input.easing,
+				...(input.easing === undefined ? {} : { easing: input.easing }),
 			},
 		},
 	];
@@ -506,7 +550,7 @@ export function keyframeSetOperations(input: {
 
 export function keyframeRemoveOperations(
 	itemId: string,
-	property: KeyframeProperty,
+	property: AnyKeyframeProperty,
 	frame: number,
 ): Operations {
 	return [
@@ -520,7 +564,7 @@ export function keyframeRemoveOperations(
 // One property, or every animated property of the item when none is named.
 export function keyframeClearOperations(
 	itemId: string,
-	property?: KeyframeProperty,
+	property?: AnyKeyframeProperty,
 ): Operations {
 	return [
 		{

@@ -7,11 +7,14 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/cn";
 import { useT } from "@/lib/i18n";
 import {
+	type AnyKeyframeProperty,
+	COLOUR_FALLBACK,
+	type ColourKeyframeProperty,
 	containsInclusive,
+	KEYFRAME_COLOUR_PROPERTIES,
 	KEYFRAME_EASINGS,
 	KEYFRAME_PROPERTIES,
 	type KeyframeEasing,
-	type KeyframeProperty,
 	keyframeClearOperations,
 	keyframeFrame,
 	keyframeRemoveOperations,
@@ -37,14 +40,23 @@ const SELECT_CLASS =
 	"h-8 min-w-0 rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30";
 
 // The properties a keyframe may animate on an item of each type.
-function propertiesOf(type: string): readonly KeyframeProperty[] {
+function propertiesOf(type: string): readonly AnyKeyframeProperty[] {
 	if (type === "audio") return ["volume"];
-	if (type === "clip") return KEYFRAME_PROPERTIES;
+	if (type === "clip")
+		return [...KEYFRAME_PROPERTIES, ...KEYFRAME_COLOUR_PROPERTIES];
 	return KEYFRAME_PROPERTIES.filter((property) => property !== "volume");
 }
 
-const isProperty = (name: string): name is KeyframeProperty =>
-	(KEYFRAME_PROPERTIES as readonly string[]).includes(name);
+const ALL_PROPERTIES: readonly AnyKeyframeProperty[] = [
+	...KEYFRAME_PROPERTIES,
+	...KEYFRAME_COLOUR_PROPERTIES,
+];
+
+const isProperty = (name: string): name is AnyKeyframeProperty =>
+	(ALL_PROPERTIES as readonly string[]).includes(name);
+
+const isColour = (name: AnyKeyframeProperty): name is ColourKeyframeProperty =>
+	(KEYFRAME_COLOUR_PROPERTIES as readonly string[]).includes(name);
 
 const isEasing = (name: string): name is KeyframeEasing =>
 	(KEYFRAME_EASINGS as readonly string[]).includes(name);
@@ -98,7 +110,7 @@ export default function KeyframesSection({
 	const playhead = useUiState((s) => s.playheadFrame);
 	const picked = useUiState((s) => s.selection.keyframe);
 	const effective = useEffectiveState((s) => s.items[itemId]);
-	const [property, setProperty] = useState<KeyframeProperty | null>(null);
+	const [property, setProperty] = useState<AnyKeyframeProperty | null>(null);
 	const [valueText, setValueText] = useState("");
 	const [easing, setEasing] = useState<KeyframeEasing>("linear");
 	if (item === undefined || width === undefined || height === undefined) {
@@ -110,8 +122,8 @@ export default function KeyframesSection({
 	const target =
 		property !== null && offered.includes(property)
 			? property
-			: (offered[0] as KeyframeProperty);
-	const animated = KEYFRAME_PROPERTIES.filter(
+			: (offered[0] as AnyKeyframeProperty);
+	const animated = ALL_PROPERTIES.filter(
 		(name) => (item.keyframes?.[name]?.length ?? 0) > 0,
 	);
 	const inside = containsInclusive(
@@ -121,8 +133,9 @@ export default function KeyframesSection({
 
 	// With no value typed, the keyframe takes the value the field shows now:
 	// the stored one, or the plan's for a property already animated.
-	const current =
-		target === "volume"
+	const current = isColour(target)
+		? round3(item[target] ?? COLOUR_FALLBACK[target])
+		: target === "volume"
 			? item.volume === undefined
 				? ""
 				: round3(item.volume)

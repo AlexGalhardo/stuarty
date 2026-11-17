@@ -479,6 +479,14 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 			"inspector.color": colorOperations("itm_a", { contrast: 1.2 }).map(
 				(o) => o.op,
 			),
+			"inspector.color_keyframe": keyframeSetOperations({
+				itemId: "itm_a",
+				property: "hue",
+				frame: 10,
+				value: 20,
+			})
+				.concat(keyframeRemoveOperations("itm_a", "hue", 10))
+				.map((o) => o.op),
 			"inspector.silences": silenceOperations("itm_a", {
 				minSilence: "0.4s",
 				padding: "0.1s",

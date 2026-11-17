@@ -11,6 +11,7 @@ import {
 	selectTrackItemIds,
 } from "../state/selectors";
 import {
+	type AnyKeyframeProperty,
 	addAudioOperations,
 	addClipOperations,
 	adjacentTrack,
@@ -28,7 +29,6 @@ import {
 	extractAudioOperations,
 	freezeFrameOperations,
 	type ItemRange,
-	type KeyframeProperty,
 	keyframeFallbackOperations,
 	keyframeFrame,
 	keyframeRemoveOperations,
@@ -626,7 +626,7 @@ export function createActions(runtime: EditorRuntime): Actions {
 				return send(
 					keyframeRemoveOperations(
 						keyframe.item,
-						keyframe.property as KeyframeProperty,
+						keyframe.property as AnyKeyframeProperty,
 						keyframeFrame(item.start, keyframe.t),
 					),
 				);

@@ -112,4 +112,55 @@ test.describe("advanced colour", () => {
 			curves: { master: [] },
 		});
 	});
+
+	test("a colour keyframe button animates the property and its slider then edits the keyframe", async ({
+		page,
+		request,
+	}) => {
+		const seeded = await seedProject(request, {
+			tracks: 1,
+			perTrack: 1,
+			clipDuration: "4s",
+		});
+		const itemId = seeded.itemIds[0] ?? "";
+		await page.goto(`/editor/${seeded.id}`);
+		await page.locator("[data-item-id]").click();
+		await expect(page.getByRole("heading", { name: /^Clip/ })).toBeVisible();
+		const edits = recordEdits(page);
+
+		await page
+			.getByRole("button", {
+				name: "Add a keyframe for Brightness at the playhead",
+			})
+			.click();
+		await expect.poll(() => edits.length).toBe(1);
+		expect(edits[0]?.operations).toEqual([
+			{
+				op: "keyframe.set",
+				args: { item_id: itemId, property: "brightness", at: "0f", value: 0 },
+			},
+		]);
+		const remove = page.getByRole("button", {
+			name: "Remove the keyframe of Brightness at the playhead",
+		});
+		await expect(remove).toHaveAttribute("aria-pressed", "true");
+
+		const slider = page.getByLabel("Brightness", { exact: true });
+		await slider.focus();
+		await slider.press("End");
+		await expect.poll(() => edits.length).toBe(2);
+		expect(edits[1]?.operations[0]).toMatchObject({
+			op: "keyframe.set",
+			args: { item_id: itemId, property: "brightness", at: "0f", value: 1 },
+		});
+
+		await remove.click();
+		await expect.poll(() => edits.length).toBe(3);
+		expect(edits[2]?.operations).toEqual([
+			{
+				op: "keyframe.remove",
+				args: { item_id: itemId, property: "brightness", at: "0f" },
+			},
+		]);
+	});
 });

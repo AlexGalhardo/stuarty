@@ -927,6 +927,8 @@
         "lut": "Lookup table (LUT)",
         "lut_none": "None",
         "lut_intensity": "LUT intensity",
+        "color_keyframe_add": "Add a keyframe for {property} at the playhead",
+        "color_keyframe_remove": "Remove the keyframe of {property} at the playhead",
         "color_reset": "Reset",
         "color_reset_of": "Reset {group}",
         "hsl_title": "HSL by colour",
@@ -1206,7 +1208,13 @@
           "scale": "Scale",
           "rotation": "Rotation",
           "opacity": "Opacity",
-          "volume": "Volume"
+          "volume": "Volume",
+          "brightness": "Brightness",
+          "contrast": "Contrast",
+          "saturation": "Saturation",
+          "temperature": "Temperature",
+          "tint": "Tint",
+          "hue": "Hue"
         },
         "easing_name": {
           "linear": "Linear",

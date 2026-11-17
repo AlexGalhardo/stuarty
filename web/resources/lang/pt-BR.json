@@ -415,7 +415,7 @@
             "gif": "Animação GIF",
             "wav": "Somente áudio WAV",
             "aac": "Somente áudio AAC",
-            "png": "Imagem PNG do quadro na posição do cursor"
+            "png": "Imagem PNG do quadro no cabeçote de reprodução"
           }
         }
       },
@@ -927,6 +927,8 @@
         "lut": "Tabela de cores (LUT)",
         "lut_none": "Nenhuma",
         "lut_intensity": "Intensidade da LUT",
+        "color_keyframe_add": "Adicionar um quadro-chave de {property} no cabeçote de reprodução",
+        "color_keyframe_remove": "Remover o quadro-chave de {property} no cabeçote de reprodução",
         "color_reset": "Redefinir",
         "color_reset_of": "Redefinir {group}",
         "hsl_title": "HSL por cor",
@@ -1199,7 +1201,13 @@
           "scale": "Escala",
           "rotation": "Rotação",
           "opacity": "Opacidade",
-          "volume": "Volume"
+          "volume": "Volume",
+          "brightness": "Brilho",
+          "contrast": "Contraste",
+          "saturation": "Saturação",
+          "temperature": "Temperatura",
+          "tint": "Tonalidade",
+          "hue": "Matiz"
         },
         "easing_name": {
           "linear": "Linear",
