@@ -1023,6 +1023,8 @@
         "chroma_key_title": "Tela verde",
         "chroma_key_on": "Remover uma cor (tela verde)",
         "chroma_key_color": "Cor do chroma key",
+        "chroma_pick": "Pegar a cor do preview",
+        "chroma_pick_hint": "Clique no preview para pegar a cor. Esc cancela.",
         "chroma_similarity": "Semelhança",
         "chroma_smoothness": "Suavidade",
         "chroma_spill": "Reflexo (spill)",

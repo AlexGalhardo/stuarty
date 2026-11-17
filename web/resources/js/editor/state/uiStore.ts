@@ -38,6 +38,10 @@ export interface UiState {
 	editingText: string | null;
 	// The safe-area guide over the preview, off by default (SDD-012 section 11.6).
 	safeAreaVisible: boolean;
+	// The eyedropper of VV-186: the item whose chroma key colour the next click
+	// on the preview picks, and what receives the colour (the inspector sends it
+	// through the existing `clip.set_chroma_key`); null when it is off.
+	eyedropper: { item: string; onPick(hex: string): void } | null;
 	// E_IN_USE of an asset.remove: the ids `details.used_by` named, shown by the
 	// dialog (SDD-012 section 4.4); null when the dialog is closed.
 	inUse: { assetId: string; usedBy: readonly string[] } | null;
@@ -75,6 +79,7 @@ export interface UiWriter {
 	selectWord(word: UiState["selectedWord"]): void;
 	startWordEdit(word: UiState["editingWord"]): void;
 	toggleSafeArea(): void;
+	setEyedropper(eyedropper: UiState["eyedropper"]): void;
 	showInUse(inUse: UiState["inUse"]): void;
 	selectTrack(trackId: string | null): void;
 	dropSelection(isKnown: (id: string) => boolean): void;
@@ -109,6 +114,7 @@ export function createUiStore(initialZoom = 1): {
 		selectedWord: null,
 		editingWord: null,
 		safeAreaVisible: false,
+		eyedropper: null,
 		inUse: null,
 		tool: "select",
 		playheadFrame: 0,
@@ -167,6 +173,10 @@ export function createUiStore(initialZoom = 1): {
 				),
 			toggleSafeArea: () =>
 				store.setState((s) => ({ ...s, safeAreaVisible: !s.safeAreaVisible })),
+			setEyedropper: (eyedropper) =>
+				store.setState((s) =>
+					s.eyedropper === eyedropper ? s : { ...s, eyedropper },
+				),
 			showInUse: (inUse) => store.setState((s) => ({ ...s, inUse })),
 			selectTrack: (track) =>
 				store.setState((s) => ({

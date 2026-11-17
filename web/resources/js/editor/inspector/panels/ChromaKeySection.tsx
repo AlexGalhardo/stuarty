@@ -1,10 +1,14 @@
 import type { ReactNode } from "react";
-
+import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
 import { chromaKeyOperations } from "../../commands/builders";
 import { useCanEdit } from "../../commands/useActions";
 import { useCommandsExposed } from "../../commands/useExposedCommands";
-import { useDocumentState } from "../../state/EditorContext";
+import {
+	useDocumentState,
+	useRuntime,
+	useUiState,
+} from "../../state/EditorContext";
 import ColorField from "../fields/ColorField";
 import { registryRange } from "../fields/registryLimits";
 import SliderField from "../fields/SliderField";
@@ -27,6 +31,8 @@ export default function ChromaKeySection({
 	const canEdit = useCanEdit();
 	const send = useFieldCommit();
 	const exposed = useCommandsExposed("clip.set_chroma_key");
+	const runtime = useRuntime();
+	const picking = useUiState((s) => s.eyedropper?.item === itemId);
 	const item = useDocumentState((s) => s.document?.items[itemId]);
 	if (!exposed || item === undefined) return null;
 	const key = item.chroma_key;
@@ -48,6 +54,33 @@ export default function ChromaKeySection({
 						disabled={!canEdit}
 						commit={(color) => send(chromaKeyOperations(itemId, color))}
 					/>
+					<div className="flex flex-col gap-1">
+						<Button
+							type="button"
+							size="sm"
+							variant="outline"
+							disabled={!canEdit}
+							aria-pressed={picking}
+							onClick={() =>
+								runtime.uiWriter.setEyedropper(
+									picking
+										? null
+										: {
+												item: itemId,
+												onPick: (hex) =>
+													void send(chromaKeyOperations(itemId, hex)),
+											},
+								)
+							}
+						>
+							{t("ui.editor.clip.chroma_pick")}
+						</Button>
+						{picking && (
+							<p role="status" className="text-xs text-muted-foreground">
+								{t("ui.editor.clip.chroma_pick_hint")}
+							</p>
+						)}
+					</div>
 					<SliderField
 						label={t("ui.editor.clip.chroma_similarity")}
 						stored={String(key.similarity)}

@@ -82,6 +82,10 @@ export interface PreviewExecutor {
 	// Resolves when the plan window of the frame is held, so a caller can ask for
 	// its geometry; never rejects.
 	whenPlan(frame: number): Promise<void>;
+	// The colour the preview canvas shows at a point of the frame, `x` and `y`
+	// in project pixels, as `#RRGGBB`; null when nothing is drawn yet. A read of
+	// pixels for the eyedropper: no edit result is worked out from it.
+	readColour(x: number, y: number): string | null;
 	readonly stats: {
 		videoElements: number;
 		planWindows: number;
