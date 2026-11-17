@@ -14,7 +14,7 @@ const OP_PREFIXES = ["project", "settings", "asset", "track", "item", "timeline"
 /** File extensions that look like an operation (`clip.mov`). */
 const FILE_EXTENSIONS = new Set(["mov", "mp4", "mp3", "wav", "mkv", "webm", "json", "txt", "zip", "jpg", "png"]);
 /** Commands that exist outside the generated CLI reference (SDD-000 section 1, "Other CLI commands"). */
-const EXTRA_CLI = ["user:create", "user:passwd"];
+const EXTRA_CLI = ["open", "serve", "user:create", "user:passwd"];
 
 export type Names = { operations: Set<string>; cli: Set<string>; tools: Set<string> };
 
