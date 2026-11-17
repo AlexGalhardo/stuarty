@@ -3,9 +3,11 @@ import { describe, expect, test } from "vitest";
 import actionsSource from "./actions.ts?raw";
 import {
 	BINDING_IDS,
+	DEFAULT_BINDINGS,
 	editShortcut,
 	fixedRowFor,
 	isSelectAllShortcut,
+	labelWithKey,
 	landmarkShortcut,
 	panelShortcut,
 	SHORTCUTS,
@@ -211,5 +213,34 @@ describe("selectAll and landmark keys", () => {
 		expect(landmarkShortcut({ ...base, key: "F6", ctrlKey: true })).toBeNull();
 		expect(landmarkShortcut({ ...base, key: "F6", altKey: true })).toBeNull();
 		expect(landmarkShortcut({ ...base, key: "F5" })).toBeNull();
+	});
+});
+
+describe("labelWithKey", () => {
+	test("adds the first key of the row, Mod by platform", () => {
+		expect(labelWithKey("Split", "split", DEFAULT_BINDINGS, false)).toBe(
+			"Split (Ctrl+B)",
+		);
+		expect(labelWithKey("Split", "split", DEFAULT_BINDINGS, true)).toBe(
+			"Split (Cmd+B)",
+		);
+		expect(labelWithKey("Delete", "delete", DEFAULT_BINDINGS, false)).toBe(
+			"Delete (Delete)",
+		);
+	});
+
+	test("follows a rebound key", () => {
+		expect(
+			labelWithKey(
+				"Split",
+				"split",
+				{ ...DEFAULT_BINDINGS, split: "S" },
+				false,
+			),
+		).toBe("Split (S)");
+	});
+
+	test("leaves the label alone for an unknown row", () => {
+		expect(labelWithKey("Fit", "nope", DEFAULT_BINDINGS, false)).toBe("Fit");
 	});
 });

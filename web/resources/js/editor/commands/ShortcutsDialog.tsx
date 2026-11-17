@@ -17,13 +17,10 @@ import {
 	comboFromEvent,
 	displayCombo,
 	isBindingId,
+	IS_MAC as MAC,
 	SHORTCUTS,
 } from "./keymap";
 import { rebind, resetBindings, useBindings } from "./keymapStore";
-
-const MAC =
-	typeof navigator !== "undefined" &&
-	/Mac|iPhone|iPad/.test(navigator.userAgent);
 
 function isEditable(target: EventTarget | null): boolean {
 	return (

@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
 import { useActions, useCanEdit } from "../commands/useActions";
+import { useShortcutLabel } from "../commands/useShortcutLabel";
 import { useStore } from "../state/createStore";
 import {
 	useDocumentState,
@@ -17,6 +18,7 @@ import {
 // the core answered that there is nothing to undo or redo, until the next batch.
 export default function UndoRedo(): ReactNode {
 	const t = useT();
+	const tip = useShortcutLabel();
 	const actions = useActions();
 	const revision = useDocumentState((s) => s.revision);
 	const ready = useCanEdit();
@@ -31,6 +33,7 @@ export default function UndoRedo(): ReactNode {
 				variant="ghost"
 				size="sm"
 				disabled={!ready || undoable === false || blocked.undo === revision}
+				title={tip(t("ui.editor.undo"), "undo")}
 				onClick={() => void actions.undo()}
 			>
 				<Undo2 aria-hidden="true" />
@@ -41,6 +44,7 @@ export default function UndoRedo(): ReactNode {
 				variant="ghost"
 				size="sm"
 				disabled={!ready || redoable === false || blocked.redo === revision}
+				title={tip(t("ui.editor.redo"), "redo")}
 				onClick={() => void actions.redo()}
 			>
 				<Redo2 aria-hidden="true" />

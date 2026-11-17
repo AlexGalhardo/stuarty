@@ -23,6 +23,7 @@ import { bindingFor } from "../commands/keymapStore";
 import { magnetTrackId } from "../commands/magnet";
 import { formatTime } from "../commands/units";
 import { useActions, useCanEdit } from "../commands/useActions";
+import { useShortcutLabel } from "../commands/useShortcutLabel";
 import {
 	useDocumentState,
 	useRuntime,
@@ -102,6 +103,7 @@ function isEditable(target: EventTarget | null): boolean {
 // It draws the read model and the UI state and never edits either.
 export default function Timeline(): ReactNode {
 	const t = useT();
+	const tip = useShortcutLabel();
 	const runtime = useRuntime();
 	const trackIds = useDocumentState(selectOrderedTrackIds);
 	const endFrame = useDocumentState(selectEndFrame);
@@ -395,6 +397,7 @@ export default function Timeline(): ReactNode {
 					variant="ghost"
 					size="icon-sm"
 					aria-label={t("ui.editor.timeline.zoom_out")}
+					title={tip(t("ui.editor.timeline.zoom_out"), "zoom_out")}
 					onClick={() => zoomStep(-1)}
 				>
 					<ZoomOut aria-hidden="true" />
@@ -404,11 +407,18 @@ export default function Timeline(): ReactNode {
 					variant="ghost"
 					size="icon-sm"
 					aria-label={t("ui.editor.timeline.zoom_in")}
+					title={tip(t("ui.editor.timeline.zoom_in"), "zoom_in")}
 					onClick={() => zoomStep(1)}
 				>
 					<ZoomIn aria-hidden="true" />
 				</Button>
-				<Button type="button" variant="ghost" size="sm" onClick={fitToView}>
+				<Button
+					type="button"
+					variant="ghost"
+					size="sm"
+					title={tip(t("ui.editor.timeline.fit"), "zoom_fit")}
+					onClick={fitToView}
+				>
 					<Maximize2 aria-hidden="true" />
 					{t("ui.editor.timeline.fit")}
 				</Button>
@@ -417,6 +427,7 @@ export default function Timeline(): ReactNode {
 					variant={snapEnabled ? "secondary" : "ghost"}
 					size="sm"
 					aria-pressed={snapEnabled}
+					title={tip(t("ui.editor.timeline.snap"), "toggle_snap")}
 					onClick={runtime.uiWriter.toggleSnap}
 				>
 					<Magnet aria-hidden="true" />
