@@ -48,6 +48,7 @@ var requiredCases = []string{
 	"text-style",
 	"shape",
 	"color-adjust",
+	"color-keyframes",
 	"speed-half",
 	"speed-double",
 	"fps-30000-1001",
@@ -449,8 +450,9 @@ var alphaCases = map[string]func() alphaCase{
 		b.clip(track, asset, 20, 10, func(it *timeline.Item) { it.SourceIn, it.Saturation = 20, 0.2 })
 		return b.build(5, 15, 25)
 	},
-	"speed-half":   func() alphaCase { return speedCase("speed 0.5", rate(1, 2), 40, 0, 13, 26, 39) },
-	"speed-double": func() alphaCase { return speedCase("speed 2", rate(2, 1), 30, 0, 10, 20, 29) },
+	"color-keyframes": colourKeyframesCase,
+	"speed-half":      func() alphaCase { return speedCase("speed 0.5", rate(1, 2), 40, 0, 13, 26, 39) },
+	"speed-double":    func() alphaCase { return speedCase("speed 2", rate(2, 1), 30, 0, 10, 20, 29) },
 	"fps-30000-1001": func() alphaCase {
 		b := newCase("a 30000/1001 project", rate(30000, 1001))
 		b.clip(b.track(), b.video(portrait), 0, 60, nil)
@@ -810,4 +812,18 @@ func TestExportAlphaCases(t *testing.T) {
 			}
 		})
 	}
+}
+
+// colourKeyframesCase animates brightness, saturation and hue on one clip, so every frame has its own colour
+// matrix (SDD-004 section 3.5, animated colour): the planner gives each frame its matrix and both renderers draw it.
+func colourKeyframesCase() alphaCase {
+	b := newCase("animated colour", rate(30, 1))
+	b.clip(b.track(), b.video(portrait), 0, 30, func(it *timeline.Item) {
+		it.Keyframes = timeline.Keyframes{
+			"brightness": {timeline.NewKeyframe(0, 0), timeline.NewKeyframe(29, 0.3)},
+			"saturation": {timeline.NewKeyframe(0, 1), timeline.NewKeyframe(29, 0.2)},
+			"hue":        {timeline.NewKeyframe(0, 0), timeline.NewKeyframe(29, 120)},
+		}
+	})
+	return b.build(0, 10, 20, 29)
 }
