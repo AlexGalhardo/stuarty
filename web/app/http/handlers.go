@@ -39,7 +39,7 @@ type createIn struct {
 	Preset string  `json:"preset,omitempty"                      doc:"9:16 (default), 1:1, 16:9 or 4:5."`
 	FPS    fpsText `json:"fps,omitempty"                         doc:"30 (default); n or n/1001, as text or as a number."`
 	ID     string  `json:"id,omitempty"                          doc:"An id of your own; E_ID_EXISTS when taken."`
-	DryRun bool    `json:"dry_run,omitempty"`
+	DryRun any     `json:"dry_run,omitempty"`
 
 	// Width and Height are not accepted: a project takes its size from preset. They are members so that a
 	// request that sends them is refused instead of silently made 9:16 (VV-086).
@@ -78,11 +78,10 @@ type getIn struct {
 
 type stateIn struct {
 	ID     string `json:"id"                validate:"required"`
-	DryRun bool   `json:"dry_run,omitempty"`
+	DryRun any    `json:"dry_run,omitempty"`
 }
 
-// stepIn is the body of undo and redo. dry_run is read as it came: the binder coerces text to a boolean for
-// a bool field, and "yes" or "true" as a string must be refused as a number is (VV-210).
+// stepIn is the body of undo and redo. dry_run is read as it came (readDryRun).
 type stepIn struct {
 	ID     string `json:"id"                validate:"required"`
 	DryRun any    `json:"dry_run,omitempty"`
@@ -91,7 +90,7 @@ type stepIn struct {
 type mediaStateIn struct {
 	ID      string `json:"id"                validate:"required"`
 	AssetID string `json:"asset_id"          validate:"required"`
-	DryRun  bool   `json:"dry_run,omitempty"`
+	DryRun  any    `json:"dry_run,omitempty"`
 }
 
 // Operation is one operation of a batch: the command name and its arguments.
@@ -106,7 +105,7 @@ type editIn struct {
 	BaseRevision   int64       `json:"base_revision"             validate:"required"               doc:"The revision the batch was planned against."`
 	Operations     []Operation `json:"operations"                validate:"required,min=1,max=200"`
 	IdempotencyKey string      `json:"idempotency_key,omitempty"                                   doc:"8 to 64 characters; the Idempotency-Key header is the same."`
-	DryRun         bool        `json:"dry_run,omitempty"`
+	DryRun         any         `json:"dry_run,omitempty"`
 }
 
 type historyIn struct {
@@ -216,18 +215,28 @@ func (h *apiHandler) registerAll() {
 	register(h, "projects.create", h.projectsCreate)
 	register(h, "projects.get", h.projectsGet)
 	register(h, "projects.trash", func(c *web.Ctx, in stateIn) (service.ProjectStateResult, error) {
+		dryRun, err := readDryRun(c, in.DryRun)
+		if err != nil {
+			return service.ProjectStateResult{}, err
+		}
+
 		return stateResult(
 			h.Service.ProjectTrash(
 				c.Context(),
-				service.ProjectTrashRequest{ProjectID: in.ID, DryRun: dry(c, in.DryRun)},
+				service.ProjectTrashRequest{ProjectID: in.ID, DryRun: dryRun},
 			),
 		)
 	})
 	register(h, "projects.restore", func(c *web.Ctx, in stateIn) (service.ProjectStateResult, error) {
+		dryRun, err := readDryRun(c, in.DryRun)
+		if err != nil {
+			return service.ProjectStateResult{}, err
+		}
+
 		return stateResult(
 			h.Service.ProjectRestore(
 				c.Context(),
-				service.ProjectTrashRequest{ProjectID: in.ID, DryRun: dry(c, in.DryRun)},
+				service.ProjectTrashRequest{ProjectID: in.ID, DryRun: dryRun},
 			),
 		)
 	})
@@ -286,17 +295,27 @@ func (h *apiHandler) registerAll() {
 	register(h, "media.list", h.mediaList)
 	register(h, "media.inspect", h.mediaInspect)
 	register(h, "media.trash", func(c *web.Ctx, in mediaStateIn) (service.MediaStateResult, error) {
+		dryRun, err := readDryRun(c, in.DryRun)
+		if err != nil {
+			return service.MediaStateResult{}, err
+		}
+
 		res, err := h.Service.MediaTrash(
 			c.Context(),
-			service.MediaTrashRequest{ProjectID: in.ID, AssetID: in.AssetID, DryRun: dry(c, in.DryRun)},
+			service.MediaTrashRequest{ProjectID: in.ID, AssetID: in.AssetID, DryRun: dryRun},
 		)
 
 		return deref(res), err
 	})
 	register(h, "media.restore", func(c *web.Ctx, in mediaStateIn) (service.MediaStateResult, error) {
+		dryRun, err := readDryRun(c, in.DryRun)
+		if err != nil {
+			return service.MediaStateResult{}, err
+		}
+
 		res, err := h.Service.MediaRestore(
 			c.Context(),
-			service.MediaTrashRequest{ProjectID: in.ID, AssetID: in.AssetID, DryRun: dry(c, in.DryRun)},
+			service.MediaTrashRequest{ProjectID: in.ID, AssetID: in.AssetID, DryRun: dryRun},
 		)
 
 		return deref(res), err
@@ -379,8 +398,32 @@ func deref[T any](p *T) T {
 
 func page(p pageIn) service.Page { return service.Page{Cursor: p.Cursor, Limit: p.Limit} }
 
-// dry reads the body member or its alias ?dry_run=true (SDD-003 section 6.3).
-func dry(c *web.Ctx, member bool) bool { return member || c.QueryBool("dry_run") }
+// readDryRun reads dry_run as a JSON boolean, or the query alias ?dry_run=true
+// (SDD-003 section 6.3). The binder copies that query text into the member and,
+// for a bool field, also turns "yes", "no" and "1" into a boolean, so a string
+// "no" would apply the write. The member is therefore untyped, and only true
+// and false are accepted.
+func readDryRun(c *web.Ctx, raw any) (bool, error) {
+	query := c.Query("dry_run")
+	if s, ok := raw.(string); ok && query != "" && s == query {
+		raw = nil
+	}
+
+	if query != "" && query != "true" && query != "false" {
+		return false, &service.Error{
+			Code: command.CodeValidation, Path: "dry_run",
+			Message: "dry_run must be true or false.",
+			Hint:    "use the query dry_run=true or dry_run=false",
+		}
+	}
+
+	member, err := jsonBool(raw, "dry_run")
+	if err != nil {
+		return false, err
+	}
+
+	return member || query == "true", nil
+}
 
 // jsonBool is a body member that must be a JSON boolean; absent is false. The query alias is text and is
 // read by dry.
@@ -413,7 +456,10 @@ func (h *apiHandler) projectsList(c *web.Ctx, in listIn) (service.ProjectListRes
 }
 
 func (h *apiHandler) projectsCreate(c *web.Ctx, in createIn) (service.ProjectCreateResult, error) {
-	dryRun := dry(c, in.DryRun)
+	dryRun, err := readDryRun(c, in.DryRun)
+	if err != nil {
+		return service.ProjectCreateResult{}, err
+	}
 
 	if in.Width != nil || in.Height != nil {
 		path := "width"
@@ -502,12 +548,17 @@ func (h *apiHandler) projectsEdit(c *web.Ctx, in editIn) (service.EditResult, er
 		ops[i] = command.Operation{Op: o.Op, Args: raw}
 	}
 
+	dryRun, err := readDryRun(c, in.DryRun)
+	if err != nil {
+		return service.EditResult{}, err
+	}
+
 	res, err := h.Service.Edit(c.Context(), service.EditRequest{
 		ProjectID:      in.ID,
 		BaseRevision:   in.BaseRevision,
 		Operations:     ops,
 		IdempotencyKey: key,
-		DryRun:         dry(c, in.DryRun),
+		DryRun:         dryRun,
 	})
 	if err != nil {
 		return service.EditResult{}, err
@@ -523,18 +574,12 @@ func (h *apiHandler) step(
 	in stepIn,
 	fn func(ctx context.Context, req service.UndoRequest) (*service.UndoResult, error),
 ) (service.UndoResult, error) {
-	// The binder merges ?dry_run= into the member as text; that is the alias, which dry reads itself.
-	raw := in.DryRun
-	if s, ok := raw.(string); ok && s != "" && s == c.Query("dry_run") {
-		raw = nil
-	}
-
-	member, err := jsonBool(raw, "dry_run")
+	dryRun, err := readDryRun(c, in.DryRun)
 	if err != nil {
 		return service.UndoResult{}, err
 	}
 
-	res, err := fn(c.Context(), service.UndoRequest{ProjectID: in.ID, DryRun: dry(c, member)})
+	res, err := fn(c.Context(), service.UndoRequest{ProjectID: in.ID, DryRun: dryRun})
 	if err != nil {
 		return service.UndoResult{}, err
 	}

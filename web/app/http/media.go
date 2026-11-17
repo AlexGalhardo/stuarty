@@ -24,7 +24,7 @@ type mediaImportIn struct {
 	ID     string         `json:"id"                validate:"required"`
 	Files  []importFileIn `json:"files"             validate:"required,min=1,max=50"`
 	WaitMS int            `json:"wait_ms,omitempty"                                  doc:"0 to 25000: hold the call until the assets are ready."`
-	DryRun bool           `json:"dry_run,omitempty"                                  doc:"Checks the paths and limits only: the format is probed on the real import, so a file that is refused there (SVG, for one) still answers 202."`
+	DryRun any            `json:"dry_run,omitempty"                                  doc:"Checks the paths and limits only: the format is probed on the real import, so a file that is refused there (SVG, for one) still answers 202."`
 }
 
 type mediaListIn struct {
@@ -56,7 +56,7 @@ type jobStartIn struct {
 	Kind   string         `json:"kind"              validate:"required" doc:"export."`
 	Args   map[string]any `json:"args,omitempty"                        doc:"The arguments of the kind: start, end and format (mp4, gif, wav or aac; default mp4) for an export."`
 	WaitMS int            `json:"wait_ms,omitempty"                     doc:"0 to 25000: hold the call until the job is final."`
-	DryRun bool           `json:"dry_run,omitempty"`
+	DryRun any            `json:"dry_run,omitempty"`
 }
 
 type jobListIn struct {
@@ -76,8 +76,13 @@ func (h *apiHandler) mediaImport(c *web.Ctx, in mediaImportIn) (service.MediaImp
 		files[i] = service.ImportFile{Path: f.Path, AssetID: f.AssetID}
 	}
 
+	dryRun, err := readDryRun(c, in.DryRun)
+	if err != nil {
+		return service.MediaImportResult{}, err
+	}
+
 	res, err := h.Service.MediaImport(c.Context(), service.MediaImportRequest{
-		ProjectID: in.ID, Files: files, WaitMS: in.WaitMS, DryRun: dry(c, in.DryRun),
+		ProjectID: in.ID, Files: files, WaitMS: in.WaitMS, DryRun: dryRun,
 	})
 	if err != nil {
 		return service.MediaImportResult{}, err
@@ -129,7 +134,10 @@ func (h *apiHandler) jobStart(c *web.Ctx, in jobStartIn) (service.Job, error) {
 		}
 	}
 
-	isDry := dry(c, in.DryRun)
+	isDry, err := readDryRun(c, in.DryRun)
+	if err != nil {
+		return service.Job{}, err
+	}
 
 	res, err := h.Service.JobStart(c.Context(), service.JobStartRequest{
 		ProjectID: in.ID, Kind: in.Kind, Args: args, WaitMS: in.WaitMS, DryRun: isDry,
@@ -222,7 +230,7 @@ type templateSaveIn struct {
 	ProjectID   string `json:"project_id"            validate:"required"`
 	Name        string `json:"name"                  validate:"required"`
 	Description string `json:"description,omitempty"`
-	DryRun      bool   `json:"dry_run,omitempty"`
+	DryRun      any    `json:"dry_run,omitempty"`
 }
 
 type templateInstantiateIn struct {
@@ -230,7 +238,7 @@ type templateInstantiateIn struct {
 	Name       string                       `json:"name"              validate:"required"`
 	Fill       map[string]service.SlotValue `json:"fill,omitempty"                        doc:"Slot name to a value: one of asset_id, text or words."`
 	ID         string                       `json:"id,omitempty"                          doc:"Optional project id; local mode only."`
-	DryRun     bool                         `json:"dry_run,omitempty"`
+	DryRun     any                          `json:"dry_run,omitempty"`
 
 	BrandColors []string `json:"brand_colors,omitempty" doc:"Names of template colours that take the colour of the brand kit."`
 	BrandFonts  []string `json:"brand_fonts,omitempty"  doc:"Families of the brand kit added to the fonts of the project."`
@@ -243,7 +251,10 @@ func (h *apiHandler) templateList(c *web.Ctx, in templateListIn) (service.Templa
 }
 
 func (h *apiHandler) templateSave(c *web.Ctx, in templateSaveIn) (service.TemplateResult, error) {
-	dryRun := dry(c, in.DryRun)
+	dryRun, err := readDryRun(c, in.DryRun)
+	if err != nil {
+		return service.TemplateResult{}, err
+	}
 
 	res, err := h.Service.TemplateSave(c.Context(), service.TemplateSaveRequest{
 		ProjectID: in.ProjectID, Name: in.Name, Description: in.Description, DryRun: dryRun,
@@ -265,7 +276,10 @@ func (h *apiHandler) templateInstantiate(
 	c *web.Ctx,
 	in templateInstantiateIn,
 ) (service.TemplateInstantiateResult, error) {
-	dryRun := dry(c, in.DryRun)
+	dryRun, err := readDryRun(c, in.DryRun)
+	if err != nil {
+		return service.TemplateInstantiateResult{}, err
+	}
 
 	res, err := h.Service.TemplateInstantiate(c.Context(), service.TemplateInstantiateRequest{
 		TemplateID: in.TemplateID, Name: in.Name, Fill: in.Fill, ID: in.ID, DryRun: dryRun,
@@ -286,7 +300,7 @@ func (h *apiHandler) templateInstantiate(
 
 type templateImportIn struct {
 	Path   string `json:"path"              validate:"required" doc:"An absolute path to a template file on the machine that runs the server."`
-	DryRun bool   `json:"dry_run,omitempty"`
+	DryRun any    `json:"dry_run,omitempty"`
 }
 
 type templateRefIn struct {
@@ -294,7 +308,10 @@ type templateRefIn struct {
 }
 
 func (h *apiHandler) templateImport(c *web.Ctx, in templateImportIn) (service.TemplateResult, error) {
-	dryRun := dry(c, in.DryRun)
+	dryRun, err := readDryRun(c, in.DryRun)
+	if err != nil {
+		return service.TemplateResult{}, err
+	}
 
 	res, err := h.Service.TemplateImport(c.Context(), service.TemplateImportRequest{Path: in.Path, DryRun: dryRun})
 	if err != nil {

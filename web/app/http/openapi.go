@@ -215,22 +215,28 @@ func describeDryRunAndRevision(op *openapi.Operation, id string, problem openapi
 	}
 }
 
-// describeStepBodies restores the boolean type of dry_run on undo and redo: the field is read untyped by the
-// handler so that text is refused (VV-210), and the document still says what a caller may send.
+// describeStepBodies restores the boolean type of dry_run. The field is read untyped so that text is
+// refused, and the document still says a caller sends true or false. The description on the field stays.
 func describeStepBodies(doc *openapi.Document) {
 	for _, item := range doc.Paths {
 		for _, op := range item {
-			if op == nil || op.RequestBody == nil {
+			if op == nil {
 				continue
 			}
 
-			if op.OperationID != "projects.undo" && op.OperationID != "projects.redo" {
-				continue
+			if op.RequestBody != nil {
+				if media, ok := op.RequestBody.Content["application/json"]; ok && media.Schema != nil {
+					props, _ := media.Schema["properties"].(map[string]any)
+					if prop, ok := props["dry_run"].(map[string]any); ok {
+						prop["type"] = "boolean"
+					}
+				}
 			}
 
-			props, _ := op.RequestBody.Content["application/json"].Schema["properties"].(map[string]any)
-			if _, ok := props["dry_run"]; ok {
-				props["dry_run"] = map[string]any{"type": "boolean"}
+			for _, p := range op.Parameters {
+				if p.Name == "dry_run" && p.Schema != nil {
+					p.Schema["type"] = "boolean"
+				}
 			}
 		}
 	}

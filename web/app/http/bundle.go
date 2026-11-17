@@ -18,7 +18,7 @@ type bundleExportIn struct {
 type bundleImportIn struct {
 	Path   string `json:"path"              validate:"required" doc:"An absolute path to a .vvbundle on the machine that runs the server."`
 	AsNew  bool   `json:"as_new,omitempty"                      doc:"true makes a new project id and leaves the history out; false keeps the id."`
-	DryRun bool   `json:"dry_run,omitempty"`
+	DryRun any    `json:"dry_run,omitempty"`
 }
 
 func (h *apiHandler) projectBundleExport(c *web.Ctx, in bundleExportIn) (service.Job, error) {
@@ -38,7 +38,10 @@ func (h *apiHandler) projectBundleExport(c *web.Ctx, in bundleExportIn) (service
 }
 
 func (h *apiHandler) projectBundleImport(c *web.Ctx, in bundleImportIn) (service.ProjectCreateResult, error) {
-	dryRun := dry(c, in.DryRun)
+	dryRun, err := readDryRun(c, in.DryRun)
+	if err != nil {
+		return service.ProjectCreateResult{}, err
+	}
 
 	res, err := h.Service.ProjectBundleImport(c.Context(), service.ProjectBundleImportRequest{
 		Path: in.Path, AsNew: in.AsNew, DryRun: dryRun,
