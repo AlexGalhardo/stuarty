@@ -174,6 +174,10 @@ export default function Templates(): ReactNode {
 	const [failure, setFailure] = useState<Failure | null>(null);
 	const [path, setPath] = useState("");
 	const [importing, setImporting] = useState(false);
+	const [imported, setImported] = useState<{
+		name: string;
+		duplicate: boolean;
+	} | null>(null);
 	const [kit, setKit] = useState<BrandKit | null>(null);
 	const bridge = useSyncExternalStore(
 		subscribeDesktopBridge,
@@ -222,10 +226,17 @@ export default function Templates(): ReactNode {
 		clearOtherAlerts("template-import");
 		setImporting(true);
 		setFailure(null);
+		setImported(null);
 		try {
-			await createClient(new HttpTransport("/api/v1")).importTemplate(
-				path.trim(),
-			);
+			const result = await createClient(
+				new HttpTransport("/api/v1"),
+			).importTemplate(path.trim());
+			// The list is read again below; a template of the same name already on it says the file
+			// was imported before (VV-128).
+			const duplicate =
+				loaded.state === "ready" &&
+				loaded.templates.some((known) => known.name === result.template.name);
+			setImported({ name: result.template.name, duplicate });
 			setPath("");
 			await load();
 		} catch (error) {
@@ -241,6 +252,20 @@ export default function Templates(): ReactNode {
 				{t("ui.projects.templates.title")}
 			</h2>
 			<FailureNote failure={failure} />
+			{imported !== null && (
+				<p role="status" className="mt-2 text-sm">
+					{t("ui.projects.templates.imported")}{" "}
+					<UntrustedText>{imported.name}</UntrustedText>
+					{imported.duplicate && (
+						<>
+							{" "}
+							<span className="text-muted-foreground">
+								{t("ui.projects.templates.imported_again")}
+							</span>
+						</>
+					)}
+				</p>
+			)}
 			{loaded.state === "loading" && (
 				<p className="mt-4 text-sm text-muted-foreground">
 					{t("ui.projects.templates.loading")}
