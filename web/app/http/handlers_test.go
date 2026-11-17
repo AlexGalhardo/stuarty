@@ -583,3 +583,74 @@ func TestValidationErrorDoesNotEchoTheSubmittedValue(t *testing.T) {
 		t.Errorf("a refused create left a project: %d %s", list.status, list.body)
 	}
 }
+
+// dry_run is a JSON boolean. A string such as "no" is not false: accepting it
+// applies the write (trash, or an edit) and advances the project.
+func TestDryRunTextDoesNotApplyTheWrite(t *testing.T) {
+	t.Parallel()
+
+	h := newHarness(t)
+
+	refused := func(path, body string) {
+		t.Helper()
+
+		res := h.post(path, body)
+		if res.status != http.StatusBadRequest || res.json(t)["code"] != "E_VALIDATION" {
+			t.Errorf("POST %s %s = %d %s, want 400 E_VALIDATION", path, body, res.status, res.body)
+		}
+	}
+
+	id := h.newProject("trash")
+	for _, body := range []string{`{"dry_run":"no"}`, `{"dry_run":"yes"}`, `{"dry_run":"true"}`, `{"dry_run":7}`} {
+		refused("/api/v1/projects/"+id+"/trash", body)
+	}
+
+	refused("/api/v1/projects/"+id+"/trash?dry_run=yes", `{}`)
+	refused("/api/v1/projects/"+id+"/restore", `{"dry_run":"no"}`)
+
+	if res := h.post("/api/v1/projects/"+id+"/trash?dry_run=true", `{}`); res.status != http.StatusOK {
+		t.Errorf("trash ?dry_run=true = %d %s", res.status, res.body)
+	}
+
+	if res := h.post("/api/v1/projects/"+id+"/trash", `{"dry_run":true}`); res.status != http.StatusOK {
+		t.Errorf("trash dry_run true = %d %s", res.status, res.body)
+	}
+
+	if got := h.get("/api/v1/projects/" + id); got.json(t)["state"] != "active" {
+		t.Fatalf("dry_run text changed the project: %s", got.body)
+	}
+
+	edit := h.newProject("edit")
+	refused("/api/v1/projects/"+edit+"/edit",
+		`{"base_revision":0,"dry_run":"no","operations":[{"op":"track.add","args":{"kind":"visual"}}]}`)
+
+	if got := h.get("/api/v1/projects/" + edit); got.json(t)["revision"] != float64(0) {
+		t.Fatalf("dry_run text advanced the revision: %s", got.body)
+	}
+
+	applied := h.post("/api/v1/projects/"+edit+"/edit",
+		`{"base_revision":0,"operations":[{"op":"track.add","args":{"kind":"visual"}}]}`)
+	if applied.status != http.StatusOK || applied.json(t)["applied"] != true {
+		t.Fatalf("a valid edit = %d %s", applied.status, applied.body)
+	}
+
+	if got := h.get("/api/v1/projects/" + edit); got.json(t)["revision"] != float64(1) {
+		t.Fatalf("a valid edit did not advance the revision: %s", got.body)
+	}
+
+	doc := h.openapi()
+	paths, _ := doc["paths"].(map[string]any)
+	for _, path := range []string{"/api/v1/projects/{id}/trash", "/api/v1/projects/{id}/edit", "/api/v1/projects/{id}/undo"} {
+		item, _ := paths[path].(map[string]any)
+		op, _ := item["post"].(map[string]any)
+		body, _ := op["requestBody"].(map[string]any)
+		content, _ := body["content"].(map[string]any)
+		jsonBody, _ := content["application/json"].(map[string]any)
+		schema, _ := jsonBody["schema"].(map[string]any)
+		props, _ := schema["properties"].(map[string]any)
+		dry, _ := props["dry_run"].(map[string]any)
+		if dry["type"] != "boolean" {
+			t.Errorf("%s dry_run schema = %v, want boolean", path, dry)
+		}
+	}
+}
