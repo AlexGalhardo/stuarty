@@ -50,6 +50,7 @@ Content type `application/json`. Schema: [`WindowPlan`](/docs/api/schemas#window
 | `revision` | `integer (int64)` | no |  |
 | `safe_area` | array of `number (double)` | no |  |
 | `to` | `integer` | no |  |
+| `transparent` | `boolean` | no |  |
 | `width` | `integer` | no |  |
 
 ### 400
@@ -256,6 +257,7 @@ puts "#{response.code} #{response.body}"
       "color_matrices": [],
       "color_matrix": "string",
       "crop": [],
+      "crops": [],
       "cx": "string",
       "cy": "string",
       "effects": [],
@@ -270,10 +272,13 @@ puts "#{response.code} #{response.body}"
       "last": 0,
       "lut": {},
       "mask": {},
+      "masks": [],
       "natural": [],
       "opacity": "string",
+      "outline": {},
       "rotation": "string",
       "scale": "string",
+      "shadow": {},
       "source_frames": [],
       "source_seconds": [],
       "transition": [],
@@ -285,6 +290,7 @@ puts "#{response.code} #{response.body}"
     0
   ],
   "to": 0,
+  "transparent": false,
   "width": 0
 }
 ```
