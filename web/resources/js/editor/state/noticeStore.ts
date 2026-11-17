@@ -9,6 +9,8 @@ export interface Notice {
 	code?: string;
 	message: string;
 	hint?: string;
+	// The `details` of the core's error, for the catalogue wording (VV-126).
+	details?: { readonly [key: string]: unknown };
 	// A catalogue key for the notices the UI itself words (undo skipped).
 	messageKey?: string;
 	count?: number;

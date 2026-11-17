@@ -1,7 +1,6 @@
 import { Plus, X } from "lucide-react";
 import { type ReactNode, useState } from "react";
 
-import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -11,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useT } from "@/lib/i18n";
 import type { JsonValue } from "../../api/types";
 import TimeField from "../../ui/TimeField";
+import ErrorBody from "../ErrorBody";
 import { localizeDecimalInput, normalizeTimeInput } from "../units";
 import { type Construct, classify, isNullable, type Schema } from "./classify";
 import { useForm } from "./context";
@@ -41,15 +41,9 @@ function FieldError({ path }: { path: string }): ReactNode {
 	const { error } = useForm();
 	if (error === null || error.path !== path) return null;
 	return (
-		<p role="alert" lang="en" className="text-xs text-destructive">
-			<UntrustedText>{error.message}</UntrustedText>
-			{error.hint !== undefined && (
-				<>
-					{" "}
-					<UntrustedText>{error.hint}</UntrustedText>
-				</>
-			)}
-		</p>
+		<div role="alert" className="text-xs text-destructive">
+			<ErrorBody error={error} hintClassName="" />
+		</div>
 	);
 }
 

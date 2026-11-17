@@ -19,6 +19,7 @@ import { ApiError } from "../../api/errors";
 import type { CommandDetail, EditResult } from "../../api/types";
 import { useDocumentState, useRuntime } from "../../state/EditorContext";
 import { errorHeadline } from "../../ui/errorHeadline";
+import ErrorBody from "../ErrorBody";
 import { hasMod } from "../keymap";
 import { SchemaForm } from "../schemaForm/SchemaForm";
 import { useCanEdit } from "../useActions";
@@ -60,15 +61,10 @@ function ErrorBlock({ error }: { error: ApiError }): ReactNode {
 			/>
 			<div className="min-w-0">
 				<p className="font-semibold">{errorHeadline(t, error.code)}</p>
-				<p lang="en">
-					<UntrustedText>{error.message}</UntrustedText>
-				</p>
-				{error.hint !== undefined && (
-					<p lang="en" className="text-muted-foreground">
-						{t("ui.editor.palette.how_to_fix")}{" "}
-						<UntrustedText>{error.hint}</UntrustedText>
-					</p>
-				)}
+				<ErrorBody
+					error={error}
+					hintPrefix={t("ui.editor.palette.how_to_fix")}
+				/>
 				<p className="font-mono text-xs text-muted-foreground">{error.code}</p>
 			</div>
 		</div>
