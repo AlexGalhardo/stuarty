@@ -147,6 +147,16 @@ func (c *Context) conflicts(track string, start, length int, ignore string) []st
 // checkOverlap returns E_OVERLAP when the item would overlap another one of the
 // track (R8).
 func (c *Context) checkOverlap(itemID, track string, start, length int) *Error {
+	return c.checkOverlapAt(itemID, track, start, length, false)
+}
+
+// checkOverlapAppend is checkOverlap for the commands whose start is optional: the
+// hint also offers omitting start, which appends at the end of the track.
+func (c *Context) checkOverlapAppend(itemID, track string, start, length int) *Error {
+	return c.checkOverlapAt(itemID, track, start, length, true)
+}
+
+func (c *Context) checkOverlapAt(itemID, track string, start, length int, optionalStart bool) *Error {
 	conflict := c.conflicts(track, start, length, itemID)
 	if len(conflict) == 0 {
 		return nil
@@ -156,6 +166,10 @@ func (c *Context) checkOverlap(itemID, track string, start, length int) *Error {
 		itemID, start, start+length-1, track, conflict[0], other.Start, itemEnd(&other)-1).
 		WithDetail("conflicting_item", conflict[0])
 	if free, ok := c.nextFree(track, start, length, itemID); ok {
+		if optionalStart {
+			return e.WithDetail("next_free", free).
+				WithHint("Use start \"%df\" (%s), the next free position, omit start to append at the end of the track, or move to another track.", free, c.seconds(free))
+		}
 		return e.WithDetail("next_free", free).
 			WithHint("Use start \"%df\" (%s), the next free position on that track, or move to another track.", free, c.seconds(free))
 	}

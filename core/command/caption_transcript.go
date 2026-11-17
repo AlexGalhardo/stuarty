@@ -250,7 +250,10 @@ func applyCaptionFromTranscript(c *Context, a *captionFromTranscriptArgs) error 
 	for i, g := range groups {
 		start, duration, ws := toWords(g)
 		if err := c.checkOverlap(ids[i], a.TrackID, start, duration); err != nil {
-			return err.WithHint("Use replace true to remove the old captions, or pick another track.")
+			return err.WithHint(
+				"replace true removes only the captions of this clip on this track, not the item in the way; " +
+					"clear that item or use another track.",
+			)
 		}
 		it := timeline.NewItem(ids[i], timeline.ItemCaption, a.TrackID, start, duration)
 		it.Words, it.LinkedItem = ws, a.ClipItemID

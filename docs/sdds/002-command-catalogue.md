@@ -2117,7 +2117,7 @@ Places a video or image asset on a visual track. An animated image (BETA, RF-028
 | `E_ID_EXISTS` | `id` used | `Item id itm_m1n2p3q4r5 already exists.` | `Omit id or use an unused id.` |
 | `E_LIMIT` | 500 items | `The document already has 500 items; the limit is 500.` | `Delete unused items first.` |
 | `E_OUT_OF_SOURCE` | the range leaves the asset | `Clip of 900 frames from source frame 60 would read to frame 960; asset ast_3c5v8n2w6d has 900 frames.` | `Use duration "840f" (28.000s), the most this asset allows from source_in 60.` |
-| `E_OVERLAP` | overlap on the track | `Item itm_m1n2p3q4r5 would occupy frames 100-249 on track trk_f6g7h8j9k0, where item itm_c3d4e5f6g7 already is (frames 90-179).` | `Use start "180f" (6.000s), the next free position on that track, or move to another track.` |
+| `E_OVERLAP` | overlap on the track | `Item itm_m1n2p3q4r5 would occupy frames 100-249 on track trk_f6g7h8j9k0, where item itm_c3d4e5f6g7 already is (frames 90-179).` | `Use start "180f" (6.000s), the next free position, omit start to append at the end of the track, or move to another track.` |
 
 **Inverse.** `remove {collection: "items", id: <new id>}`.
 
@@ -2215,7 +2215,7 @@ Places an audio asset, or the audio of a video asset, on an audio track.
 | `E_ID_EXISTS` | `id` used | `Item id itm_s6t7v8w9x0 already exists.` | `Omit id or use an unused id.` |
 | `E_LIMIT` | 500 items | `The document already has 500 items; the limit is 500.` | `Delete unused items first.` |
 | `E_OUT_OF_SOURCE` | the range leaves the asset | `Audio of 900 frames from source frame 30 would read to frame 930; asset ast_4h6j8k2m3n has 900 frames.` | `Use duration "870f" (29.000s).` |
-| `E_OVERLAP` | overlap on the track | `Item itm_s6t7v8w9x0 would occupy frames 30-929 on track trk_m1n2p3q4r5, where item itm_c3d4e5f6g7 already is (frames 0-99).` | `Use start "100f" (3.333s), the next free position on that track.` |
+| `E_OVERLAP` | overlap on the track | `Item itm_s6t7v8w9x0 would occupy frames 30-929 on track trk_m1n2p3q4r5, where item itm_c3d4e5f6g7 already is (frames 0-99).` | `Use start "100f" (3.333s), the next free position, omit start to append at the end of the track, or move to another track.` |
 
 **Inverse.** `remove {collection: "items", id: <new id>}`.
 
@@ -3628,7 +3628,7 @@ Creates caption items for the speech in a clip's visible source range, from a tr
 | `E_INVALID_STATE` | no word in the visible range | `The transcript has no word between source frames 60 and 179 of clip itm_m1n2p3q4r5.` | `Check that the clip contains speech, or widen the clip with item.trim.` |
 | `E_ID_EXISTS` | a new id used | `Item id itm_c3d4e5f6g7 already exists.` | `Omit new_ids to generate ids.` |
 | `E_LIMIT` | too many items or words | `The document would have 5010 caption words; the limit is 5000.` | `Remove captions you no longer need.` |
-| `E_OVERLAP` | overlap with a kept item | `Item itm_c3d4e5f6g7 would occupy frames 92-133 on track trk_a1b2c3d4e5, where item itm_p7q8r9s0t1 already is (frames 92-121).` | `Use replace true to remove the old captions, or pick another track.` |
+| `E_OVERLAP` | overlap with a kept item | `Item itm_c3d4e5f6g7 would occupy frames 92-133 on track trk_a1b2c3d4e5, where item itm_p7q8r9s0t1 already is (frames 92-121).` | `replace true removes only the captions of this clip on this track, not the item in the way; clear that item or use another track.` |
 
 **Inverse.** `put {collection: "items", object}` for each removed caption, then `remove {collection: "items", id}` for each created one, in the order the operation produced them.
 
