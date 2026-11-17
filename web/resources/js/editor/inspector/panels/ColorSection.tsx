@@ -13,9 +13,9 @@ import {
 	keyframeSetOperations,
 	shownColourKeyframe,
 } from "../../commands/builders";
+import { registryRange } from "../../commands/registryLimits";
 import { useCanEdit } from "../../commands/useActions";
 import { useDocumentState, useUiState } from "../../state/EditorContext";
-import { registryRange } from "../fields/registryLimits";
 import SelectField from "../fields/SelectField";
 import SliderField from "../fields/SliderField";
 import Section from "../Section";

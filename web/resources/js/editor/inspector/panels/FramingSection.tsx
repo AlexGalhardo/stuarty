@@ -7,10 +7,10 @@ import {
 	type Fit,
 	framingOperations,
 } from "../../commands/builders";
+import { registryLimits } from "../../commands/registryLimits";
 import { useCanEdit } from "../../commands/useActions";
 import { useDocumentState } from "../../state/EditorContext";
 import NumberField from "../fields/NumberField";
-import { registryLimits } from "../fields/registryLimits";
 import SelectField from "../fields/SelectField";
 import Section from "../Section";
 import { useFieldCommit } from "../useFieldCommit";

@@ -12,6 +12,7 @@ import {
 	type TransformProperty,
 	transformOperations,
 } from "../../commands/builders";
+import { registryLimits } from "../../commands/registryLimits";
 import { useCanEdit } from "../../commands/useActions";
 import {
 	useDocumentState,
@@ -20,7 +21,6 @@ import {
 } from "../../state/EditorContext";
 import type { EffectiveValues } from "../../state/effectiveStore";
 import NumberField from "../fields/NumberField";
-import { registryLimits } from "../fields/registryLimits";
 import Section from "../Section";
 import { useFieldCommit } from "../useFieldCommit";
 

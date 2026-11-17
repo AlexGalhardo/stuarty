@@ -7,9 +7,9 @@ import {
 	HSL_RANGES,
 	type HslRange,
 } from "../../commands/builders";
+import { registryRange } from "../../commands/registryLimits";
 import { useCanEdit } from "../../commands/useActions";
 import { useDocumentState } from "../../state/EditorContext";
-import { registryRange } from "../fields/registryLimits";
 import SliderField from "../fields/SliderField";
 import { useFieldCommit } from "../useFieldCommit";
 import ColorGroup, { ChoiceRow } from "./ColorGroup";

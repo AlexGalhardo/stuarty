@@ -6,12 +6,12 @@ import {
 	VOICE_PRESETS,
 	type VoicePreset,
 } from "../../commands/builders";
+import { registryLimits, registryRange } from "../../commands/registryLimits";
 import { formatTime, fpsOf } from "../../commands/units";
 import { useCanEdit } from "../../commands/useActions";
 import { useDocumentState } from "../../state/EditorContext";
 import { readTimeDisplay } from "../../state/prefs";
 import NumberField from "../fields/NumberField";
-import { registryLimits, registryRange } from "../fields/registryLimits";
 import SelectField from "../fields/SelectField";
 import SliderField from "../fields/SliderField";
 import TimeCommitField from "../fields/TimeCommitField";

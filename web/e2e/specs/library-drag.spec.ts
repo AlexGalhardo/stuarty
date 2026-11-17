@@ -157,6 +157,8 @@ test.describe("library-drag", () => {
 		const seeded = await seedProject(request, { tracks: 1, perTrack: 2 });
 		await page.goto(`/editor/${seeded.id}?debug=1`);
 		await expect(page.locator("[data-item-id]")).toHaveCount(2);
+		// The card of the library, not the menu of a track header, comes first.
+		await expect(page.locator("[data-asset-id]")).toHaveCount(1);
 		await page
 			.getByRole("button", { name: /^Actions for/ })
 			.first()

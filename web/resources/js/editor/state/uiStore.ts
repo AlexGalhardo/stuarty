@@ -70,7 +70,14 @@ export interface UiState {
 }
 
 // The tabs of the material rail (SDD-012 section 6.4); "library" is Media.
-export type LeftTab = "library" | "audio" | "text" | "captions" | "history";
+export type LeftTab =
+	| "library"
+	| "audio"
+	| "text"
+	| "captions"
+	| "transitions"
+	| "filters"
+	| "history";
 
 export interface UiWriter {
 	select(items: readonly string[], anchor?: string | null): void;

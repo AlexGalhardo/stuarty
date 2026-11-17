@@ -136,7 +136,9 @@
         "inspector": "Inspector",
         "audio": "Audio",
         "text": "Text",
-        "captions": "Captions"
+        "captions": "Captions",
+        "transitions": "Transitions",
+        "filters": "Filters"
       },
       "activity": {
         "you": "you",
@@ -378,7 +380,8 @@
         "select_first": "Select an item first.",
         "select_text_first": "Select one text item first.",
         "fonts": "Fonts",
-        "captions_select_clip": "Select a video clip with audio to generate captions."
+        "captions_select_clip": "Select a video clip with audio to generate captions.",
+        "select_clip_first": "Select a clip first."
       },
       "edit": {
         "label": "Editing",
