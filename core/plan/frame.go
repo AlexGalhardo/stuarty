@@ -1,6 +1,7 @@
 package plan
 
 import (
+	"math"
 	"slices"
 	"sort"
 
@@ -232,6 +233,21 @@ func (p *planner) mediaLayer(l Layer, it *timeline.Item, r int, a animated) (Lay
 	return l, true
 }
 
+// fitToMaxWidth is the factor that brings a bitmap of natural width nw back to the style's max_width
+// when one word is wider than it: the layout never cuts a word, so the bitmap would leave the frame
+// (SDD-004 section 5.1 item 2). The padding, stroke and shadow the bitmap is grown by do not count
+// against max_width.
+func fitToMaxWidth(st ResolvedStyle, nw float64) float64 {
+	grown := 2 * (max(st.BackgroundPadding, st.StrokeWidth/2, math.Abs(st.ShadowDX)+st.ShadowBlur) + 1)
+	limit := st.MaxWidth + grown
+
+	if st.MaxWidth <= 0 || nw <= limit {
+		return 1
+	}
+
+	return limit / nw
+}
+
 // textLayer places a text or caption item. Captions anchor to the safe area
 // by their position (SDD-004 §4.3); text and custom captions use x and y.
 func (p *planner) textLayer(l Layer, it *timeline.Item, r int, a animated) Layer {
@@ -273,7 +289,8 @@ func (p *planner) textLayer(l Layer, it *timeline.Item, r int, a animated) Layer
 		nw, nh = p.opts.Measure(spec)
 	}
 
-	w, h := nw*a.scale, nh*a.scale
+	fit := fitToMaxWidth(spec.Style, nw)
+	w, h := nw*fit*a.scale, nh*fit*a.scale
 	cx, cy := a.x, a.y
 	fw, fh := float64(p.doc.Settings.Width), float64(p.doc.Settings.Height)
 	safe := SafeArea(p.doc.Settings.Width, p.doc.Settings.Height)
