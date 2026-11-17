@@ -56,6 +56,8 @@ export default function MaskSection({ itemId }: { itemId: string }): ReactNode {
 			step={0.05}
 			min={box.min}
 			max={box.max}
+			percentInput
+			suffix={t("ui.editor.clip.mask_unit")}
 			commit={(value) =>
 				send(maskOperations(itemId, { ...mask, [key]: value }))
 			}

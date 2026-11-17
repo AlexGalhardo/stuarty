@@ -1034,6 +1034,7 @@
         "mask_x": "X da máscara",
         "mask_y": "Y da máscara",
         "mask_width": "Largura da máscara",
+        "mask_unit": "0–1 ou %",
         "mask_height": "Altura da máscara",
         "mask_feather": "Suavização da máscara",
         "mask_invert": "Inverter máscara",

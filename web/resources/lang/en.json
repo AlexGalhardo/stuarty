@@ -1041,6 +1041,7 @@
         "mask_x": "Mask X",
         "mask_y": "Mask Y",
         "mask_width": "Mask width",
+        "mask_unit": "0–1 or %",
         "mask_height": "Mask height",
         "mask_feather": "Mask feather",
         "mask_invert": "Invert mask",

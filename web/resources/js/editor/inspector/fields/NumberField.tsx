@@ -10,6 +10,7 @@ import { FieldRow } from "./FieldFrame";
 import { useCommitField } from "./useCommitField";
 
 const NUMBER = /^-?\d+(?:\.\d+)?$/;
+const PERCENT = /^(-?\d+(?:\.\d+)?)\s*%$/;
 
 // A number: Enter or blur commits, the arrow keys step and a burst of presses
 // is one command 400 ms after the last one (SDD-012 section 12.3). The decimal
@@ -23,6 +24,7 @@ export default function NumberField({
 	max,
 	below,
 	suffix,
+	percentInput = false,
 	placeholder,
 	marker,
 	reset,
@@ -38,6 +40,10 @@ export default function NumberField({
 	// An upper bound the value must stay under, which `max` cannot say.
 	below?: number;
 	suffix?: string;
+	// A fraction field that also takes a percentage: "50%", or a plain number
+	// above `max`, is divided by 100. Only the parsing of what was typed; the
+	// command still receives the fraction.
+	percentInput?: boolean;
 	// Shown while the field is empty, for a value the selected items do not share.
 	placeholder?: string;
 	// The accessible name of the keyframe marker of an animated property.
@@ -51,9 +57,18 @@ export default function NumberField({
 }): ReactNode {
 	const locale = useLocale();
 	const parse = (text: string): number | null => {
-		const cleaned = localizeDecimalInput(text.trim(), locale);
+		let cleaned = localizeDecimalInput(text.trim(), locale);
+		let percent = false;
+		const match = percentInput ? PERCENT.exec(cleaned) : null;
+		if (match?.[1] !== undefined) {
+			cleaned = match[1];
+			percent = true;
+		}
 		if (!NUMBER.test(cleaned)) return null;
-		const value = Number(cleaned);
+		let value = Number(cleaned);
+		if (percent || (percentInput && max !== undefined && value > max)) {
+			value = Number((value / 100).toFixed(6));
+		}
 		if (min !== undefined && value < min) return null;
 		if (max !== undefined && value > max) return null;
 		if (below !== undefined && value >= below) return null;
