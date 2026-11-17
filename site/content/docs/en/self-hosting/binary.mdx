@@ -20,7 +20,7 @@ The server makes no outbound connection by default and sends no telemetry; see [
 1. [Download and verify](/docs/self-hosting/verify-a-release) the archive of your platform, and put `vukem-video` on your `PATH`.
 2. Check the installation: `vukem-video doctor --full` runs every check and names what to fix.
 3. Start the server: `vukem-video serve`. It stays in the foreground and logs to standard error.
-4. Open the editor with `vukem-video open`. It prints a one-time link and opens it in your browser. Opening `http://127.0.0.1:7878` directly shows a "401 Sign-in needed" page, because local mode has no login and the browser needs that link to get a session.
+4. Open the editor with `vukem-video open`. It opens your browser with a one-time link (valid for two minutes) and does not print the link, because the browser uses it up and a printed copy would only leak into your terminal history. To get a link for a tool such as Playwright, run it with `VUKEM_VIDEO_NO_BROWSER=1`: it then prints a fresh link and starts no browser. Opening `http://127.0.0.1:7878` directly shows a "401 Sign-in needed" page, because local mode has no login and the browser needs that link to get a session.
 
 ```bash
 vukem-video version
@@ -30,7 +30,7 @@ vukem-video serve
 
 Stop the server with `Ctrl+C` or by sending `SIGTERM`. It waits up to 15 seconds for running jobs to reach a safe point; a job that is still running then is interrupted and requeued, and the next start recovers it.
 
-`vukem-video open` starts a local server first when none runs, then opens the browser. With `VUKEM_VIDEO_NO_BROWSER` set it prints the address instead of starting a browser.
+`vukem-video open` starts a local server first when none runs, then opens the browser. With `VUKEM_VIDEO_NO_BROWSER` set it prints the one-time link instead of starting a browser; open it once, it works for two minutes.
 
 ## What it uses
 
