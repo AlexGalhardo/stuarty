@@ -1,4 +1,4 @@
 lint r1 prj_7k2m9x4q1b: errors=0 warnings=1 (showing 1 of 1)
 warning L_OFF_FRAME itm_sh 0s/0f-2s/60f
   the shape box spans x 1100-1500 and y 100-500; the frame is 1080 by 1920.
-  hint: reposition it with item.set_transform
+  hint: reposition it with item.set_transform; x and y are the item centre from the top-left corner

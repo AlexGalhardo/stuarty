@@ -369,6 +369,8 @@ func init() {
 	rc(CodeOffFrame, "trigger_shape_more_than_half_outside", shape(), spec("itm_sh", 900, 100, 1300, 500))
 	rc(CodeOffFrame, "quiet_shape_exactly_half_outside", shape(), spec("itm_sh", 880, 100, 1280, 500))
 	rc(CodeOffFrame, "quiet_shape_slightly_outside", shape(), spec("itm_sh", 700, 100, 1100, 500))
+	// VV-179: a shape wholly inside the frame (origin top-left, x and y the centre) is quiet.
+	rc(CodeOffFrame, "quiet_shape_inside_the_frame", shape(), spec("itm_sh", 340, 760, 740, 1160))
 	rc(CodeOffFrame, "quiet_box_covers_the_frame", shape(), spec("itm_sh", -600, -100, 1700, 2000))
 	rc(CodeOffFrame, "quiet_without_a_measurer", text())
 	rc(CodeOffFrame, "quiet_text_enters_by_a_slide", func() *timeline.Document {
