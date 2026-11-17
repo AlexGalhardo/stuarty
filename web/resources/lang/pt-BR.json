@@ -1179,6 +1179,13 @@
           "copy_details": "Copiar detalhes"
         }
       },
+      "subtitles": {
+        "title": "Importar legendas",
+        "hint": "Importe um arquivo de legendas (SRT ou WebVTT). Cada trecho vira uma legenda nesta faixa.",
+        "file": "Arquivo de legendas (.srt ou .vtt)",
+        "import": "Importar legendas...",
+        "read_failed": "Não foi possível ler {name}."
+      },
       "keyframes": {
         "title": "Quadros-chave",
         "property": "Propriedade",

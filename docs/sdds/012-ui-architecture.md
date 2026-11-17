@@ -610,7 +610,7 @@ The library region keeps its width (§6.3) and gets a vertical tab rail of 40 px
 | Media | the import bar and asset cards of §13 | `asset.add`, `clip.add`, `audio.add` | exists |
 | Audio | asset cards of kind audio, then the audio actions of the selection: ducking and beat markers | `audio.add`, `audio.duck`, `audio.mark_beats` | exists (sound libraries are out of scope, D-016) |
 | Text | "Add text", the text presets, the fonts, "Add shape" | `text.add`, `text.apply_preset`, `shape.add`, `getFonts` | exists |
-| Captions | "Generate captions" (§12.4), the caption styles, the track style | `caption.from_transcript`, `caption.set_style`, `track.set_caption_style` | exists |
+| Captions | "Generate captions" (§12.4), "Import subtitles" (§12.1), the caption styles, the track style | `caption.from_transcript`, `caption.import_subtitles`, `caption.set_style`, `track.set_caption_style` | exists |
 | Effects | the effect list served by the core | the effect commands (card NEW-18 of TASK-0232) | needs command |
 | Transitions | the transition kinds served by the core, grouped as the core groups them | `item.set_transition`, `item.crossfade` | exists (few kinds; more with the card NEW-16) |
 | Filters | the filter names served by the core, with an amount slider | `clip.set_filter` | exists |
@@ -924,6 +924,7 @@ Phase of the entry point is the phase in which that entry point is built. Every 
 | `caption.set_breaks` | inspector word table (line break toggle per word) | A |
 | `caption.set_style` | inspector Caption style section ("Use track style" sends `style: null`) | A |
 | `caption.from_transcript` | inspector button "Auto captions" on a clip (§12.4) | A |
+| `caption.import_subtitles` | inspector "Import subtitles" file picker in the track panel of a visual track and in the caption panel (§12.1), and the palette | B |
 | `caption.retime_from_clip` | button "Re-sync captions" in the inspector of a clip with linked captions, and in the lint finding for out-of-sync captions | A |
 | `keyframe.set` | inspector Keyframes section (diamond button at the playhead), canvas handles on animated properties | A |
 | `keyframe.remove` | inspector Keyframes section, `Delete` on a selected keyframe | A |
@@ -1129,7 +1130,7 @@ The inspector panel shows one panel by selection: nothing selected, the project 
 | Keyframes | per animated property: list of keyframes (time, value, easing; the time field is item-relative and `keyframe.set` and `keyframe.remove` receive the absolute `at` from `keyframeFrame(itemStart, t)` of `commands/builders.ts`, rule R5), "Add at playhead", remove, "Clear"; a clip also offers the six colour properties (brightness, contrast, saturation, temperature, tint, hue) in the property select | `keyframe.set`, `keyframe.remove`, `keyframe.clear` | visual and audio items |
 | Template | "Template slot" toggle, name (fixed once marked: the core refuses another name on a slot), description, required, duration policy (media slots only). Each change is one `slot.mark` with the whole slot; the toggle off is `slot.unmark` | `slot.mark`, `slot.unmark` | clip, audio, text, caption |
 | Template slots (in the project panel) | one row per slot with an asset picker (media) or a text field (text) and "Fill"; the required slots still open are read from the `L_SLOT_UNFILLED` findings of the lint, read again at each revision. A caption slot is filled from the CLI, MCP or API (its words carry times, which the browser does not compute) | `slot.fill` | nothing selected |
-| Track panel | name, hidden, muted, caption style (partial and "Replace") | `track.update`, `track.set_caption_style` | track |
+| Track panel | name, hidden, muted, magnet, caption style (partial and "Replace"); on a visual track a closed "Import subtitles" section with a button that opens a file picker for `.srt` and `.vtt` (the caption panel has the same section for the track of the caption): the browser reads the text of the file and sends it, with `format` from the extension, in one `caption.import_subtitles {track_id, text, format?}`; the core parses it, creates one caption per cue and judges the cues, and its refusal (`E_VALIDATION` for a bad file, `E_OVERLAP`, `E_INVALID_STATE`, ...) shows under the button as received; the page parses no time line and builds no caption | `track.update`, `track.set_caption_style`, `caption.import_subtitles` | track |
 | Project panel | name, size preset (9:16, 1:1, 16:9, 4:5), width, height, background, loudness target, frame rate, template info (description and the named colours, added and removed one at a time) | `project.rename`, `settings.set`, `settings.set_fps`, `template.set_info` | nothing selected |
 
 Fonts come from `getFonts()` (Appendix B); the select shows bundled families first, as names in the UI font: the browser never loads the rendering fonts, and the MVP shows no rendered samples (D-030). Colours use `ColorField` (hex text input plus the native colour input for the RGB part and a slider for alpha, sending `#RRGGBB` or `#RRGGBBAA`).
@@ -1527,7 +1528,7 @@ TASK-0236 draws and binds the rows of state exists and the UI rows that need no 
 
 N-4 and N-5 exist, `Shift+B` included. Rows still without a command or a surface when TASK-0236 closed: `Mod+Shift+C` and `Mod+Shift+V` (N-8), `Mod+G` and `Mod+Shift+G` (N-2), `Alt+M` (N-3, no colour), `S` (no preview axis) and the desktop-only `Mod+R`, `Mod+Shift+F`, `Mod+N`, `Mod+O`, which belong to the shell menu accelerators (§21), not to the page. The rows of N-2 enter `SHORTCUTS` when their command exists. The `surface.*` ids marked UI are added to `UI_SHORTCUT_ACTIONS` by TASK-0236. The cheat sheet and the shortcuts page of the site read the same table, so no key is written twice.
 
-NEW-36 (advanced colour, TASK-0254): the HSL, wheels and curves groups of the Colour section (§12.1) send `clip.set_color` with `hsl`, `wheels` and `curves`; an e2e test (`colour-advanced`) drives each from the keyboard and checks the command and Reset. NEW-15 (colour keyframes, TASK-0254): the diamond buttons of the Colour section and the colour properties of the Keyframes section send `keyframe.set` and `keyframe.remove` (the e2e test covers add, edit and remove).
+NEW-36 (advanced colour, TASK-0254): the HSL, wheels and curves groups of the Colour section (§12.1) send `clip.set_color` with `hsl`, `wheels` and `curves`; an e2e test (`colour-advanced`) drives each from the keyboard and checks the command and Reset. NEW-32a (subtitle import, TASK-0254): the "Import subtitles" section of the track panel and the caption panel sends `caption.import_subtitles`; an e2e test (`import-subtitles`) picks an SRT file and a bad file. NEW-15 (colour keyframes, TASK-0254): the diamond buttons of the Colour section and the colour properties of the Keyframes section send `keyframe.set` and `keyframe.remove` (the e2e test covers add, edit and remove).
 
 ### 18.8 Find bar
 

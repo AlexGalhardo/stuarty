@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 
 import {
+	captionImportSubtitlesOperations,
 	colorOperations,
 	colorResetChanges,
 	constantSpeedOperations,
@@ -19,6 +20,7 @@ import {
 	reverseOperations,
 	shownColourKeyframe,
 	speedCurveOperations,
+	subtitleFormatOf,
 	trackUpdateOperations,
 	transitionOperations,
 	unlinkOperations,
@@ -338,5 +340,27 @@ describe("the builders of the D-040 commands", () => {
 		expect(shownColourKeyframe(keys, 100, 125)?.value).toBe(0.1);
 		expect(shownColourKeyframe(keys, 100, 105)?.value).toBe(0.1);
 		expect(shownColourKeyframe([], 100, 105)).toBeUndefined();
+	});
+
+	test("an imported subtitle file is one caption.import_subtitles with its format from the extension", () => {
+		expect(subtitleFormatOf("Talk.SRT")).toBe("srt");
+		expect(subtitleFormatOf("talk.vtt")).toBe("vtt");
+		expect(subtitleFormatOf("talk.txt")).toBeUndefined();
+		expect(
+			captionImportSubtitlesOperations({
+				trackId: "trk_a",
+				text: "WEBVTT",
+				format: "vtt",
+			}),
+		).toEqual([
+			{
+				op: "caption.import_subtitles",
+				args: { track_id: "trk_a", text: "WEBVTT", format: "vtt" },
+			},
+		]);
+		expect(
+			captionImportSubtitlesOperations({ trackId: "trk_a", text: "x" })[0]
+				?.args,
+		).toEqual({ track_id: "trk_a", text: "x" });
 	});
 });
