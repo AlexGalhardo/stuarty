@@ -2,6 +2,8 @@
 # QA campaigns, test media, results and scripts) live in development/ and stay
 # out of git, by decision of the author (D-036).
 development/
+# Local QA builds and the workspaces of test runs (servers write tokens there).
+/qa-build/
 .playwright-mcp/
 
 # Advisor plans of the improve skill: local working files, never committed.
