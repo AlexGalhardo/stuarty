@@ -450,3 +450,13 @@ func TestDoctorMarksTheHelperOptionalAndSaysWhenNoCheckRan(t *testing.T) {
 		}
 	}
 }
+
+// VV-129: in local mode the editor session of a launch code (not the desktop shell) sees the workspace folder.
+func TestDoctorShowsTheWorkspaceToALocalEditorSession(t *testing.T) {
+	e := doctorEnv(t, service.ModeLocal)
+
+	res, err := e.svc.Doctor(e.as(ui), service.DoctorRequest{})
+	if err != nil || res.Workspace != string(e.dir) {
+		t.Fatalf("workspace = %q, %v; want %q", res.Workspace, err, e.dir)
+	}
+}

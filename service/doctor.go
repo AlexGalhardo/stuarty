@@ -189,7 +189,10 @@ func (s *svc) Doctor(ctx context.Context, req DoctorRequest) (*DoctorResult, err
 	res := &DoctorResult{
 		Version: s.version, APIVersion: "v1", Mode: mode, PID: os.Getpid(), StartedAt: s.doctor.StartedAt,
 	}
-	if privileged && mode == ModeLocal && s.workspace != "" {
+	// In local mode the folder is the one of the person who runs the editor, and every local caller can
+	// read it from the token file anyway, so the editor session of a launch code sees it too (VV-129).
+	// A key limited to one project never does.
+	if mode == ModeLocal && c.ProjectID == "" && s.workspace != "" {
 		res.Workspace = s.workspace
 	}
 
