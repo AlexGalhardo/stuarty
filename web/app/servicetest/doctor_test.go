@@ -339,7 +339,10 @@ func TestDoctorRefusesANetworkMemberTheMachineDetails(t *testing.T) {
 	e := doctorEnv(t, service.ModeNetwork)
 
 	member := service.WithCaller(context.Background(), service.Caller{
-		Actor: "user:usr_member", Scopes: service.RoleScopes(service.RoleMember), OwnerUserID: "usr_member", Browser: true,
+		Actor:       "user:usr_member",
+		Scopes:      service.RoleScopes(service.RoleMember),
+		OwnerUserID: "usr_member",
+		Browser:     true,
 	})
 
 	res, err := e.svc.Doctor(member, service.DoctorRequest{Full: true})

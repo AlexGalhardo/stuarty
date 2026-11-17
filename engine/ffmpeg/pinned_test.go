@@ -46,7 +46,10 @@ func pinned(t *testing.T) *Installation {
 			"no pinned FFmpeg: run scripts/install-ffmpeg.sh and set " + envTestFFmpegDir + " to the folder it prints",
 		)
 	}
-	in, err := Discover(context.Background(), Config{FFmpegPath: filepath.Join(dir, exeName("ffmpeg")), CPUCount: 2, ToolsDir: os.Getenv(envTestToolsDir)})
+	in, err := Discover(
+		context.Background(),
+		Config{FFmpegPath: filepath.Join(dir, exeName("ffmpeg")), CPUCount: 2, ToolsDir: os.Getenv(envTestToolsDir)},
+	)
 	if err != nil {
 		t.Skipf("the FFmpeg in %s is not usable: %v", envTestFFmpegDir, err)
 	}
