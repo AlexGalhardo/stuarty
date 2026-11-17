@@ -174,8 +174,13 @@ type Request struct {
 	Argv []string
 	// InputDirs are artifact directories the argv may read from (see ffargs.Policy).
 	InputDirs []string
-	// Deadline bounds the run (SDD-007 6.5); required.
+	// Deadline bounds the run (SDD-007 6.5); required. While other runs are in flight it is
+	// multiplied by that count, then capped at DeadlineCeiling.
 	Deadline time.Duration
+	// DeadlineCeiling caps a deadline that was multiplied because other runs share the process.
+	// Zero uses ExportDeadlineCeiling when Deadline is within it, and IngestDeadlineCeiling when
+	// Deadline is already longer (only an ingest deadline exceeds the export cap).
+	DeadlineCeiling time.Duration
 	// Stall overrides StallTimeout; used only when argv has -progress pipe:1.
 	Stall time.Duration
 	// OnProgress receives each progress block, from the goroutine that reads the pipe.
@@ -234,6 +239,7 @@ func (r *Runner) RunFFmpeg(ctx context.Context, req Request) (Result, error) {
 		dir:        req.Dir.path,
 		argv:       req.Argv,
 		deadline:   req.Deadline,
+		ceiling:    req.DeadlineCeiling,
 		onProgress: req.OnProgress,
 		stdout:     req.Stdout,
 		stdin:      req.Stdin,
@@ -292,6 +298,7 @@ type execSpec struct {
 	dir        string
 	argv       []string
 	deadline   time.Duration
+	ceiling    time.Duration
 	stall      time.Duration
 	onProgress func(Progress)
 	stdout     io.Writer
@@ -316,10 +323,19 @@ func (r *Runner) exec(ctx context.Context, s execSpec) (engine.Result, error) {
 		return engine.Result{}, internalErr("a run needs a deadline", nil)
 	}
 
+	// Count this run before the watchers start, so a peer that is already inside lengthens
+	// this run, and a run that started alone hears the peer arrive.
+	endFlight := beginFlight()
+	defer endFlight()
+
 	runCtx, cancel := context.WithCancelCause(ctx)
 	defer cancel(nil)
-	dctx, dcancel := context.WithTimeoutCause(runCtx, s.deadline, ErrDeadline)
-	defer dcancel()
+	dctx, dcancel := context.WithCancelCause(runCtx)
+	defer dcancel(nil)
+	started := time.Now()
+	go watchDeadline(dctx, started, s.deadline, deadlineCeiling(s.deadline, s.ceiling), func() {
+		dcancel(ErrDeadline)
+	})
 
 	stdout := s.stdout
 	var pw *progressWriter
@@ -402,20 +418,169 @@ func (r *Runner) exec(ctx context.Context, s execSpec) (engine.Result, error) {
 
 var errOverflow = errors.New("output over the cap")
 
-// watchStall cancels the run when -progress shows no advance for the window.
+// flight is the number of runs inside this process. Export and ingest use different runners, so the
+// count cannot live on one Runner: the run that started first is the one that would otherwise die.
+type flightCounter struct {
+	mu sync.Mutex
+	n  int
+	ch chan struct{}
+}
+
+var flights = flightCounter{ch: make(chan struct{})}
+
+func beginFlight() (end func()) {
+	flights.mu.Lock()
+	flights.n++
+	wakeFlightsLocked()
+	flights.mu.Unlock()
+
+	return func() {
+		flights.mu.Lock()
+		if flights.n > 0 {
+			flights.n--
+		}
+		wakeFlightsLocked()
+		flights.mu.Unlock()
+	}
+}
+
+func wakeFlightsLocked() {
+	close(flights.ch)
+	flights.ch = make(chan struct{})
+}
+
+func flightNow() (n int, changed <-chan struct{}) {
+	flights.mu.Lock()
+	defer flights.mu.Unlock()
+
+	return flights.n, flights.ch
+}
+
+// scaleAllowance multiplies base by the number of runs in flight. n <= 1 leaves base as it is.
+// A positive ceiling caps the product but never below base, and a positive base never scales to zero.
+func scaleAllowance(base time.Duration, n int, ceiling time.Duration) time.Duration {
+	if base <= 0 {
+		return base
+	}
+	if n < 1 {
+		n = 1
+	}
+
+	scaled := base
+	if n > 1 {
+		const maxDuration = time.Duration(^uint64(0) >> 1)
+		if base > maxDuration/time.Duration(n) {
+			scaled = maxDuration
+		} else {
+			scaled = base * time.Duration(n)
+		}
+		if scaled <= 0 {
+			scaled = base
+		}
+	}
+	if ceiling > 0 {
+		limit := ceiling
+		if limit < base {
+			limit = base
+		}
+		if scaled > limit {
+			scaled = limit
+		}
+	}
+	if scaled <= 0 {
+		return base
+	}
+
+	return scaled
+}
+
+func deadlineCeiling(base, explicit time.Duration) time.Duration {
+	if explicit > 0 {
+		return explicit
+	}
+	if base > ExportDeadlineCeiling {
+		return IngestDeadlineCeiling
+	}
+
+	return ExportDeadlineCeiling
+}
+
+// watchDeadline cancels the run once the wall clock passes the base deadline multiplied by the
+// runs in flight. The start does not move: a peer lengthens the allowance, and a peer leaving
+// shortens it back toward the base.
+func watchDeadline(ctx context.Context, started time.Time, base, ceiling time.Duration, kill func()) {
+	for {
+		if ctx.Err() != nil {
+			return
+		}
+		n, changed := flightNow()
+		wait := time.Until(started.Add(scaleAllowance(base, n, ceiling)))
+		if wait <= 0 {
+			kill()
+
+			return
+		}
+		timer := time.NewTimer(wait)
+		select {
+		case <-ctx.Done():
+			timer.Stop()
+
+			return
+		case <-timer.C:
+		case <-changed:
+			stopTimer(timer)
+		}
+	}
+}
+
+// watchStall cancels the run when -progress shows no advance for the stall window. The window is
+// the base stall multiplied by the runs in flight. A change in that count starts a fresh window,
+// so a run that began alone gains the longer stall when a peer appears, and a run left alone again
+// is cancelled only after the base stall.
 func watchStall(ctx context.Context, pw *progressWriter, stall time.Duration, kill func()) {
+	if stall <= 0 {
+		return
+	}
 	tick := max(min(stall/4, 5*time.Second), 10*time.Millisecond)
 	t := time.NewTicker(tick)
 	defer t.Stop()
+
+	n, changed := flightNow()
+	seen := n
+	anchor := time.Now()
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-t.C:
-			if time.Since(time.Unix(0, pw.last.Load())) >= stall {
-				kill()
-				return
-			}
+		case <-changed:
+		}
+		if ctx.Err() != nil {
+			return
+		}
+		n, changed = flightNow()
+		if n != seen {
+			anchor = time.Now()
+			seen = n
+		}
+		allowance := scaleAllowance(stall, seen, 0)
+		last := time.Unix(0, pw.last.Load())
+		if anchor.After(last) {
+			last = anchor
+		}
+		if time.Since(last) >= allowance {
+			kill()
+
+			return
+		}
+	}
+}
+
+func stopTimer(t *time.Timer) {
+	if !t.Stop() {
+		select {
+		case <-t.C:
+		default:
 		}
 	}
 }

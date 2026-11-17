@@ -71,7 +71,7 @@ func (s *state) encodeAAC(ctx context.Context, mix, partial string) error {
 	}
 
 	res, err := r.RunFFmpeg(ctx, ffmpeg.Request{
-		Dir: s.dir, Argv: argv, Deadline: s.deadline,
+		Dir: s.dir, Argv: argv, Deadline: s.deadline, DeadlineCeiling: ffmpeg.ExportDeadlineCeiling,
 		OutputPath: partial, MaxOutputBytes: s.job.MaxBytes,
 	})
 	if err != nil {

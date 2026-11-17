@@ -43,6 +43,14 @@ func ExportDeadline(timeline time.Duration) time.Duration {
 	return capped(120*time.Second+6*timeline, 2*time.Hour)
 }
 
+// ExportDeadlineCeiling and IngestDeadlineCeiling are the caps already applied by ExportDeadline
+// and by IngestDeadline / IngestDeadlineFor. A deadline that grows because other runs share the
+// process stops at the ceiling of its kind.
+var (
+	ExportDeadlineCeiling = ExportDeadline(10 * time.Hour)
+	IngestDeadlineCeiling = IngestDeadline(10 * time.Hour)
+)
+
 // AudioExtractDeadline is 60 s + 1 x audio duration, at most 1 h.
 func AudioExtractDeadline(audio time.Duration) time.Duration {
 	return capped(60*time.Second+audio, time.Hour)

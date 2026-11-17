@@ -143,7 +143,7 @@ func (j *job) decodeFrames(ctx context.Context, name, mapSpec string, deadline t
 		return 0, err
 	}
 	res, err := j.r.RunFFmpeg(ctx, ffmpeg.Request{
-		Dir: j.wd, Argv: argv, Deadline: deadline,
+		Dir: j.wd, Argv: argv, Deadline: deadline, DeadlineCeiling: ffmpeg.IngestDeadlineCeiling,
 		OnProgress: func(p ffmpeg.Progress) { last.Store(p.Frame) },
 	})
 	j.mu.Lock()
@@ -175,7 +175,9 @@ func (j *job) decodeSamples(ctx context.Context, name string, deadline time.Dura
 		return 0, err
 	}
 	w := &countWriter{}
-	res, err := j.r.RunFFmpeg(ctx, ffmpeg.Request{Dir: j.wd, Argv: argv, Deadline: deadline, Stdout: w})
+	res, err := j.r.RunFFmpeg(ctx, ffmpeg.Request{
+		Dir: j.wd, Argv: argv, Deadline: deadline, DeadlineCeiling: ffmpeg.IngestDeadlineCeiling, Stdout: w,
+	})
 	return w.n.Load() / 4, mapRunErr(err, StepVerify, res.Stderr)
 }
 

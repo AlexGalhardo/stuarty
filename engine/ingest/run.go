@@ -273,7 +273,9 @@ func (j *job) run(
 			Err:     err,
 		}
 	}
-	req := ffmpeg.Request{Dir: j.wd, Argv: argv, Deadline: deadline}
+	req := ffmpeg.Request{
+		Dir: j.wd, Argv: argv, Deadline: deadline, DeadlineCeiling: ffmpeg.IngestDeadlineCeiling,
+	}
 	if c.Progress && onFrac != nil && j.durationMS > 0 {
 		total := float64(j.durationMS) * 1000
 		req.OnProgress = func(p ffmpeg.Progress) { onFrac(float64(p.OutTimeUS) / total) }

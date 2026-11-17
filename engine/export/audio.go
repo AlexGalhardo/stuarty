@@ -172,7 +172,9 @@ func (s *state) measure(ctx context.Context, path string, samples int64) (*inges
 	if err != nil {
 		return nil, "", exportErr(ReasonAudio, "The loudness command was refused.", err, "")
 	}
-	res, err := s.job.Runner.RunFFmpeg(ctx, ffmpeg.Request{Dir: s.dir, Argv: argv, Deadline: s.deadline})
+	res, err := s.job.Runner.RunFFmpeg(ctx, ffmpeg.Request{
+		Dir: s.dir, Argv: argv, Deadline: s.deadline, DeadlineCeiling: ffmpeg.ExportDeadlineCeiling,
+	})
 	if err != nil {
 		return nil, res.Stderr, err
 	}
@@ -262,7 +264,8 @@ func (o *audioOpener) Open(ctx context.Context, src plan.AudioSource) (io.ReadCl
 	st := &audioStream{pr: pr, ctx: rctx, cancel: cancel, dir: dir, done: make(chan struct{})}
 	go func() {
 		res, err := s.job.Runner.RunFFmpeg(rctx, ffmpeg.Request{
-			Dir: dir, Argv: argv, InputDirs: s.inputDirs, Deadline: s.deadline, Stdout: pw,
+			Dir: dir, Argv: argv, InputDirs: s.inputDirs, Deadline: s.deadline,
+			DeadlineCeiling: ffmpeg.ExportDeadlineCeiling, Stdout: pw,
 		})
 		_ = pw.Close()
 		st.err, st.stderr = err, res.Stderr
