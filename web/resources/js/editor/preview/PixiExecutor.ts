@@ -26,6 +26,7 @@ import { DecodeClient, decoderPreference } from "./decode/client";
 import { createDecodeWorker } from "./decode/createWorker";
 import { EffectFilter } from "./effectFilter";
 import { type EffectPass, effectPasses } from "./effects";
+import { GradeFilter } from "./gradeFilter";
 import { pixiColorMatrix } from "./layerFilters";
 import { Lru } from "./lru";
 import { coverageSize, coverageTexels } from "./mask";
@@ -60,7 +61,7 @@ import type {
 const BITMAP_CACHE = 64;
 
 // The filters of a layer in the order of the compositor: chroma key, colour
-// matrix, filter
+// matrix, grade, filter
 // matrix, blur (SDD-004 section 6 step 2.2). Each runs in a pass of its own, so
 // the result of one is clamped to 0..1 before the next, as the export does.
 interface Drawn {
@@ -71,6 +72,7 @@ interface Drawn {
 	sprite: Sprite;
 	key: ChromaKeyFilter | null;
 	color: ColorMatrixFilter | null;
+	grade: GradeFilter | null;
 	look: ColorMatrixFilter | null;
 	blur: BlurFilter | null;
 	// The passes of the pixel effects and the transitions, reused from frame to
@@ -248,6 +250,7 @@ export class PixiExecutor implements PreviewExecutor {
 		for (const entry of this.drawn.values()) {
 			this.dropMask(entry);
 			this.sizeFx(entry, 0);
+			entry.grade?.destroy();
 		}
 		this.app?.destroy({ removeView: true }, { children: true });
 		this.app = null;
@@ -455,6 +458,7 @@ export class PixiExecutor implements PreviewExecutor {
 					sprite: new Sprite(),
 					key: null,
 					color: null,
+					grade: null,
 					look: null,
 					blur: null,
 					fx: [],
@@ -480,6 +484,7 @@ export class PixiExecutor implements PreviewExecutor {
 			entry.holder.removeFromParent();
 			this.dropMask(entry);
 			this.sizeFx(entry, 0);
+			entry.grade?.destroy();
 			entry.holder.destroy({ children: true });
 			this.drawn.delete(item);
 		}
@@ -568,6 +573,7 @@ export class PixiExecutor implements PreviewExecutor {
 			entry.key = null;
 		}
 		entry.color = this.matrixFilter(entry.color, colorMatrixAt(layer, frame));
+		const gradeOn = this.gradeFilter(entry, media?.grade);
 		entry.look = this.matrixFilter(entry.look, media?.filter ?? null);
 		// The blur is in project pixels; the stage scale is the output scale.
 		const sigma = (media?.blur ?? 0) * this.stage.scale.x;
@@ -591,6 +597,7 @@ export class PixiExecutor implements PreviewExecutor {
 		const now = [
 			entry.key,
 			entry.color,
+			gradeOn ? entry.grade : null,
 			entry.look,
 			entry.blur,
 			...entry.fx.slice(0, passes.before.length),
@@ -722,6 +729,18 @@ export class PixiExecutor implements PreviewExecutor {
 		entry.holder.filters = null;
 		drawn.filter.destroy();
 		drawn.sprite.destroy({ texture: true, textureSource: true });
+	}
+
+	// The advanced colour comes right after the colour matrix (SDD-004 section
+	// 3.14); a grade that changes no pixel leaves the filter out.
+	private gradeFilter(entry: Drawn, grade: PlanMediaLayer["grade"]): boolean {
+		if (grade === undefined) {
+			entry.grade?.destroy();
+			entry.grade = null;
+			return false;
+		}
+		entry.grade ??= new GradeFilter();
+		return entry.grade.set(grade);
 	}
 
 	private matrixFilter(
