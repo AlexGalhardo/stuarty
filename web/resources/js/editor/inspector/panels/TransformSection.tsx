@@ -32,6 +32,30 @@ const ROWS: readonly Row[] = [
 	{ property: "opacity", step: 0.05 },
 ];
 
+// The values the core documents as clearing the stored property
+// (`item.set_transform`: scale 1, rotation 0 and opacity 1). X and Y have no
+// such value in the registry, so they have no reset button.
+const RESET_VALUE: Partial<Record<TransformProperty, number>> = {
+	scale: 1,
+	rotation: 0,
+	opacity: 1,
+};
+
+// The reset of one property, or null when the property has none: the value to
+// send and whether the button is off, because the field already shows it or a
+// keyframed property is reset through its keyframes.
+export function resetOf(
+	property: TransformProperty,
+	values: readonly string[],
+	animated: boolean,
+): { value: number; disabled: boolean } | null {
+	const value = RESET_VALUE[property];
+	if (value === undefined) return null;
+	const atDefault =
+		values.length > 0 && values.every((shown) => shown === round3(value));
+	return { value, disabled: animated || atDefault };
+}
+
 export const round3 = (value: number): string =>
 	String(Math.round(value * 1000) / 1000);
 
@@ -110,13 +134,36 @@ export default function TransformSection({
 				const animated = targets.some(
 					(item) => (item.keyframes?.[row.property]?.length ?? 0) > 0,
 				);
+				const reset = resetOf(row.property, values, animated);
+				const label = t(`ui.editor.inspector.transform.${row.property}`);
 				return (
 					<NumberField
 						key={row.property}
-						label={t(`ui.editor.inspector.transform.${row.property}`)}
+						label={label}
 						stored={same ? (values[0] ?? "") : ""}
 						placeholder={same ? undefined : t("ui.editor.inspector.mixed")}
 						marker={animated ? t("ui.editor.inspector.keyframed") : undefined}
+						reset={
+							reset === null
+								? undefined
+								: {
+										label: t("ui.editor.inspector.reset_field", {
+											name: label,
+										}),
+										disabled: reset.disabled,
+										onReset: () =>
+											void send(
+												transformOperations(
+													targets.map((item) => ({
+														id: item.id,
+														animated: [],
+													})),
+													{ [row.property]: reset.value },
+													playhead,
+												),
+											),
+									}
+						}
 						step={row.step}
 						min={row.min ?? limits.min}
 						max={limits.max}

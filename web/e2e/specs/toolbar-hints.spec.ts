@@ -88,3 +88,27 @@ test.describe("timeline toolbar groups", () => {
 		expect((toolsBox?.x ?? 1) < (modesBox?.x ?? 0)).toBe(true);
 	});
 });
+
+test.describe("per-property reset", () => {
+	test("Reset Scale sends the clearing value and the field shows 1 again", async ({
+		page,
+		request,
+	}) => {
+		const seeded = await seedProject(request, {
+			tracks: 1,
+			perTrack: 1,
+			clipDuration: "4s",
+		});
+		await page.goto(`/editor/${seeded.id}?debug=1`);
+		await page.locator("[data-item-id]").first().click();
+		const scale = page.getByLabel("Scale", { exact: true });
+		const reset = page.getByRole("button", { name: "Reset Scale" });
+		await expect(reset).toBeDisabled();
+		await scale.fill("2");
+		await scale.press("Enter");
+		await expect(reset).toBeEnabled();
+		await reset.click();
+		await expect(scale).toHaveValue("1");
+		await expect(reset).toBeDisabled();
+	});
+});

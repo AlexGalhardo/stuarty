@@ -1059,6 +1059,7 @@
         },
         "mixed": "Mixed",
         "keyframed": "Animated with keyframes",
+        "reset_field": "Reset {name}",
         "color_picker": "{label}, colour picker",
         "alpha": "{label}, opacity",
         "track_kind": {
