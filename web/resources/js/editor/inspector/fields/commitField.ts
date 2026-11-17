@@ -140,11 +140,18 @@ export class CommitField {
 		this.publish();
 		const result = await this.options.commit(draft);
 		this.busy = false;
+		this.error = result.ok ? null : result.error;
+		// A change made while the command was in flight is a step the person
+		// took (a key pressed again): keep it and send it next, never drop it.
+		if (this.draft !== null && this.draft !== draft && result.ok) {
+			this.publish();
+			void this.commit();
+			return;
+		}
 		// On success the draft gives way to the read model, on error the stored
 		// value returns and the error shows under the field.
 		this.draft = null;
 		this.remoteActor = null;
-		this.error = result.ok ? null : result.error;
 		this.publish();
 	}
 
