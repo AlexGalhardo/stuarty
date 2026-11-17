@@ -11,6 +11,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"strings"
 	"sync"
 	"testing"
@@ -38,21 +39,16 @@ func TestMain(m *testing.M) {
 	}
 	// RunFFmpeg only accepts a real argv. The overlap test points the tool at this binary and
 	// passes one, so the child has to answer here instead of starting the suite.
-	for _, a := range os.Args[1:] {
-		if a == "-nostdin" {
-			overlapChild(os.Args[1:])
-			return
-		}
+	if slices.Contains(os.Args[1:], "-nostdin") {
+		overlapChild(os.Args[1:])
+		return
 	}
 	os.Exit(m.Run())
 }
 
 func overlapChild(args []string) {
-	for _, a := range args {
-		if a == "-progress" {
-			_, _ = os.Stdout.Write([]byte("frame=1\nout_time_us=1000\nprogress=continue\n"))
-			break
-		}
+	if slices.Contains(args, "-progress") {
+		_, _ = os.Stdout.WriteString("frame=1\nout_time_us=1000\nprogress=continue\n")
 	}
 	// Stay until the runner kills this process. A bare receive deadlocks, and a
 	// timed sleep on a new test line is refused. The signal watcher is the wait.
@@ -401,15 +397,13 @@ func TestOverlappingRunsDoNotStallWhileAPeerIsAlive(t *testing.T) {
 
 	progressed := make(chan struct{})
 	var once sync.Once
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		_, runErr := rA.RunFFmpeg(ctxA, Request{
 			Dir: dirA, Argv: argvA, Deadline: time.Minute, Stall: stall,
 			OnProgress: func(Progress) { once.Do(func() { close(progressed) }) },
 		})
 		aDone <- runErr
-	}()
+	})
 
 	select {
 	case <-progressed:
@@ -419,12 +413,10 @@ func TestOverlappingRunsDoNotStallWhileAPeerIsAlive(t *testing.T) {
 		t.Fatal("A did not report progress")
 	}
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		_, runErr := rB.RunFFmpeg(ctxB, Request{Dir: dirB, Argv: argvB, Deadline: time.Minute})
 		bDone <- runErr
-	}()
+	})
 	awaitFlight(t, 2)
 
 	// Stop short of the scaled window so the watchdog tick cannot land on the boundary.
