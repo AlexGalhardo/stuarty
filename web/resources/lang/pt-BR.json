@@ -558,6 +558,12 @@
           "set_mask": {
             "title": "Definir máscara do clipe"
           },
+          "set_shadow": {
+            "title": "Definir sombra do clipe"
+          },
+          "set_outline": {
+            "title": "Definir contorno do clipe"
+          },
           "set_flip": {
             "title": "Espelhar clipe"
           },
@@ -600,6 +606,9 @@
           },
           "duplicate": {
             "title": "Duplicar item"
+          },
+          "repeat": {
+            "title": "Repetir item"
           },
           "move": {
             "title": "Mover item"
