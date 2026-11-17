@@ -205,6 +205,29 @@ describe("gestures send one request and wait for the answer", () => {
 		});
 	});
 
+	test("add to timeline enters the chosen track, or a new one, with no start (VV-092)", async () => {
+		const h = await startHarness();
+		const doc = h.server.document;
+		const asset = Object.keys(doc.assets)[0];
+		const chosen = Object.values(doc.tracks).find((t) => t.kind === "visual");
+		if (asset === undefined || chosen === undefined) throw new Error("fixture");
+		const sent = scripted(h, () => ({
+			status: 200,
+			body: h.server.commit([bump(h)]).result,
+		}));
+		const actions = createActions(h.runtime);
+		await actions.addToTimeline(asset, chosen.id);
+		expect(sent[0]?.request.operations).toEqual([
+			{ op: "clip.add", args: { track_id: chosen.id, asset_id: asset } },
+		]);
+		await actions.addToTimeline(asset, null);
+		expect(sent[1]?.request.operations.map((o) => o.op)).toEqual([
+			"track.add",
+			"clip.add",
+		]);
+		expect(sent[1]?.request.operations[1]?.args.start).toBeUndefined();
+	});
+
 	test("split with the playhead outside the item sends nothing", async () => {
 		const h = await startHarness();
 		const item = firstItem(h);
