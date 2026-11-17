@@ -946,7 +946,7 @@ Fields:
 | text detail | `"<first 10 characters>"` in compact form (§3.1), `…` inside the quotes when truncated |
 | caption detail | `<n>w`, the number of words. No text: the full view has the words |
 | shape detail | `<shape> <width>x<height>` |
-| flags | space separated, in this order: `tin:<kind>`, `tout:<kind>`, `kf:<n>` (number of animated properties), `vol:<volume>` when not 1, `muted` (`audio_muted`), on a clip `grade:<bri|con|sat|temp|tint|hue><value>,...` (the adjustments that are not neutral), `hsl:<bands>`, `wheels`, `curves` and `lut:<asset>[@<intensity>]` (intensity when not 1), `slot:<name>`, `unfilled` (required slot not filled) |
+| flags | space separated, in this order: `tin:<kind>`, `tout:<kind>`, `kf:<n>` (number of animated properties), `vol:<volume>` when not 1, `muted` (`audio_muted`), on a clip `grade:<adjustment><value>,...` (the adjustments among bri, con, sat, temp, tint and hue that are not neutral), `hsl:<bands>`, `wheels`, `curves` and `lut:<asset>[@<intensity>]` (intensity when not 1), `slot:<name>`, `unfilled` (required slot not filled) |
 | asset line | `<ast id> <kind> <duration cell without +> <width>x<height>` for video, `<ast id> audio <duration cell>` for audio, `<ast id> image <width>x<height>` for an image, then ` audio` when a video has audio. The name is not printed (the full view prints it) |
 
 The concise view leaves out the in-point (`source_in`), fit, crop, names and caption text on purpose: it is the cheapest outline, in the sense of Figma's `get_metadata`, and the full view (§3.3) and `command_help` supply the rest.
