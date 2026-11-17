@@ -117,7 +117,7 @@ func Import(lines []ImportLine) string {
 	}
 
 	if failed > 0 {
-		fmt.Fprintf(&b, "\n%d of %d files failed", failed, len(lines))
+		fmt.Fprintf(&b, "\n%d of %d files failed, %d imported", failed, len(lines), len(lines)-failed)
 	}
 
 	for i := range lines {
