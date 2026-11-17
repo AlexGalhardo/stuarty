@@ -174,7 +174,10 @@ function walk(
 				? draft
 				: undefined;
 		case "boolean":
-			return typeof draft === "boolean" ? draft : undefined;
+			if (typeof draft === "boolean") return draft;
+			// An untouched required checkbox shows its default (or unchecked), so
+			// it must send what it shows instead of leaving the argument out.
+			return required ? schema.default === true : undefined;
 		default:
 			return typeof draft === "string" ? draft : undefined;
 	}
