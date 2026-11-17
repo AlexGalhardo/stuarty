@@ -533,6 +533,10 @@ Every pair below is WCAG 2.2 AA, computed with the method of section 2.6 (light 
 
 Focus is the 2 px `--ring` outline with 2 px offset everywhere (section 2.10); inside the preview it is `--ed-handle`, inside the timeline grid `--ed-selection`. A selected tab is shown by the bar and `aria-selected`, a pressed toggle by the fill, the border and `aria-pressed`, never by colour alone.
 
+#### 3.4.10 Judgement calls of the first build
+
+The comparison with the real CapCut app (TASK-0296) is pending: the author has not installed it yet, so nothing here is marked as the same or different. The calls the first build made, as SDD-012 section 6.4 lists them: the Adjust tab holds Color, Filters, Chroma key and Effects, and the Text tab holds Auto captions; several items show no inspector strip; the Transitions panel has no length field; Select and Blade are two `aria-pressed` buttons in the toolbar, with Undo and Redo moved there from the top bar; the ratio in the player row is a native `select` that sends `settings.reframe`; the toolbar and menu draw only what has an action (no Duplicate on a project card, no Zoom or Theme item in the menu); a text button collapses to its icon below 1536 px and keeps its name.
+
 ## 4. Components
 
 ### 4.1 The state model

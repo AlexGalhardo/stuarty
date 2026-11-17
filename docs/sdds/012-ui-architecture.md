@@ -621,7 +621,7 @@ A card in Effects, Transitions or Filters applies to the selection with one comm
 
 #### Player
 
-The preview region keeps the canvas box and the transport row of §11. The transport row gains, at its right: the aspect ratio selector (the size presets of RF-002, calling `settings.set`), "Fit", the safe-area toggle (exists) and "Full screen" (`surface.preview_fullscreen`, §18.7). Time shows the project's `timeDisplay`. Nothing is added inside the canvas box.
+The preview region keeps the canvas box and the transport row of §11. The transport row gains, at its right: the aspect ratio selector (the size presets of RF-002, sending `settings.reframe` as the project panel does, so a text or shape is rescaled and the two controls never differ), "Fit", the safe-area toggle (exists) and "Full screen" (`surface.preview_fullscreen`, §18.7). Time shows the project's `timeDisplay`. Nothing is added inside the canvas box.
 
 #### Properties panel (the inspector region)
 
@@ -665,6 +665,16 @@ The context menu of a clip repeats the Clip menu and adds Copy, Cut, Paste, Dupl
 #### Accessibility and tests
 
 The tab rail and the tab strips follow the tabs pattern with roving `tabindex`; `F6` visits the regions in the order top bar, library, preview, timeline, inspector (§18.2). Every new region keeps its landmark and its `aria-label` (§18.1). Each screen or panel has an e2e test of its controls and an `axe` check in both themes and both languages; the strings are in the catalogues (§16) and checked by `check:i18n`. A control tied to a command that does not exist yet has no test and is not drawn.
+
+#### Judgement calls of the first build
+
+The walk-through of TASK-0296 against the real CapCut app has **not** been done yet: it needs the app installed by the author, and every row of this section is still unchecked against it. Until then the build made these calls, each reversible, and the walk-through confirms or changes them in this section:
+
+- **Inspector tabs.** Adjust holds Color, Filters, Chroma key and Effects (the sections that change how the picture looks); Text holds Auto captions beside Text, Shape and Caption words. Several kinds of item show no tab strip when one tab would hold everything. The Transitions panel has no length field: the length is a field of the item's Transitions section.
+- **Timeline toolbar.** Select and Blade are two buttons with `aria-pressed`, not a `ToggleGroup`. Undo and Redo moved from the top bar into the toolbar, with one instance of each. "Add text" and "Add shape" stay in the editing strip above the timeline and in the Text tab, not in the toolbar. Magnet and Link are drawn because `track.update` and `item.link` exist; the zoom slider is drawn. A text button keeps its label from 1536 px up and collapses to its icon below, keeping its name for assistive technology.
+- **Player row.** Time at the left, transport in the centre, and at the right the ratio, the preview size (Fit, 50%, 100%), the safe area, mute and volume, and Full screen. The ratio is a native `select` (it sits on the dark surround, where a portal menu would not follow the theme). The row wraps when the preview region is narrow.
+- **Menu.** The items without an action are not drawn: New project (the projects page creates), Quit (the shell has its own), Zoom, Full screen preview, Theme and Language (they have top bar controls and the shortcuts dialog), Documentation, About (the version is in the shortcuts dialog), Group, Reverse and the Add shape submenu. Cut, Copy and Paste are not native accelerators either; only Undo, Redo and Select all show a key in the native bar (§21.3 item 4).
+- **Projects page.** The create form stays on the page above the grid, with the preset radios; "Delete" moves the project to the trash after a confirmation. Duplicate is not drawn because the service has no project duplicate endpoint (a card for the service owner). The picture of a card is the first frame and is absent for a project with nothing on the timeline.
 
 #### Order of work
 
