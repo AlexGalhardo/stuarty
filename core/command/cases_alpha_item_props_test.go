@@ -71,8 +71,11 @@ func init() {
 		cl(func(it *timeline.Item) { it.TransitionIn = tr("fade", 60) }))
 	st("ok_text_caption_shape_items", fmt.Sprintf(`{"item_id": %q, "edge": "in", "kind": "fade"}`, itemB),
 		func() *B { return base().shape(itemB, vidTr, 0, 60) })
-	st("err_validation_unknown_kind", arg(`"edge": "in", "kind": "spin"`), cl())
+	st("err_validation_unknown_kind", arg(`"edge": "in", "kind": "bounce"`), cl())
 	st("ok_zoom", arg(`"edge": "in", "kind": "zoom", "duration": "12f"`), cl())
+	st("ok_spin", arg(`"edge": "in", "kind": "spin", "duration": "12f"`), cl())
+	st("ok_shrink", arg(`"edge": "in", "kind": "shrink", "duration": "12f"`), cl())
+	st("ok_grow", arg(`"edge": "in", "kind": "grow", "duration": "12f"`), cl())
 	st("ok_whip_with_direction", arg(`"edge": "out", "kind": "whip", "direction": "up", "duration": "9f"`), cl())
 	st("ok_whip_default_direction_left_not_stored", arg(`"edge": "in", "kind": "whip", "direction": "left"`), cl())
 	st("ok_dip_with_colour", arg(`"edge": "in", "kind": "dip", "color": "#FF8800", "duration": "15f"`), cl())

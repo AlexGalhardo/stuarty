@@ -85,6 +85,14 @@ func (a *animated) transition(tr *timeline.Transition, p, width, height float64)
 	case "zoom":
 		a.scale *= 1 + (1-s)/2
 		a.opacity *= p
+	case "spin":
+		a.rotation += (1 - s) * 90
+		a.opacity *= p
+	case "shrink":
+		a.scale *= 0.5 + 0.5*s
+		a.opacity *= p
+	case "grow":
+		a.scale *= 0.001 + 0.999*s
 	case "whip":
 		s5 := 1 - math.Pow(1-p, 5)
 

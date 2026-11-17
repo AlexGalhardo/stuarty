@@ -311,7 +311,7 @@ func TestValidateRejectsEveryInvariant(t *testing.T) {
 			})
 		}, VTransitions},
 		{"transition kind", func(d *Document) {
-			editItem(d, clipID, func(i *Item) { i.TransitionIn = &Transition{Kind: "spin", Duration: 5} })
+			editItem(d, clipID, func(i *Item) { i.TransitionIn = &Transition{Kind: "bounce", Duration: 5} })
 		}, VShape},
 		{"transition colour on a fade", func(d *Document) {
 			editItem(

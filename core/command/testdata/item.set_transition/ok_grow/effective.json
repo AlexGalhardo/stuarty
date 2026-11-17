@@ -1,0 +1,9 @@
+{
+  "duration": {
+    "frame": 12,
+    "requested": "12f",
+    "seconds": 0.4
+  },
+  "edge": "in",
+  "kind": "grow"
+}

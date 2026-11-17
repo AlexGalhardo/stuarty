@@ -785,7 +785,18 @@ func (v *validator) transitions(path, key string, it Item) {
 			continue
 		}
 		switch t.val.Kind {
-		case "fade", "slide_left", "slide_right", "slide_up", "slide_down", "zoom", "whip", "dip", "wipe":
+		case "fade",
+			"slide_left",
+			"slide_right",
+			"slide_up",
+			"slide_down",
+			"zoom",
+			"whip",
+			"dip",
+			"wipe",
+			"spin",
+			"shrink",
+			"grow":
 		default:
 			v.add(VShape, path+"."+t.name+".kind", key, "unknown transition kind %q", t.val.Kind)
 		}

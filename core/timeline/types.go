@@ -315,8 +315,8 @@ type Word struct {
 
 // Transition of an item entry or exit (SDD-001 §3.8).
 type Transition struct {
-	Kind     string `json:"kind"     enum:"fade,slide_left,slide_right,slide_up,slide_down,zoom,whip,dip,wipe"`
-	Duration int    `json:"duration"                                                                           min:"1"`
+	Kind     string `json:"kind"     enum:"fade,slide_left,slide_right,slide_up,slide_down,zoom,whip,dip,wipe,spin,shrink,grow"`
+	Duration int    `json:"duration"                                                                                            min:"1"`
 	// Added after BETA (TASK-0278, SDD-004 §3.2): the colour of a dip, #RRGGBB or #RRGGBBAA, default
 	// black when absent, and the direction of a whip or a wipe, default left when absent.
 	Color     Color  `json:"color,omitempty"`

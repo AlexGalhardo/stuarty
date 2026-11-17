@@ -1224,7 +1224,10 @@
           "zoom": "Zoom",
           "whip": "Whip",
           "dip": "Dip to colour",
-          "wipe": "Wipe"
+          "wipe": "Wipe",
+          "spin": "Spin",
+          "shrink": "Shrink",
+          "grow": "Grow"
         }
       },
       "animation": {

@@ -1680,9 +1680,22 @@ export interface ItemSetTransitionArgs {
    */
   item_id: string;
   /**
-   * fade, slide_left, slide_right, slide_up, slide_down, zoom, whip, dip, wipe, or null to remove.
+   * fade, slide_left, slide_right, slide_up, slide_down, zoom, whip, dip, wipe, spin, shrink, grow, or null to remove.
    */
-  kind: "fade" | "slide_left" | "slide_right" | "slide_up" | "slide_down" | "zoom" | "whip" | "dip" | "wipe" | null;
+  kind:
+    | "fade"
+    | "slide_left"
+    | "slide_right"
+    | "slide_up"
+    | "slide_down"
+    | "zoom"
+    | "whip"
+    | "dip"
+    | "wipe"
+    | "spin"
+    | "shrink"
+    | "grow"
+    | null;
 }
 
 export interface ItemSlipArgs {

@@ -1217,7 +1217,10 @@
           "zoom": "Ampliar (zoom)",
           "whip": "Whip (giro rápido)",
           "dip": "Mergulho em cor",
-          "wipe": "Cortina"
+          "wipe": "Cortina",
+          "spin": "Girar",
+          "shrink": "Encolher",
+          "grow": "Crescer"
         }
       },
       "animation": {
