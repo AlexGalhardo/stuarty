@@ -360,6 +360,7 @@
           "other": "Redo applied, {count} changes were left alone because {actor} changed them"
         },
         "source_has_only": "The source has only {available}",
+        "link_needs_two": "Select at least two items to link them",
         "gesture_cancelled": "{actor} changed what you were dragging, so the drag was cancelled",
         "another_actor": "another actor",
         "open_words": "Show the words"
