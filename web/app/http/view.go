@@ -26,7 +26,7 @@ type sheetIn struct {
 	Times     string `json:"times,omitempty"                          doc:"Comma-separated times, 2 to 16."`
 	From      string `json:"from,omitempty"`
 	Until     string `json:"until,omitempty"`
-	To        string `json:"to,omitempty"                             doc:"Deprecated alias of until, removed at 1.0."`
+	To        string `json:"to,omitempty"                             doc:"Deprecated alias of until (whole frames), removed at 1.0."`
 	Count     int    `json:"count,omitempty"`
 	Cols      int    `json:"cols,omitempty"`
 	Rev       int64  `json:"rev,omitempty"                            doc:"Must be the current revision when given."`
@@ -147,7 +147,7 @@ type planIn struct {
 	ID    string `json:"id"              validate:"required"`
 	From  int    `json:"from,omitempty"                      doc:"The first frame of the window, as a whole number of frames (not a time such as 1s); default 0."`
 	Until int    `json:"until,omitempty"                     doc:"The end of the window in whole frames (not a time such as 1s), not included; at most 300 frames after from. Required."`
-	To    int    `json:"to,omitempty"                        doc:"Deprecated alias of until, removed at 1.0."`
+	To    int    `json:"to,omitempty"                        doc:"Deprecated alias of until (whole frames), removed at 1.0."`
 	Rev   int64  `json:"rev,omitempty"                       doc:"Must be the current revision when given."`
 	Width int    `json:"width,omitempty"                     doc:"The width in pixels the preview draws at, 16 to 4096; bitmaps are rasterized at that scale. Default: the project width."`
 }

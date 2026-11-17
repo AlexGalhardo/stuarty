@@ -10235,7 +10235,7 @@
             }
           },
           {
-            "description": "Deprecated alias of until, removed at 1.0.",
+            "description": "Deprecated alias of until (whole frames), removed at 1.0.",
             "in": "query",
             "name": "to",
             "schema": {
@@ -10462,7 +10462,7 @@
             }
           },
           {
-            "description": "Deprecated alias of until, removed at 1.0.",
+            "description": "Deprecated alias of until (whole frames), removed at 1.0.",
             "in": "query",
             "name": "to",
             "schema": {
