@@ -54,6 +54,7 @@
         "import_path": "Path of a template file on this computer",
         "import": "Import template",
         "imported": "Imported:",
+        "imported_same_file": "This file was already imported, so nothing was added.",
         "imported_again": "A template with this name was already in the list, so there are now two.",
         "use_brand": "Use the brand kit colours and fonts"
       },
