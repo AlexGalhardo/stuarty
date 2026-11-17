@@ -43,7 +43,7 @@ An export is an MP4 unless you choose another format with `--format` (CLI) or `a
 | Format | File | What it is |
 | --- | --- | --- |
 | `mp4` | `.mp4` | H.264 video and AAC audio (the default); needs an H.264 encoder |
-| `gif` | `.gif` | the composed frames, no audio; needs no encoder; capped at 480 pixels wide (the height keeps the aspect) and 15 fps, and the job warns when it scales the project down |
+| `gif` | `.gif` | the composed frames, no audio; needs no encoder; always opaque (the project background is drawn into every frame, there is no transparent GIF); capped at 480 pixels wide (the height keeps the aspect) and 15 fps, and the job warns when it scales the project down |
 | `wav` | `.wav` | the audio mix as 16-bit PCM, 48 kHz, stereo |
 | `aac` | `.m4a` | the same mix as AAC in an MP4 container |
 | `png` | `.png` | one frame at the size of the project, chosen with `--at` (the start by default) |

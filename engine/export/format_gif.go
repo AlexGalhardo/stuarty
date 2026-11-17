@@ -19,7 +19,7 @@ import (
 // The GIF the export writes is made here, not by FFmpeg (SDD-004 section 8): the palette is a fixed
 // 6x6x6 colour cube, each frame is dithered with Floyd-Steinberg in integer arithmetic, and the frames
 // are written one after the other, so the same frames give the same bytes (NFR-010) and the memory
-// is one frame, not the whole animation. Every frame is a full frame, with no transparency.
+// is one frame, not the whole animation. Every frame is a full frame, with no transparency (VV-172: the project has no transparent background to export).
 
 // gifLevels is the number of levels of each channel of the palette; the palette has 216 of its 256 entries in use.
 const gifLevels = 6
