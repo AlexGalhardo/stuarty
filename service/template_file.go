@@ -187,7 +187,7 @@ func (s *svc) TemplateImport(ctx context.Context, req TemplateImportRequest) (*T
 		return nil, internalError()
 	}
 
-	file, gerr := s.media.Guard.OpenImport(req.Path)
+	file, gerr := s.media.Guard.OpenExported(req.Path)
 	if gerr != nil {
 		return nil, fromEngine(gerr)
 	}

@@ -260,6 +260,22 @@ func (g *Guard) Roots() []string { return slices.Clone(g.roots) }
 // OpenImport is steps 1 to 10: it returns the file opened for reading, which
 // the caller must close. Every later step uses the handle, never the path.
 func (g *Guard) OpenImport(path string) (*os.File, error) {
+	return g.open(path, false)
+}
+
+// ownDirs are the folders of the workspace where the server itself writes the files it exports: project
+// bundles and template files. They hold no secret, unlike the rest of the workspace.
+var ownDirs = []string{"exports", "templates"}
+
+// OpenExported is OpenImport for the import of a bundle or a template: it also accepts a file that the
+// server wrote under exports/ or templates/ of the workspace, so the round trip needs no copy (VV-081).
+// A medium, a font and every other path of the workspace stay refused. It applies in local mode only: a
+// network server shows no path of its workspace, and its import roots are the rule.
+func (g *Guard) OpenExported(path string) (*os.File, error) {
+	return g.open(path, true)
+}
+
+func (g *Guard) open(path string, exported bool) (*os.File, error) {
 	if _, err := Clean(path, g.goos); err != nil {
 		return nil, err
 	}
@@ -273,13 +289,15 @@ func (g *Guard) OpenImport(path string) (*os.File, error) {
 		return nil, g.late(err)
 	}
 
-	if g.workspace != "" && g.within(g.workspace, resolved) {
+	ours := exported && g.exportedByUs(resolved)
+
+	if g.workspace != "" && g.within(g.workspace, resolved) && !ours {
 		return nil, g.late(refuse("the file lies inside the workspace.", hintInside))
 	}
 
 	var root string
 
-	if len(g.roots) > 0 {
+	if len(g.roots) > 0 && !ours {
 		i := slices.IndexFunc(g.roots, func(r string) bool { return g.within(r, resolved) })
 		if i < 0 {
 			return nil, g.late(refuse("the file is outside the import roots.", "Move the file under an import root."))
@@ -310,6 +328,21 @@ func (g *Guard) OpenImport(path string) (*os.File, error) {
 	}
 
 	return f, nil
+}
+
+// exportedByUs reports whether resolved lies under exports/ or templates/ of the workspace of a local server.
+func (g *Guard) exportedByUs(resolved string) bool {
+	if g.network || g.workspace == "" {
+		return false
+	}
+
+	for _, d := range ownDirs {
+		if g.within(filepath.Join(g.workspace, d), resolved) {
+			return true
+		}
+	}
+
+	return false
 }
 
 // openUnder opens real inside root with os.Root, so that a link swapped after

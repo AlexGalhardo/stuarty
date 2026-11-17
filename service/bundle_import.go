@@ -110,7 +110,7 @@ func (s *svc) ProjectBundleImport(ctx context.Context, req ProjectBundleImportRe
 		return nil, internalError()
 	}
 
-	file, gerr := s.media.Guard.OpenImport(req.Path)
+	file, gerr := s.media.Guard.OpenExported(req.Path)
 	if gerr != nil {
 		return nil, fromEngine(gerr)
 	}
