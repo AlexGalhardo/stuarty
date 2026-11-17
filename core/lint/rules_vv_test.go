@@ -1,6 +1,7 @@
 package lint
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
@@ -88,5 +89,30 @@ func TestSafeAreaIgnoresSlideIn(t *testing.T) {
 		if want := map[bool]int{false: 1, true: 0}[slide]; len(got) != want {
 			t.Errorf("slide %v: %d findings, want %d: %+v", slide, len(got), want, got)
 		}
+	}
+}
+
+// The loudness estimate never promises a gain the export cannot reach: peak headroom plus the
+// 12 dB the limiter may take off (VV-074).
+func TestLoudnessEstimateIsCappedByPeaks(t *testing.T) {
+	t.Parallel()
+
+	d := newDoc()
+	d.Settings.LoudnessTarget = -14
+
+	a := clip("itm_a0000000001", 0, 90)
+	a.Fit = "cover"
+	put(d, a)
+
+	peaks := make([]float64, 400)
+	for i := range peaks {
+		peaks[i] = 0.5 // -6 dBFS
+	}
+
+	arts := fakeArtifacts{envSpec{Peaks: map[string][]float64{astVideo: peaks}, Loudness: map[string]float64{astVideo: -50}}}
+
+	got := has(Lint(d, Env{Artifacts: arts}, Full), CodeLoudness)
+	if len(got) != 1 || !strings.Contains(got[0].Message, "gain of +16.5 dB") {
+		t.Fatalf("want a gain capped at +16.5 dB: %+v", got)
 	}
 }

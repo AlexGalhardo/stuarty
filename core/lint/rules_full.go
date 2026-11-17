@@ -14,6 +14,11 @@ const (
 	frameTolerance = 3
 	// loudnessTolerance is the largest difference to the target, in LU, left alone.
 	loudnessTolerance = 6
+	// peakCeilingDB and maxLimitingDB are the rule of the export gain (engine/audio): the true peak
+	// of the mix may not pass peakCeilingDB after the gain, and the limiter takes off at most
+	// maxLimitingDB to get there, so the gain never exceeds the headroom plus maxLimitingDB.
+	peakCeilingDB = -1.5
+	maxLimitingDB = 12
 	// clipLevel is the sum of source peaks above which the mix clips.
 	clipLevel = 1.0
 )
@@ -193,6 +198,27 @@ func (c *check) audioClip() {
 // loudness is L_LOUDNESS: the energy of the sources, each with the loudness of its
 // asset, its gain and the share of the timeline it plays, gives the mix loudness; more
 // than 6 LU from the target is a finding that states the gain the export would apply.
+// reachableGain caps the gain that reaches the target by what the export can do: the peak of
+// the mix plus the gain may not pass peakCeilingDB, and the limiter takes off at most
+// maxLimitingDB (VV-074). Without the peaks of the assets the estimate is not capped.
+func (c *check) reachableGain(gain float64) float64 {
+	fps := c.doc.Settings.FPS
+	if fps.Num < 1 || fps.Den < 1 {
+		return gain
+	}
+
+	peak := 0.0
+	for _, v := range c.mixPeaks(float64(fps.Num) / float64(fps.Den)) {
+		peak = max(peak, v)
+	}
+
+	if peak <= 0 {
+		return gain
+	}
+
+	return math.Round(min(gain, peakCeilingDB-20*math.Log10(peak)+maxLimitingDB)*10) / 10
+}
+
 func (c *check) loudness() {
 	end := c.timelineEnd()
 	if c.env.Artifacts == nil || end == 0 {
@@ -226,6 +252,8 @@ func (c *check) loudness() {
 		return
 	}
 
+	gain := c.reachableGain(target - estimate)
+
 	c.add(
 		CodeLoudness,
 		"",
@@ -234,7 +262,7 @@ func (c *check) loudness() {
 			"the estimated mix loudness is %.1f LUFS; the target is %.1f LUFS, so the export applies a gain of %+.1f dB.",
 			estimate,
 			target,
-			target-estimate,
+			gain,
 		),
 		"adjust volumes or accept the normalization",
 	)
