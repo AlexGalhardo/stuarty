@@ -614,6 +614,8 @@ func TestValidationSaysWhatIsAccepted(t *testing.T) {
 		"enum":  {"project_get", map[string]any{"project_id": made, "detail": "document"}, "use one of concise, full"},
 		"array": {"media_inspect", map[string]any{"project_id": made, "asset_id": "ast_0000000001", "sections": "probe,loudness"}, "expected an array"},
 		"type":  {"project_list", map[string]any{"limit": "ten"}, "expected integer"},
+		// VV-149: a numeric bound is named in the message.
+		"maximum": {"media_import", map[string]any{"project_id": made, "paths": []any{"a.mp4"}, "wait_ms": 120000}, "at most 25000"},
 	} {
 		text := textOf(t, call(t, cs, tc.tool, tc.args))
 

@@ -115,6 +115,26 @@ func expectation(k jsonschema.ErrorKind) string {
 		}
 
 		return ": expected " + want
+	case *kind.Maximum:
+		return ": use at most " + k.Want.RatString()
+	case *kind.Minimum:
+		return ": use at least " + k.Want.RatString()
+	case *kind.ExclusiveMaximum:
+		return ": use less than " + k.Want.RatString()
+	case *kind.ExclusiveMinimum:
+		return ": use more than " + k.Want.RatString()
+	case *kind.MaxLength:
+		return fmt.Sprintf(": use at most %d characters", k.Want)
+	case *kind.MinLength:
+		return fmt.Sprintf(": use at least %d characters", k.Want)
+	case *kind.MaxItems:
+		return fmt.Sprintf(": use at most %d items", k.Want)
+	case *kind.MinItems:
+		return fmt.Sprintf(": use at least %d items", k.Want)
+	case *kind.Pattern:
+		return ": use a value that matches " + k.Want
+	case *kind.Const:
+		return fmt.Sprintf(": use %v", k.Want)
 	}
 
 	return ""
