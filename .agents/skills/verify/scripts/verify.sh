@@ -81,12 +81,27 @@ step flaky bash "$(script .agents/skills/verify/scripts/check-flaky-patterns.sh)
 export VUKEM_VIDEO_MIN_FREE_BYTES=1
 go_files="$(echo "$changed" | grep -E '\.go$' | while read -r f; do [ -f "$f" ] && echo "$f"; done)"
 if [ -n "$go_files" ] || echo "$changed" | grep -qE '(^|/)go\.(mod|sum)$'; then
-	pkgs="$(echo "$go_files" | xargs -r -n1 dirname | sort -u | sed 's#^#./#')"
 	step gofmt bash -c "out=\$(gofmt -l $(echo "$go_files" | tr '\n' ' ')); [ -z \"\$out\" ] || { echo \"\$out\"; exit 1; }"
-	step go-build go build ./...
-	[ -z "$pkgs" ] || step go-vet go vet $pkgs
-	[ -z "$pkgs" ] || step go-test go test -count=1 $pkgs
-	if command -v golangci-lint >/dev/null 2>&1 && [ -n "$pkgs" ]; then step golangci golangci-lint run $pkgs; fi
+	# A nested module (desktop/shell/app has its own go.mod) is built, vetted, tested and linted inside it.
+	modof() {
+		local d="$1"
+		while [ "$d" != . ] && [ ! -f "$d/go.mod" ]; do d="$(dirname "$d")"; done
+		echo "$d"
+	}
+	mods="$(echo "$go_files" | while read -r f; do modof "$(dirname "$f")"; done | sort -u)"
+	for m in $mods; do
+		pkgs=""
+		for d in $(echo "$go_files" | while read -r f; do dirname "$f"; done | sort -u); do
+			[ "$(modof "$d")" = "$m" ] || continue
+			if [ "$m" = . ]; then pkgs="$pkgs ./$d"; elif [ "$d" = "$m" ]; then pkgs="$pkgs ."; else pkgs="$pkgs ./${d#"$m"/}"; fi
+		done
+		tag=""
+		[ "$m" = . ] || tag="-$(echo "$m" | tr '/' '-')"
+		step "go-build$tag" go -C "$m" build ./...
+		step "go-vet$tag" go -C "$m" vet $pkgs
+		step "go-test$tag" go -C "$m" test -count=1 $pkgs
+		if command -v golangci-lint >/dev/null 2>&1; then step "golangci$tag" bash -c "cd '$m' && golangci-lint run $pkgs"; fi
+	done
 fi
 if echo "$changed" | grep -qE '^(web/app/|core/schema/|web/app/agentdocs/)'; then
 	step agent-docs go run ./web/cmd/gen-agent-docs -check
