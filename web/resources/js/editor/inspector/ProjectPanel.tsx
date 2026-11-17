@@ -1,5 +1,6 @@
 import { type ReactNode, useState } from "react";
 
+import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
 import {
 	FRAME_RATES,
@@ -165,6 +166,19 @@ export default function ProjectPanel(): ReactNode {
 				stored={settings.background ?? "#000000"}
 				disabled={!canEdit}
 				commit={(value) => change({ background: value })}
+				aside={
+					<Button
+						type="button"
+						variant="outline"
+						size="sm"
+						className="shrink-0"
+						aria-pressed={settings.background === "transparent"}
+						disabled={!canEdit}
+						onClick={() => void change({ background: "transparent" })}
+					>
+						{t("ui.editor.project.background_transparent")}
+					</Button>
+				}
 			/>
 			<NumberField
 				label={t("ui.editor.project.loudness")}

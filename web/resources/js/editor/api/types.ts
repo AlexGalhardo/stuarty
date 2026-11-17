@@ -376,6 +376,9 @@ export interface PlanWindow extends PlanWindowHead {
 	width: number;
 	height: number;
 	background: string;
+	// True when settings.background is "transparent": `background` is then
+	// #000000 and uncovered pixels stay clear (SDD-001).
+	transparent?: boolean;
 	safe_area: [number, number, number, number];
 	layers: PlanLayer[];
 	audio: PlanAudio[];

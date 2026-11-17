@@ -950,6 +950,7 @@
         "width": "Width",
         "height": "Height",
         "background": "Background",
+        "background_transparent": "Transparent",
         "loudness": "Loudness target",
         "fps": "Frame rate",
         "fps_confirm_title": "Change the frame rate to {rate}?",

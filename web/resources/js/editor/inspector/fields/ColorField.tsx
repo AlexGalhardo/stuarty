@@ -32,11 +32,14 @@ export default function ColorField({
 	stored,
 	commit,
 	disabled = false,
+	aside = null,
 }: {
 	label: string;
 	stored: string;
 	commit(hex: string): Promise<CommitResult>;
 	disabled?: boolean;
+	// A control beside the hex field, such as the transparent-background button.
+	aside?: ReactNode;
 }): ReactNode {
 	const t = useT();
 	const swatches = Object.entries(useBrandKit()?.colors ?? {});
@@ -51,35 +54,48 @@ export default function ColorField({
 		return commit(joinHex(parts.rgb, parts.alpha));
 	});
 	const parts = splitHex(binding.text);
+	// The word the core stores for no background colour. A native colour input
+	// can only show a hex, and its empty fallback is black, which would claim
+	// the project is #000000.
+	const namedTransparent = binding.text.trim().toLowerCase() === "transparent";
 	const picker = useRef<HTMLInputElement>(null);
 	const { field } = binding;
 
 	// The native picker reports `change` when it closes; React reports every
 	// step as `input`, so the commit listens to the native event.
 	useEffect(() => {
+		if (namedTransparent) return;
 		const node = picker.current;
 		if (node === null) return;
 		const onChange = (): void => void field.commit();
 		node.addEventListener("change", onChange);
 		return () => node.removeEventListener("change", onChange);
-	}, [field]);
+	}, [field, namedTransparent]);
 
 	return (
 		<FieldRow label={label} state={binding}>
 			{(ids) => (
 				<div className="flex flex-col gap-1.5">
 					<div className="flex items-center gap-1.5">
-						<input
-							ref={picker}
-							type="color"
-							aria-label={t("ui.editor.inspector.color_picker", { label })}
-							disabled={disabled}
-							value={parts === null ? "#000000" : parts.rgb.toLowerCase()}
-							className="h-8 w-8 shrink-0 cursor-pointer rounded-lg border border-input bg-transparent p-0.5"
-							onChange={(event) =>
-								field.change(joinHex(event.target.value, parts?.alpha ?? 255))
-							}
-						/>
+						{namedTransparent ? (
+							<span
+								aria-hidden="true"
+								data-background="transparent"
+								className="h-8 w-8 shrink-0 rounded-lg border border-dashed border-input bg-muted/40"
+							/>
+						) : (
+							<input
+								ref={picker}
+								type="color"
+								aria-label={t("ui.editor.inspector.color_picker", { label })}
+								disabled={disabled}
+								value={parts === null ? "#000000" : parts.rgb.toLowerCase()}
+								className="h-8 w-8 shrink-0 cursor-pointer rounded-lg border border-input bg-transparent p-0.5"
+								onChange={(event) =>
+									field.change(joinHex(event.target.value, parts?.alpha ?? 255))
+								}
+							/>
+						)}
 						<Input
 							{...binding.input}
 							id={ids.control}
@@ -87,8 +103,9 @@ export default function ColorField({
 							spellCheck={false}
 							disabled={disabled}
 							aria-describedby={binding.error ? ids.message : undefined}
-							className="h-8 font-mono"
+							className="h-8 min-w-0 flex-1 font-mono"
 						/>
+						{aside}
 					</div>
 					<Slider
 						aria-label={t("ui.editor.inspector.alpha", { label })}
