@@ -57,6 +57,24 @@ func TestConflicts(t *testing.T) {
 			"", "",
 		},
 		{
+			"rename after another actor renamed",
+			[]Operation{opJSON("project.rename", `{"name":"B"}`)},
+			[]Change{{Kind: KindProjectUpdated, ID: "prj_7k2m9x4q1b"}},
+			"prj_7k2m9x4q1b", KindProjectUpdated,
+		},
+		{
+			"settings.set after another actor changed settings",
+			[]Operation{opJSON("settings.set", `{"background":"#0000FF"}`)},
+			[]Change{{Kind: KindSettingsUpdated, ID: "prj_7k2m9x4q1b"}},
+			"prj_7k2m9x4q1b", KindSettingsUpdated,
+		},
+		{
+			"settings.set does not conflict with a project rename",
+			[]Operation{opJSON("settings.set", `{"background":"#0000FF"}`)},
+			[]Change{{Kind: KindProjectUpdated, ID: "prj_7k2m9x4q1b"}},
+			"", "",
+		},
+		{
 			"settings, project and fonts are not referenced by id",
 			[]Operation{op(`{"item_id":"` + clipID + `","family":"Mine"}`)},
 			[]Change{

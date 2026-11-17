@@ -26,7 +26,9 @@ func Conflicts(ops []Operation, intervening []Change) *ConflictInfo {
 	changed := map[string]Change{}
 	for _, ch := range intervening {
 		coll, _, _ := strings.Cut(ch.Kind, ".")
-		collection := map[string]string{"asset": "assets", "track": "tracks", "item": "items"}[coll]
+		collection := map[string]string{
+			"asset": "assets", "track": "tracks", "item": "items", "project": "project", "settings": "settings",
+		}[coll]
 		if collection == "" {
 			continue
 		}
@@ -36,6 +38,13 @@ func Conflicts(ops []Operation, intervening []Change) *ConflictInfo {
 		}
 	}
 	for _, op := range ops {
+		if scope := projectScope(op.Op); scope != "" {
+			for _, ch := range intervening {
+				if strings.HasPrefix(ch.Kind, scope+".") {
+					return &ConflictInfo{Collection: scope, ID: ch.ID, Kind: ch.Kind}
+				}
+			}
+		}
 		for _, id := range referencedIDs(op.Args) {
 			collection := collectionOfPrefix(id)
 			if ch, ok := changed[collection+" "+id]; ok {
@@ -44,6 +53,18 @@ func Conflicts(ops []Operation, intervening []Change) *ConflictInfo {
 		}
 	}
 	return nil
+}
+
+// projectScope is the project-level object an operation writes without naming
+// it in its arguments: the project itself (name, markers) or its settings.
+func projectScope(op string) string {
+	switch {
+	case op == "project.rename" || strings.HasPrefix(op, "marker."):
+		return "project"
+	case strings.HasPrefix(op, "settings."):
+		return "settings"
+	}
+	return ""
 }
 
 // referencedIDs lists the identifiers of objects found anywhere in an

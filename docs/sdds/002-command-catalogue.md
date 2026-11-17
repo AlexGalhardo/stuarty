@@ -113,7 +113,7 @@ The primitives of one undo are applied together to a working copy, with no valid
 A batch request carries `base_revision`. The service decides:
 
 1. If `base_revision` equals the current revision: apply.
-2. If it is older: collect the diffs of the intervening batches issued by **other** actors. If any of them added, updated or removed an object that this batch refers to by identifier in its `args`, reject with `E_REVISION_CONFLICT`. Otherwise apply the batch to the current document; if an operation then fails (for example with `E_OVERLAP` because someone placed an item there), return that error.
+2. If it is older: collect the diffs of the intervening batches issued by **other** actors. If any of them added, updated or removed an object that this batch refers to by identifier in its `args`, or changed the project (name, markers) or its settings when the batch has a `project.rename`, `marker.*` or `settings.*` operation, reject with `E_REVISION_CONFLICT`. Otherwise apply the batch to the current document; if an operation then fails (for example with `E_OVERLAP` because someone placed an item there), return that error.
 3. If it is newer than the current revision: `E_VALIDATION`.
 
 `E_REVISION_CONFLICT` carries the current revision and the text diff from `base_revision` to it, so the caller can re-plan.

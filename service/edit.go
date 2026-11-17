@@ -449,9 +449,11 @@ func decodeDiff(raw json.RawMessage) []command.Change {
 
 // conflictAuthor is the first batch of another actor that touched the object.
 func conflictAuthor(rows []OperationRow, c *command.ConflictInfo) command.Touch {
+	kind, _, _ := strings.Cut(c.Kind, ".")
+
 	for i := range rows {
 		for _, ch := range decodeDiff(rows[i].Diff) {
-			if ch.ID == c.ID && strings.HasPrefix(ch.Kind, singular(c.Collection)+".") {
+			if ch.ID == c.ID && strings.HasPrefix(ch.Kind, kind+".") {
 				return command.Touch{Revision: rows[i].Revision, Actor: rows[i].Actor}
 			}
 		}
@@ -459,8 +461,6 @@ func conflictAuthor(rows []OperationRow, c *command.ConflictInfo) command.Touch 
 
 	return command.Touch{}
 }
-
-func singular(collection string) string { return strings.TrimSuffix(collection, "s") }
 
 // conflictText is the text of every batch in (base, current] from all actors:
 // a header "r<revision> <actor>" and the DescribeDiff lines of each, at most
