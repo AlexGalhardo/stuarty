@@ -1333,6 +1333,7 @@
         "choose": "Escolha uma mídia",
         "fill": "Preencher",
         "caption_hint": "Preencha um espaço de legenda com palavras pela CLI, MCP ou API.",
+        "row_unfilled": "este espaço obrigatório não foi preenchido",
         "unfilled": {
           "one": "{count} espaço obrigatório não foi preenchido",
           "other": "{count} espaços obrigatórios não foram preenchidos"

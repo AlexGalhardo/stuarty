@@ -157,11 +157,25 @@ export default function SlotsPanel(): ReactNode {
 						{t("ui.editor.slots.unfilled", { count: open.length })}
 					</p>
 					<ul>
-						{open.map((finding) => (
-							<li key={`${finding.item ?? ""}:${finding.message}`} lang="en">
-								<UntrustedText>{finding.message}</UntrustedText>
-							</li>
-						))}
+						{open.map((finding) => {
+							const slot =
+								finding.item === undefined
+									? undefined
+									: items?.[finding.item]?.slot?.name;
+							// The core's wording is English: the row names the slot in the language of the
+							// page, and the core's text stays only for a finding with no slot (VV-130).
+							return slot === undefined ? (
+								<li key={finding.message} lang="en">
+									<UntrustedText>{finding.message}</UntrustedText>
+								</li>
+							) : (
+								<li key={finding.item}>
+									<UntrustedText>{slot}</UntrustedText>
+									{": "}
+									{t("ui.editor.slots.row_unfilled")}
+								</li>
+							);
+						})}
 					</ul>
 				</div>
 			)}
