@@ -616,6 +616,8 @@ func TestValidationSaysWhatIsAccepted(t *testing.T) {
 		"type":  {"project_list", map[string]any{"limit": "ten"}, "expected integer"},
 		// VV-149: a numeric bound is named in the message.
 		"maximum": {"media_import", map[string]any{"project_id": made, "paths": []any{"a.mp4"}, "wait_ms": 120000}, "at most 25000"},
+		// VV-176: a missing required argument is named.
+		"required": {"project_get", map[string]any{}, "project_id"},
 	} {
 		text := textOf(t, call(t, cs, tc.tool, tc.args))
 
