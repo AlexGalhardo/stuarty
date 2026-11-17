@@ -58,3 +58,17 @@ export function bitmapKeyAt(
 	);
 	return layer.bitmaps.keys[layer.bitmaps.index[at] ?? 0];
 }
+
+// The colour matrix of a layer at a frame: the entry of `color_matrices` when
+// the plan carries one per frame (animated colour, SDD-004 section 3.5), else
+// the constant `color_matrix`.
+export function colorMatrixAt(
+	layer: PlanLayer,
+	frame: number,
+): number[] | null {
+	if (layer.kind !== "media") return null;
+	const series = layer.color_matrices;
+	if (series === undefined || series.length === 0) return layer.color_matrix;
+	const at = Math.min(Math.max(frame - layer.first, 0), series.length - 1);
+	return series[at] ?? null;
+}

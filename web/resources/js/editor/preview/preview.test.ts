@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from "vitest";
 
-import type { PlanLayer, PlanWindow } from "../api/types";
+import type { PlanLayer, PlanMediaLayer, PlanWindow } from "../api/types";
 import { bufferSize, fitScale, sizedScale, truthWidth } from "./fit";
 import { pixiColorMatrix } from "./layerFilters";
 import { Lru } from "./lru";
@@ -24,7 +24,13 @@ import {
 	type PausedFrameDeps,
 	TRUTH_DELAY_MS,
 } from "./pausedFrame";
-import { bitmapKeyAt, layersAt, mirrorSigns, valueAt } from "./planValue";
+import {
+	bitmapKeyAt,
+	colorMatrixAt,
+	layersAt,
+	mirrorSigns,
+	valueAt,
+} from "./planValue";
 import { PlanWindows, windowStart } from "./planWindows";
 
 const fps = { num: 30, den: 1 };
@@ -441,6 +447,31 @@ describe("plan matrices for PixiJS", () => {
 
 	test("a matrix of another size is refused", () => {
 		expect(() => pixiColorMatrix([1, 0, 0, 0])).toThrow("12 numbers");
+	});
+});
+
+describe("colour matrix at a frame", () => {
+	const m1 = [1, 0, 0, 0.1, 0, 1, 0, 0.1, 0, 0, 1, 0.1];
+	const m2 = [1, 0, 0, 0.2, 0, 1, 0, 0.2, 0, 0, 1, 0.2];
+
+	test("the constant matrix is used when the plan has no series", () => {
+		const layer = {
+			...(media("a", 10, 12) as PlanMediaLayer),
+			color_matrix: m1,
+		};
+		expect(colorMatrixAt(layer, 11)).toEqual(m1);
+	});
+
+	test("a series replaces it, one entry per frame from the first, null for neutral", () => {
+		const layer = {
+			...(media("a", 10, 12) as PlanMediaLayer),
+			color_matrix: null,
+			color_matrices: [null, m1, m2],
+		};
+		expect(colorMatrixAt(layer, 10)).toBeNull();
+		expect(colorMatrixAt(layer, 11)).toEqual(m1);
+		expect(colorMatrixAt(layer, 12)).toEqual(m2);
+		expect(colorMatrixAt(layer, 99)).toEqual(m2);
 	});
 });
 

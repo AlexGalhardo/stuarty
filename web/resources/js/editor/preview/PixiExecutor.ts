@@ -41,6 +41,7 @@ import {
 } from "./mediaSync";
 import {
 	bitmapKeyAt,
+	colorMatrixAt,
 	geometryOf,
 	layersAt,
 	mirrorSigns,
@@ -566,7 +567,7 @@ export class PixiExecutor implements PreviewExecutor {
 		} else {
 			entry.key = null;
 		}
-		entry.color = this.matrixFilter(entry.color, media?.color_matrix ?? null);
+		entry.color = this.matrixFilter(entry.color, colorMatrixAt(layer, frame));
 		entry.look = this.matrixFilter(entry.look, media?.filter ?? null);
 		// The blur is in project pixels; the stage scale is the output scale.
 		const sigma = (media?.blur ?? 0) * this.stage.scale.x;
