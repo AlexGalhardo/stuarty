@@ -1,6 +1,7 @@
-import { Diamond } from "lucide-react";
+import { Diamond, RotateCcw } from "lucide-react";
 import type { KeyboardEvent, ReactNode } from "react";
 
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useLocale } from "@/lib/i18n";
 import { localizeDecimalInput } from "../../commands/units";
@@ -24,6 +25,7 @@ export default function NumberField({
 	suffix,
 	placeholder,
 	marker,
+	reset,
 	disabled = false,
 }: {
 	label: string;
@@ -39,6 +41,9 @@ export default function NumberField({
 	placeholder?: string;
 	// The accessible name of the keyframe marker of an animated property.
 	marker?: string;
+	// Puts the property back to its default, beside the keyframe marker. Drawn
+	// only when given; `disabled` while the value already is the default.
+	reset?: { label: string; disabled: boolean; onReset(): void };
 	disabled?: boolean;
 }): ReactNode {
 	const locale = useLocale();
@@ -106,6 +111,19 @@ export default function NumberField({
 							data-keyframe-marker=""
 							className="size-3 shrink-0 fill-current text-ed-handle"
 						/>
+					)}
+					{reset !== undefined && (
+						<Button
+							type="button"
+							variant="ghost"
+							size="icon-xs"
+							aria-label={reset.label}
+							title={reset.label}
+							disabled={disabled || reset.disabled}
+							onClick={reset.onReset}
+						>
+							<RotateCcw aria-hidden="true" />
+						</Button>
 					)}
 				</div>
 			)}

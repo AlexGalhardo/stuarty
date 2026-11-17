@@ -1051,6 +1051,7 @@
           "opacity": "Opacidade"
         },
         "mixed": "Misto",
+        "reset_field": "Redefinir {name}",
         "keyframed": "Animado com quadros-chave",
         "color_picker": "{label}, seletor de cor",
         "alpha": "{label}, opacidade",
