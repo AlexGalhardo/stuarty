@@ -384,3 +384,29 @@ func TestVersionNeedsNoService(t *testing.T) {
 		t.Fatalf("version takes no argument, exit %d", code)
 	}
 }
+
+// VV-151: a not-found answer of a command that ran in process names the workspace it read.
+func TestNotFoundInProcessNamesTheWorkspace(t *testing.T) {
+	h := newHarness(t)
+	h.res.inProcess = true
+	h.svc.err = &service.Error{Code: command.CodeNotFound, Message: "the project does not exist."}
+
+	if code := h.run("project:show", "prj_0000000001"); code == 0 {
+		t.Fatal("expected a failure")
+	}
+
+	got := h.stderr.String()
+	for _, want := range []string{"/ws", "--workspace", "VUKEM_VIDEO_HOME"} {
+		if !strings.Contains(got, want) {
+			t.Errorf("stderr does not say %q: %q", want, got)
+		}
+	}
+
+	h.res.inProcess = false
+
+	h.run("project:show", "prj_0000000001")
+
+	if strings.Contains(h.stderr.String(), "--workspace") {
+		t.Errorf("a server answer must not carry the note: %q", h.stderr.String())
+	}
+}
