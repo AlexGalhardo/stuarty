@@ -25,7 +25,7 @@ Adds a shape item with the given size in pixels before scale. Colours are hex or
 | `start` | `string` | yes | A time with a unit: "12.5s", "375f" or "00:00:12.500" |
 | `stroke_color` | `string` | no | A colour; default #000000. |
 | `stroke_width` | `number` | no | Pixels, 0 or more. |
-| `track_id` | `string` | no | A visual track; omitted, the highest free one, or a new one on top. |
+| `track_id` | `string` | no | A visual track; omitted, the highest visual track free over the item (an empty track you made for video counts; pass track_id to keep it clear), or a new one on top. effective.track_id names it. |
 | `width` | `number` | yes | Pixels before scale, above 0. |
 | `x` | `number` | no |  |
 | `y` | `number` | no |  |

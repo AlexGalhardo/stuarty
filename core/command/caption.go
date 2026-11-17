@@ -28,7 +28,7 @@ func init() {
 }
 
 type captionAddArgs struct {
-	TrackID    string    `json:"track_id,omitempty"    desc:"A visual track; omitted, the highest free one, or a new one on top."`
+	TrackID    string    `json:"track_id,omitempty"    desc:"A visual track; omitted, the highest visual track free over the item (an empty track you made for video counts; pass track_id to keep it clear), or a new one on top. effective.track_id names it."`
 	Start      Time      `json:"start"`
 	Words      []WordArg `json:"words,omitempty"       desc:"Words with times relative to the caption, as lengths."`
 	Text       *string   `json:"text,omitempty"        desc:"Text to split on whitespace; needs duration."`

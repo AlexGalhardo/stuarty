@@ -280,7 +280,7 @@ export interface CaptionAddArgs {
    */
   text?: string;
   /**
-   * A visual track; omitted, the highest free one, or a new one on top.
+   * A visual track; omitted, the highest visual track free over the item (an empty track you made for video counts; pass track_id to keep it clear), or a new one on top. effective.track_id names it.
    */
   track_id?: string;
   /**
@@ -1976,7 +1976,7 @@ export interface ShapeAddArgs {
    */
   stroke_width?: number;
   /**
-   * A visual track; omitted, the highest free one, or a new one on top.
+   * A visual track; omitted, the highest visual track free over the item (an empty track you made for video counts; pass track_id to keep it clear), or a new one on top. effective.track_id names it.
    */
   track_id?: string;
   /**
@@ -2141,7 +2141,7 @@ export interface TextAddArgs {
    */
   text: string;
   /**
-   * A visual track; omitted, the highest free one, or a new one on top.
+   * A visual track; omitted, the highest visual track free over the item (an empty track you made for video counts; pass track_id to keep it clear), or a new one on top. effective.track_id names it.
    */
   track_id?: string;
   x?: number;

@@ -32,7 +32,7 @@ func init() {
 }
 
 type textAddArgs struct {
-	TrackID  string         `json:"track_id,omitempty" desc:"A visual track; omitted, the highest free one, or a new one on top."`
+	TrackID  string         `json:"track_id,omitempty" desc:"A visual track; omitted, the highest visual track free over the item (an empty track you made for video counts; pass track_id to keep it clear), or a new one on top. effective.track_id names it."`
 	Start    Time           `json:"start"`
 	Duration Time           `json:"duration"           desc:"A length of at least 1 frame."`
 	Text     string         `json:"text"               desc:"The text; line breaks are allowed."                                  min:"1" max:"2000"`
