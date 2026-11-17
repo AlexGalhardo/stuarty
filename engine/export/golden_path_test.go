@@ -23,7 +23,7 @@ func TestGoldenPathFFmpeg(t *testing.T) {
 	if err != nil {
 		t.Skip("no ffmpeg on the PATH")
 	}
-	in, err := ffmpeg.Discover(context.Background(), ffmpeg.Config{FFmpegPath: path, CPUCount: runtime.NumCPU()})
+	in, err := ffmpeg.Discover(context.Background(), ffmpeg.Config{FFmpegPath: path, CPUCount: runtime.NumCPU(), ToolsDir: os.Getenv("VUKEM_VIDEO_TEST_TOOLS_DIR")})
 	if err != nil {
 		t.Skipf("the FFmpeg on the PATH is not usable: %v", err)
 	}
