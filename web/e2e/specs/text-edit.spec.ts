@@ -1,5 +1,6 @@
 import type { APIRequestContext, Page } from "@playwright/test";
 import { caller, expect, seedProject, test } from "./helpers";
+import { openInspectorTab } from "./sections";
 
 interface Posted {
 	operations: { op: string; args: Record<string, unknown> }[];
@@ -181,6 +182,7 @@ test.describe("text-edit", () => {
 		const seeded = await seedText(request);
 		await page.goto(`/editor/${seeded.id}?debug=1`);
 		await page.locator("[data-item-id]").click();
+		await openInspectorTab(page, "Text");
 		const font = page.getByLabel("Font", { exact: true });
 		await expect(font.locator("option")).not.toHaveCount(1);
 		// The core refuses a family that lacks the default weight 700, so the test
@@ -216,6 +218,7 @@ test.describe("text-edit", () => {
 		const seeded = await seedText(request);
 		await page.goto(`/editor/${seeded.id}?debug=1`);
 		await page.locator("[data-item-id]").click();
+		await openInspectorTab(page, "Text");
 		const font = page.getByLabel("Font", { exact: true });
 		await expect(font.locator("option")).not.toHaveCount(1);
 		const call = await caller(request);
@@ -252,6 +255,7 @@ test.describe("text-edit", () => {
 		const seeded = await seedText(request);
 		await page.goto(`/editor/${seeded.id}?debug=1`);
 		await page.locator("[data-item-id]").click();
+		await openInspectorTab(page, "Text");
 		const font = page.getByLabel("Font", { exact: true });
 		await expect(font.locator("option")).not.toHaveCount(1);
 		const refetched: string[] = [];
@@ -292,6 +296,7 @@ test.describe("text-edit", () => {
 		const item = page.locator("[data-item-id]");
 		await expect(item).toContainText(payload);
 		await item.click();
+		await openInspectorTab(page, "Text");
 		await expect(page.getByLabel("Content")).toHaveValue(payload);
 		await item.dblclick();
 		await expect(page.getByTestId("inline-text-editor")).toHaveValue(payload);

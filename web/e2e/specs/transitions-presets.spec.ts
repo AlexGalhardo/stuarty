@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test";
 import { expect, seedProject, test } from "./helpers";
+import { openInspectorTab } from "./sections";
 
 interface Posted {
 	operations: { op: string; args: Record<string, unknown> }[];
@@ -112,6 +113,7 @@ test.describe("transitions-presets", () => {
 		await page.locator(`[data-item-id="${itemId}"]`).click();
 		const posted = recordEdits(page);
 
+		await openInspectorTab(page, "Animation");
 		await page.getByLabel("Preset", { exact: true }).selectOption("pop");
 		await page.getByLabel("Edge", { exact: true }).selectOption("out");
 		await page.getByRole("button", { name: "Apply" }).click();

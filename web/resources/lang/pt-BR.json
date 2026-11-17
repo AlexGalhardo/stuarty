@@ -1174,7 +1174,16 @@
         "caption_style_title": "Estilo da legenda",
         "use_track_style": "Usar o estilo da faixa",
         "brand_colors": "{label}, cores do kit de marca",
-        "brand_color_use": "Usar a cor de marca {name}"
+        "brand_color_use": "Usar a cor de marca {name}",
+        "tabs": "Propriedades",
+        "tab": {
+          "video": "Vídeo",
+          "audio": "Áudio",
+          "speed": "Velocidade",
+          "animation": "Animação",
+          "adjust": "Ajustes",
+          "text": "Texto"
+        }
       },
       "history": {
         "tab": "Histórico",

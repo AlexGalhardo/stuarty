@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test";
 import { expect, seedProject, silenceClip, test } from "./helpers";
+import { openInspectorTab } from "./sections";
 
 interface Posted {
 	operations: { op: string; args: Record<string, unknown> }[];
@@ -39,6 +40,7 @@ test.describe("clip-sections", () => {
 		await open(page, seeded.id);
 		const edits = recordEdits(page);
 
+		await openInspectorTab(page, "Audio");
 		const volume = page.getByLabel("Volume", { exact: true });
 		await volume.fill("2");
 		await volume.press("Enter");
@@ -50,6 +52,7 @@ test.describe("clip-sections", () => {
 		await page.getByLabel("Mute audio").check();
 		await expect.poll(() => edits.length).toBe(3);
 
+		await openInspectorTab(page, "Video");
 		await page.getByLabel("Fit", { exact: true }).selectOption("contain");
 		await expect.poll(() => edits.length).toBe(4);
 		const left = page.getByLabel("Crop left", { exact: true });
@@ -57,7 +60,11 @@ test.describe("clip-sections", () => {
 		await left.press("Enter");
 		await expect.poll(() => edits.length).toBe(5);
 
-		const speed = page.getByLabel("Speed", { exact: true });
+		await openInspectorTab(page, "Speed");
+		// The tab panel is named by its tab, so it is left out of the label match.
+		const speed = page
+			.getByRole("tabpanel")
+			.getByLabel("Speed", { exact: true });
 		await speed.fill("1.5");
 		await speed.press("Enter");
 		await expect.poll(() => edits.length).toBe(6);
@@ -90,7 +97,7 @@ test.describe("clip-sections", () => {
 				},
 			],
 		]);
-		await expect(page.getByLabel("Speed", { exact: true })).toHaveValue("2");
+		await expect(speed).toHaveValue("2");
 	});
 
 	test("the blend mode select sends clip.set_blend and shows the stored mode", async ({
@@ -188,6 +195,7 @@ test.describe("clip-sections", () => {
 		await open(page, seeded.id);
 		const edits = recordEdits(page);
 
+		await openInspectorTab(page, "Adjust");
 		const slider = page.getByLabel("Brightness", { exact: true });
 		await slider.scrollIntoViewIfNeeded();
 		const box = await slider.boundingBox();
@@ -240,6 +248,7 @@ test.describe("clip-sections", () => {
 			await route.continue();
 		});
 
+		await openInspectorTab(page, "Audio");
 		await page.getByRole("button", { name: "Remove silences" }).click();
 		const body = (await (await answered).json()) as {
 			revision: number;

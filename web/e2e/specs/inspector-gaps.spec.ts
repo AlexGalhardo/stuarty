@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test";
 import { expect, seedProject, test } from "./helpers";
+import { openInspectorTab } from "./sections";
 
 interface Operation {
 	op: string;
@@ -31,6 +32,7 @@ test.describe("inspector-gaps", () => {
 		await page.locator("[data-item-id]").click();
 		const ops = recordOps(page);
 
+		await openInspectorTab(page, "Audio");
 		const voice = page.getByLabel("Voice filter");
 		await expect(voice).toHaveValue("none");
 		await voice.selectOption({ label: "Warm" });
@@ -44,6 +46,7 @@ test.describe("inspector-gaps", () => {
 		await page.reload();
 		await expect(page.locator("[data-item-id]")).toHaveCount(1);
 		await page.locator("[data-item-id]").click();
+		await openInspectorTab(page, "Audio");
 		await expect(page.getByLabel("Voice filter")).toHaveValue("warm");
 	});
 

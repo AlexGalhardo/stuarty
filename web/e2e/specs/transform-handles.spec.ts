@@ -281,7 +281,7 @@ test.describe("transform-handles", () => {
 		await openSelected(page, seeded.id, itemId);
 		const posted = recordEdits(page);
 
-		const rotation = page.getByLabel("Rotation");
+		const rotation = page.getByLabel("Rotation", { exact: true });
 		await rotation.fill("15");
 		await rotation.press("Enter");
 
@@ -315,7 +315,7 @@ test.describe("transform-handles", () => {
 		await expect(items).toHaveCount(2);
 		await items.first().click();
 		await items.nth(1).click({ modifiers: ["Shift"] });
-		const rotation = page.getByLabel("Rotation");
+		const rotation = page.getByLabel("Rotation", { exact: true });
 		await expect(rotation).toHaveAttribute("placeholder", "Mixed");
 		const posted = recordEdits(page);
 

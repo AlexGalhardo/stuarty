@@ -8,3 +8,16 @@ export async function openSection(page: Page, name: string): Promise<void> {
 		await header.click();
 	}
 }
+
+// Shows a tab of the inspector strip (SDD-012 section 6.4): the sections of a
+// clip are spread over Video, Audio, Speed, Animation, Adjust and Text. The tab
+// is kept across selections, so a spec that changes selection opens it again.
+export async function openInspectorTab(
+	page: Page,
+	name: string,
+): Promise<void> {
+	const tab = page
+		.getByRole("tablist", { name: /^(Properties|Propriedades)$/ })
+		.getByRole("tab", { name, exact: true });
+	await tab.click();
+}

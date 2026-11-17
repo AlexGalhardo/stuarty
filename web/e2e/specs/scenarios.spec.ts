@@ -272,7 +272,7 @@ test.describe("prototype-reference", () => {
 
 		// 3. Add a caption.
 		await page.getByRole("button", { name: "Add caption" }).click();
-		await page.getByLabel("Text").fill("Launch day");
+		await page.getByRole("dialog").getByLabel("Text").fill("Launch day");
 		await page
 			.getByRole("dialog")
 			.getByRole("button", { name: "Add caption" })

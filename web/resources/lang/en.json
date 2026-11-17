@@ -1174,7 +1174,16 @@
         "caption_style_title": "Caption style",
         "use_track_style": "Use track style",
         "brand_colors": "{label}, brand kit colours",
-        "brand_color_use": "Use brand colour {name}"
+        "brand_color_use": "Use brand colour {name}",
+        "tabs": "Properties",
+        "tab": {
+          "video": "Video",
+          "audio": "Audio",
+          "speed": "Speed",
+          "animation": "Animation",
+          "adjust": "Adjust",
+          "text": "Text"
+        }
       },
       "history": {
         "tab": "History",
