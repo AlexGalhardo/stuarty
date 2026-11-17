@@ -35,8 +35,8 @@ type effectArgs struct {
 }
 
 type clipEffectsArgs struct {
-	ItemID  string       `json:"item_id" desc:"A clip."`
-	Effects []effectArgs `json:"effects" desc:"The effects in order, up to 6, each kind once; [] removes them all." maxitems:"6"`
+	ItemID  string       `json:"item_id" desc:"A clip."                                                             pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	Effects []effectArgs `json:"effects" desc:"The effects in order, up to 6, each kind once; [] removes them all."                                                        maxitems:"6"`
 }
 
 // effectDefaults are the values a parameter takes when it is left out (SDD-004 §3.13).

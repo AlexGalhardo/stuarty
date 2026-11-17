@@ -16,10 +16,10 @@ Sets the start of the item, its track, or both; at least one is required. Keyfra
 
 | Argument | Type | Required | Notes |
 | --- | --- | --- | --- |
-| `item_id` | `string` | yes |  |
+| `item_id` | `string` | yes | pattern `^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
 | `slide` | `boolean` | no | Slide edit: the neighbours that touch the item keep touching it, the one before ends and the one after starts where the item now does. Needs start; not with track_id. |
 | `start` | `string` | no | The new absolute position of the first frame. |
-| `track_id` | `string` | no | A track that accepts the item type. |
+| `track_id` | `string` | no | A track that accepts the item type.; pattern `^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
 
 ## Errors
 

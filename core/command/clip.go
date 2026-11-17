@@ -21,13 +21,13 @@ func init() {
 }
 
 type clipAddArgs struct {
-	TrackID  string `json:"track_id"            desc:"A visual track."`
-	AssetID  string `json:"asset_id"            desc:"A video or image asset, or ast_placeholder in a template."`
+	TrackID  string `json:"track_id"            desc:"A visual track."                                              pattern:"^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	AssetID  string `json:"asset_id"            desc:"A video or image asset, or ast_placeholder in a template."    pattern:"^ast_([0123456789abcdefghjkmnpqrstvwxyz]{10}|placeholder)$"`
 	Start    Time   `json:"start"               desc:"Absolute position."`
 	SourceIn Time   `json:"source_in,omitempty" desc:"Offset into the asset; default 0s; omit for an image."`
 	Duration Time   `json:"duration,omitempty"  desc:"A length; default the rest of the asset, or 5s for an image."`
-	Fit      string `json:"fit,omitempty"                                                                           enum:"cover,contain,none"`
-	ID       string `json:"id,omitempty"`
+	Fit      string `json:"fit,omitempty"                                                                                                                                                enum:"cover,contain,none"`
+	ID       string `json:"id,omitempty"                                                                            pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
 }
 
 func applyClipAdd(c *Context, a *clipAddArgs) error {

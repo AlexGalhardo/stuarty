@@ -3,9 +3,11 @@
   "additionalProperties": false,
   "properties": {
     "above": {
+      "pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
       "type": "string"
     },
     "below": {
+      "pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
       "type": "string"
     },
     "position": {
@@ -16,6 +18,7 @@
       "type": "string"
     },
     "track_id": {
+      "pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
       "type": "string"
     }
   },

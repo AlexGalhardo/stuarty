@@ -44,20 +44,20 @@ func init() {
 }
 
 type markerAddArgs struct {
-	ItemID string `json:"item_id,omitempty" desc:"An item to mark instead of the timeline; at must then fall inside it." pattern:"^itm_[0-9a-hjkmnp-tv-z]{10}$"`
+	ItemID string `json:"item_id,omitempty" desc:"An item to mark instead of the timeline; at must then fall inside it." pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
 	At     Time   `json:"at"                desc:"The position on the timeline."`
-	Label  string `json:"label,omitempty"   desc:"Up to 60 characters; default none."                                                                           max:"60"`
+	Label  string `json:"label,omitempty"   desc:"Up to 60 characters; default none."                                                                                           max:"60"`
 }
 
 type markerSetArgs struct {
-	ItemID string  `json:"item_id,omitempty" desc:"The item that holds the marker; at and to fall inside it." pattern:"^itm_[0-9a-hjkmnp-tv-z]{10}$"`
+	ItemID string  `json:"item_id,omitempty" desc:"The item that holds the marker; at and to fall inside it." pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
 	At     Time    `json:"at"                desc:"The position of the marker to change."`
 	To     Time    `json:"to,omitempty"      desc:"The new position."`
-	Label  *string `json:"label,omitempty"   desc:"The new label, up to 60 characters; \"\" removes it."                                             max:"60"`
+	Label  *string `json:"label,omitempty"   desc:"The new label, up to 60 characters; \"\" removes it."                                                             max:"60"`
 }
 
 type markerRemoveArgs struct {
-	ItemID string `json:"item_id,omitempty" desc:"The item that holds the marker; all then clears its markers." pattern:"^itm_[0-9a-hjkmnp-tv-z]{10}$"`
+	ItemID string `json:"item_id,omitempty" desc:"The item that holds the marker; all then clears its markers." pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
 	At     Time   `json:"at,omitempty"      desc:"The position of the marker to remove."`
 	All    *bool  `json:"all,omitempty"     desc:"true removes every marker, instead of at."`
 }

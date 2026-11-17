@@ -5,6 +5,7 @@
     "item_ids": {
       "description": "Exactly two distinct captions of one track, in any order.",
       "items": {
+        "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
         "type": "string"
       },
       "type": "array"

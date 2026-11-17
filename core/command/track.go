@@ -139,10 +139,10 @@ func (c *Context) visualTrackFor(given string, start, length int) (track string,
 type trackAddArgs struct {
 	Kind     string `json:"kind"               enum:"visual,audio"`
 	Name     string `json:"name,omitempty"                         max:"60"`
-	ID       string `json:"id,omitempty"`
-	Position string `json:"position,omitempty" enum:"top,bottom"            desc:"top (default) or bottom."`
-	Above    string `json:"above,omitempty"                                 desc:"Place the track directly over this track."`
-	Below    string `json:"below,omitempty"                                 desc:"Place the track directly under this track."`
+	ID       string `json:"id,omitempty"                                    pattern:"^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	Position string `json:"position,omitempty" enum:"top,bottom"                                                                   desc:"top (default) or bottom."`
+	Above    string `json:"above,omitempty"                                 pattern:"^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$" desc:"Place the track directly over this track."`
+	Below    string `json:"below,omitempty"                                 pattern:"^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$" desc:"Place the track directly under this track."`
 }
 
 func applyTrackAdd(c *Context, a *trackAddArgs) error {
@@ -194,14 +194,14 @@ func applyTrackAdd(c *Context, a *trackAddArgs) error {
 }
 
 type trackUpdateArgs struct {
-	TrackID string   `json:"track_id"`
-	Name    *string  `json:"name,omitempty"   max:"60" desc:"The track name; \"\" clears it."`
-	Hidden  *bool    `json:"hidden,omitempty"          desc:"Visual tracks only."`
+	TrackID string   `json:"track_id"         pattern:"^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	Name    *string  `json:"name,omitempty"                                                          max:"60" desc:"The track name; \"\" clears it."`
+	Hidden  *bool    `json:"hidden,omitempty"                                                                 desc:"Visual tracks only."`
 	Muted   *bool    `json:"muted,omitempty"`
-	Locked  *bool    `json:"locked,omitempty"          desc:"true refuses every edit of the items of the track until it is false again."`
-	Solo    *bool    `json:"solo,omitempty"            desc:"true plays only the soloed tracks (the picture of visual tracks, the sound of all)."`
-	Magnet  *bool    `json:"magnet,omitempty"          desc:"true keeps the items of the track packed from frame 0 with no gap, closing the gaps now and after every edit."`
-	Volume  *float64 `json:"volume,omitempty" max:"4"  desc:"Factor on the volume of the items of the track, 0 to 4; 1 is neutral."                                         min:"0"`
+	Locked  *bool    `json:"locked,omitempty"                                                                 desc:"true refuses every edit of the items of the track until it is false again."`
+	Solo    *bool    `json:"solo,omitempty"                                                                   desc:"true plays only the soloed tracks (the picture of visual tracks, the sound of all)."`
+	Magnet  *bool    `json:"magnet,omitempty"                                                                 desc:"true keeps the items of the track packed from frame 0 with no gap, closing the gaps now and after every edit."`
+	Volume  *float64 `json:"volume,omitempty"                                                        max:"4"  desc:"Factor on the volume of the items of the track, 0 to 4; 1 is neutral."                                         min:"0"`
 }
 
 func applyTrackUpdate(c *Context, a *trackUpdateArgs) error {
@@ -269,10 +269,10 @@ func applyTrackUpdate(c *Context, a *trackUpdateArgs) error {
 }
 
 type trackMoveArgs struct {
-	TrackID  string `json:"track_id"`
-	Position string `json:"position,omitempty" enum:"top,bottom"`
-	Above    string `json:"above,omitempty"`
-	Below    string `json:"below,omitempty"`
+	TrackID  string `json:"track_id"           pattern:"^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	Position string `json:"position,omitempty"                                                        enum:"top,bottom"`
+	Above    string `json:"above,omitempty"    pattern:"^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	Below    string `json:"below,omitempty"    pattern:"^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
 }
 
 func applyTrackMove(c *Context, a *trackMoveArgs) error {
@@ -329,8 +329,8 @@ func applyTrackMove(c *Context, a *trackMoveArgs) error {
 }
 
 type trackRemoveArgs struct {
-	TrackID   string `json:"track_id"`
-	WithItems bool   `json:"with_items,omitempty" desc:"Remove the items of the track too."`
+	TrackID   string `json:"track_id"             pattern:"^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	WithItems bool   `json:"with_items,omitempty"                                                        desc:"Remove the items of the track too."`
 }
 
 func applyTrackRemove(c *Context, a *trackRemoveArgs) error {
@@ -364,9 +364,9 @@ func applyTrackRemove(c *Context, a *trackRemoveArgs) error {
 }
 
 type trackCaptionStyleArgs struct {
-	TrackID string         `json:"track_id"`
-	Style   map[string]any `json:"style"             schema:"caption_style_merge" desc:"A partial CaptionStyle; null removes a key when merging."`
-	Replace bool           `json:"replace,omitempty"                              desc:"Replace the whole style instead of merging."`
+	TrackID string         `json:"track_id"          pattern:"^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	Style   map[string]any `json:"style"                                                                    schema:"caption_style_merge" desc:"A partial CaptionStyle; null removes a key when merging."`
+	Replace bool           `json:"replace,omitempty"                                                                                     desc:"Replace the whole style instead of merging."`
 }
 
 func applyTrackSetCaptionStyle(c *Context, a *trackCaptionStyleArgs) error {

@@ -3,6 +3,7 @@
   "additionalProperties": false,
   "properties": {
     "item_id": {
+      "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
       "type": "string"
     }
   },

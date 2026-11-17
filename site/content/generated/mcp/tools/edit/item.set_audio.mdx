@@ -20,7 +20,7 @@ Sets the given values. Volume 1, fades of 0, audio_muted false, denoise 0 and vo
 | `denoise` | `number` | no | Noise reduction strength, 0 (off) to 1.; min 0; max 1 |
 | `fade_in` | `string` | no | Fade-in length; 0s removes it. |
 | `fade_out` | `string` | no | Fade-out length; 0s removes it. |
-| `item_id` | `string` | yes | A clip or audio item. |
+| `item_id` | `string` | yes | A clip or audio item.; pattern `^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
 | `voice` | `none`, `clear`, `warm`, `deep`, `bright`, `radio` | no | Voice preset: none (default), clear, warm, deep, bright or radio. |
 | `volume` | `number` | no | Linear gain, 0 to 4.; min 0; max 4 |
 

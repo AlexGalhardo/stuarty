@@ -16,7 +16,7 @@ Sets source_in, the offset into the asset where the item starts reading (a slip 
 
 | Argument | Type | Required | Notes |
 | --- | --- | --- | --- |
-| `item_id` | `string` | yes | A clip or audio item of a video or audio asset. |
+| `item_id` | `string` | yes | A clip or audio item of a video or audio asset.; pattern `^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
 | `source_in` | `string` | yes | The new offset into the asset where the item starts reading. |
 
 ## Errors

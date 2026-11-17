@@ -16,7 +16,7 @@ Removes the track. A track with items is refused with E_NOT_EMPTY unless with_it
 
 | Argument | Type | Required | Notes |
 | --- | --- | --- | --- |
-| `track_id` | `string` | yes |  |
+| `track_id` | `string` | yes | pattern `^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
 | `with_items` | `boolean` | no | Remove the items of the track too. |
 
 ## Errors

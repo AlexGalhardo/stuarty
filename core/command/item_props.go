@@ -59,8 +59,8 @@ func init() {
 }
 
 type itemRenameArgs struct {
-	ItemID string `json:"item_id" desc:"The item to label."`
-	Name   string `json:"name"    desc:"The label, 0 to 120 characters; empty clears it." min:"0" max:"120"`
+	ItemID string `json:"item_id" desc:"The item to label."                               pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	Name   string `json:"name"    desc:"The label, 0 to 120 characters; empty clears it."                                                        min:"0" max:"120"`
 }
 
 func applyItemRename(c *Context, a *itemRenameArgs) error {
@@ -80,12 +80,12 @@ func applyItemRename(c *Context, a *itemRenameArgs) error {
 func isVisual(t timeline.ItemType) bool { return t != timeline.ItemAudio }
 
 type itemTransformArgs struct {
-	ItemID   string   `json:"item_id"            desc:"A clip, text, caption or shape item."`
+	ItemID   string   `json:"item_id"            desc:"A clip, text, caption or shape item."          pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
 	X        *float64 `json:"x,omitempty"        desc:"Centre of the item in pixels."`
 	Y        *float64 `json:"y,omitempty"        desc:"Centre of the item in pixels."`
-	Scale    *float64 `json:"scale,omitempty"    desc:"Uniform scale, greater than 0 and at most 20." max:"20"`
+	Scale    *float64 `json:"scale,omitempty"    desc:"Uniform scale, greater than 0 and at most 20."                                                        max:"20"`
 	Rotation *float64 `json:"rotation,omitempty" desc:"Degrees clockwise."`
-	Opacity  *float64 `json:"opacity,omitempty"  desc:"0 to 1."                                       max:"1"  min:"0"`
+	Opacity  *float64 `json:"opacity,omitempty"  desc:"0 to 1."                                                                                              max:"1"  min:"0"`
 }
 
 // maxMagnitude bounds every position, size and angle a command accepts. Far below the
@@ -207,12 +207,12 @@ var transitionKinds = []string{
 }
 
 type itemTransitionArgs struct {
-	ItemID    string `json:"item_id"             desc:"A clip, text, caption or shape item."`
-	Edge      string `json:"edge"                desc:"The edge: in or out."                                                                                               enum:"in,out"`
-	Kind      any    `json:"kind"                desc:"fade, slide_left, slide_right, slide_up, slide_down, zoom, whip, dip, wipe, spin, shrink, grow, or null to remove."                           schema:"transition_kind"`
+	ItemID    string `json:"item_id"             desc:"A clip, text, caption or shape item."                                                                               pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	Edge      string `json:"edge"                desc:"The edge: in or out."                                                                                                                                                      enum:"in,out"`
+	Kind      any    `json:"kind"                desc:"fade, slide_left, slide_right, slide_up, slide_down, zoom, whip, dip, wipe, spin, shrink, grow, or null to remove."                                                                                  schema:"transition_kind"`
 	Duration  *Time  `json:"duration,omitempty"  desc:"Length of the transition, at least 1 frame; default 0.5s."`
-	Color     string `json:"color,omitempty"     desc:"dip only: #RRGGBB, default #000000."                                                                                                                                   pattern:"^#[0-9A-Fa-f]{6}$"`
-	Direction string `json:"direction,omitempty" desc:"whip and wipe only: left (default), right, up or down."                                                             enum:"left,right,up,down"`
+	Color     string `json:"color,omitempty"     desc:"dip only: #RRGGBB, default #000000."                                                                                pattern:"^#[0-9A-Fa-f]{6}$"`
+	Direction string `json:"direction,omitempty" desc:"whip and wipe only: left (default), right, up or down."                                                                                                                    enum:"left,right,up,down"`
 }
 
 // checkTransitionParams refuses a colour on anything but a dip, and a direction on anything but a
@@ -315,13 +315,13 @@ func applyItemSetTransition(c *Context, a *itemTransitionArgs) error {
 }
 
 type itemAudioArgs struct {
-	ItemID     string   `json:"item_id"               desc:"A clip or audio item."`
-	Volume     *float64 `json:"volume,omitempty"      desc:"Linear gain, 0 to 4."                                              min:"0" max:"4"`
+	ItemID     string   `json:"item_id"               desc:"A clip or audio item."                                             pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	Volume     *float64 `json:"volume,omitempty"      desc:"Linear gain, 0 to 4."                                                                                                     min:"0" max:"4"`
 	FadeIn     *Time    `json:"fade_in,omitempty"     desc:"Fade-in length; 0s removes it."`
 	FadeOut    *Time    `json:"fade_out,omitempty"    desc:"Fade-out length; 0s removes it."`
 	AudioMuted *bool    `json:"audio_muted,omitempty" desc:"Drop the audio of a clip."`
-	Denoise    *float64 `json:"denoise,omitempty"     desc:"Noise reduction strength, 0 (off) to 1."                           min:"0" max:"1"`
-	Voice      *string  `json:"voice,omitempty"       desc:"Voice preset: none (default), clear, warm, deep, bright or radio."                 enum:"none,clear,warm,deep,bright,radio"`
+	Denoise    *float64 `json:"denoise,omitempty"     desc:"Noise reduction strength, 0 (off) to 1."                                                                                  min:"0" max:"1"`
+	Voice      *string  `json:"voice,omitempty"       desc:"Voice preset: none (default), clear, warm, deep, bright or radio."                                                                        enum:"none,clear,warm,deep,bright,radio"`
 }
 
 func applyItemSetAudio(c *Context, a *itemAudioArgs) error {

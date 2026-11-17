@@ -18,7 +18,7 @@ Sets the value of x, y, scale, rotation, opacity, (clips and audio) volume or (c
 | --- | --- | --- | --- |
 | `at` | `string` | yes | Position on the project timeline, from the item start to its end inclusive. |
 | `easing` | `linear`, `ease_in`, `ease_out`, `ease_in_out`, `hold` | no | From this keyframe to the next. Default linear. |
-| `item_id` | `string` | yes |  |
+| `item_id` | `string` | yes | pattern `^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
 | `property` | `string`, one of 12 values | yes |  |
 | `value` | `number` | yes | Valid for the property: scale above 0 up to 20, opacity 0 to 1, volume 0 to 4. |
 

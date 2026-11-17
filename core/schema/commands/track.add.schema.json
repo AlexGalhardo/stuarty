@@ -4,13 +4,16 @@
   "properties": {
     "above": {
       "description": "Place the track directly over this track.",
+      "pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
       "type": "string"
     },
     "below": {
       "description": "Place the track directly under this track.",
+      "pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
       "type": "string"
     },
     "id": {
+      "pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
       "type": "string"
     },
     "kind": {

@@ -17,7 +17,7 @@ Makes the pixels near a colour transparent. similarity (0 to 1, default 0.3) is 
 | Argument | Type | Required | Notes |
 | --- | --- | --- | --- |
 | `color` | `string` or `null` | yes | The colour to remove, #RRGGBB, or null to remove the key.; pattern `(^#([0-9A-Fa-f]{6}\|[0-9A-Fa-f]{8})$)\|(^\\$[a-z][a-z0-9_]{0,39}$)` |
-| `item_id` | `string` | yes | A clip. |
+| `item_id` | `string` | yes | A clip.; pattern `^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
 | `similarity` | `number` | no | 0 to 1; default 0.3, or the current value.; min 0; max 1 |
 | `smoothness` | `number` | no | 0 to 1; default 0.1, or the current value.; min 0; max 1 |
 | `spill` | `number` | no | 0 to 1; default 0, or the current value.; min 0; max 1 |

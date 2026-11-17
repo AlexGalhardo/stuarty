@@ -17,9 +17,9 @@ The item that leaves gets a fade transition out and the item that arrives a fade
 | Argument | Type | Required | Notes |
 | --- | --- | --- | --- |
 | `duration` | `string` | yes | Length of the crossfade, at least 1 frame. |
-| `from_item_id` | `string` | yes | The item that leaves. |
-| `to_item_id` | `string` | yes | The item that arrives. |
-| `track_id` | `string` | no | Only for two neighbours that touch on one track: another visual track the arriving item moves to. |
+| `from_item_id` | `string` | yes | The item that leaves.; pattern `^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
+| `to_item_id` | `string` | yes | The item that arrives.; pattern `^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
+| `track_id` | `string` | no | Only for two neighbours that touch on one track: another visual track the arriving item moves to.; pattern `^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
 
 ## Errors
 

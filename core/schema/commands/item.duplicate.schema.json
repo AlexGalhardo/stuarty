@@ -4,10 +4,12 @@
   "properties": {
     "item_id": {
       "description": "The item to copy.",
+      "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
       "type": "string"
     },
     "new_id": {
       "description": "The id of the copy.",
+      "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
       "type": "string"
     },
     "start": {
@@ -17,6 +19,7 @@
     },
     "track_id": {
       "description": "The track of the copy; default the source's track.",
+      "pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
       "type": "string"
     }
   },

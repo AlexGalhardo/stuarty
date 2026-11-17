@@ -16,7 +16,7 @@ Sets a mask in the item's own frame: x, y, width and height are fractions of the
 
 | Argument | Type | Required | Notes |
 | --- | --- | --- | --- |
-| `item_id` | `string` | yes | A visual item. |
+| `item_id` | `string` | yes | A visual item.; pattern `^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
 | `mask` | `object` or `null` | yes | The mask, or null to remove it. |
 
 ## Errors

@@ -18,7 +18,7 @@ func init() {
 }
 
 type itemEnabledArgs struct {
-	ItemID  string `json:"item_id" desc:"Any item."`
+	ItemID  string `json:"item_id" desc:"Any item."                                   pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
 	Enabled *bool  `json:"enabled" desc:"false turns the item off, true turns it on."`
 }
 

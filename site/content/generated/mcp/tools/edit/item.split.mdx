@@ -17,8 +17,8 @@ The original item keeps its id and becomes the left part; a new item is the righ
 | Argument | Type | Required | Notes |
 | --- | --- | --- | --- |
 | `at` | `string` | yes | Absolute position strictly inside the item. |
-| `item_id` | `string` | yes |  |
-| `new_id` | `string` | no | The id of the right part. |
+| `item_id` | `string` | yes | pattern `^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
+| `new_id` | `string` | no | The id of the right part.; pattern `^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
 | `new_ids` | array of `string` | no | The ids of the right parts of the linked items that the split cuts, in the order of the ids of those items. |
 
 ## Errors

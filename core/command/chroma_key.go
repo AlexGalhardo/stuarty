@@ -28,11 +28,11 @@ func init() {
 }
 
 type clipChromaKeyArgs struct {
-	ItemID     string   `json:"item_id"              desc:"A clip."`
-	Color      any      `json:"color"                desc:"The colour to remove, #RRGGBB, or null to remove the key." schema:"chroma_color"`
-	Similarity *float64 `json:"similarity,omitempty" desc:"0 to 1; default 0.3, or the current value."                                      min:"0" max:"1"`
-	Smoothness *float64 `json:"smoothness,omitempty" desc:"0 to 1; default 0.1, or the current value."                                      min:"0" max:"1"`
-	Spill      *float64 `json:"spill,omitempty"      desc:"0 to 1; default 0, or the current value."                                        min:"0" max:"1"`
+	ItemID     string   `json:"item_id"              desc:"A clip."                                                   pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	Color      any      `json:"color"                desc:"The colour to remove, #RRGGBB, or null to remove the key."                                                        schema:"chroma_color"`
+	Similarity *float64 `json:"similarity,omitempty" desc:"0 to 1; default 0.3, or the current value."                                                                                             min:"0" max:"1"`
+	Smoothness *float64 `json:"smoothness,omitempty" desc:"0 to 1; default 0.1, or the current value."                                                                                             min:"0" max:"1"`
+	Spill      *float64 `json:"spill,omitempty"      desc:"0 to 1; default 0, or the current value."                                                                                               min:"0" max:"1"`
 }
 
 func applyClipSetChromaKey(c *Context, a *clipChromaKeyArgs) error {

@@ -21,12 +21,12 @@ func init() {
 }
 
 type audioAddArgs struct {
-	TrackID  string `json:"track_id"            desc:"An audio track."`
-	AssetID  string `json:"asset_id"            desc:"An audio asset, a video asset with audio, or ast_placeholder in a template."`
+	TrackID  string `json:"track_id"            desc:"An audio track."                                                             pattern:"^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	AssetID  string `json:"asset_id"            desc:"An audio asset, a video asset with audio, or ast_placeholder in a template." pattern:"^ast_([0123456789abcdefghjkmnpqrstvwxyz]{10}|placeholder)$"`
 	Start    Time   `json:"start"               desc:"Absolute position."`
 	SourceIn Time   `json:"source_in,omitempty" desc:"Offset into the asset; default 0s."`
 	Duration Time   `json:"duration,omitempty"  desc:"A length; default the rest of the asset."`
-	ID       string `json:"id,omitempty"`
+	ID       string `json:"id,omitempty"                                                                                           pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
 }
 
 func applyAudioAdd(c *Context, a *audioAddArgs) error {

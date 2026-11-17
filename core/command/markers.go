@@ -34,9 +34,9 @@ type ResolvedBeats struct {
 }
 
 type markBeatsArgs struct {
-	ItemID   string         `json:"item_id"            desc:"An audio item of an audio asset, or of a video asset with audio."`
-	Every    int            `json:"every,omitempty"    desc:"Mark every nth beat of the visible part, from the first; default 1."              min:"1" max:"64"`
-	Label    string         `json:"label,omitempty"    desc:"Label of every marker, up to 60 characters; default none."                                max:"60"`
+	ItemID   string         `json:"item_id"            desc:"An audio item of an audio asset, or of a video asset with audio."                 pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	Every    int            `json:"every,omitempty"    desc:"Mark every nth beat of the visible part, from the first; default 1."                                                                     min:"1" max:"64"`
+	Label    string         `json:"label,omitempty"    desc:"Label of every marker, up to 60 characters; default none."                                                                                       max:"60"`
 	Replace  *bool          `json:"replace,omitempty"  desc:"true (default) replaces the item's markers; false keeps them and adds the beats."`
 	Resolved *ResolvedBeats `json:"resolved,omitempty" desc:"Filled by the service from the beat grid of the asset; never sent by a caller."`
 }

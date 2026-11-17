@@ -16,7 +16,7 @@ Sets the Gaussian blur radius in pixels at project resolution, 0 to 100; 0 remov
 
 | Argument | Type | Required | Notes |
 | --- | --- | --- | --- |
-| `item_id` | `string` | yes | A clip, text, caption or shape item. |
+| `item_id` | `string` | yes | A clip, text, caption or shape item.; pattern `^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
 | `radius` | `number` | yes | Blur radius in pixels, 0 to 100; 0 removes the blur.; min 0; max 100 |
 
 ## Errors

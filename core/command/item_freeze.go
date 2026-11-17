@@ -25,11 +25,11 @@ func init() {
 }
 
 type itemFreezeArgs struct {
-	ItemID   string `json:"item_id"             desc:"A clip of a video asset."`
+	ItemID   string `json:"item_id"             desc:"A clip of a video asset."                              pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
 	At       Time   `json:"at"                  desc:"Absolute frame inside the clip whose picture is held."`
 	Duration Time   `json:"duration,omitempty"  desc:"How long the frame is held; default 3s."`
-	FreezeID string `json:"freeze_id,omitempty" desc:"Id for the freeze frame item."`
-	NewID    string `json:"new_id,omitempty"    desc:"Id for the right part of the split."`
+	FreezeID string `json:"freeze_id,omitempty" desc:"Id for the freeze frame item."                         pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	NewID    string `json:"new_id,omitempty"    desc:"Id for the right part of the split."                   pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
 }
 
 func applyItemFreezeFrame(c *Context, a *itemFreezeArgs) error {

@@ -4,6 +4,7 @@
   "properties": {
     "item_id": {
       "description": "The item to label.",
+      "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
       "type": "string"
     },
     "name": {

@@ -4,11 +4,13 @@
   "properties": {
     "id": {
       "description": "The id of the link group, lnk_ and 10 characters; generated when omitted.",
+      "pattern": "^lnk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
       "type": "string"
     },
     "item_ids": {
       "description": "The items to link, 2 to 20.",
       "items": {
+        "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
         "type": "string"
       },
       "type": "array"

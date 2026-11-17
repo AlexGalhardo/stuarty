@@ -9,6 +9,7 @@
     },
     "item_id": {
       "description": "An item to mark instead of the timeline; at must then fall inside it.",
+      "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
       "type": "string"
     },
     "label": {

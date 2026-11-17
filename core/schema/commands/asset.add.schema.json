@@ -41,6 +41,7 @@
           "type": "boolean"
         },
         "hash": {
+          "pattern": "^sha256:[0-9a-f]{64}$",
           "type": "string"
         },
         "height": {
@@ -48,6 +49,7 @@
           "type": "integer"
         },
         "id": {
+          "pattern": "^ast_[0-9a-hjkmnp-tv-z]{10}$",
           "type": "string"
         },
         "kind": {

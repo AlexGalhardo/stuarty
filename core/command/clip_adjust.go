@@ -43,8 +43,8 @@ type cropArgs struct {
 }
 
 type clipFramingArgs struct {
-	ItemID string    `json:"item_id"        desc:"A clip."`
-	Fit    string    `json:"fit,omitempty"  desc:"cover (default), contain or none."                                  enum:"cover,contain,none"`
+	ItemID string    `json:"item_id"        desc:"A clip."                                                            pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	Fit    string    `json:"fit,omitempty"  desc:"cover (default), contain or none."                                                                                         enum:"cover,contain,none"`
 	Crop   *cropArgs `json:"crop,omitempty" desc:"Sides to crop, fractions 0 to 1; sides not given keep their value."`
 }
 
@@ -171,16 +171,16 @@ func cropMap(cr *timeline.Crop) map[string]any {
 }
 
 type clipColorArgs struct {
-	ItemID       string        `json:"item_id"                 desc:"A clip."`
-	Brightness   *float64      `json:"brightness,omitempty"    desc:"-1 to 1; default 0."                                                                          min:"-1"   max:"1"`
-	Contrast     *float64      `json:"contrast,omitempty"      desc:"0 to 2; default 1."                                                                           min:"0"    max:"2"`
-	Saturation   *float64      `json:"saturation,omitempty"    desc:"0 to 2; default 1."                                                                           min:"0"    max:"2"`
-	Temperature  *float64      `json:"temperature,omitempty"   desc:"-1 (cooler) to 1 (warmer); default 0."                                                        min:"-1"   max:"1"`
-	Tint         *float64      `json:"tint,omitempty"          desc:"-1 (greener) to 1 (more magenta); default 0."                                                 min:"-1"   max:"1"`
-	Hue          *float64      `json:"hue,omitempty"           desc:"-180 to 180 degrees; default 0."                                                              min:"-180" max:"180"`
-	LutAsset     string        `json:"lut_asset,omitempty"     desc:"Id of a lut asset to grade the clip with."`
-	LutIntensity *float64      `json:"lut_intensity,omitempty" desc:"0 to 1; default 1; 0 removes the lookup table."                                               min:"0"    max:"1"`
-	Hsl          []hslBandArgs `json:"hsl,omitempty"           desc:"Bands of colour ranges, up to 8; a given range replaces its band, a neutral band removes it."                      maxitems:"8"`
+	ItemID       string        `json:"item_id"                 desc:"A clip."                                                                                      pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	Brightness   *float64      `json:"brightness,omitempty"    desc:"-1 to 1; default 0."                                                                                                                                 min:"-1"   max:"1"`
+	Contrast     *float64      `json:"contrast,omitempty"      desc:"0 to 2; default 1."                                                                                                                                  min:"0"    max:"2"`
+	Saturation   *float64      `json:"saturation,omitempty"    desc:"0 to 2; default 1."                                                                                                                                  min:"0"    max:"2"`
+	Temperature  *float64      `json:"temperature,omitempty"   desc:"-1 (cooler) to 1 (warmer); default 0."                                                                                                               min:"-1"   max:"1"`
+	Tint         *float64      `json:"tint,omitempty"          desc:"-1 (greener) to 1 (more magenta); default 0."                                                                                                        min:"-1"   max:"1"`
+	Hue          *float64      `json:"hue,omitempty"           desc:"-180 to 180 degrees; default 0."                                                                                                                     min:"-180" max:"180"`
+	LutAsset     string        `json:"lut_asset,omitempty"     desc:"Id of a lut asset to grade the clip with."                                                    pattern:"^ast_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	LutIntensity *float64      `json:"lut_intensity,omitempty" desc:"0 to 1; default 1; 0 removes the lookup table."                                                                                                      min:"0"    max:"1"`
+	Hsl          []hslBandArgs `json:"hsl,omitempty"           desc:"Bands of colour ranges, up to 8; a given range replaces its band, a neutral band removes it."                                                                             maxitems:"8"`
 	Wheels       *wheelsArgs   `json:"wheels,omitempty"        desc:"Colour wheels of shadows, midtones and highlights."`
 	Curves       *curvesArgs   `json:"curves,omitempty"        desc:"Tone curves: master, red, green, blue."`
 }

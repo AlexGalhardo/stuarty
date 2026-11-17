@@ -16,12 +16,12 @@ Adds an audio item. The default duration is the rest of the asset from source_in
 
 | Argument | Type | Required | Notes |
 | --- | --- | --- | --- |
-| `asset_id` | `string` | yes | An audio asset, a video asset with audio, or ast_placeholder in a template. |
+| `asset_id` | `string` | yes | An audio asset, a video asset with audio, or ast_placeholder in a template.; pattern `^ast_([0123456789abcdefghjkmnpqrstvwxyz]{10}\|placeholder)$` |
 | `duration` | `string` | no | A length; default the rest of the asset. |
-| `id` | `string` | no |  |
+| `id` | `string` | no | pattern `^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
 | `source_in` | `string` | no | Offset into the asset; default 0s. |
 | `start` | `string` | yes | Absolute position. |
-| `track_id` | `string` | yes | An audio track. |
+| `track_id` | `string` | yes | An audio track.; pattern `^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
 
 ## Errors
 

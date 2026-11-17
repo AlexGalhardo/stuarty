@@ -21,7 +21,7 @@ func init() {
 }
 
 type assetRemoveArgs struct {
-	AssetID string `json:"asset_id" desc:"The id of the asset to remove."`
+	AssetID string `json:"asset_id" desc:"The id of the asset to remove." pattern:"^ast_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
 }
 
 func applyAssetRemove(c *Context, a *assetRemoveArgs) error {

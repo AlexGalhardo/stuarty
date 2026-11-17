@@ -16,7 +16,7 @@ Give exactly one of asset_id (media slot), text (text slot) or words (caption sl
 
 | Argument | Type | Required | Notes |
 | --- | --- | --- | --- |
-| `asset_id` | `string` | no | For a media slot. |
+| `asset_id` | `string` | no | For a media slot.; pattern `^ast_([0123456789abcdefghjkmnpqrstvwxyz]{10}\|placeholder)$` |
 | `name` | `string` | yes | The slot name. |
 | `source_in` | `string` | no | With asset_id only. Default "0s". |
 | `text` | `string` | no | For a text slot.; min length 1; max length 2000 |

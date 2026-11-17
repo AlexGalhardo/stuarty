@@ -14,14 +14,17 @@
     },
     "freeze_id": {
       "description": "Id for the freeze frame item.",
+      "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
       "type": "string"
     },
     "item_id": {
       "description": "A clip of a video asset.",
+      "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
       "type": "string"
     },
     "new_id": {
       "description": "Id for the right part of the split.",
+      "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
       "type": "string"
     }
   },

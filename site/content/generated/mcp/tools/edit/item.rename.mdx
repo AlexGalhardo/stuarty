@@ -16,7 +16,7 @@ Sets the display name of the item; an empty name clears it.
 
 | Argument | Type | Required | Notes |
 | --- | --- | --- | --- |
-| `item_id` | `string` | yes | The item to label. |
+| `item_id` | `string` | yes | The item to label.; pattern `^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
 | `name` | `string` | yes | The label, 0 to 120 characters; empty clears it.; min length 0; max length 120 |
 
 ## Errors

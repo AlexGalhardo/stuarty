@@ -17,6 +17,7 @@
     },
     "item_id": {
       "description": "A clip, text, caption or shape item.",
+      "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
       "type": "string"
     },
     "preset": {

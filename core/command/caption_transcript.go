@@ -129,13 +129,13 @@ func noWordInRange(it *timeline.Item) *Error {
 }
 
 type captionFromTranscriptArgs struct {
-	ClipItemID string         `json:"clip_item_id"        desc:"A clip of a video asset with audio, or an audio item."`
-	TrackID    string         `json:"track_id"            desc:"A visual track that receives the captions."`
-	MaxWords   *int           `json:"max_words,omitempty" desc:"Words per caption, default 5."                                                   min:"1" max:"60"`
-	MaxChars   *int           `json:"max_chars,omitempty" desc:"Characters per caption, default 28."                                             min:"1" max:"500"`
+	ClipItemID string         `json:"clip_item_id"        desc:"A clip of a video asset with audio, or an audio item."                           pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	TrackID    string         `json:"track_id"            desc:"A visual track that receives the captions."                                      pattern:"^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	MaxWords   *int           `json:"max_words,omitempty" desc:"Words per caption, default 5."                                                                                                          min:"1" max:"60"`
+	MaxChars   *int           `json:"max_chars,omitempty" desc:"Characters per caption, default 28."                                                                                                    min:"1" max:"500"`
 	MaxGap     Time           `json:"max_gap,omitempty"   desc:"A length, may be 0; a longer pause starts a caption. Default \"0.6s\"."`
 	Replace    *bool          `json:"replace,omitempty"   desc:"Remove the captions linked to this clip on this track first. Default true."`
-	NewIDs     []string       `json:"new_ids,omitempty"   desc:"Ids for the created captions, in order."`
+	NewIDs     []string       `json:"new_ids,omitempty"   desc:"Ids for the created captions, in order."                                         pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
 	Resolved   *ResolvedWords `json:"resolved,omitempty"  desc:"Filled by the service from the transcript of the asset; never sent by a caller."`
 }
 
@@ -267,7 +267,7 @@ func applyCaptionFromTranscript(c *Context, a *captionFromTranscriptArgs) error 
 }
 
 type captionRetimeArgs struct {
-	ClipItemID string         `json:"clip_item_id"       desc:"A clip of a video asset with audio, or an audio item."`
+	ClipItemID string         `json:"clip_item_id"       desc:"A clip of a video asset with audio, or an audio item."                           pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
 	Resolved   *ResolvedWords `json:"resolved,omitempty" desc:"Filled by the service from the transcript of the asset; never sent by a caller."`
 }
 

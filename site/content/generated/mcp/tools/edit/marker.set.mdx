@@ -17,7 +17,7 @@ Finds the marker at a frame and changes its frame (to) and or its label; a label
 | Argument | Type | Required | Notes |
 | --- | --- | --- | --- |
 | `at` | `string` | yes | The position of the marker to change. |
-| `item_id` | `string` | no | The item that holds the marker; at and to fall inside it. |
+| `item_id` | `string` | no | The item that holds the marker; at and to fall inside it.; pattern `^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
 | `label` | `string` | no | The new label, up to 60 characters; "" removes it.; max length 60 |
 | `to` | `string` | no | The new position. |
 

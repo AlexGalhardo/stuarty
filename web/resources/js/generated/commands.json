@@ -43,6 +43,7 @@
 							"type": "boolean"
 						},
 						"hash": {
+							"pattern": "^sha256:[0-9a-f]{64}$",
 							"type": "string"
 						},
 						"height": {
@@ -50,6 +51,7 @@
 							"type": "integer"
 						},
 						"id": {
+							"pattern": "^ast_[0-9a-hjkmnp-tv-z]{10}$",
 							"type": "string"
 						},
 						"kind": {
@@ -123,6 +125,7 @@
 			"properties": {
 				"asset_id": {
 					"description": "The id of the asset to remove.",
+					"pattern": "^ast_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				}
 			},
@@ -153,6 +156,7 @@
 			"properties": {
 				"asset_id": {
 					"description": "An audio asset, a video asset with audio, or ast_placeholder in a template.",
+					"pattern": "^ast_([0123456789abcdefghjkmnpqrstvwxyz]{10}|placeholder)$",
 					"type": "string"
 				},
 				"duration": {
@@ -161,6 +165,7 @@
 					"x-vv-kind": "time"
 				},
 				"id": {
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"source_in": {
@@ -175,6 +180,7 @@
 				},
 				"track_id": {
 					"description": "An audio track.",
+					"pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				}
 			},
@@ -226,6 +232,7 @@
 				},
 				"item_id": {
 					"description": "The music: an audio item with no volume keyframes.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"release": {
@@ -244,6 +251,7 @@
 								"properties": {
 									"item_id": {
 										"description": "One of the speech items.",
+										"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 										"type": "string"
 									},
 									"ranges": {
@@ -284,6 +292,7 @@
 				"speech_item_ids": {
 					"description": "Clips or audio items that carry the speech.",
 					"items": {
+						"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 						"type": "string"
 					},
 					"maxItems": 20,
@@ -332,6 +341,7 @@
 				},
 				"item_id": {
 					"description": "An audio item of an audio asset, or of a video asset with audio.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"label": {
@@ -396,6 +406,7 @@
 					"x-vv-kind": "time"
 				},
 				"id": {
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"linked_item": {
@@ -413,6 +424,7 @@
 				},
 				"track_id": {
 					"description": "A visual track; omitted, the highest visual track free over the item (an empty track you made for video counts; pass track_id to keep it clear), or a new one on top. effective.track_id names it.",
+					"pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"words": {
@@ -492,6 +504,7 @@
 				},
 				"item_id": {
 					"description": "A caption.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"text": {
@@ -533,6 +546,7 @@
 			"properties": {
 				"clip_item_id": {
 					"description": "A clip of a video asset with audio, or an audio item.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"max_chars": {
@@ -555,6 +569,7 @@
 				"new_ids": {
 					"description": "Ids for the created captions, in order.",
 					"items": {
+						"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 						"type": "string"
 					},
 					"type": "array"
@@ -599,6 +614,7 @@
 				},
 				"track_id": {
 					"description": "A visual track that receives the captions.",
+					"pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				}
 			},
@@ -646,6 +662,7 @@
 				"new_ids": {
 					"description": "Ids for the created captions, in cue order.",
 					"items": {
+						"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 						"type": "string"
 					},
 					"type": "array"
@@ -661,6 +678,7 @@
 				},
 				"track_id": {
 					"description": "A visual track that receives the captions.",
+					"pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				}
 			},
@@ -700,6 +718,7 @@
 				"item_ids": {
 					"description": "Exactly two distinct captions of one track, in any order.",
 					"items": {
+						"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 						"type": "string"
 					},
 					"type": "array"
@@ -737,6 +756,7 @@
 			"properties": {
 				"clip_item_id": {
 					"description": "A clip of a video asset with audio, or an audio item.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"resolved": {
@@ -810,6 +830,7 @@
 				},
 				"item_id": {
 					"description": "A caption.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				}
 			},
@@ -844,6 +865,7 @@
 			"properties": {
 				"item_id": {
 					"description": "A caption.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"replace": {
@@ -1071,6 +1093,7 @@
 				},
 				"item_id": {
 					"description": "A caption.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"text": {
@@ -1154,10 +1177,12 @@
 				},
 				"item_id": {
 					"description": "A caption.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"new_id": {
 					"description": "The id of the right part.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				}
 			},
@@ -1193,6 +1218,7 @@
 			"properties": {
 				"asset_id": {
 					"description": "A video or image asset, or ast_placeholder in a template.",
+					"pattern": "^ast_([0123456789abcdefghjkmnpqrstvwxyz]{10}|placeholder)$",
 					"type": "string"
 				},
 				"duration": {
@@ -1209,6 +1235,7 @@
 					"type": "string"
 				},
 				"id": {
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"source_in": {
@@ -1223,6 +1250,7 @@
 				},
 				"track_id": {
 					"description": "A visual track.",
+					"pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				}
 			},
@@ -1265,6 +1293,7 @@
 			"properties": {
 				"item_id": {
 					"description": "A clip of a video asset with audio, or an audio item.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"min_silence": {
@@ -1275,6 +1304,7 @@
 				"new_ids": {
 					"description": "Ids for the second, third, ... pieces, in order.",
 					"items": {
+						"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 						"type": "string"
 					},
 					"type": "array"
@@ -1361,6 +1391,7 @@
 			"properties": {
 				"item_id": {
 					"description": "A visual item.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"mode": {
@@ -1404,6 +1435,7 @@
 			"properties": {
 				"item_id": {
 					"description": "A clip, text, caption or shape item.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"radius": {
@@ -1450,6 +1482,7 @@
 				},
 				"item_id": {
 					"description": "A clip.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"similarity": {
@@ -1678,10 +1711,12 @@
 				},
 				"item_id": {
 					"description": "A clip.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"lut_asset": {
 					"description": "Id of a lut asset to grade the clip with.",
+					"pattern": "^ast_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"lut_intensity": {
@@ -1898,6 +1933,7 @@
 				},
 				"item_id": {
 					"description": "A clip.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				}
 			},
@@ -1956,6 +1992,7 @@
 				},
 				"item_id": {
 					"description": "A clip, text, caption or shape item.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				}
 			},
@@ -1992,6 +2029,7 @@
 				},
 				"item_id": {
 					"description": "A visual item.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"vertical": {
@@ -2064,6 +2102,7 @@
 				},
 				"item_id": {
 					"description": "A clip.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				}
 			},
@@ -2099,6 +2138,7 @@
 			"properties": {
 				"item_id": {
 					"description": "A visual item.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"mask": {
@@ -2247,6 +2287,7 @@
 				},
 				"item_id": {
 					"description": "A clip of a video asset, or an audio item.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"reverse": {
@@ -2439,14 +2480,17 @@
 				},
 				"from_item_id": {
 					"description": "The item that leaves.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"to_item_id": {
 					"description": "The item that arrives.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"track_id": {
 					"description": "Only for two neighbours that touch on one track: another visual track the arriving item moves to.",
+					"pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				}
 			},
@@ -2485,6 +2529,7 @@
 			"properties": {
 				"item_ids": {
 					"items": {
+						"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 						"type": "string"
 					},
 					"maxItems": 200,
@@ -2532,10 +2577,12 @@
 			"properties": {
 				"item_id": {
 					"description": "The item to copy.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"new_id": {
 					"description": "The id of the copy.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"start": {
@@ -2545,6 +2592,7 @@
 				},
 				"track_id": {
 					"description": "The track of the copy; default the source's track.",
+					"pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				}
 			},
@@ -2581,14 +2629,17 @@
 			"properties": {
 				"id": {
 					"description": "The id of the new audio item.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"item_id": {
 					"description": "A clip of a video asset with audio.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"track_id": {
 					"description": "An audio track with room for the item.",
+					"pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				}
 			},
@@ -2635,14 +2686,17 @@
 				},
 				"freeze_id": {
 					"description": "Id for the freeze frame item.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"item_id": {
 					"description": "A clip of a video asset.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"new_id": {
 					"description": "Id for the right part of the split.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				}
 			},
@@ -2680,11 +2734,13 @@
 			"properties": {
 				"id": {
 					"description": "The id of the link group, lnk_ and 10 characters; generated when omitted.",
+					"pattern": "^lnk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"item_ids": {
 					"description": "The items to link, 2 to 20.",
 					"items": {
+						"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 						"type": "string"
 					},
 					"type": "array"
@@ -2721,6 +2777,7 @@
 			"additionalProperties": false,
 			"properties": {
 				"item_id": {
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"slide": {
@@ -2734,6 +2791,7 @@
 				},
 				"track_id": {
 					"description": "A track that accepts the item type.",
+					"pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				}
 			},
@@ -2776,11 +2834,13 @@
 				},
 				"from_item_id": {
 					"description": "The item to copy from.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"item_ids": {
 					"description": "The items to copy to, 1 to 20.",
 					"items": {
+						"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 						"type": "string"
 					},
 					"type": "array"
@@ -2823,6 +2883,7 @@
 			"properties": {
 				"item_id": {
 					"description": "The item to label.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"name": {
@@ -2880,6 +2941,7 @@
 				},
 				"item_id": {
 					"description": "A clip or audio item.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"voice": {
@@ -2937,6 +2999,7 @@
 				},
 				"item_id": {
 					"description": "Any item.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				}
 			},
@@ -2968,6 +3031,7 @@
 			"properties": {
 				"item_id": {
 					"description": "A clip, text, caption or shape item.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"opacity": {
@@ -3024,6 +3088,7 @@
 			"properties": {
 				"color": {
 					"description": "dip only: #RRGGBB, default #000000.",
+					"pattern": "^#[0-9A-Fa-f]{6}$",
 					"type": "string"
 				},
 				"direction": {
@@ -3051,6 +3116,7 @@
 				},
 				"item_id": {
 					"description": "A clip, text, caption or shape item.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"kind": {
@@ -3109,6 +3175,7 @@
 			"properties": {
 				"item_id": {
 					"description": "A clip or audio item of a video or audio asset.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"source_in": {
@@ -3152,15 +3219,18 @@
 					"x-vv-kind": "time"
 				},
 				"item_id": {
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"new_id": {
 					"description": "The id of the right part.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"new_ids": {
 					"description": "The ids of the right parts of the linked items that the split cuts, in the order of the ids of those items.",
 					"items": {
+						"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 						"type": "string"
 					},
 					"type": "array"
@@ -3205,6 +3275,7 @@
 					"type": "string"
 				},
 				"item_id": {
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"ripple": {
@@ -3260,6 +3331,7 @@
 				"item_ids": {
 					"description": "The items to take out of their link group.",
 					"items": {
+						"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 						"type": "string"
 					},
 					"type": "array"
@@ -3293,6 +3365,7 @@
 			"additionalProperties": false,
 			"properties": {
 				"item_id": {
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"property": {
@@ -3346,6 +3419,7 @@
 					"x-vv-kind": "time"
 				},
 				"item_id": {
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"property": {
@@ -3413,6 +3487,7 @@
 					"type": "string"
 				},
 				"item_id": {
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"property": {
@@ -3478,6 +3553,7 @@
 				},
 				"item_id": {
 					"description": "An item to mark instead of the timeline; at must then fall inside it.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"label": {
@@ -3524,6 +3600,7 @@
 				},
 				"item_id": {
 					"description": "The item that holds the marker; all then clears its markers.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				}
 			},
@@ -3557,6 +3634,7 @@
 				},
 				"item_id": {
 					"description": "The item that holds the marker; at and to fall inside it.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"label": {
@@ -3790,6 +3868,7 @@
 					"type": "number"
 				},
 				"id": {
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"radius": {
@@ -3819,6 +3898,7 @@
 				},
 				"track_id": {
 					"description": "A visual track; omitted, the highest visual track free over the item (an empty track you made for video counts; pass track_id to keep it clear), or a new one on top. effective.track_id names it.",
+					"pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"width": {
@@ -3881,6 +3961,7 @@
 				},
 				"item_id": {
 					"description": "A shape item.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"radius": {
@@ -3938,6 +4019,7 @@
 			"properties": {
 				"asset_id": {
 					"description": "For a media slot.",
+					"pattern": "^ast_([0123456789abcdefghjkmnpqrstvwxyz]{10}|placeholder)$",
 					"type": "string"
 				},
 				"name": {
@@ -4032,6 +4114,7 @@
 				},
 				"item_id": {
 					"description": "A clip, audio, text or caption item.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"name": {
@@ -4074,6 +4157,7 @@
 			"additionalProperties": false,
 			"properties": {
 				"item_id": {
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				}
 			},
@@ -4154,6 +4238,7 @@
 					"x-vv-kind": "time"
 				},
 				"id": {
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"start": {
@@ -4256,6 +4341,7 @@
 				},
 				"track_id": {
 					"description": "A visual track; omitted, the highest visual track free over the item (an empty track you made for video counts; pass track_id to keep it clear), or a new one on top. effective.track_id names it.",
+					"pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"x": {
@@ -4319,6 +4405,7 @@
 				},
 				"item_id": {
 					"description": "A clip, text, caption or shape item.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"preset": {
@@ -4368,6 +4455,7 @@
 			"properties": {
 				"item_id": {
 					"description": "A text item.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"reset_style": {
@@ -4564,6 +4652,7 @@
 				},
 				"track_id": {
 					"description": "The track with the gap.",
+					"pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				}
 			},
@@ -4598,13 +4687,16 @@
 			"properties": {
 				"above": {
 					"description": "Place the track directly over this track.",
+					"pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"below": {
 					"description": "Place the track directly under this track.",
+					"pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"id": {
+					"pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"kind": {
@@ -4656,9 +4748,11 @@
 			"additionalProperties": false,
 			"properties": {
 				"above": {
+					"pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"below": {
+					"pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"position": {
@@ -4669,6 +4763,7 @@
 					"type": "string"
 				},
 				"track_id": {
+					"pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				}
 			},
@@ -4699,6 +4794,7 @@
 			"additionalProperties": false,
 			"properties": {
 				"track_id": {
+					"pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"with_items": {
@@ -4915,6 +5011,7 @@
 					"type": "object"
 				},
 				"track_id": {
+					"pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				}
 			},
@@ -4974,6 +5071,7 @@
 					"type": "boolean"
 				},
 				"track_id": {
+					"pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
 				"volume": {

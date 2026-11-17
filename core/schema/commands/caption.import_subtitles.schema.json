@@ -13,6 +13,7 @@
     "new_ids": {
       "description": "Ids for the created captions, in cue order.",
       "items": {
+        "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
         "type": "string"
       },
       "type": "array"
@@ -28,6 +29,7 @@
     },
     "track_id": {
       "description": "A visual track that receives the captions.",
+      "pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
       "type": "string"
     }
   },

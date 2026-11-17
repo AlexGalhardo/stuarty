@@ -13,6 +13,7 @@
     },
     "item_id": {
       "description": "The item that holds the marker; all then clears its markers.",
+      "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
       "type": "string"
     }
   },

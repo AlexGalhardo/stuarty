@@ -17,6 +17,7 @@
     },
     "track_id": {
       "description": "The track with the gap.",
+      "pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
       "type": "string"
     }
   },

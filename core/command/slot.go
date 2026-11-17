@@ -52,11 +52,11 @@ func init() {
 var slotName = regexp.MustCompile(`^[a-z][a-z0-9_]{0,39}$`)
 
 type slotMarkArgs struct {
-	ItemID         string `json:"item_id"                   desc:"A clip, audio, text or caption item."`
+	ItemID         string `json:"item_id"                   desc:"A clip, audio, text or caption item."                  pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
 	Name           string `json:"name"                      desc:"Matches [a-z][a-z0-9_]{0,39}; unique among the slots."`
-	Description    string `json:"description,omitempty"     desc:"Up to 200 characters."                                 max:"200"`
+	Description    string `json:"description,omitempty"     desc:"Up to 200 characters."                                                                                        max:"200"`
 	Required       *bool  `json:"required,omitempty"        desc:"Default true."`
-	DurationPolicy string `json:"duration_policy,omitempty" desc:"Media slots only. Default fit."                                  enum:"fit,stretch_timeline"`
+	DurationPolicy string `json:"duration_policy,omitempty" desc:"Media slots only. Default fit."                                                                                         enum:"fit,stretch_timeline"`
 }
 
 func slotKind(t timeline.ItemType) string {
@@ -142,7 +142,7 @@ func slotView(s *timeline.Slot) map[string]any {
 }
 
 type slotUnmarkArgs struct {
-	ItemID string `json:"item_id"`
+	ItemID string `json:"item_id" pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
 }
 
 func applySlotUnmark(c *Context, a *slotUnmarkArgs) error {
@@ -172,9 +172,9 @@ func applySlotUnmark(c *Context, a *slotUnmarkArgs) error {
 
 type slotFillArgs struct {
 	Name     string    `json:"name"                desc:"The slot name."`
-	AssetID  string    `json:"asset_id,omitempty"  desc:"For a media slot."`
+	AssetID  string    `json:"asset_id,omitempty"  desc:"For a media slot."                                                         pattern:"^ast_([0123456789abcdefghjkmnpqrstvwxyz]{10}|placeholder)$"`
 	SourceIn Time      `json:"source_in,omitempty" desc:"With asset_id only. Default \"0s\"."`
-	Text     *string   `json:"text,omitempty"      desc:"For a text slot."                                                          min:"1" max:"2000"`
+	Text     *string   `json:"text,omitempty"      desc:"For a text slot."                                                                                                                               min:"1" max:"2000"`
 	Words    []WordArg `json:"words,omitempty"     desc:"For a caption slot: words with times relative to the caption, as lengths."`
 }
 

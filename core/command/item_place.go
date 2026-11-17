@@ -56,10 +56,10 @@ func init() {
 }
 
 type itemDuplicateArgs struct {
-	ItemID  string `json:"item_id"            desc:"The item to copy."`
+	ItemID  string `json:"item_id"            desc:"The item to copy."                                                             pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
 	Start   Time   `json:"start,omitempty"    desc:"Absolute start of the copy; default the first free position after the source."`
-	TrackID string `json:"track_id,omitempty" desc:"The track of the copy; default the source's track."`
-	NewID   string `json:"new_id,omitempty"   desc:"The id of the copy."`
+	TrackID string `json:"track_id,omitempty" desc:"The track of the copy; default the source's track."                            pattern:"^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	NewID   string `json:"new_id,omitempty"   desc:"The id of the copy."                                                           pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
 }
 
 func applyItemDuplicate(c *Context, a *itemDuplicateArgs) error {
@@ -138,10 +138,10 @@ func applyItemDuplicate(c *Context, a *itemDuplicateArgs) error {
 }
 
 type itemCrossfadeArgs struct {
-	From     string `json:"from_item_id"       desc:"The item that leaves."`
-	To       string `json:"to_item_id"         desc:"The item that arrives."`
+	From     string `json:"from_item_id"       desc:"The item that leaves."                                                                             pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	To       string `json:"to_item_id"         desc:"The item that arrives."                                                                            pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
 	Duration Time   `json:"duration"           desc:"Length of the crossfade, at least 1 frame."`
-	TrackID  string `json:"track_id,omitempty" desc:"Only for two neighbours that touch on one track: another visual track the arriving item moves to."`
+	TrackID  string `json:"track_id,omitempty" desc:"Only for two neighbours that touch on one track: another visual track the arriving item moves to." pattern:"^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
 }
 
 func applyItemCrossfade(c *Context, a *itemCrossfadeArgs) error {
@@ -295,9 +295,9 @@ func crossfadeRoom(it *timeline.Item, other *timeline.Transition, fade, length i
 }
 
 type closeGapArgs struct {
-	TrackID string `json:"track_id"         desc:"The track with the gap."`
+	TrackID string `json:"track_id"         desc:"The track with the gap."                                       pattern:"^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
 	At      Time   `json:"at"               desc:"Absolute frame inside the gap."`
-	Ripple  string `json:"ripple,omitempty" desc:"track (default) or all: all moves later items of every track." enum:"track,all"`
+	Ripple  string `json:"ripple,omitempty" desc:"track (default) or all: all moves later items of every track."                                                        enum:"track,all"`
 }
 
 func applyCloseGap(c *Context, a *closeGapArgs) error {

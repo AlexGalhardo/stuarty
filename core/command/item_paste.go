@@ -25,9 +25,9 @@ func init() {
 }
 
 type itemPasteArgs struct {
-	FromItemID string   `json:"from_item_id" desc:"The item to copy from."`
-	ItemIDs    []string `json:"item_ids"     desc:"The items to copy to, 1 to 20."                                                                                                   minitems:"1" maxitems:"20"`
-	Attributes []string `json:"attributes"   desc:"Groups to copy: color, filter, blur, framing, transform, blend, mask, flip, chroma_key, effects, audio. At least one, each once." minitems:"1" maxitems:"11"`
+	FromItemID string   `json:"from_item_id" desc:"The item to copy from."                                                                                                           pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	ItemIDs    []string `json:"item_ids"     desc:"The items to copy to, 1 to 20."                                                                                                   pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$" minitems:"1" maxitems:"20"`
+	Attributes []string `json:"attributes"   desc:"Groups to copy: color, filter, blur, framing, transform, blend, mask, flip, chroma_key, effects, audio. At least one, each once."                                                        minitems:"1" maxitems:"11"`
 }
 
 // pasteGroup is one group of attributes: the item types that have it, the properties that

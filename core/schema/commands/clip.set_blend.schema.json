@@ -4,6 +4,7 @@
   "properties": {
     "item_id": {
       "description": "A visual item.",
+      "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
       "type": "string"
     },
     "mode": {

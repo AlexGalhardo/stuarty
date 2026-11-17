@@ -16,7 +16,7 @@ Replaces the text, merges a partial style into the stored one (null removes a ke
 
 | Argument | Type | Required | Notes |
 | --- | --- | --- | --- |
-| `item_id` | `string` | yes | A text item. |
+| `item_id` | `string` | yes | A text item.; pattern `^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
 | `reset_style` | `boolean` | no | Empty the stored style before applying style. |
 | `style` | `object` | no | A partial TextStyle, merged; null removes a key. |
 | `text` | `string` | no | min length 1; max length 2000 |

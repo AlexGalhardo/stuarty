@@ -16,9 +16,9 @@ Adds an audio item on an audio track with the same asset, start, duration, sourc
 
 | Argument | Type | Required | Notes |
 | --- | --- | --- | --- |
-| `id` | `string` | no | The id of the new audio item. |
-| `item_id` | `string` | yes | A clip of a video asset with audio. |
-| `track_id` | `string` | yes | An audio track with room for the item. |
+| `id` | `string` | no | The id of the new audio item.; pattern `^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
+| `item_id` | `string` | yes | A clip of a video asset with audio.; pattern `^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
+| `track_id` | `string` | yes | An audio track with room for the item.; pattern `^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
 
 ## Errors
 
