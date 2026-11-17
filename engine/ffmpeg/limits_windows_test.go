@@ -75,8 +75,8 @@ func TestWindowsJobObjectLimit(t *testing.T) {
 	r, dir := jobRunner(t, l)
 
 	out, err := runJobHelper(r, dir, "alloc")
-	if !errors.Is(err, engine.ErrRun) {
-		t.Fatalf("a helper over the limit ended with %v, want engine.ErrRun", err)
+	if !errors.Is(err, engine.ErrMemoryLimit) {
+		t.Fatalf("a helper over the limit ended with %v, want engine.ErrMemoryLimit", err)
 	}
 
 	if strings.Contains(out, "allocated") {
@@ -96,8 +96,8 @@ func TestWindowsJobObjectLimitLetsAWellBehavedRunPass(t *testing.T) {
 func TestWindowsJobObjectLimitLeavesNoProcess(t *testing.T) {
 	r, dir := jobRunner(t, engine.Limits{AddressSpace: 512 << 20})
 
-	if _, err := runJobHelper(r, dir, "alloctree"); !errors.Is(err, engine.ErrRun) {
-		t.Fatalf("error = %v, want engine.ErrRun", err)
+	if _, err := runJobHelper(r, dir, "alloctree"); !errors.Is(err, engine.ErrMemoryLimit) {
+		t.Fatalf("error = %v, want engine.ErrMemoryLimit", err)
 	}
 
 	b, err := os.ReadFile(filepath.Join(dir.Dir(), "pids"))
