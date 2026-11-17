@@ -74,19 +74,22 @@ function loadDetail(client: ApiClient, command: string): Promise<unknown> {
 // Empty until the registry answers, and for an argument with no enum.
 export function useCommandEnum(
 	command: string,
-	arg: string,
+	...path: string[]
 ): readonly string[] {
 	const runtime = useRuntime();
 	const [values, setValues] = useState<readonly string[]>([]);
+	const key = path.join(".");
+	// biome-ignore lint/correctness/useExhaustiveDependencies: `key` stands for `path`, which is a new array on every call.
 	useEffect(() => {
 		let current = true;
 		void loadDetail(runtime.client, command).then((schema) => {
 			if (!current) return;
-			const property = (
-				schema as { properties?: Record<string, { enum?: unknown[] }> } | null
-			)?.properties?.[arg];
+			let node = schema as EnumSchema | null | undefined;
+			for (const step of path) {
+				node = step === "items" ? node?.items : node?.properties?.[step];
+			}
 			setValues(
-				(property?.enum ?? []).filter(
+				(node?.enum ?? []).filter(
 					(value): value is string => typeof value === "string",
 				),
 			);
@@ -94,6 +97,12 @@ export function useCommandEnum(
 		return () => {
 			current = false;
 		};
-	}, [runtime, command, arg]);
+	}, [runtime, command, key]);
 	return values;
+}
+
+interface EnumSchema {
+	enum?: unknown[];
+	properties?: Record<string, EnumSchema>;
+	items?: EnumSchema;
 }

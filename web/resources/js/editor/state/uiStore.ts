@@ -75,6 +75,7 @@ export type LeftTab =
 	| "audio"
 	| "text"
 	| "captions"
+	| "effects"
 	| "transitions"
 	| "filters"
 	| "templates"

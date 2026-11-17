@@ -139,7 +139,8 @@
         "captions": "Captions",
         "transitions": "Transitions",
         "filters": "Filters",
-        "templates": "Templates"
+        "templates": "Templates",
+        "effects": "Effects"
       },
       "activity": {
         "you": "you",
