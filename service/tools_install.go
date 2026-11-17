@@ -53,6 +53,8 @@ const installedFile = "installed.json"
 type ToolsInstallRequest struct {
 	Name  string `json:"name"`
 	Model string `json:"model,omitempty"`
+	// Force downloads again what is installed and verified.
+	Force bool `json:"force,omitempty"`
 }
 
 // ToolFile is one file of an install, with what it costs.
@@ -65,7 +67,7 @@ type ToolFile struct {
 // ToolsInstallResult is the answer of the install call: it announces the size
 // and the source before the first byte arrives.
 type ToolsInstallResult struct {
-	State         string     `json:"state"` // "running"
+	State         string     `json:"state"` // "running", or "installed" when nothing had to be downloaded
 	Files         []ToolFile `json:"files"`
 	DownloadBytes int64      `json:"download_bytes"`
 	Text          string     `json:"text"`
@@ -212,6 +214,14 @@ func (s *svc) ToolsInstall(ctx context.Context, req ToolsInstallRequest) (*Tools
 		res.DownloadBytes += entries[i].Bytes
 	}
 
+	if !req.Force && s.allInstalled(entries) {
+		return &ToolsInstallResult{
+			State: "installed", Files: res.Files,
+			Text: fmt.Sprintf("%s (%s) is already installed and its files verify; pass force to install it again",
+				req.Name, model),
+		}, nil
+	}
+
 	res.Text = fmt.Sprintf("installing %s (%s): %d files, %s from %s",
 		req.Name, model, len(res.Files), sizesText(res.DownloadBytes), res.Files[0].Host)
 
@@ -233,6 +243,24 @@ func (s *svc) ToolsInstall(ctx context.Context, req ToolsInstallRequest) (*Tools
 	s.auditInstall(ctx, c.Actor, req.Name)
 
 	return res, nil
+}
+
+// allInstalled is true when every entry is recorded at its version and its file still has the recorded digest.
+func (s *svc) allInstalled(entries []transcribe.ManifestEntry) bool {
+	installed := readInstalled(s.tools.Dir)
+
+	for i := range entries {
+		e := &entries[i]
+
+		recorded := slices.ContainsFunc(installed, func(t InstalledTool) bool {
+			return t.Name == e.Name && t.Kind == e.Kind && t.Model == e.Model && t.Version == e.Version
+		})
+		if _, ok := VerifiedTool(s.tools.Dir, e.Name, e.Kind, e.Model); !recorded || !ok {
+			return false
+		}
+	}
+
+	return true
 }
 
 // ToolsStatus lists what is installed and the progress of a running install.

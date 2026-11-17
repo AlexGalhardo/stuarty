@@ -761,12 +761,13 @@ vukem-video audit --limit 20 --json
 Download a helper such as the transcription program
 
 ```text
-vukem-video tools:install <name> [--model <model>] [--yes] [--timeout d]
+vukem-video tools:install <name> [--model <model>] [--force] [--yes] [--timeout d]
 ```
 
 | Flag | Type | Default | Meaning |
 | --- | --- | --- | --- |
 | `--model` | string |  | the model to download, which then becomes the default of transcribe (default: small) |
+| `--force` | boolean | `false` | download again what is installed and verified |
 | `--yes` | boolean | `false` | do not ask for confirmation |
 
 Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--timeout`.

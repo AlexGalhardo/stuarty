@@ -2132,6 +2132,9 @@
           "failed": {
             "type": "integer"
           },
+          "imported": {
+            "type": "integer"
+          },
           "project_id": {
             "type": "string"
           },
@@ -11155,6 +11158,10 @@
             "application/json": {
               "schema": {
                 "properties": {
+                  "force": {
+                    "description": "Download again what is already installed and verified.",
+                    "type": "boolean"
+                  },
                   "model": {
                     "description": "The model, one the manifest of this build pins; default small.",
                     "type": "string"
