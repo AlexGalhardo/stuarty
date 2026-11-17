@@ -9577,6 +9577,9 @@
           "404": {
             "$ref": "#/components/responses/Problem"
           },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
           "default": {
             "$ref": "#/components/responses/Problem"
           }
@@ -9831,6 +9834,16 @@
           "required": true
         },
         "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            },
+            "description": "Accepted"
+          },
           "202": {
             "content": {
               "application/json": {
@@ -10906,6 +10919,9 @@
           "404": {
             "$ref": "#/components/responses/Problem"
           },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
           "default": {
             "$ref": "#/components/responses/Problem"
           }
@@ -11154,6 +11170,9 @@
           "404": {
             "$ref": "#/components/responses/Problem"
           },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
           "429": {
             "$ref": "#/components/responses/Problem"
           },
@@ -11221,6 +11240,9 @@
             "$ref": "#/components/responses/Problem"
           },
           "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
             "$ref": "#/components/responses/Problem"
           },
           "429": {

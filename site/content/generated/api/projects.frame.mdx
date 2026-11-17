@@ -62,6 +62,12 @@ Error (RFC 9457 problem details)
 
 Content type `application/problem+json`. Schema: [`Problem`](/docs/api/schemas#problem).
 
+### 409
+
+Error (RFC 9457 problem details)
+
+Content type `application/problem+json`. Schema: [`Problem`](/docs/api/schemas#problem).
+
 ### Any other status
 
 Error (RFC 9457 problem details)
@@ -300,6 +306,35 @@ puts "#{response.code} #{response.body.to_s.bytesize} bytes"
 ```
 
 ```json title="404"
+{
+  "code": "string",
+  "detail": "string",
+  "details": {},
+  "errors": {},
+  "hint": "string",
+  "instance": "string",
+  "issues": [
+    {
+      "code": "string",
+      "key": "string",
+      "message": "string",
+      "on": "string",
+      "params": {},
+      "path": "string"
+    }
+  ],
+  "message": "string",
+  "op_index": 0,
+  "path": "string",
+  "request_id": "string",
+  "retryable": false,
+  "status": 0,
+  "title": "string",
+  "type": "string"
+}
+```
+
+```json title="409"
 {
   "code": "string",
   "detail": "string",

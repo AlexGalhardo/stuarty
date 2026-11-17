@@ -192,11 +192,25 @@ func describeReturnedStatuses(doc *openapi.Document) {
 				op.Responses["200"] = op.Responses["202"]
 			}
 
+			describeDryRunAndRevision(op, ep.ID, problem)
+
 			if slices.ContainsFunc(networkOnlyPrefixes, func(p string) bool { return strings.HasPrefix(ep.ID, p) }) {
 				op.Responses["404"] = problem
 				op.Description = strings.TrimSpace(op.Description + " Network mode only: local mode answers 404.")
 			}
 		}
+	}
+}
+
+// describeDryRunAndRevision declares the 200 of a dry run of jobs.start, which carries the body of the job it
+// would have queued, and the 409 E_REVISION_CONFLICT of a read pinned with ?rev= (VV-209).
+func describeDryRunAndRevision(op *openapi.Operation, id string, problem openapi.Response) {
+	if id == "jobs.start" {
+		op.Responses["200"] = op.Responses["202"]
+	}
+
+	if slices.ContainsFunc(op.Parameters, func(p openapi.Parameter) bool { return p.Name == "rev" }) {
+		op.Responses["409"] = problem
 	}
 }
 
