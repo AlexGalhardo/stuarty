@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
 	"github.com/AlexGalhardo/vukem-video/engine/transcribe"
 	"github.com/AlexGalhardo/vukem-video/service"
 )
@@ -290,6 +291,10 @@ func runToolsInstall(ctx context.Context, c *call) (*output, error) {
 // installAnnouncement states what a confirmed install will download, from the
 // manifest of the build, before anything is requested.
 func (c *call) installAnnouncement(name, model string) (string, error) {
+	if name == ffmpeg.OpenH264Tool {
+		return openH264Announcement()
+	}
+
 	load := c.rt.Manifest
 	if load == nil {
 		load = transcribe.DefaultManifest
@@ -335,4 +340,29 @@ func (c *call) confirm(announce string) bool {
 	answer := strings.ToLower(strings.TrimSpace(line))
 
 	return answer == "y" || answer == "yes"
+}
+
+// openH264Announcement is the announcement of the Cisco library of the own FFmpeg build, whose
+// manifest is the one of engine/ffmpeg (SDD-007 section 6.8), not the transcription manifest.
+func openH264Announcement() (string, error) {
+	manifest, err := ffmpeg.DefaultOpenH264Manifest()
+	if err != nil {
+		return "", err
+	}
+
+	entry, ok := manifest.For(runtime.GOOS, runtime.GOARCH)
+	if !ok || !entry.Published {
+		return "", &service.Error{
+			Code:    ffmpeg.CodeNoEncoder,
+			Message: fmt.Sprintf("there is no OpenH264 library to install for %s/%s.", runtime.GOOS, runtime.GOARCH),
+			Hint:    "use the hardware or operating system encoder of this machine",
+		}
+	}
+
+	host := ""
+	if u, perr := url.Parse(entry.URL); perr == nil {
+		host = u.Hostname()
+	}
+
+	return fmt.Sprintf("1 file, %.1f MB from %s", float64(entry.Bytes)/1e6, host), nil
 }
