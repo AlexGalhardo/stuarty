@@ -80,7 +80,11 @@ darwin)
 	esac
 	export MACOSX_DEPLOYMENT_TARGET=13.0
 	target_os=darwin
-	configure_target=("--extra-cflags=-arch $darwin_arch -mmacosx-version-min=13.0" "--extra-ldflags=-arch $darwin_arch")
+	# The only bytes that differed between two macOS builds of the same commit (ffmpeg-9.0.2-2) were the 16 bytes of the
+	# LC_UUID load command (and, on arm64, the ad hoc code signature that hashes them). The linker derives that UUID from
+	# its inputs, not from the output, and it moved once the static LAME, libogg, libvorbis and libwebp archives joined
+	# the link. -no_uuid removes the load command, so nothing varies; the code signature then hashes identical pages.
+	configure_target=("--extra-cflags=-arch $darwin_arch -mmacosx-version-min=13.0" "--extra-ldflags=-arch $darwin_arch -Wl,-no_uuid")
 	;;
 windows)
 	[ "$arch" = amd64 ] || die "unsupported architecture: $arch"
