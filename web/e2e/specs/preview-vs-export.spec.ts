@@ -71,6 +71,7 @@ interface GoldenItem {
 	hsl?: Record<string, unknown>[];
 	wheels?: Record<string, unknown>;
 	curves?: Record<string, unknown>;
+	lut?: { asset: string; intensity: number };
 	filter?: string;
 	filter_amount?: number;
 	blur?: number;
@@ -105,6 +106,8 @@ interface Fixture {
 	name: string;
 	sticker?: boolean;
 	delays_cs?: number[];
+	// A lookup table asset: "warm" or "teal" (lutFixture in engine/export).
+	lut?: string;
 	width: number;
 	height: number;
 	fps: number;
@@ -139,6 +142,10 @@ function fixtureClip(spec: Fixture): string {
 	const dir = join(tmpdir(), "vukem-video-e2e-golden-markers");
 	mkdirSync(dir, { recursive: true });
 	const out = join(dir, spec.name);
+	if (spec.lut !== undefined) {
+		writeFileSync(out, lutFixture(spec.lut));
+		return out;
+	}
 	if (!existsSync(out)) {
 		execFileSync(
 			ffmpegExe(),
@@ -256,6 +263,8 @@ function buildOperations(
 				hsl: item.hsl,
 				wheels: item.wheels,
 				curves: item.curves,
+				lut_asset: item.lut ? assets[item.lut.asset] : undefined,
+				lut_intensity: item.lut?.intensity,
 			};
 			if (Object.values(color).some((v) => v !== undefined)) {
 				ops.push({
@@ -386,15 +395,43 @@ function needsImageFixtures(name: string): boolean {
 	return Object.values(fixtures).some((f) => f.sticker || f.delays_cs);
 }
 
-// A lookup table asset (`lut` in the fixtures): the preview has no route to
-// fetch the .cube of the asset yet (the proxy route serves only the "proxy"
-// artifact, and a lut asset has no artifact), so it draws the clip without the
-// table and the case cannot match the export.
-function needsLutRoute(name: string): boolean {
-	const fixtures = JSON.parse(
-		readFileSync(join(GOLDEN, name, "fixtures.json"), "utf8"),
-	) as Record<string, { lut?: string }>;
-	return Object.values(fixtures).some((f) => f.lut !== undefined);
+// The text of a generated lookup table, the same as lutFixture in
+// engine/export/lut_test.go (integer arithmetic printed with six decimals): a
+// "warm" 17 point table and a "teal" 9 point one that mixes the channels.
+function lutFixture(kind: string): string {
+	const n = kind === "warm" ? 17 : 9;
+	const lines = [
+		"# generated for the golden cases",
+		`TITLE ${JSON.stringify(kind)}`,
+		`LUT_3D_SIZE ${n}`,
+	];
+	const div = Math.floor;
+	const six = (v: number): string =>
+		`${div(v / 1000000)}.${String(v % 1000000).padStart(6, "0")}`;
+	for (let b = 0; b < n; b++) {
+		for (let g = 0; g < n; g++) {
+			for (let r = 0; r < n; r++) {
+				const o =
+					kind === "warm"
+						? [
+								div(
+									(Math.min(div((r * 11) / 10) + div(n / 10), n - 1) *
+										1000000) /
+										(n - 1),
+								),
+								div((g * 1000000) / (n - 1)),
+								div((div((b * 85) / 100) * 1000000) / (n - 1)),
+							]
+						: [
+								div(((7 * g + 3 * b) * 100000) / (n - 1)),
+								div(((8 * r + 2 * g) * 100000) / (n - 1)),
+								div(((5 * r + 5 * b) * 100000) / (n - 1)),
+							];
+				lines.push(o.map(six).join(" "));
+			}
+		}
+	}
+	return `${lines.join("\n")}\n`;
 }
 
 // Loads a golden case into a new project and returns its id and listed frames.
@@ -724,10 +761,6 @@ test.describe("preview-vs-export", () => {
 				needsImageFixtures(name),
 				"the fixtures are an alpha PNG or a GIF with delays that only the Go suite generates",
 			);
-			test.skip(
-				needsLutRoute(name),
-				"the preview has no route to the .cube of a lookup table asset yet (TASK-0254, senior-c)",
-			);
 			test.fail(name in KNOWN_DIVERGENCES, KNOWN_DIVERGENCES[name]);
 			const loaded = await loadCase(request, name);
 			await openCase(page, loaded.id);
@@ -830,6 +863,16 @@ test.describe("preview-vs-export", () => {
 						? markerDistance(exported, canvas)
 						: edges;
 				const markers = markerShifts(name, canvas, exported);
+				const mean = (p: Pixels): string => {
+					const sum = [0, 0, 0];
+					for (let i = 0; i < p.data.length; i += 4) {
+						for (let c = 0; c < 3; c++) sum[c] += p.data[i + c];
+					}
+					return sum.map((v) => (v / (p.data.length / 4)).toFixed(1)).join("/");
+				};
+				console.log(
+					`preview-vs-export ${name} frame ${frame}: mean RGB canvas ${mean(canvas)} export ${mean(exported)}`,
+				);
 				console.log(
 					`preview-vs-export ${name} frame ${frame}: SSIM(luma) ${ssim.toFixed(4)}, shift ${shift.distance.toFixed(2)} px (${shift.dx.toFixed(2)}, ${shift.dy.toFixed(2)}) texture ${edges.texture.toFixed(3)}${markers.map((m) => `, ${m.label} ${m.distance.toFixed(2)} px`).join("")}`,
 				);
