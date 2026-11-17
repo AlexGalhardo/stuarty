@@ -2542,6 +2542,9 @@
       },
       "ProbeSummary": {
         "properties": {
+          "animated": {
+            "type": "boolean"
+          },
           "audio_codec": {
             "type": "string"
           },
@@ -2564,6 +2567,9 @@
           "frame_rate": {
             "type": "string"
           },
+          "frames": {
+            "type": "integer"
+          },
           "has_audio": {
             "type": "boolean"
           },
@@ -2572,6 +2578,10 @@
           },
           "kind": {
             "type": "string"
+          },
+          "loop_duration_ms": {
+            "format": "int64",
+            "type": "integer"
           },
           "sample_rate": {
             "type": "integer"
