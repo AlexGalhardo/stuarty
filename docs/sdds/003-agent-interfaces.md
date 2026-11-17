@@ -264,7 +264,7 @@ type ProjectCreateResult struct {
 
 type ProjectGetRequest struct {
 	ProjectID string `json:"project_id"`
-	Detail    string `json:"detail,omitempty"` // default: "concise"; "full"; "document" (CLI and HTTP only). The only read operation with a detail member (ADR-0015 item 6 is narrowed to project_get)
+	Detail    string `json:"detail,omitempty"` // default: "concise"; "full"; "document" (the whole document, not paged; on MCP it comes as JSON in the text, VV-214). The only read operation with a detail member (ADR-0015 item 6 is narrowed to project_get)
 	Page                                      // limit: items per page; not accepted with detail "document"
 }
 type ProjectGetResult struct {
@@ -1424,12 +1424,12 @@ created prj_7k2m9x4q1b "Launch teaser" r0 1080x1920 30fps; add tracks with edit 
 ```json
 {
   "name":"project_get",
-  "description":"Read a project as text: revision, settings, tracks listed top to bottom (the top track is drawn over the others), then items per track with times in seconds and frames. Use it first, and to get the revision for edit. detail=concise is one line per item; full adds every non-default field. Long projects return next_cursor.",
+  "description":"Read a project as text: revision, settings, tracks listed top to bottom (the top track is drawn over the others), then items per track with times in seconds and frames. Use it first, and to get the revision for edit. detail=concise is one line per item; full adds every non-default field; document is the whole document as JSON, not paged. Long projects return next_cursor.",
   "inputSchema":{
     "type":"object",
     "properties":{
       "project_id":{"type":"string","pattern":"^prj_[0-9a-hjkmnp-tv-z]{10}$"},
-      "detail":{"enum":["concise","full"],"default":"concise"},
+      "detail":{"enum":["concise","full","document"],"default":"concise"},
       "cursor":{"type":"string"},
       "limit":{"type":"integer","minimum":1,"maximum":500}
     },
@@ -2841,7 +2841,7 @@ The CLI commands of SDD-000 §1 that are not service operations (`serve`, `mcp`,
 
 | ID | Difference | Reason |
 | --- | --- | --- |
-| S-1 | `detail: "document"` of `ProjectGet` exists on CLI and HTTP only | the document is unbounded; MCP results have token budgets (NFR-020, RF-116) |
+| S-1 | (withdrawn, VV-214) `detail: "document"` of `ProjectGet` is now on MCP too, as JSON in the text | the three surfaces give the same choices; an agent that needs the document no longer leaves MCP. The document is unbounded, so an agent should prefer `concise` and `full` |
 | S-2 | `dry_run` is exposed on MCP only for `edit`; the CLI and HTTP accept it on every write | tool definitions are budgeted (NFR-020); an agent can check other writes with `lint` and `command_help` |
 | S-3 | `width` and `cols` of the view operations are CLI and HTTP only | the UI needs exact pixel sizes; an agent works in tokens (`max_tokens`) and takes the default grid |
 | S-4 | `--base` may be omitted on the CLI (the current revision is used and reported) | one agent in a shell planning one command at a time; MCP and HTTP require it |
