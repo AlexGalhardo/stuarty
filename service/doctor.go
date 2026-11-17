@@ -80,6 +80,9 @@ type DoctorCheck struct {
 	OK     bool   `json:"ok"`
 	Detail string `json:"detail"`
 	Hint   string `json:"hint,omitempty"`
+	// Optional marks a check whose failure does not stop the product from working (the transcription
+	// helper and its model): it does not make the CLI exit non-zero (VV-110).
+	Optional bool `json:"optional,omitempty"`
 }
 
 // DoctorResult is the report.
@@ -252,7 +255,11 @@ func doctorText(r *DoctorResult) string {
 
 	for _, c := range r.Checks {
 		state := "ok"
-		if !c.OK {
+
+		switch {
+		case !c.OK && c.Optional:
+			state = "missing"
+		case !c.OK:
 			state = "FAIL"
 		}
 
@@ -261,6 +268,10 @@ func doctorText(r *DoctorResult) string {
 		if c.Hint != "" {
 			fmt.Fprintf(&b, "  hint: %s\n", c.Hint)
 		}
+	}
+
+	if len(r.Checks) == 0 {
+		b.WriteString("no check was run: use --full for FFmpeg, the workspace and the helpers\n")
 	}
 
 	if r.Bundle != "" {
@@ -496,7 +507,7 @@ func (s *svc) transcribeChecks() []DoctorCheck {
 
 // toolCheck reports whether the helper or the model is installed and verified.
 func (s *svc) toolCheck(kind, goos, goarch string) DoctorCheck {
-	check := DoctorCheck{Name: "transcribe." + kind}
+	check := DoctorCheck{Name: "transcribe." + kind, Optional: true}
 
 	entries, ok := s.tools.Manifest.For("whisper", s.toolsModel(), goos, goarch)
 	if !ok {
@@ -736,6 +747,9 @@ func (s *svc) childPolicyChecks() []DoctorCheck {
 	limits := DoctorCheck{Name: "child.limits", OK: true, Detail: "unavailable: " + p.LimitsWhy}
 
 	switch {
+	case p.Limits && runtime.GOOS == "windows":
+		limits.Detail = "available: a Job Object bounds the CPU time and the memory of every child; it has no file " +
+			"size limit, so the output size watchdog alone bounds the output"
 	case p.Limits:
 		limits.Detail = "available: prlimit(1) sets RLIMIT_CPU and RLIMIT_FSIZE on every child, and RLIMIT_AS " +
 			"on the software paths"
