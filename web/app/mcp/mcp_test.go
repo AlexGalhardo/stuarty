@@ -612,7 +612,7 @@ func TestValidationSaysWhatIsAccepted(t *testing.T) {
 		args map[string]any
 		want string
 	}{
-		"enum":  {"project_get", map[string]any{"project_id": made, "detail": "document"}, "use one of concise, full"},
+		"enum":  {"project_get", map[string]any{"project_id": made, "detail": "everything"}, "use one of concise, full, document"},
 		"array": {"media_inspect", map[string]any{"project_id": made, "asset_id": "ast_0000000001", "sections": "probe,loudness"}, "expected an array"},
 		"type":  {"project_list", map[string]any{"limit": "ten"}, "expected integer"},
 		// VV-149: a numeric bound is named in the message.
@@ -654,5 +654,27 @@ func TestProjectCreateFPSNumberOrText(t *testing.T) {
 
 	if res := call(t, cs, "project_create", map[string]any{"name": "F", "fps": 0}); !res.IsError {
 		t.Error("fps 0 must be refused")
+	}
+}
+
+// project_get accepts detail document, as the API and the CLI do, and carries the
+// whole document in the text (VV-214).
+func TestProjectGetDetailDocument(t *testing.T) {
+	t.Parallel()
+
+	cs := connect(t, newService(t), Options{}, "claude-code")
+	project, _ := structured(t, ok(t, call(t, cs, "project_create", map[string]any{"name": "Doc"})))["project_id"].(string)
+
+	res := ok(t, call(t, cs, "project_get", map[string]any{"project_id": project, "detail": "document"}))
+
+	var doc struct {
+		SchemaVersion int `json:"schema_version"`
+	}
+
+	text := textOf(t, res)
+	_, body, _ := strings.Cut(text, "\n")
+
+	if err := json.Unmarshal([]byte(body), &doc); err != nil || doc.SchemaVersion == 0 {
+		t.Fatalf("the text is not the document (%v): %.200s", err, text)
 	}
 }

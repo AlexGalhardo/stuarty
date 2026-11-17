@@ -7,6 +7,7 @@ import (
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
 	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/vukem-video/service/textview"
 )
 
 // handlers are the tools whose Service methods exist; a tool without one is in
@@ -127,6 +128,16 @@ func projectGet(ctx context.Context, svc service.Service, raw json.RawMessage) (
 	)
 	if err != nil {
 		return nil, err
+	}
+
+	if res.Document != nil {
+		// The document is a bulk member, left out of the structured content, so the text carries it.
+		doc, merr := json.Marshal(res.Document)
+		if merr != nil {
+			return nil, merr
+		}
+
+		res.Text = textview.Note + "\n" + string(doc)
 	}
 
 	return &toolOutput{value: res, text: res.Text}, nil
