@@ -890,6 +890,8 @@
         "remove": "Remove font family {name}",
         "family": "Family name",
         "weight": "Weight",
+        "imported": "Imported font file",
+        "imported_choose": "Choose an imported font file",
         "hash": "Font file hash (sha256:...)",
         "add": "Add font",
         "brand": "Brand kit fonts",

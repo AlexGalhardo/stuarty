@@ -175,4 +175,34 @@ test.describe("brand-kit", () => {
 		expect(kit.logo).toMatch(/^sha256:[0-9a-f]{64}$/);
 		await call("PUT", "/brand-kit", { colors: {}, fonts: {} });
 	});
+
+	// VV-094: a font in the font store is chosen in the editor, never pasted as a hash.
+	test("add an imported font to the project from the Fonts section", async ({
+		page,
+		request,
+	}) => {
+		const call = await caller(request);
+		const stored = (await call("POST", "/fonts", { path: brandFont() })) as {
+			hash: string;
+		};
+		const seeded = await seedProject(request, { tracks: 1, perTrack: 0 });
+
+		await page.goto(`/editor/${seeded.id}?debug=1`);
+		await expect(page.getByRole("toolbar", { name: "Editing" })).toBeVisible();
+		const pick = page.getByLabel("Imported font file");
+		await expect(pick.locator(`option[value='${stored.hash}']`)).toHaveCount(1);
+		await pick.selectOption(stored.hash);
+		await page.getByLabel("Family name").fill("Stored Anton");
+		await page.getByRole("button", { name: "Add font" }).click();
+		await expect
+			.poll(() =>
+				page.evaluate(() =>
+					Object.keys(
+						(window.__vv?.document as { fonts?: object } | undefined)?.fonts ??
+							{},
+					),
+				),
+			)
+			.toContain("Stored Anton");
+	});
 });

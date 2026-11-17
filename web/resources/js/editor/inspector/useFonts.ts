@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import type { FontFamily } from "../api/types";
+import type { FontFamily, ImportedFont } from "../api/types";
 import { useDocumentState, useRuntime } from "../state/EditorContext";
 
 // The families a style may name: the bundled ones as `getFonts()` lists them
@@ -9,14 +9,20 @@ import { useDocumentState, useRuntime } from "../state/EditorContext";
 // service again, for E_FONT_UNKNOWN.
 export function useFonts(): {
 	families: readonly FontFamily[];
+	// The font files of the font store, by the hash `font.add` takes (VV-094).
+	imported: readonly ImportedFont[];
 	reload(): void;
 } {
 	const runtime = useRuntime();
 	const projectFonts = useDocumentState((s) => s.document?.fonts);
 	const [bundled, setBundled] = useState<readonly FontFamily[]>([]);
+	const [imported, setImported] = useState<readonly ImportedFont[]>([]);
 	const reload = useCallback(() => {
 		runtime.client.getFonts().then(
-			(result) => setBundled(result.fonts),
+			(result) => {
+				setBundled(result.fonts);
+				setImported(result.imported ?? []);
+			},
 			() => {},
 		);
 	}, [runtime]);
@@ -32,5 +38,5 @@ export function useFonts(): {
 			}));
 		return [...bundled, ...own];
 	}, [bundled, projectFonts]);
-	return { families, reload };
+	return { families, imported, reload };
 }
