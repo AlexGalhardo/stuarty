@@ -610,6 +610,21 @@ func (s *svc) refreshImported(ctx context.Context, c Caller, project *ProjectRow
 	}
 }
 
+// assetDurationFrames is the duration of an asset in project frames, the one value every
+// surface shows: the same count the document holds and the one a clip can use (SDD-001
+// section 3.2, whole frames of the project rate), so the probe, media.list and the events agree.
+// Without the frame or sample count it falls back to the probed milliseconds.
+func assetDurationFrames(f *AssetFacts, fps timeval.FPS, probedMS int64) int64 {
+	switch {
+	case f.FrameCount != nil && f.FrameRateNum != nil && f.FrameRateDen != nil && *f.FrameRateNum > 0 && *f.FrameCount > 0:
+		return *f.FrameCount * fps.Num * int64(*f.FrameRateDen) / (fps.Den * int64(*f.FrameRateNum))
+	case f.SampleCount != nil && *f.SampleCount > 0:
+		return *f.SampleCount * fps.Num / (48000 * fps.Den)
+	default:
+		return fps.FrameAtMillis(probedMS)
+	}
+}
+
 // probeOf is the ProbeSummary of a ready asset, from its probe artifact.
 func (s *svc) probeOf(ctx context.Context, project *ProjectRow, ar *AssetRow) *ProbeSummary {
 	sum := s.readSummary(ctx, ar.Hash)
@@ -621,7 +636,8 @@ func (s *svc) probeOf(ctx context.Context, project *ProjectRow, ar *AssetRow) *P
 	p := &ProbeSummary{Kind: string(sum.Kind), Container: sum.Container, SizeBytes: sum.SizeBytes}
 
 	if sum.Kind != ingest.KindImage && fps.Valid() {
-		tv := timeValue(timeline.Rational{Num: int(fps.Num), Den: int(fps.Den)}, fps.FrameAtMillis(sum.DurationMS))
+		frames := assetDurationFrames(&ar.Facts, fps, sum.DurationMS)
+		tv := timeValue(timeline.Rational{Num: int(fps.Num), Den: int(fps.Den)}, frames)
 		p.Duration = &tv
 	}
 
@@ -876,8 +892,8 @@ func (s *svc) entryOf(ctx context.Context, c Caller, pa *ProjectAssetRow, ar *As
 	}
 
 	if ar.Facts.DurationMs != nil && ar.Kind != string(timeline.AssetImage) && fps.Valid() {
-		frames := fps.FrameAtMillis(*ar.Facts.DurationMs)
-		secs := round3(float64(*ar.Facts.DurationMs) / 1000)
+		frames := assetDurationFrames(&ar.Facts, fps, *ar.Facts.DurationMs)
+		secs := round3(fps.Seconds(frames))
 		e.DurationFrames, e.DurationSeconds = &frames, &secs
 	}
 
