@@ -465,7 +465,9 @@ func (d *mcpDriver) do(t *testing.T, s step) (json.RawMessage, string, *service.
 		t.Fatalf("mcp %s: the content is %T, want text (images come only from view)", tool, res.Content[0])
 	}
 
-	if res.IsError {
+	// A result that failed as a whole but carries data (media_import with nothing imported, VV-208) has
+	// structured content; an error result has none.
+	if res.IsError && res.StructuredContent == nil {
 		// The last line of an error text is its envelope (SDD-003 section 1.3).
 		_, last, _ := strings.Cut(tc.Text, "\n")
 		last = last[strings.LastIndex(last, "\n")+1:]
