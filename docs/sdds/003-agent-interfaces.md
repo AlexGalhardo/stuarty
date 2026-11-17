@@ -3061,7 +3061,7 @@ Check 29 (ten runs of an agent with a real model) is not run by any local comman
 | D-33 | Operations added by SDD-000: `MediaList` and `JobList` are encoded on MCP as `media_inspect` without `asset_id` and `job_get` with `project_id`; the others have no MCP tool; `TrashEmpty` is on no agent surface; the tool list is filtered by phase (12 tools in the Prototype) | §2.1, §4.1, §7.1 |
 | D-34 | `EditResult` has `description` and no `text`; `UndoResult` follows SDD-005 §12.3 and one call undoes one step; the conflict `details` follow SDD-006 §7.3; `DescribeDiff` has one format; an unknown `op` is `E_UNKNOWN_COMMAND` on every surface | §2.4, §2.5, §3.4 |
 | D-35 | `MediaImport` returns one entry per file; only an invalid request, or a single refused file, fails the call; a mixed batch is HTTP 200 and CLI exit 1; relative paths are `E_PATH_NOT_ALLOWED`; names are base names | §2.6 |
-| D-36 | The local actor header is `Vukem-Video-Client`; the browser cookie is `vukem_video_session` and never holds the token; `E_RATE_LIMITED` is 429; the label `ui` is reserved | §1.6, §6.1, §6.2 |
+| D-36 | The local actor header is `Vukem-Video-Client`; the browser cookie is `vukem_video_session` (`vukem_video_session_<port>` in local mode, VV-170) and never holds the token; `E_RATE_LIMITED` is 429; the label `ui` is reserved | §1.6, §6.1, §6.2 |
 | D-37 | `Caller` (SDD-007 §5.1) is the one identity type; `Job.project_id` is nullable; `JobStartRequest` has one `args`; cursors of history and global lists never go stale | §1.5, §1.6, §2.8 |
 | D-38 | Lint rule `L_BLACK_FRAMES` (RF-108) is added; hints are surface-neutral | §3.6, §3.1 |
 

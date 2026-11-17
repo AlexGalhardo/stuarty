@@ -83,7 +83,7 @@ func TestLaunchFlowGivesACookieSession(t *testing.T) {
 	}
 
 	cookie := res.header.Get("Set-Cookie")
-	for _, attr := range []string{"vukem_video_session=", "Path=/", "HttpOnly", "SameSite=Strict", "Max-Age=604800"} {
+	for _, attr := range []string{"vukem_video_session_", "Path=/", "HttpOnly", "SameSite=Strict", "Max-Age=604800"} {
 		if !strings.Contains(cookie, attr) {
 			t.Errorf("Set-Cookie %q lacks %s", cookie, attr)
 		}
@@ -511,5 +511,31 @@ func TestInstallRouteRefusesTheLocalToken(t *testing.T) {
 
 	if res := h.get("/api/v1/unlisted"); res.status != http.StatusNotFound {
 		t.Errorf("an unlisted route = %d, want 404", res.status)
+	}
+}
+
+// VV-170: two local servers on one host must not share a cookie name, or opening one signs the other out.
+func TestLocalSessionCookieNamesThePortOfTheServer(t *testing.T) {
+	t.Parallel()
+
+	h := newHarness(t)
+	cookie := h.session(t)
+	name, id, _ := strings.Cut(cookie, "=")
+
+	if want := "vukem_video_session_" + h.port; name != want {
+		t.Fatalf("cookie name = %q, want %q", name, want)
+	}
+
+	if res := h.do(
+		req{path: "/api/v1/projects", noAuth: true, headers: map[string]string{"Cookie": name + "=" + id}},
+	); res.status != http.StatusOK {
+		t.Errorf("the session cookie of this server = %d", res.status)
+	}
+
+	bare := "vukem_video_session=" + id
+	if res := h.do(
+		req{path: "/api/v1/projects", noAuth: true, headers: map[string]string{"Cookie": bare}},
+	); res.status != http.StatusUnauthorized {
+		t.Errorf("a cookie without the port = %d, want 401", res.status)
 	}
 }

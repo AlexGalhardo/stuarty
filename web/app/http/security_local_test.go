@@ -9,7 +9,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/web/app/auth"
 	httpapi "github.com/AlexGalhardo/vukem-video/web/app/http"
 )
 
@@ -247,7 +246,7 @@ func TestSecurity_T04_SecretsNeverAppear(t *testing.T) {
 
 	code, _ := h.post("/api/v1/system/launch", "").json(t)["code"].(string)
 	cookie := h.session(t)
-	_, sessionID, _ := strings.Cut(cookie, "=")
+	cookieName, sessionID, _ := strings.Cut(cookie, "=")
 
 	secrets := map[string]string{"local token": canary, "launch code": code, "session id": sessionID}
 
@@ -262,7 +261,7 @@ func TestSecurity_T04_SecretsNeverAppear(t *testing.T) {
 		{"Authorization": "Bearer " + canary},
 		{"Authorization": "Bearer " + wrong},
 		{"Cookie": cookie},
-		{"Cookie": auth.CookieName + "=" + sessionID + "x"},
+		{"Cookie": cookieName + "=" + sessionID + "x"},
 		{},
 	}
 

@@ -38,8 +38,15 @@ func (h *apiHandler) launch(c *web.Ctx) error {
 
 	// Secure only over TLS: loopback is plain HTTP and Safari drops a Secure cookie there (SDD-007 section 3.5).
 	c.SetCookie(&http.Cookie{ //nolint:gosec // see above
-		Name: auth.CookieName, Value: id, Path: "/", HttpOnly: true, SameSite: http.SameSiteStrictMode,
-		MaxAge: auth.SessionMaxAge, Secure: c.Request().TLS != nil,
+		Name: auth.LocalCookieName(
+			browserPort(c.Request()),
+		),
+		Value:    id,
+		Path:     "/",
+		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
+		MaxAge:   auth.SessionMaxAge,
+		Secure:   c.Request().TLS != nil,
 	})
 	c.SetHeader("Cache-Control", "no-store")
 	c.SetHeader("Referrer-Policy", "no-referrer")

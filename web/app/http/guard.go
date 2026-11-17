@@ -158,6 +158,16 @@ func listenPort(r *http.Request) string {
 	return port
 }
 
+// browserPort is the port the browser used to reach this server (the Host header), which is not the
+// listening port behind a published container port; it falls back to the listening port.
+func browserPort(r *http.Request) string {
+	if _, port, err := net.SplitHostPort(r.Host); err == nil && port != "" {
+		return port
+	}
+
+	return listenPort(r)
+}
+
 func hostAllowed(r *http.Request) bool {
 	port := listenPort(r)
 	if port == "" {

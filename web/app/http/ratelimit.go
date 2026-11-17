@@ -263,7 +263,7 @@ func (h *apiHandler) credentialLimit(next http.Handler) http.Handler {
 }
 
 func (h *apiHandler) sessionID(r *http.Request) string {
-	name := auth.CookieName
+	name := auth.LocalCookieName(browserPort(r))
 	if h.Auth != nil {
 		name = h.Auth.Sessions.CookieName()
 	}

@@ -221,7 +221,7 @@ The limits and their errors are specified in SDD-007 §9. Variables read by vuke
 | `X-Vukem-Revision` | response header | the revision a read or a byte response belongs to | SDD-003 §6 |
 | `X-Request-Id` | request and response header | the request identifier, repeated in the error envelope as `request_id` | SDD-003 §1.4 |
 | `Last-Event-ID` | request header | the last revision a stream client received (the `since` query parameter does the same) | SDD-006 §4 |
-| `vukem_video_session` | cookie | the browser session in local mode, and in network mode over plain HTTP on localhost | SDD-007 §3.5 |
+| `vukem_video_session_<port>` | cookie | the browser session in local mode, `<port>` being the port of the Host the browser used, so two local servers on one host do not share a cookie (VV-170); in network mode over plain HTTP on localhost the name is `vukem_video_session` | SDD-007 §3.5 |
 | `__Host-vukem_video_session` | cookie | the browser session in network mode over TLS | SDD-007 §4.1 |
 
 ## 12. Renderer names (SDD-013)
