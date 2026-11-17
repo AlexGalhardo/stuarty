@@ -292,6 +292,11 @@ function problemExample(status: string, schemas: Record<string, Schema>): unknow
 	return { ...base, ...real };
 }
 
+// The summary of the two operations the local token cannot call says so (trash.empty, system.tools.install).
+function browserOnly(op: ApiOp): boolean {
+	return (op.op.summary ?? "").includes("the local token gets 403");
+}
+
 function operationPage(op: ApiOp, ctx: Context): string {
 	const { doc } = ctx;
 	const schemas = doc.components.schemas;
@@ -306,7 +311,7 @@ function operationPage(op: ApiOp, ctx: Context): string {
 		[
 			`Send the secret in the header ${code("Authorization: Bearer <secret>")}: the local token in local mode, an [API key](/docs/self-hosting/api-keys) in network mode.`,
 			op.scope
-				? `An API key needs the ${code(op.scope)} scope${op.alsoScope ? ` (or ${code(op.alsoScope)} where the call concerns media)` : ""}; the local token has every scope.`
+				? `An API key needs the ${code(op.scope)} scope${op.alsoScope ? ` (or ${code(op.alsoScope)} where the call concerns media)` : ""}; ${browserOnly(op) ? "the local token has every scope but this operation refuses it with 403 E_FORBIDDEN: it needs a browser session or an admin key." : "the local token has every scope."}`
 				: "",
 			// The route table carries no scope for the handshake, and the adapter lets it through without a credential.
 			op.id === "handshake.get"
