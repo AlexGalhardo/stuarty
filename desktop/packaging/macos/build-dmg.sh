@@ -48,7 +48,7 @@ cp "$iconset/icon_256x256.png" "$iconset/icon_128x128@2x.png"
 rm "$iconset/icon_64x64.png"
 iconutil -c icns "$iconset" -o "$app/Contents/Resources/vukem-video.icns"
 
-dmg="$out/vukem-video-desktop_${version}_darwin_${arch}.dmg"
+dmg="$out/vukem-video-desktop-${version//./-}-${arch}.dmg"
 rm -f "$dmg"
 hdiutil create -quiet -volname "Vukem Video" -srcfolder "$stage" -ov -format UDZO "$dmg"
 

@@ -26,7 +26,7 @@ example one made with `ffmpeg -f lavfi -i testsrc=duration=10:size=1280x720:rate
 
 | # | Step | Do | Expected |
 | --- | --- | --- | --- |
-| 1 | Install | Windows: run `..._windows_amd64_setup.exe` (SmartScreen: More info, then Run anyway). macOS: open the `.pkg` (Gatekeeper: control-click, Open). Linux: `apt install ./vukem-video_X.Y.Z_linux_<arch>.deb`, or run the AppImage. | Installs without an administrator prompt on Windows (per user); the application shows in the Start menu, `/Applications` or the desktop menu. |
+| 1 | Install | Windows: run `vukem-video-X-Y-Z.exe` (SmartScreen: More info, then Run anyway). macOS: open the `.pkg` (Gatekeeper: control-click, Open). Linux: `apt install ./vukem-video_X.Y.Z_linux_<arch>.deb`, or run `vukem-video-X-Y-Z.AppImage`. | Installs without an administrator prompt on Windows (per user); the application shows in the Start menu, `/Applications` or the desktop menu. |
 | 2 | First run | Start the application from its shortcut or menu entry. | A window opens on the project list within 30 s; no console window; no browser tab. The workspace folder exists (File, Open workspace folder opens it). The menu bar shows File, View and Help. |
 | 3 | Language and version | Help, About. | The dialog says "Vukem Video" and the version under test. Menu texts follow the system language (English or pt-BR). |
 | 4 | Import by dialog | Create a project. In the editor press "Choose files" and pick the test file in the native file dialog. | The system dialog opens (not a browser dialog), filtered to media files. The asset reaches "Ready" and appears in the library with a thumbnail. Dropping a file on the window also imports it. |

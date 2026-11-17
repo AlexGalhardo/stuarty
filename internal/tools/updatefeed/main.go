@@ -48,8 +48,59 @@ var (
 	launcherName = regexp.MustCompile(
 		`^vukem-video-desktop_([0-9.]+)_(windows|darwin|linux)_(amd64|arm64)(?:\.AppImage|\.app\.zip|_portable\.zip)$`,
 	)
+	// The download a person grabs: vukem-video-desktop-0-28-0.exe, .AppImage, or -arm64.dmg.
+	// The version uses dashes. .exe is Windows amd64, .AppImage is Linux amd64, .dmg names its arch.
+	friendlyName = regexp.MustCompile(
+		`^vukem-video-desktop-([0-9]+-[0-9]+-[0-9]+)(?:-(amd64|arm64))?(\.exe|\.AppImage|\.dmg)$`,
+	)
 	hex64 = regexp.MustCompile(`^[0-9a-f]{64}$`)
 )
+
+// artifact is one file the feed lists: its platform key and whether it replaces the launcher.
+type artifact struct {
+	platform string
+	launcher bool
+}
+
+// classify reads the platform of a desktop installer or launcher artifact of version.
+// version is MAJOR.MINOR.PATCH with dots. The dashed download names count as that version.
+func classify(name, version string) (artifact, bool) {
+	if m := installerName.FindStringSubmatch(name); len(m) == 4 && m[1] == version {
+		return artifact{platform: m[2] + "-" + m[3]}, true
+	}
+
+	if m := launcherName.FindStringSubmatch(name); len(m) == 4 && m[1] == version {
+		return artifact{platform: m[2] + "-" + m[3], launcher: true}, true
+	}
+
+	m := friendlyName.FindStringSubmatch(name)
+	if len(m) != 4 || strings.ReplaceAll(m[1], "-", ".") != version {
+		return artifact{}, false
+	}
+
+	switch m[3] {
+	case ".exe":
+		if m[2] != "" {
+			return artifact{}, false
+		}
+
+		return artifact{platform: "windows-amd64"}, true
+	case ".AppImage":
+		if m[2] != "" {
+			return artifact{}, false
+		}
+
+		return artifact{platform: "linux-amd64", launcher: true}, true
+	case ".dmg":
+		if m[2] != "amd64" && m[2] != "arm64" {
+			return artifact{}, false
+		}
+
+		return artifact{platform: "darwin-" + m[2]}, true
+	default:
+		return artifact{}, false
+	}
+}
 
 // launcherPlatform prefixes the platform in the signed message of a launcher artifact: the same
 // artifact message as an installer, with the platform "launcher:<goos>-<goarch>", so the signature of
@@ -235,22 +286,21 @@ func buildPayload(
 	for _, file := range files {
 		name := filepath.Base(file)
 
-		m := installerName.FindStringSubmatch(name)
-		group, signed := p.Platforms, ""
+		kind, ok := classify(name, version)
+		if !ok {
+			return nil, fmt.Errorf("%s is not a desktop installer or launcher artifact of version %s", name, version)
+		}
 
-		if len(m) == 0 {
-			if m = launcherName.FindStringSubmatch(name); len(m) == 4 && p.Launchers == nil {
+		group, signed := p.Platforms, ""
+		if kind.launcher {
+			if p.Launchers == nil {
 				p.Launchers = map[string]entry{}
 			}
 
 			group, signed = p.Launchers, launcherPlatform
 		}
 
-		if len(m) != 4 || m[1] != version {
-			return nil, fmt.Errorf("%s is not a desktop installer or launcher artifact of version %s", name, version)
-		}
-
-		platform := m[2] + "-" + m[3]
+		platform := kind.platform
 		if _, dup := group[platform]; dup {
 			return nil, fmt.Errorf("two files for %s", signed+platform)
 		}

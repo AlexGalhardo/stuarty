@@ -1,8 +1,10 @@
 ; Inno Setup script of the Windows installer of the desktop application (SDD-009 sections 10.4 and 10.5,
 ; P3-REL-003, D-033).
 ;
-; Build:  ISCC.exe /DAppVersion=0.15.0 /DDesktopBinary=<vukem-video-desktop.exe> /DServerBinary=<vukem-video.exe>
-;                  /DOutputDir=<dir> vukem-video-desktop.iss
+; Build:  ISCC.exe /DAppVersion=0.15.0 /DFileVersion=0-15-0 /DDesktopBinary=<vukem-video-desktop.exe>
+;                  /DServerBinary=<vukem-video.exe> /DOutputDir=<dir> vukem-video-desktop.iss
+; FileVersion is AppVersion with dots replaced by dashes, so the download is
+; vukem-video-desktop-0-15-0.exe.
 ;
 ; The installer is per user by default, with no administrator prompt and no paid signing (D-033): Windows
 ; SmartScreen shows "Windows protected your PC" until the user chooses "More info" then "Run anyway". The
@@ -22,6 +24,9 @@
 #endif
 #ifndef OutputDir
   #define OutputDir "."
+#endif
+#ifndef FileVersion
+  #define FileVersion "0-0-0"
 #endif
 #define AppName "Vukem Video Desktop"
 #define AppExe "vukem-video-desktop.exe"
@@ -47,7 +52,7 @@ SetupIconFile=..\..\..\.config\installers\assets\vukem-video.ico
 UninstallDisplayIcon={app}\vukem-video.ico
 UninstallDisplayName={#AppName}
 OutputDir={#OutputDir}
-OutputBaseFilename=vukem-video-desktop_{#AppVersion}_windows_amd64_setup
+OutputBaseFilename=vukem-video-desktop-{#FileVersion}
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern

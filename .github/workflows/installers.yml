@@ -88,18 +88,18 @@ jobs:
         run: |
           iscc="$(bash scripts/fetch-installer-tool.sh inno)"
           mkdir -p out
-          MSYS2_ARG_CONV_EXCL='*' "$iscc" "/DAppVersion=${VERSION}" \
+          MSYS2_ARG_CONV_EXCL='*' "$iscc" "/DAppVersion=${VERSION}" "/DFileVersion=${VERSION//./-}" \
             "/DSourceBinary=$(cygpath -w "$PWD/binaries/windows_amd64/vukem-video.exe")" \
             "/DOutputDir=$(cygpath -w "$PWD/out")" \
             .config/installers/windows/vukem-video.iss
           ls -l out
       - name: Test the installer
         shell: pwsh
-        run: ./.config/installers/windows/smoke-test.ps1 -Installer (Get-ChildItem out/*_setup.exe).FullName
+        run: ./.config/installers/windows/smoke-test.ps1 -Installer (Get-ChildItem out/vukem-video-*.exe).FullName
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: installer-windows
-          path: out/*_setup.exe
+          path: out/vukem-video-*.exe
           if-no-files-found: error
 
   appimage:

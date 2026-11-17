@@ -95,7 +95,7 @@ cosign verify-blob checksums.txt \
 # which cosign signed above, and the provenance attestation of every file.
 sha256sum --ignore-missing -c checksums.txt
 gh attestation verify "$archive" -R "$repo"
-for installer in vukem-video-desktop_"${v}"_*; do
+for installer in vukem-video-desktop_"${v}"_* vukem-video-desktop-"${v//./-}"*; do
 	[ -e "$installer" ] || continue
 	case "$installer" in *.sbom.json) continue ;; esac
 	gh attestation verify "$installer" -R "$repo"
