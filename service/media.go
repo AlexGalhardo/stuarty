@@ -791,6 +791,10 @@ func (s *svc) MediaList(ctx context.Context, req MediaListRequest) (*MediaListRe
 		return nil, asError(err)
 	}
 
+	if err := checkLimit(req.Limit); err != nil {
+		return nil, err
+	}
+
 	limit := clampLimit(req.Limit, defMediaLimit, maxMediaLimit)
 	fps := projectFPS(&row)
 	total := len(rows)

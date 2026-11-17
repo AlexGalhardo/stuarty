@@ -198,6 +198,10 @@ func (s *svc) ProjectList(ctx context.Context, req ProjectListRequest) (*Project
 		return nil, err
 	}
 
+	if err := checkLimit(req.Limit); err != nil {
+		return nil, err
+	}
+
 	q := ProjectQuery{
 		After: req.Cursor, Limit: clampLimit(req.Limit, defaultProjectLimit, maxProjectLimit),
 		OwnerUserID: c.OwnerUserID, ProjectID: c.ProjectID,
@@ -274,6 +278,17 @@ func (s *svc) ProjectList(ctx context.Context, req ProjectListRequest) (*Project
 	}
 
 	return res, nil
+}
+
+// checkLimit refuses a limit below zero; zero is the default of the operation. An explicit limit=0 is
+// refused by the adapters, which can tell it from an absent one (VV-104).
+func checkLimit(n int) error {
+	if n < 0 {
+		return newError(command.CodeValidation, "limit is %d; it must be at least 1.", n).
+			withPath("limit").withHint("omit limit for the default page size")
+	}
+
+	return nil
 }
 
 func clampLimit(n, def, maxN int) int {
