@@ -129,7 +129,7 @@ vukem-video project:restore prj_7k2m9x4q1b
 
 ## `edit`
 
-Apply a batch of operations to a project
+Apply a batch of operations to a project (its lint block is lint_scope fast: lint runs every rule)
 
 ```text
 vukem-video edit --project <id> --ops <file|-> [--base n] [--key k]
@@ -206,7 +206,7 @@ vukem-video redo --project prj_7k2m9x4q1b
 
 ## `lint`
 
-Check a project against the lint rules
+Check a project against every lint rule (an edit result runs only the fast rules, lint_scope fast)
 
 ```text
 vukem-video lint --project <id> [--severity error|warning] [--cursor c] [--limit n] [--strict]

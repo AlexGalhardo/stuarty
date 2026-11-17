@@ -1,6 +1,6 @@
 ---
-title: "Apply a batch of operations"
-description: "POST /api/v1/projects/{id}/edit: Apply a batch of operations"
+title: "Apply a batch of operations (lint_scope fast)"
+description: "POST /api/v1/projects/{id}/edit: Apply a batch of operations (lint_scope fast)"
 badge: "POST"
 wide: true
 ---
@@ -385,6 +385,7 @@ puts "#{response.code} #{response.body}"
   ],
   "lint": {
     "errors": 0,
+    "lint_scope": "string",
     "warnings": 0
   },
   "project_id": "string",

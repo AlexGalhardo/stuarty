@@ -117,7 +117,7 @@ var Endpoints = []Endpoint{
 	},
 	{
 		ID: "projects.edit", Method: http.MethodPost, Path: "/projects/{id}/edit", Scope: service.ScopeEdit,
-		Service: "Edit", Status: 200, Summary: "Apply a batch of operations",
+		Service: "Edit", Status: 200, Summary: "Apply a batch of operations (lint_scope fast)",
 	},
 	{
 		ID:      "commands.list",
@@ -146,7 +146,7 @@ var Endpoints = []Endpoint{
 	},
 	{
 		ID: "projects.lint", Method: http.MethodGet, Path: "/projects/{id}/lint", Scope: service.ScopeRead,
-		Service: "Lint", Status: 200, Summary: "Lint a project",
+		Service: "Lint", Status: 200, Summary: "Lint a project with every rule",
 	},
 
 	{

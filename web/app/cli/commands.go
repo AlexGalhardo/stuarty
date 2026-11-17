@@ -244,7 +244,7 @@ var (
 
 var lintCmd = &spec{
 	name:    "lint",
-	summary: "check a project against the lint rules",
+	summary: "check a project against every lint rule (an edit result runs only the fast rules, lint_scope fast)",
 	usage:   []string{"vukem-video lint --project <id> [--severity error|warning] [--cursor c] [--limit n] [--strict]"},
 	example: "vukem-video lint --project prj_7k2m9x4q1b --json",
 	project: true,

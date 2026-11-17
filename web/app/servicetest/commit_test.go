@@ -450,6 +450,10 @@ func TestEditReportsNewLintFindings(t *testing.T) {
 		t.Errorf("totals = %+v", res.Lint)
 	}
 
+	if res.Lint.LintScope != "fast" {
+		t.Errorf("lint_scope = %q, want fast (VV-082)", res.Lint.LintScope)
+	}
+
 	codes := map[string]bool{}
 	for _, f := range res.Findings {
 		codes[f.Code] = true

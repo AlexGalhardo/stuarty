@@ -147,10 +147,16 @@ type OpEffect struct {
 	Created   []string       `json:"created,omitempty"`
 }
 
-// LintTotals counts the findings of the fast rules.
+// LintScopeFast marks totals computed by the fast rules only.
+const LintScopeFast = "fast"
+
+// LintTotals counts findings. In an edit result LintScope is "fast": only the
+// doc and item rules ran, so the totals can differ from lint of the project,
+// which runs every rule (VV-082).
 type LintTotals struct {
-	Errors   int `json:"errors"`
-	Warnings int `json:"warnings"`
+	Errors    int    `json:"errors"`
+	Warnings  int    `json:"warnings"`
+	LintScope string `json:"lint_scope,omitempty"`
 }
 
 // EditResult is the outcome of a batch.

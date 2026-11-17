@@ -1925,6 +1925,9 @@
           "errors": {
             "type": "integer"
           },
+          "lint_scope": {
+            "type": "string"
+          },
           "warnings": {
             "type": "integer"
           }
@@ -9113,7 +9116,7 @@
             "bearer": []
           }
         ],
-        "summary": "Apply a batch of operations"
+        "summary": "Apply a batch of operations (lint_scope fast)"
       }
     },
     "/api/v1/projects/{id}/events": {
@@ -9597,7 +9600,7 @@
             "bearer": []
           }
         ],
-        "summary": "Lint a project"
+        "summary": "Lint a project with every rule"
       }
     },
     "/api/v1/projects/{id}/media": {

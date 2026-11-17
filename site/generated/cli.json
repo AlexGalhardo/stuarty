@@ -200,7 +200,7 @@
     },
     {
       "name": "edit",
-      "summary": "apply a batch of operations to a project",
+      "summary": "apply a batch of operations to a project (its lint block is lint_scope fast: lint runs every rule)",
       "usage": [
         "vukem-video edit --project <id> --ops <file|-> [--base n] [--key k]",
         "vukem-video edit --project <id> <op> [k=v | k:=json]..."
@@ -299,7 +299,7 @@
     },
     {
       "name": "lint",
-      "summary": "check a project against the lint rules",
+      "summary": "check a project against every lint rule (an edit result runs only the fast rules, lint_scope fast)",
       "usage": [
         "vukem-video lint --project <id> [--severity error|warning] [--cursor c] [--limit n] [--strict]"
       ],
