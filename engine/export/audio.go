@@ -23,7 +23,17 @@ type Loudness struct {
 	TruePeakDBTP   *float64 `json:"true_peak_dbtp"`  // before the gain
 	GainDB         float64  `json:"gain_db"`
 	TargetLUFS     float64  `json:"target_lufs"`
+	// Limited is true when the gain took the mix over the true peak ceiling and the limiter held
+	// the peaks. OutputLUFS is then the loudness of the file after the limiter, and ShortfallDB how
+	// far it stays under the target (0 when it reached it).
+	Limited     bool     `json:"limited"`
+	OutputLUFS  *float64 `json:"output_lufs,omitempty"`
+	ShortfallDB float64  `json:"shortfall_db"`
 }
+
+// shortfallTolerance is how far under the target a limited mix may land before the gain is raised
+// once more to make up for the loudness that the limiter took.
+const shortfallTolerance = 0.3
 
 // samplesAt is the output sample of timeline frame t: t x 48000 x den / num, floored.
 func samplesAt(fps timeline.Rational, t int) int64 {
@@ -69,18 +79,68 @@ func (s *state) mixAudio(ctx context.Context) (string, Loudness, error) {
 	loud.IntegratedLUFS, loud.TruePeakDBTP = l.IntegratedLUFS, l.TruePeakDBTP
 	loud.GainDB = audio.GainDB(l.IntegratedLUFS, l.TruePeakDBTP, total, target)
 
-	in, err := os.Open(raw)
-	if err != nil {
+	if err := s.writeGain(ctx, raw, out, total, &loud); err != nil {
 		return "", loud, err
 	}
-	defer func() { _ = in.Close() }()
-	err = writeFile(out, func(w io.Writer) error { return audio.GainToPCM16WAV(in, w, total, loud.GainDB) })
-	if err != nil {
-		return "", loud, wrapAudio(err, "")
-	}
-	_ = in.Close()
 	_ = os.Remove(raw)
 	return out, loud, nil
+}
+
+// writeGain writes the 16-bit WAV out from the float mix raw with the gain of loud. A gain that takes
+// the peaks over the ceiling goes through the limiter; the result is measured, and the gain is raised
+// once when the limiter took more loudness than the tolerance (the peaks it cut were part of the
+// measured level).
+func (s *state) writeGain(ctx context.Context, raw, out string, total int64, loud *Loudness) error {
+	ceilingGain := math.Inf(1)
+	if loud.TruePeakDBTP != nil {
+		ceilingGain = audio.PeakCeilingDBTP - *loud.TruePeakDBTP + audio.MaxLimitingDB
+	}
+	for pass := 0; ; pass++ {
+		limited := audio.NeedsLimiter(loud.TruePeakDBTP, loud.GainDB)
+		if err := writeGainOnce(raw, out, total, loud.GainDB, limited); err != nil {
+			return wrapAudio(err, "")
+		}
+		loud.Limited = limited
+		if !limited {
+			return nil
+		}
+
+		l, stderr, err := s.measure(ctx, out, total)
+		if err != nil {
+			return wrapAudio(err, stderr)
+		}
+		loud.OutputLUFS = l.IntegratedLUFS
+		loud.ShortfallDB = 0
+		if l.IntegratedLUFS == nil {
+			return nil
+		}
+		short := loud.TargetLUFS - *l.IntegratedLUFS
+		loud.ShortfallDB = math.Max(0, short)
+		next := math.Min(loud.GainDB+short, ceilingGain)
+		if pass > 0 || short <= shortfallTolerance || next < loud.GainDB+0.05 {
+			return nil
+		}
+		loud.GainDB = next
+		if err := os.Remove(out); err != nil {
+			return err
+		}
+	}
+}
+
+func writeGainOnce(raw, out string, total int64, gainDB float64, limit bool) error {
+	in, err := os.Open(raw)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = in.Close() }()
+
+	return writeFile(out, func(w io.Writer) error {
+		if limit {
+			return audio.LimitToPCM16WAV(in, w, total, gainDB)
+		}
+
+		return audio.GainToPCM16WAV(in, w, total, gainDB)
+	})
 }
 
 func wrapAudio(err error, stderr string) error {

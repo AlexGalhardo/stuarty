@@ -355,6 +355,87 @@ func TestLoudnessTarget(t *testing.T) {
 		}
 	})
 
+	t.Run("limited", func(t *testing.T) {
+		ctx := context.Background()
+		s := testState(t, job, "loud-limited")
+		const n = 6 * audio.SampleRate
+
+		// Quiet noise-like bursts with a loud click each half second: the peak leaves no room for the
+		// gain that the target needs, so the limiter takes the peaks.
+		op := audio.OpenerFunc(func(context.Context, plan.AudioSource) (io.ReadCloser, error) {
+			b := synth(1, n)
+			for i := range n {
+				v := int16(binary.LittleEndian.Uint16(b[i*4:])) / 4
+				if (i/9600)%3 == 2 {
+					v = 0
+				}
+				if i%24000 == 5000 {
+					v = 30000
+				}
+				binary.LittleEndian.PutUint16(b[i*4:], uint16(v))
+				binary.LittleEndian.PutUint16(b[i*4+2:], uint16(v))
+			}
+			return io.NopCloser(bytes.NewReader(b)), nil
+		})
+		raw, err := s.dir.Path("raw.wav")
+		if err != nil {
+			t.Fatal(err)
+		}
+		srcs := []plan.AudioSource{src("i", "x", 0, 0, n, gp(0, 1))}
+		if err := writeFile(
+			raw,
+			func(w io.Writer) error { return audio.MixToFloatWAV(ctx, srcs, n, op, w) },
+		); err != nil {
+			t.Fatal(err)
+		}
+		first, _, err := s.measure(ctx, raw, n)
+		if err != nil {
+			t.Fatal(err)
+		}
+		loud := Loudness{
+			IntegratedLUFS: first.IntegratedLUFS, TruePeakDBTP: first.TruePeakDBTP, TargetLUFS: -14,
+			GainDB: audio.GainDB(first.IntegratedLUFS, first.TruePeakDBTP, n, -14),
+		}
+		out, err := s.dir.Path("out.wav")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := s.writeGain(ctx, raw, out, n, &loud); err != nil {
+			t.Fatal(err)
+		}
+		after, _, err := s.measure(ctx, out, n)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		t.Logf(
+			"before %.2f LUFS %.2f dBTP; gain %.2f dB; after %.2f LUFS %.2f dBTP; shortfall %.2f dB",
+			*first.IntegratedLUFS,
+			*first.TruePeakDBTP,
+			loud.GainDB,
+			*after.IntegratedLUFS,
+			*after.TruePeakDBTP,
+			loud.ShortfallDB,
+		)
+
+		if !loud.Limited {
+			t.Fatal("the mix was not limited, the test does not cover the limiter")
+		}
+		if *after.TruePeakDBTP > -1.5 {
+			t.Errorf("true peak %.2f dBTP, want at most -1.5", *after.TruePeakDBTP)
+		}
+		if got := *after.IntegratedLUFS; math.Abs(got+14) > 1 && loud.ShortfallDB < 1 {
+			t.Errorf(
+				"%.2f LUFS with a shortfall of %.2f dB, want -14 within 1.0 LU or the shortfall reported",
+				got,
+				loud.ShortfallDB,
+			)
+		}
+		if loud.OutputLUFS == nil || math.Abs(*loud.OutputLUFS-*after.IntegratedLUFS) > 0.3 {
+			t.Errorf("output loudness %v, measured %.2f", loud.OutputLUFS, *after.IntegratedLUFS)
+		}
+	})
+
 	t.Run("short", func(t *testing.T) {
 		if before, _ := normalize(t, job, "short", 0.3); before.gain != 0 {
 			t.Errorf("gain %.2f dB for a 0.3 s mix, want 0", before.gain)

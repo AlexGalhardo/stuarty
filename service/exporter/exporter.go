@@ -91,6 +91,10 @@ func (a *adapter) Export(ctx context.Context, in service.ExportInput) (*service.
 
 	if l := res.Loudness.IntegratedLUFS; l != nil {
 		v := *l + res.Loudness.GainDB
+		if res.Loudness.OutputLUFS != nil {
+			v = *res.Loudness.OutputLUFS
+		}
+
 		out.LoudnessLUFS = &v
 	}
 
