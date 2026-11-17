@@ -240,7 +240,7 @@ func (s *svc) findings(before, after *timeline.Document) ([]lint.Finding, LintTo
 		added = []lint.Finding{}
 	}
 
-	return added, LintTotals{Errors: errs, Warnings: warns}
+	return added, LintTotals{Errors: errs, Warnings: warns, LintScope: LintScopeFast}
 }
 
 // describe is DescribeDiff cut at 40 lines and 4,000 characters, the rest

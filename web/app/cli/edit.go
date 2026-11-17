@@ -14,7 +14,7 @@ import (
 
 var edit = &spec{
 	name:    "edit",
-	summary: "apply a batch of operations to a project",
+	summary: "apply a batch of operations to a project (its lint block is lint_scope fast: lint runs every rule)",
 	usage: []string{
 		"vukem-video edit --project <id> --ops <file|-> [--base n] [--key k]",
 		"vukem-video edit --project <id> <op> [k=v | k:=json]...",
