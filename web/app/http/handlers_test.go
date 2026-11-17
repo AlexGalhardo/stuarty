@@ -481,3 +481,16 @@ func TestLimitAndCountBelowOneAreRefused(t *testing.T) {
 		t.Errorf("limit=1 = %d", res.status)
 	}
 }
+
+// VV-107: the listing names the id of a project the way every other answer does.
+func TestProjectListCarriesProjectID(t *testing.T) {
+	t.Parallel()
+
+	h := newHarness(t)
+	id := h.newProject("p")
+
+	res := h.get("/api/v1/projects")
+	if res.status != http.StatusOK || !strings.Contains(string(res.body), `"project_id":"`+id+`"`) {
+		t.Fatalf("list = %d %s", res.status, res.body)
+	}
+}

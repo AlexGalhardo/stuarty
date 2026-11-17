@@ -2976,6 +2976,9 @@
             "type": "string",
             "x-untrusted": true
           },
+          "project_id": {
+            "type": "string"
+          },
           "revision": {
             "format": "int64",
             "type": "integer"
