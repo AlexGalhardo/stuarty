@@ -2,6 +2,7 @@ package service
 
 import (
 	"regexp"
+	"slices"
 	"strings"
 )
 
@@ -58,6 +59,56 @@ func hintFor(s Surface, hint string) string {
 	default:
 		return hint
 	}
+}
+
+var toolOfRoute = func() map[string]string {
+	m := make(map[string]string, len(httpNames))
+	for tool, route := range httpNames {
+		m[route] = tool
+	}
+
+	return m
+}()
+
+// httpRoutes matches the routes of httpNames, the longest first so that a route is not cut at its prefix.
+var httpRoutes = func() *regexp.Regexp {
+	routes := make([]string, 0, len(toolOfRoute))
+	for r := range toolOfRoute {
+		routes = append(routes, r)
+	}
+
+	slices.SortFunc(routes, func(a, b string) int { return len(b) - len(a) })
+
+	for i, r := range routes {
+		routes[i] = regexp.QuoteMeta(r)
+	}
+
+	return regexp.MustCompile(strings.Join(routes, "|"))
+}()
+
+// CanonicalHint turns the HTTP form of a hint, as an HTTP server wrote it, back to the tool names. A
+// client that relays the error of a server (the stdio MCP and the CLI over a running server) applies
+// it before ForSurface, so the hint names the surface that answered and not the one that carried it.
+func CanonicalHint(hint string) string {
+	var b strings.Builder
+
+	last := 0
+
+	for _, m := range httpRoutes.FindAllStringIndex(hint, -1) {
+		// A longer route that the table does not know ("/media/{asset_id}") stays as written.
+		if m[1] < len(hint) && hint[m[1]] == '/' {
+			continue
+		}
+
+		b.WriteString(hint[last:m[0]])
+		b.WriteString(toolOfRoute[hint[m[0]:m[1]]])
+
+		last = m[1]
+	}
+
+	b.WriteString(hint[last:])
+
+	return b.String()
 }
 
 // ForSurface returns a copy of the error whose hint names the commands of the surface.

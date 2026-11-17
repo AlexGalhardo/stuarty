@@ -353,3 +353,18 @@ func TestOversizedRequestsAreE_PAYLOAD_TOO_LARGE(t *testing.T) {
 		}
 	}
 }
+
+func TestDecodeErrorGivesTheHintInToolNames(t *testing.T) {
+	t.Parallel()
+
+	raw := `{"code":"E_NOT_FOUND","message":"no such project.","hint":"list the projects with GET /api/v1/projects"}`
+
+	var se *service.Error
+	if !errors.As(decodeError(http.StatusNotFound, []byte(raw)), &se) {
+		t.Fatal("not a service error")
+	}
+
+	if se.Hint != "list the projects with project_list" {
+		t.Errorf("hint = %q", se.Hint)
+	}
+}

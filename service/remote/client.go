@@ -167,7 +167,7 @@ func decodeError(status int, raw []byte) error {
 	}
 
 	return &service.Error{
-		Code: p.Code, Message: p.Message, Hint: p.Hint, Retryable: p.Retryable,
+		Code: p.Code, Message: p.Message, Hint: service.CanonicalHint(p.Hint), Retryable: p.Retryable,
 		OpIndex: p.OpIndex, Path: p.Path, Details: p.Details,
 	}
 }
