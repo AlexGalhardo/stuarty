@@ -165,3 +165,22 @@ func TestEditOpsRejectsMalformedBatches(t *testing.T) {
 		}
 	}
 }
+
+// VV-138: --base 0 is a real base on the shorthand form, not an absent one; the
+// CLI sends it as given and the service decides (a stale base that touches
+// nothing another actor changed is rebased, SDD-002 A.7).
+func TestEditShorthandSendsAnExplicitBaseOfZero(t *testing.T) {
+	t.Parallel()
+
+	h := newHarness(t)
+
+	if code := h.run(
+		"edit", "--project", "prj_a", "--base", "0", "marker.add", "at=2s", "label=x", "--json",
+	); code != 0 {
+		t.Fatalf("exit %d: %s", code, h.stdout.String())
+	}
+
+	if r := h.svc.editReq; r.BaseRevision != 0 || h.svc.getReq.ProjectID != "" {
+		t.Fatalf("an explicit --base 0 must not be replaced by the current revision: %+v", r)
+	}
+}
