@@ -65,10 +65,10 @@ func (c *check) durationLimit() {
 }
 
 // covers says whether an item fills the whole frame, opaque, unrotated and in its
-// default position, with nothing that animates or fades it: what it takes to hide the
+// default position, with no mask and nothing that animates or fades it: what it takes to hide the
 // items below.
 func (c *check) covers(it *timeline.Item) bool {
-	if it.Opacity != 1 || it.X != nil || it.Y != nil || it.Scale < 1 || it.Rotation != 0 ||
+	if it.Opacity != 1 || it.Mask != nil || it.X != nil || it.Y != nil || it.Scale < 1 || it.Rotation != 0 ||
 		it.TransitionIn != nil || it.TransitionOut != nil {
 		return false
 	}
@@ -177,7 +177,7 @@ func (c *check) transitionEmpty() {
 			{"transition_in", it.TransitionIn, it.Start, it.Start + durationOf(it.TransitionIn), it.Start == 0},
 			{"transition_out", it.TransitionOut, itemEnd - durationOf(it.TransitionOut), itemEnd, itemEnd == end},
 		} {
-			if t.tr == nil || t.expectedAt || c.coveredBeneath(it, t.from, t.to) {
+			if t.tr == nil || t.tr.Kind == "dip" || t.expectedAt || c.coveredBeneath(it, t.from, t.to) {
 				continue
 			}
 

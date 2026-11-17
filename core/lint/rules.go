@@ -196,6 +196,10 @@ func (c *check) layers() {
 		}
 	}
 
+	if !c.hasVisualTrack() {
+		blacks = nil // an audio-only project has no picture to be black
+	}
+
 	for _, s := range blacks {
 		if s.end-s.start >= minBlackFrames {
 			c.add(
@@ -212,6 +216,16 @@ func (c *check) layers() {
 			)
 		}
 	}
+}
+
+func (c *check) hasVisualTrack() bool {
+	for _, t := range c.doc.Tracks {
+		if t.Kind == timeline.TrackVisual {
+			return true
+		}
+	}
+
+	return false
 }
 
 func appendMerged(list []segment, s segment) []segment {
