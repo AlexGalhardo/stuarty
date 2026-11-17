@@ -1,8 +1,12 @@
-//! The Rust rasterizer against `engine/raster`, byte for byte.
+//! The Rust rasterizer against its own vectors, byte for byte.
 //!
-//! `renderer/testdata/raster-vectors.bin` is written by `engine/raster/vectors_test.go`: each case
-//! holds a spec and the bitmap the Go rasterizer draws for it. A single differing byte is a failure
-//! (rule `.agents/skills/renderer-parity`).
+//! `renderer/testdata/raster-vectors.bin` holds each case: a spec and the bitmap this rasterizer draws
+//! for it. Rust is the reference (ADR-0012, decision of 2026-11-16): the file is written from this
+//! crate with `VUKEM_WRITE_RASTER_VECTORS=1 cargo test -p vukem-renderer-text --test raster_vectors`
+//! (a reviewed change of output, rule `.agents/skills/renderer-parity`), and `engine/rasterize`
+//! draws the same specs through the renderer module under `wazero` and must get the same bytes
+//! (`TestRasterVectorsAreCurrent`). The specs are encoded by that Go test; this one keeps them as
+//! they are and replaces only the bitmaps.
 
 use vukem_renderer_text::fonts::FontSet;
 use vukem_renderer_text::shape::{Shape, ShapeKind, render_shape};
@@ -10,54 +14,6 @@ use vukem_renderer_text::text::{Align, Content, Style, TextSpec, render_text};
 use vukem_renderer_text::{Bitmap, Colour, Rect};
 
 const VECTORS: &[u8] = include_bytes!("../../testdata/raster-vectors.bin");
-
-/// The vectors the port does not draw byte for byte like `engine/raster`, and why (TASK-0220 waits
-/// for the author's decision on them). The test requires exactly these to differ: a vector that
-/// starts to match must leave the list, one that starts to differ must not be added without a review.
-///
-/// Every one is a text in a variable font (Inter, Montserrat, Playfair Display, JetBrains Mono) or
-/// reaches a kerning pair whose GPOS value go-text rounds differently:
-///
-/// - go-text 0.3.5 does not apply the kerning of most pairs of the variable fonts (`Wo`, `VA`, `To`
-///   in Inter), which `harfrust` (HarfBuzz 15.1) applies, so the lines are a few pixels narrower and
-///   the sizes of the bitmaps differ;
-/// - go-text scales a GPOS value with a truncating integer division (`emScaleX`) where HarfBuzz and
-///   `harfrust` round, so a kerned advance can differ by 1/64 pixel (`anton-text-ligature-and-kerning`);
-/// - go-text computes the points of a variable glyph in `float32` (HarfBuzz `gvar` code) and rounds
-///   the end result to a font unit, `skrifa` in 16.16 fixed point: a point can land on the other side
-///   of a rounding boundary, one font unit away (`jetbrains-mono-code`, `text-stroke-only-thick`).
-const KNOWN_DIVERGENT: &[&str] = &[
-	"inter-plain",
-	"inter-stroke-shadow-box",
-	"montserrat-uppercase",
-	"playfair-accents",
-	"jetbrains-mono-code",
-	"inter-cyrillic-greek",
-	"inter-wrapped-paragraph",
-	"caption-plain",
-	"caption-active-word",
-	"emoji-sequence-and-notdef",
-	"right-to-left-mixed",
-	"missing-glyph-no-fallback",
-	"caption-active-first",
-	"caption-active-last-with-box",
-	"text-empty-lines",
-	"text-trailing-space",
-	"text-unbreakable-word-over-width",
-	"text-align-left-multiline",
-	"text-align-center-multiline",
-	"text-fractional-size-scale-1.5",
-	"text-shadow-blur-offset",
-	"text-box-padding",
-	"text-stroke-only-thick",
-	"text-uppercase-accents",
-	"text-ligature-and-kerning",
-	"caption-break-and-highlight-colour",
-	"caption-highlight-none",
-	"caption-forced-break",
-	"caption-wrapped-narrow",
-	"anton-text-ligature-and-kerning",
-];
 
 struct Reader<'a>(&'a [u8]);
 
@@ -209,8 +165,55 @@ fn text_style(r: &mut Reader<'_>) -> Style {
 	}
 }
 
+fn put_u32(out: &mut Vec<u8>, v: usize) {
+	out.extend_from_slice(&(v as u32).to_le_bytes());
+}
+
+fn put_f64(out: &mut Vec<u8>, v: f64) {
+	out.extend_from_slice(&v.to_bits().to_le_bytes());
+}
+
+/// The pixels as runs of zero bytes and of other bytes (see `Reader::pixels`): the length of a run of
+/// zeros, the length of the run that follows and those bytes, until the bitmap is written. A literal
+/// run keeps a single zero that sits between two other bytes.
+fn put_pixels(out: &mut Vec<u8>, pix: &[u8]) {
+	let mut i = 0;
+	while i < pix.len() {
+		let zeros = pix[i..].iter().take_while(|&&b| b == 0).count();
+		let mut lit = 0;
+		while i + zeros + lit < pix.len()
+			&& (pix[i + zeros + lit] != 0
+				|| (i + zeros + lit + 1 < pix.len() && pix[i + zeros + lit + 1] != 0))
+		{
+			lit += 1;
+		}
+		put_u32(out, zeros);
+		put_u32(out, lit);
+		out.extend_from_slice(&pix[i + zeros..i + zeros + lit]);
+		i += zeros + lit;
+	}
+}
+
+/// The expected part of a case as the file holds it.
+fn put_expected(out: &mut Vec<u8>, b: &Bitmap, text: bool) {
+	put_u32(out, b.width);
+	put_u32(out, b.height);
+	for v in [b.natural_w, b.natural_h, b.center_dx, b.center_dy] {
+		put_f64(out, v);
+	}
+	if text {
+		put_u32(out, b.word_boxes.len());
+		for w in &b.word_boxes {
+			for v in [w.x, w.y, w.w, w.h] {
+				put_f64(out, v);
+			}
+		}
+	}
+	put_pixels(out, &b.pix);
+}
+
 #[test]
-fn every_vector_is_the_bytes_of_the_go_rasterizer() {
+fn every_vector_is_what_the_rasterizer_draws() {
 	let fonts = FontSet::bundled();
 	let mut r = Reader(VECTORS);
 	assert_eq!(r.take(4), b"VRAS");
@@ -218,10 +221,13 @@ fn every_vector_is_the_bytes_of_the_go_rasterizer() {
 	let n = r.u32();
 	assert!(n >= 50, "{n} vectors");
 	let (mut shapes, mut texts) = (0, 0);
-	let mut failures: Vec<(String, String)> = Vec::new();
+	let mut failures: Vec<String> = Vec::new();
+	let mut written: Vec<u8> = VECTORS[..12].to_vec();
 	for _ in 0..n {
 		let name = r.str();
+		let spec_start = VECTORS.len() - r.0.len();
 		let kind = r.u32();
+		let spec_bytes;
 		let (got, want) = if kind == 0 {
 			let shape_kind = match r.u32() {
 				0 => ShapeKind::Rect,
@@ -240,7 +246,9 @@ fn every_vector_is_the_bytes_of_the_go_rasterizer() {
 				stroke_color,
 				stroke_width,
 			};
+			let spec_end = VECTORS.len() - r.0.len();
 			let want = expected(&mut r, false);
+			spec_bytes = spec_start..spec_end;
 			shapes += 1;
 			(render_shape(&sh, scale).unwrap(), want)
 		} else {
@@ -258,7 +266,9 @@ fn every_vector_is_the_bytes_of_the_go_rasterizer() {
 				Content::Text(r.str())
 			};
 			let pixel_scale = r.f64();
+			let spec_end = VECTORS.len() - r.0.len();
 			let want = expected(&mut r, true);
+			spec_bytes = spec_start..spec_end;
 			texts += 1;
 			let spec = TextSpec {
 				content,
@@ -268,40 +278,32 @@ fn every_vector_is_the_bytes_of_the_go_rasterizer() {
 			(render_text(&spec, &fonts).unwrap(), want)
 		};
 		if let Some(d) = first_difference(&name, &got, &want) {
-			failures.push((name, d));
+			failures.push(d);
 		}
+		put_u32(&mut written, name.len());
+		written.extend_from_slice(name.as_bytes());
+		written.extend_from_slice(&VECTORS[spec_bytes]);
+		put_expected(&mut written, &got, kind != 0);
 	}
 	assert!(r.0.is_empty(), "trailing bytes");
 	assert!(
 		shapes >= 10 && texts >= 20,
 		"{shapes} shapes, {texts} texts"
 	);
-	let differing: Vec<&str> = failures.iter().map(|(n, _)| n.as_str()).collect();
-	let unexpected: Vec<&String> = failures
-		.iter()
-		.filter(|(n, _)| !KNOWN_DIVERGENT.contains(&n.as_str()))
-		.map(|(_, d)| d)
-		.collect();
+	if std::env::var("VUKEM_WRITE_RASTER_VECTORS").is_ok_and(|v| v == "1") {
+		let path = concat!(
+			env!("CARGO_MANIFEST_DIR"),
+			"/../testdata/raster-vectors.bin"
+		);
+		std::fs::write(path, &written).unwrap();
+		return;
+	}
 	assert!(
-		unexpected.is_empty(),
-		"{} vectors differ from Go and are not known to:
+		failures.is_empty(),
+		"{} vectors differ from the file (regenerate it with VUKEM_WRITE_RASTER_VECTORS=1 and review 		 the change):
 {}",
-		unexpected.len(),
-		unexpected
-			.iter()
-			.map(|d| d.as_str())
-			.collect::<Vec<_>>()
-			.join(
-				"
-"
-			)
-	);
-	let fixed: Vec<&&str> = KNOWN_DIVERGENT
-		.iter()
-		.filter(|n| !differing.contains(n))
-		.collect();
-	assert!(
-		fixed.is_empty(),
-		"these vectors now match Go: remove them from KNOWN_DIVERGENT: {fixed:?}"
+		failures.len(),
+		failures.join("
+")
 	);
 }
