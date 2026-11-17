@@ -235,6 +235,15 @@ describe("the builders of the D-040 commands", () => {
 		expect(pasteAttributesOperations("itm_a", [])).toEqual([]);
 	});
 
+	test("paste attributes never sends the flip group (VV-184)", () => {
+		expect(PASTE_GROUPS).not.toContain("flip");
+		expect(
+			pasteAttributesOperations("itm_a", ["itm_b"])[0]?.args,
+		).toMatchObject({
+			attributes: expect.not.arrayContaining(["flip"]),
+		});
+	});
+
 	test("the magnet is one track.update with the new value", () => {
 		expect(trackUpdateOperations("trk_a", { magnet: true })).toEqual([
 			{ op: "track.update", args: { track_id: "trk_a", magnet: true } },
