@@ -21,6 +21,7 @@ import { chunksUrl, proxyUrl, thumbnailUrl } from "../api/urls";
 import "pixi.js/advanced-blend-modes";
 
 import { AudioGraph } from "./audioGraph";
+import { uncoveredPixel } from "./background";
 import { pixiBlendMode } from "./blend";
 import { ChromaKeyFilter } from "./chromaKey";
 import { DecodeClient, decoderPreference } from "./decode/client";
@@ -209,6 +210,10 @@ export class PixiExecutor implements PreviewExecutor {
 				autoStart: false,
 				autoDensity: false,
 				resolution: 1,
+				// Below 1 the canvas keeps an alpha channel. PixiJS cannot add one
+				// later, so a transparent project can clear to alpha 0; an opaque
+				// colour still sets alpha to 1 on each draw.
+				backgroundAlpha: 0,
 				// The end-to-end build reads the buffer pixels back (preview-vs-export),
 				// which a WebGL canvas that clears after each composite cannot give.
 				preserveDrawingBuffer: import.meta.env.VITE_E2E === "1",
@@ -456,7 +461,13 @@ export class PixiExecutor implements PreviewExecutor {
 		const app = this.app;
 		const info = this.info;
 		if (app === null || info === null) return;
-		app.renderer.background.color = plan.background;
+		const [red, green, blue, alpha] = uncoveredPixel(plan);
+		app.renderer.background.color = [
+			red / 255,
+			green / 255,
+			blue / 255,
+			alpha / 255,
+		];
 
 		const layers = layersAt(plan, frame);
 		const decoding = rankVideoLayers(layers, MAX_VIDEO_LAYERS);

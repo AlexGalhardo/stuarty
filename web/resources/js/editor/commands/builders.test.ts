@@ -649,6 +649,12 @@ describe("project builders (SDD-002 C.1 to C.3)", () => {
 		]);
 	});
 
+	test("a transparent background is settings.set", () => {
+		expect(settingsSetOperations({ background: "transparent" })).toEqual([
+			{ op: "settings.set", args: { background: "transparent" } },
+		]);
+	});
+
 	test("the frame rate goes as a string", () => {
 		expect(settingsFpsOperations("30000/1001")).toEqual([
 			{ op: "settings.set_fps", args: { fps: "30000/1001" } },

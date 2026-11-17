@@ -950,6 +950,7 @@
         "width": "Largura",
         "height": "Altura",
         "background": "Fundo",
+        "background_transparent": "Transparente",
         "loudness": "Volume alvo",
         "fps": "Taxa de quadros",
         "fps_confirm_title": "Mudar a taxa de quadros para {rate}?",
