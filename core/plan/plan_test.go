@@ -588,6 +588,36 @@ func TestCaptionBottomEdge(t *testing.T) {
 	near(t, "scaled height", l2.H, 2*l.H)
 }
 
+// A caption with one word wider than max_width is scaled down to max_width instead of leaving the frame.
+func TestCaptionLongWordFitsMaxWidth(t *testing.T) {
+	t.Parallel()
+
+	d := newDoc()
+	it := timeline.NewItem("itm_c", timeline.ItemCaption, trkTop, 0, 30)
+	it.Words = []timeline.Word{{Text: "www.americanoprogress.org/a-very-long-link-to-a-page", Start: 0, Duration: 30}}
+	put(d, it)
+
+	short := d.Items["itm_c"]
+	short.Words = []timeline.Word{{Text: "hi", Start: 0, Duration: 30}}
+	d2 := newDoc()
+	put(d2, short)
+
+	l := FrameWith(d, 0, Options{Measure: fakeMeasure}).Layers[0]
+	ref := FrameWith(d2, 0, Options{Measure: fakeMeasure}).Layers[0]
+
+	if l.W > 0.8*1080+40 {
+		t.Errorf("width %v, want about max_width (864) plus the padding", l.W)
+	}
+
+	if l.CX-l.W/2 < 0 || l.CX+l.W/2 > 1080 {
+		t.Errorf("the caption spans x %v to %v, outside the frame", l.CX-l.W/2, l.CX+l.W/2)
+	}
+
+	if ref.W >= l.W {
+		t.Errorf("a short caption is %v wide, a long one %v", ref.W, l.W)
+	}
+}
+
 func TestCaptionPositions(t *testing.T) {
 	t.Parallel()
 
