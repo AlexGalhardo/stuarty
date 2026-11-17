@@ -5,7 +5,13 @@
     "after": 60,
     "before": 90
   },
+  "gap": {
+    "frames": 30,
+    "hint": "The item got shorter and left a gap before the next item; use ripple \"track\" to close it, or timeline.close_gap.",
+    "start": 90
+  },
   "linked_captions": [],
+  "result_duration": 60,
   "shift": 0,
   "speed": {
     "den": 2,
