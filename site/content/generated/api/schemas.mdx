@@ -777,6 +777,14 @@ The types named in the tables of the operations. The arguments of each editing c
 | `id` | `string` | no |  |
 | `name` | `string` | no |  |
 
+### OtioMatch
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `asset_id` | `string` | no |  |
+| `matched` | `string` | no |  |
+| `ref` | `string` | no |  |
+
 ### OtioMedia
 
 | Name | Type | Required | Description |
@@ -901,11 +909,13 @@ The types named in the tables of the operations. The arguments of each editing c
 | `applied` | `boolean` | no |  |
 | `edit` | [`EditResult`](/docs/api/schemas#editresult) or `any` or `null` or `null` | no |  |
 | `lost` | array of [`OtioLost`](/docs/api/schemas#otiolost) | no |  |
+| `matched_media` | array of [`OtioMatch`](/docs/api/schemas#otiomatch) | no |  |
 | `project_id` | `string` | no |  |
 | `revision` | `integer (int64)` | no |  |
 | `text` | `string` | no |  |
 | `unresolved_media` | array of [`OtioMedia`](/docs/api/schemas#otiomedia) | no |  |
 | `untrusted_notice` | `string` | no |  |
+| `warnings` | array of `string` | no |  |
 
 ### ProjectStateResult
 

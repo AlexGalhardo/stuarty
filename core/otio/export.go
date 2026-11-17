@@ -29,6 +29,10 @@ func Export(doc *timeline.Document) ([]byte, []Lost, error) {
 
 	var lost []Lost
 
+	if doc.Template != nil {
+		lost = append(lost, Lost{Name: doc.Name, Feature: "template information of the project"})
+	}
+
 	ids := make([]string, 0, len(doc.Tracks))
 	for id := range doc.Tracks {
 		ids = append(ids, id)
@@ -222,7 +226,7 @@ func timelineMarkers(marks []timeline.Marker, rate float64) []any {
 }
 
 // trackMetadata keeps what OTIO has no field for in the vukem namespace, which other tools
-// ignore and Import reads back: hidden, muted and magnet. Ids are not kept: an import makes new ones.
+// ignore and Import reads back: hidden, muted, magnet, locked, solo and volume. Ids are not kept: an import makes new ones.
 func trackMetadata(t *timeline.Track) object {
 	v := object{}
 	if t.Hidden {
@@ -235,6 +239,18 @@ func trackMetadata(t *timeline.Track) object {
 
 	if t.Magnet {
 		v["magnet"] = true
+	}
+
+	if t.Locked {
+		v["locked"] = true
+	}
+
+	if t.Solo {
+		v["solo"] = true
+	}
+
+	if t.Volume != nil {
+		v["volume"] = *t.Volume
 	}
 
 	if m := timeline.StyleToMap(t.CaptionStyle); len(m) > 0 {
@@ -532,6 +548,8 @@ func lostTextProperties(it *timeline.Item) []Lost {
 		feature string
 	}{
 		{len(it.Markers) > 0, "markers of a " + string(it.Type) + " item"},
+		{it.Link != "", "link of a " + string(it.Type) + " item"},
+		{it.LinkedItem != "", "caption link to a clip"},
 	} {
 		if f.on {
 			out = append(out, Lost{ID: it.ID, Name: it.Name, Feature: f.feature})

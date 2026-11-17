@@ -2635,6 +2635,21 @@
         },
         "type": "object"
       },
+      "OtioMatch": {
+        "properties": {
+          "asset_id": {
+            "type": "string"
+          },
+          "matched": {
+            "type": "string"
+          },
+          "ref": {
+            "type": "string",
+            "x-untrusted": true
+          }
+        },
+        "type": "object"
+      },
       "OtioMedia": {
         "properties": {
           "reason": {
@@ -2973,6 +2988,12 @@
             },
             "type": "array"
           },
+          "matched_media": {
+            "items": {
+              "$ref": "#/components/schemas/OtioMatch"
+            },
+            "type": "array"
+          },
           "project_id": {
             "type": "string"
           },
@@ -2991,6 +3012,12 @@
           },
           "untrusted_notice": {
             "type": "string"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           }
         },
         "type": "object"
