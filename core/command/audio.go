@@ -108,7 +108,7 @@ func applyAudioAdd(c *Context, a *audioAddArgs) error {
 	if err := c.checkEnd("args.duration", start, it.Duration); err != nil {
 		return err
 	}
-	if err := c.checkOverlap(id, a.TrackID, start, it.Duration); err != nil {
+	if err := c.checkOverlapAppend(id, a.TrackID, start, it.Duration); err != nil {
 		return err
 	}
 	c.Doc.Items[id] = it
