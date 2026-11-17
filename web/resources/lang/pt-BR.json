@@ -813,6 +813,7 @@
         "title": "Atalhos de teclado",
         "description": "Escolha uma tecla para alterá-la e pressione a nova. Esc cancela.",
         "open": "Atalhos de teclado (?)",
+        "version": "Versão {version}",
         "action": "Ação",
         "key": "Tecla",
         "change": "Alterar a tecla de {action}, atualmente {key}",
