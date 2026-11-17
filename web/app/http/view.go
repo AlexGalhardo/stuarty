@@ -196,6 +196,17 @@ func (h *apiHandler) fontList(c *web.Ctx, _ noIn) (service.FontListResult, error
 	return deref(res), err
 }
 
+type assetListIn struct {
+	Kind string `json:"kind,omitempty" doc:"image, video or audio; omit it for every kind."`
+}
+
+// assetList is GET /assets: the files of the workspace by content hash (VV-117).
+func (h *apiHandler) assetList(c *web.Ctx, in assetListIn) (service.AssetListResult, error) {
+	res, err := h.Service.AssetList(c.Context(), service.AssetListRequest{Kind: in.Kind})
+
+	return deref(res), err
+}
+
 type auditIn struct {
 	pageIn
 	ProjectID string `json:"project_id,omitempty" doc:"Keep the entries of one project."`

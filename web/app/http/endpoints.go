@@ -250,6 +250,10 @@ var Endpoints = []Endpoint{
 		Service: "Doctor", Status: 200, Summary: "Read the diagnostic report",
 	},
 	{
+		ID: "assets.list", Method: http.MethodGet, Path: "/assets", Scope: service.ScopeRead,
+		Service: "AssetList", Status: 200, Summary: "List the files of the workspace by content hash",
+	},
+	{
 		ID: "fonts.list", Method: http.MethodGet, Path: "/fonts", Scope: service.ScopeRead,
 		Service: "FontList", Status: 200, Summary: "List the bundled font families and weights",
 	},

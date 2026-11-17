@@ -355,6 +355,7 @@ Scopes: `read`, `edit`, `media`, `render`, `admin` (SDD-000 §4). They are indep
 | `JobList` | `GET /projects/{id}/jobs` | R | - | - | - | - | Project and ownership check |
 | `PlanWindow` | `GET /projects/{id}/plan` | R | - | - | - | - | Project and ownership check |
 | `SnapPoints` | `GET /projects/{id}/snap-points` | R | - | - | - | - | Project and ownership check |
+| `AssetList` | `GET /assets` | R | - | - | - | - | The files of the projects the caller may see: the owner's in network mode, one project for a project-limited key |
 | `FontList` | `GET /fonts` | R | - | - | - | - | Families and weights, and the imported font files by hash (VV-094); in network mode only the files the caller owns (7.7); no per-project data |
 | `Undo`, `Redo` | `POST /projects/{id}/undo`, `/redo` | - | R | - | - | - | Own steps only (ADR-0006) |
 | `MediaImport` | `POST /projects/{id}/media` | - | - | R | - | - | Path rules of section 7; network mode confined to import roots |

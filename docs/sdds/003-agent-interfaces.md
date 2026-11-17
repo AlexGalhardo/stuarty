@@ -161,6 +161,7 @@ type Service interface {
 	PlanWindow(ctx context.Context, req PlanWindowRequest) (*PlanWindowResult, error)       // SDD-004 §10
 	SnapPoints(ctx context.Context, req SnapPointsRequest) (*SnapPointsResult, error)       // SDD-012 §7.8
 	FontList(ctx context.Context, req FontListRequest) (*FontListResult, error)              // SDD-012 §4.2 (`getFonts`)
+	AssetList(ctx context.Context, req AssetListRequest) (*AssetListResult, error)           // the files of the workspace by hash, VV-117
 	AuditList(ctx context.Context, req AuditListRequest) (*AuditListResult, error)           // SDD-005 §5.9, scope admin
 	TrashEmpty(ctx context.Context, req TrashEmptyRequest) (*TrashEmptyResult, error)        // SDD-005 §13.3, HTTP only
 	KeyCreate(ctx context.Context, req KeyCreateRequest) (*KeyCreateResult, error)           // SDD-007 §4.2, HTTP only
@@ -2624,6 +2625,7 @@ Success codes are the `Op.Status`. Error statuses are the table of SDD-000 §8; 
 | `templates.import` | `POST /templates/import` | none | `{path, dry_run?}`, `path` an absolute path to the same zip (SDD-007 §7.6: at most 64 MiB compressed, the limit on the file read from disk; the request body is `{path, dry_run?}` and keeps the 1 MiB body limit; 64 entries; 256 MiB declared in total; 32 MiB per entry; exact-name allowlist) | 201 `TemplateResult` | edit | 403 `E_PATH_NOT_ALLOWED`; 404 `E_FILE_NOT_FOUND` |
 | `system.get` | `GET /system` | `full` | none | 200 `DoctorResult` | read | none |
 | `fonts.list` | `GET /fonts` | none | none | 200 `FontListResult` | read | none |
+| `assets.list` | `GET /assets` | `kind` (`image`, `video`, `audio`) | none | 200 `AssetListResult` (`assets[]` of `{hash, name, kind, bytes, width, height, projects}`; the ready, active files of the projects the caller may see, once per content hash) | read | 400 `E_VALIDATION` for another kind |
 | `audit.list` | `GET /audit` | `cursor`, `limit` | none | 200 `AuditListResult` (the audit record of RF-134: actions outside a document batch, with their actor, SDD-005 §5.9) | admin | none |
 | `events.stream` | `GET /projects/{id}/events` | `since` (a revision, SDD-006 §2); header `Last-Event-ID` | none | 200 `text/event-stream` (SDD-006) | read | 400 `E_VALIDATION` for a non-integer or negative `since` |
 | `trash.empty` | `POST /trash/empty` | none | `{project_id?, older_than_days?}` (SDD-005 §13.3) | 200 `TrashEmptyResult` | admin, and only from a browser session (local mode) or an `admin` key (network mode); the local token is refused | 403 `E_FORBIDDEN` |
@@ -2812,6 +2814,7 @@ Every `Service` operation has an encoding on each surface. The table is the proo
 | `PlanWindow` | none (exception E-3) | none | `GET /projects/{id}/plan` |
 | `SnapPoints` | none (exception E-3) | none | `GET /projects/{id}/snap-points` |
 | `FontList` | none (exception E-3) | `fonts` | `GET /fonts` |
+| `AssetList` | none (exception E-4) | none (exception E-4) | `GET /assets` |
 | `AuditList` | none (exception E-3) | `audit` | `GET /audit` (scope `admin`) |
 | `TrashEmpty` | none (exception E-4) | none (exception E-4) | `POST /trash/empty` |
 | `KeyCreate`, `KeyList`, `KeyRevoke` | none (exception E-4) | none | `POST /keys`, `GET /keys`, `DELETE /keys/{key_id}` |
@@ -2828,7 +2831,7 @@ Every `Service` operation has an encoding on each surface. The table is the proo
 - **E-1.** `MediaTrash`, `MediaRestore`, `Doctor` and `Events` have no MCP tool (SDD-000 §1, which keeps the catalogue at 15). RF-104 says every operation is on every surface; SDD-000 wins and §10 issue I-3 asks for RF-104 to be amended.
 - **E-2.** `OpenFile` is a transport helper, not an operation an agent calls: MCP and the CLI return a path (`path` in `ViewResult` and `ExportResult`), HTTP serves the bytes. `OpenFile`, including the export file route, is phase P.
 - **E-3.** `PlanWindow`, `SnapPoints`, `FontList`, `AuditList`, `ProjectBundleExport`, `ProjectBundleImport`, `ProjectOtioExport` and `ProjectOtioImport` serve the UI, the administrator or a file workflow, not an agent editing a project: HTTP, and the CLI command where the table names one, but no MCP tool (SDD-000 §1). An agent that needs the `format` of an export uses the `format` member of `job_start` `args`.
-- **E-4.** `TrashEmpty`, `KeyCreate`, `KeyList` and `KeyRevoke` are HTTP only, with the callers SDD-007 §5.3 allows. `TrashEmpty` is not an MCP tool and not a CLI command (RF-131, ADR-0020 item 2): no agent surface can reach the one operation that deletes data for good.
+- **E-4.** `TrashEmpty`, `KeyCreate`, `KeyList`, `KeyRevoke` and `AssetList` are HTTP only, with the callers SDD-007 §5.3 allows. `TrashEmpty` is not an MCP tool and not a CLI command (RF-131, ADR-0020 item 2): no agent surface can reach the one operation that deletes data for good.
 
 The CLI commands of SDD-000 §1 that are not service operations (`serve`, `mcp`, `open`, `token:rotate`, `user:create`, `user:passwd`, `tools:install`, `agent:docs`) are in §5.4 and have no row here. `MediaList` and `JobList` close the gap SDD-012 §13.2 and Appendix B (B2, B3) left: they are the operations behind the library list and the job list of the UI.
 

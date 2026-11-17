@@ -169,7 +169,8 @@ func (s *svc) MediaImport(ctx context.Context, req MediaImportRequest) (*MediaIm
 	}
 
 	lines := make([]textview.ImportLine, len(res.Assets))
-	for i, a := range res.Assets {
+	for i := range res.Assets {
+		a := &res.Assets[i]
 		lines[i] = textview.ImportLine{
 			ID: a.AssetID, Kind: a.Kind, State: a.State, Name: a.Name, Deduplicated: a.Deduplicated, JobID: a.JobID,
 		}
@@ -298,7 +299,7 @@ func (s *svc) importFile(ctx context.Context, c Caller, project *ProjectRow, f I
 		return refuse(werr)
 	}
 
-	out.AssetID, out.JobID, out.Kind = pa.AssetID, jobID, asset.Kind
+	out.AssetID, out.JobID, out.Kind, out.Hash = pa.AssetID, jobID, asset.Kind, hash
 
 	if addNow != nil {
 		if aerr := s.addAsset(ctx, project, *addNow, asset, ""); aerr != nil {

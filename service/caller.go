@@ -86,6 +86,7 @@ var Scopes = map[string]string{
 	"Doctor":              ScopeRead,
 	"SnapPoints":          ScopeRead,
 	"FontList":            ScopeRead,
+	"AssetList":           ScopeRead,
 	"ExportFile":          ScopeRead,
 	"AuditList":           ScopeAdmin,
 	"ToolsInstall":        ScopeAdmin,

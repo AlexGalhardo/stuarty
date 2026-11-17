@@ -545,6 +545,16 @@ func (c *Client) FontList(ctx context.Context, _ service.FontListRequest) (*serv
 	return get[service.FontListResult](ctx, c, "/fonts", nil)
 }
 
+// AssetList implements service.Service.
+func (c *Client) AssetList(ctx context.Context, req service.AssetListRequest) (*service.AssetListResult, error) {
+	q := url.Values{}
+	if req.Kind != "" {
+		q.Set("kind", req.Kind)
+	}
+
+	return get[service.AssetListResult](ctx, c, "/assets", q)
+}
+
 // AuditList implements service.Service.
 func (c *Client) AuditList(ctx context.Context, req service.AuditListRequest) (*service.AuditListResult, error) {
 	q := url.Values{}

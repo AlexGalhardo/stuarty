@@ -40,8 +40,10 @@ type ProbeSummary struct {
 // ImportedAsset is one entry per file of the request, in order. It never
 // carries the directory of the path.
 type ImportedAsset struct {
-	AssetID      string        `json:"asset_id,omitempty"`
-	Name         string        `json:"name"               untrusted:"true"` // base name only; untrusted
+	AssetID string `json:"asset_id,omitempty"`
+	// Hash is the content hash that the brand kit logo and font.add take (VV-117).
+	Hash         string        `json:"hash,omitempty"`
+	Name         string        `json:"name"             untrusted:"true"` // base name only; untrusted
 	Kind         string        `json:"kind,omitempty"`
 	State        string        `json:"state"`
 	Progress     float64       `json:"progress"`
