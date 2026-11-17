@@ -1,19 +1,13 @@
-import { type ReactNode, useId, useState } from "react";
+import type { ReactNode } from "react";
 
-import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
-import {
-	type TrackChanges,
-	trackCaptionStyleOperations,
-	trackUpdateOperations,
-} from "../commands/builders";
+import { type TrackChanges, trackUpdateOperations } from "../commands/builders";
 import { useCanEdit } from "../commands/useActions";
 import { useDocumentState } from "../state/EditorContext";
 import TextField from "./fields/TextField";
 import ToggleField from "./fields/ToggleField";
 import ImportSubtitles from "./panels/ImportSubtitles";
-import StyleRows, { CAPTION_STYLE_ROWS } from "./panels/StyleRows";
-import Section from "./Section";
+import TrackCaptionStyle from "./panels/TrackCaptionStyle";
 import { useFieldCommit } from "./useFieldCommit";
 
 // A track selected: its panel (SDD-012 section 12.1, row Track panel). Name,
@@ -28,8 +22,6 @@ export default function TrackPanel({
 	const t = useT();
 	const canEdit = useCanEdit();
 	const send = useFieldCommit();
-	const replaceId = useId();
-	const [replace, setReplace] = useState(false);
 	const track = useDocumentState((s) => s.document?.tracks[trackId]);
 	if (track === undefined) return null;
 	const update = (changes: TrackChanges) =>
@@ -67,48 +59,7 @@ export default function TrackPanel({
 				disabled={!canEdit}
 				commit={(magnet) => update({ magnet })}
 			/>
-			<Section title={t("ui.editor.inspector.caption_style_title")}>
-				{track.kind === "audio" ? (
-					<p className="text-xs text-muted-foreground">
-						{t("ui.editor.track.no_caption_style")}
-					</p>
-				) : (
-					<>
-						<StyleRows
-							rows={CAPTION_STYLE_ROWS}
-							stored={track.caption_style ?? {}}
-							disabled={!canEdit}
-							commit={(changes) =>
-								send(trackCaptionStyleOperations(trackId, changes, replace))
-							}
-						/>
-						<div className="flex items-center gap-2 text-xs">
-							<input
-								id={replaceId}
-								type="checkbox"
-								checked={replace}
-								disabled={!canEdit}
-								className="size-4 accent-primary"
-								onChange={(event) => setReplace(event.target.checked)}
-							/>
-							<label htmlFor={replaceId}>
-								{t("ui.editor.track.caption_style_replace")}
-							</label>
-						</div>
-						<Button
-							type="button"
-							variant="outline"
-							size="sm"
-							disabled={!canEdit || track.caption_style === undefined}
-							onClick={() =>
-								void send(trackCaptionStyleOperations(trackId, {}, true))
-							}
-						>
-							{t("ui.editor.track.caption_style_clear")}
-						</Button>
-					</>
-				)}
-			</Section>
+			<TrackCaptionStyle trackId={trackId} />
 			{track.kind === "visual" && <ImportSubtitles trackId={trackId} />}
 		</div>
 	);

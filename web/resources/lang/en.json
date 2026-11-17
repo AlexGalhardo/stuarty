@@ -135,7 +135,8 @@
         "preview": "Preview",
         "inspector": "Inspector",
         "audio": "Audio",
-        "text": "Text"
+        "text": "Text",
+        "captions": "Captions"
       },
       "activity": {
         "you": "you",
@@ -376,7 +377,8 @@
         "presets": "Animation presets",
         "select_first": "Select an item first.",
         "select_text_first": "Select one text item first.",
-        "fonts": "Fonts"
+        "fonts": "Fonts",
+        "captions_select_clip": "Select a video clip with audio to generate captions."
       },
       "edit": {
         "label": "Editing",
