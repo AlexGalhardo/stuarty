@@ -1399,8 +1399,11 @@ export function linkOperations(itemIds: readonly string[]): Operations {
 	return [{ op: "item.link", args: { item_ids: [...itemIds] } }];
 }
 
-// The groups `item.paste_attributes` copies; a group the target type does not
-// have is skipped by the core and listed in `effective.skipped`.
+// The groups the menu and the shortcut paste with `item.paste_attributes`; a group
+// the target type does not have is skipped by the core and listed in
+// `effective.skipped`. `flip` is left out on purpose: it is the orientation of the
+// picture, not part of its look, and pasting it would reset a mirrored target
+// whenever the source is not mirrored (VV-184). The command still accepts `flip`.
 export const PASTE_GROUPS = [
 	"color",
 	"filter",
@@ -1409,7 +1412,6 @@ export const PASTE_GROUPS = [
 	"transform",
 	"blend",
 	"mask",
-	"flip",
 	"chroma_key",
 	"effects",
 	"audio",
