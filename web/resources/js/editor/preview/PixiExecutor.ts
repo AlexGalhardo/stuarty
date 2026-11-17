@@ -46,8 +46,10 @@ import {
 import {
 	bitmapKeyAt,
 	colorMatrixAt,
+	cropAt,
 	geometryOf,
 	layersAt,
+	maskAt,
 	mirrorSigns,
 	valueAt,
 } from "./planValue";
@@ -628,7 +630,7 @@ export class PixiExecutor implements PreviewExecutor {
 		}
 		// The mask goes last: it is applied after the key, colour, filter and blur,
 		// and the opacity and the blend of the sprite come after it (SDD-004 3.9).
-		this.applyMask(entry, layer, g);
+		this.applyMask(entry, layer, g, frame);
 		const passes = effectPasses(layer, frame, {
 			scale: this.stage.scale.x,
 			rotation: g.rotation,
@@ -716,9 +718,14 @@ export class PixiExecutor implements PreviewExecutor {
 	// output pixels, rounded so a keyframed scale does not rebuild it on every
 	// frame) and its sprite takes the item's position, size and rotation, so the
 	// mask is in the item's own frame.
-	private applyMask(entry: Drawn, layer: PlanLayer, g: LayerGeometry): void {
-		const mask = layer.mask;
-		if (mask === undefined) {
+	private applyMask(
+		entry: Drawn,
+		layer: PlanLayer,
+		g: LayerGeometry,
+		frame: number,
+	): void {
+		const mask = maskAt(layer, frame);
+		if (mask === null) {
 			this.dropMask(entry);
 			return;
 		}
@@ -870,7 +877,7 @@ export class PixiExecutor implements PreviewExecutor {
 		) {
 			this.complete = false;
 		}
-		return this.videoTexture(video, layer);
+		return this.videoTexture(video, layer, frame);
 	}
 
 	// The layer drawn from a decoded frame: null while the first frame is not
@@ -905,21 +912,27 @@ export class PixiExecutor implements PreviewExecutor {
 		}
 		if (result.exact) this.decodedUs = result.timestamp;
 		else this.complete = false;
-		return this.frameTexture(layer, result.frame);
+		return this.frameTexture(layer, result.frame, frame);
 	}
 
 	// One texture per asset and crop whose source is swapped for each new
 	// frame; the frame stays open until the decode cache evicts it.
-	private frameTexture(layer: PlanMediaLayer, frame: VideoFrame): Texture {
-		const key = `frame:${layer.asset}:${layer.crop.join(",")}`;
+	private frameTexture(
+		layer: PlanMediaLayer,
+		bitmap: VideoFrame,
+		frame: number,
+	): Texture | null {
+		const crop = cropAt(layer, frame);
+		if (crop === null) return null;
+		const key = `frame:${layer.asset}:${crop.join(",")}`;
 		let texture = this.stills.get(key);
 		if (texture === undefined) {
-			const source = new ImageSource({ resource: frame });
-			const [x, y, w, h] = layer.crop;
+			const source = new ImageSource({ resource: bitmap });
+			const [x, y, w, h] = crop;
 			texture = new Texture({ source, frame: new Rectangle(x, y, w, h) });
 			this.stills.set(key, texture);
-		} else if (texture.source.resource !== frame) {
-			texture.source.resource = frame;
+		} else if (texture.source.resource !== bitmap) {
+			texture.source.resource = bitmap;
 			texture.source.update();
 		}
 		return texture;
@@ -961,12 +974,15 @@ export class PixiExecutor implements PreviewExecutor {
 	private videoTexture(
 		video: HTMLVideoElement,
 		layer: PlanMediaLayer,
+		frame: number,
 	): Texture | null {
 		// Without autoLoad the source never learns the size of the video, and a
 		// frame rectangle on a 1x1 source samples one texel: a flat color. The
 		// element redraws when its metadata arrives (MediaPool).
 		if (video.videoWidth === 0) return null;
-		const key = `video:${layer.asset}:${layer.crop.join(",")}`;
+		const crop = cropAt(layer, frame);
+		if (crop === null) return null;
+		const key = `video:${layer.asset}:${crop.join(",")}`;
 		let texture = this.stills.get(key);
 		if (texture === undefined) {
 			const source = new VideoSource({
@@ -975,7 +991,7 @@ export class PixiExecutor implements PreviewExecutor {
 				autoLoad: false,
 			});
 			source.resize(video.videoWidth, video.videoHeight);
-			const [x, y, w, h] = layer.crop;
+			const [x, y, w, h] = crop;
 			texture = new Texture({ source, frame: new Rectangle(x, y, w, h) });
 			this.stills.set(key, texture);
 		}
