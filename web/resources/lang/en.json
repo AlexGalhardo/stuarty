@@ -267,6 +267,7 @@
         "step_forward": "Step forward one frame",
         "current": "Current time",
         "total": "Total duration",
+        "ratio": "Aspect ratio",
         "size": "Preview size",
         "size_fit": "Fit",
         "size_50": "Half (50%)",

@@ -21,6 +21,7 @@ import { FailureView } from "../ui/FailureView";
 import FirstRunTips from "./FirstRunTips";
 import InUseHost from "./InUseHost";
 import LeftPanel from "./LeftPanel";
+import PlayerRatioSelect from "./PlayerRatioSelect";
 import TopBar from "./TopBar";
 import TrashedBanner from "./TrashedBanner";
 import { usePanelShortcuts } from "./usePanelShortcuts";
@@ -153,6 +154,7 @@ export default function EditorShell({
 						parseTime={(text) =>
 							timeToFrame(localizeDecimalInput(text, locale), fpsOf(fps))
 						}
+						trailing={<PlayerRatioSelect />}
 					/>
 				)}
 			</main>
