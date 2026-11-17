@@ -4,11 +4,12 @@ import type { CommitResult } from "./commitField";
 import { FieldRow } from "./FieldFrame";
 import { useCommitField } from "./useCommitField";
 
-// A value on a slider: dragging or holding a key only changes the draft, and
-// the value is sent once, when the pointer or the key is released (SDD-012
-// section 12.3). A change that comes with no pointer or key held, such as one
-// made by assistive software, is sent at once. The number beside it shows the
-// draft.
+// A value on a slider: dragging only changes the draft, and the value is sent
+// once, when the pointer is released (SDD-012 section 12.3). Arrow keys, held
+// or pressed again and again, are a burst: one command with the final value,
+// 400 ms after the last key, and no step is lost while an earlier one is in
+// flight (VV-182). A change that comes with no pointer or key, such as one made
+// by assistive software, is sent at once. The number beside it shows the draft.
 export default function SliderField({
 	label,
 	stored,
@@ -37,6 +38,7 @@ export default function SliderField({
 		return commit(value);
 	});
 	const held = useRef(false);
+	const keyed = useRef(false);
 	const release = (): void => {
 		if (!held.current) return;
 		held.current = false;
@@ -58,18 +60,26 @@ export default function SliderField({
 						className="h-8 min-w-0 flex-1 accent-primary"
 						onPointerDown={() => {
 							held.current = true;
+							keyed.current = false;
 							// Released anywhere on the page, not only over the control.
 							window.addEventListener("pointerup", release, { once: true });
 						}}
 						onKeyDown={() => {
-							held.current = true;
+							if (!held.current) keyed.current = true;
 						}}
 						onChange={(event) => {
+							if (keyed.current) {
+								binding.field.change(event.target.value, true);
+								return;
+							}
 							binding.field.change(event.target.value);
 							if (!held.current) void binding.field.commit();
 						}}
-						onKeyUp={release}
-						onBlur={release}
+						onBlur={() => {
+							release();
+							keyed.current = false;
+							void binding.field.commit();
+						}}
 					/>
 					<output
 						htmlFor={ids.control}

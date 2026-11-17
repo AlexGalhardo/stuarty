@@ -148,4 +148,30 @@ describe("CommitField (SDD-012 section 12.3)", () => {
 		await done;
 		expect(field.snapshot().busy).toBe(false);
 	});
+
+	// VV-182: a step taken while an earlier command is in flight is sent next,
+	// not dropped when the earlier one answers.
+	test("a change made while a command is in flight is sent afterwards", async () => {
+		const sent: string[] = [];
+		const releases: (() => void)[] = [];
+		const field = new CommitField("0", {
+			commit: (draft) =>
+				new Promise<CommitResult>((resolve) => {
+					sent.push(draft);
+					releases.push(() => resolve({ ok: true }));
+				}),
+		});
+		field.change("1");
+		const first = field.commit();
+		field.change("2", true);
+		releases[0]?.();
+		await first;
+		await Promise.resolve();
+		expect(sent).toEqual(["1", "2"]);
+		expect(field.snapshot().text).toBe("2");
+		releases[1]?.();
+		await Promise.resolve();
+		await Promise.resolve();
+		expect(field.snapshot()).toMatchObject({ busy: false, drafting: false });
+	});
 });
