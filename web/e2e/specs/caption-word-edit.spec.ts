@@ -86,6 +86,33 @@ test.describe("caption-word-edit", () => {
 		);
 	});
 
+	// VV-095: the words are reachable by role and name, and Enter edits one.
+	test("a word is a button with a name and Enter edits it", async ({
+		page,
+		request,
+	}) => {
+		const seeded = await seedCaptions(request, [
+			{ start: "0s", text: "one two three four" },
+		]);
+		const itemId = seeded.itemIds[0] as string;
+		await open(page, seeded.id);
+		const posted = recordEdits(page);
+
+		const word = page.getByRole("button", { name: "Word 2: two" });
+		await word.focus();
+		await word.press("Enter");
+		const editor = page.getByLabel("Word 2", { exact: true });
+		await editor.fill("2");
+		await editor.press("Enter");
+		await expect.poll(() => posted.length).toBe(1);
+		expect(posted[0]?.operations).toEqual([
+			{
+				op: "caption.edit_word",
+				args: { item_id: itemId, index: 1, text: "2" },
+			},
+		]);
+	});
+
 	test("a double click edits a word and an empty text removes it", async ({
 		page,
 		request,

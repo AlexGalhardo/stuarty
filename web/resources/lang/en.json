@@ -165,6 +165,7 @@
         "magnet_hint": "Magnet (P): keep the items of the track packed with no gap",
         "blade": "Blade",
         "blade_hint": "Blade tool (B): click an item to cut it there. A or Esc goes back to select.",
+        "word_label": "Word {n}: {text}",
         "caption_words": {
           "one": "{count} word",
           "other": "{count} words"

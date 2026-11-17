@@ -91,30 +91,60 @@ export default function CaptionItem({ id }: { id: string }): ReactNode {
 					selected && word?.item === id && word.index === segment.index;
 				const isEditing =
 					editing?.item === id && editing.index === segment.index;
-				return (
-					<span
-						key={segment.index}
-						data-word-index={segment.index}
-						data-selected={isSelected ? "" : undefined}
-						className={cn(
-							"absolute top-1 bottom-1 flex items-center overflow-hidden rounded-sm border border-ed-track-line bg-ed-item-caption px-1",
-							isSelected && "outline-2 outline-ed-selection",
-						)}
-						style={{ left: segment.left, width: segment.width }}
-						onPointerDown={() =>
-							runtime.uiWriter.selectWord({ item: id, index: segment.index })
-						}
-					>
-						{isEditing ? (
+				const className = cn(
+					"absolute top-1 bottom-1 flex items-center overflow-hidden rounded-sm border border-ed-track-line bg-ed-item-caption px-1 text-left text-xs",
+					isSelected && "outline-2 outline-ed-selection",
+				);
+				const style = { left: segment.left, width: segment.width };
+				// An input does not live inside a button, so the word being edited is a plain box.
+				if (isEditing) {
+					return (
+						<div
+							key={segment.index}
+							data-word-index={segment.index}
+							data-selected={isSelected ? "" : undefined}
+							className={className}
+							style={style}
+						>
 							<WordEditor
 								itemId={id}
 								index={segment.index}
 								initial={segment.text}
 							/>
-						) : (
-							<UntrustedText className="truncate">{segment.text}</UntrustedText>
-						)}
-					</span>
+						</div>
+					);
+				}
+				return (
+					<button
+						type="button"
+						key={segment.index}
+						tabIndex={-1}
+						aria-label={t("ui.editor.timeline.word_label", {
+							n: segment.index + 1,
+							text: segment.text,
+						})}
+						data-word-index={segment.index}
+						data-selected={isSelected ? "" : undefined}
+						className={className}
+						style={style}
+						onPointerDown={() =>
+							runtime.uiWriter.selectWord({ item: id, index: segment.index })
+						}
+						onKeyDown={(event) => {
+							// Enter or F2 edits the word, as a double click does (VV-095).
+							if (event.key !== "Enter" && event.key !== "F2") return;
+							event.preventDefault();
+							event.stopPropagation();
+							runtime.uiWriter.select([id], id);
+							runtime.uiWriter.selectWord({ item: id, index: segment.index });
+							runtime.uiWriter.startWordEdit({
+								item: id,
+								index: segment.index,
+							});
+						}}
+					>
+						<UntrustedText className="truncate">{segment.text}</UntrustedText>
+					</button>
 				);
 			})}
 			{segments.slice(1).map((segment) => (
