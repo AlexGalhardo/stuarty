@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { type ReactNode, useState } from "react";
 
 import { useT } from "@/lib/i18n";
 import {
@@ -34,6 +34,11 @@ export default function WheelControls({
 	const canEdit = useCanEdit();
 	const send = useFieldCommit();
 	const item = useDocumentState((s) => s.document?.items[itemId]);
+	// The core drops a neutral wheel (amount 0, luma 0), hue included, so the
+	// angle picked on such a wheel waits here until the wheel has a tint to keep.
+	const [pendingHue, setPendingHue] = useState<
+		Partial<Record<WheelName, number>>
+	>({});
 	if (item === undefined) return null;
 	const stored = WHEEL_NAMES.filter(
 		(name) => item.wheels?.[name] !== undefined,
@@ -50,7 +55,7 @@ export default function WheelControls({
 		>
 			{WHEEL_NAMES.map((name: WheelName) => {
 				const wheel = {
-					hue: item.wheels?.[name]?.hue ?? 0,
+					hue: item.wheels?.[name]?.hue ?? pendingHue[name] ?? 0,
 					amount: item.wheels?.[name]?.amount ?? 0,
 					luma: item.wheels?.[name]?.luma ?? 0,
 				};
@@ -66,13 +71,17 @@ export default function WheelControls({
 								disabled={!canEdit}
 								{...registryRange("clip.set_color", "wheels", name, key)}
 								step={step}
-								commit={(value) =>
-									send(
-										colorOperations(itemId, {
-											wheels: { [name]: { ...wheel, [key]: value } },
-										}),
-									)
-								}
+								commit={(value) => {
+									const next = { ...wheel, [key]: value };
+									setPendingHue((held) => ({ ...held, [name]: next.hue }));
+									const neutral = next.amount === 0 && next.luma === 0;
+									if (neutral && item.wheels?.[name] === undefined) {
+										return Promise.resolve({ ok: true });
+									}
+									return send(
+										colorOperations(itemId, { wheels: { [name]: next } }),
+									);
+								}}
 							/>
 						))}
 					</fieldset>

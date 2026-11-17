@@ -163,4 +163,40 @@ test.describe("advanced colour", () => {
 			},
 		]);
 	});
+
+	// VV-185: the core drops a neutral wheel, so the angle picked first is kept
+	// by the panel and sent with the first tint.
+	test("the hue of a neutral wheel is kept and sent with the first tint", async ({
+		page,
+		request,
+	}) => {
+		const seeded = await seedProject(request, {
+			tracks: 1,
+			perTrack: 1,
+			clipDuration: "4s",
+		});
+		const itemId = seeded.itemIds[0] ?? "";
+		await page.goto(`/editor/${seeded.id}`);
+		await page.locator("[data-item-id]").click();
+		await page
+			.getByRole("button", { name: "Colour wheels", exact: true })
+			.click();
+		const edits = recordEdits(page);
+		const shadows = page.getByRole("group", { name: "Shadows" });
+		const hue = shadows.getByLabel("Hue (degrees)", { exact: true });
+		await hue.focus();
+		await hue.press("End");
+		await expect(hue).toHaveValue("360");
+		expect(edits).toHaveLength(0);
+
+		const amount = shadows.getByLabel("Amount", { exact: true });
+		await amount.focus();
+		await amount.press("End");
+		await expect.poll(() => edits.length).toBe(1);
+		expect(edits[0]?.operations[0]?.args).toEqual({
+			item_id: itemId,
+			wheels: { shadows: { hue: 360, amount: 1, luma: 0 } },
+		});
+		await expect(hue).toHaveValue("360");
+	});
 });
