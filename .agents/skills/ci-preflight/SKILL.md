@@ -9,7 +9,7 @@ Run every step from the repository root. Stop at the first failure and fix it be
 
 ## 1. Commits
 
-Run `bash .agents/skills/ci-preflight/scripts/check-commits.sh > out.txt; echo $?`. It replays the "Conventional commits" job on `origin/main..HEAD`: the type, the scope list, at most 100 characters, and the skip lists. Test the exit code. Never pipe it to `tail` before a push.
+Run `bash .agents/skills/ci-preflight/scripts/check-commits.sh > out.txt; echo $?`. It replays the "Conventional commits" job on `origin/main..HEAD`: the type, the scope list, at most 100 characters, and the skip lists. Test the exit code. Never pipe it to `tail` before a push. The same holds for any check you shorten with a pipe: start with `set -o pipefail`, or the exit code of `tail` hides the failure (it did twice in v0.26.0).
 
 ## 2. Go lint on the three targets
 
