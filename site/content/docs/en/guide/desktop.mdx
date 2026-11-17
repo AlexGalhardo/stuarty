@@ -61,7 +61,7 @@ The site moved to `https://video.vukem.dev` in v0.21.0, and the feed moved with 
 
 - The build is not signed with a paid certificate, so Windows SmartScreen warns before the first run. See [Installation](/docs/installation) for the steps on Windows and macOS.
 - Every page answers with an error: the front end was not built. Run `bun run build` in `web/` before `go build`.
-- A second copy of the program on the same workspace: the workspace is locked and the second one cannot start. See [the workspace is locked](/docs/troubleshooting/workspace-locked).
+- A second copy of the program on the same workspace: the workspace is locked and the second one cannot start. See [the workspace is locked](/docs/troubleshooting/workspace-locked) This includes a `vukem-video serve` that is already running on the workspace: the window says so, with the process and the address. Open that server with `vukem-video open`, stop it, or give the application another folder in `VUKEM_VIDEO_HOME`.
 - Looking for macOS or Linux builds: they are not verified, so nothing here is promised for them.
 
 ## Next steps
