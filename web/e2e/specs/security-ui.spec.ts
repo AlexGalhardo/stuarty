@@ -28,7 +28,7 @@ function hostileFont(): string {
 	mkdirSync(dir, { recursive: true });
 	const out = join(dir, `${ASSET_NAME}.ttf`);
 	copyFileSync(
-		join(process.cwd(), "..", "engine", "raster", "fonts", "Anton-Regular.ttf"),
+		join(process.cwd(), "..", "renderer", "fonts", "Anton-Regular.ttf"),
 		out,
 	);
 	return out;
