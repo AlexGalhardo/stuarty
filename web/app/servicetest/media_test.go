@@ -735,3 +735,25 @@ func TestOpenFileServesTheAlphaProxyAndPNGThumbnails(t *testing.T) {
 		t.Errorf("an alpha asset has no chunk index: %v", err)
 	}
 }
+
+// VV-105: one bad asset id fails the call before any file is imported.
+func TestMediaImportChecksEveryAssetIDBeforeImporting(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{})
+	project := m.newProject("p")
+
+	_, err := m.svc.MediaImport(m.as(ui), service.MediaImportRequest{
+		ProjectID: project,
+		Files: []service.ImportFile{
+			{Path: m.write("a.mp4", clipBytes)},
+			{Path: m.write("b.mp4", clipBytes), AssetID: "ast_mus0000001"},
+		},
+	})
+	if code(err) != command.CodeValidation {
+		t.Fatalf("a bad asset id = %v, want E_VALIDATION", err)
+	}
+
+	list, lerr := m.svc.MediaList(m.as(ui), service.MediaListRequest{ProjectID: project})
+	if lerr != nil || len(list.Assets) != 0 {
+		t.Errorf("the other file was imported: %+v, %v", list, lerr)
+	}
+}
