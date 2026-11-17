@@ -45,3 +45,27 @@ func TestMissingPagesAnswerTheErrorPage(t *testing.T) {
 		t.Errorf("an unknown API route = %d %s, want problem+json", api.status, api.body)
 	}
 }
+
+// VV-157: a browser that opens a page of the local editor with no session gets a
+// 401 page that says how to get in, and the JSON answer carries the same hint;
+// neither carries the token or a launch code.
+func TestUnauthenticatedPageSaysHowToSignIn(t *testing.T) {
+	h := pagesHarness(t)
+
+	page := h.do(req{path: "/projects", noAuth: true, headers: map[string]string{"Accept": "text/html"}})
+	body := string(page.body)
+
+	if page.status != http.StatusUnauthorized || !strings.Contains(page.header.Get("Content-Type"), "text/html") ||
+		!strings.Contains(body, "vukem-video open") || !strings.Contains(body, "https://video.vukem.dev/docs/") {
+		t.Errorf("/projects as a browser = %d %s\n%.600s", page.status, page.header.Get("Content-Type"), body)
+	}
+
+	if strings.Contains(body, canary) || strings.Contains(body, "/auth/launch") {
+		t.Errorf("the 401 page reveals a credential: %.600s", body)
+	}
+
+	api := h.do(req{path: "/api/v1/projects", noAuth: true})
+	if api.status != http.StatusUnauthorized || !strings.Contains(string(api.body), "vukem-video open") {
+		t.Errorf("/api/v1/projects = %d %s, want the hint", api.status, api.body)
+	}
+}

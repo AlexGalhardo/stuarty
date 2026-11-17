@@ -20,7 +20,7 @@ The server makes no outbound connection by default and sends no telemetry; see [
 1. [Download and verify](/docs/self-hosting/verify-a-release) the archive of your platform, and put `vukem-video` on your `PATH`.
 2. Check the installation: `vukem-video doctor --full` runs every check and names what to fix.
 3. Start the server: `vukem-video serve`. It stays in the foreground and logs to standard error.
-4. Open the editor with `vukem-video open`, or go to `http://127.0.0.1:7878` in a browser.
+4. Open the editor with `vukem-video open`. It prints a one-time link and opens it in your browser. Opening `http://127.0.0.1:7878` directly shows a "401 Sign-in needed" page, because local mode has no login and the browser needs that link to get a session.
 
 ```bash
 vukem-video version
