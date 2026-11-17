@@ -35,7 +35,8 @@ test.describe("failed asset card", () => {
 		await expect(card).toBeVisible();
 		await expect(card).toHaveAttribute("data-state", "failed");
 		await expect(card.getByRole("alert")).toBeVisible();
-		await page.waitForTimeout(500);
+		// Wait for the page to stop making requests (a condition, not a duration) before asserting none was a thumbnail.
+		await page.waitForLoadState("networkidle");
 		expect(thumbnails).toEqual([]);
 		expect(refused.filter((u) => u.includes("/media/"))).toEqual([]);
 	});
