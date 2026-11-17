@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args: give exactly one of copies and until.",
+  "hint": "Use {\"copies\": 3} or {\"until\": \"120s\"}.",
+  "retryable": false,
+  "path": "args.copies"
+}

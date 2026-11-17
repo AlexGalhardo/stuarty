@@ -1,0 +1,20 @@
+[
+  {
+    "type": "remove",
+    "collection": "items",
+    "id": "itm_g9h8j7k6m5"
+  },
+  {
+    "type": "patch",
+    "collection": "items",
+    "id": "itm_m1n2p3q4r5",
+    "unset": [
+      "link"
+    ]
+  },
+  {
+    "type": "remove",
+    "collection": "items",
+    "id": "itm_n1p2q3r4s5"
+  }
+]

@@ -1672,6 +1672,33 @@ export interface ItemRenameArgs {
   name: string;
 }
 
+export interface ItemRepeatArgs {
+  /**
+   * How many extra copies to add after the item (2 plays it three times). Give copies or until.
+   */
+  copies?: number;
+  /**
+   * The item to repeat.
+   */
+  item_id: string;
+  /**
+   * Link the item and its copies so they move, trim and split together; default false.
+   */
+  link?: boolean;
+  /**
+   * Ids for the copies, in order; the rest are generated.
+   */
+  new_ids?: string[];
+  /**
+   * none (default) or track: the later items of the track move later by the length added.
+   */
+  ripple?: "none" | "track";
+  /**
+   * Absolute time the sequence ends at; the last copy is trimmed to end there. Give copies or until.
+   */
+  until?: string;
+}
+
 export interface ItemSetAudioArgs {
   /**
    * Drop the audio of a clip.
@@ -2429,7 +2456,7 @@ export interface TrackUpdateArgs {
   volume?: number;
 }
 
-export type CommandName = "asset.add" | "asset.remove" | "audio.add" | "audio.duck" | "audio.mark_beats" | "caption.add" | "caption.edit_word" | "caption.from_transcript" | "caption.import_subtitles" | "caption.merge" | "caption.retime_from_clip" | "caption.set_breaks" | "caption.set_style" | "caption.set_words" | "caption.split" | "clip.add" | "clip.remove_silences" | "clip.set_blend" | "clip.set_blur" | "clip.set_chroma_key" | "clip.set_color" | "clip.set_effects" | "clip.set_filter" | "clip.set_flip" | "clip.set_framing" | "clip.set_mask" | "clip.set_outline" | "clip.set_shadow" | "clip.set_speed" | "font.add" | "font.remove" | "item.crossfade" | "item.delete" | "item.duplicate" | "item.extract_audio" | "item.freeze_frame" | "item.link" | "item.move" | "item.paste_attributes" | "item.rename" | "item.set_audio" | "item.set_enabled" | "item.set_transform" | "item.set_transition" | "item.slip" | "item.split" | "item.trim" | "item.unlink" | "keyframe.clear" | "keyframe.remove" | "keyframe.set" | "marker.add" | "marker.remove" | "marker.set" | "project.rename" | "settings.reframe" | "settings.set" | "settings.set_fps" | "shape.add" | "shape.set" | "slot.fill" | "slot.mark" | "slot.unmark" | "template.set_info" | "text.add" | "text.apply_preset" | "text.set" | "timeline.close_gap" | "track.add" | "track.move" | "track.remove" | "track.set_caption_style" | "track.update";
+export type CommandName = "asset.add" | "asset.remove" | "audio.add" | "audio.duck" | "audio.mark_beats" | "caption.add" | "caption.edit_word" | "caption.from_transcript" | "caption.import_subtitles" | "caption.merge" | "caption.retime_from_clip" | "caption.set_breaks" | "caption.set_style" | "caption.set_words" | "caption.split" | "clip.add" | "clip.remove_silences" | "clip.set_blend" | "clip.set_blur" | "clip.set_chroma_key" | "clip.set_color" | "clip.set_effects" | "clip.set_filter" | "clip.set_flip" | "clip.set_framing" | "clip.set_mask" | "clip.set_outline" | "clip.set_shadow" | "clip.set_speed" | "font.add" | "font.remove" | "item.crossfade" | "item.delete" | "item.duplicate" | "item.extract_audio" | "item.freeze_frame" | "item.link" | "item.move" | "item.paste_attributes" | "item.rename" | "item.repeat" | "item.set_audio" | "item.set_enabled" | "item.set_transform" | "item.set_transition" | "item.slip" | "item.split" | "item.trim" | "item.unlink" | "keyframe.clear" | "keyframe.remove" | "keyframe.set" | "marker.add" | "marker.remove" | "marker.set" | "project.rename" | "settings.reframe" | "settings.set" | "settings.set_fps" | "shape.add" | "shape.set" | "slot.fill" | "slot.mark" | "slot.unmark" | "template.set_info" | "text.add" | "text.apply_preset" | "text.set" | "timeline.close_gap" | "track.add" | "track.move" | "track.remove" | "track.set_caption_style" | "track.update";
 
 export interface CommandArgsMap {
 	"asset.add": AssetAddArgs;
@@ -2472,6 +2499,7 @@ export interface CommandArgsMap {
 	"item.move": ItemMoveArgs;
 	"item.paste_attributes": ItemPasteAttributesArgs;
 	"item.rename": ItemRenameArgs;
+	"item.repeat": ItemRepeatArgs;
 	"item.set_audio": ItemSetAudioArgs;
 	"item.set_enabled": ItemSetEnabledArgs;
 	"item.set_transform": ItemSetTransformArgs;
@@ -2550,6 +2578,7 @@ export const COMMANDS: Record<CommandName, { summary: string; scope: "edit" | "m
 	"item.move": { summary: "Moves an item in time, to another track of the same kind, or both.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_OUT_OF_SOURCE","E_OVERLAP"] },
 	"item.paste_attributes": { summary: "Copies the look of one item to other items.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE"] },
 	"item.rename": { summary: "Sets the label of an item.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND"] },
+	"item.repeat": { summary: "Repeats an item back to back, a number of times or until a time, such as a looping background.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_INVALID_STATE","E_ID_EXISTS","E_LIMIT","E_OVERLAP"] },
 	"item.set_audio": { summary: "Sets the volume, the fades, the mute flag, the noise reduction or the voice of a clip or audio item.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE"] },
 	"item.set_enabled": { summary: "Turns an item off or on without removing it from the timeline.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND"] },
 	"item.set_transform": { summary: "Sets the position, scale, rotation or opacity of a visual item.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE"] },

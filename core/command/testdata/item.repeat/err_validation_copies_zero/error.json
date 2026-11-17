@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "The value of args.copies is 0, outside the accepted range.",
+  "hint": "Use a value between 1 and 200.",
+  "retryable": false,
+  "path": "args.copies"
+}

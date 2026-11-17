@@ -1,0 +1,7 @@
+{
+  "code": "E_INVALID_TIME",
+  "message": "args.until \"90f\" is frame 90; the item already ends at frame 90.",
+  "hint": "Use an until after \"90f\" (3s).",
+  "retryable": false,
+  "path": "args.until"
+}

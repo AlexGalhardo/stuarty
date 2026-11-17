@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "copies": {
+      "description": "How many extra copies to add after the item (2 plays it three times). Give copies or until.",
+      "maximum": 200,
+      "minimum": 1,
+      "type": "integer"
+    },
+    "item_id": {
+      "description": "The item to repeat.",
+      "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+      "type": "string"
+    },
+    "link": {
+      "description": "Link the item and its copies so they move, trim and split together; default false.",
+      "type": "boolean"
+    },
+    "new_ids": {
+      "description": "Ids for the copies, in order; the rest are generated.",
+      "items": {
+        "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "ripple": {
+      "description": "none (default) or track: the later items of the track move later by the length added.",
+      "enum": [
+        "none",
+        "track"
+      ],
+      "type": "string"
+    },
+    "until": {
+      "description": "Absolute time the sequence ends at; the last copy is trimmed to end there. Give copies or until.",
+      "type": "string",
+      "x-vv-kind": "time"
+    }
+  },
+  "required": [
+    "item_id"
+  ],
+  "type": "object"
+}

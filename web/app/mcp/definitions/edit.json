@@ -37,6 +37,7 @@
         "item.split",
         "item.delete",
         "item.duplicate",
+        "item.repeat",
         "item.rename",
         "item.set_transform",
         "item.set_transition",

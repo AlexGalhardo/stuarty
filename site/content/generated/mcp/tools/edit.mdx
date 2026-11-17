@@ -30,7 +30,7 @@ These are the annotations of the tool definition, the hints a client uses to dec
 | `project_id` | `string` | yes | pattern `^prj_[0-9a-hjkmnp-tv-z]{10}$` |
 | `base_revision` | `integer` | yes | min 0 |
 | `operations` | array of `object` | yes | at least 1 items; at most 200 items |
-| `operations[].op` | `string`, one of 72 values | yes |  |
+| `operations[].op` | `string`, one of 73 values | yes |  |
 | `operations[].args` | `object` | yes |  |
 | `idempotency_key` | `string` | no | pattern `^[A-Za-z0-9._~-]{8,64}$` |
 | `dry_run` | `boolean` | no | default `false` |
@@ -95,6 +95,7 @@ Each member of `operations` is `{ op, args }`. Every operation has its own page 
 | [`item.move`](/docs/mcp/tools/edit/item.move) | Moves an item in time, to another track of the same kind, or both. | `edit` | prototype |
 | [`item.paste_attributes`](/docs/mcp/tools/edit/item.paste_attributes) | Copies the look of one item to other items. | `edit` | beta |
 | [`item.rename`](/docs/mcp/tools/edit/item.rename) | Sets the label of an item. | `edit` | alpha |
+| [`item.repeat`](/docs/mcp/tools/edit/item.repeat) | Repeats an item back to back, a number of times or until a time, such as a looping background. | `edit` | beta |
 | [`item.set_audio`](/docs/mcp/tools/edit/item.set_audio) | Sets the volume, the fades, the mute flag, the noise reduction or the voice of a clip or audio item. | `edit` | alpha |
 | [`item.set_enabled`](/docs/mcp/tools/edit/item.set_enabled) | Turns an item off or on without removing it from the timeline. | `edit` | beta |
 | [`item.set_transform`](/docs/mcp/tools/edit/item.set_transform) | Sets the position, scale, rotation or opacity of a visual item. | `edit` | alpha |

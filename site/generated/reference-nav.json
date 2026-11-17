@@ -182,6 +182,7 @@
       "item.move",
       "item.paste_attributes",
       "item.rename",
+      "item.repeat",
       "item.set_audio",
       "item.set_enabled",
       "item.set_transform",

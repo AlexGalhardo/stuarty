@@ -1,0 +1,7 @@
+{
+  "code": "E_LIMIT",
+  "message": "Repeating itm_m1n2p3q4r5 until 1500f needs 299 copies; the limit is 200.",
+  "hint": "Use a later start of the sequence, a longer item, or two item.repeat calls.",
+  "retryable": false,
+  "path": "args.until"
+}

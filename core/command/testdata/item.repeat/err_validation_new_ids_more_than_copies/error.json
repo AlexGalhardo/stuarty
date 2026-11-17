@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.new_ids has 2 ids for 1 copies.",
+  "hint": "Send at most one id per copy, or fewer.",
+  "retryable": false,
+  "path": "args.new_ids"
+}
