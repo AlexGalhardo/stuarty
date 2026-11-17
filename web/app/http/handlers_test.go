@@ -508,3 +508,20 @@ func TestProjectListCarriesProjectID(t *testing.T) {
 		t.Fatalf("list = %d %s", res.status, res.body)
 	}
 }
+
+// VV-210: dry_run in a body is a JSON boolean; a string is refused as a number is.
+func TestUndoRedoDryRunTakesOnlyJSONBooleans(t *testing.T) {
+	t.Parallel()
+
+	h := newHarness(t)
+	id := h.newProject("a")
+
+	for _, route := range []string{"undo", "redo"} {
+		for _, body := range []string{`{"dry_run":"yes"}`, `{"dry_run":"true"}`, `{"dry_run":7}`} {
+			res := h.post("/api/v1/projects/"+id+"/"+route, body)
+			if res.status != http.StatusBadRequest && res.status != http.StatusUnprocessableEntity {
+				t.Errorf("%s %s = %d %s, want a validation error", route, body, res.status, res.body)
+			}
+		}
+	}
+}
