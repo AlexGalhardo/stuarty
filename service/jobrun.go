@@ -348,6 +348,26 @@ func (s *svc) requeueInterrupted(ctx context.Context, job *JobRow) {
 	s.emitCurrent(ctx, job.ID)
 }
 
+// missingFFmpeg is the discovery error when ffmpeg or ffprobe cannot be used.
+// The real ingest panics on a nil runner; a substitute ingester does not use one.
+func (s *svc) missingFFmpeg() error {
+	if s.media.FFmpegMissing != nil {
+		return s.media.FFmpegMissing
+	}
+
+	if s.media.Runner != nil || !s.defaultIngest {
+		return nil
+	}
+
+	return &ffmpeg.Error{
+		Code:    ffmpeg.CodeFFmpegMissing,
+		Reason:  "ffmpeg_missing",
+		Message: "No usable FFmpeg was found (looked at: the configured path, next to the program, the PATH).",
+		Hint: `Install FFmpeg 7 or newer, or set ` + ffmpeg.EnvFFmpeg +
+			` to its path. Run "vukem-video doctor" for details.`,
+	}
+}
+
 // runIngest is steps 1 to 7 of SDD-011 section 7.1 for one file, then the
 // asset.add batches of section 2.5. A file whose asset is already ready (a
 // crash between the registration and the end of the job) skips straight to the
@@ -389,6 +409,10 @@ func (s *svc) runIngest(ctx context.Context, job *JobRow, pw *progress) (json.Ra
 		}
 
 		if !isLUT {
+			if miss := s.missingFFmpeg(); miss != nil {
+				return nil, miss
+			}
+
 			res, rerr := s.media.Ingest(ctx, in)
 			if rerr != nil {
 				return nil, rerr
@@ -690,6 +714,10 @@ func (s *svc) runExport(ctx context.Context, job *JobRow, pw *progress) (json.Ra
 
 	if in.Format == bundleExportFormat {
 		return s.runBundleExport(ctx, job, pw, in)
+	}
+
+	if s.exporter == nil && s.media.FFmpegMissing != nil {
+		return nil, s.media.FFmpegMissing
 	}
 
 	if in.Format == FormatPNG {

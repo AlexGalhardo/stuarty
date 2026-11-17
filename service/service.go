@@ -218,6 +218,10 @@ type svc struct {
 	fonts   *enginestore.Fonts // user fonts of the workspace; nil without one
 	snaps   snapCache
 	sems    map[string]chan struct{}
+
+	// defaultIngest is true when New installed ingest.Run. A substitute ingester
+	// does not touch the runner, so a nil runner is not a missing tool.
+	defaultIngest bool
 }
 
 // New returns the in-process Service over a store.
@@ -266,6 +270,7 @@ func New(o Options) (Service, error) {
 
 	if s.media.Ingest == nil {
 		s.media.Ingest = ingest.Run
+		s.defaultIngest = true
 	}
 
 	if s.media.FreeBytes == nil {
