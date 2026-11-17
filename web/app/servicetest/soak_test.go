@@ -9,8 +9,11 @@ import (
 	"math/rand/v2"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
 	"runtime"
+	"runtime/debug"
 	"runtime/metrics"
+	"runtime/pprof"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -31,8 +34,10 @@ import (
 const (
 	// soakDurationEnv sets the length of the run (a Go duration); the nightly job leaves it unset: one hour.
 	soakDurationEnv = "VUKEM_VIDEO_SOAK_DURATION"
-	soakWarmup      = 30 * time.Second
-	soakWorkers     = 4
+	// soakHeapDirEnv names a directory for the heap profiles of the baseline and of the end.
+	soakHeapDirEnv = "VUKEM_VIDEO_SOAK_HEAPDIR"
+	soakWarmup     = 30 * time.Second
+	soakWorkers    = 4
 	// The HTTP workers share the one local credential, which the server limits to 600 requests a minute
 	// plus a burst (SDD-007 section 4.4): they pace themselves under it, as a client that is told to. The
 	// in-process workers have no such limit and only leave the machine some room.
@@ -40,6 +45,8 @@ const (
 	soakProcessPause = 10 * time.Millisecond
 	// soakMargin is the room that the soak gives goroutines and memory to return to the baseline (P4-SRV-002).
 	soakMargin = 0.10
+	// soakSettledEvery is how many minutes apart the settled figures are logged while the load runs.
+	soakSettledEvery = 5
 )
 
 // soakStats counts what the workers did and what went wrong.
@@ -76,10 +83,36 @@ func soakResident() uint64 {
 	return samples[0].Value.Uint64() - samples[1].Value.Uint64()
 }
 
-// soakSettle collects garbage until the numbers stop moving and returns them.
+// soakHeapProfile writes the heap profile of the settled process to <VUKEM_VIDEO_SOAK_HEAPDIR>/<name>.pprof
+// when that variable names a directory, so that go tool pprof -base baseline.pprof end.pprof shows what grew.
+func soakHeapProfile(t *testing.T, name string) {
+	t.Helper()
+
+	dir := os.Getenv(soakHeapDirEnv)
+	if dir == "" {
+		return
+	}
+
+	f, err := os.Create(filepath.Join(dir, name+".pprof"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer func() { _ = f.Close() }()
+
+	if err := pprof.Lookup("heap").WriteTo(f, 0); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// soakSettle collects garbage until the numbers stop moving and returns them. The memory that the runtime
+// still holds but no longer uses is handed back first (FreeOSMemory): without it the figure follows the
+// pace of the background scavenger, and the in-use heap, which stays under 0.5 MiB between the baseline
+// and the end of a run, is hidden behind a few MiB of free pages that move from run to run.
 func soakSettle() (goroutines int, resident uint64) {
 	for range 5 {
 		runtime.GC()
+		debug.FreeOSMemory()
 		time.Sleep(200 * time.Millisecond)
 	}
 
@@ -142,6 +175,11 @@ func (w *soakWorker) step(ctx context.Context, rng *rand.Rand, i int, stats *soa
 //	go test -tags soak -run TestSoak -timeout 90m ./web/app/servicetest/
 func TestSoak(t *testing.T) {
 	total := time.Hour
+
+	if os.Getenv(soakHeapDirEnv) != "" {
+		// Finer sampling than the default 512 KiB, so that a few MiB of growth is attributed.
+		runtime.MemProfileRate = 4 << 10
+	}
 
 	if v := os.Getenv(soakDurationEnv); v != "" {
 		d, err := time.ParseDuration(v)
@@ -258,6 +296,7 @@ func TestSoak(t *testing.T) {
 	run(soakWarmup)
 
 	baseG, baseMem := soakSettle()
+	soakHeapProfile(t, "baseline")
 	t.Logf("baseline after %s of warm-up: %d goroutines, %.1f MiB", soakWarmup, baseG, float64(baseMem)/(1<<20))
 
 	done := make(chan struct{})
@@ -266,13 +305,20 @@ func TestSoak(t *testing.T) {
 		tick := time.NewTicker(time.Minute)
 		defer tick.Stop()
 
-		for {
+		for minute := 1; ; minute++ {
 			select {
 			case <-done:
 				return
 			case <-tick.C:
 				t.Logf("running: %d ops, %d goroutines, %.1f MiB resident", stats.ops.Load(), runtime.NumGoroutine(),
 					float64(soakResident())/(1<<20))
+
+				// The figure that the margin judges is the settled one: it shows whether the memory
+				// plateaus or climbs while the load is still running.
+				if minute%soakSettledEvery == 0 {
+					g, mem := soakSettle()
+					t.Logf("settled at minute %d: %d goroutines, %.1f MiB", minute, g, float64(mem)/(1<<20))
+				}
 			}
 		}
 	}()
@@ -282,6 +328,7 @@ func TestSoak(t *testing.T) {
 	srv.Close()
 
 	endG, endMem := soakSettle()
+	soakHeapProfile(t, "end")
 	t.Logf("%s: %d ops (%d edits, %d undos, %d reads, %d exports, %d bundle exports), %d refused by a limit", total,
 		stats.ops.Load(), stats.edits.Load(), stats.undos.Load(), stats.reads.Load(), stats.exports.Load(),
 		stats.bundles.Load(), stats.refused.Load())
