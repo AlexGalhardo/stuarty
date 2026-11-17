@@ -1105,7 +1105,7 @@ export const VOICE_PRESETS = [
 ] as const;
 export type VoicePreset = (typeof VOICE_PRESETS)[number];
 
-// Only the fields the person changed (SDD-002 C.19); the fades are lengths with
+// Only the fields the person changed (SDD-001 section 3.5); the fades are lengths with
 // a unit, as the time field normalized them.
 export function audioOperations(
 	itemId: string,
@@ -1396,6 +1396,79 @@ export interface ColorChanges {
 	// The id of a lut asset, and how much of it is applied (0 removes it).
 	lut_asset?: string;
 	lut_intensity?: number;
+	// A band, a wheel or a curve that is given replaces the stored one; a neutral
+	// one removes it (SDD-001 section 3.5).
+	hsl?: HslBandValue[];
+	wheels?: { [name in WheelName]?: WheelValue };
+	curves?: { [channel in CurveChannel]?: CurvePointValue[] };
+}
+
+export const HSL_RANGES = [
+	"red",
+	"orange",
+	"yellow",
+	"green",
+	"cyan",
+	"blue",
+	"purple",
+	"magenta",
+] as const;
+export type HslRange = (typeof HSL_RANGES)[number];
+
+export type HslBandValue = {
+	range: HslRange;
+	hue: number;
+	saturation: number;
+	lightness: number;
+};
+
+export const WHEEL_NAMES = ["shadows", "midtones", "highlights"] as const;
+export type WheelName = (typeof WHEEL_NAMES)[number];
+
+export type WheelValue = {
+	hue: number;
+	amount: number;
+	luma: number;
+};
+
+export const CURVE_CHANNELS = ["master", "red", "green", "blue"] as const;
+export type CurveChannel = (typeof CURVE_CHANNELS)[number];
+
+export type CurvePointValue = {
+	x: number;
+	y: number;
+};
+
+// "Reset" of the three advanced groups: the neutral value of what the item
+// stores, which the core reads as removing it (an empty list for a curve).
+export function colorResetChanges(
+	group: "hsl" | "wheels" | "curves",
+	stored: {
+		hsl: readonly HslRange[];
+		wheels: readonly WheelName[];
+		curves: readonly CurveChannel[];
+	},
+): ColorChanges {
+	if (group === "hsl") {
+		return {
+			hsl: stored.hsl.map((range) => ({
+				range,
+				hue: 0,
+				saturation: 0,
+				lightness: 0,
+			})),
+		};
+	}
+	if (group === "wheels") {
+		return {
+			wheels: Object.fromEntries(
+				stored.wheels.map((name) => [name, { hue: 0, amount: 0, luma: 0 }]),
+			),
+		};
+	}
+	return {
+		curves: Object.fromEntries(stored.curves.map((name) => [name, []])),
+	};
 }
 
 export function colorOperations(

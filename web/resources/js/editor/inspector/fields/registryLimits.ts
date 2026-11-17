@@ -9,17 +9,21 @@ interface Schema {
 	minimum?: number;
 	maximum?: number;
 	properties?: Record<string, Schema>;
+	items?: Schema;
 }
 
 // The numeric limits the core's registry gives an argument of a command (the
 // `minimum` and `maximum` of its schema, generated from Go), so a field refuses
 // what the core would refuse without the editor repeating the numbers. `path`
-// names the argument, one key per level (`["crop", "left"]`). A command or
+// names the argument, one key per level (`["crop", "left"]`; `items` steps into
+// the elements of a list). A command or
 // argument the registry does not know has no limits.
 export function registryLimits(command: string, ...path: string[]): Limits {
 	let schema: Schema | undefined = registry.find((c) => c.name === command)
 		?.args_schema as unknown as Schema | undefined;
-	for (const key of path) schema = schema?.properties?.[key];
+	for (const key of path) {
+		schema = key === "items" ? schema?.items : schema?.properties?.[key];
+	}
 	const out: Limits = {};
 	if (typeof schema?.minimum === "number") out.min = schema.minimum;
 	if (typeof schema?.maximum === "number") out.max = schema.maximum;
