@@ -165,7 +165,7 @@ func headSummary(h *ProjectHead) ProjectSummary {
 	fps := timeline.Rational{Num: h.Summary.FPSNum, Den: h.Summary.FPSDen}
 
 	return ProjectSummary{
-		ID: h.ID, Name: h.Name, Revision: h.Revision, State: stateString(h.State),
+		ID: h.ID, ProjectID: h.ID, Name: h.Name, Revision: h.Revision, State: stateString(h.State),
 		Width: h.Summary.Width, Height: h.Summary.Height, FPS: fpsString(fps.Num, fps.Den),
 		Duration: timeValue(fps, h.Summary.DurationFrames),
 		Tracks:   h.Summary.Tracks, Items: h.Summary.Items, Assets: h.Summary.Assets,
