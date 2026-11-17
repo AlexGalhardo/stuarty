@@ -73,6 +73,11 @@ func (c *check) safeArea() {
 			continue
 		}
 
+		// The box of an item that slides or animates is only one moment of it (VV-121).
+		if movesInOrOut(it) {
+			continue
+		}
+
 		b, ok := c.boxOf(it, safe)
 		if !ok || (b.x0 >= safe.x0-edgeSlack && b.y0 >= safe.y0-edgeSlack && b.x1 <= safe.x1+edgeSlack &&
 			b.y1 <= safe.y1+edgeSlack) {
