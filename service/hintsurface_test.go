@@ -26,6 +26,19 @@ func TestHintNamesTheCommandsOfTheSurface(t *testing.T) {
 		t.Error("ForSurface changed the original")
 	}
 
+	// A client of a server relays the hint the server wrote for HTTP; the canonical form comes back
+	// to the tool names so that the stdio MCP and the CLI name their own surface (VV-168).
+	for _, h := range []string{
+		"list the projects with project_list",
+		"list the jobs of the project with job_get",
+		`start the transcription with job_start (kind "transcribe") then job_get`,
+		"import it again with media_import or create a project with project_create",
+	} {
+		if got := CanonicalHint(hintFor(SurfaceHTTP, h)); got != h {
+			t.Errorf("CanonicalHint(HTTP(%q)) = %q", h, got)
+		}
+	}
+
 	cli := hintFor(SurfaceCLI, `start the transcription with job_start (kind "transcribe") then job_get`)
 	if strings.Contains(cli, "job_") || !strings.Contains(cli, "transcribe") {
 		t.Errorf("cli hint = %q", cli)
