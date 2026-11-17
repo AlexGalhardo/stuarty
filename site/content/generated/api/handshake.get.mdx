@@ -21,7 +21,7 @@ Send the secret in the header `Authorization: Bearer <secret>`: the local token 
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
-| `nonce` | `string` | yes | 32 lower-case hexadecimal characters.. min length 1 |
+| `nonce` | `string` | yes | 32 lower-case hexadecimal characters.. min length 1; pattern `^[0-9a-f]{32}$` |
 
 ## Responses
 

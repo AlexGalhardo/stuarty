@@ -3,6 +3,7 @@ package httpapi
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -34,11 +35,34 @@ type listIn struct {
 }
 
 type createIn struct {
-	Name   string `json:"name"              validate:"required" doc:"1 to 120 characters."`
-	Preset string `json:"preset,omitempty"                      doc:"9:16 (default), 1:1, 16:9 or 4:5."`
-	FPS    string `json:"fps,omitempty"                         doc:"30 (default); n or n/1001."`
-	ID     string `json:"id,omitempty"                          doc:"An id of your own; E_ID_EXISTS when taken."`
-	DryRun bool   `json:"dry_run,omitempty"`
+	Name   string  `json:"name"              validate:"required" doc:"1 to 120 characters."`
+	Preset string  `json:"preset,omitempty"                      doc:"9:16 (default), 1:1, 16:9 or 4:5."`
+	FPS    fpsText `json:"fps,omitempty"                         doc:"30 (default); n or n/1001, as text or as a number."`
+	ID     string  `json:"id,omitempty"                          doc:"An id of your own; E_ID_EXISTS when taken."`
+	DryRun bool    `json:"dry_run,omitempty"`
+}
+
+// fpsText is the frame rate of a new project. The CLI takes --fps 30, so the API takes the JSON
+// number 30 as well as the text "30" or "30000/1001" (VV-103); the service sees text.
+type fpsText string
+
+func (f *fpsText) UnmarshalJSON(b []byte) error {
+	var n json.Number
+
+	if err := json.Unmarshal(b, &n); err == nil {
+		*f = fpsText(n.String())
+		return nil
+	}
+
+	var s string
+
+	if err := json.Unmarshal(b, &s); err != nil {
+		return errors.New("must be a number or text such as 30 or 30000/1001")
+	}
+
+	*f = fpsText(s)
+
+	return nil
 }
 
 type getIn struct {
@@ -338,7 +362,7 @@ func (h *apiHandler) projectsCreate(c *web.Ctx, in createIn) (service.ProjectCre
 	dryRun := dry(c, in.DryRun)
 
 	res, err := h.Service.ProjectCreate(c.Context(), service.ProjectCreateRequest{
-		Name: in.Name, Preset: in.Preset, FPS: in.FPS, ID: in.ID, DryRun: dryRun,
+		Name: in.Name, Preset: in.Preset, FPS: string(in.FPS), ID: in.ID, DryRun: dryRun,
 	})
 	if err != nil {
 		return service.ProjectCreateResult{}, err

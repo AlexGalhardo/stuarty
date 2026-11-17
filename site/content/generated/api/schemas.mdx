@@ -402,7 +402,7 @@ The types named in the tables of the operations. The arguments of each editing c
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
-| `asset_id` | `string` | no | An id of your own; ignored for a duplicate. |
+| `asset_id` | `string` | no | An id of your own; ignored for a duplicate.. pattern `^ast_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
 | `path` | `string` | yes | An absolute path on the machine that runs the server.. min length 1 |
 
 ### InstalledTool
