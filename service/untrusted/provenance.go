@@ -20,6 +20,7 @@ var Provenance = map[string]string{
 	"service.SlotInfo.Description":             SourceTemplateText,
 	"service.OtioLost.Name":                    SourceProjectText,
 	"service.OtioLost.Feature":                 SourceProjectText,
+	"service.OtioMatch.Ref":                    SourceAssetName,
 	"service.OtioMedia.Ref":                    SourceAssetName,
 	"service.OtioMedia.Reason":                 SourceAssetName,
 	"service.ProjectOtioExportResult.FileName": SourceProjectText,
