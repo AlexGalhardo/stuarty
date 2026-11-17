@@ -235,7 +235,7 @@ func (s *svc) registerBitmaps(
 		// A client that gave up (a newer revision) stops the planning (SDD-012 section 19.2 rule 8).
 		if (t-from)%30 == 0 {
 			if cerr := ctx.Err(); cerr != nil {
-				return cerr
+				return asError(cerr)
 			}
 		}
 
