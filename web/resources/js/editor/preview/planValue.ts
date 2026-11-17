@@ -1,4 +1,4 @@
-import type { PerFrame, PlanLayer, PlanWindow } from "../api/types";
+import type { PerFrame, PlanLayer, PlanMask, PlanWindow } from "../api/types";
 import type { LayerGeometry } from "./types";
 
 // A plan value is one number, or one number per frame from `first` (SDD-004
@@ -57,6 +57,28 @@ export function bitmapKeyAt(
 		layer.bitmaps.index.length - 1,
 	);
 	return layer.bitmaps.keys[layer.bitmaps.index[at] ?? 0];
+}
+
+// The mask of a layer at a frame: the entry of `masks` when the plan carries
+// one per frame (an animated mask property), else the constant `mask`.
+export function maskAt(layer: PlanLayer, frame: number): PlanMask | null {
+	const series = layer.masks;
+	if (series === undefined || series.length === 0) return layer.mask ?? null;
+	const at = Math.min(Math.max(frame - layer.first, 0), series.length - 1);
+	return series[at] ?? null;
+}
+
+// The crop of a media layer at a frame: the entry of `crops` when the plan
+// carries one per frame (an animated crop side), else the constant `crop`.
+export function cropAt(
+	layer: PlanLayer,
+	frame: number,
+): [number, number, number, number] | null {
+	if (layer.kind !== "media") return null;
+	const series = layer.crops;
+	if (series === undefined || series.length === 0) return layer.crop;
+	const at = Math.min(Math.max(frame - layer.first, 0), series.length - 1);
+	return series[at] ?? layer.crop;
 }
 
 // The colour matrix of a layer at a frame: the entry of `color_matrices` when
