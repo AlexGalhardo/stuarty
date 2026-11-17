@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 
 import {
 	colorOperations,
+	colorResetChanges,
 	constantSpeedOperations,
 	defaultEffect,
 	EFFECT_KINDS,
@@ -246,5 +247,50 @@ describe("the builders of the D-040 commands", () => {
 			item_id: "itm_a",
 			lut_intensity: 0,
 		});
+	});
+
+	test("an HSL band, a wheel and a curve are sent whole and replace the stored one", () => {
+		expect(
+			colorOperations("itm_a", {
+				hsl: [{ range: "red", hue: 0.2, saturation: 0, lightness: -0.1 }],
+				wheels: { shadows: { hue: 210, amount: 0.4, luma: 0 } },
+				curves: {
+					master: [
+						{ x: 0, y: 0 },
+						{ x: 0.5, y: 0.6 },
+						{ x: 1, y: 1 },
+					],
+				},
+			})[0]?.args,
+		).toEqual({
+			item_id: "itm_a",
+			hsl: [{ range: "red", hue: 0.2, saturation: 0, lightness: -0.1 }],
+			wheels: { shadows: { hue: 210, amount: 0.4, luma: 0 } },
+			curves: {
+				master: [
+					{ x: 0, y: 0 },
+					{ x: 0.5, y: 0.6 },
+					{ x: 1, y: 1 },
+				],
+			},
+		});
+	});
+
+	test("Reset sends the neutral value of what the item stores", () => {
+		const none = { hsl: [], wheels: [], curves: [] } as const;
+		expect(colorResetChanges("hsl", { ...none, hsl: ["red", "blue"] })).toEqual(
+			{
+				hsl: [
+					{ range: "red", hue: 0, saturation: 0, lightness: 0 },
+					{ range: "blue", hue: 0, saturation: 0, lightness: 0 },
+				],
+			},
+		);
+		expect(
+			colorResetChanges("wheels", { ...none, wheels: ["midtones"] }),
+		).toEqual({ wheels: { midtones: { hue: 0, amount: 0, luma: 0 } } });
+		expect(
+			colorResetChanges("curves", { ...none, curves: ["master", "green"] }),
+		).toEqual({ curves: { master: [], green: [] } });
 	});
 });

@@ -44,6 +44,21 @@ describe("registryRange", () => {
 		] as const) {
 			expect(registryRange(command, arg), `${command} ${arg}`).toBeDefined();
 		}
+		for (const path of [
+			["hsl", "items", "hue"],
+			["hsl", "items", "saturation"],
+			["hsl", "items", "lightness"],
+			["wheels", "shadows", "hue"],
+			["wheels", "midtones", "amount"],
+			["wheels", "highlights", "luma"],
+			["curves", "master", "items", "x"],
+			["curves", "red", "items", "y"],
+		] as const) {
+			expect(
+				registryRange("clip.set_color", ...path),
+				path.join("."),
+			).toBeDefined();
+		}
 		expect(() => registryRange("item.set_transform", "x")).toThrow();
 	});
 });

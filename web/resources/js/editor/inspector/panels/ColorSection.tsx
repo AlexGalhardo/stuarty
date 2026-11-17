@@ -9,6 +9,9 @@ import SelectField from "../fields/SelectField";
 import SliderField from "../fields/SliderField";
 import Section from "../Section";
 import { useFieldCommit } from "../useFieldCommit";
+import CurveEditor from "./CurveEditor";
+import HslControls from "./HslControls";
+import WheelControls from "./WheelControls";
 
 type SliderKey = Exclude<keyof ColorChanges, "lut_asset" | "lut_intensity">;
 
@@ -29,8 +32,9 @@ const ROWS: readonly Row[] = [
 
 const NO_LUT = "";
 
-// The Colour section of SDD-012 section 12.1 for a clip: six sliders and the
-// lookup table picker, each change one `clip.set_color` (sliders when released).
+// The Colour section of SDD-012 section 12.1 for a clip: six sliders, the
+// lookup table picker and the HSL, wheels and curves groups, each change one
+// `clip.set_color` (sliders when released).
 // The picker lists the assets of kind lut; "None" sends an intensity of 0, which
 // the core reads as removing the table.
 export default function ColorSection({
@@ -98,6 +102,9 @@ export default function ColorSection({
 					)}
 				</>
 			)}
+			<HslControls itemId={itemId} />
+			<WheelControls itemId={itemId} />
+			<CurveEditor itemId={itemId} />
 		</Section>
 	);
 }
