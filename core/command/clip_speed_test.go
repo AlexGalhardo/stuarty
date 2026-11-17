@@ -3,6 +3,7 @@ package command
 import (
 	"fmt"
 	"math/rand"
+	"strings"
 	"testing"
 
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
@@ -192,6 +193,28 @@ func TestReverseTrimAndSplitKeepTheMapping(t *testing.T) {
 	for k := range r.Duration {
 		if d := r.SourceIn + r.SourceOffset(k) - (orig.SourceIn + orig.SourceOffset(25+k)); d < -1 || d > 1 {
 			t.Fatalf("split right: frame %d is %d frames off", k, d)
+		}
+	}
+}
+
+// A speed or a curve that lengthens a clip over its neighbour says how long the clip became
+// and that ripple "track" moves the later items (VV-118, VV-155).
+func TestSetSpeedOverlapNamesTheResultDuration(t *testing.T) {
+	for name, args := range map[string]string{
+		"constant": `"speed": "0.5x"`,
+		"curve":    `"curve": [{"t": 0, "speed": "1x"}, {"t": 0.5, "speed": "0.4x"}, {"t": 1, "speed": "1x"}]`,
+	} {
+		doc := base().clip(itemA, vidTr, 0, 90, 0).clip(itemB, vidTr, 90, 30, 0).d
+		_, err := Default().Apply(doc, op2("clip.set_speed", fmt.Sprintf(`{"item_id": %q, %s}`, itemA, args)), Env{})
+		ce := AsError(err)
+		if ce == nil || ce.Code != CodeOverlap {
+			t.Fatalf("%s: want E_OVERLAP, got %v", name, err)
+		}
+		if _, ok := ce.Details["result_duration"]; !ok {
+			t.Errorf("%s: no details.result_duration in %+v", name, ce.Details)
+		}
+		if !strings.Contains(ce.Hint, "ripple") {
+			t.Errorf("%s: hint %q does not suggest ripple", name, ce.Hint)
 		}
 	}
 }
