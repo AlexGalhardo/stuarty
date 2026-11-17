@@ -30,10 +30,15 @@ const (
 )
 
 var (
-	keyframeProperties = append([]string{"x", "y", "scale", "rotation", "opacity", "volume"}, ColourProps...)
-	rationalType       = reflect.TypeFor[Rational]()
-	keyframesType      = reflect.TypeFor[Keyframes]()
-	colorTypeOf        = reflect.TypeFor[Color]()
+	keyframeProperties = slices.Concat(
+		[]string{"x", "y", "scale", "rotation", "opacity", "volume"},
+		ColourProps,
+		MaskProps,
+		CropProps,
+	)
+	rationalType  = reflect.TypeFor[Rational]()
+	keyframesType = reflect.TypeFor[Keyframes]()
+	colorTypeOf   = reflect.TypeFor[Color]()
 )
 
 // ref returns a $ref to the definition of a named struct, generating it once.

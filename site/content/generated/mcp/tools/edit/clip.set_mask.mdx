@@ -10,7 +10,7 @@ wide: true
 
 <RefMain>
 
-Sets a mask in the item's own frame: x, y, width and height are fractions of the item (0 to 1, x plus width and y plus height at most 1), feather is the soft edge in pixels (0 to 200, default 0) and invert keeps the outside instead. Replaces the current mask. Works on clip, text, caption and shape items. mask null removes it.
+Sets a mask in the item's own frame: x, y, width and height are fractions of the item (0 to 1, x plus width and y plus height at most 1), feather is the soft edge in pixels (0 to 200, default 0) and invert keeps the outside instead. Replaces the current mask and clears its keyframes (mask_x, mask_y, mask_width, mask_height, mask_feather; see keyframe.set). Works on clip, text, caption and shape items. mask null removes it.
 
 ## Arguments
 

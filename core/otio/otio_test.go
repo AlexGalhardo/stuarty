@@ -1367,6 +1367,41 @@ func TestRoundTripKeepsColourKeyframes(t *testing.T) {
 	}
 }
 
+func TestRoundTripKeepsMaskAndCropKeyframes(t *testing.T) {
+	d := sampleDoc()
+	c1 := d.Items["itm_c000000001"]
+	c1.Mask = &timeline.Mask{Shape: "rect", X: 0, Y: 0, Width: 0.5, Height: 0.5}
+	c1.Keyframes = timeline.Keyframes{
+		"mask_x":    {{T: 0, Value: 0, Easing: "linear"}, {T: 30, Value: 0.4, Easing: "linear"}},
+		"crop_left": {{T: 0, Value: 0, Easing: "linear"}, {T: 30, Value: 0.2, Easing: "linear"}},
+	}
+	d.Items[c1.ID] = c1
+
+	first, _, err := Export(d)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	im, err := Parse(first)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	doc := build(t, im, newDoc(im.FPS))
+
+	for _, it := range doc.Items {
+		if it.Name == "intro" {
+			if kfs := it.Keyframes["mask_x"]; len(kfs) != 2 || kfs[1].Value != 0.4 {
+				t.Errorf("mask keyframes did not come back: %+v", it.Keyframes)
+			}
+
+			if kfs := it.Keyframes["crop_left"]; len(kfs) != 2 || kfs[1].Value != 0.2 {
+				t.Errorf("crop keyframes did not come back: %+v", it.Keyframes)
+			}
+		}
+	}
+}
+
 func TestRoundTripKeepsEveryTransitionKind(t *testing.T) {
 	d := sampleDoc()
 	c1 := d.Items["itm_c000000001"]

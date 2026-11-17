@@ -55,14 +55,14 @@ var pasteGroups = []pasteGroup{
 	{
 		"framing",
 		[]timeline.ItemType{timeline.ItemClip},
-		nil,
+		timeline.CropProps,
 		func(d, s *timeline.Item) { d.Fit, d.Crop = s.Fit, s.Crop },
 	},
 	{"transform", visualTypes, []string{"x", "y", "scale", "rotation", "opacity"}, func(d, s *timeline.Item) {
 		d.X, d.Y, d.Scale, d.Rotation, d.Opacity = s.X, s.Y, s.Scale, s.Rotation, s.Opacity
 	}},
 	{"blend", visualTypes, nil, func(d, s *timeline.Item) { d.Blend = s.Blend }},
-	{"mask", visualTypes, nil, func(d, s *timeline.Item) { d.Mask = s.Mask }},
+	{"mask", visualTypes, timeline.MaskProps, func(d, s *timeline.Item) { d.Mask = s.Mask }},
 	{"flip", visualTypes, nil, func(d, s *timeline.Item) { d.FlipX, d.FlipY = s.FlipX, s.FlipY }},
 	{"chroma_key", visualTypes, nil, func(d, s *timeline.Item) { d.ChromaKey = s.ChromaKey }},
 	{"effects", visualTypes, nil, func(d, s *timeline.Item) { d.Effects = s.Effects }},

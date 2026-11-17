@@ -937,7 +937,32 @@ func keyframeRange(prop string) (lo, hi float64, ok bool) {
 	case "volume":
 		return 0, 4, true
 	}
+	if lo, hi, ok := MaskRange(prop); ok {
+		return lo, hi, true
+	}
+	if lo, hi, ok := CropRange(prop); ok {
+		return lo, hi, true
+	}
 	return ColourRange(prop)
+}
+
+// keyframeTarget checks that an animatable property applies to the item.
+func (v *validator) keyframeTarget(pp, key, prop string, it Item) {
+	if _, _, colour := ColourRange(prop); colour && it.Type != ItemClip {
+		v.add(VKeyframes, pp, key, "%s applies to clips", prop)
+	}
+	if _, _, mask := MaskRange(prop); mask && it.Mask == nil {
+		v.add(VKeyframes, pp, key, "%s needs a mask on the item", prop)
+	}
+	if _, _, crop := CropRange(prop); crop && it.Type != ItemClip {
+		v.add(VKeyframes, pp, key, "%s applies to clips", prop)
+	}
+	switch {
+	case prop == "volume" && it.Type != ItemClip && it.Type != ItemAudio:
+		v.add(VKeyframes, pp, key, "volume applies to items with audio")
+	case prop != "volume" && it.Type == ItemAudio:
+		v.add(VKeyframes, pp, key, "%s applies to visual items", prop)
+	}
 }
 
 func (v *validator) keyframes(path, key string, it Item) {
@@ -948,15 +973,7 @@ func (v *validator) keyframes(path, key string, it Item) {
 			v.add(VKeyframes, pp, key, "%q is not an animatable property", prop)
 			continue
 		}
-		if _, _, colour := ColourRange(prop); colour && it.Type != ItemClip {
-			v.add(VKeyframes, pp, key, "%s applies to clips", prop)
-		}
-		switch {
-		case prop == "volume" && it.Type != ItemClip && it.Type != ItemAudio:
-			v.add(VKeyframes, pp, key, "volume applies to items with audio")
-		case prop != "volume" && it.Type == ItemAudio:
-			v.add(VKeyframes, pp, key, "%s applies to visual items", prop)
-		}
+		v.keyframeTarget(pp, key, prop, it)
 		kfs := it.Keyframes[prop]
 		if len(kfs) > 100 {
 			v.add(VKeyframes, pp, key, "%d keyframes exceed the limit of 100", len(kfs))

@@ -149,12 +149,7 @@ func (p *planner) layerBase(it *timeline.Item, r int) (Layer, bool) {
 
 	l.FlipX, l.FlipY = it.FlipX, it.FlipY
 
-	if m := it.Mask; m != nil {
-		l.Mask = &MaskSpec{
-			Shape: m.Shape, X: round3(m.X), Y: round3(m.Y), Width: round3(m.Width), Height: round3(m.Height),
-			Feather: m.Feather, Invert: m.Invert,
-		}
-	}
+	l.Mask = maskAt(it, r)
 
 	if k := it.ChromaKey; k != nil {
 		l.ChromaKey = &ChromaKeySpec{
@@ -189,6 +184,65 @@ func (p *planner) layerBase(it *timeline.Item, r int) (Layer, bool) {
 	return Layer{}, false
 }
 
+// minMask is the smallest width or height of a mask, as in the document (SDD-001 §3.4).
+const minMask = 0.001
+
+// maskAt is the mask of the item at frame r inside it, or nil: a mask property with keyframes takes
+// the interpolated value, the others their static one (SDD-004 §3.9). The rectangle is kept inside the item.
+func maskAt(it *timeline.Item, r int) *MaskSpec {
+	m := it.Mask
+	if m == nil {
+		return nil
+	}
+
+	fr := float64(r)
+	x, y := property(it, "mask_x", m.X, fr), property(it, "mask_y", m.Y, fr)
+	w, h := property(it, "mask_width", m.Width, fr), property(it, "mask_height", m.Height, fr)
+	feather := property(it, "mask_feather", float64(m.Feather), fr)
+
+	x, y = min(max(x, 0), 1-minMask), min(max(y, 0), 1-minMask)
+	w, h = min(max(w, minMask), 1-x), min(max(h, minMask), 1-y)
+
+	return &MaskSpec{
+		Shape: m.Shape, X: round3(x), Y: round3(y), Width: round3(w), Height: round3(h),
+		Feather: int(min(max(math.Round(feather), 0), timeline.MaxMaskFeather)), Invert: m.Invert,
+	}
+}
+
+// cropAt is the crop fractions of a clip at frame r inside it, and whether it has any: a side with
+// keyframes takes the interpolated value (SDD-004 §3.4). Opposite sides are kept below 1 together.
+func cropAt(it *timeline.Item, r int) (left, top, right, bottom float64, ok bool) {
+	animated := false
+
+	for _, name := range timeline.CropProps {
+		animated = animated || len(it.Keyframes[name]) > 0
+	}
+
+	if it.Crop == nil && !animated {
+		return 0, 0, 0, 0, false
+	}
+
+	fr := float64(r)
+	left, top = property(
+		it,
+		"crop_left",
+		it.CropValue("crop_left"),
+		fr,
+	), property(
+		it,
+		"crop_top",
+		it.CropValue("crop_top"),
+		fr,
+	)
+	right, bottom = property(it, "crop_right", it.CropValue("crop_right"), fr),
+		property(it, "crop_bottom", it.CropValue("crop_bottom"), fr)
+
+	left, top = min(max(left, 0), 1-minMask), min(max(top, 0), 1-minMask)
+	right, bottom = min(max(right, 0), 1-minMask-left), min(max(bottom, 0), 1-minMask-top)
+
+	return left, top, right, bottom, true
+}
+
 // mediaLayer places a clip: the source frame, the crop and the cover, contain
 // or none size of SDD-004 §3.4.
 func (p *planner) mediaLayer(l Layer, it *timeline.Item, r int, a animated) (Layer, bool) {
@@ -200,8 +254,8 @@ func (p *planner) mediaLayer(l Layer, it *timeline.Item, r int, a animated) (Lay
 	sw, sh := float64(asset.Width), float64(asset.Height)
 	crop := Rect{W: sw, H: sh}
 
-	if c := it.Crop; c != nil {
-		crop = Rect{X: c.Left * sw, Y: c.Top * sh, W: sw * (1 - c.Left - c.Right), H: sh * (1 - c.Top - c.Bottom)}
+	if left, top, right, bottom, ok := cropAt(it, r); ok {
+		crop = Rect{X: left * sw, Y: top * sh, W: sw * (1 - left - right), H: sh * (1 - top - bottom)}
 	}
 
 	fw, fh := float64(p.doc.Settings.Width), float64(p.doc.Settings.Height)

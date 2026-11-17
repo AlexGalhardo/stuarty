@@ -1,0 +1,12 @@
+{
+  "code": "E_INVALID_STATE",
+  "message": "Property crop_left of itm_m1n2p3q4r5 has 2 keyframes, which define its value.",
+  "hint": "Use keyframe.set to change a keyframe, or keyframe.clear to remove them first.",
+  "retryable": false,
+  "path": "args.crop",
+  "details": {
+    "properties": [
+      "crop_left"
+    ]
+  }
+}

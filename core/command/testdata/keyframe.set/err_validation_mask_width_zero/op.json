@@ -1,0 +1,9 @@
+{
+  "op": "keyframe.set",
+  "args": {
+    "item_id": "itm_m1n2p3q4r5",
+    "property": "mask_width",
+    "at": "30f",
+    "value": 0
+  }
+}

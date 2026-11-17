@@ -2263,7 +2263,7 @@ Sets how a clip's asset is fitted into the frame and how much of each side is cr
 | --- | --- | --- | --- | --- |
 | `item_id` | item id | yes | none | a `clip` |
 | `fit` | `"cover"`, `"contain"`, `"none"` | no | unchanged | |
-| `crop` | object with any of `left`, `top`, `right`, `bottom` | no | unchanged | each 0 to 1; sides not given keep their current value; the merged result needs `left + right < 1` and `top + bottom < 1` |
+| `crop` | object with any of `left`, `top`, `right`, `bottom` | no | unchanged | each 0 to 1; sides not given keep their current value; the merged result needs `left + right < 1` and `top + bottom < 1`; a side that has keyframes (`crop_left`, `crop_top`, `crop_right`, `crop_bottom`, VV-120) cannot be given |
 
 At least one of `fit` and `crop` is required.
 
@@ -2285,6 +2285,7 @@ At least one of `fit` and `crop` is required.
 | `E_VALIDATION` | nothing to set, a side out of range, or sides summing to 1 or more | `args.crop: left 0.6 plus right 0.5 is 1.1; it must be below 1.` | `Use left 0.4 and right 0.5.` |
 | `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
 | `E_TYPE_MISMATCH` | not a clip | `Item itm_s6t7v8w9x0 is a text item; framing applies to clips.` | `Use item.set_transform to size other items.` |
+| `E_INVALID_STATE` | a given crop side has keyframes (VV-120) | `Property crop_left of itm_s6t7v8w9x0 has 2 keyframes, which define its value.` | `Use keyframe.set to change a keyframe, or keyframe.clear to remove them first.` |
 
 **Inverse.** `patch {collection: "items", id, set: {fit, crop: <old>}, unset: <fields that were absent>}`.
 
@@ -2316,6 +2317,8 @@ At least one of `fit` and `crop` is required.
 - `err_validation_merged_vertical_sum_1`
 - `err_not_found`
 - `err_type_mismatch_text_item`
+- `err_invalid_state_crop_side_has_keyframes`
+- `ok_other_crop_side_is_free`
 
 ### C.25 `clip.set_speed` (phase A)
 
@@ -3815,16 +3818,16 @@ Adds or replaces a keyframe of one property.
 | Name | Type | Required | Default | Rule |
 | --- | --- | --- | --- | --- |
 | `item_id` | item id | yes | none | |
-| `property` | `"x"`, `"y"`, `"scale"`, `"rotation"`, `"opacity"`, `"volume"`, `"brightness"`, `"contrast"`, `"saturation"`, `"temperature"`, `"tint"`, `"hue"` | yes | none | `volume` for `audio` items and clips of a video (not of an image); `brightness`, `contrast`, `saturation`, `temperature`, `tint` and `hue` (added after BETA, TASK-0254, NEW-15) for clips only; the others for visual items |
+| `property` | `"x"`, `"y"`, `"scale"`, `"rotation"`, `"opacity"`, `"volume"`, `"brightness"`, `"contrast"`, `"saturation"`, `"temperature"`, `"tint"`, `"hue"`, `"mask_x"`, `"mask_y"`, `"mask_width"`, `"mask_height"`, `"mask_feather"`, `"crop_left"`, `"crop_top"`, `"crop_right"`, `"crop_bottom"` | yes | none | `volume` for `audio` items and clips of a video (not of an image); `brightness`, `contrast`, `saturation`, `temperature`, `tint` and `hue` (added after BETA, TASK-0254, NEW-15) for clips only; `mask_x`, `mask_y`, `mask_width`, `mask_height` and `mask_feather` (VV-120) for a visual item that has a mask (`clip.set_mask`); `crop_left`, `crop_top`, `crop_right` and `crop_bottom` (VV-120) for clips only; the others for visual items |
 | `at` | time | yes | none | absolute; from the item's `start` to `start + duration` inclusive |
-| `value` | number | yes | none | valid for the property: `scale` above 0 and at most 20, `opacity` 0 to 1, `volume` 0 to 4, a colour property the range of `clip.set_color` (-1 to 1 for `brightness`, `temperature` and `tint`, 0 to 2 for `contrast` and `saturation`, -180 to 180 for `hue`), `x`, `y`, `rotation` finite |
+| `value` | number | yes | none | valid for the property: `scale` above 0 and at most 20, `opacity` 0 to 1, `volume` 0 to 4, a colour property the range of `clip.set_color` (-1 to 1 for `brightness`, `temperature` and `tint`, 0 to 2 for `contrast` and `saturation`, -180 to 180 for `hue`), a mask or crop property the range of its static field (`mask_x`, `mask_y` 0 to 1, `mask_width`, `mask_height` 0.001 to 1, `mask_feather` 0 to 200, a crop side 0 to 1), `x`, `y`, `rotation` finite |
 | `easing` | `"linear"`, `"ease_in"`, `"ease_out"`, `"ease_in_out"`, `"hold"` | no | `"linear"` | applies from this keyframe to the next |
 
 **Preconditions.**
 
 1. Arguments match the schema and `at` parses (`E_VALIDATION`, `E_INVALID_TIME`).
 2. The item exists (`E_NOT_FOUND`).
-3. The property applies to the item type (`E_TYPE_MISMATCH`).
+3. The property applies to the item type (`E_TYPE_MISMATCH`); a `mask_*` property needs the item to have a mask (`E_INVALID_STATE`, hint to use `clip.set_mask`).
 4. `at` lies in the inclusive range `start` to `start + duration` (`E_INVALID_TIME`, `path` `args.at`, `details.range`). A keyframe may sit at `start + duration`, because `t` ranges from 0 to `duration`.
 5. The property ends with at most 100 keyframes (`E_LIMIT`).
 
@@ -3844,6 +3847,7 @@ Adds or replaces a keyframe of one property.
 | `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
 | `E_TYPE_MISMATCH` | property does not apply | `Property opacity does not apply to audio item itm_s6t7v8w9x0.` | `Use property volume for audio items.` |
 | `E_LIMIT` | would pass 100 keyframes | `Property scale of itm_s6t7v8w9x0 would have 101 keyframes; the limit is 100.` | `Remove keyframes with keyframe.remove first.` |
+| `E_INVALID_STATE` | a `mask_*` property on an item with no mask | `Item itm_s6t7v8w9x0 has no mask to animate.` | `Set one with clip.set_mask first.` |
 
 **Inverse.** `patch {collection: "items", id, set: {keyframes: <old>}}` or `unset: ["keyframes"]`.
 
@@ -3890,6 +3894,16 @@ Adds or replaces a keyframe of one property.
 - `err_invalid_time_at_after_item_end`
 - `err_invalid_time_at_one_past_start_plus_duration`
 - `err_limit_101_keyframes`
+- `ok_mask_x_first_keyframe_keeps_static`
+- `ok_mask_width_at_its_limit`
+- `ok_mask_feather`
+- `err_invalid_state_mask_missing`
+- `err_validation_mask_width_zero`
+- `err_validation_mask_feather_above_range`
+- `ok_crop_left`
+- `ok_crop_bottom_on_cropped_clip`
+- `err_validation_crop_above_range`
+- `err_type_mismatch_crop_on_text`
 
 ### C.43 `keyframe.remove` (phase A)
 
@@ -3900,7 +3914,7 @@ Removes the keyframe of a property at a frame.
 | Name | Type | Required | Default | Rule |
 | --- | --- | --- | --- | --- |
 | `item_id` | item id | yes | none | |
-| `property` | `"x"`, `"y"`, `"scale"`, `"rotation"`, `"opacity"`, `"volume"` | yes | none | |
+| `property` | the properties of `keyframe.set` | yes | none | |
 | `at` | time | yes | none | absolute position of the keyframe |
 
 **Preconditions.**
@@ -3957,6 +3971,7 @@ Removes the keyframe of a property at a frame.
 - `err_not_found_no_keyframe_at_frame`
 - `err_not_found_property_has_no_keyframes`
 - `err_type_mismatch_volume_on_text`
+- `ok_mask_last_keyframe_writes_static`
 
 ### C.44 `keyframe.clear` (phase A)
 
@@ -4015,6 +4030,7 @@ Removes all keyframes of one property, or of every property, keeping the value a
 - `err_not_found`
 - `err_type_mismatch_volume_on_text`
 - `ok_colour_property_returns_to_static`
+- `ok_crop_returns_to_static`
 
 ### C.45 `slot.mark` (phase A)
 
@@ -5145,7 +5161,7 @@ Sets or removes the mask of a visual item (VV-015, SDD-001 §3.4): the rectangle
 | Name | Type | Required | Default | Rule |
 | --- | --- | --- | --- | --- |
 | `item_id` | item id | yes | none | a `clip`, `text`, `caption` or `shape` item |
-| `mask` | object or null | yes | none | the whole mask, which replaces the current one; null removes it |
+| `mask` | object or null | yes | none | the whole mask, which replaces the current one and clears its keyframes (`mask_x`, `mask_y`, `mask_width`, `mask_height`, `mask_feather`, VV-120); null removes it |
 | `mask.shape` | string | yes | none | `rect` or `ellipse` |
 | `mask.x`, `mask.y` | number | yes | none | the top-left corner, a fraction of the item's width and height, 0 to 1 |
 | `mask.width`, `mask.height` | number | yes | none | the size, a fraction of the item's width and height, 0.001 to 1 |
@@ -5207,6 +5223,8 @@ The fractions are rounded to 3 decimals. `x + width` and `y + height` must be at
 - `err_validation_missing_height`
 - `err_not_found`
 - `err_type_mismatch_audio_item`
+- `ok_replace_clears_mask_keyframes`
+- `ok_null_clears_mask_keyframes`
 
 ### C.63 `clip.set_flip` (phase B)
 

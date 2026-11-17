@@ -1,0 +1,7 @@
+{
+  "code": "E_INVALID_STATE",
+  "message": "Item itm_m1n2p3q4r5 has no mask to animate.",
+  "hint": "Set one with clip.set_mask first.",
+  "retryable": false,
+  "path": "args.property"
+}

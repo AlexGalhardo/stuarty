@@ -11,9 +11,10 @@ func init() {
 		Name:    "clip.set_framing",
 		Summary: "Sets how the asset of a clip is fitted into the frame and how much of each side is cropped.",
 		Description: "Sets fit (cover, contain or none) and merges the given crop sides with the current ones. Each side " +
-			"is a fraction of the asset from 0 to 1; left plus right and top plus bottom must stay below 1.",
+			"is a fraction of the asset from 0 to 1; left plus right and top plus bottom must stay below 1. " +
+			"A side that has keyframes (crop_left, crop_top, crop_right, crop_bottom; see keyframe.set) cannot be set here.",
 		Example: `{"item_id": "itm_m1n2p3q4r5", "fit": "contain", "crop": {"left": 0.1, "right": 0.1}}`,
-		Errors:  []string{CodeValidation, CodeNotFound, CodeTypeMismatch},
+		Errors:  []string{CodeValidation, CodeNotFound, CodeTypeMismatch, CodeInvalidState},
 		Scope:   ScopeEdit,
 		Phase:   Alpha,
 	}, applyClipSetFraming))
@@ -113,6 +114,9 @@ func applyClipSetFraming(c *Context, a *clipFramingArgs) error {
 		it.Fit = a.Fit
 	}
 	if a.Crop != nil {
+		if err := cropAnimated(&it, a.Crop); err != nil {
+			return err
+		}
 		merged := timeline.Crop{}
 		if it.Crop != nil {
 			merged = *it.Crop
@@ -144,6 +148,32 @@ func applyClipSetFraming(c *Context, a *clipFramingArgs) error {
 		c.SetEffective("crop", cropMap(it.Crop))
 	}
 	return nil
+}
+
+// cropAnimated refuses a crop side that has keyframes, which define its value.
+func cropAnimated(it *timeline.Item, cr *cropArgs) *Error {
+	var animated []string
+	for _, p := range []struct {
+		name  string
+		given *float64
+	}{
+		{"crop_left", cr.Left},
+		{"crop_top", cr.Top},
+		{"crop_right", cr.Right},
+		{"crop_bottom", cr.Bottom},
+	} {
+		if p.given != nil && len(it.Keyframes[p.name]) > 0 {
+			animated = append(animated, p.name)
+		}
+	}
+	if len(animated) == 0 {
+		return nil
+	}
+	first := animated[0]
+	return Errorf(CodeInvalidState, "Property %s of %s has %d keyframes, which define its value.",
+		first, it.ID, len(it.Keyframes[first])).
+		WithHint("Use keyframe.set to change a keyframe, or keyframe.clear to remove them first.").
+		WithDetail("properties", animated).WithPath("args.crop")
 }
 
 func checkCropSums(m *timeline.Crop) *Error {

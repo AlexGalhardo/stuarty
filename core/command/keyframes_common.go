@@ -46,6 +46,12 @@ func setStatic(it *timeline.Item, prop string, v float64) {
 		it.Tint = v
 	case "hue":
 		it.Hue = v
+	default:
+		if isMaskProp(prop) {
+			it.SetMaskValue(prop, v)
+		} else if isCropProp(prop) {
+			it.SetCropValue(prop, v)
+		}
 	}
 }
 

@@ -1,0 +1,36 @@
+[
+  {
+    "kind": "item.updated",
+    "id": "itm_m1n2p3q4r5",
+    "changes": {
+      "keyframes": [
+        {
+          "mask_x": [
+            {
+              "easing": "linear",
+              "t": 0,
+              "value": 0
+            },
+            {
+              "easing": "linear",
+              "t": 60,
+              "value": 0.5
+            }
+          ]
+        },
+        null
+      ],
+      "mask": [
+        {
+          "feather": 4,
+          "height": 0.5,
+          "shape": "rect",
+          "width": 0.5,
+          "x": 0,
+          "y": 0
+        },
+        null
+      ]
+    }
+  }
+]

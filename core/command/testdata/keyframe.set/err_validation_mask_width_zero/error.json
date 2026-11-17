@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.value must be from 0.001 to 1 for mask_width, got 0.",
+  "hint": "Use a value in range.",
+  "retryable": false,
+  "path": "args.value"
+}

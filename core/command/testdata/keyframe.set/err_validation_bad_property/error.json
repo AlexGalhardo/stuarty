@@ -1,7 +1,7 @@
 {
   "code": "E_VALIDATION",
   "message": "args.property is \"zoom\", which is not one of the accepted values.",
-  "hint": "Use one of: x, y, scale, rotation, opacity, volume, brightness, contrast, saturation, temperature, tint, hue.",
+  "hint": "Use one of: x, y, scale, rotation, opacity, volume, brightness, contrast, saturation, temperature, tint, hue, mask_x, mask_y, mask_width, mask_height, mask_feather, crop_left, crop_top, crop_right, crop_bottom.",
   "retryable": false,
   "path": "args.property",
   "details": {
@@ -17,7 +17,16 @@
       "saturation",
       "temperature",
       "tint",
-      "hue"
+      "hue",
+      "mask_x",
+      "mask_y",
+      "mask_width",
+      "mask_height",
+      "mask_feather",
+      "crop_left",
+      "crop_top",
+      "crop_right",
+      "crop_bottom"
     ]
   }
 }

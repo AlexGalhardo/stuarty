@@ -20,7 +20,16 @@
         "saturation",
         "temperature",
         "tint",
-        "hue"
+        "hue",
+        "mask_x",
+        "mask_y",
+        "mask_width",
+        "mask_height",
+        "mask_feather",
+        "crop_left",
+        "crop_top",
+        "crop_right",
+        "crop_bottom"
       ],
       "type": "string"
     }

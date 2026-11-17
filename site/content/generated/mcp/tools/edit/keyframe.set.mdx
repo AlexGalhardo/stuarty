@@ -10,7 +10,7 @@ wide: true
 
 <RefMain>
 
-Sets the value of x, y, scale, rotation, opacity, (clips and audio) volume or (clips) brightness, contrast, saturation, temperature, tint or hue at an absolute position inside the item, from its start to its end inclusive. When the property had no keyframe and at is after the start, its current static value becomes the first keyframe. The easing applies from this keyframe to the next. At most 100 keyframes per property.
+Sets the value of x, y, scale, rotation, opacity, (clips and audio) volume, (clips) brightness, contrast, saturation, temperature, tint or hue, (items with a mask, set it first with clip.set_mask) mask_x, mask_y, mask_width, mask_height or mask_feather, or (clips) crop_left, crop_top, crop_right or crop_bottom at an absolute position inside the item, from its start to its end inclusive. When the property had no keyframe and at is after the start, its current static value becomes the first keyframe. The easing applies from this keyframe to the next. At most 100 keyframes per property.
 
 ## Arguments
 
@@ -19,7 +19,7 @@ Sets the value of x, y, scale, rotation, opacity, (clips and audio) volume or (c
 | `at` | `string` | yes | Position on the project timeline, from the item start to its end inclusive. |
 | `easing` | `linear`, `ease_in`, `ease_out`, `ease_in_out`, `hold` | no | From this keyframe to the next. Default linear. |
 | `item_id` | `string` | yes | pattern `^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
-| `property` | `string`, one of 12 values | yes |  |
+| `property` | `string`, one of 21 values | yes |  |
 | `value` | `number` | yes | Valid for the property: scale above 0 up to 20, opacity 0 to 1, volume 0 to 4. |
 
 ## Errors
@@ -29,6 +29,7 @@ Sets the value of x, y, scale, rotation, opacity, (clips and audio) volume or (c
 - [`E_NOT_FOUND`](/docs/reference/error-codes#e_not_found)
 - [`E_TYPE_MISMATCH`](/docs/reference/error-codes#e_type_mismatch)
 - [`E_LIMIT`](/docs/reference/error-codes#e_limit)
+- [`E_INVALID_STATE`](/docs/reference/error-codes#e_invalid_state)
 
 ## Scope and phase
 
