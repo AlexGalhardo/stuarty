@@ -113,3 +113,20 @@ func TestHelpUserCommandsTakeAnEmail(t *testing.T) {
 		}
 	}
 }
+
+// VV-113: the help of edit shows the file format of --ops.
+func TestEditHelpShowsTheBatchFormat(t *testing.T) {
+	t.Parallel()
+
+	h := newHarness(t)
+
+	if code := h.run("edit", "--help"); code != ExitOK {
+		t.Fatalf("edit --help exit %d", code)
+	}
+
+	for _, want := range []string{`"operations"`, `"op"`, `"args"`} {
+		if !strings.Contains(h.stdout.String(), want) {
+			t.Errorf("edit --help does not show %s: %s", want, h.stdout.String())
+		}
+	}
+}
