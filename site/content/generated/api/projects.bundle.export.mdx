@@ -36,6 +36,30 @@ Content type `application/json`.
 
 ## Responses
 
+### 200 OK
+
+Accepted
+
+Content type `application/json`. Schema: [`Job`](/docs/api/schemas#job).
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `actor` | `string` | no |  |
+| `created_at` | `string (date-time)` | no |  |
+| `error` | [`Error`](/docs/api/schemas#error) or `any` or `null` or `null` | no |  |
+| `finished_at` | `string (date-time)` or `null` | no |  |
+| `job_id` | `string` | no |  |
+| `kind` | `string` | no |  |
+| `lint` | [`LintTotals`](/docs/api/schemas#linttotals) or `any` or `null` or `null` | no |  |
+| `message` | `string` | no |  |
+| `progress` | `number (double)` | no |  |
+| `project_id` | `string` or `null` | no |  |
+| `result` | [`JobResult`](/docs/api/schemas#jobresult) or `any` or `null` or `null` | no |  |
+| `started_at` | `string (date-time)` or `null` | no |  |
+| `state` | `string` | no |  |
+| `text` | `string` | no |  |
+| `warnings` | array of `string` | no |  |
+
 ### 202 Accepted
 
 Content type `application/json`. Schema: [`Job`](/docs/api/schemas#job).
@@ -70,6 +94,12 @@ Error (RFC 9457 problem details)
 
 Content type `application/problem+json`. Schema: [`Problem`](/docs/api/schemas#problem).
 
+### 403
+
+Error (RFC 9457 problem details)
+
+Content type `application/problem+json`. Schema: [`Problem`](/docs/api/schemas#problem).
+
 ### 404
 
 Error (RFC 9457 problem details)
@@ -83,6 +113,12 @@ Error (RFC 9457 problem details)
 Content type `application/problem+json`. Schema: [`Problem`](/docs/api/schemas#problem).
 
 ### 422 Unprocessable Content
+
+Error (RFC 9457 problem details)
+
+Content type `application/problem+json`. Schema: [`Problem`](/docs/api/schemas#problem).
+
+### 429
 
 Error (RFC 9457 problem details)
 
@@ -256,6 +292,61 @@ puts "#{response.code} #{response.body}"
 
 <CodeGroup>
 
+```json title="200"
+{
+  "actor": "string",
+  "created_at": "2006-01-02T15:04:05Z",
+  "error": {
+    "code": "string",
+    "details": {},
+    "hint": "string",
+    "message": "string",
+    "op_index": 0,
+    "path": "string",
+    "retryable": false
+  },
+  "finished_at": "2006-01-02T15:04:05Z",
+  "job_id": "string",
+  "kind": "string",
+  "lint": {
+    "errors": 0,
+    "warnings": 0
+  },
+  "message": "string",
+  "progress": 0,
+  "project_id": "string",
+  "result": {
+    "export": {
+      "audio_codec": "string",
+      "bytes": 0,
+      "checks": [],
+      "download_url": "string",
+      "duration": {},
+      "format": "string",
+      "fps": "string",
+      "height": 0,
+      "loudness_lufs": 0,
+      "path": "string",
+      "revision": 0,
+      "sha256": "string",
+      "video_codec": "string",
+      "width": 0
+    },
+    "transcribe": {
+      "asset_id": "string",
+      "language": "string",
+      "words": 0
+    }
+  },
+  "started_at": "2006-01-02T15:04:05Z",
+  "state": "string",
+  "text": "string",
+  "warnings": [
+    "string"
+  ]
+}
+```
+
 ```json title="202"
 {
   "actor": "string",
@@ -369,6 +460,35 @@ puts "#{response.code} #{response.body}"
 }
 ```
 
+```json title="403"
+{
+  "code": "string",
+  "detail": "string",
+  "details": {},
+  "errors": {},
+  "hint": "string",
+  "instance": "string",
+  "issues": [
+    {
+      "code": "string",
+      "key": "string",
+      "message": "string",
+      "on": "string",
+      "params": {},
+      "path": "string"
+    }
+  ],
+  "message": "string",
+  "op_index": 0,
+  "path": "string",
+  "request_id": "string",
+  "retryable": false,
+  "status": 0,
+  "title": "string",
+  "type": "string"
+}
+```
+
 ```json title="404"
 {
   "code": "string",
@@ -451,6 +571,35 @@ puts "#{response.code} #{response.body}"
   "request_id": "string",
   "retryable": false,
   "status": 422,
+  "title": "string",
+  "type": "string"
+}
+```
+
+```json title="429"
+{
+  "code": "string",
+  "detail": "string",
+  "details": {},
+  "errors": {},
+  "hint": "string",
+  "instance": "string",
+  "issues": [
+    {
+      "code": "string",
+      "key": "string",
+      "message": "string",
+      "on": "string",
+      "params": {},
+      "path": "string"
+    }
+  ],
+  "message": "string",
+  "op_index": 0,
+  "path": "string",
+  "request_id": "string",
+  "retryable": false,
+  "status": 0,
   "title": "string",
   "type": "string"
 }

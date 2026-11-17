@@ -423,3 +423,14 @@ func endpointOf(id string) Endpoint {
 
 	panic("httpapi: no endpoint " + id)
 }
+
+// endpointByID is endpointOf for an id that may not be a route of this package.
+func endpointByID(id string) (Endpoint, bool) {
+	for i := range Endpoints {
+		if Endpoints[i].ID == id {
+			return Endpoints[i], true
+		}
+	}
+
+	return Endpoint{}, false
+}
