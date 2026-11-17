@@ -201,7 +201,7 @@ Recover from a conflict:
 ```text
 # the project is at revision 1; another actor changes the track first
 vukem-video edit --project prj_7k2m9x4q1b --actor other track.update track_id=trk_f6g7h8j9k0 name=Theirs
-# a stale --base is a conflict, exit 2; read details.diff
+# another actor changed it: conflict, exit 2
 vukem-video edit --project prj_7k2m9x4q1b --base 1 track.update track_id=trk_f6g7h8j9k0 name=Mine
 vukem-video project:show prj_7k2m9x4q1b
 # send again from the new revision
