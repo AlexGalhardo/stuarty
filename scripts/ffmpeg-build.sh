@@ -83,8 +83,10 @@ darwin)
 	# The only bytes that differed between two macOS builds of the same commit (ffmpeg-9.0.2-2) were the 16 bytes of the
 	# LC_UUID load command (and, on arm64, the ad hoc code signature that hashes them). The linker derives that UUID from
 	# its inputs, not from the output, and it moved once the static LAME, libogg, libvorbis and libwebp archives joined
-	# the link. -no_uuid removes the load command, so nothing varies; the code signature then hashes identical pages.
-	configure_target=("--extra-cflags=-arch $darwin_arch -mmacosx-version-min=13.0" "--extra-ldflags=-arch $darwin_arch -Wl,-no_uuid")
+	# the link. -no_uuid is not an option: dyld refuses an arm64 executable without LC_UUID, so every configure test
+	# program aborts. The load command stays; after the final link internal/tools/machouuid rewrites the UUID from the
+	# SHA-256 of the binary and the binary is signed again (see below).
+	configure_target=("--extra-cflags=-arch $darwin_arch -mmacosx-version-min=13.0" "--extra-ldflags=-arch $darwin_arch")
 	;;
 windows)
 	[ "$arch" = amd64 ] || die "unsupported architecture: $arch"
@@ -326,6 +328,16 @@ log "ffmpeg-build: ffmpeg $FFMPEG_BUILD_VERSION for $os-$arch"
 		"${flags[@]}" ${extra[@]+"${extra[@]}"} >&2
 	make -j"$jobs" >&2 && make install >&2
 )
+
+if [ "$os" = darwin ]; then
+	# Runs on the installed (stripped) binaries, which are what is archived. The ad hoc signature carries no time and
+	# its identifier comes from the file name, so signing the same bytes again gives the same signature.
+	(cd "$root" && go run ./internal/tools/machouuid "$work/install/bin/ffmpeg" "$work/install/bin/ffprobe") >&2 \
+		|| die "could not derive the Mach-O UUID"
+	for bin in ffmpeg ffprobe; do
+		codesign --force -s - "$work/install/bin/$bin" >&2 || die "codesign failed for $bin"
+	done
+fi
 
 # --- the package, with the layout of the BtbN archives the pins already read ---
 pkg="$work/pkg/$name"
