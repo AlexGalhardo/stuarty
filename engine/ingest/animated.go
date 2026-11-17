@@ -344,7 +344,8 @@ func (j *job) runToFile(ctx context.Context, c ffargs.Cmd, dst string, maxBytes 
 		)
 	}
 	res, err := j.r.RunFFmpeg(ctx, ffmpeg.Request{
-		Dir: j.wd, Argv: argv, Deadline: ffmpeg.IngestDeadline(0), Stdout: out,
+		Dir: j.wd, Argv: argv, Deadline: ffmpeg.IngestDeadline(0), DeadlineCeiling: ffmpeg.IngestDeadlineCeiling,
+		Stdout:     out,
 		OutputPath: dst, MaxOutputBytes: maxBytes,
 	})
 	if cerr := out.Close(); err == nil && cerr != nil {

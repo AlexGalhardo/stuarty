@@ -11,10 +11,13 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
 	"github.com/AlexGalhardo/vukem/contrib/engine"
+
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg/ffargs"
 )
 
 const helperFlag = "--vukem-helper="
@@ -32,7 +35,25 @@ func TestMain(m *testing.M) {
 			return
 		}
 	}
+	// RunFFmpeg only accepts a real argv. The overlap test points the tool at this binary and
+	// passes one, so the child has to answer here instead of starting the suite.
+	for _, a := range os.Args[1:] {
+		if a == "-nostdin" {
+			overlapChild(os.Args[1:])
+			return
+		}
+	}
 	os.Exit(m.Run())
+}
+
+func overlapChild(args []string) {
+	for _, a := range args {
+		if a == "-progress" {
+			_, _ = os.Stdout.Write([]byte("frame=1\nout_time_us=1000\nprogress=continue\n"))
+			break
+		}
+	}
+	time.Sleep(time.Minute)
 }
 
 func helper(mode string) {
@@ -280,6 +301,150 @@ func TestRunDeadlineKillsTheRun(t *testing.T) {
 	}
 	if time.Since(start) > 10*time.Second {
 		t.Errorf("took %s", time.Since(start))
+	}
+}
+
+func TestScaledDeadlinesStayInsideTheCeilings(t *testing.T) {
+	exportBase := ExportDeadline(30 * time.Second)
+	if exportBase != 5*time.Minute || ExportDeadline(10*time.Hour) != 2*time.Hour {
+		t.Fatal("ExportDeadline(30s) must stay 5min and ExportDeadline(10h) 2h")
+	}
+	if got := scaleAllowance(exportBase, 40, deadlineCeiling(exportBase, ExportDeadlineCeiling)); got != 2*time.Hour {
+		t.Fatalf("scaled export deadline = %s, want 2h", got)
+	}
+	if got := scaleAllowance(exportBase, 1, ExportDeadlineCeiling); got != exportBase {
+		t.Fatalf("a lone export deadline = %s, want %s", got, exportBase)
+	}
+
+	ingestBase := 30 * time.Minute
+	if got := scaleAllowance(ingestBase, 40, deadlineCeiling(ingestBase, IngestDeadlineCeiling)); got != 4*time.Hour {
+		t.Fatalf("scaled ingest deadline = %s, want 4h", got)
+	}
+	if got := scaleAllowance(4*time.Hour, 3, IngestDeadlineCeiling); got != 4*time.Hour {
+		t.Fatalf("an ingest already at the ceiling scaled to %s", got)
+	}
+	if got := scaleAllowance(time.Second, 4, 0); got != 4*time.Second {
+		t.Fatalf("scaled stall = %s, want 4s", got)
+	}
+	if got := scaleAllowance(time.Second, 1, 0); got <= 0 || got != time.Second {
+		t.Fatalf("lone stall = %s", got)
+	}
+}
+
+func overlapArgv(t *testing.T, r *Runner, dir *RunDir, progress bool) []string {
+	t.Helper()
+	argv, err := ffargs.Cmd{
+		Progress: progress,
+		Inputs:   []ffargs.Input{ffargs.TestSrc2(16, 16, ffargs.Rate{Num: 1, Den: 1}, 1000)},
+		Outputs:  []ffargs.Output{{Format: "null", Maps: []string{"0:v:0"}}},
+	}.Argv(r.Policy(dir))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return argv
+}
+
+func awaitFlight(t *testing.T, n int) {
+	t.Helper()
+	deadline := time.After(5 * time.Second)
+	for {
+		got, changed := flightNow()
+		if got >= n {
+			return
+		}
+		select {
+		case <-changed:
+		case <-deadline:
+			t.Fatalf("in-flight runs = %d, want at least %d", got, n)
+		}
+	}
+}
+
+// Two runners share the process count: A stops making progress, B stays up, and A must not take
+// the stall error until two stall intervals could have elapsed. After B ends, the base stall applies.
+func TestOverlappingRunsDoNotStallWhileAPeerIsAlive(t *testing.T) {
+	if ExportDeadline(30*time.Second) != 5*time.Minute || ExportDeadline(10*time.Hour) != 2*time.Hour {
+		t.Fatal("ExportDeadline(30s) must stay 5min and ExportDeadline(10h) 2h")
+	}
+	const stall = time.Second
+
+	rA, dirA, tool := helperRunner(t)
+	rB, err := NewRunner(&Installation{FFmpeg: tool, FFprobe: tool, CPUCount: 2}, t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	dirB, err := rB.NewRunDir("job_b")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = dirB.Remove() })
+
+	argvA := overlapArgv(t, rA, dirA, true)
+	argvB := overlapArgv(t, rB, dirB, false)
+
+	ctxA, cancelA := context.WithCancel(context.Background())
+	ctxB, cancelB := context.WithCancel(context.Background())
+	aDone := make(chan error, 1)
+	bDone := make(chan error, 1)
+	var wg sync.WaitGroup
+	t.Cleanup(func() {
+		cancelA()
+		cancelB()
+		wg.Wait()
+	})
+
+	progressed := make(chan struct{})
+	var once sync.Once
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		_, runErr := rA.RunFFmpeg(ctxA, Request{
+			Dir: dirA, Argv: argvA, Deadline: time.Minute, Stall: stall,
+			OnProgress: func(Progress) { once.Do(func() { close(progressed) }) },
+		})
+		aDone <- runErr
+	}()
+
+	select {
+	case <-progressed:
+	case err := <-aDone:
+		t.Fatalf("A ended before progress: %v", err)
+	case <-time.After(5 * time.Second):
+		t.Fatal("A did not report progress")
+	}
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		_, runErr := rB.RunFFmpeg(ctxB, Request{Dir: dirB, Argv: argvB, Deadline: time.Minute})
+		bDone <- runErr
+	}()
+	awaitFlight(t, 2)
+
+	// Stop short of the scaled window so the watchdog tick cannot land on the boundary.
+	// An unscaled stall has already expired: one interval is not enough while B is alive.
+	hold := 2*stall - 300*time.Millisecond
+	select {
+	case err := <-aDone:
+		t.Fatalf("A returned before two stall intervals while B was alive: %v", err)
+	case <-time.After(hold):
+	}
+
+	cancelB()
+	select {
+	case <-bDone:
+	case <-time.After(15 * time.Second):
+		t.Fatal("B did not end")
+	}
+
+	select {
+	case err := <-aDone:
+		if !errors.Is(err, ErrStalled) {
+			t.Fatalf("A error = %v, want ErrStalled", err)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("A did not stall after B ended")
 	}
 }
 

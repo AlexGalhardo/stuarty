@@ -532,7 +532,8 @@ func (d *videoDecoder) start(sf int) error {
 	// stop, and the next start replaces the fields.
 	go func() {
 		res, err := r.RunFFmpeg(ctx, ffmpeg.Request{
-			Dir: dir, Argv: argv, InputDirs: d.s.inputDirs, Deadline: d.s.deadline, Stdout: pw,
+			Dir: dir, Argv: argv, InputDirs: d.s.inputDirs, Deadline: d.s.deadline,
+			DeadlineCeiling: ffmpeg.ExportDeadlineCeiling, Stdout: pw,
 		})
 		_ = pw.Close()
 		d.runErr, d.stderr = err, res.Stderr

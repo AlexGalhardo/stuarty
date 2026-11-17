@@ -479,7 +479,7 @@ All child processes (`ffmpeg`, `ffprobe`, `whisper.cpp`) are started through vuk
 | Limit | Linux | macOS | Windows |
 | --- | --- | --- | --- |
 | Wall-clock timeout | context deadline per run (below); `contrib/engine` kills the process group | same | same, by terminating the run's Job Object (the whole tree, grandchildren included); `taskkill /T /F` only if the process never joined it |
-| Stall watchdog | `-progress pipe:1` is parsed; no advance in `out_time` or `frame` for 120 s cancels the run | same | same |
+| Stall watchdog | `-progress pipe:1` is parsed; no advance in `out_time` or `frame` for 120 s cancels the run. While more than one run is in flight in the process, that stall and the run's wall-clock deadline are the base values multiplied by the number of runs (a scaled export deadline stays at most 2 h, a scaled ingest deadline at most 4 h). When the other runs have ended, a run that still makes no progress is cancelled after its base stall | same | same |
 | Captured output | stderr tail 64 KiB (`DefaultMaxOutput`; 4 MiB for ffmpeg, SDD-011 §1.3), progress lines longer than 4 KiB discarded, ffprobe JSON capped at 4 MiB (a larger answer kills the run: `E_UNSUPPORTED_MEDIA`, `probe_output_too_large`) | same | same |
 | Output file size | `RLIMIT_FSIZE` through `prlimit(1)` plus the Go size watchdog | Go size watchdog only (polls the output file every 2 s; overshoot up to 2 s of writing) | Go size watchdog only |
 | CPU time | `RLIMIT_CPU` = timeout x `cpu.Count`, as a backstop | none | the same number as the Job Object's per-process user-mode time limit (kernel time is not counted) |
@@ -506,7 +506,7 @@ Timeouts (defaults, all as context deadlines so that `contrib/engine`'s own 5-mi
 | Audio extraction for transcription | `60 s + 1 x audio duration`, at most 1 h |
 | Transcription (whisper.cpp) | `120 s + 3 x audio duration`, at most 6 h |
 
-The multipliers are defaults that the ALPHA measurements may change; `TestSecurity_T16_TimeoutsEnforced` runs a helper binary that hangs and proves each deadline is enforced and the process tree is gone.
+Those are the base deadlines. While more than one run is in flight in the process, each live run uses its base multiplied by that count, capped as the stall row describes; a run on its own keeps the base. The multipliers are defaults that the ALPHA measurements may change; `TestSecurity_T16_TimeoutsEnforced` runs a helper binary that hangs and proves each deadline is enforced and the process tree is gone.
 
 Implementation notes (P2-RND-005): the multipliers are unchanged. The size watchdog polls every 2 s (`ffmpeg.OutputPollInterval`) and ends the run with `ErrOutputTooLarge`, removing the partial file when it lies inside the run directory; the interval is injectable only inside the package so `TestSecurity_T17_OutputSizeWatchdogRealFFmpeg` can arm it with a 4 MiB cap and 20 ms. A run that has not ended `CancelGrace` (5 s) plus 2 s after its cancellation fails with `details.reason = "cancel_timeout"`. `contrib/engine` applies limits per tool, so `Installation.WithLimits` opens a pair per run kind (`LimitsFor`); a sandboxed run (`VUKEM_VIDEO_SANDBOX=bwrap`) is started by this package, with `prlimit` in front when the installation has limits. `TestSecurity_T16_LinuxLimitsApplied`, `TestSecurity_T16_BwrapHasNoNetwork` and `TestSecurity_T16_LimitsDoNotBreakGoldenExport` run on Linux only.
 
