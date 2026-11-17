@@ -1313,6 +1313,11 @@
         "color_name": "Nome da nova cor",
         "color_value": "Nova cor",
         "color_add": "Adicionar cor",
+        "save_title": "Salvar como modelo",
+        "save_name": "Nome do modelo",
+        "save_description": "Descrição do modelo salvo",
+        "save": "Salvar modelo",
+        "saved": "Modelo salvo:",
         "color_remove": "Remover a cor {name}",
         "policies": {
           "fit": "Manter a duração do item",

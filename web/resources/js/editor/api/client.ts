@@ -44,6 +44,7 @@ import type {
 	TemplateInstantiateResult,
 	TemplateListResult,
 	TemplateResult,
+	TemplateSaveRequest,
 	ToolsStatusResult,
 	UserListResult,
 } from "./types";
@@ -151,6 +152,7 @@ export interface ApiClient {
 	): Promise<TemplateInstantiateResult>;
 	// `path` is an absolute path on the machine of the service (SDD-007 section 7.6).
 	importTemplate(path: string): Promise<TemplateResult>;
+	saveTemplate(request: TemplateSaveRequest): Promise<TemplateResult>;
 }
 
 // One typed function per endpoint the editor uses (SDD-012 section 4.2). The
@@ -352,5 +354,7 @@ export function createClient(
 			),
 		importTemplate: (path) =>
 			call("POST", "/templates/import", EDIT_TIMEOUT_MS, { path }),
+		saveTemplate: (request) =>
+			call("POST", "/templates", EDIT_TIMEOUT_MS, request),
 	};
 }

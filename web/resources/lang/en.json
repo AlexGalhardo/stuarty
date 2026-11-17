@@ -1320,6 +1320,11 @@
         "color_name": "New colour name",
         "color_value": "New colour",
         "color_add": "Add colour",
+        "save_title": "Save as template",
+        "save_name": "Template name",
+        "save_description": "Description of the saved template",
+        "save": "Save template",
+        "saved": "Template saved:",
         "color_remove": "Remove colour {name}",
         "policies": {
           "fit": "Keep the item duration",

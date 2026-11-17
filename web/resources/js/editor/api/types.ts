@@ -759,6 +759,12 @@ export interface TemplateResult {
 	text: string;
 }
 
+export interface TemplateSaveRequest {
+	project_id: string;
+	name: string;
+	description?: string;
+}
+
 export interface TemplateInstantiateRequest {
 	name: string;
 	fill?: { [slot: string]: { asset_id: string } | { text: string } };
