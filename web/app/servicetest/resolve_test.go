@@ -322,3 +322,30 @@ func TestMediaInspectTranscriptIsDelimitedAndPaged(t *testing.T) {
 		t.Errorf("a cursor of a replaced transcript = %v, want E_VALIDATION stale", err)
 	}
 }
+
+// VV-084: caption.from_transcript in the batch that creates the clip finds the transcript of the clip's
+// asset; before, the batch was refused with "args.resolved is required".
+func TestResolveFindsTheClipCreatedInTheSameBatch(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{})
+	project, track := m.withTrack()
+	asset := m.importOne(project, m.write("speech.mp4", clipBytes)).Assets[0].AssetID
+
+	row, err := m.store.Assets().GetProjectAsset(context.Background(), project, asset)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	m.putTranscript(row.AssetHash)
+
+	res := m.mustEdit(ui, project, m.head(project).Revision,
+		op("clip.add", fmt.Sprintf(
+			`{"id":"itm_2k3m4n5p6q","track_id":%q,"asset_id":%q,"start":"0s","duration":"2s"}`, track, asset)),
+		op("track.add", `{"kind":"visual","name":"C","id":"trk_2k3m4n5p6q"}`),
+		op("caption.from_transcript", `{"clip_item_id":"itm_2k3m4n5p6q","track_id":"trk_2k3m4n5p6q"}`),
+	)
+
+	if res.Revision == 0 || !strings.Contains(
+		string(storedOps(t, m, project, res.Revision)[2].Args), `"resolved":{"words":[`) {
+		t.Fatalf("the caption operation was not resolved: %+v", res)
+	}
+}
