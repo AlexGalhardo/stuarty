@@ -1,8 +1,9 @@
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { useLocale, useT } from "@/lib/i18n";
 import LiveRegion from "../a11y/LiveRegion";
+import { useSurfaceRequest } from "../commands/surface";
 import { fpsOf, localizeDecimalInput, timeToFrame } from "../commands/units";
 import { useShellShortcuts } from "../commands/useShellShortcuts";
 import FindBar from "../find/FindBar";
@@ -80,6 +81,8 @@ export default function EditorShell({
 	useShellShortcuts();
 	const [captionOpen, setCaptionOpen] = useState(false);
 	useShortcuts(() => setCaptionOpen(true));
+	const openCaption = useCallback(() => setCaptionOpen(true), []);
+	useSurfaceRequest("add_caption", openCaption);
 
 	if (viewport < MIN_SUPPORTED_WIDTH) {
 		return (

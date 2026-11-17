@@ -392,6 +392,28 @@
         "select_clip_first": "Select a clip first.",
         "templates_select": "Select one clip, audio, text or caption item to mark it as a slot."
       },
+      "menu": {
+        "label": "Menu",
+        "file": "File",
+        "edit": "Edit",
+        "clip": "Clip",
+        "timeline": "Timeline",
+        "view": "View",
+        "help": "Help",
+        "open_project": "Open project",
+        "import": "Import media",
+        "export": "Export",
+        "cut": "Cut",
+        "copy": "Copy",
+        "paste": "Paste",
+        "select_all": "Select all",
+        "speed": "Speed",
+        "toggle_enabled": "Turn on or off",
+        "add_video_track": "Add video track",
+        "add_audio_track": "Add audio track",
+        "marker": "Marker at the playhead",
+        "shortcuts": "Keyboard shortcuts"
+      },
       "edit": {
         "label": "Editing",
         "split": "Split",

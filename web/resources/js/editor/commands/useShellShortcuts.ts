@@ -3,6 +3,7 @@ import { useRuntime } from "../state/EditorContext";
 import type { PreviewSize } from "../state/uiStore";
 import { toggleKeyframePanel } from "./keyframePanel";
 import { hasMod } from "./keymap";
+import { openImport } from "./openImport";
 import { openSpeedCurve } from "./speedCurvePanel";
 
 const PREVIEW_SIZES: readonly PreviewSize[] = ["fit", "50", "100"];
@@ -74,15 +75,7 @@ export function useShellShortcuts(): void {
 			const key = event.key.toLowerCase();
 			if (key === "i") {
 				event.preventDefault();
-				uiWriter.showLeftTab("library");
-				requestAnimationFrame(() => {
-					const choose = document.querySelector<HTMLElement>(
-						"[data-import-choose]",
-					);
-					if (choose !== null) choose.click();
-					else
-						document.querySelector<HTMLElement>("[data-import-path]")?.focus();
-				});
+				openImport(runtime);
 			} else if (key === "s") {
 				event.preventDefault();
 				noticeWriter.push({

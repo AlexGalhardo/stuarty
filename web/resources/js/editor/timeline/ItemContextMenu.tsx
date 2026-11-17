@@ -5,6 +5,7 @@ import {
 	CopyPlus,
 	Eye,
 	EyeOff,
+	Gauge,
 	Link2,
 	Link2Off,
 	Merge,
@@ -14,6 +15,8 @@ import {
 	Scissors,
 	Snowflake,
 	Split,
+	StepBack,
+	StepForward,
 	Trash2,
 } from "lucide-react";
 import type { ReactNode } from "react";
@@ -21,14 +24,25 @@ import type { ReactNode } from "react";
 import {
 	ContextMenuItem,
 	ContextMenuSeparator,
+	ContextMenuShortcut,
 } from "@/components/ui/context-menu";
 import { useT } from "@/lib/i18n";
+import { IS_MAC, keyLabel } from "../commands/keymap";
+import { useBindings } from "../commands/keymapStore";
 import { useActions, useCanCut } from "../commands/useActions";
+import { useCommandNames } from "../commands/useExposedCommands";
+import { useMenuRunner } from "../commands/useMenuRunner";
 import {
 	useDocumentState,
 	useRuntime,
 	useUiState,
 } from "../state/EditorContext";
+
+// The key of a row of the cheat sheet, at the right of an entry.
+function RowKey({ row }: { row: string }): ReactNode {
+	const key = keyLabel(row, useBindings(), IS_MAC);
+	return key === null ? null : <ContextMenuShortcut>{key}</ContextMenuShortcut>;
+}
 
 // The entries of the item menu (SDD-012 section 8.2). They act on the
 // selection; the row selects the item under the pointer first when it was not
@@ -44,6 +58,8 @@ export default function ItemContextMenuItems({
 	const t = useT();
 	const actions = useActions();
 	const runtime = useRuntime();
+	const run = useMenuRunner();
+	const names = useCommandNames();
 	const canCut = useCanCut();
 	const selection = useUiState((s) => s.selection.items);
 	const isCaption = useDocumentState(
@@ -128,7 +144,32 @@ export default function ItemContextMenuItems({
 			>
 				<Scissors aria-hidden="true" />
 				{t("ui.editor.edit.split")}
+				<RowKey row="split" />
 			</ContextMenuItem>
+			<ContextMenuItem
+				disabled={!canCut}
+				onSelect={() => void run("trimToPlayhead.start")}
+			>
+				<StepForward aria-hidden="true" />
+				{t("ui.editor.edit.trim_start")}
+				<RowKey row="trim_start" />
+			</ContextMenuItem>
+			<ContextMenuItem
+				disabled={!canCut}
+				onSelect={() => void run("trimToPlayhead.end")}
+			>
+				<StepBack aria-hidden="true" />
+				{t("ui.editor.edit.trim_end")}
+				<RowKey row="trim_end" />
+			</ContextMenuItem>
+			{names.has("clip.set_speed") && (
+				<ContextMenuItem
+					onSelect={() => void run("surface.open_inspector_tab.speed")}
+				>
+					<Gauge aria-hidden="true" />
+					{t("ui.editor.menu.speed")}
+				</ContextMenuItem>
+			)}
 			{freezable && (
 				<ContextMenuItem
 					disabled={!canCut}
@@ -170,9 +211,25 @@ export default function ItemContextMenuItems({
 					{t("ui.editor.edit.extract_audio")}
 				</ContextMenuItem>
 			)}
-			<ContextMenuItem onSelect={() => void actions.duplicateSelection()}>
+			<ContextMenuItem onSelect={() => void run("surface.copy")}>
+				<Copy aria-hidden="true" />
+				{t("ui.editor.menu.copy")}
+				<RowKey row="copy" />
+			</ContextMenuItem>
+			<ContextMenuItem onSelect={() => void run("surface.cut")}>
+				<Scissors aria-hidden="true" />
+				{t("ui.editor.menu.cut")}
+				<RowKey row="cut" />
+			</ContextMenuItem>
+			<ContextMenuItem onSelect={() => void run("surface.paste")}>
+				<ClipboardPaste aria-hidden="true" />
+				{t("ui.editor.menu.paste")}
+				<RowKey row="paste" />
+			</ContextMenuItem>
+			<ContextMenuItem onSelect={() => void run("duplicateSelection")}>
 				<CopyPlus aria-hidden="true" />
 				{t("ui.editor.edit.duplicate")}
+				<RowKey row="duplicate" />
 			</ContextMenuItem>
 			<ContextMenuItem onSelect={() => runtime.uiWriter.startRepeat(itemId)}>
 				<Repeat aria-hidden="true" />
@@ -193,6 +250,7 @@ export default function ItemContextMenuItems({
 			>
 				<Trash2 aria-hidden="true" />
 				{t("ui.editor.edit.delete")}
+				<RowKey row="delete" />
 			</ContextMenuItem>
 			<ContextMenuItem
 				variant="destructive"

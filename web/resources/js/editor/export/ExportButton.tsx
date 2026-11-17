@@ -2,6 +2,7 @@ import { type ReactNode, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
+import { useSurfaceRequest } from "../commands/surface";
 import { useStore } from "../state/createStore";
 import { useDocumentState, useRuntime } from "../state/EditorContext";
 import ExportDialog from "./ExportDialog";
@@ -24,6 +25,10 @@ export default function ExportButton(): ReactNode {
 	const ready = useDocumentState(
 		(s) => s.status === "ready" || s.status === "offline",
 	);
+	// The menu item "Export" asks for the same dialog.
+	useSurfaceRequest("export", () => {
+		if (ready) setOpen(true);
+	});
 	// Mod+E (SDD-012 section 18.7), not inside a field or another dialog.
 	useEffect(() => {
 		const onKey = (event: KeyboardEvent): void => {

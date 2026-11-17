@@ -1,5 +1,5 @@
 import { Keyboard } from "lucide-react";
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -21,6 +21,7 @@ import {
 	SHORTCUTS,
 } from "./keymap";
 import { rebind, resetBindings, useBindings } from "./keymapStore";
+import { useSurfaceRequest } from "./surface";
 
 function isEditable(target: EventTarget | null): boolean {
 	return (
@@ -199,6 +200,8 @@ export function ShortcutsDialog({
 export default function ShortcutsButton(): ReactNode {
 	const t = useT();
 	const [open, setOpen] = useState(false);
+	const openFromMenu = useCallback(() => setOpen(true), []);
+	useSurfaceRequest("cheat_sheet", openFromMenu);
 
 	useEffect(() => {
 		const onKey = (event: KeyboardEvent): void => {

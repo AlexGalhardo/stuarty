@@ -392,6 +392,28 @@
         "select_clip_first": "Selecione um clipe antes.",
         "templates_select": "Selecione um item de clipe, áudio, texto ou legenda para marcá-lo como slot."
       },
+      "menu": {
+        "label": "Menu do editor",
+        "file": "Arquivo",
+        "edit": "Editar",
+        "clip": "Clipe",
+        "timeline": "Linha do tempo",
+        "view": "Exibir",
+        "help": "Ajuda",
+        "open_project": "Abrir projeto",
+        "import": "Importar mídia",
+        "export": "Exportar",
+        "cut": "Recortar",
+        "copy": "Copiar",
+        "paste": "Colar",
+        "select_all": "Selecionar tudo",
+        "speed": "Velocidade",
+        "toggle_enabled": "Ativar ou desativar",
+        "add_video_track": "Adicionar faixa de vídeo",
+        "add_audio_track": "Adicionar faixa de áudio",
+        "marker": "Marcador no cabeçote",
+        "shortcuts": "Atalhos de teclado"
+      },
       "edit": {
         "label": "Edição",
         "split": "Dividir",
