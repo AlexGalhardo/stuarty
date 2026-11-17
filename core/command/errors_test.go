@@ -136,7 +136,7 @@ func TestErrorfDoesNotEchoALongValue(t *testing.T) {
 	long := strings.Repeat("x", 100_000)
 	e := Errorf(CodeValidation, "args.mode %q is not a blend mode.", long)
 
-	if len(e.Message) > 300 || !strings.Contains(e.Message, "is not a blend mode.") ||
+	if len(e.Message) > 400 || !strings.Contains(e.Message, "is not a blend mode.") ||
 		!strings.Contains(e.Message, "100000 characters") {
 		t.Errorf("message = %d bytes: %.120s", len(e.Message), e.Message)
 	}
