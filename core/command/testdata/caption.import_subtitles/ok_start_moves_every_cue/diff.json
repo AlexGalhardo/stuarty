@@ -1,0 +1,76 @@
+[
+  {
+    "kind": "item.added",
+    "id": "itm_d4d4d4d4d4",
+    "object": {
+      "contrast": 1,
+      "duration": 45,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
+      "id": "itm_d4d4d4d4d4",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
+      "start": 90,
+      "stroke_color": "#000000",
+      "track": "trk_f6g7h8j9k0",
+      "type": "caption",
+      "volume": 1,
+      "words": [
+        {
+          "duration": 14,
+          "start": 0,
+          "text": "Hello"
+        },
+        {
+          "duration": 14,
+          "start": 14,
+          "text": "there"
+        },
+        {
+          "duration": 17,
+          "start": 28,
+          "text": "friend"
+        }
+      ]
+    }
+  },
+  {
+    "kind": "item.added",
+    "id": "itm_e5e5e5e5e5",
+    "object": {
+      "contrast": 1,
+      "duration": 30,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
+      "id": "itm_e5e5e5e5e5",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
+      "start": 150,
+      "stroke_color": "#000000",
+      "track": "trk_f6g7h8j9k0",
+      "type": "caption",
+      "volume": 1,
+      "words": [
+        {
+          "duration": 30,
+          "start": 0,
+          "text": "Bye"
+        }
+      ]
+    }
+  }
+]

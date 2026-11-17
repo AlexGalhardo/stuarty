@@ -529,6 +529,10 @@ var alphaOps = map[string]func(p *docPick) string{
 		return fmt.Sprintf(`{"clip_item_id":%q,"track_id":%q,"max_words":%d,"replace":%t,"resolved":%s}`,
 			p.clip(), p.vtrack(), 1+p.n(6), p.n(2) == 0, p.resolvedWords())
 	},
+	"caption.import_subtitles": func(p *docPick) string {
+		return fmt.Sprintf(`{"track_id":%q,"text":%q,"start":%q}`, p.vtrack(),
+			"1\n00:00:01,000 --> 00:00:02,000\nHello there\n\n2\n00:00:03,000 --> 00:00:04,000\nBye\n", p.frames(300))
+	},
 	"caption.retime_from_clip": func(p *docPick) string {
 		return fmt.Sprintf(`{"clip_item_id":%q,"resolved":%s}`, p.clip(), p.resolvedWords())
 	},

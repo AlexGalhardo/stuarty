@@ -10,7 +10,7 @@ wide: true
 
 <RefMain>
 
-Change a project. Atomic batch, one undo step. base_revision: last revision read. Times need a unit. See command_help. Returns revision, diff, lint. dry_run: check only. idempotency_key: safe retries.
+Change a project. Atomic batch, one undo step. base_revision: last revision read. Times need a unit. See command_help. dry_run: check only. idempotency_key: safe retries.
 
 ## Behaviour
 
@@ -30,7 +30,7 @@ These are the annotations of the tool definition, the hints a client uses to dec
 | `project_id` | `string` | yes | pattern `^prj_[0-9a-hjkmnp-tv-z]{10}$` |
 | `base_revision` | `integer` | yes | min 0 |
 | `operations` | array of `object` | yes | at least 1 items; at most 200 items |
-| `operations[].op` | `string`, one of 69 values | yes |  |
+| `operations[].op` | `string`, one of 70 values | yes |  |
 | `operations[].args` | `object` | yes |  |
 | `idempotency_key` | `string` | no | pattern `^[A-Za-z0-9._~-]{8,64}$` |
 | `dry_run` | `boolean` | no | default `false` |
@@ -63,6 +63,7 @@ Each member of `operations` is `{ op, args }`. Every operation has its own page 
 | [`caption.add`](/docs/mcp/tools/edit/caption.add) | Adds a caption item with timed words. | `edit` | prototype |
 | [`caption.edit_word`](/docs/mcp/tools/edit/caption.edit_word) | Changes the text of one word of a caption, or removes the word. | `edit` | alpha |
 | [`caption.from_transcript`](/docs/mcp/tools/edit/caption.from_transcript) | Creates captions for the speech of a clip from its transcript. | `edit` | alpha |
+| [`caption.import_subtitles`](/docs/mcp/tools/edit/caption.import_subtitles) | Creates one caption per cue of an SRT or WebVTT text. | `edit` | beta |
 | [`caption.merge`](/docs/mcp/tools/edit/caption.merge) | Joins two captions of one track into one that spans both. | `edit` | alpha |
 | [`caption.retime_from_clip`](/docs/mcp/tools/edit/caption.retime_from_clip) | Retimes the captions linked to a clip after the clip was moved, trimmed or sped up. | `edit` | alpha |
 | [`caption.set_breaks`](/docs/mcp/tools/edit/caption.set_breaks) | Sets the forced line breaks of a caption. | `edit` | alpha |

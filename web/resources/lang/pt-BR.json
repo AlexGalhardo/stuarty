@@ -446,6 +446,9 @@
           "from_transcript": {
             "title": "Legendas a partir da transcrição"
           },
+          "import_subtitles": {
+            "title": "Importar legendas (SRT, VTT)"
+          },
           "merge": {
             "title": "Mesclar legendas"
           },

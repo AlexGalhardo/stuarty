@@ -1,6 +1,6 @@
 # SDD-002: Command catalogue of the core
 
-- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen for ALPHA: all 48 commands have golden cases and pass the registry-wide gates (P2-ENG-018). BETA adds `clip.set_filter` and `clip.set_blur` (C.49, C.50; P3-ENG-001), `audio.duck` and `audio.mark_beats` (C.51, C.52; P3-ENG-002), `font.add` and `font.remove` (C.53, C.54; P3-ENG-005), 54 in the BETA build; after BETA `clip.set_chroma_key` (C.55, VV-015) and the marker commands `marker.add`, `marker.set` and `marker.remove` (C.56 to C.58, VV-035) make 58; `item.slip` and `settings.reframe` (C.59, C.60, VV-036 and VV-038) make 60; `clip.set_blend` (C.61, VV-015) makes 61; `clip.set_mask` (C.62, VV-015) makes 62; `clip.set_flip` (C.63, TASK-0233) makes 63; `item.set_enabled` (C.64, TASK-0233) makes 64; `item.link`, `item.unlink` and `item.extract_audio` (C.65 to C.67, TASK-0277) make 67; `clip.set_effects` (C.68, TASK-0278) makes 68; `item.paste_attributes` (C.69, TASK-0254) makes 69; `item.freeze_frame` (C.70, TASK-0254) makes 70. The binary exposes the BETA build (`command.Build` is `Beta`, switched on 2026-11-15): 70 commands, 69 public, of which 16 are Prototype, 32 ALPHA and 22 BETA; `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
+- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen for ALPHA: all 48 commands have golden cases and pass the registry-wide gates (P2-ENG-018). BETA adds `clip.set_filter` and `clip.set_blur` (C.49, C.50; P3-ENG-001), `audio.duck` and `audio.mark_beats` (C.51, C.52; P3-ENG-002), `font.add` and `font.remove` (C.53, C.54; P3-ENG-005), 54 in the BETA build; after BETA `clip.set_chroma_key` (C.55, VV-015) and the marker commands `marker.add`, `marker.set` and `marker.remove` (C.56 to C.58, VV-035) make 58; `item.slip` and `settings.reframe` (C.59, C.60, VV-036 and VV-038) make 60; `clip.set_blend` (C.61, VV-015) makes 61; `clip.set_mask` (C.62, VV-015) makes 62; `clip.set_flip` (C.63, TASK-0233) makes 63; `item.set_enabled` (C.64, TASK-0233) makes 64; `item.link`, `item.unlink` and `item.extract_audio` (C.65 to C.67, TASK-0277) make 67; `clip.set_effects` (C.68, TASK-0278) makes 68; `item.paste_attributes` (C.69, TASK-0254) makes 69; `item.freeze_frame` (C.70, TASK-0254) makes 70; `caption.import_subtitles` (C.71, TASK-0254) makes 71. The binary exposes the BETA build (`command.Build` is `Beta`, switched on 2026-11-15): 71 commands, 70 public, of which 16 are Prototype, 32 ALPHA and 23 BETA; `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
 - Depends on: SDD-001 (document), ADR-0002 (command core), ADR-0004 (time), ADR-0006 (log, concurrency, undo), ADR-0014 (JSON Schema)
 - Implements: RF-010 to RF-016, RF-020 to RF-026, RF-030 to RF-036, RF-040, RF-041, RF-050, RF-051, RF-100, RF-105, RF-107, RF-112 to RF-115, RF-119, NFR-001, NFR-025
 - Owner area: senior-a (command core and schema)
@@ -279,6 +279,7 @@ Scope is `edit` unless stated. Phase: `P` Prototype, `A` ALPHA. "Time" marks arg
 | `clip.set_effects` | B | `item_id`, `effects` (up to 6 `{kind, ...}`) | Sets the visual effects of a clip: motion blur, glow, vignette, grain, RGB split and shake, each with its parameters. See C.68 |
 | `item.paste_attributes` | B | `from_item_id`, `item_ids`, `attributes` | Copies attribute groups (color, filter, blur, framing, transform, blend, mask, flip, chroma_key, effects, audio) from one item to 1 to 20 others. See C.69 |
 | `item.freeze_frame` | B | `item_id`, `at`, `duration?`, `freeze_id?`, `new_id?` | Splits a clip at a frame and inserts between the parts a still of the source frame shown there, held for `duration` (default 3s); the later items of the track move later. See C.70 |
+| `caption.import_subtitles` | B | `track_id`, `text`, `format?`, `start?`, `new_ids?` | Creates one caption per cue of an SRT or WebVTT text on a visual track (the file is read by the caller). See C.71 |
 | `item.link` | B | `item_ids` (2 to 20), `id?` | Puts items in one link group: `item.move`, `item.trim` and `item.split` on one of them apply to all of them. See C.65 |
 | `item.unlink` | B | `item_ids` | Takes items out of their link group; a group left with one item is dissolved. See C.66 |
 | `item.extract_audio` | B | `item_id`, `track_id`, `id?` | Creates a linked audio item from the audio of a video clip and mutes the clip. See C.67 |
@@ -5740,4 +5741,72 @@ Holds one frame of a clip (TASK-0254): the "freeze frame" of an editor. The clip
 - `err_invalid_state_already_a_freeze_frame`
 - `err_invalid_state_speed_curve`
 - `err_id_exists`
+- `err_limit_500_items`
+
+### C.71 `caption.import_subtitles` (phase B)
+
+Creates one caption item for each cue of an SRT or WebVTT text (TASK-0254, NEW-32a). The command is pure: the caller or the service reads the file and sends its text, and the parser is `core/subtitle`. Writing the captions of a document back as SRT or WebVTT is `subtitle.Format` over the cues a caller builds from the captions (the service does the file); the core has no command for it, because it changes nothing.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `track_id` | track id | yes | none | a visual track |
+| `text` | string | yes | none | the SRT or WebVTT text, at most 2,000,000 characters and 5,000 cues |
+| `format` | `"srt"`, `"vtt"` | no | `vtt` when the text starts with `WEBVTT`, else `srt` | |
+| `start` | length | no | `0` | added to every cue |
+| `new_ids` | list of item ids | no | generated | ids of the captions, in cue order |
+
+**Preconditions.**
+
+1. `track_id` and the `new_ids` have the id form, the `new_ids` are not repeated and `start` is a length that may be 0 (`E_VALIDATION`).
+2. `text` is valid in the format: a time line is `hh:mm:ss,mmm --> hh:mm:ss,mmm` (VTT: the hours may be left out and the milliseconds follow a dot or a comma), the cue ends after it starts, minutes and seconds are below 60; and at least one cue has text (`E_VALIDATION`, the message names the cue).
+3. The track exists (`E_NOT_FOUND`) and is visual (`E_TYPE_MISMATCH`).
+4. The ids are not used (`E_ID_EXISTS`) and the document has room for one item per cue (`E_LIMIT`).
+5. Each cue has at least as many frames as words (`E_INVALID_STATE`), no word longer than 80 characters (`E_VALIDATION`), and the words stay within the limits of a caption and of the document (`E_LIMIT`).
+6. A cue does not overlap an item of the track nor a cue before it, and ends by frame 108,000 (`E_OVERLAP`, `E_INVALID_TIME`).
+
+**Postconditions.**
+
+1. Each cue becomes a caption: its start and end, in milliseconds, are rounded to the nearest frame of the project (`ms x fps / 1000`) and `start` is added; the duration is at least 1 frame. Header, cue numbers, VTT identifiers and settings, `NOTE`, `STYLE` and `REGION` blocks, `<...>` markup and `{\...}` override tags are dropped; the lines of a cue are joined by a space, and its words share the duration in proportion to their characters, as `caption.add` with `text`. A cue with no text is skipped.
+2. `diff` has one `item.added` per caption. `effective` has `created` and `new_ids` (the ids used), `unused_ids`, `cue_count` and `format`.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | a bad id, a text that is not valid SRT or WebVTT, or no cue with text | `args.text is not valid srt: cue 1: "00:00:01" is not a time (hh:mm:ss,mmm).` | `Send SubRip or WebVTT text with a time line (00:00:01,000 --> 00:00:02,500) for each cue.` |
+| `E_INVALID_TIME` | a cue ends past frame 108,000 | `The item would occupy frames 108000-108044, past the limit 108000.` | `Use a start of at most "107955f" for this 45-frame item.` |
+| `E_NOT_FOUND` | unknown track | `Track trk_zzzzzzzzzz does not exist.` | `Use the id of a track listed by project_get.` |
+| `E_TYPE_MISMATCH` | an audio track | `Track trk_m1n2p3q4r5 is an audio track; captions need a visual track.` | `Use a visual track.` |
+| `E_INVALID_STATE` | a cue with fewer frames than words | `Cue 1 lasts 1 frames but has 3 words; each word needs 1 frame.` | `Lengthen the cue in the file or use a higher frame rate.` |
+| `E_ID_EXISTS` | an id is used | `Item id itm_m1n2p3q4r5 already exists.` | `Omit id or use an unused id.` |
+| `E_OVERLAP` | a cue overlaps an item of the track | `Item itm_d4d4d4d4d4 would occupy frames 30-74 on track trk_f6g7h8j9k0, where item itm_m1n2p3q4r5 already is (frames 0-89).` | `Cue 1 overlaps another item of the track; pick an empty track or another start.` |
+| `E_LIMIT` | too many items | `The document would have 501 items; the limit is 500.` | `Delete unused items first.` |
+
+**Inverse.** `delete` of the created items.
+
+**Idempotency.** Not idempotent: a second call adds the captions again, or fails with `E_OVERLAP`.
+
+**Example.** Two cues on an empty caption track.
+
+```json
+{"op": "caption.import_subtitles", "args": {"track_id": "trk_a1b2c3d4e5", "text": "1\n00:00:01,000 --> 00:00:02,500\nHello there\n\n2\n00:00:03,000 --> 00:00:04,000\nBye\n", "new_ids": ["itm_d4d4d4d4d4", "itm_e5e5e5e5e5"]}}
+```
+
+**Golden cases.**
+
+- `ok_srt_two_cues`
+- `ok_vtt_detected_by_its_header`
+- `ok_format_given`
+- `ok_start_moves_every_cue`
+- `err_validation_bad_time_line`
+- `err_validation_no_cue_with_text`
+- `err_validation_bad_new_id`
+- `err_not_found_track`
+- `err_type_mismatch_audio_track`
+- `err_invalid_time_cue_past_the_end`
+- `err_overlap_item_on_the_track`
+- `err_id_exists`
+- `err_invalid_state_cue_shorter_than_its_words`
 - `err_limit_500_items`

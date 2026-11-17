@@ -1512,7 +1512,7 @@ trashed prj_2x5c8d1f4g; restore it with project_trash restore=true
 ```json
 {
   "name":"edit",
-  "description":"Change a project. Atomic batch, one undo step. base_revision: last revision read. Times need a unit. See command_help. Returns revision, diff, lint. dry_run: check only. idempotency_key: safe retries.",
+  "description":"Change a project. Atomic batch, one undo step. base_revision: last revision read. Times need a unit. See command_help. dry_run: check only. idempotency_key: safe retries.",
   "inputSchema":{
     "type":"object",
     "properties":{
@@ -1535,7 +1535,7 @@ trashed prj_2x5c8d1f4g; restore it with project_trash restore=true
                 "clip.set_speed", "clip.set_color", "clip.set_blur", "clip.set_chroma_key", "clip.set_blend", "clip.set_mask", "clip.set_flip", "clip.set_effects", "item.set_enabled", "item.link", "item.unlink", "item.extract_audio", "item.paste_attributes", "item.freeze_frame", "marker.add", "marker.set", "marker.remove", "clip.set_filter", "clip.remove_silences", "text.add", "text.set", "text.apply_preset",
                 "shape.add", "shape.set", "caption.add", "caption.set_words", "caption.edit_word",
                 "caption.split", "caption.merge", "caption.set_breaks", "caption.set_style",
-                "caption.from_transcript", "caption.retime_from_clip", "keyframe.set", "keyframe.remove",
+                "caption.from_transcript", "caption.import_subtitles", "caption.retime_from_clip", "keyframe.set", "keyframe.remove",
                 "keyframe.clear", "slot.mark", "slot.unmark", "slot.fill", "template.set_info",
                 "font.add", "font.remove"
               ]
