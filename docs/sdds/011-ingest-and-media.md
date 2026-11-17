@@ -700,7 +700,7 @@ The handler computes the facts after the files exist and passes only these measu
 | `sample_count` | decode the audio stream to raw `s16le` stereo on a pipe and count bytes divided by 4; it must equal `duration_ts` of the audio stream (time base 1/48000). For audio assets this is the fact; for video it must also equal `N` | `N` of 4.3.3 |
 | `width`, `height` | `ffprobe` of the produced file (`normalized.mov`, `normalized.png`) | `W`, `H` |
 | `has_audio` | true when `normalized.mov` has an audio stream with `sample_count > 0` | the probe found a usable stream |
-| `has_alpha` | video only: true when `normalized.mov` is the ProRes 4444 file of 4.3.5 | the plan's `alpha` |
+| `has_alpha` | video: true when `normalized.mov` is the ProRes 4444 file of 4.3.5; image: true when the source pixel format carries alpha (the proxy is then a PNG) | the plan's `alpha` |
 
 Because the frame rate, timestamps, dimensions and counts are read back from the produced file and compared with the plan, the document never holds a number that the media does not have.
 

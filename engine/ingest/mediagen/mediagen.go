@@ -87,6 +87,14 @@ func (g Gen) Image(ctx context.Context) (string, error) {
 	return g.ff(ctx, "image.png", append(src(200, 100, 1, 1), "-frames:v", "1", "-c:v", "png", "-f", "image2")...)
 }
 
+// AlphaImage is a 200x100 RGBA PNG whose left half is fully transparent and whose right half is opaque red.
+func (g Gen) AlphaImage(ctx context.Context) (string, error) {
+	return g.ff(ctx, "alpha.png",
+		"-f", "lavfi", "-i", "color=c=red:s=200x100:r=1:d=1",
+		"-vf", "format=rgba,geq=r='r(X,Y)':g='g(X,Y)':b='b(X,Y)':a='if(gte(X,100),255,0)'",
+		"-frames:v", "1", "-c:v", "png", "-pix_fmt", "rgba", "-f", "image2")
+}
+
 // Truncated is a clip with its index at the front whose data ends early: ffprobe reads the whole
 // declared length and the decoder can produce only part of it.
 func (g Gen) Truncated(ctx context.Context) (string, error) {

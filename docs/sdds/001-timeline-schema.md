@@ -80,7 +80,7 @@ An asset is a reference to a file in the content store plus the facts the frame 
 | `sample_count` | integer | when it has audio | samples at 48,000 Hz of the normalized audio |
 | `width`, `height` | integer | video and image | pixels after the display matrix was applied |
 | `has_audio` | boolean | video only | default false |
-| `has_alpha` | boolean | video only | default false. True when the normalized video keeps an alpha channel (SDD-011 4.3.5); the export then composes the clip over the layers below instead of drawing it opaque |
+| `has_alpha` | boolean | video and image | default false. True when the normalized video keeps an alpha channel (SDD-011 4.3.5), or when a still image has one (a PNG logo, SDD-011 4.7); the export then composes the clip over the layers below instead of drawing it opaque |
 | `frame_delays` | array of integers, 2 to 1,000 | animated image only | BETA. Display time of each frame in milliseconds, 10 to 60,000 each, read from the file by ingest. Present only on an `image` asset, with `frame_count` equal to its length; its presence is what makes the image animated (`Asset.IsAnimated`). A still image has neither |
 
 An asset appears in the document only after its ingest produced the normalized media (ADR-0010); for a `lut` asset, after the `.cube` file was read and checked.
