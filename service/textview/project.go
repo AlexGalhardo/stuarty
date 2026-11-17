@@ -362,6 +362,10 @@ func itemFlags(it *timeline.Item) []string {
 		f = append(f, "rev")
 	}
 
+	if it.Type == timeline.ItemClip {
+		f = append(f, colourFlags(it)...)
+	}
+
 	if it.Link != "" {
 		f = append(f, "linked")
 	}
@@ -380,6 +384,54 @@ func itemFlags(it *timeline.Item) []string {
 		if it.Slot.Required && !it.Slot.Filled {
 			f = append(f, "unfilled")
 		}
+	}
+
+	return f
+}
+
+// colourFlags lists the colour work of a clip, so a reader of the summary sees a graded clip (VV-150):
+// grade:<adjustments that are not neutral>, hsl:<bands>, wheels, curves and lut:<asset>[@intensity].
+func colourFlags(it *timeline.Item) []string {
+	var f []string
+
+	var grade []string
+
+	add := func(name string, v, neutral float64) {
+		if v != neutral {
+			grade = append(grade, name+num(v))
+		}
+	}
+
+	add("bri", it.Brightness, 0)
+	add("con", it.Contrast, 1)
+	add("sat", it.Saturation, 1)
+	add("temp", it.Temperature, 0)
+	add("tint", it.Tint, 0)
+	add("hue", it.Hue, 0)
+
+	if len(grade) > 0 {
+		f = append(f, "grade:"+strings.Join(grade, ","))
+	}
+
+	if n := len(it.Hsl); n > 0 {
+		f = append(f, fmt.Sprintf("hsl:%d", n))
+	}
+
+	if it.Wheels != nil {
+		f = append(f, "wheels")
+	}
+
+	if it.Curves != nil {
+		f = append(f, "curves")
+	}
+
+	if it.Lut != nil {
+		l := "lut:" + it.Lut.Asset
+		if it.Lut.Intensity != 1 {
+			l += "@" + num(it.Lut.Intensity)
+		}
+
+		f = append(f, l)
 	}
 
 	return f
