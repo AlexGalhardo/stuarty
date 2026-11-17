@@ -15,6 +15,7 @@ import {
 
 import { fetchBitmap } from "../api/bitmaps";
 import type { ApiClient } from "../api/client";
+import { fetchLut, type LutTable } from "../api/lut";
 import type { PlanLayer, PlanMediaLayer, PlanWindow } from "../api/types";
 import { chunksUrl, proxyUrl, thumbnailUrl } from "../api/urls";
 import "pixi.js/advanced-blend-modes";
@@ -29,6 +30,7 @@ import { type EffectPass, effectPasses } from "./effects";
 import { GradeFilter } from "./gradeFilter";
 import { pixiColorMatrix } from "./layerFilters";
 import { Lru } from "./lru";
+import { LutFilter } from "./lutFilter";
 import { coverageSize, coverageTexels } from "./mask";
 import { MediaPool, type PoolTimers } from "./mediaPool";
 import {
@@ -61,8 +63,7 @@ import type {
 const BITMAP_CACHE = 64;
 
 // The filters of a layer in the order of the compositor: chroma key, colour
-// matrix, grade, filter
-// matrix, blur (SDD-004 section 6 step 2.2). Each runs in a pass of its own, so
+// matrix, grade, lookup table, filter matrix, blur (SDD-004 section 6 step 2.2). Each runs in a pass of its own, so
 // the result of one is clamped to 0..1 before the next, as the export does.
 interface Drawn {
 	// The filters, the opacity and the blend are on the holder, which has no
@@ -73,6 +74,7 @@ interface Drawn {
 	key: ChromaKeyFilter | null;
 	color: ColorMatrixFilter | null;
 	grade: GradeFilter | null;
+	lut: LutFilter | null;
 	look: ColorMatrixFilter | null;
 	blur: BlurFilter | null;
 	// The passes of the pixel effects and the transitions, reused from frame to
@@ -143,6 +145,9 @@ export class PixiExecutor implements PreviewExecutor {
 	);
 	private readonly loading = new Set<string>();
 	private readonly stills = new Map<string, Texture>();
+	// The parsed table of each lut asset; null once it cannot be had, so the
+	// layer is drawn without it and the route is not asked again.
+	private readonly luts = new Map<string, LutTable | null>();
 	private readonly frameListeners = new Set<(frame: number) => void>();
 	private readonly stateListeners = new Set<(state: PreviewState) => void>();
 
@@ -247,6 +252,7 @@ export class PixiExecutor implements PreviewExecutor {
 		this.bitmaps.clear();
 		for (const texture of this.stills.values()) texture.destroy(true);
 		this.stills.clear();
+		this.luts.clear();
 		for (const entry of this.drawn.values()) {
 			this.dropMask(entry);
 			this.sizeFx(entry, 0);
@@ -459,6 +465,7 @@ export class PixiExecutor implements PreviewExecutor {
 					key: null,
 					color: null,
 					grade: null,
+					lut: null,
 					look: null,
 					blur: null,
 					fx: [],
@@ -485,6 +492,7 @@ export class PixiExecutor implements PreviewExecutor {
 			this.dropMask(entry);
 			this.sizeFx(entry, 0);
 			entry.grade?.destroy();
+			entry.lut?.destroy();
 			entry.holder.destroy({ children: true });
 			this.drawn.delete(item);
 		}
@@ -574,6 +582,7 @@ export class PixiExecutor implements PreviewExecutor {
 		}
 		entry.color = this.matrixFilter(entry.color, colorMatrixAt(layer, frame));
 		const gradeOn = this.gradeFilter(entry, media?.grade);
+		const lutOn = this.lutFilter(entry, media?.lut, info);
 		entry.look = this.matrixFilter(entry.look, media?.filter ?? null);
 		// The blur is in project pixels; the stage scale is the output scale.
 		const sigma = (media?.blur ?? 0) * this.stage.scale.x;
@@ -598,6 +607,7 @@ export class PixiExecutor implements PreviewExecutor {
 			entry.key,
 			entry.color,
 			gradeOn ? entry.grade : null,
+			lutOn ? entry.lut : null,
 			entry.look,
 			entry.blur,
 			...entry.fx.slice(0, passes.before.length),
@@ -741,6 +751,45 @@ export class PixiExecutor implements PreviewExecutor {
 		}
 		entry.grade ??= new GradeFilter();
 		return entry.grade.set(grade);
+	}
+
+	// The lookup table sits between the grade and the filter (SDD-004 section
+	// 3.6). While its table is on the way the frame is not complete, so a
+	// capture waits; a table that cannot be had is drawn without.
+	private lutFilter(
+		entry: Drawn,
+		lut: PlanMediaLayer["lut"],
+		info: ProjectInfo,
+	): boolean {
+		const table = lut === undefined ? null : this.lutTable(info, lut.asset);
+		if (lut === undefined || table === null || table === undefined) {
+			if (table === undefined) this.complete = false;
+			entry.lut?.destroy();
+			entry.lut = null;
+			return false;
+		}
+		entry.lut ??= new LutFilter();
+		return entry.lut.set(table, lut.intensity);
+	}
+
+	// The table of an asset: undefined while it loads, null when it is refused.
+	private lutTable(
+		info: ProjectInfo,
+		asset: string,
+	): LutTable | null | undefined {
+		const key = `${info.projectId}:${asset}`;
+		const cached = this.luts.get(key);
+		if (cached !== undefined) return cached;
+		const id = `lut:${key}`;
+		if (this.loading.has(id)) return undefined;
+		this.loading.add(id);
+		fetchLut(info.projectId, asset).then((table) => {
+			this.loading.delete(id);
+			if (this.disposed) return;
+			this.luts.set(key, table);
+			this.redraw();
+		});
+		return undefined;
 	}
 
 	private matrixFilter(
