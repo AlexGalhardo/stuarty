@@ -168,6 +168,12 @@ func Parse(s string, fps FPS) (int64, error) {
 	case strings.HasSuffix(s, "f"):
 		return parseFrames(s)
 	case strings.HasSuffix(s, "s"):
+		if u := trailingUnit(s); u != "s" {
+			return 0, invalid(
+				s,
+				fmt.Sprintf("unit %q is not supported; use seconds (0.8s), frames (24f) or a timecode", u),
+			)
+		}
 		num, den, err = parseDecimal(s[:len(s)-1])
 	case s[len(s)-1] >= '0' && s[len(s)-1] <= '9':
 		return 0, invalid(s, "no unit")
@@ -181,6 +187,15 @@ func Parse(s string, fps FPS) (int64, error) {
 	n := num.Mul(num, big.NewInt(fps.Num))
 	d := den.Mul(den, big.NewInt(fps.Den))
 	return checkFrame(s, roundDiv(n, d))
+}
+
+// trailingUnit returns the run of letters at the end of s.
+func trailingUnit(s string) string {
+	i := len(s)
+	for i > 0 && (s[i-1] >= 'a' && s[i-1] <= 'z' || s[i-1] >= 'A' && s[i-1] <= 'Z') {
+		i--
+	}
+	return s[i:]
 }
 
 func checkFrame(s string, frame *big.Int) (int64, error) {
