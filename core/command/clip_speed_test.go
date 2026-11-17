@@ -218,3 +218,16 @@ func TestSetSpeedOverlapNamesTheResultDuration(t *testing.T) {
 		}
 	}
 }
+
+// A bad point of a speed curve is reported at its own path (VV-156).
+func TestSetSpeedCurvePointErrorPath(t *testing.T) {
+	doc := base().clip(itemA, vidTr, 0, 90, 0).d
+	_, err := Default().Apply(doc, op2("clip.set_speed", fmt.Sprintf(
+		`{"item_id": %q, "curve": [{"t": 0, "speed": "1x"}, {"t": 0.5, "speed": 0.4}, {"t": 1, "speed": "1x"}]}`,
+		itemA,
+	)), Env{})
+	ce := AsError(err)
+	if ce == nil || ce.Path != "args.curve[1].speed" || !strings.Contains(ce.Message, "args.curve[1].speed") {
+		t.Fatalf("got %+v", ce)
+	}
+}
