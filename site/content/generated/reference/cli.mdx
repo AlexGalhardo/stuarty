@@ -479,8 +479,8 @@ vukem-video events --project <id> [--from-id n] [--since n] [--count n]
 | Flag | Type | Default | Meaning |
 | --- | --- | --- | --- |
 | `--from-id` | string |  | resume after this event id (the Last-Event-ID) |
-| `--since` | integer |  | replay the revisions after this one |
-| `--count` | integer | `0` | stop after n events (0: until interrupted) |
+| `--since` | integer |  | replay the revisions after this one (without it only new events arrive, so --count waits for them) |
+| `--count` | integer | `0` | stop after n events (past ones only with --since or --from-id; 0: until interrupted) |
 
 Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`.
 

@@ -45,8 +45,14 @@ var eventsCmd = &spec{
 	stream:  true,
 	flags: []flagDef{
 		{Name: "from-id", Kind: kindString, Usage: "resume after this event id (the Last-Event-ID)"},
-		{Name: "since", Kind: kindInt, Usage: "replay the revisions after this one"},
-		{Name: "count", Kind: kindInt, Default: "0", Usage: "stop after n events (0: until interrupted)"},
+		{
+			Name: "since", Kind: kindInt,
+			Usage: "replay the revisions after this one (without it only new events arrive, so --count waits for them)",
+		},
+		{
+			Name: "count", Kind: kindInt, Default: "0",
+			Usage: "stop after n events (past ones only with --since or --from-id; 0: until interrupted)",
+		},
 	},
 	run: runEvents,
 }
