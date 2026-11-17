@@ -813,6 +813,7 @@
         "title": "Keyboard shortcuts",
         "description": "Choose a key to change it, then press the new one. Esc cancels.",
         "open": "Keyboard shortcuts (?)",
+        "version": "Version {version}",
         "action": "Action",
         "key": "Key",
         "change": "Change the key of {action}, now {key}",

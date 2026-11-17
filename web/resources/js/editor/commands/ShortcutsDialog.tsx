@@ -1,6 +1,8 @@
 import { Keyboard } from "lucide-react";
 import { type ReactNode, useCallback, useEffect, useState } from "react";
 
+import LocaleSelect from "@/components/LocaleSelect";
+import ThemeToggle from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -11,6 +13,7 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { useT } from "@/lib/i18n";
+import { useRuntime } from "../state/EditorContext";
 import { showTipsAgain } from "../state/tipsStore";
 import {
 	type BindingId,
@@ -44,11 +47,30 @@ interface Conflict {
 export function ShortcutsDialog({
 	open,
 	onOpenChange,
+	onLocaleChange,
 }: {
 	open: boolean;
 	onOpenChange(open: boolean): void;
+	onLocaleChange(locale: string): void;
 }): ReactNode {
 	const t = useT();
+	const runtime = useRuntime();
+	// The version is the service's, read when the dialog opens (SDD-012 section
+	// 18.2); it is left out when the read fails.
+	const [version, setVersion] = useState<string | null>(null);
+	useEffect(() => {
+		if (!open) return;
+		let current = true;
+		runtime.client.getSystem().then(
+			(system) => {
+				if (current) setVersion(system.version);
+			},
+			() => undefined,
+		);
+		return () => {
+			current = false;
+		};
+	}, [open, runtime]);
 	const bindings = useBindings();
 	const [capturing, setCapturing] = useState<BindingId | null>(null);
 	const [conflict, setConflict] = useState<Conflict | null>(null);
@@ -168,6 +190,17 @@ export function ShortcutsDialog({
 								})}
 					</p>
 				)}
+				<div className="flex items-center justify-between gap-3 border-t pt-3">
+					<div className="flex items-center gap-2">
+						<LocaleSelect onChange={onLocaleChange} />
+						<ThemeToggle />
+					</div>
+					{version !== null && (
+						<span className="text-xs text-muted-foreground" data-version="">
+							{t("ui.editor.shortcuts.version", { version })}
+						</span>
+					)}
+				</div>
 				<DialogFooter>
 					<Button
 						type="button"
@@ -197,7 +230,11 @@ export function ShortcutsDialog({
 
 // The top-bar entry to the cheat sheet and the `?` key that opens it outside
 // an editable field or another dialog.
-export default function ShortcutsButton(): ReactNode {
+export default function ShortcutsButton({
+	onLocaleChange,
+}: {
+	onLocaleChange(locale: string): void;
+}): ReactNode {
 	const t = useT();
 	const [open, setOpen] = useState(false);
 	const openFromMenu = useCallback(() => setOpen(true), []);
@@ -239,7 +276,11 @@ export default function ShortcutsButton(): ReactNode {
 			>
 				<Keyboard aria-hidden="true" />
 			</Button>
-			<ShortcutsDialog open={open} onOpenChange={setOpen} />
+			<ShortcutsDialog
+				open={open}
+				onOpenChange={setOpen}
+				onLocaleChange={onLocaleChange}
+			/>
 		</>
 	);
 }

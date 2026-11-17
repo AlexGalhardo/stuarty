@@ -185,7 +185,7 @@ export default function TopBar({
 			<SavedIndicator live={shown === "live"} />
 			<div className="ml-auto flex items-center gap-2">
 				<PaletteButton />
-				<ShortcutsButton />
+				<ShortcutsButton onLocaleChange={onLocaleChange} />
 				<ExportButton />
 				<ActivityIndicator />
 				<LocaleSelect onChange={onLocaleChange} />
