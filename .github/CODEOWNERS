@@ -1,1 +1,12 @@
-* @AlexGalhardo
+# The author reviews every change to the checks that judge the code, so a pull request can never loosen its
+# own checks (REVIEW.md, .agents/skills/verify/). The ruleset protect-main requires code-owner review.
+/REVIEW.md @AlexGalhardo
+/.github/CODEOWNERS @AlexGalhardo
+/.github/workflows/ @AlexGalhardo
+/.agents/rules/ @AlexGalhardo
+/.agents/skills/verify/ @AlexGalhardo
+/.agents/skills/ci-preflight/ @AlexGalhardo
+/scripts/gate.sh @AlexGalhardo
+/scripts/smoke-e2e.sh @AlexGalhardo
+/web/e2e/playwright.config.ts @AlexGalhardo
+/web/vitest.config.ts @AlexGalhardo
