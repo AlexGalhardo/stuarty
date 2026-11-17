@@ -71,6 +71,12 @@ func validationFailure(err error) error {
 	}
 
 	path := formatPath(leaf.InstanceLocation)
+
+	// A failed "required" is reported on the parent object; name the missing properties instead.
+	if req, isReq := leaf.ErrorKind.(*kind.Required); isReq && len(req.Missing) > 0 {
+		loc := slices.Concat(leaf.InstanceLocation, req.Missing[:1])
+		path = formatPath(loc)
+	}
 	constraint := "schema"
 
 	if kp := leaf.ErrorKind.KeywordPath(); len(kp) > 0 {
@@ -99,6 +105,8 @@ func validationFailure(err error) error {
 // never repeats the value that was sent (SDD-003 section 1.2 rule 9).
 func expectation(k jsonschema.ErrorKind) string {
 	switch k := k.(type) {
+	case *kind.Required:
+		return ": the argument is required (missing: " + strings.Join(k.Missing, ", ") + ")"
 	case *kind.Enum:
 		values := make([]string, len(k.Want))
 
