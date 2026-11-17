@@ -124,7 +124,7 @@ func writeFile(path string, data []byte, mode int, makeFolders bool) error {
 var otioImport = &spec{
 	name:       "otio:import",
 	summary:    "apply an OpenTimelineIO file to a project as one undo step",
-	usage:      []string{"vukem-video otio:import <path> --project <id> [--base-revision n] [--allow-partial]"},
+	usage:      []string{"vukem-video otio:import <path> --project <id> [--base-revision n]"},
 	example:    "vukem-video otio:import cut.otio --project prj_7k2m9x4q1b --dry-run",
 	project:    true,
 	positional: true,
