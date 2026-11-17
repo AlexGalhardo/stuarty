@@ -51,6 +51,8 @@ type LauncherConfig struct {
 	BuildErr error
 	UI       LauncherUI
 	Current  string
+	// Language is the catalogue of the dialogs ("en" when empty).
+	Language string
 	// After is the clock: it returns a channel that fires after d. Default time.After.
 	After func(d time.Duration) <-chan time.Time
 	// RolledBack is the version of an update that was undone: the schedule never offers it again, only
@@ -225,7 +227,7 @@ func (l *Launcher) scheduledCheck(ctx context.Context) time.Duration {
 // CheckNow is the menu action: one check, whatever the setting is, then a dialog with the result.
 func (l *Launcher) CheckNow(ctx context.Context) {
 	l.wg.Go(func() {
-		out := CheckForUpdates(ctx, launcherChecker(l.cfg.Client), l.cfg.BuildErr, l.cfg.Current)
+		out := CheckForUpdates(ctx, l.cfg.Language, launcherChecker(l.cfg.Client), l.cfg.BuildErr, l.cfg.Current)
 		if out.Offer != nil {
 			l.offer(ctx, out.Offer)
 
@@ -281,7 +283,7 @@ func (l *Launcher) install(ctx context.Context, offer *update.Offer) {
 		l.mu.Unlock()
 
 		if err != nil {
-			l.cfg.UI.Fail(InstallFailedMessage(err))
+			l.cfg.UI.Fail(InstallFailedMessage(l.cfg.Language, err))
 		}
 	})
 }
