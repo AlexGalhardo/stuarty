@@ -48,12 +48,16 @@ jobs:
       matrix:
         round: [1, 2]
         platform:
-          - { runner: ubuntu-latest, os: linux, arch: amd64 }
-          - { runner: ubuntu-24.04-arm, os: linux, arch: arm64 }
-          - { runner: ubuntu-latest, os: windows, arch: amd64 }
+          - { runner: ubuntu-latest, os: linux, arch: amd64, container: "debian:13.7-slim@sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c51600d63b6b2" }
+          - { runner: ubuntu-24.04-arm, os: linux, arch: arm64, container: "debian:13.7-slim@sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c51600d63b6b2" }
+          - { runner: ubuntu-latest, os: windows, arch: amd64, container: "" }
           - { runner: macos-latest, os: darwin, arch: arm64 }
           - { runner: macos-15-intel, os: darwin, arch: amd64 }
     runs-on: ${{ matrix.platform.runner }}
+    # The Linux binaries run in the runtime image (debian:13.7-slim, glibc 2.41), so they are built
+    # in that image: on the runner itself they would need the glibc of the runner (2.43 on
+    # ubuntu-latest) and fail with "GLIBC_2.43 not found" in the container image.
+    container: ${{ matrix.platform.container }}
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -63,8 +67,14 @@ jobs:
         with:
           go-version-file: go.mod
           cache: false
-      - name: Build tools (Linux)
-        if: runner.os == 'Linux'
+      - name: Build tools (Linux, in the Debian container)
+        if: matrix.platform.os == 'linux'
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends build-essential ca-certificates curl git binutils perl pkg-config nasm autoconf automake libtool cmake zip xz-utils
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - name: Build tools (Windows target, host tools)
+        if: matrix.platform.os == 'windows'
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends nasm autoconf automake libtool cmake zip xz-utils
