@@ -335,11 +335,18 @@ func TestCLIToolsInstall(t *testing.T) {
 		}
 
 		doc := decodeOut(t, h)
-		if msg, _ := doc["message"].(string); doc["path"] != "yes" || !strings.Contains(msg, "ciscobinary.openh264.org") {
+		if msg, _ := doc["message"].(string); doc["path"] != "yes" ||
+			!strings.Contains(msg, "ciscobinary.openh264.org") {
 			t.Fatalf("document %v", doc)
 		}
 
-		if code := h.run("tools:install", "openh264", "--yes", "--json"); code != ExitOK || s.installed.Name != "openh264" {
+		if code := h.run(
+			"tools:install",
+			"openh264",
+			"--yes",
+			"--json",
+		); code != ExitOK ||
+			s.installed.Name != "openh264" {
 			t.Fatalf("exit %d, request %+v", code, s.installed)
 		}
 	})
