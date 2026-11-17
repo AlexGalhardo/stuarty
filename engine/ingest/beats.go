@@ -27,7 +27,7 @@ const (
 	beatHighWeight  = 0.6
 	beatMinPeaks    = 8
 	beatMinRise     = 0.5 // in log energy, a little over a 40% rise
-	beatMinConf     = 0.12
+	beatMinConf     = 0.10
 	beatStrongOnset = 1.0 // standard deviations of the onset signal
 	// MaxBeatSamples is the longest audio the beat analysis reads: two hours at 48 kHz. A longer
 	// file gets an empty grid, so the job stays inside the ingest limit (SDD-007 9.1).
