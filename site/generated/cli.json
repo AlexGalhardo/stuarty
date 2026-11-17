@@ -1193,7 +1193,7 @@
       "name": "otio:import",
       "summary": "apply an OpenTimelineIO file to a project as one undo step",
       "usage": [
-        "vukem-video otio:import <path> --project <id> [--base-revision n]"
+        "vukem-video otio:import <path> --project <id> [--base-revision n] [--allow-partial]"
       ],
       "example": "vukem-video otio:import cut.otio --project prj_7k2m9x4q1b --dry-run",
       "flags": [
@@ -1201,6 +1201,12 @@
           "name": "base-revision",
           "type": "integer",
           "usage": "the revision the file is applied to (default: the current one)"
+        },
+        {
+          "name": "allow-partial",
+          "type": "boolean",
+          "default": "false",
+          "usage": "import the rest when the file refers to media the project does not have (default: refuse)"
         }
       ],
       "globals": [

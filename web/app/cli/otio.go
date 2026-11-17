@@ -124,7 +124,7 @@ func writeFile(path string, data []byte, mode int, makeFolders bool) error {
 var otioImport = &spec{
 	name:       "otio:import",
 	summary:    "apply an OpenTimelineIO file to a project as one undo step",
-	usage:      []string{"vukem-video otio:import <path> --project <id> [--base-revision n]"},
+	usage:      []string{"vukem-video otio:import <path> --project <id> [--base-revision n] [--allow-partial]"},
 	example:    "vukem-video otio:import cut.otio --project prj_7k2m9x4q1b --dry-run",
 	project:    true,
 	positional: true,
@@ -132,6 +132,10 @@ var otioImport = &spec{
 	write:      true,
 	flags: []flagDef{
 		{Name: "base-revision", Kind: kindInt, Usage: "the revision the file is applied to (default: the current one)"},
+		{
+			Name: "allow-partial", Kind: kindBool, Default: "false",
+			Usage: "import the rest when the file refers to media the project does not have (default: refuse)",
+		},
 	},
 	run: func(ctx context.Context, c *call) (*output, error) {
 		if len(c.args.Positional) != 1 {
@@ -145,6 +149,7 @@ var otioImport = &spec{
 
 		req := service.ProjectOtioImportRequest{
 			ProjectID: c.projectID, Path: path, DryRun: c.args.boolean("dry-run"),
+			AllowPartial: c.args.boolean("allow-partial"),
 		}
 
 		if c.args.has("base-revision") {

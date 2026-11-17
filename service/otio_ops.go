@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"io"
 	"slices"
@@ -81,6 +82,9 @@ type ProjectOtioImportRequest struct {
 	BaseRevision int64  `json:"base_revision"`
 	Path         string `json:"path"` // absolute
 	DryRun       bool   `json:"dry_run,omitempty"`
+	// AllowPartial imports what the project can take when the file refers to media the project does not have;
+	// without it such a file is refused and nothing is applied (VV-133).
+	AllowPartial bool `json:"allow_partial,omitempty"`
 }
 
 // ProjectOtioImportResult is the batch the file became and what it left out.
@@ -178,6 +182,15 @@ func (s *svc) ProjectOtioImport(ctx context.Context, req ProjectOtioImportReques
 		im.KnownFonts = append(im.KnownFonts, family)
 	}
 
+	if len(unresolved) > 0 && !req.AllowPartial && !req.DryRun && req.BaseRevision <= row.Revision {
+		// The names are in details, cleaned and tagged as untrusted; the message carries none of them.
+		return nil, newError(command.CodeInvalidState,
+			"the file refers to %d media that the project does not have.", len(unresolved)).
+			withPath("path").withDetail("unresolved_media", otioMedia(unresolved)).
+			withHint("import the media with media:import (it is matched by file name) and import the file again, " +
+				"or set allow_partial to import the rest now and place the clips yourself; a dry run lists what is missing")
+	}
+
 	ops, dropped := im.Operations(assets, s.newIDs)
 	lost := append(slices.Clone(im.Lost), dropped...)
 
@@ -226,6 +239,21 @@ func noClipsNote(ops []command.Operation, unresolved int) string {
 		"segment), so import the media with media:import first, then import the file again"
 }
 
+// otioEnvelope is the answer of ProjectOtioExport: the file is its content member. A saved answer is accepted
+// as the file, so the round trip needs no editing (VV-108).
+func otioEnvelope(data []byte) []byte {
+	var env struct {
+		FileName string `json:"file_name"`
+		Content  string `json:"content"`
+	}
+
+	if json.Unmarshal(data, &env) == nil && env.Content != "" && env.FileName != "" {
+		return []byte(env.Content)
+	}
+
+	return data
+}
+
 // readOtio opens the file with the import path rules and parses it.
 func (s *svc) readOtio(path string) (*otio.Import, error) {
 	file, gerr := s.media.Guard.OpenImport(path)
@@ -245,7 +273,7 @@ func (s *svc) readOtio(path string) (*otio.Import, error) {
 			withPath("path").withHint("export a smaller timeline").withLimit("otio_bytes", len(data), otioFileMax)
 	}
 
-	im, perr := otio.Parse(data)
+	im, perr := otio.Parse(otioEnvelope(data))
 	if perr != nil {
 		if errors.Is(perr, otio.ErrInvalid) {
 			return nil, newError(
