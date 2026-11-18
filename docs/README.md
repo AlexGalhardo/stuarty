@@ -67,6 +67,7 @@ Each decision has a date, alternatives, reason and impact. They are the input of
 | 0027 | items of the stack draft that were cut or deferred, each with its reason |
 | 0028 | one legacy release, a minor about every 90 commits, rebase-merged release pull requests |
 | 0029 | one frame plan (Go), one renderer (Rust in WebAssembly), two hosts; WebCodecs and WebGPU in the preview (Phase 5) |
+| 0030 | desktop editor is a Gio window over `service.Service`; the browser UI stays the web client |
 
 ## Specifications (`sdds/`)
 

@@ -1,0 +1,346 @@
+package gioapp
+
+import (
+	"image"
+	"time"
+
+	"gioui.org/io/key"
+	"gioui.org/layout"
+	"gioui.org/op"
+	"gioui.org/unit"
+	"gioui.org/widget"
+
+	"github.com/AlexGalhardo/vukem-video/web/app/agentdocs"
+)
+
+// Layout draws one frame of the editor.
+func (ui *UI) Layout(gtx layout.Context) layout.Dimensions {
+	ui.drain()
+	ui.syncEditors()
+	ui.keys(gtx)
+	ui.tick(gtx)
+	ui.pollJob(gtx)
+
+	return layout.Stack{}.Layout(gtx,
+		layout.Expanded(func(gtx layout.Context) layout.Dimensions {
+			return fill(gtx, colBg)
+		}),
+		layout.Stacked(func(gtx layout.Context) layout.Dimensions {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(ui.topBar),
+				layout.Rigid(hline),
+				layout.Rigid(ui.statusLine),
+				layout.Flexed(1, ui.body),
+			)
+		}),
+		layout.Expanded(ui.overlay),
+	)
+}
+
+func (ui *UI) syncEditors() {
+	if ui.boundSelection == ui.selected {
+		return
+	}
+
+	ui.boundSelection = ui.selected
+	it := ui.item(ui.selected)
+
+	if it == nil {
+		return
+	}
+
+	ui.textEd.SetText(it.Text)
+	ui.labelEd.SetText(it.Name)
+}
+
+func (ui *UI) body(gtx layout.Context) layout.Dimensions {
+	if ui.fatal != "" && ui.sess == nil {
+		return ui.fatalScreen(gtx)
+	}
+
+	if ui.doc == nil {
+		return ui.home(gtx)
+	}
+
+	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
+			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					gtx.Constraints = layout.Exact(image.Pt(gtx.Dp(unit.Dp(292)), gtx.Constraints.Max.Y))
+
+					return ui.leftPanel(gtx)
+				}),
+				layout.Rigid(vline),
+				layout.Flexed(1, ui.preview),
+				layout.Rigid(vline),
+				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					gtx.Constraints = layout.Exact(image.Pt(gtx.Dp(unit.Dp(300)), gtx.Constraints.Max.Y))
+
+					return ui.inspector(gtx)
+				}),
+			)
+		}),
+		layout.Rigid(hline),
+		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+			gtx.Constraints = layout.Exact(image.Pt(gtx.Constraints.Max.X, gtx.Dp(unit.Dp(248))))
+
+			return ui.timeline(gtx)
+		}),
+	)
+}
+
+func (ui *UI) topBar(gtx layout.Context) layout.Dimensions {
+	h := gtx.Dp(unit.Dp(48))
+	gtx.Constraints.Min.Y = h
+	gtx.Constraints.Max.Y = h
+
+	return layout.Stack{}.Layout(gtx,
+		layout.Expanded(func(gtx layout.Context) layout.Dimensions {
+			return fill(gtx, colPanel)
+		}),
+		layout.Stacked(func(gtx layout.Context) layout.Dimensions {
+			return layout.Inset{
+				Left:  unit.Dp(12),
+				Right: unit.Dp(12),
+			}.Layout(
+				gtx,
+				func(gtx layout.Context) layout.Dimensions {
+					name := "No project"
+					if ui.doc != nil {
+						name = ui.doc.Name
+					}
+
+					return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
+						layout.Rigid(lbl(ui.th, unit.Sp(14), colAccent, "Vukem")),
+						gap(unit.Dp(8)),
+						layout.Rigid(lbl(ui.th, unit.Sp(14), colText, "Video")),
+						gap(unit.Dp(16)),
+						layout.Rigid(lbl(ui.th, unit.Sp(13), colMuted, ellipsize(name, 42))),
+						layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
+							return layout.Dimensions{Size: image.Pt(gtx.Constraints.Max.X, gtx.Constraints.Min.Y)}
+						}),
+						layout.Rigid(lbl(ui.th, unit.Sp(12), colMuted, agentdocs.Version)),
+						gap(unit.Dp(12)),
+						ui.barButton("projects", "Projects", ui.doc != nil, ui.closeProject),
+						gap(unit.Dp(6)),
+						ui.barButton("undo", "Undo", ui.doc != nil, ui.undo),
+						gap(unit.Dp(6)),
+						ui.barButton("redo", "Redo", ui.doc != nil, ui.redo),
+						gap(unit.Dp(10)),
+						ui.barButton("export", "Export", ui.doc != nil, func() { ui.exportOpen = true }),
+					)
+				},
+			)
+		}),
+	)
+}
+
+func (ui *UI) barButton(id, txt string, enabled bool, fn func()) layout.FlexChild {
+	return layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+		if !enabled {
+			return lbl(ui.th, unit.Sp(12), colLine, txt)(gtx)
+		}
+
+		bg, fg := colPanel2, colText
+		if id == "export" {
+			bg, fg = colAccent, colBlack
+		}
+
+		if ui.clicked(gtx, "bar-"+id) {
+			fn()
+		}
+
+		return button(gtx, ui.th, ui.click("bar-"+id), txt, bg, fg)
+	})
+}
+
+func (ui *UI) statusLine(gtx layout.Context) layout.Dimensions {
+	msg := ui.status
+	if ui.fatal != "" {
+		msg = ui.fatal
+	}
+
+	if msg == "" {
+		return layout.Dimensions{}
+	}
+
+	return layout.Inset{Left: unit.Dp(12), Right: unit.Dp(12), Top: unit.Dp(4), Bottom: unit.Dp(4)}.Layout(gtx,
+		lbl(ui.th, unit.Sp(12), colMuted, ellipsize(msg, 160)),
+	)
+}
+
+func (ui *UI) fatalScreen(gtx layout.Context) layout.Dimensions {
+	return layout.Center.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+		return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(gtx,
+			layout.Rigid(lbl(ui.th, unit.Sp(18), colText, "Vukem Video could not open the workspace")),
+			gap(unit.Dp(8)),
+			layout.Rigid(lbl(ui.th, unit.Sp(13), colMuted, ellipsize(ui.fatal, 120))),
+		)
+	})
+}
+
+func (ui *UI) home(gtx layout.Context) layout.Dimensions {
+	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+		layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
+			return layout.Inset{
+				Top:   unit.Dp(28),
+				Left:  unit.Dp(36),
+				Right: unit.Dp(24),
+			}.Layout(
+				gtx,
+				func(gtx layout.Context) layout.Dimensions {
+					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+						layout.Rigid(lbl(ui.th, unit.Sp(22), colText, "Projects")),
+						gap(unit.Dp(6)),
+						layout.Rigid(lbl(ui.th, unit.Sp(13), colMuted, "Open a project or start a new one.")),
+						gap(unit.Dp(16)),
+						layout.Flexed(1, ui.projectListLayout),
+					)
+				},
+			)
+		}),
+		layout.Rigid(vline),
+		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+			w := gtx.Dp(unit.Dp(360))
+			gtx.Constraints = layout.Exact(image.Pt(w, gtx.Constraints.Max.Y))
+
+			return layout.Stack{}.Layout(gtx,
+				layout.Expanded(func(gtx layout.Context) layout.Dimensions {
+					return fill(gtx, colPanel)
+				}),
+				layout.Stacked(ui.homeForm),
+			)
+		}),
+	)
+}
+
+func (ui *UI) projectListLayout(gtx layout.Context) layout.Dimensions {
+	ui.projectList.Axis = layout.Vertical
+
+	return ui.projectList.Layout(gtx, len(ui.projects), func(gtx layout.Context, i int) layout.Dimensions {
+		p := ui.projects[i]
+		id := p.ProjectID
+		if id == "" {
+			id = p.ID
+		}
+
+		if ui.clicked(gtx, "prj-"+id) {
+			ui.openProject(id)
+		}
+
+		label := ellipsize(p.Name, 40)
+		if size := summarySize(p); size != "" {
+			label += "    " + size
+		}
+
+		return layout.Inset{Bottom: unit.Dp(8)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+			return button(gtx, ui.th, ui.click("prj-"+id), label, colPanel2, colText)
+		})
+	})
+}
+
+func (ui *UI) keys(gtx layout.Context) {
+	if ui.editorFocused(gtx) || ui.importOpen || ui.exportOpen {
+		return
+	}
+
+	for {
+		ev, ok := gtx.Event(
+			key.Filter{Name: key.NameSpace},
+			key.Filter{Name: key.NameDeleteBackward},
+			key.Filter{Name: key.NameDeleteForward},
+			key.Filter{Name: "S"},
+			key.Filter{Name: "Z", Required: key.ModShortcut, Optional: key.ModShift},
+		)
+		if !ok {
+			break
+		}
+
+		e, ok := ev.(key.Event)
+		if !ok || e.State != key.Press {
+			continue
+		}
+
+		switch e.Name {
+		case key.NameSpace:
+			ui.playing = !ui.playing && ui.doc != nil
+			ui.last = time.Time{}
+		case key.NameDeleteBackward, key.NameDeleteForward:
+			ui.deleteSelected()
+		case "S":
+			ui.split()
+		case "Z":
+			if e.Modifiers.Contain(key.ModShift) {
+				ui.redo()
+			} else {
+				ui.undo()
+			}
+		default:
+		}
+	}
+}
+
+func (ui *UI) editorFocused(gtx layout.Context) bool {
+	for _, ed := range []*widget.Editor{&ui.nameEd, &ui.textEd, &ui.draftEd, &ui.labelEd} {
+		if gtx.Focused(ed) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (ui *UI) tick(gtx layout.Context) {
+	if !ui.playing || ui.doc == nil {
+		ui.last = gtx.Now
+
+		return
+	}
+
+	if ui.last.IsZero() {
+		ui.last = gtx.Now
+	}
+
+	step := time.Second
+	fps := ui.fps()
+
+	if fps.Num > 0 {
+		step = time.Duration(float64(time.Second) * float64(fps.Den) / float64(fps.Num))
+	}
+
+	if step <= 0 {
+		step = time.Second / 30
+	}
+
+	advanced := 0
+
+	for gtx.Now.Sub(ui.last) >= step && advanced < 8 {
+		ui.last = ui.last.Add(step)
+		ui.playhead++
+		advanced++
+	}
+
+	if ui.playhead >= ui.endFrame() {
+		ui.playhead = ui.endFrame()
+		ui.playing = false
+	}
+
+	if advanced > 0 {
+		ui.requestFrame()
+	}
+
+	gtx.Execute(op.InvalidateCmd{At: gtx.Now.Add(step)})
+}
+
+func (ui *UI) seek(frame int) {
+	if frame < 0 {
+		frame = 0
+	}
+
+	if frame > ui.endFrame() {
+		frame = ui.endFrame()
+	}
+
+	ui.playhead = frame
+	ui.requestFrame()
+}
