@@ -7,7 +7,10 @@ This folder is for the people and agents who work on this repository. It holds w
 
 | Skill | Use it when |
 | --- | --- |
-| `skills/verify/` | before every commit (`--quick`): runs the checks of what changed. `--full` boots the product end to end and runs the gate; it is not required while releases are deferred (ADR-0045) and is useful before a large merge |
+| `skills/verify/` | before every commit (`--quick --base <integration branch>`: without `--base` the change is compared with `main` and every epic is reported as changing the checks): runs the checks of what changed. `--full` boots the product end to end and runs the gate; it is not required while releases are deferred (ADR-0045) and is useful before a large merge |
+| `skills/orchestrator-loop/` | running the work session as the orchestrator: the loop that picks, dispatches, reviews, merges, pushes and keeps the state, for hours unattended |
+| `skills/epic-loop/` | working one epic (or one fix of the feedback queue) as its senior: one task, its `Verify:` command, fix until it passes, commit, next task, then the hand-off |
+| `skills/qa-campaign/` | after the epics: the end-to-end rounds with five seniors, one surface each, until a full round finds no problem |
 | `skills/integrate-agent-work/` | merging an approved epic into the integration branch |
 | `skills/deterministic-media/` | anything that runs FFmpeg and whose bytes or pixels are compared with a golden |
 | `skills/cross-platform-go/` | Go code or tests that touch paths, file systems, processes or timing |
