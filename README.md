@@ -38,6 +38,17 @@
 - The UI never computes the result of an edit: it draws what the core says and sends commands.
 - The layout is `core/`, `engine/`, `service/`, `web/`, `site/` and `desktop/` ([ADR-0001](docs/adrs/0001-repository-layout-and-go-module.md)).
 
+## Desktop application
+
+The native editor is a Gio window (`desktop/gio`, ADR-0030). It edits through the same service as the CLI and the browser. From `desktop/gio`:
+
+```bash
+go build -o vukem-video-desktop ./cmd/vukem-video-desktop
+./vukem-video-desktop
+```
+
+Linux needs a C compiler and the Wayland or X11, EGL and Vulkan development libraries; macOS needs the Xcode command line tools; Windows builds with `CGO_ENABLED=0`. The commands and the package names are in [desktop/README.md](desktop/README.md). Import, preview and export need FFmpeg. The browser UI is unchanged, and the installers still package the earlier webview shell.
+
 ## Quick start
 
 Run the container image of the latest release. The port is published on your computer only:

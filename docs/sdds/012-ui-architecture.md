@@ -1749,7 +1749,7 @@ The Playwright test `preview-vs-export`: for each golden case of `engine/export/
 
 ## 21. Desktop shell
 
-The packaged desktop application is RF-213 (BETA) and its shell is chosen in BETA (ADR-0023). This section fixes what the UI must not assume until then, and the detection page that informs that choice, which is built in ALPHA (ROADMAP task P2-DSK-001).
+The packaged desktop application is RF-213 (BETA). ADR-0023 wraps the browser UI in a system webview. ADR-0030 adds a native Gio editor in `desktop/gio` that calls `service.Service` in process; the browser UI is unchanged, and the webview shell in `desktop/shell` remains the window the installers ship until packaging is pointed at the Gio binary. This section still fixes what the browser UI must not assume, and the detection page that informed the webview choice (ROADMAP task P2-DSK-001).
 
 ### 21.1 What the UI must not assume
 

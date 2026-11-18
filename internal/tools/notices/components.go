@@ -55,7 +55,7 @@ var buildTargets = [][2]string{
 
 // goRoot is a Go module whose binary is shipped: the directory to run `go list`
 // in, the package to list, the targets it is built for and CGO_ENABLED. The
-// desktop shell is a nested module (ADR-0030) that links Wails v3, which needs
+// desktop shell is a nested module (ADR-0023) that links Wails v3, which needs
 // cgo on macOS and Linux; `go list` does not compile, so it needs no C compiler.
 type goRoot struct {
 	dir, pkg, cgo string
