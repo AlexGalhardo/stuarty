@@ -2,6 +2,11 @@
 # QA campaigns, test media, results and scripts) live in development/ and stay
 # out of git, by decision of the author (D-036).
 development/
+# The prompts the author pastes to open a session: the work-session prompt and the
+# prompts for the product icon. Local, in Portuguese, never committed.
+/prompt-workers.md
+/prompts-create-stuarty-icon.md
+/TODO.md
 # Local QA builds and the workspaces of test runs (servers write tokens there).
 /qa-build/
 .playwright-mcp/
