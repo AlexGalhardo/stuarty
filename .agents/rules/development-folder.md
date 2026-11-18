@@ -19,7 +19,8 @@ development/
 ├── README.md          the map of this folder, in Portuguese: what each file is, who writes it, when it is read
 ├── STATE.md           the current state of the work: branch, pull request, what each agent is doing, epics done and blocked,
 │                      what waits for the author, the commands that validate. Read first; written after every event
-├── QUESTIONS.md       questions for the author asked while they were away: options, the recommended one, the decision taken to keep going
+├── QUESTIONS.md       what the agents need from the author during the work: a confirmation or a manual action, with the options,
+│                      the recommended one and what was done meanwhile. Empty when nothing waits; an answered line leaves the file
 ├── brainstorming.md   the decisions of the author (D-NNN) that define Stuarty, from D-047; a new decision takes the next number
 ├── context/           the turn to Stuarty: estado-atual.md (the code on 2026-11-18), brainstorming-rodadas.md (questions and answers),
 │   │                  brainstorming-vukem-video-legado.md (decisions D-001 to D-046), changelog-docs.md (what the planning changed in the documents)
@@ -44,11 +45,11 @@ development/
 
 1. **Starting a session, and after every context compaction:** read `STATE.md` first, then `QUESTIONS.md` for what the author answered. Never start an epic again from memory.
 2. **The state.** After every event (an epic dispatched, handed off, reviewed, merged or blocked; an agent started or stopped) the orchestrator rewrites `STATE.md`: it describes now, not the story. The status of an epic is the Status column of `docs/plans/00-roadmap.md`; `STATE.md` only summarizes it and adds what the roadmap does not hold (who is working where, what waits for the author).
-3. **A STOP condition.** The agent that stops writes the question into `QUESTIONS.md` with the options, the one it recommends, what it did in order not to block the rest, and what the question blocks. The orchestrator marks the epic blocked in the roadmap and continues with work that does not depend on the answer.
-4. **A decision of the author.** The orchestrator records it as the next `D-NNN` in `brainstorming.md`, removes the question from `QUESTIONS.md` once it became a decision or code, and fixes the public document it changes.
+3. **A STOP condition.** `QUESTIONS.md` is where an agent asks the author for a confirmation (a decision only the author can take) or a manual action (something only the author can do on the machine or in an account: a download an agent may not make, a real sign-in, creating a developer app, approving a spend). The agent that stops adds the entry in the format of that file: the question with enough context to answer it without opening another file, the options with the recommended one first, the exact command or steps of a manual action, what it did in order not to block the rest, and what the entry blocks. It is not for a choice that is cheap to undo, nor for anything the epic, a specification, an ADR or a recorded decision already answers. The orchestrator marks the epic blocked in the roadmap and continues with work that does not depend on the answer.
+4. **An answer of the author.** The orchestrator records a decision as the next `D-NNN` in `brainstorming.md`, fixes the epic and the public documents it changes, and removes the entry from `QUESTIONS.md`: the file holds only what still waits, never a history.
 5. **A product problem.** Whoever finds a defect outside the scope of what it is doing adds a `VV-NNN` block at the end of `feedbacks/vukem-video.md`, in the format of that file, with the steps, what was expected, what happened, the evidence and where it should be fixed (an epic, or the queue). Only the orchestrator writes a status of fixed, after the specialist approved, and then moves the whole block to `vukem-video-resolvidas.md`.
 6. **A friction with vukem.** Whoever meets it adds a `VF-NNN` to `feedbacks/vukem.md` at once, checked against the vukem source, before working around anything (ADR-0047).
-7. **A briefing.** An epic never cites a path of this folder. The orchestrator copies into the briefing what the agent needs from here: the `VV` entries the epic closes, the decisions `D-NNN` that apply, the rules the author gave that are in `QUESTIONS.md` section 3.
+7. **A briefing.** An epic never cites a path of this folder. The orchestrator copies into the briefing what the agent needs from here: the `VV` entries the epic closes and the decisions `D-NNN` that apply.
 8. **The specialist** receives nothing from this folder beyond what the epic cites. A defect it finds and does not fix goes to the orchestrator, who records the `VV`.
 9. **Evidence.** A QA agent writes only under `tests/results/R<n>/<its name>/`; an intern writes reports and evidence only where its briefing says. Nobody edits the results of a finished round.
 
