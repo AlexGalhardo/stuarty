@@ -74,3 +74,4 @@ area:upgrade|c5def5|upgrade
 area:servicetest|c5def5|servicetest
 area:auth|c5def5|auth
 area:studio|c5def5|studio
+area:prd|c5def5|prd
