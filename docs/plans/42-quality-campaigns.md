@@ -10,6 +10,7 @@ Before the product is tested by hand from end to end, the numbers and the hard c
 - Author decisions D-073, D-084. PRD-001 NFR-001 to NFR-013; PRD-002 NFR-020 to NFR-025; PRD-003 NFR-040, NFR-041; PRD-004 NFR-061, NFR-062.
 - SDD-007 (the threat model), SDD-008 (the test strategy).
 - Absorbs the earlier plans on UI performance, goldens and export performance, fuzz, crash and soak, the security acceptance, and the agent surface budgets.
+- Open product issues this epic closes (their text comes in the briefing): VV-224 (browser specs that fail under parallel load and pass alone) and VV-228 (Go timing tests that fail under load). A flaky test is fixed at its cause, never with a skip, a retry or a sleep.
 
 ## Scope
 

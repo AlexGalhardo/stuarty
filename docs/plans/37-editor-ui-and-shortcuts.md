@@ -8,7 +8,7 @@ A creator who knows another editor feels at home in an afternoon: the shortcuts 
 
 - ADR-0041, ADR-0007, ADR-0013.
 - Author decisions D-073 (carried over from the earlier plan on shortcuts and the final UI), D-076 (the commit that simplified the projects and settings pages is not recovered). PRD-001 RF-074, RF-075.
-- SDD-012, `docs/design-system.md`. The open product issues are in the feedback queue of the project (`VV` entries); the orchestrator passes the list in the briefing.
+- SDD-012, `docs/design-system.md`. The open product issues are in the feedback queue of the project (`VV` entries); the orchestrator passes the list in the briefing. On 2026-11-18 the queue named VV-215 (the slip shortcuts do nothing) and VV-217 (on the desktop the import shortcut does not reach the import field) for this epic, plus the editor specs of VV-224.
 
 ## Scope
 
