@@ -9,6 +9,7 @@ An agent that connects to Stuarty finds a short list of tools that covers every 
 - ADR-0043 (few tools by intent, with a domain), ADR-0015 (the MCP server), ADR-0016 (the CLI), ADR-0017 (the HTTP API), ADR-0014 (contracts in JSON Schema).
 - Author decision D-069. PRD-002 RF-100 to RF-119, NFR-020 (token budget, revised once here), NFR-021 to NFR-025.
 - Absorbs the earlier plan on agent surface budgets and the harness.
+- Author decision D-088: `project_get` keeps accepting `detail: "document"` over MCP, like the CLI and the HTTP API (SDD-003 lists decision S-1 as withdrawn). The document is unbounded, so the revised budget of this epic states that this one call is outside the per-call ceiling and that the tool description says what it costs.
 
 ## Scope
 

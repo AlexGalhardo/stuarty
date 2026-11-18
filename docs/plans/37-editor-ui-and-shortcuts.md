@@ -67,6 +67,7 @@ A creator who knows another editor feels at home in an afternoon: the shortcuts 
 
 - **Shortcuts that collide with the browser or the webview.** Mitigation: the reserved list; tested in the Windows shell.
 - **A large number of open issues.** Mitigation: the briefing fixes the list; what does not fit goes back to the queue with a note.
+- **Checking a shortcut against another editor on the author's machine.** Screen automation on the author's Windows session runs only with the author's authorization at that moment, never on an agent's own initiative; without it, the preset is built from the research note `capcut-shortcuts` alone.
 - **STOP** at task 5.
 
 ## Size
