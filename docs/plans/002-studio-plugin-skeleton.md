@@ -3,7 +3,7 @@
 This plan answers how the studio kit becomes an installable Claude Code plugin in this repository, how its skills are checked on every lint, and how the generated editor skill reaches it without drifting.
 
 - Owner: senior-d (root files, `internal/tools/`, `web/cmd/gen-agent-docs/`, `.github/`)
-- Status: TODO
+- Status: IN PROGRESS (orchestrator, 2026-11-18)
 - Effort: M
 - Depends on: plan 001 (SDD-014 is the contract)
 - Written against: `8787714a`

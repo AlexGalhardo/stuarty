@@ -24,7 +24,7 @@ Ordered by value to the simplest use case first (short meme cuts of game footage
 | Plan | Title | Owner | Effort | Depends on | Status |
 | --- | --- | --- | --- | --- | --- |
 | [001](001-studio-architecture-records.md) | Record the studio direction: ADR-0031, SDD-014, PRD-004 | orchestrator | S | — | DONE (2026-11-18) |
-| [002](002-studio-plugin-skeleton.md) | The `studio/` plugin: layout, manifest, skill lint, editor skill, router skill | senior-d | M | 001 | TODO |
+| [002](002-studio-plugin-skeleton.md) | The `studio/` plugin: layout, manifest, skill lint, editor skill, router skill | senior-d | M | 001 | IN PROGRESS (orchestrator, 2026-11-18) |
 | [003](003-production-folder-and-memory.md) | Production folder and learnings memory as skills | senior-d, estagiario-1 | S-M | 002 | TODO |
 | [004](004-meme-cut-pilot.md) | Pilot: a vertical meme cut from game footage, end to end | senior-d, estagiario-2, orchestrator | M | 003 | TODO |
 | [005](005-agent-side-provider-skills.md) | Skills for agent-side generation: audio, images and video | senior-d, estagiario-1 | M | 003 | TODO |
