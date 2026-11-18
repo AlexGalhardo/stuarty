@@ -82,7 +82,7 @@ Written so that they can start the day their condition is met. They do not hold 
 | [43](43-desktop-on-macos-and-linux.md) | The desktop on macOS and Linux | M | real macOS and Linux machines | BLOCKED (no hardware) |
 | [44](44-reddit-connector.md) | Reddit | S | Reddit approving the author's application | BLOCKED (Reddit approval) |
 | [45](45-post-metrics.md) | Metrics of published posts | M | 19, 20, and the author's go | TODO (after publishing is solid) |
-| [46](46-own-ffmpeg-build.md) | The own FFmpeg build, signed and adopted | L | the author's decision on the OpenH264 download; a release to carry the assets | BLOCKED (author decision) |
+| [46](46-own-ffmpeg-build.md) | The own FFmpeg build, signed and adopted | L | a release to carry the assets (the H.264 question is settled: author decision D-087) | BLOCKED (no release yet) |
 | [47](47-one-renderer-everywhere.md) | One renderer everywhere: remove the Go compositor and PixiJS | M | 26, 43 | BLOCKED (three-system proof) |
 
 ## 2. Dependency graph
