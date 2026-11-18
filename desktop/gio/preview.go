@@ -146,8 +146,7 @@ func (ui *UI) transport(gtx layout.Context) layout.Dimensions {
 							return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 								layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 									if ui.clicked(gtx, "play") {
-										ui.playing = !ui.playing
-										ui.last = gtx.Now
+										ui.togglePlay()
 									}
 
 									return button(gtx, ui.th, ui.click("play"), play, colAccent, colBlack)

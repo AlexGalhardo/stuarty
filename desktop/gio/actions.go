@@ -629,6 +629,11 @@ func (ui *UI) reloadSync(ctx context.Context, id string) error {
 // HideProject keeps the project list and returns to the home screen.
 func (ui *UI) HideProject() {
 	ui.playing = false
+
+	if ui.stage != nil {
+		ui.stage.pause()
+	}
+
 	ui.projectID = ""
 	ui.doc = nil
 	ui.selected = ""

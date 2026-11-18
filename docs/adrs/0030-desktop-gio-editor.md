@@ -26,6 +26,6 @@ Gio (gioui.org) is an immediate-mode GUI toolkit in Go. It can draw the window. 
 
 ## Consequences
 
-Positive: a person can edit in a native window with the same commands an agent sends. Preview frames come from `ViewFrame`, the same path as export.
+Positive: a person can edit in a native window with the same commands an agent sends. Playback uses `export.NewSequenceRenderer`: the export's decoders stay open and read ahead, and the audio mix of an export is played in step with that clock. A paused scrub still asks for one composited frame. `ViewFrame` (one JPEG) stays the agent and browser path.
 
 Negative: two desktop windows exist until the installers are switched. The Gio window does not yet play proxy video, waveforms, captions word by word, or the rest of the browser inspector. Those gaps are listed on the release pull request. Audio is not played. A missing FFmpeg disables import, preview and export and leaves editing of text and shapes working.

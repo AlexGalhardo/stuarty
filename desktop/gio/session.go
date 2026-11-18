@@ -8,9 +8,11 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"sync"
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
 	"github.com/AlexGalhardo/vukem-video/service"
 	"github.com/AlexGalhardo/vukem-video/service/workspace"
 	"github.com/AlexGalhardo/vukem-video/web/app/agentdocs"
@@ -21,8 +23,11 @@ import (
 // the owner (ADR-0008): it does not start a second server, and every edit goes
 // through service.Service.
 type Session struct {
-	mu  sync.Mutex
-	own *owner.Owner
+	mu         sync.Mutex
+	own        *owner.Owner
+	runner     *ffmpeg.Runner
+	artifacts  string
+	ffmpegPath string
 }
 
 // Open locks the workspace and builds the service. An empty dir uses the
@@ -66,6 +71,42 @@ func (s *Session) Close() error {
 	defer s.mu.Unlock()
 
 	return s.own.Close()
+}
+
+// Engine is the FFmpeg runner, the artifacts directory and the ffmpeg binary.
+// The desktop preview uses them to keep a decoder open across frames. The
+// result is cached for the life of the session.
+func (s *Session) Engine(ctx context.Context) (*ffmpeg.Runner, string, string, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if s.runner != nil {
+		return s.runner, s.artifacts, s.ffmpegPath, nil
+	}
+
+	if s.own == nil {
+		return nil, "", "", errors.New("the workspace is not open")
+	}
+
+	dir := string(s.own.Dir)
+	in, err := ffmpeg.Discover(ctx, ffmpeg.Config{})
+	if err != nil {
+		return nil, "", "", err
+	}
+
+	runner, err := ffmpeg.NewRunner(in, dir)
+	if err != nil {
+		return nil, "", "", err
+	}
+
+	artifacts := filepath.Join(dir, "artifacts")
+	if err := os.MkdirAll(artifacts, 0o700); err != nil {
+		return nil, "", "", err
+	}
+
+	s.runner, s.artifacts, s.ffmpegPath = runner, artifacts, in.FFmpeg.Path()
+
+	return s.runner, s.artifacts, s.ffmpegPath, nil
 }
 
 func (s *Session) call(ctx context.Context) context.Context {

@@ -30,8 +30,21 @@ type Renderer struct {
 	rd *renderer
 }
 
-// NewRenderer makes the renderer and its work directory.
+// NewRenderer makes the renderer and its work directory. Each frame is independent:
+// a decoder is not kept open for the next frame. ViewFrame and the paused frame use this.
 func NewRenderer(ctx context.Context, cfg RenderConfig) (*Renderer, error) {
+	return newRenderer(ctx, cfg, true)
+}
+
+// NewSequenceRenderer is NewRenderer for frames asked in order, which is how an
+// export reads a clip. Decoders stay open and read ahead. A jump backwards, or
+// of more than the restart gap, starts the process at the new frame. Close ends
+// them. It is not safe for concurrent use, same as Renderer.
+func NewSequenceRenderer(ctx context.Context, cfg RenderConfig) (*Renderer, error) {
+	return newRenderer(ctx, cfg, false)
+}
+
+func newRenderer(ctx context.Context, cfg RenderConfig, single bool) (*Renderer, error) {
 	if cfg.Runner == nil || cfg.Doc == nil || cfg.ArtifactsDir == "" {
 		return nil, exportErr(
 			ReasonRender,
@@ -46,7 +59,8 @@ func NewRenderer(ctx context.Context, cfg RenderConfig) (*Renderer, error) {
 	}
 	job := &Job{Runner: cfg.Runner, Doc: cfg.Doc, JobID: cfg.JobID, ArtifactsDir: cfg.ArtifactsDir, Fonts: cfg.Fonts}
 	s := newState(ctx, job, dir, endFrame(cfg.Doc))
-	s.single = true
+	s.single = single
+
 	return &Renderer{s: s, rd: s.newRenderer(cfg.Bands)}, nil
 }
 

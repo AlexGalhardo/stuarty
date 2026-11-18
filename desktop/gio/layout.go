@@ -263,8 +263,7 @@ func (ui *UI) keys(gtx layout.Context) {
 
 		switch e.Name {
 		case key.NameSpace:
-			ui.playing = !ui.playing && ui.doc != nil
-			ui.last = time.Time{}
+			ui.togglePlay()
 		case key.NameDeleteBackward, key.NameDeleteForward:
 			ui.deleteSelected()
 		case "S":
@@ -290,7 +289,82 @@ func (ui *UI) editorFocused(gtx layout.Context) bool {
 	return false
 }
 
+func (ui *UI) togglePlay() {
+	if ui.doc == nil {
+		return
+	}
+
+	if ui.playing {
+		ui.playing = false
+
+		if ui.stage != nil {
+			ui.stage.pause()
+		}
+
+		return
+	}
+
+	ui.playing = true
+	ui.last = time.Time{}
+
+	if ui.stage != nil && !ui.stage.failed {
+		ui.stage.play(ui.doc, ui.revision, ui.playhead)
+	}
+}
+
+func (ui *UI) takePreview() {
+	if ui.stage == nil {
+		return
+	}
+
+	snap := ui.stage.snapshot()
+	if snap.seq > ui.seenSeq && snap.img != nil {
+		ui.seenSeq = snap.seq
+		ui.frame.img = snap.img
+		ui.frame.have = snap.at
+		ui.frame.err = ""
+
+		if !snap.playing {
+			ui.playhead = snap.at
+		}
+	}
+
+	if snap.err != "" {
+		ui.frame.err = snap.err
+	}
+
+	if snap.audio != "" && snap.audio != ui.audioNote {
+		ui.audioNote = snap.audio
+		ui.status = snap.audio
+	}
+
+	if snap.playing {
+		ui.playing = true
+		ui.playhead = snap.at
+		ui.stageWasOn = true
+
+		return
+	}
+
+	if ui.stageWasOn {
+		ui.playing = false
+		ui.playhead = snap.at
+		ui.stageWasOn = false
+	}
+}
+
 func (ui *UI) tick(gtx layout.Context) {
+	live := ui.stage != nil && !ui.stage.failed
+	if live {
+		ui.takePreview()
+
+		if ui.playing {
+			gtx.Execute(op.InvalidateCmd{At: gtx.Now.Add(time.Second / 30)})
+		}
+
+		return
+	}
+
 	if !ui.playing || ui.doc == nil {
 		ui.last = gtx.Now
 
@@ -339,6 +413,12 @@ func (ui *UI) seek(frame int) {
 
 	if frame > ui.endFrame() {
 		frame = ui.endFrame()
+	}
+
+	ui.playing = false
+
+	if ui.stage != nil {
+		ui.stage.pause()
 	}
 
 	ui.playhead = frame
