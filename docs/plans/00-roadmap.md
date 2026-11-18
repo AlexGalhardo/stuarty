@@ -4,6 +4,7 @@ The order of the work: which epics exist, what each depends on, what can run sid
 
 - There are no phases and no milestones. The first complete flow to deliver is a short vertical video with captions and a thumbnail, from the briefing to the publication (PRD-004 section 3); section 5 lists the epics that close it.
 - Epics are numbered in the order of dispatch. Two tracks run in parallel after the foundation: the platform (three seniors) and the editor (two seniors).
+- Every commit lands on the integration branch `release/0.30.0`, in the draft pull request #106 (codename "release 0.30.0"). The pull request is split into releases only after the QA campaign (section 4).
 - Written against commit `6fe3eca7`. After epic 02 the binary is `stuarty`; epics 03 onwards use the new names.
 
 ## 1. Status

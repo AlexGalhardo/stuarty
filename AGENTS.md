@@ -106,7 +106,7 @@ The author confirms before: a push or a merge to `main`, marking the pull reques
 
 ## 8. Git and shell
 
-- One integration branch carries the single draft pull request; each epic is a branch from it, in its own worktree outside the repository folder (`.agents/rules/git-and-branches.md`). The orchestrator pushes the integration branch after each approved epic; nobody else pushes, and nothing else is pushed.
+- One integration branch, `release/0.30.0`, carries the single draft pull request (#106, codename "release 0.30.0"), where every commit of the work is saved; each epic is a branch from it, in its own worktree outside the repository folder (`.agents/rules/git-and-branches.md`). The orchestrator pushes the integration branch after each approved epic; nobody else pushes, and nothing else is pushed.
 - Conventional Commits, one small self-contained commit per task of the epic, with `Refs: epic NN task N`.
 - Never `git stash`, `git checkout -- .`, `git reset --hard`, or a force push.
 - Chain with `&&`; never `;` before a push.
