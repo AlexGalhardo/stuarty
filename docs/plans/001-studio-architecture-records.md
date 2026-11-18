@@ -3,7 +3,7 @@
 This plan answers how the agent studio direction (author decisions D-041 to D-044) enters the public planning documents before any code or skill is written, so that every later plan cites a document instead of a conversation.
 
 - Owner: orchestrator (documents only)
-- Status: TODO
+- Status: DONE (2026-11-18). Drift refresh: ADR-0030 already records the Gio desktop editor, so the studio decision is ADR-0031. The checks below that named ADR-0030 mean ADR-0031.
 - Effort: S
 - Depends on: nothing
 - Written against: `8787714a`
@@ -40,9 +40,9 @@ ls docs/prds | tail -1                                                     # 003
 - Alternatives to record: native provider plugins in `service/` (rejected: reopens ADR-0020 and adds keys to the product); a project in the editor for every video (rejected: forces the editor into flows that do not need it); skills in a separate repository (rejected: two versions to keep in step with the generated editor skill).
 - Cite decisions as "author decision D-041" (never a path into the private folder).
 - Acceptance:
-  - [ ] `task lint` reports nothing for the new file.
-  - [ ] `docs/README.md` lists ADR-0030 with a one-line summary.
-  - [ ] the ADR contains no provider key and no path into the private maintainers' folder (`.agents/rules/development-folder.md` rule 1).
+  - [x] `task lint` reports nothing for the new file.
+  - [x] `docs/README.md` lists ADR-0031 with a one-line summary.
+  - [x] the ADR contains no provider key and no path into the private maintainers' folder (`.agents/rules/development-folder.md` rule 1).
 
 ### Step 2: Write SDD-014 "The studio kit"
 
@@ -71,9 +71,9 @@ ls docs/prds | tail -1                                                     # 003
   7. **Versioning and discovery**: the plugin version equals the product version; the router skill `video-studio` lists every other skill and when to choose it.
   8. Acceptance (the checks plan 002 automates).
 - Acceptance:
-  - [ ] `task lint` clean for the file.
-  - [ ] the example layout and both JSON examples parse (`python -c "import json,sys; json.load(open(sys.argv[1]))"` on each example extracted to a scratch file).
-  - [ ] SDD-000 is not changed by this card (the studio adds no operation, table or error code).
+  - [x] `task lint` clean for the file.
+  - [x] the example layout and both JSON examples parse (`python -c "import json,sys; json.load(open(sys.argv[1]))"` on each example extracted to a scratch file).
+  - [x] SDD-000 is not changed by this card (the studio adds no operation, table or error code).
 
 ### Step 3: Write PRD-004 "Agent studio" and its traceability rows
 
@@ -89,8 +89,8 @@ ls docs/prds | tail -1                                                     # 003
   - NFR-060 every skill passes the skill lint; NFR-061 a Haiku-class model completes the pilot of plan 004.
 - Update `docs/README.md` (PRD table) and `docs/traceability.md` by hand for the new rows (task-cards rule section 3 item 8).
 - Acceptance:
-  - [ ] the maintainers' traceability script (`.agents/rules/task-cards.md` section 3 item 8) lists RF-300..RF-306 with an ADR (0030) and an SDD (014 or 005).
-  - [ ] `task lint` clean.
+  - [x] the traceability rows list RF-300..RF-306 with ADR-0031 and SDD-014 (the task-card script named in the original line was retired by `.agents/rules/plans.md`).
+  - [x] `task lint` clean.
 
 ## 4. Out of scope
 

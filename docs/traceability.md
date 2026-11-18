@@ -141,7 +141,21 @@ How to read it: an empty SDD cell or an empty task cell is a gap and is listed a
 - BETA requirements whose specification is written in BETA, by design: RF-064. They have no command or SDD section yet. Each ROADMAP task that implements one starts with the amendment of the SDD it names (SDD-001, SDD-002, SDD-004, SDD-005 or SDD-012), accepted by the orchestrator before any code; until then the requirement text in the PRD is the only contract.
 - Requirements named by no ROADMAP task: none.
 
+## PRD-004: agent studio
+
+| ID | Phase | Requirement | SDD | ADR | ROADMAP tasks |
+| --- | --- | --- | --- | --- | --- |
+| RF-300 | S | An agent with only the plugin installed can produce a vertical video for each of the three use cases | SDD-014 | ADR-0031 | plan 004, plan 010 |
+| RF-301 | S | Every video has a production folder with the SDD-014 layout | SDD-014 | ADR-0031 | plan 003 |
+| RF-302 | S | An agent reads relevant learnings before planning and records new ones after delivery | SDD-014 | ADR-0031 | plan 003 |
+| RF-303 | S | An agent picks the simplest engine for the request and writes the reason in brief.md | SDD-014 | ADR-0031 | plan 008 |
+| RF-304 | S | Every asset has its origin and licence recorded | SDD-014 | ADR-0031 | plan 003, plan 006 |
+| RF-305 | S | An agent reverts a project to a revision in one call | SDD-014, SDD-005 | ADR-0031 | plan 007 |
+| RF-306 | S | An agent creates and lists named checkpoints and reads the diff between two revisions | SDD-014, SDD-005 | ADR-0031 | plan 009 |
+| NFR-060 |  | Every skill passes the skill lint | SDD-014 | ADR-0031 | plan 002 |
+| NFR-061 |  | A Haiku-class model completes the pilot of plan 004 | SDD-014 | ADR-0031 | plan 004 |
+
 ## Counts
 
-- Requirements: 116 (91 functional, 25 non-functional).
+- Requirements: 125 (98 functional, 27 non-functional).
 - ROADMAP tasks read: 245 (Prototype 44, ALPHA 135, BETA 47, Release 1.0 19).
