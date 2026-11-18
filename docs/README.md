@@ -2,13 +2,14 @@
 
 Everything needed to build Vukem Video, written so that an engineer who was not in the planning conversation can work from it. Read in this order: the three PRDs (what and why), the ADR list (how, in one page each), then the SDD of the area you are about to touch.
 
-Work is driven by the maintainers' task cards, a private work list kept outside version control (D-036); this folder holds only what defines the product. Names and numbering of the documents follow `.agents/rules/naming.md`: `prds/NNN-<slug>.md`, `adrs/NNNN-<slug>.md`, `sdds/NNN-<slug>.md`, decisions of the author `D-NNN` and research notes are kept by the maintainers outside version control and are cited by id or name only; a document is never renumbered or moved, and each starts with its title and a short paragraph that says what it answers.
+Work is driven by the plans of `plans/` (index `plans/README.md`): one plan is one unit of work that an agent executes and delivers, with its steps, acceptance commands and status (rule `.agents/rules/plans.md`). The other folders hold what defines the product. Names and numbering of the documents follow `.agents/rules/naming.md`: `prds/NNN-<slug>.md`, `adrs/NNNN-<slug>.md`, `sdds/NNN-<slug>.md`, decisions of the author `D-NNN` and research notes are kept by the maintainers outside version control and are cited by id or name only; a document is never renumbered or moved, and each starts with its title and a short paragraph that says what it answers.
 
 ## Reading map
 
 | You want to | Read |
 | --- | --- |
 | know what the product is and what is in or out of scope | `prds/001-editor-mvp.md` |
+| know what to build next, in what order, and how to verify it | `plans/README.md`, then the plan you were given |
 | know how an agent uses it | `prds/002-agent-operability.md`, then `sdds/003-agent-interfaces.md` |
 | use a name (operation, table, error code, variable) | `sdds/000-shared-definitions.md` |
 | change the document format | `sdds/001-timeline-schema.md` |

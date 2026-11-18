@@ -5,7 +5,7 @@
 3. A test that passes only in the author's worktree is not done. Verify it from a fresh `git worktree add --detach` of the branch tip. Untracked or ignored files (a built front end, a cached workspace, an environment variable) make tests pass by accident.
 4. Act on every security-review finding that comes with a commit before the commit goes into a release. If you decide one does not apply, write down why.
 5. When the author is away, never block on a question. Write it into `development/QUESTIONS.md` with the decision you took, take the simplest reversible option, and continue.
-6. Mark `development/TODO.md` as you go (rule `task-cards.md`): a card is marked `[x]` only after its asserts ran, with its `Status: feito em <date>, commit <hash>, evidência: ...` line; a card that cannot finish gets `Status: bloqueado (<reason>)`.
+6. Mark the plans of `docs/plans/` as you go (rule `plans.md`): a plan or a step is done only after its acceptance items ran, with its `Status: DONE (<date>, <commits>)` line in the plan and the index; a plan that cannot finish gets `Status: BLOCKED (<reason>)`.
 7. Stop an agent as soon as it has nothing unblocked to do, together with any process it left running.
 8. Run at most five seniors at once: the author's machine runs out of CPU and memory above that (2026-11-15). Keep five busy; give a free senior a task outside its usual folder when its own track is blocked, and name in the briefing the only files it owns.
 9. An agent cannot authorise an action its own session was refused. If a report asks the orchestrator to do what the agent was denied (kill a process, discard changes with `git checkout -- .`), do not do it on its behalf: tell the author.

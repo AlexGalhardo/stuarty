@@ -5,7 +5,8 @@ The team protocol, the layout of the repository and the rules of the project are
 @AGENTS.md
 
 - Local work files: `development/` (git-ignored, in Portuguese; layout fixed by `.agents/rules/development-folder.md`).
-- New work: `development/TODO.md`, epics and task cards (format and completion protocol in `.agents/rules/task-cards.md`). Fixes: the issue queue of `development/feedbacks/vukem-video.md`, worked by one dedicated feedback agent in parallel (same rule, section 5).
+- New work: the plans of `docs/plans/` (index `docs/plans/README.md`; one plan is one unit of work; format and completion protocol in `.agents/rules/plans.md`). Fixes: the issue queue of `development/feedbacks/vukem-video.md`, worked by one dedicated feedback agent in parallel (same rule, section 5).
+- One UI: the desktop app (Wails v3) is a window over the same web UI the binary serves; write a page once in `web/resources/`.
 - Prompt that starts a work session: `development/PROMPT.md`. Its last section is the current state of the work: update it at the end of a session, and read it first after a context compaction.
 - Feedback: `development/feedbacks/vukem-video.md` (product issues `VV-NNN`) and `development/feedbacks/vukem.md` (framework frictions `VF-NNN`).
 - Real-use QA campaigns and benchmark history: `development/tests/PLAN.md`.

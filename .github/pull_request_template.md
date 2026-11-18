@@ -8,7 +8,7 @@ it writes the sections below from the commits, each linked by its hash.
 Release pull request for **vX.Y.Z**: every microcommit since the previous tag lands on `main` as it is (rebase-merge, ADR-0028). After the merge, the tag `vX.Y.Z` is pushed with the author's yes.
 
 - Commits since the previous tag: N (target: about 90 per release, D-026)
-- Tasks: <!-- ids of the task cards (TASK-NNNN) this release closes -->
+- Plans: <!-- numbers of the plans of docs/plans/ (and their steps) this release delivers -->
 - Docs page: <!-- path of the guide page under site/content/docs/ that a feat commit changes or adds; "none" with the reason when no page applies -->
 
 ### Added
@@ -36,7 +36,7 @@ Release pull request for **vX.Y.Z**: every microcommit since the previous tag la
 - [ ] Title is `chore(release): vX.Y.Z updates`; every commit is a Conventional Commit with an allowed scope and a `Refs:` line
 - [ ] The body was refreshed with `task release:pr-body` after the last push
 - [ ] All required checks are green on the three runners
-- [ ] The asserts of every task card named above were run, and the commands with their exit codes are in this description or in the `Status` line of each card
+- [ ] The acceptance items of every plan named above were run, and the commands with their exit codes are in this description or in the `Status` line of each plan
 - [ ] Thin-client rule: no editing rule or edit result is computed in `web/`, a handler or a tool
 - [ ] Changed contracts: `task codegen` run and the generated files committed
 - [ ] New dependencies: approved by the author, exact versions; `task notices` run and `THIRD_PARTY_NOTICES.md` and `licenses/` committed (a Dependabot update that changes `go.mod`, `go.sum` or `web/bun.lock` fails `Notices` until a maintainer does this on its branch)

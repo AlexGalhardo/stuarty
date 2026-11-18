@@ -1,12 +1,14 @@
 # AGENTS.md: how the team works on Vukem Video
 
-Read this file first, then the current state at the end of `development/PROMPT.md` and the open cards of `development/TODO.md`. Together with `docs/` and `.agents/rules/` they are enough to start working without asking the author anything.
+Read this file first, then the current state at the end of `development/PROMPT.md` and the index of plans in `docs/plans/README.md`. Together with `docs/` and `.agents/rules/` they are enough to start working without asking the author anything.
 
 ## 1. What this is
 
 **Vukem Video** is a minimalist, open source (MIT) video editor, web first and desktop later, built to be operated by AI agents (through MCP, a CLI and an HTTP API) as first-class users. A person edits the same project in a browser UI. Both go through one command core, so a human and an agent see the same result. Two use cases drive every priority: short vertical videos with captions for social networks, and product commercials.
 
-The product is built in public releases (`CHANGELOG.md`). What defines it: research (`development/search/`, private) and decisions of the author (`development/brainstorming.md`, `D-NNN`, private; D-037), requirements (`docs/prds/`), architecture decisions (`docs/adrs/`), specifications (`docs/sdds/`). What is left to do: new work in the epics and task cards of `development/TODO.md`, and fixes in the issue queue of `development/feedbacks/vukem-video.md` (rule `.agents/rules/task-cards.md`).
+The product is built in public releases (`CHANGELOG.md`). What defines it: research (`development/search/`, private) and decisions of the author (`development/brainstorming.md`, `D-NNN`, private; D-037), requirements (`docs/prds/`), architecture decisions (`docs/adrs/`), specifications (`docs/sdds/`). What is left to do: new work in the plans of `docs/plans/` (index `docs/plans/README.md`, one plan is one unit of work), and fixes in the issue queue of `development/feedbacks/vukem-video.md` (rule `.agents/rules/plans.md`).
+
+Direction since 2026-11-18 (author decisions D-041 to D-046): the editor stays an editing toolkit with no intelligence and no outbound capability; agents generate assets with the providers' own tools, download clips, keep memory and choose the engine (HyperFrames, Remotion or the editor) on their side, guided by the studio plugin of plans 001-010. **There is one UI:** the desktop application (Wails v3, `desktop/shell/app/`) is a native window over the same web UI that the same binary serves (ADR-0023), so every page, the editor and the home dashboard of plan 012 are written once in `web/resources/` and appear in both; only native menus, file dialogs, drops and updates belong to the shell.
 
 ## 2. Where things are
 
@@ -17,20 +19,19 @@ C:/dev/vukem-video/                 THE PRODUCT REPOSITORY (remote AlexGalhardo/
 ├── .agents/                        rules/ (always apply) and skills/ (procedures); start with .agents/README.md
 ├── development/                    local work files only, git-ignored, in Portuguese (D-036, rule development-folder.md)
 │   ├── README.md                   the map of the folder
-│   ├── TODO.md                     new work: epics and task cards (rule task-cards.md)
 │   ├── PROMPT.md                   the prompt that starts a work session; its last section is the current state
 │   ├── QUESTIONS.md                questions for the author asked while they were away, with the decision taken
 │   ├── feedbacks/                  vukem-video.md (product issues VV-NNN), vukem.md (framework frictions VF-NNN)
 │   ├── tests/                      PLAN.md (QA campaign and benchmark history), inventory/, assets/, bench/, results/
 │   └── scripts/                    traceability.py, build-todo.py
 ├── plans/                          advisor plans of the improve skill, git-ignored
-├── docs/                           prds/, adrs/, sdds/, README.md (index), traceability.md, design-system.md
+├── docs/                           prds/, adrs/, sdds/, plans/ (the work, one plan per unit), README.md (index), traceability.md, design-system.md
 ├── scripts/                        versioned scripts, gate.sh (the full local release gate: task gate)
 ├── spikes/                         disposable experiments, never promoted to product code
 └── web/, core/, engine/, service/, site/, desktop/ ...  the product
 ```
 
-- Paths inside task cards are relative to the repository root.
+- New work: `docs/plans/NNN-<slug>.md`, in English, with the index `docs/plans/README.md` (rule `.agents/rules/plans.md`). Paths inside plans are relative to the repository root.
 - `development/` is git-ignored (D-036, which replaces D-025): nothing in it is published, and nothing outside it may reference it. Its layout, names and languages are fixed by `.agents/rules/development-folder.md`; names elsewhere by `.agents/rules/naming.md`.
 - A clone of the vukem framework, if kept, lives outside this repository; never commit it. Parallel worktrees live in `C:/dev/vukem-video-worktrees/`.
 - After task P1-REL-003 the product has `core/`, `engine/`, `service/`, `web/`, `site/` (ADR-0001).
@@ -52,7 +53,7 @@ C:/dev/vukem-video/                 THE PRODUCT REPOSITORY (remote AlexGalhardo/
 
 | Role | Who | Does | Model |
 | --- | --- | --- | --- |
-| Orchestrator | the main session | plans the session, writes the briefings, reviews and audits every delivery, fixes the last defects itself, runs git wiring, merges, pushes and releases, marks `[x]` on the cards of `development/TODO.md` | the model chosen with the author at session start |
+| Orchestrator | the main session | plans the session, writes the briefings, reviews and audits every delivery, fixes the last defects itself, runs git wiring, merges, pushes and releases, marks the plans of `docs/plans/` done | the model chosen with the author at session start |
 | Senior | `senior-a` to `senior-e` | implements: features, fixes, migrations, tests | Sonnet |
 | Intern | `estagiario-1`, `estagiario-2` | mechanical, checkable work: translations, catalogue keys, running a suite and reporting, building fixtures, gathering data | Haiku |
 
@@ -66,23 +67,23 @@ Each senior has a stable area, so that two never edit the same folder:
 | senior-d | agent surfaces, documentation site, releases and CI | `web/app/mcp/`, `web/app/cli/`, `web/app/agentdocs/`, `web/cmd/gen-agent-docs/`, `web/contract/`, `site/`, `.github/`, `.config/`, `internal/tools/`, `scripts/`, `licenses/`, root files |
 | senior-e | editor UI, desktop shell | `web/resources/`, `web/scripts/`, `web/package.json`, `web/biome.json`, `web/e2e/`, `desktop/` |
 
-Generated folders are written only by the generators. A task with more than one owner is one branch on which the owners work one after the other. Interns write no code: scripts, tests and scenarios belong to the senior named in the card. A card that crosses two areas is split into one card per owner (`.agents/rules/task-cards.md` section 2).
+Generated folders are written only by the generators. A task with more than one owner is one branch on which the owners work one after the other. Interns write no code: scripts, tests and scenarios belong to the senior named in the card. A plan that crosses two areas gives each step one owner, and the owners work one after the other on one branch (`.agents/rules/plans.md` section 1).
 
 Dispatch by the named type (`senior-a`, never the generic `senior`), and never reuse a name while an agent with that name is alive. Stop an agent as soon as its delivery is reviewed, together with any process it left running.
 
 ## 5. Starting a session
 
-1. Read the current state at the end of `development/PROMPT.md`, this file, `.agents/rules/` and the open cards of `development/TODO.md`, highest priority first (`P0` before `P1`).
+1. Read the current state at the end of `development/PROMPT.md`, this file, `.agents/rules/` and `docs/plans/README.md` (execution order and status).
 2. Follow the author's global instructions for the session start (model and effort are chosen with the author; questions go through the question tool, one at a time, with a recommended option first).
-3. Pick the next cards whose `Depende de` are marked and whose `Arquivos` do not intersect. One agent per card. In parallel, one senior is the feedback agent: it fixes the open issues of `development/feedbacks/vukem-video.md` one at a time, lowest number first (`.agents/rules/task-cards.md` section 5). Parallel agents and worktrees need the author's explicit yes.
-4. For each card, write a briefing (section 6), dispatch, and keep working on what does not depend on the answer.
-5. At the end, or before a context compaction, refresh the last section of `development/PROMPT.md` (the current state): cards done, commands that validate, decisions taken, what is open.
+3. Pick the next plans whose dependencies are done and whose files do not intersect. One agent (or one sequence of owners on one branch) per plan. In parallel, one senior is the feedback agent: it fixes the open issues of `development/feedbacks/vukem-video.md` one at a time, lowest number first (`.agents/rules/plans.md` section 5). Parallel agents and worktrees need the author's explicit yes.
+4. For each plan, write a briefing (section 6), dispatch, and keep working on what does not depend on the answer.
+5. At the end, or before a context compaction, refresh the last section of `development/PROMPT.md` (the current state): plans done, commands that validate, decisions taken, what is open.
 
 ## 6. A briefing
 
 A delegated engineer knows only what the briefing says. It contains:
 
-- the card copied whole from `development/TODO.md` (id, type, origin, context, files, commit, asserts); the engineer reads the `Contexto` sections first;
+- the path of the plan in `docs/plans/` and the steps it owns; the engineer reads the whole plan and runs its drift check first;
 - the goal in one sentence and why it matters;
 - the files and folders it owns, and the ones it must not touch;
 - the acceptance: the asserts of the task, as commands to run;
@@ -92,7 +93,7 @@ A delegated engineer knows only what the briefing says. It contains:
 
 ## 7. Review and completion
 
-The protocol is in `.agents/rules/task-cards.md` section 3. Every delivery is verified with `.agents/skills/verify/` (`--full`), whose checks come from the default branch; review findings follow `REVIEW.md`, and a failure that survives three fix rounds goes to the author. In short: a report is a claim, not evidence. The orchestrator reads the diff (`git diff --stat` first, and reverts anything outside the briefing), runs the asserts, fixes or sends back, and only then marks the card `[x]` with its `Status` line (date, commit, evidence). One pull request per release (D-031): the branch `release/vX.Y.Z` collects the task branches (the orchestrator cherry-picks or fast-forwards them in, never force pushes), the pull request is titled `chore(release): vX.Y.Z updates`, holds about 90 microcommits, has its body refreshed with `task release:pr-body -- vX.Y.Z` (Added, Changed, Removed, Fixed, Security with linked commit hashes) and is rebase-merged so every microcommit reaches `main` (ADR-0028). Seniors branch from the open `release/vX.Y.Z` and never open pull requests; each commit is small and self-contained. Nobody else pushes. `main` is protected by the ruleset `protect-main`: no direct commit or push to `main`, ever, including releases: every change, the release commit of `v0.3.0` and later included, goes through a pull request whose required checks are green and which is up to date with `main`.
+The protocol is in `.agents/rules/plans.md` section 3. Every delivery is verified with `.agents/skills/verify/` (`--full`), whose checks come from the default branch; review findings follow `REVIEW.md`, and a failure that survives three fix rounds goes to the author. In short: a report is a claim, not evidence. The orchestrator reads the diff (`git diff --stat` first, and reverts anything outside the briefing), runs the asserts, fixes or sends back, and only then ticks the plan's acceptance items and writes its `Status` line (date, commits) in the plan and in `docs/plans/README.md`. One pull request per release (D-031): the branch `release/vX.Y.Z` collects the task branches (the orchestrator cherry-picks or fast-forwards them in, never force pushes), the pull request is titled `chore(release): vX.Y.Z updates`, holds about 90 microcommits, has its body refreshed with `task release:pr-body -- vX.Y.Z` (Added, Changed, Removed, Fixed, Security with linked commit hashes) and is rebase-merged so every microcommit reaches `main` (ADR-0028). Seniors branch from the open `release/vX.Y.Z` and never open pull requests; each commit is small and self-contained. Nobody else pushes. `main` is protected by the ruleset `protect-main`: no direct commit or push to `main`, ever, including releases: every change, the release commit of `v0.3.0` and later included, goes through a pull request whose required checks are green and which is up to date with `main`.
 
 The author confirms before: the first push of the repository, a release tag, repository settings, secrets, anything paid, a new dependency.
 
@@ -118,7 +119,7 @@ The author confirms before: the first push of the repository, a release tag, rep
 | `go test -run TestSecurity_ ./...` | the security suite |
 | `bash .agents/skills/verify/scripts/verify.sh --quick` / `--full` | the verification loop (`.agents/skills/verify/`): the checks of what changed; `--full` adds the gate and the end-to-end smoke test (`scripts/smoke-e2e.sh`, boots the product and exports through the CLI). Required before a pull request |
 | `task gate -- <tag>` (run inside the worktree) | the full local release gate (lint on three GOOS, tidy, notices, threatcheck, ffmpegpins, agent docs, Go tests, security suite, web, Markdown, leaks, site, commits); used instead of CI while the pull-request workflows are disabled until the BETA exit |
-| `python development/scripts/traceability.py` | regenerates `docs/traceability.md` from the PRDs, the SDDs and the cards of `development/TODO.md` |
+| `python development/scripts/traceability.py` | lists the requirements of the PRDs with no SDD or ADR (it read the retired task cards for open work; update `docs/traceability.md` by hand for the requirements a plan touches) |
 | `bash scripts/build-renderer.sh` (after P5-REL-001) | builds the Rust renderer natively and to WebAssembly, reproducibly |
 | `cargo fmt --check && cargo clippy -- -D warnings && cargo test && cargo deny check` (in `renderer/`) | the Rust gate (rule `.agents/rules/rust.md`) |
 

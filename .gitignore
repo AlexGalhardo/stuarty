@@ -7,15 +7,13 @@ development/
 .playwright-mcp/
 
 # Advisor plans of the improve skill: local working files, never committed.
-plans/
+# Anchored to the root: docs/plans/ holds the versioned plans (.agents/rules/plans.md).
+/plans/
 
 # The decisions of the author and the research notes are private since D-037;
 # they live in development/ and must never come back under docs/.
 docs/brainstorming.md
 docs/search/
-
-# Advisor plans of the improve skill: local working files, never committed.
-plans/
 
 # Dependencies, builds and caches
 node_modules/
