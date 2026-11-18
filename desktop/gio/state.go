@@ -97,6 +97,10 @@ type UI struct {
 	drag           dragState
 	boundSelection string
 
+	stage       *stage
+	seenSeq     int
+	stageWasOn  bool
+	audioNote   string
 	clicks      map[string]*widget.Clickable
 	nameEd      widget.Editor
 	textEd      widget.Editor
@@ -131,6 +135,10 @@ func New(sess *Session, fail error) *UI {
 	ui.projectList.Axis = layout.Vertical
 	ui.fileList.Axis = layout.Vertical
 
+	if sess != nil {
+		ui.stage = newStage(sess, nil)
+	}
+
 	if fail != nil {
 		ui.fatal = errText(fail)
 	}
@@ -139,7 +147,13 @@ func New(sess *Session, fail error) *UI {
 }
 
 // SetWake is called when a background result is ready and the window should redraw.
-func (ui *UI) SetWake(fn func()) { ui.wake = fn }
+func (ui *UI) SetWake(fn func()) {
+	ui.wake = fn
+
+	if ui.stage != nil {
+		ui.stage.wake = fn
+	}
+}
 
 func (ui *UI) post(fn func()) {
 	ui.mu.Lock()
@@ -242,6 +256,8 @@ func (ui *UI) show(got *service.ProjectGetResult, media []service.MediaEntry) {
 	if ui.playhead > ui.endFrame() {
 		ui.playhead = ui.endFrame()
 	}
+
+	ui.requestFrame()
 }
 
 func (ui *UI) reload(ctx context.Context, id string) error {
@@ -265,6 +281,12 @@ func (ui *UI) reload(ctx context.Context, id string) error {
 
 func (ui *UI) requestFrame() {
 	if ui.sess == nil || ui.doc == nil || ui.projectID == "" {
+		return
+	}
+
+	if ui.stage != nil && !ui.stage.failed {
+		ui.stage.show(ui.doc, ui.revision, ui.playhead)
+
 		return
 	}
 

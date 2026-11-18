@@ -23,6 +23,7 @@ type options struct {
 	demo      bool
 	shot      string
 	home      string
+	gallery   string
 	limit     time.Duration
 }
 
@@ -35,6 +36,15 @@ func main() {
 
 	sess, openErr := gioapp.Open(dir)
 	ui := gioapp.New(sess, openErr)
+
+	if opt.gallery != "" {
+		if err := runGallery(ui, sess, opt.gallery); err != nil {
+			exit(err)
+		}
+
+		return
+	}
+
 	if opt.shot != "" || opt.home != "" || opt.demo {
 		if err := writeShots(ui, sess, dir, temp, opt); err != nil {
 			exit(err)
@@ -57,17 +67,18 @@ func parseOptions() options {
 	demo := flag.Bool("demo", false, "create a sample project and open it")
 	shot := flag.String("screenshot", "", "write a PNG of the editor and exit")
 	home := flag.String("screenshot-home", "", "write a PNG of the project list and exit")
+	gallery := flag.String("gallery", "", "write the editor screenshots into this directory and exit")
 	seconds := flag.Int("seconds", 0, "close the window after this many seconds (0 keeps it open)")
 	flag.Parse()
 
 	return options{
-		workspace: *workspace, demo: *demo, shot: *shot, home: *home,
+		workspace: *workspace, demo: *demo, shot: *shot, home: *home, gallery: *gallery,
 		limit: time.Duration(*seconds) * time.Second,
 	}
 }
 
 func pickDir(opt options) (string, bool, error) {
-	if (opt.shot != "" || opt.home != "") && opt.workspace == "" {
+	if (opt.shot != "" || opt.home != "" || opt.gallery != "") && opt.workspace == "" {
 		dir, err := os.MkdirTemp("", "vukem-gio-")
 
 		return dir, true, err
@@ -110,6 +121,17 @@ func writeShots(ui *gioapp.UI, sess *gioapp.Session, dir string, temp bool, opt 
 	return nil
 }
 
+func runGallery(ui *gioapp.UI, sess *gioapp.Session, dir string) error {
+	if sess == nil {
+		return errOpen
+	}
+
+	defer ui.ClosePreview()
+	defer func() { _ = sess.Close() }()
+
+	return ui.Gallery(dir)
+}
+
 var errOpen = errors.New("the workspace is not open")
 
 func runWindow(ui *gioapp.UI, sess *gioapp.Session, limit time.Duration) {
@@ -123,6 +145,8 @@ func runWindow(ui *gioapp.UI, sess *gioapp.Session, limit time.Duration) {
 		ui.SetWake(w.Invalidate)
 
 		err := loop(w, ui, limit)
+		ui.ClosePreview()
+
 		if sess != nil {
 			_ = sess.Close()
 		}
