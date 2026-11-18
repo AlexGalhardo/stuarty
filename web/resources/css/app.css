@@ -79,7 +79,7 @@
 	--font-heading: var(--font-sans);
 	--font-sans: "Geist Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 
-	/* shadcn base */
+	/* Base UI surfaces. The names stay so existing utilities keep working. */
 	--color-sidebar-ring: var(--sidebar-ring);
 	--color-sidebar-border: var(--sidebar-border);
 	--color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -157,73 +157,72 @@
 }
 
 :root {
-	/* shadcn base (section 2.3). Changed against the shadcn defaults, for contrast:
-	   muted-foreground, destructive, input, ring, sidebar-ring. */
-	--background: oklch(1 0 0);
-	--foreground: oklch(0.145 0 0);
+	/* Light chrome, the same hues as the Gio desktop palette. */
+	--background: oklch(0.967 0.003 264.5);
+	--foreground: oklch(0.230 0.012 264.3);
 	--card: oklch(1 0 0);
-	--card-foreground: oklch(0.145 0 0);
+	--card-foreground: oklch(0.230 0.012 264.3);
 	--popover: oklch(1 0 0);
-	--popover-foreground: oklch(0.145 0 0);
-	--primary: oklch(0.205 0 0);
-	--primary-foreground: oklch(0.985 0 0);
-	--secondary: oklch(0.97 0 0);
-	--secondary-foreground: oklch(0.205 0 0);
-	--muted: oklch(0.97 0 0);
-	--muted-foreground: oklch(0.5 0 0);
-	--accent: oklch(0.97 0 0);
-	--accent-foreground: oklch(0.205 0 0);
-	--destructive: oklch(0.55 0.22 27.325);
-	--border: oklch(0.922 0 0);
-	--input: oklch(0.62 0 0);
-	--ring: oklch(0.45 0.18 250);
-	--chart-1: oklch(0.87 0 0);
-	--chart-2: oklch(0.556 0 0);
-	--chart-3: oklch(0.439 0 0);
-	--chart-4: oklch(0.371 0 0);
-	--chart-5: oklch(0.269 0 0);
-	--radius: 0.625rem;
-	--sidebar: oklch(0.985 0 0);
-	--sidebar-foreground: oklch(0.145 0 0);
-	--sidebar-primary: oklch(0.205 0 0);
-	--sidebar-primary-foreground: oklch(0.985 0 0);
-	--sidebar-accent: oklch(0.97 0 0);
-	--sidebar-accent-foreground: oklch(0.205 0 0);
-	--sidebar-border: oklch(0.922 0 0);
-	--sidebar-ring: oklch(0.45 0.18 250);
+	--popover-foreground: oklch(0.230 0.012 264.3);
+	--primary: oklch(0.520 0.094 223.1);
+	--primary-foreground: oklch(1 0 0);
+	--secondary: oklch(0.931 0.006 264.5);
+	--secondary-foreground: oklch(0.230 0.012 264.3);
+	--muted: oklch(0.931 0.006 264.5);
+	--muted-foreground: oklch(0.446 0.026 256.8);
+	--accent: oklch(0.931 0.006 264.5);
+	--accent-foreground: oklch(0.230 0.012 264.3);
+	--destructive: oklch(0.500 0.200 17.6);
+	--border: oklch(0.872 0.012 259.8);
+	--input: oklch(0.446 0.026 256.8);
+	--ring: oklch(0.520 0.094 223.1);
+	--chart-1: oklch(0.546 0.215 262.9);
+	--chart-2: oklch(0.527 0.137 150.1);
+	--chart-3: oklch(0.496 0.237 301.9);
+	--chart-4: oklch(0.553 0.174 38.4);
+	--chart-5: oklch(0.525 0.199 4.0);
+	--radius: 0.25rem;
+	--sidebar: oklch(1 0 0);
+	--sidebar-foreground: oklch(0.230 0.012 264.3);
+	--sidebar-primary: oklch(0.520 0.094 223.1);
+	--sidebar-primary-foreground: oklch(1 0 0);
+	--sidebar-accent: oklch(0.931 0.006 264.5);
+	--sidebar-accent-foreground: oklch(0.230 0.012 264.3);
+	--sidebar-border: oklch(0.872 0.012 259.8);
+	--sidebar-ring: oklch(0.520 0.094 223.1);
 
 	/* semantic states, agent attribution and brand (section 2.4) */
-	--success: oklch(0.5 0.13 150);
-	--warning: oklch(0.52 0.12 70);
-	--info: oklch(0.5 0.15 250);
-	--agent: oklch(0.5 0.1 190);
-	--brand: oklch(0.511 0.262 276.966);
-	--brand-foreground: oklch(0.985 0 0);
+	--success: oklch(0.480 0.130 150.1);
+	--warning: oklch(0.480 0.150 38.4);
+	--info: oklch(0.520 0.094 223.1);
+	--agent: oklch(0.496 0.237 301.9);
+	--brand: oklch(0.520 0.094 223.1);
+	--brand-foreground: oklch(1 0 0);
 
-	/* editor (section 2.5) */
-	--ed-bg: oklch(0.97 0 0);
+	/* editor (section 2.5), matching the Gio light palette */
+	--ed-bg: oklch(0.967 0.003 264.5);
 	--ed-panel: oklch(1 0 0);
-	--ed-timeline: oklch(0.95 0 0);
-	--ed-track-line: oklch(0.62 0 0);
-	--ed-item-clip: oklch(0.8 0.08 250);
-	--ed-item-clip-fg: oklch(0.2 0 0);
-	--ed-item-audio: oklch(0.8 0.08 150);
-	--ed-item-audio-fg: oklch(0.2 0 0);
-	--ed-item-text: oklch(0.84 0.1 80);
-	--ed-item-text-fg: oklch(0.2 0 0);
-	--ed-item-caption: oklch(0.82 0.08 300);
-	--ed-item-caption-fg: oklch(0.2 0 0);
-	--ed-item-shape: oklch(0.82 0.08 350);
-	--ed-item-shape-fg: oklch(0.2 0 0);
-	--ed-playhead: oklch(0.55 0.22 25);
-	--ed-marker: oklch(0.6 0.16 250);
-	--ed-selection: oklch(0.45 0.18 250);
-	--ed-snap: oklch(0.5 0.15 90);
-	--ed-ghost: oklch(0.45 0.18 250 / 0.75);
-	--ed-safe-area: oklch(0.5 0.15 90);
-	--ed-error-flash: oklch(0.55 0.22 25);
-	--ed-preview-surround: oklch(0.2 0 0);
-	--ed-handle: oklch(0.85 0.12 230);
+	--ed-timeline: oklch(0.931 0.006 264.5);
+	--ed-track-line: oklch(0.446 0.026 256.8);
+	--ed-item-clip: oklch(0.546 0.215 262.9);
+	--ed-item-clip-fg: oklch(1 0 0);
+	--ed-item-audio: oklch(0.527 0.137 150.1);
+	--ed-item-audio-fg: oklch(1 0 0);
+	--ed-item-text: oklch(0.496 0.237 301.9);
+	--ed-item-text-fg: oklch(1 0 0);
+	--ed-item-caption: oklch(0.525 0.199 4.0);
+	--ed-item-caption-fg: oklch(1 0 0);
+	--ed-item-shape: oklch(0.553 0.174 38.4);
+	--ed-item-shape-fg: oklch(1 0 0);
+	--ed-playhead: oklch(0.210 0.032 264.7);
+	--ed-marker: oklch(0.520 0.094 223.1);
+	--ed-selection: oklch(1 0 0);
+	--ed-snap: oklch(0.520 0.094 223.1);
+	--ed-ghost: oklch(0.210 0.032 264.7 / 0.9);
+	--ed-safe-area: oklch(0.520 0.094 223.1);
+	--ed-error-flash: oklch(0.586 0.222 17.6);
+	--ed-preview-surround: oklch(0.927 0.007 260.7);
+	--ed-handle: oklch(0.520 0.094 223.1);
 
 	/* motion (section 2.13): the editor animates from BETA, always through
 	   these tokens and never under prefers-reduced-motion */
@@ -235,68 +234,69 @@
 }
 
 .dark {
-	--background: oklch(0.145 0 0);
-	--foreground: oklch(0.985 0 0);
-	--card: oklch(0.205 0 0);
-	--card-foreground: oklch(0.985 0 0);
-	--popover: oklch(0.205 0 0);
-	--popover-foreground: oklch(0.985 0 0);
-	--primary: oklch(0.922 0 0);
-	--primary-foreground: oklch(0.205 0 0);
-	--secondary: oklch(0.269 0 0);
-	--secondary-foreground: oklch(0.985 0 0);
-	--muted: oklch(0.269 0 0);
-	--muted-foreground: oklch(0.708 0 0);
-	--accent: oklch(0.269 0 0);
-	--accent-foreground: oklch(0.985 0 0);
-	--destructive: oklch(0.704 0.191 22.216);
-	--border: oklch(1 0 0 / 10%);
-	--input: oklch(1 0 0 / 40%);
-	--ring: oklch(0.85 0.12 230);
+	/* Dark chrome, the same hues as the Gio desktop palette. */
+	--background: oklch(0.178 0.006 271.0);
+	--foreground: oklch(0.975 0.006 255.5);
+	--card: oklch(0.221 0.011 260.7);
+	--card-foreground: oklch(0.975 0.006 255.5);
+	--popover: oklch(0.268 0.016 264.3);
+	--popover-foreground: oklch(0.975 0.006 255.5);
+	--primary: oklch(0.797 0.134 211.5);
+	--primary-foreground: oklch(0.122 0.006 261.6);
+	--secondary: oklch(0.268 0.016 264.3);
+	--secondary-foreground: oklch(0.975 0.006 255.5);
+	--muted: oklch(0.268 0.016 264.3);
+	--muted-foreground: oklch(0.686 0.026 267.8);
+	--accent: oklch(0.268 0.016 264.3);
+	--accent-foreground: oklch(0.975 0.006 255.5);
+	--destructive: oklch(0.750 0.170 16.4);
+	--border: oklch(0.324 0.023 264.2);
+	--input: oklch(0.686 0.026 267.8);
+	--ring: oklch(0.797 0.134 211.5);
 	--chart-1: oklch(0.87 0 0);
 	--chart-2: oklch(0.556 0 0);
 	--chart-3: oklch(0.439 0 0);
 	--chart-4: oklch(0.371 0 0);
 	--chart-5: oklch(0.269 0 0);
-	--sidebar: oklch(0.205 0 0);
-	--sidebar-foreground: oklch(0.985 0 0);
-	--sidebar-primary: oklch(0.488 0.243 264.376);
-	--sidebar-primary-foreground: oklch(0.985 0 0);
-	--sidebar-accent: oklch(0.269 0 0);
-	--sidebar-accent-foreground: oklch(0.985 0 0);
-	--sidebar-border: oklch(1 0 0 / 10%);
-	--sidebar-ring: oklch(0.85 0.12 230);
+	--sidebar: oklch(0.221 0.011 260.7);
+	--sidebar-foreground: oklch(0.975 0.006 255.5);
+	--sidebar-primary: oklch(0.797 0.134 211.5);
+	--sidebar-primary-foreground: oklch(0.122 0.006 261.6);
+	--sidebar-accent: oklch(0.268 0.016 264.3);
+	--sidebar-accent-foreground: oklch(0.975 0.006 255.5);
+	--sidebar-border: oklch(0.324 0.023 264.2);
+	--sidebar-ring: oklch(0.797 0.134 211.5);
 
-	--success: oklch(0.75 0.15 150);
-	--warning: oklch(0.8 0.14 80);
-	--info: oklch(0.75 0.12 240);
-	--agent: oklch(0.78 0.11 190);
-	--brand: oklch(0.511 0.262 276.966);
-	--brand-foreground: oklch(0.985 0 0);
+	--success: oklch(0.723 0.192 149.6);
+	--warning: oklch(0.769 0.165 70.1);
+	--info: oklch(0.797 0.134 211.5);
+	--agent: oklch(0.797 0.134 211.5);
+	--brand: oklch(0.797 0.134 211.5);
+	--brand-foreground: oklch(0.122 0.006 261.6);
 
-	--ed-bg: oklch(0.16 0 0);
-	--ed-panel: oklch(0.2 0 0);
-	--ed-timeline: oklch(0.18 0 0);
-	--ed-track-line: oklch(0.5 0 0);
-	--ed-item-clip: oklch(0.42 0.12 250);
-	--ed-item-clip-fg: oklch(0.98 0 0);
-	--ed-item-audio: oklch(0.42 0.1 150);
-	--ed-item-audio-fg: oklch(0.98 0 0);
-	--ed-item-text: oklch(0.5 0.12 70);
-	--ed-item-text-fg: oklch(0.98 0 0);
-	--ed-item-caption: oklch(0.44 0.14 300);
-	--ed-item-caption-fg: oklch(0.98 0 0);
-	--ed-item-shape: oklch(0.46 0.13 350);
-	--ed-item-shape-fg: oklch(0.98 0 0);
-	--ed-playhead: oklch(0.7 0.2 25);
-	--ed-marker: oklch(0.75 0.14 250);
-	--ed-selection: oklch(0.85 0.12 230);
-	--ed-snap: oklch(0.85 0.15 90);
-	--ed-ghost: oklch(0.85 0.12 230 / 0.5);
-	--ed-safe-area: oklch(0.8 0.15 90);
-	--ed-error-flash: oklch(0.7 0.2 25);
-	--ed-preview-surround: oklch(0.2 0 0);
-	--ed-handle: oklch(0.85 0.12 230);
+	--ed-bg: oklch(0.178 0.006 271.0);
+	--ed-panel: oklch(0.221 0.011 260.7);
+	--ed-timeline: oklch(0.178 0.006 271.0);
+	--ed-track-line: oklch(0.686 0.026 267.8);
+	--ed-item-clip: oklch(0.500 0.180 259.8);
+	--ed-item-clip-fg: oklch(1 0 0);
+	--ed-item-audio: oklch(0.620 0.170 149.6);
+	--ed-item-audio-fg: oklch(0.122 0.006 261.6);
+	--ed-item-text: oklch(0.500 0.200 303.9);
+	--ed-item-text-fg: oklch(1 0 0);
+	--ed-item-caption: oklch(0.500 0.190 354.3);
+	--ed-item-caption-fg: oklch(1 0 0);
+	--ed-item-shape: oklch(0.769 0.165 70.1);
+	--ed-item-shape-fg: oklch(0.122 0.006 261.6);
+	--ed-playhead: oklch(1 0 0);
+	--ed-marker: oklch(0.797 0.134 211.5);
+	--ed-selection: oklch(1 0 0);
+	--ed-snap: oklch(0.797 0.134 211.5);
+	--ed-ghost: oklch(0.797 0.134 211.5 / 0.55);
+	--ed-safe-area: oklch(0.797 0.134 211.5);
+	--ed-error-flash: oklch(0.645 0.215 16.4);
+	--ed-preview-surround: oklch(0.122 0.006 261.6);
+	--ed-handle: oklch(0.797 0.134 211.5);
 }
 
 @layer base {
@@ -321,12 +321,10 @@
 }
 
 /*
- * Focus (design-system.md section 2.10). The kept shadcn components carry
- * outline-none and a 50% ring, which no ring colour can bring to 3:1. This rule
- * is outside every @layer, so it wins over Tailwind's utilities without
- * touching the components: a solid 2 px outline in --ring on everything
- * focusable. The shadcn halo stays as decoration. Narrow the selector if
- * needed, never weaken the outline.
+ * Focus (design-system.md section 2.10). The Base UI primitives carry
+ * outline-none and a ring. This rule is outside every @layer, so it wins
+ * over Tailwind's utilities: a solid 2 px outline in --ring on everything
+ * focusable. Narrow the selector if needed, never weaken the outline.
  */
 :where(a, button, input, select, textarea, summary, [tabindex], [contenteditable="true"], [data-slot]):focus-visible {
 	outline: 2px solid var(--ring);

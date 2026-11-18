@@ -81,8 +81,6 @@ The production dependency closure of `web/package.json` (`dependencies`, transit
 | @jridgewell/sourcemap-codec | 1.6.0 | MIT | Copyright 2024 Justin Ridgewell <justin@ridgewell.name> | [LICENSE](<licenses/npm/@jridgewell/sourcemap-codec@1.6.0/LICENSE>) | - |
 | @jridgewell/trace-mapping | 0.3.31 | MIT | Copyright 2024 Justin Ridgewell <justin@ridgewell.name> | [LICENSE](<licenses/npm/@jridgewell/trace-mapping@0.3.31/LICENSE>) | - |
 | @types/earcut | 3.0.0 | MIT | Copyright (c) Microsoft Corporation. | [LICENSE](<licenses/npm/@types/earcut@3.0.0/LICENSE>) | - |
-| @ui-sdk/core | 0.1.0-beta.6 | Apache-2.0 | copyright notice that is included in or attached to the work | [LICENSE](<licenses/npm/@ui-sdk/core@0.1.0-beta.6/LICENSE>) | - |
-| @ui-sdk/react | 0.1.0-beta.6 | Apache-2.0 | copyright notice that is included in or attached to the work | [LICENSE](<licenses/npm/@ui-sdk/react@0.1.0-beta.6/LICENSE>) | - |
 | @webgpu/types | 0.1.74 | BSD-3-Clause | Copyright 2022 WebGPU Developers | [LICENSE](<licenses/npm/@webgpu/types@0.1.74/LICENSE>) | - |
 | @xmldom/xmldom | 0.8.15 | MIT | Copyright 2019 - present Christopher J. Brody and other contributors, as listed in: <https://github.com/xmldom/xmldom/graphs/contributors> | [LICENSE](<licenses/npm/@xmldom/xmldom@0.8.15/LICENSE>) | - |
 | class-variance-authority | 0.7.1 | Apache-2.0 | copyright notice that is included in or attached to the work | [LICENSE](<licenses/npm/class-variance-authority@0.7.1/LICENSE>) | - |

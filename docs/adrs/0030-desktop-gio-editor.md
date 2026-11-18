@@ -7,7 +7,7 @@
 
 ## Context
 
-ADR-0023 ships the desktop application as a system webview around the browser UI. That keeps one UI, and it is still how the installers are built. The author asked for release 0.30.0 to redraw the desktop editor as a native window, close to the CapCut desktop layout, without a second editing engine and without changing the browser.
+ADR-0023 ships the desktop application as a system webview around the browser UI. That keeps one UI, and it is still how the installers are built. The author asked for release 0.29.0 to redraw the desktop editor as a native window, close to the CapCut desktop layout, without a second editing engine and without changing the browser.
 
 Gio (gioui.org) is an immediate-mode GUI toolkit in Go. It can draw the window. The editing rules already live in `core/` and are reached only through `service.Service` (ADR-0008). The desktop process can be the workspace owner, the same way a CLI command is when no server is running.
 
