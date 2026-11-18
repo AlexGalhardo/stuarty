@@ -1750,7 +1750,7 @@ The Playwright test `preview-vs-export`: for each golden case of `engine/export/
 
 ## 21. Desktop shell
 
-The packaged desktop application is RF-213. ADR-0023 wraps the browser UI in a system webview, and ADR-0041 confirms that shell (`desktop/shell`, Wails) as the only desktop window: the native Gio editor that ADR-0030 added in `desktop/gio` is removed by its own epic. This section fixes what the browser UI must not assume, and the detection page that informs the webview choice on each platform.
+The packaged desktop application is RF-213. ADR-0023 wraps the browser UI in a system webview, and ADR-0041 confirms that shell (`desktop/shell`, Wails) as the only desktop window: the native Gio editor that ADR-0030 added is removed (epic 01). This section fixes what the browser UI must not assume, and the detection page that informs the webview choice on each platform.
 
 ### 21.1 What the UI must not assume
 

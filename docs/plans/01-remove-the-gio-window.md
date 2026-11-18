@@ -35,7 +35,7 @@ None. It is the first epic.
 
 - [x] 1. List every reference to the Gio module and classify it as "Gio only" or "shared with the shell" in the hand-off. Verify: `git grep -n -iE "desktop/gio|gioui" -- ':!desktop/gio'` output is attached with a class per line.
 - [x] 2. Delete `desktop/gio/`. Verify: `go build ./...` exits 0 and `(cd desktop/shell/app && go build ./...)` exits 0.
-- [ ] 3. Remove the Gio-only lines from `desktop/packaging/`, `scripts/` and the two workflows; keep the shell's packaging intact. Verify: `git grep -n -iE "desktop/gio|gioui"` prints nothing outside `docs/adrs/`.
+- [x] 3. Remove the Gio-only lines from `desktop/packaging/`, `scripts/` and the two workflows; keep the shell's packaging intact. Verify: `git grep -n -iE "desktop/gio|gioui"` prints nothing outside `docs/adrs/`.
 - [ ] 4. Rewrite `desktop/README.md` for the shell only, and fix the site pages that describe a native window (both languages). Verify: `task lint:md` and `task lint:site` exit 0.
 - [ ] 5. Regenerate the notices. Verify: `task notices:check` exits 0.
 - [ ] 6. Run the shell's tests. Verify: `go test ./desktop/...` and `(cd desktop/shell/app && go test ./...)` pass.
