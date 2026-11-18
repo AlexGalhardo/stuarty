@@ -1,6 +1,6 @@
 # Vukem Video: planning documents
 
-Everything needed to build Vukem Video, written so that an engineer who was not in the planning conversation can work from it. Read in this order: the three PRDs (what and why), the ADR list (how, in one page each), then the SDD of the area you are about to touch.
+Everything needed to build Vukem Video, written so that an engineer who was not in the planning conversation can work from it. Read in this order: the PRDs (what and why), the ADR list (how, in one page each), then the SDD of the area you are about to touch.
 
 Work is driven by the plans of `plans/` (index `plans/README.md`): one plan is one unit of work that an agent executes and delivers, with its steps, acceptance commands and status (rule `.agents/rules/plans.md`). The other folders hold what defines the product. Names and numbering of the documents follow `.agents/rules/naming.md`: `prds/NNN-<slug>.md`, `adrs/NNNN-<slug>.md`, `sdds/NNN-<slug>.md`, decisions of the author `D-NNN` and research notes are kept by the maintainers outside version control and are cited by id or name only; a document is never renumbered or moved, and each starts with its title and a short paragraph that says what it answers.
 
@@ -28,6 +28,7 @@ Work is driven by the plans of `plans/` (index `plans/README.md`): one plan is o
 | `001-editor-mvp.md` | the editor: projects, timeline, picture, text and captions, audio, templates, preview and export, UI; RF-001 to RF-075, NFR-001 to NFR-013 |
 | `002-agent-operability.md` | MCP, CLI, HTTP API, text views, verification, safety; RF-100 to RF-134, NFR-020 to NFR-025 |
 | `003-distribution-and-docs.md` | installation, local and network modes, releases, container image, documentation site; RF-200 to RF-215, NFR-040 to NFR-045 |
+| `004-agent-studio.md` | the agent studio outside the editor: production folders, skills, memory; RF-300 to RF-306, NFR-060 to NFR-061 |
 
 Each requirement has a phase: `P` Prototype, `A` ALPHA, `B` BETA.
 
@@ -69,6 +70,7 @@ Each decision has a date, alternatives, reason and impact. They are the input of
 | 0028 | one legacy release, a minor about every 90 commits, rebase-merged release pull requests |
 | 0029 | one frame plan (Go), one renderer (Rust in WebAssembly), two hosts; WebCodecs and WebGPU in the preview (Phase 5) |
 | 0030 | desktop editor is a Gio window over `service.Service`; the browser UI stays the web client |
+| 0031 | the agent studio lives outside the editor: generation, engine choice, production folders and memory are agent-side |
 
 ## Specifications (`sdds/`)
 
@@ -88,6 +90,7 @@ Each decision has a date, alternatives, reason and impact. They are the input of
 | 011 | ingest and media: import, probe, profiles, artifacts, analysis, transcription | senior-b |
 | 012 | editor UI architecture: thin-client rules, state, timeline, preview, command coverage | senior-e |
 | 013 | the renderer: the plan as input, the pixel contract, the module and its hosts, frames from WebCodecs and FFmpeg, the proxy chunk index, errors and limits (Phase 5) | senior-b |
+| 014 | the studio kit: plugin layout, skills, production folder, hand-off manifest and memory | senior-d |
 
 Every SDD except SDD-000 (names only) ends with an Acceptance section; the acceptance of SDD-002 is its golden cases (§A.11 and Part C).
 
