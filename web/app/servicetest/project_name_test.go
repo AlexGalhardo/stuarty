@@ -3,8 +3,8 @@ package servicetest
 import (
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/core/command"
-	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/service"
 )
 
 // VV-049: one name rule for the desktop and the network mode.

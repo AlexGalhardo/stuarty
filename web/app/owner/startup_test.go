@@ -9,9 +9,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/core/command"
-	"github.com/AlexGalhardo/stuarty/service"
-	"github.com/AlexGalhardo/stuarty/service/workspace"
+	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/vukem-video/service/workspace"
 )
 
 // SDD-005 section 7 step 2: a workspace written by a newer version is refused with the reason, in

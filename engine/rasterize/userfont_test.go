@@ -13,8 +13,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/core/plan"
-	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/core/plan"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
 func bundledBytes(tb testing.TB, name string) []byte {

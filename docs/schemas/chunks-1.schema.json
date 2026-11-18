@@ -1,6 +1,6 @@
 {
 	"$schema": "https://json-schema.org/draft/2020-12/schema",
-	"$id": "https://github.com/AlexGalhardo/stuarty/docs/schemas/chunks-1.schema.json",
+	"$id": "https://github.com/AlexGalhardo/vukem-video/docs/schemas/chunks-1.schema.json",
 	"title": "Proxy chunk index (chunks-1.json)",
 	"description": "What a WebCodecs decoder needs to read the video of a proxy without a demuxer (SDD-011 section 4.4.1, SDD-013). The four arrays have one entry per sample in decode order, so they have the same length; a schema cannot say it and TestChunkIndexMatchesItsSchema checks it.",
 	"type": "object",

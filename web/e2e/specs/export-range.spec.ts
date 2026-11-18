@@ -97,7 +97,6 @@ test.describe("export-range", () => {
 		expect(sent).toEqual({
 			kind: "export",
 			args: { start: `${inFrame}f`, end: `${outFrame}f` },
-			timeline_id: seeded.id,
 		});
 	});
 
@@ -141,7 +140,6 @@ test.describe("export-range", () => {
 		expect(bodies.filter((b) => b.dry_run !== true).at(-1)).toEqual({
 			kind: "export",
 			args: { format: "png", at: `${frame}f` },
-			timeline_id: seeded.id,
 		});
 		await expect(
 			dialog.getByRole("link", { name: "Download" }),

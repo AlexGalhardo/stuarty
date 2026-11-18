@@ -2,7 +2,7 @@
   "ui": {
     "nav": {
       "label": "Main navigation",
-      "home": "{name}, dashboard",
+      "home": "{name}, projects",
       "language": "Language",
       "languages": {
         "en": "English",
@@ -10,74 +10,10 @@
       },
       "projects": "Projects",
       "settings": "Settings",
-      "dashboard": "Dashboard",
-      "collapse": "Collapse sidebar",
-      "expand": "Expand sidebar",
-      "profile": "Profile",
-      "local": "Local",
-      "section": {
-        "projects": "Projects",
-        "edit-video": "Edit Video",
-        "edit-image": "Edit Image",
-        "write": "Write",
-        "visual-assets": "Visual Assets",
-        "video-assets": "Video Assets",
-        "publish": "Publish",
-        "skills": "Skills",
-        "prompts": "Prompts",
-        "memory": "Memory",
-        "connections": "Connections"
-      },
       "sidebar": {
         "title": "Sidebar",
         "description": "Displays the mobile sidebar.",
         "toggle": "Toggle sidebar"
-      }
-    },
-    "dashboard": {
-      "home": {
-        "title": "Home",
-        "lead": "Everything you make, in one place. Pick a section to start."
-      },
-      "empty": {
-        "status": "This section is not available yet. It will arrive in a later release.",
-        "via_projects": "The video editor opens from a project. Open or create one in Projects.",
-        "goto": "Go to Projects"
-      },
-      "section": {
-        "projects": {
-          "holds": "Your productions: the brief, the media and everything you publish, project by project."
-        },
-        "edit-video": {
-          "holds": "The video editor: timeline, captions, effects and export."
-        },
-        "edit-image": {
-          "holds": "The image editor: layers, text and thumbnails."
-        },
-        "write": {
-          "holds": "Scripts, copy and blog posts, written alone or with an agent."
-        },
-        "visual-assets": {
-          "holds": "Images, logos and generated art that you reuse across projects."
-        },
-        "video-assets": {
-          "holds": "Footage, clips, music and voice-overs that you reuse across projects."
-        },
-        "publish": {
-          "holds": "The calendar of what goes out and the approval queue that waits for you."
-        },
-        "skills": {
-          "holds": "Reusable skills that your agents can run."
-        },
-        "prompts": {
-          "holds": "Saved prompts for your agents."
-        },
-        "memory": {
-          "holds": "What your agents remember about you, your brand and your projects."
-        },
-        "connections": {
-          "holds": "Your social networks and AI providers, and the access you gave each one."
-        }
       }
     },
     "theme": {
@@ -129,71 +65,8 @@
         "save": "Save",
         "cancel": "Cancel",
         "delete": "Delete",
-        "duplicate": "Duplicate",
-        "details": "Details",
-        "timelines": "Timelines: {count}",
         "delete_title": "Delete this project?",
         "delete_body": "The project moves to the trash, where you can restore it."
-      },
-      "briefing": {
-        "title": "Guided briefing",
-        "intro": "Answer a few questions. The answers become the brief of this production, and your agent reads them.",
-        "required": "required",
-        "optional": "optional",
-        "submit": "Save the answers as the brief",
-        "saved": "The brief was saved from your answers.",
-        "hand_written": "The brief of this production was written by hand. Saving these answers replaces it.",
-        "replace": "Replace the brief I wrote",
-        "seconds_hint": "From {min} to {max} seconds",
-        "q": {
-          "audience": "Who is this video for?",
-          "goal": "What should the viewer do or feel after watching?",
-          "platform": "Where will it be published?",
-          "format": "Which format?",
-          "duration": "How long, in seconds?",
-          "tone": "Which tone of voice?",
-          "references": "Any references to follow (links, creators, videos)?",
-          "must_include": "What must appear in it?",
-          "must_avoid": "What must not appear in it?",
-          "deadline": "By when?"
-        },
-        "option": {
-          "platform": {
-            "youtube-shorts": "YouTube Shorts",
-            "tiktok": "TikTok",
-            "instagram-reels": "Instagram Reels",
-            "facebook-reels": "Facebook Reels",
-            "other": "Another place"
-          },
-          "format": {
-            "vertical-9x16": "Vertical, 9:16",
-            "square-1x1": "Square, 1:1",
-            "horizontal-16x9": "Horizontal, 16:9"
-          }
-        },
-        "choose": "Choose one"
-      },
-      "overview": {
-        "brief": "Brief",
-        "brief_empty": "Write the brief of this production: the idea, the audience, the tone.",
-        "brief_save": "Save brief",
-        "items": "Items",
-        "items_empty": "No items yet. Add a timeline or a text below.",
-        "trashed": "Trashed items",
-        "add": "Add to the production",
-        "add_submit": "Add item",
-        "item_title": "Title",
-        "item_text": "Text",
-        "rename_title": "Rename item",
-        "write": "Write",
-        "move_up": "Move up",
-        "move_down": "Move down",
-        "kind": {
-          "brief": "Brief",
-          "text": "Text",
-          "timeline": "Timeline",
-          "output": "Output"
-        }
       },
       "trash": {
         "title": "Trash",
@@ -239,297 +112,6 @@
         "forbidden": "This session cannot install files. Run the command below in a terminal.",
         "command": "Install command",
         "copy_command": "Copy the command"
-      }
-    },
-    "image": {
-      "editor": {
-        "title": "Image editor",
-        "loading": "Loading image…",
-        "failed": "The image could not be opened.",
-        "back": "Back to Edit Image",
-        "size": "{w} x {h} px",
-        "revision": "revision {revision}"
-      },
-      "canvas": {
-        "label": "Image canvas",
-        "picture": "The image as it is drawn now",
-        "loading": "Drawing the image…",
-        "failed": "The picture could not be drawn.",
-        "retry": "Try again",
-        "locked": "Locked",
-        "none_selected": "Nothing selected",
-        "many_selected": "{count} layers selected",
-        "selected": "Layer {name}, {kind}, at {x}, {y}, {w} by {h}"
-      },
-      "view": {
-        "zoom_out": "Zoom out",
-        "zoom_in": "Zoom in",
-        "fit": "Fit to window",
-        "actual": "Actual size (100%)"
-      },
-      "kind": {
-        "image": "image",
-        "text": "text",
-        "shape": "shape",
-        "fill": "fill",
-        "group": "group"
-      },
-      "layers": {
-        "title": "Layers",
-        "label": "Layers, top first",
-        "empty_title": "The image has no layers",
-        "empty_body": "Add a text, a shape or a photo from the toolbar.",
-        "hidden": "hidden",
-        "locked": "locked",
-        "rename": "Layer name"
-      },
-      "arrange": {
-        "group": "Group layers",
-        "ungroup": "Ungroup",
-        "duplicate": "Duplicate",
-        "remove": "Remove",
-        "forward": "Bring forward",
-        "back": "Send backward"
-      },
-      "history": {
-        "undo": "Undo my last step",
-        "redo": "Redo my step",
-        "title": "History",
-        "empty": "No changes yet. Every change by you or an agent is listed here.",
-        "undo_of": "undid revision {revision}",
-        "redo_of": "redid revision {revision}",
-        "revision": "revision {revision}",
-        "you": "You",
-        "undone": "Undone by revision {revision}",
-        "skipped": {
-          "one": "{count} change left alone because another actor changed it since",
-          "other": "{count} changes left alone because another actor changed them since"
-        },
-        "agent_changed_prefix": "The image was changed by",
-        "agent_changed_suffix": "and the canvas shows it."
-      },
-      "add": {
-        "text": "Add text",
-        "text_default": "Your text",
-        "rectangle": "Add rectangle",
-        "ellipse": "Add ellipse",
-        "fill": "Add fill",
-        "image": "Add image",
-        "image_hint": "Choose an image of your workspace.",
-        "image_none": "There are no images in the workspace yet. Import one into a project first."
-      },
-      "brand": {
-        "place_logo": "Place logo",
-        "logo_name": "Logo",
-        "swatches": "Brand colours for {label}",
-        "use_color": "Use {name} ({value})"
-      },
-      "align": {
-        "left": "Left",
-        "center": "Centre",
-        "right": "Right",
-        "top": "Top",
-        "middle": "Middle",
-        "bottom": "Bottom"
-      },
-      "shape": {
-        "rect": "Rectangle",
-        "rounded_rect": "Rounded rectangle",
-        "ellipse": "Ellipse"
-      },
-      "inspector": {
-        "title": "Inspector",
-        "x": "X position",
-        "y": "Y position",
-        "selection": "Selection",
-        "document": "Canvas",
-        "canvas_width": "Width",
-        "canvas_height": "Height",
-        "resize_mode": "When the size changes",
-        "resize_keep": "Keep layers where they are",
-        "resize_scale": "Scale layers with the canvas",
-        "document_hint": "Select a layer to edit it.",
-        "align": "Align",
-        "align_to": "Align to",
-        "canvas": "Canvas",
-        "layer": "Layer",
-        "name": "Name",
-        "opacity": "Opacity",
-        "visible": "Visible",
-        "locked": "Locked",
-        "slot": "Template slot",
-        "box": "Position and size",
-        "width": "Width",
-        "height": "Height",
-        "rotation": "Rotation",
-        "image": "Image",
-        "replace": "Replace the photo",
-        "current_image": "Current image",
-        "fit_cover": "Cover canvas",
-        "fit_contain": "Fit in canvas",
-        "crop": "Crop of the source",
-        "crop_reset": "Reset crop",
-        "text": "Text",
-        "content": "Content",
-        "font": "Font",
-        "font_default": "Default font",
-        "weight": "Weight",
-        "size": "Size",
-        "color": "Colour",
-        "align_text": "Text alignment",
-        "uppercase": "Uppercase",
-        "stroke_color": "Outline colour",
-        "stroke_width": "Outline width",
-        "shape": "Shape",
-        "shape_kind": "Kind",
-        "fill": "Fill",
-        "radius": "Corner radius",
-        "bad_number": "Type a whole number of pixels, such as 120, 120px or 50%.",
-        "pick_color": "Pick {label}",
-        "none": "none"
-      },
-      "look": {
-        "adjust": "Adjustments",
-        "brightness": "Brightness",
-        "contrast": "Contrast",
-        "saturation": "Saturation",
-        "temperature": "Temperature",
-        "tint": "Tint",
-        "hue": "Hue",
-        "exposure": "Exposure (hundredths of a stop)",
-        "levels": "Levels",
-        "levels_black": "Black point",
-        "levels_white": "White point",
-        "levels_gamma": "Gamma (hundredths)",
-        "curve": "Tone curve",
-        "curve_hint": "Points of x and y from 0 to 255, such as 64:48, 192:208. Empty removes the curve.",
-        "adjust_reset": "Reset adjustments",
-        "filters": "Filters",
-        "filters_none": "No filters. They act in the order of the list.",
-        "filter_add_kind": "Filter to add",
-        "filter_add": "Add filter",
-        "filter_up": "Move {name} up",
-        "filter_down": "Move {name} down",
-        "filter_remove": "Remove {name}",
-        "move_up": "Up",
-        "move_down": "Down",
-        "remove": "Remove",
-        "filter_grayscale": "Grayscale",
-        "filter_sepia": "Sepia",
-        "filter_invert": "Invert",
-        "filter_warm": "Warm",
-        "filter_cool": "Cool",
-        "filter_blur": "Blur",
-        "filter_sharpen": "Sharpen",
-        "filter_vignette": "Vignette",
-        "filter_grain": "Grain",
-        "filter_shadow": "Drop shadow",
-        "filter_glow": "Outer glow",
-        "filter_stroke": "Stroke",
-        "param_amount": "Amount",
-        "param_radius": "Radius",
-        "param_softness": "Softness",
-        "param_size": "Grain size",
-        "param_seed": "Seed",
-        "param_opacity": "Opacity",
-        "param_dx": "Offset X",
-        "param_dy": "Offset Y",
-        "param_blur": "Blur",
-        "param_width": "Width",
-        "param_color": "Colour",
-        "mask": "Mask",
-        "mask_kind": "Mask",
-        "mask_none": "No mask",
-        "mask_rect": "Rectangle",
-        "mask_rounded_rect": "Rounded rectangle",
-        "mask_ellipse": "Ellipse",
-        "mask_layer": "Shape of another layer",
-        "mask_x": "Left",
-        "mask_y": "Top",
-        "mask_w": "Width",
-        "mask_h": "Height",
-        "mask_radius": "Corner radius",
-        "mask_feather": "Soft edge",
-        "mask_invert": "Invert the mask",
-        "mask_source": "Take the shape from",
-        "blend": "Blend",
-        "blend_mode": "Blend mode",
-        "blend_normal": "Normal",
-        "blend_multiply": "Multiply",
-        "blend_screen": "Screen",
-        "blend_overlay": "Overlay",
-        "blend_soft_light": "Soft light",
-        "blend_hard_light": "Hard light",
-        "blend_darken": "Darken",
-        "blend_lighten": "Lighten",
-        "blend_color_dodge": "Colour dodge",
-        "blend_color_burn": "Colour burn",
-        "blend_difference": "Difference"
-      },
-      "export": {
-        "open": "Export image",
-        "title": "Export image",
-        "hint": "Draws the current revision and saves a file in your workspace.",
-        "format": "Format",
-        "size": "Size",
-        "original": "Original ({w} x {h})",
-        "quality": "Quality",
-        "findings": "Problems found",
-        "no_findings": "No problems found. The image is ready to export.",
-        "error": "Error",
-        "warning": "Warning",
-        "go_to_layer": "Go to layer",
-        "blocked": {
-          "one": "{count} error stops the export. Fix it first.",
-          "other": "{count} errors stop the export. Fix them first."
-        },
-        "done": "Exported {w} x {h}, {bytes} bytes.",
-        "digest": "SHA-256 digest {hash}",
-        "download": "Download the file",
-        "close": "Close",
-        "run": "Export",
-        "exporting": "Exporting…"
-      },
-      "toolbar": {
-        "label": "Image tools"
-      },
-      "error": {
-        "dismiss": "Dismiss the error"
-      },
-      "index": {
-        "title": "Edit Image",
-        "new": "New image",
-        "name": "Name",
-        "name_placeholder": "Untitled",
-        "size": "Size",
-        "width": "Width",
-        "height": "Height",
-        "create": "Create image",
-        "as_template": "Make it a template",
-        "templates": "Your templates",
-        "documents": "Your images",
-        "loading": "Loading…",
-        "empty": "No images yet. Create one above.",
-        "layers": {
-          "one": "{count} layer",
-          "other": "{count} layers"
-        }
-      },
-      "preset": {
-        "video_thumbnail": "Video thumbnail (16:9)",
-        "square_post": "Square post (1:1)",
-        "vertical_cover": "Vertical cover (9:16)",
-        "custom": "Custom size"
-      },
-      "template": {
-        "title": "New from template",
-        "none": "There are no image templates yet. Make an image a template and it is listed here.",
-        "pick": "Template",
-        "choose": "Choose a template",
-        "required": "required",
-        "no_image": "No image",
-        "create": "Create from template",
-        "slot_hint": "Fill the slots marked required, then create again."
       }
     },
     "editor": {
@@ -727,15 +309,6 @@
         "E_NETWORK": "Network error",
         "E_UNAUTHORIZED": "Session ended",
         "E_FORBIDDEN": "Not allowed",
-        "E_PRIVILEGED_SESSION": "Only you in the app can do this",
-        "E_AGENT_NOT_FOUND": "No such agent",
-        "E_CHAT_NOT_FOUND": "No such conversation",
-        "E_AGENT_UNAVAILABLE": "The agent could not be started",
-        "E_COST_CEILING": "Over a cost ceiling",
-        "E_PUBLISH": "The network refused or failed the publication",
-        "E_PROVIDER": "The AI provider refused or failed",
-        "E_PRICE_UNKNOWN": "No price for that model",
-        "E_APPROVAL_NOT_FOUND": "No such request or rule",
         "E_ASSET_NOT_READY": "The media is still being prepared",
         "E_NOTHING_TO_UNDO": "Nothing to undo",
         "E_NOTHING_TO_REDO": "Nothing to redo",
@@ -849,8 +422,7 @@
         "add_video_track": "Add video track",
         "add_audio_track": "Add audio track",
         "marker": "Marker at the playhead",
-        "shortcuts": "Keyboard shortcuts",
-        "tour": "Take the tour"
+        "shortcuts": "Keyboard shortcuts"
       },
       "edit": {
         "label": "Editing",
@@ -961,65 +533,9 @@
             "aac": "AAC audio only",
             "png": "PNG image of the frame at the playhead"
           }
-        },
-        "presets": {
-          "title": "Platforms",
-          "hint": "Pick one or more: each becomes a file that fits that network.",
-          "loading": "Loading the platforms",
-          "unavailable": "The platforms could not be loaded.",
-          "limit_duration_max": "up to {seconds} s",
-          "limit_duration_range": "{min} to {max} s",
-          "limit_duration_min": "at least {seconds} s",
-          "limit_fps": "{min} to {max} fps",
-          "limit_fps_max": "up to {max} fps",
-          "limit_aspect": "aspect {ratio}",
-          "limit_size": "file up to {size}",
-          "source": "Limits read on {date}",
-          "source_link": "Source",
-          "checking": "Checking",
-          "fits": "The project fits.",
-          "does_not_fit": "The project does not fit:",
-          "limit_line": "limit {limit}, now {got}",
-          "misfit": "{count} of the chosen platforms do not fit and will fail; fix the project or leave them out.",
-          "start_many": "Export {count} files"
-        },
-        "codec": {
-          "label": "Video codec",
-          "auto": "Automatic (as the platform prefers)",
-          "h264": "H.264 (works everywhere)",
-          "hevc": "H.265 (HEVC, smaller files)",
-          "av1": "AV1 (smallest files, newer devices)",
-          "unavailable": "{name} (not available on this machine)",
-          "fallback_note": "If this machine cannot encode the preferred codec, H.264 is used and the result says so."
-        },
-        "batch": {
-          "title": "Exports",
-          "summary": "{done} of {total} done",
-          "state": {
-            "queued": "Waiting",
-            "running": "Exporting",
-            "succeeded": "Done",
-            "failed": "Failed",
-            "cancelled": "Cancelled"
-          },
-          "item": "Export {index}: {name}",
-          "queued_behind": "Another export is running: this one waits for it and starts by itself.",
-          "finished": "Exports finished",
-          "some_failed": "Some exports failed",
-          "download": "Download {name}",
-          "codec_note": "File: {codec}, {size} MB",
-          "plain": "Export"
         }
       },
       "commands": {
-        "animation": {
-          "apply_preset": {
-            "title": "Apply a motion preset"
-          },
-          "list_presets": {
-            "title": "List the motion presets"
-          }
-        },
         "asset": {
           "remove": {
             "title": "Remove media"
@@ -1029,26 +545,11 @@
           "add": {
             "title": "Add audio"
           },
-          "apply_preset": {
-            "title": "Apply an audio preset"
-          },
           "duck": {
             "title": "Duck music under speech"
           },
           "mark_beats": {
             "title": "Mark beats"
-          },
-          "processor_add": {
-            "title": "Add an audio processor"
-          },
-          "processor_move": {
-            "title": "Move an audio processor"
-          },
-          "processor_remove": {
-            "title": "Remove an audio processor"
-          },
-          "processor_set": {
-            "title": "Change an audio processor"
           }
         },
         "caption": {
@@ -1122,9 +623,6 @@
           },
           "set_framing": {
             "title": "Set clip framing"
-          },
-          "replace_media": {
-            "title": "Replace the media of a clip"
           },
           "set_speed": {
             "title": "Set clip speed"
@@ -1203,9 +701,6 @@
           },
           "set": {
             "title": "Set keyframe"
-          },
-          "set_easing": {
-            "title": "Set keyframe easing"
           }
         },
         "project": {
@@ -1312,10 +807,7 @@
         "L_SLOT_UNFILLED": "Template slot not filled",
         "L_AUDIO_CLIP": "Audio clipping",
         "L_LOUDNESS": "Loudness off target",
-        "L_DURATION_LIMIT": "Over the duration limit",
-        "L_ALPHA_MISSING": "Transparency declared but missing",
-        "L_AUDIO_LIMITER_NOT_LAST": "Limiter is not last in the chain",
-        "L_AUDIO_NOISE_REDUCTION_REPEATED": "More than one noise reduction"
+        "L_DURATION_LIMIT": "Over the duration limit"
       },
       "shortcuts": {
         "title": "Keyboard shortcuts",
@@ -1331,50 +823,30 @@
         "reset": "Reset to defaults",
         "also": "Also {keys}",
         "saved": "Saved. Every edit is saved as you make it.",
-        "search": "Search shortcuts",
-        "none": "No shortcut matches.",
-        "preset": "Preset",
-        "presets": {
-          "short": "Short video",
-          "classic": "Classic"
-        },
-        "dropped": "These keys went back to the preset because the new one uses them: {actions}.",
         "rows": {
           "play_pause": "Play or pause",
-          "shuttle_back": "Back one second (player)",
-          "pause": "Pause",
-          "shuttle_play": "Play",
-          "step_back": "Step back one frame",
-          "step_forward": "Step forward one frame",
-          "step_second_back": "Step back one second",
-          "step_second_forward": "Step forward one second",
-          "go_start": "Go to the start",
-          "go_end": "Go to the end",
-          "prev_cut": "Go to the previous cut",
-          "next_cut": "Go to the next cut",
-          "prev_marker": "Go to the previous marker",
-          "next_marker": "Go to the next marker",
+          "step_frame": "Step one frame",
+          "step_second": "Step one second",
+          "go_to_edge": "Go to start or end",
+          "next_cut": "Go to the previous or next cut",
+          "shuttle": "Play (L), pause (K), back one second (J)",
+          "next_marker": "Go to the previous or next marker",
           "marker": "Add a marker at the playhead, or remove the one there",
-          "range_in": "Set the in point",
-          "range_out": "Set the out point",
+          "range_in_out": "Set the in point (I) and the out point (O)",
           "range_select": "Set the in and out points to the selected items",
           "range_clear": "Clear the in and out points",
-          "tool_blade": "Blade tool",
-          "tool_select": "Select tool",
+          "tool": "Blade tool (B), select tool (A)",
           "split": "Split the selected item at the playhead",
           "split_all": "Split every track at the playhead",
           "trim_start": "Delete what is left of the playhead",
           "trim_end": "Delete what is right of the playhead",
-          "slide_back": "Slide the selected item back, its neighbours keep touching it (1 frame)",
-          "slide_forward": "Slide the selected item forward, its neighbours keep touching it (1 frame)",
-          "roll_back": "Roll the cut after the selected item back (1 frame)",
-          "roll_forward": "Roll the cut after the selected item forward (1 frame)",
-          "slip_back": "Slip the selected clip back, showing an earlier part of its source (1 frame)",
-          "slip_forward": "Slip the selected clip forward, showing a later part of its source (1 frame)",
-          "select_left": "Select everything left of the playhead",
-          "select_right": "Select everything right of the playhead",
+          "slide": "Slide the selected item, its neighbours keep touching it (1 frame)",
+          "roll": "Roll the cut after the selected item (1 frame)",
+          "slip": "Slip the selected clip, showing another part of its source (1 frame)",
+          "select_side": "Select everything left, right of the playhead",
           "undo": "Undo",
           "redo": "Redo",
+          "redo_alt": "Redo (alternative)",
           "zoom_in": "Zoom in",
           "zoom_out": "Zoom out",
           "zoom_fit": "Fit the timeline",
@@ -1393,28 +865,23 @@
           "toggle_enabled": "Turn the selected items on or off",
           "link": "Link or unlink the selected items",
           "extract_audio": "Extract the audio of the selected clips",
+          "toggle_snap": "Toggle snapping",
           "toggle_magnet": "Turn the magnet of the track on or off",
           "copy_attributes": "Copy the look of the selected item",
           "paste_attributes": "Paste the copied look onto the selected items",
-          "toggle_snap": "Toggle snapping",
           "keyframe_panel": "Show or hide the keyframes of the selected item",
           "speed_curve": "Open the speed curve of the selected clip",
           "scroll": "Scroll the timeline: wheel up and down, Alt+wheel sideways",
-          "preview_fit": "Fit the preview",
-          "preview_zoom_in": "Zoom the preview in",
-          "preview_zoom_out": "Zoom the preview out",
+          "preview_zoom": "Fit the preview, zoom it in, zoom it out",
           "import": "Import media",
           "export": "Export",
           "save": "Save (every edit is saved already)",
           "palette": "Command palette",
           "find": "Find in the project",
-          "panel_library": "Show or hide the library",
-          "panel_inspector": "Show or hide the inspector",
-          "panel_history": "Show or hide the history",
+          "toggle_panel": "Toggle library, inspector and history",
           "select_all": "Select all items",
           "cancel": "Cancel, close or clear the selection",
           "next_landmark": "Jump to the next region",
-          "prev_landmark": "Jump to the previous region",
           "grid_keys": "Move inside the timeline",
           "cheat_sheet": "Open this list"
         }
@@ -1527,69 +994,6 @@
           "other": "{count} markers"
         },
         "beats_apply": "Mark beats"
-      },
-      "processors": {
-        "title": "Audio processors",
-        "empty": "No processors yet. Add one or apply a preset.",
-        "preset_label": "Preset",
-        "preset_apply": "Apply preset",
-        "presets": {
-          "voice": "Voice",
-          "voice_with_music": "Voice with music",
-          "podcast": "Podcast",
-          "clean_noisy_room": "Clean up a noisy room"
-        },
-        "add_kind": "Processor",
-        "add": "Add processor",
-        "kind": {
-          "eq": "Equaliser",
-          "compressor": "Compressor",
-          "limiter": "Limiter",
-          "gate": "Noise gate",
-          "deesser": "De-esser",
-          "noise_reduction": "Noise reduction"
-        },
-        "enabled": "On",
-        "move_up": "Move up",
-        "move_down": "Move down",
-        "remove": "Remove",
-        "params": "Parameters",
-        "param": {
-          "hp_hz": "High-pass frequency (0 is off)",
-          "lp_hz": "Low-pass frequency (0 is off)",
-          "threshold_db": "Threshold",
-          "ratio": "Ratio",
-          "attack_ms": "Attack",
-          "release_ms": "Release",
-          "knee_db": "Knee",
-          "makeup_db": "Make-up gain",
-          "ceiling_db": "Ceiling",
-          "range_db": "Range",
-          "hold_ms": "Hold",
-          "frequency_hz": "Frequency",
-          "strength": "Strength",
-          "profile_start_ms": "Noise profile starts (0 is automatic)",
-          "profile_end_ms": "Noise profile ends"
-        },
-        "band": {
-          "hz": "Band {n} frequency",
-          "gain_db": "Band {n} gain",
-          "q": "Band {n} width (Q)"
-        },
-        "measure": "Measure the sound",
-        "measuring": "Measuring...",
-        "measure_failed": "The sound could not be measured.",
-        "before": "Before",
-        "after": "After",
-        "loudness": "Loudness",
-        "true_peak": "True peak",
-        "noise_floor": "Noise floor",
-        "speech_to_noise": "Speech to noise",
-        "no_level": "none",
-        "listen": "Listen to the processed sound",
-        "rendering": "Rendering the sound...",
-        "listen_failed": "The sound could not be rendered.",
-        "player": "Processed sound"
       },
       "markers": {
         "title": {
@@ -1858,29 +1262,7 @@
           "one": "{count} change",
           "other": "{count} changes",
           "zero": "No changes"
-        },
-        "compare": "Compare r{revision}",
-        "revert_here": "Revert to here",
-        "revert_row": "Revert to r{revision}",
-        "diff_title": "Changes between r{from} and r{to}",
-        "diff_hint": "Tick two steps to see in words what changed between them.",
-        "diff_empty": "The two states are the same.",
-        "diff_failed": "The changes could not be read.",
-        "checkpoints_title": "Checkpoints",
-        "checkpoints_empty": "No checkpoints yet. Name a state to come back to it.",
-        "checkpoint_label": "Name this state",
-        "checkpoint_add": "Add checkpoint",
-        "checkpoint_auto": "Automatic",
-        "checkpoint_remove": "Remove {name}",
-        "checkpoint_revert": "Revert to {name}",
-        "revert_title": "Go back to r{revision}?",
-        "revert_title_named": "Go back to {name}?",
-        "revert_body": "This adds a new step that takes the project back. The steps in between stay in the history, and you can undo it.",
-        "revert_changes": "What would change",
-        "revert_same": "The project already looks like this. Nothing would change.",
-        "revert_cancel": "Cancel",
-        "revert_confirm": "Revert",
-        "revert_loading": "Reading what would change"
+        }
       },
       "shape": {
         "title": "Shape",
@@ -2005,26 +1387,7 @@
           "ease_in": "Ease in",
           "ease_out": "Ease out",
           "ease_in_out": "Ease in and out",
-          "hold": "Hold",
-          "bezier": "Custom curve"
-        },
-        "curve": "Curve",
-        "curve_edit": "Edit the curve of the {property} keyframe at {time}",
-        "curve_close": "Close the curve editor of the {property} keyframe at {time}",
-        "curve_plot": "Curve of the {property} keyframe",
-        "curve_hint": "Drag the two handles, move one with the arrow keys (Shift for a larger step) or type the four numbers.",
-        "curve_handle": "Control point {n} of the curve",
-        "curve_handle_value": "x {x}, y {y}",
-        "curve_preset": "Named curve",
-        "curve_preset_of": "Named curve for the {property} keyframe",
-        "curve_preset_none": "Pick one...",
-        "curve_number": "{name} of the {property} curve",
-        "curve_preset_name": {
-          "in": "Ease in",
-          "out": "Ease out",
-          "in_out": "Ease in and out",
-          "back": "Back (pulls back first)",
-          "overshoot": "Overshoot (goes past, then settles)"
+          "hold": "Hold"
         }
       },
       "effects": {
@@ -2101,36 +1464,6 @@
           "slide_right": "Slide right"
         }
       },
-      "motion": {
-        "title": "Motion presets",
-        "preset": "Preset",
-        "preset_of": "Motion preset",
-        "edge_of": "Edge of the motion preset",
-        "duration_of": "Duration of the motion preset",
-        "apply": "Add motion",
-        "direction": "Direction",
-        "use_default": "Default",
-        "preset_name": {
-          "fade": "Fade",
-          "slide": "Slide",
-          "scale": "Scale",
-          "pop": "Pop",
-          "push_in": "Push in",
-          "pull_out": "Pull out"
-        },
-        "direction_name": {
-          "left": "From the left",
-          "right": "From the right",
-          "up": "From the top",
-          "down": "From the bottom"
-        },
-        "amount_of": {
-          "slide": "Distance (px)",
-          "scale": "Scale factor",
-          "push_in": "Zoom factor",
-          "pull_out": "Zoom factor"
-        }
-      },
       "template": {
         "title": "Template",
         "slot": "Template slot",
@@ -2195,36 +1528,16 @@
         "undone": "Undone",
         "redone": "Redone"
       },
-      "tour": {
-        "step": "Step {current} of {total}",
-        "back": "Back",
-        "next": "Next",
-        "done": "Done",
-        "skip": "Skip tour",
-        "replay": "Replay the tour",
-        "steps": {
-          "library": {
-            "title": "Your media",
-            "body": "Your files live here. Paste the path of a media file and press Import, or press {import} to go to the import field."
-          },
-          "library_desktop": "Your files live here. Choose files, drop them here or paste a path, then press Import. Press {import} to start.",
-          "preview": {
-            "title": "Preview",
-            "body": "Watch your video here. Press {play} to play or pause."
-          },
-          "timeline": {
-            "title": "Timeline",
-            "body": "Arrange clips on tracks. Press {split} to split at the playhead and {undo} to undo."
-          },
-          "inspector": {
-            "title": "Inspector",
-            "body": "Select an item to change its look, sound and speed. Every change is saved as you make it."
-          },
-          "export": {
-            "title": "Export",
-            "body": "When you are happy, export your video here ({export}). Press {shortcuts} to see every shortcut and {palette} to search every command."
-          }
-        }
+      "tips": {
+        "title": "First steps",
+        "items": {
+          "library": "Paste the path of a media file in the library and press Import.",
+          "library_desktop": "Choose files in the library, drop them there or paste a path, then press Import.",
+          "palette": "Press Ctrl+K to search every command.",
+          "shortcuts": "Press ? to see and change the keyboard shortcuts."
+        },
+        "dismiss": "Got it",
+        "show_again": "Show tips again"
       },
       "repeat": {
         "title": "Repeat item",
@@ -2248,373 +1561,6 @@
       "password": "Password",
       "submit": "Log in",
       "logout": "Log out"
-    },
-    "connections": {
-      "title": "Connections",
-      "approvals_link": "Approvals and cost ceilings",
-      "intro": "Every place Stuarty is allowed to talk to. Until you connect something, nothing leaves your computer.",
-      "list": "Your connections",
-      "empty": "No connections yet. Nothing leaves this computer.",
-      "new": "Add a connection",
-      "label": "Name",
-      "endpoint": "Address (https)",
-      "hosts": "More hosts it may reach (optional, separated by commas)",
-      "accepts_legend": "What it may receive",
-      "accept": {
-        "text": "Text",
-        "image": "Images",
-        "video": "Video",
-        "audio": "Audio",
-        "metadata": "Metadata",
-        "document": "Documents"
-      },
-      "secret": "Credential",
-      "secret_hint": "Stored encrypted on this machine. It is never shown again and no agent can read it.",
-      "add": "Connect",
-      "test": "Test",
-      "remove": "Remove",
-      "destinations": "Reaches: {hosts}",
-      "accepts": "May receive: {list}",
-      "never_used": "Never used",
-      "last_used": "Last used {date}",
-      "secret_set": "Credential stored",
-      "secret_missing": "No credential: connect it again",
-      "test_ok": "The destination answered {status}.",
-      "test_failed": "The destination did not answer well (status {status})."
-    },
-    "generate": {
-      "open": {
-        "visual": "Generate an image",
-        "video": "Generate a voice-over"
-      },
-      "title": {
-        "image": "Generate an image",
-        "voice": "Generate a voice-over"
-      },
-      "intro": {
-        "image": "The price is shown before anything is asked of the provider. The image lands in the library, with the model and the prompt it came from.",
-        "voice": "The price is shown before anything is asked of the provider. The narration lands in the library, with the model and the text it came from."
-      },
-      "no_provider": {
-        "image": "No connected provider makes images yet.",
-        "voice": "No connected provider makes speech yet."
-      },
-      "open_connections": "Connect one on the Connections page",
-      "project": "Project",
-      "connection": "Connection",
-      "model": "Model",
-      "no_price": "no price yet",
-      "voice": "Voice",
-      "prompt": {
-        "image": "What to draw",
-        "voice": "What to read out"
-      },
-      "size": "Size",
-      "count": "How many",
-      "format": "Format",
-      "language": "Language",
-      "disclosure": "Say that this voice is AI-generated to the people who hear it: the provider asks for it.",
-      "estimate": "Show the estimate",
-      "estimated": "Estimated cost: {amount}",
-      "submit": "Generate",
-      "state": {
-        "queued": "Waiting to start.",
-        "waiting_approval": "Waiting for your approval.",
-        "running": "Generating.",
-        "succeeded": "Done.",
-        "failed": "It did not work.",
-        "cancelled": "Cancelled."
-      },
-      "open_approvals": "Open the Approvals page",
-      "done": "{delivered} of {requested} made, it cost {amount}."
-    },
-    "social": {
-      "title": "Social networks",
-      "intro": "Connect your own channel with your own developer project. Nothing is published until you approve it in Approvals.",
-      "connect": "Set up {name}",
-      "close": "Close",
-      "guide_title": "Connect {name} with your own developer project",
-      "guide_again_title": "Sign in to {name} again",
-      "guide_intro": "Stuarty has no app of its own on {name}: you create one in your own account, so your videos and your keys stay with you. Follow the steps, then paste the client id and the secret below.",
-      "redirect_label": "Redirect address to paste in your developer project",
-      "official_page": "Read the official page",
-      "client_id": "Client id",
-      "client_secret": "Client secret",
-      "account_label": "Name for this connection (optional)",
-      "start_sign_in": "Save and sign in",
-      "sign_in_again": "Sign in again",
-      "signed_in_as": "Signed in as",
-      "needs_sign_in": "Not signed in yet",
-      "publish_now": "Publish now",
-      "publish_title": "Publish a video",
-      "publish_intro": "It goes to",
-      "project": "Project",
-      "choose": "Choose...",
-      "video": "Exported video",
-      "thumbnail": "Thumbnail (an exported still)",
-      "no_thumbnail": "No thumbnail",
-      "post_title": "Title",
-      "description": "Description",
-      "tags": "Tags (separated by commas)",
-      "visibility": "Who can watch",
-      "visibility_private": "Only you (private)",
-      "visibility_unlisted": "Anyone with the link (unlisted)",
-      "visibility_public": "Everyone (public)",
-      "kids": "Is this video made for kids?",
-      "kids_yes": "Yes",
-      "kids_no": "No",
-      "synthetic": "It has realistic altered or synthetic content",
-      "check": "Check",
-      "send": "Send for approval",
-      "check_ok": "The post fits the limits of the network. A person will be asked to approve:",
-      "check_issues": "Fix these before sending:",
-      "waiting_title": "Waiting for your approval",
-      "waiting_body": "Nothing has been sent yet. Open Approvals, read what will go out, and approve or reject it.",
-      "open_approvals": "Open Approvals",
-      "callback_title": "Signing in",
-      "callback_working": "Finishing the sign-in...",
-      "callback_done": "Signed in as",
-      "callback_failed": "The sign-in could not be finished. Start it again from the Connections page.",
-      "back": "Back to Connections",
-      "needs_account": "Signed in. Choose the account this connection publishes to.",
-      "pick_title": "Choose the account",
-      "pick_hint": "Your sign-in reached these accounts. Stuarty publishes only to the one you choose, and only after you approve each post.",
-      "pick_use": "Use this account",
-      "callback_choose": "Signed in. Now go back to Connections and choose the account to publish to.",
-      "instagram": {
-        "step": {
-          "project": "At developers.facebook.com create an app of the type \"Business\" in your own account. It is yours; Stuarty never sees it. Keep it in development mode with yourself as administrator: that is Standard Access, and Meta asks for no review of an app used only for your own accounts.",
-          "api": "Add the product \"Facebook Login for Business\" (or \"Facebook Login\") to the app. A Reel reaches Instagram through the Facebook Page that your Instagram account is linked to.",
-          "consent": "Make sure your Instagram account is a professional account (Business or Creator) linked to a Facebook Page you administer: in Instagram, Settings, Account type and tools, then the Page link. A personal Instagram account cannot be published to.",
-          "client": "In the app, under Settings, Basic, copy the App ID and the App Secret.",
-          "redirect": "Under Facebook Login, Settings, add exactly this address to \"Valid OAuth Redirect URIs\": {redirect}",
-          "paste": "Paste the app id and the app secret into the form below. Stuarty asks for these permissions: {scopes}. After you sign in you choose which Instagram account this connection publishes to."
-        },
-        "research": "What Meta said on {read}: an app used only for a business you own or manage needs no App Review at Standard Access. Instagram publishes only to professional accounts. The file goes from your computer to Meta with the resumable upload, so no public address of your video is needed, and none is created. A Reel is 3 seconds to 15 minutes, up to 300 MB, with a caption of up to 2,200 characters and 30 hashtags; a cover image is not offered, because Meta takes it only from a public address. A Reel has no private mode, so every post goes out as public. An app may publish 100 posts in a moving 24 hours."
-      },
-      "facebook": {
-        "step": {
-          "project": "At developers.facebook.com create an app of the type \"Business\" in your own account. It is yours; Stuarty never sees it. Keep it in development mode with yourself as administrator: that is Standard Access, and Meta asks for no review of an app used only for your own Pages.",
-          "api": "Add the product \"Facebook Login for Business\" (or \"Facebook Login\") to the app. Reels are published to a Facebook Page; Meta does not publish to a personal profile.",
-          "consent": "You need a role on the Page that can create content (Admin or Editor, for example). The sign-in lists your Pages and you choose one.",
-          "client": "In the app, under Settings, Basic, copy the App ID and the App Secret.",
-          "redirect": "Under Facebook Login, Settings, add exactly this address to \"Valid OAuth Redirect URIs\": {redirect}",
-          "paste": "Paste the app id and the app secret into the form below. Stuarty asks for these permissions: {scopes}. After you sign in you choose which Page this connection publishes to."
-        },
-        "research": "What Meta said on {read}: an app used only for a business you own or manage needs no App Review at Standard Access. The file goes from your computer to Meta with the resumable upload, so no public address of your video is needed, and none is created. A Page Reel is 3 to 90 seconds, 9:16, at least 540 by 960, 24 to 60 frames a second; an app may publish 30 in a moving 24 hours. Meta states no largest file and no longest description, so Stuarty applies 1 GiB and 2,200 characters. Only Reels are offered: a longer or wider video is refused with the limit it breaks. There is no cover image field and no private mode, so every post goes out as public."
-      },
-      "youtube": {
-        "step": {
-          "project": "In the Google Cloud console, create a project (or choose one you already have). It is yours; Stuarty never sees it.",
-          "api": "Enable \"YouTube Data API v3\" for that project.",
-          "consent": "Configure the OAuth consent screen: user type External, and add your own Google address as a test user. While the project is in the Testing status, the sign-in expires after 7 days and you will sign in again.",
-          "client": "Create an OAuth client of the type \"Web application\".",
-          "redirect": "Under \"Authorised redirect URIs\" paste exactly: {redirect}",
-          "paste": "Copy the client id and the client secret into the form below. Stuarty asks for these permissions: {scopes}."
-        },
-        "research": "What Google said on {read}: a video uploaded from a project that has not been verified is no longer forced to private since 2 November 2026; Stuarty still sends every video as private unless you choose otherwise. An upload costs about 1 unit of its own quota of 100 a day, and a thumbnail 50 units of the 10,000 a day."
-      },
-      "generic": {
-        "step": {
-          "project": "Create a developer project on the network, in your own account.",
-          "api": "Enable the publishing API for that project.",
-          "consent": "Configure the consent screen and add your own account as a test user.",
-          "client": "Create an OAuth client of the type \"Web application\".",
-          "redirect": "Authorise exactly this redirect address: {redirect}",
-          "paste": "Copy the client id and the client secret into the form below. Stuarty asks for: {scopes}."
-        },
-        "research": "The rules of the network were read on {read}; they change, so check the official page."
-      }
-    },
-    "providers": {
-      "title": "AI providers",
-      "intro": "Connect the AI services you already pay for, with your own key. The price is shown before anything runs, and costly work waits for you on the Approvals page.",
-      "docs": "Where to find the key",
-      "none": "Not connected yet.",
-      "connect_title": "Connect {provider} with an API key",
-      "connect_name": "Name for this connection",
-      "connect_address": "Base address of the API",
-      "connect_key": "API key",
-      "connect_hint": "Stored encrypted on this machine. It is never shown again and no agent can read it.",
-      "connect_submit": "Save the key",
-      "check": "Check the key",
-      "models": "Show the models",
-      "models_refresh": "Read the models again",
-      "models_empty": "The provider lists no models.",
-      "fetched": "Read from the provider {date}",
-      "limits": "Up to {context} tokens, {output} of them in the answer",
-      "price": "Per million tokens: {input} in, {output} out ({source})",
-      "price_none": "No price yet: nothing can be generated with this model until you set one.",
-      "price_unit": {
-        "image": "Per image: {amount} ({source})",
-        "mchar": "Per million characters: {amount} ({source})"
-      },
-      "price_per": {
-        "image": "Price of one image",
-        "mchar": "Price of a million characters"
-      },
-      "source": {
-        "user": "your price",
-        "catalogue": "published by the provider",
-        "none": "none"
-      },
-      "set_price": "Set the price",
-      "price_currency": "Currency",
-      "price_input": "Input, per million tokens",
-      "price_output": "Output, per million tokens",
-      "price_save": "Save the price",
-      "spend": "Spent today: {amount}",
-      "spend_none": "Nothing spent today."
-    },
-    "approvals": {
-      "title": "Approvals",
-      "intro": "Publishing and costly generation wait here for you. An agent can prepare them; only you can say yes, or write a rule that says yes for you.",
-      "queue": "Waiting for you",
-      "live": "Live: new requests appear here by themselves.",
-      "offline": "Not live: reload the page to see new requests.",
-      "empty": "Nothing is waiting for you.",
-      "kind": "Kind",
-      "destination": "Goes to",
-      "no_destination": "No destination",
-      "cost": "Estimated cost",
-      "no_cost": "Free",
-      "actor": "Asked by",
-      "asked": "Asked",
-      "reason": "Reason (optional, when rejecting)",
-      "approve": "Approve",
-      "reject": "Reject",
-      "currency": "Currency",
-      "per_item": "Most per item",
-      "per_day": "Most per day",
-      "cost_title": "Cost",
-      "cost_intro": "A ceiling stops further spending, whoever approves it: raise it here first. A day is a UTC day.",
-      "spent_today": "Spent today",
-      "nothing_spent": "Nothing spent today.",
-      "scope_workspace": "Whole workspace",
-      "ceilings": "Ceilings",
-      "no_ceilings": "No ceilings: every costly request still waits for you.",
-      "set_ceiling": "Set a ceiling",
-      "ceiling_note": "Leave both limits empty to remove the ceiling of that currency.",
-      "save_ceiling": "Save ceiling",
-      "rules": {
-        "title": "Rules that approve for you",
-        "intro": "A rule lets a kind of action go without asking. Only you can write one; no agent can.",
-        "empty": "No rules: everything waits for you.",
-        "new": "New rule",
-        "kind": "Kind of action (for example publish.post)",
-        "destination": "Destination",
-        "project": "Project id (optional)",
-        "any_destination": "Any destination",
-        "any_project": "Any project",
-        "disabled": "(off)",
-        "applies": "Destination: {destination}. Project: {project}.",
-        "no_limits": "No limits.",
-        "limits": "Most per item: {item}. Most per day: {day}.",
-        "disable": "Turn off",
-        "enable": "Turn on",
-        "remove": "Remove",
-        "add": "Add rule",
-        "note": "A rule with no limit per item never approves something that costs money.",
-        "bad_amount": "An amount is a number with at most six decimals, for example 2.50."
-      }
-    },
-    "google": {
-      "nav": "Google sign-in",
-      "sign_in": "Sign in with Google",
-      "title": "Google sign-in",
-      "off": "Google sign-in is off on this server. An administrator can turn it on here.",
-      "account": "Your Google account",
-      "linked": "Linked Google account:",
-      "not_linked": "No Google account is linked. Link yours to sign in with it; your password keeps working.",
-      "unlink_note": "Unlinking does not change your password or end your sessions.",
-      "password": "Your password",
-      "link": "Link my Google account",
-      "unlink": "Unlink",
-      "owner": "For the owner of this server",
-      "owner_intro": "Users sign in with a Google project that you own. Make the connection of that project on the Connections page (a YouTube connection with the client id and the secret; you do not need to sign in to YouTube).",
-      "redirect": "Add this address to the authorised redirect URIs of your Google project:",
-      "enabled": "Let users sign in with Google",
-      "connection": "Connection of your Google project",
-      "connection_none": "Choose a connection",
-      "allowed": "Only these Google e-mail addresses (optional)",
-      "allowed_hint": "One per line. Leave empty to allow every linked user. A user must be linked first: there is no registration with Google.",
-      "save": "Save",
-      "saved": "Saved.",
-      "callback_title": "Signing in with Google",
-      "callback_working": "Finishing the sign-in…",
-      "callback_failed": "The sign-in with Google did not work.",
-      "back_to_login": "Back to the login"
-    },
-    "chat": {
-      "open": "Chat with your agent",
-      "close": "Close the chat",
-      "manage": "Agents",
-      "title": "Agent chat",
-      "loading": "Loading…",
-      "no_profile_title": "No agent connected",
-      "no_profile_text": "Stuarty hosts the agent you already use, with your own sign-in. Install one yourself and connect it here: Stuarty never installs an agent and never signs you in to one.",
-      "not_available": "This process cannot run an agent. Open the Stuarty app or a running server.",
-      "known_title": "Agents Stuarty knows",
-      "found": "Found on this machine",
-      "not_found": "Not found on this machine",
-      "use_suggestion": "Fill the form with this agent",
-      "connect_title": "Connect an agent",
-      "profile_name": "Name",
-      "profile_command": "Program (a full path, or its name when it is on the search path)",
-      "profile_args": "Arguments, one per line",
-      "full_command": "The full command that will run on this machine:",
-      "profile_warning": "This is a program that runs with your access. Connect only an agent you trust.",
-      "save_profile": "Connect the agent",
-      "remove_profile": "Remove",
-      "ask_admin": "Ask the administrator to connect an agent on this server.",
-      "project": "Project",
-      "agent_label": "Agent",
-      "start": "Start a conversation",
-      "new_session": "New session",
-      "stop": "Stop",
-      "end_session": "End the session",
-      "export": "Export as Markdown",
-      "delete": "Delete the transcript",
-      "delete_confirm": "Delete for good",
-      "no_session": "No conversation yet for this project.",
-      "state_starting": "Starting",
-      "state_idle": "Waiting for you",
-      "state_running": "Working",
-      "state_awaiting_permission": "Asking your permission",
-      "state_ended": "Ended",
-      "live": "Live",
-      "reconnecting": "Reconnecting",
-      "not_running": "Not running",
-      "ended_user": "ended by you",
-      "ended_exited": "the agent exited",
-      "ended_protocol": "the agent broke the protocol",
-      "ended_timeout": "it took too long",
-      "ended_idle": "it was idle for too long",
-      "ended_flood": "the agent said too much",
-      "ended_shutdown": "Stuarty was closed",
-      "ended_start_failed": "it could not start",
-      "conversation": "Conversation with the agent",
-      "composer_label": "Message to the agent",
-      "composer_hint": "Enter sends, Shift+Enter adds a line.",
-      "send": "Send",
-      "you": "You",
-      "agent": "Agent",
-      "thought": "Thinking",
-      "plan": "Plan",
-      "tool": "Tool",
-      "tool_status_pending": "waiting",
-      "tool_status_in_progress": "running",
-      "tool_status_completed": "done",
-      "tool_status_failed": "failed",
-      "permission_title": "The agent asks to run:",
-      "allow_once": "Allow once",
-      "reject": "Reject",
-      "cancel_request": "Cancel",
-      "approvals_note": "Publications and costly generations are decided in Approvals, not here.",
-      "approvals_link": "Open Approvals",
-      "answer_allow": "You allowed:",
-      "answer_reject": "You rejected:",
-      "answer_cancel": "Cancelled:"
     },
     "keys": {
       "title": "API keys",
@@ -2655,289 +1601,6 @@
       "font_remove": "Remove font family {name}",
       "save": "Save brand kit",
       "saved": "Brand kit saved."
-    },
-    "assets": {
-      "intro": {
-        "visual": "The images and colour tables of your workspace, with where each came from and where it is used.",
-        "video": "The video and audio of your workspace, with where each came from and where it is used."
-      },
-      "filter": {
-        "text": "Search",
-        "tag": "Tag",
-        "origin": "Origin",
-        "any_origin": "Any origin",
-        "reusable": "Reusable only",
-        "apply": "Apply",
-        "clear": "Clear"
-      },
-      "origin": {
-        "imported": "Imported",
-        "generated": "Generated",
-        "fetched_by_agent": "Fetched by an agent",
-        "rendered_externally": "Rendered elsewhere"
-      },
-      "kind": {
-        "image": "Image",
-        "video": "Video",
-        "audio": "Audio",
-        "lut": "Colour table"
-      },
-      "reusable_badge": "Reusable",
-      "count": "{count} files",
-      "empty": {
-        "visual": "No images yet. Import a file in a project and it appears here.",
-        "video": "No video or audio yet. Import a file in a project and it appears here."
-      },
-      "empty_filtered": "No file matches these filters.",
-      "more": "Load more",
-      "detail": {
-        "title": "Details",
-        "close": "Close",
-        "origin": "Origin",
-        "facts": "File",
-        "provider": "Provider {provider}, model {model}",
-        "cost": "Cost: {amount} USD",
-        "created": "added {date}",
-        "description": "Description",
-        "rights": "Rights note",
-        "rights_notice": "This note is your own record of the licence or the permission. The product does not check it against a licence.",
-        "reusable": "Offer this file again (reusable)",
-        "save": "Save",
-        "saved": "Saved.",
-        "tags": "Tags",
-        "tag_add_label": "New tag",
-        "tag_add": "Add tag",
-        "tag_remove": "Remove the tag {tag}",
-        "uses": "Used by",
-        "no_uses": "No project uses this file.",
-        "use_in": "Use in a project",
-        "use": "Use",
-        "used": "Added to the project. No copy was made."
-      }
-    },
-    "write": {
-      "title": "Write",
-      "intro": "Scripts, copy and captions of your productions, written by you or with a model. Every save is a revision you can go back to.",
-      "filter": {
-        "project": "Project",
-        "kind": "Kind",
-        "all_projects": "Every project",
-        "all_kinds": "Every kind"
-      },
-      "kind": {
-        "script": "Script",
-        "copy": "Copy",
-        "caption": "Caption"
-      },
-      "new": "New text",
-      "new_form": {
-        "title": "New text",
-        "project": "Project",
-        "name": "Title",
-        "kind": "Kind",
-        "create": "Create",
-        "cancel": "Cancel",
-        "no_projects": "Make a project first."
-      },
-      "list": {
-        "label": "Texts",
-        "loading": "Loading.",
-        "failed": "The texts could not be loaded.",
-        "empty": "No texts yet.",
-        "row": "Revision {revision}, {words} words",
-        "more": "More",
-        "in_project": "in {project}"
-      },
-      "pick": "Choose a text, or make a new one.",
-      "editor": {
-        "title": "Title",
-        "body": "Text (Markdown)",
-        "tab_edit": "Write",
-        "tab_preview": "Preview",
-        "preview_label": "Preview of the text",
-        "preview_empty": "Nothing to show yet.",
-        "save": "Save",
-        "saving": "Saving.",
-        "saved": "Saved as revision {revision}.",
-        "unchanged": "Nothing changed: still revision {revision}.",
-        "unsaved": "Unsaved changes",
-        "loading": "Loading the text.",
-        "conflict": "Someone saved revision {revision} after you opened this text. Your changes are still here.",
-        "reload": "Read the latest revision"
-      },
-      "script": {
-        "heading": "Duration",
-        "pace": "Words per minute",
-        "result": "About {duration} read aloud at {pace} words per minute.",
-        "words": "{words} words spoken, {screen} on screen.",
-        "scenes": "Scenes",
-        "scene_line": "{title}: {words} words, {duration}",
-        "untitled": "Before the first heading",
-        "plain": "No VO: line was found, so every paragraph is counted as narration.",
-        "empty": "Write some narration to see how long it takes."
-      },
-      "caption": {
-        "heading": "Networks",
-        "common": "Common text",
-        "count": "{length} of {max} {unit}",
-        "count_free": "{length} {unit}, no limit published",
-        "hashtags": "hashtags: {count}",
-        "mentions": "mentions: {count}",
-        "links": "links: {count}",
-        "links_dead": "Links are not clickable on this network.",
-        "ok": "Within the limits",
-        "hint": "Start a part for a network with a line such as ## instagram. The networks are youtube, instagram, facebook, x and tiktok.",
-        "empty": "Write the caption to see the counters.",
-        "unit": {
-          "bytes": "UTF-8 bytes",
-          "characters": "characters",
-          "utf16_units": "UTF-16 units",
-          "weighted": "weighted characters"
-        }
-      },
-      "revisions": {
-        "heading": "Revisions",
-        "loading": "Loading the revisions.",
-        "source": {
-          "created": "made",
-          "write": "saved",
-          "generated": "drafted by a model",
-          "revert": "went back"
-        },
-        "line": "Revision {revision}, {source} by {actor}",
-        "reverted_to": "back to revision {revision}",
-        "model_line": "{provider}, {model}, cost {cost}",
-        "read": "Read",
-        "compare": "Compare with the one before",
-        "back": "Go back to this revision",
-        "went_back": "Went back to revision {from}: it is revision {revision} now.",
-        "diff_heading": "Changes from revision {from} to {to}",
-        "diff_added": "Added",
-        "diff_removed": "Removed",
-        "diff_none": "No paragraph changed.",
-        "diff_coarse": "The texts are too long to compare paragraph by paragraph; all of one is shown against all of the other."
-      },
-      "draft": {
-        "heading": "Draft with a model",
-        "intro": "A model writes a draft as a new revision. You see the estimated cost first, and the draft waits for your approval.",
-        "connection": "Connection",
-        "model": "Model",
-        "instruction": "What to write",
-        "network": "Network",
-        "whole": "The whole caption",
-        "estimate": "Estimate the cost",
-        "start": "Ask for the draft",
-        "estimated": "Estimated cost: {cost}.",
-        "waiting": "Waiting for your approval.",
-        "open_approvals": "Open the approval queue",
-        "running": "The model is writing.",
-        "done": "The draft is revision {revision}. It cost {cost}.",
-        "failed": "The draft failed.",
-        "no_connection": "Connect an AI provider that writes text first.",
-        "open_connections": "Open Connections"
-      }
-    },
-    "library": {
-      "intro": {
-        "memory": "What you learned from past productions, one fact per file. Agents read it before they plan the next one.",
-        "skill": "Procedures an agent follows, in the Agent Skills format. A skill from outside is not offered to an agent until you have read it.",
-        "prompt": "Texts you reuse, with variables that you fill in when you use them."
-      },
-      "list": {
-        "memory": "Memory notes",
-        "skill": "Skills",
-        "prompt": "Prompts"
-      },
-      "search": "Search",
-      "search_button": "Search",
-      "new": "New",
-      "rescan": "Read the files again",
-      "rescanned": "Files read again: {memory} notes, {skills} skills, {prompts} prompts, {invalid} invalid.",
-      "loading": "Loading.",
-      "load_failed": "The list could not be loaded.",
-      "empty": "Nothing here yet.",
-      "no_match": "Nothing matches.",
-      "pick": "Choose an entry, or create a new one.",
-      "saved": "Saved.",
-      "preview_label": "Text of the entry",
-      "badge": {
-        "invalid": "Invalid file",
-        "reviewed": "Reviewed",
-        "unreviewed": "Not reviewed",
-        "scripts": "Has scripts",
-        "kept": "Kept",
-        "pending": "Pending"
-      },
-      "origin": {
-        "built-in": "Built in",
-        "user": "Yours",
-        "imported": "Imported"
-      },
-      "tab": {
-        "edit": "Edit",
-        "preview": "Preview"
-      },
-      "field": {
-        "name": "Name",
-        "name_optional": "Name (optional)",
-        "name_hint": "Lower case letters, digits and hyphens, for example weekly-recap.",
-        "description": "Description",
-        "body": "Text",
-        "scope": "Scope",
-        "tags": "Tags, separated by commas",
-        "license": "Licence"
-      },
-      "action": {
-        "save": "Save",
-        "remove": "Remove"
-      },
-      "memory": {
-        "description": "The fact, in one line",
-        "keep": "Keep this note",
-        "pending_hint": "An agent wrote this note. Agents are not offered it until you keep it."
-      },
-      "prompt": {
-        "variables_hint": "Write {{variable}} where a value goes.",
-        "save_first": "Save the prompt, then fill in its variables here.",
-        "no_variables": "This prompt has no variables.",
-        "value": "Value of {name}",
-        "render": "Render",
-        "rendered": "Rendered text"
-      },
-      "skill": {
-        "origin": "Origin",
-        "source": "Source",
-        "no_licence": "None named",
-        "review_hint": "Read the text below and its files, then mark the skill as read. Until then no agent is offered it. Any change to it takes the mark away.",
-        "mark_reviewed": "Mark as read",
-        "reviewed_done": "Marked as read.",
-        "text": "Full text",
-        "full_text": "Full text of the skill",
-        "files": "Files",
-        "bytes": "size: {count} bytes",
-        "script": "Script: stored, never run",
-        "lint": "Lint",
-        "instructions": "Instructions"
-      },
-      "lint": {
-        "none": "No findings.",
-        "error": "Error",
-        "warning": "Warning"
-      },
-      "import": {
-        "heading": "Import or export skills",
-        "hint": "Stuarty opens no connection to fetch a skill. Download it first, then give the folder or the archive (.zip, .tar.gz) that is on the machine of the service.",
-        "path": "Folder or archive on the machine of the service",
-        "source": "Where it came from",
-        "replace": "Replace a skill of the same name",
-        "button": "Import",
-        "done": "Imported {name}. It is not reviewed yet."
-      },
-      "export": {
-        "button": "Export reviewed skills",
-        "done": "{count} skills written to {path}.",
-        "none": "No reviewed skill to export."
-      }
     }
   }
 }

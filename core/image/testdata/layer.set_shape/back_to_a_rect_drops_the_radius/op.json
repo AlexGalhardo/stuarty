@@ -1,7 +1,0 @@
-{
-  "args": {
-    "layer_id": "lyr_dddddddddd",
-    "shape": "rect"
-  },
-  "op": "layer.set_shape"
-}

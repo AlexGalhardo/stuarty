@@ -7,14 +7,14 @@
 # archive of this OS and architecture, checks it against checksums.txt, builds a workspace with
 # service/testdata/upgrade/build-workspace.sh, builds the candidate (this checkout), sets
 #   VUKEM_UPGRADE_WORKSPACES   one folder per version
-#   VUKEM_UPGRADE_BINARIES     <version>/stuarty[.exe] (vukem-video[.exe] for a release before v0.30.0)
+#   VUKEM_UPGRADE_BINARIES     <version>/vukem-video[.exe]
 #   VUKEM_UPGRADE_CANDIDATE    the binary of this checkout
 # and runs TestUpgradeMatrix and TestUpgradeOlderBinaryRefusesCandidate. Exit 0 means every released
 # workspace opens with the candidate and every older binary refuses a workspace of the candidate.
 #
 # v0.1.0 (the legacy Studio) and v0.2.0 (no command that creates a project) cannot be in the matrix.
 # Needs: go, ffmpeg on PATH, curl or gh, jq, tar or unzip. Environment:
-#   UPGRADE_REPO   owner/name of the releases (default $GITHUB_REPOSITORY, else AlexGalhardo/stuarty)
+#   UPGRADE_REPO   owner/name of the releases (default $GITHUB_REPOSITORY, else AlexGalhardo/vukem-video)
 #   UPGRADE_WORK   work folder (default a new temporary one, removed at the end)
 #   UPGRADE_KEEP   set to 1 to keep the work folder
 set -euo pipefail
@@ -23,16 +23,16 @@ die() { echo "upgrade-test: error: $*" >&2; exit 1; }
 log() { echo "upgrade-test: $*" >&2; }
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-repo="${UPGRADE_REPO:-${GITHUB_REPOSITORY:-AlexGalhardo/stuarty}}"
+repo="${UPGRADE_REPO:-${GITHUB_REPOSITORY:-AlexGalhardo/vukem-video}}"
 
 for tool in go ffmpeg ffprobe jq; do
 	command -v "$tool" >/dev/null 2>&1 || die "$tool is required"
 done
 
 case "$(uname -s)" in
-Linux) os=linux ext=tar.gz suffix= ;;
-Darwin) os=darwin ext=tar.gz suffix= ;;
-MINGW* | MSYS* | CYGWIN*) os=windows ext=zip suffix=.exe ;;
+Linux) os=linux ext=tar.gz exe=vukem-video ;;
+Darwin) os=darwin ext=tar.gz exe=vukem-video ;;
+MINGW* | MSYS* | CYGWIN*) os=windows ext=zip exe=vukem-video.exe ;;
 *) die "unsupported OS $(uname -s)" ;;
 esac
 case "$(uname -m)" in
@@ -94,13 +94,7 @@ mkdir -p "$workspaces" "$binaries"
 
 for version in "${versions[@]}"; do
 	number="${version#v}"
-	# A release before v0.30.0 is named vukem-video (ADR-0044): its archive, its binary and its variables.
-	prefix=stuarty
-	minor="${number#*.}"
-	minor="${minor%%.*}"
-	if [ "${number%%.*}" = 0 ] && [ "$minor" -lt 30 ]; then prefix=vukem-video; fi
-	exe="$prefix$suffix"
-	archive="${prefix}_${number}_${os}_${arch}.${ext}"
+	archive="vukem-video_${number}_${os}_${arch}.${ext}"
 	dl="$work/download/$version"
 	mkdir -p "$dl" "$binaries/$version"
 
@@ -145,7 +139,7 @@ if ! find "$binaries" -mindepth 1 -type d | grep -q .; then
 fi
 
 log "building the candidate"
-candidate="$work/candidate/stuarty$suffix"
+candidate="$work/candidate/$exe"
 mkdir -p "$work/candidate"
 (cd "$root" && go build -trimpath -o "$candidate" ./web/cmd/app)
 

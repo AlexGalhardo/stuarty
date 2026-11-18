@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/core/plan"
+	"github.com/AlexGalhardo/vukem-video/core/plan"
 )
 
 // TestKeyStable: the key is identical on two runs and is the hash of the spec

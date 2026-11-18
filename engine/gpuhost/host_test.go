@@ -15,17 +15,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/core/plan"
-	"github.com/AlexGalhardo/stuarty/engine/bitmap"
-	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
-	"github.com/AlexGalhardo/stuarty/engine/renderhost"
+	"github.com/AlexGalhardo/vukem-video/core/plan"
+	"github.com/AlexGalhardo/vukem-video/engine/bitmap"
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
+	"github.com/AlexGalhardo/vukem-video/engine/renderhost"
 )
 
-// A copy of the test binary named stuarty-render answers as the GPU host does, in the mode its mode.txt names,
+// A copy of the test binary named vukem-render answers as the GPU host does, in the mode its mode.txt names,
 // so the process policy and the protocol are tested without a graphics adapter (the real child is tested by
 // TestSecurity_T37_RealHostSurvivesHostileRequests and by the parity tests of engine/export).
 func TestMain(m *testing.M) {
-	if strings.TrimSuffix(strings.ToLower(filepath.Base(os.Args[0])), ".exe") == "stuarty-render" {
+	if strings.TrimSuffix(strings.ToLower(filepath.Base(os.Args[0])), ".exe") == "vukem-render" {
 		fakeChild()
 
 		return
@@ -36,7 +36,7 @@ func TestMain(m *testing.M) {
 
 func fakeChild() {
 	if len(os.Args) > 1 && os.Args[1] == "--version" {
-		_, _ = os.Stdout.WriteString("stuarty-render fake\n")
+		_, _ = os.Stdout.WriteString("vukem-render fake\n")
 
 		return
 	}
@@ -105,7 +105,7 @@ type env struct {
 	path string
 }
 
-// newEnv makes a runner, a run directory and a copy of the test binary named stuarty-render in the given mode.
+// newEnv makes a runner, a run directory and a copy of the test binary named vukem-render in the given mode.
 func newEnv(t *testing.T, mode string) env {
 	t.Helper()
 
@@ -128,7 +128,7 @@ func newEnv(t *testing.T, mode string) env {
 
 	defer func() { _ = self.Close() }()
 
-	bin := filepath.Join(t.TempDir(), "stuarty-render")
+	bin := filepath.Join(t.TempDir(), "vukem-render")
 	if runtime.GOOS == "windows" {
 		bin += ".exe"
 	}
@@ -275,8 +275,8 @@ func TestAMissingOrRelativeHostIsUnavailable(t *testing.T) {
 	e := newEnv(t, "echo")
 
 	for name, path := range map[string]string{
-		"missing":  filepath.Join(t.TempDir(), "stuarty-render"),
-		"relative": "stuarty-render",
+		"missing":  filepath.Join(t.TempDir(), "vukem-render"),
+		"relative": "vukem-render",
 		"empty":    "",
 	} {
 		_, err := Start(context.Background(), e.r, Config{Path: path, Dir: e.dir, Deadline: time.Minute})
@@ -293,7 +293,7 @@ func TestAMissingOrRelativeHostIsUnavailable(t *testing.T) {
 }
 
 func TestSecurity_T37_ChildEnvironmentMinimal(t *testing.T) {
-	for _, k := range []string{"STUARTY_TRANSCRIBE_KEY", "APP_KEY", "STUARTY_KEY", "OTEL_EXPORTER_OTLP_ENDPOINT", "STUARTY_TOKEN"} {
+	for _, k := range []string{"VUKEM_VIDEO_TRANSCRIBE_KEY", "APP_KEY", "VUKEM_VIDEO_KEY", "OTEL_EXPORTER_OTLP_ENDPOINT", "VUKEM_VIDEO_TOKEN"} {
 		t.Setenv(k, "canary-"+k)
 	}
 
@@ -408,9 +408,9 @@ func TestSecurity_T37_CancelKillsTheChild(t *testing.T) {
 // The real child, when it is built: a request the protocol does not allow ends it with one answer and a
 // non-zero exit, never a hang and never a frame.
 func TestSecurity_T37_RealHostSurvivesHostileRequests(t *testing.T) {
-	bin := os.Getenv("STUARTY_TEST_GPU_HOST")
+	bin := os.Getenv("VUKEM_VIDEO_TEST_GPU_HOST")
 	if bin == "" {
-		name := "stuarty-render"
+		name := "vukem-render"
 		if runtime.GOOS == "windows" {
 			name += ".exe"
 		}
@@ -420,9 +420,7 @@ func TestSecurity_T37_RealHostSurvivesHostileRequests(t *testing.T) {
 
 	if _, err := os.Stat(bin); err != nil {
 		// skip-env: gpu-adapter
-		t.Skip( // verify:env-skip the GPU render host is not built
-			"stuarty-render is not built: set STUARTY_TEST_GPU_HOST or run bash scripts/build-renderer.sh native",
-		)
+		t.Skip("vukem-render is not built: set VUKEM_VIDEO_TEST_GPU_HOST or run bash scripts/build-renderer.sh native")
 	}
 
 	if out, err := exec.CommandContext(t.Context(), bin, "--probe").Output(); err != nil {

@@ -4,7 +4,7 @@ import (
 	"image"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/core/plan"
+	"github.com/AlexGalhardo/vukem-video/core/plan"
 )
 
 func redSquare() Image {

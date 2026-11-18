@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/core/command"
-	"github.com/AlexGalhardo/stuarty/service"
-	"github.com/AlexGalhardo/stuarty/service/workspace"
+	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/vukem-video/service/workspace"
 )
 
 func shape(track string, size int, id string) string {

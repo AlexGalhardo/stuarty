@@ -1,9 +1,0 @@
-{
-  "args": {
-    "h": 10,
-    "radius": 3,
-    "shape": "rect",
-    "w": 10
-  },
-  "op": "layer.add_shape"
-}

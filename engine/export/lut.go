@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/AlexGalhardo/stuarty/core/plan"
-	"github.com/AlexGalhardo/stuarty/core/timeline"
-	"github.com/AlexGalhardo/stuarty/engine/lut"
+	"github.com/AlexGalhardo/vukem-video/core/plan"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/engine/lut"
 )
 
 // lutExt is the extension of the normalized artifact of a lut asset: the .cube file the ingest checked and kept.

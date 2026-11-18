@@ -5,9 +5,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/core/command"
-	"github.com/AlexGalhardo/stuarty/service"
-	"github.com/AlexGalhardo/stuarty/service/workspace"
+	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/vukem-video/service/workspace"
 )
 
 // errorCodes is every code of SDD-000 section 8 and SDD-002 A.8, with the exit
@@ -94,7 +94,7 @@ func TestErrorDocumentHasTheProblemMembersAndNoHTTPOnlyOnes(t *testing.T) {
 	h.run("project:list", "--json")
 
 	doc := oneJSONDocument(t, h.stdout.String())
-	if doc["type"] != "urn:stuarty:error:E_OVERLAP" || doc["title"] != "E_OVERLAP" ||
+	if doc["type"] != "urn:vukem-video:error:E_OVERLAP" || doc["title"] != "E_OVERLAP" ||
 		doc["status"] != float64(409) ||
 		doc["detail"] != "overlaps" ||
 		doc["op_index"] != float64(2) ||

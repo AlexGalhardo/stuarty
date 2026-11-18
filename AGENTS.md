@@ -10,7 +10,7 @@ It grew out of a video editor called Vukem Video. The editor (a command core in 
 
 What defines the product: requirements (`docs/prds/`), architecture decisions (`docs/adrs/`), specifications (`docs/sdds/`), and the decisions of the author (`D-NNN`, private, cited by id). What is left to do: the epics of `docs/plans/`, in the order of `docs/plans/00-roadmap.md`. There are no phases and no milestones (ADR-0045).
 
-**The name in the code.** The product was renamed in one epic (ADR-0044): the Go module, the binary, the variables (`STUARTY_*`) and the workspace folder (`~/.stuarty`) say `stuarty`. The former names are still read for a deprecation period (SDD-000 section 13). The specifications SDD-000, SDD-002, SDD-003 and SDD-007 are read by tests and by the site generator: their names change only together with the code.
+**The name in the code.** Until the rename epic of ADR-0044 is merged, the Go module, the binary, the environment variables and the workspace folder still say `vukem-video`. Write "Stuarty" in prose and the real identifier in commands. The specifications SDD-000, SDD-002, SDD-003 and SDD-007 are read by tests and by the site generator: their names and their phase labels (`P`, `A`, `B`) change only together with the code.
 
 ## 2. Where things are
 
@@ -34,7 +34,7 @@ the repository (remote AlexGalhardo/stuarty)
 ```
 
 - The work: `docs/plans/NN-<slug>.md`, one file per epic, in English, with the index `docs/plans/00-roadmap.md` (rule `.agents/rules/plans.md`).
-- `development/` is git-ignored: nothing in it is published, and nothing outside it may reference it, except this file, `CLAUDE.md` and `.agents/`. The current state of the work is in `development/STATE.md` (read it first); questions waiting for the author in `development/QUESTIONS.md`; decisions of the author in `development/brainstorming.md`; the open product issues in `development/feedbacks/vukem-video.md`; research notes in `development/search/`; the state of the code on 2026-11-18 in `development/context/estado-atual.md`. How the folder is used, and who may write what in it, is the rule `.agents/rules/development-folder.md`; the folder is kept in step with the project, so what a change makes stale there is updated or deleted in the same change.
+- `development/` is git-ignored: nothing in it is published, and nothing outside it may reference it, except this file, `CLAUDE.md` and `.agents/`. Decisions of the author are in `development/brainstorming.md`; research notes in `development/search/`; the state of the code on 2026-11-18 in `development/context/estado-atual.md`.
 - There is one UI: the desktop application is the Wails shell over the same web UI (ADR-0041). A page is written once in `web/resources/`.
 
 ## 3. The rules that are never traded
@@ -70,11 +70,11 @@ Seven agents, defined in `.claude/agents/`.
 
 ## 5. Starting a session
 
-1. Read this file, `.agents/rules/`, `docs/plans/00-roadmap.md` and the current state in `development/STATE.md`, then `development/QUESTIONS.md` for what the author answered.
+1. Read this file, `.agents/rules/`, `docs/plans/00-roadmap.md` and the current state at the end of the session prompt the author gives you.
 2. Follow the author's instructions for the session start (model and effort; questions through the question tool, one at a time, with a recommended option first).
 3. Pick the next epics whose dependencies are done and whose modules do not intersect: at most five seniors at once. Parallel agents and worktrees need the author's explicit yes; the work-session prompt carries it.
 4. For each epic, write a briefing (section 6), dispatch, and keep working on what does not depend on the answer.
-5. After every event (an epic dispatched, handed off, reviewed, merged or blocked), at the end, and before a context compaction, rewrite `development/STATE.md`: what each agent is doing, epics done, commands that validate, decisions taken, what waits for the author.
+5. At the end, or before a context compaction, refresh the current state: epics done, commands that validate, decisions taken, what is open.
 
 ## 6. A briefing
 
@@ -90,7 +90,7 @@ A delegated engineer knows only what the briefing says. It contains:
 
 ## 7. Review and completion
 
-The protocol is `.agents/rules/plans.md` section 3, and its step-by-step procedures are three skills of `.agents/skills/`: `orchestrator-loop` (the session), `epic-loop` (one epic, for its senior) and `qa-campaign` (the rounds after the epics). In short:
+The protocol is `.agents/rules/plans.md` section 3. In short:
 
 1. **The senior works the epic in a loop**: read the epic; do task 1; run the command that verifies task 1; if it fails, fix and run it again; only when it passes, commit and move to task 2. When every task is done and every acceptance criterion passes, write the hand-off.
 2. The orchestrator opens a **new** specialist session with only the epic, its acceptance criteria and the diff of the epic branch against the integration branch.
@@ -106,7 +106,7 @@ The author confirms before: a push or a merge to `main`, marking the pull reques
 
 ## 8. Git and shell
 
-- One integration branch, `release/0.30.0`, carries the single draft pull request (#106, codename "release 0.30.0"), where every commit of the work is saved; each epic is a branch from it, in its own worktree outside the repository folder (`.agents/rules/git-and-branches.md`). The orchestrator pushes the integration branch after each approved epic; nobody else pushes, and nothing else is pushed.
+- One integration branch carries the single draft pull request; each epic is a branch from it, in its own worktree outside the repository folder (`.agents/rules/git-and-branches.md`). The orchestrator pushes the integration branch after each approved epic; nobody else pushes, and nothing else is pushed.
 - Conventional Commits, one small self-contained commit per task of the epic, with `Refs: epic NN task N`.
 - Never `git stash`, `git checkout -- .`, `git reset --hard`, or a force push.
 - Chain with `&&`; never `;` before a push.
@@ -126,7 +126,7 @@ The author confirms before: a push or a merge to `main`, marking the pull reques
 | `bun run typecheck` and `bun run check:thin-client` (in `web/`) | the TypeScript types and the thin-client rules |
 | `bun run e2e` (in `web/`) | the browser tests (Playwright) |
 | `go test -run TestSecurity_ ./...` | the security suite |
-| `bash .agents/skills/verify/scripts/verify.sh --quick --base release/0.30.0` | the checks of what changed against the integration branch, before a commit (without `--base` it compares with `main`) |
+| `bash .agents/skills/verify/scripts/verify.sh --quick` | the checks of what changed, before a commit |
 | `bash scripts/build-renderer.sh` | builds the Rust renderer natively and to WebAssembly, reproducibly |
 | `cargo fmt --check && cargo clippy -- -D warnings && cargo test && cargo deny check` (in `renderer/`) | the Rust gate (rule `.agents/rules/rust.md`) |
 | `task ci`, `task gate -- <tag>`, `verify.sh --full` | the full gates; not required while releases are deferred (ADR-0045), useful before a large merge |

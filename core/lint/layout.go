@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
 // Rect is a box in project pixels, rotation already applied.

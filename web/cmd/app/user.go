@@ -9,11 +9,11 @@ import (
 	"os"
 	"strings"
 
-	"github.com/AlexGalhardo/stuarty/core/timeline"
-	"github.com/AlexGalhardo/stuarty/service"
-	"github.com/AlexGalhardo/stuarty/service/workspace"
-	"github.com/AlexGalhardo/stuarty/web/app/auth"
-	"github.com/AlexGalhardo/stuarty/web/app/store"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/vukem-video/service/workspace"
+	"github.com/AlexGalhardo/vukem-video/web/app/auth"
+	"github.com/AlexGalhardo/vukem-video/web/app/store"
 )
 
 // isUserCommand tells the two commands that manage the users of network mode
@@ -98,8 +98,8 @@ func runUser(ctx context.Context, name string, args []string, u userIO) int {
 }
 
 const (
-	createUsage = "usage: stuarty user:create <email> [--admin]"
-	passwdUsage = "usage: stuarty user:passwd <email>" //nolint:gosec // a usage line, not a credential
+	createUsage = "usage: vukem-video user:create <email> [--admin]"
+	passwdUsage = "usage: vukem-video user:passwd <email>" //nolint:gosec // a usage line, not a credential
 )
 
 func parseUserArgs(name string, args []string) (email string, admin bool, err error) {
@@ -190,7 +190,7 @@ func (o *oneByte) Read(p []byte) (int, error) {
 
 func userFailWith(u userIO, err error) int {
 	if we, ok := errors.AsType[*workspace.Error](err); ok {
-		_, _ = fmt.Fprintf(u.Err, "stuarty: %s: %s\n", we.Code, we.Message)
+		_, _ = fmt.Fprintf(u.Err, "vukem-video: %s: %s\n", we.Code, we.Message)
 
 		if we.Retryable {
 			return 2
@@ -203,7 +203,7 @@ func userFailWith(u userIO, err error) int {
 }
 
 func userFail(u userIO, msg string) int {
-	_, _ = fmt.Fprintln(u.Err, "stuarty:", msg)
+	_, _ = fmt.Fprintln(u.Err, "vukem-video:", msg)
 
 	return 1
 }

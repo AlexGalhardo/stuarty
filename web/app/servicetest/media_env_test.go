@@ -14,18 +14,19 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/engine/cache"
-	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
-	"github.com/AlexGalhardo/stuarty/engine/frame"
-	"github.com/AlexGalhardo/stuarty/engine/ingest"
-	enginestore "github.com/AlexGalhardo/stuarty/engine/store"
-	"github.com/AlexGalhardo/stuarty/engine/transcribe"
-	"github.com/AlexGalhardo/stuarty/service"
-	"github.com/AlexGalhardo/stuarty/service/exporter"
-	"github.com/AlexGalhardo/stuarty/service/pathguard"
-	"github.com/AlexGalhardo/stuarty/web/app/jobs"
-
 	"github.com/AlexGalhardo/vukem/queue"
+
+	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/engine/cache"
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
+	"github.com/AlexGalhardo/vukem-video/engine/frame"
+	"github.com/AlexGalhardo/vukem-video/engine/ingest"
+	enginestore "github.com/AlexGalhardo/vukem-video/engine/store"
+	"github.com/AlexGalhardo/vukem-video/engine/transcribe"
+	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/vukem-video/service/exporter"
+	"github.com/AlexGalhardo/vukem-video/service/pathguard"
+	"github.com/AlexGalhardo/vukem-video/web/app/jobs"
 )
 
 // lazyRunner lets the queue handlers exist before the service that they call.
@@ -61,6 +62,8 @@ type mediaCfg struct {
 	onEvent func(service.Event)
 	// durable runs the jobs on the database queue with workers instead of inline.
 	durable bool
+	// beta serves the commands of the Beta phase.
+	beta bool
 	// tools is the install step of the helper.
 	tools *service.Tools
 	// transcriber is the provider of the transcribe job.
@@ -71,8 +74,6 @@ type mediaCfg struct {
 	log *slog.Logger
 	// jobWait is how long TrashEmpty waits for a job to stop; zero is the default.
 	jobWait time.Duration
-	// with changes the options of the service before it is built, after the helper set its own.
-	with func(e *env, o *service.Options)
 }
 
 // mediaEnv is an env whose service has the media and job machinery, with a
@@ -104,6 +105,10 @@ func newMediaEnv(tb testing.TB, cfg mediaCfg) *mediaEnv {
 
 	m.env = newEnvWith(tb, func(e *env, o *service.Options) {
 		m.ws = string(e.dir)
+
+		if cfg.beta {
+			o.Registry = command.BetaBuild()
+		}
 
 		gc := pathguard.Config{Workspace: m.ws}
 
@@ -171,10 +176,6 @@ func newMediaEnv(tb testing.TB, cfg mediaCfg) *mediaEnv {
 			o.Exporter = exporter.New(exporter.Config{Runner: runner, Workspace: m.ws})
 		}
 		o.Limits = cfg.limits
-
-		if cfg.with != nil {
-			cfg.with(e, o)
-		}
 
 		if cfg.noQueue {
 			return
@@ -381,7 +382,7 @@ func pinnedFFmpeg(tb testing.TB) *ffmpeg.Installation {
 		exe += ".exe"
 	}
 
-	dir := os.Getenv("STUARTY_TEST_FFMPEG_DIR")
+	dir := os.Getenv("VUKEM_VIDEO_TEST_FFMPEG_DIR")
 
 	if dir == "" {
 		for _, base := range []string{os.Getenv("RUNNER_TEMP"), os.Getenv("TEMP"), os.Getenv("TMPDIR")} {
@@ -398,7 +399,7 @@ func pinnedFFmpeg(tb testing.TB) *ffmpeg.Installation {
 	}
 
 	if dir == "" {
-		tb.Skip("no pinned FFmpeg: run scripts/install-ffmpeg.sh and set STUARTY_TEST_FFMPEG_DIR")
+		tb.Skip("no pinned FFmpeg: run scripts/install-ffmpeg.sh and set VUKEM_VIDEO_TEST_FFMPEG_DIR")
 	}
 
 	in, err := ffmpeg.Discover(
@@ -406,7 +407,7 @@ func pinnedFFmpeg(tb testing.TB) *ffmpeg.Installation {
 		ffmpeg.Config{FFmpegPath: filepath.Join(dir, exe), CPUCount: runtime.NumCPU()},
 	)
 	if err != nil || in.Info.License.Name != "lgpl" {
-		tb.Skip("the FFmpeg in STUARTY_TEST_FFMPEG_DIR is not the pinned LGPL build")
+		tb.Skip("the FFmpeg in VUKEM_VIDEO_TEST_FFMPEG_DIR is not the pinned LGPL build")
 	}
 
 	return in

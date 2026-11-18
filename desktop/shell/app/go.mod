@@ -1,9 +1,9 @@
-module github.com/AlexGalhardo/stuarty/desktop/shell/app
+module github.com/AlexGalhardo/vukem-video/desktop/shell/app
 
 go 1.27.4
 
 require (
-	github.com/AlexGalhardo/stuarty v0.0.0
+	github.com/AlexGalhardo/vukem-video v0.0.0
 	github.com/wailsapp/wails/v3 v3.1.0
 )
 
@@ -16,4 +16,4 @@ require (
 	golang.org/x/term v0.46.0 // indirect
 )
 
-replace github.com/AlexGalhardo/stuarty => ../../..
+replace github.com/AlexGalhardo/vukem-video => ../../..

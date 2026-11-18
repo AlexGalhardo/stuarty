@@ -1,6 +1,6 @@
 # Bundled fonts
 
-The six open families of D-022, embedded in the renderer module with `include_bytes!` (`renderer/stuarty-renderer-text/src/fonts.rs`). The rasterizer reads no other font: not the system fonts, not a download (ADR-0012, D-016).
+The six open families of D-022, embedded in the renderer module with `include_bytes!` (`renderer/vukem-renderer-text/src/fonts.rs`). The rasterizer reads no other font: not the system fonts, not a download (ADR-0012, D-016).
 
 Every file comes from the Google Fonts repository at commit `cc39c4c2c304bc368c9b7c311ea2bcc6013299fe` (folder `ofl/<family>/`), which distributes the upstream projects named below under the SIL Open Font License 1.1. The licence of each family is in `licenses/fonts/<Family>-OFL.txt`; the copyright line of each text names the upstream authors. The METADATA of each family in that commit says `license: "OFL"`.
 
@@ -13,7 +13,7 @@ Every file comes from the Google Fonts repository at commit `cc39c4c2c304bc368c9
 | Playfair Display | `PlayfairDisplay-Variable.ttf` | 400 to 900 (variable `wght`) | `c40f2293766a503bc70cce9e512ef844a4ccb7cbcde792fe2ea31d191917d8d6` | <https://github.com/aaronbell/Playfair-Display> | SIL OFL 1.1, `licenses/fonts/PlayfairDisplay-OFL.txt` |
 | JetBrains Mono | `JetBrainsMono-Variable.ttf` | 100 to 800 (variable `wght`) | `48715a42ec242c21e9f02692891e147d022299a52e48d5e413e1a942193ffeda` | <https://github.com/JetBrains/JetBrainsMono> | SIL OFL 1.1, `licenses/fonts/JetBrainsMono-OFL.txt` |
 
-A weight outside these ranges, or one that is not a multiple of 100, is `E_FONT_UNKNOWN` with the weights that exist (`FontSet::lookup`). The weights are the ranges of the `wght` axis of each file; the `fonts` tests of `renderer/stuarty-renderer-text` and `TestBundledFamilies` of `engine/rasterize` fail when this table is wrong.
+A weight outside these ranges, or one that is not a multiple of 100, is `E_FONT_UNKNOWN` with the weights that exist (`FontSet::lookup`). The weights are the ranges of the `wght` axis of each file; the `fonts` tests of `renderer/vukem-renderer-text` and `TestBundledFamilies` of `engine/rasterize` fail when this table is wrong.
 
 ## Coverage
 
@@ -22,6 +22,6 @@ The files cover Latin, Latin Extended and Vietnamese. Inter also covers Greek an
 ## Adding or updating a font
 
 1. Take the file and its `OFL.txt` from the upstream release or from the Google Fonts folder, and check the licence in the copyright text.
-2. Put the file here, the licence in `licenses/fonts/`, add a row above with the SHA-256 (`sha256sum`), and add the family to `FAMILIES` in `renderer/stuarty-renderer-text/src/fonts.rs` and to `bundledFamilies` in `engine/rasterize/fonts_test.go`.
-3. Bump `BitmapVersion` in `core/plan` when the change alters the bytes of a bitmap, regenerate the vectors (`VUKEM_WRITE_RASTER_VECTORS=1 cargo test -p stuarty-renderer-text` in `renderer/`), rebuild the module (`bash scripts/build-renderer.sh embed`) and refresh the goldens (`go test ./engine/rasterize -run Golden -update`).
+2. Put the file here, the licence in `licenses/fonts/`, add a row above with the SHA-256 (`sha256sum`), and add the family to `FAMILIES` in `renderer/vukem-renderer-text/src/fonts.rs` and to `bundledFamilies` in `engine/rasterize/fonts_test.go`.
+3. Bump `BitmapVersion` in `core/plan` when the change alters the bytes of a bitmap, regenerate the vectors (`VUKEM_WRITE_RASTER_VECTORS=1 cargo test -p vukem-renderer-text` in `renderer/`), rebuild the module (`bash scripts/build-renderer.sh embed`) and refresh the goldens (`go test ./engine/rasterize -run Golden -update`).
 4. A new file needs the author's approval of the licence and of the size it adds to the binary.

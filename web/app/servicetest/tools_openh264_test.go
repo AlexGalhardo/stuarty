@@ -10,9 +10,9 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
-	"github.com/AlexGalhardo/stuarty/engine/transcribe"
-	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
+	"github.com/AlexGalhardo/vukem-video/engine/transcribe"
+	"github.com/AlexGalhardo/vukem-video/service"
 )
 
 // cisco stands in for ciscobinary.openh264.org: it serves the compressed stand-in library of

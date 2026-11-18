@@ -48,7 +48,7 @@ func zipOf(tb testing.TB, members ...member) []byte {
 
 func goodManifest() []byte {
 	return []byte(
-		`{"format":"stuarty-template","template_version":1,"app_version":"t","schema_version":1,"name":"n"}`,
+		`{"format":"vukem-video-template","template_version":1,"app_version":"t","schema_version":1,"name":"n"}`,
 	)
 }
 
@@ -179,7 +179,7 @@ func FuzzTemplateArchive(f *testing.F) {
 	hexName := strings.Repeat("ab", 32)
 	f.Add(zipOf(
 		f,
-		member{name: "manifest.json", body: []byte(`{"format":"stuarty-bundle","bundle_version":1}`)},
+		member{name: "manifest.json", body: []byte(`{"format":"vukem-video-bundle","bundle_version":1}`)},
 		member{name: "document.json", body: []byte(`{}`)},
 		member{name: "media." + hexName, body: []byte("media")},
 		member{name: "font." + hexName, body: []byte("\x00\x01\x00\x00")},

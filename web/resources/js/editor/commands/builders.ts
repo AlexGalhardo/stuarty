@@ -576,8 +576,6 @@ export interface StoredKeyframe {
 	t: number;
 	value: number;
 	easing?: KeyframeEasing;
-	// The four numbers of an easing `bezier` (SDD-001 section 3.8).
-	bezier?: readonly number[];
 }
 
 // The keyframe a list holds at a frame of the timeline, if any.
@@ -604,53 +602,15 @@ export function shownColourKeyframe(
 	return before[before.length - 1] ?? keys[0];
 }
 
-// The spellings of the registry: the named easings (`keyframe.set_easing` easing)
-// and, with `bezier`, those of `keyframe.set`.
-export const KEYFRAME_NAMED_EASINGS = [
+// The spellings of the registry (`keyframe.set` easing).
+export const KEYFRAME_EASINGS = [
 	"linear",
 	"ease_in",
 	"ease_out",
 	"ease_in_out",
 	"hold",
 ] as const;
-export type NamedKeyframeEasing = (typeof KEYFRAME_NAMED_EASINGS)[number];
-export const KEYFRAME_EASINGS = [...KEYFRAME_NAMED_EASINGS, "bezier"] as const;
 export type KeyframeEasing = (typeof KEYFRAME_EASINGS)[number];
-
-// The named curves of `keyframe.set_easing`; the core stores each as its four numbers.
-export const BEZIER_PRESETS = [
-	"in",
-	"out",
-	"in_out",
-	"back",
-	"overshoot",
-] as const;
-export type BezierPreset = (typeof BEZIER_PRESETS)[number];
-
-// The curve editor and the easing select of a row: one of a named easing, four
-// numbers or a named curve. The core judges the numbers.
-export function keyframeEasingOperations(input: {
-	itemId: string;
-	property: AnyKeyframeProperty;
-	frame: number;
-	easing?: NamedKeyframeEasing;
-	bezier?: readonly number[];
-	preset?: BezierPreset;
-}): Operations {
-	return [
-		{
-			op: "keyframe.set_easing",
-			args: {
-				item_id: input.itemId,
-				property: input.property,
-				at: frames(input.frame),
-				...(input.easing === undefined ? {} : { easing: input.easing }),
-				...(input.bezier === undefined ? {} : { bezier: [...input.bezier] }),
-				...(input.preset === undefined ? {} : { preset: input.preset }),
-			},
-		},
-	];
-}
 
 // Whether the playhead lies inside the item, its end included: the one gate of
 // "Add at playhead" (SDD-012 section 8.3), never a prediction of success.
@@ -671,7 +631,6 @@ export function keyframeSetOperations(input: {
 	frame: number;
 	value: number;
 	easing?: KeyframeEasing;
-	bezier?: readonly number[];
 }): Operations {
 	return [
 		{
@@ -682,7 +641,6 @@ export function keyframeSetOperations(input: {
 				at: frames(input.frame),
 				value: input.value,
 				...(input.easing === undefined ? {} : { easing: input.easing }),
-				...(input.bezier === undefined ? {} : { bezier: [...input.bezier] }),
 			},
 		},
 	];
@@ -801,51 +759,6 @@ export function presetOperations(input: {
 				edge: input.edge,
 				preset: input.preset,
 				...(input.duration === undefined ? {} : { duration: input.duration }),
-			},
-		},
-	];
-}
-
-// The motion presets of `animation.apply_preset`: the core expands one into ordinary
-// keyframes at the start or the end of the item.
-export const MOTION_PRESETS = [
-	"fade",
-	"slide",
-	"scale",
-	"pop",
-	"push_in",
-	"pull_out",
-] as const;
-export type MotionPreset = (typeof MOTION_PRESETS)[number];
-export const MOTION_DIRECTIONS = ["left", "right", "up", "down"] as const;
-export type MotionDirection = (typeof MOTION_DIRECTIONS)[number];
-
-// Which arguments a preset takes; the core refuses the others.
-export const motionTakesDirection = (preset: MotionPreset): boolean =>
-	preset === "slide";
-export const motionTakesAmount = (preset: MotionPreset): boolean =>
-	preset !== "fade" && preset !== "pop";
-
-export function motionPresetOperations(input: {
-	itemId: string;
-	preset: MotionPreset;
-	edge: Edge;
-	duration?: string;
-	direction?: MotionDirection;
-	amount?: number;
-}): Operations {
-	return [
-		{
-			op: "animation.apply_preset",
-			args: {
-				item_id: input.itemId,
-				preset: input.preset,
-				edge: input.edge,
-				...(input.duration === undefined ? {} : { duration: input.duration }),
-				...(input.direction === undefined
-					? {}
-					: { direction: input.direction }),
-				...(input.amount === undefined ? {} : { amount: input.amount }),
 			},
 		},
 	];

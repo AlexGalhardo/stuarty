@@ -7,7 +7,7 @@ import (
 	"image"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/core/plan"
+	"github.com/AlexGalhardo/vukem-video/core/plan"
 )
 
 // blurSceneHash pins the blur on every architecture (NFR-010).

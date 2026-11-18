@@ -1,8 +1,0 @@
-{
-  "code": "E_VALIDATION",
-  "hint": "Take it out of layer_ids, or align to the canvas.",
-  "message": "Layer lyr_cccccccccc cannot be aligned to itself.",
-  "op_index": 0,
-  "path": "args.to",
-  "retryable": false
-}

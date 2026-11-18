@@ -1,6 +1,6 @@
 # Agent benchmark: the model ladder
 
-Can a modest AI agent edit video with Stuarty almost as well as a large one? This document answers that question release after release. Each round runs three agents, one per model tier (Claude Haiku, Sonnet and Opus, all at medium effort), through exactly the same fixed script of tasks, as first-class users of the product. Every gap between the smallest and the largest model is treated as a defect of the product (documentation, error messages, schemas, MCP, CLI, HTTP API or UI), not of the model, and the goal is that the gap shrinks from one round to the next.
+Can a modest AI agent edit video with Vukem Video almost as well as a large one? This document answers that question release after release. Each round runs three agents, one per model tier (Claude Haiku, Sonnet and Opus, all at medium effort), through exactly the same fixed script of tasks, as first-class users of the product. Every gap between the smallest and the largest model is treated as a defect of the product (documentation, error messages, schemas, MCP, CLI, HTTP API or UI), not of the model, and the goal is that the gap shrinks from one round to the next.
 
 ## 1. Method
 

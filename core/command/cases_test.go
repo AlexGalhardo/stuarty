@@ -12,7 +12,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
 // Golden cases of SDD-002 Part C. A case is a document, built here, and an operation;

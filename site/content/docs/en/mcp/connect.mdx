@@ -16,7 +16,7 @@ There are two ways to reach the same tools. The first is a process the client st
 ## Over stdio
 
 ```bash
-stuarty mcp
+vukem-video mcp
 ```
 
 This is the command a client runs. In a client's configuration it is a command and its arguments:
@@ -24,20 +24,20 @@ This is the command a client runs. In a client's configuration it is a command a
 ```json
 {
   "mcpServers": {
-    "stuarty": { "command": "stuarty", "args": ["mcp"] }
+    "vukem-video": { "command": "vukem-video", "args": ["mcp"] }
   }
 }
 ```
 
-When no other process owns your [workspace](/docs/workspace), `stuarty mcp` becomes its owner for as long as it runs. When the editor server (`stuarty serve`) is already running, it talks to that server instead, so the agent and the browser see the same project at once.
+When no other process owns your [workspace](/docs/workspace), `vukem-video mcp` becomes its owner for as long as it runs. When the editor server (`vukem-video serve`) is already running, it talks to that server instead, so the agent and the browser see the same project at once.
 
 The edits of the agent carry an actor, so the history shows who did what. By default it is `local:` plus the name the client gives itself. Name it yourself with `--actor`:
 
 ```bash
-stuarty mcp --actor claude-code
+vukem-video mcp --actor claude-code
 ```
 
-To use a server that runs elsewhere, set `STUARTY_URL` and `STUARTY_KEY`; the stdio server then talks to that server with the API key. See the [configuration variables](/docs/reference/configuration).
+To use a server that runs elsewhere, set `VUKEM_VIDEO_URL` and `VUKEM_VIDEO_KEY`; the stdio server then talks to that server with the API key. See the [configuration variables](/docs/reference/configuration).
 
 ## Over HTTP
 
@@ -47,17 +47,17 @@ The credentials are the ones of the [API](/docs/api/overview): `Authorization: B
 
 ```bash
 curl -X POST "http://127.0.0.1:7878/mcp" \
-  -H "Authorization: Bearer $STUARTY_KEY" \
+  -H "Authorization: Bearer $VUKEM_VIDEO_KEY" \
   -H "Content-Type: application/json" \
   -H "Accept: application/json, text/event-stream" \
   -d '{"jsonrpc": "2.0", "id": 1, "method": "tools/list"}'
 ```
 
-The answer lists the 17 tools, each with its input schema, its output schema and its annotations. To call one, send `tools/call`:
+The answer lists the 16 tools, each with its input schema, its output schema and its annotations. To call one, send `tools/call`:
 
 ```bash
 curl -X POST "http://127.0.0.1:7878/mcp" \
-  -H "Authorization: Bearer $STUARTY_KEY" \
+  -H "Authorization: Bearer $VUKEM_VIDEO_KEY" \
   -H "Content-Type: application/json" \
   -H "Accept: application/json, text/event-stream" \
   -d '{
@@ -73,13 +73,13 @@ curl -X POST "http://127.0.0.1:7878/mcp" \
 
 ## Check that it works
 
-Ask the agent to list your projects. It should call [`project_list`](/docs/mcp/tools/project_list) and answer with the projects of your workspace, or with none. If the client shows no tools, run `stuarty mcp` in a terminal: it must wait for input and print nothing on standard output. Logs go to standard error, never to standard output, because the protocol uses it.
+Ask the agent to list your projects. It should call [`project_list`](/docs/mcp/tools/project_list) and answer with the projects of your workspace, or with none. If the client shows no tools, run `vukem-video mcp` in a terminal: it must wait for input and print nothing on standard output. Logs go to standard error, never to standard output, because the protocol uses it.
 
 ## Common mistakes
 
-- Printing to standard output in a wrapper script around `stuarty mcp`: the protocol shares that stream, and extra text breaks the connection.
+- Printing to standard output in a wrapper script around `vukem-video mcp`: the protocol shares that stream, and extra text breaks the connection.
 - Calling `/mcp` over HTTP without the `Accept` header that names both types: the request is refused.
-- Starting a second `stuarty mcp` or `serve` on the same workspace by hand: one process owns a workspace; the other fails with `E_WORKSPACE_LOCKED` or talks to the owner.
+- Starting a second `vukem-video mcp` or `serve` on the same workspace by hand: one process owns a workspace; the other fails with `E_WORKSPACE_LOCKED` or talks to the owner.
 
 ## Next steps
 

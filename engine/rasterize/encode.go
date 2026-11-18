@@ -8,7 +8,7 @@ import (
 	"math"
 	"slices"
 
-	"github.com/AlexGalhardo/stuarty/core/plan"
+	"github.com/AlexGalhardo/vukem-video/core/plan"
 )
 
 // colour is a straight RGBA colour.

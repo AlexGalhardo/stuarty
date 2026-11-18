@@ -15,11 +15,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/internal/outbound"
-	"github.com/AlexGalhardo/stuarty/service"
-	"github.com/AlexGalhardo/stuarty/service/workspace"
-	"github.com/AlexGalhardo/stuarty/web/app/agentdocs"
-	"github.com/AlexGalhardo/stuarty/web/app/cli"
+	"github.com/AlexGalhardo/vukem-video/internal/outbound"
+	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/vukem-video/service/workspace"
+	"github.com/AlexGalhardo/vukem-video/web/app/agentdocs"
+	"github.com/AlexGalhardo/vukem-video/web/app/cli"
 )
 
 type serveProc struct {
@@ -62,8 +62,8 @@ func startServeEnv(t *testing.T, bin, home string, env ...string) *serveProc {
 	t.Helper()
 
 	cmd := exec.CommandContext(t.Context(), bin, "serve")
-	cmd.Env = append(append(os.Environ(), "STUARTY_HOME="+home, "STUARTY_URL=", "APP_KEY=", "APP_ENV=",
-		"STUARTY_MIN_FREE_BYTES=1"), env...)
+	cmd.Env = append(append(os.Environ(), "VUKEM_VIDEO_HOME="+home, "VUKEM_VIDEO_URL=", "APP_KEY=", "APP_ENV=",
+		"VUKEM_VIDEO_MIN_FREE_BYTES=1"), env...)
 
 	p := &serveProc{cmd: cmd, out: &lockedBuffer{}, done: make(chan struct{})}
 	cmd.Stdout, cmd.Stderr = p.out, p.out
@@ -200,7 +200,7 @@ func serveOnce(t *testing.T, bin, home string) (stderr string, code int) {
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, bin, "serve")
-	cmd.Env = append(os.Environ(), "STUARTY_HOME="+home, "STUARTY_URL=", "PORT="+freePort(t))
+	cmd.Env = append(os.Environ(), "VUKEM_VIDEO_HOME="+home, "VUKEM_VIDEO_URL=", "PORT="+freePort(t))
 
 	var errOut bytes.Buffer
 
@@ -226,21 +226,21 @@ func TestServeRefusesAnUnsafeConfiguration(t *testing.T) {
 		env  []string
 		want string
 	}{
-		{"unknown mode", []string{"STUARTY_MODE=lan"}, "STUARTY_MODE"},
-		{"non-loopback address in local mode", []string{"STUARTY_ADDR=0.0.0.0:0"}, "STUARTY_ADDR"},
-		{"network mode without APP_URL", []string{"STUARTY_MODE=network", "APP_URL=", "PORT=0"}, "APP_URL"},
+		{"unknown mode", []string{"VUKEM_VIDEO_MODE=lan"}, "VUKEM_VIDEO_MODE"},
+		{"non-loopback address in local mode", []string{"VUKEM_VIDEO_ADDR=0.0.0.0:0"}, "VUKEM_VIDEO_ADDR"},
+		{"network mode without APP_URL", []string{"VUKEM_VIDEO_MODE=network", "APP_URL=", "PORT=0"}, "APP_URL"},
 		{"network mode with a short key", []string{
-			"STUARTY_MODE=network", "APP_URL=http://localhost:7878", "APP_KEY=short",
+			"VUKEM_VIDEO_MODE=network", "APP_URL=http://localhost:7878", "APP_KEY=short",
 		}, "APP_KEY"},
 		{"network mode with a zero limit", []string{
-			"STUARTY_MODE=network", "APP_URL=http://localhost:7878", "STUARTY_MAX_EXPORTS=0",
+			"VUKEM_VIDEO_MODE=network", "APP_URL=http://localhost:7878", "VUKEM_VIDEO_MAX_EXPORTS=0",
 		}, "invalid limit"},
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			home := filepath.Join(t.TempDir(), "ws")
 
 			cmd := exec.CommandContext(t.Context(), bin, "serve")
-			cmd.Env = append(os.Environ(), "STUARTY_HOME="+home, "STUARTY_URL=", "APP_ENV=", "APP_KEY=")
+			cmd.Env = append(os.Environ(), "VUKEM_VIDEO_HOME="+home, "VUKEM_VIDEO_URL=", "APP_ENV=", "APP_KEY=")
 			cmd.Env = append(cmd.Env, c.env...)
 
 			var out bytes.Buffer
@@ -273,13 +273,13 @@ func TestServeNetworkModeWithNoUsers(t *testing.T) {
 		t,
 		bin,
 		home,
-		"STUARTY_MODE=network",
-		"STUARTY_ADDR=127.0.0.1:"+port,
+		"VUKEM_VIDEO_MODE=network",
+		"VUKEM_VIDEO_ADDR=127.0.0.1:"+port,
 		"APP_URL=http://localhost:"+port,
 		"APP_KEY=base64:"+base64.StdEncoding.EncodeToString(
 			[]byte(strings.Repeat("k", 32)),
 		),
-		"STUARTY_INSECURE_ALLOW_ROOT=true",
+		"VUKEM_VIDEO_INSECURE_ALLOW_ROOT=true",
 	)
 
 	rt, err := workspace.Dir(home).ReadRuntime()

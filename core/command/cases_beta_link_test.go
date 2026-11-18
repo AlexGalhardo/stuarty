@@ -6,7 +6,7 @@ package command
 import (
 	"fmt"
 
-	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
 const (

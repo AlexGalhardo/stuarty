@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/AlexGalhardo/stuarty/service"
-
 	"github.com/AlexGalhardo/vukem/database"
+
+	"github.com/AlexGalhardo/vukem-video/service"
 )
 
 type projectRepo struct{ ex database.Executor }
@@ -60,11 +60,7 @@ func projectFilter(q service.ProjectQuery) ([]string, []any) {
 		where, args = append(where, "owner_user_id = ?"), append(args, q.OwnerUserID)
 	}
 	if q.ProjectID != "" {
-		// A key limited to one project reaches every timeline of it (SDD-003 section 1.7 rule 4), not only the
-		// one whose id is the project's.
-		where = append(where,
-			"(id = ? OR id IN (SELECT i.ref FROM project_items i WHERE i.kind = 'timeline' AND i.project_id = ?))")
-		args = append(args, q.ProjectID, q.ProjectID)
+		where, args = append(where, "id = ?"), append(args, q.ProjectID)
 	}
 	return where, args
 }
@@ -85,7 +81,7 @@ func (r projectRepo) List(ctx context.Context, q service.ProjectQuery) ([]servic
 		where, args = append(where, "(updated_ms, id) < (?, ?)"), append(args, ms, id)
 	}
 
-	query := "SELECT " + projectHeadColumns + " FROM timelines"
+	query := "SELECT " + projectHeadColumns + " FROM projects"
 	if len(where) > 0 {
 		query += " WHERE " + strings.Join(where, " AND ")
 	}
@@ -125,7 +121,7 @@ var ErrBadCursor = service.ErrBadCursor
 // Count implements service.ProjectRepo.
 func (r projectRepo) Count(ctx context.Context, q service.ProjectQuery) (int, error) {
 	where, args := projectFilter(q)
-	query := "SELECT count(*) FROM timelines"
+	query := "SELECT count(*) FROM projects"
 	if len(where) > 0 {
 		query += " WHERE " + strings.Join(where, " AND ")
 	}
@@ -154,16 +150,14 @@ func decodeCursor(c string) (int64, string, error) {
 }
 
 func (r projectRepo) Head(ctx context.Context, id string) (service.ProjectHead, error) {
-	h, err := scanProjectHead(
-		r.ex.QueryRowContext(ctx, "SELECT "+projectHeadColumns+" FROM timelines WHERE id = ?", id),
-	)
+	h, err := scanProjectHead(r.ex.QueryRowContext(ctx, "SELECT "+projectHeadColumns+" FROM projects WHERE id = ?", id))
 	return h, mapNoRows(err)
 }
 
 func (r projectRepo) Get(ctx context.Context, id string) (service.ProjectRow, error) {
 	var doc, sha string
 	h, err := scanProjectHead(r.ex.QueryRowContext(ctx,
-		"SELECT "+projectHeadColumns+", document, doc_sha256 FROM timelines WHERE id = ?", id), &doc, &sha)
+		"SELECT "+projectHeadColumns+", document, doc_sha256 FROM projects WHERE id = ?", id), &doc, &sha)
 	if err != nil {
 		return service.ProjectRow{}, mapNoRows(err)
 	}
@@ -174,7 +168,7 @@ func (r projectRepo) Create(ctx context.Context, row service.ProjectRow) error {
 	s := row.Summary
 	_, err := r.ex.ExecContext(
 		ctx,
-		`INSERT INTO timelines
+		`INSERT INTO projects
  (id, name, state, revision, schema_version, document, doc_sha256, width, height, fps_num, fps_den,
   duration_frames, track_count, item_count, asset_count, resync_floor, created_ms, updated_ms,
   created_by, owner_user_id, trashed_ms, trashed_by)
@@ -217,7 +211,7 @@ func stateOrActive(s service.ProjectState) string {
 
 func (r projectRepo) Commit(ctx context.Context, id string, expected int64, u service.ProjectUpdate) error {
 	s := u.Summary
-	n, err := rowsAffected(r.ex.ExecContext(ctx, `UPDATE timelines SET
+	n, err := rowsAffected(r.ex.ExecContext(ctx, `UPDATE projects SET
  name = ?, schema_version = ?, document = ?, doc_sha256 = ?,
  width = ?, height = ?, fps_num = ?, fps_den = ?, duration_frames = ?,
  track_count = ?, item_count = ?, asset_count = ?, updated_ms = ?,
@@ -232,12 +226,7 @@ func (r projectRepo) Commit(ctx context.Context, id string, expected int64, u se
 	if n == 0 {
 		return service.ErrStale
 	}
-	// The project that holds this timeline rises in the list, and takes the name of the timeline that shares its
-	// id (SDD-005 section 5.12). A timeline without a project, as the store tests make, changes nothing here.
-	_, err = r.ex.ExecContext(ctx, `UPDATE projects SET updated_ms = ?, name = CASE WHEN id = ? THEN ? ELSE name END
- WHERE id = (SELECT project_id FROM project_items WHERE kind = 'timeline' AND ref = ?)`,
-		u.UpdatedMs, id, u.Name, id)
-	return err
+	return nil
 }
 
 func (r projectRepo) SetState(ctx context.Context, id string, st service.ProjectState, by string, atMs int64) error {
@@ -248,7 +237,7 @@ func (r projectRepo) SetState(ctx context.Context, id string, st service.Project
 	if st == service.ProjectTrashed {
 		n, err = rowsAffected(r.ex.ExecContext(
 			ctx,
-			"UPDATE timelines SET state = 'trashed', trashed_ms = ?, trashed_by = ?, updated_ms = ? WHERE id = ?",
+			"UPDATE projects SET state = 'trashed', trashed_ms = ?, trashed_by = ?, updated_ms = ? WHERE id = ?",
 			atMs,
 			by,
 			atMs,
@@ -257,7 +246,7 @@ func (r projectRepo) SetState(ctx context.Context, id string, st service.Project
 	} else {
 		n, err = rowsAffected(r.ex.ExecContext(
 			ctx,
-			"UPDATE timelines SET state = 'active', trashed_ms = NULL, trashed_by = NULL, updated_ms = ? WHERE id = ?",
+			"UPDATE projects SET state = 'active', trashed_ms = NULL, trashed_by = NULL, updated_ms = ? WHERE id = ?",
 			atMs,
 			id,
 		))
@@ -279,7 +268,7 @@ func (r projectRepo) Delete(ctx context.Context, id string) error {
 	); err != nil {
 		return err
 	}
-	n, err := rowsAffected(r.ex.ExecContext(ctx, "DELETE FROM timelines WHERE id = ?", id))
+	n, err := rowsAffected(r.ex.ExecContext(ctx, "DELETE FROM projects WHERE id = ?", id))
 	if err != nil {
 		return err
 	}

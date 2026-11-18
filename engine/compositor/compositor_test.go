@@ -12,8 +12,8 @@ import (
 	xdraw "golang.org/x/image/draw"
 	"golang.org/x/image/math/f64"
 
-	"github.com/AlexGalhardo/stuarty/core/plan"
-	"github.com/AlexGalhardo/stuarty/engine/rasterize"
+	"github.com/AlexGalhardo/vukem-video/core/plan"
+	"github.com/AlexGalhardo/vukem-video/engine/rasterize"
 )
 
 // pattern is an opaque image whose pixels are all different enough to expose a misplaced one.

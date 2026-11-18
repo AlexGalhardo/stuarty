@@ -1,7 +1,0 @@
-{
-  "code": "E_VALIDATION",
-  "message": "args: give at least one of params, enabled.",
-  "hint": "Send for example {\"params\": ...}.",
-  "retryable": false,
-  "path": "args"
-}

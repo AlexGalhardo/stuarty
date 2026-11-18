@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/vukem-video/service"
 )
 
 // otioService adds the OpenTimelineIO operations to the fake.

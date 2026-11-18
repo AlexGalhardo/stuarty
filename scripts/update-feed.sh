@@ -14,7 +14,7 @@
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-repo="${GITHUB_REPOSITORY:-AlexGalhardo/stuarty}"
+repo="${GITHUB_REPOSITORY:-AlexGalhardo/vukem-video}"
 
 die() { printf 'update-feed: error: %s\n' "$*" >&2; exit 1; }
 
@@ -31,7 +31,7 @@ sign)
 	[ -d "$dir" ] || die "not a directory: $dir"
 	files=()
 	dashed="${version//./-}"
-	for f in "$dir"/stuarty-desktop_"${version}"_* "$dir"/stuarty-desktop-"${dashed}"*; do
+	for f in "$dir"/vukem-video-desktop_"${version}"_* "$dir"/vukem-video-desktop-"${dashed}"*; do
 		case "$f" in *.sbom.json) continue ;; esac
 		[ -e "$f" ] && files+=("$f")
 	done

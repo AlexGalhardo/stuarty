@@ -11,9 +11,9 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/core/command"
-	enginestore "github.com/AlexGalhardo/stuarty/engine/store"
-	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/vukem-video/core/command"
+	enginestore "github.com/AlexGalhardo/vukem-video/engine/store"
+	"github.com/AlexGalhardo/vukem-video/service"
 )
 
 func bundledFontFile(t *testing.T, name string) []byte {
@@ -79,7 +79,7 @@ func (m *mediaEnv) bitmapOf(project string) (key string, png []byte) {
 // SDD-007 section 5.4 item 3: font.add of a file the font store lacks is E_NOT_FOUND, and the same
 // operation succeeds once the file is stored.
 func TestFontAddRefusesAHashTheStoreLacks(t *testing.T) {
-	m := newMediaEnv(t, mediaCfg{})
+	m := newMediaEnv(t, mediaCfg{beta: true})
 	project := m.newProject("p")
 	hash := strings.Repeat("ab", 32)
 	args := fmt.Sprintf(`{"family":"Brand","files":[{"weight":400,"hash":"sha256:%s"}]}`, hash)
@@ -106,7 +106,7 @@ func TestFontAddRefusesAHashTheStoreLacks(t *testing.T) {
 // RF-053: two projects that name a family alike and ship different files never share a bitmap, a
 // document with a user font renders (no E_FONT_UNKNOWN) and the bundled families are untouched.
 func TestUserFontBitmapsAreNotSharedBetweenProjects(t *testing.T) {
-	m := newMediaEnv(t, mediaCfg{noQueue: true, realExport: true})
+	m := newMediaEnv(t, mediaCfg{noQueue: true, realExport: true, beta: true})
 	fonts := enginestore.NewFonts(m.ws)
 
 	anton, err := fonts.Put(bundledFontFile(t, "Anton-Regular.ttf"))
@@ -145,7 +145,7 @@ func TestUserFontBitmapsAreNotSharedBetweenProjects(t *testing.T) {
 
 // The export renders a document that uses a user font through the workspace font store.
 func TestExportRendersAUserFont(t *testing.T) {
-	m := newMediaEnv(t, mediaCfg{noQueue: true, realExport: true})
+	m := newMediaEnv(t, mediaCfg{noQueue: true, realExport: true, beta: true})
 
 	anton, err := enginestore.NewFonts(m.ws).Put(bundledFontFile(t, "Anton-Regular.ttf"))
 	if err != nil {
@@ -171,7 +171,7 @@ func TestExportRendersAUserFont(t *testing.T) {
 // A bundle carries the user fonts of the document; the import validates them and stores them in the
 // font store of the new workspace, not in the media store.
 func TestBundleCarriesUserFontsIntoTheFontStore(t *testing.T) {
-	src := newMediaEnv(t, mediaCfg{})
+	src := newMediaEnv(t, mediaCfg{beta: true})
 
 	anton, err := enginestore.NewFonts(src.ws).Put(bundledFontFile(t, "Anton-Regular.ttf"))
 	if err != nil {
@@ -190,7 +190,7 @@ func TestBundleCarriesUserFontsIntoTheFontStore(t *testing.T) {
 		t.Fatalf("the bundle has no font entry: %v", entries)
 	}
 
-	dst := newMediaEnv(t, mediaCfg{realExport: true})
+	dst := newMediaEnv(t, mediaCfg{beta: true, realExport: true})
 
 	res, err := dst.importBundle(job.Result.Export.Path, false)
 	if err != nil {
@@ -224,7 +224,7 @@ func memberCtx(user string) context.Context {
 // SDD-007 T-21: in network mode the font store is shared, so a user cannot name the font another
 // user brought; the refusal is the one a hash nobody stored gets, and names no hash.
 func TestSecurity_T21_FontAddCannotNameAnotherUsersFont(t *testing.T) {
-	src := newMediaEnv(t, mediaCfg{})
+	src := newMediaEnv(t, mediaCfg{beta: true})
 
 	anton, err := enginestore.NewFonts(src.ws).Put(bundledFontFile(t, "Anton-Regular.ttf"))
 	if err != nil {
@@ -233,7 +233,7 @@ func TestSecurity_T21_FontAddCannotNameAnotherUsersFont(t *testing.T) {
 
 	bundle := src.exportBundle(src.brandProject(anton), nil).Result.Export.Path
 
-	net := newMediaEnv(t, mediaCfg{})
+	net := newMediaEnv(t, mediaCfg{beta: true})
 	alice, bob := memberCtx("alice"), memberCtx("bob")
 
 	// Alice brings the font with a bundle, which links it to her project.
@@ -264,7 +264,7 @@ func TestSecurity_T21_FontAddCannotNameAnotherUsersFont(t *testing.T) {
 		ProjectID: newProject(bob), BaseRevision: 0, Operations: []command.Operation{add},
 	})
 
-	unknown := newMediaEnv(t, mediaCfg{})
+	unknown := newMediaEnv(t, mediaCfg{beta: true})
 	unknownProject := unknown.newProject("p")
 	_, errNever := unknown.svc.Edit(unknown.as(ui), service.EditRequest{
 		ProjectID: unknownProject, BaseRevision: 0, Operations: []command.Operation{add},
@@ -321,7 +321,7 @@ func (r countRepo) Get(ctx context.Context, id string) (service.ProjectRow, erro
 func TestSecurity_T21_FontAddOwnershipScanIsBoundedPerBatch(t *testing.T) {
 	var gets atomic.Int64
 
-	m := newMediaEnv(t, mediaCfg{wrapStore: func(s service.Store) service.Store {
+	m := newMediaEnv(t, mediaCfg{beta: true, wrapStore: func(s service.Store) service.Store {
 		return countStore{Store: s, gets: &gets}
 	}})
 

@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/core/command"
-	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/service"
 )
 
 // SDD-005 section 10 and SDD-007 section 9.1: at 10,000 valid keys for one actor and project a new

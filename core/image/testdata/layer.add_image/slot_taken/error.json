@@ -1,8 +1,0 @@
-{
-  "code": "E_ID_EXISTS",
-  "hint": "Slot names are unique in a document.",
-  "message": "The slot \"title\" is already used by layer lyr_cccccccccc.",
-  "op_index": 0,
-  "path": "args.slot",
-  "retryable": false
-}

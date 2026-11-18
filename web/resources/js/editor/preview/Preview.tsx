@@ -30,7 +30,6 @@ import {
 	useUiState,
 } from "../state/EditorContext";
 import { selectEndFrame, selectFps } from "../state/selectors";
-import { createPreviewExecutor } from "./ExecutorSwitch";
 import { bufferSize, fitScale, sizedScale, truthWidth } from "./fit";
 import { shouldCommitFrame } from "./mediaSync";
 import Handles from "./overlays/Handles";
@@ -38,14 +37,10 @@ import { hitTest } from "./overlays/hitTest";
 import InlineTextEditor from "./overlays/InlineTextEditor";
 import SafeArea from "./overlays/SafeArea";
 import SelectionBox from "./overlays/SelectionBox";
+import { PixiExecutor } from "./PixiExecutor";
 import { clampToLastFrame, PausedFrame } from "./pausedFrame";
 import Timecode, { LiveTimecode } from "./Timecode";
-import type {
-	CanvasPort,
-	LayerGeometry,
-	PreviewExecutor,
-	PreviewState,
-} from "./types";
+import type { CanvasPort, LayerGeometry, PreviewState } from "./types";
 
 const DEFAULT_FPS = { num: 30, den: 1 } as const;
 // While playing the committed playhead follows at most every 250 ms, for the
@@ -68,7 +63,6 @@ function canFullscreen(): boolean {
 	);
 }
 
-// A button keeps Space for its own click, so it counts here as a field.
 function isEditable(target: EventTarget | null): boolean {
 	if (!(target instanceof HTMLElement)) return false;
 	return (
@@ -83,17 +77,12 @@ export default function Preview({
 	port,
 	parseTime,
 	trailing,
-	shortcutRow,
 }: {
 	port: CanvasPort;
 	parseTime: (text: string) => number | null;
 	// The aspect ratio selector at the right of the transport row, passed in by
 	// the shell because it sends a command and the preview does not.
 	trailing?: ReactNode;
-	// The row of the shortcut registry a key press is, among the rows of the
-	// preview scope (play, pause, shuttle): the shell passes it in because the
-	// registry belongs to `commands`, which the preview does not import.
-	shortcutRow: (event: KeyboardEvent) => string | null;
 }): ReactNode {
 	const t = useT();
 	const runtime = useRuntime();
@@ -115,7 +104,7 @@ export default function Preview({
 	const region = useRef<HTMLDivElement>(null);
 	const host = useRef<HTMLDivElement>(null);
 	const truth = useRef<HTMLImageElement>(null);
-	const executor = useRef<PreviewExecutor | null>(null);
+	const executor = useRef<PixiExecutor | null>(null);
 	const paused = useRef<PausedFrame | null>(null);
 	const committed = useRef(0);
 	const playingRef = useRef(false);
@@ -156,7 +145,7 @@ export default function Preview({
 	// The executor lives as long as the editor; the project info and revision
 	// are pushed to it as they change.
 	useEffect(() => {
-		const instance = createPreviewExecutor(runtime.client, (asset) => {
+		const instance = new PixiExecutor(runtime.client, undefined, (asset) => {
 			const found = runtime.documents.getState().document?.assets[asset];
 			if (found?.width === undefined || found.height === undefined) {
 				return null;
@@ -342,20 +331,26 @@ export default function Preview({
 
 	const togglePlayRef = useRef(togglePlay);
 	togglePlayRef.current = togglePlay;
-	const shortcutRowRef = useRef(shortcutRow);
-	shortcutRowRef.current = shortcutRow;
 	useEffect(() => {
 		const onKey = (event: KeyboardEvent): void => {
 			if (isEditable(event.target)) return;
+			if (event.code === "Space") {
+				event.preventDefault();
+				togglePlayRef.current();
+				return;
+			}
 			// J, K and L (VV-035): back one second, pause, play. The preview has
 			// no reverse or fast playback, so J steps back instead of shuttling.
-			const row = shortcutRowRef.current(event);
-			if (row === "play_pause") togglePlayRef.current();
-			else if (row === "pause") executor.current?.pause();
-			else if (row === "shuttle_play") {
+			if (event.ctrlKey || event.metaKey || event.altKey || event.shiftKey) {
+				return;
+			}
+			if (event.key.toLowerCase() === "k") {
+				executor.current?.pause();
+			} else if (event.key.toLowerCase() === "l") {
 				if (!playingRef.current) void executor.current?.play();
-			} else if (row === "shuttle_back") backOneSecondRef.current();
-			else return;
+			} else if (event.key.toLowerCase() === "j") {
+				backOneSecondRef.current();
+			} else return;
 			event.preventDefault();
 		};
 		window.addEventListener("keydown", onKey);

@@ -13,8 +13,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/core/timeline"
-	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
 )
 
 // perfClip is the common case of SDD-004 section 12: a full-frame clip of the size of the project.
@@ -124,14 +124,14 @@ func TestExportSixtySecondsStaysUnder500MB(t *testing.T) {
 
 // BenchmarkExportCommonCase is the first row of the table of SDD-004 section 12: 30 s of one full-frame
 // clip plus a caption. It reports the speed in times real time and fails below the floor in
-// STUARTY_BENCH_MIN_RT (the CI of the reference runner sets 1.5).
+// VUKEM_VIDEO_BENCH_MIN_RT (the CI of the reference runner sets 1.5).
 func BenchmarkExportCommonCase(b *testing.B) {
 	if raceEnabled {
 		b.Skip("the race detector multiplies memory and time")
 	}
 	const secs = 30
 	doc := perfDoc(b, secs)
-	floor, _ := strconv.ParseFloat(os.Getenv("STUARTY_BENCH_MIN_RT"), 64)
+	floor, _ := strconv.ParseFloat(os.Getenv("VUKEM_VIDEO_BENCH_MIN_RT"), 64)
 
 	b.ResetTimer()
 	for i := range b.N {

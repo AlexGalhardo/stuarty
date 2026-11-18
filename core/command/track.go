@@ -5,7 +5,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
 func init() {
@@ -18,6 +18,7 @@ func init() {
 		Example: `{"kind": "visual", "name": "Captions", "id": "trk_a1b2c3d4e5"}`,
 		Errors:  []string{CodeValidation, CodeNotFound, CodeIDExists, CodeLimit},
 		Scope:   ScopeEdit,
+		Phase:   Prototype,
 	}, applyTrackAdd))
 
 	Register(Define(Spec{
@@ -31,6 +32,7 @@ func init() {
 		Example: `{"track_id": "trk_f6g7h8j9k0", "hidden": true}`,
 		Errors:  []string{CodeValidation, CodeNotFound, CodeTypeMismatch},
 		Scope:   ScopeEdit,
+		Phase:   Prototype,
 	}, applyTrackUpdate))
 
 	Register(Define(Spec{
@@ -40,6 +42,7 @@ func init() {
 		Example:     `{"track_id": "trk_m1n2p3q4r5", "below": "trk_a1b2c3d4e5"}`,
 		Errors:      []string{CodeValidation, CodeNotFound, CodeInvalidState},
 		Scope:       ScopeEdit,
+		Phase:       Prototype,
 	}, applyTrackMove))
 
 	Register(Define(Spec{
@@ -50,6 +53,7 @@ func init() {
 		Example: `{"track_id": "trk_f6g7h8j9k0", "with_items": true}`,
 		Errors:  []string{CodeNotFound, CodeNotEmpty},
 		Scope:   ScopeEdit,
+		Phase:   Prototype,
 	}, applyTrackRemove))
 
 	Register(Define(Spec{
@@ -60,6 +64,7 @@ func init() {
 		Example: `{"track_id": "trk_a1b2c3d4e5", "style": {"size": 72, "position": "middle"}}`,
 		Errors:  []string{CodeValidation, CodeNotFound, CodeTypeMismatch, CodeFontUnknown},
 		Scope:   ScopeEdit,
+		Phase:   Prototype,
 	}, applyTrackSetCaptionStyle))
 }
 

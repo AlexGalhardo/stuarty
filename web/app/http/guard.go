@@ -7,11 +7,10 @@ import (
 	"net/netip"
 	"strings"
 
-	"github.com/AlexGalhardo/stuarty/service"
-	"github.com/AlexGalhardo/stuarty/web/app/auth"
-
 	"github.com/AlexGalhardo/vukem/errs"
 	"github.com/AlexGalhardo/vukem/web"
+
+	"github.com/AlexGalhardo/vukem-video/service"
 )
 
 // relayHeaders reveal a tunnel or proxy: the peer is loopback while the client
@@ -189,51 +188,13 @@ func hostAllowed(r *http.Request) bool {
 	return false
 }
 
-// SignInCallbackPath is the one page a person may reach from another site: the redirect address of the
-// sign-in to a social network (SDD-020 section 6). The network sends the browser there, so the request is
-// a cross-site navigation by nature.
-const SignInCallbackPath = "/social/callback"
-
-// signInRedirect says whether r is the top-level navigation of the browser coming back from a consent
-// screen: a GET of the sign-in page, as a navigation that loads a document. The page holds no data and
-// changes nothing; it hands the state and the code to POST /api/v1/social/complete, which is a
-// same-origin request with every check of this guard, and the state is single-use and bound to the
-// session that began it (SDD-007 section 3.6 item 4, T-59).
-func signInRedirect(r *http.Request) bool {
-	return r.Method == http.MethodGet && r.URL.Path == SignInCallbackPath &&
-		r.Header.Get("Sec-Fetch-Mode") == "navigate" && r.Header.Get("Sec-Fetch-Dest") == "document"
-}
-
-// googleRedirect is signInRedirect for the second and last cross-site page, which exists in network mode
-// only: where Google sends the browser back after "Sign in with Google" (SDD-007 section 3.6 item 4 and
-// 4.7, T-82). Same shape, no wider: a GET navigation that loads a document, to that one path.
-func googleRedirect(r *http.Request) bool {
-	return r.Method == http.MethodGet && r.URL.Path == auth.GoogleCallbackPath &&
-		r.Header.Get("Sec-Fetch-Mode") == "navigate" && r.Header.Get("Sec-Fetch-Dest") == "document"
-}
-
-func fetchSiteAllowed(r *http.Request) bool { return fetchSiteAllowedIn(r, false) }
-
-// fetchSiteAllowedIn is step 4 of SDD-007 section 3.6; network is true in network mode, which has the
-// callback page of the Google sign-in as a second exception.
-func fetchSiteAllowedIn(r *http.Request, network bool) bool {
+func fetchSiteAllowed(r *http.Request) bool {
 	site, present := r.Header["Sec-Fetch-Site"]
 	if !present {
 		return true
 	}
 
-	if len(site) != 1 {
-		return false
-	}
-
-	switch site[0] {
-	case "same-origin", "none":
-		return true
-	case "same-site", "cross-site":
-		return signInRedirect(r) || (network && googleRedirect(r))
-	}
-
-	return false
+	return len(site) == 1 && (site[0] == "same-origin" || site[0] == "none")
 }
 
 func originAllowed(r *http.Request) bool {

@@ -1,6 +1,6 @@
 {
  "name": "project_list",
- "description": "Projects, newest first, a line each: id, name, revision, size, duration. next_cursor as cursor gives more.",
+ "description": "List projects, newest first. Use it to find a project_id. Returns one line per project: id, name, revision, size, duration. Pass next_cursor as cursor for more.",
  "inputSchema": {
   "type": "object",
   "properties": {

@@ -17,19 +17,19 @@ Every failure has a stable code that starts with `E_`, a message, a hint and a `
 
 1. Find the code in the table below.
 2. Follow its fix, or the page it links.
-3. If the problem stays, run `stuarty doctor --full` and read the checks that fail, then [make a diagnostic bundle](/docs/troubleshooting/diagnostic-bundle).
+3. If the problem stays, run `vukem-video doctor --full` and read the checks that fail, then [make a diagnostic bundle](/docs/troubleshooting/diagnostic-bundle).
 
 | Code | What it means | Fix |
 | --- | --- | --- |
 | `E_WORKSPACE_LOCKED` | another process owns the workspace and cannot be reached | [The workspace is locked](/docs/troubleshooting/workspace-locked) |
 | `E_FFMPEG_MISSING` | no usable FFmpeg, or a required encoder, filter or muxer is missing | [FFmpeg is not found](/docs/troubleshooting/ffmpeg-missing) |
 | `E_NO_ENCODER` | no H.264 encoder passed the test encode | [No H.264 encoder works](/docs/troubleshooting/no-encoder) |
-| `E_UNAUTHORIZED` | the token, key or session is missing or invalid | in local mode the token is in `<workspace>/token` (`stuarty token:rotate` makes a new one); in network mode sign in or use an [API key](/docs/self-hosting/api-keys) |
+| `E_UNAUTHORIZED` | the token, key or session is missing or invalid | in local mode the token is in `<workspace>/token` (`vukem-video token:rotate` makes a new one); in network mode sign in or use an [API key](/docs/self-hosting/api-keys) |
 | `E_FORBIDDEN` | the key lacks the scope, or is limited to another project | create a key with the scope the call needs |
 | `E_REVISION_CONFLICT` | the project changed since your `base_revision` | read the project again, rebuild the batch and resend; see [Batches and revisions](/docs/agents/batches) |
 | `E_ASSET_NOT_READY` | the asset is still ingesting | wait for `ready`, then retry |
 | `E_PATH_NOT_ALLOWED`, `E_FILE_NOT_FOUND`, `E_UNSUPPORTED_MEDIA`, `E_LIMIT_EXCEEDED` | an import was refused | [An import fails](/docs/troubleshooting/import-fails) |
-| `E_LINT_BLOCKING` | an export was refused because `lint` found errors | run `stuarty lint`, fix the findings in `details.findings`, export again |
+| `E_LINT_BLOCKING` | an export was refused because `lint` found errors | run `vukem-video lint`, fix the findings in `details.findings`, export again |
 | `E_QUEUE_FULL`, `E_RATE_LIMITED` | a concurrency or rate limit is reached | wait (the answer carries `Retry-After` for the rate limit) and retry; see [Jobs](/docs/guide/jobs) |
 | `E_EXPORT_FAILED`, `E_VERIFY_FAILED` | the export process failed, or its file did not pass verification | read `details.reason` or `details.checks`, then [Export is slow](/docs/troubleshooting/slow-export) and the diagnostic bundle |
 
@@ -37,8 +37,8 @@ Every failure has a stable code that starts with `E_`, a message, a hint and a `
 
 - Retrying an error that is not retryable. A `E_VALIDATION` or `E_LINT_BLOCKING` gives the same answer until you change the request.
 - Reading only the message. The hint and `details` say what to change.
-- Deleting files in the workspace to fix a problem. Nothing there is safe to remove by hand; use `stuarty doctor --gc` for what no project refers to.
-- Reporting a bug without the version. Run `stuarty version` and attach the diagnostic bundle, which is cleaned of secret values and holds a project document only when you ask for it.
+- Deleting files in the workspace to fix a problem. Nothing there is safe to remove by hand; use `vukem-video doctor --gc` for what no project refers to.
+- Reporting a bug without the version. Run `vukem-video version` and attach the diagnostic bundle, which is cleaned of secret values and holds a project document only when you ask for it.
 
 ## Next steps
 

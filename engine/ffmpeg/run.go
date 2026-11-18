@@ -19,9 +19,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/engine/ffmpeg/ffargs"
-
 	"github.com/AlexGalhardo/vukem/contrib/engine"
+
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg/ffargs"
 )
 
 // Runner starts FFmpeg and ffprobe for one workspace. Every argv goes through
@@ -47,9 +47,6 @@ type Runner struct {
 
 	capMu    sync.Mutex
 	capCache map[sizeKey]error
-
-	codecMu  sync.Mutex
-	codecDet map[string]codecResult
 }
 
 // NewRunner returns a runner for the installation and the workspace root.
@@ -194,7 +191,7 @@ type Request struct {
 	// Stdin feeds a run whose input is pipe:0 (raw frames to the encoder). An *os.File is
 	// handed to the child as it is. The runner never closes it: the caller owns both ends.
 	Stdin io.Reader
-	// OutputPath and MaxOutputBytes arm the size watchdog (STUARTY_MAX_EXPORT_BYTES): the file is
+	// OutputPath and MaxOutputBytes arm the size watchdog (VUKEM_VIDEO_MAX_EXPORT_BYTES): the file is
 	// polled every OutputPollInterval and a run that grows it past the cap is killed with
 	// ErrOutputTooLarge. The path must be inside the run directory.
 	OutputPath     string

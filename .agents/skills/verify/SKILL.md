@@ -16,7 +16,7 @@ A change is done when this skill says so, not when the code looks right. It is t
 | Before a large merge into the integration branch, and before any release branch when releases return | `bash .agents/skills/verify/scripts/verify.sh --full` |
 | A senior's delivery under review by the specialist (`rules/plans.md` section 3) | the acceptance criteria of the epic and the checks of what changed; `--full` is optional while releases are deferred (ADR-0045) |
 
-Run it from the repository or worktree root, with `STUARTY_TEST_FFMPEG_DIR` set to the LGPL FFmpeg `bin` folder so the export tests and the smoke test do not skip or pick another FFmpeg.
+Run it from the repository or worktree root, with `VUKEM_VIDEO_TEST_FFMPEG_DIR` set to the LGPL FFmpeg `bin` folder so the export tests and the smoke test do not skip or pick another FFmpeg.
 
 ## 2. What it runs
 
@@ -29,7 +29,7 @@ Run it from the repository or worktree root, with `STUARTY_TEST_FFMPEG_DIR` set 
 - **`site/` or the reference changed:** `check:last-updated` and `reference:check`.
 - **`--full` adds two steps:**
   - `scripts/gate.sh`, the whole local release gate;
-  - `scripts/smoke-e2e.sh`, which boots the product end to end. It builds the binary and starts `stuarty serve` with a private workspace. It then creates a project, imports a generated clip, adds a clip and a title, lints and exports with `--wait`. Finally `ffprobe` checks the MP4 (video, audio, 4 s), and the server is stopped by its pid.
+  - `scripts/smoke-e2e.sh`, which boots the product end to end. It builds the binary and starts `vukem-video serve` with a private workspace. It then creates a project, imports a generated clip, adds a clip and a title, lints and exports with `--wait`. Finally `ffprobe` checks the MP4 (video, audio, 4 s), and the server is stopped by its pid.
 
 The last line is `VERIFY_OK` (exit 0), `VERIFY_FAIL=<n>` (exit 1) or `VERIFY_NEEDS_HUMAN` (exit 3). Logs are in `$TEMP/verify-<time>/`.
 

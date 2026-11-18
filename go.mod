@@ -1,4 +1,4 @@
-module github.com/AlexGalhardo/stuarty
+module github.com/AlexGalhardo/vukem-video
 
 go 1.27.4
 

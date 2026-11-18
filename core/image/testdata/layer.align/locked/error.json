@@ -1,8 +1,0 @@
-{
-  "code": "E_INVALID_STATE",
-  "hint": "Unlock it with layer.set (locked false), then change it.",
-  "message": "Layer lyr_hhhhhhhhhh is locked.",
-  "op_index": 0,
-  "path": "args.layer_ids[0]",
-  "retryable": false
-}

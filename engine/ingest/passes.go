@@ -10,8 +10,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
-	"github.com/AlexGalhardo/stuarty/engine/ffmpeg/ffargs"
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg/ffargs"
 )
 
 // workFile is a file of the work directory that publish moves into artifacts/<hash>/.

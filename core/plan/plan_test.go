@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
 var update = flag.Bool("update", false, "rewrite the golden files")

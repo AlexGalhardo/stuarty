@@ -17,9 +17,9 @@ import (
 
 	"golang.org/x/text/unicode/norm"
 
-	"github.com/AlexGalhardo/stuarty/core/command"
-	"github.com/AlexGalhardo/stuarty/core/timeline"
-	"github.com/AlexGalhardo/stuarty/engine/rasterize"
+	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/engine/rasterize"
 )
 
 // The limits of a template file (SDD-007 section 7.6 item 1 and 2).
@@ -34,8 +34,7 @@ const (
 	templateJSONDepth    = 64
 	templateBombRatio    = 1000
 	templatePreviewSide  = 8192
-	templateFormat       = "stuarty-template"
-	formerTemplateFormat = "vukem-video-template" // written before the rename (ADR-0044), still imported
+	templateFormat       = "vukem-video-template"
 	templateFileVersion  = 1
 	templateManifestName = "manifest.json"
 	templateDocName      = "template.json"
@@ -300,8 +299,8 @@ func parseManifest(b []byte) (templateManifest, error) {
 		return m, errors.New("manifest.json is not valid")
 	}
 
-	if (m.Format != templateFormat && m.Format != formerTemplateFormat) || m.TemplateVersion < 1 {
-		return m, errors.New("manifest.json is not a stuarty template manifest")
+	if m.Format != templateFormat || m.TemplateVersion < 1 {
+		return m, errors.New("manifest.json is not a vukem-video template manifest")
 	}
 
 	return m, nil
@@ -379,7 +378,7 @@ func migrateTemplateDocument(data []byte) (*timeline.Document, *Error) {
 
 	if schemaVersionOf(raw) > timeline.CurrentSchemaVersion {
 		return nil, newError(command.CodeValidation, "the template was made by a newer version of the editor.").
-			withHint("update stuarty, then import it again").withDetail("code", "V_SCHEMA_VERSION")
+			withHint("update vukem-video, then import it again").withDetail("code", "V_SCHEMA_VERSION")
 	}
 
 	raw, err = timeline.Migrate(raw)

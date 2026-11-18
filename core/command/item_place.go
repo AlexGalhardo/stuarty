@@ -5,7 +5,7 @@ import (
 	"slices"
 	"strconv"
 
-	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
 func init() {
@@ -21,6 +21,7 @@ func init() {
 			CodeValidation, CodeInvalidTime, CodeNotFound, CodeTypeMismatch, CodeIDExists, CodeLimit, CodeOverlap,
 		},
 		Scope: ScopeEdit,
+		Phase: Alpha,
 	}, applyItemDuplicate))
 
 	Register(Define(Spec{
@@ -37,6 +38,7 @@ func init() {
 			CodeOverlap,
 		},
 		Scope: ScopeEdit,
+		Phase: Alpha,
 	}, applyItemCrossfade))
 
 	Register(Define(Spec{
@@ -50,6 +52,7 @@ func init() {
 			CodeValidation, CodeInvalidTime, CodeNotFound, CodeInvalidState, CodeOverlap,
 		},
 		Scope: ScopeEdit,
+		Phase: Alpha,
 	}, applyCloseGap))
 }
 

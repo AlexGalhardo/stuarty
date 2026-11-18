@@ -46,7 +46,7 @@ jobs:
         shell: bash
         run: |
           bin_dir="$(bash scripts/install-ffmpeg.sh)"
-          echo "STUARTY_TEST_FFMPEG_DIR=${bin_dir}" >> "$GITHUB_ENV"
+          echo "VUKEM_VIDEO_TEST_FFMPEG_DIR=${bin_dir}" >> "$GITHUB_ENV"
       - name: Upgrade test
         shell: bash
         run: bash scripts/upgrade-test.sh

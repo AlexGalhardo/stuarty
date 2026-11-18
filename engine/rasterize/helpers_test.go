@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/core/plan"
+	"github.com/AlexGalhardo/vukem-video/core/plan"
 )
 
 // C is a colour in the form a plan style holds it.

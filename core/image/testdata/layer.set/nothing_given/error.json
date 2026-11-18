@@ -1,8 +1,0 @@
-{
-  "code": "E_VALIDATION",
-  "hint": "Add one of name, opacity, visible, locked, slot to the arguments.",
-  "message": "Give at least one of: name, opacity, visible, locked, slot.",
-  "op_index": 0,
-  "path": "args",
-  "retryable": false
-}

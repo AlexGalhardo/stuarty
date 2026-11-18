@@ -5,7 +5,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
 // WordArg is a caption word as a caller writes it: times are lengths relative to the

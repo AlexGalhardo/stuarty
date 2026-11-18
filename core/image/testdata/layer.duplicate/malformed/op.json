@@ -1,6 +1,0 @@
-{
-  "args": {
-    "layer_id": "x"
-  },
-  "op": "layer.duplicate"
-}

@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/service"
-	"github.com/AlexGalhardo/stuarty/web/app/cli"
-	"github.com/AlexGalhardo/stuarty/web/contract/testenv"
+	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/vukem-video/web/app/cli"
+	"github.com/AlexGalhardo/vukem-video/web/contract/testenv"
 )
 
 type fixedResolver struct{ svc service.Service }

@@ -3,13 +3,14 @@
 //
 //   - every threat row names at least one test and has a mitigation;
 //
-//   - every test a row names exists in the repository;
+//   - every test a row names exists in the repository, except the ones of a threat
+//     that belongs to a later phase (the allowlist in beta.go, which is data);
 //
 //   - every TestSecurity_T<NN>_ test of the repository is named by a row;
 //
 //   - every operation of service.Service appears in the scope matrix of section 5.
 //
-//     go run ./internal/tools/threatcheck [-sdd path] [-root dir]
+//     go run ./internal/tools/threatcheck [-phase P1] [-sdd path] [-root dir]
 //
 // It exits 0 when all of that holds, 1 with the list of problems otherwise.
 package main
@@ -29,6 +30,7 @@ func run(argv []string, stdout, stderr io.Writer) int {
 	fs := flag.NewFlagSet("threatcheck", flag.ContinueOnError)
 	fs.SetOutput(stderr)
 
+	phase := fs.String("phase", "", "check only the threats of a phase (P1); default: all of them")
 	sdd := fs.String("sdd", "docs/sdds/007-security-model.md", "the security model")
 	root := fs.String("root", ".", "the repository root")
 
@@ -36,7 +38,13 @@ func run(argv []string, stdout, stderr io.Writer) int {
 		return 2
 	}
 
-	problems, err := check(*root, *sdd)
+	if *phase != "" && *phase != "P1" {
+		fmt.Fprintf(stderr, "threatcheck: unknown phase %q (only P1)\n", *phase)
+
+		return 2
+	}
+
+	problems, err := check(*root, *sdd, *phase)
 	if err != nil {
 		fmt.Fprintf(stderr, "threatcheck: %v\n", err)
 

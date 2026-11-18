@@ -1,8 +1,0 @@
-{
-  "code": "E_VALIDATION",
-  "hint": "A layer id is lyr_ and 10 characters from 0-9 and a-z, without i, l, o and u.",
-  "message": "args.id \"not-an-id\" is not a layer id.",
-  "op_index": 0,
-  "path": "args.id",
-  "retryable": false
-}

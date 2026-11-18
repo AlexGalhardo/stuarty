@@ -9,7 +9,7 @@ export const NEW_TRACK = "";
 // a new track (the empty id).
 export function defaultCaptionTrack(
 	orderedIds: readonly string[],
-	tracks: Readonly<Record<string, Pick<Track, "kind" | "caption_style">>>,
+	tracks: Readonly<Record<string, Track>>,
 ): string {
 	for (const id of orderedIds) {
 		const track = tracks[id];
@@ -105,7 +105,7 @@ export function installRequest(
 	return parseInstallCommand(unavailable.installCommand);
 }
 
-const INSTALL_COMMAND = /^stuarty tools:install (\S+)(?: --model (\S+))?$/;
+const INSTALL_COMMAND = /^vukem-video tools:install (\S+)(?: --model (\S+))?$/;
 
 // The tool and the model the install step takes, read from the command the
 // service announced (`details.install_command`); null when the command is not

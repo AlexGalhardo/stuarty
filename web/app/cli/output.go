@@ -8,9 +8,9 @@ import (
 	"io"
 	"strings"
 
-	"github.com/AlexGalhardo/stuarty/core/command"
-	"github.com/AlexGalhardo/stuarty/service"
-	"github.com/AlexGalhardo/stuarty/service/workspace"
+	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/vukem-video/service/workspace"
 )
 
 // Exit codes of SDD-000 section 8: 0 success, 1 a permanent failure, 2 a

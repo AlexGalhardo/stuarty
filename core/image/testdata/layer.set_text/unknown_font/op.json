@@ -1,9 +1,0 @@
-{
-  "args": {
-    "layer_id": "lyr_cccccccccc",
-    "style": {
-      "font_family": "Nope Sans"
-    }
-  },
-  "op": "layer.set_text"
-}

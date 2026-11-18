@@ -4,7 +4,7 @@ import { mdxToMarkdown } from "@/lib/text";
 import { withTrailingSlash } from "@/lib/trailing-slash";
 
 const SUMMARY =
-	"Stuarty is a minimalist, open source video editor operated by AI agents (MCP, CLI, HTTP API) and by people in a browser UI.";
+	"Vukem Video is a minimalist, open source video editor operated by AI agents (MCP, CLI, HTTP API) and by people in a browser UI. It is in the BETA phase.";
 
 const url = (path: string) => `${site.url}${withTrailingSlash(path)}`;
 

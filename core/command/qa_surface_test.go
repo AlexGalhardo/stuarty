@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/core/lint"
-	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/core/lint"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
 // Section 6 of the real-use plan, through the registry the service calls:

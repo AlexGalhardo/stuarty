@@ -125,7 +125,6 @@ export interface Item {
   name?: string;
   opacity?: number;
   outline?: Outline;
-  processors?: Processor[];
   radius?: number;
   reverse?: boolean;
   rotation?: number;
@@ -255,8 +254,7 @@ export interface HslBand {
   saturation?: number;
 }
 export interface Keyframe {
-  bezier?: number[];
-  easing?: "linear" | "ease_in" | "ease_out" | "ease_in_out" | "hold" | "bezier";
+  easing?: "linear" | "ease_in" | "ease_out" | "ease_in_out" | "hold";
   t: number;
   value: number;
 }
@@ -280,13 +278,6 @@ export interface Mask {
 export interface Outline {
   color: string;
   width: number;
-}
-export interface Processor {
-  disabled?: boolean;
-  kind: "eq" | "compressor" | "limiter" | "gate" | "deesser" | "noise_reduction";
-  params?: {
-    [k: string]: number;
-  };
 }
 export interface Shadow {
   blur: number;
@@ -402,7 +393,6 @@ export interface Track {
   muted?: boolean;
   name?: string;
   order: string;
-  processors?: Processor[];
   solo?: boolean;
   volume?: number;
 }

@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/core/command"
-	"github.com/AlexGalhardo/stuarty/core/lint"
-	"github.com/AlexGalhardo/stuarty/core/timeline"
-	"github.com/AlexGalhardo/stuarty/service/untrusted"
+	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/core/lint"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/service/untrusted"
 )
 
 // Page selects a page of a list (SDD-003 section 1.5).
@@ -45,11 +45,7 @@ type ProjectSummary struct {
 	Tracks    int       `json:"tracks"`
 	Items     int       `json:"items"`
 	Assets    int       `json:"assets"`
-	// TimelineID is the first active timeline, the one the other members are about; Timelines is how many the
-	// project holds.
-	TimelineID string    `json:"timeline_id,omitempty"`
-	Timelines  int       `json:"timelines"`
-	UpdatedAt  time.Time `json:"updated_at"` // UTC
+	UpdatedAt time.Time `json:"updated_at"` // UTC
 }
 
 // ProjectListRequest lists projects.
@@ -90,9 +86,8 @@ type ProjectCreateResult struct {
 
 // ProjectGetRequest reads a project.
 type ProjectGetRequest struct {
-	ProjectID  string `json:"project_id"`
-	TimelineID string `json:"timeline_id,omitempty"` // SDD-003 section 1.7
-	Detail     string `json:"detail,omitempty"`      // default "concise"; "full"; "document"
+	ProjectID string `json:"project_id"`
+	Detail    string `json:"detail,omitempty"` // default "concise"; "full"; "document"
 	Page
 }
 
@@ -107,23 +102,19 @@ type ProjectCounts struct {
 // ProjectGetResult is the head of a project and, by detail, its text or document.
 type ProjectGetResult struct {
 	Envelope
-	ProjectID      string        `json:"project_id"`
-	Name           string        `json:"name"            untrusted:"true"`
-	Revision       int64         `json:"revision"`
-	State          string        `json:"state"`
-	Width          int           `json:"width"`
-	Height         int           `json:"height"`
-	FPS            string        `json:"fps"`
-	DurationFrames int64         `json:"duration_frames"`
-	Duration       TimeValue     `json:"duration"`
-	Counts         ProjectCounts `json:"counts"`
-	// TimelineID is the timeline the head and the text are about.
-	TimelineID string             `json:"timeline_id,omitempty"`
-	Items      []ProjectItem      `json:"items"`
-	Production ProductionState    `json:"production"`
-	NextCursor *string            `json:"next_cursor"`
-	Document   *timeline.Document `json:"document,omitempty"    bulk:"true"`
-	Text       string             `json:"text,omitempty"`
+	ProjectID      string             `json:"project_id"`
+	Name           string             `json:"name"               untrusted:"true"`
+	Revision       int64              `json:"revision"`
+	State          string             `json:"state"`
+	Width          int                `json:"width"`
+	Height         int                `json:"height"`
+	FPS            string             `json:"fps"`
+	DurationFrames int64              `json:"duration_frames"`
+	Duration       TimeValue          `json:"duration"`
+	Counts         ProjectCounts      `json:"counts"`
+	NextCursor     *string            `json:"next_cursor"`
+	Document       *timeline.Document `json:"document,omitempty"                  bulk:"true"`
+	Text           string             `json:"text,omitempty"`
 }
 
 // ProjectTrashRequest trashes or restores a project.
@@ -142,7 +133,6 @@ type ProjectStateResult struct {
 // EditRequest is a batch of operations (SDD-003 section 2.4).
 type EditRequest struct {
 	ProjectID      string              `json:"project_id"`
-	TimelineID     string              `json:"timeline_id,omitempty"` // SDD-003 section 1.7
 	BaseRevision   int64               `json:"base_revision"`
 	Operations     []command.Operation `json:"operations"` // 1 to 200
 	IdempotencyKey string              `json:"idempotency_key,omitempty"`
@@ -189,9 +179,8 @@ type EditResult struct {
 
 // HistoryListRequest pages the history, newest first.
 type HistoryListRequest struct {
-	ProjectID  string `json:"project_id"`
-	TimelineID string `json:"timeline_id,omitempty"` // SDD-003 section 1.7
-	Actor      string `json:"actor,omitempty"`
+	ProjectID string `json:"project_id"`
+	Actor     string `json:"actor,omitempty"`
 	Page
 }
 
@@ -221,9 +210,8 @@ type HistoryListResult struct {
 
 // UndoRequest undoes or redoes one step.
 type UndoRequest struct {
-	ProjectID  string `json:"project_id"`
-	TimelineID string `json:"timeline_id,omitempty"` // SDD-003 section 1.7
-	DryRun     bool   `json:"dry_run,omitempty"`
+	ProjectID string `json:"project_id"`
+	DryRun    bool   `json:"dry_run,omitempty"`
 }
 
 // HistoryRef names a step of the history.
@@ -256,9 +244,8 @@ type UndoResult struct {
 
 // LintRequest runs the whole lint on the current revision.
 type LintRequest struct {
-	ProjectID  string `json:"project_id"`
-	TimelineID string `json:"timeline_id,omitempty"` // SDD-003 section 1.7
-	Severity   string `json:"severity,omitempty"`    // minimum to list; default "warning" (everything); "error"
+	ProjectID string `json:"project_id"`
+	Severity  string `json:"severity,omitempty"` // minimum to list; default "warning" (everything); "error"
 	Page
 }
 

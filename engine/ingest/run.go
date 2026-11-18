@@ -12,8 +12,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
-	"github.com/AlexGalhardo/stuarty/engine/ffmpeg/ffargs"
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg/ffargs"
 )
 
 // CodeIngestFailed is the E_INGEST_FAILED of SDD-011 5.3; details.reason is one of the codes below.
@@ -85,9 +85,6 @@ type Facts struct {
 	HasAudio    bool     `json:"has_audio"`
 	// HasAlpha is true for a video whose normalized file keeps an alpha channel (SDD-011 4.3.5).
 	HasAlpha bool `json:"has_alpha,omitempty"`
-	// AlphaOpaque is true when HasAlpha is and every sampled picture of the asset is fully opaque: the file
-	// declares transparency and has none (SDD-011 4.3.6). It is a fact of the normalized artifact, not of the asset.
-	AlphaOpaque bool `json:"alpha_opaque,omitempty"`
 	// FrameDelays is the display time in milliseconds of each frame of an animated image, whose
 	// FrameCount is its length (SDD-001 3.2). Empty for every other asset.
 	FrameDelays []int `json:"frame_delays,omitempty"`
@@ -111,7 +108,7 @@ func ingestErr(reason, msg string, details map[string]any, cause error) *ffmpeg.
 	}
 	return &ffmpeg.Error{
 		Code: CodeIngestFailed, Reason: reason, Message: msg, Details: details, Err: cause,
-		Hint: "Try the file in another player; if it plays there, report it with the output of \"stuarty doctor\".",
+		Hint: "Try the file in another player; if it plays there, report it with the output of \"vukem-video doctor\".",
 	}
 }
 

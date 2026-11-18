@@ -1,10 +1,10 @@
 ---
 title: "Installation"
-description: "Where to get Stuarty, what each download is, and how to check it before you run it."
+description: "Where to get Vukem Video, what each download is, and how to check it before you run it."
 ---
 
-<Callout type="warning" title="Still before 1.0">
-Stuarty is released and still before 1.0. New releases (`v0.N.0`) add features about every 90 commits and may change a public interface. Check the [changelog](/changelog) for what a release changes.
+<Callout type="warning" title="BETA">
+Vukem Video is in its BETA phase: released and still before 1.0. New releases (`v0.N.0`) add features about every 90 commits and may change a public interface. Check the [changelog](/changelog) for what a release changes.
 </Callout>
 
 ## You will learn
@@ -15,51 +15,51 @@ Stuarty is released and still before 1.0. New releases (`v0.N.0`) add features a
 
 ## The idea
 
-Stuarty runs only on your computer. You install one program, `stuarty`. It serves the editor in your browser, the MCP server, the CLI and the HTTP API from the same process and the same workspace.
+Vukem Video runs only on your computer. You install one program, `vukem-video`. It serves the editor in your browser, the MCP server, the CLI and the HTTP API from the same process and the same workspace.
 
 ## Quick start
 
-1. Open the [releases page](https://github.com/AlexGalhardo/stuarty/releases) and download the installer for your system, or the archive for your platform.
-2. Install it. The installer adds `stuarty` to your path.
-3. Run `stuarty version`. It prints the version, which tells you the program is installed.
-4. Run `stuarty serve`. It listens on `127.0.0.1:7878` and nowhere else.
+1. Open the [releases page](https://github.com/AlexGalhardo/vukem-video/releases) and download the installer for your system, or the archive for your platform.
+2. Install it. The installer adds `vukem-video` to your path.
+3. Run `vukem-video version`. It prints the version, which tells you the program is installed.
+4. Run `vukem-video serve`. It listens on `127.0.0.1:7878` and nowhere else.
 
 ### The container image
 
-Every stable release also publishes a multi-architecture image with the pinned LGPL FFmpeg inside, on two registries with the same digest: `ghcr.io/alexgalhardo/stuarty` and `alexgalhardo/stuarty` on Docker Hub. The tags are `X.Y.Z`, `X.Y` and `latest`. The workspace lives in the `/data` volume, so keep it in a named volume or a folder of your choice:
+Every stable release also publishes a multi-architecture image with the pinned LGPL FFmpeg inside, on two registries with the same digest: `ghcr.io/alexgalhardo/vukem-video` and `alexgalhardo/vukem-video` on Docker Hub. The tags are `X.Y.Z`, `X.Y` and `latest`. The workspace lives in the `/data` volume, so keep it in a named volume or a folder of your choice:
 
 ```bash
-docker run --rm -p 127.0.0.1:7878:7878 -v stuarty:/data \
+docker run --rm -p 127.0.0.1:7878:7878 -v vukem-video:/data \
   -e APP_KEY="$(openssl rand -base64 32)" \
-  -e STUARTY_ADMIN_EMAIL=admin@example.com \
-  -e STUARTY_ADMIN_PASSWORD="choose-a-long-password" \
-  ghcr.io/alexgalhardo/stuarty:latest
+  -e VUKEM_VIDEO_ADMIN_EMAIL=admin@example.com \
+  -e VUKEM_VIDEO_ADMIN_PASSWORD="choose-a-long-password" \
+  ghcr.io/alexgalhardo/vukem-video:latest
 ```
 
 `latest` is for trying it out; pin `X.Y.Z` for a server you keep. The `127.0.0.1:` in `-p` matters: over plain HTTP nothing is encrypted, so any other interface needs TLS in front (see the [Docker page](/docs/self-hosting/docker)).
 
-A container always runs in [network mode](/docs/self-hosting/network-mode), where sign-in is required, so the two `STUARTY_ADMIN_*` variables create the first administrator. Open `http://127.0.0.1:7878` and sign in with that email and password. The [Docker page](/docs/self-hosting/docker) explains each option and walks from this command to a first verified export.
+A container always runs in [network mode](/docs/self-hosting/network-mode), where sign-in is required, so the two `VUKEM_VIDEO_ADMIN_*` variables create the first administrator. Open `http://127.0.0.1:7878` and sign in with that email and password. The [Docker page](/docs/self-hosting/docker) explains each option and walks from this command to a first verified export.
 
-The container runs as the user `app` (uid 10001) and sends no data anywhere by default. `docker run --rm ghcr.io/alexgalhardo/stuarty:X.Y.Z version` prints the version.
+The container runs as the user `app` (uid 10001) and sends no data anywhere by default. `docker run --rm ghcr.io/alexgalhardo/vukem-video:X.Y.Z version` prints the version.
 
 To build from source you need Go (the version in `go.mod`) and Bun for the front end.
 
 ### The desktop application
 
-A release that carries the desktop application lists one file per system next to the other installers: `stuarty-desktop-X-Y-Z.exe` for Windows 11 (`stuarty-desktop-0-28-0.exe`), `stuarty-desktop-X-Y-Z-arm64.dmg` (Apple silicon) or `stuarty-desktop-X-Y-Z-amd64.dmg` (Intel) for macOS, `stuarty-desktop-X-Y-Z.AppImage` for Linux, and `stuarty-desktop_X.Y.Z_linux_amd64.deb` for Debian and Ubuntu. Each holds the window and the server it starts. The [desktop application](/docs/guide/desktop) page says what it does.
+A release that carries the desktop application lists one file per system next to the other installers: `vukem-video-desktop-X-Y-Z.exe` for Windows 11 (`vukem-video-desktop-0-28-0.exe`), `vukem-video-desktop-X-Y-Z-arm64.dmg` (Apple silicon) or `vukem-video-desktop-X-Y-Z-amd64.dmg` (Intel) for macOS, `vukem-video-desktop-X-Y-Z.AppImage` for Linux, and `vukem-video-desktop_X.Y.Z_linux_amd64.deb` for Debian and Ubuntu. Each holds the window and the server it starts. The [desktop application](/docs/guide/desktop) page says what it does.
 
-### The installers are not signed
+### The BETA installers are not signed
 
-No installer is signed with a paid certificate: there is no Apple Developer ID, no notarization and no Windows code-signing certificate. Windows and macOS therefore warn before the first run. This is expected; what proves the file is genuine is the checksum and the signature in the release, which you can [verify](/docs/self-hosting/verify-a-release).
+No installer is signed with a paid certificate: there is no Apple Developer ID, no notarization and no Windows code-signing certificate in the BETA. Windows and macOS therefore warn before the first run. This is expected; what proves the file is genuine is the checksum and the signature in the release, which you can [verify](/docs/self-hosting/verify-a-release).
 
 - **Windows.** SmartScreen shows "Windows protected your PC". Choose **More info**, then **Run anyway**.
-- **macOS.** Gatekeeper says the app cannot be opened because Apple cannot check it. Control-click (right-click) the app, choose **Open**, then **Open** again. Or remove the quarantine mark in a terminal: `xattr -d com.apple.quarantine "/Applications/Stuarty.app"`.
-- **Debian and Ubuntu.** No warning. Install with `sudo apt install ./stuarty-desktop_X.Y.Z_linux_amd64.deb`.
+- **macOS.** Gatekeeper says the app cannot be opened because Apple cannot check it. Control-click (right-click) the app, choose **Open**, then **Open** again. Or remove the quarantine mark in a terminal: `xattr -d com.apple.quarantine "/Applications/Vukem Video.app"`.
+- **Debian and Ubuntu.** No warning. Install with `sudo apt install ./vukem-video-desktop_X.Y.Z_linux_amd64.deb`.
 
 ## Common mistakes
 
-- The system warns before the first run. The installers are not signed with a paid certificate; see [The installers are not signed](#the-installers-are-not-signed) above for the SmartScreen and Gatekeeper steps, and [verify the download](/docs/self-hosting/verify-a-release) first if you want proof.
-- FFmpeg is not found. The editor uses your FFmpeg, and `STUARTY_FFMPEG` and `STUARTY_FFPROBE` name the binaries explicitly. See the [configuration variables](/docs/reference/configuration).
+- The system warns before the first run. The installers are not signed with a paid certificate; see [The BETA installers are not signed](#the-beta-installers-are-not-signed) above for the SmartScreen and Gatekeeper steps, and [verify the download](/docs/self-hosting/verify-a-release) first if you want proof.
+- FFmpeg is not found. The editor uses your FFmpeg, and `VUKEM_VIDEO_FFMPEG` and `VUKEM_VIDEO_FFPROBE` name the binaries explicitly. See the [configuration variables](/docs/reference/configuration).
 
 ## Next steps
 

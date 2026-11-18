@@ -7,13 +7,13 @@ import (
 	"maps"
 	"sync"
 
-	"github.com/AlexGalhardo/stuarty/core/command"
-	"github.com/AlexGalhardo/stuarty/core/timeline"
-	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
-	"github.com/AlexGalhardo/stuarty/engine/frame"
-	"github.com/AlexGalhardo/stuarty/engine/ingest"
-	enginestore "github.com/AlexGalhardo/stuarty/engine/store"
-	"github.com/AlexGalhardo/stuarty/service/pathguard"
+	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
+	"github.com/AlexGalhardo/vukem-video/engine/frame"
+	"github.com/AlexGalhardo/vukem-video/engine/ingest"
+	enginestore "github.com/AlexGalhardo/vukem-video/engine/store"
+	"github.com/AlexGalhardo/vukem-video/service/pathguard"
 )
 
 // Kinds of the queue messages (SDD-005 section 14.1). The payload of each is
@@ -22,9 +22,6 @@ const (
 	QueueKindIngest = "video.ingest"
 	QueueKindExport = "video.export"
 	QueueKindFrame  = "video.frame"
-	// QueueKindExportBatch is the parent job of an export batch (SDD-004 section 8.4). It runs on the default
-	// queue: it holds no encoder, its children are exports that take their own slots.
-	QueueKindExportBatch = "video.export_batch"
 )
 
 // Enqueuer hands a job to the workers. Enqueue runs inside the write
@@ -48,12 +45,9 @@ type ExportInput struct {
 	Start, End int64 // frames; End 0 is the end of the timeline
 	// Format is mp4, gif, wav or aac; empty is mp4.
 	Format string
-	// MaxBytes is STUARTY_MAX_EXPORT_BYTES: the encoder stops at this size
+	// MaxBytes is VUKEM_VIDEO_MAX_EXPORT_BYTES: the encoder stops at this size
 	// instead of filling the disk first; 0 means no ceiling.
 	MaxBytes int64
-	// Preset is the id of a platform preset and Codec the codec asked for (h264, hevc or av1); both are for
-	// mp4 (SDD-004 sections 8.2 and 8.3). Empty is none.
-	Preset, Codec string
 	// OnProgress receives the frames written and the total.
 	OnProgress func(done, total int)
 }
@@ -67,9 +61,6 @@ type ExportOutput struct {
 	VideoCodec   string
 	AudioCodec   string
 	LoudnessLUFS *float64
-	// CodecFallback is the codec the preset preferred when the video is H.264 instead, and Notes say so.
-	CodecFallback string
-	Notes         []string
 	// Width and Height are the pixels of the file when they differ from the project's
 	// (a GIF is capped); zero means the project's size.
 	Width, Height int
@@ -88,20 +79,20 @@ type Exporter interface {
 // Limits are the ceilings of SDD-007 section 9.1 that this part of the
 // service enforces. A zero field takes its default.
 type Limits struct {
-	MaxImportBytes     int64 // STUARTY_MAX_IMPORT_BYTES
-	MinFreeBytes       int64 // STUARTY_MIN_FREE_BYTES
-	MaxIngests         int   // STUARTY_MAX_INGESTS: ingest jobs running at once
+	MaxImportBytes     int64 // VUKEM_VIDEO_MAX_IMPORT_BYTES
+	MinFreeBytes       int64 // VUKEM_VIDEO_MIN_FREE_BYTES
+	MaxIngests         int   // VUKEM_VIDEO_MAX_INGESTS: ingest jobs running at once
 	MaxQueuedIngests   int   // ingest jobs waiting
-	MaxExports         int   // STUARTY_MAX_EXPORTS: exports queued or running
-	MaxExportsPerActor int   // STUARTY_MAX_EXPORTS_PER_KEY: running; two more may wait
-	// MaxTranscribes is STUARTY_MAX_TRANSCRIBES: transcriptions running at once.
+	MaxExports         int   // VUKEM_VIDEO_MAX_EXPORTS: exports queued or running
+	MaxExportsPerActor int   // VUKEM_VIDEO_MAX_EXPORTS_PER_KEY: running; two more may wait
+	// MaxTranscribes is VUKEM_VIDEO_MAX_TRANSCRIBES: transcriptions running at once.
 	MaxTranscribes int
-	// MaxTranscribesPerActor is STUARTY_MAX_TRANSCRIBES_PER_KEY: the
+	// MaxTranscribesPerActor is VUKEM_VIDEO_MAX_TRANSCRIBES_PER_KEY: the
 	// transcriptions of one actor that are queued or running.
 	MaxTranscribesPerActor int
-	// MaxTranscribeSeconds is STUARTY_MAX_TRANSCRIBE_SECONDS: the longest audio of one job.
+	// MaxTranscribeSeconds is VUKEM_VIDEO_MAX_TRANSCRIBE_SECONDS: the longest audio of one job.
 	MaxTranscribeSeconds int64
-	// MaxExportBytes is STUARTY_MAX_EXPORT_BYTES: the largest exported file.
+	// MaxExportBytes is VUKEM_VIDEO_MAX_EXPORT_BYTES: the largest exported file.
 	MaxExportBytes int64
 	Ceilings       ffmpeg.Ceilings
 }

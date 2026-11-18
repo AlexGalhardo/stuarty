@@ -1,6 +1,0 @@
-{
-  "args": {
-    "text": "Hello world"
-  },
-  "op": "layer.add_text"
-}

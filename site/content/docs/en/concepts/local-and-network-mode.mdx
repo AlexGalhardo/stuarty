@@ -9,7 +9,7 @@ The server runs in one of two modes, and the address it binds to decides which. 
 
 ## Local mode
 
-The server is bound to `127.0.0.1` or `::1`, so only your computer can reach it. This is the default and what `stuarty serve` does.
+The server is bound to `127.0.0.1` or `::1`, so only your computer can reach it. This is the default and what `vukem-video serve` does.
 
 - There is no login. At the first start the server creates a random local token in the workspace, in a file readable only by you. The CLI and the stdio MCP server read it from there.
 - "No login" is not "no protection". Any web page you open can send requests to `127.0.0.1`, so the server also checks the `Host` and `Origin` of every request and refuses what does not come from the editor or from a client holding the token.

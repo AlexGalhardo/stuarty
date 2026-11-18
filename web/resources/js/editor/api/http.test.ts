@@ -78,7 +78,7 @@ describe("HttpTransport.send", () => {
 
 	test("a problem+json body comes back as the response", async () => {
 		stubFetch(409, {
-			type: "urn:stuarty:error:E_OVERLAP",
+			type: "urn:vukem-video:error:E_OVERLAP",
 			code: "E_OVERLAP",
 			message: "overlap",
 			retryable: false,
@@ -227,7 +227,7 @@ describe("endpoints and URLs", () => {
 
 	test("binary URLs carry time as a string with a unit", () => {
 		expect(frameUrl("prj_x", 375, 540, 12)).toBe(
-			"/api/v1/projects/prj_x/frame?at=375f&width=540&rev=12&timeline_id=prj_x",
+			"/api/v1/projects/prj_x/frame?at=375f&width=540&rev=12",
 		);
 		expect(thumbnailUrl("prj_x", "ast_1", 160)).toBe(
 			"/api/v1/projects/prj_x/media/ast_1/thumbnail?width=160",

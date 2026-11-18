@@ -1,15 +1,15 @@
 ---
 title: "Connect an agent"
-description: "Add the Stuarty MCP server to Claude Code, Cursor or another MCP client, or drive the CLI from a shell."
+description: "Add the Vukem Video MCP server to Claude Code, Cursor or another MCP client, or drive the CLI from a shell."
 ---
 
 ## Claude Code
 
 ```bash
-claude mcp add stuarty -- stuarty mcp
+claude mcp add vukem-video -- vukem-video mcp
 ```
 
-The server speaks MCP over standard input and output. When no other process owns your workspace, `stuarty mcp` becomes its owner for as long as it runs; when the editor server is already running, it talks to that server instead, so the agent and the browser see the same project.
+The server speaks MCP over standard input and output. When no other process owns your workspace, `vukem-video mcp` becomes its owner for as long as it runs; when the editor server is already running, it talks to that server instead, so the agent and the browser see the same project.
 
 ## Other MCP clients
 
@@ -18,7 +18,7 @@ Any client that starts a stdio server takes the same command. In a JSON configur
 ```json
 {
   "mcpServers": {
-    "stuarty": { "command": "stuarty", "args": ["mcp"] }
+    "vukem-video": { "command": "vukem-video", "args": ["mcp"] }
   }
 }
 ```
@@ -27,16 +27,16 @@ The server names the actor of each edit after the client, as `local:<client name
 
 ## A remote server
 
-Set `STUARTY_URL` and `STUARTY_KEY` and the CLI and the stdio server talk to that server with the API key. See the [configuration variables](/docs/reference/configuration).
+Set `VUKEM_VIDEO_URL` and `VUKEM_VIDEO_KEY` and the CLI and the stdio server talk to that server with the API key. See the [configuration variables](/docs/reference/configuration).
 
 ## The CLI
 
 An agent with a shell can use the CLI instead. Add `--json` for one JSON document per command and `--actor <label>` to name itself:
 
 ```bash
-stuarty project:create --name "Launch teaser" --json --actor claude-code
-stuarty media:import clip.mov --project prj_7k2m9x4q1b --json
-stuarty export --project prj_7k2m9x4q1b --json
+vukem-video project:create --name "Launch teaser" --json --actor claude-code
+vukem-video media:import clip.mov --project prj_7k2m9x4q1b --json
+vukem-video export --project prj_7k2m9x4q1b --json
 ```
 
 Exit code `0` is success, `2` is a retryable error or a `--wait` that timed out, and `1` is any other failure. Every command is in the [CLI reference](/docs/reference/cli).

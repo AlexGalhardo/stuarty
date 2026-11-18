@@ -19,20 +19,20 @@ A video file with speech, `talk.mp4`, and a music file, `song.mp3`. Transcriptio
 1. Create the project. The default preset is 9:16 at 30 frames per second, which is the format of a short.
 
    ```bash
-   stuarty project:create --name "Short 01" --id prj_7k2m9x4q1b
+   vukem-video project:create --name "Short 01" --id prj_7k2m9x4q1b
    ```
 
 2. Import the two files and wait until they are ready.
 
    ```bash
-   stuarty media:import talk.mp4 --project prj_7k2m9x4q1b --asset-id ast_3c5v8n2w6d
-   stuarty media:import song.mp3 --project prj_7k2m9x4q1b --asset-id ast_4h6j8k2m3n
+   vukem-video media:import talk.mp4 --project prj_7k2m9x4q1b --asset-id ast_3c5v8n2w6d
+   vukem-video media:import song.mp3 --project prj_7k2m9x4q1b --asset-id ast_4h6j8k2m3n
    ```
 
 3. Add three tracks (footage, captions, music) and put the clip and the song on them. A track has a kind, `visual` or `audio`.
 
    ```bash
-   stuarty edit --project prj_7k2m9x4q1b --ops - <<'JSON'
+   vukem-video edit --project prj_7k2m9x4q1b --ops - <<'JSON'
    [{"op":"track.add","args":{"kind":"visual","name":"Video","id":"trk_f6g7h8j9k0"}},
     {"op":"track.add","args":{"kind":"visual","name":"Captions","id":"trk_a1b2c3d4e5"}},
     {"op":"track.add","args":{"kind":"audio","name":"Music","id":"trk_m1n2p3q4r5"}},
@@ -44,38 +44,38 @@ A video file with speech, `talk.mp4`, and a music file, `song.mp3`. Transcriptio
 4. Transcribe the speech and make the captions from it. The first command downloads the model once and asks before it does.
 
    ```bash
-   stuarty tools:install whisper --model small
-   stuarty transcribe --project prj_7k2m9x4q1b --asset ast_3c5v8n2w6d --language en --wait
-   stuarty edit --project prj_7k2m9x4q1b caption.from_transcript \
+   vukem-video tools:install whisper --model small
+   vukem-video transcribe --project prj_7k2m9x4q1b --asset ast_3c5v8n2w6d --language en --wait
+   vukem-video edit --project prj_7k2m9x4q1b caption.from_transcript \
      clip_item_id=itm_m1n2p3q4r5 track_id=trk_a1b2c3d4e5 max_words:=4
    ```
 
 5. Style the captions: big, upper case, with the spoken word highlighted.
 
    ```bash
-   stuarty edit --project prj_7k2m9x4q1b track.set_caption_style track_id=trk_a1b2c3d4e5 \
+   vukem-video edit --project prj_7k2m9x4q1b track.set_caption_style track_id=trk_a1b2c3d4e5 \
      style:='{"uppercase":true,"size":84,"highlight":"word","highlight_color":"#FFE600","position":"bottom"}'
    ```
 
 6. Give the footage a warmer look.
 
    ```bash
-   stuarty edit --project prj_7k2m9x4q1b clip.set_filter item_id=itm_m1n2p3q4r5 filter=warm amount:=0.5
+   vukem-video edit --project prj_7k2m9x4q1b clip.set_filter item_id=itm_m1n2p3q4r5 filter=warm amount:=0.5
    ```
 
 7. Lower the music while you speak. Wait until the song is ready first; ducking needs the analysis of the speech in the clip.
 
    ```bash
-   stuarty edit --project prj_7k2m9x4q1b audio.duck item_id=itm_s6t7v8w9x0 \
+   vukem-video edit --project prj_7k2m9x4q1b audio.duck item_id=itm_s6t7v8w9x0 \
      speech_item_ids:='["itm_m1n2p3q4r5"]' gain_db:=-14
    ```
 
 8. Look at a frame, run the lint and export.
 
    ```bash
-   stuarty view --project prj_7k2m9x4q1b --at 2s
-   stuarty lint --project prj_7k2m9x4q1b
-   stuarty export --project prj_7k2m9x4q1b
+   vukem-video view --project prj_7k2m9x4q1b --at 2s
+   vukem-video lint --project prj_7k2m9x4q1b
+   vukem-video export --project prj_7k2m9x4q1b
    ```
 
 The export prints the verified file under `<workspace>/exports/prj_7k2m9x4q1b/`.

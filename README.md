@@ -20,13 +20,13 @@
 
 Stuarty is an open source (MIT), self-hosted studio for people who make content for the Internet, built so that AI agents are first-class users: everything a person does in the UI can be done through the HTTP API, the CLI and MCP. Files, tokens and credentials stay on your machine or on your own server.
 
-It grew out of a video editor called Vukem Video. The editor is what works today; the rest is being built, epic by epic, from [`docs/plans/`](docs/plans/00-roadmap.md).
+It grew out of a video editor called Vukem Video. The editor is what works today; the rest is being built, epic by epic, from [`docs/plans/`](docs/plans/00-roadmap.md). The code still uses the former name (`vukem-video`) until the rename described in [ADR-0044](docs/adrs/0044-rename-to-stuarty.md).
 
 ## What works today: the video editor
 
 | Area | What you get |
 | --- | --- |
-| **Interfaces** | Editor in the browser<br>MCP server (`stuarty mcp`)<br>CLI with `--json`<br>HTTP API (`stuarty serve`)<br>Desktop application (a native window over the same web UI) |
+| **Interfaces** | Editor in the browser<br>MCP server (`vukem-video mcp`)<br>CLI with `--json`<br>HTTP API (`vukem-video serve`)<br>Desktop application (a native window over the same web UI) |
 | **Editing** | Captions from a transcript, with editable words and styles<br>Cuts, trims, splits, ripple, roll, slide and slip, and silence removal<br>Chroma key, blend modes, masks, filters, effects, colour and blur per clip<br>Framing, speed curves, transitions and keyframes<br>Re-target a project to 16:9, 9:16, 1:1 or 4:5 in one command<br>Text, shapes and markers<br>Audio ducking and beat marks<br>Templates and brand kit |
 | **Export** | MP4, GIF, WAV and AAC<br>A full-resolution PNG of one frame<br>A range of the timeline<br>OpenTimelineIO export and import |
 | **For agents** | Agent docs generated from the code: `SKILL.md`, an `AGENTS.md` snippet and the MCP instructions<br>`command_help` lists every operation with arguments and an example<br>`lint` finds problems before export<br>Batches of operations are applied as one revision |
@@ -62,11 +62,11 @@ The requirements are in [`docs/prds/`](docs/prds), the decisions in [`docs/adrs/
 Run the container image of the latest release. The port is published on your computer only:
 
 ```bash
-docker run --rm -p 127.0.0.1:7878:7878 -v stuarty:/data \
+docker run --rm -p 127.0.0.1:7878:7878 -v vukem-video:/data \
   -e APP_KEY="$(openssl rand -base64 32)" \
-  -e STUARTY_ADMIN_EMAIL=admin@example.com \
-  -e STUARTY_ADMIN_PASSWORD=choose-a-long-password \
-  ghcr.io/alexgalhardo/stuarty:latest
+  -e VUKEM_VIDEO_ADMIN_EMAIL=admin@example.com \
+  -e VUKEM_VIDEO_ADMIN_PASSWORD=choose-a-long-password \
+  ghcr.io/alexgalhardo/vukem-video:latest
 ```
 
 Then open `http://127.0.0.1:7878` in a browser and sign in with that email and password. The two variables create the first administrator on the first start only; later starts ignore them.
@@ -78,16 +78,16 @@ Installers for Windows, Linux and macOS and the desktop application are on the [
 Add the stdio MCP server to your client:
 
 ```sh
-stuarty mcp
+vukem-video mcp
 ```
 
 Or use the CLI with `--json`:
 
 ```sh
-stuarty project:create --name "Launch teaser" --json
+vukem-video project:create --name "Launch teaser" --json
 ```
 
-Or call the HTTP API of `stuarty serve` (default `127.0.0.1:7878`, `POST /mcp` for Streamable HTTP MCP). The workspace is `~/.stuarty`, or `$STUARTY_HOME`.
+Or call the HTTP API of `vukem-video serve` (default `127.0.0.1:7878`, `POST /mcp` for Streamable HTTP MCP). The workspace is `~/.vukem-video`, or `$VUKEM_VIDEO_HOME`.
 
 ## Stability
 

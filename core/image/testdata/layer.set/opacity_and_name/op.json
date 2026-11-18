@@ -1,8 +1,0 @@
-{
-  "args": {
-    "layer_id": "lyr_dddddddddd",
-    "name": "Headline bar",
-    "opacity": 80
-  },
-  "op": "layer.set"
-}

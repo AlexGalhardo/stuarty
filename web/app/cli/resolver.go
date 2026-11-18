@@ -5,15 +5,15 @@ import (
 	"os"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/internal/outbound"
-	"github.com/AlexGalhardo/stuarty/service/remote"
-	"github.com/AlexGalhardo/stuarty/service/workspace"
-	"github.com/AlexGalhardo/stuarty/web/app/owner"
+	"github.com/AlexGalhardo/vukem-video/internal/outbound"
+	"github.com/AlexGalhardo/vukem-video/service/remote"
+	"github.com/AlexGalhardo/vukem-video/service/workspace"
+	"github.com/AlexGalhardo/vukem-video/web/app/owner"
 )
 
 // LocalResolver is the Resolver of the binary (SDD-003 section 5.2): it finds
 // the workspace owner with workspace.Open (SDD-005 section 6.4). A remote
-// server (STUARTY_URL) or a local owner becomes service/remote over HTTP;
+// server (VUKEM_VIDEO_URL) or a local owner becomes service/remote over HTTP;
 // when no server owns the workspace, the Service runs in this process over the
 // SQLite store.
 type LocalResolver struct {
@@ -73,7 +73,7 @@ func (r LocalResolver) Resolve(ctx context.Context, t Target) (*Connection, erro
 const callTimeout = 2 * time.Minute
 
 // httpConnection is steps 1 and 2 of SDD-003 section 5.2. Without a workspace
-// directory the address came from STUARTY_URL and any host is allowed; a
+// directory the address came from VUKEM_VIDEO_URL and any host is allowed; a
 // local owner is reached on loopback only.
 func httpConnection(sess *workspace.Session) *Connection {
 	hc := outbound.LocalServer(callTimeout)

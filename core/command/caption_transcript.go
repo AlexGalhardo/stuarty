@@ -6,7 +6,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
 func init() {
@@ -23,6 +23,7 @@ func init() {
 			CodeLimit, CodeOverlap,
 		},
 		Scope: ScopeEdit,
+		Phase: Alpha,
 	}, applyCaptionFromTranscript))
 
 	Register(Define(Spec{
@@ -36,6 +37,7 @@ func init() {
 			CodeValidation, CodeNotFound, CodeTypeMismatch, CodeInvalidState, CodeOverlap,
 		},
 		Scope: ScopeEdit,
+		Phase: Alpha,
 	}, applyCaptionRetime))
 }
 

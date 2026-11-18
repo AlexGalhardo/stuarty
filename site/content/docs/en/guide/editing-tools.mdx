@@ -23,7 +23,7 @@ Every cut is an **operation** in an `edit` batch. An operation names an item (`i
 | copy an item | `item.duplicate` |
 | close an empty range of a track | `timeline.close_gap` |
 
-Use `command_help` (or `stuarty command:help item.trim`) for the exact arguments of each one.
+Use `command_help` (or `vukem-video command:help item.trim`) for the exact arguments of each one.
 
 ## Quick start
 
@@ -33,7 +33,7 @@ Cut a clip in two at `2s`. The original keeps its id and becomes the left part; 
 <Tab title="CLI">
 
 ```bash
-stuarty edit --project prj_7k2m9x4q1b item.split item_id=itm_m1n2p3q4r5 at=2s
+vukem-video edit --project prj_7k2m9x4q1b item.split item_id=itm_m1n2p3q4r5 at=2s
 ```
 
 </Tab>

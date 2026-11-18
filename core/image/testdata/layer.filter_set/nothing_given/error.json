@@ -1,8 +1,0 @@
-{
-  "code": "E_VALIDATION",
-  "hint": "Add one of the parameters of the filter to the arguments.",
-  "message": "Give at least one of: the parameters of the filter.",
-  "op_index": 0,
-  "path": "args",
-  "retryable": false
-}

@@ -16,15 +16,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/desktop/update"
-	"github.com/AlexGalhardo/stuarty/internal/outbound"
+	"github.com/AlexGalhardo/vukem-video/desktop/update"
+	"github.com/AlexGalhardo/vukem-video/internal/outbound"
 )
 
 const (
 	seedFile     = "../../../desktop/update/testdata/test-key.seed"
 	pubFile      = "../../../desktop/update/testdata/test-key.pub"
-	winInstaller = "stuarty-desktop_0.15.0_windows_amd64_setup.exe"
-	debInstaller = "stuarty-desktop_0.15.0_linux_amd64.deb"
+	winInstaller = "vukem-video-desktop_0.15.0_windows_amd64_setup.exe"
+	debInstaller = "vukem-video-desktop_0.15.0_linux_amd64.deb"
 )
 
 func useTestKey(t *testing.T) string {
@@ -93,12 +93,12 @@ func TestClassifyFriendlyDownloadNames(t *testing.T) {
 		platform string
 		launcher bool
 	}{
-		{"stuarty-desktop-0-28-0.exe", "windows-amd64", false},
-		{"stuarty-desktop-0-28-0.AppImage", "linux-amd64", true},
-		{"stuarty-desktop-0-28-0-arm64.dmg", "darwin-arm64", false},
-		{"stuarty-desktop-0-28-0-amd64.dmg", "darwin-amd64", false},
+		{"vukem-video-desktop-0-28-0.exe", "windows-amd64", false},
+		{"vukem-video-desktop-0-28-0.AppImage", "linux-amd64", true},
+		{"vukem-video-desktop-0-28-0-arm64.dmg", "darwin-arm64", false},
+		{"vukem-video-desktop-0-28-0-amd64.dmg", "darwin-amd64", false},
 		{winInstaller, "windows-amd64", false},
-		{"stuarty-desktop_0.15.0_linux_amd64.AppImage", "linux-amd64", true},
+		{"vukem-video-desktop_0.15.0_linux_amd64.AppImage", "linux-amd64", true},
 	}
 	for _, c := range cases {
 		version := "0.28.0"
@@ -112,11 +112,11 @@ func TestClassifyFriendlyDownloadNames(t *testing.T) {
 		}
 	}
 
-	if _, ok := classify("stuarty-desktop-0-28-0.exe", "0.27.0"); ok {
+	if _, ok := classify("vukem-video-desktop-0-28-0.exe", "0.27.0"); ok {
 		t.Error("a file of another version was accepted")
 	}
 
-	if _, ok := classify("stuarty-desktop-0-28-0-arm64.exe", "0.28.0"); ok {
+	if _, ok := classify("vukem-video-desktop-0-28-0-arm64.exe", "0.28.0"); ok {
 		t.Error("an exe must not carry an architecture suffix")
 	}
 }

@@ -1,6 +1,6 @@
 // Request samples for the API reference: one template per language, filled from an operation of the OpenAPI
 // document. Every sample sends the secret as `Authorization: Bearer <secret>` (the local token in local mode,
-// an API key in network mode) and reads it from the environment variable STUARTY_KEY. Node strips the types.
+// an API key in network mode) and reads it from the environment variable VUKEM_VIDEO_KEY. Node strips the types.
 
 export type SampleRequest = {
 	method: string;
@@ -15,7 +15,7 @@ export type SampleRequest = {
 
 export type Sample = { label: string; lang: string; code: string };
 
-export const SECRET_VARIABLE = "STUARTY_KEY";
+export const SECRET_VARIABLE = "VUKEM_VIDEO_KEY";
 
 const fullUrl = (r: SampleRequest): string => {
 	if (r.query.length === 0) return r.url;

@@ -350,7 +350,7 @@ func TestRefusesToStartWithoutTheGuards(t *testing.T) {
 	t.Parallel()
 
 	env := func(m map[string]string) func(string) string { return func(k string) string { return m[k] } }
-	full := map[string]string{"STUARTY_HARNESS": "1", "ANTHROPIC_API_KEY": testKey}
+	full := map[string]string{"VUKEM_VIDEO_HARNESS": "1", "ANTHROPIC_API_KEY": testKey}
 
 	tests := []struct {
 		name string
@@ -362,17 +362,17 @@ func TestRefusesToStartWithoutTheGuards(t *testing.T) {
 			"no switch",
 			[]string{"--runs", "1"},
 			map[string]string{"ANTHROPIC_API_KEY": testKey},
-			"STUARTY_HARNESS=1",
+			"VUKEM_VIDEO_HARNESS=1",
 		},
 		{
 			"switch is not 1",
 			[]string{"--runs", "1"},
-			map[string]string{"STUARTY_HARNESS": "true", "ANTHROPIC_API_KEY": testKey},
-			"STUARTY_HARNESS=1",
+			map[string]string{"VUKEM_VIDEO_HARNESS": "true", "ANTHROPIC_API_KEY": testKey},
+			"VUKEM_VIDEO_HARNESS=1",
 		},
 		{"no runs", nil, full, "--runs"},
 		{"zero runs", []string{"--runs", "0"}, full, "--runs"},
-		{"no key", []string{"--runs", "1"}, map[string]string{"STUARTY_HARNESS": "1"}, "ANTHROPIC_API_KEY"},
+		{"no key", []string{"--runs", "1"}, map[string]string{"VUKEM_VIDEO_HARNESS": "1"}, "ANTHROPIC_API_KEY"},
 		{"http endpoint", []string{"--runs", "1", "--endpoint", "http://example.com/v1/messages"}, full, "https"},
 		{"bad scenario", []string{"--runs", "1", "--scenario", "x"}, full, "unknown scenario"},
 	}
@@ -418,7 +418,7 @@ func TestEstimateOnlyPrintsTheCostAndCallsNothing(t *testing.T) {
 
 		return nil, http.ErrNotSupported
 	})
-	env := func(k string) string { return map[string]string{"STUARTY_HARNESS": "1"}[k] }
+	env := func(k string) string { return map[string]string{"VUKEM_VIDEO_HARNESS": "1"}[k] }
 
 	code := run(t.Context(), []string{"--runs", "10", "--estimate", "--skill", skill}, env, api, nil, &stdout, &stderr)
 	if code != 0 {
@@ -488,7 +488,7 @@ func TestFullRunWritesTranscriptsAndSummaryAndJudgesTheBar(t *testing.T) {
 
 	out := filepath.Join(dir, "out")
 	env := func(k string) string {
-		return map[string]string{"STUARTY_HARNESS": "1", "ANTHROPIC_API_KEY": testKey}[k]
+		return map[string]string{"VUKEM_VIDEO_HARNESS": "1", "ANTHROPIC_API_KEY": testKey}[k]
 	}
 	mk := func(string) func(home, work string) Runner {
 		return func(_, _ string) Runner {
@@ -536,7 +536,7 @@ func TestPrototypeScenarioNeedsAClip(t *testing.T) {
 	}
 
 	env := func(k string) string {
-		return map[string]string{"STUARTY_HARNESS": "1", "ANTHROPIC_API_KEY": testKey}[k]
+		return map[string]string{"VUKEM_VIDEO_HARNESS": "1", "ANTHROPIC_API_KEY": testKey}[k]
 	}
 
 	var stdout, stderr bytes.Buffer

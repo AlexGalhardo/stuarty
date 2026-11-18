@@ -12,19 +12,19 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/service/workspace"
+	"github.com/AlexGalhardo/vukem-video/service/workspace"
 )
 
 // readBudget is NFR-024: a read command through a running server, from process
 // start to its output, answers in under 300 ms (SDD-003 section 9 check 16).
 const readBudget = 300 * time.Millisecond
 
-// BenchmarkCLIReadViaServer starts `stuarty serve` and times `project:list`
+// BenchmarkCLIReadViaServer starts `vukem-video serve` and times `project:list`
 // as a process: it finds the owner through runtime.json, checks /up, makes the
 // handshake and makes the call. The median must stay under 300 ms; the run is
 // only meaningful on the reference machine of SDD-008.
 func BenchmarkCLIReadViaServer(b *testing.B) {
-	bin := filepath.Join(b.TempDir(), "stuarty")
+	bin := filepath.Join(b.TempDir(), "vukem-video")
 	if runtime.GOOS == "windows" {
 		bin += ".exe"
 	}
@@ -36,7 +36,7 @@ func BenchmarkCLIReadViaServer(b *testing.B) {
 
 	home := filepath.Join(b.TempDir(), "ws")
 	env := append(os.Environ(), workspace.EnvHome+"="+home, workspace.EnvURL+"=", "APP_KEY=", "APP_ENV=",
-		"STUARTY_MIN_FREE_BYTES=1")
+		"VUKEM_VIDEO_MIN_FREE_BYTES=1")
 
 	l, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {

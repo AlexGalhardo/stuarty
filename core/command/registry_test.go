@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
 // ROADMAP P1-ENG-001: a command registered without a schema, an example or its error
@@ -62,6 +62,7 @@ func TestRegisterRejectsIncompleteCommands(t *testing.T) {
 		"no summary":     {withSpec(good, func(s *Spec) { s.Summary = " " }), "no summary"},
 		"no description": {withSpec(good, func(s *Spec) { s.Description = "" }), "no description"},
 		"bad scope":      {withSpec(good, func(s *Spec) { s.Scope = "root" }), "scope must be"},
+		"bad phase":      {withSpec(good, func(s *Spec) { s.Phase = "later" }), "phase must be"},
 		"zero value":     {Command{}, "no arguments schema"},
 		"several problems": {
 			withSpec(good, func(s *Spec) { s.Example, s.Errors = "", nil }),
@@ -69,7 +70,7 @@ func TestRegisterRejectsIncompleteCommands(t *testing.T) {
 		},
 	}
 	for name, c := range cases {
-		r := NewRegistry(DomainVideo)
+		r := NewRegistry(Prototype)
 		err := r.Register(c.cmd)
 		if err == nil || !strings.Contains(err.Error(), c.want) {
 			t.Errorf("%s: got %v, want %q", name, err, c.want)
@@ -85,21 +86,26 @@ func withSpec(c Command, f func(*Spec)) Command {
 	return c
 }
 
-func TestRegistryDuplicates(t *testing.T) {
-	r := NewRegistry(DomainVideo)
+func TestRegistryPhaseAndDuplicates(t *testing.T) {
+	r := NewRegistry(Prototype)
 	cmds := testCommands()
 	for i := range cmds {
 		if err := r.Register(cmds[i]); err != nil {
 			t.Fatal(err)
 		}
 	}
-	if _, ok := r.Get("test.font"); !ok {
-		t.Error("a registered command must be found")
+	if _, ok := r.Get("test.font"); ok {
+		t.Error("an alpha command is registered in a prototype build")
 	}
 	if err := r.Register(testCommands()[0]); err == nil || !strings.Contains(err.Error(), "twice") {
 		t.Errorf("duplicate: %v", err)
 	}
-	if _, ok := r.Lookup("test.name"); !ok {
+	alpha := NewRegistry(Alpha)
+	alpha.MustRegister(testCommands()...)
+	if _, ok := alpha.Get("test.font"); !ok {
+		t.Error("an alpha build must have the alpha command")
+	}
+	if _, ok := alpha.Lookup("test.name"); !ok {
 		t.Error("Lookup")
 	}
 }
@@ -110,7 +116,7 @@ func TestMustRegisterPanicsOnIncomplete(t *testing.T) {
 			t.Error("no panic")
 		}
 	}()
-	NewRegistry(DomainVideo).MustRegister(Command{})
+	NewRegistry(Prototype).MustRegister(Command{})
 }
 
 func TestRegisterOnDefaultPanicsOnIncomplete(t *testing.T) {
@@ -152,7 +158,7 @@ func TestListNamesSchemaHelp(t *testing.T) {
 	for _, want := range []string{
 		"test.item_add: Adds a text item.", "Arguments:", "track_id (a string, required)",
 		"duration (a whole number, required) between 1 and 108000", `Example: {"op": "test.item_add"`, "ids in the example are placeholders", "Errors: E_VALIDATION",
-		"Scope: edit", "text (a string, optional)",
+		"Scope: edit, phase: prototype", "text (a string, optional)",
 	} {
 		if !strings.Contains(help, want) {
 			t.Errorf("help lacks %q:\n%s", want, help)
@@ -179,8 +185,8 @@ func TestListNamesSchemaHelp(t *testing.T) {
 // snapshotEntry is a command of core/schema/commands.json, the contract the surfaces read.
 type snapshotEntry struct {
 	Name     string `json:"name"`
+	Phase    string `json:"phase"`
 	Internal bool   `json:"internal"`
-	Domain   string `json:"domain"`
 }
 
 // TestRegistryMatchesSnapshot compares the registry, which the init function of every
@@ -212,10 +218,9 @@ func TestRegistryMatchesSnapshot(t *testing.T) {
 		switch {
 		case !ok:
 			t.Errorf("%s is registered but absent from commands.json (run go run ./internal/tools/contractgen)", c.Name)
-		case e.Internal != c.Internal:
-			t.Errorf("%s: the snapshot says internal %v, the registry %v", c.Name, e.Internal, c.Internal)
-		case e.Domain != c.Domain:
-			t.Errorf("%s: the snapshot says domain %q, the registry %q", c.Name, e.Domain, c.Domain)
+		case e.Phase != string(c.Phase) || e.Internal != c.Internal:
+			t.Errorf("%s: the snapshot says phase %q internal %v, the registry %q %v",
+				c.Name, e.Phase, e.Internal, c.Phase, c.Internal)
 		}
 
 		delete(want, c.Name)
@@ -253,10 +258,36 @@ func goldenCaseDirs(t *testing.T, name string) (ok, failing []string) {
 // PRD-001 metric 3: every command of the registry has a golden directory with at least
 // one success and one error case, one error case per code it lists, and every success
 // case carries the inverse that the runner applies to get the starting bytes back.
+func TestBuildPhaseExposesAlphaOnly(t *testing.T) {
+	if Build != Alpha {
+		t.Skip("the build exposes a later phase")
+	}
+
+	if n := len(Default().List()); n != 48 {
+		t.Errorf("the build exposes %d commands, want 48", n)
+	}
+
+	beta := 0
+
+	for _, c := range BetaBuild().List() {
+		if c.Phase == Beta {
+			beta++
+
+			if _, ok := Default().Get(c.Name); ok {
+				t.Errorf("%s is a Beta command and must not be exposed in the Alpha build", c.Name)
+			}
+		}
+	}
+
+	if beta != 26 {
+		t.Errorf("the Beta build has %d Beta commands, want 26", beta)
+	}
+}
+
 func TestEveryCommandHasGoldenAndUndo(t *testing.T) {
 	cmds := fullRegistry().List()
-	if len(cmds) != 83 {
-		t.Errorf("the registry has %d commands, want 83", len(cmds))
+	if len(cmds) != 74 {
+		t.Errorf("the registry has %d commands, want 74", len(cmds))
 	}
 
 	for _, c := range cmds {
@@ -482,7 +513,7 @@ func TestGoldenErrorsQuoteIdsNotNames(t *testing.T) {
 }
 
 func TestHelpCarriesTheSchemaAndTheShapeOfListItems(t *testing.T) {
-	r := FullRegistry()
+	r := BetaBuild()
 
 	for name, want := range map[string][]string{
 		"caption.add": {

@@ -23,8 +23,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/internal/outbound"
-	"github.com/AlexGalhardo/stuarty/service/workspace"
+	"github.com/AlexGalhardo/vukem-video/internal/outbound"
+	"github.com/AlexGalhardo/vukem-video/service/workspace"
 )
 
 // Modes of SDD-000 section 10.
@@ -35,15 +35,15 @@ const (
 
 // Variables read here (SDD-000 section 10; the last group is vukem's).
 const (
-	EnvMode           = "STUARTY_MODE"
-	EnvAddr           = "STUARTY_ADDR"
-	EnvImportRoots    = "STUARTY_IMPORT_ROOTS"
-	EnvTranscribeURL  = "STUARTY_TRANSCRIBE_URL"
-	EnvTranscribeKey  = "STUARTY_TRANSCRIBE_KEY"
-	EnvSandbox        = "STUARTY_SANDBOX"
-	EnvAllowRoot      = "STUARTY_INSECURE_ALLOW_ROOT"
-	EnvFFmpeg         = "STUARTY_FFMPEG"
-	EnvFFprobe        = "STUARTY_FFPROBE"
+	EnvMode           = "VUKEM_VIDEO_MODE"
+	EnvAddr           = "VUKEM_VIDEO_ADDR"
+	EnvImportRoots    = "VUKEM_VIDEO_IMPORT_ROOTS"
+	EnvTranscribeURL  = "VUKEM_VIDEO_TRANSCRIBE_URL"
+	EnvTranscribeKey  = "VUKEM_VIDEO_TRANSCRIBE_KEY"
+	EnvSandbox        = "VUKEM_VIDEO_SANDBOX"
+	EnvAllowRoot      = "VUKEM_VIDEO_INSECURE_ALLOW_ROOT"
+	EnvFFmpeg         = "VUKEM_VIDEO_FFMPEG"
+	EnvFFprobe        = "VUKEM_VIDEO_FFPROBE"
 	envAppURL         = "APP_URL"
 	envAppKey         = "APP_KEY"
 	envTLSCert        = "TLS_CERT_FILE"
@@ -131,7 +131,7 @@ type Resolved struct {
 // Network reports whether the configuration is network mode.
 func (r Resolved) Network() bool { return r.Mode == ModeNetwork }
 
-// ModeOf is the mode named by STUARTY_MODE; empty is local. The value is
+// ModeOf is the mode named by VUKEM_VIDEO_MODE; empty is local. The value is
 // not checked here: Validate refuses an unknown one.
 func ModeOf(getenv func(string) string) string {
 	if m := strings.TrimSpace(getenv(EnvMode)); m != "" {
@@ -141,7 +141,7 @@ func ModeOf(getenv func(string) string) string {
 	return ModeLocal
 }
 
-// Addr is the address the server binds: STUARTY_ADDR, else HOST and PORT
+// Addr is the address the server binds: VUKEM_VIDEO_ADDR, else HOST and PORT
 // (the variables vukem reads), else 127.0.0.1:7878.
 func Addr(getenv func(string) string) (host, port string) {
 	if a := getenv(EnvAddr); a != "" {
@@ -203,12 +203,12 @@ func LoopbackURL(appURL string) bool {
 // network mode one of them set to zero or a negative number is a boot error.
 func LimitVariables() []string {
 	return []string{
-		"STUARTY_MAX_EXPORTS", "STUARTY_MAX_EXPORTS_PER_KEY", "STUARTY_MAX_INGESTS",
-		"STUARTY_MAX_TRANSCRIBES", "STUARTY_MAX_TRANSCRIBES_PER_KEY", "STUARTY_MAX_IMPORT_BYTES",
-		"STUARTY_MAX_IMPORT_SECONDS", "STUARTY_MAX_IMPORT_PIXELS", "STUARTY_MAX_TRANSCRIBE_SECONDS",
-		"STUARTY_MAX_EXPORT_BYTES", "STUARTY_MIN_FREE_BYTES", "STUARTY_CACHE_MAX_BYTES",
-		"STUARTY_RATE_LIMIT_PER_MINUTE", "STUARTY_RATE_LIMIT_SESSION_PER_MINUTE",
-		"STUARTY_RATE_LIMIT_HEAVY_PER_MINUTE",
+		"VUKEM_VIDEO_MAX_EXPORTS", "VUKEM_VIDEO_MAX_EXPORTS_PER_KEY", "VUKEM_VIDEO_MAX_INGESTS",
+		"VUKEM_VIDEO_MAX_TRANSCRIBES", "VUKEM_VIDEO_MAX_TRANSCRIBES_PER_KEY", "VUKEM_VIDEO_MAX_IMPORT_BYTES",
+		"VUKEM_VIDEO_MAX_IMPORT_SECONDS", "VUKEM_VIDEO_MAX_IMPORT_PIXELS", "VUKEM_VIDEO_MAX_TRANSCRIBE_SECONDS",
+		"VUKEM_VIDEO_MAX_EXPORT_BYTES", "VUKEM_VIDEO_MIN_FREE_BYTES", "VUKEM_VIDEO_CACHE_MAX_BYTES",
+		"VUKEM_VIDEO_RATE_LIMIT_PER_MINUTE", "VUKEM_VIDEO_RATE_LIMIT_SESSION_PER_MINUTE",
+		"VUKEM_VIDEO_RATE_LIMIT_HEAVY_PER_MINUTE",
 	}
 }
 
@@ -266,7 +266,7 @@ func Validate(env Env) (Resolved, []Problem) {
 
 	if !network && !IsLoopbackHost(host) {
 		v.add(RowAddrNotLoopback, EnvAddr, fmt.Sprintf(
-			"bind address %q (STUARTY_ADDR) is not loopback: set %s=network and read the self-hosting guide, "+
+			"bind address %q (VUKEM_VIDEO_ADDR) is not loopback: set %s=network and read the self-hosting guide, "+
 				"or bind 127.0.0.1", res.Addr, EnvMode,
 		))
 	}
@@ -324,7 +324,7 @@ func (v *validator) network(res *Resolved) {
 
 	if allow, _ := strconv.ParseBool(get(EnvAllowRoot)); !allow && v.env.Probes.Privileged() {
 		v.add(RowRoot, EnvAllowRoot, "refusing to run as root or Administrator in network mode: run as an "+
-			"unprivileged user, or set STUARTY_INSECURE_ALLOW_ROOT=true if you accept the risk")
+			"unprivileged user, or set VUKEM_VIDEO_INSECURE_ALLOW_ROOT=true if you accept the risk")
 	}
 
 	for _, name := range LimitVariables() {
@@ -348,14 +348,14 @@ func (v *validator) common(network bool) {
 			))
 		}
 	} else if get(EnvTranscribeKey) != "" {
-		v.add(RowTranscribe, EnvTranscribeKey, "unsafe transcription endpoint: STUARTY_TRANSCRIBE_KEY is set "+
-			"without STUARTY_TRANSCRIBE_URL: set the URL, or unset the key so it is never sent anywhere")
+		v.add(RowTranscribe, EnvTranscribeKey, "unsafe transcription endpoint: VUKEM_VIDEO_TRANSCRIBE_KEY is set "+
+			"without VUKEM_VIDEO_TRANSCRIBE_URL: set the URL, or unset the key so it is never sent anywhere")
 	}
 
 	if !network && v.env.Probes.TokenFile != nil {
 		if err := v.env.Probes.TokenFile(); errors.Is(err, workspace.ErrTokenPermissions) {
 			v.add(RowTokenFile, "token", "token file permissions are too loose: only its owner may read the "+
-				"token file in the workspace: chmod 600 it, or run stuarty token:rotate")
+				"token file in the workspace: chmod 600 it, or run vukem-video token:rotate")
 		}
 	}
 
@@ -363,7 +363,7 @@ func (v *validator) common(network bool) {
 		if err := v.env.Probes.Sandbox(); err != nil {
 			v.add(RowSandbox, EnvSandbox, fmt.Sprintf(
 				"sandbox requested but unavailable (%v): install bubblewrap and allow user namespaces, "+
-					"or unset STUARTY_SANDBOX", err,
+					"or unset VUKEM_VIDEO_SANDBOX", err,
 			))
 		}
 	}
@@ -508,7 +508,7 @@ func (p Probes) withDefaults(env Env) Probes {
 // the process: ExitStatus when there is any, 0 when there is none.
 func Report(w io.Writer, problems []Problem) int {
 	for _, p := range problems {
-		_, _ = fmt.Fprintln(w, "stuarty: "+p.Message)
+		_, _ = fmt.Fprintln(w, "vukem-video: "+p.Message)
 	}
 
 	if len(problems) > 0 {
@@ -533,7 +533,7 @@ func bwrapAvailable() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	// Like every child (SDD-007 6.4): no application variable such as STUARTY_KEY reaches the probe.
+	// Like every child (SDD-007 6.4): no application variable such as VUKEM_VIDEO_KEY reaches the probe.
 	probe := exec.CommandContext(ctx, path, "--unshare-user", "--ro-bind", "/", "/", "true")
 	probe.Dir = os.TempDir()
 	probe.Env = []string{"PATH=" + os.Getenv("PATH")}

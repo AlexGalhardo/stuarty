@@ -11,7 +11,7 @@ description: "Import your own fonts, keep your colours, fonts and logo in one br
 
 ## The idea
 
-The editor comes with bundled font families (`stuarty fonts` lists them). To use another font, **import** the TrueType or OpenType file: it is checked and stored once by its content hash, so importing the same file twice stores one copy. The import returns the `hash` that `font.add` needs to add the font to a project.
+The editor comes with bundled font families (`vukem-video fonts` lists them). To use another font, **import** the TrueType or OpenType file: it is checked and stored once by its content hash, so importing the same file twice stores one copy. The import returns the `hash` that `font.add` needs to add the font to a project.
 
 The **brand kit** is one small document with three optional members: a `logo` (the `sha256:` hash of an image asset), `colors` (names such as `accent` with a `#RRGGBB` or `#RRGGBBAA` value) and `fonts` (families you imported, with one file per weight). There is one kit per workspace, and one per user in network mode. Replacing the kit replaces all three members at once.
 
@@ -23,14 +23,14 @@ A template that is started with `brand_colors` or `brand_fonts` takes values fro
 <Tab title="CLI">
 
 ```bash
-stuarty font:import ./Brand-Regular.ttf
+vukem-video font:import ./Brand-Regular.ttf
 cat > brand.json <<'JSON'
 {"colors": {"accent": "#FF3366"},
  "fonts": {"Brand Sans": {"files": [{"weight": 400, "hash": "sha256:9f2c...e41a"}]}}}
 JSON
-stuarty brand:set --kit brand.json
-stuarty brand:show
-stuarty template:new tpl_5n8b2v6c1x --name "Spring sale"   --brand-color accent --brand-font "Brand Sans"
+vukem-video brand:set --kit brand.json
+vukem-video brand:show
+vukem-video template:new tpl_5n8b2v6c1x --name "Spring sale"   --brand-color accent --brand-font "Brand Sans"
 ```
 
 `--brand-color` and `--brand-font` can be repeated or hold a comma list. `--kit -` reads the kit from standard input.

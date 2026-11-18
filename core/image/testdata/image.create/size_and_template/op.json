@@ -1,9 +1,0 @@
-{
-  "args": {
-    "background": "transparent",
-    "height": 600,
-    "template": true,
-    "width": 800
-  },
-  "op": "image.create"
-}

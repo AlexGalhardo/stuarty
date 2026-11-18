@@ -8,14 +8,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/service"
-	"github.com/AlexGalhardo/stuarty/web/app/auth"
+	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/vukem-video/web/app/auth"
 )
 
 const (
 	netHost    = "video.example.com"
 	netOrigin  = "https://" + netHost
-	cookieName = "__Host-stuarty_session"
+	cookieName = "__Host-vukem_video_session"
 	goodPass   = "correct horse battery"
 )
 
@@ -194,7 +194,7 @@ func TestSessionCookieOverLoopbackHTTP(t *testing.T) {
 		c = ck
 	}
 
-	if c == nil || c.Name != "stuarty_session" || c.Secure || !c.HttpOnly || c.SameSite != http.SameSiteLaxMode {
+	if c == nil || c.Name != "vukem_video_session" || c.Secure || !c.HttpOnly || c.SameSite != http.SameSiteLaxMode {
 		t.Errorf("cookie = %+v, want the local-mode name, HttpOnly, Lax and not Secure", c)
 	}
 }

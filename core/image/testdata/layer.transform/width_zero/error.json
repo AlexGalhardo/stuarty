@@ -1,8 +1,0 @@
-{
-  "code": "E_VALIDATION",
-  "hint": "Use a value between 1 and 16384.",
-  "message": "The value of args.w is 0, outside the accepted range.",
-  "op_index": 0,
-  "path": "args.w",
-  "retryable": false
-}

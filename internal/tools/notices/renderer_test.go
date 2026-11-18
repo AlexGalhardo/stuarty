@@ -54,7 +54,7 @@ func TestRendererToolchainIsPinned(t *testing.T) {
 
 	dep := regexp.MustCompile(`(?m)^([a-z0-9_-]+) = "([^"]+)"$`)
 
-	for _, m := range dep.FindAllStringSubmatch(readFile(t, root, "renderer", "stuarty-renderer", "Cargo.toml"), -1) {
+	for _, m := range dep.FindAllStringSubmatch(readFile(t, root, "renderer", "vukem-renderer", "Cargo.toml"), -1) {
 		if !strings.HasPrefix(m[2], "=") && m[1] != "name" && m[1] != "description" && m[1] != "version" {
 			t.Errorf("crate %s is at %q, want an exact version (=x.y.z)", m[1], m[2])
 		}

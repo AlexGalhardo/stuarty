@@ -1,8 +1,0 @@
-{
-  "op": "audio.processor_move",
-  "args": {
-    "item_id": "itm_zzzzzzzzzz",
-    "index": 0,
-    "to": 1
-  }
-}

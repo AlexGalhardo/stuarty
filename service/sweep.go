@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	enginestore "github.com/AlexGalhardo/stuarty/engine/store"
+	enginestore "github.com/AlexGalhardo/vukem-video/engine/store"
 )
 
 // orphanAge protects a file that an import copied into store/ before its row
@@ -39,8 +39,8 @@ func SweeperOf(s Service) (Sweeper, bool) {
 
 // Sweep removes, under the write side of the store lock: files of store/ with
 // no row and older than 24 hours, artifacts/ directories with no row, and
-// exports/ and frames/ directories of projects that do not exist, and upload
-// session files older than seven days. Nothing else is touched: templates/, bitmaps/ and the database are not its business.
+// exports/ and frames/ directories of projects that do not exist. Nothing else
+// is touched: templates/, bitmaps/ and the database are not its business.
 func (s *svc) Sweep(ctx context.Context) (SweepResult, error) {
 	var res SweepResult
 
@@ -78,12 +78,6 @@ func (s *svc) Sweep(ctx context.Context) (SweepResult, error) {
 
 	n, err := s.sweepBundleTemps()
 	if err != nil {
-		return res, err
-	}
-
-	res.IncomingFiles += n
-
-	if n, err = s.sweepUploadSessions(now); err != nil {
 		return res, err
 	}
 
@@ -133,45 +127,6 @@ func (s *svc) sweepDirs(dir string, drop func(name string) bool) (int, error) {
 		}
 
 		if os.RemoveAll(filepath.Join(root, e.Name())) == nil {
-			n++
-		}
-	}
-
-	return n, nil
-}
-
-// uploadSessionAge is how long the address of an upload session is kept (SDD-020 section 7.4): a network
-// forgets a session within days, so an older file can only start a resume that fails.
-const uploadSessionAge = 7 * 24 * time.Hour
-
-// sweepUploadSessions removes the files of publish/uploads/ (the session files and the temporary files a
-// killed save left) whose modification time is more than uploadSessionAge old. They are counted with the
-// incoming files, the other partial writes.
-func (s *svc) sweepUploadSessions(now time.Time) (int, error) {
-	root := filepath.Join(s.workspace, "publish", "uploads")
-
-	files, err := os.ReadDir(root)
-	if errors.Is(err, os.ErrNotExist) {
-		return 0, nil
-	}
-
-	if err != nil {
-		return 0, err
-	}
-
-	n := 0
-
-	for _, f := range files {
-		if !f.Type().IsRegular() {
-			continue
-		}
-
-		info, ierr := f.Info()
-		if ierr != nil || now.Sub(info.ModTime()) <= uploadSessionAge {
-			continue
-		}
-
-		if os.Remove(filepath.Join(root, f.Name())) == nil {
 			n++
 		}
 	}

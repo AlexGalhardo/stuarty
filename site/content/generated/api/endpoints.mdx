@@ -11,41 +11,20 @@ Every operation has its own page with the parameters, the body, the responses an
 
 | Method | Path | Operation | Summary |
 | --- | --- | --- | --- |
-| `GET` | `/api/v1/briefing/questions` | [`briefing.questions`](/docs/api/briefing.questions) | The questions of the guided briefing |
 | `GET` | `/api/v1/projects` | [`projects.list`](/docs/api/projects.list) | List projects |
 | `POST` | `/api/v1/projects` | [`projects.create`](/docs/api/projects.create) | Create a project |
 | `GET` | `/api/v1/projects/{id}` | [`projects.get`](/docs/api/projects.get) | Read a project |
-| `GET` | `/api/v1/projects/{id}/audio-measure` | [`audio.measure`](/docs/api/audio.measure) | Measure the sound with and without the audio processors |
 | `GET` | `/api/v1/projects/{id}/bitmaps/{key}` | [`bitmaps.get`](/docs/api/bitmaps.get) | Download a rasterized text or shape |
-| `GET` | `/api/v1/projects/{id}/brief` | [`projects.brief.get`](/docs/api/projects.brief.get) | Read the brief of a project |
-| `PUT` | `/api/v1/projects/{id}/brief` | [`projects.brief.set`](/docs/api/projects.brief.set) | Write the brief of a project |
-| `PUT` | `/api/v1/projects/{id}/briefing` | [`projects.briefing.answer`](/docs/api/projects.briefing.answer) | Answer the briefing: the answers become the brief of the project |
 | `POST` | `/api/v1/projects/{id}/bundle` | [`projects.bundle.export`](/docs/api/projects.bundle.export) | Export a project as a .vvbundle |
-| `GET` | `/api/v1/projects/{id}/checkpoints` | [`projects.checkpoints.list`](/docs/api/projects.checkpoints.list) | List the checkpoints of a project |
-| `POST` | `/api/v1/projects/{id}/checkpoints` | [`projects.checkpoints.create`](/docs/api/projects.checkpoints.create) | Name a revision |
-| `PATCH` | `/api/v1/projects/{id}/checkpoints/{name}` | [`projects.checkpoints.rename`](/docs/api/projects.checkpoints.rename) | Rename a checkpoint |
-| `DELETE` | `/api/v1/projects/{id}/checkpoints/{name}` | [`projects.checkpoints.remove`](/docs/api/projects.checkpoints.remove) | Remove a checkpoint, never a revision |
-| `GET` | `/api/v1/projects/{id}/describe` | [`projects.describe`](/docs/api/projects.describe) | Describe a project as text: brief, items and state |
-| `GET` | `/api/v1/projects/{id}/diff` | [`projects.diff`](/docs/api/projects.diff) | List what changed between two revisions |
-| `POST` | `/api/v1/projects/{id}/duplicate` | [`projects.duplicate`](/docs/api/projects.duplicate) | Duplicate a project |
 | `POST` | `/api/v1/projects/{id}/edit` | [`projects.edit`](/docs/api/projects.edit) | Apply a batch of operations (lint_scope fast) |
 | `GET` | `/api/v1/projects/{id}/frame` | [`projects.frame`](/docs/api/projects.frame) | Render one frame |
 | `GET` | `/api/v1/projects/{id}/history` | [`projects.history`](/docs/api/projects.history) | List the history of a project |
-| `POST` | `/api/v1/projects/{id}/items` | [`projects.items.add`](/docs/api/projects.items.add) | Add an item (text, timeline or output) to a project |
-| `POST` | `/api/v1/projects/{id}/items/{item_id}/move` | [`projects.items.move`](/docs/api/projects.items.move) | Move an item of a project |
-| `POST` | `/api/v1/projects/{id}/items/{item_id}/rename` | [`projects.items.rename`](/docs/api/projects.items.rename) | Rename an item of a project |
-| `POST` | `/api/v1/projects/{id}/items/{item_id}/restore` | [`projects.items.restore`](/docs/api/projects.items.restore) | Restore an item from the trash |
-| `POST` | `/api/v1/projects/{id}/items/{item_id}/trash` | [`projects.items.trash`](/docs/api/projects.items.trash) | Move an item to the trash |
 | `GET` | `/api/v1/projects/{id}/lint` | [`projects.lint`](/docs/api/projects.lint) | Lint a project with every rule |
-| `GET` | `/api/v1/projects/{id}/motion/brief` | [`projects.motion.brief`](/docs/api/projects.motion.brief) | What a render by an external motion engine must fit: size, rate, length, safe area, brand kit, captions and reference frames |
-| `GET` | `/api/v1/projects/{id}/motion/check` | [`projects.motion.check`](/docs/api/projects.motion.check) | Check a rendered asset against the brief: each mismatch of size, rate, length or alpha with the value expected |
-| `POST` | `/api/v1/projects/{id}/motion/replace` | [`projects.motion.replace`](/docs/api/projects.motion.replace) | Replace, in one undoable batch, every clip that reads an earlier render of an animation with a new render of it |
 | `GET` | `/api/v1/projects/{id}/otio` | [`projects.otio.export`](/docs/api/projects.otio.export) | Export a project as OpenTimelineIO |
 | `POST` | `/api/v1/projects/{id}/otio` | [`projects.otio.import`](/docs/api/projects.otio.import) | Import an OpenTimelineIO file into a project |
 | `GET` | `/api/v1/projects/{id}/plan` | [`projects.plan`](/docs/api/projects.plan) | Read the render plan of a window |
 | `POST` | `/api/v1/projects/{id}/redo` | [`projects.redo`](/docs/api/projects.redo) | Redo the caller's latest undone step |
 | `POST` | `/api/v1/projects/{id}/restore` | [`projects.restore`](/docs/api/projects.restore) | Restore a project from the trash |
-| `POST` | `/api/v1/projects/{id}/revert` | [`projects.revert`](/docs/api/projects.revert) | Go back to an earlier revision as a new step |
 | `GET` | `/api/v1/projects/{id}/sheet` | [`projects.sheet`](/docs/api/projects.sheet) | Render a contact sheet |
 | `GET` | `/api/v1/projects/{id}/snap-points` | [`projects.snap_points`](/docs/api/projects.snap_points) | Read the snap points and trim limits |
 | `POST` | `/api/v1/projects/{id}/trash` | [`projects.trash`](/docs/api/projects.trash) | Move a project to the trash |
@@ -57,11 +36,7 @@ Every operation has its own page with the parameters, the body, the responses an
 
 | Method | Path | Operation | Summary |
 | --- | --- | --- | --- |
-| `GET` | `/api/v1/assets` | [`assets.list`](/docs/api/assets.list) | List the files of the library by content hash, with origin, tags and reuse |
-| `GET` | `/api/v1/assets/{hash}` | [`assets.get`](/docs/api/assets.get) | Read one file of the library with its origin and the projects that use it |
-| `PUT` | `/api/v1/assets/{hash}` | [`assets.set`](/docs/api/assets.set) | Set the description, the rights note and the reuse mark of a file |
-| `POST` | `/api/v1/assets/{hash}/tags` | [`assets.tag`](/docs/api/assets.tag) | Add and remove the tags of a file |
-| `GET` | `/api/v1/assets/{hash}/uses` | [`assets.uses`](/docs/api/assets.uses) | List the projects that use a file of the library |
+| `GET` | `/api/v1/assets` | [`assets.list`](/docs/api/assets.list) | List the files of the workspace by content hash |
 | `GET` | `/api/v1/projects/{id}/media` | [`media.list`](/docs/api/media.list) | List the assets of a project |
 | `POST` | `/api/v1/projects/{id}/media` | [`media.import`](/docs/api/media.import) | Import media files |
 | `GET` | `/api/v1/projects/{id}/media/{asset_id}` | [`media.inspect`](/docs/api/media.inspect) | Inspect an asset |
@@ -78,12 +53,9 @@ Every operation has its own page with the parameters, the body, the responses an
 
 | Method | Path | Operation | Summary |
 | --- | --- | --- | --- |
-| `GET` | `/api/v1/export-presets` | [`export.presets`](/docs/api/export.presets) | List the export presets of the platforms |
 | `GET` | `/api/v1/jobs/{job_id}` | [`jobs.get`](/docs/api/jobs.get) | Read a job |
 | `POST` | `/api/v1/jobs/{job_id}/cancel` | [`jobs.cancel`](/docs/api/jobs.cancel) | Cancel a job |
 | `GET` | `/api/v1/jobs/{job_id}/file` | [`jobs.file`](/docs/api/jobs.file) | Download the file of a finished export |
-| `POST` | `/api/v1/projects/{id}/export-batches` | [`export.batch`](/docs/api/export.batch) | Export a project several times, one after the other |
-| `GET` | `/api/v1/projects/{id}/export-check` | [`export.check`](/docs/api/export.check) | Check a project against an export preset |
 | `GET` | `/api/v1/projects/{id}/jobs` | [`jobs.list`](/docs/api/jobs.list) | List the jobs of a project |
 | `POST` | `/api/v1/projects/{id}/jobs` | [`jobs.start`](/docs/api/jobs.start) | Start a job |
 
@@ -124,123 +96,6 @@ Every operation has its own page with the parameters, the body, the responses an
 | --- | --- | --- | --- |
 | `GET` | `/api/v1/brand-kit` | [`brand.get`](/docs/api/brand.get) | Read the brand kit |
 | `PUT` | `/api/v1/brand-kit` | [`brand.set`](/docs/api/brand.set) | Replace the brand kit |
-
-## Library
-
-| Method | Path | Operation | Summary |
-| --- | --- | --- | --- |
-| `GET` | `/api/v1/library/memory` | [`library.memory.list`](/docs/api/library.memory.list) | List the memory notes |
-| `POST` | `/api/v1/library/memory` | [`library.memory.write`](/docs/api/library.memory.write) | Create or replace a memory note |
-| `GET` | `/api/v1/library/memory/{name}` | [`library.memory.get`](/docs/api/library.memory.get) | Read a memory note |
-| `DELETE` | `/api/v1/library/memory/{name}` | [`library.memory.remove`](/docs/api/library.memory.remove) | Remove a memory note |
-| `GET` | `/api/v1/library/prompts` | [`library.prompts.list`](/docs/api/library.prompts.list) | List the prompts |
-| `GET` | `/api/v1/library/prompts/{name}` | [`library.prompts.get`](/docs/api/library.prompts.get) | Read a prompt |
-| `PUT` | `/api/v1/library/prompts/{name}` | [`library.prompts.write`](/docs/api/library.prompts.write) | Create or replace a prompt |
-| `POST` | `/api/v1/library/prompts/{name}/render` | [`library.prompts.render`](/docs/api/library.prompts.render) | Replace the variables of a prompt |
-| `POST` | `/api/v1/library/reindex` | [`library.reindex`](/docs/api/library.reindex) | Rebuild the index of the library from its files |
-| `GET` | `/api/v1/library/search` | [`library.search`](/docs/api/library.search) | Search memory, skills and prompts |
-| `GET` | `/api/v1/library/skills` | [`library.skills.list`](/docs/api/library.skills.list) | List the skills |
-| `GET` | `/api/v1/library/skills/{name}` | [`library.skills.get`](/docs/api/library.skills.get) | Read a skill |
-| `PUT` | `/api/v1/library/skills/{name}` | [`library.skills.write`](/docs/api/library.skills.write) | Create or replace a skill |
-| `GET` | `/api/v1/library/skills/{name}/lint` | [`library.skills.lint`](/docs/api/library.skills.lint) | Run the lint on a skill |
-| `POST` | `/api/v1/library/skills/{name}/review` | [`library.skills.review`](/docs/api/library.skills.review) | Mark a skill as read (a browser session only) |
-| `POST` | `/api/v1/library/skills/export` | [`library.skills.export`](/docs/api/library.skills.export) | Export skills as folders in the Agent Skills layout |
-| `POST` | `/api/v1/library/skills/import` | [`library.skills.import`](/docs/api/library.skills.import) | Import a skill from a folder or an archive; it starts unreviewed |
-
-## Writing
-
-| Method | Path | Operation | Summary |
-| --- | --- | --- | --- |
-| `POST` | `/api/v1/captions/validate` | [`captions.validate`](/docs/api/captions.validate) | Measure a caption against the limits of each network |
-| `POST` | `/api/v1/projects/{id}/texts` | [`texts.create`](/docs/api/texts.create) | Make a script, a copy text or a caption in a project |
-| `GET` | `/api/v1/projects/{id}/texts/{item_id}` | [`texts.get`](/docs/api/texts.get) | Read a text, or one of its revisions |
-| `PUT` | `/api/v1/projects/{id}/texts/{item_id}` | [`texts.write`](/docs/api/texts.write) | Save a new revision of a text |
-| `POST` | `/api/v1/projects/{id}/texts/{item_id}/draft` | [`texts.draft`](/docs/api/texts.draft) | Ask a model for a draft of a text; the job waits for approval and shows its estimate |
-| `POST` | `/api/v1/projects/{id}/texts/{item_id}/revert` | [`texts.revert`](/docs/api/texts.revert) | Bring an older revision back as a new one |
-| `GET` | `/api/v1/projects/{id}/texts/{item_id}/revisions` | [`texts.revisions`](/docs/api/texts.revisions) | List the revisions of a text, and compare two |
-| `POST` | `/api/v1/scripts/estimate` | [`scripts.estimate`](/docs/api/scripts.estimate) | Estimate how long a script takes when read aloud |
-| `GET` | `/api/v1/texts` | [`texts.list`](/docs/api/texts.list) | List the texts of a project, or of every project the caller may see |
-
-## Connections
-
-| Method | Path | Operation | Summary |
-| --- | --- | --- | --- |
-| `GET` | `/api/v1/connections` | [`connections.list`](/docs/api/connections.list) | List the destinations the user connected (never a secret) |
-| `POST` | `/api/v1/connections` | [`connections.create`](/docs/api/connections.create) | Connect a destination; the secret goes into the vault |
-| `GET` | `/api/v1/connections/{id}` | [`connections.get`](/docs/api/connections.get) | Read one connection (never a secret) |
-| `DELETE` | `/api/v1/connections/{id}` | [`connections.remove`](/docs/api/connections.remove) | Remove a connection and its credential |
-| `GET` | `/api/v1/connections/{id}/models` | [`providers.models`](/docs/api/providers.models) | Read the current models of a provider through its connection |
-| `POST` | `/api/v1/connections/{id}/test` | [`connections.test`](/docs/api/connections.test) | Make one request through a connection |
-| `GET` | `/api/v1/connections/{id}/voices` | [`voice.list`](/docs/api/voice.list) | List the voices of the provider of a connection |
-
-## AI providers
-
-| Method | Path | Operation | Summary |
-| --- | --- | --- | --- |
-| `POST` | `/api/v1/image/generate` | [`image.generate`](/docs/api/image.generate) | Start an image generation with the provider of a connection; the job waits for approval, shows its estimate and stores the images as assets with their origin |
-| `GET` | `/api/v1/providers` | [`providers.list`](/docs/api/providers.list) | List the AI providers, the connections of each and the price table |
-| `PUT` | `/api/v1/providers/prices` | [`providers.prices.set`](/docs/api/providers.prices.set) | Set or remove the price of a model (a person in the browser only; the local token and keys get 403) |
-| `POST` | `/api/v1/text/generate` | [`text.generate`](/docs/api/text.generate) | Start a text generation with the provider of a connection; the job waits for approval and shows its estimate |
-| `POST` | `/api/v1/voice/generate` | [`voice.generate`](/docs/api/voice.generate) | Start a speech generation with the provider of a connection; the job waits for approval, shows its estimate and stores the audio as an asset with its origin |
-
-## Images
-
-| Method | Path | Operation | Summary |
-| --- | --- | --- | --- |
-| `GET` | `/api/v1/images` | [`images.list`](/docs/api/images.list) | List the image documents and templates |
-| `POST` | `/api/v1/images` | [`images.create`](/docs/api/images.create) | Create an image document, blank or from a template |
-| `GET` | `/api/v1/images/{id}` | [`images.get`](/docs/api/images.get) | Describe an image document: layers, findings and text view |
-| `POST` | `/api/v1/images/{id}/edit` | [`images.edit`](/docs/api/images.edit) | Apply a batch of image operations |
-| `POST` | `/api/v1/images/{id}/export` | [`images.export`](/docs/api/images.export) | Export an image document to a PNG, JPEG or WebP file |
-| `GET` | `/api/v1/images/{id}/exports/{name}` | [`images.file`](/docs/api/images.file) | Download a file that an image export wrote |
-| `GET` | `/api/v1/images/{id}/frame` | [`images.frame`](/docs/api/images.frame) | Render the picture of an image document |
-| `GET` | `/api/v1/images/{id}/history` | [`images.history`](/docs/api/images.history) | List the latest batches of an image document |
-| `POST` | `/api/v1/images/{id}/redo` | [`images.redo`](/docs/api/images.redo) | Redo the latest undone step of the caller on an image |
-| `POST` | `/api/v1/images/{id}/undo` | [`images.undo`](/docs/api/images.undo) | Undo the latest step of the caller on an image |
-
-## Approvals
-
-| Method | Path | Operation | Summary |
-| --- | --- | --- | --- |
-| `GET` | `/api/v1/approval-rules` | [`approval-rules.list`](/docs/api/approval-rules.list) | List the rules that approve without asking |
-| `POST` | `/api/v1/approval-rules` | [`approval-rules.set`](/docs/api/approval-rules.set) | Create or replace a rule (a person in the browser only; the local token and keys get 403) |
-| `DELETE` | `/api/v1/approval-rules/{id}` | [`approval-rules.remove`](/docs/api/approval-rules.remove) | Remove a rule (a person in the browser only; the local token and keys get 403) |
-| `GET` | `/api/v1/approvals` | [`approvals.list`](/docs/api/approvals.list) | List the approval queue (pending requests by default) |
-| `GET` | `/api/v1/approvals/{id}` | [`approvals.get`](/docs/api/approvals.get) | Read one approval request |
-| `POST` | `/api/v1/approvals/{id}/decide` | [`approvals.decide`](/docs/api/approvals.decide) | Approve or reject a request (a person in the browser only; the local token and keys get 403) |
-| `GET` | `/api/v1/approvals/events` | [`approvals.events`](/docs/api/approvals.events) | Stream the events of the approval queue |
-| `GET` | `/api/v1/cost` | [`cost.get`](/docs/api/cost.get) | Read the cost ceilings and what was spent |
-| `PUT` | `/api/v1/cost/ceilings` | [`cost.ceilings.set`](/docs/api/cost.ceilings.set) | Set or remove a cost ceiling (a person in the browser only; the local token and keys get 403) |
-
-## Publishing
-
-| Method | Path | Operation | Summary |
-| --- | --- | --- | --- |
-| `POST` | `/api/v1/publish` | [`publish.now`](/docs/api/publish.now) | Prepare the publication of an exported video; it waits for a person to approve it |
-| `GET` | `/api/v1/publish/{job_id}` | [`publish.status`](/docs/api/publish.status) | Read the state of a publication |
-| `POST` | `/api/v1/publish/validate` | [`publish.validate`](/docs/api/publish.validate) | Check a post against the limits of its network; sends nothing |
-| `GET` | `/api/v1/social/accounts` | [`social.accounts`](/docs/api/social.accounts) | List the connected social accounts and their state |
-| `POST` | `/api/v1/social/complete` | [`social.complete`](/docs/api/social.complete) | Finish the sign-in with what the network sent to the redirect address (a person in the browser only) |
-| `POST` | `/api/v1/social/connect` | [`social.connect`](/docs/api/social.connect) | Start the sign-in to a network with your own developer app; answers the address of the consent screen |
-| `GET` | `/api/v1/social/networks` | [`social.networks`](/docs/api/social.networks) | List the social networks of this build and their limits |
-| `POST` | `/api/v1/social/select` | [`social.select`](/docs/api/social.select) | Choose the Page or Instagram account a sign-in reached (a person in the browser only) |
-
-## Agent chat
-
-| Method | Path | Operation | Summary |
-| --- | --- | --- | --- |
-| `GET` | `/api/v1/agents/profiles` | [`agents.profiles.list`](/docs/api/agents.profiles.list) | List the agents the chat may host and the suggestions |
-| `PUT` | `/api/v1/agents/profiles/{name}` | [`agents.profiles.set`](/docs/api/agents.profiles.set) | Write an agent profile, a command that will run on the machine (a person in the browser only; others get 403) |
-| `DELETE` | `/api/v1/agents/profiles/{name}` | [`agents.profiles.remove`](/docs/api/agents.profiles.remove) | Remove an agent profile (a person in the browser only; others get 403) |
-| `GET` | `/api/v1/chat/sessions/{id}` | [`chat.sessions.get`](/docs/api/chat.sessions.get) | Read one chat session |
-| `DELETE` | `/api/v1/chat/sessions/{id}` | [`chat.sessions.delete`](/docs/api/chat.sessions.delete) | Delete a session and its transcript (a person in the browser only; others get 403) |
-| `POST` | `/api/v1/chat/sessions/{id}/cancel` | [`chat.sessions.cancel`](/docs/api/chat.sessions.cancel) | Cancel the turn in progress, or end the session (a person in the browser only; others get 403) |
-| `GET` | `/api/v1/chat/sessions/{id}/events` | [`chat.sessions.events`](/docs/api/chat.sessions.events) | Stream what the agent of a session says and does |
-| `POST` | `/api/v1/chat/sessions/{id}/messages` | [`chat.sessions.send`](/docs/api/chat.sessions.send) | Send a message to the agent (a person in the browser only; others get 403) |
-| `POST` | `/api/v1/chat/sessions/{id}/permissions/{request_id}` | [`chat.sessions.answer`](/docs/api/chat.sessions.answer) | Answer a permission request of the agent (a person in the browser only; others get 403) |
-| `GET` | `/api/v1/chat/sessions/{id}/transcript` | [`chat.sessions.transcript`](/docs/api/chat.sessions.transcript) | Read the transcript of a session as events or as Markdown |
-| `GET` | `/api/v1/projects/{id}/chat/sessions` | [`chat.sessions.list`](/docs/api/chat.sessions.list) | List the chat sessions of a project |
-| `POST` | `/api/v1/projects/{id}/chat/sessions` | [`chat.sessions.start`](/docs/api/chat.sessions.start) | Start the agent of a profile on a project (a person in the browser only; others get 403) |
 
 ## System
 

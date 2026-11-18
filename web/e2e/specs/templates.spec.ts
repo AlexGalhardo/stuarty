@@ -247,15 +247,14 @@ test.describe("templates", () => {
 	}) => {
 		await page.addInitScript(() => {
 			(window as unknown as Record<string, unknown>).vukemDesktop = {
-				pickTemplate: () =>
-					Promise.resolve(["C:\tspring.stuarty-template.zip"]),
+				pickTemplate: () => Promise.resolve(["C:\tspring.vukem-template.zip"]),
 			};
 		});
 		await page.goto("/projects");
 		await page.getByRole("button", { name: "Choose file" }).click();
 		await expect(
 			page.getByLabel("Path of a template file on this computer"),
-		).toHaveValue("C:\tspring.stuarty-template.zip");
+		).toHaveValue("C:\tspring.vukem-template.zip");
 	});
 
 	test("a browser has no template file dialog", async ({ page }) => {
@@ -278,9 +277,9 @@ test.describe("templates", () => {
 		const id = (await rows.first().getAttribute("data-template-id")) as string;
 		const file = await page.request.get(`/api/v1/templates/${id}/file`);
 		expect(file.ok()).toBe(true);
-		const dir = join(tmpdir(), "stuarty-e2e-template-import");
+		const dir = join(tmpdir(), "vukem-video-e2e-template-import");
 		mkdirSync(dir, { recursive: true });
-		const path = join(dir, `again-${Date.now()}.stuarty-template.zip`);
+		const path = join(dir, `again-${Date.now()}.vukem-template.zip`);
 		writeFileSync(path, await file.body());
 
 		const field = page.getByLabel("Path of a template file on this computer");

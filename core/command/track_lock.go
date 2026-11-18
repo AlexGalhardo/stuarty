@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"slices"
 
-	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
 // lockedSnapshot is the items on locked tracks as they were before an operation.

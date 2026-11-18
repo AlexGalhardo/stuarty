@@ -12,10 +12,11 @@ import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useT } from "@/lib/i18n";
-import { isRowKey } from "../commands/keymapStore";
+import { isPaletteShortcut } from "../commands/keymap";
 import { useDocumentState, useRuntime } from "../state/EditorContext";
 import { revealItem } from "../timeline/revealItem";
 import { type FindMatch, findMatches, stepIndex } from "./findMatches";
+import { isFindShortcut } from "./findShortcut";
 
 const MAX_ROWS = 500;
 
@@ -59,7 +60,7 @@ export default function FindBar(): ReactNode {
 
 	useEffect(() => {
 		const onKey = (event: KeyboardEvent): void => {
-			if (!isRowKey(event, "find")) return;
+			if (!isFindShortcut(event)) return;
 			const inside = root.current?.contains(event.target as Node) ?? false;
 			if (!inside && (isEditable(event.target) || inDialog(event.target))) {
 				return;
@@ -128,10 +129,7 @@ export default function FindBar(): ReactNode {
 			go(stepIndex(at, matches.length, event.shiftKey ? -1 : 1));
 		}
 		// The keys of the editor must not reach the timeline from here.
-		if (
-			!isRowKey(event.nativeEvent, "palette") &&
-			!isRowKey(event.nativeEvent, "find")
-		) {
+		if (!isPaletteShortcut(event.nativeEvent) && !isFindShortcut(event)) {
 			event.nativeEvent.stopPropagation();
 		}
 	}

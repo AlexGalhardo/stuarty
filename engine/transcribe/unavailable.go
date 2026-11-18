@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
 )
 
 // Reasons of E_TRANSCRIBE_UNAVAILABLE (details.reason).
@@ -26,7 +26,7 @@ const (
 	DefaultModel = "small"
 )
 
-// Models are the model names of the manifest, the only names `--model` and STUARTY_WHISPER_MODEL accept.
+// Models are the model names of the manifest, the only names `--model` and VUKEM_VIDEO_WHISPER_MODEL accept.
 var Models = []string{"tiny", "base", "small", "large-v3-turbo"}
 
 // SupportedPlatforms are the operating systems and architectures the helper is installed for; the
@@ -81,7 +81,7 @@ func UnavailableError(m *MissingError, model string) *ffmpeg.Error {
 		needModel = needModel || it.Name != HelperName
 	}
 
-	cmd := "stuarty tools:install whisper"
+	cmd := "vukem-video tools:install whisper"
 	if needModel {
 		cmd += " --model " + model
 	}
@@ -93,7 +93,7 @@ func UnavailableError(m *MissingError, model string) *ffmpeg.Error {
 			"tool": HelperName, "model": model,
 		})
 	e.Hint = fmt.Sprintf(
-		"Run %q, choose a smaller model with STUARTY_WHISPER_MODEL, or configure an API provider.",
+		"Run %q, choose a smaller model with VUKEM_VIDEO_WHISPER_MODEL, or configure an API provider.",
 		cmd,
 	)
 

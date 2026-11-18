@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Builds a workspace with a released binary, running the fixed scenario of P4-SRV-001.
+# Builds a workspace with a released vukem-video binary, running the fixed scenario of P4-SRV-001.
 #
 #   build-workspace.sh <binary> <workspace dir> <media file>
 #
@@ -15,8 +15,7 @@ ws=$2
 media=$3
 
 mkdir -p "$ws"
-# A released binary reads the variable of its own time: VUKEM_VIDEO_HOME before v0.30.0, STUARTY_HOME after.
-export VUKEM_VIDEO_HOME="$ws" STUARTY_HOME="$ws"
+export VUKEM_VIDEO_HOME="$ws"
 log="$ws/scenario.txt"
 : >"$log"
 

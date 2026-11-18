@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/web/contract/testenv"
+	"github.com/AlexGalhardo/vukem-video/web/contract/testenv"
 )
 
 // TestLintArtifactRulesGolden: with the rasterizer measurer and the stored

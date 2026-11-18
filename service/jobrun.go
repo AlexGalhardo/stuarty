@@ -17,13 +17,11 @@ import (
 	"sync"
 	"time"
 
-	core "github.com/AlexGalhardo/stuarty/core/approval"
-	"github.com/AlexGalhardo/stuarty/core/command"
-	exportcore "github.com/AlexGalhardo/stuarty/core/export"
-	"github.com/AlexGalhardo/stuarty/core/timeline"
-	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
-	"github.com/AlexGalhardo/stuarty/engine/ingest"
-	"github.com/AlexGalhardo/stuarty/service/logging"
+	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
+	"github.com/AlexGalhardo/vukem-video/engine/ingest"
+	"github.com/AlexGalhardo/vukem-video/service/logging"
 )
 
 const (
@@ -219,24 +217,9 @@ func (s *svc) RunJob(ctx context.Context, jobID string) (err error) {
 		result, herr = s.runIngest(jctx, &job, pw)
 	case JobExport:
 		result, herr = s.runExport(jctx, &job, pw)
-	case JobExportBatch:
-		result, herr = s.runExportBatch(jctx, &job, pw)
 	case JobTranscribe:
 		result, herr = s.runTranscribe(jctx, &job, pw)
 	default:
-		if k := s.kindOf(job.Kind); k != nil {
-			var cost *core.Money
-
-			result, cost, herr = s.runApprovable(jctx, k, &job, pw)
-
-			// The ledger is settled after the outcome is final: a run a shutdown interrupted is requeued
-			// and keeps its reservation (SDD-015 section 6).
-			serr := s.settle(ctx, jctx, &job, result, herr)
-			s.finishCost(ctx, &job, cost)
-
-			return serr
-		}
-
 		herr = newError(command.CodeInternal, "jobs of the kind %s are not available in this build.", job.Kind)
 	}
 
@@ -381,7 +364,7 @@ func (s *svc) missingFFmpeg() error {
 		Reason:  "ffmpeg_missing",
 		Message: "No usable FFmpeg was found (looked at: the configured path, next to the program, the PATH).",
 		Hint: `Install FFmpeg 7 or newer, or set ` + ffmpeg.EnvFFmpeg +
-			` to its path. Run "stuarty doctor" for details.`,
+			` to its path. Run "vukem-video doctor" for details.`,
 	}
 }
 
@@ -686,7 +669,7 @@ func (s *svc) completePending(ctx context.Context, hash, jobID string) []string 
 
 // checkDisk refuses work while the volume of the workspace is under the free
 // space floor (SDD-007 section 9.2 item 4).
-// exportSizeLimitReason is details.reason of an export that passed STUARTY_MAX_EXPORT_BYTES, the
+// exportSizeLimitReason is details.reason of an export that passed VUKEM_VIDEO_MAX_EXPORT_BYTES, the
 // same one engine/export gives (SDD-007 section 9.1).
 const exportSizeLimitReason = "size_limit"
 
@@ -700,7 +683,7 @@ func (s *svc) exportSizeDetails(err error) error {
 
 	return fromEngine(err).
 		withDetail("limit", "export_bytes").withDetail("ceiling", s.limits.MaxExportBytes).
-		withDetail("variable", "STUARTY_MAX_EXPORT_BYTES")
+		withDetail("variable", "VUKEM_VIDEO_MAX_EXPORT_BYTES")
 }
 
 func (s *svc) checkDisk() *Error {
@@ -712,9 +695,9 @@ func (s *svc) checkDisk() *Error {
 	if err == nil && free < uint64(s.limits.MinFreeBytes) {
 		return newError("E_LIMIT_EXCEEDED", "The disk of the workspace has too little free space.").
 			withHint("free space on the disk of the workspace; the person running the server can lower "+
-				"STUARTY_MIN_FREE_BYTES").
+				"VUKEM_VIDEO_MIN_FREE_BYTES").
 			withLimit("free_bytes", free, s.limits.MinFreeBytes).withDetail("reason", "disk_low").
-			withDetail("variable", "STUARTY_MIN_FREE_BYTES")
+			withDetail("variable", "VUKEM_VIDEO_MIN_FREE_BYTES")
 	}
 
 	return nil
@@ -756,14 +739,6 @@ func (s *svc) runExport(ctx context.Context, job *JobRow, pw *progress) (json.Ra
 		return nil, derr
 	}
 
-	if in.Preset != "" {
-		if p, ok := exportcore.Lookup(in.Preset); ok {
-			if perr := presetFit(doc, &p, in.End-in.Start, exportcore.Codec(in.Codec)); perr != nil {
-				return nil, perr
-			}
-		}
-	}
-
 	if err := s.checkDisk(); err != nil {
 		return nil, err
 	}
@@ -780,7 +755,7 @@ func (s *svc) runExport(ctx context.Context, job *JobRow, pw *progress) (json.Ra
 
 	res, err := s.exporter.Export(ctx, ExportInput{
 		JobID: job.ID, Doc: doc, OutPath: out, Start: in.Start, End: in.End, Format: in.Format,
-		MaxBytes: s.limits.MaxExportBytes, Preset: in.Preset, Codec: in.Codec,
+		MaxBytes: s.limits.MaxExportBytes,
 		OnProgress: func(done, total int) {
 			if total > 0 {
 				pw.report(ctx, float64(done)/float64(total), "Rendering ("+strconv.Itoa(done*100/total)+"%)")
@@ -806,15 +781,15 @@ func (s *svc) runExport(ctx context.Context, job *JobRow, pw *progress) (json.Ra
 
 		return nil, newError(
 			CodeExportFailed,
-			"The export is %s; the export limit is %s (STUARTY_MAX_EXPORT_BYTES).",
+			"The export is %s; the export limit is %s (VUKEM_VIDEO_MAX_EXPORT_BYTES).",
 			have,
 			ceiling,
 		).
 			withHint("export a shorter range or a smaller frame size; the person running the server can raise "+
-				"STUARTY_MAX_EXPORT_BYTES").
+				"VUKEM_VIDEO_MAX_EXPORT_BYTES").
 			withDetail("reason", exportSizeLimitReason).
 			withLimit("export_bytes", res.Bytes, s.limits.MaxExportBytes).
-			withDetail("variable", "STUARTY_MAX_EXPORT_BYTES")
+			withDetail("variable", "VUKEM_VIDEO_MAX_EXPORT_BYTES")
 	}
 
 	fps := doc.Settings.FPS
@@ -844,8 +819,6 @@ func (s *svc) runExport(ctx context.Context, job *JobRow, pw *progress) (json.Ra
 		AudioCodec:   res.AudioCodec,
 		LoudnessLUFS: res.LoudnessLUFS,
 		Checks:       res.Checks,
-
-		Preset: in.Preset, CodecFallback: res.CodecFallback, Notes: res.Notes,
 	}
 
 	if export.Checks == nil {
@@ -994,8 +967,6 @@ func queueKindFor(jobKind string) string {
 		return QueueKindIngest
 	case JobExport:
 		return QueueKindExport
-	case JobExportBatch:
-		return QueueKindExportBatch
 	default:
 		return QueueKindFrame
 	}
@@ -1004,7 +975,7 @@ func queueKindFor(jobKind string) string {
 // failCode is the error code of a job of the kind that was stopped.
 func failCode(kind string) string {
 	switch kind {
-	case JobExport, JobExportBatch:
+	case JobExport:
 		return CodeExportFailed
 	case JobIngest:
 		return CodeIngestFailed

@@ -22,7 +22,7 @@ test("a script, stylesheet, font or image from another origin is refused", () =>
 
 test("own files, inert links and the SVG namespace are accepted", () => {
 	const html =
-		'<script src="/stuarty/_astro/a.js"></script><a href="https://github.com/AlexGalhardo/stuarty">repo</a><svg xmlns="http://www.w3.org/2000/svg"></svg>';
+		'<script src="/vukem-video/_astro/a.js"></script><a href="https://github.com/AlexGalhardo/vukem-video">repo</a><svg xmlns="http://www.w3.org/2000/svg"></svg>';
 	assert.deepEqual(foreignOriginProblems("index.html", html, own), []);
 });
 
@@ -45,8 +45,8 @@ test("a remote @import or url() in CSS is refused", () => {
 
 test("a root-relative link without the base path is refused", () => {
 	assert.deepEqual(
-		basePathProblems("a.html", '<a href="/stuarty/docs/">x</a><img src="/icon.svg">', "/stuarty"),
-		["a.html: /icon.svg does not start with /stuarty"],
+		basePathProblems("a.html", '<a href="/vukem-video/docs/">x</a><img src="/icon.svg">', "/vukem-video"),
+		["a.html: /icon.svg does not start with /vukem-video"],
 	);
 	assert.deepEqual(basePathProblems("a.html", '<a href="/docs/">x</a>', ""), []);
 });

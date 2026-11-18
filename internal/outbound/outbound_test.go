@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/internal/outbound"
+	"github.com/AlexGalhardo/vukem-video/internal/outbound"
 )
 
 func TestLocalServerReachesLoopbackOnly(t *testing.T) {

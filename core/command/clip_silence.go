@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"slices"
 
-	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
 func init() {
 	Register(Define(Spec{
 		Name:    "clip.remove_silences",
-		Summary: "Cuts the silences out of a clip or audio item, one item per stretch of speech.",
+		Summary: "Cuts the silent stretches out of a clip or an audio item, leaving one item per stretch of speech.",
 		Description: "Replaces the clip or audio item by one item per non-silent stretch of its source range. Silences shorter than " +
 			"min_silence are kept; padding of speech is kept on each side of a cut. With ripple track the pieces " +
 			"close up and the later items of the track follow. The silences come from the analysis of the asset " +
@@ -21,6 +21,7 @@ func init() {
 			CodeValidation, CodeInvalidTime, CodeNotFound, CodeTypeMismatch, CodeIDExists, CodeInvalidState, CodeLimit,
 		},
 		Scope: ScopeEdit,
+		Phase: Alpha,
 	}, applyRemoveSilences))
 }
 

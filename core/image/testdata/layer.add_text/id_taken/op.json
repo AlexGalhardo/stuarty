@@ -1,7 +1,0 @@
-{
-  "args": {
-    "id": "lyr_cccccccccc",
-    "text": "Hi"
-  },
-  "op": "layer.add_text"
-}

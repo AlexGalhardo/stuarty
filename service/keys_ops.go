@@ -6,7 +6,7 @@ import (
 	"slices"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/vukem-video/core/command"
 )
 
 // Limits of API keys (SDD-007 section 4.2).
@@ -133,10 +133,8 @@ func (s *svc) KeyCreate(ctx context.Context, req KeyCreateRequest) (*KeyCreateRe
 	}
 
 	if req.ProjectID != "" {
-		// A key is limited to a project, never to the id of one of its timelines: Productions().Get answers
-		// for projects only, and a timeline id gets the answer of an id that names nothing.
-		head, perr := s.store.Productions().Get(ctx, req.ProjectID)
-		if perr != nil || !visible(c, head.OwnerUserID) {
+		row, perr := s.store.Projects().Get(ctx, req.ProjectID)
+		if perr != nil || !visible(c, row.OwnerUserID) {
 			return nil, projectNotFound(req.ProjectID, perr)
 		}
 	}

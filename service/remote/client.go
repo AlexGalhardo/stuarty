@@ -1,6 +1,6 @@
 // Package remote is service.Service over the HTTP API of a running owner
 // (SDD-003 section 5.2, ADR-0008 item 5): the CLI and the stdio MCP server use
-// it when a server owns the workspace or STUARTY_URL is set. It encodes the
+// it when a server owns the workspace or VUKEM_VIDEO_URL is set. It encodes the
 // request structs as the routes of SDD-003 section 6 and decodes the error
 // envelope of section 1.4 back into *service.Error. It holds no rule.
 package remote
@@ -15,14 +15,11 @@ import (
 	"net"
 	"net/http"
 	"net/url"
-	"slices"
 	"strconv"
 	"strings"
 
-	"github.com/AlexGalhardo/stuarty/core/asset"
-	"github.com/AlexGalhardo/stuarty/core/command"
-	"github.com/AlexGalhardo/stuarty/service"
-	"github.com/AlexGalhardo/stuarty/service/connections"
+	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/service"
 )
 
 // Doer is the part of an HTTP client the package needs. The caller builds the
@@ -34,7 +31,7 @@ type Doer interface {
 const (
 	apiBase = "/api/v1"
 	// ClientHeader carries the actor label of a local client (SDD-007 section 3.7).
-	ClientHeader = "Stuarty-Client"
+	ClientHeader = "Vukem-Video-Client"
 	// maxBody bounds what the client reads, so a wrong server cannot fill memory.
 	maxBody = 64 << 20
 )
@@ -55,25 +52,8 @@ func New(base, token string, hc Doer) *Client {
 	return &Client{base: strings.TrimRight(base, "/"), token: token, http: hc}
 }
 
-type timelineKey struct{}
-
-// withTimeline carries the timeline_id of a request to do, which sends it as the query member of that name
-// (SDD-003 section 1.7); the server reads it on every route that addresses a timeline.
-func withTimeline(ctx context.Context, id string) context.Context {
-	if id == "" {
-		return ctx
-	}
-
-	return context.WithValue(ctx, timelineKey{}, id)
-}
-
 // do sends one request and decodes a 2xx body into out, or the error envelope.
 func (c *Client) do(ctx context.Context, method, path string, query url.Values, body, out any) error {
-	if id, ok := ctx.Value(timelineKey{}).(string); ok && id != "" {
-		query = cloneQuery(query)
-		query.Set("timeline_id", id)
-	}
-
 	var reader io.Reader = http.NoBody
 
 	if body != nil {
@@ -255,7 +235,6 @@ func (c *Client) ProjectCreate(
 
 // ProjectGet implements service.Service.
 func (c *Client) ProjectGet(ctx context.Context, req service.ProjectGetRequest) (*service.ProjectGetResult, error) {
-	ctx = withTimeline(ctx, req.TimelineID)
 	q := url.Values{}
 	setIf(q, "detail", req.Detail)
 
@@ -291,7 +270,6 @@ type editBody struct {
 
 // Edit implements service.Service.
 func (c *Client) Edit(ctx context.Context, req service.EditRequest) (*service.EditResult, error) {
-	ctx = withTimeline(ctx, req.TimelineID)
 	return post[service.EditResult](ctx, c, projectPath(req.ProjectID, "/edit"), editBody{
 		BaseRevision:   req.BaseRevision,
 		Operations:     req.Operations,
@@ -302,21 +280,15 @@ func (c *Client) Edit(ctx context.Context, req service.EditRequest) (*service.Ed
 
 // CommandHelp implements service.Service.
 func (c *Client) CommandHelp(ctx context.Context, req service.CommandHelpRequest) (*service.CommandHelpResult, error) {
-	var q url.Values
-	if req.Domain != "" {
-		q = url.Values{"domain": {req.Domain}}
-	}
-
 	if req.Name == "" {
-		return get[service.CommandHelpResult](ctx, c, "/commands", q)
+		return get[service.CommandHelpResult](ctx, c, "/commands", nil)
 	}
 
-	return get[service.CommandHelpResult](ctx, c, "/commands/"+url.PathEscape(req.Name), q)
+	return get[service.CommandHelpResult](ctx, c, "/commands/"+url.PathEscape(req.Name), nil)
 }
 
 // HistoryList implements service.Service.
 func (c *Client) HistoryList(ctx context.Context, req service.HistoryListRequest) (*service.HistoryListResult, error) {
-	ctx = withTimeline(ctx, req.TimelineID)
 	q := url.Values{}
 	setIf(q, "actor", req.Actor)
 
@@ -325,19 +297,16 @@ func (c *Client) HistoryList(ctx context.Context, req service.HistoryListRequest
 
 // Undo implements service.Service.
 func (c *Client) Undo(ctx context.Context, req service.UndoRequest) (*service.UndoResult, error) {
-	ctx = withTimeline(ctx, req.TimelineID)
 	return post[service.UndoResult](ctx, c, projectPath(req.ProjectID, "/undo"), dryBody{req.DryRun})
 }
 
 // Redo implements service.Service.
 func (c *Client) Redo(ctx context.Context, req service.UndoRequest) (*service.UndoResult, error) {
-	ctx = withTimeline(ctx, req.TimelineID)
 	return post[service.UndoResult](ctx, c, projectPath(req.ProjectID, "/redo"), dryBody{req.DryRun})
 }
 
 // Lint implements service.Service.
 func (c *Client) Lint(ctx context.Context, req service.LintRequest) (*service.LintResult, error) {
-	ctx = withTimeline(ctx, req.TimelineID)
 	q := url.Values{}
 	setIf(q, "severity", req.Severity)
 
@@ -346,21 +315,17 @@ func (c *Client) Lint(ctx context.Context, req service.LintRequest) (*service.Li
 
 // MediaImport implements service.Service.
 func (c *Client) MediaImport(ctx context.Context, req service.MediaImportRequest) (*service.MediaImportResult, error) {
-	ctx = withTimeline(ctx, req.TimelineID)
 	body := struct {
 		Files  []service.ImportFile `json:"files"`
 		WaitMS int                  `json:"wait_ms,omitempty"`
 		DryRun bool                 `json:"dry_run,omitempty"`
-		Origin *asset.Origin        `json:"origin,omitempty"`
-		Info   *service.AssetInfo   `json:"info,omitempty"`
-	}{req.Files, req.WaitMS, req.DryRun, req.Origin, req.Info}
+	}{req.Files, req.WaitMS, req.DryRun}
 
 	return post[service.MediaImportResult](ctx, c, projectPath(req.ProjectID, "/media"), body)
 }
 
 // MediaList implements service.Service.
 func (c *Client) MediaList(ctx context.Context, req service.MediaListRequest) (*service.MediaListResult, error) {
-	ctx = withTimeline(ctx, req.TimelineID)
 	return get[service.MediaListResult](ctx, c, projectPath(req.ProjectID, "/media"), pageQuery(url.Values{}, req.Page))
 }
 
@@ -369,7 +334,6 @@ func (c *Client) MediaInspect(
 	ctx context.Context,
 	req service.MediaInspectRequest,
 ) (*service.MediaInspectResult, error) {
-	ctx = withTimeline(ctx, req.TimelineID)
 	q := url.Values{}
 	setIf(q, "sections", strings.Join(req.Sections, ","))
 	setIf(q, "min_silence", req.MinSilence)
@@ -381,7 +345,6 @@ func (c *Client) MediaInspect(
 
 // MediaTrash implements service.Service.
 func (c *Client) MediaTrash(ctx context.Context, req service.MediaTrashRequest) (*service.MediaStateResult, error) {
-	ctx = withTimeline(ctx, req.TimelineID)
 	return post[service.MediaStateResult](
 		ctx, c, projectPath(req.ProjectID, "/media/"+url.PathEscape(req.AssetID)+"/trash"), dryBody{req.DryRun},
 	)
@@ -389,7 +352,6 @@ func (c *Client) MediaTrash(ctx context.Context, req service.MediaTrashRequest) 
 
 // MediaRestore implements service.Service.
 func (c *Client) MediaRestore(ctx context.Context, req service.MediaTrashRequest) (*service.MediaStateResult, error) {
-	ctx = withTimeline(ctx, req.TimelineID)
 	return post[service.MediaStateResult](
 		ctx, c, projectPath(req.ProjectID, "/media/"+url.PathEscape(req.AssetID)+"/restore"), dryBody{req.DryRun},
 	)
@@ -397,7 +359,6 @@ func (c *Client) MediaRestore(ctx context.Context, req service.MediaTrashRequest
 
 // JobStart implements service.Service.
 func (c *Client) JobStart(ctx context.Context, req service.JobStartRequest) (*service.Job, error) {
-	ctx = withTimeline(ctx, req.TimelineID)
 	body := struct {
 		Kind   string          `json:"kind"`
 		Args   json.RawMessage `json:"args,omitempty"`
@@ -406,59 +367,6 @@ func (c *Client) JobStart(ctx context.Context, req service.JobStartRequest) (*se
 	}{req.Kind, req.Args, req.WaitMS, req.DryRun}
 
 	return jobText(post[service.Job](ctx, c, projectPath(req.ProjectID, "/jobs"), body))
-}
-
-// ExportPresetList implements service.Service.
-func (c *Client) ExportPresetList(
-	ctx context.Context,
-	req service.ExportPresetListRequest,
-) (*service.ExportPresetListResult, error) {
-	q := url.Values{}
-	if req.Codecs {
-		q.Set("codecs", "true")
-	}
-
-	return get[service.ExportPresetListResult](ctx, c, "/export-presets", q)
-}
-
-// ExportCheck implements service.Service.
-func (c *Client) ExportCheck(
-	ctx context.Context,
-	req service.ExportCheckRequest,
-) (*service.ExportCheckResult, error) {
-	ctx = withTimeline(ctx, req.TimelineID)
-	q := url.Values{}
-	setIf(q, "preset", req.Preset)
-	setIf(q, "start", req.Start)
-	setIf(q, "end", req.End)
-	setIf(q, "codec", req.Codec)
-
-	return get[service.ExportCheckResult](ctx, c, projectPath(req.ProjectID, "/export-check"), q)
-}
-
-// AudioMeasure implements service.Service.
-func (c *Client) AudioMeasure(
-	ctx context.Context,
-	req service.AudioMeasureRequest,
-) (*service.AudioMeasureResult, error) {
-	ctx = withTimeline(ctx, req.TimelineID)
-	q := url.Values{}
-	setIf(q, "item_id", req.ItemID)
-	setIf(q, "start", req.Start)
-	setIf(q, "end", req.End)
-
-	return get[service.AudioMeasureResult](ctx, c, projectPath(req.ProjectID, "/audio-measure"), q)
-}
-
-// ExportBatch implements service.Service.
-func (c *Client) ExportBatch(ctx context.Context, req service.ExportBatchRequest) (*service.Job, error) {
-	ctx = withTimeline(ctx, req.TimelineID)
-	body := struct {
-		Items  []service.ExportBatchItem `json:"items"`
-		WaitMS int                       `json:"wait_ms,omitempty"`
-	}{req.Items, req.WaitMS}
-
-	return jobText(post[service.Job](ctx, c, projectPath(req.ProjectID, "/export-batches"), body))
 }
 
 // jobText turns the HTTP form of the next call in the text of a job ("call GET /api/v1/jobs/{id}")
@@ -496,7 +404,6 @@ func (c *Client) TemplateList(
 
 // TemplateSave implements service.Service.
 func (c *Client) TemplateSave(ctx context.Context, req service.TemplateSaveRequest) (*service.TemplateResult, error) {
-	ctx = withTimeline(ctx, req.TimelineID)
 	return post[service.TemplateResult](ctx, c, "/templates", req)
 }
 
@@ -552,7 +459,6 @@ func (c *Client) ToolsStatus(ctx context.Context, _ service.ToolsStatusRequest) 
 
 // JobList implements service.Service.
 func (c *Client) JobList(ctx context.Context, req service.JobListRequest) (*service.JobListResult, error) {
-	ctx = withTimeline(ctx, req.TimelineID)
 	q := url.Values{}
 	setIf(q, "state", req.State)
 
@@ -561,7 +467,6 @@ func (c *Client) JobList(ctx context.Context, req service.JobListRequest) (*serv
 
 // PlanWindow implements service.Service.
 func (c *Client) PlanWindow(ctx context.Context, req service.PlanWindowRequest) (*service.PlanWindowResult, error) {
-	ctx = withTimeline(ctx, req.TimelineID)
 	q := url.Values{}
 	q.Set("from", strconv.Itoa(req.From))
 	q.Set("until", strconv.Itoa(req.Until))
@@ -576,7 +481,6 @@ func (c *Client) PlanWindow(ctx context.Context, req service.PlanWindowRequest) 
 // ViewFrame implements service.Service; the server answers the ViewResult as
 // JSON with the image in image_base64 (Accept: application/json).
 func (c *Client) ViewFrame(ctx context.Context, req service.ViewFrameRequest) (*service.ViewResult, error) {
-	ctx = withTimeline(ctx, req.TimelineID)
 	q := url.Values{}
 	setIf(q, "at", req.At)
 
@@ -593,7 +497,6 @@ func (c *Client) ViewFrame(ctx context.Context, req service.ViewFrameRequest) (*
 
 // ViewSheet implements service.Service.
 func (c *Client) ViewSheet(ctx context.Context, req service.ViewSheetRequest) (*service.ViewResult, error) {
-	ctx = withTimeline(ctx, req.TimelineID)
 	q := url.Values{}
 	setIf(q, "times", strings.Join(req.Times, ","))
 	setIf(q, "from", req.From)
@@ -634,7 +537,6 @@ func (c *Client) Doctor(ctx context.Context, req service.DoctorRequest) (*servic
 
 // SnapPoints implements service.Service.
 func (c *Client) SnapPoints(ctx context.Context, req service.SnapPointsRequest) (*service.SnapPointsResult, error) {
-	ctx = withTimeline(ctx, req.TimelineID)
 	q := url.Values{}
 
 	if req.Revision != 0 {
@@ -656,50 +558,11 @@ func (c *Client) FontList(ctx context.Context, _ service.FontListRequest) (*serv
 // AssetList implements service.Service.
 func (c *Client) AssetList(ctx context.Context, req service.AssetListRequest) (*service.AssetListResult, error) {
 	q := url.Values{}
-	setIf(q, "kind", req.Kind)
-	setIf(q, "section", req.Section)
-	setIf(q, "tag", req.Tag)
-	setIf(q, "project", req.Project)
-	setIf(q, "origin", req.Origin)
-	setIf(q, "text", req.Text)
-
-	if req.Reusable != nil {
-		q.Set("reusable", strconv.FormatBool(*req.Reusable))
+	if req.Kind != "" {
+		q.Set("kind", req.Kind)
 	}
 
-	return get[service.AssetListResult](
-		ctx,
-		c,
-		"/assets",
-		pageQuery(q, service.Page{Cursor: req.Cursor, Limit: req.Limit}),
-	)
-}
-
-func assetPath(hash, suffix string) string { return "/assets/" + url.PathEscape(hash) + suffix }
-
-// AssetGet implements service.Service.
-func (c *Client) AssetGet(ctx context.Context, req service.AssetRef) (*service.AssetResult, error) {
-	return get[service.AssetResult](ctx, c, assetPath(req.Hash, ""), nil)
-}
-
-// AssetUses implements service.Service.
-func (c *Client) AssetUses(ctx context.Context, req service.AssetUsesRequest) (*service.AssetUsesResult, error) {
-	return get[service.AssetUsesResult](ctx, c, assetPath(req.Hash, "/uses"), pageQuery(url.Values{}, req.Page))
-}
-
-// AssetSetInfo implements service.Service.
-func (c *Client) AssetSetInfo(ctx context.Context, req service.AssetSetInfoRequest) (*service.AssetResult, error) {
-	out := new(service.AssetResult)
-	if err := c.do(ctx, http.MethodPut, assetPath(req.Hash, ""), nil, req, out); err != nil {
-		return nil, err
-	}
-
-	return out, nil
-}
-
-// AssetTag implements service.Service.
-func (c *Client) AssetTag(ctx context.Context, req service.AssetTagRequest) (*service.AssetResult, error) {
-	return post[service.AssetResult](ctx, c, assetPath(req.Hash, "/tags"), req)
+	return get[service.AssetListResult](ctx, c, "/assets", q)
 }
 
 // AuditList implements service.Service.
@@ -762,7 +625,6 @@ func (c *Client) ProjectBundleExport(
 	ctx context.Context,
 	req service.ProjectBundleExportRequest,
 ) (*service.Job, error) {
-	ctx = withTimeline(ctx, req.TimelineID)
 	body := struct {
 		IncludeLog *bool `json:"include_log,omitempty"`
 		WaitMS     int   `json:"wait_ms,omitempty"`
@@ -804,7 +666,6 @@ func (c *Client) ProjectOtioExport(
 	ctx context.Context,
 	req service.ProjectOtioExportRequest,
 ) (*service.ProjectOtioExportResult, error) {
-	ctx = withTimeline(ctx, req.TimelineID)
 	return get[service.ProjectOtioExportResult](ctx, c, projectPath(req.ProjectID, "/otio"), url.Values{})
 }
 
@@ -813,7 +674,6 @@ func (c *Client) ProjectOtioImport(
 	ctx context.Context,
 	req service.ProjectOtioImportRequest,
 ) (*service.ProjectOtioImportResult, error) {
-	ctx = withTimeline(ctx, req.TimelineID)
 	body := struct {
 		BaseRevision int64  `json:"base_revision"`
 		Path         string `json:"path"`
@@ -821,47 +681,4 @@ func (c *Client) ProjectOtioImport(
 	}{req.BaseRevision, req.Path, req.DryRun}
 
 	return post[service.ProjectOtioImportResult](ctx, c, projectPath(req.ProjectID, "/otio"), body)
-}
-
-func cloneQuery(q url.Values) url.Values {
-	out := url.Values{}
-	for k, v := range q {
-		out[k] = slices.Clone(v)
-	}
-
-	return out
-}
-
-// ConnectionList implements service.Service.
-func (c *Client) ConnectionList(
-	ctx context.Context, _ service.ConnectionListRequest,
-) (*service.ConnectionListResult, error) {
-	return get[service.ConnectionListResult](ctx, c, "/connections", nil)
-}
-
-// ConnectionGet implements service.Service.
-func (c *Client) ConnectionGet(ctx context.Context, req service.ConnectionRef) (*connections.Connection, error) {
-	return get[connections.Connection](ctx, c, "/connections/"+url.PathEscape(req.ID), nil)
-}
-
-// ConnectionCreate implements service.Service.
-func (c *Client) ConnectionCreate(
-	ctx context.Context, req service.ConnectionCreateRequest,
-) (*connections.Connection, error) {
-	return post[connections.Connection](ctx, c, "/connections", req)
-}
-
-// ConnectionRemove implements service.Service.
-func (c *Client) ConnectionRemove(ctx context.Context, req service.ConnectionRef) (*connections.Connection, error) {
-	out := new(connections.Connection)
-	if err := c.do(ctx, http.MethodDelete, "/connections/"+url.PathEscape(req.ID), nil, nil, out); err != nil {
-		return nil, err
-	}
-
-	return out, nil
-}
-
-// ConnectionTest implements service.Service.
-func (c *Client) ConnectionTest(ctx context.Context, req service.ConnectionRef) (*service.ConnectionTestResult, error) {
-	return post[service.ConnectionTestResult](ctx, c, "/connections/"+url.PathEscape(req.ID)+"/test", struct{}{})
 }

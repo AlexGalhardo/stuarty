@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/desktop/update"
+	"github.com/AlexGalhardo/vukem-video/desktop/update"
 )
 
 // The schedule of the automatic checks (SDD-009 section 10.5, launcher flow item 2).

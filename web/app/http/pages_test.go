@@ -9,10 +9,10 @@ import (
 	"testing"
 	"testing/fstest"
 
-	"github.com/AlexGalhardo/stuarty/core/timeline"
-	"github.com/AlexGalhardo/stuarty/web/app/events"
-
 	vukem "github.com/AlexGalhardo/vukem"
+
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/web/app/events"
 )
 
 // manifest stands in for the output of `vite build`, which the Go tests do not run.
@@ -70,62 +70,9 @@ func TestPages(t *testing.T) {
 		t.Errorf("robots.txt = %d %s", robots.status, robots.body)
 	}
 
-	// The application opens on the dashboard (RF-310), and each section without
-	// a page of its own answers with its empty state, never an error.
 	home := page("/")
-	if home.status != http.StatusOK || !strings.Contains(string(home.body), `Dashboard\/Home`) {
-		t.Errorf("/ = %d, want the dashboard home", home.status)
-	}
-
-	for _, key := range []string{"edit-video", "publish"} {
-		res := page("/" + key)
-		if res.status != http.StatusOK || !strings.Contains(string(res.body), `Dashboard\/Section`) ||
-			!strings.Contains(string(res.body), `"section":"`+key+`"`) {
-			t.Errorf("/%s = %d, want its empty state", key, res.status)
-		}
-	}
-
-	// Write has its own page (epic 17).
-	if res := page("/write"); res.status != http.StatusOK || !strings.Contains(string(res.body), `Write\/Index`) {
-		t.Errorf("/write = %d, want the writing page", res.status)
-	}
-
-	// The Connections section has its own page (epic 04).
-	if res := page(
-		"/connections",
-	); res.status != http.StatusOK ||
-		!strings.Contains(string(res.body), `Connections\/Index`) {
-		t.Errorf("/connections = %d, want the connections page", res.status)
-	}
-
-	// The redirect address of the sign-in to a social network is a page (epic 18).
-	if res := page("/social/callback"); res.status != http.StatusOK ||
-		!strings.Contains(string(res.body), `Social\/Callback`) {
-		t.Errorf("/social/callback = %d, want the callback page", res.status)
-	}
-
-	// Edit Image has its own pages (epic 28): the list, and the editor of a document whose id has the shape of one.
-	if res := page("/edit-image"); res.status != http.StatusOK ||
-		!strings.Contains(string(res.body), `EditImage\/Index`) {
-		t.Errorf("/edit-image = %d, want the image list page", res.status)
-	}
-
-	if res := page("/edit-image/img_0123456789"); res.status != http.StatusOK ||
-		!strings.Contains(string(res.body), `EditImage\/Show`) ||
-		!strings.Contains(string(res.body), `"imageId":"img_0123456789"`) {
-		t.Errorf("/edit-image/img_0123456789 = %d, want the editor page", res.status)
-	}
-
-	for _, p := range []string{"/edit-image/not-an-id", "/edit-image/img_0123", "/edit-image/IMG_0123456789"} {
-		if res := page(p); res.status != http.StatusNotFound {
-			t.Errorf("%s = %d, want 404", p, res.status)
-		}
-	}
-
-	// The approval queue has its own page (epic 05).
-	if res := page("/approvals"); res.status != http.StatusOK ||
-		!strings.Contains(string(res.body), `Approvals\/Index`) {
-		t.Errorf("/approvals = %d, want the approvals page", res.status)
+	if home.status/100 != 3 || home.header.Get("Location") != "/projects" {
+		t.Errorf("/ = %d to %q", home.status, home.header.Get("Location"))
 	}
 
 	if res := h.do(req{path: "/projects", noAuth: true}); res.status != http.StatusUnauthorized {
@@ -174,52 +121,6 @@ func TestPages(t *testing.T) {
 	}
 }
 
-// The consent screen of a social network sends the browser back by a cross-site navigation, which carries
-// no SameSite=Strict session cookie: the sign-in page is drawn all the same, with nothing of the workspace
-// in it, and the call it makes, POST /api/v1/social/complete, still needs the session. Every other page
-// and the API still answer 401 without one (SDD-020 section 6).
-func TestSignInPageIsDrawnWithoutTheSessionCookie(t *testing.T) {
-	t.Parallel()
-
-	h := pagesHarness(t)
-
-	navigation := map[string]string{
-		"Accept":         "text/html",
-		"Sec-Fetch-Site": "cross-site",
-		"Sec-Fetch-Mode": "navigate",
-		"Sec-Fetch-Dest": "document",
-	}
-
-	res := h.do(req{path: "/social/callback?state=s&code=c", noAuth: true, headers: navigation})
-	if res.status != http.StatusOK || !strings.Contains(string(res.body), `Social\/Callback`) {
-		t.Fatalf("the sign-in page without a session = %d, want the page", res.status)
-	}
-
-	if strings.Contains(string(res.body), `"auth"`) || strings.Contains(string(res.body), "prj_") {
-		t.Errorf("the sign-in page carries data of the workspace: %.400s", res.body)
-	}
-
-	for name, r := range map[string]req{
-		"another page": {path: "/connections", noAuth: true, headers: map[string]string{"Accept": "text/html"}},
-		"the completion": {
-			method: http.MethodPost, path: "/api/v1/social/complete", body: `{"state":"s","code":"c"}`,
-			noAuth: true, headers: map[string]string{"Sec-Fetch-Site": "same-origin"},
-		},
-	} {
-		if got := h.do(r); got.status != http.StatusUnauthorized {
-			t.Errorf("%s without a session = %d, want 401", name, got.status)
-		}
-	}
-
-	// The exemption is the GET of the page: the path takes no other method.
-	if got := h.do(req{
-		method: http.MethodPost, path: "/social/callback", body: `{}`, noAuth: true,
-		headers: map[string]string{"Sec-Fetch-Site": "same-origin"},
-	}); got.status != http.StatusUnauthorized && got.status != http.StatusMethodNotAllowed {
-		t.Errorf("a POST of the page without a session = %d, want 401 or 405", got.status)
-	}
-}
-
 // A project that the editor cannot open answers with the Inertia error page carrying the code, the
 // message and the hint of the service, never a bare "500 Internal Server Error".
 func TestEditorPageShowsWhyAProjectCannotOpen(t *testing.T) {
@@ -229,7 +130,7 @@ func TestEditorPageShowsWhyAProjectCannotOpen(t *testing.T) {
 
 	_, err := h.store.DB().ExecContext(
 		context.Background(),
-		"UPDATE timelines SET document = replace(document, ?, ?) WHERE id = ?",
+		"UPDATE projects SET document = replace(document, ?, ?) WHERE id = ?",
 		fmt.Sprintf(`"schema_version":%d`, timeline.CurrentSchemaVersion),
 		fmt.Sprintf(`"schema_version":%d`, timeline.CurrentSchemaVersion+1),
 		id,
@@ -245,7 +146,7 @@ func TestEditorPageShowsWhyAProjectCannotOpen(t *testing.T) {
 		t.Errorf("status = %d, want a client error", res.status)
 	}
 
-	for _, want := range []string{`data-page="app"`, `Error`, "V_SCHEMA_VERSION", "update stuarty"} {
+	for _, want := range []string{`data-page="app"`, `Error`, "V_SCHEMA_VERSION", "update vukem-video"} {
 		if !strings.Contains(body, want) {
 			t.Errorf("body lacks %q\n%s", want, body)
 		}
@@ -253,7 +154,7 @@ func TestEditorPageShowsWhyAProjectCannotOpen(t *testing.T) {
 }
 
 // The language is a preference of each browser (SDD-012 section 16.3): the
-// Stuarty-Lang header decides, the shared lang cookie is neither read nor
+// Vukem-Video-Lang header decides, the shared lang cookie is neither read nor
 // written, and the old POST /locale is gone.
 func TestPagesLanguageIsPerBrowser(t *testing.T) {
 	h := pagesHarness(t)
@@ -264,7 +165,7 @@ func TestPagesLanguageIsPerBrowser(t *testing.T) {
 		return h.do(req{path: "/projects" + query, noAuth: true, headers: headers})
 	}
 
-	if got := page(map[string]string{"Stuarty-Lang": "pt-BR"}, "").header.Get("Content-Language"); got != "pt-BR" {
+	if got := page(map[string]string{"Vukem-Video-Lang": "pt-BR"}, "").header.Get("Content-Language"); got != "pt-BR" {
 		t.Errorf("the language header = %q, want pt-BR", got)
 	}
 

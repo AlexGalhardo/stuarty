@@ -18,10 +18,10 @@ import (
 )
 
 // File is the name of the current log file inside the logs folder.
-const File = "stuarty.log"
+const File = "vukem-video.log"
 
 // Defaults of the rotating file: it is rotated at 10 MiB and the 3 newest old
-// files are kept as stuarty.log.1 (the newest) to stuarty.log.3.
+// files are kept as vukem-video.log.1 (the newest) to vukem-video.log.3.
 const (
 	DefaultMaxBytes int64 = 10 << 20
 	DefaultKeep           = 3
@@ -135,7 +135,7 @@ func Media(ctx context.Context, log *slog.Logger, msg string, attrs ...slog.Attr
 }
 
 // rotating is a file that is rotated when a write would take it past max bytes:
-// stuarty.log becomes stuarty.log.1, that one .2, and so on up to keep
+// vukem-video.log becomes vukem-video.log.1, that one .2, and so on up to keep
 // old files; the oldest is removed.
 type rotating struct {
 	mu   sync.Mutex

@@ -1,8 +1,0 @@
-{
-  "args": {
-    "background": "#101820",
-    "name": "Episode 12",
-    "preset": "video_thumbnail"
-  },
-  "op": "image.create"
-}

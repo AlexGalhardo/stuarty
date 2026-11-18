@@ -1,8 +1,0 @@
-{
-  "code": "E_INVALID_STATE",
-  "hint": "Add a layer to the group, or align to the canvas.",
-  "message": "Layer lyr_eeeeeeeeee has nothing in it, so it has no box.",
-  "op_index": 0,
-  "path": "args.to",
-  "retryable": false
-}

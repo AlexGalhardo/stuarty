@@ -1,8 +1,0 @@
-{
-  "code": "E_TYPE_MISMATCH",
-  "hint": "Use layer.remove to remove a layer.",
-  "message": "Layer lyr_cccccccccc is a text; layer.ungroup changes groups.",
-  "op_index": 0,
-  "path": "args.layer_id",
-  "retryable": false
-}

@@ -12,14 +12,14 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/AlexGalhardo/stuarty/engine/transcribe"
-	"github.com/AlexGalhardo/stuarty/service"
-	"github.com/AlexGalhardo/stuarty/service/workspace"
+	"github.com/AlexGalhardo/vukem-video/engine/transcribe"
+	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/vukem-video/service/workspace"
 )
 
 const (
 	// EnvProject names the project a command acts on when --project is absent.
-	EnvProject = "STUARTY_PROJECT"
+	EnvProject = "VUKEM_VIDEO_PROJECT"
 	// DefaultActor is the label of the caller when --actor is absent.
 	DefaultActor = "cli"
 )
@@ -128,7 +128,7 @@ func actorFrom(flag string) (string, error) {
 
 // abs makes a path absolute against the current directory before it is sent
 // to the service (SDD-003 section 5.3, ADR-0016 item 7). Against a remote server
-// (STUARTY_URL) a rooted path belongs to the server's filesystem and goes as typed.
+// (VUKEM_VIDEO_URL) a rooted path belongs to the server's filesystem and goes as typed.
 func (rt *Runtime) abs(path string) (string, error) {
 	out, err := rt.absolute(expandPath(path, rt.Getenv))
 	if err == nil {

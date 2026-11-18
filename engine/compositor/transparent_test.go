@@ -5,7 +5,7 @@ import (
 	"image"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/core/plan"
+	"github.com/AlexGalhardo/vukem-video/core/plan"
 )
 
 // An empty transparent plan leaves every pixel at alpha 0. The same plan with the flag clear is the

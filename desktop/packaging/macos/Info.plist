@@ -3,15 +3,15 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleName</key>
-	<string>Stuarty</string>
+	<string>Vukem Video</string>
 	<key>CFBundleDisplayName</key>
-	<string>Stuarty</string>
+	<string>Vukem Video</string>
 	<key>CFBundleIdentifier</key>
 	<string>dev.vukem.vukem-video.desktop</string>
 	<key>CFBundleExecutable</key>
-	<string>stuarty-desktop</string>
+	<string>vukem-video-desktop</string>
 	<key>CFBundleIconFile</key>
-	<string>stuarty</string>
+	<string>vukem-video</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>

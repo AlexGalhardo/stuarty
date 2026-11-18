@@ -22,9 +22,9 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/jsonrpc"
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
-	"github.com/AlexGalhardo/stuarty/core/command"
-	"github.com/AlexGalhardo/stuarty/service"
-	"github.com/AlexGalhardo/stuarty/web/app/agentdocs"
+	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/vukem-video/web/app/agentdocs"
 )
 
 // Options configure the adapter.
@@ -38,9 +38,8 @@ type Options struct {
 	Session string
 	// Description is shown in serverInfo: which workspace and server the tools act on.
 	Description string
-	// Registry is not read since the operations left the definition of edit (SDD-003
-	// section 4.8): the Service names them, through command_help. It stays so that the
-	// callers that set it still compile.
+	// Registry is the command registry of the build, which decides the operations
+	// edit offers; default command.Default().
 	Registry *command.Registry
 }
 
@@ -60,17 +59,21 @@ const (
 
 // New builds the MCP server over a Service.
 func New(svc service.Service, o Options) (*sdk.Server, error) {
+	if o.Registry == nil {
+		o.Registry = command.Default()
+	}
+
 	if o.Version == "" {
 		o.Version = moduleVersion()
 	}
 
-	defs, err := loadDefinitions()
+	defs, err := loadDefinitions(o.Registry)
 	if err != nil {
 		return nil, err
 	}
 
 	srv := sdk.NewServer(
-		&sdk.Implementation{Name: "stuarty", Version: o.Version, Description: o.Description},
+		&sdk.Implementation{Name: "vukem-video", Version: o.Version, Description: o.Description},
 		&sdk.ServerOptions{
 			Instructions: agentdocs.Instructions(),
 			SetCacheable: func(_ context.Context, req sdk.Request, c *sdk.Cacheable) {
@@ -283,7 +286,7 @@ func runDraining(ctx context.Context, svc service.Service, o Options, t sdk.Tran
 }
 
 // drainTransport keeps the connection open after the input ends until every
-// request already read has been answered, so `echo <request> | stuarty mcp`
+// request already read has been answered, so `echo <request> | vukem-video mcp`
 // gets its response instead of exiting while the call is still running.
 type drainTransport struct {
 	inner sdk.Transport

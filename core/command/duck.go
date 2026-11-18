@@ -6,7 +6,7 @@ import (
 	"math"
 	"slices"
 
-	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
 func init() {
@@ -23,6 +23,7 @@ func init() {
 			CodeValidation, CodeInvalidTime, CodeNotFound, CodeTypeMismatch, CodeInvalidState, CodeLimit,
 		},
 		Scope: ScopeEdit,
+		Phase: Beta,
 	}, applyDuck))
 }
 

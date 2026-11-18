@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
 func init() {
@@ -24,6 +24,7 @@ func init() {
 			CodeValidation, CodeNotFound, CodeTypeMismatch, CodeOutOfSource, CodeInvalidTime, CodeOverlap,
 		},
 		Scope: ScopeEdit,
+		Phase: Alpha,
 	}, applyClipSetSpeed))
 }
 

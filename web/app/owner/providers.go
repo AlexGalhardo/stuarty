@@ -7,14 +7,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
-	"github.com/AlexGalhardo/stuarty/engine/transcribe"
-	"github.com/AlexGalhardo/stuarty/service/config"
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
+	"github.com/AlexGalhardo/vukem-video/engine/transcribe"
+	"github.com/AlexGalhardo/vukem-video/service/config"
 )
 
 const (
 	// EnvTestTranscriber selects the test-only provider; the only value is "stub".
-	EnvTestTranscriber = "STUARTY_TEST_TRANSCRIBER"
+	EnvTestTranscriber = "VUKEM_VIDEO_TEST_TRANSCRIBER"
 	// envAppEnv is vukem's environment name; the stub needs it to be "test".
 	envAppEnv = "APP_ENV"
 	// appEnvTesting is the only APP_ENV under which the stub runs.
@@ -22,12 +22,12 @@ const (
 	stubName      = "stub"
 )
 
-// ErrTestTranscriber is the start-up refusal of STUARTY_TEST_TRANSCRIBER outside the test condition.
+// ErrTestTranscriber is the start-up refusal of VUKEM_VIDEO_TEST_TRANSCRIBER outside the test condition.
 var ErrTestTranscriber = errors.New("owner: test transcriber refused")
 
 // pickTranscriber chooses the transcription provider (SDD-011 section 10.1): the test stub when
-// STUARTY_TEST_TRANSCRIBER=stub under APP_ENV=test in local mode; else the API provider when
-// STUARTY_TRANSCRIBE_URL or _KEY is set; else the local helper (whisper may be nil). With
+// VUKEM_VIDEO_TEST_TRANSCRIBER=stub under APP_ENV=test in local mode; else the API provider when
+// VUKEM_VIDEO_TRANSCRIBE_URL or _KEY is set; else the local helper (whisper may be nil). With
 // nothing configured no API client is built, so nothing can dial (D-016).
 func pickTranscriber(
 	getenv func(string) string, mode string, whisper transcribe.Provider, r *ffmpeg.Runner,

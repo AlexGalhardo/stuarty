@@ -11,8 +11,8 @@ import (
 	"path/filepath"
 	"unicode/utf8"
 
-	"github.com/AlexGalhardo/stuarty/core/command"
-	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
 // templateFileDir is where the files of exported templates are kept, under the
@@ -62,7 +62,7 @@ type FileResult struct {
 	Text        string `json:"text"`
 }
 
-func templateFileName(id string) string { return id + ".stuarty-template.zip" }
+func templateFileName(id string) string { return id + ".vukem-template.zip" }
 
 // TemplateExport writes the template file of a template and says where to get
 // it (SDD-005 section 15): manifest.json and template.json with flat names.

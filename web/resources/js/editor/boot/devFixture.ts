@@ -56,6 +56,7 @@ export function devFixture(itemsPerTrack: number): {
 			locales: ["en"],
 			messages,
 			user: null,
+			phase: "prototype",
 			version: "dev-fixture",
 		},
 		options: { transport: server, checked: true },

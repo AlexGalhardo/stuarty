@@ -1,7 +1,7 @@
 package command
 
 import (
-	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
 func init() {
@@ -16,6 +16,7 @@ func init() {
 			CodeOutOfSource, CodeOverlap,
 		},
 		Scope: ScopeEdit,
+		Phase: Prototype,
 	}, applyClipAdd))
 }
 

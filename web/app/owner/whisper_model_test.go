@@ -3,8 +3,8 @@ package owner
 import (
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/service"
-	"github.com/AlexGalhardo/stuarty/service/workspace"
+	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/vukem-video/service/workspace"
 )
 
 func TestWhisperProviderTakesAModelByName(t *testing.T) {

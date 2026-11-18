@@ -9,9 +9,9 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/AlexGalhardo/stuarty/core/command"
-	"github.com/AlexGalhardo/stuarty/core/timeline"
-	"github.com/AlexGalhardo/stuarty/service/crashpoint"
+	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/service/crashpoint"
 )
 
 const (
@@ -48,12 +48,8 @@ func EditInternal(ctx context.Context, s Service, req EditRequest) (*EditResult,
 }
 
 func (s *svc) edit(ctx context.Context, req EditRequest, allowInternal bool) (*EditResult, error) {
-	c, err := s.authorizeProject(ctx, "Edit", req.ProjectID)
+	c, err := authorize(ctx, "Edit", req.ProjectID)
 	if err != nil {
-		return nil, err
-	}
-
-	if err := s.useTimeline(ctx, c, &req.ProjectID, req.TimelineID); err != nil {
 		return nil, err
 	}
 
@@ -154,7 +150,6 @@ func (s *svc) edit(ctx context.Context, req EditRequest, allowInternal bool) (*E
 			key:           req.IdempotencyKey,
 			requestHash:   hash,
 			closeOpenRedo: true,
-			checkpoint:    true,
 			result: func(rev int64) ([]byte, error) {
 				stored := *res
 				stored.Revision = rev

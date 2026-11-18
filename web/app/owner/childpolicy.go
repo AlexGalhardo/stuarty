@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
-	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
+	"github.com/AlexGalhardo/vukem-video/service"
 )
 
 // childRunners are the runners of the four kinds of FFmpeg run. The pinned contrib/engine applies
@@ -24,7 +24,7 @@ type childRunners struct {
 }
 
 // newChildRunners applies SDD-007 sections 6.5 and 6.7 to an installation: prlimit(1) limits where
-// they exist, and the bwrap sandbox when STUARTY_SANDBOX asks for it. A missing prlimit on Linux
+// they exist, and the bwrap sandbox when VUKEM_VIDEO_SANDBOX asks for it. A missing prlimit on Linux
 // and an unusable bwrap are boot errors; there is never a child that is silently unlimited.
 func newChildRunners(
 	ctx context.Context,

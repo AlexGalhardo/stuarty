@@ -3,84 +3,95 @@ import { describe, expect, test } from "vitest";
 import actionsSource from "./actions.ts?raw";
 import {
 	BINDING_IDS,
-	comboFromEvent,
-	PRESET_IDS,
-	type PresetId,
-	presetKeys,
-	RESERVED_KEYS,
-	type Scope,
+	DEFAULT_BINDINGS,
+	editShortcut,
+	fixedRowFor,
+	isSelectAllShortcut,
+	labelWithKey,
+	landmarkShortcut,
+	panelShortcut,
 	SHORTCUTS,
-	scopesOverlap,
 	UI_SHORTCUT_ACTIONS,
 } from "./keymap";
 
-const press = (
-	key: string,
-	mods: Partial<
-		Record<"ctrlKey" | "metaKey" | "altKey" | "shiftKey", boolean>
-	> & { code?: string } = {},
-) => ({
-	key,
-	ctrlKey: false,
-	metaKey: false,
-	altKey: false,
-	shiftKey: false,
-	...mods,
-});
-
-describe("comboFromEvent", () => {
-	test("names a key the way the table does", () => {
-		expect(comboFromEvent(press("s"))).toBe("S");
-		expect(comboFromEvent(press("S", { shiftKey: true }))).toBe("Shift+S");
-		expect(comboFromEvent(press("+", { shiftKey: true }))).toBe("+");
-		expect(comboFromEvent(press("?", { shiftKey: true }))).toBe("?");
-		expect(comboFromEvent(press("z", { ctrlKey: true }))).toBe("Mod+Z");
-		expect(comboFromEvent(press("Z", { metaKey: true, shiftKey: true }))).toBe(
-			"Mod+Shift+Z",
-		);
-		expect(comboFromEvent(press("ArrowLeft", { shiftKey: true }))).toBe(
-			"Shift+Left",
-		);
-		expect(comboFromEvent(press(" "))).toBe("Space");
-		expect(comboFromEvent(press("Escape"))).toBe("Esc");
-		expect(comboFromEvent(press("Shift", { shiftKey: true }))).toBeNull();
+const key = (init: Partial<Parameters<typeof panelShortcut>[0]>) =>
+	panelShortcut({
+		key: "1",
+		code: "Digit1",
+		ctrlKey: false,
+		metaKey: false,
+		altKey: true,
+		shiftKey: false,
+		...init,
 	});
 
-	test("with Alt the physical key names it, as Option changes the character", () => {
-		expect(comboFromEvent(press(",", { altKey: true, code: "Comma" }))).toBe(
-			"Alt+,",
-		);
-		// Option+. is a dot-above character on a Mac.
-		expect(comboFromEvent(press("˙", { altKey: true, code: "Period" }))).toBe(
-			"Alt+.",
-		);
-		expect(comboFromEvent(press("¡", { altKey: true, code: "Digit1" }))).toBe(
-			"Alt+1",
-		);
-		expect(
-			comboFromEvent(
-				press("≠", { altKey: true, shiftKey: true, code: "Equal" }),
-			),
-		).toBe("Alt+Shift+=");
-		expect(
-			comboFromEvent(
-				press("¸", { altKey: true, shiftKey: true, code: "KeyZ" }),
-			),
-		).toBe("Alt+Shift+Z");
-		expect(
-			comboFromEvent(
-				press("ArrowLeft", {
-					ctrlKey: true,
-					altKey: true,
-					shiftKey: true,
-					code: "ArrowLeft",
-				}),
-			),
-		).toBe("Mod+Alt+Shift+Left");
+describe("panelShortcut", () => {
+	test("Alt+1, Alt+2 and Alt+3 name the library, inspector and history", () => {
+		expect(key({})).toBe("library");
+		expect(key({ key: "2", code: "Digit2" })).toBe("inspector");
+		expect(key({ key: "3", code: "Digit3" })).toBe("history");
+	});
+
+	test("the physical key counts when Option changes the character", () => {
+		expect(key({ key: "\u00a1", code: "Digit1" })).toBe("library");
+	});
+
+	test("Alt is required, Ctrl, Cmd and Shift are not allowed", () => {
+		expect(key({ altKey: false })).toBeNull();
+		expect(key({ ctrlKey: true })).toBeNull();
+		expect(key({ metaKey: true })).toBeNull();
+		expect(key({ shiftKey: true })).toBeNull();
+		expect(key({ key: "4", code: "Digit4" })).toBeNull();
 	});
 });
 
-describe("the table of SDD-012 sections 18.2 and 18.9", () => {
+describe("editShortcut", () => {
+	const edit = (
+		name: string,
+		mods: Partial<
+			Record<"ctrlKey" | "metaKey" | "altKey" | "shiftKey", boolean>
+		> = {},
+	) =>
+		editShortcut({
+			key: name,
+			ctrlKey: false,
+			metaKey: false,
+			altKey: false,
+			shiftKey: false,
+			...mods,
+		});
+
+	test("the keys of the delete, duplicate and rename gestures", () => {
+		expect(edit("Delete")).toBe("delete");
+		expect(edit("Backspace")).toBe("delete");
+		expect(edit("Delete", { shiftKey: true })).toBe("ripple_delete");
+		expect(edit("d", { ctrlKey: true })).toBe("duplicate");
+		expect(edit("D", { metaKey: true })).toBe("duplicate");
+		expect(edit("F2")).toBe("rename");
+		expect(edit("v")).toBe("toggle_enabled");
+		expect(edit("~", { shiftKey: true })).toBe("toggle_link");
+		expect(edit("S", { ctrlKey: true, shiftKey: true })).toBe("extract_audio");
+		expect(edit("s", { metaKey: true, shiftKey: true })).toBe("extract_audio");
+		expect(edit("C", { ctrlKey: true, shiftKey: true })).toBe(
+			"copy_attributes",
+		);
+		expect(edit("v", { metaKey: true, shiftKey: true })).toBe(
+			"paste_attributes",
+		);
+		expect(edit("c", { ctrlKey: true })).toBeNull();
+		expect(edit("p")).toBe("toggle_magnet");
+		expect(edit("P")).toBe("toggle_magnet");
+		expect(edit("p", { shiftKey: true })).toBeNull();
+		expect(edit("p", { ctrlKey: true })).toBeNull();
+		expect(edit("s", { ctrlKey: true })).toBeNull();
+		expect(edit("V", { shiftKey: true })).toBeNull();
+		expect(edit("v", { ctrlKey: true })).toBeNull();
+		expect(edit("d")).toBeNull();
+		expect(edit("Delete", { altKey: true })).toBeNull();
+	});
+});
+
+describe("the table of SDD-012 section 18.2", () => {
 	const body =
 		/export interface Actions \{([\s\S]*?)\n\}/.exec(actionsSource)?.[1] ?? "";
 	const methods = new Set(
@@ -93,90 +104,17 @@ describe("the table of SDD-012 sections 18.2 and 18.9", () => {
 			const known =
 				methods.has(row.action) ||
 				(UI_SHORTCUT_ACTIONS as readonly string[]).includes(row.action);
-			expect(known, `${row.id} ${row.keys} -> ${row.action}`).toBe(true);
+			expect(known, `${row.keys} -> ${row.action}`).toBe(true);
 		}
 	});
 
-	test("row ids are unique and every rebindable row is a row of the table", () => {
-		const ids = SHORTCUTS.map((row) => row.id);
-		expect(new Set(ids).size).toBe(ids.length);
-		for (const id of BINDING_IDS) expect(ids).toContain(id);
-		expect(BINDING_IDS.length).toBe(
-			SHORTCUTS.filter((row) => row.fixed !== true).length,
-		);
-	});
-
-	test("every row that is not fixed has keys in both presets", () => {
-		for (const row of SHORTCUTS) {
-			if (row.fixed === true) continue;
-			for (const preset of PRESET_IDS) {
-				const keys = presetKeys(row, preset);
-				expect(keys.length, `${row.id} in ${preset}`).toBeGreaterThan(0);
-				for (const key of keys) expect(key, row.id).not.toBe("");
-			}
-		}
-	});
-
-	// Every key a row answers to in a preset, aliases included.
-	const held = (preset: PresetId) =>
-		SHORTCUTS.filter((row) => row.fixed !== true).flatMap((row) =>
-			[...presetKeys(row, preset), ...(row.aliases?.split(", ") ?? [])].map(
-				(key) => ({ id: row.id, scope: row.scope, key }),
-			),
-		);
-
-	test.each(PRESET_IDS)(
-		"no key is held by two rows of overlapping scopes in the %s preset",
-		(preset) => {
-			const seen: { id: string; scope: Scope; key: string }[] = [];
-			for (const entry of held(preset)) {
-				for (const other of seen) {
-					if (other.key !== entry.key || other.id === entry.id) continue;
-					expect(
-						scopesOverlap(entry.scope, other.scope),
-						`${entry.key}: ${entry.id} and ${other.id} in ${preset}`,
-					).toBe(false);
-				}
-				seen.push(entry);
-			}
-		},
-	);
-
-	test.each(PRESET_IDS)(
-		"no default key of the %s preset is reserved",
-		(preset) => {
-			for (const { id, key } of held(preset)) {
-				expect(RESERVED_KEYS, `${id}: ${key}`).not.toContain(key);
-			}
-		},
-	);
-
-	test("the classic preset differs from the short one only where the table says", () => {
-		const different = SHORTCUTS.filter((row) => row.classic !== undefined).map(
-			(row) => row.id,
-		);
-		expect(different.sort()).toEqual(
-			[
-				"add_caption",
-				"add_text",
-				"split",
-				"split_all",
-				"tool_blade",
-				"tool_select",
-				"toggle_enabled",
-				"zoom_fit",
-			].sort(),
-		);
-	});
-
-	test("the keys the sections list are all in the table", () => {
-		const keys = held("short")
-			.map((entry) => entry.key)
-			.join(" | ");
+	test("the keys the section lists are all in the table", () => {
+		const keys = SHORTCUTS.map((row) => row.keys).join(" | ");
 		for (const key of [
 			"Space",
+			"S",
 			"Mod+Z",
-			"Mod+Y",
+			"Ctrl+Y",
 			"Mod+D",
 			"C",
 			"T",
@@ -186,12 +124,123 @@ describe("the table of SDD-012 sections 18.2 and 18.9", () => {
 			"Mod+K",
 			"Alt+1",
 			"Mod+A",
+			"Esc",
 			"F6",
-			"?",
-			"Alt+,",
-			"Alt+.",
 		]) {
 			expect(keys, key).toContain(key);
 		}
+	});
+});
+
+describe("the CapCut-compatible map of SDD-012 section 18.7", () => {
+	// Every key a row names, with the aliases, so a key held by two rows shows.
+	const held = SHORTCUTS.flatMap((row) =>
+		[...row.keys.split(", "), ...(row.aliases?.split(", ") ?? [])]
+			.filter((key) => !key.startsWith("Timeline"))
+			.map((key) => ({ id: row.id, key })),
+	);
+
+	test("no key is held by two rows", () => {
+		const seen = new Map<string, string>();
+		for (const { id, key } of held) {
+			expect(
+				seen.get(key),
+				`${key}: ${id} and ${seen.get(key)}`,
+			).toBeUndefined();
+			seen.set(key, id);
+		}
+	});
+
+	test("the rebindable rows are rows of the table with a default key", () => {
+		for (const id of BINDING_IDS) {
+			const row = SHORTCUTS.find((candidate) => candidate.id === id);
+			expect(row, id).toBeDefined();
+			expect(row?.keys, id).not.toBe("");
+		}
+	});
+
+	test("the keys the browser reserves are not bound on the web", () => {
+		const reserved = ["Mod+N", "Mod+T", "Mod+W", "Mod+Shift+N", "Mod+Shift+T"];
+		const reservedMore = ["Mod+Q", "Mod+Tab", "Mod+R", "Mod+Shift+F", "Mod+O"];
+		for (const { key } of held) {
+			expect(reserved, key).not.toContain(key);
+			expect(reservedMore, key).not.toContain(key);
+		}
+	});
+
+	test("old keys of the first map do not stay on a row", () => {
+		const keys = held.map((entry) => entry.key);
+		expect(keys).not.toContain("S");
+		expect(keys).not.toContain("[ ");
+		expect(fixedRowFor("Mod+Shift+B")).toBe("split_all");
+		expect(fixedRowFor("[")).toBe("select_side");
+		expect(fixedRowFor("]")).toBe("select_side");
+		expect(fixedRowFor("Mod+C")).toBe("copy");
+	});
+
+	test("the marker, speed curve and scroll keys are rows of the table", () => {
+		expect(fixedRowFor("Shift+M")).toBe("next_marker");
+		expect(fixedRowFor("Alt+Shift+M")).toBe("next_marker");
+		expect(fixedRowFor("Shift+B")).toBe("speed_curve");
+		expect(fixedRowFor("Alt+Wheel")).toBe("scroll");
+	});
+});
+
+describe("selectAll and landmark keys", () => {
+	const base = {
+		ctrlKey: false,
+		metaKey: false,
+		altKey: false,
+		shiftKey: false,
+	};
+
+	test("Mod+A selects, A and Mod+Shift+A do not", () => {
+		expect(isSelectAllShortcut({ ...base, key: "a", ctrlKey: true })).toBe(
+			true,
+		);
+		expect(isSelectAllShortcut({ ...base, key: "A", metaKey: true })).toBe(
+			true,
+		);
+		expect(isSelectAllShortcut({ ...base, key: "a" })).toBe(false);
+		expect(
+			isSelectAllShortcut({ ...base, key: "a", ctrlKey: true, shiftKey: true }),
+		).toBe(false);
+	});
+
+	test("F6 goes forward, Shift+F6 back, with Ctrl or Alt it is the browser's", () => {
+		expect(landmarkShortcut({ ...base, key: "F6" })).toBe(1);
+		expect(landmarkShortcut({ ...base, key: "F6", shiftKey: true })).toBe(-1);
+		expect(landmarkShortcut({ ...base, key: "F6", ctrlKey: true })).toBeNull();
+		expect(landmarkShortcut({ ...base, key: "F6", altKey: true })).toBeNull();
+		expect(landmarkShortcut({ ...base, key: "F5" })).toBeNull();
+	});
+});
+
+describe("labelWithKey", () => {
+	test("adds the first key of the row, Mod by platform", () => {
+		expect(labelWithKey("Split", "split", DEFAULT_BINDINGS, false)).toBe(
+			"Split (Ctrl+B)",
+		);
+		expect(labelWithKey("Split", "split", DEFAULT_BINDINGS, true)).toBe(
+			"Split (Cmd+B)",
+		);
+		expect(labelWithKey("Delete", "delete", DEFAULT_BINDINGS, false)).toBe(
+			"Delete (Delete)",
+		);
+	});
+
+	test("follows a rebound key", () => {
+		expect(
+			labelWithKey(
+				"Split",
+				"split",
+				{ ...DEFAULT_BINDINGS, split: "S" },
+				false,
+			),
+		).toBe("Split (S)");
+	});
+
+	test("leaves the label alone for an unknown row", () => {
+		expect(labelWithKey("Fit", "nope", DEFAULT_BINDINGS, false)).toBe("Fit");
 	});
 });

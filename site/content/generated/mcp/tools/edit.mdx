@@ -1,6 +1,6 @@
 ---
 title: "edit"
-description: "Edit project. Change a project (project_id) or image (domain=image, image_id)."
+description: "Edit project. Change a project."
 wide: true
 ---
 
@@ -10,7 +10,7 @@ wide: true
 
 <RefMain>
 
-Change a project (project_id) or image (domain=image, image_id). Atomic batch, one undo step. base_revision: last revision read. Times need a unit. Operation names, args: command_help. dry_run: check only. idempotency_key: safe retries.
+Change a project. Atomic batch, one undo step. base_revision: last revision read. Times need a unit. See command_help. dry_run: check only. idempotency_key: safe retries.
 
 ## Behaviour
 
@@ -27,13 +27,10 @@ These are the annotations of the tool definition, the hints a client uses to dec
 
 | Argument | Type | Required | Notes |
 | --- | --- | --- | --- |
-| `domain` | `video`, `image` | no | default `"video"` |
-| `project_id` | `string` | no | pattern `^prj_[0-9a-hjkmnp-tv-z]{10}$` |
-| `timeline_id` | `string` | no | pattern `^prj_[0-9a-hjkmnp-tv-z]{10}$` |
-| `image_id` | `string` | no | pattern `^img_[0-9a-hjkmnp-tv-z]{10}$` |
+| `project_id` | `string` | yes | pattern `^prj_[0-9a-hjkmnp-tv-z]{10}$` |
 | `base_revision` | `integer` | yes | min 0 |
 | `operations` | array of `object` | yes | at least 1 items; at most 200 items |
-| `operations[].op` | `string` | yes |  |
+| `operations[].op` | `string`, one of 73 values | yes |  |
 | `operations[].args` | `object` | yes |  |
 | `idempotency_key` | `string` | no | pattern `^[A-Za-z0-9._~-]{8,64}$` |
 | `dry_run` | `boolean` | no | default `false` |
@@ -57,90 +54,81 @@ A result has a text block, written for the model, and structured content with th
 
 Each member of `operations` is `{ op, args }`. Every operation has its own page with its arguments, an example and its errors.
 
-| Operation | Summary | Scope |
-| --- | --- | --- |
-| [`animation.apply_preset`](/docs/mcp/tools/edit/animation.apply_preset) | Animates the start or end of a visual item with a preset: fade, slide, scale, pop, push in or pull out. | `edit` |
-| [`animation.list_presets`](/docs/mcp/tools/edit/animation.list_presets) | Describes the animation presets and the named Bezier curves. | `edit` |
-| [`asset.remove`](/docs/mcp/tools/edit/asset.remove) | Removes an asset that no item uses. | `media` |
-| [`audio.add`](/docs/mcp/tools/edit/audio.add) | Places an audio asset, or the audio of a video asset, on an audio track. | `edit` |
-| [`audio.apply_preset`](/docs/mcp/tools/edit/audio.apply_preset) | Preset | `edit` |
-| [`audio.duck`](/docs/mcp/tools/edit/audio.duck) | Lowers a music item while speech sounds, with a ramp down before and a ramp up after. | `edit` |
-| [`audio.mark_beats`](/docs/mcp/tools/edit/audio.mark_beats) | Writes markers on a music item at the beats of its audio. | `edit` |
-| [`audio.processor_add`](/docs/mcp/tools/edit/audio.processor_add) | Add | `edit` |
-| [`audio.processor_move`](/docs/mcp/tools/edit/audio.processor_move) | Move | `edit` |
-| [`audio.processor_remove`](/docs/mcp/tools/edit/audio.processor_remove) | Remove | `edit` |
-| [`audio.processor_set`](/docs/mcp/tools/edit/audio.processor_set) | Set | `edit` |
-| [`caption.add`](/docs/mcp/tools/edit/caption.add) | Adds a caption item with timed words. | `edit` |
-| [`caption.edit_word`](/docs/mcp/tools/edit/caption.edit_word) | Changes the text of one word of a caption, or removes the word. | `edit` |
-| [`caption.from_transcript`](/docs/mcp/tools/edit/caption.from_transcript) | Creates captions for the speech of a clip from its transcript. | `edit` |
-| [`caption.import_subtitles`](/docs/mcp/tools/edit/caption.import_subtitles) | Creates one caption per cue of an SRT or WebVTT text. | `edit` |
-| [`caption.merge`](/docs/mcp/tools/edit/caption.merge) | Joins two captions of one track into one that spans both. | `edit` |
-| [`caption.retime_from_clip`](/docs/mcp/tools/edit/caption.retime_from_clip) | Retimes the captions linked to a clip after the clip was moved, trimmed or sped up. | `edit` |
-| [`caption.set_breaks`](/docs/mcp/tools/edit/caption.set_breaks) | Sets the forced line breaks of a caption. | `edit` |
-| [`caption.set_style`](/docs/mcp/tools/edit/caption.set_style) | Sets, changes or clears the style override of one caption. | `edit` |
-| [`caption.set_words`](/docs/mcp/tools/edit/caption.set_words) | Replaces the words of a caption. | `edit` |
-| [`caption.split`](/docs/mcp/tools/edit/caption.split) | Splits a caption into two at a word boundary. | `edit` |
-| [`clip.add`](/docs/mcp/tools/edit/clip.add) | Places a video or image asset on a visual track. | `edit` |
-| [`clip.remove_silences`](/docs/mcp/tools/edit/clip.remove_silences) | Cuts the silences out of a clip or audio item, one item per stretch of speech. | `edit` |
-| [`clip.replace_media`](/docs/mcp/tools/edit/clip.replace_media) | Swaps the asset of a clip for another of the same kind and keeps everything else. | `edit` |
-| [`clip.set_blend`](/docs/mcp/tools/edit/clip.set_blend) | Sets how a visual item is mixed with what is below it. | `edit` |
-| [`clip.set_blur`](/docs/mcp/tools/edit/clip.set_blur) | Sets the blur radius of a visual item. | `edit` |
-| [`clip.set_chroma_key`](/docs/mcp/tools/edit/clip.set_chroma_key) | Keys out one colour of a clip, such as a green screen. | `edit` |
-| [`clip.set_color`](/docs/mcp/tools/edit/clip.set_color) | Sets brightness, contrast, saturation, temperature, tint, hue, LUT, HSL bands, wheels and curves of a clip. | `edit` |
-| [`clip.set_effects`](/docs/mcp/tools/edit/clip.set_effects) | Sets the effects of a clip: motion blur, glow, vignette, grain, RGB split and shake. | `edit` |
-| [`clip.set_filter`](/docs/mcp/tools/edit/clip.set_filter) | Sets the colour filter of a visual item and how much of it is mixed in. | `edit` |
-| [`clip.set_flip`](/docs/mcp/tools/edit/clip.set_flip) | Mirrors a visual item horizontally, vertically or both. | `edit` |
-| [`clip.set_framing`](/docs/mcp/tools/edit/clip.set_framing) | Sets how a clip fits the frame and how much of each side is cropped. | `edit` |
-| [`clip.set_mask`](/docs/mcp/tools/edit/clip.set_mask) | Limits where a visual item is drawn to a rectangle or an ellipse. | `edit` |
-| [`clip.set_outline`](/docs/mcp/tools/edit/clip.set_outline) | Gives a clip an outline that follows its visible shape. | `edit` |
-| [`clip.set_shadow`](/docs/mcp/tools/edit/clip.set_shadow) | Gives a clip a drop shadow that follows its visible shape. | `edit` |
-| [`clip.set_speed`](/docs/mcp/tools/edit/clip.set_speed) | Changes the speed of a clip or audio item, constant or along a curve, or plays it backwards. | `edit` |
-| [`font.add`](/docs/mcp/tools/edit/font.add) | Adds a user font family to the project, or more weights to one it already has. | `media` |
-| [`font.remove`](/docs/mcp/tools/edit/font.remove) | Removes a user font family from the project. | `media` |
-| [`item.crossfade`](/docs/mcp/tools/edit/item.crossfade) | Sets a matching fade-out and fade-in on two overlapping visual items of different tracks. | `edit` |
-| [`item.delete`](/docs/mcp/tools/edit/item.delete) | Removes items, and optionally closes the freed space. | `edit` |
-| [`item.duplicate`](/docs/mcp/tools/edit/item.duplicate) | Copies an item to another position, optionally on another track. | `edit` |
-| [`item.extract_audio`](/docs/mcp/tools/edit/item.extract_audio) | Creates an audio item from the audio of a video clip, linked to it, and mutes the clip. | `edit` |
-| [`item.freeze_frame`](/docs/mcp/tools/edit/item.freeze_frame) | Holds one frame of a clip: splits the clip at a frame and inserts a still of that frame. | `edit` |
-| [`item.link`](/docs/mcp/tools/edit/item.link) | Links items so that they move, trim and split together. | `edit` |
-| [`item.move`](/docs/mcp/tools/edit/item.move) | Moves an item in time, to another track of the same kind, or both. | `edit` |
-| [`item.paste_attributes`](/docs/mcp/tools/edit/item.paste_attributes) | Copies the look of one item to other items. | `edit` |
-| [`item.rename`](/docs/mcp/tools/edit/item.rename) | Sets the label of an item. | `edit` |
-| [`item.repeat`](/docs/mcp/tools/edit/item.repeat) | Repeats an item back to back, a number of times or until a time, such as a looping background. | `edit` |
-| [`item.set_audio`](/docs/mcp/tools/edit/item.set_audio) | Sets the volume, fades, mute, noise reduction or voice of a clip or audio item. | `edit` |
-| [`item.set_enabled`](/docs/mcp/tools/edit/item.set_enabled) | Turns an item off or on without removing it from the timeline. | `edit` |
-| [`item.set_transform`](/docs/mcp/tools/edit/item.set_transform) | Sets the position, scale, rotation or opacity of a visual item. | `edit` |
-| [`item.set_transition`](/docs/mcp/tools/edit/item.set_transition) | Sets or removes the transition on one edge of a visual item. | `edit` |
-| [`item.slip`](/docs/mcp/tools/edit/item.slip) | Shows another part of the source in a clip or audio item without moving or resizing it. | `edit` |
-| [`item.split`](/docs/mcp/tools/edit/item.split) | Splits an item into two at a timeline frame. | `edit` |
-| [`item.trim`](/docs/mcp/tools/edit/item.trim) | Moves the start edge or the end edge of an item to a timeline position. | `edit` |
-| [`item.unlink`](/docs/mcp/tools/edit/item.unlink) | Removes items from their link group. | `edit` |
-| [`keyframe.clear`](/docs/mcp/tools/edit/keyframe.clear) | Removes all keyframes of one property, or of every property. | `edit` |
-| [`keyframe.remove`](/docs/mcp/tools/edit/keyframe.remove) | Removes the keyframe of a property at a frame. | `edit` |
-| [`keyframe.set`](/docs/mcp/tools/edit/keyframe.set) | Adds or replaces a keyframe of one animated property of an item. | `edit` |
-| [`keyframe.set_easing`](/docs/mcp/tools/edit/keyframe.set_easing) | Changes the easing of the segment that starts at a keyframe. | `edit` |
-| [`marker.add`](/docs/mcp/tools/edit/marker.add) | Puts a marker on the timeline, or on one item. | `edit` |
-| [`marker.remove`](/docs/mcp/tools/edit/marker.remove) | Removes a marker of the timeline or of an item. | `edit` |
-| [`marker.set`](/docs/mcp/tools/edit/marker.set) | Moves or relabels a marker of the timeline or of an item. | `edit` |
-| [`project.rename`](/docs/mcp/tools/edit/project.rename) | Sets the project name. | `edit` |
-| [`settings.reframe`](/docs/mcp/tools/edit/settings.reframe) | Re-targets the project to another aspect ratio and refits the items to the new frame. | `edit` |
-| [`settings.set`](/docs/mcp/tools/edit/settings.set) | Sets the frame size, the background colour or the loudness target. | `edit` |
-| [`settings.set_fps`](/docs/mcp/tools/edit/settings.set_fps) | Changes the project frame rate and rescales every time quantity. | `edit` |
-| [`shape.add`](/docs/mcp/tools/edit/shape.add) | Adds a rectangle, rounded rectangle or ellipse to a visual track. | `edit` |
-| [`shape.set`](/docs/mcp/tools/edit/shape.set) | Changes the shape, size, colours, stroke or radius of a shape item. | `edit` |
-| [`slot.fill`](/docs/mcp/tools/edit/slot.fill) | Fills a template slot with media, text or caption words. | `edit` |
-| [`slot.mark`](/docs/mcp/tools/edit/slot.mark) | Marks an item as a template slot. | `edit` |
-| [`slot.unmark`](/docs/mcp/tools/edit/slot.unmark) | Removes the slot marking of an item. | `edit` |
-| [`template.set_info`](/docs/mcp/tools/edit/template.set_info) | Sets the description and the named colours of the template. | `edit` |
-| [`text.add`](/docs/mcp/tools/edit/text.add) | Adds a text item to a visual track. | `edit` |
-| [`text.apply_preset`](/docs/mcp/tools/edit/text.apply_preset) | Animates one edge of a visual item with a named preset. | `edit` |
-| [`text.set`](/docs/mcp/tools/edit/text.set) | Changes the content or the style of a text item. | `edit` |
-| [`timeline.close_gap`](/docs/mcp/tools/edit/timeline.close_gap) | Closes the empty range that contains a given frame on a track. | `edit` |
-| [`track.add`](/docs/mcp/tools/edit/track.add) | Adds an empty track at a place in the track order. | `edit` |
-| [`track.move`](/docs/mcp/tools/edit/track.move) | Changes the place of a track in the track order. | `edit` |
-| [`track.remove`](/docs/mcp/tools/edit/track.remove) | Removes a track, and its items when with_items is true. | `edit` |
-| [`track.set_caption_style`](/docs/mcp/tools/edit/track.set_caption_style) | Merges a partial caption style into a track, or replaces it. | `edit` |
-| [`track.update`](/docs/mcp/tools/edit/track.update) | Sets the name, hidden, muted, locked, solo or magnet flag or the volume of a track. | `edit` |
+| Operation | Summary | Scope | Phase |
+| --- | --- | --- | --- |
+| [`asset.remove`](/docs/mcp/tools/edit/asset.remove) | Removes an asset that no item uses. | `media` | alpha |
+| [`audio.add`](/docs/mcp/tools/edit/audio.add) | Places an audio asset, or the audio of a video asset, on an audio track. | `edit` | alpha |
+| [`audio.duck`](/docs/mcp/tools/edit/audio.duck) | Lowers a music item while speech sounds, with a ramp down before and a ramp up after. | `edit` | beta |
+| [`audio.mark_beats`](/docs/mcp/tools/edit/audio.mark_beats) | Writes markers on a music item at the beats of its audio. | `edit` | beta |
+| [`caption.add`](/docs/mcp/tools/edit/caption.add) | Adds a caption item with timed words. | `edit` | prototype |
+| [`caption.edit_word`](/docs/mcp/tools/edit/caption.edit_word) | Changes the text of one word of a caption, or removes the word. | `edit` | alpha |
+| [`caption.from_transcript`](/docs/mcp/tools/edit/caption.from_transcript) | Creates captions for the speech of a clip from its transcript. | `edit` | alpha |
+| [`caption.import_subtitles`](/docs/mcp/tools/edit/caption.import_subtitles) | Creates one caption per cue of an SRT or WebVTT text. | `edit` | beta |
+| [`caption.merge`](/docs/mcp/tools/edit/caption.merge) | Joins two captions of one track into one that spans both. | `edit` | alpha |
+| [`caption.retime_from_clip`](/docs/mcp/tools/edit/caption.retime_from_clip) | Retimes the captions linked to a clip after the clip was moved, trimmed or sped up. | `edit` | alpha |
+| [`caption.set_breaks`](/docs/mcp/tools/edit/caption.set_breaks) | Sets the forced line breaks of a caption. | `edit` | alpha |
+| [`caption.set_style`](/docs/mcp/tools/edit/caption.set_style) | Sets, changes or clears the style override of one caption. | `edit` | alpha |
+| [`caption.set_words`](/docs/mcp/tools/edit/caption.set_words) | Replaces the words of a caption. | `edit` | alpha |
+| [`caption.split`](/docs/mcp/tools/edit/caption.split) | Splits a caption into two at a word boundary. | `edit` | alpha |
+| [`clip.add`](/docs/mcp/tools/edit/clip.add) | Places a video or image asset on a visual track. | `edit` | prototype |
+| [`clip.remove_silences`](/docs/mcp/tools/edit/clip.remove_silences) | Cuts the silent stretches out of a clip or an audio item, leaving one item per stretch of speech. | `edit` | alpha |
+| [`clip.set_blend`](/docs/mcp/tools/edit/clip.set_blend) | Sets how a visual item is mixed with what is below it. | `edit` | beta |
+| [`clip.set_blur`](/docs/mcp/tools/edit/clip.set_blur) | Sets the blur radius of a visual item. | `edit` | beta |
+| [`clip.set_chroma_key`](/docs/mcp/tools/edit/clip.set_chroma_key) | Keys out one colour of a clip, such as a green screen. | `edit` | beta |
+| [`clip.set_color`](/docs/mcp/tools/edit/clip.set_color) | Sets the brightness, contrast, saturation, temperature, tint, hue, lookup table, HSL bands, wheels and curves of a clip. | `edit` | alpha |
+| [`clip.set_effects`](/docs/mcp/tools/edit/clip.set_effects) | Sets the visual effects of a clip: motion blur, glow, vignette, grain, RGB split and shake. | `edit` | beta |
+| [`clip.set_filter`](/docs/mcp/tools/edit/clip.set_filter) | Sets the colour filter of a visual item and how much of it is mixed in. | `edit` | beta |
+| [`clip.set_flip`](/docs/mcp/tools/edit/clip.set_flip) | Mirrors a visual item horizontally, vertically or both. | `edit` | beta |
+| [`clip.set_framing`](/docs/mcp/tools/edit/clip.set_framing) | Sets how the asset of a clip is fitted into the frame and how much of each side is cropped. | `edit` | alpha |
+| [`clip.set_mask`](/docs/mcp/tools/edit/clip.set_mask) | Limits where a visual item is drawn to a rectangle or an ellipse. | `edit` | beta |
+| [`clip.set_outline`](/docs/mcp/tools/edit/clip.set_outline) | Gives a clip an outline that follows its visible shape. | `edit` | beta |
+| [`clip.set_shadow`](/docs/mcp/tools/edit/clip.set_shadow) | Gives a clip a drop shadow that follows its visible shape. | `edit` | beta |
+| [`clip.set_speed`](/docs/mcp/tools/edit/clip.set_speed) | Changes the speed of a clip or audio item, constant or along a curve, or plays it backwards. | `edit` | alpha |
+| [`font.add`](/docs/mcp/tools/edit/font.add) | Adds a user font family to the project, or more weights to one it already has. | `media` | beta |
+| [`font.remove`](/docs/mcp/tools/edit/font.remove) | Removes a user font family from the project. | `media` | beta |
+| [`item.crossfade`](/docs/mcp/tools/edit/item.crossfade) | Sets a matching fade-out and fade-in on two overlapping visual items of different tracks. | `edit` | alpha |
+| [`item.delete`](/docs/mcp/tools/edit/item.delete) | Removes items, and optionally closes the freed space. | `edit` | prototype |
+| [`item.duplicate`](/docs/mcp/tools/edit/item.duplicate) | Copies an item to another position, optionally on another track. | `edit` | alpha |
+| [`item.extract_audio`](/docs/mcp/tools/edit/item.extract_audio) | Creates an audio item from the audio of a video clip, linked to it, and mutes the clip. | `edit` | beta |
+| [`item.freeze_frame`](/docs/mcp/tools/edit/item.freeze_frame) | Holds one frame of a clip: splits the clip at a frame and inserts a still of that frame. | `edit` | beta |
+| [`item.link`](/docs/mcp/tools/edit/item.link) | Links items so that they move, trim and split together. | `edit` | beta |
+| [`item.move`](/docs/mcp/tools/edit/item.move) | Moves an item in time, to another track of the same kind, or both. | `edit` | prototype |
+| [`item.paste_attributes`](/docs/mcp/tools/edit/item.paste_attributes) | Copies the look of one item to other items. | `edit` | beta |
+| [`item.rename`](/docs/mcp/tools/edit/item.rename) | Sets the label of an item. | `edit` | alpha |
+| [`item.repeat`](/docs/mcp/tools/edit/item.repeat) | Repeats an item back to back, a number of times or until a time, such as a looping background. | `edit` | beta |
+| [`item.set_audio`](/docs/mcp/tools/edit/item.set_audio) | Sets the volume, the fades, the mute flag, the noise reduction or the voice of a clip or audio item. | `edit` | alpha |
+| [`item.set_enabled`](/docs/mcp/tools/edit/item.set_enabled) | Turns an item off or on without removing it from the timeline. | `edit` | beta |
+| [`item.set_transform`](/docs/mcp/tools/edit/item.set_transform) | Sets the position, scale, rotation or opacity of a visual item. | `edit` | alpha |
+| [`item.set_transition`](/docs/mcp/tools/edit/item.set_transition) | Sets or removes the transition on one edge of a visual item. | `edit` | alpha |
+| [`item.slip`](/docs/mcp/tools/edit/item.slip) | Shows another part of the source in a clip or audio item without moving or resizing it. | `edit` | beta |
+| [`item.split`](/docs/mcp/tools/edit/item.split) | Splits an item into two at a timeline frame. | `edit` | prototype |
+| [`item.trim`](/docs/mcp/tools/edit/item.trim) | Moves the start edge or the end edge of an item to a timeline position. | `edit` | prototype |
+| [`item.unlink`](/docs/mcp/tools/edit/item.unlink) | Removes items from their link group. | `edit` | beta |
+| [`keyframe.clear`](/docs/mcp/tools/edit/keyframe.clear) | Removes all keyframes of one property, or of every property. | `edit` | alpha |
+| [`keyframe.remove`](/docs/mcp/tools/edit/keyframe.remove) | Removes the keyframe of a property at a frame. | `edit` | alpha |
+| [`keyframe.set`](/docs/mcp/tools/edit/keyframe.set) | Adds or replaces a keyframe of one animated property of an item. | `edit` | alpha |
+| [`marker.add`](/docs/mcp/tools/edit/marker.add) | Puts a marker on the timeline, or on one item. | `edit` | beta |
+| [`marker.remove`](/docs/mcp/tools/edit/marker.remove) | Removes a marker of the timeline or of an item. | `edit` | beta |
+| [`marker.set`](/docs/mcp/tools/edit/marker.set) | Moves or relabels a marker of the timeline or of an item. | `edit` | beta |
+| [`project.rename`](/docs/mcp/tools/edit/project.rename) | Sets the project name. | `edit` | prototype |
+| [`settings.reframe`](/docs/mcp/tools/edit/settings.reframe) | Re-targets the project to another aspect ratio and refits the items to the new frame. | `edit` | beta |
+| [`settings.set`](/docs/mcp/tools/edit/settings.set) | Sets the frame size, the background colour or the loudness target. | `edit` | prototype |
+| [`settings.set_fps`](/docs/mcp/tools/edit/settings.set_fps) | Changes the project frame rate and rescales every time quantity. | `edit` | alpha |
+| [`shape.add`](/docs/mcp/tools/edit/shape.add) | Adds a rectangle, rounded rectangle or ellipse to a visual track. | `edit` | alpha |
+| [`shape.set`](/docs/mcp/tools/edit/shape.set) | Changes the shape, size, colours, stroke or radius of a shape item. | `edit` | alpha |
+| [`slot.fill`](/docs/mcp/tools/edit/slot.fill) | Fills a template slot with media, text or caption words. | `edit` | alpha |
+| [`slot.mark`](/docs/mcp/tools/edit/slot.mark) | Marks an item as a template slot. | `edit` | alpha |
+| [`slot.unmark`](/docs/mcp/tools/edit/slot.unmark) | Removes the slot marking of an item. | `edit` | alpha |
+| [`template.set_info`](/docs/mcp/tools/edit/template.set_info) | Sets the description and the named colours of the template. | `edit` | alpha |
+| [`text.add`](/docs/mcp/tools/edit/text.add) | Adds a text item to a visual track. | `edit` | prototype |
+| [`text.apply_preset`](/docs/mcp/tools/edit/text.apply_preset) | Animates one edge of a visual item with a named preset. | `edit` | alpha |
+| [`text.set`](/docs/mcp/tools/edit/text.set) | Changes the content or the style of a text item. | `edit` | prototype |
+| [`timeline.close_gap`](/docs/mcp/tools/edit/timeline.close_gap) | Closes the empty range that contains a given frame on a track. | `edit` | alpha |
+| [`track.add`](/docs/mcp/tools/edit/track.add) | Adds an empty track at a place in the track order. | `edit` | prototype |
+| [`track.move`](/docs/mcp/tools/edit/track.move) | Changes the place of a track in the track order. | `edit` | prototype |
+| [`track.remove`](/docs/mcp/tools/edit/track.remove) | Removes a track, and its items when with_items is true. | `edit` | prototype |
+| [`track.set_caption_style`](/docs/mcp/tools/edit/track.set_caption_style) | Merges a partial caption style into a track, or replaces it. | `edit` | prototype |
+| [`track.update`](/docs/mcp/tools/edit/track.update) | Sets the name, hidden, muted, locked, solo or magnet flag or the volume of a track. | `edit` | prototype |
 
 ## Errors
 

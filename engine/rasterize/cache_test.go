@@ -4,7 +4,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/core/plan"
+	"github.com/AlexGalhardo/vukem-video/core/plan"
 )
 
 func TestCacheHitSharesPixels(t *testing.T) {

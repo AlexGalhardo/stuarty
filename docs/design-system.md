@@ -1,7 +1,7 @@
 # Stuarty design system
 
 - Status: Accepted (2026-11-14). Written by the designer, to be reviewed by the architect and by senior-e (editor UI).
-- Applies to: the web UI under `web/resources/` (the Inertia pages and the editor), the desktop shell (`desktop/`, ADR-0023), and, where section 8.4 says so, the documentation site (`site/`, SDD-010).
+- Applies to: the web UI under `web/resources/` (the Inertia pages and the editor), the desktop shell of BETA (`desktop/`, ADR-0023), and, where section 8.4 says so, the documentation site (`site/`, SDD-010).
 - Sources of truth, which this document follows and never overrides: author decisions D-008, D-013, D-016, D-022, D-023, D-024, D-028, D-029; [SDD-012](sdds/012-ui-architecture.md) (editor UI architecture: §1 thin client, §3 kept front end, §6 layout, §7 timeline, §11 preview, §12 inspector, §16 i18n, §17 theme, §18 accessibility, §21 desktop); [SDD-002](sdds/002-command-catalogue.md) A.4 (time strings) and A.8 (the error envelope); [SDD-003](sdds/003-agent-interfaces.md) §1.4; [SDD-010](sdds/010-documentation-site.md) §1 and §10 (site shell, glossary); [ADR-0007](adrs/0007-thin-ui-client.md), [ADR-0012](adrs/0012-text-and-shape-rasterization.md), [ADR-0013](adrs/0013-browser-preview-stack.md), [ADR-0023](adrs/0023-desktop-shell-deferred.md); [PRD-001](prds/001-video-editor.md) §3 (use cases), RF-070 to RF-075.
 - Code it describes: `web/resources/css/app.css` (the only token file), `web/components.json` (kept style record: base colour `neutral`, icon library `lucide`), `web/resources/js/components/ui/*` (`@base-ui/react`), `web/resources/js/layouts/AppLayout.tsx`, and the editor tree of SDD-012 §3.2.
 
@@ -28,7 +28,7 @@ Every rule below has a reason in a decision of the author or an ADR. When two pr
 | --- | --- | --- | --- |
 | P1 | The UI never computes an edit | Components draw what the core returns and send commands. A component shows a ghost while a request is pending, never the predicted result. No visual state may imply that an edit succeeded before the core answered (no optimistic "done" check marks, no item moved in the read model) | ADR-0007, SDD-012 §1 rules T1 to T10 |
 | P2 | Content first | The picture and the timeline are the largest and most saturated things on screen. Chrome is neutral grey; colour in chrome is reserved for state (focus, selection, error, warning, success, agent activity). The preview surround is a neutral dark grey in both themes | D-024, SDD-012 §17 item 4 |
-| P3 | Minimalist editor | One way to reach each command plus the palette; no decorative illustration, gradients, glass effects or interface animation beyond the two kinds of section 2.13. Fewer, larger regions beat many small panels | D-013, SDD-012 §17 item 5 |
+| P3 | Minimalist editor | One way to reach each command plus the palette; no decorative illustration, gradients, glass effects or interface animation until BETA polish. Fewer, larger regions beat many small panels | D-013, SDD-012 §17 item 5 |
 | P4 | Agent actions are visible and attributed | Any change made by another actor shows who made it (actor label, `--agent` colour, icon), where (outlined items), and when (relative time). The UI never hides or merges another actor's work into "you" | RF-118, SDD-012 §5.8, §15 |
 | P5 | Errors are the core's words | An error shows a localized headline for its code, then the core's `message` and `hint` exactly as received. The UI never paraphrases or invents a cause | SDD-002 A.8, SDD-012 §4.4, rule T9 |
 | P6 | One look in browser and desktop | The desktop shell loads the same web UI with the same tokens, fonts and components. Nothing may depend on a browser-only or webview-only feature outside SDD-012 §21.1 | ADR-0023, SDD-012 §21 |
@@ -189,7 +189,7 @@ Item fills against `--ed-timeline` are 1.61:1 (light clip) to 2.22:1 (dark clip)
 | `--font-heading` | `var(--font-sans)` | no |
 | `--font-mono` (`font-mono`) | Tailwind 4 default: `ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace` | no (Tailwind default, not redefined) |
 
-**Fonts of the video are not UI fonts.** The six families of D-022 (Inter, Montserrat, Anton, Bebas Neue, Playfair Display, JetBrains Mono) are bundled in the Go binary for rasterizing text into the picture (ADR-0012). The browser never loads them and never lays out video text (SDD-012 rule T6): the inspector's font select lists the family names in the UI font, with no rendered samples (D-030).
+**Fonts of the video are not UI fonts.** The six families of D-022 (Inter, Montserrat, Anton, Bebas Neue, Playfair Display, JetBrains Mono) are bundled in the Go binary for rasterizing text into the picture (ADR-0012). The browser never loads them and never lays out video text (SDD-012 rule T6): the inspector's font select lists the family names in the UI font, with no rendered samples in the MVP (D-030).
 
 **Timecodes and numbers.** Every time, duration, revision number, frame count, percentage and size uses `tabular-nums` (`font-variant-numeric: tabular-nums`) so digits do not jump while the playhead moves. Timecodes are set in `font-sans` with tabular figures, not in a monospace font: the mono stack above is a system font and differs between Windows, macOS and Linux, which would break P6. `font-mono` is used only for code-like content: file paths, command names, ids, error codes, the install command, diff text from the core.
 
@@ -312,15 +312,15 @@ Inside the preview box: canvas 0, truth-on-pause `<img>` 1, safe-area guide 2, s
 
 ### 2.13 Motion
 
-D-013 and SDD-012 §17 item 5: interface animation is limited to the two kinds below (P3-UI-003), **and nothing else.** The tokens below are the one set of values for them and for the animations shadcn components carry.
+D-013 and SDD-012 §17 item 5: no interface animations until BETA polish; **BETA polish (P3-UI-003) allows the two kinds below and nothing else.** The tokens below are the one set of values for them and for the animations shadcn components carry.
 
 | Token | Value | Use now |
 | --- | --- | --- |
 | `--duration-none` | `0ms` | every editor component |
 | `--duration-fast` | `100ms` | already carried by shadcn select and sheet close (`duration-100`) |
-| `--duration-base` | `150ms` | `.ed-motion` state transitions  |
-| `--duration-slow` | `200ms` | `.ed-highlight` ; already carried by shadcn sheet open and sidebar collapse (`duration-200`) |
-| `--ease-standard` | `cubic-bezier(0.2, 0, 0, 1)` | `.ed-motion` and `.ed-highlight` ; shadcn components keep their own easing |
+| `--duration-base` | `150ms` | `.ed-motion` state transitions (BETA) |
+| `--duration-slow` | `200ms` | `.ed-highlight` (BETA); already carried by shadcn sheet open and sidebar collapse (`duration-200`) |
+| `--ease-standard` | `cubic-bezier(0.2, 0, 0, 1)` | `.ed-motion` and `.ed-highlight` (BETA); shadcn components keep their own easing |
 
 Rules:
 
@@ -360,7 +360,7 @@ The editor shell is the CSS grid of SDD-012 §6.1: rows `48px 1fr var(--timeline
 | Region | Landmark | Surface | Contents | Size |
 | --- | --- | --- | --- | --- |
 | Top bar | `header` | `--ed-panel`, bottom `--border` | back, project name, revision and connection state, Undo and Redo, activity indicator, palette button, theme, language, jobs chip, Export (SDD-012 §6.2) | 48 px high, padding `px-3`, groups separated by `gap-2`, the primary action (Export) at the far right |
-| Library (tabs Library and History) | `aside` with `aria-label` | `--ed-panel`, right `--border` | import bar, asset cards, trash group; History tab | default 320 or 240 px (section 3.2); minimum 200 px; collapsible (`Alt+1`) |
+| Library (tabs Library and History) | `aside` with `aria-label` | `--ed-panel`, right `--border` | import bar, asset cards, trash group; History tab in ALPHA | default 320 or 240 px (section 3.2); minimum 200 px; collapsible (`Alt+1`) |
 | Preview | inside `main` | `--ed-preview-surround` | canvas box (16 px padding), overlays, transport row (40 px) | the remaining width; minimum 240 px high |
 | Inspector | `aside` with `aria-label` | `--ed-panel`, left `--border` | panel for the selection (SDD-012 §12.1) | default 360 or 280 px; minimum 200 px; collapsible (`Alt+2`) |
 | Timeline | inside `main` | toolbar `--ed-panel` (40 px), body `--ed-timeline` | toolbar, ruler (28 px), track headers (176 px), rows | default 300 or 240 px high; minimum 160 px; resized by its splitter |
@@ -385,7 +385,7 @@ Height below 600 px is allowed: regions get smaller and panels scroll.
 
 Web, Inertia pages (projects, settings, login, error): responsive from 360 px wide. Below 768 px (`MOBILE_BREAKPOINT` of `hooks/use-mobile.ts`) the sidebar becomes a sheet; content is one column. The project grid uses `repeat(auto-fill, minmax(240px, 1fr))`.
 
-Desktop window (ADR-0023):
+Desktop window (BETA, ADR-0023):
 
 | Property | Value | Why |
 | --- | --- | --- |
@@ -411,7 +411,7 @@ Every target is at least 24 by 24 CSS px (WCAG 2.2 target size minimum, SDD-012 
 
 ### 3.4 Editor layout familiar to users of other editors
 
-Decision D-038: a person who already edits short videos in a popular desktop editor should find each thing in the same place here. This section describes, screen by screen, the regions, the components inside them, the menus and the flows of that familiar layout, using only the tokens of section 2 and the components of section 4. It adds no token. The behaviour and the commands are those of SDD-012 §6.4 (the layout) and §6.5 (which familiar patterns are adopted now, later, or not at all); where this section and SDD-012 differ, SDD-012 wins and this section is fixed. No asset, icon, colour, name or text of another product is used: icons are lucide (section 5.1), labels come from the catalogues (section 6).
+Decision D-038: a person who already edits short videos in a popular desktop editor should find each thing in the same place here. This section describes, screen by screen, the regions, the components inside them, the menus and the flows of that familiar layout, using only the tokens of section 2 and the components of section 4. It adds no token. The behaviour, the commands and the phases are those of SDD-012 §6.4 (the layout) and §6.5 (which familiar patterns are adopted now, later, or not at all); where this section and SDD-012 differ, SDD-012 wins and this section is fixed. No asset, icon, colour, name or text of another product is used: icons are lucide (section 5.1), labels come from the catalogues (section 6).
 
 Rules that hold on every screen below:
 
@@ -427,7 +427,7 @@ Rules that hold on every screen below:
 | Start | `/projects` (Inertia page) | page title; a full-width `Button` `default` `lg` "Create project"; the project grid (`repeat(auto-fill, minmax(240px, 1fr))`, section 3.2) of `Card`s: thumbnail box `aspect-video` on `--ed-preview-surround`, name (`UntrustedText`), meta line "edited 2 h ago · 00:30.000" in `text-xs tabular-nums text-muted-foreground`, and a `DropdownMenu` (Rename, Duplicate when the API has it, Delete with an `AlertDialog`) | Create project |
 | Editor | `/editor/{project_id}` | top bar, library with tab rail, preview with transport row, inspector with tab strip, timeline with its toolbar (3.4.2 to 3.4.7) | Export (top bar) |
 | Export | `Dialog` over the editor (section 4.3.10, SDD-012 §14) | name and destination at the top, then one group per output the engine supports (video; others only when the engine lists them), lint findings, progress | Start export |
-| Shortcuts and settings | `Dialog` opened by `?` or Help > Keyboard shortcuts (SDD-012 §18.2) | the cheat sheet (grouped by context, Timeline, Player and General, when SDD-012 §6.5 row 10 brings contexts), rebind and reset per row with the conflict named inline; below, language, theme, "Replay the tour" and the version | Close (`Esc` closes it) |
+| Shortcuts and settings | `Dialog` opened by `?` or Help > Keyboard shortcuts (SDD-012 §18.2) | the cheat sheet (grouped by context, Timeline, Player and General, when SDD-012 §6.5 row 10 brings contexts), rebind and reset per row with the conflict named inline; below, language, theme, "Show tips again" and the version | Close (`Esc` closes it) |
 | Palette | `Dialog` (section 4.3.11) | unchanged | Run |
 
 There is no separate settings window and no second browser window: the export and every dialog stay inside the page (SDD-012 §6.5, what to avoid).
@@ -533,24 +533,7 @@ Focus is the 2 px `--ring` outline with 2 px offset everywhere (section 2.10); i
 
 #### 3.4.10 Judgement calls of the first build
 
-The comparison with the real CapCut app was made by TASK-0296 (CapCut 9.8.0.4213, walked with the window on screen); its marks, row by row, are in SDD-012 section 6.4, and this section keeps only the calls the build made, as that section lists them: the Adjust tab holds Color, Filters, Chroma key and Effects, and the Text tab holds Auto captions; several items show no inspector strip; the Transitions panel has no length field; Select and Blade are two `aria-pressed` buttons in the toolbar, with Undo and Redo moved there from the top bar; the ratio in the player row is a native `select` that sends `settings.reframe`; the toolbar and menu draw only what has an action (no Duplicate on a project card, no Zoom or Theme item in the menu); a text button collapses to its icon below 1536 px and keeps its name.
-
-### 3.5 Dashboard sidebar
-
-The frame of every page except the editor and the login (SDD-012 §23). It uses tokens whose contrast pairs section 2.6 already checks (`--background`, `--foreground`, `--muted`, `--muted-foreground`, `--border`) and adds none; the kept `--sidebar*` tokens stay unused.
-
-| Part | Element | Surface | Contents | Size |
-| --- | --- | --- | --- | --- |
-| Sidebar | `header` (the banner) holding a `nav` with `aria-label` for the sections | `--background`, right `--border` | the product mark, the eleven sections, then the profile and the controls | 16 rem expanded, 3.5 rem collapsed; collapsible; below 768 px a strip above the page, always collapsed, in the same order, with no collapse button |
-| Item | `a` | transparent | an icon (`size-4`, `aria-hidden`) and the label | 36 px high, `px-3`, `gap-2` |
-| Main | `main` | `--background` | the page | the remaining width, scrolls on its own |
-| Right dock | `div`, no landmark | `--background`, left `--border` once it has content | empty; reserved for the agent chat | 0 px until epic 14 |
-
-States of an item: rest `--muted-foreground` text; hover `--muted` fill and `--foreground` text; current `--muted` fill, `--foreground` text, weight 500 and `aria-current="page"` (never colour alone); focus the 2 px `--ring` outline of section 2.10, inside the item so the sidebar edge does not clip it; disabled is not used, a section that is not built opens an empty state. Collapsed: the label is visually hidden, the icon stays in an item at least 36 px wide (a target above the 24 px of WCAG 2.5.8, also in the narrow strip, where the items wrap instead of scrolling), a `Tooltip` shows the label on hover and focus.
-
-The bottom block holds, in this order: the profile (the email in network mode, "Local" in local mode, a link to Settings, Sign out in network mode), the language select, the theme toggle and the collapse button. Their contrast pairs are `muted-foreground` on `background` and on `muted`, and `foreground` on `background`, all in section 2.6 and `check:contrast`.
-
-**Decision of this document.** The dashboard has its own small sidebar instead of the shadcn `Sidebar` of section 4.2: the kept component stores its state in a cookie and carries a mobile sheet the dashboard does not need. The row of section 4.2 is amended: the shadcn `Sidebar` stays unused until a page needs it.
+The comparison with the real CapCut app (TASK-0296) is pending: the author has not installed it yet, so nothing here is marked as the same or different. The calls the first build made, as SDD-012 section 6.4 lists them: the Adjust tab holds Color, Filters, Chroma key and Effects, and the Text tab holds Auto captions; several items show no inspector strip; the Transitions panel has no length field; Select and Blade are two `aria-pressed` buttons in the toolbar, with Undo and Redo moved there from the top bar; the ratio in the player row is a native `select` that sends `settings.reframe`; the toolbar and menu draw only what has an action (no Duplicate on a project card, no Zoom or Theme item in the menu); a text button collapses to its icon below 1536 px and keeps its name.
 
 ## 4. Components
 
@@ -561,7 +544,7 @@ All interactive components use the same visual states. "Disabled" never relies o
 | State | Selector | Treatment |
 | --- | --- | --- |
 | default | | as the variant says |
-| hover | `:hover` (pointer only; never the only cue) | surface one step (`bg-muted`, `bg-accent`, or, for the primary button, `--primary` mixed with 10% black in OKLab: a fade to `primary/80` left white text at 3.7:1 in the light theme) |
+| hover | `:hover` (pointer only; never the only cue) | surface one step (`bg-muted`, `bg-accent`, or `primary/80` for the primary button) |
 | focus-visible | `:focus-visible` | 2 px `--ring` outline, 2 px offset (section 2.10); never removed |
 | active (pressed) | `:active`, `aria-pressed="true"`, `data-state="active"` | shadcn's 1 px press offset for buttons; toggles show the pressed surface `bg-accent` plus `aria-pressed` |
 | disabled | `disabled`, `aria-disabled="true"` | 50% opacity, `pointer-events: none` (shadcn); exempt from contrast; keyboard focus skips native disabled controls; controls that must explain why use `aria-disabled` with a tooltip |
@@ -576,7 +559,7 @@ The files in `components/ui/` (SDD-012 §3.1). Dialogs, popovers, tooltips, tabs
 
 | Component | Variants and sizes used | States and keyboard | Product rules |
 | --- | --- | --- | --- |
-| `Button` | variants `default` (primary, one per view), `secondary`, `outline`, `ghost` (toolbars, icon buttons), `destructive` (remove, delete), `link` (inline). Sizes `default` 32 px, `sm` 28 px, `xs` 24 px, `lg` 36 px, `icon` 32 px, `icon-sm` 28 px, `icon-xs` 24 px, `icon-lg` 36 px | all of 4.1; `Enter` and `Space` activate; icon-only buttons have `aria-label` from `t()` and a `Tooltip` with the shortcut | labels are verbs (section 6.2); the icon leads the label (`data-icon="inline-start"`); an anchor given to `asChild` stays a link (`role="link"`), never announced as a button; no button wider than its label plus padding, so pt-BR text fits |
+| `Button` | variants `default` (primary, one per view), `secondary`, `outline`, `ghost` (toolbars, icon buttons), `destructive` (remove, delete), `link` (inline). Sizes `default` 32 px, `sm` 28 px, `xs` 24 px, `lg` 36 px, `icon` 32 px, `icon-sm` 28 px, `icon-xs` 24 px, `icon-lg` 36 px | all of 4.1; `Enter` and `Space` activate; icon-only buttons have `aria-label` from `t()` and a `Tooltip` with the shortcut | labels are verbs (section 6.2); the icon leads the label (`data-icon="inline-start"`); no button wider than its label plus padding, so pt-BR text fits |
 | `Badge` | `secondary` (counts, neutral states), `outline` (scope in the palette), `destructive` (failed); product tints through classes `bg-success/10 text-success`, and so on, for ready, warning, agent | not focusable unless it is a link | always text, optionally an icon; never colour alone |
 | `Card` | default | | project cards on `/projects`, settings groups; not used inside the editor (panels are flat) |
 | `Input` | default; `font-mono` for paths | 4.1; error state through `aria-invalid` | always with a `Label` or an `aria-label`; placeholder is an example, never the label |
@@ -585,7 +568,7 @@ The files in `components/ui/` (SDD-012 §3.1). Dialogs, popovers, tooltips, tabs
 | `Select` | default trigger `h-8`; `sm` in toolbars | UI SDK: `Space` and `Enter` open, arrows move, typing selects, `Esc` closes | used for enums (preset, fit, font family, track); options rendered with `UntrustedText` when they show user content |
 | `Separator` | horizontal and vertical | decorative (`role="none"`) unless it separates toolbar groups (`role="separator"`) | |
 | `Sheet` | `left` (library drawer), `right` (inspector drawer) | focus trap, `Esc` closes, focus returns to the opener | only at 1024 to 1279 px (section 3.2) and in the mobile Inertia sidebar |
-| `Sidebar` | `collapsible="icon"`, 16 rem / 3 rem | `Ctrl+B` toggles (kept) | kept in `components/ui/` but unused; the dashboard sidebar of section 3.5 is its own component |
+| `Sidebar` | `collapsible="icon"`, 16 rem / 3 rem | `Ctrl+B` toggles (kept) | Inertia pages only; navigation reduced to Projects and Settings (SDD-012 §3.1) |
 | `Skeleton` | default | `aria-hidden`; the region has `aria-busy` | first load of the project list and of the document; never longer than the request; no shimmer animation |
 | `Tabs` | default | Base UI: arrows move, `Home` and `End`, automatic activation | the vertical tab rail of the library and the tab strip of the inspector (section 3.4, SDD-012 §6.4); inside one inspector tab the sections stack and scroll, with no further level of tabs |
 | `Tooltip` | default | opens on hover and on focus, `Esc` closes | every icon-only button; text is the label plus the shortcut in `<kbd>` style (`Split (S)`); never the only place of essential information |
@@ -617,11 +600,11 @@ Names are the files of SDD-012 §3.2. Each entry gives anatomy, variants, states
 
 - Anatomy: header (36 px: title `text-sm font-semibold`, optional actions at the right), body (scrolls, padding 12 px).
 - Variants: `library`, `inspector`, `history`; collapsed state hides the body and keeps a 32 px reopen button in the top bar.
-- Keyboard: `Alt+1`, `Alt+2`, `Alt+3` toggle; `F6` moves between regions.
+- Keyboard: `Alt+1`, `Alt+2`, `Alt+3` toggle (ALPHA); `F6` moves between regions (ALPHA).
 
 #### 4.3.3 `layout/TopBar`
 
-- Anatomy, left to right: back link (`ArrowLeft` icon button to `/projects`), project name (`UntrustedText`, `text-sm font-medium`, truncates with a tooltip; inline edit), revision and connection state, Undo and Redo, activity indicator, flexible space, palette button, theme, language, jobs chip, Export (`Button` `default`).
+- Anatomy, left to right: back link (`ArrowLeft` icon button to `/projects`), project name (`UntrustedText`, `text-sm font-medium`, truncates with a tooltip; inline edit in ALPHA), revision and connection state, Undo and Redo, activity indicator, flexible space, palette button, theme, language, jobs chip, Export (`Button` `default`).
 - Connection state (text and icon, never colour alone): `live` (no icon, `text-muted-foreground` "rev 42"), `reconnecting` (`RefreshCw` icon, `--warning`, "Reconnecting"), `offline` (`--destructive`, "Offline", the edit controls become `aria-disabled`), `resyncing` (`--info`, "Syncing").
 - Undo and Redo: `IconButton`; disabled after `E_NOTHING_TO_UNDO` or `E_NOTHING_TO_REDO` until the next batch of this actor (SDD-012 §15).
 
@@ -629,7 +612,7 @@ Names are the files of SDD-012 §3.2. Each entry gives anatomy, variants, states
 
 - Anatomy: a button containing a 8 px dot (`--agent`, static), the actor label (`UntrustedText`) and a text: "claude-code is editing" while active (3 s), then "Last edit by claude-code, 12 s ago" (relative time, updated every 10 s), cleared after 5 min (SDD-012 §5.8).
 - Variants: `active` (dot filled, text `text-agent`), `settled` (dot outlined, text `text-muted-foreground`), `hidden` (nothing rendered, no empty space reserved beyond the button's minimum).
-- Popover (level 1): first one row per active actor (actor chip, its last action, relative time), then the 20 latest entries, each with actor chip, relative time and summary; a link "Open history".
+- Popover (level 1): first one row per active actor (actor chip, its last action, relative time), then the 20 latest entries, each with actor chip, relative time and summary; a link "Open history" (ALPHA).
 - Keyboard: `Enter` and `Space` open the popover, `Esc` closes; the live region announces remote edits at most every 2 s (SDD-012 §18.1 item 5).
 - Several actors at once (D-030, SDD-012 §5.8): one badge, naming the actor of the latest remote batch and counting the other active actors ("claude-code and 1 other are editing", plural through `params.count`); the popover lists each active actor with its last action.
 
@@ -646,12 +629,12 @@ Timeline item (`tl-item` with `tl-clip`, `tl-audio`, `tl-text`, `tl-caption`, `t
 | --- | --- |
 | Block | fill `--ed-item-<type>`, 1 px `--ed-track-line` border, `rounded-xs`, full row height minus 4 px (2 px top and bottom), 1 px gap visible between adjacent items is not required: the borders separate them |
 | Type cue | a 12 px type icon before the label (`Film` clip, `AudioLines` audio, `Type` text, `Captions` caption, `Square` shape), so type is not colour alone |
-| Label | `text-xs font-medium`, `--ed-item-<type>-fg`, padding `px-1.5 py-1`, one line, truncates; rendered with `UntrustedText`. When the clip shows a thumbnail strip the label sits on a chip of the item's fill colour so its contrast stays 4.5:1 over any picture |
-| Badges | right-aligned, `text-xs tabular-nums`: speed (`1.5x`), keyframe diamonds (6 px, `-fg` colour), slot icon, missing-media icon (`TriangleAlert` in `-fg`, plus `aria-label` text) |
-| Transition marks | 8 px corner triangles in `-fg` at 60% at the start or end edge |
-| Audio waveform | drawn in `-fg` at full opacity (a graphical object, 3:1 against the fill); fade ramps as 1 px lines in `-fg` |
+| Label | `text-xs font-medium`, `--ed-item-<type>-fg`, padding `px-1.5 py-1`, one line, truncates; rendered with `UntrustedText`. When the clip shows a thumbnail strip (ALPHA) the label sits on a chip of the item's fill colour so its contrast stays 4.5:1 over any picture |
+| Badges (ALPHA) | right-aligned, `text-xs tabular-nums`: speed (`1.5x`), keyframe diamonds (6 px, `-fg` colour), slot icon, missing-media icon (`TriangleAlert` in `-fg`, plus `aria-label` text) |
+| Transition marks (ALPHA) | 8 px corner triangles in `-fg` at 60% at the start or end edge |
+| Audio waveform (ALPHA) | drawn in `-fg` at full opacity (a graphical object, 3:1 against the fill); fade ramps as 1 px lines in `-fg` |
 | Caption block | below 120 px wide or `ppf` under 0.5: one block with the word count ("12 words"); else one segment per word, separated by 1 px lines in `-fg` at 40% (decorative); the selected word gets a 2 px `--ed-selection` inset ring |
-| Handles | 8 px wide visual edge zones, 24 px hit area, cursor `ew-resize`, visible on hover and when selected |
+| Handles (ALPHA) | 8 px wide visual edge zones, 24 px hit area, cursor `ew-resize`, visible on hover and when selected |
 
 Item states: default; hover (border becomes `-fg` at 60%); focus-visible (2 px `--ed-selection` outline, 1 px offset); selected (2 px `--ed-selection` inset ring plus `aria-selected="true"`); ghost pending (2 px dashed `--ed-ghost`, fill at 15%); remote-changed (2 px `--agent` outline for 1.5 s, D-030); conflicting (2 px `--ed-error-flash` outline for 2 s); disabled does not exist (an item is always selectable); on a hidden track the fill is mixed 50% with `--ed-timeline` and the label keeps full `-fg` colour.
 
@@ -661,7 +644,7 @@ Playhead: 2 px line in `--ed-playhead` across ruler and rows; a 12 by 8 px downw
 
 Snap line: 1 px `--ed-snap`, full height, only during a gesture.
 
-Track header: 176 px wide (`TRACK_HEADER_PX`), the row's height; type icon, name (`UntrustedText`, inline rename), hide toggle (visual tracks, `Eye` and `EyeOff`) and mute toggle (`Volume2` and `VolumeX`) as `Toggle` `icon-xs` with `aria-pressed`, drag handle (`GripVertical`), menu (`Ellipsis`). Selected track: `bg-accent` and a 2 px leading bar in `--ed-selection`.
+Track header: 176 px wide (`TRACK_HEADER_PX`), the row's height; type icon, name (`UntrustedText`, inline rename in ALPHA), hide toggle (visual tracks, `Eye` and `EyeOff`) and mute toggle (`Volume2` and `VolumeX`) as `Toggle` `icon-xs` with `aria-pressed`, drag handle (`GripVertical`, ALPHA), menu (`Ellipsis`, ALPHA). Selected track: `bg-accent` and a 2 px leading bar in `--ed-selection`.
 
 Keyboard: the grid keys of SDD-012 §7.10 (one tab stop, roving `tabindex`), the global keys of §18.2.
 
@@ -669,10 +652,10 @@ Keyboard: the grid keys of SDD-012 §7.10 (one tab stop, roving `tabindex`), the
 
 - Canvas frame: the region is `--ed-preview-surround`; the canvas sits centred with 16 px padding, no radius, a 1 px `oklch(1 0 0 / 15%)` outline (decorative) so a black picture is still seen against the surround; `role="img"` with the label of SDD-012 §18.1 item 3.
 - Truth on pause: the exact frame `<img>` replaces the canvas pixels without a visual cue (it is the same picture, sharper).
-- Safe-area guide: section 2.10; toggled by a `Toggle` "Safe area" in the transport row, off by default.
-- Selection box and handles: 1 px `--ed-handle` box; four 8 by 8 px corner squares filled `--ed-handle` with a 1 px `--ed-preview-surround` border; a 10 px rotation circle 24 px above the top edge; every handle has a 24 px hit area.
+- Safe-area guide (ALPHA): section 2.10; toggled by a `Toggle` "Safe area" in the transport row, off by default.
+- Selection box and handles (ALPHA): 1 px `--ed-handle` box; four 8 by 8 px corner squares filled `--ed-handle` with a 1 px `--ed-preview-surround` border; a 10 px rotation circle 24 px above the top edge; every handle has a 24 px hit area.
 - Preview banners: unsupported WebGL2 (SDD-012 §11.2 item 6) and offline, at the top of the preview, `text-sm` on `oklch(0.2 0 0)` with a 1 px `--border`, text in the surround colours of section 2.5.
-- Transport row, 40 px, centred: go to start (`SkipBack`), step back one frame (`StepBack`), Play and Pause (`Play` and `Pause`, `icon-lg` 36 px, `aria-pressed` reflects playing), step forward (`StepForward`), go to end (`SkipForward`), timecode `current / total` (`text-sm font-medium tabular-nums`; `total` in `--muted-foreground`). At the right: Safe area and Fit. Play is disabled with a tooltip when the executor reports `unsupported`.
+- Transport row, 40 px, centred: go to start (`SkipBack`), step back one frame (`StepBack`), Play and Pause (`Play` and `Pause`, `icon-lg` 36 px, `aria-pressed` reflects playing), step forward (`StepForward`), go to end (`SkipForward`), timecode `current / total` (`text-sm font-medium tabular-nums`; `total` in `--muted-foreground`). At the right: Safe area and Fit (ALPHA). Play is disabled with a tooltip when the executor reports `unsupported`.
 - Keyboard: global (`Space`, `Left`, `Right`, `Shift` variants, `Home`, `End`); buttons are also reachable with `Tab`.
 
 #### 4.3.8 Inspector field (`inspector/fields/*`, `ui/TimeField`)
@@ -687,7 +670,7 @@ Keyboard: the grid keys of SDD-012 §7.10 (one tab stop, roving `tabindex`), the
 
 - Import bar: `Input` (`font-mono`, placeholder an example path for the platform, `aria-label` "File path") and `Button` `secondary` "Import"; `Enter` submits. In the desktop shell, a `Button` `outline` "Choose files" appears only when `window.vukemDesktop?.pickFiles` exists (SDD-012 §13.1).
 - Drop target: when a drag enters the library, a 2 px dashed `--ring` outline and the label "Drop to import" (desktop) or the message "A browser page cannot see the path of a file. Paste the path into the field." (browser, SDD-012 §13.1 item 1).
-- Asset card (grid of two columns at 320 px, one at 240 px): thumbnail box `aspect-video`, `object-contain` on `--ed-preview-surround`, `rounded-sm`; name (`UntrustedText`, one line, tooltip with the full name); meta line `text-xs tabular-nums text-muted-foreground`: "00:05.000 · 1080×1920 · 12 MB"; state badge with text (Pending, Ingesting, Ready, Failed); `Progress` (4 px) while ingesting; actions: "Add to timeline" (`Button` `sm` `secondary`, enabled only when ready and present in the read model) and a menu.
+- Asset card (grid of two columns at 320 px, one at 240 px): thumbnail box `aspect-video`, `object-contain` on `--ed-preview-surround`, `rounded-sm`; name (`UntrustedText`, one line, tooltip with the full name); meta line `text-xs tabular-nums text-muted-foreground`: "00:05.000 · 1080×1920 · 12 MB"; state badge with text (Pending, Ingesting, Ready, Failed); `Progress` (4 px) while ingesting; actions: "Add to timeline" (`Button` `sm` `secondary`, enabled only when ready and present in the read model) and a menu (ALPHA).
 - Failed card: the error block of section 4.3.12 inside the card, with "Try again" and "Dismiss".
 - Keyboard: each card is a group with its buttons in tab order; the menu opens with `Shift+F10` and the context-menu key as well as its button.
 
@@ -738,45 +721,21 @@ The non-blocking notice of SDD-012 §4.5 for `E_REVISION_CONFLICT`.
 | Projects list | No projects yet | Create a project, or let an agent create one; it appears here. | Create project |
 | Library | No media yet | Paste the path of a video, audio or image file above and press Import. | none (the import bar is the action) |
 | Timeline | The timeline is empty | Add media from the library, or ask an agent to edit. Changes from any actor appear here. | none |
-| History | No changes yet | Every change by you or an agent is listed here. | none |
+| History (ALPHA) | No changes yet | Every change by you or an agent is listed here. | none |
 | Export, no findings | No problems found | The project is ready to export. | none (Start export is in the footer) |
 | Palette, no results | No command matches | Check the spelling or search by command name. | none |
-| Trash | The trash is empty | | none |
+| Trash (ALPHA) | The trash is empty | | none |
 | Window too small | This window is too small | The editor needs at least 1024 pixels of width. | Back to projects |
 
 Keys: `ui.editor.<area>.empty.title` and `.body` (SDD-012 §16.2).
 
-An empty state is shown only when the region has been told it is empty: while the project is still loading, the library and the timeline draw two `Skeleton` blocks with `aria-busy="true"` instead (state model of section 4.1), so a person never reads "No media yet" about a project that has media.
-
-#### 4.3.16 History row
+#### 4.3.16 History row (ALPHA)
 
 - 40 px collapsed: revision (`tabular-nums`, `--muted-foreground`), actor chip, relative time, first line of the description (`UntrustedText`); expanded shows the whole text in `text-sm`. Undone steps: strikethrough plus the label "Undone" (not strikethrough alone).
-
-#### 4.3.18 Tour card
-
-- The first-run tour (SDD-012 §18.5): a card of at most `w-80` (`bg-popover`, `text-popover-foreground`, `rounded-md`, `shadow-md`, z-index of the popover layer) beside the region of the step, which gets a 2 px `--ring` outline drawn over it with `pointer-events: none`. Content: the step counter ("2 of 5", `text-xs text-muted-foreground`), a title (`text-sm font-semibold`), one sentence (`text-sm`), and the buttons "Back" (`ghost`, hidden on step 1), "Next" or "Done" (`default`) and "Skip tour" (`ghost`). Focus goes to "Next" when a step opens; `Esc` skips. No animation. Below 1280 px the card sits at the bottom centre instead of beside the region.
-- Keys: `ui.editor.tour.*`.
-
-#### 4.3.19 Shortcuts dialog
-
-- A search field at the top (`Input`, `type="search"` role searchbox, label "Search shortcuts"), the preset choice (a native `select`, like the ratio of the player row) beside it, then the table of rows (action, key button), a `text-sm text-muted-foreground` line "No shortcut matches" when the filter is empty, the conflict message in `role="alert"`, and a footer with "Reset to defaults" and "Replay the tour". A key button shows the key as `kbd`; while capturing it reads "Press a key".
 
 #### 4.3.17 `ui/UntrustedText`
 
 Every name or text from an agent or a file (project, track, item, asset names, caption words, history text) is rendered through it: `dir="auto"`, `unicode-bidi: isolate` (SDD-012 §1.2). Visually identical to plain text; truncation with an ellipsis and a tooltip carrying the full text.
-
-#### 4.3.18 Image editor components
-
-The screen of SDD-012 section 24. It is the editor shell of section 3.1 over an image: a toolbar on top, the layer panel on the left, the canvas in the middle, the inspector and the history on the right.
-
-- `image-editor/toolbar/Toolbar`: the `role="toolbar"` of 4.3.1 with groups (add: text, shape, fill, image, logo; arrange: group, ungroup, forward, back, duplicate, remove; align: six buttons; history: undo, redo; view: zoom out, zoom in, fit, 100%; export). Every button has an icon, an `aria-label` and a tooltip; the disabled ones keep their name.
-- `image-editor/canvas/Canvas`: one focusable region (`role="application"` is not used; it is a `group` named by `ui.image.canvas.label`) over the picture. The picture sits on `--ed-preview-surround`; the selection outline is 2 px of `--ed-handle`; the eight handles are 10 px squares with a 24 px hit area and the rotate handle is 24 px above the top edge; guides are 1 px of `--ed-snap` (a 2:1 dash as well as a colour); the outline of a layer an agent changed is 2 px of `--agent`. Nothing on the canvas is conveyed by colour alone: the selection also shows its size as a text badge, and the agent outline comes with the live-region message.
-- `image-editor/layers/LayerPanel`: a `role="tree"` (4.3.2 panel, variant `layers`). A row is 32 px: indent 16 px per level, disclosure for a group, kind icon, name, visibility and lock toggles (`aria-pressed`, 24 px targets with 32 px rows). The selected row uses `--ed-selection` as background with the text token of that pair (2.6); a dragged row shows an insertion line, and the same move is available from the keyboard.
-- `image-editor/inspector/Inspector`: the inspector of 12.1 with sections per kind. Numeric fields are `ui/TimeField`-style fields with `inputMode="numeric"`, a visible label and a unit suffix; a colour field is a text field with a swatch button that opens the brand swatches.
-- `image-editor/export/ExportDialog`: the dialog of 14.1 with a findings list (each finding a button that selects the layer) and a download link when the file is ready.
-- `image-editor/history/HistoryPanel`: the history row of 4.3.16 with the actor chip; an undone row says "Undone" in text.
-- Empty and error states: no layer ("The image has no layers", "Add a text, a shape or a photo from the toolbar"), no frame yet (a skeleton the size of the canvas), a frame that failed (the core's message with a Retry button).
-- Keys: `ui.image.<area>.<name>` (SDD-012 section 16.2).
 
 ## 5. Iconography, illustration and the product mark
 
@@ -865,7 +824,7 @@ All of these use `tabular-nums` when they are in a column or change while visibl
 
 ### 6.5 Internationalization
 
-- Locales: `en` (source) and `pt-BR` (RF-073). Every string goes through `t(key)` (rule T9); keys follow SDD-012 §16.2; placeholders `{name}`; plurals by `Intl.PluralRules`.
+- Locales: `en` (source) and `pt-BR` (RF-073, ALPHA). Every string goes through `t(key)` (rule T9); keys follow SDD-012 §16.2; placeholders `{name}`; plurals by `Intl.PluralRules`.
 - Never build a sentence by concatenating translated pieces; one key per sentence, with placeholders.
 - Text expansion: Portuguese runs about 20 to 30% longer than English. Every label is designed for 35% more width: no fixed widths on text buttons, tabs or badges; toolbars collapse text to icons rather than wrap (section 4.3.1); dialog buttons may wrap to a second row, never truncate. User content truncates with an ellipsis and a tooltip; UI labels in menus and dialogs wrap instead of truncating.
 - The test `i18n-switch` (SDD-012 §20.1) checks pt-BR in both themes at 1280 by 720.
@@ -874,11 +833,11 @@ All of these use `tabular-nums` when they are in a column or change while visibl
 
 ## 7. Accessibility
 
-Target: WCAG 2.2 level AA for every control outside the canvas (RF-075); keyboard operation and automated checks, then a sign-off (SDD-012 §18).
+Target: WCAG 2.2 level AA for every control outside the canvas (RF-075); keyboard operation and automated checks from ALPHA, sign-off in BETA (SDD-012 §18).
 
 ### 7.1 Focus order
 
-`Tab` follows the regions in the order of SDD-012 §18.2: top bar, library, preview (transport), timeline, inspector. Inside a region, the visual order left to right, top to bottom. Composite widgets (toolbar, timeline grid, tabs, listbox, menus) take one tab stop and use arrow keys inside. `F6` jumps between regions. Dialogs trap focus and return it to their opener; after `Delete` focus moves to the next item on the track (SDD-012 §18.1 item 4).
+`Tab` follows the regions in the order of SDD-012 §18.2: top bar, library, preview (transport), timeline, inspector. Inside a region, the visual order left to right, top to bottom. Composite widgets (toolbar, timeline grid, tabs, listbox, menus) take one tab stop and use arrow keys inside. `F6` jumps between regions (ALPHA). Dialogs trap focus and return it to their opener; after `Delete` focus moves to the next item on the track (SDD-012 §18.1 item 4).
 
 ### 7.2 Visible focus
 
@@ -892,8 +851,7 @@ The keyboard map is SDD-012 §18.2 (global keys) and §7.10 (timeline grid keys)
 2. Single letters (`S`, `C`, `T`, `N`) are ignored while focus is in an editable field; `Mod` combinations follow the editable-field exceptions of §18.2.
 3. `Mod` is `Ctrl` on Windows and Linux and `Cmd` on macOS; tooltips show the platform's form (`Ctrl+K`, `⌘K`).
 4. No shortcut needs a key that a common keyboard layout lacks without a modifier; `[` and `]` have toolbar buttons as an alternative.
-5. Customization and the cheat sheet (`?`) are specified by RF-074 and SDD-012 §18.9: one registry, two presets (`short`, `classic`), every row remappable, a conflicting key refused with the name of the row it collides with.
-6. A handler never names a key: it asks the registry. Tooltips show the key that is current (`Split (Ctrl+B)`), so a rebound key is never stated wrong.
+5. Customization and the cheat sheet (`?`) are BETA (RF-074).
 
 ### 7.4 Screen reader names
 
@@ -931,7 +889,7 @@ At least 24 by 24 CSS px for every target (WCAG 2.5.8); the design default is 32
 
 ### 8.1 The rule
 
-The desktop shell is a window around the same binary and the same UI (ADR-0023 item 2): it loads `web/resources/` from the local address, with the same `app.css`, the same tokens, the same bundled Geist font and the same components. It contains no editing logic, no renderer and no second stylesheet. Nothing in this document has a desktop variant unless section 8.3 lists it.
+The desktop shell of BETA is a window around the same binary and the same UI (ADR-0023 item 2): it loads `web/resources/` from the local address, with the same `app.css`, the same tokens, the same bundled Geist font and the same components. It contains no editing logic, no renderer and no second stylesheet. Nothing in this document has a desktop variant unless section 8.3 lists it.
 
 ### 8.2 Identical in both
 
@@ -939,7 +897,7 @@ Tokens and both themes; typography (bundled, not system fonts); layout and break
 
 ### 8.3 What differs
 
-| Topic | Browser (now) | Desktop shell  |
+| Topic | Browser (now) | Desktop shell (BETA) |
 | --- | --- | --- |
 | Window chrome | the browser's | native title bar and decorations of the operating system; no custom title bar, no draggable CSS region (`app-region`), so the web UI needs no desktop-only layout |
 | Window size | any; section 3.2 notices below 1280 px | minimum inner size 1280 by 640 (section 3.2) |
@@ -977,7 +935,7 @@ The site (`site/`, SDD-010, D-028) is a separate Astro package that starts from 
 | UI strings | `web/resources/lang/en.json`, `pt-BR.json` (SDD-012 §16) | senior-e, interns for translation |
 | Product terms | `site/content/glossary.json` (SDD-010 §10) | senior-d |
 | Site theme | `site/app/globals.css` (takes `--brand` from here) | senior-d |
-| Desktop shell | no tokens of its own | the desktop owner |
+| Desktop shell | no tokens of its own | the BETA owner |
 
 ### 9.2 How a change is made
 
@@ -998,7 +956,7 @@ Copy into the pull request description and tick each line that applies.
 - [ ] Every icon-only control has an `aria-label` from `t()` and a tooltip with its shortcut.
 - [ ] Targets are at least 24 by 24 CSS px.
 - [ ] Nothing is conveyed by colour alone.
-- [ ] No `transition`, `animation` or `@keyframes` besides `.ed-motion` and `.ed-highlight` (D-013); reduced motion respected.
+- [ ] No `transition`, `animation` or `@keyframes` besides `.ed-motion` and `.ed-highlight` (D-013, BETA polish); reduced motion respected.
 - [ ] Every string through `t()`; no concatenated sentences; the layout holds in pt-BR at 1280 by 720.
 - [ ] User content rendered with `UntrustedText`.
 - [ ] Errors from the core shown with the error block: headline, message and hint as received, code.
@@ -1027,8 +985,6 @@ Decisions taken here (each is cheap to undo). "Recorded in" names where the spec
 | DS-10 | Shared primitives (`Dialog`, `AlertDialog`, `Popover`, `DropdownMenu`, `ContextMenu`, `Slider`, `Switch`, `Checkbox`, `RadioGroup`, `Progress`, `Toggle`, `ToggleGroup`, `Select`, `Tabs`, `Tooltip`) from `@base-ui/react` and `@ui-sdk/react` | 4.2 | SDD-012 §3.1 |
 | DS-11 | Native menus show `Mod+Z`, `Mod+Shift+Z` and `Mod+A` without registering them as accelerators; menu items and the title-bar theme go through `onMenuAction` and `setTheme` | 8.3 | decided by D-030; SDD-012 §13.1, §21.3 |
 | DS-12 | The familiar layout (D-038): a 40 px tab rail inside the library width, a 36 px tab strip in the inspector, a selected tab shown by a 2 px `--ring` bar, a save indicator and a Menu button in the top bar, the timeline toolbar in two labelled groups; no new token | 3.4 | SDD-012 §6.4, §6.5 |
-| DS-13 | The dashboard has its own sidebar built from checked tokens; the shadcn `Sidebar` stays unused | 3.5 | SDD-012 §23 |
-| DS-14 | The first-run tour is a card beside the region of each step (outline in `--ring`), not a full-screen overlay, so the keyboard and the screen reader are never trapped; the shortcuts dialog gets a search field and a preset choice | 4.3.18, 4.3.19 | SDD-012 §18.5, §18.9 |
 
 Open points found in the specifications while writing this document, and how each was closed:
 
@@ -1038,7 +994,7 @@ Open points found in the specifications while writing this document, and how eac
 4. **Components missing from SDD-012 §3.1.** Decided: §3.1 lists the components of DS-10.
 5. **No timecode font.** Decided by D-030 and measured: Geist with tabular figures (DS-4, SDD-012 §11.5).
 6. **Typed decimals in pt-BR.** Decided by D-030: the comma is accepted and sent as `.`; timecodes are always shown with `.` (section 6.5, SDD-012 §12.2).
-7. **Font select samples.** Decided by D-030: names in the UI font, no samples (section 2.7, SDD-012 §12.1).
+7. **Font select samples.** Decided by D-030: names in the UI font, no samples in the MVP (section 2.7, SDD-012 §12.1).
 8. **Desktop shell details.** Decided: SDD-012 §21.3 (window size, chrome, pre-paint background) and D-030 (menus, accelerators, `onMenuAction`, `setTheme`, SDD-012 §13.1).
 9. **Connection-state colours and several active agents.** Decided: SDD-012 §6.2 (tones of section 4.3.3) and D-030 (section 4.3.4, SDD-012 §5.8).
 10. **The site's theme default.** Decided: SDD-010 §1.1 keeps the copied shell's behaviour (section 8.4).

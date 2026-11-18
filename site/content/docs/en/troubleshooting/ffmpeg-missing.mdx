@@ -11,27 +11,27 @@ description: "What E_FFMPEG_MISSING means, how the product looks for FFmpeg and 
 
 ## The idea
 
-Import and export need FFmpeg and ffprobe, run as separate processes. The product reports `E_FFMPEG_MISSING` when it finds none that works, when the one you named in `STUARTY_FFMPEG` is unusable, or when the build lacks a required encoder, filter or muxer (`details.missing` lists them). Editing, the timeline and the text views work without it.
+Import and export need FFmpeg and ffprobe, run as separate processes. The product reports `E_FFMPEG_MISSING` when it finds none that works, when the one you named in `VUKEM_VIDEO_FFMPEG` is unusable, or when the build lacks a required encoder, filter or muxer (`details.missing` lists them). Editing, the timeline and the text views work without it.
 
-The search order is fixed: `STUARTY_FFMPEG` and `STUARTY_FFPROBE` first, then the FFmpeg next to the program, then the `PATH`. When you set `STUARTY_FFMPEG` and it fails, the product does not fall back to another one, because you asked for that binary. `ffprobe` is taken from the same directory as `ffmpeg`.
+The search order is fixed: `VUKEM_VIDEO_FFMPEG` and `VUKEM_VIDEO_FFPROBE` first, then the FFmpeg next to the program, then the `PATH`. When you set `VUKEM_VIDEO_FFMPEG` and it fails, the product does not fall back to another one, because you asked for that binary. `ffprobe` is taken from the same directory as `ffmpeg`.
 
 ## Quick start
 
-1. Run `stuarty doctor --full`. The `ffmpeg.binary` check shows the path and version it found, or the error.
+1. Run `vukem-video doctor --full`. The `ffmpeg.binary` check shows the path and version it found, or the error.
 2. If none is found, install FFmpeg 9 and make sure `ffmpeg` and `ffprobe` are on the `PATH`, or set both variables to **absolute paths of files**.
-3. Run `stuarty doctor --full` again: the version, the licence class and the H.264 encoder should show.
+3. Run `vukem-video doctor --full` again: the version, the licence class and the H.264 encoder should show.
 
 ```bash
-export STUARTY_FFMPEG=/opt/ffmpeg/bin/ffmpeg
-export STUARTY_FFPROBE=/opt/ffmpeg/bin/ffprobe
-stuarty doctor --full
+export VUKEM_VIDEO_FFMPEG=/opt/ffmpeg/bin/ffmpeg
+export VUKEM_VIDEO_FFPROBE=/opt/ffmpeg/bin/ffprobe
+vukem-video doctor --full
 ```
 
 The container image carries a pinned LGPL FFmpeg and needs nothing; see [FFmpeg, codecs and licences](/docs/self-hosting/ffmpeg-and-licences) for its source and how to verify it.
 
 ## Common mistakes
 
-- A relative path or a directory in `STUARTY_FFMPEG`: it is refused at start-up as an invalid path.
+- A relative path or a directory in `VUKEM_VIDEO_FFMPEG`: it is refused at start-up as an invalid path.
 - Setting the variable in a shell and starting the server from a service manager or a desktop shortcut, which do not see it. Set it where the server starts.
 - An FFmpeg that is much older than 9: a version below 7 is reported as old, and an encoder or filter may be missing. Another version is otherwise accepted with a warning.
 - Using a GPL or non-free build in something you distribute. The check classifies the licence from the configure line; see the licence page.

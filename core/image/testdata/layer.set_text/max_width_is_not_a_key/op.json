@@ -1,9 +1,0 @@
-{
-  "args": {
-    "layer_id": "lyr_cccccccccc",
-    "style": {
-      "max_width": 100
-    }
-  },
-  "op": "layer.set_text"
-}

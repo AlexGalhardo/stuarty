@@ -2,12 +2,11 @@ package mcp
 
 import (
 	"bytes"
-	"strings"
 	"testing"
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
-	"github.com/AlexGalhardo/stuarty/web/contract/testenv"
+	"github.com/AlexGalhardo/vukem-video/web/contract/testenv"
 )
 
 // textProject is a project with one text item of 1 s, so that a frame has
@@ -147,32 +146,5 @@ func TestViewImageSizeTable(t *testing.T) {
 				}
 			}
 		})
-	}
-}
-
-// Mode audio of view measures the sound and takes item_id, from and until only; item_id is refused in the image
-// modes, as the CLI refuses --item there (epic 34).
-func TestViewModeAudioArguments(t *testing.T) {
-	t.Parallel()
-
-	env := testenv.New(t, testenv.Options{Frames: true})
-	cs := connect(t, env.Service, Options{}, "claude-code")
-	project := textProject(t, cs)
-
-	for _, c := range []struct {
-		args map[string]any
-		code string
-	}{
-		{map[string]any{"mode": "audio", "at": "0s"}, "E_VALIDATION"},
-		{map[string]any{"mode": "audio", "item_id": "itm_0000000000"}, "E_NOT_FOUND"},
-		{map[string]any{"mode": "frame", "at": "0s", "item_id": "itm_0000000000"}, "E_VALIDATION"},
-		{map[string]any{"mode": "sheet", "times": []any{"0s", "0.5s"}, "item_id": "itm_0000000000"}, "E_VALIDATION"},
-	} {
-		c.args["project_id"] = project
-
-		res := call(t, cs, "view", c.args)
-		if !res.IsError || len(imagesOf(res)) != 0 || !strings.Contains(textOf(t, res), c.code) {
-			t.Errorf("view %v: want %s and no image, got %+v", c.args, c.code, res.Content)
-		}
 	}
 }

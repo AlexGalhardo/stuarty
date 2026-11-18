@@ -1,8 +1,0 @@
-{
-  "code": "E_VALIDATION",
-  "hint": "Use preset video_thumbnail, or width and height in pixels.",
-  "message": "Give a preset, or both width and height.",
-  "op_index": 0,
-  "path": "args",
-  "retryable": false
-}

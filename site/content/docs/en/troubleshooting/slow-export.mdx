@@ -21,19 +21,19 @@ The numbers on a table of the repository, `docs/perf/`, are those of one machine
 2. Read the job, which reports the encoder used and the duration:
 
 ```bash
-stuarty job:list --project prj_7k2m9x4q1b --state all
-stuarty job:show job_4h8k2m6p9t
-stuarty doctor --full
+vukem-video job:list --project prj_7k2m9x4q1b --state all
+vukem-video job:show job_4h8k2m6p9t
+vukem-video doctor --full
 ```
 
-3. Export a short range to compare: `stuarty export --project prj_7k2m9x4q1b --start 0s --end 5s`.
+3. Export a short range to compare: `vukem-video export --project prj_7k2m9x4q1b --start 0s --end 5s`.
 
 | Check | What to do |
 | --- | --- |
-| The encoder is `libopenh264` and a hardware encoder exists | `doctor --full` shows why the hardware one failed; fix the driver, or force one with `STUARTY_ENCODER`. The gain is small |
+| The encoder is `libopenh264` and a hardware encoder exists | `doctor --full` shows why the hardware one failed; fix the driver, or force one with `VUKEM_VIDEO_ENCODER`. The gain is small |
 | The project is larger than the output needs | set the frame size to what the platform shows; 1080 x 1920 is the usual vertical size |
 | The sources are very large or of a heavy codec | the import makes a proxy for the editor, but the export reads the original: re-encode a smaller source |
-| Several exports are queued | `STUARTY_MAX_EXPORTS` is 2 per workspace and 1 per user or key; the rest wait |
+| Several exports are queued | `VUKEM_VIDEO_MAX_EXPORTS` is 2 per workspace and 1 per user or key; the rest wait |
 | The disk is almost full or slow | the workspace and `tmp/` live on one volume; free space and use a fast disk |
 | A container with a small CPU limit | give it more CPUs |
 

@@ -10,7 +10,7 @@
 # internal/tools/bundlehash) of the re-export equal those of the bundle, and that every bundle given has the
 # same hashes: bundles made on other systems must equal the one made here. Exit 0 means all of it holds.
 # Needs: go, ffmpeg on PATH. Environment:
-#   STUARTY_BIN   the binary to use (default: built from this checkout)
+#   VUKEM_VIDEO_BIN   the binary to use (default: built from this checkout)
 #   BUNDLE_KEEP       set to 1 to keep the work folder
 set -euo pipefail
 
@@ -33,10 +33,10 @@ cleanup() {
 }
 trap cleanup EXIT
 
-case "$(uname -s)" in MINGW* | MSYS* | CYGWIN*) exe=stuarty.exe ;; *) exe=stuarty ;; esac
+case "$(uname -s)" in MINGW* | MSYS* | CYGWIN*) exe=vukem-video.exe ;; *) exe=vukem-video ;; esac
 bin="$work/$exe"
-if [ -n "${STUARTY_BIN:-}" ]; then
-	cp "$STUARTY_BIN" "$bin"
+if [ -n "${VUKEM_VIDEO_BIN:-}" ]; then
+	cp "$VUKEM_VIDEO_BIN" "$bin"
 else
 	log "building the binary"
 	(cd "$root" && go build -o "$bin" ./web/cmd/app)
@@ -44,14 +44,14 @@ fi
 hashtool="$work/bundlehash"
 (cd "$root" && go build -o "$hashtool" ./internal/tools/bundlehash)
 
-unset STUARTY_URL APP_KEY APP_ENV
+unset VUKEM_VIDEO_URL APP_KEY APP_ENV
 project=prj_7k2m9x4q1b
 
 # vv <home> <args...>: the product CLI in a private workspace; commands run in-process, no server is needed.
 vv() {
 	local home="$1"
 	shift
-	STUARTY_HOME="$home" "$bin" "$@"
+	VUKEM_VIDEO_HOME="$home" "$bin" "$@"
 }
 
 # export_bundle <home> <out>: exports the project of the workspace without the log and copies the file.

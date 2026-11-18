@@ -3,9 +3,9 @@ package service
 import (
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/core/command"
-	"github.com/AlexGalhardo/stuarty/core/otio"
-	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/core/otio"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
 func TestExportFormatsAreValidated(t *testing.T) {

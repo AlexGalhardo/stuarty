@@ -9,7 +9,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/AlexGalhardo/stuarty/engine/rasterize"
+	"github.com/AlexGalhardo/vukem-video/engine/rasterize"
 )
 
 // Fonts is the user fonts of a workspace: fonts/<sha256>, mode 0600 (SDD-000

@@ -9,12 +9,12 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/AlexGalhardo/stuarty/core/command"
-	"github.com/AlexGalhardo/stuarty/core/lint"
-	"github.com/AlexGalhardo/stuarty/core/timeline"
-	"github.com/AlexGalhardo/stuarty/core/timeval"
-	"github.com/AlexGalhardo/stuarty/service/crashpoint"
-	"github.com/AlexGalhardo/stuarty/service/textview"
+	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/core/lint"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/core/timeval"
+	"github.com/AlexGalhardo/vukem-video/service/crashpoint"
+	"github.com/AlexGalhardo/vukem-video/service/textview"
 )
 
 const (
@@ -26,12 +26,8 @@ const (
 )
 
 func (s *svc) HistoryList(ctx context.Context, req HistoryListRequest) (*HistoryListResult, error) {
-	c, err := s.authorizeProject(ctx, "HistoryList", req.ProjectID)
+	c, err := authorize(ctx, "HistoryList", req.ProjectID)
 	if err != nil {
-		return nil, err
-	}
-
-	if err := s.useTimeline(ctx, c, &req.ProjectID, req.TimelineID); err != nil {
 		return nil, err
 	}
 
@@ -182,12 +178,8 @@ func (s *svc) Redo(ctx context.Context, req UndoRequest) (*UndoResult, error) {
 // step is Undo and Redo: the same transaction as an edit with the differences
 // of SDD-005 section 12.2.
 func (s *svc) step(ctx context.Context, method string, req UndoRequest, redo bool) (*UndoResult, error) {
-	c, err := s.authorizeProject(ctx, method, req.ProjectID)
+	c, err := authorize(ctx, method, req.ProjectID)
 	if err != nil {
-		return nil, err
-	}
-
-	if err := s.useTimeline(ctx, c, &req.ProjectID, req.TimelineID); err != nil {
 		return nil, err
 	}
 
@@ -468,12 +460,8 @@ func (s *svc) undoResult(
 }
 
 func (s *svc) Lint(ctx context.Context, req LintRequest) (*LintResult, error) {
-	c, err := s.authorizeProject(ctx, "Lint", req.ProjectID)
+	c, err := authorize(ctx, "Lint", req.ProjectID)
 	if err != nil {
-		return nil, err
-	}
-
-	if err := s.useTimeline(ctx, c, &req.ProjectID, req.TimelineID); err != nil {
 		return nil, err
 	}
 
@@ -582,10 +570,6 @@ func (s *svc) stepDescription(row *OperationRow, ops []string) string {
 	case OpImport:
 		return "Imported the project."
 	case OpEdit:
-	}
-
-	if len(ops) == 1 && ops[0] == revertOp {
-		return "Reverted to r" + strconv.FormatInt(revertTargetOf(row.Ops), 10) + "."
 	}
 
 	var parts []string

@@ -8,10 +8,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/service"
-	"github.com/AlexGalhardo/stuarty/web/app/http/middleware"
-
 	"github.com/AlexGalhardo/vukem/ratelimit"
+
+	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/vukem-video/web/app/http/middleware"
 )
 
 type broken struct{}

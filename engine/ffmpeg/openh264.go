@@ -23,15 +23,13 @@ var openH264ManifestJSON []byte
 // downloaded by an explicit install step, never by an export, a transcription or an agent call, and the
 // build loads it at run time from the directory the runner names in EnvOpenH264Dir.
 const (
-	// OpenH264Tool is the name of the install step: "stuarty tools:install openh264".
+	// OpenH264Tool is the name of the install step: "vukem-video tools:install openh264".
 	OpenH264Tool = "openh264"
 	// EnvOpenH264Dir is the variable that tells the own build where the verified library is. It is set
 	// only for the tools of an installation whose library passed verification, and only the own build reads it.
-	// The name is the one the pinned build ffmpeg-9.0.2-2 reads (.config/ffmpeg-build/patches/); it
-	// changes with the next rebuild of that build, not before.
 	EnvOpenH264Dir = "VUKEM_VIDEO_OPENH264_DIR"
 	// OpenH264InstallCommand is what an error says to run.
-	OpenH264InstallCommand = "stuarty tools:install " + OpenH264Tool
+	OpenH264InstallCommand = "vukem-video tools:install " + OpenH264Tool
 )
 
 // Reasons of the errors of the OpenH264 library (details.reason).
@@ -200,7 +198,7 @@ func openH264Error(st OpenH264State) *Error {
 		e.Message = "The OpenH264 library that this FFmpeg build loads is not available for " + runtime.GOOS + "/" +
 			runtime.GOARCH + "."
 		e.Hint = "Use the hardware or operating system encoder of this machine, or point " + EnvFFmpeg +
-			" at an FFmpeg that has libx264 and set STUARTY_ALLOW_USER_X264=true."
+			" at an FFmpeg that has libx264 and set VUKEM_VIDEO_ALLOW_USER_X264=true."
 		e.Details = map[string]any{"reason": st.Reason, "tool": OpenH264Tool}
 		return e
 	case ReasonOpenH264Changed:

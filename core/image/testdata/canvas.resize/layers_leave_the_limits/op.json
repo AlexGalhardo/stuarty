@@ -1,8 +1,0 @@
-{
-  "args": {
-    "height": 4096,
-    "mode": "scale",
-    "width": 4096
-  },
-  "op": "canvas.resize"
-}

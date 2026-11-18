@@ -4,15 +4,15 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/AlexGalhardo/stuarty/core/command"
-	"github.com/AlexGalhardo/stuarty/service"
-
 	"github.com/AlexGalhardo/vukem/errs"
 	"github.com/AlexGalhardo/vukem/web"
+
+	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/service"
 )
 
-// ProblemTypePrefix starts the type of every problem: urn:stuarty:error:<code>.
-const ProblemTypePrefix = "urn:stuarty:error:"
+// ProblemTypePrefix starts the type of every problem: urn:vukem-video:error:<code>.
+const ProblemTypePrefix = "urn:vukem-video:error:"
 
 // CodeMethodNotAllowed is the code of a 405 (OPTIONS included). SDD-000 section 8
 // lists no code for it, so it falls under "everything else", status 405.

@@ -1,7 +1,0 @@
-{
-  "args": {
-    "asset": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-    "id": "not-an-id"
-  },
-  "op": "layer.add_image"
-}

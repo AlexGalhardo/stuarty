@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/service/logging"
-	"github.com/AlexGalhardo/stuarty/service/workspace"
+	"github.com/AlexGalhardo/vukem-video/service/logging"
+	"github.com/AlexGalhardo/vukem-video/service/workspace"
 )
 
 func TestOpenLogWritesToStderrAndTheWorkspaceFile(t *testing.T) {

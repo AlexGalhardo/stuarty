@@ -5,7 +5,7 @@ import (
 	"slices"
 	"sort"
 
-	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
 // planner holds what Frame needs and Window reuses for every frame: the

@@ -7,13 +7,13 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/service"
-
 	"github.com/AlexGalhardo/vukem/auth"
 	"github.com/AlexGalhardo/vukem/auth/hash"
 	"github.com/AlexGalhardo/vukem/database"
 	vsession "github.com/AlexGalhardo/vukem/session"
 	"github.com/AlexGalhardo/vukem/web"
+
+	"github.com/AlexGalhardo/vukem-video/service"
 )
 
 // Session lifetimes of network mode (SDD-007 section 4.1 item 4).

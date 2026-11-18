@@ -12,9 +12,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/core/command"
-	"github.com/AlexGalhardo/stuarty/core/timeline"
-	"github.com/AlexGalhardo/stuarty/core/timeval"
+	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/core/timeval"
 )
 
 // decodeRow reads the stored document of a project row.
@@ -25,7 +25,7 @@ func decodeRow(row *ProjectRow) (*timeline.Document, error) {
 			for _, v := range ve.Violations {
 				if v.Code == timeline.VSchemaVersion {
 					return nil, newError(command.CodeValidation, "%s", v.Message).
-						withHint("update stuarty, then open the project again").
+						withHint("update vukem-video, then open the project again").
 						withDetail("code", timeline.VSchemaVersion)
 				}
 			}
@@ -161,17 +161,15 @@ func stateString(s ProjectState) string {
 	return string(s)
 }
 
-// productionSummary is the item of the list of projects: the project, with the numbers of its first timeline.
-func productionSummary(h *ProductionHead) ProjectSummary {
-	t := &h.Timeline
-	fps := timeline.Rational{Num: t.Summary.FPSNum, Den: t.Summary.FPSDen}
+func headSummary(h *ProjectHead) ProjectSummary {
+	fps := timeline.Rational{Num: h.Summary.FPSNum, Den: h.Summary.FPSDen}
 
 	return ProjectSummary{
-		ID: h.ID, ProjectID: h.ID, Name: h.Name, Revision: t.Revision, State: stateString(h.State),
-		Width: t.Summary.Width, Height: t.Summary.Height, FPS: fpsString(fps.Num, fps.Den),
-		Duration: timeValue(fps, t.Summary.DurationFrames),
-		Tracks:   t.Summary.Tracks, Items: t.Summary.Items, Assets: t.Summary.Assets,
-		TimelineID: t.ID, Timelines: h.Timelines, UpdatedAt: msTime(h.UpdatedMs),
+		ID: h.ID, ProjectID: h.ID, Name: h.Name, Revision: h.Revision, State: stateString(h.State),
+		Width: h.Summary.Width, Height: h.Summary.Height, FPS: fpsString(fps.Num, fps.Den),
+		Duration: timeValue(fps, h.Summary.DurationFrames),
+		Tracks:   h.Summary.Tracks, Items: h.Summary.Items, Assets: h.Summary.Assets,
+		UpdatedAt: msTime(h.UpdatedMs),
 	}
 }
 

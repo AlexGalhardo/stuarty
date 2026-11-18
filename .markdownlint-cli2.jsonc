@@ -28,5 +28,5 @@
 		"MD060": false
 	},
 	"globs": ["**/*.md"],
-	"ignores": ["**/node_modules/**", "**/testdata/**", "site/out/**", "web/resources/public/**", "CREATE.md", ".claude/skills/**", "licenses/go-modules/**", "licenses/npm/**", "licenses/crates/**", "development/**", "qa-build/**", "web/test-results/**", "prompt-workers.md", "prompts-create-stuarty-icon.md", "TODO.md"]
+	"ignores": ["**/node_modules/**", "**/testdata/**", "site/out/**", "web/resources/public/**", "CREATE.md", ".claude/skills/**", "licenses/go-modules/**", "licenses/npm/**", "licenses/crates/**", "development/**"]
 }

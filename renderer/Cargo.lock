@@ -649,32 +649,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 
 [[package]]
-name = "stuarty-renderer"
-version = "0.0.0"
-dependencies = [
- "stuarty-renderer-text",
-]
-
-[[package]]
-name = "stuarty-renderer-gpu"
-version = "0.0.0"
-dependencies = [
- "stuarty-renderer",
- "wgpu",
-]
-
-[[package]]
-name = "stuarty-renderer-text"
-version = "0.0.0"
-dependencies = [
- "harfrust",
- "skrifa",
- "unicode-bidi",
- "unicode-linebreak",
- "unicode-script",
-]
-
-[[package]]
 name = "syn"
 version = "2.0.119"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -765,6 +739,32 @@ name = "unicode-width"
 version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ca718471876992059f251e33aafc334346ada08042b7661dd1fe313a9bced557"
+
+[[package]]
+name = "vukem-renderer"
+version = "0.0.0"
+dependencies = [
+ "vukem-renderer-text",
+]
+
+[[package]]
+name = "vukem-renderer-gpu"
+version = "0.0.0"
+dependencies = [
+ "vukem-renderer",
+ "wgpu",
+]
+
+[[package]]
+name = "vukem-renderer-text"
+version = "0.0.0"
+dependencies = [
+ "harfrust",
+ "skrifa",
+ "unicode-bidi",
+ "unicode-linebreak",
+ "unicode-script",
+]
 
 [[package]]
 name = "wasm-bindgen"

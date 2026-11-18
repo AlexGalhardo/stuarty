@@ -3,7 +3,7 @@ package service
 import (
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/core/lint"
+	"github.com/AlexGalhardo/vukem-video/core/lint"
 )
 
 func TestSilentAudioIsError(t *testing.T) {

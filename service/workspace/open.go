@@ -34,8 +34,8 @@ const (
 
 // Environment variables of SDD-000 section 10 read by Open.
 const (
-	EnvURL = "STUARTY_URL"
-	EnvKey = "STUARTY_KEY"
+	EnvURL = "VUKEM_VIDEO_URL"
+	EnvKey = "VUKEM_VIDEO_KEY"
 )
 
 const (
@@ -48,14 +48,14 @@ const (
 	ProbeTimeout = 500 * time.Millisecond
 
 	handshakePath    = "/api/v1/handshake"
-	handshakeContext = "stuarty-handshake-v1"
+	handshakeContext = "vukem-video-handshake-v1"
 )
 
 // Options configures Open. The zero value is Auto with the process environment.
 type Options struct {
 	Force   Force
 	Getenv  func(string) string // default os.Getenv
-	KeyFile string              // --key-file; used with STUARTY_URL
+	KeyFile string              // --key-file; used with VUKEM_VIDEO_URL
 	// Test seams; zero values mean the constants above.
 	Wait   time.Duration
 	Poll   time.Duration
@@ -78,7 +78,7 @@ const (
 // remote client.
 type Session struct {
 	Mode Mode
-	Dir  Dir // empty when STUARTY_URL was used: no local file is read
+	Dir  Dir // empty when VUKEM_VIDEO_URL was used: no local file is read
 	// Lock is held until Close when Mode is ModeInProcess.
 	Lock *Lock
 	// BaseURL and Token are set when Mode is ModeHTTP.

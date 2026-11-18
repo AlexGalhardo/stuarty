@@ -31,7 +31,7 @@ func newDir(t *testing.T) Dir {
 func TestResolve(t *testing.T) {
 	t.Parallel()
 
-	t.Run("uses STUARTY_HOME and creates it", func(t *testing.T) {
+	t.Run("uses VUKEM_VIDEO_HOME and creates it", func(t *testing.T) {
 		t.Parallel()
 		home := filepath.Join(t.TempDir(), "ws")
 		d, err := Resolve(env(home))
@@ -53,7 +53,7 @@ func TestResolve(t *testing.T) {
 			t.Skip("no home directory")
 		}
 		// Resolve would create the real folder, so check only the path logic.
-		want := filepath.Join(home, ".stuarty")
+		want := filepath.Join(home, ".vukem-video")
 		if _, err := os.Stat(want); err != nil {
 			t.Skip("not creating the real default workspace in a test")
 		}

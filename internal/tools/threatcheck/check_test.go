@@ -46,7 +46,7 @@ func TestEveryProblemIsReported(t *testing.T) {
 
 	root := repo(t, "func TestSecurity_T01_One(t *testing.T) {}\nfunc TestSecurity_T01_Extra(t *testing.T) {}\n")
 
-	problems, err := check(root, "docs/sdds/007-security-model.md")
+	problems, err := check(root, "docs/sdds/007-security-model.md", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -70,6 +70,21 @@ func TestEveryProblemIsReported(t *testing.T) {
 		if strings.Contains(got, unwanted) {
 			t.Errorf("%q is reported:\n%s", unwanted, got)
 		}
+	}
+}
+
+func TestPhaseRunChecksOnlyItsThreats(t *testing.T) {
+	t.Parallel()
+
+	root := repo(t, "func TestSecurity_T01_One(t *testing.T) {}\nfunc TestSecurity_T01_Two(t *testing.T) {}\n")
+
+	problems, err := check(root, "docs/sdds/007-security-model.md", "P1")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if got := strings.Join(problems, "\n"); !strings.Contains(got, "T-02") {
+		t.Errorf("T-02 is a threat of phase P1: %q", got)
 	}
 }
 
@@ -119,11 +134,8 @@ func TestTheRealModelParses(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// T-52 to T-55 are the AI provider threats of epic 09; T-56 to T-59 are the publishing threats of epic 18;
-	// T-60 and T-61 are the Meta threats of epic 19; T-70 to T-74 are the hosted agent threats of epic 14;
-	// T-80 to T-85 are the Google sign-in threats of epic 24.
-	if len(threats) != 72 {
-		t.Errorf("the model has %d threats, want 72 (T-85, the Google sign-in)", len(threats))
+	if len(threats) != 37 {
+		t.Errorf("the model has %d threats, want 37 (T-37, the GPU render process)", len(threats))
 	}
 }
 

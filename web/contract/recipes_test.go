@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/web/app/agentdocs"
+	"github.com/AlexGalhardo/vukem-video/web/app/agentdocs"
 )
 
 // TestCutCaptionScenarioIsTheSameThroughEverySurface (P2-AGT-009): the first

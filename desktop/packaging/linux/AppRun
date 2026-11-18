@@ -2,4 +2,4 @@
 # AppRun of the desktop AppImage: the native window. The server sits next to it in usr/bin, where the
 # application looks for it. The launcher reads $APPIMAGE (set by the AppImage runtime) to replace this file.
 HERE="$(dirname "$(readlink -f "$0")")"
-exec "$HERE/usr/bin/stuarty-desktop" "$@"
+exec "$HERE/usr/bin/vukem-video-desktop" "$@"

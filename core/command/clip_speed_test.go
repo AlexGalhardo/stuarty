@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/core/lint"
-	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/core/lint"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
 func TestSpeedBoundaries(t *testing.T) {

@@ -18,12 +18,12 @@ let built: string | undefined;
 // buildCli compiles the binary once per run.
 export function buildCli(): string {
 	if (built !== undefined) return built;
-	const dir = join(tmpdir(), "stuarty-e2e-cli");
+	const dir = join(tmpdir(), "vukem-video-e2e-cli");
 	mkdirSync(dir, { recursive: true });
 	const out = join(dir, process.platform === "win32" ? "app.exe" : "app");
 	execFileSync(
 		"go",
-		["build", "-o", out, "github.com/AlexGalhardo/stuarty/web/cmd/app"],
+		["build", "-o", out, "github.com/AlexGalhardo/vukem-video/web/cmd/app"],
 		{ cwd: REPO, stdio: "ignore" },
 	);
 	built = out;
@@ -54,8 +54,8 @@ export function cliMove(
 			env: {
 				...process.env,
 				APP_KEY,
-				STUARTY_MIN_FREE_BYTES: "1",
-				STUARTY_HOME: home,
+				VUKEM_VIDEO_MIN_FREE_BYTES: "1",
+				VUKEM_VIDEO_HOME: home,
 			},
 			stdio: "ignore",
 		},

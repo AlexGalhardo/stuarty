@@ -15,7 +15,7 @@ func TestRouteListShowsTheOwnerAPI(t *testing.T) {
 	cmd := exec.CommandContext(t.Context(), bin, "route:list")
 	cmd.Env = append(
 		os.Environ(),
-		"STUARTY_HOME="+filepath.Join(t.TempDir(), "ws"),
+		"VUKEM_VIDEO_HOME="+filepath.Join(t.TempDir(), "ws"),
 		"APP_ENV=development",
 		"APP_KEY=",
 	)

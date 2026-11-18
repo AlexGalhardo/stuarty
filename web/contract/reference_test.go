@@ -15,7 +15,7 @@ import (
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
-	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/vukem-video/service"
 )
 
 // The reference scenario (P1-QA-001, Prototype exit criteria 1 and 2): create a

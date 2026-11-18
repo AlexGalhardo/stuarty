@@ -7,9 +7,9 @@ import (
 	"encoding/hex"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/core/timeline"
-	"github.com/AlexGalhardo/stuarty/service"
-	"github.com/AlexGalhardo/stuarty/web/app/store"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/vukem-video/web/app/store"
 )
 
 // invariants are those of SDD-005 section 9.2, checked after every crash.

@@ -7,10 +7,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/core/plan"
-	"github.com/AlexGalhardo/stuarty/core/timeline"
-	"github.com/AlexGalhardo/stuarty/engine/compositor"
-	"github.com/AlexGalhardo/stuarty/engine/rasterize"
+	"github.com/AlexGalhardo/vukem-video/core/plan"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/engine/compositor"
+	"github.com/AlexGalhardo/vukem-video/engine/rasterize"
 )
 
 // TestRenderPlansTextAtTheOutputScale: a frame asked for at 2.5 times the project size draws the text

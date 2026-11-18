@@ -13,7 +13,7 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/vukem-video/service"
 )
 
 var ctx = context.Background()
@@ -1025,8 +1025,8 @@ func TestQueryPlans(t *testing.T) {
 	cases := []struct{ name, query, want string }{
 		{
 			"project listing",
-			`SELECT id FROM timelines WHERE state = 'active' AND (updated_ms, id) < (?, ?) ORDER BY updated_ms DESC, id DESC LIMIT 50`,
-			"timelines_state_updated_ms_index",
+			`SELECT id FROM projects WHERE state = 'active' AND (updated_ms, id) < (?, ?) ORDER BY updated_ms DESC, id DESC LIMIT 50`,
+			"projects_state_updated_ms_index",
 		},
 		{
 			"Since",

@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/desktop/update"
+	"github.com/AlexGalhardo/vukem-video/desktop/update"
 )
 
 // ErrInstallUnsupported is returned by the installer of a system that cannot update itself yet.
@@ -125,7 +125,7 @@ func locateRunning(goos string) (Target, error) {
 }
 
 // WatchFlag is the command line flag of the watchdog: the backup program run as
-// `stuarty-desktop --update-watch <pending.json>`.
+// `vukem-video-desktop --update-watch <pending.json>`.
 const WatchFlag = "--update-watch"
 
 func startWatchdog(backupExec, pendingFile string) error {

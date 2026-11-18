@@ -10,7 +10,8 @@ The product was a video editor called Vukem Video until 2026-11-18, when it beca
 
 - **The PRDs and the ADRs are current.** ADR-0031 to ADR-0047 record the turn; the status line of every older ADR says what amended or superseded it.
 - **The SDDs specify the video editor as built, up to release 0.29.0.** Each one that the turn affects starts with an "Amended" line that names the ADRs to read with it. A new domain (image, publishing, providers and the others) gets its specification from the epic that builds it, before code.
-- **The former name** is in SDD-000 section 13, with the old variables, folder and identifiers that are still read (ADR-0044). Four SDDs (SDD-000, SDD-002, SDD-003, SDD-007) are read by tests and by the site generator.
+- **The former name is still in the code** (`vukem-video`, `VUKEM_VIDEO_*`) and in the SDDs, four of which (SDD-000, SDD-002, SDD-003, SDD-007) are read by tests and by the site generator. Names change together with the code, in the rename epic (ADR-0044).
+- **Phase labels no longer schedule anything.** `P`, `A`, `B`, Prototype, ALPHA, BETA and 1.0 appear in the SDDs because the command registry still carries a phase field that tests compare with SDD-002. Read them as history; they leave with that field.
 - **`security-review-1.0.md` and `agent-benchmark.md` are records** of a review and of benchmark rounds of the editor; they are not rewritten.
 
 ## Reading map
@@ -111,12 +112,6 @@ Which epic delivers each requirement is in the traceability table of `plans/00-r
 | 011 | ingest and media: import, probe, profiles, artifacts, analysis, transcription | — |
 | 012 | editor UI architecture: thin-client rules, state, timeline, preview, command coverage, the desktop shell | ADR-0041 |
 | 013 | the renderer: the plan as input, the pixel contract, the module and its hosts | ADR-0038 |
-| 014 | connections and the secret vault: the record, the encrypted file, the master key, the outbound gate | ADR-0032, ADR-0033 |
-| 015 | the approval queue, rules and cost ceilings: the decision, the requests, the jobs that wait, the ledger | ADR-0032, ADR-0018 |
-| 020 | publishing: the connector frame, the sign-in with the user's own app and the YouTube connector | ADR-0032, ADR-0035 |
-| 021 | image documents: the document, the catalogue of layer operations, the plan, export, templates, lint, storage | ADR-0038 |
-| 018 | memory, skills and prompts: the files, front matter, review, the skill lint, import and export, the index and search | ADR-0040 |
-| 017 | the hosted agent chat: the protocol, profiles, the process, sessions, permission requests, streaming, transcripts | ADR-0037, ADR-0036 |
 
 ## Rules for changing these documents
 

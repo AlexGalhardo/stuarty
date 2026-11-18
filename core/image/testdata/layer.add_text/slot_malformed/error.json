@@ -1,8 +1,0 @@
-{
-  "code": "E_VALIDATION",
-  "hint": "A slot name is a lower case letter followed by up to 39 letters, digits or underscores.",
-  "message": "args.slot \"Title Slot\" is not a slot name.",
-  "op_index": 0,
-  "path": "args.slot",
-  "retryable": false
-}

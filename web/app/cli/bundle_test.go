@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/vukem-video/service"
 )
 
 // bundleService adds the bundle export to the fake, as the in-process service does.

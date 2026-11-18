@@ -9,7 +9,7 @@ package crashpoint
 import "os"
 
 // CrashEnv names the crash point the process dies at.
-const CrashEnv = "STUARTY_CRASH_AT"
+const CrashEnv = "VUKEM_VIDEO_CRASH_AT"
 
 // Hit is a named crash point.
 func Hit(name string) {

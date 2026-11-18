@@ -8,7 +8,7 @@
     "files": [
       "licenses/programs/ffmpeg/COPYING.LGPLv3"
     ],
-    "note": "BtbN lgpl build run as a separate process; the archives do not carry it; its configure line and source link are in /usr/share/doc/stuarty/ffmpeg/ in the image",
+    "note": "BtbN lgpl build run as a separate process; the archives do not carry it; its configure line and source link are in /usr/share/doc/vukem-video/ffmpeg/ in the image",
     "shipped_in": [
       "image"
     ]
@@ -180,37 +180,7 @@
     "files": [
       "licenses/vendored/x-image-vector-BSD-3-Clause.txt"
     ],
-    "note": "ported to Rust as renderer/stuarty-renderer-text/src/scan.rs (it was engine/raster/internal/scan)",
-    "shipped_in": [
-      "archive",
-      "image"
-    ]
-  },
-  {
-    "group": "vendored",
-    "name": "coreyhaines31/marketingskills (adapted skill text)",
-    "version": "73573e94a06a39965978b3fa1f9c1eace8cebc7c",
-    "spdx": "MIT",
-    "copyright": "Copyright (c) 2025 Corey Haines",
-    "files": [
-      "licenses/vendored/marketingskills-MIT.txt"
-    ],
-    "note": "adapted, with attribution, into the skills write-a-hook, short-script and caption-per-network (web/resources/skills); see licenses/vendored/NOTICE-skills.md",
-    "shipped_in": [
-      "archive",
-      "image"
-    ]
-  },
-  {
-    "group": "vendored",
-    "name": "heygen-com/hyperframes (adapted skill text)",
-    "version": "77ea9d80cfc8b347ccca966487a8ff902ce28320",
-    "spdx": "Apache-2.0",
-    "copyright": "Copyright 2026 HeyGen, Inc.",
-    "files": [
-      "licenses/vendored/hyperframes-Apache-2.0.txt"
-    ],
-    "note": "adapted, with attribution, into the skills captions-for-shorts and motion-with-an-external-engine (web/resources/skills); see licenses/vendored/NOTICE-skills.md",
+    "note": "ported to Rust as renderer/vukem-renderer-text/src/scan.rs (it was engine/raster/internal/scan)",
     "shipped_in": [
       "archive",
       "image"

@@ -1,7 +1,0 @@
-{
-  "args": {
-    "color": "#000000",
-    "parent": "lyr_zzzzzzzzzz"
-  },
-  "op": "layer.add_fill"
-}

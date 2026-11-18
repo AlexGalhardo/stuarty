@@ -7,9 +7,9 @@ import (
 	"os"
 	"slices"
 
-	"github.com/AlexGalhardo/stuarty/core/lint"
-	"github.com/AlexGalhardo/stuarty/core/timeline"
-	"github.com/AlexGalhardo/stuarty/engine/ingest"
+	"github.com/AlexGalhardo/vukem-video/core/lint"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/engine/ingest"
 )
 
 // maxPeaksFile bounds the peaks artifact read for a lint: an hour of audio is
@@ -36,10 +36,6 @@ func (s *svc) lintEnvFor(ctx context.Context, doc *timeline.Document) lint.Env {
 
 	env.Artifacts = r
 
-	if env.AlphaOpaque == nil {
-		env.AlphaOpaque = r.alphaOpaque
-	}
-
 	return env
 }
 
@@ -52,27 +48,6 @@ type artifactReader struct {
 }
 
 var _ lint.ArtifactReader = (*artifactReader)(nil)
-
-// alphaOpaque is the alpha_opaque fact of the normalized artifact of an asset (SDD-011 section 4.3.6): the ingest
-// measured that a file which declares an alpha channel has only opaque pictures. known is false when the asset has
-// no normalized artifact or the artifact predates the fact, which reads as "not opaque", never as a finding.
-func (r *artifactReader) alphaOpaque(asset string) (opaque, known bool) {
-	i := slices.IndexFunc(r.rows[asset], func(a ArtifactRow) bool { return a.Kind == "normalized" && len(a.Meta) > 0 })
-	if i < 0 {
-		return false, false
-	}
-
-	var facts struct {
-		HasAlpha    bool `json:"has_alpha"`
-		AlphaOpaque bool `json:"alpha_opaque"`
-	}
-
-	if json.Unmarshal(r.rows[asset][i].Meta, &facts) != nil || !facts.HasAlpha {
-		return false, false
-	}
-
-	return facts.AlphaOpaque, true
-}
 
 func (r *artifactReader) Peaks(asset string) (lint.Peaks, bool) {
 	i := slices.IndexFunc(r.rows[asset], func(a ArtifactRow) bool { return a.Kind == "peaks" && a.Ext == "bin" })

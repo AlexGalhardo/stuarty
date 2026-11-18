@@ -8,19 +8,18 @@ import (
 	"os"
 	"strings"
 
-	"github.com/AlexGalhardo/stuarty/core/command"
-	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/service"
 )
 
 var edit = &spec{
-	name:     "edit",
-	timeline: true,
-	summary:  "apply a batch of operations to a project (its lint block is lint_scope fast: lint runs every rule)",
+	name:    "edit",
+	summary: "apply a batch of operations to a project (its lint block is lint_scope fast: lint runs every rule)",
 	usage: []string{
-		"stuarty edit --project <id> --ops <file|-> [--base n] [--key k]",
-		"stuarty edit --project <id> <op> [k=v | k:=json]...",
+		"vukem-video edit --project <id> --ops <file|-> [--base n] [--key k]",
+		"vukem-video edit --project <id> <op> [k=v | k:=json]...",
 	},
-	example:    "stuarty edit --project prj_7k2m9x4q1b item.move item_id=itm_m1n2p3q4r5 start=2s",
+	example:    "vukem-video edit --project prj_7k2m9x4q1b item.move item_id=itm_m1n2p3q4r5 start=2s",
 	project:    true,
 	positional: true,
 	globals:    []string{"dry-run"},
@@ -42,7 +41,7 @@ func runEdit(ctx context.Context, c *call) (*output, error) {
 	}
 
 	if !c.args.has("base") && !req.baseGiven {
-		cur, gerr := c.svc.ProjectGet(ctx, service.ProjectGetRequest{ProjectID: c.projectID, TimelineID: c.timelineID})
+		cur, gerr := c.svc.ProjectGet(ctx, service.ProjectGetRequest{ProjectID: c.projectID})
 		if gerr != nil {
 			return nil, gerr
 		}
@@ -75,7 +74,7 @@ type batchObject struct {
 // editRequest builds the EditRequest from either input form of SDD-003
 // section 5.5. Flags override the members of the object form.
 func editRequest(c *call) (*batchRequest, error) {
-	req := &batchRequest{ProjectID: c.projectID, TimelineID: c.timelineID}
+	req := &batchRequest{ProjectID: c.projectID}
 	positional := c.args.Positional
 
 	switch {

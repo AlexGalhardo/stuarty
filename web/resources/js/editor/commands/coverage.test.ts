@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 
 import registry from "@/generated/commands.json";
+import { type BuildPhase, isPhaseAtLeast } from "../boot/phase";
 import {
 	addAudioOperations,
 	addClipOperations,
@@ -35,7 +36,6 @@ import {
 	framingOperations,
 	freezeFrameOperations,
 	keyframeClearOperations,
-	keyframeEasingOperations,
 	keyframeFallbackOperations,
 	keyframeRemoveOperations,
 	keyframeSetOperations,
@@ -45,7 +45,6 @@ import {
 	markerRemoveOperations,
 	markerSetOperations,
 	maskOperations,
-	motionPresetOperations,
 	moveOperations,
 	outlineOperations,
 	pasteAttributesOperations,
@@ -87,29 +86,33 @@ import {
 	unlinkOperations,
 } from "./builders";
 import { ACTIONS, ANY_COMMAND, COVERAGE, type EntryPoint } from "./coverage";
-import {
-	applyPresetOperations,
-	processorAddOperations,
-	processorMoveOperations,
-	processorRemoveOperations,
-	processorSetOperations,
-} from "./processorBuilders";
 
 interface RegistryEntry {
 	name: string;
 	internal: boolean;
+	phase: string;
 }
 
 const commands = registry as RegistryEntry[];
 const byName = new Map(commands.map((c) => [c.name, c]));
 
+// The build phase this editor ships: BETA (SDD-012 section 9.3 rule 3).
+const BUILD: BuildPhase = "beta";
+
+const LETTER: Readonly<Record<string, BuildPhase>> = {
+	P: "prototype",
+	A: "alpha",
+	B: "beta",
+};
+
 type Coverage = Readonly<Record<string, readonly EntryPoint[]>>;
 
-// The rules of SDD-012 section 9.3, as a function so that the negative
+// The four rules of SDD-012 section 9.3, as a function so that the negative
 // fixtures below can run them on a damaged declaration.
 function coverageProblems(
 	list: readonly RegistryEntry[],
 	coverage: Coverage,
+	phase: BuildPhase,
 ): string[] {
 	const problems: string[] = [];
 	const names = new Set(list.map((c) => c.name));
@@ -120,8 +123,21 @@ function coverageProblems(
 			problems.push(`${c.name} has no entry point`);
 			continue;
 		}
-		if (!entries.some((e) => e.kind === "palette")) {
-			problems.push(`${c.name} has no palette entry`);
+		if (isPhaseAtLeast(c.phase as BuildPhase, phase)) {
+			// The catalogue phase is at or before the build phase: rule 3.
+			const usable = entries.filter((e) =>
+				isPhaseAtLeast(LETTER[e.phase], phase),
+			);
+			if (usable.length === 0)
+				problems.push(
+					`${c.name} has no entry point of phase ${phase} or earlier`,
+				);
+			if (
+				isPhaseAtLeast("alpha", phase) &&
+				!entries.some((e) => e.kind === "palette")
+			) {
+				problems.push(`${c.name} has no palette entry`);
+			}
 		}
 	}
 	for (const name of Object.keys(coverage)) {
@@ -140,17 +156,17 @@ function coverageProblems(
 
 describe("command coverage (SDD-012 section 9.3)", () => {
 	test("the declaration of the committed registry is complete and consistent", () => {
-		expect(coverageProblems(commands, COVERAGE)).toEqual([]);
+		expect(coverageProblems(commands, COVERAGE, BUILD)).toEqual([]);
 	});
 
-	test("every non-internal command has a key", () => {
+	test("every non-internal command has a key: 47 of ALPHA and the 25 of BETA", () => {
 		const keys = commands.filter((c) => !c.internal).map((c) => c.name);
 		expect(Object.keys(COVERAGE).sort()).toEqual(keys.sort());
-		expect(keys).toHaveLength(82);
+		expect(keys).toHaveLength(73);
 	});
 
-	test("every command has a palette entry, and the commands with an inspector control keep it", () => {
-		expect(coverageProblems(commands, COVERAGE)).toEqual([]);
+	test("the full BETA phase rule holds: every command has a BETA entry point and a palette entry", () => {
+		expect(coverageProblems(commands, COVERAGE, "beta")).toEqual([]);
 		for (const name of [
 			"audio.duck",
 			"audio.mark_beats",
@@ -159,8 +175,9 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 			"font.add",
 			"font.remove",
 		]) {
+			expect(byName.get(name)?.phase, name).toBe("beta");
 			expect(
-				COVERAGE[name]?.some((e) => e.kind === "inspector"),
+				COVERAGE[name]?.some((e) => e.kind === "inspector" && e.phase === "B"),
 				name,
 			).toBe(true);
 		}
@@ -173,7 +190,7 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 		}
 	});
 
-	test("the commands of the first UI keep a direct entry point", () => {
+	test("every command the Prototype UI sends keeps its entry point of phase P", () => {
 		for (const name of [
 			"clip.add",
 			"track.add",
@@ -182,7 +199,7 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 			"caption.add",
 		]) {
 			expect(
-				(COVERAGE[name] ?? []).some((e) => e.kind !== "palette"),
+				(COVERAGE[name] ?? []).some((e) => e.phase === "P"),
 				name,
 			).toBe(true);
 		}
@@ -190,22 +207,27 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 
 	test("negative: deleting one key of COVERAGE fails with the command name", () => {
 		const { "item.move": _removed, ...rest } = COVERAGE;
-		expect(coverageProblems(commands, rest)).toContain(
+		expect(coverageProblems(commands, rest, BUILD)).toContain(
 			"item.move has no entry point",
 		);
 	});
 
 	test("negative: a command added to the catalogue with no key fails", () => {
-		const grown = [...commands, { name: "clip.set_example", internal: false }];
-		expect(coverageProblems(grown, COVERAGE)).toContain(
+		const grown = [
+			...commands,
+			{ name: "clip.set_example", internal: false, phase: "alpha" },
+		];
+		expect(coverageProblems(grown, COVERAGE, BUILD)).toContain(
 			"clip.set_example has no entry point",
 		);
 	});
 
-	test("negative: a command with no palette entry fails", () => {
+	test("negative: a command with no palette entry fails in the ALPHA build", () => {
 		const bare = { ...COVERAGE, "text.add": [] as EntryPoint[] };
-		bare["text.add"] = [{ kind: "gesture", action: "timeline.split" }];
-		const problems = coverageProblems(commands, bare);
+		bare["text.add"] = [
+			{ kind: "gesture", action: "timeline.split", phase: "P" },
+		];
+		const problems = coverageProblems(commands, bare, BUILD);
 		expect(problems).toContain("text.add has no palette entry");
 	});
 
@@ -213,13 +235,36 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 		const stale = {
 			...COVERAGE,
 			"gone.command": [
-				{ kind: "palette", action: "palette.run" } as EntryPoint,
+				{ kind: "palette", action: "palette.run", phase: "A" } as EntryPoint,
 			],
-			"item.move": [{ kind: "palette", action: "no.such" } as EntryPoint],
+			"item.move": [
+				{ kind: "palette", action: "no.such", phase: "A" } as EntryPoint,
+			],
 		};
-		const problems = coverageProblems(commands, stale);
+		const problems = coverageProblems(commands, stale, BUILD);
 		expect(problems).toContain("gone.command is not in the registry");
 		expect(problems).toContain("no.such is not an action");
+	});
+
+	test("the Prototype build requires only the commands marked P in section 9.1", () => {
+		// The catalogue phase says when the service has a command; the UI phase
+		// of the table says when the UI reaches it, so in the Prototype build the
+		// rule covers the five commands of the table.
+		const marked = new Set([
+			"clip.add",
+			"track.add",
+			"item.split",
+			"item.trim",
+			"caption.add",
+		]);
+		const problems = coverageProblems(
+			commands.filter((c) => marked.has(c.name)),
+			Object.fromEntries(
+				Object.entries(COVERAGE).filter(([n]) => marked.has(n)),
+			),
+			"prototype",
+		);
+		expect(problems).toEqual([]);
 	});
 
 	test("the builders emit the operations the actions declare", () => {
@@ -339,18 +384,9 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 			"inspector.keyframe_add": keyframeSetOperations(setInput).map(
 				(o) => o.op,
 			),
-			"inspector.keyframe_easing": keyframeEasingOperations({
-				itemId: "itm_a",
-				property: "scale",
-				frame: 10,
-				easing: "hold",
-			}).map((o) => o.op),
-			"inspector.keyframe_curve": keyframeEasingOperations({
-				itemId: "itm_a",
-				property: "scale",
-				frame: 10,
-				bezier: [0.1, 0.2, 0.3, 0.4],
-			}).map((o) => o.op),
+			"inspector.keyframe_easing": keyframeSetOperations(setInput).map(
+				(o) => o.op,
+			),
 			"inspector.keyframe_value": keyframeSetOperations(setInput).map(
 				(o) => o.op,
 			),
@@ -380,12 +416,6 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 				itemId: "itm_a",
 				edge: "out",
 				preset: "pop",
-			}).map((o) => o.op),
-			"inspector.motion": motionPresetOperations({
-				itemId: "itm_a",
-				preset: "slide",
-				edge: "in",
-				direction: "left",
 			}).map((o) => o.op),
 			"inspector.auto_captions": captionFromTranscriptOperations({
 				clipId: "itm_a",
@@ -488,17 +518,6 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 				label: "",
 				replace: true,
 			}).map((o) => o.op),
-			"inspector.audio_processors": processorAddOperations(
-				{ itemId: "itm_a" },
-				"gate",
-			)
-				.concat(
-					processorSetOperations({ itemId: "itm_a" }, 0, { enabled: false }),
-				)
-				.concat(processorMoveOperations({ trackId: "trk_a" }, 1, 0))
-				.concat(processorRemoveOperations({ itemId: "itm_a" }, 0))
-				.concat(applyPresetOperations({ itemId: "itm_a" }, "voice"))
-				.map((o) => o.op),
 			"inspector.font_add": fontAddOperations("Brand Sans", [
 				{ weight: 400, hash: `sha256:${"a".repeat(64)}` },
 			]).map((o) => o.op),
@@ -557,5 +576,14 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 			if (action !== "palette.run")
 				expect(emitted[action], action).toBeDefined();
 		}
+	});
+});
+
+describe("isPhaseAtLeast", () => {
+	test("orders prototype, alpha and beta", () => {
+		expect(isPhaseAtLeast("alpha", "prototype")).toBe(false);
+		expect(isPhaseAtLeast("alpha", "alpha")).toBe(true);
+		expect(isPhaseAtLeast("alpha", "beta")).toBe(true);
+		expect(isPhaseAtLeast("prototype", "prototype")).toBe(true);
 	});
 });

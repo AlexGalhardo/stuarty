@@ -6,7 +6,6 @@ import { useCanEdit } from "../commands/useActions";
 import { useDocumentState } from "../state/EditorContext";
 import TextField from "./fields/TextField";
 import ToggleField from "./fields/ToggleField";
-import AudioProcessors from "./panels/AudioProcessors";
 import ImportSubtitles from "./panels/ImportSubtitles";
 import TrackCaptionStyle from "./panels/TrackCaptionStyle";
 import { useFieldCommit } from "./useFieldCommit";
@@ -60,7 +59,6 @@ export default function TrackPanel({
 				disabled={!canEdit}
 				commit={(magnet) => update({ magnet })}
 			/>
-			<AudioProcessors target={{ trackId }} />
 			<TrackCaptionStyle trackId={trackId} />
 			{track.kind === "visual" && <ImportSubtitles trackId={trackId} />}
 		</div>

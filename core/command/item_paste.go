@@ -4,7 +4,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
 func init() {
@@ -20,6 +20,7 @@ func init() {
 			CodeValidation, CodeNotFound, CodeTypeMismatch, CodeInvalidState,
 		},
 		Scope: ScopeEdit,
+		Phase: Beta,
 	}, applyItemPasteAttributes))
 }
 
@@ -71,7 +72,6 @@ var pasteGroups = []pasteGroup{
 		[]string{"volume"},
 		func(d, s *timeline.Item) {
 			d.Volume, d.Denoise, d.Voice = s.Volume, s.Denoise, s.Voice
-			d.Processors = timeline.CloneProcessors(s.Processors)
 		},
 	},
 }

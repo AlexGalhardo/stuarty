@@ -467,9 +467,7 @@ export interface MediaImportResult {
 }
 
 export type JobState =
-	| "waiting_approval"
 	| "queued"
-	| "waiting_approval"
 	| "running"
 	| "succeeded"
 	| "failed"
@@ -477,7 +475,6 @@ export type JobState =
 
 export interface ExportResult {
 	revision: number;
-	format?: string;
 	path?: string;
 	download_url: string;
 	bytes: number;
@@ -485,34 +482,6 @@ export interface ExportResult {
 	duration: TimeValue;
 	width: number;
 	height: number;
-	// The preset the export was made for, and the codec the file holds. When the
-	// preset wanted a codec this machine cannot write, codec_fallback is the
-	// codec it wanted and notes say so (SDD-004 section 8.3).
-	preset?: string;
-	video_codec?: string;
-	codec_fallback?: string;
-	notes?: string[];
-}
-
-// One export of a batch, read from its child job (SDD-004 section 8.4).
-export interface BatchItem {
-	index: number;
-	preset?: string;
-	format: string;
-	codec?: string;
-	job_id?: string;
-	state: JobState;
-	progress: number;
-	result?: ExportResult;
-	error?: ApiErrorBody;
-}
-
-export interface BatchResult {
-	total: number;
-	succeeded: number;
-	failed: number;
-	cancelled: number;
-	items: BatchItem[];
 }
 
 export interface Job {
@@ -524,77 +493,13 @@ export interface Job {
 	message?: string;
 	result?: {
 		export?: ExportResult;
-		batch?: BatchResult;
 		transcribe?: { asset_id: string; language: string; words: number };
-		generated?: GeneratedResult;
-		publish?: PublishResult;
 	};
 	error?: ApiErrorBody;
 	lint?: { errors: number; warnings: number };
-	// A job of a kind that needs approval carries its approval request and, from the moment it exists, the
-	// estimate the service made (SDD-016 section 6).
-	approval_id?: string;
-	estimate?: Money;
 	actor: string;
 	created_at: string;
 	text: string;
-}
-
-// The files an image.generate or voice.generate job stored as assets (SDD-016 section 6.1).
-export interface GeneratedItem {
-	asset_id: string;
-	hash: string;
-	kind: string;
-	bytes: number;
-	state: string;
-	revised_prompt?: string;
-}
-
-export interface GeneratedResult {
-	provider: string;
-	model: string;
-	items: GeneratedItem[];
-	requested: number;
-	delivered: number;
-	notes?: string[];
-	cost: Money;
-}
-
-// The bodies of POST /image/generate and POST /voice/generate.
-export interface ImageGenerateRequest {
-	project_id: string;
-	connection_id: string;
-	model: string;
-	prompt: string;
-	size?: string;
-	count?: number;
-	wait_ms?: number;
-	dry_run?: boolean;
-}
-
-export interface VoiceGenerateRequest {
-	project_id: string;
-	connection_id: string;
-	model: string;
-	text: string;
-	voice: string;
-	language?: string;
-	format?: string;
-	wait_ms?: number;
-	dry_run?: boolean;
-}
-
-export interface VoiceView {
-	id: string;
-	name: string;
-	language?: string;
-	source: "provider" | "documented";
-}
-
-export interface VoiceListResult {
-	connection_id: string;
-	provider: string;
-	voices: VoiceView[];
 }
 
 export interface JobListResult {
@@ -616,6 +521,7 @@ export interface LintResult {
 // the summaries, one command has its schema, example and error codes.
 export interface CommandSummary {
 	name: string;
+	phase: "prototype" | "alpha" | "beta";
 	scope: string;
 	summary: string;
 	internal?: boolean;
@@ -662,56 +568,6 @@ export interface HistoryQuery {
 	actor?: string;
 	cursor?: string;
 	limit?: number;
-}
-
-// Revert, the diff of two revisions and checkpoints (SDD-003 section 2.5.1). The
-// core classifies and words every change: `line` is shown as it comes.
-export interface Checkpoint {
-	name: string;
-	note: string;
-	revision: number;
-	actor: string;
-	at: string;
-	auto: boolean;
-}
-
-export interface CheckpointListResult {
-	project_id: string;
-	revision: number;
-	checkpoints: Checkpoint[];
-	text: string;
-}
-
-export interface DiffEntry {
-	verb: "added" | "removed" | "moved" | "trimmed" | "changed";
-	noun: string;
-	line: string;
-}
-
-export interface HistoryDiffResult {
-	project_id: string;
-	revision: number;
-	from: number;
-	to: number;
-	count: number;
-	entries: DiffEntry[];
-	text: string;
-}
-
-export interface HistoryRevertResult extends Omit<EditResult, "kind"> {
-	kind: "revert";
-	target: number;
-	same: boolean;
-	text: string;
-}
-
-export interface RevertRequest {
-	revision?: number;
-	checkpoint?: string;
-	// The revision the caller read; a change by another actor since then to what
-	// the revert changes is E_REVISION_CONFLICT (SDD-002 A.7).
-	base_revision?: number;
-	dry_run?: boolean;
 }
 
 // GET /projects/{id}/media/{asset_id}: the facts and the text of one asset.
@@ -794,75 +650,12 @@ export interface LibraryAsset {
 	bytes: number;
 	width?: number;
 	height?: number;
-	duration_ms?: number;
-	origin?: AssetOrigin;
-	description?: string;
-	reusable?: boolean;
-	tags?: string[];
-	created_by?: string;
-	created_at?: string;
 	projects: number;
-	// Where a picture of the file is served from: a timeline that holds it and its id there.
-	poster?: AssetPoster;
-	uses?: AssetUse[];
-}
-
-export type OriginKind =
-	| "imported"
-	| "generated"
-	| "fetched_by_agent"
-	| "rendered_externally";
-
-// SDD-011 section 14.2. source, prompt and rights_note are untrusted text.
-export interface AssetOrigin {
-	kind: OriginKind;
-	source?: string;
-	provider?: string;
-	model?: string;
-	prompt?: string;
-	cost_micros?: number;
-	rights_note?: string;
-}
-
-export interface AssetPoster {
-	timeline_id: string;
-	asset_id: string;
-}
-
-export interface AssetUse {
-	project_id: string;
-	name: string;
-	timelines: string[];
-	asset_id: string;
 }
 
 export interface AssetListResult {
 	assets: LibraryAsset[];
-	total: number;
-	next_cursor: string | null;
 	text: string;
-}
-
-// The filters of GET /assets (SDD-011 section 14.4).
-export interface AssetQuery {
-	section?: "visual" | "video";
-	kind?: "image" | "video" | "audio" | "lut";
-	tag?: string;
-	origin?: OriginKind;
-	reusable?: boolean;
-	text?: string;
-	project?: string;
-	cursor?: string;
-	limit?: number;
-}
-
-// GET /assets/{hash}, PUT /assets/{hash} and POST /assets/{hash}/tags answer one entry.
-export type AssetResult = LibraryAsset & { text: string };
-
-export interface AssetInfoBody {
-	description?: string;
-	rights_note?: string;
-	reusable?: boolean;
 }
 
 // GET /system (Doctor).
@@ -972,215 +765,6 @@ export interface KeyListResult {
 
 export type KeyRevokeResult = ApiKey;
 
-// /connections (SDD-014): the destinations the user connected. A result never carries a
-// credential, only secret_set.
-export interface Connection {
-	id: string;
-	kind: string;
-	label: string;
-	endpoint: string;
-	hosts: string[];
-	accepts: string[];
-	created_at: string;
-	last_used_at: string | null;
-	secret_set: boolean;
-}
-
-export interface ConnectionListResult {
-	connections: Connection[];
-}
-
-export interface ConnectionCreateRequest {
-	kind: string;
-	label: string;
-	endpoint: string;
-	hosts?: string[];
-	accepts: string[];
-	secret: string;
-}
-
-export interface ConnectionTestResult {
-	id: string;
-	ok: boolean;
-	status: number;
-	message: string;
-}
-
-// The AI providers (SDD-016): the providers, the models each connection offers, and the price table a
-// person edits. A result never carries a key. An amount is an integer in millionths of the currency
-// unit for a million tokens; the page formats it and decides nothing.
-export interface ProviderPrice {
-	currency: string;
-	input_micros_per_mtok: number;
-	output_micros_per_mtok: number;
-	// image or mchar for the price of one image or of a million characters of speech; absent for tokens.
-	unit?: "image" | "mchar";
-	unit_micros?: number;
-}
-
-export interface PriceEntry extends ProviderPrice {
-	provider: string;
-	model: string;
-}
-
-export interface ProviderView {
-	id: string;
-	name: string;
-	capabilities: string[];
-	credential_kinds: string[];
-	default_endpoint: string;
-	docs_url: string;
-	connections: string[];
-}
-
-export interface ProviderListResult {
-	providers: ProviderView[];
-	prices: PriceEntry[];
-}
-
-export type PriceSource = "user" | "catalogue" | "none";
-
-export interface ModelView {
-	id: string;
-	name: string;
-	context_tokens: number;
-	output_tokens: number;
-	price: ProviderPrice | null;
-	price_source: PriceSource;
-	// A hint of the adapter, never a rule: it orders what a picker shows.
-	capability?: "text" | "image" | "voice";
-}
-
-export interface ProviderModelsResult {
-	connection_id: string;
-	provider: string;
-	models: ModelView[];
-	fetched_at: string;
-	cached: boolean;
-}
-
-export interface ProviderPriceSetRequest {
-	provider: string;
-	model: string;
-	currency?: string;
-	input_micros_per_mtok?: number;
-	output_micros_per_mtok?: number;
-	unit?: "image" | "mchar";
-	unit_micros?: number;
-}
-
-export interface ProviderPricesResult {
-	prices: PriceEntry[];
-}
-
-// The approval queue, its rules and the cost ceilings (SDD-015). An amount is an integer in
-// millionths of the currency unit; the page formats it and adds nothing.
-export interface Money {
-	micros: number;
-	currency: string;
-}
-
-export type ApprovalState = "pending" | "approved" | "rejected" | "expired";
-
-export interface ApprovalRequest {
-	id: string;
-	actor: string;
-	kind: string;
-	// Text an agent or a job kind wrote: shown as text, never as markup.
-	summary: string;
-	connection_id: string | null;
-	project_id: string | null;
-	job_id: string | null;
-	payload_ref: string;
-	estimate: Money;
-	state: ApprovalState;
-	decided_by: string | null;
-	rule_id: string | null;
-	reason?: string;
-	created_at: string;
-	decided_at: string | null;
-	expires_at: string;
-}
-
-export interface ApprovalListResult {
-	requests: ApprovalRequest[];
-	next_cursor: string | null;
-	total: number;
-	text: string;
-}
-
-export interface ApprovalRule {
-	id: string;
-	kind: string;
-	connection_id: string | null;
-	project_id: string | null;
-	currency?: string;
-	per_item_micros: number | null;
-	per_day_micros: number | null;
-	enabled: boolean;
-	created_by: string;
-	created_at: string;
-}
-
-export interface ApprovalRuleListResult {
-	rules: ApprovalRule[];
-}
-
-export interface ApprovalRuleSetRequest {
-	id?: string;
-	kind: string;
-	connection_id?: string;
-	project_id?: string;
-	currency?: string;
-	per_item_micros?: number;
-	per_day_micros?: number;
-	enabled?: boolean;
-}
-
-export interface CostCeiling {
-	project_id: string | null;
-	currency: string;
-	per_item_micros: number | null;
-	per_day_micros: number | null;
-	updated_by: string;
-	updated_at: string;
-}
-
-export interface CostLine {
-	scope: "workspace" | "project";
-	project_id?: string;
-	currency: string;
-	micros: number;
-}
-
-export interface CostTotal {
-	day: string;
-	connection_id?: string;
-	project_id?: string;
-	currency: string;
-	micros: number;
-}
-
-export interface CostSummary {
-	ceilings: CostCeiling[];
-	today: CostLine[];
-	day: string;
-	days: CostTotal[];
-}
-
-export interface CostCeilingSetRequest {
-	project_id?: string;
-	currency: string;
-	per_item_micros?: number;
-	per_day_micros?: number;
-}
-
-// The events of GET /approvals/events: the data of each is an ApprovalRequest.
-export const APPROVAL_EVENT_NAMES = [
-	"approval.requested",
-	"approval.decided",
-] as const;
-
 // GET /users: an administrator session only (SDD-007 section 4.1 item 2). The
 // editor reads it once, to show the name of the actors `user:<id>`.
 export interface UserSummary {
@@ -1265,70 +849,6 @@ export interface ProjectCreateResult {
 	text: string;
 }
 
-// An item of a project as a production (SDD-005 section 16.1): the commands and the answers are the service's.
-export type ProjectItemKind = "brief" | "text" | "timeline" | "output";
-
-export interface ProjectItem {
-	id: string;
-	kind: ProjectItemKind;
-	title: string;
-	position: number;
-	state: "active" | "trashed";
-	timeline_id?: string;
-	job_id?: string;
-	format?: string;
-	text?: string;
-	// A text item: script, copy or caption (SDD-019).
-	text_kind?: "script" | "copy" | "caption";
-	updated_at: string;
-}
-
-export interface ProjectItemResult {
-	project_id: string;
-	item: ProjectItem;
-	text: string;
-}
-
-export interface ProjectItemAddRequest {
-	kind: "text" | "timeline";
-	title: string;
-	text?: string;
-	preset?: string;
-}
-
-export interface BriefResult {
-	project_id: string;
-	item_id?: string;
-	text: string;
-}
-
-// The guided briefing (SDD-005 section 5.12.1): the questions are the core's, the page only draws them.
-export interface BriefingQuestion {
-	id: string;
-	heading: string;
-	text: string;
-	kind: "text" | "choice" | "seconds" | "date";
-	required: boolean;
-	options?: string[];
-	max_chars?: number;
-	min?: number;
-	max?: number;
-}
-
-export interface BriefingAnswer {
-	id: string;
-	value: string;
-}
-
-export interface BriefingQuestionsResult {
-	project_id?: string;
-	questions: BriefingQuestion[];
-	has_brief: boolean;
-	guided: boolean;
-	answers?: BriefingAnswer[];
-	text: string;
-}
-
 export interface ProjectStateResult {
 	project_id: string;
 	state: ProjectState;
@@ -1341,39 +861,6 @@ export interface SessionResult {
 	email: string;
 	role: string;
 	scopes: string[];
-}
-
-// The optional Google sign-in of network mode (SDD-007 section 4.7, SDD-014 section 12.4).
-export interface GoogleLinked {
-	email: string;
-	linked_ms: number;
-}
-
-export interface GoogleStatus {
-	enabled: boolean;
-	linked: GoogleLinked | null;
-}
-
-export interface GoogleStart {
-	authorize_url: string;
-}
-
-export interface GoogleComplete {
-	user?: SessionResult;
-	linked?: GoogleLinked;
-}
-
-export interface GoogleSettingsRequest {
-	enabled: boolean;
-	connection_id?: string;
-	allowed_emails?: string[];
-}
-
-export interface GoogleSettings {
-	enabled: boolean;
-	connection_id: string;
-	allowed_emails: string[];
-	redirect_url: string;
 }
 
 // The brand kit and the font import (SDD-005 section 5.11, SDD-007 section 7.7).
@@ -1413,108 +900,6 @@ export interface ExportOptions {
 	end?: string;
 	// The time of the frame of a png export (`120f`).
 	at?: string;
-	// h264, hevc or av1, for an mp4 export; absent is the choice of the preset or H.264.
-	codec?: string;
-}
-
-// One platform preset of GET /export-presets (SDD-004 section 8.2): the limits are
-// the core's, the browser only shows them.
-export interface ExportPreset {
-	id: string;
-	network: string;
-	placement: string;
-	label: string;
-	container: string;
-	codecs: string[];
-	limits: {
-		min_duration_ms?: number;
-		max_duration_ms?: number;
-		min_fps?: number;
-		max_fps?: number;
-		min_width?: number;
-		min_height?: number;
-		max_width?: number;
-		max_height?: number;
-		aspect_ratio?: string;
-		max_bytes?: number;
-		max_video_kbps?: number;
-	};
-	targets: {
-		width: number;
-		height: number;
-		video_kbps: number;
-		audio_kbps: number;
-	};
-	sources: { url: string; read: string; says: string }[];
-}
-
-export interface CodecAvailability {
-	codec: string;
-	available: boolean;
-	encoder?: string;
-	reason?: string;
-}
-
-export interface ExportPresetListResult {
-	presets: ExportPreset[];
-	codecs?: CodecAvailability[];
-	text: string;
-}
-
-export interface ExportFinding {
-	code: string;
-	severity: string;
-	message: string;
-	limit: string;
-	got: string;
-}
-
-// GET /projects/{id}/audio-measure: the sound of an item or a range, before and after its audio processors
-// (SDD-004 section 7.1). A level is null when the audio has none (silence, or under 0.4 s).
-export interface AudioLevels {
-	integrated_lufs: number | null;
-	true_peak_dbtp: number | null;
-	noise_floor_dbfs: number;
-	speech_to_noise_db: number | null;
-}
-
-export interface AudioMeasureResult {
-	project_id: string;
-	revision: number;
-	item_id?: string;
-	start_frame: number;
-	end_frame: number;
-	seconds: number;
-	before: AudioLevels;
-	after: AudioLevels;
-	text: string;
-}
-
-export interface AudioMeasureQuery {
-	itemId?: string;
-	start?: string;
-	end?: string;
-}
-
-// GET /projects/{id}/export-check: what does not fit a preset, with the exact limit.
-export interface ExportCheckResult {
-	project_id: string;
-	revision: number;
-	preset: string;
-	ok: boolean;
-	findings: ExportFinding[];
-	duration_ms: number;
-	estimated_bytes: number;
-	text: string;
-}
-
-// One export of a batch request.
-export interface ExportBatchItem {
-	preset?: string;
-	format?: string;
-	codec?: string;
-	start?: string;
-	end?: string;
 }
 
 export interface ExportCapabilities {
@@ -1529,228 +914,4 @@ export interface BundleImportResult {
 	name: string;
 	revision: number;
 	text: string;
-}
-
-// The hosted agent chat (SDD-017). Every text in these types was written by an agent or by a
-// person and is shown as text, never as markup.
-export type ChatState =
-	| "starting"
-	| "idle"
-	| "running"
-	| "awaiting_permission"
-	| "ended";
-
-export interface ChatSession {
-	id: string;
-	project_id: string;
-	profile: string;
-	state: ChatState;
-	end_reason?: string;
-	title: string;
-	created_at: string;
-	updated_at: string;
-	ended_at?: string;
-	event_count: number;
-	live: boolean;
-}
-
-export interface ChatToolCall {
-	tool_call_id: string;
-	title: string;
-	tool_kind?: string;
-	status: "pending" | "in_progress" | "completed" | "failed";
-	output?: string;
-}
-
-export interface ChatPermissionOption {
-	option_id: string;
-	name: string;
-	kind: "allow_once" | "allow_always" | "reject_once" | "reject_always";
-}
-
-export interface ChatPermission {
-	request_id: string;
-	tool_call_id?: string;
-	title?: string;
-	tool_kind?: string;
-	options?: ChatPermissionOption[];
-	answer?: "allow" | "reject" | "cancel";
-}
-
-export type ChatEventKind =
-	| "user_message"
-	| "agent_message"
-	| "agent_thought"
-	| "tool_call"
-	| "permission_request"
-	| "permission_answer"
-	| "plan"
-	| "notice"
-	| "state";
-
-// One entry of a transcript and one frame of GET /chat/sessions/{id}/events. A frame with
-// `append` continues the text of the event with the same `seq`.
-export interface ChatEvent {
-	seq: number;
-	kind: ChatEventKind;
-	at: string;
-	text?: string;
-	append?: boolean;
-	tool?: ChatToolCall;
-	permission?: ChatPermission;
-	state?: { state: ChatState; end_reason?: string };
-}
-
-export interface ChatTranscriptResult {
-	session: ChatSession;
-	events?: ChatEvent[];
-	next_after?: number;
-	markdown?: string;
-}
-
-export interface ChatSessionListResult {
-	sessions: ChatSession[];
-}
-
-export interface AgentProfile {
-	name: string;
-	command: string;
-	args: string[];
-	created_by: string;
-	created_at: string;
-	updated_at: string;
-}
-
-export interface AgentSuggestion {
-	name: string;
-	title: string;
-	executables: string[];
-	args: string[];
-	install: string;
-	found: boolean;
-	found_path?: string;
-}
-
-export interface AgentProfileListResult {
-	profiles: AgentProfile[];
-	suggestions: AgentSuggestion[];
-	can_write: boolean;
-	available: boolean;
-}
-
-// The event of GET /chat/sessions/{id}/events: the data is a ChatEvent.
-export const CHAT_EVENT_NAMES = ["chat.event"] as const;
-
-// The social networks and publishing (SDD-020). No result carries a credential.
-export interface SocialLimits {
-	title_max: number;
-	description_max_bytes: number;
-	tags_max_chars: number;
-	file_max_bytes: number;
-	formats: string[];
-	// What the network takes besides the video; the dialog asks only for these (SDD-020 section 18).
-	thumbnail_formats?: string[];
-	visibilities?: string[];
-	needs_kids_declaration?: boolean;
-	source: string;
-	read: string;
-}
-
-export interface SocialNetwork {
-	network: string;
-	name: string;
-	publishes: string[];
-	limits: SocialLimits;
-	// The network takes a flag that says the video has synthetic content.
-	ai_disclosure?: boolean;
-	endpoint: string;
-	hosts: string[];
-	scopes: string[];
-	guide: string;
-	guide_read: string;
-}
-
-export interface SocialNetworkListResult {
-	networks: SocialNetwork[];
-	redirect_path: string;
-}
-
-export interface SocialConnectRequest {
-	network: string;
-	label?: string;
-	client_id?: string;
-	client_secret?: string;
-	connection_id?: string;
-	redirect_uri: string;
-}
-
-export interface SocialConnectResult {
-	connection_id: string;
-	authorize_url: string;
-}
-
-export interface SocialCompleteRequest {
-	state: string;
-	code?: string;
-	error?: string;
-}
-
-export interface SocialAccount {
-	connection_id: string;
-	network: string;
-	label: string;
-	account_id?: string;
-	account_title?: string;
-	// needs_account: the sign-in reached several accounts and a person has not chosen one (SDD-020 section 17).
-	state: "ready" | "needs_sign_in" | "needs_account";
-	choices?: SocialChoice[];
-}
-
-export interface SocialChoice {
-	id: string;
-	title: string;
-}
-
-export interface SocialSelectRequest {
-	connection_id: string;
-	account_id: string;
-}
-
-export interface SocialAccountListResult {
-	accounts: SocialAccount[];
-}
-
-export interface PublishRequest {
-	project_id: string;
-	connection_id: string;
-	export: string;
-	thumbnail?: string;
-	title: string;
-	description?: string;
-	tags?: string[];
-	visibility?: string;
-	made_for_kids?: boolean;
-	ai_disclosure?: boolean;
-}
-
-export interface PublishIssue {
-	path: string;
-	code: string;
-	message: string;
-}
-
-export interface PublishValidateResult {
-	network: string;
-	state: "prepared" | "invalid";
-	issues: PublishIssue[];
-	summary?: string;
-}
-
-export interface PublishResult {
-	network: string;
-	connection_id: string;
-	remote_id: string;
-	url: string;
-	state: "processing" | "published";
-	thumbnail_error?: string;
 }

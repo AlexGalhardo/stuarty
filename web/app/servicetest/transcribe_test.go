@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/engine/transcribe"
-	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/vukem-video/engine/transcribe"
+	"github.com/AlexGalhardo/vukem-video/service"
 )
 
 // stubProvider is a transcription provider that needs no helper. missing makes
@@ -126,7 +126,7 @@ func TestTranscribeWithoutTheHelperIsUnavailable(t *testing.T) {
 
 	se := serviceErr(err)
 	if se == nil || se.Code != "E_TRANSCRIBE_UNAVAILABLE" ||
-		se.Details["install_command"] != "stuarty tools:install whisper --model tiny" ||
+		se.Details["install_command"] != "vukem-video tools:install whisper --model tiny" ||
 		se.Details["download_bytes"] != int64(8_200_000) ||
 		se.Details["tool"] != "whisper" || se.Details["model"] != "tiny" ||
 		se.Details["missing"] == nil ||
@@ -253,7 +253,7 @@ func TestInspectTranscriptSectionFollowsTheProvider(t *testing.T) {
 		want string
 	}{
 		"ready":   {&stubProvider{}, "transcript: none yet (start a transcribe job for this asset)"},
-		"missing": {&stubProvider{missing: missing}, "transcript: unavailable (E_TRANSCRIBE_UNAVAILABLE): Run \"stuarty tools:install whisper --model tiny\""},
+		"missing": {&stubProvider{missing: missing}, "transcript: unavailable (E_TRANSCRIBE_UNAVAILABLE): Run \"vukem-video tools:install whisper --model tiny\""},
 	} {
 		t.Run(name, func(t *testing.T) {
 			m := newMediaEnv(t, mediaCfg{transcriber: tc.prov})

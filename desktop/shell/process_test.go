@@ -14,7 +14,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/service/workspace"
+	"github.com/AlexGalhardo/vukem-video/service/workspace"
 )
 
 var fakeBinary string
@@ -132,7 +132,7 @@ func TestMissingBinary(t *testing.T) {
 
 func TestRelativeBinaryIsRefused(t *testing.T) {
 	cfg := newConfig(t, "ok")
-	cfg.Binary = "stuarty"
+	cfg.Binary = "vukem-video"
 	_, err := Start(context.Background(), cfg)
 	assertReason(t, err, ReasonSpawn)
 }
@@ -219,7 +219,7 @@ func TestWorkspaceOfARunningServerIsReportedWithWhatToDo(t *testing.T) {
 	assertReason(t, err, ReasonInUse)
 
 	if se, ok := errors.AsType[*StartupError](err); ok {
-		for _, want := range []string{strconv.Itoa(os.Getpid()), "127.0.0.1:3490", "stuarty open", "STUARTY_HOME"} {
+		for _, want := range []string{strconv.Itoa(os.Getpid()), "127.0.0.1:3490", "vukem-video open", "VUKEM_VIDEO_HOME"} {
 			if !strings.Contains(se.Message, want) {
 				t.Errorf("message %q lacks %q", se.Message, want)
 			}

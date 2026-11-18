@@ -9,8 +9,8 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/engine/transcribe"
-	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/vukem-video/engine/transcribe"
+	"github.com/AlexGalhardo/vukem-video/service"
 )
 
 // installModel records a model of the manifest as installed, with real bytes under dir.
@@ -68,7 +68,7 @@ func installModels(t *testing.T, dir string, m transcribe.Manifest, models ...st
 }
 
 // The model that `tools:install whisper --model base` installed is the one transcribe uses
-// when STUARTY_WHISPER_MODEL is not set (VV-007).
+// when VUKEM_VIDEO_WHISPER_MODEL is not set (VV-007).
 func TestWhisperProviderUsesTheInstalledModel(t *testing.T) {
 	m, err := transcribe.DefaultManifest()
 	if err != nil {

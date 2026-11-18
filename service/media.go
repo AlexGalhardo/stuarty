@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"math"
 	"os"
 	"path"
@@ -19,14 +18,13 @@ import (
 
 	"golang.org/x/text/unicode/norm"
 
-	"github.com/AlexGalhardo/stuarty/core/command"
-	"github.com/AlexGalhardo/stuarty/core/timeline"
-	"github.com/AlexGalhardo/stuarty/core/timeval"
-	"github.com/AlexGalhardo/stuarty/engine/ingest"
-	assetlib "github.com/AlexGalhardo/stuarty/service/assets"
-	"github.com/AlexGalhardo/stuarty/service/pathguard"
-	"github.com/AlexGalhardo/stuarty/service/textview"
-	"github.com/AlexGalhardo/stuarty/service/untrusted"
+	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/core/timeval"
+	"github.com/AlexGalhardo/vukem-video/engine/ingest"
+	"github.com/AlexGalhardo/vukem-video/service/pathguard"
+	"github.com/AlexGalhardo/vukem-video/service/textview"
+	"github.com/AlexGalhardo/vukem-video/service/untrusted"
 )
 
 const (
@@ -94,16 +92,12 @@ func displayName(p string) string {
 }
 
 func (s *svc) MediaImport(ctx context.Context, req MediaImportRequest) (*MediaImportResult, error) {
-	c, err := s.authorizeProject(ctx, "MediaImport", req.ProjectID)
+	c, err := authorize(ctx, "MediaImport", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}
 
 	if err := s.heavyLimit(ctx, c); err != nil {
-		return nil, err
-	}
-
-	if err := s.useTimeline(ctx, c, &req.ProjectID, req.TimelineID); err != nil {
 		return nil, err
 	}
 
@@ -127,11 +121,6 @@ func (s *svc) MediaImport(ctx context.Context, req MediaImportRequest) (*MediaIm
 		}
 	}
 
-	rec, rerr := checkImportBlocks(&req)
-	if rerr != nil {
-		return nil, rerr
-	}
-
 	row, lerr := s.loadProject(ctx, c, req.ProjectID)
 	if lerr != nil {
 		return nil, lerr
@@ -149,7 +138,7 @@ func (s *svc) MediaImport(ctx context.Context, req MediaImportRequest) (*MediaIm
 	}
 
 	for i, f := range req.Files {
-		res.Assets[i] = s.importFile(ctx, c, &row, f, req.DryRun, &rec)
+		res.Assets[i] = s.importFile(ctx, c, &row, f, req.DryRun)
 		if res.Assets[i].Error != nil {
 			res.Failed++
 		}
@@ -201,25 +190,12 @@ func (s *svc) MediaImport(ctx context.Context, req MediaImportRequest) (*MediaIm
 
 	res.Text = textview.Import(lines)
 
-	s.offerReplacements(ctx, c, row.ID, rec.origin.RenderKey, req.DryRun, res)
-
 	return res, nil
 }
 
 // importFile is the flow of SDD-011 section 2.3 for one file. It never fails
 // the call: a refusal is the Error of the entry.
-func (s *svc) importFile(
-	ctx context.Context,
-	c Caller,
-	project *ProjectRow,
-	f ImportFile,
-	dryRun bool,
-	rec *libraryRecord,
-) ImportedAsset {
-	if f.Hash != "" {
-		return s.reuseFile(ctx, c, project, f, dryRun, rec)
-	}
-
+func (s *svc) importFile(ctx context.Context, c Caller, project *ProjectRow, f ImportFile, dryRun bool) ImportedAsset {
 	out := ImportedAsset{Name: displayName(f.Path), State: string(IngestPending)}
 
 	refuse := func(err error) ImportedAsset {
@@ -258,29 +234,6 @@ func (s *svc) importFile(
 		return out
 	}
 
-	return s.putAndAttach(ctx, c.Actor, c.OwnerUserID, project, file, f.AssetID, out, rec)
-}
-
-// putAndAttach is the part of an import from the open file to the linked asset: the copy into the store, the
-// row of the asset, its link to the project and the library side (SDD-011 sections 2.3 and 14). A file read from
-// a path and a file a provider generated (SDD-016 section 6.1) share it. It never fails the call: a refusal is
-// the Error of the entry.
-func (s *svc) putAndAttach(
-	ctx context.Context,
-	actor, owner string,
-	project *ProjectRow,
-	file io.Reader,
-	wantedID string,
-	out ImportedAsset,
-	rec *libraryRecord,
-) ImportedAsset {
-	refuse := func(err error) ImportedAsset {
-		out.State = string(IngestFailed)
-		out.Error = fromEngine(err)
-
-		return out
-	}
-
 	// The read side of the store lock covers the copy into store/ and the row
 	// of the asset, so an emptying cannot delete a file this import found.
 	s.storeMu.RLock()
@@ -295,7 +248,13 @@ func (s *svc) putAndAttach(
 	hash := "sha256:" + put.Hash
 	out.Deduplicated = put.Deduplicated
 
-	var att attached
+	var (
+		jobID  string
+		addNow *ProjectAssetRow
+		asset  AssetRow
+		pa     ProjectAssetRow
+		fresh  bool
+	)
 
 	werr := s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
 		now := s.nowMs()
@@ -308,92 +267,60 @@ func (s *svc) putAndAttach(
 			return uerr
 		}
 
-		var aerr error
-		if att, aerr = s.attach(ctx, tx, project, ar, out.Name, wantedID, actor, now); aerr != nil {
-			return aerr
+		if ar.IngestState == IngestFailed {
+			if err := tx.Assets().SetIngest(ctx, hash, IngestPending, 0, nil, now); err != nil {
+				return err
+			}
+
+			ar.IngestState, ar.Progress, ar.IngestError = IngestPending, 0, nil
 		}
 
-		return assetlib.RecordImport(ctx, tx.AssetLibrary(), owner, hash, rec.origin, rec.info, actor, now)
+		_, ferr := tx.Assets().FindProjectAssetByHash(ctx, project.ID, hash)
+		fresh = ferr != nil
+
+		row, perr := s.linkProjectAsset(ctx, tx, project.ID, hash, out.Name, f.AssetID, c.Actor, now)
+		if perr != nil {
+			return perr
+		}
+
+		asset, pa = ar, row
+
+		// Registered before the enqueue: an inline queue runs the job in its own
+		// after-commit hook, and this event must come first.
+		tx.AfterCommit(func() { s.emitAssetFor(project.ID, row.AssetID, ar.IngestState, ar.Progress, nil) })
+
+		switch ar.IngestState {
+		case IngestReady:
+			if row.State == ProjectAssetPending {
+				addNow = &row
+			}
+		default:
+			id, jerr := s.ensureIngestJob(ctx, tx, hash, c.Actor, now)
+			if jerr != nil {
+				return jerr
+			}
+
+			jobID = id
+		}
+
+		return nil
 	})
 	s.storeMu.RUnlock()
 
 	if werr != nil {
-		// A refusal of the library rules (too many tags) is the caller's, not an internal fault.
-		return refuse(libraryRefusal(werr))
+		return refuse(werr)
 	}
 
-	out.AssetID, out.JobID, out.Kind, out.Hash = att.pa.AssetID, att.jobID, att.asset.Kind, hash
-	out.newInProject = att.fresh
+	out.AssetID, out.JobID, out.Kind, out.Hash = pa.AssetID, jobID, asset.Kind, hash
+	out.newInProject = fresh
 
-	if att.addNow != nil {
-		if aerr := s.addAsset(ctx, project, *att.addNow, att.asset, ""); aerr != nil {
+	if addNow != nil {
+		if aerr := s.addAsset(ctx, project, *addNow, asset, ""); aerr != nil {
 			out.Error = aerr
 		}
 	}
 
 	return out
-}
-
-// attached is what linking an asset row to a project made: the use, the job when the asset still needs an
-// ingest, and the use to add to the document at once when the asset is ready.
-type attached struct {
-	asset  AssetRow
-	pa     ProjectAssetRow
-	addNow *ProjectAssetRow
-	jobID  string
-	fresh  bool // the project did not have the file before
-}
-
-// attach links an asset row that is in the store to a project, inside the import's transaction, and queues the
-// ingest the asset still needs: the part of an import that a file read from a path and a file named by its hash
-// share (SDD-011 sections 2.3 and 14.3).
-func (s *svc) attach(
-	ctx context.Context,
-	tx Tx,
-	project *ProjectRow,
-	ar AssetRow,
-	name, wanted, actor string,
-	now int64,
-) (attached, error) {
-	hash := ar.Hash
-
-	if ar.IngestState == IngestFailed {
-		if err := tx.Assets().SetIngest(ctx, hash, IngestPending, 0, nil, now); err != nil {
-			return attached{}, err
-		}
-
-		ar.IngestState, ar.Progress, ar.IngestError = IngestPending, 0, nil
-	}
-
-	_, ferr := tx.Assets().FindProjectAssetByHash(ctx, project.ID, hash)
-	att := attached{asset: ar, fresh: ferr != nil}
-
-	row, perr := s.linkProjectAsset(ctx, tx, project.ID, hash, name, wanted, actor, now)
-	if perr != nil {
-		return attached{}, perr
-	}
-
-	att.pa = row
-
-	// Registered before the enqueue: an inline queue runs the job in its own
-	// after-commit hook, and this event must come first.
-	tx.AfterCommit(func() { s.emitAssetFor(project.ID, row.AssetID, ar.IngestState, ar.Progress, nil) })
-
-	switch ar.IngestState {
-	case IngestReady:
-		if row.State == ProjectAssetPending {
-			att.addNow = &row
-		}
-	default:
-		id, jerr := s.ensureIngestJob(ctx, tx, hash, actor, now)
-		if jerr != nil {
-			return attached{}, jerr
-		}
-
-		att.jobID = id
-	}
-
-	return att, nil
 }
 
 // sizesApart formats a size and the ceiling it exceeds so that they never read
@@ -418,27 +345,22 @@ func (s *svc) checkImportSize(size int64) *Error {
 	if size > s.limits.MaxImportBytes {
 		have, ceiling := sizesApart(size, s.limits.MaxImportBytes)
 
-		return newError("E_LIMIT_EXCEEDED", "The file is %s; the import limit is %s (STUARTY_MAX_IMPORT_BYTES).",
+		return newError("E_LIMIT_EXCEEDED", "The file is %s; the import limit is %s (VUKEM_VIDEO_MAX_IMPORT_BYTES).",
 			have, ceiling).
-			withHint("import a smaller file; the person running the server can raise STUARTY_MAX_IMPORT_BYTES").
+			withHint("import a smaller file; the person running the server can raise VUKEM_VIDEO_MAX_IMPORT_BYTES").
 			withDetail("limit", "import_bytes").withDetail("value", size).
-			withDetail("ceiling", s.limits.MaxImportBytes).withDetail("variable", "STUARTY_MAX_IMPORT_BYTES")
+			withDetail("ceiling", s.limits.MaxImportBytes).withDetail("variable", "VUKEM_VIDEO_MAX_IMPORT_BYTES")
 	}
 
-	return s.checkFreeSpace(size)
-}
-
-// checkFreeSpace refuses when the disk of the workspace would keep less than the reserve after size more bytes.
-func (s *svc) checkFreeSpace(size int64) *Error {
 	if s.limits.MinFreeBytes > 0 && s.workspace != "" {
 		need := uint64(size) + uint64(s.limits.MinFreeBytes) //nolint:gosec // both are positive
 
 		if free, err := s.media.FreeBytes(s.workspace); err == nil && free < need {
 			return newError("E_LIMIT_EXCEEDED", "The disk of the workspace has too little free space for this file.").
 				withHint("free space on the disk of the workspace; the person running the server can lower "+
-					"STUARTY_MIN_FREE_BYTES").
+					"VUKEM_VIDEO_MIN_FREE_BYTES").
 				withLimit("free_bytes", free, need).withDetail("reason", "disk_low").
-				withDetail("variable", "STUARTY_MIN_FREE_BYTES")
+				withDetail("variable", "VUKEM_VIDEO_MIN_FREE_BYTES")
 		}
 	}
 
@@ -885,12 +807,8 @@ func decodeOffset(cur, kind, project string) (int, *Error) {
 }
 
 func (s *svc) MediaList(ctx context.Context, req MediaListRequest) (*MediaListResult, error) {
-	c, err := s.authorizeProject(ctx, "MediaList", req.ProjectID)
+	c, err := authorize(ctx, "MediaList", req.ProjectID)
 	if err != nil {
-		return nil, err
-	}
-
-	if err := s.useTimeline(ctx, c, &req.ProjectID, req.TimelineID); err != nil {
 		return nil, err
 	}
 
@@ -1022,12 +940,8 @@ func stripOf(arts []ArtifactRow) *Strip {
 var inspectSections = []string{"probe", "transcript", "silences", "loudness", "beats"}
 
 func (s *svc) MediaInspect(ctx context.Context, req MediaInspectRequest) (*MediaInspectResult, error) {
-	c, err := s.authorizeProject(ctx, "MediaInspect", req.ProjectID)
+	c, err := authorize(ctx, "MediaInspect", req.ProjectID)
 	if err != nil {
-		return nil, err
-	}
-
-	if err := s.useTimeline(ctx, c, &req.ProjectID, req.TimelineID); err != nil {
 		return nil, err
 	}
 
@@ -1333,7 +1247,7 @@ func (s *svc) silencesSection(arts []ArtifactRow, row *ProjectRow, minSilence st
 
 // OpenFile resolves the byte-serving routes of an asset (SDD-003 section 6.5).
 func (s *svc) OpenFile(ctx context.Context, ref FileRef) (*File, error) {
-	c, err := s.authorizeProject(ctx, "OpenFile", ref.ProjectID)
+	c, err := authorize(ctx, "OpenFile", ref.ProjectID)
 	if err != nil {
 		return nil, err
 	}

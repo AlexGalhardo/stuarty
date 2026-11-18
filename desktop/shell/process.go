@@ -16,16 +16,16 @@ import (
 	"sync"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/service/workspace"
+	"github.com/AlexGalhardo/vukem-video/service/workspace"
 )
 
 // Environment variables of the server (SDD-000 section 10); the shell sets
 // both so the child binds a known loopback port and writes into the workspace.
 const (
-	envAddr = "STUARTY_ADDR"
+	envAddr = "VUKEM_VIDEO_ADDR"
 	envHome = workspace.EnvHome
 	// envLauncher carries the launcher secret (SDD-007 section 5.3).
-	envLauncher = "STUARTY_LAUNCHER_SECRET"
+	envLauncher = "VUKEM_VIDEO_LAUNCHER_SECRET"
 )
 
 const (
@@ -66,7 +66,7 @@ func (e *StartupError) Unwrap() error { return e.Err }
 
 // Config describes the server to start.
 type Config struct {
-	// Binary is the path of stuarty; it is run as `<Binary> serve`.
+	// Binary is the path of vukem-video; it is run as `<Binary> serve`.
 	Binary string
 	// Workspace is the workspace directory the child uses.
 	Workspace workspace.Dir
@@ -147,9 +147,9 @@ func Start(ctx context.Context, cfg Config) (*Server, error) {
 	if rt, err := cfg.Workspace.ReadRuntime(); err == nil && workspace.ProcessAlive(rt.PID) {
 		return nil, &StartupError{
 			Reason: ReasonInUse,
-			Message: fmt.Sprintf("Another Stuarty server (process %d, %s) is already running on this workspace. "+
-				"Open it in the browser with `stuarty open`, stop that server, or start the application with "+
-				"STUARTY_HOME set to another folder.", rt.PID, rt.Addr),
+			Message: fmt.Sprintf("Another Vukem Video server (process %d, %s) is already running on this workspace. "+
+				"Open it in the browser with `vukem-video open`, stop that server, or start the application with "+
+				"VUKEM_VIDEO_HOME set to another folder.", rt.PID, rt.Addr),
 		}
 	}
 

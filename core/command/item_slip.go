@@ -1,6 +1,6 @@
 package command
 
-import "github.com/AlexGalhardo/stuarty/core/timeline"
+import "github.com/AlexGalhardo/vukem-video/core/timeline"
 
 func init() {
 	Register(Define(Spec{
@@ -11,6 +11,7 @@ func init() {
 		Example: `{"item_id": "itm_m1n2p3q4r5", "source_in": "2s"}`,
 		Errors:  []string{CodeValidation, CodeInvalidTime, CodeNotFound, CodeTypeMismatch, CodeOutOfSource},
 		Scope:   ScopeEdit,
+		Phase:   Beta,
 	}, applyItemSlip))
 }
 

@@ -9,9 +9,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/core/timeline"
-	"github.com/AlexGalhardo/stuarty/core/timeline/migrate"
-	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/core/timeline/migrate"
+	"github.com/AlexGalhardo/vukem-video/service"
 )
 
 // stored is a schema version that no binary writes: the migration of the tests
@@ -159,7 +159,7 @@ func TestStartupMigrationClosesEveryUndoChain(t *testing.T) {
 	}
 
 	_, err := e.store.DB().ExecContext(context.Background(),
-		`UPDATE timelines SET schema_version = 0, document = replace(document, '"schema_version":1', '"schema_version":0')
+		`UPDATE projects SET schema_version = 0, document = replace(document, '"schema_version":1', '"schema_version":0')
  WHERE id = ?`, project)
 	if err != nil {
 		t.Fatal(err)
@@ -194,7 +194,7 @@ func TestStartupMigrationFailureNamesTheProjectAndWritesNothing(t *testing.T) {
 	project, _ := e.withTrack()
 
 	_, err := e.store.DB().ExecContext(context.Background(),
-		`UPDATE timelines SET schema_version = 0, document = replace(document, '"schema_version":1', '"schema_version":0')
+		`UPDATE projects SET schema_version = 0, document = replace(document, '"schema_version":1', '"schema_version":0')
  WHERE id = ?`, project)
 	if err != nil {
 		t.Fatal(err)

@@ -7,7 +7,6 @@ package workspace
 import (
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -25,31 +24,21 @@ var Subdirectories = []string{
 
 const (
 	// EnvHome overrides the workspace location (SDD-000 section 10).
-	EnvHome    = "STUARTY_HOME"
-	defaultDir = ".stuarty"
+	EnvHome    = "VUKEM_VIDEO_HOME"
+	defaultDir = ".vukem-video"
 )
 
-// Notice is where Resolve says that it adopted the workspace of the former name, or that it found one it
-// did not adopt. It is the standard error unless a test replaces it.
-var Notice io.Writer = os.Stderr
-
-// Resolve returns the workspace directory: STUARTY_HOME or ~/.stuarty.
+// Resolve returns the workspace directory: VUKEM_VIDEO_HOME or ~/.vukem-video.
 // It creates the directory (mode 0700 on Unix) and refuses a path that holds
 // ?, # or %, which break the file: DSN of the database (SDD-005 section 6.2).
-//
-// With STUARTY_HOME unset and no ~/.stuarty, a workspace left by Vukem Video in ~/.vukem-video is
-// adopted first, after a backup (SDD-005 section 6.6), and Resolve says so once on Notice.
 func Resolve(getenv func(string) string) (Dir, error) {
 	path := getenv(EnvHome)
-	adopt := ""
-
 	if path == "" {
 		home, err := os.UserHomeDir()
 		if err != nil {
 			return "", fmt.Errorf("workspace: cannot find the home directory: %w", err)
 		}
 		path = filepath.Join(home, defaultDir)
-		adopt = filepath.Join(home, formerDir)
 	}
 
 	abs, err := filepath.Abs(path)
@@ -58,12 +47,6 @@ func Resolve(getenv func(string) string) (Dir, error) {
 	}
 	if strings.ContainsAny(abs, "?#%") {
 		return "", fmt.Errorf("%w: %q holds ?, # or %%; choose another with %s", ErrUnusablePath, abs, EnvHome)
-	}
-
-	if adopt != "" {
-		if err := adoptFormer(adopt, abs); err != nil {
-			return "", err
-		}
 	}
 
 	if err := os.MkdirAll(abs, 0o700); err != nil {
@@ -91,7 +74,6 @@ func (d Dir) Path(elem ...string) string {
 const (
 	CodeWorkspaceLocked = "E_WORKSPACE_LOCKED"
 	CodeUnauthorized    = "E_UNAUTHORIZED"
-	CodeInvalidState    = "E_INVALID_STATE"
 )
 
 // Error carries an SDD-000 error code so adapters can map it to an exit code

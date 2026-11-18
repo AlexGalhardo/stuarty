@@ -8,20 +8,19 @@ import (
 	"sync"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/core/command"
-	"github.com/AlexGalhardo/stuarty/core/plan"
-	"github.com/AlexGalhardo/stuarty/core/timeline"
-	"github.com/AlexGalhardo/stuarty/engine/cache"
-	"github.com/AlexGalhardo/stuarty/engine/rasterize"
+	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/core/plan"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/engine/cache"
+	"github.com/AlexGalhardo/vukem-video/engine/rasterize"
 )
 
 // PlanWindowRequest asks for the render plan of frames From up to, not
 // including, Until (SDD-004 section 10).
 type PlanWindowRequest struct {
-	ProjectID  string `json:"project_id"`
-	TimelineID string `json:"timeline_id,omitempty"` // SDD-003 section 1.7
-	From       int    `json:"from"`
-	Until      int    `json:"until"`
+	ProjectID string `json:"project_id"`
+	From      int    `json:"from"`
+	Until     int    `json:"until"`
 	// Width is the output width in pixels the preview draws at; 0 is the project width. The
 	// bitmaps of the plan are rasterized at that scale, as ViewFrame does (SDD-004 section 10).
 	Width int `json:"width,omitempty"`
@@ -167,12 +166,8 @@ func planOutputScale(width, projectWidth int) (float64, *Error) {
 // PlanWindow reads the render plan of a window of the current revision. The
 // editor draws what it says and computes nothing (ADR-0007).
 func (s *svc) PlanWindow(ctx context.Context, req PlanWindowRequest) (*PlanWindowResult, error) {
-	c, err := s.authorizeProject(ctx, "PlanWindow", req.ProjectID)
+	c, err := authorize(ctx, "PlanWindow", req.ProjectID)
 	if err != nil {
-		return nil, err
-	}
-
-	if err := s.useTimeline(ctx, c, &req.ProjectID, req.TimelineID); err != nil {
 		return nil, err
 	}
 

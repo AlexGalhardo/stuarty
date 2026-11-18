@@ -6,14 +6,14 @@
 #
 # With no argument it takes the tutorials of site/content/docs/en/guide/ (tutorial-vertical-short first: it
 # creates the project that the next tutorial reads). It extracts every fenced bash block, starts
-# `stuarty serve` with a private workspace on a loopback port, runs the blocks one after the other in a
+# `vukem-video serve` with a private workspace on a loopback port, runs the blocks one after the other in a
 # folder that holds the sample media (made with ffmpeg) and stops at the first non-zero exit. The server and
 # the work folder are removed at the end.
 #
 # A block is skipped, and reported, when it cannot run offline: it installs a tool or a model (needs the
 # network, D-016) or it starts another agent client (`claude`). SMOKE_NETWORK=1 runs the model blocks too.
-# Needs: ffmpeg on PATH, go (only when STUARTY_BIN is not set). Environment:
-#   STUARTY_BIN   the binary to test (default: built from this checkout)
+# Needs: ffmpeg on PATH, go (only when VUKEM_VIDEO_BIN is not set). Environment:
+#   VUKEM_VIDEO_BIN   the binary to test (default: built from this checkout)
 #   SMOKE_PORT        loopback port of the server (default a random one in 20000 to 39999)
 #   SMOKE_KEEP        set to 1 to keep the work folder
 set -euo pipefail
@@ -50,12 +50,12 @@ cleanup() {
 }
 trap cleanup EXIT
 
-case "$(uname -s)" in MINGW* | MSYS* | CYGWIN*) exe=stuarty.exe ;; *) exe=stuarty ;; esac
+case "$(uname -s)" in MINGW* | MSYS* | CYGWIN*) exe=vukem-video.exe ;; *) exe=vukem-video ;; esac
 mkdir -p "$work/bin" "$work/cwd" "$work/home" "$work/blocks"
-if [ -n "${STUARTY_BIN:-}" ]; then
-	cp "$STUARTY_BIN" "$work/bin/$exe"
+if [ -n "${VUKEM_VIDEO_BIN:-}" ]; then
+	cp "$VUKEM_VIDEO_BIN" "$work/bin/$exe"
 else
-	command -v go >/dev/null 2>&1 || die "go is required to build the binary (or set STUARTY_BIN)"
+	command -v go >/dev/null 2>&1 || die "go is required to build the binary (or set VUKEM_VIDEO_BIN)"
 	log "building the binary"
 	(cd "$root" && go build -o "$work/bin/$exe" ./web/cmd/app)
 fi
@@ -63,11 +63,11 @@ chmod +x "$work/bin/$exe"
 export PATH="$work/bin:$PATH"
 
 # The private home keeps the run away from the workspace of the person who runs it. No server of another
-# workspace can be reached: STUARTY_URL is cleared.
-unset STUARTY_URL APP_KEY APP_ENV
-export STUARTY_HOME="$work/home"
+# workspace can be reached: VUKEM_VIDEO_URL is cleared.
+unset VUKEM_VIDEO_URL APP_KEY APP_ENV
+export VUKEM_VIDEO_HOME="$work/home"
 port="${SMOKE_PORT:-$((20000 + RANDOM % 20000))}"
-STUARTY_ADDR="127.0.0.1:$port" "$work/bin/$exe" serve >"$work/serve.log" 2>&1 &
+VUKEM_VIDEO_ADDR="127.0.0.1:$port" "$work/bin/$exe" serve >"$work/serve.log" 2>&1 &
 server_pid=$!
 for _ in $(seq 1 120); do
 	[ -s "$work/home/runtime.json" ] && break

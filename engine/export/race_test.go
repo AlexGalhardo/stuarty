@@ -5,7 +5,7 @@ package export
 import (
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
 )
 
 // raceEnabled is true when the tests run with the race detector, which multiplies the memory of the

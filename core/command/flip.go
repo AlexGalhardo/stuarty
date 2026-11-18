@@ -1,7 +1,7 @@
 package command
 
 import (
-	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
 func init() {
@@ -13,6 +13,7 @@ func init() {
 		Example: `{"item_id": "itm_m1n2p3q4r5", "horizontal": true}`,
 		Errors:  []string{CodeValidation, CodeNotFound, CodeTypeMismatch},
 		Scope:   ScopeEdit,
+		Phase:   Beta,
 	}, applyClipSetFlip))
 }
 

@@ -1,45 +1,23 @@
-// Command app is the stuarty binary: the HTTP server by default, or a
+// Command app is the vukem-video binary: the HTTP server by default, or a
 // command such as migrate, route:list or about (vukem <command> delegates here).
 package main
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"os/signal"
 	"slices"
 	"strings"
 	"syscall"
 
-	"github.com/AlexGalhardo/stuarty/service/config"
-	"github.com/AlexGalhardo/stuarty/web/app/cli"
-	"github.com/AlexGalhardo/stuarty/web/bootstrap"
-
 	vukem "github.com/AlexGalhardo/vukem"
+
+	"github.com/AlexGalhardo/vukem-video/web/app/cli"
+	"github.com/AlexGalhardo/vukem-video/web/bootstrap"
 )
 
 func main() {
-	// A variable set under its former name (VUKEM_VIDEO_*) is read under the new one, with a warning
-	// (SDD-000 section 13.1), before anything reads the environment.
-	if _, err := config.ApplyFormerVariables(config.ProcessEnviron(), os.Stderr); err != nil {
-		fmt.Fprintln(os.Stderr, "stuarty:", err)
-		os.Exit(1)
-	}
-
 	args := os.Args
-
-	if len(args) > 1 {
-		// `stuarty <domain> <verb>` is the command of that domain, written as a group (SDD-003 section 5.1); the
-		// former names stay as they were, so the arguments become the ones of the command it names.
-		rewritten, code, matched := cli.Group(args[1:], os.Stdout, os.Stderr)
-		if matched && rewritten == nil {
-			os.Exit(code)
-		}
-
-		if matched {
-			args = append([]string{args[0]}, rewritten...)
-		}
-	}
 
 	if len(args) > 1 {
 		// Help comes from the product table, never from the framework (VV-029).

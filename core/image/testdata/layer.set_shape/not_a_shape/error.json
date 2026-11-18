@@ -1,8 +1,0 @@
-{
-  "code": "E_TYPE_MISMATCH",
-  "hint": "Use layer.set_text for text.",
-  "message": "Layer lyr_cccccccccc is a text; layer.set_shape changes shapes and fills.",
-  "op_index": 0,
-  "path": "args.layer_id",
-  "retryable": false
-}

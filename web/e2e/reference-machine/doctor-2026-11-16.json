@@ -7,7 +7,7 @@
 		"os": "Windows 11 Pro 10.0.26300",
 		"logical_cpus": 16
 	},
-	"command": "stuarty doctor --full --json",
+	"command": "vukem-video doctor --full --json",
 	"exit_code": 1,
 	"exit_note": "1 because the whisper helper and model are not installed on this machine; every other check is ok",
 	"doctor": {
@@ -46,7 +46,7 @@
 			{
 				"name": "child.sandbox",
 				"ok": true,
-				"detail": "unavailable: not requested (STUARTY_SANDBOX is unset); children run with the user's privileges"
+				"detail": "unavailable: not requested (VUKEM_VIDEO_SANDBOX is unset); children run with the user's privileges"
 			},
 			{
 				"name": "transcribe.provider",
@@ -57,13 +57,13 @@
 				"name": "transcribe.helper",
 				"ok": false,
 				"detail": "not installed or changed since the install, 8194445 bytes to download",
-				"hint": "Run \"stuarty tools:install whisper\"."
+				"hint": "Run \"vukem-video tools:install whisper\"."
 			},
 			{
 				"name": "transcribe.model",
 				"ok": false,
 				"detail": "not installed or changed since the install, 487601967 bytes to download",
-				"hint": "Run \"stuarty tools:install whisper\"."
+				"hint": "Run \"vukem-video tools:install whisper\"."
 			},
 			{
 				"name": "workspace.store",
@@ -78,7 +78,7 @@
 			{
 				"name": "environment",
 				"ok": true,
-				"detail": "STUARTY_FFMPEG=set STUARTY_FFPROBE=set STUARTY_HOME=set"
+				"detail": "VUKEM_VIDEO_FFMPEG=set VUKEM_VIDEO_FFPROBE=set VUKEM_VIDEO_HOME=set"
 			}
 		]
 	}

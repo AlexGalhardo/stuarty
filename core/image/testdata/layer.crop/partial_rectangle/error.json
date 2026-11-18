@@ -1,8 +1,0 @@
-{
-  "code": "E_VALIDATION",
-  "hint": "Add the missing members of the rectangle of the source.",
-  "message": "Give all of x, y, w and h, or reset.",
-  "op_index": 0,
-  "path": "args",
-  "retryable": false
-}

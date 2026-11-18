@@ -1,9 +1,0 @@
-{
-  "args": {
-    "h": 10,
-    "parent": "lyr_cccccccccc",
-    "shape": "rect",
-    "w": 10
-  },
-  "op": "layer.add_shape"
-}

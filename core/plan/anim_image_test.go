@@ -4,7 +4,7 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
 const astAnim = "ast_anim0000001"

@@ -6,11 +6,11 @@
 #   bash scripts/build-renderer.sh verify     build the module twice from clean and fail unless the digests match
 #   bash scripts/build-renderer.sh embed      verify, then write the module and its digest where Go embeds them
 #   bash scripts/build-renderer.sh check      verify, then fail unless the embedded module is the one this source builds
-#   bash scripts/build-renderer.sh host       the GPU render child process stuarty-render (SDD-013 section 4.9) for this machine,
+#   bash scripts/build-renderer.sh host       the GPU render child process vukem-render (SDD-013 section 4.9) for this machine,
 #                                             copied to renderer/dist/ with its SHA-256; an archive or installer that carries
-#                                             ffmpeg carries this file next to the server executable or in libexec/stuarty/
+#                                             ffmpeg carries this file next to the server executable or in libexec/vukem-video/
 # The core module (SDD-013 section 4.1) has plain C-ABI exports and no import, so it needs no
-# wasm-bindgen glue; it is written to renderer/dist/stuarty_renderer.wasm with stuarty_renderer.wasm.sha256 next
+# wasm-bindgen glue; it is written to renderer/dist/vukem_renderer.wasm with vukem_renderer.wasm.sha256 next
 # to it. embed copies both to engine/renderhost/ (renderer.wasm and renderer.wasm.sha256).
 # Reproducible: the toolchain is the one of rust-toolchain.toml, dependencies come from Cargo.lock
 # (--locked), the build path is fixed (renderer/target), SOURCE_DATE_EPOCH defaults to the commit time
@@ -51,7 +51,7 @@ export CARGO_TARGET_DIR="$src/renderer/target"
 # system: the two remaps below turn them into the same text everywhere (no leading slash, which Git
 # Bash would rewrite as a Windows path).
 remap="--remap-path-prefix=$src=/build --remap-path-prefix=$cargo_home=/cargo --remap-path-prefix=$rustup_home=/rustup"
-remap="$remap --remap-path-prefix=stuarty-renderer/src=renderer-src/ --remap-path-prefix=stuarty-renderer\\src=renderer-src/"
+remap="$remap --remap-path-prefix=vukem-renderer/src=renderer-src/ --remap-path-prefix=vukem-renderer\\src=renderer-src/"
 export RUSTFLAGS="$remap"
 # An incremental cache is not part of a reproducible build.
 export CARGO_INCREMENTAL=0
@@ -61,26 +61,26 @@ manifest="$root/renderer/Cargo.toml"
 embedded="$root/engine/renderhost"
 
 native_build() {
-	cargo build --locked --release -p stuarty-renderer --manifest-path "$manifest"
+	cargo build --locked --release -p vukem-renderer --manifest-path "$manifest"
 }
 
 wasm_build() {
 	# 16,384 pages of 64 KiB: the memory limit of SDD-013 section 4.1, also set in wazero.
 	RUSTFLAGS="$remap -C link-arg=--max-memory=1073741824" \
-		cargo build --locked --release -p stuarty-renderer --lib --target wasm32-unknown-unknown --manifest-path "$manifest"
+		cargo build --locked --release -p vukem-renderer --lib --target wasm32-unknown-unknown --manifest-path "$manifest"
 
 	rm -rf "$dist"
 	mkdir -p "$dist"
-	cp "$CARGO_TARGET_DIR/wasm32-unknown-unknown/release/stuarty_renderer.wasm" "$dist/stuarty_renderer.wasm"
-	sha256 "$dist/stuarty_renderer.wasm" >"$dist/stuarty_renderer.wasm.sha256"
-	printf 'build-renderer: stuarty_renderer.wasm sha256 %s\n' "$(cat "$dist/stuarty_renderer.wasm.sha256")"
+	cp "$CARGO_TARGET_DIR/wasm32-unknown-unknown/release/vukem_renderer.wasm" "$dist/vukem_renderer.wasm"
+	sha256 "$dist/vukem_renderer.wasm" >"$dist/vukem_renderer.wasm.sha256"
+	printf 'build-renderer: vukem_renderer.wasm sha256 %s\n' "$(cat "$dist/vukem_renderer.wasm.sha256")"
 }
 
 host_build() {
-	local exe=stuarty-render
-	case "$(uname -s)" in MINGW* | MSYS* | CYGWIN*) exe=stuarty-render.exe ;; esac
+	local exe=vukem-render
+	case "$(uname -s)" in MINGW* | MSYS* | CYGWIN*) exe=vukem-render.exe ;; esac
 
-	cargo build --locked --release --bin stuarty-render --manifest-path "$manifest"
+	cargo build --locked --release --bin vukem-render --manifest-path "$manifest"
 
 	mkdir -p "$dist"
 	cp "$CARGO_TARGET_DIR/release/$exe" "$dist/$exe"
@@ -96,10 +96,10 @@ verify_build() {
 	local first second
 	clean_wasm
 	wasm_build
-	first="$(cat "$dist/stuarty_renderer.wasm.sha256")"
+	first="$(cat "$dist/vukem_renderer.wasm.sha256")"
 	clean_wasm
 	wasm_build
-	second="$(cat "$dist/stuarty_renderer.wasm.sha256")"
+	second="$(cat "$dist/vukem_renderer.wasm.sha256")"
 	[ "$first" = "$second" ] || die "two clean builds differ: $first and $second"
 	printf 'build-renderer: reproducible, two clean builds give %s\n' "$first"
 }
@@ -115,14 +115,14 @@ host) host_build ;;
 verify) verify_build ;;
 embed)
 	verify_build
-	cp "$dist/stuarty_renderer.wasm" "$embedded/renderer.wasm"
-	cp "$dist/stuarty_renderer.wasm.sha256" "$embedded/renderer.wasm.sha256"
+	cp "$dist/vukem_renderer.wasm" "$embedded/renderer.wasm"
+	cp "$dist/vukem_renderer.wasm.sha256" "$embedded/renderer.wasm.sha256"
 	printf 'build-renderer: embedded in engine/renderhost/\n'
 	;;
 check)
 	verify_build
 	have="$(sha256 "$embedded/renderer.wasm")"
-	want="$(cat "$dist/stuarty_renderer.wasm.sha256")"
+	want="$(cat "$dist/vukem_renderer.wasm.sha256")"
 	[ "$have" = "$want" ] || die "engine/renderhost/renderer.wasm ($have) is not what the source builds ($want): run bash scripts/build-renderer.sh embed"
 	printf 'build-renderer: the embedded module is the one this source builds\n'
 	;;

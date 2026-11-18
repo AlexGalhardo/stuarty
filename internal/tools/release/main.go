@@ -1,4 +1,4 @@
-// Command release prepares and tags a release of Stuarty (SDD-009
+// Command release prepares and tags a release of Vukem Video (SDD-009
 // sections 7 and 8, ADR-0028).
 //
 //	release prepare vX.Y.Z   on branch release/vX.Y.Z, pushed and green: write the changelog section, commit it

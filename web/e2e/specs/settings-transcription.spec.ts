@@ -34,7 +34,7 @@ test.describe("settings transcription", () => {
 		await page.getByLabel("Model", { exact: true }).selectOption("base");
 		await page.getByRole("button", { name: "Install transcription" }).click();
 		await expect(page.getByLabel("Install command")).toHaveValue(
-			"stuarty tools:install whisper --model base",
+			"vukem-video tools:install whisper --model base",
 		);
 	});
 });

@@ -4,7 +4,7 @@ import { ApiError } from "../api/errors";
 import { browserTimers, createEventStream, type Timers } from "../api/events";
 import { createSharedEventStream } from "../api/eventsLock";
 import type { Transport } from "../api/transport";
-import { guardUnauthorized, scopedToTimeline } from "../api/transport";
+import { guardUnauthorized } from "../api/transport";
 import type { Job, ProjectEvent } from "../api/types";
 import {
 	type ActivityState,
@@ -114,12 +114,9 @@ export function createRuntime(options: RuntimeOptions): EditorRuntime {
 		location.assign(`/login?next=${encodeURIComponent(location.pathname)}`);
 	};
 	const client = createClient(
-		scopedToTimeline(
-			options.mode === "network"
-				? guardUnauthorized(transport, toLogin)
-				: transport,
-			projectId,
-		),
+		options.mode === "network"
+			? guardUnauthorized(transport, toLogin)
+			: transport,
 	);
 	const { store: documents, writer } = createDocumentStore({
 		projectId,

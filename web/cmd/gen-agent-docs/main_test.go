@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/web/app/agentdocs"
+	"github.com/AlexGalhardo/vukem-video/web/app/agentdocs"
 )
 
 // TestCheckFailsOnAHandEdit: --check passes on what the generator wrote and

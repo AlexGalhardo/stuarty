@@ -1,6 +1,6 @@
 ---
 title: "item.set_audio"
-description: "Sets the volume, fades, mute, noise reduction or voice of a clip or audio item."
+description: "Sets the volume, the fades, the mute flag, the noise reduction or the voice of a clip or audio item."
 wide: true
 ---
 
@@ -32,9 +32,9 @@ Sets the given values. Volume 1, fades of 0, audio_muted false, denoise 0 and vo
 - [`E_TYPE_MISMATCH`](/docs/reference/error-codes#e_type_mismatch)
 - [`E_INVALID_STATE`](/docs/reference/error-codes#e_invalid_state)
 
-## Scope
+## Scope and phase
 
-Scope `edit`. The scope is the one an API key needs in network mode. Run `stuarty command:help item.set_audio` for the same description from the binary, or call the [`command_help`](/docs/mcp/tools/command_help) tool.
+Scope `edit`, phase `alpha`. The scope is the one an API key needs in network mode. Run `vukem-video command:help item.set_audio` for the same description from the binary, or call the [`command_help`](/docs/mcp/tools/command_help) tool.
 
 ## Next steps
 
@@ -90,14 +90,14 @@ Scope `edit`. The scope is the one an API key needs in network mode. Run `stuart
 ```
 
 ```bash title="Terminal"
-stuarty edit --project prj_7k2m9x4q1b --ops batch.json --json
+vukem-video edit --project prj_7k2m9x4q1b --ops batch.json --json
 ```
 
 **Over HTTP**
 
 ```bash title="curl"
 curl -X POST "http://127.0.0.1:7878/api/v1/projects/prj_7k2m9x4q1b/edit" \
-  -H "Authorization: Bearer $STUARTY_KEY" \
+  -H "Authorization: Bearer $VUKEM_VIDEO_KEY" \
   -H "Content-Type: application/json" \
   -d '{
   "base_revision": 12,

@@ -1,9 +1,0 @@
-{
-  "args": {
-    "style": {
-      "color": "$accent"
-    },
-    "text": "x"
-  },
-  "op": "layer.add_text"
-}

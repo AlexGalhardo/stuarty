@@ -4,9 +4,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/core/command"
-	"github.com/AlexGalhardo/stuarty/core/lint"
-	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/core/lint"
+	"github.com/AlexGalhardo/vukem-video/service"
 )
 
 func TestEditTextCapsTheDiff(t *testing.T) {
@@ -125,7 +125,7 @@ func TestRetryableByCodeAndDocument(t *testing.T) {
 	}
 
 	d := c.Document()
-	if d.Type != "urn:stuarty:error:E_REVISION_CONFLICT" || d.Status != 409 || !d.Retryable ||
+	if d.Type != "urn:vukem-video:error:E_REVISION_CONFLICT" || d.Status != 409 || !d.Retryable ||
 		d.Detail != "behind" {
 		t.Fatalf("document = %+v", d)
 	}

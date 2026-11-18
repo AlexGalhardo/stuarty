@@ -7,11 +7,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/AlexGalhardo/stuarty/service"
-	"github.com/AlexGalhardo/stuarty/web/app/auth"
-	httpapi "github.com/AlexGalhardo/stuarty/web/app/http"
-	"github.com/AlexGalhardo/stuarty/web/resources"
-
 	vukem "github.com/AlexGalhardo/vukem"
 	"github.com/AlexGalhardo/vukem/errs"
 	"github.com/AlexGalhardo/vukem/i18n"
@@ -19,7 +14,16 @@ import (
 	"github.com/AlexGalhardo/vukem/middleware"
 	"github.com/AlexGalhardo/vukem/router"
 	"github.com/AlexGalhardo/vukem/web"
+
+	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/service"
+	httpapi "github.com/AlexGalhardo/vukem-video/web/app/http"
+	"github.com/AlexGalhardo/vukem-video/web/resources"
 )
+
+// phase is the build's feature gate that the editor reads from its bootstrap
+// (SDD-012 section 10).
+var phase = string(command.Build)
 
 var projectID = regexp.MustCompile(`^prj_[0-9a-hjkmnp-tv-z]{10}$`)
 
@@ -35,6 +39,7 @@ type editorBootstrap struct {
 	Locales   []string       `json:"locales"`
 	Messages  map[string]any `json:"messages"`
 	User      *struct{}      `json:"user"`
+	Phase     string         `json:"phase"`
 	Version   string         `json:"version"`
 }
 
@@ -50,16 +55,10 @@ func Pages(d *httpapi.Deps) func(r *router.Router, app *vukem.App) error {
 		r.UseServer(middleware.StaticFS(resources.Public(), middleware.StaticConfig{Prefix: "/"}))
 		r.Use(app.Inertia.Middleware, inertia.I18n("ui."), sharedProps(d))
 
-		// The home and the sections that have no page of their own yet (dashboard.go).
-		dashboardPages(r)
-
-		// Edit Image, the image editor (epic 28, image_pages.go).
-		imagePages(r)
+		r.Get("/{$}", func(c *web.Ctx) error { return c.Redirect("/projects") }).Name("home")
 
 		r.Get("/projects", func(c *web.Ctx) error { return projectsPage(c, d) }).Name("projects.index")
 		r.Post("/projects", func(c *web.Ctx) error { return projectCreate(c, d) }).Name("projects.store")
-
-		r.Get("/projects/{project_id}", func(c *web.Ctx) error { return projectPageShow(c, d) }).Name("projects.show")
 
 		r.Get("/editor/{project_id}", func(c *web.Ctx) error { return editorPage(c, d, app) }).Name("editor.show")
 
@@ -67,34 +66,6 @@ func Pages(d *httpapi.Deps) func(r *router.Router, app *vukem.App) error {
 		r.Get("/settings", func(c *web.Ctx) error {
 			return inertia.Render(c, "Settings/Index", inertia.Props{})
 		}).Name("settings.index")
-
-		// The Connections section (epic 04, SDD-014): the page reads and changes the connections
-		// through /api/v1/connections.
-		r.Get("/connections", func(c *web.Ctx) error {
-			return inertia.Render(c, "Connections/Index", inertia.Props{})
-		}).Name("connections.index")
-
-		// The redirect address of the sign-in to a social network (epic 18, SDD-020 section 13): the page
-		// hands the state and the code to POST /api/v1/social/complete with the session of the browser.
-		r.Get("/social/callback", func(c *web.Ctx) error {
-			return inertia.Render(c, "Social/Callback", inertia.Props{})
-		}).Name("social.callback")
-
-		// The approval queue, the rules and the cost ceilings (epic 05, SDD-015): the page reads and
-		// changes them through /api/v1/approvals, /approval-rules and /cost, and follows the queue on
-		// /api/v1/approvals/events.
-		r.Get("/approvals", func(c *web.Ctx) error {
-			return inertia.Render(c, "Approvals/Index", inertia.Props{})
-		}).Name("approvals.index")
-
-		// The asset library (epic 08, SDD-011 section 14.6): two sections over one library; the pages read and
-		// change it through /api/v1/assets.
-		r.Get("/visual-assets", func(c *web.Ctx) error {
-			return inertia.Render(c, "VisualAssets/Index", inertia.Props{})
-		}).Name("dashboard.visual-assets")
-		r.Get("/video-assets", func(c *web.Ctx) error {
-			return inertia.Render(c, "VideoAssets/Index", inertia.Props{})
-		}).Name("dashboard.video-assets")
 
 		// The brand kit is read and saved by the page through /api/v1/brand-kit.
 		r.Get("/settings/brand-kit", func(c *web.Ctx) error {
@@ -120,31 +91,12 @@ func Pages(d *httpapi.Deps) func(r *router.Router, app *vukem.App) error {
 			return inertia.Render(c, "Settings/Keys", inertia.Props{})
 		}).Name("settings.keys")
 
-		// The optional Google sign-in (epic 24, SDD-007 section 4.7, SDD-014 section 12): the page where
-		// Google sends the browser back (it needs no session and hands the state and the code to
-		// POST /auth/google/complete), and the settings page. Network mode only; 404 in local mode.
-		r.Get(auth.GoogleCallbackPath, func(c *web.Ctx) error {
-			if d.Network == nil || d.Google == nil {
-				return errs.ErrNotFound
-			}
-
-			return inertia.Render(c, "Auth/GoogleCallback", inertia.Props{})
-		}).Name("login.google.callback")
-
-		r.Get("/settings/google", func(c *web.Ctx) error {
-			if d.Network == nil || d.Google == nil {
-				return errs.ErrNotFound
-			}
-
-			return inertia.Render(c, "Settings/Google", inertia.Props{})
-		}).Name("settings.google")
-
 		return nil
 	}
 }
 
 // appName is the name the layout shows and gives the logo as its accessible name.
-const appName = "Stuarty"
+const appName = "Vukem Video"
 
 // sharedUser is the account that network mode shows in the header; the layout
 // draws the keys link and the log out button when it is not null.
@@ -220,34 +172,6 @@ func projectsPage(c *web.Ctx, d *httpapi.Deps) error {
 	return inertia.Render(c, "Projects/Index", inertia.Props{"projects": nonNil(list.Projects)})
 }
 
-// projectPageShow is the overview of one project as a production (SDD-012 section 2.1): its brief and its items.
-func projectPageShow(c *web.Ctx, d *httpapi.Deps) error {
-	id := c.Param("project_id")
-	if !projectID.MatchString(id) {
-		return errs.ErrNotFound
-	}
-
-	desc, err := d.Service.ProjectDescribe(c.Context(), service.ProjectDescribeRequest{ProjectID: id})
-	if err != nil {
-		return err
-	}
-
-	brief, err := d.Service.BriefGet(c.Context(), service.BriefGetRequest{ProjectID: id})
-	if err != nil {
-		return err
-	}
-
-	briefing, err := d.Service.BriefingQuestions(c.Context(), service.BriefingQuestionsRequest{ProjectID: id})
-	if err != nil {
-		return err
-	}
-
-	return inertia.Render(c, "Projects/Show", inertia.Props{
-		"project":    map[string]any{"id": desc.ProjectID, "name": desc.Name, "state": desc.State},
-		"production": desc.Production, "items": nonNil(desc.Items), "brief": brief, "briefing": briefing,
-	})
-}
-
 // projectCreate is the form of the list page. The app has no sessions, so a
 // refused name cannot travel as a flashed validation error: the service error
 // goes to the Inertia error page.
@@ -297,7 +221,7 @@ func editorPage(c *web.Ctx, d *httpapi.Deps, app *vukem.App) error {
 	return c.Render("editor", map[string]any{"Bootstrap": editorBootstrap{
 		ProjectID: id, Mode: "local", APIBase: httpapi.BasePath, Locale: locale, Locales: app.I18n.Locales(),
 		Messages: app.I18n.Messages(locale, "ui.editor.", "ui.common.", "ui.theme.", "ui.nav."),
-		Version:  d.Version,
+		Phase:    phase, Version: d.Version,
 	}})
 }
 

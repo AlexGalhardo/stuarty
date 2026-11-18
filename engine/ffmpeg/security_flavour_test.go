@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/engine/ffmpeg/ffargs"
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg/ffargs"
 )
 
 func parsedBuild(t *testing.T, configuration string) VersionInfo {
@@ -233,7 +233,7 @@ func demuxerNames(out string) map[string]bool {
 }
 
 // TestSecurity_T14_InputWhitelistMatchesTheBuild re-derives the input allowlist from "ffmpeg -demuxers" of
-// the build under test (the own build when STUARTY_TEST_FFMPEG_DIR names it): every allowed name is a
+// the build under test (the own build when VUKEM_VIDEO_TEST_FFMPEG_DIR names it): every allowed name is a
 // demuxer of the build, and none of the dangerous demuxers is allowed or in the way of the allowlist.
 func TestSecurity_T14_InputWhitelistMatchesTheBuild(t *testing.T) {
 	forbidden := []string{

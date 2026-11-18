@@ -3,7 +3,7 @@
 #
 #   bash scripts/no-egress.sh
 #
-# Runs the product with every STUARTY_* variable unset through a reference session, each process under
+# Runs the product with every VUKEM_VIDEO_* variable unset through a reference session, each process under
 # `strace -f -e trace=connect,sendto,sendmsg,sendmmsg`, so the children (FFmpeg, ffprobe) are traced too:
 #
 #   1. `serve` (the owner, in the background, bound to loopback);
@@ -13,10 +13,7 @@
 #      import, bundle export and import, source import (media and a font file), a template saved, written
 #      and imported, the brand kit (colours, a font and a logo) and the helper install, which must stop at
 #      its question or be refused, so it connects to nothing;
-#   4. `mcp` on stdio: initialize and tools/list;
-#   5. the connections (ADR-0032, SDD-014): with none configured, `connection:list` is empty and a test of a
-#      connection that does not exist is refused by the gate before any socket, so the product still opens
-#      no outbound connection until the user connects a destination.
+#   4. `mcp` on stdio: initialize and tools/list.
 #
 # It fails on any socket address that is not loopback (127.0.0.0/8, ::1, ::ffff:127.x) or a Unix socket, and
 # fails when the trace shows no loopback connect at all (then strace saw nothing and the result is void).
@@ -24,8 +21,8 @@
 # The helper download itself (`tools:install`) is the one outbound path the product has (SDD-007 section
 # 6.8: HTTPS to the hosts of the embedded manifest), so it is not run here: the check is that it stops at its
 # question and that `--yes` from a session that is not a person is refused, both without a connection.
-# Needs: go (or STUARTY_BIN), ffmpeg on PATH, strace. Environment:
-#   STUARTY_BIN   the binary to test (default: built from this checkout)
+# Needs: go (or VUKEM_VIDEO_BIN), ffmpeg on PATH, strace. Environment:
+#   VUKEM_VIDEO_BIN   the binary to test (default: built from this checkout)
 #   NOEGRESS_PORT     loopback port of the server (default a random one in 20000 to 39999)
 #   NOEGRESS_KEEP     set to 1 to keep the work folder and the traces
 set -euo pipefail
@@ -59,23 +56,23 @@ cleanup() {
 }
 trap cleanup EXIT
 
-if [ -n "${STUARTY_BIN:-}" ]; then
-	bin="$work/stuarty"
-	cp "$STUARTY_BIN" "$bin"
+if [ -n "${VUKEM_VIDEO_BIN:-}" ]; then
+	bin="$work/vukem-video"
+	cp "$VUKEM_VIDEO_BIN" "$bin"
 else
-	command -v go >/dev/null 2>&1 || die "go is required to build the binary (or set STUARTY_BIN)"
+	command -v go >/dev/null 2>&1 || die "go is required to build the binary (or set VUKEM_VIDEO_BIN)"
 	log "building the binary"
-	bin="$work/stuarty"
+	bin="$work/vukem-video"
 	(cd "$root" && go build -o "$bin" ./web/cmd/app)
 fi
 chmod +x "$bin"
 
 # Nothing may configure an outbound path, and no other workspace may be reached.
 while IFS='=' read -r name _; do
-	case "$name" in STUARTY_* | APP_KEY | APP_ENV | OTEL_*) unset "$name" ;; esac
+	case "$name" in VUKEM_VIDEO_* | APP_KEY | APP_ENV | OTEL_*) unset "$name" ;; esac
 done < <(env)
-export STUARTY_HOME="$work/home"
-mkdir -p "$STUARTY_HOME" "$work/traces"
+export VUKEM_VIDEO_HOME="$work/home"
+mkdir -p "$VUKEM_VIDEO_HOME" "$work/traces"
 port="${NOEGRESS_PORT:-$((20000 + RANDOM % 20000))}"
 project=prj_7k2m9x4q1b
 
@@ -115,16 +112,16 @@ vv_refused() {
 json_field() { sed -n "s/.*\"$1\":\"\([^\"]*\)\".*/\1/p" "$2" | head -n 1; }
 
 log "starting the server on 127.0.0.1:$port"
-STUARTY_ADDR="127.0.0.1:$port" STUARTY_MIN_FREE_BYTES=1 \
+VUKEM_VIDEO_ADDR="127.0.0.1:$port" VUKEM_VIDEO_MIN_FREE_BYTES=1 \
 	strace -f --seccomp-bpf -e trace=connect,sendto,sendmsg,sendmmsg -o "$work/traces/serve.log" -- \
 	"$bin" serve >"$work/serve.log" 2>&1 &
 server_pid=$!
 for _ in $(seq 1 120); do
-	[ -s "$STUARTY_HOME/runtime.json" ] && break
+	[ -s "$VUKEM_VIDEO_HOME/runtime.json" ] && break
 	kill -0 "$server_pid" 2>/dev/null || { cat "$work/serve.log" >&2; die "the server exited at start"; }
 	sleep 0.5
 done
-[ -s "$STUARTY_HOME/runtime.json" ] || { cat "$work/serve.log" >&2; die "the server did not announce itself in 60 s"; }
+[ -s "$VUKEM_VIDEO_HOME/runtime.json" ] || { cat "$work/serve.log" >&2; die "the server did not announce itself in 60 s"; }
 
 log "CLI session: create, import, edit, export, view"
 ffmpeg -v error -f lavfi -i testsrc2=size=320x180:rate=30:duration=2 -f lavfi -i sine=frequency=220:duration=2 \
@@ -184,11 +181,6 @@ grep -q "nothing was downloaded" "$work/cli-tools-install.out" || { cat "$work/c
 # SDD-007 section 6.8): the helper download itself is the one allowed outbound path (HTTPS to the hosts of
 # the embedded manifest) and is not run here, so the trace stays free of non-loopback addresses.
 vv_refused cli-tools-install-yes tools:install whisper --yes </dev/null
-
-log "CLI session: no connection configured, so nothing can leave"
-vv cli-connection-list connection:list --json
-grep -qF '"connections":[]' "$work/cli-connection-list.out" || { cat "$work/cli-connection-list.out" >&2; die "a fresh workspace lists a connection"; }
-vv_refused cli-connection-test connection:test con_0000000000
 
 log "MCP session on stdio: initialize, tools/list"
 mcp_out="$work/mcp.out"

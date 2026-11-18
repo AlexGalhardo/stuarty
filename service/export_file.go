@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/vukem-video/core/command"
 )
 
 // ExportFileRequest names a finished export by its job.

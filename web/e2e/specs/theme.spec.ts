@@ -9,20 +9,9 @@ test.describe("theme-default-dark-and-toggle", () => {
 			await page.goto("/projects");
 
 			await expect(page.locator("html")).toHaveClass(/\bdark\b/);
-			// The body paints the --background token of the dark theme; the token
-			// is read, not written here, so a new palette does not break the spec.
-			const background = await page.evaluate(() => {
-				const probe = document.createElement("div");
-				probe.style.backgroundColor = "var(--background)";
-				document.body.append(probe);
-				const color = getComputedStyle(probe).backgroundColor;
-				probe.remove();
-				return color;
-			});
-			expect(background).not.toBe("");
 			await expect(page.locator("body")).toHaveCSS(
 				"background-color",
-				background,
+				"oklch(0.145 0 0)",
 			);
 		});
 

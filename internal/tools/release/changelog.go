@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-const repoURL = "https://github.com/AlexGalhardo/stuarty"
+const repoURL = "https://github.com/AlexGalhardo/vukem-video"
 
 var (
 	versionRe  = regexp.MustCompile(`^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-[0-9A-Za-z.-]+)?$`)

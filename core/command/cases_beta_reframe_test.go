@@ -1,6 +1,6 @@
 package command
 
-import "github.com/AlexGalhardo/stuarty/core/timeline"
+import "github.com/AlexGalhardo/vukem-video/core/timeline"
 
 // Golden cases of settings.reframe (SDD-002 C.60). The case documents are 1080x1920.
 func init() {

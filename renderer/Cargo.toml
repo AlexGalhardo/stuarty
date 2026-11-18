@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["stuarty-renderer", "stuarty-renderer-gpu", "stuarty-renderer-text"]
+members = ["vukem-renderer", "vukem-renderer-gpu", "vukem-renderer-text"]
 
 [workspace.package]
 version = "0.0.0"

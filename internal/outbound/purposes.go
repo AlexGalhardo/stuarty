@@ -120,7 +120,7 @@ func DesktopUpdate(feedURL string, timeout time.Duration, test *TestOptions) (*h
 	}, nil
 }
 
-// ParseEndpoint checks STUARTY_TRANSCRIBE_URL: https, or http for a loopback host, no userinfo, no
+// ParseEndpoint checks VUKEM_VIDEO_TRANSCRIBE_URL: https, or http for a loopback host, no userinfo, no
 // query or fragment (SDD-007 section 4.5).
 func ParseEndpoint(endpoint string) (*url.URL, error) {
 	u, err := url.Parse(endpoint)

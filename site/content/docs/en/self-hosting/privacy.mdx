@@ -17,25 +17,24 @@ A connection **to** the server, from a browser or a client you use, is inbound a
 
 | Path | Opens a connection when | To | Default |
 | --- | --- | --- | --- |
-| Transcription API | `STUARTY_TRANSCRIBE_URL` and `STUARTY_TRANSCRIBE_KEY` are set and a transcription runs | the host you configured, with the audio of one asset and the key | off |
+| Transcription API | `VUKEM_VIDEO_TRANSCRIBE_URL` and `VUKEM_VIDEO_TRANSCRIBE_KEY` are set and a transcription runs | the host you configured, with the audio of one asset and the key | off |
 | Helper download | a person runs `tools:install` or presses Install in the editor | the hosts of the embedded manifest | never at run time |
 | OpenTelemetry | `OTEL_EXPORTER_OTLP_ENDPOINT` is set | that endpoint | off |
 | Desktop update check | you answered Yes to the first-use question, or you choose **Help**, **Check for updates** | `video.vukem.dev`, one signed file, nothing about you | asked once; nothing connects before the answer |
-| CLI and stdio MCP as clients | a server owns the workspace | the loopback address of that server, or `STUARTY_URL` when you set it | loopback only |
+| CLI and stdio MCP as clients | a server owns the workspace | the loopback address of that server, or `VUKEM_VIDEO_URL` when you set it | loopback only |
 | Browser launch | `serve` opens your browser | your browser connects to loopback; the product makes no connection | loopback only |
-| Google sign-in | on a server in network mode where you turned [Google sign-in](/docs/self-hosting/google-sign-in) on, a person signs in with Google or links a Google account | the hosts of the connection you chose (`oauth2.googleapis.com` and `www.googleapis.com`), for the code and the keys; the browser, not the server, opens Google's sign-in page | off |
 
 That is the whole list. The transcription provider receives only the normalised audio of the asset and the key. It receives no project, no file name and no path, the certificate is always verified, redirects are refused and the job says which host receives the audio. The helper download is announced with its size and host before it starts.
 
-No tool of an agent can make the product send data anywhere: no argument is a URL, host, webhook or destination, and there is no import by URL, no publishing and no upload. FFmpeg, ffprobe and the transcription program are never given a network address; on Linux, `STUARTY_SANDBOX=bwrap` makes the operating system enforce it.
+No tool of an agent can make the product send data anywhere: no argument is a URL, host, webhook or destination, and there is no import by URL, no publishing and no upload. FFmpeg, ffprobe and the transcription program are never given a network address; on Linux, `VUKEM_VIDEO_SANDBOX=bwrap` makes the operating system enforce it.
 
 ## Quick start
 
 To verify it on your own machine, run the server and watch its connections with the tool of your system. On Linux:
 
 ```bash
-stuarty serve &
-ss -tnp | grep stuarty
+vukem-video serve &
+ss -tnp | grep vukem-video
 ```
 
 You should see only the listening socket and your own browser. Stop the server with `kill %1` when you finish.

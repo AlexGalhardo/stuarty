@@ -30,9 +30,9 @@ The original item keeps its id and becomes the left part; a new item is the righ
 - [`E_ID_EXISTS`](/docs/reference/error-codes#e_id_exists)
 - [`E_LIMIT`](/docs/reference/error-codes#e_limit)
 
-## Scope
+## Scope and phase
 
-Scope `edit`. The scope is the one an API key needs in network mode. Run `stuarty command:help item.split` for the same description from the binary, or call the [`command_help`](/docs/mcp/tools/command_help) tool.
+Scope `edit`, phase `prototype`. The scope is the one an API key needs in network mode. Run `vukem-video command:help item.split` for the same description from the binary, or call the [`command_help`](/docs/mcp/tools/command_help) tool.
 
 ## Next steps
 
@@ -86,14 +86,14 @@ Scope `edit`. The scope is the one an API key needs in network mode. Run `stuart
 ```
 
 ```bash title="Terminal"
-stuarty edit --project prj_7k2m9x4q1b --ops batch.json --json
+vukem-video edit --project prj_7k2m9x4q1b --ops batch.json --json
 ```
 
 **Over HTTP**
 
 ```bash title="curl"
 curl -X POST "http://127.0.0.1:7878/api/v1/projects/prj_7k2m9x4q1b/edit" \
-  -H "Authorization: Bearer $STUARTY_KEY" \
+  -H "Authorization: Bearer $VUKEM_VIDEO_KEY" \
   -H "Content-Type: application/json" \
   -d '{
   "base_revision": 12,

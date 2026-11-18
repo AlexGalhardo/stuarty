@@ -1,7 +1,5 @@
 // The thin-client check of SDD-012 section 1.4: rules R1 to R8 over every file
-// under resources/js/editor/, and R1 to R7 over every file under
-// resources/js/image-editor/ (SDD-012 section 24.2). It fails with file, line
-// and rule id.
+// under resources/js/editor/. It fails with file, line and rule id.
 //
 //   bun run check:thin-client          the tree, then the fixtures
 //
@@ -87,7 +85,7 @@ const R5_ALLOWLIST = [
 	"ui/TimeField.tsx",
 ];
 const STORAGE_NAMES = new Set(["localStorage", "sessionStorage", "indexedDB", "caches"]);
-const PREFS_KEYS = new Set(["theme", "vv.layout", "vv.timeDisplay", "vv.timeUnit", "vv.zoomByProject", "vv.keymap", "vv.shortcutsSeen", "vv.lang", "stuarty.preview.executor"]);
+const PREFS_KEYS = new Set(["theme", "vv.layout", "vv.timeDisplay", "vv.timeUnit", "vv.zoomByProject", "vv.keymap", "vv.shortcutsSeen", "vv.lang"]);
 const WRITE_FUNCTIONS = ["replaceDocument", "applyRevisionDiff"];
 
 const ASSIGNMENTS = new Set<SyntaxKind>([
@@ -133,10 +131,6 @@ const MAY_IMPORT: Record<string, string[]> = {
 
 // What lies after the last /editor/ segment: "state/sync.ts".
 function editorRelative(file: string): string | null {
-	// The image editor (SDD-012 section 24) is checked by the same rules; its files are named
-	// "image-editor/<folder>/<file>", and only its api/ folder may call the network.
-	const image = file.lastIndexOf("/image-editor/");
-	if (image >= 0) return file.slice(image + 1);
 	const marker = "/editor/";
 	const at = file.lastIndexOf(marker);
 	return at < 0 ? null : file.slice(at + marker.length);
@@ -194,18 +188,9 @@ function checkFile(sf: SourceFile, rel: string, fileLabel: string): Finding[] {
 	const folder = rel.split("/")[0];
 	// The decode worker of the preview reads the proxy and its chunk index in byte
 	// ranges (SDD-013 section 5.3); it edits nothing and holds no project data.
-	// The render worker fetches the renderer module, a same-origin asset, and nothing
-	// else (SDD-013 section 4.7 rule 4): it may call fetch and nothing more of R6.
-	// The one that creates it is createRenderWorker.ts.
 	const isDecodeWorker = rel === "preview/decode/decodeWorker.ts";
-	const isRenderWorker = rel === "preview/render/renderWorker.ts";
-	const mayCreateWorker =
-		rel === "preview/decode/createWorker.ts" || rel === "preview/render/createRenderWorker.ts";
-	const inApiOrBoot =
-		folder === "api" ||
-		folder === "boot" ||
-		isDecodeWorker ||
-		rel.startsWith("image-editor/api/");
+	const mayCreateWorker = rel === "preview/decode/createWorker.ts";
+	const inApiOrBoot = folder === "api" || folder === "boot" || isDecodeWorker;
 	const isSync = rel === "state/sync.ts";
 	const isPrefs = rel === "state/prefs.ts";
 	const r5Allowed = R5_ALLOWLIST.some((entry) => rel === entry || rel.startsWith(entry));
@@ -279,8 +264,7 @@ function checkFile(sf: SourceFile, rel: string, fileLabel: string): Finding[] {
 					report(n, "R2", `call to "${calleeName}" computes an edit result`);
 				}
 				if (calleeName === "measureText") report(n, "R2", ".measureText() lays out text");
-				const mayFetch = inApiOrBoot || (isRenderWorker && calleeText === "fetch");
-				if (!mayFetch && (calleeText === "fetch" || calleeText === "navigator.sendBeacon")) {
+				if (!inApiOrBoot && (calleeText === "fetch" || calleeText === "navigator.sendBeacon")) {
 					report(n, "R6", `${calleeText}() outside editor/api and editor/boot`);
 				}
 				if (!isSync && callee.kind === SyntaxKind.PropertyAccessExpression) {

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
 )
 
 // Error codes of SDD-000 section 8 that a transcription raises.

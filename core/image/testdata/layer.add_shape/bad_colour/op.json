@@ -1,9 +1,0 @@
-{
-  "args": {
-    "fill": "blue",
-    "h": 10,
-    "shape": "rect",
-    "w": 10
-  },
-  "op": "layer.add_shape"
-}

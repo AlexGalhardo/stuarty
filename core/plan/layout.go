@@ -4,7 +4,7 @@ import (
 	"math"
 	"strings"
 
-	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
 // verticalAspect is the largest width/height treated as vertical video.

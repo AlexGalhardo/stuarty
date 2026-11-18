@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/vukem-video/service"
 )
 
 // refDoc is the part of a project document the checks of reference scenario 2 read.

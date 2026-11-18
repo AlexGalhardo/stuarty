@@ -10,22 +10,22 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/engine/gpuhost"
-	"github.com/AlexGalhardo/stuarty/engine/renderhost"
+	"github.com/AlexGalhardo/vukem-video/engine/gpuhost"
+	"github.com/AlexGalhardo/vukem-video/engine/renderhost"
 )
 
-// The GPU gate of the skill renderer-parity, part 2, through the child process: the frames stuarty-render draws
+// The GPU gate of the skill renderer-parity, part 2, through the child process: the frames vukem-render draws
 // on the GPU against the frames of the CPU path (equal to the Go compositor byte for byte, see
 // TestRustCPUPathEqualsGoCompositor), as SSIM on luma. The displacement bound of half a pixel is held by the
-// Rust test renderer/stuarty-renderer-gpu/tests/parity.rs, which has the quads.
+// Rust test renderer/vukem-renderer-gpu/tests/parity.rs, which has the quads.
 
 const (
-	envGPUHost  = "STUARTY_TEST_GPU_HOST"
+	envGPUHost  = "VUKEM_VIDEO_TEST_GPU_HOST"
 	minGPUSSIM  = 0.99
 	gpuHostWait = 2 * time.Minute
 )
 
-// gpuHostBinary is the stuarty-render the environment names or a fresh build; a machine without cargo skips.
+// gpuHostBinary is the vukem-render the environment names or a fresh build; a machine without cargo skips.
 func gpuHostBinary(t *testing.T) string {
 	t.Helper()
 
@@ -43,13 +43,13 @@ func gpuHostBinary(t *testing.T) string {
 		t.Fatal(err)
 	}
 
-	cmd := exec.CommandContext(t.Context(), cargo, "build", "--locked", "--release", "--bin", "stuarty-render",
+	cmd := exec.CommandContext(t.Context(), cargo, "build", "--locked", "--release", "--bin", "vukem-render",
 		"--manifest-path", filepath.Join(root, "Cargo.toml"))
 	if out, err := cmd.CombinedOutput(); err != nil {
-		t.Fatalf("cargo build of stuarty-render: %v\n%s", err, out)
+		t.Fatalf("cargo build of vukem-render: %v\n%s", err, out)
 	}
 
-	name := "stuarty-render"
+	name := "vukem-render"
 	if runtime.GOOS == "windows" {
 		name += ".exe"
 	}
@@ -161,7 +161,7 @@ func TestExportWithTheGPUHost(t *testing.T) {
 	t.Run("a host that cannot start falls back to the CPU path", func(t *testing.T) {
 		job := newJob(t, doc, "export-gpu-missing", "gpu-missing.mp4")
 		job.PixelRenderer = PixelRendererGPU
-		job.GPUHost = filepath.Join(t.TempDir(), "no-such-stuarty-render")
+		job.GPUHost = filepath.Join(t.TempDir(), "no-such-vukem-render")
 
 		res, err := Run(context.Background(), job)
 		if err != nil {
@@ -229,7 +229,7 @@ func TestGPUHostIsChosenOnlyWhenAllowed(t *testing.T) {
 		{"gpu with a host", PixelRendererGPU, bin, false, true},
 		{"gpu without a host", PixelRendererGPU, "", false, false},
 		{"gpu with a host that is missing", PixelRendererGPU, filepath.Join(t.TempDir(), "none"), false, false},
-		{"gpu with a relative path", PixelRendererGPU, "stuarty-render", false, false},
+		{"gpu with a relative path", PixelRendererGPU, "vukem-render", false, false},
 		{"rust with a host", PixelRendererRust, bin, false, false},
 		{"go with a host", PixelRendererGo, bin, false, false},
 		{"gpu for a single frame", PixelRendererGPU, bin, true, false},

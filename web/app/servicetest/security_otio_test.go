@@ -7,7 +7,7 @@ import (
 	"testing"
 	"unicode"
 
-	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/vukem-video/service"
 )
 
 // hostileOtio is a name that tries to close a block, to override the text direction and to forge a

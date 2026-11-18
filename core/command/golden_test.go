@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
 // The golden-case runner of SDD-002 §A.11 and SDD-008 §3. A case is a directory
@@ -61,7 +61,12 @@ func runGolden(t *testing.T, reg *Registry, root string) int {
 			}
 			n++
 			dir := filepath.Join(root, cmd.Name, c.Name())
-			t.Run(cmd.Name+"/"+c.Name(), func(t *testing.T) { runGoldenCase(t, reg, dir) })
+			// A case named *_in_prototype runs against the Prototype build.
+			caseReg := reg
+			if strings.HasSuffix(c.Name(), "_in_prototype") {
+				caseReg = prototypeBuild()
+			}
+			t.Run(cmd.Name+"/"+c.Name(), func(t *testing.T) { runGoldenCase(t, caseReg, dir) })
 		}
 	}
 	return n
@@ -202,4 +207,15 @@ func checkCaseName(t *testing.T, name string, err error) {
 	default:
 		t.Errorf("case name %q starts with neither ok_ nor err_", name)
 	}
+}
+
+// prototypeBuild is the Prototype registry: the commands of Default that belong to it.
+func prototypeBuild() *Registry {
+	r := NewRegistry(Prototype)
+	for _, c := range Default().List() {
+		if err := r.Register(*c); err != nil {
+			panic(err)
+		}
+	}
+	return r
 }

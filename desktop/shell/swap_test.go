@@ -14,7 +14,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/desktop/update"
+	"github.com/AlexGalhardo/vukem-video/desktop/update"
 )
 
 type zipEntry struct {
@@ -90,13 +90,13 @@ func gone(path string) bool {
 	return os.IsNotExist(err)
 }
 
-// bundle is an installed old application: Apps/Stuarty.app with its program.
+// bundle is an installed old application: Apps/Vukem Video.app with its program.
 func bundle(t *testing.T) (Target, string) {
 	t.Helper()
 
 	apps := t.TempDir()
-	app := filepath.Join(apps, "Stuarty.app")
-	exe := filepath.Join(app, "Contents", "MacOS", "stuarty-desktop")
+	app := filepath.Join(apps, "Vukem Video.app")
+	exe := filepath.Join(app, "Contents", "MacOS", "vukem-video-desktop")
 	write(t, exe, "old")
 
 	return Target{Path: app, Exec: exe}, apps
@@ -106,9 +106,9 @@ func newBundleZip(t *testing.T) string {
 	t.Helper()
 
 	return makeZip(t,
-		zipEntry{name: "Stuarty.app/", mode: os.ModeDir | 0o755},
-		zipEntry{name: "Stuarty.app/Contents/MacOS/stuarty-desktop", body: "new"},
-		zipEntry{name: "Stuarty.app/Contents/Info.plist", body: "plist", mode: 0o644},
+		zipEntry{name: "Vukem Video.app/", mode: os.ModeDir | 0o755},
+		zipEntry{name: "Vukem Video.app/Contents/MacOS/vukem-video-desktop", body: "new"},
+		zipEntry{name: "Vukem Video.app/Contents/Info.plist", body: "plist", mode: 0o644},
 	)
 }
 
@@ -147,7 +147,7 @@ func TestSwapReplacesTheBundleAndKeepsABackup(t *testing.T) {
 		t.Errorf("marker %+v, %v", stored, err)
 	}
 
-	if !gone(filepath.Join(apps, ".Stuarty.app.staging")) {
+	if !gone(filepath.Join(apps, ".Vukem Video.app.staging")) {
 		t.Error("the staging directory must be removed")
 	}
 
@@ -176,8 +176,8 @@ func TestSwapReplacesAnAppImage(t *testing.T) {
 func TestSwapRefusesABadArchiveAndTouchesNothing(t *testing.T) {
 	cases := map[string]string{
 		"two bundles": makeZip(t,
-			zipEntry{name: "A.app/Contents/MacOS/stuarty-desktop", body: "x"},
-			zipEntry{name: "B.app/Contents/MacOS/stuarty-desktop", body: "x"}),
+			zipEntry{name: "A.app/Contents/MacOS/vukem-video-desktop", body: "x"},
+			zipEntry{name: "B.app/Contents/MacOS/vukem-video-desktop", body: "x"}),
 		"no program": makeZip(t, zipEntry{name: "A.app/Contents/Info.plist", body: "x"}),
 		"not a zip":  filepath.Join(t.TempDir(), "missing.zip"),
 		"not an app": makeZip(t, zipEntry{name: "tool/bin", body: "x"}),
@@ -219,7 +219,7 @@ func TestExtractRefusesLinksOutsideTheBundle(t *testing.T) {
 	for _, link := range []string{"/etc/passwd", "../../../outside", "../../..", ""} {
 		tgt, _ := bundle(t)
 		art := makeZip(t,
-			zipEntry{name: "A.app/Contents/MacOS/stuarty-desktop", body: "x"},
+			zipEntry{name: "A.app/Contents/MacOS/vukem-video-desktop", body: "x"},
 			zipEntry{name: "A.app/Contents/link", body: link, mode: os.ModeSymlink | 0o777},
 		)
 
@@ -236,7 +236,7 @@ func TestExtractKeepsASafeLink(t *testing.T) {
 
 	tgt, _ := bundle(t)
 	art := makeZip(t,
-		zipEntry{name: "A.app/Contents/MacOS/stuarty-desktop", body: "new"},
+		zipEntry{name: "A.app/Contents/MacOS/vukem-video-desktop", body: "new"},
 		zipEntry{name: "A.app/Contents/Frameworks/Current", body: "../MacOS", mode: os.ModeSymlink | 0o777},
 	)
 
@@ -257,7 +257,7 @@ func TestExtractDropsSetuidBits(t *testing.T) {
 
 	tgt, _ := bundle(t)
 	art := makeZip(t,
-		zipEntry{name: "A.app/Contents/MacOS/stuarty-desktop", body: "new", mode: 0o755 | os.ModeSetuid},
+		zipEntry{name: "A.app/Contents/MacOS/vukem-video-desktop", body: "new", mode: 0o755 | os.ModeSetuid},
 	)
 
 	if _, err := Swap(swapReq(t, tgt, art)); err != nil {
@@ -299,14 +299,14 @@ func TestOnlyOneSwapAtATime(t *testing.T) {
 func TestLocateTarget(t *testing.T) {
 	env := func(m map[string]string) func(string) string { return func(k string) string { return m[k] } }
 
-	appDir := filepath.Join("Applications", "Stuarty.app")
-	app := filepath.Join(appDir, "Contents", "MacOS", "stuarty-desktop")
+	appDir := filepath.Join("Applications", "Vukem Video.app")
+	app := filepath.Join(appDir, "Contents", "MacOS", "vukem-video-desktop")
 
 	if got, err := LocateTarget("darwin", app, env(nil)); err != nil || got.Path != appDir || got.Exec != app {
 		t.Errorf("darwin bundle: %+v, %v", got, err)
 	}
 
-	loose := filepath.Join("dev", "stuarty-desktop")
+	loose := filepath.Join("dev", "vukem-video-desktop")
 	if _, err := LocateTarget("darwin", loose, env(nil)); !errors.Is(err, ErrNotInstalled) {
 		t.Errorf("darwin loose binary: %v", err)
 	}
@@ -320,7 +320,7 @@ func TestLocateTarget(t *testing.T) {
 		t.Errorf("appimage: %+v, %v", got, err)
 	}
 
-	_, err = LocateTarget("linux", "/usr/lib/stuarty-desktop/stuarty-desktop", env(nil))
+	_, err = LocateTarget("linux", "/usr/lib/vukem-video-desktop/vukem-video-desktop", env(nil))
 	if !errors.Is(err, ErrDebInstall) || !strings.Contains(err.Error(), ReleasePageURL) {
 		t.Errorf("deb: %v", err)
 	}
@@ -455,59 +455,6 @@ func TestWatchRollsBackWhenTheNewVersionCannotBeStarted(t *testing.T) {
 	}
 
 	assertRolledBack(t, req, target, s)
-}
-
-// TestAnUpdateFromVukemVideoIsConfirmedByStuarty: an installed Vukem Video replaces itself with Stuarty and
-// its watchdog waits in the update folder of the former name (ADR-0044). The start of Stuarty confirms
-// there too, so the update is kept instead of undone.
-func TestAnUpdateFromVukemVideoIsConfirmedByStuarty(t *testing.T) {
-	config := t.TempDir()
-	t.Setenv("APPDATA", config)
-	t.Setenv("XDG_CONFIG_HOME", config)
-	t.Setenv("HOME", config)
-
-	base, err := os.UserConfigDir()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	target, _ := bundle(t)
-	req := swapReq(t, target, newBundleZip(t))
-	req.StateDir = filepath.Join(base, "vukem-video", "update")
-
-	p, err := Swap(req)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	var confirmErr error
-
-	// The watchdog starts the new version, which confirms as the application does once it has started.
-	start := func(string) (<-chan struct{}, error) {
-		confirmErr = ConfirmUpdates("0.21.0")
-
-		return nil, nil
-	}
-
-	// The confirmation is written before the watchdog first looks, so the timeout is never reached.
-	cfg := WatchConfig{
-		StateDir: req.StateDir, Start: start, Timeout: 400 * time.Millisecond, Poll: 5 * time.Millisecond,
-	}
-	if err := Watch(context.Background(), cfg); err != nil {
-		t.Fatalf("Watch = %v, want the update kept", err)
-	}
-
-	if confirmErr != nil {
-		t.Fatal(confirmErr)
-	}
-
-	if read(t, target.Exec) != "new" || !gone(p.Backup) {
-		t.Errorf("program %q, backup gone %v: want the new version kept", read(t, target.Exec), gone(p.Backup))
-	}
-
-	if _, failed := LoadFailed(req.StateDir); failed {
-		t.Error("the update was recorded as failed")
-	}
 }
 
 func TestConfirmIsIgnoredForAnotherVersion(t *testing.T) {

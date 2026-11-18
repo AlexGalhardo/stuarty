@@ -7,8 +7,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
-	"github.com/AlexGalhardo/stuarty/engine/renderhost"
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
+	"github.com/AlexGalhardo/vukem-video/engine/renderhost"
 )
 
 func TestParsePixelRenderer(t *testing.T) {

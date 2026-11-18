@@ -13,13 +13,13 @@ formatters:
     - golines
   settings:
     gofumpt:
-      module-path: github.com/AlexGalhardo/stuarty
+      module-path: github.com/AlexGalhardo/vukem-video
     gci:
       sections:
         - standard
         - default
         - prefix(github.com/AlexGalhardo/vukem)
-        - prefix(github.com/AlexGalhardo/stuarty)
+        - prefix(github.com/AlexGalhardo/vukem-video)
     golines:
       max-len: 120
       tab-len: 4
@@ -86,15 +86,15 @@ linters:
           list-mode: lax
           files:
             - "**/core/**"
-          # The deny prefix of vukem also matches the module path stuarty.
+          # The deny prefix of vukem also matches the module path vukem-video.
           allow:
-            - github.com/AlexGalhardo/stuarty/core
+            - github.com/AlexGalhardo/vukem-video/core
           deny:
-            - pkg: github.com/AlexGalhardo/stuarty/engine
+            - pkg: github.com/AlexGalhardo/vukem-video/engine
               desc: core never imports engine (ADR-0001 rule 1)
-            - pkg: github.com/AlexGalhardo/stuarty/service
+            - pkg: github.com/AlexGalhardo/vukem-video/service
               desc: core never imports service (ADR-0001 rule 1)
-            - pkg: github.com/AlexGalhardo/stuarty/web
+            - pkg: github.com/AlexGalhardo/vukem-video/web
               desc: core never imports web (ADR-0001 rule 1)
             - pkg: github.com/AlexGalhardo/vukem
               desc: core never imports vukem (ADR-0001 rule 1)
@@ -103,22 +103,22 @@ linters:
           files:
             - "**/engine/**"
           deny:
-            - pkg: github.com/AlexGalhardo/stuarty/service
+            - pkg: github.com/AlexGalhardo/vukem-video/service
               desc: engine never imports service (ADR-0001 rule 2)
-            - pkg: github.com/AlexGalhardo/stuarty/web
+            - pkg: github.com/AlexGalhardo/vukem-video/web
               desc: engine never imports web (ADR-0001 rule 2)
         service-is-not-vukem:
           list-mode: lax
           files:
             - "**/service/**"
-          # The deny prefix of vukem also matches the module path stuarty.
+          # The deny prefix of vukem also matches the module path vukem-video.
           allow:
-            - github.com/AlexGalhardo/stuarty/core
-            - github.com/AlexGalhardo/stuarty/engine
-            - github.com/AlexGalhardo/stuarty/service
-            - github.com/AlexGalhardo/stuarty/internal
+            - github.com/AlexGalhardo/vukem-video/core
+            - github.com/AlexGalhardo/vukem-video/engine
+            - github.com/AlexGalhardo/vukem-video/service
+            - github.com/AlexGalhardo/vukem-video/internal
           deny:
-            - pkg: github.com/AlexGalhardo/stuarty/web
+            - pkg: github.com/AlexGalhardo/vukem-video/web
               desc: service defines interfaces that web implements (ADR-0001 rule 3)
             - pkg: github.com/AlexGalhardo/vukem
               desc: only web imports vukem application packages (ADR-0001 rule 4)

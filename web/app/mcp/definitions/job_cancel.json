@@ -1,6 +1,6 @@
 {
  "name": "job_cancel",
- "description": "Cancel a queued or running job. A finished job returns unchanged; a cancelled export leaves no file.",
+ "description": "Cancel a queued or running job. A job already in a final state is returned unchanged. A cancelled export leaves no file.",
  "inputSchema": {
   "type": "object",
   "properties": {

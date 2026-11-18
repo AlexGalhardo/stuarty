@@ -24,9 +24,9 @@ In the editor, the inspector of a clip or an audio item has an **Audio** section
 <Tab title="CLI">
 
 ```bash
-stuarty edit --project prj_7k2m9x4q1b audio.add track_id=trk_m1n2p3q4r5 \
+vukem-video edit --project prj_7k2m9x4q1b audio.add track_id=trk_m1n2p3q4r5 \
   asset_id=ast_4h6j8k2m3n start=0s
-stuarty edit --project prj_7k2m9x4q1b item.set_audio item_id=itm_s6t7v8w9x0 \
+vukem-video edit --project prj_7k2m9x4q1b item.set_audio item_id=itm_s6t7v8w9x0 \
   volume:=0.6 fade_in=1s fade_out=2s
 ```
 
@@ -54,7 +54,7 @@ The default duration of an audio item is the rest of the asset from `source_in`.
 The speech is found by the analysis of those items, which the service reads for you; never send `resolved`. The music item must have no volume keyframes yet. To undo the ducking, clear them with `keyframe.clear` on `volume`.
 
 ```bash
-stuarty edit --project prj_7k2m9x4q1b audio.duck item_id=itm_s6t7v8w9x0   speech_item_ids:=[itm_m1n2p3q4r5] gain_db:=-14
+vukem-video edit --project prj_7k2m9x4q1b audio.duck item_id=itm_s6t7v8w9x0   speech_item_ids:=[itm_m1n2p3q4r5] gain_db:=-14
 ```
 
 If the speech item has no analysis yet the edit fails with `E_INVALID_STATE` and the hint to wait until the asset is ready.
@@ -64,12 +64,12 @@ If the speech item has no analysis yet the edit fails with `E_INVALID_STATE` and
 `audio.mark_beats` writes a marker on a music item at each <Term id="beat">beat</Term> of its visible part, so you can place cuts and transitions on the music. `every` marks every nth beat (1 to 64, default 1), `label` names the markers (up to 60 characters) and `replace` (true by default) replaces the markers the item already has. The beat grid comes from the analysis of the asset. Markers change neither the picture nor the sound.
 
 ```bash
-stuarty edit --project prj_7k2m9x4q1b audio.mark_beats item_id=itm_s6t7v8w9x0 every:=2 label=beat
+vukem-video edit --project prj_7k2m9x4q1b audio.mark_beats item_id=itm_s6t7v8w9x0 every:=2 label=beat
 ```
 
 An asset without audio has no beat grid and the edit fails with `E_INVALID_STATE`. The same two operations are available to an MCP agent through `edit`. In the editor, the inspector of a music item has a **Ducking** section (the speech items, the volume change, attack and release) and a **Beat markers** section (every nth beat, a label, replace the markers of the item).
 
-Run `stuarty lint` before you export. These rules concern sound: `L_AUDIO_OVERLAP` (audio items that overlap), `L_AUDIO_CLIP` (the mix reaches clipping) and `L_SILENT_EXPORT` (the export would have no sound).
+Run `vukem-video lint` before you export. These rules concern sound: `L_AUDIO_OVERLAP` (audio items that overlap), `L_AUDIO_CLIP` (the mix reaches clipping) and `L_SILENT_EXPORT` (the export would have no sound).
 
 ## Common mistakes
 

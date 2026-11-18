@@ -38,6 +38,7 @@ type Command = {
 	errors: string[];
 	example: unknown;
 	internal: boolean;
+	phase: string;
 	scope: string;
 	args_schema: Schema;
 };
@@ -160,7 +161,6 @@ const STATUS_NUMBERS: Record<string, number> = {
 	StatusTooManyRequests: 429,
 	StatusClientClosed: 499,
 	StatusInternalServerError: 500,
-	StatusBadGateway: 502,
 	StatusServiceUnavailable: 503,
 };
 
@@ -211,7 +211,7 @@ function cliReference(cli: CliDoc): string {
 	});
 	return page(
 		"CLI reference",
-		"Every stuarty command, its flags and the exit codes.",
+		"Every vukem-video command, its flags and the exit codes.",
 		[
 			"The CLI is a thin adapter over the same service as the editor, the MCP server and the HTTP API. Add `--json` to any command for one JSON document on standard output.",
 			"## Global flags",
@@ -251,20 +251,10 @@ function configuration(): string {
 		esc(def ?? ""),
 		esc(meaning ?? ""),
 	]);
-	const former = sddTable("docs/sdds/000-shared-definitions.md", /^### 13\.1 /m).map(([was, now]) => [
-		esc(was ?? ""),
-		esc(now ?? ""),
-	]);
 	return page(
 		"Configuration variables",
-		"Every environment variable of Stuarty, with its default.",
-		[
-			"All variables are optional.",
-			table(["Variable", "Default", "Meaning"], rows),
-			"## Names before the rename",
-			"The product was called Vukem Video until `v0.29.0`. A variable below is still read, until `1.0.0`, when its new name is not set; each use prints one warning. The new name wins when both are set.",
-			table(["Former variable", "Variable"], former),
-		].join("\n\n"),
+		"Every environment variable of vukem-video, with its default.",
+		["All variables are optional.", table(["Variable", "Default", "Meaning"], rows)].join("\n\n"),
 	);
 }
 
@@ -315,38 +305,10 @@ function skillPage(): string {
 		"The agent skill",
 		"The skill file that teaches an agent the edit loop, the rules, the commands and the errors, as shipped in the release archives.",
 		[
-			"This page is the skill file `agent/skills/stuarty/SKILL.md` of every release archive. Write it into an agent's skills folder with `stuarty agent:docs --write <dir>`, or print it with `stuarty agent:docs --print skill`.",
+			"This page is the skill file `agent/skills/vukem-video/SKILL.md` of every release archive. Write it into an agent's skills folder with `vukem-video agent:docs --write <dir>`, or print it with `vukem-video agent:docs --print skill`.",
 			lines.join("\n"),
 		].join("\n\n"),
 	);
-}
-
-/**
- * The guide of the agents, one page per domain (SDD-003 section 8.1, epic 13): the body of
- * web/app/agentdocs/out/guide/<domain>.md without its generated comment and its H1, as the skill page is.
- */
-export function domainPages(): { file: string; text: string }[] {
-	const dir = path.join(root, "web", "app", "agentdocs", "out", "guide");
-	if (!fs.existsSync(dir)) return [];
-	return fs
-		.readdirSync(dir)
-		.filter((f) => f.endsWith(".md"))
-		.sort()
-		.map((f) => {
-			const domain = f.replace(/\.md$/, "");
-			const raw = fs.readFileSync(path.join(dir, f), "utf8").replace(/\r\n/g, "\n");
-			const body = raw.replace(/^<!--.*-->\n/m, "").replace(/^# .*\n/m, "");
-			const lines = body.split("\n").map((line) => escProse(line));
-			const intro = `This page is generated from the registry. Print it with \`stuarty agent:docs --print guide:${domain}\`; \`stuarty ${domain}\` lists the commands of the domain.`;
-			return {
-				file: `domain-${domain}.mdx`,
-				text: page(
-					`The ${domain} domain`,
-					`How an agent reaches the ${domain} domain: its MCP tools, its CLI commands and its edit operations.`,
-					[intro, lines.join("\n")].join("\n\n"),
-				),
-			};
-		});
 }
 
 function write(file: string, text: string, expected: Set<string>, base = outDir) {
@@ -372,7 +334,6 @@ async function main() {
 	write("configuration.mdx", configuration(), written);
 	write("glossary.mdx", glossary(), written);
 	write("skill.mdx", skillPage(), written, agentsDir);
-	for (const p of domainPages()) write(p.file, p.text, written, agentsDir);
 
 	const api = apiPages(readJson<OpenApi>("site/generated/openapi.json"), root, new Map(commands.map((c) => [c.name, c.example])));
 	for (const [file, text] of api.files) write(file, text, written, apiDir);

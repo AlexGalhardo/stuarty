@@ -4,7 +4,7 @@ import { expect, seedProject, test } from "./helpers";
 // scrubbing, a proxy frame appears within 100 ms of a seek. The time is that
 // from the pointer going down on the ruler to the canvas saying it shows the
 // frame (`data-drawn`), measured inside the page. It runs in the `perf`
-// project with the other load-sensitive budgets (STUARTY_PERF=1), alone.
+// project with the other load-sensitive budgets (VUKEM_VIDEO_PERF=1), alone.
 const SEEKS = 60;
 const BUDGET_MS = 100;
 

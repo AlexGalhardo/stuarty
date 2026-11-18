@@ -27,31 +27,31 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/desktop/update"
+	"github.com/AlexGalhardo/vukem-video/desktop/update"
 )
 
 const (
 	defaultKeyEnv    = "UPDATE_FEED_SIGNING_KEY"
 	feedSchema       = 1
 	maxArtifactBytes = 1 << 30
-	filePrefix       = "stuarty-desktop_"
+	filePrefix       = "vukem-video-desktop_"
 )
 
 var (
 	stableVersion = regexp.MustCompile(`^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$`)
-	// A desktop installer: stuarty-desktop_<version>_<goos>_<goarch>_setup.exe, .dmg or .deb.
+	// A desktop installer: vukem-video-desktop_<version>_<goos>_<goarch>_setup.exe, .dmg or .deb.
 	installerName = regexp.MustCompile(
-		`^stuarty-desktop_([0-9.]+)_(windows|darwin|linux)_(amd64|arm64)(?:_setup\.exe|\.dmg|\.deb)$`,
+		`^vukem-video-desktop_([0-9.]+)_(windows|darwin|linux)_(amd64|arm64)(?:_setup\.exe|\.dmg|\.deb)$`,
 	)
 	// A launcher artifact, the file the desktop launcher swaps for itself: an AppImage, a zipped macOS
 	// application or a zipped Windows portable build (EPIC-55, D-039).
 	launcherName = regexp.MustCompile(
-		`^stuarty-desktop_([0-9.]+)_(windows|darwin|linux)_(amd64|arm64)(?:\.AppImage|\.app\.zip|_portable\.zip)$`,
+		`^vukem-video-desktop_([0-9.]+)_(windows|darwin|linux)_(amd64|arm64)(?:\.AppImage|\.app\.zip|_portable\.zip)$`,
 	)
-	// The download a person grabs: stuarty-desktop-0-28-0.exe, .AppImage, or -arm64.dmg.
+	// The download a person grabs: vukem-video-desktop-0-28-0.exe, .AppImage, or -arm64.dmg.
 	// The version uses dashes. .exe is Windows amd64, .AppImage is Linux amd64, .dmg names its arch.
 	friendlyName = regexp.MustCompile(
-		`^stuarty-desktop-([0-9]+-[0-9]+-[0-9]+)(?:-(amd64|arm64))?(\.exe|\.AppImage|\.dmg)$`,
+		`^vukem-video-desktop-([0-9]+-[0-9]+-[0-9]+)(?:-(amd64|arm64))?(\.exe|\.AppImage|\.dmg)$`,
 	)
 	hex64 = regexp.MustCompile(`^[0-9a-f]{64}$`)
 )

@@ -17,9 +17,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/core/timeline"
-	enginestore "github.com/AlexGalhardo/stuarty/engine/store"
-	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	enginestore "github.com/AlexGalhardo/vukem-video/engine/store"
+	"github.com/AlexGalhardo/vukem-video/service"
 )
 
 type bundleExporter interface {
@@ -150,7 +150,7 @@ func TestBundleExport(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if man.Format != "stuarty-bundle" || man.BundleVersion != 2 || man.Project.ID != project ||
+	if man.Format != "vukem-video-bundle" || man.BundleVersion != 1 || man.Project.ID != project ||
 		man.Project.Revision != head.Revision || man.Project.SchemaVersion != timeline.CurrentSchemaVersion {
 		t.Errorf("manifest = %+v", man)
 	}
@@ -313,10 +313,10 @@ func TestBundleExportCancel(t *testing.T) {
 }
 
 // TestBundleExportMemory exports a 3 GiB project and keeps the Go process under 500 MB: the media is
-// streamed, never held. It writes about 6 GiB, so it runs only when STUARTY_LARGE_TESTS is set.
+// streamed, never held. It writes about 6 GiB, so it runs only when VUKEM_VIDEO_LARGE_TESTS is set.
 func TestBundleExportMemory(t *testing.T) {
-	if os.Getenv("STUARTY_LARGE_TESTS") == "" {
-		t.Skip("set STUARTY_LARGE_TESTS=1 to export 3 GiB") // verify:env-skip a 3 GiB export that runs on request
+	if os.Getenv("VUKEM_VIDEO_LARGE_TESTS") == "" {
+		t.Skip("set VUKEM_VIDEO_LARGE_TESTS=1 to export 3 GiB")
 	}
 
 	m := newMediaEnv(t, mediaCfg{})

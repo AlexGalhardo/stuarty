@@ -3,7 +3,7 @@
 // resolve it, so `//host`, `/\host` and other parser tricks that land on
 // another origin are ignored. Backslashes and control characters are refused
 // first, since browsers drop or rewrite them while resolving.
-const base = "http://stuarty.invalid";
+const base = "http://vukem-video.invalid";
 
 export function safeNext(next: string | null): string {
 	const fallback = "/projects";

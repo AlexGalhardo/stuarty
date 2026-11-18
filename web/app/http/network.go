@@ -9,7 +9,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/AlexGalhardo/stuarty/service/config"
+	"github.com/AlexGalhardo/vukem-video/service/config"
 )
 
 // Network is the part of the guard that network mode replaces (SDD-007 section
@@ -88,8 +88,8 @@ func (n *Network) logStartup(noUsers bool) {
 	}
 
 	n.log.Warn("network mode has no users yet: every API request is answered 401; " +
-		"create the first administrator with `stuarty user:create <email> --admin` while the server is " +
-		"stopped, or start it with STUARTY_ADMIN_EMAIL and STUARTY_ADMIN_PASSWORD")
+		"create the first administrator with `vukem-video user:create <email> --admin` while the server is " +
+		"stopped, or start it with VUKEM_VIDEO_ADMIN_EMAIL and VUKEM_VIDEO_ADMIN_PASSWORD")
 }
 
 func (n *Network) bindsBeyondLoopback() bool {
@@ -107,7 +107,7 @@ func (n *Network) allowed(r *http.Request) bool {
 		return fetchSiteAllowed(r)
 	}
 
-	return n.schemeAllowed(r) && n.hostAllowed(r.Host) && fetchSiteAllowedIn(r, true) && n.originAllowed(r)
+	return n.schemeAllowed(r) && n.hostAllowed(r.Host) && fetchSiteAllowed(r) && n.originAllowed(r)
 }
 
 func (n *Network) hostAllowed(host string) bool {

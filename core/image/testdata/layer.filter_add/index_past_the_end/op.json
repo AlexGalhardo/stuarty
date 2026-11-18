@@ -1,8 +1,0 @@
-{
-  "args": {
-    "index": 4,
-    "kind": "grain",
-    "layer_id": "lyr_bbbbbbbbbb"
-  },
-  "op": "layer.filter_add"
-}

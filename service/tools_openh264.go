@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"slices"
 
-	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
 )
 
 // openH264Manifest is the manifest that pins the Cisco library: the one of the install step, or the

@@ -1,8 +1,0 @@
-{
-  "code": "E_VALIDATION",
-  "hint": "Use a value between 1 and 4096.",
-  "message": "The value of args.width is 5000, outside the accepted range.",
-  "op_index": 0,
-  "path": "args.width",
-  "retryable": false
-}

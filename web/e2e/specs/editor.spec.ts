@@ -29,7 +29,7 @@ test.describe("editor-live-edit", () => {
 		await expect(page.locator("[data-item-id]")).toHaveCount(1);
 
 		// The CLI and this call are the same client to the server: a bearer token
-		// and the label of Stuarty-Client, so the actor is local:cli.
+		// and the label of Vukem-Video-Client, so the actor is local:cli.
 		const cli = await caller(request, "cli");
 		const head = (await cli("GET", `/projects/${seeded.id}`)) as {
 			revision: number;

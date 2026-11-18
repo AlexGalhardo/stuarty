@@ -1,8 +1,0 @@
-{
-  "code": "E_ID_EXISTS",
-  "hint": "Omit id, and a new one is made.",
-  "message": "Layer lyr_kkkkkkkkkk already exists.",
-  "op_index": 0,
-  "path": "args.id",
-  "retryable": false
-}

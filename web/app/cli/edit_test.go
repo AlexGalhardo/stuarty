@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/vukem-video/core/command"
 )
 
 func TestEditShorthandBuildsOneOperation(t *testing.T) {

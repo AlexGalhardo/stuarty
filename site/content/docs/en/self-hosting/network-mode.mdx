@@ -11,13 +11,13 @@ description: "Run the server for other people: bind address, TLS, users, roles, 
 
 ## The idea
 
-[Network mode](/docs/concepts/local-and-network-mode) is any bind address that is not loopback, with `STUARTY_MODE=network`. A non-loopback address with the mode `local` is a start-up error, never a silent exposure. The local token is not accepted in this mode.
+[Network mode](/docs/concepts/local-and-network-mode) is any bind address that is not loopback, with `VUKEM_VIDEO_MODE=network`. A non-loopback address with the mode `local` is a start-up error, never a silent exposure. The local token is not accepted in this mode.
 
-- **Login is mandatory.** There is no open registration and no email. The operator creates the users. A user may also [sign in with Google](/docs/self-hosting/google-sign-in) after linking a Google account, when you turn that on; Google never creates a user.
+- **Login is mandatory.** There is no open registration, no social login and no email. The operator creates the users.
 - **TLS is required.** Either the process terminates it (`TLS_CERT_FILE` and `TLS_KEY_FILE`, TLS 1.2 or newer) or a reverse proxy does, with `TRUSTED_PROXIES` and `TRUST_FORWARDED_PROTO=true` (see [Put Caddy in front](/docs/self-hosting/caddy)). `APP_URL` must be the public `https` address, and the server accepts only that host and origin. The one exception is a container used on its own machine: `APP_URL=http://localhost:<port>` or `http://127.0.0.1:<port>` is served over plain HTTP, and only to that name. Plain HTTP is safe only when the port is published on `127.0.0.1` or `[::1]` (for Docker, `-p 127.0.0.1:7878:7878`) or when TLS is in front: nothing on that listener is encrypted. When the server listens beyond loopback over plain HTTP it logs a warning that starts `network mode over plain HTTP on <address>: no credential is encrypted on this listener`; the [Docker page](/docs/self-hosting/docker) has the whole message.
 - **`APP_KEY` is required**, 32 bytes or more in base64.
-- **Not as root.** Running as root or Administrator is refused unless `STUARTY_INSECURE_ALLOW_ROOT=true`.
-- **Import by path is confined** to the directories in `STUARTY_IMPORT_ROOTS` (absolute paths of existing directories, outside the workspace).
+- **Not as root.** Running as root or Administrator is refused unless `VUKEM_VIDEO_INSECURE_ALLOW_ROOT=true`.
+- **Import by path is confined** to the directories in `VUKEM_VIDEO_IMPORT_ROOTS` (absolute paths of existing directories, outside the workspace).
 
 ## Users and roles
 
@@ -26,16 +26,16 @@ An `admin` has the five scopes `read`, `edit`, `media`, `render` and `admin`. A 
 Create the first administrator at start-up, from the environment, when no user exists yet:
 
 ```bash
-STUARTY_ADMIN_EMAIL=admin@example.com
-STUARTY_ADMIN_PASSWORD=@file:/run/secrets/admin_password
+VUKEM_VIDEO_ADMIN_EMAIL=admin@example.com
+VUKEM_VIDEO_ADMIN_PASSWORD=@file:/run/secrets/admin_password
 ```
 
 Create or change users with the commands below. They run in process and need the workspace lock, so **stop the server first**. The password is read from a terminal prompt (twice, without echo) or from the first line of standard input, never from an argument.
 
 ```bash
-stuarty user:create ana@example.com
-stuarty user:create admin2@example.com --admin
-echo "a-new-long-password" | stuarty user:passwd ana@example.com
+vukem-video user:create ana@example.com
+vukem-video user:create admin2@example.com --admin
+echo "a-new-long-password" | vukem-video user:passwd ana@example.com
 ```
 
 A password change ends the sessions and revokes the API keys of that user.
@@ -62,7 +62,7 @@ curl -fsS -b jar.txt -X PATCH -H "Content-Type: application/json" -H "Origin: $A
 
 ## Sessions and login
 
-The browser session cookie is `__Host-stuarty_session` (the plain-HTTP container case uses the local cookie name). A session ends after 8 hours idle or 7 days in all. Login is `POST /auth/login` with `email` and `password`; a wrong email and a wrong password give the same `E_UNAUTHORIZED`. Failed logins are throttled per email and per address before the password is checked.
+The browser session cookie is `__Host-vukem_video_session` (the plain-HTTP container case uses the local cookie name). A session ends after 8 hours idle or 7 days in all. Login is `POST /auth/login` with `email` and `password`; a wrong email and a wrong password give the same `E_UNAUTHORIZED`. Failed logins are throttled per email and per address before the password is checked.
 
 <Callout type="warning" title="No login page in this release">
 The browser login page and the page to manage API keys are not built yet. Until they are, sign in with `POST /auth/login` as shown on [API keys and scopes](/docs/self-hosting/api-keys) and give agents an API key. A server with no users answers every API request with 401 and logs how to create one.
@@ -74,7 +74,7 @@ The process exits with status 1 and a message that names the variable.
 
 | Condition | Fix |
 | --- | --- |
-| Non-loopback address in `local` mode | set `STUARTY_MODE=network` |
+| Non-loopback address in `local` mode | set `VUKEM_VIDEO_MODE=network` |
 | Network mode without an `https` `APP_URL` | set `APP_URL` to the public `https` address |
 | `https` without TLS files or a trusted proxy | set `TLS_CERT_FILE` and `TLS_KEY_FILE`, or `TRUSTED_PROXIES` and `TRUST_FORWARDED_PROTO=true` |
 | `APP_KEY` missing or short | `openssl rand -base64 32` |
@@ -82,7 +82,7 @@ The process exits with status 1 and a message that names the variable.
 | Invalid import root | an absolute, existing directory outside the workspace |
 | Unsafe transcription endpoint | `https`, or `http` to a loopback address, with no user name in the URL |
 | A limit set to zero or less | give a positive number |
-| `STUARTY_FFMPEG` not an absolute path to a file | give the full path |
+| `VUKEM_VIDEO_FFMPEG` not an absolute path to a file | give the full path |
 
 ## Common mistakes
 

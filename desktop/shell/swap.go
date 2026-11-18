@@ -51,36 +51,7 @@ func UpdateStateDir() (string, error) {
 		return "", fmt.Errorf("update state: %w", err)
 	}
 
-	return filepath.Join(dir, "stuarty", "update"), nil
-}
-
-// updateStateDirs are UpdateStateDir and the one of Vukem Video (ADR-0044). An installed Vukem Video that
-// replaced itself with Stuarty wrote its marker files in its own folder, and its watchdog waits there for
-// the confirmation of the new start; without it the update would be undone.
-func updateStateDirs() ([]string, error) {
-	dir, err := os.UserConfigDir()
-	if err != nil {
-		return nil, fmt.Errorf("update state: %w", err)
-	}
-
-	return []string{filepath.Join(dir, "stuarty", "update"), filepath.Join(dir, "vukem-video", "update")}, nil
-}
-
-// ConfirmUpdates runs ConfirmStart in every folder of updateStateDirs, once the application has started.
-// RecoverPending stays on UpdateStateDir: in the folder of Vukem Video a marker of this version is left to
-// ConfirmStart, and one of another version is the business of Vukem Video itself.
-func ConfirmUpdates(running string) error {
-	dirs, err := updateStateDirs()
-	if err != nil {
-		return err
-	}
-
-	var errs []error
-	for _, dir := range dirs {
-		errs = append(errs, ConfirmStart(dir, running))
-	}
-
-	return errors.Join(errs...)
+	return filepath.Join(dir, "vukem-video", "update"), nil
 }
 
 // Target is the installed application: Path is the bundle directory (macOS) or the AppImage file

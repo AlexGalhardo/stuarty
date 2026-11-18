@@ -1,7 +1,0 @@
-{
-  "args": {
-    "id": "not-an-id",
-    "text": "Hi"
-  },
-  "op": "layer.add_text"
-}

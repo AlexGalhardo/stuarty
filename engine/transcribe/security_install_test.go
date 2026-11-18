@@ -87,7 +87,7 @@ func pinProblems(m Manifest, ffEnv map[string]string) []string {
 		}
 
 		if !helper.Published {
-			if !strings.Contains(helper.URL, "/AlexGalhardo/stuarty/releases/download/helpers-") {
+			if !strings.Contains(helper.URL, "/AlexGalhardo/vukem-video/releases/download/helpers-") {
 				add("helper %s/%s: unpublished and not from this repository's helpers release", p[0], p[1])
 			}
 

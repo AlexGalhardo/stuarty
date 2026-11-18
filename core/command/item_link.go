@@ -5,7 +5,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
 func init() {
@@ -20,6 +20,7 @@ func init() {
 			CodeValidation, CodeNotFound, CodeTypeMismatch, CodeInvalidState, CodeIDExists,
 		},
 		Scope: ScopeEdit,
+		Phase: Beta,
 	}, applyItemLink))
 
 	Register(Define(Spec{
@@ -30,6 +31,7 @@ func init() {
 		Example: `{"item_ids": ["itm_c3d4e5f6g7"]}`,
 		Errors:  []string{CodeValidation, CodeNotFound, CodeInvalidState},
 		Scope:   ScopeEdit,
+		Phase:   Beta,
 	}, applyItemUnlink))
 
 	Register(Define(Spec{
@@ -43,6 +45,7 @@ func init() {
 			CodeValidation, CodeNotFound, CodeTypeMismatch, CodeInvalidState, CodeOverlap, CodeIDExists, CodeLimit,
 		},
 		Scope: ScopeEdit,
+		Phase: Beta,
 	}, applyItemExtractAudio))
 }
 
@@ -241,7 +244,6 @@ func applyItemExtractAudio(c *Context, a *itemExtractAudioArgs) error {
 	au.Asset, au.SourceIn, au.Speed, au.Reverse = it.Asset, it.SourceIn, it.Speed, it.Reverse
 	au.SpeedCurve = slices.Clone(it.SpeedCurve)
 	au.Volume, au.FadeIn, au.FadeOut, au.Denoise, au.Voice = it.Volume, it.FadeIn, it.FadeOut, it.Denoise, it.Voice
-	au.Processors, it.Processors = it.Processors, nil
 	if kfs, ok := it.Keyframes["volume"]; ok {
 		au.Keyframes = timeline.Keyframes{"volume": slices.Clone(kfs)}
 	}

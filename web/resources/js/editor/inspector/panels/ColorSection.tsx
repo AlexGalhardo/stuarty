@@ -91,7 +91,6 @@ export default function ColorSection({
 											frame: playhead,
 											value,
 											easing: here?.easing,
-											bezier: here?.bezier,
 										})
 									: colorOperations(itemId, { [key]: value }),
 							)

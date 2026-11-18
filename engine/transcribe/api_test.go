@@ -17,8 +17,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
-	"github.com/AlexGalhardo/stuarty/internal/outbound"
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
+	"github.com/AlexGalhardo/vukem-video/internal/outbound"
 )
 
 const canaryKey = "sk-canary-0123456789abcdef"

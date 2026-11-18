@@ -23,25 +23,22 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/core/command"
-	"github.com/AlexGalhardo/stuarty/core/lint"
-	"github.com/AlexGalhardo/stuarty/core/timeline"
-	"github.com/AlexGalhardo/stuarty/engine/cache"
-	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
-	"github.com/AlexGalhardo/stuarty/engine/frame"
-	"github.com/AlexGalhardo/stuarty/engine/ingest"
-	enginestore "github.com/AlexGalhardo/stuarty/engine/store"
-	"github.com/AlexGalhardo/stuarty/engine/transcribe"
-	"github.com/AlexGalhardo/stuarty/service"
-	"github.com/AlexGalhardo/stuarty/service/connections"
-	"github.com/AlexGalhardo/stuarty/service/pathguard"
-	"github.com/AlexGalhardo/stuarty/service/providers"
-	"github.com/AlexGalhardo/stuarty/service/vault"
-	"github.com/AlexGalhardo/stuarty/service/workspace"
-	"github.com/AlexGalhardo/stuarty/web/app/jobs"
-	"github.com/AlexGalhardo/stuarty/web/app/store"
-
 	"github.com/AlexGalhardo/vukem/queue"
+
+	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/core/lint"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/engine/cache"
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
+	"github.com/AlexGalhardo/vukem-video/engine/frame"
+	"github.com/AlexGalhardo/vukem-video/engine/ingest"
+	enginestore "github.com/AlexGalhardo/vukem-video/engine/store"
+	"github.com/AlexGalhardo/vukem-video/engine/transcribe"
+	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/vukem-video/service/pathguard"
+	"github.com/AlexGalhardo/vukem-video/service/workspace"
+	"github.com/AlexGalhardo/vukem-video/web/app/jobs"
+	"github.com/AlexGalhardo/vukem-video/web/app/store"
 )
 
 // ExportFunc renders one export for the fake exporter.
@@ -75,12 +72,6 @@ type Options struct {
 	// is 24576 to 48128 and not 24000 to 48000), for a run that must match the real
 	// binary on a real clip.
 	SilenceBlocks bool
-	// MasterKey gives the workspace a vault whose master key is this one (32 bytes), so a test can
-	// create connections; nil leaves a vault with no key source.
-	MasterKey []byte
-	// Providers are the AI providers to register (SDD-016); they need MasterKey, since a provider is reached
-	// through a connection.
-	Providers []providers.Provider
 }
 
 // Env is a service with a worker running behind it.
@@ -163,30 +154,7 @@ func New(tb testing.TB, o Options) *Env {
 		media.Frames = realFrames(tb, string(dir))
 	}
 
-	var conns *connections.Manager
-	if o.MasterKey != nil {
-		conns = connections.NewManager(connections.Options{
-			Store: st.Connections(), Now: o.Clock,
-			Vault: vault.Open(filepath.Join(string(dir), connections.VaultFile), vault.NewMemoryProvider(o.MasterKey)),
-		})
-	}
-
-	var reg *providers.Registry
-
-	if len(o.Providers) > 0 {
-		reg = providers.NewRegistry(
-			conns, providers.NewPriceBook(filepath.Join(string(dir), "providers", providers.PriceFile)), o.Clock,
-		)
-
-		for _, p := range o.Providers {
-			if err := reg.Register(p); err != nil {
-				tb.Fatal(err)
-			}
-		}
-	}
-
 	svc, err := service.New(service.Options{
-		Connections: conns, Providers: reg,
 		Store: st, Registry: command.Default(), Now: o.Clock, NewIDs: e.newID,
 		Workspace:   string(dir),
 		Limits:      o.Limits,
@@ -481,7 +449,7 @@ func fakeResult(
 }
 
 // realFrames is the frame renderer of view over the pinned LGPL FFmpeg: the
-// directory comes from STUARTY_TEST_FFMPEG_DIR or from the install of
+// directory comes from VUKEM_VIDEO_TEST_FFMPEG_DIR or from the install of
 // scripts/install-ffmpeg.sh under the temporary directory.
 func realFrames(tb testing.TB, dir string) *frame.Frames {
 	tb.Helper()
@@ -491,7 +459,7 @@ func realFrames(tb testing.TB, dir string) *frame.Frames {
 		exe += ".exe"
 	}
 
-	ffdir := os.Getenv("STUARTY_TEST_FFMPEG_DIR")
+	ffdir := os.Getenv("VUKEM_VIDEO_TEST_FFMPEG_DIR")
 
 	if ffdir == "" {
 		for _, base := range []string{os.Getenv("RUNNER_TEMP"), os.Getenv("TEMP"), os.Getenv("TMPDIR")} {
@@ -508,7 +476,7 @@ func realFrames(tb testing.TB, dir string) *frame.Frames {
 	}
 
 	if ffdir == "" {
-		tb.Skip("no pinned FFmpeg: run scripts/install-ffmpeg.sh and set STUARTY_TEST_FFMPEG_DIR")
+		tb.Skip("no pinned FFmpeg: run scripts/install-ffmpeg.sh and set VUKEM_VIDEO_TEST_FFMPEG_DIR")
 	}
 
 	in, err := ffmpeg.Discover(
@@ -516,7 +484,7 @@ func realFrames(tb testing.TB, dir string) *frame.Frames {
 		ffmpeg.Config{FFmpegPath: filepath.Join(ffdir, exe), CPUCount: runtime.NumCPU()},
 	)
 	if err != nil || in.Info.License.Name != "lgpl" {
-		tb.Skip("the FFmpeg in STUARTY_TEST_FFMPEG_DIR is not the pinned LGPL build")
+		tb.Skip("the FFmpeg in VUKEM_VIDEO_TEST_FFMPEG_DIR is not the pinned LGPL build")
 	}
 
 	runner, err := ffmpeg.NewRunner(in, dir)

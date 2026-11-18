@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/web/app/owner"
+	"github.com/AlexGalhardo/vukem-video/web/app/owner"
 )
 
 // SDD-005 section 7 step 2: the message of a workspace written by a newer version reaches every
@@ -18,7 +18,7 @@ func TestNewerWorkspaceIsRefusedWithItsReasonOnEverySurface(t *testing.T) {
 	home := filepath.Join(t.TempDir(), "ws")
 
 	getenv := func(k string) string {
-		if k == "STUARTY_HOME" {
+		if k == "VUKEM_VIDEO_HOME" {
 			return home
 		}
 

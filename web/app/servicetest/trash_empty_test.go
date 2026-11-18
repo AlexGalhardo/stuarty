@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/core/command"
-	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/service"
 )
 
 func (m *mediaEnv) browser() context.Context {
@@ -269,7 +269,7 @@ func TestSweepRemovesOrphansOlderThan24Hours(t *testing.T) {
 	}
 
 	if err := os.WriteFile(
-		filepath.Join(m.ws, "templates", "tpl_x.stuarty-template.zip"),
+		filepath.Join(m.ws, "templates", "tpl_x.vukem-template.zip"),
 		[]byte("z"),
 		0o600,
 	); err != nil {
@@ -298,7 +298,7 @@ func TestSweepRemovesOrphansOlderThan24Hours(t *testing.T) {
 		t.Error("an orphan younger than 24 hours was removed")
 	}
 
-	if _, err := os.Stat(filepath.Join(m.ws, "templates", "tpl_x.stuarty-template.zip")); err != nil {
+	if _, err := os.Stat(filepath.Join(m.ws, "templates", "tpl_x.vukem-template.zip")); err != nil {
 		t.Error("the sweep removed a template file")
 	}
 

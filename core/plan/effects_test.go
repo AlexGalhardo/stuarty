@@ -4,7 +4,7 @@ import (
 	"math"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
 // The vectors were computed with an independent implementation (Python integers masked to 32 bits).

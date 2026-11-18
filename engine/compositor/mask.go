@@ -3,7 +3,7 @@ package compositor
 import (
 	"math"
 
-	"github.com/AlexGalhardo/stuarty/core/plan"
+	"github.com/AlexGalhardo/vukem-video/core/plan"
 )
 
 // maskFix is the fractional bits of the position inside a mask's rectangle: 24.8 fixed point.

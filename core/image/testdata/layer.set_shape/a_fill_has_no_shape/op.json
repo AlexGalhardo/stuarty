@@ -1,7 +1,0 @@
-{
-  "args": {
-    "layer_id": "lyr_aaaaaaaaaa",
-    "shape": "ellipse"
-  },
-  "op": "layer.set_shape"
-}

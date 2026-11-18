@@ -8,14 +8,14 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/core/timeline"
-	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
-	"github.com/AlexGalhardo/stuarty/engine/ingest"
-	"github.com/AlexGalhardo/stuarty/engine/ingest/mediagen"
-	"github.com/AlexGalhardo/stuarty/engine/store"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
+	"github.com/AlexGalhardo/vukem-video/engine/ingest"
+	"github.com/AlexGalhardo/vukem-video/engine/ingest/mediagen"
+	"github.com/AlexGalhardo/vukem-video/engine/store"
 )
 
-const envTestFFmpegDir = "STUARTY_TEST_FFMPEG_DIR"
+const envTestFFmpegDir = "VUKEM_VIDEO_TEST_FFMPEG_DIR"
 
 // The tests share one workspace and the pinned FFmpeg: ingesting a fixture takes seconds.
 var shared struct {
@@ -74,7 +74,7 @@ func setup(tb testing.TB) {
 			ffmpeg.Config{
 				FFmpegPath: filepath.Join(dir, exe("ffmpeg")),
 				CPUCount:   runtime.NumCPU(),
-				ToolsDir:   os.Getenv("STUARTY_TEST_TOOLS_DIR"),
+				ToolsDir:   os.Getenv("VUKEM_VIDEO_TEST_TOOLS_DIR"),
 			},
 		)
 		if err != nil || in.Info.License.Name != "lgpl" {

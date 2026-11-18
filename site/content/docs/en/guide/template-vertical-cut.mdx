@@ -28,11 +28,11 @@ description: "The starter for a short vertical video: one clip of footage and wo
 <Tab title="CLI">
 
 ```bash
-stuarty template:list
+vukem-video template:list
 echo '{"clip": {"asset_id": "ast_4h6j8k2m3n"}}' > fill.json
-stuarty template:new tpl_5n8b2v6c1x --name "Short 01" --fill fill.json
-stuarty transcribe --project prj_7k2m9x4q1b --asset ast_4h6j8k2m3n
-stuarty edit --project prj_7k2m9x4q1b caption.from_transcript \
+vukem-video template:new tpl_5n8b2v6c1x --name "Short 01" --fill fill.json
+vukem-video transcribe --project prj_7k2m9x4q1b --asset ast_4h6j8k2m3n
+vukem-video edit --project prj_7k2m9x4q1b caption.from_transcript \
   clip_item_id=itm_m1n2p3q4r5 track_id=trk_f6g7h8j9k0
 ```
 

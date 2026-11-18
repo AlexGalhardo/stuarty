@@ -20,15 +20,15 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/AlexGalhardo/stuarty/desktop/update"
-	"github.com/AlexGalhardo/stuarty/internal/outbound"
+	"github.com/AlexGalhardo/vukem-video/desktop/update"
+	"github.com/AlexGalhardo/vukem-video/internal/outbound"
 )
 
 const (
 	running  = "0.14.0"
 	rfc3339  = time.RFC3339
 	platform = "windows-amd64"
-	fileName = "stuarty_0.15.0_windows_amd64_setup.exe"
+	fileName = "vukem-video_0.15.0_windows_amd64_setup.exe"
 )
 
 // clock is the fixed "now" of every test, so the freshness window is deterministic.
@@ -114,7 +114,7 @@ type env struct {
 func newEnv(t *testing.T, sc scenario) *env {
 	t.Helper()
 
-	e := &env{installer: &installerFake{}, artifact: bytes.Repeat([]byte("stuarty installer bytes\n"), 200)}
+	e := &env{installer: &installerFake{}, artifact: bytes.Repeat([]byte("vukem-video installer bytes\n"), 200)}
 	key := testKey(t)
 
 	applyDefaults(&sc, e, key)

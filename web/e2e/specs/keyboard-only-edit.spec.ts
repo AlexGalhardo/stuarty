@@ -61,12 +61,9 @@ test.describe("keyboard-only-edit", () => {
 		await page.keyboard.press("Enter");
 		const before = await items.nth(1).boundingBox();
 		await page.keyboard.press("q");
-		// Q trims with ripple on the track (SDD-012 section 18.7), so the item
-		// keeps its place and gets shorter by the second that was left of the
-		// playhead.
 		await expect
-			.poll(async () => (await items.nth(1).boundingBox())?.width ?? 0)
-			.toBeLessThan((before?.width ?? 0) - 1);
+			.poll(async () => (await items.nth(1).boundingBox())?.x ?? 0)
+			.toBeGreaterThan((before?.x ?? 0) + 1);
 
 		// Nudge: Alt+Right moves the focused item by one frame.
 		await items.nth(1).focus();

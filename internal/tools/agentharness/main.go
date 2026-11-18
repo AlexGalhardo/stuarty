@@ -4,11 +4,11 @@
 // Messages API over HTTPS with the key of ANTHROPIC_API_KEY.
 //
 // It costs money, so it never runs by itself and never in CI: it refuses to start unless
-// STUARTY_HARNESS=1 is set and --runs is given, and it prints the estimated cost first. It is a
+// VUKEM_VIDEO_HARNESS=1 is set and --runs is given, and it prints the estimated cost first. It is a
 // release-checklist tool, not part of the product: no shipped binary contains it.
 //
-//	STUARTY_HARNESS=1 ANTHROPIC_API_KEY=... go run ./internal/tools/agentharness \
-//	    --runs 10 --bin ./stuarty --clip ./clip.mp4 --out ./transcripts
+//	VUKEM_VIDEO_HARNESS=1 ANTHROPIC_API_KEY=... go run ./internal/tools/agentharness \
+//	    --runs 10 --bin ./vukem-video --clip ./clip.mp4 --out ./transcripts
 package main
 
 import (
@@ -24,7 +24,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/internal/outbound"
+	"github.com/AlexGalhardo/vukem-video/internal/outbound"
 )
 
 const (
@@ -73,7 +73,7 @@ func parseOptions(argv []string, getenv func(string) string, stderr io.Writer) (
 	fs.StringVar(&o.endpoint, "endpoint", defaultEndpoint, "the Messages API URL (https; tests use a loopback server)")
 	fs.StringVar(&o.scenario, "scenario", "all", "prototype, template or all")
 	fs.StringVar(&o.skill, "skill", "web/app/agentdocs/out/SKILL.md", "the SKILL.md given to the agent")
-	fs.StringVar(&o.bin, "bin", "stuarty", "the stuarty binary the agent drives")
+	fs.StringVar(&o.bin, "bin", "vukem-video", "the vukem-video binary the agent drives")
 	fs.StringVar(&o.clip, "clip", "", "a short video copied to clip.mp4 for the prototype scenario")
 	fs.StringVar(&o.out, "out", "agent-transcripts", "where the transcripts and summary.json are written")
 	fs.IntVar(&o.maxTurns, "max-turns", 40, "model calls allowed per run")
@@ -87,8 +87,8 @@ func parseOptions(argv []string, getenv func(string) string, stderr io.Writer) (
 	}
 
 	switch {
-	case getenv("STUARTY_HARNESS") != "1":
-		fmt.Fprintln(stderr, "agentharness: refusing to run: it costs money; set STUARTY_HARNESS=1 to run it")
+	case getenv("VUKEM_VIDEO_HARNESS") != "1":
+		fmt.Fprintln(stderr, "agentharness: refusing to run: it costs money; set VUKEM_VIDEO_HARNESS=1 to run it")
 
 		return o, 2
 	case o.runs < 1:
@@ -189,7 +189,7 @@ func run(
 }
 
 func systemPrompt(skill string) string {
-	return "You are an agent that edits video with the stuarty command line. You have one tool, " +
+	return "You are an agent that edits video with the vukem-video command line. You have one tool, " +
 		toolName + ", that runs a command of the CLI; the working directory holds any file the task names. " +
 		"The CLI reference is `help`; the skill below is everything else you know.\n\n" + skill
 }
@@ -304,7 +304,7 @@ func saveTranscript(dir string, r runResult) error {
 	return os.WriteFile(filepath.Join(dir, name), raw, 0o600)
 }
 
-// execRunner is the real Runner: the stuarty binary, run with no shell, in the work directory,
+// execRunner is the real Runner: the vukem-video binary, run with no shell, in the work directory,
 // on a workspace of its own so no run sees another one.
 func execRunner(bin string) func(home, work string) Runner {
 	return func(home, work string) Runner {
@@ -316,7 +316,7 @@ func execRunner(bin string) func(home, work string) Runner {
 			// and reach the program as an argument vector, never a shell.
 			cmd := exec.CommandContext(ctx, bin, args...)
 			cmd.Dir = work
-			cmd.Env = append(os.Environ(), "STUARTY_HOME="+home)
+			cmd.Env = append(os.Environ(), "VUKEM_VIDEO_HOME="+home)
 			cmd.Stdin = strings.NewReader(stdin)
 
 			out, err := cmd.CombinedOutput()

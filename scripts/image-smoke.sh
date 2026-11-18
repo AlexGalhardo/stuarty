@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # Smoke test of a built image: bash scripts/image-smoke.sh <image> [<version>]
-# With a version (no leading v), `version` must print exactly stuarty <version>.
+# With a version (no leading v), `version` must print exactly vukem-video <version>.
 # It starts the container the way the documentation says (published on the
 # loopback of the host) and removes it and its volume at the end.
 set -euo pipefail
 img="${1:?usage: image-smoke.sh <image> [<version>]}"
 want="${2:-}"
-name="stuarty-smoke-$$"
-vol="stuarty-smoke-$$"
+name="vukem-video-smoke-$$"
+vol="vukem-video-smoke-$$"
 
 cleanup() {
 	docker rm -f "$name" >/dev/null 2>&1 || true
@@ -16,11 +16,11 @@ cleanup() {
 trap cleanup EXIT
 
 got="$(docker run --rm "$img" version)"
-if [ -n "$want" ] && [ "$got" != "stuarty $want" ]; then
-	echo "image-smoke: version printed [$got], want [stuarty $want]" >&2
+if [ -n "$want" ] && [ "$got" != "vukem-video $want" ]; then
+	echo "image-smoke: version printed [$got], want [vukem-video $want]" >&2
 	exit 1
 fi
-case "$got" in "stuarty "*) ;; *) echo "image-smoke: version printed [$got]" >&2; exit 1 ;; esac
+case "$got" in "vukem-video "*) ;; *) echo "image-smoke: version printed [$got]" >&2; exit 1 ;; esac
 
 docker run --rm --entrypoint sh "$img" -c "id -u | grep -qx 10001"
 docker run --rm --entrypoint sh "$img" -c "ffmpeg -version | head -n 1"
@@ -42,11 +42,11 @@ else
 	fi
 fi
 docker run --rm --entrypoint sh "$img" -c "if ffmpeg -version | grep -q -e --enable-gpl -e --enable-nonfree; then exit 1; fi"
-docker run --rm --entrypoint sh "$img" -c "test -s /usr/share/doc/stuarty/ffmpeg/LICENSE.txt && test -s /usr/share/doc/stuarty/ffmpeg/configure.txt && test -s /usr/share/doc/stuarty/ffmpeg/SOURCE.txt"
+docker run --rm --entrypoint sh "$img" -c "test -s /usr/share/doc/vukem-video/ffmpeg/LICENSE.txt && test -s /usr/share/doc/vukem-video/ffmpeg/configure.txt && test -s /usr/share/doc/vukem-video/ffmpeg/SOURCE.txt"
 docker image inspect --format "{{json .Config.Healthcheck.Test}}" "$img" | grep -q 7878
-docker image inspect --format "{{json .Config.Env}}" "$img" | grep -q "STUARTY_HOME=/data"
+docker image inspect --format "{{json .Config.Env}}" "$img" | grep -q "VUKEM_VIDEO_HOME=/data"
 docker image inspect --format "{{json .Config.Volumes}}" "$img" | grep -q "\"/data\""
-docker run --rm --entrypoint sh "$img" -c "test -s /usr/share/doc/stuarty/LICENSE.md && test -s /usr/share/doc/stuarty/THIRD_PARTY_NOTICES.md && test -d /usr/share/doc/stuarty/licenses && test -s /usr/share/doc/stuarty/base-image-packages.txt"
+docker run --rm --entrypoint sh "$img" -c "test -s /usr/share/doc/vukem-video/LICENSE.md && test -s /usr/share/doc/vukem-video/THIRD_PARTY_NOTICES.md && test -d /usr/share/doc/vukem-video/licenses && test -s /usr/share/doc/vukem-video/base-image-packages.txt"
 docker run --rm --entrypoint prlimit "$img" --version >/dev/null
 # The whisper.cpp helper installed by tools:install needs the OpenMP runtime (VV-012).
 docker run --rm --entrypoint sh "$img" -c "ldconfig -p | grep -q libgomp.so.1"

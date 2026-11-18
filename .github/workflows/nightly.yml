@@ -33,11 +33,11 @@ jobs:
       - name: Install FFmpeg
         run: |
           bin_dir="$(bash scripts/install-ffmpeg.sh)"
-          echo "STUARTY_TEST_FFMPEG_DIR=${bin_dir}" >> "$GITHUB_ENV"
+          echo "VUKEM_VIDEO_TEST_FFMPEG_DIR=${bin_dir}" >> "$GITHUB_ENV"
       # shell: bash turns on pipefail: without it `| tee` hid the exit code of go test and a
       # failed benchmark (BenchmarkExportCommonCase at 1.43 x real time, run 133226885991)
       # left the job green. The floors are in .github/bench-limits.txt, not in
-      # STUARTY_BENCH_MIN_RT: the runners of ubuntu-latest differ by 30% (1.43 and 1.92).
+      # VUKEM_VIDEO_BENCH_MIN_RT: the runners of ubuntu-latest differ by 30% (1.43 and 1.92).
       - name: Benchmarks
         shell: bash
         run: |
@@ -68,7 +68,7 @@ jobs:
       - name: Install FFmpeg
         run: |
           bin_dir="$(bash scripts/install-ffmpeg.sh)"
-          echo "STUARTY_TEST_FFMPEG_DIR=${bin_dir}" >> "$GITHUB_ENV"
+          echo "VUKEM_VIDEO_TEST_FFMPEG_DIR=${bin_dir}" >> "$GITHUB_ENV"
       - name: Soak and Fixture5Min tests
         run: |
           go test -count=1 -v -run 'Soak|Fixture5Min' -timeout=15m ./... | tee soak.txt

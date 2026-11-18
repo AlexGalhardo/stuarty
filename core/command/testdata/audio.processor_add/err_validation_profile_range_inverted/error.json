@@ -1,7 +1,0 @@
-{
-  "code": "E_VALIDATION",
-  "message": "args.params: the noise profile must end at least 22 ms after it starts.",
-  "hint": "Send profile_start_ms and profile_end_ms at least 22 ms apart, or leave both out.",
-  "retryable": false,
-  "path": "args.params"
-}

@@ -20,26 +20,26 @@ An import has two stages. First the server checks the **path** and queues the fi
 3. Fix it and import again. The same file imported twice adds nothing, because originals are kept by content.
 
 ```bash
-stuarty media:list --project prj_7k2m9x4q1b
-stuarty media:inspect ast_4h6j8k2m3n --project prj_7k2m9x4q1b --sections probe
-stuarty doctor --full
+vukem-video media:list --project prj_7k2m9x4q1b
+vukem-video media:inspect ast_4h6j8k2m3n --project prj_7k2m9x4q1b --sections probe
+vukem-video doctor --full
 ```
 
 | What you see | Cause | Fix |
 | --- | --- | --- |
 | `E_FILE_NOT_FOUND` (local mode) | the path does not exist | check the path; paste the absolute path, a browser cannot read it from a dropped file |
 | `E_PATH_NOT_ALLOWED` | a URL, a UNC or device path, a relative path, a `..`, a directory or a file that is not regular | give the absolute path of a regular file on this machine |
-| `E_PATH_NOT_ALLOWED` in network mode | the file is not inside `STUARTY_IMPORT_ROOTS`, or does not exist: the answer is the same on purpose | ask the operator to add the directory to the import roots |
-| a file larger than 8 GiB | `STUARTY_MAX_IMPORT_BYTES` | raise the limit, or cut the file first |
-| longer than 4 hours | `STUARTY_MAX_IMPORT_SECONDS` | raise it, or cut the file |
-| a frame larger than 7680 x 4320, or a side above 8192 | `STUARTY_MAX_IMPORT_PIXELS` | scale the source down |
+| `E_PATH_NOT_ALLOWED` in network mode | the file is not inside `VUKEM_VIDEO_IMPORT_ROOTS`, or does not exist: the answer is the same on purpose | ask the operator to add the directory to the import roots |
+| a file larger than 8 GiB | `VUKEM_VIDEO_MAX_IMPORT_BYTES` | raise the limit, or cut the file first |
+| longer than 4 hours | `VUKEM_VIDEO_MAX_IMPORT_SECONDS` | raise it, or cut the file |
+| a frame larger than 7680 x 4320, or a side above 8192 | `VUKEM_VIDEO_MAX_IMPORT_PIXELS` | scale the source down |
 | `E_FFMPEG_MISSING` | no usable FFmpeg | see [FFmpeg, codecs and licences](/docs/self-hosting/ffmpeg-and-licences) |
 | `E_ASSET_NOT_READY` on an edit | the asset is still ingesting | wait for `ready`, then retry; it is retryable |
 | `E_RATE_LIMITED` | more than 10 imports a minute | wait for `Retry-After` |
-| `E_QUEUE_FULL` | too many ingests at once (`STUARTY_MAX_INGESTS`) | retry shortly |
+| `E_QUEUE_FULL` | too many ingests at once (`VUKEM_VIDEO_MAX_INGESTS`) | retry shortly |
 | the file ends `failed` with a codec reason | the file is damaged or in a format FFmpeg cannot read | re-export the file from its source, or convert it to MP4 |
 
-If the server is below `STUARTY_MIN_FREE_BYTES` (2 GiB) of free space on the workspace volume, writes are refused until you free space.
+If the server is below `VUKEM_VIDEO_MIN_FREE_BYTES` (2 GiB) of free space on the workspace volume, writes are refused until you free space.
 
 ## Common mistakes
 

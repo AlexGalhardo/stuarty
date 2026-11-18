@@ -5,7 +5,7 @@ description: "How the preview, the paused frame and the export share one decisio
 
 ## The idea
 
-One function decides what every <Term id="frame">frame</Term> contains. Two executors only put pixels where it says. That is what "a single <Term id="render">render</Term> path" means in Stuarty.
+One function decides what every <Term id="frame">frame</Term> contains. Two executors only put pixels where it says. That is what "a single <Term id="render">render</Term> path" means in Vukem Video.
 
 For a project revision and a frame number, the frame plan returns the ordered layers: which source media and which source frame, the crop, the transform, the opacity, and the bitmaps to draw and where. Keyframe interpolation, easing, transition timing and the choice of source frame exist only in that function. The plan is data, so it can be tested without pixels.
 

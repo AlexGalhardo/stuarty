@@ -3,7 +3,7 @@ package lint
 import (
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
 // An optional slot left on its placeholder is not an error (the export skips it);

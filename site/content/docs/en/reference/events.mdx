@@ -5,7 +5,7 @@ description: "The server-sent events of a project: names, payloads, ordering, re
 
 ## The idea
 
-The editor and any client that wants to follow a project open one stream per project: `GET /api/v1/projects/{id}/events`, scope `read`. The stream is one way and text only. Commands do not travel on it; they are ordinary HTTP requests. MCP has no stream. The CLI command `stuarty events --project <id>` prints it, one JSON object per line.
+The editor and any client that wants to follow a project open one stream per project: `GET /api/v1/projects/{id}/events`, scope `read`. The stream is one way and text only. Commands do not travel on it; they are ordinary HTTP requests. MCP has no stream. The CLI command `vukem-video events --project <id>` prints it, one JSON object per line.
 
 ## Connect
 

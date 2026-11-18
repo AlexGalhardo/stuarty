@@ -28,7 +28,7 @@ describe("reference machine records", () => {
 		it(`${file} names the hardware and the checks a later run compares`, () => {
 			const rec = JSON.parse(readFileSync(dir + file, "utf8")) as Record;
 			expect(file).toBe(`doctor-${rec.recorded_on}.json`);
-			expect(rec.command).toBe("stuarty doctor --full --json");
+			expect(rec.command).toBe("vukem-video doctor --full --json");
 			expect(rec.machine.cpu).not.toBe("");
 			expect(rec.machine.logical_cpus).toBeGreaterThan(0);
 			const names = rec.doctor.checks.map((c) => c.name);

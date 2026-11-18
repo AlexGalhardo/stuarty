@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
 // Merging the two parts of a split gives back the words, the timing and the style.

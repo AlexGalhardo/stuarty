@@ -1,8 +1,8 @@
 package service
 
 import (
-	"github.com/AlexGalhardo/stuarty/core/command"
-	"github.com/AlexGalhardo/stuarty/core/lint"
+	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/core/lint"
 )
 
 // TemplateListRequest pages the template library.
@@ -40,7 +40,6 @@ type TemplateListResult struct {
 // TemplateSaveRequest makes a template from a project.
 type TemplateSaveRequest struct {
 	ProjectID   string `json:"project_id"`
-	TimelineID  string `json:"timeline_id,omitempty"` // SDD-003 section 1.7
 	Name        string `json:"name"`
 	Description string `json:"description,omitempty"`
 	DryRun      bool   `json:"dry_run,omitempty"`

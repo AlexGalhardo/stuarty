@@ -3,7 +3,7 @@ package command
 import (
 	"math"
 
-	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
 // reframeSizes are the frame sizes of the aspect presets of settings.reframe.
@@ -26,6 +26,7 @@ func init() {
 		Example: `{"aspect": "9:16"}`,
 		Errors:  []string{CodeValidation},
 		Scope:   ScopeEdit,
+		Phase:   Beta,
 	}, applySettingsReframe))
 }
 

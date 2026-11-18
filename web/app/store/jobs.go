@@ -6,15 +6,15 @@ import (
 	"encoding/json"
 	"strings"
 
-	"github.com/AlexGalhardo/stuarty/service"
-
 	"github.com/AlexGalhardo/vukem/database"
+
+	"github.com/AlexGalhardo/vukem-video/service"
 )
 
 type jobRepo struct{ ex database.Executor }
 
 const jobColumns = `id, kind, project_id, asset_hash, actor, state, progress, message, input, result, error,
- cancel_requested, attempts, created_ms, updated_ms, started_ms, finished_ms, approval_id`
+ cancel_requested, attempts, created_ms, updated_ms, started_ms, finished_ms`
 
 func scanJob(sc scanner) (service.JobRow, error) {
 	var (
@@ -22,16 +22,14 @@ func scanJob(sc scanner) (service.JobRow, error) {
 		project, asset    sql.NullString
 		input             string
 		result, errJSON   sql.NullString
-		approvalID        sql.NullString
 		cancel            int
 		started, finished sql.NullInt64
 	)
 	err := sc.Scan(&j.ID, &j.Kind, &project, &asset, &j.Actor, &j.State, &j.Progress, &j.Message, &input,
-		&result, &errJSON, &cancel, &j.Attempts, &j.CreatedMs, &j.UpdatedMs, &started, &finished, &approvalID)
+		&result, &errJSON, &cancel, &j.Attempts, &j.CreatedMs, &j.UpdatedMs, &started, &finished)
 	if err != nil {
 		return service.JobRow{}, err
 	}
-	j.ApprovalID = approvalID.String
 	j.ProjectID, j.AssetHash = ptrString(project), ptrString(asset)
 	j.Input, j.Result, j.Error = json.RawMessage(input), rawJSON(result), rawJSON(errJSON)
 	j.CancelRequested = cancel != 0
@@ -227,36 +225,4 @@ func (r jobRepo) QueuedBefore(ctx context.Context, createdBeforeMs int64) ([]ser
 		"SELECT "+jobColumns+" FROM jobs WHERE state = 'queued' AND created_ms < ? ORDER BY created_ms, id",
 		createdBeforeMs,
 	)
-}
-
-// CreateWaiting inserts a job that waits for approval (SDD-015 section 5).
-func (r jobRepo) CreateWaiting(ctx context.Context, j service.JobRow) error {
-	_, err := r.ex.ExecContext(ctx, `INSERT INTO jobs
- (id, kind, project_id, asset_hash, actor, state, progress, message, input, created_ms, updated_ms, approval_id)
- VALUES (?, ?, ?, ?, ?, 'waiting_approval', 0, ?, ?, ?, ?, ?)`,
-		j.ID, j.Kind, j.ProjectID, j.AssetHash, j.Actor, j.Message, string(j.Input), j.CreatedMs, j.UpdatedMs,
-		nullString(j.ApprovalID))
-	if isUnique(r.ex, err) {
-		return service.ErrExists
-	}
-	return err
-}
-
-// Release moves a waiting job to queued once, so that it can be claimed.
-func (r jobRepo) Release(ctx context.Context, id string, nowMs int64) (bool, error) {
-	n, err := rowsAffected(r.ex.ExecContext(ctx, `UPDATE jobs SET state = 'queued', message = '', updated_ms = ?
- WHERE id = ? AND state = 'waiting_approval'`, nowMs, id))
-	return n == 1, err
-}
-
-// FinishWaiting ends a job that never ran: rejected, cancelled or expired.
-func (r jobRepo) FinishWaiting(
-	ctx context.Context,
-	id, state string,
-	errJSON json.RawMessage,
-	nowMs int64,
-) (bool, error) {
-	n, err := rowsAffected(r.ex.ExecContext(ctx, `UPDATE jobs SET state = ?, error = ?, finished_ms = ?, updated_ms = ?
- WHERE id = ? AND state = 'waiting_approval'`, state, nullJSON(errJSON), nowMs, nowMs, id))
-	return n == 1, err
 }

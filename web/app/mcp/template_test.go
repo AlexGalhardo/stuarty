@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/web/contract/testenv"
+	"github.com/AlexGalhardo/vukem-video/web/contract/testenv"
 )
 
 // TestTemplateToolSavesListsAndInstantiates: save makes a template from a
@@ -87,7 +87,7 @@ func TestTemplateToolExportsAndImports(t *testing.T) {
 		t.Fatalf("export: %v", exported)
 	}
 
-	relative := call(t, cs, "template", map[string]any{"action": "import", "path": "x.stuarty-template.zip"})
+	relative := call(t, cs, "template", map[string]any{"action": "import", "path": "x.vukem-template.zip"})
 	if !relative.IsError || !strings.Contains(textOf(t, relative), "E_PATH_NOT_ALLOWED") {
 		t.Errorf("a relative path: %s", textOf(t, relative))
 	}

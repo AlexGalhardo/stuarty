@@ -1,8 +1,0 @@
-{
-  "code": "E_VALIDATION",
-  "hint": "Send \"#RRGGBB\" or \"#RRGGBBAA\".",
-  "message": "args.background \"red\" is not a colour.",
-  "op_index": 0,
-  "path": "args.background",
-  "retryable": false
-}

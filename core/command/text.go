@@ -1,7 +1,7 @@
 package command
 
 import (
-	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
 func init() {
@@ -16,6 +16,7 @@ func init() {
 			CodeFontUnknown, CodeOverlap,
 		},
 		Scope: ScopeEdit,
+		Phase: Prototype,
 	}, applyTextAdd))
 
 	Register(Define(Spec{
@@ -26,6 +27,7 @@ func init() {
 		Example: `{"item_id": "itm_s6t7v8w9x0", "text": "Hello world", "style": {"color": "#FFE600"}}`,
 		Errors:  []string{CodeValidation, CodeNotFound, CodeTypeMismatch, CodeFontUnknown},
 		Scope:   ScopeEdit,
+		Phase:   Prototype,
 	}, applyTextSet))
 }
 

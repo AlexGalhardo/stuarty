@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/AlexGalhardo/stuarty/core/lint"
-	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
+	"github.com/AlexGalhardo/vukem-video/core/lint"
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
 )
 
 // Error codes of SDD-000 section 8 that an export raises. E_NO_ENCODER and E_INTERNAL come from
@@ -43,7 +43,7 @@ func exportErr(reason, msg string, cause error, stderr string) *ffmpeg.Error {
 		Message: msg,
 		Details: details,
 		Err:     cause,
-		Hint:    "Run \"stuarty doctor\" and try the export again; if it fails again, report it with the output of doctor.",
+		Hint:    "Run \"vukem-video doctor\" and try the export again; if it fails again, report it with the output of doctor.",
 	}
 }
 
@@ -91,21 +91,21 @@ func verifyError(checks []Check) *ffmpeg.Error {
 		Code:    CodeVerifyFailed,
 		Reason:  "verify_failed",
 		Message: fmt.Sprintf("The exported file failed %d check(s) and was deleted.", len(checks)),
-		Hint:    "Export again; if it keeps failing, report it with the output of \"stuarty doctor\".",
+		Hint:    "Export again; if it keeps failing, report it with the output of \"vukem-video doctor\".",
 		Details: map[string]any{"checks": checks},
 	}
 }
 
-// ReasonSizeLimit is details.reason of an export whose file passed STUARTY_MAX_EXPORT_BYTES.
+// ReasonSizeLimit is details.reason of an export whose file passed VUKEM_VIDEO_MAX_EXPORT_BYTES.
 const ReasonSizeLimit = "size_limit"
 
 func sizeLimitError(size, limit int64) *ffmpeg.Error {
 	e := exportErr(ReasonSizeLimit, "The exported file is larger than the limit and was deleted.", nil, "")
-	e.Hint = "Export a shorter project, or raise STUARTY_MAX_EXPORT_BYTES."
+	e.Hint = "Export a shorter project, or raise VUKEM_VIDEO_MAX_EXPORT_BYTES."
 	e.Details["limit"] = "export_bytes"
 	e.Details["value"] = size
 	e.Details["ceiling"] = limit
-	e.Details["variable"] = "STUARTY_MAX_EXPORT_BYTES"
+	e.Details["variable"] = "VUKEM_VIDEO_MAX_EXPORT_BYTES"
 
 	return e
 }

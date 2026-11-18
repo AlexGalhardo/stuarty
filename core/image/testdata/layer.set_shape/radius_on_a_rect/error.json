@@ -1,8 +1,0 @@
-{
-  "code": "E_VALIDATION",
-  "hint": "Set shape rounded_rect together with radius.",
-  "message": "args.radius is only valid for shape \"rounded_rect\", got \"rect\".",
-  "op_index": 0,
-  "path": "args.radius",
-  "retryable": false
-}

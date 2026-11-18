@@ -11,16 +11,16 @@ description: "Check the installation, and write a local archive you can attach t
 
 ## The idea
 
-`stuarty doctor` checks the installation and the workspace and answers with the version, the mode, the process, the workspace and a list of checks, each with a result and, when it fails, what to do. Nothing in the answer is a key, a token or the contents of the environment.
+`vukem-video doctor` checks the installation and the workspace and answers with the version, the mode, the process, the workspace and a list of checks, each with a result and, when it fails, what to do. Nothing in the answer is a key, a token or the contents of the environment.
 
 The **bundle** is a file for a bug report. It is written inside your workspace; the product never sends it anywhere, and you decide whether to attach it to an issue.
 
 ## Quick start
 
 ```bash
-stuarty doctor
-stuarty doctor --full
-stuarty doctor --bundle
+vukem-video doctor
+vukem-video doctor --full
+vukem-video doctor --bundle
 ```
 
 - `doctor` checks the identity of the installation. `--full` runs every check, including FFmpeg, its licence class and the H.264 encoder detection, and re-runs the detection.
@@ -33,8 +33,8 @@ The bundle holds the report with the paths removed, the versions, the FFmpeg con
 In the container:
 
 ```bash
-docker exec stuarty stuarty doctor --bundle
-docker cp stuarty:/data/exports/diagnostics .
+docker exec vukem-video vukem-video doctor --bundle
+docker cp vukem-video:/data/exports/diagnostics .
 ```
 
 Read the bundle before you attach it: it is your decision.

@@ -16,10 +16,10 @@ import (
 	"github.com/AlexGalhardo/vukem/contrib/engine"
 )
 
-// SandboxBwrap is the value of STUARTY_SANDBOX that wraps every tool in bubblewrap (SDD-007 6.7).
+// SandboxBwrap is the value of VUKEM_VIDEO_SANDBOX that wraps every tool in bubblewrap (SDD-007 6.7).
 const SandboxBwrap = "bwrap"
 
-// ResolveSandbox returns the path of bwrap for STUARTY_SANDBOX=bwrap, or "" for no sandbox.
+// ResolveSandbox returns the path of bwrap for VUKEM_VIDEO_SANDBOX=bwrap, or "" for no sandbox.
 // A bwrap that is missing or cannot create its namespaces is an error, so the owner process
 // does not start with a sandbox that is not there.
 func ResolveSandbox(ctx context.Context, mode string) (string, error) {
@@ -28,12 +28,12 @@ func ResolveSandbox(ctx context.Context, mode string) (string, error) {
 		return "", nil
 	case SandboxBwrap:
 	default:
-		return "", fmt.Errorf("ffmpeg: STUARTY_SANDBOX=%q: the only value is %q", mode, SandboxBwrap)
+		return "", fmt.Errorf("ffmpeg: VUKEM_VIDEO_SANDBOX=%q: the only value is %q", mode, SandboxBwrap)
 	}
 
 	path, err := exec.LookPath(SandboxBwrap)
 	if err != nil {
-		return "", fmt.Errorf("ffmpeg: STUARTY_SANDBOX=bwrap but bwrap is missing: install bubblewrap: %w", err)
+		return "", fmt.Errorf("ffmpeg: VUKEM_VIDEO_SANDBOX=bwrap but bwrap is missing: install bubblewrap: %w", err)
 	}
 
 	cctx, cancel := context.WithTimeout(ctx, 10*time.Second)

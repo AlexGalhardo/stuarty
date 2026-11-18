@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
 const maxWordsPerDocument = timeline.MaxCaptionWords
@@ -23,6 +23,7 @@ func init() {
 			CodeLimit, CodeOverlap,
 		},
 		Scope: ScopeEdit,
+		Phase: Prototype,
 	}, applyCaptionAdd))
 }
 

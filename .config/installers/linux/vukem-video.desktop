@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Vukem Video
+GenericName=Video editor
+Comment=Start the local server and open Vukem Video in your browser
+Exec=vukem-video open
+Icon=vukem-video
+Terminal=false
+Categories=AudioVideo;Video;AudioVideoEditing;
+Keywords=video;editor;captions;
+StartupNotify=false

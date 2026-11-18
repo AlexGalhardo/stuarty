@@ -40,7 +40,7 @@ if [ -z "$dir" ]; then
 	command -v gh >/dev/null 2>&1 || die "gh is required to download the release (or pass the folder of the assets)"
 	dir="$work/assets"
 	mkdir -p "$dir"
-	gh release download "$FFMPEG_BUILD_TAG" --repo "${REPO:-AlexGalhardo/stuarty}" --dir "$dir" --pattern 'ffmpeg-*' >&2
+	gh release download "$FFMPEG_BUILD_TAG" --repo "${REPO:-AlexGalhardo/vukem-video}" --dir "$dir" --pattern 'ffmpeg-*' >&2
 fi
 
 unpack() { # unpack <archive> <dest>

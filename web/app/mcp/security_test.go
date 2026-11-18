@@ -12,8 +12,8 @@ import (
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
-	"github.com/AlexGalhardo/stuarty/service/untrusted"
-	"github.com/AlexGalhardo/stuarty/web/contract/testenv"
+	"github.com/AlexGalhardo/vukem-video/service/untrusted"
+	"github.com/AlexGalhardo/vukem-video/web/contract/testenv"
 )
 
 // TestSecurity_T31_ToolDefinitionsMatchTheirGolden is SDD-007 section 15 check

@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
 // TestKeyframeHelpers reproduces the worked values of R11 to R13.
@@ -155,6 +155,7 @@ func TestStyleValidation(t *testing.T) {
 		{`{"color": 5}`, false, "colour string"},
 		{`{"color": "red"}`, false, "is not a colour"},
 		{`{"position": "top"}`, false, "not a style key"},
+		{`{"highlight": "word"}`, true, `must be "none"`},
 		{`{"position": "left"}`, true, "must be one of"},
 	}
 	for _, tc := range cases {

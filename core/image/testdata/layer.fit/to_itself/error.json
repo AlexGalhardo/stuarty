@@ -1,8 +1,0 @@
-{
-  "code": "E_VALIDATION",
-  "hint": "Fit it to the canvas.",
-  "message": "Layer lyr_dddddddddd cannot be fitted to itself.",
-  "op_index": 0,
-  "path": "args.to",
-  "retryable": false
-}

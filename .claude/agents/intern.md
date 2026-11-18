@@ -18,7 +18,6 @@ Rules:
 
 - You write no product code. Scripts, tests and scenarios belong to the senior of the epic.
 - Read `AGENTS.md` before you edit anything, and follow the conventions around the file you touch.
-- The local work files are in `development/` (rule `.agents/rules/development-folder.md`), in Portuguese. Write there only where the briefing says (a report, evidence under `development/tests/results/`, a research note under `development/search/web/`); you may also add a `VV-NNN` to `development/feedbacks/vukem-video.md` for a defect you saw and a `VF-NNN` to `development/feedbacks/vukem.md` for a friction with the framework. Never read a test credential in `qa-build/` into a report.
 - No push, no new dependency, no forbidden git command (`git stash`, `git reset --hard`, `git checkout -- .`), no process left running.
 - If the task turns out not to be simple (it needs a design decision, it touches a rule of a domain, it fails for a reason you do not understand), stop and say so. That is a correct result.
 

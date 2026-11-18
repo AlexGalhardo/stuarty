@@ -5,8 +5,8 @@ import (
 	"image"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/core/plan"
-	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/core/plan"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
 func fx(kind string, params map[string]float64) timeline.Effect {

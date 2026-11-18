@@ -5,9 +5,9 @@ import (
 	"database/sql"
 	"encoding/json"
 
-	"github.com/AlexGalhardo/stuarty/service"
-
 	"github.com/AlexGalhardo/vukem/database"
+
+	"github.com/AlexGalhardo/vukem-video/service"
 )
 
 type operationRepo struct{ ex database.Executor }

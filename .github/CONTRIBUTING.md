@@ -2,7 +2,7 @@
 
 Thank you for helping. Stuarty is where a creator plans, creates, edits, manages and publishes content in one place, self-hosted, with AI agents as first-class users. The planning documents in [`docs/`](../docs/README.md) are the contract. Start with the requirements ([`docs/prds/`](../docs/prds)), the decisions ([`docs/adrs/`](../docs/adrs)) and the specification of the area you will touch ([`docs/sdds/`](../docs/sdds)). The work is the epics of [`docs/plans/`](../docs/plans/00-roadmap.md).
 
-The product was called Stuarty until 2026-11-18. The code still carries the former name (`stuarty`, `STUARTY_*`) until the rename epic of ADR-0044 is merged; commands in this guide use the names the code accepts today.
+The product was called Vukem Video until 2026-11-18. The code still carries the former name (`vukem-video`, `VUKEM_VIDEO_*`) until the rename epic of ADR-0044 is merged; commands in this guide use the names the code accepts today.
 
 By taking part you agree to the [Code of Conduct](CODE_OF_CONDUCT.md). Report vulnerabilities privately, as described in [SECURITY](SECURITY.md), never in a public issue.
 
@@ -64,11 +64,11 @@ Work in `web/` uses Bun, not npm.
 The pull-request pipeline (`ci.yml`) still exists and will be required again. Its jobs, for reference:
 
 - `Lint (Go)`, `Lint (Markdown)`, `Types and lint (web)`
-- `Test (ubuntu-latest)`, `Test (windows-latest)`, `Test (macos-latest)`: the Go suite with the race detector, the coverage gate and `BenchmarkExportCommonCase` with the floor of 1.5 x real time (`STUARTY_BENCH_MIN_RT`). `task gate -- <tag>` runs the full local gate
+- `Test (ubuntu-latest)`, `Test (windows-latest)`, `Test (macos-latest)`: the Go suite with the race detector, the coverage gate and `BenchmarkExportCommonCase` with the floor of 1.5 x real time (`VUKEM_VIDEO_BENCH_MIN_RT`). `task gate -- <tag>` runs the full local gate
 - `Generated files`: `task codegen` leaves `core/schema/` and `web/resources/js/generated/` unchanged; after a change to a generator run `task codegen` and commit
 - `Release build (snapshot)`: GoReleaser dry run, six archives under 60,000,000 bytes
 - `Reference scenario (ubuntu-latest)`, `(windows-latest)`, `(macos-latest)`: the reference scenario through the CLI process, MCP over stdio and MCP over HTTP against a real `serve`; each export is checked with ffprobe and the three documents are compared; skips where only a GPL FFmpeg exists (macOS)
-- `Browser tests (Playwright)`: `bun run e2e` in `web/`: the functional specs and nothing that measures a time budget. The budgets of SDD-012 section 19 (200-item timeline frames, edit round trip, scrub latency, pause to exact frame, video layers, `perf-edit-200`) belong to the reference machine and run only by hand: `STUARTY_PERF=1 bun run e2e` in `web/` adds the `perf` project, which runs alone after the others
+- `Browser tests (Playwright)`: `bun run e2e` in `web/`: the functional specs and nothing that measures a time budget. The budgets of SDD-012 section 19 (200-item timeline frames, edit round trip, scrub latency, pause to exact frame, video layers, `perf-edit-200`) belong to the reference machine and run only by hand: `VUKEM_VIDEO_PERF=1 bun run e2e` in `web/` adds the `perf` project, which runs alone after the others
 - `Browser tests (firefox)`, `Browser tests (webkit)`: the same specs on the other two engines, except those tagged `CHROMIUM_ONLY`; run one by hand with `bunx playwright test -c e2e/playwright.config.ts --project=firefox` in `web/`
 - `Bundle export (<os>)`, `Bundle matrix (<os>)`: a bundle of the reference project made on each system is imported on all three, and the document and media hashes must be equal; `bash scripts/bundle-matrix.sh` runs it by hand
 - `Sandbox (bwrap)`: `TestSecurity_T16_` must pass, not skip
@@ -95,7 +95,7 @@ Rust lives only in `renderer/` (ADR-0029, rule `.agents/rules/rust.md`); you nee
 
 ### Container image
 
-`task image:build` builds `.config/docker/stuarty.Dockerfile` as `stuarty:local`, and `task image:smoke` runs `scripts/image-smoke.sh` on it: user 10001, `STUARTY_HOME=/data` with a volume, FFmpeg without `--enable-gpl` or `--enable-nonfree` that encodes with `libopenh264`, `prlimit`, the licence files under `/usr/share/doc/stuarty/`, `/up` on a loopback port, and the CLI scenario with `--network none`. Docker is required. Build from a clone: from a git worktree the `.git` file points outside the build context, so the image gets no version stamp and the version check is skipped.
+`task image:build` builds `.config/docker/vukem-video.Dockerfile` as `vukem-video:local`, and `task image:smoke` runs `scripts/image-smoke.sh` on it: user 10001, `VUKEM_VIDEO_HOME=/data` with a volume, FFmpeg without `--enable-gpl` or `--enable-nonfree` that encodes with `libopenh264`, `prlimit`, the licence files under `/usr/share/doc/vukem-video/`, `/up` on a loopback port, and the CLI scenario with `--network none`. Docker is required. Build from a clone: from a git worktree the `.git` file points outside the build context, so the image gets no version stamp and the version check is skipped.
 
 ### The own FFmpeg build
 

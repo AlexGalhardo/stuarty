@@ -12,7 +12,7 @@ import (
 
 const sample = `goos: windows
 goarch: amd64
-pkg: github.com/AlexGalhardo/stuarty/engine/export
+pkg: github.com/AlexGalhardo/vukem-video/engine/export
 cpu: AMD Ryzen 7 5700X3D 8-Core Processor
 BenchmarkExport60s
     perf_test.go:185: h264_nvenc: 22.2 s, peak 111 MB

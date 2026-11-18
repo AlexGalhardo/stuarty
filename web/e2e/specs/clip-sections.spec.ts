@@ -135,15 +135,6 @@ test.describe("clip-sections", () => {
 		const itemId = seeded.itemIds[0] ?? "";
 		await open(page, seeded.id);
 		const edits = recordEdits(page);
-		// The editor builds each mask command from the read model (SDD-012 section
-		// 1, T3), so the next edit waits until the revision of the last one is
-		// shown: a command sent before it would carry the old mask.
-		const revision = page.locator("[data-connection] .font-mono");
-		const applied = async (change: () => Promise<void>): Promise<void> => {
-			const before = await revision.textContent();
-			await change();
-			await expect(revision).not.toHaveText(before ?? "");
-		};
 		const mask = {
 			shape: "ellipse",
 			x: 0.1,
@@ -157,7 +148,7 @@ test.describe("clip-sections", () => {
 		const shape = page.getByLabel("Mask shape", { exact: true });
 		await expect(shape).toHaveValue("none");
 		await expect(page.getByLabel("Mask feather")).toHaveCount(0);
-		await applied(() => shape.selectOption("ellipse").then(() => undefined));
+		await shape.selectOption("ellipse");
 		await expect.poll(() => edits.length).toBe(1);
 		expect(edits[0]?.operations).toEqual([
 			{ op: "clip.set_mask", args: { item_id: itemId, mask } },
@@ -166,7 +157,7 @@ test.describe("clip-sections", () => {
 
 		const feather = page.getByLabel("Mask feather", { exact: true });
 		await feather.fill("12");
-		await applied(() => feather.press("Enter"));
+		await feather.press("Enter");
 		await expect.poll(() => edits.length).toBe(2);
 		expect(edits[1]?.operations).toEqual([
 			{
@@ -175,9 +166,7 @@ test.describe("clip-sections", () => {
 			},
 		]);
 
-		await applied(() =>
-			page.getByLabel("Invert mask", { exact: true }).check(),
-		);
+		await page.getByLabel("Invert mask", { exact: true }).check();
 		await expect.poll(() => edits.length).toBe(3);
 		expect(edits[2]?.operations).toEqual([
 			{

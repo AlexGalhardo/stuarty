@@ -6,9 +6,9 @@ import (
 	"encoding/binary"
 	"io"
 
-	"github.com/AlexGalhardo/stuarty/core/plan"
-	"github.com/AlexGalhardo/stuarty/core/timeline"
-	"github.com/AlexGalhardo/stuarty/engine/audio"
+	"github.com/AlexGalhardo/vukem-video/core/plan"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/engine/audio"
 )
 
 // This file is the audio of an item with a speed curve or with reverse (SDD-004 sections 3.11, 3.12 and 7).

@@ -1,0 +1,17 @@
+[package]
+name = "vukem-renderer-text"
+description = "The text and shape rasterizer of the Vukem Video renderer (ADR-0029 stage E, SDD-013 section 3.11): the port of engine/raster."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+harfrust = "=0.16.0"
+skrifa = "=0.50.0"
+unicode-bidi = "=0.3.18"
+unicode-linebreak = "=0.1.5"
+unicode-script = "=0.5.9"
+
+[lints]
+workspace = true

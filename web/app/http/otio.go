@@ -1,19 +1,17 @@
 package httpapi
 
 import (
-	"github.com/AlexGalhardo/stuarty/service"
-
 	"github.com/AlexGalhardo/vukem/web"
+
+	"github.com/AlexGalhardo/vukem-video/service"
 )
 
 type otioExportIn struct {
-	ID         string `json:"id"                    validate:"required"`
-	TimelineID string `json:"timeline_id,omitempty"                     doc:"The timeline of the project; required when the project has several."`
+	ID string `json:"id" validate:"required"`
 }
 
 type otioImportIn struct {
 	ID           string `json:"id"                      validate:"required"`
-	TimelineID   string `json:"timeline_id,omitempty"                       doc:"The timeline of the project; required when the project has several."`
 	BaseRevision int64  `json:"base_revision"                               doc:"The revision the import is applied to."`
 	Path         string `json:"path"                    validate:"required" doc:"An absolute path to an .otio file on the machine that runs the server."`
 	DryRun       any    `json:"dry_run,omitempty"`
@@ -36,7 +34,7 @@ func (h *apiHandler) projectOtioImport(c *web.Ctx, in otioImportIn) (service.Pro
 	}
 
 	res, err := h.Service.ProjectOtioImport(c.Context(), service.ProjectOtioImportRequest{
-		ProjectID: in.ID, TimelineID: in.TimelineID, BaseRevision: in.BaseRevision, Path: in.Path, DryRun: dryRun,
+		ProjectID: in.ID, BaseRevision: in.BaseRevision, Path: in.Path, DryRun: dryRun,
 		AllowPartial: in.AllowPartial,
 	})
 	if res != nil {

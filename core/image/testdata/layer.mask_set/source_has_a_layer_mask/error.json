@@ -1,8 +1,0 @@
-{
-  "code": "E_INVALID_STATE",
-  "hint": "A mask source cannot have a mask from a layer: remove it first.",
-  "message": "Layer lyr_bbbbbbbbbb has a mask from a layer itself.",
-  "op_index": 0,
-  "path": "args.source",
-  "retryable": false
-}

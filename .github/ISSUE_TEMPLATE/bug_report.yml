@@ -7,7 +7,7 @@ body:
     attributes:
       value: |
         Thanks for the report. One bug per issue. Security problems go to a
-        [private advisory](https://github.com/AlexGalhardo/stuarty/security/advisories/new), never here.
+        [private advisory](https://github.com/AlexGalhardo/vukem-video/security/advisories/new), never here.
   - type: dropdown
     id: area
     attributes:
@@ -47,8 +47,8 @@ body:
   - type: input
     id: version
     attributes:
-      label: Stuarty version
-      description: Output of stuarty version, or a commit SHA.
+      label: Vukem Video version
+      description: Output of vukem-video version, or a commit SHA.
     validations:
       required: true
   - type: dropdown

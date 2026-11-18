@@ -78,7 +78,7 @@ if [ "$source_kind" = own ]; then
 	asset_var="FFMPEG_OWN_ASSET_$key"
 	sha_var="FFMPEG_OWN_SHA256_$key"
 	release_tag="$FFMPEG_OWN_TAG"
-	base_url="https://github.com/AlexGalhardo/stuarty/releases/download"
+	base_url="https://github.com/AlexGalhardo/vukem-video/releases/download"
 else
 	asset_var="FFMPEG_ASSET_$key"
 	sha_var="FFMPEG_SHA256_$key"

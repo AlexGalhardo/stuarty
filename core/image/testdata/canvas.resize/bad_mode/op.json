@@ -1,8 +1,0 @@
-{
-  "args": {
-    "height": 100,
-    "mode": "stretch",
-    "width": 100
-  },
-  "op": "canvas.resize"
-}

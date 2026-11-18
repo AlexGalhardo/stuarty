@@ -41,7 +41,7 @@ Normal just covers what is below. Other modes add, multiply or lighten the colou
 
 **Example.** A sparkle video on a black background looks good when its blend mode is Screen: the black disappears.
 
-**In Stuarty.** `clip.set_blend`: normal, multiply, screen, overlay or add. See [Effects and color](/docs/guide/effects-and-color).
+**In Vukem Video.** `clip.set_blend`: normal, multiply, screen, overlay or add. See [Effects and color](/docs/guide/effects-and-color).
 
 **Also called:** transfer mode. **See also:** [Multiply](#multiply), [Screen](#screen), [Overlay (blend mode)](#overlay-blend-mode).
 
@@ -53,7 +53,7 @@ Blur hides detail. Editors use it to hide faces or car plates, or to make a back
 
 **Example.** A blurred copy of the video fills the empty bars of a vertical video.
 
-**In Stuarty.** `clip.set_blur`, a radius from 0 to 100 pixels.
+**In Vukem Video.** `clip.set_blur`, a radius from 0 to 100 pixels.
 
 **Also called:** Gaussian blur. **See also:** [Filter](#filter), [Motion blur](#motion-blur).
 
@@ -75,7 +75,7 @@ You film a person in front of a plain green wall. The editor makes every green p
 
 **Example.** A kid sits in front of green cloth and the video puts them on the Moon.
 
-**In Stuarty.** `clip.set_chroma_key` sets the colour, the similarity, the smoothness and the spill. See [Effects and color](/docs/guide/effects-and-color).
+**In Vukem Video.** `clip.set_chroma_key` sets the colour, the similarity, the smoothness and the spill. See [Effects and color](/docs/guide/effects-and-color).
 
 **Also called:** green screen, blue screen, keying. **See also:** [Spill](#spill), [Matte](#matte).
 
@@ -87,7 +87,7 @@ Compositing stacks layers. A person filmed in front of a green screen, a drawing
 
 **Example.** A weather reporter in front of a moving map.
 
-**In Stuarty.** Stacked tracks are composited, and the preview and the export use the same render plan. See [Render](/docs/concepts/render).
+**In Vukem Video.** Stacked tracks are composited, and the preview and the export use the same render plan. See [Render](/docs/concepts/render).
 
 **See also:** [Layer](/docs/glossary/editing-and-timeline#layer), [Chroma key](#chroma-key), [Blend mode](#blend-mode).
 
@@ -99,7 +99,7 @@ Cropping removes the sides, the top or the bottom, to hide something or change t
 
 **Example.** Crop a wide video so a person fills a tall frame.
 
-**In Stuarty.** `clip.set_framing` has a crop for each side. See [Clip properties](/docs/guide/clip-properties).
+**In Vukem Video.** `clip.set_framing` has a crop for each side. See [Clip properties](/docs/guide/clip-properties).
 
 **See also:** [Fit](#fit), [Aspect ratio](/docs/glossary/shooting-and-footage#aspect-ratio).
 
@@ -121,7 +121,7 @@ A feathered edge fades slowly from visible to hidden, so the shape blends in smo
 
 **Example.** A round spotlight with a soft border.
 
-**In Stuarty.** `feather`, in pixels from 0 to 200, in `clip.set_mask`.
+**In Vukem Video.** `feather`, in pixels from 0 to 200, in `clip.set_mask`.
 
 **See also:** [Mask](#mask).
 
@@ -133,7 +133,7 @@ A filter changes colours or details in one step, like making it black and white 
 
 **Example.** A sepia filter on an old family video.
 
-**In Stuarty.** `clip.set_filter`: grayscale, sepia, invert, warm or cool, with an amount.
+**In Vukem Video.** `clip.set_filter`: grayscale, sepia, invert, warm or cool, with an amount.
 
 **See also:** [Look](/docs/glossary/color#look), [Color grading](/docs/glossary/color#color-grading).
 
@@ -145,7 +145,7 @@ Cover fills the whole frame and cuts what does not fit. Contain shows all of the
 
 **Example.** A wide video in a tall frame: cover cuts the sides; contain shows black bars above and below.
 
-**In Stuarty.** `fit` is `cover`, `contain` or `none` in `clip.set_framing`.
+**In Vukem Video.** `fit` is `cover`, `contain` or `none` in `clip.set_framing`.
 
 **Also called:** cover, contain, letterbox. **See also:** [Aspect ratio](/docs/glossary/shooting-and-footage#aspect-ratio), [Crop](#crop).
 
@@ -157,7 +157,7 @@ Instead of drawing every frame, you say: at second 1 the box is here, at second 
 
 **Example.** A star that starts small at 0 seconds and ends big at 2 seconds.
 
-**In Stuarty.** `keyframe.set` for x, y, scale, rotation, opacity and volume. See [Animate with keyframes](/docs/guide/keyframes).
+**In Vukem Video.** `keyframe.set` for x, y, scale, rotation, opacity and volume. See [Animate with keyframes](/docs/guide/keyframes).
 
 **See also:** [Easing](/docs/glossary/cuts-and-transitions#easing), [Tween](#tween), [Animation](#animation).
 
@@ -169,7 +169,7 @@ A mask hides everything outside its shape. You can use it to show a video throug
 
 **Example.** Showing a face inside a round bubble.
 
-**In Stuarty.** `clip.set_mask` limits an item to a rectangle or an ellipse, with a soft edge and an invert option.
+**In Vukem Video.** `clip.set_mask` limits an item to a rectangle or an ellipse, with a soft edge and an invert option.
 
 **See also:** [Feather](#feather), [Matte](#matte).
 
@@ -201,7 +201,7 @@ Motion graphics are moving designs: titles that fly, charts that grow, shapes th
 
 **Example.** An animated bar chart in a news video.
 
-**In Stuarty.** `shape.add` creates rectangles, rounded rectangles and ellipses to animate. See [Shapes](/docs/guide/shapes).
+**In Vukem Video.** `shape.add` creates rectangles, rounded rectangles and ellipses to animate. See [Shapes](/docs/guide/shapes).
 
 **See also:** [Animation](#animation), [Keyframe](#keyframe).
 
@@ -233,7 +233,7 @@ Lower the opacity and the layer becomes see-through, so what is under it shows.
 
 **Example.** A watermark set to 30% so it does not hide the video.
 
-**In Stuarty.** `opacity` is a property of an item and can be keyframed, from 0 to 1.
+**In Vukem Video.** `opacity` is a property of an item and can be keyframed, from 0 to 1.
 
 **Also called:** transparency. **See also:** [Alpha channel](#alpha-channel), [Fade](/docs/glossary/cuts-and-transitions#fade).
 
@@ -295,7 +295,7 @@ Light from a green screen reflects on hair and shoulders. After keying, a green 
 
 **Example.** A green glow around someone's hair.
 
-**In Stuarty.** `spill`, from 0 to 1, in `clip.set_chroma_key`.
+**In Vukem Video.** `spill`, from 0 to 1, in `clip.set_chroma_key`.
 
 **Also called:** despill. **See also:** [Chroma key](#chroma-key).
 
@@ -317,7 +317,7 @@ Layers are drawn from bottom to top. The one on top covers the others unless it 
 
 **Example.** The caption is placed above the video, so you see it.
 
-**In Stuarty.** The preview and the export draw the tracks from the bottom row up, so the track at the top of the timeline is drawn on top.
+**In Vukem Video.** The preview and the export draw the tracks from the bottom row up, so the track at the top of the timeline is drawn on top.
 
 **Also called:** z-order. **See also:** [Layer](/docs/glossary/editing-and-timeline#layer), [Track](/docs/glossary/editing-and-timeline#track).
 
@@ -327,7 +327,7 @@ Transform changes where a layer is (position), how big (scale) and how rotated.
 
 **Example.** Make a logo smaller and put it in the corner.
 
-**In Stuarty.** `item.set_transform` sets x, y, scale, rotation and opacity.
+**In Vukem Video.** `item.set_transform` sets x, y, scale, rotation and opacity.
 
 **See also:** [Anchor point](#anchor-point), [Crop](#crop).
 

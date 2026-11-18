@@ -1,8 +1,0 @@
-{
-  "args": {
-    "index": 1,
-    "layer_id": "lyr_dddddddddd",
-    "parent": "lyr_eeeeeeeeee"
-  },
-  "op": "layer.move"
-}

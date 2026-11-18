@@ -7,13 +7,13 @@ import (
 )
 
 var (
-	// variableInParens is the " (STUARTY_X)" of a limit message.
-	variableInParens = regexp.MustCompile(` \(STUARTY_[A-Z_]+\)`)
-	// operatorClause is the "; the person running the server can raise STUARTY_X" of a limit hint.
+	// variableInParens is the " (VUKEM_VIDEO_X)" of a limit message.
+	variableInParens = regexp.MustCompile(` \(VUKEM_VIDEO_[A-Z_]+\)`)
+	// operatorClause is the "; the person running the server can raise VUKEM_VIDEO_X" of a limit hint.
 	operatorClause = regexp.MustCompile(
-		`[;,]? the person running the server can \w+ STUARTY_[A-Z_]+(?: or STUARTY_[A-Z_]+)*`,
+		`[;,]? the person running the server can \w+ VUKEM_VIDEO_[A-Z_]+(?: or VUKEM_VIDEO_[A-Z_]+)*`,
 	)
-	anyVariable = regexp.MustCompile(`STUARTY_[A-Z_]+`)
+	anyVariable = regexp.MustCompile(`VUKEM_VIDEO_[A-Z_]+`)
 )
 
 // hidesVariables is true for a caller of network mode (it has an owner user)

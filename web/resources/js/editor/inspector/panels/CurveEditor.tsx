@@ -57,11 +57,6 @@ const ARROWS: Record<string, readonly [number, number]> = {
 	ArrowDown: [0, -1],
 };
 
-// Delete and Backspace remove the focused point of the curve.
-const isRemovePointKey = (key: string): boolean =>
-	// shortcut-ok: keys of the widget, not editor shortcuts.
-	key === "Delete" || key === "Backspace";
-
 // The tone curves (SDD-012 section 12.1): one editor for the channel the
 // person picks. A point moves with the pointer or the arrow keys (Shift for a
 // larger step), Delete removes it, a click on the plot adds one, and the
@@ -146,7 +141,7 @@ export default function CurveEditor({ itemId }: { itemId: string }): ReactNode {
 					point.y + arrow[1] * step,
 				),
 			);
-		} else if (isRemovePointKey(event.key)) {
+		} else if (event.key === "Delete" || event.key === "Backspace") {
 			event.preventDefault();
 			setActive(null);
 			commit(removePoint(latest.current, index));

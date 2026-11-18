@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
 // styled gives the caption track a caption style, from a JSON object.
@@ -152,6 +152,7 @@ func init() {
 	cs("ok_same_style_noop", `{"track_id": "`+capTr+`", "style": {"size": 72}}`, styled(`{"size": 72}`))
 	cs("err_validation_unknown_key", `{"track_id": "`+capTr+`", "style": {"zzz": 1}}`, base)
 	cs("err_validation_size_below_8", `{"track_id": "`+capTr+`", "style": {"size": 4}}`, base)
+	cs("err_validation_highlight_word_in_prototype", `{"track_id": "`+capTr+`", "style": {"highlight": "word"}}`, base)
 	cs("err_validation_unknown_color_reference", `{"track_id": "`+capTr+`", "style": {"color": "$brand"}}`, base)
 	cs("err_not_found_track", `{"track_id": "trk_zzzzzzzzzz", "style": {"size": 72}}`, base)
 	cs("err_type_mismatch_audio_track", `{"track_id": "`+audTr+`", "style": {"size": 72}}`, base)

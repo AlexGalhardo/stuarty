@@ -9,16 +9,16 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/internal/outbound"
+	"github.com/AlexGalhardo/vukem-video/internal/outbound"
 )
 
 // TestSecurity_T10_DefaultRunOpensNoOutboundConnection (SDD-007 section 10.2): with every
-// STUARTY_* variable unset, the prototype scenario (create, import, edit, lint, view, export,
+// VUKEM_VIDEO_* variable unset, the prototype scenario (create, import, edit, lint, view, export,
 // undo) makes no dial through any outbound purpose.
 func TestSecurity_T10_DefaultRunOpensNoOutboundConnection(t *testing.T) {
 	for _, kv := range os.Environ() {
 		name, _, _ := strings.Cut(kv, "=")
-		if strings.HasPrefix(name, "STUARTY_") {
+		if strings.HasPrefix(name, "VUKEM_VIDEO_") {
 			t.Setenv(name, "") // restored when the test ends; empty is unset for the configuration
 		}
 	}

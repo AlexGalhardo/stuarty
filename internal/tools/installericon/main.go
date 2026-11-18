@@ -1,6 +1,6 @@
 // Command installericon draws the application icon of the installers from the shapes of
-// site/public/icon.svg, with the standard library only, and writes stuarty.png and
-// stuarty.ico. The outputs are committed; run it again only when the icon changes:
+// site/public/icon.svg, with the standard library only, and writes vukem-video.png and
+// vukem-video.ico. The outputs are committed; run it again only when the icon changes:
 //
 //	go run ./internal/tools/installericon .config/installers/assets
 package main
@@ -157,14 +157,14 @@ func run(dir string) error {
 	if err != nil {
 		return err
 	}
-	if err := write(dir, "stuarty.png", p); err != nil {
+	if err := write(dir, "vukem-video.png", p); err != nil {
 		return err
 	}
 	i, err := ico([]int{16, 32, 48, 256})
 	if err != nil {
 		return err
 	}
-	return write(dir, "stuarty.ico", i)
+	return write(dir, "vukem-video.ico", i)
 }
 
 func main() {

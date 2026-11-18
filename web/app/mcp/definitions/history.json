@@ -1,25 +1,10 @@
 {
  "name": "history",
- "description": "Change log (action=list, newest first, with actor; actor, cursor, limit: list only); undo/redo your own latest step (one per call); revert to a revision or checkpoint as a new step (dry_run previews); diff two revisions; checkpoints, checkpoint, rename_checkpoint, remove_checkpoint name revisions. Undo skips (and reports) others' later changes. domain=image (image_id): undo, redo only.",
+ "description": "Read the change log of a project (action=list, newest first, with actor; actor, cursor, limit are for list only), or undo or redo your own latest step (action=undo or redo, one step per call). Undo skips a change another actor made after yours and reports it. Undo is itself a step and can be redone.",
  "inputSchema": {
   "type": "object",
   "properties": {
-   "domain": {
-    "enum": [
-     "video",
-     "image"
-    ],
-    "default": "video"
-   },
-   "image_id": {
-    "type": "string",
-    "pattern": "^img_[0-9a-hjkmnp-tv-z]{10}$"
-   },
    "project_id": {
-    "type": "string",
-    "pattern": "^prj_[0-9a-hjkmnp-tv-z]{10}$"
-   },
-   "timeline_id": {
     "type": "string",
     "pattern": "^prj_[0-9a-hjkmnp-tv-z]{10}$"
    },
@@ -27,13 +12,7 @@
     "enum": [
      "list",
      "undo",
-     "redo",
-     "revert",
-     "diff",
-     "checkpoints",
-     "checkpoint",
-     "rename_checkpoint",
-     "remove_checkpoint"
+     "redo"
     ],
     "default": "list"
    },
@@ -48,28 +27,11 @@
     "minimum": 1,
     "maximum": 100,
     "default": 20
-   },
-   "revision": {
-    "type": "integer",
-    "minimum": 1
-   },
-   "until": {
-    "type": "integer",
-    "minimum": 1
-   },
-   "name": {
-    "type": "string"
-   },
-   "new_name": {
-    "type": "string"
-   },
-   "note": {
-    "type": "string"
-   },
-   "dry_run": {
-    "type": "boolean"
    }
   },
+  "required": [
+   "project_id"
+  ],
   "additionalProperties": false
  },
  "outputSchema": {
@@ -81,8 +43,7 @@
    "kind": {
     "enum": [
      "undo",
-     "redo",
-     "revert"
+     "redo"
     ]
    },
    "entries": {

@@ -18,12 +18,12 @@ The agent uses the same commands you do. Through MCP it calls tools such as `edi
 1. Connect the agent. For Claude Code:
 
    ```bash
-   claude mcp add stuarty -- stuarty mcp
+   claude mcp add vukem-video -- vukem-video mcp
    ```
 
    Other clients take the same command, see [Connect an agent](/docs/agents/connect). If you run the editor, the agent and the browser share the project.
 
-2. Teach it the product. `stuarty agent:docs --print skill` prints the skill and `--print agents` the snippet for your `AGENTS.md`; see [The skill](/docs/agents/skill).
+2. Teach it the product. `vukem-video agent:docs --print skill` prints the skill and `--print agents` the snippet for your `AGENTS.md`; see [The skill](/docs/agents/skill).
 
 3. Ask in plain words, for example: "Import `interview.mp4`, remove the silences, caption the speech and export a 9:16 video."
 
@@ -31,21 +31,21 @@ The agent uses the same commands you do. Through MCP it calls tools such as `edi
 
    | Step | MCP tool | CLI |
    | --- | --- | --- |
-   | create the project | `project_create` | `stuarty project:create --name "Interview" --id prj_7k2m9x4q1b` |
-   | import the media | `media_import` | `stuarty media:import interview.mp4 --project prj_7k2m9x4q1b --asset-id ast_3c5v8n2w6d` |
-   | learn the operations | `command_help` | `stuarty command:help clip.add` |
-   | edit in one batch | `edit` | `stuarty edit --project prj_7k2m9x4q1b --ops -` |
-   | transcribe | `job_start` with `"kind": "transcribe"` | `stuarty transcribe --project prj_7k2m9x4q1b --asset ast_3c5v8n2w6d --wait` |
-   | check | `lint`, then `view` | `stuarty lint --project prj_7k2m9x4q1b` |
-   | export | `job_start` with `"kind": "export"` | `stuarty export --project prj_7k2m9x4q1b` |
+   | create the project | `project_create` | `vukem-video project:create --name "Interview" --id prj_7k2m9x4q1b` |
+   | import the media | `media_import` | `vukem-video media:import interview.mp4 --project prj_7k2m9x4q1b --asset-id ast_3c5v8n2w6d` |
+   | learn the operations | `command_help` | `vukem-video command:help clip.add` |
+   | edit in one batch | `edit` | `vukem-video edit --project prj_7k2m9x4q1b --ops -` |
+   | transcribe | `job_start` with `"kind": "transcribe"` | `vukem-video transcribe --project prj_7k2m9x4q1b --asset ast_3c5v8n2w6d --wait` |
+   | check | `lint`, then `view` | `vukem-video lint --project prj_7k2m9x4q1b` |
+   | export | `job_start` with `"kind": "export"` | `vukem-video export --project prj_7k2m9x4q1b` |
 
 5. Read what it did. The agent sees the same history you do:
 
    ```bash
-   stuarty history --project prj_7k2m9x4q1b
+   vukem-video history --project prj_7k2m9x4q1b
    ```
 
-6. Undo what you do not like. `stuarty undo --project prj_7k2m9x4q1b` reverts the last step, and the agent can redo or try again.
+6. Undo what you do not like. `vukem-video undo --project prj_7k2m9x4q1b` reverts the last step, and the agent can redo or try again.
 
 ## How to check its work
 
@@ -54,7 +54,7 @@ An agent should look the cheapest way first: read the project as text, run `lint
 ## Common mistakes
 
 - Letting two actors edit from an old revision: `E_REVISION_CONFLICT`. The agent reads the project again and plans again; see [Recipes](/docs/agents/recipes).
-- Asking for transcription before the helper is installed. A person installs it once with `stuarty tools:install whisper`.
+- Asking for transcription before the helper is installed. A person installs it once with `vukem-video tools:install whisper`.
 - Giving the agent a path on another machine. Paths are read on the machine that runs the server.
 
 ## Next steps

@@ -9,7 +9,7 @@ import (
 	"io"
 	"math"
 
-	"github.com/AlexGalhardo/stuarty/core/plan"
+	"github.com/AlexGalhardo/vukem-video/core/plan"
 )
 
 // maxWAVData is the largest data chunk a RIFF header can state.

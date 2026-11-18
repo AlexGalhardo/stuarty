@@ -166,7 +166,7 @@ func TestNoHardwareAndNoSoftware(t *testing.T) {
 	}
 }
 
-// TestForcedHardwareEncoderIsNeverReplaced: STUARTY_ENCODER=h264_amf on a machine where only NVENC
+// TestForcedHardwareEncoderIsNeverReplaced: VUKEM_VIDEO_ENCODER=h264_amf on a machine where only NVENC
 // works is E_NO_ENCODER with the AMF failure, not a silent switch to NVENC.
 func TestForcedHardwareEncoderIsNeverReplaced(t *testing.T) {
 	r, caps := hwFixture(t, "h264_nvenc", "libopenh264")

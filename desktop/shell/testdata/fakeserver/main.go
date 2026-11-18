@@ -1,4 +1,4 @@
-// Command fakeserver stands in for `stuarty serve` in the shell tests. The
+// Command fakeserver stands in for `vukem-video serve` in the shell tests. The
 // variable FAKE_MODE picks the behaviour: ok (default), never-ready (the
 // runtime file is written but /up answers 503), exit (fails with a message),
 // ignore-term (does not stop on SIGTERM), impostor (answers the handshake with
@@ -18,7 +18,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/service/workspace"
+	"github.com/AlexGalhardo/vukem-video/service/workspace"
 )
 
 func main() {
@@ -27,13 +27,13 @@ func main() {
 		fmt.Fprintln(os.Stderr, "fake: cannot open the workspace")
 		os.Exit(3)
 	}
-	addr := os.Getenv("STUARTY_ADDR")
+	addr := os.Getenv("VUKEM_VIDEO_ADDR")
 	ln, err := net.Listen("tcp", addr)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "fake:", err)
 		os.Exit(1)
 	}
-	dir := workspace.Dir(os.Getenv("STUARTY_HOME"))
+	dir := workspace.Dir(os.Getenv("VUKEM_VIDEO_HOME"))
 	if _, err := dir.EnsureToken(); err != nil {
 		fmt.Fprintln(os.Stderr, "fake:", err)
 		os.Exit(1)
@@ -59,7 +59,7 @@ func main() {
 			key = "not the token"
 		}
 		m := hmac.New(sha256.New, []byte(key))
-		m.Write([]byte("stuarty-handshake-v1" + r.URL.Query().Get("nonce")))
+		m.Write([]byte("vukem-video-handshake-v1" + r.URL.Query().Get("nonce")))
 		_ = json.NewEncoder(w).Encode(map[string]string{"proof": hex.EncodeToString(m.Sum(nil))})
 	})
 	mux.HandleFunc("/api/v1/system/launch", func(w http.ResponseWriter, r *http.Request) {
@@ -68,7 +68,7 @@ func main() {
 			return
 		}
 		// The shell must prove the secret it put in this process environment (SDD-007 section 5.3).
-		if want := os.Getenv("STUARTY_LAUNCHER_SECRET"); want == "" || r.Header.Get("Stuarty-Launcher") != want {
+		if want := os.Getenv("VUKEM_VIDEO_LAUNCHER_SECRET"); want == "" || r.Header.Get("Vukem-Video-Launcher") != want {
 			w.WriteHeader(http.StatusForbidden)
 			return
 		}

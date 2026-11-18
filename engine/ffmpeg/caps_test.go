@@ -184,9 +184,9 @@ func TestNoEncoderNamesTheFix(t *testing.T) {
 		if !errors.As(err, &e) || e.Code != CodeNoEncoder {
 			t.Fatalf("%s: error = %v, want E_NO_ENCODER", name, err)
 		}
-		if !strings.Contains(e.Hint, "Use the FFmpeg that ships with Stuarty") ||
-			!strings.Contains(e.Hint, "STUARTY_ALLOW_USER_X264=true") ||
-			!strings.Contains(e.Hint, "STUARTY_FFMPEG") {
+		if !strings.Contains(e.Hint, "Use the FFmpeg that ships with Vukem Video") ||
+			!strings.Contains(e.Hint, "VUKEM_VIDEO_ALLOW_USER_X264=true") ||
+			!strings.Contains(e.Hint, "VUKEM_VIDEO_FFMPEG") {
 			t.Errorf("%s: the hint does not name the fix: %q", name, e.Hint)
 		}
 		if !strings.HasPrefix(e.Message, "No H.264 encoder works on this machine. Tried: ") ||

@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/engine/ffmpeg/ffargs"
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg/ffargs"
 )
 
 // snapshot reads the names that "ffmpeg -demuxers" or "-filters" of the pinned build listed (SDD-007 FF-04,

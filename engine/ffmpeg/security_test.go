@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/engine/ffmpeg/ffargs"
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg/ffargs"
 )
 
 func validBase(t *testing.T) []string {
@@ -266,7 +266,7 @@ func TestSecurity_T17_ProbeCeilings(t *testing.T) {
 	}
 }
 
-// SDD-007 4.5, T-16: as uid 0 the runner starts nothing unless STUARTY_INSECURE_ALLOW_ROOT is true.
+// SDD-007 4.5, T-16: as uid 0 the runner starts nothing unless VUKEM_VIDEO_INSECURE_ALLOW_ROOT is true.
 // The uid comes through a seam so the test runs on every system; Windows has no uid 0, so the real
 // uid is never 0 there and only the seam is exercised.
 func TestSecurity_T16_RefusesRoot(t *testing.T) {

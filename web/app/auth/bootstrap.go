@@ -7,13 +7,13 @@ import (
 	"os"
 	"strings"
 
-	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/vukem-video/service"
 )
 
 // Variables of the first administrator (SDD-000 section 10).
 const (
-	EnvAdminEmail    = "STUARTY_ADMIN_EMAIL"
-	EnvAdminPassword = "STUARTY_ADMIN_PASSWORD"
+	EnvAdminEmail    = "VUKEM_VIDEO_ADMIN_EMAIL"
+	EnvAdminPassword = "VUKEM_VIDEO_ADMIN_PASSWORD" //nolint:gosec // the name of a variable, not a credential
 	filePrefix       = "@file:"
 )
 

@@ -3,7 +3,7 @@ package command
 import (
 	"strings"
 
-	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
 func init() {
@@ -14,6 +14,7 @@ func init() {
 		Example:     `{"name": "Launch teaser v2"}`,
 		Errors:      []string{CodeValidation},
 		Scope:       ScopeEdit,
+		Phase:       Prototype,
 	}, applyProjectRename))
 
 	Register(Define(Spec{
@@ -25,6 +26,7 @@ func init() {
 		Example: `{"width": 720, "height": 1280}`,
 		Errors:  []string{CodeValidation},
 		Scope:   ScopeEdit,
+		Phase:   Prototype,
 	}, applySettingsSet))
 }
 

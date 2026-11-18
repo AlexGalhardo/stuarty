@@ -8,7 +8,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/core/plan"
+	"github.com/AlexGalhardo/vukem-video/core/plan"
 )
 
 func styledForAllEffects() plan.ResolvedStyle {

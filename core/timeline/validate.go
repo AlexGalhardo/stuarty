@@ -248,7 +248,6 @@ func (v *validator) tracks() {
 		if t.CaptionStyle != nil {
 			v.style(path+".caption_style", k, t.CaptionStyle, true)
 		}
-		v.processors(path, k, t.Processors, false)
 	}
 }
 
@@ -434,7 +433,7 @@ func (v *validator) itemFieldsForType(path, key string, it Item) {
 	media := it.Type == ItemClip || it.Type == ItemAudio
 	if !media &&
 		(it.Asset != "" || it.SourceIn != 0 || it.FadeIn != 0 || it.FadeOut != 0 || it.Denoise != 0 || it.Voice != "" ||
-			len(it.SpeedCurve) > 0 || it.Reverse || len(it.Processors) > 0) {
+			len(it.SpeedCurve) > 0 || it.Reverse) {
 		bad("asset")
 	}
 	if it.Type != ItemClip &&
@@ -497,7 +496,6 @@ func (v *validator) media(path, key string, it Item) {
 		v.add(VShape, path+".denoise", key, "denoise must be between 0 and 1")
 	}
 	v.voice(path, key, it)
-	v.processors(path, key, it.Processors, true)
 	if it.SourceIn < 0 {
 		v.add(VShape, path+".source_in", key, "source_in cannot be negative")
 	}
@@ -995,15 +993,6 @@ func (v *validator) keyframes(path, key string, it Item) {
 			}
 			switch k.Easing {
 			case "linear", "ease_in", "ease_out", "ease_in_out", "hold":
-				if len(k.Bezier) > 0 {
-					v.add(VKeyframes, kp+".bezier", key, "bezier needs the easing %q", EasingBezier)
-				}
-			case EasingBezier:
-				if !BezierValid(k.Bezier) {
-					v.add(VKeyframes, kp+".bezier", key,
-						"bezier must be four numbers, x1 and x2 from 0 to 1, y1 and y2 from %v to %v",
-						BezierMinY, BezierMaxY)
-				}
 			default:
 				v.add(VKeyframes, kp+".easing", key, "unknown easing %q", k.Easing)
 			}

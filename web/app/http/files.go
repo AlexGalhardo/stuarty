@@ -5,9 +5,9 @@ import (
 	"path"
 	"strconv"
 
-	"github.com/AlexGalhardo/stuarty/service"
-
 	"github.com/AlexGalhardo/vukem/web"
+
+	"github.com/AlexGalhardo/vukem-video/service"
 )
 
 type jobFileIn struct {

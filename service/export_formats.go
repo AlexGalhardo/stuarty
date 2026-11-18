@@ -3,8 +3,8 @@ package service
 import (
 	"strings"
 
-	"github.com/AlexGalhardo/stuarty/core/command"
-	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
 // The formats of an export job (SDD-003 section 2.8, SDD-004 section 8.1). The empty

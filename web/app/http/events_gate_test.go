@@ -9,8 +9,8 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/core/command"
-	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/service"
 )
 
 // TestEventsTwoStreamsGetEveryRevisionOnceInOrderUnderUndo is SDD-006 section 11 check 4: 200

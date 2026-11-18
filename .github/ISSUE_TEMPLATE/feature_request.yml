@@ -6,8 +6,8 @@ body:
   - type: markdown
     attributes:
       value: |
-        One idea per issue. Read the requirements in
-        [docs/prds](https://github.com/AlexGalhardo/stuarty/tree/main/docs/prds) first: some things are out of scope on purpose.
+        One idea per issue. Read the scope of the current phase in
+        [docs/prds](https://github.com/AlexGalhardo/vukem-video/tree/main/docs/prds) first: some things are out of scope on purpose.
   - type: dropdown
     id: area
     attributes:

@@ -14,12 +14,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/core/command"
-	"github.com/AlexGalhardo/stuarty/core/timeline"
-	"github.com/AlexGalhardo/stuarty/engine/ingest"
-	"github.com/AlexGalhardo/stuarty/service"
-
 	"github.com/AlexGalhardo/vukem/queue"
+
+	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/engine/ingest"
+	"github.com/AlexGalhardo/vukem-video/service"
 )
 
 const clipBytes = "not really a clip, but long enough for the store"
@@ -350,7 +350,7 @@ func TestImportLimits(t *testing.T) {
 
 	se := serviceError(t, err)
 	if se.Code != "E_LIMIT_EXCEEDED" || se.Details["limit"] != "import_bytes" || se.Details["ceiling"] != int64(20) ||
-		se.Details["variable"] != "STUARTY_MAX_IMPORT_BYTES" {
+		se.Details["variable"] != "VUKEM_VIDEO_MAX_IMPORT_BYTES" {
 		t.Errorf("error = %+v", se)
 	}
 

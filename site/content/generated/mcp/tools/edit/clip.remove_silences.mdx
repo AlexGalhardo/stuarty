@@ -1,6 +1,6 @@
 ---
 title: "clip.remove_silences"
-description: "Cuts the silences out of a clip or audio item, one item per stretch of speech."
+description: "Cuts the silent stretches out of a clip or an audio item, leaving one item per stretch of speech."
 wide: true
 ---
 
@@ -34,9 +34,9 @@ Replaces the clip or audio item by one item per non-silent stretch of its source
 - [`E_INVALID_STATE`](/docs/reference/error-codes#e_invalid_state)
 - [`E_LIMIT`](/docs/reference/error-codes#e_limit)
 
-## Scope
+## Scope and phase
 
-Scope `edit`. The scope is the one an API key needs in network mode. Run `stuarty command:help clip.remove_silences` for the same description from the binary, or call the [`command_help`](/docs/mcp/tools/command_help) tool.
+Scope `edit`, phase `alpha`. The scope is the one an API key needs in network mode. Run `vukem-video command:help clip.remove_silences` for the same description from the binary, or call the [`command_help`](/docs/mcp/tools/command_help) tool.
 
 ## Next steps
 
@@ -92,14 +92,14 @@ Scope `edit`. The scope is the one an API key needs in network mode. Run `stuart
 ```
 
 ```bash title="Terminal"
-stuarty edit --project prj_7k2m9x4q1b --ops batch.json --json
+vukem-video edit --project prj_7k2m9x4q1b --ops batch.json --json
 ```
 
 **Over HTTP**
 
 ```bash title="curl"
 curl -X POST "http://127.0.0.1:7878/api/v1/projects/prj_7k2m9x4q1b/edit" \
-  -H "Authorization: Bearer $STUARTY_KEY" \
+  -H "Authorization: Bearer $VUKEM_VIDEO_KEY" \
   -H "Content-Type: application/json" \
   -d '{
   "base_revision": 12,

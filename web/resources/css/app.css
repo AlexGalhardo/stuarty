@@ -157,7 +157,7 @@
 }
 
 :root {
-	/* Light chrome. */
+	/* Light chrome, the same hues as the Gio desktop palette. */
 	--background: oklch(0.967 0.003 264.5);
 	--foreground: oklch(0.230 0.012 264.3);
 	--card: oklch(1 0 0);
@@ -199,7 +199,7 @@
 	--brand: oklch(0.520 0.094 223.1);
 	--brand-foreground: oklch(1 0 0);
 
-	/* editor (section 2.5), light palette */
+	/* editor (section 2.5), matching the Gio light palette */
 	--ed-bg: oklch(0.967 0.003 264.5);
 	--ed-panel: oklch(1 0 0);
 	--ed-timeline: oklch(0.931 0.006 264.5);
@@ -234,7 +234,7 @@
 }
 
 .dark {
-	/* Dark chrome. */
+	/* Dark chrome, the same hues as the Gio desktop palette. */
 	--background: oklch(0.178 0.006 271.0);
 	--foreground: oklch(0.975 0.006 255.5);
 	--card: oklch(0.221 0.011 260.7);

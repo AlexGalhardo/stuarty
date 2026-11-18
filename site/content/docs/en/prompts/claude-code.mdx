@@ -1,50 +1,50 @@
 ---
 title: "Claude Code"
-description: "Register the Stuarty MCP server in Claude Code, then copy a setup prompt and task prompts that work."
+description: "Register the Vukem Video MCP server in Claude Code, then copy a setup prompt and task prompts that work."
 ---
 
 ## You will learn
 
-- how to register the Stuarty MCP server in Claude Code
+- how to register the Vukem Video MCP server in Claude Code
 - a setup prompt to paste as the first message
 - four prompts for the tasks people ask most: a vertical video with captions, a product commercial, cutting silences, and exporting
 
 ## The idea
 
-Claude Code starts `stuarty mcp` and gives its agent the 16 [tools](/docs/mcp/tools) of Stuarty. The agent edits the same projects you see in the editor. The prompts on this page are written to be pasted as they are: replace the words in capital letters (such as `PATH_TO_CLIP`) with your own, and nothing else.
+Claude Code starts `vukem-video mcp` and gives its agent the 16 [tools](/docs/mcp/tools) of Vukem Video. The agent edits the same projects you see in the editor. The prompts on this page are written to be pasted as they are: replace the words in capital letters (such as `PATH_TO_CLIP`) with your own, and nothing else.
 
 ## Register the server
 
 Run this in a terminal. `--` ends the options of Claude Code; everything after it is the command that starts the server.
 
 ```bash
-claude mcp add stuarty -- stuarty mcp
+claude mcp add vukem-video -- vukem-video mcp
 ```
 
 By default the server is stored for you and the current project only. Add `--scope user` (before the name) to use it in every project, or `--scope project` to write it to `.mcp.json` in the project root, which you can share with your team:
 
 ```bash
-claude mcp add --scope user stuarty -- stuarty mcp
+claude mcp add --scope user vukem-video -- vukem-video mcp
 ```
 
-Claude Code can also load the Stuarty skill, a guide of the edit loop, the rules and the commands. Write it once:
+Claude Code can also load the Vukem Video skill, a guide of the edit loop, the rules and the commands. Write it once:
 
 ```bash
-stuarty agent:docs --write ~/.claude/skills/stuarty
+vukem-video agent:docs --write ~/.claude/skills/vukem-video
 ```
 
 Source: [Connect Claude Code to tools via MCP](https://code.claude.com/docs/en/mcp).
 
 ## Check the connection
 
-Run `claude mcp get stuarty`, or type `/mcp` inside a Claude Code session. The status must be connected. `claude mcp list` shows every server and `claude mcp remove stuarty` removes it.
+Run `claude mcp get vukem-video`, or type `/mcp` inside a Claude Code session. The status must be connected. `claude mcp list` shows every server and `claude mcp remove vukem-video` removes it.
 
 ## Setup prompt
 
 Paste this as the first message of a session. It teaches the agent the loop that keeps an edit safe and checked.
 
 ```text
-You will edit videos with Stuarty through its MCP server, "stuarty".
+You will edit videos with Vukem Video through its MCP server, "vukem-video".
 
 1. Call project_list to check that the tools work, then tell me how many projects exist.
 2. Work in this loop. Read the project with project_get and note its revision. Change it with
@@ -74,7 +74,7 @@ Make a short vertical video with captions from the clip at PATH_TO_CLIP.
 2. List the templates with the template tool and create a project from "Vertical cut with
    captions", named NAME_OF_THE_VIDEO, with my clip in the clip slot.
 3. Transcribe the asset with job_start (kind transcribe) and wait for the job with job_get. If the
-   transcription helper is not installed, stop and tell me to run: stuarty tools:install
+   transcription helper is not installed, stop and tell me to run: vukem-video tools:install
    whisper
 4. Make the captions with the caption.from_transcript operation (call command_help first).
 5. Run lint and fix every error. Look at the frame at 2s with view and tell me whether the
@@ -139,7 +139,7 @@ Export the project NAME_OF_THE_PROJECT as an MP4.
 - Sending a prompt before the server is connected: the agent then answers from memory and invents commands. Run the check above first.
 - Leaving a word in capital letters in the prompt: the agent will ask you for it or guess.
 - Asking for an export and a look at the result in one step: ask for the check first, then export.
-- Transcribing with no helper installed: install it once with `stuarty tools:install whisper`.
+- Transcribing with no helper installed: install it once with `vukem-video tools:install whisper`.
 
 ## Next steps
 

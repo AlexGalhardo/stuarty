@@ -3,7 +3,7 @@
 # Run it from the repository root (or a worktree root): bash scripts/gate.sh [<tag>]
 # (or `task gate -- <tag>`). Each step logs to $TEMP/gate-<tag>/<step>.log; a failing step prints
 # `<step>_fail` and its first error lines, the script keeps going and ends with GATE_FAIL=<n>.
-# Set STUARTY_TEST_FFMPEG_DIR to an LGPL FFmpeg bin directory so the export tests do not skip.
+# Set VUKEM_VIDEO_TEST_FFMPEG_DIR to an LGPL FFmpeg bin directory so the export tests do not skip.
 set -uo pipefail
 
 tag="${1:-local}"
@@ -11,10 +11,10 @@ L="${TEMP:-${TMPDIR:-/tmp}}/gate-$tag"
 mkdir -p "$L"
 fail=0
 
-if [ -z "${STUARTY_TEST_FFMPEG_DIR:-}" ]; then
-	echo "ffmpeg: STUARTY_TEST_FFMPEG_DIR unset, export tests may skip"
+if [ -z "${VUKEM_VIDEO_TEST_FFMPEG_DIR:-}" ]; then
+	echo "ffmpeg: VUKEM_VIDEO_TEST_FFMPEG_DIR unset, export tests may skip"
 fi
-export STUARTY_MIN_FREE_BYTES=1
+export VUKEM_VIDEO_MIN_FREE_BYTES=1
 
 step() {
 	local name="$1"
@@ -45,8 +45,8 @@ step test go test ./... -count=1 -timeout 60m
 step race go test -race -short -count=1 -timeout 30m ./core/... ./service/... ./web/app/...
 step cover bash -c "go test -short -count=1 -coverprofile='$L/coverage.out' ./... && go run ./internal/tools/covergate '$L/coverage.out'"
 
-export STUARTY_E2E_HOME="${TEMP:-${TMPDIR:-/tmp}}/gate-e2e-$tag"
-export STUARTY_E2E_PORT=3471
+export VUKEM_VIDEO_E2E_HOME="${TEMP:-${TMPDIR:-/tmp}}/gate-e2e-$tag"
+export VUKEM_VIDEO_E2E_PORT=3471
 step sec go test -run TestSecurity_ ./... -count=1
 step web bash -c "cd web && bun run lint && bun run typecheck && bun run check:i18n && bun run check:thin-client && bun run test && bun run check:contrast && bun run check:hooks"
 step md bunx markdownlint-cli2@0.24.1 "**/*.md"

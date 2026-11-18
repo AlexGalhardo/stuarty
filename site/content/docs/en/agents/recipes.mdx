@@ -10,22 +10,22 @@ Each recipe is a sequence of CLI commands that works as written. The same operat
 ## Import, cut, caption and export
 
 ```bash
-stuarty project:create --name "Teaser" --id prj_7k2m9x4q1b
-stuarty media:import clip.mp4 --project prj_7k2m9x4q1b --asset-id ast_3c5v8n2w6d
-stuarty edit --project prj_7k2m9x4q1b --ops - <<'EOF'
+vukem-video project:create --name "Teaser" --id prj_7k2m9x4q1b
+vukem-video media:import clip.mp4 --project prj_7k2m9x4q1b --asset-id ast_3c5v8n2w6d
+vukem-video edit --project prj_7k2m9x4q1b --ops - <<'EOF'
 [{"op":"track.add","args":{"kind":"visual","name":"Video","id":"trk_f6g7h8j9k0"}},
  {"op":"track.add","args":{"kind":"visual","name":"Captions","id":"trk_a1b2c3d4e5"}},
  {"op":"clip.add","args":{"track_id":"trk_f6g7h8j9k0","asset_id":"ast_3c5v8n2w6d","start":"0s","duration":"2s","id":"itm_m1n2p3q4r5"}}]
 EOF
-stuarty edit --project prj_7k2m9x4q1b --ops - <<'EOF'
+vukem-video edit --project prj_7k2m9x4q1b --ops - <<'EOF'
 [{"op":"item.split","args":{"item_id":"itm_m1n2p3q4r5","at":"1s","new_id":"itm_c3d4e5f6g7"}},
  {"op":"item.delete","args":{"item_ids":["itm_c3d4e5f6g7"]}}]
 EOF
-stuarty edit --project prj_7k2m9x4q1b --ops - <<'EOF'
+vukem-video edit --project prj_7k2m9x4q1b --ops - <<'EOF'
 [{"op":"caption.add","args":{"track_id":"trk_a1b2c3d4e5","start":"0.1s","linked_item":"itm_m1n2p3q4r5","id":"itm_s6t7v8w9x0","words":[{"text":"Meet","start":"0s","duration":"0.3s"},{"text":"us.","start":"0.3s","duration":"0.3s"}]}}]
 EOF
-stuarty lint --project prj_7k2m9x4q1b
-stuarty export --project prj_7k2m9x4q1b
+vukem-video lint --project prj_7k2m9x4q1b
+vukem-video export --project prj_7k2m9x4q1b
 ```
 
 `lint` before `export` catches what would block the export. `export` waits for the job and prints the verified result.
@@ -37,11 +37,11 @@ To caption speech instead of typing the words, see "Captions from a transcript" 
 When another actor changed the objects your batch touches after your plan, an edit with a stale `--base` fails with `E_REVISION_CONFLICT` and exit code `2`. Here the project is at revision 1 and another actor changes the track first, which moves it to revision 2.
 
 ```bash
-stuarty edit --project prj_7k2m9x4q1b --actor other track.update track_id=trk_f6g7h8j9k0 name=Theirs
-stuarty edit --project prj_7k2m9x4q1b --base 1 track.update track_id=trk_f6g7h8j9k0 name=Mine
+vukem-video edit --project prj_7k2m9x4q1b --actor other track.update track_id=trk_f6g7h8j9k0 name=Theirs
+vukem-video edit --project prj_7k2m9x4q1b --base 1 track.update track_id=trk_f6g7h8j9k0 name=Mine
 # exit 2: E_REVISION_CONFLICT, details.diff lists what changed since revision 1
-stuarty project:show prj_7k2m9x4q1b
-stuarty edit --project prj_7k2m9x4q1b --base 2 track.update track_id=trk_f6g7h8j9k0 name=Mine
+vukem-video project:show prj_7k2m9x4q1b
+vukem-video edit --project prj_7k2m9x4q1b --base 2 track.update track_id=trk_f6g7h8j9k0 name=Mine
 ```
 
 Read `details.diff`, plan again against the current revision and send the batch again. The batch that failed changed nothing.
@@ -51,23 +51,23 @@ Read `details.diff`, plan again against the current revision and send the batch 
 The project must have a text item marked as a slot (here `headline`) before it is saved as a template.
 
 ```bash
-stuarty edit --project prj_7k2m9x4q1b --base 1 slot.mark item_id=itm_t1t2t3t4t5 name=headline
-stuarty template:save --project prj_7k2m9x4q1b --name "Spring sale"
-stuarty template:new <template id> --name "Spring sale" --id prj_6t4y2w8j1m --fill - <<'EOF'
+vukem-video edit --project prj_7k2m9x4q1b --base 1 slot.mark item_id=itm_t1t2t3t4t5 name=headline
+vukem-video template:save --project prj_7k2m9x4q1b --name "Spring sale"
+vukem-video template:new <template id> --name "Spring sale" --id prj_6t4y2w8j1m --fill - <<'EOF'
 {"headline":{"text":"Spring sale"}}
 EOF
-stuarty export --project prj_6t4y2w8j1m
+vukem-video export --project prj_6t4y2w8j1m
 ```
 
 A required slot that is missing returns an error that names the slot in `path`; fix the fill and run the command again.
 
 ## Captions from a transcript
 
-`transcribe` needs the transcription helper, installed once by a person with `stuarty tools:install whisper`. The project has a clip `itm_m1n2p3q4r5` on a video track and an empty track `trk_a1b2c3d4e5` for the captions.
+`transcribe` needs the transcription helper, installed once by a person with `vukem-video tools:install whisper`. The project has a clip `itm_m1n2p3q4r5` on a video track and an empty track `trk_a1b2c3d4e5` for the captions.
 
 ```bash
-stuarty transcribe --project prj_7k2m9x4q1b --asset ast_3c5v8n2w6d --language en --wait
-stuarty edit --project prj_7k2m9x4q1b caption.from_transcript clip_item_id=itm_m1n2p3q4r5 track_id=trk_a1b2c3d4e5 new_ids:='["itm_c1c2c3c4c5","itm_c6c7c8c9c0"]'
+vukem-video transcribe --project prj_7k2m9x4q1b --asset ast_3c5v8n2w6d --language en --wait
+vukem-video edit --project prj_7k2m9x4q1b caption.from_transcript clip_item_id=itm_m1n2p3q4r5 track_id=trk_a1b2c3d4e5 new_ids:='["itm_c1c2c3c4c5","itm_c6c7c8c9c0"]'
 ```
 
 Pass one new id per caption line.
@@ -77,10 +77,10 @@ Pass one new id per caption line.
 With the transcript of the asset in place, cut the silent parts out of a clip.
 
 ```bash
-stuarty edit --project prj_7k2m9x4q1b clip.remove_silences item_id=itm_m1n2p3q4r5 new_ids:='["itm_s1s2s3s4s5","itm_s6s7s8s9s0"]'
+vukem-video edit --project prj_7k2m9x4q1b clip.remove_silences item_id=itm_m1n2p3q4r5 new_ids:='["itm_s1s2s3s4s5","itm_s6s7s8s9s0"]'
 ```
 
-Pass one new id per piece left; `stuarty media:inspect --sections silences` lists them.
+Pass one new id per piece left; `vukem-video media:inspect --sections silences` lists them.
 
 ## Common mistakes
 

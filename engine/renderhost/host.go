@@ -13,8 +13,8 @@ import (
 	"github.com/tetratelabs/wazero"
 	"github.com/tetratelabs/wazero/api"
 
-	"github.com/AlexGalhardo/stuarty/engine/bitmap"
-	"github.com/AlexGalhardo/stuarty/engine/lut"
+	"github.com/AlexGalhardo/vukem-video/engine/bitmap"
+	"github.com/AlexGalhardo/vukem-video/engine/lut"
 )
 
 // Default budgets of vr_init (SDD-013 section 7.2).

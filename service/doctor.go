@@ -12,10 +12,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
-	"github.com/AlexGalhardo/stuarty/engine/transcribe"
-	"github.com/AlexGalhardo/stuarty/service/connections"
-	"github.com/AlexGalhardo/stuarty/service/workspace"
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
+	"github.com/AlexGalhardo/vukem-video/engine/transcribe"
+	"github.com/AlexGalhardo/vukem-video/service/workspace"
 )
 
 // Modes of the server a Doctor report describes.
@@ -39,7 +38,7 @@ type DoctorOptions struct {
 	Integrity func(ctx context.Context) (string, error)
 	// Child is the policy the owner applied to FFmpeg and whisper.cpp (SDD-007 sections 6.5 and 6.7).
 	Child ChildPolicy
-	// GPURenderer is set when STUARTY_EXPORT_RENDERER=gpu asks for the GPU render host.
+	// GPURenderer is set when VUKEM_VIDEO_EXPORT_RENDERER=gpu asks for the GPU render host.
 	GPURenderer GPURenderer
 }
 
@@ -47,7 +46,7 @@ type DoctorOptions struct {
 type GPURenderer struct {
 	// Requested is true when the configured renderer is gpu.
 	Requested bool
-	// Host is the absolute path of stuarty-render; empty when it was not found.
+	// Host is the absolute path of vukem-render; empty when it was not found.
 	Host string
 }
 
@@ -57,7 +56,7 @@ type ChildPolicy struct {
 	Limits bool
 	// LimitsWhy is why the limits are unavailable, when they are.
 	LimitsWhy string
-	// Sandbox is the path of bwrap when STUARTY_SANDBOX=bwrap wraps every child; empty is none.
+	// Sandbox is the path of bwrap when VUKEM_VIDEO_SANDBOX=bwrap wraps every child; empty is none.
 	Sandbox string
 }
 
@@ -126,22 +125,22 @@ func (s *svc) bundleStamp() string { return s.now().UTC().Format("20060102T15040
 // (SDD-007 section 11). The check below is by name and by pattern, so a new
 // secret named like these is covered before it is listed.
 var secretVars = map[string]bool{
-	"APP_KEY":                    true,
-	"STUARTY_KEY":                true,
-	"STUARTY_TRANSCRIBE_KEY":     true,
-	"STUARTY_ADMIN_PASSWORD":     true,
-	"OTEL_EXPORTER_OTLP_HEADERS": true,
-	"STUARTY_TRANSCRIBE_TOKEN":   true,
+	"APP_KEY":                      true,
+	"VUKEM_VIDEO_KEY":              true,
+	"VUKEM_VIDEO_TRANSCRIBE_KEY":   true,
+	"VUKEM_VIDEO_ADMIN_PASSWORD":   true,
+	"OTEL_EXPORTER_OTLP_HEADERS":   true,
+	"VUKEM_VIDEO_TRANSCRIBE_TOKEN": true,
 }
 
 // plainVars are the only variables whose value is printed: limits and switches that say nothing
-// about the machine. Every other STUARTY_ variable prints "set".
+// about the machine. Every other VUKEM_VIDEO_ variable prints "set".
 var plainVars = map[string]bool{
-	"STUARTY_MAX_IMPORT_BYTES": true, "STUARTY_MAX_EXPORT_BYTES": true, "STUARTY_MIN_FREE_BYTES": true,
-	"STUARTY_MAX_INGESTS": true, "STUARTY_MAX_EXPORTS": true, "STUARTY_MAX_EXPORTS_PER_KEY": true,
-	"STUARTY_MAX_TRANSCRIBES": true, "STUARTY_MAX_TRANSCRIBES_PER_KEY": true,
-	"STUARTY_MAX_TRANSCRIBE_SECONDS": true, "STUARTY_WHISPER_MODEL": true, "STUARTY_ENCODER": true,
-	"STUARTY_ALLOW_USER_X264": true, "STUARTY_EXPORT_RENDERER": true,
+	"VUKEM_VIDEO_MAX_IMPORT_BYTES": true, "VUKEM_VIDEO_MAX_EXPORT_BYTES": true, "VUKEM_VIDEO_MIN_FREE_BYTES": true,
+	"VUKEM_VIDEO_MAX_INGESTS": true, "VUKEM_VIDEO_MAX_EXPORTS": true, "VUKEM_VIDEO_MAX_EXPORTS_PER_KEY": true,
+	"VUKEM_VIDEO_MAX_TRANSCRIBES": true, "VUKEM_VIDEO_MAX_TRANSCRIBES_PER_KEY": true,
+	"VUKEM_VIDEO_MAX_TRANSCRIBE_SECONDS": true, "VUKEM_VIDEO_WHISPER_MODEL": true, "VUKEM_VIDEO_ENCODER": true,
+	"VUKEM_VIDEO_ALLOW_USER_X264": true, "VUKEM_VIDEO_EXPORT_RENDERER": true,
 }
 
 func isSecretVar(name string) bool {
@@ -201,7 +200,7 @@ func (s *svc) Doctor(ctx context.Context, req DoctorRequest) (*DoctorResult, err
 
 	if req.GC && !c.Browser && !c.Operator {
 		return nil, newError(CodeForbidden, "only the person running the server can run the sweep.").
-			withHint("run it from the terminal of the server machine: stuarty doctor --gc")
+			withHint("run it from the terminal of the server machine: vukem-video doctor --gc")
 	}
 
 	res := &DoctorResult{
@@ -276,7 +275,7 @@ func sweepText(r SweepResult) string {
 func doctorText(r *DoctorResult) string {
 	var b strings.Builder
 
-	fmt.Fprintf(&b, "stuarty %s (%s, pid %d)\n", r.Version, r.Mode, r.PID)
+	fmt.Fprintf(&b, "vukem-video %s (%s, pid %d)\n", r.Version, r.Mode, r.PID)
 
 	for _, c := range r.Checks {
 		state := c.status()
@@ -317,7 +316,7 @@ func (s *svc) doctorChecks(ctx context.Context, privileged, verify bool) []Docto
 	})
 
 	if privileged {
-		out = append(out, s.environmentCheck(), s.vaultCheck())
+		out = append(out, s.environmentCheck())
 	}
 
 	if verify {
@@ -374,7 +373,7 @@ func licenseCheck(in *ffmpeg.Installation, privileged bool) DoctorCheck {
 	case lic.Name == "gpl":
 		licHint = "this FFmpeg is GPL (" + gplFlags(in.Info.Flags) + "), not the LGPL build the product is made for: " +
 			"fine for your own use, not for anything this project ships or redistributes; " +
-			"point STUARTY_FFMPEG at an LGPL build (the pinned one, or the FFmpeg of the container image)"
+			"point VUKEM_VIDEO_FFMPEG at an LGPL build (the pinned one, or the FFmpeg of the container image)"
 	}
 
 	parts := []string{lic.Name + versionSuffix(lic.Version3), "flavour " + string(fl.Name)}
@@ -451,7 +450,7 @@ func (s *svc) ffmpegCoreChecks(ctx context.Context, privileged bool) (checks []D
 	if r == nil || r.In == nil {
 		return []DoctorCheck{{
 			Name: "ffmpeg.binary", OK: false, Detail: "E_FFMPEG_MISSING: no usable FFmpeg was found",
-			Hint: "install FFmpeg 9 or set STUARTY_FFMPEG to its absolute path; import and export need it",
+			Hint: "install FFmpeg 9 or set VUKEM_VIDEO_FFMPEG to its absolute path; import and export need it",
 		}}, ""
 	}
 
@@ -574,7 +573,7 @@ func (s *svc) toolCheck(kind, goos, goarch string) DoctorCheck {
 		}
 
 		check.Detail = fmt.Sprintf("not installed or changed since the install, %d bytes to download", e.Bytes)
-		check.Hint = `Run "stuarty tools:install whisper".`
+		check.Hint = `Run "vukem-video tools:install whisper".`
 
 		return check
 	}
@@ -627,7 +626,7 @@ func (s *svc) workspaceChecks(ctx context.Context, privileged bool) []DoctorChec
 
 			if s.limits.MinFreeBytes > 0 && n < uint64(s.limits.MinFreeBytes) {
 				healthy = false
-				hint = "free space on the disk of the workspace or lower STUARTY_MIN_FREE_BYTES"
+				hint = "free space on the disk of the workspace or lower VUKEM_VIDEO_MIN_FREE_BYTES"
 			}
 		}
 	}
@@ -674,7 +673,7 @@ func cloudSyncFolder(p string) string {
 	return ""
 }
 
-// environmentCheck lists the STUARTY_* variables that are set: the value
+// environmentCheck lists the VUKEM_VIDEO_* variables that are set: the value
 // of a plain one, `set` for a secret, and nothing for a path unless the caller
 // is privileged (the caller of this function is).
 func (s *svc) environmentCheck() DoctorCheck {
@@ -682,7 +681,7 @@ func (s *svc) environmentCheck() DoctorCheck {
 
 	for _, kv := range s.environ() {
 		name, value, ok := strings.Cut(kv, "=")
-		if !ok || !strings.HasPrefix(name, "STUARTY_") || value == "" {
+		if !ok || !strings.HasPrefix(name, "VUKEM_VIDEO_") || value == "" {
 			continue
 		}
 
@@ -695,40 +694,12 @@ func (s *svc) environmentCheck() DoctorCheck {
 
 	sort.Strings(parts)
 
-	detail := "no STUARTY_ variable is set"
+	detail := "no VUKEM_VIDEO_ variable is set"
 	if len(parts) > 0 {
 		detail = strings.Join(parts, " ")
 	}
 
 	return DoctorCheck{Name: "environment", OK: true, Detail: detail}
-}
-
-// vaultCheck says where the master key of the vault comes from and whether it opens the vault
-// (SDD-014 section 8). The owner removes the key variables from its environment, so this check, not
-// environment, is where they show; it names the provider and never a value or a path.
-func (s *svc) vaultCheck() DoctorCheck {
-	if s.conns == nil {
-		// New always builds a registry; only a service assembled by hand in a test has none.
-		return DoctorCheck{Name: "vault", OK: true, Detail: "no vault in this process"}
-	}
-
-	st := s.conns.VaultStatus()
-
-	file := "no vault file yet"
-	if st.Exists {
-		file = "vault.json present"
-	}
-
-	check := DoctorCheck{Name: "vault", OK: st.Err == nil, Detail: "master key from " + st.Provider + "; " + file}
-
-	if st.Err != nil {
-		check.Hint = "the vault cannot be read"
-		if _, hint, ok := connections.Locked(st.Err); ok {
-			check.Hint = hint
-		}
-	}
-
-	return check
 }
 
 // sanitizeValue keeps a value on one line and short.
@@ -769,7 +740,7 @@ func (s *svc) verifyChecks() []DoctorCheck {
 				check.OK = true
 			} else {
 				check.Detail += ": the file differs from what was installed"
-				check.Hint = "install it again with stuarty tools:install"
+				check.Hint = "install it again with vukem-video tools:install"
 			}
 
 			out = append(out, check)
@@ -830,7 +801,7 @@ func (s *svc) childPolicyChecks() []DoctorCheck {
 
 	sandbox := DoctorCheck{
 		Name: "child.sandbox", OK: true,
-		Detail: "unavailable: not requested (STUARTY_SANDBOX is unset); children run with the user's privileges",
+		Detail: "unavailable: not requested (VUKEM_VIDEO_SANDBOX is unset); children run with the user's privileges",
 	}
 
 	if p.Sandbox != "" {
@@ -841,7 +812,7 @@ func (s *svc) childPolicyChecks() []DoctorCheck {
 }
 
 // rendererChecks is export.renderer, present only when the GPU renderer was requested. A missing
-// stuarty-render is not a failure: the export draws on the CPU. The path is shown only to a privileged
+// vukem-render is not a failure: the export draws on the CPU. The path is shown only to a privileged
 // caller, like the FFmpeg paths.
 func (s *svc) rendererChecks(privileged bool) []DoctorCheck {
 	g := s.doctor.GPURenderer
@@ -852,14 +823,14 @@ func (s *svc) rendererChecks(privileged bool) []DoctorCheck {
 	if g.Host == "" {
 		return []DoctorCheck{{
 			Name: "export.renderer", OK: true,
-			Detail: "gpu requested, stuarty-render not found, using cpu",
-			Hint:   "put stuarty-render next to the server executable or in ../libexec/stuarty",
+			Detail: "gpu requested, vukem-render not found, using cpu",
+			Hint:   "put vukem-render next to the server executable or in ../libexec/vukem-video",
 		}}
 	}
 
-	detail := "gpu requested, stuarty-render found"
+	detail := "gpu requested, vukem-render found"
 	if privileged {
-		detail = "gpu requested, stuarty-render at " + g.Host
+		detail = "gpu requested, vukem-render at " + g.Host
 	}
 
 	return []DoctorCheck{{Name: "export.renderer", OK: true, Detail: detail}}

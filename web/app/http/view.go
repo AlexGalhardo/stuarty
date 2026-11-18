@@ -8,38 +8,36 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/AlexGalhardo/stuarty/service"
-
 	"github.com/AlexGalhardo/vukem/web"
+
+	"github.com/AlexGalhardo/vukem-video/service"
 )
 
 type frameIn struct {
-	ID         string `json:"id"                    validate:"required"`
-	TimelineID string `json:"timeline_id,omitempty"                     doc:"The timeline of the project; required when the project has several."`
-	At         string `json:"at,omitempty"                              doc:"The time to render; required."`
-	Rev        int64  `json:"rev,omitempty"                             doc:"Must be the current revision when given."`
-	MaxTokens  int    `json:"max_tokens,omitempty"`
-	Width      int    `json:"width,omitempty"`
+	ID        string `json:"id"                   validate:"required"`
+	At        string `json:"at,omitempty"                             doc:"The time to render; required."`
+	Rev       int64  `json:"rev,omitempty"                            doc:"Must be the current revision when given."`
+	MaxTokens int    `json:"max_tokens,omitempty"`
+	Width     int    `json:"width,omitempty"`
 }
 
 type sheetIn struct {
-	ID         string `json:"id"                    validate:"required"`
-	TimelineID string `json:"timeline_id,omitempty"                     doc:"The timeline of the project; required when the project has several."`
-	Times      string `json:"times,omitempty"                           doc:"Comma-separated times, 2 to 16."`
-	From       string `json:"from,omitempty"`
-	Until      string `json:"until,omitempty"`
-	To         string `json:"to,omitempty"                              doc:"Deprecated alias of until (whole frames), removed at 1.0."`
-	Count      int    `json:"count,omitempty"`
-	Cols       int    `json:"cols,omitempty"`
-	Rev        int64  `json:"rev,omitempty"                             doc:"Must be the current revision when given."`
-	MaxTokens  int    `json:"max_tokens,omitempty"`
+	ID        string `json:"id"                   validate:"required"`
+	Times     string `json:"times,omitempty"                          doc:"Comma-separated times, 2 to 16."`
+	From      string `json:"from,omitempty"`
+	Until     string `json:"until,omitempty"`
+	To        string `json:"to,omitempty"                             doc:"Deprecated alias of until (whole frames), removed at 1.0."`
+	Count     int    `json:"count,omitempty"`
+	Cols      int    `json:"cols,omitempty"`
+	Rev       int64  `json:"rev,omitempty"                            doc:"Must be the current revision when given."`
+	MaxTokens int    `json:"max_tokens,omitempty"`
 }
 
 // projectsFrame is GET /projects/{id}/frame (SDD-003 section 6.5): the JPEG, or
 // the ViewResult as JSON when the client asks for application/json.
 func (h *apiHandler) projectsFrame(c *web.Ctx, in frameIn) (noIn, error) {
 	res, err := h.Service.ViewFrame(c.Context(), service.ViewFrameRequest{
-		ProjectID: in.ID, TimelineID: in.TimelineID, At: in.At, MaxTokens: in.MaxTokens, Width: in.Width, Pin: in.Rev,
+		ProjectID: in.ID, At: in.At, MaxTokens: in.MaxTokens, Width: in.Width, Pin: in.Rev,
 	})
 	if err != nil {
 		return noIn{}, err
@@ -62,15 +60,8 @@ func (h *apiHandler) projectsSheet(c *web.Ctx, in sheetIn) (noIn, error) {
 	}
 
 	res, err := h.Service.ViewSheet(c.Context(), service.ViewSheetRequest{
-		ProjectID:  in.ID,
-		TimelineID: in.TimelineID,
-		Times:      times,
-		From:       in.From,
-		Until:      until,
-		Count:      in.Count,
-		Cols:       in.Cols,
-		MaxTokens:  in.MaxTokens,
-		Pin:        in.Rev,
+		ProjectID: in.ID, Times: times, From: in.From, Until: until, Count: in.Count, Cols: in.Cols,
+		MaxTokens: in.MaxTokens, Pin: in.Rev,
 	})
 	if err != nil {
 		return noIn{}, err
@@ -153,13 +144,12 @@ func untilAlias[T comparable](until, to T) (T, error) {
 }
 
 type planIn struct {
-	ID         string `json:"id"                    validate:"required"`
-	TimelineID string `json:"timeline_id,omitempty"                     doc:"The timeline of the project; required when the project has several."`
-	From       int    `json:"from,omitempty"                            doc:"The first frame of the window, as a whole number of frames (not a time such as 1s); default 0."`
-	Until      int    `json:"until,omitempty"                           doc:"The end of the window in whole frames (not a time such as 1s), not included; at most 300 frames after from. Required."`
-	To         int    `json:"to,omitempty"                              doc:"Deprecated alias of until (whole frames), removed at 1.0."`
-	Rev        int64  `json:"rev,omitempty"                             doc:"Must be the current revision when given."`
-	Width      int    `json:"width,omitempty"                           doc:"The width in pixels the preview draws at, 16 to 4096; bitmaps are rasterized at that scale. Default: the project width."`
+	ID    string `json:"id"              validate:"required"`
+	From  int    `json:"from,omitempty"                      doc:"The first frame of the window, as a whole number of frames (not a time such as 1s); default 0."`
+	Until int    `json:"until,omitempty"                     doc:"The end of the window in whole frames (not a time such as 1s), not included; at most 300 frames after from. Required."`
+	To    int    `json:"to,omitempty"                        doc:"Deprecated alias of until (whole frames), removed at 1.0."`
+	Rev   int64  `json:"rev,omitempty"                       doc:"Must be the current revision when given."`
+	Width int    `json:"width,omitempty"                     doc:"The width in pixels the preview draws at, 16 to 4096; bitmaps are rasterized at that scale. Default: the project width."`
 }
 
 // projectsPlan is GET /projects/{id}/plan (SDD-004 section 10).
@@ -171,14 +161,7 @@ func (h *apiHandler) projectsPlan(c *web.Ctx, in planIn) (service.PlanWindowResu
 
 	res, err := h.Service.PlanWindow(
 		c.Context(),
-		service.PlanWindowRequest{
-			ProjectID:  in.ID,
-			TimelineID: in.TimelineID,
-			From:       in.From,
-			Until:      until,
-			Width:      in.Width,
-			Pin:        in.Rev,
-		},
+		service.PlanWindowRequest{ProjectID: in.ID, From: in.From, Until: until, Width: in.Width, Pin: in.Rev},
 	)
 	if res != nil {
 		revisionHeader(c, res.Revision)
@@ -188,17 +171,16 @@ func (h *apiHandler) projectsPlan(c *web.Ctx, in planIn) (service.PlanWindowResu
 }
 
 type snapPointsIn struct {
-	ID         string `json:"id"                    validate:"required"`
-	TimelineID string `json:"timeline_id,omitempty"                     doc:"The timeline of the project; required when the project has several."`
-	Rev        int64  `json:"rev,omitempty"                             doc:"The revision the caller holds; 409 when the project has moved on."`
-	Words      int    `json:"words,omitempty"                           doc:"1 adds the start and end of every caption word."`
+	ID    string `json:"id"              validate:"required"`
+	Rev   int64  `json:"rev,omitempty"                       doc:"The revision the caller holds; 409 when the project has moved on."`
+	Words int    `json:"words,omitempty"                     doc:"1 adds the start and end of every caption word."`
 }
 
 // snapPoints is GET /projects/{id}/snap-points (SDD-012 section 7.8).
 func (h *apiHandler) snapPoints(c *web.Ctx, in snapPointsIn) (service.SnapPointsResult, error) {
 	res, err := h.Service.SnapPoints(
 		c.Context(),
-		service.SnapPointsRequest{ProjectID: in.ID, TimelineID: in.TimelineID, Revision: in.Rev, Words: in.Words == 1},
+		service.SnapPointsRequest{ProjectID: in.ID, Revision: in.Rev, Words: in.Words == 1},
 	)
 	if res != nil {
 		revisionHeader(c, res.Revision)
@@ -215,27 +197,13 @@ func (h *apiHandler) fontList(c *web.Ctx, _ noIn) (service.FontListResult, error
 }
 
 type assetListIn struct {
-	pageIn
-	Kind     string `json:"kind,omitempty"     doc:"image, video, audio or lut; omit it for every kind."`
-	Section  string `json:"section,omitempty"  doc:"visual (image, lut) or video (video, audio): the two sections of the library."`
-	Tag      string `json:"tag,omitempty"      doc:"Keep the files that carry this tag."`
-	Project  string `json:"project,omitempty"  doc:"Keep the files a project, or one of its timelines, uses."`
-	Origin   string `json:"origin,omitempty"   doc:"imported, generated, fetched_by_agent or rendered_externally."`
-	Reusable string `json:"reusable,omitempty" doc:"true keeps the files marked reusable, false the others."`
-	Text     string `json:"text,omitempty"     doc:"A full-text query over name, tags, description and origin; at most 8 words."`
+	Limit int    `json:"limit,omitempty" doc:"Keep the first files of the list; the default and the largest are 500."`
+	Kind  string `json:"kind,omitempty"  doc:"image, video or audio; omit it for every kind."`
 }
 
-// assetList is GET /assets: the files of the library by content hash (VV-117, SDD-011 section 14).
+// assetList is GET /assets: the files of the workspace by content hash (VV-117).
 func (h *apiHandler) assetList(c *web.Ctx, in assetListIn) (service.AssetListResult, error) {
-	reusable, err := parseReusable(in.Reusable)
-	if err != nil {
-		return service.AssetListResult{}, err
-	}
-
-	res, err := h.Service.AssetList(c.Context(), service.AssetListRequest{
-		Kind: in.Kind, Section: in.Section, Tag: in.Tag, Project: in.Project, Origin: in.Origin,
-		Reusable: reusable, Text: in.Text, Limit: in.Limit, Cursor: in.Cursor,
-	})
+	res, err := h.Service.AssetList(c.Context(), service.AssetListRequest{Kind: in.Kind, Limit: in.Limit})
 
 	return deref(res), err
 }

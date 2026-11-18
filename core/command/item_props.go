@@ -4,7 +4,7 @@ import (
 	"math"
 	"slices"
 
-	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
 func init() {
@@ -15,6 +15,7 @@ func init() {
 		Example:     `{"item_id": "itm_m1n2p3q4r5", "name": "Intro shot"}`,
 		Errors:      []string{CodeValidation, CodeNotFound},
 		Scope:       ScopeEdit,
+		Phase:       Alpha,
 	}, applyItemRename))
 
 	Register(Define(Spec{
@@ -25,6 +26,7 @@ func init() {
 		Example: `{"item_id": "itm_s6t7v8w9x0", "x": 540, "scale": 1.5}`,
 		Errors:  []string{CodeValidation, CodeNotFound, CodeTypeMismatch, CodeInvalidState},
 		Scope:   ScopeEdit,
+		Phase:   Alpha,
 	}, applyItemSetTransform))
 
 	Register(Define(Spec{
@@ -41,11 +43,12 @@ func init() {
 		Example: `{"item_id": "itm_m1n2p3q4r5", "edge": "in", "kind": "fade"}`,
 		Errors:  []string{CodeValidation, CodeInvalidTime, CodeNotFound, CodeTypeMismatch, CodeInvalidState},
 		Scope:   ScopeEdit,
+		Phase:   Alpha,
 	}, applyItemSetTransition))
 
 	Register(Define(Spec{
 		Name:    "item.set_audio",
-		Summary: "Sets the volume, fades, mute, noise reduction or voice of a clip or audio item.",
+		Summary: "Sets the volume, the fades, the mute flag, the noise reduction or the voice of a clip or audio item.",
 		Description: "Sets the given values. Volume 1, fades of 0, audio_muted false, denoise 0 and voice none clear " +
 			"the stored value. audio_muted applies to clip items only. denoise is the noise reduction strength, 0 to " +
 			"1. voice is a preset for speech: clear, warm, deep, bright or radio. The two fades together cannot be " +
@@ -55,6 +58,7 @@ func init() {
 			CodeValidation, CodeInvalidTime, CodeNotFound, CodeTypeMismatch, CodeInvalidState,
 		},
 		Scope: ScopeEdit,
+		Phase: Alpha,
 	}, applyItemSetAudio))
 }
 

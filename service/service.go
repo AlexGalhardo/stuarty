@@ -3,31 +3,20 @@ package service
 import (
 	"context"
 	"errors"
-	"io/fs"
 	"log/slog"
-	"path/filepath"
-	"slices"
 	"sync"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/core/command"
-	"github.com/AlexGalhardo/stuarty/core/lint"
-	"github.com/AlexGalhardo/stuarty/core/plan"
-	"github.com/AlexGalhardo/stuarty/core/timeline"
-	"github.com/AlexGalhardo/stuarty/engine/export"
-	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
-	"github.com/AlexGalhardo/stuarty/engine/ingest"
-	"github.com/AlexGalhardo/stuarty/engine/rasterize"
-	enginestore "github.com/AlexGalhardo/stuarty/engine/store"
-	"github.com/AlexGalhardo/stuarty/engine/transcribe"
-	"github.com/AlexGalhardo/stuarty/service/agenthost"
-	"github.com/AlexGalhardo/stuarty/service/approval"
-	"github.com/AlexGalhardo/stuarty/service/connections"
-	"github.com/AlexGalhardo/stuarty/service/connections/oauth"
-	"github.com/AlexGalhardo/stuarty/service/library"
-	"github.com/AlexGalhardo/stuarty/service/providers"
-	"github.com/AlexGalhardo/stuarty/service/social"
-	"github.com/AlexGalhardo/stuarty/service/workspace"
+	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/core/lint"
+	"github.com/AlexGalhardo/vukem-video/core/plan"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
+	"github.com/AlexGalhardo/vukem-video/engine/ingest"
+	"github.com/AlexGalhardo/vukem-video/engine/rasterize"
+	enginestore "github.com/AlexGalhardo/vukem-video/engine/store"
+	"github.com/AlexGalhardo/vukem-video/engine/transcribe"
+	"github.com/AlexGalhardo/vukem-video/service/workspace"
 )
 
 // Service is the single application boundary (ADR-0008): the UI, MCP, CLI and
@@ -36,13 +25,6 @@ import (
 // bundles, OpenTimelineIO and system. Every method returns a *Error on
 // failure and never a partial result with a non-nil error.
 type Service interface {
-	ProductionService
-	WritingService
-	BriefingService
-	AssetLibraryService
-	ChatService
-	MotionService
-
 	ProjectList(ctx context.Context, req ProjectListRequest) (*ProjectListResult, error)
 	ProjectCreate(ctx context.Context, req ProjectCreateRequest) (*ProjectCreateResult, error)
 	ProjectGet(ctx context.Context, req ProjectGetRequest) (*ProjectGetResult, error)
@@ -55,12 +37,6 @@ type Service interface {
 	HistoryList(ctx context.Context, req HistoryListRequest) (*HistoryListResult, error)
 	Undo(ctx context.Context, req UndoRequest) (*UndoResult, error)
 	Redo(ctx context.Context, req UndoRequest) (*UndoResult, error)
-	HistoryRevert(ctx context.Context, req HistoryRevertRequest) (*HistoryRevertResult, error)
-	HistoryDiff(ctx context.Context, req HistoryDiffRequest) (*HistoryDiffResult, error)
-	CheckpointCreate(ctx context.Context, req CheckpointCreateRequest) (*Checkpoint, error)
-	CheckpointList(ctx context.Context, req CheckpointListRequest) (*CheckpointListResult, error)
-	CheckpointRename(ctx context.Context, req CheckpointRenameRequest) (*Checkpoint, error)
-	CheckpointRemove(ctx context.Context, req CheckpointRemoveRequest) (*Checkpoint, error)
 
 	Lint(ctx context.Context, req LintRequest) (*LintResult, error)
 
@@ -80,36 +56,6 @@ type Service interface {
 	BrandKitGet(ctx context.Context, req BrandKitGetRequest) (*BrandKit, error)
 	BrandKitSet(ctx context.Context, req BrandKitSetRequest) (*BrandKit, error)
 
-	// The library: memory notes, skills and prompts kept as files in the workspace (SDD-018). The text of every
-	// entry is untrusted; a skill that a person has not reviewed is not offered to an agent.
-	MemoryList(ctx context.Context, req MemoryListRequest) (*LibraryListResult, error)
-	MemoryGet(ctx context.Context, req LibraryRef) (*MemoryGetResult, error)
-	MemoryWrite(ctx context.Context, req MemoryWriteRequest) (*MemoryWriteResult, error)
-	MemoryRemove(ctx context.Context, req LibraryRef) (*LibraryRemoveResult, error)
-	SkillList(ctx context.Context, req SkillListRequest) (*LibraryListResult, error)
-	SkillGet(ctx context.Context, req LibraryRef) (*SkillGetResult, error)
-	SkillWrite(ctx context.Context, req SkillWriteRequest) (*SkillWriteResult, error)
-	SkillImport(ctx context.Context, req SkillImportRequest) (*SkillImportResult, error)
-	SkillMarkReviewed(ctx context.Context, req SkillReviewRequest) (*SkillReviewResult, error)
-	SkillLint(ctx context.Context, req LibraryRef) (*SkillLintResult, error)
-	SkillExport(ctx context.Context, req SkillExportRequest) (*SkillExportResult, error)
-	PromptList(ctx context.Context, req PromptListRequest) (*LibraryListResult, error)
-	PromptGet(ctx context.Context, req LibraryRef) (*PromptGetResult, error)
-	PromptWrite(ctx context.Context, req PromptWriteRequest) (*PromptWriteResult, error)
-	PromptRender(ctx context.Context, req PromptRenderRequest) (*PromptRenderResult, error)
-	LibrarySearch(ctx context.Context, req LibrarySearchRequest) (*LibrarySearchResult, error)
-	LibraryReindex(ctx context.Context, req LibraryReindexRequest) (*LibraryReindexResult, error)
-
-	// The AI provider layer (SDD-016): the providers and their models, the price table, and a text generation,
-	// which is a job of a kind that needs approval (SDD-015 section 5).
-	ProviderList(ctx context.Context, req ProviderListRequest) (*ProviderListResult, error)
-	ProviderModels(ctx context.Context, req ProviderModelsRequest) (*ProviderModelsResult, error)
-	ProviderPriceSet(ctx context.Context, req ProviderPriceSetRequest) (*ProviderPricesResult, error)
-	TextGenerate(ctx context.Context, req TextGenerateRequest) (*Job, error)
-	ImageGenerate(ctx context.Context, req ImageGenerateRequest) (*Job, error)
-	VoiceGenerate(ctx context.Context, req VoiceGenerateRequest) (*Job, error)
-	VoiceList(ctx context.Context, req VoiceListRequest) (*VoiceListResult, error)
-
 	JobGet(ctx context.Context, req JobGetRequest) (*Job, error)
 	JobList(ctx context.Context, req JobListRequest) (*JobListResult, error)
 	JobCancel(ctx context.Context, req JobCancelRequest) (*Job, error)
@@ -127,14 +73,6 @@ type Service interface {
 	// AssetList lists the files the projects hold, by content hash, for the picker of a brand logo (VV-117).
 	AssetList(ctx context.Context, req AssetListRequest) (*AssetListResult, error)
 	ExportFile(ctx context.Context, req ExportFileRequest) (*File, error)
-	// ExportPresetList, ExportCheck and ExportBatch are the export presets, the check against one and the batch of
-	// exports of SDD-004 sections 8.2 to 8.4 (RF-087 to RF-089).
-	ExportPresetList(ctx context.Context, req ExportPresetListRequest) (*ExportPresetListResult, error)
-	ExportCheck(ctx context.Context, req ExportCheckRequest) (*ExportCheckResult, error)
-	ExportBatch(ctx context.Context, req ExportBatchRequest) (*Job, error)
-	// AudioMeasure is the loudness, true peak and noise floor of a range or an item with and without its audio
-	// processors (SDD-004 section 7.1, epic 34).
-	AudioMeasure(ctx context.Context, req AudioMeasureRequest) (*AudioMeasureResult, error)
 	AuditList(ctx context.Context, req AuditListRequest) (*AuditListResult, error)
 
 	// Doctor is the diagnostic report (SDD-003 section 2, SDD-011 section 8.6).
@@ -166,51 +104,6 @@ type Service interface {
 	KeyCreate(ctx context.Context, req KeyCreateRequest) (*KeyCreateResult, error)
 	KeyList(ctx context.Context, req KeyListRequest) (*KeyListResult, error)
 	KeyRevoke(ctx context.Context, req KeyRevokeRequest) (*Key, error)
-
-	// The image documents of SDD-021: creation (blank or from a template), the list, the text view, batches of
-	// image operations, undo and redo, and the export to a file.
-	ImageCreate(ctx context.Context, req ImageCreateRequest) (*ImageCreateResult, error)
-	ImageList(ctx context.Context, req ImageListRequest) (*ImageListResult, error)
-	ImageDescribe(ctx context.Context, req ImageDescribeRequest) (*ImageDescribeResult, error)
-	ImageEdit(ctx context.Context, req ImageEditRequest) (*ImageEditResult, error)
-	ImageUndo(ctx context.Context, req ImageStepRequest) (*ImageStepResult, error)
-	ImageRedo(ctx context.Context, req ImageStepRequest) (*ImageStepResult, error)
-	ImageExport(ctx context.Context, req ImageExportRequest) (*ImageExportResult, error)
-	// ImageFrame, ImageHistory and ImageFile are the reads of the image editor screen (SDD-012 section 24.3); HTTP only.
-	ImageFrame(ctx context.Context, req ImageFrameRequest) (*ImageFrameResult, error)
-	ImageHistory(ctx context.Context, req ImageHistoryRequest) (*ImageHistoryResult, error)
-	ImageFile(ctx context.Context, req ImageFileRequest) (*File, error)
-	// ConnectionList and ConnectionGet read the destinations the user connected; ConnectionCreate,
-	// ConnectionRemove and ConnectionTest are for an administrator. No result carries a credential
-	// (SDD-014 section 5).
-	ConnectionList(ctx context.Context, req ConnectionListRequest) (*ConnectionListResult, error)
-	ConnectionGet(ctx context.Context, req ConnectionRef) (*connections.Connection, error)
-	ConnectionCreate(ctx context.Context, req ConnectionCreateRequest) (*connections.Connection, error)
-	ConnectionRemove(ctx context.Context, req ConnectionRef) (*connections.Connection, error)
-	ConnectionTest(ctx context.Context, req ConnectionRef) (*ConnectionTestResult, error)
-
-	// The approval queue, its rules and the cost ceilings (SDD-015). Reading is for every caller that
-	// may read; ApprovalDecide, ApprovalRuleSet, ApprovalRuleRemove and CostCeilingSet are for a
-	// person in a privileged browser session and answer E_PRIVILEGED_SESSION to everyone else.
-	ApprovalList(ctx context.Context, req ApprovalListRequest) (*ApprovalListResult, error)
-	ApprovalGet(ctx context.Context, req ApprovalRef) (*approval.Request, error)
-	ApprovalDecide(ctx context.Context, req ApprovalDecideRequest) (*approval.Request, error)
-	ApprovalRuleList(ctx context.Context, req ApprovalRuleListRequest) (*ApprovalRuleListResult, error)
-	ApprovalRuleSet(ctx context.Context, req ApprovalRuleSetRequest) (*approval.RuleView, error)
-	ApprovalRuleRemove(ctx context.Context, req ApprovalRef) (*approval.RuleView, error)
-	CostSummary(ctx context.Context, req CostSummaryRequest) (*CostSummaryResult, error)
-	CostCeilingSet(ctx context.Context, req CostCeilingSetRequest) (*CostSummaryResult, error)
-
-	// The social networks and publishing (SDD-020). A publication is a job of a kind that needs approval:
-	// PublishNow answers a job in waiting_approval, and nothing leaves the machine before a person approves.
-	SocialNetworkList(ctx context.Context, req SocialNetworkListRequest) (*SocialNetworkListResult, error)
-	SocialConnectBegin(ctx context.Context, req SocialConnectBeginRequest) (*SocialConnectBeginResult, error)
-	SocialConnectComplete(ctx context.Context, req SocialConnectCompleteRequest) (*SocialAccount, error)
-	SocialAccountList(ctx context.Context, req SocialAccountListRequest) (*SocialAccountListResult, error)
-	SocialAccountSelect(ctx context.Context, req SocialAccountSelectRequest) (*SocialAccount, error)
-	PublishValidate(ctx context.Context, req PublishValidateRequest) (*PublishValidateResult, error)
-	PublishNow(ctx context.Context, req PublishNowRequest) (*Job, error)
-	PublishStatus(ctx context.Context, req PublishStatusRequest) (*PublishStatusResult, error)
 }
 
 // Event is what the service publishes after the change is durable (SDD-006
@@ -236,10 +129,6 @@ type Event struct {
 	Message  string
 	Error    *Error
 	Result   *JobResult
-	// Approval is the request of approval.requested and approval.decided (SDD-015 section 7), and
-	// Owner the user it belongs to in network mode, so that a member's stream carries their own only.
-	Approval *approval.Request
-	Owner    string
 }
 
 // Options configure New. Store is required.
@@ -273,9 +162,6 @@ type Options struct {
 	Limits Limits
 	// Version is the binary version written into the template files.
 	Version string
-	// BuiltInSkills is the set of skills that ship with the product, one folder per skill; the service
-	// installs it into the library at start (SDD-018 section 16). Nil installs none.
-	BuiltInSkills fs.FS
 	// Transcriber is the transcription provider of the transcribe job; without
 	// one JobStart for it answers E_TRANSCRIBE_UNAVAILABLE.
 	Transcriber transcribe.Provider
@@ -286,32 +172,14 @@ type Options struct {
 	// Keys stores the API keys of network mode; without one the key operations
 	// answer E_NOT_FOUND, as in local mode.
 	Keys KeyStore
-	// Connections is the registry of the destinations the user connected and the holder of their
-	// credentials; without one the service builds a registry over the store with a vault in the
-	// workspace that has no master key source, so a connection cannot be created (SDD-014).
-	Connections *connections.Manager
-	// Social is the registry of the social network connectors (SDD-020); without one the build publishes
-	// to no network and the social operations answer empty lists.
-	Social *social.Registry
-	// Providers is the registry of the AI providers, with their adapters registered (SDD-016); without one
-	// the service has a registry with no provider, so no generation can start.
-	Providers *providers.Registry
-	// JobKinds are the job kinds that need approval, registered by the epics of publishing and
-	// generation (SDD-015 section 5). The product registers none of its own; tests register one.
-	JobKinds []ApprovableKind
 	// Heavy limits the heavy operations (jobs, media, template, font, bundle and OpenTimelineIO imports and exports) per actor; nil counts nothing.
 	Heavy RateLimiter
 	// HeavyPerMinute is the limit Heavy enforces, for the error message; zero is HeavyPerMinute.
 	HeavyPerMinute int
 	// Log receives the job lines (start, end, failure); nil discards them.
 	Log *slog.Logger
-	// WebP encodes the WebP export of an image; without one that format answers webp_unavailable (SDD-021 section 6).
-	WebP export.WebPEncoder
 	// JobWait is how long TrashEmpty waits for the jobs of a trashed project to stop; zero is 15 s.
 	JobWait time.Duration
-	// Agents hosts the agent a user installed, for the chat (SDD-017). Nil in a process that only runs a
-	// command: the chat operations that need a process then answer E_AGENT_UNAVAILABLE, and the reads work.
-	Agents *agenthost.Host
 }
 
 type svc struct {
@@ -332,18 +200,10 @@ type svc struct {
 	toolsState  toolsState
 	doctor      DoctorOptions
 	keys        KeyStore
-	conns       *connections.Manager
-	kinds       map[string]*ApprovableKind
-	social      *social.Registry
-	flows       *oauth.Flows
-	providers   *providers.Registry
-	lib         *library.Manager // the files of memory, skills and prompts; nil without a workspace
 	heavy       RateLimiter
 	heavyLimitN int
 	log         *slog.Logger
 	jobWait     time.Duration
-	agents      *agenthost.Host // the hosted agent chat; nil without a host (SDD-017)
-	webp        export.WebPEncoder
 	doctorMu    sync.Mutex
 	doctorCaps  *ffmpeg.Capabilities
 
@@ -391,47 +251,15 @@ func New(o Options) (Service, error) {
 		tools:       o.Tools,
 		doctor:      o.Doctor,
 		keys:        o.Keys,
-		conns:       o.Connections,
-		social:      o.Social,
 		heavy:       o.Heavy,
 		heavyLimitN: o.HeavyPerMinute,
 		log:         o.Log,
 		jobWait:     o.JobWait,
-		agents:      o.Agents,
-		webp:        o.WebP,
 		startedAt:   time.Now(),
 	}
 
-	s.providers = o.Providers
-
-	kinds, err := registerKinds(append(slices.Clone(o.JobKinds), s.textGenerateKind(), s.textDraftKind()))
-	if err != nil {
-		return nil, err
-	}
-
-	s.kinds = kinds
-	s.registerPublishKind()
-
 	if s.workspace != "" {
 		s.fonts = enginestore.NewFonts(s.workspace)
-		s.lib = library.New(filepath.Join(s.workspace, "library"), o.Store.Library(), o.Now)
-	}
-
-	if s.conns == nil {
-		s.conns = connections.NewDefault(o.Store.Connections(), s.workspace, s.now)
-	}
-
-	if s.social != nil {
-		s.social.Bind(s.conns)
-	}
-
-	if s.providers == nil {
-		prices := ""
-		if s.workspace != "" {
-			prices = filepath.Join(s.workspace, "providers", providers.PriceFile)
-		}
-
-		s.providers = providers.NewRegistry(s.conns, providers.NewPriceBook(prices), s.now)
 	}
 
 	s.sems = map[string]chan struct{}{
@@ -457,21 +285,12 @@ func New(o Options) (Service, error) {
 		s.now = time.Now
 	}
 
-	s.flows = oauth.NewFlows(s.now)
-
 	if s.jobWait <= 0 {
 		s.jobWait = jobWait
 	}
 
 	if s.log == nil {
 		s.log = slog.New(slog.DiscardHandler)
-	}
-
-	if s.lib != nil && o.BuiltInSkills != nil {
-		// A failure here must not stop the product: the library works without the built-in skills.
-		if _, err := s.lib.InstallBuiltInSet(context.Background(), o.BuiltInSkills, s.version); err != nil {
-			s.log.Warn("the built-in skills were not installed", "error", err)
-		}
 	}
 
 	if s.newIDs == nil {

@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/AlexGalhardo/stuarty/web/app/cli"
+	"github.com/AlexGalhardo/vukem-video/web/app/cli"
 )
 
 func main() {

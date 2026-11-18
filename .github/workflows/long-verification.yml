@@ -18,7 +18,7 @@ on:
         description: Minutes of repeated SIGKILL tests (the real serve process and the in-process child)
         default: "10"
       soak_duration:
-        description: Length of the soak (STUARTY_SOAK_DURATION, a Go duration)
+        description: Length of the soak (VUKEM_VIDEO_SOAK_DURATION, a Go duration)
         default: 1h
 
 permissions:
@@ -95,7 +95,7 @@ jobs:
     # One hour of soak, plus the warm-up, the settling and the build; the test timeout is 90 minutes.
     timeout-minutes: 100
     env:
-      STUARTY_SOAK_DURATION: ${{ inputs.soak_duration }}
+      VUKEM_VIDEO_SOAK_DURATION: ${{ inputs.soak_duration }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

@@ -1,6 +1,6 @@
 package timeline
 
-import "github.com/AlexGalhardo/stuarty/core/timeline/migrate"
+import "github.com/AlexGalhardo/vukem-video/core/timeline/migrate"
 
 // The Go types are the source of truth of the document (SDD-001 §7). Their tags
 // drive the decoder, the canonical encoder and, later, the generated JSON Schema:
@@ -148,9 +148,7 @@ type Track struct {
 	Magnet       bool          `json:"magnet,omitempty"`
 	Volume       *float64      `json:"volume,omitempty"                                                                               min:"0" max:"4"`
 	CaptionStyle *CaptionStyle `json:"caption_style,omitempty"`
-	// Optional and additive (SDD-001 §3.3): the processor chain of the track, run on the sum of its items.
-	Processors []Processor `json:"processors,omitempty"`
-	Extra      Extra       `json:"-"`
+	Extra        Extra         `json:"-"`
 }
 
 // Item is any of the five item types (SDD-001 §3.4 to §3.7). One flat struct holds
@@ -235,8 +233,6 @@ type Item struct {
 	Voice   string `json:"voice,omitempty"    enum:"clear,warm,deep,bright,radio"`
 	FadeIn  int    `json:"fade_in,omitempty"                                      min:"0"`
 	FadeOut int    `json:"fade_out,omitempty"                                     min:"0"`
-	// Clip and audio, optional and additive (SDD-001 §3.5): the audio processor chain, in the user's order.
-	Processors []Processor `json:"processors,omitempty"`
 
 	// Clip only.
 	Fit        string  `json:"fit"                  default:"cover" enum:"cover,contain,none"`
@@ -400,14 +396,9 @@ type Keyframes map[string][]Keyframe
 type Keyframe struct {
 	T      int     `json:"t"      min:"0"`
 	Value  float64 `json:"value"`
-	Easing string  `json:"easing"         default:"linear" enum:"linear,ease_in,ease_out,ease_in_out,hold,bezier"`
-	// Bezier is [x1, y1, x2, y2], present exactly when Easing is "bezier" (SDD-001 §3.8).
-	Bezier []float64 `json:"bezier,omitempty"`
-	Extra  Extra     `json:"-"`
+	Easing string  `json:"easing"         default:"linear" enum:"linear,ease_in,ease_out,ease_in_out,hold"`
+	Extra  Extra   `json:"-"`
 }
-
-// EasingBezier is the easing of a keyframe whose segment follows its Bezier curve.
-const EasingBezier = "bezier"
 
 // TextStyle is the style of a text item; every field is set or not (cascade, SDD-001 §3.7).
 type TextStyle struct {

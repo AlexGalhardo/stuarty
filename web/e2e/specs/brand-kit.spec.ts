@@ -11,7 +11,7 @@ test.describe.configure({ timeout: 120_000, mode: "serial" });
 // The font of the test: a bundled file copied under a name of its own, so the
 // workspace imports it by path like a font the person brought.
 function brandFont(): string {
-	const dir = join(tmpdir(), "stuarty-e2e-fonts");
+	const dir = join(tmpdir(), "vukem-video-e2e-fonts");
 	mkdirSync(dir, { recursive: true });
 	const out = join(dir, "Brand Anton.ttf");
 	copyFileSync(
@@ -172,13 +172,15 @@ test.describe("brand-kit", () => {
 			".config",
 			"installers",
 			"assets",
-			"stuarty.png",
+			"vukem-video.png",
 		);
 		await seedProject(request, { tracks: 0, files: [logo] });
 
 		await page.goto("/settings/brand-kit");
 		const pick = page.getByLabel("Logo image from this workspace");
-		await expect(pick.locator("option", { hasText: "stuarty" })).toHaveCount(1);
+		await expect(
+			pick.locator("option", { hasText: "vukem-video" }),
+		).toHaveCount(1);
 		await pick.selectOption({ index: 1 });
 		await expect(page.getByLabel("Logo image hash")).toHaveValue(/^sha256:/);
 		await page.getByRole("button", { name: "Save brand kit" }).click();

@@ -13,7 +13,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/engine/ffmpeg/ffargs"
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg/ffargs"
 )
 
 var corpusPolicy = ffargs.Policy{StoreDir: "/ws/store", RunDir: "/ws/tmp/job_1", MaxThreads: 2}

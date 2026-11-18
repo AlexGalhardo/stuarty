@@ -116,16 +116,6 @@ export const navigation: NavCategory[] = [
 	},
 	{
 		dir: "guide",
-		title: "Writing",
-		pages: ["writing"],
-	},
-	{
-		dir: "guide",
-		title: "AI providers",
-		pages: ["ai-providers", "agent-chat"],
-	},
-	{
-		dir: "guide",
 		title: "The editor",
 		pages: ["keyboard-shortcuts", "keyboard-shortcuts-list", "coming-from-capcut", "settings", "accessibility", "desktop"],
 	},
@@ -133,21 +123,6 @@ export const navigation: NavCategory[] = [
 		dir: "agents",
 		title: "Agents",
 		pages: ["overview", "connect", "mcp", "cli", "verify", "batches", "skill", "safety", "recipes", "drive-the-editor"],
-	},
-	{
-		dir: "agents",
-		title: "Agents by domain",
-		pages: [
-			"domain-project",
-			"domain-video",
-			"domain-image",
-			"domain-writing",
-			"domain-asset",
-			"domain-publish",
-			"domain-provider",
-			"domain-memory",
-			"domain-workspace",
-		],
 	},
 	{
 		dir: "prompts",

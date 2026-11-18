@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/service/workspace"
+	"github.com/AlexGalhardo/vukem-video/service/workspace"
 )
 
 // fakeInfo is a file the Stat probe reports.
@@ -158,12 +158,12 @@ func TestSecurity_T34_UnsafeConfigurationRefusesBoot(t *testing.T) {
 			&machine{sandbox: errors.New("bwrap is not on the PATH")},
 		},
 		{
-			"limit zero in network mode", RowInvalidLimit, "STUARTY_MAX_EXPORTS",
-			override(network(), "STUARTY_MAX_EXPORTS", "0"), nil,
+			"limit zero in network mode", RowInvalidLimit, "VUKEM_VIDEO_MAX_EXPORTS",
+			override(network(), "VUKEM_VIDEO_MAX_EXPORTS", "0"), nil,
 		},
 		{
-			"limit negative in network mode", RowInvalidLimit, "STUARTY_MAX_IMPORT_BYTES",
-			override(network(), "STUARTY_MAX_IMPORT_BYTES", "-5"), nil,
+			"limit negative in network mode", RowInvalidLimit, "VUKEM_VIDEO_MAX_IMPORT_BYTES",
+			override(network(), "VUKEM_VIDEO_MAX_IMPORT_BYTES", "-5"), nil,
 		},
 		{"ffmpeg relative", RowFFmpegPath, EnvFFmpeg, map[string]string{EnvFFmpeg: "ffmpeg"}, nil},
 		{"ffprobe not a file", RowFFmpegPath, EnvFFprobe, map[string]string{EnvFFprobe: abs("bin", "ffprobe")}, nil},
@@ -279,23 +279,23 @@ func TestReverseProxyNeedsBothTrustedProxiesAndForwardedProto(t *testing.T) {
 
 func TestLimitsInLocalModeMeanTheDefault(t *testing.T) {
 	for _, raw := range []string{"0", "-3"} {
-		use, err := CheckLimit("STUARTY_MAX_EXPORTS", raw, false)
+		use, err := CheckLimit("VUKEM_VIDEO_MAX_EXPORTS", raw, false)
 		if err != nil || use {
 			t.Errorf("local %q: use=%v err=%v", raw, use, err)
 		}
 
-		if _, err := CheckLimit("STUARTY_MAX_EXPORTS", raw, true); err == nil ||
+		if _, err := CheckLimit("VUKEM_VIDEO_MAX_EXPORTS", raw, true); err == nil ||
 			!strings.Contains(err.Error(), "invalid limit") ||
-			!strings.Contains(err.Error(), "STUARTY_MAX_EXPORTS") {
+			!strings.Contains(err.Error(), "VUKEM_VIDEO_MAX_EXPORTS") {
 			t.Errorf("network %q: %v", raw, err)
 		}
 	}
 
-	if _, err := CheckLimit("STUARTY_MAX_EXPORTS", "many", false); err == nil {
+	if _, err := CheckLimit("VUKEM_VIDEO_MAX_EXPORTS", "many", false); err == nil {
 		t.Error("a limit that is not a number was accepted")
 	}
 
-	if use, err := CheckLimit("STUARTY_MAX_EXPORTS", "3", true); !use || err != nil {
+	if use, err := CheckLimit("VUKEM_VIDEO_MAX_EXPORTS", "3", true); !use || err != nil {
 		t.Errorf("3: %v %v", use, err)
 	}
 }

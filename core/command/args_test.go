@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/core/timeval"
+	"github.com/AlexGalhardo/vukem-video/core/timeval"
 )
 
 type nested struct {

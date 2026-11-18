@@ -1,8 +1,0 @@
-{
-  "code": "E_INVALID_STATE",
-  "hint": "Choose a group outside the layer.",
-  "message": "Layer lyr_eeeeeeeeee cannot move into itself or its own children.",
-  "op_index": 0,
-  "path": "args.parent",
-  "retryable": false
-}

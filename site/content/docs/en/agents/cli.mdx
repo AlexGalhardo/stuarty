@@ -1,11 +1,11 @@
 ---
 title: "The CLI for agents"
-description: "How an agent with a shell uses stuarty: JSON output, exit codes and waiting."
+description: "How an agent with a shell uses vukem-video: JSON output, exit codes and waiting."
 ---
 
 ## The idea
 
-Every command is an adapter over the same service as the MCP tools. For an agent three flags matter: `--json` prints one JSON document and nothing else on standard output; `--actor <label>` names the caller in the history; `--project` (or `STUARTY_PROJECT`) says which project.
+Every command is an adapter over the same service as the MCP tools. For an agent three flags matter: `--json` prints one JSON document and nothing else on standard output; `--actor <label>` names the caller in the history; `--project` (or `VUKEM_VIDEO_PROJECT`) says which project.
 
 ## Exit codes
 
@@ -24,16 +24,12 @@ With `--json` an error is one JSON document with `code`, `message`, `hint` and `
 ## Quick start
 
 ```bash
-stuarty project:create --name "Launch teaser" --json --actor claude-code
-stuarty edit --project prj_7k2m9x4q1b --ops - --json < batch.json
-stuarty export --project prj_7k2m9x4q1b --json
+vukem-video project:create --name "Launch teaser" --json --actor claude-code
+vukem-video edit --project prj_7k2m9x4q1b --ops - --json < batch.json
+vukem-video export --project prj_7k2m9x4q1b --json
 ```
 
 Every command and flag is in the [CLI reference](/docs/reference/cli).
-
-## Commands by domain
-
-Every command belongs to a domain: `project`, `video`, `image`, `writing`, `asset`, `publish`, `provider`, `memory` or `workspace`. `stuarty <domain>` lists the commands of one, and `stuarty <domain> <verb>` runs one: `stuarty image edit` is `image:edit`, `stuarty project list` is `project:list` and `stuarty memory skill list` is `skill:list`. A verb that two commands of a domain share, such as `import` in `asset`, is refused with both full names. The full names (`edit`, `project:list`, `image:create`, ...) keep working and are what the reference and scripts use. `stuarty command:help --domain <domain>` lists the edit operations of a domain, and each domain has a page in [the guide by domain](/docs/agents/domain-video).
 
 ## Next steps
 

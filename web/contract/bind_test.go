@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-const bindHelperEnv = "STUARTY_CONTRACT_BIND_HELPER"
+const bindHelperEnv = "VUKEM_VIDEO_CONTRACT_BIND_HELPER"
 
 // TestBindHelper is not a test: it is the parent process of TestServerDiesWithTheTestProcess.
 // It starts a long-lived child the way the harness starts `serve`, prints its pid and waits.

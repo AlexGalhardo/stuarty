@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/AlexGalhardo/stuarty/core/plan"
-	"github.com/AlexGalhardo/stuarty/engine/renderhost"
+	"github.com/AlexGalhardo/vukem-video/core/plan"
+	"github.com/AlexGalhardo/vukem-video/engine/renderhost"
 )
 
 // engine is the one instance of the renderer module that draws bitmaps for the process. Calls are

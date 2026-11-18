@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/engine/ffmpeg/ffargs"
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg/ffargs"
 )
 
 // TestGoldenCommandsRunOnThePinnedBuild builds the commands of SDD-011 section 4 and

@@ -7,7 +7,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/core/plan"
+	"github.com/AlexGalhardo/vukem-video/core/plan"
 )
 
 // vectorStyle is the style of a vector with the colours parsed, in the order the file holds it.
@@ -82,7 +82,7 @@ func mustStyle(t *testing.T, p plan.ResolvedStyle) vectorStyle {
 	return st
 }
 
-// The Rust rasterizer (renderer/stuarty-renderer-text, SDD-013 section 3.11) is the reference. These
+// The Rust rasterizer (renderer/vukem-renderer-text, SDD-013 section 3.11) is the reference. These
 // vectors are the specs and the bitmap it draws for each, written by `cargo test` in renderer/
 // (VUKEM_WRITE_RASTER_VECTORS=1, a reviewed change of output, rule .agents/skills/renderer-parity).
 // This package encodes the same specs, draws them through the renderer module under wazero and must

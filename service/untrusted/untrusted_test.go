@@ -5,7 +5,7 @@ import (
 	"testing"
 	"unicode/utf8"
 
-	"github.com/AlexGalhardo/stuarty/service/untrusted"
+	"github.com/AlexGalhardo/vukem-video/service/untrusted"
 )
 
 // oneBlock reports whether s is exactly one block: it opens once, closes once,

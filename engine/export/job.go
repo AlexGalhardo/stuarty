@@ -11,13 +11,12 @@ import (
 	"strings"
 	"time"
 
-	exportcore "github.com/AlexGalhardo/stuarty/core/export"
-	"github.com/AlexGalhardo/stuarty/core/lint"
-	"github.com/AlexGalhardo/stuarty/core/plan"
-	"github.com/AlexGalhardo/stuarty/core/timeline"
-	"github.com/AlexGalhardo/stuarty/engine/compositor"
-	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
-	"github.com/AlexGalhardo/stuarty/engine/rasterize"
+	"github.com/AlexGalhardo/vukem-video/core/lint"
+	"github.com/AlexGalhardo/vukem-video/core/plan"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/engine/compositor"
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
+	"github.com/AlexGalhardo/vukem-video/engine/rasterize"
 )
 
 // Progress is the share of the frames written to the encoder.
@@ -45,19 +44,10 @@ type Job struct {
 	OutPath string
 	// Format is what the export writes; the zero value is FormatMP4.
 	Format Format
-	// Codec is the video codec of an mp4 export; the zero value is the first choice of the preset that the
-	// machine offers, else H.264. A codec that is named and cannot be had is E_NO_ENCODER (SDD-004 section 8.3).
-	Codec exportcore.Codec
-	// Preset is the platform preset of the export (SDD-004 section 8.2): its bit rates and codecs are used and
-	// its limits are checked on the file that was written. Nil is no preset.
-	Preset *exportcore.Preset
-	// CodecPlan is the decision of PlanCodec when the caller has already made it (the service does, so that it
-	// can pick the runner of the encoder); nil means Run decides.
-	CodecPlan *CodecPlan
-	// MaxBytes is STUARTY_MAX_EXPORT_BYTES: a larger file ends the job with reason "size_limit".
+	// MaxBytes is VUKEM_VIDEO_MAX_EXPORT_BYTES: a larger file ends the job with reason "size_limit".
 	// Zero is no limit.
 	MaxBytes int64
-	// Encoder is STUARTY_ENCODER and STUARTY_ALLOW_USER_X264 (ADR-0011 item 5).
+	// Encoder is VUKEM_VIDEO_ENCODER and VUKEM_VIDEO_ALLOW_USER_X264 (ADR-0011 item 5).
 	Encoder ffmpeg.DetectOptions
 	// Start and End are the frames [Start, End) of the timeline to export. End 0 is the end of the
 	// last item; Start 0 and End 0 export the whole timeline (VV-018).
@@ -68,10 +58,10 @@ type Job struct {
 	Fonts *rasterize.FontSet
 	// Bands is the number of bands of the compositor; zero is one per CPU, at most 8.
 	Bands int
-	// PixelRenderer is STUARTY_EXPORT_RENDERER: the Go compositor (the zero value) or the Rust renderer
+	// PixelRenderer is VUKEM_VIDEO_EXPORT_RENDERER: the Go compositor (the zero value) or the Rust renderer
 	// running as WebAssembly under wazero (SDD-013 section 4.6). Both draw the same bytes.
 	PixelRenderer PixelRenderer
-	// GPUHost is the absolute path of the native GPU host stuarty-render. With PixelRendererGPU and a path the
+	// GPUHost is the absolute path of the native GPU host vukem-render. With PixelRendererGPU and a path the
 	// frames are drawn by the child when the machine has a graphics adapter, and by the WebAssembly module
 	// otherwise (SDD-013 section 4.9); empty means no GPU host.
 	GPUHost string
@@ -90,13 +80,7 @@ type Result struct {
 	DurationMS int64
 	Frames     int
 	Encoder    string
-	// Codec is the video codec written ("h264", "hevc" or "av1"); empty for a format with no video codec.
-	Codec exportcore.Codec
-	// CodecWanted is the codec the preset preferred when the export fell back to another; empty otherwise.
-	CodecWanted exportcore.Codec
-	// Notes say in words what a person should know about the result, such as that fall back.
-	Notes    []string
-	Loudness Loudness
+	Loudness   Loudness
 	// Width and Height are the pixels of the file when they differ from the project's (a GIF is
 	// capped at 480 pixels wide); zero means the project's size.
 	Width, Height int
@@ -228,24 +212,6 @@ func run(ctx context.Context, job *Job) (*Result, error) {
 	format := job.Format.normal()
 	doc := job.Doc
 
-	if !job.Codec.Valid() {
-		return nil, exportErr(
-			ReasonBadFormat,
-			"The codec is not one of h264, hevc and av1.",
-			errors.New("unknown codec"),
-			"",
-		)
-	}
-
-	if (job.Codec != "" || job.Preset != nil) && format != FormatMP4 {
-		return nil, exportErr(
-			ReasonBadFormat,
-			"A codec or a preset is for an mp4 export.",
-			errCodecWithFormat,
-			"",
-		)
-	}
-
 	// 1. Check.
 	var blocking []lint.Finding
 	for _, f := range lint.Lint(doc, job.Lint, lint.Full) {
@@ -297,18 +263,15 @@ func run(ctx context.Context, job *Job) (*Result, error) {
 		return nil, exportErr(ReasonPublish, "The exported file could not be moved into place.", err, "")
 	}
 	return &Result{
-		Path:        out,
-		Size:        ver.Size,
-		DurationMS:  ver.DurationMS,
-		Frames:      frames,
-		Format:      format,
-		Encoder:     b.encoder,
-		Codec:       b.codec,
-		CodecWanted: b.codecWanted,
-		Notes:       b.notes,
-		Loudness:    b.loud,
-		Width:       ver.Width,
-		Height:      ver.Height,
+		Path:       out,
+		Size:       ver.Size,
+		DurationMS: ver.DurationMS,
+		Frames:     frames,
+		Format:     format,
+		Encoder:    b.encoder,
+		Loudness:   b.loud,
+		Width:      ver.Width,
+		Height:     ver.Height,
 	}, nil
 }
 
@@ -401,13 +364,10 @@ func copyFile(src, dst string) (err error) {
 
 // built is a verified partial file and what the build learned on the way.
 type built struct {
-	partial     string
-	encoder     string
-	codec       exportcore.Codec
-	codecWanted exportcore.Codec
-	notes       []string
-	loud        Loudness
-	ver         Verified
+	partial string
+	encoder string
+	loud    Loudness
+	ver     Verified
 }
 
 // build makes and verifies the partial file of the format (steps 2 to 7 of SDD-004 section 8).
@@ -429,13 +389,8 @@ func (s *state) build(ctx context.Context, f Format) (built, error) {
 func (s *state) buildMP4(ctx context.Context) (built, error) {
 	job := s.job
 
-	// 2. Codec and encoder.
-	cp, err := s.codecPlan(ctx)
-	if err != nil {
-		return built{}, err
-	}
-
-	det, err := job.Runner.DetectCodec(ctx, job.Caps, string(cp.Codec), job.Encoder)
+	// 2. Encoder.
+	det, err := job.Runner.DetectEncoder(ctx, job.Caps, job.Encoder)
 	if err != nil {
 		return built{}, err
 	}
@@ -464,7 +419,7 @@ func (s *state) buildMP4(ctx context.Context) (built, error) {
 		return built{}, err
 	}
 
-	if err := s.encode(ctx, cand, cp.Codec, mix, partial, rd); err != nil {
+	if err := s.encode(ctx, cand, mix, partial, rd); err != nil {
 		return built{}, err
 	}
 
@@ -477,25 +432,12 @@ func (s *state) buildMP4(ctx context.Context) (built, error) {
 	}
 
 	// 7. Verification.
-	ver, err := s.verify(ctx, partial, s.frames, cp.Codec)
+	ver, err := s.verify(ctx, partial, s.frames)
 	if err != nil {
 		_ = os.Remove(partial)
 
 		return built{}, err
 	}
 
-	return built{
-		partial: partial, encoder: cand.Name, codec: cp.Codec, codecWanted: cp.Wanted, notes: cp.Notes,
-		loud: loud, ver: ver,
-	}, nil
-}
-
-// codecPlan is the codec of the export: the plan the caller made, or the one PlanCodec makes now.
-func (s *state) codecPlan(ctx context.Context) (CodecPlan, error) {
-	job := s.job
-	if job.CodecPlan != nil {
-		return *job.CodecPlan, nil
-	}
-
-	return PlanCodec(ctx, job.Runner, job.Caps, job.Encoder, job.Codec, job.Preset)
+	return built{partial: partial, encoder: cand.Name, loud: loud, ver: ver}, nil
 }

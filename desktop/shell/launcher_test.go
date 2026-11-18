@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/desktop/update"
+	"github.com/AlexGalhardo/vukem-video/desktop/update"
 )
 
 type fakeClient struct {

@@ -1,7 +1,0 @@
-{
-  "error": {
-    "message": "bad request",
-    "type": "invalid_request_error",
-    "code": "sk-test-0123456789-abc"
-  }
-}

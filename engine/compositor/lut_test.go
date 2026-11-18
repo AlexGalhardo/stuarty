@@ -3,7 +3,7 @@ package compositor
 import (
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/engine/lut"
+	"github.com/AlexGalhardo/vukem-video/engine/lut"
 )
 
 func identityTable(n int) *lut.Table {
@@ -48,7 +48,7 @@ func TestLUTIdentityTables(t *testing.T) {
 	}
 }
 
-// The same pixels are pinned in renderer/stuarty-renderer/src/lut.rs.
+// The same pixels are pinned in renderer/vukem-renderer/src/lut.rs.
 func TestLUTInvertingTableAndMix(t *testing.T) {
 	inv := &lut.Table{Size: 2}
 

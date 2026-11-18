@@ -4,7 +4,7 @@ import (
 	"container/list"
 	"sync"
 
-	"github.com/AlexGalhardo/stuarty/core/plan"
+	"github.com/AlexGalhardo/vukem-video/core/plan"
 )
 
 // DefaultCacheBytes is the default memory budget of a Cache.

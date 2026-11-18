@@ -1,6 +1,6 @@
 package command
 
-import "github.com/AlexGalhardo/stuarty/core/timeline"
+import "github.com/AlexGalhardo/vukem-video/core/timeline"
 
 // checkFit is R14: fades and transitions must still fit the duration.
 func checkFit(it *timeline.Item, what string) *Error {

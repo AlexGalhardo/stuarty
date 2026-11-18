@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/core/timeval"
+	"github.com/AlexGalhardo/vukem-video/core/timeval"
 )
 
 func TestProbeTextOfAnAnimatedImage(t *testing.T) {

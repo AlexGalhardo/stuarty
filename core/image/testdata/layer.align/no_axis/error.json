@@ -1,8 +1,0 @@
-{
-  "code": "E_VALIDATION",
-  "hint": "Add one of horizontal, vertical to the arguments.",
-  "message": "Give at least one of: horizontal, vertical.",
-  "op_index": 0,
-  "path": "args",
-  "retryable": false
-}

@@ -4,14 +4,13 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/AlexGalhardo/stuarty/service"
-
 	"github.com/AlexGalhardo/vukem/web"
+
+	"github.com/AlexGalhardo/vukem-video/service"
 )
 
 type bundleExportIn struct {
 	ID         string `json:"id"                    validate:"required"`
-	TimelineID string `json:"timeline_id,omitempty"                     doc:"One timeline only (the format of releases up to 0.29.0); without it, the whole project."`
 	IncludeLog *bool  `json:"include_log,omitempty"                     doc:"false leaves the history out, to share a project without it. Default true."`
 	WaitMS     int    `json:"wait_ms,omitempty"                         doc:"0 to 25000: hold the call until the job is final."`
 }
@@ -24,7 +23,7 @@ type bundleImportIn struct {
 
 func (h *apiHandler) projectBundleExport(c *web.Ctx, in bundleExportIn) (service.Job, error) {
 	res, err := h.Service.ProjectBundleExport(c.Context(), service.ProjectBundleExportRequest{
-		ProjectID: in.ID, TimelineID: in.TimelineID, IncludeLog: in.IncludeLog, WaitMS: in.WaitMS,
+		ProjectID: in.ID, IncludeLog: in.IncludeLog, WaitMS: in.WaitMS,
 	})
 	if err != nil {
 		return service.Job{}, err

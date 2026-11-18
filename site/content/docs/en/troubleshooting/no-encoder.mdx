@@ -11,28 +11,28 @@ description: "What E_NO_ENCODER means, which encoders are tried and how to get a
 
 ## The idea
 
-An export needs an H.264 encoder, and the product only trusts one that passed a real test encode on your machine. It tries, in order, `h264_videotoolbox`, `h264_nvenc`, `h264_qsv`, `h264_amf`, `h264_mf`, `h264_vaapi` and `libopenh264`; `libx264` joins only when the FFmpeg is your own and `STUARTY_ALLOW_USER_X264` is `true`. If none passes, the export fails with `E_NO_ENCODER`; the message lists each candidate and why it failed (not in this FFmpeg build, or the first line of its error). The detection is cached for 24 hours.
+An export needs an H.264 encoder, and the product only trusts one that passed a real test encode on your machine. It tries, in order, `h264_videotoolbox`, `h264_nvenc`, `h264_qsv`, `h264_amf`, `h264_mf`, `h264_vaapi` and `libopenh264`; `libx264` joins only when the FFmpeg is your own and `VUKEM_VIDEO_ALLOW_USER_X264` is `true`. If none passes, the export fails with `E_NO_ENCODER`; the message lists each candidate and why it failed (not in this FFmpeg build, or the first line of its error). The detection is cached for 24 hours.
 
 ## Quick start
 
-1. Run `stuarty doctor --full`. The `ffmpeg.encoder` check prints the chosen encoder and each candidate with its status and time, or `E_NO_ENCODER`.
+1. Run `vukem-video doctor --full`. The `ffmpeg.encoder` check prints the chosen encoder and each candidate with its status and time, or `E_NO_ENCODER`.
 2. Pick the way out that fits:
-   - use the FFmpeg that ships with Stuarty (the container image and the installers), which includes OpenH264;
+   - use the FFmpeg that ships with Vukem Video (the container image and the installers), which includes OpenH264;
    - install the driver of your GPU, so that a hardware encoder passes the test;
-   - point `STUARTY_FFMPEG` at your own build that has `libx264` and set `STUARTY_ALLOW_USER_X264=true`. The licence consequences are yours: do not redistribute it.
+   - point `VUKEM_VIDEO_FFMPEG` at your own build that has `libx264` and set `VUKEM_VIDEO_ALLOW_USER_X264=true`. The licence consequences are yours: do not redistribute it.
 3. Run the doctor again, then export.
 
 ```bash
-stuarty doctor --full
-STUARTY_ALLOW_USER_X264=true stuarty serve
+vukem-video doctor --full
+VUKEM_VIDEO_ALLOW_USER_X264=true vukem-video serve
 ```
 
-To test one encoder only, set `STUARTY_ENCODER` to its FFmpeg name. Then only that one is tried and the product never swaps it silently.
+To test one encoder only, set `VUKEM_VIDEO_ENCODER` to its FFmpeg name. Then only that one is tried and the product never swaps it silently.
 
 ## Common mistakes
 
-- Forcing an encoder the machine does not have (`STUARTY_ENCODER=h264_nvenc` without an NVIDIA driver).
-- Setting `STUARTY_ALLOW_USER_X264=true` while the FFmpeg is the bundled one: `libx264` is used only with your own FFmpeg.
+- Forcing an encoder the machine does not have (`VUKEM_VIDEO_ENCODER=h264_nvenc` without an NVIDIA driver).
+- Setting `VUKEM_VIDEO_ALLOW_USER_X264=true` while the FFmpeg is the bundled one: `libx264` is used only with your own FFmpeg.
 - Running in a container or a virtual machine without the device nodes that a hardware encoder needs. The OpenH264 encoder of the bundled FFmpeg needs none.
 - Reading `E_FFMPEG_MISSING` as the same thing. See [FFmpeg is not found](/docs/troubleshooting/ffmpeg-missing).
 

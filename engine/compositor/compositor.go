@@ -15,8 +15,8 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/AlexGalhardo/stuarty/core/plan"
-	"github.com/AlexGalhardo/stuarty/engine/bitmap"
+	"github.com/AlexGalhardo/vukem-video/core/plan"
+	"github.com/AlexGalhardo/vukem-video/engine/bitmap"
 )
 
 // MaxBands is the largest number of bands (SDD-004 section 12, rule 5).

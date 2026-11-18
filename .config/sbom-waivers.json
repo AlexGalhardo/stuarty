@@ -9,7 +9,7 @@
 			"reason": "The module licence is BSD-3-Clause (its LICENSE-3RD-PARTY.md lists only MIT and BSD parts); the scanner read GPL and GCC header comments of generated constant files in subpackages the product does not link."
 		},
 		{
-			"package": "github.com/AlexGalhardo/stuarty",
+			"package": "github.com/AlexGalhardo/vukem-video",
 			"claimed": "LGPL-3.0-only",
 			"shipped": "MIT",
 			"path": "LICENSE.md",

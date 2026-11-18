@@ -4,102 +4,6 @@
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"additionalProperties": false,
 			"properties": {
-				"amount": {
-					"description": "slide: distance in pixels; scale: factor at the far end; push_in and pull_out: zoom factor. Per preset default.",
-					"type": "number"
-				},
-				"direction": {
-					"description": "slide only: the side it comes from or leaves to. Default left.",
-					"enum": [
-						"left",
-						"right",
-						"up",
-						"down"
-					],
-					"type": "string"
-				},
-				"duration": {
-					"description": "A length, at most the item's duration. Default 0.5s; the whole item for push_in and pull_out.",
-					"type": "string",
-					"x-vv-kind": "time"
-				},
-				"edge": {
-					"description": "in animates the start of the item, out its end. Default in.",
-					"enum": [
-						"in",
-						"out"
-					],
-					"type": "string"
-				},
-				"item_id": {
-					"description": "A clip, text, caption or shape item.",
-					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
-					"type": "string"
-				},
-				"preset": {
-					"description": "The animation.",
-					"enum": [
-						"fade",
-						"slide",
-						"scale",
-						"pop",
-						"push_in",
-						"pull_out"
-					],
-					"type": "string"
-				}
-			},
-			"required": [
-				"item_id",
-				"preset"
-			],
-			"type": "object"
-		},
-		"description": "Writes ordinary keyframes (with a Bezier easing where the preset needs a curve) on the first duration frames (edge in) or the last ones (edge out) of a clip, text, caption or shape item; edit them afterwards with keyframe.set and keyframe.set_easing. Keyframes of the same properties inside that window are replaced, the rest are kept. duration is at most the item's duration, default 0.5s (the whole item for push_in and pull_out). direction is for slide; amount is the slide distance in pixels, the scale factor of scale, or the zoom factor of push_in and pull_out. animation.list_presets describes them.",
-		"domain": "video",
-		"errors": [
-			"E_VALIDATION",
-			"E_INVALID_TIME",
-			"E_NOT_FOUND",
-			"E_TYPE_MISMATCH",
-			"E_LIMIT"
-		],
-		"example": {
-			"direction": "left",
-			"duration": "0.5s",
-			"edge": "in",
-			"item_id": "itm_s6t7v8w9x0",
-			"preset": "slide"
-		},
-		"internal": false,
-		"name": "animation.apply_preset",
-		"scope": "edit",
-		"summary": "Animates the start or end of a visual item with a preset: fade, slide, scale, pop, push in or pull out."
-	},
-	{
-		"args_schema": {
-			"$schema": "https://json-schema.org/draft/2020-12/schema",
-			"additionalProperties": false,
-			"properties": {},
-			"required": [],
-			"type": "object"
-		},
-		"description": "Changes nothing. The result lists, for each preset of animation.apply_preset, what it animates and the range and default of its parameters, and the four numbers of each named curve of keyframe.set_easing.",
-		"domain": "video",
-		"errors": [
-			"E_VALIDATION"
-		],
-		"example": {},
-		"internal": false,
-		"name": "animation.list_presets",
-		"scope": "edit",
-		"summary": "Describes the animation presets and the named Bezier curves."
-	},
-	{
-		"args_schema": {
-			"$schema": "https://json-schema.org/draft/2020-12/schema",
-			"additionalProperties": false,
-			"properties": {
 				"asset": {
 					"additionalProperties": false,
 					"description": "An Asset object of SDD-001 section 3.2.",
@@ -186,7 +90,6 @@
 			"type": "object"
 		},
 		"description": "Adds the asset with the facts measured on the normalized media. An asset whose hash is already in the project is not added again: its identifier is returned in effective.asset_id. Only the import flow issues it.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_ID_EXISTS",
@@ -211,6 +114,7 @@
 		},
 		"internal": true,
 		"name": "asset.add",
+		"phase": "prototype",
 		"scope": "media",
 		"summary": "Adds an asset that the import flow has already ingested."
 	},
@@ -231,7 +135,6 @@
 			"type": "object"
 		},
 		"description": "Removes the asset from the project. It fails with E_IN_USE, listing the items, while an item uses it. The file stays in the content store.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_NOT_FOUND",
@@ -242,6 +145,7 @@
 		},
 		"internal": false,
 		"name": "asset.remove",
+		"phase": "alpha",
 		"scope": "media",
 		"summary": "Removes an asset that no item uses."
 	},
@@ -287,7 +191,6 @@
 			"type": "object"
 		},
 		"description": "Adds an audio item. The default duration is the rest of the asset from source_in. The reserved asset ast_placeholder creates a template slot holder and needs an explicit duration.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_INVALID_TIME",
@@ -306,55 +209,9 @@
 		},
 		"internal": false,
 		"name": "audio.add",
+		"phase": "alpha",
 		"scope": "edit",
 		"summary": "Places an audio asset, or the audio of a video asset, on an audio track."
-	},
-	{
-		"args_schema": {
-			"$schema": "https://json-schema.org/draft/2020-12/schema",
-			"additionalProperties": false,
-			"properties": {
-				"item_id": {
-					"description": "A clip or audio item; give this or track_id.",
-					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
-					"type": "string"
-				},
-				"preset": {
-					"description": "voice, voice_with_music, podcast or clean_noisy_room.",
-					"enum": [
-						"voice",
-						"voice_with_music",
-						"podcast",
-						"clean_noisy_room"
-					],
-					"type": "string"
-				},
-				"track_id": {
-					"description": "A track; give this or item_id.",
-					"pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
-					"type": "string"
-				}
-			},
-			"required": [
-				"preset"
-			],
-			"type": "object"
-		},
-		"description": "Replaces the chain of an item or a track with a preset: voice, voice_with_music, podcast or clean_noisy_room. The chain becomes exactly the preset; change any processor afterwards with audio.processor_set. voice_with_music has no noise reduction.",
-		"domain": "video",
-		"errors": [
-			"E_VALIDATION",
-			"E_NOT_FOUND",
-			"E_TYPE_MISMATCH"
-		],
-		"example": {
-			"item_id": "itm_m1n2p3q4r5",
-			"preset": "voice"
-		},
-		"internal": false,
-		"name": "audio.apply_preset",
-		"scope": "edit",
-		"summary": "Preset"
 	},
 	{
 		"args_schema": {
@@ -449,7 +306,6 @@
 			"type": "object"
 		},
 		"description": "Writes volume keyframes on the music item: its volume drops by gain_db over attack before each stretch of speech and returns over release after it. Speech stretches closer than the ramps are held low across the gap. The speech comes from the analysis of the speech items and is supplied by the service in resolved; the command never starts a job. The item must have no volume keyframes yet; keyframe.clear on volume undoes the ducking.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_INVALID_TIME",
@@ -467,6 +323,7 @@
 		},
 		"internal": false,
 		"name": "audio.duck",
+		"phase": "beta",
 		"scope": "edit",
 		"summary": "Lowers a music item while speech sounds, with a ramp down before and a ramp up after."
 	},
@@ -530,7 +387,6 @@
 			"type": "object"
 		},
 		"description": "Places a marker at each beat of the visible part of the item, or at every nth beat, so that cuts and transitions can be aligned to the music. Beats are frames of the asset and come from the beat grid of the asset, supplied by the service in resolved; the command never starts a job. Markers have no effect on the picture or the sound. When the analysis finds no steady pulse, give bpm (and offset, the time of the first beat on the asset's own time axis, default 0) and the beats are those of that tempo; the grid of the asset is then not used, for example {\"item_id\": \"itm_s6t7v8w9x0\", \"bpm\": 120, \"offset\": \"0.25s\"}.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_NOT_FOUND",
@@ -545,843 +401,9 @@
 		},
 		"internal": false,
 		"name": "audio.mark_beats",
+		"phase": "beta",
 		"scope": "edit",
 		"summary": "Writes markers on a music item at the beats of its audio."
-	},
-	{
-		"args_schema": {
-			"$schema": "https://json-schema.org/draft/2020-12/schema",
-			"additionalProperties": false,
-			"properties": {
-				"enabled": {
-					"description": "false adds it switched off; default true.",
-					"type": "boolean"
-				},
-				"index": {
-					"description": "Where to insert, 0 to the length of the chain; default the end.",
-					"minimum": 0,
-					"type": "integer"
-				},
-				"item_id": {
-					"description": "A clip or audio item; give this or track_id.",
-					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
-					"type": "string"
-				},
-				"kind": {
-					"description": "eq, compressor, limiter, gate, deesser or noise_reduction.",
-					"enum": [
-						"eq",
-						"compressor",
-						"limiter",
-						"gate",
-						"deesser",
-						"noise_reduction"
-					],
-					"type": "string"
-				},
-				"params": {
-					"additionalProperties": {
-						"type": "number"
-					},
-					"description": "Parameter values by name; the rest keep their default.",
-					"type": "object",
-					"x-vv-max-processors": 12,
-					"x-vv-processors": [
-						{
-							"kind": "eq",
-							"params": [
-								{
-									"default": 0,
-									"max": 1000,
-									"min": 0,
-									"min_on": 20,
-									"name": "hp_hz",
-									"off_zero": true,
-									"unit": "Hz"
-								},
-								{
-									"default": 0,
-									"max": 20000,
-									"min": 0,
-									"min_on": 1000,
-									"name": "lp_hz",
-									"off_zero": true,
-									"unit": "Hz"
-								},
-								{
-									"default": 100,
-									"max": 20000,
-									"min": 20,
-									"name": "b1_hz",
-									"unit": "Hz"
-								},
-								{
-									"default": 0,
-									"max": 24,
-									"min": -24,
-									"name": "b1_gain_db",
-									"unit": "dB"
-								},
-								{
-									"default": 1,
-									"max": 18,
-									"min": 0.1,
-									"name": "b1_q",
-									"unit": "Q"
-								},
-								{
-									"default": 250,
-									"max": 20000,
-									"min": 20,
-									"name": "b2_hz",
-									"unit": "Hz"
-								},
-								{
-									"default": 0,
-									"max": 24,
-									"min": -24,
-									"name": "b2_gain_db",
-									"unit": "dB"
-								},
-								{
-									"default": 1,
-									"max": 18,
-									"min": 0.1,
-									"name": "b2_q",
-									"unit": "Q"
-								},
-								{
-									"default": 1000,
-									"max": 20000,
-									"min": 20,
-									"name": "b3_hz",
-									"unit": "Hz"
-								},
-								{
-									"default": 0,
-									"max": 24,
-									"min": -24,
-									"name": "b3_gain_db",
-									"unit": "dB"
-								},
-								{
-									"default": 1,
-									"max": 18,
-									"min": 0.1,
-									"name": "b3_q",
-									"unit": "Q"
-								},
-								{
-									"default": 3000,
-									"max": 20000,
-									"min": 20,
-									"name": "b4_hz",
-									"unit": "Hz"
-								},
-								{
-									"default": 0,
-									"max": 24,
-									"min": -24,
-									"name": "b4_gain_db",
-									"unit": "dB"
-								},
-								{
-									"default": 1,
-									"max": 18,
-									"min": 0.1,
-									"name": "b4_q",
-									"unit": "Q"
-								},
-								{
-									"default": 6000,
-									"max": 20000,
-									"min": 20,
-									"name": "b5_hz",
-									"unit": "Hz"
-								},
-								{
-									"default": 0,
-									"max": 24,
-									"min": -24,
-									"name": "b5_gain_db",
-									"unit": "dB"
-								},
-								{
-									"default": 1,
-									"max": 18,
-									"min": 0.1,
-									"name": "b5_q",
-									"unit": "Q"
-								},
-								{
-									"default": 10000,
-									"max": 20000,
-									"min": 20,
-									"name": "b6_hz",
-									"unit": "Hz"
-								},
-								{
-									"default": 0,
-									"max": 24,
-									"min": -24,
-									"name": "b6_gain_db",
-									"unit": "dB"
-								},
-								{
-									"default": 1,
-									"max": 18,
-									"min": 0.1,
-									"name": "b6_q",
-									"unit": "Q"
-								}
-							]
-						},
-						{
-							"kind": "compressor",
-							"params": [
-								{
-									"default": -18,
-									"max": 0,
-									"min": -60,
-									"name": "threshold_db",
-									"unit": "dBFS"
-								},
-								{
-									"default": 3,
-									"max": 20,
-									"min": 1,
-									"name": "ratio",
-									"unit": "ratio"
-								},
-								{
-									"default": 10,
-									"max": 200,
-									"min": 0.1,
-									"name": "attack_ms",
-									"unit": "ms"
-								},
-								{
-									"default": 100,
-									"max": 2000,
-									"min": 5,
-									"name": "release_ms",
-									"unit": "ms"
-								},
-								{
-									"default": 6,
-									"max": 24,
-									"min": 0,
-									"name": "knee_db",
-									"unit": "dB"
-								},
-								{
-									"default": 0,
-									"max": 24,
-									"min": -12,
-									"name": "makeup_db",
-									"unit": "dB"
-								}
-							]
-						},
-						{
-							"kind": "limiter",
-							"params": [
-								{
-									"default": -1,
-									"max": 0,
-									"min": -20,
-									"name": "ceiling_db",
-									"unit": "dBFS"
-								},
-								{
-									"default": 50,
-									"max": 1000,
-									"min": 1,
-									"name": "release_ms",
-									"unit": "ms"
-								}
-							]
-						},
-						{
-							"kind": "gate",
-							"params": [
-								{
-									"default": -50,
-									"max": 0,
-									"min": -80,
-									"name": "threshold_db",
-									"unit": "dBFS"
-								},
-								{
-									"default": -40,
-									"max": 0,
-									"min": -80,
-									"name": "range_db",
-									"unit": "dB"
-								},
-								{
-									"default": 2,
-									"max": 100,
-									"min": 0.1,
-									"name": "attack_ms",
-									"unit": "ms"
-								},
-								{
-									"default": 50,
-									"max": 1000,
-									"min": 0,
-									"name": "hold_ms",
-									"unit": "ms"
-								},
-								{
-									"default": 150,
-									"max": 2000,
-									"min": 5,
-									"name": "release_ms",
-									"unit": "ms"
-								}
-							]
-						},
-						{
-							"kind": "deesser",
-							"params": [
-								{
-									"default": 6500,
-									"max": 12000,
-									"min": 2000,
-									"name": "frequency_hz",
-									"unit": "Hz"
-								},
-								{
-									"default": -30,
-									"max": 0,
-									"min": -60,
-									"name": "threshold_db",
-									"unit": "dBFS"
-								},
-								{
-									"default": 4,
-									"max": 20,
-									"min": 1,
-									"name": "ratio",
-									"unit": "ratio"
-								}
-							]
-						},
-						{
-							"kind": "noise_reduction",
-							"params": [
-								{
-									"default": 0.5,
-									"max": 1,
-									"min": 0,
-									"name": "strength",
-									"unit": "fraction"
-								},
-								{
-									"default": 0,
-									"max": 3600000,
-									"min": 0,
-									"name": "profile_start_ms",
-									"unit": "ms"
-								},
-								{
-									"default": 0,
-									"max": 3600000,
-									"min": 0,
-									"name": "profile_end_ms",
-									"unit": "ms"
-								}
-							]
-						}
-					]
-				},
-				"track_id": {
-					"description": "A track; give this or item_id.",
-					"pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
-					"type": "string"
-				}
-			},
-			"required": [
-				"kind"
-			],
-			"type": "object"
-		},
-		"description": "Adds an audio processor to the chain of a clip or audio item (item_id) or of a track (track_id). kind is eq, compressor, limiter, gate, deesser or noise_reduction; params are the values that differ from the default of the kind (units and ranges in SDD-004 7.1). The chain runs in order, so index matters; a track chain runs on the sum of the track.",
-		"domain": "video",
-		"errors": [
-			"E_VALIDATION",
-			"E_NOT_FOUND",
-			"E_TYPE_MISMATCH",
-			"E_LIMIT"
-		],
-		"example": {
-			"item_id": "itm_m1n2p3q4r5",
-			"kind": "compressor",
-			"params": {
-				"ratio": 4,
-				"threshold_db": -24
-			}
-		},
-		"internal": false,
-		"name": "audio.processor_add",
-		"scope": "edit",
-		"summary": "Add"
-	},
-	{
-		"args_schema": {
-			"$schema": "https://json-schema.org/draft/2020-12/schema",
-			"additionalProperties": false,
-			"properties": {
-				"index": {
-					"description": "The processor to move, 0-based.",
-					"minimum": 0,
-					"type": "integer"
-				},
-				"item_id": {
-					"description": "A clip or audio item; give this or track_id.",
-					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
-					"type": "string"
-				},
-				"to": {
-					"description": "Its new place, 0 to the length minus one.",
-					"minimum": 0,
-					"type": "integer"
-				},
-				"track_id": {
-					"description": "A track; give this or item_id.",
-					"pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
-					"type": "string"
-				}
-			},
-			"required": [
-				"index",
-				"to"
-			],
-			"type": "object"
-		},
-		"description": "Moves a processor to another place in the chain of an item or a track. index and to are 0-based places in the chain; the order changes the sound.",
-		"domain": "video",
-		"errors": [
-			"E_VALIDATION",
-			"E_NOT_FOUND",
-			"E_TYPE_MISMATCH"
-		],
-		"example": {
-			"index": 0,
-			"item_id": "itm_m1n2p3q4r5",
-			"to": 2
-		},
-		"internal": false,
-		"name": "audio.processor_move",
-		"scope": "edit",
-		"summary": "Move"
-	},
-	{
-		"args_schema": {
-			"$schema": "https://json-schema.org/draft/2020-12/schema",
-			"additionalProperties": false,
-			"properties": {
-				"index": {
-					"description": "The processor to remove, 0-based.",
-					"minimum": 0,
-					"type": "integer"
-				},
-				"item_id": {
-					"description": "A clip or audio item; give this or track_id.",
-					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
-					"type": "string"
-				},
-				"track_id": {
-					"description": "A track; give this or item_id.",
-					"pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
-					"type": "string"
-				}
-			},
-			"required": [
-				"index"
-			],
-			"type": "object"
-		},
-		"description": "Removes a processor from the chain of an item or a track. index is the 0-based place in the chain; later processors move one place earlier.",
-		"domain": "video",
-		"errors": [
-			"E_VALIDATION",
-			"E_NOT_FOUND",
-			"E_TYPE_MISMATCH"
-		],
-		"example": {
-			"index": 1,
-			"item_id": "itm_m1n2p3q4r5"
-		},
-		"internal": false,
-		"name": "audio.processor_remove",
-		"scope": "edit",
-		"summary": "Remove"
-	},
-	{
-		"args_schema": {
-			"$schema": "https://json-schema.org/draft/2020-12/schema",
-			"additionalProperties": false,
-			"properties": {
-				"enabled": {
-					"description": "true switches it on, false off.",
-					"type": "boolean"
-				},
-				"index": {
-					"description": "The processor to change, 0-based.",
-					"minimum": 0,
-					"type": "integer"
-				},
-				"item_id": {
-					"description": "A clip or audio item; give this or track_id.",
-					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
-					"type": "string"
-				},
-				"params": {
-					"additionalProperties": {
-						"type": "number"
-					},
-					"description": "Values to change; the others stay.",
-					"type": "object",
-					"x-vv-max-processors": 12,
-					"x-vv-processors": [
-						{
-							"kind": "eq",
-							"params": [
-								{
-									"default": 0,
-									"max": 1000,
-									"min": 0,
-									"min_on": 20,
-									"name": "hp_hz",
-									"off_zero": true,
-									"unit": "Hz"
-								},
-								{
-									"default": 0,
-									"max": 20000,
-									"min": 0,
-									"min_on": 1000,
-									"name": "lp_hz",
-									"off_zero": true,
-									"unit": "Hz"
-								},
-								{
-									"default": 100,
-									"max": 20000,
-									"min": 20,
-									"name": "b1_hz",
-									"unit": "Hz"
-								},
-								{
-									"default": 0,
-									"max": 24,
-									"min": -24,
-									"name": "b1_gain_db",
-									"unit": "dB"
-								},
-								{
-									"default": 1,
-									"max": 18,
-									"min": 0.1,
-									"name": "b1_q",
-									"unit": "Q"
-								},
-								{
-									"default": 250,
-									"max": 20000,
-									"min": 20,
-									"name": "b2_hz",
-									"unit": "Hz"
-								},
-								{
-									"default": 0,
-									"max": 24,
-									"min": -24,
-									"name": "b2_gain_db",
-									"unit": "dB"
-								},
-								{
-									"default": 1,
-									"max": 18,
-									"min": 0.1,
-									"name": "b2_q",
-									"unit": "Q"
-								},
-								{
-									"default": 1000,
-									"max": 20000,
-									"min": 20,
-									"name": "b3_hz",
-									"unit": "Hz"
-								},
-								{
-									"default": 0,
-									"max": 24,
-									"min": -24,
-									"name": "b3_gain_db",
-									"unit": "dB"
-								},
-								{
-									"default": 1,
-									"max": 18,
-									"min": 0.1,
-									"name": "b3_q",
-									"unit": "Q"
-								},
-								{
-									"default": 3000,
-									"max": 20000,
-									"min": 20,
-									"name": "b4_hz",
-									"unit": "Hz"
-								},
-								{
-									"default": 0,
-									"max": 24,
-									"min": -24,
-									"name": "b4_gain_db",
-									"unit": "dB"
-								},
-								{
-									"default": 1,
-									"max": 18,
-									"min": 0.1,
-									"name": "b4_q",
-									"unit": "Q"
-								},
-								{
-									"default": 6000,
-									"max": 20000,
-									"min": 20,
-									"name": "b5_hz",
-									"unit": "Hz"
-								},
-								{
-									"default": 0,
-									"max": 24,
-									"min": -24,
-									"name": "b5_gain_db",
-									"unit": "dB"
-								},
-								{
-									"default": 1,
-									"max": 18,
-									"min": 0.1,
-									"name": "b5_q",
-									"unit": "Q"
-								},
-								{
-									"default": 10000,
-									"max": 20000,
-									"min": 20,
-									"name": "b6_hz",
-									"unit": "Hz"
-								},
-								{
-									"default": 0,
-									"max": 24,
-									"min": -24,
-									"name": "b6_gain_db",
-									"unit": "dB"
-								},
-								{
-									"default": 1,
-									"max": 18,
-									"min": 0.1,
-									"name": "b6_q",
-									"unit": "Q"
-								}
-							]
-						},
-						{
-							"kind": "compressor",
-							"params": [
-								{
-									"default": -18,
-									"max": 0,
-									"min": -60,
-									"name": "threshold_db",
-									"unit": "dBFS"
-								},
-								{
-									"default": 3,
-									"max": 20,
-									"min": 1,
-									"name": "ratio",
-									"unit": "ratio"
-								},
-								{
-									"default": 10,
-									"max": 200,
-									"min": 0.1,
-									"name": "attack_ms",
-									"unit": "ms"
-								},
-								{
-									"default": 100,
-									"max": 2000,
-									"min": 5,
-									"name": "release_ms",
-									"unit": "ms"
-								},
-								{
-									"default": 6,
-									"max": 24,
-									"min": 0,
-									"name": "knee_db",
-									"unit": "dB"
-								},
-								{
-									"default": 0,
-									"max": 24,
-									"min": -12,
-									"name": "makeup_db",
-									"unit": "dB"
-								}
-							]
-						},
-						{
-							"kind": "limiter",
-							"params": [
-								{
-									"default": -1,
-									"max": 0,
-									"min": -20,
-									"name": "ceiling_db",
-									"unit": "dBFS"
-								},
-								{
-									"default": 50,
-									"max": 1000,
-									"min": 1,
-									"name": "release_ms",
-									"unit": "ms"
-								}
-							]
-						},
-						{
-							"kind": "gate",
-							"params": [
-								{
-									"default": -50,
-									"max": 0,
-									"min": -80,
-									"name": "threshold_db",
-									"unit": "dBFS"
-								},
-								{
-									"default": -40,
-									"max": 0,
-									"min": -80,
-									"name": "range_db",
-									"unit": "dB"
-								},
-								{
-									"default": 2,
-									"max": 100,
-									"min": 0.1,
-									"name": "attack_ms",
-									"unit": "ms"
-								},
-								{
-									"default": 50,
-									"max": 1000,
-									"min": 0,
-									"name": "hold_ms",
-									"unit": "ms"
-								},
-								{
-									"default": 150,
-									"max": 2000,
-									"min": 5,
-									"name": "release_ms",
-									"unit": "ms"
-								}
-							]
-						},
-						{
-							"kind": "deesser",
-							"params": [
-								{
-									"default": 6500,
-									"max": 12000,
-									"min": 2000,
-									"name": "frequency_hz",
-									"unit": "Hz"
-								},
-								{
-									"default": -30,
-									"max": 0,
-									"min": -60,
-									"name": "threshold_db",
-									"unit": "dBFS"
-								},
-								{
-									"default": 4,
-									"max": 20,
-									"min": 1,
-									"name": "ratio",
-									"unit": "ratio"
-								}
-							]
-						},
-						{
-							"kind": "noise_reduction",
-							"params": [
-								{
-									"default": 0.5,
-									"max": 1,
-									"min": 0,
-									"name": "strength",
-									"unit": "fraction"
-								},
-								{
-									"default": 0,
-									"max": 3600000,
-									"min": 0,
-									"name": "profile_start_ms",
-									"unit": "ms"
-								},
-								{
-									"default": 0,
-									"max": 3600000,
-									"min": 0,
-									"name": "profile_end_ms",
-									"unit": "ms"
-								}
-							]
-						}
-					]
-				},
-				"track_id": {
-					"description": "A track; give this or item_id.",
-					"pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
-					"type": "string"
-				}
-			},
-			"required": [
-				"index"
-			],
-			"type": "object"
-		},
-		"description": "Changes one processor of the chain of an item or a track. index is the 0-based place in the chain. params are merged with the current ones; enabled false keeps the processor but skips it.",
-		"domain": "video",
-		"errors": [
-			"E_VALIDATION",
-			"E_NOT_FOUND",
-			"E_TYPE_MISMATCH"
-		],
-		"example": {
-			"enabled": false,
-			"index": 0,
-			"track_id": "trk_m1n2p3q4r5"
-		},
-		"internal": false,
-		"name": "audio.processor_set",
-		"scope": "edit",
-		"summary": "Set"
 	},
 	{
 		"args_schema": {
@@ -1456,7 +478,6 @@
 			"type": "object"
 		},
 		"description": "Adds a caption. Give either words (times relative to the caption, as lengths) or text with a duration: the text is split on whitespace and the words share the duration in proportion to their character counts. x and y are used when the caption style position of the track is custom.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_INVALID_TIME",
@@ -1477,6 +498,7 @@
 		},
 		"internal": false,
 		"name": "caption.add",
+		"phase": "prototype",
 		"scope": "edit",
 		"summary": "Adds a caption item with timed words."
 	},
@@ -1510,7 +532,6 @@
 			"type": "object"
 		},
 		"description": "Replaces the text of the word at index; timing is untouched. An empty text removes the word and leaves a gap. The only word of a caption cannot be removed.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_NOT_FOUND",
@@ -1524,6 +545,7 @@
 		},
 		"internal": false,
 		"name": "caption.edit_word",
+		"phase": "alpha",
 		"scope": "edit",
 		"summary": "Changes the text of one word of a caption, or removes the word."
 	},
@@ -1613,7 +635,6 @@
 			"type": "object"
 		},
 		"description": "Groups the transcript words of the visible range of the clip into captions of at most max_words words and max_chars characters, split at pauses longer than max_gap, and links them to the clip. With replace (the default) the captions already linked to the clip on that track are removed first. The transcript is supplied by the service in resolved; the command never starts a job.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_INVALID_TIME",
@@ -1631,6 +652,7 @@
 		},
 		"internal": false,
 		"name": "caption.from_transcript",
+		"phase": "alpha",
 		"scope": "edit",
 		"summary": "Creates captions for the speech of a clip from its transcript."
 	},
@@ -1677,7 +699,6 @@
 			"type": "object"
 		},
 		"description": "Reads the subtitle text (the service or the caller reads the file) and adds one caption for each cue on a visual track: the cue time is the caption time, rounded to frames, and its words share the duration in proportion to their character counts. Markup tags and line breaks are dropped. start moves every cue later by that length. The cues must not overlap each other or the items of the track.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_INVALID_TIME",
@@ -1695,6 +716,7 @@
 		},
 		"internal": false,
 		"name": "caption.import_subtitles",
+		"phase": "beta",
 		"scope": "edit",
 		"summary": "Creates one caption per cue of an SRT or WebVTT text."
 	},
@@ -1718,7 +740,6 @@
 			"type": "object"
 		},
 		"description": "The caption that starts first keeps its identifier, style and position and takes the words of the other; the other is removed. Captions with keyframes cannot be merged.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_NOT_FOUND",
@@ -1734,6 +755,7 @@
 		},
 		"internal": false,
 		"name": "caption.merge",
+		"phase": "alpha",
 		"scope": "edit",
 		"summary": "Joins two captions of one track into one that spans both."
 	},
@@ -1788,7 +810,6 @@
 			"type": "object"
 		},
 		"description": "Maps the transcript words of the visible range to the timeline again and gives them to the linked captions in order, each taking as many words as it has. Edited texts are kept when the word count is unchanged. The transcript is supplied by the service in resolved.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_NOT_FOUND",
@@ -1801,6 +822,7 @@
 		},
 		"internal": false,
 		"name": "caption.retime_from_clip",
+		"phase": "alpha",
 		"scope": "edit",
 		"summary": "Retimes the captions linked to a clip after the clip was moved, trimmed or sped up."
 	},
@@ -1829,7 +851,6 @@
 			"type": "object"
 		},
 		"description": "Each break is the index of the word that starts a new line, from 1 to the word count minus 1, strictly increasing. An empty array clears the breaks.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_NOT_FOUND",
@@ -1843,6 +864,7 @@
 		},
 		"internal": false,
 		"name": "caption.set_breaks",
+		"phase": "alpha",
 		"scope": "edit",
 		"summary": "Sets the forced line breaks of a caption."
 	},
@@ -2050,7 +1072,6 @@
 			"type": "object"
 		},
 		"description": "The given keys are merged into the override the caption already has, so a later call that gives only a colour keeps the position set before; a null value removes one key. With replace true the object replaces the whole override. A null or {} style clears the override. highlight is none or word. The caption style of the track is not touched.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_NOT_FOUND",
@@ -2066,6 +1087,7 @@
 		},
 		"internal": false,
 		"name": "caption.set_style",
+		"phase": "alpha",
 		"scope": "edit",
 		"summary": "Sets, changes or clears the style override of one caption."
 	},
@@ -2123,7 +1145,6 @@
 			"type": "object"
 		},
 		"description": "Replaces all words, given as words (1 to 60, times relative to the caption, as lengths) or as text, which is split on whitespace and spread over the caption's current duration like caption.add (duration may change it). With words the caption lasts until the end of the last word unless duration is given. Line breaks are cleared; keyframes are cut when the caption gets shorter.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_INVALID_TIME",
@@ -2150,6 +1171,7 @@
 		},
 		"internal": false,
 		"name": "caption.set_words",
+		"phase": "alpha",
 		"scope": "edit",
 		"summary": "Replaces the words of a caption."
 	},
@@ -2181,7 +1203,6 @@
 			"type": "object"
 		},
 		"description": "The right part starts with the word at before_word. Style and the linked clip are copied to it; transition_out moves to it. The cut falls at the start of that word, so the parts cover the original range.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_NOT_FOUND",
@@ -2196,6 +1217,7 @@
 		},
 		"internal": false,
 		"name": "caption.split",
+		"phase": "alpha",
 		"scope": "edit",
 		"summary": "Splits a caption into two at a word boundary."
 	},
@@ -2249,7 +1271,6 @@
 			"type": "object"
 		},
 		"description": "Adds a clip. The default duration is the rest of the asset from source_in, or 5 seconds for an image. The reserved asset ast_placeholder creates a template slot holder and needs an explicit duration.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_INVALID_TIME",
@@ -2270,6 +1291,7 @@
 		},
 		"internal": false,
 		"name": "clip.add",
+		"phase": "prototype",
 		"scope": "edit",
 		"summary": "Places a video or image asset on a visual track."
 	},
@@ -2350,7 +1372,6 @@
 			"type": "object"
 		},
 		"description": "Replaces the clip or audio item by one item per non-silent stretch of its source range. Silences shorter than min_silence are kept; padding of speech is kept on each side of a cut. With ripple track the pieces close up and the later items of the track follow. The silences come from the analysis of the asset and are supplied by the service in resolved; the command never starts a job. Captions linked to the clip move their link to the piece that holds their first word.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_INVALID_TIME",
@@ -2368,48 +1389,9 @@
 		},
 		"internal": false,
 		"name": "clip.remove_silences",
+		"phase": "alpha",
 		"scope": "edit",
-		"summary": "Cuts the silences out of a clip or audio item, one item per stretch of speech."
-	},
-	{
-		"args_schema": {
-			"$schema": "https://json-schema.org/draft/2020-12/schema",
-			"additionalProperties": false,
-			"properties": {
-				"asset_id": {
-					"description": "A video or image asset of the document, of the same kind as the clip's asset.",
-					"pattern": "^ast_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
-					"type": "string"
-				},
-				"item_id": {
-					"description": "A clip.",
-					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
-					"type": "string"
-				}
-			},
-			"required": [
-				"item_id",
-				"asset_id"
-			],
-			"type": "object"
-		},
-		"description": "Replaces the asset a clip plays, a video by a video or an image by an image, and keeps its position, duration, trim, speed, transform, keyframes and effects: the animation an external engine rendered again takes the place of the one it replaces. Nothing is stretched or trimmed: a video the clip's range does not fit is refused.",
-		"domain": "video",
-		"errors": [
-			"E_VALIDATION",
-			"E_NOT_FOUND",
-			"E_TYPE_MISMATCH",
-			"E_INVALID_STATE",
-			"E_OUT_OF_SOURCE"
-		],
-		"example": {
-			"asset_id": "ast_k8m2n4p6q9",
-			"item_id": "itm_m1n2p3q4r5"
-		},
-		"internal": false,
-		"name": "clip.replace_media",
-		"scope": "edit",
-		"summary": "Swaps the asset of a clip for another of the same kind and keeps everything else."
+		"summary": "Cuts the silent stretches out of a clip or an audio item, leaving one item per stretch of speech."
 	},
 	{
 		"args_schema": {
@@ -2440,7 +1422,6 @@
 			"type": "object"
 		},
 		"description": "Sets one blend mode of the fixed list (normal, multiply, screen, overlay, add). normal is the default and clears the stored one. Works on clip, text, caption and shape items.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_NOT_FOUND",
@@ -2452,6 +1433,7 @@
 		},
 		"internal": false,
 		"name": "clip.set_blend",
+		"phase": "beta",
 		"scope": "edit",
 		"summary": "Sets how a visual item is mixed with what is below it."
 	},
@@ -2479,7 +1461,6 @@
 			"type": "object"
 		},
 		"description": "Sets the Gaussian blur radius in pixels at project resolution, 0 to 100; 0 removes the blur.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_NOT_FOUND",
@@ -2491,6 +1472,7 @@
 		},
 		"internal": false,
 		"name": "clip.set_blur",
+		"phase": "beta",
 		"scope": "edit",
 		"summary": "Sets the blur radius of a visual item."
 	},
@@ -2538,7 +1520,6 @@
 			"type": "object"
 		},
 		"description": "Makes the pixels near a colour transparent. similarity (0 to 1, default 0.3) is how far from the colour a pixel is still removed, smoothness (0 to 1, default 0.1) the soft edge beyond it and spill (0 to 1, default 0) how much of the colour is taken out of the pixels that stay. On a clip that is already keyed, values not given keep their current value. color null removes the key. Values are rounded to 3 decimals.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_NOT_FOUND",
@@ -2553,6 +1534,7 @@
 		},
 		"internal": false,
 		"name": "clip.set_chroma_key",
+		"phase": "beta",
 		"scope": "edit",
 		"summary": "Keys out one colour of a clip, such as a green screen."
 	},
@@ -2863,7 +1845,6 @@
 			"type": "object"
 		},
 		"description": "Sets the given adjustments, rounded to 3 decimals; a value equal to the default (brightness 0, contrast 1, saturation 1, temperature 0, tint 0, hue 0) clears the stored one. Positive temperature is warmer, positive tint is more magenta, hue rotates the colours in degrees. lut_asset is the id of a lut asset (a .cube file) and lut_intensity how much of it is mixed in, 0 to 1, default 1; lut_intensity 0 removes the lookup table. hsl bands (red, orange, yellow, green, cyan, blue, purple, magenta: hue, saturation, lightness, -1 to 1), wheels (shadows, midtones, highlights: hue 0 to 360, amount 0 to 1, luma -1 to 1) and curves (master, red, green, blue: 2 to 8 points of x and y from 0 to 1) each replace what they name and a neutral one removes it.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_NOT_FOUND",
@@ -2877,8 +1858,9 @@
 		},
 		"internal": false,
 		"name": "clip.set_color",
+		"phase": "alpha",
 		"scope": "edit",
-		"summary": "Sets brightness, contrast, saturation, temperature, tint, hue, LUT, HSL bands, wheels and curves of a clip."
+		"summary": "Sets the brightness, contrast, saturation, temperature, tint, hue, lookup table, HSL bands, wheels and curves of a clip."
 	},
 	{
 		"args_schema": {
@@ -2971,7 +1953,6 @@
 			"type": "object"
 		},
 		"description": "Replaces the whole list of effects, applied in order; an empty list removes them. Each kind appears at most once and takes only its own parameters (omitted ones get the defaults): motion_blur amount 0.5 and angle 0; glow amount 0.5, radius 12 and threshold 0.6; vignette amount 0.5 and softness 0.5; grain amount 0.3, size 1 and seed 0; rgb_split amount 0.3 and angle 0; shake amount 0.3, speed 8 and seed 0.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_NOT_FOUND",
@@ -2991,8 +1972,9 @@
 		},
 		"internal": false,
 		"name": "clip.set_effects",
+		"phase": "beta",
 		"scope": "edit",
-		"summary": "Sets the effects of a clip: motion blur, glow, vignette, grain, RGB split and shake."
+		"summary": "Sets the visual effects of a clip: motion blur, glow, vignette, grain, RGB split and shake."
 	},
 	{
 		"args_schema": {
@@ -3029,7 +2011,6 @@
 			"type": "object"
 		},
 		"description": "Sets one filter of the fixed list (none, grayscale, sepia, invert, warm, cool) and its amount, 0 (the original) to 1 (the full filter), rounded to 3 decimals; a value equal to the default (none, 1) clears the stored one.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_NOT_FOUND",
@@ -3042,6 +2023,7 @@
 		},
 		"internal": false,
 		"name": "clip.set_filter",
+		"phase": "beta",
 		"scope": "edit",
 		"summary": "Sets the colour filter of a visual item and how much of it is mixed in."
 	},
@@ -3070,7 +2052,6 @@
 			"type": "object"
 		},
 		"description": "Sets the mirror of an item: horizontal flips left to right, vertical flips top to bottom. A side not given keeps its value; false clears it. Works on clip, text, caption and shape items.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_NOT_FOUND",
@@ -3082,6 +2063,7 @@
 		},
 		"internal": false,
 		"name": "clip.set_flip",
+		"phase": "beta",
 		"scope": "edit",
 		"summary": "Mirrors a visual item horizontally, vertically or both."
 	},
@@ -3139,7 +2121,6 @@
 			"type": "object"
 		},
 		"description": "Sets fit (cover, contain or none) and merges the given crop sides with the current ones. Each side is a fraction of the asset from 0 to 1; left plus right and top plus bottom must stay below 1. A side that has keyframes (crop_left, crop_top, crop_right, crop_bottom; see keyframe.set) cannot be set here.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_NOT_FOUND",
@@ -3156,8 +2137,9 @@
 		},
 		"internal": false,
 		"name": "clip.set_framing",
+		"phase": "alpha",
 		"scope": "edit",
-		"summary": "Sets how a clip fits the frame and how much of each side is cropped."
+		"summary": "Sets how the asset of a clip is fitted into the frame and how much of each side is cropped."
 	},
 	{
 		"args_schema": {
@@ -3236,7 +2218,6 @@
 			"type": "object"
 		},
 		"description": "Sets a mask in the item's own frame: x, y, width and height are fractions of the item (0 to 1, x plus width and y plus height at most 1), feather is the soft edge in pixels (0 to 200, default 0) and invert keeps the outside instead. Replaces the current mask and clears its keyframes (mask_x, mask_y, mask_width, mask_height, mask_feather; see keyframe.set). Works on clip, text, caption and shape items. mask null removes it.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_NOT_FOUND",
@@ -3255,6 +2236,7 @@
 		},
 		"internal": false,
 		"name": "clip.set_mask",
+		"phase": "beta",
 		"scope": "edit",
 		"summary": "Limits where a visual item is drawn to a rectangle or an ellipse."
 	},
@@ -3297,7 +2279,6 @@
 			"type": "object"
 		},
 		"description": "Sets a contour of width pixels (0.5 to 100, default 4) in color (default #000000) around the visible shape of the clip, so a keyed subject gets a sticker-like border. Width is in project pixels. Replaces the current outline; outline null removes it. Works on clips and still images.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_NOT_FOUND",
@@ -3312,6 +2293,7 @@
 		},
 		"internal": false,
 		"name": "clip.set_outline",
+		"phase": "beta",
 		"scope": "edit",
 		"summary": "Gives a clip an outline that follows its visible shape."
 	},
@@ -3372,7 +2354,6 @@
 			"type": "object"
 		},
 		"description": "Sets a shadow drawn below the clip: the silhouette of its picture (a keyed subject keeps its cut-out shape) in color (default #000000), at opacity (0 to 1, default 0.5), moved by dx and dy pixels (-500 to 500, default 8) and softened by blur pixels (0 to 100, default 12). Lengths are project pixels. Replaces the current shadow; shadow null removes it. Works on clips and still images.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_NOT_FOUND",
@@ -3390,6 +2371,7 @@
 		},
 		"internal": false,
 		"name": "clip.set_shadow",
+		"phase": "beta",
 		"scope": "edit",
 		"summary": "Gives a clip a drop shadow that follows its visible shape."
 	},
@@ -3502,7 +2484,6 @@
 			"type": "object"
 		},
 		"description": "Sets either speed, from 0.25x to 4x, or curve, 2 to 8 points {t, speed} (speed is text like \"0.5x\") with t the fraction of the item from 0 to 1 (first 0, last 1) and a linear ramp between points; a speed clears the curve. Rescales the duration, the fades, the transitions and the keyframes by the ratio of the old to the new mean speed. With ripple track the later items of the track follow the change in length. Captions linked to the clip are listed, not changed. reverse true plays the same source range backwards (false restores it), alone or with a speed or a curve.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_NOT_FOUND",
@@ -3530,6 +2511,7 @@
 		},
 		"internal": false,
 		"name": "clip.set_speed",
+		"phase": "alpha",
 		"scope": "edit",
 		"summary": "Changes the speed of a clip or audio item, constant or along a curve, or plays it backwards."
 	},
@@ -3578,7 +2560,6 @@
 			"type": "object"
 		},
 		"description": "Names a font that is already stored by hash in the workspace as a family of the project, so that styles can use it. The family name must not be a bundled family. Adding to an existing family adds the weights and replaces the file of a weight it already has. The command never reads or stores a file; the service refuses a hash that the workspace does not hold.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_NOT_FOUND"
@@ -3598,6 +2579,7 @@
 		},
 		"internal": false,
 		"name": "font.add",
+		"phase": "beta",
 		"scope": "media",
 		"summary": "Adds a user font family to the project, or more weights to one it already has."
 	},
@@ -3617,7 +2599,6 @@
 			"type": "object"
 		},
 		"description": "Removes the family from the fonts of the project. A family that a text style, a caption style or a track still uses cannot be removed. The font files stay in the workspace.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_NOT_FOUND",
@@ -3628,6 +2609,7 @@
 		},
 		"internal": false,
 		"name": "font.remove",
+		"phase": "beta",
 		"scope": "media",
 		"summary": "Removes a user font family from the project."
 	},
@@ -3665,7 +2647,6 @@
 			"type": "object"
 		},
 		"description": "The item that leaves gets a fade transition out and the item that arrives a fade transition in, both of the given length, plus the matching audio fades for clips. The two items must overlap by at least that length, and the arriving item must start after the leaving one. For two neighbours that touch on the same track give track_id, another visual track: the arriving item moves there and starts duration earlier, using the source it has before the cut, so they overlap by duration.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_INVALID_TIME",
@@ -3682,6 +2663,7 @@
 		},
 		"internal": false,
 		"name": "item.crossfade",
+		"phase": "alpha",
 		"scope": "edit",
 		"summary": "Sets a matching fade-out and fade-in on two overlapping visual items of different tracks."
 	},
@@ -3715,7 +2697,6 @@
 			"type": "object"
 		},
 		"description": "Removes the items. With ripple track, every later item on each affected track moves earlier by the length freed on that track; with ripple all, every later item on every track moves by the length freed, which requires the deleted items to cover one contiguous range; ripple all also moves the timeline markers after the range earlier by that length and removes those inside it (effective.markers_removed, markers_moved).",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_NOT_FOUND",
@@ -3730,6 +2711,7 @@
 		},
 		"internal": false,
 		"name": "item.delete",
+		"phase": "prototype",
 		"scope": "edit",
 		"summary": "Removes items, and optionally closes the freed space."
 	},
@@ -3765,7 +2747,6 @@
 			"type": "object"
 		},
 		"description": "Adds a copy of the item at start, on the same track or another track of the same kind. Keyframes, words and the name are copied; the slot mark is not. Without start the copy goes to the first free position at or after the end of the source on the target track. With start it fails when the copy would overlap an item of the target track.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_INVALID_TIME",
@@ -3782,6 +2763,7 @@
 		},
 		"internal": false,
 		"name": "item.duplicate",
+		"phase": "alpha",
 		"scope": "edit",
 		"summary": "Copies an item to another position, optionally on another track."
 	},
@@ -3813,7 +2795,6 @@
 			"type": "object"
 		},
 		"description": "Adds an audio item on an audio track with the same asset, start, duration, source range, speed, curve, reverse, volume, fades, noise reduction and volume keyframes as the clip, links the two, and sets audio_muted on the clip so the sound is not heard twice.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_NOT_FOUND",
@@ -3829,6 +2810,7 @@
 		},
 		"internal": false,
 		"name": "item.extract_audio",
+		"phase": "beta",
 		"scope": "edit",
 		"summary": "Creates an audio item from the audio of a video clip, linked to it, and mutes the clip."
 	},
@@ -3870,7 +2852,6 @@
 			"type": "object"
 		},
 		"description": "Splits the clip at a timeline frame and puts between the two parts a new clip that shows the source frame at that point for duration (default 3s), with no sound. The right part and the later items of the track move later by duration; other tracks are untouched. The freeze frame has no keyframes. Not for linked items or items with a speed curve.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_INVALID_TIME",
@@ -3887,6 +2868,7 @@
 		},
 		"internal": false,
 		"name": "item.freeze_frame",
+		"phase": "beta",
 		"scope": "edit",
 		"summary": "Holds one frame of a clip: splits the clip at a frame and inserts a still of that frame."
 	},
@@ -3915,7 +2897,6 @@
 			"type": "object"
 		},
 		"description": "Puts 2 to 20 clip, audio, text or shape items in one link group. item.move, item.trim and item.split on one of them apply the same change to the others, and a locked track refuses the edit that would change a linked item on it. An item belongs to one group; unlink it first to link it elsewhere.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_NOT_FOUND",
@@ -3931,6 +2912,7 @@
 		},
 		"internal": false,
 		"name": "item.link",
+		"phase": "beta",
 		"scope": "edit",
 		"summary": "Links items so that they move, trim and split together."
 	},
@@ -3964,7 +2946,6 @@
 			"type": "object"
 		},
 		"description": "Sets the start of the item, its track, or both; at least one is required. Keyframes, words, transitions and fades are relative to the item and travel with it. With slide true the neighbours that touch the item are trimmed so they keep touching it (a slide edit).",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_INVALID_TIME",
@@ -3980,6 +2961,7 @@
 		},
 		"internal": false,
 		"name": "item.move",
+		"phase": "prototype",
 		"scope": "edit",
 		"summary": "Moves an item in time, to another track of the same kind, or both."
 	},
@@ -4017,7 +2999,6 @@
 			"type": "object"
 		},
 		"description": "Copies attribute groups from one item to 1 to 20 others: color, filter, blur, framing, transform (x, y, scale, rotation, opacity), blend, mask, flip, chroma_key, effects, audio (volume, denoise, voice). A group the target type does not have is skipped and listed in effective.skipped. Keyframes are not copied; a target whose animated property would be overwritten is refused.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_NOT_FOUND",
@@ -4036,6 +3017,7 @@
 		},
 		"internal": false,
 		"name": "item.paste_attributes",
+		"phase": "beta",
 		"scope": "edit",
 		"summary": "Copies the look of one item to other items."
 	},
@@ -4063,7 +3045,6 @@
 			"type": "object"
 		},
 		"description": "Sets the display name of the item; an empty name clears it.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_NOT_FOUND"
@@ -4074,6 +3055,7 @@
 		},
 		"internal": false,
 		"name": "item.rename",
+		"phase": "alpha",
 		"scope": "edit",
 		"summary": "Sets the label of an item."
 	},
@@ -4125,7 +3107,6 @@
 			"type": "object"
 		},
 		"description": "Adds copies of the item one after the other on its track, starting at its end: give copies (1 to 200 extra plays) or until (an absolute time; the last copy is trimmed to end exactly there). Keyframes, words and the name are copied; the slot mark is not. With ripple none (default) it fails when a copy would overlap an item of the track; with ripple track the later items of the track move later by the length added. With link the item and its copies are linked, so they move, trim and split together (up to 20 items).",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_INVALID_TIME",
@@ -4142,6 +3123,7 @@
 		},
 		"internal": false,
 		"name": "item.repeat",
+		"phase": "beta",
 		"scope": "edit",
 		"summary": "Repeats an item back to back, a number of times or until a time, such as a looping background."
 	},
@@ -4200,7 +3182,6 @@
 			"type": "object"
 		},
 		"description": "Sets the given values. Volume 1, fades of 0, audio_muted false, denoise 0 and voice none clear the stored value. audio_muted applies to clip items only. denoise is the noise reduction strength, 0 to 1. voice is a preset for speech: clear, warm, deep, bright or radio. The two fades together cannot be longer than the item.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_INVALID_TIME",
@@ -4216,8 +3197,9 @@
 		},
 		"internal": false,
 		"name": "item.set_audio",
+		"phase": "alpha",
 		"scope": "edit",
-		"summary": "Sets the volume, fades, mute, noise reduction or voice of a clip or audio item."
+		"summary": "Sets the volume, the fades, the mute flag, the noise reduction or the voice of a clip or audio item."
 	},
 	{
 		"args_schema": {
@@ -4241,7 +3223,6 @@
 			"type": "object"
 		},
 		"description": "enabled false keeps the item, its place and its settings, and makes the preview, the export and the audio mix ignore it; true turns it back on. Works on every item type.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_NOT_FOUND"
@@ -4252,6 +3233,7 @@
 		},
 		"internal": false,
 		"name": "item.set_enabled",
+		"phase": "beta",
 		"scope": "edit",
 		"summary": "Turns an item off or on without removing it from the timeline."
 	},
@@ -4295,7 +3277,6 @@
 			"type": "object"
 		},
 		"description": "Sets the given properties, rounded to 3 decimals. Scale 1, rotation 0 and opacity 1 clear the stored value. A property that has keyframes cannot be set; use keyframe.set or keyframe.clear.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_NOT_FOUND",
@@ -4309,6 +3290,7 @@
 		},
 		"internal": false,
 		"name": "item.set_transform",
+		"phase": "alpha",
 		"scope": "edit",
 		"summary": "Sets the position, scale, rotation or opacity of a visual item."
 	},
@@ -4381,7 +3363,6 @@
 			"type": "object"
 		},
 		"description": "Sets a fade, a slide, a zoom, a whip, a dip, a wipe, a spin, a shrink or a grow on the in or out edge, 0.5 seconds long unless duration is given; kind null removes the transition. color (#RRGGBB, default black) is for dip; direction (left, right, up or down, default left) is for whip and wipe. The two transitions together cannot be longer than the item. A transition needs something visible beneath it: to crossfade, let the previous clip run under it, on another track below, so that it is still playing during the duration of the in edge (or already playing during the out edge); otherwise lint reports L_TRANSITION_EMPTY. For example, clip A on the lower track ends at 4.5s and clip B on the upper track starts at 4s, so B gets {\"item_id\": B, \"edge\": \"in\", \"kind\": \"fade\", \"duration\": \"0.5s\"}.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_INVALID_TIME",
@@ -4396,6 +3377,7 @@
 		},
 		"internal": false,
 		"name": "item.set_transition",
+		"phase": "alpha",
 		"scope": "edit",
 		"summary": "Sets or removes the transition on one edge of a visual item."
 	},
@@ -4422,7 +3404,6 @@
 			"type": "object"
 		},
 		"description": "Sets source_in, the offset into the asset where the item starts reading (a slip edit). The start, the duration, the keyframes and the neighbours do not change. The source range must stay inside the asset.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_INVALID_TIME",
@@ -4436,6 +3417,7 @@
 		},
 		"internal": false,
 		"name": "item.slip",
+		"phase": "beta",
 		"scope": "edit",
 		"summary": "Shows another part of the source in a clip or audio item without moving or resizing it."
 	},
@@ -4474,7 +3456,6 @@
 			"type": "object"
 		},
 		"description": "The original item keeps its id and becomes the left part; a new item is the right part. Transitions, fades, keyframes and caption words are divided so that the motion is unchanged.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_INVALID_TIME",
@@ -4490,6 +3471,7 @@
 		},
 		"internal": false,
 		"name": "item.split",
+		"phase": "prototype",
 		"scope": "edit",
 		"summary": "Splits an item into two at a timeline frame."
 	},
@@ -4535,7 +3517,6 @@
 			"type": "object"
 		},
 		"description": "Moves an edge to an absolute position and keeps the source range, the keyframes and the caption words consistent. The end edge is exclusive: it is the first frame after the item. With ripple track the later items of the track follow the change in length (a start trim then keeps the start of the item). With roll true the touching edge of the neighbouring item moves to the same frame (a roll edit).",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_INVALID_TIME",
@@ -4551,6 +3532,7 @@
 		},
 		"internal": false,
 		"name": "item.trim",
+		"phase": "prototype",
 		"scope": "edit",
 		"summary": "Moves the start edge or the end edge of an item to a timeline position."
 	},
@@ -4574,7 +3556,6 @@
 			"type": "object"
 		},
 		"description": "Takes each listed item out of its link group. A group left with one item is dissolved, so the item that remains is unlinked too (listed in effective.also_unlinked).",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_NOT_FOUND",
@@ -4587,6 +3568,7 @@
 		},
 		"internal": false,
 		"name": "item.unlink",
+		"phase": "beta",
 		"scope": "edit",
 		"summary": "Removes items from their link group."
 	},
@@ -4633,7 +3615,6 @@
 			"type": "object"
 		},
 		"description": "The value at the first frame of the item becomes the static value. Without property, every animated property is cleared.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_NOT_FOUND",
@@ -4645,6 +3626,7 @@
 		},
 		"internal": false,
 		"name": "keyframe.clear",
+		"phase": "alpha",
 		"scope": "edit",
 		"summary": "Removes all keyframes of one property, or of every property."
 	},
@@ -4697,7 +3679,6 @@
 			"type": "object"
 		},
 		"description": "Removes the keyframe at the absolute position. The last keyframe of a property writes its value into the static field.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_INVALID_TIME",
@@ -4711,6 +3692,7 @@
 		},
 		"internal": false,
 		"name": "keyframe.remove",
+		"phase": "alpha",
 		"scope": "edit",
 		"summary": "Removes the keyframe of a property at a frame."
 	},
@@ -4724,24 +3706,14 @@
 					"type": "string",
 					"x-vv-kind": "time"
 				},
-				"bezier": {
-					"description": "x1, y1, x2, y2 of the curve of easing bezier: x1 and x2 from 0 to 1, y1 and y2 from -2 to 3.",
-					"items": {
-						"type": "number"
-					},
-					"maxItems": 4,
-					"minItems": 4,
-					"type": "array"
-				},
 				"easing": {
-					"description": "From this keyframe to the next. Default linear. bezier needs the bezier argument.",
+					"description": "From this keyframe to the next. Default linear.",
 					"enum": [
 						"linear",
 						"ease_in",
 						"ease_out",
 						"ease_in_out",
-						"hold",
-						"bezier"
+						"hold"
 					],
 					"type": "string"
 				},
@@ -4789,7 +3761,6 @@
 			"type": "object"
 		},
 		"description": "Sets the value of x, y, scale, rotation, opacity, (clips and audio) volume, (clips) brightness, contrast, saturation, temperature, tint or hue, (items with a mask, set it first with clip.set_mask) mask_x, mask_y, mask_width, mask_height or mask_feather, or (clips) crop_left, crop_top, crop_right or crop_bottom at an absolute position inside the item, from its start to its end inclusive. When the property had no keyframe and at is after the start, its current static value becomes the first keyframe. The easing applies from this keyframe to the next. At most 100 keyframes per property.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_INVALID_TIME",
@@ -4807,106 +3778,9 @@
 		},
 		"internal": false,
 		"name": "keyframe.set",
+		"phase": "alpha",
 		"scope": "edit",
 		"summary": "Adds or replaces a keyframe of one animated property of an item."
-	},
-	{
-		"args_schema": {
-			"$schema": "https://json-schema.org/draft/2020-12/schema",
-			"additionalProperties": false,
-			"properties": {
-				"at": {
-					"description": "Position of an existing keyframe on the project timeline.",
-					"type": "string",
-					"x-vv-kind": "time"
-				},
-				"bezier": {
-					"description": "x1, y1, x2, y2 of a cubic Bezier curve: x1 and x2 from 0 to 1, y1 and y2 from -2 to 3.",
-					"items": {
-						"type": "number"
-					},
-					"maxItems": 4,
-					"minItems": 4,
-					"type": "array"
-				},
-				"easing": {
-					"description": "A named easing. Exactly one of easing, bezier and preset.",
-					"enum": [
-						"linear",
-						"ease_in",
-						"ease_out",
-						"ease_in_out",
-						"hold"
-					],
-					"type": "string"
-				},
-				"item_id": {
-					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
-					"type": "string"
-				},
-				"preset": {
-					"description": "A named Bezier curve, stored as its four numbers.",
-					"enum": [
-						"in",
-						"out",
-						"in_out",
-						"back",
-						"overshoot"
-					],
-					"type": "string"
-				},
-				"property": {
-					"enum": [
-						"x",
-						"y",
-						"scale",
-						"rotation",
-						"opacity",
-						"volume",
-						"brightness",
-						"contrast",
-						"saturation",
-						"temperature",
-						"tint",
-						"hue",
-						"mask_x",
-						"mask_y",
-						"mask_width",
-						"mask_height",
-						"mask_feather",
-						"crop_left",
-						"crop_top",
-						"crop_right",
-						"crop_bottom"
-					],
-					"type": "string"
-				}
-			},
-			"required": [
-				"item_id",
-				"property",
-				"at"
-			],
-			"type": "object"
-		},
-		"description": "Gives the keyframe at the absolute position a named easing (easing), a custom cubic Bezier curve (bezier: x1, y1, x2, y2; x1 and x2 from 0 to 1, y1 and y2 from -2 to 3) or a named Bezier preset (preset: in, out, in_out, back, overshoot, stored as its four numbers). Exactly one of the three. The value and the time of the keyframe do not change. Works for every animatable property, crop and mask included.",
-		"domain": "video",
-		"errors": [
-			"E_VALIDATION",
-			"E_INVALID_TIME",
-			"E_NOT_FOUND",
-			"E_TYPE_MISMATCH"
-		],
-		"example": {
-			"at": "1s",
-			"item_id": "itm_s6t7v8w9x0",
-			"preset": "overshoot",
-			"property": "scale"
-		},
-		"internal": false,
-		"name": "keyframe.set_easing",
-		"scope": "edit",
-		"summary": "Changes the easing of the segment that starts at a keyframe."
 	},
 	{
 		"args_schema": {
@@ -4935,7 +3809,6 @@
 			"type": "object"
 		},
 		"description": "Adds a marker at a frame of the timeline, with an optional label of up to 60 characters. With item_id the marker belongs to that item (at must fall inside it) and moves with it, like the beat markers of audio.mark_beats. At most 200 markers on the timeline and on each item; one marker per frame. Markers have no effect on the picture or the sound.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_INVALID_TIME",
@@ -4948,6 +3821,7 @@
 		},
 		"internal": false,
 		"name": "marker.add",
+		"phase": "beta",
 		"scope": "edit",
 		"summary": "Puts a marker on the timeline, or on one item."
 	},
@@ -4975,7 +3849,6 @@
 			"type": "object"
 		},
 		"description": "Removes the marker at a frame; all removes every marker. With item_id it works on the markers of that item, beat markers included.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_INVALID_TIME",
@@ -4986,6 +3859,7 @@
 		},
 		"internal": false,
 		"name": "marker.remove",
+		"phase": "beta",
 		"scope": "edit",
 		"summary": "Removes a marker of the timeline or of an item."
 	},
@@ -5021,7 +3895,6 @@
 			"type": "object"
 		},
 		"description": "Finds the marker at a frame and changes its frame (to) and or its label; a label of \"\" removes the label. With item_id it works on the markers of that item, and at and to fall inside it.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_INVALID_TIME",
@@ -5035,6 +3908,7 @@
 		},
 		"internal": false,
 		"name": "marker.set",
+		"phase": "beta",
 		"scope": "edit",
 		"summary": "Moves or relabels a marker of the timeline or of an item."
 	},
@@ -5056,7 +3930,6 @@
 			"type": "object"
 		},
 		"description": "Sets the name of the project. The name is stored exactly as given, without trimming.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION"
 		],
@@ -5065,6 +3938,7 @@
 		},
 		"internal": false,
 		"name": "project.rename",
+		"phase": "prototype",
 		"scope": "edit",
 		"summary": "Sets the project name."
 	},
@@ -5100,7 +3974,6 @@
 			"type": "object"
 		},
 		"description": "Sets the frame size from an aspect preset (16:9 is 1920x1080, 9:16 is 1080x1920, 1:1 is 1080x1080, 4:5 is 1080x1350) or from width and height. Like settings.set, the explicit x and y of the items and their keyframes follow the size. Beyond that, text and shape items, and clips with fit none, are scaled by the smaller of the two axis ratios so they keep their share of the frame instead of overflowing it. Clips with fit cover or contain fill the frame by themselves; adjust their crop with clip.set_framing.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION"
 		],
@@ -5109,6 +3982,7 @@
 		},
 		"internal": false,
 		"name": "settings.reframe",
+		"phase": "beta",
 		"scope": "edit",
 		"summary": "Re-targets the project to another aspect ratio and refits the items to the new frame."
 	},
@@ -5144,7 +4018,6 @@
 			"type": "object"
 		},
 		"description": "Sets the given settings. When the size changes, the explicit x and y of every visual item, and the values of its x and y keyframes, are scaled by the ratio of new to old size on each axis; scale and text size are untouched and items at the default position stay centred.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION"
 		],
@@ -5154,6 +4027,7 @@
 		},
 		"internal": false,
 		"name": "settings.set",
+		"phase": "prototype",
 		"scope": "edit",
 		"summary": "Sets the frame size, the background colour or the loudness target."
 	},
@@ -5203,7 +4077,6 @@
 			"type": "object"
 		},
 		"description": "Rescales every time quantity q of the project to round(q * new / old), then repairs what rounding can break: durations that became 0, the source range, overlaps, keyframes, caption words, fades and transitions. effective.adjusted lists every item changed by a repair. A rate is 1 to 120 fps with a denominator of 1 or 1001.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_INVALID_TIME"
@@ -5213,6 +4086,7 @@
 		},
 		"internal": false,
 		"name": "settings.set_fps",
+		"phase": "alpha",
 		"scope": "edit",
 		"summary": "Changes the project frame rate and rescales every time quantity."
 	},
@@ -5289,7 +4163,6 @@
 			"type": "object"
 		},
 		"description": "Adds a shape item with the given size in pixels before scale. Colours are hex or a template colour name like \"$accent\"; radius is for rounded_rect only. x and y default to the frame centre.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_INVALID_TIME",
@@ -5310,6 +4183,7 @@
 		},
 		"internal": false,
 		"name": "shape.add",
+		"phase": "alpha",
 		"scope": "edit",
 		"summary": "Adds a rectangle, rounded rectangle or ellipse to a visual track."
 	},
@@ -5362,7 +4236,6 @@
 			"type": "object"
 		},
 		"description": "Sets the given fields; a value equal to its default clears the stored field. Changing the shape to rect or ellipse removes a stored radius. Position and transform are set with item.set_transform.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_NOT_FOUND",
@@ -5376,6 +4249,7 @@
 		},
 		"internal": false,
 		"name": "shape.set",
+		"phase": "alpha",
 		"scope": "edit",
 		"summary": "Changes the shape, size, colours, stroke or radius of a shape item."
 	},
@@ -5439,7 +4313,6 @@
 			"type": "object"
 		},
 		"description": "Give exactly one of asset_id (media slot), text (text slot) or words (caption slot). A media slot with duration policy fit keeps its duration and needs an asset long enough; with stretch_timeline it takes the rest of the asset and the later items of every track follow.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_INVALID_TIME",
@@ -5458,6 +4331,7 @@
 		},
 		"internal": false,
 		"name": "slot.fill",
+		"phase": "alpha",
 		"scope": "edit",
 		"summary": "Fills a template slot with media, text or caption words."
 	},
@@ -5500,7 +4374,6 @@
 			"type": "object"
 		},
 		"description": "Makes a clip, audio, text or caption item a slot named name; the slot kind follows from the item type (clip and audio give media). Marking the same item again with the same name updates the slot.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_NOT_FOUND",
@@ -5515,6 +4388,7 @@
 		},
 		"internal": false,
 		"name": "slot.mark",
+		"phase": "alpha",
 		"scope": "edit",
 		"summary": "Marks an item as a template slot."
 	},
@@ -5534,7 +4408,6 @@
 			"type": "object"
 		},
 		"description": "The item keeps its content. An unfilled media slot that still holds the placeholder asset cannot be unmarked.",
-		"domain": "video",
 		"errors": [
 			"E_NOT_FOUND",
 			"E_SLOT",
@@ -5545,6 +4418,7 @@
 		},
 		"internal": false,
 		"name": "slot.unmark",
+		"phase": "alpha",
 		"scope": "edit",
 		"summary": "Removes the slot marking of an item."
 	},
@@ -5577,7 +4451,6 @@
 			"type": "object"
 		},
 		"description": "Sets the description and adds, replaces or (with null) removes named colours. A colour that a style, a shape or the background still refers to as \"$name\" cannot be removed. A document that has no template gets one.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_IN_USE"
@@ -5591,6 +4464,7 @@
 		},
 		"internal": false,
 		"name": "template.set_info",
+		"phase": "alpha",
 		"scope": "edit",
 		"summary": "Sets the description and the named colours of the template."
 	},
@@ -5726,7 +4600,6 @@
 			"type": "object"
 		},
 		"description": "Adds a text item. The style is stored exactly as given, including keys equal to the default. x and y are the centre of the item in pixels; without them the item is centred.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_INVALID_TIME",
@@ -5749,6 +4622,7 @@
 		},
 		"internal": false,
 		"name": "text.add",
+		"phase": "prototype",
 		"scope": "edit",
 		"summary": "Adds a text item to a visual track."
 	},
@@ -5796,7 +4670,6 @@
 			"type": "object"
 		},
 		"description": "Writes the keyframes (or, for slide_left and slide_right, the transition) of the preset on the in or out edge, 0.4 seconds long unless duration is given. Keyframes of the same properties inside that edge are replaced; the rest of the animation is kept.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_INVALID_TIME",
@@ -5812,6 +4685,7 @@
 		},
 		"internal": false,
 		"name": "text.apply_preset",
+		"phase": "alpha",
 		"scope": "edit",
 		"summary": "Animates one edge of a visual item with a named preset."
 	},
@@ -5980,7 +4854,6 @@
 			"type": "object"
 		},
 		"description": "Replaces the text, merges a partial style into the stored one (null removes a key), or empties the style first with reset_style. At least one of text, style and reset_style is required.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_NOT_FOUND",
@@ -5996,6 +4869,7 @@
 		},
 		"internal": false,
 		"name": "text.set",
+		"phase": "prototype",
 		"scope": "edit",
 		"summary": "Changes the content or the style of a text item."
 	},
@@ -6030,7 +4904,6 @@
 			"type": "object"
 		},
 		"description": "Moves the items after the gap earlier by the length of the gap: those of the track (ripple track, the default) or those of every track (ripple all); ripple all also moves the timeline markers after the gap and removes those inside it.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_INVALID_TIME",
@@ -6044,6 +4917,7 @@
 		},
 		"internal": false,
 		"name": "timeline.close_gap",
+		"phase": "alpha",
 		"scope": "edit",
 		"summary": "Closes the empty range that contains a given frame on a track."
 	},
@@ -6092,7 +4966,6 @@
 			"type": "object"
 		},
 		"description": "Adds a visual or audio track. A visual track goes on top by default and an audio track at the bottom, below the visual ones; position top or bottom, above or below another track places it elsewhere. The first track in the order is the top layer. The document keeps tracks in a map by id, so read the stacking from the order field (ascending, the smallest is the top layer), not from the position of a track in the listing.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_NOT_FOUND",
@@ -6106,6 +4979,7 @@
 		},
 		"internal": false,
 		"name": "track.add",
+		"phase": "prototype",
 		"scope": "edit",
 		"summary": "Adds an empty track at a place in the track order."
 	},
@@ -6140,7 +5014,6 @@
 			"type": "object"
 		},
 		"description": "Moves a track to the top or the bottom, or directly above or below another track. Items are untouched.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_NOT_FOUND",
@@ -6152,6 +5025,7 @@
 		},
 		"internal": false,
 		"name": "track.move",
+		"phase": "prototype",
 		"scope": "edit",
 		"summary": "Changes the place of a track in the track order."
 	},
@@ -6175,7 +5049,6 @@
 			"type": "object"
 		},
 		"description": "Removes the track. A track with items is refused with E_NOT_EMPTY unless with_items is true, in which case its items are removed too.",
-		"domain": "video",
 		"errors": [
 			"E_NOT_FOUND",
 			"E_NOT_EMPTY"
@@ -6186,6 +5059,7 @@
 		},
 		"internal": false,
 		"name": "track.remove",
+		"phase": "prototype",
 		"scope": "edit",
 		"summary": "Removes a track, and its items when with_items is true."
 	},
@@ -6389,7 +5263,6 @@
 			"type": "object"
 		},
 		"description": "Sets the caption style of a visual track. The style is stored exactly as given, including keys equal to the default. A null value removes a key when merging. highlight is \"none\" or \"word\" (the active word is coloured with highlight_color). A bottom position anchors to the bottom of the safe area, not of the frame.",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_NOT_FOUND",
@@ -6405,6 +5278,7 @@
 		},
 		"internal": false,
 		"name": "track.set_caption_style",
+		"phase": "prototype",
 		"scope": "edit",
 		"summary": "Merges a partial caption style into a track, or replaces it."
 	},
@@ -6454,7 +5328,6 @@
 			"type": "object"
 		},
 		"description": "Sets the given fields. hidden applies to visual tracks, the others to both kinds. locked refuses every edit of the items of the track (E_INVALID_STATE) until it is unlocked. solo plays only the soloed tracks: the picture of visual tracks when one is solo, and the sound of every track. volume is a factor from 0 to 4 on the volume of the items of the track; 1 clears it. magnet packs the items of the track from frame 0 with no gap, now and after every later edit (a locked track is not repacked).",
-		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_NOT_FOUND",
@@ -6466,6 +5339,7 @@
 		},
 		"internal": false,
 		"name": "track.update",
+		"phase": "prototype",
 		"scope": "edit",
 		"summary": "Sets the name, hidden, muted, locked, solo or magnet flag or the volume of a track."
 	}

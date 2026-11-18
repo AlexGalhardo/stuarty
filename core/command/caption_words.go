@@ -5,7 +5,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
 func init() {
@@ -22,6 +22,7 @@ func init() {
 			CodeValidation, CodeInvalidTime, CodeNotFound, CodeTypeMismatch, CodeInvalidState, CodeLimit, CodeOverlap,
 		},
 		Scope: ScopeEdit,
+		Phase: Alpha,
 	}, applyCaptionSetWords))
 
 	Register(Define(Spec{
@@ -32,6 +33,7 @@ func init() {
 		Example: `{"item_id": "itm_s6t7v8w9x0", "index": 3, "text": "editor"}`,
 		Errors:  []string{CodeValidation, CodeNotFound, CodeTypeMismatch, CodeInvalidState},
 		Scope:   ScopeEdit,
+		Phase:   Alpha,
 	}, applyCaptionEditWord))
 
 	Register(Define(Spec{
@@ -42,6 +44,7 @@ func init() {
 		Example: `{"item_id": "itm_s6t7v8w9x0", "breaks": [2]}`,
 		Errors:  []string{CodeValidation, CodeNotFound, CodeTypeMismatch},
 		Scope:   ScopeEdit,
+		Phase:   Alpha,
 	}, applyCaptionSetBreaks))
 
 	Register(Define(Spec{
@@ -54,6 +57,7 @@ func init() {
 		Example: `{"item_id": "itm_s6t7v8w9x0", "style": {"size": 80, "highlight": "word"}}`,
 		Errors:  []string{CodeValidation, CodeNotFound, CodeTypeMismatch, CodeFontUnknown},
 		Scope:   ScopeEdit,
+		Phase:   Alpha,
 	}, applyCaptionSetStyle))
 }
 

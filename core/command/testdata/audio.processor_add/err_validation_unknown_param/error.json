@@ -1,7 +1,0 @@
-{
-  "code": "E_VALIDATION",
-  "message": "args.params.ratio is not a parameter of gate.",
-  "hint": "The parameters of gate are threshold_db, range_db, attack_ms, hold_ms, release_ms.",
-  "retryable": false,
-  "path": "args.params.ratio"
-}

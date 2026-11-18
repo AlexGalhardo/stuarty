@@ -15,7 +15,7 @@ description: "Turn the speech of a clip into word-timed text on your computer, a
 
 By default transcription runs on your computer with whisper.cpp and a model you install once: `tiny`, `base`, `small` (the default) or `large-v3-turbo`. The download is an explicit step, announced with its size and host before it starts, and nothing is downloaded at any other time. When the files are missing, the job fails with `E_TRANSCRIBE_UNAVAILABLE` and the editor offers to install them.
 
-An operator can point the server to an OpenAI-compatible transcription API with `STUARTY_TRANSCRIBE_URL`, `STUARTY_TRANSCRIBE_KEY` and `STUARTY_TRANSCRIBE_MODEL`. Then the audio of the asset (and nothing else) is sent to that host, and the job message says which host receives it. With no URL set, no audio leaves the machine. See [Privacy](/docs/self-hosting/privacy).
+An operator can point the server to an OpenAI-compatible transcription API with `VUKEM_VIDEO_TRANSCRIBE_URL`, `VUKEM_VIDEO_TRANSCRIBE_KEY` and `VUKEM_VIDEO_TRANSCRIBE_MODEL`. Then the audio of the asset (and nothing else) is sent to that host, and the job message says which host receives it. With no URL set, no audio leaves the machine. See [Privacy](/docs/self-hosting/privacy).
 
 ## Quick start
 
@@ -30,9 +30,9 @@ In the editor, select a clip that has audio and open **Auto captions** in the in
 <Tab title="CLI">
 
 ```bash
-stuarty tools:install whisper --model small   # a person, in a terminal; works while the server runs
-stuarty transcribe --project prj_7k2m9x4q1b --asset ast_3c5v8n2w6d --language en
-stuarty edit --project prj_7k2m9x4q1b caption.from_transcript \
+vukem-video tools:install whisper --model small   # a person, in a terminal; works while the server runs
+vukem-video transcribe --project prj_7k2m9x4q1b --asset ast_3c5v8n2w6d --language en
+vukem-video edit --project prj_7k2m9x4q1b caption.from_transcript \
   clip_item_id=itm_m1n2p3q4r5 track_id=trk_f6g7h8j9k0 max_words:=4
 ```
 
@@ -55,8 +55,8 @@ stuarty edit --project prj_7k2m9x4q1b caption.from_transcript \
 ## Common mistakes
 
 - Running `caption.from_transcript` before the transcript exists. Start the transcription job and wait for it first.
-- Transcription is queued behind others: `STUARTY_MAX_TRANSCRIBES` and `STUARTY_MAX_TRANSCRIBES_PER_KEY` limit how many run at once.
-- A source longer than `STUARTY_MAX_TRANSCRIBE_SECONDS` (2 hours by default) is refused.
+- Transcription is queued behind others: `VUKEM_VIDEO_MAX_TRANSCRIBES` and `VUKEM_VIDEO_MAX_TRANSCRIBES_PER_KEY` limit how many run at once.
+- A source longer than `VUKEM_VIDEO_MAX_TRANSCRIBE_SECONDS` (2 hours by default) is refused.
 
 ## Next steps
 

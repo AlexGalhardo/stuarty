@@ -1,7 +1,0 @@
-{
-  "code": "E_VALIDATION",
-  "message": "Give exactly one of args.item_id and args.track_id.",
-  "hint": "Send item_id for a clip or audio item, or track_id for a track chain.",
-  "retryable": false,
-  "path": "args.item_id"
-}

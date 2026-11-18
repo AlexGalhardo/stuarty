@@ -23,7 +23,7 @@ Raising brightness makes every part of the picture lighter, so the dark parts al
 
 **Example.** A video filmed in shade made brighter so the face is visible.
 
-**In Stuarty.** `brightness`, from -1 to 1 (default 0).
+**In Vukem Video.** `brightness`, from -1 to 1 (default 0).
 
 **See also:** [Contrast](#contrast), [Exposure](/docs/glossary/shooting-and-footage#exposure).
 
@@ -45,7 +45,7 @@ Color correction repairs problems: a picture that is too dark, too blue or too y
 
 **Example.** A video filmed indoors looks orange, so you make it a little cooler.
 
-**In Stuarty.** `clip.set_color` sets brightness, contrast and saturation. See [Effects and color](/docs/guide/effects-and-color).
+**In Vukem Video.** `clip.set_color` sets brightness, contrast and saturation. See [Effects and color](/docs/guide/effects-and-color).
 
 **See also:** [Color grading](#color-grading), [White balance](#white-balance).
 
@@ -107,7 +107,7 @@ A high contrast picture has deep blacks and bright whites. A low contrast one lo
 
 **Example.** A foggy video looks better with a bit more contrast.
 
-**In Stuarty.** `contrast`, from 0 to 2 (default 1).
+**In Vukem Video.** `contrast`, from 0 to 2 (default 1).
 
 **See also:** [Brightness](#brightness), [Dynamic range](#dynamic-range).
 
@@ -149,7 +149,7 @@ Grayscale (black and white) keeps brightness and removes all colour. It is often
 
 **Example.** An old photograph.
 
-**In Stuarty.** The `grayscale` filter of `clip.set_filter`.
+**In Vukem Video.** The `grayscale` filter of `clip.set_filter`.
 
 **Also called:** black and white. **See also:** [Saturation](#saturation), [Sepia](#sepia).
 
@@ -229,7 +229,7 @@ A LUT (look-up table) is a recipe: for every input colour, it says which colour 
 
 **Example.** Dropping a "warm film" LUT on a clip to give it a movie look.
 
-**In Stuarty.** Import a .cube file as a lut asset and apply it to a clip with clip.set_color (lut_asset and lut_intensity).
+**In Vukem Video.** Import a .cube file as a lut asset and apply it to a clip with clip.set_color (lut_asset and lut_intensity).
 
 **See also:** [Color grading](#color-grading), [Log footage](#log-footage).
 
@@ -271,7 +271,7 @@ At full saturation colours are rich and strong. At zero there is no colour at al
 
 **Example.** Turn saturation down and a rainbow fades to grey.
 
-**In Stuarty.** `saturation`, from 0 to 2 (default 1).
+**In Vukem Video.** `saturation`, from 0 to 2 (default 1).
 
 **See also:** [Hue](#hue), [Grayscale](#grayscale).
 
@@ -293,7 +293,7 @@ Sepia colours the picture in brown tones like old photographs.
 
 **Example.** A picture of your grandparents made to look like it is a hundred years old.
 
-**In Stuarty.** The `sepia` filter of `clip.set_filter`.
+**In Vukem Video.** The `sepia` filter of `clip.set_filter`.
 
 **See also:** [Grayscale](#grayscale), [Look](#look).
 

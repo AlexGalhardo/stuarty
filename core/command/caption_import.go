@@ -1,8 +1,8 @@
 package command
 
 import (
-	"github.com/AlexGalhardo/stuarty/core/subtitle"
-	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/core/subtitle"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
 // maxSubtitleChars bounds the text of caption.import_subtitles.
@@ -22,6 +22,7 @@ func init() {
 			CodeLimit, CodeOverlap,
 		},
 		Scope: ScopeEdit,
+		Phase: Beta,
 	}, applyCaptionImportSubtitles))
 }
 

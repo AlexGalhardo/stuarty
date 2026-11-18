@@ -37,7 +37,7 @@ func entries(t *testing.T, dir string) []string {
 func TestPutStoresByHashAndDeduplicates(t *testing.T) {
 	ws := t.TempDir()
 	s := New(ws)
-	data := bytes.Repeat([]byte("Stuarty "), 1000)
+	data := bytes.Repeat([]byte("vukem video "), 1000)
 
 	r, err := s.Put(context.Background(), bytes.NewReader(data), 1<<20)
 	if err != nil {
@@ -91,7 +91,7 @@ func TestPutRefusesWhatSDD007Refuses(t *testing.T) {
 	var e *Error
 	if !errors.As(err, &e) || e.Code != CodeLimitExceeded || e.Details["limit"] != "import_bytes" ||
 		e.Details["ceiling"] != int64(100) ||
-		e.Details["variable"] != "STUARTY_MAX_IMPORT_BYTES" {
+		e.Details["variable"] != "VUKEM_VIDEO_MAX_IMPORT_BYTES" {
 		t.Errorf("over the limit: %v", err)
 	}
 	// Exactly max is fine.

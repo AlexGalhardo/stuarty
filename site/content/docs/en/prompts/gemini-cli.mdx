@@ -1,24 +1,24 @@
 ---
 title: "Gemini CLI"
-description: "Register the Stuarty MCP server in Gemini CLI, then copy a setup prompt and task prompts that work."
+description: "Register the Vukem Video MCP server in Gemini CLI, then copy a setup prompt and task prompts that work."
 ---
 
 ## You will learn
 
-- how to register the Stuarty MCP server in Gemini CLI
+- how to register the Vukem Video MCP server in Gemini CLI
 - a setup prompt to paste as the first message
 - four prompts for the tasks people ask most: a vertical video with captions, a product commercial, cutting silences, and exporting
 
 ## The idea
 
-Gemini CLI starts `stuarty mcp` and gives its agent the 16 [tools](/docs/mcp/tools) of Stuarty. The agent edits the same projects you see in the editor. The prompts on this page are written to be pasted as they are: replace the words in capital letters (such as `PATH_TO_CLIP`) with your own, and nothing else.
+Gemini CLI starts `vukem-video mcp` and gives its agent the 16 [tools](/docs/mcp/tools) of Vukem Video. The agent edits the same projects you see in the editor. The prompts on this page are written to be pasted as they are: replace the words in capital letters (such as `PATH_TO_CLIP`) with your own, and nothing else.
 
 ## Register the server
 
 Run this in a terminal. The syntax is `gemini mcp add [options] <name> <commandOrUrl> [args...]`, and the server is stored for the current project unless you add `--scope user`:
 
 ```bash
-gemini mcp add stuarty stuarty mcp
+gemini mcp add vukem-video vukem-video mcp
 ```
 
 Or edit `~/.gemini/settings.json` (every project) or `.gemini/settings.json` (this project):
@@ -26,15 +26,15 @@ Or edit `~/.gemini/settings.json` (every project) or `.gemini/settings.json` (th
 ```json
 {
   "mcpServers": {
-    "stuarty": {
-      "command": "stuarty",
+    "vukem-video": {
+      "command": "vukem-video",
       "args": ["mcp"]
     }
   }
 }
 ```
 
-Do not use underscores in the server name: the documentation says tool names are split on them, so rules written for the server can fail silently. `stuarty` has none.
+Do not use underscores in the server name: the documentation says tool names are split on them, so rules written for the server can fail silently. `vukem-video` has none.
 
 Source: [MCP servers with Gemini CLI](https://geminicli.com/docs/tools/mcp-server/).
 
@@ -47,7 +47,7 @@ Run `gemini mcp list`. The documentation says a stdio server shows as connected 
 Paste this as the first message of a session. It teaches the agent the loop that keeps an edit safe and checked.
 
 ```text
-You will edit videos with Stuarty through its MCP server, "stuarty".
+You will edit videos with Vukem Video through its MCP server, "vukem-video".
 
 1. Call project_list to check that the tools work, then tell me how many projects exist.
 2. Work in this loop. Read the project with project_get and note its revision. Change it with
@@ -77,7 +77,7 @@ Make a short vertical video with captions from the clip at PATH_TO_CLIP.
 2. List the templates with the template tool and create a project from "Vertical cut with
    captions", named NAME_OF_THE_VIDEO, with my clip in the clip slot.
 3. Transcribe the asset with job_start (kind transcribe) and wait for the job with job_get. If the
-   transcription helper is not installed, stop and tell me to run: stuarty tools:install
+   transcription helper is not installed, stop and tell me to run: vukem-video tools:install
    whisper
 4. Make the captions with the caption.from_transcript operation (call command_help first).
 5. Run lint and fix every error. Look at the frame at 2s with view and tell me whether the
@@ -142,7 +142,7 @@ Export the project NAME_OF_THE_PROJECT as an MP4.
 - Sending a prompt before the server is connected: the agent then answers from memory and invents commands. Run the check above first.
 - Leaving a word in capital letters in the prompt: the agent will ask you for it or guess.
 - Asking for an export and a look at the result in one step: ask for the check first, then export.
-- Transcribing with no helper installed: install it once with `stuarty tools:install whisper`.
+- Transcribing with no helper installed: install it once with `vukem-video tools:install whisper`.
 
 ## Next steps
 

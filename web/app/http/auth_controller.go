@@ -5,15 +5,15 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/core/command"
-	"github.com/AlexGalhardo/stuarty/service"
-	"github.com/AlexGalhardo/stuarty/web/app/auth"
-	"github.com/AlexGalhardo/stuarty/web/app/http/middleware"
-
 	vauth "github.com/AlexGalhardo/vukem/auth"
 	"github.com/AlexGalhardo/vukem/errs"
 	"github.com/AlexGalhardo/vukem/ratelimit"
 	"github.com/AlexGalhardo/vukem/web"
+
+	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/vukem-video/web/app/auth"
+	"github.com/AlexGalhardo/vukem-video/web/app/http/middleware"
 )
 
 type loginIn struct {

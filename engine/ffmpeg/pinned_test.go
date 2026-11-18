@@ -12,17 +12,17 @@ import (
 
 // EnvTestFFmpegDir names the bin directory of the pinned LGPL build for tests. scripts/install-ffmpeg.sh
 // prints it. When it is unset the tests look where the script installs by default.
-const envTestFFmpegDir = "STUARTY_TEST_FFMPEG_DIR"
+const envTestFFmpegDir = "VUKEM_VIDEO_TEST_FFMPEG_DIR"
 
 // envTestToolsDir names the tools folder (<workspace>/tools) that holds the Cisco OpenH264 library the own
 // build loads; the own build has no H.264 encoder without it.
-const envTestToolsDir = "STUARTY_TEST_TOOLS_DIR"
+const envTestToolsDir = "VUKEM_VIDEO_TEST_TOOLS_DIR"
 
 var pinnedCache *Installation
 
 // pinned returns the pinned LGPL FFmpeg, or skips the test. A test never downloads anything:
 // run "bash scripts/install-ffmpeg.sh" first and export the printed folder as
-// STUARTY_TEST_FFMPEG_DIR (it is also found in the default install location).
+// VUKEM_VIDEO_TEST_FFMPEG_DIR (it is also found in the default install location).
 func pinned(t *testing.T) *Installation {
 	t.Helper()
 	if pinnedCache != nil {

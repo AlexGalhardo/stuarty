@@ -1,7 +1,0 @@
-{
-  "args": {
-    "name": "Lines",
-    "text": "One\nTwo"
-  },
-  "op": "layer.add_text"
-}

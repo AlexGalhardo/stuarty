@@ -1,7 +1,0 @@
-{
-  "args": {
-    "layer_id": "lyr_dddddddddd",
-    "radius": 5
-  },
-  "op": "layer.set_shape"
-}

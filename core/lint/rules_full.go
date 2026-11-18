@@ -6,7 +6,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
 const (
@@ -22,37 +22,6 @@ const (
 	// clipLevel is the sum of source peaks above which the mix clips.
 	clipLevel = 1.0
 )
-
-// alphaMissing is L_ALPHA_MISSING: a clip reads an asset that declares an alpha channel whose sampled pictures are
-// all opaque (the ingest recorded it, SDD-011 section 4.3.6), so the animation covers what is below it instead of
-// showing through.
-func (c *check) alphaMissing() {
-	if c.env.AlphaOpaque == nil {
-		return
-	}
-
-	for _, it := range c.sorted() {
-		a, ok := c.doc.Assets[it.Asset]
-		if it.Type != timeline.ItemClip || it.Disabled || !ok || !a.HasAlpha {
-			continue
-		}
-
-		if opaque, known := c.env.AlphaOpaque(it.Asset); !known || !opaque {
-			continue
-		}
-
-		c.add(
-			CodeAlphaMissing,
-			it.ID,
-			itemRange(it),
-			fmt.Sprintf(
-				"the file of asset %s declares an alpha channel but every sampled picture is opaque, so the clip covers what is below it.",
-				it.Asset,
-			),
-			"render it with alpha, or place it on the lowest track",
-		)
-	}
-}
 
 // captionDesync is L_CAPTION_DESYNC: the item part (a caption that extends beyond its
 // linked clip) and, in a full run with a transcript, the part that compares the first

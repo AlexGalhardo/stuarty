@@ -3,7 +3,7 @@ package service
 import (
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/core/timeval"
+	"github.com/AlexGalhardo/vukem-video/core/timeval"
 )
 
 func TestAssetDurationFramesAgreesWithTheDocument(t *testing.T) {

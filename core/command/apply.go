@@ -5,8 +5,8 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/AlexGalhardo/stuarty/core/timeline"
-	"github.com/AlexGalhardo/stuarty/core/timeval"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/core/timeval"
 )
 
 // Operation is one use of a command: {"op": "<command>", "args": {...}}.
@@ -21,10 +21,6 @@ type Env struct {
 	// NewIDs returns a fresh identifier for a prefix; deterministic in tests,
 	// random in production. A command uses it only when the caller supplied no id.
 	NewIDs func(prefix string) string
-
-	// Extra is what the commands of another document type need besides identifiers: the lookup of a file and
-	// the text measurer of an image (SDD-021 section 4). The timeline commands ignore it.
-	Extra any
 }
 
 // Result is the outcome of one operation.
@@ -53,8 +49,9 @@ type Context struct {
 	Doc *timeline.Document
 	Env Env
 
-	// Custom is the document of a command defined with DefineIn, a type other than the timeline.
-	Custom any
+	// build is the phase of the registry running the command; a few values are
+	// accepted only from ALPHA on (decision 36 of SDD-002 Part C).
+	build Phase
 
 	effective map[string]any
 }
@@ -146,7 +143,7 @@ func (r *Registry) run(work *timeline.Document, op Operation, env Env) (effectiv
 	if e != nil {
 		return nil, e
 	}
-	ctx := &Context{Doc: work, Env: env, effective: map[string]any{}}
+	ctx := &Context{Doc: work, Env: env, build: r.phase, effective: map[string]any{}}
 	locks := lockedItems(work)
 	defer func() {
 		if recover() != nil {

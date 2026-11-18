@@ -1,36 +1,30 @@
 import { useEffect } from "react";
 
 import { jumpLandmark } from "../a11y/focus";
-import { rowFor } from "../commands/keymapStore";
+import { landmarkShortcut, panelShortcut } from "../commands/keymap";
 import { useRuntime } from "../state/EditorContext";
 
-// The panel and landmark rows of the registry (SDD-012 sections 18.2 and 18.9):
-// `panel_library`, `panel_inspector` and `panel_history` toggle the library,
-// inspector and history panels, `next_landmark` and `prev_landmark` jump between
-// regions. They work from any focus, as the browser does not type anything with
-// Alt+digit or F6. Opening History moves focus to its first row.
+// Alt+1, Alt+2 and Alt+3 toggle the library, inspector and history panels
+// (SDD-012 section 18.2). They work from any focus, as the browser does not
+// type anything with Alt+digit. Opening History moves focus to its first row.
 export function usePanelShortcuts(): void {
 	const runtime = useRuntime();
 	useEffect(() => {
 		const onKey = (event: KeyboardEvent): void => {
-			const row = rowFor(event, ["global"]);
-			if (row === "next_landmark" || row === "prev_landmark") {
+			const direction = landmarkShortcut(event);
+			if (direction !== null) {
 				event.preventDefault();
-				jumpLandmark(row === "next_landmark" ? 1 : -1);
+				jumpLandmark(direction);
 				return;
 			}
-			if (
-				row !== "panel_library" &&
-				row !== "panel_inspector" &&
-				row !== "panel_history"
-			)
-				return;
+			const panel = panelShortcut(event);
+			if (panel === null) return;
 			event.preventDefault();
 			const { uiWriter } = runtime;
-			if (row === "panel_inspector") uiWriter.toggleInspector();
-			else if (row === "panel_library") uiWriter.toggleLeftRegion();
-			else uiWriter.toggleLeftTab("history");
-			if (row === "panel_history" && runtime.ui.getState().panels.left) {
+			if (panel === "inspector") uiWriter.toggleInspector();
+			else if (panel === "library") uiWriter.toggleLeftRegion();
+			else uiWriter.toggleLeftTab(panel);
+			if (panel === "history" && runtime.ui.getState().panels.left) {
 				requestAnimationFrame(() =>
 					document
 						.querySelector<HTMLElement>("[data-revision] button")

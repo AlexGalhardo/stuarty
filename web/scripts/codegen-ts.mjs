@@ -43,11 +43,11 @@ for (const c of commands) {
 ts += `\nexport type CommandName = ${commands.map((c) => JSON.stringify(c.name)).join(" | ")};\n`;
 ts += `\nexport interface CommandArgsMap {\n${commands.map((c) => `\t${JSON.stringify(c.name)}: ${pascal(c.name)}Args;`).join("\n")}\n}\n`;
 ts += "\nexport type Operation = { [K in CommandName]: { op: K; args: CommandArgsMap[K] } }[CommandName];\n";
-ts += `\nexport const COMMANDS: Record<CommandName, { summary: string; scope: "edit" | "media"; internal: boolean; errors: ErrorCode[] }> = {\n`;
+ts += `\nexport const COMMANDS: Record<CommandName, { summary: string; scope: "edit" | "media"; phase: "prototype" | "alpha" | "beta"; internal: boolean; errors: ErrorCode[] }> = {\n`;
 ts += commands
 	.map(
 		(c) =>
-			`\t${JSON.stringify(c.name)}: { summary: ${JSON.stringify(c.summary)}, scope: ${JSON.stringify(c.scope)}, internal: ${c.internal}, errors: ${JSON.stringify(c.errors)} },`,
+			`\t${JSON.stringify(c.name)}: { summary: ${JSON.stringify(c.summary)}, scope: ${JSON.stringify(c.scope)}, phase: ${JSON.stringify(c.phase)}, internal: ${c.internal}, errors: ${JSON.stringify(c.errors)} },`,
 	)
 	.join("\n");
 ts += "\n};\n";
@@ -77,6 +77,7 @@ export type LintCode = ${lintRules.map((r) => JSON.stringify(r.code)).join(" | "
 		`export interface LintRule {
 	code: LintCode;
 	severity: "error" | "warning";
+	phase: "P" | "A";
 	depth: ("doc" | "item" | "full")[];
 	blocking: boolean;
 	key: string;

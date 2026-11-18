@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/vukem-video/service"
 )
 
 // SDD-006 section 9.4: a key has at most 16 streams across all its projects;

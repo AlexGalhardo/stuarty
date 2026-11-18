@@ -10,10 +10,9 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"slices"
 
-	"github.com/AlexGalhardo/stuarty/web/app/agentdocs"
-	"github.com/AlexGalhardo/stuarty/web/app/cli"
+	"github.com/AlexGalhardo/vukem-video/web/app/agentdocs"
+	"github.com/AlexGalhardo/vukem-video/web/app/cli"
 )
 
 func main() { os.Exit(run(os.Args[1:], os.Stdout, os.Stderr)) }
@@ -38,17 +37,10 @@ func run(args []string, stdout, stderr io.Writer) int {
 
 	code := 0
 
-	// The three files of SDD-003 section 8.1 and the page of every domain (out/guide/).
-	for _, name := range append(slices.Clone(agentdocs.Files), agentdocs.GuideFiles()...) {
-		path := filepath.Join(*dir, filepath.FromSlash(name))
+	for _, name := range agentdocs.Files {
+		path := filepath.Join(*dir, name)
 
 		if !*check {
-			if err := os.MkdirAll(filepath.Dir(path), 0o750); err != nil {
-				fmt.Fprintln(stderr, "gen-agent-docs:", err)
-
-				return 1
-			}
-
 			if err := os.WriteFile(path, files[name], 0o600); err != nil {
 				fmt.Fprintln(stderr, "gen-agent-docs:", err)
 

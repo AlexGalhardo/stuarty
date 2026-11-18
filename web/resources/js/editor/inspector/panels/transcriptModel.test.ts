@@ -49,13 +49,13 @@ describe("installRequest", () => {
 				...base,
 				tool: "whisper",
 				model: "base",
-				installCommand: "stuarty tools:install other --model x",
+				installCommand: "vukem-video tools:install other --model x",
 			}),
 		).toEqual({ name: "whisper", model: "base" });
 		expect(
 			installRequest({
 				...base,
-				installCommand: "stuarty tools:install whisper --model small",
+				installCommand: "vukem-video tools:install whisper --model small",
 			}),
 		).toEqual({ name: "whisper", model: "small" });
 	});
@@ -64,9 +64,9 @@ describe("installRequest", () => {
 describe("parseInstallCommand", () => {
 	test("reads the tool and the model", () => {
 		expect(
-			parseInstallCommand("stuarty tools:install whisper --model small"),
+			parseInstallCommand("vukem-video tools:install whisper --model small"),
 		).toEqual({ name: "whisper", model: "small" });
-		expect(parseInstallCommand("stuarty tools:install whisper")).toEqual({
+		expect(parseInstallCommand("vukem-video tools:install whisper")).toEqual({
 			name: "whisper",
 		});
 	});
@@ -75,7 +75,7 @@ describe("parseInstallCommand", () => {
 		expect(parseInstallCommand(undefined)).toBeNull();
 		expect(parseInstallCommand("rm -rf / --model x")).toBeNull();
 		expect(
-			parseInstallCommand("stuarty tools:install whisper; echo hi"),
+			parseInstallCommand("vukem-video tools:install whisper; echo hi"),
 		).toBeNull();
 	});
 });
@@ -89,14 +89,14 @@ describe("unavailableFrom", () => {
 			details: {
 				missing: [{ name: "whisper-cli", url_host: "example.com", bytes: 10 }],
 				download_bytes: 10,
-				install_command: "stuarty tools:install whisper",
+				install_command: "vukem-video tools:install whisper",
 			},
 		});
 		expect(out.missing).toEqual([
 			{ name: "whisper-cli", host: "example.com", bytes: 10 },
 		]);
 		expect(out.downloadBytes).toBe(10);
-		expect(out.installCommand).toBe("stuarty tools:install whisper");
+		expect(out.installCommand).toBe("vukem-video tools:install whisper");
 	});
 
 	test("a code with no details has nothing to install", () => {

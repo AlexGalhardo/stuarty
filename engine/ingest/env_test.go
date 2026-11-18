@@ -9,13 +9,13 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
-	"github.com/AlexGalhardo/stuarty/engine/ffmpeg/ffargs"
-	"github.com/AlexGalhardo/stuarty/engine/ingest/mediagen"
-	"github.com/AlexGalhardo/stuarty/engine/store"
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg/ffargs"
+	"github.com/AlexGalhardo/vukem-video/engine/ingest/mediagen"
+	"github.com/AlexGalhardo/vukem-video/engine/store"
 )
 
-const envTestFFmpegDir = "STUARTY_TEST_FFMPEG_DIR"
+const envTestFFmpegDir = "VUKEM_VIDEO_TEST_FFMPEG_DIR"
 
 var (
 	pinOnce sync.Once
@@ -32,7 +32,7 @@ func exe(n string) string {
 }
 
 // pinnedInstall returns the pinned LGPL FFmpeg and its capabilities, or skips the test. A test never
-// downloads: run scripts/install-ffmpeg.sh and set STUARTY_TEST_FFMPEG_DIR to the folder it prints.
+// downloads: run scripts/install-ffmpeg.sh and set VUKEM_VIDEO_TEST_FFMPEG_DIR to the folder it prints.
 func pinnedInstall(tb testing.TB) (*ffmpeg.Installation, *ffmpeg.Capabilities) {
 	tb.Helper()
 	pinOnce.Do(func() {
@@ -57,7 +57,7 @@ func pinnedInstall(tb testing.TB) (*ffmpeg.Installation, *ffmpeg.Capabilities) {
 			ffmpeg.Config{
 				FFmpegPath: filepath.Join(dir, exe("ffmpeg")),
 				CPUCount:   runtime.NumCPU(),
-				ToolsDir:   os.Getenv("STUARTY_TEST_TOOLS_DIR"),
+				ToolsDir:   os.Getenv("VUKEM_VIDEO_TEST_TOOLS_DIR"),
 			},
 		)
 		if err != nil || in.Info.License.Name != "lgpl" {

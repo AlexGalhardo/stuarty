@@ -13,10 +13,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/core/timeline"
-	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
-	"github.com/AlexGalhardo/stuarty/engine/ffmpeg/ffargs"
-	"github.com/AlexGalhardo/stuarty/engine/ingest"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg/ffargs"
+	"github.com/AlexGalhardo/vukem-video/engine/ingest"
 )
 
 func asFFError(t *testing.T, err error) *ffmpeg.Error {
@@ -309,57 +309,6 @@ func TestAnimatedCropAndMaskFramesDiffer(t *testing.T) {
 			}
 		})
 	}
-}
-
-// A Bezier easing reaches the export as the value of each frame (SDD-004 section 3.1): the same clip with a
-// linear easing draws other pixels in the middle of the segment, equal at both ends, and the bands agree.
-func TestBezierEasingChangesTheMiddleFrames(t *testing.T) {
-	setup(t)
-	for _, name := range []string{"easing-bezier-scale", "crop-animated-bezier", "mask-animated-bezier"} {
-		t.Run(name, func(t *testing.T) {
-			c := alphaCases[name]()
-			for id, spec := range c.fixtures {
-				useAsset(c.doc, id, ingestClip(t, spec))
-			}
-			curved := renderDoc(t, c.doc, name, 1, c.frames)
-			if eight := renderDoc(t, c.doc, name, 8, c.frames); !equalFrames(curved, eight) {
-				t.Fatal("1 band and 8 bands differ")
-			}
-			for id, it := range c.doc.Items {
-				for prop, keys := range it.Keyframes {
-					for i := range keys {
-						keys[i].Easing, keys[i].Bezier = "linear", nil
-					}
-					it.Keyframes[prop] = keys
-				}
-				c.doc.Items[id] = it
-			}
-			linear := renderDoc(t, c.doc, name+"-linear", 1, c.frames)
-			last := len(c.frames) - 1
-			if !bytes.Equal(curved[0], linear[0]) || !bytes.Equal(curved[last], linear[last]) {
-				t.Error("the first and the last frame must not depend on the easing")
-			}
-			differs := false
-			for i := 1; i < last; i++ {
-				differs = differs || !bytes.Equal(curved[i], linear[i])
-			}
-			if !differs {
-				t.Error("no middle frame changed with the curve")
-			}
-		})
-	}
-}
-
-func equalFrames(a, b [][]byte) bool {
-	if len(a) != len(b) {
-		return false
-	}
-	for i := range a {
-		if !bytes.Equal(a[i], b[i]) {
-			return false
-		}
-	}
-	return true
 }
 
 // A shadow and an outline change pixels of the export compositor, and the bands stay equal. The corner of

@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/web/contract/testenv"
+	"github.com/AlexGalhardo/vukem-video/web/contract/testenv"
 )
 
 // TestUntrustedText is §9 check 11 through the MCP adapter: names with

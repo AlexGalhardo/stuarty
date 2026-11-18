@@ -15,10 +15,10 @@ import { caller, expect, ffmpegExe, seedProject, test } from "./helpers";
 // keeps rising, so the last reading is held against the first.
 //
 // The spec runs in the `soak` project of playwright.config.ts, which exists only
-// with STUARTY_SOAK=1, alone, because ten minutes next to other specs
-// measure the neighbours. STUARTY_SOAK_MINUTES shortens it (default 10);
+// with VUKEM_VIDEO_SOAK=1, alone, because ten minutes next to other specs
+// measure the neighbours. VUKEM_VIDEO_SOAK_MINUTES shortens it (default 10);
 // the edits are always ten a minute.
-const MINUTES = Number(process.env.STUARTY_SOAK_MINUTES ?? 10);
+const MINUTES = Number(process.env.VUKEM_VIDEO_SOAK_MINUTES ?? 10);
 const ROUND_MS = 6_000;
 const EDIT_EVERY_MS = 6_000;
 const HEAP_LIMIT = 300 * MB;
@@ -48,7 +48,7 @@ test.use({
 // A 5 minute video of 320 x 568: the clip under the timeline, as long as the
 // project it plays in.
 function soakClip(): string {
-	const dir = join(tmpdir(), "stuarty-e2e-media");
+	const dir = join(tmpdir(), "vukem-video-e2e-media");
 	mkdirSync(dir, { recursive: true });
 	const out = join(dir, "soak-301s.mp4");
 	if (!existsSync(out)) {

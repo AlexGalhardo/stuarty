@@ -1,9 +1,9 @@
-// Package gpuhost drives the native GPU host of the export, the child process stuarty-render (ADR-0029 item 4,
+// Package gpuhost drives the native GPU host of the export, the child process vukem-render (ADR-0029 item 4,
 // SDD-013 section 4.9). The child composes the frame plan on the GPU and is fed through its standard input and
 // output, the way FFmpeg is fed frames. It runs under the process policy of FFmpeg (SDD-007 6.10): started by
 // engine/ffmpeg, from an absolute path, with the minimal environment, a run directory, limits, a deadline and
 // the kill of its whole process tree. This package is the only place that knows the pipe protocol of
-// renderer/stuarty-renderer-gpu/src/proto.rs.
+// renderer/vukem-renderer-gpu/src/proto.rs.
 package gpuhost
 
 import (
@@ -19,10 +19,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/engine/bitmap"
-	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
-	"github.com/AlexGalhardo/stuarty/engine/lut"
-	"github.com/AlexGalhardo/stuarty/engine/renderhost"
+	"github.com/AlexGalhardo/vukem-video/engine/bitmap"
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
+	"github.com/AlexGalhardo/vukem-video/engine/lut"
+	"github.com/AlexGalhardo/vukem-video/engine/renderhost"
 )
 
 // The kinds of request of the protocol.
@@ -65,7 +65,7 @@ var reasons = [...]renderhost.Reason{
 
 // Config is what Start needs.
 type Config struct {
-	// Path is the absolute path of stuarty-render.
+	// Path is the absolute path of vukem-render.
 	Path string
 	// Dir is the run directory: the child's working directory, HOME and temp directory.
 	Dir *ffmpeg.RunDir
@@ -76,7 +76,7 @@ type Config struct {
 	MaxTextureBytes, MaxBitmapBytes uint32
 }
 
-// Host is a running stuarty-render. It is not safe for concurrent use.
+// Host is a running vukem-render. It is not safe for concurrent use.
 type Host struct {
 	in      *io.PipeWriter
 	out     *bufio.Reader
@@ -92,7 +92,7 @@ type Host struct {
 	buf  []byte
 }
 
-// Start runs stuarty-render and waits for its answer to the init, which names the adapter. Any failure before
+// Start runs vukem-render and waits for its answer to the init, which names the adapter. Any failure before
 // that is ErrUnavailable. ctx ends the child with the kill of its process tree.
 func Start(ctx context.Context, r *ffmpeg.Runner, cfg Config) (*Host, error) {
 	if cfg.Dir == nil || cfg.Deadline <= 0 {

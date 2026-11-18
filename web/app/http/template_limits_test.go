@@ -7,8 +7,8 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/service"
-	"github.com/AlexGalhardo/stuarty/web/app/events"
+	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/vukem-video/web/app/events"
 )
 
 // importSpy records what the route hands to TemplateImport.
@@ -45,7 +45,7 @@ func TestTemplateImportRouteKeepsTheGlobalBodyCap(t *testing.T) {
 		return spy
 	})
 
-	long := "/srv/media/" + strings.Repeat("a/", 1500) + "t.stuarty-template.zip"
+	long := "/srv/media/" + strings.Repeat("a/", 1500) + "t.vukem-template.zip"
 
 	res := h.do(req{method: http.MethodPost, path: "/api/v1/templates/import", body: `{"path":"` + long + `"}`})
 	if res.status != http.StatusCreated {

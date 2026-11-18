@@ -5,19 +5,19 @@ package bootstrap
 import (
 	"context"
 
-	httpapi "github.com/AlexGalhardo/stuarty/web/app/http"
-	"github.com/AlexGalhardo/stuarty/web/app/listeners"
-	"github.com/AlexGalhardo/stuarty/web/database/migrations"
-	"github.com/AlexGalhardo/stuarty/web/database/seeders"
-	"github.com/AlexGalhardo/stuarty/web/resources"
-	"github.com/AlexGalhardo/stuarty/web/routes"
-
 	vukem "github.com/AlexGalhardo/vukem"
 	"github.com/AlexGalhardo/vukem/inertia"
+
+	httpapi "github.com/AlexGalhardo/vukem-video/web/app/http"
+	"github.com/AlexGalhardo/vukem-video/web/app/listeners"
+	"github.com/AlexGalhardo/vukem-video/web/database/migrations"
+	"github.com/AlexGalhardo/vukem-video/web/database/seeders"
+	"github.com/AlexGalhardo/vukem-video/web/resources"
+	"github.com/AlexGalhardo/vukem-video/web/routes"
 )
 
 // defaultEnv is where the server listens until the workspace configuration
-// (SDD-000 section 10, STUARTY_ADDR) replaces it. vukem reads HOST and PORT.
+// (SDD-000 section 10, VUKEM_VIDEO_ADDR) replaces it. vukem reads HOST and PORT.
 var defaultEnv = map[string]string{
 	"HOST": "127.0.0.1",
 	"PORT": "7878",
@@ -35,7 +35,7 @@ func NewWith(api *httpapi.Deps, opts ...vukem.Option) (*vukem.App, error) {
 	var app *vukem.App
 
 	base := []vukem.Option{
-		vukem.WithName("Stuarty"),
+		vukem.WithName("Vukem Video"),
 		vukem.WithEnvDefaults(defaultEnv),
 		vukem.WithProviders(Providers()...),
 		vukem.WithMigrations(migrations.All()),

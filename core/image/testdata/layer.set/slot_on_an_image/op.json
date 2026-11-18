@@ -1,7 +1,0 @@
-{
-  "args": {
-    "layer_id": "lyr_bbbbbbbbbb",
-    "slot": "photo"
-  },
-  "op": "layer.set"
-}

@@ -11,8 +11,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/engine/transcribe"
-	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/vukem-video/engine/transcribe"
+	"github.com/AlexGalhardo/vukem-video/service"
 )
 
 // canary is a recognisable value for every secret variable.
@@ -28,12 +28,12 @@ func doctorEnv(t *testing.T, mode string) *env {
 			Mode: mode,
 			Environ: func() []string {
 				return []string{
-					"STUARTY_TRANSCRIBE_KEY=" + canary + "-transcribe",
-					"STUARTY_ADMIN_PASSWORD=" + canary + "-password",
+					"VUKEM_VIDEO_TRANSCRIBE_KEY=" + canary + "-transcribe",
+					"VUKEM_VIDEO_ADMIN_PASSWORD=" + canary + "-password",
 					"APP_KEY=" + canary + "-appkey",
 					"OTEL_EXPORTER_OTLP_HEADERS=authorization=" + canary + "-otlp",
-					"STUARTY_MAX_EXPORTS=3",
-					"STUARTY_HOME=" + string(e.dir),
+					"VUKEM_VIDEO_MAX_EXPORTS=3",
+					"VUKEM_VIDEO_HOME=" + string(e.dir),
 					"PATH=/usr/bin",
 				}
 			},
@@ -87,7 +87,7 @@ func TestDoctorBundleNoSecrets(t *testing.T) {
 	}
 
 	line := "level=INFO msg=boot key=" + canary + "-transcribe token=" + token + " user=" + canary + "-appkey\n"
-	if err := os.WriteFile(filepath.Join(logs, "stuarty.log"), []byte(line), 0o600); err != nil {
+	if err := os.WriteFile(filepath.Join(logs, "vukem-video.log"), []byte(line), 0o600); err != nil {
 		t.Fatal(err)
 	}
 
@@ -109,8 +109,8 @@ func TestDoctorBundleNoSecrets(t *testing.T) {
 		t.Fatalf("the report holds a secret: %s", res.Text)
 	}
 
-	if !strings.Contains(res.Text, "STUARTY_TRANSCRIBE_KEY=set") ||
-		!strings.Contains(res.Text, "STUARTY_MAX_EXPORTS=3") {
+	if !strings.Contains(res.Text, "VUKEM_VIDEO_TRANSCRIBE_KEY=set") ||
+		!strings.Contains(res.Text, "VUKEM_VIDEO_MAX_EXPORTS=3") {
 		t.Errorf("the environment line = %s", res.Text)
 	}
 
@@ -120,7 +120,7 @@ func TestDoctorBundleNoSecrets(t *testing.T) {
 
 	files := unzipAll(t, filepath.Join(string(e.dir), filepath.FromSlash(res.Bundle)))
 
-	for _, want := range []string{"doctor.json", "doctor.txt", "versions.txt", "environment.txt", "logs/stuarty.log", "project.json"} {
+	for _, want := range []string{"doctor.json", "doctor.txt", "versions.txt", "environment.txt", "logs/vukem-video.log", "project.json"} {
 		if _, ok := files[want]; !ok {
 			t.Errorf("the bundle lacks %s: %v", want, keys(files))
 		}
@@ -136,7 +136,7 @@ func TestDoctorBundleNoSecrets(t *testing.T) {
 		}
 	}
 
-	if !strings.Contains(files["logs/stuarty.log"], "[redacted]") {
+	if !strings.Contains(files["logs/vukem-video.log"], "[redacted]") {
 		t.Error("the log was not scrubbed")
 	}
 
@@ -327,8 +327,8 @@ func TestDoctorRefusesAProjectLimitedKeyTheMachineDetails(t *testing.T) {
 	}
 
 	for _, c := range op.Checks {
-		if c.Name == "environment" && (!strings.Contains(c.Detail, "STUARTY_MAX_EXPORTS=3") ||
-			!strings.Contains(c.Detail, "STUARTY_HOME=set") || strings.Contains(c.Detail, string(e.dir))) {
+		if c.Name == "environment" && (!strings.Contains(c.Detail, "VUKEM_VIDEO_MAX_EXPORTS=3") ||
+			!strings.Contains(c.Detail, "VUKEM_VIDEO_HOME=set") || strings.Contains(c.Detail, string(e.dir))) {
 			t.Errorf("environment = %s", c.Detail)
 		}
 	}

@@ -3,12 +3,12 @@ package compositor
 import (
 	"math"
 
-	"github.com/AlexGalhardo/stuarty/core/plan"
-	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/core/plan"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
 // The advanced colour of SDD-004 section 3.14 in integer arithmetic: HSL bands, then the three colour
-// wheels, then the tone curves, on straight RGB values 0..255. The Rust renderer (renderer/stuarty-renderer/src/grade.rs)
+// wheels, then the tone curves, on straight RGB values 0..255. The Rust renderer (renderer/vukem-renderer/src/grade.rs)
 // does the same operations in the same order, so a frame has the same bytes in both.
 
 const (

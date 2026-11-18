@@ -4,7 +4,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
 func init() {
@@ -16,6 +16,7 @@ func init() {
 		Example: `{"asset_id": "ast_3c5v8n2w6d"}`,
 		Errors:  []string{CodeValidation, CodeNotFound, CodeInUse},
 		Scope:   ScopeMedia,
+		Phase:   Alpha,
 	}, applyAssetRemove))
 }
 

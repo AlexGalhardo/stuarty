@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"slices"
 
-	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
 func init() {
@@ -20,6 +20,7 @@ func init() {
 			CodeOverlap,
 		},
 		Scope: ScopeEdit,
+		Phase: Prototype,
 	}, applyItemMove))
 
 	Register(Define(Spec{
@@ -34,6 +35,7 @@ func init() {
 			CodeValidation, CodeInvalidTime, CodeNotFound, CodeInvalidState, CodeOutOfSource, CodeOverlap,
 		},
 		Scope: ScopeEdit,
+		Phase: Prototype,
 	}, applyItemTrim))
 
 	Register(Define(Spec{
@@ -46,6 +48,7 @@ func init() {
 			CodeValidation, CodeInvalidTime, CodeNotFound, CodeInvalidState, CodeIDExists, CodeLimit,
 		},
 		Scope: ScopeEdit,
+		Phase: Prototype,
 	}, applyItemSplit))
 
 	Register(Define(Spec{
@@ -58,6 +61,7 @@ func init() {
 		Example: `{"item_ids": ["itm_a1b2c3d4e5"], "ripple": "track"}`,
 		Errors:  []string{CodeValidation, CodeNotFound, CodeInvalidState, CodeOverlap},
 		Scope:   ScopeEdit,
+		Phase:   Prototype,
 	}, applyItemDelete))
 }
 

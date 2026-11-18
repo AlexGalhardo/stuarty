@@ -17,6 +17,7 @@ function bootstrap(mode: "local" | "network"): EditorBootstrap {
 		locales: ["en"],
 		messages: {},
 		user: { id: "12", name: "Ana" },
+		phase: "beta",
 		version: "",
 	};
 }

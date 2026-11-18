@@ -1,8 +1,0 @@
-{
-  "code": "E_TYPE_MISMATCH",
-  "hint": "Add a shape layer for a shape with a stroke or rounded corners.",
-  "message": "Layer lyr_aaaaaaaaaa is a fill; it takes fill only.",
-  "op_index": 0,
-  "path": "args.layer_id",
-  "retryable": false
-}

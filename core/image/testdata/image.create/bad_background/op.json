@@ -1,8 +1,0 @@
-{
-  "args": {
-    "background": "red",
-    "height": 10,
-    "width": 10
-  },
-  "op": "image.create"
-}

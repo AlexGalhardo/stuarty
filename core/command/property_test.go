@@ -16,7 +16,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
 // randomOp returns a random operation of the test catalogue that makes sense for doc.
@@ -277,7 +277,7 @@ func (p *docPick) silences() string {
 	return `{"silences":[` + strings.Join(parts, ",") + `]}`
 }
 
-// alphaOps are the generators of the later commands, one per command.
+// alphaOps are the generators of the ALPHA commands, one per command.
 var alphaOps = map[string]func(p *docPick) string{
 	"settings.set_fps": func(p *docPick) string {
 		return fmt.Sprintf(`{"fps":%q}`, p.oneOf("24", "25", "30", "60", "30000/1001"))
@@ -375,11 +375,6 @@ var alphaOps = map[string]func(p *docPick) string{
 			float64(p.n(101))/100,
 		)
 	},
-	// The random documents hold one video, so a swap succeeds only as the same asset (a no-op); an image for a
-	// video is the refusal the sequences should also meet.
-	"clip.replace_media": func(p *docPick) string {
-		return fmt.Sprintf(`{"item_id":%q,"asset_id":%q}`, p.clip(), p.oneOf(vidAsset, vidAsset, imgAsset))
-	},
 	"clip.set_blur": func(p *docPick) string {
 		return fmt.Sprintf(`{"item_id":%q,"radius":%d}`, p.clip(), p.n(101))
 	},
@@ -400,23 +395,6 @@ var alphaOps = map[string]func(p *docPick) string{
 	},
 	"item.freeze_frame": func(p *docPick) string {
 		return fmt.Sprintf(`{"item_id":%q,"at":%q,"duration":%q}`, p.clip(), p.frames(400), p.frames(60))
-	},
-	"audio.processor_add": func(p *docPick) string {
-		kind := p.oneOf("eq", "compressor", "limiter", "gate", "deesser", "noise_reduction")
-		return fmt.Sprintf(`{"item_id":%q,"kind":%q,"index":%d}`, p.audioItem(), kind, p.n(3))
-	},
-	"audio.processor_set": func(p *docPick) string {
-		return fmt.Sprintf(`{"item_id":%q,"index":%d,"enabled":%s}`, p.audioItem(), p.n(3), p.oneOf("true", "false"))
-	},
-	"audio.processor_move": func(p *docPick) string {
-		return fmt.Sprintf(`{"item_id":%q,"index":%d,"to":%d}`, p.audioItem(), p.n(3), p.n(3))
-	},
-	"audio.processor_remove": func(p *docPick) string {
-		return fmt.Sprintf(`{"item_id":%q,"index":%d}`, p.audioItem(), p.n(3))
-	},
-	"audio.apply_preset": func(p *docPick) string {
-		presets := []string{"voice", "voice_with_music", "podcast", "clean_noisy_room"}
-		return fmt.Sprintf(`{"item_id":%q,"preset":%q}`, p.audioItem(), p.oneOf(presets...))
 	},
 	"item.set_enabled": func(p *docPick) string {
 		return fmt.Sprintf(`{"item_id":%q,"enabled":%s}`, p.clip(), p.oneOf("true", "false"))
@@ -582,38 +560,6 @@ var alphaOps = map[string]func(p *docPick) string{
 			p.oneOf("scale", "opacity", "x", "y", "rotation", "volume"), p.frames(500), float64(p.n(100))/100+0.1,
 			p.oneOf("linear", "ease_in", "ease_out", "ease_in_out", "hold"))
 	},
-	"animation.apply_preset": func(p *docPick) string {
-		preset := p.oneOf("fade", "slide", "scale", "pop", "push_in", "pull_out")
-		edge := p.oneOf("in", "out")
-		extra := ""
-
-		if preset == "slide" && p.n(2) == 0 {
-			extra = fmt.Sprintf(`,"direction":%q`, p.oneOf("left", "right", "up", "down"))
-		}
-
-		return fmt.Sprintf(`{"item_id":%q,"preset":%q,"edge":%q,"duration":%q%s}`, p.item(), preset, edge,
-			p.frames(120), extra)
-	},
-	"animation.list_presets": func(_ *docPick) string { return `{}` },
-	"keyframe.set_easing": func(p *docPick) string {
-		item, prop, at := p.item(), "scale", p.frames(500)
-		if len(p.keys) > 0 && p.n(4) != 0 {
-			k := p.keys[p.n(len(p.keys))]
-			item, prop, at = k.item, k.prop, fmt.Sprintf("%df", k.at)
-		}
-
-		switch p.n(3) {
-		case 0:
-			return fmt.Sprintf(`{"item_id":%q,"property":%q,"at":%q,"preset":%q}`, item, prop, at,
-				p.oneOf("in", "out", "in_out", "back", "overshoot"))
-		case 1:
-			return fmt.Sprintf(`{"item_id":%q,"property":%q,"at":%q,"bezier":[%.2f,%.2f,%.2f,%.2f]}`, item, prop, at,
-				float64(p.n(100))/100, float64(p.n(500))/100-2, float64(p.n(100))/100, float64(p.n(500))/100-2)
-		}
-
-		return fmt.Sprintf(`{"item_id":%q,"property":%q,"at":%q,"easing":%q}`, item, prop, at,
-			p.oneOf("linear", "ease_in", "ease_out", "ease_in_out", "hold"))
-	},
 	"keyframe.remove": func(p *docPick) string {
 		if len(p.keys) > 0 && p.n(4) != 0 {
 			k := p.keys[p.n(len(p.keys))]
@@ -660,8 +606,8 @@ var alphaOps = map[string]func(p *docPick) string{
 	},
 }
 
-// randomRegistryOp returns a random operation of the whole registry: the first
-// commands of realOp and the later commands of alphaOps.
+// randomRegistryOp returns a random operation of the whole registry: the Prototype
+// commands of realOp and the ALPHA commands of alphaOps.
 func randomRegistryOp(rng *rand.Rand, doc *timeline.Document) Operation {
 	if rng.Intn(3) == 0 {
 		return realOp(rng, doc)
@@ -864,7 +810,7 @@ func FuzzApplyBatch(f *testing.F) {
 
 var genScale = flag.Bool("gen-scale", false, "write the 5 minute project of NFR-009 under testdata/scale")
 
-// scaleProject is the project of NFR-009 for the benchmarks: 5
+// scaleProject is the project of NFR-009 for the benchmarks of the ALPHA phase: 5
 // minutes at 30 fps, a clip, a music track, 164 text items and 34 captions of 60
 // words, 200 items and about 2,000 caption words.
 func scaleProject() *timeline.Document {
@@ -933,7 +879,7 @@ func TestScaleProject(t *testing.T) {
 }
 
 // FuzzApplyArgs feeds raw bytes as the arguments of any command of the registry,
-// on a document with items, captions and slots: the answer is a
+// Beta included, on a document with items, captions and slots: the answer is a
 // well formed error or a valid, undoable document, never E_INTERNAL (SDD-002 A.3, A.8).
 func FuzzApplyArgs(f *testing.F) {
 	cmds := fullRegistry().List()

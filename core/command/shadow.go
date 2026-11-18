@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
 // The values a shadow and an outline start with when the command does not give them (VV-122).
@@ -39,6 +39,7 @@ func init() {
 		Example: `{"item_id": "itm_m1n2p3q4r5", "shadow": {"color": "#000000", "opacity": 0.6, "dx": 10, "dy": 12, "blur": 16}}`,
 		Errors:  []string{CodeValidation, CodeNotFound, CodeTypeMismatch},
 		Scope:   ScopeEdit,
+		Phase:   Beta,
 	}, applyClipSetShadow))
 
 	Register(Define(Spec{
@@ -50,6 +51,7 @@ func init() {
 		Example: `{"item_id": "itm_m1n2p3q4r5", "outline": {"color": "#FFFFFF", "width": 6}}`,
 		Errors:  []string{CodeValidation, CodeNotFound, CodeTypeMismatch},
 		Scope:   ScopeEdit,
+		Phase:   Beta,
 	}, applyClipSetOutline))
 }
 

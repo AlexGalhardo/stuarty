@@ -22,8 +22,8 @@ Set the version, then download and verify the archive of your platform:
 ```bash
 VERSION=vX.Y.Z
 V="${VERSION#v}"
-REPO=AlexGalhardo/stuarty
-ARCHIVE="stuarty_${V}_linux_amd64.tar.gz"
+REPO=AlexGalhardo/vukem-video
+ARCHIVE="vukem-video_${V}_linux_amd64.tar.gz"
 IDENTITY="^https://github[.]com/$REPO/[.]github/workflows/release[.]yml@refs/tags/v"
 ISSUER=https://token.actions.githubusercontent.com
 gh release download "$VERSION" -R "$REPO" -p checksums.txt -p checksums.txt.sigstore.json \
@@ -34,25 +34,25 @@ sha256sum --ignore-missing -c checksums.txt
 gh attestation verify "$ARCHIVE" -R "$REPO"
 ```
 
-On macOS use `shasum -a 256 -c` for the check of the checksums. The release also attaches the provenance bundle, `stuarty.intoto.jsonl`, and a software bill of materials (SBOM) for each archive.
+On macOS use `shasum -a 256 -c` for the check of the checksums. The release also attaches the provenance bundle, `vukem-video.intoto.jsonl`, and a software bill of materials (SBOM) for each archive.
 
 Verify the container image on both registries. The two digests printed must be equal, because one build is pushed to both:
 
 ```bash
-for image in ghcr.io/alexgalhardo/stuarty alexgalhardo/stuarty; do
+for image in ghcr.io/alexgalhardo/vukem-video alexgalhardo/vukem-video; do
   digest="$(docker buildx imagetools inspect "$image:$V" --format "{{.Manifest.Digest}}")"
   cosign verify "$image@$digest" \
     --certificate-identity-regexp "$IDENTITY" --certificate-oidc-issuer "$ISSUER"
   echo "$image $digest"
 done
-docker run --rm "ghcr.io/alexgalhardo/stuarty:$V" version
+docker run --rm "ghcr.io/alexgalhardo/vukem-video:$V" version
 ```
 
-The last command prints `stuarty vX.Y.Z`. The Windows and macOS installers are not signed with a paid code-signing certificate; the signed `checksums.txt` is how you verify them.
+The last command prints `vukem-video vX.Y.Z`. The Windows and macOS installers are not signed with a paid code-signing certificate; the signed `checksums.txt` is how you verify them.
 
-## The installers are not signed
+## The BETA installers are not signed
 
-There is no paid code signing: no Apple Developer ID or notarization, and no Windows code-signing certificate. This covers the installers of the local server and the installers of the [desktop application](/docs/guide/desktop) (`stuarty-desktop-X-Y-Z.exe`, `stuarty-desktop-X-Y-Z-arm64.dmg`, `stuarty-desktop-X-Y-Z-amd64.dmg`, `stuarty-desktop-X-Y-Z.AppImage` and `..._linux_amd64.deb`). Paid signing is decided again before 1.0. Until then the proof that a file is the one the project built is the signature of `checksums.txt` and the attestation of the file, and your system warns before it runs the file:
+The BETA has no paid code signing: no Apple Developer ID or notarization, and no Windows code-signing certificate. This covers the installers of the local server and the installers of the [desktop application](/docs/guide/desktop) (`vukem-video-desktop-X-Y-Z.exe`, `vukem-video-desktop-X-Y-Z-arm64.dmg`, `vukem-video-desktop-X-Y-Z-amd64.dmg`, `vukem-video-desktop-X-Y-Z.AppImage` and `..._linux_amd64.deb`). Paid signing is decided again before 1.0. Until then the proof that a file is the one the project built is the signature of `checksums.txt` and the attestation of the file, and your system warns before it runs the file:
 
 - **Windows SmartScreen** shows "Windows protected your PC". Choose **More info**, then **Run anyway**. The publisher shows as unknown because there is no certificate.
 - **macOS Gatekeeper** says the app or package cannot be opened because Apple cannot check it. Control-click (right-click) it, choose **Open**, then **Open** again; or run `xattr -d com.apple.quarantine <path of the file or app>`.
@@ -62,7 +62,7 @@ A warning is not a verdict, and a missing warning is not proof. Verify the file 
 Download the installer and run, with the version and the file name of your system:
 
 ```bash
-FILE="stuarty-desktop-${V//./-}.exe"
+FILE="vukem-video-desktop-${V//./-}.exe"
 gh release download "$VERSION" -R "$REPO" -p "$FILE"
 bash scripts/desktop-verify.sh "$VERSION" "$FILE"
 ```

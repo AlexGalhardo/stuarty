@@ -1,4 +1,4 @@
-// Command ffmpegfresh decides whether the FFmpeg that Stuarty distributes is stale
+// Command ffmpegfresh decides whether the FFmpeg that Vukem Video distributes is stale
 // (SDD-007 section 12, "FFmpeg freshness"). It reads the pin in .config/ffmpeg.env and the inputs
 // of the own build in .config/ffmpeg-build/sources.env, compares the patch release of the active
 // source with the newest patch tag of the same branch in a list of upstream tags, and checks the

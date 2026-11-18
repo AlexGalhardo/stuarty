@@ -9,12 +9,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/service"
-	"github.com/AlexGalhardo/stuarty/web/app/auth"
-	"github.com/AlexGalhardo/stuarty/web/app/http/middleware"
-
 	"github.com/AlexGalhardo/vukem/ratelimit"
 	"github.com/AlexGalhardo/vukem/web"
+
+	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/vukem-video/web/app/auth"
+	"github.com/AlexGalhardo/vukem-video/web/app/http/middleware"
 )
 
 // Defaults of SDD-007 section 4.4.
@@ -28,8 +28,8 @@ const (
 )
 
 // RateLimits are the per-credential limits in requests a minute; zero is the
-// default (STUARTY_RATE_LIMIT_PER_MINUTE and
-// STUARTY_RATE_LIMIT_SESSION_PER_MINUTE). The burst is added to the rate: a
+// default (VUKEM_VIDEO_RATE_LIMIT_PER_MINUTE and
+// VUKEM_VIDEO_RATE_LIMIT_SESSION_PER_MINUTE). The burst is added to the rate: a
 // credential may spend its minute at once and then 60 more (a session 300 more).
 type RateLimits struct {
 	PerCredential int

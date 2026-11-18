@@ -1,9 +1,9 @@
 package rasterize
 
-import "github.com/AlexGalhardo/stuarty/core/plan"
+import "github.com/AlexGalhardo/vukem-video/core/plan"
 
 // textVectorCases are the cases of the text rasterizer that the goldens do not reach: the corners of the
-// layout, the highlight and the effects. renderer/stuarty-renderer-text must draw each byte for byte.
+// layout, the highlight and the effects. renderer/vukem-renderer-text must draw each byte for byte.
 //
 // Each case is drawn twice: with Inter, a variable font, and with Anton, a static one. The two differ in
 // how a port can match go-text: a variable font's points come out of float32 arithmetic and its kerning

@@ -22,10 +22,10 @@ const (
 // EnvLauncherSecret is the variable through which the desktop shell hands the
 // server its launcher secret (SDD-007 section 5.3). The server reads it once at
 // start and removes it from its environment, so no child process inherits it.
-const EnvLauncherSecret = "STUARTY_LAUNCHER_SECRET"
+const EnvLauncherSecret = "VUKEM_VIDEO_LAUNCHER_SECRET" //nolint:gosec // the name of the variable, not a secret
 
 // LauncherHeader carries the launcher secret on POST /api/v1/system/launch.
-const LauncherHeader = "Stuarty-Launcher"
+const LauncherHeader = "Vukem-Video-Launcher"
 
 // IsLauncher is true when got is the launcher secret of this server process.
 // An empty secret (no launcher started the server) matches nothing, an empty

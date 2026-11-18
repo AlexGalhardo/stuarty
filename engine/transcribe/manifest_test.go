@@ -16,8 +16,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
-	"github.com/AlexGalhardo/stuarty/internal/outbound"
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
+	"github.com/AlexGalhardo/vukem-video/internal/outbound"
 )
 
 func TestManifestHasEntryForEverySupportedPlatform(t *testing.T) {
@@ -66,7 +66,7 @@ func TestManifestPinsAreWellFormed(t *testing.T) {
 
 		if !e.Published {
 			if e.Kind != KindHelper ||
-				!strings.Contains(e.URL, "/AlexGalhardo/stuarty/releases/download/helpers-") {
+				!strings.Contains(e.URL, "/AlexGalhardo/vukem-video/releases/download/helpers-") {
 				t.Errorf("%s: only a helper built by this repository may be unpublished", e.File)
 			}
 
@@ -309,7 +309,7 @@ func TestJobNeverDownloads(t *testing.T) {
 
 	fe := UnavailableError(missing, w.ModelName)
 	if fe.Code != CodeUnavailable ||
-		fe.Details["install_command"] != "stuarty tools:install whisper --model small" ||
+		fe.Details["install_command"] != "vukem-video tools:install whisper --model small" ||
 		fe.Details["tool"] != "whisper" || fe.Details["model"] != "small" {
 		t.Errorf("error %+v", fe)
 	}

@@ -99,8 +99,8 @@ func TestHelpUserCommandsTakeAnEmail(t *testing.T) {
 	t.Parallel()
 
 	for name, want := range map[string]string{
-		"user:create": "stuarty user:create <email> [--admin]",
-		"user:passwd": "stuarty user:passwd <email>",
+		"user:create": "vukem-video user:create <email> [--admin]",
+		"user:passwd": "vukem-video user:passwd <email>",
 	} {
 		var out, errOut bytes.Buffer
 
@@ -136,11 +136,11 @@ func TestMCPDescription(t *testing.T) {
 	t.Parallel()
 
 	if got, want := mcpDescription("/w", "http://127.0.0.1:3401"),
-		"Stuarty MCP server for the workspace /w, server http://127.0.0.1:3401"; got != want {
+		"Vukem Video MCP server for the workspace /w, server http://127.0.0.1:3401"; got != want {
 		t.Errorf("description = %q, want %q", got, want)
 	}
 
-	if got := mcpDescription("", ""); got != "Stuarty MCP server" {
+	if got := mcpDescription("", ""); got != "Vukem Video MCP server" {
 		t.Errorf("description = %q", got)
 	}
 }

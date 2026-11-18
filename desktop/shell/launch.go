@@ -15,13 +15,13 @@ import (
 )
 
 // The handshake and launch routes of the server (SDD-007 sections 3.4 and 3.8).
-// The proof format is HMAC-SHA256(token, "stuarty-handshake-v1" + nonce).
+// The proof format is HMAC-SHA256(token, "vukem-video-handshake-v1" + nonce).
 const (
 	handshakePath  = "/api/v1/handshake"
 	launchPath     = "/api/v1/system/launch"
-	handshakeLabel = "stuarty-handshake-v1"
+	handshakeLabel = "vukem-video-handshake-v1"
 	launchTimeout  = 10 * time.Second
-	launcherHeader = "Stuarty-Launcher"
+	launcherHeader = "Vukem-Video-Launcher"
 )
 
 // newLauncherSecret is 32 random bytes as hexadecimal: the proof that a launch request comes from

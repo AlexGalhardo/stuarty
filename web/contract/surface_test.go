@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/web/app/cli"
+	"github.com/AlexGalhardo/vukem-video/web/app/cli"
 )
 
 const surfacePath = "testdata/surface.txt"

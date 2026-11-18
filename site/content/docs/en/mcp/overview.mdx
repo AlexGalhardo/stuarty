@@ -1,6 +1,6 @@
 ---
 title: "MCP overview"
-description: "What the Stuarty MCP server is, what it exposes, how a result looks and what keeps an agent safe."
+description: "What the Vukem Video MCP server is, what it exposes, how a result looks and what keeps an agent safe."
 ---
 
 ## You will learn
@@ -11,9 +11,9 @@ description: "What the Stuarty MCP server is, what it exposes, how a result look
 
 ## The idea
 
-[MCP](https://modelcontextprotocol.io/) (the Model Context Protocol) is the standard way for an AI agent to call tools. The Stuarty MCP server gives an agent the same abilities as the editor: create a project, import media, edit the timeline, look at the result, check it and export it. The server is a thin adapter over the same service as the editor, the CLI and the [HTTP API](/docs/api/overview), so what an agent does and what a person does in the browser are the same edits, on the same project.
+[MCP](https://modelcontextprotocol.io/) (the Model Context Protocol) is the standard way for an AI agent to call tools. The Vukem Video MCP server gives an agent the same abilities as the editor: create a project, import media, edit the timeline, look at the result, check it and export it. The server is a thin adapter over the same service as the editor, the CLI and the [HTTP API](/docs/api/overview), so what an agent does and what a person does in the browser are the same edits, on the same project.
 
-The server is called `stuarty` and lists 16 [tools](/docs/mcp/tools). One of them, [`edit`](/docs/mcp/tools/edit), applies a batch of operations, and each operation has its own page.
+The server is called `vukem-video` and lists 16 [tools](/docs/mcp/tools). One of them, [`edit`](/docs/mcp/tools/edit), applies a batch of operations, and each operation has its own page.
 
 ## Quick start
 
@@ -21,7 +21,7 @@ The server is called `stuarty` and lists 16 [tools](/docs/mcp/tools). One of the
 <Step title="Register the server in your agent">
 
 ```bash
-claude mcp add stuarty -- stuarty mcp
+claude mcp add vukem-video -- vukem-video mcp
 ```
 
 This is the command for Claude Code. [Connect a client](/docs/mcp/connect) has the other ways, and [Prompts](/docs/prompts/overview) has the setup for each agent.
@@ -54,7 +54,7 @@ An error has `isError` set to true and no structured content. Its text block has
     "content": [
       {
         "type": "text",
-        "text": "error E_VALIDATION: the argument \"project_id\" breaks the constraint \"pattern\".\nhint: check the tool definition; command_help lists the operations\nretryable: false  path: project_id\n{\"type\":\"urn:stuarty:error:E_VALIDATION\",\"title\":\"E_VALIDATION\",\"status\":422,\"code\":\"E_VALIDATION\",\"retryable\":false,\"path\":\"project_id\"}"
+        "text": "error E_VALIDATION: the argument \"project_id\" breaks the constraint \"pattern\".\nhint: check the tool definition; command_help lists the operations\nretryable: false  path: project_id\n{\"type\":\"urn:vukem-video:error:E_VALIDATION\",\"title\":\"E_VALIDATION\",\"status\":422,\"code\":\"E_VALIDATION\",\"retryable\":false,\"path\":\"project_id\"}"
       }
     ]
   }

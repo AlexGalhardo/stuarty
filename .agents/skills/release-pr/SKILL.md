@@ -44,7 +44,7 @@ After release N is merged, its commits get new hashes on `main`, and branch N+1,
    1. `bash scripts/release-pr-body.sh vX.Y.Z`. It edits the pull request itself; never pipe its output into `gh pr edit`.
    2. `gh pr ready N`
    3. `gh pr merge N --rebase --auto`
-   - While the epics are implemented the pull-request workflows are disabled by the author's decision (2026-11-15), so nothing would fire auto-merge: after the full local gate passes, merge with `gh pr merge N --rebase --admin`.
+   - Until the end of BETA the pull-request workflows are disabled by the author's decision (2026-11-15), so nothing would fire auto-merge: after the full local gate passes, merge with `gh pr merge N --rebase --admin`.
    - "This branch can't be rebased" right after a push can be GitHub still computing mergeability. Check `gh pr view N --json mergeable,mergeStateStatus` and look for an empty commit (`git diff-tree --no-commit-id -r <sha>` prints nothing); if `mergeable` is `MERGEABLE` and no commit is empty, retry the merge once.
 5. If a fix is needed after `prepare`, branch from `HEAD~1`, commit the fix, move `release/vX.Y.Z` there, push with lease, and run `prepare` again. The CHANGELOG must be written last.
 6. Auto-merge sometimes does not fire on a clean pull request. When every check is green, run `gh pr merge N --rebase` yourself.

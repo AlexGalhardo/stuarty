@@ -9,9 +9,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/service"
-	"github.com/AlexGalhardo/stuarty/web/app/events"
-	httpapi "github.com/AlexGalhardo/stuarty/web/app/http"
+	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/vukem-video/web/app/events"
+	httpapi "github.com/AlexGalhardo/vukem-video/web/app/http"
 )
 
 func rateHarness(t *testing.T) (*networkHarness, string) {
@@ -264,7 +264,7 @@ func TestRateLimitFrameConcurrencyCap(t *testing.T) {
 }
 
 // SR1-03 (T-18): the cap belongs to the credential, not to the label that the client chooses: rotating
-// Stuarty-Client labels with one token does not lift it.
+// Vukem-Video-Client labels with one token does not lift it.
 func TestRateLimitFrameCapIsPerTokenNotPerLabel(t *testing.T) {
 	slow := slowFrames{started: make(chan struct{}, 8), release: make(chan struct{})}
 	h := newHarnessWrapped(t, events.Options{}, func(s service.Service) service.Service {
@@ -277,11 +277,11 @@ func TestRateLimitFrameCapIsPerTokenNotPerLabel(t *testing.T) {
 	var wg sync.WaitGroup
 
 	for _, label := range []string{"agent-a", "agent-b"} {
-		wg.Go(func() { h.do(req{path: path, headers: map[string]string{"Stuarty-Client": label}}) })
+		wg.Go(func() { h.do(req{path: path, headers: map[string]string{"Vukem-Video-Client": label}}) })
 		<-slow.started
 	}
 
-	res := h.do(req{path: path, headers: map[string]string{"Stuarty-Client": "agent-c"}})
+	res := h.do(req{path: path, headers: map[string]string{"Vukem-Video-Client": "agent-c"}})
 	if res.status != http.StatusTooManyRequests || res.json(t)["code"] != service.CodeQueueFull {
 		t.Errorf("a third label on the same token = %d %s, want 429 E_QUEUE_FULL", res.status, res.body)
 	}

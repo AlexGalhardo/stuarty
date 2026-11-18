@@ -12,10 +12,10 @@ import (
 	"testing"
 	"unicode/utf8"
 
-	"github.com/AlexGalhardo/stuarty/desktop/update"
+	"github.com/AlexGalhardo/vukem-video/desktop/update"
 )
 
-const appImage = "stuarty-desktop_0.15.0_linux_amd64.AppImage"
+const appImage = "vukem-video-desktop_0.15.0_linux_amd64.AppImage"
 
 const releaseNotes = "## Added\n\n- **Launcher** with [updates](https://x.example/u)\n- `a` thing\n\n## Fixed\n\n- a bug\n"
 

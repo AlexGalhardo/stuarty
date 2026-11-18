@@ -11,9 +11,9 @@ import (
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
-	"github.com/AlexGalhardo/stuarty/internal/outbound"
-	"github.com/AlexGalhardo/stuarty/service"
-	"github.com/AlexGalhardo/stuarty/service/workspace"
+	"github.com/AlexGalhardo/vukem-video/internal/outbound"
+	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/vukem-video/service/workspace"
 )
 
 // SDD-003 section 4.7: a stdio MCP server with no owner becomes the owner. It
@@ -25,8 +25,8 @@ func TestStdioOwnerIsReachedByTheCLIAndOpen(t *testing.T) {
 	home := filepath.Join(t.TempDir(), "ws")
 
 	cmd := exec.CommandContext(t.Context(), bin, "mcp")
-	cmd.Env = append(os.Environ(), "STUARTY_HOME="+home, "STUARTY_URL=", "APP_KEY=", "APP_ENV=",
-		"HOST=127.0.0.1", "PORT="+freePort(t), "STUARTY_MIN_FREE_BYTES=1")
+	cmd.Env = append(os.Environ(), "VUKEM_VIDEO_HOME="+home, "VUKEM_VIDEO_URL=", "APP_KEY=", "APP_ENV=",
+		"HOST=127.0.0.1", "PORT="+freePort(t), "VUKEM_VIDEO_MIN_FREE_BYTES=1")
 
 	client := sdk.NewClient(&sdk.Implementation{Name: "Claude Code", Version: "1"}, nil)
 

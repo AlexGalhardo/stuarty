@@ -22,12 +22,12 @@ describe("failureOf", () => {
 		const error = new ApiError(500, {
 			code: "E_VALIDATION",
 			message: "this project was saved by a newer version",
-			hint: "update stuarty",
+			hint: "update vukem-video",
 		});
 		expect(failureOf(error)).toEqual({
 			code: "E_VALIDATION",
 			message: "this project was saved by a newer version",
-			hint: "update stuarty",
+			hint: "update vukem-video",
 		});
 	});
 
@@ -44,13 +44,13 @@ describe("FailureView", () => {
 				failure={{
 					code: "E_VALIDATION",
 					message: "newer <b>version</b>",
-					hint: "update stuarty",
+					hint: "update vukem-video",
 				}}
 			/>,
 		);
 		expect(html).toContain("E_VALIDATION");
 		expect(html).toContain("newer &lt;b&gt;version&lt;/b&gt;");
-		expect(html).toContain("update stuarty");
+		expect(html).toContain("update vukem-video");
 	});
 });
 

@@ -27,7 +27,7 @@ Add two tracks and a clip. The clip names the imported asset, where it starts on
 }
 ```
 
-Send it with the `edit` MCP tool, `stuarty edit --project prj_7k2m9x4q1b --ops -` (the batch on standard input), or `POST /api/v1/projects/{id}/edit`. The result gives the new `revision`, the ids created and a `diff`.
+Send it with the `edit` MCP tool, `vukem-video edit --project prj_7k2m9x4q1b --ops -` (the batch on standard input), or `POST /api/v1/projects/{id}/edit`. The result gives the new `revision`, the ids created and a `diff`.
 
 Read the project back as text with `project_get` (or `project:show`). The concise view is meant to fit in two pages of a few thousand tokens even for a long project; follow `next_cursor` for the next page.
 

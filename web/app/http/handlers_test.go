@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/service"
-	"github.com/AlexGalhardo/stuarty/web/app/events"
+	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/vukem-video/web/app/events"
 )
 
 // SDD-003 section 6.8, the part of session C that does not need media or jobs:
@@ -21,7 +21,7 @@ func TestSessionCOverHTTP(t *testing.T) {
 
 	created := h.do(req{
 		method: http.MethodPost, path: "/api/v1/projects", body: `{"name":"Launch teaser"}`,
-		headers: map[string]string{"Stuarty-Client": "curl-demo"},
+		headers: map[string]string{"Vukem-Video-Client": "curl-demo"},
 	})
 	if created.status != http.StatusCreated {
 		t.Fatalf("create = %d %s", created.status, created.body)
@@ -48,7 +48,7 @@ func TestSessionCOverHTTP(t *testing.T) {
 	}
 
 	edit := func(base int, ops, key string) resp {
-		hd := map[string]string{"Stuarty-Client": "curl-demo"}
+		hd := map[string]string{"Vukem-Video-Client": "curl-demo"}
 		if key != "" {
 			hd["Idempotency-Key"] = key
 		}
@@ -104,7 +104,7 @@ func TestSessionCOverHTTP(t *testing.T) {
 
 	undo := h.do(req{
 		method: http.MethodPost, path: "/api/v1/projects/" + id + "/undo",
-		headers: map[string]string{"Stuarty-Client": "curl-demo"},
+		headers: map[string]string{"Vukem-Video-Client": "curl-demo"},
 	})
 	if undo.status != http.StatusOK || undo.json(t)["kind"] != "undo" || undo.json(t)["revision"] != float64(3) {
 		t.Errorf("undo = %d %s", undo.status, undo.body)
@@ -271,7 +271,7 @@ func TestErrorEnvelope(t *testing.T) {
 			headers: map[string]string{"Authorization": "Bearer wrong"},
 		}, 401, "E_UNAUTHORIZED"},
 		"bad label": {
-			req{path: "/api/v1/projects", headers: map[string]string{"Stuarty-Client": "ui"}},
+			req{path: "/api/v1/projects", headers: map[string]string{"Vukem-Video-Client": "ui"}},
 			400,
 			"E_VALIDATION",
 		},
@@ -280,29 +280,9 @@ func TestErrorEnvelope(t *testing.T) {
 			400,
 			"E_VALIDATION",
 		},
-		"missing member": {
-			req{method: http.MethodPost, path: "/api/v1/projects", body: `{}`},
-			400,
-			"E_VALIDATION",
-		},
-		"bad limit":           {req{path: "/api/v1/projects?limit=abc"}, 400, "E_VALIDATION"},
-		"bad assets limit":    {req{path: "/api/v1/assets?limit=abc"}, 400, "E_VALIDATION"},
-		"bad assets reusable": {req{path: "/api/v1/assets?reusable=maybe"}, 400, "E_VALIDATION"},
-		"bad assets origin":   {req{path: "/api/v1/assets?origin=stolen"}, 400, "E_VALIDATION"},
-		"bad asset hash":      {req{path: "/api/v1/assets/nonsense"}, 400, "E_VALIDATION"},
-		"unknown asset":       {req{path: "/api/v1/assets/sha256:" + strings.Repeat("0", 64)}, 404, "E_NOT_FOUND"},
-		"unknown asset uses": {
-			req{path: "/api/v1/assets/sha256:" + strings.Repeat("0", 64) + "/uses"},
-			404,
-			"E_NOT_FOUND",
-		},
-		"tag an unknown asset": {req{
-			method: http.MethodPost, path: "/api/v1/assets/sha256:" + strings.Repeat("0", 64) + "/tags",
-			body: `{"add":["x"]}`,
-		}, 404, "E_NOT_FOUND"},
-		"set an unknown asset": {req{
-			method: http.MethodPut, path: "/api/v1/assets/sha256:" + strings.Repeat("0", 64), body: `{"reusable":true}`,
-		}, 404, "E_NOT_FOUND"},
+		"missing member":   {req{method: http.MethodPost, path: "/api/v1/projects", body: `{}`}, 400, "E_VALIDATION"},
+		"bad limit":        {req{path: "/api/v1/projects?limit=abc"}, 400, "E_VALIDATION"},
+		"bad assets limit": {req{path: "/api/v1/assets?limit=abc"}, 400, "E_VALIDATION"},
 		"too large": {
 			req{
 				method: http.MethodPost,
@@ -334,7 +314,7 @@ func TestErrorEnvelope(t *testing.T) {
 			}
 
 			env := res.json(t)
-			if env["code"] != c.code || env["title"] != c.code || env["type"] != "urn:stuarty:error:"+c.code ||
+			if env["code"] != c.code || env["title"] != c.code || env["type"] != "urn:vukem-video:error:"+c.code ||
 				env["status"] != float64(c.status) || env["message"] == "" || env["message"] != env["detail"] ||
 				env["retryable"] == nil || env["instance"] == nil {
 				t.Errorf("envelope = %s", res.body)

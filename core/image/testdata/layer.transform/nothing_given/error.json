@@ -1,8 +1,0 @@
-{
-  "code": "E_VALIDATION",
-  "hint": "Add one of x, y, w, h, rotation to the arguments.",
-  "message": "Give at least one of: x, y, w, h, rotation.",
-  "op_index": 0,
-  "path": "args",
-  "retryable": false
-}

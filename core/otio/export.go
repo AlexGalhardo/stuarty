@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
 type object = map[string]any
@@ -440,12 +440,7 @@ func sharedProps(it *timeline.Item, props object) {
 		for name, list := range it.Keyframes {
 			out := make([]any, 0, len(list))
 			for _, k := range list {
-				key := object{"t": k.T, "value": k.Value, "easing": k.Easing}
-				if k.Bezier != nil {
-					key["bezier"] = k.Bezier
-				}
-
-				out = append(out, key)
+				out = append(out, object{"t": k.T, "value": k.Value, "easing": k.Easing})
 			}
 
 			kfs[name] = out

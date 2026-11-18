@@ -3,7 +3,7 @@ package timeline
 import (
 	"errors"
 
-	"github.com/AlexGalhardo/stuarty/core/timeline/migrate"
+	"github.com/AlexGalhardo/vukem-video/core/timeline/migrate"
 )
 
 // Migrate chains the migrations of the migrate package from the document's

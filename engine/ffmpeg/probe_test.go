@@ -174,7 +174,7 @@ func TestCheckProbe(t *testing.T) {
 		t.Errorf("cover art refused: %v", err)
 	}
 	e := asError(t, errOf(CheckProbe([]byte(video("avi", 100, 100, "61")), Ceilings{MaxSeconds: 60})))
-	if e.Details["variable"] != "STUARTY_MAX_IMPORT_SECONDS" || e.Details["ceiling"] != int64(60) {
+	if e.Details["variable"] != "VUKEM_VIDEO_MAX_IMPORT_SECONDS" || e.Details["ceiling"] != int64(60) {
 		t.Errorf("details = %v", e.Details)
 	}
 }

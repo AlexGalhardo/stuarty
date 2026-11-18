@@ -1,9 +1,9 @@
 #!/bin/sh
 # AppRun of the AppImage. Started with no argument (a double click, or running the file), it does what
-# the shortcut of the other installers does: "stuarty open" starts the local server on 127.0.0.1
+# the shortcut of the other installers does: "vukem-video open" starts the local server on 127.0.0.1
 # if none runs and opens the browser. With arguments it is the command line program.
 HERE="$(dirname "$(readlink -f "$0")")"
 if [ "$#" -eq 0 ]; then
-	exec "$HERE/usr/bin/stuarty" open
+	exec "$HERE/usr/bin/vukem-video" open
 fi
-exec "$HERE/usr/bin/stuarty" "$@"
+exec "$HERE/usr/bin/vukem-video" "$@"

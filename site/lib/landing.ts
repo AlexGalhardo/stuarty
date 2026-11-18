@@ -12,7 +12,7 @@ export type Feature = {
 };
 
 export const landing = {
-	title: "Stuarty: an open source video editor that agents and people share",
+	title: "Vukem Video: an open source video editor that agents and people share",
 	description:
 		"A minimalist, local-first, open source (MIT) video editor. An AI agent edits through MCP, a CLI or an HTTP API; you edit the same project in the browser.",
 	hero: {
@@ -72,7 +72,7 @@ export const landing = {
 			tab: "Agents",
 			title: "Agents at the keyboard",
 			text: "An agent edits the same project through MCP, the CLI or the HTTP API. The editor shows what changed and who changed it, and every edit can be undone.",
-			command: "stuarty mcp",
+			command: "vukem-video mcp",
 			image: {
 				src: "/placeholders/agents.svg",
 				alt: "Placeholder for a screenshot: a terminal where an agent runs editing commands while the editor updates.",
@@ -83,7 +83,7 @@ export const landing = {
 			tab: "Export",
 			title: "Export what you previewed",
 			text: "Export MP4, GIF, WAV, AAC or a single PNG frame. An MP4 export reports success only after the file is checked: both streams and the duration.",
-			command: "stuarty export --format mp4",
+			command: "vukem-video export --format mp4",
 			image: {
 				src: "/placeholders/export.svg",
 				alt: "Placeholder for a screenshot of the editor: the export dialog with a progress bar.",

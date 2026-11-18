@@ -4,7 +4,7 @@ import type { Translate } from "@/lib/i18n";
 import type { ApiClient } from "../../api/client";
 import { createEditQueue, type EditQueue } from "../../api/edit";
 import type { CommandSummary, EditResult } from "../../api/types";
-import { isRowKey } from "../keymapStore";
+import { isPaletteShortcut } from "../keymap";
 import {
 	addToBatch,
 	type BatchEntry,
@@ -13,11 +13,9 @@ import {
 } from "./batch";
 import { matchRange, paletteRows } from "./usePaletteSearch";
 
-const summary = (
-	name: string,
-	extra: Partial<CommandSummary> = {},
-): CommandSummary => ({
+const summary = (name: string, extra: Partial<CommandSummary> = {}) => ({
 	name,
+	phase: "alpha" as const,
 	scope: "edit",
 	summary: `Does ${name}.`,
 	...extra,
@@ -139,19 +137,16 @@ describe("batch", () => {
 	});
 });
 
-describe("the palette key", () => {
+describe("isPaletteShortcut", () => {
 	const key = (init: Partial<KeyboardEvent>) =>
-		isRowKey(
-			{
-				key: "k",
-				ctrlKey: false,
-				metaKey: false,
-				altKey: false,
-				shiftKey: false,
-				...init,
-			},
-			"palette",
-		);
+		isPaletteShortcut({
+			key: "k",
+			ctrlKey: false,
+			metaKey: false,
+			altKey: false,
+			shiftKey: false,
+			...init,
+		});
 	test("Ctrl+K and Cmd+K only", () => {
 		expect(key({ ctrlKey: true })).toBe(true);
 		expect(key({ metaKey: true, key: "K" })).toBe(true);

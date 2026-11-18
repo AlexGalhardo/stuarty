@@ -23,7 +23,7 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/internal/outbound"
+	"github.com/AlexGalhardo/vukem-video/internal/outbound"
 )
 
 // Build-time configuration (SDD-009 section 10.5), set with -ldflags -X. The production feed host and
@@ -37,7 +37,7 @@ var (
 
 const (
 	placeholderHost    = "updates.example.invalid"
-	placeholderFeedURL = "https://" + placeholderHost + "/stuarty/feed.json"
+	placeholderFeedURL = "https://" + placeholderHost + "/vukem-video/feed.json"
 )
 
 // Errors of the client.
@@ -377,7 +377,7 @@ func (c *Client) get(ctx context.Context, client doer, rawURL string, limit int6
 	return body, nil
 }
 
-func userAgent(current string) string { return "stuarty-desktop/" + current }
+func userAgent(current string) string { return "vukem-video-desktop/" + current }
 
 // doer is the part of an HTTP client the update code uses; the clients come from internal/outbound.
 type doer interface {

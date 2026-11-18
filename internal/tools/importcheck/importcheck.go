@@ -9,9 +9,6 @@
 //     runner [EngineException] that ADR-0001 rule 2 allows.
 //   - service/ never imports web/ or vukem.
 //   - every package outside web/ never imports vukem (rule 4).
-//   - service/vault, which can return a credential, is imported only by service/connections, by the
-//     owner that wires it and by the test environment of the contract tests (ADR-0033 item 3, SDD-014 section 3); tests may import it.
-//   - only internal/outbound opens a connection to a host ([CheckOutbound]).
 package importcheck
 
 import (
@@ -34,12 +31,9 @@ const EngineException = VukemModule + "/contrib/engine"
 
 // CoreLibraries are the pure third-party libraries core/ may import, as
 // import path prefixes. A library enters this list only together with the
-// author's approval of the dependency (ADR-0014 names the JSON Schema validator;
-// D-094 approves the Unicode normalization of the Go team, for the caption counts
-// of core/writing).
+// author's approval of the dependency (ADR-0014 names the JSON Schema validator).
 var CoreLibraries = []string{
 	"github.com/santhosh-tekuri/jsonschema",
-	"golang.org/x/text/unicode/norm",
 }
 
 // Violation is one forbidden import.
@@ -133,10 +127,6 @@ func forbidden(rel, imp, modulePath string) string {
 	area, _, _ := strings.Cut(rel, "/")
 	inVukem := under(imp, VukemModule)
 
-	if imp == modulePath+"/service/vault" && !vaultImporter(rel) {
-		return "service/vault is imported only by service/connections and the owner (ADR-0033 item 3): a credential is read inside the call that uses it"
-	}
-
 	switch area {
 	case "web":
 		return ""
@@ -177,21 +167,6 @@ func forbidden(rel, imp, modulePath string) string {
 	}
 
 	return ""
-}
-
-// vaultImporter reports whether a file may import service/vault.
-func vaultImporter(rel string) bool {
-	if strings.HasSuffix(rel, "_test.go") {
-		return true
-	}
-
-	for _, p := range []string{"service/vault/", "service/connections/", "web/app/owner/", "web/contract/testenv/"} {
-		if strings.HasPrefix(rel, p) {
-			return true
-		}
-	}
-
-	return false
 }
 
 func under(imp, prefix string) bool {
