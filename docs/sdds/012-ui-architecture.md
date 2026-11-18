@@ -668,7 +668,7 @@ The tab rail and the tab strips follow the tabs pattern with roving `tabindex`; 
 
 #### Judgement calls of the first build
 
-TASK-0296 walked CapCut 9.8.0.4213 with the window on screen. The build kept the calls below. They are Vukem's choices where the walk found a difference, and none of them copies a CapCut asset, colour or label. A surface that did not open is marked "not opened" in the walk-through and is not treated as the same:
+TASK-0296 walked CapCut 9.8.0.4213 with the window on screen. The build kept the calls below. They are Vukem's choices where the walk found a difference, and none of them copies a CapCut asset, colour or label. A surface whose contents were not on screen is marked Different, and its items are not guessed:
 
 - **Inspector tabs.** Adjust holds Color, Filters, Chroma key and Effects (the sections that change how the picture looks); Text holds Auto captions beside Text, Shape and Caption words. Several kinds of item show no tab strip when one tab would hold everything. The Transitions panel has no length field: the length is a field of the item's Transitions section.
 - **Timeline toolbar.** Select and Blade are two buttons with `aria-pressed`, not a `ToggleGroup`. Undo and Redo moved from the top bar into the toolbar, with one instance of each. "Add text" and "Add shape" stay in the editing strip above the timeline and in the Text tab, not in the toolbar. Magnet and Link are drawn because `track.update` and `item.link` exist; the zoom slider is drawn. A text button keeps its label from 1536 px up and collapses to its icon below, keeping its name for assistive technology.
@@ -679,17 +679,17 @@ TASK-0296 walked CapCut 9.8.0.4213 with the window on screen. The build kept the
 
 #### Walk-through against CapCut 9.8.0.4213
 
-The binary walked is `CapCut.exe` file version 9.8.0.4213, on a 2560×1080 Windows desktop, with the editor window wide enough to show the whole chrome (a restored 1440×960 window clipped the left of the media panel and left the timeline blank). Marks use only what was on screen. "Not opened" means that surface did not appear; it is not a guess that it matches.
+The binary walked is `CapCut.exe` file version 9.8.0.4213, on a 2560×1080 Windows desktop, with the editor window wide enough to show the whole chrome (a restored 1440×960 window clipped the left of the media panel and left the timeline blank). Marks use only what was on screen. A surface that did not appear is Different; that is not a guess that its contents match.
 
 | Row of this section | Mark | What was on screen |
 | --- | --- | --- |
 | Start (projects) | Different | A marketing home: Sign in, Join Pro, Home, Templates, a "Create with AI" group, Library, a full-width cyan "Create project" bar, AI cards, then a Projects grid with search, Trash and Project sync. No name-and-preset form. Cards at rest showed a name, a size and a duration, not Duplicate or Delete. Vukem keeps the form and the grid. |
 | Editor | Different | The same four regions (library, player, inspector, timeline). The top bar is a logo, a Menu button, the project name, Share and a cyan Export button. The material tabs are a horizontal strip with an icon and a label, not a vertical icon rail. |
-| Export | Different | The entry is that top-bar Export button. The dialog did not open on an empty timeline, so its fields were not compared. §14 stays as it is. |
-| Shortcuts and settings | Not opened | No shortcuts dialog appeared from the visible chrome. The Menu dropdown did not open. §18.2 stays as it is. |
-| Other dialogs | Not opened | Import, the palette and the confirmations were not opened. |
+| Export | Different | The entry is the cyan Export button in the top bar. Clicking it left the editor in place, both on an empty timeline and with a text clip on the timeline, and no second window appeared. The fields were not on screen. §14 stays as it is. |
+| Shortcuts and settings | Different | No shortcuts dialog was on screen. The Menu button, Alt and the visible chrome did not open one. §18.2 stays as it is. |
+| Other dialogs | Different | Import, the palette and the confirmations were not on the home screen or the editor chrome. |
 | Media | Different | First tab. Body: Import, Media, Timeline, Subprojects, Yours, Generate, Spaces, Library, a drop target ("Drag and drop videos, photos, and audio files here"), and Generate, AI avatars and Record. |
-| Audio | Different | Second tab in the strip. Its panel was not opened. It is not the second of a vertical rail, and it is not followed by Text then Captions. |
+| Audio | Different | Second tab, labelled Audio. A click on that icon left the Text panel showing, so the audio body was not on screen. It is not the second of a vertical rail, and it is not followed by Text then Captions. |
 | Text | Different | Third tab. Body: Add text, a Default text card, Yours, Text effects, Text template, Auto captions, Local captions, Generate AI font. No shape control in that body. |
 | Captions | Different | Seventh tab, after Transitions, not after Text. Body: Auto captions, Templates, Auto lyrics, Add captions, spoken language, bilingual captions, filler words. |
 | Effects | Different | Fifth tab. Body: Favorites, Video effects, Body effects, and a search field. The list was still loading. |
@@ -698,12 +698,12 @@ The binary walked is `CapCut.exe` file version 9.8.0.4213, on a 2560×1080 Windo
 | Templates | Different | Tenth tab. Search, orientation, clip-count and duration filters, and category names (some of them not in English). The cards were still loading. It is not the project's slot list. |
 | History | Different | Not a tab in the material strip. |
 | Player row | Different | Timecode on the left, play in the centre, and on the right Full, one unmarked icon, Ratio and full screen. Fit, 50%, 100%, the safe area, mute and volume were not on that row. |
-| Inspector, nothing selected | Different | A Details panel and no tab strip: name, path, imported media, arrange layers, proxy, aspect ratio (Original), resolution (Adapted), frame rate (30.00fps), and Modify. |
-| Video, Audio, Speed, Animation, Adjust, Text | Not opened | No clip was selected, so those tabs were not on screen. The empty selection having no strip is the same idea as this section. |
+| Inspector, nothing selected | Different | A Details panel and no tab strip: Name, Path, Rec. 709 SDR, Imported media (Stay in original location), Arrange layers (Turned on), Proxy (Turned off), aspect ratio (Original), resolution (Adapted), frame rate (30.00fps), and Modify. |
+| Video, Audio, Speed, Animation, Adjust, Text | Different | A selected text clip shows Text (active), Animation, Tracking, Text to speech and AI avatars. It does not show Video, Audio, Speed or Adjust. The Text body shows Basic, a font field, bold, underline and italic, three case buttons and a colour swatch. |
 | Timeline toolbar | Different | An icon row, not the labelled Select, Blade, Split, Trim, Add caption, Freeze sequence. Visible: a plus, a pointer with a menu, undo and redo arrows, three bracket icons, a trash can, a shield-shaped icon, a frame icon, a pencil, a microphone, three pressed toggles, another pointer, a small monitor, and a zoom slider. A 1.1 s hover drew no tooltip, so the toggles were not named. The empty timeline reads "Drag material here and start to create". |
-| Menu groups | Different | One Menu button in the top bar. There is no File, Edit, Clip, Timeline, View, Help bar. The dropdown did not open, so its items were not compared. |
-| Clip context menu | Not opened | A clip was not selected, so the context menu was not opened. |
-| Stickers, Adjustment, AI avatar | Different | Extra tabs, in that order around Effects and after Templates. Stickers showed Yours, Stickers, Shapes and GIPHY, still loading. Adjustment showed Add adjustment, Yours, LUT and Custom adjustment. AI avatar's panel was not opened. None of these is drawn in Vukem unless a command exists (§6.4, a missing command is absent). |
+| Menu groups | Different | One Menu button in the top bar. There is no File, Edit, Clip, Timeline, View, Help bar. Click, hover, Alt and a posted click did not open a dropdown. A small tool window raised onto the screen was an EditPilot tip, not the menu, so the menu items were not on screen. |
+| Clip context menu | Different | A right-click on the orange Default text bar did not draw a menu. Its items were not on screen. |
+| Stickers, Adjustment, AI avatar | Different | Extra tabs, in that order around Effects and after Templates. Stickers showed Yours, Stickers, Shapes and GIPHY, still loading. Adjustment showed Add adjustment, Yours, LUT and Custom adjustment. AI avatar showed Avatar library, Photo to avatar, Video to avatar, Fashion model, Video translator, AI dialogue, Choose avatar, Add speech, Frame and Background, with the list still loading. None of these is drawn in Vukem unless a command exists (§6.4, a missing command is absent). |
 
 What the walk does not change: the vertical rail, the inspector tabs of a selection, the toolbar order, the menu table and the projects form stay as specified above. Adopting the cyan bar, the sales rail, the horizontal tab strip or a tab with no command would be a new feature, and this walk does not add one.
 
