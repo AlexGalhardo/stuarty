@@ -2,42 +2,100 @@
 
 import * as React from "react"
 import { cn } from "@/lib/cn"
-import { Dialog as DialogPrimitive } from "radix-ui"
-
+import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
 import { Button } from "@/components/ui/button"
+import { childRender } from "@/components/ui/slot"
 import { XIcon } from "lucide-react"
 import { useT } from "@/lib/i18n"
 
+const DialogEscapeContext = React.createContext<React.MutableRefObject<
+  ((event: KeyboardEvent) => void) | null
+> | null>(null)
+
 function Dialog({
+  onOpenChange,
+  children,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Root>) {
-  return <DialogPrimitive.Root data-slot="dialog" {...props} />
+  const escape = React.useRef<((event: KeyboardEvent) => void) | null>(null)
+  return (
+    <DialogEscapeContext.Provider value={escape}>
+      <DialogPrimitive.Root
+        onOpenChange={(open, details) => {
+          if (
+            !open &&
+            details.reason === "escape-key" &&
+            escape.current &&
+            details.event instanceof KeyboardEvent
+          ) {
+            escape.current(details.event)
+            if (details.event.defaultPrevented) {
+              details.cancel()
+              return
+            }
+          }
+          onOpenChange?.(open, details)
+        }}
+        {...props}
+      >
+        {children}
+      </DialogPrimitive.Root>
+    </DialogEscapeContext.Provider>
+  )
 }
 
 function DialogTrigger({
+  asChild,
+  children,
   ...props
-}: React.ComponentProps<typeof DialogPrimitive.Trigger>) {
-  return <DialogPrimitive.Trigger data-slot="dialog-trigger" {...props} />
+}: React.ComponentProps<typeof DialogPrimitive.Trigger> & {
+  asChild?: boolean
+}) {
+  const render = childRender(asChild, children)
+  return (
+    <DialogPrimitive.Trigger
+      data-slot="dialog-trigger"
+      nativeButton={render ? false : undefined}
+      render={render}
+      {...props}
+    >
+      {render ? undefined : children}
+    </DialogPrimitive.Trigger>
+  )
 }
 
 function DialogPortal({
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Portal>) {
-  return <DialogPrimitive.Portal data-slot="dialog-portal" {...props} />
+  return <DialogPrimitive.Portal {...props} />
 }
 
 function DialogClose({
+  asChild,
+  children,
   ...props
-}: React.ComponentProps<typeof DialogPrimitive.Close>) {
-  return <DialogPrimitive.Close data-slot="dialog-close" {...props} />
+}: React.ComponentProps<typeof DialogPrimitive.Close> & {
+  asChild?: boolean
+}) {
+  const render = childRender(asChild, children)
+  return (
+    <DialogPrimitive.Close
+      data-slot="dialog-close"
+      nativeButton={render ? false : undefined}
+      render={render}
+      {...props}
+    >
+      {render ? undefined : children}
+    </DialogPrimitive.Close>
+  )
 }
 
 function DialogOverlay({
   className,
   ...props
-}: React.ComponentProps<typeof DialogPrimitive.Overlay>) {
+}: React.ComponentProps<typeof DialogPrimitive.Backdrop>) {
   return (
-    <DialogPrimitive.Overlay
+    <DialogPrimitive.Backdrop
       data-slot="dialog-overlay"
       className={cn(
         "fixed inset-0 isolate z-50 bg-black/10 duration-100 supports-backdrop-filter:backdrop-blur-xs data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
@@ -52,15 +110,25 @@ function DialogContent({
   className,
   children,
   showCloseButton = true,
+  onEscapeKeyDown,
   ...props
-}: React.ComponentProps<typeof DialogPrimitive.Content> & {
+}: React.ComponentProps<typeof DialogPrimitive.Popup> & {
   showCloseButton?: boolean
+  onEscapeKeyDown?: (event: KeyboardEvent) => void
 }) {
   const t = useT()
+  const escape = React.useContext(DialogEscapeContext)
+  React.useEffect(() => {
+    if (!escape) return
+    escape.current = onEscapeKeyDown ?? null
+    return () => {
+      escape.current = null
+    }
+  }, [escape, onEscapeKeyDown])
   return (
     <DialogPortal>
       <DialogOverlay />
-      <DialogPrimitive.Content
+      <DialogPrimitive.Popup
         data-slot="dialog-content"
         className={cn(
           "fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl bg-popover p-4 text-sm text-popover-foreground ring-1 ring-foreground/10 duration-100 outline-none sm:max-w-sm data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
@@ -70,19 +138,21 @@ function DialogContent({
       >
         {children}
         {showCloseButton && (
-          <DialogPrimitive.Close data-slot="dialog-close" asChild>
-            <Button
-              variant="ghost"
-              className="absolute top-2 right-2"
-              size="icon-sm"
-            >
-              <XIcon
+          <DialogPrimitive.Close
+            data-slot="dialog-close"
+            render={
+              <Button
+                variant="ghost"
+                className="absolute top-2 right-2"
+                size="icon-sm"
               />
-              <span className="sr-only">{t("ui.editor.dialog.close")}</span>
-            </Button>
+            }
+          >
+            <XIcon />
+            <span className="sr-only">{t("ui.editor.dialog.close")}</span>
           </DialogPrimitive.Close>
         )}
-      </DialogPrimitive.Content>
+      </DialogPrimitive.Popup>
     </DialogPortal>
   )
 }
@@ -117,8 +187,10 @@ function DialogFooter({
     >
       {children}
       {showCloseButton && (
-        <DialogPrimitive.Close asChild>
-          <Button variant="outline">{t("ui.editor.dialog.close")}</Button>
+        <DialogPrimitive.Close
+          render={<Button variant="outline" />}
+        >
+          {t("ui.editor.dialog.close")}
         </DialogPrimitive.Close>
       )}
     </div>

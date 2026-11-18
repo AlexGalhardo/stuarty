@@ -3,7 +3,7 @@
 - Status: Accepted (2026-11-14). Written by the designer, to be reviewed by the architect and by senior-e (editor UI).
 - Applies to: the web UI under `web/resources/` (the Inertia pages and the editor), the desktop shell of BETA (`desktop/`, ADR-0023), and, where section 8.4 says so, the documentation site (`site/`, SDD-010).
 - Sources of truth, which this document follows and never overrides: author decisions D-008, D-013, D-016, D-022, D-023, D-024, D-028, D-029; [SDD-012](sdds/012-ui-architecture.md) (editor UI architecture: §1 thin client, §3 kept front end, §6 layout, §7 timeline, §11 preview, §12 inspector, §16 i18n, §17 theme, §18 accessibility, §21 desktop); [SDD-002](sdds/002-command-catalogue.md) A.4 (time strings) and A.8 (the error envelope); [SDD-003](sdds/003-agent-interfaces.md) §1.4; [SDD-010](sdds/010-documentation-site.md) §1 and §10 (site shell, glossary); [ADR-0007](adrs/0007-thin-ui-client.md), [ADR-0012](adrs/0012-text-and-shape-rasterization.md), [ADR-0013](adrs/0013-browser-preview-stack.md), [ADR-0023](adrs/0023-desktop-shell-deferred.md); [PRD-001](prds/001-editor-mvp.md) §3 (use cases), RF-070 to RF-075.
-- Code it describes: `web/resources/css/app.css` (the only token file), `web/components.json` (shadcn style `radix-nova`, base colour `neutral`, icon library `lucide`), `web/resources/js/components/ui/*`, `web/resources/js/layouts/AppLayout.tsx`, and the editor tree of SDD-012 §3.2.
+- Code it describes: `web/resources/css/app.css` (the only token file), `web/components.json` (kept style record: base colour `neutral`, icon library `lucide`), `web/resources/js/components/ui/*` (`@base-ui/react` and `@ui-sdk/react`), `web/resources/js/layouts/AppLayout.tsx`, and the editor tree of SDD-012 §3.2.
 
 A paragraph headed **Decision of this document** fills a gap that no SDD or ADR covers. Each is listed again in section 10 with the specification that should absorb it.
 
@@ -90,7 +90,7 @@ The neutral scale is the shadcn `neutral` base colour (`components.json`). It is
 | `--border` (`border-border`) | `oklch(0.922 0 0)` | `oklch(1 0 0 / 10%)` | dividers between regions, card and panel edges. Decorative only: never the only cue that identifies a control | no (exempt from 3:1 because decorative; section 7.6) |
 | `--input` (`border-input`) | **`oklch(0.62 0 0)`** | **`oklch(1 0 0 / 40%)`** | the boundary of text inputs, selects, text areas, checkboxes: the cue that identifies the field | **yes, both**: light `0.922` gave 1.26:1 and dark `/ 15%` gave 1.47:1 against the background; a field boundary needs 3:1 (WCAG 1.4.11). The dark fill `bg-input/30` becomes 12% white, still dark |
 | `--ring` (`ring-ring`, `outline-ring`) | **`oklch(0.45 0.18 250)`** | **`oklch(0.85 0.12 230)`** | the focus indicator of every focusable element (section 2.10), the only interactive accent hue | **yes, both**: light `0.708` gave 2.59:1 and dark `0.556` gave 4.18:1 solid but 1.87:1 at the 50% the components use. The new values equal `--ed-selection`, so focus looks the same in pages and editor (SDD-012 §18.1 item 6) |
-| `--sidebar`, `--sidebar-foreground`, `--sidebar-primary`, `--sidebar-primary-foreground`, `--sidebar-accent`, `--sidebar-accent-foreground`, `--sidebar-border` | kept | kept | the shadcn sidebar of `AppLayout` | no |
+| `--sidebar`, `--sidebar-foreground`, `--sidebar-primary`, `--sidebar-primary-foreground`, `--sidebar-accent`, `--sidebar-accent-foreground`, `--sidebar-border` | kept | kept | the sidebar of `AppLayout` | no |
 | `--sidebar-ring` | **as `--ring`** | **as `--ring`** | focus in the sidebar | **yes**, same reason as `--ring` |
 | `--chart-1` to `--chart-5` | kept | kept | not used by the product; kept because shadcn components may reference them | no |
 
@@ -291,9 +291,9 @@ Global layers (Tailwind `z-*`):
 | --- | --- | --- |
 | base | `z-0` | page and editor regions |
 | splitters | `z-10` | `ui/Splitter.tsx` hit areas over region edges |
-| sticky page chrome | `z-20` | the shadcn sidebar rail (kept value) |
+| sticky page chrome | `z-20` | the sidebar rail (kept value) |
 | in-page banners | `z-30` | offline, unsupported, read-only banners pinned to the top of a region |
-| portals | `z-50` | everything Radix portals: tooltip, popover, menu, select, dialog, sheet, palette (shadcn's value, kept) |
+| portals | `z-50` | Base UI and UI SDK popups: tooltip, popover, menu, select, dialog, sheet, palette (the `z-50` value is kept) |
 | toasts | `z-[60]` | the toast viewport, so a toast raised while a dialog is open is visible |
 
 Inside `#timeline`, which is its own stacking context (`isolation: isolate`):
@@ -329,7 +329,7 @@ Rules:
 1. Editor components add no `transition`, `animation` or `@keyframes` of their own. Motion comes from two classes of `app.css`: `.ed-motion` (colour, border, shadow, opacity and outline colour fade in `--duration-base`; position and size never transition, so a drag, a zoom or a row resize never lags the pointer) on timeline items, rows, track headers and the row splitter, and `.ed-highlight` (the outline of a remote edit or a conflict eases in over `--duration-slow`). Timed highlights (remote-edit outline 1.5 s, conflict outline 2 s, activity "is editing" 3 s) stay class toggles with a timer; the class only adds the ease-in. A unit test (`web/scripts/motion.test.ts`) fails on any other `transition`, `animate-` or `duration-` class in an editor component.
 2. No spinner rotates. A running job shows a determinate bar; an unknown duration shows a static icon and text ("Waiting for the server").
 3. Scrolling is never smooth: page-follow of the playhead jumps (SDD-012 §7.5), `scroll-behavior` stays `auto`.
-4. `prefers-reduced-motion: reduce` turns off the two classes above and what shadcn carries, with this rule in `app.css`, after them. Transitions are off at `0s`; animations keep `0.01ms` because the Radix presence logic waits for `animationend`, which an animation of exactly `0s` does not fire in every engine:
+4. `prefers-reduced-motion: reduce` turns off the two classes above and what the shared primitives carry, with this rule in `app.css`, after them. Transitions are off at `0s`; animations keep `0.01ms` because popup presence waits for `animationend`, which an animation of exactly `0s` does not fire in every engine:
 
 ```css
 @media (prefers-reduced-motion: reduce) {
@@ -385,7 +385,7 @@ Web, editor (from SDD-012 §6.3):
 
 Height below 600 px is allowed: regions get smaller and panels scroll.
 
-Web, Inertia pages (projects, settings, login, error): responsive from 360 px wide. Below 768 px (`MOBILE_BREAKPOINT` of `hooks/use-mobile.ts`) the shadcn sidebar becomes a sheet; content is one column. The project grid uses `repeat(auto-fill, minmax(240px, 1fr))`.
+Web, Inertia pages (projects, settings, login, error): responsive from 360 px wide. Below 768 px (`MOBILE_BREAKPOINT` of `hooks/use-mobile.ts`) the sidebar becomes a sheet; content is one column. The project grid uses `repeat(auto-fill, minmax(240px, 1fr))`.
 
 Desktop window (BETA, ADR-0023):
 
@@ -555,9 +555,9 @@ All interactive components use the same visual states. "Disabled" never relies o
 | busy | `aria-busy="true"` | the control keeps its value and stays enabled for reading; no spinner; a "Saving" text label appears after 400 ms only if the request is still in flight |
 | read-only | `readonly`, or plain text | plain text in `text-foreground`, no field boundary |
 
-### 4.2 Kept shadcn components
+### 4.2 Shared primitives
 
-Kept unchanged in `components/ui/` (SDD-012 §3.1). This section says how the product uses them.
+The files in `components/ui/` (SDD-012 §3.1). Dialogs, popovers, tooltips, tabs, sheets and form controls are `@base-ui/react`. Menus, `Select` and `Label` are `@ui-sdk/react`. This section says how the product uses them.
 
 | Component | Variants and sizes used | States and keyboard | Product rules |
 | --- | --- | --- | --- |
@@ -567,15 +567,15 @@ Kept unchanged in `components/ui/` (SDD-012 §3.1). This section says how the pr
 | `Input` | default; `font-mono` for paths | 4.1; error state through `aria-invalid` | always with a `Label` or an `aria-label`; placeholder is an example, never the label |
 | `Textarea` | default | 4.1 | caption and text content; `Ctrl+Enter` commits (SDD-012 §12.3) |
 | `Label` | default | | `text-xs font-medium text-muted-foreground` in the inspector, `text-sm` on pages |
-| `Select` | default trigger `h-8`; `sm` in toolbars | Radix: `Space` and `Enter` open, arrows move, typing selects, `Esc` closes | used for enums (preset, fit, font family, track); options rendered with `UntrustedText` when they show user content |
+| `Select` | default trigger `h-8`; `sm` in toolbars | UI SDK: `Space` and `Enter` open, arrows move, typing selects, `Esc` closes | used for enums (preset, fit, font family, track); options rendered with `UntrustedText` when they show user content |
 | `Separator` | horizontal and vertical | decorative (`role="none"`) unless it separates toolbar groups (`role="separator"`) | |
 | `Sheet` | `left` (library drawer), `right` (inspector drawer) | focus trap, `Esc` closes, focus returns to the opener | only at 1024 to 1279 px (section 3.2) and in the mobile Inertia sidebar |
 | `Sidebar` | `collapsible="icon"`, 16 rem / 3 rem | `Ctrl+B` toggles (kept) | Inertia pages only; navigation reduced to Projects and Settings (SDD-012 §3.1) |
 | `Skeleton` | default | `aria-hidden`; the region has `aria-busy` | first load of the project list and of the document; never longer than the request; no shimmer animation |
-| `Tabs` | default | Radix: arrows move, `Home` and `End`, automatic activation | the vertical tab rail of the library and the tab strip of the inspector (section 3.4, SDD-012 §6.4); inside one inspector tab the sections stack and scroll, with no further level of tabs |
+| `Tabs` | default | Base UI: arrows move, `Home` and `End`, automatic activation | the vertical tab rail of the library and the tab strip of the inspector (section 3.4, SDD-012 §6.4); inside one inspector tab the sections stack and scroll, with no further level of tabs |
 | `Tooltip` | default | opens on hover and on focus, `Esc` closes | every icon-only button; text is the label plus the shortcut in `<kbd>` style (`Split (S)`); never the only place of essential information |
 
-Components the specifications need that are not in `components/ui/` yet. They are added with `bunx shadcn add <name>` in the same `radix-nova` style; they import from `radix-ui`, which is already a dependency, so no new package is added. Each needs a line in SDD-012 §3.1.
+These primitives live in `components/ui/`. Dialogs, popovers, sliders, switches, checkboxes, radio groups, progress, toggles and sheets are `@base-ui/react`. Menus are `@ui-sdk/react`. Each is listed in SDD-012 §3.1.
 
 | Component | Used by |
 | --- | --- |
@@ -700,12 +700,11 @@ The one way an error from the core is shown, inside a toast, a card, a dialog or
 - Variants: `block` (dialogs, cards), `inline` (under a field: headline omitted, message and hint only), `toast`.
 - `role="alert"` when raised by the user's own action; the live region announces the headline only.
 
-#### 4.3.13 `ui/Toast` (toast and notice)
+#### 4.3.13 Notices
 
-- Built on Radix Toast (`radix-ui`, already a dependency). Viewport top-right, 16 px below the top bar and 16 px from the edge, 360 px wide, at most 3 visible, newest on top, `z-[60]`.
-- Anatomy: icon, title, body, up to two actions, close button (`IconButton` `icon-xs` with `aria-label` "Dismiss").
-- Variants: `status` (neutral, `role="status"`, closes after 5 s), `success` (`--success` icon, 5 s), `warning` (`--warning` icon, stays until dismissed), `error` (the error block, `role="alert"`, stays until dismissed). A toast with an action never closes on its own (WCAG 2.2.1).
-- The timer pauses on hover and on focus; `F8` moves focus to the viewport (Radix default hotkey), `Esc` dismisses the focused toast.
+- The editor draws notices in `web/resources/js/editor/timeline/Notices.tsx`. There is no toast primitive and no `radix-ui` toast.
+- The stack is fixed bottom-right (`right-3 bottom-3`), 384 px wide (`w-96`), at most 3 (`MAX_NOTICES_SHOWN`), `z-50`. The stack itself ignores pointer events; the buttons do not.
+- Each notice is `role="alert"` when `kind` is `error`, otherwise `role="status"`. The body is the error block. One optional action button calls `actions.applyNotice`. Dismiss is a ghost icon button with `aria-label` from `t("ui.editor.notice.dismiss")`. Notices stay until dismissed.
 
 #### 4.3.14 Conflict notice
 
@@ -907,7 +906,7 @@ Tokens and both themes; typography (bundled, not system fonts); layout and break
 | Menus | the "Menu" button of the top bar (section 3.4.3), the top bar and the palette | native menu bar, with the same items as the in-page Menu button, which is then not drawn (SDD-012 §6.4): File (Import files, Export), Edit (Undo, Redo, Select all), View (toggle panels, zoom, theme, language), Help (documentation, version). Each item calls the same action as its in-page control through `window.vukemDesktop.onMenuAction(cb)`. **`Mod+Z`, `Mod+Shift+Z` and `Mod+A` are shown in the menu but not registered as native accelerators** (D-030), so text fields keep their native undo and select-all and project undo applies elsewhere (SDD-012 §18.2, §21.3) |
 | File choice | path field only (SDD-012 §13.1 item 1) | "Choose files" button through `window.vukemDesktop.pickFiles()`; the path field stays |
 | Drag and drop from the OS | drop shows the "cannot see the path" message | drop imports through `onDropPaths`; the library shows the drop target of section 4.3.9 |
-| Context menu | the in-app Radix menus; the browser's own menu elsewhere | the in-app Radix menus; the webview's native menu is kept only in editable fields (cut, copy, paste) |
+| Context menu | the in-app menus; the browser's own menu elsewhere | the in-app menus; the webview's native menu is kept only in editable fields (cut, copy, paste) |
 | Theme | D-024: dark by default, the toggle, `localStorage.theme`; `prefers-color-scheme` ignored | the same, inside the webview. The shell paints the window background `oklch(0.16 0 0)` (`#0d0d0d`, dark `--ed-bg`) before the page loads, so there is no white flash, and sets the native title bar to the theme the page passes to `window.vukemDesktop.setTheme(theme)` at boot and on every toggle (D-030) |
 | Zoom | browser zoom applies; `Ctrl+wheel` on the timeline is taken by the timeline (non-passive listener) | page zoom fixed at 100% by the shell; `Ctrl+wheel` belongs to the timeline |
 | Text rendering | the browser's | the webview's; small anti-aliasing differences are accepted, layout must not depend on them |
@@ -944,10 +943,10 @@ The site (`site/`, SDD-010, D-028) is a separate Astro package that starts from 
 
 1. **This document first.** Change the token, component rule or style rule here, with the reason (a contrast number, a decision, a requirement). A change of an editor token name also changes SDD-012 §17 in the same pull request.
 2. **Then `app.css`.** Edit the value or add the variable and its `@theme inline` mapping. Run `bun run check:contrast`; if a pair fails, go back to step 1.
-3. **Then the components.** Use the new utility; never a literal colour or a raw palette class. Kept shadcn files are not edited (SDD-012 §3.1); a needed change goes into `app.css` or a wrapper component.
+3. **Then the components.** Use the new utility; never a literal colour or a raw palette class. A visual change that the shared primitive does not need goes into `app.css` or a wrapper (SDD-012 §3.1).
 4. **Then the tests.** The `@themes` Playwright scenarios and `a11y-axe-both-themes` pass in both themes.
 
-A new shadcn component is added with `bunx shadcn add` in the `radix-nova` style and listed in SDD-012 §3.1; a component that needs a new npm package needs the author's approval first.
+A new shared primitive is built on `@base-ui/react` or `@ui-sdk/react` and listed in SDD-012 §3.1. Any other npm package needs the author's approval first.
 
 ### 9.3 Checklist for UI pull requests
 
@@ -984,8 +983,8 @@ Decisions taken here (each is cheap to undo). "Recorded in" names where the spec
 | DS-6 | Desktop window minimum inner size 1280 by 640, default 1600 by 900 | 3.2 | SDD-012 §21.3 |
 | DS-7 | Several active agents: one badge with the latest actor and a count, a popover listing each actor and its last action | 4.3.4 | decided by D-030; SDD-012 §5.8 |
 | DS-8 | The command palette is built on `Dialog` and a listbox, without `cmdk` | 4.3.11 | SDD-012 §3.1, §9.2 |
-| DS-9 | Toast placement, durations and the persistent conflict notice | 4.3.13, 4.3.14 | this document only |
-| DS-10 | shadcn components to add (`Dialog`, `AlertDialog`, `Popover`, `DropdownMenu`, `ContextMenu`, `Slider`, `Switch`, `Checkbox`, `RadioGroup`, `Progress`, `Toggle`, `ToggleGroup`), all from `radix-ui` | 4.2 | SDD-012 §3.1 |
+| DS-9 | Notice stack placement (bottom-right, at most 3) and the persistent conflict notice | 4.3.13, 4.3.14 | this document only |
+| DS-10 | Shared primitives (`Dialog`, `AlertDialog`, `Popover`, `DropdownMenu`, `ContextMenu`, `Slider`, `Switch`, `Checkbox`, `RadioGroup`, `Progress`, `Toggle`, `ToggleGroup`, `Select`, `Tabs`, `Tooltip`) from `@base-ui/react` and `@ui-sdk/react` | 4.2 | SDD-012 §3.1 |
 | DS-11 | Native menus show `Mod+Z`, `Mod+Shift+Z` and `Mod+A` without registering them as accelerators; menu items and the title-bar theme go through `onMenuAction` and `setTheme` | 8.3 | decided by D-030; SDD-012 §13.1, §21.3 |
 | DS-12 | The familiar layout (D-038): a 40 px tab rail inside the library width, a 36 px tab strip in the inspector, a selected tab shown by a 2 px `--ring` bar, a save indicator and a Menu button in the top bar, the timeline toolbar in two labelled groups; no new token | 3.4 | SDD-012 §6.4, §6.5 |
 
