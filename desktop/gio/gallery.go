@@ -18,6 +18,8 @@ func (ui *UI) Gallery(dir string) error {
 		return errors.New("the workspace is not open")
 	}
 
+	ui.useTheme(false, false)
+
 	if err := os.MkdirAll(dir, 0o750); err != nil {
 		return err
 	}
@@ -72,6 +74,45 @@ func (ui *UI) Gallery(dir string) error {
 		return err
 	}
 
+	if err := ui.shoot(dir, "desktop-editor-clips-dark.png"); err != nil {
+		return err
+	}
+
+	ui.useTheme(true, false)
+
+	if err := ui.shoot(dir, "desktop-editor-clips-light.png"); err != nil {
+		return err
+	}
+
+	list, err = ui.sess.Projects(ctx)
+	if err != nil {
+		return err
+	}
+
+	ui.projects = list
+	ui.HideProject()
+
+	if err := ui.shoot(dir, "desktop-projects-light.png"); err != nil {
+		return err
+	}
+
+	if err := ui.reloadSync(ctx, created.ProjectID); err != nil {
+		return err
+	}
+
+	ui.useTheme(true, false)
+	ui.selected = clipItem(ui.doc)
+	ui.boundSelection = ""
+
+	if ui.stage != nil {
+		_ = ui.stage.ShowSync(ui.doc, ui.revision, 0)
+	}
+
+	if err := ui.shoot(dir, "desktop-inspector-light.png"); err != nil {
+		return err
+	}
+
+	ui.useTheme(false, false)
 	ui.selected = clipItem(ui.doc)
 	ui.boundSelection = ""
 

@@ -16,7 +16,7 @@ import (
 func (ui *UI) preview(gtx layout.Context) layout.Dimensions {
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Flexed(1, ui.canvas),
-		layout.Rigid(hline),
+		layout.Rigid(ui.hline),
 		layout.Rigid(ui.transport),
 	)
 }
@@ -24,7 +24,7 @@ func (ui *UI) preview(gtx layout.Context) layout.Dimensions {
 func (ui *UI) canvas(gtx layout.Context) layout.Dimensions {
 	return layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx layout.Context) layout.Dimensions {
-			return fill(gtx, colBlack)
+			return fill(gtx, ui.pal.canvas)
 		}),
 		layout.Stacked(func(gtx layout.Context) layout.Dimensions {
 			return layout.Center.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
@@ -50,7 +50,7 @@ func (ui *UI) canvas(gtx layout.Context) layout.Dimensions {
 				return layout.Stack{}.Layout(gtx,
 					layout.Expanded(func(gtx layout.Context) layout.Dimensions {
 						gtx.Constraints.Min = size
-						paint.FillShape(gtx.Ops, colPanel, clip.Rect{Max: size}.Op())
+						paint.FillShape(gtx.Ops, ui.pal.panel, clip.Rect{Max: size}.Op())
 
 						return layout.Dimensions{Size: size}
 					}),
@@ -64,7 +64,7 @@ func (ui *UI) canvas(gtx layout.Context) layout.Dimensions {
 							hint = ellipsize(ui.frame.err, 48)
 						}
 
-						return layout.Center.Layout(gtx, lbl(ui.th, unit.Sp(13), colMuted, hint))
+						return layout.Center.Layout(gtx, lbl(ui.th, unit.Sp(13), ui.pal.muted, hint))
 					}),
 				)
 			})
@@ -127,7 +127,7 @@ func (ui *UI) transport(gtx layout.Context) layout.Dimensions {
 
 	return layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx layout.Context) layout.Dimensions {
-			return fill(gtx, colPanel)
+			return fill(gtx, ui.pal.panel)
 		}),
 		layout.Stacked(func(gtx layout.Context) layout.Dimensions {
 			return layout.Inset{
@@ -149,12 +149,12 @@ func (ui *UI) transport(gtx layout.Context) layout.Dimensions {
 										ui.togglePlay()
 									}
 
-									return button(gtx, ui.th, ui.click("play"), play, colAccent, colBlack)
+									return ui.button(gtx, ui.click("play"), play, ui.pal.accent, ui.pal.onAccent)
 								}),
 								gap(unit.Dp(12)),
-								layout.Rigid(lbl(ui.th, unit.Sp(13), colText, ui.tc(ui.playhead))),
+								layout.Rigid(lbl(ui.th, unit.Sp(13), ui.pal.text, ui.tc(ui.playhead))),
 								gap(unit.Dp(8)),
-								layout.Rigid(lbl(ui.th, unit.Sp(12), colMuted, "/  "+ui.tc(ui.endFrame()))),
+								layout.Rigid(lbl(ui.th, unit.Sp(12), ui.pal.muted, "/  "+ui.tc(ui.endFrame()))),
 							)
 						}),
 						gap(unit.Dp(6)),
@@ -173,12 +173,12 @@ func (ui *UI) scrubber(gtx layout.Context) layout.Dimensions {
 
 	defer clip.Rect{Max: size}.Push(gtx.Ops).Pop()
 	event.Op(gtx.Ops, &ui.scrubTag)
-	paint.FillShape(gtx.Ops, colPanel2, clip.Rect{Max: size}.Op())
+	paint.FillShape(gtx.Ops, ui.pal.panel2, clip.Rect{Max: size}.Op())
 
 	end := max(ui.endFrame(), 1)
 	pos := min(w*ui.playhead/end, w)
 
-	paint.FillShape(gtx.Ops, colAccent, clip.Rect{Max: image.Pt(pos, h)}.Op())
+	paint.FillShape(gtx.Ops, ui.pal.accent, clip.Rect{Max: image.Pt(pos, h)}.Op())
 
 	ui.scrubEvents(gtx, w, end)
 

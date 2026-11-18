@@ -13,10 +13,10 @@ func (ui *UI) homeForm(gtx layout.Context) layout.Dimensions {
 	return layout.Inset{Top: unit.Dp(28), Left: unit.Dp(24), Right: unit.Dp(24)}.Layout(gtx,
 		func(gtx layout.Context) layout.Dimensions {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(lbl(ui.th, unit.Sp(16), colText, "New project")),
+				layout.Rigid(lbl(ui.th, unit.Sp(16), ui.pal.text, "New project")),
 				gap(unit.Dp(12)),
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-					return editorBox(gtx, ui.th, &ui.nameEd, "Project name")
+					return ui.editorBox(gtx, &ui.nameEd, "Project name")
 				}),
 				gap(unit.Dp(12)),
 				layout.Rigid(ui.presetRow),
@@ -26,10 +26,10 @@ func (ui *UI) homeForm(gtx layout.Context) layout.Dimensions {
 						ui.createProject()
 					}
 
-					return button(gtx, ui.th, ui.click("create"), "Create project", colAccent, colBlack)
+					return ui.button(gtx, ui.click("create"), "Create project", ui.pal.accent, ui.pal.onAccent)
 				}),
 				gap(unit.Dp(18)),
-				layout.Rigid(lbl(ui.th, unit.Sp(12), colMuted, "16:9, 9:16, 1:1 and 4:5, at 30 fps.")),
+				layout.Rigid(lbl(ui.th, unit.Sp(12), ui.pal.muted, "16:9, 9:16, 1:1 and 4:5, at 30 fps.")),
 			)
 		})
 }
@@ -55,7 +55,7 @@ func (ui *UI) presetChip(preset string) layout.FlexChild {
 			ui.preset = preset
 		}
 
-		return chip(gtx, ui.th, ui.click("preset-"+preset), preset, ui.preset == preset)
+		return ui.chip(gtx, ui.click("preset-"+preset), preset, ui.preset == preset)
 	})
 }
 

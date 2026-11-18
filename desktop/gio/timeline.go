@@ -31,7 +31,7 @@ type trackRow struct {
 func (ui *UI) timeline(gtx layout.Context) layout.Dimensions {
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(ui.timelineBar),
-		layout.Rigid(hline),
+		layout.Rigid(ui.hline),
 		layout.Flexed(1, ui.timelineBody),
 	)
 }
@@ -43,7 +43,7 @@ func (ui *UI) timelineBar(gtx layout.Context) layout.Dimensions {
 
 	return layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx layout.Context) layout.Dimensions {
-			return fill(gtx, colPanel)
+			return fill(gtx, ui.pal.panel)
 		}),
 		layout.Stacked(func(gtx layout.Context) layout.Dimensions {
 			return layout.Inset{
@@ -63,7 +63,7 @@ func (ui *UI) timelineBar(gtx layout.Context) layout.Dimensions {
 						layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
 							return layout.Dimensions{Size: image.Pt(gtx.Constraints.Max.X, gtx.Constraints.Min.Y)}
 						}),
-						layout.Rigid(lbl(ui.th, unit.Sp(12), colMuted, "Zoom")),
+						layout.Rigid(lbl(ui.th, unit.Sp(12), ui.pal.muted, "Zoom")),
 						gap(unit.Dp(6)),
 						ui.tool("zoom-out", "−", func() { ui.zoom(0.8) }),
 						gap(unit.Dp(4)),
@@ -81,7 +81,7 @@ func (ui *UI) tool(id, txt string, fn func()) layout.FlexChild {
 			fn()
 		}
 
-		return chip(gtx, ui.th, ui.click("tool-"+id), txt, false)
+		return ui.chip(gtx, ui.click("tool-"+id), txt, false)
 	})
 }
 
@@ -143,7 +143,7 @@ func (ui *UI) timelineBody(gtx layout.Context) layout.Dimensions {
 
 			return ui.trackHeads(gtx, rows)
 		}),
-		layout.Rigid(vline),
+		layout.Rigid(ui.vline),
 		layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
 			return ui.trackLanes(gtx, rows)
 		}),
@@ -197,7 +197,7 @@ func (ui *UI) trackRows() []trackRow {
 }
 
 func (ui *UI) trackHeads(gtx layout.Context, rows []trackRow) layout.Dimensions {
-	fill(gtx, colPanel)
+	fill(gtx, ui.pal.panel)
 	ruler := gtx.Dp(unit.Dp(rulerDp))
 	rowH := gtx.Dp(unit.Dp(rowDp))
 	y := ruler - ui.scrollY
@@ -232,7 +232,7 @@ func (ui *UI) trackHeads(gtx layout.Context, rows []trackRow) layout.Dimensions 
 		}
 
 		off := op.Offset(image.Pt(gtx.Dp(unit.Dp(8)), top+gtx.Dp(unit.Dp(8)))).Push(gtx.Ops)
-		lbl(ui.th, unit.Sp(11), colMuted, ellipsize(label, 12))(gtx)
+		lbl(ui.th, unit.Sp(11), ui.pal.muted, ellipsize(label, 12))(gtx)
 		off.Pop()
 	}
 
@@ -247,7 +247,7 @@ func (ui *UI) trackLanes(gtx layout.Context, rows []trackRow) layout.Dimensions 
 
 	defer clip.Rect{Max: size}.Push(gtx.Ops).Pop()
 	event.Op(gtx.Ops, &ui.timeTag)
-	paintTracks(gtx, rows, ruler, rowH, ui.scrollY)
+	ui.paintTracks(gtx, rows, ruler, rowH, ui.scrollY)
 	ui.paintClips(gtx, rows, ruler, rowH)
 	ui.paintPlayhead(gtx)
 	ui.paintRuler(gtx, ruler)
@@ -256,15 +256,15 @@ func (ui *UI) trackLanes(gtx layout.Context, rows []trackRow) layout.Dimensions 
 	return layout.Dimensions{Size: size}
 }
 
-func paintTracks(gtx layout.Context, rows []trackRow, ruler, rowH, scrollY int) {
-	paint.FillShape(gtx.Ops, colBg, clip.Rect{Max: gtx.Constraints.Max}.Op())
+func (ui *UI) paintTracks(gtx layout.Context, rows []trackRow, ruler, rowH, scrollY int) {
+	paint.FillShape(gtx.Ops, ui.pal.bg, clip.Rect{Max: gtx.Constraints.Max}.Op())
 	width := gtx.Constraints.Max.X
 
 	for i := range rows {
 		y := ruler + i*rowH - scrollY
-		col := colPanel
+		col := ui.pal.panel
 		if i%2 == 1 {
-			col = colPanel2
+			col = ui.pal.panel2
 		}
 
 		paint.FillShape(gtx.Ops, col, clip.Rect{
@@ -293,9 +293,9 @@ func (ui *UI) paintClips(gtx layout.Context, rows []trackRow, ruler, rowH int) {
 				continue
 			}
 
-			col := itemColor(it.Type)
+			col := ui.pal.clip(it.Type)
 			if it.ID == ui.selected {
-				col = mix(col, colWhite, 0.25)
+				col = mix(col, ui.pal.lift, 0.25)
 			}
 
 			off := op.Offset(image.Pt(x, y)).Push(gtx.Ops)
@@ -304,7 +304,7 @@ func (ui *UI) paintClips(gtx layout.Context, rows []trackRow, ruler, rowH int) {
 
 			if w > gtx.Dp(unit.Dp(36)) {
 				off = op.Offset(image.Pt(x+gtx.Dp(unit.Dp(6)), y+gtx.Dp(unit.Dp(6)))).Push(gtx.Ops)
-				lbl(ui.th, unit.Sp(11), colWhite, ellipsize(itemLabel(it, assets), 18))(gtx)
+				lbl(ui.th, unit.Sp(11), ui.pal.onClip, ellipsize(itemLabel(it, assets), 18))(gtx)
 				off.Pop()
 			}
 		}
@@ -317,13 +317,13 @@ func (ui *UI) paintPlayhead(gtx layout.Context) {
 		return
 	}
 
-	paint.FillShape(gtx.Ops, colWhite, clip.Rect{
+	paint.FillShape(gtx.Ops, ui.pal.playhead, clip.Rect{
 		Min: image.Pt(x, 0), Max: image.Pt(x+gtx.Dp(unit.Dp(1)), gtx.Constraints.Max.Y),
 	}.Op())
 }
 
 func (ui *UI) paintRuler(gtx layout.Context, ruler int) {
-	paint.FillShape(gtx.Ops, colPanel, clip.Rect{Max: image.Pt(gtx.Constraints.Max.X, ruler)}.Op())
+	paint.FillShape(gtx.Ops, ui.pal.panel, clip.Rect{Max: image.Pt(gtx.Constraints.Max.X, ruler)}.Op())
 	fps := ui.fps()
 	if fps.Num <= 0 {
 		return
@@ -332,7 +332,7 @@ func (ui *UI) paintRuler(gtx layout.Context, ruler int) {
 	secPx := max(frameToX(int(fps.Num), fps, ui.pxPerSec), 8)
 
 	for x := -ui.scrollX % secPx; x < gtx.Constraints.Max.X; x += secPx {
-		paint.FillShape(gtx.Ops, colLine, clip.Rect{
+		paint.FillShape(gtx.Ops, ui.pal.line, clip.Rect{
 			Min: image.Pt(x, ruler-gtx.Dp(unit.Dp(8))), Max: image.Pt(x+1, ruler),
 		}.Op())
 	}

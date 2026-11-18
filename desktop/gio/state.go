@@ -98,6 +98,9 @@ type UI struct {
 	boundSelection string
 
 	stage       *stage
+	configPath  string
+	light       bool
+	pal         palette
 	seenSeq     int
 	stageWasOn  bool
 	audioNote   string
@@ -120,12 +123,13 @@ type UI struct {
 func New(sess *Session, fail error) *UI {
 	ui := &UI{
 		sess:     sess,
-		th:       theme(),
 		preset:   "16:9",
 		pxPerSec: 80,
 		format:   "mp4",
 		clicks:   map[string]*widget.Clickable{},
 	}
+	ui.loadTheme()
+	ui.th = newMaterial(ui.pal)
 	ui.nameEd.SingleLine = true
 	ui.textEd.SingleLine = true
 	ui.draftEd.SingleLine = true

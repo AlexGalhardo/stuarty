@@ -59,7 +59,7 @@ func (ui *UI) overlay(gtx layout.Context) layout.Dimensions {
 		return layout.Stack{}.Layout(gtx,
 			layout.Expanded(func(gtx layout.Context) layout.Dimensions {
 				size := gtx.Constraints.Min
-				roundRect(gtx.Ops, colPanel, size, gtx.Dp(unit.Dp(8)))
+				roundRect(gtx.Ops, ui.pal.panel, size, gtx.Dp(unit.Dp(8)))
 
 				return layout.Dimensions{Size: size}
 			}),
@@ -128,9 +128,9 @@ func (ui *UI) readImportDir() {
 
 func (ui *UI) importCard(gtx layout.Context) layout.Dimensions {
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-		layout.Rigid(lbl(ui.th, unit.Sp(16), colText, "Import media")),
+		layout.Rigid(lbl(ui.th, unit.Sp(16), ui.pal.text, "Import media")),
 		gap(unit.Dp(6)),
-		layout.Rigid(lbl(ui.th, unit.Sp(12), colMuted, ellipsize(ui.importDir, 64))),
+		layout.Rigid(lbl(ui.th, unit.Sp(12), ui.pal.muted, ellipsize(ui.importDir, 64))),
 		gap(unit.Dp(8)),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
@@ -147,7 +147,7 @@ func (ui *UI) importCard(gtx layout.Context) layout.Dimensions {
 				ui.importSelected()
 			}
 
-			return button(gtx, ui.th, ui.click("import-do"), "Import selected", colAccent, colBlack)
+			return ui.button(gtx, ui.click("import-do"), "Import selected", ui.pal.accent, ui.pal.onAccent)
 		}),
 	)
 }
@@ -186,7 +186,7 @@ func (ui *UI) importList(gtx layout.Context) layout.Dimensions {
 		}
 
 		return layout.Inset{Bottom: unit.Dp(2)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-			return chip(gtx, ui.th, ui.click(id), ellipsize(label, 48), ui.importSel == e.path)
+			return ui.chip(gtx, ui.click(id), ellipsize(label, 48), ui.importSel == e.path)
 		})
 	})
 }
@@ -224,9 +224,9 @@ func (ui *UI) exportCard(gtx layout.Context) layout.Dimensions {
 	formats := []string{"mp4", "gif", "wav", "aac", "png"}
 
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-		layout.Rigid(lbl(ui.th, unit.Sp(16), colText, "Export")),
+		layout.Rigid(lbl(ui.th, unit.Sp(16), ui.pal.text, "Export")),
 		gap(unit.Dp(8)),
-		layout.Rigid(lbl(ui.th, unit.Sp(12), colMuted, "The file is written into the workspace exports folder.")),
+		layout.Rigid(lbl(ui.th, unit.Sp(12), ui.pal.muted, "The file is written into the workspace exports folder.")),
 		gap(unit.Dp(12)),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			children := make([]layout.FlexChild, 0, len(formats)*2)
@@ -249,7 +249,7 @@ func (ui *UI) exportCard(gtx layout.Context) layout.Dimensions {
 						ui.startExport()
 					}
 
-					return button(gtx, ui.th, ui.click("export-go"), "Start export", colAccent, colBlack)
+					return ui.button(gtx, ui.click("export-go"), "Start export", ui.pal.accent, ui.pal.onAccent)
 				}),
 				gap(unit.Dp(8)),
 				ui.tool("export-close", "Close", func() { ui.exportOpen = false }),
@@ -264,7 +264,7 @@ func (ui *UI) formatChip(format string) layout.FlexChild {
 			ui.format = format
 		}
 
-		return chip(gtx, ui.th, ui.click("fmt-"+format), format, ui.format == format)
+		return ui.chip(gtx, ui.click("fmt-"+format), format, ui.format == format)
 	})
 }
 
