@@ -1,6 +1,6 @@
 # ADR-0015: MCP server: sixteen tools by intent, stateless, text first
 
-- Status: Accepted (2026-11-14)
+- Status: Accepted (2026-11-14); extended to several domains by [ADR-0043](0043-mcp-tools-by-intent-with-a-domain.md) (2026-11-18)
 - Deciders: architect; author (D-011)
 - Links: agents and MCP, ADR-0002, ADR-0008, ADR-0014, ADR-0020, SDD-003
 

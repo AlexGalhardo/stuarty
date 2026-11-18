@@ -1,6 +1,6 @@
 # ADR-0019: Authentication: a local token on loopback, login and scoped keys on the network
 
-- Status: Accepted (2026-11-14)
+- Status: Accepted (2026-11-14); item 3 (no social login) amended by [ADR-0034](0034-local-login-and-optional-google-account.md) (2026-11-18)
 - Deciders: author (D-012), architect
 - Links: author decision D-012, agents and MCP §9, ADR-0008, ADR-0020, SDD-007
 

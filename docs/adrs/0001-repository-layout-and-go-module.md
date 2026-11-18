@@ -1,6 +1,6 @@
 # ADR-0001: Repository layout and Go module
 
-- Status: Accepted (2026-11-14)
+- Status: Accepted (2026-11-14); the product name is amended by [ADR-0031](0031-stuarty-product-scope-and-domains.md) and the module path and binary name by [ADR-0044](0044-rename-to-stuarty.md) (2026-11-18)
 - Deciders: author (D-002, D-005, D-007, D-008, D-020, D-021), architect
 - Links: author decision D-002, D-005, D-007, vukem practices, existing Studio
 

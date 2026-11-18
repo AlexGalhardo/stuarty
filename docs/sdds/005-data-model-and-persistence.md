@@ -1,5 +1,6 @@
 # SDD-005: Data model and persistence
 
+- Amended (2026-11-18) for Stuarty: a project becomes the container of a production and what this document calls a project becomes a timeline inside it (ADR-0039); third-party credentials live in a vault outside these tables (ADR-0033); jobs gain a scheduled start and an approval state (ADR-0046). The epics that build each change rewrite the sections they touch; until then this document describes the model as built.
 - Status: Accepted (2026-11-14). Drafted by senior-c, reviewed and corrected by the architect; reconciled with SDD-000, SDD-006 and SDD-007.
 - Depends on: ADR-0001, ADR-0006, ADR-0008, ADR-0009, ADR-0010, ADR-0017, ADR-0018, ADR-0019, ADR-0020, ADR-0022, ADR-0026, SDD-000, SDD-001, SDD-002, SDD-006
 - Implements: RF-001, RF-005, RF-006, RF-013, RF-105, RF-107, RF-111, RF-115, RF-119, RF-131, RF-132, RF-134, RF-201, RF-208, NFR-001, NFR-012, NFR-013, NFR-024, NFR-025

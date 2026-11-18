@@ -1,5 +1,6 @@
 # SDD-007: Security model
 
+- Amended (2026-11-18) for Stuarty: "no outbound capability" is replaced by outbound only to connected destinations, with an approval queue for publishing and costly generation (ADR-0032). The threat model must be extended, before the first connector ships, for the secret vault (ADR-0033), the optional Google account (ADR-0034), the social connectors (ADR-0035), the AI providers and their output as untrusted text (ADR-0036), the hosted agent process (ADR-0037) and the background service and webhooks (ADR-0046). Until that epic rewrites them, the sections that say the product sends nothing out describe the product as built. The threat rows of this document are read by a tool; add rows, do not reword existing ones without running it.
 - Status: Accepted (2026-11-14). Drafted by senior-e, reviewed and corrected by the architect. The amendments of Appendix A are applied to the documents they name.
 - Depends on: SDD-000 (names), SDD-001 (limits), SDD-002 (commands, errors, idempotency), ADR-0008, ADR-0010, ADR-0011, ADR-0018, ADR-0019, ADR-0020, ADR-0021, ADR-0026
 - Implements: RF-130 to RF-134, RF-202, RF-203, RF-205, RF-206, RF-209, RF-214, RF-215, NFR-043

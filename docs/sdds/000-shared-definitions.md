@@ -1,5 +1,6 @@
 # SDD-000: Shared definitions
 
+- Amended (2026-11-18) for Stuarty: the product is Stuarty (ADR-0031). The names below still say `vukem-video` and `VUKEM_VIDEO_*` because the code accepts only those, and the documentation site is generated from this file; they change together with the code in the rename epic (ADR-0044). A new domain adds its names here first.
 - Status: Authoritative (2026-11-14). Every SDD uses these names exactly. A name is changed here first, then everywhere.
 - Depends on: ADR-0001, ADR-0006, ADR-0008, ADR-0015 to ADR-0020
 - Last change: 2026-11-14, names added from the review of SDD-005, SDD-006 and SDD-007 (operations outside the agent surfaces, tables `document_backups`, `audit` and `api_keys`, `E_RATE_LIMITED`, workspace files, limit variables)

@@ -1,5 +1,6 @@
 # SDD-013: The renderer: plan input, pixel contract, host interface
 
+- Amended (2026-11-18) for Stuarty: the same renderer draws image documents, as a one-frame plan built by `core/` (ADR-0038). The epic of the image editor adds what an image needs (more blend modes, adjustments, masks, image decoding and encoding) to this document before code.
 - Status: Draft (2026-11-16). Written by P5-RND-001; the code follows in the later tasks of Phase 5 (stages C and D of ADR-0029).
 - Depends on: ADR-0029 (one plan, one renderer, two hosts), ADR-0003 (one plan, two executors), ADR-0004 (time), ADR-0012 (rasterizer), ADR-0013 (browser stack), SDD-000 (names), SDD-004 (the plan, the compositor, the preview executor, tolerance), SDD-011 (the proxy), SDD-012 §11 (the preview component), SDD-007 (limits and process policy)
 - Implements: ADR-0029 items 1 to 5; NFR-003, NFR-004, NFR-007, NFR-010
