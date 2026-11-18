@@ -15,7 +15,7 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 
 | Epic | Title | Size | Depends on | Status |
 | --- | --- | --- | --- | --- |
-| [01](01-remove-the-gio-window.md) | Remove the Gio window | S | — | TODO |
+| [01](01-remove-the-gio-window.md) | Remove the Gio window | S | — | IN PROGRESS (senior-a, 2026-11-18) |
 | [02](02-rename-to-stuarty.md) | Rename the code to Stuarty, with a workspace migration | L | 01 | TODO |
 | [03](03-drop-the-phase-labels.md) | Drop the phase labels from the registry and the specifications | S | 02 | TODO |
 
