@@ -1,64 +1,13 @@
 # Desktop
 
-Two windows live here. The editor a person runs is the Gio application in
-`gio/` (ADR-0030): it opens the workspace in this process and calls
-`service.Service`, so it does not reimplement a timeline. The browser UI is
-unchanged. The Wails webview in `shell/app/` (ADR-0023) is still what the
-installers package.
+There is one desktop application: the Wails shell in `shell/app/` (ADR-0023,
+ADR-0041). It is a window over the same web UI the server serves, so a page is
+written once in `web/resources/` and appears in the browser and on the desktop.
+The shell holds no editing logic.
 
-## Gio editor
+## The shell
 
-| Path | What it is |
-| --- | --- |
-| `gio/` | Module `github.com/AlexGalhardo/vukem-video/desktop/gio`. The window, the timeline and the inspector. No editing rule: splits, trims and defaults are commands. |
-| `gio/cmd/vukem-video-desktop/` | The program. `-workspace` selects the directory, `-demo` opens a sample project, `-screenshot` writes one PNG without a window. |
-
-Build and run, from `desktop/gio`:
-
-```text
-go test .
-go build -o vukem-video-desktop ./cmd/vukem-video-desktop
-./vukem-video-desktop
-```
-
-The top bar switches between the dark theme and a light one. The choice is
-stored in `gio.json` under the user config directory (`vukem-video/gio.json`),
-separate from the webview shell's `desktop.json`.
-
-The editor is local mode only. Import, the preview and export need FFmpeg and
-ffprobe on `PATH`, or `VUKEM_VIDEO_FFMPEG` and `VUKEM_VIDEO_FFPROBE`. Text,
-shapes and the timeline work without them. `-screenshot out.png` renders one
-frame with the headless GPU (EGL on Linux) and exits.
-
-### Linux
-
-A C compiler, pkg-config, and the window-system headers. Debian and Ubuntu:
-
-```text
-sudo apt install gcc pkg-config libwayland-dev libx11-dev libx11-xcb-dev \
-  libxkbcommon-dev libxkbcommon-x11-dev libxcursor-dev libxfixes-dev \
-  libegl1-mesa-dev libgles2-mesa-dev libvulkan-dev libffi-dev
-```
-
-A machine without Wayland can build with `-tags nowayland`. A machine without
-Vulkan can build with `-tags novulkan`.
-
-### macOS
-
-The Xcode command line tools (`xcode-select --install`). The window uses Cocoa.
-
-### Windows
-
-```text
-set CGO_ENABLED=0
-go build -o vukem-video-desktop.exe ./cmd/vukem-video-desktop
-```
-
-No extra C toolchain: the window uses the system graphics stack.
-
-## Webview shell
-
-The packaged desktop application of RF-213 (ADR-0023). Nothing in `shell/`,
+The packaged desktop application of RF-213 (ADR-0023, ADR-0041). Nothing in `shell/`,
 `detect/`, `update/` or `packaging/` contains editing logic or renderer code,
 and nothing there imports `core/` or `engine/`.
 
@@ -73,11 +22,11 @@ and nothing there imports `core/` or `engine/`.
 
 ## Decision
 
-The window a person launches is the Gio editor (ADR-0030). The author chose
-Wails v3 on 2026-11-15 for the webview shell (ADR-0023 item 5). The detection
-runs on the real webviews (P3-DSK-001) still decide whether a platform falls
-back to Electron. Wails is only in `shell/app/go.mod`, and Gio is only in
-`gio/go.mod`, so the server binary and the root `go.mod` link neither.
+The window a person launches is the Wails shell (ADR-0041). The author chose
+Wails v3 on 2026-11-15 (ADR-0023 item 5). The detection runs on the real
+webviews (P3-DSK-001) still decide whether a platform falls back to Electron.
+Wails is only in `shell/app/go.mod`, so the server binary and the root `go.mod`
+do not link it.
 
 ## Build and test
 
