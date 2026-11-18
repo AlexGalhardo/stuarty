@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.29.0] - 2026-11-18
+
+### Added
+
+- **ui:** Build shared primitives on Base UI and UI SDK ([3be3e12](https://github.com/AlexGalhardo/vukem-video/commit/3be3e1297c4b1b2cc832e272ec3aaf979c0ba1c2))
+
 ## [0.28.0] - 2026-11-17
 
 ### Added
@@ -1342,7 +1348,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/vukem-video/compare/v0.28.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/vukem-video/compare/v0.29.0...HEAD
+[0.29.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.28.0...v0.29.0
 [0.28.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.27.0...v0.28.0
 [0.27.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.26.0...v0.27.0
 [0.26.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.25.0...v0.26.0
