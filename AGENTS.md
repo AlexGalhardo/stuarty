@@ -90,7 +90,7 @@ A delegated engineer knows only what the briefing says. It contains:
 
 ## 7. Review and completion
 
-The protocol is `.agents/rules/plans.md` section 3. In short:
+The protocol is `.agents/rules/plans.md` section 3, and its step-by-step procedures are three skills of `.agents/skills/`: `orchestrator-loop` (the session), `epic-loop` (one epic, for its senior) and `qa-campaign` (the rounds after the epics). In short:
 
 1. **The senior works the epic in a loop**: read the epic; do task 1; run the command that verifies task 1; if it fails, fix and run it again; only when it passes, commit and move to task 2. When every task is done and every acceptance criterion passes, write the hand-off.
 2. The orchestrator opens a **new** specialist session with only the epic, its acceptance criteria and the diff of the epic branch against the integration branch.
@@ -126,7 +126,7 @@ The author confirms before: a push or a merge to `main`, marking the pull reques
 | `bun run typecheck` and `bun run check:thin-client` (in `web/`) | the TypeScript types and the thin-client rules |
 | `bun run e2e` (in `web/`) | the browser tests (Playwright) |
 | `go test -run TestSecurity_ ./...` | the security suite |
-| `bash .agents/skills/verify/scripts/verify.sh --quick` | the checks of what changed, before a commit |
+| `bash .agents/skills/verify/scripts/verify.sh --quick --base release/0.30.0` | the checks of what changed against the integration branch, before a commit (without `--base` it compares with `main`) |
 | `bash scripts/build-renderer.sh` | builds the Rust renderer natively and to WebAssembly, reproducibly |
 | `cargo fmt --check && cargo clippy -- -D warnings && cargo test && cargo deny check` (in `renderer/`) | the Rust gate (rule `.agents/rules/rust.md`) |
 | `task ci`, `task gate -- <tag>`, `verify.sh --full` | the full gates; not required while releases are deferred (ADR-0045), useful before a large merge |
