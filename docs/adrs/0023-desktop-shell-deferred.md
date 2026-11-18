@@ -1,6 +1,6 @@
 # ADR-0023: Desktop: the same binary on localhost now; a packaged shell in BETA, Wails v3 first candidate
 
-- Status: Accepted (2026-11-14); shell choice Proposed until the BETA test
+- Status: Accepted (2026-11-14); the shell is Wails v3 (author decision of 2026-11-15, item 5), confirmed as the only desktop by [ADR-0041](0041-one-web-ui-and-the-wails-shell.md) (2026-11-18); the detection runs on macOS and Linux are still owed
 - Deciders: author (D-004), architect
 - Links: author decision D-004, stack trade-offs §7, ADR-0003, ADR-0007, ADR-0013
 

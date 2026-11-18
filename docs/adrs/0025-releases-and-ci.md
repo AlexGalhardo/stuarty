@@ -1,6 +1,6 @@
 # ADR-0025: Releases and CI/CD follow the vukem pattern, starting at v0.5.0
 
-- Status: Accepted (2026-11-14)
+- Status: Accepted (2026-11-14); releases and CI as a gate are deferred by [ADR-0045](0045-epics-one-pull-request-ci-and-releases-deferred.md) (2026-11-18) until the epics are done
 - Deciders: author (D-005, restriction 2 of the briefing), architect
 - Links: vukem practices and releases, author decision D-005, ADR-0011, SDD-009
 

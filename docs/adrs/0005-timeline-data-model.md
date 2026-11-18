@@ -1,6 +1,6 @@
 # ADR-0005: Timeline model: absolute positions, tracks, typed items
 
-- Status: Accepted (2026-11-14)
+- Status: Accepted (2026-11-14); what a project is, is amended by [ADR-0039](0039-project-as-production-container.md) (2026-11-18): this model becomes the timeline inside a project
 - Deciders: architect
 - Links: engine §3, post-mortems §6, §7, SDD-001
 

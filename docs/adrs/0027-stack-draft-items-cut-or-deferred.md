@@ -1,6 +1,6 @@
 # ADR-0027: Items of the stack draft that were cut or deferred
 
-- Status: Accepted (2026-11-14)
+- Status: Accepted (2026-11-14); amended on 2026-11-18: the Rust renderer was adopted by [ADR-0029](0029-one-renderer-webgpu-webcodecs-rust.md), HyperFrames is used as an external engine ([ADR-0042](0042-editor-scope-motion-audio-export.md)), and the triggers of "upload over the network" and of outbound features are met by [ADR-0032](0032-controlled-outbound-and-human-approval.md); the other verdicts stand
 - Deciders: architect, on the author's decisions D-001 to D-016
 - Links: stack trade-offs §2, §8, licensing, ADR-0001 to ADR-0026
 

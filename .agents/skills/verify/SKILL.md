@@ -13,8 +13,8 @@ A change is done when this skill says so, not when the code looks right. It is t
 | Moment | Command |
 | --- | --- |
 | After each logical step of a task, before its commit | `bash .agents/skills/verify/scripts/verify.sh --quick` |
-| Before opening or updating a pull request, before pushing a release branch, before reporting a card done | `bash .agents/skills/verify/scripts/verify.sh --full` |
-| A senior's delivery under review (`skills/integrate-agent-work/`) | `--full` on the integration line after the cherry-picks |
+| Before a large merge into the integration branch, and before any release branch when releases return | `bash .agents/skills/verify/scripts/verify.sh --full` |
+| A senior's delivery under review by the specialist (`rules/plans.md` section 3) | the acceptance criteria of the epic and the checks of what changed; `--full` is optional while releases are deferred (ADR-0045) |
 
 Run it from the repository or worktree root, with `VUKEM_VIDEO_TEST_FFMPEG_DIR` set to the LGPL FFmpeg `bin` folder so the export tests and the smoke test do not skip or pick another FFmpeg.
 

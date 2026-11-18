@@ -1,6 +1,6 @@
 # ADR-0030: The desktop editor is a Gio window over the service
 
-- Status: Accepted (2026-11-18)
+- Status: Superseded (2026-11-18) by [ADR-0041](0041-one-web-ui-and-the-wails-shell.md): the Gio window is removed and the desktop is the Wails shell. Accepted earlier on 2026-11-18
 - Deciders: author
 - Amends: ADR-0023 items 3 and 5 (no second UI; the desktop window is Wails), for the editor window only
 - Links: ADR-0007, ADR-0008, ADR-0023, SDD-012 section 21

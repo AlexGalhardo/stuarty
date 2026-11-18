@@ -1,5 +1,6 @@
 # SDD-012: Editor UI architecture
 
+- Amended (2026-11-18) for Stuarty: there is one UI, the web UI, and the desktop is the Wails shell; the Gio window is removed (ADR-0041, which supersedes ADR-0030; section 21). This document specifies the video editor; the dashboard, the image editor and the other sections of PRD-004 are specified by the epics that build them and follow the same thin-client rules. The phase names of this document no longer schedule any work (ADR-0045).
 - Status: Accepted (2026-11-14). Drafted by a delegated engineer, reviewed and corrected by the architect; aligned with SDD-006 (stream, reconciliation, conflicts) and SDD-007 (session, content security policy). Amended the same day to agree with `docs/design-system.md` (tokens, focus, motion, components, desktop window; Appendix A items 19 to 23).
 - Depends on: SDD-000 (names), SDD-001 (document), SDD-002 Parts A and B (commands, batch, errors), SDD-004 §4.1, §9, §10, §11 (safe area, frames, preview executor, tolerance), SDD-003 (service result shapes) and SDD-006 (event payloads): every shape this document takes from them is marked "mirrors SDD-003" or "mirrors SDD-006" and the generated types win on any difference. ADR-0003, ADR-0007, ADR-0013, ADR-0014, ADR-0017, ADR-0019, ADR-0023; author decisions D-013, D-023, D-024
 - Implements: RF-060, RF-061, RF-070, RF-071, RF-072, RF-073, RF-074 (design only), RF-075, RF-118, RF-119; NFR-001, NFR-002, NFR-003, NFR-004, NFR-008, NFR-011
@@ -1749,7 +1750,7 @@ The Playwright test `preview-vs-export`: for each golden case of `engine/export/
 
 ## 21. Desktop shell
 
-The packaged desktop application is RF-213 (BETA). ADR-0023 wraps the browser UI in a system webview. ADR-0030 adds a native Gio editor in `desktop/gio` that calls `service.Service` in process; the browser UI is unchanged, and the webview shell in `desktop/shell` remains the window the installers ship until packaging is pointed at the Gio binary. This section still fixes what the browser UI must not assume, and the detection page that informed the webview choice (ROADMAP task P2-DSK-001).
+The packaged desktop application is RF-213. ADR-0023 wraps the browser UI in a system webview, and ADR-0041 confirms that shell (`desktop/shell`, Wails) as the only desktop window: the native Gio editor that ADR-0030 added in `desktop/gio` is removed by its own epic. This section fixes what the browser UI must not assume, and the detection page that informs the webview choice on each platform.
 
 ### 21.1 What the UI must not assume
 

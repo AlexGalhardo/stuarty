@@ -1,6 +1,6 @@
 # ADR-0009: Persistence: SQLite, a document snapshot plus the operation log
 
-- Status: Accepted (2026-11-14)
+- Status: Accepted (2026-11-14); what a project holds is amended by [ADR-0039](0039-project-as-production-container.md) (2026-11-18)
 - Deciders: author (D-003), architect
 - Links: author decision D-003, engine §8, post-mortems §8, vukem practices, ADR-0006, SDD-001, SDD-005
 

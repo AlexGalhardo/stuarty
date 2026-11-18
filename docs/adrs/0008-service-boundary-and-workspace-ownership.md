@@ -1,6 +1,6 @@
 # ADR-0008: One application service; a workspace has one owner process
 
-- Status: Accepted (2026-11-14)
+- Status: Accepted (2026-11-14); workspace ownership while the desktop window is closed is amended by [ADR-0046](0046-publishing-scheduler-and-blog-destinations.md) (2026-11-18)
 - Deciders: architect
 - Links: ADR-0002, ADR-0006, ADR-0015, ADR-0016, ADR-0017, SDD-003, SDD-005
 

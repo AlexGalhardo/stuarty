@@ -1,6 +1,6 @@
 # ADR-0020: Agent safety: remove dangerous capabilities instead of asking for confirmation
 
-- Status: Accepted (2026-11-14)
+- Status: Accepted (2026-11-14); item 1 (no outbound capability) superseded and item 2 amended by [ADR-0032](0032-controlled-outbound-and-human-approval.md) (2026-11-18); items 3 to 8 stand
 - Deciders: author (D-011), architect
 - Links: author decision D-011, agents and MCP §9, ADR-0006, ADR-0010, ADR-0018, ADR-0019, SDD-007
 
