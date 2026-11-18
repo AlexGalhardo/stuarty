@@ -34,7 +34,7 @@ the repository (remote AlexGalhardo/stuarty)
 ```
 
 - The work: `docs/plans/NN-<slug>.md`, one file per epic, in English, with the index `docs/plans/00-roadmap.md` (rule `.agents/rules/plans.md`).
-- `development/` is git-ignored: nothing in it is published, and nothing outside it may reference it, except this file, `CLAUDE.md` and `.agents/`. Decisions of the author are in `development/brainstorming.md`; research notes in `development/search/`; the state of the code on 2026-11-18 in `development/context/estado-atual.md`.
+- `development/` is git-ignored: nothing in it is published, and nothing outside it may reference it, except this file, `CLAUDE.md` and `.agents/`. The current state of the work is in `development/STATE.md` (read it first); questions waiting for the author in `development/QUESTIONS.md`; decisions of the author in `development/brainstorming.md`; the open product issues in `development/feedbacks/vukem-video.md`; research notes in `development/search/`; the state of the code on 2026-11-18 in `development/context/estado-atual.md`. How the folder is used, and who may write what in it, is the rule `.agents/rules/development-folder.md`; the folder is kept in step with the project, so what a change makes stale there is updated or deleted in the same change.
 - There is one UI: the desktop application is the Wails shell over the same web UI (ADR-0041). A page is written once in `web/resources/`.
 
 ## 3. The rules that are never traded
@@ -70,11 +70,11 @@ Seven agents, defined in `.claude/agents/`.
 
 ## 5. Starting a session
 
-1. Read this file, `.agents/rules/`, `docs/plans/00-roadmap.md` and the current state at the end of the session prompt the author gives you.
+1. Read this file, `.agents/rules/`, `docs/plans/00-roadmap.md` and the current state in `development/STATE.md`, then `development/QUESTIONS.md` for what the author answered.
 2. Follow the author's instructions for the session start (model and effort; questions through the question tool, one at a time, with a recommended option first).
 3. Pick the next epics whose dependencies are done and whose modules do not intersect: at most five seniors at once. Parallel agents and worktrees need the author's explicit yes; the work-session prompt carries it.
 4. For each epic, write a briefing (section 6), dispatch, and keep working on what does not depend on the answer.
-5. At the end, or before a context compaction, refresh the current state: epics done, commands that validate, decisions taken, what is open.
+5. After every event (an epic dispatched, handed off, reviewed, merged or blocked), at the end, and before a context compaction, rewrite `development/STATE.md`: what each agent is doing, epics done, commands that validate, decisions taken, what waits for the author.
 
 ## 6. A briefing
 

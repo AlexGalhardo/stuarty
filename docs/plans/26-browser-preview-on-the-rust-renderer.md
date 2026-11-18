@@ -10,6 +10,7 @@ What a creator sees while editing is what the exported file will contain, becaus
 - Author decision D-073 (finishing the Rust renderer is carried over from the earlier plans). PRD-001 NFR-011, NFR-001 to NFR-004.
 - SDD-013 sections 4.7 (the browser worker protocol), 5.3 (frames through WebCodecs) and 6 (the proxy chunk index); SDD-012; SDD-004.
 - Read `.agents/rules/rust.md` and `.agents/skills/renderer-parity/` before touching anything.
+- Open product issues this epic closes (their text comes in the briefing): VV-093 (the preview shows black behind a chroma-keyed subject while the export does not; check it again on the current build first), VV-222 (an unhandled WebGPU exception when a text item is selected in the desktop preview).
 
 ## Scope
 
