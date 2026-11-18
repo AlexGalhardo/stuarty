@@ -80,10 +80,23 @@ project=prj_7k2m9x4q1b
 traced() {
 	local label="$1"
 	shift
-	if ! strace -f --seccomp-bpf -e trace=connect,sendto,sendmsg,sendmmsg -o "$work/traces/$label.log" -- "$@" 		>"$work/$label.out" 2>&1; then
+	local attempt
+	for attempt in 1 2 3; do
+		if strace -f --seccomp-bpf -e trace=connect,sendto,sendmsg,sendmmsg -o "$work/traces/$label.log" -- "$@" \
+			>"$work/$label.out" 2>&1; then
+			return 0
+		fi
+		# The heavy-call ceiling is ten a minute. A full session crosses it; wait out the window and retry.
+		if grep -q 'E_RATE_LIMITED' "$work/$label.out"; then
+			log "$label: the heavy-call limit answered, waiting 65s (attempt $attempt)"
+			sleep 65
+			continue
+		fi
 		cat "$work/$label.out" >&2
 		die "$label failed"
-	fi
+	done
+	cat "$work/$label.out" >&2
+	die "$label failed"
 }
 vv() { traced "$1" "$bin" "${@:2}"; }
 # vv_refused <label> <args...>: the command must exit non-zero, and its refusal must not connect anywhere either.

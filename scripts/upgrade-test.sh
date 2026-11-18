@@ -98,6 +98,17 @@ for version in "${versions[@]}"; do
 	dl="$work/download/$version"
 	mkdir -p "$dl" "$binaries/$version"
 
+	# A release can be published before its archives exist (v0.25.0 has notes and no binaries).
+	# There is nothing to open, so the matrix continues with the releases that shipped this OS.
+	if command -v gh >/dev/null 2>&1; then
+		names="$(gh release view "$version" -R "$repo" --json assets -q '.assets[].name' || true)"
+		if ! printf '%s\n' "$names" | grep -qx "$archive"; then
+			log "$version: no $archive on the release, skipping"
+			rm -rf "$dl"
+			continue
+		fi
+	fi
+
 	log "$version: downloading $archive"
 	download "$version" "$archive" "$dl/$archive"
 	download "$version" checksums.txt "$dl/checksums.txt"
@@ -122,6 +133,10 @@ for version in "${versions[@]}"; do
 		die "$version: the scenario did not run (see $workspaces/$version/scenario.out)"
 	rm -rf "$dl"
 done
+
+if ! find "$binaries" -mindepth 1 -type d | grep -q .; then
+	die "every release was missing the archive for this OS"
+fi
 
 log "building the candidate"
 candidate="$work/candidate/$exe"

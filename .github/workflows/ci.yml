@@ -786,10 +786,32 @@ jobs:
           source_kind="$(. .config/ffmpeg.env && echo "${FFMPEG_SOURCE:-btbn}")"
           if [ "$RUNNER_OS_NAME" = "macOS" ] && [ "$source_kind" != "own" ]; then
             { echo '### Skipped security tests (macOS, risk R6)'; echo '```'; echo "${skipped:-none}"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
-          elif echo "$skipped" | grep -vE "^$|TestSecurity_[A-Za-z0-9_]*_(Linux|Windows|Darwin)"; then
-            echo "::error::a security test was skipped without a platform marker"
-            exit 1
+            exit 0
           fi
+          # SDD-007: a skip is allowed when the name carries the platform, or the
+          # call is marked skip-env. threatcheck enforces the marker statically.
+          status=0
+          while IFS= read -r line; do
+            [ -z "$line" ] && continue
+            name="$(printf '%s\n' "$line" | sed -n 's/.*SKIP: \(TestSecurity_[A-Za-z0-9_]*\).*/\1/p')"
+            [ -z "$name" ] && continue
+            case "$name" in
+              *_Linux | *_Windows | *_Darwin) continue ;;
+            esac
+            file="$(grep -R --include='*_test.go' -l "func ${name}(" . || true)"
+            if [ -z "$file" ] || ! awk -v fn="$name" '
+              $0 ~ "func " fn "\\(" { on = 1 }
+              on && /skip-env:/ { found = 1 }
+              on && /^func / && $0 !~ ("func " fn "\\(") { exit }
+              END { exit found ? 0 : 1 }
+            ' "$file"; then
+              echo "::error::${name} was skipped without a platform marker or a skip-env comment"
+              status=1
+            fi
+          done <<EOF
+          $skipped
+          EOF
+          exit "$status"
 
   # SDD-007 section 12, SDD-009 job 12: every threat of the table has a test that
   # exists, every TestSecurity_T.. test is named by a row, and every operation of
