@@ -3,7 +3,7 @@
 The process is ADR-0045: one integration branch, one pull request, no release while the epics are implemented.
 
 1. Never commit or push to `main`. Without the author: no merge to `main`, no marking the pull request ready, no release, no tag.
-2. **One integration branch carries the single draft pull request.** Every epic is a branch from it, `epic/NN-<slug>`, and a fix of the feedback queue is `fix/VV-NNN-<slug>`. Epic branches are never pushed and never get pull requests of their own.
+2. **One integration branch carries the single draft pull request.** The branch is `release/0.30.0` and the pull request is #106, codename "release 0.30.0": every commit of the work is saved there. Every epic is a branch from it, `epic/NN-<slug>`, and a fix of the feedback queue is `fix/VV-NNN-<slug>`. Epic branches are never pushed and never get pull requests of their own.
 3. **Only the orchestrator pushes, and only the integration branch**, after merging an epic the specialist approved, so that the draft pull request shows what is finished. The work-session prompt carries the author's authorization; without it, do not push. Never push a branch whose local checks failed.
 4. **Each agent works in its own worktree outside the repository folder**, in the sibling folder `stuarty-worktrees/<agent>`, created by the orchestrator from the integration branch. Parallel agents and worktrees need the author's explicit yes; the work-session prompt carries it.
 5. The orchestrator merges an approved epic into the integration branch with a merge that keeps its commits (`git merge --no-ff epic/NN-<slug>`), then removes the worktree and the local branch. Shared files (`rules/plans.md` section 4) are merged one epic at a time.
