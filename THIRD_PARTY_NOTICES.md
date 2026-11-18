@@ -10,8 +10,8 @@ Linked into the `vukem-video` binary, collected for the six release targets.
 
 | Name | Version | Licence | Copyright | Licence text | Notes |
 | --- | --- | --- | --- | --- | --- |
-| github.com/AlexGalhardo/vukem | v0.45.0 | MIT | Copyright (c) 2026 Alex Galhardo | [LICENSE](<licenses/go-modules/github.com/AlexGalhardo/vukem@v0.45.0/LICENSE>) | - |
-| github.com/AlexGalhardo/vukem/contrib/engine | v0.2.0 | MIT | Copyright (c) 2026 Alex Galhardo | [LICENSE](<licenses/go-modules/github.com/AlexGalhardo/vukem/contrib/engine@v0.2.0/LICENSE>) | - |
+| github.com/AlexGalhardo/vukem | v0.46.0 | MIT | Copyright (c) 2026 Alex Galhardo | [LICENSE](<licenses/go-modules/github.com/AlexGalhardo/vukem@v0.46.0/LICENSE>) | - |
+| github.com/AlexGalhardo/vukem/contrib/engine | v0.2.1-0.20261117155947-c84bd713f586 | MIT | Copyright (c) 2026 Alex Galhardo | [LICENSE](<licenses/go-modules/github.com/AlexGalhardo/vukem/contrib/engine@v0.2.1-0.20261117155947-c84bd713f586/LICENSE>) | - |
 | github.com/AlexGalhardo/vukem/drivers/otel | v0.4.5 | MIT | Copyright (c) 2026 Alex Galhardo | [LICENSE](<licenses/go-modules/github.com/AlexGalhardo/vukem/drivers/otel@v0.4.5/LICENSE>) | - |
 | github.com/cenkalti/backoff/v5 | v5.0.3 | MIT | Copyright (c) 2014 Cenk Altı | [LICENSE](<licenses/go-modules/github.com/cenkalti/backoff/v5@v5.0.3/LICENSE>) | - |
 | github.com/cespare/xxhash/v2 | v2.3.0 | MIT | Copyright (c) 2016 Caleb Spare | [LICENSE.txt](<licenses/go-modules/github.com/cespare/xxhash/v2@v2.3.0/LICENSE.txt>) | - |
@@ -67,6 +67,9 @@ The production dependency closure of `web/package.json` (`dependencies`, transit
 
 | Name | Version | Licence | Copyright | Licence text | Notes |
 | --- | --- | --- | --- | --- | --- |
+| @babel/runtime | 8.1.2 | MIT | Copyright (c) 2014-present Sebastian McKenzie and other contributors | [LICENSE](<licenses/npm/@babel/runtime@8.1.2/LICENSE>) | - |
+| @base-ui/react | 1.9.0 | MIT | Copyright (c) 2019 Material-UI SAS | [LICENSE](<licenses/npm/@base-ui/react@1.9.0/LICENSE>) | - |
+| @base-ui/utils | 0.5.0 | MIT | Copyright (c) 2019 Material-UI SAS | [LICENSE](<licenses/npm/@base-ui/utils@0.5.0/LICENSE>) | - |
 | @floating-ui/core | 1.8.0 | MIT | Copyright (c) 2021-present Floating UI contributors | [LICENSE](<licenses/npm/@floating-ui/core@1.8.0/LICENSE>) | - |
 | @floating-ui/dom | 1.8.0 | MIT | Copyright (c) 2021-present Floating UI contributors | [LICENSE](<licenses/npm/@floating-ui/dom@1.8.0/LICENSE>) | - |
 | @floating-ui/react-dom | 2.1.9 | MIT | Copyright (c) 2021-present Floating UI contributors | [LICENSE](<licenses/npm/@floating-ui/react-dom@2.1.9/LICENSE>) | - |
@@ -77,78 +80,17 @@ The production dependency closure of `web/package.json` (`dependencies`, transit
 | @jridgewell/resolve-uri | 3.1.2 | MIT | Copyright 2019 Justin Ridgewell <jridgewell@google.com> | [LICENSE](<licenses/npm/@jridgewell/resolve-uri@3.1.2/LICENSE>) | - |
 | @jridgewell/sourcemap-codec | 1.6.0 | MIT | Copyright 2024 Justin Ridgewell <justin@ridgewell.name> | [LICENSE](<licenses/npm/@jridgewell/sourcemap-codec@1.6.0/LICENSE>) | - |
 | @jridgewell/trace-mapping | 0.3.31 | MIT | Copyright 2024 Justin Ridgewell <justin@ridgewell.name> | [LICENSE](<licenses/npm/@jridgewell/trace-mapping@0.3.31/LICENSE>) | - |
-| @radix-ui/number | 1.1.3 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/number@1.1.3/LICENSE>) | - |
-| @radix-ui/primitive | 1.2.0 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/primitive@1.2.0/LICENSE>) | - |
-| @radix-ui/react-accessible-icon | 1.2.0 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-accessible-icon@1.2.0/LICENSE>) | - |
-| @radix-ui/react-accordion | 1.3.1 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-accordion@1.3.1/LICENSE>) | - |
-| @radix-ui/react-alert-dialog | 1.2.1 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-alert-dialog@1.2.1/LICENSE>) | - |
-| @radix-ui/react-arrow | 1.1.17 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-arrow@1.1.17/LICENSE>) | - |
-| @radix-ui/react-aspect-ratio | 1.2.0 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-aspect-ratio@1.2.0/LICENSE>) | - |
-| @radix-ui/react-avatar | 1.3.1 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-avatar@1.3.1/LICENSE>) | - |
-| @radix-ui/react-checkbox | 1.4.1 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-checkbox@1.4.1/LICENSE>) | - |
-| @radix-ui/react-collapsible | 1.2.1 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-collapsible@1.2.1/LICENSE>) | - |
-| @radix-ui/react-collection | 1.2.0 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-collection@1.2.0/LICENSE>) | - |
-| @radix-ui/react-compose-refs | 1.1.5 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-compose-refs@1.1.5/LICENSE>) | - |
-| @radix-ui/react-context | 1.3.0 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-context@1.3.0/LICENSE>) | - |
-| @radix-ui/react-context-menu | 2.4.1 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-context-menu@2.4.1/LICENSE>) | - |
-| @radix-ui/react-dialog | 1.3.1 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-dialog@1.3.1/LICENSE>) | - |
-| @radix-ui/react-direction | 1.2.0 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-direction@1.2.0/LICENSE>) | - |
-| @radix-ui/react-dismissable-layer | 1.2.1 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-dismissable-layer@1.2.1/LICENSE>) | - |
-| @radix-ui/react-dropdown-menu | 2.2.1 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-dropdown-menu@2.2.1/LICENSE>) | - |
-| @radix-ui/react-focus-guards | 1.2.0 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-focus-guards@1.2.0/LICENSE>) | - |
-| @radix-ui/react-focus-scope | 1.3.1 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-focus-scope@1.3.1/LICENSE>) | - |
-| @radix-ui/react-form | 0.3.0 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-form@0.3.0/LICENSE>) | - |
-| @radix-ui/react-hover-card | 1.2.1 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-hover-card@1.2.1/LICENSE>) | - |
-| @radix-ui/react-id | 1.1.4 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-id@1.1.4/LICENSE>) | - |
-| @radix-ui/react-label | 2.1.17 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-label@2.1.17/LICENSE>) | - |
-| @radix-ui/react-menu | 2.2.1 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-menu@2.2.1/LICENSE>) | - |
-| @radix-ui/react-menubar | 1.2.1 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-menubar@1.2.1/LICENSE>) | - |
-| @radix-ui/react-navigation-menu | 1.4.1 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-navigation-menu@1.4.1/LICENSE>) | - |
-| @radix-ui/react-one-time-password-field | 0.2.1 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-one-time-password-field@0.2.1/LICENSE>) | - |
-| @radix-ui/react-password-toggle-field | 0.2.1 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-password-toggle-field@0.2.1/LICENSE>) | - |
-| @radix-ui/react-popover | 1.3.1 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-popover@1.3.1/LICENSE>) | - |
-| @radix-ui/react-popper | 1.4.0 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-popper@1.4.0/LICENSE>) | - |
-| @radix-ui/react-portal | 1.2.0 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-portal@1.2.0/LICENSE>) | - |
-| @radix-ui/react-presence | 1.1.11 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-presence@1.1.11/LICENSE>) | - |
-| @radix-ui/react-primitive | 2.2.0 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-primitive@2.2.0/LICENSE>) | - |
-| @radix-ui/react-progress | 1.2.1 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-progress@1.2.1/LICENSE>) | - |
-| @radix-ui/react-radio-group | 1.5.1 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-radio-group@1.5.1/LICENSE>) | - |
-| @radix-ui/react-roving-focus | 1.2.1 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-roving-focus@1.2.1/LICENSE>) | - |
-| @radix-ui/react-scroll-area | 1.4.0 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-scroll-area@1.4.0/LICENSE>) | - |
-| @radix-ui/react-select | 2.4.1 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-select@2.4.1/LICENSE>) | - |
-| @radix-ui/react-separator | 1.2.0 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-separator@1.2.0/LICENSE>) | - |
-| @radix-ui/react-slider | 1.6.1 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-slider@1.6.1/LICENSE>) | - |
-| @radix-ui/react-slot | 1.5.0 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-slot@1.5.0/LICENSE>) | - |
-| @radix-ui/react-switch | 1.4.1 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-switch@1.4.1/LICENSE>) | - |
-| @radix-ui/react-tabs | 1.2.1 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-tabs@1.2.1/LICENSE>) | - |
-| @radix-ui/react-toast | 1.3.1 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-toast@1.3.1/LICENSE>) | - |
-| @radix-ui/react-toggle | 1.2.1 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-toggle@1.2.1/LICENSE>) | - |
-| @radix-ui/react-toggle-group | 1.2.1 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-toggle-group@1.2.1/LICENSE>) | - |
-| @radix-ui/react-toolbar | 1.2.1 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-toolbar@1.2.1/LICENSE>) | - |
-| @radix-ui/react-tooltip | 1.4.1 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-tooltip@1.4.1/LICENSE>) | - |
-| @radix-ui/react-use-callback-ref | 1.1.5 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-use-callback-ref@1.1.5/LICENSE>) | - |
-| @radix-ui/react-use-controllable-state | 1.3.0 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-use-controllable-state@1.3.0/LICENSE>) | - |
-| @radix-ui/react-use-effect-event | 0.0.5 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-use-effect-event@0.0.5/LICENSE>) | - |
-| @radix-ui/react-use-escape-keydown | 1.1.6 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-use-escape-keydown@1.1.6/LICENSE>) | - |
-| @radix-ui/react-use-is-hydrated | 0.1.3 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-use-is-hydrated@0.1.3/LICENSE>) | - |
-| @radix-ui/react-use-layout-effect | 1.1.4 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-use-layout-effect@1.1.4/LICENSE>) | - |
-| @radix-ui/react-use-previous | 1.1.4 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-use-previous@1.1.4/LICENSE>) | - |
-| @radix-ui/react-use-rect | 1.1.4 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-use-rect@1.1.4/LICENSE>) | - |
-| @radix-ui/react-use-size | 1.1.5 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-use-size@1.1.5/LICENSE>) | - |
-| @radix-ui/react-visually-hidden | 1.2.13 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-visually-hidden@1.2.13/LICENSE>) | - |
-| @radix-ui/rect | 1.1.3 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/rect@1.1.3/LICENSE>) | - |
 | @types/earcut | 3.0.0 | MIT | Copyright (c) Microsoft Corporation. | [LICENSE](<licenses/npm/@types/earcut@3.0.0/LICENSE>) | - |
+| @ui-sdk/core | 0.1.0-beta.6 | Apache-2.0 | copyright notice that is included in or attached to the work | [LICENSE](<licenses/npm/@ui-sdk/core@0.1.0-beta.6/LICENSE>) | - |
+| @ui-sdk/react | 0.1.0-beta.6 | Apache-2.0 | copyright notice that is included in or attached to the work | [LICENSE](<licenses/npm/@ui-sdk/react@0.1.0-beta.6/LICENSE>) | - |
 | @webgpu/types | 0.1.74 | BSD-3-Clause | Copyright 2022 WebGPU Developers | [LICENSE](<licenses/npm/@webgpu/types@0.1.74/LICENSE>) | - |
 | @xmldom/xmldom | 0.8.15 | MIT | Copyright 2019 - present Christopher J. Brody and other contributors, as listed in: <https://github.com/xmldom/xmldom/graphs/contributors> | [LICENSE](<licenses/npm/@xmldom/xmldom@0.8.15/LICENSE>) | - |
-| aria-hidden | 1.2.6 | MIT | Copyright (c) 2017 Anton Korzunov | [LICENSE](<licenses/npm/aria-hidden@1.2.6/LICENSE>) | - |
 | class-variance-authority | 0.7.1 | Apache-2.0 | copyright notice that is included in or attached to the work | [LICENSE](<licenses/npm/class-variance-authority@0.7.1/LICENSE>) | - |
 | clsx | 2.1.1 | MIT | Copyright (c) Luke Edwards <luke.edwards05@gmail.com> (lukeed.com) | [license](<licenses/npm/clsx@2.1.1/license>) | - |
 | colord | 2.13.0 | MIT | Copyright (c) 2020 Vlad Shilov <omgovich@ya.ru> | [LICENSE.md](<licenses/npm/colord@2.13.0/LICENSE.md>) | - |
-| detect-node-es | 1.1.0 | MIT | Copyright (c) 2017 Ilya Kantor | [LICENSE](<licenses/npm/detect-node-es@1.1.0/LICENSE>) | - |
 | earcut | 3.2.4 | ISC | Copyright (c) 2026, Mapbox | [LICENSE](<licenses/npm/earcut@3.2.4/LICENSE>) | - |
 | es-toolkit | 1.53.1 | MIT | Copyright (c) 2024 Viva Republica, Inc. | [LICENSE](<licenses/npm/es-toolkit@1.53.1/LICENSE>), [NOTICE](<licenses/npm/es-toolkit@1.53.1/NOTICE>) | - |
 | eventemitter3 | 5.0.4 | MIT | Copyright (c) 2014 Arnout Kazemier | [LICENSE](<licenses/npm/eventemitter3@5.0.4/LICENSE>) | - |
-| get-nonce | 1.0.1 | MIT | Copyright (c) 2020 Anton Korzunov | [LICENSE](<licenses/npm/get-nonce@1.0.1/LICENSE>) | - |
 | gifuct-js | 2.1.2 | MIT | Copyright (c) 2015 Matt Way | [LICENSE](<licenses/npm/gifuct-js@2.1.2/LICENSE>) | - |
 | ismobilejs | 1.1.1 | MIT | Copyright (c) 2019 Kai Mallea | [LICENSE](<licenses/npm/ismobilejs@1.1.1/LICENSE>) | - |
 | js-binary-schema-parser | 2.0.3 | MIT | Copyright (c) 2015 Matt Way | [LICENSE](<licenses/npm/js-binary-schema-parser@2.0.3/LICENSE>) | - |
@@ -156,19 +98,14 @@ The production dependency closure of `web/package.json` (`dependencies`, transit
 | lucide-react | 1.68.0 | ISC | Copyright (c) 2026 Lucide Icons and Contributors | [LICENSE](<licenses/npm/lucide-react@1.68.0/LICENSE>) | - |
 | parse-svg-path | 0.2.0 | MIT | Copyright (c) 2013 Jake Rosoman <jkroso@gmail.com> | [LICENSE](<licenses/npm/parse-svg-path@0.2.0/LICENSE>) | - |
 | pixi.js | 8.23.0 | MIT | Copyright (c) 2013-2023 Mathew Groves, Chad Engler | [LICENSE](<licenses/npm/pixi.js@8.23.0/LICENSE>) | - |
-| radix-ui | 1.8.1 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/radix-ui@1.8.1/LICENSE>) | - |
 | react | 19.3.1 | MIT | Copyright (c) Meta Platforms, Inc. and affiliates. | [LICENSE](<licenses/npm/react@19.3.1/LICENSE>) | - |
 | react-dom | 19.3.1 | MIT | Copyright (c) Meta Platforms, Inc. and affiliates. | [LICENSE](<licenses/npm/react-dom@19.3.1/LICENSE>) | - |
-| react-remove-scroll | 2.7.2 | MIT | Copyright (c) 2017 Anton Korzunov | [LICENSE](<licenses/npm/react-remove-scroll@2.7.2/LICENSE>) | - |
-| react-remove-scroll-bar | 2.3.8 | MIT | Anton Korzunov <thekashey@gmail.com> |  | - |
-| react-style-singleton | 2.2.3 | MIT | Copyright (c) 2017 Anton Korzunov | [LICENSE](<licenses/npm/react-style-singleton@2.2.3/LICENSE>) | - |
+| reselect | 5.3.0 | MIT | Copyright (c) 2015-2018 Reselect Contributors | [LICENSE](<licenses/npm/reselect@5.3.0/LICENSE>) | - |
 | scheduler | 0.28.0 | MIT | Copyright (c) Meta Platforms, Inc. and affiliates. | [LICENSE](<licenses/npm/scheduler@0.28.0/LICENSE>) | - |
 | tailwind-merge | 3.7.0 | MIT | Copyright (c) 2021 Dany Castillo | [LICENSE.md](<licenses/npm/tailwind-merge@3.7.0/LICENSE.md>) | - |
 | tiny-lru | 11.4.7 | BSD-3-Clause | Copyright (c) 2026, Jason Mulligan | [LICENSE](<licenses/npm/tiny-lru@11.4.7/LICENSE>) | - |
-| tslib | 2.9.1 | 0BSD | Copyright (c) Microsoft Corporation. | [LICENSE.txt](<licenses/npm/tslib@2.9.1/LICENSE.txt>) | - |
 | tw-animate-css | 1.4.0 | MIT | Copyright (c) 2025 Wombosvideo | [LICENSE](<licenses/npm/tw-animate-css@1.4.0/LICENSE>) | - |
-| use-callback-ref | 1.3.3 | MIT | Copyright (c) 2017 Anton Korzunov | [LICENSE](<licenses/npm/use-callback-ref@1.3.3/LICENSE>) | - |
-| use-sidecar | 1.1.3 | MIT | Copyright (c) 2017 Anton Korzunov | [LICENSE](<licenses/npm/use-sidecar@1.1.3/LICENSE>) | - |
+| use-sync-external-store | 1.7.0 | MIT | Copyright (c) Meta Platforms, Inc. and affiliates. | [LICENSE](<licenses/npm/use-sync-external-store@1.7.0/LICENSE>) | - |
 | zustand | 5.1.0 | MIT | Copyright (c) 2019 Paul Henschel | [LICENSE](<licenses/npm/zustand@5.1.0/LICENSE>) | - |
 
 ## Rust crates
