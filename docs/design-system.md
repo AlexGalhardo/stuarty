@@ -3,7 +3,7 @@
 - Status: Accepted (2026-11-14). Written by the designer, to be reviewed by the architect and by senior-e (editor UI).
 - Applies to: the web UI under `web/resources/` (the Inertia pages and the editor), the desktop shell of BETA (`desktop/`, ADR-0023), and, where section 8.4 says so, the documentation site (`site/`, SDD-010).
 - Sources of truth, which this document follows and never overrides: author decisions D-008, D-013, D-016, D-022, D-023, D-024, D-028, D-029; [SDD-012](sdds/012-ui-architecture.md) (editor UI architecture: §1 thin client, §3 kept front end, §6 layout, §7 timeline, §11 preview, §12 inspector, §16 i18n, §17 theme, §18 accessibility, §21 desktop); [SDD-002](sdds/002-command-catalogue.md) A.4 (time strings) and A.8 (the error envelope); [SDD-003](sdds/003-agent-interfaces.md) §1.4; [SDD-010](sdds/010-documentation-site.md) §1 and §10 (site shell, glossary); [ADR-0007](adrs/0007-thin-ui-client.md), [ADR-0012](adrs/0012-text-and-shape-rasterization.md), [ADR-0013](adrs/0013-browser-preview-stack.md), [ADR-0023](adrs/0023-desktop-shell-deferred.md); [PRD-001](prds/001-editor-mvp.md) §3 (use cases), RF-070 to RF-075.
-- Code it describes: `web/resources/css/app.css` (the only token file), `web/components.json` (kept style record: base colour `neutral`, icon library `lucide`), `web/resources/js/components/ui/*` (`@base-ui/react` and `@ui-sdk/react`), `web/resources/js/layouts/AppLayout.tsx`, and the editor tree of SDD-012 §3.2.
+- Code it describes: `web/resources/css/app.css` (the only token file), `web/components.json` (kept style record: base colour `neutral`, icon library `lucide`), `web/resources/js/components/ui/*` (`@base-ui/react`), `web/resources/js/layouts/AppLayout.tsx`, and the editor tree of SDD-012 §3.2.
 
 A paragraph headed **Decision of this document** fills a gap that no SDD or ADR covers. Each is listed again in section 10 with the specification that should absorb it.
 
@@ -55,7 +55,7 @@ Values are OKLCH, as in the existing file. The column "Changed" says whether thi
 
 ### 2.2 Neutral scale
 
-The neutral scale is the shadcn `neutral` base colour (`components.json`). It is a reference scale: components do not use these steps directly, the semantic tokens below are defined from them. Hex values are the sRGB rendering, for reading only.
+The neutral scale is the Base UI editor palette (`components.json` records `style: base-ui`). It is a reference scale: components do not use these steps directly, the semantic tokens below are defined from them. Hex values are the sRGB rendering, for reading only.
 
 | Step | OKLCH | Hex | Semantic tokens that use it |
 | --- | --- | --- | --- |
@@ -143,41 +143,39 @@ Method: OKLCH to linear sRGB (Björn Ottosson's matrices), gamut clamp, sRGB enc
 
 | Pair (foreground on background) | Need | Light | Dark |
 | --- | --- | --- | --- |
-| `foreground` on `background` | 4.5 | 19.79 | 18.96 |
-| `foreground` on `ed-panel` | 4.5 | 19.79 | 17.34 |
-| `muted-foreground` on `background` | 4.5 | 6.00 | 7.63 |
-| `muted-foreground` on `muted` | 4.5 | 5.50 | 5.83 |
-| `muted-foreground` on `ed-timeline` | 4.5 | 5.19 | 7.25 |
-| `primary-foreground` on `primary` | 4.5 | 17.16 | 14.22 |
-| `secondary-foreground` on `secondary` | 4.5 | 16.42 | 14.48 |
-| `destructive` on `background` | 4.5 | 5.43 | 6.84 |
-| `destructive` on its tint (`/10` light, `/20` dark) | 4.5 | 4.57 | 5.30 |
-| `success` on `background` | 4.5 | 5.65 | 9.43 |
-| `warning` on `background` | 4.5 | 5.65 | 10.45 |
-| `info` on `background` | 4.5 | 5.97 | 9.04 |
-| `agent` on `background` | 4.5 | 5.58 | 10.35 |
-| `agent` on `ed-panel` | 4.5 | 5.58 | 9.47 |
-| `agent` (remote-edit outline) on `ed-timeline` | 3 | 4.82 | 9.84 |
-| `agent` (remote-edit outline) on the item fills | 3 | 3.00 to 3.39 | 3.22 to 4.43 |
-| each state on its tint (`/10` light, `/20` dark over the panel) | 4.5 | 4.84 to 5.15 | 5.68 to 6.31 |
-| `brand-foreground` on `brand` | 4.5 | 6.17 | 6.17 |
-| `ring` on `background` | 3 | 7.25 | 12.64 |
-| `ring` on `ed-timeline` | 3 | 6.26 | 12.01 |
-| `input` on `background` | 3 | 3.64 | 3.77 |
-| `ed-track-line` on `ed-timeline` | 3 | 3.15 | 3.13 |
-| `ed-playhead` on `ed-timeline` | 3 | 4.70 | 6.30 |
-| `ed-snap` on `ed-timeline` | 3 | 5.17 | 11.86 |
-| `ed-ghost` on `ed-timeline` | 3 | 3.82 | 3.78 |
-| `ed-error-flash` on `ed-timeline` | 3 | 4.70 | 6.30 |
-| `ed-safe-area` on `ed-preview-surround` | 3 | 3.03 | 9.65 |
-| `ed-handle` on `ed-preview-surround` | 3 | 11.56 | 11.56 |
-| `ed-item-clip-fg` on `ed-item-clip` | 4.5 | 9.74 | 7.99 |
-| `ed-item-audio-fg` on `ed-item-audio` | 4.5 | 9.99 | 7.62 |
-| `ed-item-text-fg` on `ed-item-text` | 4.5 | 11.00 | 5.80 |
-| `ed-item-caption-fg` on `ed-item-caption` | 4.5 | 10.14 | 7.82 |
-| `ed-item-shape-fg` on `ed-item-shape` | 4.5 | 10.01 | 7.24 |
-| `ed-selection` on `ed-item-clip` (ring against the fill it surrounds) | 3 | 3.90 | 5.41 |
-| `ed-selection` on `ed-item-text` (the closest item colour) | 3 | 4.40 | 3.93 |
+| `foreground` on `background` | 4.5 | 15.35 | 17.57 |
+| `foreground` on `ed-panel` | 4.5 | 16.89 | 16.07 |
+| `muted-foreground` on `background` | 4.5 | 6.87 | 6.69 |
+| `muted-foreground` on `muted` | 4.5 | 6.17 | 5.38 |
+| `muted-foreground` on `ed-timeline` | 4.5 | 6.17 | 6.69 |
+| `primary-foreground` on `primary` | 4.5 | 5.35 | 11.21 |
+| `secondary-foreground` on `secondary` | 4.5 | 13.79 | 14.12 |
+| `destructive` on `background` | 4.5 | 6.08 | 7.58 |
+| `destructive` on its tint (`/10` light, `/20` dark) | 4.5 | 5.07 | 5.51 |
+| `success` on `background` | 4.5 | 5.59 | 8.29 |
+| `warning` on `background` | 4.5 | 6.37 | 8.80 |
+| `info` on `background` | 4.5 | 4.86 | 10.44 |
+| `agent` on `background` | 4.5 | 6.33 | 10.44 |
+| `agent` on `ed-panel` | 4.5 | 6.97 | 9.55 |
+| each state on its tint (`/10` light, `/20` dark over the panel) | 4.5 | 4.66 to 5.98 | 5.28 to 6.22 |
+| `brand-foreground` on `brand` | 4.5 | 5.35 | 11.21 |
+| `ring` on `background` | 3 | 4.86 | 10.44 |
+| `ring` on `ed-timeline` | 3 | 4.37 | 10.44 |
+| `input` on `background` | 3 | 6.87 | 6.69 |
+| `ed-track-line` on `ed-timeline` | 3 | 6.17 | 6.69 |
+| `ed-playhead` on `ed-timeline` | 3 | 14.48 | 18.88 |
+| `ed-snap` on `ed-timeline` | 3 | 4.37 | 10.44 |
+| `ed-ghost` on `ed-timeline` | 3 | 11.29 | 3.85 |
+| `ed-error-flash` on `ed-timeline` | 3 | 3.83 | 5.14 |
+| `ed-safe-area` on `ed-preview-surround` | 3 | 4.32 | 11.21 |
+| `ed-handle` on `ed-preview-surround` | 3 | 4.32 | 11.21 |
+| `ed-item-clip-fg` on `ed-item-clip` | 4.5 | 5.17 | 6.18 |
+| `ed-item-audio-fg` on `ed-item-audio` | 4.5 | 5.02 | 5.98 |
+| `ed-item-text-fg` on `ed-item-text` | 4.5 | 6.97 | 6.66 |
+| `ed-item-caption-fg` on `ed-item-caption` | 4.5 | 6.03 | 6.69 |
+| `ed-item-shape-fg` on `ed-item-shape` | 4.5 | 5.19 | 9.45 |
+| `ed-selection` on `ed-item-clip` (ring against the fill it surrounds) | 3 | 5.17 | 6.18 |
+| `ed-selection` on `ed-item-text` (the closest item colour) | 3 | 6.97 | 6.66 |
 
 Item fills against `--ed-timeline` are 1.61:1 (light clip) to 2.22:1 (dark clip), below 3:1; this is why every item block has a 1 px `--ed-track-line` border (3.15:1 and 3.13:1), which carries the boundary of the block (section 4.3.6).
 
@@ -557,7 +555,7 @@ All interactive components use the same visual states. "Disabled" never relies o
 
 ### 4.2 Shared primitives
 
-The files in `components/ui/` (SDD-012 §3.1). Dialogs, popovers, tooltips, tabs, sheets and form controls are `@base-ui/react`. Menus, `Select` and `Label` are `@ui-sdk/react`. This section says how the product uses them.
+The files in `components/ui/` (SDD-012 §3.1). Dialogs, popovers, tooltips, tabs, sheets, menus, `Select` and form controls are `@base-ui/react`. This section says how the product uses them.
 
 | Component | Variants and sizes used | States and keyboard | Product rules |
 | --- | --- | --- | --- |
@@ -575,7 +573,7 @@ The files in `components/ui/` (SDD-012 §3.1). Dialogs, popovers, tooltips, tabs
 | `Tabs` | default | Base UI: arrows move, `Home` and `End`, automatic activation | the vertical tab rail of the library and the tab strip of the inspector (section 3.4, SDD-012 §6.4); inside one inspector tab the sections stack and scroll, with no further level of tabs |
 | `Tooltip` | default | opens on hover and on focus, `Esc` closes | every icon-only button; text is the label plus the shortcut in `<kbd>` style (`Split (S)`); never the only place of essential information |
 
-These primitives live in `components/ui/`. Dialogs, popovers, sliders, switches, checkboxes, radio groups, progress, toggles and sheets are `@base-ui/react`. Menus are `@ui-sdk/react`. Each is listed in SDD-012 §3.1.
+These primitives live in `components/ui/`. Dialogs, popovers, sliders, switches, checkboxes, radio groups, progress, toggles, sheets and menus are `@base-ui/react`. Each is listed in SDD-012 §3.1.
 
 | Component | Used by |
 | --- | --- |

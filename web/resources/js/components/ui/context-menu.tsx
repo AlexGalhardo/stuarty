@@ -1,23 +1,8 @@
 "use client"
 
 import * as React from "react"
+import { ContextMenu as ContextMenuPrimitive } from "@base-ui/react/context-menu"
 import { cn } from "@/lib/cn"
-import {
-  Menu,
-  MenuCheckboxItem,
-  MenuContent,
-  MenuContextTrigger,
-  MenuGroup,
-  MenuGroupLabel,
-  MenuItem,
-  MenuItemIndicator,
-  MenuRadioGroup,
-  MenuRadioItem,
-  MenuSeparator,
-  MenuSub,
-  MenuSubContent,
-  MenuSubTrigger,
-} from "@ui-sdk/react/menu"
 import { childRender } from "@/components/ui/slot"
 import { CheckIcon, ChevronRightIcon } from "lucide-react"
 
@@ -27,74 +12,73 @@ const itemClass =
 const popupClass =
   "z-50 max-h-(--available-height) min-w-36 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-lg bg-popover p-1 text-popover-foreground shadow-md ring-1 ring-foreground/10 duration-100 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95"
 
-function ContextMenu({
-  ...props
-}: React.ComponentProps<typeof Menu>) {
-  return <Menu {...props} />
+function ContextMenu(props: React.ComponentProps<typeof ContextMenuPrimitive.Root>) {
+  return <ContextMenuPrimitive.Root {...props} />
 }
 
 function ContextMenuTrigger({
   asChild,
   className,
   children,
+  disabled,
   ...props
-}: Omit<React.ComponentProps<typeof MenuContextTrigger>, "children"> & {
+}: Omit<React.ComponentProps<typeof ContextMenuPrimitive.Trigger>, "children"> & {
   asChild?: boolean
+  disabled?: boolean
   children?: React.ReactNode
 }) {
+  if (disabled) return <>{children}</>
   const render = childRender(asChild, children)
   return (
-    <MenuContextTrigger
+    <ContextMenuPrimitive.Trigger
       data-slot="context-menu-trigger"
       className={cn("select-none", className)}
       render={render}
       {...props}
     >
       {render ? undefined : children}
-    </MenuContextTrigger>
+    </ContextMenuPrimitive.Trigger>
   )
 }
 
-function ContextMenuGroup({
-  ...props
-}: React.ComponentProps<typeof MenuGroup>) {
-  return <MenuGroup data-slot="context-menu-group" {...props} />
+function ContextMenuGroup(props: React.ComponentProps<typeof ContextMenuPrimitive.Group>) {
+  return <ContextMenuPrimitive.Group data-slot="context-menu-group" {...props} />
 }
 
 function ContextMenuPortal({ children }: { children?: React.ReactNode }) {
   return <>{children}</>
 }
 
-function ContextMenuSub({
-  ...props
-}: React.ComponentProps<typeof MenuSub>) {
-  return <MenuSub {...props} />
+function ContextMenuSub(props: React.ComponentProps<typeof ContextMenuPrimitive.SubmenuRoot>) {
+  return <ContextMenuPrimitive.SubmenuRoot {...props} />
 }
 
-function ContextMenuRadioGroup({
-  name,
-  ...props
-}: React.ComponentProps<typeof MenuRadioGroup>) {
-  const fallback = React.useId()
+function ContextMenuRadioGroup(
+  props: React.ComponentProps<typeof ContextMenuPrimitive.RadioGroup>,
+) {
   return (
-    <MenuRadioGroup
-      data-slot="context-menu-radio-group"
-      name={name ?? fallback}
-      {...props}
-    />
+    <ContextMenuPrimitive.RadioGroup data-slot="context-menu-radio-group" {...props} />
   )
 }
 
 function ContextMenuContent({
   className,
-  ...props
-}: React.ComponentProps<typeof MenuContent>) {
+  children,
+}: {
+  className?: string
+  children?: React.ReactNode
+}) {
   return (
-    <MenuContent
-      data-slot="context-menu-content"
-      className={cn(popupClass, className)}
-      {...props}
-    />
+    <ContextMenuPrimitive.Portal>
+      <ContextMenuPrimitive.Positioner>
+        <ContextMenuPrimitive.Popup
+          data-slot="context-menu-content"
+          className={cn(popupClass, className)}
+        >
+          {children}
+        </ContextMenuPrimitive.Popup>
+      </ContextMenuPrimitive.Positioner>
+    </ContextMenuPrimitive.Portal>
   )
 }
 
@@ -103,16 +87,15 @@ function ContextMenuItem({
   inset,
   variant = "default",
   ...props
-}: React.ComponentProps<typeof MenuItem> & {
+}: React.ComponentProps<typeof ContextMenuPrimitive.Item> & {
   inset?: boolean
   variant?: "default" | "destructive"
 }) {
   return (
-    <MenuItem
+    <ContextMenuPrimitive.Item
       data-slot="context-menu-item"
       data-inset={inset ? "" : undefined}
       data-variant={variant}
-      destructive={variant === "destructive"}
       className={cn(itemClass, className)}
       {...props}
     />
@@ -124,12 +107,12 @@ function ContextMenuSubTrigger({
   inset,
   children,
   ...props
-}: Omit<React.ComponentProps<typeof MenuSubTrigger>, "children"> & {
+}: Omit<React.ComponentProps<typeof ContextMenuPrimitive.SubmenuTrigger>, "children"> & {
   inset?: boolean
   children?: React.ReactNode
 }) {
   return (
-    <MenuSubTrigger
+    <ContextMenuPrimitive.SubmenuTrigger
       data-slot="context-menu-sub-trigger"
       data-inset={inset ? "" : undefined}
       className={cn(
@@ -140,20 +123,28 @@ function ContextMenuSubTrigger({
     >
       {children}
       <ChevronRightIcon className="ml-auto" />
-    </MenuSubTrigger>
+    </ContextMenuPrimitive.SubmenuTrigger>
   )
 }
 
 function ContextMenuSubContent({
   className,
-  ...props
-}: React.ComponentProps<typeof MenuSubContent>) {
+  children,
+}: {
+  className?: string
+  children?: React.ReactNode
+}) {
   return (
-    <MenuSubContent
-      data-slot="context-menu-sub-content"
-      className={cn(popupClass, "min-w-32 border shadow-lg", className)}
-      {...props}
-    />
+    <ContextMenuPrimitive.Portal>
+      <ContextMenuPrimitive.Positioner side="inline-end" align="start">
+        <ContextMenuPrimitive.Popup
+          data-slot="context-menu-sub-content"
+          className={cn(popupClass, "min-w-32 border shadow-lg", className)}
+        >
+          {children}
+        </ContextMenuPrimitive.Popup>
+      </ContextMenuPrimitive.Positioner>
+    </ContextMenuPrimitive.Portal>
   )
 }
 
@@ -162,32 +153,29 @@ function ContextMenuCheckboxItem({
   children,
   checked,
   inset,
-  value,
   ...props
-}: Omit<React.ComponentProps<typeof MenuCheckboxItem>, "children"> & {
+}: Omit<React.ComponentProps<typeof ContextMenuPrimitive.CheckboxItem>, "children"> & {
   inset?: boolean
   children?: React.ReactNode
 }) {
-  const fallback = React.useId()
   return (
-    <MenuCheckboxItem
+    <ContextMenuPrimitive.CheckboxItem
       data-slot="context-menu-checkbox-item"
       data-inset={inset ? "" : undefined}
       className={cn(
         "relative flex cursor-default items-center gap-1.5 rounded-md py-1 pr-8 pl-1.5 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground data-highlighted:bg-accent data-highlighted:text-accent-foreground data-inset:pl-7 data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className
       )}
-      value={value ?? fallback}
       checked={checked}
       {...props}
     >
       <span className="pointer-events-none absolute right-2">
-        <MenuItemIndicator keepMounted>
+        <ContextMenuPrimitive.CheckboxItemIndicator keepMounted>
           <CheckIcon />
-        </MenuItemIndicator>
+        </ContextMenuPrimitive.CheckboxItemIndicator>
       </span>
       {children}
-    </MenuCheckboxItem>
+    </ContextMenuPrimitive.CheckboxItem>
   )
 }
 
@@ -196,12 +184,12 @@ function ContextMenuRadioItem({
   children,
   inset,
   ...props
-}: Omit<React.ComponentProps<typeof MenuRadioItem>, "children"> & {
+}: Omit<React.ComponentProps<typeof ContextMenuPrimitive.RadioItem>, "children"> & {
   inset?: boolean
   children?: React.ReactNode
 }) {
   return (
-    <MenuRadioItem
+    <ContextMenuPrimitive.RadioItem
       data-slot="context-menu-radio-item"
       data-inset={inset ? "" : undefined}
       className={cn(
@@ -211,12 +199,12 @@ function ContextMenuRadioItem({
       {...props}
     >
       <span className="pointer-events-none absolute right-2">
-        <MenuItemIndicator keepMounted>
+        <ContextMenuPrimitive.RadioItemIndicator keepMounted>
           <CheckIcon />
-        </MenuItemIndicator>
+        </ContextMenuPrimitive.RadioItemIndicator>
       </span>
       {children}
-    </MenuRadioItem>
+    </ContextMenuPrimitive.RadioItem>
   )
 }
 
@@ -224,9 +212,9 @@ function ContextMenuLabel({
   className,
   inset,
   ...props
-}: React.ComponentProps<typeof MenuGroupLabel> & { inset?: boolean }) {
+}: React.ComponentProps<typeof ContextMenuPrimitive.GroupLabel> & { inset?: boolean }) {
   return (
-    <MenuGroupLabel
+    <ContextMenuPrimitive.GroupLabel
       data-slot="context-menu-label"
       data-inset={inset ? "" : undefined}
       className={cn(
@@ -241,9 +229,9 @@ function ContextMenuLabel({
 function ContextMenuSeparator({
   className,
   ...props
-}: React.ComponentProps<typeof MenuSeparator>) {
+}: React.ComponentProps<typeof ContextMenuPrimitive.Separator>) {
   return (
-    <MenuSeparator
+    <ContextMenuPrimitive.Separator
       data-slot="context-menu-separator"
       className={cn("-mx-1 my-1 h-px bg-border", className)}
       {...props}
