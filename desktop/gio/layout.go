@@ -23,12 +23,12 @@ func (ui *UI) Layout(gtx layout.Context) layout.Dimensions {
 
 	return layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx layout.Context) layout.Dimensions {
-			return fill(gtx, colBg)
+			return fill(gtx, ui.pal.bg)
 		}),
 		layout.Stacked(func(gtx layout.Context) layout.Dimensions {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(ui.topBar),
-				layout.Rigid(hline),
+				layout.Rigid(ui.hline),
 				layout.Rigid(ui.statusLine),
 				layout.Flexed(1, ui.body),
 			)
@@ -70,9 +70,9 @@ func (ui *UI) body(gtx layout.Context) layout.Dimensions {
 
 					return ui.leftPanel(gtx)
 				}),
-				layout.Rigid(vline),
+				layout.Rigid(ui.vline),
 				layout.Flexed(1, ui.preview),
-				layout.Rigid(vline),
+				layout.Rigid(ui.vline),
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 					gtx.Constraints = layout.Exact(image.Pt(gtx.Dp(unit.Dp(300)), gtx.Constraints.Max.Y))
 
@@ -80,7 +80,7 @@ func (ui *UI) body(gtx layout.Context) layout.Dimensions {
 				}),
 			)
 		}),
-		layout.Rigid(hline),
+		layout.Rigid(ui.hline),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			gtx.Constraints = layout.Exact(image.Pt(gtx.Constraints.Max.X, gtx.Dp(unit.Dp(248))))
 
@@ -96,7 +96,7 @@ func (ui *UI) topBar(gtx layout.Context) layout.Dimensions {
 
 	return layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx layout.Context) layout.Dimensions {
-			return fill(gtx, colPanel)
+			return fill(gtx, ui.pal.panel)
 		}),
 		layout.Stacked(func(gtx layout.Context) layout.Dimensions {
 			return layout.Inset{
@@ -111,16 +111,18 @@ func (ui *UI) topBar(gtx layout.Context) layout.Dimensions {
 					}
 
 					return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-						layout.Rigid(lbl(ui.th, unit.Sp(14), colAccent, "Vukem")),
+						layout.Rigid(lbl(ui.th, unit.Sp(14), ui.pal.accent, "Vukem")),
 						gap(unit.Dp(8)),
-						layout.Rigid(lbl(ui.th, unit.Sp(14), colText, "Video")),
+						layout.Rigid(lbl(ui.th, unit.Sp(14), ui.pal.text, "Video")),
 						gap(unit.Dp(16)),
-						layout.Rigid(lbl(ui.th, unit.Sp(13), colMuted, ellipsize(name, 42))),
+						layout.Rigid(lbl(ui.th, unit.Sp(13), ui.pal.muted, ellipsize(name, 42))),
 						layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
 							return layout.Dimensions{Size: image.Pt(gtx.Constraints.Max.X, gtx.Constraints.Min.Y)}
 						}),
-						layout.Rigid(lbl(ui.th, unit.Sp(12), colMuted, agentdocs.Version)),
+						layout.Rigid(lbl(ui.th, unit.Sp(12), ui.pal.muted, agentdocs.Version)),
 						gap(unit.Dp(12)),
+						ui.barButton("theme", ui.themeWord(), true, ui.toggleTheme),
+						gap(unit.Dp(6)),
 						ui.barButton("projects", "Projects", ui.doc != nil, ui.closeProject),
 						gap(unit.Dp(6)),
 						ui.barButton("undo", "Undo", ui.doc != nil, ui.undo),
@@ -138,19 +140,19 @@ func (ui *UI) topBar(gtx layout.Context) layout.Dimensions {
 func (ui *UI) barButton(id, txt string, enabled bool, fn func()) layout.FlexChild {
 	return layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 		if !enabled {
-			return lbl(ui.th, unit.Sp(12), colLine, txt)(gtx)
+			return lbl(ui.th, unit.Sp(12), ui.pal.line, txt)(gtx)
 		}
 
-		bg, fg := colPanel2, colText
+		bg, fg := ui.pal.panel2, ui.pal.text
 		if id == "export" {
-			bg, fg = colAccent, colBlack
+			bg, fg = ui.pal.accent, ui.pal.onAccent
 		}
 
 		if ui.clicked(gtx, "bar-"+id) {
 			fn()
 		}
 
-		return button(gtx, ui.th, ui.click("bar-"+id), txt, bg, fg)
+		return ui.button(gtx, ui.click("bar-"+id), txt, bg, fg)
 	})
 }
 
@@ -165,16 +167,16 @@ func (ui *UI) statusLine(gtx layout.Context) layout.Dimensions {
 	}
 
 	return layout.Inset{Left: unit.Dp(12), Right: unit.Dp(12), Top: unit.Dp(4), Bottom: unit.Dp(4)}.Layout(gtx,
-		lbl(ui.th, unit.Sp(12), colMuted, ellipsize(msg, 160)),
+		lbl(ui.th, unit.Sp(12), ui.pal.muted, ellipsize(msg, 160)),
 	)
 }
 
 func (ui *UI) fatalScreen(gtx layout.Context) layout.Dimensions {
 	return layout.Center.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 		return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(gtx,
-			layout.Rigid(lbl(ui.th, unit.Sp(18), colText, "Vukem Video could not open the workspace")),
+			layout.Rigid(lbl(ui.th, unit.Sp(18), ui.pal.text, "Vukem Video could not open the workspace")),
 			gap(unit.Dp(8)),
-			layout.Rigid(lbl(ui.th, unit.Sp(13), colMuted, ellipsize(ui.fatal, 120))),
+			layout.Rigid(lbl(ui.th, unit.Sp(13), ui.pal.muted, ellipsize(ui.fatal, 120))),
 		)
 	})
 }
@@ -190,23 +192,23 @@ func (ui *UI) home(gtx layout.Context) layout.Dimensions {
 				gtx,
 				func(gtx layout.Context) layout.Dimensions {
 					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-						layout.Rigid(lbl(ui.th, unit.Sp(22), colText, "Projects")),
+						layout.Rigid(lbl(ui.th, unit.Sp(22), ui.pal.text, "Projects")),
 						gap(unit.Dp(6)),
-						layout.Rigid(lbl(ui.th, unit.Sp(13), colMuted, "Open a project or start a new one.")),
+						layout.Rigid(lbl(ui.th, unit.Sp(13), ui.pal.muted, "Open a project or start a new one.")),
 						gap(unit.Dp(16)),
 						layout.Flexed(1, ui.projectListLayout),
 					)
 				},
 			)
 		}),
-		layout.Rigid(vline),
+		layout.Rigid(ui.vline),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			w := gtx.Dp(unit.Dp(360))
 			gtx.Constraints = layout.Exact(image.Pt(w, gtx.Constraints.Max.Y))
 
 			return layout.Stack{}.Layout(gtx,
 				layout.Expanded(func(gtx layout.Context) layout.Dimensions {
-					return fill(gtx, colPanel)
+					return fill(gtx, ui.pal.panel)
 				}),
 				layout.Stacked(ui.homeForm),
 			)
@@ -234,7 +236,7 @@ func (ui *UI) projectListLayout(gtx layout.Context) layout.Dimensions {
 		}
 
 		return layout.Inset{Bottom: unit.Dp(8)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-			return button(gtx, ui.th, ui.click("prj-"+id), label, colPanel2, colText)
+			return ui.button(gtx, ui.click("prj-"+id), label, ui.pal.panel2, ui.pal.text)
 		})
 	})
 }

@@ -21,6 +21,10 @@ go build -o vukem-video-desktop ./cmd/vukem-video-desktop
 ./vukem-video-desktop
 ```
 
+The top bar switches between the dark theme and a light one. The choice is
+stored in `gio.json` under the user config directory (`vukem-video/gio.json`),
+separate from the webview shell's `desktop.json`.
+
 The editor is local mode only. Import, the preview and export need FFmpeg and
 ffprobe on `PATH`, or `VUKEM_VIDEO_FFMPEG` and `VUKEM_VIDEO_FFPROBE`. Text,
 shapes and the timeline work without them. `-screenshot out.png` renders one

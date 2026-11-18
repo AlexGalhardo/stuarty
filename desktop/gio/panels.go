@@ -15,16 +15,16 @@ func (ui *UI) leftPanel(gtx layout.Context) layout.Dimensions {
 
 			return layout.Stack{}.Layout(gtx,
 				layout.Expanded(func(gtx layout.Context) layout.Dimensions {
-					return fill(gtx, colPanel)
+					return fill(gtx, ui.pal.panel)
 				}),
 				layout.Stacked(ui.tabs),
 			)
 		}),
-		layout.Rigid(vline),
+		layout.Rigid(ui.vline),
 		layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
 			return layout.Stack{}.Layout(gtx,
 				layout.Expanded(func(gtx layout.Context) layout.Dimensions {
-					return fill(gtx, colBg)
+					return fill(gtx, ui.pal.bg)
 				}),
 				layout.Stacked(func(gtx layout.Context) layout.Dimensions {
 					return layout.Inset{Top: unit.Dp(10), Left: unit.Dp(10), Right: unit.Dp(10), Bottom: unit.Dp(10)}.
@@ -61,14 +61,14 @@ func (ui *UI) tabButton(name string, next tab) layout.Widget {
 			ui.tab = next
 		}
 
-		bg, fg := colPanel, colMuted
+		bg, fg := ui.pal.panel, ui.pal.muted
 		if ui.tab == next {
-			bg, fg = colAccentD, colAccent
+			bg, fg = ui.pal.accentOn, ui.pal.accent
 		}
 
 		return layout.Inset{Top: unit.Dp(4), Bottom: unit.Dp(4), Left: unit.Dp(6), Right: unit.Dp(6)}.Layout(gtx,
 			func(gtx layout.Context) layout.Dimensions {
-				return button(gtx, ui.th, ui.click(id), name, bg, fg)
+				return ui.button(gtx, ui.click(id), name, bg, fg)
 			})
 	}
 }
@@ -88,10 +88,10 @@ func (ui *UI) tabBody(gtx layout.Context) layout.Dimensions {
 
 func (ui *UI) textTab(gtx layout.Context) layout.Dimensions {
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-		layout.Rigid(lbl(ui.th, unit.Sp(12), colMuted, "Text")),
+		layout.Rigid(lbl(ui.th, unit.Sp(12), ui.pal.muted, "Text")),
 		gap(unit.Dp(8)),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return editorBox(gtx, ui.th, &ui.draftEd, "Type a title")
+			return ui.editorBox(gtx, &ui.draftEd, "Type a title")
 		}),
 		gap(unit.Dp(8)),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
@@ -99,7 +99,7 @@ func (ui *UI) textTab(gtx layout.Context) layout.Dimensions {
 				ui.addText(96)
 			}
 
-			return button(gtx, ui.th, ui.click("add-title"), "Add title", colPanel2, colText)
+			return ui.button(gtx, ui.click("add-title"), "Add title", ui.pal.panel2, ui.pal.text)
 		}),
 		gap(unit.Dp(6)),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
@@ -107,7 +107,7 @@ func (ui *UI) textTab(gtx layout.Context) layout.Dimensions {
 				ui.addText(48)
 			}
 
-			return button(gtx, ui.th, ui.click("add-text"), "Add text", colPanel2, colText)
+			return ui.button(gtx, ui.click("add-text"), "Add text", ui.pal.panel2, ui.pal.text)
 		}),
 		gap(unit.Dp(6)),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
@@ -115,7 +115,7 @@ func (ui *UI) textTab(gtx layout.Context) layout.Dimensions {
 				ui.addShape()
 			}
 
-			return button(gtx, ui.th, ui.click("add-shape"), "Add shape", colPanel2, colText)
+			return ui.button(gtx, ui.click("add-shape"), "Add shape", ui.pal.panel2, ui.pal.text)
 		}),
 	)
 }
@@ -133,13 +133,13 @@ func (ui *UI) assetTab(gtx layout.Context, audio bool) layout.Dimensions {
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-				layout.Flexed(1, lbl(ui.th, unit.Sp(12), colMuted, title)),
+				layout.Flexed(1, lbl(ui.th, unit.Sp(12), ui.pal.muted, title)),
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 					if ui.clicked(gtx, "import") {
 						ui.openImport()
 					}
 
-					return button(gtx, ui.th, ui.click("import"), "Import", colPanel2, colText)
+					return ui.button(gtx, ui.click("import"), "Import", ui.pal.panel2, ui.pal.text)
 				}),
 			)
 		}),
@@ -147,7 +147,7 @@ func (ui *UI) assetTab(gtx layout.Context, audio bool) layout.Dimensions {
 		layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
 			ui.assetList.Axis = layout.Vertical
 			if len(rows) == 0 {
-				return lbl(ui.th, unit.Sp(12), colMuted, "Nothing here yet.")(gtx)
+				return lbl(ui.th, unit.Sp(12), ui.pal.muted, "Nothing here yet.")(gtx)
 			}
 
 			return ui.assetList.Layout(gtx, len(rows), func(gtx layout.Context, i int) layout.Dimensions {
@@ -164,7 +164,7 @@ func (ui *UI) assetTab(gtx layout.Context, audio bool) layout.Dimensions {
 				}
 
 				return layout.Inset{Bottom: unit.Dp(4)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-					return chip(gtx, ui.th, ui.click(id), ellipsize(mark, 28), ui.selectedAsset == a.ID)
+					return ui.chip(gtx, ui.click(id), ellipsize(mark, 28), ui.selectedAsset == a.ID)
 				})
 			})
 		}),
@@ -174,7 +174,7 @@ func (ui *UI) assetTab(gtx layout.Context, audio bool) layout.Dimensions {
 				ui.placeAsset(ui.selectedAsset, audio)
 			}
 
-			return button(gtx, ui.th, ui.click(action), "Add to timeline", colAccent, colBlack)
+			return ui.button(gtx, ui.click(action), "Add to timeline", ui.pal.accent, ui.pal.onAccent)
 		}),
 	)
 }
@@ -205,7 +205,7 @@ func (ui *UI) visibleAssets(audio bool) []assetRow {
 
 func (ui *UI) effectsTab(gtx layout.Context) layout.Dimensions {
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-		layout.Rigid(lbl(ui.th, unit.Sp(12), colMuted, "Effects on the selection")),
+		layout.Rigid(lbl(ui.th, unit.Sp(12), ui.pal.muted, "Effects on the selection")),
 		gap(unit.Dp(8)),
 		layout.Rigid(ui.filterRow),
 		gap(unit.Dp(8)),
@@ -216,7 +216,7 @@ func (ui *UI) effectsTab(gtx layout.Context) layout.Dimensions {
 				ui.fadeIn()
 			}
 
-			return button(gtx, ui.th, ui.click("fade"), "Fade in", colPanel2, colText)
+			return ui.button(gtx, ui.click("fade"), "Fade in", ui.pal.panel2, ui.pal.text)
 		}),
 		gap(unit.Dp(6)),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
@@ -224,7 +224,7 @@ func (ui *UI) effectsTab(gtx layout.Context) layout.Dimensions {
 				ui.setBlur(8)
 			}
 
-			return button(gtx, ui.th, ui.click("blur"), "Blur", colPanel2, colText)
+			return ui.button(gtx, ui.click("blur"), "Blur", ui.pal.panel2, ui.pal.text)
 		}),
 	)
 }
@@ -273,14 +273,14 @@ func (ui *UI) choiceChip(item choice) layout.FlexChild {
 			item.fn()
 		}
 
-		return chip(gtx, ui.th, ui.click(item.id), item.label, false)
+		return ui.chip(gtx, ui.click(item.id), item.label, false)
 	})
 }
 
 func (ui *UI) inspector(gtx layout.Context) layout.Dimensions {
 	return layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx layout.Context) layout.Dimensions {
-			return fill(gtx, colPanel)
+			return fill(gtx, ui.pal.panel)
 		}),
 		layout.Stacked(func(gtx layout.Context) layout.Dimensions {
 			return layout.Inset{Top: unit.Dp(12), Left: unit.Dp(12), Right: unit.Dp(12)}.Layout(gtx, ui.inspectorBody)
@@ -292,23 +292,23 @@ func (ui *UI) inspectorBody(gtx layout.Context) layout.Dimensions {
 	it := ui.item(ui.selected)
 	if it == nil {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(lbl(ui.th, unit.Sp(13), colText, "Inspector")),
+			layout.Rigid(lbl(ui.th, unit.Sp(13), ui.pal.text, "Inspector")),
 			gap(unit.Dp(8)),
-			layout.Rigid(lbl(ui.th, unit.Sp(12), colMuted, "Select a clip on the timeline.")),
+			layout.Rigid(lbl(ui.th, unit.Sp(12), ui.pal.muted, "Select a clip on the timeline.")),
 		)
 	}
 
 	children := []layout.FlexChild{
-		layout.Rigid(lbl(ui.th, unit.Sp(13), colText, "Inspector")),
+		layout.Rigid(lbl(ui.th, unit.Sp(13), ui.pal.text, "Inspector")),
 		gap(unit.Dp(4)),
 		layout.Rigid(
-			lbl(ui.th, unit.Sp(12), colAccent, string(it.Type)+"  "+ellipsize(itemLabel(*it, ui.assetMap()), 24)),
+			lbl(ui.th, unit.Sp(12), ui.pal.accent, string(it.Type)+"  "+ellipsize(itemLabel(*it, ui.assetMap()), 24)),
 		),
 		gap(unit.Dp(4)),
-		layout.Rigid(lbl(ui.th, unit.Sp(12), colMuted, ui.tc(it.Start)+"   "+ui.tc(it.Duration)+" long")),
+		layout.Rigid(lbl(ui.th, unit.Sp(12), ui.pal.muted, ui.tc(it.Start)+"   "+ui.tc(it.Duration)+" long")),
 		gap(unit.Dp(10)),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return editorBox(gtx, ui.th, &ui.labelEd, "Name")
+			return ui.editorBox(gtx, &ui.labelEd, "Name")
 		}),
 		gap(unit.Dp(6)),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
@@ -316,7 +316,7 @@ func (ui *UI) inspectorBody(gtx layout.Context) layout.Dimensions {
 				ui.applyLabel()
 			}
 
-			return button(gtx, ui.th, ui.click("apply-name"), "Rename", colPanel2, colText)
+			return ui.button(gtx, ui.click("apply-name"), "Rename", ui.pal.panel2, ui.pal.text)
 		}),
 	}
 
@@ -324,7 +324,7 @@ func (ui *UI) inspectorBody(gtx layout.Context) layout.Dimensions {
 		children = append(children,
 			gap(unit.Dp(8)),
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				return editorBox(gtx, ui.th, &ui.textEd, "Text")
+				return ui.editorBox(gtx, &ui.textEd, "Text")
 			}),
 			gap(unit.Dp(6)),
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
@@ -332,7 +332,7 @@ func (ui *UI) inspectorBody(gtx layout.Context) layout.Dimensions {
 					ui.applyText()
 				}
 
-				return button(gtx, ui.th, ui.click("apply-text"), "Update text", colPanel2, colText)
+				return ui.button(gtx, ui.click("apply-text"), "Update text", ui.pal.panel2, ui.pal.text)
 			}),
 		)
 	}
@@ -340,7 +340,7 @@ func (ui *UI) inspectorBody(gtx layout.Context) layout.Dimensions {
 	if it.Type != timeline.ItemAudio {
 		children = append(children,
 			gap(unit.Dp(10)),
-			layout.Rigid(lbl(ui.th, unit.Sp(12), colMuted, "Scale")),
+			layout.Rigid(lbl(ui.th, unit.Sp(12), ui.pal.muted, "Scale")),
 			gap(unit.Dp(4)),
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				return ui.choiceRow(gtx, []choice{
@@ -351,7 +351,7 @@ func (ui *UI) inspectorBody(gtx layout.Context) layout.Dimensions {
 				})
 			}),
 			gap(unit.Dp(8)),
-			layout.Rigid(lbl(ui.th, unit.Sp(12), colMuted, "Opacity")),
+			layout.Rigid(lbl(ui.th, unit.Sp(12), ui.pal.muted, "Opacity")),
 			gap(unit.Dp(4)),
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				return ui.choiceRow(gtx, []choice{
@@ -366,7 +366,7 @@ func (ui *UI) inspectorBody(gtx layout.Context) layout.Dimensions {
 	if it.Type == timeline.ItemClip || it.Type == timeline.ItemAudio {
 		children = append(children,
 			gap(unit.Dp(8)),
-			layout.Rigid(lbl(ui.th, unit.Sp(12), colMuted, "Volume")),
+			layout.Rigid(lbl(ui.th, unit.Sp(12), ui.pal.muted, "Volume")),
 			gap(unit.Dp(4)),
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				return ui.choiceRow(gtx, []choice{
@@ -381,7 +381,7 @@ func (ui *UI) inspectorBody(gtx layout.Context) layout.Dimensions {
 	if it.Type == timeline.ItemClip {
 		children = append(children,
 			gap(unit.Dp(8)),
-			layout.Rigid(lbl(ui.th, unit.Sp(12), colMuted, "Fit")),
+			layout.Rigid(lbl(ui.th, unit.Sp(12), ui.pal.muted, "Fit")),
 			gap(unit.Dp(4)),
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				return ui.choiceRow(gtx, []choice{
@@ -407,7 +407,7 @@ func (ui *UI) inspectorBody(gtx layout.Context) layout.Dimensions {
 				ui.deleteSelected()
 			}
 
-			return button(gtx, ui.th, ui.click("delete"), "Delete", colDanger, colWhite)
+			return ui.button(gtx, ui.click("delete"), "Delete", ui.pal.danger, ui.pal.onClip)
 		}),
 	)
 

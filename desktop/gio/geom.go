@@ -1,7 +1,6 @@
 package gioapp
 
 import (
-	"image/color"
 	"math"
 	"strconv"
 
@@ -43,21 +42,6 @@ func xToFrame(x int, fps timeval.FPS, pxPerSec float64) int {
 
 func framesArg(frame int) string {
 	return strconv.Itoa(frame) + "f"
-}
-
-func itemColor(t timeline.ItemType) color.NRGBA {
-	switch t {
-	case timeline.ItemAudio:
-		return colAudio
-	case timeline.ItemText:
-		return colTextIt
-	case timeline.ItemCaption:
-		return colCaption
-	case timeline.ItemShape:
-		return colShape
-	default:
-		return colVideo
-	}
 }
 
 func itemLabel(it timeline.Item, assets map[string]timeline.Asset) string {
