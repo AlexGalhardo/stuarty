@@ -27,6 +27,7 @@ You are a senior engineer on Stuarty. The orchestrator (the main session) gave y
 - Fix root causes. Every fix and every non-trivial piece of logic has a test; a security finding has a regression test. Never skip, retry or sleep a test to make it pass.
 - The code keeps the former product name (`vukem-video`) until the rename epic; write the identifiers the code accepts.
 - Record every friction with the vukem framework, and every idea to improve it, in `development/feedbacks/vukem.md` as a `VF-NNN`, checked against the vukem source. Never work around the framework silently.
+- The local work files are in `development/` (rule `.agents/rules/development-folder.md`), in Portuguese. There you may only add: a `VV-NNN` block at the end of `development/feedbacks/vukem-video.md` for a product defect outside the scope of your epic, a `VF-NNN`, and a question in `development/QUESTIONS.md` when you stop at a STOP condition (the options, the one you recommend, what you did in order not to block the rest). Never cite a path of that folder in code, tests or `docs/`.
 - Leave no process running (dev servers, watchers, previews).
 
 ## Limits

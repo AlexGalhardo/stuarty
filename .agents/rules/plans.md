@@ -88,12 +88,12 @@ Touched by one epic at a time, never in parallel: `go.mod`, `web/routes/`, `web/
 
 ## 5. The feedback queue
 
-Errors, bugs, crashes and the problems found by practical tests (QA rounds, real use) are recorded in `development/feedbacks/vukem-video.md`.
+Errors, bugs, crashes and the problems found by practical tests (QA rounds, real use) are recorded in `development/feedbacks/vukem-video.md`, one `VV` block per problem, in the format that file gives. Each block says where the problem is to be fixed: in an epic (it then goes into that epic's briefing and is closed with it) or in the queue (it is worked on its own, as below).
 
 1. An important fix is worked like a small epic: the orchestrator gives one open `VV` to a free senior, on its own branch from the integration branch, and the specialist reviews it the same way. The orchestrator does not dispatch at the same time an epic whose modules intersect the fix.
 2. A fix that turns out large, or that changes a rule of `core/`, stops and goes back to the orchestrator, who turns it into an epic.
 3. Delivery: one commit per `VV` (or one per area when the fix crosses areas), `fix(<scope>): <english summary>` (`feat` for a missing feature) with `Refs: VV-NNN`. Write the test that reproduces the problem first.
-4. The last line of each `VV` block is its status: `aberto`, `em andamento (<agent>, <date>)`, `bloqueado (<reason>)` or `corrigido em <date>, commit <hash>, evidência: <command and result>`. Only the orchestrator writes `corrigido`, after the specialist approved. An issue is never deleted.
+4. The last line of each `VV` block is its status: `aberto`, `em andamento (<agent>, <date>)`, `bloqueado (<reason>)` or `corrigido em <date>, commit <hash>, evidência: <command and result>`. Only the orchestrator writes `corrigido`, after the specialist approved, and then moves the whole block to `development/feedbacks/vukem-video-resolvidas.md`, where the QA campaign checks it again. An issue is never deleted, and an id is never reused: a problem that comes back gets a new `VV` that cites the old one.
 
 ## 6. The QA campaign
 

@@ -175,7 +175,8 @@ New specifications have their numbers reserved here, so that epics running side 
 | RF-001 to RF-006, RF-010 to RF-016, RF-020 to RF-029, RF-030 to RF-036, RF-040 to RF-044, RF-050 to RF-053, RF-060 to RF-065, RF-070 to RF-073 | built; RF-001 and RF-004 change meaning with 06 and 08 |
 | RF-074 (shortcuts, onboarding, polish) | 37 |
 | RF-075 (keyboard and WCAG 2.2 AA) | 37, 41 |
-| RF-080 (editable easing curves), RF-081 (animated crop and mask), RF-082 (animation presets) | 31 |
+| RF-080 (editable easing curves), RF-082 (animation presets) | 31 |
+| RF-081 (animated crop and mask) | built in release 0.28.0; 31 adds the crop control in the inspector, the parity cases and the new easing on top |
 | RF-083 (nested compositions) | 32 |
 | RF-084 (clip from an external motion engine) | 33 |
 | RF-085 (audio processors), RF-086 (noise reduction) | 34 |
@@ -272,4 +273,4 @@ The plans 001 to 034 were removed on 2026-11-18 (author decision D-073). Each wa
 | 029 desktop on real machines and the update feed | 43 |
 | 030 CI gates; 031 release 1.0 | not epics: CI and releases return after the QA campaign (section 4, ADR-0045) |
 | 032 keyboard shortcuts and final UI | 37 |
-| 033 animated crop and mask | 31 (the author decided for it: author decision D-065) |
+| 033 animated crop and mask | already built in release 0.28.0 (the plan was stale); 31 proves it and finishes the inspector and the parity cases (author decision D-065) |

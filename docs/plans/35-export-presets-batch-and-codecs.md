@@ -10,6 +10,7 @@ A creator picks "YouTube Shorts" or "Instagram Reel" instead of guessing bitrate
 - Author decision D-067 (presets per platform, a batch queue, H.265 and AV1 through system and hardware encoders; no mastering formats). PRD-001 RF-087, RF-088, RF-089, NFR-043.
 - SDD-004, SDD-011 section 8 (FFmpeg discovery and licence classification). Research note `web/02-redes-sociais` (each network's upload limits).
 - Absorbs the platform limits of the earlier pilot plan.
+- Open product issues this epic closes (their text comes in the briefing): VV-219 (an export fails by deadline when several exports and ingests run together), VV-220 (the export dialog refuses by concurrency and neither retries nor queues), VV-223 (the export dialog lacks PNG, AAC and a range, which the CLI and the API have).
 
 ## Scope
 

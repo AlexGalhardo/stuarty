@@ -8,6 +8,7 @@ A creator opens one project and finds the whole production in it: the brief, the
 
 - ADR-0039 (the project is the production), ADR-0005, ADR-0006, ADR-0009, ADR-0031.
 - Author decision D-064. PRD-004 RF-300, RF-303, RF-304; PRD-001 RF-001; PRD-001 NFR-012 (old workspaces open).
+- Open product issue this epic closes (its text comes in the briefing): VV-225 (there is no operation to duplicate a project). Add `ProjectDuplicate` on the three surfaces and in the project card menu, as one more task after task 4.
 
 ## Scope
 
