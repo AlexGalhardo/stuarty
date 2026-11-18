@@ -1,6 +1,6 @@
 # Security policy
 
-Vukem Video handles people's footage and is driven by AI agents, so security reports are welcome and taken seriously. The security model is [SDD-007](../docs/sdds/007-security-model.md).
+Stuarty handles people's footage, holds the credentials of their social accounts and AI providers, and is driven by AI agents, so security reports are welcome and taken seriously. The security model is [SDD-007](../docs/sdds/007-security-model.md), amended by [ADR-0032](../docs/adrs/0032-controlled-outbound-and-human-approval.md) and [ADR-0033](../docs/adrs/0033-secret-vault.md).
 
 ## Supported versions
 

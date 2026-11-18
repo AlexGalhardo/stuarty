@@ -1,9 +1,11 @@
 ---
 name: release-pr
-description: Cut a release of Vukem Video through one rebase-merged pull request, including stacked release branches that must be rebuilt on main after the previous release merges.
+description: Suspended by ADR-0045 while the epics are implemented. Cut a release of Stuarty through one rebase-merged pull request, including stacked release branches that must be rebuilt on main after the previous release merges.
 ---
 
 # Release pull request
+
+**Suspended (ADR-0045, 2026-11-18):** no release is cut while the epics are implemented, and the default branch is not protected or green. This procedure describes the flow of ADR-0028 as it worked until release 0.29.0. It is the starting point when the integration pull request is split into releases (`v0.30.0`, `v0.31.0` and so on); revise it with the author then.
 
 Read `rules/git-and-branches.md` first. The release tool is `go run ./internal/tools/release` (SDD-009).
 

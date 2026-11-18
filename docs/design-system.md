@@ -1,8 +1,8 @@
-# Vukem Video design system
+# Stuarty design system
 
 - Status: Accepted (2026-11-14). Written by the designer, to be reviewed by the architect and by senior-e (editor UI).
 - Applies to: the web UI under `web/resources/` (the Inertia pages and the editor), the desktop shell of BETA (`desktop/`, ADR-0023), and, where section 8.4 says so, the documentation site (`site/`, SDD-010).
-- Sources of truth, which this document follows and never overrides: author decisions D-008, D-013, D-016, D-022, D-023, D-024, D-028, D-029; [SDD-012](sdds/012-ui-architecture.md) (editor UI architecture: §1 thin client, §3 kept front end, §6 layout, §7 timeline, §11 preview, §12 inspector, §16 i18n, §17 theme, §18 accessibility, §21 desktop); [SDD-002](sdds/002-command-catalogue.md) A.4 (time strings) and A.8 (the error envelope); [SDD-003](sdds/003-agent-interfaces.md) §1.4; [SDD-010](sdds/010-documentation-site.md) §1 and §10 (site shell, glossary); [ADR-0007](adrs/0007-thin-ui-client.md), [ADR-0012](adrs/0012-text-and-shape-rasterization.md), [ADR-0013](adrs/0013-browser-preview-stack.md), [ADR-0023](adrs/0023-desktop-shell-deferred.md); [PRD-001](prds/001-editor-mvp.md) §3 (use cases), RF-070 to RF-075.
+- Sources of truth, which this document follows and never overrides: author decisions D-008, D-013, D-016, D-022, D-023, D-024, D-028, D-029; [SDD-012](sdds/012-ui-architecture.md) (editor UI architecture: §1 thin client, §3 kept front end, §6 layout, §7 timeline, §11 preview, §12 inspector, §16 i18n, §17 theme, §18 accessibility, §21 desktop); [SDD-002](sdds/002-command-catalogue.md) A.4 (time strings) and A.8 (the error envelope); [SDD-003](sdds/003-agent-interfaces.md) §1.4; [SDD-010](sdds/010-documentation-site.md) §1 and §10 (site shell, glossary); [ADR-0007](adrs/0007-thin-ui-client.md), [ADR-0012](adrs/0012-text-and-shape-rasterization.md), [ADR-0013](adrs/0013-browser-preview-stack.md), [ADR-0023](adrs/0023-desktop-shell-deferred.md); [PRD-001](prds/001-video-editor.md) §3 (use cases), RF-070 to RF-075.
 - Code it describes: `web/resources/css/app.css` (the only token file), `web/components.json` (kept style record: base colour `neutral`, icon library `lucide`), `web/resources/js/components/ui/*` (`@base-ui/react`), `web/resources/js/layouts/AppLayout.tsx`, and the editor tree of SDD-012 §3.2.
 
 A paragraph headed **Decision of this document** fills a gap that no SDD or ADR covers. Each is listed again in section 10 with the specification that should absorb it.
@@ -774,7 +774,7 @@ None. Empty states use one icon (section 4.3.15); there are no mascots, stock ph
 
 ### 5.3 The product mark
 
-There is no product mark yet. Until the author approves one, the **placeholder** is the one `AppLayout.tsx` already draws: a 32 px square with `rounded-lg` corners in `--brand` holding the Lucide `Video` icon at 16 px in `--brand-foreground`, followed by the name "Vukem Video" in `text-lg font-semibold tracking-tight`.
+There is no product mark yet. Until the author approves one, the **placeholder** is the one `AppLayout.tsx` already draws: a 32 px square with `rounded-lg` corners in `--brand` holding the Lucide `Video` icon at 16 px in `--brand-foreground`, followed by the name "Stuarty" in `text-lg font-semibold tracking-tight`.
 
 - The placeholder is not a logo: it is not used as the favicon of a release, in the installers, on the site's landing page as a brand, or in any third-party listing. Those wait for the real mark (SDD-010 §1.1 replaces vukem's logo and icon "by the product ones").
 - Minimum size 16 px; clear space around it equal to a quarter of its size; never recoloured, stretched or placed on a picture.
@@ -789,7 +789,7 @@ Plain, direct, calm. The UI talks to a person who edits video and works next to 
 ### 6.2 Capitalization and labels
 
 - Sentence case everywhere: buttons, menu items, titles, tabs, toasts ("Add caption", "Export dialog", "Move to next free position").
-- Product and proper names keep their case: Vukem Video, MCP, CLI, FFmpeg, MP4.
+- Product and proper names keep their case: Stuarty, MCP, CLI, FFmpeg, MP4.
 - Buttons start with a verb and name the result: "Export", "Start export", "Add to timeline", "Try again", "Apply again". "OK" and "Yes" are not labels.
 - Terms come from the shared glossary (`site/content/glossary.json`, SDD-010 §10): track, clip, item, caption, playhead, trim, split, safe area. "Asset" is "media" in the UI. Command names, field names and error codes are never translated and are shown in `font-mono`.
 
@@ -918,7 +918,7 @@ The site (`site/`, SDD-010, D-028) is a separate Astro package that starts from 
 
 | The site follows the product in | The site departs from the product in |
 | --- | --- |
-| the product mark and `--brand` colour (when the mark exists, section 5.3); the landing page uses "the copy, mark and colours of Vukem Video only" (D-028) | typography, spacing and layout: those of the vukem shell |
+| the product mark and `--brand` colour (when the mark exists, section 5.3); the landing page uses "the copy, mark and colours of Stuarty only" (D-028) | typography, spacing and layout: those of the vukem shell |
 | the content style of section 6 and the shared glossary (SDD-010 §10) | theme behaviour: the shell's toggle as copied; D-024's dark default is a rule of the editor interface |
 | screenshots of the UI: dark theme, 1600 by 900, the fixture project of the e2e suite, no personal paths visible | components: MDX components of the shell (callout, card, code block, steps, tabs) |
 | no remote fonts or trackers (the site is static on GitHub Pages) | density: comfortable reading layout |

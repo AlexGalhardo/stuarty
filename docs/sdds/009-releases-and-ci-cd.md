@@ -1,5 +1,6 @@
 # SDD-009: Releases and CI/CD in the vukem pattern
 
+- Amended (2026-11-18) for Stuarty: no release is cut and CI is not a gate while the epics are implemented (ADR-0045, which suspends ADR-0028); the tooling described here is unchanged and is used again when the integration pull request is split into releases, starting at v0.30.0 under the new name (ADR-0044). The phase names of this document (Prototype, ALPHA, BETA, 1.0) no longer schedule any work.
 - Status: Accepted (2026-11-14). Drafted by a delegated engineer, audited independently, corrected under the architect's decisions.
 - Depends on: SDD-000, SDD-007, ADR-0001, ADR-0011, ADR-0014, ADR-0024, ADR-0025, ADR-0026, author decisions D-005, D-006, D-008, D-015, D-016, D-017, D-020, D-021, D-025
 - Implements: RF-200, RF-209, RF-210, RF-214, RF-215, NFR-041, NFR-042, NFR-043, NFR-044, NFR-045 (and the repository part of RF-211, RF-212 through SDD-010)

@@ -10,7 +10,7 @@ Examples of behavior that helps:
 
 - Being respectful in disagreement
 - Accepting correction on code and docs
-- Focusing on what is best for the people who use Vukem Video
+- Focusing on what is best for the people who use Stuarty
 
 Examples of behavior that is not accepted:
 
@@ -22,7 +22,7 @@ Examples of behavior that is not accepted:
 
 ## Scope
 
-This code applies in the repository, the issue tracker, pull requests, and any other Vukem Video space, and it applies when someone represents the project in public.
+This code applies in the repository, the issue tracker, pull requests, and any other Stuarty space, and it applies when someone represents the project in public.
 
 ## Enforcement
 

@@ -1,6 +1,6 @@
 # ADR-0021: Transcription behind a provider interface; whisper.cpp local by default
 
-- Status: Accepted (2026-11-14)
+- Status: Accepted (2026-11-14); transcription becomes one capability of the provider layer of [ADR-0036](0036-ai-provider-layer.md) (2026-11-18); whisper.cpp stays the local default
 - Deciders: author (D-009, D-010), architect
 - Links: author decision D-010, spikes, features, ADR-0018, ADR-0020, SDD-004
 
