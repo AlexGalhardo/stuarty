@@ -7,9 +7,9 @@ The shell holds no editing logic.
 
 ## The shell
 
-The packaged desktop application of RF-213 (ADR-0023, ADR-0041). Nothing in `shell/`,
-`detect/`, `update/` or `packaging/` contains editing logic or renderer code,
-and nothing there imports `core/` or `engine/`.
+The packaged desktop application of RF-213 (ADR-0023, ADR-0041). Nothing in
+`shell/`, `detect/`, `update/` or `packaging/` contains editing logic or
+renderer code, and nothing there imports `core/` or `engine/`.
 
 | Path | What it is | State |
 | --- | --- | --- |
