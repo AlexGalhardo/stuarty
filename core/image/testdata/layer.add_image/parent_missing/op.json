@@ -1,0 +1,7 @@
+{
+  "args": {
+    "asset": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "parent": "lyr_zzzzzzzzzz"
+  },
+  "op": "layer.add_image"
+}

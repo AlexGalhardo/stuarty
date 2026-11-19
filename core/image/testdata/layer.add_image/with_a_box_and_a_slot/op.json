@@ -1,0 +1,12 @@
+{
+  "args": {
+    "asset": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "h": 200,
+    "index": 1,
+    "slot": "logo",
+    "w": 200,
+    "x": 40,
+    "y": 40
+  },
+  "op": "layer.add_image"
+}
