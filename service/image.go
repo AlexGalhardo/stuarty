@@ -866,14 +866,17 @@ func (s *svc) imageStep(ctx context.Context, method string, req ImageStepRequest
 
 		res = &ImageStepResult{ImageEditResult: *base, Kind: word, Step: target.Revision, Skipped: skipped}
 
-		if batch.NoOp() || req.DryRun {
-			res.Applied, res.DryRun = false, req.DryRun
-			if req.DryRun && !batch.NoOp() {
+		if req.DryRun {
+			res.Applied, res.DryRun = false, true
+			if !batch.NoOp() {
 				res.Revision = row.Revision + 1
 			}
 
 			return nil
 		}
+
+		// A step whose primitives were all skipped still commits, with an empty diff and applied false, so the
+		// step is consumed and the next undo reaches the one before it (SDD-005 section 12.2 item 16).
 
 		skippedJSON := marshalOr(skipped)
 		kind, step := OpUndo, target.Revision
@@ -890,7 +893,7 @@ func (s *svc) imageStep(ctx context.Context, method string, req ImageStepRequest
 			return cerr
 		}
 
-		res.Revision, res.Applied = rev, true
+		res.Revision, res.Applied = rev, !batch.NoOp()
 
 		return nil
 	})
