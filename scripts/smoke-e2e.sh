@@ -147,27 +147,29 @@ sum2="$(jsonfield "$work/imgexport2.out" sha256)"
 png="$(jsonfield "$work/imgexport1.out" path)"
 if command -v cygpath >/dev/null 2>&1; then png="$(cygpath -u "$png")"; fi
 iprobe="$(ffprobe -v error -show_entries stream=codec_name,width,height -of default=nw=1 "$png")"
-echo "$iprobe" | grep -q "codec_name=png" && echo "$iprobe" | grep -q "width=1280" && echo "$iprobe" | grep -q "height=720" 	|| die "the exported thumbnail is not a 1280x720 PNG: $iprobe"
-log "thumbnail: $(echo "$iprobe" | tr '
-' ' ')"
+echo "$iprobe" | grep -q "codec_name=png" && echo "$iprobe" | grep -q "width=1280" && echo "$iprobe" | grep -q "height=720" ||
+	die "the exported thumbnail is not a 1280x720 PNG: $iprobe"
+log "thumbnail: $(echo "$iprobe" | tr '\n' ' ')"
 
-# The same, through the MCP tool: one call per process, so the id of the image is read between calls.
+# The same, through the MCP tool: one call per process, so the id of the image is read between calls. Each
+# process is a new MCP session, and an actor undoes only its own steps, so the sessions share one --actor.
 mcp_image() {
 	{
-		printf '%s
-' '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"smoke","version":"1"}}}'
-		printf '%s
-' '{"jsonrpc":"2.0","method":"notifications/initialized"}'
-		printf '%s
-' "{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/call\",\"params\":{\"name\":\"image\",\"arguments\":$1}}"
-	} | stuarty mcp 2>"$work/mcp.err" | grep '"id":2' || { cat "$work/mcp.err" >&2; return 1; }
+		printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"smoke","version":"1"}}}'
+		printf '%s\n' '{"jsonrpc":"2.0","method":"notifications/initialized"}'
+		printf '%s\n' "{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/call\",\"params\":{\"name\":\"image\",\"arguments\":$1}}"
+	} | stuarty mcp --actor smoke 2>"$work/mcp.err" | grep '"id":2' || { cat "$work/mcp.err" >&2; return 1; }
 }
 mcp1="$(mcp_image "{\"action\":\"create\",\"from_template\":\"$tpl\",\"values\":{\"title\":{\"text\":\"BY MCP\"}}}")" || die "mcp create failed"
 mimg="$(echo "$mcp1" | grep -o 'img_[0-9a-z]\{10\}' | head -1)"
 [ -n "$mimg" ] || die "the MCP create gave no image id: $mcp1"
-mcp_image "{\"action\":\"edit\",\"image_id\":\"$mimg\",\"base_revision\":1,\"operations\":[{\"op\":\"layer.add_shape\",\"args\":{\"shape\":\"ellipse\",\"w\":200,\"h\":200,\"fill\":\"#FFFFFF\"}}]}" >"$work/mcpedit.out" || die "mcp edit failed"
+mcp_image "{\"action\":\"edit\",\"image_id\":\"$mimg\",\"base_revision\":1,\"operations\":[{\"op\":\"layer.add_shape\",\"args\":{\"shape\":\"ellipse\",\"w\":200,\"h\":200,\"fill\":\"#FFFFFF\",\"id\":\"lyr_e11p5e0000\"}}]}" >"$work/mcpedit.out" || die "mcp edit failed"
 grep -q '"isError":true' "$work/mcpedit.out" && die "the MCP edit was refused: $(cat "$work/mcpedit.out")"
+mcp_image "{\"action\":\"edit\",\"image_id\":\"$mimg\",\"base_revision\":2,\"operations\":[{\"op\":\"layer.align\",\"args\":{\"layer_ids\":[\"lyr_e11p5e0000\"],\"to\":\"canvas\",\"horizontal\":\"right\",\"vertical\":\"top\"}}]}" >"$work/mcpalign.out" || die "mcp align failed"
+grep -q '"isError":true' "$work/mcpalign.out" && die "the MCP align was refused: $(cat "$work/mcpalign.out")"
 mcp_image "{\"action\":\"undo\",\"image_id\":\"$mimg\"}" >"$work/mcpundo.out" || die "mcp undo failed"
+grep -q '"isError":true' "$work/mcpundo.out" && die "the MCP undo was refused: $(cat "$work/mcpundo.out")"
+grep -q 'undo of r3' "$work/mcpundo.out" || die "the MCP undo did not undo the align: $(cat "$work/mcpundo.out")"
 mcp_image "{\"action\":\"export\",\"image_id\":\"$mimg\"}" >"$work/mcpexport.out" || die "mcp export failed"
 grep -q '"isError":true' "$work/mcpexport.out" && die "the MCP export failed: $(cat "$work/mcpexport.out")"
 grep -q 'exported img_' "$work/mcpexport.out" || die "the MCP export did not say it exported: $(cat "$work/mcpexport.out")"
