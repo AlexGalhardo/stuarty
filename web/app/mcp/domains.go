@@ -126,8 +126,10 @@ var toolDomains = map[string][]string{
 	"project_get": {command.DomainProject}, "project_trash": {command.DomainProject},
 	"project_item": {command.DomainProject},
 	"edit":         {command.DomainVideo, command.DomainImage}, "history": {command.DomainVideo, command.DomainImage},
-	"view": {command.DomainVideo}, "lint": {command.DomainVideo}, "job_start": {command.DomainVideo},
-	"job_get": {command.DomainVideo}, "job_cancel": {command.DomainVideo}, "template": {command.DomainVideo},
+	"view": {command.DomainVideo}, "lint": {command.DomainVideo},
+	// job_start also starts text.generate, the generation of the provider domain (SDD-016 section 10).
+	"job_start": {command.DomainVideo, command.DomainProvider},
+	"job_get":   {command.DomainVideo}, "job_cancel": {command.DomainVideo}, "template": {command.DomainVideo},
 	"media_import": {command.DomainAsset}, "media_inspect": {command.DomainAsset}, "font_import": {command.DomainAsset},
 	"image":   {command.DomainImage},
 	"library": {command.DomainMemory},

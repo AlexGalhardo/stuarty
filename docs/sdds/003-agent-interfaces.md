@@ -3382,7 +3382,7 @@ The tool list stays short while the product grows because a new domain adds **op
 
 `command_help` also takes the topic `export` (epic 35), which is not a domain: it answers with the export presets and codecs of this machine (`ExportPresetList`, a video operation), and takes no `name`. `export_batch` of `job_start` and the `preset` of `lint` are reached the same way, through the tools that already exist.
 
-A tool gets `domain` in the epic that registers the first non-video operation behind it, never earlier: every argument costs bytes of every `tools/list` (NFR-020). `lint`, `view`, `job_start`, `job_get` and `job_cancel` wait for such an operation. The `image` tool of §4.2 stays (the surface is frozen, §9.1); `edit` with `domain` `image` reaches the same `ImageEdit`, so an agent that learned one tool for timelines learns the same call for images.
+A tool gets `domain` in the epic that registers the first non-video operation behind it, never earlier: every argument costs bytes of every `tools/list` (NFR-020). `lint`, `view`, `job_get` and `job_cancel` wait for such an operation. `job_start` belongs to the `provider` domain too, with no `domain` argument: its `kind` already names the operation, and `text.generate` (epic 09, SDD-016) is a generation of that domain. The `image` tool of §4.2 stays (the surface is frozen, §9.1); `edit` with `domain` `image` reaches the same `ImageEdit`, so an agent that learned one tool for timelines learns the same call for images.
 
 **No new tool.** The catalogue is still the 20 tools of §4.1: no existing intent fits a new tool better than a `domain` on an existing one, so none is added. A later epic adds a tool only when no intent fits, and writes the reason in this section.
 
