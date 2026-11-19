@@ -39,7 +39,7 @@ A creator opens Stuarty and sees where everything is: one home with a sidebar th
 
 - [x] 1. Add the dashboard section to SDD-012 and the sidebar to the design system (structure, tokens, states). Verify: `task lint:md` exits 0.
 - [x] 2. Build `DashboardLayout` with the sidebar, the profile and the theme toggle. Verify: `task test:web` passes with the new component tests; `bun run check:contrast` passes.
-- [ ] 3. Add the section routes and their empty states, in both languages. Verify: `bun run check:i18n` and `bun run typecheck` pass.
+- [x] 3. Add the section routes and their empty states, in both languages. Verify: `bun run check:i18n` and `bun run typecheck` pass.
 - [ ] 4. Move the projects list and the settings into the new layout with redirects. Verify: the existing specs `web/e2e/specs/projects*.spec.ts` and `settings*.spec.ts` pass, updated where a selector moved.
 - [ ] 5. Add the way in and out of the editor. Verify: `web/e2e/specs/dashboard-navigation.spec.ts` (new) passes.
 - [ ] 6. Run the accessibility checks on the dashboard. Verify: the axe spec for the dashboard (`web/e2e/specs/a11y-dashboard.spec.ts`, new) reports no violation.
