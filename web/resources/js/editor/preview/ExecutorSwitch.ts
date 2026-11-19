@@ -1,11 +1,11 @@
 import type { ApiClient } from "../api/client";
+import { readPreviewExecutor } from "../state/prefs";
 import {
 	chooseExecutor,
 	type ExecutorChoice,
 	missingFeatures,
 	probeFeatures,
 	readSetting,
-	storedSetting,
 } from "./executorChoice";
 import { PixiExecutor } from "./PixiExecutor";
 import { RustExecutor } from "./RustExecutor";
@@ -173,7 +173,7 @@ export function createPreviewExecutor(
 	client: ApiClient,
 	sources: Sources,
 ): PreviewExecutor {
-	const setting = readSetting(window.location.search, storedSetting());
+	const setting = readSetting(window.location.search, readPreviewExecutor());
 	const missing = missingFeatures(
 		probeFeatures(window as unknown as Record<string, unknown>),
 	);

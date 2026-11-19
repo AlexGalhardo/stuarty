@@ -85,7 +85,7 @@ const R5_ALLOWLIST = [
 	"ui/TimeField.tsx",
 ];
 const STORAGE_NAMES = new Set(["localStorage", "sessionStorage", "indexedDB", "caches"]);
-const PREFS_KEYS = new Set(["theme", "vv.layout", "vv.timeDisplay", "vv.timeUnit", "vv.zoomByProject", "vv.keymap", "vv.shortcutsSeen", "vv.lang"]);
+const PREFS_KEYS = new Set(["theme", "vv.layout", "vv.timeDisplay", "vv.timeUnit", "vv.zoomByProject", "vv.keymap", "vv.shortcutsSeen", "vv.lang", "stuarty.preview.executor"]);
 const WRITE_FUNCTIONS = ["replaceDocument", "applyRevisionDiff"];
 
 const ASSIGNMENTS = new Set<SyntaxKind>([
