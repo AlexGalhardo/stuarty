@@ -1824,6 +1824,9 @@ trashed prj_2x5c8d1f4g; restore it with project_trash restore=true
                 "keyframe.set",
                 "keyframe.remove",
                 "keyframe.clear",
+                "keyframe.set_easing",
+                "animation.apply_preset",
+                "animation.list_presets",
                 "slot.mark",
                 "slot.unmark",
                 "slot.fill",
@@ -1977,7 +1980,7 @@ The result carries `isError: true` and no `structuredContent`; `content[0]` is t
 ```json
 {
   "name":"command_help",
-  "description":"Describe edit operations. Without name: one line each. With name (e.g. item.split): description, args schema, example, error codes. Read it before using an unfamiliar operation. domain=export: the export presets and the codecs this machine writes.",
+  "description":"Describe edit operations. Without name: one line each. With name (e.g. item.split): description, args schema, example, error codes. Read it before using an unfamiliar operation. domain=export: presets and codecs.",
   "inputSchema":{
     "type":"object",
     "properties":{
@@ -2535,7 +2538,7 @@ The `image` block follows the text block: `{"type": "image", "mimeType": "image/
 ```json
 {
   "name": "lint",
-  "description": "Check a project for problems: code, severity, item, message, hint. Errors block export; run after edits, before export. Runs every rule. preset (see command_help domain=export) checks the fit to that export preset instead, over start..end.",
+  "description": "Check a project for problems: code, severity, item, message, hint. Errors block export; run after edits, before export. Runs every rule, unlike an edit's lint block (lint_scope fast). preset: fit to an export preset over start..end.",
   "inputSchema": {
     "type": "object",
     "properties": {
@@ -2633,7 +2636,7 @@ Example (the text of §3.6): `{"name": "lint", "arguments": {"project_id": "prj_
 ```json
 {
   "name": "job_start",
-  "description": "Start long work. export renders a workspace file: args {start?, end?, format?, at? (the png frame), preset?, codec?}. export_batch runs args.items [{preset, format, codec, start, end}] in turn. transcribe: args {asset_id, language?, model?}. Poll job_get.",
+  "description": "Start long work. export renders a workspace file: args {start?, end?, format?, at? (the png frame), preset?, codec?}. export_batch runs args.items (export args) in turn. transcribe: args {asset_id, language?, model?}. Poll job_get.",
   "inputSchema": {
     "type": "object",
     "properties": {
@@ -2684,10 +2687,7 @@ Example (the text of §3.6): `{"name": "lint", "arguments": {"project_id": "prj_
             ]
           },
           "items": {
-            "type": "array",
-            "items": {
-              "type": "object"
-            }
+            "type": "array"
           }
         }
       },
@@ -3996,7 +3996,7 @@ Every `Service` operation has an encoding on each surface. The table is the proo
 
 - **E-1.** `MediaTrash`, `MediaRestore`, `Doctor` and `Events` have no MCP tool (SDD-000 §1, which keeps the catalogue at 15). RF-104 says every operation is on every surface; SDD-000 wins and §10 issue I-3 asks for RF-104 to be amended.
 - **E-2.** `OpenFile` is a transport helper, not an operation an agent calls: MCP and the CLI return a path (`path` in `ViewResult` and `ExportResult`), HTTP serves the bytes.
-- **E-3.** `PlanWindow`, `SnapPoints`, `FontList`, `AuditList`, `ProjectBundleExport`, `ProjectBundleImport`, `ProjectOtioExport` and `ProjectOtioImport` serve the UI, the administrator or a file workflow, not an agent editing a project: HTTP, and the CLI command where the table names one, but no MCP tool (SDD-000 §1). An agent that needs the `format` of an export uses the `format` member of `job_start` `args`.
+- **E-3.** `ImageFrame`, `ImageHistory` and `ImageFile` (the reads of the image editor screen, SDD-012 §24.3) are in the same case. `PlanWindow`, `SnapPoints`, `FontList`, `AuditList`, `ProjectBundleExport`, `ProjectBundleImport`, `ProjectOtioExport` and `ProjectOtioImport` serve the UI, the administrator or a file workflow, not an agent editing a project: HTTP, and the CLI command where the table names one, but no MCP tool (SDD-000 §1). An agent that needs the `format` of an export uses the `format` member of `job_start` `args`.
 - **E-4.** `TrashEmpty`, `KeyCreate`, `KeyList`, `KeyRevoke` and `AssetList` are HTTP only, with the callers SDD-007 §5.3 allows. `TrashEmpty` is not an MCP tool and not a CLI command (RF-131, ADR-0020 item 2): no agent surface can reach the one operation that deletes data for good.
 - **E-5.** `ConnectionCreate`, `ConnectionRemove` and `ConnectionTest` have a CLI command and a route and no MCP tool: creating takes a credential, which an agent must not handle (RF-137), and testing makes a request to a destination. The tool `connection` lists and reads only (SDD-014 section 10, ADR-0043 item 3).
 - **E-6.** `ApprovalDecide`, `ApprovalRuleSet`, `ApprovalRuleRemove` and `CostCeilingSet` have a CLI command and a route and no MCP tool: a person decides (RF-136, ADR-0032 item 4). The commands exist so that an agent that tries gets `E_PRIVILEGED_SESSION` and its hint; with the local token or a key they always fail, on HTTP, in the CLI and in process, and no tool exists to call. `ApprovalList`, `ApprovalGet`, `ApprovalRuleList` and `CostSummary` are read operations with a command and a route and no tool, because the 18 definitions already use 19,320 of the 19,500 bytes of NFR-020 and a tool of the queue needs about 540: an agent learns the state of its own request from `job_get` (`waiting_approval`, `approval_id`) and reads the queue with `approval:list` or `GET /approvals` (SDD-015 section 10). The epic that registers the first kind that needs approval adds it to the `kind` enum of `job_start`, and `waiting_approval` to the `state` of the `outputSchema` of `job_start` and `job_get`, out of the budget of epic 13.

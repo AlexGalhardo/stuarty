@@ -682,6 +682,29 @@ The types named in the tables of the operations. The arguments of each editing c
 | `text` | `string` | no |  |
 | `width` | `integer` | no |  |
 
+### ImageHistoryEntry
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `actor` | `string` | no |  |
+| `at` | `string (date-time)` | no |  |
+| `changes` | `integer` | no |  |
+| `kind` | `string` | no |  |
+| `mine` | `boolean` | no |  |
+| `ops` | array of `string` | no |  |
+| `revision` | `integer (int64)` | no |  |
+| `skipped` | `integer` | no |  |
+| `undo_of` | `integer (int64)` or `null` | no |  |
+| `undone_by` | `integer (int64)` or `null` | no |  |
+
+### ImageHistoryResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `entries` | array of [`ImageHistoryEntry`](/docs/api/schemas#imagehistoryentry) | no |  |
+| `image_id` | `string` | no |  |
+| `revision` | `integer (int64)` | no |  |
+
 ### ImageListResult
 
 | Name | Type | Required | Description |
@@ -916,7 +939,8 @@ The types named in the tables of the operations. The arguments of each editing c
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
-| `easing` | `linear`, `ease_in`, `ease_out`, `ease_in_out`, `hold` | no |  |
+| `bezier` | array of `number (double)` | no |  |
+| `easing` | `linear`, `ease_in`, `ease_out`, `ease_in_out`, `hold`, `bezier` | no |  |
 | `t` | `integer` | no |  |
 | `value` | `number (double)` | no |  |
 
@@ -1244,7 +1268,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `args` | map of `any` | no | The arguments of the command. |
-| `op` | `string`, one of 73 values | yes | A command name, as listed by GET /commands.. min length 1 |
+| `op` | `string`, one of 76 values | yes | A command name, as listed by GET /commands.. min length 1 |
 
 ### OtioLost
 

@@ -10,7 +10,7 @@ metadata:
 
 Edit video with commands: the CLI `stuarty` or the MCP server (`stuarty mcp`). Output is text; `--json` is JSON.
 
-Check with `project:list`. Workspace: `~/.stuarty` or `$STUARTY_HOME`; `serve` shares it with the browser.
+Workspace: `~/.stuarty` or `$STUARTY_HOME`; `serve` shares it with the browser.
 
 ## The loop
 
@@ -33,13 +33,14 @@ Check with `project:list`. Workspace: `~/.stuarty` or `$STUARTY_HOME`; `serve` s
 
 `edit` operations. `command_help [name]` shows arguments. `asset.remove` and `font.*` need the media scope.
 
+- `animation`: apply_preset, list_presets
 - `asset`: remove
 - `audio`: add, duck, mark_beats
 - `caption`: add, edit_word, from_transcript, import_subtitles, merge, retime_from_clip, set_breaks, set_style, set_words, split
 - `clip`: add, remove_silences, set_blend, set_blur, set_chroma_key, set_color, set_effects, set_filter, set_flip, set_framing, set_mask, set_outline, set_shadow, set_speed
 - `font`: add, remove
 - `item`: crossfade, delete, duplicate, extract_audio, freeze_frame, link, move, paste_attributes, rename, repeat, set_audio, set_enabled, set_transform, set_transition, slip, split, trim, unlink
-- `keyframe`: clear, remove, set
+- `keyframe`: clear, remove, set, set_easing
 - `marker`: add, remove, set
 - `project`: rename
 - `settings`: reframe, set, set_fps
@@ -156,7 +157,7 @@ Lint rules (`!` blocks export):
 
 ## Errors and recovery
 
-Exit codes: 0 success; 1 failure, do not retry; 2 retryable or a `--wait` timeout. `undo` reverts your last step.
+Exit codes: 0 success; 1 failure, do not retry; 2 retryable or a `--wait` timeout.
 
 - `E_VALIDATION`: fix the argument
 - `E_INVALID_TIME`: add a unit: 2s, 60f

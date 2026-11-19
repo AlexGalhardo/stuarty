@@ -142,6 +142,9 @@
         "images.get",
         "images.edit",
         "images.export",
+        "images.file",
+        "images.frame",
+        "images.history",
         "images.redo",
         "images.undo"
       ]
@@ -217,6 +220,8 @@
       "library"
     ],
     "operations": [
+      "animation.apply_preset",
+      "animation.list_presets",
       "asset.remove",
       "audio.add",
       "audio.duck",
@@ -268,6 +273,7 @@
       "keyframe.clear",
       "keyframe.remove",
       "keyframe.set",
+      "keyframe.set_easing",
       "marker.add",
       "marker.remove",
       "marker.set",

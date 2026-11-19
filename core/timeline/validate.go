@@ -993,6 +993,15 @@ func (v *validator) keyframes(path, key string, it Item) {
 			}
 			switch k.Easing {
 			case "linear", "ease_in", "ease_out", "ease_in_out", "hold":
+				if len(k.Bezier) > 0 {
+					v.add(VKeyframes, kp+".bezier", key, "bezier needs the easing %q", EasingBezier)
+				}
+			case EasingBezier:
+				if !BezierValid(k.Bezier) {
+					v.add(VKeyframes, kp+".bezier", key,
+						"bezier must be four numbers, x1 and x2 from 0 to 1, y1 and y2 from %v to %v",
+						BezierMinY, BezierMaxY)
+				}
 			default:
 				v.add(VKeyframes, kp+".easing", key, "unknown easing %q", k.Easing)
 			}

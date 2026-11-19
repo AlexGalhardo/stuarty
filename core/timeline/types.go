@@ -396,9 +396,14 @@ type Keyframes map[string][]Keyframe
 type Keyframe struct {
 	T      int     `json:"t"      min:"0"`
 	Value  float64 `json:"value"`
-	Easing string  `json:"easing"         default:"linear" enum:"linear,ease_in,ease_out,ease_in_out,hold"`
-	Extra  Extra   `json:"-"`
+	Easing string  `json:"easing"         default:"linear" enum:"linear,ease_in,ease_out,ease_in_out,hold,bezier"`
+	// Bezier is [x1, y1, x2, y2], present exactly when Easing is "bezier" (SDD-001 §3.8).
+	Bezier []float64 `json:"bezier,omitempty"`
+	Extra  Extra     `json:"-"`
 }
+
+// EasingBezier is the easing of a keyframe whose segment follows its Bezier curve.
+const EasingBezier = "bezier"
 
 // TextStyle is the style of a text item; every field is set or not (cascade, SDD-001 §3.7).
 type TextStyle struct {

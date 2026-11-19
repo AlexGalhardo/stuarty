@@ -141,6 +141,10 @@ var parity = []row{
 	{method: "ExportPresetList", tool: "command_help", command: "export:presets", route: "GET /export-presets"},
 	{method: "ExportCheck", tool: "lint", command: "export:check", route: "GET /projects/{}/export-check"},
 	{method: "ExportBatch", tool: "job_start", command: "export:batch", route: "POST /projects/{}/export-batches"},
+	// The reads of the image editor screen (SDD-012 section 24.3): HTTP only, an agent has the text view.
+	{method: "ImageFrame", route: "GET /images/{}/frame", httpOnly: true},
+	{method: "ImageHistory", route: "GET /images/{}/history", httpOnly: true},
+	{method: "ImageFile", route: "GET /images/{}/exports/{}", httpOnly: true},
 	// The approval queue (SDD-015 section 10): no MCP tool, the budget of the tool list leaves no room
 	// for one; deciding, writing a rule and setting a ceiling are for a person, and their commands
 	// always fail for an agent.
