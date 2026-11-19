@@ -1,5 +1,6 @@
 import type { useT } from "@/lib/i18n";
 import type { EditorRuntime } from "../state/runtime";
+import { startTour } from "../state/tourStore";
 import type { Actions } from "./actions";
 import {
 	pasteFromClipboard,
@@ -236,6 +237,7 @@ export const MENUS: readonly MenuDef[] = [
 				labelKey: "ui.editor.menu.shortcuts",
 				row: "cheat_sheet",
 			},
+			{ id: "surface.tour", labelKey: "ui.editor.menu.tour" },
 		],
 	},
 ];
@@ -293,6 +295,7 @@ const MENU_ACTIONS: Readonly<Record<string, (deps: MenuDeps) => void>> = {
 	"surface.toggle_panel.history": ({ runtime }) =>
 		runtime.uiWriter.toggleLeftTab("history"),
 	"surface.cheat_sheet": () => requestSurface("cheat_sheet"),
+	"surface.tour": () => startTour(),
 };
 
 // The ids the menu can run; a native menu sends only these.

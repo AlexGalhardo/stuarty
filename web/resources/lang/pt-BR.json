@@ -844,7 +844,8 @@
         "add_video_track": "Adicionar faixa de vídeo",
         "add_audio_track": "Adicionar faixa de áudio",
         "marker": "Marcador no cabeçote",
-        "shortcuts": "Atalhos de teclado"
+        "shortcuts": "Atalhos de teclado",
+        "tour": "Fazer o tour"
       },
       "edit": {
         "label": "Edição",
@@ -2083,16 +2084,36 @@
         "undone": "Desfeito",
         "redone": "Refeito"
       },
-      "tips": {
-        "title": "Primeiros passos",
-        "items": {
-          "library": "Cole o caminho de um arquivo de mídia na biblioteca e pressione Importar.",
-          "library_desktop": "Escolha arquivos na biblioteca, solte-os ali ou cole um caminho e pressione Importar.",
-          "palette": "Pressione Ctrl+K para buscar todos os comandos.",
-          "shortcuts": "Pressione ? para ver e alterar os atalhos de teclado."
-        },
-        "dismiss": "Entendi",
-        "show_again": "Mostrar as dicas de novo"
+      "tour": {
+        "step": "Passo {current} de {total}",
+        "back": "Voltar",
+        "next": "Avançar",
+        "done": "Concluir",
+        "skip": "Pular o tour",
+        "replay": "Rever o tour",
+        "steps": {
+          "library": {
+            "title": "Sua mídia",
+            "body": "Seus arquivos ficam aqui. Cole o caminho de um arquivo de mídia e pressione Importar, ou pressione {import} para ir ao campo de importação."
+          },
+          "library_desktop": "Seus arquivos ficam aqui. Escolha arquivos, solte-os aqui ou cole um caminho e pressione Importar. Pressione {import} para começar.",
+          "preview": {
+            "title": "Prévia",
+            "body": "Assista ao seu vídeo aqui. Pressione {play} para reproduzir ou pausar."
+          },
+          "timeline": {
+            "title": "Linha do tempo",
+            "body": "Organize os clipes nas trilhas. Pressione {split} para dividir na posição de reprodução e {undo} para desfazer."
+          },
+          "inspector": {
+            "title": "Inspetor",
+            "body": "Selecione um item para mudar sua aparência, som e velocidade. Toda alteração é salva ao ser feita."
+          },
+          "export": {
+            "title": "Exportar",
+            "body": "Quando estiver satisfeito, exporte o vídeo aqui ({export}). Pressione {shortcuts} para ver todos os atalhos e {palette} para buscar todos os comandos."
+          }
+        }
       },
       "repeat": {
         "title": "Repetir item",

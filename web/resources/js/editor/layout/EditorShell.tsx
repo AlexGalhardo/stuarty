@@ -21,12 +21,12 @@ import RepeatDialog from "../timeline/RepeatDialog";
 import Timeline from "../timeline/Timeline";
 import { useShortcuts } from "../timeline/useShortcuts";
 import { FailureView } from "../ui/FailureView";
-import FirstRunTips from "./FirstRunTips";
 import InUseHost from "./InUseHost";
 import LeftPanel from "./LeftPanel";
 import PlayerRatioSelect from "./PlayerRatioSelect";
 import TopBar from "./TopBar";
 import TrashedBanner from "./TrashedBanner";
+import Tour from "./tour/Tour";
 import { useDesktopMenu } from "./useDesktopMenu";
 import { usePanelShortcuts } from "./usePanelShortcuts";
 
@@ -124,7 +124,6 @@ export default function EditorShell({
 						onCaptionOpenChange={setCaptionOpen}
 					/>
 				</section>
-				<FirstRunTips />
 				{status === "failed" && (
 					<div
 						role="alert"
@@ -183,6 +182,7 @@ export default function EditorShell({
 			<LiveRegion />
 			<InUseHost />
 			<RepeatDialog />
+			<Tour />
 		</div>
 	);
 }

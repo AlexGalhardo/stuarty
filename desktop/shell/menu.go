@@ -45,6 +45,7 @@ const (
 	TextMenuPanelInspect = "menu_panel_inspector"
 	TextMenuPanelHistory = "menu_panel_history"
 	TextMenuShortcuts    = "menu_shortcuts"
+	TextMenuTour         = "menu_tour"
 )
 
 // MenuItem is one native item: the action the page runs, the catalogue key of
@@ -112,6 +113,7 @@ var EditorMenus = []MenuGroup{
 	}},
 	{Name: "help", Items: []MenuItem{
 		{Action: "surface.cheat_sheet", Text: TextMenuShortcuts},
+		{Action: "surface.tour", Text: TextMenuTour},
 	}},
 }
 
