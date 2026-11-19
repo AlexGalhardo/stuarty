@@ -1088,6 +1088,9 @@
           "add": {
             "title": "Add clip"
           },
+          "add_composition": {
+            "title": "Add a timeline as a clip"
+          },
           "set_blur": {
             "title": "Set clip blur"
           },

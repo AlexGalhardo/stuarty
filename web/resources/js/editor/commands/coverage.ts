@@ -212,6 +212,7 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 		{ kind: "gesture", action: "library.drag" },
 		palette,
 	],
+	"clip.add_composition": [palette],
 	"clip.remove_silences": [
 		{ kind: "inspector", action: "inspector.silences" },
 		palette,

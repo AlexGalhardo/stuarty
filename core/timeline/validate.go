@@ -31,6 +31,7 @@ const (
 	VSlot          = "V_SLOT"
 	VColorRef      = "V_COLOR_REF"
 	VLimits        = "V_LIMITS"
+	VComposition   = "V_COMPOSITION"
 )
 
 var (
@@ -362,9 +363,9 @@ func (v *validator) item(key string, it Item) {
 		v.add(VID, path+".id", key, "map key %q differs from id %q", key, it.ID)
 	}
 	switch it.Type {
-	case ItemClip, ItemAudio, ItemText, ItemCaption, ItemShape:
+	case ItemClip, ItemAudio, ItemText, ItemCaption, ItemShape, ItemComposition:
 	default:
-		v.add(VShape, path+".type", key, "type must be clip, audio, text, caption or shape")
+		v.add(VShape, path+".type", key, "type must be clip, audio, text, caption, shape or composition")
 		return
 	}
 	if runes(it.Name) > 120 {
@@ -420,6 +421,8 @@ func (v *validator) item(key string, it Item) {
 		v.caption(path, key, it)
 	case ItemShape:
 		v.shape(path, key, it)
+	case ItemComposition:
+		v.composition(path, key, it)
 	}
 	v.transitions(path, key, it)
 	v.keyframes(path, key, it)
@@ -428,20 +431,52 @@ func (v *validator) item(key string, it Item) {
 	v.effects(path, key, it)
 }
 
-// itemFieldsForType reports fields that belong to another item type.
-func (v *validator) itemFieldsForType(path, key string, it Item) {
-	bad := func(name string) { v.add(VShape, path+"."+name, key, "%s does not apply to %s items", name, it.Type) }
+// clipGrading says the item carries a field of the framing and colour work that only a clip has.
+func clipGrading(it *Item) bool {
+	return it.Crop != nil || it.Lut != nil || it.Wheels != nil || it.Curves != nil || len(it.Hsl) > 0 ||
+		it.Brightness != 0 || it.Temperature != 0 || it.Tint != 0 || it.Hue != 0
+}
+
+// compositionGrading says a composition carries a colour field its picture cannot have: contrast and
+// saturation are 1 by default, and a chroma key needs pixels of a source.
+func compositionGrading(it *Item) bool {
+	return it.Contrast != 1 || it.Saturation != 1 || it.ChromaKey != nil
+}
+
+// compositionExtras says a composition carries what it may not have: an asset and the audio shaping of one.
+func compositionExtras(it *Item) bool {
+	return it.Asset != "" || it.Denoise != 0 || it.Voice != "" || len(it.SpeedCurve) > 0 || it.Reverse
+}
+
+// mediaFieldsForType reports the media fields of an item that is not a clip, an audio item or a composition,
+// and what a composition has no use for.
+func mediaFieldsForType(bad func(string), it *Item) {
 	media := it.Type == ItemClip || it.Type == ItemAudio
-	if !media &&
+	comp := it.Type == ItemComposition
+	if !media && !comp &&
 		(it.Asset != "" || it.SourceIn != 0 || it.FadeIn != 0 || it.FadeOut != 0 || it.Denoise != 0 || it.Voice != "" ||
 			len(it.SpeedCurve) > 0 || it.Reverse || len(it.Processors) > 0) {
 		bad("asset")
 	}
-	if it.Type != ItemClip &&
-		(it.Crop != nil || it.Shadow != nil || it.Outline != nil || it.Lut != nil || it.Brightness != 0 || it.Temperature != 0 || it.Tint != 0 || it.Hue != 0 || it.AudioMuted ||
-			len(it.Hsl) > 0 || it.Wheels != nil || it.Curves != nil) {
+	// A composition plays its nested timeline: it keeps source_in and the fades, and has no asset of its own.
+	if comp && compositionExtras(it) {
+		bad("asset")
+	}
+	if !comp && it.Timeline != "" {
+		bad("timeline")
+	}
+	if it.Type != ItemClip && (clipGrading(it) || (comp && compositionGrading(it))) {
 		bad("crop")
 	}
+	if it.Type != ItemClip && !comp && (it.Shadow != nil || it.Outline != nil || it.AudioMuted) {
+		bad("shadow")
+	}
+}
+
+// itemFieldsForType reports fields that belong to another item type.
+func (v *validator) itemFieldsForType(path, key string, it Item) {
+	bad := func(name string) { v.add(VShape, path+"."+name, key, "%s does not apply to %s items", name, it.Type) }
+	mediaFieldsForType(bad, &it)
 	if it.Freeze &&
 		(it.Type != ItemClip || it.Speed != (Rational{Num: 1, Den: 1}) || len(it.SpeedCurve) > 0 || it.Reverse) {
 		bad("freeze")
@@ -587,6 +622,41 @@ func (v *validator) media(path, key string, it Item) {
 			)
 			v.related(it.Asset)
 		}
+	}
+}
+
+// CompositionIDOK is the form check of the nested timeline id of a composition item.
+func CompositionIDOK(id string) bool { return ValidID(PrefixProject, id) }
+
+// composition checks what one document can say about a composition item (SDD-001 §3.5.1): the nested
+// timeline is named well and is not the document itself, and the fields it keeps have valid values. That
+// the timeline is in the project, that there is no cycle and that the depth is bounded are checked by the
+// command core and the service, which know the other documents.
+func (v *validator) composition(path, key string, it Item) {
+	if !inRange(it.Volume, 0, 4) {
+		v.add(VShape, path+".volume", key, "volume must be between 0 and 4")
+	}
+	if it.SourceIn < 0 {
+		v.add(VShape, path+".source_in", key, "source_in cannot be negative")
+	}
+	if it.FadeIn < 0 || it.FadeOut < 0 {
+		v.add(VShape, path+".fade_in", key, "fades cannot be negative")
+	} else if it.FadeIn+it.FadeOut > it.Duration {
+		v.add(VFades, path, key, "fade_in %d plus fade_out %d exceeds duration %d", it.FadeIn, it.FadeOut, it.Duration)
+	}
+	switch {
+	case it.Timeline == "":
+		v.add(VShape, path+".timeline", key, "a composition item needs a timeline")
+	case !CompositionIDOK(it.Timeline):
+		v.add(VID, path+".timeline", key, "%q is not a valid timeline identifier", it.Timeline)
+	case it.Timeline == v.doc.ID:
+		v.add(VComposition, path+".timeline", key, "a timeline cannot contain itself")
+	}
+	if it.Speed != (Rational{Num: 1, Den: 1}) {
+		v.add(VComposition, path+".speed", key, "a composition plays at speed 1/1")
+	}
+	if it.Freeze {
+		v.add(VComposition, path+".freeze", key, "a composition cannot be a freeze frame")
 	}
 }
 
@@ -962,7 +1032,7 @@ func (v *validator) keyframeTarget(pp, key, prop string, it Item) {
 		v.add(VKeyframes, pp, key, "%s applies to clips", prop)
 	}
 	switch {
-	case prop == "volume" && it.Type != ItemClip && it.Type != ItemAudio:
+	case prop == "volume" && it.Type != ItemClip && it.Type != ItemAudio && it.Type != ItemComposition:
 		v.add(VKeyframes, pp, key, "volume applies to items with audio")
 	case prop != "volume" && it.Type == ItemAudio:
 		v.add(VKeyframes, pp, key, "%s applies to visual items", prop)
