@@ -15,7 +15,7 @@ var processorErrors = []string{CodeValidation, CodeNotFound, CodeTypeMismatch}
 func init() {
 	Register(Define(Spec{
 		Name:    "audio.processor_add",
-		Summary: "Add processor",
+		Summary: "Add",
 		Description: "Adds an audio processor to the chain of a clip or audio item (item_id) or of a track (track_id). " +
 			"kind is eq, compressor, limiter, gate, deesser or noise_reduction; params are the values that differ from " +
 			"the default of the kind (units and ranges in SDD-004 7.1). The chain runs in order, so index matters; a " +
@@ -26,7 +26,7 @@ func init() {
 	}, applyProcessorAdd))
 	Register(Define(Spec{
 		Name:    "audio.processor_set",
-		Summary: "Set processor",
+		Summary: "Set",
 		Description: "Changes one processor of the chain of an item or a track. index is the 0-based place in the chain. " +
 			"params are merged with the current ones; enabled false keeps the processor but skips it.",
 		Example: `{"track_id": "trk_m1n2p3q4r5", "index": 0, "enabled": false}`,
