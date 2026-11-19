@@ -1107,6 +1107,9 @@
           "set_framing": {
             "title": "Set clip framing"
           },
+          "replace_media": {
+            "title": "Replace the media of a clip"
+          },
           "set_speed": {
             "title": "Set clip speed"
           }
@@ -1293,7 +1296,8 @@
         "L_SLOT_UNFILLED": "Template slot not filled",
         "L_AUDIO_CLIP": "Audio clipping",
         "L_LOUDNESS": "Loudness off target",
-        "L_DURATION_LIMIT": "Over the duration limit"
+        "L_DURATION_LIMIT": "Over the duration limit",
+        "L_ALPHA_MISSING": "Transparency declared but missing"
       },
       "shortcuts": {
         "title": "Keyboard shortcuts",

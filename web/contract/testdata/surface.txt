@@ -69,6 +69,9 @@ command memory:list
 command memory:remove
 command memory:show
 command memory:write
+command motion:brief
+command motion:check
+command motion:replace
 command otio:export
 command otio:import
 command project:create
@@ -175,6 +178,8 @@ route GET /projects/{}/media/{}/peaks
 route GET /projects/{}/media/{}/proxy
 route GET /projects/{}/media/{}/strip
 route GET /projects/{}/media/{}/thumbnail
+route GET /projects/{}/motion/brief
+route GET /projects/{}/motion/check
 route GET /projects/{}/otio
 route GET /projects/{}/plan
 route GET /projects/{}/sheet
@@ -227,6 +232,7 @@ route POST /projects/{}/jobs
 route POST /projects/{}/media
 route POST /projects/{}/media/{}/restore
 route POST /projects/{}/media/{}/trash
+route POST /projects/{}/motion/replace
 route POST /projects/{}/otio
 route POST /projects/{}/redo
 route POST /projects/{}/restore

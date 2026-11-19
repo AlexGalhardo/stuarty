@@ -30,6 +30,9 @@ var OperationDomains = map[string]string{
 	"ImageExport": command.DomainImage, "ImageFrame": command.DomainImage, "ImageHistory": command.DomainImage,
 	"ImageFile": command.DomainImage,
 
+	// The hand-off from an external motion engine (epic 33) works on the clips of a timeline.
+	"MotionBrief": command.DomainVideo, "MotionCheck": command.DomainVideo, "MotionReplace": command.DomainVideo,
+
 	"MediaImport": command.DomainAsset, "MediaInspect": command.DomainAsset, "MediaList": command.DomainAsset,
 	"MediaTrash": command.DomainAsset, "MediaRestore": command.DomainAsset, "AssetList": command.DomainAsset,
 	"FontImport": command.DomainAsset, "FontList": command.DomainAsset,

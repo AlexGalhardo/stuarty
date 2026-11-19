@@ -73,4 +73,9 @@ var Provenance = map[string]string{
 	"asset.Origin.Source":             SourceMetadata,
 	"asset.Origin.Prompt":             SourceMetadata,
 	"asset.Origin.RightsNote":         SourceMetadata,
+
+	// the hand-off from an external motion engine (SDD-011 section 15): the words of the captions in the range
+	"service.MotionCaption.Text":          SourceProjectText,
+	"service.MotionCheckResult.AssetName": SourceAssetName,
+	"service.RenderOffer.Name":            SourceAssetName,
 }
