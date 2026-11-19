@@ -306,6 +306,26 @@ var Endpoints = []Endpoint{
 		Service: "BrandKitSet", Status: 200, Summary: "Replace the brand kit",
 	},
 	{
+		ID: "connections.list", Method: http.MethodGet, Path: "/connections", Scope: service.ScopeRead,
+		Service: "ConnectionList", Status: 200, Summary: "List the destinations the user connected (never a secret)",
+	},
+	{
+		ID: "connections.get", Method: http.MethodGet, Path: "/connections/{id}", Scope: service.ScopeRead,
+		Service: "ConnectionGet", Status: 200, Summary: "Read one connection (never a secret)",
+	},
+	{
+		ID: "connections.create", Method: http.MethodPost, Path: "/connections", Scope: service.ScopeAdmin,
+		Service: "ConnectionCreate", Status: 201, Summary: "Connect a destination; the secret goes into the vault",
+	},
+	{
+		ID: "connections.remove", Method: http.MethodDelete, Path: "/connections/{id}", Scope: service.ScopeAdmin,
+		Service: "ConnectionRemove", Status: 200, Summary: "Remove a connection and its credential",
+	},
+	{
+		ID: "connections.test", Method: http.MethodPost, Path: "/connections/{id}/test", Scope: service.ScopeAdmin,
+		Service: "ConnectionTest", Status: 200, Summary: "Make one request through a connection",
+	},
+	{
 		ID: "audit.list", Method: http.MethodGet, Path: "/audit", Scope: service.ScopeAdmin,
 		Service: "AuditList", Status: 200, Summary: "List the audit table",
 	},
@@ -446,6 +466,35 @@ var Endpoints = []Endpoint{
 	{
 		ID: "auth.logout", Method: http.MethodPost, Path: "/auth/logout", Root: true, Status: 200,
 		Summary: "End the browser session (network mode)",
+	},
+	// The image documents of SDD-021.
+	{
+		ID: "images.create", Method: http.MethodPost, Path: "/images", Scope: service.ScopeEdit,
+		Service: "ImageCreate", Status: 200, Summary: "Create an image document, blank or from a template",
+	},
+	{
+		ID: "images.list", Method: http.MethodGet, Path: "/images", Scope: service.ScopeRead,
+		Service: "ImageList", Status: 200, Summary: "List the image documents and templates",
+	},
+	{
+		ID: "images.get", Method: http.MethodGet, Path: "/images/{id}", Scope: service.ScopeRead,
+		Service: "ImageDescribe", Status: 200, Summary: "Describe an image document: layers, findings and text view",
+	},
+	{
+		ID: "images.edit", Method: http.MethodPost, Path: "/images/{id}/edit", Scope: service.ScopeEdit,
+		Service: "ImageEdit", Status: 200, Summary: "Apply a batch of image operations",
+	},
+	{
+		ID: "images.undo", Method: http.MethodPost, Path: "/images/{id}/undo", Scope: service.ScopeEdit,
+		Service: "ImageUndo", Status: 200, Summary: "Undo the latest step of the caller on an image",
+	},
+	{
+		ID: "images.redo", Method: http.MethodPost, Path: "/images/{id}/redo", Scope: service.ScopeEdit,
+		Service: "ImageRedo", Status: 200, Summary: "Redo the latest undone step of the caller on an image",
+	},
+	{
+		ID: "images.export", Method: http.MethodPost, Path: "/images/{id}/export", Scope: service.ScopeEdit,
+		Service: "ImageExport", Status: 200, Summary: "Export an image document to a PNG, JPEG or WebP file",
 	},
 }
 

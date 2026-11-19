@@ -1,0 +1,8 @@
+{
+  "args": {
+    "h": 10,
+    "shape": "star",
+    "w": 10
+  },
+  "op": "layer.add_shape"
+}

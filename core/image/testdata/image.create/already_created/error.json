@@ -1,0 +1,7 @@
+{
+  "code": "E_INVALID_STATE",
+  "hint": "Change the size with canvas.resize.",
+  "message": "The document already has a canvas of 1280x720.",
+  "op_index": 0,
+  "retryable": false
+}

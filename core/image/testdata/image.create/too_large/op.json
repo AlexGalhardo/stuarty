@@ -1,0 +1,7 @@
+{
+  "args": {
+    "height": 10,
+    "width": 5000
+  },
+  "op": "image.create"
+}

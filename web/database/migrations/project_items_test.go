@@ -147,7 +147,7 @@ func upgrade(t *testing.T, db *database.DB) *schema.Migrator {
 		t.Fatal(err)
 	}
 
-	if !slices.Contains(ran, "20261119100000_project_items") {
+	if !slices.Contains(ran, "20261119120000_project_items") {
 		t.Fatalf("the migration did not run: %v", ran)
 	}
 
@@ -334,7 +334,7 @@ func TestProjectItemsMigrationDown(t *testing.T) {
 			)
 
 			rolled, err := m.Rollback(ctx, 1)
-			if err != nil || len(rolled) != 1 || rolled[0] != "20261119100000_project_items" {
+			if err != nil || len(rolled) != 1 || rolled[0] != "20261119120000_project_items" {
 				t.Fatalf("Rollback = %v, %v", rolled, err)
 			}
 

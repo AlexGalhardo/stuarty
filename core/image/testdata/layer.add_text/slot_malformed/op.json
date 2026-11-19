@@ -1,0 +1,7 @@
+{
+  "args": {
+    "slot": "Title Slot",
+    "text": "x"
+  },
+  "op": "layer.add_text"
+}

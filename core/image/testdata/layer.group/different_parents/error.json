@@ -1,0 +1,8 @@
+{
+  "code": "E_INVALID_STATE",
+  "hint": "Group only layers that share one parent; move them together first with layer.move.",
+  "message": "Layer lyr_ffffffffff is not in the same group as lyr_cccccccccc.",
+  "op_index": 0,
+  "path": "args.layer_ids[1]",
+  "retryable": false
+}

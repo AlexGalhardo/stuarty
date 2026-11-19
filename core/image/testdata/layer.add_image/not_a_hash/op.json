@@ -1,0 +1,6 @@
+{
+  "args": {
+    "asset": "face.png"
+  },
+  "op": "layer.add_image"
+}

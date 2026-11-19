@@ -3,7 +3,9 @@ package mcp
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"slices"
+	"strings"
 
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/service"
@@ -31,6 +33,8 @@ func (a *adapter) handlers() map[string]callFunc {
 		"template":       template,
 		"view":           view,
 		"font_import":    fontImport,
+		"connection":     connection,
+		"image":          imageTool,
 		"project_item":   projectItem,
 	}
 }
@@ -214,13 +218,14 @@ func edit(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolO
 
 func commandHelp(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolOutput, error) {
 	in, err := decode[struct {
-		Name string `json:"name"`
+		Name   string `json:"name"`
+		Domain string `json:"domain"`
 	}](raw)
 	if err != nil {
 		return nil, err
 	}
 
-	res, err := svc.CommandHelp(ctx, service.CommandHelpRequest{Name: in.Name})
+	res, err := svc.CommandHelp(ctx, service.CommandHelpRequest{Name: in.Name, Domain: in.Domain})
 	if err != nil {
 		return nil, err
 	}
@@ -641,6 +646,37 @@ func fontImport(ctx context.Context, svc service.Service, raw json.RawMessage) (
 	}
 
 	return &toolOutput{value: res, text: res.Text}, nil
+}
+
+// connection lists the destinations the user connected, or reads one. It never carries a credential.
+func connection(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolOutput, error) {
+	in, err := decode[struct {
+		ID string `json:"id"`
+	}](raw)
+	if err != nil {
+		return nil, err
+	}
+
+	if in.ID != "" {
+		res, gerr := svc.ConnectionGet(ctx, service.ConnectionRef{ID: in.ID})
+		if gerr != nil {
+			return nil, gerr
+		}
+
+		return &toolOutput{value: res, text: res.Summary()}, nil
+	}
+
+	res, err := svc.ConnectionList(ctx, service.ConnectionListRequest{})
+	if err != nil {
+		return nil, err
+	}
+
+	lines := []string{fmt.Sprintf("%d connection(s)", len(res.Connections))}
+	for i := range res.Connections {
+		lines = append(lines, res.Connections[i].Summary())
+	}
+
+	return &toolOutput{value: res, text: strings.Join(lines, "\n")}, nil
 }
 
 // projectDescribe is project_get with detail overview: the description of the whole production (SDD-003 section

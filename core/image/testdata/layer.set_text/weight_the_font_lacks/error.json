@@ -1,0 +1,13 @@
+{
+  "code": "E_FONT_UNKNOWN",
+  "details": {
+    "available": [
+      400
+    ]
+  },
+  "hint": "Use font_weight 400.",
+  "message": "Font weight 300 does not exist for family \"Anton\"; available weights: 400.",
+  "op_index": 0,
+  "path": "args.style.font_weight",
+  "retryable": false
+}

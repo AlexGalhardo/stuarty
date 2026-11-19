@@ -1,0 +1,11 @@
+{
+  "args": {
+    "horizontal": "center",
+    "layer_ids": [
+      "lyr_cccccccccc"
+    ],
+    "to": "canvas",
+    "vertical": "middle"
+  },
+  "op": "layer.align"
+}

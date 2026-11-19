@@ -63,7 +63,7 @@ func TestProjectWorkspaceOfAnEarlierReleaseOpens(t *testing.T) {
 		context.Background(),
 		1,
 	); err != nil || len(rolled) != 1 ||
-		rolled[0] != "20261119100000_project_items" {
+		rolled[0] != "20261119120000_project_items" {
 		t.Fatalf("rollback = %v, %v", rolled, err)
 	}
 

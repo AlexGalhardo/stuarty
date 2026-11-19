@@ -1,0 +1,8 @@
+{
+  "code": "E_INVALID_STATE",
+  "hint": "Unlock the layers inside with layer.set first.",
+  "message": "Layer lyr_eeeeeeeeee holds a locked layer.",
+  "op_index": 0,
+  "path": "args.layer_id",
+  "retryable": false
+}

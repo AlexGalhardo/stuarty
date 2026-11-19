@@ -49,7 +49,8 @@ func Pages(d *httpapi.Deps) func(r *router.Router, app *vukem.App) error {
 		r.UseServer(middleware.StaticFS(resources.Public(), middleware.StaticConfig{Prefix: "/"}))
 		r.Use(app.Inertia.Middleware, inertia.I18n("ui."), sharedProps(d))
 
-		r.Get("/{$}", func(c *web.Ctx) error { return c.Redirect("/projects") }).Name("home")
+		// The home and the sections that have no page of their own yet (dashboard.go).
+		dashboardPages(r)
 
 		r.Get("/projects", func(c *web.Ctx) error { return projectsPage(c, d) }).Name("projects.index")
 		r.Post("/projects", func(c *web.Ctx) error { return projectCreate(c, d) }).Name("projects.store")
@@ -62,6 +63,12 @@ func Pages(d *httpapi.Deps) func(r *router.Router, app *vukem.App) error {
 		r.Get("/settings", func(c *web.Ctx) error {
 			return inertia.Render(c, "Settings/Index", inertia.Props{})
 		}).Name("settings.index")
+
+		// The Connections section (epic 04, SDD-014): the page reads and changes the connections
+		// through /api/v1/connections.
+		r.Get("/connections", func(c *web.Ctx) error {
+			return inertia.Render(c, "Connections/Index", inertia.Props{})
+		}).Name("connections.index")
 
 		// The brand kit is read and saved by the page through /api/v1/brand-kit.
 		r.Get("/settings/brand-kit", func(c *web.Ctx) error {

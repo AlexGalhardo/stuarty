@@ -1,0 +1,25 @@
+[
+  {
+    "id": "lyr_mmmmmmmmmm",
+    "kind": "layer.added",
+    "object": {
+      "h": 144,
+      "id": "lyr_mmmmmmmmmm",
+      "kind": "text",
+      "name": "Title 2",
+      "opacity": 100,
+      "order": "w",
+      "parent": "",
+      "style": {
+        "color": "#FFE600",
+        "font_family": "Anton",
+        "size": 120
+      },
+      "text": "HOW IT WORKS",
+      "visible": true,
+      "w": 1000,
+      "x": 120,
+      "y": 300
+    }
+  }
+]
