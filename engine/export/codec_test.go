@@ -119,7 +119,9 @@ func allowedOrSkip(t *testing.T, codec exportcore.Codec) (*ffmpeg.Runner, string
 			}
 		}
 
-		t.Skipf("no allowed %s encoder passes its test encode on this machine (%s)", codec, strings.Join(why, " "))
+		t.Skipf( // verify:env-skip the machine has no allowed encoder of the codec
+			"no allowed %s encoder passes its test encode on this machine (%s)", codec, strings.Join(why, " "),
+		)
 	}
 
 	return r, det.Chosen
@@ -209,13 +211,9 @@ func TestHEVCWithNoEncoderFallsBackToH264(t *testing.T) {
 	job.Runner, job.Caps, job.Encoder = r, caps, ffmpeg.DetectOptions{Forced: "libopenh264"}
 	job.Preset = &tiktok
 
+	// The scene is 1080x1920 at 30 fps and 3 s, inside every limit of tiktok: a failed verification is a defect.
 	res, err := Run(context.Background(), job)
 	if err != nil {
-		var ve *ffmpeg.Error
-		if errors.As(err, &ve) && ve.Code == CodeVerifyFailed {
-			t.Skipf("the scene does not fit the tiktok preset: %v", ve.Details["checks"])
-		}
-
 		t.Fatal(err)
 	}
 

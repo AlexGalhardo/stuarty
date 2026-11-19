@@ -25,6 +25,18 @@ type memJobs struct {
 	JobRepo
 	mu   sync.Mutex
 	rows map[string]*JobRow
+	// full, when set, hears of every creation refused because the ceiling is reached, so a test waits for the
+	// refusal instead of for a duration.
+	full chan struct{}
+}
+
+func (m *memJobs) refused() {
+	if m.full != nil {
+		select {
+		case m.full <- struct{}{}:
+		default:
+		}
+	}
 }
 
 func (m *memJobs) CreateLimited(_ context.Context, row JobRow, lim *JobLimit) error {
@@ -49,10 +61,14 @@ func (m *memJobs) CreateLimited(_ context.Context, row JobRow, lim *JobLimit) er
 		}
 
 		if lim.Max > 0 && len(kind) >= lim.Max {
+			m.refused()
+
 			return &QueueFullError{Running: kind, Kind: lim.Kind, Ceiling: lim.Max}
 		}
 
 		if lim.Actor != "" && lim.MaxPerActor > 0 && len(actor) >= lim.MaxPerActor {
+			m.refused()
+
 			return &QueueFullError{Running: actor, Kind: lim.Kind, Ceiling: lim.MaxPerActor, PerActor: true}
 		}
 	}
@@ -431,8 +447,25 @@ func TestExportBatchPartialFailure(t *testing.T) {
 func TestExportBatchRunsOneEncodeAtATime(t *testing.T) {
 	t.Parallel()
 
-	env := newBatchEnv(t, 10, Limits{MaxExports: 4}, func(context.Context, ExportInput) error {
-		time.Sleep(20 * time.Millisecond)
+	// Each encode looks at the jobs while it runs: only the parent and its own child may be unfinished, so no
+	// other child is queued or running beside it, whatever the ceiling of the server allows.
+	var (
+		env     *batchEnv
+		overlap atomic.Int32
+	)
+
+	env = newBatchEnv(t, 10, Limits{MaxExports: 4}, func(context.Context, ExportInput) error {
+		active := 0
+
+		for _, state := range env.jobs.states() {
+			if !JobFinal(state) {
+				active++
+			}
+		}
+
+		if active != 2 {
+			overlap.Add(1)
+		}
 
 		return nil
 	})
@@ -453,8 +486,9 @@ func TestExportBatchRunsOneEncodeAtATime(t *testing.T) {
 		t.Fatalf("batch %s %+v", got.State, got.Result.Batch)
 	}
 
-	if env.peak.Load() != 1 || env.calls.Load() != 4 {
-		t.Errorf("peak %d, calls %d: want one encode at a time, four in all", env.peak.Load(), env.calls.Load())
+	if env.peak.Load() != 1 || env.calls.Load() != 4 || overlap.Load() != 0 {
+		t.Errorf("peak %d, calls %d, encodes beside another child %d: want one encode at a time, four in all",
+			env.peak.Load(), env.calls.Load(), overlap.Load())
 	}
 }
 
@@ -481,15 +515,25 @@ func TestExportBatchWaitsForASlotInsteadOfRefusing(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	env.jobs.full = make(chan struct{}, 1)
 	done := make(chan error, 1)
 
 	go func() { done <- env.s.RunJob(context.Background(), job.JobID) }()
 
-	// While the slot is taken nothing is created and nothing is refused.
-	time.Sleep(1200 * time.Millisecond)
+	// While the slot is taken the parent asks for it, is refused, and asks again: two refusals prove it waits
+	// instead of failing, and nothing is created meanwhile.
+	for range 2 {
+		select {
+		case <-env.jobs.full:
+		case err := <-done:
+			t.Fatalf("the batch ended while the slot was busy: %v", err)
+		case <-time.After(30 * time.Second):
+			t.Fatal("the batch never asked for the busy slot")
+		}
+	}
 
-	if got := len(env.jobs.states()); got != 2 {
-		t.Fatalf("%d jobs while the slot is busy: %v", got, env.jobs.states())
+	if got := env.jobs.states(); len(got) != 2 || got[job.JobID] != JobRunning {
+		t.Fatalf("jobs while the slot is busy: %v", got)
 	}
 
 	if _, err := env.jobs.Claim(context.Background(), busy.ID, 1); err != nil {
