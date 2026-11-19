@@ -78,6 +78,9 @@ command prompt:list
 command prompt:render
 command prompt:show
 command prompt:write
+command provider:list
+command provider:models
+command provider:price
 command redo
 command skill:export
 command skill:import
@@ -90,6 +93,7 @@ command template:import
 command template:list
 command template:new
 command template:save
+command text:generate
 command token:rotate
 command tools:install
 command transcribe
@@ -114,6 +118,7 @@ route GET /commands
 route GET /commands/{}
 route GET /connections
 route GET /connections/{}
+route GET /connections/{}/models
 route GET /cost
 route GET /export-presets
 route GET /fonts
@@ -157,6 +162,7 @@ route GET /projects/{}/otio
 route GET /projects/{}/plan
 route GET /projects/{}/sheet
 route GET /projects/{}/snap-points
+route GET /providers
 route GET /system
 route GET /system/tools
 route GET /templates
@@ -208,6 +214,7 @@ route POST /templates
 route POST /templates/import
 route POST /templates/{}/export
 route POST /templates/{}/instantiate
+route POST /text/generate
 route POST /trash/empty
 route POST /users
 route PUT /assets/{}
@@ -216,7 +223,7 @@ route PUT /cost/ceilings
 route PUT /library/prompts/{}
 route PUT /library/skills/{}
 route PUT /projects/{}/brief
-route PUT /projects/{}/briefing
+route PUT /providers/prices
 tool command_help
 tool connection
 tool edit

@@ -137,7 +137,16 @@
         "connections.create",
         "connections.get",
         "connections.remove",
+        "providers.models",
         "connections.test"
+      ]
+    },
+    {
+      "tag": "AI providers",
+      "pages": [
+        "providers.list",
+        "providers.prices.set",
+        "text.generate"
       ]
     },
     {

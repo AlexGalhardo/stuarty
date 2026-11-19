@@ -1,6 +1,6 @@
 {
  "name": "job_start",
- "description": "Start long work. export renders a workspace file: args {start?, end?, format?, at? (the png frame), preset?, codec?}. export_batch runs args.items (export args) in turn. transcribe: args {asset_id, language?, model?}. Poll job_get.",
+ "description": "Start long work. kind=export renders to a workspace file: args {start?, end?, format?, at?}, format mp4 (default), gif, wav, aac or png (the frame at `at`). kind=transcribe makes a transcript: args {asset_id, language?, model?}. kind=text.generate: args {connection_id, model, prompt}; a person approves it. Lint errors block export. Returns after wait_ms at most; poll job_get.",
  "inputSchema": {
   "type": "object",
   "properties": {
@@ -15,8 +15,8 @@
    "kind": {
     "enum": [
      "export",
-     "export_batch",
-     "transcribe"
+     "transcribe",
+     "text.generate"
     ]
    },
    "args": {

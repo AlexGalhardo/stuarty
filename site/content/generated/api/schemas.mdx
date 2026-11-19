@@ -971,6 +971,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `approval_id` | `string` | no |  |
 | `created_at` | `string (date-time)` | no |  |
 | `error` | [`Error`](/docs/api/schemas#error) or `any` or `null` or `null` | no |  |
+| `estimate` | [`Money`](/docs/api/schemas#money) or `any` or `null` or `null` | no |  |
 | `finished_at` | `string (date-time)` or `null` | no |  |
 | `job_id` | `string` | no |  |
 | `kind` | `string` | no |  |
@@ -999,6 +1000,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | --- | --- | --- | --- |
 | `batch` | [`BatchResult`](/docs/api/schemas#batchresult) or `any` or `null` or `null` | no |  |
 | `export` | [`ExportResult`](/docs/api/schemas#exportresult) or `any` or `null` or `null` | no |  |
+| `text` | [`TextResult`](/docs/api/schemas#textresult) or `any` or `null` or `null` | no |  |
 | `transcribe` | [`TranscribeResult`](/docs/api/schemas#transcriberesult) or `any` or `null` or `null` | no |  |
 
 ### Key
@@ -1342,6 +1344,17 @@ The types named in the tables of the operations. The arguments of each editing c
 | `text` | `string` | no |  |
 | `untrusted_notice` | `string` | no |  |
 
+### ModelView
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `context_tokens` | `integer` | no |  |
+| `id` | `string` | no |  |
+| `name` | `string` | no |  |
+| `output_tokens` | `integer` | no |  |
+| `price` | [`Price`](/docs/api/schemas#price) or `any` or `null` or `null` | no |  |
+| `price_source` | `string` | no |  |
+
 ### Money
 
 | Name | Type | Required | Description |
@@ -1415,12 +1428,23 @@ The types named in the tables of the operations. The arguments of each editing c
 | `color` | `string` | no |  |
 | `width` | `number (double)` | no |  |
 
-### Poster
+### Price
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
-| `asset_id` | `string` | no |  |
-| `timeline_id` | `string` | no |  |
+| `currency` | `string` | no |  |
+| `input_micros_per_mtok` | `integer (int64)` | no |  |
+| `output_micros_per_mtok` | `integer (int64)` | no |  |
+
+### PriceEntry
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `currency` | `string` | no |  |
+| `input_micros_per_mtok` | `integer (int64)` | no |  |
+| `model` | `string` | no |  |
+| `output_micros_per_mtok` | `integer (int64)` | no |  |
+| `provider` | `string` | no |  |
 
 ### Primitive
 
@@ -1664,6 +1688,41 @@ The types named in the tables of the operations. The arguments of each editing c
 | `text` | `string` | no |  |
 | `untrusted_notice` | `string` | no |  |
 | `variables` | array of `string` | no |  |
+
+### ProviderListResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `prices` | array of [`PriceEntry`](/docs/api/schemas#priceentry) | no |  |
+| `providers` | array of [`ProviderView`](/docs/api/schemas#providerview) | no |  |
+
+### ProviderModelsResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `cached` | `boolean` | no |  |
+| `connection_id` | `string` | no |  |
+| `fetched_at` | `string (date-time)` | no |  |
+| `models` | array of [`ModelView`](/docs/api/schemas#modelview) | no |  |
+| `provider` | `string` | no |  |
+
+### ProviderPricesResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `prices` | array of [`PriceEntry`](/docs/api/schemas#priceentry) | no |  |
+
+### ProviderView
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `capabilities` | array of `string` | no |  |
+| `connections` | array of `string` | no |  |
+| `credential_kinds` | array of `string` | no |  |
+| `default_endpoint` | `string` | no |  |
+| `docs_url` | `string` | no |  |
+| `id` | `string` | no |  |
+| `name` | `string` | no |  |
 
 ### Range
 
@@ -1992,6 +2051,18 @@ The types named in the tables of the operations. The arguments of each editing c
 | `slots` | array of [`SlotInfo`](/docs/api/schemas#slotinfo) | no |  |
 | `template_id` | `string` | no |  |
 | `width` | `integer` | no |  |
+
+### TextResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `cost` | [`Money`](/docs/api/schemas#money) | no |  |
+| `finish_reason` | `string` | no |  |
+| `input_tokens` | `integer` | no |  |
+| `model` | `string` | no |  |
+| `output_tokens` | `integer` | no |  |
+| `provider` | `string` | no |  |
+| `text` | `string` | no |  |
 
 ### TimeRange
 
