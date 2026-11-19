@@ -59,7 +59,9 @@ func TestGuideHasOnePagePerDomain(t *testing.T) {
 		}
 
 		for _, c := range cli.Reference().Commands {
-			if (cli.CommandDomain(c.Name) == d) != strings.Contains(text, "- `"+c.Name+"`:") {
+			// A command for a person (a decision of the approval queue) is not for an agent, so no page lists it.
+			listed := cli.CommandDomain(c.Name) == d && !c.Person
+			if listed != strings.Contains(text, "- `"+c.Name+"`:") {
 				t.Errorf(
 					"%s: the command %s is in the domain %s, and the page disagrees",
 					name,
