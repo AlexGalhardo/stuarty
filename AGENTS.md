@@ -10,7 +10,7 @@ It grew out of a video editor called Vukem Video. The editor (a command core in 
 
 What defines the product: requirements (`docs/prds/`), architecture decisions (`docs/adrs/`), specifications (`docs/sdds/`), and the decisions of the author (`D-NNN`, private, cited by id). What is left to do: the epics of `docs/plans/`, in the order of `docs/plans/00-roadmap.md`. There are no phases and no milestones (ADR-0045).
 
-**The name in the code.** The product was renamed in one epic (ADR-0044): the Go module, the binary, the variables (`STUARTY_*`) and the workspace folder (`~/.stuarty`) say `stuarty`. The former names are still read for a deprecation period (SDD-000 section 13). The specifications SDD-000, SDD-002, SDD-003 and SDD-007 are read by tests and by the site generator: their names and their phase labels (`P`, `A`, `B`) change only together with the code.
+**The name in the code.** The product was renamed in one epic (ADR-0044): the Go module, the binary, the variables (`STUARTY_*`) and the workspace folder (`~/.stuarty`) say `stuarty`. The former names are still read for a deprecation period (SDD-000 section 13). The specifications SDD-000, SDD-002, SDD-003 and SDD-007 are read by tests and by the site generator: their names change only together with the code.
 
 ## 2. Where things are
 
