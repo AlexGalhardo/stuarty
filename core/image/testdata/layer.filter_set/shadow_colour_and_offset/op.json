@@ -1,0 +1,10 @@
+{
+  "args": {
+    "color": "#FF0000",
+    "dx": 0,
+    "dy": 10,
+    "kind": "shadow",
+    "layer_id": "lyr_bbbbbbbbbb"
+  },
+  "op": "layer.filter_set"
+}

@@ -39,7 +39,7 @@ A creator connects the AI services they already pay for, once, and every part of
 ## Tasks
 
 - [x] 1. Write SDD-016 and the SDD-000 names; add SDD-007 rows (prompt with untrusted text, provider output as instructions, cost run-away). Verify: `task lint:md` exits 0.
-- [ ] 2. Propose the first two text providers with their API, pricing source and terms; STOP for approval. Verify: the approval is in the hand-off.
+- [x] 2. Propose the first two text providers with their API, pricing source and terms; STOP for approval. Verify: the approval is in the hand-off.
 - [x] 3. Implement `core/provider` with table tests. Verify: `go test ./core/provider/...` passes.
 - [x] 4. Implement the registry, the interfaces and the model catalogue with caching. Verify: `go test ./service/providers/...` passes against recorded responses.
 - [x] 5. Implement the two adapters with contract tests from recorded responses. Verify: `go test ./service/providers/...` passes with no network (`bash scripts/no-egress.sh` still passes).
