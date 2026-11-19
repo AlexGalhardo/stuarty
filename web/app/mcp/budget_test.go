@@ -12,10 +12,10 @@ const charsPerToken = 3.2
 
 func tokens(s string) int { return int(float64(len([]rune(s))) / charsPerToken) }
 
-// TestToolDefinitionBudget is NFR-020: the tool definitions total at most 7,500
-// tokens. The interim cap of SDD-003 section 4.1 is 22,500 bytes of minified JSON for
-// all 16 tools of the ALPHA build, 2,700 for edit and 1,600 for any other; the
-// 12 tools of the Prototype are measured here.
+// TestToolDefinitionBudget is NFR-020 as revised by epic 13: the definitions total at most MaxToolListBytes
+// bytes of minified JSON (7,000 tokens), no tool is over MaxToolBytes, and the list has at most MaxTools tools
+// (SDD-003 section 4.1). internal/tools/surfacebudget measures the list a client receives; this measures the
+// definitions themselves.
 func TestToolDefinitionBudget(t *testing.T) {
 	t.Parallel()
 
@@ -30,22 +30,25 @@ func TestToolDefinitionBudget(t *testing.T) {
 		raw := marshal(t, defs[name].tool)
 		total += len(raw)
 
-		limit := 1600
-		if name == "edit" {
-			limit = 2700
-		}
-
-		if len(raw) > limit {
-			t.Errorf("%s is %d bytes, at most %d", name, len(raw), limit)
+		if len(raw) > MaxToolBytes {
+			t.Errorf("%s is %d bytes, at most %d", name, len(raw), MaxToolBytes)
 		}
 	}
 
-	if total > 22500 {
-		t.Errorf("the definitions are %d bytes, at most 22,500", total)
+	if len(order) > MaxTools {
+		t.Errorf(
+			"%d tools, at most %d: a domain adds operations, not tools (SDD-003 section 4.8)",
+			len(order),
+			MaxTools,
+		)
 	}
 
-	if tk := tokens(strings.Repeat("x", total)); tk > 7500 {
-		t.Errorf("the definitions are about %d tokens, at most 7,500 (NFR-020, interim)", tk)
+	if total > MaxToolListBytes {
+		t.Errorf("the definitions are %d bytes, at most %d", total, MaxToolListBytes)
+	}
+
+	if tk := tokens(strings.Repeat("x", total)); tk > 7000 {
+		t.Errorf("the definitions are about %d tokens, at most 7,000 (NFR-020)", tk)
 	}
 
 	t.Logf("%d Prototype definitions: %d bytes, about %d tokens", len(order), total, tokens(strings.Repeat("x", total)))

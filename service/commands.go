@@ -64,13 +64,13 @@ func (s *svc) CommandHelp(ctx context.Context, req CommandHelpRequest) (*Command
 	}
 
 	if req.Name == "" {
+		if req.Domain == "" {
+			return Discovery(s.reg), nil
+		}
+
 		res := commandList(reg)
 		if len(res.Commands) == 0 {
 			res.Text = "No edit operations in the domain " + reg.Domain() + " yet."
-		}
-
-		if req.Domain == "" {
-			s.addDomains(res)
 		}
 
 		return res, nil
@@ -152,16 +152,19 @@ func unknownCommand(reg *command.Registry, name string) *Error {
 		withHint("use one of the known commands: %s", strings.Join(known, ", ")).withDetail("known", known)
 }
 
-// addDomains appends the discovery of the domains to the list of the default one: one line each, and the
-// structured member (SDD-003 section 4.8).
-func (s *svc) addDomains(res *CommandHelpResult) {
+// Discovery is the first discovery call: command_help with no name and no domain. It lists the operations of the
+// timeline registry, then one line per domain and the structured member (SDD-003 section 4.8). It needs no store, so
+// the budget check of NFR-020 measures it without a workspace.
+func Discovery(video *command.Registry) *CommandHelpResult {
+	res := commandList(video)
+
 	var b strings.Builder
 
 	b.WriteString(res.Text)
 	b.WriteString("\n\nDomains (command_help domain=<name> lists the operations of one):")
 
 	for _, d := range command.Domains() {
-		reg, _ := s.registryOf(d.Name)
+		reg, _ := registryFor(video, d.Name)
 		n := 0
 
 		for _, c := range reg.List() {
@@ -179,14 +182,20 @@ func (s *svc) addDomains(res *CommandHelpResult) {
 	}
 
 	res.Text = b.String()
+
+	return res
 }
 
 // registryOf is the registry of a domain: the timeline's for video (the default), the image documents' for image,
 // and an empty one for a domain that has no edit commands yet.
 func (s *svc) registryOf(domain string) (*command.Registry, *Error) {
+	return registryFor(s.reg, domain)
+}
+
+func registryFor(video *command.Registry, domain string) (*command.Registry, *Error) {
 	switch domain {
 	case "", command.DomainVideo:
-		return s.reg, nil
+		return video, nil
 	case command.DomainImage:
 		return coreimage.Registry(), nil
 	}
