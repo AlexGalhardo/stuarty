@@ -250,6 +250,32 @@ func TestCapabilityIsCachedPerCodec(t *testing.T) {
 	}
 }
 
+// TestCapabilityForcedEncoderOfAnotherCodec: STUARTY_ENCODER names an H.264 encoder. A forced HEVC or AV1
+// encoder that works is never chosen as the H.264 one: the H.264 export would write HEVC and fail its
+// verification, so the detection says at once that the name is not an H.264 encoder.
+func TestCapabilityForcedEncoderOfAnotherCodec(t *testing.T) {
+	t.Parallel()
+
+	r, caps, _ := codecFixture(t, []string{"hevc_nvenc", "av1_nvenc"}, "hevc_nvenc", "av1_nvenc", "libopenh264")
+
+	for _, forced := range []string{"hevc_nvenc", "av1_nvenc"} {
+		det, err := r.DetectEncoder(context.Background(), caps, DetectOptions{Forced: forced, Refresh: true})
+		if err == nil || det.Chosen != "" {
+			t.Fatalf("%s was chosen as the H.264 encoder: %v %+v", forced, err, det)
+		}
+
+		if c, _ := statusOf(det, forced); c.Status != EncoderFailed || !strings.Contains(c.StderrTail, "h264") {
+			t.Errorf("%s: %+v", forced, c)
+		}
+	}
+
+	// The HEVC detection ignores the forced H.264 name and still finds its own encoder.
+	det, err := r.DetectCodec(context.Background(), caps, CodecHEVC, DetectOptions{Forced: "libopenh264"})
+	if err != nil || det.Chosen != "hevc_nvenc" {
+		t.Fatalf("hevc with a forced H.264 encoder: %v %+v", err, det)
+	}
+}
+
 // TestCapabilityUnknownCodec: a codec the product does not write is the same stable error, not a crash.
 func TestCapabilityUnknownCodec(t *testing.T) {
 	t.Parallel()
