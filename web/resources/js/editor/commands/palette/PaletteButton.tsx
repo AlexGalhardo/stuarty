@@ -3,7 +3,7 @@ import { type ReactNode, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
-import { isPaletteShortcut } from "../keymap";
+import { isRowKey } from "../keymapStore";
 import Palette from "./Palette";
 
 // The top-bar entry to the command palette (SDD-012 section 6.2): the button
@@ -14,7 +14,7 @@ export default function PaletteButton(): ReactNode {
 
 	useEffect(() => {
 		const onKey = (event: KeyboardEvent): void => {
-			if (!isPaletteShortcut(event)) return;
+			if (!isRowKey(event, "palette")) return;
 			event.preventDefault();
 			setOpen((was) => !was);
 		};
