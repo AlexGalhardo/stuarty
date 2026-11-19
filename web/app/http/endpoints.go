@@ -299,6 +299,11 @@ var Endpoints = []Endpoint{
 		Service: "ViewSheet", Status: 200, Summary: "Render a contact sheet",
 	},
 	{
+		ID: "projects.motion.brief", Method: http.MethodGet, Path: "/projects/{id}/motion/brief", Scope: service.ScopeRead,
+		Service: "MotionBrief", Status: 200,
+		Summary: "What a render by an external motion engine must fit: size, rate, length, safe area, brand kit, captions and reference frames",
+	},
+	{
 		ID:      "projects.snap_points",
 		Method:  http.MethodGet,
 		Path:    "/projects/{id}/snap-points",
