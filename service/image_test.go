@@ -714,6 +714,11 @@ func TestImageAssetOfAnotherUserIsNotUsable(t *testing.T) {
 	s, _ := newImageService(t)
 	holdAsset(s, "alice")
 
+	st0 := s.store.(*memStore)
+	row := st0.assets.rows[imgHash]
+	row.OriginalName = "/home/bob/private-name.png"
+	st0.assets.rows[imgHash] = row
+
 	alice, bob := networkUser("alice"), networkUser("bob")
 	add := ops("layer.add_image", `{"asset": "`+imgHash+`", "id": "lyr_aaaaaaaaaa"}`)
 
@@ -737,6 +742,15 @@ func TestImageAssetOfAnotherUserIsNotUsable(t *testing.T) {
 		ImageEditRequest{ImageID: ca.ImageID, BaseRevision: 1, Operations: add},
 	); err != nil {
 		t.Fatalf("the user who holds the file may use it: %v", err)
+	}
+
+	// another user imported the same bytes under a name of their own: the global row has it, the caller must not
+	if d, _ := s.ImageDescribe(
+		alice,
+		ImageDescribeRequest{ImageID: ca.ImageID},
+	); len(d.Layers) != 1 ||
+		d.Layers[0].Name != "face.png" {
+		t.Fatalf("the layer carries the name of the project entry of the caller, not the global one: %+v", d.Layers)
 	}
 
 	// a document that already names the file (a template shared by an administrator, an old revision) does not
