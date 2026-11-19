@@ -135,3 +135,40 @@ func TestPartCSectionsMatchTheRegistry(t *testing.T) {
 		}
 	}
 }
+
+// Every command of the snapshot names a domain of SDD-000 section 1.1: the timeline registry is video, the
+// image registry image (epic 13).
+func TestRegistrySnapshotsCarryTheDomain(t *testing.T) {
+	t.Parallel()
+
+	known := []string{"project", "video", "image", "writing", "asset", "publish", "provider", "memory", "workspace"}
+
+	for file, want := range map[string]string{"commands.json": "video", "image/commands.json": "image"} {
+		b, err := os.ReadFile(file)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		var cmds []struct {
+			Name   string `json:"name"`
+			Domain string `json:"domain"`
+		}
+		if err := json.Unmarshal(b, &cmds); err != nil {
+			t.Fatal(err)
+		}
+
+		if len(cmds) == 0 {
+			t.Errorf("%s lists no command", file)
+		}
+
+		for _, c := range cmds {
+			if !slices.Contains(known, c.Domain) {
+				t.Errorf("%s: %s has domain %q, which SDD-000 section 1.1 does not list", file, c.Name, c.Domain)
+			}
+
+			if c.Domain != want {
+				t.Errorf("%s: %s has domain %q, want %q", file, c.Name, c.Domain, want)
+			}
+		}
+	}
+}
