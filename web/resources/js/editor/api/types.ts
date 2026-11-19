@@ -192,6 +192,9 @@ export interface PlanWindowHead {
 export type PerFrame = number | number[];
 
 interface PlanLayerBase {
+	// The timeline whose assets table names this layer's asset, for a layer that comes from a composition
+	// (SDD-004 section 3.16); absent for a layer of the timeline being edited.
+	timeline?: string;
 	item: string;
 	first: number;
 	last: number;
@@ -367,6 +370,8 @@ export interface PlanBitmapLayer extends PlanLayerBase {
 export type PlanLayer = PlanMediaLayer | PlanBitmapLayer;
 
 export interface PlanAudio {
+	// As on a layer: the timeline that holds `asset` when the sound comes from a composition.
+	timeline?: string;
 	item: string;
 	asset: string;
 	first: number;

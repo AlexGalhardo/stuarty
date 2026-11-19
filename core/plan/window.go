@@ -46,8 +46,11 @@ type WindowLayer struct {
 	Kind      LayerKind `json:"kind"`
 	Asset     string    `json:"asset,omitempty"`
 	AssetKind string    `json:"asset_kind,omitempty"`
-	First     int       `json:"first"`
-	Last      int       `json:"last"`
+	// Timeline is the timeline whose assets table names Asset (and Lut) when the layer comes from a composition;
+	// empty for a layer of the timeline of the plan (SDD-004 section 3.16).
+	Timeline string `json:"timeline,omitempty"`
+	First    int    `json:"first"`
+	Last     int    `json:"last"`
 
 	// Media layers: the time in the proxy at which each frame starts, the
 	// crop in source pixels [x, y, w, h], and the colour matrix (null when neutral).
@@ -138,6 +141,9 @@ type WindowAudio struct {
 	Gain          Series     `json:"gain"`
 	Denoise       float64    `json:"denoise,omitempty"`
 	Voice         string     `json:"voice,omitempty"`
+	// Timeline is the timeline whose assets table names Asset when the source comes from a composition; empty for
+	// the timeline of the plan (SDD-004 section 3.16).
+	Timeline string `json:"timeline,omitempty"`
 }
 
 // Window returns the plans of frames [from, to) in the compact form of
@@ -272,6 +278,7 @@ func newLayerAcc(p *planner, t, room int, first *Layer) *layerAcc {
 	}
 
 	a.wl = WindowLayer{
+		Timeline:  ownerTimeline(owner),
 		Item:      first.ItemID,
 		Kind:      first.Kind,
 		Asset:     first.AssetID,
@@ -525,4 +532,14 @@ func (a *layerAcc) addMatrix(l *Layer) {
 	}
 
 	wl.ColorMatrices = append(wl.ColorMatrices, m)
+}
+
+// ownerTimeline is the id of the timeline that holds the item of a layer when it is a nested one: the planner of
+// a composition has a prefix, the one of the timeline of the plan has none.
+func ownerTimeline(owner *planner) string {
+	if owner == nil || owner.prefix == "" {
+		return ""
+	}
+
+	return owner.doc.ID
 }

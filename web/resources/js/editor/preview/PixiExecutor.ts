@@ -18,6 +18,7 @@ import type { ApiClient } from "../api/client";
 import { fetchLut, type LutTable } from "../api/lut";
 import type { PlanLayer, PlanMediaLayer, PlanWindow } from "../api/types";
 import { chunksUrl, proxyUrl, thumbnailUrl } from "../api/urls";
+import { AssetOwners } from "./assetOwners";
 import "pixi.js/advanced-blend-modes";
 
 import { AudioGraph } from "./audioGraph";
@@ -158,6 +159,8 @@ export class PixiExecutor implements PreviewExecutor {
 	private clock: PlaybackClock | null = null;
 	private windows: PlanWindows;
 	private readonly videos: MediaPool;
+	// Where the assets of compositions live (see AssetOwners).
+	private readonly owners = new AssetOwners();
 	private readonly sounds: MediaPool;
 	// Decodes the proxies with WebCodecs in a worker; an asset it cannot decode
 	// is drawn from a pooled <video> (SDD-013 section 5.3).
@@ -199,8 +202,10 @@ export class PixiExecutor implements PreviewExecutor {
 		this.decoder = new DecodeClient<VideoFrame>({
 			preference: decoderPreference(window.location.search),
 			createWorker: createDecodeWorker,
-			indexUrl: (asset) => chunksUrl(this.info?.projectId ?? "", asset),
-			proxyUrl: (asset) => proxyUrl(this.info?.projectId ?? "", asset),
+			indexUrl: (asset) =>
+				chunksUrl(this.owners.of(asset, this.info?.projectId ?? ""), asset),
+			proxyUrl: (asset) =>
+				proxyUrl(this.owners.of(asset, this.info?.projectId ?? ""), asset),
 			onChange: redraw,
 			now: () => performance.now(),
 		});
@@ -495,6 +500,7 @@ export class PixiExecutor implements PreviewExecutor {
 	}
 
 	private draw(plan: PlanWindow, frame: number, mode: DrawMode): void {
+		this.owners.note(plan);
 		const app = this.app;
 		const info = this.info;
 		if (app === null || info === null) return;
@@ -1144,7 +1150,7 @@ export class PixiExecutor implements PreviewExecutor {
 		usedVideos.add(layer.asset);
 		const { element } = this.videos.acquire(
 			layer.asset,
-			proxyUrl(info.projectId, layer.asset),
+			proxyUrl(this.owners.of(layer.asset, info.projectId), layer.asset),
 		);
 		const video = element as HTMLVideoElement;
 		this.driveVideo(video, layer, frame, mode, info);
@@ -1347,6 +1353,7 @@ export class PixiExecutor implements PreviewExecutor {
 	}
 
 	private syncAudio(plan: PlanWindow, frame: number, playing: boolean): void {
+		this.owners.note(plan);
 		const info = this.info;
 		if (info === null) return;
 		const inUse = new Set<string>();
@@ -1355,7 +1362,7 @@ export class PixiExecutor implements PreviewExecutor {
 			inUse.add(audio.item);
 			const entry = this.sounds.acquire(
 				audio.item,
-				proxyUrl(info.projectId, audio.asset),
+				proxyUrl(this.owners.of(audio.asset, info.projectId), audio.asset),
 			);
 			if (entry.gain !== null) {
 				entry.gain.gain.value = valueAt(audio.gain, frame, audio.first);
