@@ -45,24 +45,16 @@
 | `FontImport` | none | `font:import` | `POST /fonts` | media |
 | `BrandKitGet`, `BrandKitSet` | none | `brand:show`, `brand:set` | `GET /brand-kit`, `PUT /brand-kit` | read, edit |
 | `ProjectOtioExport`, `ProjectOtioImport` | none | `otio:export`, `otio:import` | `GET /projects/{id}/otio`, `POST /projects/{id}/otio` | read; edit (the batch is applied through `Edit`, so each operation needs its own scope too) |
-| `ProjectDescribe` | `project_get` called with `detail` `overview` | `project:describe` | `GET /projects/{id}/describe` (the production as text: brief, items, state; SDD-003 §2.3) | read |
-| `ProjectDuplicate` | `project_create` called with `from` | `project:duplicate` | `POST /projects/{id}/duplicate` (a copy of the production; its timelines get new ids, SDD-003 §2.3) | edit |
-| `ProjectItemAdd`, `ProjectItemMove`, `ProjectItemRename`, `ProjectItemTrash`, `ProjectItemRestore` | `project_item` (argument `action`) | `item:add`, `item:move`, `item:rename`, `item:trash`, `item:restore` | `POST /projects/{id}/items`, `POST /projects/{id}/items/{item_id}/move`, `.../rename`, `.../trash`, `.../restore` | edit |
-| `BriefGet`, `BriefSet` | `project_item` (`action` `brief`; given `text`, it sets) | `brief:show`, `brief:set` | `GET /projects/{id}/brief`, `PUT /projects/{id}/brief` | read, edit |
-| `ConnectionList`, `ConnectionGet` | `connection` (list, or one by id) | `connection:list`, `connection:show` | `GET /connections`, `GET /connections/{id}` | read |
-| `ConnectionCreate`, `ConnectionRemove`, `ConnectionTest` | none | `connection:add`, `connection:remove`, `connection:test` | `POST /connections`, `DELETE /connections/{id}`, `POST /connections/{id}/test` | admin (SDD-014) |
-| `ImageCreate` | `image` (`action` create) | `image:create` | `POST /images` | edit |
-| `ImageList` | `image` (`action` list) | `image:list` | `GET /images` | read |
-| `ImageDescribe` | `image` (`action` show) | `image:show` | `GET /images/{id}` | read |
-| `ImageEdit` | `image` (`action` edit) | `image:edit` | `POST /images/{id}/edit` | edit |
-| `ImageUndo`, `ImageRedo` | `image` (`action` undo, redo) | `image:undo`, `image:redo` | `POST /images/{id}/undo`, `POST /images/{id}/redo` | edit |
-| `ImageExport` | `image` (`action` export) | `image:export` | `POST /images/{id}/export` | edit |
+| `MemoryList`, `MemoryGet`, `MemoryWrite`, `MemoryRemove` | `library` (kind `memory`; actions `list`, `get`, `write`, `remove`) | `memory:list`, `memory:show`, `memory:write`, `memory:remove` | `GET /library/memory`, `GET /library/memory/{name}`, `PUT /library/memory/{name}`, `DELETE /library/memory/{name}` | read, edit (SDD-018) |
+| `SkillList`, `SkillGet`, `SkillWrite`, `SkillLint` | `library` (kind `skill`) | `skill:list`, `skill:show`, `skill:write`, `skill:lint` | `GET /library/skills`, `GET /library/skills/{name}`, `PUT /library/skills/{name}`, `GET /library/skills/{name}/lint` | read, edit |
+| `SkillImport`, `SkillExport` | none | `skill:import`, `skill:export` | `POST /library/skills/import`, `POST /library/skills/export` | media |
+| `SkillMarkReviewed` | none | none | `POST /library/skills/{name}/review` | edit, and only from a browser session (SDD-018 section 7) |
+| `PromptList`, `PromptGet`, `PromptWrite`, `PromptRender` | `library` (kind `prompt`) | `prompt:list`, `prompt:show`, `prompt:write`, `prompt:render` | `GET /library/prompts`, `GET /library/prompts/{name}`, `PUT /library/prompts/{name}`, `POST /library/prompts/{name}/render` | read, edit |
+| `LibrarySearch`, `LibraryReindex` | `library` (action `search`), none | `library:search`, `library:reindex` | `GET /library/search`, `POST /library/reindex` | read, edit |
 
 Routes that are not service operations: `POST /mcp` (the MCP server over Streamable HTTP, SDD-003 §4.3; `GET` and `DELETE` on the path are not routes and answer 405 `E_METHOD_NOT_ALLOWED`, because the server is stateless; every tool call behind it is a service operation with the scope of its tool), `GET /api/v1/handshake` (the server proves it knows the local token, SDD-007 §3.8), `GET /auth/launch` and `POST /api/v1/system/launch` (browser session from a one-time code, SDD-007 §3.4), `POST /auth/login` and `POST /auth/logout` (network mode: the browser session of a user, SDD-007 §4.1; in local mode they answer 404 `E_NOT_FOUND`), `GET /up` (vukem health probe), `GET /openapi.json` and `GET /api/docs` (the OpenAPI document and its viewer), `POST /api/v1/system/tools/install` and `GET /api/v1/system/tools` (the explicit install of a helper such as whisper.cpp from the editor, and its state with the progress of a running install; the same step as the CLI command `tools:install`; the install is allowed only to a browser session in local mode or an `admin` key in network mode, never to the local token and never on an agent surface, SDD-007 §6.8; the `GET` only reads and takes the `read` scope, so an agent can tell whether a helper is installed before it asks for a transcript), and the byte-serving routes that the editor uses, all `read`, all under the project so that access is checked against it, all with HTTP Range and long-lived caching because their content never changes: `GET /projects/{id}/media/{asset_id}/proxy`, `.../thumbnail`, `.../strip`, `.../peaks`, `.../lut` (the parsed table of a lookup table asset, SDD-004 §3.6), and `GET /projects/{id}/bitmaps/{key}` (rasterized text and shapes by content key). What each returns is in SDD-011 and SDD-004.
 
-The MCP catalogue is 19 tools: `project_list`, `project_create`, `project_get`, `project_trash`, `edit`, `command_help`, `history`, `media_import`, `media_inspect`, `view`, `lint`, `job_start`, `job_get`, `job_cancel`, `template`, `font_import`, `connection` (read only: the destinations the user connected, SDD-014), `image` (the image documents of SDD-021, one tool with an `action`), `project_item` (the items and the brief of a production, SDD-003 section 2.3).
-
-**Projects and timelines (ADR-0039).** A project is a production; its timelines are items of it. Every operation above that edits or reads a timeline document (`Edit`, `HistoryList`, `Undo`, `Redo`, `Lint`, `MediaImport`, `MediaInspect`, `MediaList`, `MediaTrash`, `MediaRestore`, `ViewFrame`, `ViewSheet`, `JobStart`, `JobList`, `PlanWindow`, `SnapPoints`, `ProjectOtioExport`, `ProjectOtioImport`, `ProjectBundleExport`, and `ProjectGet` with a detail) accepts an optional `timeline_id` next to `project_id`; the rule is SDD-003 §1.7.
+The MCP catalogue is 17 tools: `project_list`, `project_create`, `project_get`, `project_trash`, `edit`, `command_help`, `history`, `media_import`, `media_inspect`, `view`, `lint`, `job_start`, `job_get`, `job_cancel`, `template`, `font_import`, `library` (memory, skills and prompts: search, list, get, write, remove, render and lint; SDD-018).
 
 Other CLI commands that are not service operations: `serve` (start the owner process), `mcp` (stdio MCP server), `open` (open the UI of a running server with a fresh launch code), `token:rotate`, `user:create` and `user:passwd` (network mode; they need the workspace lock, so no server may be running), `tools:install` (download a helper such as whisper.cpp after stating its size), `agent:docs` (print or write the generated material for agents, SDD-003 §8), plus vukem's built-in commands.
 
@@ -130,8 +122,7 @@ Kinds: `ingest`, `transcribe`, `export`, `frame`. States: `queued`, `running`, `
 | `users` | network mode: email, argon2id password hash, role (`admin` or `member`), session version | SDD-007 |
 | `brand_kits` | the brand kit: logo, named colours and fonts, one row per owner  | SDD-005 §5.11 |
 | `font_owners` | which user imported or brought each stored font file, network mode  | SDD-005 §5.11, SDD-007 §7.7 |
-| `connections` | the destinations the user connected: kind, label, hosts, what each may receive, last use and the id of its secret in the vault; no secret | SDD-014 |
-| `image_documents`, `image_operations` | image documents, and their append-only log of batches | SDD-005 §5.13, SDD-021 |
+| `library_entries`, `library_fts` | the index of memory, skills and prompts for search and lists; rebuilt from the files, holds no content that the files lack | SDD-018 §9 |
 | vukem's own tables for sessions (`sessions`) and tokens (`access_tokens`) | network mode | vukem |
 
 A document with a `template` member is a template draft, or an instance when `template.instance` is true (SDD-001 section 3.10). `TemplateInstantiate` writes the flag; lint reads it (`L_SLOT_UNFILLED`, SDD-003).
@@ -183,7 +174,7 @@ CLI exit codes: `0` success; `2` for every code marked retryable; `1` for the re
 ├── lock                     empty file that carries the operating-system lock of the owner process (SDD-005 §6.2)
 ├── runtime.json             owner process: schema, pid, addr, mode, started_at, version (present only while a server runs; no secret)
 ├── token                    local token, file mode 0600 (local mode only)
-├── vault.json               encrypted credentials of the connections, file mode 0600; created with the first credential (SDD-014 §3)
+├── library/                 memory/, prompts/ and skills/<name>/SKILL.md: the files of the library, the truth of the index (SDD-018 §2)
 ├── store/                   content-addressed originals: store/<first 2 hex>/<sha256>; store/.incoming/ holds copies in progress
 ├── artifacts/               derived files: artifacts/<asset sha256>/<kind>-<profile version>[-<variant>].<ext> (SDD-011 §6.1)
 ├── exports/                 exported files: exports/<project id>/<job id>.mp4 (`.gif`, `.wav` or `.m4a` for the other formats of SDD-004 §8.1)
