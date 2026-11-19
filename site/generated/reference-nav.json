@@ -179,6 +179,18 @@
       ]
     },
     {
+      "tag": "Publishing",
+      "pages": [
+        "publish.now",
+        "publish.status",
+        "publish.validate",
+        "social.accounts",
+        "social.complete",
+        "social.connect",
+        "social.networks"
+      ]
+    },
+    {
       "tag": "Agent chat",
       "pages": [
         "agents.profiles.list",

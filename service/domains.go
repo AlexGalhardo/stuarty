@@ -48,6 +48,12 @@ var OperationDomains = map[string]string{
 	"ApprovalList": command.DomainPublish, "ApprovalGet": command.DomainPublish,
 	"ApprovalDecide": command.DomainPublish, "ApprovalRuleList": command.DomainPublish,
 	"ApprovalRuleSet": command.DomainPublish, "ApprovalRuleRemove": command.DomainPublish,
+	// The social networks a publication goes to, and the publication itself (SDD-020 section 9).
+	"SocialNetworkList": command.DomainPublish, "SocialConnectBegin": command.DomainPublish,
+	"SocialConnectComplete": command.DomainPublish, "SocialAccountList": command.DomainPublish,
+	"PublishValidate": command.DomainPublish, "PublishNow": command.DomainPublish,
+	"PublishStatus": command.DomainPublish,
+
 	"CostSummary": command.DomainProvider, "CostCeilingSet": command.DomainProvider,
 	"ProviderList": command.DomainProvider, "ProviderModels": command.DomainProvider,
 	"ProviderPriceSet": command.DomainProvider, "TextGenerate": command.DomainProvider,

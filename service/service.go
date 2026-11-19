@@ -23,8 +23,10 @@ import (
 	"github.com/AlexGalhardo/stuarty/service/agenthost"
 	"github.com/AlexGalhardo/stuarty/service/approval"
 	"github.com/AlexGalhardo/stuarty/service/connections"
+	"github.com/AlexGalhardo/stuarty/service/connections/oauth"
 	"github.com/AlexGalhardo/stuarty/service/library"
 	"github.com/AlexGalhardo/stuarty/service/providers"
+	"github.com/AlexGalhardo/stuarty/service/social"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
 )
 
@@ -184,6 +186,16 @@ type Service interface {
 	ApprovalRuleRemove(ctx context.Context, req ApprovalRef) (*approval.RuleView, error)
 	CostSummary(ctx context.Context, req CostSummaryRequest) (*CostSummaryResult, error)
 	CostCeilingSet(ctx context.Context, req CostCeilingSetRequest) (*CostSummaryResult, error)
+
+	// The social networks and publishing (SDD-020). A publication is a job of a kind that needs approval:
+	// PublishNow answers a job in waiting_approval, and nothing leaves the machine before a person approves.
+	SocialNetworkList(ctx context.Context, req SocialNetworkListRequest) (*SocialNetworkListResult, error)
+	SocialConnectBegin(ctx context.Context, req SocialConnectBeginRequest) (*SocialConnectBeginResult, error)
+	SocialConnectComplete(ctx context.Context, req SocialConnectCompleteRequest) (*SocialAccount, error)
+	SocialAccountList(ctx context.Context, req SocialAccountListRequest) (*SocialAccountListResult, error)
+	PublishValidate(ctx context.Context, req PublishValidateRequest) (*PublishValidateResult, error)
+	PublishNow(ctx context.Context, req PublishNowRequest) (*Job, error)
+	PublishStatus(ctx context.Context, req PublishStatusRequest) (*PublishStatusResult, error)
 }
 
 // Event is what the service publishes after the change is durable (SDD-006
@@ -263,6 +275,9 @@ type Options struct {
 	// credentials; without one the service builds a registry over the store with a vault in the
 	// workspace that has no master key source, so a connection cannot be created (SDD-014).
 	Connections *connections.Manager
+	// Social is the registry of the social network connectors (SDD-020); without one the build publishes
+	// to no network and the social operations answer empty lists.
+	Social *social.Registry
 	// Providers is the registry of the AI providers, with their adapters registered (SDD-016); without one
 	// the service has a registry with no provider, so no generation can start.
 	Providers *providers.Registry
@@ -304,6 +319,8 @@ type svc struct {
 	keys        KeyStore
 	conns       *connections.Manager
 	kinds       map[string]*ApprovableKind
+	social      *social.Registry
+	flows       *oauth.Flows
 	providers   *providers.Registry
 	lib         *library.Manager // the files of memory, skills and prompts; nil without a workspace
 	heavy       RateLimiter
@@ -360,6 +377,7 @@ func New(o Options) (Service, error) {
 		doctor:      o.Doctor,
 		keys:        o.Keys,
 		conns:       o.Connections,
+		social:      o.Social,
 		heavy:       o.Heavy,
 		heavyLimitN: o.HeavyPerMinute,
 		log:         o.Log,
@@ -377,6 +395,7 @@ func New(o Options) (Service, error) {
 	}
 
 	s.kinds = kinds
+	s.registerPublishKind()
 
 	if s.workspace != "" {
 		s.fonts = enginestore.NewFonts(s.workspace)
@@ -385,6 +404,10 @@ func New(o Options) (Service, error) {
 
 	if s.conns == nil {
 		s.conns = connections.NewDefault(o.Store.Connections(), s.workspace, s.now)
+	}
+
+	if s.social != nil {
+		s.social.Bind(s.conns)
 	}
 
 	if s.providers == nil {
@@ -418,6 +441,8 @@ func New(o Options) (Service, error) {
 	if s.now == nil {
 		s.now = time.Now
 	}
+
+	s.flows = oauth.NewFlows(s.now)
 
 	if s.jobWait <= 0 {
 		s.jobWait = jobWait

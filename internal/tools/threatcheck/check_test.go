@@ -119,11 +119,10 @@ func TestTheRealModelParses(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if len(threats) != 55 {
-		t.Errorf(
-			"the model has %d threats, want 55 (T-55, a key or an error body leaves through a provider call)",
-			len(threats),
-		)
+	// T-52 to T-55 are the AI provider threats of epic 09; T-56 to T-59 are the publishing threats of epic 18;
+	// T-70 to T-74 are the hosted agent threats of epic 14.
+	if len(threats) != 64 {
+		t.Errorf("the model has %d threats, want 64 (T-74, the chat used to approve what only the queue may)", len(threats))
 	}
 }
 
