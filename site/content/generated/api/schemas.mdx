@@ -1002,11 +1002,12 @@ The types named in the tables of the operations. The arguments of each editing c
 | `style` | [`CaptionStyle`](/docs/api/schemas#captionstyle) or `any` or `null` or `null` | no |  |
 | `temperature` | `number (double)` | no |  |
 | `text` | `string` | no |  |
+| `timeline` | `string` | no |  |
 | `tint` | `number (double)` | no |  |
 | `track` | `string` | no |  |
 | `transition_in` | [`Transition`](/docs/api/schemas#transition) or `any` or `null` or `null` | no |  |
 | `transition_out` | [`Transition`](/docs/api/schemas#transition) or `any` or `null` or `null` | no |  |
-| `type` | `clip`, `audio`, `text`, `caption`, `shape` | no |  |
+| `type` | `clip`, `audio`, `text`, `caption`, `shape`, `composition` | no |  |
 | `voice` | `clear`, `warm`, `deep`, `bright`, `radio` | no |  |
 | `volume` | `number (double)` | no |  |
 | `wheels` | [`Wheels`](/docs/api/schemas#wheels) or `any` or `null` or `null` | no |  |
@@ -1441,7 +1442,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `args` | map of `any` | no | The arguments of the command. |
-| `op` | `string`, one of 76 values | yes | A command name, as listed by GET /commands.. min length 1 |
+| `op` | `string`, one of 79 values | yes | A command name, as listed by GET /commands.. min length 1 |
 
 ### Origin
 
@@ -2343,6 +2344,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `source_seconds` | `number (double)` | no |  |
 | `speed` | `number (double)` | no |  |
 | `speed_curve` | [`SpeedRamp`](/docs/api/schemas#speedramp) or `any` or `null` or `null` | no |  |
+| `timeline` | `string` | no |  |
 | `voice` | `string` | no |  |
 
 ### WindowBitmaps
@@ -2351,6 +2353,14 @@ The types named in the tables of the operations. The arguments of each editing c
 | --- | --- | --- | --- |
 | `index` | array of `integer` | no |  |
 | `keys` | array of `string` | no |  |
+
+### WindowGroup
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `height` | `integer` | no |  |
+| `layers` | array of [`WindowLayer`](/docs/api/schemas#windowlayer) | no |  |
+| `width` | `integer` | no |  |
 
 ### WindowLayer
 
@@ -2374,6 +2384,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `flip_x` | `boolean` | no |  |
 | `flip_y` | `boolean` | no |  |
 | `grade` | [`GradeSpec`](/docs/api/schemas#gradespec) or `any` or `null` or `null` | no |  |
+| `group` | [`WindowGroup`](/docs/api/schemas#windowgroup) or `any` or `null` or `null` | no |  |
 | `h` | `any` | no |  |
 | `item` | `string` | no |  |
 | `kind` | `string` | no |  |
@@ -2389,6 +2400,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `shadow` | [`ShadowSpec`](/docs/api/schemas#shadowspec) or `any` or `null` or `null` | no |  |
 | `source_frames` | array of `integer` | no |  |
 | `source_seconds` | array of `number (double)` | no |  |
+| `timeline` | `string` | no |  |
 | `transition` | array of [`TransitionSpec`](/docs/api/schemas#transitionspec) or `any` or `null` or `null` | no |  |
 | `w` | `any` | no |  |
 
