@@ -11,6 +11,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -666,5 +667,40 @@ func TestRuntimeSecretIsPrivatePerRunAndRemovedWithRuntime(t *testing.T) {
 
 	if _, err := d.LoadRuntimeSecret(); !errors.Is(err, fs.ErrNotExist) {
 		t.Errorf("after RemoveRuntime: %v, want not exist", err)
+	}
+}
+
+// VV-252: an owner that holds the lock but does not answer in time (slow, not
+// absent) is never replaced by in-process access. Every probe is held until
+// the client gives up on it, so each one misses by construction; Open waits
+// out its limit and reports E_WORKSPACE_LOCKED.
+func TestOpenSlowOwnerHoldingTheLockIsNeverReplacedByInProcess(t *testing.T) {
+	t.Parallel()
+	home := t.TempDir()
+	d := Dir(home)
+	holder, err := d.TryLock()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer holder.Release()
+
+	var probes atomic.Int32
+	srv := httptest.NewServer(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
+		probes.Add(1)
+		<-r.Context().Done()
+	}))
+	t.Cleanup(srv.Close)
+	advertise(t, d, srv, ModeLocal)
+
+	o := fast(home)
+	o.Wait = 300 * time.Millisecond
+	o.Client = &http.Client{Timeout: 20 * time.Millisecond}
+	s, err := Open(context.Background(), o)
+	if s != nil {
+		t.Fatalf("session = %+v, want none: a slow owner must not be replaced", s)
+	}
+	lockedCode(t, err)
+	if probes.Load() == 0 {
+		t.Error("the owner was never probed")
 	}
 }
