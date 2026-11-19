@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"math"
 	"os"
 	"path"
@@ -257,6 +258,29 @@ func (s *svc) importFile(
 		return out
 	}
 
+	return s.putAndAttach(ctx, c.Actor, project, file, f.AssetID, out, rec)
+}
+
+// putAndAttach is the part of an import from the open file to the linked asset: the copy into the store, the
+// row of the asset, its link to the project and the library side (SDD-011 sections 2.3 and 14). A file read from
+// a path and a file a provider generated (SDD-016 section 6.1) share it. It never fails the call: a refusal is
+// the Error of the entry.
+func (s *svc) putAndAttach(
+	ctx context.Context,
+	actor string,
+	project *ProjectRow,
+	file io.Reader,
+	wantedID string,
+	out ImportedAsset,
+	rec *libraryRecord,
+) ImportedAsset {
+	refuse := func(err error) ImportedAsset {
+		out.State = string(IngestFailed)
+		out.Error = fromEngine(err)
+
+		return out
+	}
+
 	// The read side of the store lock covers the copy into store/ and the row
 	// of the asset, so an emptying cannot delete a file this import found.
 	s.storeMu.RLock()
@@ -285,11 +309,11 @@ func (s *svc) importFile(
 		}
 
 		var aerr error
-		if att, aerr = s.attach(ctx, tx, project, ar, out.Name, f.AssetID, c.Actor, now); aerr != nil {
+		if att, aerr = s.attach(ctx, tx, project, ar, out.Name, wantedID, actor, now); aerr != nil {
 			return aerr
 		}
 
-		return assetlib.RecordImport(ctx, tx.AssetLibrary(), c.OwnerUserID, hash, rec.origin, rec.info, c.Actor, now)
+		return assetlib.RecordImport(ctx, tx.AssetLibrary(), hash, rec.origin, rec.info, actor, now)
 	})
 	s.storeMu.RUnlock()
 
@@ -401,6 +425,11 @@ func (s *svc) checkImportSize(size int64) *Error {
 			withDetail("ceiling", s.limits.MaxImportBytes).withDetail("variable", "STUARTY_MAX_IMPORT_BYTES")
 	}
 
+	return s.checkFreeSpace(size)
+}
+
+// checkFreeSpace refuses when the disk of the workspace would keep less than the reserve after size more bytes.
+func (s *svc) checkFreeSpace(size int64) *Error {
 	if s.limits.MinFreeBytes > 0 && s.workspace != "" {
 		need := uint64(size) + uint64(s.limits.MinFreeBytes) //nolint:gosec // both are positive
 

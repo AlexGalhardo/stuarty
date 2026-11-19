@@ -44,6 +44,8 @@ var Provenance = map[string]string{
 	"approval.Request.Reason":              SourceProjectText,
 	"service.TextResult.Text":              SourceNetworkText,
 	"service.ModelView.Name":               SourceNetworkText,
+	"service.VoiceView.Name":               SourceNetworkText,
+	"service.GeneratedItem.RevisedPrompt":  SourceNetworkText,
 	"service.LibraryEntry.Description":     SourceLibraryText,
 	"service.LibraryEntry.Tags":            SourceLibraryText,
 	"service.LibraryEntry.Error":           SourceLibraryText,

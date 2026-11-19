@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"net"
 	"net/http"
 	"strconv"
 	"strings"
@@ -82,11 +83,23 @@ func transportError(ctx context.Context, err error) error {
 		errors.Is(err, outbound.ErrDestination),
 		errors.Is(err, outbound.ErrNotPublic):
 		return err
+	case errors.Is(ctx.Err(), context.Canceled):
+		return ctx.Err()
+	case errors.Is(err, context.DeadlineExceeded), isTimeout(err):
+		// The client of a connection gives up after its timeout, and a parent context may have a deadline of its
+		// own: either way the request did not finish in time (SDD-016 section 6.2).
+		return &providers.Error{Kind: providers.KindTimeout}
 	case ctx.Err() != nil:
 		return ctx.Err()
 	}
 
 	return &providers.Error{Kind: providers.KindUnavailable}
+}
+
+func isTimeout(err error) bool {
+	ne, ok := errors.AsType[net.Error](err)
+
+	return ok && ne.Timeout()
 }
 
 // refusedCodes are the short error codes with which a provider says it declined the prompt under its content
