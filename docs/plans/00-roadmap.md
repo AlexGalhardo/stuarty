@@ -34,7 +34,7 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | [12](12-ai-oauth-connections.md) | Sign in with ChatGPT and OpenRouter | M | 09 | TODO |
 | [13](13-mcp-domains-and-agent-docs.md) | MCP tools by domain and generated agent documentation | M | 06 | TODO |
 | [14](14-hosted-agent-chat.md) | The user's agent hosted in the chat panel | L | 07, 13 | TODO |
-| [15](15-memory-skills-and-prompts.md) | Memory, skills and prompts | L | 07 | IN PROGRESS (senior-c, 2026-11-19) |
+| [15](15-memory-skills-and-prompts.md) | Memory, skills and prompts | L | 07 | DONE (2026-11-19, 65d33593..d2e8660f) |
 | [16](16-curated-skills-and-briefing.md) | Curated skills and the guided briefing | M | 06, 15 | TODO |
 | [17](17-writing.md) | Writing: scripts, copy and captions | M | 06, 09 | TODO |
 | [18](18-social-connectors-and-youtube.md) | Social connectors and YouTube | L | 04, 05 | TODO |
@@ -52,7 +52,7 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | --- | --- | --- | --- | --- |
 | [26](26-browser-preview-on-the-rust-renderer.md) | The browser preview on the Rust renderer | L | 03 | DONE (2026-11-19, e21f512f..9c750319; task 8, the idle-machine playback measurement, waits for an idle window) |
 | [27](27-image-document-core.md) | Image documents: core, catalogue, templates and export | L | 03 | DONE (2026-11-19, 97d5c560..7758cdda replayed and merged; WebP export waits for an ffargs builder) |
-| [28](28-image-editor-ui.md) | Image editor in the UI | L | 07, 27 | TODO |
+| [28](28-image-editor-ui.md) | Image editor in the UI | L | 07, 27 | IN PROGRESS (senior-a, 2026-11-19) |
 | [29](29-image-adjustments-filters-and-masks.md) | Image adjustments, filters, masks and blend modes | L | 27 | TODO |
 | [30](30-image-operations-with-a-model.md) | Image operations with a model | S | 10, 28 | TODO |
 | [31](31-motion-easing-crop-and-mask.md) | Motion: easing curves, animated crop and mask, presets | L | 03 | IN PROGRESS (senior-d, 2026-11-19) |
