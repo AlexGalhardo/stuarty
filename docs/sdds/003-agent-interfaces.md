@@ -3360,7 +3360,7 @@ The tool is the MCP form of the library operations of SDD-018 (memory notes, ski
 
 ### 4.3 `command_help`
 
-`command_help` is the only place that serves a command's schema over MCP. Without `name` it returns one line per public command of the build (`<name> [<scope>] <summary>`, under 2,000 tokens). With a name it returns the description, the `args` JSON Schema, an example and the error codes of that command, from `Registry.Get` and `Registry.Schema`, in the format of §3.9. Descriptions and summaries come from the registry's `summary` and `description` fields, so the tool, the CLI `command:help`, `GET /commands/{name}` and the skill file always agree.
+`command_help` is the only place that serves a command's schema over MCP, and the discovery call of §4.8: its `domain` argument selects the domain whose commands it lists or explains (`video` when absent). Without `name` it returns one line per public command of the build (`<name> [<scope>] <summary>`, under 2,000 tokens). With a name it returns the description, the `args` JSON Schema, an example and the error codes of that command, from `Registry.Get` and `Registry.Schema`, in the format of §3.9. Descriptions and summaries come from the registry's `summary` and `description` fields, so the tool, the CLI `command:help`, `GET /commands/{name}` and the skill file always agree.
 
 ### 4.4 Jobs, waiting and tasks
 
@@ -3429,6 +3429,42 @@ The package is `web/app/mcp` (`mcp.New`, `mcp.Handler` for `POST /mcp`, `mcp.Run
 - **Process model (rule 3) is not complete.** `stuarty serve` is the owner (listener, worker, hub, `runtime.json`), and `stuarty mcp` with a server running is its HTTP client, which `TestScenarioThroughTheRealServer` exercises. `stuarty mcp` with no owner still runs the Service in process: it takes the lock but opens no listener and writes no `runtime.json`, so the UI and the CLI cannot reach a stdio server that is the owner (`TestStdioOwnerIsReachedByTheCLIAndOpen` is skipped). Closing it needs the serve wiring of `web/cmd/app` inside the `mcp` command.
 - **`POST /mcp`** is mounted behind the HTTP guard; `TestScenarioThroughTheRealServer` calls it with the bearer token of the workspace.
 - **Tasks extension:** not supported by the SDK, deferred by decision, see §4.4.
+
+### 4.8 Domains, routing and discovery (ADR-0043, D-069, epic 13)
+
+The tool list stays short while the product grows because a new domain adds **operations, not tools**: the operations are registered with a domain, an existing intent tool routes to them, and the agent finds them through `command_help`. The domains are in SDD-000 §1.1: `project`, `video`, `image`, `writing`, `asset`, `publish`, `provider`, `memory`, `workspace`.
+
+**Registry.** `command.Spec` has `Domain`; `command.NewRegistry(domain)` makes the registry of one kind of document and `Register` gives each command its registry's domain, or refuses it (a `Domain` that differs from the registry's, an unknown domain, a registry with none). `commands.json` (the registry snapshot) has a `domain` member on every command. Service operations that are not commands (`ProjectList`, `MediaImport`, ...) have their domain in `service.OperationDomains`.
+
+**Routing.** An intent tool whose work differs by kind of document takes `domain`; a missing `domain` is `video`, so every call written before this change behaves as it did. The router is one function of `web/app/mcp` (`routeDomain`): it names the Service operation for the pair (tool, domain), and the answer for a pair with no operation is `E_VALIDATION` with `path` `domain` and a hint naming the domains the tool serves; an unknown domain is `E_VALIDATION` too. Routed today:
+
+| Tool | `video` (default) | `image` | other domains |
+| --- | --- | --- | --- |
+| `edit` | `Edit` (`project_id`) | `ImageEdit` (`image_id` instead of `project_id`) | not served: `E_VALIDATION` |
+| `history` | `HistoryList`, `Undo`, `Redo` | `ImageUndo`, `ImageRedo` (`image_id`); `action` `list` is not served | not served |
+| `command_help` | the commands of the timeline registry | the commands of the image registry | that domain's commands (none yet: the answer says so and names the tools that serve the domain) |
+
+A tool gets `domain` in the epic that registers the first non-video operation behind it, never earlier: every argument costs bytes of every `tools/list` (NFR-020). `lint`, `view`, `job_start`, `job_get` and `job_cancel` wait for such an operation. The `image` tool of §4.2 stays (the surface is frozen, §9.1); `edit` with `domain` `image` reaches the same `ImageEdit`, so an agent that learned one tool for timelines learns the same call for images.
+
+**No new tool.** The catalogue is still the 20 tools of §4.1: no existing intent fits a new tool better than a `domain` on an existing one, so none is added. A later epic adds a tool only when no intent fits, and writes the reason in this section.
+
+**Discovery (progressive disclosure).** `command_help` is the one discovery call:
+
+1. Without `name` and without `domain` it returns the operations of the video domain, one line each, as it always did, followed by one line per other domain (`<domain>: <summary>; <n> operations; tools <names>`) and the structured member `domains`. One call therefore returns the domains and the operations of the default one.
+2. With `domain` and no `name` it returns the operations of that domain, one line each, with the scope and the summary.
+3. With `name` (and the `domain` of the operation, `video` by default) it returns the description, the `args` schema, an example and the error codes, as §4.3 says. The schema of an operation is fetched on demand and never repeated in a tool definition.
+
+The summaries of the domains are the text of `command.Domains()`; a domain description is at most 160 characters.
+
+**The budget of NFR-020 (revised once, here).** It has three parts, all measured by `go run ./internal/tools/surfacebudget`, which `task lint` runs, with the figure of this document (characters divided by 3.2 for tokens, bytes of the minified JSON for the tool list): (1) the minified `tools/list` result, with a limit for the whole list, one for `edit` and one for any other tool; (2) the first discovery call, `command_help` with no argument, in characters of its text; (3) the description of each domain. The limits are in the Cost row of §4.1 and in NFR-020. The tool `project_get` with `detail` `document` is outside the per-call caps of §3.10 (D-088, decision S-1 is withdrawn): the document is unbounded and the description of the tool says what it costs. The limits are set from the measurement of the shape of this section plus a margin of about 3 percent, rounded up to 100 bytes, and not raised again for a new domain: a new domain adds no tool and spends none of the budget except its description line.
+
+**How a later epic registers a domain operation (the recipe).**
+
+1. Add the domain to SDD-000 §1.1 if it is new (it is one of the nine; a tenth needs the author), and the Service operation to the table of SDD-000 §1 and to `service.OperationDomains`.
+2. For an edit command of a document kind: build its registry with `command.NewRegistry(<domain>)` and register the commands in it; they inherit the domain. Give the Service a `registryOf` case for the domain.
+3. Route it: add the (tool, domain) pair to `routeDomain` and the member of the Service request it needs. If the tool has no `domain` argument yet, add it to the definition (§4.2), to `definitions/<tool>.json` and to the byte budget in the same change, and shorten a description to pay for it.
+4. Add the HTTP route, the CLI command (it appears under `stuarty <domain> <verb>` by itself, §5.1) and the row of the parity table of §7.1. `go test ./web/contract/...` fails until the three surfaces and the domain are there.
+5. Regenerate: `task codegen` rewrites the snapshot, the agent guide page of the domain and the references; `task generate:check` must pass.
 
 ## 5. CLI contract
 

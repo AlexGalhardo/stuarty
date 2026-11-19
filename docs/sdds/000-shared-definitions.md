@@ -89,6 +89,24 @@ The MCP catalogue is 20 tools: `project_list`, `project_create`, `project_get`, 
 
 Other CLI commands that are not service operations: `serve` (start the owner process), `mcp` (stdio MCP server), `open` (open the UI of a running server with a fresh launch code), `token:rotate`, `user:create` and `user:passwd` (network mode; they need the workspace lock, so no server may be running), `tools:install` (download a helper such as whisper.cpp after stating its size), `agent:docs` (print or write the generated material for agents, SDD-003 §8), plus vukem's built-in commands.
 
+### 1.1 Domains (ADR-0043, epic 13)
+
+Every operation belongs to one **domain**. The domain names are fixed here; a new domain is added here first.
+
+| Domain | What it holds | Operations today |
+| --- | --- | --- |
+| `project` | productions: projects, their items, the brief, bundles | `ProjectList`, `ProjectCreate`, `ProjectGet`, `ProjectTrash`, `ProjectRestore`, `ProjectDescribe`, `ProjectDuplicate`, `ProjectItem*`, `Brief*`, `ProjectBundle*`, the event stream |
+| `video` | the timeline document: its edit commands, history, lint, frames, jobs, templates, OpenTimelineIO | `Edit` and the commands of the timeline registry, `HistoryList`, `Undo`, `Redo`, `Lint`, `View*`, `JobStart`, `JobGet`, `JobList`, `JobCancel`, `ExportFile`, `Template*`, `SnapPoints`, `ProjectOtio*` |
+| `image` | image documents (SDD-021) | `Image*` and the commands of the image registry |
+| `writing` | written documents | none yet |
+| `asset` | files of the workspace: media, fonts | `Media*`, `AssetList`, `FontImport`, `FontList` |
+| `publish` | publications and their approval | none yet |
+| `provider` | AI providers and generation | none yet |
+| `memory` | the library: notes, skills, prompts, search | `Memory*`, `Skill*`, `Prompt*`, `Library*` |
+| `workspace` | the installation: help, connections, brand kit, health, keys, audit, trash, helpers | `CommandHelp`, `Connection*`, `BrandKit*`, `Doctor`, `AuditList`, `TrashEmpty`, `Tools*`, `Key*` |
+
+Rules: a command (an operation of a registry in `core/command`) takes its domain from the registry that holds it (`command.NewRegistry(domain)`); the registry refuses a command whose own `Domain` differs, and a registry with no domain. The timeline registry is `video`, the image registry `image`. A Service operation has its domain in the table `service.OperationDomains`, and `TestOperationDomains` fails when a Service method has none. The `domain` argument of an MCP tool (SDD-003 section 4.8) takes these names; a missing one means `video`.
+
 ## 2. Identifiers
 
 | Prefix | Object | Defined in |
