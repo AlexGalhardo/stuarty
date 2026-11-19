@@ -423,12 +423,9 @@ func (l *linter) otherFile(f File) {
 		return
 	}
 
-	switch {
-	case textExt[ext]:
-		l.text(f.Path, string(f.Data), true)
-	case isScript:
-		l.text(f.Path, string(f.Data), false)
-	}
+	// An agent reads any text file a skill points to (a .json, a .yaml, a file with no extension), so hidden
+	// characters and a piped download are looked for in every one; the words of an instruction only in prose.
+	l.text(f.Path, string(f.Data), textExt[ext])
 }
 
 // hasHidden reports whether the text has a character a person cannot see.

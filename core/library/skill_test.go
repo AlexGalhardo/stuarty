@@ -100,6 +100,12 @@ func TestLintEveryRuleOnItsFailingFixture(t *testing.T) {
 		{library.LintHiddenText, "error", "hook-writer", withBody("rtl \u202Eoverride\n")},
 		{library.LintHiddenText, "error", "hook-writer", withBody("tag \U000E0041\n")},
 		{library.LintHiddenText, "error", "hook-writer", withBody("pair \u200D\u200D\n")},
+		{
+			library.LintHiddenText,
+			"error",
+			"hook-writer",
+			withBody("x", library.File{Path: "assets/data.json", Data: []byte("{\"a\": \"b\u202Ec\"}\n")}),
+		},
 		{library.LintSize, "error", "hook-writer", withBody(strings.Repeat("x", library.MaxSkillMD))},
 		{
 			library.LintSize,
