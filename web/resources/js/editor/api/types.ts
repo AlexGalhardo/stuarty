@@ -678,12 +678,75 @@ export interface LibraryAsset {
 	bytes: number;
 	width?: number;
 	height?: number;
+	duration_ms?: number;
+	origin?: AssetOrigin;
+	description?: string;
+	reusable?: boolean;
+	tags?: string[];
+	created_by?: string;
+	created_at?: string;
 	projects: number;
+	// Where a picture of the file is served from: a timeline that holds it and its id there.
+	poster?: AssetPoster;
+	uses?: AssetUse[];
+}
+
+export type OriginKind =
+	| "imported"
+	| "generated"
+	| "fetched_by_agent"
+	| "rendered_externally";
+
+// SDD-011 section 14.2. source, prompt and rights_note are untrusted text.
+export interface AssetOrigin {
+	kind: OriginKind;
+	source?: string;
+	provider?: string;
+	model?: string;
+	prompt?: string;
+	cost_micros?: number;
+	rights_note?: string;
+}
+
+export interface AssetPoster {
+	timeline_id: string;
+	asset_id: string;
+}
+
+export interface AssetUse {
+	project_id: string;
+	name: string;
+	timelines: string[];
+	asset_id: string;
 }
 
 export interface AssetListResult {
 	assets: LibraryAsset[];
+	total: number;
+	next_cursor: string | null;
 	text: string;
+}
+
+// The filters of GET /assets (SDD-011 section 14.4).
+export interface AssetQuery {
+	section?: "visual" | "video";
+	kind?: "image" | "video" | "audio" | "lut";
+	tag?: string;
+	origin?: OriginKind;
+	reusable?: boolean;
+	text?: string;
+	project?: string;
+	cursor?: string;
+	limit?: number;
+}
+
+// GET /assets/{hash}, PUT /assets/{hash} and POST /assets/{hash}/tags answer one entry.
+export type AssetResult = LibraryAsset & { text: string };
+
+export interface AssetInfoBody {
+	description?: string;
+	rights_note?: string;
+	reusable?: boolean;
 }
 
 // GET /system (Doctor).

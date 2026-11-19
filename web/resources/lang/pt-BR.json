@@ -2137,6 +2137,65 @@
       "save": "Salvar kit de marca",
       "saved": "Kit de marca salvo."
     },
+    "assets": {
+      "intro": {
+        "visual": "As imagens e tabelas de cor do seu espaço de trabalho, com a origem de cada uma e onde é usada.",
+        "video": "Os vídeos e áudios do seu espaço de trabalho, com a origem de cada um e onde é usado."
+      },
+      "filter": {
+        "text": "Buscar",
+        "tag": "Etiqueta",
+        "origin": "Origem",
+        "any_origin": "Qualquer origem",
+        "reusable": "Só reutilizáveis",
+        "apply": "Aplicar",
+        "clear": "Limpar"
+      },
+      "origin": {
+        "imported": "Importado",
+        "generated": "Gerado",
+        "fetched_by_agent": "Baixado por um agente",
+        "rendered_externally": "Renderizado fora"
+      },
+      "kind": {
+        "image": "Imagem",
+        "video": "Vídeo",
+        "audio": "Áudio",
+        "lut": "Tabela de cor"
+      },
+      "reusable_badge": "Reutilizável",
+      "count": "{count} arquivos",
+      "empty": {
+        "visual": "Nenhuma imagem ainda. Importe um arquivo em um projeto e ele aparece aqui.",
+        "video": "Nenhum vídeo ou áudio ainda. Importe um arquivo em um projeto e ele aparece aqui."
+      },
+      "empty_filtered": "Nenhum arquivo corresponde a esses filtros.",
+      "more": "Carregar mais",
+      "detail": {
+        "title": "Detalhes",
+        "close": "Fechar",
+        "origin": "Origem",
+        "facts": "Arquivo",
+        "provider": "Provedor {provider}, modelo {model}",
+        "cost": "Custo: {amount} USD",
+        "created": "adicionado em {date}",
+        "description": "Descrição",
+        "rights": "Nota de direitos",
+        "rights_notice": "Esta nota é o seu próprio registro da licença ou da permissão. O produto não a confere com nenhuma licença.",
+        "reusable": "Oferecer este arquivo de novo (reutilizável)",
+        "save": "Salvar",
+        "saved": "Salvo.",
+        "tags": "Etiquetas",
+        "tag_add_label": "Nova etiqueta",
+        "tag_add": "Adicionar etiqueta",
+        "tag_remove": "Remover a etiqueta {tag}",
+        "uses": "Usado por",
+        "no_uses": "Nenhum projeto usa este arquivo.",
+        "use_in": "Usar em um projeto",
+        "use": "Usar",
+        "used": "Adicionado ao projeto. Nenhuma cópia foi feita."
+      }
+    },
     "library": {
       "intro": {
         "memory": "O que você aprendeu em produções passadas, um fato por arquivo. Os agentes leem antes de planejar a próxima.",
