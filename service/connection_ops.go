@@ -135,6 +135,17 @@ func (s *svc) ConnectionCreate(ctx context.Context, req ConnectionCreateRequest)
 			withPath("secret")
 	}
 
+	return s.insertConnection(ctx, c, spec, []byte(req.Secret))
+}
+
+// insertConnection puts the credential of a validated connection in the vault and records it, with an
+// audit row. ConnectionCreate and the sign-in of a social network (SDD-020) share it.
+func (s *svc) insertConnection(
+	ctx context.Context,
+	c Caller,
+	spec connections.Spec,
+	secret []byte,
+) (*connections.Connection, error) {
 	count, err := s.store.Connections().Count(ctx)
 	if err != nil {
 		return nil, asError(err)
@@ -149,7 +160,7 @@ func (s *svc) ConnectionCreate(ctx context.Context, req ConnectionCreateRequest)
 	id := s.newIDs("con")
 	now := s.nowMs()
 
-	if err := s.conns.PutSecret(id, []byte(req.Secret)); err != nil {
+	if err := s.conns.PutSecret(id, secret); err != nil {
 		return nil, connectionError(err)
 	}
 
