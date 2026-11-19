@@ -3,8 +3,8 @@ title: "Installation"
 description: "Where to get Stuarty, what each download is, and how to check it before you run it."
 ---
 
-<Callout type="warning" title="BETA">
-Stuarty is in its BETA phase: released and still before 1.0. New releases (`v0.N.0`) add features about every 90 commits and may change a public interface. Check the [changelog](/changelog) for what a release changes.
+<Callout type="warning" title="Still before 1.0">
+Stuarty is released and still before 1.0. New releases (`v0.N.0`) add features about every 90 commits and may change a public interface. Check the [changelog](/changelog) for what a release changes.
 </Callout>
 
 ## You will learn
@@ -48,9 +48,9 @@ To build from source you need Go (the version in `go.mod`) and Bun for the front
 
 A release that carries the desktop application lists one file per system next to the other installers: `stuarty-desktop-X-Y-Z.exe` for Windows 11 (`stuarty-desktop-0-28-0.exe`), `stuarty-desktop-X-Y-Z-arm64.dmg` (Apple silicon) or `stuarty-desktop-X-Y-Z-amd64.dmg` (Intel) for macOS, `stuarty-desktop-X-Y-Z.AppImage` for Linux, and `stuarty-desktop_X.Y.Z_linux_amd64.deb` for Debian and Ubuntu. Each holds the window and the server it starts. The [desktop application](/docs/guide/desktop) page says what it does.
 
-### The BETA installers are not signed
+### The installers are not signed
 
-No installer is signed with a paid certificate: there is no Apple Developer ID, no notarization and no Windows code-signing certificate in the BETA. Windows and macOS therefore warn before the first run. This is expected; what proves the file is genuine is the checksum and the signature in the release, which you can [verify](/docs/self-hosting/verify-a-release).
+No installer is signed with a paid certificate: there is no Apple Developer ID, no notarization and no Windows code-signing certificate. Windows and macOS therefore warn before the first run. This is expected; what proves the file is genuine is the checksum and the signature in the release, which you can [verify](/docs/self-hosting/verify-a-release).
 
 - **Windows.** SmartScreen shows "Windows protected your PC". Choose **More info**, then **Run anyway**.
 - **macOS.** Gatekeeper says the app cannot be opened because Apple cannot check it. Control-click (right-click) the app, choose **Open**, then **Open** again. Or remove the quarantine mark in a terminal: `xattr -d com.apple.quarantine "/Applications/Stuarty.app"`.
@@ -58,7 +58,7 @@ No installer is signed with a paid certificate: there is no Apple Developer ID, 
 
 ## Common mistakes
 
-- The system warns before the first run. The installers are not signed with a paid certificate; see [The BETA installers are not signed](#the-beta-installers-are-not-signed) above for the SmartScreen and Gatekeeper steps, and [verify the download](/docs/self-hosting/verify-a-release) first if you want proof.
+- The system warns before the first run. The installers are not signed with a paid certificate; see [The installers are not signed](#the-installers-are-not-signed) above for the SmartScreen and Gatekeeper steps, and [verify the download](/docs/self-hosting/verify-a-release) first if you want proof.
 - FFmpeg is not found. The editor uses your FFmpeg, and `STUARTY_FFMPEG` and `STUARTY_FFPROBE` name the binaries explicitly. See the [configuration variables](/docs/reference/configuration).
 
 ## Next steps

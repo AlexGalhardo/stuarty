@@ -10,7 +10,6 @@ export interface EditorBootstrap {
 	locales: string[];
 	messages: Record<string, Message>;
 	user: { id: string; name: string } | null;
-	phase: "prototype" | "alpha" | "beta";
 	version: string;
 }
 
@@ -26,7 +25,7 @@ export function parseBootstrap(
 	if (!text) throw new Error("editor bootstrap is missing");
 	const raw: unknown = JSON.parse(text);
 	if (!isRecord(raw)) throw new Error("editor bootstrap is not an object");
-	const { project_id, mode, api_base, locale, messages, phase } = raw;
+	const { project_id, mode, api_base, locale, messages } = raw;
 	if (typeof project_id !== "string" || !PROJECT_ID.test(project_id)) {
 		throw new Error("editor bootstrap has no valid project_id");
 	}
@@ -39,9 +38,6 @@ export function parseBootstrap(
 	if (typeof locale !== "string" || !isRecord(messages)) {
 		throw new Error("editor bootstrap has no catalog");
 	}
-	if (phase !== "prototype" && phase !== "alpha" && phase !== "beta") {
-		throw new Error("editor bootstrap has an unknown phase");
-	}
 	return {
 		project_id,
 		mode,
@@ -50,7 +46,6 @@ export function parseBootstrap(
 		locales: Array.isArray(raw.locales) ? (raw.locales as string[]) : [locale],
 		messages: messages as EditorBootstrap["messages"],
 		user: isRecord(raw.user) ? (raw.user as EditorBootstrap["user"]) : null,
-		phase,
 		version: typeof raw.version === "string" ? raw.version : "",
 	};
 }
