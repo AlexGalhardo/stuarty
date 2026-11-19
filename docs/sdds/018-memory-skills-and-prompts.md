@@ -156,11 +156,11 @@ Files are copied as bytes; none is executed, opened by another program or given 
 
 ## 9. The index and the scan
 
-The index is two tables (migration `create_library_index`): `library_entries` and the full-text table `library_fts`. It is rebuilt from the files: `LibraryReindex` empties it and reads every file; a **scan** compares the files with the rows (path, size, modification time) and re-reads what differs, adds what is new and drops what is gone. The scan runs on the first read after the process starts and at the start of every list, get and search (a few hundred files cost a few directory reads), so a file edited outside the product is found at the next call (RF-391). A file that does not parse is indexed as `invalid` with its error, never skipped silently, and shown in the list with the reason. A request that reads a file reads the file, never the index.
+The index is two tables (migration `create_library_index`): `library_entries` and the full-text table `library_fts`. It is rebuilt from the files: `LibraryReindex` empties it and reads every file; a **scan** compares the files with the rows (`sig`) and re-reads what differs, adds what is new and drops what is gone. The scan runs on the first read after the process starts and at the start of every list, get and search (a few hundred files cost a few directory reads), so a file edited outside the product is found at the next call (RF-391). A file that does not parse is indexed as `invalid` with its error, never skipped silently, and shown in the list with the reason. A request that reads a file reads the file, never the index.
 
 | Table | Columns |
 | --- | --- |
-| `library_entries` | `key` (primary key, `<kind>/<name>`), `kind`, `name`, `description`, `scope`, `origin`, `reviewed` (0 or 1, computed at the scan from the content hash), `kept` (0 or 1), `actor`, `tags` (JSON array), `state` (`ok` or `invalid`), `error`, `path` (relative to `library/`), `size`, `mtime_ns`, `created_ms`, `updated_ms` |
+| `library_entries` | `key` (primary key, `<kind>/<name>`), `kind`, `name`, `description`, `scope`, `origin`, `reviewed` (0 or 1, computed at the scan from the content hash), `kept` (0 or 1), `actor`, `tags` (JSON array), `state` (`ok` or `invalid`), `error`, `path` (relative to `library/`), `sig` (file count, bytes and latest modification time of the file or folder, what the scan compares), `lint_errors`, `lint_warnings`, `has_scripts` (skills), `created_ms`, `updated_ms` |
 | `library_fts` | FTS5 over `key` (not indexed), `name`, `description`, `tags`, `body`; the tokenizer is `unicode61` with `remove_diacritics 2` |
 
 ## 10. Search
