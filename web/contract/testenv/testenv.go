@@ -35,6 +35,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/connections"
 	"github.com/AlexGalhardo/stuarty/service/pathguard"
+	"github.com/AlexGalhardo/stuarty/service/providers"
 	"github.com/AlexGalhardo/stuarty/service/vault"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
 	"github.com/AlexGalhardo/stuarty/web/app/jobs"
@@ -77,6 +78,9 @@ type Options struct {
 	// MasterKey gives the workspace a vault whose master key is this one (32 bytes), so a test can
 	// create connections; nil leaves a vault with no key source.
 	MasterKey []byte
+	// Providers are the AI providers to register (SDD-016); they need MasterKey, since a provider is reached
+	// through a connection.
+	Providers []providers.Provider
 }
 
 // Env is a service with a worker running behind it.
@@ -167,9 +171,23 @@ func New(tb testing.TB, o Options) *Env {
 		})
 	}
 
+	var reg *providers.Registry
+
+	if len(o.Providers) > 0 {
+		reg = providers.NewRegistry(
+			conns, providers.NewPriceBook(filepath.Join(string(dir), "providers", providers.PriceFile)), o.Clock,
+		)
+
+		for _, p := range o.Providers {
+			if err := reg.Register(p); err != nil {
+				tb.Fatal(err)
+			}
+		}
+	}
+
 	svc, err := service.New(service.Options{
-		Connections: conns,
-		Store:       st, Registry: command.Default(), Now: o.Clock, NewIDs: e.newID,
+		Connections: conns, Providers: reg,
+		Store: st, Registry: command.Default(), Now: o.Clock, NewIDs: e.newID,
 		Workspace:   string(dir),
 		Limits:      o.Limits,
 		Transcriber: o.Transcriber,
