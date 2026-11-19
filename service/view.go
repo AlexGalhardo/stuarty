@@ -209,7 +209,7 @@ func pinMismatch(current int64) *Error {
 }
 
 func (s *svc) beginView(ctx context.Context, method, projectID, timelineID string, pin int64) (*view, error) {
-	c, err := authorize(ctx, method, projectID)
+	c, err := s.authorizeProject(ctx, method, projectID)
 	if err != nil {
 		return nil, err
 	}

@@ -1435,7 +1435,7 @@ PRD-004 RF-320 to RF-323, ADR-0010, ADR-0039, ADR-0036 item 6. The library is th
 
 ### 14.1 The entry
 
-A library entry is one file by hash, with the facts of the probe and the library side of SDD-005 §5.5.1. In `service` it is `LibraryAsset`; its members:
+A library entry is one file by hash for one owner, with the facts of the probe and the library side of SDD-005 §5.5.1. The bytes are one per hash and shared; the library side (origin, rights note, description, tags, reuse mark and the search text) belongs to the owner: the user in network mode, the one local owner in local mode (DS-22). In `service` it is `LibraryAsset`; its members:
 
 | Member | Meaning |
 | --- | --- |
@@ -1463,9 +1463,9 @@ A missing required member is `E_VALIDATION` with `path` `origin.<member>` and `d
 
 ### 14.3 Tags, reuse and uses
 
-- A tag is trimmed, NFC-normalised, lower-cased, a leading `#` removed and runs of white space turned into one `-`; it has 1 to 40 characters from letters, digits, `-` and `_`. An asset holds at most 20. A tag that is not valid after normalisation refuses the call (`tags_invalid`); a duplicate is kept once; the set is sorted.
+- A tag is trimmed, NFC-normalised, lower-cased, a leading `#` removed and runs of white space turned into one `-`; it has 1 to 40 characters from letters, digits, `-` and `_`. An asset holds at most 20. A tag that is not valid after normalisation refuses the call (`tags_invalid`); a duplicate is kept once; the set is sorted. The NFC step is done by `service/assets` before `core/asset` applies the other rules, since `core/` imports only the standard library (ADR-0001).
 - `reusable` is a mark the user or an agent sets on a file they want offered again (a logo, a reaction clip, a sound). It filters; it grants nothing: any file of the library can be used by a project, reusable or not.
-- A project uses an asset when a timeline of it holds the hash in `project_assets` in state `active` (SDD-005 §5.5.1). Reusing a file from another project is `MediaImport` with the file given by hash (`files[].hash`, no path): the service links the hash to the timeline with its own `ast_` identifier and, when the asset is `ready`, issues `asset.add`. Nothing is copied and no ingest runs for a `ready` asset. In network mode the hash must be held by a project the caller can see; otherwise the answer is the same `E_VALIDATION` as for a hash that does not exist (SDD-007 T-20).
+- A project uses an asset when a timeline of it holds the hash in `project_assets` in state `active` (SDD-005 §5.5.1). Reusing a file from another project is `MediaImport` with the file given by hash (`files[].hash`, no path): the service links the hash to the timeline with its own `ast_` identifier and, when the asset is `ready`, issues `asset.add`. Nothing is copied and no ingest runs for a `ready` asset. In network mode the hash must be held by a project the caller can see; otherwise the answer is the same `E_VALIDATION` as for a hash that does not exist (SDD-007 T-20). The new use takes the name a project of the caller gives the file; only in local mode is it the first name seen (`assets.original_name`), which in network mode may be another user's.
 
 ### 14.4 Operations
 
@@ -1497,7 +1497,7 @@ The UI has two sections over the library, Visual Assets (`image`, `lut`) and Vid
 | DS-19 | Origin is written once, at the first import of the bytes; the user's fields change later. |
 | DS-20 | A refused origin is `E_VALIDATION` with `details.reason`, not a new code. |
 | DS-21 | MCP gains no tool: the library reads live in `media_inspect` and its writes in `media_import`. |
-| DS-22 | Open, for the author before a release with network mode: the library side is kept per file, not per user. In network mode two users who both hold the same bytes see one entry (its origin, prompt, cost, rights note, description and tags) and either can change the description, the rights note, the reuse mark and the tags; a user who does not hold the bytes sees nothing of it (14.3). The alternative is an entry per owner in network mode. Local mode has one user and is not affected. |
+| DS-22 | Decided (VV-254): the library side is kept per owner, not per file. `asset_info`, `asset_tags` and `asset_search` are keyed by `(owner_user_id, asset_hash)`, the empty owner being local mode, and every read and write of the library (`AssetGet`, `AssetUses`, `AssetSetInfo`, `AssetTag`, `AssetList` with its search, the import that records a file) carries the owner of the caller and filters by it. Two network users who hold the same bytes each have their own origin, prompt, cost, rights note, description, tags and reuse mark, and neither reads, searches or changes the other's; the search text of an owner names the file only by the names that owner's projects give it. A user who does not hold the bytes still sees nothing, and a refused hash answers as a missing one (14.3). Reuse by hash across the projects of one owner is unchanged and makes no second copy. |
 
 ## 15. The hand-off from an external motion engine
 
@@ -1529,7 +1529,7 @@ A range that is empty or reversed, or a time that is not a time, is `E_INVALID_T
 
 ### 15.2 Import with origin
 
-A rendered file is imported with `MediaImport` and the origin block `{kind: rendered_externally, source, engine?, engine_version?, render_key?}` (14.2). `source` is where the engine's project lives or what it was, as plain text (untrusted). The agent chooses the `render_key`: a stable name for "this animation" (for example `lower-third-intro`), the same every time it renders that animation again. The origin is written once for the bytes (14.4): a re-render has other bytes, so it is another entry with the same `render_key`.
+A rendered file is imported with `MediaImport` and the origin block `{kind: rendered_externally, source, engine?, engine_version?, render_key?}` (14.2). `source` is where the engine's project lives or what it was, as plain text (untrusted). The agent chooses the `render_key`: a stable name for "this animation" (for example `lower-third-intro`), the same every time it renders that animation again. The origin is written once for the owner and the bytes (14.4): a re-render has other bytes, so it is another entry with the same `render_key`.
 
 ### 15.3 The check (`MotionCheck`)
 
@@ -1564,4 +1564,4 @@ HTTP: `GET /projects/{id}/motion/brief`, `GET /projects/{id}/motion/check`, `POS
 | DS-23 | The motion rules (the brief, the mismatches, which clips a key reaches) are `core/motion`, pure; the service reads the project and renders the two frames. |
 | DS-24 | The product runs no engine: no process, no runtime, no download (ADR-0042, ADR-0020 item 6). The hand-off is files in and files out. |
 | DS-25 | Nothing is stretched or trimmed silently: a mismatch is reported with the value expected, and `clip.replace_media` refuses a media that does not fit the clip's range. |
-| DS-26 | The replacement by `render_key` is one batch, so one undo restores every clip; the key is workspace data (`asset_info`, SDD-005 5.5.1), not a field of the timeline. |
+| DS-26 | The replacement by `render_key` is one batch, so one undo restores every clip; the key is library data of the caller (`asset_info` of the owner, SDD-005 5.5.1), not a field of the timeline. |

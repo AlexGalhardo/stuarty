@@ -844,7 +844,8 @@
         "add_video_track": "Adicionar faixa de vídeo",
         "add_audio_track": "Adicionar faixa de áudio",
         "marker": "Marcador no cabeçote",
-        "shortcuts": "Atalhos de teclado"
+        "shortcuts": "Atalhos de teclado",
+        "tour": "Fazer o tour"
       },
       "edit": {
         "label": "Edição",
@@ -1308,30 +1309,50 @@
         "reset": "Restaurar o padrão",
         "also": "Também {keys}",
         "saved": "Salvo. Toda edição é salva ao ser feita.",
+        "search": "Buscar atalhos",
+        "none": "Nenhum atalho corresponde.",
+        "preset": "Conjunto",
+        "presets": {
+          "short": "Vídeo curto",
+          "classic": "Clássico"
+        },
+        "dropped": "Estas teclas voltaram ao padrão do conjunto porque o novo conjunto as usa: {actions}.",
         "rows": {
           "play_pause": "Reproduzir ou pausar",
-          "step_frame": "Avançar ou voltar um quadro",
-          "step_second": "Avançar ou voltar um segundo",
-          "go_to_edge": "Ir ao início ou ao fim",
-          "next_cut": "Ir ao corte anterior ou ao seguinte",
-          "shuttle": "Reproduzir (L), pausar (K), voltar um segundo (J)",
-          "next_marker": "Ir ao marcador anterior ou ao seguinte",
+          "shuttle_back": "Voltar um segundo (player)",
+          "pause": "Pausar",
+          "shuttle_play": "Reproduzir",
+          "step_back": "Voltar um quadro",
+          "step_forward": "Avançar um quadro",
+          "step_second_back": "Voltar um segundo",
+          "step_second_forward": "Avançar um segundo",
+          "go_start": "Ir ao início",
+          "go_end": "Ir ao fim",
+          "prev_cut": "Ir ao corte anterior",
+          "next_cut": "Ir ao corte seguinte",
+          "prev_marker": "Ir ao marcador anterior",
+          "next_marker": "Ir ao marcador seguinte",
           "marker": "Adicionar um marcador na posição de reprodução, ou remover o que estiver nela",
-          "range_in_out": "Definir o ponto de entrada (I) e o de saída (O)",
+          "range_in": "Definir o ponto de entrada",
+          "range_out": "Definir o ponto de saída",
           "range_select": "Definir os pontos de entrada e saída pelos itens selecionados",
           "range_clear": "Limpar os pontos de entrada e saída",
-          "tool": "Ferramenta lâmina (B), ferramenta de seleção (A)",
+          "tool_blade": "Ferramenta lâmina",
+          "tool_select": "Ferramenta de seleção",
           "split": "Dividir o item selecionado na posição de reprodução",
           "split_all": "Dividir todas as trilhas na posição de reprodução",
           "trim_start": "Excluir o que está à esquerda da posição de reprodução",
           "trim_end": "Excluir o que está à direita da posição de reprodução",
-          "slide": "Deslizar o item selecionado, os vizinhos continuam encostados (1 quadro)",
-          "roll": "Rolar o corte depois do item selecionado (1 quadro)",
-          "slip": "Deslocar a fonte do clipe selecionado, mostrando outro trecho (1 quadro)",
-          "select_side": "Selecionar tudo à esquerda ou à direita da posição de reprodução",
+          "slide_back": "Deslizar o item selecionado para trás, os vizinhos continuam encostados (1 quadro)",
+          "slide_forward": "Deslizar o item selecionado para frente, os vizinhos continuam encostados (1 quadro)",
+          "roll_back": "Rolar para trás o corte depois do item selecionado (1 quadro)",
+          "roll_forward": "Rolar para frente o corte depois do item selecionado (1 quadro)",
+          "slip_back": "Deslocar a fonte do clipe selecionado para trás, mostrando um trecho anterior (1 quadro)",
+          "slip_forward": "Deslocar a fonte do clipe selecionado para frente, mostrando um trecho posterior (1 quadro)",
+          "select_left": "Selecionar tudo à esquerda da posição de reprodução",
+          "select_right": "Selecionar tudo à direita da posição de reprodução",
           "undo": "Desfazer",
           "redo": "Refazer",
-          "redo_alt": "Refazer (alternativa)",
           "zoom_in": "Aumentar o zoom",
           "zoom_out": "Diminuir o zoom",
           "zoom_fit": "Ajustar a linha do tempo",
@@ -1350,23 +1371,28 @@
           "toggle_enabled": "Ativar ou desativar os itens selecionados",
           "link": "Vincular ou desvincular os itens selecionados",
           "extract_audio": "Extrair o áudio dos clipes selecionados",
-          "toggle_snap": "Ativar ou desativar o encaixe",
           "toggle_magnet": "Ativar ou desativar o ímã da faixa",
           "copy_attributes": "Copiar o visual do item selecionado",
           "paste_attributes": "Colar o visual copiado nos itens selecionados",
+          "toggle_snap": "Ativar ou desativar o encaixe",
           "keyframe_panel": "Mostrar ou ocultar os keyframes do item selecionado",
           "speed_curve": "Abrir a curva de velocidade do clipe selecionado",
           "scroll": "Rolar a linha do tempo: roda para cima e para baixo, Alt+roda para os lados",
-          "preview_zoom": "Ajustar a prévia, aumentar o zoom, diminuir o zoom",
+          "preview_fit": "Ajustar a prévia",
+          "preview_zoom_in": "Aumentar o zoom da prévia",
+          "preview_zoom_out": "Diminuir o zoom da prévia",
           "import": "Importar mídia",
           "export": "Exportar",
           "save": "Salvar (toda edição já é salva)",
           "palette": "Paleta de comandos",
           "find": "Buscar no projeto",
-          "toggle_panel": "Mostrar ou ocultar biblioteca, inspetor e histórico",
+          "panel_library": "Mostrar ou ocultar a biblioteca",
+          "panel_inspector": "Mostrar ou ocultar o inspetor",
+          "panel_history": "Mostrar ou ocultar o histórico",
           "select_all": "Selecionar todos os itens",
           "cancel": "Cancelar, fechar ou limpar a seleção",
           "next_landmark": "Ir para a próxima região",
+          "prev_landmark": "Ir para a região anterior",
           "grid_keys": "Mover-se na linha do tempo",
           "cheat_sheet": "Abrir esta lista"
         }
@@ -2062,16 +2088,36 @@
         "undone": "Desfeito",
         "redone": "Refeito"
       },
-      "tips": {
-        "title": "Primeiros passos",
-        "items": {
-          "library": "Cole o caminho de um arquivo de mídia na biblioteca e pressione Importar.",
-          "library_desktop": "Escolha arquivos na biblioteca, solte-os ali ou cole um caminho e pressione Importar.",
-          "palette": "Pressione Ctrl+K para buscar todos os comandos.",
-          "shortcuts": "Pressione ? para ver e alterar os atalhos de teclado."
-        },
-        "dismiss": "Entendi",
-        "show_again": "Mostrar as dicas de novo"
+      "tour": {
+        "step": "Passo {current} de {total}",
+        "back": "Voltar",
+        "next": "Avançar",
+        "done": "Concluir",
+        "skip": "Pular o tour",
+        "replay": "Rever o tour",
+        "steps": {
+          "library": {
+            "title": "Sua mídia",
+            "body": "Seus arquivos ficam aqui. Cole o caminho de um arquivo de mídia e pressione Importar, ou pressione {import} para ir ao campo de importação."
+          },
+          "library_desktop": "Seus arquivos ficam aqui. Escolha arquivos, solte-os aqui ou cole um caminho e pressione Importar. Pressione {import} para começar.",
+          "preview": {
+            "title": "Prévia",
+            "body": "Assista ao seu vídeo aqui. Pressione {play} para reproduzir ou pausar."
+          },
+          "timeline": {
+            "title": "Linha do tempo",
+            "body": "Organize os clipes nas trilhas. Pressione {split} para dividir na posição de reprodução e {undo} para desfazer."
+          },
+          "inspector": {
+            "title": "Inspetor",
+            "body": "Selecione um item para mudar sua aparência, som e velocidade. Toda alteração é salva ao ser feita."
+          },
+          "export": {
+            "title": "Exportar",
+            "body": "Quando estiver satisfeito, exporte o vídeo aqui ({export}). Pressione {shortcuts} para ver todos os atalhos e {palette} para buscar todos os comandos."
+          }
+        }
       },
       "repeat": {
         "title": "Repetir item",
