@@ -69,6 +69,20 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.JobStart(ctx, service.JobStartRequest{ProjectID: "prj_0000000001"})
 			return err
 		},
+		"ExportPresetList": func() error {
+			_, err := e.svc.ExportPresetList(ctx, service.ExportPresetListRequest{Codecs: true})
+			return err
+		},
+		"ExportCheck": func() error {
+			_, err := e.svc.ExportCheck(ctx, service.ExportCheckRequest{ProjectID: "prj_0000000001", Preset: "tiktok"})
+			return err
+		},
+		"ExportBatch": func() error {
+			_, err := e.svc.ExportBatch(ctx, service.ExportBatchRequest{
+				ProjectID: "prj_0000000001", Items: []service.ExportBatchItem{{Preset: "tiktok"}},
+			})
+			return err
+		},
 		"JobGet": func() error { _, err := e.svc.JobGet(ctx, service.JobGetRequest{JobID: "job_0000000001"}); return err },
 		"TemplateList": func() error {
 			_, err := e.svc.TemplateList(ctx, service.TemplateListRequest{})
