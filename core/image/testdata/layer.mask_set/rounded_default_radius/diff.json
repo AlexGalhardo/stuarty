@@ -1,0 +1,17 @@
+[
+  {
+    "changes": {
+      "mask": [
+        null,
+        {
+          "h": 1000,
+          "kind": "rounded_rect",
+          "radius": 16,
+          "w": 1000
+        }
+      ]
+    },
+    "id": "lyr_bbbbbbbbbb",
+    "kind": "layer.updated"
+  }
+]

@@ -115,6 +115,11 @@ type Layer struct {
 	StrokeWidth int    `json:"stroke_width,omitempty"`
 	Radius      int    `json:"radius,omitempty"`
 
+	Adjust  *Adjust  `json:"adjust,omitempty"` // the look of a layer that is not a group (SDD-021 section 3.1)
+	Filters []Filter `json:"filters,omitempty"`
+	Mask    *Mask    `json:"mask,omitempty"`
+	Blend   string   `json:"blend,omitempty"`
+
 	Children []Layer `json:"children,omitempty"` // group
 }
 
@@ -153,6 +158,8 @@ func cloneLayer(l *Layer) Layer {
 	if l.Style != nil {
 		out.Style = cloneStyle(l.Style)
 	}
+
+	cloneLook(&out, l)
 
 	out.Children = cloneLayers(l.Children)
 

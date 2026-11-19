@@ -1,0 +1,8 @@
+{
+  "args": {
+    "hue": 3,
+    "layer_id": "lyr_bbbbbbbbbb",
+    "reset": true
+  },
+  "op": "layer.adjust"
+}

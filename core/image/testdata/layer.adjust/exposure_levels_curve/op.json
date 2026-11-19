@@ -1,0 +1,22 @@
+{
+  "args": {
+    "curve": [
+      {
+        "x": 64,
+        "y": 48
+      },
+      {
+        "x": 192,
+        "y": 208
+      }
+    ],
+    "exposure": 50,
+    "layer_id": "lyr_bbbbbbbbbb",
+    "levels": {
+      "black": 10,
+      "gamma": 120,
+      "white": 240
+    }
+  },
+  "op": "layer.adjust"
+}
