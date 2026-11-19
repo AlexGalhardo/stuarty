@@ -1478,3 +1478,4 @@ The UI has two sections over the library, Visual Assets (`image`, `lut`) and Vid
 | DS-19 | Origin is written once, at the first import of the bytes; the user's fields change later. |
 | DS-20 | A refused origin is `E_VALIDATION` with `details.reason`, not a new code. |
 | DS-21 | MCP gains no tool: the library reads live in `media_inspect` and its writes in `media_import`. |
+| DS-22 | Open, for the author before a release with network mode: the library side is kept per file, not per user. In network mode two users who both hold the same bytes see one entry (its origin, prompt, cost, rights note, description and tags) and either can change the description, the rights note, the reuse mark and the tags; a user who does not hold the bytes sees nothing of it (14.3). The alternative is an entry per owner in network mode. Local mode has one user and is not affected. |
