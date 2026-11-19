@@ -19,7 +19,7 @@ export default function DashboardLayout({
 	const appName = page.props.appName || "Stuarty";
 
 	return (
-		<div className="flex min-h-dvh">
+		<div className="flex min-h-dvh max-md:flex-col">
 			<Sidebar
 				url={page.url}
 				appName={appName}
