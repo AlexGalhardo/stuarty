@@ -1,0 +1,9 @@
+{
+  "layer_id": "lyr_bbbbbbbbbb",
+  "mask": {
+    "h": 1000,
+    "kind": "rounded_rect",
+    "radius": 16,
+    "w": 1000
+  }
+}

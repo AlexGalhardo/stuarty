@@ -573,6 +573,128 @@
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "additionalProperties": false,
       "properties": {
+        "brightness": {
+          "maximum": 100,
+          "minimum": -100,
+          "type": "integer"
+        },
+        "contrast": {
+          "maximum": 100,
+          "minimum": -100,
+          "type": "integer"
+        },
+        "curve": {
+          "description": "Up to 8 points of 0 to 255, x increasing; an empty list removes the curve.",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "x": {
+                "type": "integer"
+              },
+              "y": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          },
+          "maxItems": 8,
+          "type": "array"
+        },
+        "exposure": {
+          "description": "Hundredths of a stop.",
+          "maximum": 300,
+          "minimum": -300,
+          "type": "integer"
+        },
+        "hue": {
+          "description": "Degrees.",
+          "maximum": 180,
+          "minimum": -180,
+          "type": "integer"
+        },
+        "layer_id": {
+          "pattern": "^lyr_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+          "type": "string"
+        },
+        "levels": {
+          "additionalProperties": false,
+          "properties": {
+            "black": {
+              "description": "0 to 254.",
+              "maximum": 254,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "gamma": {
+              "description": "Hundredths, 10 to 1000; 100 is neutral.",
+              "maximum": 1000,
+              "minimum": 10,
+              "type": "integer"
+            },
+            "white": {
+              "description": "1 to 255, above black.",
+              "maximum": 255,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          "required": [],
+          "type": "object"
+        },
+        "reset": {
+          "description": "Remove every adjustment; no other argument.",
+          "type": "boolean"
+        },
+        "saturation": {
+          "maximum": 100,
+          "minimum": -100,
+          "type": "integer"
+        },
+        "temperature": {
+          "maximum": 100,
+          "minimum": -100,
+          "type": "integer"
+        },
+        "tint": {
+          "maximum": 100,
+          "minimum": -100,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "layer_id"
+      ],
+      "type": "object"
+    },
+    "description": "Each key given replaces that adjustment and the others stay; a value equal to its neutral one removes it. brightness, contrast, saturation, temperature and tint are -100 to 100, hue -180 to 180 degrees, exposure -300 to 300 hundredths of a stop. levels takes black (0 to 254), white (1 to 255, above black) and gamma (10 to 1000 hundredths, 100 is neutral); the keys left out keep their value. curve is up to 8 points {x, y} of 0 to 255 with x increasing, and an empty list removes it. reset true removes every adjustment. Not valid for a group.",
+    "errors": [
+      "E_VALIDATION",
+      "E_NOT_FOUND",
+      "E_TYPE_MISMATCH",
+      "E_INVALID_STATE"
+    ],
+    "example": {
+      "brightness": 10,
+      "contrast": 20,
+      "layer_id": "lyr_a1b2c3d4e5",
+      "levels": {
+        "gamma": 120
+      }
+    },
+    "internal": false,
+    "name": "layer.adjust",
+    "scope": "edit",
+    "summary": "Sets the brightness, contrast, saturation, temperature, tint, hue, exposure, levels or tone curve of a layer."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
         "horizontal": {
           "enum": [
             "left",
@@ -628,6 +750,54 @@
     "name": "layer.align",
     "scope": "edit",
     "summary": "Aligns layers to the canvas or to another layer."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "layer_id": {
+          "pattern": "^lyr_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+          "type": "string"
+        },
+        "mode": {
+          "enum": [
+            "normal",
+            "multiply",
+            "screen",
+            "overlay",
+            "soft_light",
+            "hard_light",
+            "darken",
+            "lighten",
+            "color_dodge",
+            "color_burn",
+            "difference"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "layer_id",
+        "mode"
+      ],
+      "type": "object"
+    },
+    "description": "mode is normal, multiply, screen, overlay, soft_light, hard_light, darken, lighten, color_dodge, color_burn or difference; normal removes the mode. Not valid for a group.",
+    "errors": [
+      "E_VALIDATION",
+      "E_NOT_FOUND",
+      "E_TYPE_MISMATCH",
+      "E_INVALID_STATE"
+    ],
+    "example": {
+      "layer_id": "lyr_a1b2c3d4e5",
+      "mode": "multiply"
+    },
+    "internal": false,
+    "name": "layer.blend",
+    "scope": "edit",
+    "summary": "Sets the blend mode of a layer."
   },
   {
     "args_schema": {
@@ -749,6 +919,346 @@
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "additionalProperties": false,
       "properties": {
+        "amount": {
+          "description": "Per cent: a colour filter 1 to 100, sharpen 1 to 300, vignette and grain 1 to 100, glow 1 to 400.",
+          "maximum": 400,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "blur": {
+          "description": "Shadow blur in pixels.",
+          "maximum": 100,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "color": {
+          "description": "Shadow, glow and stroke: #RRGGBB or #RRGGBBAA.",
+          "type": "string"
+        },
+        "dx": {
+          "description": "Shadow offset in pixels.",
+          "maximum": 200,
+          "minimum": -200,
+          "type": "integer"
+        },
+        "dy": {
+          "description": "Shadow offset in pixels.",
+          "maximum": 200,
+          "minimum": -200,
+          "type": "integer"
+        },
+        "index": {
+          "description": "Position among the filters; absent means last.",
+          "maximum": 8,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "kind": {
+          "enum": [
+            "grayscale",
+            "sepia",
+            "invert",
+            "warm",
+            "cool",
+            "blur",
+            "sharpen",
+            "vignette",
+            "grain",
+            "shadow",
+            "glow",
+            "stroke"
+          ],
+          "type": "string"
+        },
+        "layer_id": {
+          "pattern": "^lyr_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+          "type": "string"
+        },
+        "opacity": {
+          "description": "Shadow, per cent.",
+          "maximum": 100,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "radius": {
+          "description": "Pixels: blur and glow 1 to 100, sharpen 1 to 20.",
+          "maximum": 100,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "seed": {
+          "description": "Grain, 0 to 65535.",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "size": {
+          "description": "Grain, 1 to 8.",
+          "maximum": 8,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "softness": {
+          "description": "Vignette, 0 to 100.",
+          "maximum": 100,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "width": {
+          "description": "Stroke width in pixels.",
+          "maximum": 100,
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "layer_id",
+        "kind"
+      ],
+      "type": "object"
+    },
+    "description": "kind is grayscale, sepia, invert, warm, cool, blur, sharpen, vignette, grain, shadow, glow or stroke; a layer has at most one filter of each kind and at most 8. The parameters left out take the defaults of the kind. Filters act in list order; index is the position of the new one (0 is the first to act, absent means last). Not valid for a group.",
+    "errors": [
+      "E_VALIDATION",
+      "E_NOT_FOUND",
+      "E_TYPE_MISMATCH",
+      "E_INVALID_STATE",
+      "E_LIMIT"
+    ],
+    "example": {
+      "kind": "blur",
+      "layer_id": "lyr_a1b2c3d4e5",
+      "radius": 12
+    },
+    "internal": false,
+    "name": "layer.filter_add",
+    "scope": "edit",
+    "summary": "Adds a filter to a layer: a colour filter, blur, sharpen, vignette, grain, shadow, glow or stroke."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "index": {
+          "maximum": 7,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "kind": {
+          "enum": [
+            "grayscale",
+            "sepia",
+            "invert",
+            "warm",
+            "cool",
+            "blur",
+            "sharpen",
+            "vignette",
+            "grain",
+            "shadow",
+            "glow",
+            "stroke"
+          ],
+          "type": "string"
+        },
+        "layer_id": {
+          "pattern": "^lyr_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "layer_id",
+        "kind",
+        "index"
+      ],
+      "type": "object"
+    },
+    "description": "index is the final position of the filter among the filters of the layer; the first acts first.",
+    "errors": [
+      "E_VALIDATION",
+      "E_NOT_FOUND",
+      "E_TYPE_MISMATCH",
+      "E_INVALID_STATE"
+    ],
+    "example": {
+      "index": 0,
+      "kind": "shadow",
+      "layer_id": "lyr_a1b2c3d4e5"
+    },
+    "internal": false,
+    "name": "layer.filter_move",
+    "scope": "edit",
+    "summary": "Changes the place of a filter in the list of a layer."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "grayscale",
+            "sepia",
+            "invert",
+            "warm",
+            "cool",
+            "blur",
+            "sharpen",
+            "vignette",
+            "grain",
+            "shadow",
+            "glow",
+            "stroke"
+          ],
+          "type": "string"
+        },
+        "layer_id": {
+          "pattern": "^lyr_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "layer_id",
+        "kind"
+      ],
+      "type": "object"
+    },
+    "description": "kind names the filter.",
+    "errors": [
+      "E_VALIDATION",
+      "E_NOT_FOUND",
+      "E_TYPE_MISMATCH",
+      "E_INVALID_STATE"
+    ],
+    "example": {
+      "kind": "blur",
+      "layer_id": "lyr_a1b2c3d4e5"
+    },
+    "internal": false,
+    "name": "layer.filter_remove",
+    "scope": "edit",
+    "summary": "Removes a filter of a layer."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "amount": {
+          "description": "Per cent: a colour filter 1 to 100, sharpen 1 to 300, vignette and grain 1 to 100, glow 1 to 400.",
+          "maximum": 400,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "blur": {
+          "description": "Shadow blur in pixels.",
+          "maximum": 100,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "color": {
+          "description": "Shadow, glow and stroke: #RRGGBB or #RRGGBBAA.",
+          "type": "string"
+        },
+        "dx": {
+          "description": "Shadow offset in pixels.",
+          "maximum": 200,
+          "minimum": -200,
+          "type": "integer"
+        },
+        "dy": {
+          "description": "Shadow offset in pixels.",
+          "maximum": 200,
+          "minimum": -200,
+          "type": "integer"
+        },
+        "kind": {
+          "enum": [
+            "grayscale",
+            "sepia",
+            "invert",
+            "warm",
+            "cool",
+            "blur",
+            "sharpen",
+            "vignette",
+            "grain",
+            "shadow",
+            "glow",
+            "stroke"
+          ],
+          "type": "string"
+        },
+        "layer_id": {
+          "pattern": "^lyr_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+          "type": "string"
+        },
+        "opacity": {
+          "description": "Shadow, per cent.",
+          "maximum": 100,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "radius": {
+          "description": "Pixels: blur and glow 1 to 100, sharpen 1 to 20.",
+          "maximum": 100,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "seed": {
+          "description": "Grain, 0 to 65535.",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "size": {
+          "description": "Grain, 1 to 8.",
+          "maximum": 8,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "softness": {
+          "description": "Vignette, 0 to 100.",
+          "maximum": 100,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "width": {
+          "description": "Stroke width in pixels.",
+          "maximum": 100,
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "layer_id",
+        "kind"
+      ],
+      "type": "object"
+    },
+    "description": "kind names the filter; the parameters given replace the old ones and the others stay.",
+    "errors": [
+      "E_VALIDATION",
+      "E_NOT_FOUND",
+      "E_TYPE_MISMATCH",
+      "E_INVALID_STATE"
+    ],
+    "example": {
+      "kind": "blur",
+      "layer_id": "lyr_a1b2c3d4e5",
+      "radius": 20
+    },
+    "internal": false,
+    "name": "layer.filter_set",
+    "scope": "edit",
+    "summary": "Changes the parameters of a filter of a layer."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
         "layer_id": {
           "pattern": "^lyr_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
           "type": "string"
@@ -837,6 +1347,125 @@
     "name": "layer.group",
     "scope": "edit",
     "summary": "Wraps layers that share one parent in a new group."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "layer_id": {
+          "pattern": "^lyr_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "layer_id"
+      ],
+      "type": "object"
+    },
+    "description": "A layer with no mask is left as it is.",
+    "errors": [
+      "E_NOT_FOUND",
+      "E_TYPE_MISMATCH",
+      "E_INVALID_STATE"
+    ],
+    "example": {
+      "layer_id": "lyr_a1b2c3d4e5"
+    },
+    "internal": false,
+    "name": "layer.mask_clear",
+    "scope": "edit",
+    "summary": "Removes the mask of a layer."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "feather": {
+          "description": "Pixels of soft edge.",
+          "maximum": 200,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "h": {
+          "description": "Thousandths of the box, 1 to 1000.",
+          "maximum": 1000,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "invert": {
+          "type": "boolean"
+        },
+        "kind": {
+          "enum": [
+            "rect",
+            "rounded_rect",
+            "ellipse",
+            "layer"
+          ],
+          "type": "string"
+        },
+        "layer_id": {
+          "pattern": "^lyr_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+          "type": "string"
+        },
+        "radius": {
+          "description": "rounded_rect only, pixels.",
+          "maximum": 16384,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "source": {
+          "description": "kind layer only: the id of another layer.",
+          "pattern": "^lyr_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+          "type": "string"
+        },
+        "w": {
+          "description": "Thousandths of the box, 1 to 1000.",
+          "maximum": 1000,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "x": {
+          "description": "Thousandths of the box, 0 to 999.",
+          "maximum": 1000,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "y": {
+          "description": "Thousandths of the box, 0 to 999.",
+          "maximum": 1000,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "layer_id",
+        "kind"
+      ],
+      "type": "object"
+    },
+    "description": "A shape mask is in thousandths of the box of the layer: x, y, w and h (default the whole box), radius (rounded_rect only, pixels), feather (the soft edge in pixels, 0 to 200) and invert. kind layer takes source, the id of another layer that is not a group and has no mask from a layer of its own, and invert: the layer shows only where the source has pixels. The old mask is replaced. Not valid for a group.",
+    "errors": [
+      "E_VALIDATION",
+      "E_NOT_FOUND",
+      "E_TYPE_MISMATCH",
+      "E_INVALID_STATE"
+    ],
+    "example": {
+      "feather": 12,
+      "h": 800,
+      "kind": "ellipse",
+      "layer_id": "lyr_a1b2c3d4e5",
+      "w": 800,
+      "x": 100,
+      "y": 100
+    },
+    "internal": false,
+    "name": "layer.mask_set",
+    "scope": "edit",
+    "summary": "Sets the mask of a layer: a rectangle, a rounded rectangle or an ellipse, or the alpha of another layer."
   },
   {
     "args_schema": {

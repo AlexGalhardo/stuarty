@@ -50,7 +50,7 @@ The product is called Stuarty everywhere a person or an agent meets it: the comm
 - [x] 7. Rename the image, the Dockerfile, the installers, `.config/`, `Taskfile.yml`, scripts and workflow paths. Verify: `task image:build` and `task image:smoke` pass.
 - [x] 8. Rename the specifications, the site and the generated reference; remove the "former name" notes from `README.md`, `AGENTS.md`, `CLAUDE.md`, `.agents/` and the "Amended" lines that only explained the name. Verify: `task lint:md`, `task lint:site` and `task site:build` exit 0.
 - [x] 9. Regenerate the agent documents and the notices. Verify: `task generate:check` and `task notices:check` exit 0.
-- [ ] 10. Run the whole Go suite and the reference scenario. Verify: `task test` passes and `bash scripts/smoke-e2e.sh` exports a valid MP4 through the renamed binary.
+- [x] 10. Run the whole Go suite and the reference scenario. Verify: `task test` passes and `bash scripts/smoke-e2e.sh` exports a valid MP4 through the renamed binary.
 - [x] 11. Adopt real workspaces by hand (author decision D-089): copy the author's own workspace of release 0.29.0 into `qa-build/` (never committed, never read into a report), and with it the three earlier test workspaces kept there; start the new binary on each copy. Verify: every project of each copy opens and exports; a listing of the author's original folder (names, sizes, modification times) taken before and after is identical; the result is in the hand-off.
 
 ## Test strategy

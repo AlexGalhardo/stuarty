@@ -1,0 +1,10 @@
+[
+  {
+    "collection": "layers",
+    "id": "lyr_cccccccccc",
+    "type": "patch",
+    "unset": [
+      "adjust"
+    ]
+  }
+]

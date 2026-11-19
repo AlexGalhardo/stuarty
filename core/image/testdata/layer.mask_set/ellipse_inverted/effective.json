@@ -1,0 +1,9 @@
+{
+  "layer_id": "lyr_bbbbbbbbbb",
+  "mask": {
+    "h": 500,
+    "invert": true,
+    "kind": "ellipse",
+    "w": 500
+  }
+}

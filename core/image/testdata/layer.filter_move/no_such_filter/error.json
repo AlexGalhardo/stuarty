@@ -1,0 +1,12 @@
+{
+  "code": "E_NOT_FOUND",
+  "details": {
+    "id": "grain",
+    "kind": "filter"
+  },
+  "hint": "Add it with layer.filter_add.",
+  "message": "Layer lyr_bbbbbbbbbb has no grain filter.",
+  "op_index": 0,
+  "path": "args.kind",
+  "retryable": false
+}
