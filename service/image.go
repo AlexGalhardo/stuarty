@@ -834,7 +834,7 @@ func (s *svc) imageStep(ctx context.Context, method string, req ImageStepRequest
 
 		target, terr := tx.Images().LastOpen(ctx, row.ID, c.Actor, kinds)
 		if errors.Is(terr, ErrNotFound) {
-			return newError(code, "there is nothing to %s for %s on image %s.", word, c.Actor, row.ID).
+			return newError(code, "there is nothing for you to %s on image %s.", word, row.ID).
 				withHint("an actor undoes only its own steps, newest first")
 		}
 

@@ -17,6 +17,12 @@ wide: true
 
 Send the secret in the header `Authorization: Bearer <secret>`: the local token in local mode, an [API key](/docs/self-hosting/api-keys) in network mode. An API key needs the `read` scope; the local token has every scope. See the [API overview](/docs/api/overview) for both modes.
 
+## Query parameters
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `domain` | `string` | no | video (default) or image. |
+
 ## Responses
 
 ### 200 OK
@@ -28,6 +34,12 @@ Content type `application/json`. Schema: [`CommandHelpResult`](/docs/api/schemas
 | `command` | [`CommandDetail`](/docs/api/schemas#commanddetail) or `any` or `null` or `null` | no |  |
 | `commands` | array of [`CommandSummary`](/docs/api/schemas#commandsummary) | no |  |
 | `text` | `string` | no |  |
+
+### 400
+
+Validation failed; errors maps each field to its messages and issues lists each problem with its code, key and params
+
+Content type `application/problem+json`. Schema: [`Problem`](/docs/api/schemas#problem).
 
 ### 401 Unauthorized
 
@@ -215,6 +227,35 @@ puts "#{response.code} #{response.body}"
     }
   ],
   "text": "string"
+}
+```
+
+```json title="400"
+{
+  "code": "string",
+  "detail": "string",
+  "details": {},
+  "errors": {},
+  "hint": "string",
+  "instance": "string",
+  "issues": [
+    {
+      "code": "string",
+      "key": "string",
+      "message": "string",
+      "on": "string",
+      "params": {},
+      "path": "string"
+    }
+  ],
+  "message": "string",
+  "op_index": 0,
+  "path": "string",
+  "request_id": "string",
+  "retryable": false,
+  "status": 0,
+  "title": "string",
+  "type": "string"
 }
 ```
 

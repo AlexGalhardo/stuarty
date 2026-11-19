@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "index": {
+      "description": "Final position among the siblings, 0 is the bottom; absent means on top.",
+      "maximum": 500,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "layer_id": {
+      "pattern": "^lyr_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+      "type": "string"
+    },
+    "parent": {
+      "description": "A group id, or root for the top level.",
+      "type": "string"
+    }
+  },
+  "required": [
+    "layer_id"
+  ],
+  "type": "object"
+}

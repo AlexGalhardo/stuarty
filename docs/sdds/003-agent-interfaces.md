@@ -1284,7 +1284,7 @@ A frame is one JPEG (quality 80, 4:2:0). A sheet is one JPEG:
 | `tools/list` | the 17 tools below, always in the order of the table, never paged, with `ttlMs` 3,600,000 and `cacheScope` `public` (the SDK type `Cacheable`, `mcp/protocol.go` lines 1148 to 1166; the list changes only when the binary is upgraded). |
 | Tool registration | each tool is registered with the SDK's raw `(*Server).AddTool` (`mcp/server.go` line 315) with `inputSchema` and `outputSchema` taken from the registry generator, **not** with the generic `mcp.AddTool[In, Out]`, which infers schemas from Go types and would not produce the `edit` schema of §4.4. The adapter validates `arguments` against `inputSchema` with the validator of ADR-0014 and converts a failure into `E_VALIDATION` with the `path` of the first invalid value (a failure of the `operations[].op` enum is `E_UNKNOWN_COMMAND`, §2.4 rule 5). The message names the path and the constraint, never the value (§1.2 rule 9) |
 | Call result | `CallToolResult` (`Content`, `StructuredContent`, `IsError`) built as §1.3 and §1.4 say |
-| Cost | the minified `tools/list` result is at most **19,500 bytes**: at the conservative 3 bytes per token of JSON this is 6,500 tokens, the NFR-020 limit (raised from 6,000 tokens, 18,000 bytes, by D-040; before that from 17,500 bytes when `font_import` became the 16th tool, VV-024; at the 3.2 characters per token of check 2 it is 5,625 tokens). The definitions of this section measure about 17,814 bytes in total, under the cap, so a new parameter must shorten a description. `edit` is 2,534 bytes (limit 2,700 since VV-122 added `clip.set_shadow` and `clip.set_outline`, raised from 2,500; each new operation name costs about 25 bytes) and the largest other tool is `view` at 1,518 (limit 1,600); `media_inspect` is 1,428 and `template` 1,315. No single tool is larger than 2,700 bytes (`edit`) or 1,600 bytes (the others). **Verified by** `TestToolDefinitionBudget` and, once per release, a count with the model vendor's token counting endpoint (if it exceeds 6,500 tokens the descriptions are shortened; no field is removed) |
+| Cost | the minified `tools/list` result is at most **19,500 bytes**: at the conservative 3 bytes per token of JSON this is 6,500 tokens, the NFR-020 limit (raised from 6,000 tokens, 18,000 bytes, by D-040; before that from 17,500 bytes when `font_import` became the 16th tool, VV-024; at the 3.2 characters per token of check 2 it is 5,625 tokens). The definitions of this section measure about 19,490 bytes in total with `image` (the 17th tool, whose minified definition is about 1,080 bytes), just under the cap, so a new parameter must shorten a description. `edit` is 2,534 bytes (limit 2,700 since VV-122 added `clip.set_shadow` and `clip.set_outline`, raised from 2,500; each new operation name costs about 25 bytes) and the largest other tool is `view` at 1,518 (limit 1,600); `media_inspect` is 1,428 and `template` 1,315. No single tool is larger than 2,700 bytes (`edit`) or 1,600 bytes (the others). **Verified by** `TestToolDefinitionBudget` and, once per release, a count with the model vendor's token counting endpoint (if it exceeds 6,500 tokens the descriptions are shortened; no field is removed) |
 | Order | deterministic (MCP `2026-07-28` Tools: "SHOULD return tools in a deterministic order"), so prompt caches hit |
 
 Tool and Service mapping, scope and annotations (annotations are hints and clients treat them as untrusted; they are never a security control, ADR-0020):
@@ -1307,7 +1307,7 @@ Tool and Service mapping, scope and annotations (annotations are hints and clien
 | `job_cancel` | `JobCancel` | render, or media for the caller's own `transcribe` or `ingest` job | false | false | true | false |
 | `template` | `TemplateList`, `TemplateSave`, `TemplateInstantiate`, `TemplateExport`, `TemplateImport` | read (list, export), edit (the others) | false | false | false | false |
 | `font_import` | `FontImport` | media | false | false | true | false |
-| `connection` | `ConnectionList` (without `id`), `ConnectionGet` (with `id`) | read | true | n/a | true | false |
+| `image` | `ImageCreate`, `ImageList`, `ImageDescribe`, `ImageEdit`, `ImageUndo`, `ImageRedo`, `ImageExport` (SDD-021) | read (list, show), edit (the others) | false | false | false | false |
 
 `destructiveHint` is `false` on every tool: every write is undoable and recorded per actor, and nothing is removed for good (ADR-0020 items 2 and 3). A client that prompts on destructive tools therefore never prompts for this server, which is what unattended use needs (D-011). `openWorldHint` is `false` on every tool: no tool reaches an address chosen by the caller (RF-130). `TestNoOutboundTools` asserts both hints for every registered tool and that `web/app/mcp` imports no HTTP client.
 
@@ -1645,7 +1645,7 @@ The result carries `isError: true` and no `structuredContent`; `content[0]` is t
 {
   "name":"command_help",
   "description":"Describe edit operations. Without name: lists every operation with a one-line summary. With name (for example item.split): returns its description, JSON Schema of args, an example and its error codes. Read it before using an operation you have not used.",
-  "inputSchema":{"type":"object","properties":{"name":{"type":"string"}},"additionalProperties":false},
+  "inputSchema":{"type":"object","properties":{"name":{"type":"string"},"domain":{"enum":["video","image"]}},"additionalProperties":false},
   "outputSchema":{
     "type":"object",
     "properties":{"commands":{"type":"array","items":{"type":"object"}},"command":{"type":"object"}}
@@ -2207,31 +2207,103 @@ The result is a `TemplateInstantiateResult` (§2.9): `project_id`, `revision`, `
 
 The `outputSchema` and the `title` are minimal, to stay under the budget of §4.1; the result is a `FontImportResult` (`hash`, `bytes`, `deduplicated`) in `structuredContent`; the hash goes into `files[].hash` of a `font.add` edit. The same bytes twice store one file. The tool is the MCP form of `font:import` and `POST /fonts` (VV-024).
 
-#### `connection`
+#### `image`
 
 ```json
 {
-  "name":"connection",
-  "description":"List the destinations the user connected (id, kind, label, hosts, what each accepts, last use), or read one with id. Never returns a credential. Adding, removing and testing a connection is for a person.",
-  "inputSchema":{
-    "type":"object",
-    "properties":{
-      "id":{"type":"string","pattern":"^con_[0-9a-hjkmnp-tv-z]{10}$"}
+  "name": "image",
+  "description": "Images. action=create (preset or width+height; or from_template+values), list, show, edit (operations: command_help domain=image), undo, redo, export.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "action": {
+        "enum": [
+          "create",
+          "list",
+          "show",
+          "edit",
+          "undo",
+          "redo",
+          "export"
+        ]
+      },
+      "image_id": {
+        "type": "string",
+        "pattern": "^img_[0-9a-hjkmnp-tv-z]{10}$"
+      },
+      "base_revision": {
+        "type": "integer"
+      },
+      "operations": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "op": {
+              "type": "string"
+            },
+            "args": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "idempotency_key": {
+        "type": "string"
+      },
+      "dry_run": {
+        "type": "boolean"
+      },
+      "preset": {
+        "type": "string"
+      },
+      "width": {
+        "type": "integer"
+      },
+      "height": {
+        "type": "integer"
+      },
+      "name": {
+        "type": "string"
+      },
+      "template": {
+        "type": "boolean"
+      },
+      "values": {
+        "type": "object"
+      },
+      "format": {
+        "type": "string"
+      },
+      "from_template": {
+        "type": "string"
+      }
     },
-    "additionalProperties":false
+    "required": [
+      "action"
+    ],
+    "additionalProperties": false
   },
-  "outputSchema":{"type":"object"},
-  "annotations":{
-    "title":"Connections",
-    "readOnlyHint":true,
-    "destructiveHint":false,
-    "idempotentHint":true,
-    "openWorldHint":false
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "text": {
+        "type": "string",
+        "x-untrusted": true
+      }
+    }
+  },
+  "annotations": {
+    "title": "Images",
+    "readOnlyHint": false,
+    "destructiveHint": false,
+    "idempotentHint": false,
+    "openWorldHint": false
   }
 }
 ```
 
-The only tool of the connections domain (ADR-0043 item 3: an intent no other tool expresses, the question "where may this product send data?"; about 560 bytes, 175 tokens). It reads the registry and nothing else: it has no argument that names a destination, and creating, removing and testing a connection take a credential or reach the network, so they have a CLI command and a route and no tool (SDD-014 section 10). The result is a `ConnectionListResult` or a `Connection` in `structuredContent`; the label is delimited as untrusted text in the text part (SDD-007 section 8). It never carries a secret, only `secret_set`.
+The `image` tool is the image documents of SDD-021 behind one tool, as `template` is the templates: `action` picks the Service operation (`create` is `ImageCreate`, `list` `ImageList`, `show` `ImageDescribe`, `edit` `ImageEdit`, `undo` and `redo` `ImageUndo` and `ImageRedo`, `export` `ImageExport`) and a member the action does not use is refused. `operations` of `edit` are the operations of the image registry, which `command_help` serves with `domain` `image` (the video `edit` enum does not list them). The definition is as small as the budget of §4.1 allows, so some members are CLI and HTTP only: the background, the id, the quality, the paging and the template filter of the list, and the output schema names only `text`. The template to start from is `from_template` (an image id, not an `_id` member, to save the pattern). An agent sets a background with `layer.add_fill`.
 
 ### 4.3 `command_help`
 
@@ -2859,6 +2931,12 @@ Every `Service` operation has an encoding on each surface. The table is the proo
 | `ProjectBundleImport` | none (exception E-3) | `bundle:import` | `POST /projects/import` |
 | `ProjectOtioExport` | none (exception E-3) | `otio:export` | `GET /projects/{id}/otio` |
 | `ProjectOtioImport` | none (exception E-3) | `otio:import` | `POST /projects/{id}/otio` |
+| `ImageCreate` | `image` (`action` create) | `image:create` | `POST /images` |
+| `ImageList` | `image` (`action` list) | `image:list` | `GET /images` |
+| `ImageDescribe` | `image` (`action` show) | `image:show` | `GET /images/{id}` |
+| `ImageEdit` | `image` (`action` edit) | `image:edit` | `POST /images/{id}/edit` |
+| `ImageUndo`, `ImageRedo` | `image` (`action` undo, redo) | `image:undo`, `image:redo` | `POST /images/{id}/undo`, `POST /images/{id}/redo` |
+| `ImageExport` | `image` (`action` export) | `image:export` | `POST /images/{id}/export` |
 
 **Exceptions**, each fixed by an authoritative document:
 
