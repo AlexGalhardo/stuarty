@@ -188,3 +188,41 @@ func TestTextPresetInheritsABezierCurveWithItsNumbers(t *testing.T) {
 		t.Errorf("the tail keyframe does not continue the curve: %+v", keys)
 	}
 }
+
+// R11: a split or a trim of the start that cuts a Bezier segment gives the new first keyframe the curve of
+// the segment it was cut from, and a value where the curve overshoots stays inside the range of the property.
+func TestSplitAndTrimCarryTheBezierCurve(t *testing.T) {
+	t.Parallel()
+
+	curve := []float64{0.34, 1.56, 0.64, 1}
+	doc := presetDoc()
+	it := doc.Items[itemA]
+	it.Keyframes = timeline.Keyframes{"opacity": {kfb(0, 0, curve...), timeline.NewKeyframe(60, 1)}}
+	doc.Items[itemA] = it
+
+	const right = "itm_s6t7v8w9x0"
+
+	split := applyBeta(t, doc, "item.split", fmt.Sprintf(`{"item_id": %q, "at": "30f", "new_id": %q}`, itemA, right))
+	trimmed := applyBeta(t, doc, "item.trim", fmt.Sprintf(`{"item_id": %q, "edge": "start", "to": "30f"}`, itemA))
+
+	for name, got := range map[string]*timeline.Document{"split": split, "trim": trimmed} {
+		if vs := timeline.Validate(got); len(vs) != 0 {
+			t.Errorf("%s: the document is not valid: %v", name, vs)
+		}
+	}
+
+	for name, keys := range map[string][]timeline.Keyframe{
+		"split": split.Items[right].Keyframes["opacity"],
+		"trim":  trimmed.Items[itemA].Keyframes["opacity"],
+	} {
+		if len(keys) != 2 || keys[0].Easing != timeline.EasingBezier || !slices.Equal(keys[0].Bezier, curve) {
+			t.Errorf("%s: the first keyframe does not continue the curve: %+v", name, keys)
+
+			continue
+		}
+
+		if keys[0].Value != 1 {
+			t.Errorf("%s: the overshoot at the cut is %v, want it kept at the opacity limit 1", name, keys[0].Value)
+		}
+	}
+}
