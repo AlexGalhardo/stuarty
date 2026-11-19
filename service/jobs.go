@@ -926,6 +926,19 @@ func (s *svc) jobView(c Caller, r JobRow, waited bool) *Job {
 		}
 	}
 
+	if r.Kind == JobTextGenerate {
+		var in textInput
+		if json.Unmarshal(r.Input, &in) == nil {
+			estimate := in.Estimate
+			j.Estimate = &estimate
+		}
+
+		var res JobResult
+		if len(r.Result) > 0 && json.Unmarshal(r.Result, &res) == nil && res.Text != nil {
+			j.Result = &res
+		}
+	}
+
 	j.Text = jobText(j, waited)
 
 	return j
@@ -944,6 +957,18 @@ func jobText(j *Job, waited bool) string {
 		if fps, ok := parseFPS(e.FPS); ok {
 			v.Duration = textview.Cell(timeval.FPS{Num: int64(fps.Num), Den: int64(fps.Den)}, e.Duration.Frame)
 		}
+	}
+
+	if j.Estimate != nil {
+		v.Estimate = money(j.Estimate.Micros, j.Estimate.Currency)
+	}
+
+	if j.Result != nil && j.Result.Text != nil {
+		t := j.Result.Text
+		v.Cost = money(t.Cost.Micros, t.Cost.Currency)
+		// The text of a model is network text: delimited, cleaned and cut like every other (SDD-007 section 8).
+		v.Output = untrusted.Block(untrusted.SourceNetworkText,
+			untrusted.Attrs{"provider": t.Provider, "model": t.Model}, t.Text, untrusted.TranscriptFull)
 	}
 
 	for _, w := range j.Warnings {

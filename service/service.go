@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"log/slog"
 	"path/filepath"
+	"slices"
 	"sync"
 	"time"
 
@@ -23,6 +24,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/service/connections"
 	"github.com/AlexGalhardo/stuarty/service/connections/oauth"
 	"github.com/AlexGalhardo/stuarty/service/library"
+	"github.com/AlexGalhardo/stuarty/service/providers"
 	"github.com/AlexGalhardo/stuarty/service/social"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
 )
@@ -87,6 +89,13 @@ type Service interface {
 	PromptRender(ctx context.Context, req PromptRenderRequest) (*PromptRenderResult, error)
 	LibrarySearch(ctx context.Context, req LibrarySearchRequest) (*LibrarySearchResult, error)
 	LibraryReindex(ctx context.Context, req LibraryReindexRequest) (*LibraryReindexResult, error)
+
+	// The AI provider layer (SDD-016): the providers and their models, the price table, and a text generation,
+	// which is a job of a kind that needs approval (SDD-015 section 5).
+	ProviderList(ctx context.Context, req ProviderListRequest) (*ProviderListResult, error)
+	ProviderModels(ctx context.Context, req ProviderModelsRequest) (*ProviderModelsResult, error)
+	ProviderPriceSet(ctx context.Context, req ProviderPriceSetRequest) (*ProviderPricesResult, error)
+	TextGenerate(ctx context.Context, req TextGenerateRequest) (*Job, error)
 
 	JobGet(ctx context.Context, req JobGetRequest) (*Job, error)
 	JobList(ctx context.Context, req JobListRequest) (*JobListResult, error)
@@ -267,6 +276,9 @@ type Options struct {
 	// Social is the registry of the social network connectors (SDD-020); without one the build publishes
 	// to no network and the social operations answer empty lists.
 	Social *social.Registry
+	// Providers is the registry of the AI providers, with their adapters registered (SDD-016); without one
+	// the service has a registry with no provider, so no generation can start.
+	Providers *providers.Registry
 	// JobKinds are the job kinds that need approval, registered by the epics of publishing and
 	// generation (SDD-015 section 5). The product registers none of its own; tests register one.
 	JobKinds []ApprovableKind
@@ -304,6 +316,7 @@ type svc struct {
 	kinds       map[string]*ApprovableKind
 	social      *social.Registry
 	flows       *oauth.Flows
+	providers   *providers.Registry
 	lib         *library.Manager // the files of memory, skills and prompts; nil without a workspace
 	heavy       RateLimiter
 	heavyLimitN int
@@ -367,7 +380,9 @@ func New(o Options) (Service, error) {
 		startedAt:   time.Now(),
 	}
 
-	kinds, err := registerKinds(o.JobKinds)
+	s.providers = o.Providers
+
+	kinds, err := registerKinds(append(slices.Clone(o.JobKinds), s.textGenerateKind()))
 	if err != nil {
 		return nil, err
 	}
@@ -386,6 +401,15 @@ func New(o Options) (Service, error) {
 
 	if s.social != nil {
 		s.social.Bind(s.conns)
+	}
+
+	if s.providers == nil {
+		prices := ""
+		if s.workspace != "" {
+			prices = filepath.Join(s.workspace, "providers", providers.PriceFile)
+		}
+
+		s.providers = providers.NewRegistry(s.conns, providers.NewPriceBook(prices), s.now)
 	}
 
 	s.sems = map[string]chan struct{}{

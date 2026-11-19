@@ -53,7 +53,10 @@ var OperationDomains = map[string]string{
 	"SocialConnectComplete": command.DomainPublish, "SocialAccountList": command.DomainPublish,
 	"PublishValidate": command.DomainPublish, "PublishNow": command.DomainPublish,
 	"PublishStatus": command.DomainPublish,
-	"CostSummary":   command.DomainProvider, "CostCeilingSet": command.DomainProvider,
+
+	"CostSummary": command.DomainProvider, "CostCeilingSet": command.DomainProvider,
+	"ProviderList": command.DomainProvider, "ProviderModels": command.DomainProvider,
+	"ProviderPriceSet": command.DomainProvider, "TextGenerate": command.DomainProvider,
 
 	"CommandHelp": command.DomainWorkspace, "ConnectionList": command.DomainWorkspace,
 	"ConnectionGet": command.DomainWorkspace, "ConnectionCreate": command.DomainWorkspace,

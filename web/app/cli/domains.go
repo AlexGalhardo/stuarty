@@ -59,6 +59,8 @@ var commandDomains = map[string]string{
 	"social:account:list": command.DomainPublish, "publish:validate": command.DomainPublish,
 	"publish:now": command.DomainPublish, "publish:status": command.DomainPublish,
 	"cost:show": command.DomainProvider, "cost:ceiling": command.DomainProvider,
+	"provider:list": command.DomainProvider, "provider:models": command.DomainProvider,
+	"provider:price": command.DomainProvider, "text:generate": command.DomainProvider,
 
 	"command:help": command.DomainWorkspace, "connection:list": command.DomainWorkspace,
 	"connection:show": command.DomainWorkspace, "connection:add": command.DomainWorkspace,
