@@ -92,6 +92,7 @@
         "keyframe.set",
         "keyframe.remove",
         "keyframe.clear",
+        "keyframe.set_easing",
         "slot.mark",
         "slot.unmark",
         "slot.fill",

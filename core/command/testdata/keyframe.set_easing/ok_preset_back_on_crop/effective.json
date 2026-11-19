@@ -1,0 +1,15 @@
+{
+  "at": {
+    "frame": 0,
+    "requested": "0f",
+    "seconds": 0
+  },
+  "bezier": [
+    0.36,
+    0,
+    0.66,
+    -0.56
+  ],
+  "easing": "bezier",
+  "t": 0
+}

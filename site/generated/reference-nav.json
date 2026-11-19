@@ -265,6 +265,7 @@
       "keyframe.clear",
       "keyframe.remove",
       "keyframe.set",
+      "keyframe.set_easing",
       "marker.add",
       "marker.remove",
       "marker.set",
