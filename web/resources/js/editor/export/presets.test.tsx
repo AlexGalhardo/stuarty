@@ -18,6 +18,7 @@ import {
 	groupByNetwork,
 	itemName,
 	limitLines,
+	plainOptions,
 	queuedItem,
 } from "./presetText";
 
@@ -120,6 +121,19 @@ describe("preset text", () => {
 			start: "1f",
 			end: undefined,
 		});
+	});
+
+	test("a plain export sends the codec only with an mp4", () => {
+		expect(plainOptions({ start: "1f" }, "hevc")).toEqual({
+			start: "1f",
+			codec: "hevc",
+		});
+		expect(plainOptions({ format: "mp4" }, "av1").codec).toBe("av1");
+		expect(plainOptions({}, "").codec).toBeUndefined();
+		// A codec chosen before the format moved away from mp4 is not sent.
+		for (const format of ["gif", "wav", "aac", "png"]) {
+			expect(plainOptions({ format }, "hevc").codec).toBeUndefined();
+		}
 	});
 
 	test("an item is named by its preset label, else by its format", () => {

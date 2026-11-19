@@ -101,6 +101,17 @@ export function batchItems(
 	}));
 }
 
+// The options of a plain export with the codec the person chose. The codec is
+// for an mp4 only: a codec chosen before the format moved to gif, wav, aac or
+// png stays in the select, disabled, and is not sent.
+export function plainOptions(
+	options: ExportOptions,
+	codec: string,
+): ExportOptions {
+	const mp4 = options.format === undefined || options.format === "mp4";
+	return { ...options, codec: codec === "" || !mp4 ? undefined : codec };
+}
+
 // The one export of a batch that stands for a plain export which the server had
 // no free slot for: the core queues it behind the others (VV-220).
 export function queuedItem(options: ExportOptions): ExportBatchItem {
