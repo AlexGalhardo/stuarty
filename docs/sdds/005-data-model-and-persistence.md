@@ -1089,6 +1089,20 @@ Open (Auto)                                  (the order of SDD-003 §5.2)
 
 Listed in section 18: two processes racing for the lock, a killed owner (including `taskkill /F` on Windows) releasing it, a stale `runtime.json`, a CLI started while the owner is still starting, and the 10-second limit.
 
+### 6.6 Adopting the workspace of the former name
+
+Until release 0.29.0 the default workspace was `~/.vukem-video`. `Resolve` (section 6.2) adopts it at the first start of Stuarty, only when `STUARTY_HOME` is unset (a folder the person chose is never replaced), `~/.stuarty` does not exist and `~/.vukem-video` does and holds no `MOVED-TO-STUARTY.txt`. `workspace.AdoptFormer` does this, in order, and a failure at any step leaves the former folder complete:
+
+1. It takes the lock of the former workspace and releases it; a process that still owns it (an old server, an old desktop application) stops the adoption with `ErrFormerInUse`, which asks the person to close it.
+2. An optional `Check` may refuse the folder (the caller names the reason; `ErrAdoptionRefused` wraps it). The newer-workspace rule of section 7 step 2 still decides, at the database, whether this build can open what it adopted: it refuses with both version numbers and writes nothing, and the adopted folder can be renamed back.
+3. **Backup.** `db.sqlite` and its `-wal` and `-shm` files are copied to `backups/adopt-<UTC yyyymmddThhmmssZ>/` inside the former folder, so the backup travels with the workspace.
+4. **Move.** The folder is renamed to `~/.stuarty` (the same volume). When the rename reports another volume (`EXDEV` on Unix, `ERROR_NOT_SAME_DEVICE` on Windows) the folder is copied to `~/.stuarty.adopting`, every file is checked (size, and SHA-256 for the database files), the copy is renamed into place, and `MOVED-TO-STUARTY.txt` is left in the former folder, whose files stay. A symbolic link or another special file in the workspace stops the copy; `runtime.json` and `runtime.secret` are not copied. A failed copy removes `~/.stuarty.adopting` and nothing else.
+5. **Record.** `adopted.json` in the adopted workspace holds `from`, `to`, `method` (`rename` or `copy`), `backup` and `adopted_at`.
+
+The former folder is never deleted. `Resolve` prints one line on the standard error when it adopts (`stuarty: the workspace of Vukem Video, <folder>, was moved to <folder>; a backup of its database is in <folder>.`); the next start finds `~/.stuarty` and prints nothing. When both folders exist and the former one holds a database, the new one is used and one line names the former one and `STUARTY_HOME`. The former environment variables are separate (SDD-000 section 13.1).
+
+Tests: `TestAdoptFormerWorkspace` (the same volume, another volume, both folders, a refused folder, an owned folder, a failed or damaged copy, no database), `TestResolveAdoptsTheFormerWorkspace` and the workspace of a release 0.29.0 binary under `service/testdata/former-workspace/`.
+
 ## 7. Start-up order and migrations
 
 The same sequence runs for `serve` and for an in-process command, after the workspace lock is held:
