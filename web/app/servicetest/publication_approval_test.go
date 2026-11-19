@@ -263,3 +263,34 @@ func TestSecurityPublicationOfAnotherProjectIsNotFound(t *testing.T) {
 		t.Error("a read key scheduled a post")
 	}
 }
+
+// A request nobody answered in a week expires, and the target goes back to a draft that says so: the scheduler
+// sees to it, so the calendar never shows a post waiting for an answer that cannot come.
+func TestApprovalThatExpiresReturnsTheTargetToADraft(t *testing.T) {
+	c := newCalendar(t)
+	p := c.create(c.target(c.at(time.Hour)))
+	id := p.Targets[0].ID
+
+	c.schedule(p, id)
+	c.clock.advance(8 * 24 * time.Hour)
+	c.tick()
+
+	got := c.get(p).Target(id)
+	if got.State != corepub.TargetDraft || got.Error == nil || got.Error.Code != "approval_expired" ||
+		got.Error.Hint == "" ||
+		got.ApprovalID != "" ||
+		uploads(c.net) != 0 {
+		t.Fatalf("target = %+v, error = %+v", got, got.Error)
+	}
+
+	// It can be planned again with a time that has not come.
+	if _, err := c.svc.PublicationSchedule(c.as(token), service.PublicationScheduleRequest{
+		ID: p.ID, TargetID: id, At: c.at(time.Hour), Zone: "UTC",
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	if c.state(p, id) != corepub.TargetWaitingApproval {
+		t.Errorf("state = %s", c.state(p, id))
+	}
+}

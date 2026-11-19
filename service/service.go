@@ -493,7 +493,7 @@ func New(o Options) (Service, error) {
 		clock = svcClock{now: s.now}
 	}
 
-	s.sched = pub.NewScheduler(s.pubs, pub.SchedulerOptions{Clock: clock, Log: s.log})
+	s.sched = pub.NewScheduler(s.pubs, pub.SchedulerOptions{Clock: clock, Log: s.log, Housekeeping: s.expireDue})
 
 	return s, nil
 }

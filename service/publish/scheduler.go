@@ -40,6 +40,9 @@ type SchedulerOptions struct {
 	// Owner names this scheduler in the lease; default a random id.
 	Owner string
 	Log   *slog.Logger
+	// Housekeeping runs at the start of every pass: the service uses it to expire the approval requests whose
+	// week passed, so a post that waits for an answer nobody gave goes back to a draft by itself.
+	Housekeeping func(ctx context.Context)
 }
 
 // Scheduler sends the approved targets at their time (SDD-020 section 19). It sleeps until the next time
@@ -52,6 +55,7 @@ type Scheduler struct {
 	poll  time.Duration
 	owner string
 	log   *slog.Logger
+	house func(ctx context.Context)
 
 	wake chan struct{}
 	sem  chan struct{}
@@ -88,7 +92,7 @@ func NewScheduler(m *Manager, o SchedulerOptions) *Scheduler {
 	}
 
 	s := &Scheduler{
-		m: m, clock: o.Clock, lease: o.Lease, poll: o.Poll, owner: o.Owner, log: o.Log,
+		m: m, clock: o.Clock, lease: o.Lease, poll: o.Poll, owner: o.Owner, log: o.Log, house: o.Housekeeping,
 		wake: make(chan struct{}, 1), sem: make(chan struct{}, o.Parallel),
 	}
 
@@ -115,6 +119,10 @@ func (s *Scheduler) Wait() { s.wg.Wait() }
 // that were interrupted too many times, and claims and starts the sends that are due. It returns the number
 // of sends it started; Wait returns when they end.
 func (s *Scheduler) Tick(ctx context.Context) (int, error) {
+	if s.house != nil {
+		s.house(ctx)
+	}
+
 	now := s.clock.Now()
 
 	open, err := s.m.Open(ctx)
