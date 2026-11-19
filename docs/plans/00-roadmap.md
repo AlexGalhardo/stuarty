@@ -24,7 +24,7 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | Epic | Title | Size | Depends on | Status |
 | --- | --- | --- | --- | --- |
 | [04](04-secret-vault-and-connections.md) | Secret vault and connections | L | 03 | DONE (2026-11-19, 8e43a1a2..7410dcd3 replayed onto the integration branch) |
-| [05](05-approval-queue-and-cost-ceilings.md) | Approval queue, rules and cost ceilings | M | 04 | IN PROGRESS (senior-a, 2026-11-19) |
+| [05](05-approval-queue-and-cost-ceilings.md) | Approval queue, rules and cost ceilings | M | 04 | DONE (2026-11-19, fe07849a..174a7b89; the MCP approval tool waits for epic 13's budget) |
 | [06](06-project-as-production.md) | The project as the container of a production | L | 03 | DONE (2026-11-19, 08a630f5..77cf52b7; closes VV-225, VV-237, VV-241) |
 | [07](07-dashboard-shell.md) | Dashboard: sidebar, navigation, profile, theme | M | 03 | DONE (2026-11-19, 70387363..171fb786) |
 | [08](08-asset-library.md) | Asset library with origin, rights and reuse | M | 06, 07 | IN PROGRESS (senior-b, 2026-11-19) |
@@ -32,10 +32,10 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | [10](10-image-and-voice-generation.md) | Image and voice generation | M | 08, 09 | TODO |
 | [11](11-video-generation.md) | Video generation | M | 10 | TODO |
 | [12](12-ai-oauth-connections.md) | Sign in with ChatGPT and OpenRouter | M | 09 | TODO |
-| [13](13-mcp-domains-and-agent-docs.md) | MCP tools by domain and generated agent documentation | M | 06 | TODO |
+| [13](13-mcp-domains-and-agent-docs.md) | MCP tools by domain and generated agent documentation | M | 06 | IN PROGRESS (senior-d, 2026-11-19) |
 | [14](14-hosted-agent-chat.md) | The user's agent hosted in the chat panel | L | 07, 13 | TODO |
 | [15](15-memory-skills-and-prompts.md) | Memory, skills and prompts | L | 07 | DONE (2026-11-19, 65d33593..d2e8660f) |
-| [16](16-curated-skills-and-briefing.md) | Curated skills and the guided briefing | M | 06, 15 | TODO |
+| [16](16-curated-skills-and-briefing.md) | Curated skills and the guided briefing | M | 06, 15 | IN PROGRESS (senior-e, 2026-11-19) |
 | [17](17-writing.md) | Writing: scripts, copy and captions | M | 06, 09 | TODO |
 | [18](18-social-connectors-and-youtube.md) | Social connectors and YouTube | L | 04, 05 | TODO |
 | [19](19-instagram-and-facebook.md) | Instagram and Facebook | L | 18 | TODO |
