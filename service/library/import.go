@@ -73,7 +73,12 @@ func (m *Manager) ImportSkillDir(
 		// another skill than the one the person chose. A file next to the skill folder is refused anyway (one
 		// skill per source).
 		if info.Size() > core.MaxSkillFile {
-			return fmt.Errorf("the file %s is %d bytes; the limit is %d", printable(rel), info.Size(), core.MaxSkillFile)
+			return fmt.Errorf(
+				"the file %s is %d bytes; the limit is %d",
+				printable(rel),
+				info.Size(),
+				core.MaxSkillFile,
+			)
 		}
 
 		data, _, err := readSmall(root, rel, core.MaxSkillFile)

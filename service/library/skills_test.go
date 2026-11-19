@@ -259,7 +259,8 @@ func TestSkillWriteKeepsTheMetadataAndTheUnknownKeys(t *testing.T) {
 	}
 
 	md, err := os.ReadFile(filepath.Join(dir, "skills", "kept", "SKILL.md"))
-	if err != nil || !strings.Contains(string(md), "version: 3") || !strings.Contains(string(md), "description: edited") {
+	if err != nil || !strings.Contains(string(md), "version: 3") ||
+		!strings.Contains(string(md), "description: edited") {
 		t.Fatalf("%v %s", err, md)
 	}
 
