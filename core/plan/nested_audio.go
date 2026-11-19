@@ -49,7 +49,7 @@ func nestedWindowAudio(doc *timeline.Document, from, to int, opts Options) []Win
 		speed := float64(s.Speed.Num) / float64(max(s.Speed.Den, 1))
 		wa := WindowAudio{
 			Item: s.ItemID, Asset: s.AssetID, First: first, Last: last, Speed: round3(speed), Curve: s.Curve,
-			Reverse: s.Reverse, Denoise: s.Denoise, Voice: s.Voice,
+			Reverse: s.Reverse, Denoise: s.Denoise, Voice: s.Voice, Timeline: s.Timeline,
 		}
 		skipped := float64(frameSample(fps, first) - s.StartSample)
 		wa.SourceSeconds = round3((float64(s.SourceStart) + skipped*speed) / SampleRate)
@@ -137,6 +137,10 @@ func compositionAudio(
 		for i := range inner {
 			s := &inner[i]
 			s.ItemID = it.ID + "/" + s.ItemID
+
+			if s.Timeline == "" {
+				s.Timeline = nested.ID
+			}
 			s.StartSample += shift
 
 			if !s.trim(lo, hi) {

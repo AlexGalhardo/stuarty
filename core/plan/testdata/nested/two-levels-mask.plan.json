@@ -276,6 +276,7 @@
             {
               "item": "itm_comp0000001/itm_mid",
               "kind": "group",
+              "timeline": "prj_e3e3e3e3e3",
               "first": 0,
               "last": 89,
               "crop": [
@@ -293,6 +294,7 @@
                     "kind": "media",
                     "asset": "ast_video000001",
                     "asset_kind": "video",
+                    "timeline": "prj_d2d2d2d2d2",
                     "first": 0,
                     "last": 89,
                     "source_seconds": [
@@ -438,7 +440,8 @@
         "last": 89,
         "source_seconds": 0,
         "speed": 1,
-        "gain": 1
+        "gain": 1,
+        "timeline": "prj_d2d2d2d2d2"
       }
     ]
   }
