@@ -651,7 +651,7 @@ type HistoryDiffResult struct {
 }
 type DiffEntry struct {
 	Verb   string         `json:"verb"` // added | removed | moved | trimmed | changed
-	Noun   string         `json:"noun"` // track | clip | caption | asset | font | settings | project
+	Noun   string         `json:"noun"` // track | clip | audio | text | caption | shape | asset | font | settings | project
 	Change command.Change `json:"change"`
 	Line   string         `json:"line"` // DescribeDiff of the change
 }
