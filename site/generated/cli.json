@@ -1511,7 +1511,7 @@
       "summary": "add a text, a timeline or an output to a project",
       "usage": [
         "stuarty item:add --project <id> --kind text|timeline|output --title <t>",
-        "stuarty item:add --project <id> --kind text --title <t> --text <file|->",
+        "stuarty item:add --project <id> --kind text --title <t> --text <file|-> [--text-kind script|copy|caption]",
         "stuarty item:add --project <id> --kind output --title <t> --job <export job id>"
       ],
       "example": "stuarty item:add --project prj_7k2m9x4q1b --kind timeline --title \"Wide cut\" --preset 16:9",
@@ -1535,6 +1535,11 @@
           "name": "text",
           "type": "string",
           "usage": "a text item: a file with its Markdown, or - for standard input"
+        },
+        {
+          "name": "text-kind",
+          "type": "string",
+          "usage": "a text item: script, copy (default) or caption"
         },
         {
           "name": "preset",

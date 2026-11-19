@@ -1024,7 +1024,7 @@ Add a text, a timeline or an output to a project
 
 ```text
 stuarty item:add --project <id> --kind text|timeline|output --title <t>
-stuarty item:add --project <id> --kind text --title <t> --text <file|->
+stuarty item:add --project <id> --kind text --title <t> --text <file|-> [--text-kind script|copy|caption]
 stuarty item:add --project <id> --kind output --title <t> --job <export job id>
 ```
 
@@ -1034,6 +1034,7 @@ stuarty item:add --project <id> --kind output --title <t> --job <export job id>
 | `--title` | string |  | 1 to 120 characters (required) |
 | `--position` | integer |  | where in the order of the items, from 0 (default: the end) |
 | `--text` | string |  | a text item: a file with its Markdown, or - for standard input |
+| `--text-kind` | string |  | a text item: script, copy (default) or caption |
 | `--preset` | string |  | a timeline: 9:16 (default), 1:1, 16:9 or 4:5 |
 | `--fps` | string |  | a timeline: 30 (default), or n/1001 |
 | `--job` | string |  | an output: a succeeded export job of this project |

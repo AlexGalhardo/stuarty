@@ -55,9 +55,17 @@ func TestWritingScenarioIsEqualOnEverySurface(t *testing.T) {
 		),
 		libraryStepOf("ScriptEstimate", `{`+project+`,"item_id":"$item:0","words_per_minute":10}`, "E_VALIDATION"),
 		libraryStepOf("ProjectDescribe", `{`+project+`}`, ""),
+		libraryStepOf("ProjectItemAdd", `{`+project+`,"kind":"text","title":"Outro","text_kind":"script"}`, ""),
+		libraryStepOf("ProjectItemAdd", `{`+project+`,"kind":"timeline","title":"Wide","text_kind":"script"}`,
+			"E_VALIDATION"),
 	}
 
 	_, outcomes := runEverywhere(t, steps, nil, testenv.Options{})
+
+	// An item added as a text keeps the text kind it was given, on every surface.
+	if got := outcomes[24].result; !strings.Contains(got, `"text_kind":"script"`) {
+		t.Errorf("a text added with text_kind script: %s", got)
+	}
 
 	// The caption breaks the limit of X by one: the exact limit, the figure and the unit are in the answer.
 	if got := outcomes[17].result; !strings.Contains(got, `"code":"too_long"`) ||

@@ -900,7 +900,7 @@ func projectItem(ctx context.Context, svc service.Service, raw json.RawMessage) 
 	case "add":
 		res, err = svc.ProjectItemAdd(ctx, service.ProjectItemAddRequest{
 			ProjectID: in.ProjectID, Kind: in.Kind, Title: in.Title, Position: in.Position, Text: deref(in.Text),
-			Preset: in.Preset, FPS: string(in.FPS), JobID: in.JobID,
+			TextKind: in.TextKind, Preset: in.Preset, FPS: string(in.FPS), JobID: in.JobID,
 		})
 	case "move":
 		if in.Position == nil {
