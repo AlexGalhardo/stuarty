@@ -89,6 +89,7 @@ command view
 route DELETE /approval-rules/{}
 route DELETE /connections/{}
 route DELETE /keys/{}
+route DELETE /library/memory/{}
 route GET /approval-rules
 route GET /approvals
 route GET /approvals/events
@@ -191,7 +192,9 @@ route POST /trash/empty
 route POST /users
 route PUT /brand-kit
 route PUT /cost/ceilings
-tool approval
+route PUT /library/prompts/{}
+route PUT /library/skills/{}
+route PUT /projects/{}/brief
 tool command_help
 tool connection
 tool edit

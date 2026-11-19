@@ -27,7 +27,8 @@ func registry() []*spec {
 		connectionListCmd, connectionShowCmd, connectionAddCmd, connectionRemoveCmd, connectionTestCmd,
 		approvalListCmd, approvalShowCmd, approvalDecideCmd, approvalRuleListCmd, approvalRuleSetCmd,
 		approvalRuleRemoveCmd, costShowCmd, costCeilingCmd,
-	}
+		imageCreate, imageList, imageShow, imageEdit, imageUndo, imageRedo, imageExport,
+	}, libraryCommands()...)
 }
 
 // CommandNames lists the commands the binary knows, and those among them that

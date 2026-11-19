@@ -30,7 +30,7 @@ func AgentDocsInputs() agentdocs.Inputs {
 
 	for i := range commands {
 		c := &commands[i]
-		if inLibrary[c.Name] {
+		if c.Person || inLibrary[c.Name] {
 			continue
 		}
 

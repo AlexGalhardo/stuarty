@@ -1409,7 +1409,7 @@ A frame is one JPEG (quality 80, 4:2:0). A sheet is one JPEG:
 | Implementation | the official Go SDK `github.com/modelcontextprotocol/go-sdk` v1.8.0 (it implements revision `2026-07-28` and still serves older revisions: `mcp/shared.go` lines 50 to 91, 555 to 580) |
 | Server identity | `name` `stuarty`, `version` the binary version |
 | Capabilities | `tools` only. No resources, prompts, completions, logging, sampling, roots or elicitation (ADR-0015 item 10) |
-| `tools/list` | the 18 tools below, always in the order of the table, never paged, with `ttlMs` 3,600,000 and `cacheScope` `public` (the SDK type `Cacheable`, `mcp/protocol.go` lines 1148 to 1166; the list changes only when the binary is upgraded). |
+| `tools/list` | the 20 tools below, always in the order of the table, never paged, with `ttlMs` 3,600,000 and `cacheScope` `public` (the SDK type `Cacheable`, `mcp/protocol.go` lines 1148 to 1166; the list changes only when the binary is upgraded). |
 | Tool registration | each tool is registered with the SDK's raw `(*Server).AddTool` (`mcp/server.go` line 315) with `inputSchema` and `outputSchema` taken from the registry generator, **not** with the generic `mcp.AddTool[In, Out]`, which infers schemas from Go types and would not produce the `edit` schema of §4.4. The adapter validates `arguments` against `inputSchema` with the validator of ADR-0014 and converts a failure into `E_VALIDATION` with the `path` of the first invalid value (a failure of the `operations[].op` enum is `E_UNKNOWN_COMMAND`, §2.4 rule 5). The message names the path and the constraint, never the value (§1.2 rule 9) |
 | Call result | `CallToolResult` (`Content`, `StructuredContent`, `IsError`) built as §1.3 and §1.4 say |
 | Cost | the minified `tools/list` result is at most **22,500 bytes**: at the conservative 3 bytes per token of JSON this is 7,500 tokens, the NFR-020 limit, **interim until epic 13 revises NFR-020; the author has not yet decided the new figure** (it was 21,500 bytes and 7,200 tokens until epic 15 added the 20th tool, `library`, and 19,500 bytes and 6,500 tokens until epic 06 added the 19th tool, `project_item`; raised before that from 6,000 tokens, 18,000 bytes, by D-040; before that from 17,500 bytes when `font_import` became the 16th tool, VV-024; at the 3.2 characters per token of check 2 it is 5,625 tokens). The definitions of this section measure 22,318 bytes in total (the list a client receives, 22,497) with `library` (about 1,130 bytes), `image` (whose minified definition is about 1,080 bytes) and `project_item` (about 1,100 bytes, plus `timeline_id` on nine tools and `from` on `project_create`); the integration was at 19,492 bytes with 18 tools, and shortening descriptions could not recover the 1,700 bytes of the 19th tool, nor the 1,130 of the 20th, without dropping a capability, so the cap is interim. A new parameter should still shorten a description. `edit` is 2,534 bytes (limit 2,700 since VV-122 added `clip.set_shadow` and `clip.set_outline`, raised from 2,500; each new operation name costs about 25 bytes) and the largest other tool is `view` at 1,518 (limit 1,600); `media_inspect` is 1,428 and `template` 1,315. No single tool is larger than 2,700 bytes (`edit`) or 1,600 bytes (the others). **Verified by** `TestToolDefinitionBudget` and, once per release, a count with the model vendor's token counting endpoint (if it exceeds 7,500 tokens the descriptions are shortened; no field is removed) |
@@ -1436,7 +1436,9 @@ Tool and Service mapping, scope and annotations (annotations are hints and clien
 | `template` | `TemplateList`, `TemplateSave`, `TemplateInstantiate`, `TemplateExport`, `TemplateImport` | read (list, export), edit (the others) | false | false | false | false |
 | `font_import` | `FontImport` | media | false | false | true | false |
 | `connection` | `ConnectionList` (without `id`), `ConnectionGet` (with `id`) | read | true | n/a | true | false |
-| `approval` | `ApprovalList` (without `id`), `ApprovalGet` (with `id`) | read | true | n/a | true | false |
+| `image` | `ImageCreate`, `ImageList`, `ImageDescribe`, `ImageEdit`, `ImageUndo`, `ImageRedo`, `ImageExport` (SDD-021) | read (list, show), edit (the others) | false | false | false | false |
+| `project_item` | `ProjectItemAdd`, `ProjectItemMove`, `ProjectItemRename`, `ProjectItemTrash`, `ProjectItemRestore`, `BriefGet`, `BriefSet` (argument `action`) | edit (read for `brief` without `text`) | false | false | false | false |
+| `library` | `LibrarySearch`, `MemoryList`, `SkillList`, `PromptList`, `MemoryGet`, `SkillGet`, `PromptGet`, `MemoryWrite`, `SkillWrite`, `PromptWrite`, `PromptRender`, `SkillLint` | read (search, list, get, render, lint), edit (write) | false | false | false | false |
 
 `destructiveHint` is `false` on every tool: every write is undoable and recorded per actor, and nothing is removed for good (ADR-0020 items 2 and 3). A client that prompts on destructive tools therefore never prompts for this server, which is what unattended use needs (D-011). `openWorldHint` is `false` on every tool: no tool reaches an address chosen by the caller (RF-130). `TestNoOutboundTools` asserts both hints for every registered tool and that `web/app/mcp` imports no HTTP client.
 
@@ -2651,16 +2653,36 @@ Example (the text of §3.6): `{"name": "lint", "arguments": {"project_id": "prj_
     ],
     "additionalProperties": false
   },
-  "outputSchema":{
-    "type":"object",
-    "properties":{
-      "job_id":{"type":"string"},
-      "kind":{"type":"string"},
-      "state":{"enum":["queued","running","succeeded","failed","cancelled"]},
-      "progress":{"type":"number"},
-      "message":{"type":"string"},
-      "result":{"type":"object"},
-      "error":{"type":"object"}
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "job_id": {
+        "type": "string"
+      },
+      "kind": {
+        "type": "string"
+      },
+      "state": {
+        "enum": [
+          "queued",
+          "running",
+          "succeeded",
+          "failed",
+          "cancelled"
+        ]
+      },
+      "progress": {
+        "type": "number"
+      },
+      "message": {
+        "type": "string"
+      },
+      "result": {
+        "type": "object"
+      },
+      "error": {
+        "type": "object"
+      }
     },
     "required": [
       "job_id",
@@ -2721,17 +2743,42 @@ job_4h8k2m6p9t export succeeded 100% file=/home/ana/.stuarty/exports/prj_7k2m9x4
     },
     "additionalProperties": false
   },
-  "outputSchema":{
-    "type":"object",
-    "properties":{
-      "job_id":{"type":"string"},
-      "kind":{"type":"string"},
-      "state":{"enum":["queued","running","succeeded","failed","cancelled"]},
-      "progress":{"type":"number"},
-      "message":{"type":"string"},
-      "result":{"type":"object"},
-      "error":{"type":"object"},
-      "jobs":{"type":"array","items":{"type":"object"}}
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "job_id": {
+        "type": "string"
+      },
+      "kind": {
+        "type": "string"
+      },
+      "state": {
+        "enum": [
+          "queued",
+          "running",
+          "succeeded",
+          "failed",
+          "cancelled"
+        ]
+      },
+      "progress": {
+        "type": "number"
+      },
+      "message": {
+        "type": "string"
+      },
+      "result": {
+        "type": "object"
+      },
+      "error": {
+        "type": "object"
+      },
+      "jobs": {
+        "type": "array",
+        "items": {
+          "type": "object"
+        }
+      }
     }
   },
   "annotations": {
@@ -2949,32 +2996,280 @@ The `outputSchema` and the `title` are minimal, to stay under the budget of §4.
 
 The only tool of the connections domain (ADR-0043 item 3: an intent no other tool expresses, the question "where may this product send data?"; about 560 bytes, 175 tokens). It reads the registry and nothing else: it has no argument that names a destination, and creating, removing and testing a connection take a credential or reach the network, so they have a CLI command and a route and no tool (SDD-014 section 10). The result is a `ConnectionListResult` or a `Connection` in `structuredContent`; the label is delimited as untrusted text in the text part (SDD-007 section 8). It never carries a secret, only `secret_set`.
 
-#### `approval`
+#### `image`
 
 ```json
 {
-  "name":"approval",
-  "description":"List the approval queue (pending; state: approved, rejected, expired, all) or read one with id. Publishing and costly generation wait for a person: you cannot approve or reject.",
-  "inputSchema":{
-    "type":"object",
-    "properties":{
-      "id":{"type":"string","pattern":"^apr_[0-9a-hjkmnp-tv-z]{10}$"},
-      "state":{"type":"string"}
+  "name": "image",
+  "description": "Images. action=create (preset or width+height; or from_template+values), list, show, edit (operations: command_help domain=image), undo, redo, export.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "action": {
+        "enum": [
+          "create",
+          "list",
+          "show",
+          "edit",
+          "undo",
+          "redo",
+          "export"
+        ]
+      },
+      "image_id": {
+        "type": "string",
+        "pattern": "^img_[0-9a-hjkmnp-tv-z]{10}$"
+      },
+      "base_revision": {
+        "type": "integer"
+      },
+      "operations": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "op": {
+              "type": "string"
+            },
+            "args": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "idempotency_key": {
+        "type": "string"
+      },
+      "dry_run": {
+        "type": "boolean"
+      },
+      "preset": {
+        "type": "string"
+      },
+      "width": {
+        "type": "integer"
+      },
+      "height": {
+        "type": "integer"
+      },
+      "name": {
+        "type": "string"
+      },
+      "template": {
+        "type": "boolean"
+      },
+      "values": {
+        "type": "object"
+      },
+      "format": {
+        "type": "string"
+      },
+      "from_template": {
+        "type": "string"
+      }
     },
-    "additionalProperties":false
+    "required": [
+      "action"
+    ],
+    "additionalProperties": false
   },
-  "outputSchema":{"type":"object"},
-  "annotations":{
-    "title":"Approvals",
-    "readOnlyHint":true,
-    "destructiveHint":false,
-    "idempotentHint":true,
-    "openWorldHint":false
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "text": {
+        "type": "string",
+        "x-untrusted": true
+      }
+    }
+  },
+  "annotations": {
+    "title": "Images",
+    "readOnlyHint": false,
+    "destructiveHint": false,
+    "idempotentHint": false,
+    "openWorldHint": false
   }
 }
 ```
 
-The only tool of the approval queue (ADR-0043 item 3: an intent no other tool expresses, the question "what is waiting for a person?"; 536 bytes minified, about 180 tokens; the 18 definitions total 19,440 bytes of the 19,500 allowed, so the next tool needs the budget revised; `state` is not an enum for that reason, and the service answers `E_VALIDATION` for a state it does not know). It reads the queue and nothing else. A request is made by `job_start` of a kind that needs approval, which answers the job in the state `waiting_approval` with `approval_id`; `job_get` shows the same state. Deciding, writing a rule and setting a ceiling have no tool and no argument (RF-136, SDD-015 section 10): any member other than `id` and `state` is refused by the input schema. The result is an `ApprovalListResult` or an `approval.Request` in `structuredContent`; the summary of a request is delimited as untrusted text in the text part (SDD-007 section 8).
+The `image` tool is the image documents of SDD-021 behind one tool, as `template` is the templates: `action` picks the Service operation (`create` is `ImageCreate`, `list` `ImageList`, `show` `ImageDescribe`, `edit` `ImageEdit`, `undo` and `redo` `ImageUndo` and `ImageRedo`, `export` `ImageExport`) and a member the action does not use is refused. `operations` of `edit` are the operations of the image registry, which `command_help` serves with `domain` `image` (the video `edit` enum does not list them). The definition is as small as the budget of §4.1 allows, so some members are CLI and HTTP only: the background, the id, the quality, the paging and the template filter of the list, and the output schema names only `text`. The template to start from is `from_template` (an image id, not an `_id` member, to save the pattern). An agent sets a background with `layer.add_fill`.
+
+#### `project_item`
+
+```json
+{
+  "name": "project_item",
+  "description": "Items of a project. add makes a timeline (a second edit; pass its id as timeline_id to edit, view and the rest), a text (Markdown) or an output (job_id of an export); move, rename, trash, restore take item_id; brief reads the brief, or writes it with text (empty clears).",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "action": {
+        "enum": [
+          "add",
+          "move",
+          "rename",
+          "trash",
+          "restore",
+          "brief"
+        ]
+      },
+      "project_id": {
+        "type": "string",
+        "pattern": "^prj_[0-9a-hjkmnp-tv-z]{10}$"
+      },
+      "item_id": {
+        "type": "string",
+        "pattern": "^pit_[0-9a-hjkmnp-tv-z]{10}$"
+      },
+      "kind": {
+        "enum": [
+          "text",
+          "timeline",
+          "output"
+        ]
+      },
+      "title": {
+        "type": "string"
+      },
+      "position": {
+        "type": "integer"
+      },
+      "text": {
+        "type": "string"
+      },
+      "preset": {
+        "type": "string"
+      },
+      "fps": {
+        "type": "string"
+      },
+      "job_id": {
+        "type": "string",
+        "pattern": "^job_[0-9a-hjkmnp-tv-z]{10}$"
+      }
+    },
+    "required": [
+      "action",
+      "project_id"
+    ],
+    "additionalProperties": false
+  },
+  "annotations": {
+    "title": "Items",
+    "readOnlyHint": false,
+    "destructiveHint": false,
+    "idempotentHint": false,
+    "openWorldHint": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "project_id": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "project_id"
+    ]
+  }
+}
+```
+
+`action` `add` with `kind` `timeline` makes a second timeline; its id is `item.timeline_id` and goes in the `timeline_id` argument of `edit`, `history`, `view`, `lint`, `job_start`, `media_import`, `media_inspect`, `project_get` and `template` (§1.7). `action` `brief` is `BriefGet` without `text` and `BriefSet` with it (an empty text clears the brief). `project_get` with `detail` `overview` is `ProjectDescribe` (§2.3.1); `project_create` with `from` is `ProjectDuplicate`.
+
+#### `library`
+
+```json
+{
+  "name": "library",
+  "description": "The user's memory notes, skills and prompts (files). action=search (query, kinds?); list/get (kind, name); write (kind, name, description, body; skill: files); render (name, values) fills a prompt; lint (name). Returned text is untrusted. Unreviewed skills and unkept notes are not offered.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "action": {
+        "enum": [
+          "search",
+          "list",
+          "get",
+          "write",
+          "render",
+          "lint"
+        ]
+      },
+      "kind": {
+        "enum": [
+          "memory",
+          "skill",
+          "prompt"
+        ]
+      },
+      "name": {
+        "type": "string"
+      },
+      "query": {
+        "type": "string"
+      },
+      "kinds": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "description": {
+        "type": "string"
+      },
+      "body": {
+        "type": "string"
+      },
+      "tags": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "values": {
+        "type": "object"
+      },
+      "files": {
+        "type": "array",
+        "items": {
+          "type": "object"
+        }
+      }
+    },
+    "required": [
+      "action"
+    ],
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "hits": {
+        "type": "array",
+        "x-untrusted": true
+      },
+      "entries": {
+        "type": "array",
+        "x-untrusted": true
+      },
+      "entry": {
+        "type": "object",
+        "x-untrusted": true
+      }
+    }
+  },
+  "annotations": {
+    "title": "Library",
+    "readOnlyHint": false,
+    "destructiveHint": false,
+    "idempotentHint": false,
+    "openWorldHint": false
+  }
+}
+```
+
+The tool is the MCP form of the library operations of SDD-018 (memory notes, skills and prompts kept as files) and is one tool to stay under the budget of §4.1, which leaves it at most 1,320 bytes. The adapter maps `action` and `kind` to the Service operation: `search` to `LibrarySearch`; `list` to `MemoryList`, `SkillList` or `PromptList`; `get` to `MemoryGet`, `SkillGet` or `PromptGet`; `write` to `MemoryWrite`, `SkillWrite` or `PromptWrite`; `render` to `PromptRender` (the kind is `prompt`); `lint` to `SkillLint` (the kind is `skill`). A missing member the action needs is `E_VALIDATION` with the `path` of the member, and so is a member the action does not use (`search`: `query`, `kinds`; `list`: `kind`, `tags`; `get`: `kind`, `name`; `render`: `name`, `values`; `lint`: `name`; `write`: for `memory` `description`, `name` (made from the description when it is missing), `body`, `tags`; for `skill` `name`, `description`, `body`, `files` (each `{path, text}`); for `prompt` `name`, `description`, `body`, `tags`). Every call is made with `agent_view`: it never sees a skill that no person has reviewed or a note that no person has kept, and `get` of one is `E_FORBIDDEN` with the hint to ask the person. A note or a skill written through the tool is unreviewed or pending. The tool removes nothing, imports nothing and reviews nothing: removing a note, importing and exporting skills and marking a skill as read are for a person (SDD-018 sections 7, 8 and 11). Every text in the result is untrusted data, delimited as a block of source `library_text` (SDD-007 section 8). `readOnlyHint` is `false` because `write` writes; the description says that no write is irreversible but a note removal, which the tool does not have.
 
 ### 4.3 `command_help`
 
@@ -3623,8 +3918,8 @@ Every `Service` operation has an encoding on each surface. The table is the proo
 | `ConnectionCreate` | none (exception E-5: it carries a credential) | `connection:add` | `POST /connections` |
 | `ConnectionRemove` | none (exception E-5) | `connection:remove` | `DELETE /connections/{id}` |
 | `ConnectionTest` | none (exception E-5: it reaches the network) | `connection:test` | `POST /connections/{id}/test` |
-| `ApprovalList` | `approval` (no `id`) | `approval:list` | `GET /approvals` |
-| `ApprovalGet` | `approval` (`id`) | `approval:show` | `GET /approvals/{id}` |
+| `ApprovalList` | none (E-6: no tool) | `approval:list` | `GET /approvals` |
+| `ApprovalGet` | none (E-6: no tool) | `approval:show` | `GET /approvals/{id}` |
 | `ApprovalDecide` | none (exception E-6: a person decides) | `approval:decide` | `POST /approvals/{id}/decide` |
 | `ApprovalRuleList` | none | `approval:rule:list` | `GET /approval-rules` |
 | `ApprovalRuleSet` | none (exception E-6) | `approval:rule:set` | `POST /approval-rules` |
@@ -3798,7 +4093,7 @@ The implementation of this SDD is complete when every check below passes. "Test"
 | # | Check | How verified |
 | --- | --- | --- |
 | 1 | Every `service.Service` method has an MCP tool, CLI command and HTTP route, or is in the exceptions of §7.1; the §7.1 table equals the one derived from the code | `TestParityTableCoversTheService`, `TestDriversCoverService`, `TestEveryOperationIsReachableOnEverySurface` (`web/contract`) |
-| 2 | `tools/list` holds exactly the 18 tools of SDD-000 §1 in the order of §4.1, byte-equal across two calls, at most 19,500 bytes minified, `edit` at most 2,700 bytes and every other tool at most 1,600 (NFR-020) | `TestToolDefinitionBudget`; release checklist: token count with the vendor endpoint at most 6,500 |
+| 2 | `tools/list` holds exactly the 20 tools of SDD-000 §1 in the order of §4.1, byte-equal across two calls, at most 22,500 bytes minified (interim until epic 13), `edit` at most 2,700 bytes and every other tool at most 1,600 (NFR-020) | `TestToolDefinitionBudget`; release checklist: token count with the vendor endpoint at most 7,500 |
 | 3 | Every `inputSchema` and `outputSchema` is valid JSON Schema 2020-12; every `inputSchema` has `additionalProperties: false`; the `edit` operation enum equals the public command names of the build; the annotations equal the table of §4.1; every output path that holds text from media or other actors carries `"x-untrusted": true` and a result with such a value has `untrusted_notice` | `TestToolSchemas` |
 | 4 | The first 512 characters of `instructions` (after the generated header line is stripped) are those of §4.6, the whole is at most 2,100 bytes, it names the tools by their exact names and does not mention locks | `TestInstructionsHead` |
 | 5 | The MCP server is stateless: no `Mcp-Session-Id` is sent or read, `GET /mcp` and `DELETE /mcp` answer 405, two interleaved clients do not influence each other; revisions `2026-07-28` and `2025-11-25` both work over stdio and HTTP | `TestHTTPIsStateless` (`web/app/mcp`), `TestMCPOverStdioThroughTheBinary` (`web/cmd/app`); no single test runs both revisions with the SDK client |
@@ -3836,8 +4131,8 @@ Numbers measured on the reference machine (AMD Ryzen 7 5700X3D, Windows 11, FFmp
 
 | Budget | Measured | Limit |
 | --- | --- | --- |
-| `tools/list` definitions, 18 tools | about 19,320 bytes, about 6,040 tokens by the 3.2 characters per token estimate | at most 19,500 bytes (check 2) |
-| `tools/list` by the vendor token count | not measured: needs `ANTHROPIC_API_KEY` (`TestToolListVendorTokens`, release only) | at most 6,500 tokens |
+| `tools/list` definitions, 20 tools | 22,318 bytes, about 6,974 tokens by the 3.2 characters per token estimate | at most 22,500 bytes, interim (check 2) |
+| `tools/list` by the vendor token count | not measured: needs `ANTHROPIC_API_KEY` (`TestToolListVendorTokens`, release only) | at most 7,500 tokens, interim |
 | Concise view of the reference project | 1 page, 11,785 characters | at most 2 pages, cap 12,800 characters (check 7) |
 | Frame and sheet image tokens | `TestViewImageSizeTable` passes for the four presets | frame at most 800, sheet at most 1,500 (check 8) |
 | 9-cell sheet, median | 149 ms (`BenchmarkViewSheet9`) | under 2 s (check 9) |

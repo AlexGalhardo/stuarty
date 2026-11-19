@@ -20,6 +20,8 @@ type CommandDoc struct {
 	Globals []string `json:"globals"`
 	// Pending names the task that delivers a command that is still a stub.
 	Pending string `json:"pending,omitempty"`
+	// Person marks a command only a person in the app may succeed at; the skill for agents leaves it out.
+	Person bool `json:"-"`
 }
 
 // ReferenceDoc is what the documentation site renders as the CLI reference

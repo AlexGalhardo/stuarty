@@ -216,6 +216,13 @@ func TestTablesMatchSDD005Section5(t *testing.T) {
 			"actual_micros INTEGER 0 - 0", "state TEXT 1 'reserved' 0", "day TEXT 1 - 0", "created_ms INTEGER 1 - 0",
 			"settled_ms INTEGER 0 - 0",
 		},
+		"library_entries": {
+			"key TEXT 1 - 1", "kind TEXT 1 - 0", "name TEXT 1 - 0", "description TEXT 1 - 0", "scope TEXT 1 - 0",
+			"origin TEXT 1 - 0", "reviewed INTEGER 1 - 0", "kept INTEGER 1 - 0", "actor TEXT 1 - 0", "tags TEXT 1 - 0",
+			"state TEXT 1 - 0", "error TEXT 1 - 0", "path TEXT 1 - 0", "sig TEXT 1 - 0", "lint_errors INTEGER 1 - 0",
+			"lint_warnings INTEGER 1 - 0", "has_scripts INTEGER 1 - 0", "created_ms INTEGER 1 - 0",
+			"updated_ms INTEGER 1 - 0",
+		},
 	}
 	for table, w := range want {
 		if got := columns(t, db, table); !slices.Equal(got, w) {
@@ -364,10 +371,14 @@ func TestResetDropsEveryEditorTableAndUpRunsAgain(t *testing.T) {
 		"brand_kits",
 		"font_owners",
 		"connections",
+		"image_documents",
+		"image_operations",
 		"approval_requests",
 		"approval_rules",
 		"cost_ceilings",
 		"cost_ledger",
+		"library_entries",
+		"library_fts",
 	}
 	for _, table := range tables {
 		if len(columns(t, db, table)) == 0 {
@@ -547,7 +558,7 @@ func TestJobsAcceptWaitingApprovalAndRegisteredKinds(t *testing.T) {
 	}
 
 	if err := exec(
-		`INSERT INTO projects (id, name, schema_version, document, doc_sha256, width, height, fps_num, fps_den, created_ms, updated_ms, created_by)
+		`INSERT INTO timelines (id, name, schema_version, document, doc_sha256, width, height, fps_num, fps_den, created_ms, updated_ms, created_by)
  VALUES ('prj_a', 'a', 1, '{}', 'x', 1, 1, 30, 1, 1, 1, 'local:ui')`,
 	); err != nil {
 		t.Fatal(err)
@@ -587,7 +598,7 @@ func TestJobsRebuildKeepsTheRowsOfAnExistingWorkspace(t *testing.T) {
 
 	all := All()
 	before := all[:len(all)-1] // everything but the rebuild of jobs
-	if all[len(all)-1].ID != "20261119110100_jobs_waiting_approval" {
+	if all[len(all)-1].ID != "20261119140100_jobs_waiting_approval" {
 		t.Fatalf("the last migration is %s: update this test", all[len(all)-1].ID)
 	}
 
@@ -601,7 +612,7 @@ func TestJobsRebuildKeepsTheRowsOfAnExistingWorkspace(t *testing.T) {
 	}
 
 	for _, q := range []string{
-		`INSERT INTO projects (id, name, schema_version, document, doc_sha256, width, height, fps_num, fps_den, created_ms, updated_ms, created_by)
+		`INSERT INTO timelines (id, name, schema_version, document, doc_sha256, width, height, fps_num, fps_den, created_ms, updated_ms, created_by)
  VALUES ('prj_a', 'a', 1, '{}', 'x', 1, 1, 30, 1, 1, 1, 'local:ui')`,
 		`INSERT INTO jobs (id, kind, project_id, actor, state, progress, message, input, result, cancel_requested, attempts, created_ms, updated_ms, started_ms, finished_ms)
  VALUES ('job_a', 'export', 'prj_a', 'local:cli', 'succeeded', 1, 'm', '{"k":1}', '{"r":2}', 0, 2, 10, 20, 11, 19)`,
