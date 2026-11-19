@@ -24,11 +24,22 @@ type Rect struct {
 // LayerKind says how a layer is drawn.
 type LayerKind string
 
-// The two kinds of layer: pixels of a media asset, or a bitmap the rasterizer draws.
+// The kinds of layer: pixels of a media asset, a bitmap the rasterizer draws, or a group, the layers of a
+// nested timeline that an executor draws on a surface of their own before it places that surface as one layer
+// (SDD-004 §3.16, SDD-013 §3.12).
 const (
 	Media  LayerKind = "media"
 	Bitmap LayerKind = "bitmap"
+	Group  LayerKind = "group"
 )
+
+// GroupSpec is the nested frame of a group layer: its own size in pixels and its layers, bottom first, placed
+// in that frame. The surface the executor makes is transparent where the layers draw nothing.
+type GroupSpec struct {
+	Width  int     `json:"width"`
+	Height int     `json:"height"`
+	Layers []Layer `json:"layers"`
+}
 
 // FramePlan is what one frame contains (SDD-004 §2).
 type FramePlan struct {
@@ -56,6 +67,9 @@ type Layer struct {
 
 	// Bitmap layers (text, caption, shape items).
 	Bitmap *BitmapSpec `json:"bitmap,omitempty"`
+
+	// Group layers (composition items that draw as one unit): the nested frame. Crop is the whole nested frame.
+	Group *GroupSpec `json:"group,omitempty"`
 
 	// Both kinds (SDD-004 §3.6): the filter matrix, applied after ColorMatrix and
 	// before the blur, and the blur radius in frame pixels. Nil and 0 mean none;
@@ -264,9 +278,16 @@ func (s BitmapSpec) Key() string {
 // anchored by its centre on the edge.
 type Measurer func(BitmapSpec) (w, h float64)
 
+// Nested gives the document of a timeline of the same project by its id, for the composition items of a
+// document (SDD-004 §3.16). The plan is pure and reads no store, so the caller that has the project answers it;
+// a nil Nested, or an id it does not know, makes the composition draw and sound nothing.
+type Nested func(id string) (*timeline.Document, bool)
+
 // Options configure FrameWith and WindowWith.
 type Options struct {
 	Measure Measurer
+	// Nested resolves the timelines that composition items use; see Nested.
+	Nested Nested
 	// OutputScale is width / project width of the frame asked for; 0 means 1 (export).
 	// It enters the oversampling of bitmap layers (SDD-004 §5.3).
 	OutputScale float64

@@ -195,7 +195,7 @@ A `composition` item shows another timeline of the same project as one clip: a c
 | `fit` | `"cover"`, `"contain"`, `"none"` | `"cover"` | how the nested timeline's frame (its own `width` and `height`) is sized into this document's frame before `scale` applies, as for a clip (SDD-004 section 3.4); the nested frame plays the part of the asset's pixels |
 | `volume`, `audio_muted`, `fade_in`, `fade_out` | as for a clip | | the gain of the nested timeline's mixed sound (SDD-004 section 7) |
 
-A composition also takes every visual field of section 3.4 (`x`, `y`, `scale`, `rotation`, `opacity`, `blur`, `filter`, `blend`, `flip_x`, `flip_y`, `effects`, `mask`, the transitions and the keyframes of those properties, `shadow`, `outline`, `disabled`, `markers`, `link`). It has no `asset`, `crop`, colour adjustment, `lut`, `chroma_key`, `hsl`, `wheels`, `curves`, `speed_curve`, `reverse`, `freeze`, `denoise` or `voice`, and a value of those that is not the default is `V_COMPOSITION`. It sits on a visual track (`V_ITEM_TRACK` otherwise).
+A composition also takes every visual field of section 3.4 (`x`, `y`, `scale`, `rotation`, `opacity`, `blur`, `filter`, `blend`, `flip_x`, `flip_y`, `effects`, `mask`, the transitions and the keyframes of those properties, `shadow`, `outline`, `disabled`, `markers`, `link`). It has no `asset`, `crop`, colour adjustment, `lut`, `chroma_key`, `hsl`, `wheels`, `curves`, `speed_curve`, `reverse`, `freeze`, `denoise` or `voice`, and a value of those that is not the default is `V_SHAPE` like any field that does not apply to the type of an item (`speed` and `freeze` are `V_COMPOSITION`). It sits on a visual track (`V_ITEM_TRACK` otherwise).
 
 **What the nested timeline contributes.** Its layers and its sound, as its own plan gives them (hidden, muted, solo and disabled apply inside it). Its own `width` and `height` are the frame that is placed; its `fps` is converted as for a video asset; its `background`, `loudness_target`, markers and template information are ignored: **its frame is transparent where it draws nothing**, so the composition lets the layers below show through. What the nested layers draw outside the nested frame is not visible. The nested timeline is as long as its last item (`end_frame`); after that the composition shows nothing and is silent, and the lint says so.
 
@@ -377,7 +377,7 @@ TemplateInfo, at the top of a template document: `{"description": string, "color
 | `V_SLOT` | slot names are unique and each slot kind matches its item type |
 | `V_COLOR_REF` | every `"$name"` colour reference exists in `template.colors` |
 | `V_LIMITS` | at most 50 tracks, 500 items, 200 assets and 5,000 caption words in the document |
-| `V_COMPOSITION` | a `composition` item names a well formed timeline other than the document itself and has none of the fields it may not have (section 3.5.1); an `asset` on it is `V_ASSET_REF`, a track that is not visual `V_ITEM_TRACK` |
+| `V_COMPOSITION` | a `composition` item names a timeline other than the document itself (a missing or malformed id is `V_SHAPE` or `V_ID`), plays at speed `1/1` and is not a freeze frame (section 3.5.1); a field it may not have is `V_SHAPE`, a track that is not visual `V_ITEM_TRACK` |
 
 The limits bound the cost of every operation and are well above the supported project size of NFR-009.
 

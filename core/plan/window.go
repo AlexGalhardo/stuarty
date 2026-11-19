@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"encoding/json"
 	"slices"
+	"strings"
 
 	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
@@ -68,6 +69,10 @@ type WindowLayer struct {
 	Bitmaps *WindowBitmaps `json:"bitmaps,omitempty"`
 	Natural *[2]float64    `json:"natural,omitempty"`
 
+	// Group layers (SDD-004 §3.16): the nested frame and its window layers, bottom first, each with the series
+	// of the frames of the window in which it is present. Crop is the whole nested frame.
+	Group *WindowGroup `json:"group,omitempty"`
+
 	// Both kinds: constant over the item (filter and blur are not keyframed).
 	Filter *[12]float64 `json:"filter,omitempty"`
 	Blur   float64      `json:"blur,omitempty"`
@@ -104,6 +109,14 @@ type WindowLayer struct {
 	Rotation Series `json:"rotation"`
 	Scale    Series `json:"scale"`
 	Opacity  Series `json:"opacity"`
+}
+
+// WindowGroup is the nested frame of a group layer in the compact form: its size in its own pixels and the layers
+// of every frame of the window, by their ids (paths, SDD-004 §3.16).
+type WindowGroup struct {
+	Width  int           `json:"width"`
+	Height int           `json:"height"`
+	Layers []WindowLayer `json:"layers"`
 }
 
 // WindowBitmaps selects, for each frame, one of the keys.
@@ -174,7 +187,8 @@ func WindowWith(doc *timeline.Document, from, to int, opts Options) WindowPlan {
 		}
 	}
 
-	for _, id := range sortedLayers(doc, acc) {
+	for _, id := range sortedLayers(acc) {
+		acc[id].finish()
 		w.Layers = append(w.Layers, acc[id].wl)
 	}
 
@@ -202,13 +216,50 @@ type layerAcc struct {
 	colourKF  bool           // media layers: a colour property has keyframes
 	maskKF    bool           // a mask property has keyframes
 	cropKF    bool           // media layers: a crop side has keyframes
+
+	// order is the track order of the item and of each composition item above it, which sorts the layers
+	// bottom first among their siblings (SDD-004 §3.16).
+	order []string
+	// Group layers: the accumulators of the nested layers, by id, and what they need to be made.
+	p    *planner
+	to   int
+	kids map[string]*layerAcc
+}
+
+// orderKey is the track order of the item a layer id names and, for a path, of each composition item on the
+// way down: nested layers of one composition item sort together, in the place of the item.
+func orderKey(p *planner, id string) []string {
+	var key []string
+
+	for cur := p; cur != nil; {
+		head, rest, more := strings.Cut(id, "/")
+
+		it, ok := cur.doc.Items[head]
+		if !ok {
+			break
+		}
+
+		key = append(key, cur.doc.Tracks[it.Track].Order)
+
+		if !more || cur.kids[head] == nil {
+			break
+		}
+
+		cur, id = cur.kids[head].p, rest
+	}
+
+	return key
 }
 
 func newLayerAcc(p *planner, t, room int, first *Layer) *layerAcc {
-	it := p.doc.Items[first.ItemID]
-	room = min(room, it.Start+it.Duration-t)
+	it, owner, _ := p.lookup(first.ItemID)
+	if owner == p {
+		room = min(room, it.Start+it.Duration-t)
+	}
 
-	a := &layerAcc{}
+	room = max(room, 0)
+
+	a := &layerAcc{order: orderKey(p, first.ItemID), p: p, to: t + room}
 	for _, name := range timeline.ColourProps {
 		a.colourKF = a.colourKF || len(it.Keyframes[name]) > 0
 	}
@@ -248,8 +299,20 @@ func newLayerAcc(p *planner, t, room int, first *Layer) *layerAcc {
 		Effects:   first.Effects,
 	}
 
+	if first.Kind == Group {
+		a.wl.Group = &WindowGroup{Width: first.Group.Width, Height: first.Group.Height, Layers: []WindowLayer{}}
+		a.wl.Crop = &[4]float64{first.Crop.X, first.Crop.Y, first.Crop.W, first.Crop.H}
+		a.kids = map[string]*layerAcc{}
+
+		return a
+	}
+
 	if first.Kind == Media {
-		a.asset = p.doc.Assets[first.AssetID]
+		if owner == nil {
+			owner = p
+		}
+
+		a.asset = owner.doc.Assets[first.AssetID]
 		a.wl.SourceSeconds = make([]float64, 0, room)
 
 		if a.asset.IsAnimated() {
@@ -309,6 +372,12 @@ func (a *layerAcc) add(t int, l *Layer) {
 		wl.Masks = append(wl.Masks, l.Mask)
 	}
 
+	if l.Kind == Group {
+		a.addKids(t, l)
+
+		return
+	}
+
 	if l.Kind == Media {
 		if a.cropKF {
 			wl.Crops = append(wl.Crops, [4]float64{l.Crop.X, l.Crop.Y, l.Crop.W, l.Crop.H})
@@ -340,9 +409,36 @@ func (a *layerAcc) add(t int, l *Layer) {
 	wl.Bitmaps.Index = append(wl.Bitmaps.Index, i)
 }
 
-// sortedLayers orders the items bottom first: by track order descending, then
-// first frame, then id.
-func sortedLayers(doc *timeline.Document, acc map[string]*layerAcc) []string {
+// addKids keeps the nested layers of the frame of a group layer, each in its own accumulator.
+func (a *layerAcc) addKids(t int, l *Layer) {
+	for i := range l.Group.Layers {
+		kl := &l.Group.Layers[i]
+
+		ka := a.kids[kl.ItemID]
+		if ka == nil {
+			ka = newLayerAcc(a.p, t, a.to-t, kl)
+			a.kids[kl.ItemID] = ka
+		}
+
+		ka.add(t, kl)
+	}
+}
+
+// finish puts the nested layers of a group in its window layer, bottom first.
+func (a *layerAcc) finish() {
+	if a.wl.Group == nil {
+		return
+	}
+
+	for _, id := range sortedLayers(a.kids) {
+		a.kids[id].finish()
+		a.wl.Group.Layers = append(a.wl.Group.Layers, a.kids[id].wl)
+	}
+}
+
+// sortedLayers orders the layers bottom first: by track order descending (of each composition item on the way
+// down, then of the item), then first frame, then id.
+func sortedLayers(acc map[string]*layerAcc) []string {
 	ids := make([]string, 0, len(acc))
 	for id := range acc {
 		ids = append(ids, id)
@@ -350,7 +446,7 @@ func sortedLayers(doc *timeline.Document, acc map[string]*layerAcc) []string {
 
 	slices.SortFunc(ids, func(a, b string) int {
 		return cmp.Or(
-			-cmp.Compare(doc.Tracks[doc.Items[a].Track].Order, doc.Tracks[doc.Items[b].Track].Order),
+			-slices.Compare(acc[a].order, acc[b].order),
 			cmp.Compare(acc[a].wl.First, acc[b].wl.First),
 			cmp.Compare(a, b),
 		)

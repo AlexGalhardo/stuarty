@@ -14,6 +14,13 @@ type planner struct {
 	doc    *timeline.Document
 	opts   Options
 	tracks []trackItems
+
+	// The nested timelines of the composition items (SDD-004 §3.16): the planner of each, by item id. prefix
+	// is the path of the composition item that holds this planner, "" at the top, and trail the timelines
+	// from the top down to this one, which bounds the depth and stops a loop.
+	prefix string
+	trail  []string
+	kids   map[string]*kid
 }
 
 type trackItems struct {
@@ -23,7 +30,7 @@ type trackItems struct {
 }
 
 func newPlanner(doc *timeline.Document, opts Options) *planner {
-	p := &planner{doc: doc, opts: opts}
+	p := &planner{doc: doc, opts: opts, trail: []string{doc.ID}}
 	byTrack := map[string]*trackItems{}
 
 	for id := range doc.Tracks {
@@ -117,6 +124,12 @@ func (p *planner) frame(t int) FramePlan {
 			continue
 		}
 
+		if k := p.nested(it); k != nil && k.flat {
+			fp.Layers = append(fp.Layers, k.layers(it, t-it.Start, p.doc.Settings.FPS)...)
+
+			continue
+		}
+
 		if l, ok := p.layer(it, t-it.Start); ok {
 			fp.Layers = append(fp.Layers, l)
 		}
@@ -151,7 +164,9 @@ func (p *planner) layerBase(it *timeline.Item, r int) (Layer, bool) {
 	st := p.doc.Settings
 	w, h := float64(st.Width), float64(st.Height)
 	a := evaluate(it, r, w, h, w/2, h/2)
-	l := Layer{ItemID: it.ID, Rotation: round3(a.rotation), Scale: round3(a.scale), Opacity: round3(a.opacity)}
+	l := Layer{
+		ItemID: p.prefix + it.ID, Rotation: round3(a.rotation), Scale: round3(a.scale), Opacity: round3(a.opacity),
+	}
 	l.Filter, l.Blur = FilterMatrix(it.Filter, it.FilterAmount), round3(it.Blur)
 
 	if it.Blend != "" && it.Blend != "normal" {
@@ -199,8 +214,10 @@ func (p *planner) layerBase(it *timeline.Item, r int) (Layer, bool) {
 		return l, true
 	case timeline.ItemText, timeline.ItemCaption:
 		return p.textLayer(l, it, r, a), true
-	case timeline.ItemAudio, timeline.ItemComposition:
-		// Audio items make no layer (SDD-004 §2); a composition is resolved by frame (SDD-004 §3.16).
+	case timeline.ItemComposition:
+		return p.groupLayer(l, it, r, a)
+	case timeline.ItemAudio:
+		// Audio items make no layer (SDD-004 §2).
 	}
 
 	return Layer{}, false
