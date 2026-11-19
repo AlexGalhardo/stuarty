@@ -81,9 +81,13 @@ Every number is a JSON number read as an IEEE 754 double (`f64`, correctly round
 | `grade` | `{hsl, wheels, curves}` or `null` | the advanced colour of SDD-004 §3.14, the JSON of `plan.GradeSpec`: `hsl` is a list of at most 8 `{range, hue, saturation, lightness}` (a number that is absent is 0), `wheels` has `shadows`, `midtones` and `highlights` as `{hue, amount, luma}`, `curves` has `master`, `red`, `green` and `blue` as lists of at most 8 `{x, y}`; more is `limit_exceeded`, an unknown range or field `invalid_plan` |
 | `lut` | `{asset, intensity}` or `null` | the lookup table of SDD-004 §3.6: `asset` (1 to 64 ASCII bytes) is the id the host gave to `vr_put_lut` and `intensity` is 0 to 1; a table that was not uploaded is `missing_texture` with the asset as the detail, unless the intensity rounds to 0 thousandths (then nothing is drawn and nothing is needed) |
 | `chroma_key` | `{color, similarity, smoothness, spill}` or `null` | the key of SDD-004 §3.7, all four members required; absent or `null` means none |
-| `blend` | string | the blend mode of SDD-004 §3.8: `multiply`, `screen`, `overlay` or `add`; absent means normal (source-over of §3.7) |
+| `blend` | string | the blend mode of SDD-004 §3.8: `multiply`, `screen`, `overlay` or `add`, and since epic 29 `soft_light`, `hard_light`, `darken`, `lighten`, `color_dodge`, `color_burn` or `difference` (§3.11.2); absent means normal (source-over of §3.7) |
+| `tone` | 256 integers or `null` | the tone table of §3.11.1, each entry 0 to 255; absent or `null` means none |
+| `filters` | array or `null` | the ordered pixel filters of §3.11.3 (`kind` and the members of the kind; at most 8, `limit_exceeded` above) |
+| `clip` | `{source, invert}` or `null` | the mask from the alpha of another layer (§3.11.4): `source` is the `item` of that layer, `invert` a boolean that may be absent |
+| `stencil` | boolean | the layer is read by a `clip` and drawn by nobody (§3.11.4); absent means false |
 | `flip_x`, `flip_y` | boolean | mirror the layer across its own vertical or horizontal axis (SDD-004 §3.10); absent means false |
-| `mask` | `{shape, x, y, width, height, feather, invert}` or `null` | the mask of SDD-004 §3.9: `shape` is `rect` or `ellipse`, `x`, `y`, `width`, `height` are fractions of the layer rectangle, `feather` is in project pixels (an integer), `invert` is a boolean and may be absent; absent or `null` means none |
+| `mask` | `{shape, x, y, width, height, feather, invert}` or `null` | the mask of SDD-004 §3.9: `shape` is `rect`, `ellipse` or, since epic 29, `rounded_rect` (with `radius`, in project pixels, an integer, absent means 0), `x`, `y`, `width`, `height` are fractions of the layer rectangle, `feather` is in project pixels (an integer), `invert` is a boolean and may be absent; absent or `null` means none |
 | `shadow` | `{color, opacity, dx, dy, blur}` or `null` | the drop shadow of SDD-004 §3.15; every member is required when the object is present; absent or `null` means none |
 | `outline` | `{color, width}` or `null` | the outline of SDD-004 §3.15; both members are required when the object is present; absent or `null` means none |
 | `blur` | number | the standard deviation of the Gaussian of SDD-004 §3.6 in project pixels; 0 or absent for none |
@@ -235,6 +239,77 @@ These rules make §3.1 to §3.7 give the same bytes on Linux, macOS, Windows and
 - Rasterizer crates (stage E, TASK-0219; the author chose them on 2026-11-16 because `rustybuzz` and `ttf-parser` are flagged unmaintained by `cargo deny`, RUSTSEC-2026-0206 and RUSTSEC-2026-0192): `harfrust` 0.16.0 (shaping, HarfBuzz 15.1, at the scale `ceil(size) * 64` that go-text uses, so the advances come out in the same 26.6 fixed point), `skrifa` 0.50.0 (font parsing, outlines in font units and the metrics of the lines), `unicode-bidi` 0.3.18, `unicode-linebreak` 0.1.5 and `unicode-script` 0.5.9, all at exact versions. `yoke`, `yoke-derive`, `zerofrom` and `zerofrom-derive` come with them and are licensed `Unicode-3.0` only, so they are per-crate exceptions next to `unicode-ident` in `renderer/deny.toml` and in `internal/tools/notices/spdx.go`. The crate `stuarty-renderer-text` is linked into the module of §4.1 (the text exports of §4.2.1), so these crates are part of the shipped notices.
 - Rasterizer reference (stage E, TASK-0220; decision of the author, 2026-11-16): the Rust output is the reference. While the port was checked against `engine/raster`, the shapes, the static fonts and 14 of the 15 corner cases in Anton were byte for byte the Go bitmaps (26 of the 56 vectors) and 30 differed: go-text 0.3.5 did not apply the kerning of most pairs of Inter, Montserrat and Playfair Display (`Wo`, `VA`, `To`, `LT`) that `harfrust` applies, so a line was a few pixels narrower (`text-ligature-and-kerning` in Inter was 598 against 612 pixels); go-text scaled a GPOS value with a truncating integer division where HarfBuzz rounds (1/64 pixel); and it computed the points of a variable glyph in `float32` where `skrifa` uses 16.16 fixed point (one font unit). The author accepted the Rust output rather than keep go-text's shaping: the vectors and the goldens were regenerated from Rust, `plan.BitmapVersion` is 2 (every cached bitmap is invalidated) and `engine/raster` was removed. The kerning is now applied as the fonts say.
 - Stage D gate: §3.8 on every golden case.
+
+### 3.11 Image looks (epic 29)
+
+Added by epic 29 (RF-333, RF-334, RF-335, ADR-0038) for the one-frame plans of image documents. Every field below is optional and absent means the old behaviour, so a plan that has none of them draws the bytes it drew before and `RenderInputVersion` stays 1 (a renderer older than this section refuses the plan with `invalid_plan`, as §2.2 rule 2 says, and host and module ship in one build). The Go compositor of the video export does not draw them: only the plans of image documents, drawn by the Rust renderer, carry them. `core/image` builds them (SDD-021 section 5); the renderer decides nothing.
+
+**Order for one layer.** §3.3 step 2.5 becomes: chroma key, the tone table (3.11.1), colour matrix, grade, lookup table, filter matrix, blur, **the filters of 3.11.3 in list order**, flip, pixel effects, shadow and outline, then the mask, the clip (3.11.4), opacity and the draw with its blend mode (3.11.2). A plan layer of an image uses `color_matrix`, `tone`, `filters`, `mask`, `clip` and `blend`; the other fields stay for video.
+
+#### 3.11.1 The tone table
+
+`tone` holds `T[0..255]`, built in Go (`core/image`) from the exposure, the levels and the curve of the document and passed in the plan, so the renderer has no formula to get wrong. For a pixel with alpha `a`: `a == 0` is copied; otherwise the straight colour is taken as in §3.4, each channel `c` becomes `T[c]`, and the pixel is premultiplied again with `div255` when `a != 255`. Alpha is unchanged. The table is built as three tables composed, each entry rounded half up to an integer in 0 to 255, and held to that range:
+
+1. Exposure `e` (hundredths of a stop): `E[v] = clamp(round(v x 2^(e / 100)))`.
+2. Levels `black`, `white`, `gamma` (hundredths): `L[v] = round(255 x (clamp((v - black) / (white - black), 0, 1))^(100 / gamma))`.
+3. Curve, the points sorted by `x` with `(0, 0)` and `(255, 255)` added when `x = 0` or `x = 255` is missing: for `v` between two points, `C[v] = y0 + (((v - x0) x (y1 - y0)) x 2 + (x1 - x0)) / (2 x (x1 - x0))` with integer division rounding half up for a rising segment and half away from zero for a falling one.
+
+`T[v] = C[L[E[v]]]`, the steps absent when neutral. The Go function is pure and its output is the golden of the case; a curve through `(x, x)` points is the identity, and a monotonic input gives a table that is monotonic when the points rise (a property test).
+
+#### 3.11.2 Blend modes
+
+The destination pixel is `(dr, dg, db, da)`, the source is premultiplied with the opacity and the mask applied, `(r, g, b, a)`; `a == 0` draws nothing. The four modes of SDD-004 section 3.8 keep their formulas when `da == 255`, which is every plan with an opaque background. The seven new modes, and every mode but `normal` when `da < 255` (a transparent canvas), use the general form, on the straight values `s = min((c x 255 + a / 2) / a, 255)` of the source and `b = min((dc x 255 + da / 2) / da, 255)` of the destination (when `da == 0` the pixel is the source, as for `normal`):
+
+```text
+B     = blend function of s and b, 0 to 255 (table below)
+t     = div255(a x da)
+out_c = div255(c x (255 - da)) + div255(dc x (255 - a)) + div255(t x B)
+out_a = a + da - t
+```
+
+`out_c` and `out_a` are clamped to 255. With `da == 255` this is `div255(dc x (255 - a)) + div255(a x B)`. The general form also draws `multiply`, `screen`, `overlay` and `add` on a transparent canvas, with `B` of the table; on an opaque one those four keep SDD-004 section 3.8 and agree with the general form within one level (a property test). `mul(x, y) = div255(x x y)` and `scr(x, y) = x + y - mul(x, y)`:
+
+| Mode | `B(s, b)` |
+| --- | --- |
+| `multiply` | `mul(s, b)` |
+| `screen` | `scr(s, b)` |
+| `overlay` | `hard_light` with `s` and `b` exchanged: `2 mul(s, b)` when `b <= 127`, else `scr(s, 2 b - 255)` |
+| `add` | `min(s + b, 255)` |
+| `darken` | `min(s, b)` |
+| `lighten` | `max(s, b)` |
+| `difference` | `abs(s - b)` |
+| `hard_light` | `mul(b, 2 s)` when `s <= 127`, else `scr(b, 2 s - 255)` (the `mul` argument is held to 255) |
+| `soft_light` | `s <= 127`: `b - div255((255 - 2 s) x mul(b, 255 - b))`; else `b + round((2 s - 255) x (D(b) - b) / 255)`, rounding half away from zero, with `D(b) = ((16 b' - 12) b' + 4) b'` for `b <= 64` taken in 8 bits as `round(((16 b - 3060) x b + 260100) x b / 16581375)` and `D(b) = round(sqrt(255 b))` above 64 (the integer root, plus 1 when `255 b - r^2 > r`); the result is clamped to 0 to 255 |
+| `color_dodge` | `0` when `b == 0`, `255` when `s == 255`, else `min(255, (b x 255 + (255 - s) / 2) / (255 - s))` |
+| `color_burn` | `255` when `b == 255`, `0` when `s == 0`, else `255 - min(255, ((255 - b) x 255 + s / 2) / s)` |
+
+These are the separable blend functions of the W3C compositing specification in 8-bit integers. The GPU path evaluates the same formulas in `f32` (the modes 5 to 11 of its shader) and is held to §3.8.
+
+#### 3.11.3 Filters
+
+`filters` entries, drawn in order on the layer's own pixels (each may pad the layer, like the blur, and the placement grows around the same centre). Lengths are project pixels, times `outScale`, as for the blur. Every colour is `#RRGGBB` or `#RRGGBBAA` (§3.15).
+
+| `kind` | Members | Drawn as |
+| --- | --- | --- |
+| `matrix` | `matrix` (12 numbers) | the filter matrix of §3.4 |
+| `blur` | `sigma` | the blur of §3.5 |
+| `sharpen` | `amount` (0 to 3), `radius` (0 to 100, the standard deviation) | the unsharp mask below |
+| `vignette`, `grain` | as the effects of SDD-004 §3.13 (`amount`, `softness` / `amount`, `size`, `seed`) | the same function, on the position of the layer's own rectangle |
+| `shadow` | `color`, `opacity`, `dx`, `dy`, `blur` | the drop shadow of §3.15 alone |
+| `stroke` | `color`, `width` | the outline of §3.15 alone |
+| `outer_glow` | `color`, `radius` (the standard deviation), `amount` (0 to 4) | the glow below |
+
+**Unsharp mask.** `rx`, `ry` are the box radii of the blur of §3.5 for `sigma = mul(radius, outScale)` (both 0 draws nothing). The premultiplied pixels are blurred by the three box passes of §3.5 with the edge pixels repeated beyond the layer instead of transparent ones (so an opaque picture has no bright fringe), and the layer keeps its size. With `ap = round_half_away(mul(amount, 1000))`, each colour channel `c` with blurred value `u` becomes `clamp(c + q, 0, a)` where `q = ((c - u) x ap + 500) / 1000` for a positive product and `-((u - c) x ap + 500) / 1000` for a negative one (integer division, half away from zero); alpha is unchanged.
+
+**Outer glow.** `sigma = mul(radius, outScale)`; the silhouette (the alpha of the layer, colour 0) is blurred as in §3.5 (the layer grows by 3 radii on every side; a zero radius draws nothing), the blurred alpha `g` becomes `ga = div255(min(255, (g x ag + 500) / 1000) x ca)` with `ag = round_half_away(mul(amount, 1000))` and `ca` the alpha of the colour, the glow pixel is the colour premultiplied by `ga`, and the layer is drawn over it with the premultiplied source-over of §3.7: `out = c + div255(glow x (255 - a))` for every channel including alpha.
+
+**Mask shape `rounded_rect`** (§3.9). The shape of §3.9 step 2 with the corner radius `rq = min(round_half_away(mul(mul(radius, outScale), 256)), a, b)` (24.8; `a`, `b` the half-extents), and in step 3, with `qx = abs(lx - (L + a)) - (a - rq)` and `qy = abs(ly - (T + b)) - (b - rq)`: `d = rq - max(qx, qy)` when both are at most 0, else `d = rq - isqrt(max(qx, 0)^2 + max(qy, 0)^2)`. Feather and invert are unchanged. `radius` 0 is the `rect` of §3.9.
+
+#### 3.11.4 The clip
+
+A layer with `clip` is drawn only where the layer named by `source` has pixels. The source is found by `item` among the layers of the plan (the layer list the renderer drew, a `stencil` one included); a source that is not there, or that has a `clip` itself, is `invalid_plan`. The coverage plane `S` is the alpha of the source drawn alone on a transparent frame of the same size: its own pixels prepared as in §3.3 (its own mask included, its opacity not), placed and sampled as in §3.6, with source-over. For a destination pixel `cov = S` (`255 - S` with `invert`), and it multiplies the pixel of the clipped layer, all four channels with one `div255` each, in the same place as the mask coverage and after it (`div255(mask x clip)` is applied as two products). A layer with a clip is never drawn by the opaque copy shortcut. A `stencil` layer is prepared like any other but is not drawn on the frame; its `opacity` is 1 (a layer that rounds to no opacity is skipped, so the plan gives a stencil the opacity 1). The GPU path receives the plane as a texture of the frame size and multiplies the coverage of the mask by it.
+
+**Golden frames.** `renderer/testdata/image-ops/` holds, per operation of this section, a render input (`<case>.json`), the textures it draws (made by the pattern functions that `renderer/stuarty-renderer/tests/image_ops.rs` and `engine/renderhost/image_ops_test.go` both implement) and the frame (`<case>.rgba`, raw RGBA8). `cargo test` and the Go test through `wazero` draw each case and require the same bytes; `STUARTY_WRITE_IMAGE_OPS=1 cargo test --test image_ops` rewrites the frames (a reviewed change of output). The GPU path draws the same inputs and is compared by the rule of §3.8.
 
 ## 4. The host interface
 
