@@ -98,6 +98,8 @@ func (e *Error) HTTPStatus() int {
 		return http.StatusTooManyRequests
 	case CodeClientClosed:
 		return StatusClientClosed
+	case CodePublish:
+		return http.StatusBadGateway
 	case CodeWorkspaceLocked, "E_TRANSCRIBE_UNAVAILABLE", "E_FFMPEG_MISSING", "E_NO_ENCODER", CodeVaultLocked,
 		CodeAgentUnavailable:
 		return http.StatusServiceUnavailable

@@ -5,9 +5,9 @@ import "github.com/AlexGalhardo/vukem/schema"
 // The hosted agent chat (SDD-017 sections 3 and 9): the agents the user may host, the chat sessions of a project
 // and their transcripts. No table holds a credential, an environment or a header: the session token lives in memory
 // only. A transcript follows its project: the rows go with it.
-func m20261119160000CreateChatTables() schema.Migration {
+func m20261119220000CreateChatTables() schema.Migration {
 	return schema.Migration{
-		ID: "20261119160000_create_chat_tables",
+		ID: "20261119220000_create_chat_tables",
 		Up: func(s *schema.Schema) error {
 			stmts := []string{
 				`CREATE TABLE agent_profiles (
