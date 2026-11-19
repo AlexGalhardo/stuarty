@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"strings"
 	"testing"
-
-	"github.com/AlexGalhardo/stuarty/core/command"
 )
 
 // charsPerToken is the estimate of SDD-003 section 3.10: tokens are characters
@@ -21,7 +19,7 @@ func tokens(s string) int { return int(float64(len([]rune(s))) / charsPerToken) 
 func TestToolDefinitionBudget(t *testing.T) {
 	t.Parallel()
 
-	defs, err := loadDefinitions(command.Default())
+	defs, err := loadDefinitions()
 	if err != nil {
 		t.Fatal(err)
 	}
