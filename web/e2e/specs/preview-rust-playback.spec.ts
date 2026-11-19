@@ -54,6 +54,11 @@ test.describe("preview-rust-playback", () => {
 		// slower one would still show the right frame, so this only guards a
 		// worker that draws nothing.
 		expect(presented).toBeGreaterThan(10);
+		// And a frame drawn whole is not drawn again on the next animation frame:
+		// without a vsync the page gets about 250 of them a second, against the 30
+		// frames of the clock. A frame whose layers are still arriving is drawn
+		// again, hence the margin.
+		expect(presented).toBeLessThanOrEqual(3 * stopped + 20);
 		expect(
 			Number(await canvas.getAttribute("data-peak-frames")),
 		).toBeLessThanOrEqual(OPEN_FRAMES_BOUND);
