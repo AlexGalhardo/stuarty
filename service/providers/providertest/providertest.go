@@ -7,15 +7,20 @@ package providertest
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/http/httptest"
+	"net/netip"
 	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
 	"sync"
 	"testing"
+
+	"github.com/AlexGalhardo/stuarty/internal/outbound"
 )
 
 // Exchange is one request the adapter must make and the answer it gets.
@@ -185,4 +190,30 @@ func (r *Recorder) Last() Seen {
 	defer r.mu.Unlock()
 
 	return r.Requests[len(r.Requests)-1]
+}
+
+// Main is the TestMain of a package that tests an adapter or the registry: it makes the whole run
+// refuse any dial that is not to a loopback address, so no test of the layer can reach a real provider
+// (NFR-064, SDD-016 section 11). The dial of a connection is shown to the recorder before the socket is made.
+func Main(m *testing.M) {
+	restore := outbound.SetDialRecorder(func(_ outbound.Purpose, address string) error {
+		host, _, err := net.SplitHostPort(address)
+		if err != nil {
+			host = address
+		}
+
+		if ip, perr := netip.ParseAddr(host); perr == nil && ip.IsLoopback() || host == "localhost" {
+			return nil
+		}
+
+		return fmt.Errorf(
+			"providertest: a test dialled %s, and no test of the provider layer may reach the network",
+			address,
+		)
+	})
+
+	code := m.Run()
+
+	restore()
+	os.Exit(code)
 }
