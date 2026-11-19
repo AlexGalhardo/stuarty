@@ -9,7 +9,9 @@ import (
 const (
 	JobIngest = "ingest"
 	JobExport = "export"
-	JobFrame  = "frame"
+	// JobExportBatch is the parent of an ExportBatch; its children are export jobs (SDD-004 section 8.4).
+	JobExportBatch = "export_batch"
+	JobFrame       = "frame"
 )
 
 // Job states.
@@ -49,6 +51,10 @@ type ExportArgs struct {
 	Format string `json:"format,omitempty"`
 	// At is the time of the frame of a png export, "0s" when absent; only for format png (VV-037).
 	At string `json:"at,omitempty"`
+	// Preset is a platform preset of SDD-004 section 8.2; it needs the format mp4.
+	Preset string `json:"preset,omitempty"`
+	// Codec is h264 (the default), hevc or av1, for the format mp4 (SDD-004 section 8.3).
+	Codec string `json:"codec,omitempty"`
 }
 
 // JobGetRequest reads a job.
@@ -103,12 +109,20 @@ type ExportResult struct {
 	AudioCodec   string        `json:"audio_codec"`
 	LoudnessLUFS *float64      `json:"loudness_lufs,omitempty"`
 	Checks       []VerifyCheck `json:"checks"`
+	// Preset is the platform preset the export was made for, when there was one.
+	Preset string `json:"preset,omitempty"`
+	// CodecFallback is the codec the preset preferred when this machine could not write it and the video
+	// is H.264 instead; Notes say so in words (SDD-004 section 8.3).
+	CodecFallback string   `json:"codec_fallback,omitempty"`
+	Notes         []string `json:"notes,omitempty"`
 }
 
 // JobResult has exactly one member set.
 type JobResult struct {
 	Export     *ExportResult     `json:"export,omitempty"`
 	Transcribe *TranscribeResult `json:"transcribe,omitempty"`
+	// Batch is the state of the children of an export_batch job, read from them whenever the job is read.
+	Batch *BatchResult `json:"batch,omitempty"`
 }
 
 // Job is the job object of SDD-003 section 2.8.
@@ -149,7 +163,7 @@ type exportInput struct {
 	Format string `json:"format,omitempty"`
 	// IncludeLog false leaves the operation log out of a bundle; nil means true.
 	IncludeLog *bool `json:"include_log,omitempty"`
-	// Whole makes the bundle of the whole project (version 2) instead of one timeline; the job is kept on the
-	// first active timeline.
-	Whole bool `json:"whole,omitempty"`
+	// Preset and Codec are those of the export arguments (SDD-004 sections 8.2 and 8.3).
+	Preset string `json:"preset,omitempty"`
+	Codec  string `json:"codec,omitempty"`
 }
