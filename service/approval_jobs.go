@@ -232,8 +232,12 @@ func (s *svc) rejectJob(ctx context.Context, tx Tx, row *approval.Row, why *Erro
 	return nil
 }
 
+// errNoLongerWaiting is a job that left waiting_approval between the read of the cancel and its
+// write: a person or a rule approved it, so the caller cancels it as a queued job.
+var errNoLongerWaiting = errors.New("service: the job is no longer waiting for approval")
+
 // cancelWaiting is JobCancel for a job that waits for approval: the request is rejected and the job
-// is cancelled, in one transaction (SDD-015 section 5).
+// is cancelled, in one transaction (SDD-015 section 5). errNoLongerWaiting when it was approved first.
 func (s *svc) cancelWaiting(ctx context.Context, actor string, job *JobRow) error {
 	var view approval.Request
 
@@ -255,8 +259,12 @@ func (s *svc) cancelWaiting(ctx context.Context, actor string, job *JobRow) erro
 		why := "cancelled by " + actor
 
 		ok, err := tx.Approvals().Decide(ctx, row.ID, approval.StateRejected, actor, "", why, now)
-		if err != nil || !ok {
+		if err != nil {
 			return err
+		}
+
+		if !ok {
+			return errNoLongerWaiting
 		}
 
 		row.State, row.DecidedBy, row.Reason, row.DecidedMs = approval.StateRejected, actor, why, &now

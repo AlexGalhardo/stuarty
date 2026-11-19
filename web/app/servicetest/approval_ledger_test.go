@@ -4,10 +4,81 @@ import (
 	"context"
 	"errors"
 	"sync"
+	"sync/atomic"
 	"testing"
 
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/web/app/jobs"
+
+	"github.com/AlexGalhardo/vukem/queue"
 )
+
+// beforeWrite runs a function once, before the next write transaction of the service.
+type beforeWrite struct {
+	service.Store
+
+	next func()
+}
+
+func (b *beforeWrite) Write(ctx context.Context, fn func(ctx context.Context, tx service.Tx) error) error {
+	if f := b.next; f != nil {
+		b.next = nil
+		f()
+	}
+
+	return b.Store.Write(ctx, fn)
+}
+
+// SDD-015 section 5: a cancel that races an approval still cancels. JobCancel reads the job waiting,
+// a person approves it before the cancel writes, and the cancel then stops the job as a queued one
+// instead of answering it queued and letting it run.
+func TestJobApproval_CancelThatRacesAnApprovalStillCancels(t *testing.T) {
+	t.Parallel()
+
+	p := &probe{estimate: usd(500_000)}
+	hook := &beforeWrite{}
+	lazy := &lazyRunner{}
+
+	var hold atomic.Bool
+
+	hold.Store(true)
+
+	e := newEnvWith(t, func(_ *env, o *service.Options) {
+		q, err := jobs.NewQueue(queue.Sync{}, lazy)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		hook.Store = o.Store
+		o.Store = hook
+		o.Enqueue = gated{inner: jobs.Dispatcher{Queue: q}, hold: &hold}
+		o.JobKinds = []service.ApprovableKind{p.kind()}
+	})
+
+	job, err := e.submit(e.as(token), e.newProject("p"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	hook.next = func() {
+		if err := e.approve(job.ApprovalID); err != nil {
+			t.Errorf("the approval inside the race: %v", err)
+		}
+	}
+
+	got, err := e.svc.JobCancel(e.as(token), service.JobCancelRequest{JobID: job.JobID})
+	if err != nil || got.State != service.JobCancelled {
+		t.Fatalf("a cancel that raced an approval = %+v, %v, want the job cancelled", got, err)
+	}
+
+	if n := e.spentToday(); n != 0 {
+		t.Errorf("spent today = %d, want 0: the job never ran", n)
+	}
+
+	if p.calls.Load() != 0 {
+		t.Error("the job ran after it was cancelled")
+	}
+}
 
 // SDD-015 sections 3 and 5: a summary a person could misread (a bidirectional override, a zero-width
 // character, a tag character) is refused at the submission as the caller's error, and writes nothing.
