@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useT } from "@/lib/i18n";
 import type { ImageApi } from "../api/imageApi";
 import { type Library, loadLibrary } from "../api/library";
-import type { ImageSummary, Layer } from "../api/types";
+import type { Finding, ImageSummary, Layer } from "../api/types";
 
 interface Slot {
 	name: string;
@@ -18,29 +18,39 @@ interface Slot {
 	layerName: string;
 }
 
-// The slots of a template, in the order of its layers, read from what the server described.
-export function slotsOf(layers: readonly Layer[]): Slot[] {
+// The lint finding of the core for a slot with no content: the core decides which slots are required.
+const EMPTY_SLOT = "L_IMAGE_EMPTY_SLOT";
+
+// The slots of a template, in the order of its layers, read from what the server described. A slot is
+// required when the core's lint says it is empty, never by a rule of its own here.
+export function slotsOf(
+	layers: readonly Layer[],
+	findings: readonly Finding[],
+): Slot[] {
+	const empty = new Set(
+		findings
+			.filter((f) => f.code === EMPTY_SLOT && f.item !== undefined)
+			.map((f) => f.item),
+	);
 	const out: Slot[] = [];
-	for (const layer of layers) {
-		if (layer.slot !== undefined && layer.slot !== "") {
-			if (layer.kind === "text") {
+	const visit = (list: readonly Layer[]): void => {
+		for (const layer of list) {
+			if (
+				layer.slot !== undefined &&
+				layer.slot !== "" &&
+				(layer.kind === "text" || layer.kind === "image")
+			) {
 				out.push({
 					name: layer.slot,
-					kind: "text",
-					required: (layer.text ?? "") === "",
-					layerName: layer.name,
-				});
-			} else if (layer.kind === "image") {
-				out.push({
-					name: layer.slot,
-					kind: "image",
-					required: layer.asset === undefined || layer.asset === "",
+					kind: layer.kind,
+					required: empty.has(layer.id),
 					layerName: layer.name,
 				});
 			}
+			if (layer.children) visit(layer.children);
 		}
-		if (layer.children) out.push(...slotsOf(layer.children));
-	}
+	};
+	visit(layers);
 	return out;
 }
 
@@ -82,7 +92,8 @@ export default function NewFromTemplate({ api }: { api: ImageApi }): ReactNode {
 			return;
 		}
 		try {
-			setSlots(slotsOf((await api.describe(id)).layers));
+			const template = await api.describe(id);
+			setSlots(slotsOf(template.layers, template.findings));
 		} catch (error) {
 			setFailure(failureOf(error));
 		}
