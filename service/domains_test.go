@@ -2,6 +2,7 @@ package service
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/AlexGalhardo/stuarty/core/command"
@@ -33,6 +34,22 @@ func TestOperationDomains(t *testing.T) {
 	for name := range OperationDomains {
 		if !seen[name] {
 			t.Errorf("OperationDomains names %s, which Service does not have", name)
+		}
+	}
+}
+
+// The line of a domain in the discovery call does not tell an agent the domain is empty while the Service has
+// operations in it (the approval queue in publish, the spend in provider).
+func TestADomainWithOperationsDoesNotSayItHasNone(t *testing.T) {
+	t.Parallel()
+
+	for _, d := range command.Domains() {
+		for method, domain := range OperationDomains {
+			if domain == d.Name && strings.Contains(strings.ToLower(d.Summary), "no operations") {
+				t.Errorf("the domain %s says %q, and Service.%s is in it", d.Name, d.Summary, method)
+
+				break
+			}
 		}
 	}
 }
