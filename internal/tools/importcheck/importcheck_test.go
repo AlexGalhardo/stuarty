@@ -203,6 +203,25 @@ func TestOutboundRule(t *testing.T) {
 		"service/leak/server.go",
 		"package leak\n\nimport \"net/http\"\n\nvar _ = http.StatusOK\nvar _ http.Handler\n",
 	)
+	// TLS dialled by hand, and a DNS lookup, leave the machine as surely as an HTTP client.
+	write(
+		t,
+		root,
+		"service/leak/d.go",
+		"package leak\n\nimport \"crypto/tls\"\n\nfunc d() { _, _ = tls.Dial(\"tcp\", \"example.com:443\", nil) }\n",
+	)
+	write(
+		t,
+		root,
+		"service/leak/e.go",
+		"package leak\n\nimport \"net\"\n\nfunc e() { _, _ = net.LookupHost(\"example.com\") }\n",
+	)
+	write(
+		t,
+		root,
+		"service/leak/f.go",
+		"package leak\n\nimport \"net\"\n\nvar _, _ = net.ParseCIDR(\"10.0.0.0/8\")\nvar _ net.IP\n",
+	)
 
 	got, err := CheckOutbound(root)
 	if err != nil {
@@ -214,7 +233,8 @@ func TestOutboundRule(t *testing.T) {
 		files = append(files, v.File)
 	}
 
-	want := "service/leak/a.go service/leak/b.go service/leak/c.go service/leak/unmarked.go"
+	want := "service/leak/a.go service/leak/b.go service/leak/c.go service/leak/d.go service/leak/e.go " +
+		"service/leak/unmarked.go"
 	if strings.Join(files, " ") != want {
 		t.Fatalf("violations in %v, want %s", files, want)
 	}
