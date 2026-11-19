@@ -41,6 +41,7 @@ Content type `application/json`. Schema: [`AssetResult`](/docs/api/schemas#asset
 | `kind` | `string` | no |  |
 | `name` | `string` | no |  |
 | `origin` | [`Origin`](/docs/api/schemas#origin) | no |  |
+| `poster` | [`Poster`](/docs/api/schemas#poster) or `any` or `null` or `null` | no |  |
 | `projects` | `integer` | no |  |
 | `reusable` | `boolean` | no |  |
 | `tags` | array of `string` | no |  |
@@ -246,6 +247,10 @@ puts "#{response.code} #{response.body}"
     "provider": "string",
     "rights_note": "string",
     "source": "string"
+  },
+  "poster": {
+    "asset_id": "string",
+    "timeline_id": "string"
   },
   "projects": 0,
   "reusable": false,

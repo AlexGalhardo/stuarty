@@ -173,6 +173,16 @@ func ruleError(err error) error {
 	return asError(err)
 }
 
+// libraryRefusal is the error of a transaction that wrote the library side of a file: a refusal of the rules
+// is the caller's E_VALIDATION, anything else goes on as it is.
+func libraryRefusal(err error) error {
+	if _, ok := errors.AsType[*asset.RuleError](err); ok {
+		return ruleError(err)
+	}
+
+	return err
+}
+
 // AssetList lists the ready, active files of the projects the caller may see, by content hash, so a picker can
 // offer the image of a brand logo without asking for a hash (VV-117), and a person or an agent can find a file
 // of a past production (RF-320). A key limited to one project lists that project's files only.

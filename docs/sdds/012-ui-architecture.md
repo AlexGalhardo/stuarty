@@ -1923,7 +1923,8 @@ Implements RF-310, RF-311 and RF-312 (PRD-004), author decision D-075 and epic 0
 | --- | --- | --- |
 | `GET /` | `pages/Dashboard/Home.tsx` | the home: a short welcome and one card for each section, with what it will hold |
 | `GET /projects` | `pages/Projects/Index.tsx` | Projects (epic 06 owns the content) |
-| `GET /edit-video`, `/edit-image`, `/write`, `/visual-assets`, `/video-assets`, `/publish`, `/skills`, `/prompts`, `/memory` | `pages/Dashboard/Section.tsx` | an honest empty state, until the epic of the section replaces the route's page |
+| `GET /edit-video`, `/edit-image`, `/write`, `/publish`, `/skills`, `/prompts`, `/memory` | `pages/Dashboard/Section.tsx` | an honest empty state, until the epic of the section replaces the route's page |
+| `GET /visual-assets`, `/video-assets` | `pages/VisualAssets/Index.tsx`, `pages/VideoAssets/Index.tsx` | the two sections of the asset library (epic 08, SDD-011 §14.6): filters, a grid of posters, a detail panel with the origin, the rights note, the tags and the projects that use the file, and "use in a project" (no copy); both are `assetlibrary/AssetLibrary.tsx` with a section |
 | `GET /connections` | `pages/Dashboard/Section.tsx` | an empty state until epic 04 puts the Connections page there |
 | `GET /settings`, `/settings/*` | the existing pages | reached from the profile block, not a section |
 

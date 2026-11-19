@@ -398,3 +398,41 @@ func TestAssetLibraryHidesOtherUsersFiles(t *testing.T) {
 		t.Errorf("alice cannot reuse her own file: %v", err)
 	}
 }
+
+// A file that already holds the most tags, imported again with one more, is the caller's E_VALIDATION and not
+// an internal fault, and nothing of the second import is kept (found by the e2e suite, whose workspace tagged
+// the same file twenty times).
+func TestAssetLibraryTagLimitOnImportIsAValidationError(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{})
+	ctx := m.as(ui)
+	one, two := m.newProject("One"), m.newProject("Two")
+
+	hash := m.importOne(one, m.write("a.mp4", clipBytes)).Assets[0].Hash
+
+	var tags []string
+	for i := range asset.MaxTags {
+		tags = append(tags, "tag"+strings.Repeat("x", i))
+	}
+
+	if _, err := m.svc.AssetTag(ctx, service.AssetTagRequest{Hash: hash, Add: tags}); err != nil {
+		t.Fatal(err)
+	}
+
+	for name, f := range map[string]service.ImportFile{
+		"by path": {Path: m.write("a.mp4", clipBytes)},
+		"by hash": {Hash: hash},
+	} {
+		_, err := m.svc.MediaImport(ctx, service.MediaImportRequest{
+			ProjectID: two, Files: []service.ImportFile{f}, Info: &service.AssetInfo{Tags: []string{"one-too-many"}},
+		})
+
+		e := serviceErr(err)
+		if e == nil || e.Code != command.CodeValidation || e.Details["reason"] != "tags_invalid" {
+			t.Errorf("%s: error = %+v", name, err)
+		}
+	}
+
+	if list, _ := m.svc.MediaList(ctx, service.MediaListRequest{ProjectID: two}); len(list.Assets) != 0 {
+		t.Errorf("a refused import left a file in the project: %+v", list.Assets)
+	}
+}

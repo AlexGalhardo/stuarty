@@ -56,6 +56,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `kind` | `string` | no |  |
 | `name` | `string` | no |  |
 | `origin` | [`Origin`](/docs/api/schemas#origin) | no |  |
+| `poster` | [`Poster`](/docs/api/schemas#poster) or `any` or `null` or `null` | no |  |
 | `projects` | `integer` | no |  |
 | `reusable` | `boolean` | no |  |
 | `tags` | array of `string` | no |  |
@@ -853,6 +854,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `kind` | `string` | no |  |
 | `name` | `string` | no |  |
 | `origin` | [`Origin`](/docs/api/schemas#origin) | no |  |
+| `poster` | [`Poster`](/docs/api/schemas#poster) or `any` or `null` or `null` | no |  |
 | `projects` | `integer` | no |  |
 | `reusable` | `boolean` | no |  |
 | `tags` | array of `string` | no |  |
@@ -1065,6 +1067,13 @@ The types named in the tables of the operations. The arguments of each editing c
 | --- | --- | --- | --- |
 | `color` | `string` | no |  |
 | `width` | `number (double)` | no |  |
+
+### Poster
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `asset_id` | `string` | no |  |
+| `timeline_id` | `string` | no |  |
 
 ### Primitive
 

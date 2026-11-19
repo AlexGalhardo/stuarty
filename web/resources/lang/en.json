@@ -1721,6 +1721,65 @@
       "font_remove": "Remove font family {name}",
       "save": "Save brand kit",
       "saved": "Brand kit saved."
+    },
+    "assets": {
+      "intro": {
+        "visual": "The images and colour tables of your workspace, with where each came from and where it is used.",
+        "video": "The video and audio of your workspace, with where each came from and where it is used."
+      },
+      "filter": {
+        "text": "Search",
+        "tag": "Tag",
+        "origin": "Origin",
+        "any_origin": "Any origin",
+        "reusable": "Reusable only",
+        "apply": "Apply",
+        "clear": "Clear"
+      },
+      "origin": {
+        "imported": "Imported",
+        "generated": "Generated",
+        "fetched_by_agent": "Fetched by an agent",
+        "rendered_externally": "Rendered elsewhere"
+      },
+      "kind": {
+        "image": "Image",
+        "video": "Video",
+        "audio": "Audio",
+        "lut": "Colour table"
+      },
+      "reusable_badge": "Reusable",
+      "count": "{count} files",
+      "empty": {
+        "visual": "No images yet. Import a file in a project and it appears here.",
+        "video": "No video or audio yet. Import a file in a project and it appears here."
+      },
+      "empty_filtered": "No file matches these filters.",
+      "more": "Load more",
+      "detail": {
+        "title": "Details",
+        "close": "Close",
+        "origin": "Origin",
+        "facts": "File",
+        "provider": "Provider {provider}, model {model}",
+        "cost": "Cost: {amount} USD",
+        "created": "added {date}",
+        "description": "Description",
+        "rights": "Rights note",
+        "rights_notice": "This note is your own record of the licence or the permission. The product does not check it against a licence.",
+        "reusable": "Offer this file again (reusable)",
+        "save": "Save",
+        "saved": "Saved.",
+        "tags": "Tags",
+        "tag_add_label": "New tag",
+        "tag_add": "Add tag",
+        "tag_remove": "Remove the tag {tag}",
+        "uses": "Used by",
+        "no_uses": "No project uses this file.",
+        "use_in": "Use in a project",
+        "use": "Use",
+        "used": "Added to the project. No copy was made."
+      }
     }
   }
 }

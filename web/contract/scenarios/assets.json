@@ -16,7 +16,7 @@
 		{"call": "AssetList", "args": {"section": "video", "origin": "fetched_by_agent"}},
 		{"call": "MediaImport", "args": {"project_id": "prj_8m3q6w9e2r", "files": [{"hash": "sha256:926740d102dff40b0c0afdd2d37465ac2574348af2d4734e2e4e0878e762e76e", "asset_id": "ast_5n7p2q4r6s"}], "wait_ms": 20000}},
 		{"call": "AssetTag", "args": {"hash": "sha256:926740d102dff40b0c0afdd2d37465ac2574348af2d4734e2e4e0878e762e76e", "add": ["cat"], "remove": ["funny"]}},
-		{"call": "AssetSetInfo", "args": {"hash": "sha256:926740d102dff40b0c0afdd2d37465ac2574348af2d4734e2e4e0878e762e76e", "rights_note": "CC0 per the page, checked", "reusable": false}},
+		{"call": "AssetSetInfo", "args": {"hash": "sha256:926740d102dff40b0c0afdd2d37465ac2574348af2d4734e2e4e0878e762e76e", "rights_note": "CC0 per the page, checked", "reusable": true}},
 		{"call": "AssetGet", "args": {"hash": "sha256:926740d102dff40b0c0afdd2d37465ac2574348af2d4734e2e4e0878e762e76e"}},
 		{"call": "AssetList", "args": {"project": "prj_8m3q6w9e2r"}},
 		{"call": "AssetList", "args": {"reusable": true}}

@@ -292,7 +292,8 @@ func (s *svc) importFile(
 	s.storeMu.RUnlock()
 
 	if werr != nil {
-		return refuse(werr)
+		// A refusal of the library rules (too many tags) is the caller's, not an internal fault.
+		return refuse(libraryRefusal(werr))
 	}
 
 	out.AssetID, out.JobID, out.Kind, out.Hash = att.pa.AssetID, att.jobID, att.asset.Kind, hash

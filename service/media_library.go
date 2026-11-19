@@ -139,7 +139,7 @@ func (s *svc) reuseFile(
 			return refuse(notThere)
 		}
 
-		return refuse(werr)
+		return refuse(libraryRefusal(werr))
 	}
 
 	out.AssetID, out.JobID, out.Kind = att.pa.AssetID, att.jobID, att.asset.Kind
