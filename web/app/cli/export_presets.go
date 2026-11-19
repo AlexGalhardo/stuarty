@@ -78,7 +78,7 @@ var exportBatch = &spec{
 	globals: []string{"wait", "timeout"},
 	write:   true,
 	flags: []flagDef{
-		{Name: "preset", Kind: kindString, Usage: "a preset id; give the flag once for each export"},
+		{Name: "preset", Kind: kindString, Repeat: true, Usage: "a preset id; give the flag once for each export"},
 		{
 			Name:  "items",
 			Kind:  kindString,
