@@ -37,24 +37,35 @@ func JobFinal(state string) bool {
 	return state == JobSucceeded || state == JobFailed || state == JobCancelled
 }
 
-func (s *svc) JobStart(ctx context.Context, req JobStartRequest) (*Job, error) {
+// authorizeStart checks the scope JobStart needs for the kind and that a key limited to one project covers the
+// project or timeline the request names.
+func (s *svc) authorizeStart(ctx context.Context, req *JobStartRequest, approvable *ApprovableKind) (Caller, error) {
 	var (
 		c   Caller
 		err error
 	)
 
+	switch {
+	case approvable != nil:
+		c, err = authorizeScope(ctx, approvable.Scope, "")
+	case req.Kind == JobTranscribe:
+		c, err = authorizeScope(ctx, ScopeMedia, "")
+	default:
+		c, err = authorize(ctx, "JobStart", "")
+	}
+
+	if err != nil {
+		return Caller{}, err
+	}
+
+	return c, s.requireCovers(ctx, c, req.ProjectID)
+}
+
+func (s *svc) JobStart(ctx context.Context, req JobStartRequest) (*Job, error) {
 	// A kind that needs approval waits for a person or a rule (SDD-015 section 5); it has its own scope.
 	approvable := s.kinds[req.Kind]
 
-	switch {
-	case approvable != nil:
-		c, err = authorizeScope(ctx, approvable.Scope, req.ProjectID)
-	case req.Kind == JobTranscribe:
-		c, err = authorizeScope(ctx, ScopeMedia, req.ProjectID)
-	default:
-		c, err = authorize(ctx, "JobStart", req.ProjectID)
-	}
-
+	c, err := s.authorizeStart(ctx, &req, approvable)
 	if err != nil {
 		return nil, err
 	}
@@ -385,13 +396,43 @@ func exportRange(doc *timeline.Document, a ExportArgs) (start, end int64, err *E
 // another user, the answer is the one of a job that does not exist, so no job
 // is disclosed.
 func (s *svc) refuseJob(ctx context.Context, c Caller, j *JobRow, id string) *Error {
-	if c.ProjectID != "" && j != nil && j.ProjectID != nil && *j.ProjectID != c.ProjectID {
+	if c.ProjectID != "" && j != nil && j.ProjectID != nil && !s.covers(ctx, c, *j.ProjectID) {
 		if h, err := s.store.Projects().Head(ctx, *j.ProjectID); err == nil && visible(c, h.OwnerUserID) {
 			return limitedElsewhere()
 		}
 	}
 
 	return jobNotFound(id)
+}
+
+// keyCovers reports whether a key limited to one project reaches the timeline document id (SDD-003 section 1.7
+// rule 4): the document belongs to that project, or, for an id that is no timeline of any project, it is the
+// project's own id. A caller with no project limit reaches every id. The answer for a timeline of another
+// project and for an id that does not exist is the same, so it tells nothing about either.
+func keyCovers(ctx context.Context, r interface{ Productions() ProductionRepo }, c Caller, id string) bool {
+	if c.ProjectID == "" {
+		return true
+	}
+
+	if owner, err := r.Productions().ProjectOfTimeline(ctx, id); err == nil {
+		return owner == c.ProjectID
+	}
+
+	return id == c.ProjectID
+}
+
+func (s *svc) covers(ctx context.Context, c Caller, id string) bool {
+	return keyCovers(ctx, s.store, c, id)
+}
+
+// requireCovers refuses a key limited to one project that names a project or timeline outside it, before
+// anything of that project is read. An empty id names none and is left to the operation.
+func (s *svc) requireCovers(ctx context.Context, c Caller, id string) error {
+	if id == "" || s.covers(ctx, c, id) {
+		return nil
+	}
+
+	return limitedElsewhere()
 }
 
 func limitedElsewhere() *Error {
@@ -404,7 +445,7 @@ func limitedElsewhere() *Error {
 // section 2.8 rule 7).
 func (s *svc) canSee(ctx context.Context, c Caller, j *JobRow) bool {
 	if j.ProjectID != nil {
-		if c.ProjectID != "" && c.ProjectID != *j.ProjectID {
+		if !s.covers(ctx, c, *j.ProjectID) {
 			return false
 		}
 
@@ -419,7 +460,7 @@ func (s *svc) canSee(ctx context.Context, c Caller, j *JobRow) bool {
 
 	refs := s.referrers(ctx, *j.AssetHash)
 	for i := range refs {
-		if c.ProjectID != "" && c.ProjectID != refs[i].ProjectID {
+		if !s.covers(ctx, c, refs[i].ProjectID) {
 			continue
 		}
 
@@ -489,8 +530,12 @@ func (s *svc) waitJob(ctx context.Context, id string, d time.Duration) {
 }
 
 func (s *svc) JobList(ctx context.Context, req JobListRequest) (*JobListResult, error) {
-	c, err := authorize(ctx, "JobList", req.ProjectID)
+	c, err := authorize(ctx, "JobList", "")
 	if err != nil {
+		return nil, err
+	}
+
+	if err := s.requireCovers(ctx, c, req.ProjectID); err != nil {
 		return nil, err
 	}
 
@@ -646,7 +691,7 @@ func (s *svc) JobCancel(ctx context.Context, req JobCancelRequest) (*Job, error)
 			withHint("use a key with the %s scope", ScopeRender)
 	}
 
-	if c.ProjectID != "" && row.ProjectID != nil && c.ProjectID != *row.ProjectID {
+	if row.ProjectID != nil && !s.covers(ctx, c, *row.ProjectID) {
 		return nil, newError(CodeForbidden, "the key is limited to another project.").
 			withHint("use a key that covers this project")
 	}
@@ -749,7 +794,7 @@ func (s *svc) decideSharedIngest(ctx context.Context, tx Tx, c Caller, job *JobR
 			return JobRow{}, false, gerr
 		}
 
-		if visible(c, owner.OwnerUserID) && (c.ProjectID == "" || c.ProjectID == id) {
+		if visible(c, owner.OwnerUserID) && keyCovers(ctx, tx, c, id) {
 			mine = append(mine, ref)
 		}
 	}

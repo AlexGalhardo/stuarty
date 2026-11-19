@@ -106,7 +106,7 @@ func batchChildID(parentID string, i int) string {
 
 // ExportBatch checks every item, pins the project, and creates the parent job (SDD-004 section 8.4).
 func (s *svc) ExportBatch(ctx context.Context, req ExportBatchRequest) (*Job, error) {
-	c, err := authorize(ctx, "ExportBatch", req.ProjectID)
+	c, err := s.authorizeProject(ctx, "ExportBatch", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}

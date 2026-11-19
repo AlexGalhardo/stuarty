@@ -92,7 +92,7 @@ func (c *snapCache) get(k snapKey, compute func() (plan.Snap, error)) (plan.Snap
 }
 
 func (s *svc) SnapPoints(ctx context.Context, req SnapPointsRequest) (*SnapPointsResult, error) {
-	c, err := authorize(ctx, "SnapPoints", req.ProjectID)
+	c, err := s.authorizeProject(ctx, "SnapPoints", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}
