@@ -639,16 +639,7 @@ func (s *svc) ApprovalRuleSet(ctx context.Context, req ApprovalRuleSetRequest) (
 
 		view = row.ViewOf()
 
-		raw, err := json.Marshal(map[string]any{
-			"kind": row.Kind, "connection_id": row.Connection, "project_id": row.Project, "currency": row.Currency,
-			"per_item_micros": row.PerItem, "per_day_micros": row.PerDay, "enabled": row.Enabled,
-		})
-		if err != nil {
-			return err
-		}
-
-		return tx.Audit().
-			Append(ctx, AuditRow{AtMs: now, Actor: c.Actor, Action: "approval.rule.set", SubjectID: &row.ID, Details: raw})
+		return auditRule(ctx, tx, now, c.Actor, "approval.rule.set", &row)
 	})
 	if werr != nil {
 		return nil, approvalError(werr)
@@ -678,13 +669,27 @@ func (s *svc) ApprovalRuleRemove(ctx context.Context, req ApprovalRef) (*approva
 
 		view = old.ViewOf()
 
-		return appendAudit(ctx, tx, s.nowMs(), c.Actor, "approval.rule.remove", "", req.ID)
+		return auditRule(ctx, tx, s.nowMs(), c.Actor, "approval.rule.remove", &old)
 	})
 	if werr != nil {
 		return nil, approvalError(werr)
 	}
 
 	return &view, nil
+}
+
+// auditRule writes the audit row of a rule written or removed, with what the rule covered and its
+// limits (SDD-015 section 9), so the log says what a removed rule used to approve.
+func auditRule(ctx context.Context, tx Tx, now int64, actor, action string, r *approval.Rule) error {
+	raw, err := json.Marshal(map[string]any{
+		"kind": r.Kind, "connection_id": r.Connection, "project_id": r.Project, "currency": r.Currency,
+		"per_item_micros": r.PerItem, "per_day_micros": r.PerDay, "enabled": r.Enabled,
+	})
+	if err != nil {
+		return err
+	}
+
+	return tx.Audit().Append(ctx, AuditRow{AtMs: now, Actor: actor, Action: action, SubjectID: &r.ID, Details: raw})
 }
 
 // CostSummary returns the ceilings and what was spent.
