@@ -1,4 +1,4 @@
-import { randomBytes } from "node:crypto";
+import { randomBytes, randomInt } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
@@ -18,9 +18,8 @@ test.describe.configure({ mode: "serial" });
 const ALPHABET = "0123456789abcdefghjkmnpqrstvwxyz";
 
 function newId(prefix: string): string {
-	const bytes = randomBytes(10);
 	let out = "";
-	for (const byte of bytes) out += ALPHABET[byte % ALPHABET.length];
+	for (let i = 0; i < 10; i++) out += ALPHABET[randomInt(ALPHABET.length)];
 	return `${prefix}_${out}`;
 }
 
