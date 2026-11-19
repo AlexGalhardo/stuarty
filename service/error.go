@@ -33,7 +33,10 @@ const (
 	CodeCostCeiling       = "E_COST_CEILING"
 	CodeApprovalExpired   = "E_APPROVAL_EXPIRED"
 	// CodePublish is the code of SDD-020 section 11: a network refused or failed a publication.
-	CodePublish           = "E_PUBLISH"
+	CodePublish = "E_PUBLISH"
+	// CodeProvider and CodePriceUnknown are the codes of SDD-016 section 8.
+	CodeProvider          = "E_PROVIDER"
+	CodePriceUnknown      = "E_PRICE_UNKNOWN"
 	codeInternalMessage   = "the operation failed because of an internal error."
 	codeInternalHint      = "Report this as a bug with the operation that was sent."
 	hintRestoreProject    = "restore the project first"

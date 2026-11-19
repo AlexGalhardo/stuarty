@@ -168,9 +168,8 @@ var parity = []row{
 	{method: "ApprovalRuleRemove", command: "approval:rule:remove", route: "DELETE /approval-rules/{}"},
 	{method: "CostSummary", command: "cost:show", route: "GET /cost"},
 	{method: "CostCeilingSet", command: "cost:ceiling", route: "PUT /cost/ceilings"},
-	// Social networks and publishing (SDD-020 section 13): no MCP tool in this release, the catalogue is at its
-	// interim cap until epic 13; an agent reaches them through the CLI and HTTP. The sign-in redirect is the
-	// browser's: it has no command.
+	// Social networks and publishing (SDD-020 section 13): no MCP tool routes to them yet; an agent reaches them
+	// through the CLI and HTTP. The sign-in redirect is the browser's: it has no command.
 	{method: "SocialNetworkList", command: "social:network:list", route: "GET /social/networks"},
 	{method: "SocialConnectBegin", command: "social:connect", route: "POST /social/connect"},
 	{method: "SocialConnectComplete", route: "POST /social/complete", httpOnly: true},
@@ -178,6 +177,12 @@ var parity = []row{
 	{method: "PublishValidate", command: "publish:validate", route: "POST /publish/validate"},
 	{method: "PublishNow", command: "publish:now", route: "POST /publish"},
 	{method: "PublishStatus", command: "publish:status", route: "GET /publish/{}"},
+	// The AI providers (SDD-016 section 10): a generation starts with job_start (kind text.generate), the
+	// byte budget of the tool list leaves no room for a tool of its own. Setting a price is for a person.
+	{method: "ProviderList", command: "provider:list", route: "GET /providers"},
+	{method: "ProviderModels", command: "provider:models", route: "GET /connections/{}/models"},
+	{method: "ProviderPriceSet", command: "provider:price", route: "PUT /providers/prices"},
+	{method: "TextGenerate", tool: "job_start", command: "text:generate", route: "POST /text/generate"},
 	// The library (SDD-018): one MCP tool, library, serves the lists, reads, writes, searches, renders and
 	// lints. Removing a note, importing and exporting skills read and write files by path (no tool), and
 	// marking a skill as read is for a person at the browser (HTTP only).
