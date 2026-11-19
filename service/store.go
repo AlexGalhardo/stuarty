@@ -9,6 +9,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/service/assets"
 	"github.com/AlexGalhardo/stuarty/service/connections"
 	"github.com/AlexGalhardo/stuarty/service/library"
+	"github.com/AlexGalhardo/stuarty/service/publish"
 )
 
 // Sentinel errors returned by the store (SDD-005 section 2 item 8). The
@@ -73,6 +74,7 @@ type Repos interface {
 	Approvals() approval.Store
 	Library() library.Index
 	AssetLibrary() assets.Store
+	Publications() publish.Store
 }
 
 // Tx is a write transaction.

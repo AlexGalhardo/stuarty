@@ -36,5 +36,6 @@ func All() []schema.Migration {
 		m20261119140000CreateApprovalTables(),
 		m20261119140100JobsWaitingApproval(),
 		m20261119150000AssetLibrary(),
+		m20261119160000CreatePublicationsTables(),
 	}
 }

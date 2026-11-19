@@ -67,6 +67,15 @@ var Provenance = map[string]string{
 	"service.SocialAccount.AccountTitle":    SourceNetworkText,
 	"service.PublishValidateResult.Summary": SourceProjectText,
 
+	// the calendar of publications (SDD-020 section 15): the text of a post and what the network named
+	"publish.Publication.Title":  SourceProjectText,
+	"publish.Publication.Text":   SourceProjectText,
+	"publish.Fields.Title":       SourceProjectText,
+	"publish.Fields.Description": SourceProjectText,
+	"publish.Fields.Tags":        SourceProjectText,
+	"publish.Target.RemoteID":    SourceNetworkText,
+	"publish.Target.URL":         SourceNetworkText,
+
 	// the asset library (SDD-011 section 14): the text a person or an agent wrote about a file
 	"assets.LibraryAsset.Description": SourceMetadata,
 	"assets.Use.Name":                 SourceProjectText,

@@ -14,6 +14,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/service/assets"
 	"github.com/AlexGalhardo/stuarty/service/connections"
 	"github.com/AlexGalhardo/stuarty/service/library"
+	"github.com/AlexGalhardo/stuarty/service/publish"
 
 	"github.com/AlexGalhardo/vukem/database"
 )
@@ -109,6 +110,7 @@ func (p *projectTx) Approvals() approval.Store            { return p.tx.Approval
 func (p *projectTx) Images() service.ImageRepo            { return p.tx.Images() }
 func (p *projectTx) Library() library.Index               { return p.tx.Library() }
 func (p *projectTx) AssetLibrary() assets.Store           { return p.tx.AssetLibrary() }
+func (p *projectTx) Publications() publish.Store          { return p.tx.Publications() }
 func (p *projectTx) AfterCommit(fn func())                { p.tx.AfterCommit(fn) }
 func (p *projectTx) Project() service.ProjectRow          { return p.row }
 func (p *projectTx) Executor() database.Executor          { return p.tx.Executor() }
