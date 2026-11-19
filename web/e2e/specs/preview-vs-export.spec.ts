@@ -143,7 +143,7 @@ function markedGradient(spec: Fixture): string {
 // The generated media of a case, with the arguments of engine/ingest/mediagen
 // (a test pattern and a tone), made once per run.
 function fixtureClip(spec: Fixture): string {
-	const dir = join(tmpdir(), "vukem-video-e2e-golden-markers");
+	const dir = join(tmpdir(), "stuarty-e2e-golden-markers");
 	mkdirSync(dir, { recursive: true });
 	const out = join(dir, spec.name);
 	if (spec.lut !== undefined) {

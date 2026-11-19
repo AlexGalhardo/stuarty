@@ -78,7 +78,7 @@ describe("HttpTransport.send", () => {
 
 	test("a problem+json body comes back as the response", async () => {
 		stubFetch(409, {
-			type: "urn:vukem-video:error:E_OVERLAP",
+			type: "urn:stuarty:error:E_OVERLAP",
 			code: "E_OVERLAP",
 			message: "overlap",
 			retryable: false,

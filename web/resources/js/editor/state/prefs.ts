@@ -131,7 +131,7 @@ export function writeLayout(layout: LayoutPrefs): void {
 
 // The language of the interface is a preference of this browser (SDD-012
 // section 16.3), not of the workspace: two browsers on one server keep their own.
-// It is sent on every request in the Vukem-Video-Lang header.
+// It is sent on every request in the Stuarty-Lang header.
 const LOCALE_TAG = /^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$/;
 
 export function readLocale(): string | null {

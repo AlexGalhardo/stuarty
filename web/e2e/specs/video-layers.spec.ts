@@ -5,7 +5,7 @@ import { expect, seedProject, test } from "./helpers";
 // 4, 6 and 8 simultaneous video layers play for 10 seconds; the spec measures
 // the frames the elements dropped, the JS heap and the memory of the renderer
 // process of the tab (NFR-008, under 1 GB). It runs in the "perf" project with
-// the other load-sensitive budgets (VUKEM_VIDEO_PERF=1): next to another spec
+// the other load-sensitive budgets (STUARTY_PERF=1): next to another spec
 // the dropped frames measure the neighbour.
 //
 // The gate is the chosen cap of 4. Above it the preview decodes only the four
