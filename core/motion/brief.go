@@ -78,7 +78,11 @@ type Brief struct {
 func Build(doc *timeline.Document, from, until int, trackID string) (Brief, *RuleError) {
 	switch {
 	case from < 0:
-		return Brief{}, &RuleError{Path: "from", Reason: "range_negative", Detail: "the range starts before the timeline"}
+		return Brief{}, &RuleError{
+			Path:   "from",
+			Reason: "range_negative",
+			Detail: "the range starts before the timeline",
+		}
 	case until <= from:
 		return Brief{}, &RuleError{
 			Path: "until", Reason: "range_empty",
@@ -96,16 +100,30 @@ func Build(doc *timeline.Document, from, until int, trackID string) (Brief, *Rul
 	sa := Rect{X: int(area.X), Y: int(area.Y), Width: int(area.W), Height: int(area.H)}
 
 	b := Brief{
-		FromFrame: from, UntilFrame: until, Width: st.Width, Height: st.Height, FrameRate: st.FPS,
-		DurationFrames: until - from, SafeArea: sa,
-		Margins:  Margins{Left: sa.X, Right: st.Width - sa.X - sa.Width, Top: sa.Y, Bottom: st.Height - sa.Y - sa.Height},
+		FromFrame:      from,
+		UntilFrame:     until,
+		Width:          st.Width,
+		Height:         st.Height,
+		FrameRate:      st.FPS,
+		DurationFrames: until - from,
+		SafeArea:       sa,
+		Margins: Margins{
+			Left:   sa.X,
+			Right:  st.Width - sa.X - sa.Width,
+			Top:    sa.Y,
+			Bottom: st.Height - sa.Y - sa.Height,
+		},
 		Captions: []Caption{},
 	}
 
 	if trackID != "" {
 		t, ok := doc.Tracks[trackID]
 		if !ok {
-			return Brief{}, &RuleError{Path: "track_id", Reason: "track_unknown", Detail: "the project has no track " + trackID}
+			return Brief{}, &RuleError{
+				Path:   "track_id",
+				Reason: "track_unknown",
+				Detail: "the project has no track " + trackID,
+			}
 		}
 
 		if t.Kind != timeline.TrackVisual {

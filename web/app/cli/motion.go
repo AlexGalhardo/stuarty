@@ -34,7 +34,11 @@ func saveTemp(pattern string, b []byte) (string, error) {
 var motionRange = []flagDef{
 	{Name: "from", Kind: kindString, Usage: "start of the range, a time (default 0s)"},
 	{Name: "until", Kind: kindString, Usage: "end of the range, exclusive (default the end of the timeline)"},
-	{Name: "track", Kind: kindString, Usage: "the visual track the clip will go on: tells whether the render needs alpha"},
+	{
+		Name:  "track",
+		Kind:  kindString,
+		Usage: "the visual track the clip will go on: tells whether the render needs alpha",
+	},
 }
 
 var motionBriefCmd = &spec{
@@ -55,6 +59,31 @@ var motionBriefCmd = &spec{
 		}
 
 		return motionOutput(res), nil
+	},
+}
+
+var motionCheckCmd = &spec{
+	name:     "motion:check",
+	timeline: true,
+	summary:  "check a rendered asset against the brief: each mismatch of size, rate, length or alpha, with the value expected",
+	usage: []string{
+		"stuarty motion:check --project <id> --asset <ast_id> [--from t] [--until t] [--track <trk_id>]",
+	},
+	example: "stuarty motion:check --project prj_7k2m9x4q1b --asset ast_3c5v8n2w6d --from 2s --until 5s --track trk_f6g7h8j9k0",
+	project: true,
+	flags: append([]flagDef{
+		{Name: "asset", Kind: kindString, Usage: "the asset to check: an asset of the project, ready (required)"},
+	}, motionRange...),
+	run: func(ctx context.Context, c *call) (*output, error) {
+		res, err := c.svc.MotionCheck(ctx, service.MotionCheckRequest{
+			ProjectID: c.projectID, TimelineID: c.timelineID, AssetID: c.args.str("asset"), From: c.args.str("from"),
+			Until: c.args.str("until"), TrackID: c.args.str("track"),
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		return &output{value: res, text: res.Text}, nil
 	},
 }
 

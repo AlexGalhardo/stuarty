@@ -16,7 +16,10 @@ func TestMotionBriefThroughView(t *testing.T) {
 	cs := connect(t, env.Service, Options{}, "claude-code")
 	project := textProject(t, cs) // one text item of 1 s at 30 fps
 
-	res := ok(t, call(t, cs, "view", map[string]any{"project_id": project, "mode": "motion", "from": "0.2s", "until": "0.8s"}))
+	res := ok(
+		t,
+		call(t, cs, "view", map[string]any{"project_id": project, "mode": "motion", "from": "0.2s", "until": "0.8s"}),
+	)
 	if len(imagesOf(res)) != 0 {
 		t.Error("the brief carries no image block: its frames are files")
 	}
