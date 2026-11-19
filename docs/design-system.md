@@ -427,7 +427,7 @@ Rules that hold on every screen below:
 | Start | `/projects` (Inertia page) | page title; a full-width `Button` `default` `lg` "Create project"; the project grid (`repeat(auto-fill, minmax(240px, 1fr))`, section 3.2) of `Card`s: thumbnail box `aspect-video` on `--ed-preview-surround`, name (`UntrustedText`), meta line "edited 2 h ago · 00:30.000" in `text-xs tabular-nums text-muted-foreground`, and a `DropdownMenu` (Rename, Duplicate when the API has it, Delete with an `AlertDialog`) | Create project |
 | Editor | `/editor/{project_id}` | top bar, library with tab rail, preview with transport row, inspector with tab strip, timeline with its toolbar (3.4.2 to 3.4.7) | Export (top bar) |
 | Export | `Dialog` over the editor (section 4.3.10, SDD-012 §14) | name and destination at the top, then one group per output the engine supports (video; others only when the engine lists them), lint findings, progress | Start export |
-| Shortcuts and settings | `Dialog` opened by `?` or Help > Keyboard shortcuts (SDD-012 §18.2) | the cheat sheet (grouped by context, Timeline, Player and General, when SDD-012 §6.5 row 10 brings contexts), rebind and reset per row with the conflict named inline; below, language, theme, "Show tips again" and the version | Close (`Esc` closes it) |
+| Shortcuts and settings | `Dialog` opened by `?` or Help > Keyboard shortcuts (SDD-012 §18.2) | the cheat sheet (grouped by context, Timeline, Player and General, when SDD-012 §6.5 row 10 brings contexts), rebind and reset per row with the conflict named inline; below, language, theme, "Replay the tour" and the version | Close (`Esc` closes it) |
 | Palette | `Dialog` (section 4.3.11) | unchanged | Run |
 
 There is no separate settings window and no second browser window: the export and every dialog stay inside the page (SDD-012 §6.5, what to avoid).
@@ -533,7 +533,7 @@ Focus is the 2 px `--ring` outline with 2 px offset everywhere (section 2.10); i
 
 #### 3.4.10 Judgement calls of the first build
 
-The comparison with the real CapCut app (TASK-0296) is pending: the author has not installed it yet, so nothing here is marked as the same or different. The calls the first build made, as SDD-012 section 6.4 lists them: the Adjust tab holds Color, Filters, Chroma key and Effects, and the Text tab holds Auto captions; several items show no inspector strip; the Transitions panel has no length field; Select and Blade are two `aria-pressed` buttons in the toolbar, with Undo and Redo moved there from the top bar; the ratio in the player row is a native `select` that sends `settings.reframe`; the toolbar and menu draw only what has an action (no Duplicate on a project card, no Zoom or Theme item in the menu); a text button collapses to its icon below 1536 px and keeps its name.
+The comparison with the real CapCut app was made by TASK-0296 (CapCut 9.8.0.4213, walked with the window on screen); its marks, row by row, are in SDD-012 section 6.4, and this section keeps only the calls the build made, as that section lists them: the Adjust tab holds Color, Filters, Chroma key and Effects, and the Text tab holds Auto captions; several items show no inspector strip; the Transitions panel has no length field; Select and Blade are two `aria-pressed` buttons in the toolbar, with Undo and Redo moved there from the top bar; the ratio in the player row is a native `select` that sends `settings.reframe`; the toolbar and menu draw only what has an action (no Duplicate on a project card, no Zoom or Theme item in the menu); a text button collapses to its icon below 1536 px and keeps its name.
 
 ### 3.5 Dashboard sidebar
 
@@ -561,7 +561,7 @@ All interactive components use the same visual states. "Disabled" never relies o
 | State | Selector | Treatment |
 | --- | --- | --- |
 | default | | as the variant says |
-| hover | `:hover` (pointer only; never the only cue) | surface one step (`bg-muted`, `bg-accent`, or `primary/80` for the primary button) |
+| hover | `:hover` (pointer only; never the only cue) | surface one step (`bg-muted`, `bg-accent`, or, for the primary button, `--primary` mixed with 10% black in OKLab: a fade to `primary/80` left white text at 3.7:1 in the light theme) |
 | focus-visible | `:focus-visible` | 2 px `--ring` outline, 2 px offset (section 2.10); never removed |
 | active (pressed) | `:active`, `aria-pressed="true"`, `data-state="active"` | shadcn's 1 px press offset for buttons; toggles show the pressed surface `bg-accent` plus `aria-pressed` |
 | disabled | `disabled`, `aria-disabled="true"` | 50% opacity, `pointer-events: none` (shadcn); exempt from contrast; keyboard focus skips native disabled controls; controls that must explain why use `aria-disabled` with a tooltip |
@@ -746,13 +746,37 @@ The non-blocking notice of SDD-012 §4.5 for `E_REVISION_CONFLICT`.
 
 Keys: `ui.editor.<area>.empty.title` and `.body` (SDD-012 §16.2).
 
+An empty state is shown only when the region has been told it is empty: while the project is still loading, the library and the timeline draw two `Skeleton` blocks with `aria-busy="true"` instead (state model of section 4.1), so a person never reads "No media yet" about a project that has media.
+
 #### 4.3.16 History row
 
 - 40 px collapsed: revision (`tabular-nums`, `--muted-foreground`), actor chip, relative time, first line of the description (`UntrustedText`); expanded shows the whole text in `text-sm`. Undone steps: strikethrough plus the label "Undone" (not strikethrough alone).
 
+#### 4.3.18 Tour card
+
+- The first-run tour (SDD-012 §18.5): a card of at most `w-80` (`bg-popover`, `text-popover-foreground`, `rounded-md`, `shadow-md`, z-index of the popover layer) beside the region of the step, which gets a 2 px `--ring` outline drawn over it with `pointer-events: none`. Content: the step counter ("2 of 5", `text-xs text-muted-foreground`), a title (`text-sm font-semibold`), one sentence (`text-sm`), and the buttons "Back" (`ghost`, hidden on step 1), "Next" or "Done" (`default`) and "Skip tour" (`ghost`). Focus goes to "Next" when a step opens; `Esc` skips. No animation. Below 1280 px the card sits at the bottom centre instead of beside the region.
+- Keys: `ui.editor.tour.*`.
+
+#### 4.3.19 Shortcuts dialog
+
+- A search field at the top (`Input`, `type="search"` role searchbox, label "Search shortcuts"), the preset choice (a native `select`, like the ratio of the player row) beside it, then the table of rows (action, key button), a `text-sm text-muted-foreground` line "No shortcut matches" when the filter is empty, the conflict message in `role="alert"`, and a footer with "Reset to defaults" and "Replay the tour". A key button shows the key as `kbd`; while capturing it reads "Press a key".
+
 #### 4.3.17 `ui/UntrustedText`
 
 Every name or text from an agent or a file (project, track, item, asset names, caption words, history text) is rendered through it: `dir="auto"`, `unicode-bidi: isolate` (SDD-012 §1.2). Visually identical to plain text; truncation with an ellipsis and a tooltip carrying the full text.
+
+#### 4.3.18 Image editor components
+
+The screen of SDD-012 section 24. It is the editor shell of section 3.1 over an image: a toolbar on top, the layer panel on the left, the canvas in the middle, the inspector and the history on the right.
+
+- `image-editor/toolbar/Toolbar`: the `role="toolbar"` of 4.3.1 with groups (add: text, shape, fill, image, logo; arrange: group, ungroup, forward, back, duplicate, remove; align: six buttons; history: undo, redo; view: zoom out, zoom in, fit, 100%; export). Every button has an icon, an `aria-label` and a tooltip; the disabled ones keep their name.
+- `image-editor/canvas/Canvas`: one focusable region (`role="application"` is not used; it is a `group` named by `ui.image.canvas.label`) over the picture. The picture sits on `--ed-preview-surround`; the selection outline is 2 px of `--ed-handle`; the eight handles are 10 px squares with a 24 px hit area and the rotate handle is 24 px above the top edge; guides are 1 px of `--ed-snap` (a 2:1 dash as well as a colour); the outline of a layer an agent changed is 2 px of `--agent`. Nothing on the canvas is conveyed by colour alone: the selection also shows its size as a text badge, and the agent outline comes with the live-region message.
+- `image-editor/layers/LayerPanel`: a `role="tree"` (4.3.2 panel, variant `layers`). A row is 32 px: indent 16 px per level, disclosure for a group, kind icon, name, visibility and lock toggles (`aria-pressed`, 24 px targets with 32 px rows). The selected row uses `--ed-selection` as background with the text token of that pair (2.6); a dragged row shows an insertion line, and the same move is available from the keyboard.
+- `image-editor/inspector/Inspector`: the inspector of 12.1 with sections per kind. Numeric fields are `ui/TimeField`-style fields with `inputMode="numeric"`, a visible label and a unit suffix; a colour field is a text field with a swatch button that opens the brand swatches.
+- `image-editor/export/ExportDialog`: the dialog of 14.1 with a findings list (each finding a button that selects the layer) and a download link when the file is ready.
+- `image-editor/history/HistoryPanel`: the history row of 4.3.16 with the actor chip; an undone row says "Undone" in text.
+- Empty and error states: no layer ("The image has no layers", "Add a text, a shape or a photo from the toolbar"), no frame yet (a skeleton the size of the canvas), a frame that failed (the core's message with a Retry button).
+- Keys: `ui.image.<area>.<name>` (SDD-012 section 16.2).
 
 ## 5. Iconography, illustration and the product mark
 
@@ -868,7 +892,8 @@ The keyboard map is SDD-012 §18.2 (global keys) and §7.10 (timeline grid keys)
 2. Single letters (`S`, `C`, `T`, `N`) are ignored while focus is in an editable field; `Mod` combinations follow the editable-field exceptions of §18.2.
 3. `Mod` is `Ctrl` on Windows and Linux and `Cmd` on macOS; tooltips show the platform's form (`Ctrl+K`, `⌘K`).
 4. No shortcut needs a key that a common keyboard layout lacks without a modifier; `[` and `]` have toolbar buttons as an alternative.
-5. Customization and the cheat sheet (`?`) are specified by RF-074.
+5. Customization and the cheat sheet (`?`) are specified by RF-074 and SDD-012 §18.9: one registry, two presets (`short`, `classic`), every row remappable, a conflicting key refused with the name of the row it collides with.
+6. A handler never names a key: it asks the registry. Tooltips show the key that is current (`Split (Ctrl+B)`), so a rebound key is never stated wrong.
 
 ### 7.4 Screen reader names
 
@@ -1003,6 +1028,7 @@ Decisions taken here (each is cheap to undo). "Recorded in" names where the spec
 | DS-11 | Native menus show `Mod+Z`, `Mod+Shift+Z` and `Mod+A` without registering them as accelerators; menu items and the title-bar theme go through `onMenuAction` and `setTheme` | 8.3 | decided by D-030; SDD-012 §13.1, §21.3 |
 | DS-12 | The familiar layout (D-038): a 40 px tab rail inside the library width, a 36 px tab strip in the inspector, a selected tab shown by a 2 px `--ring` bar, a save indicator and a Menu button in the top bar, the timeline toolbar in two labelled groups; no new token | 3.4 | SDD-012 §6.4, §6.5 |
 | DS-13 | The dashboard has its own sidebar built from checked tokens; the shadcn `Sidebar` stays unused | 3.5 | SDD-012 §23 |
+| DS-14 | The first-run tour is a card beside the region of each step (outline in `--ring`), not a full-screen overlay, so the keyboard and the screen reader are never trapped; the shortcuts dialog gets a search field and a preset choice | 4.3.18, 4.3.19 | SDD-012 §18.5, §18.9 |
 
 Open points found in the specifications while writing this document, and how each was closed:
 

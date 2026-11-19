@@ -193,7 +193,59 @@ describe("HistoryPanel", () => {
 		expect(html).toContain('data-undone="true"');
 		expect(html).toContain("Undone");
 		expect(html).toContain("Load more");
-		expect(html).toContain("item.move");
+		expect(html).toContain("step 3");
 		expect(html.match(/data-revision=/g)).toHaveLength(3);
+	});
+
+	// VV-266: the page of the history says what a step did, in the words the core
+	// sends in `description`, not the name of the operation.
+	test("words a revert row with the description of the core", async () => {
+		const { h } = await withHistory([
+			page([
+				entry(3, {
+					ops: ["history.revert"],
+					description: "Reverted to r2.",
+				}),
+				entry(2, { ops: [], description: "", changes: 2 }),
+			]),
+		]);
+		await h.runtime.historyControls.refresh();
+		const html = renderToString(
+			<I18nProvider messages={devFixture(1).bootstrap.messages} locale="en">
+				<EditorProvider runtime={h.runtime}>
+					<HistoryPanel />
+				</EditorProvider>
+			</I18nProvider>,
+		);
+		expect(html).toContain("Reverted to r2.");
+		expect(html).not.toContain("history.revert");
+		expect(html).toContain("2 changes");
+	});
+
+	// Epic 36: every step can be compared and reverted to, except the newest, which a
+	// revert would leave as it is; the checkpoints have their own section.
+	test("offers Compare on every step, Revert on all but the newest, and the checkpoints", async () => {
+		const { h } = await withHistory([page([entry(3), entry(2), entry(1)])]);
+		await h.runtime.historyControls.refresh();
+		const render = (locale: "en" | "pt-BR"): string =>
+			renderToString(
+				<I18nProvider
+					messages={devFixture(1).bootstrap.messages}
+					locale={locale}
+				>
+					<EditorProvider runtime={h.runtime}>
+						<HistoryPanel />
+					</EditorProvider>
+				</I18nProvider>,
+			);
+		const html = render("en");
+		expect(html).toContain("Checkpoints");
+		expect(html).toContain("Name this state");
+		expect(html).toContain("Tick two steps");
+		for (const r of [1, 2, 3])
+			expect(html).toContain(`aria-label="Compare r${r}"`);
+		expect(html).toContain('aria-label="Revert to r2"');
+		expect(html).toContain('aria-label="Revert to r1"');
+		expect(html).not.toContain('aria-label="Revert to r3"');
 	});
 });

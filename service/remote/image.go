@@ -2,8 +2,11 @@ package remote
 
 import (
 	"context"
+	"net/http"
 	"net/url"
+	"strconv"
 
+	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/service"
 )
 
@@ -55,4 +58,88 @@ func (c *Client) ImageRedo(ctx context.Context, req service.ImageStepRequest) (*
 // ImageExport implements service.Service.
 func (c *Client) ImageExport(ctx context.Context, req service.ImageExportRequest) (*service.ImageExportResult, error) {
 	return post[service.ImageExportResult](ctx, c, imagePath(req.ImageID, "/export"), req)
+}
+
+// ImageImport implements service.Service.
+func (c *Client) ImageImport(ctx context.Context, req service.ImageImportRequest) (*service.ImageImportResult, error) {
+	return post[service.ImageImportResult](ctx, c, "/images/import", req)
+}
+
+// ImageImportFile implements service.Service: the bytes of the file are the body, the other members the query.
+func (c *Client) ImageImportFile(
+	ctx context.Context,
+	req service.ImageImportFileRequest,
+) (*service.ImageImportResult, error) {
+	q := url.Values{}
+	setIf(q, "file_name", req.FileName)
+	setIf(q, "image_id", req.ImageID)
+	setIf(q, "name", req.Name)
+	setIf(q, "preset", req.Preset)
+	setIf(q, "idempotency_key", req.IdempotencyKey)
+
+	if req.Width > 0 {
+		q.Set("width", strconv.Itoa(req.Width))
+	}
+
+	if req.Height > 0 {
+		q.Set("height", strconv.Itoa(req.Height))
+	}
+
+	if req.WaitMS > 0 {
+		q.Set("wait_ms", strconv.Itoa(req.WaitMS))
+	}
+
+	if req.BaseRevision > 0 {
+		q.Set("base_revision", strconv.FormatInt(req.BaseRevision, 10))
+	}
+
+	if req.DryRun {
+		q.Set("dry_run", "true")
+	}
+
+	out := new(service.ImageImportResult)
+	if err := c.do(
+		ctx,
+		http.MethodPost,
+		"/images/import/file",
+		q,
+		fileBody{r: req.Body, size: req.Size},
+		out,
+	); err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}
+
+// ImageFrame implements service.Service. The picture is binary and the screen reads it from its URL.
+func (*Client) ImageFrame(context.Context, service.ImageFrameRequest) (*service.ImageFrameResult, error) {
+	return nil, &service.Error{
+		Code:    command.CodeInternal,
+		Message: "the picture of an image is not read over this client.",
+		Hint:    "read it from GET /images/{id}/frame",
+	}
+}
+
+// ImageHistory implements service.Service.
+func (c *Client) ImageHistory(
+	ctx context.Context,
+	req service.ImageHistoryRequest,
+) (*service.ImageHistoryResult, error) {
+	q := url.Values{}
+
+	if req.Limit > 0 {
+		q.Set("limit", strconv.Itoa(req.Limit))
+	}
+
+	return get[service.ImageHistoryResult](ctx, c, imagePath(req.ImageID, "/history"), q)
+}
+
+// ImageFile implements service.Service. A stored file is a path inside the workspace of the server.
+func (*Client) ImageFile(context.Context, service.ImageFileRequest) (*service.File, error) {
+	return nil, &service.Error{
+		Code:    command.CodeInternal,
+		Message: "stored files are not opened over HTTP.",
+		Hint:    "read the file from GET /images/{id}/exports/{name}",
+	}
 }

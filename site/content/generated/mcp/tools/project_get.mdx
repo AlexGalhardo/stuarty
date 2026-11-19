@@ -1,6 +1,6 @@
 ---
 title: "project_get"
-description: "Read project. Read a project as text: revision, settings, tracks top to bottom (the top one is drawn over the others), then items per track with times in seconds and frames."
+description: "Read project. Read a project as text: revision, settings, tracks top to bottom (top draws over the rest), items per track, times in seconds and frames."
 wide: true
 ---
 
@@ -10,7 +10,7 @@ wide: true
 
 <RefMain>
 
-Read a project as text: revision, settings, tracks top to bottom (the top one is drawn over the others), then items per track with times in seconds and frames. Use it first, and to get the revision for edit. detail=concise is one line per item; full adds every non-default field; document is the whole JSON, not paged; overview is the whole project (brief, items, what is missing). Long projects return next_cursor.
+Read a project as text: revision, settings, tracks top to bottom (top draws over the rest), items per track, times in seconds and frames. Use first, and for edit's revision. detail=concise: a line per item; full: every non-default field; document: whole JSON, unpaged, unbounded (tens of thousands of tokens if long: prefer concise/full); overview: whole project (brief, items, what is missing). Long projects give next_cursor.
 
 ## Behaviour
 

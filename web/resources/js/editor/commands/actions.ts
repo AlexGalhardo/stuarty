@@ -22,10 +22,12 @@ import {
 	captionRetimeOperations,
 	captionSplitOperations,
 	closeGapOperations,
+	createCompositionOperations,
 	crossfadeOperations,
 	deleteOperations,
 	duplicateOperations,
 	enabledOperations,
+	expandCompositionOperations,
 	extractAudioOperations,
 	freezeFrameOperations,
 	type ItemRange,
@@ -145,6 +147,10 @@ export interface Actions {
 	crossfadeSelection(): Promise<EditOutcome | null>;
 	// Ctrl+D: a copy of each selected item right after its end.
 	duplicateSelection(): Promise<EditOutcome | null>;
+	// The menu entry "Create composition from selection" (SDD-002 C.85).
+	createComposition(): Promise<EditOutcome | null>;
+	// The menu entry "Expand composition" on one composition item (SDD-002 C.86).
+	expandComposition(itemId: string): Promise<EditOutcome | null>;
 	// V and the menu: every selected item off when any is on, else all on.
 	toggleEnabled(): Promise<EditOutcome | null>;
 	// `~` and the menu: the selected items are unlinked when any is in a link
@@ -663,6 +669,8 @@ export function createActions(runtime: EditorRuntime): Actions {
 			return send(deleteOperations(actedIds(), ripple));
 		},
 		duplicateSelection: () => send(duplicateOperations(rangesOf(actedIds()))),
+		createComposition: () => send(createCompositionOperations(actedIds())),
+		expandComposition: (itemId) => send(expandCompositionOperations(itemId)),
 		toggleEnabled() {
 			const doc = documents.getState().document;
 			if (doc === null) return Promise.resolve(null);

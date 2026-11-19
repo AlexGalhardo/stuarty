@@ -1,28 +1,59 @@
 command agent:docs
+command agent:profiles
+command approval:decide
+command approval:list
+command approval:rule:list
+command approval:rule:remove
+command approval:rule:set
+command approval:show
+command asset:list
+command asset:set
+command asset:show
+command asset:tag
+command asset:uses
 command audit
 command brand:set
 command brand:show
 command brief:set
 command brief:show
+command briefing:answer
+command briefing:questions
 command bundle:export
 command bundle:import
+command caption:validate
+command chat:session
+command chat:sessions
+command chat:transcript
+command checkpoint:create
+command checkpoint:list
+command checkpoint:remove
+command checkpoint:rename
 command command:help
 command connection:add
 command connection:list
 command connection:remove
 command connection:show
 command connection:test
+command cost:ceiling
+command cost:show
+command diff
 command doctor
 command edit
 command events
 command export
+command export:batch
+command export:check
+command export:presets
 command font:import
 command fonts
 command history
 command image:create
 command image:edit
 command image:export
+command image:generate
+command image:import
 command image:list
+command image:model-edit
 command image:redo
 command image:show
 command image:undo
@@ -34,6 +65,8 @@ command item:trash
 command job:cancel
 command job:list
 command job:show
+command library:reindex
+command library:search
 command lint
 command mcp
 command media:import
@@ -41,6 +74,13 @@ command media:inspect
 command media:list
 command media:restore
 command media:trash
+command memory:list
+command memory:remove
+command memory:show
+command memory:write
+command motion:brief
+command motion:check
+command motion:replace
 command otio:export
 command otio:import
 command project:create
@@ -50,40 +90,117 @@ command project:list
 command project:restore
 command project:show
 command project:trash
+command prompt:list
+command prompt:render
+command prompt:show
+command prompt:write
+command provider:list
+command provider:models
+command provider:price
+command publication:cancel
+command publication:create
+command publication:list
+command publication:retry
+command publication:schedule
+command publication:send-now
+command publication:show
+command publication:update
+command publish:now
+command publish:status
+command publish:validate
 command redo
+command revert
+command script:estimate
+command skill:export
+command skill:import
+command skill:lint
+command skill:list
+command skill:show
+command skill:write
+command social:account:list
+command social:connect
+command social:network:list
 command template:export
 command template:import
 command template:list
 command template:new
 command template:save
+command text:draft
+command text:generate
+command text:list
+command text:revert
+command text:revisions
+command text:show
+command text:write
 command token:rotate
 command tools:install
 command transcribe
 command undo
 command version
+command video:generate
 command view
+command voice:generate
+command voice:list
+route DELETE /agents/profiles/{}
+route DELETE /approval-rules/{}
+route DELETE /chat/sessions/{}
 route DELETE /connections/{}
 route DELETE /keys/{}
+route DELETE /library/memory/{}
+route DELETE /projects/{}/checkpoints/{}
+route GET /agents/profiles
+route GET /approval-rules
+route GET /approvals
+route GET /approvals/events
+route GET /approvals/{}
 route GET /assets
+route GET /assets/{}
+route GET /assets/{}/uses
 route GET /audit
 route GET /brand-kit
+route GET /briefing/questions
+route GET /chat/sessions/{}
+route GET /chat/sessions/{}/events
+route GET /chat/sessions/{}/transcript
 route GET /commands
 route GET /commands/{}
 route GET /connections
 route GET /connections/{}
+route GET /connections/{}/models
+route GET /connections/{}/voices
+route GET /cost
+route GET /export-presets
 route GET /fonts
 route GET /handshake
 route GET /images
 route GET /images/{}
+route GET /images/{}/events
+route GET /images/{}/exports/{}
+route GET /images/{}/frame
+route GET /images/{}/history
 route GET /jobs/{}
 route GET /jobs/{}/file
 route GET /keys
+route GET /library/memory
+route GET /library/memory/{}
+route GET /library/prompts
+route GET /library/prompts/{}
+route GET /library/search
+route GET /library/skills
+route GET /library/skills/{}
+route GET /library/skills/{}/lint
 route GET /projects
 route GET /projects/{}
+route GET /projects/{}/audio-measure
+route GET /projects/{}/audio-previews/{}
 route GET /projects/{}/bitmaps/{}
 route GET /projects/{}/brief
+route GET /projects/{}/chat/sessions
+route GET /projects/{}/checkpoints
 route GET /projects/{}/describe
+route GET /projects/{}/diff
 route GET /projects/{}/events
+route GET /projects/{}/export-check
 route GET /projects/{}/frame
 route GET /projects/{}/history
 route GET /projects/{}/jobs
@@ -96,31 +213,65 @@ route GET /projects/{}/media/{}/peaks
 route GET /projects/{}/media/{}/proxy
 route GET /projects/{}/media/{}/strip
 route GET /projects/{}/media/{}/thumbnail
+route GET /projects/{}/motion/brief
+route GET /projects/{}/motion/check
 route GET /projects/{}/otio
 route GET /projects/{}/plan
 route GET /projects/{}/sheet
 route GET /projects/{}/snap-points
+route GET /projects/{}/texts/{}
+route GET /projects/{}/texts/{}/revisions
+route GET /providers
+route GET /providers/sign-ins
+route GET /publications
+route GET /publications/events
+route GET /publications/{}
+route GET /publish/{}
+route GET /social/accounts
+route GET /social/networks
 route GET /system
 route GET /system/tools
 route GET /templates
 route GET /templates/{}/file
+route GET /texts
 route GET /users
+route PATCH /projects/{}/checkpoints/{}
 route PATCH /users/{}
+route POST /approval-rules
+route POST /approvals/{}/decide
+route POST /assets/{}/tags
+route POST /captions/validate
+route POST /chat/sessions/{}/cancel
+route POST /chat/sessions/{}/messages
+route POST /chat/sessions/{}/permissions/{}
 route POST /connections
 route POST /connections/{}/test
 route POST /fonts
+route POST /image/generate
 route POST /images
+route POST /images/import
+route POST /images/import/file
 route POST /images/{}/edit
 route POST /images/{}/export
+route POST /images/{}/model-edit
 route POST /images/{}/redo
 route POST /images/{}/undo
 route POST /jobs/{}/cancel
 route POST /keys
+route POST /library/memory
+route POST /library/prompts/{}/render
+route POST /library/reindex
+route POST /library/skills/export
+route POST /library/skills/import
+route POST /library/skills/{}/review
 route POST /projects
 route POST /projects/import
 route POST /projects/{}/bundle
+route POST /projects/{}/chat/sessions
+route POST /projects/{}/checkpoints
 route POST /projects/{}/duplicate
 route POST /projects/{}/edit
+route POST /projects/{}/export-batches
 route POST /projects/{}/items
 route POST /projects/{}/items/{}/move
 route POST /projects/{}/items/{}/rename
@@ -130,21 +281,53 @@ route POST /projects/{}/jobs
 route POST /projects/{}/media
 route POST /projects/{}/media/{}/restore
 route POST /projects/{}/media/{}/trash
+route POST /projects/{}/motion/replace
 route POST /projects/{}/otio
 route POST /projects/{}/redo
 route POST /projects/{}/restore
+route POST /projects/{}/revert
+route POST /projects/{}/texts
+route POST /projects/{}/texts/{}/draft
+route POST /projects/{}/texts/{}/revert
 route POST /projects/{}/trash
 route POST /projects/{}/undo
+route POST /providers/signin
+route POST /providers/signin/complete
+route POST /publications
+route POST /publications/{}/cancel
+route POST /publications/{}/retry
+route POST /publications/{}/schedule
+route POST /publications/{}/send-now
+route POST /publish
+route POST /publish/validate
+route POST /scripts/estimate
+route POST /social/complete
+route POST /social/connect
+route POST /social/price
+route POST /social/select
 route POST /system/launch
+route POST /system/scheduler
 route POST /system/tools/install
 route POST /templates
 route POST /templates/import
 route POST /templates/{}/export
 route POST /templates/{}/instantiate
+route POST /text/generate
 route POST /trash/empty
 route POST /users
+route POST /video/generate
+route POST /voice/generate
+route PUT /agents/profiles/{}
+route PUT /assets/{}
 route PUT /brand-kit
+route PUT /cost/ceilings
+route PUT /library/prompts/{}
+route PUT /library/skills/{}
 route PUT /projects/{}/brief
+route PUT /projects/{}/briefing
+route PUT /projects/{}/texts/{}
+route PUT /providers/prices
+route PUT /publications/{}
 tool command_help
 tool connection
 tool edit
@@ -154,6 +337,7 @@ tool image
 tool job_cancel
 tool job_get
 tool job_start
+tool library
 tool lint
 tool media_import
 tool media_inspect

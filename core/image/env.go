@@ -9,9 +9,11 @@ import (
 	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
-// AssetInfo is what the caller knows of an image file: the facts the core needs and cannot read.
+// AssetInfo is what the caller knows of a file of the workspace: the facts the core needs and cannot read.
+// Kind is AssetImage (or empty) or AssetLUT; Width and Height are those of an image and zero for a table.
 type AssetInfo struct {
 	Name   string
+	Kind   string
 	Width  int
 	Height int
 }
@@ -21,8 +23,8 @@ type AssetInfo struct {
 type Env struct {
 	// NewIDs makes an identifier for a prefix; a command uses it only when the caller supplied no id.
 	NewIDs func(prefix string) string
-	// Asset says whether a content hash is a ready image and gives its size. Without it every layer.add_image
-	// is refused with E_NOT_FOUND.
+	// Asset says whether a content hash is a ready image or lookup table and gives what the core needs of it.
+	// Without it every layer.add_image, and every lut of layer.adjust, is refused with E_NOT_FOUND.
 	Asset func(hash string) (AssetInfo, bool)
 	// Measure gives the natural size of a text as the rasterizer lays it out. Without it the height of a text is
 	// estimated from its lines and its size.
@@ -51,7 +53,7 @@ func register(cs ...command.Command) { catalogue = append(catalogue, cs...) }
 // Registry is the registry of the commands of domain image (SDD-021 section 3).
 func Registry() *command.Registry {
 	registryOnce.Do(func() {
-		registry = command.NewRegistry()
+		registry = command.NewRegistry(command.DomainImage)
 		registry.MustRegister(catalogue...)
 	})
 

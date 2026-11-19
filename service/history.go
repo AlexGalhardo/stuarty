@@ -26,7 +26,7 @@ const (
 )
 
 func (s *svc) HistoryList(ctx context.Context, req HistoryListRequest) (*HistoryListResult, error) {
-	c, err := authorize(ctx, "HistoryList", req.ProjectID)
+	c, err := s.authorizeProject(ctx, "HistoryList", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}
@@ -182,7 +182,7 @@ func (s *svc) Redo(ctx context.Context, req UndoRequest) (*UndoResult, error) {
 // step is Undo and Redo: the same transaction as an edit with the differences
 // of SDD-005 section 12.2.
 func (s *svc) step(ctx context.Context, method string, req UndoRequest, redo bool) (*UndoResult, error) {
-	c, err := authorize(ctx, method, req.ProjectID)
+	c, err := s.authorizeProject(ctx, method, req.ProjectID)
 	if err != nil {
 		return nil, err
 	}
@@ -226,6 +226,11 @@ func (s *svc) step(ctx context.Context, method string, req UndoRequest, redo boo
 			return err
 		}
 
+		graph := newProductionGraph(ctx, tx, row.ID)
+		if nerr := checkNesting(graph, out.Doc); nerr != nil {
+			return nerr
+		}
+
 		crashpoint.Hit("commit.after_apply")
 
 		res = s.undoResult(c.Actor, &row, &cand, doc, &out, skipped, redo)
@@ -259,11 +264,8 @@ func (s *svc) step(ctx context.Context, method string, req UndoRequest, redo boo
 			Type: "batch.committed", ProjectID: row.ID, Revision: rev, Kind: string(kind), Actor: c.Actor,
 			Description: cutRunes(res.Description, eventDescription), At: s.now().UTC(),
 		}
-		tx.AfterCommit(func() {
-			crashpoint.Hit("commit.after_commit")
-			s.emit(ev)
-			crashpoint.Hit("commit.after_publish")
-		})
+
+		s.publishAfterCommit(tx, graph, &ev)
 
 		return nil
 	})
@@ -468,7 +470,7 @@ func (s *svc) undoResult(
 }
 
 func (s *svc) Lint(ctx context.Context, req LintRequest) (*LintResult, error) {
-	c, err := authorize(ctx, "Lint", req.ProjectID)
+	c, err := s.authorizeProject(ctx, "Lint", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}
@@ -582,6 +584,10 @@ func (s *svc) stepDescription(row *OperationRow, ops []string) string {
 	case OpImport:
 		return "Imported the project."
 	case OpEdit:
+	}
+
+	if len(ops) == 1 && ops[0] == revertOp {
+		return "Reverted to r" + strconv.FormatInt(revertTargetOf(row.Ops), 10) + "."
 	}
 
 	var parts []string

@@ -2,6 +2,7 @@ package lint
 
 import (
 	"fmt"
+	"maps"
 	"slices"
 	"strings"
 
@@ -113,7 +114,7 @@ func (c *check) covers(it *timeline.Item) bool {
 
 		return it.Shape == "rect" && opaque && it.Width*it.Scale >= float64(st.Width) &&
 			it.Height*it.Scale >= float64(st.Height)
-	case timeline.ItemAudio, timeline.ItemText, timeline.ItemCaption:
+	case timeline.ItemAudio, timeline.ItemText, timeline.ItemCaption, timeline.ItemComposition:
 	}
 
 	return false
@@ -166,6 +167,32 @@ func (c *check) audioOverlap() {
 				fmt.Sprintf("%s and %s both play sound during frames %d-%d.", a.ID, b.ID, start, end-1),
 				"mute one with item.set_audio audio_muted or move one")
 		}
+	}
+}
+
+// processorChains reports a limiter that another processor follows, and a second noise reduction, in the chain of
+// an item or a track (SDD-001 section 3.5).
+func (c *check) processorChains() {
+	report := func(id string, chain []timeline.Processor, rng *Range) {
+		notLast, repeated := timeline.ChainWarnings(chain)
+		for _, i := range notLast {
+			c.add(CodeAudioLimiterNotLast, id, rng,
+				fmt.Sprintf("The limiter at place %d of the chain of %s is not the last processor.", i, id),
+				"move it last with audio.processor_move")
+		}
+
+		for _, i := range repeated {
+			c.add(CodeAudioNoiseReductionRepeats, id, rng,
+				fmt.Sprintf("The chain of %s has a second noise reduction at place %d.", id, i), "remove one")
+		}
+	}
+
+	for _, id := range slices.Sorted(maps.Keys(c.doc.Tracks)) {
+		report(id, c.doc.Tracks[id].Processors, nil)
+	}
+
+	for _, it := range c.sorted() {
+		report(it.ID, it.Processors, itemRange(it))
 	}
 }
 

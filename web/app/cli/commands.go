@@ -14,19 +14,28 @@ import (
 
 // registry lists the commands in the order the short list prints them.
 func registry() []*spec {
-	return []*spec{
+	return append([]*spec{
 		projectList, projectCreate, projectShow, projectTrash, projectRestore,
 		edit, history, undo, redo, lintCmd, version, mcpCmd,
+		revertCmd, diffCmd, checkpointCreateCmd, checkpointListCmd, checkpointRenameCmd, checkpointRemoveCmd,
 		mediaImport, mediaInspect, mediaList, mediaTrash, mediaRestore, view, export,
+		exportPresets, exportCheck, exportBatch,
 		jobShow, jobCancel, jobList, eventsCmd, commandHelp,
 		templateList, templateSave, templateNew, templateExport, templateImport, bundleExport, bundleImport,
 		agentDocs, transcribeCmd, doctorCmd, fontsCmd, auditCmd, toolsInstallCmd, tokenRotate,
 		fontImportCmd, brandShowCmd, brandSetCmd, otioExport, otioImport,
 		projectDescribeCmd, projectDuplicateCmd, itemAddCmd, itemMoveCmd, itemRenameCmd, itemTrashCmd, itemRestoreCmd,
-		briefShowCmd, briefSetCmd,
+		briefShowCmd, briefSetCmd, briefingQuestionsCmd, briefingAnswerCmd,
 		connectionListCmd, connectionShowCmd, connectionAddCmd, connectionRemoveCmd, connectionTestCmd,
-		imageCreate, imageList, imageShow, imageEdit, imageUndo, imageRedo, imageExport,
-	}
+		approvalListCmd, approvalShowCmd, approvalDecideCmd, approvalRuleListCmd, approvalRuleSetCmd,
+		approvalRuleRemoveCmd, costShowCmd, costCeilingCmd,
+		providerListCmd, providerModelsCmd, providerPriceCmd, textGenerateCmd,
+		imageGenerateCmd, voiceGenerateCmd, videoGenerateCmd, voiceListCmd, imageModelEditCmd,
+		imageCreate, imageList, imageShow, imageEdit, imageUndo, imageRedo, imageExport, imageImport,
+		assetListCmd, assetShowCmd, assetUsesCmd, assetSetCmd, assetTagCmd,
+		motionBriefCmd, motionCheckCmd, motionReplaceCmd,
+		agentProfilesCmd, chatSessionsCmd, chatSessionCmd, chatTranscriptCmd,
+	}, append(append(libraryCommands(), publishingCommands()...), writingCommands()...)...)
 }
 
 // CommandNames lists the commands the binary knows, and those among them that
@@ -288,16 +297,15 @@ var lintCmd = &spec{
 
 var commandHelp = &spec{
 	name:       "command:help",
-	summary:    "list the editing commands, or describe one",
-	usage:      []string{"stuarty command:help [<name>]"},
+	summary:    "list the editing commands and the domains, or describe one command",
+	usage:      []string{"stuarty command:help [<name>]", "stuarty command:help --domain <domain>"},
 	example:    "stuarty command:help item.move",
 	positional: true,
 	flags: []flagDef{
 		{
-			Name:    "domain",
-			Kind:    kindString,
-			Default: "video",
-			Usage:   "video, or image for the commands of image documents",
+			Name:  "domain",
+			Kind:  kindString,
+			Usage: "a domain of the product: its commands (without it, the video commands and the list of domains)",
 		},
 	},
 	run: func(ctx context.Context, c *call) (*output, error) {

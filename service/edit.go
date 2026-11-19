@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"maps"
+	"math"
 	"slices"
 	"strings"
 
@@ -48,7 +49,7 @@ func EditInternal(ctx context.Context, s Service, req EditRequest) (*EditResult,
 }
 
 func (s *svc) edit(ctx context.Context, req EditRequest, allowInternal bool) (*EditResult, error) {
-	c, err := authorize(ctx, "Edit", req.ProjectID)
+	c, err := s.authorizeProject(ctx, "Edit", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}
@@ -121,9 +122,11 @@ func (s *svc) edit(ctx context.Context, req EditRequest, allowInternal bool) (*E
 
 		req.Operations = resolvedOps
 
-		out, aerr := s.reg.ApplyBatch(doc, req.Operations, command.Env{NewIDs: ids.next})
+		graph := newProductionGraph(ctx, tx, row.ID)
+
+		out, aerr := s.applyChecked(graph, doc, req.Operations, &ids)
 		if aerr != nil {
-			return fromCommand(aerr)
+			return aerr
 		}
 
 		crashpoint.Hit("commit.after_apply")
@@ -154,6 +157,8 @@ func (s *svc) edit(ctx context.Context, req EditRequest, allowInternal bool) (*E
 			key:           req.IdempotencyKey,
 			requestHash:   hash,
 			closeOpenRedo: true,
+			spawned:       out.Spawned,
+			checkpoint:    true,
 			result: func(rev int64) ([]byte, error) {
 				stored := *res
 				stored.Revision = rev
@@ -174,11 +179,8 @@ func (s *svc) edit(ctx context.Context, req EditRequest, allowInternal bool) (*E
 			Type: "batch.committed", ProjectID: row.ID, Revision: rev, Kind: string(OpEdit), Actor: c.Actor,
 			Description: cutRunes(res.Description, eventDescription), At: s.now().UTC(),
 		}
-		tx.AfterCommit(func() {
-			crashpoint.Hit("commit.after_commit")
-			s.emit(ev)
-			crashpoint.Hit("commit.after_publish")
-		})
+
+		s.publishAfterCommit(tx, graph, &ev)
 
 		return nil
 	})
@@ -215,13 +217,19 @@ func (s *svc) assetStillIngesting(ctx context.Context, projectID string, err err
 		return err
 	}
 
+	progress := math.Min(math.Max(ar.Progress, 0), 1)
+
 	out := newError(
 		"E_ASSET_NOT_READY",
-		"the asset %s is %s; it cannot be used until its ingest ends.",
+		"the asset %s is %s (%d%% done); it cannot be used until its ingest ends.",
 		id,
 		ar.IngestState,
+		int(math.Round(progress*100)),
 	).
-		withHint("poll job:show (or media:list) until the asset is ready, then repeat the edit")
+		withHint("call media_inspect with asset_id %s until its state is ready, then repeat the edit", id).
+		withDetail("asset_id", id).
+		withDetail("state", string(ar.IngestState)).
+		withDetail("progress", progress)
 	out.OpIndex, out.Path = se.OpIndex, se.Path
 
 	return out

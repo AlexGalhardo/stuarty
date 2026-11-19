@@ -3,12 +3,14 @@ package service
 import (
 	"context"
 	"errors"
+	"slices"
 	"strconv"
 	"strings"
 	"unicode/utf8"
 
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/core/project"
+	corepub "github.com/AlexGalhardo/stuarty/core/publish"
 	"github.com/AlexGalhardo/stuarty/core/timeline"
 	"github.com/AlexGalhardo/stuarty/core/timeval"
 	"github.com/AlexGalhardo/stuarty/service/textview"
@@ -131,6 +133,14 @@ func (s *svc) loadProduction(ctx context.Context, repo ProductionRepo, c Caller,
 		}
 	}
 
+	// A key limited to one project reaches that project only, whatever id names it. An id that resolves to
+	// another project and one that resolves to nothing are refused alike, as resolveTimeline refuses them, so
+	// the answer does not say whether the id exists.
+	if c.ProjectID != "" && (err != nil && id != c.ProjectID || err == nil && head.ID != c.ProjectID) {
+		return ProductionHead{}, newError(CodeForbidden, "the key is limited to another project.").
+			withHint("use a key that covers this project")
+	}
+
 	if err != nil || !visible(c, head.OwnerUserID) {
 		return ProductionHead{}, projectNotFound(id, err)
 	}
@@ -150,9 +160,56 @@ func coreItems(rows []ItemRow) []project.Item {
 		if r.Kind == string(project.Brief) || r.Kind == string(project.Text) {
 			out[i].Text = r.Body
 		}
+
+		// The status of a publication is read from its targets (withPublications keeps it in Ref).
+		if r.Kind == string(project.Publication) {
+			out[i].Status = r.Ref
+		}
 	}
 
 	return out
+}
+
+// withPublications adds the publications of a project to its items (ADR-0039, SDD-020 section 23): a
+// publication is an item of the project, kept in its own tables, so it is read from them. Its Ref holds the
+// status the core rolls up from its targets and its Format the networks they go to. Nothing is added when the
+// publications cannot be read: the overview is still the production.
+func (s *svc) withPublications(ctx context.Context, projectID string, rows []ItemRow) []ItemRow {
+	list, err := s.store.Publications().OfProject(ctx, projectID)
+	if err != nil {
+		s.log.WarnContext(
+			ctx,
+			"the publications of a project were not read",
+			"project",
+			projectID,
+			"error",
+			err.Error(),
+		)
+
+		return rows
+	}
+
+	for i := range list {
+		p := &list[i]
+		states := make([]corepub.TargetState, 0, len(p.Targets))
+		networks := make([]string, 0, len(p.Targets))
+
+		for j := range p.Targets {
+			states = append(states, p.Targets[j].State)
+
+			if !slices.Contains(networks, p.Targets[j].Network) {
+				networks = append(networks, p.Targets[j].Network)
+			}
+		}
+
+		rows = append(rows, ItemRow{
+			ID: p.ID, ProjectID: projectID, Kind: string(project.Publication), Title: p.Title, Position: len(rows),
+			State: ProjectActive, Ref: corepub.ItemStatus(states), Format: strings.Join(networks, ","),
+			CreatedMs: p.CreatedAt.UnixMilli(), UpdatedMs: p.UpdatedAt.UnixMilli(), CreatedBy: p.CreatedBy,
+		})
+	}
+
+	return rows
 }
 
 func itemView(r *ItemRow, withText bool) ProjectItem {
@@ -166,6 +223,10 @@ func itemView(r *ItemRow, withText bool) ProjectItem {
 		it.TimelineID = r.Ref
 	case string(project.Output):
 		it.JobID = r.Ref
+	case string(project.Text):
+		it.TextKind = r.TextKind
+	case string(project.Publication):
+		it.Status = r.Ref
 	}
 
 	if withText {
@@ -302,7 +363,7 @@ func (s *svc) itemResult(head *ProductionHead, rows []ItemRow, id string) *Proje
 
 // BriefGet reads the brief of a project.
 func (s *svc) BriefGet(ctx context.Context, req BriefGetRequest) (*BriefResult, error) {
-	c, err := authorize(ctx, "BriefGet", req.ProjectID)
+	c, err := s.authorizeProject(ctx, "BriefGet", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}
@@ -343,7 +404,7 @@ func briefResult(head *ProductionHead, rows []ItemRow) *BriefResult {
 
 // ProjectDescribe is the text view of a production, for an agent that has never seen it (RF-303).
 func (s *svc) ProjectDescribe(ctx context.Context, req ProjectDescribeRequest) (*ProjectDescribeResult, error) {
-	c, err := authorize(ctx, "ProjectDescribe", req.ProjectID)
+	c, err := s.authorizeProject(ctx, "ProjectDescribe", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}
@@ -364,6 +425,8 @@ func (s *svc) ProjectDescribe(ctx context.Context, req ProjectDescribeRequest) (
 		return nil, asError(err)
 	}
 
+	rows = s.withPublications(ctx, head.ID, rows)
+
 	res := &ProjectDescribeResult{
 		UntrustedNotice: UntrustedNotice, ProjectID: head.ID, Name: head.Name, State: stateString(head.State),
 		Production: productionOf(rows), Items: itemViews(rows),
@@ -382,7 +445,7 @@ func (s *svc) describeText(
 
 	v := textview.ProductionView{
 		ID: head.ID, Name: head.Name, State: stateString(head.State), HasBrief: p.HasBrief, HasScript: p.HasScript,
-		Timelines: p.Timelines, Outputs: p.Outputs, Pending: p.PendingApprovals, Published: p.Published,
+		Texts: p.Texts, Timelines: p.Timelines, Outputs: p.Outputs, Pending: p.PendingApprovals, Published: p.Published,
 	}
 
 	if b := briefOf(rows); b != nil {
@@ -398,6 +461,10 @@ func (s *svc) describeText(
 			l.Detail = s.timelineDetail(ctx, r.Ref)
 		case string(project.Output):
 			l.Detail = "format=" + r.Format + " job=" + r.Ref
+		case string(project.Text):
+			l.Detail = s.textDetail(ctx, r)
+		case string(project.Publication):
+			l.Detail = "networks=" + r.Format + " status=" + r.Ref
 		}
 
 		v.Lines = append(v.Lines, l)
@@ -432,7 +499,7 @@ func (s *svc) timelineDetail(ctx context.Context, id string) string {
 // ProjectDuplicate copies a project: its brief and texts and every active timeline, each timeline as a new
 // document at revision 0 with no log, using the same assets. Outputs are not copied.
 func (s *svc) ProjectDuplicate(ctx context.Context, req ProjectDuplicateRequest) (*ProjectCreateResult, error) {
-	c, err := authorize(ctx, "ProjectDuplicate", req.ProjectID)
+	c, err := s.authorizeProject(ctx, "ProjectDuplicate", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}
@@ -550,6 +617,12 @@ func (s *svc) planDuplicate(
 
 	newProject := s.newIDs(timeline.PrefixProject)
 
+	// The copies are written once every timeline has its new id, so that a composition of the copy names the
+	// copy of its timeline and not the timeline of the original (SDD-001 §3.5.1).
+	var docs []*timeline.Document
+
+	renamed := map[string]string{}
+
 	for i := range rows {
 		r := &rows[i]
 		if r.State != ProjectActive {
@@ -559,8 +632,10 @@ func (s *svc) planDuplicate(
 		it := s.newItem(newProject, r.Kind, r.Title, len(plan.items), c.Actor, now)
 
 		switch r.Kind {
-		case string(project.Brief), string(project.Text):
+		case string(project.Brief):
 			it.Body = r.Body
+		case string(project.Text):
+			it.Body, it.TextKind = r.Body, r.TextKind
 		case string(project.Timeline):
 			trow, terr := tx.Projects().Get(ctx, r.Ref)
 			if terr != nil {
@@ -573,18 +648,18 @@ func (s *svc) planDuplicate(
 			}
 
 			id := newProject
-			if len(plan.timelines) > 0 {
+			if len(docs) > 0 {
 				id = s.newIDs(timeline.PrefixProject)
 			} else {
 				it.Title = name
 			}
 
 			doc.ID = id
-			if len(plan.timelines) == 0 {
+			if len(docs) == 0 {
 				doc.Name = name
 			}
 
-			plan.timelines = append(plan.timelines, s.timelineRow(doc, c, owner, now))
+			docs, renamed[r.Ref] = append(docs, doc), id
 
 			it.Ref = id
 
@@ -603,6 +678,11 @@ func (s *svc) planDuplicate(
 		}
 
 		plan.items = append(plan.items, it)
+	}
+
+	for _, doc := range docs {
+		timeline.RenameCompositions(doc, renamed)
+		plan.timelines = append(plan.timelines, s.timelineRow(doc, c, owner, now))
 	}
 
 	if len(plan.timelines) == 0 {
@@ -636,9 +716,21 @@ func (s *svc) writeDuplicate(ctx context.Context, tx Tx, c Caller, src *Producti
 		}
 	}
 
+	indexed := map[string]bool{}
+
 	for i := range plan.assets {
 		if err := tx.Assets().PutProjectAsset(ctx, plan.assets[i]); err != nil {
 			return err
+		}
+
+		// The copy may belong to an owner with no search row for the file yet (a local copy of a user's
+		// project): the file is found by the names the copy gives it (VV-254).
+		if h := plan.assets[i].AssetHash; !indexed[h] {
+			indexed[h] = true
+
+			if err := tx.AssetLibrary().Reindex(ctx, ownerOf(head.OwnerUserID), h); err != nil {
+				return err
+			}
 		}
 	}
 

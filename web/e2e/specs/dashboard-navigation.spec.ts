@@ -74,25 +74,37 @@ test.describe("dashboard-navigation", () => {
 		await expect(
 			page.getByRole("button", { name: /Switch to (light|dark) theme/ }),
 		).toBeVisible();
-		await expect(page.getByTestId("right-dock")).toBeEmpty();
+		// The right dock holds the agent chat (epic 14): closed, one button and no panel.
+		await expect(
+			page.getByTestId("right-dock").getByTestId("chat-toggle"),
+		).toBeVisible();
+		await expect(page.getByTestId("chat-panel")).toHaveCount(0);
 	});
 
 	for (const lang of ["en", "pt-BR"] as const) {
 		for (const theme of ["light", "dark"] as const) {
 			test(`every section opens in ${theme} in ${lang} with no console error`, async ({
 				page,
+				browserName,
 			}) => {
 				await settle(page);
 				const problems: string[] = [];
 				page.on("console", (message) => {
 					if (message.type() !== "error") return;
-					// The thumbnails of the projects page ask the frame endpoint for every
-					// project, and the workspace of the suite holds hundreds, so the
-					// heavy limit answers 429. That is the content of the projects page
-					// (epic 06), not of the dashboard: only that URL is let through.
-					const url = message.location().url;
-					if (/\/api\/v1\/projects\/prj_\w+\/frame\?/.test(url)) return;
-					problems.push(`${message.text()} ${url}`);
+					// WebKit reports a violation of style-src-attr every time a native
+					// <select> is created (its own user-agent shadow tree, not our markup;
+					// Chromium and Firefox stay silent), and its console line does not name
+					// the directive, so that line is dropped here. The violations themselves
+					// are checked by the page fixture of helpers.ts, across navigations, with
+					// only style-src-attr let through in WebKit (cspViolations): a <style> or
+					// a script without the nonce still fails (VV-263).
+					if (
+						browserName === "webkit" &&
+						message.text().startsWith("Refused to apply a stylesheet")
+					) {
+						return;
+					}
+					problems.push(`${message.text()} ${message.location().url}`);
 				});
 				page.on("pageerror", (error) => problems.push(error.message));
 				await page.addInitScript(
@@ -133,12 +145,14 @@ test.describe("dashboard-navigation", () => {
 		}
 	}
 
-	test("a section that is not built says so and leads to the projects", async ({
+	// Every section but Edit Video has its own page now; Edit Video opens from a project, and its section
+	// says so and leads there.
+	test("a section with no page of its own says so and leads to the projects", async ({
 		page,
 	}) => {
-		await page.goto("/publish");
-		await expect(page.getByTestId("empty-publish")).toContainText(
-			"This section is not available yet",
+		await page.goto("/edit-video");
+		await expect(page.getByTestId("empty-edit-video")).toContainText(
+			"The video editor opens from a project",
 		);
 		await page.getByRole("link", { name: "Go to Projects" }).click();
 		await expect(page).toHaveURL(/\/projects$/);

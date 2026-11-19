@@ -8,6 +8,7 @@ import {
 } from "react";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import {
 	canDropPaths,
@@ -19,7 +20,7 @@ import {
 import { useT } from "@/lib/i18n";
 import { useCanEdit } from "../commands/useActions";
 import { useStore } from "../state/createStore";
-import { useRuntime } from "../state/EditorContext";
+import { useDocumentState, useRuntime } from "../state/EditorContext";
 import EmptyState from "../ui/EmptyState";
 import { errorHeadline } from "../ui/errorHeadline";
 import AssetCard, { type AssetDragStart } from "./AssetCard";
@@ -39,6 +40,8 @@ export default function Library({
 	const t = useT();
 	const canEdit = useCanEdit();
 	const runtime = useRuntime();
+	// A library still waiting for the project is loading, not empty.
+	const loading = useDocumentState((s) => s.status === "loading");
 	const entries = useStore(runtime.library, (s) => s.entries);
 	const dismissed = useStore(runtime.library, (s) => s.dismissed);
 	const importError = useStore(runtime.library, (s) => s.importError);
@@ -175,7 +178,12 @@ export default function Library({
 					)}
 				</div>
 			)}
-			{visible.length === 0 ? (
+			{loading ? (
+				<div aria-busy="true" className="flex flex-col gap-2">
+					<Skeleton className="h-16" />
+					<Skeleton className="h-16" />
+				</div>
+			) : visible.length === 0 ? (
 				<EmptyState
 					icon={Film}
 					title={t("ui.editor.library.empty")}

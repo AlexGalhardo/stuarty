@@ -9,14 +9,16 @@ import (
 // ProjectItem is an item of a production (SDD-003 section 2.3.1).
 type ProjectItem struct {
 	ID         string    `json:"id"`
-	Kind       string    `json:"kind"` // "brief" | "text" | "timeline" | "output"
+	Kind       string    `json:"kind"` // "brief" | "text" | "timeline" | "output" | "publication"
 	Title      string    `json:"title"                 untrusted:"true"`
 	Position   int       `json:"position"`
 	State      string    `json:"state"`                 // "active" | "trashed"
 	TimelineID string    `json:"timeline_id,omitempty"` // kind timeline
 	JobID      string    `json:"job_id,omitempty"`      // kind output: the export job
-	Format     string    `json:"format,omitempty"`      // kind output: the destination format
+	Format     string    `json:"format,omitempty"`      // kind output: the destination format; publication: its networks
+	Status     string    `json:"status,omitempty"`      // kind publication: pending_approval or published, from its targets
 	Text       string    `json:"text,omitempty"        untrusted:"true"`
+	TextKind   string    `json:"text_kind,omitempty"` // kind text: "script" | "copy" | "caption" (SDD-019)
 	UpdatedAt  time.Time `json:"updated_at"`
 }
 
@@ -50,13 +52,14 @@ type ProjectDuplicateRequest struct {
 // ProjectItemAddRequest adds an item to a production.
 type ProjectItemAddRequest struct {
 	ProjectID string `json:"project_id"`
-	Kind      string `json:"kind"`               // "text", "timeline" or "output"
-	Title     string `json:"title"`              // 1 to 120 characters
-	Position  *int   `json:"position,omitempty"` // default: the end
-	Text      string `json:"text,omitempty"`     // kind text
-	Preset    string `json:"preset,omitempty"`   // kind timeline
-	FPS       string `json:"fps,omitempty"`      // kind timeline
-	JobID     string `json:"job_id,omitempty"`   // kind output: a succeeded export job of this project
+	Kind      string `json:"kind"`                // "text", "timeline" or "output"
+	Title     string `json:"title"`               // 1 to 120 characters
+	Position  *int   `json:"position,omitempty"`  // default: the end
+	Text      string `json:"text,omitempty"`      // kind text
+	TextKind  string `json:"text_kind,omitempty"` // kind text: "script", "copy" (default) or "caption"
+	Preset    string `json:"preset,omitempty"`    // kind timeline
+	FPS       string `json:"fps,omitempty"`       // kind timeline
+	JobID     string `json:"job_id,omitempty"`    // kind output: a succeeded export job of this project
 	DryRun    bool   `json:"dry_run,omitempty"`
 }
 

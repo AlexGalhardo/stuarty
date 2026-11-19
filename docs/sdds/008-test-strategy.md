@@ -120,7 +120,7 @@ The **reference runner** is the GitHub-hosted `ubuntu-latest` runner; absolute l
 | NFR-011 preview tolerance | SSIM 0.97, 1 pixel | `preview-vs-export` | senior-e |
 | NFR-012 old projects open | every released schema version | fixtures per version (section 9) | senior-a |
 | NFR-013 no committed change lost | crash suite | `service/crashtest` | senior-c |
-| NFR-020 tool definitions | 7,200 tokens (interim until epic 13; 6,500 before epic 06) | `TestToolDefinitionBudget` (SDD-003) | senior-d |
+| NFR-020 tool definitions and discovery | 7,300 tokens of `tools/list` (23,400 bytes), 2,650 tokens for the first discovery call | `go run ./internal/tools/surfacebudget` and `TestToolDefinitionBudget` (SDD-003) | senior-d |
 | NFR-021 concise view | pages of at most 4,000 tokens; 200 items in at most two pages | `TestTextBudgets`, `TestPaging` (SDD-003) | senior-d |
 | NFR-022 image cost | 800 and 1,600 image tokens | `TestImageSizeTable` (SDD-003) | senior-b |
 | NFR-023 frame and contact sheet for an agent | frame under 1 s, contact sheet under 2 s, median | `BenchmarkViewFrame`, `BenchmarkViewSheet9` (SDD-003) | senior-b |

@@ -4,13 +4,10 @@ import (
 	"embed"
 	"encoding/json"
 	"fmt"
-	"slices"
 	"strings"
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/santhosh-tekuri/jsonschema/v6"
-
-	"github.com/AlexGalhardo/stuarty/core/command"
 )
 
 // The definitions are the objects of SDD-003 section 4.2, one file per tool,
@@ -25,7 +22,7 @@ var definitionFiles embed.FS
 var order = []string{
 	"project_list", "project_create", "project_get", "project_trash", "edit", "command_help", "history",
 	"media_import", "media_inspect", "view", "lint", "job_start", "job_get", "job_cancel", "template",
-	"font_import", "connection", "image", "project_item",
+	"font_import", "connection", "image", "project_item", "library",
 }
 
 // definition is a tool definition and its compiled input schema.
@@ -34,9 +31,9 @@ type definition struct {
 	input *jsonschema.Schema
 }
 
-// loadDefinitions reads every definition in order. The op enum of edit is cut to
-// the commands the registry has (SDD-003 section 4.1).
-func loadDefinitions(reg *command.Registry) (map[string]*definition, error) {
+// loadDefinitions reads every definition in order. The definitions are the same on every build: the operations
+// of a domain are not in them but in command_help (SDD-003 section 4.8).
+func loadDefinitions() (map[string]*definition, error) {
 	out := make(map[string]*definition, len(order))
 
 	for _, name := range order {
@@ -54,10 +51,6 @@ func loadDefinitions(reg *command.Registry) (map[string]*definition, error) {
 			return nil, fmt.Errorf("mcp: definitions/%s.json defines %q", name, t.Name)
 		}
 
-		if name == "edit" {
-			filterOps(&t, reg)
-		}
-
 		compiled, err := compileInput(&t)
 		if err != nil {
 			return nil, fmt.Errorf("mcp: input schema of %s: %w", name, err)
@@ -67,29 +60,6 @@ func loadDefinitions(reg *command.Registry) (map[string]*definition, error) {
 	}
 
 	return out, nil
-}
-
-// filterOps keeps, in the order of the definition, the operations the build has.
-func filterOps(t *sdk.Tool, reg *command.Registry) {
-	have := reg.Names()
-
-	schema, _ := t.InputSchema.(map[string]any)
-	props, _ := schema["properties"].(map[string]any)
-	ops, _ := props["operations"].(map[string]any)
-	items, _ := ops["items"].(map[string]any)
-	itemProps, _ := items["properties"].(map[string]any)
-	op, _ := itemProps["op"].(map[string]any)
-	enum, _ := op["enum"].([]any)
-
-	kept := make([]any, 0, len(enum))
-
-	for _, e := range enum {
-		if name, ok := e.(string); ok && slices.Contains(have, name) {
-			kept = append(kept, e)
-		}
-	}
-
-	op["enum"] = kept
 }
 
 func compileInput(t *sdk.Tool) (*jsonschema.Schema, error) {

@@ -37,30 +37,49 @@ func Validate(d *Document) []Violation {
 
 	v.layers(d.Layers, "layers", "", 0)
 
+	v.maskSources()
+
 	if n := Count(d); n > MaxLayers {
 		v.add("limit", "layers", "", "the document has %d layers; the limit is %d", n, MaxLayers)
 	}
 
 	for h, a := range d.Assets {
-		if !hashPattern.MatchString(h) || a.Hash != h || a.Width < 1 || a.Height < 1 {
+		sized := a.Kind == "" || a.Kind == AssetImage
+
+		if !hashPattern.MatchString(h) || a.Hash != h || (!sized && !a.isLUT()) ||
+			(sized && (a.Width < 1 || a.Height < 1)) || (a.isLUT() && (a.Width != 0 || a.Height != 0)) {
 			v.add("asset", "assets."+h, "", "the asset entry %q is not valid", h)
 		}
 	}
 
 	if len(d.Assets) > MaxAssets {
-		v.add("limit", "assets", "", "the document uses %d images; the limit is %d", len(d.Assets), MaxAssets)
+		v.add("limit", "assets", "", "the document uses %d files; the limit is %d", len(d.Assets), MaxAssets)
 	}
 
-	used := usedAssets(d)
+	if n := lutCount(d); n > MaxLUTs {
+		v.add("limit", "assets", "", "the document uses %d lookup tables; the limit is %d", n, MaxLUTs)
+	}
 
-	for h := range used {
-		if _, ok := d.Assets[h]; !ok {
+	images, luts := usedAssets(d)
+
+	for h := range images {
+		if a, ok := d.Assets[h]; !ok {
 			v.add("asset", "assets", "", "an image layer uses %s, which is not in assets", h)
+		} else if a.isLUT() {
+			v.add("asset", "assets."+h, "", "an image layer uses %s, which is a lookup table", h)
 		}
 	}
 
-	for h := range d.Assets {
-		if !used[h] {
+	for h := range luts {
+		if a, ok := d.Assets[h]; !ok {
+			v.add("asset", "assets", "", "a layer uses the lookup table %s, which is not in assets", h)
+		} else if !a.isLUT() {
+			v.add("asset", "assets."+h, "", "a layer uses %s as a lookup table, and it is an image", h)
+		}
+	}
+
+	for h, a := range d.Assets {
+		if (a.isLUT() && !luts[h]) || (!a.isLUT() && !images[h]) {
 			v.add("asset", "assets."+h, "", "assets lists %s, which no layer uses", h)
 		}
 	}
@@ -157,6 +176,8 @@ func (v *validator) layer(l *Layer, p string) {
 	if l.Slot != "" {
 		v.slot(l, p)
 	}
+
+	v.look(l, p)
 
 	if l.Kind != KindGroup {
 		if l.W < 1 || l.H < 1 || l.W > MaxBoxSide || l.H > MaxBoxSide {

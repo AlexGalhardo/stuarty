@@ -1,6 +1,6 @@
 {
  "name": "job_start",
- "description": "Start long work. kind=export renders to a workspace file: args {start?, end?, format?, at?}, format mp4 (default), gif, wav, aac or png (the frame at `at`). kind=transcribe makes a transcript: args {asset_id, language?, model?}. Lint errors block export. Returns after wait_ms at most; poll job_get.",
+ "description": "Start long work; args by kind. export: args properties (at: png frame); export_batch: items (export args); transcribe {asset_id, language?, model?}; publish.upload {connection_id, export (job_id), title, made_for_kids, thumbnail?, description?, tags?, visibility?, ai_disclosure?}; with connection_id, model: text.generate {prompt}; image.generate {prompt, size?, count?}; voice.generate {text, voice, format?}; image.edit {image_id, operation, layer_id?, prompt?}; text.draft {item_id, instruction}; video.generate {prompt, seconds?, aspect?, first_frame?}. A person approves; poll job_get.",
  "inputSchema": {
   "type": "object",
   "properties": {
@@ -15,7 +15,15 @@
    "kind": {
     "enum": [
      "export",
-     "transcribe"
+     "export_batch",
+     "transcribe",
+     "text.generate",
+     "image.generate",
+     "voice.generate",
+     "text.draft",
+     "image.edit",
+     "video.generate",
+     "publish.upload"
     ]
    },
    "args": {
@@ -38,6 +46,19 @@
      },
      "at": {
       "type": "string"
+     },
+     "preset": {
+      "type": "string"
+     },
+     "codec": {
+      "enum": [
+       "h264",
+       "hevc",
+       "av1"
+      ]
+     },
+     "items": {
+      "type": "array"
      }
     }
    },
@@ -64,25 +85,10 @@
     "type": "string"
    },
    "state": {
-    "enum": [
-     "queued",
-     "running",
-     "succeeded",
-     "failed",
-     "cancelled"
-    ]
+    "type": "string"
    },
    "progress": {
     "type": "number"
-   },
-   "message": {
-    "type": "string"
-   },
-   "result": {
-    "type": "object"
-   },
-   "error": {
-    "type": "object"
    }
   },
   "required": [

@@ -12,7 +12,7 @@ func init() {
 	Register(Define(Spec{
 		Name:    "caption.import_subtitles",
 		Summary: "Creates one caption per cue of an SRT or WebVTT text.",
-		Description: "Reads the subtitle text (the service or the caller reads the file) and adds one caption for each cue " +
+		Description: "Reads the subtitle text, never a file path (the caller reads the file and sends its content), and adds one caption for each cue " +
 			"on a visual track: the cue time is the caption time, rounded to frames, and its words share the duration " +
 			"in proportion to their character counts. Markup tags and line breaks are dropped. start moves every cue " +
 			"later by that length. The cues must not overlap each other or the items of the track.",
@@ -26,11 +26,11 @@ func init() {
 }
 
 type captionImportArgs struct {
-	TrackID string   `json:"track_id"          desc:"A visual track that receives the captions."                 pattern:"^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
-	Text    string   `json:"text"              desc:"The SRT or WebVTT text."                                                                                           maxlen:"2000000"`
-	Format  string   `json:"format,omitempty"  desc:"srt or vtt; default: vtt when the text starts with WEBVTT."                                                                         enum:"srt,vtt"`
+	TrackID string   `json:"track_id"          desc:"A visual track that receives the captions."                                          pattern:"^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	Text    string   `json:"text"              desc:"The SRT or WebVTT text itself, not a file path: read the file and pass its content."                                                        maxlen:"2000000"`
+	Format  string   `json:"format,omitempty"  desc:"srt or vtt; default: vtt when the text starts with WEBVTT."                                                                                                  enum:"srt,vtt"`
 	Start   Time     `json:"start,omitempty"   desc:"A length added to every cue; default 0."`
-	NewIDs  []string `json:"new_ids,omitempty" desc:"Ids for the created captions, in cue order."                pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	NewIDs  []string `json:"new_ids,omitempty" desc:"Ids for the created captions, in cue order."                                         pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
 }
 
 // msToFrames rounds a time in milliseconds to the nearest frame of the project.
@@ -69,11 +69,11 @@ func applyCaptionImportSubtitles(c *Context, a *captionImportArgs) error {
 	cues, perr := subtitle.Parse(format, a.Text)
 	if perr != nil {
 		return invalidArg("args.text", "args.text is not valid %s: %v.", format, perr).
-			WithHint("Send SubRip or WebVTT text with a time line (00:00:01,000 --> 00:00:02,500) for each cue.")
+			WithHint("Send the content of the SubRip or WebVTT file, not its path, with a time line (00:00:01,000 --> 00:00:02,500) for each cue.")
 	}
 	if len(cues) == 0 {
 		return invalidArg("args.text", "args.text has no cue with text.").
-			WithHint("Send SubRip or WebVTT text with at least one cue.")
+			WithHint("Send the content of the SubRip or WebVTT file, not its path, with at least one cue.")
 	}
 	track, err := c.track(a.TrackID, "args.track_id")
 	if err != nil {

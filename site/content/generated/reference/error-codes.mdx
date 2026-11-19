@@ -7,7 +7,7 @@ description: "Every error code, its HTTP status and whether retrying can help."
 
 An error carries `code`, `message`, `hint` and `retryable`. The CLI exits with `2` for a retryable code and `1` otherwise.
 
-<a id="e_font_unknown"></a><a id="e_id_exists"></a><a id="e_idempotency_mismatch"></a><a id="e_in_use"></a><a id="e_internal"></a><a id="e_invalid_state"></a><a id="e_invalid_time"></a><a id="e_limit"></a><a id="e_not_empty"></a><a id="e_not_found"></a><a id="e_out_of_source"></a><a id="e_overlap"></a><a id="e_revision_conflict"></a><a id="e_slot"></a><a id="e_type_mismatch"></a><a id="e_unknown_command"></a><a id="e_validation"></a><a id="e_asset_not_ready"></a><a id="e_cancelled"></a><a id="e_client_closed"></a><a id="e_connection_destination"></a><a id="e_connection_not_found"></a><a id="e_export_failed"></a><a id="e_ffmpeg_missing"></a><a id="e_file_not_found"></a><a id="e_forbidden"></a><a id="e_ingest_failed"></a><a id="e_limit_exceeded"></a><a id="e_lint_blocking"></a><a id="e_method_not_allowed"></a><a id="e_no_encoder"></a><a id="e_nothing_to_redo"></a><a id="e_nothing_to_undo"></a><a id="e_path_not_allowed"></a><a id="e_payload_too_large"></a><a id="e_queue_full"></a><a id="e_rate_limited"></a><a id="e_transcribe_failed"></a><a id="e_transcribe_unavailable"></a><a id="e_unauthorized"></a><a id="e_unsupported_media"></a><a id="e_vault_locked"></a><a id="e_verify_failed"></a><a id="e_workspace_locked"></a>
+<a id="e_font_unknown"></a><a id="e_id_exists"></a><a id="e_idempotency_mismatch"></a><a id="e_in_use"></a><a id="e_internal"></a><a id="e_invalid_state"></a><a id="e_invalid_time"></a><a id="e_limit"></a><a id="e_not_empty"></a><a id="e_not_found"></a><a id="e_out_of_source"></a><a id="e_overlap"></a><a id="e_revision_conflict"></a><a id="e_slot"></a><a id="e_type_mismatch"></a><a id="e_unknown_command"></a><a id="e_validation"></a><a id="e_agent_not_found"></a><a id="e_agent_unavailable"></a><a id="e_approval_expired"></a><a id="e_approval_not_found"></a><a id="e_asset_not_ready"></a><a id="e_cancelled"></a><a id="e_chat_not_found"></a><a id="e_client_closed"></a><a id="e_connection_destination"></a><a id="e_connection_not_found"></a><a id="e_cost_ceiling"></a><a id="e_export_failed"></a><a id="e_ffmpeg_missing"></a><a id="e_file_not_found"></a><a id="e_forbidden"></a><a id="e_ingest_failed"></a><a id="e_limit_exceeded"></a><a id="e_lint_blocking"></a><a id="e_method_not_allowed"></a><a id="e_no_encoder"></a><a id="e_nothing_to_redo"></a><a id="e_nothing_to_undo"></a><a id="e_path_not_allowed"></a><a id="e_payload_too_large"></a><a id="e_price_unknown"></a><a id="e_privileged_session"></a><a id="e_provider"></a><a id="e_publish"></a><a id="e_queue_full"></a><a id="e_rate_limited"></a><a id="e_transcribe_failed"></a><a id="e_transcribe_unavailable"></a><a id="e_unauthorized"></a><a id="e_unsupported_media"></a><a id="e_vault_locked"></a><a id="e_verify_failed"></a><a id="e_workspace_locked"></a>
 
 ## Errors of the editing commands
 
@@ -39,11 +39,17 @@ Raised around the commands: sign-in, imports, exports, jobs and limits. They app
 
 | Code | HTTP | Retryable | Meaning |
 | --- | --- | --- | --- |
-| `E_ASSET_NOT_READY` | 409 | yes | the asset is still ingesting |
+| `E_AGENT_NOT_FOUND` | 500 | no | the agent profile does not exist (SDD-017 §11) |
+| `E_AGENT_UNAVAILABLE` | 500 | no | the hosted agent could not be started or opened; `details.reason` `not_found`, `start_failed`, `exited`, `timeout`, `protocol`, `protocol_version`, `no_http_mcp`, `sign_in_required`, `limit` (SDD-017 §11) |
+| `E_APPROVAL_EXPIRED` | 409 | no | in the error of a job whose approval request expired before a person answered (SDD-015 §3) |
+| `E_APPROVAL_NOT_FOUND` | 404 | no | the approval request or the approval rule does not exist (SDD-015 §8) |
+| `E_ASSET_NOT_READY` | 409 | yes | the asset is still ingesting; `details` has `asset_id`, `state` and `progress` (0 to 1) when an edit names it |
 | `E_CANCELLED` | 500 | no | the job was cancelled |
+| `E_CHAT_NOT_FOUND` | 500 | no | the chat session does not exist, or the caller may not see its project (SDD-017 §11) |
 | `E_CLIENT_CLOSED` | 499 | no | the caller closed the request (or its deadline passed) before the answer; status 499, logged below error level, never a server fault |
 | `E_CONNECTION_DESTINATION` | 403 | no | a request through a connection is for a host or a scheme it does not allow (SDD-014 §6) |
 | `E_CONNECTION_NOT_FOUND` | 404 | no | the connection does not exist or was removed (SDD-014 §7) |
+| `E_COST_CEILING` | 422 | no | an estimate is over a cost ceiling; `details` hold `scope`, `reason`, `limit_micros`, `spent_micros`, `estimate_micros`, `currency`; nothing was spent (SDD-015 §6) |
 | `E_EXPORT_FAILED` | 500 | no | the export process failed; `details.reason` |
 | `E_FFMPEG_MISSING` | 503 | no | no usable FFmpeg was found |
 | `E_FILE_NOT_FOUND` | 404 | no | the path does not exist or cannot be read |
@@ -52,11 +58,15 @@ Raised around the commands: sign-in, imports, exports, jobs and limits. They app
 | `E_LIMIT_EXCEEDED` | 422 | no | a configured ceiling (file size, duration, resolution) is exceeded |
 | `E_LINT_BLOCKING` | 422 | no | an export was refused because the lint has errors; `details.findings` |
 | `E_METHOD_NOT_ALLOWED` | 405 | no | HTTP only: the route does not answer that method; `OPTIONS` is always refused (no CORS, SDD-007 §3.6) |
-| `E_NO_ENCODER` | 503 | no | no H.264 encoder works on this machine |
+| `E_NO_ENCODER` | 503 | no | no encoder works on this machine for the codec the export needs (H.264, or the `details.codec` that was asked for: `hevc` or `av1`, SDD-004 section 8.3); `details.reason` `codec_unavailable` and `details.candidates` |
 | `E_NOTHING_TO_REDO` | 409 | no | the actor has no step to undo or redo |
 | `E_NOTHING_TO_UNDO` | 409 | no | the actor has no step to undo or redo |
 | `E_PATH_NOT_ALLOWED` | 403 | no | a path is outside the allowed import roots or is not a regular file |
 | `E_PAYLOAD_TOO_LARGE` | 413 | no | a request or batch is too large |
+| `E_PRICE_UNKNOWN` | 422 | no | no price is known for the model of a generation, so no estimate can be made; `details` hold `provider` and `model` (SDD-016 §4.2) |
+| `E_PRIVILEGED_SESSION` | 403 | no | the operation is for a person in a privileged browser session; the caller is the local token, a key or an agent surface (SDD-015 §4) |
+| `E_PROVIDER` | 502 | no | an AI provider refused or failed a request; `details.kind` is `auth`, `rate_limited`, `bad_request`, `unavailable`, `unreadable`, `refused` (a prompt the provider declined) or `timeout`, with `status`, `code` and `retry_after_seconds` when known; the body of the provider is never in it (SDD-016 §8) |
+| `E_PUBLISH` | 502 | no | a network refused or failed a publication; `details.kind` is `quota`, `not_eligible`, `auth`, `invalid`, `rejected` or `unavailable`, with `network` and, for a quota, `retry_after`; the `retryable` of the error is true for the kinds `quota`, `auth` and `unavailable` (SDD-020 §7.3) |
 | `E_QUEUE_FULL` | 429 | yes | a concurrency limit is reached; `details.limit` names it (`exports`, `exports_per_key`, `ingests`, `transcribes`, `streams`, `frames`) with `value` and `ceiling`, and `details.running` lists the jobs of a job queue |
 | `E_RATE_LIMITED` | 429 | yes | the caller sent too many requests; the answer carries `Retry-After`, and `details` has `retry_after`, `limit`, `value` and `ceiling` |
 | `E_TRANSCRIBE_FAILED` | 500 | no | a transcription ran and failed (no output, provider error, no word timings); `details.reason` |

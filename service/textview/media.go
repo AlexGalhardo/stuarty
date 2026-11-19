@@ -165,6 +165,10 @@ type JobView struct {
 	Error    string   // the error text, for a failed job
 	Warnings []string // notes about the job, one line each
 	Waited   bool     // a wait elapsed without a final state
+	Estimate string   // the estimated cost of a generation, before it runs
+	Cost     string   // the real cost of a finished generation
+	Output   string   // the text a model wrote, already delimited as untrusted text
+	Files    []string // the assets a generation stored, one line each: id, kind and size
 }
 
 // Job renders one job (SDD-003 section 3.9).
@@ -197,6 +201,22 @@ func Job(j JobView) string {
 		}
 
 		b.WriteString(" " + j.SizeText)
+	}
+
+	if j.Estimate != "" {
+		b.WriteString("\nestimated cost " + j.Estimate)
+	}
+
+	if j.State == "succeeded" && j.Output != "" {
+		b.WriteString("\ncost " + j.Cost + "\n" + j.Output)
+	}
+
+	if j.State == "succeeded" && len(j.Files) > 0 {
+		b.WriteString("\ncost " + j.Cost)
+
+		for _, f := range j.Files {
+			b.WriteString("\nasset " + oneLine(f, 120))
+		}
 	}
 
 	for _, w := range j.Warnings {

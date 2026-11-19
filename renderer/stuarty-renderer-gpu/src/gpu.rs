@@ -4,7 +4,9 @@ use core::fmt;
 use std::mem::size_of;
 
 use stuarty_renderer::blend::BlendMode;
-use stuarty_renderer::compose::{Layer, Prepared, Target, copy_origin, frame_fill, prepare_layer};
+use stuarty_renderer::compose::{
+	Layer, Prepared, Target, copy_origin, frame_fill, prepare_clipped, prepare_layer,
+};
 use stuarty_renderer::effects::Direction;
 use stuarty_renderer::error::{Error, Reason};
 use stuarty_renderer::host::Renderer;
@@ -220,9 +222,20 @@ impl GpuRenderer {
 		}
 		let out = &mut *dst.pix;
 
+		// A layer with a clip is drawn into a frame-sized image by the CPU path, with the coverage of
+		// the clip, and drawn here as a copy; a stencil is not drawn (SDD-013 section 3.11.4).
 		let prepared: Vec<Prepared<'_>> = layers
 			.iter()
-			.filter_map(|l| prepare_layer(l, out_scale))
+			.enumerate()
+			.filter_map(|(i, l)| {
+				if l.ext.stencil {
+					None
+				} else if l.ext.clip.is_some() {
+					prepare_clipped(layers, i, width, height, &rows, out_scale)
+				} else {
+					prepare_layer(l, out_scale)
+				}
+			})
 			.collect();
 		let limit = self.device.limits().max_texture_dimension_2d as usize;
 		if prepared
@@ -463,20 +476,28 @@ fn layer_bytes(w: usize, h: usize, op: u32, blend: BlendMode) -> Vec<u8> {
 		BlendMode::Screen => 2,
 		BlendMode::Overlay => 3,
 		BlendMode::Add => 4,
+		BlendMode::SoftLight => 5,
+		BlendMode::HardLight => 6,
+		BlendMode::Darken => 7,
+		BlendMode::Lighten => 8,
+		BlendMode::ColorDodge => 9,
+		BlendMode::ColorBurn => 10,
+		BlendMode::Difference => 11,
 	};
 	let mut v = f32_bytes(&[w as f32, h as f32, op as f32 / 255.0]);
 	v.extend_from_slice(&mode.to_le_bytes());
 	v
 }
 
-/// The uniform of a layer's mask: four `vec4<f32>`, all zero when the layer has none. The first
+/// The uniform of a layer's mask: five `vec4<f32>`, all zero when the layer has none. The first
 /// holds the map of `x` and the enabled flag (1 a shape, 2 a wipe only), the second the map of `y`
 /// and the direction of a wipe (1 left, 2 right, 3 up, 4 down, 0 none), the third the corner and
-/// half-extents of the shape and the fourth the feather, the shape, the invert flag and the edge
-/// of the wipe in pixels.
+/// half-extents of the shape and the fourth the feather, the shape (0 rectangle, 1 ellipse, 2
+/// rounded rectangle), the invert flag and the edge of the wipe in pixels; the fifth holds the
+/// corner radius of a rounded rectangle.
 fn mask_bytes(m: Option<&MaskGeometry>) -> Vec<u8> {
 	let Some(m) = m else {
-		return f32_bytes(&[0.0; 16]);
+		return f32_bytes(&[0.0; 20]);
 	};
 	let flag = |b: bool| if b { 1.0 } else { 0.0 };
 	let (dir, edge) = match m.wipe {
@@ -500,9 +521,13 @@ fn mask_bytes(m: Option<&MaskGeometry>) -> Vec<u8> {
 		m.half_w as f32,
 		m.half_h as f32,
 		m.feather as f32,
-		flag(m.ellipse),
+		if m.rounded { 2.0 } else { flag(m.ellipse) },
 		flag(m.invert),
 		edge,
+		m.radius as f32,
+		0.0,
+		0.0,
+		0.0,
 	])
 }
 

@@ -11,6 +11,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -200,6 +201,28 @@ func TestOpenRemoteURLReadsNoLocalFile(t *testing.T) {
 	var we *Error
 	if _, err := Open(context.Background(), o); !errors.As(err, &we) || we.Code != CodeUnauthorized {
 		t.Errorf("missing key: err = %v, want %s", err, CodeUnauthorized)
+	}
+}
+
+// InProcess writes the local workspace only: with STUARTY_URL set it refuses and names the variable, with
+// or without a key, and touches no folder, instead of answering with a remote session that has no folder
+// (VV-272: user:create, user:passwd, token:rotate and workspace:restore wrote into the current directory).
+func TestOpenInProcessRefusesARemoteURL(t *testing.T) {
+	t.Parallel()
+	home := t.TempDir() + "/never-created"
+	for _, key := range []string{"k", ""} {
+		o := Options{
+			Force:  InProcess,
+			Getenv: openEnv(home, map[string]string{EnvURL: "https://videos.example.org", EnvKey: key}),
+		}
+		s, err := Open(context.Background(), o)
+		var we *Error
+		if !errors.As(err, &we) || we.Code != CodeInvalidState || !strings.Contains(we.Message, EnvURL) {
+			t.Errorf("key %q: session %+v, err = %v, want %s naming %s", key, s, err, CodeInvalidState, EnvURL)
+		}
+	}
+	if _, err := os.Stat(home); err == nil {
+		t.Error("the workspace must not be touched when STUARTY_URL is set")
 	}
 }
 
@@ -666,5 +689,40 @@ func TestRuntimeSecretIsPrivatePerRunAndRemovedWithRuntime(t *testing.T) {
 
 	if _, err := d.LoadRuntimeSecret(); !errors.Is(err, fs.ErrNotExist) {
 		t.Errorf("after RemoveRuntime: %v, want not exist", err)
+	}
+}
+
+// VV-252: an owner that holds the lock but does not answer in time (slow, not
+// absent) is never replaced by in-process access. Every probe is held until
+// the client gives up on it, so each one misses by construction; Open waits
+// out its limit and reports E_WORKSPACE_LOCKED.
+func TestOpenSlowOwnerHoldingTheLockIsNeverReplacedByInProcess(t *testing.T) {
+	t.Parallel()
+	home := t.TempDir()
+	d := Dir(home)
+	holder, err := d.TryLock()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer holder.Release()
+
+	var probes atomic.Int32
+	srv := httptest.NewServer(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
+		probes.Add(1)
+		<-r.Context().Done()
+	}))
+	t.Cleanup(srv.Close)
+	advertise(t, d, srv, ModeLocal)
+
+	o := fast(home)
+	o.Wait = 300 * time.Millisecond
+	o.Client = &http.Client{Timeout: 20 * time.Millisecond}
+	s, err := Open(context.Background(), o)
+	if s != nil {
+		t.Fatalf("session = %+v, want none: a slow owner must not be replaced", s)
+	}
+	lockedCode(t, err)
+	if probes.Load() == 0 {
+		t.Error("the owner was never probed")
 	}
 }

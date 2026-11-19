@@ -1,0 +1,23 @@
+{
+	"name": "composition-speed",
+	"actor": "contract",
+	"steps": [
+		{"call": "ProjectCreate", "args": {"id": "prj_7k2m9x4q1b", "name": "Intro at speed"}},
+		{"call": "ProjectItemAdd", "args": {"project_id": "prj_7k2m9x4q1b", "kind": "timeline", "title": "Intro", "preset": "16:9"}},
+		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "timeline_id": "prj_7k2m9x4q1b", "base_revision": 0, "operations": [
+			{"op": "track.add", "args": {"kind": "visual", "name": "Video", "id": "trk_f6g7h8j9k0"}}]}},
+		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "timeline_id": "$timeline:0", "base_revision": 0, "operations": [
+			{"op": "track.add", "args": {"kind": "visual", "name": "Titles", "id": "trk_m1n2p3q4r5"}},
+			{"op": "text.add", "args": {"track_id": "trk_m1n2p3q4r5", "start": "0s", "duration": "4s", "text": "Intro", "id": "itm_t1t2t3t4t5"}}]}},
+		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "timeline_id": "prj_7k2m9x4q1b", "base_revision": 1, "operations": [
+			{"op": "clip.add_composition", "args": {"track_id": "trk_f6g7h8j9k0", "timeline_id": "$timeline:0", "start": "0s", "id": "itm_k1k2k3k4k5"}}]}},
+		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "timeline_id": "prj_7k2m9x4q1b", "base_revision": 2, "operations": [
+			{"op": "clip.set_speed", "args": {"item_id": "itm_k1k2k3k4k5", "speed": "2x"}}]}},
+		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "timeline_id": "prj_7k2m9x4q1b", "base_revision": 3, "operations": [
+			{"op": "clip.set_speed", "args": {"item_id": "itm_k1k2k3k4k5", "curve": [{"t": 0, "speed": "1x"}, {"t": 1, "speed": "2x"}]}}]}, "expect_error": {"code": "E_VALIDATION"}},
+		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "timeline_id": "prj_7k2m9x4q1b", "base_revision": 3, "operations": [
+			{"op": "clip.set_speed", "args": {"item_id": "itm_k1k2k3k4k5", "reverse": true}}]}, "expect_error": {"code": "E_VALIDATION"}},
+		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "timeline_id": "prj_7k2m9x4q1b", "base_revision": 3, "operations": [
+			{"op": "clip.set_speed", "args": {"item_id": "itm_k1k2k3k4k5", "speed": "0.5x"}}]}}
+	]
+}

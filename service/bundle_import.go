@@ -16,11 +16,14 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/AlexGalhardo/stuarty/core/asset"
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/core/project"
 	"github.com/AlexGalhardo/stuarty/core/timeline"
 	"github.com/AlexGalhardo/stuarty/core/timeval"
+	"github.com/AlexGalhardo/stuarty/core/writing"
 	enginestore "github.com/AlexGalhardo/stuarty/engine/store"
+	assetlib "github.com/AlexGalhardo/stuarty/service/assets"
 	"github.com/AlexGalhardo/stuarty/service/crashpoint"
 	"github.com/AlexGalhardo/stuarty/service/textview"
 )
@@ -153,6 +156,16 @@ func (s *svc) ProjectBundleImport(ctx context.Context, req ProjectBundleImportRe
 
 	if err := s.numberImportedTimelines(ctx, parts, req.AsNew); err != nil {
 		return nil, err
+	}
+
+	// A copy gives the timelines new ids: its compositions use the copies (SDD-001 §3.5.1).
+	renamed := map[string]string{}
+	for _, t := range parts.timelines() {
+		renamed[t.id] = t.doc.ID
+	}
+
+	for _, t := range parts.timelines() {
+		timeline.RenameCompositions(t.doc, renamed)
 	}
 
 	revision := parts.main.newRevision(req.AsNew)
@@ -363,6 +376,10 @@ func (s *svc) putImportedProduction(ctx context.Context, tx Tx, p *bundleParts) 
 		it := s.newItem(row.ID, bi.Kind, bi.Title, i, row.CreatedBy, row.CreatedMs)
 		it.Body, it.Format = p.texts[i], bi.Format
 
+		if bi.Kind == string(project.Text) {
+			it.TextKind = bi.TextKind
+		}
+
 		if bi.Kind == string(project.Timeline) {
 			it.Ref = byKey[bi.Timeline].row.ID
 		}
@@ -486,6 +503,14 @@ func (s *svc) linkBundleAssets(
 			if _, err := s.ensureIngestJob(ctx, tx, a.Hash, c.Actor, now); err != nil {
 				return err
 			}
+		}
+
+		// The library side belongs to the owner who imports the bundle, which also makes the file found by name.
+		if err := assetlib.RecordImport(
+			ctx, tx.AssetLibrary(), c.OwnerUserID, a.Hash, asset.Origin{Kind: asset.Imported}, assetlib.ImportInfo{},
+			c.Actor, now,
+		); err != nil {
+			return err
 		}
 	}
 
@@ -831,6 +856,13 @@ func checkBundleProduction(m *BundleManifest) *Error {
 func checkBundleItem(it *BundleItem, keys, used map[string]bool) string {
 	if !project.Kind(it.Kind).Allowed() || project.CheckTitle(it.Title) != nil || len(it.Format) > 16 {
 		return "an item of the project is not valid"
+	}
+
+	// A text kind belongs to a text, and is one of the three (a bundle of before epic 17 has none: it is a copy).
+	if it.TextKind != "" {
+		if _, v := writing.CheckKind(it.TextKind); v != nil || it.Kind != string(project.Text) {
+			return "an item declares a text kind that is not valid"
+		}
 	}
 
 	// Only a brief or a text has a text, and its entry is at most the limit of a text.

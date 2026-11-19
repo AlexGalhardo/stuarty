@@ -24,11 +24,22 @@ type Rect struct {
 // LayerKind says how a layer is drawn.
 type LayerKind string
 
-// The two kinds of layer: pixels of a media asset, or a bitmap the rasterizer draws.
+// The kinds of layer: pixels of a media asset, a bitmap the rasterizer draws, or a group, the layers of a
+// nested timeline that an executor draws on a surface of their own before it places that surface as one layer
+// (SDD-004 §3.16, SDD-013 §3.12).
 const (
 	Media  LayerKind = "media"
 	Bitmap LayerKind = "bitmap"
+	Group  LayerKind = "group"
 )
+
+// GroupSpec is the nested frame of a group layer: its own size in pixels and its layers, bottom first, placed
+// in that frame. The surface the executor makes is transparent where the layers draw nothing.
+type GroupSpec struct {
+	Width  int     `json:"width"`
+	Height int     `json:"height"`
+	Layers []Layer `json:"layers"`
+}
 
 // FramePlan is what one frame contains (SDD-004 §2).
 type FramePlan struct {
@@ -57,6 +68,9 @@ type Layer struct {
 	// Bitmap layers (text, caption, shape items).
 	Bitmap *BitmapSpec `json:"bitmap,omitempty"`
 
+	// Group layers (composition items that draw as one unit): the nested frame. Crop is the whole nested frame.
+	Group *GroupSpec `json:"group,omitempty"`
+
 	// Both kinds (SDD-004 §3.6): the filter matrix, applied after ColorMatrix and
 	// before the blur, and the blur radius in frame pixels. Nil and 0 mean none;
 	// filters and blur are drawn in Go by the compositor, never by FFmpeg.
@@ -77,6 +91,18 @@ type Layer struct {
 
 	// Mask limits where the layer is drawn (SDD-004 §3.9); nil means no mask.
 	Mask *MaskSpec `json:"mask,omitempty"`
+
+	// Tone is the 256-entry table of the exposure, levels and curve of an image layer, applied to every colour
+	// channel before the colour matrix (SDD-013 §3.11.1); nil means none.
+	Tone *[256]uint8 `json:"tone,omitempty"`
+
+	// Filters are the ordered pixel filters of an image layer, drawn after the blur (SDD-013 §3.11.3).
+	Filters []FilterSpec `json:"filters,omitempty"`
+
+	// Clip limits the layer to the alpha of another layer of the plan; Stencil marks a layer that only gives
+	// that alpha and is not drawn (SDD-013 §3.11.4).
+	Clip    *ClipSpec `json:"clip,omitempty"`
+	Stencil bool      `json:"stencil,omitempty"`
 
 	// Shadow and Outline are the drop shadow and the contour of a media layer (SDD-004 §3.15); nil means none.
 	Shadow  *ShadowSpec  `json:"shadow,omitempty"`
@@ -148,6 +174,32 @@ type MaskSpec struct {
 	Height  float64 `json:"height"`
 	Feather int     `json:"feather,omitempty"`
 	Invert  bool    `json:"invert,omitempty"`
+	Radius  int     `json:"radius,omitempty"` // the corner of shape rounded_rect, in project pixels
+}
+
+// ClipSpec is the mask of a layer from the alpha of another layer, named by its item id (SDD-013 §3.11.4).
+type ClipSpec struct {
+	Source string `json:"source"`
+	Invert bool   `json:"invert,omitempty"`
+}
+
+// FilterSpec is one pixel filter of an image layer (SDD-013 §3.11.3): the kind and the members it uses, the
+// others absent. Kinds: matrix, blur, sharpen, vignette, grain, shadow, stroke and outer_glow.
+type FilterSpec struct {
+	Kind     string       `json:"kind"`
+	Matrix   *[12]float64 `json:"matrix,omitempty"`
+	Sigma    float64      `json:"sigma,omitempty"`
+	Amount   float64      `json:"amount,omitempty"`
+	Radius   float64      `json:"radius,omitempty"`
+	Softness float64      `json:"softness,omitempty"`
+	Size     int          `json:"size,omitempty"`
+	Seed     int          `json:"seed,omitempty"`
+	Color    string       `json:"color,omitempty"`
+	Opacity  float64      `json:"opacity,omitempty"`
+	DX       float64      `json:"dx,omitempty"`
+	DY       float64      `json:"dy,omitempty"`
+	Blur     float64      `json:"blur,omitempty"`
+	Width    float64      `json:"width,omitempty"`
 }
 
 // BitmapSpec says what the rasterizer draws (SDD-004 §5). It lives here so
@@ -226,9 +278,16 @@ func (s BitmapSpec) Key() string {
 // anchored by its centre on the edge.
 type Measurer func(BitmapSpec) (w, h float64)
 
+// Nested gives the document of a timeline of the same project by its id, for the composition items of a
+// document (SDD-004 §3.16). The plan is pure and reads no store, so the caller that has the project answers it;
+// a nil Nested, or an id it does not know, makes the composition draw and sound nothing.
+type Nested func(id string) (*timeline.Document, bool)
+
 // Options configure FrameWith and WindowWith.
 type Options struct {
 	Measure Measurer
+	// Nested resolves the timelines that composition items use; see Nested.
+	Nested Nested
 	// OutputScale is width / project width of the frame asked for; 0 means 1 (export).
 	// It enters the oversampling of bitmap layers (SDD-004 §5.3).
 	OutputScale float64

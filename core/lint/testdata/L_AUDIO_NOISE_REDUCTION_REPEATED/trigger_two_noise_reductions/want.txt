@@ -1,0 +1,4 @@
+lint r1 prj_7k2m9x4q1b: errors=0 warnings=1 (showing 1 of 1)
+warning L_AUDIO_NOISE_REDUCTION_REPEATED itm_m 0s/0f-5s/150f
+  The chain of itm_m has a second noise reduction at place 2.
+  hint: remove one

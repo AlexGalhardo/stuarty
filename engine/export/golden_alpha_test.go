@@ -34,6 +34,9 @@ var requiredCases = []string{
 	"crop",
 	"crop-animated",
 	"crop-still",
+	"crop-animated-bezier",
+	"mask-animated-bezier",
+	"easing-bezier-scale",
 	"pip-opacity",
 	"rotation",
 	"transition-fade",
@@ -78,6 +81,10 @@ var requiredCases = []string{
 	"blend-screen",
 	"blend-overlay",
 	"blend-add",
+	"blend-multiply-transparent",
+	"blend-screen-transparent",
+	"blend-overlay-transparent",
+	"blend-add-transparent",
 	"mask-rect",
 	"mask-animated",
 	"mask-ellipse-feather",
@@ -221,6 +228,14 @@ func (b *caseBuilder) backdrop(dur int) {
 	b.clip(b.track(), b.video(portrait), 0, dur, nil)
 }
 
+// bezierKey is the first keyframe of a segment that follows a cubic Bezier curve.
+func bezierKey(v float64, curve ...float64) timeline.Keyframe {
+	k := timeline.NewKeyframe(0, v)
+	k.Easing, k.Bezier = timeline.EasingBezier, curve
+
+	return k
+}
+
 func transitionCase(kind string) alphaCase {
 	return transitionOf(timeline.Transition{Kind: kind, Duration: 8})
 }
@@ -340,6 +355,30 @@ func blendCase(mode string) alphaCase {
 	return b.build(0, 15, 29)
 }
 
+// blendTransparentCase draws, on a transparent background, a clip at half opacity, an opaque clip and,
+// over both, an opaque clip with a blend mode: the blended clip lands on transparent pixels (SDD-013
+// section 3.11.2, a destination with alpha 0), on half-transparent ones (the general form with
+// 0 < da < 255) and on opaque ones (SDD-004 section 3.8). It covers the whole half-opacity clip, so
+// every pixel of the frame has alpha 0 or 255 and the PNG round trip keeps every byte of the reference
+// (the encoder stores straight alpha).
+func blendTransparentCase(mode string) alphaCase {
+	b := newCase("blend "+mode+" on a transparent frame", rate(30, 1))
+	b.doc.Settings.Background = timeline.BackgroundTransparent
+	b.clip(b.track(), b.video(landscape), 0, 30, func(it *timeline.Item) {
+		it.Fit, it.Scale, it.Opacity = "contain", 0.3, 0.5
+		it.X, it.Y = new(55.0), new(160.0)
+	})
+	b.clip(b.track(), b.video(landscape), 0, 30, func(it *timeline.Item) {
+		it.Fit, it.Scale = "contain", 0.3
+		it.X, it.Y = new(130.0), new(160.0)
+	})
+	b.clip(b.track(), b.video(landscape), 0, 30, func(it *timeline.Item) {
+		it.Fit, it.Scale, it.Blend = "contain", 0.6, mode
+		it.X, it.Y = new(70.0), new(160.0)
+	})
+	return b.build(0, 15, 29)
+}
+
 // maskCase draws a clip through a mask over the portrait clip; edit sets what else the item has.
 func maskCase(name string, m timeline.Mask, edit func(it *timeline.Item)) alphaCase {
 	b := newCase("mask "+name, rate(30, 1))
@@ -407,6 +446,34 @@ var alphaCases = map[string]func() alphaCase{
 				}
 			})
 		return b.build(0, 10)
+	},
+	// The curves of epic 31 (SDD-004 section 3.1): the frames in the middle of the segment are where an
+	// eased value differs from a linear one. A frozen source, so the frames differ only by the curve.
+	"easing-bezier-scale": func() alphaCase {
+		b := newCase("a scale with a bezier easing", rate(30, 1))
+		b.backdrop(12)
+		b.clip(b.track(), b.video(landscape), 0, 12, func(it *timeline.Item) {
+			it.Freeze, it.Fit = true, "contain"
+			it.X, it.Y = new(90.0), new(160.0)
+			it.Keyframes = timeline.Keyframes{"scale": {
+				bezierKey(0.4, 0.34, 1.56, 0.64, 1), timeline.NewKeyframe(10, 1),
+			}}
+		})
+		return b.build(0, 2, 4, 5, 7, 10)
+	},
+	// The crop edges swap along an overshooting curve; the plan keeps each window inside the picture.
+	"crop-animated-bezier": func() alphaCase {
+		b := newCase("an animated crop with a bezier easing", rate(30, 1))
+		b.clip(b.track(), b.video(portrait), 0, 11, func(it *timeline.Item) {
+			it.Freeze, it.Fit = true, "none"
+			it.Keyframes = timeline.Keyframes{
+				"crop_left": {bezierKey(0, 0.34, 1.56, 0.64, 1), timeline.NewKeyframe(10, 0.4)},
+				"crop_right": {
+					bezierKey(0.4, 0.34, 1.56, 0.64, 1), timeline.NewKeyframe(10, 0),
+				},
+			}
+		})
+		return b.build(0, 3, 5, 7, 10)
 	},
 	"pip-opacity": func() alphaCase {
 		b := newCase("picture in picture", rate(30, 1))
@@ -552,10 +619,14 @@ var alphaCases = map[string]func() alphaCase{
 		})
 		return b.build(0, 15, 29)
 	},
-	"blend-multiply": func() alphaCase { return blendCase("multiply") },
-	"blend-screen":   func() alphaCase { return blendCase("screen") },
-	"blend-overlay":  func() alphaCase { return blendCase("overlay") },
-	"blend-add":      func() alphaCase { return blendCase("add") },
+	"blend-multiply":             func() alphaCase { return blendCase("multiply") },
+	"blend-screen":               func() alphaCase { return blendCase("screen") },
+	"blend-overlay":              func() alphaCase { return blendCase("overlay") },
+	"blend-add":                  func() alphaCase { return blendCase("add") },
+	"blend-multiply-transparent": func() alphaCase { return blendTransparentCase("multiply") },
+	"blend-screen-transparent":   func() alphaCase { return blendTransparentCase("screen") },
+	"blend-overlay-transparent":  func() alphaCase { return blendTransparentCase("overlay") },
+	"blend-add-transparent":      func() alphaCase { return blendTransparentCase("add") },
 	"mask-rect": func() alphaCase {
 		return maskCase("rect", timeline.Mask{Shape: "rect", X: 0.2, Y: 0.1, Width: 0.6, Height: 0.7}, nil)
 	},
@@ -570,6 +641,18 @@ var alphaCases = map[string]func() alphaCase{
 			}
 		})
 		return b.build(0, 10)
+	},
+	"mask-animated-bezier": func() alphaCase {
+		b := newCase("an animated mask with a bezier easing", rate(30, 1))
+		b.clip(b.track(), b.video(portrait), 0, 11, func(it *timeline.Item) {
+			it.Freeze = true
+			it.Mask = &timeline.Mask{Shape: "ellipse", X: 0.1, Y: 0.2, Width: 0.3, Height: 0.5, Feather: 4}
+			it.Keyframes = timeline.Keyframes{
+				"mask_width": {bezierKey(0.2, 0.34, 1.56, 0.64, 1), timeline.NewKeyframe(10, 0.8)},
+				"mask_x":     {bezierKey(0.1, 0.42, 0, 0.58, 1), timeline.NewKeyframe(10, 0.2)},
+			}
+		})
+		return b.build(0, 3, 5, 7, 10)
 	},
 	"mask-ellipse-feather": func() alphaCase {
 		return maskCase(
@@ -834,7 +917,7 @@ func TestCompositorBandsEqualBlurAndFilter(t *testing.T) {
 		if !strings.HasPrefix(name, "blur-") && !strings.HasPrefix(name, "filter-") &&
 			!strings.HasPrefix(name, "sticker-") && !strings.HasPrefix(name, "chroma-") &&
 			!strings.HasPrefix(name, "blend-") && !strings.HasPrefix(name, "mask-") &&
-			!strings.HasPrefix(name, "crop-") &&
+			!strings.HasPrefix(name, "crop-") && !strings.HasPrefix(name, "easing-") &&
 			!strings.HasPrefix(name, "shadow") && !strings.HasPrefix(name, "outline") &&
 			!strings.HasPrefix(name, "transparent") && !strings.HasPrefix(name, "opaque") &&
 			!strings.HasPrefix(
@@ -856,6 +939,22 @@ func TestCompositorBandsEqualBlurAndFilter(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+// VV-257: the blended clip of the transparent blend cases reaches pixels its mode changes, so no two
+// modes give the same reference; equal references would mean it draws only on alpha 0.
+func TestBlendTransparentCasesDifferByMode(t *testing.T) {
+	modes := []string{"multiply", "screen", "overlay", "add"}
+	for _, f := range readFrames(t, goldenDir("blend-multiply-transparent")) {
+		seen := map[string]string{}
+		for _, mode := range modes {
+			h := sum(readPNG(t, framePNG(goldenDir("blend-"+mode+"-transparent"), f)))
+			if other, ok := seen[h]; ok {
+				t.Errorf("frame %d: blend-%s-transparent and blend-%s-transparent are the same", f, other, mode)
+			}
+			seen[h] = mode
+		}
 	}
 }
 

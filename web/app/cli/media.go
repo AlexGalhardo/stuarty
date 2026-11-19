@@ -35,6 +35,8 @@ var mediaImport = &spec{
 	summary:  "import media files into a project",
 	usage: []string{
 		"stuarty media:import <path>... --project <id> [--asset-id ast_...] [--wait] [--timeout d]",
+		"stuarty media:import --hash sha256:... --project <id>   (a file the library already holds: no copy)",
+		"origin and reuse: [--origin-kind k] [--origin-source s] [--provider p] [--model m] [--prompt t] [--rights-note t] [--engine e] [--engine-version v] [--render-key k] [--tag t] [--reusable] [--description t]",
 		"formats: MP4, MOV, MKV, WebM, AVI, MP3, WAV, FLAC, OGG, PNG, JPEG, WebP, GIF and .cube; not SVG",
 	},
 	example:    "stuarty media:import clip.mov --project prj_7k2m9x4q1b --json",
@@ -42,29 +44,31 @@ var mediaImport = &spec{
 	positional: true,
 	globals:    []string{"wait", "timeout"},
 	write:      true,
-	flags: []flagDef{
+	flags: append([]flagDef{
 		{Name: "asset-id", Kind: kindString, Repeat: true, Usage: "id to give the asset, once per path, in order"},
-	},
+	}, libraryFlags()...),
 	run: runMediaImport,
 }
 
 func runMediaImport(ctx context.Context, c *call) (*output, error) {
 	paths := c.args.Positional
-	if len(paths) == 0 {
-		return nil, validation("", "media:import needs at least one path.")
+	hashes := c.args.all("hash")
+
+	if len(paths)+len(hashes) == 0 {
+		return nil, validation("", "media:import needs at least one path or --hash.")
 	}
 
 	ids := c.args.all("asset-id")
-	if len(ids) > 0 && len(ids) != len(paths) {
+	if len(ids) > 0 && len(ids) != len(paths)+len(hashes) {
 		return nil, validation(
 			"asset-id",
-			"--asset-id must be given once per path: %d paths, %d ids.",
-			len(paths),
+			"--asset-id must be given once per file: %d files, %d ids.",
+			len(paths)+len(hashes),
 			len(ids),
 		)
 	}
 
-	files := make([]service.ImportFile, len(paths))
+	files := make([]service.ImportFile, len(paths)+len(hashes))
 
 	for i, p := range paths {
 		abs, err := c.rt.abs(p)
@@ -79,6 +83,14 @@ func runMediaImport(ctx context.Context, c *call) (*output, error) {
 		}
 	}
 
+	for i, h := range hashes {
+		files[len(paths)+i].Hash = h
+
+		if len(ids) > 0 {
+			files[len(paths)+i].AssetID = ids[len(paths)+i]
+		}
+	}
+
 	if err := c.noWaitInProcess(); err != nil {
 		return nil, err
 	}
@@ -88,6 +100,7 @@ func runMediaImport(ctx context.Context, c *call) (*output, error) {
 	p := c.progress()
 
 	req := service.MediaImportRequest{ProjectID: c.projectID, TimelineID: c.timelineID, Files: files}
+	req.Origin, req.Info = importBlocks(c.args)
 
 	var first *service.MediaImportResult
 
@@ -299,7 +312,9 @@ var export = &spec{
 	timeline: true,
 	summary:  "export a project to a file",
 	usage: []string{
-		"stuarty export --project <id> [--start t] [--end t] [--format f] [--at t] [--wait] [--timeout d] [--out f] [--force]",
+		// The first line is the one of the agent skill, whose size is capped: --timeout is global.
+		"stuarty export --project <id> [--start t] [--end t] [--format f] [--at t] [--preset p] [--codec c] " +
+			"[--wait] [--out f] [--force]",
 	},
 	example: "stuarty export --project prj_7k2m9x4q1b --json",
 	project: true,
@@ -309,6 +324,8 @@ var export = &spec{
 		{Name: "start", Kind: kindString, Usage: "first time to export (default: the start)"},
 		{Name: "end", Kind: kindString, Usage: "end of the export (default: the end of the timeline)"},
 		{Name: "at", Kind: kindString, Usage: "the time of the frame, only with --format png (default: the start)"},
+		{Name: "preset", Kind: kindString, Usage: "a platform preset, as export:presets lists them (mp4 only)"},
+		{Name: "codec", Kind: kindString, Usage: "h264 (default), hevc or av1 (mp4 only)"},
 		{
 			Name:  "format",
 			Kind:  kindString,
@@ -323,9 +340,11 @@ var export = &spec{
 
 		req := service.JobStartRequest{ProjectID: c.projectID, TimelineID: c.timelineID, Kind: service.JobExport}
 
-		if c.args.has("start") || c.args.has("end") || c.args.has("format") || c.args.has("at") {
+		if c.args.has("start") || c.args.has("end") || c.args.has("format") || c.args.has("at") ||
+			c.args.has("preset") || c.args.has("codec") {
 			raw, err := json.Marshal(service.ExportArgs{
 				Start: c.args.str("start"), End: c.args.str("end"), Format: c.args.str("format"), At: c.args.str("at"),
+				Preset: c.args.str("preset"), Codec: c.args.str("codec"),
 			})
 			if err != nil {
 				return nil, err

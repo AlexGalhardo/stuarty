@@ -10,9 +10,12 @@
 
 use stuarty_renderer::blend::BlendMode;
 use stuarty_renderer::chroma::ChromaKeySpec;
-use stuarty_renderer::compose::{Layer, Placement, Source, Target, compose, sample};
+use stuarty_renderer::compose::{
+	Layer, LayerExt, OutlineSpec, Placement, ShadowSpec, Source, Target, compose, sample,
+};
 use stuarty_renderer::effects::{Direction, Effect, FrameInfo, Transition, TransitionKind};
 use stuarty_renderer::error::Reason;
+use stuarty_renderer::filters::FilterOp;
 use stuarty_renderer::grade::{CurvePoint, GradeSpec, HslBand, Wheel};
 use stuarty_renderer::host::{BitmapMetrics, Limits, Renderer};
 use stuarty_renderer::image::Image;
@@ -298,12 +301,19 @@ fn random_image(rng: &mut Rng, premultiplied: bool) -> Image {
 	Image { pix, w, h, opaque }
 }
 
-const BLENDS: [BlendMode; 5] = [
+const BLENDS: [BlendMode; 12] = [
 	BlendMode::Normal,
 	BlendMode::Multiply,
 	BlendMode::Screen,
 	BlendMode::Overlay,
 	BlendMode::Add,
+	BlendMode::SoftLight,
+	BlendMode::HardLight,
+	BlendMode::Darken,
+	BlendMode::Lighten,
+	BlendMode::ColorDodge,
+	BlendMode::ColorBurn,
+	BlendMode::Difference,
 ];
 
 fn mask(rng: &mut Rng) -> MaskSpec {
@@ -314,11 +324,12 @@ fn mask(rng: &mut Rng) -> MaskSpec {
 			rng.below(1001) as f64 / 1000.0
 		}
 	};
-	MaskSpec {
-		shape: if rng.chance(2) {
-			MaskShape::Ellipse
-		} else {
-			MaskShape::Rect
+	let spec = MaskSpec {
+		radius: 0.0,
+		shape: match rng.below(3) {
+			0 => MaskShape::Ellipse,
+			1 => MaskShape::Rect,
+			_ => MaskShape::RoundedRect,
 		},
 		x: fraction(rng),
 		y: fraction(rng),
@@ -330,6 +341,12 @@ fn mask(rng: &mut Rng) -> MaskSpec {
 			rng.below(60) as f64
 		},
 		invert: rng.chance(2),
+	};
+	// The corner radius comes from a member already drawn, so the stream of the other members is the one
+	// it was before the rounded rectangle existed.
+	MaskSpec {
+		radius: spec.height * 300.0,
+		..spec
 	}
 }
 
@@ -375,6 +392,54 @@ fn effect(rng: &mut Rng) -> Effect {
 		_ => Effect::RgbSplit {
 			amount: extreme(rng),
 			angle: extreme(rng),
+		},
+	}
+}
+
+fn filter(rng: &mut Rng, i: usize) -> FilterOp {
+	let colour = |rng: &mut Rng| format!("#{:06X}{:02X}", rng.below(1 << 24), rng.below(256));
+	// A length is small, as the blur of a layer is: a huge radius is capped at 128 source pixels and
+	// costs a great deal, so only every hundredth composition has one.
+	let length = |rng: &mut Rng| {
+		if i.is_multiple_of(100) {
+			extreme(rng).abs().min(1e9)
+		} else {
+			rng.below(12) as f64
+		}
+	};
+	match rng.below(8) {
+		0 => FilterOp::Matrix(core::array::from_fn(|_| extreme(rng))),
+		1 => FilterOp::Blur { sigma: length(rng) },
+		2 => FilterOp::Sharpen {
+			amount: extreme(rng),
+			radius: length(rng),
+		},
+		3 => FilterOp::Vignette {
+			amount: extreme(rng),
+			softness: extreme(rng),
+		},
+		4 => FilterOp::Grain {
+			amount: extreme(rng),
+			size: extreme(rng),
+			seed: rng.next() as i64,
+		},
+		5 => FilterOp::Shadow(ShadowSpec {
+			color: colour(rng),
+			opacity: extreme(rng),
+			dx: length(rng),
+			dy: length(rng),
+			blur: length(rng),
+		}),
+		6 => FilterOp::Stroke(OutlineSpec {
+			color: colour(rng),
+			// The contour is dilated by a disc, which costs the pixels times the square of the
+			// radius: keep its width small even in the hundredth composition.
+			width: rng.below(10) as f64,
+		}),
+		_ => FilterOp::OuterGlow {
+			color: colour(rng),
+			radius: length(rng),
+			amount: extreme(rng),
 		},
 	}
 }
@@ -447,6 +512,9 @@ fn matrix(rng: &mut Rng) -> Option<[f64; 12]> {
 #[test]
 fn the_composition_survives_extreme_numbers() {
 	let mut rng = Rng(0xA076_1D64_78BD_642F);
+	// What the image looks add is drawn from a stream of its own, so the stream of the older members
+	// (and with it every older case) is the one it was before.
+	let mut ext_rng = Rng(0x5DEE_CE66_D1CE_4E5B);
 	for i in 0..iterations(6_000) {
 		let images: Vec<Image> = (0..1 + rng.below(3))
 			.map(|_| random_image(&mut rng, true))
@@ -492,6 +560,20 @@ fn the_composition_survives_extreme_numbers() {
 					transition: rng.chance(8).then(|| transition(&mut rng)),
 					shadow: None,
 					outline: None,
+					ext: LayerExt {
+						tone: ext_rng
+							.chance(4)
+							.then(|| Box::new(core::array::from_fn(|_| ext_rng.below(256) as u8))),
+						filters: if i.is_multiple_of(50) && ext_rng.chance(2) {
+							(0..1 + ext_rng.below(3))
+								.map(|_| filter(&mut ext_rng, i))
+								.collect()
+						} else {
+							Vec::new()
+						},
+						clip: None,
+						stencil: false,
+					},
 					frame: FrameInfo {
 						frame: rng.next() as i64,
 						width: rng.next() as i64 >> rng.below(64),
@@ -501,7 +583,7 @@ fn the_composition_survives_extreme_numbers() {
 					blur: if rng.chance(3) {
 						extreme(&mut rng)
 							.abs()
-							.min(if i % 100 == 0 { 1e9 } else { 12.0 })
+							.min(if i.is_multiple_of(100) { 1e9 } else { 12.0 })
 					} else {
 						0.0
 					},

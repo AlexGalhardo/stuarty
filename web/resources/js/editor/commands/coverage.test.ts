@@ -20,6 +20,7 @@ import {
 	chromaKeyOperations,
 	closeGapOperations,
 	colorOperations,
+	createCompositionOperations,
 	crossfadeOperations,
 	deleteOperations,
 	dropAssetOperations,
@@ -27,6 +28,7 @@ import {
 	duplicateOperations,
 	effectsOperations,
 	enabledOperations,
+	expandCompositionOperations,
 	extractAudioOperations,
 	filterOperations,
 	flipOperations,
@@ -35,6 +37,7 @@ import {
 	framingOperations,
 	freezeFrameOperations,
 	keyframeClearOperations,
+	keyframeEasingOperations,
 	keyframeFallbackOperations,
 	keyframeRemoveOperations,
 	keyframeSetOperations,
@@ -44,6 +47,7 @@ import {
 	markerRemoveOperations,
 	markerSetOperations,
 	maskOperations,
+	motionPresetOperations,
 	moveOperations,
 	outlineOperations,
 	pasteAttributesOperations,
@@ -85,6 +89,13 @@ import {
 	unlinkOperations,
 } from "./builders";
 import { ACTIONS, ANY_COMMAND, COVERAGE, type EntryPoint } from "./coverage";
+import {
+	applyPresetOperations,
+	processorAddOperations,
+	processorMoveOperations,
+	processorRemoveOperations,
+	processorSetOperations,
+} from "./processorBuilders";
 
 interface RegistryEntry {
 	name: string;
@@ -137,7 +148,7 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 	test("every non-internal command has a key", () => {
 		const keys = commands.filter((c) => !c.internal).map((c) => c.name);
 		expect(Object.keys(COVERAGE).sort()).toEqual(keys.sort());
-		expect(keys).toHaveLength(73);
+		expect(keys).toHaveLength(85);
 	});
 
 	test("every command has a palette entry, and the commands with an inspector control keep it", () => {
@@ -268,6 +279,12 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 				(o) => o.op,
 			),
 			"timeline.duplicate": duplicateOperations(items).map((o) => o.op),
+			"timeline.create_composition": createCompositionOperations(["itm_a"]).map(
+				(o) => o.op,
+			),
+			"timeline.expand_composition": expandCompositionOperations("itm_a").map(
+				(o) => o.op,
+			),
 			"timeline.toggle_enabled": enabledOperations("itm_a", false).map(
 				(o) => o.op,
 			),
@@ -330,9 +347,18 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 			"inspector.keyframe_add": keyframeSetOperations(setInput).map(
 				(o) => o.op,
 			),
-			"inspector.keyframe_easing": keyframeSetOperations(setInput).map(
-				(o) => o.op,
-			),
+			"inspector.keyframe_easing": keyframeEasingOperations({
+				itemId: "itm_a",
+				property: "scale",
+				frame: 10,
+				easing: "hold",
+			}).map((o) => o.op),
+			"inspector.keyframe_curve": keyframeEasingOperations({
+				itemId: "itm_a",
+				property: "scale",
+				frame: 10,
+				bezier: [0.1, 0.2, 0.3, 0.4],
+			}).map((o) => o.op),
 			"inspector.keyframe_value": keyframeSetOperations(setInput).map(
 				(o) => o.op,
 			),
@@ -362,6 +388,12 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 				itemId: "itm_a",
 				edge: "out",
 				preset: "pop",
+			}).map((o) => o.op),
+			"inspector.motion": motionPresetOperations({
+				itemId: "itm_a",
+				preset: "slide",
+				edge: "in",
+				direction: "left",
 			}).map((o) => o.op),
 			"inspector.auto_captions": captionFromTranscriptOperations({
 				clipId: "itm_a",
@@ -464,6 +496,17 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 				label: "",
 				replace: true,
 			}).map((o) => o.op),
+			"inspector.audio_processors": processorAddOperations(
+				{ itemId: "itm_a" },
+				"gate",
+			)
+				.concat(
+					processorSetOperations({ itemId: "itm_a" }, 0, { enabled: false }),
+				)
+				.concat(processorMoveOperations({ trackId: "trk_a" }, 1, 0))
+				.concat(processorRemoveOperations({ itemId: "itm_a" }, 0))
+				.concat(applyPresetOperations({ itemId: "itm_a" }, "voice"))
+				.map((o) => o.op),
 			"inspector.font_add": fontAddOperations("Brand Sans", [
 				{ weight: 400, hash: `sha256:${"a".repeat(64)}` },
 			]).map((o) => o.op),

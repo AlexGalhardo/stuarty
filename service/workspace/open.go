@@ -28,7 +28,8 @@ const (
 	Auto Force = iota
 	// Server never falls back to in-process: E_WORKSPACE_LOCKED when no owner answers.
 	Server
-	// InProcess never uses a server: E_WORKSPACE_LOCKED when one exists.
+	// InProcess never uses a server: E_WORKSPACE_LOCKED when one exists, and E_INVALID_STATE naming
+	// STUARTY_URL when that names a remote one.
 	InProcess
 )
 
@@ -108,6 +109,15 @@ func Open(ctx context.Context, o Options) (*Session, error) {
 	}
 
 	if raw := o.Getenv(EnvURL); raw != "" {
+		// A command that must own the workspace has no folder in a remote session: answering with one let
+		// it write the workspace into the current directory (VV-272).
+		if o.Force == InProcess {
+			return nil, &Error{
+				Code: CodeInvalidState,
+				Message: "this command writes the local workspace and " + EnvURL + " names a server: unset it " +
+					"and run the command on the machine of the workspace, with no server running",
+			}
+		}
 		return remoteSession(raw, o)
 	}
 

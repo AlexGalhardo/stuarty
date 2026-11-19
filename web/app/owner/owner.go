@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/AlexGalhardo/stuarty/core/command"
@@ -26,6 +27,7 @@ import (
 	enginestore "github.com/AlexGalhardo/stuarty/engine/store"
 	"github.com/AlexGalhardo/stuarty/internal/ffmpegpins"
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/agenthost"
 	"github.com/AlexGalhardo/stuarty/service/config"
 	"github.com/AlexGalhardo/stuarty/service/connections"
 	"github.com/AlexGalhardo/stuarty/service/exporter"
@@ -38,8 +40,8 @@ import (
 	httpapi "github.com/AlexGalhardo/stuarty/web/app/http"
 	"github.com/AlexGalhardo/stuarty/web/app/http/middleware"
 	"github.com/AlexGalhardo/stuarty/web/app/jobs"
-	"github.com/AlexGalhardo/stuarty/web/app/mcp"
 	"github.com/AlexGalhardo/stuarty/web/app/store"
+	"github.com/AlexGalhardo/stuarty/web/resources/skills"
 
 	vukem "github.com/AlexGalhardo/vukem"
 	"github.com/AlexGalhardo/vukem/queue"
@@ -88,11 +90,21 @@ type Owner struct {
 	// runtimeSecret is the per-run secret of network mode, the key of its handshake.
 	runtimeSecret string
 	Events        *events.Events
-
-	deps   *httpapi.Deps
-	lock   *workspace.Lock
-	limits service.Limits
-	child  service.ChildPolicy
+	// Agents hosts the agent a user installed, for the chat panel (SDD-017); nil in a process that only
+	// runs a command.
+	Agents *agenthost.Host
+	// mcpURL is the address of this server's own MCP endpoint, as the hosted agent reaches it; empty until the
+	// listener is bound.
+	mcpURL atomic.Value
+	appURL string
+	// agentTokens is the registry of the session tokens of the hosted agent.
+	agentTokens *agenthost.Tokens
+	deps        *httpapi.Deps
+	lock        *workspace.Lock
+	limits      service.Limits
+	child       service.ChildPolicy
+	// webp is the WebP encoder of the image export; nil when FFmpeg is missing.
+	webp export.WebPEncoder
 	// gpuRenderer is the GPU renderer request and the stuarty-render found for it.
 	gpuRenderer service.GPURenderer
 	version     string
@@ -113,6 +125,10 @@ type lateRunner struct{ service.JobRunner }
 func Open(ctx context.Context, cfg Config) (*Owner, error) {
 	if cfg.Getenv == nil {
 		cfg.Getenv = os.Getenv
+	}
+
+	if err := refuseTestAddresses(cfg.Getenv); err != nil {
+		return nil, err
 	}
 
 	if cfg.Log == nil {
@@ -263,6 +279,15 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 	if !cfg.Inline {
 		o.Events = events.New(st, events.Options{Log: cfg.Log, RedactPaths: o.mode == config.ModeNetwork})
 		publish = o.Events.Publish
+
+		// The agent a user installed, hosted in the chat panel (SDD-017). A command has no panel and
+		// hosts none.
+		o.appURL = cfg.Resolved.AppURL
+		o.agentTokens = agenthost.NewTokens(cfg.Now)
+		o.Agents = agenthost.New(agenthost.Options{
+			Store: st.Chat(), Tokens: o.agentTokens, MCPURL: o.MCPURL, Workspace: string(o.Dir), Now: cfg.Now,
+			Version: o.version, Log: cfg.Log,
+		})
 	}
 
 	rates, err := rateLimitsFromEnv(cfg.Getenv, o.mode == config.ModeNetwork)
@@ -270,7 +295,7 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 		return err
 	}
 
-	conns, err := o.connections(cfg.Getenv, st, cfg.Now)
+	out, err := o.outbound(cfg.Getenv, st, cfg.Now)
 	if err != nil {
 		return err
 	}
@@ -281,11 +306,13 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 	}
 
 	o.Service, err = service.New(service.Options{
-		Keys: o.keyStore(), Connections: conns, HeavyPerMinute: heavy,
+		Keys: o.keyStore(), Connections: out.conns, Providers: out.provs, Social: out.socials, HeavyPerMinute: heavy,
+		SignIns: out.signInSet,
+		Agents:  o.Agents, WebP: o.webp,
 		Heavy: middleware.ServiceLimiter{L: ratelimit.NewMemory(heavy, time.Minute)},
 		Store: st, Registry: command.Default(), Now: cfg.Now, Workspace: string(o.Dir), Media: media,
 		Exporter: exp, Enqueue: jobs.Dispatcher{Queue: o.Queue}, Limits: limits, Publish: publish, Version: o.version,
-		Transcriber: transcriber, Tools: tools, Log: cfg.Log,
+		BuiltInSkills: skills.FS(), Transcriber: transcriber, Tools: tools, Log: cfg.Log,
 		Lint: lint.Env{Measurer: lintMeasurer{workspace: string(o.Dir)}},
 		Doctor: service.DoctorOptions{
 			Mode: o.mode, StartedAt: o.now().UTC(), Child: o.child, FFmpegPins: ffmpegpins.Current(),
@@ -321,10 +348,11 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 		RuntimeSecret: o.runtimeSecret, LauncherSecret: launcherSecret,
 		Sessions: auth.NewSessions(cfg.Now), Launch: auth.NewLaunch(cfg.Now), Now: cfg.Now,
 		Events: o.Events, Version: o.version, Network: o.network, Auth: o.netAuth, RateLimits: rates,
+		Chat: o.chatStreams(), AgentTokens: o.agentLookup(),
 	}
 
-	if o.deps.MCP, err = mcp.Handler(o.Service, mcp.Options{Version: o.version}); err != nil {
-		return err
+	if aerr := o.attachHandlers(cfg, st.DB(), out.conns); aerr != nil {
+		return aerr
 	}
 
 	// The library of a new workspace holds the starter templates; later starts add nothing.
@@ -435,6 +463,7 @@ func (o *Owner) media(ctx context.Context, cfg Config) (service.Media, service.E
 	}
 
 	o.child = child.Policy
+	o.webp = export.FFmpegWebP{Runner: child.Export, MaxBytes: o.limits.MaxExportBytes}
 	runner := child.Ingest
 	media.Runner = runner
 
@@ -480,6 +509,7 @@ func (o *Owner) Deps() *httpapi.Deps { return o.deps }
 // 6.3 step 5): from then on a command finds this process and talks to it.
 func (o *Owner) Announce(addr string) error {
 	o.announce = true
+	o.mcpURL.Store(mcpURLFor(addr))
 
 	return o.Dir.WriteRuntime(workspace.Runtime{
 		Schema: 1, PID: os.Getpid(), Addr: addr, Mode: o.mode, StartedAt: o.now().UTC(),
@@ -489,8 +519,21 @@ func (o *Owner) Announce(addr string) error {
 
 // Work runs the queue workers until ctx ends. Jobs still running when the
 // timeout passes are interrupted; the service requeues them (SDD-005 section
-// 14.5), so none is lost to a shutdown.
+// 14.5), so none is lost to a shutdown. The publication scheduler runs beside them for as long as the server
+// does (SDD-020 section 27); keeping it alive with the window closed is the desktop service of epic 21.
 func (o *Owner) Work(ctx context.Context) error {
+	if sched, ok := service.SchedulerOf(o.Service); ok {
+		done := make(chan struct{})
+
+		go func() {
+			defer close(done)
+
+			_ = sched.Run(ctx)
+		}()
+
+		defer func() { <-done }()
+	}
+
 	err := o.Queue.Work(ctx, queue.WorkOptions{
 		Queues:      jobs.Queues,
 		Concurrency: o.limits.MaxIngests + o.limits.MaxExports + 2,
@@ -512,6 +555,11 @@ func (o *Owner) Close() error {
 
 	if o.Events != nil {
 		o.Events.Close() // ends the open streams at once
+	}
+
+	// No agent process is left behind: every tree is killed before the store closes (SDD-017 section 4).
+	if o.Agents != nil {
+		o.Agents.Shutdown()
 	}
 
 	if o.announce || o.runtimeSecret != "" {
@@ -657,19 +705,16 @@ func rateLimitsFromEnv(getenv func(string) string, network bool) (httpapi.RateLi
 
 // connections builds the registry of connections over the vault of the workspace. The master key
 // comes from the environment, a file or the operating system keychain (SDD-014 section 4). It is
-// read once and removed from the environment, so no child process inherits it. A key that is named
-// and malformed, or named twice, stops the start; a key that is merely absent does not: the vault
-// is created with the first credential.
+// read once and removed from the environment, so no child process inherits it. A key named twice
+// stops the start. A key that is absent or is not a key does not: the vault is created with the first
+// credential, and until then `doctor` reports the key (the check `vault`) and a credential answers
+// E_VAULT_LOCKED, so the command that would diagnose the problem can still run (VV-269).
 func (o *Owner) connections(
 	getenv func(string) string, st service.Store, now func() time.Time,
 ) (*connections.Manager, error) {
 	keys, err := vault.Resolve(vault.ConfigFromEnv(getenv, string(o.Dir)))
 	if err != nil {
 		return nil, err
-	}
-
-	if _, err := keys.Load(); err != nil && !errors.Is(err, vault.ErrKeyNotFound) {
-		return nil, fmt.Errorf("owner: the master key of the vault from %s is not usable: %w", keys.Name(), err)
 	}
 
 	for _, name := range []string{vault.EnvMasterKey, vault.EnvMasterKeyFile} {

@@ -16,6 +16,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/core/timeval"
 	"github.com/AlexGalhardo/stuarty/engine/export"
 	"github.com/AlexGalhardo/stuarty/service/textview"
+	"github.com/AlexGalhardo/stuarty/service/untrusted"
 )
 
 const (
@@ -29,25 +30,42 @@ const (
 	codeTranscribeOff = "E_TRANSCRIBE_UNAVAILABLE"
 )
 
-var jobStates = []string{JobQueued, JobRunning, JobSucceeded, JobFailed, JobCancelled}
+var jobStates = []string{JobQueued, JobWaitingApproval, JobRunning, JobSucceeded, JobFailed, JobCancelled}
 
 // JobFinal reports whether a job state is final: succeeded, failed or cancelled.
 func JobFinal(state string) bool {
 	return state == JobSucceeded || state == JobFailed || state == JobCancelled
 }
 
-func (s *svc) JobStart(ctx context.Context, req JobStartRequest) (*Job, error) {
+// authorizeStart checks the scope JobStart needs for the kind and that a key limited to one project covers the
+// project or timeline the request names.
+func (s *svc) authorizeStart(ctx context.Context, req *JobStartRequest, approvable *ApprovableKind) (Caller, error) {
 	var (
 		c   Caller
 		err error
 	)
 
-	if req.Kind == JobTranscribe {
-		c, err = authorizeScope(ctx, ScopeMedia, req.ProjectID)
-	} else {
-		c, err = authorize(ctx, "JobStart", req.ProjectID)
+	switch {
+	case approvable != nil:
+		c, err = authorizeScope(ctx, approvable.Scope, "")
+	case req.Kind == JobTranscribe:
+		c, err = authorizeScope(ctx, ScopeMedia, "")
+	default:
+		c, err = authorize(ctx, "JobStart", "")
 	}
 
+	if err != nil {
+		return Caller{}, err
+	}
+
+	return c, s.requireCovers(ctx, c, req.ProjectID)
+}
+
+func (s *svc) JobStart(ctx context.Context, req JobStartRequest) (*Job, error) {
+	// A kind that needs approval waits for a person or a rule (SDD-015 section 5); it has its own scope.
+	approvable := s.kinds[req.Kind]
+
+	c, err := s.authorizeStart(ctx, &req, approvable)
 	if err != nil {
 		return nil, err
 	}
@@ -63,6 +81,10 @@ func (s *svc) JobStart(ctx context.Context, req JobStartRequest) (*Job, error) {
 	if req.WaitMS < 0 || req.WaitMS > maxWaitMS {
 		return nil, newError(command.CodeValidation, "wait_ms is %d; it must be 0 to %d.", req.WaitMS, maxWaitMS).
 			withPath("wait_ms")
+	}
+
+	if approvable != nil {
+		return s.startApprovable(ctx, c, req, approvable)
 	}
 
 	switch req.Kind {
@@ -109,21 +131,7 @@ func (s *svc) JobStart(ctx context.Context, req JobStartRequest) (*Job, error) {
 		return nil, gerr
 	}
 
-	var (
-		start, end int64
-		terr       *Error
-	)
-
-	switch {
-	case args.Format == FormatPNG:
-		start, end, terr = stillRange(doc, args)
-	case args.At != "":
-		terr = newError(command.CodeValidation, "at is for a png export.").withPath("args.at").
-			withHint("set format to png, or use start and end")
-	default:
-		start, end, terr = exportRange(doc, args)
-	}
-
+	start, end, terr := jobExportRange(doc, args)
 	if terr != nil {
 		return nil, terr
 	}
@@ -137,10 +145,17 @@ func (s *svc) JobStart(ctx context.Context, req JobStartRequest) (*Job, error) {
 		return nil, lerr
 	}
 
+	if perr := checkPresetArgs(doc, format, args, end-start); perr != nil {
+		return nil, perr
+	}
+
+	nested, _ := s.nestedFor(ctx, s.store, doc)
+
 	input := marshalOrNull(
 		exportInput{
 			Revision: row.Revision, Start: start, End: end, Lint: &totals, Document: row.Document, Format: format,
-			Warnings: exportWarnings(doc, format, end-start),
+			Nested:   nestedSnapshot(nested),
+			Warnings: exportWarnings(doc, format, end-start), Preset: args.Preset, Codec: args.Codec,
 		},
 	)
 	projectID := row.ID
@@ -196,7 +211,7 @@ func (s *svc) JobStart(ctx context.Context, req JobStartRequest) (*Job, error) {
 		return nil, asError(gerr2)
 	}
 
-	return s.jobView(c, cur, req.WaitMS > 0), nil
+	return s.jobViewCtx(ctx, c, cur, req.WaitMS > 0), nil
 }
 
 // stamp gives a job that is never stored the times of a new one.
@@ -251,14 +266,17 @@ func decodeExportArgs(raw json.RawMessage) (ExportArgs, *Error) {
 	}
 
 	for name := range probe {
-		if name != "start" && name != "end" && name != "format" && name != "at" {
+		if name != "start" && name != "end" && name != "format" && name != "at" && name != "preset" && name != "codec" {
 			return a, newError(command.CodeValidation, "the export does not take the argument %q.", name).
-				withPath("args." + name).withHint("use start, end, format and at, all optional; at is for format png")
+				withPath("args." + name).
+				withHint("use start, end, format, at, preset and codec, all optional; at is for format png; " +
+					"preset and codec are for format mp4")
 		}
 	}
 
 	if err := json.Unmarshal(raw, &a); err != nil {
-		return a, newError(command.CodeValidation, "start, end, format and at must be strings.").withPath("args")
+		return a, newError(command.CodeValidation, "start, end, format, at, preset and codec must be strings.").
+			withPath("args")
 	}
 
 	return a, nil
@@ -381,13 +399,43 @@ func exportRange(doc *timeline.Document, a ExportArgs) (start, end int64, err *E
 // another user, the answer is the one of a job that does not exist, so no job
 // is disclosed.
 func (s *svc) refuseJob(ctx context.Context, c Caller, j *JobRow, id string) *Error {
-	if c.ProjectID != "" && j != nil && j.ProjectID != nil && *j.ProjectID != c.ProjectID {
+	if c.ProjectID != "" && j != nil && j.ProjectID != nil && !s.covers(ctx, c, *j.ProjectID) {
 		if h, err := s.store.Projects().Head(ctx, *j.ProjectID); err == nil && visible(c, h.OwnerUserID) {
 			return limitedElsewhere()
 		}
 	}
 
 	return jobNotFound(id)
+}
+
+// keyCovers reports whether a key limited to one project reaches the timeline document id (SDD-003 section 1.7
+// rule 4): the document belongs to that project, or, for an id that is no timeline of any project, it is the
+// project's own id. A caller with no project limit reaches every id. The answer for a timeline of another
+// project and for an id that does not exist is the same, so it tells nothing about either.
+func keyCovers(ctx context.Context, r interface{ Productions() ProductionRepo }, c Caller, id string) bool {
+	if c.ProjectID == "" {
+		return true
+	}
+
+	if owner, err := r.Productions().ProjectOfTimeline(ctx, id); err == nil {
+		return owner == c.ProjectID
+	}
+
+	return id == c.ProjectID
+}
+
+func (s *svc) covers(ctx context.Context, c Caller, id string) bool {
+	return keyCovers(ctx, s.store, c, id)
+}
+
+// requireCovers refuses a key limited to one project that names a project or timeline outside it, before
+// anything of that project is read. An empty id names none and is left to the operation.
+func (s *svc) requireCovers(ctx context.Context, c Caller, id string) error {
+	if id == "" || s.covers(ctx, c, id) {
+		return nil
+	}
+
+	return limitedElsewhere()
 }
 
 func limitedElsewhere() *Error {
@@ -400,7 +448,7 @@ func limitedElsewhere() *Error {
 // section 2.8 rule 7).
 func (s *svc) canSee(ctx context.Context, c Caller, j *JobRow) bool {
 	if j.ProjectID != nil {
-		if c.ProjectID != "" && c.ProjectID != *j.ProjectID {
+		if !s.covers(ctx, c, *j.ProjectID) {
 			return false
 		}
 
@@ -415,7 +463,7 @@ func (s *svc) canSee(ctx context.Context, c Caller, j *JobRow) bool {
 
 	refs := s.referrers(ctx, *j.AssetHash)
 	for i := range refs {
-		if c.ProjectID != "" && c.ProjectID != refs[i].ProjectID {
+		if !s.covers(ctx, c, refs[i].ProjectID) {
 			continue
 		}
 
@@ -463,7 +511,7 @@ func (s *svc) JobGet(ctx context.Context, req JobGetRequest) (*Job, error) {
 		}
 	}
 
-	return s.jobView(c, row, req.WaitMS > 0), nil
+	return s.jobViewCtx(ctx, c, row, req.WaitMS > 0), nil
 }
 
 // waitJob holds until the job is final or the time passes.
@@ -485,8 +533,12 @@ func (s *svc) waitJob(ctx context.Context, id string, d time.Duration) {
 }
 
 func (s *svc) JobList(ctx context.Context, req JobListRequest) (*JobListResult, error) {
-	c, err := authorize(ctx, "JobList", req.ProjectID)
+	c, err := authorize(ctx, "JobList", "")
 	if err != nil {
+		return nil, err
+	}
+
+	if err := s.requireCovers(ctx, c, req.ProjectID); err != nil {
 		return nil, err
 	}
 
@@ -559,7 +611,7 @@ func (s *svc) listJobs(ctx context.Context, projectID, state string, off, limit 
 
 	switch state {
 	case "":
-		active, err := pick([]string{JobQueued, JobRunning}, 0)
+		active, err := pick([]string{JobQueued, JobWaitingApproval, JobRunning}, 0)
 		if err != nil {
 			return nil, 0, err
 		}
@@ -577,7 +629,7 @@ func (s *svc) listJobs(ctx context.Context, projectID, state string, off, limit 
 		}
 	case jobStateActive:
 		var err error
-		if all, err = pick([]string{JobQueued, JobRunning}, 0); err != nil {
+		if all, err = pick([]string{JobQueued, JobWaitingApproval, JobRunning}, 0); err != nil {
 			return nil, 0, err
 		}
 	default:
@@ -642,7 +694,7 @@ func (s *svc) JobCancel(ctx context.Context, req JobCancelRequest) (*Job, error)
 			withHint("use a key with the %s scope", ScopeRender)
 	}
 
-	if c.ProjectID != "" && row.ProjectID != nil && c.ProjectID != *row.ProjectID {
+	if row.ProjectID != nil && !s.covers(ctx, c, *row.ProjectID) {
 		return nil, newError(CodeForbidden, "the key is limited to another project.").
 			withHint("use a key that covers this project")
 	}
@@ -660,13 +712,17 @@ func (s *svc) JobCancel(ctx context.Context, req JobCancelRequest) (*Job, error)
 				return nil, asError(gerr)
 			}
 
-			return s.jobView(c, after, false), nil
+			return s.jobViewCtx(ctx, c, after, false), nil
+		}
+	} else if row.State == JobWaitingApproval {
+		if err := s.cancelWaitingJob(ctx, c.Actor, &row); err != nil {
+			return nil, asError(err)
 		}
 	} else if err := s.cancelJob(ctx, row.ID); err != nil {
 		return nil, asError(err)
 	}
 
-	if !JobFinal(row.State) {
+	if !JobFinal(row.State) && row.State != JobWaitingApproval {
 		s.waitJob(ctx, row.ID, cancelWait)
 	}
 
@@ -675,7 +731,7 @@ func (s *svc) JobCancel(ctx context.Context, req JobCancelRequest) (*Job, error)
 		return nil, asError(gerr)
 	}
 
-	return s.jobView(c, after, false), nil
+	return s.jobViewCtx(ctx, c, after, false), nil
 }
 
 // cancelSharedIngest decides and applies the cancellation of an ingest, which
@@ -741,7 +797,7 @@ func (s *svc) decideSharedIngest(ctx context.Context, tx Tx, c Caller, job *JobR
 			return JobRow{}, false, gerr
 		}
 
-		if visible(c, owner.OwnerUserID) && (c.ProjectID == "" || c.ProjectID == id) {
+		if visible(c, owner.OwnerUserID) && keyCovers(ctx, tx, c, id) {
 			mine = append(mine, ref)
 		}
 	}
@@ -791,6 +847,21 @@ func (s *svc) cancelJob(ctx context.Context, id string) error {
 		return nil
 	}
 
+	if before.State == JobWaitingApproval {
+		if err := s.cancelWaiting(ctx, "system", &before); !errors.Is(err, errNoLongerWaiting) {
+			return err
+		}
+
+		// Approved since it was read: it is queued or running now, and is cancelled as such.
+		if before, err = s.store.Jobs().Get(ctx, id); err != nil || JobFinal(before.State) {
+			return err
+		}
+	}
+
+	if before.Kind == JobExportBatch {
+		s.cancelBatchChildren(ctx, &before)
+	}
+
 	after, err := s.store.Jobs().RequestCancel(ctx, id, s.nowMs())
 	if err != nil {
 		return err
@@ -800,7 +871,7 @@ func (s *svc) cancelJob(ctx context.Context, id string) error {
 		s.running.cancel(id)
 	}
 
-	if before.State == JobQueued && after.State == JobCancelled {
+	if before.State != JobRunning && after.State == JobCancelled {
 		s.afterQueuedCancel(ctx, &after)
 	}
 
@@ -816,13 +887,20 @@ func (s *svc) afterQueuedCancel(ctx context.Context, j *JobRow) {
 		}
 	}
 
+	// An approved job cancelled before it ran spent nothing, and RunJob never reaches finishCost for
+	// it: its reservation goes back here, or it would hold the ceiling of the day (SDD-015 section 6).
+	// One queued again after a shutdown may have left work at a provider, which its kind abandons.
+	if k := s.kindOf(j.Kind); k != nil {
+		s.settleQueuedCancel(ctx, k, j)
+	}
+
 	s.emitJob(ctx, j)
 }
 
 // cancelProjectJobs asks for the cancellation of the export and frame jobs of
 // a project that went to the trash (SDD-005 section 14.4 item 5).
 func (s *svc) cancelProjectJobs(ctx context.Context, projectID string) {
-	rows, err := s.store.Jobs().List(ctx, projectID, []string{JobQueued, JobRunning}, 0)
+	rows, err := s.store.Jobs().List(ctx, projectID, []string{JobQueued, JobWaitingApproval, JobRunning}, 0)
 	if err != nil {
 		return
 	}
@@ -836,8 +914,19 @@ func (s *svc) cancelProjectJobs(ctx context.Context, projectID string) {
 // callers only.
 func (s *svc) jobView(c Caller, r JobRow, waited bool) *Job {
 	j := &Job{
-		JobID: r.ID, Kind: r.Kind, ProjectID: r.ProjectID, State: r.State, Progress: r.Progress, Message: r.Message,
-		Error: forCaller(c, parseError(r.Error)), Actor: r.Actor, CreatedAt: msTime(r.CreatedMs),
+		JobID:     r.ID,
+		Kind:      r.Kind,
+		ProjectID: r.ProjectID,
+		State:     r.State,
+		Progress:  r.Progress,
+		Message:   r.Message,
+		Error: forCaller(
+			c,
+			parseError(r.Error),
+		),
+		Actor:      r.Actor,
+		CreatedAt:  msTime(r.CreatedMs),
+		ApprovalID: r.ApprovalID,
 	}
 
 	// The last progress message of a finished job ("Rendering (97%)") contradicts its state (VV-102).
@@ -872,12 +961,21 @@ func (s *svc) jobView(c Caller, r JobRow, waited bool) *Job {
 		}
 	}
 
+	if r.Kind == JobPublishUpload && len(r.Result) > 0 {
+		var res JobResult
+		if json.Unmarshal(r.Result, &res) == nil && res.Publish != nil {
+			j.Result = &res
+		}
+	}
+
 	if r.Kind == JobTranscribe && len(r.Result) > 0 {
 		var res JobResult
 		if json.Unmarshal(r.Result, &res) == nil && res.Transcribe != nil {
 			j.Result = &res
 		}
 	}
+
+	viewGeneration(j, &r)
 
 	j.Text = jobText(j, waited)
 
@@ -899,12 +997,53 @@ func jobText(j *Job, waited bool) string {
 		}
 	}
 
+	if j.Estimate != nil {
+		v.Estimate = money(j.Estimate.Micros, j.Estimate.Currency)
+	}
+
+	if j.Result != nil && j.Result.Text != nil {
+		t := j.Result.Text
+		v.Cost = money(t.Cost.Micros, t.Cost.Currency)
+		// The text of a model is network text: delimited, cleaned and cut like every other (SDD-007 section 8).
+		v.Output = untrusted.Block(untrusted.SourceNetworkText,
+			untrusted.Attrs{"provider": t.Provider, "model": t.Model}, t.Text, untrusted.TranscriptFull)
+	}
+
+	if j.Result != nil && j.Result.Generated != nil {
+		g := j.Result.Generated
+		v.Cost = money(g.Cost.Micros, g.Cost.Currency)
+
+		for i := range g.Items {
+			v.Files = append(
+				v.Files,
+				fmt.Sprintf("%s %s %s", g.Items[i].AssetID, g.Items[i].Kind, textview.Size(g.Items[i].Bytes)),
+			)
+		}
+
+		for _, n := range g.Notes {
+			v.Warnings = append(v.Warnings, "warning: "+n)
+		}
+	}
+
 	for _, w := range j.Warnings {
 		v.Warnings = append(v.Warnings, "warning: "+w)
 	}
 
+	if j.Result != nil && j.Result.Publish != nil {
+		p := j.Result.Publish
+		v.Warnings = append(v.Warnings, fmt.Sprintf("publication %s: %s",
+			p.State, untrusted.Inline(untrusted.SourceNetworkText, nil, p.URL, 200)))
+	}
+
 	if j.Error != nil && j.State == JobFailed {
 		v.Error = "error " + j.Error.Code + ": " + j.Error.Message
+	}
+
+	if j.State == JobWaitingApproval {
+		// The agent that reads this must know it waits and cannot decide (RF-135).
+		v.Warnings = append(v.Warnings, fmt.Sprintf(
+			"waiting for approval %s: a person approves or rejects it in the app, and you cannot; "+
+				"do not submit it again, read it with job_get later", j.ApprovalID))
 	}
 
 	return textview.Job(v)

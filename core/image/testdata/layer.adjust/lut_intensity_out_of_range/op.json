@@ -1,0 +1,10 @@
+{
+  "args": {
+    "layer_id": "lyr_bbbbbbbbbb",
+    "lut": {
+      "asset": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "intensity": 101
+    }
+  },
+  "op": "layer.adjust"
+}

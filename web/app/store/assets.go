@@ -365,5 +365,10 @@ func (r assetRepo) Unreferenced(ctx context.Context) ([]service.AssetRow, error)
 }
 
 func (r assetRepo) Delete(ctx context.Context, hash string) error {
+	// The search index is a virtual table: no foreign key reaches it (SDD-005 section 5.5.1).
+	if _, err := r.ex.ExecContext(ctx, "DELETE FROM asset_search WHERE asset_hash = ?", hash); err != nil {
+		return err
+	}
+
 	return notFoundIfNone(rowsAffected(r.ex.ExecContext(ctx, "DELETE FROM assets WHERE id = ?", hash)))
 }

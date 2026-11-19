@@ -10,7 +10,7 @@ var Provenance = map[string]string{
 	"service.ProjectCreateResult.Name":         SourceProjectText,
 	"service.ProjectGetResult.Name":            SourceProjectText,
 	"service.ImportedAsset.Name":               SourceAssetName,
-	"service.LibraryAsset.Name":                SourceAssetName,
+	"assets.LibraryAsset.Name":                 SourceAssetName,
 	"service.UntrustedData.Metadata":           SourceMetadata,
 	"service.TranscriptLine.Text":              SourceTranscript,
 	"service.MediaEntry.Name":                  SourceAssetName,
@@ -28,6 +28,7 @@ var Provenance = map[string]string{
 	"service.ProjectItem.Text":                 SourceProjectText,
 	"service.ProjectDescribeResult.Name":       SourceProjectText,
 	"service.BriefResult.Text":                 SourceProjectText,
+	"service.BriefingAnswer.Value":             SourceProjectText,
 
 	// image documents (SDD-021): names, texts and the descriptions built from them
 	"service.ImageCreateResult.Text":       SourceProjectText,
@@ -37,6 +38,72 @@ var Provenance = map[string]string{
 	"service.ImageDescribeResult.Layers":   SourceProjectText,
 	"service.ImageDescribeResult.Text":     SourceProjectText,
 	"service.ImageEditResult.Description":  SourceProjectText,
+	"service.ImageImportResult.Name":       SourceAssetName,
+	"service.ImageImportResult.Text":       SourceProjectText,
 	"connections.Connection.Label":         SourceProjectText,
 	"service.ConnectionTestResult.Message": SourceNetworkText,
+	"approval.Request.Summary":             SourceProjectText,
+	"approval.Request.Reason":              SourceProjectText,
+	"service.TextResult.Text":              SourceNetworkText,
+	"service.ModelView.Name":               SourceNetworkText,
+	"service.VoiceView.Name":               SourceNetworkText,
+	"service.GeneratedItem.RevisedPrompt":  SourceNetworkText,
+	"service.LibraryEntry.Description":     SourceLibraryText,
+	"service.LibraryEntry.Tags":            SourceLibraryText,
+	"service.LibraryEntry.Error":           SourceLibraryText,
+	"service.LibraryHit.Snippet":           SourceLibraryText,
+	"service.MemoryGetResult.Body":         SourceLibraryText,
+	"service.PromptGetResult.Body":         SourceLibraryText,
+	"service.PromptGetResult.Defaults":     SourceLibraryText,
+	"service.PromptRenderResult.Rendered":  SourceLibraryText,
+	"service.SkillGetResult.License":       SourceLibraryText,
+	"service.SkillGetResult.Compatibility": SourceLibraryText,
+	"service.SkillGetResult.AllowedTools":  SourceLibraryText,
+	"service.SkillGetResult.Source":        SourceLibraryText,
+	"service.SkillGetResult.Body":          SourceLibraryText,
+	"service.SkillFileView.Text":           SourceLibraryText,
+	"service.LibraryReindexResult.Ignored": SourceLibraryText,
+
+	// publishing (SDD-020): the channel, the video the network named and what a person would approve
+	"service.PublishResult.RemoteID":        SourceNetworkText,
+	"service.PublishResult.URL":             SourceNetworkText,
+	"service.SocialAccount.Label":           SourceProjectText,
+	"service.SocialAccount.AccountTitle":    SourceNetworkText,
+	"service.SocialChoice.Title":            SourceNetworkText,
+	"service.PublishValidateResult.Summary": SourceProjectText,
+
+	// the calendar of publications (SDD-020 section 23): the text of a post and what the network named
+	"publish.Publication.Title":  SourceProjectText,
+	"publish.Publication.Text":   SourceProjectText,
+	"publish.Fields.Title":       SourceProjectText,
+	"publish.Fields.Description": SourceProjectText,
+	"publish.Fields.Tags":        SourceProjectText,
+	"publish.Target.RemoteID":    SourceNetworkText,
+	"publish.Target.URL":         SourceNetworkText,
+
+	// the sign-in to an AI provider (SDD-016 section 12): the name a person gave the connection, and who the
+	// provider says the account is
+	"service.ProviderSignIn.Label":   SourceProjectText,
+	"service.ProviderSignIn.Account": SourceNetworkText,
+
+	// the asset library (SDD-011 section 14): the text a person or an agent wrote about a file
+	"assets.LibraryAsset.Description": SourceMetadata,
+	"assets.Use.Name":                 SourceProjectText,
+	"asset.Origin.Source":             SourceMetadata,
+	"asset.Origin.Prompt":             SourceMetadata,
+	"asset.Origin.RightsNote":         SourceMetadata,
+
+	// the texts of a production (SDD-019): their titles and bodies, the model of a generated revision, and the
+	// parts of a body that a difference or an estimate repeats
+	"service.TextItem.ProjectName": SourceProjectText,
+	"service.TextItem.Title":       SourceProjectText,
+	"service.TextRevision.Model":   SourceNetworkText,
+	"service.TextGetResult.Body":   SourceProjectText,
+	"writing.TextHunk.Text":        SourceProjectText,
+	"writing.SceneEstimate.Title":  SourceProjectText,
+
+	// the hand-off from an external motion engine (SDD-011 section 15): the words of the captions in the range
+	"service.MotionCaption.Text":          SourceProjectText,
+	"service.MotionCheckResult.AssetName": SourceAssetName,
+	"service.RenderOffer.Name":            SourceAssetName,
 }

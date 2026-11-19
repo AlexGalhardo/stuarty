@@ -87,8 +87,9 @@ func (s *svc) resolveOps(
 }
 
 // viewFor is the document an operation of the batch sees: when it names an item that the batch itself
-// creates before it (a clip.add followed by caption.from_transcript on it), the document after those
-// operations, so the analysis of the created clip's asset is found (VV-084). The copy is private and is
+// creates before it (a clip.add followed by caption.from_transcript on it, or an audio.add followed by
+// audio.duck naming it as speech), the document after those operations, so the analysis of the created
+// item's asset is found (VV-084, VV-199). The copy is private and is
 // only read; when the earlier operations do not apply it is the document as loaded, and the batch
 // reports their error itself.
 func (s *svc) viewFor(doc *timeline.Document, ops, resolvedSoFar []command.Operation, i int) *timeline.Document {
@@ -102,7 +103,7 @@ func (s *svc) viewFor(doc *timeline.Document, ops, resolvedSoFar []command.Opera
 	}
 
 	missing := func(id string) bool { _, have := doc.Items[id]; return id != "" && !have }
-	if !missing(a.ItemID) && !missing(a.ClipItemID) {
+	if !missing(a.ItemID) && !missing(a.ClipItemID) && !slices.ContainsFunc(a.SpeechItemIDs, missing) {
 		return doc
 	}
 
@@ -127,10 +128,11 @@ func (s *svc) viewFor(doc *timeline.Document, ops, resolvedSoFar []command.Opera
 // opArgs reads the members the resolver needs; a malformed or incomplete
 // operation is left to the command, which answers with its own error.
 type opArgs struct {
-	ItemID      string          `json:"item_id"`
-	ClipItemID  string          `json:"clip_item_id"`
-	ThresholdDB *int            `json:"threshold_db"`
-	Resolved    json.RawMessage `json:"resolved"`
+	ItemID        string          `json:"item_id"`
+	ClipItemID    string          `json:"clip_item_id"`
+	SpeechItemIDs []string        `json:"speech_item_ids"`
+	ThresholdDB   *int            `json:"threshold_db"`
+	Resolved      json.RawMessage `json:"resolved"`
 }
 
 // unresolvedArgs reads the arguments of an operation that still needs its

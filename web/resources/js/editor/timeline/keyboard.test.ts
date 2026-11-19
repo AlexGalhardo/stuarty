@@ -41,33 +41,23 @@ const key = (
 		...mods,
 	});
 
-describe("gridCommand: slide, roll and slip (VV-036)", () => {
-	test("Mod+Alt+arrows slide, with Shift they roll", () => {
-		expect(key("ArrowRight", { ctrlKey: true, altKey: true })).toEqual({
-			kind: "slide",
-			sign: 1,
-		});
-		expect(key("ArrowLeft", { metaKey: true, altKey: true })).toEqual({
-			kind: "slide",
-			sign: -1,
-		});
+describe("gridCommand: the keys of the registry are not grid keys", () => {
+	test("slide, roll and slip (VV-036, VV-215) are rows of the registry", () => {
+		expect(key("ArrowRight", { ctrlKey: true, altKey: true })).toBeNull();
+		expect(key("ArrowLeft", { metaKey: true, altKey: true })).toBeNull();
 		expect(
 			key("ArrowRight", { ctrlKey: true, altKey: true, shiftKey: true }),
-		).toEqual({ kind: "roll", sign: 1 });
-	});
-
-	test("Alt+, and Alt+. slip by the physical key", () => {
-		const slip = (code: string) =>
+		).toBeNull();
+		expect(
 			gridCommand({
-				key: "≤",
-				code,
+				key: ",",
+				code: "Comma",
 				ctrlKey: false,
 				metaKey: false,
 				altKey: true,
 				shiftKey: false,
-			});
-		expect(slip("Comma")).toEqual({ kind: "slip", sign: -1 });
-		expect(slip("Period")).toEqual({ kind: "slip", sign: 1 });
+			}),
+		).toBeNull();
 	});
 
 	test("Mod+Shift+arrows without Alt stay with the global keys", () => {
@@ -152,9 +142,9 @@ describe("gridCommand: the key table of section 7.10", () => {
 		});
 	});
 
-	test("Mod+A selects all, other Mod keys are left alone", () => {
-		expect(key("a", { ctrlKey: true })).toEqual({ kind: "select-all" });
-		expect(key("A", { metaKey: true })).toEqual({ kind: "select-all" });
+	test("Mod+A and the other Mod keys are the registry's, not the grid's", () => {
+		expect(key("a", { ctrlKey: true })).toBeNull();
+		expect(key("A", { metaKey: true })).toBeNull();
 		expect(key("ArrowLeft", { ctrlKey: true })).toBeNull();
 		expect(key("s")).toBeNull();
 	});

@@ -13,7 +13,7 @@ description: "Run the server for other people: bind address, TLS, users, roles, 
 
 [Network mode](/docs/concepts/local-and-network-mode) is any bind address that is not loopback, with `STUARTY_MODE=network`. A non-loopback address with the mode `local` is a start-up error, never a silent exposure. The local token is not accepted in this mode.
 
-- **Login is mandatory.** There is no open registration, no social login and no email. The operator creates the users.
+- **Login is mandatory.** There is no open registration and no email. The operator creates the users. A user may also [sign in with Google](/docs/self-hosting/google-sign-in) after linking a Google account, when you turn that on; Google never creates a user.
 - **TLS is required.** Either the process terminates it (`TLS_CERT_FILE` and `TLS_KEY_FILE`, TLS 1.2 or newer) or a reverse proxy does, with `TRUSTED_PROXIES` and `TRUST_FORWARDED_PROTO=true` (see [Put Caddy in front](/docs/self-hosting/caddy)). `APP_URL` must be the public `https` address, and the server accepts only that host and origin. The one exception is a container used on its own machine: `APP_URL=http://localhost:<port>` or `http://127.0.0.1:<port>` is served over plain HTTP, and only to that name. Plain HTTP is safe only when the port is published on `127.0.0.1` or `[::1]` (for Docker, `-p 127.0.0.1:7878:7878`) or when TLS is in front: nothing on that listener is encrypted. When the server listens beyond loopback over plain HTTP it logs a warning that starts `network mode over plain HTTP on <address>: no credential is encrypted on this listener`; the [Docker page](/docs/self-hosting/docker) has the whole message.
 - **`APP_KEY` is required**, 32 bytes or more in base64.
 - **Not as root.** Running as root or Administrator is refused unless `STUARTY_INSECURE_ALLOW_ROOT=true`.
@@ -88,6 +88,7 @@ The process exits with status 1 and a message that names the variable.
 
 - Setting `APP_URL` to one name and browsing by another: the host and the origin must match `APP_URL` exactly.
 - Running `user:create` while the server runs: `E_WORKSPACE_LOCKED`. Stop the server, or use the first-administrator variables.
+- Running `user:create`, `user:passwd` or `token:rotate` with `STUARTY_URL` set: `E_INVALID_STATE`. They write the workspace on the machine where they run, so unset `STUARTY_URL` and run them on the server's machine.
 - Forgetting that every project belongs to its creator: an agent key sees only its owner's projects.
 
 ## Next steps

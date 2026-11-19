@@ -36,6 +36,7 @@ Content type `application/json`.
 | `position` | `integer` or `null` | no | Where in the order of the items, from 0; default the end. |
 | `preset` | `string` | no | A timeline: 9:16 (default), 1:1, 16:9 or 4:5. |
 | `text` | `string` | no | Markdown of a text item, at most 256 KiB. |
+| `text_kind` | `string` | no | A text item: script, copy (default) or caption. |
 | `title` | `string` | yes | 1 to 120 characters.. min length 1 |
 
 ## Responses
@@ -295,7 +296,9 @@ puts "#{response.code} #{response.body}"
     "kind": "string",
     "position": 0,
     "state": "string",
+    "status": "string",
     "text": "string",
+    "text_kind": "string",
     "timeline_id": "string",
     "title": "string",
     "updated_at": "2006-01-02T15:04:05Z"
@@ -306,6 +309,7 @@ puts "#{response.code} #{response.body}"
     "outputs": 0,
     "pending_approvals": 0,
     "published": 0,
+    "texts": 0,
     "timelines": 0
   },
   "project_id": "string",

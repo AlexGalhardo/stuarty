@@ -1,0 +1,10 @@
+{
+  "code": "E_INVALID_STATE",
+  "message": "Item itm_m1n2p3q4r5 shows frames 30 to 299 of a timeline of 300 frames; only the whole of it can be expanded.",
+  "hint": "Trim and slip the composition to show the whole timeline, or keep it.",
+  "retryable": false,
+  "path": "args.item_id",
+  "details": {
+    "reason": "composition_window"
+  }
+}

@@ -9,6 +9,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/core/project"
 	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/writing"
 )
 
 // productionChange is what the plan of an item operation decides: the items as they will be, the item the
@@ -111,10 +112,19 @@ func (s *svc) checkItemAdd(req *ProjectItemAddRequest) (*timeline.Document, erro
 		}
 	}
 
+	if req.TextKind != "" && kind != project.Text {
+		return nil, newError(command.CodeValidation, "text_kind is for an item of kind text.").
+			withPath("text_kind").withHint("leave text_kind out, or add a text")
+	}
+
 	switch kind {
 	case project.Text:
 		if v := project.CheckText(req.Text); v != nil {
 			return nil, violation(v)
+		}
+
+		if _, v := writing.CheckKind(req.TextKind); v != nil {
+			return nil, writingViolation(v)
 		}
 	case project.Timeline:
 		doc, verr := s.newDocument(ProjectCreateRequest{Name: req.Title, Preset: req.Preset, FPS: req.FPS})
@@ -137,7 +147,7 @@ func (s *svc) checkItemAdd(req *ProjectItemAddRequest) (*timeline.Document, erro
 
 // ProjectItemAdd adds an item to a production.
 func (s *svc) ProjectItemAdd(ctx context.Context, req ProjectItemAddRequest) (*ProjectItemResult, error) {
-	c, err := authorize(ctx, "ProjectItemAdd", req.ProjectID)
+	c, err := s.authorizeProject(ctx, "ProjectItemAdd", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}
@@ -159,6 +169,11 @@ func (s *svc) ProjectItemAdd(ctx context.Context, req ProjectItemAddRequest) (*P
 			switch project.Kind(req.Kind) {
 			case project.Text:
 				it.Body = req.Text
+				it.TextKind = req.TextKind
+
+				if it.TextKind == "" {
+					it.TextKind = string(writing.DefaultKind)
+				}
 			case project.Timeline:
 				it.Ref = doc.ID
 			case project.Output:
@@ -283,7 +298,7 @@ func outputFormat(job *JobRow) string {
 
 // ProjectItemMove moves an item to a position of the order of the production.
 func (s *svc) ProjectItemMove(ctx context.Context, req ProjectItemMoveRequest) (*ProjectItemResult, error) {
-	c, err := authorize(ctx, "ProjectItemMove", req.ProjectID)
+	c, err := s.authorizeProject(ctx, "ProjectItemMove", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}
@@ -320,7 +335,7 @@ func (s *svc) ProjectItemMove(ctx context.Context, req ProjectItemMoveRequest) (
 
 // ProjectItemRename changes the title of an item; the document of a timeline is not touched.
 func (s *svc) ProjectItemRename(ctx context.Context, req ProjectItemRenameRequest) (*ProjectItemResult, error) {
-	c, err := authorize(ctx, "ProjectItemRename", req.ProjectID)
+	c, err := s.authorizeProject(ctx, "ProjectItemRename", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}
@@ -364,7 +379,7 @@ func (s *svc) ProjectItemRestore(ctx context.Context, req ProjectItemTrashReques
 func (s *svc) setItemState(
 	ctx context.Context, method string, req ProjectItemTrashRequest, to ProjectState, action string,
 ) (*ProjectItemResult, error) {
-	c, err := authorize(ctx, method, req.ProjectID)
+	c, err := s.authorizeProject(ctx, method, req.ProjectID)
 	if err != nil {
 		return nil, err
 	}
@@ -372,7 +387,7 @@ func (s *svc) setItemState(
 	var tlID string
 
 	head, change, err := s.changeProduction(ctx, c, action, req.ProjectID, req.DryRun,
-		func(_ context.Context, _ Tx, _ *ProductionHead, rows []ItemRow) (*productionChange, error) {
+		func(ctx context.Context, tx Tx, _ *ProductionHead, rows []ItemRow) (*productionChange, error) {
 			it := findItem(rows, req.ItemID)
 			if it == nil {
 				return nil, itemNotFound(req.ItemID)
@@ -381,6 +396,12 @@ func (s *svc) setItemState(
 			ch := &productionChange{rows: rows, itemID: req.ItemID}
 			if it.State == to {
 				return ch, nil
+			}
+
+			if it.Kind == string(project.Timeline) {
+				if nerr := s.checkTimelineState(ctx, tx, it.Ref, to); nerr != nil {
+					return nil, nerr
+				}
 			}
 
 			check := project.CheckTrash(coreItems(rows), it.ID)
@@ -434,11 +455,19 @@ func (s *svc) setItemState(
 // BriefSet writes the brief of a project: the Markdown the answers of the briefing are kept in (RF-302). The
 // first call makes the brief item, at the head of the production; an empty text clears it.
 func (s *svc) BriefSet(ctx context.Context, req BriefSetRequest) (*BriefResult, error) {
-	c, err := authorize(ctx, "BriefSet", req.ProjectID)
+	c, err := s.authorizeProject(ctx, "BriefSet", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}
 
+	return s.writeBrief(ctx, c, req, nil)
+}
+
+// writeBrief is BriefSet for a caller already authorized. keep, when set, is given the brief there is inside the
+// write transaction and may refuse the write, so that no other write lands between the check and the write.
+func (s *svc) writeBrief(
+	ctx context.Context, c Caller, req BriefSetRequest, keep func(current string) *project.RuleError,
+) (*BriefResult, error) {
 	if v := project.CheckText(req.Text); v != nil {
 		return nil, violation(v)
 	}
@@ -446,6 +475,18 @@ func (s *svc) BriefSet(ctx context.Context, req BriefSetRequest) (*BriefResult, 
 	head, change, err := s.changeProduction(ctx, c, "project.brief.set", req.ProjectID, req.DryRun,
 		func(_ context.Context, _ Tx, head *ProductionHead, rows []ItemRow) (*productionChange, error) {
 			b := briefOf(rows)
+
+			if keep != nil {
+				current := ""
+				if b != nil {
+					current = b.Body
+				}
+
+				if v := keep(current); v != nil {
+					return nil, violation(v)
+				}
+			}
+
 			if (b == nil && req.Text == "") || (b != nil && b.Body == req.Text) {
 				return &productionChange{rows: rows}, nil
 			}

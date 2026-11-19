@@ -3,6 +3,8 @@ package httpapi
 import (
 	"context"
 	"encoding/json"
+	"os"
+	"strconv"
 
 	"github.com/AlexGalhardo/stuarty/core/command"
 	coreimage "github.com/AlexGalhardo/stuarty/core/image"
@@ -57,6 +59,135 @@ type imageExportIn struct {
 	Preset  string `json:"preset,omitempty"                      doc:"Resample to a named size."`
 	Width   int    `json:"width,omitempty"                       doc:"Resample to this width; 0 keeps the aspect."`
 	Height  int    `json:"height,omitempty"                      doc:"Resample to this height; 0 keeps the aspect."`
+}
+
+type imageImportIn struct {
+	Path           string `json:"path,omitempty"            doc:"An absolute path to an image file on the machine of the server, read with the rules of media:import."`
+	Hash           string `json:"hash,omitempty"            doc:"sha256: and 64 hex characters: an image already in the workspace, instead of path."`
+	ImageID        string `json:"image_id,omitempty"        doc:"Put the file in this document as one more layer; without it a new document is made."`
+	Name           string `json:"name,omitempty"            doc:"The name of the new document, or of the layer when image_id is given; default the name of the file."`
+	Width          int    `json:"width,omitempty"           doc:"The canvas of a new document, with height; default the size of the file when it fits 4096."`
+	Height         int    `json:"height,omitempty"          doc:"The canvas of a new document, with width."`
+	Preset         string `json:"preset,omitempty"          doc:"The canvas of a new document: video_thumbnail, square_post or vertical_cover."`
+	WaitMS         int    `json:"wait_ms,omitempty"         doc:"How long to wait for the ingest of the file, 0 to 25000; default 10000."`
+	BaseRevision   int64  `json:"base_revision,omitempty"   doc:"With image_id: the revision the layer was planned against."`
+	IdempotencyKey string `json:"idempotency_key,omitempty" doc:"With image_id: 8 to 64 characters; the Idempotency-Key header is the same."`
+	DryRun         any    `json:"dry_run,omitempty"`
+}
+
+func (h *apiHandler) imageImport(c *web.Ctx, in imageImportIn) (service.ImageImportResult, error) {
+	key := in.IdempotencyKey
+
+	if header := c.Header("Idempotency-Key"); header != "" {
+		if key != "" && key != header {
+			return service.ImageImportResult{}, &service.Error{
+				Code: command.CodeValidation, Path: "idempotency_key",
+				Message: "the Idempotency-Key header and the idempotency_key member differ.",
+			}
+		}
+
+		key = header
+	}
+
+	dryRun, err := readDryRun(c, in.DryRun)
+	if err != nil {
+		return service.ImageImportResult{}, err
+	}
+
+	res, err := h.Service.ImageImport(c.Context(), service.ImageImportRequest{
+		Path: in.Path, Hash: in.Hash, ImageID: in.ImageID, Name: in.Name, Width: in.Width, Height: in.Height,
+		Preset: in.Preset, WaitMS: in.WaitMS, BaseRevision: in.BaseRevision, IdempotencyKey: key, DryRun: dryRun,
+	})
+	if err != nil {
+		return service.ImageImportResult{}, err
+	}
+
+	if res.ImageID != "" {
+		revisionHeader(c, res.Revision)
+	}
+
+	return *res, nil
+}
+
+// imageImportFile is POST /images/import/file (SDD-021 section 10.2): the body is the file, the other members are the
+// query. The route binds no input, so the framework never parses the body (as JSON or anything else); the body
+// limit of the router (1 MiB) is replaced by the one of an upload, and the Service reads at most that many bytes
+// into the content store. The declared Content-Type is ignored: a cookie session needs a preflighted type on an
+// unsafe method (SDD-007 section 3.6 step 6), which is why the screen sends application/json.
+func (h *apiHandler) imageImportFile(c *web.Ctx, _ noIn) (service.ImageImportResult, error) {
+	r := c.Request()
+	web.LimitBody(c.Writer(), r, service.MaxImageFileBytes+1)
+
+	q := func(name string) string { return c.Query(name) }
+
+	count := func(name string) (int, error) {
+		raw := q(name)
+		if raw == "" {
+			return 0, nil
+		}
+
+		n, err := strconv.Atoi(raw)
+		if err != nil || n < 0 {
+			return 0, &service.Error{
+				Code: command.CodeValidation, Path: name, Message: name + " must be a whole number of 0 or more.",
+			}
+		}
+
+		return n, nil
+	}
+
+	var (
+		width, height, wait int
+		base                int64
+		err                 error
+	)
+
+	for name, dst := range map[string]*int{"width": &width, "height": &height, "wait_ms": &wait} {
+		if *dst, err = count(name); err != nil {
+			return service.ImageImportResult{}, err
+		}
+	}
+
+	if raw := q("base_revision"); raw != "" {
+		if base, err = strconv.ParseInt(raw, 10, 64); err != nil || base < 0 {
+			return service.ImageImportResult{}, &service.Error{
+				Code: command.CodeValidation, Path: "base_revision",
+				Message: "base_revision must be a whole number of 0 or more.",
+			}
+		}
+	}
+
+	key := q("idempotency_key")
+	if header := c.Header("Idempotency-Key"); header != "" {
+		if key != "" && key != header {
+			return service.ImageImportResult{}, &service.Error{
+				Code: command.CodeValidation, Path: "idempotency_key",
+				Message: "the Idempotency-Key header and the idempotency_key member differ.",
+			}
+		}
+
+		key = header
+	}
+
+	dryRun, err := readDryRun(c, nil)
+	if err != nil {
+		return service.ImageImportResult{}, err
+	}
+
+	res, err := h.Service.ImageImportFile(c.Context(), service.ImageImportFileRequest{
+		ImageID: q("image_id"), Name: q("name"), Width: width, Height: height, Preset: q("preset"), WaitMS: wait,
+		BaseRevision: base, IdempotencyKey: key, DryRun: dryRun,
+		FileName: q("file_name"), Body: r.Body, Size: r.ContentLength,
+	})
+	if err != nil {
+		return service.ImageImportResult{}, err
+	}
+
+	if res.ImageID != "" {
+		revisionHeader(c, res.Revision)
+	}
+
+	return *res, nil
 }
 
 func (h *apiHandler) imageCreate(c *web.Ctx, in imageCreateIn) (service.ImageCreateResult, error) {
@@ -175,4 +306,76 @@ func (h *apiHandler) registerImages() {
 		return h.imageStep(c, in, h.Service.ImageRedo)
 	})
 	register(h, "images.export", h.imageExport)
+	register(h, "images.import", h.imageImport)
+	register(h, "images.import_file", h.imageImportFile)
+	register(h, "images.frame", h.imagesFrame)
+	register(h, "images.history", h.imagesHistory)
+	register(h, "images.file", h.imagesFile)
+	register(h, "images.events", h.imagesStream)
+}
+
+// The three reads of the image editor screen (SDD-012 section 24.3): the picture, the log and a file that an
+// export wrote. They are HTTP only; the rules and the rendering are in the Service.
+
+type imageFrameIn struct {
+	ID    string `json:"id"              validate:"required"`
+	Width int    `json:"width,omitempty"                     doc:"Pixels, 16 to 4096; default the canvas width."`
+	Rev   int64  `json:"rev,omitempty"                       doc:"Only a cache key of the caller: the answer is always the current revision."`
+}
+
+type imageHistoryIn struct {
+	ID    string `json:"id"              validate:"required"`
+	Limit int    `json:"limit,omitempty"                     doc:"1 to 100; default 30."`
+}
+
+type imageFileIn struct {
+	ID   string `json:"id"   validate:"required"`
+	Name string `json:"name" validate:"required" doc:"The file name ImageExport returned: <revision>-<12 hex>.<png|jpg|webp>."`
+}
+
+// imagesFrame is GET /images/{id}/frame: the PNG of the current revision, never cached by a proxy.
+func (h *apiHandler) imagesFrame(c *web.Ctx, in imageFrameIn) (noIn, error) {
+	res, err := h.Service.ImageFrame(c.Context(), service.ImageFrameRequest{ImageID: in.ID, Width: in.Width})
+	if err != nil {
+		return noIn{}, err
+	}
+
+	revisionHeader(c, res.Revision)
+	c.SetHeader("X-Vukem-Image-Width", strconv.Itoa(res.Width))
+	c.SetHeader("X-Vukem-Image-Height", strconv.Itoa(res.Height))
+	c.SetHeader("Cache-Control", "private, no-cache")
+	c.SetHeader("Content-Type", res.MIME)
+
+	_, werr := c.Writer().Write(res.Image)
+
+	return noIn{}, werr
+}
+
+func (h *apiHandler) imagesHistory(c *web.Ctx, in imageHistoryIn) (service.ImageHistoryResult, error) {
+	res, err := h.Service.ImageHistory(c.Context(), service.ImageHistoryRequest{ImageID: in.ID, Limit: in.Limit})
+	if res != nil {
+		revisionHeader(c, res.Revision)
+	}
+
+	return deref(res), err
+}
+
+// imagesFile is GET /images/{id}/exports/{name}: the file as a download, with the Range support of http.ServeContent.
+func (h *apiHandler) imagesFile(c *web.Ctx, in imageFileIn) (noIn, error) {
+	f, err := h.Service.ImageFile(c.Context(), service.ImageFileRequest{ImageID: in.ID, Name: in.Name})
+	if err != nil {
+		return noIn{}, err
+	}
+
+	hd := c.Writer().Header()
+	hd.Set("Content-Type", f.ContentType)
+	hd.Set("Content-Disposition", `attachment; filename="`+f.DownloadName+`"`)
+	hd.Set("Cache-Control", "private, max-age="+strconv.Itoa(f.MaxAge)+", immutable")
+	hd.Set("ETag", f.ETag)
+
+	if err := c.File(os.DirFS(string(h.Workspace)), f.Path); err != nil {
+		return noIn{}, err
+	}
+
+	return noIn{}, nil
 }

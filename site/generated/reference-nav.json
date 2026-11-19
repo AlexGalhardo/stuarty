@@ -3,14 +3,23 @@
     {
       "tag": "Projects",
       "pages": [
+        "briefing.questions",
         "projects.list",
         "projects.create",
         "projects.get",
+        "audio.measure",
+        "audio_previews.get",
         "bitmaps.get",
         "projects.brief.get",
         "projects.brief.set",
+        "projects.briefing.answer",
         "projects.bundle.export",
+        "projects.checkpoints.list",
+        "projects.checkpoints.create",
+        "projects.checkpoints.rename",
+        "projects.checkpoints.remove",
         "projects.describe",
+        "projects.diff",
         "projects.duplicate",
         "projects.edit",
         "projects.frame",
@@ -21,11 +30,15 @@
         "projects.items.restore",
         "projects.items.trash",
         "projects.lint",
+        "projects.motion.brief",
+        "projects.motion.check",
+        "projects.motion.replace",
         "projects.otio.export",
         "projects.otio.import",
         "projects.plan",
         "projects.redo",
         "projects.restore",
+        "projects.revert",
         "projects.sheet",
         "projects.snap_points",
         "projects.trash",
@@ -38,6 +51,10 @@
       "tag": "Media",
       "pages": [
         "assets.list",
+        "assets.get",
+        "assets.set",
+        "assets.tag",
+        "assets.uses",
         "media.list",
         "media.import",
         "media.inspect",
@@ -54,9 +71,12 @@
     {
       "tag": "Jobs",
       "pages": [
+        "export.presets",
         "jobs.get",
         "jobs.cancel",
         "jobs.file",
+        "export.batch",
+        "export.check",
         "jobs.list",
         "jobs.start"
       ]
@@ -100,13 +120,65 @@
       ]
     },
     {
+      "tag": "Library",
+      "pages": [
+        "library.memory.list",
+        "library.memory.write",
+        "library.memory.get",
+        "library.memory.remove",
+        "library.prompts.list",
+        "library.prompts.get",
+        "library.prompts.write",
+        "library.prompts.render",
+        "library.reindex",
+        "library.search",
+        "library.skills.list",
+        "library.skills.get",
+        "library.skills.write",
+        "library.skills.lint",
+        "library.skills.review",
+        "library.skills.export",
+        "library.skills.import"
+      ]
+    },
+    {
+      "tag": "Writing",
+      "pages": [
+        "captions.validate",
+        "texts.create",
+        "texts.get",
+        "texts.write",
+        "texts.draft",
+        "texts.revert",
+        "texts.revisions",
+        "scripts.estimate",
+        "texts.list"
+      ]
+    },
+    {
       "tag": "Connections",
       "pages": [
         "connections.list",
         "connections.create",
         "connections.get",
         "connections.remove",
-        "connections.test"
+        "providers.models",
+        "connections.test",
+        "voice.list"
+      ]
+    },
+    {
+      "tag": "AI providers",
+      "pages": [
+        "image.generate",
+        "providers.list",
+        "providers.prices.set",
+        "providers.sign-ins",
+        "providers.signin.begin",
+        "providers.signin.complete",
+        "text.generate",
+        "video.generate",
+        "voice.generate"
       ]
     },
     {
@@ -116,9 +188,70 @@
         "images.create",
         "images.get",
         "images.edit",
+        "images.events",
         "images.export",
+        "images.file",
+        "images.frame",
+        "images.history",
+        "images.model_edit",
         "images.redo",
-        "images.undo"
+        "images.undo",
+        "images.import",
+        "images.import_file"
+      ]
+    },
+    {
+      "tag": "Approvals",
+      "pages": [
+        "approval-rules.list",
+        "approval-rules.set",
+        "approval-rules.remove",
+        "approvals.list",
+        "approvals.get",
+        "approvals.decide",
+        "approvals.events",
+        "cost.get",
+        "cost.ceilings.set"
+      ]
+    },
+    {
+      "tag": "Publishing",
+      "pages": [
+        "publications.list",
+        "publications.create",
+        "publications.get",
+        "publications.update",
+        "publications.cancel",
+        "publications.retry",
+        "publications.schedule",
+        "publications.send-now",
+        "publications.events",
+        "publish.now",
+        "publish.status",
+        "publish.validate",
+        "social.accounts",
+        "social.complete",
+        "social.connect",
+        "social.networks",
+        "social.price",
+        "social.select"
+      ]
+    },
+    {
+      "tag": "Agent chat",
+      "pages": [
+        "agents.profiles.list",
+        "agents.profiles.set",
+        "agents.profiles.remove",
+        "chat.sessions.get",
+        "chat.sessions.delete",
+        "chat.sessions.cancel",
+        "chat.sessions.events",
+        "chat.sessions.send",
+        "chat.sessions.answer",
+        "chat.sessions.transcript",
+        "chat.sessions.list",
+        "chat.sessions.start"
       ]
     },
     {
@@ -127,6 +260,7 @@
         "handshake.get",
         "system.get",
         "system.launch",
+        "system.scheduler",
         "system.tools",
         "system.tools.install"
       ]
@@ -174,13 +308,21 @@
       "font_import",
       "connection",
       "image",
-      "project_item"
+      "project_item",
+      "library"
     ],
     "operations": [
+      "animation.apply_preset",
+      "animation.list_presets",
       "asset.remove",
       "audio.add",
+      "audio.apply_preset",
       "audio.duck",
       "audio.mark_beats",
+      "audio.processor_add",
+      "audio.processor_move",
+      "audio.processor_remove",
+      "audio.processor_set",
       "caption.add",
       "caption.edit_word",
       "caption.from_transcript",
@@ -192,7 +334,9 @@
       "caption.set_words",
       "caption.split",
       "clip.add",
+      "clip.add_composition",
       "clip.remove_silences",
+      "clip.replace_media",
       "clip.set_blend",
       "clip.set_blur",
       "clip.set_chroma_key",
@@ -205,6 +349,8 @@
       "clip.set_outline",
       "clip.set_shadow",
       "clip.set_speed",
+      "composition.create_from_selection",
+      "composition.expand",
       "font.add",
       "font.remove",
       "item.crossfade",
@@ -228,6 +374,7 @@
       "keyframe.clear",
       "keyframe.remove",
       "keyframe.set",
+      "keyframe.set_easing",
       "marker.add",
       "marker.remove",
       "marker.set",

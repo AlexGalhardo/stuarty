@@ -205,9 +205,33 @@ func baseOrCustom(c gcase) *Document {
 
 func TestRegistryIsComplete(t *testing.T) {
 	want := []string{
-		"canvas.resize", "image.create", "layer.add_fill", "layer.add_image", "layer.add_shape", "layer.add_text",
-		"layer.align", "layer.crop", "layer.duplicate", "layer.fit", "layer.group", "layer.move", "layer.remove",
-		"layer.set", "layer.set_shape", "layer.set_text", "layer.transform", "layer.ungroup",
+		"canvas.resize",
+		"image.create",
+		"layer.add_fill",
+		"layer.add_image",
+		"layer.add_shape",
+		"layer.add_text",
+		"layer.adjust",
+		"layer.align",
+		"layer.blend",
+		"layer.crop",
+		"layer.duplicate",
+		"layer.filter_add",
+		"layer.filter_move",
+		"layer.filter_remove",
+		"layer.filter_set",
+		"layer.fit",
+		"layer.group",
+		"layer.mask_clear",
+		"layer.mask_set",
+		"layer.move",
+		"layer.remove",
+		"layer.replace_source",
+		"layer.set",
+		"layer.set_shape",
+		"layer.set_text",
+		"layer.transform",
+		"layer.ungroup",
 	}
 
 	if got := Registry().Names(); !slices.Equal(got, want) {

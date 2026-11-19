@@ -133,8 +133,10 @@ func (s *svc) KeyCreate(ctx context.Context, req KeyCreateRequest) (*KeyCreateRe
 	}
 
 	if req.ProjectID != "" {
-		row, perr := s.store.Projects().Get(ctx, req.ProjectID)
-		if perr != nil || !visible(c, row.OwnerUserID) {
+		// A key is limited to a project, never to the id of one of its timelines: Productions().Get answers
+		// for projects only, and a timeline id gets the answer of an id that names nothing.
+		head, perr := s.store.Productions().Get(ctx, req.ProjectID)
+		if perr != nil || !visible(c, head.OwnerUserID) {
 			return nil, projectNotFound(req.ProjectID, perr)
 		}
 	}
