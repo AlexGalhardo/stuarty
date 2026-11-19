@@ -134,7 +134,7 @@ One file, `<workspace>/providers/prices.json`, mode 0600, written through a temp
 }
 ```
 
-At most 500 entries, one per provider and model. The file has no secret. A person sets or removes an entry with `ProviderPriceSet` (section 7): because a lower price lowers every estimate, it is an operation of a privileged browser session, like the ceilings of SDD-015 section 4, so an agent cannot talk its way under a ceiling by editing a price.
+At most 500 entries, one per provider and model: a file edited by hand with two entries for one model is refused as a whole, like any entry that does not pass the rules, since the estimate would otherwise use whichever came first. The file has no secret. A person sets or removes an entry with `ProviderPriceSet` (section 7): because a lower price lowers every estimate, it is an operation of a privileged browser session, like the ceilings of SDD-015 section 4, so an agent cannot talk its way under a ceiling by editing a price.
 
 ### 4.4 Ceilings and approval
 
