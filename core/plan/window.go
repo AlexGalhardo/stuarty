@@ -192,7 +192,7 @@ func WindowWith(doc *timeline.Document, from, to int, opts Options) WindowPlan {
 		w.Layers = append(w.Layers, acc[id].wl)
 	}
 
-	w.Audio = windowAudio(doc, from, to)
+	w.Audio = append(windowAudio(doc, from, to), nestedWindowAudio(doc, from, to, opts)...)
 
 	return w
 }
