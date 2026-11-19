@@ -15,7 +15,7 @@ The server lists 20 tools. Each page has the input, the output, the errors, the 
 | [`project_trash`](/docs/mcp/tools/project_trash) | Trash or restore project | no | Move a project to the trash, or restore it with restore=true. |
 | [`edit`](/docs/mcp/tools/edit) | Edit project | no | Change a project (project_id) or an image (domain=image, image_id). |
 | [`command_help`](/docs/mcp/tools/command_help) | Operation help | yes | Discover operations. |
-| [`history`](/docs/mcp/tools/history) | History, undo and redo | no | Read the change log (action=list, newest first, with actor; actor, cursor, limit only for list), or undo or redo your own latest step (action=undo or redo, one step per call). |
+| [`history`](/docs/mcp/tools/history) | History, undo and redo | no | Read the change log (action=list, newest first, with actor; actor, cursor, limit only for list), undo or redo your own latest step (one per call), revert to a revision or checkpoint as a new step (dry_run shows it), diff two revisions, or name revisions: checkpoints, checkpoint, rename_checkpoint, remove_checkpoint. |
 | [`media_import`](/docs/mcp/tools/media_import) | Import media | no | Import files into a project. |
 | [`media_inspect`](/docs/mcp/tools/media_inspect) | Inspect media | yes | Describe an asset (asset_id) or list a project's assets, pending and failed included. |
 | [`view`](/docs/mcp/tools/view) | View frame, sheet or sound | yes | See the result. |
