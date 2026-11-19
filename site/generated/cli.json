@@ -3526,59 +3526,39 @@
       ]
     },
     {
-      "name": "social:network:list",
-      "domain": "publish",
-      "summary": "list the social networks this build can publish to, with their limits and where they were read",
+      "name": "text:list",
+      "domain": "writing",
+      "summary": "list the scripts, copy and captions of a project, or of every project",
       "usage": [
-        "stuarty social:network:list"
+        "stuarty text:list [--project <id>] [--kind script|copy|caption] [--state active|trashed]"
       ],
-      "example": "stuarty social:network:list --json",
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "social:connect",
-      "domain": "publish",
-      "summary": "start the sign-in to a network with your own developer app; the client secret is read from standard input or a file, never from an argument",
-      "usage": [
-        "stuarty social:connect --network <n> --client-id <id> --redirect-uri <url> [--label <t>]",
-        "stuarty social:connect --network <n> --connection <id> --redirect-uri <url>"
-      ],
-      "example": "echo $CLIENT_SECRET | stuarty social:connect --network youtube --client-id 123.apps.googleusercontent.com --redirect-uri http://127.0.0.1:7878/social/callback",
+      "example": "stuarty text:list --kind caption --json",
       "flags": [
         {
-          "name": "network",
+          "name": "project",
           "type": "string",
-          "usage": "the network, for example youtube (required)"
+          "usage": "only the texts of this project"
         },
         {
-          "name": "client-id",
+          "name": "kind",
           "type": "string",
-          "usage": "the client id of your developer project"
+          "usage": "script, copy or caption"
         },
         {
-          "name": "redirect-uri",
+          "name": "state",
           "type": "string",
-          "usage": "the address of this app followed by /social/callback (required)"
+          "usage": "active (default) or trashed"
         },
         {
-          "name": "label",
+          "name": "cursor",
           "type": "string",
-          "usage": "a name for the connection"
+          "usage": "continue a list from this cursor"
         },
         {
-          "name": "connection",
-          "type": "string",
-          "usage": "sign in again an existing connection instead of making one"
-        },
-        {
-          "name": "secret-file",
-          "type": "string",
-          "usage": "a file that holds the client secret; without it it is read from standard input"
+          "name": "limit",
+          "type": "integer",
+          "default": "50",
+          "usage": "items per page"
         }
       ],
       "globals": [
@@ -3589,74 +3569,18 @@
       ]
     },
     {
-      "name": "social:account:list",
-      "domain": "publish",
-      "summary": "list the connected social accounts and whether each is signed in",
+      "name": "text:show",
+      "domain": "writing",
+      "summary": "show a text, or one of its revisions",
       "usage": [
-        "stuarty social:account:list"
+        "stuarty text:show <item> --project <id> [--revision n]"
       ],
-      "example": "stuarty social:account:list",
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "publish:validate",
-      "domain": "publish",
-      "summary": "check a post against the limits of its network and show what a person would approve; sends nothing",
-      "usage": [
-        "stuarty publish:validate --project <id> --connection <id> --export <job> --title <t> --made-for-kids yes|no"
-      ],
-      "example": "stuarty publish:validate --project prj_7k2m9x4q1b --connection con_0123456789 --export job_0123456789 --title \"My short\" --made-for-kids no",
+      "example": "stuarty text:show pit_3c5v8n2w6d --project prj_7k2m9x4q1b",
       "flags": [
         {
-          "name": "connection",
-          "type": "string",
-          "usage": "the connection the video goes to (required)"
-        },
-        {
-          "name": "export",
-          "type": "string",
-          "usage": "the id of a succeeded export job of the project: the video (required)"
-        },
-        {
-          "name": "thumbnail",
-          "type": "string",
-          "usage": "the id of a succeeded export job of a still: the cover"
-        },
-        {
-          "name": "title",
-          "type": "string",
-          "usage": "the title (required)"
-        },
-        {
-          "name": "description",
-          "type": "string",
-          "usage": "the description"
-        },
-        {
-          "name": "tags",
-          "type": "string",
-          "usage": "the tags, a comma list"
-        },
-        {
-          "name": "visibility",
-          "type": "string",
-          "usage": "private (the default), unlisted or public"
-        },
-        {
-          "name": "made-for-kids",
-          "type": "string",
-          "usage": "yes or no: whether the video is made for kids (required)"
-        },
-        {
-          "name": "ai-disclosure",
-          "type": "boolean",
-          "default": "false",
-          "usage": "the video has realistic altered or synthetic content"
+          "name": "revision",
+          "type": "integer",
+          "usage": "a revision number from 1; default the latest"
         }
       ],
       "globals": [
@@ -3668,59 +3592,34 @@
       ]
     },
     {
-      "name": "publish:now",
-      "domain": "publish",
-      "summary": "prepare the publication of an exported video: it waits for a person to approve it in the app, then it is sent; you cannot approve it",
+      "name": "text:write",
+      "domain": "writing",
+      "summary": "make a text, or save a new revision of one, from a Markdown file",
       "usage": [
-        "stuarty publish:now --project <id> --connection <id> --export <job> --title <t> --made-for-kids yes|no"
+        "stuarty text:write --project <id> --title <t> [--kind script|copy|caption] --text <file|->",
+        "stuarty text:write <item> --project <id> --text <file|-> [--title <t>] [--base <revision>]"
       ],
-      "example": "stuarty publish:now --project prj_7k2m9x4q1b --connection con_0123456789 --export job_0123456789 --title \"My short\" --made-for-kids no --visibility private",
+      "example": "stuarty text:write --project prj_7k2m9x4q1b --title Hook --kind script --text hook.md",
       "flags": [
         {
-          "name": "connection",
+          "name": "text",
           "type": "string",
-          "usage": "the connection the video goes to (required)"
-        },
-        {
-          "name": "export",
-          "type": "string",
-          "usage": "the id of a succeeded export job of the project: the video (required)"
-        },
-        {
-          "name": "thumbnail",
-          "type": "string",
-          "usage": "the id of a succeeded export job of a still: the cover"
+          "usage": "the Markdown: a file, or - for standard input (required)"
         },
         {
           "name": "title",
           "type": "string",
-          "usage": "the title (required)"
+          "usage": "the title: needed to make a text, a new title when saving one"
         },
         {
-          "name": "description",
+          "name": "kind",
           "type": "string",
-          "usage": "the description"
+          "usage": "making a text: script, copy (default) or caption"
         },
         {
-          "name": "tags",
-          "type": "string",
-          "usage": "the tags, a comma list"
-        },
-        {
-          "name": "visibility",
-          "type": "string",
-          "usage": "private (the default), unlisted or public"
-        },
-        {
-          "name": "made-for-kids",
-          "type": "string",
-          "usage": "yes or no: whether the video is made for kids (required)"
-        },
-        {
-          "name": "ai-disclosure",
-          "type": "boolean",
-          "default": "false",
-          "usage": "the video has realistic altered or synthetic content"
+          "name": "base",
+          "type": "integer",
+          "usage": "the revision you read: a newer one is refused"
         }
       ],
       "globals": [
@@ -3733,13 +3632,181 @@
       ]
     },
     {
-      "name": "publish:status",
-      "domain": "publish",
-      "summary": "show the state of a publication: waiting_approval, uploading, processing, published or failed",
+      "name": "text:revisions",
+      "domain": "writing",
+      "summary": "list the revisions of a text, and compare two by paragraph",
       "usage": [
-        "stuarty publish:status <job id>"
+        "stuarty text:revisions <item> --project <id> [--from n [--until n]]"
       ],
-      "example": "stuarty publish:status job_0123456789",
+      "example": "stuarty text:revisions pit_3c5v8n2w6d --project prj_7k2m9x4q1b --from 1",
+      "flags": [
+        {
+          "name": "before",
+          "type": "integer",
+          "usage": "start under this revision (the next_before of the last page)"
+        },
+        {
+          "name": "limit",
+          "type": "integer",
+          "usage": "revisions per page, 1 to 100 (default 50)"
+        },
+        {
+          "name": "from",
+          "type": "integer",
+          "usage": "compare this revision with --until"
+        },
+        {
+          "name": "until",
+          "type": "integer",
+          "usage": "the revision to compare with (default the latest)"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project"
+      ]
+    },
+    {
+      "name": "text:revert",
+      "domain": "writing",
+      "summary": "bring an older revision of a text back as a new revision",
+      "usage": [
+        "stuarty text:revert <item> --project <id> --revision n"
+      ],
+      "example": "stuarty text:revert pit_3c5v8n2w6d --project prj_7k2m9x4q1b --revision 2",
+      "flags": [
+        {
+          "name": "revision",
+          "type": "integer",
+          "usage": "the revision whose text comes back (required)"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project",
+        "dry-run"
+      ]
+    },
+    {
+      "name": "text:draft",
+      "domain": "writing",
+      "summary": "ask a model for a draft of a text; the job shows its estimate and waits for approval",
+      "usage": [
+        "stuarty text:draft <item> --project <id> --connection <id> --model <id> --instruction <text> [--network <n>] [--max-tokens <n>] [--temperature <t>] [--dry-run]"
+      ],
+      "example": "stuarty text:draft pit_3c5v8n2w6d --project prj_7k2m9x4q1b --connection con_0123456789 --model a-model --instruction \"A hook in 20 seconds\"",
+      "flags": [
+        {
+          "name": "connection",
+          "type": "string",
+          "usage": "the connection to the provider (required)"
+        },
+        {
+          "name": "model",
+          "type": "string",
+          "usage": "the model id, as provider:models lists it (required)"
+        },
+        {
+          "name": "instruction",
+          "type": "string",
+          "usage": "what to write, 1 to 4000 characters (required)"
+        },
+        {
+          "name": "network",
+          "type": "string",
+          "usage": "a caption: draft the variant of this network only"
+        },
+        {
+          "name": "max-tokens",
+          "type": "integer",
+          "usage": "the most tokens the model may write; the estimate counts all of them"
+        },
+        {
+          "name": "temperature",
+          "type": "string",
+          "usage": "0 to 2"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project",
+        "dry-run"
+      ]
+    },
+    {
+      "name": "caption:validate",
+      "domain": "writing",
+      "summary": "measure a caption against the limits of each network",
+      "usage": [
+        "stuarty caption:validate <item> --project <id> [--network <n>]",
+        "stuarty caption:validate --body <file|->",
+        "stuarty caption:validate --text <file|-> --network <n>"
+      ],
+      "example": "stuarty caption:validate pit_3c5v8n2w6d --project prj_7k2m9x4q1b",
+      "flags": [
+        {
+          "name": "project",
+          "type": "string",
+          "usage": "the project of the text (default $STUARTY_PROJECT)"
+        },
+        {
+          "name": "body",
+          "type": "string",
+          "usage": "a whole caption, saved or not: a file, or - for standard input"
+        },
+        {
+          "name": "text",
+          "type": "string",
+          "usage": "one variant: a file, or - for standard input (needs --network)"
+        },
+        {
+          "name": "network",
+          "type": "string",
+          "usage": "youtube, instagram, facebook, x or tiktok"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "script:estimate",
+      "domain": "writing",
+      "summary": "estimate how long a script takes when read aloud",
+      "usage": [
+        "stuarty script:estimate <item> --project <id> [--wpm n]",
+        "stuarty script:estimate --text <file|-> [--wpm n]"
+      ],
+      "example": "stuarty script:estimate pit_3c5v8n2w6d --project prj_7k2m9x4q1b --wpm 130",
+      "flags": [
+        {
+          "name": "project",
+          "type": "string",
+          "usage": "the project of the text (default $STUARTY_PROJECT)"
+        },
+        {
+          "name": "text",
+          "type": "string",
+          "usage": "a script that is not saved: a file, or - for standard input"
+        },
+        {
+          "name": "wpm",
+          "type": "integer",
+          "usage": "words per minute, 60 to 300 (default 150)"
+        }
+      ],
       "globals": [
         "json",
         "workspace",

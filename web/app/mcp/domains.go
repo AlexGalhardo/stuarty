@@ -129,12 +129,13 @@ func imageHistory(
 var toolDomains = map[string][]string{
 	"project_list": {command.DomainProject}, "project_create": {command.DomainProject},
 	"project_get": {command.DomainProject}, "project_trash": {command.DomainProject},
-	"project_item": {command.DomainProject},
+	// project_item also serves the texts of a production (text, revisions, revert, check; SDD-019).
+	"project_item": {command.DomainProject, command.DomainWriting},
 	"edit":         {command.DomainVideo, command.DomainImage}, "history": {command.DomainVideo, command.DomainImage},
 	"view": {command.DomainVideo}, "lint": {command.DomainVideo},
-	// job_start also starts text.generate, image.generate and voice.generate, the generations of the provider
-	// domain (SDD-016 sections 10 and 6.1).
-	"job_start": {command.DomainVideo, command.DomainProvider},
+	// job_start also starts text.generate, the generation of the provider domain (SDD-016 section 10), and
+	// text.draft, the draft of a text of the writing domain (SDD-019 section 6).
+	"job_start": {command.DomainVideo, command.DomainProvider, command.DomainWriting},
 	"job_get":   {command.DomainVideo}, "job_cancel": {command.DomainVideo}, "template": {command.DomainVideo},
 	"media_import": {command.DomainAsset}, "media_inspect": {command.DomainAsset}, "font_import": {command.DomainAsset},
 	"image":   {command.DomainImage},

@@ -2434,134 +2434,188 @@ Example:
 stuarty library:reindex
 ```
 
-## `social:network:list`
+## `text:list`
 
-List the social networks this build can publish to, with their limits and where they were read
-
-```text
-stuarty social:network:list
-```
-
-Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
-
-Example:
-
-```bash
-stuarty social:network:list --json
-```
-
-## `social:connect`
-
-Start the sign-in to a network with your own developer app; the client secret is read from standard input or a file, never from an argument
+List the scripts, copy and captions of a project, or of every project
 
 ```text
-stuarty social:connect --network <n> --client-id <id> --redirect-uri <url> [--label <t>]
-stuarty social:connect --network <n> --connection <id> --redirect-uri <url>
+stuarty text:list [--project <id>] [--kind script|copy|caption] [--state active|trashed]
 ```
 
 | Flag | Type | Default | Meaning |
 | --- | --- | --- | --- |
-| `--network` | string |  | the network, for example youtube (required) |
-| `--client-id` | string |  | the client id of your developer project |
-| `--redirect-uri` | string |  | the address of this app followed by /social/callback (required) |
-| `--label` | string |  | a name for the connection |
-| `--connection` | string |  | sign in again an existing connection instead of making one |
-| `--secret-file` | string |  | a file that holds the client secret; without it it is read from standard input |
+| `--project` | string |  | only the texts of this project |
+| `--kind` | string |  | script, copy or caption |
+| `--state` | string |  | active (default) or trashed |
+| `--cursor` | string |  | continue a list from this cursor |
+| `--limit` | integer | `50` | items per page |
 
 Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
 
 Example:
 
 ```bash
-echo $CLIENT_SECRET | stuarty social:connect --network youtube --client-id 123.apps.googleusercontent.com --redirect-uri http://127.0.0.1:7878/social/callback
+stuarty text:list --kind caption --json
 ```
 
-## `social:account:list`
+## `text:show`
 
-List the connected social accounts and whether each is signed in
+Show a text, or one of its revisions
 
 ```text
-stuarty social:account:list
-```
-
-Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
-
-Example:
-
-```bash
-stuarty social:account:list
-```
-
-## `publish:validate`
-
-Check a post against the limits of its network and show what a person would approve; sends nothing
-
-```text
-stuarty publish:validate --project <id> --connection <id> --export <job> --title <t> --made-for-kids yes|no
+stuarty text:show <item> --project <id> [--revision n]
 ```
 
 | Flag | Type | Default | Meaning |
 | --- | --- | --- | --- |
-| `--connection` | string |  | the connection the video goes to (required) |
-| `--export` | string |  | the id of a succeeded export job of the project: the video (required) |
-| `--thumbnail` | string |  | the id of a succeeded export job of a still: the cover |
-| `--title` | string |  | the title (required) |
-| `--description` | string |  | the description |
-| `--tags` | string |  | the tags, a comma list |
-| `--visibility` | string |  | private (the default), unlisted or public |
-| `--made-for-kids` | string |  | yes or no: whether the video is made for kids (required) |
-| `--ai-disclosure` | boolean | `false` | the video has realistic altered or synthetic content |
+| `--revision` | integer |  | a revision number from 1; default the latest |
 
 Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`.
 
 Example:
 
 ```bash
-stuarty publish:validate --project prj_7k2m9x4q1b --connection con_0123456789 --export job_0123456789 --title "My short" --made-for-kids no
+stuarty text:show pit_3c5v8n2w6d --project prj_7k2m9x4q1b
 ```
 
-## `publish:now`
+## `text:write`
 
-Prepare the publication of an exported video: it waits for a person to approve it in the app, then it is sent; you cannot approve it
+Make a text, or save a new revision of one, from a Markdown file
 
 ```text
-stuarty publish:now --project <id> --connection <id> --export <job> --title <t> --made-for-kids yes|no
+stuarty text:write --project <id> --title <t> [--kind script|copy|caption] --text <file|->
+stuarty text:write <item> --project <id> --text <file|-> [--title <t>] [--base <revision>]
 ```
 
 | Flag | Type | Default | Meaning |
 | --- | --- | --- | --- |
-| `--connection` | string |  | the connection the video goes to (required) |
-| `--export` | string |  | the id of a succeeded export job of the project: the video (required) |
-| `--thumbnail` | string |  | the id of a succeeded export job of a still: the cover |
-| `--title` | string |  | the title (required) |
-| `--description` | string |  | the description |
-| `--tags` | string |  | the tags, a comma list |
-| `--visibility` | string |  | private (the default), unlisted or public |
-| `--made-for-kids` | string |  | yes or no: whether the video is made for kids (required) |
-| `--ai-disclosure` | boolean | `false` | the video has realistic altered or synthetic content |
+| `--text` | string |  | the Markdown: a file, or - for standard input (required) |
+| `--title` | string |  | the title: needed to make a text, a new title when saving one |
+| `--kind` | string |  | making a text: script, copy (default) or caption |
+| `--base` | integer |  | the revision you read: a newer one is refused |
 
 Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--dry-run`.
 
 Example:
 
 ```bash
-stuarty publish:now --project prj_7k2m9x4q1b --connection con_0123456789 --export job_0123456789 --title "My short" --made-for-kids no --visibility private
+stuarty text:write --project prj_7k2m9x4q1b --title Hook --kind script --text hook.md
 ```
 
-## `publish:status`
+## `text:revisions`
 
-Show the state of a publication: waiting_approval, uploading, processing, published or failed
+List the revisions of a text, and compare two by paragraph
 
 ```text
-stuarty publish:status <job id>
+stuarty text:revisions <item> --project <id> [--from n [--until n]]
 ```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--before` | integer |  | start under this revision (the next_before of the last page) |
+| `--limit` | integer |  | revisions per page, 1 to 100 (default 50) |
+| `--from` | integer |  | compare this revision with --until |
+| `--until` | integer |  | the revision to compare with (default the latest) |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`.
+
+Example:
+
+```bash
+stuarty text:revisions pit_3c5v8n2w6d --project prj_7k2m9x4q1b --from 1
+```
+
+## `text:revert`
+
+Bring an older revision of a text back as a new revision
+
+```text
+stuarty text:revert <item> --project <id> --revision n
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--revision` | integer |  | the revision whose text comes back (required) |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--dry-run`.
+
+Example:
+
+```bash
+stuarty text:revert pit_3c5v8n2w6d --project prj_7k2m9x4q1b --revision 2
+```
+
+## `text:draft`
+
+Ask a model for a draft of a text; the job shows its estimate and waits for approval
+
+```text
+stuarty text:draft <item> --project <id> --connection <id> --model <id> --instruction <text> [--network <n>] [--max-tokens <n>] [--temperature <t>] [--dry-run]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--connection` | string |  | the connection to the provider (required) |
+| `--model` | string |  | the model id, as provider:models lists it (required) |
+| `--instruction` | string |  | what to write, 1 to 4000 characters (required) |
+| `--network` | string |  | a caption: draft the variant of this network only |
+| `--max-tokens` | integer |  | the most tokens the model may write; the estimate counts all of them |
+| `--temperature` | string |  | 0 to 2 |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--dry-run`.
+
+Example:
+
+```bash
+stuarty text:draft pit_3c5v8n2w6d --project prj_7k2m9x4q1b --connection con_0123456789 --model a-model --instruction "A hook in 20 seconds"
+```
+
+## `caption:validate`
+
+Measure a caption against the limits of each network
+
+```text
+stuarty caption:validate <item> --project <id> [--network <n>]
+stuarty caption:validate --body <file|->
+stuarty caption:validate --text <file|-> --network <n>
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--project` | string |  | the project of the text (default $STUARTY_PROJECT) |
+| `--body` | string |  | a whole caption, saved or not: a file, or - for standard input |
+| `--text` | string |  | one variant: a file, or - for standard input (needs --network) |
+| `--network` | string |  | youtube, instagram, facebook, x or tiktok |
 
 Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
 
 Example:
 
 ```bash
-stuarty publish:status job_0123456789
+stuarty caption:validate pit_3c5v8n2w6d --project prj_7k2m9x4q1b
+```
+
+## `script:estimate`
+
+Estimate how long a script takes when read aloud
+
+```text
+stuarty script:estimate <item> --project <id> [--wpm n]
+stuarty script:estimate --text <file|-> [--wpm n]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--project` | string |  | the project of the text (default $STUARTY_PROJECT) |
+| `--text` | string |  | a script that is not saved: a file, or - for standard input |
+| `--wpm` | integer |  | words per minute, 60 to 300 (default 150) |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty script:estimate pit_3c5v8n2w6d --project prj_7k2m9x4q1b --wpm 130
 ```
 
 ## `serve`

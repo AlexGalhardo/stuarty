@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func codes(r Report) []string {
+func codes(r CaptionReport) []string {
 	out := make([]string, len(r.Problems))
 	for i := range r.Problems {
 		out[i] = r.Problems[i].Code
@@ -449,7 +449,7 @@ func TestDiffAtParagraphLevel(t *testing.T) {
 	b := "one\n\n2\n\nthree\r\n\r\n\r\nfour\n\nfive"
 
 	got := Diff(a, b)
-	want := []Hunk{
+	want := []TextHunk{
 		{OpEqual, "one"}, {OpRemoved, "two"}, {OpAdded, "2"}, {OpEqual, "three"}, {OpEqual, "four"}, {OpAdded, "five"},
 	}
 
@@ -461,7 +461,7 @@ func TestDiffAtParagraphLevel(t *testing.T) {
 		t.Fatalf("%+v", d)
 	}
 
-	if d := Diff("", "x"); len(d.Hunks) != 1 || d.Hunks[0] != (Hunk{OpAdded, "x"}) {
+	if d := Diff("", "x"); len(d.Hunks) != 1 || d.Hunks[0] != (TextHunk{OpAdded, "x"}) {
 		t.Fatalf("%+v", d)
 	}
 

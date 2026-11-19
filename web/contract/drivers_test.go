@@ -300,6 +300,10 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return res, err
 	}
 
+	if res, ok, err := writingCall(ctx, svc, s); ok {
+		return res, err
+	}
+
 	return nil, fmt.Errorf("no mapping for %s", s.Call)
 }
 
@@ -707,6 +711,10 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 	}
 
 	if tool, args, ok, err := libraryTool(s); ok {
+		return tool, args, err
+	}
+
+	if tool, args, ok, err := writingTool(s); ok {
 		return tool, args, err
 	}
 
@@ -1314,6 +1322,10 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 	}
 
 	if name, argv, stdin, ok, err := libraryCommand(s); ok {
+		return name, argv, stdin, err
+	}
+
+	if name, argv, stdin, ok, err := writingCommand(s); ok {
 		return name, argv, stdin, err
 	}
 

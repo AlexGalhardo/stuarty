@@ -83,6 +83,6 @@ var Provenance = map[string]string{
 	"service.TextItem.Title":       SourceProjectText,
 	"service.TextRevision.Model":   SourceNetworkText,
 	"service.TextGetResult.Body":   SourceProjectText,
-	"writing.Hunk.Text":            SourceProjectText,
+	"writing.TextHunk.Text":        SourceProjectText,
 	"writing.SceneEstimate.Title":  SourceProjectText,
 }
