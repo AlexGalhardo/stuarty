@@ -237,7 +237,7 @@ func (v *validator) processors(path, key string, chain []Processor, item bool) {
 	}
 }
 
-// Presets are the processor chains of audio.apply_preset (SDD-002 C.82).
+// Presets are the processor chains of audio.apply_preset (SDD-002 C.83).
 var Presets = []string{"voice", "voice_with_music", "podcast", "clean_noisy_room"}
 
 // PresetChain is the chain of a preset, or nil for an unknown name. Every call returns a new slice.

@@ -1312,6 +1312,7 @@
         "L_AUDIO_CLIP": "Áudio saturado",
         "L_LOUDNESS": "Volume fora do alvo",
         "L_DURATION_LIMIT": "Acima do limite de duração",
+        "L_ALPHA_MISSING": "Transparência declarada, mas ausente",
         "L_AUDIO_LIMITER_NOT_LAST": "O limitador não é o último da cadeia",
         "L_AUDIO_NOISE_REDUCTION_REPEATED": "Mais de uma redução de ruído"
       },
