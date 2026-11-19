@@ -39,17 +39,23 @@ tasks:
       - cd web && bun run format
 
   lint:
-    desc: Lint Go code, Markdown, the web front end and the site
+    desc: Lint Go code, Markdown, the web front end and the site, and check the agent surface budget
     cmds:
       - task: lint:go
       - task: lint:md
       - task: lint:web
       - task: lint:site
+      - task: lint:budget
 
   lint:go:
     desc: Run golangci-lint (linters and formatters)
     cmds:
       - golangci-lint run --allow-parallel-runners ./...
+
+  lint:budget:
+    desc: Measure the MCP tool list, the first discovery call and the domain descriptions against NFR-020
+    cmds:
+      - go run ./internal/tools/surfacebudget
 
   lint:md:
     desc: Run markdownlint-cli2 at the pinned version
