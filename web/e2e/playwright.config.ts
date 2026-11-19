@@ -197,6 +197,9 @@ export default defineConfig({
 				HOST: "127.0.0.1",
 				PORT: String(port),
 				STUARTY_HOME: home,
+				// The master key of the vault (SDD-014 section 4) lives next to the workspace, never in it, so
+				// the connections spec does not write into the keychain of the machine that runs it.
+				STUARTY_MASTER_KEY_FILE: `${home}.master.key`,
 				// One token drives the whole suite, faster and with more exports a minute
 				// than one person would (the limits of SDD-007 4.4 apply in local mode).
 				STUARTY_RATE_LIMIT_HEAVY_PER_MINUTE: "1000",

@@ -38,15 +38,15 @@ A creator can let Stuarty hold the keys to their accounts without fear: every cr
 
 ## Tasks
 
-- [ ] 1. Write SDD-014 (model, interfaces, errors, files) and add its names to SDD-000; add the threat rows to SDD-007. Verify: `task lint:md` exits 0 and `go run ./internal/tools/threatcheck` lists the new rows as needing tests.
-- [ ] 2. Propose the keychain and cipher libraries and wait for approval. Verify: the approval is recorded in the hand-off.
-- [ ] 3. Implement the vault with the file format and rotation. Verify: `go test ./service/vault/...` passes, including a test that the file never contains a known plaintext.
-- [ ] 4. Implement the master key providers (keychain, variable, file). Verify: `go test ./service/vault/... -run TestMasterKey` passes on Windows and in the Linux Docker test (`bash scripts/test-linux-docker.sh ./service/vault/...`).
-- [ ] 5. Implement connections, their migration and the service operations with scopes. Verify: `go test ./service/connections/... ./web/database/...` passes.
-- [ ] 6. Put the outbound gate in `internal/outbound` and route every existing outbound call through it. Verify: `go test ./internal/outbound/...` passes and `bash scripts/no-egress.sh` passes with no connection configured.
-- [ ] 7. Expose connections on HTTP, CLI and MCP, with parity tests. Verify: `go test ./web/contract/... -run TestParity` passes; `UPDATE_SURFACE=1` is used for the new names.
-- [ ] 8. Build the Connections page (list, add, test, remove, last used) in both languages. Verify: `bun run typecheck`, `bun run check:i18n`, `task test:web` and the new spec `web/e2e/specs/connections.spec.ts` pass.
-- [ ] 9. Make the diagnostic bundle and the logs free of secrets. Verify: `go test -run TestSecurity_ ./...` passes with the new tests of the SDD-007 rows.
+- [x] 1. Write SDD-014 (model, interfaces, errors, files) and add its names to SDD-000; add the threat rows to SDD-007. Verify: `task lint:md` exits 0 and `go run ./internal/tools/threatcheck` lists the new rows as needing tests.
+- [x] 2. Propose the keychain and cipher libraries and wait for approval. Verify: the approval is recorded in the hand-off.
+- [x] 3. Implement the vault with the file format and rotation. Verify: `go test ./service/vault/...` passes, including a test that the file never contains a known plaintext.
+- [x] 4. Implement the master key providers (keychain, variable, file). Verify: `go test ./service/vault/... -run TestMasterKey` passes on Windows and in the Linux Docker test (`bash scripts/test-linux-docker.sh ./service/vault/...`).
+- [x] 5. Implement connections, their migration and the service operations with scopes. Verify: `go test ./service/connections/... ./web/database/...` passes.
+- [x] 6. Put the outbound gate in `internal/outbound` and route every existing outbound call through it. Verify: `go test ./internal/outbound/...` passes and `bash scripts/no-egress.sh` passes with no connection configured.
+- [x] 7. Expose connections on HTTP, CLI and MCP, with parity tests. Verify: `go test ./web/contract/... -run TestParity` passes; `UPDATE_SURFACE=1` is used for the new names.
+- [x] 8. Build the Connections page (list, add, test, remove, last used) in both languages. Verify: `bun run typecheck`, `bun run check:i18n`, `task test:web` and the new spec `web/e2e/specs/connections.spec.ts` pass.
+- [x] 9. Make the diagnostic bundle and the logs free of secrets. Verify: `go test -run TestSecurity_ ./...` passes with the new tests of the SDD-007 rows.
 
 ## Test strategy
 

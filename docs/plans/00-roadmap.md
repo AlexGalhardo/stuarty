@@ -23,10 +23,10 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 
 | Epic | Title | Size | Depends on | Status |
 | --- | --- | --- | --- | --- |
-| [04](04-secret-vault-and-connections.md) | Secret vault and connections | L | 03 | IN PROGRESS (senior-a, 2026-11-19) |
-| [05](05-approval-queue-and-cost-ceilings.md) | Approval queue, rules and cost ceilings | M | 04 | TODO |
+| [04](04-secret-vault-and-connections.md) | Secret vault and connections | L | 03 | DONE (2026-11-19, 8e43a1a2..7410dcd3 replayed onto the integration branch) |
+| [05](05-approval-queue-and-cost-ceilings.md) | Approval queue, rules and cost ceilings | M | 04 | IN PROGRESS (senior-a, 2026-11-19) |
 | [06](06-project-as-production.md) | The project as the container of a production | L | 03 | IN PROGRESS (senior-b, 2026-11-19) |
-| [07](07-dashboard-shell.md) | Dashboard: sidebar, navigation, profile, theme | M | 03 | IN PROGRESS (senior-c, 2026-11-19) |
+| [07](07-dashboard-shell.md) | Dashboard: sidebar, navigation, profile, theme | M | 03 | DONE (2026-11-19, 70387363..171fb786) |
 | [08](08-asset-library.md) | Asset library with origin, rights and reuse | M | 06, 07 | TODO |
 | [09](09-ai-provider-layer.md) | AI provider layer with API keys, text generation and cost | L | 04, 05 | TODO |
 | [10](10-image-and-voice-generation.md) | Image and voice generation | M | 08, 09 | TODO |
@@ -34,7 +34,7 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | [12](12-ai-oauth-connections.md) | Sign in with ChatGPT and OpenRouter | M | 09 | TODO |
 | [13](13-mcp-domains-and-agent-docs.md) | MCP tools by domain and generated agent documentation | M | 06 | TODO |
 | [14](14-hosted-agent-chat.md) | The user's agent hosted in the chat panel | L | 07, 13 | TODO |
-| [15](15-memory-skills-and-prompts.md) | Memory, skills and prompts | L | 07 | TODO |
+| [15](15-memory-skills-and-prompts.md) | Memory, skills and prompts | L | 07 | IN PROGRESS (senior-c, 2026-11-19) |
 | [16](16-curated-skills-and-briefing.md) | Curated skills and the guided briefing | M | 06, 15 | TODO |
 | [17](17-writing.md) | Writing: scripts, copy and captions | M | 06, 09 | TODO |
 | [18](18-social-connectors-and-youtube.md) | Social connectors and YouTube | L | 04, 05 | TODO |
@@ -50,7 +50,7 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 
 | Epic | Title | Size | Depends on | Status |
 | --- | --- | --- | --- | --- |
-| [26](26-browser-preview-on-the-rust-renderer.md) | The browser preview on the Rust renderer | L | 03 | IN PROGRESS (senior-d, 2026-11-19) |
+| [26](26-browser-preview-on-the-rust-renderer.md) | The browser preview on the Rust renderer | L | 03 | DONE (2026-11-19, e21f512f..9c750319; task 8, the idle-machine playback measurement, waits for an idle window) |
 | [27](27-image-document-core.md) | Image documents: core, catalogue, templates and export | L | 03 | IN PROGRESS (senior-e, 2026-11-19) |
 | [28](28-image-editor-ui.md) | Image editor in the UI | L | 07, 27 | TODO |
 | [29](29-image-adjustments-filters-and-masks.md) | Image adjustments, filters, masks and blend modes | L | 27 | TODO |

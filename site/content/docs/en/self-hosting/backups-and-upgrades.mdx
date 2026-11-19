@@ -70,6 +70,7 @@ Without arguments the script tests every published release from `v0.3.0` on.
 - Using the tag `latest` on a server you keep. Pin `X.Y.Z` and move it on purpose.
 - Running the new and the old container on one volume at the same time: the second fails with `E_WORKSPACE_LOCKED`.
 - Losing `APP_KEY`: keep it with your other secrets.
+- Backing up `vault.json` and not the master key (`STUARTY_MASTER_KEY`, the file named by `STUARTY_MASTER_KEY_FILE`, or the keychain item of a desktop). The vault cannot be opened without it, and the key is never inside the workspace on purpose: keep it with your other secrets. Without it you connect the accounts again; your projects and media are unaffected.
 
 ## Next steps
 

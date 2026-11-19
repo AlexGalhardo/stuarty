@@ -5,7 +5,7 @@
 		{"cmd": "project:create --name \"Base\" --id prj_7k2m9x4q1b", "hidden": true},
 		{"cmd": "edit --project prj_7k2m9x4q1b --ops -", "hidden": true, "stdin": "[{\"op\":\"track.add\",\"args\":{\"kind\":\"visual\",\"name\":\"Text\",\"id\":\"trk_f6g7h8j9k0\"}},\n {\"op\":\"text.add\",\"args\":{\"track_id\":\"trk_f6g7h8j9k0\",\"start\":\"0s\",\"duration\":\"1s\",\"text\":\"Headline\",\"id\":\"itm_t1t2t3t4t5\"}}]"},
 		{"cmd": "edit --project prj_7k2m9x4q1b --base 1 slot.mark item_id=itm_t1t2t3t4t5 name=headline", "hidden": true},
-		{"cmd": "template:save --project prj_7k2m9x4q1b --name \"Spring sale\"", "note": "the project has a text item marked as the slot headline (slot.mark)"},
+		{"cmd": "template:save --project prj_7k2m9x4q1b --name \"Spring sale\"", "note": "a text item is marked as slot headline (slot.mark)"},
 		{"cmd": "template:new <template id> --name \"Spring sale\" --id prj_6t4y2w8j1m --fill -", "run": "template:new tpl_0000000001 --name \"Spring sale\" --id prj_6t4y2w8j1m --fill -", "stdin": "{\"headline\":{\"text\":\"Spring sale\"}}"},
 		{"cmd": "export --project prj_6t4y2w8j1m"}
 	]

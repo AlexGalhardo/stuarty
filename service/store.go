@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+
+	"github.com/AlexGalhardo/stuarty/service/connections"
 )
 
 // Sentinel errors returned by the store (SDD-005 section 2 item 8). The
@@ -63,6 +65,7 @@ type Repos interface {
 	Fonts() FontRepo
 	BrandKit() BrandKitRepo
 	Images() ImageRepo
+	Connections() connections.Store
 }
 
 // Tx is a write transaction.

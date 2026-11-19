@@ -892,6 +892,95 @@ Example:
 stuarty otio:import cut.otio --project prj_7k2m9x4q1b --dry-run
 ```
 
+## `connection:list`
+
+List the destinations Stuarty may reach
+
+```text
+stuarty connection:list
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty connection:list --json
+```
+
+## `connection:show`
+
+Show one connection: destinations, what it accepts and its last use
+
+```text
+stuarty connection:show <id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty connection:show con_0123456789
+```
+
+## `connection:add`
+
+Connect a destination; the secret is read from standard input or a file, never from an argument
+
+```text
+stuarty connection:add --kind <k> --label <t> --endpoint <url> --accepts <list>
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--kind` | string |  | the kind of connection (required) |
+| `--label` | string |  | a name for the person, 1 to 60 characters (required) |
+| `--endpoint` | string |  | the URL the connector calls first, https (required) |
+| `--accepts` | string |  | what it may receive, a comma list of text, image, video, audio, metadata, document (required) |
+| `--hosts` | string |  | further hosts it may reach, a comma list; the endpoint host is always allowed |
+| `--secret-file` | string |  | a file that holds the secret; without it the secret is read from standard input |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+echo $TOKEN | stuarty connection:add --kind test --label Blog --endpoint https://video.example.com --accepts text
+```
+
+## `connection:remove`
+
+Remove a connection and its credential
+
+```text
+stuarty connection:remove <id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty connection:remove con_0123456789
+```
+
+## `connection:test`
+
+Make one request through a connection and show how the destination answered
+
+```text
+stuarty connection:test <id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty connection:test con_0123456789
+```
+
 ## `image:create`
 
 Create an image document, blank or from a template

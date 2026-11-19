@@ -17,6 +17,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/engine/rasterize"
 	enginestore "github.com/AlexGalhardo/stuarty/engine/store"
 	"github.com/AlexGalhardo/stuarty/engine/transcribe"
+	"github.com/AlexGalhardo/stuarty/service/connections"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
 )
 
@@ -115,6 +116,14 @@ type Service interface {
 	ImageUndo(ctx context.Context, req ImageStepRequest) (*ImageStepResult, error)
 	ImageRedo(ctx context.Context, req ImageStepRequest) (*ImageStepResult, error)
 	ImageExport(ctx context.Context, req ImageExportRequest) (*ImageExportResult, error)
+	// ConnectionList and ConnectionGet read the destinations the user connected; ConnectionCreate,
+	// ConnectionRemove and ConnectionTest are for an administrator. No result carries a credential
+	// (SDD-014 section 5).
+	ConnectionList(ctx context.Context, req ConnectionListRequest) (*ConnectionListResult, error)
+	ConnectionGet(ctx context.Context, req ConnectionRef) (*connections.Connection, error)
+	ConnectionCreate(ctx context.Context, req ConnectionCreateRequest) (*connections.Connection, error)
+	ConnectionRemove(ctx context.Context, req ConnectionRef) (*connections.Connection, error)
+	ConnectionTest(ctx context.Context, req ConnectionRef) (*ConnectionTestResult, error)
 }
 
 // Event is what the service publishes after the change is durable (SDD-006
@@ -183,6 +192,10 @@ type Options struct {
 	// Keys stores the API keys of network mode; without one the key operations
 	// answer E_NOT_FOUND, as in local mode.
 	Keys KeyStore
+	// Connections is the registry of the destinations the user connected and the holder of their
+	// credentials; without one the service builds a registry over the store with a vault in the
+	// workspace that has no master key source, so a connection cannot be created (SDD-014).
+	Connections *connections.Manager
 	// Heavy limits the heavy operations (jobs, media, template, font, bundle and OpenTimelineIO imports and exports) per actor; nil counts nothing.
 	Heavy RateLimiter
 	// HeavyPerMinute is the limit Heavy enforces, for the error message; zero is HeavyPerMinute.
@@ -213,6 +226,7 @@ type svc struct {
 	toolsState  toolsState
 	doctor      DoctorOptions
 	keys        KeyStore
+	conns       *connections.Manager
 	heavy       RateLimiter
 	heavyLimitN int
 	log         *slog.Logger
@@ -265,6 +279,7 @@ func New(o Options) (Service, error) {
 		tools:       o.Tools,
 		doctor:      o.Doctor,
 		keys:        o.Keys,
+		conns:       o.Connections,
 		heavy:       o.Heavy,
 		heavyLimitN: o.HeavyPerMinute,
 		log:         o.Log,
@@ -275,6 +290,10 @@ func New(o Options) (Service, error) {
 
 	if s.workspace != "" {
 		s.fonts = enginestore.NewFonts(s.workspace)
+	}
+
+	if s.conns == nil {
+		s.conns = connections.NewDefault(o.Store.Connections(), s.workspace, s.now)
 	}
 
 	s.sems = map[string]chan struct{}{

@@ -9,6 +9,10 @@ import type {
 	BrandKitBody,
 	BundleImportResult,
 	CommandHelpResult,
+	Connection,
+	ConnectionCreateRequest,
+	ConnectionListResult,
+	ConnectionTestResult,
 	EditRequest,
 	EditResult,
 	ExportOptions,
@@ -138,6 +142,10 @@ export interface ApiClient {
 	createKey(request: KeyCreateRequest): Promise<KeyCreateResult>;
 	listKeys(): Promise<KeyListResult>;
 	revokeKey(keyId: string): Promise<KeyRevokeResult>;
+	listConnections(): Promise<ConnectionListResult>;
+	createConnection(request: ConnectionCreateRequest): Promise<Connection>;
+	removeConnection(id: string): Promise<Connection>;
+	testConnection(id: string): Promise<ConnectionTestResult>;
 	// An administrator session; any other caller gets E_FORBIDDEN.
 	listUsers(): Promise<UserListResult>;
 	listTrashedProjects(): Promise<ProjectListResult>;
@@ -334,6 +342,18 @@ export function createClient(
 		createKey: (request) => call("POST", "/keys", EDIT_TIMEOUT_MS, request),
 		listKeys: () => call("GET", "/keys", READ_TIMEOUT_MS),
 		listUsers: () => call("GET", "/users", READ_TIMEOUT_MS),
+		listConnections: () => call("GET", "/connections", READ_TIMEOUT_MS),
+		createConnection: (request) =>
+			call("POST", "/connections", EDIT_TIMEOUT_MS, request),
+		removeConnection: (id) =>
+			call("DELETE", `/connections/${encodeURIComponent(id)}`, EDIT_TIMEOUT_MS),
+		testConnection: (id) =>
+			call(
+				"POST",
+				`/connections/${encodeURIComponent(id)}/test`,
+				EDIT_TIMEOUT_MS,
+				{},
+			),
 		revokeKey: (keyId) =>
 			call("DELETE", `/keys/${encodeURIComponent(keyId)}`, EDIT_TIMEOUT_MS),
 		listTrashedProjects: () =>

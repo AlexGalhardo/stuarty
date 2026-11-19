@@ -20,6 +20,7 @@ import (
 
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/connections"
 )
 
 // Doer is the part of an HTTP client the package needs. The caller builds the
@@ -681,4 +682,38 @@ func (c *Client) ProjectOtioImport(
 	}{req.BaseRevision, req.Path, req.DryRun}
 
 	return post[service.ProjectOtioImportResult](ctx, c, projectPath(req.ProjectID, "/otio"), body)
+}
+
+// ConnectionList implements service.Service.
+func (c *Client) ConnectionList(
+	ctx context.Context, _ service.ConnectionListRequest,
+) (*service.ConnectionListResult, error) {
+	return get[service.ConnectionListResult](ctx, c, "/connections", nil)
+}
+
+// ConnectionGet implements service.Service.
+func (c *Client) ConnectionGet(ctx context.Context, req service.ConnectionRef) (*connections.Connection, error) {
+	return get[connections.Connection](ctx, c, "/connections/"+url.PathEscape(req.ID), nil)
+}
+
+// ConnectionCreate implements service.Service.
+func (c *Client) ConnectionCreate(
+	ctx context.Context, req service.ConnectionCreateRequest,
+) (*connections.Connection, error) {
+	return post[connections.Connection](ctx, c, "/connections", req)
+}
+
+// ConnectionRemove implements service.Service.
+func (c *Client) ConnectionRemove(ctx context.Context, req service.ConnectionRef) (*connections.Connection, error) {
+	out := new(connections.Connection)
+	if err := c.do(ctx, http.MethodDelete, "/connections/"+url.PathEscape(req.ID), nil, nil, out); err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}
+
+// ConnectionTest implements service.Service.
+func (c *Client) ConnectionTest(ctx context.Context, req service.ConnectionRef) (*service.ConnectionTestResult, error) {
+	return post[service.ConnectionTestResult](ctx, c, "/connections/"+url.PathEscape(req.ID)+"/test", struct{}{})
 }

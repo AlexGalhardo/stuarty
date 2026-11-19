@@ -70,9 +70,27 @@ func TestPages(t *testing.T) {
 		t.Errorf("robots.txt = %d %s", robots.status, robots.body)
 	}
 
+	// The application opens on the dashboard (RF-310), and each section without
+	// a page of its own answers with its empty state, never an error.
 	home := page("/")
-	if home.status/100 != 3 || home.header.Get("Location") != "/projects" {
-		t.Errorf("/ = %d to %q", home.status, home.header.Get("Location"))
+	if home.status != http.StatusOK || !strings.Contains(string(home.body), `Dashboard\/Home`) {
+		t.Errorf("/ = %d, want the dashboard home", home.status)
+	}
+
+	for _, key := range []string{"edit-video", "write", "publish"} {
+		res := page("/" + key)
+		if res.status != http.StatusOK || !strings.Contains(string(res.body), `Dashboard\/Section`) ||
+			!strings.Contains(string(res.body), `"section":"`+key+`"`) {
+			t.Errorf("/%s = %d, want its empty state", key, res.status)
+		}
+	}
+
+	// The Connections section has its own page (epic 04).
+	if res := page(
+		"/connections",
+	); res.status != http.StatusOK ||
+		!strings.Contains(string(res.body), `Connections\/Index`) {
+		t.Errorf("/connections = %d, want the connections page", res.status)
 	}
 
 	if res := h.do(req{path: "/projects", noAuth: true}); res.status != http.StatusUnauthorized {
