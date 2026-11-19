@@ -41,7 +41,7 @@ A creator who runs Stuarty on their own server signs in with a password, as toda
 - [x] 3. Implement linking and unlinking from settings. Verify: `go test ./web/app/... -run TestLinkIdentity` passes.
 - [x] 4. Implement sign-in with a linked identity and the refusal of an unlinked one. Verify: `go test ./web/app/... -run TestGoogleSignIn` passes.
 - [x] 5. Implement the admin controls. Verify: `go test ./web/app/... -run TestGoogleSignInPolicy` passes.
-- [ ] 6. Build the login button, the settings and the guide, in both languages. Verify: `task test:web` and `web/e2e/specs/google-sign-in.spec.ts` pass with the fake issuer.
+- [x] 6. Build the login button, the settings and the guide, in both languages. Verify: `task test:web` and `web/e2e/specs/google-sign-in.spec.ts` pass with the fake issuer.
 - [ ] 7. Security tests of the new rows. Verify: `go test -run TestSecurity_ ./...` and `go run ./internal/tools/threatcheck` exit 0.
 - [ ] 8. One real sign-in by the author on a Docker deployment, or marked as not verified. Verify: the result or the note is in the hand-off.
 
