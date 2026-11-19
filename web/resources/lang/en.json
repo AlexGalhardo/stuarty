@@ -2,7 +2,7 @@
   "ui": {
     "nav": {
       "label": "Main navigation",
-      "home": "{name}, projects",
+      "home": "{name}, dashboard",
       "language": "Language",
       "languages": {
         "en": "English",
@@ -10,6 +10,24 @@
       },
       "projects": "Projects",
       "settings": "Settings",
+      "dashboard": "Dashboard",
+      "collapse": "Collapse sidebar",
+      "expand": "Expand sidebar",
+      "profile": "Profile",
+      "local": "Local",
+      "section": {
+        "projects": "Projects",
+        "edit-video": "Edit Video",
+        "edit-image": "Edit Image",
+        "write": "Write",
+        "visual-assets": "Visual Assets",
+        "video-assets": "Video Assets",
+        "publish": "Publish",
+        "skills": "Skills",
+        "prompts": "Prompts",
+        "memory": "Memory",
+        "connections": "Connections"
+      },
       "sidebar": {
         "title": "Sidebar",
         "description": "Displays the mobile sidebar.",
