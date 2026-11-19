@@ -1474,7 +1474,7 @@ Tool and Service mapping, scope and annotations (annotations are hints and clien
 | `history` | `HistoryList`, `Undo`, `Redo` | read (list), edit (undo, redo) | false | false | false | false |
 | `media_import` | `MediaImport` | media | false | false | true | false |
 | `media_inspect` | `MediaInspect` (with `asset_id`), `MediaList` (without) | read | true | n/a | true | false |
-| `view` | `ViewFrame`, `ViewSheet` | read | true | n/a | true | false |
+| `view` | `ViewFrame`, `ViewSheet`, `AudioMeasure` (`mode` audio) | read | true | n/a | true | false |
 | `lint` | `Lint`, `ExportCheck` (with `preset`) | read | true | n/a | true | false |
 | `job_start` | `JobStart`, `ExportBatch` (`kind` `export_batch`) | render (export, export_batch), media (transcribe) | false | false | false | false |
 | `job_get` | `JobGet` (with `job_id`), `JobList` (with `project_id` and no `job_id`) | read | true | n/a | true | false |
@@ -3488,7 +3488,7 @@ Every command that reads or edits a timeline (those whose result is about one do
 | `media:list` | `media:list --project <id> [--cursor c] [--limit n]` | `--cursor`; `--limit` int 50 | none | `MediaListResult` |
 | `media:trash` | `media:trash <asset id> --project <id>` | none | none | `MediaStateResult` |
 | `media:restore` | `media:restore <asset id> --project <id>` | none | none | `MediaStateResult` |
-| `view` | `view --project <id> [--mode frame\|sheet] [--at t] [--times t1,t2,...] [--from t --until t --count n] [--cols n] [--max-tokens n] [--width px]` | `--mode` string `frame`; `--at`; `--times`; `--from`; `--until`; `--count` int 9; `--cols` int; `--max-tokens` int 800 (sheet 1,500); `--width` int | none | `ViewResult` without `image_base64` (the image is the file in `path`; with a remote server the CLI downloads the image from the byte-serving route to a temporary file on the client and prints that path) |
+| `view` | `view --project <id> [--mode frame\|sheet\|audio] [--at t] [--times t1,t2,...] [--from t --until t --count n] [--cols n] [--max-tokens n] [--width px] [--item id]` | `--mode` string `frame`; `--at`; `--times`; `--from`; `--until`; `--count` int 9; `--cols` int; `--max-tokens` int 800 (sheet 1,500); `--width` int; `--item` string, mode audio only | none | `ViewResult` without `image_base64` (the image is the file in `path`; with a remote server the CLI downloads the image from the byte-serving route to a temporary file on the client and prints that path); with `--mode audio`, `AudioMeasureResult` (the sound of the item or the range before and after its audio processors: `--item` one clip or audio item, `--from` and `--until` the range, the item's own or the whole timeline by default) |
 | `lint` | `lint --project <id> [--severity error\|warning] [--cursor c] [--limit n] [--strict]` | `--severity` string `warning`; `--cursor`; `--limit` int 25; `--strict` bool false | none | `LintResult` |
 | `export:presets` | `export:presets [--codecs]` | `--codecs` bool false: also tell which codecs this machine writes | none | `ExportPresetListResult` |
 | `export:check` | `export:check --project <id> --preset <id> [--start t] [--end t] [--codec c]` | `--preset` string, required; `--start`; `--end`; `--codec` | none | `ExportCheckResult`; exit 1 when the project does not fit |
@@ -3760,6 +3760,7 @@ Success codes are the `Op.Status`. Error statuses are the table of SDD-000 §8; 
 | `jobs.start` | `POST /projects/{id}/jobs` | none | `{kind, args?, wait_ms?, dry_run?}` | 202 `Job` | render (export), media (transcribe) | 422 `E_LINT_BLOCKING`; 429 `E_QUEUE_FULL`; 503 `E_TRANSCRIBE_UNAVAILABLE`, `E_FFMPEG_MISSING`, `E_NO_ENCODER` |
 | `export.presets` | `GET /export-presets` | `codecs` | none | 200 `ExportPresetListResult` | read | none |
 | `export.check` | `GET /projects/{id}/export-check` | `preset` (required), `start`, `end`, `codec` | none | 200 `ExportCheckResult` | read | 400 `E_VALIDATION` for an unknown preset or codec |
+| `audio.measure` | `GET /projects/{id}/audio-measure` | `item_id`, `start`, `end`, `timeline_id` | none | 200 `AudioMeasureResult` | read | 404 `E_NOT_FOUND` for an unknown item; 422 `E_TYPE_MISMATCH` for an item with no audio and `E_LIMIT` for a range over 600 s |
 | `export.batch` | `POST /projects/{id}/export-batches` | none | `{items, wait_ms?}` | 202 `Job` (200 when final) | render | 400 `E_VALIDATION` with `items[i]` paths; 429 `E_QUEUE_FULL` |
 | `jobs.list` | `GET /projects/{id}/jobs` | `state`, `cursor`, `limit` | none | 200 `JobListResult` | read | 400 `E_VALIDATION` for an unknown `state` |
 | `jobs.get` | `GET /jobs/{job_id}` | `wait_ms` | none | 200 `Job` (an ingest job has a null `project_id`; allowed to a caller who can read a project that uses the asset, §2.8) | read | none |
@@ -3969,6 +3970,7 @@ Every `Service` operation has an encoding on each surface. The table is the proo
 | `JobStart` (`transcribe`) | `job_start` (`kind` `transcribe`) | `transcribe` | `POST /projects/{id}/jobs` |
 | `ExportPresetList` | `command_help` (`domain` `export`: the presets and the codecs of this machine) | `export:presets [--codecs]` | `GET /export-presets` |
 | `ExportCheck` | `lint` (with `preset`, and `start` and `end` for a range: the fit check instead of the lint) | `export:check --project <id> --preset <id> [--start t] [--end t] [--codec c]` | `GET /projects/{id}/export-check` |
+| `AudioMeasure` | `view` (`mode` `audio`, with `item_id`, and `from` and `until` for a range: the measurement of the sound, no image) | `view --project <id> --mode audio [--item id] [--from t] [--until t]` | `GET /projects/{id}/audio-measure` |
 | `ExportBatch` | `job_start` (`kind` `export_batch`) | `export:batch --project <id> --preset <id> [--preset <id> ...] \| --items <json>` | `POST /projects/{id}/export-batches` |
 | `JobGet` | `job_get` (with `job_id`) | `job:show` | `GET /jobs/{job_id}` |
 | `JobList` | `job_get` (with `project_id`, no `job_id`) | `job:list` | `GET /projects/{id}/jobs` |

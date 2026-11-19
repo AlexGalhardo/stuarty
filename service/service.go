@@ -122,6 +122,9 @@ type Service interface {
 	ExportPresetList(ctx context.Context, req ExportPresetListRequest) (*ExportPresetListResult, error)
 	ExportCheck(ctx context.Context, req ExportCheckRequest) (*ExportCheckResult, error)
 	ExportBatch(ctx context.Context, req ExportBatchRequest) (*Job, error)
+	// AudioMeasure is the loudness, true peak and noise floor of a range or an item with and without its audio
+	// processors (SDD-004 section 7.1, epic 34).
+	AudioMeasure(ctx context.Context, req AudioMeasureRequest) (*AudioMeasureResult, error)
 	AuditList(ctx context.Context, req AuditListRequest) (*AuditListResult, error)
 
 	// Doctor is the diagnostic report (SDD-003 section 2, SDD-011 section 8.6).
