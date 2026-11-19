@@ -399,20 +399,17 @@ Rules:
 5. **WebGPU loss.** On `device lost` the worker answers every pending and following `render` with `error` and `reason: "device_lost"`, then tries once to re-create the device; if that fails it switches to the CPU path and sends `ready` with `path: "cpu"`. The main thread then resends the textures it still has.
 6. **Fallback.** With no adapter (`navigator.gpu` missing or `requestAdapter()` null) or `prefer: "cpu"`, the worker uses the core module and draws on a 2D canvas (`ImageData`), the same pixels as the export's CPU path.
 
-#### 4.7.1 What is implemented, and what epic 26 adds
-
-State on 2026-11-19, before epic 26 (`docs/plans/26-browser-preview-on-the-rust-renderer.md`):
+#### 4.7.1 What is implemented (epic 26, 2026-11-19)
 
 | Part | State |
 | --- | --- |
-| §5.3 decode worker: chunk index fetch and checks, `isConfigSupported`, `Range` fetch, seek from the key frame, forward play with a bounded queue, per-asset fallback to `<video>`, the main-thread frame cache and the `openFrames` ledger (`preview/decode/`) | implemented, used by the PixiJS executor |
-| §6 consumer of the chunk index (`decode/chunkIndex.ts`) | implemented |
-| §2.4 expansion of a plan window to the render input of one frame, in TypeScript | not implemented; the PixiJS executor reads the window directly |
-| §4.7 render worker (`renderWorker.ts`), its protocol and the main-thread client | not implemented; the module is loaded only by the Go host |
-| the executor that feeds the worker (textures, bitmaps, lookup tables, audio clock) behind `PreviewExecutor` | not implemented |
-| §4.7 GPU path (`wasm-bindgen` GPU module, `OffscreenCanvas` presented by `wgpu`) | not implemented; there is no GPU module for the browser |
+| §5.3 decode worker, §6 chunk index consumer (`preview/decode/`) | implemented, used by both executors |
+| §2.4 expansion of a window to the render input of a frame, in TypeScript (`render/frameInput.ts`) | implemented; tested for the names and shapes the module accepts (a layer that uses every field is read by the real module). The byte-for-byte twin of Go's `plan.Frame` is not written: the plan has no Go `WindowPlan.Frame`, and the golden comparison of `preview-export-parity` is what holds the two |
+| §4.7 render worker (`render/renderWorker.ts`, logic in `renderService.ts`), its protocol (`protocol.ts`) and the main-thread client (`client.ts`) | implemented on the CPU path |
+| the executor that feeds the worker behind `PreviewExecutor` (`RustExecutor.ts`), the choice by feature detection and a setting (`executorChoice.ts`, `ExecutorSwitch.ts`) | implemented |
+| §4.7 GPU path (`wasm-bindgen` GPU module, `OffscreenCanvas` presented by `wgpu`) | **not implemented**; there is no GPU module for the browser. `prefer: "gpu"` is answered with `path: "cpu"` |
 
-Epic 26 adds the CPU path of the worker: the core module (no import, §4.1) is loaded by `render/renderWorker.ts` from a same-origin asset whose SHA-256 is checked against `renderer.wasm.sha256`, and a second executor, `RustExecutor`, implements `PreviewExecutor` over it. The choice between the executors is by feature detection and a setting (SDD-012 §11.1). The GPU module stays a later stage: the worker's `path` is always `"cpu"` and `prefer: "gpu"` is answered as `cpu`.
+Differences from the protocol above, all of them of the CPU path: `init` carries the SHA-256 the module must have (`digest`, from `renderer.wasm.sha256`), and a file that differs is refused with `module_digest` (a fetch or compile failure is `module_load`); `texture` carries an optional `rect`, the crop of the layer, in the pixels of the frame; a `lut` message uploads a lookup table (`vr_put_lut`); the worker draws on the CPU path and answers `frame` with an `ImageBitmap`, which the page draws on a 2D canvas (so the preview reads its pixels for the eyedropper); the `OffscreenCanvas` of `init` arrives with the GPU module. The worker needs the CSP source `'wasm-unsafe-eval'` (SDD-007 §8.5.5), because a browser compiles WebAssembly only where the policy allows it.
 
 ### 4.8 Acceptance of this section
 
@@ -466,6 +463,7 @@ The preview worker decodes the video layers of the window from the proxies (ADR-
 5. **Unsupported, or an error.** When `isConfigSupported` answers false, when the decoder's `error` callback fires, or when a `Range` fetch fails, the worker marks the asset as `fallback`, closes its decoder and every `VideoFrame` of it, and tells the main thread, which draws that asset's layers from a `<video>` element as the earlier preview does (`videoPool.ts`) and sends the picture to the renderer through `createImageBitmap(video)` as a texture. A fallback is per asset and lasts until the page is reloaded; it is shown by a stats counter (`stats.fallbackAssets`), not by a toast.
 6. **From a `VideoFrame` to a texture.**
    - **CPU path.** The worker copies the frame's `rect` (the layer's `crop`, rounded to whole pixels) with `VideoFrame.copyTo(buffer, {format: "RGBA", rect, colorSpace: "srgb"})`, a conversion done by the browser from the colour tags of the proxy (BT.709 limited range, tagged by the ingest, SDD-011 §4.3), and uploads the bytes with `texture` (§4.7). The frame has no alpha, so `opaque` is 1.
+   - **A crop that starts on an odd pixel.** `copyTo` converts 4:2:0 in blocks of 2 x 2 and returns such a `rect` shifted by two pixels (the golden case `crop` was 5 output pixels off the export). The worker copies the even rectangle that holds the crop (`render/pixels.ts`, `evenAround`) and cuts the crop out of it.
    - **GPU path.** The worker uses the frame as an external texture or copies it to a GPU texture (`importExternalTexture`, or `copyExternalImageToTexture` for the cropped rectangle) and draws with it in the same task.
    - **Close.** `frame.close()` is called as soon as the pixels are copied (CPU path) or, on the GPU path, in the same task that submitted the commands that use it (an external texture expires at the end of the task). A frame is never kept across a message without being counted in `stats.openFrames`, and a `render` never starts with a frame whose `close()` was already called: that is the black texture of P2-QA-003.
 7. **Tolerance.** The browser's conversion from YUV to RGB is not the one FFmpeg does, so the preview's frames are in the tolerance class of §3.8 and ADR-0003 item 6, never byte-equal to the export's. Truth on pause is unchanged: the paused frame is the export's frame from `ViewFrame` (SDD-004 §9, SDD-012 §11.3).
