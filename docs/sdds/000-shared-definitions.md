@@ -45,12 +45,16 @@
 | `FontImport` | none | `font:import` | `POST /fonts` | media |
 | `BrandKitGet`, `BrandKitSet` | none | `brand:show`, `brand:set` | `GET /brand-kit`, `PUT /brand-kit` | read, edit |
 | `ProjectOtioExport`, `ProjectOtioImport` | none | `otio:export`, `otio:import` | `GET /projects/{id}/otio`, `POST /projects/{id}/otio` | read; edit (the batch is applied through `Edit`, so each operation needs its own scope too) |
-| `ConnectionList`, `ConnectionGet` | `connection` (list, or one by id) | `connection:list`, `connection:show` | `GET /connections`, `GET /connections/{id}` | read |
-| `ConnectionCreate`, `ConnectionRemove`, `ConnectionTest` | none | `connection:add`, `connection:remove`, `connection:test` | `POST /connections`, `DELETE /connections/{id}`, `POST /connections/{id}/test` | admin (SDD-014) |
+| `ImageCreate` | `image` (`action` create) | `image:create` | `POST /images` | edit |
+| `ImageList` | `image` (`action` list) | `image:list` | `GET /images` | read |
+| `ImageDescribe` | `image` (`action` describe) | `image:show` | `GET /images/{id}` | read |
+| `ImageEdit` | `image` (`action` edit) | `image:edit` | `POST /images/{id}/edit` | edit |
+| `ImageUndo`, `ImageRedo` | `image` (`action` undo, redo) | `image:undo`, `image:redo` | `POST /images/{id}/undo`, `POST /images/{id}/redo` | edit |
+| `ImageExport` | `image` (`action` export) | `image:export` | `POST /images/{id}/export` | edit |
 
 Routes that are not service operations: `POST /mcp` (the MCP server over Streamable HTTP, SDD-003 §4.3; `GET` and `DELETE` on the path are not routes and answer 405 `E_METHOD_NOT_ALLOWED`, because the server is stateless; every tool call behind it is a service operation with the scope of its tool), `GET /api/v1/handshake` (the server proves it knows the local token, SDD-007 §3.8), `GET /auth/launch` and `POST /api/v1/system/launch` (browser session from a one-time code, SDD-007 §3.4), `POST /auth/login` and `POST /auth/logout` (network mode: the browser session of a user, SDD-007 §4.1; in local mode they answer 404 `E_NOT_FOUND`), `GET /up` (vukem health probe), `GET /openapi.json` and `GET /api/docs` (the OpenAPI document and its viewer), `POST /api/v1/system/tools/install` and `GET /api/v1/system/tools` (the explicit install of a helper such as whisper.cpp from the editor, and its state with the progress of a running install; the same step as the CLI command `tools:install`; the install is allowed only to a browser session in local mode or an `admin` key in network mode, never to the local token and never on an agent surface, SDD-007 §6.8; the `GET` only reads and takes the `read` scope, so an agent can tell whether a helper is installed before it asks for a transcript), and the byte-serving routes that the editor uses, all `read`, all under the project so that access is checked against it, all with HTTP Range and long-lived caching because their content never changes: `GET /projects/{id}/media/{asset_id}/proxy`, `.../thumbnail`, `.../strip`, `.../peaks`, `.../lut` (the parsed table of a lookup table asset, SDD-004 §3.6), and `GET /projects/{id}/bitmaps/{key}` (rasterized text and shapes by content key). What each returns is in SDD-011 and SDD-004.
 
-The MCP catalogue is 17 tools: `project_list`, `project_create`, `project_get`, `project_trash`, `edit`, `command_help`, `history`, `media_import`, `media_inspect`, `view`, `lint`, `job_start`, `job_get`, `job_cancel`, `template`, `font_import`, `connection` (read only: the destinations the user connected, SDD-014).
+The MCP catalogue is 17 tools: `project_list`, `project_create`, `project_get`, `project_trash`, `edit`, `command_help`, `history`, `media_import`, `media_inspect`, `view`, `lint`, `job_start`, `job_get`, `job_cancel`, `template`, `font_import`, `image` (the image documents of SDD-021, one tool with an `action`).
 
 Other CLI commands that are not service operations: `serve` (start the owner process), `mcp` (stdio MCP server), `open` (open the UI of a running server with a fresh launch code), `token:rotate`, `user:create` and `user:passwd` (network mode; they need the workspace lock, so no server may be running), `tools:install` (download a helper such as whisper.cpp after stating its size), `agent:docs` (print or write the generated material for agents, SDD-003 §8), plus vukem's built-in commands.
 
@@ -66,7 +70,8 @@ Other CLI commands that are not service operations: `serve` (start the owner pro
 | `tpl_` | template | SDD-005 |
 | `key_` | API key | SDD-007 |
 | `usr_` | user (network mode) | SDD-007 |
-| `con_` | connection (SDD-014) | SDD-014 |
+| `img_` | image document | SDD-021 |
+| `lyr_` | layer of an image document | SDD-021 |
 
 All have the form `<prefix>_<10 lower-case Crockford base32 characters>`.
 
@@ -113,7 +118,7 @@ Kinds: `ingest`, `transcribe`, `export`, `frame`. States: `queued`, `running`, `
 | `users` | network mode: email, argon2id password hash, role (`admin` or `member`), session version | SDD-007 |
 | `brand_kits` | the brand kit: logo, named colours and fonts, one row per owner  | SDD-005 §5.11 |
 | `font_owners` | which user imported or brought each stored font file, network mode  | SDD-005 §5.11, SDD-007 §7.7 |
-| `connections` | the destinations the user connected: kind, label, hosts, what each may receive, last use and the id of its secret in the vault; no secret | SDD-014 |
+| `image_documents`, `image_operations` | image documents, and their append-only log of batches | SDD-005 §5.12, SDD-021 |
 | vukem's own tables for sessions (`sessions`) and tokens (`access_tokens`) | network mode | vukem |
 
 A document with a `template` member is a template draft, or an instance when `template.instance` is true (SDD-001 section 3.10). `TemplateInstantiate` writes the flag; lint reads it (`L_SLOT_UNFILLED`, SDD-003).
@@ -169,6 +174,7 @@ CLI exit codes: `0` success; `2` for every code marked retryable; `1` for the re
 ├── store/                   content-addressed originals: store/<first 2 hex>/<sha256>; store/.incoming/ holds copies in progress
 ├── artifacts/               derived files: artifacts/<asset sha256>/<kind>-<profile version>[-<variant>].<ext> (SDD-011 §6.1)
 ├── exports/                 exported files: exports/<project id>/<job id>.mp4 (`.gif`, `.wav` or `.m4a` for the other formats of SDD-004 §8.1)
+│   └── images/              exported images: exports/images/<image id>/<revision>-<digest>.<ext> (SDD-021 §6)
 ├── frames/                  cache of rendered frames: frames/<project id>/<revision>/<frame>-<width>.jpg
 ├── bitmaps/                 cache of rasterized text and shapes, by content hash
 ├── fonts/                   user fonts, by hash 
@@ -375,3 +381,21 @@ These identifiers outlive the rename on purpose, because changing them would bre
 | `dev.vukem.vukem-video`, `dev.vukem.vukem-video.launcher` and `dev.vukem.vukem-video.desktop` (the macOS package and bundle identifiers) | the identity macOS upgrades by: a package of Stuarty with them replaces an installed Vukem Video; the Windows `AppId` GUIDs stay for the same reason |
 | `--extra-version=vukem<N>` (the configure line of the own FFmpeg build) | read by `engine/ffmpeg/flavour.go` to recognise the own build; it changes with the next rebuild of that build |
 | `vukem` as the OTIO metadata namespace, `X-Vukem-*` response headers, `window.vukemDesktop` | the short name of the framework era, not the product name; a wire and file format identifier, changed only by a decision of its own |
+
+## 14. Image documents (SDD-021)
+
+The operations of the registry of domain `image` (`core/command` registry built by `core/image`, schemas in `core/schema/image/`), applied by `ImageEdit`. The names are not in the video registry; `text.set` and `shape.set` keep their video meaning.
+
+| Name | Kind | Meaning |
+| --- | --- | --- |
+| `image.create`, `canvas.resize` | operation | set the canvas of a document; resize it |
+| `layer.add_image`, `layer.add_text`, `layer.add_shape`, `layer.add_fill` | operation | add a layer of that kind |
+| `layer.group`, `layer.ungroup`, `layer.move` | operation | structure: group, ungroup, change order and parent |
+| `layer.transform`, `layer.set`, `layer.crop`, `layer.duplicate`, `layer.remove` | operation | geometry, common properties, crop of an image layer, copy, removal |
+| `layer.set_text`, `layer.set_shape` | operation | change the content or style of a text layer, the look of a shape |
+| `layer.align`, `layer.fit` | operation | align to the canvas or to a layer, fit (cover, contain) |
+| `video_thumbnail`, `square_post`, `vertical_cover` | preset | 1280 x 720, 1080 x 1080, 1080 x 1920 |
+| `L_IMAGE_EMPTY_SLOT`, `L_IMAGE_TEXT_OUTSIDE`, `L_IMAGE_TEXT_SMALL`, `L_IMAGE_LOW_CONTRAST`, `L_IMAGE_UPSCALED` | lint code | the rules of SDD-021 section 8; the first blocks an export |
+| `png`, `jpeg`, `webp` | image export format | the formats of `ImageExport` |
+| `E_SLOT` `details.reason` `unknown_slot`, `wrong_kind`, `invalid_value`, `missing` | error detail | a template filled badly (SDD-021 section 7) |
+| `E_EXPORT_FAILED` `details.reason` `webp_unavailable` | error detail | no `libwebp` in the FFmpeg |

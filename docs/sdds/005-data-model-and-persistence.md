@@ -968,6 +968,55 @@ CREATE TABLE font_owners (
 
 **`font_owners`** records, per stored font file, each user who imported it (`FontImport`) or brought it (a bundle or a template file that ships it). It exists in network mode only: in local mode the store is the caller's own and a stored file is enough. `font.add`, a bundle export, a bundle import that names a font it does not ship and an instantiation of a template with fonts all ask the same question, "may this caller use this hash": the caller is a recorded owner of it, or a project of the caller already uses it (SDD-007 §7.7 item 6). `Repos` gains `Fonts() FontRepo` with `Record(ctx, owner, hash, ms)` (idempotent) and `Owns(ctx, owner, hash)`, and `BrandKit() BrandKitRepo` with `Get(ctx, owner)` and `Put(ctx, row)`.
 
+### 5.12 `image_documents` and `image_operations` (SDD-021)
+
+Migration `20261119100000_create_image_documents_and_operations`. They follow `projects` and `operations` with the columns an image needs and no more.
+
+```sql
+CREATE TABLE image_documents (
+  id             TEXT    NOT NULL,                 -- img_...
+  name           TEXT    NOT NULL,
+  template       INTEGER NOT NULL DEFAULT 0 CHECK (template IN (0,1)),
+  revision       INTEGER NOT NULL DEFAULT 0,
+  schema_version INTEGER NOT NULL,
+  document       TEXT    NOT NULL,                 -- canonical JSON of the document
+  doc_sha256     TEXT    NOT NULL,
+  width          INTEGER NOT NULL,
+  height         INTEGER NOT NULL,
+  layers         INTEGER NOT NULL DEFAULT 0,       -- count, so that listing never parses a document
+  created_ms     INTEGER NOT NULL,
+  updated_ms     INTEGER NOT NULL,
+  created_by     TEXT    NOT NULL,                 -- actor
+  owner_user_id  TEXT,                             -- network mode only
+  PRIMARY KEY (id)
+);
+CREATE INDEX image_documents_updated_ms_index ON image_documents (updated_ms);
+CREATE TABLE image_operations (
+  image_id        TEXT    NOT NULL REFERENCES image_documents (id) ON DELETE CASCADE,
+  revision        INTEGER NOT NULL CHECK (revision >= 1),
+  kind            TEXT    NOT NULL CHECK (kind IN ('edit','undo','redo')),
+  actor           TEXT    NOT NULL,
+  base_revision   INTEGER NOT NULL,
+  target_revision INTEGER,
+  at_ms           INTEGER NOT NULL,
+  ops             TEXT    NOT NULL,                -- JSON array of {op, args}, identifiers filled in
+  inverse         TEXT    NOT NULL,                -- JSON array of primitives
+  diff            TEXT    NOT NULL,                -- JSON array of changes
+  skipped         TEXT,
+  doc_sha256      TEXT    NOT NULL,
+  closed_by       INTEGER,
+  idempotency_key TEXT,
+  request_hash    TEXT,
+  result          TEXT,                            -- the stored result of a keyed edit
+  PRIMARY KEY (image_id, revision)
+);
+CREATE INDEX image_operations_actor_index ON image_operations (image_id, actor, revision);
+CREATE UNIQUE INDEX image_operations_key_index ON image_operations (image_id, actor, idempotency_key)
+  WHERE idempotency_key IS NOT NULL;
+```
+
+The log is append-only except `closed_by`, which moves from `NULL` to a revision, as in section 5.3; undo and redo follow section 12 with the rules of SDD-021 section 4. `Repos` gains `Images() ImageRepo` with `Create`, `Get`, `List`, `Commit` (a compare-and-set on the revision, `ErrStale` otherwise), `AppendOperation`, `Operation`, `LastOpen` (the actor's last step open to undo or redo), `Close`, `CloseOpenRedo` and `ByKey`. The writer is the one write transaction of `Store.Write`.
+
 ## 6. Workspace ownership
 
 ADR-0008 decides that one process owns a workspace. This section fixes how.
