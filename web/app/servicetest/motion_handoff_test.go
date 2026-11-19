@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"runtime"
+	"slices"
 	"strconv"
 	"testing"
 
@@ -70,7 +71,7 @@ func buildFakeEngine(t *testing.T) func(args ...string) {
 
 	ffdir := os.Getenv("STUARTY_TEST_FFMPEG_DIR")
 	if ffdir == "" {
-		t.Skip("the fake engine renders with the pinned FFmpeg: set STUARTY_TEST_FFMPEG_DIR")
+		t.Skip("set STUARTY_TEST_FFMPEG_DIR: the fake engine renders with it") // verify:env-skip no pinned FFmpeg
 	}
 
 	exe := ""
@@ -223,16 +224,19 @@ func TestRenderKeyScenarioWithAFakeEngine(t *testing.T) {
 		t.Errorf("a wrong size: %+v, %v", badCheck, err)
 	}
 
-	// 3. It is placed, and given keyframes by the person.
+	// 3. It is placed twice, and the first clip is given keyframes by the person.
 	placed := m.mustEdit(ui, project, m.head(project).Revision,
-		op("clip.add", fmt.Sprintf(`{"track_id":%q,"asset_id":%q,"start":"1s","duration":"1s"}`, upper, first.AssetID)))
-	clipID := placed.Created[0]
+		op("clip.add", fmt.Sprintf(`{"track_id":%q,"asset_id":%q,"start":"1s","duration":"1s"}`, upper, first.AssetID)),
+		op("clip.add", fmt.Sprintf(`{"track_id":%q,"asset_id":%q,"start":"2s","duration":"1s"}`, upper, first.AssetID)))
+	clipID, againID := placed.Created[0], placed.Created[1]
+	both := []string{clipID, againID}
+	slices.Sort(both)
 
 	m.mustEdit(ui, project, m.head(project).Revision,
 		op("keyframe.set", fmt.Sprintf(`{"item_id":%q,"property":"opacity","at":"1s","value":1}`, clipID)),
 		op("keyframe.set", fmt.Sprintf(`{"item_id":%q,"property":"opacity","at":"1.5s","value":0.4}`, clipID)))
 
-	before := m.docOf(project).Items[clipID]
+	before, beforeAgain := m.docOf(project).Items[clipID], m.docOf(project).Items[againID]
 	if len(before.Keyframes["opacity"]) < 2 {
 		t.Fatalf("the clip has no keyframes: %+v", before.Keyframes)
 	}
@@ -243,7 +247,7 @@ func TestRenderKeyScenarioWithAFakeEngine(t *testing.T) {
 		"title-card",
 	)
 	if len(second.Replaces) != 1 || second.Replaces[0].AssetID != first.AssetID ||
-		!reflect.DeepEqual(second.Replaces[0].ItemIDs, []string{clipID}) {
+		!reflect.DeepEqual(second.Replaces[0].ItemIDs, both) {
 		t.Fatalf("the offer = %+v", second.Replaces)
 	}
 
@@ -260,25 +264,27 @@ func TestRenderKeyScenarioWithAFakeEngine(t *testing.T) {
 	dry, err := m.svc.MotionReplace(ctx, service.MotionReplaceRequest{
 		ProjectID: project, AssetID: second.AssetID, DryRun: true,
 	})
-	if err != nil || dry.Applied || !reflect.DeepEqual(dry.Replaced, []string{clipID}) ||
+	if err != nil || dry.Applied || !reflect.DeepEqual(dry.Replaced, both) ||
 		m.head(project).Revision != rev {
 		t.Fatalf("dry run = %+v, %v", dry, err)
 	}
 
-	// 5. The replacement: one batch, one revision, the keyframes and everything else kept.
+	// 5. The replacement: every clip of the key in one batch, one revision, the keyframes and everything else kept.
 	done, err := m.svc.MotionReplace(ctx, service.MotionReplaceRequest{ProjectID: project, AssetID: second.AssetID})
 	if err != nil || !done.Applied || done.Revision != rev+1 || done.RenderKey != "title-card" ||
-		!reflect.DeepEqual(done.Replaced, []string{clipID}) || len(done.Effective) != 1 {
+		!reflect.DeepEqual(done.Replaced, both) || len(done.Effective) != 2 {
 		t.Fatalf("replacement = %+v, %v", done, err)
 	}
 
 	after := m.docOf(project)
-	if got := after.Items[clipID]; got.Asset != second.AssetID {
-		t.Fatalf("the clip reads %s, want %s", got.Asset, second.AssetID)
-	} else {
-		got.Asset = before.Asset
-		if !reflect.DeepEqual(got, before) {
-			t.Errorf("the clip changed beyond its asset:\n got %+v\nwant %+v", got, before)
+	for id, want := range map[string]timeline.Item{clipID: before, againID: beforeAgain} {
+		if got := after.Items[id]; got.Asset != second.AssetID {
+			t.Fatalf("clip %s reads %s, want %s", id, got.Asset, second.AssetID)
+		} else {
+			got.Asset = want.Asset
+			if !reflect.DeepEqual(got, want) {
+				t.Errorf("clip %s changed beyond its asset:\n got %+v\nwant %+v", id, got, want)
+			}
 		}
 	}
 
@@ -292,10 +298,10 @@ func TestRenderKeyScenarioWithAFakeEngine(t *testing.T) {
 		t.Errorf("a second replacement: %v", err)
 	}
 
-	// 6. One undo restores the clip.
+	// 6. One history entry, and one undo restores both clips.
 	hist, err := m.svc.HistoryList(ctx, service.HistoryListRequest{ProjectID: project})
 	if err != nil || len(hist.Entries) == 0 ||
-		!reflect.DeepEqual(hist.Entries[0].Ops, []string{"clip.replace_media"}) ||
+		!reflect.DeepEqual(hist.Entries[0].Ops, []string{"clip.replace_media", "clip.replace_media"}) ||
 		hist.Entries[0].Revision != done.Revision {
 		t.Fatalf("the history = %+v, %v", hist, err)
 	}
@@ -304,7 +310,12 @@ func TestRenderKeyScenarioWithAFakeEngine(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if got := m.docOf(project).Items[clipID]; !reflect.DeepEqual(got, before) {
+	undone := m.docOf(project)
+	if got := undone.Items[clipID]; !reflect.DeepEqual(got, before) {
 		t.Errorf("one undo did not restore the clip:\n got %+v\nwant %+v", got, before)
+	}
+
+	if got := undone.Items[againID]; !reflect.DeepEqual(got, beforeAgain) {
+		t.Errorf("one undo did not restore the second clip:\n got %+v\nwant %+v", got, beforeAgain)
 	}
 }
