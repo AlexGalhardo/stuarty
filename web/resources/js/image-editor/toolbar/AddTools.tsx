@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { type ReactNode, useState } from "react";
 
+import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -158,7 +159,7 @@ export function AddTools(): ReactNode {
 											);
 										}}
 									>
-										{asset.name}
+										<UntrustedText>{asset.name}</UntrustedText>
 										{asset.width && asset.height ? (
 											<span className="ml-2 text-xs text-foreground">
 												{t("ui.image.editor.size", {
