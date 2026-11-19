@@ -19933,6 +19933,10 @@
                     "description": "Markdown of a text item, at most 256 KiB.",
                     "type": "string"
                   },
+                  "text_kind": {
+                    "description": "A text item: script, copy (default) or caption.",
+                    "type": "string"
+                  },
                   "title": {
                     "description": "1 to 120 characters.",
                     "minLength": 1,
