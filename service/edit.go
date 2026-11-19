@@ -154,6 +154,7 @@ func (s *svc) edit(ctx context.Context, req EditRequest, allowInternal bool) (*E
 			key:           req.IdempotencyKey,
 			requestHash:   hash,
 			closeOpenRedo: true,
+			checkpoint:    true,
 			result: func(rev int64) ([]byte, error) {
 				stored := *res
 				stored.Revision = rev

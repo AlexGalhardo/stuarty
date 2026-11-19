@@ -42,9 +42,25 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			return err
 		},
 		"CommandHelp": func() error { _, err := e.svc.CommandHelp(ctx, service.CommandHelpRequest{}); return err },
-		"Undo":        func() error { _, err := e.svc.Undo(ctx, service.UndoRequest{ProjectID: "prj_0000000001"}); return err },
-		"Redo":        func() error { _, err := e.svc.Redo(ctx, service.UndoRequest{ProjectID: "prj_0000000001"}); return err },
-		"Lint":        func() error { _, err := e.svc.Lint(ctx, service.LintRequest{ProjectID: "prj_0000000001"}); return err },
+		"CheckpointCreate": func() error {
+			_, err := e.svc.CheckpointCreate(ctx, service.CheckpointCreateRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"CheckpointList": func() error {
+			_, err := e.svc.CheckpointList(ctx, service.CheckpointListRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"CheckpointRename": func() error {
+			_, err := e.svc.CheckpointRename(ctx, service.CheckpointRenameRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"CheckpointRemove": func() error {
+			_, err := e.svc.CheckpointRemove(ctx, service.CheckpointRemoveRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"Undo": func() error { _, err := e.svc.Undo(ctx, service.UndoRequest{ProjectID: "prj_0000000001"}); return err },
+		"Redo": func() error { _, err := e.svc.Redo(ctx, service.UndoRequest{ProjectID: "prj_0000000001"}); return err },
+		"Lint": func() error { _, err := e.svc.Lint(ctx, service.LintRequest{ProjectID: "prj_0000000001"}); return err },
 		"MediaImport": func() error {
 			_, err := e.svc.MediaImport(ctx, service.MediaImportRequest{ProjectID: "prj_0000000001"})
 			return err
