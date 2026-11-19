@@ -25,9 +25,9 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | --- | --- | --- | --- | --- |
 | [04](04-secret-vault-and-connections.md) | Secret vault and connections | L | 03 | DONE (2026-11-19, 8e43a1a2..7410dcd3 replayed onto the integration branch) |
 | [05](05-approval-queue-and-cost-ceilings.md) | Approval queue, rules and cost ceilings | M | 04 | IN PROGRESS (senior-a, 2026-11-19) |
-| [06](06-project-as-production.md) | The project as the container of a production | L | 03 | IN PROGRESS (senior-b, 2026-11-19) |
+| [06](06-project-as-production.md) | The project as the container of a production | L | 03 | DONE (2026-11-19, 08a630f5..77cf52b7; closes VV-225, VV-237, VV-241) |
 | [07](07-dashboard-shell.md) | Dashboard: sidebar, navigation, profile, theme | M | 03 | DONE (2026-11-19, 70387363..171fb786) |
-| [08](08-asset-library.md) | Asset library with origin, rights and reuse | M | 06, 07 | TODO |
+| [08](08-asset-library.md) | Asset library with origin, rights and reuse | M | 06, 07 | IN PROGRESS (senior-b, 2026-11-19) |
 | [09](09-ai-provider-layer.md) | AI provider layer with API keys, text generation and cost | L | 04, 05 | TODO |
 | [10](10-image-and-voice-generation.md) | Image and voice generation | M | 08, 09 | TODO |
 | [11](11-video-generation.md) | Video generation | M | 10 | TODO |
