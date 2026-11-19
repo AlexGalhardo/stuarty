@@ -626,8 +626,8 @@ func jobGet(ctx context.Context, svc service.Service, raw json.RawMessage) (*too
 	}
 }
 
-// view is two operations behind one tool (SDD-003 section 4.2): a frame at "at"
-// or a contact sheet. It is the only tool that returns an image block.
+// view is three operations behind one tool (SDD-003 section 4.2): a frame at "at", a contact sheet, or, in mode
+// audio, the measurement of the sound (epic 34). It is the only tool that returns an image block.
 func view(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolOutput, error) {
 	in, err := decode[struct {
 		ProjectID  string   `json:"project_id"`
@@ -639,21 +639,28 @@ func view(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolO
 		Until      string   `json:"until"`
 		Count      int      `json:"count"`
 		MaxTokens  int      `json:"max_tokens"`
+		ItemID     string   `json:"item_id"`
 	}](raw)
 	if err != nil {
 		return nil, err
 	}
 
-	if in.Mode == "motion" {
+	if in.Mode == "audio" {
 		if in.At != "" || len(in.Times) > 0 || in.Count != 0 || in.MaxTokens != 0 {
 			return nil, &service.Error{
-				Code: command.CodeValidation, Path: "mode",
-				Message: "at, times, count and max_tokens are not accepted in mode motion.",
-				Hint:    "use from and until for the range",
+				Code: command.CodeValidation, Path: "mode", Message: "mode audio takes item_id, from and until only.",
+				Hint: "from and until are the range; leave them out for the item, or for the timeline",
 			}
 		}
 
-		return motionTool(ctx, svc, in.ProjectID, in.TimelineID, in.From, in.Until)
+		measure, merr := svc.AudioMeasure(ctx, service.AudioMeasureRequest{
+			ProjectID: in.ProjectID, TimelineID: in.TimelineID, ItemID: in.ItemID, Start: in.From, End: in.Until,
+		})
+		if merr != nil {
+			return nil, merr
+		}
+
+		return &toolOutput{value: measure, text: measure.Text}, nil
 	}
 
 	var res *service.ViewResult

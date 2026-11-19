@@ -64,12 +64,7 @@ var parity = []row{
 	{method: "JobList", tool: "job_get", command: "job:list", route: "GET /projects/{}/jobs"},
 	{method: "ViewFrame", tool: "view", command: "view", route: "GET /projects/{}/frame"},
 	{method: "ViewSheet", tool: "view", command: "view", route: "GET /projects/{}/sheet"},
-	// The hand-off from an external motion engine (SDD-011 section 15): view with mode motion.
-	{method: "MotionBrief", tool: "view", command: "motion:brief", route: "GET /projects/{}/motion/brief"},
-	// The check has no tool: the tool list has no room for it (SDD-011 section 15.5).
-	{method: "MotionCheck", command: "motion:check", route: "GET /projects/{}/motion/check"},
-	// The replacement is a batch of clip.replace_media in one edit call over MCP: it has no tool of its own.
-	{method: "MotionReplace", command: "motion:replace", route: "POST /projects/{}/motion/replace"},
+	{method: "AudioMeasure", tool: "view", command: "view", route: "GET /projects/{}/audio-measure"},
 	{method: "TrashEmpty", route: "POST /trash/empty", httpOnly: true},
 	{method: "Doctor", command: "doctor", route: "GET /system"},
 	{method: "SnapPoints", route: "GET /projects/{}/snap-points", httpOnly: true},

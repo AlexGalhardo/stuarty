@@ -65,6 +65,7 @@
 | `ImageExport` | `image` (`action` export) | `image:export` | `POST /images/{id}/export` | edit |
 | `ExportPresetList` | `command_help` (`domain` export) | `export:presets` | `GET /export-presets` | read |
 | `ExportCheck` | `lint` (with `preset`) | `export:check` | `GET /projects/{id}/export-check` | read |
+| `AudioMeasure` | `view` (`mode` audio) | `view --mode audio` | `GET /projects/{id}/audio-measure` | read |
 | `ExportBatch` | `job_start` (`kind` export_batch) | `export:batch` | `POST /projects/{id}/export-batches` | render |
 | `ImageFrame` | none | none | `GET /images/{id}/frame` (SDD-012 §24.3) | read |
 | `ImageHistory` | none | none | `GET /images/{id}/history` (SDD-012 §24.3) | read |
