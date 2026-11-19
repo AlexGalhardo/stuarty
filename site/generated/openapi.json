@@ -4402,6 +4402,40 @@
         },
         "type": "object"
       },
+      "Skipped": {
+        "properties": {
+          "by_actor": {
+            "type": "string"
+          },
+          "by_revision": {
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "details": {
+            "additionalProperties": {},
+            "type": "object"
+          },
+          "fields": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "primitive": {
+            "$ref": "#/components/schemas/Primitive"
+          },
+          "primitive_index": {
+            "type": "integer"
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "SkippedOp": {
         "properties": {
           "by_actor": {

@@ -157,7 +157,7 @@ Files are copied as bytes; none is executed, opened by another program or given 
 
 ## 9. The index and the scan
 
-The index is two tables (migration `create_library_index`): `library_entries` and the full-text table `library_fts`. It is rebuilt from the files: `LibraryReindex` empties it and reads every file; a **scan** compares the files with the rows (`sig`) and re-reads what differs, adds what is new and drops what is gone. The scan runs on the first read after the process starts and at the start of every list, get and search (a few hundred files cost a few directory reads), so a file edited outside the product is found at the next call (RF-391). A file that does not parse is indexed as `invalid` with its error, never skipped silently, and shown in the list with the reason. A request that reads a file reads the file, never the index.
+The index is two tables (migration `20261119130000_create_library_index`): `library_entries` and the full-text table `library_fts`. It is rebuilt from the files: `LibraryReindex` empties it and reads every file; a **scan** compares the files with the rows (`sig`) and re-reads what differs, adds what is new and drops what is gone. The scan runs on the first read after the process starts and at the start of every list, get and search (a few hundred files cost a few directory reads), so a file edited outside the product is found at the next call (RF-391). A file that does not parse is indexed as `invalid` with its error, never skipped silently, and shown in the list with the reason. A request that reads a file reads the file, never the index.
 
 | Table | Columns |
 | --- | --- |

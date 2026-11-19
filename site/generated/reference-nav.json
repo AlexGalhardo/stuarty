@@ -122,6 +122,28 @@
       ]
     },
     {
+      "tag": "Connections",
+      "pages": [
+        "connections.list",
+        "connections.create",
+        "connections.get",
+        "connections.remove",
+        "connections.test"
+      ]
+    },
+    {
+      "tag": "Images",
+      "pages": [
+        "images.list",
+        "images.create",
+        "images.get",
+        "images.edit",
+        "images.export",
+        "images.redo",
+        "images.undo"
+      ]
+    },
+    {
       "tag": "System",
       "pages": [
         "handshake.get",
@@ -172,6 +194,9 @@
       "job_cancel",
       "template",
       "font_import",
+      "connection",
+      "image",
+      "project_item",
       "library"
     ],
     "operations": [
