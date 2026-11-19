@@ -70,7 +70,7 @@ Prefix: `stuarty`.
 - `media:list --project <id> [--cursor c] [--limit n]`
 - `media:trash <asset id> --project <id>`
 - `media:restore <asset id> --project <id>`
-- `view --project <id> [--mode frame|sheet] [--at t] [--times t1,t2,...]`
+- `view --project <id> [--mode frame|sheet|audio] [--at t] [--times t1,t2,...]`
 - `export --project <id> [--start t] [--end t] [--format f] [--at t] [--preset p] [--codec c] [--wait] [--out f] [--force]`
 - `export:presets [--codecs]`
 - `export:check --project <id> --preset <id> [--start t] [--end t] [--codec c]`

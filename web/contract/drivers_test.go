@@ -164,12 +164,8 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.ViewFrame)
 	case "ViewSheet":
 		return invoke(ctx, s, svc.ViewSheet)
-	case "MotionBrief":
-		return invoke(ctx, s, svc.MotionBrief)
-	case "MotionCheck":
-		return invoke(ctx, s, svc.MotionCheck)
-	case "MotionReplace":
-		return invoke(ctx, s, svc.MotionReplace)
+	case "AudioMeasure":
+		return invoke(ctx, s, svc.AudioMeasure)
 	case "Doctor":
 		return invoke(ctx, s, svc.Doctor)
 	case "FontList":
@@ -606,10 +602,20 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 		args["mode"] = "sheet"
 
 		return "view", args, nil
-	case "MotionBrief":
-		delete(args, "track_id") // the tool has no track: SDD-011 section 15.5
+	case "AudioMeasure":
+		args["mode"] = "audio"
 
-		args["mode"] = "motion"
+		if v, ok := args["start"]; ok {
+			args["from"] = v
+
+			delete(args, "start")
+		}
+
+		if v, ok := args["end"]; ok {
+			args["until"] = v
+
+			delete(args, "end")
+		}
 
 		return "view", args, nil
 	case "ProjectDescribe":
@@ -978,26 +984,11 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 		argv = append(slices.Clone(proj), "--mode", "sheet")
 
 		return "view", append(argv, flag("until", a.Until)...), "", nil
-	case "MotionBrief":
-		argv = append(slices.Clone(proj), flag("from", a.From)...)
-		argv = append(argv, flag("until", a.Until)...)
+	case "AudioMeasure":
+		argv = append(slices.Clone(proj), "--mode", "audio")
+		argv = append(argv, flag("item", a.ItemID)...)
 
-		return "motion:brief", append(argv, flag("track", a.TrackID)...), "", nil
-	case "MotionCheck":
-		argv = append(slices.Clone(proj), flag("asset", a.AssetID)...)
-		argv = append(argv, flag("from", a.From)...)
-		argv = append(argv, flag("until", a.Until)...)
-
-		return "motion:check", append(argv, flag("track", a.TrackID)...), "", nil
-	case "MotionReplace":
-		argv = append(slices.Clone(proj), flag("asset", a.AssetID)...)
-		argv = append(argv, flag("render-key", a.RenderKey)...)
-
-		if a.DryRun {
-			argv = append(argv, "--dry-run")
-		}
-
-		return "motion:replace", argv, "", nil
+		return "view", append(argv, flag("until", a.Until)...), "", nil
 	case "Doctor":
 		return "doctor", []string{"--full"}, "", nil
 	case "FontList":
