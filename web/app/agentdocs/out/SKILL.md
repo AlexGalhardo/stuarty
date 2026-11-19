@@ -75,8 +75,8 @@ Prefix each with `stuarty`.
 - `view --project <id> [--mode frame|sheet] [--at t] [--times t1,t2,...]`
 - `export --project <id> [--start t] [--end t] [--format f] [--at t] [--preset p] [--codec c] [--wait] [--timeout d] [--out f] [--force]`
 - `export:presets [--codecs]`
-- `export:check --project <id> --preset <preset id> [--start t] [--end t] [--codec c]`
-- `export:batch --project <id> --preset <id> [--preset <id> ...] [--codec c] [--start t] [--end t] [--wait] [--timeout d]`
+- `export:check --project <id> --preset <id> [--start t] [--end t] [--codec c]`
+- `export:batch --project <id> --preset <id>... [--codec c] [--start t] [--end t] [--wait]`
 - `job:show <job id> [--wait] [--timeout d]`
 - `job:cancel <job id>`
 - `job:list --project <id> [--state s] [--cursor c] [--limit n]`
@@ -185,7 +185,7 @@ Exit codes: 0 success; 1 failure, do not retry; 2 retryable or a `--wait` timeou
 - `E_INGEST_FAILED` 500: see details.reason
 - `E_ASSET_NOT_READY` 409 retry: poll job:show until ready
 - `E_FFMPEG_MISSING` 503: install FFmpeg
-- `E_NO_ENCODER` 503: no H.264 encoder
+- `E_NO_ENCODER` 503: use another codec
 - `E_EXPORT_FAILED` 500: see details.reason
 - `E_VERIFY_FAILED` 500: see details.checks
 - `E_TRANSCRIBE_UNAVAILABLE` 503: install the helper

@@ -35,7 +35,7 @@ var exportPresets = &spec{
 var exportCheck = &spec{
 	name:    "export:check",
 	summary: "check that a project fits an export preset, before any encoding",
-	usage:   []string{"stuarty export:check --project <id> --preset <preset id> [--start t] [--end t] [--codec c]"},
+	usage:   []string{"stuarty export:check --project <id> --preset <id> [--start t] [--end t] [--codec c]"},
 	example: "stuarty export:check --project prj_7k2m9x4q1b --preset tiktok --json",
 	project: true,
 	flags: []flagDef{
@@ -70,7 +70,8 @@ var exportBatch = &spec{
 	name:    "export:batch",
 	summary: "export a project several times, one after the other, as one job",
 	usage: []string{
-		"stuarty export:batch --project <id> --preset <id> [--preset <id> ...] [--codec c] [--start t] [--end t] [--wait] [--timeout d]",
+		// The first line is the one of the agent skill, whose size is capped: --preset repeats, and --timeout is global.
+		"stuarty export:batch --project <id> --preset <id>... [--codec c] [--start t] [--end t] [--wait]",
 		"stuarty export:batch --project <id> --items '<json array of {preset, format, codec, start, end}>' [--wait]",
 	},
 	example: "stuarty export:batch --project prj_7k2m9x4q1b --preset tiktok --preset youtube-shorts --wait",
