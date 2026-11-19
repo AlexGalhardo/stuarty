@@ -187,10 +187,7 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 	});
 
 	test("negative: a command added to the catalogue with no key fails", () => {
-		const grown = [
-			...commands,
-			{ name: "clip.set_example", internal: false },
-		];
+		const grown = [...commands, { name: "clip.set_example", internal: false }];
 		expect(coverageProblems(grown, COVERAGE)).toContain(
 			"clip.set_example has no entry point",
 		);
@@ -209,9 +206,7 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 			"gone.command": [
 				{ kind: "palette", action: "palette.run" } as EntryPoint,
 			],
-			"item.move": [
-				{ kind: "palette", action: "no.such" } as EntryPoint,
-			],
+			"item.move": [{ kind: "palette", action: "no.such" } as EntryPoint],
 		};
 		const problems = coverageProblems(commands, stale);
 		expect(problems).toContain("gone.command is not in the registry");
