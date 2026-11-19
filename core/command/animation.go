@@ -92,11 +92,11 @@ func animationPresetByID(id string) (animationPreset, bool) {
 const defaultPresetDuration = "0.5s"
 
 type animationPresetArgs struct {
-	ItemID    string   `json:"item_id"             desc:"A clip, text, caption or shape item."                                  pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
-	Preset    string   `json:"preset"              desc:"The animation."                                                        enum:"fade,slide,scale,pop,push_in,pull_out"`
-	Edge      string   `json:"edge,omitempty"      desc:"in animates the start of the item, out its end. Default in."           enum:"in,out"`
+	ItemID    string   `json:"item_id"             desc:"A clip, text, caption or shape item."                                                                            pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	Preset    string   `json:"preset"              desc:"The animation."                                                                                                                                                         enum:"fade,slide,scale,pop,push_in,pull_out"`
+	Edge      string   `json:"edge,omitempty"      desc:"in animates the start of the item, out its end. Default in."                                                                                                            enum:"in,out"`
 	Duration  Time     `json:"duration,omitempty"  desc:"A length, at most the item's duration. Default 0.5s; the whole item for push_in and pull_out."`
-	Direction string   `json:"direction,omitempty" desc:"slide only: the side it comes from or leaves to. Default left."         enum:"left,right,up,down"`
+	Direction string   `json:"direction,omitempty" desc:"slide only: the side it comes from or leaves to. Default left."                                                                                                         enum:"left,right,up,down"`
 	Amount    *float64 `json:"amount,omitempty"    desc:"slide: distance in pixels; scale: factor at the far end; push_in and pull_out: zoom factor. Per preset default."`
 }
 
@@ -148,10 +148,7 @@ func applyAnimationPreset(c *Context, a *animationPresetArgs) error {
 		w0, w1 = it.Duration-d, it.Duration
 	}
 
-	steps, err := c.presetSteps(&it, &preset, a)
-	if err != nil {
-		return err
-	}
+	steps := c.presetSteps(&preset, a)
 
 	ks := cloneKeyframes(it.Keyframes)
 	if ks == nil {
@@ -220,7 +217,7 @@ type presetStep struct {
 	easing string
 }
 
-func (c *Context) presetSteps(it *timeline.Item, p *animationPreset, a *animationPresetArgs) ([]presetStep, *Error) {
+func (c *Context) presetSteps(p *animationPreset, a *animationPresetArgs) []presetStep {
 	amount := 0.0
 	if a.Amount != nil {
 		amount = *a.Amount
@@ -233,15 +230,15 @@ func (c *Context) presetSteps(it *timeline.Item, p *animationPreset, a *animatio
 		ease = p.OutEase
 	}
 
-	scaleStep := func(far func(float64) float64, zoom bool) ([]presetStep, *Error) {
-		return []presetStep{{prop: "scale", far: far, zoom: zoom, easing: ease}}, nil
+	scaleStep := func(far func(float64) float64, zoom bool) []presetStep {
+		return []presetStep{{prop: "scale", far: far, zoom: zoom, easing: ease}}
 	}
 
 	switch p.ID {
 	case "fade":
-		return []presetStep{{prop: "opacity", far: func(float64) float64 { return 0 }}}, nil
+		return []presetStep{{prop: "opacity", far: func(float64) float64 { return 0 }}}
 	case "slide":
-		return c.slideStep(a, amount, ease), nil
+		return c.slideStep(a, amount, ease)
 	case "scale":
 		return scaleStep(func(v float64) float64 { return v * amount }, false)
 	case "pop":
@@ -365,11 +362,21 @@ func applyAnimationListPresets(c *Context, _ *listPresetsArgs) error {
 
 	for _, p := range animationPresets {
 		params := map[string]any{
-			"duration": map[string]any{"unit": "frames", "min": 1, "max": "the item's duration", "default": defaultPresetDuration},
+			"duration": map[string]any{
+				"unit":    "frames",
+				"min":     1,
+				"max":     "the item's duration",
+				"default": defaultPresetDuration,
+			},
 		}
 
 		if p.WholeItem {
-			params["duration"] = map[string]any{"unit": "frames", "min": 1, "max": "the item's duration", "default": "the whole item"}
+			params["duration"] = map[string]any{
+				"unit":    "frames",
+				"min":     1,
+				"max":     "the item's duration",
+				"default": "the whole item",
+			}
 		}
 
 		if p.Direction {
@@ -377,7 +384,12 @@ func applyAnimationListPresets(c *Context, _ *listPresetsArgs) error {
 		}
 
 		if p.Amount != nil {
-			amount := map[string]any{"min": p.Amount.Min, "max": p.Amount.Max, "default": p.Amount.Default, "unit": p.Amount.Unit}
+			amount := map[string]any{
+				"min":     p.Amount.Min,
+				"max":     p.Amount.Max,
+				"default": p.Amount.Default,
+				"unit":    p.Amount.Unit,
+			}
 			if p.ID == "slide" {
 				amount["default"] = "a quarter of the width (left, right) or of the height (up, down)"
 			}
