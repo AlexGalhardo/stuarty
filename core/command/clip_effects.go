@@ -18,7 +18,6 @@ func init() {
 		Example: `{"item_id": "itm_m1n2p3q4r5", "effects": [{"kind": "vignette", "amount": 0.6}, {"kind": "grain"}]}`,
 		Errors:  []string{CodeValidation, CodeNotFound, CodeTypeMismatch},
 		Scope:   ScopeEdit,
-		Phase:   Beta,
 	}, applyClipSetEffects))
 }
 

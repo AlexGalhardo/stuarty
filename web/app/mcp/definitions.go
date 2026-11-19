@@ -35,7 +35,7 @@ type definition struct {
 }
 
 // loadDefinitions reads every definition in order. The op enum of edit is cut to
-// the commands the registry has, the phase filter of SDD-003 section 4.1.
+// the commands the registry has (SDD-003 section 4.1).
 func loadDefinitions(reg *command.Registry) (map[string]*definition, error) {
 	out := make(map[string]*definition, len(order))
 

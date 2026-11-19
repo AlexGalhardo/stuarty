@@ -23,7 +23,6 @@ func init() {
 			CodeLimit, CodeOverlap,
 		},
 		Scope: ScopeEdit,
-		Phase: Prototype,
 	}, applyCaptionAdd))
 }
 

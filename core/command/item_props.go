@@ -15,7 +15,6 @@ func init() {
 		Example:     `{"item_id": "itm_m1n2p3q4r5", "name": "Intro shot"}`,
 		Errors:      []string{CodeValidation, CodeNotFound},
 		Scope:       ScopeEdit,
-		Phase:       Alpha,
 	}, applyItemRename))
 
 	Register(Define(Spec{
@@ -26,7 +25,6 @@ func init() {
 		Example: `{"item_id": "itm_s6t7v8w9x0", "x": 540, "scale": 1.5}`,
 		Errors:  []string{CodeValidation, CodeNotFound, CodeTypeMismatch, CodeInvalidState},
 		Scope:   ScopeEdit,
-		Phase:   Alpha,
 	}, applyItemSetTransform))
 
 	Register(Define(Spec{
@@ -43,7 +41,6 @@ func init() {
 		Example: `{"item_id": "itm_m1n2p3q4r5", "edge": "in", "kind": "fade"}`,
 		Errors:  []string{CodeValidation, CodeInvalidTime, CodeNotFound, CodeTypeMismatch, CodeInvalidState},
 		Scope:   ScopeEdit,
-		Phase:   Alpha,
 	}, applyItemSetTransition))
 
 	Register(Define(Spec{
@@ -58,7 +55,6 @@ func init() {
 			CodeValidation, CodeInvalidTime, CodeNotFound, CodeTypeMismatch, CodeInvalidState,
 		},
 		Scope: ScopeEdit,
-		Phase: Alpha,
 	}, applyItemSetAudio))
 }
 

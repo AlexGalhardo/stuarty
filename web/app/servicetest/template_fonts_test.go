@@ -71,7 +71,7 @@ func (m *mediaEnv) instantiate(name, template string) string {
 // ADR-0022 item 5: a template with a custom font exports with the font file, imports on a fresh
 // workspace through the font pipeline, and draws the same bitmap.
 func TestTemplateFontsRoundTripRendersTheSameBitmap(t *testing.T) {
-	a := newMediaEnv(t, mediaCfg{noQueue: true, realExport: true, beta: true})
+	a := newMediaEnv(t, mediaCfg{noQueue: true, realExport: true})
 
 	anton, err := enginestore.NewFonts(a.ws).Put(bundledFontFile(t, "Anton-Regular.ttf"))
 	if err != nil {
@@ -85,7 +85,7 @@ func TestTemplateFontsRoundTripRendersTheSameBitmap(t *testing.T) {
 		t.Fatalf("the template file has no font entry: %v", zipNames(t, file))
 	}
 
-	b := newMediaEnv(t, mediaCfg{noQueue: true, realExport: true, beta: true})
+	b := newMediaEnv(t, mediaCfg{noQueue: true, realExport: true})
 
 	imported, err := b.svc.TemplateImport(b.as(ui), service.TemplateImportRequest{Path: b.write("t.zip", string(file))})
 	if err != nil {
@@ -107,7 +107,7 @@ func TestTemplateFontsRoundTripRendersTheSameBitmap(t *testing.T) {
 // SDD-007 T-20 with the extended allowlist: a font entry must hash to its name, be in the document,
 // be a valid font, and the document must not name a font the file lacks.
 func TestTemplateFontsImportRefusesBadFontEntries(t *testing.T) {
-	a := newMediaEnv(t, mediaCfg{beta: true})
+	a := newMediaEnv(t, mediaCfg{})
 
 	anton, err := enginestore.NewFonts(a.ws).Put(bundledFontFile(t, "Anton-Regular.ttf"))
 	if err != nil {
@@ -139,7 +139,7 @@ func TestTemplateFontsImportRefusesBadFontEntries(t *testing.T) {
 	}
 
 	for name, entries := range cases {
-		b := newMediaEnv(t, mediaCfg{beta: true})
+		b := newMediaEnv(t, mediaCfg{})
 
 		_, err := b.svc.TemplateImport(
 			b.as(ui), service.TemplateImportRequest{Path: b.write("t.zip", string(zipEntries(t, entries)))},

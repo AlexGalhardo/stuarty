@@ -601,8 +601,14 @@ func TestRuleGoldens(t *testing.T) {
 		kinds[code][strings.SplitN(name, "_", 2)[0]] = true
 	}
 
+	// These rules are exercised by the table tests of lint_test.go, not by golden cases.
+	testedWithoutGoldens := []string{
+		CodeEmptyTimeline, CodeGap, CodeBlackFrames, CodeMediaMissing, CodeMediaUnready,
+		CodeSourceRange, CodeOddDimensions, CodeSilentExport, CodeSliver,
+	}
+
 	for _, r := range Catalog() {
-		if r.Phase != "A" {
+		if !r.Implemented || slices.Contains(testedWithoutGoldens, r.Code) {
 			continue
 		}
 

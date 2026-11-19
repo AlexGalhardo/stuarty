@@ -13,7 +13,6 @@ func init() {
 		Example: `{"item_id": "itm_m1n2p3q4r5", "horizontal": true}`,
 		Errors:  []string{CodeValidation, CodeNotFound, CodeTypeMismatch},
 		Scope:   ScopeEdit,
-		Phase:   Beta,
 	}, applyClipSetFlip))
 }
 

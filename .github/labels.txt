@@ -16,10 +16,6 @@ breaking|b60205|Changes or removes public behaviour
 priority:p1|b60205|Fix before the next release
 priority:p2|d93f0b|Fix soon
 priority:p3|fef2c0|Nice to have
-# phase
-phase:prototype|bfd4f2|Belongs to the Prototype
-phase:alpha|d4c5f9|Belongs to ALPHA
-phase:beta|c2e0c6|Belongs to BETA
 # area (same list as the commit scopes in SDD-009 section 6.2)
 area:core|c5def5|core
 area:timeline|c5def5|timeline

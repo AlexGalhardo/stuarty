@@ -13,9 +13,11 @@ import {
 } from "./batch";
 import { matchRange, paletteRows } from "./usePaletteSearch";
 
-const summary = (name: string, extra: Partial<CommandSummary> = {}) => ({
+const summary = (
+	name: string,
+	extra: Partial<CommandSummary> = {},
+): CommandSummary => ({
 	name,
-	phase: "alpha" as const,
 	scope: "edit",
 	summary: `Does ${name}.`,
 	...extra,

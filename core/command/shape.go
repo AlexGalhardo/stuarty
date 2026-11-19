@@ -18,7 +18,6 @@ func init() {
 			CodeValidation, CodeInvalidTime, CodeNotFound, CodeTypeMismatch, CodeIDExists, CodeLimit, CodeOverlap,
 		},
 		Scope: ScopeEdit,
-		Phase: Alpha,
 	}, applyShapeAdd))
 
 	Register(Define(Spec{
@@ -29,7 +28,6 @@ func init() {
 		Example: `{"item_id": "itm_s6t7v8w9x0", "shape": "rounded_rect", "radius": 24, "width": 600}`,
 		Errors:  []string{CodeValidation, CodeNotFound, CodeTypeMismatch},
 		Scope:   ScopeEdit,
-		Phase:   Alpha,
 	}, applyShapeSet))
 }
 

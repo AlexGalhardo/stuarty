@@ -39,7 +39,6 @@ func init() {
 		Example: `{"item_id": "itm_m1n2p3q4r5", "shadow": {"color": "#000000", "opacity": 0.6, "dx": 10, "dy": 12, "blur": 16}}`,
 		Errors:  []string{CodeValidation, CodeNotFound, CodeTypeMismatch},
 		Scope:   ScopeEdit,
-		Phase:   Beta,
 	}, applyClipSetShadow))
 
 	Register(Define(Spec{
@@ -51,7 +50,6 @@ func init() {
 		Example: `{"item_id": "itm_m1n2p3q4r5", "outline": {"color": "#FFFFFF", "width": 6}}`,
 		Errors:  []string{CodeValidation, CodeNotFound, CodeTypeMismatch},
 		Scope:   ScopeEdit,
-		Phase:   Beta,
 	}, applyClipSetOutline))
 }
 

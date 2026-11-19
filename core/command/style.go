@@ -99,13 +99,6 @@ func (c *Context) checkStyleValue(path, key string, v any, rule styleRule) *Erro
 			return bad("%s must be one of %s, got %v.", path, strings.Join(rule.enum, ", "), v).
 				WithHint("Use one of: %s.", strings.Join(rule.enum, ", "))
 		}
-		if key == "highlight" && s != "none" && c.build.rank() < Alpha.rank() {
-			return bad(
-				"%s must be \"none\" in this build, got %q.",
-				path,
-				s,
-			).WithHint(`Word highlight arrives in ALPHA; use "none".`)
-		}
 	default:
 		return checkStyleNumber(path, key, v, rule)
 	}

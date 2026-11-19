@@ -20,7 +20,6 @@ func init() {
 			`"sample_count": 1440000, "width": 1080, "height": 1920, "has_audio": true}}`,
 		Errors:   []string{CodeValidation, CodeIDExists, CodeLimit},
 		Scope:    ScopeMedia,
-		Phase:    Prototype,
 		Internal: true,
 	}, applyAssetAdd))
 }

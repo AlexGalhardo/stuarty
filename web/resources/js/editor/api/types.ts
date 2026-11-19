@@ -521,7 +521,6 @@ export interface LintResult {
 // the summaries, one command has its schema, example and error codes.
 export interface CommandSummary {
 	name: string;
-	phase: "prototype" | "alpha" | "beta";
 	scope: string;
 	summary: string;
 	internal?: boolean;

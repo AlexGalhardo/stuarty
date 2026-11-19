@@ -17,7 +17,7 @@ import (
 )
 
 // row is one line of the parity table of SDD-003 section 7.1 for an operation of
-// the Prototype phase. Pending is the task that delivers the operation: until
+// the first service. Pending is the task that delivers the operation: until
 // then it has no Service method and its tool and command are stubs.
 type row struct {
 	method  string // the Service method

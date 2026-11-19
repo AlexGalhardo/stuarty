@@ -16,7 +16,6 @@ func init() {
 			CodeOutOfSource, CodeOverlap,
 		},
 		Scope: ScopeEdit,
-		Phase: Alpha,
 	}, applyAudioAdd))
 }
 

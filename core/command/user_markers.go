@@ -17,7 +17,6 @@ func init() {
 		Example: `{"at": "12.5s", "label": "drop"}`,
 		Errors:  []string{CodeValidation, CodeInvalidTime, CodeInvalidState, CodeLimit},
 		Scope:   ScopeEdit,
-		Phase:   Beta,
 	}, applyMarkerAdd))
 
 	Register(Define(Spec{
@@ -28,7 +27,6 @@ func init() {
 		Example: `{"at": "12.5s", "to": "13s", "label": "drop"}`,
 		Errors:  []string{CodeValidation, CodeInvalidTime, CodeNotFound, CodeInvalidState},
 		Scope:   ScopeEdit,
-		Phase:   Beta,
 	}, applyMarkerSet))
 
 	Register(Define(Spec{
@@ -39,7 +37,6 @@ func init() {
 		Example: `{"at": "12.5s"}`,
 		Errors:  []string{CodeValidation, CodeInvalidTime, CodeNotFound},
 		Scope:   ScopeEdit,
-		Phase:   Beta,
 	}, applyMarkerRemove))
 }
 

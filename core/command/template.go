@@ -19,7 +19,6 @@ func init() {
 		Example: `{"description": "Product teaser", "colors": {"brand": "#ff3366", "old": null}}`,
 		Errors:  []string{CodeValidation, CodeInUse},
 		Scope:   ScopeEdit,
-		Phase:   Alpha,
 	}, applyTemplateSetInfo))
 }
 

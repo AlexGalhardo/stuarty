@@ -21,7 +21,6 @@ func init() {
 			CodeValidation, CodeInvalidTime, CodeNotFound, CodeTypeMismatch, CodeIDExists, CodeLimit, CodeOverlap,
 		},
 		Scope: ScopeEdit,
-		Phase: Alpha,
 	}, applyItemDuplicate))
 
 	Register(Define(Spec{
@@ -38,7 +37,6 @@ func init() {
 			CodeOverlap,
 		},
 		Scope: ScopeEdit,
-		Phase: Alpha,
 	}, applyItemCrossfade))
 
 	Register(Define(Spec{
@@ -52,7 +50,6 @@ func init() {
 			CodeValidation, CodeInvalidTime, CodeNotFound, CodeInvalidState, CodeOverlap,
 		},
 		Scope: ScopeEdit,
-		Phase: Alpha,
 	}, applyCloseGap))
 }
 
