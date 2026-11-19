@@ -164,6 +164,7 @@ func (b *PriceBook) read() ([]provider.PriceEntry, error) {
 	// Every entry is checked again: the file is a person's to edit by hand, and what is read is
 	// what the estimate trusts.
 	out := make([]provider.PriceEntry, 0, len(doc.Prices))
+	seen := make(map[[2]string]bool, len(doc.Prices))
 
 	for i := range doc.Prices {
 		e, ferr := provider.NormalizeEntry(doc.Prices[i])
@@ -171,6 +172,14 @@ func (b *PriceBook) read() ([]provider.PriceEntry, error) {
 			return nil, fmt.Errorf("%w: entry %d: %s", ErrBadPriceFile, i, ferr.Path)
 		}
 
+		// One price per provider and model (SDD-016 section 4.3): with two, which one an estimate used would
+		// depend on the order of a sort, not on the person.
+		key := [2]string{e.Provider, e.Model}
+		if seen[key] {
+			return nil, fmt.Errorf("%w: entry %d: a second price for %s %s", ErrBadPriceFile, i, e.Provider, e.Model)
+		}
+
+		seen[key] = true
 		out = append(out, e)
 	}
 

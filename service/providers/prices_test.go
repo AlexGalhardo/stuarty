@@ -112,6 +112,10 @@ func TestPriceBookRefusesABadFile(t *testing.T) {
 		"wrong version": `{"format":"stuarty-prices","version":2,"prices":[]}`,
 		"bad entry":     `{"format":"stuarty-prices","version":1,"prices":[{"provider":"openai","model":"a b","currency":"USD"}]}`,
 		"negative":      `{"format":"stuarty-prices","version":1,"prices":[{"provider":"openai","model":"m","currency":"USD","input_micros_per_mtok":-1}]}`,
+		// Two prices for one model: which one an estimate would use is not the person's word.
+		"duplicate": `{"format":"stuarty-prices","version":1,"prices":[` +
+			`{"provider":"openai","model":"m","currency":"USD","input_micros_per_mtok":9,"output_micros_per_mtok":9},` +
+			`{"provider":"openai","model":"m","currency":"USD","input_micros_per_mtok":0,"output_micros_per_mtok":0}]}`,
 	} {
 		path := filepath.Join(t.TempDir(), PriceFile)
 		if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
