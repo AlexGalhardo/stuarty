@@ -90,8 +90,11 @@ func TestFormerVariables(t *testing.T) {
 				t.Errorf("%s = %q, want the current value to win", p.Current, both[p.Current])
 			}
 
-			if !strings.Contains(warn.String(), "ignored") || strings.Count(warn.String(), "\n") != 1 {
-				t.Errorf("want one warning that the former name is ignored, got %q", warn.String())
+			// The container image sets some current names itself, so the person who passed the former one
+			// is told where the value goes, not only to remove it.
+			if !strings.Contains(warn.String(), "ignored") || strings.Count(warn.String(), "\n") != 1 ||
+				!strings.Contains(warn.String(), "the value you want under "+p.Current) {
+				t.Errorf("want one warning that the former name is ignored and where to set it, got %q", warn.String())
 			}
 		})
 	}
