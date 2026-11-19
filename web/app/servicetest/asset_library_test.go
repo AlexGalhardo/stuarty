@@ -653,3 +653,115 @@ func TestSecurity_T06_AssetLibraryRecordIsPerOwner(t *testing.T) {
 		t.Errorf("after the reuse: %+v", again)
 	}
 }
+
+// A file that reaches a project of an owner with no library row for it, by a copy of a project or by the asset of
+// a template fill, is found by the name that owner's project gives it, as an imported file is (VV-254: the search
+// row is per owner and the ingest writes none).
+func TestAssetLibraryFindsAFileCopiedToAnotherOwner(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{})
+	alice := service.WithCaller(context.Background(), service.Caller{
+		Actor: "user:alice", Scopes: service.AllScopes, OwnerUserID: "alice",
+	})
+	local := m.as(ui)
+
+	mk := func(c context.Context, name string) string {
+		res, err := m.svc.ProjectCreate(c, service.ProjectCreateRequest{Name: name})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		return res.ProjectID
+	}
+	imp := func(project, name, body string) service.ImportedAsset {
+		res, err := m.svc.MediaImport(alice, service.MediaImportRequest{
+			ProjectID: project, Files: []service.ImportFile{{Path: m.write(name, body)}},
+		})
+		if err != nil || res.Failed != 0 {
+			t.Fatalf("import = %+v, %v", res, err)
+		}
+
+		return res.Assets[0]
+	}
+	found := func(text string) []string {
+		res, err := m.svc.AssetList(local, service.AssetListRequest{Text: text})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		return assetIDs(res)
+	}
+
+	harbourProject := mk(alice, "alice harbour")
+	harbour := imp(harbourProject, "harbour-night.mp4", clipBytes+" harbour")
+	meadow := imp(mk(alice, "alice meadow"), "meadow-dawn.mp4", clipBytes+" meadow")
+
+	// The copy of alice's project belongs to the local owner, who had no record of the file.
+	copied, err := m.svc.ProjectDuplicate(local, service.ProjectDuplicateRequest{ProjectID: harbourProject})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if got := found("harbour"); !slices.Equal(got, []string{harbour.Hash}) {
+		t.Errorf("after the copy %s, the search for its file = %v", copied.ProjectID, got)
+	}
+
+	// A template of the local owner filled with alice's file adds it to a new project by asset.add.
+	source := mk(local, "tpl")
+	steps := []command.Operation{
+		op("track.add", `{"kind":"visual","name":"V"}`),
+		op("template.set_info", `{"description":"t"}`),
+	}
+
+	var track, clip string
+
+	for i, o := range steps {
+		res, eerr := m.svc.Edit(
+			local,
+			service.EditRequest{ProjectID: source, BaseRevision: int64(i), Operations: []command.Operation{o}},
+		)
+		if eerr != nil {
+			t.Fatal(eerr)
+		}
+
+		if i == 0 {
+			track = res.Created[0]
+		}
+	}
+
+	res, err := m.svc.Edit(
+		local,
+		service.EditRequest{ProjectID: source, BaseRevision: 2, Operations: []command.Operation{op(
+			"clip.add", `{"track_id":"`+track+`","asset_id":"ast_placeholder","start":"0s","duration":"1s"}`,
+		)}},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	clip = res.Created[0]
+
+	if _, err := m.svc.Edit(
+		local,
+		service.EditRequest{ProjectID: source, BaseRevision: 3, Operations: []command.Operation{
+			op("slot.mark", `{"item_id":"`+clip+`","name":"hero"}`),
+		}},
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	tpl, err := m.svc.TemplateSave(local, service.TemplateSaveRequest{ProjectID: source, Name: "T"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := m.svc.TemplateInstantiate(local, service.TemplateInstantiateRequest{
+		TemplateID: tpl.Template.TemplateID, Name: "Filled",
+		Fill: map[string]service.SlotValue{"hero": {AssetID: meadow.AssetID}},
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	if got := found("meadow"); !slices.Equal(got, []string{meadow.Hash}) {
+		t.Errorf("after the template fill, the search for its file = %v", got)
+	}
+}
