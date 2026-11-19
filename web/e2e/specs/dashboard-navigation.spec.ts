@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test";
 
+import { horizontalOverflow, undersizedTargets } from "../support/wcag";
 import { expect, seedProject, test } from "./helpers";
 
 // settle waits for the fonts and the requests of the page, so the next
@@ -209,6 +210,7 @@ test.describe("dashboard-navigation", () => {
 	test("the sidebar is collapsed in a narrow window whatever was chosen", async ({
 		page,
 	}) => {
+		await page.addInitScript(() => localStorage.setItem("sidebar", "expanded"));
 		await page.setViewportSize({ width: 360, height: 700 });
 		await page.goto("/");
 		await expect(page.getByTestId("sidebar")).toHaveAttribute(
@@ -216,6 +218,31 @@ test.describe("dashboard-navigation", () => {
 			"collapsed",
 		);
 		await expect(page.getByTestId("nav-connections")).toBeVisible();
+		// The toggle could not expand it here, so it is not offered.
+		await expect(page.getByTestId("sidebar-toggle")).toBeHidden();
+	});
+
+	// WCAG 1.4.10 and 2.5.8: the home and a section page reflow at 320 CSS px
+	// with targets of 24 px, and the sidebar strip is read and tabbed in the
+	// order it is drawn.
+	test("the dashboard reflows at 320 px with the navigation before the profile", async ({
+		page,
+	}) => {
+		await page.setViewportSize({ width: 320, height: 256 });
+		const found: string[] = [];
+		for (const path of ["/", "/publish"]) {
+			await page.goto(path);
+			await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+			const overflow = await horizontalOverflow(page);
+			if (overflow) found.push(`${path}: ${overflow}`);
+			for (const small of await undersizedTargets(page))
+				found.push(`${path}: ${small.target} ${small.size}`);
+		}
+		expect(found, "pages that scroll or have small targets").toEqual([]);
+
+		const top = async (testId: string): Promise<number> =>
+			(await page.getByTestId(testId).boundingBox())?.y ?? Number.NaN;
+		expect(await top("nav-projects")).toBeLessThan(await top("profile-name"));
 	});
 
 	test("the way into the editor and the way back to the dashboard", async ({
