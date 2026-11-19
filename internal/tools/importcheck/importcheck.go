@@ -9,6 +9,9 @@
 //     runner [EngineException] that ADR-0001 rule 2 allows.
 //   - service/ never imports web/ or vukem.
 //   - every package outside web/ never imports vukem (rule 4).
+//   - service/vault, which can return a credential, is imported only by service/connections and by the
+//     owner that wires it (ADR-0033 item 3, SDD-014 section 3); tests may import it.
+//   - only internal/outbound opens a connection to a host ([CheckOutbound]).
 package importcheck
 
 import (
@@ -127,6 +130,10 @@ func forbidden(rel, imp, modulePath string) string {
 	area, _, _ := strings.Cut(rel, "/")
 	inVukem := under(imp, VukemModule)
 
+	if imp == modulePath+"/service/vault" && !vaultImporter(rel) {
+		return "service/vault is imported only by service/connections and the owner (ADR-0033 item 3): a credential is read inside the call that uses it"
+	}
+
 	switch area {
 	case "web":
 		return ""
@@ -167,6 +174,21 @@ func forbidden(rel, imp, modulePath string) string {
 	}
 
 	return ""
+}
+
+// vaultImporter reports whether a file may import service/vault.
+func vaultImporter(rel string) bool {
+	if strings.HasSuffix(rel, "_test.go") {
+		return true
+	}
+
+	for _, p := range []string{"service/vault/", "service/connections/", "web/app/owner/"} {
+		if strings.HasPrefix(rel, p) {
+			return true
+		}
+	}
+
+	return false
 }
 
 func under(imp, prefix string) bool {
