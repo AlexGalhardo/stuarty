@@ -3,7 +3,7 @@
 #
 #   bash scripts/no-egress.sh
 #
-# Runs the product with every VUKEM_VIDEO_* variable unset through a reference session, each process under
+# Runs the product with every STUARTY_* variable unset through a reference session, each process under
 # `strace -f -e trace=connect,sendto,sendmsg,sendmmsg`, so the children (FFmpeg, ffprobe) are traced too:
 #
 #   1. `serve` (the owner, in the background, bound to loopback);
@@ -21,8 +21,8 @@
 # The helper download itself (`tools:install`) is the one outbound path the product has (SDD-007 section
 # 6.8: HTTPS to the hosts of the embedded manifest), so it is not run here: the check is that it stops at its
 # question and that `--yes` from a session that is not a person is refused, both without a connection.
-# Needs: go (or VUKEM_VIDEO_BIN), ffmpeg on PATH, strace. Environment:
-#   VUKEM_VIDEO_BIN   the binary to test (default: built from this checkout)
+# Needs: go (or STUARTY_BIN), ffmpeg on PATH, strace. Environment:
+#   STUARTY_BIN   the binary to test (default: built from this checkout)
 #   NOEGRESS_PORT     loopback port of the server (default a random one in 20000 to 39999)
 #   NOEGRESS_KEEP     set to 1 to keep the work folder and the traces
 set -euo pipefail
@@ -56,23 +56,23 @@ cleanup() {
 }
 trap cleanup EXIT
 
-if [ -n "${VUKEM_VIDEO_BIN:-}" ]; then
-	bin="$work/vukem-video"
-	cp "$VUKEM_VIDEO_BIN" "$bin"
+if [ -n "${STUARTY_BIN:-}" ]; then
+	bin="$work/stuarty"
+	cp "$STUARTY_BIN" "$bin"
 else
-	command -v go >/dev/null 2>&1 || die "go is required to build the binary (or set VUKEM_VIDEO_BIN)"
+	command -v go >/dev/null 2>&1 || die "go is required to build the binary (or set STUARTY_BIN)"
 	log "building the binary"
-	bin="$work/vukem-video"
+	bin="$work/stuarty"
 	(cd "$root" && go build -o "$bin" ./web/cmd/app)
 fi
 chmod +x "$bin"
 
 # Nothing may configure an outbound path, and no other workspace may be reached.
 while IFS='=' read -r name _; do
-	case "$name" in VUKEM_VIDEO_* | APP_KEY | APP_ENV | OTEL_*) unset "$name" ;; esac
+	case "$name" in STUARTY_* | APP_KEY | APP_ENV | OTEL_*) unset "$name" ;; esac
 done < <(env)
-export VUKEM_VIDEO_HOME="$work/home"
-mkdir -p "$VUKEM_VIDEO_HOME" "$work/traces"
+export STUARTY_HOME="$work/home"
+mkdir -p "$STUARTY_HOME" "$work/traces"
 port="${NOEGRESS_PORT:-$((20000 + RANDOM % 20000))}"
 project=prj_7k2m9x4q1b
 
@@ -112,16 +112,16 @@ vv_refused() {
 json_field() { sed -n "s/.*\"$1\":\"\([^\"]*\)\".*/\1/p" "$2" | head -n 1; }
 
 log "starting the server on 127.0.0.1:$port"
-VUKEM_VIDEO_ADDR="127.0.0.1:$port" VUKEM_VIDEO_MIN_FREE_BYTES=1 \
+STUARTY_ADDR="127.0.0.1:$port" STUARTY_MIN_FREE_BYTES=1 \
 	strace -f --seccomp-bpf -e trace=connect,sendto,sendmsg,sendmmsg -o "$work/traces/serve.log" -- \
 	"$bin" serve >"$work/serve.log" 2>&1 &
 server_pid=$!
 for _ in $(seq 1 120); do
-	[ -s "$VUKEM_VIDEO_HOME/runtime.json" ] && break
+	[ -s "$STUARTY_HOME/runtime.json" ] && break
 	kill -0 "$server_pid" 2>/dev/null || { cat "$work/serve.log" >&2; die "the server exited at start"; }
 	sleep 0.5
 done
-[ -s "$VUKEM_VIDEO_HOME/runtime.json" ] || { cat "$work/serve.log" >&2; die "the server did not announce itself in 60 s"; }
+[ -s "$STUARTY_HOME/runtime.json" ] || { cat "$work/serve.log" >&2; die "the server did not announce itself in 60 s"; }
 
 log "CLI session: create, import, edit, export, view"
 ffmpeg -v error -f lavfi -i testsrc2=size=320x180:rate=30:duration=2 -f lavfi -i sine=frequency=220:duration=2 \

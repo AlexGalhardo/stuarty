@@ -357,7 +357,7 @@ fi
 	printf 'lame: %s\nlibogg: %s\nlibvorbis: %s\nlibwebp: %s\n' "$LAME_SRC_URL" "$OGG_SRC_URL" "$VORBIS_SRC_URL" "$LIBWEBP_SRC_URL"
 	printf 'OpenH264 (four API headers only, BSD-2-Clause; the library is loaded at run time, not included): %s/{codec_api,codec_app_def,codec_def,codec_ver}.h (SHA-256 %s %s %s %s)\n' "$OPENH264_RAW_URL" "$OPENH264_CODEC_API_SHA256" "$OPENH264_CODEC_APP_DEF_SHA256" "$OPENH264_CODEC_DEF_SHA256" "$OPENH264_CODEC_VER_SHA256"
 	printf 'Patch: .config/ffmpeg-build/patches/%s (SHA-256 %s)\n' "$FFMPEG_PATCH_FILE" "$FFMPEG_PATCH_SHA256"
-	printf 'Build scripts and flags:https://github.com/AlexGalhardo/vukem-video/tree/%s/.config/ffmpeg-build\n' "$FFMPEG_BUILD_TAG"
+	printf 'Build scripts and flags:https://github.com/AlexGalhardo/stuarty/tree/%s/.config/ffmpeg-build\n' "$FFMPEG_BUILD_TAG"
 } >"$pkg/SOURCE.txt"
 
 touch -d "@$SOURCE_DATE_EPOCH" "$pkg" "$pkg/bin" "$pkg"/* "$pkg"/bin/* 2>/dev/null \

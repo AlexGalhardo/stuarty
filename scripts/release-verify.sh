@@ -39,9 +39,9 @@ v[0-9]*.[0-9]*.[0-9]*) ;;
 esac
 
 v="${version#v}"
-repo="AlexGalhardo/vukem-video"
-archive="vukem-video_${v}_linux_amd64.tar.gz"
-identity="^https://github\.com/AlexGalhardo/vukem-video/\.github/workflows/release\.yml@${identity_ref}"
+repo="AlexGalhardo/stuarty"
+archive="stuarty_${v}_linux_amd64.tar.gz"
+identity="^https://github\.com/AlexGalhardo/stuarty/\.github/workflows/release\.yml@${identity_ref}"
 issuer="https://token.actions.githubusercontent.com"
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -83,7 +83,7 @@ echo "release: body=$has_body assets=$assets (want $want_assets)"
 [ "$has_body" = "true" ] && [ "$assets" -eq "$want_assets" ]
 
 downloads=(-p checksums.txt -p checksums.txt.sigstore.json -p "$archive" -p "$archive.sbom.json")
-[ "$desktop" -eq 0 ] || downloads+=(-p 'vukem-video-desktop_*')
+[ "$desktop" -eq 0 ] || downloads+=(-p 'stuarty-desktop_*')
 gh release download "$version" -R "$repo" "${downloads[@]}"
 
 cosign verify-blob checksums.txt \
@@ -95,7 +95,7 @@ cosign verify-blob checksums.txt \
 # which cosign signed above, and the provenance attestation of every file.
 sha256sum --ignore-missing -c checksums.txt
 gh attestation verify "$archive" -R "$repo"
-for installer in vukem-video-desktop_"${v}"_* vukem-video-desktop-"${v//./-}"*; do
+for installer in stuarty-desktop_"${v}"_* stuarty-desktop-"${v//./-}"*; do
 	[ -e "$installer" ] || continue
 	case "$installer" in *.sbom.json) continue ;; esac
 	gh attestation verify "$installer" -R "$repo"
@@ -110,7 +110,7 @@ if [ "$(uname -s)" = "Linux" ] && [ "$(uname -m)" = "x86_64" ]; then
 	gh api "repos/$repo/contents/.config/ffmpeg.env?ref=$version" -H "Accept: application/vnd.github.raw" >ffmpeg-pin/ffmpeg.env
 	ffmpeg_bin="$(FFMPEG_ENV_FILE="$work/ffmpeg-pin/ffmpeg.env" FFMPEG_INSTALL_DIR="$work/ffmpeg-pin/install" bash "$script_dir/install-ffmpeg.sh" | tail -n 1)"
 	cp "$ffmpeg_bin/ffmpeg" "$ffmpeg_bin/ffprobe" extracted/
-	verify_out="$(VUKEM_VIDEO_HOME="$work/doctor-home" ./extracted/vukem-video doctor --verify --json || true)"
+	verify_out="$(STUARTY_HOME="$work/doctor-home" ./extracted/stuarty doctor --verify --json || true)"
 	matched="$(printf '%s' "$verify_out" | grep -o 'matches the release' | wc -l)"
 	if [ "$matched" -ne 2 ]; then
 		echo "release-verify: doctor --verify did not report 'matches the release' for ffmpeg and ffprobe ($matched of 2)" >&2
@@ -143,7 +143,7 @@ fi
 
 digests=()
 
-for image in ghcr.io/alexgalhardo/vukem-video alexgalhardo/vukem-video; do
+for image in ghcr.io/alexgalhardo/stuarty alexgalhardo/stuarty; do
 	digest="$(docker buildx imagetools inspect "$image:$v" --format '{{.Manifest.Digest}}')"
 	cosign verify "$image@$digest" \
 		--certificate-identity-regexp "$identity" \
@@ -158,5 +158,5 @@ if [ "${digests[0]}" != "${digests[1]}" ]; then
 	exit 1
 fi
 
-docker run --rm "ghcr.io/alexgalhardo/vukem-video:$v" version | grep -F -- "$v"
+docker run --rm "ghcr.io/alexgalhardo/stuarty:$v" version | grep -F -- "$v"
 echo "release-verify: ok"

@@ -47,7 +47,7 @@ The product is called Stuarty everywhere a person or an agent meets it: the comm
 - [x] 4. Implement the workspace adoption with backup and its tests (same volume, other volume, both folders exist, former folder newer than supported). Verify: `go test ./service/workspace/... -run TestAdoptFormerWorkspace` passes.
 - [x] 5. Rename the renderer crates and rebuild the module. Verify: `bash scripts/build-renderer.sh check` exits 0 and the Rust gate of `.agents/rules/rust.md` passes.
 - [x] 6. Rename in `web/resources/` (UI strings in both languages, generated types) and run the generators. Verify: `task codegen` leaves no diff; `bun run typecheck`, `bun run check:i18n` and `task test:web` pass.
-- [ ] 7. Rename the image, the Dockerfile, the installers, `.config/`, `Taskfile.yml`, scripts and workflow paths. Verify: `task image:build` and `task image:smoke` pass.
+- [x] 7. Rename the image, the Dockerfile, the installers, `.config/`, `Taskfile.yml`, scripts and workflow paths. Verify: `task image:build` and `task image:smoke` pass.
 - [ ] 8. Rename the specifications, the site and the generated reference; remove the "former name" notes from `README.md`, `AGENTS.md`, `CLAUDE.md`, `.agents/` and the "Amended" lines that only explained the name. Verify: `task lint:md`, `task lint:site` and `task site:build` exit 0.
 - [ ] 9. Regenerate the agent documents and the notices. Verify: `task generate:check` and `task notices:check` exit 0.
 - [ ] 10. Run the whole Go suite and the reference scenario. Verify: `task test` passes and `bash scripts/smoke-e2e.sh` exports a valid MP4 through the renamed binary.
