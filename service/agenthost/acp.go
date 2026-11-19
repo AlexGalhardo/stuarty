@@ -37,6 +37,7 @@ var (
 	ErrProtocol     = errors.New("agenthost: the agent broke the protocol")
 	ErrLineTooLong  = fmt.Errorf("%w: a line over %d bytes", ErrProtocol, chat.MaxLineBytes)
 	errUnknownReply = fmt.Errorf("%w: an answer to a request that was never made", ErrProtocol)
+	errTooManyCalls = fmt.Errorf("%w: more than %d requests waiting for an answer", ErrProtocol, chat.MaxAgentRequests)
 )
 
 // RPCError is an error object of a JSON-RPC response from the agent.
@@ -73,11 +74,13 @@ type Conn struct {
 	wm sync.Mutex
 	h  Handler
 
-	next    atomic.Int64
-	mu      sync.Mutex
-	pending map[int64]chan *message
-	closed  bool
-	err     error
+	next atomic.Int64
+	// inflight is how many requests of the agent wait for their answer.
+	inflight atomic.Int64
+	mu       sync.Mutex
+	pending  map[int64]chan *message
+	closed   bool
+	err      error
 
 	done   chan struct{}
 	cancel context.CancelFunc
@@ -197,6 +200,14 @@ func (c *Conn) dispatch(m *message) error {
 	case m.Method != "":
 		id, params, method := m.ID, m.Params, m.Method
 
+		// Each request is answered on a goroutine of its own, which may wait for a person: an agent
+		// that sends requests faster than they are answered would grow them without end.
+		if c.inflight.Add(1) > chat.MaxAgentRequests {
+			c.inflight.Add(-1)
+
+			return errTooManyCalls
+		}
+
 		go c.answer(id, method, params)
 	case len(m.ID) > 0:
 		var id int64
@@ -223,6 +234,8 @@ func (c *Conn) dispatch(m *message) error {
 
 // answer runs a request of the agent and sends the response.
 func (c *Conn) answer(id json.RawMessage, method string, params json.RawMessage) {
+	defer c.inflight.Add(-1)
+
 	result, rpcErr := c.h.Request(c.ctx, method, params)
 
 	resp := message{JSONRPC: "2.0", ID: id}
