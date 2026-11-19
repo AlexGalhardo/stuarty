@@ -19,6 +19,7 @@ import (
 
 	"github.com/AlexGalhardo/stuarty/desktop/shell"
 	"github.com/AlexGalhardo/stuarty/desktop/shell/webviewenv"
+	"github.com/AlexGalhardo/stuarty/service/config"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
 )
 
@@ -40,6 +41,12 @@ func main() {
 }
 
 func run() error {
+	// A variable set under its former name (VUKEM_VIDEO_*) is read under the new one, with a warning
+	// (SDD-000 section 13.1), before the workspace or the server is looked at.
+	if _, err := config.ApplyFormerVariables(config.ProcessEnviron(), os.Stderr); err != nil {
+		return err
+	}
+
 	binary := flag.String("binary", defaultBinary(), "path of the stuarty server binary")
 	devtools := flag.Bool("devtools", false, "bind F12 to the developer tools (debugging and QA builds)")
 	watch := flag.String(shell.WatchFlag[2:], "", "internal: run the watchdog of an update (marker file)")
