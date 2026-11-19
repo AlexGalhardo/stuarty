@@ -23,7 +23,10 @@ import type {
 	CostSummary,
 	EditRequest,
 	EditResult,
+	ExportBatchItem,
+	ExportCheckResult,
 	ExportOptions,
+	ExportPresetListResult,
 	FontImportResult,
 	FontListResult,
 	HistoryListResult,
@@ -94,6 +97,20 @@ export interface ApiClient {
 	// A transcription of one asset (SDD-012 section 12.4); E_TRANSCRIBE_UNAVAILABLE
 	// answers at once when no provider can run.
 	startTranscribe(projectId: string, assetId: string): Promise<Job>;
+	// The platform presets, and with `codecs` which codecs this machine writes.
+	getExportPresets(codecs?: boolean): Promise<ExportPresetListResult>;
+	// What does not fit a preset, before anything is encoded.
+	checkExport(
+		projectId: string,
+		preset: string,
+		range?: { start?: string; end?: string },
+	): Promise<ExportCheckResult>;
+	// Several exports of the project, one after the other, as one job; the core
+	// queues them behind the exports that are running.
+	startExportBatch(
+		projectId: string,
+		items: readonly ExportBatchItem[],
+	): Promise<Job>;
 	getJob(jobId: string): Promise<Job>;
 	cancelJob(jobId: string): Promise<Job>;
 	listJobs(projectId: string): Promise<JobListResult>;
@@ -294,6 +311,30 @@ export function createClient(
 			call("POST", `${project(id)}/jobs`, READ_TIMEOUT_MS, {
 				kind: "transcribe",
 				args: { asset_id: assetId },
+			}),
+		getExportPresets: (codecs) =>
+			call(
+				"GET",
+				`/export-presets${codecs === true ? "?codecs=true" : ""}`,
+				READ_TIMEOUT_MS * 3,
+			),
+		checkExport: (id, preset, range = {}) => {
+			const query = new URLSearchParams({ preset });
+			if (range.start !== undefined) query.set("start", range.start);
+			if (range.end !== undefined) query.set("end", range.end);
+			return call(
+				"GET",
+				`${project(id)}/export-check?${query.toString()}`,
+				READ_TIMEOUT_MS,
+			);
+		},
+		startExportBatch: (id, items) =>
+			call("POST", `${project(id)}/export-batches`, READ_TIMEOUT_MS, {
+				items: items.map((item) =>
+					Object.fromEntries(
+						Object.entries(item).filter(([, value]) => value !== undefined),
+					),
+				),
 			}),
 		getJob: (jobId) =>
 			call("GET", `/jobs/${encodeURIComponent(jobId)}`, READ_TIMEOUT_MS),

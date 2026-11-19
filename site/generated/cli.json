@@ -578,7 +578,7 @@
       "domain": "video",
       "summary": "export a project to a file",
       "usage": [
-        "stuarty export --project <id> [--start t] [--end t] [--format f] [--at t] [--wait] [--timeout d] [--out f] [--force]"
+        "stuarty export --project <id> [--start t] [--end t] [--format f] [--at t] [--preset p] [--codec c] [--wait] [--out f] [--force]"
       ],
       "example": "stuarty export --project prj_7k2m9x4q1b --json",
       "flags": [
@@ -598,6 +598,16 @@
           "usage": "the time of the frame, only with --format png (default: the start)"
         },
         {
+          "name": "preset",
+          "type": "string",
+          "usage": "a platform preset, as export:presets lists them (mp4 only)"
+        },
+        {
+          "name": "codec",
+          "type": "string",
+          "usage": "h264 (default), hevc or av1 (mp4 only)"
+        },
+        {
           "name": "format",
           "type": "string",
           "usage": "mp4 (default), gif, wav, aac or png"
@@ -612,6 +622,119 @@
           "type": "boolean",
           "default": "false",
           "usage": "replace the --out file when it exists"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project",
+        "wait",
+        "timeout"
+      ]
+    },
+    {
+      "name": "export:presets",
+      "domain": "video",
+      "summary": "list the export presets of the platforms",
+      "usage": [
+        "stuarty export:presets [--codecs]"
+      ],
+      "example": "stuarty export:presets --codecs --json",
+      "flags": [
+        {
+          "name": "codecs",
+          "type": "boolean",
+          "default": "false",
+          "usage": "also tell which codecs this machine can write (runs the test encodes the first time)"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "export:check",
+      "domain": "video",
+      "summary": "check that a project fits an export preset, before any encoding",
+      "usage": [
+        "stuarty export:check --project <id> --preset <id> [--start t] [--end t] [--codec c]"
+      ],
+      "example": "stuarty export:check --project prj_7k2m9x4q1b --preset tiktok --json",
+      "flags": [
+        {
+          "name": "preset",
+          "type": "string",
+          "usage": "the preset id, as export:presets lists them"
+        },
+        {
+          "name": "start",
+          "type": "string",
+          "usage": "first time to export (default: the start)"
+        },
+        {
+          "name": "end",
+          "type": "string",
+          "usage": "end of the export (default: the end of the timeline)"
+        },
+        {
+          "name": "codec",
+          "type": "string",
+          "usage": "h264, hevc or av1, for the estimate of the size (default: the preset's first)"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project"
+      ]
+    },
+    {
+      "name": "export:batch",
+      "domain": "video",
+      "summary": "export a project several times, one after the other, as one job",
+      "usage": [
+        "stuarty export:batch --project <id> --preset <id>... [--codec c] [--start t] [--end t] [--wait]",
+        "stuarty export:batch --project <id> --items '<json array of {preset, format, codec, start, end}>' [--wait]"
+      ],
+      "example": "stuarty export:batch --project prj_7k2m9x4q1b --preset tiktok --preset youtube-shorts --wait",
+      "flags": [
+        {
+          "name": "preset",
+          "type": "string",
+          "usage": "a preset id; give the flag once for each export",
+          "repeat": true
+        },
+        {
+          "name": "items",
+          "type": "string",
+          "usage": "the exports as a JSON array of {preset, format, codec, start, end}, instead of --preset"
+        },
+        {
+          "name": "format",
+          "type": "string",
+          "usage": "the format of every --preset export that is not mp4 (default mp4)"
+        },
+        {
+          "name": "codec",
+          "type": "string",
+          "usage": "h264, hevc or av1 for every --preset export (default: the choice of the preset)"
+        },
+        {
+          "name": "start",
+          "type": "string",
+          "usage": "first time to export, for every --preset export (default: the start)"
+        },
+        {
+          "name": "end",
+          "type": "string",
+          "usage": "end of the export, for every --preset export (default: the end of the timeline)"
         }
       ],
       "globals": [
@@ -1610,6 +1733,7 @@
     },
     {
       "name": "approval:list",
+      "domain": "publish",
       "summary": "list the approval queue: what waits for a person (pending by default)",
       "usage": [
         "stuarty approval:list"
@@ -1647,6 +1771,7 @@
     },
     {
       "name": "approval:show",
+      "domain": "publish",
       "summary": "show one approval request: what will be sent, where, the cost and its state",
       "usage": [
         "stuarty approval:show <id>"
@@ -1661,6 +1786,7 @@
     },
     {
       "name": "approval:decide",
+      "domain": "publish",
       "summary": "approve or reject a request (for a person in the app; the local token is refused)",
       "usage": [
         "stuarty approval:decide <id> --approve|--reject"
@@ -1692,6 +1818,7 @@
     },
     {
       "name": "approval:rule:list",
+      "domain": "publish",
       "summary": "list the rules that approve without asking",
       "usage": [
         "stuarty approval:rule:list"
@@ -1706,6 +1833,7 @@
     },
     {
       "name": "approval:rule:set",
+      "domain": "publish",
       "summary": "create or replace a rule that approves a kind of action (for a person in the app; the local token is refused)",
       "usage": [
         "stuarty approval:rule:set --kind <k>"
@@ -1762,6 +1890,7 @@
     },
     {
       "name": "approval:rule:remove",
+      "domain": "publish",
       "summary": "remove a rule (for a person in the app; the local token is refused)",
       "usage": [
         "stuarty approval:rule:remove <id>"
@@ -1776,6 +1905,7 @@
     },
     {
       "name": "cost:show",
+      "domain": "provider",
       "summary": "show the cost ceilings and what was spent today and over the last 30 days",
       "usage": [
         "stuarty cost:show"
@@ -1790,6 +1920,7 @@
     },
     {
       "name": "cost:ceiling",
+      "domain": "provider",
       "summary": "set or remove a cost ceiling (for a person in the app; the local token is refused)",
       "usage": [
         "stuarty cost:ceiling --currency USD"

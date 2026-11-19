@@ -482,6 +482,34 @@ export interface ExportResult {
 	duration: TimeValue;
 	width: number;
 	height: number;
+	// The preset the export was made for, and the codec the file holds. When the
+	// preset wanted a codec this machine cannot write, codec_fallback is the
+	// codec it wanted and notes say so (SDD-004 section 8.3).
+	preset?: string;
+	video_codec?: string;
+	codec_fallback?: string;
+	notes?: string[];
+}
+
+// One export of a batch, read from its child job (SDD-004 section 8.4).
+export interface BatchItem {
+	index: number;
+	preset?: string;
+	format: string;
+	codec?: string;
+	job_id?: string;
+	state: JobState;
+	progress: number;
+	result?: ExportResult;
+	error?: ApiErrorBody;
+}
+
+export interface BatchResult {
+	total: number;
+	succeeded: number;
+	failed: number;
+	cancelled: number;
+	items: BatchItem[];
 }
 
 export interface Job {
@@ -493,6 +521,7 @@ export interface Job {
 	message?: string;
 	result?: {
 		export?: ExportResult;
+		batch?: BatchResult;
 		transcribe?: { asset_id: string; language: string; words: number };
 	};
 	error?: ApiErrorBody;
@@ -1076,6 +1105,81 @@ export interface ExportOptions {
 	end?: string;
 	// The time of the frame of a png export (`120f`).
 	at?: string;
+	// h264, hevc or av1, for an mp4 export; absent is the choice of the preset or H.264.
+	codec?: string;
+}
+
+// One platform preset of GET /export-presets (SDD-004 section 8.2): the limits are
+// the core's, the browser only shows them.
+export interface ExportPreset {
+	id: string;
+	network: string;
+	placement: string;
+	label: string;
+	container: string;
+	codecs: string[];
+	limits: {
+		min_duration_ms?: number;
+		max_duration_ms?: number;
+		min_fps?: number;
+		max_fps?: number;
+		min_width?: number;
+		min_height?: number;
+		max_width?: number;
+		max_height?: number;
+		aspect_ratio?: string;
+		max_bytes?: number;
+		max_video_kbps?: number;
+	};
+	targets: {
+		width: number;
+		height: number;
+		video_kbps: number;
+		audio_kbps: number;
+	};
+	sources: { url: string; read: string; says: string }[];
+}
+
+export interface CodecAvailability {
+	codec: string;
+	available: boolean;
+	encoder?: string;
+	reason?: string;
+}
+
+export interface ExportPresetListResult {
+	presets: ExportPreset[];
+	codecs?: CodecAvailability[];
+	text: string;
+}
+
+export interface ExportFinding {
+	code: string;
+	severity: string;
+	message: string;
+	limit: string;
+	got: string;
+}
+
+// GET /projects/{id}/export-check: what does not fit a preset, with the exact limit.
+export interface ExportCheckResult {
+	project_id: string;
+	revision: number;
+	preset: string;
+	ok: boolean;
+	findings: ExportFinding[];
+	duration_ms: number;
+	estimated_bytes: number;
+	text: string;
+}
+
+// One export of a batch request.
+export interface ExportBatchItem {
+	preset?: string;
+	format?: string;
+	codec?: string;
+	start?: string;
+	end?: string;
 }
 
 export interface ExportCapabilities {

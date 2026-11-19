@@ -19,11 +19,13 @@ func m20261119140100JobsWaitingApproval() schema.Migration {
 	}
 }
 
+// rebuildJobs is the rebuild both ways. Down gives back the closed list of kinds that the table had before, which
+// includes export_batch (20261119120050, which sorts before this one), so the parents of export batches survive it.
 func rebuildJobs(s *schema.Schema, approval bool) error {
-	kind := `CHECK (kind IN ('ingest','transcribe','export','frame'))`
+	kind := `CHECK (kind IN ('ingest','transcribe','export','export_batch','frame'))`
 	state := `CHECK (state IN ('queued','running','succeeded','failed','cancelled'))`
 	extra := ""
-	keep := `WHERE kind IN ('ingest','transcribe','export','frame') AND state <> 'waiting_approval'`
+	keep := `WHERE kind IN ('ingest','transcribe','export','export_batch','frame') AND state <> 'waiting_approval'`
 
 	if approval {
 		kind = ""

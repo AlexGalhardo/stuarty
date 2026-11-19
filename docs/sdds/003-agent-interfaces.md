@@ -1412,7 +1412,7 @@ A frame is one JPEG (quality 80, 4:2:0). A sheet is one JPEG:
 | `tools/list` | the 20 tools below, always in the order of the table, never paged, with `ttlMs` 3,600,000 and `cacheScope` `public` (the SDK type `Cacheable`, `mcp/protocol.go` lines 1148 to 1166; the list changes only when the binary is upgraded). |
 | Tool registration | each tool is registered with the SDK's raw `(*Server).AddTool` (`mcp/server.go` line 315) with `inputSchema` and `outputSchema` taken from the registry generator, **not** with the generic `mcp.AddTool[In, Out]`, which infers schemas from Go types and would not produce the `edit` schema of §4.4. The adapter validates `arguments` against `inputSchema` with the validator of ADR-0014 and converts a failure into `E_VALIDATION` with the `path` of the first invalid value (an operation name the Service does not know is `E_UNKNOWN_COMMAND`, §2.4 rule 5). The message names the path and the constraint, never the value (§1.2 rule 9) |
 | Call result | `CallToolResult` (`Content`, `StructuredContent`, `IsError`) built as §1.3 and §1.4 say |
-| Cost | NFR-020 as revised once by epic 13 (D-069), measured by `go run ./internal/tools/surfacebudget` (which `task lint` runs) and held by `TestToolDefinitionBudget`: the minified `tools/list` result is at most **22,400 bytes** (7,000 tokens at the 3.2 characters per token of §3.10), no single tool definition is larger than **1,700 bytes**, there are at most **20 tools**, the text of the first discovery call (`command_help` with no argument, §4.8) is at most **7,040 characters** (2,200 tokens), and the description of a domain is at most 160 characters. Measured when the limits were set: the list a client receives 21,879 bytes (6,837 tokens), the largest definitions `edit` (1,589 bytes) and `media_inspect` (1,567), the discovery call 6,884 characters (2,151 tokens). The shape of §4.8 is what made the figure: the operation names left the definition of `edit` (about 950 bytes, and 25 more for every command a later epic registers), which paid for the `domain` and `image_id` arguments of `edit` and `history`, the `domains` of `command_help` and the cost sentence of `project_get`. The history of the figure (6,000 tokens by D-040, then raised for `font_import`, `project_item` and `library`, each time as an interim measure) ends here: **the budget is not raised again for a new domain**. A new domain adds operations and no tool, and its only cost is its description line in the discovery call; a tool is added only when no existing intent fits, with the reason written in §4.8, and the budget is then measured again by the epic that adds it. `project_get` with `detail` `document` is outside the per-call caps of §3.10 (D-088): the document is unbounded, and the description of the tool says what it costs. **Verified by** `surfacebudget`, `TestToolDefinitionBudget` and, once per release, a count with the model vendor's token counting endpoint (`TestToolListVendorTokens`: if it exceeds 7,000 tokens the descriptions are shortened; no field is removed) |
+| Cost | NFR-020 as revised once by epic 13 (D-069), measured by `go run ./internal/tools/surfacebudget` (which `task lint` runs) and held by `TestToolDefinitionBudget`: the minified `tools/list` result is at most **22,400 bytes** (7,000 tokens at the 3.2 characters per token of §3.10), no single tool definition is larger than **1,700 bytes**, there are at most **20 tools**, the text of the first discovery call (`command_help` with no argument, §4.8) is at most **7,500 characters** (2,340 tokens), and the description of a domain is at most 160 characters. Measured when the limits were set: the list a client receives 21,830 bytes (6,821 tokens), the largest definitions `edit` (1,589 bytes) and `media_inspect` (1,567), the discovery call 7,201 characters (2,250 tokens: about 90 more for every operation a later epic adds to the video domain, which is why its limit leaves room for a few). The shape of §4.8 is what made the figure: the operation names left the definition of `edit` (about 950 bytes, and 25 more for every command a later epic registers), which paid for the `domain` and `image_id` arguments of `edit` and `history`, the `domains` of `command_help` and the cost sentence of `project_get`. The history of the figure (6,000 tokens by D-040, then raised for `font_import`, `project_item` and `library`, each time as an interim measure) ends here: **the budget is not raised again for a new domain**. A new domain adds operations and no tool, and its only cost is its description line in the discovery call; a tool is added only when no existing intent fits, with the reason written in §4.8, and the budget is then measured again by the epic that adds it. `project_get` with `detail` `document` is outside the per-call caps of §3.10 (D-088): the document is unbounded, and the description of the tool says what it costs. **Verified by** `surfacebudget`, `TestToolDefinitionBudget` and, once per release, a count with the model vendor's token counting endpoint (`TestToolListVendorTokens`: if it exceeds 7,000 tokens the descriptions are shortened; no field is removed) |
 | Order | deterministic (MCP `2026-07-28` Tools: "SHOULD return tools in a deterministic order"), so prompt caches hit |
 
 Tool and Service mapping, scope and annotations (annotations are hints and clients treat them as untrusted; they are never a security control, ADR-0020):
@@ -1429,8 +1429,8 @@ Tool and Service mapping, scope and annotations (annotations are hints and clien
 | `media_import` | `MediaImport` | media | false | false | true | false |
 | `media_inspect` | `MediaInspect` (with `asset_id`), `MediaList` (without) | read | true | n/a | true | false |
 | `view` | `ViewFrame`, `ViewSheet` | read | true | n/a | true | false |
-| `lint` | `Lint` | read | true | n/a | true | false |
-| `job_start` | `JobStart` | render (export), media (transcribe) | false | false | false | false |
+| `lint` | `Lint`, `ExportCheck` (with `preset`) | read | true | n/a | true | false |
+| `job_start` | `JobStart`, `ExportBatch` (`kind` `export_batch`) | render (export, export_batch), media (transcribe) | false | false | false | false |
 | `job_get` | `JobGet` (with `job_id`), `JobList` (with `project_id` and no `job_id`) | read | true | n/a | true | false |
 | `job_cancel` | `JobCancel` | render, or media for the caller's own `transcribe` or `ingest` job | false | false | true | false |
 | `template` | `TemplateList`, `TemplateSave`, `TemplateInstantiate`, `TemplateExport`, `TemplateImport` | read (list, export), edit (the others) | false | false | false | false |
@@ -1913,7 +1913,7 @@ The result carries `isError: true` and no `structuredContent`; `content[0]` is t
 ```json
 {
   "name": "command_help",
-  "description": "Discover operations. No arguments: the video operations, one line each, then every domain. domain=<name>: the operations of that domain. name (for example item.split): description, args JSON Schema, example and error codes; read it before using an operation you have not used.",
+  "description": "Discover operations. No arguments: the video operations, one line each, then every domain. domain=<name>: the operations of that domain; domain=export: presets and codecs. name (for example item.split): description, args JSON Schema, example and error codes; read it before using an operation you have not used.",
   "inputSchema": {
     "type": "object",
     "properties": {
@@ -1930,7 +1930,8 @@ The result carries `isError: true` and no `structuredContent`; `content[0]` is t
           "publish",
           "provider",
           "memory",
-          "workspace"
+          "workspace",
+          "export"
         ]
       }
     },
@@ -2477,7 +2478,7 @@ The `image` block follows the text block: `{"type": "image", "mimeType": "image/
 ```json
 {
   "name": "lint",
-  "description": "Check a project for problems and get them as text: code, severity, item, message, hint. Errors block export. Run it after edits, before export. Runs every rule, unlike the lint block of an edit result (lint_scope fast).",
+  "description": "Check a project for problems: code, severity, item, message, hint. Errors block export; run after edits, before export. Runs every rule, unlike an edit's lint block (lint_scope fast). preset: fit to an export preset over start..end.",
   "inputSchema": {
     "type": "object",
     "properties": {
@@ -2504,6 +2505,15 @@ The `image` block follows the text block: `{"type": "image", "mimeType": "image/
         "minimum": 1,
         "maximum": 100,
         "default": 25
+      },
+      "preset": {
+        "type": "string"
+      },
+      "start": {
+        "type": "string"
+      },
+      "end": {
+        "type": "string"
       }
     },
     "required": [
@@ -2566,7 +2576,7 @@ Example (the text of §3.6): `{"name": "lint", "arguments": {"project_id": "prj_
 ```json
 {
   "name": "job_start",
-  "description": "Start long work. kind=export renders to a workspace file: args {start?, end?, format?, at?}, format mp4 (default), gif, wav, aac or png (the frame at `at`). kind=transcribe makes a transcript: args {asset_id, language?, model?}. Lint errors block export. Returns after wait_ms at most; poll job_get.",
+  "description": "Start long work. export renders a workspace file: args {start?, end?, format?, at? (the png frame), preset?, codec?}. export_batch runs args.items (export args) in turn. transcribe: args {asset_id, language?, model?}. Poll job_get.",
   "inputSchema": {
     "type": "object",
     "properties": {
@@ -2581,6 +2591,7 @@ Example (the text of §3.6): `{"name": "lint", "arguments": {"project_id": "prj_
       "kind": {
         "enum": [
           "export",
+          "export_batch",
           "transcribe"
         ]
       },
@@ -2604,6 +2615,19 @@ Example (the text of §3.6): `{"name": "lint", "arguments": {"project_id": "prj_
           },
           "at": {
             "type": "string"
+          },
+          "preset": {
+            "type": "string"
+          },
+          "codec": {
+            "enum": [
+              "h264",
+              "hevc",
+              "av1"
+            ]
+          },
+          "items": {
+            "type": "array"
           }
         }
       },
@@ -2630,25 +2654,10 @@ Example (the text of §3.6): `{"name": "lint", "arguments": {"project_id": "prj_
         "type": "string"
       },
       "state": {
-        "enum": [
-          "queued",
-          "running",
-          "succeeded",
-          "failed",
-          "cancelled"
-        ]
+        "type": "string"
       },
       "progress": {
         "type": "number"
-      },
-      "message": {
-        "type": "string"
-      },
-      "result": {
-        "type": "object"
-      },
-      "error": {
-        "type": "object"
       }
     },
     "required": [
@@ -2672,7 +2681,8 @@ Example (the text of §3.6): `{"name": "lint", "arguments": {"project_id": "prj_
 
 | `kind` | `args` | Notes |
 | --- | --- | --- |
-| `export` | `{"start"?: time, "end"?: time, "format"?: "mp4" \| "gif" \| "wav" \| "aac" \| "png", "at"?: time}` | renders the current revision, pinned when the job starts (there is no `revision` argument: old revisions are not rendered), to `exports/<project id>/<job id>.<ext>`, where `<ext>` is `mp4`, `gif`, `wav`, `m4a` or `png` for the format (SDD-004 §8.1); `format` is `mp4` when absent and any other value is `E_VALIDATION` with the `path` `args.format`. The frame rate and the size are project settings (SDD-001 §3.1), not arguments: a project beyond 4096 pixels or 120 fps is refused at the start with `E_LIMIT`, and an encoder that cannot do 4K or 60 fps ends the job `failed` with `E_EXPORT_FAILED` and `details.reason` `unsupported_size`. Refused with `E_LINT_BLOCKING` while lint has errors (§2.8). The finished job is verified (ADR-0018 item 6) |
+| `export` | `{"start"?: time, "end"?: time, "format"?: "mp4" \| "gif" \| "wav" \| "aac" \| "png", "at"?: time, "preset"?: string, "codec"?: "h264" \| "hevc" \| "av1"}` | renders the current revision, pinned when the job starts (there is no `revision` argument: old revisions are not rendered), to `exports/<project id>/<job id>.<ext>`, where `<ext>` is `mp4`, `gif`, `wav`, `m4a` or `png` for the format (SDD-004 §8.1); `format` is `mp4` when absent and any other value is `E_VALIDATION` with the `path` `args.format`. The frame rate and the size are project settings (SDD-001 §3.1), not arguments: a project beyond 4096 pixels or 120 fps is refused at the start with `E_LIMIT`, and an encoder that cannot do 4K or 60 fps ends the job `failed` with `E_EXPORT_FAILED` and `details.reason` `unsupported_size`. Refused with `E_LINT_BLOCKING` while lint has errors (§2.8). The finished job is verified (ADR-0018 item 6). `preset` (one of `ExportPresetList`, SDD-004 §8.2) and `codec` (SDD-004 §8.3) are for `mp4` only (`E_VALIDATION`, `path` `args.preset` or `args.codec`, with another format); a project that does not fit its preset is refused at the start with `E_VALIDATION`, `details.reason` `preset_mismatch` and `details.findings`; the result carries `preset`, and `codec_fallback` and `notes` when the preset wanted a codec this machine cannot write and the video is H.264 instead; a `codec` that cannot be written is `E_NO_ENCODER` with `details.reason` `codec_unavailable` in the job |
+| `export_batch` | `{"items": [{"preset"?: string, "format"?: string, "codec"?: string, "start"?: time, "end"?: time}]}` | `ExportBatch` (SDD-004 §8.4): one to 12 exports of the project, one after the other, as one parent job of kind `export_batch`; each item is checked like an `export` (a bad item is `E_VALIDATION` with the `path` `items[i]` or `items[i].<member>`) and the project is pinned once; whether the project fits an item's preset is checked when that child starts, so an item that does not fit fails alone (`preset_mismatch`) and the others run. The job lists its children in `result.batch.items` (`index`, `preset`, `format`, `codec`, `job_id`, `state`, `progress`, `result` or `error`) and ends `succeeded` when every child did, else `failed` with the error of the first child that did not and `details.batch` (`total`, `succeeded`, `failed`, `cancelled`, `item`); `job_cancel` on it cancels the child that runs and the rest. `png` is not a format of a batch |
 | `transcribe` | `{"asset_id": string, "language"?: string, "model"?: string}` | creates the transcript read by `media_inspect` and used by `caption.from_transcript`, `clip.remove_silences` |
 
 The adapter passes `args` as the one `Args` object of `JobStartRequest` and the service decodes it into `ExportArgs` or `TranscribeArgs` by `kind`; an unknown member is `E_VALIDATION` with the `path` `args.<name>`. The OpenAPI document lists the members of `args` under the request body of `POST /projects/{id}/jobs` (`start`, `end`, `format` with its enum, `at`, `asset_id`, `language`, `model` with its enum), so a client can offer only what the build accepts; `fps` and `size` are deliberately not there.
@@ -3324,6 +3334,8 @@ The tool list stays short while the product grows because a new domain adds **op
 | `history` | `HistoryList`, `Undo`, `Redo` | `ImageUndo`, `ImageRedo` (`image_id`); `action` `list` is not served | not served |
 | `command_help` | the commands of the timeline registry | the commands of the image registry | that domain's commands (none yet: the answer says so and names the tools that serve the domain) |
 
+`command_help` also takes the topic `export` (epic 35), which is not a domain: it answers with the export presets and codecs of this machine (`ExportPresetList`, a video operation), and takes no `name`. `export_batch` of `job_start` and the `preset` of `lint` are reached the same way, through the tools that already exist.
+
 A tool gets `domain` in the epic that registers the first non-video operation behind it, never earlier: every argument costs bytes of every `tools/list` (NFR-020). `lint`, `view`, `job_start`, `job_get` and `job_cancel` wait for such an operation. The `image` tool of §4.2 stays (the surface is frozen, §9.1); `edit` with `domain` `image` reaches the same `ImageEdit`, so an agent that learned one tool for timelines learns the same call for images.
 
 **No new tool.** The catalogue is still the 20 tools of §4.1: no existing intent fits a new tool better than a `domain` on an existing one, so none is added. A later epic adds a tool only when no intent fits, and writes the reason in this section.
@@ -3428,7 +3440,10 @@ Every command that reads or edits a timeline (those whose result is about one do
 | `media:restore` | `media:restore <asset id> --project <id>` | none | none | `MediaStateResult` |
 | `view` | `view --project <id> [--mode frame\|sheet] [--at t] [--times t1,t2,...] [--from t --until t --count n] [--cols n] [--max-tokens n] [--width px]` | `--mode` string `frame`; `--at`; `--times`; `--from`; `--until`; `--count` int 9; `--cols` int; `--max-tokens` int 800 (sheet 1,500); `--width` int | none | `ViewResult` without `image_base64` (the image is the file in `path`; with a remote server the CLI downloads the image from the byte-serving route to a temporary file on the client and prints that path) |
 | `lint` | `lint --project <id> [--severity error\|warning] [--cursor c] [--limit n] [--strict]` | `--severity` string `warning`; `--cursor`; `--limit` int 25; `--strict` bool false | none | `LintResult` |
-| `export` | `export --project <id> [--start t] [--end t] [--format f] [--at t] [--out f] [--force]` | `--start`; `--end`; `--format` mp4 (default), gif, wav, aac or png; `--at` time of the frame, only with png (`--start` and `--end` are refused with png); `--wait`, `--timeout`; `--out`, `--force` (see "The file of `--out`" below) | none | `Job` |
+| `export:presets` | `export:presets [--codecs]` | `--codecs` bool false: also tell which codecs this machine writes | none | `ExportPresetListResult` |
+| `export:check` | `export:check --project <id> --preset <id> [--start t] [--end t] [--codec c]` | `--preset` string, required; `--start`; `--end`; `--codec` | none | `ExportCheckResult`; exit 1 when the project does not fit |
+| `export:batch` | `export:batch --project <id> (--preset <id> [--preset <id> ...] [--format f] [--codec c] [--start t] [--end t] \| --items <json>) [--wait] [--timeout d]` | `--preset` string, once for each export; `--items` a JSON array of `{preset, format, codec, start, end}` instead; `--format`, `--codec`, `--start`, `--end` for every `--preset` export; `--wait`, `--timeout` | none | `Job` (kind `export_batch`) |
+| `export` | `export --project <id> [--start t] [--end t] [--format f] [--at t] [--preset p] [--codec c] [--out f] [--force]` | `--start`; `--end`; `--format` mp4 (default), gif, wav, aac or png; `--at` time of the frame, only with png (`--start` and `--end` are refused with png); `--wait`, `--timeout`; `--out`, `--force` (see "The file of `--out`" below) | none | `Job` |
 | `transcribe` | `transcribe --project <id> --asset <id> [--language auto] [--model <name>]` | `--asset` string, required; `--language` string `auto`; `--model` string, an installed model name (default: the workspace default); `--wait`, `--timeout` | none | `Job` |
 | `job:show` | `job:show <job id> [--wait] [--timeout d]` | `--wait` false; `--timeout` | none | `Job` |
 | `job:list` | `job:list --project <id> [--state s] [--cursor c] [--limit n]` | `--state` string (empty: queued, running and the 10 most recent final jobs; `queued`, `running`, `succeeded`, `failed`, `cancelled`, `active`, `all`); `--cursor`; `--limit` int 20 | none | `JobListResult` |
@@ -3688,6 +3703,9 @@ Success codes are the `Op.Status`. Error statuses are the table of SDD-000 §8; 
 | `projects.snap_points` | `GET /projects/{id}/snap-points` | `rev`, `words` (SDD-012 §7.8) | none | 200 `SnapPointsResult` | read | 409 `E_INVALID_STATE` as frame |
 | `projects.lint` | `GET /projects/{id}/lint` | `severity`, `cursor`, `limit` | none | 200 `LintResult` | read | none |
 | `jobs.start` | `POST /projects/{id}/jobs` | none | `{kind, args?, wait_ms?, dry_run?}` | 202 `Job` | render (export), media (transcribe) | 422 `E_LINT_BLOCKING`; 429 `E_QUEUE_FULL`; 503 `E_TRANSCRIBE_UNAVAILABLE`, `E_FFMPEG_MISSING`, `E_NO_ENCODER` |
+| `export.presets` | `GET /export-presets` | `codecs` | none | 200 `ExportPresetListResult` | read | none |
+| `export.check` | `GET /projects/{id}/export-check` | `preset` (required), `start`, `end`, `codec` | none | 200 `ExportCheckResult` | read | 400 `E_VALIDATION` for an unknown preset or codec |
+| `export.batch` | `POST /projects/{id}/export-batches` | none | `{items, wait_ms?}` | 202 `Job` (200 when final) | render | 400 `E_VALIDATION` with `items[i]` paths; 429 `E_QUEUE_FULL` |
 | `jobs.list` | `GET /projects/{id}/jobs` | `state`, `cursor`, `limit` | none | 200 `JobListResult` | read | 400 `E_VALIDATION` for an unknown `state` |
 | `jobs.get` | `GET /jobs/{job_id}` | `wait_ms` | none | 200 `Job` (an ingest job has a null `project_id`; allowed to a caller who can read a project that uses the asset, §2.8) | read | none |
 | `jobs.cancel` | `POST /jobs/{job_id}/cancel` | none | none | 200 `Job` | render; media for the caller's own `transcribe` or `ingest` job | none |
@@ -3890,6 +3908,9 @@ Every `Service` operation has an encoding on each surface. The table is the proo
 | `Lint` | `lint` | `lint` | `GET /projects/{id}/lint` |
 | `JobStart` (`export`) | `job_start` (`kind` `export`) | `export` | `POST /projects/{id}/jobs` |
 | `JobStart` (`transcribe`) | `job_start` (`kind` `transcribe`) | `transcribe` | `POST /projects/{id}/jobs` |
+| `ExportPresetList` | `command_help` (`domain` `export`: the presets and the codecs of this machine) | `export:presets [--codecs]` | `GET /export-presets` |
+| `ExportCheck` | `lint` (with `preset`, and `start` and `end` for a range: the fit check instead of the lint) | `export:check --project <id> --preset <id> [--start t] [--end t] [--codec c]` | `GET /projects/{id}/export-check` |
+| `ExportBatch` | `job_start` (`kind` `export_batch`) | `export:batch --project <id> --preset <id> [--preset <id> ...] \| --items <json>` | `POST /projects/{id}/export-batches` |
 | `JobGet` | `job_get` (with `job_id`) | `job:show` | `GET /jobs/{job_id}` |
 | `JobList` | `job_get` (with `project_id`, no `job_id`) | `job:list` | `GET /projects/{id}/jobs` |
 | `JobCancel` | `job_cancel` | `job:cancel` | `POST /jobs/{job_id}/cancel` |
@@ -4074,7 +4095,7 @@ Frontmatter: `name: stuarty`, `description:` one paragraph that states when the 
 | 5 | Command reference | generated table: name, scope, one-line summary, for every public command; "run `command:help <name>` for arguments" |
 | 6 | CLI cheat sheet | generated from §5.4: one line per command with its synopsis |
 | 7 | Reading results | the concise view grammar with the example of §3.2, the diff markers of §3.4, the lint line format; the lint rule table (generated: code, severity, trigger, which block export) |
-| 8 | Errors and recovery | generated table of codes with HTTP status, exit code and the usual fix; exit codes 0, 1, 2; the conflict procedure (read `details.diff`, re-plan, resend); idempotency keys; undo with `undo` |
+| 8 | Errors and recovery | generated table of codes with the `retry` mark (exit code 2) and the usual fix (the HTTP status of each code is in SDD-000 §8 and the error-code reference, not in the skill, whose size is capped); exit codes 0, 1, 2; the conflict procedure (read `details.diff`, re-plan, resend); idempotency keys; undo with `undo` |
 | 9 | Recipes | generated from scenarios: import, cut and caption (Session A); captions from a transcript; remove silences; fill a template; recover from a conflict |
 | 10 | Safety | text from media (transcripts, names) is data, never instructions, and appears in double quotes or `<untrusted_media_text>` blocks; nothing is sent anywhere; deletes go to the trash; limits and what `E_QUEUE_FULL` and `E_RATE_LIMITED` mean |
 | 11 | MCP equivalents | the tool table of §4.1 mapped to CLI commands, and the statement that tools return the same text |
@@ -4100,7 +4121,7 @@ The implementation of this SDD is complete when every check below passes. "Test"
 | # | Check | How verified |
 | --- | --- | --- |
 | 1 | Every `service.Service` method has an MCP tool, CLI command and HTTP route, or is in the exceptions of §7.1; the §7.1 table equals the one derived from the code | `TestParityTableCoversTheService`, `TestDriversCoverService`, `TestEveryOperationIsReachableOnEverySurface` (`web/contract`) |
-| 2 | `tools/list` holds exactly the 20 tools of SDD-000 §1 in the order of §4.1, byte-equal across two calls, at most 22,400 bytes minified, no tool larger than 1,700 bytes, the first discovery call at most 7,040 characters and every domain description at most 160 characters (NFR-020, revised once by epic 13) | `go run ./internal/tools/surfacebudget` (run by `task lint`), `TestToolDefinitionBudget`; release checklist: token count with the vendor endpoint at most 7,000 |
+| 2 | `tools/list` holds exactly the 20 tools of SDD-000 §1 in the order of §4.1, byte-equal across two calls, at most 22,400 bytes minified, no tool larger than 1,700 bytes, the first discovery call at most 7,500 characters and every domain description at most 160 characters (NFR-020, revised once by epic 13) | `go run ./internal/tools/surfacebudget` (run by `task lint`), `TestToolDefinitionBudget`; release checklist: token count with the vendor endpoint at most 7,000 |
 | 3 | Every `inputSchema` and `outputSchema` is valid JSON Schema 2020-12; every `inputSchema` has `additionalProperties: false`; the `edit` definition lists no operation name (§4.8); the annotations equal the table of §4.1; every output path that holds text from media or other actors carries `"x-untrusted": true` and a result with such a value has `untrusted_notice` | `TestToolSchemas` |
 | 4 | The first 512 characters of `instructions` (after the generated header line is stripped) are those of §4.6, the whole is at most 2,100 bytes, it names the tools by their exact names and does not mention locks | `TestInstructionsHead` |
 | 5 | The MCP server is stateless: no `Mcp-Session-Id` is sent or read, `GET /mcp` and `DELETE /mcp` answer 405, two interleaved clients do not influence each other; revisions `2026-07-28` and `2025-11-25` both work over stdio and HTTP | `TestHTTPIsStateless` (`web/app/mcp`), `TestMCPOverStdioThroughTheBinary` (`web/cmd/app`); no single test runs both revisions with the SDK client |
@@ -4138,7 +4159,7 @@ Numbers measured on the reference machine (AMD Ryzen 7 5700X3D, Windows 11, FFmp
 
 | Budget | Measured | Limit |
 | --- | --- | --- |
-| `tools/list` as a client receives it, 20 tools | 21,879 bytes, about 6,837 tokens by the 3.2 characters per token estimate; first discovery call 6,884 characters (`surfacebudget`, epic 13) | at most 22,400 bytes, 7,040 characters (check 2) |
+| `tools/list` as a client receives it, 20 tools | 21,830 bytes, about 6,821 tokens by the 3.2 characters per token estimate; first discovery call 7,201 characters (`surfacebudget`, epic 13) | at most 22,400 bytes, 7,500 characters (check 2) |
 | `tools/list` by the vendor token count | not measured: needs `ANTHROPIC_API_KEY` (`TestToolListVendorTokens`, release only) | at most 7,000 tokens |
 | Concise view of the reference project | 1 page, 11,785 characters | at most 2 pages, cap 12,800 characters (check 7) |
 | Frame and sheet image tokens | `TestViewImageSizeTable` passes for the four presets | frame at most 800, sheet at most 1,500 (check 8) |
