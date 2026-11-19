@@ -1,6 +1,6 @@
 {
  "name": "view",
- "description": "See the result. mode=frame: one image at time at; sheet: a grid of frames with their times (count frames from..until, or times); motion: what an external render of from..until must fit (size, rate, safe area, brand kit, captions, frames). Images cost tokens: read project_get and lint first.",
+ "description": "See the result. mode=frame: one image at time at; sheet: a grid of frames with their times (count frames from..until, or times); motion: what an external render of from..until must fit (size, rate, safe area, brand kit, captions, frames); audio: loudness, true peak and noise floor before and after the audio processors, of item_id or from..until. Images cost tokens: read project_get and lint first.",
  "inputSchema": {
   "type": "object",
   "properties": {
@@ -16,9 +16,14 @@
     "enum": [
      "frame",
      "sheet",
-     "motion"
+     "motion",
+     "audio"
     ],
     "default": "frame"
+   },
+   "item_id": {
+    "type": "string",
+    "pattern": "^itm_[0-9a-hjkmnp-tv-z]{10}$"
    },
    "at": {
     "type": "string",
@@ -81,14 +86,11 @@
    }
   },
   "required": [
-   "revision",
-   "width",
-   "height",
-   "image_tokens"
+   "revision"
   ]
  },
  "annotations": {
-  "title": "View frame or sheet",
+  "title": "View frame, sheet or sound",
   "readOnlyHint": true,
   "destructiveHint": false,
   "idempotentHint": true,

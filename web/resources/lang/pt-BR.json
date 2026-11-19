@@ -1028,11 +1028,26 @@
           "add": {
             "title": "Adicionar áudio"
           },
+          "apply_preset": {
+            "title": "Aplicar um preset de áudio"
+          },
           "duck": {
             "title": "Baixar a música sob a fala"
           },
           "mark_beats": {
             "title": "Marcar batidas"
+          },
+          "processor_add": {
+            "title": "Adicionar um processador de áudio"
+          },
+          "processor_move": {
+            "title": "Mover um processador de áudio"
+          },
+          "processor_remove": {
+            "title": "Remover um processador de áudio"
+          },
+          "processor_set": {
+            "title": "Alterar um processador de áudio"
           }
         },
         "caption": {
@@ -1297,7 +1312,9 @@
         "L_AUDIO_CLIP": "Áudio saturado",
         "L_LOUDNESS": "Volume fora do alvo",
         "L_DURATION_LIMIT": "Acima do limite de duração",
-        "L_ALPHA_MISSING": "Transparência declarada, mas ausente"
+        "L_ALPHA_MISSING": "Transparência declarada, mas ausente",
+        "L_AUDIO_LIMITER_NOT_LAST": "O limitador não é o último da cadeia",
+        "L_AUDIO_NOISE_REDUCTION_REPEATED": "Mais de uma redução de ruído"
       },
       "shortcuts": {
         "title": "Atalhos de teclado",
@@ -1509,6 +1526,69 @@
           "other": "{count} marcadores"
         },
         "beats_apply": "Marcar batidas"
+      },
+      "processors": {
+        "title": "Processadores de áudio",
+        "empty": "Nenhum processador ainda. Adicione um ou aplique um preset.",
+        "preset_label": "Predefinição",
+        "preset_apply": "Aplicar predefinição",
+        "presets": {
+          "voice": "Voz",
+          "voice_with_music": "Voz com música",
+          "podcast": "Podcast de voz",
+          "clean_noisy_room": "Limpar um ambiente com ruído"
+        },
+        "add_kind": "Processador",
+        "add": "Adicionar processador",
+        "kind": {
+          "eq": "Equalizador",
+          "compressor": "Compressor de dinâmica",
+          "limiter": "Limitador",
+          "gate": "Gate de ruído",
+          "deesser": "Redutor de sibilância",
+          "noise_reduction": "Redução de ruído"
+        },
+        "enabled": "Ligado",
+        "move_up": "Subir",
+        "move_down": "Descer",
+        "remove": "Remover",
+        "params": "Parâmetros",
+        "param": {
+          "hp_hz": "Frequência do passa-altas (0 desliga)",
+          "lp_hz": "Frequência do passa-baixas (0 desliga)",
+          "threshold_db": "Limiar",
+          "ratio": "Razão",
+          "attack_ms": "Ataque",
+          "release_ms": "Liberação",
+          "knee_db": "Joelho",
+          "makeup_db": "Ganho de compensação",
+          "ceiling_db": "Teto",
+          "range_db": "Faixa",
+          "hold_ms": "Espera",
+          "frequency_hz": "Frequência",
+          "strength": "Intensidade",
+          "profile_start_ms": "Início do perfil de ruído (0 é automático)",
+          "profile_end_ms": "Fim do perfil de ruído"
+        },
+        "band": {
+          "hz": "Frequência da banda {n}",
+          "gain_db": "Ganho da banda {n}",
+          "q": "Largura da banda {n} (Q)"
+        },
+        "measure": "Medir o som",
+        "measuring": "Medindo...",
+        "measure_failed": "Não foi possível medir o som.",
+        "before": "Antes",
+        "after": "Depois",
+        "loudness": "Volume",
+        "true_peak": "Pico real",
+        "noise_floor": "Nível de ruído",
+        "speech_to_noise": "Fala sobre ruído",
+        "no_level": "nenhum",
+        "listen": "Ouvir o som processado",
+        "rendering": "Gerando o som...",
+        "listen_failed": "Não foi possível gerar o som.",
+        "player": "Som processado"
       },
       "markers": {
         "title": {

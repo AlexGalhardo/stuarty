@@ -27,8 +27,12 @@ const (
 	CodeSlotUnfilled  = "L_SLOT_UNFILLED"
 	CodeSafeArea      = "L_SAFE_AREA"
 
-	CodeOccluded        = "L_OCCLUDED"
-	CodeAudioOverlap    = "L_AUDIO_OVERLAP"
+	CodeOccluded     = "L_OCCLUDED"
+	CodeAudioOverlap = "L_AUDIO_OVERLAP"
+
+	CodeAudioLimiterNotLast        = "L_AUDIO_LIMITER_NOT_LAST"
+	CodeAudioNoiseReductionRepeats = "L_AUDIO_NOISE_REDUCTION_REPEATED"
+
 	CodeTransitionEmpty = "L_TRANSITION_EMPTY"
 	CodeDurationLimit   = "L_DURATION_LIMIT"
 	CodeOffFrame        = "L_OFF_FRAME"
@@ -124,6 +128,7 @@ func Lint(doc *timeline.Document, env Env, mode Mode) []Finding {
 	c.offFrame()
 	c.occluded()
 	c.audioOverlap()
+	c.processorChains()
 	c.transitionEmpty()
 	c.durationLimit()
 

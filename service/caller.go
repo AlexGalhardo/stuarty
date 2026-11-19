@@ -74,6 +74,7 @@ var Scopes = map[string]string{
 	"JobStart":            ScopeRender,
 	"ExportPresetList":    ScopeRead,
 	"ExportCheck":         ScopeRead,
+	"AudioMeasure":        ScopeRead,
 	"ExportBatch":         ScopeRender,
 	"ProjectBundleExport": ScopeRender,
 	"ProjectBundleImport": ScopeEdit,

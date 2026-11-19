@@ -9,7 +9,7 @@ import (
 func init() {
 	Register(Define(Spec{
 		Name:    "clip.set_framing",
-		Summary: "Sets how the asset of a clip is fitted into the frame and how much of each side is cropped.",
+		Summary: "Sets how a clip fits the frame and how much of each side is cropped.",
 		Description: "Sets fit (cover, contain or none) and merges the given crop sides with the current ones. Each side " +
 			"is a fraction of the asset from 0 to 1; left plus right and top plus bottom must stay below 1. " +
 			"A side that has keyframes (crop_left, crop_top, crop_right, crop_bottom; see keyframe.set) cannot be set here.",
@@ -20,7 +20,7 @@ func init() {
 
 	Register(Define(Spec{
 		Name:    "clip.set_color",
-		Summary: "Sets the brightness, contrast, saturation, temperature, tint, hue, lookup table, HSL bands, wheels and curves of a clip.",
+		Summary: "Sets brightness, contrast, saturation, temperature, tint, hue, LUT, HSL bands, wheels and curves of a clip.",
 		Description: "Sets the given adjustments, rounded to 3 decimals; a value equal to the default (brightness 0, " +
 			"contrast 1, saturation 1, temperature 0, tint 0, hue 0) clears the stored one. Positive temperature is " +
 			"warmer, positive tint is more magenta, hue rotates the colours in degrees. lut_asset is the id of a lut asset (a " +

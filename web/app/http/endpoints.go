@@ -268,6 +268,10 @@ var Endpoints = []Endpoint{
 		Service: "ExportCheck", Status: 200, Summary: "Check a project against an export preset",
 	},
 	{
+		ID: "audio.measure", Method: http.MethodGet, Path: "/projects/{id}/audio-measure", Scope: service.ScopeRead,
+		Service: "AudioMeasure", Status: 200, Summary: "Measure the sound with and without the audio processors",
+	},
+	{
 		ID:      "export.batch",
 		Method:  http.MethodPost,
 		Path:    "/projects/{id}/export-batches",

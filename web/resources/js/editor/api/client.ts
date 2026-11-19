@@ -13,6 +13,8 @@ import type {
 	AssetListResult,
 	AssetQuery,
 	AssetResult,
+	AudioMeasureQuery,
+	AudioMeasureResult,
 	AuditListResult,
 	AuditQuery,
 	BrandKit,
@@ -100,6 +102,8 @@ const CHAT_START_TIMEOUT_MS = 45_000;
 // A bundle call may hold for up to 25 s (wait_ms) before the job is returned.
 const BUNDLE_WAIT_MS = 20_000;
 const BUNDLE_TIMEOUT_MS = 60_000;
+// The sound of up to 600 s is decoded and mixed twice.
+const MEASURE_TIMEOUT_MS = 120_000;
 
 const defaultDeps: RetryDeps = {
 	sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
@@ -138,6 +142,11 @@ export interface ApiClient {
 		projectId: string,
 		items: readonly ExportBatchItem[],
 	): Promise<Job>;
+	// The level of the sound before and after the audio processors (SDD-004 section 7.1).
+	measureAudio(
+		projectId: string,
+		query?: AudioMeasureQuery,
+	): Promise<AudioMeasureResult>;
 	getJob(jobId: string): Promise<Job>;
 	cancelJob(jobId: string): Promise<Job>;
 	listJobs(projectId: string): Promise<JobListResult>;
@@ -423,6 +432,18 @@ export function createClient(
 				"GET",
 				`${project(id)}/export-check?${query.toString()}`,
 				READ_TIMEOUT_MS,
+			);
+		},
+		measureAudio: (id, q = {}) => {
+			const params = new URLSearchParams();
+			if (q.itemId !== undefined) params.set("item_id", q.itemId);
+			if (q.start !== undefined) params.set("start", q.start);
+			if (q.end !== undefined) params.set("end", q.end);
+			const suffix = params.size === 0 ? "" : `?${params.toString()}`;
+			return call(
+				"GET",
+				`${project(id)}/audio-measure${suffix}`,
+				MEASURE_TIMEOUT_MS,
 			);
 		},
 		startExportBatch: (id, items) =>
