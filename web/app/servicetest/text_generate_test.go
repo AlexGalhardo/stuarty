@@ -765,14 +765,6 @@ func mustJSON(t *testing.T, v any) string {
 	return string(raw)
 }
 
-func pathOf(err error) string {
-	if se, ok := errors.AsType[*service.Error](err); ok {
-		return se.Path
-	}
-
-	return ""
-}
-
 func TestTextGenerate_ProviderListShowsTheConnections(t *testing.T) {
 	t.Parallel()
 
