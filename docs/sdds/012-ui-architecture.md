@@ -30,6 +30,7 @@
 20. [Testing](#20-testing)
 21. [Desktop shell](#21-desktop-shell)
 22. [Acceptance](#22-acceptance)
+23. [The dashboard](#23-the-dashboard)
 
 - [Appendix A: Decisions of this SDD](#appendix-a-decisions-of-this-sdd)
 - [Appendix B: Contract needs beyond SDD-000](#appendix-b-contract-needs-beyond-sdd-000)
@@ -1901,6 +1902,41 @@ Test defects found and fixed: `templates` waited for the posted request, not for
 The failures under load are the 429 of the heavy limit and the 120 s export wait of four or three parallel workers on one server; none of them fails alone. The black texture of P2-QA-003 did not appear in 500 repetitions of the `golden flip-x` case in Chromium (`--repeat-each=500`, 4 workers, 500 passed in 29.4 min). The `text-style` failure at SSIM 0.9693 of the earlier Chromium run did not reproduce in four runs (two alone, the full Chromium run and the full Firefox run; frames 0, 15 and 29: 0.9941, 0.9948, 0.9948; the preview buffer is sized like `ViewFrame` since the even-buffer change, and `KNOWN_DIVERGENCES` is empty); the threshold was not changed.
 
 `preview-vs-export` with WebCodecs: Chromium and Firefox pass all 58 tests (golden cases and prototype scenes, 211 frames each, lowest SSIM 0.9779 in Chromium and 0.9860 in Firefox, offsets under 1 px). WebKit on Windows skips them (62 skipped): its build answers `MEDIA_ERR_SRC_NOT_SUPPORTED` for the VP9 proxy, so neither WebCodecs nor the `<video>` fallback draws a video layer there; the WebKit jobs of Linux and macOS decode it. `webcodecs-seek-is-frame-exact`, `webcodecs-no-leak`, `webcodecs-fallback` and `webcodecs-forced-video` pass in Chromium and Firefox.
+
+## 23. The dashboard
+
+Implements RF-310, RF-311 and RF-312 (PRD-004), author decision D-075 and epic 07. The dashboard is the home of the web UI and of the desktop shell (ADR-0041): it is written once, in `web/resources/js/`, and both load it.
+
+### 23.1 Routes
+
+| Route | Page component | Holds |
+| --- | --- | --- |
+| `GET /` | `pages/Dashboard/Home.tsx` | the home: a short welcome and one card for each section, with what it will hold |
+| `GET /projects` | `pages/Projects/Index.tsx` | Projects (epic 06 owns the content) |
+| `GET /edit-video`, `/edit-image`, `/write`, `/visual-assets`, `/video-assets`, `/publish`, `/skills`, `/prompts`, `/memory` | `pages/Dashboard/Section.tsx` | an honest empty state, until the epic of the section replaces the route's page |
+| `GET /connections` | `pages/Dashboard/Section.tsx` | an empty state until epic 04 puts the Connections page there |
+| `GET /settings`, `/settings/*` | the existing pages | reached from the profile block, not a section |
+
+`GET /` stopped redirecting to `/projects`. A controller of these routes renders an Inertia page with the key of the section as its only prop; it computes nothing. The section list (key, path, icon) is data in `resources/js/dashboard/sections.ts`; the paths are the single list the sidebar, the home and the routes of `web/routes/pages.go` agree on, and a test compares the Go routes with it.
+
+### 23.2 Layout
+
+`layouts/AppLayout.tsx` keeps the i18n provider and chooses the frame: the pages of `Auth/` (the login) have no sidebar; every other page is drawn by `layouts/DashboardLayout.tsx`, which has three regions:
+
+1. the sidebar, a `nav` landmark labelled `ui.nav.label`, with the eleven sections in the order of RF-311 (Projects, Edit Video, Edit Image, Write, Visual Assets, Video Assets, Publish, Skills, Prompts, Memory, Connections), then, at the bottom, the profile and the controls (language, theme, collapse);
+2. the main region (`main`), which holds the page and the flash message;
+3. the right dock, an empty region reserved for the agent chat (epic 14); it has no landmark, no content and no width until that epic fills it.
+
+The sidebar is collapsible to icons; the choice is remembered in `localStorage.sidebar` (`expanded` or `collapsed`) and read by `dashboard/sidebarState.ts`. Below 768 px the sidebar is collapsed and does not take the choice from storage. The current section is the one whose path is the longest prefix of the URL, and its link has `aria-current="page"`; the logic is `dashboard/sections.ts`, pure and unit tested. The profile block shows the signed-in user's email in network mode, with the API keys link and Sign out; in local mode it shows "Local" and no sign out. It always links to Settings. The theme toggle is the existing `ThemeToggle` (section 17), moved here from the header.
+
+The editor is not drawn by this layout (section 2.2): it opens on the full window, and its top bar offers a link back to the dashboard (`/`) next to the link back to the projects list.
+
+### 23.3 Rules
+
+1. Every control is a native link or button, reachable by `Tab` in reading order, with the focus outline of the design system. A collapsed item keeps its accessible name (the label is visually hidden, not removed) and a tooltip.
+2. A section whose epic is not done shows a heading, one sentence on what it will hold and a link to the sections that work today; never a blank page or an error. The text is in both languages under `ui.dashboard.*`.
+3. The pages ask for data through the existing service results; the dashboard computes no result (section 1).
+4. Test ids stay as they were; the specs that moved selectors are listed in the epic's hand-off.
 
 ## Appendix A: Decisions of this SDD
 

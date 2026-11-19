@@ -535,6 +535,23 @@ Focus is the 2 px `--ring` outline with 2 px offset everywhere (section 2.10); i
 
 The comparison with the real CapCut app (TASK-0296) is pending: the author has not installed it yet, so nothing here is marked as the same or different. The calls the first build made, as SDD-012 section 6.4 lists them: the Adjust tab holds Color, Filters, Chroma key and Effects, and the Text tab holds Auto captions; several items show no inspector strip; the Transitions panel has no length field; Select and Blade are two `aria-pressed` buttons in the toolbar, with Undo and Redo moved there from the top bar; the ratio in the player row is a native `select` that sends `settings.reframe`; the toolbar and menu draw only what has an action (no Duplicate on a project card, no Zoom or Theme item in the menu); a text button collapses to its icon below 1536 px and keeps its name.
 
+### 3.5 Dashboard sidebar
+
+The frame of every page except the editor and the login (SDD-012 §23). It uses tokens whose contrast pairs section 2.6 already checks (`--background`, `--foreground`, `--muted`, `--muted-foreground`, `--border`) and adds none; the kept `--sidebar*` tokens stay unused.
+
+| Part | Element | Surface | Contents | Size |
+| --- | --- | --- | --- | --- |
+| Sidebar | `nav` with `aria-label` | `--background`, right `--border` | the product mark, the eleven sections, then the profile and the controls | 16 rem expanded, 3.5 rem collapsed; collapsible; collapsed by default below 768 px |
+| Item | `a` | transparent | an icon (`size-4`, `aria-hidden`) and the label | 36 px high, `px-3`, `gap-2` |
+| Main | `main` | `--background` | the page | the remaining width, scrolls on its own |
+| Right dock | `div`, no landmark | `--background`, left `--border` once it has content | empty; reserved for the agent chat | 0 px until epic 14 |
+
+States of an item: rest `--muted-foreground` text; hover `--muted` fill and `--foreground` text; current `--muted` fill, `--foreground` text, weight 500 and `aria-current="page"` (never colour alone); focus the 2 px `--ring` outline of section 2.10, inside the item so the sidebar edge does not clip it; disabled is not used, a section that is not built opens an empty state. Collapsed: the label is visually hidden, the icon stays, a `Tooltip` shows the label on hover and focus.
+
+The bottom block holds, in this order: the profile (the email in network mode, "Local" in local mode, a link to Settings, Sign out in network mode), the language select, the theme toggle and the collapse button. Their contrast pairs are `muted-foreground` on `background` and on `muted`, and `foreground` on `background`, all in section 2.6 and `check:contrast`.
+
+**Decision of this document.** The dashboard has its own small sidebar instead of the shadcn `Sidebar` of section 4.2: the kept component stores its state in a cookie and carries a mobile sheet the dashboard does not need. The row of section 4.2 is amended: the shadcn `Sidebar` stays unused until a page needs it.
+
 ## 4. Components
 
 ### 4.1 The state model
@@ -568,7 +585,7 @@ The files in `components/ui/` (SDD-012 §3.1). Dialogs, popovers, tooltips, tabs
 | `Select` | default trigger `h-8`; `sm` in toolbars | UI SDK: `Space` and `Enter` open, arrows move, typing selects, `Esc` closes | used for enums (preset, fit, font family, track); options rendered with `UntrustedText` when they show user content |
 | `Separator` | horizontal and vertical | decorative (`role="none"`) unless it separates toolbar groups (`role="separator"`) | |
 | `Sheet` | `left` (library drawer), `right` (inspector drawer) | focus trap, `Esc` closes, focus returns to the opener | only at 1024 to 1279 px (section 3.2) and in the mobile Inertia sidebar |
-| `Sidebar` | `collapsible="icon"`, 16 rem / 3 rem | `Ctrl+B` toggles (kept) | Inertia pages only; navigation reduced to Projects and Settings (SDD-012 §3.1) |
+| `Sidebar` | `collapsible="icon"`, 16 rem / 3 rem | `Ctrl+B` toggles (kept) | kept in `components/ui/` but unused; the dashboard sidebar of section 3.5 is its own component |
 | `Skeleton` | default | `aria-hidden`; the region has `aria-busy` | first load of the project list and of the document; never longer than the request; no shimmer animation |
 | `Tabs` | default | Base UI: arrows move, `Home` and `End`, automatic activation | the vertical tab rail of the library and the tab strip of the inspector (section 3.4, SDD-012 §6.4); inside one inspector tab the sections stack and scroll, with no further level of tabs |
 | `Tooltip` | default | opens on hover and on focus, `Esc` closes | every icon-only button; text is the label plus the shortcut in `<kbd>` style (`Split (S)`); never the only place of essential information |
@@ -985,6 +1002,7 @@ Decisions taken here (each is cheap to undo). "Recorded in" names where the spec
 | DS-10 | Shared primitives (`Dialog`, `AlertDialog`, `Popover`, `DropdownMenu`, `ContextMenu`, `Slider`, `Switch`, `Checkbox`, `RadioGroup`, `Progress`, `Toggle`, `ToggleGroup`, `Select`, `Tabs`, `Tooltip`) from `@base-ui/react` and `@ui-sdk/react` | 4.2 | SDD-012 §3.1 |
 | DS-11 | Native menus show `Mod+Z`, `Mod+Shift+Z` and `Mod+A` without registering them as accelerators; menu items and the title-bar theme go through `onMenuAction` and `setTheme` | 8.3 | decided by D-030; SDD-012 §13.1, §21.3 |
 | DS-12 | The familiar layout (D-038): a 40 px tab rail inside the library width, a 36 px tab strip in the inspector, a selected tab shown by a 2 px `--ring` bar, a save indicator and a Menu button in the top bar, the timeline toolbar in two labelled groups; no new token | 3.4 | SDD-012 §6.4, §6.5 |
+| DS-13 | The dashboard has its own sidebar built from checked tokens; the shadcn `Sidebar` stays unused | 3.5 | SDD-012 §23 |
 
 Open points found in the specifications while writing this document, and how each was closed:
 
