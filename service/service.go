@@ -20,7 +20,9 @@ import (
 	"github.com/AlexGalhardo/stuarty/engine/transcribe"
 	"github.com/AlexGalhardo/stuarty/service/approval"
 	"github.com/AlexGalhardo/stuarty/service/connections"
+	"github.com/AlexGalhardo/stuarty/service/connections/oauth"
 	"github.com/AlexGalhardo/stuarty/service/library"
+	"github.com/AlexGalhardo/stuarty/service/social"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
 )
 
@@ -237,6 +239,9 @@ type Options struct {
 	// credentials; without one the service builds a registry over the store with a vault in the
 	// workspace that has no master key source, so a connection cannot be created (SDD-014).
 	Connections *connections.Manager
+	// Social is the registry of the social network connectors (SDD-020); without one the build publishes
+	// to no network and the social operations answer empty lists.
+	Social *social.Registry
 	// JobKinds are the job kinds that need approval, registered by the epics of publishing and
 	// generation (SDD-015 section 5). The product registers none of its own; tests register one.
 	JobKinds []ApprovableKind
@@ -272,6 +277,8 @@ type svc struct {
 	keys        KeyStore
 	conns       *connections.Manager
 	kinds       map[string]*ApprovableKind
+	social      *social.Registry
+	flows       *oauth.Flows
 	lib         *library.Manager // the files of memory, skills and prompts; nil without a workspace
 	heavy       RateLimiter
 	heavyLimitN int
@@ -326,6 +333,7 @@ func New(o Options) (Service, error) {
 		doctor:      o.Doctor,
 		keys:        o.Keys,
 		conns:       o.Connections,
+		social:      o.Social,
 		heavy:       o.Heavy,
 		heavyLimitN: o.HeavyPerMinute,
 		log:         o.Log,
@@ -350,6 +358,10 @@ func New(o Options) (Service, error) {
 		s.conns = connections.NewDefault(o.Store.Connections(), s.workspace, s.now)
 	}
 
+	if s.social != nil {
+		s.social.Bind(s.conns)
+	}
+
 	s.sems = map[string]chan struct{}{
 		JobIngest:     make(chan struct{}, s.limits.MaxIngests),
 		JobExport:     make(chan struct{}, s.limits.MaxExports),
@@ -372,6 +384,8 @@ func New(o Options) (Service, error) {
 	if s.now == nil {
 		s.now = time.Now
 	}
+
+	s.flows = oauth.NewFlows(s.now)
 
 	if s.jobWait <= 0 {
 		s.jobWait = jobWait

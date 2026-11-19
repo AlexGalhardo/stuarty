@@ -32,6 +32,8 @@ const (
 	CodeApprovalNotFound  = "E_APPROVAL_NOT_FOUND"
 	CodeCostCeiling       = "E_COST_CEILING"
 	CodeApprovalExpired   = "E_APPROVAL_EXPIRED"
+	// CodePublish is the code of SDD-020 section 11: a network refused or failed a publication.
+	CodePublish           = "E_PUBLISH"
 	codeInternalMessage   = "the operation failed because of an internal error."
 	codeInternalHint      = "Report this as a bug with the operation that was sent."
 	hintRestoreProject    = "restore the project first"
@@ -89,6 +91,8 @@ func (e *Error) HTTPStatus() int {
 		return http.StatusTooManyRequests
 	case CodeClientClosed:
 		return StatusClientClosed
+	case CodePublish:
+		return http.StatusBadGateway
 	case CodeWorkspaceLocked, "E_TRANSCRIBE_UNAVAILABLE", "E_FFMPEG_MISSING", "E_NO_ENCODER", CodeVaultLocked:
 		return http.StatusServiceUnavailable
 	}

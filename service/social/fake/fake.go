@@ -16,6 +16,7 @@ import (
 
 	"github.com/AlexGalhardo/stuarty/core/publish"
 	"github.com/AlexGalhardo/stuarty/service/connections"
+	"github.com/AlexGalhardo/stuarty/service/connections/oauth"
 	"github.com/AlexGalhardo/stuarty/service/social"
 )
 
@@ -110,6 +111,14 @@ func (c *Connector) Begin(clientID, clientSecret string) ([]byte, error) {
 		Secret{ClientID: clientID, ClientSecret: clientSecret})
 }
 
+// ClientID implements social.Connector.
+func (c *Connector) ClientID(secret []byte) (string, bool) {
+	var s Secret
+	err := json.Unmarshal(secret, &s)
+
+	return s.ClientID, err == nil && s.ClientID != ""
+}
+
 // SignedIn implements social.Connector.
 func (c *Connector) SignedIn(secret []byte) (social.Account, bool) {
 	var s Secret
@@ -157,7 +166,8 @@ func (c *Connector) post(
 	return res.StatusCode, nil
 }
 
-// Exchange implements social.Connector: one request to the token address of the fake server.
+// Exchange implements social.Connector: the generic flow against the token address of the fake server,
+// then the account the token belongs to.
 func (c *Connector) Exchange(
 	ctx context.Context, cred connections.Credential, code, verifier, redirectURI string,
 ) ([]byte, error) {
@@ -166,25 +176,44 @@ func (c *Connector) Exchange(
 		return nil, err
 	}
 
-	var tok struct {
-		RefreshToken string `json:"refresh_token"`
-		AccountID    string `json:"account_id"`
-		AccountTitle string `json:"account_title"`
+	tok, err := oauth.Exchange(
+		ctx,
+		cred.Client,
+		c.Base+"/token",
+		s.ClientID,
+		s.ClientSecret,
+		code,
+		verifier,
+		redirectURI,
+	)
+	if err != nil {
+		return nil, social.NewError(social.KindAuth, c.name(), "invalid_grant", 0, err)
 	}
 
-	status, err := c.post(ctx, cred, "/token", map[string]string{
-		"code": code, "code_verifier": verifier, "redirect_uri": redirectURI,
-		"client_id": s.ClientID, "client_secret": s.ClientSecret,
-	}, &tok)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.Base+"/account", http.NoBody)
 	if err != nil {
 		return nil, err
 	}
 
-	if status != http.StatusOK || tok.RefreshToken == "" {
-		return nil, social.NewError(social.KindAuth, c.name(), "invalid_grant", status, nil)
+	req.Header.Set("Authorization", "Bearer "+tok.AccessToken)
+
+	res, err := cred.Client.Do(req)
+	if err != nil {
+		return nil, err
 	}
 
-	s.RefreshToken, s.AccountID, s.AccountTitle = tok.RefreshToken, tok.AccountID, tok.AccountTitle
+	defer func() { _ = res.Body.Close() }()
+
+	var acc struct {
+		ID    string `json:"id"`
+		Title string `json:"title"`
+	}
+
+	if err := json.NewDecoder(io.LimitReader(res.Body, 1<<16)).Decode(&acc); err != nil {
+		return nil, err
+	}
+
+	s.RefreshToken, s.AccountID, s.AccountTitle = tok.RefreshToken, acc.ID, acc.Title
 
 	return json.Marshal(s) //nolint:gosec // G117: the secret of a connection, made to go into the vault
 }
