@@ -36,7 +36,7 @@ A creator connects their YouTube channel once, with their own Google developer p
 
 ## Tasks
 
-- [ ] 1. Read the official YouTube pages again; write the connector part of SDD-020 with limits, scopes, quota and the date; add SDD-007 rows (a post to the wrong account, a token used by another connector, description text as untrusted input). Verify: `task lint:md` exits 0.
+- [x] 1. Read the official YouTube pages again; write the connector part of SDD-020 with limits, scopes, quota and the date; add SDD-007 rows (a post to the wrong account, a token used by another connector, description text as untrusted input). Verify: `task lint:md` exits 0.
 - [ ] 2. Implement `core/publish` with table tests. Verify: `go test ./core/publish/...` passes.
 - [ ] 3. Implement the connector interface, the registry and a fake connector for tests. Verify: `go test ./service/social/...` passes.
 - [ ] 4. Implement the sign-in with the user's own client (or reuse epic 12's flow) and the account list. Verify: `go test ./service/social/youtube/... -run TestAuth` passes against a fake authorization server.
