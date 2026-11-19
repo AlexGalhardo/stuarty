@@ -380,6 +380,9 @@ Scopes: `read`, `edit`, `media`, `render`, `admin` (SDD-000 §4). They are indep
 | `Lint` | `GET /projects/{id}/lint` | R | - | - | - | - | |
 | `JobStart` (export) | `POST /projects/{id}/jobs` | - | - | - | R | - | Limits of section 9 |
 | `JobStart` (transcribe) | `POST /projects/{id}/jobs` | - | - | R | - | - | Refused with `E_TRANSCRIBE_UNAVAILABLE` when no provider is installed (6.8) |
+| `ExportPresetList` | `GET /export-presets` | R | - | - | - | - | `codecs=true` runs the encoder test encodes once (cached on the runner); no project is read |
+| `ExportCheck` | `GET /projects/{id}/export-check` | R | - | - | - | - | Project and ownership check; reads the timeline, encodes nothing |
+| `ExportBatch` | `POST /projects/{id}/export-batches` | - | - | - | R | - | One parent job; its children pass through the export ceilings of section 9; at most 3 batches per caller and 8 in all (`E_QUEUE_FULL`) |
 | `ProjectBundleExport` | `POST /projects/{id}/bundle` | - | - | - | R | - | Project and ownership check; runs as an export job |
 | `ProjectBundleImport` | `POST /projects/import` | - | R | R | - | - | Archive rules of 7.6 and SDD-005 §16.3; network mode cannot link media or fonts the caller does not already reach (T-20, T-21) |
 | `ProjectOtioExport` | `GET /projects/{id}/otio` | R | - | - | - | - | Project and ownership check; writes nothing, returns text |
