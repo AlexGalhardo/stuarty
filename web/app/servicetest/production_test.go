@@ -981,3 +981,81 @@ func TestProjectNameFollowsTheFirstTimeline(t *testing.T) {
 		t.Fatalf("list = %+v", list.Projects)
 	}
 }
+
+// The brief is cleared, never trashed: a trashed brief would stand beside the next one, and restoring it broke
+// the rule of one brief with an internal error.
+func TestProjectBriefIsNotTrashed(t *testing.T) {
+	t.Parallel()
+
+	e := newEnv(t)
+	ctx := e.as(ui)
+	p := e.newProject("P")
+
+	b, err := e.prod().BriefSet(ctx, service.BriefSetRequest{ProjectID: p, Text: "one"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = e.prod().ProjectItemTrash(ctx, service.ProjectItemTrashRequest{ProjectID: p, ItemID: b.ItemID})
+	if se := serviceError(t, err); se.Code != "E_INVALID_STATE" || se.Path != "item_id" {
+		t.Fatalf("trash of the brief: %+v", se)
+	}
+
+	got, err := e.prod().BriefGet(ctx, service.BriefGetRequest{ProjectID: p})
+	if err != nil || got.ItemID != b.ItemID || got.Text != "one" {
+		t.Fatalf("the brief after the refusal: %+v, %v", got, err)
+	}
+}
+
+// A project holds at most as many items and timelines as a bundle of the whole project may carry, so that its
+// bundle imports again; a restore counts as an add.
+func TestProjectItemsHaveRoom(t *testing.T) {
+	t.Parallel()
+
+	e := newEnv(t)
+	ctx := e.as(ui)
+	p := e.newProject("P")
+
+	var last string
+
+	for range project.MaxItems - 1 { // the first timeline is one of them
+		res, err := e.prod().ProjectItemAdd(ctx, service.ProjectItemAddRequest{ProjectID: p, Kind: "text", Title: "T"})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		last = res.Item.ID
+	}
+
+	_, err := e.prod().ProjectItemAdd(ctx, service.ProjectItemAddRequest{ProjectID: p, Kind: "text", Title: "T"})
+	if se := serviceError(t, err); se.Code != "E_LIMIT_EXCEEDED" {
+		t.Fatalf("one item too many: %+v", se)
+	}
+
+	if _, err := e.prod().BriefSet(ctx, service.BriefSetRequest{ProjectID: p, Text: "x"}); code(err) != "E_LIMIT_EXCEEDED" {
+		t.Fatalf("a brief beyond the limit: %v", err)
+	}
+
+	if _, err := e.prod().ProjectItemTrash(ctx, service.ProjectItemTrashRequest{ProjectID: p, ItemID: last}); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := e.prod().ProjectItemAdd(ctx, service.ProjectItemAddRequest{ProjectID: p, Kind: "text", Title: "T"}); err != nil {
+		t.Fatalf("a trashed item still counted: %v", err)
+	}
+
+	_, err = e.prod().ProjectItemRestore(ctx, service.ProjectItemTrashRequest{ProjectID: p, ItemID: last})
+	if se := serviceError(t, err); se.Code != "E_LIMIT_EXCEEDED" || se.Path != "item_id" {
+		t.Fatalf("a restore beyond the limit: %+v", se)
+	}
+
+	q := e.newProject("Q")
+	for range project.MaxTimelines - 1 {
+		e.addTimeline(q, "T")
+	}
+
+	_, err = e.prod().ProjectItemAdd(ctx, service.ProjectItemAddRequest{ProjectID: q, Kind: "timeline", Title: "T"})
+	if se := serviceError(t, err); se.Code != "E_LIMIT_EXCEEDED" {
+		t.Fatalf("one timeline too many: %+v", se)
+	}
+}

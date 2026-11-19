@@ -16,10 +16,14 @@ import (
 // PrefixItem is the identifier prefix of a project item (SDD-000 section 2).
 const PrefixItem = "pit"
 
-// Limits of the text a person writes into a project (SDD-005 section 5.12).
+// Limits of the text a person writes into a project, and of the size of a production: a project never holds
+// more than a bundle of the whole project may carry, so that its bundle imports again (SDD-005 sections 5.12
+// and 16.1.1).
 const (
-	MaxTitle = 120
-	MaxText  = 256 << 10 // bytes of a brief or of a text item
+	MaxTitle     = 120
+	MaxText      = 256 << 10 // bytes of a brief or of a text item
+	MaxItems     = 256       // active items of a project
+	MaxTimelines = 64        // active timelines of a project
 )
 
 // Kind is the kind of an item.
@@ -225,6 +229,48 @@ func CheckTrash(items []Item, id string) *RuleError {
 		return &RuleError{
 			Code: "E_INVALID_STATE", Path: "item_id", Hint: "add another timeline first",
 			Message: "a project keeps at least one timeline",
+		}
+	}
+
+	// A project has one brief, and BriefSet writes it; a trashed brief would stand beside the next one.
+	if target != nil && target.Kind == Brief && !target.Trashed {
+		return &RuleError{
+			Code: "E_INVALID_STATE", Path: "item_id", Hint: "clear the brief with brief:set and an empty text",
+			Message: "the brief is not moved to the trash",
+		}
+	}
+
+	return nil
+}
+
+// CheckRoom is the rule of the size of a production: one more active item of kind k must leave the project with
+// at most MaxItems active items and MaxTimelines active timelines.
+func CheckRoom(items []Item, k Kind) *RuleError {
+	active, timelines := 0, 0
+
+	for i := range items {
+		if items[i].Trashed {
+			continue
+		}
+
+		active++
+
+		if items[i].Kind == Timeline {
+			timelines++
+		}
+	}
+
+	if active+1 > MaxItems {
+		return &RuleError{
+			Code: "E_LIMIT_EXCEEDED", Path: "kind", Hint: "trash an item you no longer need",
+			Message: fmt.Sprintf("the project has %d items; the most is %d", active, MaxItems),
+		}
+	}
+
+	if k == Timeline && timelines+1 > MaxTimelines {
+		return &RuleError{
+			Code: "E_LIMIT_EXCEEDED", Path: "kind", Hint: "trash a timeline you no longer need",
+			Message: fmt.Sprintf("the project has %d timelines; the most is %d", timelines, MaxTimelines),
 		}
 	}
 
