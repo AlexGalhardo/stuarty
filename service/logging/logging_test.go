@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/service/logging"
+	"github.com/AlexGalhardo/stuarty/service/logging"
 )
 
 const hostile = "clip\nlevel=ERROR msg=forged actor=root \x1b[31mred\x1b[0m \u202Eevil\u2028next\r\x00end"

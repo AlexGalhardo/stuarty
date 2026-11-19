@@ -1,6 +1,6 @@
 package command
 
-import "github.com/AlexGalhardo/vukem-video/core/timeline"
+import "github.com/AlexGalhardo/stuarty/core/timeline"
 
 func init() {
 	f := func(name, args string, b func() *B) { gc("settings.set_fps", name, b, op("settings.set_fps", args)) }

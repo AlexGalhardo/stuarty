@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/engine/transcribe"
+	"github.com/AlexGalhardo/stuarty/engine/transcribe"
 )
 
 // StubTranscriber is a transcription provider that needs no helper: it answers

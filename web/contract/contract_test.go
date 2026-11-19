@@ -19,9 +19,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
-	"github.com/AlexGalhardo/vukem-video/service"
-	"github.com/AlexGalhardo/vukem-video/web/contract/testenv"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
+	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/web/contract/testenv"
 )
 
 // loadScenario reads a scenario of web/contract/scenarios.
@@ -634,8 +634,8 @@ func checkIngestLimits(t *testing.T, steps []step, outcomes []outcome) {
 	}
 
 	want := map[string]expected{
-		"import_seconds": {6, 3, "VUKEM_VIDEO_MAX_IMPORT_SECONDS"},
-		"import_pixels":  {230_400, 100_000, "VUKEM_VIDEO_MAX_IMPORT_PIXELS"},
+		"import_seconds": {6, 3, "STUARTY_MAX_IMPORT_SECONDS"},
+		"import_pixels":  {230_400, 100_000, "STUARTY_MAX_IMPORT_PIXELS"},
 	}
 
 	check := func(where string, e limitError, variable bool) {

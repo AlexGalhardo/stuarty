@@ -12,8 +12,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg/ffargs"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg/ffargs"
 )
 
 // CodeIngestFailed is the E_INGEST_FAILED of SDD-011 5.3; details.reason is one of the codes below.
@@ -108,7 +108,7 @@ func ingestErr(reason, msg string, details map[string]any, cause error) *ffmpeg.
 	}
 	return &ffmpeg.Error{
 		Code: CodeIngestFailed, Reason: reason, Message: msg, Details: details, Err: cause,
-		Hint: "Try the file in another player; if it plays there, report it with the output of \"vukem-video doctor\".",
+		Hint: "Try the file in another player; if it plays there, report it with the output of \"stuarty doctor\".",
 	}
 }
 

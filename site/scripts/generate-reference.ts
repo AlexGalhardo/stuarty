@@ -211,7 +211,7 @@ function cliReference(cli: CliDoc): string {
 	});
 	return page(
 		"CLI reference",
-		"Every vukem-video command, its flags and the exit codes.",
+		"Every stuarty command, its flags and the exit codes.",
 		[
 			"The CLI is a thin adapter over the same service as the editor, the MCP server and the HTTP API. Add `--json` to any command for one JSON document on standard output.",
 			"## Global flags",
@@ -251,10 +251,20 @@ function configuration(): string {
 		esc(def ?? ""),
 		esc(meaning ?? ""),
 	]);
+	const former = sddTable("docs/sdds/000-shared-definitions.md", /^### 13\.1 /m).map(([was, now]) => [
+		esc(was ?? ""),
+		esc(now ?? ""),
+	]);
 	return page(
 		"Configuration variables",
-		"Every environment variable of vukem-video, with its default.",
-		["All variables are optional.", table(["Variable", "Default", "Meaning"], rows)].join("\n\n"),
+		"Every environment variable of Stuarty, with its default.",
+		[
+			"All variables are optional.",
+			table(["Variable", "Default", "Meaning"], rows),
+			"## Names before the rename",
+			"The product was called Vukem Video until `v0.29.0`. A variable below is still read, until `1.0.0`, when its new name is not set; each use prints one warning. The new name wins when both are set.",
+			table(["Former variable", "Variable"], former),
+		].join("\n\n"),
 	);
 }
 
@@ -305,7 +315,7 @@ function skillPage(): string {
 		"The agent skill",
 		"The skill file that teaches an agent the edit loop, the rules, the commands and the errors, as shipped in the release archives.",
 		[
-			"This page is the skill file `agent/skills/vukem-video/SKILL.md` of every release archive. Write it into an agent's skills folder with `vukem-video agent:docs --write <dir>`, or print it with `vukem-video agent:docs --print skill`.",
+			"This page is the skill file `agent/skills/stuarty/SKILL.md` of every release archive. Write it into an agent's skills folder with `stuarty agent:docs --write <dir>`, or print it with `stuarty agent:docs --print skill`.",
 			lines.join("\n"),
 		].join("\n\n"),
 	);

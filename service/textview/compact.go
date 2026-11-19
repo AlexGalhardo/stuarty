@@ -10,8 +10,8 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeval"
-	"github.com/AlexGalhardo/vukem-video/service/untrusted"
+	"github.com/AlexGalhardo/stuarty/core/timeval"
+	"github.com/AlexGalhardo/stuarty/service/untrusted"
 )
 
 // Note is the fixed line that starts every text with a quoted value or a

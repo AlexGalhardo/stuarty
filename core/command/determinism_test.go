@@ -13,7 +13,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 // determinismOut names a file that receives one "name sha256" line per case, sorted by name, so

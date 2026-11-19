@@ -3,7 +3,7 @@ package command
 import (
 	"math"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 // reframeSizes are the frame sizes of the aspect presets of settings.reframe.

@@ -6,8 +6,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/service/templates"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/service/templates"
 )
 
 // StarterActor is the creator of the starter templates. A template with no owner

@@ -27,8 +27,8 @@ const (
 // EnvFFmpeg and EnvFFprobe name the variables of the configured source (SDD-000 section 10).
 // The caller reads them; this package never touches the environment of the server.
 const (
-	EnvFFmpeg  = "VUKEM_VIDEO_FFMPEG"
-	EnvFFprobe = "VUKEM_VIDEO_FFPROBE"
+	EnvFFmpeg  = "STUARTY_FFMPEG"
+	EnvFFprobe = "STUARTY_FFPROBE"
 )
 
 // ffmpegMaxOutput is the stderr tail kept for ffmpeg: silence analysis prints one line
@@ -37,10 +37,10 @@ const ffmpegMaxOutput = 4 << 20
 
 // Config says where to look and how runs are bounded.
 type Config struct {
-	// FFmpegPath and FFprobePath are VUKEM_VIDEO_FFMPEG and VUKEM_VIDEO_FFPROBE. A set
+	// FFmpegPath and FFprobePath are STUARTY_FFMPEG and STUARTY_FFPROBE. A set
 	// FFmpegPath that is unusable is an error, never a silent fallback.
 	FFmpegPath, FFprobePath string
-	// ExecDir is the directory of the vukem-video executable, for the bundled copy.
+	// ExecDir is the directory of the stuarty executable, for the bundled copy.
 	// Empty skips the bundled source.
 	ExecDir string
 	// CPUCount is the CPU budget of a run (vukem cpu.Count, read by the caller). Zero means the
@@ -125,7 +125,7 @@ func Discover(ctx context.Context, cfg Config) (*Installation, error) {
 		for _, p := range []string{
 			filepath.Join(cfg.ExecDir, exeName("ffmpeg")),
 			filepath.Join(cfg.ExecDir, "ffmpeg", exeName("ffmpeg")),
-			filepath.Join(cfg.ExecDir, "..", "libexec", "vukem-video", exeName("ffmpeg")),
+			filepath.Join(cfg.ExecDir, "..", "libexec", "stuarty", exeName("ffmpeg")),
 		} {
 			cands = append(cands, candidate{SourceBundled, p, cfg.FFprobePath})
 		}
@@ -161,7 +161,7 @@ func missing(tried []Source, configured bool, cause error) *Error {
 		Code:    CodeFFmpegMissing,
 		Reason:  "ffmpeg_missing",
 		Message: "No usable FFmpeg was found (looked at: the configured path, next to the program, the PATH).",
-		Hint:    `Install FFmpeg 7 or newer, or set ` + EnvFFmpeg + ` to its path. Run "vukem-video doctor" for details.`,
+		Hint:    `Install FFmpeg 7 or newer, or set ` + EnvFFmpeg + ` to its path. Run "stuarty doctor" for details.`,
 		Details: map[string]any{"tried": names, "configured": configured},
 		Err:     cause,
 	}
@@ -231,7 +231,7 @@ func openTool(
 	}
 	vctx, cancel := context.WithTimeout(ctx, 15*time.Second)
 	defer cancel()
-	dir, err := os.MkdirTemp("", "vukem-video-ffver-")
+	dir, err := os.MkdirTemp("", "stuarty-ffver-")
 	if err != nil {
 		return nil, VersionInfo{}, err
 	}

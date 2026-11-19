@@ -9,19 +9,21 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/stuarty/core/command"
 )
 
 // TestToolListVendorTokens is the release measure of NFR-020: `tools/list` has at
 // most 6,000 tokens by the vendor's own count. It sends the definitions to the
 // token-count endpoint, so it is not part of CI: it runs once per release, with
 //
-//	VUKEM_VIDEO_BUDGET_RELEASE=1 ANTHROPIC_API_KEY=... ANTHROPIC_MODEL=<model> go test ./web/app/mcp -run TestToolListVendorTokens -v
+//	STUARTY_BUDGET_RELEASE=1 ANTHROPIC_API_KEY=... ANTHROPIC_MODEL=<model> go test ./web/app/mcp -run TestToolListVendorTokens -v
 //
 // and the number it logs goes into the release notes.
 func TestToolListVendorTokens(t *testing.T) {
-	if os.Getenv("VUKEM_VIDEO_BUDGET_RELEASE") != "1" {
-		t.Skip("release measure: set VUKEM_VIDEO_BUDGET_RELEASE=1, ANTHROPIC_API_KEY and ANTHROPIC_MODEL")
+	if os.Getenv("STUARTY_BUDGET_RELEASE") != "1" {
+		t.Skip( // verify:env-skip a release measure that costs money and runs on request
+			"release measure: set STUARTY_BUDGET_RELEASE=1, ANTHROPIC_API_KEY and ANTHROPIC_MODEL",
+		)
 	}
 
 	key, model := os.Getenv("ANTHROPIC_API_KEY"), os.Getenv("ANTHROPIC_MODEL")

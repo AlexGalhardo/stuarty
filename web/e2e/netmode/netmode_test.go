@@ -23,8 +23,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/internal/outbound"
-	"github.com/AlexGalhardo/vukem-video/service/workspace"
+	"github.com/AlexGalhardo/stuarty/internal/outbound"
+	"github.com/AlexGalhardo/stuarty/service/workspace"
 )
 
 // lockedBuffer is the output of the running server: exec copies into it from
@@ -77,7 +77,7 @@ func freePort(t *testing.T) string {
 func buildBinary(t *testing.T) string {
 	t.Helper()
 
-	name := "vukem-video"
+	name := "stuarty"
 	if runtime.GOOS == "windows" {
 		name += ".exe"
 	}
@@ -87,7 +87,7 @@ func buildBinary(t *testing.T) string {
 	ctx, cancel := context.WithTimeout(t.Context(), 5*time.Minute)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, "go", "build", "-o", bin, "github.com/AlexGalhardo/vukem-video/web/cmd/app")
+	cmd := exec.CommandContext(ctx, "go", "build", "-o", bin, "github.com/AlexGalhardo/stuarty/web/cmd/app")
 	if out, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("go build: %v\n%s", err, out)
 	}
@@ -111,11 +111,11 @@ func startServer(t *testing.T, bin, email, password, appKey string) *server {
 
 	cmd := exec.CommandContext(t.Context(), bin, "serve")
 	cmd.Env = append(os.Environ(),
-		"VUKEM_VIDEO_HOME="+home, "VUKEM_VIDEO_URL=", "APP_ENV=", "VUKEM_VIDEO_MIN_FREE_BYTES=1",
-		"VUKEM_VIDEO_MODE=network", "VUKEM_VIDEO_ADDR=127.0.0.1:"+port, "APP_URL=http://localhost:"+port,
+		"STUARTY_HOME="+home, "STUARTY_URL=", "APP_ENV=", "STUARTY_MIN_FREE_BYTES=1",
+		"STUARTY_MODE=network", "STUARTY_ADDR=127.0.0.1:"+port, "APP_URL=http://localhost:"+port,
 		"APP_KEY=base64:"+base64.StdEncoding.EncodeToString([]byte(appKey)),
-		"VUKEM_VIDEO_INSECURE_ALLOW_ROOT=true",
-		"VUKEM_VIDEO_ADMIN_EMAIL="+email, "VUKEM_VIDEO_ADMIN_PASSWORD="+password,
+		"STUARTY_INSECURE_ALLOW_ROOT=true",
+		"STUARTY_ADMIN_EMAIL="+email, "STUARTY_ADMIN_PASSWORD="+password,
 	)
 
 	out := &lockedBuffer{}

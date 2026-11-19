@@ -3,8 +3,8 @@ package export
 import (
 	"context"
 
-	"github.com/AlexGalhardo/vukem-video/core/plan"
-	"github.com/AlexGalhardo/vukem-video/engine/audio"
+	"github.com/AlexGalhardo/stuarty/core/plan"
+	"github.com/AlexGalhardo/stuarty/engine/audio"
 )
 
 // MixFrom mixes the timeline audio from frame from, for n frames, and hands the

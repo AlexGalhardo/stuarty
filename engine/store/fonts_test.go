@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/engine/rasterize"
+	"github.com/AlexGalhardo/stuarty/engine/rasterize"
 )
 
 func antonBytes(t *testing.T) []byte {

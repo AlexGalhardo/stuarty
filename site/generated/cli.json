@@ -9,12 +9,12 @@
     {
       "name": "project",
       "type": "string",
-      "usage": "project id (default $VUKEM_VIDEO_PROJECT)"
+      "usage": "project id (default $STUARTY_PROJECT)"
     },
     {
       "name": "workspace",
       "type": "string",
-      "usage": "workspace directory (default $VUKEM_VIDEO_HOME, else ~/.vukem-video)"
+      "usage": "workspace directory (default $STUARTY_HOME, else ~/.stuarty)"
     },
     {
       "name": "actor",
@@ -65,9 +65,9 @@
       "name": "project:list",
       "summary": "list the projects of the workspace",
       "usage": [
-        "vukem-video project:list [--state active|trashed|all] [--cursor c] [--limit n]"
+        "stuarty project:list [--state active|trashed|all] [--cursor c] [--limit n]"
       ],
-      "example": "vukem-video project:list --json",
+      "example": "stuarty project:list --json",
       "flags": [
         {
           "name": "state",
@@ -98,9 +98,9 @@
       "name": "project:create",
       "summary": "create a project",
       "usage": [
-        "vukem-video project:create --name <name> [--preset 9:16|1:1|16:9|4:5] [--fps 30] [--id prj_...]"
+        "stuarty project:create --name <name> [--preset 9:16|1:1|16:9|4:5] [--fps 30] [--id prj_...]"
       ],
-      "example": "vukem-video project:create --name \"Launch teaser\" --json",
+      "example": "stuarty project:create --name \"Launch teaser\" --json",
       "flags": [
         {
           "name": "name",
@@ -137,9 +137,9 @@
       "name": "project:show",
       "summary": "show a project",
       "usage": [
-        "vukem-video project:show [<project id>] [--detail concise|full|document] [--cursor c] [--limit n]"
+        "stuarty project:show [<project id>] [--detail concise|full|document] [--cursor c] [--limit n]"
       ],
-      "example": "vukem-video project:show --project prj_7k2m9x4q1b",
+      "example": "stuarty project:show --project prj_7k2m9x4q1b",
       "flags": [
         {
           "name": "detail",
@@ -170,9 +170,9 @@
       "name": "project:trash",
       "summary": "move a project to the trash",
       "usage": [
-        "vukem-video project:trash <project id>"
+        "stuarty project:trash <project id>"
       ],
-      "example": "vukem-video project:trash prj_7k2m9x4q1b",
+      "example": "stuarty project:trash prj_7k2m9x4q1b",
       "globals": [
         "json",
         "workspace",
@@ -186,9 +186,9 @@
       "name": "project:restore",
       "summary": "restore a trashed project",
       "usage": [
-        "vukem-video project:restore <project id>"
+        "stuarty project:restore <project id>"
       ],
-      "example": "vukem-video project:restore prj_7k2m9x4q1b",
+      "example": "stuarty project:restore prj_7k2m9x4q1b",
       "globals": [
         "json",
         "workspace",
@@ -202,10 +202,10 @@
       "name": "edit",
       "summary": "apply a batch of operations to a project (its lint block is lint_scope fast: lint runs every rule)",
       "usage": [
-        "vukem-video edit --project <id> --ops <file|-> [--base n] [--key k]",
-        "vukem-video edit --project <id> <op> [k=v | k:=json]..."
+        "stuarty edit --project <id> --ops <file|-> [--base n] [--key k]",
+        "stuarty edit --project <id> <op> [k=v | k:=json]..."
       ],
-      "example": "vukem-video edit --project prj_7k2m9x4q1b item.move item_id=itm_m1n2p3q4r5 start=2s",
+      "example": "stuarty edit --project prj_7k2m9x4q1b item.move item_id=itm_m1n2p3q4r5 start=2s",
       "flags": [
         {
           "name": "ops",
@@ -236,9 +236,9 @@
       "name": "history",
       "summary": "list the steps of a project history",
       "usage": [
-        "vukem-video history --project <id> [--by a] [--cursor c] [--limit n]"
+        "stuarty history --project <id> [--by a] [--cursor c] [--limit n]"
       ],
-      "example": "vukem-video history --project prj_7k2m9x4q1b --json",
+      "example": "stuarty history --project prj_7k2m9x4q1b --json",
       "flags": [
         {
           "name": "by",
@@ -269,9 +269,9 @@
       "name": "undo",
       "summary": "undo the last step of the caller",
       "usage": [
-        "vukem-video undo --project <id>"
+        "stuarty undo --project <id>"
       ],
-      "example": "vukem-video undo --project prj_7k2m9x4q1b",
+      "example": "stuarty undo --project prj_7k2m9x4q1b",
       "globals": [
         "json",
         "workspace",
@@ -285,9 +285,9 @@
       "name": "redo",
       "summary": "redo the last undone step of the caller",
       "usage": [
-        "vukem-video redo --project <id>"
+        "stuarty redo --project <id>"
       ],
-      "example": "vukem-video redo --project prj_7k2m9x4q1b",
+      "example": "stuarty redo --project prj_7k2m9x4q1b",
       "globals": [
         "json",
         "workspace",
@@ -301,9 +301,9 @@
       "name": "lint",
       "summary": "check a project against every lint rule (an edit result runs only the fast rules, lint_scope fast)",
       "usage": [
-        "vukem-video lint --project <id> [--severity error|warning] [--cursor c] [--limit n] [--strict]"
+        "stuarty lint --project <id> [--severity error|warning] [--cursor c] [--limit n] [--strict]"
       ],
-      "example": "vukem-video lint --project prj_7k2m9x4q1b --json",
+      "example": "stuarty lint --project prj_7k2m9x4q1b --json",
       "flags": [
         {
           "name": "severity",
@@ -341,9 +341,9 @@
       "name": "version",
       "summary": "print the version of this binary",
       "usage": [
-        "vukem-video version [--json]"
+        "stuarty version [--json]"
       ],
-      "example": "vukem-video version",
+      "example": "stuarty version",
       "globals": [
         "json",
         "workspace",
@@ -355,9 +355,9 @@
       "name": "mcp",
       "summary": "serve the MCP tools on standard input and output",
       "usage": [
-        "vukem-video mcp [--actor <label>]"
+        "stuarty mcp [--actor <label>]"
       ],
-      "example": "claude mcp add vukem-video -- vukem-video mcp",
+      "example": "claude mcp add stuarty -- stuarty mcp",
       "globals": [
         "json",
         "workspace",
@@ -369,10 +369,10 @@
       "name": "media:import",
       "summary": "import media files into a project",
       "usage": [
-        "vukem-video media:import <path>... --project <id> [--asset-id ast_...] [--wait] [--timeout d]",
+        "stuarty media:import <path>... --project <id> [--asset-id ast_...] [--wait] [--timeout d]",
         "formats: MP4, MOV, MKV, WebM, AVI, MP3, WAV, FLAC, OGG, PNG, JPEG, WebP, GIF and .cube; not SVG"
       ],
-      "example": "vukem-video media:import clip.mov --project prj_7k2m9x4q1b --json",
+      "example": "stuarty media:import clip.mov --project prj_7k2m9x4q1b --json",
       "flags": [
         {
           "name": "asset-id",
@@ -395,9 +395,9 @@
       "name": "media:inspect",
       "summary": "show what is known about an asset",
       "usage": [
-        "vukem-video media:inspect <asset id> --project <id> [--sections probe,transcript,silences,loudness]"
+        "stuarty media:inspect <asset id> --project <id> [--sections probe,transcript,silences,loudness]"
       ],
-      "example": "vukem-video media:inspect ast_3c5v8n2w6d --project prj_7k2m9x4q1b --sections probe,silences",
+      "example": "stuarty media:inspect ast_3c5v8n2w6d --project prj_7k2m9x4q1b --sections probe,silences",
       "flags": [
         {
           "name": "sections",
@@ -434,9 +434,9 @@
       "name": "media:list",
       "summary": "list the assets of a project",
       "usage": [
-        "vukem-video media:list --project <id> [--cursor c] [--limit n]"
+        "stuarty media:list --project <id> [--cursor c] [--limit n]"
       ],
-      "example": "vukem-video media:list --project prj_7k2m9x4q1b --json",
+      "example": "stuarty media:list --project prj_7k2m9x4q1b --json",
       "flags": [
         {
           "name": "cursor",
@@ -462,9 +462,9 @@
       "name": "media:trash",
       "summary": "move an asset to the trash",
       "usage": [
-        "vukem-video media:trash <asset id> --project <id>"
+        "stuarty media:trash <asset id> --project <id>"
       ],
-      "example": "vukem-video media:trash ast_3c5v8n2w6d --project prj_7k2m9x4q1b",
+      "example": "stuarty media:trash ast_3c5v8n2w6d --project prj_7k2m9x4q1b",
       "globals": [
         "json",
         "workspace",
@@ -478,9 +478,9 @@
       "name": "media:restore",
       "summary": "restore a trashed asset",
       "usage": [
-        "vukem-video media:restore <asset id> --project <id>"
+        "stuarty media:restore <asset id> --project <id>"
       ],
-      "example": "vukem-video media:restore ast_3c5v8n2w6d --project prj_7k2m9x4q1b",
+      "example": "stuarty media:restore ast_3c5v8n2w6d --project prj_7k2m9x4q1b",
       "globals": [
         "json",
         "workspace",
@@ -494,10 +494,10 @@
       "name": "view",
       "summary": "render a frame or a contact sheet of a project",
       "usage": [
-        "vukem-video view --project <id> [--mode frame|sheet] [--at t] [--times t1,t2,...]",
+        "stuarty view --project <id> [--mode frame|sheet] [--at t] [--times t1,t2,...]",
         "    [--from t --until t --count n] [--cols n] [--max-tokens n] [--width px]"
       ],
-      "example": "vukem-video view --project prj_7k2m9x4q1b --at 1s --json",
+      "example": "stuarty view --project prj_7k2m9x4q1b --at 1s --json",
       "flags": [
         {
           "name": "mode",
@@ -559,9 +559,9 @@
       "name": "export",
       "summary": "export a project to a file",
       "usage": [
-        "vukem-video export --project <id> [--start t] [--end t] [--format f] [--at t] [--wait] [--timeout d] [--out f] [--force]"
+        "stuarty export --project <id> [--start t] [--end t] [--format f] [--at t] [--wait] [--timeout d] [--out f] [--force]"
       ],
-      "example": "vukem-video export --project prj_7k2m9x4q1b --json",
+      "example": "stuarty export --project prj_7k2m9x4q1b --json",
       "flags": [
         {
           "name": "start",
@@ -609,9 +609,9 @@
       "name": "job:show",
       "summary": "show a job",
       "usage": [
-        "vukem-video job:show <job id> [--wait] [--timeout d]"
+        "stuarty job:show <job id> [--wait] [--timeout d]"
       ],
-      "example": "vukem-video job:show job_4h8k2m6p9t --wait",
+      "example": "stuarty job:show job_4h8k2m6p9t --wait",
       "flags": [
         {
           "name": "wait",
@@ -632,9 +632,9 @@
       "name": "job:cancel",
       "summary": "cancel a queued or running job",
       "usage": [
-        "vukem-video job:cancel <job id>"
+        "stuarty job:cancel <job id>"
       ],
-      "example": "vukem-video job:cancel job_4h8k2m6p9t",
+      "example": "stuarty job:cancel job_4h8k2m6p9t",
       "globals": [
         "json",
         "workspace",
@@ -646,9 +646,9 @@
       "name": "job:list",
       "summary": "list the jobs of a project",
       "usage": [
-        "vukem-video job:list --project <id> [--state s] [--cursor c] [--limit n]"
+        "stuarty job:list --project <id> [--state s] [--cursor c] [--limit n]"
       ],
-      "example": "vukem-video job:list --project prj_7k2m9x4q1b --state active",
+      "example": "stuarty job:list --project prj_7k2m9x4q1b --state active",
       "flags": [
         {
           "name": "state",
@@ -679,9 +679,9 @@
       "name": "events",
       "summary": "print the events of a project as they arrive",
       "usage": [
-        "vukem-video events --project <id> [--from-id n] [--since n] [--count n]"
+        "stuarty events --project <id> [--from-id n] [--since n] [--count n]"
       ],
-      "example": "vukem-video events --project prj_7k2m9x4q1b --since 4 --count 3",
+      "example": "stuarty events --project prj_7k2m9x4q1b --since 4 --count 3",
       "flags": [
         {
           "name": "from-id",
@@ -712,9 +712,9 @@
       "name": "command:help",
       "summary": "list the editing commands, or describe one",
       "usage": [
-        "vukem-video command:help [<name>]"
+        "stuarty command:help [<name>]"
       ],
-      "example": "vukem-video command:help item.move",
+      "example": "stuarty command:help item.move",
       "globals": [
         "json",
         "workspace",
@@ -726,9 +726,9 @@
       "name": "template:list",
       "summary": "list the templates of the library",
       "usage": [
-        "vukem-video template:list [--cursor c] [--limit n]"
+        "stuarty template:list [--cursor c] [--limit n]"
       ],
-      "example": "vukem-video template:list --json",
+      "example": "stuarty template:list --json",
       "flags": [
         {
           "name": "cursor",
@@ -753,9 +753,9 @@
       "name": "template:save",
       "summary": "make a template from a project",
       "usage": [
-        "vukem-video template:save --project <id> --name <name> [--description d]"
+        "stuarty template:save --project <id> --name <name> [--description d]"
       ],
-      "example": "vukem-video template:save --project prj_7k2m9x4q1b --name \"Spring sale\"",
+      "example": "stuarty template:save --project prj_7k2m9x4q1b --name \"Spring sale\"",
       "flags": [
         {
           "name": "name",
@@ -781,9 +781,9 @@
       "name": "template:new",
       "summary": "create a project from a template",
       "usage": [
-        "vukem-video template:new <template id> --name <name> [--fill <file|->] [--id prj_...]"
+        "stuarty template:new <template id> --name <name> [--fill <file|->] [--id prj_...]"
       ],
-      "example": "vukem-video template:new tpl_5n8b2v6c1x --name \"Spring sale\" --fill fill.json",
+      "example": "stuarty template:new tpl_5n8b2v6c1x --name \"Spring sale\" --fill fill.json",
       "flags": [
         {
           "name": "name",
@@ -825,9 +825,9 @@
       "name": "template:export",
       "summary": "write a template to a file the workspace keeps",
       "usage": [
-        "vukem-video template:export <template id> [--out f] [--force]"
+        "stuarty template:export <template id> [--out f] [--force]"
       ],
-      "example": "vukem-video template:export tpl_5n8b2v6c1x --out ~/spring-sale.vukem-template.zip",
+      "example": "stuarty template:export tpl_5n8b2v6c1x --out ~/spring-sale.stuarty-template.zip",
       "flags": [
         {
           "name": "out",
@@ -852,9 +852,9 @@
       "name": "template:import",
       "summary": "add a template file to the library",
       "usage": [
-        "vukem-video template:import <path>"
+        "stuarty template:import <path>"
       ],
-      "example": "vukem-video template:import spring-sale.vukem-template.zip",
+      "example": "stuarty template:import spring-sale.stuarty-template.zip",
       "globals": [
         "json",
         "workspace",
@@ -867,9 +867,9 @@
       "name": "bundle:export",
       "summary": "export a project as a .vvbundle to share or to back up",
       "usage": [
-        "vukem-video bundle:export --project <id> [--no-log] [--wait] [--out f] [--force]"
+        "stuarty bundle:export --project <id> [--no-log] [--wait] [--out f] [--force]"
       ],
-      "example": "vukem-video bundle:export --project prj_7k2m9x4q1b --out ~/teaser.vvbundle",
+      "example": "stuarty bundle:export --project prj_7k2m9x4q1b --out ~/teaser.vvbundle",
       "flags": [
         {
           "name": "log",
@@ -903,9 +903,9 @@
       "name": "bundle:import",
       "summary": "create a project from a .vvbundle file",
       "usage": [
-        "vukem-video bundle:import <path> [--as-new]"
+        "stuarty bundle:import <path> [--as-new]"
       ],
-      "example": "vukem-video bundle:import launch-teaser.vvbundle --as-new",
+      "example": "stuarty bundle:import launch-teaser.vvbundle --as-new",
       "flags": [
         {
           "name": "as-new",
@@ -926,10 +926,10 @@
       "name": "agent:docs",
       "summary": "print or write the material for agents: the skill, the AGENTS.md snippet, the MCP instructions",
       "usage": [
-        "vukem-video agent:docs --print skill|agents|instructions",
-        "vukem-video agent:docs --write <dir>"
+        "stuarty agent:docs --print skill|agents|instructions",
+        "stuarty agent:docs --write <dir>"
       ],
-      "example": "vukem-video agent:docs --write ~/.claude/skills/vukem-video",
+      "example": "stuarty agent:docs --write ~/.claude/skills/stuarty",
       "flags": [
         {
           "name": "print",
@@ -953,9 +953,9 @@
       "name": "transcribe",
       "summary": "transcribe the audio of an asset",
       "usage": [
-        "vukem-video transcribe --project <id> --asset <id> [--language auto] [--model <name>] [--wait] [--timeout d]"
+        "stuarty transcribe --project <id> --asset <id> [--language auto] [--model <name>] [--wait] [--timeout d]"
       ],
-      "example": "vukem-video transcribe --project prj_7k2m9x4q1b --asset ast_3c5v8n2w6d --language en",
+      "example": "stuarty transcribe --project prj_7k2m9x4q1b --asset ast_3c5v8n2w6d --language en",
       "flags": [
         {
           "name": "asset",
@@ -988,9 +988,9 @@
       "name": "doctor",
       "summary": "check the installation and the workspace",
       "usage": [
-        "vukem-video doctor [--full] [--verify] [--bundle] [--gc]"
+        "stuarty doctor [--full] [--verify] [--bundle] [--gc]"
       ],
-      "example": "vukem-video doctor --full",
+      "example": "stuarty doctor --full",
       "flags": [
         {
           "name": "full",
@@ -1028,9 +1028,9 @@
       "name": "fonts",
       "summary": "list the bundled font families",
       "usage": [
-        "vukem-video fonts"
+        "stuarty fonts"
       ],
-      "example": "vukem-video fonts --json",
+      "example": "stuarty fonts --json",
       "globals": [
         "json",
         "workspace",
@@ -1042,9 +1042,9 @@
       "name": "audit",
       "summary": "list the audit table",
       "usage": [
-        "vukem-video audit [--project <id>] [--cursor c] [--limit n]"
+        "stuarty audit [--project <id>] [--cursor c] [--limit n]"
       ],
-      "example": "vukem-video audit --limit 20 --json",
+      "example": "stuarty audit --limit 20 --json",
       "flags": [
         {
           "name": "project",
@@ -1074,9 +1074,9 @@
       "name": "tools:install",
       "summary": "download a helper such as the transcription program",
       "usage": [
-        "vukem-video tools:install <name> [--model <model>] [--force] [--yes] [--timeout d]"
+        "stuarty tools:install <name> [--model <model>] [--force] [--yes] [--timeout d]"
       ],
-      "example": "vukem-video tools:install whisper --model small",
+      "example": "stuarty tools:install whisper --model small",
       "flags": [
         {
           "name": "model",
@@ -1108,9 +1108,9 @@
       "name": "token:rotate",
       "summary": "replace the local token; clients that hold the old one must be set up again",
       "usage": [
-        "vukem-video token:rotate"
+        "stuarty token:rotate"
       ],
-      "example": "vukem-video token:rotate",
+      "example": "stuarty token:rotate",
       "globals": [
         "json",
         "workspace",
@@ -1122,9 +1122,9 @@
       "name": "font:import",
       "summary": "add a TrueType or OpenType font file to the font store",
       "usage": [
-        "vukem-video font:import <path>"
+        "stuarty font:import <path>"
       ],
-      "example": "vukem-video font:import Brand-Regular.ttf",
+      "example": "stuarty font:import Brand-Regular.ttf",
       "globals": [
         "json",
         "workspace",
@@ -1136,9 +1136,9 @@
       "name": "brand:show",
       "summary": "show the brand kit: logo, colours and fonts",
       "usage": [
-        "vukem-video brand:show"
+        "stuarty brand:show"
       ],
-      "example": "vukem-video brand:show --json",
+      "example": "stuarty brand:show --json",
       "globals": [
         "json",
         "workspace",
@@ -1150,9 +1150,9 @@
       "name": "brand:set",
       "summary": "replace the brand kit",
       "usage": [
-        "vukem-video brand:set --kit <file|->"
+        "stuarty brand:set --kit <file|->"
       ],
-      "example": "vukem-video brand:set --kit brand.json",
+      "example": "stuarty brand:set --kit brand.json",
       "flags": [
         {
           "name": "kit",
@@ -1171,9 +1171,9 @@
       "name": "otio:export",
       "summary": "write the timeline of a project as an OpenTimelineIO file",
       "usage": [
-        "vukem-video otio:export --project <id> [--out f] [--force]"
+        "stuarty otio:export --project <id> [--out f] [--force]"
       ],
-      "example": "vukem-video otio:export --project prj_7k2m9x4q1b --out cut.otio",
+      "example": "stuarty otio:export --project prj_7k2m9x4q1b --out cut.otio",
       "flags": [
         {
           "name": "out",
@@ -1199,9 +1199,9 @@
       "name": "otio:import",
       "summary": "apply an OpenTimelineIO file to a project as one undo step",
       "usage": [
-        "vukem-video otio:import <path> --project <id> [--base-revision n]"
+        "stuarty otio:import <path> --project <id> [--base-revision n]"
       ],
-      "example": "vukem-video otio:import cut.otio --project prj_7k2m9x4q1b --dry-run",
+      "example": "stuarty otio:import cut.otio --project prj_7k2m9x4q1b --dry-run",
       "flags": [
         {
           "name": "base-revision",
@@ -1230,36 +1230,36 @@
       "name": "serve",
       "summary": "run the server that owns the workspace, configured by environment variables (see the configuration reference)",
       "usage": [
-        "vukem-video serve"
+        "stuarty serve"
       ],
-      "example": "VUKEM_VIDEO_ADDR=127.0.0.1:7878 vukem-video serve",
+      "example": "STUARTY_ADDR=127.0.0.1:7878 stuarty serve",
       "globals": []
     },
     {
       "name": "open",
       "summary": "open the editor in the browser of the running server",
       "usage": [
-        "vukem-video open"
+        "stuarty open"
       ],
-      "example": "vukem-video open",
+      "example": "stuarty open",
       "globals": []
     },
     {
       "name": "user:create",
       "summary": "create a user of network mode (the password is asked, never an argument)",
       "usage": [
-        "vukem-video user:create <email> [--admin]"
+        "stuarty user:create <email> [--admin]"
       ],
-      "example": "vukem-video user:create ana@example.com --admin",
+      "example": "stuarty user:create ana@example.com --admin",
       "globals": []
     },
     {
       "name": "user:passwd",
       "summary": "change the password of a user of network mode",
       "usage": [
-        "vukem-video user:passwd <email>"
+        "stuarty user:passwd <email>"
       ],
-      "example": "vukem-video user:passwd ana@example.com",
+      "example": "stuarty user:passwd ana@example.com",
       "globals": []
     }
   ]

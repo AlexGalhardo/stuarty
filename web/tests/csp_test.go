@@ -6,9 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem/vukemtest"
+	"github.com/AlexGalhardo/stuarty/web/bootstrap"
 
-	"github.com/AlexGalhardo/vukem-video/web/bootstrap"
+	"github.com/AlexGalhardo/vukem/vukemtest"
 )
 
 // TestCSPMatchesSDD007 pins the served policy to SDD-007 section 8.5.5.

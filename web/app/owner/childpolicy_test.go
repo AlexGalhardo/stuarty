@@ -7,9 +7,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem/contrib/engine"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
 
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
+	"github.com/AlexGalhardo/vukem/contrib/engine"
 )
 
 func TestChildRunnersRefuseAnUnusableSandbox(t *testing.T) {
@@ -18,7 +18,7 @@ func TestChildRunnersRefuseAnUnusableSandbox(t *testing.T) {
 	for _, mode := range []string{"docker", "chroot"} {
 		if _, err := newChildRunners(context.Background(), in, t.TempDir(), mode, 1<<30); err == nil ||
 			!strings.Contains(err.Error(), "sandbox requested but unavailable") {
-			t.Errorf("VUKEM_VIDEO_SANDBOX=%s: err = %v", mode, err)
+			t.Errorf("STUARTY_SANDBOX=%s: err = %v", mode, err)
 		}
 	}
 

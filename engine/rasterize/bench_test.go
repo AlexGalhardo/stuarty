@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/core/plan"
+	"github.com/AlexGalhardo/stuarty/core/plan"
 )
 
 // referenceCaption is the caption of the reference scene of SDD-004 section 11:

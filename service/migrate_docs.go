@@ -6,8 +6,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/service/crashpoint"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/service/crashpoint"
 )
 
 // migrateActor is the actor of the log row a document migration writes: a valid

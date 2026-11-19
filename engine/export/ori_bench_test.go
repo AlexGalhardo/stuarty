@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 // orientationDoc is a project of w by h at 30 fps with one clip of cw by ch (fit cover) over secs

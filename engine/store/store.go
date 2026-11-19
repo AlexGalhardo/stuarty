@@ -145,7 +145,7 @@ func (s *Store) Put(ctx context.Context, r io.Reader, limit int64) (Result, erro
 				"limit":    "import_bytes",
 				"value":    n,
 				"ceiling":  limit,
-				"variable": "VUKEM_VIDEO_MAX_IMPORT_BYTES",
+				"variable": "STUARTY_MAX_IMPORT_BYTES",
 			},
 		}
 	}

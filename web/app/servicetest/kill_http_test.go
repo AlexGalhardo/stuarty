@@ -16,13 +16,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/internal/outbound"
-	"github.com/AlexGalhardo/vukem-video/service"
-	"github.com/AlexGalhardo/vukem-video/service/remote"
-	"github.com/AlexGalhardo/vukem-video/service/workspace"
-	"github.com/AlexGalhardo/vukem-video/web/app/store"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/internal/outbound"
+	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/remote"
+	"github.com/AlexGalhardo/stuarty/service/workspace"
+	"github.com/AlexGalhardo/stuarty/web/app/store"
 )
 
 // SDD-005 section 18 check 7 over HTTP: a real `serve` process takes commits
@@ -47,7 +47,7 @@ func TestKillRealServeDuringConcurrentHTTPCommits(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	bin := filepath.Join(t.TempDir(), "vukem-video")
+	bin := filepath.Join(t.TempDir(), "stuarty")
 	if runtime.GOOS == "windows" {
 		bin += ".exe"
 	}
@@ -58,7 +58,7 @@ func TestKillRealServeDuringConcurrentHTTPCommits(t *testing.T) {
 		"build",
 		"-o",
 		bin,
-		"github.com/AlexGalhardo/vukem-video/web/cmd/app",
+		"github.com/AlexGalhardo/stuarty/web/cmd/app",
 	)
 	if out, err := build.CombinedOutput(); err != nil {
 		t.Fatalf("go build: %v\n%s", err, out)
@@ -66,7 +66,7 @@ func TestKillRealServeDuringConcurrentHTTPCommits(t *testing.T) {
 
 	port := freeLoopbackPort(t)
 	cmd := exec.CommandContext(t.Context(), bin, "serve")
-	cmd.Env = append(os.Environ(), workspace.EnvHome+"="+string(e.dir), "VUKEM_VIDEO_URL=", "APP_KEY=", "APP_ENV=",
+	cmd.Env = append(os.Environ(), workspace.EnvHome+"="+string(e.dir), "STUARTY_URL=", "APP_KEY=", "APP_ENV=",
 		"HOST=127.0.0.1", "PORT="+port)
 
 	var log bytes.Buffer

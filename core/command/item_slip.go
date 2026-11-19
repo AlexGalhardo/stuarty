@@ -1,6 +1,6 @@
 package command
 
-import "github.com/AlexGalhardo/vukem-video/core/timeline"
+import "github.com/AlexGalhardo/stuarty/core/timeline"
 
 func init() {
 	Register(Define(Spec{

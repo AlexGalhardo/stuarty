@@ -6,10 +6,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/engine/export"
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
-	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/engine/export"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
+	"github.com/AlexGalhardo/stuarty/service"
 )
 
 func TestExportRefusesWhatItCannotDo(t *testing.T) {
@@ -63,7 +63,7 @@ func TestPickRunnerKeepsTheAddressSpaceLimitForSoftwareEncoders(t *testing.T) {
 }
 
 func TestJobCarriesTheGPUHost(t *testing.T) {
-	host := filepath.Join(t.TempDir(), "vukem-render")
+	host := filepath.Join(t.TempDir(), "stuarty-render")
 	a := &adapter{cfg: Config{PixelRenderer: export.PixelRendererGPU, GPUHost: host}}
 
 	job := a.job(service.ExportInput{}, nil, nil)

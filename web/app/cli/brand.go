@@ -7,14 +7,14 @@ import (
 	"io"
 	"os"
 
-	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/stuarty/service"
 )
 
 var fontImportCmd = &spec{
 	name:       "font:import",
 	summary:    "add a TrueType or OpenType font file to the font store",
-	usage:      []string{"vukem-video font:import <path>"},
-	example:    "vukem-video font:import Brand-Regular.ttf",
+	usage:      []string{"stuarty font:import <path>"},
+	example:    "stuarty font:import Brand-Regular.ttf",
 	positional: true,
 	write:      true,
 	run: func(ctx context.Context, c *call) (*output, error) {
@@ -39,8 +39,8 @@ var fontImportCmd = &spec{
 var brandShowCmd = &spec{
 	name:    "brand:show",
 	summary: "show the brand kit: logo, colours and fonts",
-	usage:   []string{"vukem-video brand:show"},
-	example: "vukem-video brand:show --json",
+	usage:   []string{"stuarty brand:show"},
+	example: "stuarty brand:show --json",
 	run: func(ctx context.Context, c *call) (*output, error) {
 		res, err := c.svc.BrandKitGet(ctx, service.BrandKitGetRequest{})
 		if err != nil {
@@ -54,8 +54,8 @@ var brandShowCmd = &spec{
 var brandSetCmd = &spec{
 	name:    "brand:set",
 	summary: "replace the brand kit",
-	usage:   []string{"vukem-video brand:set --kit <file|->"},
-	example: "vukem-video brand:set --kit brand.json",
+	usage:   []string{"stuarty brand:set --kit <file|->"},
+	example: "stuarty brand:set --kit brand.json",
 	write:   true,
 	flags: []flagDef{
 		{

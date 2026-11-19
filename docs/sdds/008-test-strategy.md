@@ -91,7 +91,7 @@ Two scenarios are named and used as exit criteria of phases.
 
 Transcription in CI uses a **test provider** that returns a stored transcript for a known audio hash, so that CI needs no model download; the real whisper.cpp path is exercised by a separate job that installs the helper explicitly and runs on Linux only.
 
-Browser scenarios are the list of SDD-012 §20.1, by name. Each one runs against a real server started by the test with a temporary workspace (`VUKEM_VIDEO_HOME`), never against mocks of the API: the UI is a thin client, and a mocked core would prove nothing.
+Browser scenarios are the list of SDD-012 §20.1, by name. Each one runs against a real server started by the test with a temporary workspace (`STUARTY_HOME`), never against mocks of the API: the UI is a thin client, and a mocked core would prove nothing.
 
 ## 6. Parity and contracts
 
@@ -134,7 +134,7 @@ The **reference runner** is the GitHub-hosted `ubuntu-latest` runner; absolute l
 | NFR-045 three operating systems | every pull request on Linux, macOS and Windows | the CI matrix (SDD-009 §13.3) | senior-d |
 | PRD-001 success metric 4 | a 60 s vertical video with automatic captions, from import to exported file, in under 5 minutes | manual check of the ALPHA release checklist, timed by the orchestrator | orchestrator |
 
-`internal/tools/perfreport` runs the Go benchmarks, writes one table per platform (`docs/perf/<date>-<goos>.md`, with the values in a comment for the comparison) and compares it with the last committed table of the same platform: a regression of more than 20% fails the job (`-compare`). Absolute limits are checked on the reference runner with `-absolute`. The benchmarks it runs are `BenchmarkCommit200Items` (NFR-001), `BenchmarkIngest60s` (NFR-005), `BenchmarkExport60s` (NFR-006 and NFR-007, which reports `peak_MB`), `BenchmarkExportCommonCase` (the 1.5 times real time floor), and `BenchmarkViewFrame` and `BenchmarkViewSheet9` (NFR-023); the list is `Specs` in the tool. The comparison of composed frames writes the frame, and with `VUKEM_VIDEO_TEST_GOLDEN_BEFORE_DIR` the frame before and a difference image, into `VUKEM_VIDEO_TEST_ARTIFACTS_DIR` for the job to upload; `VUKEM_VIDEO_TEST_OTHER_FFMPEG_DIR` runs the PSNR comparison against another FFmpeg build (reported, not blocking). Token counts are estimated as characters divided by 3.2 (SDD-003 §3.10) and are confirmed once per release with the real tokenizer through the agent run.
+`internal/tools/perfreport` runs the Go benchmarks, writes one table per platform (`docs/perf/<date>-<goos>.md`, with the values in a comment for the comparison) and compares it with the last committed table of the same platform: a regression of more than 20% fails the job (`-compare`). Absolute limits are checked on the reference runner with `-absolute`. The benchmarks it runs are `BenchmarkCommit200Items` (NFR-001), `BenchmarkIngest60s` (NFR-005), `BenchmarkExport60s` (NFR-006 and NFR-007, which reports `peak_MB`), `BenchmarkExportCommonCase` (the 1.5 times real time floor), and `BenchmarkViewFrame` and `BenchmarkViewSheet9` (NFR-023); the list is `Specs` in the tool. The comparison of composed frames writes the frame, and with `STUARTY_TEST_GOLDEN_BEFORE_DIR` the frame before and a difference image, into `STUARTY_TEST_ARTIFACTS_DIR` for the job to upload; `STUARTY_TEST_OTHER_FFMPEG_DIR` runs the PSNR comparison against another FFmpeg build (reported, not blocking). Token counts are estimated as characters divided by 3.2 (SDD-003 §3.10) and are confirmed once per release with the real tokenizer through the agent run.
 
 ## 8. Fixtures
 
@@ -152,7 +152,7 @@ Every released schema version keeps a set of documents under `core/timeline/test
 - Tests never sleep to wait for something: they wait on an event, a file, a row, or use an injected clock (`app.Now()` in Go, fake timers in the browser).
 - A test that fails without a code change is a bug with priority: it is fixed or quarantined within the same day by its owner, with an issue; a quarantined test does not count as coverage and blocks the next release until it is back.
 - Retries are allowed only in Playwright, at most one, and a test that passed on retry is listed in the job summary.
-- Port numbers come from the operating system (port 0); workspaces are temporary directories; no test touches `~/.vukem-video`.
+- Port numbers come from the operating system (port 0); workspaces are temporary directories; no test touches `~/.stuarty`.
 - Coverage floors (SDD-009 §13.2): 90% for each package of `core/`, 80% elsewhere, enforced by `covergate`. Coverage is a floor, not a goal: the golden cases and the scenarios are what prove behaviour.
 
 ## 11. What runs when

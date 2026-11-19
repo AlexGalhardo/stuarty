@@ -8,10 +8,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/service"
-	"github.com/AlexGalhardo/vukem-video/web/app/auth"
-	httpapi "github.com/AlexGalhardo/vukem-video/web/app/http"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/web/app/auth"
+	httpapi "github.com/AlexGalhardo/stuarty/web/app/http"
 )
 
 // concrete turns the path template of an endpoint into a requestable path.
@@ -83,7 +83,7 @@ func TestLaunchFlowGivesACookieSession(t *testing.T) {
 	}
 
 	cookie := res.header.Get("Set-Cookie")
-	for _, attr := range []string{"vukem_video_session_", "Path=/", "HttpOnly", "SameSite=Strict", "Max-Age=604800"} {
+	for _, attr := range []string{"stuarty_session_", "Path=/", "HttpOnly", "SameSite=Strict", "Max-Age=604800"} {
 		if !strings.Contains(cookie, attr) {
 			t.Errorf("Set-Cookie %q lacks %s", cookie, attr)
 		}
@@ -441,7 +441,7 @@ func TestSecurity_T28_TrashEmptyNeedsHumanSession(t *testing.T) {
 }
 
 // T-28 again, from the other side (SDD-007 section 5.3): a launch code asked for with the bearer
-// token alone (`vukem-video open`, an agent) or with a wrong launcher secret redeems into a
+// token alone (`stuarty open`, an agent) or with a wrong launcher secret redeems into a
 // session that works as the editor but has none of the browser-only privileges.
 func TestSecurity_T28_BearerLaunchCodeGivesNoBrowserPrivileges(t *testing.T) {
 	t.Parallel()
@@ -522,7 +522,7 @@ func TestLocalSessionCookieNamesThePortOfTheServer(t *testing.T) {
 	cookie := h.session(t)
 	name, id, _ := strings.Cut(cookie, "=")
 
-	if want := "vukem_video_session_" + h.port; name != want {
+	if want := "stuarty_session_" + h.port; name != want {
 		t.Fatalf("cookie name = %q, want %q", name, want)
 	}
 
@@ -532,7 +532,7 @@ func TestLocalSessionCookieNamesThePortOfTheServer(t *testing.T) {
 		t.Errorf("the session cookie of this server = %d", res.status)
 	}
 
-	bare := "vukem_video_session=" + id
+	bare := "stuarty_session=" + id
 	if res := h.do(
 		req{path: "/api/v1/projects", noAuth: true, headers: map[string]string{"Cookie": bare}},
 	); res.status != http.StatusUnauthorized {

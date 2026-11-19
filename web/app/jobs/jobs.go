@@ -10,10 +10,10 @@ import (
 	"errors"
 	"time"
 
+	"github.com/AlexGalhardo/stuarty/service"
+
 	"github.com/AlexGalhardo/vukem/database"
 	"github.com/AlexGalhardo/vukem/queue"
-
-	"github.com/AlexGalhardo/vukem-video/service"
 )
 
 // Queue names, in the strict priority order of QUEUE_NAMES.

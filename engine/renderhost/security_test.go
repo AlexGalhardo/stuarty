@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/core/plan"
+	"github.com/AlexGalhardo/stuarty/core/plan"
 )
 
 // Threat T-36 of SDD-007: the module renders frames of untrusted media from a plan an agent wrote, and runs in the

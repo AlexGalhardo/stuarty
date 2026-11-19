@@ -10,7 +10,7 @@ import (
 	"github.com/AlexGalhardo/vukem/contrib/engine"
 )
 
-// SandboxBwrap is the value of VUKEM_VIDEO_SANDBOX that wraps every tool in bubblewrap (Linux only).
+// SandboxBwrap is the value of STUARTY_SANDBOX that wraps every tool in bubblewrap (Linux only).
 const SandboxBwrap = "bwrap"
 
 // ResolveSandbox accepts only "": bubblewrap exists only on Linux, so asking for it elsewhere is a
@@ -20,7 +20,7 @@ func ResolveSandbox(_ context.Context, mode string) (string, error) {
 		return "", nil
 	}
 
-	return "", errors.New("ffmpeg: VUKEM_VIDEO_SANDBOX needs Linux with bubblewrap")
+	return "", errors.New("ffmpeg: STUARTY_SANDBOX needs Linux with bubblewrap")
 }
 
 // runSandboxed is never called: ResolveSandbox accepts no mode outside Linux, so Runner.Sandbox is empty.

@@ -1,8 +1,8 @@
 package service
 
 import (
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/core/lint"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/core/lint"
 )
 
 // TemplateListRequest pages the template library.

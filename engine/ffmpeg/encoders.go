@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg/ffargs"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg/ffargs"
 )
 
 // EncoderOrder is ADR-0011 item 5: the first H.264 encoder that works on the machine wins.
@@ -61,9 +61,9 @@ func (d *EncoderDetection) ChosenCandidate() (Candidate, bool) {
 
 // DetectOptions are the inputs of encoder detection.
 type DetectOptions struct {
-	// Forced is VUKEM_VIDEO_ENCODER: only that candidate is tested and it is never replaced.
+	// Forced is STUARTY_ENCODER: only that candidate is tested and it is never replaced.
 	Forced string
-	// AllowUserX264 is VUKEM_VIDEO_ALLOW_USER_X264; it matters only for a user's own build.
+	// AllowUserX264 is STUARTY_ALLOW_USER_X264; it matters only for a user's own build.
 	AllowUserX264 bool
 	// Candidates replaces the default order when non-nil. An empty non-nil list disables
 	// every encoder, which is how tests simulate a machine with none.
@@ -115,7 +115,7 @@ func (r *Runner) encoderGate(name string, caps *Capabilities, opt DetectOptions)
 		return gate{
 			true,
 			EncoderNotListed,
-			"only a user's own FFmpeg with VUKEM_VIDEO_ALLOW_USER_X264=true may use it",
+			"only a user's own FFmpeg with STUARTY_ALLOW_USER_X264=true may use it",
 			"",
 		}
 	case !caps.Encoders[name]:
@@ -282,14 +282,14 @@ func noEncoderError(det *EncoderDetection) *Error {
 		Code:    CodeNoEncoder,
 		Reason:  "no_encoder",
 		Message: "No H.264 encoder works on this machine. Tried: " + tried + ".",
-		Hint:    "Use the FFmpeg that ships with Vukem Video, which includes OpenH264, or point " + EnvFFmpeg + " at an FFmpeg that has libx264 and set VUKEM_VIDEO_ALLOW_USER_X264=true.",
+		Hint:    "Use the FFmpeg that ships with Stuarty, which includes OpenH264, or point " + EnvFFmpeg + " at an FFmpeg that has libx264 and set STUARTY_ALLOW_USER_X264=true.",
 		Details: map[string]any{"candidates": details, "forced": det.Forced},
 	}
 	for _, c := range det.Candidates {
 		if c.Name == "libopenh264" && strings.HasPrefix(c.Reason, "openh264_") {
 			e.Hint = "Run \"" + OpenH264InstallCommand + "\" to install Cisco's OpenH264 library for this FFmpeg build " +
 				"(nothing downloads it automatically), or use the hardware encoder of this machine, or point " + EnvFFmpeg +
-				" at an FFmpeg that has libx264 and set VUKEM_VIDEO_ALLOW_USER_X264=true."
+				" at an FFmpeg that has libx264 and set STUARTY_ALLOW_USER_X264=true."
 			e.Details["reason"], e.Details["install_command"], e.Details["tool"] = c.Reason, OpenH264InstallCommand, OpenH264Tool
 			e.Details["missing"] = []string{OpenH264Tool}
 		}

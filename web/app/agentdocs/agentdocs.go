@@ -16,7 +16,7 @@ import (
 // every command of the binary reports (version, doctor, serve, the template and
 // bundle files). The release commit bumps it and regenerates out/ (go run
 // ./web/cmd/gen-agent-docs); every release build also stamps it with
-// -X github.com/AlexGalhardo/vukem-video/web/app/agentdocs.Version=<X.Y.Z>, so a
+// -X github.com/AlexGalhardo/stuarty/web/app/agentdocs.Version=<X.Y.Z>, so a
 // binary never reports another version than the tag it was built from.
 var Version = "0.29.0"
 

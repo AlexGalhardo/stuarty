@@ -16,12 +16,12 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/core/plan"
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/engine/frame"
-	"github.com/AlexGalhardo/vukem-video/engine/rasterize"
-	enginestore "github.com/AlexGalhardo/vukem-video/engine/store"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/core/plan"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/engine/frame"
+	"github.com/AlexGalhardo/stuarty/engine/rasterize"
+	enginestore "github.com/AlexGalhardo/stuarty/engine/store"
 )
 
 // FontSetFor returns the font set a render of doc uses: the bundled families plus the user fonts

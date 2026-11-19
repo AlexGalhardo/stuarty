@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 // A project named "../../x" exports to exports/<project id>/<job id>.mp4 and nowhere else (T-13).

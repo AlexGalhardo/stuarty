@@ -11,12 +11,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/core/lint"
-	"github.com/AlexGalhardo/vukem-video/core/plan"
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/engine/compositor"
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
-	"github.com/AlexGalhardo/vukem-video/engine/rasterize"
+	"github.com/AlexGalhardo/stuarty/core/lint"
+	"github.com/AlexGalhardo/stuarty/core/plan"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/engine/compositor"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
+	"github.com/AlexGalhardo/stuarty/engine/rasterize"
 )
 
 // Progress is the share of the frames written to the encoder.
@@ -44,10 +44,10 @@ type Job struct {
 	OutPath string
 	// Format is what the export writes; the zero value is FormatMP4.
 	Format Format
-	// MaxBytes is VUKEM_VIDEO_MAX_EXPORT_BYTES: a larger file ends the job with reason "size_limit".
+	// MaxBytes is STUARTY_MAX_EXPORT_BYTES: a larger file ends the job with reason "size_limit".
 	// Zero is no limit.
 	MaxBytes int64
-	// Encoder is VUKEM_VIDEO_ENCODER and VUKEM_VIDEO_ALLOW_USER_X264 (ADR-0011 item 5).
+	// Encoder is STUARTY_ENCODER and STUARTY_ALLOW_USER_X264 (ADR-0011 item 5).
 	Encoder ffmpeg.DetectOptions
 	// Start and End are the frames [Start, End) of the timeline to export. End 0 is the end of the
 	// last item; Start 0 and End 0 export the whole timeline (VV-018).
@@ -58,10 +58,10 @@ type Job struct {
 	Fonts *rasterize.FontSet
 	// Bands is the number of bands of the compositor; zero is one per CPU, at most 8.
 	Bands int
-	// PixelRenderer is VUKEM_VIDEO_EXPORT_RENDERER: the Go compositor (the zero value) or the Rust renderer
+	// PixelRenderer is STUARTY_EXPORT_RENDERER: the Go compositor (the zero value) or the Rust renderer
 	// running as WebAssembly under wazero (SDD-013 section 4.6). Both draw the same bytes.
 	PixelRenderer PixelRenderer
-	// GPUHost is the absolute path of the native GPU host vukem-render. With PixelRendererGPU and a path the
+	// GPUHost is the absolute path of the native GPU host stuarty-render. With PixelRendererGPU and a path the
 	// frames are drawn by the child when the machine has a graphics adapter, and by the WebAssembly module
 	// otherwise (SDD-013 section 4.9); empty means no GPU host.
 	GPUHost string

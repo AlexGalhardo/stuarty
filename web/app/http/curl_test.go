@@ -26,7 +26,7 @@ func TestSessionCWithCurl(t *testing.T) {
 	h := newHarness(t)
 
 	headers := filepath.Join(t.TempDir(), "headers")
-	content := "Authorization: Bearer " + canary + "\nVukem-Video-Client: curl-demo\nContent-Type: application/json\n"
+	content := "Authorization: Bearer " + canary + "\nStuarty-Client: curl-demo\nContent-Type: application/json\n"
 
 	if err := os.WriteFile(headers, []byte(content), 0o600); err != nil {
 		t.Fatal(err)

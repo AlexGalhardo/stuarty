@@ -43,7 +43,7 @@ func TestResolveDefaultsToTheHomeDirectory(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if got, want := filepath.Base(string(d)), ".vukem-video"; got != want {
+	if got, want := filepath.Base(string(d)), ".stuarty"; got != want {
 		t.Errorf("Resolve() base = %q, want %q", got, want)
 	}
 }

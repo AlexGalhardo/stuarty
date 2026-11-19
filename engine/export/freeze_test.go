@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/core/plan"
+	"github.com/AlexGalhardo/stuarty/core/plan"
 )
 
 // A freeze frame (SDD-004 section 3.12.1) is drawn from the one source frame at source_in, decoded once,

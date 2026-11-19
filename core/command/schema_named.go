@@ -4,7 +4,7 @@ import (
 	"maps"
 	"slices"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 // namedSchemas are the schemas of the arguments whose Go type is any or a map of any

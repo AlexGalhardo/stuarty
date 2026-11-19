@@ -16,11 +16,11 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/AlexGalhardo/vukem-video/core/lint"
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/engine/export"
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
-	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/stuarty/core/lint"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/engine/export"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
+	"github.com/AlexGalhardo/stuarty/service"
 )
 
 // Config is what an export needs besides the project.
@@ -34,13 +34,13 @@ type Config struct {
 	Caps *ffmpeg.Capabilities
 	// Workspace is the workspace folder; the normalized media is under its artifacts folder.
 	Workspace string
-	// Encoder is VUKEM_VIDEO_ENCODER and VUKEM_VIDEO_ALLOW_USER_X264.
+	// Encoder is STUARTY_ENCODER and STUARTY_ALLOW_USER_X264.
 	Encoder ffmpeg.DetectOptions
 	// Lint is the environment of the lint that gates the export.
 	Lint lint.Env
-	// PixelRenderer is VUKEM_VIDEO_EXPORT_RENDERER; the zero value is the Go compositor.
+	// PixelRenderer is STUARTY_EXPORT_RENDERER; the zero value is the Go compositor.
 	PixelRenderer export.PixelRenderer
-	// GPUHost is the absolute path of vukem-render, found by the owner; empty keeps the CPU path.
+	// GPUHost is the absolute path of stuarty-render, found by the owner; empty keeps the CPU path.
 	GPUHost string
 }
 

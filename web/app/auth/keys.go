@@ -10,9 +10,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/AlexGalhardo/vukem/auth"
+	"github.com/AlexGalhardo/stuarty/service"
 
-	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/vukem/auth"
 )
 
 // KeyPrefix starts the secret of every API key, so secret scanners recognise a
