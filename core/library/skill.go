@@ -205,7 +205,8 @@ func (s Skill) AllFiles() ([]File, error) {
 	return append([]File{{Path: SkillFile, Data: []byte(md)}}, s.Files...), nil
 }
 
-// ValidFilePath checks the path of a file inside a skill folder: forward
+// ValidFilePath checks the path of a file inside a skill folder: printable
+// ASCII (so no two names fold together and none hides a character), forward
 // slashes, relative, no "." or ".." component, no backslash, drive letter or
 // control character, no Windows device name, no trailing dot or space.
 func ValidFilePath(p string) error {
@@ -222,8 +223,8 @@ func ValidFilePath(p string) error {
 	}
 
 	for _, r := range p {
-		if r < 0x20 || r == 0x7f || hiddenRune(r) {
-			return errors.New("the path has a control or hidden character")
+		if r < 0x20 || r > 0x7e {
+			return errors.New("the path has a control character or one that is not printable ASCII")
 		}
 	}
 

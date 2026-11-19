@@ -259,15 +259,20 @@ func writeFile(root *os.Root, rel string, data []byte) error {
 	return nil
 }
 
-// writeSkillDir writes the whole folder of a skill under a temporary name and
+// writeSkillDir writes the whole folder of a skill under skills/.
+func writeSkillDir(root *os.Root, name string, all []core.File) error {
+	return writeDirAtomic(root, skillDir, name, all)
+}
+
+// writeDirAtomic writes the whole folder parent/name under a temporary name and
 // renames it into place, keeping the old folder until the new one is there. A
 // failure leaves the old folder.
-func writeSkillDir(root *os.Root, name string, all []core.File) error {
-	if err := root.MkdirAll(skillDir, 0o700); err != nil {
+func writeDirAtomic(root *os.Root, parent, name string, all []core.File) error {
+	if err := root.MkdirAll(parent, 0o700); err != nil {
 		return err
 	}
 
-	tmp := path.Join(skillDir, ".tmp-"+randomSuffix())
+	tmp := path.Join(parent, ".tmp-"+randomSuffix())
 	if err := root.Mkdir(tmp, 0o700); err != nil {
 		return err
 	}
@@ -288,11 +293,11 @@ func writeSkillDir(root *os.Root, name string, all []core.File) error {
 		}
 	}
 
-	final := path.Join(skillDir, name)
+	final := path.Join(parent, name)
 	old := ""
 
 	if _, err := root.Lstat(final); err == nil {
-		old = path.Join(skillDir, ".old-"+randomSuffix())
+		old = path.Join(parent, ".old-"+randomSuffix())
 		if err := root.Rename(final, old); err != nil {
 			cleanup()
 
