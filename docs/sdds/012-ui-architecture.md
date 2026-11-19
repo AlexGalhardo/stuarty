@@ -1977,9 +1977,9 @@ Under `web/resources/js/image-editor/`, one folder per area. `check:thin-client`
 | `state/` | one `zustand` store: the read model (the last `ImageDescribeResult`), the selection, the viewport, the history and the status; a command goes out through `api/` and the answer replaces the read model |
 | `canvas/` | the frame, the viewport maths (zoom, pan, fit: display only), the selection overlay, the handles, the guides, the snapping to the boxes of the read model and the keyboard nudges |
 | `layers/` | the layer panel, a tree |
-| `inspector/` | the fields of the document and of each layer kind |
-| `toolbar/` | the actions that add, arrange, align, undo and redo |
-| `brand/`, `templates/`, `export/`, `history/` | the brand kit swatches, new from template, the export dialog and the list of recent operations |
+| `inspector/` | the fields of the document and of each layer kind, with the brand kit swatches of the colour fields and its families in the font field |
+| `toolbar/` | the actions that add (with "Place logo" of the brand kit), arrange, align, undo and redo |
+| `templates/`, `export/`, `history/` | new from template, the export dialog and the list of recent operations |
 
 ### 24.3 What the screen asks of the service
 
