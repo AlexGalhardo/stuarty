@@ -74,7 +74,11 @@ test.describe("dashboard-navigation", () => {
 		await expect(
 			page.getByRole("button", { name: /Switch to (light|dark) theme/ }),
 		).toBeVisible();
-		await expect(page.getByTestId("right-dock")).toBeEmpty();
+		// The right dock holds the agent chat (epic 14): closed, one button and no panel.
+		await expect(
+			page.getByTestId("right-dock").getByTestId("chat-toggle"),
+		).toBeVisible();
+		await expect(page.getByTestId("chat-panel")).toHaveCount(0);
 	});
 
 	for (const lang of ["en", "pt-BR"] as const) {

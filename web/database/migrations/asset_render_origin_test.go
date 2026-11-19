@@ -5,8 +5,6 @@ import (
 	"slices"
 	"strings"
 	"testing"
-
-	"github.com/AlexGalhardo/vukem/schema"
 )
 
 const renderOriginID = "20261119210000_asset_render_origin"
@@ -50,14 +48,10 @@ func TestAssetRenderOriginMigration(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Later epics add migrations after this one (the texts of epic 17): they go first, and this one is the last
-	// that is undone.
-	all := All()
-	at := slices.IndexFunc(all, func(m schema.Migration) bool { return m.ID == renderOriginID })
-
-	rolled, err := m.Rollback(ctx, len(all)-at)
-	if err != nil || at < 0 || len(rolled) != len(all)-at || rolled[len(rolled)-1] != renderOriginID {
-		t.Fatalf("Rollback = %v, %v", rolled, err)
+	// The migrations that came after this one (the chat tables of epic 14, the texts of epic 17) come off first.
+	want := downTo(renderOriginID)
+	if rolled, err := m.Rollback(ctx, len(want)); err != nil || !slices.Equal(rolled, want) {
+		t.Fatalf("Rollback = %v, %v; want %v", rolled, err, want)
 	}
 
 	got = columns(t, db, "asset_info")

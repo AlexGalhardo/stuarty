@@ -119,6 +119,20 @@ var Scopes = map[string]string{
 	"KeyList":             ScopeRead,
 	"KeyRevoke":           ScopeRead,
 
+	// The hosted agent chat (SDD-017 section 10). The operations that act are also for a person only: that is
+	// checked before the scope.
+	"AgentProfileList":     ScopeRead,
+	"AgentProfileSet":      ScopeAdmin,
+	"AgentProfileRemove":   ScopeAdmin,
+	"ChatSessionStart":     ScopeEdit,
+	"ChatSend":             ScopeEdit,
+	"ChatCancel":           ScopeEdit,
+	"ChatAnswerPermission": ScopeEdit,
+	"ChatSessionDelete":    ScopeEdit,
+	"ChatSessionList":      ScopeRead,
+	"ChatSessionGet":       ScopeRead,
+	"ChatTranscriptGet":    ScopeRead,
+
 	"ProjectDescribe":    ScopeRead,
 	"ProjectDuplicate":   ScopeEdit,
 	"ProjectItemAdd":     ScopeEdit,

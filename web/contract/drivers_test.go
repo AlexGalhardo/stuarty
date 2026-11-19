@@ -190,6 +190,14 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.ConnectionRemove)
 	case "ConnectionTest":
 		return invoke(ctx, s, svc.ConnectionTest)
+	case "AgentProfileList":
+		return invoke(ctx, s, svc.AgentProfileList)
+	case "ChatSessionList":
+		return invoke(ctx, s, svc.ChatSessionList)
+	case "ChatSessionGet":
+		return invoke(ctx, s, svc.ChatSessionGet)
+	case "ChatTranscriptGet":
+		return invoke(ctx, s, svc.ChatTranscriptGet)
 	case "SocialNetworkList":
 		return invoke(ctx, s, svc.SocialNetworkList)
 	case "SocialConnectBegin":
@@ -1027,6 +1035,14 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 			"--kind", c.Kind, "--label", c.Label, "--endpoint", c.Endpoint, "--accepts", strings.Join(c.Accepts, ","),
 			"--hosts", strings.Join(c.Hosts, ","),
 		}, c.Secret, nil
+	case "AgentProfileList":
+		return "agent:profiles", nil, "", nil
+	case "ChatSessionList":
+		return "chat:sessions", flag("project", a.ProjectID), "", nil
+	case "ChatSessionGet":
+		return "chat:session", []string{a.ID}, "", nil
+	case "ChatTranscriptGet":
+		return "chat:transcript", []string{a.ID}, "", nil
 	case "SocialNetworkList":
 		return "social:network:list", nil, "", nil
 	case "SocialAccountList":

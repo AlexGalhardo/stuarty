@@ -37,6 +37,7 @@ func All() []schema.Migration {
 		m20261119140100JobsWaitingApproval(),
 		m20261119150000AssetLibrary(),
 		m20261119210000AssetRenderOrigin(),
-		m20261119220000TextRevisions(),
+		m20261119220000CreateChatTables(),
+		m20261119240000TextRevisions(),
 	}
 }
