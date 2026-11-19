@@ -230,7 +230,7 @@ type Service interface {
 // section 3). The hub that carries it is the business of the events task; the
 // service only calls Options.Publish.
 type Event struct {
-	// Type is "batch.committed", "project.updated", "job.updated" or
+	// Type is "batch.committed", "project.updated", "nested.updated", "job.updated" or
 	// "asset.updated".
 	Type        string
 	ProjectID   string
@@ -242,13 +242,15 @@ type Event struct {
 
 	// The members below are set by job.updated and asset.updated, which are
 	// not replayable and carry no revision.
-	JobID    string
-	AssetID  string // the asset id of this project, for asset.updated
-	State    string
-	Progress float64
-	Message  string
-	Error    *Error
-	Result   *JobResult
+	JobID   string
+	AssetID string // the asset id of this project, for asset.updated
+	// TimelineID is the timeline that changed, for nested.updated: ProjectID is then a timeline that holds it.
+	TimelineID string
+	State      string
+	Progress   float64
+	Message    string
+	Error      *Error
+	Result     *JobResult
 	// Approval is the request of approval.requested and approval.decided (SDD-015 section 7), and
 	// Owner the user it belongs to in network mode, so that a member's stream carries their own only.
 	Approval *approval.Request

@@ -154,3 +154,17 @@ func checkDepth(g Graph, host string, below int) *Nesting {
 
 	return nil
 }
+
+// CheckDocument says whether the document d, as it will be stored, keeps both rules for every timeline its
+// compositions name: the check a caller runs after any change that does not go through clip.add_composition
+// (undo, redo, a revert, a paste). g answers for the other timelines; d is the host. The first broken rule is
+// returned with the timeline that breaks it, nil when the document is sound.
+func CheckDocument(g Graph, d *Document) (*Nesting, string) {
+	for _, child := range CompositionTimelines(d) {
+		if n := CheckPlacement(g, d.ID, child); n != nil {
+			return n, child
+		}
+	}
+
+	return nil, ""
+}

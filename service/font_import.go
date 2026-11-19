@@ -276,8 +276,10 @@ func fontFingerprint(doc *timeline.Document) string {
 
 // framesFor is the frame maker of the workspace with the font set of doc: the user fonts of a
 // document are read by hash from the workspace, so the maker is made for each document.
-func (s *svc) framesFor(doc *timeline.Document) *frame.Frames {
+func (s *svc) framesFor(doc *timeline.Document, nested map[string]*timeline.Document) *frame.Frames {
 	f := *s.media.Frames
+	f.Nested = nested
+
 	if f.Fonts == nil {
 		f.Fonts = s.fontSet(doc)
 	}
