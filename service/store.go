@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 
+	"github.com/AlexGalhardo/stuarty/service/assets"
 	"github.com/AlexGalhardo/stuarty/service/connections"
 )
 
@@ -67,6 +68,7 @@ type Repos interface {
 	BrandKit() BrandKitRepo
 	Images() ImageRepo
 	Connections() connections.Store
+	Library() assets.Store
 }
 
 // Tx is a write transaction.

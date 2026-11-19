@@ -28,6 +28,7 @@ import (
 // failure and never a partial result with a non-nil error.
 type Service interface {
 	ProductionService
+	AssetLibraryService
 
 	ProjectList(ctx context.Context, req ProjectListRequest) (*ProjectListResult, error)
 	ProjectCreate(ctx context.Context, req ProjectCreateRequest) (*ProjectCreateResult, error)

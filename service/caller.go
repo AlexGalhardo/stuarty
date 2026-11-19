@@ -120,6 +120,11 @@ var Scopes = map[string]string{
 	"ConnectionCreate":   ScopeAdmin,
 	"ConnectionRemove":   ScopeAdmin,
 	"ConnectionTest":     ScopeAdmin,
+
+	"AssetGet":     ScopeRead,
+	"AssetUses":    ScopeRead,
+	"AssetSetInfo": ScopeMedia,
+	"AssetTag":     ScopeMedia,
 }
 
 // authorize checks the caller first, as every method does: a missing caller
