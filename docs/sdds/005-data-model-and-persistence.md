@@ -201,16 +201,20 @@ The repositories of this section operate on `timelines` (section 5.2); the Go na
 ```go
 type ProductionRepo interface {
 	List(ctx context.Context, q ProductionQuery) (items []ProductionHead, next string, err error)
+	Count(ctx context.Context, q ProductionQuery) (int, error)
 	Get(ctx context.Context, id string) (ProductionHead, error)
 	Create(ctx context.Context, h ProductionHead) error // ErrExists
+	// SetState writes the state and mirrors it on the rows of the timelines of the active timeline items.
 	SetState(ctx context.Context, id string, st ProjectState, by string, atMs int64) error
 	Touch(ctx context.Context, id string, atMs int64) error
+	Delete(ctx context.Context, id string) error // cascades the items; the caller deletes the timeline rows first; emptying only
 	Items(ctx context.Context, projectID string) ([]ItemRow, error) // by position
 	Item(ctx context.Context, itemID string) (ItemRow, error)
-	CreateItem(ctx context.Context, it ItemRow) error
-	UpdateItem(ctx context.Context, it ItemRow) error
+	CreateItem(ctx context.Context, it ItemRow) error // ErrExists for a second active brief
+	UpdateItem(ctx context.Context, it ItemRow) error // title, body, state, times
+	SetPositions(ctx context.Context, projectID string, ids []string) error // numbers the items 0 to n-1 in this order
 	ProjectOfTimeline(ctx context.Context, timelineID string) (projectID string, err error)
-	DeleteTimelineRows(ctx context.Context, projectID string) error // emptying only
+	ActiveTimelines(ctx context.Context, projectID string) ([]TimelineRef, error) // by position
 }
 ```
 

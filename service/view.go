@@ -29,7 +29,7 @@ const (
 // ViewFrame renders one frame of the current revision through the export
 // executor (SDD-003 section 2.7).
 func (s *svc) ViewFrame(ctx context.Context, req ViewFrameRequest) (*ViewResult, error) {
-	v, err := s.beginView(ctx, "ViewFrame", req.ProjectID, req.Pin)
+	v, err := s.beginView(ctx, "ViewFrame", req.ProjectID, req.TimelineID, req.Pin)
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +116,7 @@ func (s *svc) ViewFrame(ctx context.Context, req ViewFrameRequest) (*ViewResult,
 
 // ViewSheet renders a contact sheet of the current revision (SDD-003 section 3.11).
 func (s *svc) ViewSheet(ctx context.Context, req ViewSheetRequest) (*ViewResult, error) {
-	v, err := s.beginView(ctx, "ViewSheet", req.ProjectID, req.Pin)
+	v, err := s.beginView(ctx, "ViewSheet", req.ProjectID, req.TimelineID, req.Pin)
 	if err != nil {
 		return nil, err
 	}
@@ -208,9 +208,13 @@ func pinMismatch(current int64) *Error {
 		withDetail("current_revision", current)
 }
 
-func (s *svc) beginView(ctx context.Context, method, projectID string, pin int64) (*view, error) {
+func (s *svc) beginView(ctx context.Context, method, projectID, timelineID string, pin int64) (*view, error) {
 	c, err := authorize(ctx, method, projectID)
 	if err != nil {
+		return nil, err
+	}
+
+	if err := s.useTimeline(ctx, c, &projectID, timelineID); err != nil {
 		return nil, err
 	}
 
