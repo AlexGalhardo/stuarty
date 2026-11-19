@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"sync"
 	"testing"
 )
@@ -348,5 +349,45 @@ func TestNoTemporaryFileIsLeftBehind(t *testing.T) {
 
 	if len(entries) != 1 {
 		t.Errorf("the folder has %d files, want only the vault", len(entries))
+	}
+}
+
+func TestRedactReplacesSecretsAndTheMasterKey(t *testing.T) {
+	t.Parallel()
+
+	v, p := newVault(t)
+	if err := v.Put("con_a", []byte("a-long-enough-secret")); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := v.Put("con_b", []byte("short")); err != nil {
+		t.Fatal(err)
+	}
+
+	key, err := p.Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	text := "token=a-long-enough-secret b64=" + FormatKey([]byte("a-long-enough-secret")) +
+		" key=" + FormatKey(key) + " short=short"
+
+	got := string(v.Redact([]byte(text)))
+
+	for _, leak := range []string{"a-long-enough-secret", FormatKey([]byte("a-long-enough-secret")), FormatKey(key)} {
+		if strings.Contains(got, leak) {
+			t.Errorf("%q survived: %s", leak, got)
+		}
+	}
+
+	// A secret under eight bytes would shred the text it is in; it is left alone.
+	if !strings.Contains(got, "short=short") {
+		t.Errorf("a short secret was replaced: %s", got)
+	}
+
+	// A vault that cannot be opened still redacts nothing it cannot read, and does not fail.
+	locked := Open(v.Path(), NewMemoryProvider(nil))
+	if out := string(locked.Redact([]byte(text))); out != text {
+		t.Errorf("a locked vault changed the text: %s", out)
 	}
 }

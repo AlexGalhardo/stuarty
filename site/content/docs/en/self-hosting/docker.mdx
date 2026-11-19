@@ -84,6 +84,17 @@ If you see it, republish the port on `127.0.0.1`, or terminate TLS in the server
 
 For any use other than `localhost` (another machine, a domain name), set `APP_URL` to the public `https` address and put TLS in front: see [Put Caddy in front](/docs/self-hosting/caddy).
 
+## The key of the credential vault
+
+When you connect an account (the Connections page), Stuarty keeps its credential in an encrypted file, `vault.json`, in the workspace. The key that opens it is never in the workspace, so a copy of the volume reveals no credential. Give the container the key once, as a Docker secret:
+
+```bash
+openssl rand -base64 32 > master.key
+docker run -d --name stuarty   -v stuarty:/data   -v "$PWD/master.key:/run/secrets/master_key:ro"   -e STUARTY_MASTER_KEY_FILE=/run/secrets/master_key   ...
+```
+
+`STUARTY_MASTER_KEY` takes the key itself instead of a file. Keep a copy of the key next to your backups: without it the connections cannot be opened and you connect the accounts again (projects and media are not encrypted and are not affected). Nothing is created until the first credential, so a server with no connection needs no key.
+
 ## Common mistakes
 
 - Publishing the port as `-p 7878:7878`, which listens on every interface: a password and a session cookie then cross the network in clear, and the server logs the warning above. Use `127.0.0.1:` unless a proxy with TLS is in front.

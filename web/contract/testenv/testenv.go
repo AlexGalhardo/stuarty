@@ -33,7 +33,9 @@ import (
 	enginestore "github.com/AlexGalhardo/stuarty/engine/store"
 	"github.com/AlexGalhardo/stuarty/engine/transcribe"
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/connections"
 	"github.com/AlexGalhardo/stuarty/service/pathguard"
+	"github.com/AlexGalhardo/stuarty/service/vault"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
 	"github.com/AlexGalhardo/stuarty/web/app/jobs"
 	"github.com/AlexGalhardo/stuarty/web/app/store"
@@ -72,6 +74,9 @@ type Options struct {
 	// is 24576 to 48128 and not 24000 to 48000), for a run that must match the real
 	// binary on a real clip.
 	SilenceBlocks bool
+	// MasterKey gives the workspace a vault whose master key is this one (32 bytes), so a test can
+	// create connections; nil leaves a vault with no key source.
+	MasterKey []byte
 }
 
 // Env is a service with a worker running behind it.
@@ -154,8 +159,17 @@ func New(tb testing.TB, o Options) *Env {
 		media.Frames = realFrames(tb, string(dir))
 	}
 
+	var conns *connections.Manager
+	if o.MasterKey != nil {
+		conns = connections.NewManager(connections.Options{
+			Store: st.Connections(), Now: o.Clock,
+			Vault: vault.Open(filepath.Join(string(dir), connections.VaultFile), vault.NewMemoryProvider(o.MasterKey)),
+		})
+	}
+
 	svc, err := service.New(service.Options{
-		Store: st, Registry: command.Default(), Now: o.Clock, NewIDs: e.newID,
+		Connections: conns,
+		Store:       st, Registry: command.Default(), Now: o.Clock, NewIDs: e.newID,
 		Workspace:   string(dir),
 		Limits:      o.Limits,
 		Transcriber: o.Transcriber,
