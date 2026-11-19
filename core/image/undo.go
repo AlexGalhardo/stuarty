@@ -23,6 +23,8 @@ func ApplyPrimitives(doc *Document, prims []command.Primitive, guard command.Gua
 	base := Flatten(doc)
 	live, skipped := filterPrimitives(base, prims, guard)
 
+	known := baselineViolations(doc)
+
 	var after *Document
 
 	for {
@@ -31,7 +33,7 @@ func ApplyPrimitives(doc *Document, prims []command.Primitive, guard command.Gua
 			applyToFlat(&work, lp.p)
 		}
 
-		next, vs := finishFlat(work)
+		next, vs := finishFlat(work, known)
 		if len(vs) == 0 {
 			after = next
 
@@ -64,6 +66,11 @@ func ApplyPrimitives(doc *Document, prims []command.Primitive, guard command.Gua
 		}
 
 		live = kept
+		if len(live) == 0 { // nothing is left to apply: the document stays as it is, and the loop ends here
+			after = Clone(doc)
+
+			break
+		}
 	}
 
 	slices.SortStableFunc(skipped, func(a, b command.Skipped) int { return a.PrimitiveIndex - b.PrimitiveIndex })
@@ -104,14 +111,33 @@ func cloneFlat(f Flat) Flat {
 	return out
 }
 
-// finishFlat rebuilds the document and checks it.
-func finishFlat(f Flat) (*Document, []Violation) {
+// baselineViolations are the violations the document had before the undo: they are not the undo's doing, so
+// they neither fail it nor make it loop.
+func baselineViolations(d *Document) map[string]bool {
+	known := map[string]bool{}
+	for _, v := range Validate(d) {
+		known[v.Code+" "+v.Path+" "+v.Layer] = true
+	}
+
+	return known
+}
+
+// finishFlat rebuilds the document and checks it, leaving out the violations in known.
+func finishFlat(f Flat, known map[string]bool) (*Document, []Violation) {
 	d, err := Unflatten(f)
 	if err != nil {
 		return nil, []Violation{{Code: "structure", Path: "layers", Message: err.Error()}}
 	}
 
-	return d, Validate(d)
+	var vs []Violation
+
+	for _, v := range Validate(d) {
+		if !known[v.Code+" "+v.Path+" "+v.Layer] {
+			vs = append(vs, v)
+		}
+	}
+
+	return d, vs
 }
 
 func collection(f *Flat, name string) map[string]map[string]any {
