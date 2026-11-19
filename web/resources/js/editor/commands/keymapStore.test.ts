@@ -173,9 +173,16 @@ describe("rebinding", () => {
 		expect(findConflict("split", "Mod+W")).toBe("reserved");
 	});
 
-	test("two rows of scopes that never overlap may share a key", () => {
-		expect(findConflict("play_pause", "Left")).toBeNull();
-		expect(findConflict("step_back", "Space")).toBeNull();
+	// The player and the timeline both listen at the window: a key shared by
+	// one of each would run both actions with one press.
+	test("a timeline row and a player row may not share a key", () => {
+		expect(findConflict("play_pause", "Left")).toBe("step_back");
+		expect(findConflict("step_back", "Space")).toBe("play_pause");
+		expect(rebind("split", "K")).toEqual({ ok: false, conflict: "pause" });
+		expect(rebind("shuttle_play", "B")).toEqual({
+			ok: false,
+			conflict: "tool_blade",
+		});
 	});
 
 	test("a row never conflicts with its own key or its own aliases", () => {
