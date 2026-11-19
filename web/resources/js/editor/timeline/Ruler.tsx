@@ -7,6 +7,7 @@ import {
 } from "react";
 
 import { useT } from "@/lib/i18n";
+import { rowFor } from "../commands/keymapStore";
 import { formatTime } from "../commands/units";
 import { readTimeDisplay } from "../state/prefs";
 import {
@@ -115,28 +116,28 @@ export default function Ruler(props: RulerProps): ReactNode {
 		onSeek(clientXToFrame(event.clientX, rect.left, scrollLeft, ppf));
 	};
 
+	// The slider keys are rows of the registry (SDD-012 section 18.9): a frame
+	// or a second back and forward, the start and the end. Mod+Shift+arrows are
+	// the markers' and are read by the timeline.
 	const onKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
-		// Mod+Shift+arrows jump between markers (the shortcut of the timeline).
-		if (event.ctrlKey || event.metaKey) return;
 		const second = framesPerSecond(fps);
-		const delta = event.shiftKey ? second : 1;
-		switch (event.key) {
-			case "ArrowLeft":
-				onSeek(clampPlayhead(playheadFrame - delta));
+		switch (rowFor(event.nativeEvent, ["timeline"])) {
+			case "step_back":
+				onSeek(clampPlayhead(playheadFrame - 1));
 				break;
-			case "ArrowRight":
-				onSeek(clampPlayhead(playheadFrame + delta));
+			case "step_forward":
+				onSeek(clampPlayhead(playheadFrame + 1));
 				break;
-			case "PageDown":
+			case "step_second_back":
 				onSeek(clampPlayhead(playheadFrame - second));
 				break;
-			case "PageUp":
+			case "step_second_forward":
 				onSeek(clampPlayhead(playheadFrame + second));
 				break;
-			case "Home":
+			case "go_start":
 				onSeek(0);
 				break;
-			case "End":
+			case "go_end":
 				onSeek(clampPlayhead(endFrame));
 				break;
 			default:

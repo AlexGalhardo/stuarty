@@ -96,6 +96,7 @@ var catalogues = map[string]map[string]string{
 		TextMenuPanelInspect: "Inspector panel",
 		TextMenuPanelHistory: "History panel",
 		TextMenuShortcuts:    "Keyboard shortcuts",
+		TextMenuTour:         "Take the tour",
 	},
 	"pt-BR": {
 		TextFile:          "Arquivo",
@@ -162,6 +163,7 @@ var catalogues = map[string]map[string]string{
 		TextMenuPanelInspect: "Painel do inspetor",
 		TextMenuPanelHistory: "Painel de histórico",
 		TextMenuShortcuts:    "Atalhos de teclado",
+		TextMenuTour:         "Fazer o tour",
 	},
 }
 

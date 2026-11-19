@@ -88,8 +88,10 @@ function Body({
 	};
 
 	if (root.kind !== "object") {
+		// A command with no arguments (animation.list_presets) still has its form,
+		// an empty one: the root carries the same marker as a form with fields.
 		return (
-			<p className="text-sm text-muted-foreground">
+			<p className="text-sm text-muted-foreground" data-form={command.name}>
 				{t("ui.editor.palette.no_arguments")}
 			</p>
 		);
