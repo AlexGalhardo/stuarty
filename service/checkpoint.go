@@ -166,7 +166,7 @@ func (s *svc) checkpointScope(
 	timelineID string,
 	write bool,
 ) (Caller, ProjectHead, error) {
-	c, err := authorize(ctx, method, *projectID)
+	c, err := s.authorizeProject(ctx, method, *projectID)
 	if err != nil {
 		return Caller{}, ProjectHead{}, err
 	}
