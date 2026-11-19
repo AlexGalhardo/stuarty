@@ -44,7 +44,8 @@ Only a person in the app can set a price, because a lower price would lower ever
 <Tab title="CLI">
 
 ```bash
-echo $OPENAI_API_KEY | stuarty connection:add --kind openai --label OpenAI --endpoint https://api.openai.com/v1 --accepts text
+# the base address is on the page of the provider that explains its API
+echo $OPENAI_API_KEY | stuarty connection:add --kind openai --label OpenAI --endpoint <base address of the API> --accepts text
 stuarty provider:models con_0123456789
 stuarty text:generate --project prj_7k2m9x4q1b --connection con_0123456789 --model a-model --prompt "Write a caption" --dry-run
 ```
