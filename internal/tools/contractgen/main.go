@@ -75,28 +75,11 @@ func run(out string) error {
 	if err := write(filepath.Join(out, "lint-rules.json"), lintRules()); err != nil {
 		return err
 	}
-	if err := write(filepath.Join(out, "audio-processors.json"), audioProcessors()); err != nil {
-		return err
-	}
 	return write(filepath.Join(out, "limits.json"), map[string]any{
 		"tracks": timeline.MaxTracks, "items": timeline.MaxItems, "assets": timeline.MaxAssets,
 		"caption_words": timeline.MaxCaptionWords, "words_per_caption": 60, "keyframes_per_property": 100,
 		"max_frames": timeline.MaxFrames, "batch_operations": 200, "batch_bytes": 512 * 1024,
 	})
-}
-
-// audioProcessors is the table of the audio processors as data for the surfaces (SDD-004 section 7.1): the kinds, the
-// name, unit, range and default of each parameter, the presets and the longest chain, so that the inspector draws its
-// controls from the core and states no range of its own.
-func audioProcessors() map[string]any {
-	var kinds []map[string]any
-	for _, kind := range timeline.ProcessorKinds {
-		kinds = append(kinds, map[string]any{"kind": kind, "params": timeline.ProcessorParams(kind)})
-	}
-	return map[string]any{
-		"max_processors": timeline.MaxProcessors, "min_profile_ms": timeline.MinProfileMS, "kinds": kinds,
-		"presets": timeline.Presets,
-	}
 }
 
 // lintRules is the rule table of core/lint as data for the surfaces: the code, the

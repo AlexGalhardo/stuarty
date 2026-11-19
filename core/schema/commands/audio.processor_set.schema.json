@@ -21,7 +21,317 @@
         "type": "number"
       },
       "description": "Values to change; the others stay.",
-      "type": "object"
+      "type": "object",
+      "x-vv-max-processors": 12,
+      "x-vv-processors": [
+        {
+          "kind": "eq",
+          "params": [
+            {
+              "default": 0,
+              "max": 1000,
+              "min": 0,
+              "min_on": 20,
+              "name": "hp_hz",
+              "off_zero": true,
+              "unit": "Hz"
+            },
+            {
+              "default": 0,
+              "max": 20000,
+              "min": 0,
+              "min_on": 1000,
+              "name": "lp_hz",
+              "off_zero": true,
+              "unit": "Hz"
+            },
+            {
+              "default": 100,
+              "max": 20000,
+              "min": 20,
+              "name": "b1_hz",
+              "unit": "Hz"
+            },
+            {
+              "default": 0,
+              "max": 24,
+              "min": -24,
+              "name": "b1_gain_db",
+              "unit": "dB"
+            },
+            {
+              "default": 1,
+              "max": 18,
+              "min": 0.1,
+              "name": "b1_q",
+              "unit": "Q"
+            },
+            {
+              "default": 250,
+              "max": 20000,
+              "min": 20,
+              "name": "b2_hz",
+              "unit": "Hz"
+            },
+            {
+              "default": 0,
+              "max": 24,
+              "min": -24,
+              "name": "b2_gain_db",
+              "unit": "dB"
+            },
+            {
+              "default": 1,
+              "max": 18,
+              "min": 0.1,
+              "name": "b2_q",
+              "unit": "Q"
+            },
+            {
+              "default": 1000,
+              "max": 20000,
+              "min": 20,
+              "name": "b3_hz",
+              "unit": "Hz"
+            },
+            {
+              "default": 0,
+              "max": 24,
+              "min": -24,
+              "name": "b3_gain_db",
+              "unit": "dB"
+            },
+            {
+              "default": 1,
+              "max": 18,
+              "min": 0.1,
+              "name": "b3_q",
+              "unit": "Q"
+            },
+            {
+              "default": 3000,
+              "max": 20000,
+              "min": 20,
+              "name": "b4_hz",
+              "unit": "Hz"
+            },
+            {
+              "default": 0,
+              "max": 24,
+              "min": -24,
+              "name": "b4_gain_db",
+              "unit": "dB"
+            },
+            {
+              "default": 1,
+              "max": 18,
+              "min": 0.1,
+              "name": "b4_q",
+              "unit": "Q"
+            },
+            {
+              "default": 6000,
+              "max": 20000,
+              "min": 20,
+              "name": "b5_hz",
+              "unit": "Hz"
+            },
+            {
+              "default": 0,
+              "max": 24,
+              "min": -24,
+              "name": "b5_gain_db",
+              "unit": "dB"
+            },
+            {
+              "default": 1,
+              "max": 18,
+              "min": 0.1,
+              "name": "b5_q",
+              "unit": "Q"
+            },
+            {
+              "default": 10000,
+              "max": 20000,
+              "min": 20,
+              "name": "b6_hz",
+              "unit": "Hz"
+            },
+            {
+              "default": 0,
+              "max": 24,
+              "min": -24,
+              "name": "b6_gain_db",
+              "unit": "dB"
+            },
+            {
+              "default": 1,
+              "max": 18,
+              "min": 0.1,
+              "name": "b6_q",
+              "unit": "Q"
+            }
+          ]
+        },
+        {
+          "kind": "compressor",
+          "params": [
+            {
+              "default": -18,
+              "max": 0,
+              "min": -60,
+              "name": "threshold_db",
+              "unit": "dBFS"
+            },
+            {
+              "default": 3,
+              "max": 20,
+              "min": 1,
+              "name": "ratio",
+              "unit": "ratio"
+            },
+            {
+              "default": 10,
+              "max": 200,
+              "min": 0.1,
+              "name": "attack_ms",
+              "unit": "ms"
+            },
+            {
+              "default": 100,
+              "max": 2000,
+              "min": 5,
+              "name": "release_ms",
+              "unit": "ms"
+            },
+            {
+              "default": 6,
+              "max": 24,
+              "min": 0,
+              "name": "knee_db",
+              "unit": "dB"
+            },
+            {
+              "default": 0,
+              "max": 24,
+              "min": -12,
+              "name": "makeup_db",
+              "unit": "dB"
+            }
+          ]
+        },
+        {
+          "kind": "limiter",
+          "params": [
+            {
+              "default": -1,
+              "max": 0,
+              "min": -20,
+              "name": "ceiling_db",
+              "unit": "dBFS"
+            },
+            {
+              "default": 50,
+              "max": 1000,
+              "min": 1,
+              "name": "release_ms",
+              "unit": "ms"
+            }
+          ]
+        },
+        {
+          "kind": "gate",
+          "params": [
+            {
+              "default": -50,
+              "max": 0,
+              "min": -80,
+              "name": "threshold_db",
+              "unit": "dBFS"
+            },
+            {
+              "default": -40,
+              "max": 0,
+              "min": -80,
+              "name": "range_db",
+              "unit": "dB"
+            },
+            {
+              "default": 2,
+              "max": 100,
+              "min": 0.1,
+              "name": "attack_ms",
+              "unit": "ms"
+            },
+            {
+              "default": 50,
+              "max": 1000,
+              "min": 0,
+              "name": "hold_ms",
+              "unit": "ms"
+            },
+            {
+              "default": 150,
+              "max": 2000,
+              "min": 5,
+              "name": "release_ms",
+              "unit": "ms"
+            }
+          ]
+        },
+        {
+          "kind": "deesser",
+          "params": [
+            {
+              "default": 6500,
+              "max": 12000,
+              "min": 2000,
+              "name": "frequency_hz",
+              "unit": "Hz"
+            },
+            {
+              "default": -30,
+              "max": 0,
+              "min": -60,
+              "name": "threshold_db",
+              "unit": "dBFS"
+            },
+            {
+              "default": 4,
+              "max": 20,
+              "min": 1,
+              "name": "ratio",
+              "unit": "ratio"
+            }
+          ]
+        },
+        {
+          "kind": "noise_reduction",
+          "params": [
+            {
+              "default": 0.5,
+              "max": 1,
+              "min": 0,
+              "name": "strength",
+              "unit": "fraction"
+            },
+            {
+              "default": 0,
+              "max": 3600000,
+              "min": 0,
+              "name": "profile_start_ms",
+              "unit": "ms"
+            },
+            {
+              "default": 0,
+              "max": 3600000,
+              "min": 0,
+              "name": "profile_end_ms",
+              "unit": "ms"
+            }
+          ]
+        }
+      ]
     },
     "track_id": {
       "description": "A track; give this or item_id.",

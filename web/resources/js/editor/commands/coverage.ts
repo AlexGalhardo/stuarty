@@ -100,6 +100,13 @@ export const ACTIONS: Readonly<Record<string, readonly string[]>> = {
 	"inspector.blur": ["clip.set_blur"],
 	"inspector.duck": ["audio.duck"],
 	"inspector.mark_beats": ["audio.mark_beats"],
+	"inspector.audio_processors": [
+		"audio.processor_add",
+		"audio.processor_set",
+		"audio.processor_move",
+		"audio.processor_remove",
+		"audio.apply_preset",
+	],
 	"inspector.font_add": ["font.add"],
 	"inspector.font_remove": ["font.remove"],
 	"topbar.rename": ["project.rename"],
@@ -138,12 +145,27 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 		{ kind: "gesture", action: "library.drag" },
 		palette,
 	],
-	"audio.apply_preset": [palette],
+	"audio.apply_preset": [
+		{ kind: "inspector", action: "inspector.audio_processors" },
+		palette,
+	],
 	"audio.duck": [{ kind: "inspector", action: "inspector.duck" }, palette],
-	"audio.processor_add": [palette],
-	"audio.processor_move": [palette],
-	"audio.processor_remove": [palette],
-	"audio.processor_set": [palette],
+	"audio.processor_add": [
+		{ kind: "inspector", action: "inspector.audio_processors" },
+		palette,
+	],
+	"audio.processor_move": [
+		{ kind: "inspector", action: "inspector.audio_processors" },
+		palette,
+	],
+	"audio.processor_remove": [
+		{ kind: "inspector", action: "inspector.audio_processors" },
+		palette,
+	],
+	"audio.processor_set": [
+		{ kind: "inspector", action: "inspector.audio_processors" },
+		palette,
+	],
 	"audio.mark_beats": [
 		{ kind: "inspector", action: "inspector.mark_beats" },
 		palette,

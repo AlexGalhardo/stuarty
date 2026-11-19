@@ -87,6 +87,13 @@ import {
 	unlinkOperations,
 } from "./builders";
 import { ACTIONS, ANY_COMMAND, COVERAGE, type EntryPoint } from "./coverage";
+import {
+	applyPresetOperations,
+	processorAddOperations,
+	processorMoveOperations,
+	processorRemoveOperations,
+	processorSetOperations,
+} from "./processorBuilders";
 
 interface RegistryEntry {
 	name: string;
@@ -481,6 +488,17 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 				label: "",
 				replace: true,
 			}).map((o) => o.op),
+			"inspector.audio_processors": processorAddOperations(
+				{ itemId: "itm_a" },
+				"gate",
+			)
+				.concat(
+					processorSetOperations({ itemId: "itm_a" }, 0, { enabled: false }),
+				)
+				.concat(processorMoveOperations({ trackId: "trk_a" }, 1, 0))
+				.concat(processorRemoveOperations({ itemId: "itm_a" }, 0))
+				.concat(applyPresetOperations({ itemId: "itm_a" }, "voice"))
+				.map((o) => o.op),
 			"inspector.font_add": fontAddOperations("Brand Sans", [
 				{ weight: 400, hash: `sha256:${"a".repeat(64)}` },
 			]).map((o) => o.op),
