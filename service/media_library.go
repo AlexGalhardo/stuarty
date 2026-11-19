@@ -132,7 +132,9 @@ func (s *svc) reuseFile(
 			return aerr
 		}
 
-		return assets.RecordImport(ctx, tx.AssetLibrary(), hash, asset.Origin{Kind: asset.Imported}, rec.info, c.Actor, now)
+		return assets.RecordImport(
+			ctx, tx.AssetLibrary(), hash, asset.Origin{Kind: asset.Imported}, rec.info, c.Actor, now,
+		)
 	})
 	if werr != nil {
 		if isNotFound(werr) {
