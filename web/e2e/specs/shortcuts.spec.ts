@@ -38,6 +38,8 @@ test.describe("shortcuts", () => {
 		// A key that another row holds is refused and names that row.
 		const split = dialog.locator('[data-shortcut-key="split"]');
 		await split.click();
+		// The button says it waits for a key, to a screen reader too.
+		await expect(split).toHaveAccessibleName("Press a key");
 		await split.press("c");
 		await expect(dialog.getByRole("alert")).toContainText("Add caption");
 		await expect(split).toContainText(/(Ctrl|Cmd)\+B/);
