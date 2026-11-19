@@ -213,6 +213,20 @@ These are the decisions of the implementation (task P1-ENG-001) that Part A leav
    - `caption.add` with `text` refuses a word of more than 80 characters with `E_VALIDATION`; the error codes of `track.remove` are `E_NOT_FOUND` and `E_NOT_EMPTY` (there is no schema error to report).
    - The `order` strings, the seconds in hints and the messages in Part C are examples; the golden files hold the real ones.
 
+### A.13 Export presets and the fit check (`core/export`)
+
+The rules of exporting for a network are pure and live in `core/export`, not in a handler: the table of presets (SDD-004 section 8.2), `Check` and the codec names. No command is added to the registry and the document is never changed: a preset does not edit the timeline, it says whether the timeline as it is fits a network. `Check(preset, input)` takes the pixels, the frame rate, the duration in milliseconds and, when the file exists, its size in bytes, and returns the findings below in a fixed order (duration, frame rate, resolution, aspect ratio, size), each with `code`, `severity`, `message`, `limit` and `got`. A limit of `0` in a preset is not checked. The aspect ratio is compared as a fraction of integers, with the tolerance the preset states.
+
+| Finding code | Raised when |
+| --- | --- |
+| `X_DURATION_TOO_LONG`, `X_DURATION_TOO_SHORT` | the duration is over the maximum or under the minimum of the preset |
+| `X_FPS_TOO_HIGH`, `X_FPS_TOO_LOW` | the frame rate is over or under the preset's range |
+| `X_RESOLUTION_TOO_SMALL`, `X_RESOLUTION_TOO_LARGE` | a side, or the width, is outside the preset's range |
+| `X_ASPECT_RATIO` | the width over the height is outside the preset's range |
+| `X_SIZE_TOO_LARGE` | the file, or the estimate of it (the targets of the preset times the duration), is over the maximum |
+
+These are findings of a check, not errors of a call: they travel in the result of `ExportCheck` and, when an export is refused for them, in `details.findings` of `E_VALIDATION` with `details.reason = "preset_mismatch"`. They are listed in SDD-000 section 15.
+
 ## Part B: the catalogue
 
 Scope is `edit` unless stated. "Time" marks arguments parsed by A.4. Optional arguments are written with `?`.
