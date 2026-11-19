@@ -34,7 +34,8 @@ func (s *svc) imageEnv(ctx context.Context, tx Repos, c Caller, ids func(string)
 	return coreimage.Env{
 		NewIDs: ids,
 		Asset: func(hash string) (coreimage.AssetInfo, bool) {
-			if !allowed(hash) {
+			scoped, ok := allowed(hash)
+			if !ok {
 				return coreimage.AssetInfo{}, false
 			}
 
@@ -44,8 +45,13 @@ func (s *svc) imageEnv(ctx context.Context, tx Repos, c Caller, ids func(string)
 				return coreimage.AssetInfo{}, false
 			}
 
+			name := row.OriginalName
+			if scoped != "" {
+				name = scoped
+			}
+
 			return coreimage.AssetInfo{
-				Name: filepath.Base(row.OriginalName), Width: *row.Facts.Width, Height: *row.Facts.Height,
+				Name: filepath.Base(name), Width: *row.Facts.Width, Height: *row.Facts.Height,
 			}, true
 		},
 		Measure: rasterize.Measure(rasterize.Bundled()),
@@ -56,9 +62,11 @@ func (s *svc) imageEnv(ctx context.Context, tx Repos, c Caller, ids func(string)
 // workspace is the caller own. In network mode the file must be held by a project of the caller, the rule of
 // the asset library (AssetList): a hash alone proves nothing, and the name of the file of another user must not
 // leak through an image. The projects are scanned once, when the first file is asked for.
-func (s *svc) imageAssetAccess(ctx context.Context, c Caller) func(hash string) bool {
+// It also gives the name the file is known by to the caller: in network mode the name of the project entry of
+// the caller, never the global one, which another user may have set.
+func (s *svc) imageAssetAccess(ctx context.Context, c Caller) func(hash string) (string, bool) {
 	if c.OwnerUserID == "" {
-		return func(string) bool { return true }
+		return func(string) (string, bool) { return "", true }
 	}
 
 	var (
@@ -66,7 +74,7 @@ func (s *svc) imageAssetAccess(ctx context.Context, c Caller) func(hash string) 
 		done bool
 	)
 
-	return func(hash string) bool {
+	return func(hash string) (string, bool) {
 		if !done {
 			scan, err := s.libraryScan(ctx, c)
 			if err != nil {
@@ -76,9 +84,12 @@ func (s *svc) imageAssetAccess(ctx context.Context, c Caller) func(hash string) 
 			held, done = scan, true
 		}
 
-		_, ok := held[hash]
+		e, ok := held[hash]
+		if !ok {
+			return "", false
+		}
 
-		return ok
+		return e.name, true
 	}
 }
 
