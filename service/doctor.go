@@ -14,6 +14,7 @@ import (
 
 	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
 	"github.com/AlexGalhardo/stuarty/engine/transcribe"
+	"github.com/AlexGalhardo/stuarty/service/connections"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
 )
 
@@ -316,7 +317,7 @@ func (s *svc) doctorChecks(ctx context.Context, privileged, verify bool) []Docto
 	})
 
 	if privileged {
-		out = append(out, s.environmentCheck())
+		out = append(out, s.environmentCheck(), s.vaultCheck())
 	}
 
 	if verify {
@@ -700,6 +701,29 @@ func (s *svc) environmentCheck() DoctorCheck {
 	}
 
 	return DoctorCheck{Name: "environment", OK: true, Detail: detail}
+}
+
+// vaultCheck says where the master key of the vault comes from and whether it opens the vault
+// (SDD-014 section 8). The owner removes the key variables from its environment, so this check, not
+// environment, is where they show; it names the provider and never a value or a path.
+func (s *svc) vaultCheck() DoctorCheck {
+	st := s.conns.VaultStatus()
+
+	file := "no vault file yet"
+	if st.Exists {
+		file = "vault.json present"
+	}
+
+	check := DoctorCheck{Name: "vault", OK: st.Err == nil, Detail: "master key from " + st.Provider + "; " + file}
+
+	if st.Err != nil {
+		check.Hint = "the vault cannot be read"
+		if _, hint, ok := connections.Locked(st.Err); ok {
+			check.Hint = hint
+		}
+	}
+
+	return check
 }
 
 // sanitizeValue keeps a value on one line and short.

@@ -3,9 +3,10 @@
 // AES-256-GCM under a key derived from a master key that a KeyProvider
 // supplies; the master key is never written into the workspace.
 //
-// Get is not part of service.Service: only service/connections imports this
-// package (internal/tools/importcheck enforces it), so a credential is read
-// inside the closure that makes the outbound call and nowhere else.
+// Get is not part of service.Service: only service/connections calls it, and
+// besides that package only the owner wiring and the contract test environment
+// import this one to build a vault (internal/tools/importcheck enforces it), so a
+// credential is read inside the closure that makes the outbound call and nowhere else.
 package vault
 
 import (
@@ -134,6 +135,31 @@ func (v *Vault) Has(id string) (bool, error) {
 	_, ok := f.Entries[id]
 
 	return ok, nil
+}
+
+// Verify reports whether the vault can be opened, for doctor: nil when there is no file yet or when
+// the master key opens it, else ErrKeyMissing, ErrWrongKey, ErrCorrupt or the error of the provider.
+// It decrypts no entry.
+func (v *Vault) Verify() error {
+	v.mu.Lock()
+	defer v.mu.Unlock()
+
+	f, err := v.read()
+	if err != nil || f == nil {
+		return err
+	}
+
+	key, err := v.masterKey(true)
+	if err != nil {
+		return err
+	}
+
+	ek, err := entryKey(key, f.Salt)
+	if err != nil {
+		return err
+	}
+
+	return openCheck(ek, f.Check)
 }
 
 // Put stores or replaces the secret of an entry.

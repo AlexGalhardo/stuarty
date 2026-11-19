@@ -164,6 +164,41 @@ func TestWrongKeyAndMissingKey(t *testing.T) {
 	}
 }
 
+// Verify is what doctor asks: a vault that is not there yet is fine, and an existing one opens only
+// with the key that made it.
+func TestVerify(t *testing.T) {
+	t.Parallel()
+
+	v, _ := newVault(t)
+	if err := v.Verify(); err != nil {
+		t.Fatalf("a vault with no file: %v", err)
+	}
+
+	if err := v.Put("con_a", []byte("secret")); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := v.Verify(); err != nil {
+		t.Errorf("the right key: %v", err)
+	}
+
+	if err := Open(v.Path(), NewMemoryProvider(newKey(t))).Verify(); !errors.Is(err, ErrWrongKey) {
+		t.Errorf("a wrong key: %v, want ErrWrongKey", err)
+	}
+
+	if err := Open(v.Path(), NoProvider()).Verify(); !errors.Is(err, ErrKeyMissing) {
+		t.Errorf("no key: %v, want ErrKeyMissing", err)
+	}
+
+	if err := os.WriteFile(v.Path(), []byte("{"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := v.Verify(); !errors.Is(err, ErrCorrupt) {
+		t.Errorf("a damaged file: %v, want ErrCorrupt", err)
+	}
+}
+
 func TestCorruptedFile(t *testing.T) {
 	t.Parallel()
 
