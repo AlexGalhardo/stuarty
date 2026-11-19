@@ -1,0 +1,8 @@
+{
+  "code": "E_VALIDATION",
+  "hint": "Add one of shape, fill, stroke_color, stroke_width, radius to the arguments.",
+  "message": "Give at least one of: shape, fill, stroke_color, stroke_width, radius.",
+  "op_index": 0,
+  "path": "args",
+  "retryable": false
+}

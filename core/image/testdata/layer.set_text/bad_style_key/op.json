@@ -1,0 +1,9 @@
+{
+  "args": {
+    "layer_id": "lyr_cccccccccc",
+    "style": {
+      "glow": 1
+    }
+  },
+  "op": "layer.set_text"
+}

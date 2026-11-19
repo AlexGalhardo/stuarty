@@ -1,0 +1,8 @@
+{
+  "code": "E_VALIDATION",
+  "hint": "Add one of text, style, reset_style to the arguments.",
+  "message": "Give at least one of: text, style, reset_style.",
+  "op_index": 0,
+  "path": "args",
+  "retryable": false
+}

@@ -202,3 +202,15 @@ func baseOrCustom(c gcase) *Document {
 
 	return baseDoc()
 }
+
+func TestRegistryIsComplete(t *testing.T) {
+	want := []string{
+		"canvas.resize", "image.create", "layer.add_fill", "layer.add_image", "layer.add_shape", "layer.add_text",
+		"layer.align", "layer.crop", "layer.duplicate", "layer.fit", "layer.group", "layer.move", "layer.remove",
+		"layer.set", "layer.set_shape", "layer.set_text", "layer.transform", "layer.ungroup",
+	}
+
+	if got := Registry().Names(); !slices.Equal(got, want) {
+		t.Errorf("the catalogue is %v, want %v", got, want)
+	}
+}
