@@ -55,8 +55,13 @@ test.describe("history-revert", () => {
 		await expect(checkpoints.getByText("Automatic").first()).toBeVisible();
 
 		// Tick the newest step and the one before the agent: the diff reads in words.
+		// The panel learns of the agent's last step through an event, so wait until
+		// its first row is the revision the server reports.
 		const rows = history.locator("[data-revision]");
-		const newest = Number(await rows.first().getAttribute("data-revision"));
+		const newest = (
+			(await agent("GET", `/projects/${seeded.id}`)) as { revision: number }
+		).revision;
+		await expect(rows.first()).toHaveAttribute("data-revision", String(newest));
 		await history.getByLabel(`Compare r${newest}`).click();
 		await history.getByLabel(`Compare r${newest - 2}`).click();
 		const diff = history.getByTestId("history-diff");
@@ -83,7 +88,16 @@ test.describe("history-revert", () => {
 		await dialog.getByRole("button", { name: "Revert", exact: true }).click();
 		await expect(dialog).toBeHidden();
 		await expect.poll(itemName).toBe("Intro");
-		await expect(rows.first()).toContainText("Reverted to");
+		// The event's row reads "Reverted to r<n>." for a moment; the page of the
+		// history that replaces it lists the step by its operation.
+		await expect(
+			history.getByLabel(`Compare r${newest + 1}`, { exact: true }),
+		).toBeVisible();
+		await expect(rows.first()).toHaveAttribute(
+			"data-revision",
+			String(newest + 1),
+		);
+		await expect(rows.first()).toContainText("history.revert");
 
 		// The revert is a step of the person: Undo takes it back.
 		await page.getByRole("button", { name: "Undo" }).click();
