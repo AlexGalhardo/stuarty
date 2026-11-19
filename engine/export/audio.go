@@ -196,7 +196,7 @@ func (o *audioOpener) Open(ctx context.Context, src plan.AudioSource) (io.ReadCl
 	}
 
 	s := o.s
-	a, ok := s.job.Doc.Assets[src.AssetID]
+	a, ok := s.asset(src.AssetID)
 	if !ok {
 		return nil, fmt.Errorf("the asset %s is not in the document", src.AssetID)
 	}
