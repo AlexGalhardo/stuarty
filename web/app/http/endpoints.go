@@ -423,6 +423,33 @@ var Endpoints = []Endpoint{
 		Summary: "Set or remove a cost ceiling (a person in the browser only; the local token and keys get 403)",
 	},
 	{
+		ID:      "providers.list",
+		Method:  http.MethodGet,
+		Path:    "/providers",
+		Scope:   service.ScopeRead,
+		Service: "ProviderList",
+		Status:  200,
+		Summary: "List the AI providers, the connections of each and the price table",
+	},
+	{
+		ID: "providers.models", Method: http.MethodGet, Path: "/connections/{id}/models", Scope: service.ScopeRead,
+		Service: "ProviderModels", Status: 200, Summary: "Read the current models of a provider through its connection",
+	},
+	{
+		ID: "providers.prices.set", Method: http.MethodPut, Path: "/providers/prices", Scope: service.ScopeAdmin,
+		Service: "ProviderPriceSet", Status: 200,
+		Summary: "Set or remove the price of a model (a person in the browser only; the local token and keys get 403)",
+	},
+	{
+		ID:      "text.generate",
+		Method:  http.MethodPost,
+		Path:    "/text/generate",
+		Scope:   service.ScopeEdit,
+		Service: "TextGenerate",
+		Status:  202,
+		Summary: "Start a text generation with the provider of a connection; the job waits for approval and shows its estimate",
+	},
+	{
 		ID: "library.memory.list", Method: http.MethodGet, Path: "/library/memory", Scope: service.ScopeRead,
 		Service: "MemoryList", Status: 200, Summary: "List the memory notes",
 	},

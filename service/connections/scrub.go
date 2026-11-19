@@ -116,3 +116,12 @@ func SafeMessage(c Credential, body []byte) string {
 
 	return untrusted.Block(untrusted.SourceNetworkText, attrs, string(body), testMessageBudget)
 }
+
+// Echoes reports whether text holds the credential of c, or any eight consecutive bytes of it, in the forms
+// a destination writes it back (as is, HTML, URL and JSON escaped, base64 and hex). A connector that returns
+// text a destination wrote, other than an error body that SafeMessage already checks, asks it before it
+// does, so a destination that echoes the credential does not hand it to a caller (SDD-014 section 9).
+func (c Credential) Echoes(text string) bool { return echoesSecret([]byte(text), c.Secret) }
+
+// EchoedAnswer replaces the text of an answer that echoed the credential.
+const EchoedAnswer = droppedBody
