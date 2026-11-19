@@ -3252,6 +3252,8 @@
           "op": {
             "description": "A command name, as listed by GET /commands.",
             "enum": [
+              "animation.apply_preset",
+              "animation.list_presets",
               "asset.remove",
               "audio.add",
               "audio.duck",
@@ -3336,6 +3338,12 @@
         ],
         "type": "object",
         "x-args-by-op": {
+          "animation.apply_preset": {
+            "$ref": "#/components/schemas/args.animation.apply_preset"
+          },
+          "animation.list_presets": {
+            "$ref": "#/components/schemas/args.animation.list_presets"
+          },
           "asset.remove": {
             "$ref": "#/components/schemas/args.asset.remove"
           },
@@ -5870,6 +5878,66 @@
             "type": "string"
           }
         },
+        "type": "object"
+      },
+      "args.animation.apply_preset": {
+        "additionalProperties": false,
+        "properties": {
+          "amount": {
+            "description": "slide: distance in pixels; scale: factor at the far end; push_in and pull_out: zoom factor. Per preset default.",
+            "type": "number"
+          },
+          "direction": {
+            "description": "slide only: the side it comes from or leaves to. Default left.",
+            "enum": [
+              "left",
+              "right",
+              "up",
+              "down"
+            ],
+            "type": "string"
+          },
+          "duration": {
+            "description": "A length, at most the item's duration. Default 0.5s; the whole item for push_in and pull_out.",
+            "type": "string",
+            "x-vv-kind": "time"
+          },
+          "edge": {
+            "description": "in animates the start of the item, out its end. Default in.",
+            "enum": [
+              "in",
+              "out"
+            ],
+            "type": "string"
+          },
+          "item_id": {
+            "description": "A clip, text, caption or shape item.",
+            "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          },
+          "preset": {
+            "description": "The animation.",
+            "enum": [
+              "fade",
+              "slide",
+              "scale",
+              "pop",
+              "push_in",
+              "pull_out"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "item_id",
+          "preset"
+        ],
+        "type": "object"
+      },
+      "args.animation.list_presets": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
         "type": "object"
       },
       "args.asset.remove": {

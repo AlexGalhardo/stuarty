@@ -31,7 +31,7 @@ These are the annotations of the tool definition, the hints a client uses to dec
 | `timeline_id` | `string` | no | pattern `^prj_[0-9a-hjkmnp-tv-z]{10}$` |
 | `base_revision` | `integer` | yes | min 0 |
 | `operations` | array of `object` | yes | at least 1 items; at most 200 items |
-| `operations[].op` | `string`, one of 74 values | yes |  |
+| `operations[].op` | `string`, one of 76 values | yes |  |
 | `operations[].args` | `object` | yes |  |
 | `idempotency_key` | `string` | no | pattern `^[A-Za-z0-9._~-]{8,64}$` |
 | `dry_run` | `boolean` | no | default `false` |
@@ -57,6 +57,8 @@ Each member of `operations` is `{ op, args }`. Every operation has its own page 
 
 | Operation | Summary | Scope |
 | --- | --- | --- |
+| [`animation.apply_preset`](/docs/mcp/tools/edit/animation.apply_preset) | Animates the start or the end of a visual item with a preset: fade, slide, scale, pop, push in or pull out. | `edit` |
+| [`animation.list_presets`](/docs/mcp/tools/edit/animation.list_presets) | Describes the animation presets and the named Bezier curves. | `edit` |
 | [`asset.remove`](/docs/mcp/tools/edit/asset.remove) | Removes an asset that no item uses. | `media` |
 | [`audio.add`](/docs/mcp/tools/edit/audio.add) | Places an audio asset, or the audio of a video asset, on an audio track. | `edit` |
 | [`audio.duck`](/docs/mcp/tools/edit/audio.duck) | Lowers a music item while speech sounds, with a ramp down before and a ramp up after. | `edit` |
