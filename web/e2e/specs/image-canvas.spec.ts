@@ -28,6 +28,37 @@ test.describe("image canvas", () => {
 			.toBeGreaterThan(0);
 	});
 
+	test("the revision of the picture is the one drawn, not the one still loading", async ({
+		page,
+		request,
+	}) => {
+		const { id, call } = await newImage(request, {
+			name: "Frame revision spec",
+		});
+		await page.goto(`/edit-image/${id}`);
+		const frame = page.getByTestId("image-frame");
+		await expect(frame).toHaveAttribute("data-revision", "1");
+
+		// the picture of the next revision is held back until the spec lets it go
+		let release: () => void = () => undefined;
+		const held = new Promise<void>((resolve) => {
+			release = resolve;
+		});
+		await page.route(/\/images\/[^/]+\/frame\?/, async (route) => {
+			await held;
+			await route.continue();
+		});
+		await editImage(call, id, [
+			{ op: "layer.add_fill", args: { color: "#204060", name: "Held" } },
+		]);
+		await expect(page.getByRole("treeitem", { name: /^Held,/ })).toBeVisible();
+		await expect(frame).toHaveAttribute("data-revision", "1");
+
+		release();
+		await expect(frame).toHaveAttribute("data-revision", "2");
+		await page.unroute(/\/images\/[^/]+\/frame\?/);
+	});
+
 	test("zooms with the buttons and the keys, fits, and goes to 100%", async ({
 		page,
 		request,

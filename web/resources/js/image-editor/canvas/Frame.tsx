@@ -34,7 +34,11 @@ export default function Frame({
 	const dpr = typeof window === "undefined" ? 1 : window.devicePixelRatio || 1;
 	const asked = frameWidth(Math.ceil(width * zoom * dpr), width);
 	const wanted = frameUrl(imageId, revision, asked === 0 ? width : asked);
-	const [shown, setShown] = useState<string | null>(null);
+	// The picture on screen and the revision it was asked for: while the picture of a new revision loads, the old
+	// one stays, and `data-revision` must name the one that is drawn, not the one that is wanted.
+	const [shown, setShown] = useState<{ url: string; revision: number } | null>(
+		null,
+	);
 	const [failed, setFailed] = useState(false);
 	const [attempt, setAttempt] = useState(0);
 
@@ -51,7 +55,7 @@ export default function Frame({
 		};
 		loader.onload = () => {
 			if (!live) return;
-			setShown(wanted);
+			setShown({ url: wanted, revision });
 			setFailed(false);
 		};
 		loader.onerror = () => {
@@ -85,8 +89,8 @@ export default function Frame({
 			) : (
 				<img
 					data-testid="image-frame"
-					data-revision={revision}
-					src={shown}
+					data-revision={shown.revision}
+					src={shown.url}
 					width={width * zoom}
 					height={height * zoom}
 					alt={t("ui.image.canvas.picture")}
