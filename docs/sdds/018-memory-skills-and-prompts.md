@@ -92,7 +92,7 @@ One prompt per file, `library/prompts/<name>.md`.
 | `name` | the file name, required |
 | `description` | one line, required, at most 200 characters |
 | `tags` | at most 10 |
-| `defaults` | a map from variable to its default value |
+| `defaults` | a map from variable to its default value; a `PromptWrite` with no `defaults` keeps those of the prompt, and an empty map removes them |
 | `created`, `updated`, `actor` | as in section 5 |
 
 The body is the text, at most 32 KiB. A variable is `{{name}}` or `{{ name }}` with a name `[a-z][a-z0-9_]{0,39}`. `PromptRender` takes values and returns the text with each variable replaced once: a value is **never** scanned for variables again, so a value cannot inject another one. A variable with no value and no default is `E_VALIDATION` naming the variable (`details.missing`); a value for a variable the text does not use is also refused (`details.unknown`), so a typo does not pass silently; a value is at most 8 KiB. `{{` that does not form a valid variable is left as it is. The rendered text is the result and goes to the caller; rendering sends it nowhere.
@@ -146,7 +146,7 @@ The skill is read in memory and checked before anything is written:
 
 1. The folder or the archive holds exactly one skill: `SKILL.md` at its root, or one top-level directory that holds it. Any entry outside that one directory is refused. The folder the Finder adds (`__MACOSX/`) and `.DS_Store` files are ignored; a path used both as a file and as a folder is refused.
 2. The name of an entry, and of a file written to a skill folder, is printable ASCII (so no two names fold together and none hides a character). An entry is refused when its name is absolute, has an empty, `.` or `..` component, a backslash, a colon (a drive letter), a character that is not printable ASCII, a character Windows refuses in a name, a Windows device name, or when two names collide after case folding; when it is a symbolic link, a hard link, a device or encrypted; or when it is nested archive content that needs another read. A refusal names the entry and writes nothing.
-3. Limits: at most 100 files, 512 KiB per file, 2 MiB in total, counted on the bytes actually read (a header that lies cannot exceed them), an archive file of at most 8 MiB.
+3. Limits: at most 100 files, 512 KiB per file, 2 MiB in total, counted on the bytes actually read (a header that lies cannot exceed them), an archive file of at most 8 MiB. A file over the limit is refused by name, from a folder as from an archive, never left out of the skill.
 4. The lint runs. A structural error (no `SKILL.md`, a front matter that does not parse, an invalid name) refuses the import; the other findings are stored with the skill and shown. A name that is already taken is `E_ID_EXISTS` unless `replace` is true, and `replace` of a kept user skill needs a person at the browser.
 5. The folder is written under a temporary name and renamed into place, so a failed import leaves nothing. The origin is `imported`, the source is the text given or the path's base name, the licence is the one the front matter names; `stuarty-reviewed` is removed whatever the file said.
 
