@@ -9,7 +9,11 @@ description: "The tools of the MCP server, what a result looks like and how the 
 
 ## The tools
 
-The server lists 17 tools: find, create and read projects, `edit`, `command_help`, `history`, import and inspect media, `view`, `lint`, jobs, `template`, `font_import` and `library` (memory, skills and prompts). Each has a page with its input, output, errors, safety notes and a real call in the [MCP reference](/docs/mcp/tools). Start with [the MCP overview](/docs/mcp/overview).
+The server lists 20 tools, named by what you want to do and not by what you work on: find, create and read projects and their items, `edit`, `command_help`, `history`, import and inspect media, `view`, `lint`, jobs, `template`, `font_import`, `image`, `connection` and `library` (memory, skills and prompts). The list stays this short as the product grows, because a new area adds operations and not tools. Each tool has a page with its input, output, errors, safety notes and a real call in the [MCP reference](/docs/mcp/tools). Start with [the MCP overview](/docs/mcp/overview).
+
+## Domains
+
+Every operation belongs to a domain: `project`, `video`, `image`, `writing`, `asset`, `publish`, `provider`, `memory` or `workspace`. `edit` and `history` take `domain` (`video` when you leave it out, or `image` with an `image_id`), and `command_help` is how you find your way: with no arguments it lists the video operations and every domain, with `domain` it lists the operations of that domain, and with a `name` it gives one operation's arguments, an example and its errors. The operation names are not in the definition of `edit`, so ask `command_help` before you use one you have not used. Each domain has a page in [the guide by domain](/docs/agents/domain-video), and `stuarty agent:docs --print guide:<domain>` prints it. On the command line the same grouping is `stuarty <domain> <verb>`, for example `stuarty image edit`; the former names keep working.
 
 ## What a result is
 
