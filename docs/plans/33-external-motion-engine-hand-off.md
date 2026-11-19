@@ -42,7 +42,7 @@ When a video needs an animation the editor cannot make, a creator's agent builds
 - [x] 3. Add ingest tests for each accepted alpha input and the "claims alpha, has none" finding. Verify: `go test ./engine/ingest/... -run TestAlpha` passes.
 - [x] 4. Implement `MotionCheck`. Verify: `go test ./service/... -run TestMotionCheck` passes.
 - [x] 5. Implement `clip.replace_media` with golden cases, and the replace-by-`render_key` batch. Verify: `go test ./core/command/... ./service/... -run "TestReplaceMedia|TestRenderKey"` passes.
-- [ ] 6. Write the skill, read the licence of its source, add the notice. Verify: `go test ./web/resources/skills/...` passes (lint and registry check) and `task notices:check` exits 0.
+- [x] 6. Write the skill, read the licence of its source, add the notice. Verify: `go test ./web/resources/skills/...` passes (lint and registry check) and `task notices:check` exits 0.
 - [ ] 7. One real round with HyperFrames on the author's machine (brief, render, import, replace), or marked as not verified. Verify: the result or the note is in the hand-off.
 
 ## Test strategy
