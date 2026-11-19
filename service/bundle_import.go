@@ -617,7 +617,8 @@ func readBundleItemTexts(p *bundleParts) *Error {
 				return bundleRefused("the text of an item is larger than it declares or cannot be read")
 			}
 
-			if sha256Hex(body) != meta.SHA256 || int64(len(body)) != meta.Bytes || project.CheckText(string(body)) != nil {
+			if sha256Hex(body) != meta.SHA256 || int64(len(body)) != meta.Bytes ||
+				project.CheckText(string(body)) != nil {
 				return bundleRefused("the text of an item does not match the manifest or is not valid")
 			}
 
