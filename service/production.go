@@ -37,20 +37,33 @@ func timelineNotFound(id string, err error) error {
 //   - With only a project_id, the active timeline of the project when it has one, an error that names the
 //     choices when it has several, and the id unchanged when it names no project (it may be a timeline id, or
 //     nothing; the operation then answers as it always did).
+//
+// No answer tells a caller whether an id it may not reach exists: a timeline of a project the caller may not see
+// is not found as a missing one is, a key limited to one project is refused every timeline outside it whether
+// it exists or not (as authorize refuses a project id), and the id of a timeline is named only to a caller who
+// may see its project.
 func (s *svc) resolveTimeline(ctx context.Context, c Caller, projectID, timelineID string) (string, error) {
 	repo := s.store.Productions()
 
 	if timelineID != "" {
 		owner, err := repo.ProjectOfTimeline(ctx, timelineID)
+		if err != nil && !errors.Is(err, ErrNotFound) {
+			return "", asError(err)
+		}
+
+		if c.ProjectID != "" && (err != nil || c.ProjectID != owner) {
+			return "", newError(CodeForbidden, "the key does not cover the timeline %s.", timelineID).
+				withHint("use a key that covers its project")
+		}
+
 		// The timeline id may stand in the place of the project id as well, which is how the editor, whose
 		// address is the id of a timeline, names it in both.
 		if err != nil || (projectID != "" && projectID != owner && projectID != timelineID) {
-			return "", timelineNotFound(timelineID, err)
+			return "", timelineNotFound(timelineID, nil)
 		}
 
-		if c.ProjectID != "" && c.ProjectID != owner {
-			return "", newError(CodeForbidden, "the key is limited to another project.").
-				withHint("use a key that covers this project")
+		if head, gerr := repo.Get(ctx, owner); gerr != nil || !visible(c, head.OwnerUserID) {
+			return "", timelineNotFound(timelineID, gerr)
 		}
 
 		return timelineID, nil
@@ -65,16 +78,19 @@ func (s *svc) resolveTimeline(ctx context.Context, c Caller, projectID, timeline
 		return "", asError(err)
 	}
 
-	switch len(tls) {
-	case 0:
+	// The usual case, a project whose one timeline has its id, needs no other read: the operation checks the
+	// row of that id as it always did.
+	if len(tls) == 0 || (len(tls) == 1 && tls[0].TimelineID == projectID) {
 		return projectID, nil
-	case 1:
-		return tls[0].TimelineID, nil
 	}
 
 	// A project the caller may not see does not tell its timelines.
 	if head, gerr := repo.Get(ctx, projectID); gerr != nil || !visible(c, head.OwnerUserID) {
 		return "", projectNotFound(projectID, gerr)
+	}
+
+	if len(tls) == 1 {
+		return tls[0].TimelineID, nil
 	}
 
 	ids := make([]string, len(tls))

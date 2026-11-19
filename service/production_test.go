@@ -63,12 +63,13 @@ func TestProjectResolveTimeline(t *testing.T) {
 
 	s := &svc{store: fakeStore{prod: fakeProductions{
 		timelines: map[string][]string{
-			"prj_one": {"prj_one"},
-			"prj_two": {"prj_two", "prj_2b"},
-			"prj_bob": {"prj_bob", "prj_bob2"},
-			"prj_all": {"prj_a", "prj_b"},
+			"prj_one":  {"prj_one"},
+			"prj_two":  {"prj_two", "prj_2b"},
+			"prj_bob":  {"prj_bob", "prj_bob2"},
+			"prj_all":  {"prj_a", "prj_b"},
+			"prj_bob1": {"prj_bob1b"},
 		},
-		owners: map[string]string{"prj_bob": "bob"},
+		owners: map[string]string{"prj_bob": "bob", "prj_bob1": "bob"},
 	}}}
 
 	ctx := context.Background()
@@ -101,6 +102,10 @@ func TestProjectResolveTimeline(t *testing.T) {
 		{"a limited key, its own second timeline", limited, "", "prj_2b", "prj_2b", "", ""},
 		{"a limited key, another project", limited, "", "prj_a", "", "E_FORBIDDEN", ""},
 		{"three choices are all listed", local, "prj_all", "", "", "E_VALIDATION", "prj_b"},
+		{"a timeline of a project of another user", alice, "", "prj_bob2", "", "E_NOT_FOUND", ""},
+		{"a project of another user whose one timeline has another id", alice, "prj_bob1", "", "", "E_NOT_FOUND", ""},
+		{"a limited key, a timeline that does not exist", limited, "", "prj_zzz", "", "E_FORBIDDEN", ""},
+		{"a limited key, its own project and a missing timeline", limited, "prj_two", "prj_zzz", "", "E_FORBIDDEN", ""},
 	}
 
 	for _, tc := range cases {
@@ -131,6 +136,45 @@ func TestProjectResolveTimeline(t *testing.T) {
 				t.Errorf("path = %q", se.Path)
 			}
 		})
+	}
+}
+
+// A caller who may not reach an id cannot tell from the answer whether it exists: the answer for a timeline of a
+// project of another user, or out of the reach of a limited key, is the answer for one that does not exist, and
+// no answer names the timeline of a project the caller may not see.
+func TestProjectResolveTimelineTellsNoExistence(t *testing.T) {
+	t.Parallel()
+
+	s := &svc{store: fakeStore{prod: fakeProductions{
+		timelines: map[string][]string{"prj_bob": {"prj_bob", "prj_bob2"}, "prj_bob1": {"prj_bob1b"}},
+		owners:    map[string]string{"prj_bob": "bob", "prj_bob1": "bob"},
+	}}}
+
+	ctx := context.Background()
+	alice := Caller{Actor: "user:alice", OwnerUserID: "alice", Scopes: AllScopes}
+	limited := Caller{Actor: "key:k", Scopes: AllScopes, ProjectID: "prj_own"}
+
+	answer := func(c Caller, projectID, timelineID string) string {
+		_, err := s.resolveTimeline(ctx, c, projectID, timelineID)
+
+		var se *Error
+		if !errors.As(err, &se) {
+			t.Fatalf("%s %s: err = %v", projectID, timelineID, err)
+		}
+
+		return se.Code + " " + strings.ReplaceAll(se.Message+" "+se.Hint, timelineID, "<id>")
+	}
+
+	if got, want := answer(alice, "", "prj_bob2"), answer(alice, "", "prj_nobodyy"); got != want {
+		t.Errorf("another user's timeline: %q; a missing one: %q", got, want)
+	}
+
+	if got, want := answer(limited, "", "prj_bob2"), answer(limited, "", "prj_nobodyy"); got != want {
+		t.Errorf("limited key, another project's timeline: %q; a missing one: %q", got, want)
+	}
+
+	if got := answer(alice, "prj_bob1", ""); strings.Contains(got, "prj_bob1b") {
+		t.Errorf("the answer names the timeline of a project alice may not see: %q", got)
 	}
 }
 
