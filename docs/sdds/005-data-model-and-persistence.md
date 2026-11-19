@@ -1187,7 +1187,7 @@ A name and a note on a revision of a timeline, so that a person or an agent can 
 
 ```sql
 CREATE TABLE checkpoints (
-  project_id TEXT    NOT NULL REFERENCES projects (id) ON DELETE CASCADE, -- the id of the timeline document (section 5.12)
+  project_id TEXT    NOT NULL REFERENCES timelines (id) ON DELETE CASCADE, -- the id of the timeline document (section 5.12): a second timeline is not a row of `projects`
   name       TEXT    NOT NULL CHECK (length(name) BETWEEN 1 AND 240),
   note       TEXT    NOT NULL DEFAULT '',
   revision   INTEGER NOT NULL CHECK (revision >= 1),
