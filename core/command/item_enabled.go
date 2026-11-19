@@ -13,7 +13,6 @@ func init() {
 		Example: `{"item_id": "itm_m1n2p3q4r5", "enabled": false}`,
 		Errors:  []string{CodeValidation, CodeNotFound},
 		Scope:   ScopeEdit,
-		Phase:   Beta,
 	}, applyItemSetEnabled))
 }
 

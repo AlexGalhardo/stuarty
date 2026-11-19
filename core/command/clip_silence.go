@@ -21,7 +21,6 @@ func init() {
 			CodeValidation, CodeInvalidTime, CodeNotFound, CodeTypeMismatch, CodeIDExists, CodeInvalidState, CodeLimit,
 		},
 		Scope: ScopeEdit,
-		Phase: Alpha,
 	}, applyRemoveSilences))
 }
 

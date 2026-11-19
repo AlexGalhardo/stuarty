@@ -22,7 +22,6 @@ func init() {
 		Example: `{"fps": "24"}`,
 		Errors:  []string{CodeValidation, CodeInvalidTime},
 		Scope:   ScopeEdit,
-		Phase:   Alpha,
 	}, applySettingsSetFPS))
 }
 

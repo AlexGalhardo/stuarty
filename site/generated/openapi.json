@@ -449,9 +449,6 @@
           "name": {
             "type": "string"
           },
-          "phase": {
-            "type": "string"
-          },
           "scope": {
             "type": "string"
           },
@@ -488,9 +485,6 @@
       "CommandSummary": {
         "properties": {
           "name": {
-            "type": "string"
-          },
-          "phase": {
             "type": "string"
           },
           "scope": {

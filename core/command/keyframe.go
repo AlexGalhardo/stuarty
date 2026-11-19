@@ -23,7 +23,6 @@ func init() {
 			CodeValidation, CodeInvalidTime, CodeNotFound, CodeTypeMismatch, CodeLimit, CodeInvalidState,
 		},
 		Scope: ScopeEdit,
-		Phase: Alpha,
 	}, applyKeyframeSet))
 
 	Register(Define(Spec{
@@ -34,7 +33,6 @@ func init() {
 		Example: `{"item_id": "itm_s6t7v8w9x0", "property": "scale", "at": "2s"}`,
 		Errors:  []string{CodeValidation, CodeInvalidTime, CodeNotFound, CodeTypeMismatch},
 		Scope:   ScopeEdit,
-		Phase:   Alpha,
 	}, applyKeyframeRemove))
 
 	Register(Define(Spec{
@@ -45,7 +43,6 @@ func init() {
 		Example: `{"item_id": "itm_s6t7v8w9x0", "property": "opacity"}`,
 		Errors:  []string{CodeValidation, CodeNotFound, CodeTypeMismatch},
 		Scope:   ScopeEdit,
-		Phase:   Alpha,
 	}, applyKeyframeClear))
 }
 

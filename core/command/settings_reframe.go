@@ -26,7 +26,6 @@ func init() {
 		Example: `{"aspect": "9:16"}`,
 		Errors:  []string{CodeValidation},
 		Scope:   ScopeEdit,
-		Phase:   Beta,
 	}, applySettingsReframe))
 }
 

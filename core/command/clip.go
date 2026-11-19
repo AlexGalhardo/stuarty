@@ -16,7 +16,6 @@ func init() {
 			CodeOutOfSource, CodeOverlap,
 		},
 		Scope: ScopeEdit,
-		Phase: Prototype,
 	}, applyClipAdd))
 }
 
