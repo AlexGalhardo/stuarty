@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/AlexGalhardo/stuarty/internal/outbound"
-	"github.com/AlexGalhardo/stuarty/service/untrusted"
 	"github.com/AlexGalhardo/stuarty/service/vault"
 )
 
@@ -277,14 +276,9 @@ func (testConnector) Test(ctx context.Context, c Credential) (TestResult, error)
 	body, _ := io.ReadAll(io.LimitReader(res.Body, maxTestBody))
 
 	return TestResult{
-		OK:     res.StatusCode >= 200 && res.StatusCode < 300,
-		Status: res.StatusCode,
-		Message: untrusted.Block(
-			untrusted.SourceNetworkText,
-			untrusted.Attrs{"connection": c.Connection.ID},
-			string(body),
-			testMessageBudget,
-		),
+		OK:      res.StatusCode >= 200 && res.StatusCode < 300,
+		Status:  res.StatusCode,
+		Message: SafeMessage(c, body),
 	}, nil
 }
 
