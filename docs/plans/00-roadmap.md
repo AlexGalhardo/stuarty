@@ -17,7 +17,7 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | --- | --- | --- | --- | --- |
 | [01](01-remove-the-gio-window.md) | Remove the Gio window | S | — | DONE (2026-11-18, d5f2c792..1ac59baf) |
 | [02](02-rename-to-stuarty.md) | Rename the code to Stuarty, with a workspace migration | L | 01 | DONE (2026-11-19, cdd8ce10..dfb93934) |
-| [03](03-drop-the-phase-labels.md) | Drop the phase labels from the registry and the specifications | S | 02 | IN PROGRESS (senior-a, 2026-11-19) |
+| [03](03-drop-the-phase-labels.md) | Drop the phase labels from the registry and the specifications | S | 02 | DONE (2026-11-19, 78261496..f36e63b7) |
 
 ### 1.2 Platform track (three seniors)
 
