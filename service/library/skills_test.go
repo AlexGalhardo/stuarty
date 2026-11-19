@@ -242,6 +242,66 @@ func TestSkillWriteKeepsFilesWhenNoneAreGivenAndKeepsAnImportedOrigin(t *testing
 	}
 }
 
+// The page edits the description, the licence and the text: a save that does not send the metadata keeps it, and
+// the keys of the front matter the product does not know are written back unchanged (SDD-018 section 3).
+func TestSkillWriteKeepsTheMetadataAndTheUnknownKeys(t *testing.T) {
+	t.Parallel()
+
+	m, _, dir := newManager(t)
+	ctx := context.Background()
+
+	write(t, filepath.Join(dir, "skills", "kept", "SKILL.md"),
+		"---\nname: kept\ndescription: d\nversion: 3\nmetadata:\n  author: someone\n---\nx\n")
+
+	s, _, _, err := m.SaveSkill(ctx, person, SkillInput{Name: "kept", Description: "edited", Body: "y\n"})
+	if err != nil || s.Metadata["author"] != "someone" {
+		t.Fatalf("%v %+v", err, s.Metadata)
+	}
+
+	md, err := os.ReadFile(filepath.Join(dir, "skills", "kept", "SKILL.md"))
+	if err != nil || !strings.Contains(string(md), "version: 3") || !strings.Contains(string(md), "description: edited") {
+		t.Fatalf("%v %s", err, md)
+	}
+
+	// an empty map removes the metadata
+	s, _, _, err = m.SaveSkill(ctx, person, SkillInput{
+		Name: "kept", Description: "edited", Body: "y\n", Metadata: map[string]string{},
+	})
+	if err != nil || s.Metadata["author"] != "" {
+		t.Fatalf("%v %+v", err, s.Metadata)
+	}
+}
+
+// A directory import refuses a file over the limit instead of leaving it out of the skill.
+func TestSkillImportFromAFolderRefusesAnOversizedFile(t *testing.T) {
+	t.Parallel()
+
+	m, _, _ := newManager(t)
+	src := filepath.Join(t.TempDir(), "hook-writer")
+
+	for _, f := range goodSkillFiles() {
+		write(t, filepath.Join(src, filepath.FromSlash(f.Path)), string(f.Data))
+	}
+
+	write(t, filepath.Join(src, "assets", "big.bin"), strings.Repeat("x", 3*core.MaxSkillFile))
+
+	root, err := os.OpenRoot(src)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer func() { _ = root.Close() }()
+
+	if _, err := m.ImportSkillDir(context.Background(), person, root, ImportOptions{}); err == nil ||
+		!strings.Contains(err.Error(), "big.bin") {
+		t.Fatalf("an oversized file is refused by name: %v", err)
+	}
+
+	if got := mustList(t, m, core.KindSkill); len(got) != 0 {
+		t.Fatalf("nothing is written: %+v", got)
+	}
+}
+
 func TestSkillReviewIsForAPersonAndNeedsALintWithNoError(t *testing.T) {
 	t.Parallel()
 

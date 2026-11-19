@@ -192,7 +192,7 @@ type PromptInput struct {
 	Name        string
 	Description string
 	Tags        []string
-	Defaults    map[string]string
+	Defaults    map[string]string // nil keeps the defaults of a prompt that exists; an empty map removes them
 	Body        string
 }
 
@@ -214,7 +214,13 @@ func (m *Manager) SavePrompt(ctx context.Context, c Caller, in PromptInput) (cor
 	p := core.Prompt{Name: in.Name, Created: m.stamp()}
 
 	if old, _, err := m.ReadPrompt(ctx, in.Name); err == nil {
-		p.Created = old.Created
+		// The prompt that exists is the start, so the keys the product does not know are written back (SDD-018
+		// section 3), and nil defaults keep the defaults it has: a page that edits the text does not wipe them.
+		p = old
+
+		if in.Defaults == nil {
+			in.Defaults = old.Defaults
+		}
 	} else {
 		var ve *ValidationError
 		if !errors.Is(err, ErrNotFound) && !errors.As(err, &ve) {
