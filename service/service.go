@@ -105,6 +105,9 @@ type Service interface {
 	ProviderModels(ctx context.Context, req ProviderModelsRequest) (*ProviderModelsResult, error)
 	ProviderPriceSet(ctx context.Context, req ProviderPriceSetRequest) (*ProviderPricesResult, error)
 	TextGenerate(ctx context.Context, req TextGenerateRequest) (*Job, error)
+	ImageGenerate(ctx context.Context, req ImageGenerateRequest) (*Job, error)
+	VoiceGenerate(ctx context.Context, req VoiceGenerateRequest) (*Job, error)
+	VoiceList(ctx context.Context, req VoiceListRequest) (*VoiceListResult, error)
 
 	JobGet(ctx context.Context, req JobGetRequest) (*Job, error)
 	JobList(ctx context.Context, req JobListRequest) (*JobListResult, error)
@@ -400,7 +403,8 @@ func New(o Options) (Service, error) {
 
 	s.providers = o.Providers
 
-	kinds, err := registerKinds(append(slices.Clone(o.JobKinds), s.textGenerateKind()))
+	kinds, err := registerKinds(append(slices.Clone(o.JobKinds),
+		s.textGenerateKind(), s.imageGenerateKind(), s.voiceGenerateKind()))
 	if err != nil {
 		return nil, err
 	}
