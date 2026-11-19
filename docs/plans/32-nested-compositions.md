@@ -39,7 +39,7 @@ A creator builds an intro once, as its own small timeline, and drops it into eve
 
 - [x] 1. Amend SDD-001, SDD-002 and SDD-013 (the clip kind, the rules, flattening, the group and its pixel rules). Verify: `task lint:md` exits 0 and the tests that read SDD-002 pass.
 - [x] 2. Implement the clip kind, cycle and depth checks, and `clip.add_composition` with golden cases. Verify: `go test ./core/command/... ./core/timeline/...` passes.
-- [ ] 3. Implement flattening in `core/plan` with golden plans. Verify: `go test ./core/plan/... -run TestNested` passes.
+- [x] 3. Implement flattening in `core/plan` with golden plans. Verify: `go test ./core/plan/... -run TestNested` passes.
 - [ ] 4. Implement the group on the CPU path of both executors that export uses today. Verify: `go test ./engine/compositor/... ./engine/renderhost/...` and `cargo test` in `renderer/` pass with new golden frames.
 - [ ] 5. Implement the group on the GPU path and the browser executor in use. Verify: the parity tests of `renderer-parity` pass.
 - [ ] 6. Mix nested audio. Verify: `go test ./engine/audio/... -run TestNestedMix` passes.
