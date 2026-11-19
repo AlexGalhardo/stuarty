@@ -28,6 +28,7 @@ var Provenance = map[string]string{
 	"service.ProjectItem.Text":                 SourceProjectText,
 	"service.ProjectDescribeResult.Name":       SourceProjectText,
 	"service.BriefResult.Text":                 SourceProjectText,
+	"service.BriefingAnswer.Value":             SourceProjectText,
 
 	// image documents (SDD-021): names, texts and the descriptions built from them
 	"service.ImageCreateResult.Text":       SourceProjectText,

@@ -35,7 +35,7 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | [13](13-mcp-domains-and-agent-docs.md) | MCP tools by domain and generated agent documentation | M | 06 | IN PROGRESS (senior-d, 2026-11-19) |
 | [14](14-hosted-agent-chat.md) | The user's agent hosted in the chat panel | L | 07, 13 | TODO |
 | [15](15-memory-skills-and-prompts.md) | Memory, skills and prompts | L | 07 | DONE (2026-11-19, 65d33593..d2e8660f) |
-| [16](16-curated-skills-and-briefing.md) | Curated skills and the guided briefing | M | 06, 15 | IN PROGRESS (senior-e, 2026-11-19) |
+| [16](16-curated-skills-and-briefing.md) | Curated skills and the guided briefing | M | 06, 15 | DONE (2026-11-19, `6a134407`..`6771dee1`, merge `7aff38e0`) |
 | [17](17-writing.md) | Writing: scripts, copy and captions | M | 06, 09 | TODO |
 | [18](18-social-connectors-and-youtube.md) | Social connectors and YouTube | L | 04, 05 | IN PROGRESS (senior-a, 2026-11-19) |
 | [19](19-instagram-and-facebook.md) | Instagram and Facebook | L | 18 | TODO |

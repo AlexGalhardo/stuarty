@@ -67,6 +67,7 @@ export function tagOf(route: string): Tag {
 	if (parts[0] === "projects" || parts[0] === "trash") return "Projects";
 	const byRoot: Record<string, Tag> = {
 		assets: "Media",
+		briefing: "Projects",
 		commands: "Commands",
 		templates: "Templates",
 		fonts: "Fonts",
