@@ -148,7 +148,7 @@ func TestEditorPageShowsWhyAProjectCannotOpen(t *testing.T) {
 
 	_, err := h.store.DB().ExecContext(
 		context.Background(),
-		"UPDATE projects SET document = replace(document, ?, ?) WHERE id = ?",
+		"UPDATE timelines SET document = replace(document, ?, ?) WHERE id = ?",
 		fmt.Sprintf(`"schema_version":%d`, timeline.CurrentSchemaVersion),
 		fmt.Sprintf(`"schema_version":%d`, timeline.CurrentSchemaVersion+1),
 		id,

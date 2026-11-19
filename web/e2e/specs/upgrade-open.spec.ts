@@ -227,7 +227,7 @@ function saveAsNewerVersion(home: string): void {
 	const db = new DatabaseSync(join(home, "db.sqlite"));
 	try {
 		db.exec(
-			"UPDATE projects SET document = json_set(document, '$.schema_version', 999), schema_version = 999 WHERE id = 'prj_1000000001'",
+			"UPDATE timelines SET document = json_set(document, '$.schema_version', 999), schema_version = 999 WHERE id = 'prj_1000000001'",
 		);
 	} finally {
 		db.close();
