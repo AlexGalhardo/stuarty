@@ -6,12 +6,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"os"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 
 	"github.com/AlexGalhardo/stuarty/core/approval"
+	"github.com/AlexGalhardo/stuarty/core/asset"
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/core/publish"
 	"github.com/AlexGalhardo/stuarty/service/connections"
@@ -99,6 +102,8 @@ type publishFile struct {
 	Bytes  int64  `json:"bytes"`
 	SHA256 string `json:"sha256,omitempty"`
 	Format string `json:"format"`
+	// Media is what the export measured on the written video: the limits of a network are checked against it.
+	Media *publish.Media `json:"media,omitempty"`
 }
 
 // publishInput is the input column of a publish.upload job.
@@ -111,9 +116,17 @@ type publishInput struct {
 
 func (in *publishInput) post() publish.Post {
 	p := publish.Post{
-		Output: publish.File{Bytes: in.Output.Bytes, Format: in.Output.Format}, Title: in.Args.Title,
-		Description: in.Args.Description, Tags: in.Args.Tags, Visibility: publish.Visibility(in.Args.Visibility),
-		MadeForKids: in.Args.MadeForKids, AIDisclosure: in.Args.AIDisclosure,
+		Output: publish.File{
+			Bytes:  in.Output.Bytes,
+			Format: in.Output.Format,
+			Media:  in.Output.Media,
+		},
+		Title:        in.Args.Title,
+		Description:  in.Args.Description,
+		Tags:         in.Args.Tags,
+		Visibility:   publish.Visibility(in.Args.Visibility),
+		MadeForKids:  in.Args.MadeForKids,
+		AIDisclosure: in.Args.AIDisclosure,
 	}
 
 	if in.Thumbnail != nil {
@@ -168,6 +181,8 @@ type publishTarget struct {
 	signedIn bool
 	input    publishInput
 	issues   []publish.Issue
+	// generated is true when an asset of the video has the origin generated (section 20 of SDD-020).
+	generated bool
 }
 
 // resolvePublish reads the connection and the files of a post and validates it. It makes no request.
@@ -222,6 +237,17 @@ func (s *svc) resolvePublish(ctx context.Context, c Caller, projectID string, a 
 		}
 
 		t.input.Thumbnail = th
+	}
+
+	gen, gerr := s.generatedAsset(ctx, c, a.Export)
+	if gerr != nil {
+		return nil, gerr
+	}
+
+	// The disclosure travels from the generation to the publication (RF-407): a generated asset sets it, and
+	// nothing the person said lowers it.
+	if t.generated = gen; gen {
+		t.input.Args.AIDisclosure = true
 	}
 
 	t.issues = conn.Validate(t.input.post())
@@ -291,6 +317,7 @@ func (s *svc) publishFile(ctx context.Context, c Caller, projectID, path, jobID 
 	}
 	if res.Export != nil {
 		out.SHA256 = res.Export.SHA256
+		out.Media = exportMedia(res.Export)
 
 		if res.Export.Bytes > 0 && res.Export.Bytes != st.Size() {
 			return nil, validationAt(
@@ -301,6 +328,75 @@ func (s *svc) publishFile(ctx context.Context, c Caller, projectID, path, jobID 
 	}
 
 	return out, nil
+}
+
+// exportMedia is what the export measured on the video it wrote, in the terms of core/publish; nil for an
+// export that recorded none (an image, or a result stored before the export kept them).
+func exportMedia(e *ExportResult) *publish.Media {
+	if e.VideoCodec == "" || e.Width <= 0 || e.Height <= 0 {
+		return nil
+	}
+
+	num, den := publish.ParseFPS(e.FPS)
+
+	return &publish.Media{
+		Width: e.Width, Height: e.Height, FPSNum: num, FPSDen: den,
+		DurationMS: int64(math.Round(e.Duration.Seconds * 1000)),
+		VideoCodec: strings.ToLower(e.VideoCodec), AudioCodec: strings.ToLower(e.AudioCodec),
+	}
+}
+
+// generatedAsset says whether the video was made with an asset that has the origin generated (RF-407): an
+// asset a timeline of the export's project holds. The rule is conservative on purpose: the assets of every
+// active timeline of the project count, not only those a clip uses, because a flag left out is the worse
+// mistake and the person can read in the approval request that it is set (SDD-020 section 20).
+func (s *svc) generatedAsset(ctx context.Context, c Caller, exportJob string) (bool, error) {
+	row, err := s.store.Jobs().Get(ctx, exportJob)
+	if err != nil || row.ProjectID == nil {
+		return false, nil //nolint:nilerr // publishFile checked the job: no project means no assets to read
+	}
+
+	// The export of a timeline is kept under the id of the timeline; one kept under a project is a project of
+	// timelines, whose active timelines are read.
+	ids := []string{*row.ProjectID}
+
+	if refs, rerr := s.store.Productions().ActiveTimelines(ctx, *row.ProjectID); rerr == nil {
+		for i := range refs {
+			ids = append(ids, refs[i].TimelineID)
+		}
+	}
+
+	var hashes []string
+
+	for _, id := range ids {
+		held, aerr := s.store.Assets().ListProjectAssets(ctx, id, ProjectAssetActive)
+		if aerr != nil {
+			return false, asError(aerr)
+		}
+
+		for i := range held {
+			if !slices.Contains(hashes, held[i].AssetHash) {
+				hashes = append(hashes, held[i].AssetHash)
+			}
+		}
+	}
+
+	if len(hashes) == 0 {
+		return false, nil
+	}
+
+	rows, gerr := s.store.AssetLibrary().GetMany(ctx, c.OwnerUserID, hashes)
+	if gerr != nil {
+		return false, asError(gerr)
+	}
+
+	for h := range rows {
+		if rows[h].Origin.Kind == asset.Generated {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
 
 func issuesError(issues []publish.Issue) *Error {
@@ -327,9 +423,23 @@ func publishSummary(t *publishTarget) string {
 		vis = publish.Private
 	}
 
-	return fmt.Sprintf("Publish %q to %s, channel %q (%s), visible to: %s; file %s, %d bytes",
+	return fmt.Sprintf("Publish %q to %s, channel %q (%s), visible to: %s; file %s, %d bytes; AI disclosure: %s",
 		clean(a.Title, 100), t.desc.Name, clean(t.account.Title, 80), t.connRow.ID, vis,
-		filepath.Base(t.input.Output.Rel), t.input.Output.Bytes)
+		filepath.Base(t.input.Output.Rel), t.input.Output.Bytes, disclosureText(t))
+}
+
+// disclosureText says whether the post carries the AI disclosure flag and why, for the person who approves.
+func disclosureText(t *publishTarget) string {
+	switch {
+	case !t.input.Args.AIDisclosure:
+		return "not set"
+	case !t.desc.AIDisclosure:
+		return "wanted, but " + t.desc.Name + " takes no such flag"
+	case t.generated:
+		return "set (a generated asset is used)"
+	}
+
+	return "set"
 }
 
 // preparePublish is the Prepare of publish.upload: it checks and describes, and sends nothing.
