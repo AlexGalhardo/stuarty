@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"html"
 	"net/url"
 	"strings"
@@ -21,7 +22,8 @@ const minScrubbed = 8
 const droppedBody = "the destination echoed the credential: its answer was dropped."
 
 // echoesSecret says whether body holds the secret, or minScrubbed bytes of its start or its end, in
-// the forms a destination writes it back: as is, HTML, URL and JSON escaped, base64 and hex. It
+// the forms a destination writes it back: as is, HTML, URL and JSON escaped, base64 and hex (lower
+// and upper case). It
 // looks at the raw bytes, before any cut or escape, and also at them after the cleaning the text
 // goes through, so a secret split by a control character is found too.
 func echoesSecret(body, secret []byte) bool {
@@ -35,13 +37,14 @@ func echoesSecret(body, secret []byte) bool {
 		html.EscapeString(text),
 		url.QueryEscape(text),
 		url.PathEscape(text),
-		strings.NewReplacer("<", `<`, ">", `>`, "&", `&`).Replace(text),
 		base64.StdEncoding.EncodeToString(secret),
 		base64.RawStdEncoding.EncodeToString(secret),
 		base64.URLEncoding.EncodeToString(secret),
 		base64.RawURLEncoding.EncodeToString(secret),
 		hex.EncodeToString(secret),
+		strings.ToUpper(hex.EncodeToString(secret)),
 	}
+	forms = append(forms, jsonForms(text)...)
 
 	haystacks := [][]byte{body, []byte(untrusted.Clean(string(body)))}
 
@@ -56,6 +59,29 @@ func echoesSecret(body, secret []byte) bool {
 	}
 
 	return false
+}
+
+// jsonForms are text inside a JSON string, without the quotes, as the encoders write it: with <, >
+// and & as <, > and & (Go) or as is, and with the slash as is or as \/ (PHP).
+func jsonForms(text string) []string {
+	var forms []string
+
+	for _, escapeHTML := range []bool{true, false} {
+		var b strings.Builder
+
+		enc := json.NewEncoder(&b)
+		enc.SetEscapeHTML(escapeHTML)
+
+		if err := enc.Encode(text); err != nil {
+			continue
+		}
+
+		s := strings.TrimSuffix(b.String(), "\n")
+		s = s[1 : len(s)-1]
+		forms = append(forms, s, strings.ReplaceAll(s, "/", `\/`))
+	}
+
+	return forms
 }
 
 // SafeMessage is the text of a test answer for a connector to return: the body as an untrusted block,
