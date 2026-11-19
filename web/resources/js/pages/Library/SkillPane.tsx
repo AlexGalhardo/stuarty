@@ -33,6 +33,9 @@ export default function SkillPane({
 	const [newName, setNewName] = useState("");
 	const [description, setDescription] = useState("");
 	const [license, setLicense] = useState("");
+	const [compatibility, setCompatibility] = useState("");
+	const [allowedTools, setAllowedTools] = useState("");
+	const [contentHash, setContentHash] = useState("");
 	const [source, setSource] = useState("");
 	const [body, setBody] = useState("");
 	const [files, setFiles] = useState<readonly SkillFileView[]>([]);
@@ -41,8 +44,12 @@ export default function SkillPane({
 	const [notice, setNotice] = useState<string | null>(null);
 	const [busy, setBusy] = useState(false);
 	const [tab, setTab] = useState(name !== null ? "text" : "edit");
+	// Read the skill again after a save or a mark, so the state, the findings and the hash the next mark sends
+	// are those of the skill as it is now.
+	const [version, setVersion] = useState(0);
 
 	useEffect(() => {
+		void version;
 		let live = true;
 		setFailure(null);
 		if (name === null) {
@@ -50,6 +57,9 @@ export default function SkillPane({
 			setNewName("");
 			setDescription("");
 			setLicense("");
+			setCompatibility("");
+			setAllowedTools("");
+			setContentHash("");
 			setSource("");
 			setBody("");
 			setFiles([]);
@@ -65,6 +75,9 @@ export default function SkillPane({
 				setEntry(result.entry);
 				setDescription(result.entry.description);
 				setLicense(result.license ?? "");
+				setCompatibility(result.compatibility ?? "");
+				setAllowedTools(result.allowed_tools ?? "");
+				setContentHash(result.content_hash);
 				setSource(result.source ?? "");
 				setBody(result.body);
 				setFiles(result.files ?? []);
@@ -76,7 +89,7 @@ export default function SkillPane({
 		return () => {
 			live = false;
 		};
-	}, [client, name]);
+	}, [client, name, version]);
 
 	async function save(event: FormEvent<HTMLFormElement>): Promise<void> {
 		event.preventDefault();
@@ -88,11 +101,14 @@ export default function SkillPane({
 			const written = await client.writeSkill(target, {
 				description,
 				license: license.trim() === "" ? undefined : license.trim(),
+				compatibility: compatibility === "" ? undefined : compatibility,
+				allowed_tools: allowedTools === "" ? undefined : allowedTools,
 				body,
 				files: null,
 			});
 			setFindings(written.findings ?? []);
 			setNotice(t("ui.library.saved"));
+			setVersion((v) => v + 1);
 			onChanged(written.entry.name);
 		} catch (error) {
 			setFailure(failureOf(error));
@@ -107,8 +123,9 @@ export default function SkillPane({
 		setFailure(null);
 		setNotice(null);
 		try {
-			await client.reviewSkill(name);
+			await client.reviewSkill(name, contentHash);
 			setNotice(t("ui.library.skill.reviewed_done"));
+			setVersion((v) => v + 1);
 			onChanged(name);
 		} catch (error) {
 			setFailure(failureOf(error));

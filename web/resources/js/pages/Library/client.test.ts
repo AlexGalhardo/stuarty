@@ -46,7 +46,7 @@ describe("libraryClient", () => {
 			body: "b",
 			files: null,
 		});
-		await client.reviewSkill("hook-writer");
+		await client.reviewSkill("hook-writer", "sha256:abc");
 		await client.writePrompt("intro", { description: "d", body: "b" });
 		await client.renderPrompt("intro", { topic: "cats" });
 		await client.exportSkills([]);
@@ -62,6 +62,8 @@ describe("libraryClient", () => {
 			"POST /library/reindex",
 		]);
 		expect(sent[2].body).toMatchObject({ files: null });
+		// the mark carries the hash of the text the person read
+		expect(sent[3].body).toEqual({ content_hash: "sha256:abc" });
 		expect(sent[5].body).toEqual({ values: { topic: "cats" } });
 	});
 
@@ -73,10 +75,10 @@ describe("libraryClient", () => {
 			retryable: false,
 		});
 		await expect(
-			libraryClient(transport).reviewSkill("a"),
+			libraryClient(transport).reviewSkill("a", "sha256:abc"),
 		).rejects.toMatchObject({ code: "E_FORBIDDEN" });
 		await expect(
-			libraryClient(transport).reviewSkill("a"),
+			libraryClient(transport).reviewSkill("a", "sha256:abc"),
 		).rejects.toBeInstanceOf(ApiError);
 	});
 });

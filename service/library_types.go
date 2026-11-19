@@ -43,6 +43,13 @@ type LibraryRef struct {
 	AgentView bool `json:"agent_view,omitempty"`
 }
 
+// SkillReviewRequest marks a skill as read: its name and the content hash of the skill as the person read it
+// (SkillGetResult.ContentHash). A skill that changed since is not marked (SDD-018 section 7).
+type SkillReviewRequest struct {
+	Name        string `json:"name"`
+	ContentHash string `json:"content_hash"`
+}
+
 // LibraryListResult is a list of entries of one kind.
 type LibraryListResult struct {
 	Envelope
@@ -119,7 +126,9 @@ type SkillGetResult struct {
 	Body          string           `json:"body"                    untrusted:"true"`
 	Files         []SkillFileView  `json:"files,omitempty"`
 	Findings      []LibraryFinding `json:"findings,omitempty"`
-	Text          string           `json:"text"`
+	// ContentHash is the hash of the content returned, which a person sends back to mark it as read.
+	ContentHash string `json:"content_hash"`
+	Text        string `json:"text"`
 }
 
 // SkillFileInput is a file of a skill that a caller writes.
