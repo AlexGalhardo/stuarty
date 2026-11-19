@@ -77,6 +77,10 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.ExportCheck(ctx, service.ExportCheckRequest{ProjectID: "prj_0000000001", Preset: "tiktok"})
 			return err
 		},
+		"AudioMeasure": func() error {
+			_, err := e.svc.AudioMeasure(ctx, service.AudioMeasureRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
 		"ExportBatch": func() error {
 			_, err := e.svc.ExportBatch(ctx, service.ExportBatchRequest{
 				ProjectID: "prj_0000000001", Items: []service.ExportBatchItem{{Preset: "tiktok"}},

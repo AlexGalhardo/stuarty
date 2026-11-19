@@ -7,6 +7,7 @@
         "projects.list",
         "projects.create",
         "projects.get",
+        "audio.measure",
         "bitmaps.get",
         "projects.brief.get",
         "projects.brief.set",
