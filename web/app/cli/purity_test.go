@@ -110,6 +110,21 @@ func (s stub) JobCancel(context.Context, service.JobCancelRequest) (*service.Job
 	return final(s.err)
 }
 
+func (s stub) ExportBatch(context.Context, service.ExportBatchRequest) (*service.Job, error) {
+	return final(s.err)
+}
+
+func (s stub) ExportCheck(context.Context, service.ExportCheckRequest) (*service.ExportCheckResult, error) {
+	return reply[service.ExportCheckResult](s.err)
+}
+
+func (s stub) ExportPresetList(
+	context.Context,
+	service.ExportPresetListRequest,
+) (*service.ExportPresetListResult, error) {
+	return reply[service.ExportPresetListResult](s.err)
+}
+
 func (s stub) JobList(context.Context, service.JobListRequest) (*service.JobListResult, error) {
 	return reply[service.JobListResult](s.err)
 }

@@ -390,7 +390,7 @@ stuarty view --project prj_7k2m9x4q1b --at 1s --json
 Export a project to a file
 
 ```text
-stuarty export --project <id> [--start t] [--end t] [--format f] [--at t] [--wait] [--timeout d] [--out f] [--force]
+stuarty export --project <id> [--start t] [--end t] [--format f] [--at t] [--preset p] [--codec c] [--wait] [--timeout d] [--out f] [--force]
 ```
 
 | Flag | Type | Default | Meaning |
@@ -398,6 +398,8 @@ stuarty export --project <id> [--start t] [--end t] [--format f] [--at t] [--wai
 | `--start` | string |  | first time to export (default: the start) |
 | `--end` | string |  | end of the export (default: the end of the timeline) |
 | `--at` | string |  | the time of the frame, only with --format png (default: the start) |
+| `--preset` | string |  | a platform preset, as export:presets lists them (mp4 only) |
+| `--codec` | string |  | h264 (default), hevc or av1 (mp4 only) |
 | `--format` | string |  | mp4 (default), gif, wav, aac or png |
 | `--out` | string |  | copy the file to this path when the job succeeds (implies --wait; the workspace keeps its own copy) |
 | `--force` | boolean | `false` | replace the --out file when it exists |
@@ -408,6 +410,75 @@ Example:
 
 ```bash
 stuarty export --project prj_7k2m9x4q1b --json
+```
+
+## `export:presets`
+
+List the export presets of the platforms
+
+```text
+stuarty export:presets [--codecs]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--codecs` | boolean | `false` | also tell which codecs this machine can write (runs the test encodes the first time) |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty export:presets --codecs --json
+```
+
+## `export:check`
+
+Check that a project fits an export preset, before any encoding
+
+```text
+stuarty export:check --project <id> --preset <preset id> [--start t] [--end t] [--codec c]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--preset` | string |  | the preset id, as export:presets lists them |
+| `--start` | string |  | first time to export (default: the start) |
+| `--end` | string |  | end of the export (default: the end of the timeline) |
+| `--codec` | string |  | h264, hevc or av1, for the estimate of the size (default: the preset's first) |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`.
+
+Example:
+
+```bash
+stuarty export:check --project prj_7k2m9x4q1b --preset tiktok --json
+```
+
+## `export:batch`
+
+Export a project several times, one after the other, as one job
+
+```text
+stuarty export:batch --project <id> --preset <id> [--preset <id> ...] [--codec c] [--start t] [--end t] [--wait] [--timeout d]
+stuarty export:batch --project <id> --items '<json array of {preset, format, codec, start, end}>' [--wait]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--preset` | string |  | a preset id; give the flag once for each export |
+| `--items` | string |  | the exports as a JSON array of \{preset, format, codec, start, end\}, instead of --preset |
+| `--format` | string |  | the format of every --preset export that is not mp4 (default mp4) |
+| `--codec` | string |  | h264, hevc or av1 for every --preset export (default: the choice of the preset) |
+| `--start` | string |  | first time to export, for every --preset export (default: the start) |
+| `--end` | string |  | end of the export, for every --preset export (default: the end of the timeline) |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--wait`, `--timeout`.
+
+Example:
+
+```bash
+stuarty export:batch --project prj_7k2m9x4q1b --preset tiktok --preset youtube-shorts --wait
 ```
 
 ## `job:show`

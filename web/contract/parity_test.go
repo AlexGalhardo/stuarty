@@ -108,6 +108,12 @@ var parity = []row{
 	{method: "ImageUndo", tool: "image", command: "image:undo", route: "POST /images/{}/undo"},
 	{method: "ImageRedo", tool: "image", command: "image:redo", route: "POST /images/{}/redo"},
 	{method: "ImageExport", tool: "image", command: "image:export", route: "POST /images/{}/export"},
+	// The export presets, the check against one and the batch (SDD-004 sections 8.2 to 8.4). The MCP tools are the
+	// ones that already exist (NFR-020 leaves no room for three more): command_help with domain export, lint with a
+	// preset, and job_start with kind export_batch.
+	{method: "ExportPresetList", tool: "command_help", command: "export:presets", route: "GET /export-presets"},
+	{method: "ExportCheck", tool: "lint", command: "export:check", route: "GET /projects/{}/export-check"},
+	{method: "ExportBatch", tool: "job_start", command: "export:batch", route: "POST /projects/{}/export-batches"},
 }
 
 // notOperations are Service methods that are not operations an agent calls

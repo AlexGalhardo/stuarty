@@ -284,7 +284,8 @@ var export = &spec{
 	name:    "export",
 	summary: "export a project to a file",
 	usage: []string{
-		"stuarty export --project <id> [--start t] [--end t] [--format f] [--at t] [--wait] [--timeout d] [--out f] [--force]",
+		"stuarty export --project <id> [--start t] [--end t] [--format f] [--at t] [--preset p] [--codec c] " +
+			"[--wait] [--timeout d] [--out f] [--force]",
 	},
 	example: "stuarty export --project prj_7k2m9x4q1b --json",
 	project: true,
@@ -294,6 +295,8 @@ var export = &spec{
 		{Name: "start", Kind: kindString, Usage: "first time to export (default: the start)"},
 		{Name: "end", Kind: kindString, Usage: "end of the export (default: the end of the timeline)"},
 		{Name: "at", Kind: kindString, Usage: "the time of the frame, only with --format png (default: the start)"},
+		{Name: "preset", Kind: kindString, Usage: "a platform preset, as export:presets lists them (mp4 only)"},
+		{Name: "codec", Kind: kindString, Usage: "h264 (default), hevc or av1 (mp4 only)"},
 		{
 			Name:  "format",
 			Kind:  kindString,
@@ -308,9 +311,11 @@ var export = &spec{
 
 		req := service.JobStartRequest{ProjectID: c.projectID, Kind: service.JobExport}
 
-		if c.args.has("start") || c.args.has("end") || c.args.has("format") || c.args.has("at") {
+		if c.args.has("start") || c.args.has("end") || c.args.has("format") || c.args.has("at") ||
+			c.args.has("preset") || c.args.has("codec") {
 			raw, err := json.Marshal(service.ExportArgs{
 				Start: c.args.str("start"), End: c.args.str("end"), Format: c.args.str("format"), At: c.args.str("at"),
+				Preset: c.args.str("preset"), Codec: c.args.str("codec"),
 			})
 			if err != nil {
 				return nil, err
