@@ -35,8 +35,8 @@ A creator lets an agent try an idea without fear: they name the current state, l
 
 ## Tasks
 
-- [ ] 1. Amend SDD-002 (`history.revert`), SDD-003 (history operations and the diff text view) and SDD-005 (checkpoints, retention). Verify: `task lint:md` exits 0 and the tests that read those documents pass.
-- [ ] 2. Implement the structured diff with table tests. Verify: `go test ./core/command/... -run TestDiff` passes.
+- [x] 1. Amend SDD-002 (`history.revert`), SDD-003 (history operations and the diff text view) and SDD-005 (checkpoints, retention). Verify: `task lint:md` exits 0 and the tests that read those documents pass.
+- [x] 2. Implement the structured diff with table tests. Verify: `go test ./core/command/... -run TestDiff` passes.
 - [ ] 3. Implement `history.revert` with golden cases and a property test (revert to R then export equals the export at R). Verify: `go test ./core/command/... -run TestRevert` passes.
 - [ ] 4. Implement checkpoints, the automatic one and retention. Verify: `go test ./service/... -run TestCheckpoint` passes.
 - [ ] 5. Render the diff as text within the budget. Verify: `go test ./service/textview/... -run TestDiffText` passes.
