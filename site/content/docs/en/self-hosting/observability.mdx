@@ -11,15 +11,15 @@ description: "Where the server writes its logs, what is in them, and how to send
 
 ## The idea
 
-The server writes **structured logs** to standard error and to a rotating file, `<workspace>/logs/vukem-video.log`. The file rotates at 10 MiB and keeps the three newest old files as `vukem-video.log.1` to `.3`. A line carries the request or job identifier, the actor and the project. Media file names and transcript text are not logged above the debug level, and no secret is: the first administrator's password and every API key are kept out of the log. In a container, `docker logs vukem-video` shows standard error.
+The server writes **structured logs** to standard error and to a rotating file, `<workspace>/logs/stuarty.log`. The file rotates at 10 MiB and keeps the three newest old files as `stuarty.log.1` to `.3`. A line carries the request or job identifier, the actor and the project. Media file names and transcript text are not logged above the debug level, and no secret is: the first administrator's password and every API key are kept out of the log. In a container, `docker logs stuarty` shows standard error.
 
 Three records answer different questions, and none is copied into the others:
 
 | Record | Answers | Read it with |
 | --- | --- | --- |
 | Logs | what the server did and what went wrong | `docker logs`, or the file in `logs/` |
-| The audit table | who changed what, in which project | `vukem-video audit` |
-| The jobs table | long work: exports and transcriptions | `vukem-video job:list` |
+| The audit table | who changed what, in which project | `stuarty audit` |
+| The jobs table | long work: exports and transcriptions | `stuarty job:list` |
 
 The product sends no telemetry and has no analytics or crash reporter. Observability is yours to switch on.
 
@@ -35,8 +35,8 @@ Set `OTEL_EXPORTER_OTLP_ENDPOINT` to your own collector and the server sends tra
 ## Quick start
 
 ```bash
-vukem-video doctor --full
-vukem-video audit --limit 20
+stuarty doctor --full
+stuarty audit --limit 20
 curl -fsS http://localhost:7878/up
 ```
 

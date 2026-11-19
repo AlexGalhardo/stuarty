@@ -78,7 +78,7 @@ fi
 step commits bash "$(script .agents/skills/ci-preflight/scripts/check-commits.sh)"
 step flaky bash "$(script .agents/skills/verify/scripts/check-flaky-patterns.sh)" "$base"
 
-export VUKEM_VIDEO_MIN_FREE_BYTES=1
+export STUARTY_MIN_FREE_BYTES=1
 go_files="$(echo "$changed" | grep -E '\.go$' | while read -r f; do [ -f "$f" ] && echo "$f"; done)"
 if [ -n "$go_files" ] || echo "$changed" | grep -qE '(^|/)go\.(mod|sum)$'; then
 	step gofmt bash -c "out=\$(gofmt -l $(echo "$go_files" | tr '\n' ' ')); [ -z \"\$out\" ] || { echo \"\$out\"; exit 1; }"

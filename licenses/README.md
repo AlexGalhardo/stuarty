@@ -1,6 +1,6 @@
 # Third-party licences
 
-The licence texts of everything Vukem Video ships, runs or copies. [`THIRD_PARTY_NOTICES.md`](../THIRD_PARTY_NOTICES.md) lists every component and links its text here.
+The licence texts of everything Stuarty ships, runs or copies. [`THIRD_PARTY_NOTICES.md`](../THIRD_PARTY_NOTICES.md) lists every component and links its text here.
 
 | Folder | Content | Kept by |
 | --- | --- | --- |
