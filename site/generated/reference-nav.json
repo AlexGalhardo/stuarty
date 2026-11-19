@@ -91,6 +91,18 @@
       ]
     },
     {
+      "tag": "Images",
+      "pages": [
+        "images.list",
+        "images.create",
+        "images.get",
+        "images.edit",
+        "images.export",
+        "images.redo",
+        "images.undo"
+      ]
+    },
+    {
       "tag": "System",
       "pages": [
         "handshake.get",
@@ -140,7 +152,8 @@
       "job_get",
       "job_cancel",
       "template",
-      "font_import"
+      "font_import",
+      "image"
     ],
     "operations": [
       "asset.remove",

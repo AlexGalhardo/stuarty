@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "asset": {
+      "description": "The sha256 content hash of an image in the workspace.",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "fit": {
+      "description": "contain (default) or cover, when no box is given.",
+      "enum": [
+        "cover",
+        "contain"
+      ],
+      "type": "string"
+    },
+    "h": {
+      "maximum": 16384,
+      "minimum": 1,
+      "type": "integer"
+    },
+    "id": {
+      "pattern": "^lyr_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+      "type": "string"
+    },
+    "index": {
+      "description": "Position among the siblings, 0 is the bottom; absent means on top.",
+      "maximum": 500,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "name": {
+      "maxLength": 120,
+      "type": "string"
+    },
+    "parent": {
+      "description": "A group; absent means the top level.",
+      "pattern": "^lyr_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+      "type": "string"
+    },
+    "slot": {
+      "description": "Make the layer an image slot of a template.",
+      "type": "string"
+    },
+    "w": {
+      "maximum": 16384,
+      "minimum": 1,
+      "type": "integer"
+    },
+    "x": {
+      "maximum": 16384,
+      "minimum": -16384,
+      "type": "integer"
+    },
+    "y": {
+      "maximum": 16384,
+      "minimum": -16384,
+      "type": "integer"
+    }
+  },
+  "required": [
+    "asset"
+  ],
+  "type": "object"
+}

@@ -26,6 +26,10 @@ var Tools = []ToolRow{
 	{"job_cancel", []string{"job:cancel"}},
 	{"template", []string{"template:list", "template:save", "template:new", "template:export", "template:import"}},
 	{"font_import", []string{"font:import"}},
+	{
+		"image",
+		[]string{"image:create", "image:show", "image:edit", "image:export"},
+	},
 }
 
 // ErrorRow is one error code of SDD-000 section 8 and SDD-002 section A.8, with

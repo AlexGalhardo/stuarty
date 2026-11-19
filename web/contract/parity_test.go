@@ -93,6 +93,14 @@ var parity = []row{
 	// OpenTimelineIO moves a timeline as a file: no MCP tool (SDD-003 section 7.1, exception E-3).
 	{method: "ProjectOtioExport", command: "otio:export", route: "GET /projects/{}/otio"},
 	{method: "ProjectOtioImport", command: "otio:import", route: "POST /projects/{}/otio"},
+	// The image documents of SDD-021: one MCP tool with an action per operation.
+	{method: "ImageCreate", tool: "image", command: "image:create", route: "POST /images"},
+	{method: "ImageList", tool: "image", command: "image:list", route: "GET /images"},
+	{method: "ImageDescribe", tool: "image", command: "image:show", route: "GET /images/{}"},
+	{method: "ImageEdit", tool: "image", command: "image:edit", route: "POST /images/{}/edit"},
+	{method: "ImageUndo", tool: "image", command: "image:undo", route: "POST /images/{}/undo"},
+	{method: "ImageRedo", tool: "image", command: "image:redo", route: "POST /images/{}/redo"},
+	{method: "ImageExport", tool: "image", command: "image:export", route: "POST /images/{}/export"},
 }
 
 // notOperations are Service methods that are not operations an agent calls

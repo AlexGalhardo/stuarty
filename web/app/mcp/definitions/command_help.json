@@ -6,6 +6,12 @@
   "properties": {
    "name": {
     "type": "string"
+   },
+   "domain": {
+    "enum": [
+     "video",
+     "image"
+    ]
    }
   },
   "additionalProperties": false

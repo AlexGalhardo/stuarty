@@ -41,7 +41,7 @@ Prefix each with `stuarty`.
 
 {{range .CLI}}{{if not .Pending}}- `{{.Usage}}`
 {{end}}{{end}}
-Batches: `--ops <file|->` reads a JSON array; `edit --project <id> item.move item_id=itm_x start=2s` is one operation (`k=v` string, `k:=json` any JSON). `--dry-run` saves nothing; `--key <k>` makes retries safe. `--out f` copies the result file out of the workspace (`--force` replaces).
+Batches: `--ops <file|->` reads a JSON array; `edit --project <id> item.move item_id=itm_x start=2s` is one operation (`k=v` string, `k:=json` any JSON). `--dry-run` saves nothing; `--key <k>` makes retries safe. `--out f` copies the result file out (`--force` replaces).
 
 ## Reading results
 
