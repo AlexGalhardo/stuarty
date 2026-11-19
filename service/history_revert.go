@@ -22,7 +22,7 @@ const revertOp = "history.revert"
 // HistoryRevert takes the timeline back to the document it had at a revision, as one new revision of the
 // caller (SDD-003 section 2.5.1, SDD-005 section 12.4). The log is never rewritten.
 func (s *svc) HistoryRevert(ctx context.Context, req HistoryRevertRequest) (*HistoryRevertResult, error) {
-	c, err := authorize(ctx, "HistoryRevert", req.ProjectID)
+	c, err := s.authorizeProject(ctx, "HistoryRevert", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}
@@ -253,7 +253,7 @@ func revertScope(diff []command.Change) []command.Operation {
 
 // HistoryDiff returns the difference between two revisions (SDD-003 section 2.5.1).
 func (s *svc) HistoryDiff(ctx context.Context, req HistoryDiffRequest) (*HistoryDiffResult, error) {
-	c, err := authorize(ctx, "HistoryDiff", req.ProjectID)
+	c, err := s.authorizeProject(ctx, "HistoryDiff", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}
