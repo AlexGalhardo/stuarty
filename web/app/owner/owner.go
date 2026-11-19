@@ -1,7 +1,7 @@
 // Package owner is the process that owns a workspace (SDD-005 section 6.3): it
 // takes the lock, opens the store, builds the Service with its media, exporter
 // and queue, and hands the HTTP adapter its dependencies. cmd/app runs it for
-// `vukem-video serve`; it holds no rule about timelines or jobs, which are
+// `stuarty serve`; it holds no rule about timelines or jobs, which are
 // service/.
 package owner
 
@@ -16,32 +16,32 @@ import (
 	"strings"
 	"time"
 
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/core/lint"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/engine/cache"
+	"github.com/AlexGalhardo/stuarty/engine/export"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
+	"github.com/AlexGalhardo/stuarty/engine/frame"
+	enginestore "github.com/AlexGalhardo/stuarty/engine/store"
+	"github.com/AlexGalhardo/stuarty/internal/ffmpegpins"
+	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/config"
+	"github.com/AlexGalhardo/stuarty/service/exporter"
+	"github.com/AlexGalhardo/stuarty/service/pathguard"
+	"github.com/AlexGalhardo/stuarty/service/workspace"
+	"github.com/AlexGalhardo/stuarty/web/app/agentdocs"
+	"github.com/AlexGalhardo/stuarty/web/app/auth"
+	"github.com/AlexGalhardo/stuarty/web/app/events"
+	httpapi "github.com/AlexGalhardo/stuarty/web/app/http"
+	"github.com/AlexGalhardo/stuarty/web/app/http/middleware"
+	"github.com/AlexGalhardo/stuarty/web/app/jobs"
+	"github.com/AlexGalhardo/stuarty/web/app/mcp"
+	"github.com/AlexGalhardo/stuarty/web/app/store"
+
 	vukem "github.com/AlexGalhardo/vukem"
 	"github.com/AlexGalhardo/vukem/queue"
 	"github.com/AlexGalhardo/vukem/ratelimit"
-
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/core/lint"
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/engine/cache"
-	"github.com/AlexGalhardo/vukem-video/engine/export"
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
-	"github.com/AlexGalhardo/vukem-video/engine/frame"
-	enginestore "github.com/AlexGalhardo/vukem-video/engine/store"
-	"github.com/AlexGalhardo/vukem-video/internal/ffmpegpins"
-	"github.com/AlexGalhardo/vukem-video/service"
-	"github.com/AlexGalhardo/vukem-video/service/config"
-	"github.com/AlexGalhardo/vukem-video/service/exporter"
-	"github.com/AlexGalhardo/vukem-video/service/pathguard"
-	"github.com/AlexGalhardo/vukem-video/service/workspace"
-	"github.com/AlexGalhardo/vukem-video/web/app/agentdocs"
-	"github.com/AlexGalhardo/vukem-video/web/app/auth"
-	"github.com/AlexGalhardo/vukem-video/web/app/events"
-	httpapi "github.com/AlexGalhardo/vukem-video/web/app/http"
-	"github.com/AlexGalhardo/vukem-video/web/app/http/middleware"
-	"github.com/AlexGalhardo/vukem-video/web/app/jobs"
-	"github.com/AlexGalhardo/vukem-video/web/app/mcp"
-	"github.com/AlexGalhardo/vukem-video/web/app/store"
 )
 
 // Config is how the owner is started.
@@ -59,7 +59,7 @@ type Config struct {
 	// directory and lock instead of taking them, and Close releases the lock.
 	Session *workspace.Session
 	// Resolved is the configuration that config.Validate accepted; its zero
-	// value is the mode named by VUKEM_VIDEO_MODE with no network facts (the
+	// value is the mode named by STUARTY_MODE with no network facts (the
 	// commands, which never serve).
 	Resolved config.Resolved
 	// Telemetry builds the OpenTelemetry provider; it is called only when
@@ -91,7 +91,7 @@ type Owner struct {
 	lock   *workspace.Lock
 	limits service.Limits
 	child  service.ChildPolicy
-	// gpuRenderer is the GPU renderer request and the vukem-render found for it.
+	// gpuRenderer is the GPU renderer request and the stuarty-render found for it.
 	gpuRenderer service.GPURenderer
 	version     string
 	now         func() time.Time
@@ -221,7 +221,7 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 		return err
 	}
 
-	model := cfg.Getenv("VUKEM_VIDEO_WHISPER_MODEL")
+	model := cfg.Getenv("STUARTY_WHISPER_MODEL")
 
 	explicit := model != ""
 	if !explicit {
@@ -372,8 +372,8 @@ func (o *Owner) authSetup(ctx context.Context, cfg Config) error {
 	var err error
 
 	if cfg.Resolved.AppURL == "" {
-		return errors.New("owner: network mode runs only through `vukem-video serve`, which validates the " +
-			"configuration; unset VUKEM_VIDEO_MODE for any other command")
+		return errors.New("owner: network mode runs only through `stuarty serve`, which validates the " +
+			"configuration; unset STUARTY_MODE for any other command")
 	}
 
 	// Written before runtime.json: a command that finds the owner must find the secret too.
@@ -400,7 +400,7 @@ func (o *Owner) authSetup(ctx context.Context, cfg Config) error {
 // error of the missing tool. The error is kept on Media so a job returns it instead
 // of panicking on a nil runner.
 func (o *Owner) media(ctx context.Context, cfg Config) (service.Media, service.Exporter, error) {
-	roots := splitList(cfg.Getenv("VUKEM_VIDEO_IMPORT_ROOTS"))
+	roots := splitList(cfg.Getenv("STUARTY_IMPORT_ROOTS"))
 
 	guard, err := pathguard.New(pathguard.Config{Roots: roots, Workspace: string(o.Dir)})
 	if err != nil {
@@ -410,7 +410,7 @@ func (o *Owner) media(ctx context.Context, cfg Config) (service.Media, service.E
 	media := service.Media{Content: enginestore.New(string(o.Dir)), Guard: guard}
 
 	fc := ffmpeg.Config{
-		FFmpegPath: cfg.Getenv("VUKEM_VIDEO_FFMPEG"), FFprobePath: cfg.Getenv("VUKEM_VIDEO_FFPROBE"), Log: cfg.Log,
+		FFmpegPath: cfg.Getenv("STUARTY_FFMPEG"), FFprobePath: cfg.Getenv("STUARTY_FFPROBE"), Log: cfg.Log,
 		ToolsDir: filepath.Join(string(o.Dir), "tools"),
 	}
 	if self, err := os.Executable(); err == nil {
@@ -426,7 +426,7 @@ func (o *Owner) media(ctx context.Context, cfg Config) (service.Media, service.E
 	}
 
 	child, err := newChildRunners(
-		ctx, in, string(o.Dir), cfg.Getenv("VUKEM_VIDEO_SANDBOX"), o.limits.MaxExportBytes,
+		ctx, in, string(o.Dir), cfg.Getenv("STUARTY_SANDBOX"), o.limits.MaxExportBytes,
 	)
 	if err != nil {
 		return service.Media{}, nil, err
@@ -452,11 +452,11 @@ func (o *Owner) media(ctx context.Context, cfg Config) (service.Media, service.E
 		Cache:        frames,
 	}
 
-	allowX264, _ := strconv.ParseBool(cfg.Getenv("VUKEM_VIDEO_ALLOW_USER_X264"))
+	allowX264, _ := strconv.ParseBool(cfg.Getenv("STUARTY_ALLOW_USER_X264"))
 
-	pixelRenderer, err := export.ParsePixelRenderer(cfg.Getenv("VUKEM_VIDEO_EXPORT_RENDERER"))
+	pixelRenderer, err := export.ParsePixelRenderer(cfg.Getenv("STUARTY_EXPORT_RENDERER"))
 	if err != nil {
-		return service.Media{}, nil, fmt.Errorf("owner: VUKEM_VIDEO_EXPORT_RENDERER: %w", err)
+		return service.Media{}, nil, fmt.Errorf("owner: STUARTY_EXPORT_RENDERER: %w", err)
 	}
 
 	o.gpuRenderer = service.GPURenderer{Requested: pixelRenderer == export.PixelRendererGPU}
@@ -464,7 +464,7 @@ func (o *Owner) media(ctx context.Context, cfg Config) (service.Media, service.E
 
 	return media, exporter.New(exporter.Config{
 		Runner: child.Export, HardwareRunner: child.ExportHardware, Workspace: string(o.Dir),
-		Encoder:       ffmpeg.DetectOptions{Forced: cfg.Getenv("VUKEM_VIDEO_ENCODER"), AllowUserX264: allowX264},
+		Encoder:       ffmpeg.DetectOptions{Forced: cfg.Getenv("STUARTY_ENCODER"), AllowUserX264: allowX264},
 		Lint:          lint.Env{Measurer: lintMeasurer{workspace: string(o.Dir)}},
 		PixelRenderer: pixelRenderer,
 		GPUHost:       o.gpuRenderer.Host,
@@ -528,7 +528,7 @@ func (o *Owner) Close() error {
 }
 
 func cacheLimit(getenv func(string) string, network bool) (int64, error) {
-	const name = "VUKEM_VIDEO_CACHE_MAX_BYTES"
+	const name = "STUARTY_CACHE_MAX_BYTES"
 
 	raw := getenv(name)
 
@@ -572,16 +572,16 @@ func limitsFromEnv(getenv func(string) string, network bool) (service.Limits, er
 		name string
 		set  func(int64)
 	}{
-		{"VUKEM_VIDEO_MAX_IMPORT_BYTES", func(v int64) { l.MaxImportBytes = v }},
-		{"VUKEM_VIDEO_MIN_FREE_BYTES", func(v int64) { l.MinFreeBytes = v }},
-		{"VUKEM_VIDEO_MAX_INGESTS", func(v int64) { l.MaxIngests = int(v) }},
-		{"VUKEM_VIDEO_MAX_EXPORTS", func(v int64) { l.MaxExports = int(v) }},
-		{"VUKEM_VIDEO_MAX_EXPORTS_PER_KEY", func(v int64) { l.MaxExportsPerActor = int(v) }},
-		{"VUKEM_VIDEO_MAX_TRANSCRIBES", func(v int64) { l.MaxTranscribes = int(v) }},
-		{"VUKEM_VIDEO_MAX_TRANSCRIBES_PER_KEY", func(v int64) { l.MaxTranscribesPerActor = int(v) }},
-		{"VUKEM_VIDEO_MAX_TRANSCRIBE_SECONDS", func(v int64) { l.MaxTranscribeSeconds = v }},
-		{"VUKEM_VIDEO_MAX_EXPORT_BYTES", func(v int64) { l.MaxExportBytes = v }},
-		{"VUKEM_VIDEO_MAX_IMPORT_PIXELS", func(v int64) { l.Ceilings.MaxPixels = v }},
+		{"STUARTY_MAX_IMPORT_BYTES", func(v int64) { l.MaxImportBytes = v }},
+		{"STUARTY_MIN_FREE_BYTES", func(v int64) { l.MinFreeBytes = v }},
+		{"STUARTY_MAX_INGESTS", func(v int64) { l.MaxIngests = int(v) }},
+		{"STUARTY_MAX_EXPORTS", func(v int64) { l.MaxExports = int(v) }},
+		{"STUARTY_MAX_EXPORTS_PER_KEY", func(v int64) { l.MaxExportsPerActor = int(v) }},
+		{"STUARTY_MAX_TRANSCRIBES", func(v int64) { l.MaxTranscribes = int(v) }},
+		{"STUARTY_MAX_TRANSCRIBES_PER_KEY", func(v int64) { l.MaxTranscribesPerActor = int(v) }},
+		{"STUARTY_MAX_TRANSCRIBE_SECONDS", func(v int64) { l.MaxTranscribeSeconds = v }},
+		{"STUARTY_MAX_EXPORT_BYTES", func(v int64) { l.MaxExportBytes = v }},
+		{"STUARTY_MAX_IMPORT_PIXELS", func(v int64) { l.Ceilings.MaxPixels = v }},
 	} {
 		raw := getenv(f.name)
 
@@ -602,7 +602,7 @@ func limitsFromEnv(getenv func(string) string, network bool) (service.Limits, er
 		f.set(v)
 	}
 
-	const seconds = "VUKEM_VIDEO_MAX_IMPORT_SECONDS"
+	const seconds = "STUARTY_MAX_IMPORT_SECONDS"
 
 	raw := getenv(seconds)
 
@@ -627,9 +627,9 @@ func rateLimitsFromEnv(getenv func(string) string, network bool) (httpapi.RateLi
 		name string
 		set  func(int)
 	}{
-		{"VUKEM_VIDEO_RATE_LIMIT_PER_MINUTE", func(v int) { r.PerCredential = v }},
-		{"VUKEM_VIDEO_RATE_LIMIT_SESSION_PER_MINUTE", func(v int) { r.PerSession = v }},
-		{"VUKEM_VIDEO_RATE_LIMIT_HEAVY_PER_MINUTE", func(v int) { r.Heavy = v }},
+		{"STUARTY_RATE_LIMIT_PER_MINUTE", func(v int) { r.PerCredential = v }},
+		{"STUARTY_RATE_LIMIT_SESSION_PER_MINUTE", func(v int) { r.PerSession = v }},
+		{"STUARTY_RATE_LIMIT_HEAVY_PER_MINUTE", func(v int) { r.Heavy = v }},
 	} {
 		raw := getenv(f.name)
 

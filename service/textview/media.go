@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeval"
+	"github.com/AlexGalhardo/stuarty/core/timeval"
 )
 
 // Caps of SDD-003 section 3.10 for the media and job texts, in characters.

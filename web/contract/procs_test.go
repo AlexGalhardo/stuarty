@@ -20,15 +20,15 @@ import (
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
-	"github.com/AlexGalhardo/vukem-video/internal/outbound"
-	"github.com/AlexGalhardo/vukem-video/service"
-	"github.com/AlexGalhardo/vukem-video/service/remote"
-	"github.com/AlexGalhardo/vukem-video/service/workspace"
-	"github.com/AlexGalhardo/vukem-video/web/contract/testenv"
+	"github.com/AlexGalhardo/stuarty/internal/outbound"
+	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/remote"
+	"github.com/AlexGalhardo/stuarty/service/workspace"
+	"github.com/AlexGalhardo/stuarty/web/contract/testenv"
 )
 
-// The subprocess drivers reach a real `vukem-video serve` the way an agent or
-// a person does: the CLI as a process, MCP over stdio through `vukem-video mcp`
+// The subprocess drivers reach a real `stuarty serve` the way an agent or
+// a person does: the CLI as a process, MCP over stdio through `stuarty mcp`
 // (an HTTP client of the owner, SDD-003 section 4.5) and MCP over HTTP at /mcp.
 // Each driver gets its own server and workspace, and the three must produce the
 // same documents; the clock, the actor and the paths are the only differences
@@ -47,12 +47,12 @@ func binary(t *testing.T) string {
 
 	binOnce.Do(func() {
 		//nolint:usetesting // shared by every test of the package; TestMain removes it
-		binDir, errBinary = os.MkdirTemp("", "vukem-video-contract-")
+		binDir, errBinary = os.MkdirTemp("", "stuarty-contract-")
 		if errBinary != nil {
 			return
 		}
 
-		name := "vukem-video"
+		name := "stuarty"
 		if runtime.GOOS == "windows" {
 			name += ".exe"
 		}
@@ -112,13 +112,13 @@ func freePort(t *testing.T) string {
 }
 
 // tools are the FFmpeg and ffprobe of a test: the pinned LGPL build when there is
-// one (VUKEM_VIDEO_TEST_FFMPEG_DIR, or the install of scripts/install-ffmpeg.sh
+// one (STUARTY_TEST_FFMPEG_DIR, or the install of scripts/install-ffmpeg.sh
 // under the temporary directory), else the ones on the PATH. With pinnedOnly a
 // machine with no pinned LGPL build, macOS in CI, skips.
 func tools(t *testing.T, pinnedOnly bool) (ffmpeg, ffprobe string) {
 	t.Helper()
 
-	dir := os.Getenv("VUKEM_VIDEO_TEST_FFMPEG_DIR")
+	dir := os.Getenv("STUARTY_TEST_FFMPEG_DIR")
 
 	if dir == "" {
 		for _, base := range []string{os.Getenv("RUNNER_TEMP"), os.Getenv("TEMP"), os.Getenv("TMPDIR")} {
@@ -144,7 +144,9 @@ func tools(t *testing.T, pinnedOnly bool) (ffmpeg, ffprobe string) {
 	}
 
 	if pinnedOnly {
-		t.Skip("no pinned LGPL FFmpeg: run scripts/install-ffmpeg.sh and set VUKEM_VIDEO_TEST_FFMPEG_DIR")
+		t.Skip( // verify:env-skip no pinned FFmpeg on this machine
+			"no pinned LGPL FFmpeg: run scripts/install-ffmpeg.sh and set STUARTY_TEST_FFMPEG_DIR",
+		)
 	}
 
 	for _, tool := range []string{"ffmpeg", "ffprobe"} {
@@ -160,7 +162,7 @@ func tools(t *testing.T, pinnedOnly bool) (ffmpeg, ffprobe string) {
 
 // needZscale skips when the build has no zscale filter, which the ingest
 // needs: Homebrew's GPL build on the macOS runner has none, the pinned LGPL
-// build has it (risk R6). VUKEM_VIDEO_TEST_FFMPEG_DIR may name either.
+// build has it (risk R6). STUARTY_TEST_FFMPEG_DIR may name either.
 func needZscale(t *testing.T, ffmpeg string) {
 	t.Helper()
 
@@ -191,15 +193,15 @@ func startProc(t *testing.T, ffmpeg, ffprobe string, extraEnv ...string) *procEn
 	}
 
 	clean := append(os.Environ(), workspace.EnvHome+"="+home, workspace.EnvURL+"=", "APP_KEY=", "APP_ENV=",
-		"VUKEM_VIDEO_FFMPEG="+ffmpeg, "VUKEM_VIDEO_FFPROBE="+ffprobe)
+		"STUARTY_FFMPEG="+ffmpeg, "STUARTY_FFPROBE="+ffprobe)
 	if !filepath.IsAbs(ffmpeg) {
 		// A tool found on the PATH is left for the server to discover.
-		clean = append(clean, "VUKEM_VIDEO_FFMPEG=", "VUKEM_VIDEO_FFPROBE=")
+		clean = append(clean, "STUARTY_FFMPEG=", "STUARTY_FFPROBE=")
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	cmd := exec.CommandContext(ctx, bin, "serve")
-	serveEnv := []string{"HOST=127.0.0.1", "PORT=" + freePort(t), "VUKEM_VIDEO_MIN_FREE_BYTES=1"}
+	serveEnv := []string{"HOST=127.0.0.1", "PORT=" + freePort(t), "STUARTY_MIN_FREE_BYTES=1"}
 	cmd.Env = slices.Concat(clean, serveEnv, extraEnv)
 
 	var out bytes.Buffer
@@ -420,7 +422,7 @@ func connect(t *testing.T, p *procEnv, label string, tr sdk.Transport) driver {
 	return &mcpProc{e: p.e, cs: cs, label: label, p: p}
 }
 
-// mcpStdio starts `vukem-video mcp`, which finds the owner and relays to it.
+// mcpStdio starts `stuarty mcp`, which finds the owner and relays to it.
 func mcpStdio(t *testing.T, p *procEnv) driver {
 	t.Helper()
 
@@ -554,8 +556,8 @@ func TestConflictScenarioThroughTheRealServer(t *testing.T) {
 // resolution ceilings of the ingest job.
 func TestErrorsScenarioThroughTheRealServer(t *testing.T) {
 	env := []string{
-		"VUKEM_VIDEO_MAX_IMPORT_BYTES=200000", "VUKEM_VIDEO_MAX_EXPORTS=1",
-		"VUKEM_VIDEO_MAX_IMPORT_SECONDS=3", "VUKEM_VIDEO_MAX_IMPORT_PIXELS=100000",
+		"STUARTY_MAX_IMPORT_BYTES=200000", "STUARTY_MAX_EXPORTS=1",
+		"STUARTY_MAX_IMPORT_SECONDS=3", "STUARTY_MAX_IMPORT_PIXELS=100000",
 	}
 
 	driveRealServerWith(t, "errors", "prj_7k2m9x4q1b", false, env, nil)

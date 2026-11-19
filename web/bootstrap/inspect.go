@@ -4,11 +4,11 @@ import (
 	"net/http"
 	"time"
 
-	vukem "github.com/AlexGalhardo/vukem"
+	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/web/app/auth"
+	httpapi "github.com/AlexGalhardo/stuarty/web/app/http"
 
-	"github.com/AlexGalhardo/vukem-video/service"
-	"github.com/AlexGalhardo/vukem-video/web/app/auth"
-	httpapi "github.com/AlexGalhardo/vukem-video/web/app/http"
+	vukem "github.com/AlexGalhardo/vukem"
 )
 
 // noService stands in for the Service of an application that only lists its

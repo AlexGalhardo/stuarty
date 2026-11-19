@@ -4,8 +4,8 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 func TestSpeechFramesRoundOutward(t *testing.T) {

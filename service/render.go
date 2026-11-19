@@ -6,9 +6,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/core/lint"
-	"github.com/AlexGalhardo/vukem-video/service/textview"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/core/lint"
+	"github.com/AlexGalhardo/stuarty/service/textview"
 )
 
 // The texts below are shared by the CLI and the MCP adapter, so that the two
@@ -202,7 +202,7 @@ type ErrorDocument struct {
 // Document is the error document of SDD-003 section 1.4 for this error.
 func (se *Error) Document() ErrorDocument {
 	return ErrorDocument{
-		Type: "urn:vukem-video:error:" + se.Code, Title: se.Code, Status: se.HTTPStatus(),
+		Type: "urn:stuarty:error:" + se.Code, Title: se.Code, Status: se.HTTPStatus(),
 		Detail: se.Message, Code: se.Code, Message: se.Message, Hint: se.Hint,
 		Retryable: se.IsRetryable(), OpIndex: se.OpIndex, Path: se.Path, Details: se.Details,
 	}

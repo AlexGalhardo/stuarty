@@ -11,14 +11,14 @@ import (
 
 const maxOutputBytes = 8000
 
-const toolName = "vukem_video"
+const toolName = "stuarty"
 
 var toolSchema = json.RawMessage(`{"type":"object","properties":{` +
 	`"args":{"type":"string","description":"the arguments after the program name, for example: project:list --json"},` +
 	`"stdin":{"type":"string","description":"text sent to the standard input of the command, when it reads one"}},` +
 	`"required":["args"]}`)
 
-// Runner runs one vukem-video command line and returns what it printed and its exit code.
+// Runner runs one stuarty command line and returns what it printed and its exit code.
 type Runner func(ctx context.Context, args []string, stdin string) (output string, exitCode int, err error)
 
 // commandRecord is one command the agent ran.
@@ -171,7 +171,7 @@ func (a *agent) play(ctx context.Context, sc scenario, n int, run Runner) (runRe
 	res := runResult{Scenario: sc.Name, Run: n}
 	tools := []toolDef{{
 		Name: toolName, InputSchema: toolSchema,
-		Description: "Runs one vukem-video command and returns its exit code and output.",
+		Description: "Runs one stuarty command and returns its exit code and output.",
 	}}
 	res.Messages = []message{{Role: "user", Content: []block{{Type: "text", Text: sc.Prompt}}}}
 

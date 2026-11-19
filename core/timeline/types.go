@@ -1,6 +1,6 @@
 package timeline
 
-import "github.com/AlexGalhardo/vukem-video/core/timeline/migrate"
+import "github.com/AlexGalhardo/stuarty/core/timeline/migrate"
 
 // The Go types are the source of truth of the document (SDD-001 §7). Their tags
 // drive the decoder, the canonical encoder and, later, the generated JSON Schema:

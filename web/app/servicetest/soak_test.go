@@ -19,23 +19,23 @@ import (
 	"testing"
 	"time"
 
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/internal/outbound"
+	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/remote"
+	"github.com/AlexGalhardo/stuarty/web/app/auth"
+	httpapi "github.com/AlexGalhardo/stuarty/web/app/http"
+	"github.com/AlexGalhardo/stuarty/web/bootstrap"
+
 	vukem "github.com/AlexGalhardo/vukem"
 	"github.com/AlexGalhardo/vukem/vukemtest"
-
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/internal/outbound"
-	"github.com/AlexGalhardo/vukem-video/service"
-	"github.com/AlexGalhardo/vukem-video/service/remote"
-	"github.com/AlexGalhardo/vukem-video/web/app/auth"
-	httpapi "github.com/AlexGalhardo/vukem-video/web/app/http"
-	"github.com/AlexGalhardo/vukem-video/web/bootstrap"
 )
 
 const (
 	// soakDurationEnv sets the length of the run (a Go duration); the nightly job leaves it unset: one hour.
-	soakDurationEnv = "VUKEM_VIDEO_SOAK_DURATION"
+	soakDurationEnv = "STUARTY_SOAK_DURATION"
 	// soakHeapDirEnv names a directory for the heap profiles of the baseline and of the end.
-	soakHeapDirEnv = "VUKEM_VIDEO_SOAK_HEAPDIR"
+	soakHeapDirEnv = "STUARTY_SOAK_HEAPDIR"
 	soakWarmup     = 30 * time.Second
 	soakWorkers    = 4
 	// The HTTP workers share the one local credential, which the server limits to 600 requests a minute
@@ -83,7 +83,7 @@ func soakResident() uint64 {
 	return samples[0].Value.Uint64() - samples[1].Value.Uint64()
 }
 
-// soakHeapProfile writes the heap profile of the settled process to <VUKEM_VIDEO_SOAK_HEAPDIR>/<name>.pprof
+// soakHeapProfile writes the heap profile of the settled process to <STUARTY_SOAK_HEAPDIR>/<name>.pprof
 // when that variable names a directory, so that go tool pprof -base baseline.pprof end.pprof shows what grew.
 func soakHeapProfile(t *testing.T, name string) {
 	t.Helper()

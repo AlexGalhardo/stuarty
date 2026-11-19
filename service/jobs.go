@@ -10,12 +10,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/core/lint"
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/core/timeval"
-	"github.com/AlexGalhardo/vukem-video/engine/export"
-	"github.com/AlexGalhardo/vukem-video/service/textview"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/core/lint"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeval"
+	"github.com/AlexGalhardo/stuarty/engine/export"
+	"github.com/AlexGalhardo/stuarty/service/textview"
 )
 
 const (
@@ -214,7 +214,7 @@ func limitError(err error, l Limits) error {
 		// An export lasts seconds to minutes: ten seconds is a fair first wait before the caller asks again (VV-116).
 		return e.withDetail("retry_after", exportRetryAfter).
 			withHint("at most %d exports run at the same time: wait for one to finish with job_get or stop one "+
-				"with job_cancel; the person running the server can raise VUKEM_VIDEO_MAX_EXPORTS", l.MaxExports)
+				"with job_cancel; the person running the server can raise STUARTY_MAX_EXPORTS", l.MaxExports)
 	}
 
 	return out

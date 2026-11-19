@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/internal/ffmpegpins"
+	"github.com/AlexGalhardo/stuarty/internal/ffmpegpins"
 )
 
 // doctor --verify on a bundled FFmpeg that was modified prints a mismatch; a
@@ -53,13 +53,13 @@ func TestDoctorVerifyMismatch(t *testing.T) {
 func TestSecretVariablesAreRecognisedByName(t *testing.T) {
 	t.Parallel()
 
-	for _, n := range []string{"APP_KEY", "VUKEM_VIDEO_TRANSCRIBE_KEY", "VUKEM_VIDEO_ADMIN_PASSWORD", "SOME_NEW_TOKEN", "X_SECRET"} {
+	for _, n := range []string{"APP_KEY", "STUARTY_TRANSCRIBE_KEY", "STUARTY_ADMIN_PASSWORD", "SOME_NEW_TOKEN", "X_SECRET"} {
 		if !isSecretVar(n) {
 			t.Errorf("%s is not treated as a secret", n)
 		}
 	}
 
-	for _, n := range []string{"VUKEM_VIDEO_MAX_EXPORTS", "VUKEM_VIDEO_HOME"} {
+	for _, n := range []string{"STUARTY_MAX_EXPORTS", "STUARTY_HOME"} {
 		if isSecretVar(n) {
 			t.Errorf("%s is treated as a secret", n)
 		}
@@ -124,15 +124,15 @@ func TestDoctorSaysWhenTheGPUHostIsMissing(t *testing.T) {
 
 	got := s.rendererChecks(true)
 	if len(got) != 1 || got[0].Name != "export.renderer" || !got[0].OK ||
-		got[0].Detail != "gpu requested, vukem-render not found, using cpu" {
+		got[0].Detail != "gpu requested, stuarty-render not found, using cpu" {
 		t.Fatalf("checks = %+v", got)
 	}
 
-	s.doctor.GPURenderer.Host = "/x/vukem-render"
+	s.doctor.GPURenderer.Host = "/x/stuarty-render"
 	if got := s.rendererChecks(
 		true,
 	); len(got) != 1 ||
-		got[0].Detail != "gpu requested, vukem-render at /x/vukem-render" {
+		got[0].Detail != "gpu requested, stuarty-render at /x/stuarty-render" {
 		t.Fatalf("checks with host = %+v", got)
 	}
 

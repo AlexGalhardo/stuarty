@@ -4,7 +4,7 @@ import (
 	"cmp"
 	"slices"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 // Severities of a finding. An error blocks an export (E_LINT_BLOCKING).

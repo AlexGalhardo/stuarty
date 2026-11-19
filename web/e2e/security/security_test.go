@@ -19,7 +19,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/internal/outbound"
+	"github.com/AlexGalhardo/stuarty/internal/outbound"
 )
 
 // rawHTMLSinks are the ways to put a string into the DOM as markup.
@@ -102,7 +102,7 @@ func buildAndStart(t *testing.T) (base, token string) {
 	ctx, cancel := context.WithTimeout(t.Context(), 5*time.Minute)
 	defer cancel()
 
-	build := exec.CommandContext(ctx, "go", "build", "-o", bin, "github.com/AlexGalhardo/vukem-video/web/cmd/app")
+	build := exec.CommandContext(ctx, "go", "build", "-o", bin, "github.com/AlexGalhardo/stuarty/web/cmd/app")
 	if out, err := build.CombinedOutput(); err != nil {
 		t.Fatalf("go build: %v\n%s", err, out)
 	}
@@ -119,7 +119,7 @@ func buildAndStart(t *testing.T) (base, token string) {
 
 	cmd := exec.CommandContext(t.Context(), bin, "serve")
 	cmd.Env = append(os.Environ(),
-		"VUKEM_VIDEO_HOME="+home, "VUKEM_VIDEO_MIN_FREE_BYTES=1",
+		"STUARTY_HOME="+home, "STUARTY_MIN_FREE_BYTES=1",
 		"HOST=127.0.0.1", "PORT="+strings.TrimPrefix(addr, "127.0.0.1:"),
 		"APP_KEY=base64:"+base64.StdEncoding.EncodeToString(bytes.Repeat([]byte("k"), 32)),
 	)
@@ -288,7 +288,7 @@ func TestSecurity_T22_UIRendersTextNotHTML(t *testing.T) {
 
 	cmd := exec.CommandContext(ctx, bun, "run", "e2e", "--", "security-ui")
 	cmd.Dir = dir
-	cmd.Env = append(os.Environ(), "VUKEM_VIDEO_MIN_FREE_BYTES=1")
+	cmd.Env = append(os.Environ(), "STUARTY_MIN_FREE_BYTES=1")
 
 	out, err := cmd.CombinedOutput()
 	if err != nil {

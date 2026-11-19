@@ -13,11 +13,11 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/service"
-	"github.com/AlexGalhardo/vukem-video/service/workspace"
-	"github.com/AlexGalhardo/vukem-video/web/app/store"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/workspace"
+	"github.com/AlexGalhardo/stuarty/web/app/store"
 )
 
 // SDD-005 section 18 check 7, at the service layer: a real child process
@@ -28,8 +28,8 @@ import (
 // `serve` process joins the suite when P1-SRV-005 and the CLI exist.
 
 const (
-	killRoleEnv   = "VUKEM_VIDEO_KILL_ROLE"
-	killTracksEnv = "VUKEM_VIDEO_KILL_TRACKS"
+	killRoleEnv   = "STUARTY_KILL_ROLE"
+	killTracksEnv = "STUARTY_KILL_TRACKS"
 	killWorkers   = 4
 	killPerWorker = 250
 	killAfterAcks = 60

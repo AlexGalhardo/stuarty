@@ -1,8 +1,8 @@
 package command
 
 import (
-	"github.com/AlexGalhardo/vukem-video/core/subtitle"
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/subtitle"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 // maxSubtitleChars bounds the text of caption.import_subtitles.

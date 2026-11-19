@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/web/contract/testenv"
+	"github.com/AlexGalhardo/stuarty/web/contract/testenv"
 )
 
 // TestAlphaOperationsAreTheSameInProcessAndOverHTTP (ADR-0008, NFR-025, SDD-005 section 18 check

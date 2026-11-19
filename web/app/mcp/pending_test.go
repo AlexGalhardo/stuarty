@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/web/contract/testenv"
+	"github.com/AlexGalhardo/stuarty/web/contract/testenv"
 )
 
 // TestSecurity_T07_TranscriptDelimitedAndTruncated (SDD-007 T-07): speech that

@@ -11,10 +11,10 @@ import (
 	"time"
 )
 
-const helperEnv = "VUKEM_VIDEO_WORKSPACE_TEST_HELPER"
+const helperEnv = "STUARTY_WORKSPACE_TEST_HELPER"
 
 // TestMain lets the test binary act as the child process of the multi-process
-// tests: it takes the lock of the workspace in VUKEM_VIDEO_HOME, prints GOT
+// tests: it takes the lock of the workspace in STUARTY_HOME, prints GOT
 // once it holds it and keeps it until its standard input closes.
 func TestMain(m *testing.M) {
 	if os.Getenv(helperEnv) == "lock" {

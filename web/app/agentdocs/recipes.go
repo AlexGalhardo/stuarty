@@ -11,7 +11,7 @@ import (
 var recipeFS embed.FS
 
 // RecipeStep is one command of a recipe. Cmd is what the skill shows, after
-// `vukem-video`; Run replaces it when the test must run something concrete (a
+// `stuarty`; Run replaces it when the test must run something concrete (a
 // minted id); Stdin is the input of the command; Exit is the exit code the step
 // is expected to end with (0 when absent); Note is a comment line above it.
 type RecipeStep struct {
@@ -83,7 +83,7 @@ func (r Recipe) Text() string {
 			b.WriteString("# " + s.Note + "\n")
 		}
 
-		b.WriteString("vukem-video " + s.Cmd)
+		b.WriteString("stuarty " + s.Cmd)
 
 		if s.Stdin != "" {
 			b.WriteString(" <<'EOF'\n" + s.Stdin + "\nEOF")

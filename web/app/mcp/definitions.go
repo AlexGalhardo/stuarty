@@ -10,7 +10,7 @@ import (
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/santhosh-tekuri/jsonschema/v6"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/stuarty/core/command"
 )
 
 // The definitions are the objects of SDD-003 section 4.2, one file per tool,

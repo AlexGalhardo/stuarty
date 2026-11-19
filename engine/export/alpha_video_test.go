@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 // A video with an alpha channel (ProRes 4444, or VP9 in WebM) is composed over the layers below: where

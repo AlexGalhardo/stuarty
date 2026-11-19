@@ -11,12 +11,12 @@ import (
 	"os/exec"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/service"
-	"github.com/AlexGalhardo/vukem-video/service/crashpoint"
-	"github.com/AlexGalhardo/vukem-video/service/workspace"
-	"github.com/AlexGalhardo/vukem-video/web/app/store"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/crashpoint"
+	"github.com/AlexGalhardo/stuarty/service/workspace"
+	"github.com/AlexGalhardo/stuarty/web/app/store"
 )
 
 // SDD-005 section 18 check 6: the child is this test binary, started with the
@@ -24,10 +24,10 @@ import (
 // the parent reopens the database and checks the invariants of section 9.2.
 
 const (
-	roleEnv    = "VUKEM_VIDEO_CRASH_ROLE"
-	projectEnv = "VUKEM_VIDEO_CRASH_PROJECT"
-	trackEnv   = "VUKEM_VIDEO_CRASH_TRACK"
-	actionEnv  = "VUKEM_VIDEO_CRASH_ACTION"
+	roleEnv    = "STUARTY_CRASH_ROLE"
+	projectEnv = "STUARTY_CRASH_PROJECT"
+	trackEnv   = "STUARTY_CRASH_TRACK"
+	actionEnv  = "STUARTY_CRASH_ACTION"
 )
 
 // TestCrashChild is the body of the child process; as a normal test it does nothing.

@@ -3,7 +3,7 @@ package command
 import (
 	"slices"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 // Keyframe rules R10 to R13 of SDD-002: the value of an animated property, and how

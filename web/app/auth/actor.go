@@ -13,7 +13,7 @@ const DefaultLabel = "api"
 const UILabel = "ui"
 
 // ClientHeader names the label of a bearer client (SDD-007 section 3.7 item 4).
-const ClientHeader = "Vukem-Video-Client"
+const ClientHeader = "Stuarty-Client"
 
 var labelRe = regexp.MustCompile(`^[a-z0-9-]{1,32}$`)
 

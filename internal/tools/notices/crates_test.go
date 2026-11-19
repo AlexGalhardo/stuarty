@@ -10,9 +10,9 @@ import (
 	"testing"
 )
 
-// cargoMetadataFor builds the `cargo metadata` document of a workspace "vukem-renderer" that depends on
+// cargoMetadataFor builds the `cargo metadata` document of a workspace "stuarty-renderer" that depends on
 // "lib" (normal), "mac" (a proc macro) and "dev" (dev-only); "mac" needs "helper". A second member,
-// "vukem-renderer-gpu", is the native host and brings "gpudep", which is listed for the native targets only.
+// "stuarty-renderer-gpu", is the native host and brings "gpudep", which is listed for the native targets only.
 func cargoMetadataFor(dirs map[string]string) string {
 	pkg := func(name, kind, source string) string {
 		return `{"id":"` + name + `","name":"` + name + `","version":"1.0.0","license":"MIT","source":` + source +
@@ -26,7 +26,7 @@ func cargoMetadataFor(dirs map[string]string) string {
 	}
 
 	return `{"packages":[` + strings.Join([]string{
-		pkg("vukem-renderer", "cdylib", "null"),
+		pkg("stuarty-renderer", "cdylib", "null"),
 		pkg("lib", "lib", reg),
 		pkg("mac", "proc-macro", reg),
 		pkg(
@@ -35,13 +35,13 @@ func cargoMetadataFor(dirs map[string]string) string {
 			reg,
 		),
 		pkg("dev", "lib", reg),
-		pkg("vukem-renderer-gpu", "bin", "null"),
+		pkg("stuarty-renderer-gpu", "bin", "null"),
 		pkg("gpudep", "lib", reg),
-	}, ",") + `],"workspace_members":["vukem-renderer","vukem-renderer-gpu"],"resolve":{"nodes":[` +
-		`{"id":"vukem-renderer","deps":[` + dep("lib", "null") + "," + dep("mac", "null") + "," + dep("dev", `"dev"`) + `]},` +
+	}, ",") + `],"workspace_members":["stuarty-renderer","stuarty-renderer-gpu"],"resolve":{"nodes":[` +
+		`{"id":"stuarty-renderer","deps":[` + dep("lib", "null") + "," + dep("mac", "null") + "," + dep("dev", `"dev"`) + `]},` +
 		`{"id":"lib","deps":[]},{"id":"mac","deps":[` + dep("helper", "null") + `]},` +
 		`{"id":"helper","deps":[]},{"id":"dev","deps":[]},` +
-		`{"id":"vukem-renderer-gpu","deps":[` + dep("gpudep", "null") + `]},{"id":"gpudep","deps":[]}]}}`
+		`{"id":"stuarty-renderer-gpu","deps":[` + dep("gpudep", "null") + `]},{"id":"gpudep","deps":[]}]}}`
 }
 
 func TestRustCratesListsOnlyWhatIsShipped(t *testing.T) {
@@ -50,7 +50,7 @@ func TestRustCratesListsOnlyWhatIsShipped(t *testing.T) {
 	root := t.TempDir()
 	dirs := map[string]string{}
 
-	for _, n := range []string{"vukem-renderer", "lib", "mac", "helper", "dev", "vukem-renderer-gpu", "gpudep"} {
+	for _, n := range []string{"stuarty-renderer", "lib", "mac", "helper", "dev", "stuarty-renderer-gpu", "gpudep"} {
 		dirs[n] = filepath.Join(root, "crate-"+n)
 		if err := os.MkdirAll(dirs[n], 0o755); err != nil {
 			t.Fatal(err)
