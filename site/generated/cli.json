@@ -559,7 +559,7 @@
       "name": "export",
       "summary": "export a project to a file",
       "usage": [
-        "stuarty export --project <id> [--start t] [--end t] [--format f] [--at t] [--preset p] [--codec c] [--wait] [--timeout d] [--out f] [--force]"
+        "stuarty export --project <id> [--start t] [--end t] [--format f] [--at t] [--preset p] [--codec c] [--wait] [--out f] [--force]"
       ],
       "example": "stuarty export --project prj_7k2m9x4q1b --json",
       "flags": [
