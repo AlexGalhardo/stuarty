@@ -243,6 +243,12 @@ func (s *svc) runText(ctx context.Context, run JobRun) (JobOutcome, error) {
 		return JobOutcome{}, providerError(err)
 	}
 
+	// The model an answer names is written by the server, and the result does not mark it as untrusted: one
+	// that is not a model id (SDD-016 section 3) is replaced by the model that was asked for.
+	if !provider.ValidModel(res.Model) {
+		res.Model = in.Request.Model
+	}
+
 	cost := provider.TextCost(res.Usage, in.Price)
 	spent := core.Money{Micros: cost.Micros, Currency: cost.Currency}
 
