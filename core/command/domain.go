@@ -81,3 +81,6 @@ func CheckStyleFont(s *timeline.CaptionStyle) *Error {
 
 	return c.checkFont(s)
 }
+
+// Unknown is the E_UNKNOWN_COMMAND of a name this registry does not have, listing the names it has.
+func (r *Registry) Unknown(name string) *Error { return r.unknown(name) }

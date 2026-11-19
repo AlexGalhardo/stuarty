@@ -311,7 +311,8 @@ func TestResetDropsEveryEditorTableAndUpRunsAgain(t *testing.T) {
 		"api_keys",
 		"brand_kits",
 		"font_owners",
-		"connections",
+		"image_documents",
+		"image_operations",
 	}
 	for _, table := range tables {
 		if len(columns(t, db, table)) == 0 {
