@@ -38,6 +38,31 @@ func productionCalls(m *mediaEnv, id string) map[string]func(ctx context.Context
 
 			return err
 		},
+		"ProjectItemMove": func(ctx context.Context) error {
+			_, err := p.ProjectItemMove(
+				ctx, service.ProjectItemMoveRequest{ProjectID: id, ItemID: "itm_0000000001", DryRun: true},
+			)
+
+			return err
+		},
+		"ProjectItemRename": func(ctx context.Context) error {
+			_, err := p.ProjectItemRename(ctx, service.ProjectItemRenameRequest{
+				ProjectID: id, ItemID: "itm_0000000001", Title: "t", DryRun: true,
+			})
+
+			return err
+		},
+		"ProjectItemRestore": func(ctx context.Context) error {
+			_, err := p.ProjectItemRestore(
+				ctx, service.ProjectItemTrashRequest{ProjectID: id, ItemID: "itm_0000000001", DryRun: true},
+			)
+
+			return err
+		},
+		"ProjectRestore": func(ctx context.Context) error {
+			_, err := m.svc.ProjectRestore(ctx, service.ProjectTrashRequest{ProjectID: id, DryRun: true})
+			return err
+		},
 		"BriefGet": func(ctx context.Context) error {
 			_, err := p.BriefGet(ctx, service.BriefGetRequest{ProjectID: id})
 			return err
