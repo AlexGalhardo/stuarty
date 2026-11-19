@@ -39,7 +39,7 @@ func TestEncoderOptionsPerEncoder(t *testing.T) {
 	fps := timeline.Rational{Num: 30, Den: 1}
 	join := func(name string) string {
 		var parts []string
-		for _, o := range encoderOpts(name, 1080, 1920, fps) {
+		for _, o := range encoderOpts(name, "", 1080, 1920, fps, 0) {
 			name, value := o.Pair()
 			parts = append(parts, name+" "+value)
 		}
@@ -61,7 +61,7 @@ func TestEncoderOptionsPerEncoder(t *testing.T) {
 	if got := join("libopenh264"); !strings.Contains(got, "-g 15") {
 		t.Error(got)
 	}
-	opts := encoderOpts("libopenh264", 1080, 1920, timeline.Rational{Num: 25, Den: 1})
+	opts := encoderOpts("libopenh264", "", 1080, 1920, timeline.Rational{Num: 25, Den: 1}, 0)
 	if name, value := opts[2].Pair(); name != "-g" || value != "13" {
 		t.Errorf("25 fps: %s %s", name, value)
 	}

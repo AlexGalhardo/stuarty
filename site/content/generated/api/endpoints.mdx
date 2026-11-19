@@ -62,9 +62,12 @@ Every operation has its own page with the parameters, the body, the responses an
 
 | Method | Path | Operation | Summary |
 | --- | --- | --- | --- |
+| `GET` | `/api/v1/export-presets` | [`export.presets`](/docs/api/export.presets) | List the export presets of the platforms |
 | `GET` | `/api/v1/jobs/{job_id}` | [`jobs.get`](/docs/api/jobs.get) | Read a job |
 | `POST` | `/api/v1/jobs/{job_id}/cancel` | [`jobs.cancel`](/docs/api/jobs.cancel) | Cancel a job |
 | `GET` | `/api/v1/jobs/{job_id}/file` | [`jobs.file`](/docs/api/jobs.file) | Download the file of a finished export |
+| `POST` | `/api/v1/projects/{id}/export-batches` | [`export.batch`](/docs/api/export.batch) | Export a project several times, one after the other |
+| `GET` | `/api/v1/projects/{id}/export-check` | [`export.check`](/docs/api/export.check) | Check a project against an export preset |
 | `GET` | `/api/v1/projects/{id}/jobs` | [`jobs.list`](/docs/api/jobs.list) | List the jobs of a project |
 | `POST` | `/api/v1/projects/{id}/jobs` | [`jobs.start`](/docs/api/jobs.start) | Start a job |
 
