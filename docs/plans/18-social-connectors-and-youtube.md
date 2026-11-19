@@ -40,7 +40,7 @@ A creator connects their YouTube channel once, with their own Google developer p
 - [x] 2. Implement `core/publish` with table tests. Verify: `go test ./core/publish/...` passes.
 - [x] 3. Implement the connector interface, the registry and a fake connector for tests. Verify: `go test ./service/social/...` passes.
 - [x] 4. Implement the sign-in with the user's own client (or reuse epic 12's flow) and the account list. Verify: `go test ./service/social/youtube/... -run TestAuth` passes against a fake authorization server.
-- [ ] 5. Implement the resumable upload, the thumbnail and status, with contract fixtures. Verify: `go test ./service/social/youtube/...` passes with no network, including resume after an interrupted upload.
+- [x] 5. Implement the resumable upload, the thumbnail and status, with contract fixtures. Verify: `go test ./service/social/youtube/...` passes with no network, including resume after an interrupted upload.
 - [ ] 6. Implement `publish.upload` with approval and the state machine. Verify: `go test ./service/... -run TestPublishNow` passes (no outbound call before approval).
 - [ ] 7. Expose on HTTP, CLI and MCP with parity. Verify: `go test ./web/contract/...` passes.
 - [ ] 8. Build the setup guide and the "publish now" dialog in both languages. Verify: `task test:web` and `web/e2e/specs/youtube-connect.spec.ts` pass with the fake connector.
