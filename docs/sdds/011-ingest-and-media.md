@@ -20,6 +20,7 @@
 11. Test fixtures
 12. Acceptance
 13. Decisions of this SDD and changes it required in other documents
+14. The workspace asset library
 
 ## 1. Overview, packages and conventions
 
@@ -1408,3 +1409,73 @@ Each row is what was decided; the architect applies it in the named document.
 | ADR-0010 | PCM for the normalized audio; AAC only in the proxy (4.3.3) |
 | `licensing.md` | MPEG-4 Part 2 (normalized codec) and libvpx and VP9 (proxy codec) are listed as not yet researched; open point for the author before the first release (4.2) |
 | `vukem/contrib/engine` | `RunStream` streams stdout live but stderr only as a tail after the run, and the default `Config.Timeout` (5 min) is shorter than a long ingest. No change needed; recorded by the architect as VF-021. A live stderr callback would let whisper's own `progress = N%` be used |
+
+## 14. The workspace asset library
+
+PRD-004 RF-320 to RF-323, ADR-0010, ADR-0039, ADR-0036 item 6. The library is the view of the files of the workspace, by content hash, with where each came from, whether it may be reused and how to find it. It is the same `assets` rows that the editor uses (section 2.2); nothing is copied and no file moves. Out of scope: generating assets, downloading from a link inside the product (an agent downloads on its own side and imports the file, ADR-0020 item 6) and editing an asset.
+
+### 14.1 The entry
+
+A library entry is one file by hash, with the facts of the probe and the library side of SDD-005 §5.5.1. In `service` it is `LibraryAsset`; its members:
+
+| Member | Meaning |
+| --- | --- |
+| `hash`, `kind`, `bytes`, `width`, `height`, `duration_ms` | the file and its facts (`kind` is `image`, `video`, `audio` or `lut`) |
+| `name` | the name it was first imported under; untrusted |
+| `origin` | `{kind, source, provider, model, prompt, cost_micros, rights_note}`; `source`, `prompt` and `rights_note` are untrusted |
+| `description` | the user's own text; untrusted |
+| `reusable`, `tags` | the reuse mark and the normalised tags |
+| `created_by`, `created_at` | the actor and the time of the first import |
+| `projects` | how many projects use it (a project counted once, however many timelines hold it) |
+| `uses` | in `AssetGet` and `AssetUses`: `[{project_id, name, timelines, asset_id}]`, `asset_id` the `ast_` identifier in the first timeline that holds it |
+
+The rights note is the user's own record of a licence or a permission. The product never checks it against a licence and never treats a note as permission; the UI says so beside every note.
+
+### 14.2 Origin by kind (`core/asset`)
+
+| Origin kind | Required | Optional |
+| --- | --- | --- |
+| `imported` | nothing | `source` (a path or a name the caller chooses to record), `rights_note` |
+| `generated` | `provider`, `model` | `prompt`, `cost_micros`, `source`, `rights_note` |
+| `fetched_by_agent` | `source` (a URL or a page, as plain text; the product never opens it), `rights_note` | `cost_micros` |
+| `rendered_externally` | `source` (the tool or the project it was rendered by) | `rights_note` |
+
+A missing required member is `E_VALIDATION` with `path` `origin.<member>` and `details.reason` `<member>_required` (`source_required`, `rights_note_required`, `provider_required`, `model_required`); an unknown kind is `origin_kind_unknown`; a text over its cap (source 2,000, prompt 8,000, rights note 2,000, description 2,000, provider and model 100 characters) is `too_long`; a negative `cost_micros` is `cost_invalid`. The check runs before any file of the call is read, so one bad block refuses the whole call and writes nothing. A call with no block records `imported` with no source: the product never stores the directory of an import by itself (SDD-007 §7).
+
+### 14.3 Tags, reuse and uses
+
+- A tag is trimmed, NFC-normalised, lower-cased, a leading `#` removed and runs of white space turned into one `-`; it has 1 to 40 characters from letters, digits, `-` and `_`. An asset holds at most 20. A tag that is not valid after normalisation refuses the call (`tags_invalid`); a duplicate is kept once; the set is sorted.
+- `reusable` is a mark the user or an agent sets on a file they want offered again (a logo, a reaction clip, a sound). It filters; it grants nothing: any file of the library can be used by a project, reusable or not.
+- A project uses an asset when a timeline of it holds the hash in `project_assets` in state `active` (SDD-005 §5.5.1). Reusing a file from another project is `MediaImport` with the file given by hash (`files[].hash`, no path): the service links the hash to the timeline with its own `ast_` identifier and, when the asset is `ready`, issues `asset.add`. Nothing is copied and no ingest runs for a `ready` asset. In network mode the hash must be held by a project the caller can see; otherwise the answer is the same `E_VALIDATION` as for a hash that does not exist (SDD-007 T-20).
+
+### 14.4 Operations
+
+| Operation | Request | Result |
+| --- | --- | --- |
+| `AssetList` | `kind`, `section`, `tag`, `project` (a production or a timeline id), `origin` (an origin kind), `reusable`, `text`, `limit`, `cursor` | `LibraryAsset` entries, `next_cursor`, `text` |
+| `AssetGet` | `hash` | the entry with `uses` |
+| `AssetUses` | `hash`, `limit`, `cursor` | the `uses` |
+| `AssetSetInfo` | `hash`, and any of `description`, `rights_note` (it edits `origin.rights_note`), `reusable` | the entry |
+| `AssetTag` | `hash`, `add`, `remove` (lists of tags) | the entry |
+
+The first three are `read`; the last two are `media`. The result of every operation is an entry or a list of them, in `LibraryAsset` form; the text carries `source`, `prompt`, `rights_note` and `description` as delimited untrusted text (SDD-007 §8.2, source `metadata`, with the member as the attribute `field`) and the text of a list is cut to the budget of SDD-003 §3.10 with a `next_cursor`. `AssetList` keeps the order name, then hash, and the section filter: `visual` is the kinds `image` and `lut`, `video` is `video` and `audio`. `text` is a full-text query over name, tags, description and origin (SDD-005 §5.5.1), at most 8 terms, every term a prefix; it is never an SQL or FTS expression. An unknown hash is `E_NOT_FOUND`; in network mode a hash no visible project holds is the same.
+
+`MediaImport` accepts an optional `origin` block for the call (all files of the call share it), validated as in 14.2, and an optional `info` block `{tags, reusable, description}` applied to the files it creates. An already-known hash keeps its origin (SDD-005 §5.5.1); its tags are added to.
+
+### 14.5 Surfaces
+
+HTTP: `GET /assets`, `GET /assets/{hash}`, `GET /assets/{hash}/uses`, `PUT /assets/{hash}`, `POST /assets/{hash}/tags`. CLI: `asset:list`, `asset:show`, `asset:uses`, `asset:set`, `asset:tag`, and `media:import` with `--origin-kind`, `--origin-source`, `--provider`, `--model`, `--prompt`, `--rights-note`, `--tag`, `--reusable` and `--hash`. MCP: no new tool (NFR-020): `media_inspect` without a `project_id` lists the library (arguments `kind`, `tag`, `reusable`, `origin`, `text`, `project`) and with a `hash` describes an entry and its uses (the `library` argument is one object: `tag`, `reusable`, `origin`, `text`, `kind`, `section`, `project`; `project_id` filters by project when `library.project` is absent); `media_import` takes `origin` and `info`, entries of `paths` of the form `sha256:<hex>` for reuse, and with a `hash` and no `paths` edits an entry through `info` (`description`, `rights_note`, `reusable`, `tags` to add, `remove_tags`). The list answers 50 entries by default on MCP. `AssetUses` has no tool.
+
+### 14.6 The two sections
+
+The UI has two sections over the library, Visual Assets (`image`, `lut`) and Video Assets (`video`, `audio`): a grid of posters (the `thumbnail` route of section 6.5), the filters of `AssetList`, a detail panel with the origin, the rights note (with the notice of 14.1) and the projects that use it, and "use in a project", which runs the reuse of 14.3 on the project the person picks (the sections are pages of their own, with no open timeline to drop on; inside the editor, the media library keeps its drag onto the timeline). The UI computes nothing: every list, filter and use comes from the operations above. Fonts keep their own picker (`FontList`, the brand kit) and image documents their own list (SDD-021); they are not entries of this library.
+
+### 14.7 Decisions
+
+| # | Decision |
+| --- | --- |
+| DS-18 | The library side is a table beside `assets`, not new columns of it, so ingest never writes it and a row is optional (SDD-005 §5.5.1). |
+| DS-19 | Origin is written once, at the first import of the bytes; the user's fields change later. |
+| DS-20 | A refused origin is `E_VALIDATION` with `details.reason`, not a new code. |
+| DS-21 | MCP gains no tool: the library reads live in `media_inspect` and its writes in `media_import`. |
+| DS-22 | Open, for the author before a release with network mode: the library side is kept per file, not per user. In network mode two users who both hold the same bytes see one entry (its origin, prompt, cost, rights note, description and tags) and either can change the description, the rights note, the reuse mark and the tags; a user who does not hold the bytes sees nothing of it (14.3). The alternative is an entry per owner in network mode. Local mode has one user and is not affected. |

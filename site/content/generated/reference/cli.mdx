@@ -265,12 +265,25 @@ Import media files into a project
 
 ```text
 stuarty media:import <path>... --project <id> [--asset-id ast_...] [--wait] [--timeout d]
+stuarty media:import --hash sha256:... --project <id>   (a file the library already holds: no copy)
+origin and reuse: [--origin-kind k] [--origin-source s] [--provider p] [--model m] [--prompt t] [--rights-note t] [--tag t] [--reusable] [--description t]
 formats: MP4, MOV, MKV, WebM, AVI, MP3, WAV, FLAC, OGG, PNG, JPEG, WebP, GIF and .cube; not SVG
 ```
 
 | Flag | Type | Default | Meaning |
 | --- | --- | --- | --- |
 | `--asset-id` | string, repeatable |  | id to give the asset, once per path, in order |
+| `--hash` | string, repeatable |  | the hash of a file of the library to use in the project, in place of a path |
+| `--origin-kind` | string |  | imported (default), generated, fetched_by_agent or rendered_externally |
+| `--origin-source` | string |  | a path, a URL or a tool name, as plain text (required for fetched_by_agent and rendered_externally) |
+| `--provider` | string |  | the provider that generated the files (required for generated) |
+| `--model` | string |  | the model that generated the files (required for generated) |
+| `--prompt` | string |  | the prompt that generated the files |
+| `--cost-micros` | integer |  | what the files cost, in millionths of a US dollar |
+| `--rights-note` | string |  | your own record of the licence or the permission (required for fetched_by_agent) |
+| `--tag` | string, repeatable |  | a tag for the files; repeat it or give a comma list |
+| `--reusable` | boolean |  | mark the files to be offered again |
+| `--description` | string |  | what the files are, in your words |
 
 Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--wait`, `--timeout`.
 
@@ -1572,6 +1585,114 @@ Example:
 
 ```bash
 stuarty image:export img_7k2m9x4q1b --format jpeg --quality 85
+```
+
+## `asset:list`
+
+List the files of the library, with origin, tags and reuse
+
+```text
+stuarty asset:list
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--section` | string |  | visual (images and LUTs) or video (video and audio) |
+| `--kind` | string |  | image, video, audio or lut |
+| `--tag` | string |  | only the files with this tag |
+| `--project` | string |  | only the files this project, or one of its timelines, uses |
+| `--origin` | string |  | imported, generated, fetched_by_agent or rendered_externally |
+| `--reusable` | boolean |  | only the files marked reusable; --no-reusable keeps the others |
+| `--text` | string |  | a full-text query over name, tags, description and origin |
+| `--cursor` | string |  | continue a list from this cursor |
+| `--limit` | integer | `50` | items per page |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty asset:list --tag logo --reusable --json
+```
+
+## `asset:show`
+
+Show a file of the library: its origin, its tags and the projects that use it
+
+```text
+stuarty asset:show <hash>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty asset:show sha256:3b4c0a1d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b --json
+```
+
+## `asset:uses`
+
+List the projects that use a file of the library
+
+```text
+stuarty asset:uses <hash>
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--cursor` | string |  | continue a list from this cursor |
+| `--limit` | integer | `50` | items per page |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty asset:uses sha256:3b4c0a1d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b --json
+```
+
+## `asset:set`
+
+Set the description, the rights note and the reuse mark of a file of the library
+
+```text
+stuarty asset:set <hash>
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--description` | string |  | what the file is, in your words; an empty value clears it |
+| `--rights-note` | string |  | your own record of the licence or the permission; the product does not check it |
+| `--reusable` | boolean |  | mark the file to be offered again; --no-reusable takes the mark off |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty asset:set sha256:3b4c0a1d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b --reusable
+```
+
+## `asset:tag`
+
+Add and remove the tags of a file of the library
+
+```text
+stuarty asset:tag <hash>
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--add` | string, repeatable |  | tags to add; repeat it or give a comma list |
+| `--remove` | string, repeatable |  | tags to take off |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty asset:tag sha256:3b4c0a1d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b --add logo,brand
 ```
 
 ## `memory:list`
