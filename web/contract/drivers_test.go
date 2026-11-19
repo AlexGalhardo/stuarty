@@ -234,6 +234,10 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.BriefGet)
 	case "BriefSet":
 		return invoke(ctx, s, svc.BriefSet)
+	case "BriefingQuestions":
+		return invoke(ctx, s, svc.BriefingQuestions)
+	case "BriefingAnswer":
+		return invoke(ctx, s, svc.BriefingAnswer)
 	}
 
 	if res, ok, err := libraryCall(ctx, svc, s); ok {
@@ -562,6 +566,17 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 		args["action"] = "brief"
 
 		return "project_item", args, nil
+	case "BriefingQuestions":
+		args["action"] = "briefing"
+
+		return "project_item", args, nil
+	case "BriefingAnswer":
+		delete(args, "dry_run")
+		delete(args, "replace")
+
+		args["action"] = "briefing"
+
+		return "project_item", args, nil
 	}
 
 	if tool, args, ok, err := libraryTool(s); ok {
@@ -704,6 +719,9 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 		Title    string `json:"title"`
 		Text     string `json:"text"`
 		Position *int   `json:"position"`
+
+		Answers map[string]string `json:"answers"`
+		Replace bool              `json:"replace"`
 	}
 
 	if len(s.Args) > 0 {
@@ -961,6 +979,20 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 		return "brief:show", proj, "", nil
 	case "BriefSet":
 		return "brief:set", append(slices.Clone(proj), "--text", "-"), a.Text, nil
+	case "BriefingQuestions":
+		return "briefing:questions", flag("project", a.ProjectID), "", nil
+	case "BriefingAnswer":
+		raw, err := json.Marshal(a.Answers)
+		if err != nil {
+			return "", nil, "", err
+		}
+
+		argv = append(slices.Clone(proj), "--answers", "-")
+		if a.Replace {
+			argv = append(argv, "--replace")
+		}
+
+		return "briefing:answer", argv, string(raw), nil
 	case "TemplateInstantiate":
 		argv = append([]string{a.TemplateID}, flag("name", a.Name)...)
 		argv = append(argv, flag("id", a.ID)...)

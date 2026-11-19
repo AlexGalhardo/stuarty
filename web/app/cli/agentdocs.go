@@ -28,6 +28,11 @@ func AgentDocsInputs() agentdocs.Inputs {
 		inLibrary[s.name] = true
 	}
 
+	// The same for the guided briefing: the skill brief-a-production carries it (SDD-018 section 16).
+	for _, s := range []*spec{briefingQuestionsCmd, briefingAnswerCmd} {
+		inLibrary[s.name] = true
+	}
+
 	for i := range commands {
 		c := &commands[i]
 		if c.Person || inLibrary[c.Name] {

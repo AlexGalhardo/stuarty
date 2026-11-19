@@ -339,6 +339,85 @@
         },
         "type": "object"
       },
+      "BriefingAnswer": {
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string",
+            "x-untrusted": true
+          }
+        },
+        "type": "object"
+      },
+      "BriefingQuestion": {
+        "properties": {
+          "heading": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "max": {
+            "type": "integer"
+          },
+          "max_chars": {
+            "type": "integer"
+          },
+          "min": {
+            "type": "integer"
+          },
+          "options": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "BriefingQuestionsResult": {
+        "properties": {
+          "answers": {
+            "items": {
+              "$ref": "#/components/schemas/BriefingAnswer"
+            },
+            "type": "array"
+          },
+          "guided": {
+            "type": "boolean"
+          },
+          "has_brief": {
+            "type": "boolean"
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "questions": {
+            "items": {
+              "$ref": "#/components/schemas/BriefingQuestion"
+            },
+            "type": "array"
+          },
+          "text": {
+            "type": "string"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "CaptionStyle": {
         "properties": {
           "align": {
@@ -10819,6 +10898,54 @@
         "summary": "Replace the brand kit"
       }
     },
+    "/api/v1/briefing/questions": {
+      "get": {
+        "operationId": "briefing.questions",
+        "parameters": [
+          {
+            "description": "With a project: also the answers its brief holds.",
+            "in": "query",
+            "name": "project_id",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BriefingQuestionsResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "The questions of the guided briefing"
+      }
+    },
     "/api/v1/commands": {
       "get": {
         "operationId": "commands.list",
@@ -14304,6 +14431,84 @@
           }
         ],
         "summary": "Write the brief of a project"
+      }
+    },
+    "/api/v1/projects/{id}/briefing": {
+      "put": {
+        "operationId": "projects.briefing.answer",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "answers": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "description": "Question id to answer; the questions are GET /briefing/questions. The answers replace the brief.",
+                    "type": "object"
+                  },
+                  "dry_run": {
+                    "type": "boolean"
+                  },
+                  "replace": {
+                    "description": "Replace a brief that was written by hand.",
+                    "type": "boolean"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BriefResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Answer the briefing: the answers become the brief of the project"
       }
     },
     "/api/v1/projects/{id}/bundle": {

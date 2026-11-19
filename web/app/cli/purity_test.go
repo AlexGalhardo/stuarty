@@ -310,6 +310,17 @@ func (s stub) BriefSet(context.Context, service.BriefSetRequest) (*service.Brief
 	return reply[service.BriefResult](s.err)
 }
 
+func (s stub) BriefingQuestions(
+	context.Context,
+	service.BriefingQuestionsRequest,
+) (*service.BriefingQuestionsResult, error) {
+	return reply[service.BriefingQuestionsResult](s.err)
+}
+
+func (s stub) BriefingAnswer(context.Context, service.BriefingAnswerRequest) (*service.BriefResult, error) {
+	return reply[service.BriefResult](s.err)
+}
+
 func (s stub) MemoryList(context.Context, service.MemoryListRequest) (*service.LibraryListResult, error) {
 	return reply[service.LibraryListResult](s.err)
 }

@@ -1054,6 +1054,33 @@ export interface BriefResult {
 	text: string;
 }
 
+// The guided briefing (SDD-005 section 5.12.1): the questions are the core's, the page only draws them.
+export interface BriefingQuestion {
+	id: string;
+	heading: string;
+	text: string;
+	kind: "text" | "choice" | "seconds" | "date";
+	required: boolean;
+	options?: string[];
+	max_chars?: number;
+	min?: number;
+	max?: number;
+}
+
+export interface BriefingAnswer {
+	id: string;
+	value: string;
+}
+
+export interface BriefingQuestionsResult {
+	project_id?: string;
+	questions: BriefingQuestion[];
+	has_brief: boolean;
+	guided: boolean;
+	answers?: BriefingAnswer[];
+	text: string;
+}
+
 export interface ProjectStateResult {
 	project_id: string;
 	state: ProjectState;
