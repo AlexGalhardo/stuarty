@@ -520,9 +520,13 @@ func applyMaskSet(c *command.Context, d *Document, a *maskSetArgs) error {
 	m := Mask{Kind: a.Kind, Invert: a.Invert}
 
 	if a.Kind == MaskLayer {
-		for name, v := range map[string]*int{"x": a.X, "y": a.Y, "w": a.W, "h": a.H, "radius": a.Radius, "feather": a.Feather} {
-			if v != nil {
-				return invalid("args."+name, "A mask of kind layer has no %s.", name).
+		// A slice, not a map: the error names the first shape member in the order of the arguments, every time.
+		for _, g := range []struct {
+			name string
+			v    *int
+		}{{"x", a.X}, {"y", a.Y}, {"w", a.W}, {"h", a.H}, {"radius", a.Radius}, {"feather", a.Feather}} {
+			if g.v != nil {
+				return invalid("args."+g.name, "A mask of kind layer has no %s.", g.name).
 					WithHint("Give source and, if you want, invert.")
 			}
 		}

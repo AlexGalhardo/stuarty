@@ -3,6 +3,7 @@ package image
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"slices"
 	"strings"
 	"testing"
@@ -435,5 +436,23 @@ func TestLookCommandsAreDeterministic(t *testing.T) {
 
 	if !bytes.Equal(Canonical(a.Doc), Canonical(b.Doc)) {
 		t.Fatal("the same batch gave two documents")
+	}
+}
+
+// The error of a refused batch is part of what is the same every time (SDD-021 section 4): a mask of kind layer
+// with two shape members names the first of them, in the order of the arguments.
+func TestMaskSetErrorIsDeterministic(t *testing.T) {
+	bad := op(
+		"layer.mask_set",
+		`{"layer_id": "`+lid('b')+`", "kind": "layer", "source": "`+lid('d')+`", "feather": 4, "radius": 8, "x": 1}`,
+	)
+
+	for range 50 {
+		_, err := ApplyBatch(baseDoc(), []command.Operation{bad}, testEnv())
+
+		var ce *command.Error
+		if !errors.As(err, &ce) || ce.Path != "args.x" {
+			t.Fatalf("the error is %v, not the one of args.x", err)
+		}
 	}
 }
