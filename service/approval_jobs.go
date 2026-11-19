@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"slices"
 	"time"
 
@@ -409,6 +410,17 @@ func (s *svc) recordActual(ctx context.Context, st approval.Store, jobID string,
 	_, err = st.Settle(ctx, jobID, actual, now)
 
 	return err
+}
+
+// releaseUnrun gives back the reservation of an approved job that ended before it ran.
+func (s *svc) releaseUnrun(ctx context.Context, j *JobRow) {
+	ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), finishTimeout)
+	defer cancel()
+
+	if _, err := s.store.Approvals().Release(ctx, j.ID, s.nowMs()); err != nil {
+		s.logJob(ctx, slog.LevelWarn, "the reservation of a cancelled job was not released", j,
+			slog.String("error", err.Error()))
+	}
 }
 
 // kindOf is the registered approvable kind of a job kind, or nil.
