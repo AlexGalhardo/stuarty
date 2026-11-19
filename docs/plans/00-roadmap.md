@@ -57,7 +57,7 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | [30](30-image-operations-with-a-model.md) | Image operations with a model | S | 10, 28 | TODO |
 | [31](31-motion-easing-crop-and-mask.md) | Motion: easing curves, animated crop and mask, presets | L | 03 | DONE (2026-11-19, `e914c99b`..`a88f8e63`, merge `4c2c5c85`) |
 | [32](32-nested-compositions.md) | Nested compositions | M | 06, 31 | IN PROGRESS (senior-a, 2026-11-20) |
-| [33](33-external-motion-engine-hand-off.md) | Hand-off from an external motion engine | M | 08 | IN PROGRESS (senior-d, 2026-11-19) |
+| [33](33-external-motion-engine-hand-off.md) | Hand-off from an external motion engine | M | 08 | DONE (2026-11-20, `4f4022cc`..`bb19aa733` replayed, merge `3d693ba1d`; real HyperFrames round and no-egress on Linux not verified) |
 | [34](34-audio-processors-and-noise-reduction.md) | Audio processors and noise reduction | L | 03 | IN PROGRESS (senior-c, 2026-11-19) |
 | [35](35-export-presets-batch-and-codecs.md) | Export presets, batch queue, H.265 and AV1 | M | 03 | DONE (2026-11-19, `c1bb77fa`..`c718fdb2`, merge `1063ec42`) |
 | [36](36-revert-checkpoints-and-diff.md) | Revert to a revision, checkpoints and a diff | M | 03 | IN PROGRESS (senior-b, 2026-11-19) |
