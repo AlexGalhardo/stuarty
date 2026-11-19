@@ -244,3 +244,85 @@ func TestJobsExportBatchKindLeavesAnOpenTableAlone(t *testing.T) {
 		t.Errorf("approval_id after the migration = %q, %v", approval, err)
 	}
 }
+
+// TestJobsMigrationsKeepEveryJobInAnyOrder: the two rebuilds of jobs, the export_batch kind and the approval queue
+// (which drops the closed list of kinds and adds approval_id and waiting_approval), keep every row whichever ran
+// first. In ID order the export_batch rebuild runs before; a workspace that already ran the approval rebuild runs
+// it out of order, and it leaves the table alone. Down of the approval rebuild keeps the export batches.
+func TestJobsMigrationsKeepEveryJobInAnyOrder(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("in order", func(t *testing.T) {
+		db := openWith(t, before(exportBatchMigrationID))
+		insertTimeline(t, db, "prj_a")
+		insertEveryJob(t, db)
+		want := jobRows(t, db)
+
+		ran := upTo(t, db, every)
+		if !slices.Contains(ran, exportBatchMigrationID) || !slices.Contains(ran, waitingApprovalID) ||
+			slices.Index(ran, exportBatchMigrationID) > slices.Index(ran, waitingApprovalID) {
+			t.Fatalf("ran %v", ran)
+		}
+
+		if got := jobRows(t, db); !slices.Equal(got, want) {
+			t.Errorf("rows after both rebuilds:\n%q\nwant\n%q", got, want)
+		}
+
+		execAll(t, db,
+			`INSERT INTO jobs (id, kind, project_id, actor, input, created_ms, updated_ms) VALUES ('job_6', 'export_batch', 'prj_a', 'a', '{}', 1, 1)`,
+			`INSERT INTO jobs (id, kind, project_id, actor, state, input, created_ms, updated_ms, approval_id) VALUES ('job_7', 'publish.post', 'prj_a', 'a', 'waiting_approval', '{}', 1, 1, 'apr_0000000001')`,
+		)
+
+		// Down of the approval rebuild gives back the closed list of kinds, export_batch included: the batch stays.
+		if err := m20261119140100JobsWaitingApproval().Down(schema.New(ctx, db)); err != nil {
+			t.Fatal(err)
+		}
+
+		if n := count(t, db, `SELECT count(*) FROM jobs WHERE kind = 'export_batch'`); n != 1 {
+			t.Errorf("export batches after Down of the approval rebuild = %d; want 1", n)
+		}
+
+		if n := count(t, db, `SELECT count(*) FROM jobs`); n != len(want)+1 {
+			t.Errorf("jobs after Down of the approval rebuild = %d; want %d (only the waiting one goes)", n, len(want)+1)
+		}
+
+		execAll(t, db, `INSERT INTO jobs (id, kind, project_id, actor, input, created_ms, updated_ms) VALUES ('job_8', 'export_batch', 'prj_a', 'a', '{}', 1, 1)`)
+	})
+
+	t.Run("approval first", func(t *testing.T) {
+		db := openWith(t, func(id string) bool { return id != exportBatchMigrationID })
+		insertTimeline(t, db, "prj_a")
+		insertEveryJob(t, db)
+		execAll(t, db, `INSERT INTO jobs (id, kind, project_id, actor, state, input, created_ms, updated_ms, approval_id)
+ VALUES ('job_9', 'publish.post', 'prj_a', 'a', 'waiting_approval', '{}', 1, 1, 'apr_0000000001')`)
+
+		want := jobRows(t, db)
+		sql := func() string {
+			var s string
+			if err := db.QueryRowContext(ctx, `SELECT sql FROM sqlite_master WHERE name = 'jobs'`).Scan(&s); err != nil {
+				t.Fatal(err)
+			}
+
+			return s
+		}
+		was := sql()
+
+		if ran := upTo(t, db, every); !slices.Equal(ran, []string{exportBatchMigrationID}) {
+			t.Fatalf("ran %v", ran)
+		}
+
+		if got := jobRows(t, db); !slices.Equal(got, want) {
+			t.Errorf("rows after the out-of-order rebuild:\n%q\nwant\n%q", got, want)
+		}
+
+		if sql() != was {
+			t.Errorf("the table was rebuilt:\n%s\nwas\n%s", sql(), was)
+		}
+
+		if n := count(t, db, `SELECT count(*) FROM jobs WHERE approval_id = 'apr_0000000001'`); n != 1 {
+			t.Errorf("approval_id after the out-of-order rebuild: %d rows; want 1", n)
+		}
+
+		execAll(t, db, `INSERT INTO jobs (id, kind, project_id, actor, input, created_ms, updated_ms) VALUES ('job_10', 'export_batch', 'prj_a', 'a', '{}', 1, 1)`)
+	})
+}
