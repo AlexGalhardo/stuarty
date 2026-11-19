@@ -2,6 +2,8 @@ command agent:docs
 command audit
 command brand:set
 command brand:show
+command brief:set
+command brief:show
 command bundle:export
 command bundle:import
 command command:help
@@ -17,13 +19,11 @@ command export
 command font:import
 command fonts
 command history
-command image:create
-command image:edit
-command image:export
-command image:list
-command image:redo
-command image:show
-command image:undo
+command item:add
+command item:move
+command item:rename
+command item:restore
+command item:trash
 command job:cancel
 command job:list
 command job:show
@@ -37,6 +37,8 @@ command media:trash
 command otio:export
 command otio:import
 command project:create
+command project:describe
+command project:duplicate
 command project:list
 command project:restore
 command project:show
@@ -72,6 +74,8 @@ route GET /keys
 route GET /projects
 route GET /projects/{}
 route GET /projects/{}/bitmaps/{}
+route GET /projects/{}/brief
+route GET /projects/{}/describe
 route GET /projects/{}/events
 route GET /projects/{}/frame
 route GET /projects/{}/history
@@ -108,7 +112,13 @@ route POST /keys
 route POST /projects
 route POST /projects/import
 route POST /projects/{}/bundle
+route POST /projects/{}/duplicate
 route POST /projects/{}/edit
+route POST /projects/{}/items
+route POST /projects/{}/items/{}/move
+route POST /projects/{}/items/{}/rename
+route POST /projects/{}/items/{}/restore
+route POST /projects/{}/items/{}/trash
 route POST /projects/{}/jobs
 route POST /projects/{}/media
 route POST /projects/{}/media/{}/restore
@@ -127,6 +137,7 @@ route POST /templates/{}/instantiate
 route POST /trash/empty
 route POST /users
 route PUT /brand-kit
+route PUT /projects/{}/brief
 tool command_help
 tool connection
 tool edit
@@ -141,6 +152,7 @@ tool media_import
 tool media_inspect
 tool project_create
 tool project_get
+tool project_item
 tool project_list
 tool project_trash
 tool template

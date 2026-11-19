@@ -45,9 +45,11 @@ type ProjectSummary struct {
 	Tracks    int       `json:"tracks"`
 	Items     int       `json:"items"`
 	Assets    int       `json:"assets"`
-	// Timelines is how many timelines the project holds; the other members are those of the first of them.
-	Timelines int       `json:"timelines"`
-	UpdatedAt time.Time `json:"updated_at"` // UTC
+	// TimelineID is the first active timeline, the one the other members are about; Timelines is how many the
+	// project holds.
+	TimelineID string    `json:"timeline_id,omitempty"`
+	Timelines  int       `json:"timelines"`
+	UpdatedAt  time.Time `json:"updated_at"` // UTC
 }
 
 // ProjectListRequest lists projects.
