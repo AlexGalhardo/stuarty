@@ -59,17 +59,12 @@ func TestProjectWorkspaceOfAnEarlierReleaseOpens(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Every later migration goes first (the export_batch kind of epic 35, the library index of epic 15, the
-	// approval tables of epic 05, the asset library of epic 08), then project_items itself.
-	for {
-		rolled, err := m.Rollback(context.Background(), 1)
-		if err != nil || len(rolled) != 1 {
-			t.Fatalf("rollback = %v, %v", rolled, err)
-		}
-
-		if rolled[0] == "20261119120000_project_items" {
-			break
-		}
+	if rolled, err := m.Rollback(
+		context.Background(),
+		2, // the library index (epic 15) is newer than project_items and goes down first
+	); err != nil || len(rolled) != 2 ||
+		rolled[1] != "20261119120000_project_items" {
+		t.Fatalf("rollback = %v, %v", rolled, err)
 	}
 
 	var n int

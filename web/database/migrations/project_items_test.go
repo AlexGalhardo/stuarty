@@ -343,9 +343,9 @@ func TestProjectItemsMigrationDown(t *testing.T) {
  VALUES ('pit_000000000a', 'prj_0000000001', 'text', 'Script', 2, 'scene', 1, 1, 'local:cli')`,
 			)
 
-			// upgrade stops at project_items, so it is the one migration a Rollback undoes.
-			rolled, err := m.Rollback(ctx, 1)
-			if err != nil || len(rolled) != 1 || rolled[0] != "20261119120000_project_items" {
+			// The library index (epic 15) is newer than project_items: it goes down first.
+			rolled, err := m.Rollback(ctx, 2)
+			if err != nil || len(rolled) != 2 || rolled[1] != "20261119120000_project_items" {
 				t.Fatalf("Rollback = %v, %v", rolled, err)
 			}
 
