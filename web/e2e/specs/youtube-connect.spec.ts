@@ -260,6 +260,16 @@ test.describe("youtube connect and publish @chromium-only", () => {
 				.toBe("published");
 			expect(exportJob).toMatch(/^job_/);
 		} finally {
+			// Leave the workspace as it was found: the connections spec expects it to hold none.
+			const api = await caller(request);
+			const list = (await api("GET", "/connections")) as {
+				connections: { id: string; kind: string }[];
+			};
+			for (const connection of list.connections.filter(
+				(c) => c.kind === "fake",
+			)) {
+				await api("DELETE", `/connections/${connection.id}`);
+			}
 			await network.close();
 		}
 	});
