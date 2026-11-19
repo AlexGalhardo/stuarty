@@ -27,6 +27,7 @@ Send the secret in the header `Authorization: Bearer <secret>`: the local token 
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
+| `timeline_id` | `string` | no | The timeline of the project; required when the project has several. |
 | `severity` | `string` | no | warning (default, everything) or error. |
 | `cursor` | `string` | no | The next_cursor of the previous page. |
 | `limit` | `integer` | no | The page size; the default depends on the operation. |

@@ -168,6 +168,22 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.ConnectionRemove)
 	case "ConnectionTest":
 		return invoke(ctx, s, svc.ConnectionTest)
+	case "ApprovalList":
+		return invoke(ctx, s, svc.ApprovalList)
+	case "ApprovalGet":
+		return invoke(ctx, s, svc.ApprovalGet)
+	case "ApprovalDecide":
+		return invoke(ctx, s, svc.ApprovalDecide)
+	case "ApprovalRuleList":
+		return invoke(ctx, s, svc.ApprovalRuleList)
+	case "ApprovalRuleSet":
+		return invoke(ctx, s, svc.ApprovalRuleSet)
+	case "ApprovalRuleRemove":
+		return invoke(ctx, s, svc.ApprovalRuleRemove)
+	case "CostSummary":
+		return invoke(ctx, s, svc.CostSummary)
+	case "CostCeilingSet":
+		return invoke(ctx, s, svc.CostCeilingSet)
 	case "AuditList":
 		return invoke(ctx, s, svc.AuditList)
 	case "ToolsInstall":
@@ -194,6 +210,28 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.ImageExport)
 	case "ProjectOtioImport":
 		return invoke(ctx, s, svc.ProjectOtioImport)
+	case "ProjectDescribe":
+		return invoke(ctx, s, svc.ProjectDescribe)
+	case "ProjectDuplicate":
+		return invoke(ctx, s, svc.ProjectDuplicate)
+	case "ProjectItemAdd":
+		return invoke(ctx, s, svc.ProjectItemAdd)
+	case "ProjectItemMove":
+		return invoke(ctx, s, svc.ProjectItemMove)
+	case "ProjectItemRename":
+		return invoke(ctx, s, svc.ProjectItemRename)
+	case "ProjectItemTrash":
+		return invoke(ctx, s, svc.ProjectItemTrash)
+	case "ProjectItemRestore":
+		return invoke(ctx, s, svc.ProjectItemRestore)
+	case "BriefGet":
+		return invoke(ctx, s, svc.BriefGet)
+	case "BriefSet":
+		return invoke(ctx, s, svc.BriefSet)
+	}
+
+	if res, ok, err := libraryCall(ctx, svc, s); ok {
+		return res, err
 	}
 
 	return nil, fmt.Errorf("no mapping for %s", s.Call)
@@ -475,6 +513,37 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 		args["mode"] = "sheet"
 
 		return "view", args, nil
+	case "ProjectDescribe":
+		args["detail"] = "overview"
+
+		return "project_get", args, nil
+	case "ProjectDuplicate":
+		delete(args, "dry_run")
+
+		args["from"] = args["project_id"]
+		delete(args, "project_id")
+
+		return "project_create", args, nil
+	case "ProjectItemAdd", "ProjectItemMove", "ProjectItemRename", "ProjectItemTrash", "ProjectItemRestore":
+		delete(args, "dry_run")
+
+		args["action"] = strings.ToLower(strings.TrimPrefix(s.Call, "ProjectItem"))
+
+		return "project_item", args, nil
+	case "BriefGet":
+		args["action"] = "brief"
+
+		return "project_item", args, nil
+	case "BriefSet":
+		delete(args, "dry_run")
+
+		args["action"] = "brief"
+
+		return "project_item", args, nil
+	}
+
+	if tool, args, ok, err := libraryTool(s); ok {
+		return tool, args, err
 	}
 
 	return "", nil, fmt.Errorf("no tool for %s", s.Call)
@@ -550,7 +619,29 @@ func (r fixedResolver) Resolve(context.Context, cli.Target) (*cli.Connection, er
 
 // command is how a Service operation is encoded as a command line (SDD-003
 // 7.1): the name, the arguments and what goes on standard input.
+// command2argv is the command of a step with the --timeline of the calls that take one (SDD-003 section 1.7).
 func command2argv(s step) (name string, argv []string, stdin string, err error) {
+	name, argv, stdin, err = commandOf(s)
+	if err != nil {
+		return name, argv, stdin, err
+	}
+
+	var t struct {
+		TimelineID string `json:"timeline_id"`
+	}
+
+	if len(s.Args) > 0 {
+		_ = json.Unmarshal(s.Args, &t)
+	}
+
+	if t.TimelineID != "" {
+		argv = append(argv, "--timeline", t.TimelineID)
+	}
+
+	return name, argv, stdin, nil
+}
+
+func commandOf(s step) (name string, argv []string, stdin string, err error) {
 	var a struct {
 		ProjectID string               `json:"project_id"`
 		AssetID   string               `json:"asset_id"`
@@ -583,6 +674,11 @@ func command2argv(s step) (name string, argv []string, stdin string, err error) 
 		DryRun      bool            `json:"dry_run"`
 		BrandColors []string        `json:"brand_colors"`
 		BrandFonts  []string        `json:"brand_fonts"`
+
+		ItemID   string `json:"item_id"`
+		Title    string `json:"title"`
+		Text     string `json:"text"`
+		Position *int   `json:"position"`
 	}
 
 	if len(s.Args) > 0 {
@@ -753,10 +849,78 @@ func command2argv(s step) (name string, argv []string, stdin string, err error) 
 			"--kind", c.Kind, "--label", c.Label, "--endpoint", c.Endpoint, "--accepts", strings.Join(c.Accepts, ","),
 			"--hosts", strings.Join(c.Hosts, ","),
 		}, c.Secret, nil
+	case "ApprovalList":
+		return "approval:list", slices.Concat(flag("state", a.State), flag("project", a.ProjectID)), "", nil
+	case "ApprovalGet":
+		return "approval:show", []string{a.ID}, "", nil
+	case "ApprovalDecide":
+		var d service.ApprovalDecideRequest
+		if err := json.Unmarshal(s.Args, &d); err != nil {
+			return "", nil, "", err
+		}
+
+		return "approval:decide", slices.Concat([]string{d.ID, "--" + d.Decision}, flag("reason", d.Reason)), "", nil
+	case "ApprovalRuleList":
+		return "approval:rule:list", nil, "", nil
+	case "ApprovalRuleSet":
+		var r service.ApprovalRuleSetRequest
+		if err := json.Unmarshal(s.Args, &r); err != nil {
+			return "", nil, "", err
+		}
+
+		return "approval:rule:set", slices.Concat(
+			[]string{"--kind", r.Kind}, flag("id", r.ID), flag("connection", r.ConnectionID),
+			flag("project", r.ProjectID), flag("currency", r.Currency),
+		), "", nil
+	case "ApprovalRuleRemove":
+		return "approval:rule:remove", []string{a.ID}, "", nil
+	case "CostSummary":
+		return "cost:show", nil, "", nil
+	case "CostCeilingSet":
+		var c service.CostCeilingSetRequest
+		if err := json.Unmarshal(s.Args, &c); err != nil {
+			return "", nil, "", err
+		}
+
+		return "cost:ceiling", slices.Concat([]string{"--currency", c.Currency}, flag("project", c.ProjectID)), "", nil
 	case "AuditList":
 		return "audit", flag("project", a.ProjectID), "", nil
 	case "ToolsInstall":
 		return "tools:install", append([]string{a.Name}, "--yes"), "", nil
+	case "ProjectDescribe":
+		return "project:describe", []string{a.ProjectID}, "", nil
+	case "ProjectDuplicate":
+		return "project:duplicate", append([]string{a.ProjectID}, flag("name", a.Name)...), "", nil
+	case "ProjectItemAdd":
+		argv = append(slices.Clone(proj), "--kind", a.Kind, "--title", a.Title)
+		argv = append(argv, flag("preset", a.Preset)...)
+
+		if a.Position != nil {
+			argv = append(argv, "--position", strconv.Itoa(*a.Position))
+		}
+
+		if a.Text != "" {
+			return "item:add", append(argv, "--text", "-"), a.Text, nil
+		}
+
+		return "item:add", argv, "", nil
+	case "ProjectItemMove":
+		position := 0
+		if a.Position != nil {
+			position = *a.Position
+		}
+
+		return "item:move", append([]string{a.ItemID, "--position", strconv.Itoa(position)}, proj...), "", nil
+	case "ProjectItemRename":
+		return "item:rename", append([]string{a.ItemID, "--title", a.Title}, proj...), "", nil
+	case "ProjectItemTrash":
+		return "item:trash", append([]string{a.ItemID}, proj...), "", nil
+	case "ProjectItemRestore":
+		return "item:restore", append([]string{a.ItemID}, proj...), "", nil
+	case "BriefGet":
+		return "brief:show", proj, "", nil
+	case "BriefSet":
+		return "brief:set", append(slices.Clone(proj), "--text", "-"), a.Text, nil
 	case "TemplateInstantiate":
 		argv = append([]string{a.TemplateID}, flag("name", a.Name)...)
 		argv = append(argv, flag("id", a.ID)...)
@@ -774,6 +938,10 @@ func command2argv(s step) (name string, argv []string, stdin string, err error) 
 		}
 
 		return "template:new", append(argv, "--fill", "-"), string(a.Fill), nil
+	}
+
+	if name, argv, stdin, ok, err := libraryCommand(s); ok {
+		return name, argv, stdin, err
 	}
 
 	return "", nil, "", fmt.Errorf("no command for %s", s.Call)
@@ -887,6 +1055,7 @@ func withoutProject(args json.RawMessage) string {
 
 	_ = json.Unmarshal(args, &m)
 	delete(m, "project_id")
+	delete(m, "timeline_id")
 
 	raw, err := json.Marshal(m)
 	if err != nil {

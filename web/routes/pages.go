@@ -55,6 +55,8 @@ func Pages(d *httpapi.Deps) func(r *router.Router, app *vukem.App) error {
 		r.Get("/projects", func(c *web.Ctx) error { return projectsPage(c, d) }).Name("projects.index")
 		r.Post("/projects", func(c *web.Ctx) error { return projectCreate(c, d) }).Name("projects.store")
 
+		r.Get("/projects/{project_id}", func(c *web.Ctx) error { return projectPageShow(c, d) }).Name("projects.show")
+
 		r.Get("/editor/{project_id}", func(c *web.Ctx) error { return editorPage(c, d, app) }).Name("editor.show")
 
 		// The page reads the version and the workspace from /api/v1/system itself.
@@ -67,6 +69,13 @@ func Pages(d *httpapi.Deps) func(r *router.Router, app *vukem.App) error {
 		r.Get("/connections", func(c *web.Ctx) error {
 			return inertia.Render(c, "Connections/Index", inertia.Props{})
 		}).Name("connections.index")
+
+		// The approval queue, the rules and the cost ceilings (epic 05, SDD-015): the page reads and
+		// changes them through /api/v1/approvals, /approval-rules and /cost, and follows the queue on
+		// /api/v1/approvals/events.
+		r.Get("/approvals", func(c *web.Ctx) error {
+			return inertia.Render(c, "Approvals/Index", inertia.Props{})
+		}).Name("approvals.index")
 
 		// The brand kit is read and saved by the page through /api/v1/brand-kit.
 		r.Get("/settings/brand-kit", func(c *web.Ctx) error {
@@ -171,6 +180,29 @@ func projectsPage(c *web.Ctx, d *httpapi.Deps) error {
 	}
 
 	return inertia.Render(c, "Projects/Index", inertia.Props{"projects": nonNil(list.Projects)})
+}
+
+// projectPageShow is the overview of one project as a production (SDD-012 section 2.1): its brief and its items.
+func projectPageShow(c *web.Ctx, d *httpapi.Deps) error {
+	id := c.Param("project_id")
+	if !projectID.MatchString(id) {
+		return errs.ErrNotFound
+	}
+
+	desc, err := d.Service.ProjectDescribe(c.Context(), service.ProjectDescribeRequest{ProjectID: id})
+	if err != nil {
+		return err
+	}
+
+	brief, err := d.Service.BriefGet(c.Context(), service.BriefGetRequest{ProjectID: id})
+	if err != nil {
+		return err
+	}
+
+	return inertia.Render(c, "Projects/Show", inertia.Props{
+		"project":    map[string]any{"id": desc.ProjectID, "name": desc.Name, "state": desc.State},
+		"production": desc.Production, "items": nonNil(desc.Items), "brief": brief,
+	})
 }
 
 // projectCreate is the form of the list page. The app has no sessions, so a

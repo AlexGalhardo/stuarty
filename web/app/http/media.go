@@ -21,19 +21,22 @@ type importFileIn struct {
 }
 
 type mediaImportIn struct {
-	ID     string         `json:"id"                validate:"required"`
-	Files  []importFileIn `json:"files"             validate:"required,min=1,max=50"`
-	WaitMS int            `json:"wait_ms,omitempty"                                  doc:"0 to 25000: hold the call until the assets are ready."`
-	DryRun any            `json:"dry_run,omitempty"                                  doc:"Checks the paths and limits only: the format is probed on the real import, so a file that is refused there (SVG, for one) still answers 202."`
+	ID         string         `json:"id"                    validate:"required"`
+	TimelineID string         `json:"timeline_id,omitempty"                                  doc:"The timeline of the project; required when the project has several."`
+	Files      []importFileIn `json:"files"                 validate:"required,min=1,max=50"`
+	WaitMS     int            `json:"wait_ms,omitempty"                                      doc:"0 to 25000: hold the call until the assets are ready."`
+	DryRun     any            `json:"dry_run,omitempty"                                      doc:"Checks the paths and limits only: the format is probed on the real import, so a file that is refused there (SVG, for one) still answers 202."`
 }
 
 type mediaListIn struct {
-	ID string `json:"id" validate:"required"`
+	ID         string `json:"id"                    validate:"required"`
+	TimelineID string `json:"timeline_id,omitempty"                     doc:"The timeline of the project; required when the project has several."`
 	pageIn
 }
 
 type mediaInspectIn struct {
 	ID         string `json:"id"                    validate:"required"`
+	TimelineID string `json:"timeline_id,omitempty"                     doc:"The timeline of the project; required when the project has several."`
 	AssetID    string `json:"asset_id"              validate:"required"`
 	Sections   string `json:"sections,omitempty"                        doc:"Comma separated: probe (default), transcript, silences, loudness, beats."`
 	MinSilence string `json:"min_silence,omitempty"                     doc:"The shortest silence to list, as a time; default 0.4s."`
@@ -52,16 +55,18 @@ type thumbnailIn struct {
 }
 
 type jobStartIn struct {
-	ID     string         `json:"id"                validate:"required"`
-	Kind   string         `json:"kind"              validate:"required" doc:"export."`
-	Args   map[string]any `json:"args,omitempty"                        doc:"The arguments of the kind: start, end and format (mp4, gif, wav or aac; default mp4) for an export."`
-	WaitMS int            `json:"wait_ms,omitempty"                     doc:"0 to 25000: hold the call until the job is final."`
-	DryRun any            `json:"dry_run,omitempty"`
+	ID         string         `json:"id"                    validate:"required"`
+	TimelineID string         `json:"timeline_id,omitempty"                     doc:"The timeline of the project; required when the project has several."`
+	Kind       string         `json:"kind"                  validate:"required" doc:"export."`
+	Args       map[string]any `json:"args,omitempty"                            doc:"The arguments of the kind: start, end and format (mp4, gif, wav or aac; default mp4) for an export."`
+	WaitMS     int            `json:"wait_ms,omitempty"                         doc:"0 to 25000: hold the call until the job is final."`
+	DryRun     any            `json:"dry_run,omitempty"`
 }
 
 type jobListIn struct {
-	ID    string `json:"id"              validate:"required"`
-	State string `json:"state,omitempty"                     doc:"queued, running, succeeded, failed, cancelled, active or all."`
+	ID         string `json:"id"                    validate:"required"`
+	TimelineID string `json:"timeline_id,omitempty"                     doc:"The timeline of the project; required when the project has several."`
+	State      string `json:"state,omitempty"                           doc:"queued, running, succeeded, failed, cancelled, active or all."`
 	pageIn
 }
 
@@ -82,7 +87,7 @@ func (h *apiHandler) mediaImport(c *web.Ctx, in mediaImportIn) (service.MediaImp
 	}
 
 	res, err := h.Service.MediaImport(c.Context(), service.MediaImportRequest{
-		ProjectID: in.ID, Files: files, WaitMS: in.WaitMS, DryRun: dryRun,
+		ProjectID: in.ID, TimelineID: in.TimelineID, Files: files, WaitMS: in.WaitMS, DryRun: dryRun,
 	})
 	if err != nil {
 		return service.MediaImportResult{}, err
@@ -99,7 +104,10 @@ func (h *apiHandler) mediaImport(c *web.Ctx, in mediaImportIn) (service.MediaImp
 }
 
 func (h *apiHandler) mediaList(c *web.Ctx, in mediaListIn) (service.MediaListResult, error) {
-	res, err := h.Service.MediaList(c.Context(), service.MediaListRequest{ProjectID: in.ID, Page: page(in.pageIn)})
+	res, err := h.Service.MediaList(
+		c.Context(),
+		service.MediaListRequest{ProjectID: in.ID, TimelineID: in.TimelineID, Page: page(in.pageIn)},
+	)
 
 	return deref(res), err
 }
@@ -114,7 +122,12 @@ func (h *apiHandler) mediaInspect(c *web.Ctx, in mediaInspectIn) (service.MediaI
 	}
 
 	res, err := h.Service.MediaInspect(c.Context(), service.MediaInspectRequest{
-		ProjectID: in.ID, AssetID: in.AssetID, Sections: sections, MinSilence: in.MinSilence, Page: page(in.pageIn),
+		ProjectID:  in.ID,
+		TimelineID: in.TimelineID,
+		AssetID:    in.AssetID,
+		Sections:   sections,
+		MinSilence: in.MinSilence,
+		Page:       page(in.pageIn),
 	})
 
 	return deref(res), err
@@ -140,7 +153,7 @@ func (h *apiHandler) jobStart(c *web.Ctx, in jobStartIn) (service.Job, error) {
 	}
 
 	res, err := h.Service.JobStart(c.Context(), service.JobStartRequest{
-		ProjectID: in.ID, Kind: in.Kind, Args: args, WaitMS: in.WaitMS, DryRun: isDry,
+		ProjectID: in.ID, TimelineID: in.TimelineID, Kind: in.Kind, Args: args, WaitMS: in.WaitMS, DryRun: isDry,
 	})
 	if err != nil {
 		return service.Job{}, err
@@ -177,7 +190,7 @@ func (h *apiHandler) jobCancel(c *web.Ctx, in jobCancelIn) (service.Job, error) 
 
 func (h *apiHandler) jobList(c *web.Ctx, in jobListIn) (service.JobListResult, error) {
 	res, err := h.Service.JobList(c.Context(), service.JobListRequest{
-		ProjectID: in.ID, State: in.State, Page: page(in.pageIn),
+		ProjectID: in.ID, TimelineID: in.TimelineID, State: in.State, Page: page(in.pageIn),
 	})
 
 	return deref(res), err
@@ -228,6 +241,7 @@ type templateListIn struct{ pageIn }
 
 type templateSaveIn struct {
 	ProjectID   string `json:"project_id"            validate:"required"`
+	TimelineID  string `json:"timeline_id,omitempty"                     doc:"The timeline of the project; required when the project has several."`
 	Name        string `json:"name"                  validate:"required"`
 	Description string `json:"description,omitempty"`
 	DryRun      any    `json:"dry_run,omitempty"`
@@ -257,7 +271,7 @@ func (h *apiHandler) templateSave(c *web.Ctx, in templateSaveIn) (service.Templa
 	}
 
 	res, err := h.Service.TemplateSave(c.Context(), service.TemplateSaveRequest{
-		ProjectID: in.ProjectID, Name: in.Name, Description: in.Description, DryRun: dryRun,
+		ProjectID: in.ProjectID, TimelineID: in.TimelineID, Name: in.Name, Description: in.Description, DryRun: dryRun,
 	})
 	if err != nil {
 		return service.TemplateResult{}, err

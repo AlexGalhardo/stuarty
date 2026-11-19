@@ -217,6 +217,42 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.KeyRevoke(ctx, service.KeyRevokeRequest{KeyID: "key_0000000001"})
 			return err
 		},
+		"ProjectDescribe": func() error {
+			_, err := e.svc.ProjectDescribe(ctx, service.ProjectDescribeRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"ProjectDuplicate": func() error {
+			_, err := e.svc.ProjectDuplicate(ctx, service.ProjectDuplicateRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"ProjectItemAdd": func() error {
+			_, err := e.svc.ProjectItemAdd(ctx, service.ProjectItemAddRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"ProjectItemMove": func() error {
+			_, err := e.svc.ProjectItemMove(ctx, service.ProjectItemMoveRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"ProjectItemRename": func() error {
+			_, err := e.svc.ProjectItemRename(ctx, service.ProjectItemRenameRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"ProjectItemTrash": func() error {
+			_, err := e.svc.ProjectItemTrash(ctx, service.ProjectItemTrashRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"ProjectItemRestore": func() error {
+			_, err := e.svc.ProjectItemRestore(ctx, service.ProjectItemTrashRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"BriefGet": func() error {
+			_, err := e.svc.BriefGet(ctx, service.BriefGetRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"BriefSet": func() error {
+			_, err := e.svc.BriefSet(ctx, service.BriefSetRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
 		"ConnectionList": func() error {
 			_, err := e.svc.ConnectionList(ctx, service.ConnectionListRequest{})
 			return err
@@ -235,6 +271,109 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 		},
 		"ConnectionTest": func() error {
 			_, err := e.svc.ConnectionTest(ctx, service.ConnectionRef{ID: "con_0000000001"})
+			return err
+		},
+		"ApprovalList": func() error {
+			_, err := e.svc.ApprovalList(ctx, service.ApprovalListRequest{})
+			return err
+		},
+		"ApprovalGet": func() error {
+			_, err := e.svc.ApprovalGet(ctx, service.ApprovalRef{ID: "apr_0000000001"})
+			return err
+		},
+		"ApprovalDecide": func() error {
+			_, err := e.svc.ApprovalDecide(
+				ctx,
+				service.ApprovalDecideRequest{ID: "apr_0000000001", Decision: "approve"},
+			)
+			return err
+		},
+		"ApprovalRuleList": func() error {
+			_, err := e.svc.ApprovalRuleList(ctx, service.ApprovalRuleListRequest{})
+			return err
+		},
+		"ApprovalRuleSet": func() error {
+			_, err := e.svc.ApprovalRuleSet(ctx, service.ApprovalRuleSetRequest{Kind: "k"})
+			return err
+		},
+		"ApprovalRuleRemove": func() error {
+			_, err := e.svc.ApprovalRuleRemove(ctx, service.ApprovalRef{ID: "rul_0000000001"})
+			return err
+		},
+		"CostSummary": func() error {
+			_, err := e.svc.CostSummary(ctx, service.CostSummaryRequest{})
+			return err
+		},
+		"CostCeilingSet": func() error {
+			_, err := e.svc.CostCeilingSet(ctx, service.CostCeilingSetRequest{Currency: "USD"})
+			return err
+		},
+		"MemoryList": func() error {
+			_, err := e.svc.MemoryList(ctx, service.MemoryListRequest{})
+			return err
+		},
+		"MemoryGet": func() error {
+			_, err := e.svc.MemoryGet(ctx, service.LibraryRef{Name: "a"})
+			return err
+		},
+		"MemoryWrite": func() error {
+			_, err := e.svc.MemoryWrite(ctx, service.MemoryWriteRequest{Description: "d"})
+			return err
+		},
+		"MemoryRemove": func() error {
+			_, err := e.svc.MemoryRemove(ctx, service.LibraryRef{Name: "a"})
+			return err
+		},
+		"SkillList": func() error {
+			_, err := e.svc.SkillList(ctx, service.SkillListRequest{})
+			return err
+		},
+		"SkillGet": func() error {
+			_, err := e.svc.SkillGet(ctx, service.LibraryRef{Name: "a"})
+			return err
+		},
+		"SkillWrite": func() error {
+			_, err := e.svc.SkillWrite(ctx, service.SkillWriteRequest{Name: "a"})
+			return err
+		},
+		"SkillImport": func() error {
+			_, err := e.svc.SkillImport(ctx, service.SkillImportRequest{Path: "/x"})
+			return err
+		},
+		"SkillMarkReviewed": func() error {
+			_, err := e.svc.SkillMarkReviewed(ctx, service.SkillReviewRequest{Name: "a"})
+			return err
+		},
+		"SkillLint": func() error {
+			_, err := e.svc.SkillLint(ctx, service.LibraryRef{Name: "a"})
+			return err
+		},
+		"SkillExport": func() error {
+			_, err := e.svc.SkillExport(ctx, service.SkillExportRequest{})
+			return err
+		},
+		"PromptList": func() error {
+			_, err := e.svc.PromptList(ctx, service.PromptListRequest{})
+			return err
+		},
+		"PromptGet": func() error {
+			_, err := e.svc.PromptGet(ctx, service.LibraryRef{Name: "a"})
+			return err
+		},
+		"PromptWrite": func() error {
+			_, err := e.svc.PromptWrite(ctx, service.PromptWriteRequest{Name: "a"})
+			return err
+		},
+		"PromptRender": func() error {
+			_, err := e.svc.PromptRender(ctx, service.PromptRenderRequest{Name: "a"})
+			return err
+		},
+		"LibrarySearch": func() error {
+			_, err := e.svc.LibrarySearch(ctx, service.LibrarySearchRequest{Query: "a"})
+			return err
+		},
+		"LibraryReindex": func() error {
+			_, err := e.svc.LibraryReindex(ctx, service.LibraryReindexRequest{})
 			return err
 		},
 		"OpenFile": func() error {

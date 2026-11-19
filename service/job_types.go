@@ -33,11 +33,12 @@ const (
 // JobStartRequest starts a job of a project; only the kind "export" exists in
 // this build.
 type JobStartRequest struct {
-	ProjectID string          `json:"project_id"`
-	Kind      string          `json:"kind"`
-	Args      json.RawMessage `json:"args,omitempty"`
-	WaitMS    int             `json:"wait_ms,omitempty"`
-	DryRun    bool            `json:"dry_run,omitempty"`
+	ProjectID  string          `json:"project_id"`
+	TimelineID string          `json:"timeline_id,omitempty"` // SDD-003 section 1.7
+	Kind       string          `json:"kind"`
+	Args       json.RawMessage `json:"args,omitempty"`
+	WaitMS     int             `json:"wait_ms,omitempty"`
+	DryRun     bool            `json:"dry_run,omitempty"`
 }
 
 // ExportArgs are the arguments of an export job.
@@ -65,8 +66,9 @@ type JobCancelRequest struct {
 // running jobs plus the 10 most recent final ones; "active", "all" and each
 // state filter.
 type JobListRequest struct {
-	ProjectID string `json:"project_id"`
-	State     string `json:"state,omitempty"`
+	ProjectID  string `json:"project_id"`
+	TimelineID string `json:"timeline_id,omitempty"` // SDD-003 section 1.7
+	State      string `json:"state,omitempty"`
 	Page
 }
 
@@ -120,6 +122,8 @@ type Job struct {
 	Result    *JobResult  `json:"result,omitempty"`
 	Error     *Error      `json:"error,omitempty"`
 	Lint      *LintTotals `json:"lint,omitempty"`
+	// ApprovalID is the approval request of a job of a kind that needs approval (SDD-015 section 5).
+	ApprovalID string `json:"approval_id,omitempty"`
 	// Warnings are notes about an accepted export that are not a reason to refuse it, such as a huge GIF.
 	Warnings   []string   `json:"warnings,omitempty"`
 	Actor      string     `json:"actor"`
@@ -145,4 +149,7 @@ type exportInput struct {
 	Format string `json:"format,omitempty"`
 	// IncludeLog false leaves the operation log out of a bundle; nil means true.
 	IncludeLog *bool `json:"include_log,omitempty"`
+	// Whole makes the bundle of the whole project (version 2) instead of one timeline; the job is kept on the
+	// first active timeline.
+	Whole bool `json:"whole,omitempty"`
 }

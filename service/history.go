@@ -31,6 +31,10 @@ func (s *svc) HistoryList(ctx context.Context, req HistoryListRequest) (*History
 		return nil, err
 	}
 
+	if err := s.useTimeline(ctx, c, &req.ProjectID, req.TimelineID); err != nil {
+		return nil, err
+	}
+
 	head, err := s.store.Projects().Head(ctx, req.ProjectID)
 	if err != nil || !visible(c, head.OwnerUserID) {
 		return nil, projectNotFound(req.ProjectID, err)
@@ -180,6 +184,10 @@ func (s *svc) Redo(ctx context.Context, req UndoRequest) (*UndoResult, error) {
 func (s *svc) step(ctx context.Context, method string, req UndoRequest, redo bool) (*UndoResult, error) {
 	c, err := authorize(ctx, method, req.ProjectID)
 	if err != nil {
+		return nil, err
+	}
+
+	if err := s.useTimeline(ctx, c, &req.ProjectID, req.TimelineID); err != nil {
 		return nil, err
 	}
 
@@ -462,6 +470,10 @@ func (s *svc) undoResult(
 func (s *svc) Lint(ctx context.Context, req LintRequest) (*LintResult, error) {
 	c, err := authorize(ctx, "Lint", req.ProjectID)
 	if err != nil {
+		return nil, err
+	}
+
+	if err := s.useTimeline(ctx, c, &req.ProjectID, req.TimelineID); err != nil {
 		return nil, err
 	}
 
