@@ -18,9 +18,11 @@ type Session struct {
 	URI string `json:"uri"`
 	// ID is what the network named the upload (a container or a video), for a network that needs it besides
 	// the address.
-	ID      string `json:"id,omitempty"`
-	Size    int64  `json:"size"`
-	Created int64  `json:"created_ms"`
+	ID string `json:"id,omitempty"`
+	// Uploaded is true when the whole file reached the network and only its processing is left.
+	Uploaded bool  `json:"uploaded,omitempty"`
+	Size     int64 `json:"size"`
+	Created  int64 `json:"created_ms"`
 }
 
 // Sessions keeps the upload sessions of publications in progress, by key, so that a restart resumes an
