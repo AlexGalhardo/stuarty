@@ -303,11 +303,11 @@ Scope is `edit` unless stated. "Time" marks arguments parsed by A.4. Optional ar
 | `item.extract_audio` | `item_id`, `track_id`, `id?` | Creates a linked audio item from the audio of a video clip and mutes the clip. See C.67 |
 | `clip.remove_silences` | `item_id`, `min_silence?` (length, default `"0.4s"`), `padding?` (length kept on each side of speech, default `"0.1s"`), `threshold_db?` (-30, -35, -40 or -45, default -35), `ripple?` (`"track"` default, `"none"`), `new_ids?` | Replaces the clip, or an audio item, by one item per non-silent stretch of its source range (A.9). With ripple the pieces are placed back to back from the original start and later items on the track move earlier; without, each piece keeps its original position. The first piece keeps the item's identifier, its `transition_in` and `fade_in`; the last keeps `transition_out` and `fade_out`. `effective.removed` is the total length removed. With no silence found the document is unchanged |
 | `audio.duck` | `item_id`, `speech_item_ids` (1 to 20 items), `gain_db?` (-40 to -1, default -12), `attack?` (length, default `"0.2s"`), `release?` (length, default `"0.5s"`) | Lowers a music item while speech sounds, as generated `volume` keyframes; the speech comes through `resolved` (A.9). `keyframe.clear` on `volume` undoes it |
-| `audio.processor_add` | `item_id` or `track_id`, `kind`, `params?`, `index?`, `enabled?` | Adds an audio processor (equaliser, compressor, limiter, gate, de-esser, noise reduction) to the chain of an item or a track. See C.78 |
-| `audio.processor_set` | `item_id` or `track_id`, `index`, `params?`, `enabled?` | Changes the parameters or the switch of one processor of a chain. See C.79 |
-| `audio.processor_move` | `item_id` or `track_id`, `index`, `to` | Moves a processor to another place of its chain. See C.80 |
-| `audio.processor_remove` | `item_id` or `track_id`, `index` | Removes a processor from a chain. See C.81 |
-| `audio.apply_preset` | `item_id` or `track_id`, `preset` | Replaces a chain with a preset: voice, voice with music, podcast or clean up a noisy room. See C.82 |
+| `audio.processor_add` | `item_id` or `track_id`, `kind`, `params?`, `index?`, `enabled?` | Adds an audio processor (equaliser, compressor, limiter, gate, de-esser, noise reduction) to the chain of an item or a track. See C.79 |
+| `audio.processor_set` | `item_id` or `track_id`, `index`, `params?`, `enabled?` | Changes the parameters or the switch of one processor of a chain. See C.80 |
+| `audio.processor_move` | `item_id` or `track_id`, `index`, `to` | Moves a processor to another place of its chain. See C.81 |
+| `audio.processor_remove` | `item_id` or `track_id`, `index` | Removes a processor from a chain. See C.82 |
+| `audio.apply_preset` | `item_id` or `track_id`, `preset` | Replaces a chain with a preset: voice, voice with music, podcast or clean up a noisy room. See C.83 |
 | `marker.add` | `item_id?`, `at`, `label?` | Puts a marker at a frame of the timeline, or of an item with `item_id` (TASK-0254); see C.56 |
 | `marker.set` | `item_id?`, `at`, `to?`, `label?` | Moves or relabels the marker at a frame, of the timeline or of an item; see C.57 |
 | `marker.remove` | `item_id?`, `at` or `all` | Removes the marker at a frame, or every marker, of the timeline or of an item; see C.58 |
@@ -6243,9 +6243,78 @@ Describes what `animation.apply_preset` and `keyframe.set_easing` accept, for an
 - `ok_lists_the_presets`
 - `err_validation_takes_no_arguments`
 
-### C.78 `audio.processor_add`
+### C.78 `clip.replace_media`
 
-Adds an audio processor (epic 34, SDD-004 section 7.1) to the `processors` chain of an item or of a track (SDD-001 section 3.5). The five commands C.78 to C.82 share the rules below.
+Swaps the asset of a clip for another asset of the same kind and changes nothing else: the animation that an external engine rendered again takes the place of the one it replaces (epic 33, SDD-011 section 15). Position, duration, trim (`source_in`), speed, transform, keyframes, effects, transitions and the links to captions stay as they are. Nothing is stretched or trimmed to make the new media fit.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | yes | none | a `clip` |
+| `asset_id` | asset id | yes | none | a video or image asset of the document, of the same kind as the clip's current asset |
+
+**Preconditions.**
+
+1. Both ids have the form of an identifier (`E_VALIDATION`); `ast_placeholder` does not match it.
+2. The item exists (`E_NOT_FOUND`) and is a `clip` (`E_TYPE_MISMATCH`).
+3. The clip reads a real asset: a template slot holder (`ast_placeholder`) is `E_INVALID_STATE` with the hint to use `slot.fill`.
+4. The new asset exists in the document (`E_NOT_FOUND`).
+5. The new asset is a video or an image asset of the same kind as the current one (`E_TYPE_MISMATCH`): a video is replaced by a video, an image (a still or an animated image) by an image.
+6. Video: the source range of the clip (R9: `source_in` plus the source frames of its duration, speed included) holds inside the new asset (`E_OUT_OF_SOURCE`, with `details.available` of R9: the length of the new asset and the most the clip may keep).
+
+**Postconditions.**
+
+1. `asset` is `asset_id`. Every other field of the item is unchanged, and so is every other item.
+2. The old asset stays in the document (`asset.remove` is a separate command).
+3. `diff` has one `item.updated` with `changes.asset`; empty when the asset is the same one. `effective` has `asset_id` and `previous_asset_id`.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | an id is malformed | `The value of args.asset_id is "x", not an asset id.` | `Use the id of an asset listed by project_get.` |
+| `E_NOT_FOUND` | unknown item or asset | `Asset ast_zzzzzzzzzz does not exist.` | `Import the file first, then use its asset id.` |
+| `E_TYPE_MISMATCH` | the item is not a clip, or the kinds differ | `Asset ast_k8m2n4p6q9 is an image asset; clip itm_m1n2p3q4r5 plays a video asset.` | `Replace a video with a video; to change the kind, add a new clip with clip.add.` |
+| `E_INVALID_STATE` | the clip is a template slot holder | `Item itm_m1n2p3q4r5 is a template slot holder.` | `Use slot.fill to put media in a slot.` |
+| `E_OUT_OF_SOURCE` | the clip's range does not fit the new video | `The range of 90 frames from source frame 0 would read to frame 90; asset ast_k8m2n4p6q9 has 60 frames.` | `Use a duration of at most "60f"; or render the animation at the length the clip needs.` |
+
+**Inverse.** `patch {collection: "items", id, set: {asset: <old>}}`.
+
+**Idempotency.** Same result.
+
+**Example.** Clip `itm_m1n2p3q4r5` plays `ast_3c5v8n2w6d`; the animation was rendered again as `ast_k8m2n4p6q9`.
+
+```json
+{"op": "clip.replace_media", "args": {"item_id": "itm_m1n2p3q4r5", "asset_id": "ast_k8m2n4p6q9"}}
+```
+
+```json
+[{"kind": "item.updated", "id": "itm_m1n2p3q4r5", "changes": {"asset": ["ast_3c5v8n2w6d", "ast_k8m2n4p6q9"]}}]
+```
+
+**Golden cases.**
+
+- `ok_video_for_video`
+- `ok_keeps_trim_speed_and_transform`
+- `ok_keeps_keyframes_and_effects`
+- `ok_image_for_image`
+- `ok_animated_image_for_image`
+- `ok_same_asset_noop`
+- `ok_longer_video_keeps_duration`
+- `err_validation_bad_item_id`
+- `err_validation_placeholder_asset`
+- `err_not_found_item`
+- `err_not_found_asset`
+- `err_type_mismatch_audio_item`
+- `err_type_mismatch_kind_differs`
+- `err_type_mismatch_audio_asset`
+- `err_invalid_state_slot_holder`
+- `err_out_of_source_new_video_too_short`
+
+### C.79 `audio.processor_add`
+
+Adds an audio processor (epic 34, SDD-004 section 7.1) to the `processors` chain of an item or of a track (SDD-001 section 3.5). The five commands C.79 to C.83 share the rules below.
 
 **Shared rules.** The target is exactly one of `item_id` (a `clip` or `audio` item) or `track_id`; both or neither is `E_VALIDATION`. An unknown item or track is `E_NOT_FOUND`; a `text`, `caption` or `shape` item is `E_TYPE_MISMATCH`. `index` and `to` are 0-based positions in the chain; one outside it is `E_VALIDATION` with the length of the chain in the hint. `params` is an object from the names of the kind (SDD-004 section 7.1) to numbers: an unknown name, or a number outside its range, is `E_VALIDATION` naming the parameter, its unit and its range. The stored `params` of a processor hold only the values that differ from the default, so a value equal to its default is removed and an empty object is not written; an emptied chain removes the `processors` field. The commands do not run on a locked track's items (`E_INVALID_STATE`, as every item command) but a track chain can be edited on a locked track. The inverse is the usual `patch` of the item or track.
 
@@ -6304,9 +6373,9 @@ Adds an audio processor (epic 34, SDD-004 section 7.1) to the `processors` chain
 - `err_type_mismatch_text_item`
 - `err_limit_13th_processor`
 
-### C.79 `audio.processor_set`
+### C.80 `audio.processor_set`
 
-Changes one processor of a chain (the shared rules of C.78).
+Changes one processor of a chain (the shared rules of C.79).
 
 **Arguments**
 
@@ -6322,7 +6391,7 @@ Changes one processor of a chain (the shared rules of C.78).
 
 **Postconditions.** The `params` are merged and checked as a whole (so a marked noise profile stays consistent). `diff` has one `item.updated` or `track.updated`, none when nothing changed. `effective` has `index`, `kind`, `params` (complete) and `enabled`.
 
-**Errors.** As C.78 without `E_LIMIT`.
+**Errors.** As C.79 without `E_LIMIT`.
 
 **Inverse.** `patch` of `processors`. **Idempotency.** Same result.
 
@@ -6346,9 +6415,9 @@ Changes one processor of a chain (the shared rules of C.78).
 - `err_not_found_item`
 - `err_type_mismatch_text_item`
 
-### C.80 `audio.processor_move`
+### C.81 `audio.processor_move`
 
-Moves one processor to another place in its chain: the order is the user's and changes the sound (the shared rules of C.78).
+Moves one processor to another place in its chain: the order is the user's and changes the sound (the shared rules of C.79).
 
 **Arguments**
 
@@ -6361,7 +6430,7 @@ Moves one processor to another place in its chain: the order is the user's and c
 
 **Postconditions.** The processor is at `to`; the ones between the two places shift by one. Moving to the same place changes nothing. `effective` has `index`, `to` and `kind`.
 
-**Errors.** `E_VALIDATION` (no or two targets, `index` or `to` out of the chain), `E_NOT_FOUND`, `E_TYPE_MISMATCH`, as C.78.
+**Errors.** `E_VALIDATION` (no or two targets, `index` or `to` out of the chain), `E_NOT_FOUND`, `E_TYPE_MISMATCH`, as C.79.
 
 **Inverse.** `patch` of `processors`. **Idempotency.** Same result.
 
@@ -6382,9 +6451,9 @@ Moves one processor to another place in its chain: the order is the user's and c
 - `err_not_found_item`
 - `err_type_mismatch_text_item`
 
-### C.81 `audio.processor_remove`
+### C.82 `audio.processor_remove`
 
-Removes one processor from a chain (the shared rules of C.78).
+Removes one processor from a chain (the shared rules of C.79).
 
 **Arguments**
 
@@ -6396,7 +6465,7 @@ Removes one processor from a chain (the shared rules of C.78).
 
 **Postconditions.** The later processors move one place earlier; an emptied chain removes the `processors` field. `effective` has `index`, `kind` and `remaining`.
 
-**Errors.** `E_VALIDATION` (no or two targets, `index` out of the chain), `E_NOT_FOUND`, `E_TYPE_MISMATCH`, as C.78.
+**Errors.** `E_VALIDATION` (no or two targets, `index` out of the chain), `E_NOT_FOUND`, `E_TYPE_MISMATCH`, as C.79.
 
 **Inverse.** `patch` of `processors`. **Idempotency.** Not idempotent: the processor that followed takes the index.
 
@@ -6415,9 +6484,9 @@ Removes one processor from a chain (the shared rules of C.78).
 - `err_not_found_item`
 - `err_type_mismatch_text_item`
 
-### C.82 `audio.apply_preset`
+### C.83 `audio.apply_preset`
 
-Replaces the chain of an item or a track with a preset (epic 34; the shared rules of C.78). The presets are `voice` ("voice"), `voice_with_music`, `podcast` and `clean_noisy_room` ("clean up a noisy room"); each is a fixed chain of the processors of SDD-004 section 7.1 with the values of the table below, and the user can then change any of them with `audio.processor_set`.
+Replaces the chain of an item or a track with a preset (epic 34; the shared rules of C.79). The presets are `voice` ("voice"), `voice_with_music`, `podcast` and `clean_noisy_room` ("clean up a noisy room"); each is a fixed chain of the processors of SDD-004 section 7.1 with the values of the table below, and the user can then change any of them with `audio.processor_set`.
 
 | Preset | Chain, in order |
 | --- | --- |
@@ -6436,7 +6505,7 @@ Replaces the chain of an item or a track with a preset (epic 34; the shared rule
 
 **Postconditions.** The chain is exactly the preset (what was there is replaced). `effective` has `preset` and `processors` (their count). Applying the preset that is already the chain changes nothing.
 
-**Errors.** `E_VALIDATION` (no or two targets, unknown preset), `E_NOT_FOUND`, `E_TYPE_MISMATCH`, as C.78.
+**Errors.** `E_VALIDATION` (no or two targets, unknown preset), `E_NOT_FOUND`, `E_TYPE_MISMATCH`, as C.79.
 
 **Inverse.** `patch` of `processors`. **Idempotency.** Same result.
 

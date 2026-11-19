@@ -1290,6 +1290,7 @@ warning L_SAFE_AREA itm_s6t7v8w9x0 0.4s/12f-2s/60f
 | `L_AUDIO_CLIP` | warning | full | the estimated mix peak exceeds 0 dBFS: at some 20 ms window the sum of each audible source's peak (from the `peaks` artifact) times its volume, fade and keyframe gain exceeds 1.0. The message gives the first range and the count of ranges | lower volume with item.set_audio |
 | `L_LOUDNESS` | warning | full | the estimated integrated loudness of the mix (from the assets' loudness artifacts) differs from `settings.loudness_target` by more than 6 LU, so the export normalization would need a large gain. The message states the gain | adjust volumes or accept the normalization |
 | `L_DURATION_LIMIT` | warning | doc | a portrait or square timeline is longer than 180 s (the YouTube Shorts limit, not checked in a landscape project; research note `features-20-80` §5) | trim the timeline or accept it |
+| `L_ALPHA_MISSING` | warning | full | a clip reads an asset that has an alpha channel (`has_alpha`) whose pictures are all opaque in what the ingest sampled (the `alpha_opaque` fact of its normalized artifact, SDD-011 §4.3.6): the file declares transparency and has none, so the animation covers what is below it. Reported once per clip | render it with alpha |
 | `L_AUDIO_LIMITER_NOT_LAST` | warning | doc | an enabled `limiter` of a processor chain (SDD-001 section 3.5) of an item or a track is followed by another enabled processor, which can lift the peaks again | move it last with audio.processor_move |
 | `L_AUDIO_NOISE_REDUCTION_REPEATED` | warning | doc | a processor chain has more than one enabled `noise_reduction` (the second one only adds artefacts) | remove one |
 
@@ -2399,7 +2400,7 @@ Example (the text of §3.8; `structuredContent` has `asset_id`, `kind`, `availab
 ```json
 {
   "name": "view",
-  "description": "See the result. mode=frame returns one image of the timeline at time at; mode=sheet returns a grid of frames, each with its time printed (count evenly spaced between from and until, or explicit times). Costs image tokens: read project_get and lint first. frame needs at; sheet takes times, or from, to and count (not both). mode=audio measures the sound, no image: loudness, true peak and noise floor before and after the audio processors, of item_id or of from to until.",
+  "description": "See the result. mode=frame: one image at time at; sheet: a grid of frames with their times (count frames from..until, or times); motion: what an external render of from..until must fit (size, rate, safe area, brand kit, captions, frames); audio: loudness, true peak and noise floor before and after the audio processors, of item_id or from..until. Images cost tokens: read project_get and lint first.",
   "inputSchema": {
     "type": "object",
     "properties": {
@@ -2415,6 +2416,7 @@ Example (the text of §3.8; `structuredContent` has `asset_id`, `kind`, `availab
         "enum": [
           "frame",
           "sheet",
+          "motion",
           "audio"
         ],
         "default": "frame"
@@ -2501,7 +2503,7 @@ Example (the text of §3.8; `structuredContent` has `asset_id`, `kind`, `availab
 
 | Parameter | Meaning |
 | --- | --- |
-| `mode` | `frame` (default): one image at `at` (required; `E_VALIDATION` with `path: "at"` when missing). `sheet`: a grid; `at` is not accepted |
+| `mode` | `frame` (default): one image at `at` (required; `E_VALIDATION` with `path: "at"` when missing). `sheet`: a grid; `at` is not accepted. `audio` (epic 34): `AudioMeasure` of `item_id`, or of `from` to `until`, with no image; `at`, `times`, `count` and `max_tokens` are `E_VALIDATION`, and so is `item_id` in any other mode |
 | `at` | time of the frame; a time beyond the timeline is `E_INVALID_TIME` |
 | `times` | sheet: 2 to 16 explicit times; exclusive with `from`, `until`, `count` (`E_VALIDATION` with the `path` of the second member) |
 | `from`, `until`, `count` | sheet: `count` (default 9) frames evenly spaced from `from` (default `0s`) to `until` (default the last frame), both ends included |

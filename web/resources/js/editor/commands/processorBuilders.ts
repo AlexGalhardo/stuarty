@@ -1,7 +1,7 @@
 import type { Operations } from "./builders";
 import type { AudioPresetId, ProcessorKind } from "./processorTable";
 
-// The operations of the audio processor chain of an item or a track (SDD-004 section 7.1, SDD-002 C.78 to C.82). The
+// The operations of the audio processor chain of an item or a track (SDD-004 section 7.1, SDD-002 C.79 to C.83). The
 // inspector requests; the core checks the ranges and decides (rules T5 and T6).
 
 export type ProcessorTarget =
