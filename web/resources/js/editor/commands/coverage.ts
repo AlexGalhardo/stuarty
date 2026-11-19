@@ -125,27 +125,18 @@ const palette: EntryPoint = {
 };
 
 export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
-	"asset.remove": [
-		{ kind: "menu", action: "library.remove" },
-		palette,
-	],
+	"asset.remove": [{ kind: "menu", action: "library.remove" }, palette],
 	"audio.add": [
 		{ kind: "gesture", action: "library.add_to_timeline" },
 		{ kind: "gesture", action: "library.drag" },
 		palette,
 	],
-	"audio.duck": [
-		{ kind: "inspector", action: "inspector.duck" },
-		palette,
-	],
+	"audio.duck": [{ kind: "inspector", action: "inspector.duck" }, palette],
 	"audio.mark_beats": [
 		{ kind: "inspector", action: "inspector.mark_beats" },
 		palette,
 	],
-	"caption.add": [
-		{ kind: "toolbar", action: "caption.add" },
-		palette,
-	],
+	"caption.add": [{ kind: "toolbar", action: "caption.add" }, palette],
 	"caption.edit_word": [
 		{ kind: "gesture", action: "timeline.edit_word" },
 		{ kind: "inspector", action: "inspector.word_text" },
@@ -191,26 +182,14 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 		{ kind: "inspector", action: "inspector.silences" },
 		palette,
 	],
-	"clip.set_blur": [
-		{ kind: "inspector", action: "inspector.blur" },
-		palette,
-	],
+	"clip.set_blur": [{ kind: "inspector", action: "inspector.blur" }, palette],
 	"clip.set_chroma_key": [
 		{ kind: "inspector", action: "inspector.chroma_key" },
 		palette,
 	],
-	"clip.set_blend": [
-		{ kind: "inspector", action: "inspector.blend" },
-		palette,
-	],
-	"clip.set_mask": [
-		{ kind: "inspector", action: "inspector.mask" },
-		palette,
-	],
-	"clip.set_flip": [
-		{ kind: "inspector", action: "inspector.flip" },
-		palette,
-	],
+	"clip.set_blend": [{ kind: "inspector", action: "inspector.blend" }, palette],
+	"clip.set_mask": [{ kind: "inspector", action: "inspector.mask" }, palette],
+	"clip.set_flip": [{ kind: "inspector", action: "inspector.flip" }, palette],
 	"clip.set_effects": [
 		{ kind: "inspector", action: "inspector.effects" },
 		palette,
@@ -250,23 +229,14 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 		{ kind: "inspector", action: "inspector.import_subtitles" },
 		palette,
 	],
-	"marker.add": [
-		{ kind: "key", action: "timeline.marker" },
-		palette,
-	],
+	"marker.add": [{ kind: "key", action: "timeline.marker" }, palette],
 	"marker.remove": [
 		{ kind: "key", action: "timeline.marker" },
 		{ kind: "inspector", action: "inspector.marker" },
 		palette,
 	],
-	"marker.set": [
-		{ kind: "inspector", action: "inspector.marker" },
-		palette,
-	],
-	"clip.set_color": [
-		{ kind: "inspector", action: "inspector.color" },
-		palette,
-	],
+	"marker.set": [{ kind: "inspector", action: "inspector.marker" }, palette],
+	"clip.set_color": [{ kind: "inspector", action: "inspector.color" }, palette],
 	"clip.set_filter": [
 		{ kind: "inspector", action: "inspector.filter" },
 		palette,
@@ -281,18 +251,12 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 		{ kind: "inspector", action: "inspector.reverse" },
 		palette,
 	],
-	"font.add": [
-		{ kind: "inspector", action: "inspector.font_add" },
-		palette,
-	],
+	"font.add": [{ kind: "inspector", action: "inspector.font_add" }, palette],
 	"font.remove": [
 		{ kind: "inspector", action: "inspector.font_remove" },
 		palette,
 	],
-	"item.crossfade": [
-		{ kind: "menu", action: "timeline.crossfade" },
-		palette,
-	],
+	"item.crossfade": [{ kind: "menu", action: "timeline.crossfade" }, palette],
 	"item.delete": [
 		{ kind: "key", action: "timeline.delete" },
 		{ kind: "key", action: "timeline.ripple_delete" },
@@ -306,10 +270,7 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 		{ kind: "menu", action: "timeline.duplicate" },
 		palette,
 	],
-	"item.repeat": [
-		{ kind: "menu", action: "timeline.repeat" },
-		palette,
-	],
+	"item.repeat": [{ kind: "menu", action: "timeline.repeat" }, palette],
 	"clip.set_shadow": [
 		{ kind: "inspector", action: "inspector.shadow" },
 		palette,
@@ -329,10 +290,7 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 		{ kind: "menu", action: "timeline.rename" },
 		palette,
 	],
-	"item.set_audio": [
-		{ kind: "inspector", action: "inspector.audio" },
-		palette,
-	],
+	"item.set_audio": [{ kind: "inspector", action: "inspector.audio" }, palette],
 	"item.set_transform": [
 		{ kind: "gesture", action: "canvas.transform" },
 		{ kind: "inspector", action: "inspector.transform" },
@@ -376,10 +334,7 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 		{ kind: "inspector", action: "inspector.keyframe_value" },
 		palette,
 	],
-	"project.rename": [
-		{ kind: "toolbar", action: "topbar.rename" },
-		palette,
-	],
+	"project.rename": [{ kind: "toolbar", action: "topbar.rename" }, palette],
 	"item.slip": [{ kind: "key", action: "timeline.slip" }, palette],
 	"settings.reframe": [
 		{ kind: "inspector", action: "inspector.aspect" },
@@ -389,23 +344,11 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 		{ kind: "inspector", action: "inspector.settings" },
 		palette,
 	],
-	"settings.set_fps": [
-		{ kind: "inspector", action: "inspector.fps" },
-		palette,
-	],
+	"settings.set_fps": [{ kind: "inspector", action: "inspector.fps" }, palette],
 	"shape.add": [{ kind: "toolbar", action: "shape.add" }, palette],
-	"shape.set": [
-		{ kind: "inspector", action: "inspector.shape" },
-		palette,
-	],
-	"slot.fill": [
-		{ kind: "inspector", action: "slots.fill" },
-		palette,
-	],
-	"slot.mark": [
-		{ kind: "inspector", action: "inspector.slot_mark" },
-		palette,
-	],
+	"shape.set": [{ kind: "inspector", action: "inspector.shape" }, palette],
+	"slot.fill": [{ kind: "inspector", action: "slots.fill" }, palette],
+	"slot.mark": [{ kind: "inspector", action: "inspector.slot_mark" }, palette],
 	"slot.unmark": [
 		{ kind: "inspector", action: "inspector.slot_unmark" },
 		palette,
@@ -443,10 +386,7 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 		{ kind: "menu", action: "timeline.track_move" },
 		palette,
 	],
-	"track.remove": [
-		{ kind: "menu", action: "timeline.track_remove" },
-		palette,
-	],
+	"track.remove": [{ kind: "menu", action: "timeline.track_remove" }, palette],
 	"track.set_caption_style": [
 		{ kind: "inspector", action: "inspector.track_caption_style" },
 		palette,
