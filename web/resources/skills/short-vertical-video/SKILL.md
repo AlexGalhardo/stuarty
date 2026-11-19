@@ -21,7 +21,7 @@ The whole path from the brief to the file, in the order that wastes the least wo
 
 ## 3. Footage
 
-1. The person's own files: `media:import <absolute path>... --project <project id> --wait`. In MCP: `media_import`. An asset is usable only when it is ready: `media:inspect --project <project id>` lists the assets and their state.
+1. The person's own files: `media:import <absolute path>... --project <project id> --wait`. In MCP: `media_import`. An asset is usable only when it is ready: `media:list --project <project id>` lists the assets and their state.
 2. A clip given as a link: `fetch-clip`.
 3. Look at what you have before you cut: `media:inspect <asset id> --project <project id>`, and for the speech `transcribe` (see `captions-for-shorts`).
 
