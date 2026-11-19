@@ -517,7 +517,11 @@ func TestDoctorReportsTheVault(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		raw, _ := json.Marshal(res)
+		raw, err := json.Marshal(res)
+		if err != nil {
+			t.Fatal(err)
+		}
+
 		if strings.Contains(string(raw), "tok-DOCTOR-CANARY") ||
 			strings.Contains(string(raw), base64.StdEncoding.EncodeToString(master)) {
 			t.Error("the doctor report holds the secret or the master key")

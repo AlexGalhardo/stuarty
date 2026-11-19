@@ -63,7 +63,8 @@ func TestSecurity_T43_NoSurfaceReturnsASecret(t *testing.T) {
 			if name != "mcp" {
 				create := func(endpoint string) json.RawMessage {
 					raw, err := json.Marshal(service.ConnectionCreateRequest{
-						Kind: "test", Label: "Echo", Endpoint: endpoint, Accepts: []string{"text"}, Secret: connectionCanary,
+						Kind: "test", Label: "Echo", Endpoint: endpoint, Accepts: []string{"text"},
+						Secret: connectionCanary,
 					})
 					if err != nil {
 						t.Fatal(err)
