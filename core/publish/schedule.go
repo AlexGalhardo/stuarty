@@ -65,6 +65,40 @@ func (s TargetState) Waiting() bool {
 // Editable says whether the fields of a target may change.
 func (s TargetState) Editable() bool { return s != TargetPublishing && s != TargetPublished }
 
+// The statuses a publication shows in the overview of its project (core/project, SDD-020 section 15).
+const (
+	ItemPendingApproval = "pending_approval"
+	ItemPublished       = "published"
+)
+
+// ItemStatus is the status of a publication among the items of its project: pending_approval while a target
+// waits for a person, published when every target that was not cancelled has gone out, and empty otherwise.
+func ItemStatus(states []TargetState) string {
+	live, gone := 0, 0
+
+	for _, s := range states {
+		if s == TargetWaitingApproval {
+			return ItemPendingApproval
+		}
+
+		if s == TargetCancelled {
+			continue
+		}
+
+		live++
+
+		if s == TargetPublished {
+			gone++
+		}
+	}
+
+	if live > 0 && gone == live {
+		return ItemPublished
+	}
+
+	return ""
+}
+
 // The timing constants (SDD-020 sections 17 and 19).
 const (
 	// Grace is how late the loop may be woken and still be on time.

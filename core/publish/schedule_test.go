@@ -314,3 +314,26 @@ func TestRetryPolicy(t *testing.T) {
 		}
 	}
 }
+
+func TestItemStatus(t *testing.T) {
+	t.Parallel()
+
+	for _, tc := range []struct {
+		name   string
+		states []TargetState
+		want   string
+	}{
+		{"no targets", nil, ""},
+		{"a draft", []TargetState{TargetDraft}, ""},
+		{"one waits for a person", []TargetState{TargetPublished, TargetWaitingApproval}, ItemPendingApproval},
+		{"all published", []TargetState{TargetPublished, TargetPublished}, ItemPublished},
+		{"a cancelled one does not count", []TargetState{TargetPublished, TargetCancelled}, ItemPublished},
+		{"only cancelled ones", []TargetState{TargetCancelled}, ""},
+		{"one still scheduled", []TargetState{TargetPublished, TargetScheduled}, ""},
+		{"one failed", []TargetState{TargetPublished, TargetFailed}, ""},
+	} {
+		if got := ItemStatus(tc.states); got != tc.want {
+			t.Errorf("%s: ItemStatus = %q, want %q", tc.name, got, tc.want)
+		}
+	}
+}
