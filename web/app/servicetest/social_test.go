@@ -127,6 +127,13 @@ type socialEnv struct {
 func newSocialEnv(t *testing.T) *socialEnv {
 	t.Helper()
 
+	return newSocialEnvWith(t, nil)
+}
+
+// newSocialEnvWith is newSocialEnv with a change to the options of the service.
+func newSocialEnvWith(t *testing.T, extra func(o *service.Options)) *socialEnv {
+	t.Helper()
+
 	n := newFakeNet(t)
 	conn := fake.New(n.srv.URL)
 	reg := social.NewRegistry()
@@ -142,6 +149,10 @@ func newSocialEnv(t *testing.T) *socialEnv {
 			Vault: vault.Open(filepath.Join(string(e.dir), "vault.json"), vault.NewMemoryProvider(nil)),
 		})
 		o.Social = reg
+
+		if extra != nil {
+			extra(o)
+		}
 	})
 
 	ops, ok := e.svc.(socialOps)
