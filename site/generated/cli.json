@@ -1258,7 +1258,7 @@
       "usage": [
         "stuarty connection:add --kind <k> --label <t> --endpoint <url> --accepts <list>"
       ],
-      "example": "echo $TOKEN | stuarty connection:add --kind test --label Blog --endpoint https://blog.example.com --accepts text",
+      "example": "echo $TOKEN | stuarty connection:add --kind test --label Blog --endpoint https://video.example.com --accepts text",
       "flags": [
         {
           "name": "kind",

@@ -56,7 +56,7 @@ var connectionAddCmd = &spec{
 	name:    "connection:add",
 	summary: "connect a destination; the secret is read from standard input or a file, never from an argument",
 	usage:   []string{"stuarty connection:add --kind <k> --label <t> --endpoint <url> --accepts <list>"},
-	example: "echo $TOKEN | stuarty connection:add --kind test --label Blog --endpoint https://blog.example.com --accepts text",
+	example: "echo $TOKEN | stuarty connection:add --kind test --label Blog --endpoint https://video.example.com --accepts text",
 	write:   true,
 	flags: []flagDef{
 		{Name: "kind", Kind: kindString, Usage: "the kind of connection (required)"},
