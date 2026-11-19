@@ -3,6 +3,8 @@ package service
 import (
 	"encoding/json"
 	"time"
+
+	core "github.com/AlexGalhardo/stuarty/core/approval"
 )
 
 // Job kinds (SDD-000 section 6).
@@ -121,8 +123,7 @@ type ExportResult struct {
 type JobResult struct {
 	Export     *ExportResult     `json:"export,omitempty"`
 	Transcribe *TranscribeResult `json:"transcribe,omitempty"`
-	// Batch is the state of the children of an export_batch job, read from them whenever the job is read.
-	Batch *BatchResult `json:"batch,omitempty"`
+	Text       *TextResult       `json:"text,omitempty"`
 }
 
 // Job is the job object of SDD-003 section 2.8.
@@ -138,6 +139,9 @@ type Job struct {
 	Lint      *LintTotals `json:"lint,omitempty"`
 	// ApprovalID is the approval request of a job of a kind that needs approval (SDD-015 section 5).
 	ApprovalID string `json:"approval_id,omitempty"`
+	// Estimate is the cost estimated before a text generation runs (SDD-016 section 6); it is on the job from the
+	// moment the job exists, also for a dry run and for a job that waits for approval.
+	Estimate *core.Money `json:"estimate,omitempty"`
 	// Warnings are notes about an accepted export that are not a reason to refuse it, such as a huge GIF.
 	Warnings   []string   `json:"warnings,omitempty"`
 	Actor      string     `json:"actor"`

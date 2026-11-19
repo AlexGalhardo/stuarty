@@ -43,9 +43,12 @@ type priceFileJSON struct {
 type PriceBook struct {
 	path string
 	mu   sync.Mutex
+	// mem is the table of a book with no file (an empty path): a service with no workspace keeps it in memory.
+	mem []provider.PriceEntry
 }
 
-// NewPriceBook returns a price table kept at path. Nothing is read or created until the first call.
+// NewPriceBook returns a price table kept at path. Nothing is read or created until the first call. An
+// empty path is a table kept in memory only.
 func NewPriceBook(path string) *PriceBook { return &PriceBook{path: path} }
 
 // List returns every entry, sorted by provider and model. A missing file is an empty table.
@@ -136,6 +139,10 @@ func sortEntries(entries []provider.PriceEntry) {
 }
 
 func (b *PriceBook) read() ([]provider.PriceEntry, error) {
+	if b.path == "" {
+		return append([]provider.PriceEntry{}, b.mem...), nil
+	}
+
 	f, err := os.Open(b.path)
 	if errors.Is(err, fs.ErrNotExist) {
 		return []provider.PriceEntry{}, nil
@@ -177,6 +184,12 @@ func (b *PriceBook) read() ([]provider.PriceEntry, error) {
 }
 
 func (b *PriceBook) write(entries []provider.PriceEntry) error {
+	if b.path == "" {
+		b.mem = slices.Clone(entries)
+
+		return nil
+	}
+
 	raw, err := json.MarshalIndent(priceFileJSON{Format: priceFormat, Version: priceVersion, Prices: entries}, "", "  ")
 	if err != nil {
 		return err
