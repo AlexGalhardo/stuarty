@@ -187,6 +187,26 @@ func init() {
 }
 
 func init() {
+	chain := func(kinds ...string) *timeline.Document {
+		d := newDoc()
+		it := timeline.NewItem("itm_m", timeline.ItemAudio, trkAudio, 0, 150)
+		for _, k := range kinds {
+			it.Processors = append(it.Processors, timeline.Processor{Kind: k})
+		}
+
+		put(d, it)
+
+		return d
+	}
+
+	rc(CodeAudioLimiterNotLast, "trigger_limiter_then_gate", chain(timeline.ProcLimiter, timeline.ProcGate))
+	rc(CodeAudioLimiterNotLast, "quiet_limiter_last", chain(timeline.ProcGate, timeline.ProcLimiter))
+	rc(CodeAudioNoiseReductionRepeats, "trigger_two_noise_reductions",
+		chain(timeline.ProcNoiseReduction, timeline.ProcEQ, timeline.ProcNoiseReduction))
+	rc(CodeAudioNoiseReductionRepeats, "quiet_one_noise_reduction", chain(timeline.ProcNoiseReduction, timeline.ProcEQ))
+}
+
+func init() {
 	sound := func(id, track string, start, dur int) timeline.Item { return onTrack(clip(id, start, dur), track) }
 	two := func(second func(*timeline.Item)) *timeline.Document {
 		d := withVideoTrack(newDoc())
