@@ -138,11 +138,16 @@ func privilegedError() *Error {
 			"token, API keys and the agent surfaces cannot approve, write a rule or set a ceiling")
 }
 
-// approvalFilter narrows a list to what the caller may read: a key limited to one project reads
-// that project's requests only, and in network mode a caller without admin reads the own user's.
+// approvalFilter narrows a list to what the caller may read: a key limited to one project reads the requests of
+// every timeline of that project only (a project id it was given was held to the key by authorizeProject), and in
+// network mode a caller without admin reads the own user's.
 func (s *svc) approvalFilter(c Caller, f approval.Filter) approval.Filter {
 	if c.ProjectID != "" {
-		f.ProjectID = c.ProjectID
+		f.KeyProjectID = c.ProjectID
+
+		if f.ProjectID == c.ProjectID {
+			f.ProjectID = "" // the key's own project: every timeline of it, not only the first
+		}
 	}
 
 	if c.OwnerUserID != "" && !slices.Contains(c.Scopes, ScopeAdmin) {
@@ -152,8 +157,8 @@ func (s *svc) approvalFilter(c Caller, f approval.Filter) approval.Filter {
 	return f
 }
 
-func (s *svc) mayRead(c Caller, r *approval.Row) bool {
-	if c.ProjectID != "" && r.ProjectID != c.ProjectID {
+func (s *svc) mayRead(ctx context.Context, c Caller, r *approval.Row) bool {
+	if c.ProjectID != "" && !s.covers(ctx, c, r.ProjectID) {
 		return false
 	}
 
@@ -377,7 +382,7 @@ func (s *svc) ApprovalGet(ctx context.Context, req ApprovalRef) (*approval.Reque
 	s.expireDue(ctx)
 
 	row, gerr := s.store.Approvals().GetRequest(ctx, req.ID)
-	if gerr != nil || !s.mayRead(c, &row) {
+	if gerr != nil || !s.mayRead(ctx, c, &row) {
 		return nil, approvalNotFound(req.ID)
 	}
 
@@ -404,7 +409,7 @@ func (s *svc) ApprovalDecide(ctx context.Context, req ApprovalDecideRequest) (*a
 	s.expireDue(ctx)
 
 	row, gerr := s.store.Approvals().GetRequest(ctx, req.ID)
-	if gerr != nil || !s.mayRead(c, &row) {
+	if gerr != nil || !s.mayRead(ctx, c, &row) {
 		return nil, approvalNotFound(req.ID)
 	}
 
