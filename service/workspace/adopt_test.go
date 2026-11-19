@@ -523,3 +523,29 @@ func TestAdoptFormerWorkspaceRefusesADamagedCopy(t *testing.T) {
 
 	assertSameFiles(t, treeOf(t, former), "backups")
 }
+
+// A failure of the adoption other than "in use" reaches every surface as E_INVALID_STATE with its reason, not
+// as E_INTERNAL, and the text says what is true: the former workspace was not moved or deleted.
+func TestAdoptionFailureAnswersWithItsReason(t *testing.T) {
+	home := t.TempDir()
+	former := makeFormer(t, home)
+	// The parent of the new folder does not exist, so the rename is denied before anything is moved.
+	current := filepath.Join(home, "missing", defaultDir)
+
+	err := adoptFormer(former, current)
+
+	we, ok := errors.AsType[*Error](err)
+	if !ok || we.Code != CodeInvalidState || we.Retryable {
+		t.Fatalf("err = %#v, want a non-retryable %s", err, CodeInvalidState)
+	}
+
+	if strings.Contains(we.Message, "workspace: workspace:") || strings.Contains(we.Message, "is untouched") ||
+		!strings.Contains(we.Message, "cannot be adopted") || !strings.Contains(we.Message, "adopt "+former) ||
+		!strings.Contains(we.Message, "a backup of its database") || !strings.Contains(we.Message, EnvHome) {
+		t.Errorf("message = %q, want the reason, no duplicated prefix and the true state of the folder", we.Message)
+	}
+
+	if got := treeOf(t, former); len(got) < len(formerFiles) {
+		t.Errorf("the former folder lost files: %v", got)
+	}
+}
