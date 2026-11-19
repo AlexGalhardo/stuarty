@@ -70,7 +70,7 @@ func Reference() ReferenceDoc {
 	for _, s := range registry() {
 		c := CommandDoc{
 			Name: s.name, Domain: domainOf(s.name), Summary: s.summary, Usage: s.usage, Example: s.example,
-			Pending: s.pending,
+			Pending: s.pending, Person: s.person,
 		}
 
 		c.Globals = append(c.Globals, baseGlobals...)

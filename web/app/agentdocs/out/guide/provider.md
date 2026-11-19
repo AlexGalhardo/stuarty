@@ -7,7 +7,9 @@ AI providers and generation: the spend on providers and its ceilings.
 
 MCP tools: `command_help`. Tools that take `domain=provider`: `command_help`.
 
-CLI: no command yet.
+CLI: `stuarty provider` lists the commands of the domain and `stuarty provider <verb>` runs one; the full names stay valid.
+
+- `cost:show`: show the cost ceilings and what was spent today and over the last 30 days
 
 ## Operations
 
