@@ -703,7 +703,7 @@ In the **text** part of every tool result and in the CLI's text output, untruste
 </untrusted_media_text>
 ```
 
-- `source` is one of `transcript`, `asset_name`, `metadata`, `project_text`, `template_text`.
+- `source` is one of `transcript`, `asset_name`, `metadata`, `project_text`, `template_text`, `network_text` (the body an outbound destination answered with, SDD-014).
 - `asset` or `project` or `item` carries the identifier of the object, for orientation, when there is one.
 - Inside a block, `&` is written `&amp;` and `<` is written `&lt;`, so no content can close the block or open another. Control characters (U+0000 to U+001F except line feed, U+007F to U+009F), Unicode bidirectional controls (U+202A to U+202E, U+2066 to U+2069, U+200E, U+200F) and the line and paragraph separators U+2028 and U+2029 are removed. So are the characters that a person cannot see and a model still reads: the zero width space U+200B, U+2060 to U+2064, U+FEFF, U+180E, U+FFF9 to U+FFFB, the tag characters U+E0000 to U+E007F and the variation selectors supplement U+E0100 to U+E01EF. A run of two or more of U+200C, U+200D and U+FE00 to U+FE0F (used once by Persian, Indic scripts and emoji sequences) is reduced to its first character. Subdivision flag emoji lose their tag characters; this is accepted. Runs of more than 3 blank lines collapse.
 - When truncated, the block ends with `[truncated: N more characters]` on its own line and the attribute is `truncated="true"`.

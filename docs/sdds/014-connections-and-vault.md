@@ -37,8 +37,9 @@ No third-party connector is built here. The registry of connector kinds has one 
 | --- | --- | --- |
 | `id` | string | `con_` and 10 lower-case Crockford base32 characters (SDD-000 section 2) |
 | `kind` | string | a kind of the connector registry; `test` is the only one in this epic |
-| `label` | string | 1 to 60 characters, no control character; shown to the person, never used as an identifier |
-| `hosts` | list of strings | 1 to 16 destination hosts: a lower-case DNS name or an IP literal, no scheme, no port, no path, no wildcard. A request may reach exactly these hosts, on any port |
+| `label` | string | 1 to 60 characters, no control character; shown to the person, never used as an identifier. It is text a person typed, so a surface that shows it to an agent delimits it as untrusted text (SDD-007 section 8) |
+| `endpoint` | string | the URL the connector calls first: `https`, or `http` for a loopback host (the tests), with no user, query or fragment; at most 2048 characters. Its host is always one of `hosts` |
+| `hosts` | list of strings | 1 to 16 destination hosts: a lower-case DNS name or an IP literal, no scheme, no port, no path, no wildcard. A request may reach exactly these hosts, on any port. The host of `endpoint` is added when the request leaves it out |
 | `accepts` | list of strings | what the destination may receive: any of `text`, `image`, `video`, `audio`, `metadata`, `document`; at least one. A connector refuses to send anything else |
 | `created_at` | time | RFC 3339, UTC |
 | `last_used_at` | time or null | set by the gate when a request goes through the connection |
@@ -120,7 +121,7 @@ Five operations on `service.Service`, in `service/connections.go`:
 | --- | --- | --- |
 | `ConnectionList` | read | `connections`: the records of section 2, oldest first |
 | `ConnectionGet` | read | one record; `E_CONNECTION_NOT_FOUND` for an unknown id |
-| `ConnectionCreate` | admin | the record created. The request carries `kind`, `label`, `hosts`, `accepts` and `secret`; the secret goes into the vault and is not in the result |
+| `ConnectionCreate` | admin | the record created. The request carries `kind`, `label`, `endpoint`, `hosts` (optional), `accepts` and `secret` (1 to 16384 bytes); the secret goes into the vault and is not in the result |
 | `ConnectionRemove` | admin | the record removed. Deletes the vault entry first, then the row; the next request through the connection fails |
 | `ConnectionTest` | admin | `ok`, `status` and a `message` made of the response body as untrusted text (SDD-007 section 8); the request goes through the gate |
 
@@ -170,7 +171,7 @@ Added to SDD-000 section 8:
 ## 8. Files, table and variables
 
 - The file `vault.json` is added to the workspace layout of SDD-000 section 9.
-- The table `connections` (migration `20261119100000_create_connections_table`): `id` (primary key), `kind`, `label`, `hosts` (JSON text), `accepts` (JSON text), `secret_ref`, `created_ms`, `created_by`, `last_used_ms` (null). It holds no secret.
+- The table `connections` (migration `20261119100000_create_connections_table`): `id` (primary key), `kind`, `label`, `endpoint`, `hosts` (JSON text), `accepts` (JSON text), `secret_ref`, `created_ms`, `created_by`, `last_used_ms` (null). It holds no secret.
 - The variables `STUARTY_MASTER_KEY` and `STUARTY_MASTER_KEY_FILE` (SDD-000 section 10). `doctor` reports them as `set` or `unset` and never their values, and reports which provider is active and whether a vault file exists.
 
 ## 9. Logs and the diagnostic bundle
