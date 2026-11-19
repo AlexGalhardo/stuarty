@@ -133,7 +133,7 @@ func (s *svc) reuseFile(
 		}
 
 		return assets.RecordImport(
-			ctx, tx.AssetLibrary(), hash, asset.Origin{Kind: asset.Imported}, rec.info, c.Actor, now,
+			ctx, tx.AssetLibrary(), c.OwnerUserID, hash, asset.Origin{Kind: asset.Imported}, rec.info, c.Actor, now,
 		)
 	})
 	if werr != nil {

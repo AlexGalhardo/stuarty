@@ -287,7 +287,7 @@ func (s *svc) importFile(
 			return aerr
 		}
 
-		return assetlib.RecordImport(ctx, tx.AssetLibrary(), hash, rec.origin, rec.info, c.Actor, now)
+		return assetlib.RecordImport(ctx, tx.AssetLibrary(), c.OwnerUserID, hash, rec.origin, rec.info, c.Actor, now)
 	})
 	s.storeMu.RUnlock()
 
