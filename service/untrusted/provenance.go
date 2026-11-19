@@ -10,7 +10,7 @@ var Provenance = map[string]string{
 	"service.ProjectCreateResult.Name":         SourceProjectText,
 	"service.ProjectGetResult.Name":            SourceProjectText,
 	"service.ImportedAsset.Name":               SourceAssetName,
-	"service.LibraryAsset.Name":                SourceAssetName,
+	"assets.LibraryAsset.Name":                 SourceAssetName,
 	"service.UntrustedData.Metadata":           SourceMetadata,
 	"service.TranscriptLine.Text":              SourceTranscript,
 	"service.MediaEntry.Name":                  SourceAssetName,
@@ -28,6 +28,7 @@ var Provenance = map[string]string{
 	"service.ProjectItem.Text":                 SourceProjectText,
 	"service.ProjectDescribeResult.Name":       SourceProjectText,
 	"service.BriefResult.Text":                 SourceProjectText,
+	"service.BriefingAnswer.Value":             SourceProjectText,
 
 	// image documents (SDD-021): names, texts and the descriptions built from them
 	"service.ImageCreateResult.Text":       SourceProjectText,
@@ -58,4 +59,11 @@ var Provenance = map[string]string{
 	"service.SkillGetResult.Body":          SourceLibraryText,
 	"service.SkillFileView.Text":           SourceLibraryText,
 	"service.LibraryReindexResult.Ignored": SourceLibraryText,
+
+	// the asset library (SDD-011 section 14): the text a person or an agent wrote about a file
+	"assets.LibraryAsset.Description": SourceMetadata,
+	"assets.Use.Name":                 SourceProjectText,
+	"asset.Origin.Source":             SourceMetadata,
+	"asset.Origin.Prompt":             SourceMetadata,
+	"asset.Origin.RightsNote":         SourceMetadata,
 }

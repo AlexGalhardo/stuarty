@@ -5,7 +5,6 @@ import (
 	"errors"
 	"path/filepath"
 	"runtime"
-	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -73,6 +72,10 @@ type DetectOptions struct {
 }
 
 func platformOK(name string) bool {
+	if CodecOf(name) == CodecHEVC || CodecOf(name) == CodecAV1 {
+		return platformOKCodec(name)
+	}
+
 	switch name {
 	case "h264_videotoolbox":
 		return runtime.GOOS == "darwin"
@@ -107,8 +110,15 @@ type gate struct {
 // candidate fails with the install command, and no test encode is wasted on a certain failure.
 func (r *Runner) encoderGate(name string, caps *Capabilities, opt DetectOptions) gate {
 	switch {
-	case !slices.Contains(EncoderOrder, name):
-		return gate{true, EncoderFailed, "not an H.264 encoder the product knows", ""}
+	case IsRefusedEncoder(name):
+		return gate{
+			true,
+			EncoderFailed,
+			"a GPL or nonfree encoder, which Stuarty never uses (ADR-0011)",
+			ReasonRefusedEncoder,
+		}
+	case CodecOf(name) == "":
+		return gate{true, EncoderFailed, "not an encoder the product knows", ""}
 	case !platformOK(name):
 		return gate{true, EncoderNotListed, "not available on " + runtime.GOOS, ""}
 	case name == "libx264" && (!r.In.UserBuild || !opt.AllowUserX264):
@@ -152,11 +162,24 @@ func (r *Runner) detectEncoder(ctx context.Context, caps *Capabilities, opt Dete
 	if opt.Candidates != nil {
 		names = opt.Candidates
 	}
-	det := &EncoderDetection{}
+
 	if opt.Forced != "" {
-		det.Forced = true
 		names = []string{opt.Forced}
 	}
+
+	return r.detectNames(ctx, caps, names, opt, CodecH264)
+}
+
+// detectNames runs the test encode of each name, in order, and chooses the first that works. For H.264 a
+// failure is noEncoderError; for another codec it is noCodecError.
+func (r *Runner) detectNames(
+	ctx context.Context,
+	caps *Capabilities,
+	names []string,
+	opt DetectOptions,
+	codec string,
+) (*EncoderDetection, error) {
+	det := &EncoderDetection{Forced: opt.Forced != ""}
 
 	dir, err := r.newInternalRunDir("encoder-detection")
 	if err != nil {
@@ -166,7 +189,11 @@ func (r *Runner) detectEncoder(ctx context.Context, caps *Capabilities, opt Dete
 
 	for _, name := range names {
 		c := Candidate{Name: name}
-		if g := r.encoderGate(name, caps, opt); g.skip {
+		// A forced or listed name of another codec (STUARTY_ENCODER=hevc_nvenc) is not an encoder of this one: it
+		// would pass its own test encode and then write the wrong codec.
+		if known := CodecOf(name); known != "" && known != codec {
+			c.Status, c.StderrTail = EncoderFailed, "a "+known+" encoder, not a "+codec+" one"
+		} else if g := r.encoderGate(name, caps, opt); g.skip {
 			c.Status, c.StderrTail, c.Reason = g.status, g.why, g.reason
 		} else if err := r.testEncoder(ctx, dir, &c); err != nil && ctx.Err() != nil {
 			return nil, err
@@ -180,6 +207,10 @@ func (r *Runner) detectEncoder(ctx context.Context, caps *Capabilities, opt Dete
 		}
 	}
 	if det.Chosen == "" {
+		if codec != CodecH264 {
+			return det, noCodecError(codec, det)
+		}
+
 		return det, noEncoderError(det)
 	}
 	return det, nil
@@ -191,7 +222,7 @@ func (r *Runner) testEncoder(ctx context.Context, dir *RunDir, c *Candidate) err
 	defer func() { c.MS = time.Since(start).Milliseconds() }()
 
 	di := ffargs.DetectInput{Filter: "format=yuv420p"}
-	if c.Name == "h264_vaapi" {
+	if strings.HasSuffix(c.Name, "_vaapi") {
 		dev := vaapiDevice()
 		if dev == "" {
 			c.Status, c.StderrTail = EncoderFailed, "no render device in /dev/dri"
@@ -226,8 +257,11 @@ func (r *Runner) testEncoder(ctx context.Context, dir *RunDir, c *Candidate) err
 		return err
 	}
 	// csv=p=0 prints "h264,15": the codec and the packet count.
-	if got := strings.TrimSpace(string(b)); got != "h264,15" {
-		c.Status, c.StderrTail = EncoderFailed, "the test file has "+scrub(got, 40)+" instead of 15 h264 packets"
+	want := CodecOf(c.Name) + ",15"
+	if got := strings.TrimSpace(string(b)); got != want {
+		c.Status = EncoderFailed
+		c.StderrTail = "the test file has " + scrub(got, 40) + " instead of 15 " + CodecOf(c.Name) + " packets"
+
 		return nil
 	}
 	c.Status = EncoderOK

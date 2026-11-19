@@ -5,11 +5,18 @@ command approval:rule:list
 command approval:rule:remove
 command approval:rule:set
 command approval:show
+command asset:list
+command asset:set
+command asset:show
+command asset:tag
+command asset:uses
 command audit
 command brand:set
 command brand:show
 command brief:set
 command brief:show
+command briefing:answer
+command briefing:questions
 command bundle:export
 command bundle:import
 command command:help
@@ -24,6 +31,9 @@ command doctor
 command edit
 command events
 command export
+command export:batch
+command export:check
+command export:presets
 command font:import
 command fonts
 command history
@@ -99,18 +109,25 @@ route GET /approvals
 route GET /approvals/events
 route GET /approvals/{}
 route GET /assets
+route GET /assets/{}
+route GET /assets/{}/uses
 route GET /audit
 route GET /brand-kit
+route GET /briefing/questions
 route GET /commands
 route GET /commands/{}
 route GET /connections
 route GET /connections/{}
 route GET /connections/{}/models
 route GET /cost
+route GET /export-presets
 route GET /fonts
 route GET /handshake
 route GET /images
 route GET /images/{}
+route GET /images/{}/exports/{}
+route GET /images/{}/frame
+route GET /images/{}/history
 route GET /jobs/{}
 route GET /jobs/{}/file
 route GET /keys
@@ -128,6 +145,7 @@ route GET /projects/{}/bitmaps/{}
 route GET /projects/{}/brief
 route GET /projects/{}/describe
 route GET /projects/{}/events
+route GET /projects/{}/export-check
 route GET /projects/{}/frame
 route GET /projects/{}/history
 route GET /projects/{}/jobs
@@ -153,6 +171,7 @@ route GET /users
 route PATCH /users/{}
 route POST /approval-rules
 route POST /approvals/{}/decide
+route POST /assets/{}/tags
 route POST /connections
 route POST /connections/{}/test
 route POST /fonts
@@ -174,6 +193,7 @@ route POST /projects/import
 route POST /projects/{}/bundle
 route POST /projects/{}/duplicate
 route POST /projects/{}/edit
+route POST /projects/{}/export-batches
 route POST /projects/{}/items
 route POST /projects/{}/items/{}/move
 route POST /projects/{}/items/{}/rename
@@ -197,11 +217,13 @@ route POST /templates/{}/instantiate
 route POST /text/generate
 route POST /trash/empty
 route POST /users
+route PUT /assets/{}
 route PUT /brand-kit
 route PUT /cost/ceilings
 route PUT /library/prompts/{}
 route PUT /library/skills/{}
 route PUT /projects/{}/brief
+route PUT /projects/{}/briefing
 route PUT /providers/prices
 tool command_help
 tool connection

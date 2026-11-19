@@ -7,7 +7,10 @@ import type {
 	ApprovalRule,
 	ApprovalRuleListResult,
 	ApprovalRuleSetRequest,
+	AssetInfoBody,
 	AssetListResult,
+	AssetQuery,
+	AssetResult,
 	AuditListResult,
 	AuditQuery,
 	BrandKit,
@@ -23,7 +26,10 @@ import type {
 	CostSummary,
 	EditRequest,
 	EditResult,
+	ExportBatchItem,
+	ExportCheckResult,
 	ExportOptions,
+	ExportPresetListResult,
 	FontImportResult,
 	FontListResult,
 	HistoryListResult,
@@ -98,6 +104,20 @@ export interface ApiClient {
 	// A transcription of one asset (SDD-012 section 12.4); E_TRANSCRIBE_UNAVAILABLE
 	// answers at once when no provider can run.
 	startTranscribe(projectId: string, assetId: string): Promise<Job>;
+	// The platform presets, and with `codecs` which codecs this machine writes.
+	getExportPresets(codecs?: boolean): Promise<ExportPresetListResult>;
+	// What does not fit a preset, before anything is encoded.
+	checkExport(
+		projectId: string,
+		preset: string,
+		range?: { start?: string; end?: string },
+	): Promise<ExportCheckResult>;
+	// Several exports of the project, one after the other, as one job; the core
+	// queues them behind the exports that are running.
+	startExportBatch(
+		projectId: string,
+		items: readonly ExportBatchItem[],
+	): Promise<Job>;
 	getJob(jobId: string): Promise<Job>;
 	cancelJob(jobId: string): Promise<Job>;
 	listJobs(projectId: string): Promise<JobListResult>;
@@ -141,6 +161,13 @@ export interface ApiClient {
 	getFonts(): Promise<FontListResult>;
 	// The ready files of the workspace by content hash (VV-117); `kind` keeps one kind.
 	listAssets(kind?: "image" | "video" | "audio"): Promise<AssetListResult>;
+	// The asset library with its filters (SDD-011 section 14.4), and one entry with the projects that use it.
+	queryAssets(query: AssetQuery): Promise<AssetListResult>;
+	getAsset(hash: string): Promise<AssetResult>;
+	setAssetInfo(hash: string, info: AssetInfoBody): Promise<AssetResult>;
+	tagAsset(hash: string, add: string[], remove: string[]): Promise<AssetResult>;
+	// Uses a file of the library in a project: no copy, no ingest (SDD-011 section 14.3).
+	useAsset(projectId: string, hash: string): Promise<MediaImportResult>;
 	// `path` is an absolute path to a font file on the machine of the service.
 	importFont(path: string): Promise<FontImportResult>;
 	getBrandKit(): Promise<BrandKit>;
@@ -186,6 +213,7 @@ export interface ApiClient {
 	// An administrator session; any other caller gets E_FORBIDDEN.
 	listUsers(): Promise<UserListResult>;
 	listTrashedProjects(): Promise<ProjectListResult>;
+	listProjects(): Promise<ProjectListResult>;
 	createProject(name: string, preset: string): Promise<ProjectCreateResult>;
 	duplicateProject(
 		projectId: string,
@@ -214,6 +242,11 @@ export interface ApiClient {
 		itemId: string,
 	): Promise<ProjectItemResult>;
 	setBrief(projectId: string, text: string): Promise<BriefResult>;
+	answerBriefing(
+		projectId: string,
+		answers: Record<string, string>,
+		replace: boolean,
+	): Promise<BriefResult>;
 	trashProject(projectId: string): Promise<ProjectStateResult>;
 	restoreProject(projectId: string): Promise<ProjectStateResult>;
 	// The two routes of network mode live at the root, not under /api/v1: a client
@@ -309,6 +342,30 @@ export function createClient(
 				kind: "transcribe",
 				args: { asset_id: assetId },
 			}),
+		getExportPresets: (codecs) =>
+			call(
+				"GET",
+				`/export-presets${codecs === true ? "?codecs=true" : ""}`,
+				READ_TIMEOUT_MS * 3,
+			),
+		checkExport: (id, preset, range = {}) => {
+			const query = new URLSearchParams({ preset });
+			if (range.start !== undefined) query.set("start", range.start);
+			if (range.end !== undefined) query.set("end", range.end);
+			return call(
+				"GET",
+				`${project(id)}/export-check?${query.toString()}`,
+				READ_TIMEOUT_MS,
+			);
+		},
+		startExportBatch: (id, items) =>
+			call("POST", `${project(id)}/export-batches`, READ_TIMEOUT_MS, {
+				items: items.map((item) =>
+					Object.fromEntries(
+						Object.entries(item).filter(([, value]) => value !== undefined),
+					),
+				),
+			}),
 		getJob: (jobId) =>
 			call("GET", `/jobs/${encodeURIComponent(jobId)}`, READ_TIMEOUT_MS),
 		cancelJob: (jobId) =>
@@ -384,6 +441,30 @@ export function createClient(
 		getFonts: () => call("GET", "/fonts", READ_TIMEOUT_MS),
 		listAssets: (kind) =>
 			call("GET", `/assets${query({ kind })}`, READ_TIMEOUT_MS),
+		queryAssets: (q) =>
+			call(
+				"GET",
+				`/assets${query({ ...q, reusable: q.reusable === undefined ? undefined : String(q.reusable) })}`,
+				READ_TIMEOUT_MS,
+			),
+		getAsset: (hash) =>
+			call("GET", `/assets/${encodeURIComponent(hash)}`, READ_TIMEOUT_MS),
+		setAssetInfo: (hash, info) =>
+			call("PUT", `/assets/${encodeURIComponent(hash)}`, EDIT_TIMEOUT_MS, info),
+		tagAsset: (hash, add, remove) =>
+			call(
+				"POST",
+				`/assets/${encodeURIComponent(hash)}/tags`,
+				EDIT_TIMEOUT_MS,
+				{
+					add,
+					remove,
+				},
+			),
+		useAsset: (id, hash) =>
+			call("POST", `${project(id)}/media`, EDIT_TIMEOUT_MS, {
+				files: [{ hash }],
+			}),
 		importFont: (path) => call("POST", "/fonts", EDIT_TIMEOUT_MS, { path }),
 		getBrandKit: () => call("GET", "/brand-kit", READ_TIMEOUT_MS),
 		setBrandKit: (kit) => call("PUT", "/brand-kit", EDIT_TIMEOUT_MS, kit),
@@ -456,6 +537,7 @@ export function createClient(
 			call("PUT", "/cost/ceilings", EDIT_TIMEOUT_MS, request),
 		revokeKey: (keyId) =>
 			call("DELETE", `/keys/${encodeURIComponent(keyId)}`, EDIT_TIMEOUT_MS),
+		listProjects: () => call("GET", "/projects", READ_TIMEOUT_MS),
 		listTrashedProjects: () =>
 			call("GET", "/projects?state=trashed", READ_TIMEOUT_MS),
 		createProject: (name, preset) =>
@@ -499,6 +581,11 @@ export function createClient(
 			),
 		setBrief: (id, text) =>
 			call("PUT", `${project(id)}/brief`, EDIT_TIMEOUT_MS, { text }),
+		answerBriefing: (id, answers, replace) =>
+			call("PUT", `${project(id)}/briefing`, EDIT_TIMEOUT_MS, {
+				answers,
+				replace,
+			}),
 		trashProject: (id) =>
 			call("POST", `${project(id)}/trash`, EDIT_TIMEOUT_MS, {}),
 		restoreProject: (id) =>

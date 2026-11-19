@@ -1,5 +1,7 @@
 // The thin-client check of SDD-012 section 1.4: rules R1 to R8 over every file
-// under resources/js/editor/. It fails with file, line and rule id.
+// under resources/js/editor/, and R1 to R7 over every file under
+// resources/js/image-editor/ (SDD-012 section 24.2). It fails with file, line
+// and rule id.
 //
 //   bun run check:thin-client          the tree, then the fixtures
 //
@@ -131,6 +133,10 @@ const MAY_IMPORT: Record<string, string[]> = {
 
 // What lies after the last /editor/ segment: "state/sync.ts".
 function editorRelative(file: string): string | null {
+	// The image editor (SDD-012 section 24) is checked by the same rules; its files are named
+	// "image-editor/<folder>/<file>", and only its api/ folder may call the network.
+	const image = file.lastIndexOf("/image-editor/");
+	if (image >= 0) return file.slice(image + 1);
 	const marker = "/editor/";
 	const at = file.lastIndexOf(marker);
 	return at < 0 ? null : file.slice(at + marker.length);
@@ -195,7 +201,11 @@ function checkFile(sf: SourceFile, rel: string, fileLabel: string): Finding[] {
 	const isRenderWorker = rel === "preview/render/renderWorker.ts";
 	const mayCreateWorker =
 		rel === "preview/decode/createWorker.ts" || rel === "preview/render/createRenderWorker.ts";
-	const inApiOrBoot = folder === "api" || folder === "boot" || isDecodeWorker;
+	const inApiOrBoot =
+		folder === "api" ||
+		folder === "boot" ||
+		isDecodeWorker ||
+		rel.startsWith("image-editor/api/");
 	const isSync = rel === "state/sync.ts";
 	const isPrefs = rel === "state/prefs.ts";
 	const r5Allowed = R5_ALLOWLIST.some((entry) => rel === entry || rel.startsWith(entry));

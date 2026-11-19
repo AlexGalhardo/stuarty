@@ -34,6 +34,9 @@ var requiredCases = []string{
 	"crop",
 	"crop-animated",
 	"crop-still",
+	"crop-animated-bezier",
+	"mask-animated-bezier",
+	"easing-bezier-scale",
 	"pip-opacity",
 	"rotation",
 	"transition-fade",
@@ -219,6 +222,14 @@ func rate(n, d int) timeline.Rational { return timeline.Rational{Num: n, Den: d}
 // backdrop is a portrait clip under the rest of a case.
 func (b *caseBuilder) backdrop(dur int) {
 	b.clip(b.track(), b.video(portrait), 0, dur, nil)
+}
+
+// bezierKey is the first keyframe of a segment that follows a cubic Bezier curve.
+func bezierKey(v float64, curve ...float64) timeline.Keyframe {
+	k := timeline.NewKeyframe(0, v)
+	k.Easing, k.Bezier = timeline.EasingBezier, curve
+
+	return k
 }
 
 func transitionCase(kind string) alphaCase {
@@ -408,6 +419,34 @@ var alphaCases = map[string]func() alphaCase{
 			})
 		return b.build(0, 10)
 	},
+	// The curves of epic 31 (SDD-004 section 3.1): the frames in the middle of the segment are where an
+	// eased value differs from a linear one. A frozen source, so the frames differ only by the curve.
+	"easing-bezier-scale": func() alphaCase {
+		b := newCase("a scale with a bezier easing", rate(30, 1))
+		b.backdrop(12)
+		b.clip(b.track(), b.video(landscape), 0, 12, func(it *timeline.Item) {
+			it.Freeze, it.Fit = true, "contain"
+			it.X, it.Y = new(90.0), new(160.0)
+			it.Keyframes = timeline.Keyframes{"scale": {
+				bezierKey(0.4, 0.34, 1.56, 0.64, 1), timeline.NewKeyframe(10, 1),
+			}}
+		})
+		return b.build(0, 2, 4, 5, 7, 10)
+	},
+	// The crop edges swap along an overshooting curve; the plan keeps each window inside the picture.
+	"crop-animated-bezier": func() alphaCase {
+		b := newCase("an animated crop with a bezier easing", rate(30, 1))
+		b.clip(b.track(), b.video(portrait), 0, 11, func(it *timeline.Item) {
+			it.Freeze, it.Fit = true, "none"
+			it.Keyframes = timeline.Keyframes{
+				"crop_left": {bezierKey(0, 0.34, 1.56, 0.64, 1), timeline.NewKeyframe(10, 0.4)},
+				"crop_right": {
+					bezierKey(0.4, 0.34, 1.56, 0.64, 1), timeline.NewKeyframe(10, 0),
+				},
+			}
+		})
+		return b.build(0, 3, 5, 7, 10)
+	},
 	"pip-opacity": func() alphaCase {
 		b := newCase("picture in picture", rate(30, 1))
 		b.backdrop(30)
@@ -570,6 +609,18 @@ var alphaCases = map[string]func() alphaCase{
 			}
 		})
 		return b.build(0, 10)
+	},
+	"mask-animated-bezier": func() alphaCase {
+		b := newCase("an animated mask with a bezier easing", rate(30, 1))
+		b.clip(b.track(), b.video(portrait), 0, 11, func(it *timeline.Item) {
+			it.Freeze = true
+			it.Mask = &timeline.Mask{Shape: "ellipse", X: 0.1, Y: 0.2, Width: 0.3, Height: 0.5, Feather: 4}
+			it.Keyframes = timeline.Keyframes{
+				"mask_width": {bezierKey(0.2, 0.34, 1.56, 0.64, 1), timeline.NewKeyframe(10, 0.8)},
+				"mask_x":     {bezierKey(0.1, 0.42, 0, 0.58, 1), timeline.NewKeyframe(10, 0.2)},
+			}
+		})
+		return b.build(0, 3, 5, 7, 10)
 	},
 	"mask-ellipse-feather": func() alphaCase {
 		return maskCase(
@@ -834,7 +885,7 @@ func TestCompositorBandsEqualBlurAndFilter(t *testing.T) {
 		if !strings.HasPrefix(name, "blur-") && !strings.HasPrefix(name, "filter-") &&
 			!strings.HasPrefix(name, "sticker-") && !strings.HasPrefix(name, "chroma-") &&
 			!strings.HasPrefix(name, "blend-") && !strings.HasPrefix(name, "mask-") &&
-			!strings.HasPrefix(name, "crop-") &&
+			!strings.HasPrefix(name, "crop-") && !strings.HasPrefix(name, "easing-") &&
 			!strings.HasPrefix(name, "shadow") && !strings.HasPrefix(name, "outline") &&
 			!strings.HasPrefix(name, "transparent") && !strings.HasPrefix(name, "opaque") &&
 			!strings.HasPrefix(

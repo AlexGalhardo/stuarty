@@ -33,6 +33,9 @@ const (
 	IngestTimeout = 4*time.Hour + 10*time.Minute
 	ExportTimeout = 2*time.Hour + 10*time.Minute
 	FrameTimeout  = 2 * time.Minute
+	// BatchTimeout is the ceiling of the parent of an export batch (SDD-004 section 8.4): up to 12 exports
+	// one after the other, each under its own ExportTimeout and deadline.
+	BatchTimeout = 24 * time.Hour
 )
 
 // Payload is the whole payload of a message: the id of the job row.
@@ -40,7 +43,7 @@ type Payload struct {
 	JobID string `json:"job_id"`
 }
 
-// Registrations are the handlers of video.ingest, video.export and
+// Registrations are the handlers of video.ingest, video.export, video.export_batch and
 // video.frame. Retries are off: a failure ends the job, it is never silently
 // retried (SDD-011 section 7.2).
 func Registrations(r service.JobRunner) []queue.Registration {
@@ -60,6 +63,13 @@ func Registrations(r service.JobRunner) []queue.Registration {
 			queue.Retries(0),
 			queue.OnQueue(QueueExport),
 			queue.Timeout(ExportTimeout),
+		),
+		queue.HandleKind(
+			service.QueueKindExportBatch,
+			run,
+			queue.Retries(0),
+			queue.OnQueue(QueueDefault),
+			queue.Timeout(BatchTimeout),
 		),
 		queue.HandleKind(
 			service.QueueKindFrame,

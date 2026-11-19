@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"io/fs"
 	"log/slog"
 	"path/filepath"
 	"slices"
@@ -33,6 +34,8 @@ import (
 // failure and never a partial result with a non-nil error.
 type Service interface {
 	ProductionService
+	BriefingService
+	AssetLibraryService
 
 	ProjectList(ctx context.Context, req ProjectListRequest) (*ProjectListResult, error)
 	ProjectCreate(ctx context.Context, req ProjectCreateRequest) (*ProjectCreateResult, error)
@@ -109,6 +112,11 @@ type Service interface {
 	// AssetList lists the files the projects hold, by content hash, for the picker of a brand logo (VV-117).
 	AssetList(ctx context.Context, req AssetListRequest) (*AssetListResult, error)
 	ExportFile(ctx context.Context, req ExportFileRequest) (*File, error)
+	// ExportPresetList, ExportCheck and ExportBatch are the export presets, the check against one and the batch of
+	// exports of SDD-004 sections 8.2 to 8.4 (RF-087 to RF-089).
+	ExportPresetList(ctx context.Context, req ExportPresetListRequest) (*ExportPresetListResult, error)
+	ExportCheck(ctx context.Context, req ExportCheckRequest) (*ExportCheckResult, error)
+	ExportBatch(ctx context.Context, req ExportBatchRequest) (*Job, error)
 	AuditList(ctx context.Context, req AuditListRequest) (*AuditListResult, error)
 
 	// Doctor is the diagnostic report (SDD-003 section 2, SDD-011 section 8.6).
@@ -150,6 +158,10 @@ type Service interface {
 	ImageUndo(ctx context.Context, req ImageStepRequest) (*ImageStepResult, error)
 	ImageRedo(ctx context.Context, req ImageStepRequest) (*ImageStepResult, error)
 	ImageExport(ctx context.Context, req ImageExportRequest) (*ImageExportResult, error)
+	// ImageFrame, ImageHistory and ImageFile are the reads of the image editor screen (SDD-012 section 24.3); HTTP only.
+	ImageFrame(ctx context.Context, req ImageFrameRequest) (*ImageFrameResult, error)
+	ImageHistory(ctx context.Context, req ImageHistoryRequest) (*ImageHistoryResult, error)
+	ImageFile(ctx context.Context, req ImageFileRequest) (*File, error)
 	// ConnectionList and ConnectionGet read the destinations the user connected; ConnectionCreate,
 	// ConnectionRemove and ConnectionTest are for an administrator. No result carries a credential
 	// (SDD-014 section 5).
@@ -232,6 +244,9 @@ type Options struct {
 	Limits Limits
 	// Version is the binary version written into the template files.
 	Version string
+	// BuiltInSkills is the set of skills that ship with the product, one folder per skill; the service
+	// installs it into the library at start (SDD-018 section 16). Nil installs none.
+	BuiltInSkills fs.FS
 	// Transcriber is the transcription provider of the transcribe job; without
 	// one JobStart for it answers E_TRANSCRIBE_UNAVAILABLE.
 	Transcriber transcribe.Provider
@@ -403,6 +418,13 @@ func New(o Options) (Service, error) {
 
 	if s.log == nil {
 		s.log = slog.New(slog.DiscardHandler)
+	}
+
+	if s.lib != nil && o.BuiltInSkills != nil {
+		// A failure here must not stop the product: the library works without the built-in skills.
+		if _, err := s.lib.InstallBuiltInSet(context.Background(), o.BuiltInSkills, s.version); err != nil {
+			s.log.Warn("the built-in skills were not installed", "error", err)
+		}
 	}
 
 	if s.newIDs == nil {

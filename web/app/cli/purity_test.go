@@ -110,6 +110,21 @@ func (s stub) JobCancel(context.Context, service.JobCancelRequest) (*service.Job
 	return final(s.err)
 }
 
+func (s stub) ExportBatch(context.Context, service.ExportBatchRequest) (*service.Job, error) {
+	return final(s.err)
+}
+
+func (s stub) ExportCheck(context.Context, service.ExportCheckRequest) (*service.ExportCheckResult, error) {
+	return reply[service.ExportCheckResult](s.err)
+}
+
+func (s stub) ExportPresetList(
+	context.Context,
+	service.ExportPresetListRequest,
+) (*service.ExportPresetListResult, error) {
+	return reply[service.ExportPresetListResult](s.err)
+}
+
 func (s stub) JobList(context.Context, service.JobListRequest) (*service.JobListResult, error) {
 	return reply[service.JobListResult](s.err)
 }
@@ -292,6 +307,37 @@ func (s stub) BriefGet(context.Context, service.BriefGetRequest) (*service.Brief
 }
 
 func (s stub) BriefSet(context.Context, service.BriefSetRequest) (*service.BriefResult, error) {
+	return reply[service.BriefResult](s.err)
+}
+
+func (s stub) AssetList(context.Context, service.AssetListRequest) (*service.AssetListResult, error) {
+	return reply[service.AssetListResult](s.err)
+}
+
+func (s stub) AssetGet(context.Context, service.AssetRef) (*service.AssetResult, error) {
+	return reply[service.AssetResult](s.err)
+}
+
+func (s stub) AssetUses(context.Context, service.AssetUsesRequest) (*service.AssetUsesResult, error) {
+	return reply[service.AssetUsesResult](s.err)
+}
+
+func (s stub) AssetSetInfo(context.Context, service.AssetSetInfoRequest) (*service.AssetResult, error) {
+	return reply[service.AssetResult](s.err)
+}
+
+func (s stub) AssetTag(context.Context, service.AssetTagRequest) (*service.AssetResult, error) {
+	return reply[service.AssetResult](s.err)
+}
+
+func (s stub) BriefingQuestions(
+	context.Context,
+	service.BriefingQuestionsRequest,
+) (*service.BriefingQuestionsResult, error) {
+	return reply[service.BriefingQuestionsResult](s.err)
+}
+
+func (s stub) BriefingAnswer(context.Context, service.BriefingAnswerRequest) (*service.BriefResult, error) {
 	return reply[service.BriefResult](s.err)
 }
 

@@ -18,17 +18,19 @@ func registry() []*spec {
 		projectList, projectCreate, projectShow, projectTrash, projectRestore,
 		edit, history, undo, redo, lintCmd, version, mcpCmd,
 		mediaImport, mediaInspect, mediaList, mediaTrash, mediaRestore, view, export,
+		exportPresets, exportCheck, exportBatch,
 		jobShow, jobCancel, jobList, eventsCmd, commandHelp,
 		templateList, templateSave, templateNew, templateExport, templateImport, bundleExport, bundleImport,
 		agentDocs, transcribeCmd, doctorCmd, fontsCmd, auditCmd, toolsInstallCmd, tokenRotate,
 		fontImportCmd, brandShowCmd, brandSetCmd, otioExport, otioImport,
 		projectDescribeCmd, projectDuplicateCmd, itemAddCmd, itemMoveCmd, itemRenameCmd, itemTrashCmd, itemRestoreCmd,
-		briefShowCmd, briefSetCmd,
+		briefShowCmd, briefSetCmd, briefingQuestionsCmd, briefingAnswerCmd,
 		connectionListCmd, connectionShowCmd, connectionAddCmd, connectionRemoveCmd, connectionTestCmd,
 		approvalListCmd, approvalShowCmd, approvalDecideCmd, approvalRuleListCmd, approvalRuleSetCmd,
 		approvalRuleRemoveCmd, costShowCmd, costCeilingCmd,
 		providerListCmd, providerModelsCmd, providerPriceCmd, textGenerateCmd,
 		imageCreate, imageList, imageShow, imageEdit, imageUndo, imageRedo, imageExport,
+		assetListCmd, assetShowCmd, assetUsesCmd, assetSetCmd, assetTagCmd,
 	}, libraryCommands()...)
 }
 

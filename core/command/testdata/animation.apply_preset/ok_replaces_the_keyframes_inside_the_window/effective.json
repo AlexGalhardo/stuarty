@@ -1,0 +1,12 @@
+{
+  "duration": {
+    "frame": 30,
+    "requested": "1s",
+    "seconds": 1
+  },
+  "edge": "in",
+  "keyframes": 2,
+  "properties": [
+    "scale"
+  ]
+}

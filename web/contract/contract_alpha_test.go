@@ -2,6 +2,7 @@ package contract
 
 import (
 	"bytes"
+	"strings"
 	"testing"
 
 	"github.com/AlexGalhardo/stuarty/web/contract/testenv"
@@ -42,5 +43,20 @@ func TestAlphaOperationsAreTheSameInProcessAndOverHTTP(t *testing.T) {
 
 	if doc := finalDocument(t, got, "prj_7k2m9x4q1b"); !bytes.Equal(doc, wantDoc) {
 		t.Errorf("the final documents differ\n got: %s\nwant: %s", doc, wantDoc)
+	}
+}
+
+// TestMotionScenarioIsTheSameThroughEverySurface (epic 31, RF-080 and RF-082): the bezier easing,
+// keyframe.set_easing, animation.apply_preset and animation.list_presets give the same results,
+// errors, texts and final document through the Service, HTTP, the CLI and the MCP tools, and
+// command_help describes the two new commands on each of them.
+func TestMotionScenarioIsTheSameThroughEverySurface(t *testing.T) {
+	docs := sameThroughEverySurface(t, "motion", "prj_7k2m9x4q1b")
+
+	doc := string(docs["prj_7k2m9x4q1b"])
+	for _, want := range []string{`"bezier":[0.36,0,0.66,-0.56]`, `"easing":"bezier"`, `"opacity"`} {
+		if !strings.Contains(doc, want) {
+			t.Errorf("the final document has no %s: %s", want, doc)
+		}
 	}
 }

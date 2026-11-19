@@ -28,6 +28,11 @@ func AgentDocsInputs() agentdocs.Inputs {
 		inLibrary[s.name] = true
 	}
 
+	// The same for the guided briefing: the skill brief-a-production carries it (SDD-018 section 16).
+	for _, s := range []*spec{briefingQuestionsCmd, briefingAnswerCmd} {
+		inLibrary[s.name] = true
+	}
+
 	// The commands of the AI provider layer (SDD-016 section 10) wait for the budget epic 13 gives the skill: the
 	// editor skill has no room for them. An agent starts a generation with job_start (kind text.generate) and
 	// reads these commands from --help.
