@@ -75,6 +75,18 @@ export const test = base.extend<{ tipsSeen: boolean }>({
 				}
 			});
 		}
+		// STUARTY_E2E_EXECUTOR=rust|pixi runs a spec with that preview executor
+		// forced (SDD-012 section 11.1); without it the editor chooses by itself.
+		const executor = process.env.STUARTY_E2E_EXECUTOR;
+		if (executor === "rust" || executor === "pixi") {
+			await page.addInitScript((value) => {
+				try {
+					localStorage.setItem("stuarty.preview.executor", value);
+				} catch {
+					// Storage can be blocked: the editor chooses by itself.
+				}
+			}, executor);
+		}
 		const other = testInfo.project.metadata.home;
 		if (typeof other === "string") pointAtServerHome(other);
 		const launch = await request.post("/api/v1/system/launch", {
