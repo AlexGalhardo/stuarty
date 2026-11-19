@@ -66,6 +66,30 @@ func (s stub) Redo(context.Context, service.UndoRequest) (*service.UndoResult, e
 	return reply[service.UndoResult](s.err)
 }
 
+func (s stub) HistoryRevert(context.Context, service.HistoryRevertRequest) (*service.HistoryRevertResult, error) {
+	return reply[service.HistoryRevertResult](s.err)
+}
+
+func (s stub) HistoryDiff(context.Context, service.HistoryDiffRequest) (*service.HistoryDiffResult, error) {
+	return reply[service.HistoryDiffResult](s.err)
+}
+
+func (s stub) CheckpointCreate(context.Context, service.CheckpointCreateRequest) (*service.Checkpoint, error) {
+	return reply[service.Checkpoint](s.err)
+}
+
+func (s stub) CheckpointList(context.Context, service.CheckpointListRequest) (*service.CheckpointListResult, error) {
+	return reply[service.CheckpointListResult](s.err)
+}
+
+func (s stub) CheckpointRename(context.Context, service.CheckpointRenameRequest) (*service.Checkpoint, error) {
+	return reply[service.Checkpoint](s.err)
+}
+
+func (s stub) CheckpointRemove(context.Context, service.CheckpointRemoveRequest) (*service.Checkpoint, error) {
+	return reply[service.Checkpoint](s.err)
+}
+
 func (s stub) Lint(context.Context, service.LintRequest) (*service.LintResult, error) {
 	return reply[service.LintResult](s.err)
 }

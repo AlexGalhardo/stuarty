@@ -35,8 +35,8 @@ func (c *Client) HistoryDiff(ctx context.Context, req service.HistoryDiffRequest
 		q.Set("from", strconv.FormatInt(req.From, 10))
 	}
 
-	if req.To > 0 {
-		q.Set("to", strconv.FormatInt(req.To, 10))
+	if req.Until > 0 {
+		q.Set("until", strconv.FormatInt(req.Until, 10))
 	}
 
 	return get[service.HistoryDiffResult](ctx, c, projectPath(req.ProjectID, "/diff"), q)

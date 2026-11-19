@@ -286,6 +286,10 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.BriefingAnswer)
 	}
 
+	if res, ok, err := historyCall(ctx, svc, s); ok {
+		return res, err
+	}
+
 	if res, ok, err := libraryCall(ctx, svc, s); ok {
 		return res, err
 	}
@@ -670,6 +674,10 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 		return "project_item", args, nil
 	}
 
+	if tool, args, ok, err := historyTool(s); ok {
+		return tool, args, err
+	}
+
 	if tool, args, ok, err := libraryTool(s); ok {
 		return tool, args, err
 	}
@@ -770,6 +778,11 @@ func command2argv(s step) (name string, argv []string, stdin string, err error) 
 }
 
 func commandOf(s step) (name string, argv []string, stdin string, err error) {
+	// First: its members are numbers where the generic decoding below reads strings (until).
+	if name, argv, ok, err := historyCommand(s); ok {
+		return name, argv, "", err
+	}
+
 	var a struct {
 		ProjectID string               `json:"project_id"`
 		AssetID   string               `json:"asset_id"`

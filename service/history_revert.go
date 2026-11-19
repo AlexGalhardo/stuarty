@@ -287,7 +287,7 @@ func (s *svc) HistoryDiff(ctx context.Context, req HistoryDiffRequest) (*History
 		from = cp.Revision
 	}
 
-	to := req.To
+	to := req.Until
 	if to == 0 {
 		to = row.Revision
 	}
@@ -317,7 +317,7 @@ func (s *svc) HistoryDiff(ctx context.Context, req HistoryDiffRequest) (*History
 	}
 
 	return &HistoryDiffResult{
-		UntrustedNotice: UntrustedNotice, ProjectID: row.ID, From: from, To: to,
+		UntrustedNotice: UntrustedNotice, ProjectID: row.ID, Revision: row.Revision, From: from, To: to,
 		Count: len(entries), Entries: append([]DiffEntry{}, entries...), Text: textview.Diff(row.ID, from, to, lines),
 	}, nil
 }
