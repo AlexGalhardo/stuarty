@@ -160,7 +160,7 @@ export function AddTools(): ReactNode {
 									>
 										{asset.name}
 										{asset.width && asset.height ? (
-											<span className="ml-2 text-xs text-muted-foreground">
+											<span className="ml-2 text-xs text-foreground">
 												{t("ui.image.editor.size", {
 													w: asset.width,
 													h: asset.height,

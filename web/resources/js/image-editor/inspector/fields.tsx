@@ -117,7 +117,7 @@ export function NumberField({
 				{unit !== undefined && (
 					<span
 						aria-hidden="true"
-						className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground"
+						className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-xs text-foreground"
 					>
 						{unit}
 					</span>

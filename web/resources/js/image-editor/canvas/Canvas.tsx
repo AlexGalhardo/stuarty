@@ -143,6 +143,15 @@ export default function Canvas(): ReactNode {
 		}
 		if (event.ctrlKey || event.metaKey || event.altKey) return;
 		const state = store.getState();
+		if (event.key === "PageDown" || event.key === "PageUp") {
+			event.preventDefault();
+			const ids = boxes.filter((b) => b.kind !== "group").map((b) => b.id);
+			const at = ids.indexOf(state.selection[0] ?? "");
+			const next = event.key === "PageUp" ? at + 1 : at - 1;
+			const pick = ids[next < 0 ? ids.length - 1 : next % ids.length];
+			if (pick !== undefined) state.select([pick]);
+			return;
+		}
 		const nudge = NUDGE[event.key];
 		if (nudge !== undefined) {
 			event.preventDefault();
