@@ -25,7 +25,53 @@ function hex(bytes: ArrayBuffer): string {
 		.join("");
 }
 
+// The cut pixels at the size the layer is drawn at. The Go host has FFmpeg or its
+// image scaler deliver an unrotated layer at its drawn size and the renderer then
+// copies it; the effects that work on the layer's pixels (grain, a channel split)
+// see that size, so a texture left at the source size draws them differently.
+async function deliver(
+	pixels: Pixels,
+	size: [number, number] | undefined,
+): Promise<Pixels> {
+	if (size === undefined) return pixels;
+	const [width, height] = size;
+	if (width === pixels.width && height === pixels.height) return pixels;
+	const from = new OffscreenCanvas(pixels.width, pixels.height);
+	const fromContext = from.getContext("2d");
+	if (fromContext === null) throw new Error("no 2d context");
+	const straight = new Uint8ClampedArray(pixels.width * pixels.height * 4);
+	straight.set(pixels.rgba);
+	fromContext.putImageData(
+		new ImageData(straight, pixels.width, pixels.height),
+		0,
+		0,
+	);
+	const scaled = await createImageBitmap(from, {
+		resizeWidth: width,
+		resizeHeight: height,
+		resizeQuality: "high",
+	});
+	const to = new OffscreenCanvas(width, height);
+	const context = to.getContext("2d", { willReadFrequently: true });
+	if (context === null) {
+		scaled.close();
+		throw new Error("no 2d context");
+	}
+	context.drawImage(scaled, 0, 0);
+	scaled.close();
+	const data = context.getImageData(0, 0, width, height).data;
+	return { width, height, rgba: new Uint8Array(data.buffer) };
+}
+
 async function readSource(
+	source: PixelSource,
+	rect: Rect | undefined,
+	size: [number, number] | undefined,
+): Promise<Pixels> {
+	return deliver(await cutSource(source, rect), size);
+}
+
+async function cutSource(
 	source: PixelSource,
 	rect: Rect | undefined,
 ): Promise<Pixels> {
