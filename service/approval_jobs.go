@@ -290,6 +290,23 @@ func (s *svc) cancelWaiting(ctx context.Context, actor string, job *JobRow) erro
 	return err
 }
 
+// cancelWaitingJob is JobCancel for a job read in waiting_approval: its request is rejected (SDD-015
+// section 5). One approved since it was read is cancelled as a queued job, so a cancel never lets it run.
+func (s *svc) cancelWaitingJob(ctx context.Context, actor string, job *JobRow) error {
+	err := s.cancelWaiting(ctx, actor, job)
+	if !errors.Is(err, errNoLongerWaiting) {
+		return err
+	}
+
+	if err := s.cancelJob(ctx, job.ID); err != nil {
+		return err
+	}
+
+	s.waitJob(ctx, job.ID, cancelWait)
+
+	return nil
+}
+
 // runApprovable is the handler of an approved job of a registered kind: it makes sure the cost is
 // reserved, runs the kind and returns the cost the kind reports. The ledger is settled by finishCost,
 // once the outcome of the job is known (SDD-015 section 6).
