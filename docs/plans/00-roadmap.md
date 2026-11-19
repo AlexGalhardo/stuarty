@@ -33,7 +33,7 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | [11](11-video-generation.md) | Video generation | M | 10 | TODO |
 | [12](12-ai-oauth-connections.md) | Sign in with ChatGPT and OpenRouter | M | 09 | TODO |
 | [13](13-mcp-domains-and-agent-docs.md) | MCP tools by domain and generated agent documentation | M | 06 | DONE (2026-11-19, `773674ed`..`e9e671d4`, merge `c3be54a0`) |
-| [14](14-hosted-agent-chat.md) | The user's agent hosted in the chat panel | L | 07, 13 | TODO |
+| [14](14-hosted-agent-chat.md) | The user's agent hosted in the chat panel | L | 07, 13 | IN PROGRESS (senior-a, 2026-11-19) |
 | [15](15-memory-skills-and-prompts.md) | Memory, skills and prompts | L | 07 | DONE (2026-11-19, 65d33593..d2e8660f) |
 | [16](16-curated-skills-and-briefing.md) | Curated skills and the guided briefing | M | 06, 15 | DONE (2026-11-19, `6a134407`..`6771dee1`, merge `7aff38e0`) |
 | [17](17-writing.md) | Writing: scripts, copy and captions | M | 06, 09 | TODO |
@@ -53,15 +53,15 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | [26](26-browser-preview-on-the-rust-renderer.md) | The browser preview on the Rust renderer | L | 03 | DONE (2026-11-19, e21f512f..9c750319; task 8, the idle-machine playback measurement, waits for an idle window) |
 | [27](27-image-document-core.md) | Image documents: core, catalogue, templates and export | L | 03 | DONE (2026-11-19, 97d5c560..7758cdda replayed and merged; WebP export waits for an ffargs builder) |
 | [28](28-image-editor-ui.md) | Image editor in the UI | L | 07, 27 | DONE (2026-11-19, `95ed640f`..`28a3e533`, merge `fac66975`) |
-| [29](29-image-adjustments-filters-and-masks.md) | Image adjustments, filters, masks and blend modes | L | 27 | TODO |
+| [29](29-image-adjustments-filters-and-masks.md) | Image adjustments, filters, masks and blend modes | L | 27 | IN PROGRESS (senior-b, 2026-11-19) |
 | [30](30-image-operations-with-a-model.md) | Image operations with a model | S | 10, 28 | TODO |
 | [31](31-motion-easing-crop-and-mask.md) | Motion: easing curves, animated crop and mask, presets | L | 03 | DONE (2026-11-19, `e914c99b`..`a88f8e63`, merge `4c2c5c85`) |
 | [32](32-nested-compositions.md) | Nested compositions | M | 06, 31 | TODO |
-| [33](33-external-motion-engine-hand-off.md) | Hand-off from an external motion engine | M | 08 | TODO |
+| [33](33-external-motion-engine-hand-off.md) | Hand-off from an external motion engine | M | 08 | IN PROGRESS (senior-d, 2026-11-19) |
 | [34](34-audio-processors-and-noise-reduction.md) | Audio processors and noise reduction | L | 03 | TODO |
 | [35](35-export-presets-batch-and-codecs.md) | Export presets, batch queue, H.265 and AV1 | M | 03 | DONE (2026-11-19, `c1bb77fa`..`c718fdb2`, merge `1063ec42`) |
 | [36](36-revert-checkpoints-and-diff.md) | Revert to a revision, checkpoints and a diff | M | 03 | TODO |
-| [37](37-editor-ui-and-shortcuts.md) | Final editor UI, shortcuts and open fixes | L | 07 | TODO |
+| [37](37-editor-ui-and-shortcuts.md) | Final editor UI, shortcuts and open fixes | L | 07 | IN PROGRESS (senior-e, 2026-11-19) |
 
 ### 1.4 Closing (after the tracks)
 
