@@ -7,6 +7,7 @@ import type {
 	RenderReason,
 	ToRenderWorker,
 } from "./protocol";
+import { RenderError } from "./renderCore";
 
 export interface RenderWorkerLike<S, B> {
 	postMessage(message: ToRenderWorker<S>, transfer?: Transferable[]): void;
@@ -36,7 +37,7 @@ export class RenderClient<S extends PixelSource, B> {
 	private inflight: number | null = null;
 	private waiting: { input: RenderInput; seq: number } | null = null;
 	private ready: ((path: "cpu" | "gpu") => void) | null = null;
-	private failed: ((failure: RenderFailure) => void) | null = null;
+	private failed: ((failure: RenderError) => void) | null = null;
 	private open = 0;
 	private peak = 0;
 	private path: "cpu" | "gpu" | null = null;
@@ -169,7 +170,7 @@ export class RenderClient<S extends PixelSource, B> {
 				if (message.seq === undefined) {
 					// Before ready it is the answer of init.
 					if (this.failed !== null) {
-						this.failed(failure);
+						this.failed(new RenderError(failure.reason, failure.detail));
 						this.failed = null;
 						this.ready = null;
 						return;
