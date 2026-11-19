@@ -1,6 +1,6 @@
 {
  "name": "project_item",
- "description": "Project items. add: timeline (id is timeline_id), text or output (export job_id); move, rename, trash, restore: item_id; brief: read, or write text (empty clears); briefing: questions, or answers {id: text} write the brief.",
+ "description": "Project items. add: timeline (its id is timeline_id), text or output (export job_id); move, rename, trash, restore: item_id; brief: read, or write text (empty clears); briefing: questions, or answers {id: text} to write the brief. Texts: text lists, reads (item_id) or writes (text; title, text_kind make one); revisions (revision, until: compare); revert (revision); check: caption (network) or script (wpm).",
  "inputSchema": {
   "type": "object",
   "properties": {
@@ -12,7 +12,11 @@
      "trash",
      "restore",
      "brief",
-     "briefing"
+     "briefing",
+     "text",
+     "revisions",
+     "revert",
+     "check"
     ]
    },
    "project_id": {
@@ -51,6 +55,21 @@
    "job_id": {
     "type": "string",
     "pattern": "^job_[0-9a-hjkmnp-tv-z]{10}$"
+   },
+   "text_kind": {
+    "type": "string"
+   },
+   "revision": {
+    "type": "integer"
+   },
+   "network": {
+    "type": "string"
+   },
+   "wpm": {
+    "type": "integer"
+   },
+   "until": {
+    "type": "integer"
    }
   },
   "required": [
@@ -71,6 +90,14 @@
   "properties": {
    "project_id": {
     "type": "string"
+   },
+   "body": {
+    "type": "string",
+    "x-untrusted": true
+   },
+   "texts": {
+    "type": "array",
+    "x-untrusted": true
    }
   },
   "required": [

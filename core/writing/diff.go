@@ -16,15 +16,15 @@ const (
 // maxDiffCells is the size of the table of the comparison: paragraph counts multiplied (SDD-019 section 3).
 const maxDiffCells = 4_000_000
 
-// Hunk is one paragraph of the difference between two bodies.
-type Hunk struct {
+// TextHunk is one paragraph of the difference between two bodies.
+type TextHunk struct {
 	Op   string `json:"op"`
 	Text string `json:"text" untrusted:"true"`
 }
 
-// DiffResult is the difference between two bodies at paragraph level.
-type DiffResult struct {
-	Hunks []Hunk `json:"hunks"`
+// TextDiff is the difference between two bodies at paragraph level.
+type TextDiff struct {
+	Hunks []TextHunk `json:"hunks"`
 	// Coarse is true when the bodies were too large to compare paragraph by paragraph: the result is the whole of a
 	// removed and the whole of b added.
 	Coarse bool `json:"coarse"`
@@ -52,11 +52,11 @@ func paragraphs(body string) []string {
 
 // Diff compares two bodies at paragraph level, as the longest common subsequence of their paragraphs (SDD-019
 // section 3): paragraphs only in a are removed, paragraphs only in b are added, the others are equal.
-func Diff(a, b string) DiffResult {
+func Diff(a, b string) TextDiff {
 	pa, pb := paragraphs(a), paragraphs(b)
 
 	if len(pa)*len(pb) > maxDiffCells {
-		return DiffResult{Hunks: wholeDiff(pa, pb), Coarse: true}
+		return TextDiff{Hunks: wholeDiff(pa, pb), Coarse: true}
 	}
 
 	// lcs[i][j] is the length of the common subsequence of pa[i:] and pb[j:].
@@ -75,44 +75,44 @@ func Diff(a, b string) DiffResult {
 		}
 	}
 
-	hunks := []Hunk{}
+	hunks := []TextHunk{}
 	i, j := 0, 0
 
 	for i < len(pa) && j < len(pb) {
 		switch {
 		case pa[i] == pb[j]:
-			hunks = append(hunks, Hunk{Op: OpEqual, Text: pa[i]})
+			hunks = append(hunks, TextHunk{Op: OpEqual, Text: pa[i]})
 			i++
 			j++
 		case lcs[i+1][j] >= lcs[i][j+1]:
-			hunks = append(hunks, Hunk{Op: OpRemoved, Text: pa[i]})
+			hunks = append(hunks, TextHunk{Op: OpRemoved, Text: pa[i]})
 			i++
 		default:
-			hunks = append(hunks, Hunk{Op: OpAdded, Text: pb[j]})
+			hunks = append(hunks, TextHunk{Op: OpAdded, Text: pb[j]})
 			j++
 		}
 	}
 
 	for ; i < len(pa); i++ {
-		hunks = append(hunks, Hunk{Op: OpRemoved, Text: pa[i]})
+		hunks = append(hunks, TextHunk{Op: OpRemoved, Text: pa[i]})
 	}
 
 	for ; j < len(pb); j++ {
-		hunks = append(hunks, Hunk{Op: OpAdded, Text: pb[j]})
+		hunks = append(hunks, TextHunk{Op: OpAdded, Text: pb[j]})
 	}
 
-	return DiffResult{Hunks: hunks}
+	return TextDiff{Hunks: hunks}
 }
 
-func wholeDiff(pa, pb []string) []Hunk {
-	hunks := make([]Hunk, 0, 2)
+func wholeDiff(pa, pb []string) []TextHunk {
+	hunks := make([]TextHunk, 0, 2)
 
 	if len(pa) > 0 {
-		hunks = append(hunks, Hunk{Op: OpRemoved, Text: strings.Join(pa, "\n\n")})
+		hunks = append(hunks, TextHunk{Op: OpRemoved, Text: strings.Join(pa, "\n\n")})
 	}
 
 	if len(pb) > 0 {
-		hunks = append(hunks, Hunk{Op: OpAdded, Text: strings.Join(pb, "\n\n")})
+		hunks = append(hunks, TextHunk{Op: OpAdded, Text: strings.Join(pb, "\n\n")})
 	}
 
 	return hunks

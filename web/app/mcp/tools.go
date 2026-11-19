@@ -474,6 +474,10 @@ func jobStart(ctx context.Context, svc service.Service, raw json.RawMessage) (*t
 		return nil, err
 	}
 
+	if in.Kind == service.JobTextDraft {
+		return textDraft(ctx, svc, in.ProjectID, in.Args, in.WaitMS)
+	}
+
 	if in.Kind == service.JobExportBatch {
 		return exportBatch(ctx, svc, service.ExportBatchRequest{
 			ProjectID: in.ProjectID, TimelineID: in.TimelineID, WaitMS: in.WaitMS,
@@ -848,23 +852,38 @@ func projectDescribe(
 	return &toolOutput{value: res, text: res.Text}, nil
 }
 
-// projectItem is five operations behind one tool (SDD-003 section 4.1): add, move, rename, trash and restore.
+// itemArgs are the arguments of project_item: one tool for the items of a production, its brief and its texts.
+type itemArgs struct {
+	Action    string            `json:"action"`
+	ProjectID string            `json:"project_id"`
+	ItemID    string            `json:"item_id"`
+	Kind      string            `json:"kind"`
+	Title     string            `json:"title"`
+	Text      *string           `json:"text"`
+	Answers   map[string]string `json:"answers"`
+	Preset    string            `json:"preset"`
+	FPS       fpsArg            `json:"fps"`
+	JobID     string            `json:"job_id"`
+	Position  *int              `json:"position"`
+	// The texts of SDD-019: the revision read or compared from, the one compared to, the kind of a new text, the
+	// network of a caption check and the pace of a script estimate.
+	Revision       *int   `json:"revision"`
+	Until          int    `json:"until"`
+	TextKind       string `json:"text_kind"`
+	Network        string `json:"network"`
+	WordsPerMinute int    `json:"wpm"`
+}
+
+// projectItem is the operations on the items of a production behind one tool (SDD-003 section 4.1): add, move,
+// rename, trash and restore, the brief and the briefing, and the texts (SDD-019: text, revisions, revert, check).
 func projectItem(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolOutput, error) {
-	in, err := decode[struct {
-		Action    string            `json:"action"`
-		ProjectID string            `json:"project_id"`
-		ItemID    string            `json:"item_id"`
-		Kind      string            `json:"kind"`
-		Title     string            `json:"title"`
-		Text      *string           `json:"text"`
-		Answers   map[string]string `json:"answers"`
-		Preset    string            `json:"preset"`
-		FPS       fpsArg            `json:"fps"`
-		JobID     string            `json:"job_id"`
-		Position  *int              `json:"position"`
-	}](raw)
+	in, err := decode[itemArgs](raw)
 	if err != nil {
 		return nil, err
+	}
+
+	if isWritingAction(in.Action) {
+		return writingItem(ctx, svc, &in)
 	}
 
 	if in.Action == "brief" {
