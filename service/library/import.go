@@ -65,12 +65,18 @@ func (m *Manager) ImportSkillDir(
 			return errors.New("the folder is far over the size limits of a skill")
 		}
 
-		if info.Size() > core.MaxSkillFile*2 {
-			// Selected later: a file of a skill over the limit is refused there, a big file next to the skill is not read.
+		if isJunk(rel) {
 			return nil
 		}
 
-		data, _, err := readSmall(root, rel, core.MaxSkillFile*2)
+		// A file over the limit is refused, not left out: a skill imported without one of its files would be
+		// another skill than the one the person chose. A file next to the skill folder is refused anyway (one
+		// skill per source).
+		if info.Size() > core.MaxSkillFile {
+			return fmt.Errorf("the file %s is %d bytes; the limit is %d", printable(rel), info.Size(), core.MaxSkillFile)
+		}
+
+		data, _, err := readSmall(root, rel, core.MaxSkillFile)
 		if err != nil {
 			return fmt.Errorf("%s: %w", rel, err)
 		}
