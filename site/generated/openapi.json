@@ -3431,6 +3431,9 @@
           "text": {
             "type": "string"
           },
+          "timeline": {
+            "type": "string"
+          },
           "tint": {
             "format": "double",
             "type": "number"
@@ -3464,7 +3467,8 @@
               "audio",
               "text",
               "caption",
-              "shape"
+              "shape",
+              "composition"
             ],
             "type": "string"
           },
@@ -5158,6 +5162,7 @@
               "caption.set_words",
               "caption.split",
               "clip.add",
+              "clip.add_composition",
               "clip.remove_silences",
               "clip.replace_media",
               "clip.set_blend",
@@ -5172,6 +5177,8 @@
               "clip.set_outline",
               "clip.set_shadow",
               "clip.set_speed",
+              "composition.create_from_selection",
+              "composition.expand",
               "font.add",
               "font.remove",
               "item.crossfade",
@@ -5294,6 +5301,9 @@
           "clip.add": {
             "$ref": "#/components/schemas/args.clip.add"
           },
+          "clip.add_composition": {
+            "$ref": "#/components/schemas/args.clip.add_composition"
+          },
           "clip.remove_silences": {
             "$ref": "#/components/schemas/args.clip.remove_silences"
           },
@@ -5335,6 +5345,12 @@
           },
           "clip.set_speed": {
             "$ref": "#/components/schemas/args.clip.set_speed"
+          },
+          "composition.create_from_selection": {
+            "$ref": "#/components/schemas/args.composition.create_from_selection"
+          },
+          "composition.expand": {
+            "$ref": "#/components/schemas/args.composition.expand"
           },
           "font.add": {
             "$ref": "#/components/schemas/args.font.add"
@@ -8598,6 +8614,9 @@
               }
             ]
           },
+          "timeline": {
+            "type": "string"
+          },
           "voice": {
             "type": "string"
           }
@@ -8617,6 +8636,23 @@
               "type": "string"
             },
             "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "WindowGroup": {
+        "properties": {
+          "height": {
+            "type": "integer"
+          },
+          "layers": {
+            "items": {
+              "$ref": "#/components/schemas/WindowLayer"
+            },
+            "type": "array"
+          },
+          "width": {
+            "type": "integer"
           }
         },
         "type": "object"
@@ -8718,6 +8754,16 @@
               }
             ]
           },
+          "group": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WindowGroup"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "h": {},
           "item": {
             "type": "string"
@@ -8806,6 +8852,9 @@
               "type": "number"
             },
             "type": "array"
+          },
+          "timeline": {
+            "type": "string"
           },
           "transition": {
             "items": {
@@ -10577,6 +10626,53 @@
         ],
         "type": "object"
       },
+      "args.clip.add_composition": {
+        "additionalProperties": false,
+        "properties": {
+          "duration": {
+            "description": "A length; default the rest of the nested timeline from source_in.",
+            "type": "string",
+            "x-vv-kind": "time"
+          },
+          "fit": {
+            "enum": [
+              "cover",
+              "contain",
+              "none"
+            ],
+            "type": "string"
+          },
+          "id": {
+            "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          },
+          "source_in": {
+            "description": "Where in the nested timeline to start, as a length from its start; default 0s.",
+            "type": "string",
+            "x-vv-kind": "time"
+          },
+          "start": {
+            "description": "Absolute position; omitted, the end of the last item of the track (0s on an empty track).",
+            "type": "string",
+            "x-vv-kind": "time"
+          },
+          "timeline_id": {
+            "description": "Another timeline of the same project.",
+            "pattern": "^prj_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          },
+          "track_id": {
+            "description": "A visual track.",
+            "pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "track_id",
+          "timeline_id"
+        ],
+        "type": "object"
+      },
       "args.clip.remove_silences": {
         "additionalProperties": false,
         "properties": {
@@ -11519,6 +11615,55 @@
                 "type": "object"
               }
             ]
+          }
+        },
+        "required": [
+          "item_id"
+        ],
+        "type": "object"
+      },
+      "args.composition.create_from_selection": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "description": "The id of the composition item.",
+            "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          },
+          "item_ids": {
+            "description": "The items to move, each once.",
+            "items": {
+              "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+              "type": "string"
+            },
+            "maxItems": 100,
+            "minItems": 1,
+            "type": "array"
+          },
+          "name": {
+            "description": "The name of the new timeline; default Composition.",
+            "maxLength": 120,
+            "minLength": 1,
+            "type": "string"
+          },
+          "timeline_id": {
+            "description": "The id of the new timeline.",
+            "pattern": "^prj_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "item_ids"
+        ],
+        "type": "object"
+      },
+      "args.composition.expand": {
+        "additionalProperties": false,
+        "properties": {
+          "item_id": {
+            "description": "A composition item.",
+            "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
           }
         },
         "required": [
