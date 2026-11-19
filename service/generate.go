@@ -489,6 +489,31 @@ func (s *svc) storeGenerated(
 	return item, nil
 }
 
+// viewGeneration puts on the job the estimate of a generation (it is there from the moment the job exists) and,
+// once it ended, its result: the text of text.generate or the files of image.generate and voice.generate.
+func viewGeneration(j *Job, r *JobRow) {
+	switch r.Kind {
+	case JobTextGenerate, JobImageGenerate, JobVoiceGenerate:
+	default:
+		return
+	}
+
+	// The input of the three kinds names its estimate the same way.
+	var in struct {
+		Estimate core.Money `json:"estimate"`
+	}
+
+	if json.Unmarshal(r.Input, &in) == nil {
+		estimate := in.Estimate
+		j.Estimate = &estimate
+	}
+
+	var res JobResult
+	if len(r.Result) > 0 && json.Unmarshal(r.Result, &res) == nil && (res.Text != nil || res.Generated != nil) {
+		j.Result = &res
+	}
+}
+
 // ingestWait is how long a generation job waits for the ingest of its files: an image or a narration probes in a
 // moment, and a file that takes longer is reported as it is, still ingesting.
 const ingestWait = 60 * time.Second
