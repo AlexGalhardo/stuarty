@@ -35,7 +35,7 @@ A creator who already pays for ChatGPT, or has an OpenRouter account, connects i
 ## Tasks
 
 - [x] 1. Read the two official pages again; record the flow, the endpoints, the limits and the date in SDD-016; STOP if either changed in a way that forbids this use. Verify: the links and the date are in SDD-016 and in the hand-off.
-- [ ] 2. Add SDD-007 rows (stolen `state`, code interception, token in a log, refresh race) and the flow to SDD-014. Verify: `task lint:md` exits 0.
+- [x] 2. Add SDD-007 rows (stolen `state`, code interception, token in a log, refresh race) and the flow to SDD-014. Verify: `task lint:md` exits 0.
 - [ ] 3. Implement the generic flow with a fake authorization server in tests. Verify: `go test ./service/connections/oauth/...` passes (happy path, replayed state, wrong verifier, expired state).
 - [ ] 4. Implement refresh with the lock and the "needs sign-in" state. Verify: `go test ./service/connections/oauth/... -run TestRefresh` passes with the race detector.
 - [ ] 5. Implement the OpenRouter credential kind and adapter. Verify: `go test ./service/providers/openrouter/...` passes against recorded responses.

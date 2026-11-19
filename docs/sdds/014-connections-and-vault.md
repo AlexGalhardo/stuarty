@@ -18,6 +18,7 @@
 9. Logs and the diagnostic bundle
 10. Surfaces
 11. Tests
+12. Sign-in credentials and their refresh (epic 12)
 
 ## 1. Overview
 
@@ -199,3 +200,16 @@ A secret is never an argument of a log call, never a field of an error and never
 | No surface returns a secret | `TestSecurity_T43_NoSurfaceReturnsASecret` (in `web/contract`, over the Service, HTTP, MCP and the CLI) |
 
 Unit tests cover the vault round trip, a wrong key, a corrupted file, rotation, concurrent use and each provider; the gate has a fake destination server that records what it receives.
+
+## 12. Sign-in credentials and their refresh (epic 12)
+
+A connection to an AI provider can be made by a sign-in in the browser (SDD-016 section 12) instead of a key. The flow is the generic authorization code flow with PKCE of `service/connections/oauth`, which the sign-in to a social network (SDD-020 section 6) uses too.
+
+- **The flow.** `ProviderSignInBegin` makes the `state` (256 random bits) and the PKCE verifier, keeps them in memory for 10 minutes (at most 20 flows, the oldest is dropped first) and answers the address of the consent screen. `ProviderSignInComplete` takes the flow by its `state`, once, whatever happens next; the caller must be a privileged browser session and, when the flow was begun in a browser, the same actor. It exchanges the code through the gated client of the connection, so the token host must be a host of the connection; a refusal of the token endpoint is turned into a fixed sentence and a short code, never its body.
+- **The stored form.** A sign-in credential is one vault entry, a JSON document with `format` `stuarty-signin`: the provider, the issued client id (when the provider issues one), the identifier of the host, the access token, the refresh token, the expiry, the scope, the account (for the card) and a `needs_sign_in` flag. It is in the vault only: no connection record, result, log, audit row, job input or file of the workspace has any of it. `ConnectionCreate` refuses a secret in that form, so only the sign-in makes one.
+- **What an adapter gets.** `Manager.With` reads the entry under the lock of the connection and, when it is a sign-in, asks the refresher (below) to renew it. The closure then receives `Credential.Secret` equal to the **access token** (or the OpenRouter key) alone, and `Credential.SignedIn` true: an adapter needs no knowledge of the stored form, and the check for an echo of the credential (section 9) compares with the token, not with the field names around it.
+- **Refresh.** An access token is renewed before it expires (60 seconds of margin) by one `refresh_token` grant through the gated client of the connection. The lock is **per connection** and is taken before the entry is read, so two concurrent uses make one refresh and the second sees the new tokens (a rotating refresh token would otherwise be spent twice). The new access token, refresh token (kept when the answer has none), expiry and scope are written together before the closure runs. A key that does not expire (OpenRouter) is never refreshed.
+- **A failed refresh.** A refusal that says the grant is no longer good (`invalid_grant` and any 4xx other than 429) sets `needs_sign_in` in the stored entry, keeps every other member, and returns `ErrNeedsSignIn`, which the service shows as `E_PROVIDER` with the code `needs_sign_in` and the hint to sign in again. Nothing is deleted: the connection, its label and the project data that used it stay, and a new sign-in of the same connection replaces the tokens. A failure that says nothing about the grant (no network, a 5xx, a 429) leaves the entry as it is and is reported as the provider being unavailable.
+- **Who may.** Beginning, completing and removing a sign-in are for a privileged browser session (`Caller.Browser`); an agent, the CLI and the local token read that the connection exists (`ConnectionList`, `ProviderSignInList`) and cannot start, complete or remove one (T-75).
+
+The rows of SDD-007 are T-75 (a stolen or replayed state), T-76 (interception of the code), T-77 (a token in a log, a result or a file) and T-78 (a refresh race).
