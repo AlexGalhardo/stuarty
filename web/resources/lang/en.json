@@ -129,8 +129,32 @@
         "save": "Save",
         "cancel": "Cancel",
         "delete": "Delete",
+        "duplicate": "Duplicate",
+        "details": "Details",
+        "timelines": "Timelines: {count}",
         "delete_title": "Delete this project?",
         "delete_body": "The project moves to the trash, where you can restore it."
+      },
+      "overview": {
+        "brief": "Brief",
+        "brief_empty": "Write the brief of this production: the idea, the audience, the tone.",
+        "brief_save": "Save brief",
+        "items": "Items",
+        "items_empty": "No items yet. Add a timeline or a text below.",
+        "trashed": "Trashed items",
+        "add": "Add to the production",
+        "add_submit": "Add item",
+        "item_title": "Title",
+        "item_text": "Text",
+        "rename_title": "Rename item",
+        "move_up": "Move up",
+        "move_down": "Move down",
+        "kind": {
+          "brief": "Brief",
+          "text": "Text",
+          "timeline": "Timeline",
+          "output": "Output"
+        }
       },
       "trash": {
         "title": "Trash",
