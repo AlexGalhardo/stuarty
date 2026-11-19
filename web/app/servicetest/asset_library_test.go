@@ -442,3 +442,68 @@ func TestAssetLibraryTagLimitOnImportIsAValidationError(t *testing.T) {
 		t.Errorf("a refused import left a file in the project: %+v", list.Assets)
 	}
 }
+
+// A key limited to one project reaches the library through that project only: a file the project does not hold
+// answers every operation as a hash that does not exist, the list and the search skip it, and the uses of a
+// shared file name the key's project alone.
+func TestAssetLibraryKeyLimitedToAProject(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{})
+	ctx := m.as(ui)
+	mine, other := m.newProject("Mine"), m.newProject("Other")
+
+	shared := m.importOne(mine, m.write("shared.mp4", clipBytes)).Assets[0].Hash
+	m.importOne(other, m.write("shared.mp4", clipBytes))
+
+	hidden := m.importOne(other, m.write("hidden-clip.mp4", clipBytes+"h")).Assets[0].Hash
+
+	key := service.WithCaller(context.Background(), service.Caller{
+		Actor: "key:k", Scopes: service.AllScopes, ProjectID: mine,
+	})
+	missing := "sha256:" + strings.Repeat("2", 64)
+
+	answer := func(hash string) map[string]*service.Error {
+		out := map[string]*service.Error{}
+
+		_, err := m.svc.AssetGet(key, service.AssetRef{Hash: hash})
+		out["get"] = serviceErr(err)
+		_, err = m.svc.AssetUses(key, service.AssetUsesRequest{Hash: hash})
+		out["uses"] = serviceErr(err)
+		_, err = m.svc.AssetSetInfo(key, service.AssetSetInfoRequest{Hash: hash, Description: new("taken")})
+		out["set"] = serviceErr(err)
+		_, err = m.svc.AssetTag(key, service.AssetTagRequest{Hash: hash, Add: []string{"taken"}})
+		out["tag"] = serviceErr(err)
+
+		return out
+	}
+
+	got, want := answer(hidden), answer(missing)
+	for op, e := range got {
+		w := want[op]
+		if e == nil || w == nil || e.Code != command.CodeNotFound || e.Code != w.Code ||
+			strings.ReplaceAll(e.Message, hidden, "H") != strings.ReplaceAll(w.Message, missing, "H") {
+			t.Errorf("%s of a file of another project = %+v, of a missing hash %+v", op, e, w)
+		}
+	}
+
+	for name, req := range map[string]service.AssetListRequest{
+		"all":        {},
+		"by text":    {Text: "hidden"},
+		"by project": {Project: other},
+	} {
+		list, err := m.svc.AssetList(key, req)
+		if err != nil || slices.Contains(assetIDs(list), hidden) {
+			t.Errorf("list %s = %+v, %v", name, list, err)
+		}
+	}
+
+	entry, err := m.svc.AssetGet(key, service.AssetRef{Hash: shared})
+	if err != nil || len(entry.Uses) != 1 || entry.Uses[0].ProjectID != mine || entry.Projects != 1 {
+		t.Errorf("the uses of a shared file through the key = %+v, %v", entry, err)
+	}
+
+	// Nothing the refused calls asked for was written.
+	if e, err := m.svc.AssetGet(ctx, service.AssetRef{Hash: hidden}); err != nil || e.Description != "" ||
+		len(e.Tags) != 0 {
+		t.Errorf("a refused call changed the file: %+v, %v", e, err)
+	}
+}
