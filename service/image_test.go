@@ -587,6 +587,58 @@ func TestImageConflictAndUndoOfAnotherActor(t *testing.T) {
 	mustCode(t, err, CodeNothingToUndo)
 }
 
+// An undo whose primitives are all skipped consumes its step (SDD-005 section 12.2 item 16): the next undo of the
+// same actor reaches the step before it instead of meeting the same step for ever.
+func TestImageUndoOfAStepThatIsAllSkippedMovesOn(t *testing.T) {
+	s, _ := newImageService(t)
+	a, b := asActor("local:a"), asActor("local:b")
+	c, _ := s.ImageCreate(a, ImageCreateRequest{Width: 200, Height: 200})
+	id := c.ImageID
+
+	if _, err := s.ImageEdit(a, ImageEditRequest{ImageID: id, BaseRevision: 1, Operations: ops(
+		"layer.add_shape", `{"shape": "rect", "w": 50, "h": 50, "id": "lyr_aaaaaaaaaa"}`,
+		"layer.add_shape", `{"shape": "rect", "w": 50, "h": 50, "id": "lyr_bbbbbbbbbb"}`,
+	)}); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := s.ImageEdit(a, ImageEditRequest{ImageID: id, BaseRevision: 2, Operations: ops(
+		"layer.set", `{"layer_id": "lyr_aaaaaaaaaa", "name": "by a"}`,
+	)}); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := s.ImageEdit(b, ImageEditRequest{ImageID: id, BaseRevision: 3, Operations: ops(
+		"layer.set", `{"layer_id": "lyr_aaaaaaaaaa", "name": "by b"}`,
+	)}); err != nil {
+		t.Fatal(err)
+	}
+
+	first, err := s.ImageUndo(a, ImageStepRequest{ImageID: id})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if first.Step != 3 || first.Applied || len(first.Skipped) != 1 || first.Revision != 5 {
+		t.Fatalf("the rename of a is skipped, and the step is consumed by revision 5: %+v", first)
+	}
+
+	second, err := s.ImageUndo(a, ImageStepRequest{ImageID: id})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if second.Step != 2 || !second.Applied {
+		t.Fatalf("the next undo reaches the step before: step %d applied %t", second.Step, second.Applied)
+	}
+
+	// the shape b renamed stays with b; the other shape of the step goes
+	if d, _ := s.ImageDescribe(a, ImageDescribeRequest{ImageID: id}); len(d.Layers) != 1 ||
+		d.Layers[0].ID != "lyr_aaaaaaaaaa" {
+		t.Fatalf("only the shape b changed is left: %+v", d.Layers)
+	}
+}
+
 func TestImageTemplates(t *testing.T) {
 	s, _ := newImageService(t)
 	ctx := asActor("local:agent")
