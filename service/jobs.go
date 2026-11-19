@@ -835,6 +835,12 @@ func (s *svc) afterQueuedCancel(ctx context.Context, j *JobRow) {
 		}
 	}
 
+	// An approved job cancelled before it ran spent nothing, and RunJob never reaches finishCost for
+	// it: its reservation goes back here, or it would hold the ceiling of the day (SDD-015 section 6).
+	if s.kindOf(j.Kind) != nil {
+		s.releaseUnrun(ctx, j)
+	}
+
 	s.emitJob(ctx, j)
 }
 
