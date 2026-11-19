@@ -707,6 +707,11 @@ func (s *svc) environmentCheck() DoctorCheck {
 // (SDD-014 section 8). The owner removes the key variables from its environment, so this check, not
 // environment, is where they show; it names the provider and never a value or a path.
 func (s *svc) vaultCheck() DoctorCheck {
+	if s.conns == nil {
+		// New always builds a registry; only a service assembled by hand in a test has none.
+		return DoctorCheck{Name: "vault", OK: true, Detail: "no vault in this process"}
+	}
+
 	st := s.conns.VaultStatus()
 
 	file := "no vault file yet"
