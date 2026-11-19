@@ -3,11 +3,24 @@ package service
 import (
 	"fmt"
 	"strings"
+
+	"github.com/AlexGalhardo/stuarty/service/textview"
 )
+
+// withNote starts a text that quotes a name or a text of the document with the note of SDD-007 section 8.2.
+func withNote(text string) string {
+	if strings.Contains(text, `"`) && !strings.HasPrefix(text, textview.Note) {
+		return textview.Note + "\n" + text
+	}
+
+	return text
+}
 
 // ImageEditText is the text of the result of an image batch, the form the CLI prints and the MCP tool returns:
 // the state and the revision, what changed, what was created and the findings the batch introduced.
-func ImageEditText(r *ImageEditResult) string {
+func ImageEditText(r *ImageEditResult) string { return withNote(imageEditBody(r)) }
+
+func imageEditBody(r *ImageEditResult) string {
 	state := "committed"
 
 	switch {
@@ -42,7 +55,7 @@ func ImageEditText(r *ImageEditResult) string {
 // ImageStepText is the text of an undo or a redo of an image.
 func ImageStepText(r *ImageStepResult) string {
 	head := fmt.Sprintf("%s of r%d: ", r.Kind, r.Step)
-	text := ImageEditText(&r.ImageEditResult)
+	text := imageEditBody(&r.ImageEditResult)
 
 	if len(r.Skipped) > 0 {
 		var skipped []string
@@ -54,7 +67,7 @@ func ImageStepText(r *ImageStepResult) string {
 		text += "\nskipped: " + strings.Join(skipped, "; ")
 	}
 
-	return head + text
+	return withNote(head + text)
 }
 
 // ImageExportText is the text of an image export.
