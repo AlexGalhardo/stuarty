@@ -187,7 +187,7 @@ func overCeiling(a Action, ceilings []Ceiling, spent Spent) *Refusal {
 				}
 			}
 
-			if c.PerDay != nil && so+a.Cost.Micros > *c.PerDay {
+			if c.PerDay != nil && overDay(so, a.Cost.Micros, *c.PerDay) {
 				return &Refusal{
 					Reason: ReasonPerDay, Scope: scope, Limit: *c.PerDay, Spent: so, Estimate: a.Cost.Micros,
 					Currency: c.Currency,
@@ -254,7 +254,14 @@ func covers(r *Rule, a Action, spent Spent) bool {
 		return false
 	}
 
-	return r.PerDay == nil || spent.ByRule[r.ID]+a.Cost.Micros <= *r.PerDay
+	return r.PerDay == nil || !overDay(spent.ByRule[r.ID], a.Cost.Micros, *r.PerDay)
+}
+
+// overDay reports whether spent plus cost is over limit, without adding them: a recorded cost may be the
+// largest int64 (a cost that does not fit saturates there, core/provider), and the sum would wrap to a
+// negative day that passes every limit.
+func overDay(spent, cost, limit int64) bool {
+	return spent > limit || cost > limit-max(spent, 0)
 }
 
 // FieldError is a validation failure; Path names the member of the request.
