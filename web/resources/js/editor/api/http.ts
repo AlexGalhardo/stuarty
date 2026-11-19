@@ -6,7 +6,7 @@ import {
 	type TransportRequest,
 	type TransportResponse,
 } from "./transport";
-import { APPROVAL_EVENT_NAMES, EVENT_NAMES } from "./types";
+import { APPROVAL_EVENT_NAMES, CHAT_EVENT_NAMES, EVENT_NAMES } from "./types";
 
 // The only place that calls fetch and EventSource (rule T7). Same origin, the
 // session cookie authenticates, no Authorization header and no token in the
@@ -66,7 +66,11 @@ export class HttpTransport implements Transport {
 		source.onopen = () => handlers.onOpen();
 		source.onmessage = (event: MessageEvent<string>) =>
 			handlers.onMessage(null, event.data);
-		for (const name of [...EVENT_NAMES, ...APPROVAL_EVENT_NAMES]) {
+		for (const name of [
+			...EVENT_NAMES,
+			...APPROVAL_EVENT_NAMES,
+			...CHAT_EVENT_NAMES,
+		]) {
 			source.addEventListener(name, (event) =>
 				handlers.onMessage(name, (event as MessageEvent<string>).data),
 			);
