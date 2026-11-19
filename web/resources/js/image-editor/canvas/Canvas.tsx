@@ -147,8 +147,13 @@ export default function Canvas(): ReactNode {
 		if (nudge !== undefined) {
 			event.preventDefault();
 			const step = event.shiftKey ? 10 : 1;
-			const ops = nudgeOps(state, nudge[0] * step, nudge[1] * step);
-			if (ops.length > 0) void state.send(ops);
+			void state.send((doc) =>
+				nudgeOps(
+					{ doc, selection: store.getState().selection },
+					nudge[0] * step,
+					nudge[1] * step,
+				),
+			);
 			return;
 		}
 		if (event.key === "Delete" || event.key === "Backspace") {

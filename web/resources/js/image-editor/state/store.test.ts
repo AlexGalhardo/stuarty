@@ -134,6 +134,25 @@ describe("the image store", () => {
 		expect(store.getState().error).toBeNull();
 	});
 
+	test("a batch given as a function is planned against the document its turn finds", async () => {
+		const server = fakeApi(doc(1, []));
+		const store = createImageStore(server.api, "img_aaaaaaaaaa");
+		await store.getState().open();
+		const seen: number[] = [];
+		const plan = (d: ImageDocument) => {
+			seen.push(d.revision);
+			return [{ op: "layer.add_fill" }];
+		};
+		await Promise.all([
+			store.getState().send(plan),
+			store.getState().send(plan),
+		]);
+		expect(seen).toEqual([1, 2]);
+		// a plan with nothing to do sends nothing
+		expect(await store.getState().send(() => [])).toBeNull();
+		expect(server.sent).toHaveLength(2);
+	});
+
 	test("a refused batch leaves the document as it was and keeps the error", async () => {
 		const server = fakeApi(doc(1, [layer("a")]));
 		const store = createImageStore(server.api, "img_aaaaaaaaaa");
