@@ -71,8 +71,9 @@ func (f *fpsText) UnmarshalJSON(b []byte) error {
 }
 
 type getIn struct {
-	ID     string `json:"id"               validate:"required"`
-	Detail string `json:"detail,omitempty"                     doc:"concise (default), full or document."`
+	ID         string `json:"id"                    validate:"required"`
+	TimelineID string `json:"timeline_id,omitempty"                     doc:"The timeline of the project; required when the project has several."`
+	Detail     string `json:"detail,omitempty"                          doc:"concise (default), full or document."`
 	pageIn
 }
 
@@ -83,14 +84,16 @@ type stateIn struct {
 
 // stepIn is the body of undo and redo. dry_run is read as it came (readDryRun).
 type stepIn struct {
-	ID     string `json:"id"                validate:"required"`
-	DryRun any    `json:"dry_run,omitempty"`
+	ID         string `json:"id"                    validate:"required"`
+	TimelineID string `json:"timeline_id,omitempty"                     doc:"The timeline of the project; required when the project has several."`
+	DryRun     any    `json:"dry_run,omitempty"`
 }
 
 type mediaStateIn struct {
-	ID      string `json:"id"                validate:"required"`
-	AssetID string `json:"asset_id"          validate:"required"`
-	DryRun  any    `json:"dry_run,omitempty"`
+	ID         string `json:"id"                    validate:"required"`
+	TimelineID string `json:"timeline_id,omitempty"                     doc:"The timeline of the project; required when the project has several."`
+	AssetID    string `json:"asset_id"              validate:"required"`
+	DryRun     any    `json:"dry_run,omitempty"`
 }
 
 // Operation is one operation of a batch: the command name and its arguments.
@@ -102,6 +105,7 @@ type Operation struct {
 
 type editIn struct {
 	ID             string      `json:"id"                        validate:"required"`
+	TimelineID     string      `json:"timeline_id,omitempty"                                       doc:"The timeline of the project; required when the project has several."`
 	BaseRevision   int64       `json:"base_revision"             validate:"required"               doc:"The revision the batch was planned against."`
 	Operations     []Operation `json:"operations"                validate:"required,min=1,max=200"`
 	IdempotencyKey string      `json:"idempotency_key,omitempty"                                   doc:"8 to 64 characters; the Idempotency-Key header is the same."`
@@ -109,14 +113,16 @@ type editIn struct {
 }
 
 type historyIn struct {
-	ID    string `json:"id"              validate:"required"`
-	Actor string `json:"actor,omitempty"                     doc:"Only the steps of this actor."`
+	ID         string `json:"id"                    validate:"required"`
+	TimelineID string `json:"timeline_id,omitempty"                     doc:"The timeline of the project; required when the project has several."`
+	Actor      string `json:"actor,omitempty"                           doc:"Only the steps of this actor."`
 	pageIn
 }
 
 type lintIn struct {
-	ID       string `json:"id"                 validate:"required"`
-	Severity string `json:"severity,omitempty"                     doc:"warning (default, everything) or error."`
+	ID         string `json:"id"                    validate:"required"`
+	TimelineID string `json:"timeline_id,omitempty"                     doc:"The timeline of the project; required when the project has several."`
+	Severity   string `json:"severity,omitempty"                        doc:"warning (default, everything) or error."`
 	pageIn
 }
 
@@ -256,7 +262,7 @@ func (h *apiHandler) registerAll() {
 	})
 	register(h, "projects.history", func(c *web.Ctx, in historyIn) (service.HistoryListResult, error) {
 		res, err := h.Service.HistoryList(c.Context(), service.HistoryListRequest{
-			ProjectID: in.ID, Actor: in.Actor, Page: page(in.pageIn),
+			ProjectID: in.ID, TimelineID: in.TimelineID, Actor: in.Actor, Page: page(in.pageIn),
 		})
 		if res != nil {
 			revisionHeader(c, res.Revision)
@@ -273,7 +279,12 @@ func (h *apiHandler) registerAll() {
 	register(h, "projects.lint", func(c *web.Ctx, in lintIn) (service.LintResult, error) {
 		res, err := h.Service.Lint(
 			c.Context(),
-			service.LintRequest{ProjectID: in.ID, Severity: in.Severity, Page: page(in.pageIn)},
+			service.LintRequest{
+				ProjectID:  in.ID,
+				TimelineID: in.TimelineID,
+				Severity:   in.Severity,
+				Page:       page(in.pageIn),
+			},
 		)
 		if res != nil {
 			revisionHeader(c, res.Revision)
@@ -307,7 +318,7 @@ func (h *apiHandler) registerAll() {
 
 		res, err := h.Service.MediaTrash(
 			c.Context(),
-			service.MediaTrashRequest{ProjectID: in.ID, AssetID: in.AssetID, DryRun: dryRun},
+			service.MediaTrashRequest{ProjectID: in.ID, TimelineID: in.TimelineID, AssetID: in.AssetID, DryRun: dryRun},
 		)
 
 		return deref(res), err
@@ -320,7 +331,7 @@ func (h *apiHandler) registerAll() {
 
 		res, err := h.Service.MediaRestore(
 			c.Context(),
-			service.MediaTrashRequest{ProjectID: in.ID, AssetID: in.AssetID, DryRun: dryRun},
+			service.MediaTrashRequest{ProjectID: in.ID, TimelineID: in.TimelineID, AssetID: in.AssetID, DryRun: dryRun},
 		)
 
 		return deref(res), err
@@ -341,6 +352,19 @@ func (h *apiHandler) registerAll() {
 	register(h, "projects.bundle.import", h.projectBundleImport)
 	register(h, "projects.otio.export", h.projectOtioExport)
 	register(h, "projects.otio.import", h.projectOtioImport)
+	register(h, "projects.describe", h.projectDescribe)
+	register(h, "projects.duplicate", h.projectDuplicate)
+	register(h, "projects.items.add", h.projectItemAdd)
+	register(h, "projects.items.move", h.projectItemMove)
+	register(h, "projects.items.rename", h.projectItemRename)
+	register(h, "projects.items.trash", func(c *web.Ctx, in itemStateIn) (service.ProjectItemResult, error) {
+		return h.projectItemState(c, in, false)
+	})
+	register(h, "projects.items.restore", func(c *web.Ctx, in itemStateIn) (service.ProjectItemResult, error) {
+		return h.projectItemState(c, in, true)
+	})
+	register(h, "projects.brief.get", h.briefGet)
+	register(h, "projects.brief.set", h.briefSet)
 	register(h, "templates.export", h.templateExport)
 	register(h, "templates.file", h.templateFile)
 	register(h, "media.proxy", func(c *web.Ctx, in mediaFileIn) (noIn, error) {
@@ -505,7 +529,7 @@ func (h *apiHandler) projectsCreate(c *web.Ctx, in createIn) (service.ProjectCre
 
 func (h *apiHandler) projectsGet(c *web.Ctx, in getIn) (service.ProjectGetResult, error) {
 	res, err := h.Service.ProjectGet(c.Context(), service.ProjectGetRequest{
-		ProjectID: in.ID, Detail: in.Detail, Page: page(in.pageIn),
+		ProjectID: in.ID, TimelineID: in.TimelineID, Detail: in.Detail, Page: page(in.pageIn),
 	})
 	if err != nil {
 		return service.ProjectGetResult{}, err
@@ -565,7 +589,7 @@ func (h *apiHandler) projectsEdit(c *web.Ctx, in editIn) (service.EditResult, er
 	}
 
 	res, err := h.Service.Edit(c.Context(), service.EditRequest{
-		ProjectID:      in.ID,
+		ProjectID: in.ID, TimelineID: in.TimelineID,
 		BaseRevision:   in.BaseRevision,
 		Operations:     ops,
 		IdempotencyKey: key,
@@ -590,7 +614,7 @@ func (h *apiHandler) step(
 		return service.UndoResult{}, err
 	}
 
-	res, err := fn(c.Context(), service.UndoRequest{ProjectID: in.ID, DryRun: dryRun})
+	res, err := fn(c.Context(), service.UndoRequest{ProjectID: in.ID, TimelineID: in.TimelineID, DryRun: dryRun})
 	if err != nil {
 		return service.UndoResult{}, err
 	}

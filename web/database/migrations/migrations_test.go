@@ -82,6 +82,17 @@ func TestTablesMatchSDD005Section5(t *testing.T) {
 
 	want := map[string][]string{
 		"projects": {
+			"id TEXT 1 - 1", "name TEXT 1 - 0", "state TEXT 1 'active' 0", "created_ms INTEGER 1 - 0",
+			"updated_ms INTEGER 1 - 0", "created_by TEXT 1 - 0", "owner_user_id TEXT 0 - 0",
+			"trashed_ms INTEGER 0 - 0", "trashed_by TEXT 0 - 0",
+		},
+		"project_items": {
+			"id TEXT 1 - 1", "project_id TEXT 1 - 0", "kind TEXT 1 - 0", "title TEXT 1 - 0",
+			"position INTEGER 1 - 0", "state TEXT 1 'active' 0", "ref TEXT 0 - 0", "body TEXT 1 '' 0",
+			"format TEXT 0 - 0", "created_ms INTEGER 1 - 0", "updated_ms INTEGER 1 - 0", "created_by TEXT 1 - 0",
+			"trashed_ms INTEGER 0 - 0",
+		},
+		"timelines": {
 			"id TEXT 1 - 1", "name TEXT 1 - 0", "state TEXT 1 'active' 0", "revision INTEGER 1 0 0",
 			"schema_version INTEGER 1 - 0", "document TEXT 1 - 0", "doc_sha256 TEXT 1 - 0",
 			"width INTEGER 1 - 0", "height INTEGER 1 - 0", "fps_num INTEGER 1 - 0", "fps_den INTEGER 1 - 0",
@@ -183,7 +194,11 @@ func TestIndexesAndTriggers(t *testing.T) {
 
 	// name -> fragments the stored SQL must contain.
 	want := map[string][]string{
+		"timelines_state_updated_ms_index":            {"ON timelines (state, updated_ms)"},
 		"projects_state_updated_ms_index":             {"ON projects (state, updated_ms)"},
+		"project_items_project_id_position_index":     {"ON project_items (project_id, position)"},
+		"project_items_timeline_ref_unique":           {"UNIQUE INDEX", "WHERE kind = 'timeline'"},
+		"project_items_brief_unique":                  {"UNIQUE INDEX", "WHERE kind = 'brief' AND state = 'active'"},
 		"operations_project_id_actor_revision_index":  {"ON operations (project_id, actor, revision)"},
 		"operations_undo_idx":                         {"WHERE closed_by IS NULL AND kind IN ('edit','redo')"},
 		"operations_redo_idx":                         {"WHERE closed_by IS NULL AND kind = 'undo'"},
@@ -232,14 +247,14 @@ func TestChecksAndForeignKeys(t *testing.T) {
 		return err
 	}
 	if err := exec(
-		`INSERT INTO projects (id, name, schema_version, document, doc_sha256, width, height, fps_num, fps_den, created_ms, updated_ms, created_by)
+		`INSERT INTO timelines (id, name, schema_version, document, doc_sha256, width, height, fps_num, fps_den, created_ms, updated_ms, created_by)
  VALUES ('prj_a', 'a', 1, '{}', 'x', 1, 1, 30, 1, 1, 1, 'local:ui')`,
 	); err != nil {
 		t.Fatal(err)
 	}
 
 	bad := map[string]string{
-		"project state":     `UPDATE projects SET state = 'gone' WHERE id = 'prj_a'`,
+		"project state":     `UPDATE timelines SET state = 'gone' WHERE id = 'prj_a'`,
 		"operation kind":    `INSERT INTO operations VALUES ('prj_a', 1, 'nope', 'a', 0, NULL, 1, '[]', '[]', '[]', NULL, 1, 'x', NULL, NULL)`,
 		"revision zero":     `INSERT INTO operations VALUES ('prj_a', 0, 'edit', 'a', 0, NULL, 1, '[]', '[]', '[]', NULL, 1, 'x', NULL, NULL)`,
 		"orphan operation":  `INSERT INTO operations VALUES ('prj_zz', 1, 'edit', 'a', 0, NULL, 1, '[]', '[]', '[]', NULL, 1, 'x', NULL, NULL)`,
@@ -259,7 +274,7 @@ func TestChecksAndForeignKeys(t *testing.T) {
 	); err != nil {
 		t.Fatal(err)
 	}
-	if err := exec(`DELETE FROM projects WHERE id = 'prj_a'`); err != nil {
+	if err := exec(`DELETE FROM timelines WHERE id = 'prj_a'`); err != nil {
 		t.Fatal(err)
 	}
 	var n int
@@ -301,6 +316,8 @@ func TestResetDropsEveryEditorTableAndUpRunsAgain(t *testing.T) {
 
 	tables := []string{
 		"projects",
+		"project_items",
+		"timelines",
 		"operations",
 		"idempotency_keys",
 		"assets",
@@ -345,7 +362,7 @@ func TestOperationsAppendOnly(t *testing.T) {
 	db := openMigrated(t)
 	ctx := context.Background()
 	for _, q := range []string{
-		`INSERT INTO projects (id, name, schema_version, document, doc_sha256, width, height, fps_num, fps_den, created_ms, updated_ms, created_by)
+		`INSERT INTO timelines (id, name, schema_version, document, doc_sha256, width, height, fps_num, fps_den, created_ms, updated_ms, created_by)
  VALUES ('prj_a', 'a', 1, '{}', 'x', 1, 1, 30, 1, 1, 1, 'local:ui')`,
 		`INSERT INTO operations VALUES ('prj_a', 1, 'edit', 'a', 0, NULL, 1, '[]', '[]', '[]', NULL, 1, 'x', NULL, NULL)`,
 	} {
@@ -386,7 +403,7 @@ func TestAPIKeysCascadeWithProject(t *testing.T) {
 	db := openMigrated(t)
 	ctx := context.Background()
 	for _, q := range []string{
-		`INSERT INTO projects (id, name, schema_version, document, doc_sha256, width, height, fps_num, fps_den, created_ms, updated_ms, created_by)
+		`INSERT INTO timelines (id, name, schema_version, document, doc_sha256, width, height, fps_num, fps_den, created_ms, updated_ms, created_by)
  VALUES ('prj_a', 'a', 1, '{}', 'x', 1, 1, 30, 1, 1, 1, 'u')`,
 		`INSERT INTO api_keys VALUES ('key_1', 'tok_1', 'usr_1', 'prj_a', 'k', 1)`,
 	} {
@@ -400,7 +417,7 @@ func TestAPIKeysCascadeWithProject(t *testing.T) {
 	); err == nil {
 		t.Error("a second key with the same token_id was accepted")
 	}
-	if _, err := db.ExecContext(ctx, `DELETE FROM projects WHERE id = 'prj_a'`); err != nil {
+	if _, err := db.ExecContext(ctx, `DELETE FROM timelines WHERE id = 'prj_a'`); err != nil {
 		t.Fatal(err)
 	}
 	var n int

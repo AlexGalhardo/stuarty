@@ -15,6 +15,7 @@ import (
 type repos struct{ ex database.Executor }
 
 func (r repos) Projects() service.ProjectRepo        { return projectRepo(r) }
+func (r repos) Productions() service.ProductionRepo  { return productionRepo(r) }
 func (r repos) Operations() service.OperationRepo    { return operationRepo(r) }
 func (r repos) Idempotency() service.IdempotencyRepo { return idempotencyRepo(r) }
 func (r repos) Assets() service.AssetRepo            { return assetRepo(r) }

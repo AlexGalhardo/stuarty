@@ -53,6 +53,10 @@ func (s *svc) edit(ctx context.Context, req EditRequest, allowInternal bool) (*E
 		return nil, err
 	}
 
+	if err := s.useTimeline(ctx, c, &req.ProjectID, req.TimelineID); err != nil {
+		return nil, err
+	}
+
 	hash, cerr := s.checkBatch(c, &req, allowInternal)
 	if cerr != nil {
 		return nil, cerr

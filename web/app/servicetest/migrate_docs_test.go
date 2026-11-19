@@ -159,7 +159,7 @@ func TestStartupMigrationClosesEveryUndoChain(t *testing.T) {
 	}
 
 	_, err := e.store.DB().ExecContext(context.Background(),
-		`UPDATE projects SET schema_version = 0, document = replace(document, '"schema_version":1', '"schema_version":0')
+		`UPDATE timelines SET schema_version = 0, document = replace(document, '"schema_version":1', '"schema_version":0')
  WHERE id = ?`, project)
 	if err != nil {
 		t.Fatal(err)
@@ -194,7 +194,7 @@ func TestStartupMigrationFailureNamesTheProjectAndWritesNothing(t *testing.T) {
 	project, _ := e.withTrack()
 
 	_, err := e.store.DB().ExecContext(context.Background(),
-		`UPDATE projects SET schema_version = 0, document = replace(document, '"schema_version":1', '"schema_version":0')
+		`UPDATE timelines SET schema_version = 0, document = replace(document, '"schema_version":1', '"schema_version":0')
  WHERE id = ?`, project)
 	if err != nil {
 		t.Fatal(err)

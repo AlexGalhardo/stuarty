@@ -31,6 +31,10 @@ var Tools = []ToolRow{
 		"image",
 		[]string{"image:create", "image:show", "image:edit", "image:export"},
 	},
+	{
+		"project_item",
+		[]string{"item:add", "brief:set"},
+	},
 }
 
 // ErrorRow is one error code of SDD-000 section 8 and SDD-002 section A.8, with

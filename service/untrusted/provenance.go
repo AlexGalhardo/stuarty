@@ -24,6 +24,10 @@ var Provenance = map[string]string{
 	"service.OtioMedia.Ref":                    SourceAssetName,
 	"service.OtioMedia.Reason":                 SourceAssetName,
 	"service.ProjectOtioExportResult.FileName": SourceProjectText,
+	"service.ProjectItem.Title":                SourceProjectText,
+	"service.ProjectItem.Text":                 SourceProjectText,
+	"service.ProjectDescribeResult.Name":       SourceProjectText,
+	"service.BriefResult.Text":                 SourceProjectText,
 
 	// image documents (SDD-021): names, texts and the descriptions built from them
 	"service.ImageCreateResult.Text":       SourceProjectText,

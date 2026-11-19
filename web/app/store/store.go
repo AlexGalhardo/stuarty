@@ -91,6 +91,7 @@ type projectTx struct {
 }
 
 func (p *projectTx) Projects() service.ProjectRepo        { return p.tx.Projects() }
+func (p *projectTx) Productions() service.ProductionRepo  { return p.tx.Productions() }
 func (p *projectTx) Operations() service.OperationRepo    { return p.tx.Operations() }
 func (p *projectTx) Idempotency() service.IdempotencyRepo { return p.tx.Idempotency() }
 func (p *projectTx) Assets() service.AssetRepo            { return p.tx.Assets() }

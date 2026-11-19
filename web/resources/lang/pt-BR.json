@@ -129,8 +129,32 @@
         "save": "Salvar",
         "cancel": "Cancelar",
         "delete": "Excluir",
+        "duplicate": "Duplicar",
+        "details": "Detalhes",
+        "timelines": "Linhas do tempo: {count}",
         "delete_title": "Excluir este projeto?",
         "delete_body": "O projeto vai para a lixeira, de onde você pode restaurá-lo."
+      },
+      "overview": {
+        "brief": "Briefing",
+        "brief_empty": "Escreva o briefing desta produção: a ideia, o público, o tom.",
+        "brief_save": "Salvar briefing",
+        "items": "Itens",
+        "items_empty": "Nenhum item ainda. Adicione uma linha do tempo ou um texto abaixo.",
+        "trashed": "Itens na lixeira",
+        "add": "Adicionar à produção",
+        "add_submit": "Adicionar item",
+        "item_title": "Título",
+        "item_text": "Texto",
+        "rename_title": "Renomear item",
+        "move_up": "Mover para cima",
+        "move_down": "Mover para baixo",
+        "kind": {
+          "brief": "Briefing",
+          "text": "Texto",
+          "timeline": "Linha do tempo",
+          "output": "Saída"
+        }
       },
       "trash": {
         "title": "Lixeira",

@@ -20,8 +20,10 @@ type call struct {
 	svc       service.Service
 	args      *parsed
 	projectID string
-	events    EventOpener
-	download  Downloader
+	// timelineID is --timeline, for a command that takes it.
+	timelineID string
+	events     EventOpener
+	download   Downloader
 	// inProcess is true when this process owns the workspace: the person at the
 	// terminal of the owner machine, who may install helpers and sweep the workspace.
 	inProcess bool
@@ -48,6 +50,8 @@ type spec struct {
 	projectPositional bool
 	// positional is true when positional arguments are allowed beyond the project id.
 	positional bool
+	// timeline is true when the command acts on one timeline of the project and takes --timeline (SDD-003 section 1.7).
+	timeline bool
 	// write is true for a command that writes or starts a job.
 	write bool
 	// stream is true for a command that owns standard output while it runs (mcp):
@@ -84,6 +88,8 @@ func globalFlag(name string) flagDef {
 		}
 	case "key-file":
 		return flagDef{Name: "key-file", Kind: kindString, Usage: "file holding an API key for a remote server"}
+	case "timeline":
+		return flagDef{Name: "timeline", Kind: kindString, Usage: "timeline id; needed when the project has several"}
 	case "dry-run":
 		return flagDef{Name: "dry-run", Kind: kindBool, Default: "false", Usage: "validate and report, change nothing"}
 	case "wait":
@@ -107,6 +113,10 @@ func (s *spec) flagDefs() []flagDef {
 	names := slices.Clone(baseGlobals)
 	if s.project {
 		names = append(names, "project")
+	}
+
+	if s.timeline {
+		names = append(names, "timeline")
 	}
 
 	names = append(names, s.globals...)
@@ -255,6 +265,7 @@ func (rt *Runtime) prepare(s *spec, p *parsed) (*call, error) {
 	}
 
 	c.projectID = id
+	c.timelineID = p.str("timeline")
 	p.Positional = rest
 
 	if len(rest) > 0 && !s.positional {

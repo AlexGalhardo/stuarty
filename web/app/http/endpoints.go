@@ -108,6 +108,42 @@ var Endpoints = []Endpoint{
 		Service: "ProjectOtioImport", Status: 200, Summary: "Import an OpenTimelineIO file into a project",
 	},
 	{
+		ID: "projects.describe", Method: http.MethodGet, Path: "/projects/{id}/describe", Scope: service.ScopeRead,
+		Service: "ProjectDescribe", Status: 200, Summary: "Describe a project as text: brief, items and state",
+	},
+	{
+		ID: "projects.duplicate", Method: http.MethodPost, Path: "/projects/{id}/duplicate", Scope: service.ScopeEdit,
+		Service: "ProjectDuplicate", Status: 201, Summary: "Duplicate a project",
+	},
+	{
+		ID: "projects.items.add", Method: http.MethodPost, Path: "/projects/{id}/items", Scope: service.ScopeEdit,
+		Service: "ProjectItemAdd", Status: 201, Summary: "Add an item (text, timeline or output) to a project",
+	},
+	{
+		ID: "projects.items.move", Method: http.MethodPost, Path: "/projects/{id}/items/{item_id}/move",
+		Scope: service.ScopeEdit, Service: "ProjectItemMove", Status: 200, Summary: "Move an item of a project",
+	},
+	{
+		ID: "projects.items.rename", Method: http.MethodPost, Path: "/projects/{id}/items/{item_id}/rename",
+		Scope: service.ScopeEdit, Service: "ProjectItemRename", Status: 200, Summary: "Rename an item of a project",
+	},
+	{
+		ID: "projects.items.trash", Method: http.MethodPost, Path: "/projects/{id}/items/{item_id}/trash",
+		Scope: service.ScopeEdit, Service: "ProjectItemTrash", Status: 200, Summary: "Move an item to the trash",
+	},
+	{
+		ID: "projects.items.restore", Method: http.MethodPost, Path: "/projects/{id}/items/{item_id}/restore",
+		Scope: service.ScopeEdit, Service: "ProjectItemRestore", Status: 200, Summary: "Restore an item from the trash",
+	},
+	{
+		ID: "projects.brief.get", Method: http.MethodGet, Path: "/projects/{id}/brief", Scope: service.ScopeRead,
+		Service: "BriefGet", Status: 200, Summary: "Read the brief of a project",
+	},
+	{
+		ID: "projects.brief.set", Method: http.MethodPut, Path: "/projects/{id}/brief", Scope: service.ScopeEdit,
+		Service: "BriefSet", Status: 200, Summary: "Write the brief of a project",
+	},
+	{
 		ID: "projects.trash", Method: http.MethodPost, Path: "/projects/{id}/trash", Scope: service.ScopeEdit,
 		Service: "ProjectTrash", Status: 200, Summary: "Move a project to the trash",
 	},

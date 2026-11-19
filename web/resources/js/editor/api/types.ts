@@ -882,6 +882,41 @@ export interface ProjectCreateResult {
 	text: string;
 }
 
+// An item of a project as a production (SDD-005 section 16.1): the commands and the answers are the service's.
+export type ProjectItemKind = "brief" | "text" | "timeline" | "output";
+
+export interface ProjectItem {
+	id: string;
+	kind: ProjectItemKind;
+	title: string;
+	position: number;
+	state: "active" | "trashed";
+	timeline_id?: string;
+	job_id?: string;
+	format?: string;
+	text?: string;
+	updated_at: string;
+}
+
+export interface ProjectItemResult {
+	project_id: string;
+	item: ProjectItem;
+	text: string;
+}
+
+export interface ProjectItemAddRequest {
+	kind: "text" | "timeline";
+	title: string;
+	text?: string;
+	preset?: string;
+}
+
+export interface BriefResult {
+	project_id: string;
+	item_id?: string;
+	text: string;
+}
+
 export interface ProjectStateResult {
 	project_id: string;
 	state: ProjectState;

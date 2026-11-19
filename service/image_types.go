@@ -12,7 +12,7 @@ import (
 // The image operations of SDD-021 section 11: a document of layers edited with the commands of the image
 // registry, in batches that have a base revision, an idempotency key, a dry run, a log and undo.
 
-// ImageRow is an image document as stored (SDD-005 section 5.12).
+// ImageRow is an image document as stored (SDD-005 section 5.13).
 type ImageRow struct {
 	ImageHead
 	Document  json.RawMessage
@@ -46,7 +46,7 @@ type ImageUpdate struct {
 	UpdatedMs     int64
 }
 
-// ImageOpRow is one committed batch of an image, the log row of SDD-005 section 5.12.
+// ImageOpRow is one committed batch of an image, the log row of SDD-005 section 5.13.
 type ImageOpRow struct {
 	ImageID        string
 	Revision       int64

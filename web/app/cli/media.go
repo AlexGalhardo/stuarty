@@ -30,8 +30,9 @@ func waitSlice(deadline time.Time) int {
 }
 
 var mediaImport = &spec{
-	name:    "media:import",
-	summary: "import media files into a project",
+	name:     "media:import",
+	timeline: true,
+	summary:  "import media files into a project",
 	usage: []string{
 		"stuarty media:import <path>... --project <id> [--asset-id ast_...] [--wait] [--timeout d]",
 		"formats: MP4, MOV, MKV, WebM, AVI, MP3, WAV, FLAC, OGG, PNG, JPEG, WebP, GIF and .cube; not SVG",
@@ -86,7 +87,7 @@ func runMediaImport(ctx context.Context, c *call) (*output, error) {
 	wait := c.args.boolean("wait")
 	p := c.progress()
 
-	req := service.MediaImportRequest{ProjectID: c.projectID, Files: files}
+	req := service.MediaImportRequest{ProjectID: c.projectID, TimelineID: c.timelineID, Files: files}
 
 	var first *service.MediaImportResult
 
@@ -182,8 +183,9 @@ func settleImport(res, first *service.MediaImportResult) {
 }
 
 var mediaInspect = &spec{
-	name:    "media:inspect",
-	summary: "show what is known about an asset",
+	name:     "media:inspect",
+	timeline: true,
+	summary:  "show what is known about an asset",
 	usage: []string{
 		"stuarty media:inspect <asset id> --project <id> [--sections probe,transcript,silences,loudness]",
 	},
@@ -200,8 +202,12 @@ var mediaInspect = &spec{
 		}
 
 		res, err := c.svc.MediaInspect(ctx, service.MediaInspectRequest{
-			ProjectID: c.projectID, AssetID: c.args.Positional[0], Sections: splitList(c.args.str("sections")),
-			MinSilence: c.args.str("min-silence"), Page: page(c.args),
+			ProjectID:  c.projectID,
+			TimelineID: c.timelineID,
+			AssetID:    c.args.Positional[0],
+			Sections:   splitList(c.args.str("sections")),
+			MinSilence: c.args.str("min-silence"),
+			Page:       page(c.args),
 		})
 		if err != nil {
 			return nil, err
@@ -229,6 +235,7 @@ func mediaStateCommand(
 ) *spec {
 	return &spec{
 		name:       name,
+		timeline:   true,
 		summary:    summary,
 		usage:      []string{"stuarty " + name + " <asset id> --project <id>"},
 		example:    "stuarty " + name + " ast_3c5v8n2w6d --project prj_7k2m9x4q1b",
@@ -242,7 +249,10 @@ func mediaStateCommand(
 			}
 
 			res, err := fn(c.svc, ctx, service.MediaTrashRequest{
-				ProjectID: c.projectID, AssetID: c.args.Positional[0], DryRun: c.args.boolean("dry-run"),
+				ProjectID:  c.projectID,
+				TimelineID: c.timelineID,
+				AssetID:    c.args.Positional[0],
+				DryRun:     c.args.boolean("dry-run"),
 			})
 			if err != nil {
 				return nil, err
@@ -264,14 +274,18 @@ var mediaRestore = mediaStateCommand("media:restore", "restore a trashed asset",
 	})
 
 var mediaList = &spec{
-	name:    "media:list",
-	summary: "list the assets of a project",
-	usage:   []string{"stuarty media:list --project <id> [--cursor c] [--limit n]"},
-	example: "stuarty media:list --project prj_7k2m9x4q1b --json",
-	project: true,
-	flags:   pageFlags("50"),
+	name:     "media:list",
+	timeline: true,
+	summary:  "list the assets of a project",
+	usage:    []string{"stuarty media:list --project <id> [--cursor c] [--limit n]"},
+	example:  "stuarty media:list --project prj_7k2m9x4q1b --json",
+	project:  true,
+	flags:    pageFlags("50"),
 	run: func(ctx context.Context, c *call) (*output, error) {
-		res, err := c.svc.MediaList(ctx, service.MediaListRequest{ProjectID: c.projectID, Page: page(c.args)})
+		res, err := c.svc.MediaList(
+			ctx,
+			service.MediaListRequest{ProjectID: c.projectID, TimelineID: c.timelineID, Page: page(c.args)},
+		)
 		if err != nil {
 			return nil, err
 		}
@@ -281,8 +295,9 @@ var mediaList = &spec{
 }
 
 var export = &spec{
-	name:    "export",
-	summary: "export a project to a file",
+	name:     "export",
+	timeline: true,
+	summary:  "export a project to a file",
 	usage: []string{
 		"stuarty export --project <id> [--start t] [--end t] [--format f] [--at t] [--wait] [--timeout d] [--out f] [--force]",
 	},
@@ -306,7 +321,7 @@ var export = &spec{
 			return nil, err
 		}
 
-		req := service.JobStartRequest{ProjectID: c.projectID, Kind: service.JobExport}
+		req := service.JobStartRequest{ProjectID: c.projectID, TimelineID: c.timelineID, Kind: service.JobExport}
 
 		if c.args.has("start") || c.args.has("end") || c.args.has("format") || c.args.has("at") {
 			raw, err := json.Marshal(service.ExportArgs{
@@ -437,17 +452,18 @@ var jobShow = &spec{
 }
 
 var jobList = &spec{
-	name:    "job:list",
-	summary: "list the jobs of a project",
-	usage:   []string{"stuarty job:list --project <id> [--state s] [--cursor c] [--limit n]"},
-	example: "stuarty job:list --project prj_7k2m9x4q1b --state active",
-	project: true,
+	name:     "job:list",
+	timeline: true,
+	summary:  "list the jobs of a project",
+	usage:    []string{"stuarty job:list --project <id> [--state s] [--cursor c] [--limit n]"},
+	example:  "stuarty job:list --project prj_7k2m9x4q1b --state active",
+	project:  true,
 	flags: append([]flagDef{
 		{Name: "state", Kind: kindString, Usage: "queued, running, succeeded, failed, cancelled, active or all"},
 	}, pageFlags("20")...),
 	run: func(ctx context.Context, c *call) (*output, error) {
 		res, err := c.svc.JobList(ctx, service.JobListRequest{
-			ProjectID: c.projectID, State: c.args.str("state"), Page: page(c.args),
+			ProjectID: c.projectID, TimelineID: c.timelineID, State: c.args.str("state"), Page: page(c.args),
 		})
 		if err != nil {
 			return nil, err
