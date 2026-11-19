@@ -814,7 +814,7 @@ type JobGetRequest struct {
 type JobCancelRequest struct{ JobID string `json:"job_id"` }
 
 // JobList: the jobs of a project. State empty means the queued and running jobs plus the 10 most recent final ones (what MCP job_get returns without job_id);
-// "queued", "running", "succeeded", "failed", "cancelled" filter by one state; "active" is queued and running; "all" lists every job, paged.
+// "queued", "waiting_approval", "running", "succeeded", "failed", "cancelled" filter by one state; "active" is queued, waiting_approval and running; "all" lists every job, paged.
 type JobListRequest struct {
 	ProjectID string `json:"project_id"`
 	State     string `json:"state,omitempty"`
@@ -831,7 +831,8 @@ type Job struct {
 	JobID      string     `json:"job_id"`
 	Kind       string     `json:"kind"`  // SDD-000 §6
 	ProjectID  *string    `json:"project_id"` // null for an ingest job: it belongs to the file, which projects may share
-	State      string     `json:"state"` // queued | running | succeeded | failed | cancelled
+	State      string     `json:"state"` // queued | waiting_approval | running | succeeded | failed | cancelled; waiting_approval: a kind that needs approval waits for a person or a rule (SDD-015 §5)
+	ApprovalID string     `json:"approval_id,omitempty"` // the approval request of a job of a kind that needs approval (SDD-015 §5)
 	Progress   float64    `json:"progress"` // 0 to 1
 	Message    string     `json:"message,omitempty"`
 	Result     *JobResult `json:"result,omitempty"` // export and transcribe only; an ingest job has no result member (its outcome is the asset state, MediaList)
@@ -3657,7 +3658,7 @@ Every `Service` operation has an encoding on each surface. The table is the proo
 - **E-3.** `PlanWindow`, `SnapPoints`, `FontList`, `AuditList`, `ProjectBundleExport`, `ProjectBundleImport`, `ProjectOtioExport` and `ProjectOtioImport` serve the UI, the administrator or a file workflow, not an agent editing a project: HTTP, and the CLI command where the table names one, but no MCP tool (SDD-000 §1). An agent that needs the `format` of an export uses the `format` member of `job_start` `args`.
 - **E-4.** `TrashEmpty`, `KeyCreate`, `KeyList`, `KeyRevoke` and `AssetList` are HTTP only, with the callers SDD-007 §5.3 allows. `TrashEmpty` is not an MCP tool and not a CLI command (RF-131, ADR-0020 item 2): no agent surface can reach the one operation that deletes data for good.
 - **E-5.** `ConnectionCreate`, `ConnectionRemove` and `ConnectionTest` have a CLI command and a route and no MCP tool: creating takes a credential, which an agent must not handle (RF-137), and testing makes a request to a destination. The tool `connection` lists and reads only (SDD-014 section 10, ADR-0043 item 3).
-- **E-6.** `ApprovalDecide`, `ApprovalRuleSet`, `ApprovalRuleRemove` and `CostCeilingSet` have a CLI command and a route and no MCP tool: a person decides (RF-136, ADR-0032 item 4). The commands exist so that an agent that tries gets `E_PRIVILEGED_SESSION` and its hint; with the local token or a key they always fail, on HTTP, in the CLI and in process, and no tool exists to call. `ApprovalList`, `ApprovalGet`, `ApprovalRuleList` and `CostSummary` are read operations with a command and a route and no tool, because the 18 definitions already use 19,320 of the 19,500 bytes of NFR-020 and a tool of the queue needs about 540: an agent learns the state of its own request from `job_get` (`waiting_approval`, `approval_id`) and reads the queue with `approval:list` or `GET /approvals` (SDD-015 section 10).
+- **E-6.** `ApprovalDecide`, `ApprovalRuleSet`, `ApprovalRuleRemove` and `CostCeilingSet` have a CLI command and a route and no MCP tool: a person decides (RF-136, ADR-0032 item 4). The commands exist so that an agent that tries gets `E_PRIVILEGED_SESSION` and its hint; with the local token or a key they always fail, on HTTP, in the CLI and in process, and no tool exists to call. `ApprovalList`, `ApprovalGet`, `ApprovalRuleList` and `CostSummary` are read operations with a command and a route and no tool, because the 18 definitions already use 19,320 of the 19,500 bytes of NFR-020 and a tool of the queue needs about 540: an agent learns the state of its own request from `job_get` (`waiting_approval`, `approval_id`) and reads the queue with `approval:list` or `GET /approvals` (SDD-015 section 10). The epic that registers the first kind that needs approval adds it to the `kind` enum of `job_start`, and `waiting_approval` to the `state` of the `outputSchema` of `job_start` and `job_get`, out of the budget of epic 13.
 
 The CLI commands of SDD-000 §1 that are not service operations (`serve`, `mcp`, `open`, `token:rotate`, `user:create`, `user:passwd`, `tools:install`, `agent:docs`) are in §5.4 and have no row here. `MediaList` and `JobList` close the gap SDD-012 §13.2 and Appendix B (B2, B3) left: they are the operations behind the library list and the job list of the UI.
 
