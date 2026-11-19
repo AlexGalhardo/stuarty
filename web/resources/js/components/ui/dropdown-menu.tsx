@@ -69,13 +69,22 @@ function DropdownMenuItem({
   className,
   inset,
   variant = "default",
+  onSelect,
+  onClick,
   ...props
-}: React.ComponentProps<typeof Menu.Item> & {
+}: Omit<React.ComponentProps<typeof Menu.Item>, "onSelect"> & {
   inset?: boolean
   variant?: "default" | "destructive"
+  onSelect?: () => void
 }) {
+  // Base UI has no select event on an item: it runs onClick when the item is chosen, by pointer or by key, so
+  // the handler the pages write as onSelect (the Radix name) is run from there.
   return (
     <Menu.Item
+      onClick={(event) => {
+        onClick?.(event)
+        onSelect?.()
+      }}
       data-slot="dropdown-menu-item"
       data-inset={inset ? "" : undefined}
       data-variant={variant}
