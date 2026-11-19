@@ -12,7 +12,7 @@ fi
 # Stop the local server that "stuarty open" started in the background.
 pkill -x stuarty 2>/dev/null || true
 
-rm -f /usr/local/bin/stuarty
+rm -f /usr/local/bin/stuarty /usr/local/bin/vukem-video
 rm -rf "/Applications/Stuarty.app"
 pkgutil --forget dev.vukem.vukem-video >/dev/null 2>&1 || true
 rm -rf /usr/local/share/stuarty

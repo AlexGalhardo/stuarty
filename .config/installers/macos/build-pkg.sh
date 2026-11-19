@@ -47,5 +47,8 @@ iconutil -c icns "$iconset" -o "$app/Contents/Resources/stuarty.icns"
 pkg="$out/stuarty_${version}_darwin_${arch}.pkg"
 # The identifier keeps the identity of the former name (ADR-0044), as do the bundle identifiers of the
 # Info.plist files: the package then upgrades an installed Vukem Video instead of sitting next to it.
-pkgbuild --root "$root" --identifier dev.vukem.vukem-video --version "$version" --install-location / "$pkg"
+scripts="$work/scripts"
+mkdir -p "$scripts"
+install -m 0755 "$here/postinstall" "$scripts/postinstall"
+pkgbuild --root "$root" --scripts "$scripts" --identifier dev.vukem.vukem-video --version "$version" --install-location / "$pkg"
 echo "$pkg"

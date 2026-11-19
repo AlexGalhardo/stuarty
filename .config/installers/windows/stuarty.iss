@@ -20,6 +20,7 @@
 #endif
 #define AppName "Stuarty"
 #define AppExe "stuarty.exe"
+#define FormerExe "vukem-video.exe"
 
 [Setup]
 ; A fixed AppId lets a new version upgrade the old one in place.
@@ -60,6 +61,9 @@ Name: "desktopicon"; Description: "Create a desktop shortcut"; GroupDescription:
 
 [Files]
 Source: "{#SourceBinary}"; DestDir: "{app}"; DestName: "{#AppExe}"; Flags: ignoreversion
+; The former command (ADR-0044, SDD-009 section 10.5): a copy of the program named as before, so that what called
+; vukem-video (an agent MCP config, a script) keeps working after an upgrade of an installed Vukem Video.
+Source: "{#SourceBinary}"; DestDir: "{app}"; DestName: "{#FormerExe}"; Flags: ignoreversion
 Source: "..\assets\stuarty.ico"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\..\LICENSE.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\..\THIRD_PARTY_NOTICES.md"; DestDir: "{app}"; Flags: ignoreversion
@@ -69,12 +73,20 @@ Source: "..\..\..\licenses\*"; DestDir: "{app}\licenses"; Flags: ignoreversion r
 Name: "{autoprograms}\{#AppName}"; Filename: "{app}\{#AppExe}"; Parameters: "open"; IconFilename: "{app}\stuarty.ico"; Comment: "Start the local server and open Stuarty in your browser"; Flags: runminimized
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExe}"; Parameters: "open"; IconFilename: "{app}\stuarty.ico"; Tasks: desktopicon; Flags: runminimized
 
+[InstallDelete]
+; An upgrade of an installed Vukem Video (same AppId, so the same folder): remove what carried the former name.
+; Only program files and shortcuts, never the workspace (SDD-009 section 10.5).
+Type: files; Name: "{app}\vukem-video.ico"
+Type: files; Name: "{autoprograms}\Vukem Video.lnk"
+Type: files; Name: "{autodesktop}\Vukem Video.lnk"
+
 [Run]
 Filename: "{app}\{#AppExe}"; Parameters: "open"; Description: "Open {#AppName} now"; Flags: postinstall nowait skipifsilent runminimized
 
 [UninstallRun]
 ; The local server runs in the background: stop it so the program can be removed. The workspace is not touched.
 Filename: "{sys}\taskkill.exe"; Parameters: "/F /IM {#AppExe}"; Flags: runhidden; RunOnceId: "StopLocalServer"
+Filename: "{sys}\taskkill.exe"; Parameters: "/F /IM {#FormerExe}"; Flags: runhidden; RunOnceId: "StopFormerServer"
 
 [Code]
 const
@@ -142,6 +154,8 @@ var
   Code: Integer;
 begin
   Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM {#AppExe}', '', SW_HIDE, ewWaitUntilTerminated, Code);
+  // The server of an installed Vukem Video owns its workspace until it stops, and locks its file.
+  Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM {#FormerExe}', '', SW_HIDE, ewWaitUntilTerminated, Code);
   Result := '';
 end;
 

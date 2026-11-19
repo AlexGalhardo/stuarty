@@ -25,6 +25,7 @@ app="/Applications/Stuarty.app"
 plutil -lint "$app/Contents/Info.plist" >/dev/null || fail "Info.plist is not valid"
 [ -f "$app/Contents/Resources/stuarty.icns" ] || fail "no icon in $app"
 [ -x /usr/local/share/stuarty/uninstall.sh ] || fail "no uninstall script"
+[ "$(readlink /usr/local/bin/vukem-video)" = "stuarty" ] || fail "the former command vukem-video is not a link to stuarty"
 pass "the program, the launcher app and the uninstall script are installed"
 
 "$app/Contents/MacOS/stuarty-launcher"
