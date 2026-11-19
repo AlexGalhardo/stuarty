@@ -3,7 +3,7 @@ package command
 import (
 	"fmt"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 type hslBandArgs struct {

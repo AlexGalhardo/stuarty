@@ -29,7 +29,7 @@ describe("the transcription state of the settings page (VV-077)", () => {
 
 	test("the terminal command names the chosen model", () => {
 		expect(installCommand("base")).toBe(
-			"vukem-video tools:install whisper --model base",
+			"stuarty tools:install whisper --model base",
 		);
 	});
 });

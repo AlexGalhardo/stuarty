@@ -15,16 +15,16 @@ const rendererManifest = "renderer/Cargo.toml"
 
 // rendererShipped is the workspace member whose dependencies are shipped in the WebAssembly module:
 // the core module of SDD-013 section 4.1, which the Go export embeds.
-const rendererShipped = "vukem-renderer"
+const rendererShipped = "stuarty-renderer"
 
 // rendererTarget is the target whose normal dependencies end up in the shipped module.
 const rendererTarget = "wasm32-unknown-unknown"
 
-// gpuHostShipped is the workspace member of the native GPU host, the binary vukem-render
+// gpuHostShipped is the workspace member of the native GPU host, the binary stuarty-render
 // (SDD-013 section 4.9), and gpuHostTargets are the platforms of the release archives, whose
 // dependency closures are joined: a crate that only one platform links (the windows crates, the
 // metal bindings) is shipped on that platform and needs its notice.
-const gpuHostShipped = "vukem-renderer-gpu"
+const gpuHostShipped = "stuarty-renderer-gpu"
 
 var gpuHostTargets = []string{
 	"x86_64-unknown-linux-gnu", "aarch64-unknown-linux-gnu",

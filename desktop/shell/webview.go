@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/AlexGalhardo/vukem-video/desktop/shell/webviewenv"
+	"github.com/AlexGalhardo/stuarty/desktop/shell/webviewenv"
 )
 
 // WebviewArgsEnv and WebviewDataEnv are the variables WebView2 documents for extra browser flags and

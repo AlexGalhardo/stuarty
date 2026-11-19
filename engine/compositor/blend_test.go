@@ -5,7 +5,7 @@ import (
 	"math"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/core/plan"
+	"github.com/AlexGalhardo/stuarty/core/plan"
 )
 
 // blendRef is the W3C compositing of SDD-004 section 3.8 in floating point on an opaque destination:

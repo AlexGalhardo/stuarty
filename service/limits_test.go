@@ -20,9 +20,9 @@ func TestLimitMessage(t *testing.T) {
 		t.Fatal("a 12.3 GiB file was accepted")
 	}
 
-	const want = "The file is 12.3 GiB; the import limit is 8 GiB (VUKEM_VIDEO_MAX_IMPORT_BYTES)."
+	const want = "The file is 12.3 GiB; the import limit is 8 GiB (STUARTY_MAX_IMPORT_BYTES)."
 	if e.Code != "E_LIMIT_EXCEEDED" || e.Message != want || e.Details["limit"] != "import_bytes" ||
-		e.Details["variable"] != "VUKEM_VIDEO_MAX_IMPORT_BYTES" || e.Details["ceiling"] != int64(8<<30) {
+		e.Details["variable"] != "STUARTY_MAX_IMPORT_BYTES" || e.Details["ceiling"] != int64(8<<30) {
 		t.Errorf("error = %+v", e)
 	}
 }
@@ -38,11 +38,11 @@ func TestLimitsDefaults(t *testing.T) {
 func TestForCallerRemovesEveryVariableName(t *testing.T) {
 	e := newError(
 		"E_LIMIT_EXCEEDED",
-		"The audio is 9 seconds; the limit is 5 seconds (VUKEM_VIDEO_MAX_TRANSCRIBE_SECONDS).",
+		"The audio is 9 seconds; the limit is 5 seconds (STUARTY_MAX_TRANSCRIBE_SECONDS).",
 	).
 		withHint("transcribe a shorter file; the person running the server can raise "+
-			"VUKEM_VIDEO_MAX_TRANSCRIBES or VUKEM_VIDEO_MAX_TRANSCRIBES_PER_KEY").
-		withDetail("variable", "VUKEM_VIDEO_MAX_TRANSCRIBE_SECONDS").
+			"STUARTY_MAX_TRANSCRIBES or STUARTY_MAX_TRANSCRIBES_PER_KEY").
+		withDetail("variable", "STUARTY_MAX_TRANSCRIBE_SECONDS").
 		withDetail("limit", "transcribe_seconds")
 
 	member := Caller{Actor: "user:a", OwnerUserID: "a", Scopes: []string{ScopeRead}}
@@ -70,9 +70,9 @@ func TestForCallerRemovesEveryVariableName(t *testing.T) {
 // An event reaches every subscriber of the project, so a failed job's event
 // carries no variable name, while JobGet keeps it for an administrator.
 func TestEventErrorCarriesNoVariable(t *testing.T) {
-	stored := `{"code":"E_LIMIT_EXCEEDED","message":"The file is 9 GiB; the import limit is 8 GiB (VUKEM_VIDEO_MAX_IMPORT_BYTES).",` +
-		`"hint":"import a smaller file; the person running the server can raise VUKEM_VIDEO_MAX_IMPORT_BYTES",` +
-		`"details":{"limit":"import_bytes","variable":"VUKEM_VIDEO_MAX_IMPORT_BYTES"}}`
+	stored := `{"code":"E_LIMIT_EXCEEDED","message":"The file is 9 GiB; the import limit is 8 GiB (STUARTY_MAX_IMPORT_BYTES).",` +
+		`"hint":"import a smaller file; the person running the server can raise STUARTY_MAX_IMPORT_BYTES",` +
+		`"details":{"limit":"import_bytes","variable":"STUARTY_MAX_IMPORT_BYTES"}}`
 
 	var got []Event
 
@@ -88,7 +88,7 @@ func TestEventErrorCarriesNoVariable(t *testing.T) {
 	}
 
 	e := got[0].Error
-	if _, has := e.Details["variable"]; has || strings.Contains(e.Message+e.Hint, "VUKEM_VIDEO_") ||
+	if _, has := e.Details["variable"]; has || strings.Contains(e.Message+e.Hint, "STUARTY_") ||
 		e.Details["limit"] != "import_bytes" {
 		t.Errorf("the event error = %+v", e)
 	}

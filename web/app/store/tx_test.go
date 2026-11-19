@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/stuarty/service"
 )
 
 func TestWriteRollsBackAndRunsHooksAfterCommit(t *testing.T) {

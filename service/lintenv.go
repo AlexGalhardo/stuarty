@@ -7,9 +7,9 @@ import (
 	"os"
 	"slices"
 
-	"github.com/AlexGalhardo/vukem-video/core/lint"
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/engine/ingest"
+	"github.com/AlexGalhardo/stuarty/core/lint"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/engine/ingest"
 )
 
 // maxPeaksFile bounds the peaks artifact read for a lint: an hour of audio is

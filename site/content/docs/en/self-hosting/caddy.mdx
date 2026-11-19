@@ -1,11 +1,11 @@
 ---
 title: "Put Caddy in front"
-description: "Terminate TLS with Caddy and forward to Vukem Video, with the settings that make the server trust the proxy."
+description: "Terminate TLS with Caddy and forward to Stuarty, with the settings that make the server trust the proxy."
 ---
 
 ## You will learn
 
-- how to give Vukem Video a public `https` address with Caddy;
+- how to give Stuarty a public `https` address with Caddy;
 - the three settings the server needs to trust the proxy;
 - how to check it.
 
@@ -17,7 +17,7 @@ The server accepts a request as `https` only when the request comes from an addr
 
 ## Quick start
 
-A `Caddyfile` for a server on the same machine as Vukem Video:
+A `Caddyfile` for a server on the same machine as Stuarty:
 
 ```text
 video.example.com {
@@ -25,16 +25,16 @@ video.example.com {
 }
 ```
 
-Caddy sends `X-Forwarded-Proto` and the client address on its own. Start Vukem Video with:
+Caddy sends `X-Forwarded-Proto` and the client address on its own. Start Stuarty with:
 
 ```bash
-export VUKEM_VIDEO_MODE=network
-export VUKEM_VIDEO_ADDR=127.0.0.1:7878
+export STUARTY_MODE=network
+export STUARTY_ADDR=127.0.0.1:7878
 export APP_URL=https://video.example.com
-export APP_KEY="$(cat /etc/vukem-video/app-key)"
+export APP_KEY="$(cat /etc/stuarty/app-key)"
 export TRUSTED_PROXIES=127.0.0.1
 export TRUST_FORWARDED_PROTO=true
-vukem-video serve
+stuarty serve
 ```
 
 - `APP_URL` is the address people type. The `Host` and the `Origin` of every request must equal it.

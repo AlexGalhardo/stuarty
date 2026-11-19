@@ -11,10 +11,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/service"
-	"github.com/AlexGalhardo/vukem-video/service/workspace"
-	"github.com/AlexGalhardo/vukem-video/web/app/cli"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/workspace"
+	"github.com/AlexGalhardo/stuarty/web/app/cli"
 )
 
 // sessionRun is the CLI with no server, over a real workspace with the media
@@ -74,8 +74,8 @@ func newSession(t *testing.T) *sessionRun {
 	}
 
 	s.env = map[string]string{
-		workspace.EnvHome: s.home, "VUKEM_VIDEO_FFMPEG": ffmpeg, "VUKEM_VIDEO_FFPROBE": ffprobe,
-		"VUKEM_VIDEO_MIN_FREE_BYTES": "1",
+		workspace.EnvHome: s.home, "STUARTY_FFMPEG": ffmpeg, "STUARTY_FFPROBE": ffprobe,
+		"STUARTY_MIN_FREE_BYTES": "1",
 	}
 
 	return s
@@ -85,7 +85,7 @@ func newSession(t *testing.T) *sessionRun {
 func (s *sessionRun) clip() string {
 	s.t.Helper()
 
-	ffmpeg := s.env["VUKEM_VIDEO_FFMPEG"]
+	ffmpeg := s.env["STUARTY_FFMPEG"]
 	path := filepath.Join(s.files, "IMG_0421.mp4")
 	args := []string{
 		"-v", "error", "-f", "lavfi", "-i", "testsrc=size=320x568:rate=30:duration=8",

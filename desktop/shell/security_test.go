@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/desktop/update"
+	"github.com/AlexGalhardo/stuarty/desktop/update"
 )
 
 // The launcher part of the threat T-35 (SDD-007): the update channel stays closed until the person
@@ -74,7 +74,7 @@ func TestSecurity_T35_ArchiveCannotEscapeItsStagingDirectory(t *testing.T) {
 		t.Skip("the link cases need symbolic links, which Windows creates only with a privilege")
 	}
 
-	exe := zipEntry{name: "A.app/Contents/MacOS/vukem-video-desktop", body: "x"}
+	exe := zipEntry{name: "A.app/Contents/MacOS/stuarty-desktop", body: "x"}
 	link := func(name, to string) zipEntry { return zipEntry{name: name, body: to, mode: os.ModeSymlink | 0o777} }
 
 	cases := map[string][]zipEntry{

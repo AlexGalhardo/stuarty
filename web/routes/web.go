@@ -21,7 +21,7 @@ const ContentSecurityPolicy = "default-src 'self'; script-src 'self' 'nonce-{non
 	"font-src 'self'; frame-ancestors 'none'; base-uri 'none'; object-src 'none'; form-action 'self'"
 
 // LangHeader carries the language the browser keeps in its own storage.
-const LangHeader = "Vukem-Video-Lang"
+const LangHeader = "Stuarty-Lang"
 
 // langHeader lets LangHeader stand for Accept-Language, which the locale
 // middleware reads; without it the browser's own Accept-Language applies.

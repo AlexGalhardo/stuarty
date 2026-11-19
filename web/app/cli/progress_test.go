@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/stuarty/service"
 )
 
 // inlineFake behaves like the in-process Service: JobStart and MediaImport return
@@ -136,7 +136,7 @@ func TestInProcessNoWaitIsRefusedAndTellsToServe(t *testing.T) {
 			t.Errorf("%v: exit %d, want 1", argv, code)
 		}
 
-		if !strings.Contains(h.stderr.String(), "vukem-video serve") || f.started {
+		if !strings.Contains(h.stderr.String(), "stuarty serve") || f.started {
 			t.Errorf("%v: stderr %q, started %v", argv, h.stderr.String(), f.started)
 		}
 	}

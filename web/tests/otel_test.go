@@ -7,11 +7,11 @@ import (
 	"sync/atomic"
 	"testing"
 
+	"github.com/AlexGalhardo/stuarty/web/app/owner"
+	"github.com/AlexGalhardo/stuarty/web/bootstrap"
+
 	vukem "github.com/AlexGalhardo/vukem"
 	"github.com/AlexGalhardo/vukem/vukemtest"
-
-	"github.com/AlexGalhardo/vukem-video/web/app/owner"
-	"github.com/AlexGalhardo/vukem-video/web/bootstrap"
 )
 
 // collector is an OTLP/HTTP endpoint that counts what reaches it.

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/stuarty/core/command"
 )
 
 // Codes the service adds to those of the core (SDD-000 section 8).
@@ -135,9 +135,9 @@ func (e *Error) withLimit(name string, value, ceiling any) *Error {
 // queueVariables names the variable that sets the ceiling of a job kind, for the workspace and for
 // one actor.
 var queueVariables = map[string][2]string{
-	JobExport:     {"VUKEM_VIDEO_MAX_EXPORTS", "VUKEM_VIDEO_MAX_EXPORTS_PER_KEY"},
-	JobIngest:     {"VUKEM_VIDEO_MAX_INGESTS", "VUKEM_VIDEO_MAX_INGESTS"},
-	JobTranscribe: {"VUKEM_VIDEO_MAX_TRANSCRIBES", "VUKEM_VIDEO_MAX_TRANSCRIBES_PER_KEY"},
+	JobExport:     {"STUARTY_MAX_EXPORTS", "STUARTY_MAX_EXPORTS_PER_KEY"},
+	JobIngest:     {"STUARTY_MAX_INGESTS", "STUARTY_MAX_INGESTS"},
+	JobTranscribe: {"STUARTY_MAX_TRANSCRIBES", "STUARTY_MAX_TRANSCRIBES_PER_KEY"},
 }
 
 // queueFullError is E_QUEUE_FULL with the jobs that hold the slots and the limit that was reached.

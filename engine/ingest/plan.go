@@ -4,8 +4,8 @@ import (
 	"math"
 	"strings"
 
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg/ffargs"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg/ffargs"
 )
 
 // Even is max(2, 2 * round(x / 2)): the even size of SDD-011 4.1.

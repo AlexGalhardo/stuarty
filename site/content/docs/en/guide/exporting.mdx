@@ -20,11 +20,11 @@ The export is refused while the lint finds an error, with `E_LINT_BLOCKING` and 
 <Tab title="CLI">
 
 ```bash
-vukem-video lint --project prj_7k2m9x4q1b
-vukem-video export --project prj_7k2m9x4q1b
+stuarty lint --project prj_7k2m9x4q1b
+stuarty export --project prj_7k2m9x4q1b
 ```
 
-The CLI waits for the job. Use `--no-wait` to return at once and `vukem-video job:show <job id> --wait` later.
+The CLI waits for the job. Use `--no-wait` to return at once and `stuarty job:show <job id> --wait` later.
 
 </Tab>
 <Tab title="MCP">
@@ -49,8 +49,8 @@ An export is an MP4 unless you choose another format with `--format` (CLI) or `a
 | `png` | `.png` | one frame at the size of the project, chosen with `--at` (the start by default) |
 
 ```bash
-vukem-video export --project prj_7k2m9x4q1b --format gif
-vukem-video export --project prj_7k2m9x4q1b --format png --at 2s
+stuarty export --project prj_7k2m9x4q1b --format gif
+stuarty export --project prj_7k2m9x4q1b --format png --at 2s
 ```
 
 With MCP: `job_start` with `{"project_id": "prj_7k2m9x4q1b", "kind": "export", "args": {"format": "wav"}}`. For a frame, add `"at": "2s"` to `args`; `at` is only for `png`.
@@ -64,7 +64,7 @@ With MCP: `job_start` with `{"project_id": "prj_7k2m9x4q1b", "kind": "export", "
 The workspace keeps the file under `exports/`. `--out <file>` also copies it to the path you give once the job succeeds (it implies `--wait`, and the workspace keeps its own copy). It refuses to replace a file unless you add `--force`.
 
 ```bash
-vukem-video export --project prj_7k2m9x4q1b --out ~/teaser.mp4
+stuarty export --project prj_7k2m9x4q1b --out ~/teaser.mp4
 ```
 
 ## Exchange a timeline with OpenTimelineIO
@@ -72,9 +72,9 @@ vukem-video export --project prj_7k2m9x4q1b --out ~/teaser.mp4
 `otio:export` writes the timeline of a project as an [OpenTimelineIO](https://opentimelineio.org) file, to open it in another editor. It writes the file on the machine that runs the command, in the current folder as `<project name>.otio`, or where `--out` says; it refuses to replace a file unless you add `--force`. The command lists what the format cannot carry (for example effects), so nothing is lost silently.
 
 ```bash
-vukem-video otio:export --project prj_7k2m9x4q1b --out cut.otio
-vukem-video otio:import cut.otio --project prj_7k2m9x4q1b --dry-run
-vukem-video otio:import cut.otio --project prj_7k2m9x4q1b --base-revision 12
+stuarty otio:export --project prj_7k2m9x4q1b --out cut.otio
+stuarty otio:import cut.otio --project prj_7k2m9x4q1b --dry-run
+stuarty otio:import cut.otio --project prj_7k2m9x4q1b --base-revision 12
 ```
 
 `otio:import` reads a file from the machine that runs the server and applies it to the project as one batch, so one `undo` reverts it. The frame rate of the file must be the project's. The media of the file are never opened: a reference is matched by name to an asset already in the project, and the ones that match nothing are listed as unresolved. `--dry-run` shows what would change; `--base-revision` defaults to the current revision. The HTTP API has `GET` and `POST /api/v1/projects/{id}/otio`. There is no MCP tool for <Term id="opentimelineio">OpenTimelineIO</Term>.
@@ -84,9 +84,9 @@ vukem-video otio:import cut.otio --project prj_7k2m9x4q1b --base-revision 12
 A bundle is one file, `<name>.vvbundle`, that holds a project and everything it needs, to back it up or hand it to someone else. It is a zip with the project document, the original media, the fonts the project uses and, unless you leave it out, the operation log with the history of edits. Proxies, thumbnails and transcripts are not included; they are made again when the bundle is opened.
 
 ```bash
-vukem-video bundle:export --project prj_7k2m9x4q1b --wait
-vukem-video bundle:export --project prj_7k2m9x4q1b --no-log --wait
-vukem-video bundle:export --project prj_7k2m9x4q1b --out ~/launch-teaser.vvbundle
+stuarty bundle:export --project prj_7k2m9x4q1b --wait
+stuarty bundle:export --project prj_7k2m9x4q1b --no-log --wait
+stuarty bundle:export --project prj_7k2m9x4q1b --out ~/launch-teaser.vvbundle
 ```
 
 Like an export, a bundle is a job: `--wait` follows it, and the file is written under `<workspace>/exports/<project id>/` as `bundle-r<revision>-<job id>.vvbundle`. `--no-log` leaves the history out, which hides who edited and why. A project in the trash cannot be exported. `--out <file>` copies the bundle out of the workspace when the job succeeds (it implies `--wait`, creates missing folders, and refuses to replace a file unless you add `--force`); against a remote server it downloads the file instead. The same `--out` works on `export` and `template:export`. The command prints the final path.
@@ -96,9 +96,9 @@ Like an export, a bundle is a job: `--wait` follows it, and the file is written 
 `bundle:import` creates a project from a `.vvbundle` file. It reads the file on the machine that runs the server, checks it before it changes anything, and copies the media and the fonts it carries into the workspace. The project opens at once; its assets show as ingesting while the proxies, thumbnails and transcripts are made again.
 
 ```bash
-vukem-video bundle:import launch-teaser.vvbundle
-vukem-video bundle:import launch-teaser.vvbundle --as-new
-vukem-video bundle:import launch-teaser.vvbundle --dry-run
+stuarty bundle:import launch-teaser.vvbundle
+stuarty bundle:import launch-teaser.vvbundle --as-new
+stuarty bundle:import launch-teaser.vvbundle --dry-run
 ```
 
 Without `--as-new` the project keeps its id and its history of edits. If a project with that id exists, even in the trash, the import is refused with `E_ID_EXISTS`. With `--as-new` the project gets a new id and starts at revision 1 with no history, because the history of another project does not belong to a new one. A server with accounts requires `--as-new`. `--dry-run` checks the file and reports what would be created. A file that is damaged, too large, has a different format or comes from a newer version of the product is refused with `E_VALIDATION` and a reason, and nothing is imported. The HTTP API has the same operation as `POST /api/v1/projects/import`.
@@ -107,25 +107,25 @@ There is no MCP tool for bundles. The projects page of the editor has **Import a
 
 ## Draw the export on the GPU (optional)
 
-By default the export draws every frame on the CPU, and the output is the same on every machine. A GPU path exists for machines with a graphics adapter, but `vukem-render`, the helper program that runs it, is **not shipped yet**: no archive, installer or image carries it. To try it, build it from the source (it needs the Rust toolchain pinned in `rust-toolchain.toml`):
+By default the export draws every frame on the CPU, and the output is the same on every machine. A GPU path exists for machines with a graphics adapter, but `stuarty-render`, the helper program that runs it, is **not shipped yet**: no archive, installer or image carries it. To try it, build it from the source (it needs the Rust toolchain pinned in `rust-toolchain.toml`):
 
 ```sh
 bash scripts/build-renderer.sh host
 ```
 
-This writes `renderer/dist/vukem-render` (`vukem-render.exe` on Windows) and its SHA-256. Copy the file next to the server executable, or into `../libexec/vukem-video/` relative to it (the server looks next to the executable first, as it does for FFmpeg), then start the server with:
+This writes `renderer/dist/stuarty-render` (`stuarty-render.exe` on Windows) and its SHA-256. Copy the file next to the server executable, or into `../libexec/stuarty/` relative to it (the server looks next to the executable first, as it does for FFmpeg), then start the server with:
 
 ```sh
-VUKEM_VIDEO_EXPORT_RENDERER=gpu vukem-video serve
+STUARTY_EXPORT_RENDERER=gpu stuarty serve
 ```
 
-`vukem-render --probe` tells whether the machine has an adapter. When the helper is missing, has no adapter, or runs inside a sandbox that hides the devices, the export falls back to the CPU path and still succeeds.
+`stuarty-render --probe` tells whether the machine has an adapter. When the helper is missing, has no adapter, or runs inside a sandbox that hides the devices, the export falls back to the CPU path and still succeeds.
 
 ## Common mistakes
 
 - No <Term id="h264">H.264</Term> encoder works on this machine: `E_NO_ENCODER`. `gif`, `wav` and `aac` still export.
 - Importing a bundle whose project id already exists: `E_ID_EXISTS`. Use `--as-new`.
-- Too many exports at once: `E_QUEUE_FULL`, retryable. `VUKEM_VIDEO_MAX_EXPORTS` sets the limit.
+- Too many exports at once: `E_QUEUE_FULL`, retryable. `STUARTY_MAX_EXPORTS` sets the limit.
 
 ## Next steps
 

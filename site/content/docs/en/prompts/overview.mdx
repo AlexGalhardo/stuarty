@@ -1,6 +1,6 @@
 ---
 title: "Prompts overview"
-description: "Copy-ready prompts to set up Vukem Video in your AI agent and to make a vertical video, a commercial, a silence cut and an export."
+description: "Copy-ready prompts to set up Stuarty in your AI agent and to make a vertical video, a commercial, a silence cut and an export."
 ---
 
 ## You will learn
@@ -11,7 +11,7 @@ description: "Copy-ready prompts to set up Vukem Video in your AI agent and to m
 
 ## The idea
 
-An agent edits well when it is told the loop to follow and one outcome to reach. These pages give you both, ready to paste. Each agent has its own page with the real way to register the Vukem Video [MCP server](/docs/mcp/overview), a setup prompt, and four task prompts.
+An agent edits well when it is told the loop to follow and one outcome to reach. These pages give you both, ready to paste. Each agent has its own page with the real way to register the Stuarty [MCP server](/docs/mcp/overview), a setup prompt, and four task prompts.
 
 ## Pick your agent
 
@@ -22,9 +22,9 @@ An agent edits well when it is told the loop to follow and one outcome to reach.
 | OpenCode | [OpenCode](/docs/prompts/opencode) | `opencode.jsonc` |
 | Cursor | [Cursor](/docs/prompts/cursor) | `.cursor/mcp.json` |
 | Gemini CLI | [Gemini CLI](/docs/prompts/gemini-cli) | the command `gemini mcp add`, or `settings.json` |
-| Any other client | [Any MCP client](/docs/prompts/other-clients) | `vukem-video mcp` over stdio, or `POST /mcp` over HTTP |
+| Any other client | [Any MCP client](/docs/prompts/other-clients) | `stuarty mcp` over stdio, or `POST /mcp` over HTTP |
 
-All of them start the same program, `vukem-video mcp`, so install Vukem Video first: see [Installation](/docs/installation).
+All of them start the same program, `stuarty mcp`, so install Stuarty first: see [Installation](/docs/installation).
 
 ## The loop behind every prompt
 
@@ -63,7 +63,7 @@ It exports with `job_start` and waits with `job_get`. Nothing is exported before
 
 - Pasting a prompt before the server is registered and connected: the agent then invents commands. Run the check on the page of your agent first.
 - Asking the agent to "remember" ids between sessions: it does not. Give the project name, and it finds the id with `project_list`.
-- Expecting captions without a transcript: transcribe first, which needs the helper from `vukem-video tools:install whisper`.
+- Expecting captions without a transcript: transcribe first, which needs the helper from `stuarty tools:install whisper`.
 
 ## Next steps
 

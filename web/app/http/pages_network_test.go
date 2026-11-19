@@ -7,11 +7,11 @@ import (
 	"testing/fstest"
 	"time"
 
+	"github.com/AlexGalhardo/stuarty/service"
+	httpapi "github.com/AlexGalhardo/stuarty/web/app/http"
+
 	vukem "github.com/AlexGalhardo/vukem"
 	"github.com/AlexGalhardo/vukem/ratelimit"
-
-	"github.com/AlexGalhardo/vukem-video/service"
-	httpapi "github.com/AlexGalhardo/vukem-video/web/app/http"
 )
 
 func pagesNetworkHarness(t *testing.T) *networkHarness {

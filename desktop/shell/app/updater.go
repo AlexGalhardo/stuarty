@@ -9,8 +9,8 @@ import (
 
 	"github.com/wailsapp/wails/v3/pkg/application"
 
-	"github.com/AlexGalhardo/vukem-video/desktop/shell"
-	"github.com/AlexGalhardo/vukem-video/desktop/update"
+	"github.com/AlexGalhardo/stuarty/desktop/shell"
+	"github.com/AlexGalhardo/stuarty/desktop/update"
 )
 
 // updater joins the launcher (desktop/shell) to the native dialogs and menu (SDD-009 section 10.5). The
@@ -42,7 +42,7 @@ func newUpdater(app *application.App) *updater {
 		staging = os.TempDir()
 	}
 
-	cfg, buildErr := update.FromBuild(version, filepath.Join(staging, "vukem-video", "updates"),
+	cfg, buildErr := update.FromBuild(version, filepath.Join(staging, "stuarty", "updates"),
 		settings.AutoCheck(), shell.InstallerFor(runtime.GOOS, app.Quit))
 
 	lc := shell.LauncherConfig{Settings: settings, UI: u.ui, Current: version, Language: shell.SystemLanguage()}
@@ -130,7 +130,7 @@ func (n *nativeUI) Inform(message string) {
 
 func (n *nativeUI) Undone(version string) {
 	application.InvokeSync(func() {
-		n.app.Dialog.Info().SetTitle("Vukem Video").SetMessage(tr(shell.TextUndone) + version).Show()
+		n.app.Dialog.Info().SetTitle("Stuarty").SetMessage(tr(shell.TextUndone) + version).Show()
 	})
 }
 

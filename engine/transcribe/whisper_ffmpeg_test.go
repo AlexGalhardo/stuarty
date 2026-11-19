@@ -11,19 +11,19 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
-	"github.com/AlexGalhardo/vukem-video/engine/ingest/mediagen"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
+	"github.com/AlexGalhardo/stuarty/engine/ingest/mediagen"
 )
 
 // pinnedFFmpeg is the runner of the pinned FFmpeg, a folder of artifacts holding a 2 s WAV, and a run
-// directory. It skips when no pinned FFmpeg is installed (VUKEM_VIDEO_TEST_FFMPEG_DIR,
+// directory. It skips when no pinned FFmpeg is installed (STUARTY_TEST_FFMPEG_DIR,
 // scripts/install-ffmpeg.sh).
 func pinnedFFmpeg(t *testing.T) (r *ffmpeg.Runner, artifacts, audio string, run *ffmpeg.RunDir) {
 	t.Helper()
 
-	dir := os.Getenv("VUKEM_VIDEO_TEST_FFMPEG_DIR")
+	dir := os.Getenv("STUARTY_TEST_FFMPEG_DIR")
 	if dir == "" {
-		t.Skip("no pinned FFmpeg: set VUKEM_VIDEO_TEST_FFMPEG_DIR")
+		t.Skip("no pinned FFmpeg: set STUARTY_TEST_FFMPEG_DIR") // verify:env-skip no pinned FFmpeg on this machine
 	}
 
 	name := "ffmpeg"
@@ -36,7 +36,9 @@ func pinnedFFmpeg(t *testing.T) (r *ffmpeg.Runner, artifacts, audio string, run 
 		ffmpeg.Config{FFmpegPath: filepath.Join(dir, name), CPUCount: runtime.NumCPU()},
 	)
 	if err != nil || in.Info.License.Name != "lgpl" {
-		t.Skip("the FFmpeg in VUKEM_VIDEO_TEST_FFMPEG_DIR is not the pinned LGPL build")
+		t.Skip( // verify:env-skip the FFmpeg here is not the pinned build
+			"the FFmpeg in STUARTY_TEST_FFMPEG_DIR is not the pinned LGPL build",
+		)
 	}
 
 	ws := t.TempDir()

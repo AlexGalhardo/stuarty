@@ -20,10 +20,10 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/AlexGalhardo/vukem/contrib/engine"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg/ffargs"
 
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg/ffargs"
+	"github.com/AlexGalhardo/vukem/contrib/engine"
 )
 
 const (

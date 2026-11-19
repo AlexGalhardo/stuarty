@@ -10,13 +10,13 @@
 #
 # The repository is mounted read-only at /src, so nothing in the working tree changes and a test
 # that writes into the source tree fails here (it should use t.TempDir). Modules, the build cache
-# and the FFmpeg download live in the named volume vukem-video-linux-cache, which makes a second run
+# and the FFmpeg download live in the named volume stuarty-linux-cache, which makes a second run
 # fast. The tests run as an unprivileged user, because a test of file permissions means nothing as root.
 #
 # Environment:
 #   GO_IMAGE     the Go image; the exact tag of go.mod's toolchain, pinned by digest (never latest)
 #   TEST_FLAGS   flags of go test; default -short -count=1 -timeout 30m
-#   CACHE_VOLUME the cache volume; default vukem-video-linux-cache
+#   CACHE_VOLUME the cache volume; default stuarty-linux-cache
 set -euo pipefail
 
 log() { printf '%s\n' "$*" >&2; }
@@ -24,7 +24,7 @@ die() { log "test-linux-docker: error: $*"; exit 1; }
 
 GO_IMAGE="${GO_IMAGE:-golang:1.27.4-bookworm@sha256:4fa7c968ba93f1635670522dbb01a2c78150443e1385746924566079f36570ea}"
 TEST_FLAGS="${TEST_FLAGS:--short -count=1 -timeout 30m}"
-CACHE_VOLUME="${CACHE_VOLUME:-vukem-video-linux-cache}"
+CACHE_VOLUME="${CACHE_VOLUME:-stuarty-linux-cache}"
 default_packages=(./core/... ./service/... ./web/app/... ./desktop/shell/... ./engine/...)
 
 use_ffmpeg=1
@@ -89,7 +89,7 @@ inner='
 set -euo pipefail
 if [ "$USE_FFMPEG" = 1 ]; then
 	bin_dir="$(cat /cache/ffmpeg/bin-dir)"
-	export VUKEM_VIDEO_TEST_FFMPEG_DIR="$bin_dir"
+	export STUARTY_TEST_FFMPEG_DIR="$bin_dir"
 	"$bin_dir/ffmpeg" -version | head -n 1
 fi
 go version
@@ -109,6 +109,6 @@ log "test-linux-docker: $GO_IMAGE, packages: ${packages[*]}"
 exec docker run --rm --user "$uid:$gid" \
 	-v "$root:/src:ro" -v "$CACHE_VOLUME:/cache" -w /src \
 	-e HOME=/cache/home -e GOPATH=/cache/go -e GOCACHE=/cache/gobuild -e GOFLAGS=-buildvcs=false \
-	-e GOTOOLCHAIN=local -e CGO_ENABLED=0 -e GOWORK=off -e VUKEM_VIDEO_MIN_FREE_BYTES=1 \
+	-e GOTOOLCHAIN=local -e CGO_ENABLED=0 -e GOWORK=off -e STUARTY_MIN_FREE_BYTES=1 \
 	-e USE_FFMPEG="$use_ffmpeg" -e TEST_FLAGS="$TEST_FLAGS" \
 	"$GO_IMAGE" bash -c "$inner" bash "${packages[@]}"

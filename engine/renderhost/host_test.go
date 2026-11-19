@@ -14,7 +14,7 @@ import (
 
 	"github.com/tetratelabs/wazero"
 
-	"github.com/AlexGalhardo/vukem-video/core/plan"
+	"github.com/AlexGalhardo/stuarty/core/plan"
 )
 
 // wasmSection returns the payload of the first section with this id, or nil.

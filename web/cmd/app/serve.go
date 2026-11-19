@@ -8,13 +8,13 @@ import (
 	"net"
 	"os"
 
-	vukem "github.com/AlexGalhardo/vukem"
+	"github.com/AlexGalhardo/stuarty/service/config"
+	"github.com/AlexGalhardo/stuarty/service/workspace"
+	"github.com/AlexGalhardo/stuarty/web/app/agentdocs"
+	"github.com/AlexGalhardo/stuarty/web/app/owner"
+	"github.com/AlexGalhardo/stuarty/web/bootstrap"
 
-	"github.com/AlexGalhardo/vukem-video/service/config"
-	"github.com/AlexGalhardo/vukem-video/service/workspace"
-	"github.com/AlexGalhardo/vukem-video/web/app/agentdocs"
-	"github.com/AlexGalhardo/vukem-video/web/app/owner"
-	"github.com/AlexGalhardo/vukem-video/web/bootstrap"
+	vukem "github.com/AlexGalhardo/vukem"
 )
 
 // exitServe is the exit code of a server that could not start or that failed
@@ -24,7 +24,7 @@ const (
 	exitLocked      = 2
 )
 
-// runServe is `vukem-video serve`: the owner of the workspace (SDD-005 section
+// runServe is `stuarty serve`: the owner of the workspace (SDD-005 section
 // 6.3). It takes the lock, opens the store, builds the Service and serves the
 // API; runtime.json is written once the listener is bound and removed, with
 // the lock released, on a graceful stop. The application key is the stopgap of
@@ -43,7 +43,7 @@ func runServe(ctx context.Context, args []string, stderr io.Writer) int {
 		owner.Config{Version: agentdocs.Version, Log: log, Resolved: resolved, Telemetry: owner.OTelProvider},
 	)
 	if err != nil {
-		_, _ = fmt.Fprintln(stderr, "vukem-video serve:", err)
+		_, _ = fmt.Fprintln(stderr, "stuarty serve:", err)
 
 		if isLocked(err) {
 			return exitLocked
@@ -55,7 +55,7 @@ func runServe(ctx context.Context, args []string, stderr io.Writer) int {
 	defer func() { _ = ow.Close() }()
 
 	if err := serveOwner(ctx, ow, args, vukem.WithStderr(stderr), vukem.WithLogger(log)); err != nil {
-		_, _ = fmt.Fprintln(stderr, "vukem-video serve:", err)
+		_, _ = fmt.Fprintln(stderr, "stuarty serve:", err)
 
 		return exitServeFailed
 	}
@@ -69,7 +69,7 @@ func runServe(ctx context.Context, args []string, stderr io.Writer) int {
 func bootConfig(getenv func(string) string, stderr io.Writer) (config.Resolved, bool) {
 	dir, err := workspace.Resolve(getenv)
 	if err != nil {
-		_, _ = fmt.Fprintln(stderr, "vukem-video serve:", err)
+		_, _ = fmt.Fprintln(stderr, "stuarty serve:", err)
 
 		return config.Resolved{}, false
 	}
@@ -132,10 +132,10 @@ func serveOwner(ctx context.Context, ow *owner.Owner, args []string, extra ...vu
 		return app, nil
 	}
 
-	return vukem.RunMain(ctx, append([]string{"vukem-video", "serve"}, args...), lookup, build, extra...)
+	return vukem.RunMain(ctx, append([]string{"stuarty", "serve"}, args...), lookup, build, extra...)
 }
 
-// addrLookup makes VUKEM_VIDEO_ADDR the bind address: vukem reads HOST and
+// addrLookup makes STUARTY_ADDR the bind address: vukem reads HOST and
 // PORT, so the product variable, when set, answers for both.
 func addrLookup(next func(string) (string, bool)) func(string) (string, bool) {
 	addr, ok := next(config.EnvAddr)

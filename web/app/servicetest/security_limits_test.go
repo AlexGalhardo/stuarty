@@ -3,10 +3,10 @@ package servicetest
 import (
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/stuarty/service"
 )
 
-// T-18, SDD-007 section 15 check 17: with VUKEM_VIDEO_MAX_EXPORTS=1 the second
+// T-18, SDD-007 section 15 check 17: with STUARTY_MAX_EXPORTS=1 the second
 // concurrent export is E_QUEUE_FULL with details.running naming the first, and
 // the system keeps working: once the first is cancelled a new export starts.
 func TestSecurity_T18_ExportConcurrencyCeilings(t *testing.T) {

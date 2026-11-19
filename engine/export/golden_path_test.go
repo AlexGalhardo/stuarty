@@ -10,7 +10,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
 )
 
 // TestGoldenPathFFmpeg composes the golden cases with the FFmpeg of the PATH when it is not the pinned
@@ -23,7 +23,10 @@ func TestGoldenPathFFmpeg(t *testing.T) {
 	if err != nil {
 		t.Skip("no ffmpeg on the PATH")
 	}
-	in, err := ffmpeg.Discover(context.Background(), ffmpeg.Config{FFmpegPath: path, CPUCount: runtime.NumCPU(), ToolsDir: os.Getenv("VUKEM_VIDEO_TEST_TOOLS_DIR")})
+	in, err := ffmpeg.Discover(
+		context.Background(),
+		ffmpeg.Config{FFmpegPath: path, CPUCount: runtime.NumCPU(), ToolsDir: os.Getenv("STUARTY_TEST_TOOLS_DIR")},
+	)
 	if err != nil {
 		t.Skipf("the FFmpeg on the PATH is not usable: %v", err)
 	}

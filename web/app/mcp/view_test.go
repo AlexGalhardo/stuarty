@@ -6,7 +6,7 @@ import (
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
-	"github.com/AlexGalhardo/vukem-video/web/contract/testenv"
+	"github.com/AlexGalhardo/stuarty/web/contract/testenv"
 )
 
 // textProject is a project with one text item of 1 s, so that a frame has

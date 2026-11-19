@@ -8,7 +8,7 @@
     "files": [
       "licenses/programs/ffmpeg/COPYING.LGPLv3"
     ],
-    "note": "BtbN lgpl build run as a separate process; the archives do not carry it; its configure line and source link are in /usr/share/doc/vukem-video/ffmpeg/ in the image",
+    "note": "BtbN lgpl build run as a separate process; the archives do not carry it; its configure line and source link are in /usr/share/doc/stuarty/ffmpeg/ in the image",
     "shipped_in": [
       "image"
     ]
@@ -180,7 +180,7 @@
     "files": [
       "licenses/vendored/x-image-vector-BSD-3-Clause.txt"
     ],
-    "note": "ported to Rust as renderer/vukem-renderer-text/src/scan.rs (it was engine/raster/internal/scan)",
+    "note": "ported to Rust as renderer/stuarty-renderer-text/src/scan.rs (it was engine/raster/internal/scan)",
     "shipped_in": [
       "archive",
       "image"

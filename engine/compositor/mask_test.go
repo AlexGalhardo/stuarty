@@ -5,7 +5,7 @@ import (
 	"math"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/core/plan"
+	"github.com/AlexGalhardo/stuarty/core/plan"
 )
 
 func newTestMask(spec plan.MaskSpec, p placement) *maskState { return newMask(&spec, nil, p, 1) }

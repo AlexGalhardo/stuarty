@@ -41,17 +41,17 @@ The product is called Stuarty everywhere a person or an agent meets it: the comm
 
 ## Tasks
 
-- [ ] 1. Rename in SDD-000 every name that carries the product name, and list the pairs old to new in the specification. Verify: `task lint:md` exits 0 and the list covers every `VUKEM_VIDEO_` variable found by `git grep -oh "VUKEM_VIDEO_[A-Z_]*" | sort -u`.
-- [ ] 2. Change the module path and every import; rename the commands under `web/cmd/` and `desktop/`. Verify: `go build ./...` and `go vet ./...` exit 0 in the root module and in `desktop/shell/app`.
-- [ ] 3. Rename the environment variables with the fallback table and its test. Verify: `go test ./service/config/... -run TestFormerVariables` passes.
-- [ ] 4. Implement the workspace adoption with backup and its tests (same volume, other volume, both folders exist, former folder newer than supported). Verify: `go test ./service/workspace/... -run TestAdoptFormerWorkspace` passes.
-- [ ] 5. Rename the renderer crates and rebuild the module. Verify: `bash scripts/build-renderer.sh check` exits 0 and the Rust gate of `.agents/rules/rust.md` passes.
-- [ ] 6. Rename in `web/resources/` (UI strings in both languages, generated types) and run the generators. Verify: `task codegen` leaves no diff; `bun run typecheck`, `bun run check:i18n` and `task test:web` pass.
-- [ ] 7. Rename the image, the Dockerfile, the installers, `.config/`, `Taskfile.yml`, scripts and workflow paths. Verify: `task image:build` and `task image:smoke` pass.
-- [ ] 8. Rename the specifications, the site and the generated reference; remove the "former name" notes from `README.md`, `AGENTS.md`, `CLAUDE.md`, `.agents/` and the "Amended" lines that only explained the name. Verify: `task lint:md`, `task lint:site` and `task site:build` exit 0.
-- [ ] 9. Regenerate the agent documents and the notices. Verify: `task generate:check` and `task notices:check` exit 0.
+- [x] 1. Rename in SDD-000 every name that carries the product name, and list the pairs old to new in the specification. Verify: `task lint:md` exits 0 and the list covers every `VUKEM_VIDEO_` variable found by `git grep -oh "VUKEM_VIDEO_[A-Z_]*" | sort -u`.
+- [x] 2. Change the module path and every import; rename the commands under `web/cmd/` and `desktop/`. Verify: `go build ./...` and `go vet ./...` exit 0 in the root module and in `desktop/shell/app`.
+- [x] 3. Rename the environment variables with the fallback table and its test. Verify: `go test ./service/config/... -run TestFormerVariables` passes.
+- [x] 4. Implement the workspace adoption with backup and its tests (same volume, other volume, both folders exist, former folder newer than supported). Verify: `go test ./service/workspace/... -run TestAdoptFormerWorkspace` passes.
+- [x] 5. Rename the renderer crates and rebuild the module. Verify: `bash scripts/build-renderer.sh check` exits 0 and the Rust gate of `.agents/rules/rust.md` passes.
+- [x] 6. Rename in `web/resources/` (UI strings in both languages, generated types) and run the generators. Verify: `task codegen` leaves no diff; `bun run typecheck`, `bun run check:i18n` and `task test:web` pass.
+- [x] 7. Rename the image, the Dockerfile, the installers, `.config/`, `Taskfile.yml`, scripts and workflow paths. Verify: `task image:build` and `task image:smoke` pass.
+- [x] 8. Rename the specifications, the site and the generated reference; remove the "former name" notes from `README.md`, `AGENTS.md`, `CLAUDE.md`, `.agents/` and the "Amended" lines that only explained the name. Verify: `task lint:md`, `task lint:site` and `task site:build` exit 0.
+- [x] 9. Regenerate the agent documents and the notices. Verify: `task generate:check` and `task notices:check` exit 0.
 - [ ] 10. Run the whole Go suite and the reference scenario. Verify: `task test` passes and `bash scripts/smoke-e2e.sh` exports a valid MP4 through the renamed binary.
-- [ ] 11. Adopt real workspaces by hand (author decision D-089): copy the author's own workspace of release 0.29.0 into `qa-build/` (never committed, never read into a report), and with it the three earlier test workspaces kept there; start the new binary on each copy. Verify: every project of each copy opens and exports; a listing of the author's original folder (names, sizes, modification times) taken before and after is identical; the result is in the hand-off.
+- [x] 11. Adopt real workspaces by hand (author decision D-089): copy the author's own workspace of release 0.29.0 into `qa-build/` (never committed, never read into a report), and with it the three earlier test workspaces kept there; start the new binary on each copy. Verify: every project of each copy opens and exports; a listing of the author's original folder (names, sizes, modification times) taken before and after is identical; the result is in the hand-off.
 
 ## Test strategy
 

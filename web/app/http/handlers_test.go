@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/service"
-	"github.com/AlexGalhardo/vukem-video/web/app/events"
+	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/web/app/events"
 )
 
 // SDD-003 section 6.8, the part of session C that does not need media or jobs:
@@ -21,7 +21,7 @@ func TestSessionCOverHTTP(t *testing.T) {
 
 	created := h.do(req{
 		method: http.MethodPost, path: "/api/v1/projects", body: `{"name":"Launch teaser"}`,
-		headers: map[string]string{"Vukem-Video-Client": "curl-demo"},
+		headers: map[string]string{"Stuarty-Client": "curl-demo"},
 	})
 	if created.status != http.StatusCreated {
 		t.Fatalf("create = %d %s", created.status, created.body)
@@ -48,7 +48,7 @@ func TestSessionCOverHTTP(t *testing.T) {
 	}
 
 	edit := func(base int, ops, key string) resp {
-		hd := map[string]string{"Vukem-Video-Client": "curl-demo"}
+		hd := map[string]string{"Stuarty-Client": "curl-demo"}
 		if key != "" {
 			hd["Idempotency-Key"] = key
 		}
@@ -104,7 +104,7 @@ func TestSessionCOverHTTP(t *testing.T) {
 
 	undo := h.do(req{
 		method: http.MethodPost, path: "/api/v1/projects/" + id + "/undo",
-		headers: map[string]string{"Vukem-Video-Client": "curl-demo"},
+		headers: map[string]string{"Stuarty-Client": "curl-demo"},
 	})
 	if undo.status != http.StatusOK || undo.json(t)["kind"] != "undo" || undo.json(t)["revision"] != float64(3) {
 		t.Errorf("undo = %d %s", undo.status, undo.body)
@@ -271,7 +271,7 @@ func TestErrorEnvelope(t *testing.T) {
 			headers: map[string]string{"Authorization": "Bearer wrong"},
 		}, 401, "E_UNAUTHORIZED"},
 		"bad label": {
-			req{path: "/api/v1/projects", headers: map[string]string{"Vukem-Video-Client": "ui"}},
+			req{path: "/api/v1/projects", headers: map[string]string{"Stuarty-Client": "ui"}},
 			400,
 			"E_VALIDATION",
 		},
@@ -314,7 +314,7 @@ func TestErrorEnvelope(t *testing.T) {
 			}
 
 			env := res.json(t)
-			if env["code"] != c.code || env["title"] != c.code || env["type"] != "urn:vukem-video:error:"+c.code ||
+			if env["code"] != c.code || env["title"] != c.code || env["type"] != "urn:stuarty:error:"+c.code ||
 				env["status"] != float64(c.status) || env["message"] == "" || env["message"] != env["detail"] ||
 				env["retryable"] == nil || env["instance"] == nil {
 				t.Errorf("envelope = %s", res.body)

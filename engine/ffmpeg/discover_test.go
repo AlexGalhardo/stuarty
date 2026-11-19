@@ -86,10 +86,10 @@ func TestDiscoverBundledLayouts(t *testing.T) {
 	if err := os.MkdirAll(exe, 0o755); err != nil {
 		t.Fatal(err)
 	}
-	install(t, filepath.Join(root, "libexec", "vukem-video"), "n9.0.2-libexec")
+	install(t, filepath.Join(root, "libexec", "stuarty"), "n9.0.2-libexec")
 	in, err = Discover(context.Background(), Config{ExecDir: exe, LookPath: noPath})
 	if err != nil || in.Info.Version != "n9.0.2-libexec" {
-		t.Fatalf("../libexec/vukem-video: %v", err)
+		t.Fatalf("../libexec/stuarty: %v", err)
 	}
 }
 
@@ -123,7 +123,7 @@ func TestDiscoverNothingFound(t *testing.T) {
 	if e.Message != want {
 		t.Errorf("message = %q", e.Message)
 	}
-	if !strings.Contains(e.Hint, "VUKEM_VIDEO_FFMPEG") || !strings.Contains(e.Hint, "doctor") {
+	if !strings.Contains(e.Hint, "STUARTY_FFMPEG") || !strings.Contains(e.Hint, "doctor") {
 		t.Errorf("hint = %q", e.Hint)
 	}
 	if got := e.Details["tried"].([]string); len(got) != 3 {

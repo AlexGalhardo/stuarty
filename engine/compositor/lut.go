@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/AlexGalhardo/vukem-video/core/plan"
-	"github.com/AlexGalhardo/vukem-video/engine/lut"
+	"github.com/AlexGalhardo/stuarty/core/plan"
+	"github.com/AlexGalhardo/stuarty/engine/lut"
 )
 
 // LUTSource returns the lookup table of a lut asset (SDD-004 section 3.6).

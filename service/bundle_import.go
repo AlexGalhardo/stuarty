@@ -16,12 +16,12 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/core/timeval"
-	enginestore "github.com/AlexGalhardo/vukem-video/engine/store"
-	"github.com/AlexGalhardo/vukem-video/service/crashpoint"
-	"github.com/AlexGalhardo/vukem-video/service/textview"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeval"
+	enginestore "github.com/AlexGalhardo/stuarty/engine/store"
+	"github.com/AlexGalhardo/stuarty/service/crashpoint"
+	"github.com/AlexGalhardo/stuarty/service/textview"
 )
 
 // The limits of a bundle (SDD-005 section 16.3 step 1, SDD-007 section 7.6).
@@ -464,7 +464,7 @@ func (s *svc) checkBundleDisk(total uint64) *Error {
 		return newError("E_LIMIT_EXCEEDED", "The disk of the workspace has too little free space for this bundle.").
 			withHint("free space on the disk of the workspace").
 			withLimit("free_bytes", free, need).withDetail("reason", "disk_low").
-			withDetail("variable", "VUKEM_VIDEO_MIN_FREE_BYTES")
+			withDetail("variable", "STUARTY_MIN_FREE_BYTES")
 	}
 
 	return nil
@@ -485,14 +485,14 @@ func (s *svc) readBundleManifest(p *bundleParts) *Error {
 		return bundleRefused("manifest.json is not valid")
 	}
 
-	if m.Format != BundleFormat || m.BundleVersion < 1 {
-		return bundleRefused("manifest.json is not a vukem-video bundle manifest")
+	if (m.Format != BundleFormat && m.Format != formerBundleFormat) || m.BundleVersion < 1 {
+		return bundleRefused("manifest.json is not a stuarty bundle manifest")
 	}
 
 	if m.BundleVersion > BundleVersion {
 		return newError(command.CodeValidation, "the bundle has version %d; this build reads up to %d.",
 			m.BundleVersion, BundleVersion).
-			withHint("update vukem-video, then import it again").withDetail("code", "V_BUNDLE_VERSION")
+			withHint("update stuarty, then import it again").withDetail("code", "V_BUNDLE_VERSION")
 	}
 
 	return nil
@@ -546,7 +546,7 @@ func migrateBundleDocument(data []byte) (*timeline.Document, int, *Error) {
 	from := schemaVersionOf(raw)
 	if from > timeline.CurrentSchemaVersion {
 		return nil, 0, newError(command.CodeValidation, "the bundle was made by a newer version of the editor.").
-			withHint("update vukem-video, then import it again").withDetail("code", "V_SCHEMA_VERSION")
+			withHint("update stuarty, then import it again").withDetail("code", "V_SCHEMA_VERSION")
 	}
 
 	if from < 1 {

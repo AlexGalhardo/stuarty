@@ -26,7 +26,7 @@ Removes the asset from the project. It fails with E_IN_USE, listing the items, w
 
 ## Scope and phase
 
-Scope `media`, phase `alpha`. The scope is the one an API key needs in network mode. Run `vukem-video command:help asset.remove` for the same description from the binary, or call the [`command_help`](/docs/mcp/tools/command_help) tool.
+Scope `media`, phase `alpha`. The scope is the one an API key needs in network mode. Run `stuarty command:help asset.remove` for the same description from the binary, or call the [`command_help`](/docs/mcp/tools/command_help) tool.
 
 ## Next steps
 
@@ -76,14 +76,14 @@ Scope `media`, phase `alpha`. The scope is the one an API key needs in network m
 ```
 
 ```bash title="Terminal"
-vukem-video edit --project prj_7k2m9x4q1b --ops batch.json --json
+stuarty edit --project prj_7k2m9x4q1b --ops batch.json --json
 ```
 
 **Over HTTP**
 
 ```bash title="curl"
 curl -X POST "http://127.0.0.1:7878/api/v1/projects/prj_7k2m9x4q1b/edit" \
-  -H "Authorization: Bearer $VUKEM_VIDEO_KEY" \
+  -H "Authorization: Bearer $STUARTY_KEY" \
   -H "Content-Type: application/json" \
   -d '{
   "base_revision": 12,

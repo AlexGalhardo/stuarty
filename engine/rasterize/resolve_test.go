@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/core/plan"
+	"github.com/AlexGalhardo/stuarty/core/plan"
 )
 
 func TestParseColour(t *testing.T) {

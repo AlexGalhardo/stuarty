@@ -8,7 +8,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
 )
 
 // Kind is the kind of an asset, found by probing and never by the file name.

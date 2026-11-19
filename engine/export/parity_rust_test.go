@@ -16,11 +16,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/core/plan"
-	"github.com/AlexGalhardo/vukem-video/engine/bitmap"
-	"github.com/AlexGalhardo/vukem-video/engine/compositor"
-	"github.com/AlexGalhardo/vukem-video/engine/lut"
-	"github.com/AlexGalhardo/vukem-video/engine/renderhost"
+	"github.com/AlexGalhardo/stuarty/core/plan"
+	"github.com/AlexGalhardo/stuarty/engine/bitmap"
+	"github.com/AlexGalhardo/stuarty/engine/compositor"
+	"github.com/AlexGalhardo/stuarty/engine/lut"
+	"github.com/AlexGalhardo/stuarty/engine/renderhost"
 )
 
 // The parity gate of stage C (SDD-013 section 3.10, skill renderer-parity): every golden case of this
@@ -30,7 +30,7 @@ import (
 // without cargo skips the test, a CI job with the toolchain runs it.
 
 const (
-	envParityBin  = "VUKEM_VIDEO_TEST_VR_PARITY"
+	envParityBin  = "STUARTY_TEST_VR_PARITY"
 	parityBands   = 8
 	rendererRoot  = "../../renderer"
 	corpusMagic   = "VVPC"

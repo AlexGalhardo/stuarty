@@ -7,10 +7,10 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/service"
-	"github.com/AlexGalhardo/vukem-video/service/workspace"
-	"github.com/AlexGalhardo/vukem-video/web/app/cli"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/workspace"
+	"github.com/AlexGalhardo/stuarty/web/app/cli"
 )
 
 // exeName is the file name of a tool on this operating system.
@@ -27,7 +27,7 @@ func exeName(tool string) string {
 func pinnedFFmpegDir() string {
 	exe := exeName("ffmpeg")
 
-	dir := os.Getenv("VUKEM_VIDEO_TEST_FFMPEG_DIR")
+	dir := os.Getenv("STUARTY_TEST_FFMPEG_DIR")
 
 	if dir == "" {
 		for _, base := range []string{os.Getenv("RUNNER_TEMP"), os.Getenv("TEMP"), os.Getenv("TMPDIR")} {
@@ -47,7 +47,9 @@ func pinnedFFmpegPath(t *testing.T) string {
 
 	dir := pinnedFFmpegDir()
 	if dir == "" {
-		t.Skip("no pinned FFmpeg: run scripts/install-ffmpeg.sh and set VUKEM_VIDEO_TEST_FFMPEG_DIR")
+		t.Skip( // verify:env-skip no pinned FFmpeg on this machine
+			"no pinned FFmpeg: run scripts/install-ffmpeg.sh and set STUARTY_TEST_FFMPEG_DIR",
+		)
 	}
 
 	return filepath.Join(dir, exeName("ffmpeg"))
@@ -63,7 +65,7 @@ func TestInProcessConnectionCanExport(t *testing.T) {
 		switch k {
 		case workspace.EnvHome:
 			return home
-		case "VUKEM_VIDEO_FFMPEG":
+		case "STUARTY_FFMPEG":
 			return ff
 		}
 

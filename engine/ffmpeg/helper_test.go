@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-// The GPU host vukem-render is started by RunHelper, which is the same exec as FFmpeg: these tests run a
+// The GPU host stuarty-render is started by RunHelper, which is the same exec as FFmpeg: these tests run a
 // helper through it and check the rules of SDD-007 6.4 to 6.6 that matter for a child that is not FFmpeg.
 
 func helperRequest(
@@ -32,7 +32,7 @@ func helperRequest(
 }
 
 func TestSecurity_T37_HelperEnvironmentMinimal(t *testing.T) {
-	for _, k := range []string{"VUKEM_VIDEO_TRANSCRIBE_KEY", "APP_KEY", "VUKEM_VIDEO_KEY", "OTEL_EXPORTER_OTLP_ENDPOINT", "VUKEM_VIDEO_TOKEN"} {
+	for _, k := range []string{"STUARTY_TRANSCRIBE_KEY", "APP_KEY", "STUARTY_KEY", "OTEL_EXPORTER_OTLP_ENDPOINT", "STUARTY_TOKEN"} {
 		t.Setenv(k, "canary-"+k)
 	}
 
@@ -130,7 +130,7 @@ func TestSecurity_T37_HelperRefusesRelativePathAndSandbox(t *testing.T) {
 	var fe *Error
 	if _, err := r.HelperTool(
 		context.Background(),
-		"vukem-render",
+		"stuarty-render",
 		time.Minute,
 	); !errors.As(err, &fe) ||
 		fe.Reason != "helper_path" {

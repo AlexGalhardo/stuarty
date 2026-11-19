@@ -8,12 +8,12 @@ import (
 	"math"
 	"sync"
 
-	"github.com/AlexGalhardo/vukem-video/core/plan"
-	"github.com/AlexGalhardo/vukem-video/engine/bitmap"
-	"github.com/AlexGalhardo/vukem-video/engine/compositor"
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
-	"github.com/AlexGalhardo/vukem-video/engine/gpuhost"
-	"github.com/AlexGalhardo/vukem-video/engine/renderhost"
+	"github.com/AlexGalhardo/stuarty/core/plan"
+	"github.com/AlexGalhardo/stuarty/engine/bitmap"
+	"github.com/AlexGalhardo/stuarty/engine/compositor"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
+	"github.com/AlexGalhardo/stuarty/engine/gpuhost"
+	"github.com/AlexGalhardo/stuarty/engine/renderhost"
 )
 
 // PixelRenderer names what places the pixels of an exported frame (SDD-013 section 4.6, ADR-0029 item 8).
@@ -24,13 +24,13 @@ type PixelRenderer string
 const (
 	PixelRendererGo   PixelRenderer = "go"
 	PixelRendererRust PixelRenderer = "rust"
-	// PixelRendererGPU draws on the GPU in the child process vukem-render when there is an adapter and a
+	// PixelRendererGPU draws on the GPU in the child process stuarty-render when there is an adapter and a
 	// GPU host, and as PixelRendererRust otherwise. The GPU frames are held to the CPU path by SSIM, not byte
 	// for byte (SDD-013 section 3.8).
 	PixelRendererGPU PixelRenderer = "gpu"
 )
 
-// ParsePixelRenderer reads VUKEM_VIDEO_EXPORT_RENDERER: empty is the default, the Go compositor.
+// ParsePixelRenderer reads STUARTY_EXPORT_RENDERER: empty is the default, the Go compositor.
 func ParsePixelRenderer(s string) (PixelRenderer, error) {
 	switch s {
 	case "", string(PixelRendererGo):

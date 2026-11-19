@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg/ffargs"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg/ffargs"
 )
 
 // SizeProbe is the size and the frame rate a test encode is asked for.
@@ -102,7 +102,7 @@ func (r *Runner) testEncoderAt(ctx context.Context, c Candidate, p SizeProbe) er
 // EncoderForSize is the encoder an export at this size and rate uses (D-034, SDD-004 section 8): the one
 // detection chose when its test encode at that size passes, else the next working candidate of the same
 // order that passes it, down to the software encoder, so a GPU that cannot do 4K or 60 fps does not stop an
-// export that libopenh264 can do. A forced encoder (VUKEM_VIDEO_ENCODER) is never replaced. When none
+// export that libopenh264 can do. A forced encoder (STUARTY_ENCODER) is never replaced. When none
 // passes, the error is the one of the chosen encoder and wraps ErrEncoderSize; a cancelled run or a failure
 // that is not about the size ends the search at once.
 func (r *Runner) EncoderForSize(ctx context.Context, det *EncoderDetection, p SizeProbe) (Candidate, error) {

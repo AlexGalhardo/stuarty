@@ -5,7 +5,7 @@ import (
 	"image"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/core/plan"
+	"github.com/AlexGalhardo/stuarty/core/plan"
 )
 
 // asymmetric is a premultiplied opaque image whose every pixel differs, so a wrong mirror shows.

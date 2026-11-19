@@ -3,9 +3,9 @@ package tests
 import (
 	"testing"
 
-	"github.com/AlexGalhardo/vukem/vukemtest"
+	"github.com/AlexGalhardo/stuarty/web/bootstrap"
 
-	"github.com/AlexGalhardo/vukem-video/web/bootstrap"
+	"github.com/AlexGalhardo/vukem/vukemtest"
 )
 
 func TestUpAnswersOK(t *testing.T) {

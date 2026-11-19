@@ -15,7 +15,7 @@ const (
 )
 
 // CookieName is the cookie of local mode (SDD-007 section 3.5).
-const CookieName = "vukem_video_session"
+const CookieName = "stuarty_session"
 
 // LocalCookieName is the cookie of local mode for the server that the browser reached at port. A
 // cookie is shared by every port of a host, so two local servers would overwrite each other's session

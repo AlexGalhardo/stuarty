@@ -43,29 +43,28 @@ function assertBuildIsFresh(): void {
 	}
 }
 
-if (process.env.VUKEM_VIDEO_DETECT_ONLY !== "1") assertBuildIsFresh();
+if (process.env.STUARTY_DETECT_ONLY !== "1") assertBuildIsFresh();
 
-const port = Number(process.env.VUKEM_VIDEO_E2E_PORT ?? 3101);
+const port = Number(process.env.STUARTY_E2E_PORT ?? 3101);
 // The pinned FFmpeg of the tests (scripts/install-ffmpeg.sh prints its folder):
-// the server finds it through VUKEM_VIDEO_FFMPEG and VUKEM_VIDEO_FFPROBE.
+// the server finds it through STUARTY_FFMPEG and STUARTY_FFPROBE.
 function ffmpegEnv(): Record<string, string> {
-	const dir = process.env.VUKEM_VIDEO_TEST_FFMPEG_DIR;
+	const dir = process.env.STUARTY_TEST_FFMPEG_DIR;
 	if (!dir) return {};
 	const exe = process.platform === "win32" ? ".exe" : "";
 	const bin = existsSync(join(dir, "bin", `ffmpeg${exe}`))
 		? join(dir, "bin")
 		: dir;
 	return {
-		VUKEM_VIDEO_FFMPEG: join(bin, `ffmpeg${exe}`),
-		VUKEM_VIDEO_FFPROBE: join(bin, `ffprobe${exe}`),
+		STUARTY_FFMPEG: join(bin, `ffmpeg${exe}`),
+		STUARTY_FFPROBE: join(bin, `ffprobe${exe}`),
 	};
 }
 
 // The WebKit run of the detection page needs only the detection server.
-const detectOnly = process.env.VUKEM_VIDEO_DETECT_ONLY === "1";
+const detectOnly = process.env.STUARTY_DETECT_ONLY === "1";
 
-const home =
-	process.env.VUKEM_VIDEO_E2E_HOME ?? join(tmpdir(), "vukem-video-e2e-home");
+const home = process.env.STUARTY_E2E_HOME ?? join(tmpdir(), "stuarty-e2e-home");
 
 // A second server whose encoder cannot work, for scenario 9 (export-failure).
 // Its workspace follows the main one, so two runs with their own homes (two
@@ -113,7 +112,7 @@ export default defineConfig({
 				// skips every filter (masks, blur, color) and the golden specs cannot
 				// pass. A headed Firefox on a virtual display (xvfb-run) has WebGL2
 				// on Mesa; the CI job sets this variable and wraps the run in it.
-				headless: process.env.VUKEM_VIDEO_FIREFOX_HEADED !== "1",
+				headless: process.env.STUARTY_FIREFOX_HEADED !== "1",
 			},
 		},
 		{
@@ -124,9 +123,9 @@ export default defineConfig({
 		},
 		// The budgets of SDD-012 section 19 are those of the reference machine. They
 		// depend on the load and on a real GPU, so they run only when asked for
-		// (VUKEM_VIDEO_PERF=1), alone, in one file and so one worker, after every other
+		// (STUARTY_PERF=1), alone, in one file and so one worker, after every other
 		// spec has finished. The shared CI runner does not ask.
-		...(process.env.VUKEM_VIDEO_PERF === "1"
+		...(process.env.STUARTY_PERF === "1"
 			? [
 					{
 						name: "perf",
@@ -143,9 +142,9 @@ export default defineConfig({
 				]
 			: []),
 		// The soak of NFR-008 (SDD-012 section 19.1): ten minutes of editing on the
-		// 5 minute project, alone, only when asked for (VUKEM_VIDEO_SOAK=1, the
+		// 5 minute project, alone, only when asked for (STUARTY_SOAK=1, the
 		// nightly job). It needs Chromium: CDP gives the process ids to read.
-		...(process.env.VUKEM_VIDEO_SOAK === "1"
+		...(process.env.STUARTY_SOAK === "1"
 			? [
 					{
 						name: "soak",
@@ -171,7 +170,7 @@ export default defineConfig({
 			use: { browserName: "chromium", baseURL: "http://127.0.0.1:7979" },
 		},
 		// The same page in WebKit, for the desktop shell choice (ADR-0023). It runs
-		// only with VUKEM_VIDEO_DETECT_ONLY=1 (workflow desktop-detect.yml).
+		// only with STUARTY_DETECT_ONLY=1 (workflow desktop-detect.yml).
 		...(detectOnly
 			? [
 					{
@@ -197,12 +196,12 @@ export default defineConfig({
 				APP_KEY: `base64:${Buffer.alloc(32, "e2e").toString("base64")}`,
 				HOST: "127.0.0.1",
 				PORT: String(port),
-				VUKEM_VIDEO_HOME: home,
+				STUARTY_HOME: home,
 				// One token drives the whole suite, faster and with more exports a minute
 				// than one person would (the limits of SDD-007 4.4 apply in local mode).
-				VUKEM_VIDEO_RATE_LIMIT_HEAVY_PER_MINUTE: "1000",
-				VUKEM_VIDEO_RATE_LIMIT_PER_MINUTE: "100000",
-				VUKEM_VIDEO_RATE_LIMIT_SESSION_PER_MINUTE: "100000",
+				STUARTY_RATE_LIMIT_HEAVY_PER_MINUTE: "1000",
+				STUARTY_RATE_LIMIT_PER_MINUTE: "100000",
+				STUARTY_RATE_LIMIT_SESSION_PER_MINUTE: "100000",
 				...ffmpegEnv(),
 			},
 		},
@@ -216,12 +215,12 @@ export default defineConfig({
 				APP_KEY: `base64:${Buffer.alloc(32, "e2e").toString("base64")}`,
 				HOST: "127.0.0.1",
 				PORT: String(failPort),
-				VUKEM_VIDEO_HOME: failHome,
-				VUKEM_VIDEO_RATE_LIMIT_HEAVY_PER_MINUTE: "1000",
-				VUKEM_VIDEO_RATE_LIMIT_PER_MINUTE: "100000",
-				VUKEM_VIDEO_RATE_LIMIT_SESSION_PER_MINUTE: "100000",
+				STUARTY_HOME: failHome,
+				STUARTY_RATE_LIMIT_HEAVY_PER_MINUTE: "1000",
+				STUARTY_RATE_LIMIT_PER_MINUTE: "100000",
+				STUARTY_RATE_LIMIT_SESSION_PER_MINUTE: "100000",
 				// Only this encoder is tried and it is never replaced (ADR-0011).
-				VUKEM_VIDEO_ENCODER: "no_such_encoder",
+				STUARTY_ENCODER: "no_such_encoder",
 				...ffmpegEnv(),
 			},
 		},
@@ -234,18 +233,18 @@ export default defineConfig({
 			env: {
 				APP_KEY: `base64:${Buffer.alloc(32, "e2e").toString("base64")}`,
 				APP_URL: NETWORK_URL,
-				VUKEM_VIDEO_MODE: "network",
-				VUKEM_VIDEO_ADDR: `127.0.0.1:${NETWORK_PORT}`,
-				VUKEM_VIDEO_HOME: networkHome,
-				VUKEM_VIDEO_ADMIN_EMAIL: NETWORK_ADMIN.email,
-				VUKEM_VIDEO_ADMIN_PASSWORD: NETWORK_ADMIN.password,
+				STUARTY_MODE: "network",
+				STUARTY_ADDR: `127.0.0.1:${NETWORK_PORT}`,
+				STUARTY_HOME: networkHome,
+				STUARTY_ADMIN_EMAIL: NETWORK_ADMIN.email,
+				STUARTY_ADMIN_PASSWORD: NETWORK_ADMIN.password,
 				// Only for a container running as root; harmless elsewhere.
-				VUKEM_VIDEO_INSECURE_ALLOW_ROOT: "true",
+				STUARTY_INSECURE_ALLOW_ROOT: "true",
 				...ffmpegEnv(),
 			},
 		},
 		{
-			command: `go run ./desktop/detect -results ${join(tmpdir(), "vukem-video-e2e-detect-results")}`,
+			command: `go run ./desktop/detect -results ${join(tmpdir(), "stuarty-e2e-detect-results")}`,
 			cwd: "../..",
 			url: "http://127.0.0.1:7979/",
 			reuseExistingServer: !process.env.CI,

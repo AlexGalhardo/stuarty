@@ -12,16 +12,16 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/engine/transcribe"
-	"github.com/AlexGalhardo/vukem-video/service/workspace"
-	"github.com/AlexGalhardo/vukem-video/web/app/owner"
-	"github.com/AlexGalhardo/vukem-video/web/contract/testenv"
+	"github.com/AlexGalhardo/stuarty/engine/transcribe"
+	"github.com/AlexGalhardo/stuarty/service/workspace"
+	"github.com/AlexGalhardo/stuarty/web/app/owner"
+	"github.com/AlexGalhardo/stuarty/web/contract/testenv"
 )
 
 // The six runs of NFR-025 (SDD-003 section 9 check 26): Direct, MCP over stdio,
 // MCP over HTTP, the CLI as a process with no server, the CLI as a process with a
 // server, and HTTP. The process drivers run the real binary, whose transcription
-// provider is the guarded test stub (VUKEM_VIDEO_TEST_TRANSCRIBER=stub under
+// provider is the guarded test stub (STUARTY_TEST_TRANSCRIBER=stub under
 // APP_ENV=test); Direct and HTTP are the in-process environments of testenv
 // with the provider that returns the same words.
 
@@ -59,10 +59,10 @@ func startLocal(t *testing.T, ffmpeg, ffprobe string) *procEnv {
 		t.Fatal(err)
 	}
 
-	env := append(os.Environ(), "VUKEM_VIDEO_HOME="+home, "VUKEM_VIDEO_URL=", "APP_KEY=",
-		"VUKEM_VIDEO_FFMPEG="+ffmpeg, "VUKEM_VIDEO_FFPROBE="+ffprobe, "VUKEM_VIDEO_MIN_FREE_BYTES=1")
+	env := append(os.Environ(), "STUARTY_HOME="+home, "STUARTY_URL=", "APP_KEY=",
+		"STUARTY_FFMPEG="+ffmpeg, "STUARTY_FFPROBE="+ffprobe, "STUARTY_MIN_FREE_BYTES=1")
 	if !filepath.IsAbs(ffmpeg) {
-		env = append(env, "VUKEM_VIDEO_FFMPEG=", "VUKEM_VIDEO_FFPROBE=")
+		env = append(env, "STUARTY_FFMPEG=", "STUARTY_FFPROBE=")
 	}
 
 	return &procEnv{

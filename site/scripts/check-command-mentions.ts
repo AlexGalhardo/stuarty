@@ -40,10 +40,10 @@ export function checkPage(page: string, text: string, names: Names): Finding[] {
 		if (names.operations.has(name)) known++;
 		else findings.push({ page, message: `\`${name}\` is not an operation of the catalogue` });
 	}
-	for (const m of text.matchAll(/vukem-video ([a-z]+(?::[a-z]+)?)(?=[\s`'"]|$)/g)) {
+	for (const m of text.matchAll(/stuarty ([a-z]+(?::[a-z]+)?)(?=[\s`'"]|$)/g)) {
 		const sub = m[1];
 		if (names.cli.has(sub)) known++;
-		else if (!["serve", "mcp", "version"].includes(sub)) findings.push({ page, message: `\`vukem-video ${sub}\` is not a CLI command` });
+		else if (!["serve", "mcp", "version"].includes(sub)) findings.push({ page, message: `\`stuarty ${sub}\` is not a CLI command` });
 		else known++;
 	}
 	for (const m of text.matchAll(/`((?:project|job|media|command)_[a-z_]+)`/g)) {

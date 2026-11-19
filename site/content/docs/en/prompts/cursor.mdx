@@ -1,17 +1,17 @@
 ---
 title: "Cursor"
-description: "Register the Vukem Video MCP server in Cursor, then copy a setup prompt and task prompts that work."
+description: "Register the Stuarty MCP server in Cursor, then copy a setup prompt and task prompts that work."
 ---
 
 ## You will learn
 
-- how to register the Vukem Video MCP server in Cursor
+- how to register the Stuarty MCP server in Cursor
 - a setup prompt to paste as the first message
 - four prompts for the tasks people ask most: a vertical video with captions, a product commercial, cutting silences, and exporting
 
 ## The idea
 
-Cursor starts `vukem-video mcp` and gives its agent the 16 [tools](/docs/mcp/tools) of Vukem Video. The agent edits the same projects you see in the editor. The prompts on this page are written to be pasted as they are: replace the words in capital letters (such as `PATH_TO_CLIP`) with your own, and nothing else.
+Cursor starts `stuarty mcp` and gives its agent the 16 [tools](/docs/mcp/tools) of Stuarty. The agent edits the same projects you see in the editor. The prompts on this page are written to be pasted as they are: replace the words in capital letters (such as `PATH_TO_CLIP`) with your own, and nothing else.
 
 ## Register the server
 
@@ -20,29 +20,29 @@ Create `.cursor/mcp.json` in your project for this project only, or `~/.cursor/m
 ```json
 {
   "mcpServers": {
-    "vukem-video": {
+    "stuarty": {
       "type": "stdio",
-      "command": "vukem-video",
+      "command": "stuarty",
       "args": ["mcp"]
     }
   }
 }
 ```
 
-`command` must be on your path, or a full path to `vukem-video`.
+`command` must be on your path, or a full path to `stuarty`.
 
 Source: [Model Context Protocol (MCP)](https://cursor.com/docs/context/mcp).
 
 ## Check the connection
 
-Open the Cursor settings for MCP: `vukem-video` must be listed and enabled. In the chat, ask the agent to list your projects.
+Open the Cursor settings for MCP: `stuarty` must be listed and enabled. In the chat, ask the agent to list your projects.
 
 ## Setup prompt
 
 Paste this as the first message of a session. It teaches the agent the loop that keeps an edit safe and checked.
 
 ```text
-You will edit videos with Vukem Video through its MCP server, "vukem-video".
+You will edit videos with Stuarty through its MCP server, "stuarty".
 
 1. Call project_list to check that the tools work, then tell me how many projects exist.
 2. Work in this loop. Read the project with project_get and note its revision. Change it with
@@ -72,7 +72,7 @@ Make a short vertical video with captions from the clip at PATH_TO_CLIP.
 2. List the templates with the template tool and create a project from "Vertical cut with
    captions", named NAME_OF_THE_VIDEO, with my clip in the clip slot.
 3. Transcribe the asset with job_start (kind transcribe) and wait for the job with job_get. If the
-   transcription helper is not installed, stop and tell me to run: vukem-video tools:install
+   transcription helper is not installed, stop and tell me to run: stuarty tools:install
    whisper
 4. Make the captions with the caption.from_transcript operation (call command_help first).
 5. Run lint and fix every error. Look at the frame at 2s with view and tell me whether the
@@ -137,7 +137,7 @@ Export the project NAME_OF_THE_PROJECT as an MP4.
 - Sending a prompt before the server is connected: the agent then answers from memory and invents commands. Run the check above first.
 - Leaving a word in capital letters in the prompt: the agent will ask you for it or guess.
 - Asking for an export and a look at the result in one step: ask for the check first, then export.
-- Transcribing with no helper installed: install it once with `vukem-video tools:install whisper`.
+- Transcribing with no helper installed: install it once with `stuarty tools:install whisper`.
 
 ## Next steps
 

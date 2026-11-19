@@ -34,7 +34,7 @@ function Shell({ children }: { children: ReactNode }) {
 	const page = usePage<SharedProps>();
 	const message = page.flash?.success ?? page.flash?.status;
 	// The shared prop can arrive empty; the link keeps a name (axe link-name).
-	const appName = page.props.appName || "Vukem Video";
+	const appName = page.props.appName || "Stuarty";
 
 	return (
 		<TooltipProvider>

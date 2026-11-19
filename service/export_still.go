@@ -11,9 +11,9 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/core/timeval"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeval"
 )
 
 // stillRange is the one frame of a png export (VV-037): args.at, "0s" when it is not given, as the
@@ -79,13 +79,13 @@ func (s *svc) runStillExport(ctx context.Context, job *JobRow, pw *progress, in 
 
 		return nil, newError(
 			CodeExportFailed,
-			"The export is %s; the export limit is %s (VUKEM_VIDEO_MAX_EXPORT_BYTES).",
+			"The export is %s; the export limit is %s (STUARTY_MAX_EXPORT_BYTES).",
 			have,
 			ceiling,
 		).
 			withDetail("reason", exportSizeLimitReason).
 			withLimit("export_bytes", int64(len(body)), s.limits.MaxExportBytes).
-			withDetail("variable", "VUKEM_VIDEO_MAX_EXPORT_BYTES")
+			withDetail("variable", "STUARTY_MAX_EXPORT_BYTES")
 	}
 
 	out, aerr := filepath.Abs(filepath.Join(s.workspace, "exports", *job.ProjectID, exportFileName(job.ID, in.Format)))

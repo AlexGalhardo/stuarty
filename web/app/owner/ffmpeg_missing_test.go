@@ -14,10 +14,10 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
-	"github.com/AlexGalhardo/vukem-video/service"
-	"github.com/AlexGalhardo/vukem-video/service/workspace"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
+	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/workspace"
 )
 
 // TestMain lets a copy of this test binary, named ffmpeg, answer -version.
@@ -131,8 +131,8 @@ func TestProjectCreateAndIngestWhenFFprobeIsAbsent(t *testing.T) {
 
 	logs := &panicTrap{}
 	getenv := envOf(map[string]string{
-		workspace.EnvHome:    home,
-		"VUKEM_VIDEO_FFMPEG": ff,
+		workspace.EnvHome: home,
+		"STUARTY_FFMPEG":  ff,
 	})
 
 	ow, err := Open(context.Background(), Config{
@@ -172,7 +172,7 @@ func TestProjectCreateAndIngestWhenFFprobeIsAbsent(t *testing.T) {
 		t.Fatalf("ingest code = %s (%s), want %s", got.Code, got.Message, ffmpeg.CodeFFmpegMissing)
 	}
 
-	if got.Hint == "" || (!strings.Contains(got.Hint, "VUKEM_VIDEO_FFMPEG") && !strings.Contains(got.Hint, "Install")) {
+	if got.Hint == "" || (!strings.Contains(got.Hint, "STUARTY_FFMPEG") && !strings.Contains(got.Hint, "Install")) {
 		t.Fatalf("hint = %q, want the install or configure hint", got.Hint)
 	}
 

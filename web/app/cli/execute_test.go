@@ -6,10 +6,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/core/lint"
-	"github.com/AlexGalhardo/vukem-video/service"
-	"github.com/AlexGalhardo/vukem-video/web/app/agentdocs"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/core/lint"
+	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/web/app/agentdocs"
 )
 
 // oneJSONDocument fails unless s is exactly one JSON document and a newline.
@@ -396,7 +396,7 @@ func TestVersionNeedsNoService(t *testing.T) {
 	h := newHarness(t)
 	h.res.err = errors.New("the workspace must not be opened")
 
-	if code := h.run("version"); code != ExitOK || !strings.HasPrefix(h.stdout.String(), "vukem-video ") {
+	if code := h.run("version"); code != ExitOK || !strings.HasPrefix(h.stdout.String(), "stuarty ") {
 		t.Fatalf("exit %d, %q, %q", code, h.stdout.String(), h.stderr.String())
 	}
 
@@ -405,7 +405,7 @@ func TestVersionNeedsNoService(t *testing.T) {
 	}
 
 	doc := oneJSONDocument(t, h.stdout.String())
-	if doc["version"] == "" || doc["text"] != "vukem-video "+agentdocs.Version {
+	if doc["version"] == "" || doc["text"] != "stuarty "+agentdocs.Version {
 		t.Fatalf("doc = %v", doc)
 	}
 
@@ -429,7 +429,7 @@ func TestNotFoundInProcessNamesTheWorkspace(t *testing.T) {
 	}
 
 	got := h.stderr.String()
-	for _, want := range []string{"/ws", "--workspace", "VUKEM_VIDEO_HOME"} {
+	for _, want := range []string{"/ws", "--workspace", "STUARTY_HOME"} {
 		if !strings.Contains(got, want) {
 			t.Errorf("stderr does not say %q: %q", want, got)
 		}

@@ -1,7 +1,7 @@
 import { Link } from "@/components/link";
 import { ui as t } from "@/lib/ui-text";
 
-/** The Vukem Video mark: the corners of a viewfinder around a play triangle. */
+/** The Stuarty mark: the corners of a viewfinder around a play triangle. */
 export function LogoMark({ className = "size-6" }: { className?: string }) {
 	return (
 		<svg viewBox="0 0 32 32" fill="none" aria-hidden className={className}>
@@ -25,7 +25,7 @@ export function Logo() {
 			aria-label={t.logoLabel}
 		>
 			<LogoMark />
-			<span className="text-[0.9375rem]">Vukem Video</span>
+			<span className="text-[0.9375rem]">Stuarty</span>
 		</Link>
 	);
 }

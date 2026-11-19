@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/stuarty/service"
 )
 
 // The bundle commands have no MCP tool: a bundle moves a whole project as a file, which is for the
@@ -13,8 +13,8 @@ import (
 var bundleExport = &spec{
 	name:    "bundle:export",
 	summary: "export a project as a .vvbundle to share or to back up",
-	usage:   []string{"vukem-video bundle:export --project <id> [--no-log] [--wait] [--out f] [--force]"},
-	example: "vukem-video bundle:export --project prj_7k2m9x4q1b --out ~/teaser.vvbundle",
+	usage:   []string{"stuarty bundle:export --project <id> [--no-log] [--wait] [--out f] [--force]"},
+	example: "stuarty bundle:export --project prj_7k2m9x4q1b --out ~/teaser.vvbundle",
 	project: true,
 	globals: []string{"wait", "timeout"},
 	write:   true,
@@ -52,8 +52,8 @@ var bundleExport = &spec{
 var bundleImport = &spec{
 	name:       "bundle:import",
 	summary:    "create a project from a .vvbundle file",
-	usage:      []string{"vukem-video bundle:import <path> [--as-new]"},
-	example:    "vukem-video bundle:import launch-teaser.vvbundle --as-new",
+	usage:      []string{"stuarty bundle:import <path> [--as-new]"},
+	example:    "stuarty bundle:import launch-teaser.vvbundle --as-new",
 	positional: true,
 	globals:    []string{"dry-run"},
 	write:      true,

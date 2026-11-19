@@ -11,7 +11,7 @@ description: "Which FFmpeg the product ships, how it is found and checked, and w
 
 ## The idea
 
-Vukem Video runs FFmpeg only as a **separate process**. It never links FFmpeg, and the pixels of a frame are composed in Go. The FFmpeg that the container image carries is one pinned LGPL build from [BtbN FFmpeg-Builds](https://github.com/BtbN/FFmpeg-Builds), downloaded by its exact URL and verified by SHA-256 when the image is built. It is configured without `--enable-gpl` and without `--enable-nonfree`, and the build fails if either appears in the configure line. The product ships no GPL component.
+Stuarty runs FFmpeg only as a **separate process**. It never links FFmpeg, and the pixels of a frame are composed in Go. The FFmpeg that the container image carries is one pinned LGPL build from [BtbN FFmpeg-Builds](https://github.com/BtbN/FFmpeg-Builds), downloaded by its exact URL and verified by SHA-256 when the image is built. It is configured without `--enable-gpl` and without `--enable-nonfree`, and the build fails if either appears in the configure line. The product ships no GPL component.
 
 The pin of this release:
 
@@ -22,34 +22,34 @@ The pin of this release:
 | Build scripts commit | `5031c6f1082414e53688d39e521849905071070d` |
 | Corresponding FFmpeg source | [FFmpeg source archive](https://github.com/FFmpeg/FFmpeg/archive/7adfbe40dcde598f93a6963d2f7b22cd75202ccc.tar.gz) |
 
-The licence text, the configure line and these source links are inside the image, in `/usr/share/doc/vukem-video/ffmpeg/` (`LICENSE.txt`, `configure.txt` and `SOURCE.txt`). The packages of the Debian base are listed with their licences in `/usr/share/doc/vukem-video/base-image-packages.txt`.
+The licence text, the configure line and these source links are inside the image, in `/usr/share/doc/stuarty/ffmpeg/` (`LICENSE.txt`, `configure.txt` and `SOURCE.txt`). The packages of the Debian base are listed with their licences in `/usr/share/doc/stuarty/base-image-packages.txt`.
 
 ## How an FFmpeg is found
 
 The order is fixed:
 
-1. `VUKEM_VIDEO_FFMPEG` and `VUKEM_VIDEO_FFPROBE`. When `VUKEM_VIDEO_FFMPEG` is set and unusable the server reports `E_FFMPEG_MISSING`; it never falls back to another one, because you asked for that binary. Both must be absolute paths to files.
+1. `STUARTY_FFMPEG` and `STUARTY_FFPROBE`. When `STUARTY_FFMPEG` is set and unusable the server reports `E_FFMPEG_MISSING`; it never falls back to another one, because you asked for that binary. Both must be absolute paths to files.
 2. The FFmpeg next to the program (bundled).
 3. The `PATH`.
 
 `ffprobe` comes from the same directory as `ffmpeg`. The product is tested on FFmpeg 9.0.2; another version is accepted with a warning and a version below 7 is reported as old. A missing required encoder, filter or muxer is `E_FFMPEG_MISSING`.
 
-The licence of the chosen build is classified from its configure line as `lgpl`, `gpl` or `nonfree`. A bundled build must be `lgpl`. Your own build may be GPL, which is fine for your own use but not for anything you distribute, and `libx264` is used only if you set `VUKEM_VIDEO_ALLOW_USER_X264=true`.
+The licence of the chosen build is classified from its configure line as `lgpl`, `gpl` or `nonfree`. A bundled build must be `lgpl`. Your own build may be GPL, which is fine for your own use but not for anything you distribute, and `libx264` is used only if you set `STUARTY_ALLOW_USER_X264=true`.
 
 ## Quick start
 
 ```bash
-vukem-video doctor --full
-vukem-video doctor --verify
+stuarty doctor --full
+stuarty doctor --verify
 ```
 
 `doctor --full` runs every check and prints the FFmpeg version, its licence class and the H.264 encoders found. `--verify` recomputes the digests of FFmpeg and of the downloaded helpers. It reports "matches the release" only for the pinned FFmpeg (the one in the image, or the pinned pair you place next to the program); any other FFmpeg is "your own build, not compared".
 
 ## Common mistakes
 
-- Setting `VUKEM_VIDEO_FFMPEG` to a relative path or to a directory: refused at start-up as an invalid FFmpeg path.
+- Setting `STUARTY_FFMPEG` to a relative path or to a directory: refused at start-up as an invalid FFmpeg path.
 - Shipping your own GPL FFmpeg inside an image you publish.
-- Expecting the FFmpeg to be able to reach the network. It is never given a network address, and on Linux `VUKEM_VIDEO_SANDBOX=bwrap` makes the operating system enforce it.
+- Expecting the FFmpeg to be able to reach the network. It is never given a network address, and on Linux `STUARTY_SANDBOX=bwrap` makes the operating system enforce it.
 
 ## Next steps
 

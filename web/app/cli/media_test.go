@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/service"
-	"github.com/AlexGalhardo/vukem-video/service/workspace"
+	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/workspace"
 )
 
 // mediaFake answers the media and job methods from scripts.
@@ -293,7 +293,7 @@ func TestExportStartsWaitsAndReportsTheOutcome(t *testing.T) {
 		t.Errorf("a timeout: exit %d, want 2", code)
 	}
 
-	want := "job_3 export running 5%\nstill running: run vukem-video job:show job_3 --wait\n"
+	want := "job_3 export running 5%\nstill running: run stuarty job:show job_3 --wait\n"
 	if h.stdout.String() != want {
 		t.Errorf("stdout = %q, want %q", h.stdout.String(), want)
 	}
@@ -378,7 +378,7 @@ func TestExportSendsTheFrameTimeOfAPNG(t *testing.T) {
 	}
 }
 
-// With VUKEM_VIDEO_URL the path belongs to the server and goes as typed (VV-005): a
+// With STUARTY_URL the path belongs to the server and goes as typed (VV-005): a
 // POSIX path is not rewritten against the Windows working directory.
 func TestAbsKeepsServerPathsWhenRemote(t *testing.T) {
 	h := newHarness(t)

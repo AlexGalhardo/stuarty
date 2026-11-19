@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/AlexGalhardo/vukem/web"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/service"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/vukem/web"
 )
 
 // projectsPrefix starts the paths that name a project.

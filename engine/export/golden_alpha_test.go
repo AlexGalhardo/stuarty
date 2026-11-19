@@ -18,7 +18,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 // The golden cases of the ALPHA scenes (SDD-004 section 11, P2-RND-004). Each case is a folder of
@@ -859,7 +859,7 @@ func TestCompositorBandsEqualBlurAndFilter(t *testing.T) {
 	}
 }
 
-const alphaHashesEnv = "VUKEM_VIDEO_TEST_ALPHA_HASHES"
+const alphaHashesEnv = "STUARTY_TEST_ALPHA_HASHES"
 
 // TestAlphaHashesChild is the second process of TestGoldenAlphaTwice.
 func TestAlphaHashesChild(t *testing.T) {

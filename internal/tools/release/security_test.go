@@ -109,7 +109,7 @@ func TestSecurity_T27_ReleaseWorkflowSigns(t *testing.T) {
 		for _, want := range []string{
 			`cosign sign --yes "$GHCR_IMAGE@$DIGEST"`, `cosign sign --yes "$HUB_IMAGE@$DIGEST"`,
 			`cosign verify "$image@$DIGEST"`, "subject-digest: ${{ steps.build.outputs.digest }}",
-			"subject-name: ghcr.io/alexgalhardo/vukem-video", "subject-name: index.docker.io/alexgalhardo/vukem-video",
+			"subject-name: ghcr.io/alexgalhardo/stuarty", "subject-name: index.docker.io/alexgalhardo/stuarty",
 		} {
 			if !strings.Contains(wf, want) {
 				t.Errorf("release.yml does not contain %q", want)

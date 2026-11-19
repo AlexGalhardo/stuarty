@@ -89,17 +89,17 @@ jobs:
           iscc="$(bash scripts/fetch-installer-tool.sh inno)"
           mkdir -p out
           MSYS2_ARG_CONV_EXCL='*' "$iscc" "/DAppVersion=${VERSION}" "/DFileVersion=${VERSION//./-}" \
-            "/DSourceBinary=$(cygpath -w "$PWD/binaries/windows_amd64/vukem-video.exe")" \
+            "/DSourceBinary=$(cygpath -w "$PWD/binaries/windows_amd64/stuarty.exe")" \
             "/DOutputDir=$(cygpath -w "$PWD/out")" \
-            .config/installers/windows/vukem-video.iss
+            .config/installers/windows/stuarty.iss
           ls -l out
       - name: Test the installer
         shell: pwsh
-        run: ./.config/installers/windows/smoke-test.ps1 -Installer (Get-ChildItem out/vukem-video-*.exe).FullName
+        run: ./.config/installers/windows/smoke-test.ps1 -Installer (Get-ChildItem out/stuarty-*.exe).FullName
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: installer-windows
-          path: out/vukem-video-*.exe
+          path: out/stuarty-*.exe
           if-no-files-found: error
 
   appimage:
@@ -118,8 +118,8 @@ jobs:
           path: binaries
       - name: Build the AppImage
         run: |
-          chmod +x binaries/linux_amd64/vukem-video
-          bash .config/installers/linux/build-appimage.sh binaries/linux_amd64/vukem-video "$VERSION" out
+          chmod +x binaries/linux_amd64/stuarty
+          bash .config/installers/linux/build-appimage.sh binaries/linux_amd64/stuarty "$VERSION" out
       - name: Test the AppImage
         run: bash .config/installers/linux/smoke-test.sh appimage out/*.AppImage
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -156,7 +156,7 @@ jobs:
       - name: Test the package
         run: |
           sudo apt-get install -y --no-install-recommends desktop-file-utils
-          bash .config/installers/linux/smoke-test.sh deb dist/vukem-video_*_linux_amd64.deb
+          bash .config/installers/linux/smoke-test.sh deb dist/stuarty_*_linux_amd64.deb
 
   macos:
     name: macOS package (${{ matrix.arch }})
@@ -178,8 +178,8 @@ jobs:
           path: binaries
       - name: Build the package
         run: |
-          chmod +x binaries/darwin_${{ matrix.arch }}/vukem-video
-          bash .config/installers/macos/build-pkg.sh binaries/darwin_${{ matrix.arch }}/vukem-video "$VERSION" ${{ matrix.arch }} out
+          chmod +x binaries/darwin_${{ matrix.arch }}/stuarty
+          bash .config/installers/macos/build-pkg.sh binaries/darwin_${{ matrix.arch }}/stuarty "$VERSION" ${{ matrix.arch }} out
       # macos-latest is an Apple silicon machine: only the arm64 package runs here.
       - name: Test the package
         if: matrix.arch == 'arm64'

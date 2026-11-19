@@ -33,7 +33,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     env:
-      VUKEM_VIDEO_DETECT_ONLY: "1"
+      STUARTY_DETECT_ONLY: "1"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -63,7 +63,7 @@ jobs:
         run: |
           {
             echo '### Detection results (${{ matrix.os }})'
-            for f in "$RUNNER_TEMP"/detect-tmp/vukem-video-e2e-detect-results/*.json; do
+            for f in "$RUNNER_TEMP"/detect-tmp/stuarty-e2e-detect-results/*.json; do
               [ -e "$f" ] || { echo 'no results file'; break; }
               echo "- $(basename "$f"): verdict $(grep -o '"verdict": *"[a-z]*"' "$f" | head -1)"
             done
@@ -73,7 +73,7 @@ jobs:
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: desktop-detect-${{ matrix.os }}
-          path: ${{ runner.temp }}/detect-tmp/vukem-video-e2e-detect-results/*.json
+          path: ${{ runner.temp }}/detect-tmp/stuarty-e2e-detect-results/*.json
           if-no-files-found: warn
 
   # The shell (Wails v3, ADR-0023) is a module of its own, so no other job

@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 // The values a shadow and an outline start with when the command does not give them (VV-122).

@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	httpapi "github.com/AlexGalhardo/vukem-video/web/app/http"
+	httpapi "github.com/AlexGalhardo/stuarty/web/app/http"
 )
 
 // hostRow is one line of testdata/hosts.txt with the port filled in.

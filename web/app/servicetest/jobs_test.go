@@ -15,12 +15,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/vukem/queue"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
+	"github.com/AlexGalhardo/stuarty/engine/ingest"
+	"github.com/AlexGalhardo/stuarty/service"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
-	"github.com/AlexGalhardo/vukem-video/engine/ingest"
-	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/vukem/queue"
 )
 
 type exportFn func(ctx context.Context, in service.ExportInput) (*service.ExportOutput, error)
@@ -297,7 +297,7 @@ func TestJobStartGates(t *testing.T) {
 	}
 }
 
-// With VUKEM_VIDEO_MAX_EXPORTS=2 the third start is E_QUEUE_FULL naming the two
+// With STUARTY_MAX_EXPORTS=2 the third start is E_QUEUE_FULL naming the two
 // jobs and creates no row; 20 concurrent starts create exactly 2 (check 30).
 func TestExportLimit(t *testing.T) {
 	m := newMediaEnv(t, mediaCfg{exporter: goodExporter(), noQueue: true, limits: service.Limits{MaxExports: 2}})
@@ -319,7 +319,7 @@ func TestExportLimit(t *testing.T) {
 	se := serviceError(t, err)
 	if se.Code != service.CodeQueueFull || !se.Retryable || se.HTTPStatus() != 429 ||
 		se.Details["limit"] != "exports" ||
-		se.Details["variable"] != "VUKEM_VIDEO_MAX_EXPORTS" {
+		se.Details["variable"] != "STUARTY_MAX_EXPORTS" {
 		t.Fatalf("error = %+v", se)
 	}
 

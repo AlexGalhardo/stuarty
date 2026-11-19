@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/core/plan"
+	"github.com/AlexGalhardo/stuarty/core/plan"
 )
 
 // A second call at the same revision is served from the cache; another

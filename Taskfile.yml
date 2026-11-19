@@ -194,14 +194,14 @@ tasks:
       - npm run check:last-updated
 
   image:build:
-    desc: Build the container image as vukem-video:local
+    desc: Build the container image as stuarty:local
     cmds:
-      - docker build -f .config/docker/vukem-video.Dockerfile -t vukem-video:local .
+      - docker build -f .config/docker/stuarty.Dockerfile -t stuarty:local .
 
   image:smoke:
     desc: Smoke test the image built by image:build
     cmds:
-      - bash scripts/image-smoke.sh vukem-video:local
+      - bash scripts/image-smoke.sh stuarty:local
 
   notices:
     desc: Regenerate THIRD_PARTY_NOTICES.md and the licence texts under licenses/

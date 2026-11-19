@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/web/contract/testenv"
+	"github.com/AlexGalhardo/stuarty/web/contract/testenv"
 )
 
 // NFR-023 (SDD-003 section 9 check 9): a nine-cell sheet takes under 2 s and a

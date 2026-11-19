@@ -19,9 +19,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
-	"github.com/AlexGalhardo/vukem-video/service/workspace"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
+	"github.com/AlexGalhardo/stuarty/service/workspace"
 )
 
 // P4-SRV-001 (SDD-005 sections 7 and 8, section 18 checks 3, 4, 17 and 26).
@@ -52,7 +52,7 @@ import (
 const (
 	// UpgradeWorkspacesEnv names the folder that holds one workspace per released version.
 	UpgradeWorkspacesEnv = "VUKEM_UPGRADE_WORKSPACES"
-	// UpgradeBinariesEnv names the folder that holds <version>/vukem-video[.exe]; the released binaries
+	// UpgradeBinariesEnv names the folder that holds <version>/stuarty[.exe]; the released binaries
 	// give the documents as they were before the upgrade and are the older binaries of the refusal test.
 	UpgradeBinariesEnv = "VUKEM_UPGRADE_BINARIES"
 	// UpgradeCandidateEnv names the binary of this build; without it the test builds ./web/cmd/app.
@@ -125,7 +125,7 @@ func candidateBinary(t *testing.T) string {
 		return p
 	}
 
-	exe := filepath.Join(t.TempDir(), "vukem-video")
+	exe := filepath.Join(t.TempDir(), "stuarty")
 	if runtime.GOOS == "windows" {
 		exe += ".exe"
 	}
@@ -138,8 +138,10 @@ func candidateBinary(t *testing.T) string {
 	return exe
 }
 
+// releasedBinary finds the binary of a release; one before v0.30.0 has the former name (ADR-0044).
+
 func releasedBinary(dir, version string) string {
-	for _, name := range []string{"vukem-video", "vukem-video.exe"} {
+	for _, name := range []string{"stuarty", "stuarty.exe", "vukem-video", "vukem-video.exe"} {
 		p := filepath.Join(dir, version, name)
 		if _, err := os.Stat(p); err == nil {
 			return p
@@ -671,7 +673,10 @@ func TestUpgradeOlderBinaryRefusesCandidate(t *testing.T) {
 
 	binaries := os.Getenv(UpgradeBinariesEnv)
 	if binaries == "" {
-		t.Skipf("%s is not set: it names the folder with <version>/vukem-video[.exe]", UpgradeBinariesEnv)
+		t.Skipf( // verify:env-skip the upgrade matrix runs from scripts/upgrade-test.sh
+			"%s is not set: it names the folder with <version>/stuarty[.exe]",
+			UpgradeBinariesEnv,
+		)
 	}
 
 	candidate := candidateBinary(t)

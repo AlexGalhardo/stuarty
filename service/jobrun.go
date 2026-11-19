@@ -17,11 +17,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
-	"github.com/AlexGalhardo/vukem-video/engine/ingest"
-	"github.com/AlexGalhardo/vukem-video/service/logging"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
+	"github.com/AlexGalhardo/stuarty/engine/ingest"
+	"github.com/AlexGalhardo/stuarty/service/logging"
 )
 
 const (
@@ -364,7 +364,7 @@ func (s *svc) missingFFmpeg() error {
 		Reason:  "ffmpeg_missing",
 		Message: "No usable FFmpeg was found (looked at: the configured path, next to the program, the PATH).",
 		Hint: `Install FFmpeg 7 or newer, or set ` + ffmpeg.EnvFFmpeg +
-			` to its path. Run "vukem-video doctor" for details.`,
+			` to its path. Run "stuarty doctor" for details.`,
 	}
 }
 
@@ -669,7 +669,7 @@ func (s *svc) completePending(ctx context.Context, hash, jobID string) []string 
 
 // checkDisk refuses work while the volume of the workspace is under the free
 // space floor (SDD-007 section 9.2 item 4).
-// exportSizeLimitReason is details.reason of an export that passed VUKEM_VIDEO_MAX_EXPORT_BYTES, the
+// exportSizeLimitReason is details.reason of an export that passed STUARTY_MAX_EXPORT_BYTES, the
 // same one engine/export gives (SDD-007 section 9.1).
 const exportSizeLimitReason = "size_limit"
 
@@ -683,7 +683,7 @@ func (s *svc) exportSizeDetails(err error) error {
 
 	return fromEngine(err).
 		withDetail("limit", "export_bytes").withDetail("ceiling", s.limits.MaxExportBytes).
-		withDetail("variable", "VUKEM_VIDEO_MAX_EXPORT_BYTES")
+		withDetail("variable", "STUARTY_MAX_EXPORT_BYTES")
 }
 
 func (s *svc) checkDisk() *Error {
@@ -695,9 +695,9 @@ func (s *svc) checkDisk() *Error {
 	if err == nil && free < uint64(s.limits.MinFreeBytes) {
 		return newError("E_LIMIT_EXCEEDED", "The disk of the workspace has too little free space.").
 			withHint("free space on the disk of the workspace; the person running the server can lower "+
-				"VUKEM_VIDEO_MIN_FREE_BYTES").
+				"STUARTY_MIN_FREE_BYTES").
 			withLimit("free_bytes", free, s.limits.MinFreeBytes).withDetail("reason", "disk_low").
-			withDetail("variable", "VUKEM_VIDEO_MIN_FREE_BYTES")
+			withDetail("variable", "STUARTY_MIN_FREE_BYTES")
 	}
 
 	return nil
@@ -781,15 +781,15 @@ func (s *svc) runExport(ctx context.Context, job *JobRow, pw *progress) (json.Ra
 
 		return nil, newError(
 			CodeExportFailed,
-			"The export is %s; the export limit is %s (VUKEM_VIDEO_MAX_EXPORT_BYTES).",
+			"The export is %s; the export limit is %s (STUARTY_MAX_EXPORT_BYTES).",
 			have,
 			ceiling,
 		).
 			withHint("export a shorter range or a smaller frame size; the person running the server can raise "+
-				"VUKEM_VIDEO_MAX_EXPORT_BYTES").
+				"STUARTY_MAX_EXPORT_BYTES").
 			withDetail("reason", exportSizeLimitReason).
 			withLimit("export_bytes", res.Bytes, s.limits.MaxExportBytes).
-			withDetail("variable", "VUKEM_VIDEO_MAX_EXPORT_BYTES")
+			withDetail("variable", "STUARTY_MAX_EXPORT_BYTES")
 	}
 
 	fps := doc.Settings.FPS

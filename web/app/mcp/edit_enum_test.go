@@ -5,7 +5,7 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/stuarty/core/command"
 )
 
 // The op enum of the edit tool is written by hand in definitions/edit.json; it

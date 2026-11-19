@@ -11,8 +11,8 @@ import (
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/web/app/agentdocs"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/web/app/agentdocs"
 )
 
 func TestToolListHasTheToolsWhoseOperationsExist(t *testing.T) {
@@ -64,11 +64,11 @@ func TestInitializeCarriesTheInstructions(t *testing.T) {
 	cs := connect(t, newService(t), Options{Version: "1.2.3"}, "x")
 
 	init := cs.InitializeResult()
-	if init.ServerInfo.Name != "vukem-video" || init.ServerInfo.Version != "1.2.3" {
+	if init.ServerInfo.Name != "stuarty" || init.ServerInfo.Version != "1.2.3" {
 		t.Errorf("server info = %+v", init.ServerInfo)
 	}
 
-	if !strings.HasPrefix(init.Instructions, "Vukem Video is a video editor") {
+	if !strings.HasPrefix(init.Instructions, "Stuarty is a video editor") {
 		t.Errorf("instructions = %.60q", init.Instructions)
 	}
 
@@ -442,7 +442,7 @@ func TestInstructionsHead(t *testing.T) {
 	text := agentdocs.Instructions()
 	first, _, _ := strings.Cut(text, "\n")
 
-	if !strings.HasPrefix(text, "Vukem Video is") || len(first) != 511 || len([]rune(text)) < 512 {
+	if !strings.HasPrefix(text, "Stuarty is") || len(first) != 507 || len([]rune(text)) < 512 {
 		t.Fatalf("first paragraph is %d characters", len(first))
 	}
 
@@ -632,9 +632,9 @@ func TestValidationSaysWhatIsAccepted(t *testing.T) {
 func TestServerInfoCarriesTheDescription(t *testing.T) {
 	t.Parallel()
 
-	cs := connect(t, newService(t), Options{Description: "Vukem Video MCP server for the workspace W"}, "x")
+	cs := connect(t, newService(t), Options{Description: "Stuarty MCP server for the workspace W"}, "x")
 
-	if got := cs.InitializeResult().ServerInfo.Description; got != "Vukem Video MCP server for the workspace W" {
+	if got := cs.InitializeResult().ServerInfo.Description; got != "Stuarty MCP server for the workspace W" {
 		t.Errorf("serverInfo.description = %q", got)
 	}
 }

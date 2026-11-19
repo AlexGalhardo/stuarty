@@ -5,11 +5,11 @@ import (
 	"path/filepath"
 	"testing"
 
-	vukem "github.com/AlexGalhardo/vukem"
+	"github.com/AlexGalhardo/stuarty/internal/outbound"
+	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/workspace"
 
-	"github.com/AlexGalhardo/vukem-video/internal/outbound"
-	"github.com/AlexGalhardo/vukem-video/service"
-	"github.com/AlexGalhardo/vukem-video/service/workspace"
+	vukem "github.com/AlexGalhardo/vukem"
 )
 
 // ADR-0022 item 8: a new workspace lists exactly the 3 starter templates, and

@@ -1,0 +1,14 @@
+#!/bin/sh
+# Runs after the files of the package are in place (pkgbuild --scripts). The package keeps the identifier
+# of Vukem Video (ADR-0044), so on a Mac that has it this is an upgrade: stop its server, which owns its
+# workspace until it ends, make the former command run stuarty, so what called vukem-video (an agent MCP
+# config, a script) keeps working, and remove the former launcher app now that the new one is in place.
+# The workspace folders are never touched.
+set -eu
+
+pkill -x vukem-video 2>/dev/null || true
+ln -sf stuarty /usr/local/bin/vukem-video
+if [ -d "/Applications/Stuarty.app" ]; then
+	rm -rf "/Applications/Vukem Video.app"
+fi
+exit 0

@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Stuarty Desktop
+GenericName=Video editor
+Comment=Edit video with Stuarty in a native window
+Exec=/usr/lib/stuarty-desktop/stuarty-desktop
+Icon=stuarty-desktop
+Terminal=false
+Categories=AudioVideo;Video;AudioVideoEditing;
+Keywords=video;editor;captions;
+StartupNotify=true
