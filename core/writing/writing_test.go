@@ -98,6 +98,19 @@ func TestCaptionWeightedCountOfX(t *testing.T) {
 		{"the dot after a link is text", "go to https://example.com.", 6 + 23 + 1},
 		{"nfc composes", "é", 1}, // e + combining acute is one character after NFC
 		{"punctuation in the first range", "a—b", 3},
+		// An emoji weighs 2 whatever its code points: a presentation selector, a skin tone, a joined sequence,
+		// a flag, a keycap and a tag sequence are one emoji each (docs.x.com/fundamentals/counting-characters).
+		{"one emoji", "\U0001F600", 2},
+		{"emoji presentation", "\U00002764\U0000FE0F", 2},
+		{"skin tone", "\U0001F44D\U0001F3FD", 2},
+		{"joined family", "\U0001F468\U0000200D\U0001F469\U0000200D\U0001F467", 2},
+		{"joined with presentation", "\U0001F3F3\U0000FE0F\U0000200D\U0001F308", 2},
+		{"flag", "\U0001F1E7\U0001F1F7", 2},
+		{"two flags", "\U0001F1E7\U0001F1F7\U0001F1F5\U0001F1F9", 4},
+		{"keycap", "1\U0000FE0F\U000020E3", 2},
+		{"tag sequence", "\U0001F3F4\U000E0067\U000E0062\U000E0065\U000E006E\U000E0067\U000E007F", 2},
+		{"emoji between words", "hi \U00002764\U0000FE0F you", 3 + 2 + 4},
+		{"a joiner between letters stays", "a\U0000200Db", 3},
 	}
 
 	for _, tc := range cases {
