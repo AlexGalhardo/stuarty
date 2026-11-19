@@ -5,12 +5,23 @@ import (
 	"testing"
 )
 
+// timelineMapOnly is a store whose only answer is that an id is the timeline of no project: every other call
+// panics on the nil interfaces it embeds.
+type timelineMapOnly struct{ Store }
+
+func (timelineMapOnly) Productions() ProductionRepo { return noTimelines{} }
+
+type noTimelines struct{ ProductionRepo }
+
+func (noTimelines) ProjectOfTimeline(context.Context, string) (string, error) { return "", ErrNotFound }
+
 // TestBriefingRefusesBeforeTouchingTheStore: the scope and the answers are checked before any read or write,
-// so a store that panics on a call proves it was not reached.
+// so a store that panics on a call proves it was not reached. The one read allowed is the project of the
+// timeline an id names, which a key limited to one project needs before it is refused (VV-250).
 func TestBriefingRefusesBeforeTouchingTheStore(t *testing.T) {
 	t.Parallel()
 
-	s := &svc{}
+	s := &svc{store: timelineMapOnly{}}
 	valid := map[string]string{
 		"audience": "makers", "goal": "sell", "platform": "tiktok", "format": "vertical-9x16", "duration": "30",
 	}
