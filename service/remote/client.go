@@ -400,6 +400,43 @@ func (c *Client) JobStart(ctx context.Context, req service.JobStartRequest) (*se
 	return jobText(post[service.Job](ctx, c, projectPath(req.ProjectID, "/jobs"), body))
 }
 
+// ExportPresetList implements service.Service.
+func (c *Client) ExportPresetList(
+	ctx context.Context,
+	req service.ExportPresetListRequest,
+) (*service.ExportPresetListResult, error) {
+	q := url.Values{}
+	if req.Codecs {
+		q.Set("codecs", "true")
+	}
+
+	return get[service.ExportPresetListResult](ctx, c, "/export-presets", q)
+}
+
+// ExportCheck implements service.Service.
+func (c *Client) ExportCheck(
+	ctx context.Context,
+	req service.ExportCheckRequest,
+) (*service.ExportCheckResult, error) {
+	q := url.Values{}
+	setIf(q, "preset", req.Preset)
+	setIf(q, "start", req.Start)
+	setIf(q, "end", req.End)
+	setIf(q, "codec", req.Codec)
+
+	return get[service.ExportCheckResult](ctx, c, projectPath(req.ProjectID, "/export-check"), q)
+}
+
+// ExportBatch implements service.Service.
+func (c *Client) ExportBatch(ctx context.Context, req service.ExportBatchRequest) (*service.Job, error) {
+	body := struct {
+		Items  []service.ExportBatchItem `json:"items"`
+		WaitMS int                       `json:"wait_ms,omitempty"`
+	}{req.Items, req.WaitMS}
+
+	return jobText(post[service.Job](ctx, c, projectPath(req.ProjectID, "/export-batches"), body))
+}
+
 // jobText turns the HTTP form of the next call in the text of a job ("call GET /api/v1/jobs/{id}")
 // back to the tool names, so the surface that relays the job names its own commands (VV-200).
 func jobText(j *service.Job, err error) (*service.Job, error) {

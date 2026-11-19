@@ -100,6 +100,11 @@ type Service interface {
 	// AssetList lists the files the projects hold, by content hash, for the picker of a brand logo (VV-117).
 	AssetList(ctx context.Context, req AssetListRequest) (*AssetListResult, error)
 	ExportFile(ctx context.Context, req ExportFileRequest) (*File, error)
+	// ExportPresetList, ExportCheck and ExportBatch are the export presets, the check against one and the batch of
+	// exports of SDD-004 sections 8.2 to 8.4 (RF-087 to RF-089).
+	ExportPresetList(ctx context.Context, req ExportPresetListRequest) (*ExportPresetListResult, error)
+	ExportCheck(ctx context.Context, req ExportCheckRequest) (*ExportCheckResult, error)
+	ExportBatch(ctx context.Context, req ExportBatchRequest) (*Job, error)
 	AuditList(ctx context.Context, req AuditListRequest) (*AuditListResult, error)
 
 	// Doctor is the diagnostic report (SDD-003 section 2, SDD-011 section 8.6).
