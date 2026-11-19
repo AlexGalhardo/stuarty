@@ -120,12 +120,14 @@ func (s *svc) startApprovable(ctx context.Context, c Caller, req JobStartRequest
 		return nil, asError(perr)
 	}
 
+	// The summary is usually made of what the caller sent (the text of a post, a prompt), so a refusal
+	// is the caller's to fix, not a bug to report (SDD-015 section 5).
 	if terr := checkText("summary", prep.Summary, core.ValidSummary); terr != nil {
-		return nil, newError(
-			command.CodeInternal,
-			"the job kind %s described the action with text that cannot be shown.",
-			k.Name,
-		)
+		return nil, newError(command.CodeValidation,
+			"the action of %s cannot be shown to a person: its summary is empty, longer than %d characters, "+
+				"or has a control or invisible character.", k.Name, core.MaxSummary).
+			withPath("args").
+			withHint("remove control and invisible characters from the text of the action, and shorten it")
 	}
 
 	projectID := row.ID
