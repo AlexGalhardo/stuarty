@@ -12,7 +12,6 @@ import { installDebugHooks } from "./editor/boot/debugHooks";
 import EditorApp from "./editor/boot/EditorApp";
 import { FailurePage, failureOf } from "./editor/boot/ErrorBoundary";
 import { reconcileUrl } from "./editor/boot/locale";
-import { setBuildPhase } from "./editor/boot/phase";
 import { loadUserNames } from "./editor/boot/userNames";
 import { readLocale } from "./editor/state/prefs";
 import { createRuntime } from "./editor/state/runtime";
@@ -99,7 +98,6 @@ async function main(): Promise<void> {
 	}
 	installStyleNonce();
 	if (debug) installDebugHooks(runtime, mismatches);
-	setBuildPhase(bootstrap.phase);
 
 	document.documentElement.lang = bootstrap.locale;
 	createRoot(root).render(
