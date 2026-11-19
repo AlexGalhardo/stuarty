@@ -1,0 +1,8 @@
+{
+  "code": "E_VALIDATION",
+  "hint": "Keep each value inside the range the message gives.",
+  "message": "the rectangle of the mask leaves the box of the layer",
+  "op_index": 0,
+  "path": "args",
+  "retryable": false
+}

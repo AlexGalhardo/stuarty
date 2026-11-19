@@ -1,0 +1,16 @@
+[
+  {
+    "changes": {
+      "mask": [
+        null,
+        {
+          "invert": true,
+          "kind": "layer",
+          "source": "lyr_dddddddddd"
+        }
+      ]
+    },
+    "id": "lyr_bbbbbbbbbb",
+    "kind": "layer.updated"
+  }
+]
