@@ -304,7 +304,10 @@ func TestAdoptFormerWorkspace(t *testing.T) {
 
 		// A symbolic link is not copied: the adoption stops instead of guessing.
 		if err := os.Symlink(filepath.Join(former, "token"), filepath.Join(former, "link")); err != nil {
-			t.Skipf("no symbolic links here: %v", err)
+			t.Skipf( // verify:env-skip creating a symbolic link needs a privilege on Windows
+				"no symbolic links here: %v",
+				err,
+			)
 		}
 
 		crossing := func(string, string) error { return &os.LinkError{Op: "rename", Err: errCrossDevice} }
