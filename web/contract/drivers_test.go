@@ -459,8 +459,6 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 		return "font_import", args, nil
 	case "ConnectionList", "ConnectionGet":
 		return "connection", args, nil
-	case "ApprovalList", "ApprovalGet":
-		return "approval", args, nil
 	case "MediaList":
 		return "media_inspect", args, nil
 	case "MediaInspect":

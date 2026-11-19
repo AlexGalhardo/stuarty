@@ -132,6 +132,18 @@
       ]
     },
     {
+      "tag": "Images",
+      "pages": [
+        "images.list",
+        "images.create",
+        "images.get",
+        "images.edit",
+        "images.export",
+        "images.redo",
+        "images.undo"
+      ]
+    },
+    {
       "tag": "Approvals",
       "pages": [
         "approval-rules.list",
@@ -197,7 +209,9 @@
       "template",
       "font_import",
       "connection",
-      "approval"
+      "image",
+      "project_item",
+      "library"
     ],
     "operations": [
       "asset.remove",

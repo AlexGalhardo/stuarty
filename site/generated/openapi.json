@@ -3169,6 +3169,38 @@
         },
         "type": "object"
       },
+      "MemoryGetResult": {
+        "properties": {
+          "body": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "entry": {
+            "$ref": "#/components/schemas/LibraryEntry"
+          },
+          "text": {
+            "type": "string"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "MemoryWriteResult": {
+        "properties": {
+          "entry": {
+            "$ref": "#/components/schemas/LibraryEntry"
+          },
+          "text": {
+            "type": "string"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "Money": {
         "properties": {
           "currency": {

@@ -272,6 +272,7 @@ type svc struct {
 	keys        KeyStore
 	conns       *connections.Manager
 	kinds       map[string]*ApprovableKind
+	lib         *library.Manager // the files of memory, skills and prompts; nil without a workspace
 	heavy       RateLimiter
 	heavyLimitN int
 	log         *slog.Logger

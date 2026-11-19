@@ -61,6 +61,9 @@ type spec struct {
 	// offline is true for a command that needs no Service: it never opens the
 	// workspace and c.svc is nil.
 	offline bool
+	// person is true for a command only a person in the app may succeed at (SDD-015 section 4): it
+	// exists so that an agent that tries gets the stable refusal, and the skill for agents leaves it out.
+	person bool
 	// pending names the task that delivers the command; the handler is a stub until then.
 	pending string
 	run     handler

@@ -4,9 +4,9 @@ import "github.com/AlexGalhardo/vukem/schema"
 
 // The approval queue, its rules, the cost ceilings and the cost ledger (SDD-015 section 3, ADR-0032).
 // Amounts are integers in millionths of a currency unit. No table holds a secret.
-func m20261119110000CreateApprovalTables() schema.Migration {
+func m20261119140000CreateApprovalTables() schema.Migration {
 	return schema.Migration{
-		ID: "20261119110000_create_approval_tables",
+		ID: "20261119140000_create_approval_tables",
 		Up: func(s *schema.Schema) error {
 			stmts := []string{
 				`CREATE TABLE approval_requests (

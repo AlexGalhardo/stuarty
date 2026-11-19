@@ -3,7 +3,7 @@
 - Status: Draft (2026-11-19). Written by epic 05; the code follows in the same epic.
 - Depends on: ADR-0032 (publishing and costly generation wait for a person), ADR-0018 (jobs), ADR-0020 (a privileged browser session), ADR-0033, SDD-000 (names), SDD-005 (jobs and audit), SDD-006 (events), SDD-007 (threat model, scope matrix), SDD-014 (connections)
 - Implements: PRD-002 RF-132, RF-135, RF-136; PRD-004 RF-362, RF-363, RF-364, RF-365
-- Owner area: `core/approval/`, `service/approval/`, the approval operations and the job wiring in `service/`, the controllers, commands and tool in `web/app/`, the approval queue and the rules screen in `web/resources/js/dashboard/approval/`
+- Owner area: `core/approval/`, `service/approval/`, the approval operations and the job wiring in `service/`, the controllers and commands in `web/app/`, the approval queue and the rules screen in `web/resources/js/dashboard/approval/`
 
 ## Contents
 
