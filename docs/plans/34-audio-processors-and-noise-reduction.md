@@ -42,7 +42,7 @@ A creator who recorded in their bedroom gets a voice that sounds clean and even:
 - [x] 3. Implement the equaliser (bands, high-pass, low-pass). Verify: `go test ./engine/audio/... -run TestEqualiser` passes (frequency response within stated bounds; golden WAV).
 - [x] 4. Implement the compressor, the gate and the de-esser; extend the limiter. Verify: `go test ./engine/audio/... -run "TestCompressor|TestGate|TestDeEsser|TestLimiter"` passes.
 - [x] 5. Implement spectral noise reduction with a marked or estimated profile. Verify: `go test ./engine/audio/... -run TestNoiseReduction` passes (noise floor reduced by a stated amount on the fixtures; speech band preserved within bounds).
-- [ ] 6. Wire the chain into the mixer for clips and tracks, in preview and export. Verify: `go test ./engine/export/... -run TestAudioChain` passes and the exported audio equals the previewed render for the same revision.
+- [x] 6. Wire the chain into the mixer for clips and tracks, in preview and export. Verify: `go test ./engine/export/... -run TestAudioChain` passes and the exported audio equals the previewed render for the same revision.
 - [ ] 7. Implement the presets and `AudioMeasure`. Verify: `go test ./service/... -run "TestAudioPreset|TestAudioMeasure"` passes.
 - [ ] 8. Expose on the three surfaces and regenerate documents. Verify: `go test ./web/contract/...` and `task generate:check` pass.
 - [ ] 9. Build the audio inspector (chain, per-processor controls, presets, before and after meters), in both languages. Verify: `task test:web`, `bun run check:thin-client` and `web/e2e/specs/audio-processors.spec.ts` pass.
