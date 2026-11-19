@@ -1491,6 +1491,24 @@
           "ease_in_out": "Entrada e saída suaves",
           "hold": "Manter",
           "bezier": "Curva personalizada"
+        },
+        "curve": "Curva",
+        "curve_edit": "Editar a curva do quadro-chave de {property} em {time}",
+        "curve_close": "Fechar o editor de curva do quadro-chave de {property} em {time}",
+        "curve_plot": "Curva do quadro-chave de {property}",
+        "curve_hint": "Arraste as duas alças, mova uma com as setas (Shift para um passo maior) ou digite os quatro números.",
+        "curve_handle": "Ponto de controle {n} da curva",
+        "curve_handle_value": "x {x}; y {y}",
+        "curve_preset": "Curva nomeada",
+        "curve_preset_of": "Curva nomeada para o quadro-chave de {property}",
+        "curve_preset_none": "Escolha uma...",
+        "curve_number": "{name} da curva de {property}",
+        "curve_preset_name": {
+          "in": "Entrada suave",
+          "out": "Saída suave",
+          "in_out": "Entrada e saída suaves",
+          "back": "Recuo (puxa para trás primeiro)",
+          "overshoot": "Ultrapassagem (passa do ponto, depois assenta)"
         }
       },
       "effects": {
@@ -1565,6 +1583,33 @@
           "zoom_in": "Aproximar",
           "slide_left": "Deslizar para a esquerda",
           "slide_right": "Deslizar para a direita"
+        }
+      },
+      "motion": {
+        "title": "Predefinições de movimento",
+        "preset": "Predefinição",
+        "direction": "Direção",
+        "duration_default": "0,5s",
+        "amount_default": "Padrão",
+        "preset_name": {
+          "fade": "Esmaecer",
+          "slide": "Deslizar",
+          "scale": "Escala",
+          "pop": "Surgir",
+          "push_in": "Aproximar devagar",
+          "pull_out": "Afastar devagar"
+        },
+        "direction_name": {
+          "left": "Da esquerda",
+          "right": "Da direita",
+          "up": "De cima",
+          "down": "De baixo"
+        },
+        "amount_of": {
+          "slide": "Distância (px)",
+          "scale": "Escala inicial",
+          "push_in": "Fator de zoom",
+          "pull_out": "Fator de zoom"
         }
       },
       "template": {
