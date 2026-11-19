@@ -2,8 +2,9 @@ package servicetest
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"slices"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -39,7 +40,7 @@ func (e *env) newText(projectID, title, kind, body string) service.TextItem {
 func wantServiceError(t *testing.T, err error, code string) *service.Error {
 	t.Helper()
 
-	e, ok := err.(*service.Error)
+	e, ok := errors.AsType[*service.Error](err)
 	if !ok || e == nil || e.Code != code {
 		t.Fatalf("want %s, got %v", code, err)
 	}
@@ -223,7 +224,7 @@ func TestTextRevisionsKeepAtMost500(t *testing.T) {
 	it := e.newText(prj, "T", "copy", "0")
 
 	for i := 1; i <= 502; i++ {
-		e.writeText(prj, service.TextWriteRequest{ItemID: it.ID, Text: fmt.Sprint(i)})
+		e.writeText(prj, service.TextWriteRequest{ItemID: it.ID, Text: strconv.Itoa(i)})
 	}
 
 	var all []service.TextRevision
