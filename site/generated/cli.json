@@ -3027,6 +3027,7 @@
     },
     {
       "name": "social:network:list",
+      "domain": "publish",
       "summary": "list the social networks this build can publish to, with their limits and where they were read",
       "usage": [
         "stuarty social:network:list"
@@ -3041,6 +3042,7 @@
     },
     {
       "name": "social:connect",
+      "domain": "publish",
       "summary": "start the sign-in to a network with your own developer app; the client secret is read from standard input or a file, never from an argument",
       "usage": [
         "stuarty social:connect --network <n> --client-id <id> --redirect-uri <url> [--label <t>]",
@@ -3088,6 +3090,7 @@
     },
     {
       "name": "social:account:list",
+      "domain": "publish",
       "summary": "list the connected social accounts and whether each is signed in",
       "usage": [
         "stuarty social:account:list"
@@ -3102,6 +3105,7 @@
     },
     {
       "name": "publish:validate",
+      "domain": "publish",
       "summary": "check a post against the limits of its network and show what a person would approve; sends nothing",
       "usage": [
         "stuarty publish:validate --project <id> --connection <id> --export <job> --title <t> --made-for-kids yes|no"
@@ -3165,6 +3169,7 @@
     },
     {
       "name": "publish:now",
+      "domain": "publish",
       "summary": "prepare the publication of an exported video: it waits for a person to approve it in the app, then it is sent; you cannot approve it",
       "usage": [
         "stuarty publish:now --project <id> --connection <id> --export <job> --title <t> --made-for-kids yes|no"
@@ -3229,6 +3234,7 @@
     },
     {
       "name": "publish:status",
+      "domain": "publish",
       "summary": "show the state of a publication: waiting_approval, uploading, processing, published or failed",
       "usage": [
         "stuarty publish:status <job id>"

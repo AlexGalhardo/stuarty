@@ -24,6 +24,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/service/connections"
 	"github.com/AlexGalhardo/stuarty/service/connections/oauth"
 	"github.com/AlexGalhardo/stuarty/service/library"
+	"github.com/AlexGalhardo/stuarty/service/providers"
 	"github.com/AlexGalhardo/stuarty/service/social"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
 )
@@ -275,6 +276,9 @@ type Options struct {
 	// Social is the registry of the social network connectors (SDD-020); without one the build publishes
 	// to no network and the social operations answer empty lists.
 	Social *social.Registry
+	// Providers is the registry of the AI providers, with their adapters registered (SDD-016); without one
+	// the service has a registry with no provider, so no generation can start.
+	Providers *providers.Registry
 	// JobKinds are the job kinds that need approval, registered by the epics of publishing and
 	// generation (SDD-015 section 5). The product registers none of its own; tests register one.
 	JobKinds []ApprovableKind
@@ -312,6 +316,7 @@ type svc struct {
 	kinds       map[string]*ApprovableKind
 	social      *social.Registry
 	flows       *oauth.Flows
+	providers   *providers.Registry
 	lib         *library.Manager // the files of memory, skills and prompts; nil without a workspace
 	heavy       RateLimiter
 	heavyLimitN int
@@ -396,6 +401,15 @@ func New(o Options) (Service, error) {
 
 	if s.social != nil {
 		s.social.Bind(s.conns)
+	}
+
+	if s.providers == nil {
+		prices := ""
+		if s.workspace != "" {
+			prices = filepath.Join(s.workspace, "providers", providers.PriceFile)
+		}
+
+		s.providers = providers.NewRegistry(s.conns, providers.NewPriceBook(prices), s.now)
 	}
 
 	s.sems = map[string]chan struct{}{
