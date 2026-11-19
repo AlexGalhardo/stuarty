@@ -282,6 +282,14 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.BriefSet(ctx, service.BriefSetRequest{ProjectID: "prj_0000000001"})
 			return err
 		},
+		"BriefingQuestions": func() error {
+			_, err := e.svc.BriefingQuestions(ctx, service.BriefingQuestionsRequest{})
+			return err
+		},
+		"BriefingAnswer": func() error {
+			_, err := e.svc.BriefingAnswer(ctx, service.BriefingAnswerRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
 		"ConnectionList": func() error {
 			_, err := e.svc.ConnectionList(ctx, service.ConnectionListRequest{})
 			return err

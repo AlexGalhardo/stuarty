@@ -368,6 +368,8 @@ func (h *apiHandler) registerAll() {
 	})
 	register(h, "projects.brief.get", h.briefGet)
 	register(h, "projects.brief.set", h.briefSet)
+	register(h, "briefing.questions", h.briefingQuestions)
+	register(h, "projects.briefing.answer", h.briefingAnswer)
 	register(h, "templates.export", h.templateExport)
 	register(h, "templates.file", h.templateFile)
 	register(h, "media.proxy", func(c *web.Ctx, in mediaFileIn) (noIn, error) {

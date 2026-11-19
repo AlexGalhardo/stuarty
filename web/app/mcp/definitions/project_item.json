@@ -1,6 +1,6 @@
 {
  "name": "project_item",
- "description": "Items of a project. add makes a timeline (a second edit; pass its id as timeline_id to edit, view and the rest), a text (Markdown) or an output (job_id of an export); move, rename, trash, restore take item_id; brief reads the brief, or writes it with text (empty clears).",
+ "description": "Project items. add: timeline (its id is timeline_id), text or output (export job_id); move, rename, trash, restore: item_id; brief: read, or write text (empty clears); briefing: questions, or answers {id: text} to write the brief.",
  "inputSchema": {
   "type": "object",
   "properties": {
@@ -11,7 +11,8 @@
      "rename",
      "trash",
      "restore",
-     "brief"
+     "brief",
+     "briefing"
     ]
    },
    "project_id": {
@@ -37,6 +38,9 @@
    },
    "text": {
     "type": "string"
+   },
+   "answers": {
+    "type": "object"
    },
    "preset": {
     "type": "string"

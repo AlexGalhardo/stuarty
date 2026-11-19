@@ -1139,6 +1139,49 @@ Example:
 stuarty brief:set --project prj_7k2m9x4q1b --text brief.md
 ```
 
+## `briefing:questions`
+
+List the questions of the guided briefing; with --project, also what its brief already answers
+
+```text
+stuarty briefing:questions [--project <id>]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--project` | string |  | a project: also the answers its brief holds |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty briefing:questions --project prj_7k2m9x4q1b
+```
+
+## `briefing:answer`
+
+Answer the guided briefing: the answers become the brief of a project
+
+```text
+stuarty briefing:answer --project <id> --answer <question>=<text> [--answer ...] [--replace]
+stuarty briefing:answer --project <id> --answers <file|-> [--replace]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--answer` | string, repeatable |  | one answer as &lt;question id&gt;=&lt;text&gt;; repeat for each question |
+| `--answers` | string |  | a JSON object of question id to answer: a file, or - for standard input |
+| `--replace` | boolean | `false` | replace a brief that was written by hand |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--dry-run`.
+
+Example:
+
+```bash
+stuarty briefing:answer --project prj_7k2m9x4q1b --answer audience="indie developers" --answer goal="get sign-ups" --answer platform=youtube-shorts --answer format=vertical-9x16 --answer duration=30
+```
+
 ## `connection:list`
 
 List the destinations Stuarty may reach
