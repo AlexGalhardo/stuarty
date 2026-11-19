@@ -1431,11 +1431,14 @@ The first line says how many changes there are. The text is cut at **6,400 chara
 The checkpoint list:
 
 ```text
-checkpoints <prj id> rev <revision> (<n>)
-r<rev> <name> <actor> <UTC time to the second>[ auto][ - <note>]
+<note line, §3.1 rule 5>
+checkpoints <prj id> rev <revision> (showing <a> of <b>)
+r<rev> "<name>" <actor> <UTC time to the second>[ auto][ - "<note>"]
+...
+... and <k> more checkpoints
 ```
 
-with one line per checkpoint, newest revision first, cut at 6,400 characters with the count of what was left out. A name and a note are free text that a person or an agent wrote, so the text writes each as an inline untrusted block (SDD-007 §8.2, `untrusted.Inline` with source `checkpoint`), the structured result marks them `x-untrusted` with the `untrusted_notice`, and both are cleaned of control and bidirectional characters when they are stored.
+with one line per checkpoint, newest revision first, cut at 6,400 characters with the count of what was left out. A name and a note are free text that a person or an agent wrote, so the text writes each as a quoted value (`textview.Quote`, §3.1 rule 5) after the note line, the structured result carries the `untrusted_notice`, and both are cleaned of control and bidirectional characters when they are stored. The diff text starts with the same note line, since the names in its lines are quoted values.
 
 ### 3.8 The media inspection text
 
