@@ -385,7 +385,7 @@ type AssetRepo interface {
 }
 ```
 
-`Repos` also has `Library() assets.Store` (package `service/assets`, as `Connections()` has `connections.Store`): `Get(hash)`, `Put(row)` (the `asset_info` row, its tags and its `asset_search` row in one call, inside the caller's transaction), `Find(query)` (the hashes that match the filters of the library, SQL and full-text, section 5.5.1) and `Names(hashes)`. `AssetRepo.Delete` also removes the `asset_search` row of the hash.
+`Repos` also has `AssetLibrary() assets.Store` (package `service/assets`, as `Connections()` has `connections.Store`; `Library()` is the index of memory, skills and prompts of SDD-018): `Get(hash)`, `GetMany(hashes)`, `Put(row)` (the `asset_info` row, its tags and its `asset_search` row in one call, inside the caller's transaction), `Reindex(hash)` (the `asset_search` row alone) and `Search(match)` (the hashes whose search row matches an expression built by `core/asset`, section 5.5.1). `AssetRepo.Delete` also removes the `asset_search` row of the hash.
 
 ### 3.5 Jobs, templates, backups
 
@@ -831,7 +831,7 @@ State of a `project_assets` row:
 
 #### 5.5.1 The library side of an asset (`asset_info`, `asset_tags`, `asset_search`)
 
-Migration `20261119130100_asset_library`. `assets` is already one row per file by hash and shared by every project, so the library is workspace-wide without moving a file (ADR-0010, ADR-0039); what the library adds is the record of where a file came from, what the user may do with it and how to find it. It lives beside `assets`, keyed by the same hash, so that the ingest never writes it and a release that does not know it still opens the workspace.
+Migration `20261119150000_asset_library`. `assets` is already one row per file by hash and shared by every project, so the library is workspace-wide without moving a file (ADR-0010, ADR-0039); what the library adds is the record of where a file came from, what the user may do with it and how to find it. It lives beside `assets`, keyed by the same hash, so that the ingest never writes it and a release that does not know it still opens the workspace.
 
 ```sql
 CREATE TABLE asset_info (

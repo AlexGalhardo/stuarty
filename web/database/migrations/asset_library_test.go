@@ -9,7 +9,7 @@ import (
 	"github.com/AlexGalhardo/vukem/schema"
 )
 
-const assetLibraryID = "20261119130100_asset_library"
+const assetLibraryID = "20261119150000_asset_library"
 
 // libraryWorkspace is the workspace of a release with a few more files in it: one used by two projects under two
 // names, one used by one project, and one that no project uses any more.

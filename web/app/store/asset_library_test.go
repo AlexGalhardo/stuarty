@@ -10,10 +10,10 @@ import (
 	"github.com/AlexGalhardo/stuarty/service/assets"
 )
 
-func searchOf(t *testing.T, s *Store, match string) []string {
+func assetSearchOf(t *testing.T, s *Store, match string) []string {
 	t.Helper()
 
-	got, err := s.Library().Search(ctx, match)
+	got, err := s.AssetLibrary().Search(ctx, match)
 	if err != nil {
 		t.Fatalf("Search(%s): %v", match, err)
 	}
@@ -30,7 +30,7 @@ func searchOf(t *testing.T, s *Store, match string) []string {
 
 // The library side of an asset round-trips, is found by every part of the text it indexes, and goes with the
 // asset: the search row of a virtual table has no foreign key, so Delete removes it by hand.
-func TestLibraryRepo(t *testing.T) {
+func TestAssetLibraryRepo(t *testing.T) {
 	s := testStore(t)
 
 	for _, h := range []string{"sha256:aa", "sha256:bb"} {
@@ -42,7 +42,7 @@ func TestLibraryRepo(t *testing.T) {
 		}
 	}
 
-	if _, err := s.Library().Get(ctx, "sha256:aa"); !errors.Is(err, assets.ErrNotFound) {
+	if _, err := s.AssetLibrary().Get(ctx, "sha256:aa"); !errors.Is(err, assets.ErrNotFound) {
 		t.Fatalf("Get with no row = %v", err)
 	}
 
@@ -56,11 +56,11 @@ func TestLibraryRepo(t *testing.T) {
 		},
 	}
 
-	if err := s.Library().Put(ctx, row); err != nil {
+	if err := s.AssetLibrary().Put(ctx, row); err != nil {
 		t.Fatal(err)
 	}
 
-	got, err := s.Library().Get(ctx, "sha256:aa")
+	got, err := s.AssetLibrary().Get(ctx, "sha256:aa")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -71,18 +71,18 @@ func TestLibraryRepo(t *testing.T) {
 		t.Errorf("Get = %+v", got)
 	}
 
-	many, err := s.Library().GetMany(ctx, []string{"sha256:aa", "sha256:bb", "sha256:none"})
+	many, err := s.AssetLibrary().GetMany(ctx, []string{"sha256:aa", "sha256:bb", "sha256:none"})
 	if err != nil || len(many) != 1 || !slices.Equal(many["sha256:aa"].Tags, row.Tags) {
 		t.Errorf("GetMany = %+v, %v", many, err)
 	}
 
 	// An update keeps who created it and when, and replaces the tags.
 	row.CreatedBy, row.CreatedMs, row.Tags = "someone else", 99, []string{"harbour"}
-	if err := s.Library().Put(ctx, row); err != nil {
+	if err := s.AssetLibrary().Put(ctx, row); err != nil {
 		t.Fatal(err)
 	}
 
-	got, _ = s.Library().Get(ctx, "sha256:aa")
+	got, _ = s.AssetLibrary().Get(ctx, "sha256:aa")
 	if got.CreatedBy != "agent" || got.CreatedMs != 5 || !slices.Equal(got.Tags, []string{"harbour"}) {
 		t.Errorf("after the update: %+v", got)
 	}
@@ -97,13 +97,13 @@ func TestLibraryRepo(t *testing.T) {
 		`"boats"* "moon"*`: {"sha256:aa"},
 		`"nothing"*`:       nil,
 	} {
-		if got := searchOf(t, s, match); !slices.Equal(got, want) {
+		if got := assetSearchOf(t, s, match); !slices.Equal(got, want) {
 			t.Errorf("Search(%s) = %v, want %v", match, got, want)
 		}
 	}
 
 	// A bad expression is an error, never a wrong answer: the query builder of core/asset never makes one.
-	if _, err := s.Library().Search(ctx, `"unterminated`); err == nil {
+	if _, err := s.AssetLibrary().Search(ctx, `"unterminated`); err == nil {
 		t.Error("a malformed expression was accepted")
 	}
 
@@ -111,11 +111,11 @@ func TestLibraryRepo(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if got := searchOf(t, s, `"harb"*`); got != nil {
+	if got := assetSearchOf(t, s, `"harb"*`); got != nil {
 		t.Errorf("the search row outlived the asset: %v", got)
 	}
 
-	if _, err := s.Library().Get(ctx, "sha256:aa"); !errors.Is(err, assets.ErrNotFound) {
+	if _, err := s.AssetLibrary().Get(ctx, "sha256:aa"); !errors.Is(err, assets.ErrNotFound) {
 		t.Errorf("the library row outlived the asset: %v", err)
 	}
 }
