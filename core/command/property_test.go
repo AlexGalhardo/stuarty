@@ -572,7 +572,7 @@ var alphaOps = map[string]func(p *docPick) string{
 		return fmt.Sprintf(`{"item_id":%q,"preset":%q,"edge":%q,"duration":%q%s}`, p.item(), preset, edge,
 			p.frames(120), extra)
 	},
-	"animation.list_presets": func(p *docPick) string { return `{}` },
+	"animation.list_presets": func(_ *docPick) string { return `{}` },
 	"keyframe.set_easing": func(p *docPick) string {
 		item, prop, at := p.item(), "scale", p.frames(500)
 		if len(p.keys) > 0 && p.n(4) != 0 {
