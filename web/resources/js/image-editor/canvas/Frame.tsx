@@ -7,6 +7,9 @@ import { frameUrl } from "../api/imageApi";
 // needs, so a zoom does not request a new picture at every step.
 const WIDTHS = [256, 512, 768, 1024, 1280, 1600, 2048, 3072, 4096] as const;
 
+const RETRIES = 2;
+const RETRY_MS = 400;
+
 export function frameWidth(needed: number, canvasWidth: number): number {
 	if (needed >= canvasWidth) return 0;
 	return WIDTHS.find((w) => w >= needed && w < canvasWidth) ?? 0;
@@ -35,23 +38,38 @@ export default function Frame({
 	const [failed, setFailed] = useState(false);
 	const [attempt, setAttempt] = useState(0);
 
+	// A picture the server is too busy to draw (429) or that failed is asked for again twice, after a short wait,
+	// before the screen says so; a picture that is no longer wanted is dropped so its request is cancelled.
 	// biome-ignore lint/correctness/useExhaustiveDependencies: `attempt` restarts the load after a retry.
 	useEffect(() => {
 		let live = true;
+		let tries = 0;
+		let timer: number | undefined;
 		const loader = new Image();
+		const load = (): void => {
+			loader.src = wanted;
+		};
 		loader.onload = () => {
 			if (!live) return;
 			setShown(wanted);
 			setFailed(false);
 		};
 		loader.onerror = () => {
-			if (live) setFailed(true);
+			if (!live) return;
+			if (tries < RETRIES) {
+				tries += 1;
+				timer = window.setTimeout(load, RETRY_MS * tries);
+				return;
+			}
+			setFailed(true);
 		};
-		loader.src = wanted;
+		load();
 		return () => {
 			live = false;
+			window.clearTimeout(timer);
 			loader.onload = null;
 			loader.onerror = null;
+			loader.src = "";
 		};
 	}, [wanted, attempt]);
 
