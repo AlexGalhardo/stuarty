@@ -98,11 +98,7 @@ var Scopes = map[string]string{
 	"KeyCreate":           ScopeRead,
 	"KeyList":             ScopeRead,
 	"KeyRevoke":           ScopeRead,
-}
 
-// productionScopes is the scope of each ProductionService method. It joins Scopes when the surfaces carry the
-// operations and ProductionService becomes part of Service.
-var productionScopes = map[string]string{
 	"ProjectDescribe":    ScopeRead,
 	"ProjectDuplicate":   ScopeEdit,
 	"ProjectItemAdd":     ScopeEdit,
@@ -120,7 +116,7 @@ var productionScopes = map[string]string{
 func authorize(ctx context.Context, method, projectID string) (Caller, error) {
 	scope, listed := Scopes[method]
 	if !listed {
-		scope = productionScopes[method]
+		scope = ""
 	}
 
 	return authorizeScope(ctx, scope, projectID)

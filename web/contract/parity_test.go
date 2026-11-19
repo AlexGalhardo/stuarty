@@ -93,6 +93,33 @@ var parity = []row{
 	// OpenTimelineIO moves a timeline as a file: no MCP tool (SDD-003 section 7.1, exception E-3).
 	{method: "ProjectOtioExport", command: "otio:export", route: "GET /projects/{}/otio"},
 	{method: "ProjectOtioImport", command: "otio:import", route: "POST /projects/{}/otio"},
+	// The production of a project (SDD-003 section 2.3.1): the description is project_get with detail overview, a
+	// copy is project_create with from, and the brief is project_item with action brief.
+	{method: "ProjectDescribe", tool: "project_get", command: "project:describe", route: "GET /projects/{}/describe"},
+	{
+		method:  "ProjectDuplicate",
+		tool:    "project_create",
+		command: "project:duplicate",
+		route:   "POST /projects/{}/duplicate",
+	},
+	{method: "ProjectItemAdd", tool: "project_item", command: "item:add", route: "POST /projects/{}/items"},
+	{method: "ProjectItemMove", tool: "project_item", command: "item:move", route: "POST /projects/{}/items/{}/move"},
+	{
+		method: "ProjectItemRename", tool: "project_item", command: "item:rename",
+		route: "POST /projects/{}/items/{}/rename",
+	},
+	{
+		method:  "ProjectItemTrash",
+		tool:    "project_item",
+		command: "item:trash",
+		route:   "POST /projects/{}/items/{}/trash",
+	},
+	{
+		method: "ProjectItemRestore", tool: "project_item", command: "item:restore",
+		route: "POST /projects/{}/items/{}/restore",
+	},
+	{method: "BriefGet", tool: "project_item", command: "brief:show", route: "GET /projects/{}/brief"},
+	{method: "BriefSet", tool: "project_item", command: "brief:set", route: "PUT /projects/{}/brief"},
 }
 
 // notOperations are Service methods that are not operations an agent calls

@@ -258,3 +258,39 @@ func (s stub) BrandKitGet(context.Context, service.BrandKitGetRequest) (*service
 func (s stub) BrandKitSet(context.Context, service.BrandKitSetRequest) (*service.BrandKit, error) {
 	return reply[service.BrandKit](s.err)
 }
+
+func (s stub) ProjectDescribe(context.Context, service.ProjectDescribeRequest) (*service.ProjectDescribeResult, error) {
+	return reply[service.ProjectDescribeResult](s.err)
+}
+
+func (s stub) ProjectDuplicate(context.Context, service.ProjectDuplicateRequest) (*service.ProjectCreateResult, error) {
+	return reply[service.ProjectCreateResult](s.err)
+}
+
+func (s stub) ProjectItemAdd(context.Context, service.ProjectItemAddRequest) (*service.ProjectItemResult, error) {
+	return reply[service.ProjectItemResult](s.err)
+}
+
+func (s stub) ProjectItemMove(context.Context, service.ProjectItemMoveRequest) (*service.ProjectItemResult, error) {
+	return reply[service.ProjectItemResult](s.err)
+}
+
+func (s stub) ProjectItemRename(context.Context, service.ProjectItemRenameRequest) (*service.ProjectItemResult, error) {
+	return reply[service.ProjectItemResult](s.err)
+}
+
+func (s stub) ProjectItemTrash(context.Context, service.ProjectItemTrashRequest) (*service.ProjectItemResult, error) {
+	return reply[service.ProjectItemResult](s.err)
+}
+
+func (s stub) ProjectItemRestore(context.Context, service.ProjectItemTrashRequest) (*service.ProjectItemResult, error) {
+	return reply[service.ProjectItemResult](s.err)
+}
+
+func (s stub) BriefGet(context.Context, service.BriefGetRequest) (*service.BriefResult, error) {
+	return reply[service.BriefResult](s.err)
+}
+
+func (s stub) BriefSet(context.Context, service.BriefSetRequest) (*service.BriefResult, error) {
+	return reply[service.BriefResult](s.err)
+}

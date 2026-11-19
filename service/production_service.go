@@ -3,7 +3,7 @@ package service
 import "context"
 
 // ProductionService is the part of the service that works on the production of a project (SDD-003 section
-// 2.3.1, ADR-0039): its items, its brief, its description and its copy. *svc and the remote client implement it.
+// 2.3.1, ADR-0039): its items, its brief, its description and its copy. Service embeds it.
 type ProductionService interface {
 	ProjectDescribe(ctx context.Context, req ProjectDescribeRequest) (*ProjectDescribeResult, error)
 	ProjectDuplicate(ctx context.Context, req ProjectDuplicateRequest) (*ProjectCreateResult, error)

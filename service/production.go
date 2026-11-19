@@ -42,7 +42,9 @@ func (s *svc) resolveTimeline(ctx context.Context, c Caller, projectID, timeline
 
 	if timelineID != "" {
 		owner, err := repo.ProjectOfTimeline(ctx, timelineID)
-		if err != nil || (projectID != "" && projectID != owner) {
+		// The timeline id may stand in the place of the project id as well, which is how the editor, whose
+		// address is the id of a timeline, names it in both.
+		if err != nil || (projectID != "" && projectID != owner && projectID != timelineID) {
 			return "", timelineNotFound(timelineID, err)
 		}
 

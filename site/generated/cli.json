@@ -1223,6 +1223,222 @@
         "project",
         "dry-run"
       ]
+    },
+    {
+      "name": "project:describe",
+      "summary": "describe a project as text: brief, items and state",
+      "usage": [
+        "stuarty project:describe <project id>"
+      ],
+      "example": "stuarty project:describe prj_7k2m9x4q1b",
+      "flags": [
+        {
+          "name": "max-tokens",
+          "type": "integer",
+          "usage": "the budget of the text in tokens, 200 to 6000 (default 1500)"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project"
+      ]
+    },
+    {
+      "name": "project:duplicate",
+      "summary": "copy a project: its brief, texts and timelines",
+      "usage": [
+        "stuarty project:duplicate <project id> [--name n]"
+      ],
+      "example": "stuarty project:duplicate prj_7k2m9x4q1b --name \"Teaser, second cut\"",
+      "flags": [
+        {
+          "name": "name",
+          "type": "string",
+          "usage": "the name of the copy (default: the name and the word copy)"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project",
+        "dry-run"
+      ]
+    },
+    {
+      "name": "item:add",
+      "summary": "add a text, a timeline or an output to a project",
+      "usage": [
+        "stuarty item:add --project <id> --kind text|timeline|output --title <t>",
+        "stuarty item:add --project <id> --kind text --title <t> --text <file|->",
+        "stuarty item:add --project <id> --kind output --title <t> --job <export job id>"
+      ],
+      "example": "stuarty item:add --project prj_7k2m9x4q1b --kind timeline --title \"Wide cut\" --preset 16:9",
+      "flags": [
+        {
+          "name": "kind",
+          "type": "string",
+          "usage": "text, timeline or output (required)"
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "usage": "1 to 120 characters (required)"
+        },
+        {
+          "name": "position",
+          "type": "integer",
+          "usage": "where in the order of the items, from 0 (default: the end)"
+        },
+        {
+          "name": "text",
+          "type": "string",
+          "usage": "a text item: a file with its Markdown, or - for standard input"
+        },
+        {
+          "name": "preset",
+          "type": "string",
+          "usage": "a timeline: 9:16 (default), 1:1, 16:9 or 4:5"
+        },
+        {
+          "name": "fps",
+          "type": "string",
+          "usage": "a timeline: 30 (default), or n/1001"
+        },
+        {
+          "name": "job",
+          "type": "string",
+          "usage": "an output: a succeeded export job of this project"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project",
+        "dry-run"
+      ]
+    },
+    {
+      "name": "item:move",
+      "summary": "move an item to a position in the order of the project",
+      "usage": [
+        "stuarty item:move <item id> --project <id> --position n"
+      ],
+      "example": "stuarty item:move pit_3c5v8n2w6d --project prj_7k2m9x4q1b --position n",
+      "flags": [
+        {
+          "name": "position",
+          "type": "integer",
+          "usage": "where in the order of the items, from 0 (required)"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project",
+        "dry-run"
+      ]
+    },
+    {
+      "name": "item:rename",
+      "summary": "change the title of an item",
+      "usage": [
+        "stuarty item:rename <item id> --project <id> --title \"...\""
+      ],
+      "example": "stuarty item:rename pit_3c5v8n2w6d --project prj_7k2m9x4q1b --title \"...\"",
+      "flags": [
+        {
+          "name": "title",
+          "type": "string",
+          "usage": "the new title, 1 to 120 characters (required)"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project",
+        "dry-run"
+      ]
+    },
+    {
+      "name": "item:trash",
+      "summary": "move an item to the trash of its project",
+      "usage": [
+        "stuarty item:trash <item id> --project <id>"
+      ],
+      "example": "stuarty item:trash pit_3c5v8n2w6d --project prj_7k2m9x4q1b",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project",
+        "dry-run"
+      ]
+    },
+    {
+      "name": "item:restore",
+      "summary": "restore an item from the trash of its project",
+      "usage": [
+        "stuarty item:restore <item id> --project <id>"
+      ],
+      "example": "stuarty item:restore pit_3c5v8n2w6d --project prj_7k2m9x4q1b",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project",
+        "dry-run"
+      ]
+    },
+    {
+      "name": "brief:show",
+      "summary": "show the brief of a project",
+      "usage": [
+        "stuarty brief:show --project <id>"
+      ],
+      "example": "stuarty brief:show --project prj_7k2m9x4q1b",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project"
+      ]
+    },
+    {
+      "name": "brief:set",
+      "summary": "write the brief of a project from a Markdown file",
+      "usage": [
+        "stuarty brief:set --project <id> --text <file|->"
+      ],
+      "example": "stuarty brief:set --project prj_7k2m9x4q1b --text brief.md",
+      "flags": [
+        {
+          "name": "text",
+          "type": "string",
+          "usage": "the Markdown: a file, or - for standard input; an empty text clears the brief (required)"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project",
+        "dry-run"
+      ]
     }
   ],
   "process_commands": [

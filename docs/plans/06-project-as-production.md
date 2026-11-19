@@ -42,7 +42,7 @@ A creator opens one project and finds the whole production in it: the brief, the
 - [x] 4. Implement the service operations and the compatibility rule for `project_id`. Verify: `go test ./service/... -run "TestProject|TestBrief"` passes.
 - [x] 4b. (VV-225) `ProjectDuplicate` in the service; its route, CLI command and MCP encoding come with task 6 and the card menu item with task 7. Verify: `go test ./web/app/servicetest/ -run TestProjectDuplicate` passes.
 - [x] 5. Update bundle export and import. Verify: `go test ./service/... -run TestBundle` passes, including a bundle made by release 0.29.0.
-- [ ] 6. Expose on HTTP, CLI and MCP with the text view. Verify: `go test ./web/contract/...` passes and the reference scenario (`bash scripts/smoke-e2e.sh`) still exports.
+- [x] 6. Expose on HTTP, CLI and MCP with the text view. Verify: `go test ./web/contract/...` passes and the reference scenario (`bash scripts/smoke-e2e.sh`) still exports.
 - [ ] 7. Build the project overview page and adapt the project list. Verify: `task test:web` and `web/e2e/specs/project-overview.spec.ts` pass.
 - [ ] 8. Regenerate agent documents and types. Verify: `task generate:check` exits 0.
 

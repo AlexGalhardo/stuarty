@@ -1,0 +1,76 @@
+{
+ "name": "project_item",
+ "description": "Items of a project. add makes a timeline (a second edit; pass its id as timeline_id to edit, view and the rest), a text (Markdown) or an output (job_id of an export); move, rename, trash, restore take item_id; brief reads the brief, or writes it with text (empty clears).",
+ "inputSchema": {
+  "type": "object",
+  "properties": {
+   "action": {
+    "enum": [
+     "add",
+     "move",
+     "rename",
+     "trash",
+     "restore",
+     "brief"
+    ]
+   },
+   "project_id": {
+    "type": "string",
+    "pattern": "^prj_[0-9a-hjkmnp-tv-z]{10}$"
+   },
+   "item_id": {
+    "type": "string",
+    "pattern": "^pit_[0-9a-hjkmnp-tv-z]{10}$"
+   },
+   "kind": {
+    "enum": [
+     "text",
+     "timeline",
+     "output"
+    ]
+   },
+   "title": {
+    "type": "string"
+   },
+   "position": {
+    "type": "integer"
+   },
+   "text": {
+    "type": "string"
+   },
+   "preset": {
+    "type": "string"
+   },
+   "fps": {
+    "type": "string"
+   },
+   "job_id": {
+    "type": "string",
+    "pattern": "^job_[0-9a-hjkmnp-tv-z]{10}$"
+   }
+  },
+  "required": [
+   "action",
+   "project_id"
+  ],
+  "additionalProperties": false
+ },
+ "annotations": {
+  "title": "Items",
+  "readOnlyHint": false,
+  "destructiveHint": false,
+  "idempotentHint": false,
+  "openWorldHint": false
+ },
+ "outputSchema": {
+  "type": "object",
+  "properties": {
+   "project_id": {
+    "type": "string"
+   }
+  },
+  "required": [
+   "project_id"
+  ]
+ }
+}

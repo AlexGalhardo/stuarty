@@ -171,7 +171,7 @@ func productionSummary(h *ProductionHead) ProjectSummary {
 		Width: t.Summary.Width, Height: t.Summary.Height, FPS: fpsString(fps.Num, fps.Den),
 		Duration: timeValue(fps, t.Summary.DurationFrames),
 		Tracks:   t.Summary.Tracks, Items: t.Summary.Items, Assets: t.Summary.Assets,
-		Timelines: h.Timelines, UpdatedAt: msTime(h.UpdatedMs),
+		TimelineID: t.ID, Timelines: h.Timelines, UpdatedAt: msTime(h.UpdatedMs),
 	}
 }
 

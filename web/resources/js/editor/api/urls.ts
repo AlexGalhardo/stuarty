@@ -12,7 +12,7 @@ export function frameUrl(
 	width: number,
 	revision: number,
 ): string {
-	return `${project(projectId)}/frame?at=${frame}f&width=${width}&rev=${revision}`;
+	return `${project(projectId)}/frame?at=${frame}f&width=${width}&rev=${revision}&timeline_id=${encodeURIComponent(projectId)}`;
 }
 
 export function thumbnailUrl(

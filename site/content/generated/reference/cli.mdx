@@ -888,6 +888,182 @@ Example:
 stuarty otio:import cut.otio --project prj_7k2m9x4q1b --dry-run
 ```
 
+## `project:describe`
+
+Describe a project as text: brief, items and state
+
+```text
+stuarty project:describe <project id>
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--max-tokens` | integer |  | the budget of the text in tokens, 200 to 6000 (default 1500) |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`.
+
+Example:
+
+```bash
+stuarty project:describe prj_7k2m9x4q1b
+```
+
+## `project:duplicate`
+
+Copy a project: its brief, texts and timelines
+
+```text
+stuarty project:duplicate <project id> [--name n]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--name` | string |  | the name of the copy (default: the name and the word copy) |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--dry-run`.
+
+Example:
+
+```bash
+stuarty project:duplicate prj_7k2m9x4q1b --name "Teaser, second cut"
+```
+
+## `item:add`
+
+Add a text, a timeline or an output to a project
+
+```text
+stuarty item:add --project <id> --kind text|timeline|output --title <t>
+stuarty item:add --project <id> --kind text --title <t> --text <file|->
+stuarty item:add --project <id> --kind output --title <t> --job <export job id>
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--kind` | string |  | text, timeline or output (required) |
+| `--title` | string |  | 1 to 120 characters (required) |
+| `--position` | integer |  | where in the order of the items, from 0 (default: the end) |
+| `--text` | string |  | a text item: a file with its Markdown, or - for standard input |
+| `--preset` | string |  | a timeline: 9:16 (default), 1:1, 16:9 or 4:5 |
+| `--fps` | string |  | a timeline: 30 (default), or n/1001 |
+| `--job` | string |  | an output: a succeeded export job of this project |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--dry-run`.
+
+Example:
+
+```bash
+stuarty item:add --project prj_7k2m9x4q1b --kind timeline --title "Wide cut" --preset 16:9
+```
+
+## `item:move`
+
+Move an item to a position in the order of the project
+
+```text
+stuarty item:move <item id> --project <id> --position n
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--position` | integer |  | where in the order of the items, from 0 (required) |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--dry-run`.
+
+Example:
+
+```bash
+stuarty item:move pit_3c5v8n2w6d --project prj_7k2m9x4q1b --position n
+```
+
+## `item:rename`
+
+Change the title of an item
+
+```text
+stuarty item:rename <item id> --project <id> --title "..."
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--title` | string |  | the new title, 1 to 120 characters (required) |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--dry-run`.
+
+Example:
+
+```bash
+stuarty item:rename pit_3c5v8n2w6d --project prj_7k2m9x4q1b --title "..."
+```
+
+## `item:trash`
+
+Move an item to the trash of its project
+
+```text
+stuarty item:trash <item id> --project <id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--dry-run`.
+
+Example:
+
+```bash
+stuarty item:trash pit_3c5v8n2w6d --project prj_7k2m9x4q1b
+```
+
+## `item:restore`
+
+Restore an item from the trash of its project
+
+```text
+stuarty item:restore <item id> --project <id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--dry-run`.
+
+Example:
+
+```bash
+stuarty item:restore pit_3c5v8n2w6d --project prj_7k2m9x4q1b
+```
+
+## `brief:show`
+
+Show the brief of a project
+
+```text
+stuarty brief:show --project <id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`.
+
+Example:
+
+```bash
+stuarty brief:show --project prj_7k2m9x4q1b
+```
+
+## `brief:set`
+
+Write the brief of a project from a Markdown file
+
+```text
+stuarty brief:set --project <id> --text <file|->
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--text` | string |  | the Markdown: a file, or - for standard input; an empty text clears the brief (required) |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--dry-run`.
+
+Example:
+
+```bash
+stuarty brief:set --project prj_7k2m9x4q1b --text brief.md
+```
+
 ## `serve`
 
 Run the server that owns the workspace, configured by environment variables (see the configuration reference)
