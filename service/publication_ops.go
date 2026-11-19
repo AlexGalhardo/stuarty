@@ -355,6 +355,11 @@ func (t *pubTx) Emit(p pub.Publication) {
 		t.s.emit(
 			Event{Type: EventPublicationUpdated, ProjectID: p.ProjectID, Publication: &p, Owner: owner, At: t.s.now()},
 		)
+
+		// An approval or a change may have made a target due: the loop looks again now, not at its next poll.
+		if t.s.sched != nil {
+			t.s.sched.Wake()
+		}
 	})
 }
 

@@ -1008,13 +1008,14 @@ func (m *Manager) patchTarget(
 		t.Network = res.Network
 	}
 
+	// The fields of an update replace the target's own as a whole, so a person can clear one; an update that
+	// names none leaves them.
 	if !fieldsEmpty(&in.Fields) {
-		f := mergeFields(t.Fields, in.Fields)
-		if err := checkFields(path+".fields", &f); err != nil {
+		if err := checkFields(path+".fields", &in.Fields); err != nil {
 			return err
 		}
 
-		t.Fields = f
+		t.Fields = in.Fields
 	}
 
 	note, err := m.applyTime(t, in)
@@ -1055,35 +1056,6 @@ func (m *Manager) removeTarget(ctx context.Context, tx Tx, p *Publication, id st
 func fieldsEmpty(f *Fields) bool {
 	return f.Title == "" && f.Description == "" && len(f.Tags) == 0 && f.Visibility == "" && f.MadeForKids == nil &&
 		!f.AIDisclosure
-}
-
-// mergeFields lays the members an update names over the target's own.
-func mergeFields(base, over Fields) Fields {
-	if over.Title != "" {
-		base.Title = over.Title
-	}
-
-	if over.Description != "" {
-		base.Description = over.Description
-	}
-
-	if over.Tags != nil {
-		base.Tags = over.Tags
-	}
-
-	if over.Visibility != "" {
-		base.Visibility = over.Visibility
-	}
-
-	if over.MadeForKids != nil {
-		base.MadeForKids = over.MadeForKids
-	}
-
-	if over.AIDisclosure {
-		base.AIDisclosure = true
-	}
-
-	return base
 }
 
 // sameTarget says whether two versions of a target would send the same post at the same time.
