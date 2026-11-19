@@ -43,7 +43,7 @@ A creator, or their agent, asks for a thumbnail background or a narration and ge
 - [x] 4. Implement the image adapter with contract tests from recorded responses. Verify: `go test ./service/providers/...` passes with no network.
 - [x] 5. Implement the voice adapter and `VoiceList` the same way. Verify: `go test ./service/providers/...` passes with no network.
 - [x] 6. Implement the two job kinds: estimate, approval, ledger, storage as assets with origin. Verify: `go test ./service/... -run "TestImageGenerate|TestVoiceGenerate"` passes.
-- [ ] 7. Expose on HTTP, CLI and MCP with parity tests. Verify: `go test ./web/contract/...` passes.
+- [x] 7. Expose on HTTP, CLI and MCP with parity tests. Verify: `go test ./web/contract/...` passes.
 - [ ] 8. Build the "Generate" dialog in both languages. Verify: `task test:web` and `web/e2e/specs/generate-assets.spec.ts` pass against a fake provider server.
 
 ## Test strategy
