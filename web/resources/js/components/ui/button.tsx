@@ -53,6 +53,14 @@ function Button({
     asChild?: boolean
   }) {
   const render = childRender(asChild, children)
+  // Base UI gives a non-native button role="button"; an anchor is a link, and
+  // a link that announces itself as a button breaks the name and the role
+  // that people and tests look for.
+  const role =
+    render && React.isValidElement<{ href?: string }>(children) &&
+    children.type === "a" && children.props.href !== undefined
+      ? "link"
+      : undefined
 
   return (
     <ButtonPrimitive
@@ -61,6 +69,7 @@ function Button({
       data-size={size}
       className={cn(buttonVariants({ variant, size, className }))}
       nativeButton={render ? false : true}
+      role={role}
       render={render}
       {...props}
     >

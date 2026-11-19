@@ -118,7 +118,10 @@ function Profile({
 	const path = pathOf(url);
 	const name = user?.email ?? t("ui.nav.local");
 	return (
-		<section aria-label={t("ui.nav.profile")} className="flex flex-col gap-1">
+		<section
+			aria-label={t("ui.nav.profile")}
+			className="flex flex-col gap-1 max-md:flex-row max-md:items-center"
+		>
 			<p
 				className={cn(
 					"flex h-9 items-center gap-2 px-3 text-sm",
@@ -191,8 +194,12 @@ export default function Sidebar({
 			data-testid="sidebar"
 			data-state={state}
 			className={cn(
-				"sticky top-0 flex h-dvh shrink-0 flex-col gap-2 border-r bg-background p-2 pb-8",
-				collapsed ? "w-14" : "w-64",
+				"flex shrink-0 flex-col gap-2 bg-background p-2",
+				// Wide: a column fixed to the window. Narrow: a strip above the page, so
+				// the page keeps the whole width (WCAG 1.4.10 reflow at 320 px).
+				"md:sticky md:top-0 md:h-dvh md:border-r md:pb-8",
+				"max-md:w-full max-md:flex-row max-md:flex-wrap max-md:items-center max-md:border-b",
+				collapsed ? "md:w-14" : "md:w-64",
 			)}
 		>
 			<Link
@@ -218,9 +225,9 @@ export default function Sidebar({
 			</Link>
 			<nav
 				aria-label={t("ui.nav.label")}
-				className="min-h-0 flex-1 overflow-y-auto"
+				className="min-h-0 flex-1 overflow-y-auto max-md:order-last max-md:w-full max-md:flex-none max-md:overflow-x-auto max-md:overflow-y-hidden"
 			>
-				<ul className="flex flex-col gap-0.5">
+				<ul className="flex flex-col gap-0.5 max-md:flex-row">
 					{SECTIONS.map(({ key, path, icon: Icon }) => (
 						<li key={key}>
 							<Item
@@ -239,7 +246,7 @@ export default function Sidebar({
 			<div
 				className={cn(
 					"flex items-center gap-1",
-					collapsed ? "flex-col" : "justify-between",
+					collapsed ? "flex-col max-md:flex-row" : "justify-between",
 				)}
 			>
 				<LocaleSwitcher
