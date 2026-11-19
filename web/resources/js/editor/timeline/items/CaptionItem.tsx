@@ -3,6 +3,7 @@ import { type ReactNode, useRef } from "react";
 import UntrustedText from "@/components/UntrustedText";
 import { cn } from "@/lib/cn";
 import { useT } from "@/lib/i18n";
+import { rowFor } from "../../commands/keymapStore";
 import { captionWordSegments } from "../../commands/units";
 import { useActions } from "../../commands/useActions";
 import {
@@ -132,7 +133,11 @@ export default function CaptionItem({ id }: { id: string }): ReactNode {
 						}
 						onKeyDown={(event) => {
 							// Enter or F2 edits the word, as a double click does (VV-095).
-							if (event.key !== "Enter" && event.key !== "F2") return;
+							if (
+								event.key !== "Enter" &&
+								rowFor(event.nativeEvent, ["timeline"]) !== "rename"
+							)
+								return;
 							event.preventDefault();
 							event.stopPropagation();
 							runtime.uiWriter.select([id], id);

@@ -88,8 +88,8 @@ func TestNormalizeTag(t *testing.T) {
 		"  #B-Roll ":     "b-roll",
 		"reaction  clip": "reaction-clip",
 		"Café":           "café",
-		"cafe\u0301":     "café", // decomposed, NFC-normalised
-		"a_b":            "a_b",
+		// "cafe\u0301" (decomposed) is among the refusals below: the caller composes it first.
+		"a_b": "a_b",
 	}
 
 	for in, want := range good {
@@ -98,7 +98,10 @@ func TestNormalizeTag(t *testing.T) {
 		}
 	}
 
-	for _, in := range []string{"", "   ", "#", "a/b", "x<script>", "a,b", strings.Repeat("a", MaxTagLength+1), "tab\there!"} {
+	// A decomposed accent is refused here: the caller composes the text first (service/assets).
+	for _, in := range []string{
+		"", "   ", "#", "a/b", "x<script>", "a,b", strings.Repeat("a", MaxTagLength+1), "tab\there!", "cafe" + string(rune(0x0301)),
+	} {
 		if got, ok := NormalizeTag(in); ok {
 			t.Errorf("NormalizeTag(%q) = %q, want a refusal", in, got)
 		}
