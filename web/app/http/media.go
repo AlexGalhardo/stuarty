@@ -55,11 +55,12 @@ type thumbnailIn struct {
 }
 
 type jobStartIn struct {
-	ID     string         `json:"id"                validate:"required"`
-	Kind   string         `json:"kind"              validate:"required" doc:"export."`
-	Args   map[string]any `json:"args,omitempty"                        doc:"The arguments of the kind: start, end, format (mp4, gif, wav, aac or png; default mp4), preset and codec (h264, hevc or av1, for mp4) for an export."`
-	WaitMS int            `json:"wait_ms,omitempty"                     doc:"0 to 25000: hold the call until the job is final."`
-	DryRun any            `json:"dry_run,omitempty"`
+	ID         string         `json:"id"                    validate:"required"`
+	TimelineID string         `json:"timeline_id,omitempty"                     doc:"The timeline of the project; required when the project has several."`
+	Kind       string         `json:"kind"                  validate:"required" doc:"export."`
+	Args       map[string]any `json:"args,omitempty"                            doc:"The arguments of the kind: start, end, format (mp4, gif, wav, aac or png; default mp4), preset and codec (h264, hevc or av1, for mp4) for an export."`
+	WaitMS     int            `json:"wait_ms,omitempty"                         doc:"0 to 25000: hold the call until the job is final."`
+	DryRun     any            `json:"dry_run,omitempty"`
 }
 
 type jobListIn struct {

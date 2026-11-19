@@ -798,6 +798,17 @@ func (s *svc) cancelJob(ctx context.Context, id string) error {
 		return nil
 	}
 
+	if before.State == JobWaitingApproval {
+		if err := s.cancelWaiting(ctx, "system", &before); !errors.Is(err, errNoLongerWaiting) {
+			return err
+		}
+
+		// Approved since it was read: it is queued or running now, and is cancelled as such.
+		if before, err = s.store.Jobs().Get(ctx, id); err != nil || JobFinal(before.State) {
+			return err
+		}
+	}
+
 	if before.Kind == JobExportBatch {
 		s.cancelBatchChildren(ctx, &before)
 	}

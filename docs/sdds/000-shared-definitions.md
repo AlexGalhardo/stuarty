@@ -60,12 +60,29 @@
 | `ExportPresetList` | `command_help` (`domain` export) | `export:presets` | `GET /export-presets` | read |
 | `ExportCheck` | `lint` (with `preset`) | `export:check` | `GET /projects/{id}/export-check` | read |
 | `ExportBatch` | `job_start` (`kind` export_batch) | `export:batch` | `POST /projects/{id}/export-batches` | render |
+| `ImageFrame` | none | none | `GET /images/{id}/frame` (SDD-012 §24.3) | read |
+| `ImageHistory` | none | none | `GET /images/{id}/history` (SDD-012 §24.3) | read |
+| `ImageFile` | none | none | `GET /images/{id}/exports/{name}` (SDD-012 §24.3) | read |
+| `ApprovalList`, `ApprovalGet` | none | `approval:list`, `approval:show` | `GET /approvals`, `GET /approvals/{id}` | read (SDD-015) |
+| `ApprovalDecide` | none | `approval:decide` | `POST /approvals/{id}/decide` | read, and only from a privileged browser session; the local token and keys get `E_PRIVILEGED_SESSION` (SDD-015 §4) |
+| `ApprovalRuleList` | none | `approval:rule:list` | `GET /approval-rules` | read |
+| `ApprovalRuleSet`, `ApprovalRuleRemove` | none | `approval:rule:set`, `approval:rule:remove` | `POST /approval-rules`, `DELETE /approval-rules/{id}` | admin, and only from a privileged browser session |
+| `CostSummary` | none | `cost:show` | `GET /cost` | read |
+| `CostCeilingSet` | none | `cost:ceiling` | `PUT /cost/ceilings` | admin, and only from a privileged browser session |
+| approval queue stream | none | none | `GET /approvals/events` (SDD-015 §7) | read |
+| `MemoryList`, `MemoryGet`, `MemoryWrite` | `library` (kind `memory`; actions `list`, `get`, `write`) | `memory:list`, `memory:show`, `memory:write` | `GET /library/memory`, `GET /library/memory/{name}`, `POST /library/memory`, `DELETE /library/memory/{name}` | read, edit (SDD-018) |
+| `MemoryRemove` | none (an agent tool removes nothing) | `memory:remove` | `DELETE /library/memory/{name}` | edit |
+| `SkillList`, `SkillGet`, `SkillWrite`, `SkillLint` | `library` (kind `skill`; actions `list`, `get`, `write`, `lint`) | `skill:list`, `skill:show`, `skill:write`, `skill:lint` | `GET /library/skills`, `GET /library/skills/{name}`, `PUT /library/skills/{name}`, `GET /library/skills/{name}/lint` | read, edit |
+| `SkillImport`, `SkillExport` | none | `skill:import`, `skill:export` | `POST /library/skills/import`, `POST /library/skills/export` | media |
+| `SkillMarkReviewed` | none | none | `POST /library/skills/{name}/review` | edit, and only from a browser session (SDD-018 section 7) |
+| `PromptList`, `PromptGet`, `PromptWrite`, `PromptRender` | `library` (kind `prompt`; actions `list`, `get`, `write`, `render`) | `prompt:list`, `prompt:show`, `prompt:write`, `prompt:render` | `GET /library/prompts`, `GET /library/prompts/{name}`, `PUT /library/prompts/{name}`, `POST /library/prompts/{name}/render` | read, edit |
+| `LibrarySearch`, `LibraryReindex` | `library` (action `search`), none | `library:search`, `library:reindex` | `GET /library/search`, `POST /library/reindex` | read, edit |
 
 Routes that are not service operations: `POST /mcp` (the MCP server over Streamable HTTP, SDD-003 §4.3; `GET` and `DELETE` on the path are not routes and answer 405 `E_METHOD_NOT_ALLOWED`, because the server is stateless; every tool call behind it is a service operation with the scope of its tool), `GET /api/v1/handshake` (the server proves it knows the local token, SDD-007 §3.8), `GET /auth/launch` and `POST /api/v1/system/launch` (browser session from a one-time code, SDD-007 §3.4), `POST /auth/login` and `POST /auth/logout` (network mode: the browser session of a user, SDD-007 §4.1; in local mode they answer 404 `E_NOT_FOUND`), `GET /up` (vukem health probe), `GET /openapi.json` and `GET /api/docs` (the OpenAPI document and its viewer), `POST /api/v1/system/tools/install` and `GET /api/v1/system/tools` (the explicit install of a helper such as whisper.cpp from the editor, and its state with the progress of a running install; the same step as the CLI command `tools:install`; the install is allowed only to a browser session in local mode or an `admin` key in network mode, never to the local token and never on an agent surface, SDD-007 §6.8; the `GET` only reads and takes the `read` scope, so an agent can tell whether a helper is installed before it asks for a transcript), and the byte-serving routes that the editor uses, all `read`, all under the project so that access is checked against it, all with HTTP Range and long-lived caching because their content never changes: `GET /projects/{id}/media/{asset_id}/proxy`, `.../thumbnail`, `.../strip`, `.../peaks`, `.../lut` (the parsed table of a lookup table asset, SDD-004 §3.6), and `GET /projects/{id}/bitmaps/{key}` (rasterized text and shapes by content key). What each returns is in SDD-011 and SDD-004.
 
 The MCP catalogue is 20 tools: `project_list`, `project_create`, `project_get`, `project_trash`, `edit`, `command_help`, `history`, `media_import`, `media_inspect`, `view`, `lint`, `job_start`, `job_get`, `job_cancel`, `template`, `font_import`, `connection` (read only: the destinations the user connected, SDD-014), `image` (the image documents of SDD-021, one tool with an `action`), `project_item` (the items and the brief of a production, SDD-003 section 2.3), `library` (memory, skills and prompts: search, list, get, write, render and lint; SDD-018).
 
-**Projects and timelines (ADR-0039).** A project is a production; its timelines are items of it. Every operation above that edits or reads a timeline document (`Edit`, `HistoryList`, `Undo`, `Redo`, `Lint`, `MediaImport`, `MediaInspect`, `MediaList`, `MediaTrash`, `MediaRestore`, `ViewFrame`, `ViewSheet`, `JobStart`, `JobList`, `PlanWindow`, `SnapPoints`, `ProjectOtioExport`, `ProjectOtioImport`, `ProjectBundleExport`, and `ProjectGet` with a detail) accepts an optional `timeline_id` next to `project_id`; the rule is SDD-003 §1.7.
+**Projects and timelines (ADR-0039).** A project is a production; its timelines are items of it. Every operation above that edits or reads a timeline document (`Edit`, `HistoryList`, `Undo`, `Redo`, `Lint`, `MediaImport`, `MediaInspect`, `MediaList`, `MediaTrash`, `MediaRestore`, `ViewFrame`, `ViewSheet`, `JobStart`, `JobList`, `PlanWindow`, `SnapPoints`, `ProjectOtioExport`, `ProjectOtioImport`, `ProjectBundleExport`, `ExportCheck`, `ExportBatch`, and `ProjectGet` with a detail) accepts an optional `timeline_id` next to `project_id`; the rule is SDD-003 §1.7.
 
 Other CLI commands that are not service operations: `serve` (start the owner process), `mcp` (stdio MCP server), `open` (open the UI of a running server with a fresh launch code), `token:rotate`, `user:create` and `user:passwd` (network mode; they need the workspace lock, so no server may be running), `tools:install` (download a helper such as whisper.cpp after stating its size), `agent:docs` (print or write the generated material for agents, SDD-003 §8), plus vukem's built-in commands.
 
@@ -115,7 +132,7 @@ The event `id` of `batch.committed` is the revision. Details in SDD-006.
 
 ## 6. Jobs
 
-Kinds: `ingest`, `transcribe`, `export`, `export_batch`, `frame`. States: `queued`, `running`, `succeeded`, `failed`, `cancelled`. Asset ingest states: `pending`, `ingesting`, `ready`, `failed`.
+Kinds: `ingest`, `transcribe`, `export`, `export_batch`, `frame`, and the kinds a feature epic registers as needing approval (SDD-015 §5). States: `queued`, `running`, `succeeded`, `failed`, `cancelled`, and `waiting_approval` (a job of a kind that needs approval, until a person or a rule approves it; it is not running and counts as active; at most 50 per submitter and 1000 in the workspace, `E_LIMIT_EXCEEDED` past either, SDD-015 §5). Asset ingest states: `pending`, `ingesting`, `ready`, `failed`.
 
 ## 7. Database tables
 

@@ -166,4 +166,7 @@ type exportInput struct {
 	// Preset and Codec are those of the export arguments (SDD-004 sections 8.2 and 8.3).
 	Preset string `json:"preset,omitempty"`
 	Codec  string `json:"codec,omitempty"`
+	// Whole makes the bundle of the whole project (version 2) instead of one timeline; the job is kept on the
+	// first active timeline.
+	Whole bool `json:"whole,omitempty"`
 }

@@ -1,6 +1,6 @@
 {
  "name": "job_start",
- "description": "Start long work. export renders a workspace file: args {start?, end?, format?, at? (the png frame), preset?, codec?}. export_batch runs args.items [{preset, format, codec, start, end}] in turn. transcribe: args {asset_id, language?, model?}. Poll job_get.",
+ "description": "Start long work. export renders a workspace file: args {start?, end?, format?, at? (the png frame), preset?, codec?}. export_batch runs args.items (export args) in turn. transcribe: args {asset_id, language?, model?}. Poll job_get.",
  "inputSchema": {
   "type": "object",
   "properties": {
@@ -51,10 +51,7 @@
       ]
      },
      "items": {
-      "type": "array",
-      "items": {
-       "type": "object"
-      }
+      "type": "array"
      }
     }
    },

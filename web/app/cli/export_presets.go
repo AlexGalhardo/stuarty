@@ -33,11 +33,12 @@ var exportPresets = &spec{
 }
 
 var exportCheck = &spec{
-	name:    "export:check",
-	summary: "check that a project fits an export preset, before any encoding",
-	usage:   []string{"stuarty export:check --project <id> --preset <id> [--start t] [--end t] [--codec c]"},
-	example: "stuarty export:check --project prj_7k2m9x4q1b --preset tiktok --json",
-	project: true,
+	name:     "export:check",
+	summary:  "check that a project fits an export preset, before any encoding",
+	usage:    []string{"stuarty export:check --project <id> --preset <id> [--start t] [--end t] [--codec c]"},
+	example:  "stuarty export:check --project prj_7k2m9x4q1b --preset tiktok --json",
+	project:  true,
+	timeline: true,
 	flags: []flagDef{
 		{Name: "preset", Kind: kindString, Usage: "the preset id, as export:presets lists them"},
 		{Name: "start", Kind: kindString, Usage: "first time to export (default: the start)"},
@@ -50,8 +51,8 @@ var exportCheck = &spec{
 	},
 	run: func(ctx context.Context, c *call) (*output, error) {
 		res, err := c.svc.ExportCheck(ctx, service.ExportCheckRequest{
-			ProjectID: c.projectID, Preset: c.args.str("preset"), Start: c.args.str("start"), End: c.args.str("end"),
-			Codec: c.args.str("codec"),
+			ProjectID: c.projectID, TimelineID: c.timelineID, Preset: c.args.str("preset"), Start: c.args.str("start"),
+			End: c.args.str("end"), Codec: c.args.str("codec"),
 		})
 		if err != nil {
 			return nil, err
@@ -74,10 +75,11 @@ var exportBatch = &spec{
 		"stuarty export:batch --project <id> --preset <id>... [--codec c] [--start t] [--end t] [--wait]",
 		"stuarty export:batch --project <id> --items '<json array of {preset, format, codec, start, end}>' [--wait]",
 	},
-	example: "stuarty export:batch --project prj_7k2m9x4q1b --preset tiktok --preset youtube-shorts --wait",
-	project: true,
-	globals: []string{"wait", "timeout"},
-	write:   true,
+	example:  "stuarty export:batch --project prj_7k2m9x4q1b --preset tiktok --preset youtube-shorts --wait",
+	project:  true,
+	timeline: true,
+	globals:  []string{"wait", "timeout"},
+	write:    true,
 	flags: []flagDef{
 		{Name: "preset", Kind: kindString, Repeat: true, Usage: "a preset id; give the flag once for each export"},
 		{
@@ -113,7 +115,7 @@ var exportBatch = &spec{
 
 		return c.runJob(ctx, wait, deadline, func(ctx context.Context, waitMS int) (*service.Job, error) {
 			return c.svc.ExportBatch(ctx, service.ExportBatchRequest{
-				ProjectID: c.projectID, Items: items, WaitMS: waitMS,
+				ProjectID: c.projectID, TimelineID: c.timelineID, Items: items, WaitMS: waitMS,
 			})
 		})
 	},
