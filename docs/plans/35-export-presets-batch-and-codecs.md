@@ -43,7 +43,7 @@ A creator picks "YouTube Shorts" or "Instagram Reel" instead of guessing bitrate
 - [x] 4. Implement HEVC and AV1 export and extend the post-export verification. Verify: `go test ./engine/export/... -run "TestHEVC|TestAV1"` passes where an allowed encoder exists and skips with a stated reason where none does.
 - [x] 5. Implement `ExportBatch` with parent and child jobs. Verify: `go test ./service/... -run TestExportBatch` passes (partial failure, cancel, ceilings).
 - [x] 6. Expose on the three surfaces and regenerate documents. Verify: `go test ./web/contract/...` and `task generate:check` pass.
-- [ ] 7. Rebuild the export dialog, in both languages. Verify: `task test:web` and `web/e2e/specs/export-presets-batch.spec.ts` pass.
+- [x] 7. Rebuild the export dialog, in both languages. Verify: `task test:web` and `web/e2e/specs/export-presets-batch.spec.ts` pass.
 - [ ] 8. Record on the author's machine which encoders were found and one export per codec. Verify: the list and the verification outputs are in the hand-off.
 
 ## Test strategy
