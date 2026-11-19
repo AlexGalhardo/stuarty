@@ -28,7 +28,7 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | [06](06-project-as-production.md) | The project as the container of a production | L | 03 | DONE (2026-11-19, 08a630f5..77cf52b7; closes VV-225, VV-237, VV-241) |
 | [07](07-dashboard-shell.md) | Dashboard: sidebar, navigation, profile, theme | M | 03 | DONE (2026-11-19, 70387363..171fb786) |
 | [08](08-asset-library.md) | Asset library with origin, rights and reuse | M | 06, 07 | IN PROGRESS (senior-b, 2026-11-19) |
-| [09](09-ai-provider-layer.md) | AI provider layer with API keys, text generation and cost | L | 04, 05 | TODO |
+| [09](09-ai-provider-layer.md) | AI provider layer with API keys, text generation and cost | L | 04, 05 | IN PROGRESS (senior-c, 2026-11-19) |
 | [10](10-image-and-voice-generation.md) | Image and voice generation | M | 08, 09 | TODO |
 | [11](11-video-generation.md) | Video generation | M | 10 | TODO |
 | [12](12-ai-oauth-connections.md) | Sign in with ChatGPT and OpenRouter | M | 09 | TODO |
@@ -37,7 +37,7 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | [15](15-memory-skills-and-prompts.md) | Memory, skills and prompts | L | 07 | DONE (2026-11-19, 65d33593..d2e8660f) |
 | [16](16-curated-skills-and-briefing.md) | Curated skills and the guided briefing | M | 06, 15 | IN PROGRESS (senior-e, 2026-11-19) |
 | [17](17-writing.md) | Writing: scripts, copy and captions | M | 06, 09 | TODO |
-| [18](18-social-connectors-and-youtube.md) | Social connectors and YouTube | L | 04, 05 | TODO |
+| [18](18-social-connectors-and-youtube.md) | Social connectors and YouTube | L | 04, 05 | IN PROGRESS (senior-a, 2026-11-19) |
 | [19](19-instagram-and-facebook.md) | Instagram and Facebook | L | 18 | TODO |
 | [20](20-publishing-calendar-and-scheduler.md) | Publishing: calendar, approval and scheduler | L | 06, 07, 18 | TODO |
 | [21](21-desktop-background-service.md) | Desktop background service for scheduled posts | M | 20 | TODO |
