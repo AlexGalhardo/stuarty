@@ -1,0 +1,115 @@
+import { Link } from "@inertiajs/react";
+import { ArrowLeft } from "lucide-react";
+import { type ReactNode, useEffect, useMemo } from "react";
+
+import UntrustedText from "@/components/UntrustedText";
+import { Button } from "@/components/ui/button";
+import { useT } from "@/lib/i18n";
+import { HttpTransport } from "../editor/api/http";
+import { API_BASE, createImageApi } from "./api/imageApi";
+import Canvas from "./canvas/Canvas";
+import ErrorBar from "./ErrorBar";
+import { ImageEditorProvider, useImage } from "./state/context";
+import { createImageStore } from "./state/store";
+import { Toolbar, ViewTools } from "./toolbar/Toolbar";
+
+// How often the screen asks whether another actor changed the document (SDD-012 section 24.3).
+export const POLL_MS = 2000;
+
+// The image editor of one document (SDD-012 section 24): a toolbar, the canvas and, on the sides, the layer
+// panel and the inspector. It sends commands and draws what the server answers.
+export default function ImageEditor({
+	imageId,
+}: {
+	imageId: string;
+}): ReactNode {
+	const api = useMemo(() => createImageApi(new HttpTransport(API_BASE)), []);
+	const store = useMemo(() => createImageStore(api, imageId), [api, imageId]);
+
+	useEffect(() => {
+		void store.getState().open();
+		const poll = (): void => {
+			if (document.visibilityState === "visible") void store.getState().poll();
+		};
+		const timer = window.setInterval(poll, POLL_MS);
+		document.addEventListener("visibilitychange", poll);
+		return () => {
+			window.clearInterval(timer);
+			document.removeEventListener("visibilitychange", poll);
+		};
+	}, [store]);
+
+	return (
+		<ImageEditorProvider store={store} api={api}>
+			<Shell />
+		</ImageEditorProvider>
+	);
+}
+
+function Shell(): ReactNode {
+	const t = useT();
+	const doc = useImage((s) => s.doc);
+	const load = useImage((s) => s.load);
+	const error = useImage((s) => s.error);
+	const open = useImage((s) => s.open);
+
+	if (load === "failed") {
+		return (
+			<section aria-labelledby="image-title" className="max-w-xl">
+				<h1 id="image-title" className="text-xl font-semibold">
+					{t("ui.image.editor.failed")}
+				</h1>
+				{error !== null && (
+					<p lang="en" className="mt-2 text-sm">
+						<UntrustedText>{error.message}</UntrustedText>
+					</p>
+				)}
+				<div className="mt-3 flex gap-2">
+					<Button type="button" onClick={() => void open()}>
+						{t("ui.image.canvas.retry")}
+					</Button>
+					<Button asChild variant="outline">
+						<Link href="/edit-image">{t("ui.image.editor.back")}</Link>
+					</Button>
+				</div>
+			</section>
+		);
+	}
+
+	return (
+		<section
+			aria-labelledby="image-title"
+			data-testid="image-editor"
+			className="flex h-[calc(100dvh-3rem)] min-h-[28rem] flex-col overflow-hidden rounded-lg border"
+		>
+			<header className="flex items-center gap-2 border-b px-2 py-1">
+				<Button asChild variant="ghost" size="icon-sm">
+					<Link href="/edit-image" aria-label={t("ui.image.editor.back")}>
+						<ArrowLeft aria-hidden="true" />
+					</Link>
+				</Button>
+				<h1 id="image-title" className="min-w-0 truncate text-sm font-medium">
+					{doc === null ? (
+						t("ui.image.editor.loading")
+					) : (
+						<UntrustedText>{doc.name}</UntrustedText>
+					)}
+				</h1>
+				{doc !== null && (
+					<span className="ml-auto text-xs text-muted-foreground tabular-nums">
+						{t("ui.image.editor.size", { w: doc.width, h: doc.height })}
+						{" · "}
+						{t("ui.image.editor.revision", { revision: doc.revision })}
+					</span>
+				)}
+			</header>
+			<Toolbar label={t("ui.image.toolbar.label")}>
+				<ViewTools />
+			</Toolbar>
+			<ErrorBar />
+			<div className="min-h-0 flex-1">
+				<Canvas />
+			</div>
+		</section>
+	);
+}

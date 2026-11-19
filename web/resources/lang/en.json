@@ -202,6 +202,79 @@
         "copy_command": "Copy the command"
       }
     },
+    "image": {
+      "editor": {
+        "title": "Image editor",
+        "loading": "Loading image…",
+        "failed": "The image could not be opened.",
+        "back": "Back to Edit Image",
+        "size": "{w} x {h} px",
+        "revision": "revision {revision}"
+      },
+      "canvas": {
+        "label": "Image canvas",
+        "picture": "The image as it is drawn now",
+        "loading": "Drawing the image…",
+        "failed": "The picture could not be drawn.",
+        "retry": "Try again",
+        "locked": "Locked",
+        "none_selected": "Nothing selected",
+        "many_selected": "{count} layers selected",
+        "selected": "Layer {name}, {kind}, at {x}, {y}, {w} by {h}"
+      },
+      "view": {
+        "zoom_out": "Zoom out",
+        "zoom_in": "Zoom in",
+        "fit": "Fit to window",
+        "actual": "Actual size (100%)"
+      },
+      "kind": {
+        "image": "image",
+        "text": "text",
+        "shape": "shape",
+        "fill": "fill",
+        "group": "group"
+      },
+      "toolbar": {
+        "label": "Image tools"
+      },
+      "error": {
+        "dismiss": "Dismiss the error"
+      },
+      "index": {
+        "title": "Edit Image",
+        "new": "New image",
+        "name": "Name",
+        "name_placeholder": "Untitled",
+        "size": "Size",
+        "width": "Width",
+        "height": "Height",
+        "create": "Create image",
+        "documents": "Your images",
+        "loading": "Loading…",
+        "empty": "No images yet. Create one above.",
+        "layers": {
+          "one": "{count} layer",
+          "other": "{count} layers"
+        }
+      },
+      "preset": {
+        "video_thumbnail": "Video thumbnail (16:9)",
+        "square_post": "Square post (1:1)",
+        "vertical_cover": "Vertical cover (9:16)",
+        "custom": "Custom size"
+      },
+      "template": {
+        "title": "New from template",
+        "none": "There are no image templates yet. Make an image a template and it is listed here.",
+        "pick": "Template",
+        "choose": "Choose a template",
+        "required": "required",
+        "no_image": "No image",
+        "create": "Create from template",
+        "slot_hint": "Fill the slots marked required, then create again."
+      }
+    },
     "editor": {
       "dialog": {
         "close": "Close"

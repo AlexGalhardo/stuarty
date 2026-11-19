@@ -202,6 +202,79 @@
         "copy_command": "Copiar o comando"
       }
     },
+    "image": {
+      "editor": {
+        "title": "Editor de imagem",
+        "loading": "Abrindo a imagem…",
+        "failed": "Não foi possível abrir a imagem.",
+        "back": "Voltar para Editar imagem",
+        "size": "{w} × {h} px",
+        "revision": "revisão {revision}"
+      },
+      "canvas": {
+        "label": "Tela da imagem",
+        "picture": "A imagem como está desenhada agora",
+        "loading": "Desenhando a imagem…",
+        "failed": "Não foi possível desenhar a imagem.",
+        "retry": "Tentar de novo",
+        "locked": "Bloqueada",
+        "none_selected": "Nada selecionado",
+        "many_selected": "{count} camadas selecionadas",
+        "selected": "Camada {name}, {kind}, em {x}, {y}, {w} por {h}"
+      },
+      "view": {
+        "zoom_out": "Diminuir o zoom",
+        "zoom_in": "Aumentar o zoom",
+        "fit": "Ajustar à janela",
+        "actual": "Tamanho real (100%)"
+      },
+      "kind": {
+        "image": "imagem",
+        "text": "texto",
+        "shape": "forma",
+        "fill": "preenchimento",
+        "group": "grupo"
+      },
+      "toolbar": {
+        "label": "Ferramentas da imagem"
+      },
+      "error": {
+        "dismiss": "Dispensar o erro"
+      },
+      "index": {
+        "title": "Editar imagem",
+        "new": "Nova imagem",
+        "name": "Nome",
+        "name_placeholder": "Sem título",
+        "size": "Tamanho",
+        "width": "Largura",
+        "height": "Altura",
+        "create": "Criar imagem",
+        "documents": "Suas imagens",
+        "loading": "Carregando…",
+        "empty": "Nenhuma imagem ainda. Crie uma acima.",
+        "layers": {
+          "one": "{count} camada",
+          "other": "{count} camadas"
+        }
+      },
+      "preset": {
+        "video_thumbnail": "Miniatura de vídeo (16:9)",
+        "square_post": "Post quadrado (1:1)",
+        "vertical_cover": "Capa vertical (9:16)",
+        "custom": "Tamanho próprio"
+      },
+      "template": {
+        "title": "Novo a partir de um modelo",
+        "none": "Ainda não há modelos de imagem. Transforme uma imagem em modelo e ela aparece aqui.",
+        "pick": "Modelo",
+        "choose": "Escolha um modelo",
+        "required": "obrigatório",
+        "no_image": "Nenhuma imagem",
+        "create": "Criar a partir do modelo",
+        "slot_hint": "Preencha os campos marcados como obrigatórios e crie de novo."
+      }
+    },
     "editor": {
       "dialog": {
         "close": "Fechar"
