@@ -39,7 +39,7 @@ A creator writes the script, the hook and the caption of each network inside the
 
 ## Tasks
 
-- [ ] 1. Write SDD-019 and SDD-000 names, including the per-network limits table with sources and dates. Verify: `task lint:md` exits 0.
+- [x] 1. Write SDD-019 and SDD-000 names, including the per-network limits table with sources and dates. Verify: `task lint:md` exits 0.
 - [ ] 2. Implement `core/writing` with table tests. Verify: `go test ./core/writing/...` passes.
 - [ ] 3. Add storage, revisions and the service operations. Verify: `go test ./service/... -run "TestText|TestCaption|TestScript"` passes.
 - [ ] 4. Implement `TextDraft` on the provider layer with a fake provider. Verify: `go test ./service/... -run TestTextDraft` passes (a draft is a new revision; cost is recorded).
