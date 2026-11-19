@@ -5,7 +5,6 @@
 package wire
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -37,6 +36,9 @@ type Call struct {
 	Header map[string]string
 	// Body is encoded as JSON; nil sends none.
 	Body any
+	// MaxAnswer is the most read of a successful answer of JSON; zero is the package MaxAnswer. An answer
+	// that holds images as base64 needs more than that.
+	MaxAnswer int64
 }
 
 // URL joins the endpoint of the connection and a path.
@@ -48,58 +50,24 @@ func URL(c connections.Credential, path string) string {
 // failure is a *providers.Error, or the error of the gate (outbound.ErrNoConnection and friends) or of
 // the context, returned as they are.
 func JSON(ctx context.Context, c connections.Credential, call Call, out any) error {
-	var body io.Reader = http.NoBody
-
-	if call.Body != nil {
-		raw, err := json.Marshal(call.Body)
-		if err != nil {
-			return err
-		}
-
-		body = bytes.NewReader(raw)
-	}
-
-	req, err := http.NewRequestWithContext(ctx, call.Method, URL(c, call.Path), body)
+	res, err := send(ctx, c, &call)
 	if err != nil {
 		return err
 	}
 
-	req.Header.Set("Accept", "application/json")
-
-	if call.Body != nil {
-		req.Header.Set("Content-Type", "application/json")
-	}
-
-	for k, v := range call.Header {
-		req.Header.Set(k, v)
-	}
-
-	res, err := c.Client.Do(req)
-	if err != nil {
-		return transportError(ctx, err)
-	}
-
 	defer func() { _ = res.Body.Close() }()
 
-	if res.StatusCode < 200 || res.StatusCode > 299 {
-		raw, _ := io.ReadAll(io.LimitReader(res.Body, MaxErrorBody))
-
-		e := StatusError(res.StatusCode, res.Header.Get("Retry-After"), raw)
-		// A code is shown only when it cannot carry text, and a server that repeats the key it was sent as its
-		// code has not sent a code (T-55).
-		if e.Code != "" && c.Echoes(e.Code) {
-			e.Code = safeType(raw, c)
-		}
-
-		return e
+	limit := call.MaxAnswer
+	if limit <= 0 {
+		limit = MaxAnswer
 	}
 
-	raw, err := io.ReadAll(io.LimitReader(res.Body, MaxAnswer+1))
+	raw, err := io.ReadAll(io.LimitReader(res.Body, limit+1))
 	if err != nil {
 		return &providers.Error{Kind: providers.KindUnavailable, Status: res.StatusCode}
 	}
 
-	if len(raw) > MaxAnswer || json.Unmarshal(raw, out) != nil {
+	if int64(len(raw)) > limit || json.Unmarshal(raw, out) != nil {
 		return &providers.Error{Kind: providers.KindUnreadable, Status: res.StatusCode}
 	}
 
@@ -121,6 +89,15 @@ func transportError(ctx context.Context, err error) error {
 	return &providers.Error{Kind: providers.KindUnavailable}
 }
 
+// refusedCodes are the short error codes with which a provider says it declined the prompt under its content
+// policy (SDD-016 section 6.2): a 400 with one of them is providers.KindRefused, not a malformed request.
+var refusedCodes = map[string]bool{
+	"content_policy_violation": true,
+	"moderation_blocked":       true,
+	"content_filter":           true,
+	"safety_violation":         true,
+}
+
 // StatusError maps a failing status to a providers.Error. body is the start of the answer: only its
 // short error code is taken, and only when it matches the safe pattern. retryAfter is the header.
 func StatusError(status int, retryAfter string, body []byte) *providers.Error {
@@ -137,6 +114,8 @@ func StatusError(status int, retryAfter string, body []byte) *providers.Error {
 		}
 	case status >= 500:
 		e.Kind = providers.KindUnavailable
+	case status == http.StatusBadRequest && refusedCodes[e.Code]:
+		e.Kind = providers.KindRefused
 	case status >= 400:
 		e.Kind = providers.KindBadRequest
 	default:
