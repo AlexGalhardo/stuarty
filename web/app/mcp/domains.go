@@ -117,3 +117,27 @@ func imageHistory(
 
 	return &toolOutput{value: res, text: service.ImageStepText(res)}, nil
 }
+
+// toolDomains is the domains each tool belongs to: what the parity test of web/contract compares with the domain
+// of the Service operations the tool serves. A tool that routes by the domain argument (served) lists those
+// domains too; command_help is the discovery of every domain.
+var toolDomains = map[string][]string{
+	"project_list": {command.DomainProject}, "project_create": {command.DomainProject},
+	"project_get": {command.DomainProject}, "project_trash": {command.DomainProject},
+	"project_item": {command.DomainProject},
+	"edit":         {command.DomainVideo, command.DomainImage}, "history": {command.DomainVideo, command.DomainImage},
+	"view": {command.DomainVideo}, "lint": {command.DomainVideo}, "job_start": {command.DomainVideo},
+	"job_get": {command.DomainVideo}, "job_cancel": {command.DomainVideo}, "template": {command.DomainVideo},
+	"media_import": {command.DomainAsset}, "media_inspect": {command.DomainAsset}, "font_import": {command.DomainAsset},
+	"image":   {command.DomainImage},
+	"library": {command.DomainMemory},
+	// command_help answers for every domain; it is itself an operation of the workspace domain.
+	"command_help": command.DomainNames(),
+	"connection":   {command.DomainWorkspace},
+}
+
+// ToolDomains lists the domains a tool belongs to.
+func ToolDomains(tool string) []string { return slices.Clone(toolDomains[tool]) }
+
+// ServesDomain reports whether a tool routes the operations of a domain through its domain argument.
+func ServesDomain(tool, domain string) bool { return slices.Contains(served[tool], domain) }
