@@ -391,14 +391,16 @@ func TestValidSummary(t *testing.T) {
 		in   string
 		want bool
 	}{
-		"text":         {"Post the launch video to the channel", true},
-		"two lines":    {"a\nb", true},
-		"empty":        {"", false},
-		"too long":     {strings.Repeat("a", MaxSummary+1), false},
-		"at the limit": {strings.Repeat("é", MaxSummary), true},
-		"control":      {"a\x00b", false},
-		"escape":       {"a\x1b[31m", false},
-		"delete":       {"a\x7f", false},
+		"text":           {"Post the launch video to the channel", true},
+		"two lines":      {"a\nb", true},
+		"empty":          {"", false},
+		"too long":       {strings.Repeat("a", MaxSummary+1), false},
+		"at the limit":   {strings.Repeat("é", MaxSummary), true},
+		"control":        {"a\x00b", false},
+		"escape":         {"a\x1b[31m", false},
+		"delete":         {"a\x7f", false},
+		"invalid utf-8":  {"a\xffb", false},
+		"emoji and text": {"Post \U0001F600 in português", true},
 	}
 
 	for name, tt := range tests {
@@ -409,5 +411,36 @@ func TestValidSummary(t *testing.T) {
 
 	if !ValidKind("publish.post") || ValidKind("Bad Kind") {
 		t.Error("ValidKind is wrong")
+	}
+}
+
+// What a person reads before approving must not be able to look like something else: every format
+// and control character is refused. The characters are built from their code points, so no editor
+// or formatter can turn them into the invisible character itself.
+func TestValidSummaryRefusesLookAlikes(t *testing.T) {
+	for _, cp := range []rune{
+		0x202A, 0x202B, 0x202C, 0x202D, 0x202E, // bidirectional embeddings and overrides
+		0x2066, 0x2067, 0x2068, 0x2069, 0x200E, 0x200F, 0x061C, // isolates and marks
+		0x200B, 0x200C, 0x200D, 0x2060, 0xFEFF, // zero width
+		0x0080, 0x0085, 0x009F, // C1 controls
+		0x2028, 0x2029, // line and paragraph separators
+		0xE0041, 0xFFF9, // tag characters, interlinear annotation
+		0x00AD, 0x180E, // soft hyphen, Mongolian vowel separator
+	} {
+		if ValidSummary("Post" + string(cp) + "now") {
+			t.Errorf("U+%04X was accepted in a summary", cp)
+		}
+
+		if ValidReason(string(cp)) {
+			t.Errorf("U+%04X was accepted in a reason", cp)
+		}
+	}
+
+	if ValidSummary("a" + string([]byte{0xff}) + "b") {
+		t.Error("invalid UTF-8 was accepted")
+	}
+
+	if !ValidReason("") || !ValidReason("no, wrong channel") || ValidReason(strings.Repeat("a", MaxReason+1)) {
+		t.Error("ValidReason is wrong")
 	}
 }
