@@ -215,7 +215,15 @@ func ensureUnowned(d Dir) error {
 
 	l, err := d.TryLock()
 	if errors.Is(err, ErrLocked) {
-		return fmt.Errorf("%w: close Vukem Video (or stop its server) and start again", ErrFormerInUse)
+		// An *Error, so that every surface answers E_WORKSPACE_LOCKED with this request instead of
+		// E_INTERNAL; the message names no folder.
+		return &Error{
+			Code: CodeWorkspaceLocked,
+			Message: "Vukem Video is still running and owns the workspace that Stuarty adopts at its first start: " +
+				"close Vukem Video (or stop its server) and start again",
+			Retryable: true,
+			Err:       ErrFormerInUse,
+		}
 	}
 
 	if err != nil {
