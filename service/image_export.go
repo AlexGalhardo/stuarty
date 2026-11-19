@@ -183,7 +183,7 @@ func (s *svc) imageAssetPath(ctx context.Context, c Caller) func(hash string) (s
 	allowed := s.imageAssetAccess(ctx, c)
 
 	return func(hash string) (string, error) {
-		if !allowed(hash) {
+		if _, ok := allowed(hash); !ok {
 			return "", fmt.Errorf("the image %s is not available to this caller", hash)
 		}
 
