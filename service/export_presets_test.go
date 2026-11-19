@@ -63,6 +63,14 @@ func TestExportPresetListGivesTheFivePlacements(t *testing.T) {
 		t.Errorf("text:\n%s", res.Text)
 	}
 
+	// The text gives the limits as the sources state them: half a second is not "0 s", and 300 MB (300,000,000
+	// bytes) is written in the units of the check, not as MiB.
+	for _, want := range []string{"at least 0.5 s", "file at most 300 MB", "file at most 4 GB", "file at most 8 GB"} {
+		if !strings.Contains(res.Text, want) {
+			t.Errorf("the text has no %q:\n%s", want, res.Text)
+		}
+	}
+
 	// The list needs the read scope and nothing more.
 	if _, err := env.s.ExportPresetList(context.Background(), ExportPresetListRequest{}); err == nil {
 		t.Error("a call with no credentials was answered")
