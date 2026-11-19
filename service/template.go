@@ -37,7 +37,7 @@ func templateRefused(c Caller) error {
 // The media of the slots become placeholders; no log row is written, and saving
 // again makes another template.
 func (s *svc) TemplateSave(ctx context.Context, req TemplateSaveRequest) (*TemplateResult, error) {
-	c, err := authorize(ctx, "TemplateSave", req.ProjectID)
+	c, err := s.authorizeProject(ctx, "TemplateSave", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}

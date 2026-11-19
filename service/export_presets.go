@@ -220,7 +220,7 @@ type ExportCheckResult struct {
 
 // ExportCheck runs the checks of SDD-004 section 8.2 on the project as it is now.
 func (s *svc) ExportCheck(ctx context.Context, req ExportCheckRequest) (*ExportCheckResult, error) {
-	c, err := authorize(ctx, "ExportCheck", req.ProjectID)
+	c, err := s.authorizeProject(ctx, "ExportCheck", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}
