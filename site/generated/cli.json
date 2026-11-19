@@ -686,7 +686,8 @@
         {
           "name": "preset",
           "type": "string",
-          "usage": "a preset id; give the flag once for each export"
+          "usage": "a preset id; give the flag once for each export",
+          "repeat": true
         },
         {
           "name": "items",
