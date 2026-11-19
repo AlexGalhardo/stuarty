@@ -233,8 +233,8 @@ func TestSecurity_T22_CSPNonceOnly(t *testing.T) {
 		}
 
 		match := nonceOf.FindStringSubmatch(script)
-		if len(match) < 2 || script != "script-src 'self' 'nonce-"+match[1]+"'" {
-			t.Fatalf("%s: script-src is not 'self' plus one nonce: %q", c.path, script)
+		if len(match) < 2 || script != "script-src 'self' 'nonce-"+match[1]+"' 'wasm-unsafe-eval'" {
+			t.Fatalf("%s: script-src is not 'self', one nonce and 'wasm-unsafe-eval': %q", c.path, script)
 		}
 
 		if !strings.Contains("; "+policy+";", "; worker-src 'self';") {
