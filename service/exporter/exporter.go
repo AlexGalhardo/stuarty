@@ -173,6 +173,7 @@ func (a *adapter) job(in service.ExportInput, runner *ffmpeg.Runner, caps *ffmpe
 		Runner:        runner,
 		Caps:          caps,
 		Doc:           in.Doc,
+		Nested:        in.Nested,
 		Start:         int(in.Start),
 		End:           int(in.End),
 		JobID:         in.JobID,

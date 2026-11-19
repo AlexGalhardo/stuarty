@@ -98,6 +98,9 @@ type Env struct {
 	// MediaFrames is the frame count of the normalized media actually in the
 	// store, on the asset's own frame rate (Full only): L_SOURCE_RANGE.
 	MediaFrames func(assetID string) (frames int, ok bool)
+	// Nested gives the timeline a composition item uses, from the same production; ok is false when it is
+	// missing or in the trash. Without it the composition rules are silent (rules_composition.go).
+	Nested func(timelineID string) (doc *timeline.Document, ok bool)
 }
 
 // Lint runs the rules over doc and returns the findings in report order:
@@ -112,6 +115,7 @@ func Lint(doc *timeline.Document, env Env, mode Mode) []Finding {
 	c.emptyTimeline()
 	c.dimensions()
 	c.media()
+	c.compositions(mode == Full)
 	c.slots()
 	c.layers()
 	c.silent()

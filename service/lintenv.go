@@ -22,6 +22,12 @@ const maxPeaksFile = 64 << 20
 // (SDD-003 section 3.6). The Fast lint of an edit reads no artifact.
 func (s *svc) lintEnvFor(ctx context.Context, doc *timeline.Document) lint.Env {
 	env := s.lintEnv
+
+	if len(timeline.CompositionTimelines(doc)) > 0 {
+		nested, _ := s.nestedFor(ctx, s.store, doc)
+		env.Nested = nestedLookup(nested)
+	}
+
 	if env.Artifacts != nil || s.workspace == "" {
 		return env
 	}

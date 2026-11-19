@@ -372,7 +372,7 @@ func (s *svc) setItemState(
 	var tlID string
 
 	head, change, err := s.changeProduction(ctx, c, action, req.ProjectID, req.DryRun,
-		func(_ context.Context, _ Tx, _ *ProductionHead, rows []ItemRow) (*productionChange, error) {
+		func(ctx context.Context, tx Tx, _ *ProductionHead, rows []ItemRow) (*productionChange, error) {
 			it := findItem(rows, req.ItemID)
 			if it == nil {
 				return nil, itemNotFound(req.ItemID)
@@ -381,6 +381,19 @@ func (s *svc) setItemState(
 			ch := &productionChange{rows: rows, itemID: req.ItemID}
 			if it.State == to {
 				return ch, nil
+			}
+
+			if to == ProjectTrashed && it.Kind == string(project.Timeline) {
+				if users := s.compositionUsers(ctx, tx, it.Ref); len(users) > 0 {
+					return nil, newError(
+						command.CodeInUse,
+						"the timeline is used as a composition by %d other timeline(s).",
+						len(users),
+					).
+						withPath("item_id").
+						withHint("remove those compositions or expand them with composition.expand, then trash it").
+						withDetail("used_by", users)
+				}
 			}
 
 			check := project.CheckTrash(coreItems(rows), it.ID)

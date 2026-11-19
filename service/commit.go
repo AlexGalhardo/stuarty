@@ -41,6 +41,7 @@ type batch struct {
 	result         func(revision int64) ([]byte, error) // the result to store under the key, when there is one
 	closeTarget    bool                                 // undo and redo close the step they consume
 	closeOpenRedo  bool                                 // a new edit ends the actor's redo chain
+	spawned        []*timeline.Document                 // the timelines the batch made, stored with it
 }
 
 // commit runs steps 7 to 14 inside the open transaction. It returns the new
@@ -107,6 +108,10 @@ func (s *svc) commit(ctx context.Context, tx ProjectTx, b *batch) (int64, error)
 	}
 
 	crashpoint.Hit("commit.after_assets_sync")
+
+	if err := s.storeSpawned(ctx, tx, b.actor, b.spawned); err != nil {
+		return 0, err
+	}
 
 	if b.key != "" && b.result != nil {
 		stored, err := b.result(newRev)

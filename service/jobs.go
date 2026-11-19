@@ -149,9 +149,12 @@ func (s *svc) JobStart(ctx context.Context, req JobStartRequest) (*Job, error) {
 		return nil, perr
 	}
 
+	nested, _ := s.nestedFor(ctx, s.store, doc)
+
 	input := marshalOrNull(
 		exportInput{
 			Revision: row.Revision, Start: start, End: end, Lint: &totals, Document: row.Document, Format: format,
+			Nested:   nestedSnapshot(nested),
 			Warnings: exportWarnings(doc, format, end-start), Preset: args.Preset, Codec: args.Codec,
 		},
 	)
