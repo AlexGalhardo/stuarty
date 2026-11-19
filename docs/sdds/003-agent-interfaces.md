@@ -114,7 +114,7 @@ A project is a production; the timeline document of SDD-001 is one item of it (S
 
 1. **`project_id` alone.** An operation that reads or edits a timeline document (SDD-000 §1 lists them) and receives only `project_id` addresses the one active timeline of the project. A project made before this model has exactly one, and the id of its timeline is the id of the project, so nothing a caller held changes.
 2. **`timeline_id`.** The same operations accept an optional `timeline_id` next to `project_id` (an HTTP query or body member of the same name, the CLI flag `--timeline`, an MCP argument). Given alone it names the timeline and the project is the one that holds it; given with `project_id` the timeline must belong to that project, otherwise `E_NOT_FOUND`. Revisions, history, undo, events and the `project_id` of the results (the id of the timeline document) are those of that timeline.
-3. **Several timelines and no `timeline_id`.** The operation is refused with `E_VALIDATION`, `path` `timeline_id`, `details.timelines` (the ids and titles of the active timelines) and the hint "pass timeline_id" followed by the ids. Nothing is done and nothing is guessed. `ProjectGet` and `ProjectDescribe` are the exceptions: they describe the whole project (§2.3.1).
+3. **Several timelines and no `timeline_id`.** The operation is refused with `E_VALIDATION`, `path` `timeline_id`, `details.timelines` (the ids of the active timelines; titles are untrusted text and are not echoed) and the hint "pass timeline_id" followed by the ids. Nothing is done and nothing is guessed. `ProjectGet` and `ProjectDescribe` are the exceptions: they describe the whole project (§2.3.1).
 4. **A new timeline** is made with `ProjectItemAdd` (kind `timeline`); its id is returned as `timeline_id`. A key limited to one project (SDD-007 §12) reaches every timeline of that project and no other.
 5. **The id of a timeline document** keeps the `prj_` prefix because the document is unchanged (SDD-001); the first timeline of a project has the id of the project.
 
@@ -329,7 +329,7 @@ type ProjectStateResult struct {
 
 ### 2.3.1 The production (ADR-0039, RF-300, RF-302 to RF-304)
 
-`ProjectGetResult` gains `items` (the items without their text, by position, trashed ones with `state` `trashed`) and `production`; `ProjectGetRequest` gains `timeline_id`. The head members (`revision`, `width`, `counts`...) and the text are those of the addressed timeline; with several timelines and no `timeline_id` the head is that of the first active one and `text` is the overview of `ProjectDescribe`. `detail: "document"` needs one timeline (§1.7 rule 3). `ProjectSummary` (the list) is that of the first active timeline and gains `timelines` (the count of active timeline items).
+`ProjectGetResult` gains `timeline_id` (the timeline the head and the text are about), `items` (the items without their text, by position, trashed ones with `state` `trashed`) and `production`; `ProjectGetRequest` gains `timeline_id`. The `project_id` of the result is the project; a timeline id given in its place names that timeline. The head members (`revision`, `width`, `counts`...) and the text are those of the addressed timeline; with several timelines and no `timeline_id` the head is that of the first active one and `text` is the overview of `ProjectDescribe`. `detail: "document"` needs one timeline (§1.7 rule 3). `ProjectSummary` (the list) is that of the first active timeline and gains `timelines` (the count of active timeline items).
 
 ```go
 type ProjectItem struct {
@@ -423,7 +423,7 @@ type BriefResult struct {
 	ProjectID string    `json:"project_id"`
 	ItemID    string    `json:"item_id,omitempty"` // empty when the project has no brief
 	Text      string    `json:"text" untrusted:"true"`
-	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	UpdatedAt *time.Time `json:"updated_at,omitempty"` // absent when the project has no brief
 }
 ```
 

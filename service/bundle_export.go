@@ -23,7 +23,8 @@ import (
 // ProjectBundleExportRequest asks for a .vvbundle of the current revision of a project
 // (SDD-005 section 16, RF-006).
 type ProjectBundleExportRequest struct {
-	ProjectID string `json:"project_id"`
+	ProjectID  string `json:"project_id"`
+	TimelineID string `json:"timeline_id,omitempty"` // SDD-003 section 1.7
 	// IncludeLog false leaves operations.ndjson out, to share without history. Default true.
 	IncludeLog *bool `json:"include_log,omitempty"`
 	WaitMS     int   `json:"wait_ms,omitempty"`
@@ -37,6 +38,10 @@ func (s *svc) ProjectBundleExport(ctx context.Context, req ProjectBundleExportRe
 	}
 
 	if err := s.heavyLimit(ctx, c); err != nil {
+		return nil, err
+	}
+
+	if err := s.useTimeline(ctx, c, &req.ProjectID, req.TimelineID); err != nil {
 		return nil, err
 	}
 
