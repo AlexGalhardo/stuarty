@@ -337,7 +337,7 @@ Added to SDD-000 section 1 (domain `publish`) and to the scope matrix of SDD-007
 | `PublicationCreate` | edit | a publication with its targets, every target `draft`; the files and the connections are checked, the posts are validated with `Validate` of the network and the issues come back as `E_VALIDATION` |
 | `PublicationGet` | read | one publication with its targets |
 | `PublicationList` | read | the publications of a project, a state or a time range (`from`, `to`: the targets whose time falls in it, in the order of the time), with a page cursor |
-| `PublicationUpdate` | edit | changes the shared fields, a target's fields, adds or removes a target; a target that was waiting or approved goes back to `waiting_approval` (section 16) |
+| `PublicationUpdate` | edit | changes the shared fields (a field left out stays), a target's fields (the `fields` given replace the target's own as a whole; none given leaves them) or its time, adds or removes a target; a target that was waiting or approved goes back to `waiting_approval` (section 16) |
 | `PublicationSchedule` | render | gives a target its time (`at`, with `zone`, or as an instant) and asks for approval; a target already waiting or scheduled is rescheduled with a new request |
 | `PublicationSendNow` | render | the same with the time of now, for a `draft`, `missed` or `failed` target |
 | `PublicationRetry` | render | the same for a `failed` target, with its error cleared |
