@@ -42,7 +42,7 @@ An agent can prepare a post or an expensive generation, and nothing is sent or s
 - [x] 5. Implement the cost ledger and the ceilings. Verify: `go test ./service/approval/... ./web/app/servicetest/... -run TestCeiling` passes (per item, per day, per project).
 - [x] 6. Expose on HTTP, CLI and MCP (read and submit for agents; decide only for a privileged session) with parity tests. Verify: `go test ./web/contract/...` passes.
 - [x] 7. Build the approval queue component and the rules screen in both languages. Verify: `task test:web` and `web/e2e/specs/approval.spec.ts` pass.
-- [ ] 8. Add the security tests of the new rows. Verify: `go test -run TestSecurity_ ./...` and `go run ./internal/tools/threatcheck` exit 0.
+- [x] 8. Add the security tests of the new rows. Verify: `go test -run TestSecurity_ ./...` and `go run ./internal/tools/threatcheck` exit 0.
 
 ## Test strategy
 
