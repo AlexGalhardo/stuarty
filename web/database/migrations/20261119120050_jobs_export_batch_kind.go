@@ -11,10 +11,12 @@ const (
 // RF-088). The kind is a check of the table, so the table is rebuilt: the indexes are recreated by Rebuild,
 // and the migration owns its transaction because Rebuild turns foreign keys off around it.
 //
-// The ID sorts before 20261119120100, the rebuild of jobs of the approval queue (epic 05), which drops the
-// closed list of kinds and adds a column and a state that this definition does not know: run after it, this
-// rebuild would lose them. The parent of project_id is the table that holds the timelines: projects until the
-// project-as-production migration renames it timelines (20261119120000), timelines after.
+// The ID sorts before the rebuild of jobs of the approval queue (epic 05), which drops the closed list of kinds
+// (so it needs no export_batch) and adds the column approval_id and the state waiting_approval, which this
+// definition does not know. On a workspace where that rebuild already ran (this migration then runs out of
+// order), the table is left alone: rebuilding it here would lose them. The parent of project_id is the table that
+// holds the timelines: projects until the project-as-production migration renames it timelines
+// (20261119120000), timelines after.
 func m20261119120050JobsExportBatchKind() schema.Migration {
 	return schema.Migration{
 		ID:            "20261119120050_jobs_export_batch_kind",
@@ -25,6 +27,15 @@ func m20261119120050JobsExportBatchKind() schema.Migration {
 }
 
 func rebuildJobsForBatch(s *schema.Schema, kindCheck string) error {
+	open, err := s.HasColumn("jobs", "approval_id")
+	if err != nil {
+		return err
+	}
+
+	if open {
+		return nil
+	}
+
 	parent := "projects"
 
 	renamed, err := s.HasTable("timelines")

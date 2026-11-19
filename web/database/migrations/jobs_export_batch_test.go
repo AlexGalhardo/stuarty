@@ -203,3 +203,44 @@ func TestJobsExportBatchKindFollowsTheRenamedTimelines(t *testing.T) {
 		t.Errorf("jobs after the timeline went = %d, %v; want 0", n, err)
 	}
 }
+
+// TestJobsExportBatchKindLeavesAnOpenTableAlone: on a workspace where the rebuild of the approval queue already
+// ran (the table has approval_id and no closed list of kinds), this migration runs out of order and must not
+// rebuild the table: the column, its values and the rows stay as they are.
+func TestJobsExportBatchKindLeavesAnOpenTableAlone(t *testing.T) {
+	db, rest := migratedBefore(t)
+	ctx := context.Background()
+
+	execAll(
+		t,
+		db,
+		`ALTER TABLE jobs ADD COLUMN approval_id TEXT`,
+		`INSERT INTO projects (id, name, schema_version, document, doc_sha256, width, height, fps_num, fps_den, created_ms, updated_ms, created_by)
+ VALUES ('prj_c', 'c', 1, '{}', 'x', 1, 1, 30, 1, 1, 1, 'local:ui')`,
+		`INSERT INTO jobs (id, kind, project_id, actor, input, created_ms, updated_ms, approval_id)
+ VALUES ('job_1', 'export', 'prj_c', 'a', '{}', 1, 1, 'apr_0000000001')`,
+	)
+
+	var before string
+	if err := db.QueryRowContext(ctx, `SELECT sql FROM sqlite_master WHERE name = 'jobs'`).Scan(&before); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := rest.Up(ctx); err != nil {
+		t.Fatal(err)
+	}
+
+	var after, approval string
+	if err := db.QueryRowContext(ctx, `SELECT sql FROM sqlite_master WHERE name = 'jobs'`).Scan(&after); err != nil {
+		t.Fatal(err)
+	}
+
+	if after != before {
+		t.Errorf("the table was rebuilt:\n%s\nwas\n%s", after, before)
+	}
+
+	if err := db.QueryRowContext(ctx, `SELECT approval_id FROM jobs WHERE id = 'job_1'`).Scan(&approval); err != nil ||
+		approval != "apr_0000000001" {
+		t.Errorf("approval_id after the migration = %q, %v", approval, err)
+	}
+}
