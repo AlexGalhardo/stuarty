@@ -108,6 +108,16 @@ func CallerFrom(ctx context.Context) (Caller, bool)
 
 A method that needs a scope the caller lacks returns `E_FORBIDDEN`; a missing `Caller` is `E_UNAUTHORIZED`. The in-process CLI and the stdio MCP server, when they run the service in process, build a `local:<label>` `Caller` with all five scopes except that `TrashEmpty` is refused (SDD-007 §5.1 item 4, §5.3). The label `ui` is reserved for the browser UI: `--actor ui` and a `Stuarty-Client: ui` header are `E_VALIDATION`, and a `clientInfo.name` of `ui` is replaced by `mcp` (it would otherwise share the UI's undo chain).
 
+### 1.7 Projects and timelines (ADR-0039)
+
+A project is a production; the timeline document of SDD-001 is one item of it (SDD-005 §5.12). The surfaces keep working for every agent and script written before this model:
+
+1. **`project_id` alone.** An operation that reads or edits a timeline document (SDD-000 §1 lists them) and receives only `project_id` addresses the one active timeline of the project. A project made before this model has exactly one, and the id of its timeline is the id of the project, so nothing a caller held changes.
+2. **`timeline_id`.** The same operations accept an optional `timeline_id` next to `project_id` (an HTTP query or body member of the same name, the CLI flag `--timeline`, an MCP argument). Given alone it names the timeline and the project is the one that holds it; given with `project_id` the timeline must belong to that project, otherwise `E_NOT_FOUND`. Revisions, history, undo, events and the `project_id` of the results (the id of the timeline document) are those of that timeline.
+3. **Several timelines and no `timeline_id`.** The operation is refused with `E_VALIDATION`, `path` `timeline_id`, `details.timelines` (the ids and titles of the active timelines) and the hint "pass timeline_id" followed by the ids. Nothing is done and nothing is guessed. `ProjectGet` and `ProjectDescribe` are the exceptions: they describe the whole project (§2.3.1).
+4. **A new timeline** is made with `ProjectItemAdd` (kind `timeline`); its id is returned as `timeline_id`. A key limited to one project (SDD-007 §12) reaches every timeline of that project and no other.
+5. **The id of a timeline document** keeps the `prj_` prefix because the document is unchanged (SDD-001); the first timeline of a project has the id of the project.
+
 ## 2. The Service interface
 
 This is the canonical shape. The surfaces only encode it. Types live in package `service`; `timeline`, `command` and `lint` are `core/timeline`, `core/command`, `core/lint`. JSON names are snake_case. Optional members are omitted when empty unless the tag says otherwise. A comment `// default:` gives the value used when the member is zero.
@@ -173,6 +183,17 @@ type Service interface {
 	FontImport(ctx context.Context, req FontImportRequest) (*FontImportResult, error)        // SDD-007 §7.7
 	BrandKitGet(ctx context.Context, req BrandKitGetRequest) (*BrandKit, error)              // SDD-005 §5.11
 	BrandKitSet(ctx context.Context, req BrandKitSetRequest) (*BrandKit, error)               // SDD-005 §5.11
+
+	// The production (§2.3.1).
+	ProjectDescribe(ctx context.Context, req ProjectDescribeRequest) (*ProjectDescribeResult, error)
+	ProjectDuplicate(ctx context.Context, req ProjectDuplicateRequest) (*ProjectCreateResult, error)
+	ProjectItemAdd(ctx context.Context, req ProjectItemAddRequest) (*ProjectItemResult, error)
+	ProjectItemMove(ctx context.Context, req ProjectItemMoveRequest) (*ProjectItemResult, error)
+	ProjectItemRename(ctx context.Context, req ProjectItemRenameRequest) (*ProjectItemResult, error)
+	ProjectItemTrash(ctx context.Context, req ProjectItemTrashRequest) (*ProjectItemResult, error)
+	ProjectItemRestore(ctx context.Context, req ProjectItemTrashRequest) (*ProjectItemResult, error)
+	BriefGet(ctx context.Context, req BriefGetRequest) (*BriefResult, error)
+	BriefSet(ctx context.Context, req BriefSetRequest) (*BriefResult, error)
 }
 ```
 
@@ -305,6 +326,112 @@ type ProjectStateResult struct {
 `ProjectGet` (HTTP `GET /projects/{id}`) always returns the head: `project_id`, `name`, `revision`, `state`, `width`, `height`, `fps`, durations and `counts`. With `detail: "document"` it adds `document` (the canonical document, not paged: `cursor` and `limit` are `E_VALIDATION`) and leaves `text` empty. The UI calls it with `detail=document` (SDD-012 §4.2).
 
 `ProjectTrash` of a trashed project and `ProjectRestore` of an active one succeed and change nothing (idempotent). A trashed project rejects `Edit`, `Undo`, `Redo`, `MediaImport`, `JobStart` with `E_INVALID_STATE`, hint "restore the project first".
+
+### 2.3.1 The production (ADR-0039, RF-300, RF-302 to RF-304)
+
+`ProjectGetResult` gains `items` (the items without their text, by position, trashed ones with `state` `trashed`) and `production`; `ProjectGetRequest` gains `timeline_id`. The head members (`revision`, `width`, `counts`...) and the text are those of the addressed timeline; with several timelines and no `timeline_id` the head is that of the first active one and `text` is the overview of `ProjectDescribe`. `detail: "document"` needs one timeline (§1.7 rule 3). `ProjectSummary` (the list) is that of the first active timeline and gains `timelines` (the count of active timeline items).
+
+```go
+type ProjectItem struct {
+	ID         string    `json:"id"`                    // pit_
+	Kind       string    `json:"kind"`                  // "brief" | "text" | "timeline" | "output"; "image" and "publication" are reserved
+	Title      string    `json:"title" untrusted:"true"`
+	Position   int       `json:"position"`              // 0 to n-1 over every item
+	State      string    `json:"state"`                 // "active" | "trashed"
+	TimelineID string    `json:"timeline_id,omitempty"` // kind timeline
+	JobID      string    `json:"job_id,omitempty"`      // kind output: the export job
+	Format     string    `json:"format,omitempty"`      // kind output: the destination format
+	Text       string    `json:"text,omitempty" untrusted:"true"` // brief and text, only where an operation says so
+	UpdatedAt  time.Time `json:"updated_at"`
+}
+
+// ProductionState is what a person or an agent reads to know what exists and what is missing (RF-303); core/project computes it.
+type ProductionState struct {
+	HasBrief         bool `json:"has_brief"`
+	HasScript        bool `json:"has_script"`        // an active text item with some text
+	Timelines        int  `json:"timelines"`         // active
+	Outputs          int  `json:"outputs"`           // active
+	PendingApprovals int  `json:"pending_approvals"` // 0 until publications exist (epic 20)
+	Published        int  `json:"published"`         // 0 until publications exist (epic 20)
+}
+
+type ProjectDescribeRequest struct {
+	ProjectID string `json:"project_id"`
+	MaxTokens int    `json:"max_tokens,omitempty"` // default: 1500; 200 to 6000
+}
+type ProjectDescribeResult struct {
+	Envelope
+	ProjectID  string          `json:"project_id"`
+	Name       string          `json:"name" untrusted:"true"`
+	State      string          `json:"state"`
+	Production ProductionState `json:"production"`
+	Items      []ProjectItem   `json:"items"`
+	Text       string          `json:"text"`
+}
+
+type ProjectDuplicateRequest struct {
+	ProjectID string `json:"project_id"`
+	Name      string `json:"name,omitempty"` // default: the name followed by " copy"
+	DryRun    bool   `json:"dry_run,omitempty"`
+}
+// ProjectDuplicate returns the ProjectCreateResult of the copy.
+
+type ProjectItemAddRequest struct {
+	ProjectID string `json:"project_id"`
+	Kind      string `json:"kind"`               // "text", "timeline" or "output" ("brief" is made by BriefSet)
+	Title     string `json:"title"`              // 1 to 120 characters
+	Position  *int   `json:"position,omitempty"` // default: the end
+	Text      string `json:"text,omitempty"`     // kind text, at most 256 KiB
+	Preset    string `json:"preset,omitempty"`   // kind timeline, as ProjectCreateRequest
+	FPS       string `json:"fps,omitempty"`      // kind timeline
+	JobID     string `json:"job_id,omitempty"`   // kind output: a succeeded export job of this project
+	DryRun    bool   `json:"dry_run,omitempty"`
+}
+type ProjectItemMoveRequest struct {
+	ProjectID string `json:"project_id"`
+	ItemID    string `json:"item_id"`
+	Position  int    `json:"position"`
+	DryRun    bool   `json:"dry_run,omitempty"`
+}
+type ProjectItemRenameRequest struct {
+	ProjectID string `json:"project_id"`
+	ItemID    string `json:"item_id"`
+	Title     string `json:"title"`
+	DryRun    bool   `json:"dry_run,omitempty"`
+}
+type ProjectItemTrashRequest struct {
+	ProjectID string `json:"project_id"`
+	ItemID    string `json:"item_id"`
+	DryRun    bool   `json:"dry_run,omitempty"`
+}
+type ProjectItemResult struct {
+	Envelope
+	ProjectID  string          `json:"project_id"`
+	Item       ProjectItem     `json:"item"`
+	Production ProductionState `json:"production"`
+	Text       string          `json:"text"`
+}
+
+type BriefGetRequest struct{ ProjectID string `json:"project_id"` }
+type BriefSetRequest struct {
+	ProjectID string `json:"project_id"`
+	Text      string `json:"text"` // Markdown, at most 256 KiB (E_LIMIT_EXCEEDED); empty is allowed and clears the brief
+	DryRun    bool   `json:"dry_run,omitempty"`
+}
+type BriefResult struct {
+	Envelope
+	ProjectID string    `json:"project_id"`
+	ItemID    string    `json:"item_id,omitempty"` // empty when the project has no brief
+	Text      string    `json:"text" untrusted:"true"`
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
+}
+```
+
+- **`ProjectDescribe`** is the text view of a production for an agent that has never seen it, inside the token budget of §3.10 (`max_tokens`, default 1,500): the name and state, one line of production state, the brief (cut at the budget with the note `brief cut; read it with brief`), then every item as `<id> <kind> "<title>" [trashed]` and, for a timeline, its id, size, duration and revision. The text of a `text` item is never inlined.
+- **`ProjectItemAdd`** of a `timeline` creates the document as `ProjectCreate` does and returns its `timeline_id` in `item.timeline_id`. A project has at most one active `brief` item (`BriefSet` creates and updates it); `ProjectItemAdd` of kind `brief` is `E_VALIDATION` with the hint "use brief:set". `ProjectItemMove` moves the item to the index `position` of the whole list and renumbers the others. `ProjectItemRename` changes the item title only (the timeline document is not touched). `ProjectItemTrash` of the last active timeline is `E_INVALID_STATE`; of a timeline it also rejects edits to it until restored (§2.3). All five are idempotent where the state already holds, and refuse a trashed project with `E_INVALID_STATE`. A brief is not deleted: `BriefSet` with an empty text clears it.
+- **`ProjectDuplicate`** copies the brief, the texts and every active timeline (each with a new `prj_` id, its document at revision 0 and no log, as an import with `as_new`, SDD-005 §16.3) and the use of the same assets; outputs are not copied (a file belongs to the job that made it). The copy is a new project, owned by the caller.
+- Scopes: `ProjectDescribe` and `BriefGet` read; the others edit. Every operation takes `project_id` of the production and checks ownership as `ProjectGet` does.
+- Audit actions (SDD-005 §5.9): `project.item.add`, `project.item.move`, `project.item.rename`, `project.item.trash`, `project.item.restore`, `project.brief.set`, `project.duplicate`.
 
 ### 2.4 Edit
 
@@ -1281,7 +1408,7 @@ A frame is one JPEG (quality 80, 4:2:0). A sheet is one JPEG:
 | Implementation | the official Go SDK `github.com/modelcontextprotocol/go-sdk` v1.8.0 (it implements revision `2026-07-28` and still serves older revisions: `mcp/shared.go` lines 50 to 91, 555 to 580) |
 | Server identity | `name` `stuarty`, `version` the binary version |
 | Capabilities | `tools` only. No resources, prompts, completions, logging, sampling, roots or elicitation (ADR-0015 item 10) |
-| `tools/list` | the 18 tools below, always in the order of the table, never paged, with `ttlMs` 3,600,000 and `cacheScope` `public` (the SDK type `Cacheable`, `mcp/protocol.go` lines 1148 to 1166; the list changes only when the binary is upgraded). |
+| `tools/list` | the 19 tools below, always in the order of the table, never paged, with `ttlMs` 3,600,000 and `cacheScope` `public` (the SDK type `Cacheable`, `mcp/protocol.go` lines 1148 to 1166; the list changes only when the binary is upgraded). |
 | Tool registration | each tool is registered with the SDK's raw `(*Server).AddTool` (`mcp/server.go` line 315) with `inputSchema` and `outputSchema` taken from the registry generator, **not** with the generic `mcp.AddTool[In, Out]`, which infers schemas from Go types and would not produce the `edit` schema of §4.4. The adapter validates `arguments` against `inputSchema` with the validator of ADR-0014 and converts a failure into `E_VALIDATION` with the `path` of the first invalid value (a failure of the `operations[].op` enum is `E_UNKNOWN_COMMAND`, §2.4 rule 5). The message names the path and the constraint, never the value (§1.2 rule 9) |
 | Call result | `CallToolResult` (`Content`, `StructuredContent`, `IsError`) built as §1.3 and §1.4 say |
 | Cost | the minified `tools/list` result is at most **19,500 bytes**: at the conservative 3 bytes per token of JSON this is 6,500 tokens, the NFR-020 limit (raised from 6,000 tokens, 18,000 bytes, by D-040; before that from 17,500 bytes when `font_import` became the 16th tool, VV-024; at the 3.2 characters per token of check 2 it is 5,625 tokens). The definitions of this section measure about 19,490 bytes in total with `image` (the 17th tool, whose minified definition is about 1,080 bytes), just under the cap, so a new parameter must shorten a description. `edit` is 2,534 bytes (limit 2,700 since VV-122 added `clip.set_shadow` and `clip.set_outline`, raised from 2,500; each new operation name costs about 25 bytes) and the largest other tool is `view` at 1,518 (limit 1,600); `media_inspect` is 1,428 and `template` 1,315. No single tool is larger than 2,700 bytes (`edit`) or 1,600 bytes (the others). **Verified by** `TestToolDefinitionBudget` and, once per release, a count with the model vendor's token counting endpoint (if it exceeds 6,500 tokens the descriptions are shortened; no field is removed) |
@@ -1292,7 +1419,7 @@ Tool and Service mapping, scope and annotations (annotations are hints and clien
 | Tool | Service operations | Scope | readOnly | destructive | idempotent | openWorld |
 | --- | --- | --- | --- | --- | --- | --- |
 | `project_list` | `ProjectList` | read | true | n/a | true | false |
-| `project_create` | `ProjectCreate` | edit | false | false | false | false |
+| `project_create` | `ProjectCreate`, `ProjectDuplicate` (with `from`) | edit | false | false | false | false |
 | `project_get` | `ProjectGet` | read | true | n/a | true | false |
 | `project_trash` | `ProjectTrash`, `ProjectRestore` | edit | false | false | true | false |
 | `edit` | `Edit` | edit (media for `asset.remove`) | false | false | false | false |
@@ -1307,8 +1434,9 @@ Tool and Service mapping, scope and annotations (annotations are hints and clien
 | `job_cancel` | `JobCancel` | render, or media for the caller's own `transcribe` or `ingest` job | false | false | true | false |
 | `template` | `TemplateList`, `TemplateSave`, `TemplateInstantiate`, `TemplateExport`, `TemplateImport` | read (list, export), edit (the others) | false | false | false | false |
 | `font_import` | `FontImport` | media | false | false | true | false |
-| `connection` | `ConnectionList` (without `id`), `ConnectionGet` (with `id`) | read | true | n/a | true | false |
-| `image` | `ImageCreate`, `ImageList`, `ImageDescribe`, `ImageEdit`, `ImageUndo`, `ImageRedo`, `ImageExport` (SDD-021) | read (list, show), edit (the others) | false | false | false | false |
+| `project_describe` | `ProjectDescribe` | read | true | n/a | true | false |
+| `project_item` | `ProjectItemAdd`, `ProjectItemMove`, `ProjectItemRename`, `ProjectItemTrash`, `ProjectItemRestore` (argument `action`) | edit | false | false | false | false |
+| `brief` | `BriefGet` (without `text`), `BriefSet` (with `text`) | read (get), edit (set) | false | false | true | false |
 
 `destructiveHint` is `false` on every tool: every write is undoable and recorded per actor, and nothing is removed for good (ADR-0020 items 2 and 3). A client that prompts on destructive tools therefore never prompts for this server, which is what unattended use needs (D-011). `openWorldHint` is `false` on every tool: no tool reaches an address chosen by the caller (RF-130). `TestNoOutboundTools` asserts both hints for every registered tool and that `web/app/mcp` imports no HTTP client.
 
@@ -2463,7 +2591,7 @@ Every path argument (`media:import <path>`, `template:import <path>`) is made ab
 
 ### 5.4 Command reference
 
-`<id>` positional arguments may also be given with `--project`, `--asset`, `--job` or `--template`; both forms are accepted and a conflict is `E_VALIDATION`. The `--json` document is the result type named in the last column (§2); the human output is always that result's `text`.
+Every command that reads or edits a timeline (those whose result is about one document) also takes `--timeline <timeline id>` (§1.7). `<id>` positional arguments may also be given with `--project`, `--asset`, `--job` or `--template`; both forms are accepted and a conflict is `E_VALIDATION`. The `--json` document is the result type named in the last column (§2); the human output is always that result's `text`.
 
 | Command | Synopsis | Flags beyond the global ones | Stdin | Result |
 | --- | --- | --- | --- | --- |
@@ -2512,6 +2640,15 @@ Every path argument (`media:import <path>`, `template:import <path>`) is made ab
 | `bundle:import` | `bundle:import <path> [--as-new]` | `--as-new` bool false, a new id and no log (required with accounts, SDD-005 §16.3); `--dry-run` | none | `ProjectCreateResult` (SDD-005 §16); the path is made absolute and read on the machine of the server |
 | `otio:export` | `otio:export --project <id> [--out f] [--force]` | `--out` string, the file to write (default: `file_name` of the result, in the current directory); `--force` bool false, replaces an existing file | none | `OtioExportResult` without `content`, plus `file` (the absolute path written) and `bytes`; the file is written by the CLI on the machine that runs it |
 | `otio:import` | `otio:import <path> --project <id> [--base-revision n]` | `--base-revision` int, default the current revision; `--allow-partial` bool, default false (VV-133; a file that refers to media the project does not have is refused with E_INVALID_STATE and nothing is applied; `--dry-run` lists what is missing); `--dry-run` | none | `OtioImportResult` (SDD-001 §9); the path is made absolute and read on the machine of the server |
+| `project:describe` | `project:describe <project id> [--max-tokens n]` | `--max-tokens` int 1500 | none | `ProjectDescribeResult` |
+| `project:duplicate` | `project:duplicate <project id> [--name n]` | `--name` string | none | `ProjectCreateResult` |
+| `item:add` | `item:add --project <id> --kind text\|timeline\|output --title <t> [--position n] [--text <file\|->] [--preset p] [--fps f] [--job <job id>]` | `--kind`, `--title` required; `--text` is read from a file or standard input | the text with `--text -` | `ProjectItemResult` |
+| `item:move` | `item:move <item id> --project <id> --position n` | `--position` int, required | none | `ProjectItemResult` |
+| `item:rename` | `item:rename <item id> --project <id> --title <t>` | `--title` required | none | `ProjectItemResult` |
+| `item:trash` | `item:trash <item id> --project <id>` | none | none | `ProjectItemResult` |
+| `item:restore` | `item:restore <item id> --project <id>` | none | none | `ProjectItemResult` |
+| `brief:show` | `brief:show --project <id>` | none | none | `BriefResult` |
+| `brief:set` | `brief:set --project <id> --text <file\|->` | `--text` required: the Markdown, from a file or standard input | the text with `--text -` | `BriefResult` |
 | `agent:docs` | `agent:docs [--print skill\|agents\|instructions] [--write <dir>]` | `--print` string `skill`; `--write` string | none | `{"files": [...]}` with `--write`; the text itself with `--print` |
 
 Notes on the table:
@@ -2762,6 +2899,15 @@ Success codes are the `Op.Status`. Error statuses are the table of SDD-000 §8; 
 | `projects.import` | `POST /projects/import` | none | `BundleImportRequest` | 201 `ProjectCreateResult` | edit and media | 403 `E_PATH_NOT_ALLOWED`; 404 `E_FILE_NOT_FOUND` |
 | `projects.otio.export` | `GET /projects/{id}/otio` | none | none | 200 `OtioExportResult` `{project_id, revision, file_name, content, lost[]}`; `content` is the `.otio` text (SDD-001 §9), `lost` lists what the file cannot carry | read | 404 `E_NOT_FOUND` |
 | `projects.otio.import` | `POST /projects/{id}/otio` | none | `{path, base_revision, dry_run?}`, an absolute path to an `.otio` file on the machine of the server, read with the path rules of `MediaImport` | 200 `OtioImportResult` `{project_id, revision, applied, edit, unresolved_media[], matched_media[], lost[], warnings[]}` (`matched_media` lists each media matched by file name, not by content, with a warning); the batch is applied through `Edit` as one undo step | edit | 403 `E_PATH_NOT_ALLOWED`; 404 `E_FILE_NOT_FOUND`; 409 `E_REVISION_CONFLICT`; 422 `E_VALIDATION` (not an OTIO timeline, or a frame rate other than the project's) |
+| `projects.describe` | `GET /projects/{id}/describe` | `max_tokens` | none | 200 `ProjectDescribeResult` | read | none |
+| `projects.duplicate` | `POST /projects/{id}/duplicate` | none | `{name?, dry_run?}` | 201 `ProjectCreateResult` | edit | none |
+| `projects.items.add` | `POST /projects/{id}/items` | none | `ProjectItemAddRequest` | 201 `ProjectItemResult` | edit | 422 `E_VALIDATION` for a bad kind or a brief |
+| `projects.items.move` | `POST /projects/{id}/items/{item_id}/move` | none | `{position, dry_run?}` | 200 `ProjectItemResult` | edit | none |
+| `projects.items.rename` | `POST /projects/{id}/items/{item_id}/rename` | none | `{title, dry_run?}` | 200 `ProjectItemResult` | edit | none |
+| `projects.items.trash` | `POST /projects/{id}/items/{item_id}/trash` | `dry_run` | none | 200 `ProjectItemResult` | edit | 409 `E_INVALID_STATE` for the last timeline |
+| `projects.items.restore` | `POST /projects/{id}/items/{item_id}/restore` | `dry_run` | none | 200 `ProjectItemResult` | edit | none |
+| `projects.brief.get` | `GET /projects/{id}/brief` | none | none | 200 `BriefResult` | read | none |
+| `projects.brief.set` | `PUT /projects/{id}/brief` | none | `{text, dry_run?}` | 200 `BriefResult` | edit | 413 `E_LIMIT_EXCEEDED` |
 | `fonts.import` | `POST /fonts` | none | `{path}`, an absolute path to a TrueType or OpenType file on the machine of the server (SDD-007 §7.7) | 201 `FontImportResult` `{hash, bytes, deduplicated}` | media | 403 `E_PATH_NOT_ALLOWED`; 404 `E_FILE_NOT_FOUND`; 422 `E_VALIDATION` (a refused font) |
 | `brand.get`, `brand.set` | `GET /brand-kit`, `PUT /brand-kit` | none | `{logo?, colors?, fonts?}` for set (replaces the kit, SDD-005 §5.11; at least one member, an empty one clears the kit) | 200 `BrandKit` | read; edit | 422 `E_VALIDATION`; 404 `E_NOT_FOUND` |
 | `users.list`, `users.create`, `users.update` | `GET /users`, `POST /users`, `PATCH /users/{user_id}` | none | `{email, password, role?}` for create; `{role?, disabled?}` for update | 200 `{users: [UserView]}`, 201 `UserView`, 200 `UserView` | an administrator's browser session; a key cannot call them (network mode only, SDD-007 §4.1) | 403 `E_FORBIDDEN`; 404 `E_NOT_FOUND`; 409 `E_INVALID_STATE` (last administrator) |
@@ -2772,7 +2918,7 @@ Success codes are the `Op.Status`. Error statuses are the table of SDD-000 §8; 
 
 **Statuses of the codes SDD-000 §8 maps** (SDD-000 §8 lists them; this SDD uses them): `E_NOTHING_TO_UNDO` and `E_NOTHING_TO_REDO` are 409; `E_TRANSCRIBE_UNAVAILABLE`, `E_FFMPEG_MISSING` and `E_NO_ENCODER` are 503; `E_INTERNAL` is 500. `E_INGEST_FAILED`, `E_EXPORT_FAILED`, `E_VERIFY_FAILED`, `E_TRANSCRIBE_FAILED` and `E_CANCELLED` describe the outcome of a job and travel inside a `Job` (`error`) with status 200; they are 500 only when raised as the error of a call. `E_RATE_LIMITED` is 429.
 
-`POST` endpoints that start work answer 202 even when `wait_ms` made them finish: the status says "accepted", the body says the state. `?dry_run=true` is accepted on every write as an alias of the body member.
+`POST` endpoints that start work answer 202 even when `wait_ms` made them finish: the status says "accepted", the body says the state. The routes of §1.7 that address a timeline accept the query member `timeline_id`, and a JSON body member of the same name on a write. `?dry_run=true` is accepted on every write as an alias of the body member.
 
 ### 6.4 Pagination and idempotency
 
@@ -2958,12 +3104,15 @@ Every `Service` operation has an encoding on each surface. The table is the proo
 | `ProjectBundleImport` | none (exception E-3) | `bundle:import` | `POST /projects/import` |
 | `ProjectOtioExport` | none (exception E-3) | `otio:export` | `GET /projects/{id}/otio` |
 | `ProjectOtioImport` | none (exception E-3) | `otio:import` | `POST /projects/{id}/otio` |
-| `ImageCreate` | `image` (`action` create) | `image:create` | `POST /images` |
-| `ImageList` | `image` (`action` list) | `image:list` | `GET /images` |
-| `ImageDescribe` | `image` (`action` show) | `image:show` | `GET /images/{id}` |
-| `ImageEdit` | `image` (`action` edit) | `image:edit` | `POST /images/{id}/edit` |
-| `ImageUndo`, `ImageRedo` | `image` (`action` undo, redo) | `image:undo`, `image:redo` | `POST /images/{id}/undo`, `POST /images/{id}/redo` |
-| `ImageExport` | `image` (`action` export) | `image:export` | `POST /images/{id}/export` |
+| `ProjectDescribe` | `project_describe` | `project:describe` | `GET /projects/{id}/describe` |
+| `ProjectDuplicate` | `project_create` (with `from`) | `project:duplicate` | `POST /projects/{id}/duplicate` |
+| `ProjectItemAdd` | `project_item` (`action` `add`) | `item:add` | `POST /projects/{id}/items` |
+| `ProjectItemMove` | `project_item` (`action` `move`) | `item:move` | `POST /projects/{id}/items/{item_id}/move` |
+| `ProjectItemRename` | `project_item` (`action` `rename`) | `item:rename` | `POST /projects/{id}/items/{item_id}/rename` |
+| `ProjectItemTrash` | `project_item` (`action` `trash`) | `item:trash` | `POST /projects/{id}/items/{item_id}/trash` |
+| `ProjectItemRestore` | `project_item` (`action` `restore`) | `item:restore` | `POST /projects/{id}/items/{item_id}/restore` |
+| `BriefGet` | `brief` (without `text`) | `brief:show` | `GET /projects/{id}/brief` |
+| `BriefSet` | `brief` (with `text`) | `brief:set` | `PUT /projects/{id}/brief` |
 
 **Exceptions**, each fixed by an authoritative document:
 
