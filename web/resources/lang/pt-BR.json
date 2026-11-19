@@ -2,7 +2,7 @@
   "ui": {
     "nav": {
       "label": "Navegação principal",
-      "home": "{name}, projetos",
+      "home": "{name}, painel",
       "language": "Idioma",
       "languages": {
         "en": "English",
@@ -10,6 +10,24 @@
       },
       "projects": "Projetos",
       "settings": "Configurações",
+      "dashboard": "Painel",
+      "collapse": "Recolher a barra lateral",
+      "expand": "Expandir a barra lateral",
+      "profile": "Perfil",
+      "local": "Modo local",
+      "section": {
+        "projects": "Projetos",
+        "edit-video": "Editar vídeo",
+        "edit-image": "Editar imagem",
+        "write": "Escrever",
+        "visual-assets": "Recursos visuais",
+        "video-assets": "Recursos de vídeo",
+        "publish": "Publicar",
+        "skills": "Habilidades",
+        "prompts": "Instruções",
+        "memory": "Memória",
+        "connections": "Conexões"
+      },
       "sidebar": {
         "title": "Barra lateral",
         "description": "Exibe a barra lateral no celular.",
