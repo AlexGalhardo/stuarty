@@ -3,12 +3,14 @@
     {
       "tag": "Projects",
       "pages": [
+        "briefing.questions",
         "projects.list",
         "projects.create",
         "projects.get",
         "bitmaps.get",
         "projects.brief.get",
         "projects.brief.set",
+        "projects.briefing.answer",
         "projects.bundle.export",
         "projects.describe",
         "projects.duplicate",

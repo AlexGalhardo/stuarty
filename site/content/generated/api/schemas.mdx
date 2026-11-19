@@ -124,6 +124,39 @@ The types named in the tables of the operations. The arguments of each editing c
 | `text` | `string` | no |  |
 | `updated_ms` | `integer (int64)` | no |  |
 
+### BriefingAnswer
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `id` | `string` | no |  |
+| `value` | `string` | no |  |
+
+### BriefingQuestion
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `heading` | `string` | no |  |
+| `id` | `string` | no |  |
+| `kind` | `string` | no |  |
+| `max` | `integer` | no |  |
+| `max_chars` | `integer` | no |  |
+| `min` | `integer` | no |  |
+| `options` | array of `string` | no |  |
+| `required` | `boolean` | no |  |
+| `text` | `string` | no |  |
+
+### BriefingQuestionsResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `answers` | array of [`BriefingAnswer`](/docs/api/schemas#briefinganswer) | no |  |
+| `guided` | `boolean` | no |  |
+| `has_brief` | `boolean` | no |  |
+| `project_id` | `string` | no |  |
+| `questions` | array of [`BriefingQuestion`](/docs/api/schemas#briefingquestion) | no |  |
+| `text` | `string` | no |  |
+| `untrusted_notice` | `string` | no |  |
+
 ### BriefResult
 
 | Name | Type | Required | Description |

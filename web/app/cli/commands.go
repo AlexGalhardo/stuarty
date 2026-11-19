@@ -24,7 +24,7 @@ func registry() []*spec {
 		agentDocs, transcribeCmd, doctorCmd, fontsCmd, auditCmd, toolsInstallCmd, tokenRotate,
 		fontImportCmd, brandShowCmd, brandSetCmd, otioExport, otioImport,
 		projectDescribeCmd, projectDuplicateCmd, itemAddCmd, itemMoveCmd, itemRenameCmd, itemTrashCmd, itemRestoreCmd,
-		briefShowCmd, briefSetCmd,
+		briefShowCmd, briefSetCmd, briefingQuestionsCmd, briefingAnswerCmd,
 		connectionListCmd, connectionShowCmd, connectionAddCmd, connectionRemoveCmd, connectionTestCmd,
 		approvalListCmd, approvalShowCmd, approvalDecideCmd, approvalRuleListCmd, approvalRuleSetCmd,
 		approvalRuleRemoveCmd, costShowCmd, costCeilingCmd,
