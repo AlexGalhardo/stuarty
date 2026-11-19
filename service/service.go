@@ -183,6 +183,16 @@ type Service interface {
 	ApprovalRuleRemove(ctx context.Context, req ApprovalRef) (*approval.RuleView, error)
 	CostSummary(ctx context.Context, req CostSummaryRequest) (*CostSummaryResult, error)
 	CostCeilingSet(ctx context.Context, req CostCeilingSetRequest) (*CostSummaryResult, error)
+
+	// The social networks and publishing (SDD-020). A publication is a job of a kind that needs approval:
+	// PublishNow answers a job in waiting_approval, and nothing leaves the machine before a person approves.
+	SocialNetworkList(ctx context.Context, req SocialNetworkListRequest) (*SocialNetworkListResult, error)
+	SocialConnectBegin(ctx context.Context, req SocialConnectBeginRequest) (*SocialConnectBeginResult, error)
+	SocialConnectComplete(ctx context.Context, req SocialConnectCompleteRequest) (*SocialAccount, error)
+	SocialAccountList(ctx context.Context, req SocialAccountListRequest) (*SocialAccountListResult, error)
+	PublishValidate(ctx context.Context, req PublishValidateRequest) (*PublishValidateResult, error)
+	PublishNow(ctx context.Context, req PublishNowRequest) (*Job, error)
+	PublishStatus(ctx context.Context, req PublishStatusRequest) (*PublishStatusResult, error)
 }
 
 // Event is what the service publishes after the change is durable (SDD-006

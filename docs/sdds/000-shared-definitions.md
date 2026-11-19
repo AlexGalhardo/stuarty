@@ -75,11 +75,11 @@
 | approval queue stream | none | none | `GET /approvals/events` (SDD-015 §7) | read |
 | `SocialNetworkList` | none | `social:network:list` | `GET /social/networks` | read (SDD-020) |
 | `SocialConnectBegin` | none | `social:connect` | `POST /social/connect` | admin |
-| `SocialConnectComplete` | none | none | `GET /social/callback` | admin, and only from a browser session |
+| `SocialConnectComplete` | none | none | `POST /social/complete` (the page `/social/callback` posts to it) | admin, and only from a browser session |
 | `SocialAccountList` | none | `social:account:list` | `GET /social/accounts` | read |
 | `PublishValidate` | none | `publish:validate` | `POST /publish/validate` | read |
-| `PublishNow` | `job_start` (kind `publish.upload`) | `publish:now` | `POST /publish` | render; the job waits for approval |
-| `PublishStatus` | `job_get` | `publish:status` | `GET /publish/{job_id}` | read |
+| `PublishNow` | none until epic 13 (then `job_start` with kind `publish.upload`) | `publish:now` | `POST /publish` | render; the job waits for approval |
+| `PublishStatus` | none | `publish:status` | `GET /publish/{job_id}` | read |
 | `MemoryList`, `MemoryGet`, `MemoryWrite` | `library` (kind `memory`; actions `list`, `get`, `write`) | `memory:list`, `memory:show`, `memory:write` | `GET /library/memory`, `GET /library/memory/{name}`, `POST /library/memory`, `DELETE /library/memory/{name}` | read, edit (SDD-018) |
 | `MemoryRemove` | none (an agent tool removes nothing) | `memory:remove` | `DELETE /library/memory/{name}` | edit |
 | `SkillList`, `SkillGet`, `SkillWrite`, `SkillLint` | `library` (kind `skill`; actions `list`, `get`, `write`, `lint`) | `skill:list`, `skill:show`, `skill:write`, `skill:lint` | `GET /library/skills`, `GET /library/skills/{name}`, `PUT /library/skills/{name}`, `GET /library/skills/{name}/lint` | read, edit |
