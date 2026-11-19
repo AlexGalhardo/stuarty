@@ -34,6 +34,52 @@
         "toggle": "Toggle sidebar"
       }
     },
+    "dashboard": {
+      "home": {
+        "title": "Home",
+        "lead": "Everything you make, in one place. Pick a section to start."
+      },
+      "empty": {
+        "status": "This section is not available yet. It will arrive in a later release.",
+        "via_projects": "The video editor opens from a project. Open or create one in Projects.",
+        "goto": "Go to Projects"
+      },
+      "section": {
+        "projects": {
+          "holds": "Your productions: the brief, the media and everything you publish, project by project."
+        },
+        "edit-video": {
+          "holds": "The video editor: timeline, captions, effects and export."
+        },
+        "edit-image": {
+          "holds": "The image editor: layers, text and thumbnails."
+        },
+        "write": {
+          "holds": "Scripts, copy and blog posts, written alone or with an agent."
+        },
+        "visual-assets": {
+          "holds": "Images, logos and generated art that you reuse across projects."
+        },
+        "video-assets": {
+          "holds": "Footage, clips, music and voice-overs that you reuse across projects."
+        },
+        "publish": {
+          "holds": "The calendar of what goes out and the approval queue that waits for you."
+        },
+        "skills": {
+          "holds": "Reusable skills that your agents can run."
+        },
+        "prompts": {
+          "holds": "Saved prompts for your agents."
+        },
+        "memory": {
+          "holds": "What your agents remember about you, your brand and your projects."
+        },
+        "connections": {
+          "holds": "Your social networks and AI providers, and the access you gave each one."
+        }
+      }
+    },
     "theme": {
       "light": "Switch to light theme",
       "dark": "Switch to dark theme"
