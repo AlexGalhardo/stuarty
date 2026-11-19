@@ -228,6 +228,11 @@ func (s *svc) runText(ctx context.Context, run JobRun) (JobOutcome, error) {
 		var gerr error
 
 		res, gerr = gen.GenerateText(ctx, c, in.Request)
+		// A server that speaks the protocol may repeat the key it was sent; the text is shown to every
+		// caller, so an answer that holds the key is dropped, and the cost is still recorded (T-55).
+		if gerr == nil && (c.Echoes(res.Text) || c.Echoes(res.Model)) {
+			res.Text, res.Model = connections.EchoedAnswer, in.Request.Model
+		}
 
 		return gerr
 	})

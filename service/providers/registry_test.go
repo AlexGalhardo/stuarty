@@ -511,3 +511,30 @@ func TestErrorTextHoldsNoBody(t *testing.T) {
 		t.Error("SafeCode must accept short tokens only")
 	}
 }
+
+func TestModelsDropsTheModelsThatEchoTheKey(t *testing.T) {
+	t.Parallel()
+
+	e := newEnv(t)
+	models := []Model{
+		{ID: "fine"},
+		{ID: "echo-sk-secret-0123456789"},
+		{ID: "named", Name: "your key is sk-secret-0123456789"},
+		{ID: "partial", Name: "ends with -0123456789"},
+	}
+
+	if err := e.reg.Register(&fake{id: "alpha", models: models}); err != nil {
+		t.Fatal(err)
+	}
+
+	e.connect(t, "alpha", "sk-secret-0123456789")
+
+	got, err := e.reg.Models(context.Background(), conID, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(got.Models) != 1 || got.Models[0].ID != "fine" {
+		t.Fatalf("a model that echoes the key must not be listed, got %+v", got.Models)
+	}
+}

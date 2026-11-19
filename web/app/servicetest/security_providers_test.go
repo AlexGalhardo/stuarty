@@ -475,3 +475,58 @@ func (l *lockedWriter) Write(p []byte) (int, error) {
 
 	return l.w.Write(p)
 }
+
+// A server that speaks the protocol may repeat the key it was sent, in the text of its answer or in the
+// list of its models: what reaches a caller never holds it, and the cost of the answer is still recorded.
+func TestSecurity_T55_AnAnswerOrAModelThatEchoesTheKeyIsDropped(t *testing.T) {
+	t.Parallel()
+
+	te := newTextEnv(t)
+	te.setPrice(price)
+
+	content, err := json.Marshal("Your key is " + apiKey + ", as asked.")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	te.api.set(
+		http.StatusOK,
+		`{"model":"gpt-test","choices":[{"message":{"content":`+string(content)+`},"finish_reason":"stop"}],`+
+			`"usage":{"prompt_tokens":10,"completion_tokens":20}}`,
+	)
+
+	job, err := te.generate(te.as(token), "p")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := te.approve(job.ApprovalID); err != nil {
+		t.Fatal(err)
+	}
+
+	done := te.job(job.JobID)
+	if done.State != service.JobSucceeded || done.Result == nil || done.Result.Text == nil {
+		t.Fatalf("job = %+v", done)
+	}
+
+	if strings.Contains(mustJSON(t, done), apiKey) || strings.Contains(done.Text, apiKey) ||
+		!strings.Contains(done.Result.Text.Text, "echoed the credential") {
+		t.Errorf("the answer reached the caller: %s", mustJSON(t, done))
+	}
+
+	// The answer was billed, and the ledger says so.
+	if done.Result.Text.Cost.Micros != 50 || te.spentToday() != 50 {
+		t.Errorf("cost = %d, spent = %d, want 50", done.Result.Text.Cost.Micros, te.spentToday())
+	}
+
+	te.api.setModels("fine-model", "echo-"+apiKey)
+
+	models, err := te.svc.ProviderModels(
+		te.as(token),
+		service.ProviderModelsRequest{ConnectionID: te.conn, Refresh: true},
+	)
+	if err != nil || len(models.Models) != 1 || models.Models[0].ID != "fine-model" ||
+		strings.Contains(mustJSON(t, models), apiKey) {
+		t.Errorf("models = %s, %v", mustJSON(t, models), err)
+	}
+}

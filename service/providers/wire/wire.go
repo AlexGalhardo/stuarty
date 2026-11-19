@@ -84,7 +84,14 @@ func JSON(ctx context.Context, c connections.Credential, call Call, out any) err
 	if res.StatusCode < 200 || res.StatusCode > 299 {
 		raw, _ := io.ReadAll(io.LimitReader(res.Body, MaxErrorBody))
 
-		return StatusError(res.StatusCode, res.Header.Get("Retry-After"), raw)
+		e := StatusError(res.StatusCode, res.Header.Get("Retry-After"), raw)
+		// A code is shown only when it cannot carry text, and a server that repeats the key it was sent as its
+		// code has not sent a code (T-55).
+		if e.Code != "" && c.Echoes(e.Code) {
+			e.Code = safeType(raw, c)
+		}
+
+		return e
 	}
 
 	raw, err := io.ReadAll(io.LimitReader(res.Body, MaxAnswer+1))
@@ -157,6 +164,22 @@ func errorCode(body []byte) string {
 		if c := providers.SafeCode(s); c != "" {
 			return c
 		}
+	}
+
+	return providers.SafeCode(v.Error.Type)
+}
+
+// safeType is the error.type of a failing body, for a code that echoed the credential: the type, when it
+// is a safe token that does not echo it either, else nothing.
+func safeType(body []byte, c connections.Credential) string {
+	var v struct {
+		Error struct {
+			Type string `json:"type"`
+		} `json:"error"`
+	}
+
+	if json.Unmarshal(body, &v) != nil || c.Echoes(v.Error.Type) {
+		return ""
 	}
 
 	return providers.SafeCode(v.Error.Type)
