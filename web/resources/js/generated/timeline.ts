@@ -254,7 +254,8 @@ export interface HslBand {
   saturation?: number;
 }
 export interface Keyframe {
-  easing?: "linear" | "ease_in" | "ease_out" | "ease_in_out" | "hold";
+  bezier?: number[];
+  easing?: "linear" | "ease_in" | "ease_out" | "ease_in_out" | "hold" | "bezier";
   t: number;
   value: number;
 }

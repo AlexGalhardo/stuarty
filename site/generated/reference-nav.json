@@ -104,6 +104,28 @@
       ]
     },
     {
+      "tag": "Library",
+      "pages": [
+        "library.memory.list",
+        "library.memory.write",
+        "library.memory.get",
+        "library.memory.remove",
+        "library.prompts.list",
+        "library.prompts.get",
+        "library.prompts.write",
+        "library.prompts.render",
+        "library.reindex",
+        "library.search",
+        "library.skills.list",
+        "library.skills.get",
+        "library.skills.write",
+        "library.skills.lint",
+        "library.skills.review",
+        "library.skills.export",
+        "library.skills.import"
+      ]
+    },
+    {
       "tag": "Connections",
       "pages": [
         "connections.list",
@@ -123,6 +145,20 @@
         "images.export",
         "images.redo",
         "images.undo"
+      ]
+    },
+    {
+      "tag": "Approvals",
+      "pages": [
+        "approval-rules.list",
+        "approval-rules.set",
+        "approval-rules.remove",
+        "approvals.list",
+        "approvals.get",
+        "approvals.decide",
+        "approvals.events",
+        "cost.get",
+        "cost.ceilings.set"
       ]
     },
     {
@@ -178,9 +214,12 @@
       "font_import",
       "connection",
       "image",
-      "project_item"
+      "project_item",
+      "library"
     ],
     "operations": [
+      "animation.apply_preset",
+      "animation.list_presets",
       "asset.remove",
       "audio.add",
       "audio.duck",
@@ -232,6 +271,7 @@
       "keyframe.clear",
       "keyframe.remove",
       "keyframe.set",
+      "keyframe.set_easing",
       "marker.add",
       "marker.remove",
       "marker.set",

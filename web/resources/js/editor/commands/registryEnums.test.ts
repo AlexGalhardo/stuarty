@@ -3,13 +3,17 @@ import { describe, expect, test } from "vitest";
 import registry from "@/generated/commands.json";
 import {
 	ANIMATION_PRESETS,
+	BEZIER_PRESETS,
 	BLEND_MODES,
 	FILTERS,
 	FITS,
 	KEYFRAME_COLOUR_PROPERTIES,
 	KEYFRAME_EASINGS,
 	KEYFRAME_FRAMING_PROPERTIES,
+	KEYFRAME_NAMED_EASINGS,
 	KEYFRAME_PROPERTIES,
+	MOTION_DIRECTIONS,
+	MOTION_PRESETS,
 	SHAPES,
 	TRANSITION_KINDS,
 	VOICE_PRESETS,
@@ -34,6 +38,20 @@ function registryEnum(command: string, arg: string): string[] {
 
 const CASES: [string, readonly string[], string, string][] = [
 	["KEYFRAME_EASINGS", KEYFRAME_EASINGS, "keyframe.set", "easing"],
+	[
+		"KEYFRAME_NAMED_EASINGS",
+		KEYFRAME_NAMED_EASINGS,
+		"keyframe.set_easing",
+		"easing",
+	],
+	["BEZIER_PRESETS", BEZIER_PRESETS, "keyframe.set_easing", "preset"],
+	["MOTION_PRESETS", MOTION_PRESETS, "animation.apply_preset", "preset"],
+	[
+		"MOTION_DIRECTIONS",
+		MOTION_DIRECTIONS,
+		"animation.apply_preset",
+		"direction",
+	],
 	[
 		"KEYFRAME_PROPERTIES",
 		[

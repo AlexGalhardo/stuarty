@@ -1,0 +1,7 @@
+{
+  "code": "E_INVALID_TIME",
+  "message": "args.duration \"0f\" is 0 frames.",
+  "hint": "Use \"2s\" or \"60f\".",
+  "retryable": false,
+  "path": "args.duration"
+}

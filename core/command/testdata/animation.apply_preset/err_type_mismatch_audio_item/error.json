@@ -1,0 +1,7 @@
+{
+  "code": "E_TYPE_MISMATCH",
+  "message": "Animation presets apply to visual items; item itm_m1n2p3q4r5 is an audio item.",
+  "hint": "Use keyframe.set with volume for audio items.",
+  "retryable": false,
+  "path": "args.item_id"
+}

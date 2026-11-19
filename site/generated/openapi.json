@@ -23,6 +23,43 @@
       }
     },
     "schemas": {
+      "ApprovalListResult": {
+        "properties": {
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "requests": {
+            "items": {
+              "$ref": "#/components/schemas/Request"
+            },
+            "type": "array"
+          },
+          "text": {
+            "type": "string"
+          },
+          "total": {
+            "type": "integer"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ApprovalRuleListResult": {
+        "properties": {
+          "rules": {
+            "items": {
+              "$ref": "#/components/schemas/RuleView"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
       "Asset": {
         "properties": {
           "frame_count": {
@@ -519,6 +556,41 @@
         },
         "type": "object"
       },
+      "CeilingView": {
+        "properties": {
+          "currency": {
+            "type": "string"
+          },
+          "per_day_micros": {
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "per_item_micros": {
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "project_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updated_by": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "Change": {
         "properties": {
           "changes": {
@@ -719,6 +791,50 @@
           },
           "status": {
             "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "CostLine": {
+        "properties": {
+          "currency": {
+            "type": "string"
+          },
+          "micros": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "scope": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "CostSummaryResult": {
+        "properties": {
+          "ceilings": {
+            "items": {
+              "$ref": "#/components/schemas/CeilingView"
+            },
+            "type": "array"
+          },
+          "day": {
+            "type": "string"
+          },
+          "days": {
+            "items": {
+              "$ref": "#/components/schemas/Total"
+            },
+            "type": "array"
+          },
+          "today": {
+            "items": {
+              "$ref": "#/components/schemas/CostLine"
+            },
+            "type": "array"
           }
         },
         "type": "object"
@@ -2201,6 +2317,9 @@
           "actor": {
             "type": "string"
           },
+          "approval_id": {
+            "type": "string"
+          },
           "created_at": {
             "format": "date-time",
             "type": "string"
@@ -2403,13 +2522,21 @@
       },
       "Keyframe": {
         "properties": {
+          "bezier": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "type": "array"
+          },
           "easing": {
             "enum": [
               "linear",
               "ease_in",
               "ease_out",
               "ease_in_out",
-              "hold"
+              "hold",
+              "bezier"
             ],
             "type": "string"
           },
@@ -2580,6 +2707,234 @@
           },
           "width": {
             "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "LibraryEntry": {
+        "properties": {
+          "actor": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "error": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "has_scripts": {
+            "type": "boolean"
+          },
+          "kept": {
+            "type": "boolean"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "lint_errors": {
+            "type": "integer"
+          },
+          "lint_warnings": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "origin": {
+            "type": "string"
+          },
+          "reviewed": {
+            "type": "boolean"
+          },
+          "scope": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "x-untrusted": true
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "warning": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "LibraryFinding": {
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "line": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "LibraryHit": {
+        "properties": {
+          "actor": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "error": {
+            "type": "string"
+          },
+          "has_scripts": {
+            "type": "boolean"
+          },
+          "kept": {
+            "type": "boolean"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "lint_errors": {
+            "type": "integer"
+          },
+          "lint_warnings": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "origin": {
+            "type": "string"
+          },
+          "reviewed": {
+            "type": "boolean"
+          },
+          "scope": {
+            "type": "string"
+          },
+          "snippet": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "state": {
+            "type": "string"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "warning": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "LibraryListResult": {
+        "properties": {
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/LibraryEntry"
+            },
+            "type": "array"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "LibraryReindexResult": {
+        "properties": {
+          "ignored": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "x-untrusted": true
+          },
+          "invalid": {
+            "type": "integer"
+          },
+          "memory": {
+            "type": "integer"
+          },
+          "prompts": {
+            "type": "integer"
+          },
+          "skills": {
+            "type": "integer"
+          },
+          "text": {
+            "type": "string"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "LibraryRemoveResult": {
+        "properties": {
+          "kind": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "LibrarySearchResult": {
+        "properties": {
+          "hits": {
+            "items": {
+              "$ref": "#/components/schemas/LibraryHit"
+            },
+            "type": "array"
+          },
+          "text": {
+            "type": "string"
+          },
+          "total": {
+            "type": "integer"
+          },
+          "truncated": {
+            "type": "boolean"
+          },
+          "untrusted_notice": {
+            "type": "string"
           }
         },
         "type": "object"
@@ -2993,6 +3348,50 @@
         },
         "type": "object"
       },
+      "MemoryGetResult": {
+        "properties": {
+          "body": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "entry": {
+            "$ref": "#/components/schemas/LibraryEntry"
+          },
+          "text": {
+            "type": "string"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "MemoryWriteResult": {
+        "properties": {
+          "entry": {
+            "$ref": "#/components/schemas/LibraryEntry"
+          },
+          "text": {
+            "type": "string"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "Money": {
+        "properties": {
+          "currency": {
+            "type": "string"
+          },
+          "micros": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
       "OpEffect": {
         "properties": {
           "created": {
@@ -3024,6 +3423,8 @@
           "op": {
             "description": "A command name, as listed by GET /commands.",
             "enum": [
+              "animation.apply_preset",
+              "animation.list_presets",
               "asset.remove",
               "audio.add",
               "audio.duck",
@@ -3075,6 +3476,7 @@
               "keyframe.clear",
               "keyframe.remove",
               "keyframe.set",
+              "keyframe.set_easing",
               "marker.add",
               "marker.remove",
               "marker.set",
@@ -3107,6 +3509,12 @@
         ],
         "type": "object",
         "x-args-by-op": {
+          "animation.apply_preset": {
+            "$ref": "#/components/schemas/args.animation.apply_preset"
+          },
+          "animation.list_presets": {
+            "$ref": "#/components/schemas/args.animation.list_presets"
+          },
           "asset.remove": {
             "$ref": "#/components/schemas/args.asset.remove"
           },
@@ -3259,6 +3667,9 @@
           },
           "keyframe.set": {
             "$ref": "#/components/schemas/args.keyframe.set"
+          },
+          "keyframe.set_easing": {
+            "$ref": "#/components/schemas/args.keyframe.set_easing"
           },
           "marker.add": {
             "$ref": "#/components/schemas/args.marker.add"
@@ -4017,6 +4428,75 @@
         },
         "type": "object"
       },
+      "PromptGetResult": {
+        "properties": {
+          "body": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "defaults": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "x-untrusted": true
+          },
+          "entry": {
+            "$ref": "#/components/schemas/LibraryEntry"
+          },
+          "text": {
+            "type": "string"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          },
+          "variables": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "PromptRenderResult": {
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "rendered": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "text": {
+            "type": "string"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "PromptWriteResult": {
+        "properties": {
+          "entry": {
+            "$ref": "#/components/schemas/LibraryEntry"
+          },
+          "text": {
+            "type": "string"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          },
+          "variables": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
       "Range": {
         "properties": {
           "end": {
@@ -4037,6 +4517,132 @@
           },
           "num": {
             "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "Request": {
+        "properties": {
+          "actor": {
+            "type": "string"
+          },
+          "connection_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "decided_at": {
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "decided_by": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "estimate": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "job_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "kind": {
+            "type": "string"
+          },
+          "payload_ref": {
+            "type": "string"
+          },
+          "project_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "rule_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "state": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string",
+            "x-untrusted": true
+          }
+        },
+        "type": "object"
+      },
+      "RuleView": {
+        "properties": {
+          "connection_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "created_by": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "per_day_micros": {
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "per_item_micros": {
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "project_id": {
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "type": "object"
@@ -4106,6 +4712,184 @@
           "opacity": {
             "format": "double",
             "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "SkillExportResult": {
+        "properties": {
+          "names": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "path": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "SkillFileInput": {
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "SkillFileView": {
+        "properties": {
+          "binary": {
+            "type": "boolean"
+          },
+          "bytes": {
+            "type": "integer"
+          },
+          "path": {
+            "type": "string"
+          },
+          "script": {
+            "type": "boolean"
+          },
+          "text": {
+            "type": "string",
+            "x-untrusted": true
+          }
+        },
+        "type": "object"
+      },
+      "SkillGetResult": {
+        "properties": {
+          "allowed_tools": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "body": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "compatibility": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "content_hash": {
+            "type": "string"
+          },
+          "entry": {
+            "$ref": "#/components/schemas/LibraryEntry"
+          },
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/SkillFileView"
+            },
+            "type": "array"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/LibraryFinding"
+            },
+            "type": "array"
+          },
+          "license": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "source": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "text": {
+            "type": "string"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "SkillImportResult": {
+        "properties": {
+          "entry": {
+            "$ref": "#/components/schemas/LibraryEntry"
+          },
+          "files": {
+            "type": "integer"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/LibraryFinding"
+            },
+            "type": "array"
+          },
+          "text": {
+            "type": "string"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "SkillLintResult": {
+        "properties": {
+          "errors": {
+            "type": "integer"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/LibraryFinding"
+            },
+            "type": "array"
+          },
+          "name": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "warnings": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "SkillReviewResult": {
+        "properties": {
+          "entry": {
+            "$ref": "#/components/schemas/LibraryEntry"
+          },
+          "text": {
+            "type": "string"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "SkillWriteResult": {
+        "properties": {
+          "entry": {
+            "$ref": "#/components/schemas/LibraryEntry"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/LibraryFinding"
+            },
+            "type": "array"
+          },
+          "text": {
+            "type": "string"
+          },
+          "untrusted_notice": {
+            "type": "string"
           }
         },
         "type": "object"
@@ -4582,6 +5366,27 @@
           "total_bytes": {
             "format": "int64",
             "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "Total": {
+        "properties": {
+          "connection_id": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "day": {
+            "type": "string"
+          },
+          "micros": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "project_id": {
+            "type": "string"
           }
         },
         "type": "object"
@@ -5309,6 +6114,66 @@
             "type": "string"
           }
         },
+        "type": "object"
+      },
+      "args.animation.apply_preset": {
+        "additionalProperties": false,
+        "properties": {
+          "amount": {
+            "description": "slide: distance in pixels; scale: factor at the far end; push_in and pull_out: zoom factor. Per preset default.",
+            "type": "number"
+          },
+          "direction": {
+            "description": "slide only: the side it comes from or leaves to. Default left.",
+            "enum": [
+              "left",
+              "right",
+              "up",
+              "down"
+            ],
+            "type": "string"
+          },
+          "duration": {
+            "description": "A length, at most the item's duration. Default 0.5s; the whole item for push_in and pull_out.",
+            "type": "string",
+            "x-vv-kind": "time"
+          },
+          "edge": {
+            "description": "in animates the start of the item, out its end. Default in.",
+            "enum": [
+              "in",
+              "out"
+            ],
+            "type": "string"
+          },
+          "item_id": {
+            "description": "A clip, text, caption or shape item.",
+            "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          },
+          "preset": {
+            "description": "The animation.",
+            "enum": [
+              "fade",
+              "slide",
+              "scale",
+              "pop",
+              "push_in",
+              "pull_out"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "item_id",
+          "preset"
+        ],
+        "type": "object"
+      },
+      "args.animation.list_presets": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
         "type": "object"
       },
       "args.asset.remove": {
@@ -7795,14 +8660,24 @@
             "type": "string",
             "x-vv-kind": "time"
           },
+          "bezier": {
+            "description": "x1, y1, x2, y2 of the curve of easing bezier: x1 and x2 from 0 to 1, y1 and y2 from -2 to 3.",
+            "items": {
+              "type": "number"
+            },
+            "maxItems": 4,
+            "minItems": 4,
+            "type": "array"
+          },
           "easing": {
-            "description": "From this keyframe to the next. Default linear.",
+            "description": "From this keyframe to the next. Default linear. bezier needs the bezier argument.",
             "enum": [
               "linear",
               "ease_in",
               "ease_out",
               "ease_in_out",
-              "hold"
+              "hold",
+              "bezier"
             ],
             "type": "string"
           },
@@ -7846,6 +8721,83 @@
           "property",
           "at",
           "value"
+        ],
+        "type": "object"
+      },
+      "args.keyframe.set_easing": {
+        "additionalProperties": false,
+        "properties": {
+          "at": {
+            "description": "Position of an existing keyframe on the project timeline.",
+            "type": "string",
+            "x-vv-kind": "time"
+          },
+          "bezier": {
+            "description": "x1, y1, x2, y2 of a cubic Bezier curve: x1 and x2 from 0 to 1, y1 and y2 from -2 to 3.",
+            "items": {
+              "type": "number"
+            },
+            "maxItems": 4,
+            "minItems": 4,
+            "type": "array"
+          },
+          "easing": {
+            "description": "A named easing. Exactly one of easing, bezier and preset.",
+            "enum": [
+              "linear",
+              "ease_in",
+              "ease_out",
+              "ease_in_out",
+              "hold"
+            ],
+            "type": "string"
+          },
+          "item_id": {
+            "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          },
+          "preset": {
+            "description": "A named Bezier curve, stored as its four numbers.",
+            "enum": [
+              "in",
+              "out",
+              "in_out",
+              "back",
+              "overshoot"
+            ],
+            "type": "string"
+          },
+          "property": {
+            "enum": [
+              "x",
+              "y",
+              "scale",
+              "rotation",
+              "opacity",
+              "volume",
+              "brightness",
+              "contrast",
+              "saturation",
+              "temperature",
+              "tint",
+              "hue",
+              "mask_x",
+              "mask_y",
+              "mask_width",
+              "mask_height",
+              "mask_feather",
+              "crop_left",
+              "crop_top",
+              "crop_right",
+              "crop_bottom"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "item_id",
+          "property",
+          "at"
         ],
         "type": "object"
       },
@@ -9071,6 +10023,428 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/approval-rules": {
+      "get": {
+        "operationId": "approval-rules.list",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalRuleListResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the rules that approve without asking"
+      },
+      "post": {
+        "operationId": "approval-rules.set",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "connection_id": {
+                    "description": "Only this destination; leave out for any.",
+                    "type": "string"
+                  },
+                  "currency": {
+                    "description": "Three upper-case letters; needed with a limit.",
+                    "type": "string"
+                  },
+                  "enabled": {
+                    "description": "false keeps the rule and stops it; the default is true.",
+                    "type": [
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "id": {
+                    "description": "The rule to replace; leave out to create one.",
+                    "type": "string"
+                  },
+                  "kind": {
+                    "description": "The kind of action the rule covers, for example publish.post.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "per_day_micros": {
+                    "description": "The most the rule may approve in one UTC day, in millionths of the currency unit.",
+                    "format": "int64",
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
+                  },
+                  "per_item_micros": {
+                    "description": "The most one action may cost for the rule to approve it, in millionths of the currency unit. A rule with no limit never approves a costly action.",
+                    "format": "int64",
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
+                  },
+                  "project_id": {
+                    "description": "Only this project; leave out for any.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RuleView"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create or replace a rule (a person in the browser only; the local token and keys get 403)"
+      }
+    },
+    "/api/v1/approval-rules/{id}": {
+      "delete": {
+        "operationId": "approval-rules.remove",
+        "parameters": [
+          {
+            "description": "An approval request id, apr_ and 10 characters; or a rule id, rul_ and 10 characters.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RuleView"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove a rule (a person in the browser only; the local token and keys get 403)"
+      }
+    },
+    "/api/v1/approvals": {
+      "get": {
+        "operationId": "approvals.list",
+        "parameters": [
+          {
+            "description": "pending (the default), approved, rejected, expired or all.",
+            "in": "query",
+            "name": "state",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Only the requests of one project.",
+            "in": "query",
+            "name": "project_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The next_cursor of the previous page.",
+            "in": "query",
+            "name": "cursor",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The page size; the default depends on the operation.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalListResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the approval queue (pending requests by default)"
+      }
+    },
+    "/api/v1/approvals/events": {
+      "get": {
+        "operationId": "approvals.events",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Stream the events of the approval queue"
+      }
+    },
+    "/api/v1/approvals/{id}": {
+      "get": {
+        "operationId": "approvals.get",
+        "parameters": [
+          {
+            "description": "An approval request id, apr_ and 10 characters; or a rule id, rul_ and 10 characters.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Request"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Read one approval request"
+      }
+    },
+    "/api/v1/approvals/{id}/decide": {
+      "post": {
+        "operationId": "approvals.decide",
+        "parameters": [
+          {
+            "description": "An approval request id, apr_ and 10 characters.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "decision": {
+                    "description": "approve or reject.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "reason": {
+                    "description": "Why a request is rejected, at most 500 characters of plain text.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "decision"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Request"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Approve or reject a request (a person in the browser only; the local token and keys get 403)"
+      }
+    },
     "/api/v1/assets": {
       "get": {
         "operationId": "assets.list",
@@ -10049,6 +11423,119 @@
           }
         ],
         "summary": "Make one request through a connection"
+      }
+    },
+    "/api/v1/cost": {
+      "get": {
+        "operationId": "cost.get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CostSummaryResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Read the cost ceilings and what was spent"
+      }
+    },
+    "/api/v1/cost/ceilings": {
+      "put": {
+        "operationId": "cost.ceilings.set",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "currency": {
+                    "description": "Three upper-case letters, for example USD.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "per_day_micros": {
+                    "description": "The most that may be spent in one UTC day, in millionths of the currency unit. With neither limit, the ceiling is removed.",
+                    "format": "int64",
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
+                  },
+                  "per_item_micros": {
+                    "description": "The most one action may cost, in millionths of the currency unit.",
+                    "format": "int64",
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
+                  },
+                  "project_id": {
+                    "description": "The project the ceiling is for; leave out for the whole workspace.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "currency"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CostSummaryResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Set or remove a cost ceiling (a person in the browser only; the local token and keys get 403)"
       }
     },
     "/api/v1/fonts": {
@@ -11093,6 +12580,1202 @@
           }
         ],
         "summary": "Revoke an API key (a logged-in session only; network mode)"
+      }
+    },
+    "/api/v1/library/memory": {
+      "get": {
+        "operationId": "library.memory.list",
+        "parameters": [
+          {
+            "description": "workspace or a project id.",
+            "in": "query",
+            "name": "scope",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Comma separated; every tag must be on the note.",
+            "in": "query",
+            "name": "tags",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Also the notes no person has kept yet.",
+            "in": "query",
+            "name": "include_unreviewed",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "agent_view",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryListResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the memory notes"
+      },
+      "post": {
+        "operationId": "library.memory.write",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "body": {
+                    "description": "At most 8 KiB.",
+                    "type": "string"
+                  },
+                  "description": {
+                    "description": "One line, at most 200 characters.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "keep": {
+                    "description": "A person may keep or release a note; a note a person writes is kept.",
+                    "type": [
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "name": {
+                    "description": "Empty: made from the description.",
+                    "type": "string"
+                  },
+                  "scope": {
+                    "description": "workspace (default) or a project id.",
+                    "type": "string"
+                  },
+                  "tags": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "description"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemoryWriteResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create or replace a memory note"
+      }
+    },
+    "/api/v1/library/memory/{name}": {
+      "delete": {
+        "operationId": "library.memory.remove",
+        "parameters": [
+          {
+            "description": "Set by an agent: only what is reviewed or kept is returned.",
+            "in": "query",
+            "name": "agent_view",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryRemoveResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove a memory note"
+      },
+      "get": {
+        "operationId": "library.memory.get",
+        "parameters": [
+          {
+            "description": "Set by an agent: only what is reviewed or kept is returned.",
+            "in": "query",
+            "name": "agent_view",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemoryGetResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Read a memory note"
+      }
+    },
+    "/api/v1/library/prompts": {
+      "get": {
+        "operationId": "library.prompts.list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "tags",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "agent_view",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryListResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the prompts"
+      }
+    },
+    "/api/v1/library/prompts/{name}": {
+      "get": {
+        "operationId": "library.prompts.get",
+        "parameters": [
+          {
+            "description": "Set by an agent: only what is reviewed or kept is returned.",
+            "in": "query",
+            "name": "agent_view",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromptGetResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Read a prompt"
+      },
+      "put": {
+        "operationId": "library.prompts.write",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "body": {
+                    "description": "Text with {{variable}} placeholders; at most 32 KiB.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "defaults": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "description": "Variable to its default value.",
+                    "type": "object"
+                  },
+                  "description": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "tags": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "description",
+                  "body"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromptWriteResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create or replace a prompt"
+      }
+    },
+    "/api/v1/library/prompts/{name}/render": {
+      "post": {
+        "operationId": "library.prompts.render",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "agent_view": {
+                    "type": "boolean"
+                  },
+                  "values": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "description": "Variable to its value.",
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromptRenderResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Replace the variables of a prompt"
+      }
+    },
+    "/api/v1/library/reindex": {
+      "post": {
+        "operationId": "library.reindex",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryReindexResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Rebuild the index of the library from its files"
+      }
+    },
+    "/api/v1/library/search": {
+      "get": {
+        "operationId": "library.search",
+        "parameters": [
+          {
+            "description": "Words; every one must start a word of the entry.",
+            "in": "query",
+            "name": "query",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Comma separated: memory, skill, prompt.",
+            "in": "query",
+            "name": "kinds",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "scope",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Comma separated.",
+            "in": "query",
+            "name": "tags",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "origin",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "include_unreviewed",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "description": "At most 50; default 20.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Characters of the answer; at most 16000, default 4000.",
+            "in": "query",
+            "name": "budget",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "agent_view",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibrarySearchResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Search memory, skills and prompts"
+      }
+    },
+    "/api/v1/library/skills": {
+      "get": {
+        "operationId": "library.skills.list",
+        "parameters": [
+          {
+            "description": "built-in, user or imported.",
+            "in": "query",
+            "name": "origin",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Also the skills no person has reviewed.",
+            "in": "query",
+            "name": "include_unreviewed",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "agent_view",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryListResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the skills"
+      }
+    },
+    "/api/v1/library/skills/export": {
+      "post": {
+        "operationId": "library.skills.export",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "names": {
+                    "description": "Empty: every reviewed skill.",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillExportResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Export skills as folders in the Agent Skills layout"
+      }
+    },
+    "/api/v1/library/skills/import": {
+      "post": {
+        "operationId": "library.skills.import",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "path": {
+                    "description": "An absolute path on the machine of the server: a folder, a .zip or a .tar.gz.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "replace": {
+                    "type": "boolean"
+                  },
+                  "source": {
+                    "description": "Where the skill came from; the base name of the path when empty.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "path"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillImportResult"
+                }
+              }
+            },
+            "description": "Created"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Import a skill from a folder or an archive; it starts unreviewed"
+      }
+    },
+    "/api/v1/library/skills/{name}": {
+      "get": {
+        "operationId": "library.skills.get",
+        "parameters": [
+          {
+            "description": "Set by an agent: only what is reviewed or kept is returned.",
+            "in": "query",
+            "name": "agent_view",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillGetResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Read a skill"
+      },
+      "put": {
+        "operationId": "library.skills.write",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "allowed_tools": {
+                    "type": "string"
+                  },
+                  "body": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "compatibility": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "description": "At most 1024 characters.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "files": {
+                    "description": "The other files of the folder; null keeps those it has, [] removes them.",
+                    "items": {
+                      "$ref": "#/components/schemas/SkillFileInput"
+                    },
+                    "type": "array"
+                  },
+                  "license": {
+                    "type": "string"
+                  },
+                  "metadata": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "description": "Keys that start with stuarty- are the product's and are dropped.",
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "description",
+                  "body"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillWriteResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create or replace a skill"
+      }
+    },
+    "/api/v1/library/skills/{name}/lint": {
+      "get": {
+        "operationId": "library.skills.lint",
+        "parameters": [
+          {
+            "description": "Set by an agent: only what is reviewed or kept is returned.",
+            "in": "query",
+            "name": "agent_view",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillLintResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Run the lint on a skill"
+      }
+    },
+    "/api/v1/library/skills/{name}/review": {
+      "post": {
+        "operationId": "library.skills.review",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "content_hash": {
+                    "description": "The content_hash of the skill as it was read (GET /library/skills/{name}); a skill that changed since is not marked.",
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "content_hash"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillReviewResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Mark a skill as read (a browser session only)"
       }
     },
     "/api/v1/projects": {

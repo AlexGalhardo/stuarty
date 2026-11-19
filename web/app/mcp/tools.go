@@ -36,6 +36,7 @@ func (a *adapter) handlers() map[string]callFunc {
 		"connection":     connection,
 		"image":          imageTool,
 		"project_item":   projectItem,
+		"library":        libraryTool,
 	}
 }
 
