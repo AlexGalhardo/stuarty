@@ -239,6 +239,9 @@ func TestSecurity_T05_EveryOperationHasScope(t *testing.T) {
 	builtin := []string{
 		"GET /up", "GET /{$}", "GET /projects", "POST /projects", "GET /editor/{project_id}",
 		"GET /settings", "GET /settings/brand-kit", "GET /login", "GET /settings/keys",
+		// The empty-state pages of the dashboard sections (web/routes/dashboard.go).
+		"GET /edit-video", "GET /edit-image", "GET /write", "GET /visual-assets", "GET /video-assets",
+		"GET /publish", "GET /skills", "GET /prompts", "GET /memory", "GET /connections",
 	}
 
 	for _, r := range h.vapp.Router.Routes() {
