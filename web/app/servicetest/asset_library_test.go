@@ -507,3 +507,149 @@ func TestAssetLibraryKeyLimitedToAProject(t *testing.T) {
 		t.Errorf("a refused call changed the file: %+v, %v", e, err)
 	}
 }
+
+// Two users of network mode who hold the same bytes each have their own library record of them (VV-254): the
+// origin, the rights note, the description, the tags and the reuse mark of one are neither read, searched nor
+// changed by the other, and a project-limited key of one user reaches that user's record only.
+func TestSecurity_T06_AssetLibraryRecordIsPerOwner(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{})
+
+	as := func(user string) context.Context {
+		return service.WithCaller(
+			context.Background(),
+			service.Caller{Actor: "user:" + user, Scopes: service.AllScopes, OwnerUserID: user},
+		)
+	}
+	mk := func(c context.Context, name string) string {
+		res, err := m.svc.ProjectCreate(c, service.ProjectCreateRequest{Name: name})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		return res.ProjectID
+	}
+
+	alice, bob := as("alice"), as("bob")
+	pa, pb := mk(alice, "alice cut"), mk(bob, "bob cut")
+
+	imp := func(c context.Context, project, name, prompt, note, text string, tags ...string) string {
+		res, err := m.svc.MediaImport(c, service.MediaImportRequest{
+			ProjectID: project,
+			Files:     []service.ImportFile{{Path: m.write(name, clipBytes)}},
+			Origin: &asset.Origin{
+				Kind:       asset.Generated,
+				Provider:   "acme",
+				Model:      "m-1",
+				Prompt:     prompt,
+				RightsNote: note,
+			},
+			Info: &service.AssetInfo{Tags: tags, Reusable: new(true), Description: text},
+		})
+		if err != nil || res.Failed != 0 {
+			t.Fatalf("import = %+v, %v", res, err)
+		}
+
+		return res.Assets[0].Hash
+	}
+
+	hash := imp(alice, pa, "alice-take.mp4", "alices secret prompt", "alice owns it", "alice describes", "alicetag")
+	if other := imp(
+		bob,
+		pb,
+		"bob-take.mp4",
+		"bobs prompt",
+		"bob licensed it",
+		"bob describes",
+		"bobtag",
+	); other != hash {
+		t.Fatalf("the same bytes have two hashes: %s, %s", hash, other)
+	}
+
+	got, err := m.svc.AssetGet(bob, service.AssetRef{Hash: hash})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if got.Origin.Prompt != "bobs prompt" || got.Origin.RightsNote != "bob licensed it" ||
+		got.Description != "bob describes" || !slices.Equal(got.Tags, []string{"bobtag"}) ||
+		got.Projects != 1 || strings.Contains(got.Text, "alice") {
+		t.Errorf("bob reads %+v", got)
+	}
+
+	for _, q := range []string{"alice", "alicetag", "alices", "secret", "describes alice"} {
+		if list, lerr := m.svc.AssetList(bob, service.AssetListRequest{Text: q}); lerr != nil || len(list.Assets) != 0 {
+			t.Errorf("bob's search for %q matched alice's text: %+v, %v", q, list, lerr)
+		}
+	}
+
+	for _, q := range []string{"bob", "bobtag", "bobs", "licensed"} {
+		if list, lerr := m.svc.AssetList(
+			alice,
+			service.AssetListRequest{Text: q},
+		); lerr != nil ||
+			len(list.Assets) != 0 {
+			t.Errorf("alice's search for %q matched bob's text: %+v, %v", q, list, lerr)
+		}
+	}
+
+	if list, _ := m.svc.AssetList(bob, service.AssetListRequest{Tag: "alicetag"}); len(list.Assets) != 0 {
+		t.Errorf("bob filters by alice's tag: %+v", list.Assets)
+	}
+
+	// Bob changes his record; alice's is as she left it.
+	if _, err := m.svc.AssetSetInfo(bob, service.AssetSetInfoRequest{
+		Hash: hash, Description: new("bob rewrote"), RightsNote: new("bob note two"), Reusable: new(false),
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := m.svc.AssetTag(bob, service.AssetTagRequest{
+		Hash: hash, Add: []string{"extra"}, Remove: []string{"alicetag", "bobtag"},
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	mine, err := m.svc.AssetGet(alice, service.AssetRef{Hash: hash})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if mine.Origin.Prompt != "alices secret prompt" || mine.Origin.RightsNote != "alice owns it" ||
+		mine.Description != "alice describes" || !mine.Reusable || !slices.Equal(mine.Tags, []string{"alicetag"}) {
+		t.Errorf("bob's change reached alice's record: %+v", mine)
+	}
+
+	if list, _ := m.svc.AssetList(alice, service.AssetListRequest{Text: "rewrote"}); len(list.Assets) != 0 {
+		t.Errorf("alice finds bob's text: %+v", list.Assets)
+	}
+
+	// A project-limited key of alice reaches her record, and only through her project.
+	key := service.WithCaller(context.Background(), service.Caller{
+		Actor: "key:k", Scopes: service.AllScopes, OwnerUserID: "alice", ProjectID: pa,
+	})
+
+	entry, err := m.svc.AssetGet(key, service.AssetRef{Hash: hash})
+	if err != nil || entry.Origin.RightsNote != "alice owns it" || len(entry.Uses) != 1 ||
+		entry.Uses[0].ProjectID != pa {
+		t.Errorf("alice's key reads %+v, %v", entry, err)
+	}
+
+	// Reuse by hash across the projects of one owner keeps working with no second copy.
+	pa2 := mk(alice, "alice second")
+	files := len(storeFiles(t, m.ws))
+
+	if _, err := m.svc.MediaImport(alice, service.MediaImportRequest{
+		ProjectID: pa2, Files: []service.ImportFile{{Hash: hash}},
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	if len(storeFiles(t, m.ws)) != files {
+		t.Error("reusing a file by hash made a second copy")
+	}
+
+	if again, _ := m.svc.AssetGet(alice, service.AssetRef{Hash: hash}); again == nil || again.Projects != 2 ||
+		again.Origin.RightsNote != "alice owns it" {
+		t.Errorf("after the reuse: %+v", again)
+	}
+}

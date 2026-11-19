@@ -23,19 +23,28 @@ func newStore() *memStore {
 	return &memStore{rows: map[string]assets.Row{}, names: map[string]string{}}
 }
 
-func (m *memStore) Get(_ context.Context, hash string) (assets.Row, error) {
-	if r, ok := m.rows[hash]; ok {
+// rowKey is the key of a row: the bare hash for the local owner (the empty one), so a test reads it as st.rows[hash].
+func rowKey(owner, hash string) string {
+	if owner == "" {
+		return hash
+	}
+
+	return owner + "|" + hash
+}
+
+func (m *memStore) Get(_ context.Context, owner, hash string) (assets.Row, error) {
+	if r, ok := m.rows[rowKey(owner, hash)]; ok {
 		return r, nil
 	}
 
 	return assets.Row{}, assets.ErrNotFound
 }
 
-func (m *memStore) GetMany(_ context.Context, hashes []string) (map[string]assets.Row, error) {
+func (m *memStore) GetMany(_ context.Context, owner string, hashes []string) (map[string]assets.Row, error) {
 	out := map[string]assets.Row{}
 
 	for _, h := range hashes {
-		if r, ok := m.rows[h]; ok {
+		if r, ok := m.rows[rowKey(owner, h)]; ok {
 			out[h] = r
 		}
 	}
@@ -44,22 +53,27 @@ func (m *memStore) GetMany(_ context.Context, hashes []string) (map[string]asset
 }
 
 func (m *memStore) Put(_ context.Context, r assets.Row) error {
-	if old, ok := m.rows[r.Hash]; ok {
+	if old, ok := m.rows[rowKey(r.Owner, r.Hash)]; ok {
 		r.CreatedBy, r.CreatedMs = old.CreatedBy, old.CreatedMs
 	}
 
-	m.rows[r.Hash] = r
+	m.rows[rowKey(r.Owner, r.Hash)] = r
 
 	return nil
 }
 
-func (m *memStore) Reindex(context.Context, string) error { return nil }
+func (m *memStore) Reindex(context.Context, string, string) error { return nil }
 
-func (m *memStore) Search(_ context.Context, match string) (map[string]bool, error) {
+func (m *memStore) Search(_ context.Context, owner, match string) (map[string]bool, error) {
 	out := map[string]bool{}
 
-	for hash := range m.rows {
-		r := m.rows[hash]
+	for key := range m.rows {
+		r := m.rows[key]
+		if r.Owner != owner {
+			continue
+		}
+
+		hash := r.Hash
 		text := strings.ToLower(strings.Join([]string{
 			m.names[hash], strings.Join(r.Tags, " "), r.Description, r.Origin.Source, r.Origin.Provider,
 			r.Origin.Model, r.Origin.Prompt,
@@ -362,6 +376,7 @@ func TestRecordImportKeepsTheFirstOrigin(t *testing.T) {
 	if err := assets.RecordImport(
 		ctx,
 		st,
+		"",
 		"sha256:z",
 		first,
 		assets.ImportInfo{Tags: []string{"cat"}},
@@ -375,6 +390,7 @@ func TestRecordImportKeepsTheFirstOrigin(t *testing.T) {
 	if err := assets.RecordImport(
 		ctx,
 		st,
+		"",
 		"sha256:z",
 		later,
 		assets.ImportInfo{Tags: []string{"pet"}, Reusable: new(true), Description: "a cat"},
@@ -391,5 +407,50 @@ func TestRecordImportKeepsTheFirstOrigin(t *testing.T) {
 
 	if !slices.Equal(r.Tags, []string{"cat", "pet"}) || !r.Reusable || r.Description != "a cat" || r.UpdatedMs != 20 {
 		t.Errorf("the later import did not add its info: %+v", r)
+	}
+}
+
+// Two owners of the same hash keep separate rows, tags and search text; a row written for one is absent for the other.
+func TestLibraryRowsBelongToTheirOwner(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	st := newStore()
+	file := held("sha256:s", "shared.png", "image", "prj_1", "prj_1")
+	st.names[file.Hash] = file.Name
+
+	for owner, note := range map[string]string{"alice": "alice note", "bob": "bob note"} {
+		lib := &assets.Library{Store: st, Owner: owner}
+
+		if _, err := lib.SetInfo(ctx, &file, assets.InfoPatch{RightsNote: &note}, "user:"+owner, 5, nil); err != nil {
+			t.Fatal(err)
+		}
+
+		if _, err := lib.Tag(ctx, &file, []string{owner + "tag"}, nil, "user:"+owner, 5, nil); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	for owner, other := range map[string]string{"alice": "bob", "bob": "alice"} {
+		lib := &assets.Library{Store: st, Owner: owner}
+
+		got, err := lib.Get(ctx, &file, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if got.Origin.RightsNote != owner+" note" || !slices.Equal(got.Tags, []string{owner + "tag"}) {
+			t.Errorf("%s reads %+v", owner, got)
+		}
+
+		page, err := lib.List(ctx, []assets.Held{file}, &assets.Query{Text: other + "tag"})
+		if err != nil || len(page.Assets) != 0 {
+			t.Errorf("%s finds the text of %s: %+v, %v", owner, other, page, err)
+		}
+	}
+
+	if got, err := (&assets.Library{Store: st, Owner: "carol"}).Get(ctx, &file, nil); err != nil ||
+		got.Origin.RightsNote != "" || len(got.Tags) != 0 {
+		t.Errorf("a third owner reads a record that is not hers: %+v, %v", got, err)
 	}
 }
