@@ -1756,7 +1756,7 @@ trashed prj_2x5c8d1f4g; restore it with project_trash restore=true
                 "shape.add", "shape.set", "caption.add", "caption.set_words", "caption.edit_word",
                 "caption.split", "caption.merge", "caption.set_breaks", "caption.set_style",
                 "caption.from_transcript", "caption.import_subtitles", "caption.retime_from_clip", "keyframe.set", "keyframe.remove",
-                "keyframe.clear", "keyframe.set_easing", "slot.mark", "slot.unmark", "slot.fill", "template.set_info",
+                "keyframe.clear", "keyframe.set_easing", "animation.apply_preset", "animation.list_presets", "slot.mark", "slot.unmark", "slot.fill", "template.set_info",
                 "font.add", "font.remove"
               ]
             },

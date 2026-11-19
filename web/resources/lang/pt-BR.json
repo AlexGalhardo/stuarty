@@ -627,6 +627,14 @@
         }
       },
       "commands": {
+        "animation": {
+          "apply_preset": {
+            "title": "Aplicar uma predefinição de movimento"
+          },
+          "list_presets": {
+            "title": "Listar as predefinições de movimento"
+          }
+        },
         "asset": {
           "remove": {
             "title": "Remover mídia"
@@ -1481,7 +1489,8 @@
           "ease_in": "Entrada suave",
           "ease_out": "Saída suave",
           "ease_in_out": "Entrada e saída suaves",
-          "hold": "Manter"
+          "hold": "Manter",
+          "bezier": "Curva personalizada"
         }
       },
       "effects": {
