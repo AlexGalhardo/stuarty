@@ -108,6 +108,7 @@ type ExportResult struct {
 // JobResult has exactly one member set.
 type JobResult struct {
 	Export     *ExportResult     `json:"export,omitempty"`
+	Publish    *PublishResult    `json:"publish,omitempty"`
 	Transcribe *TranscribeResult `json:"transcribe,omitempty"`
 }
 

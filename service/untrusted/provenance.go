@@ -56,4 +56,8 @@ var Provenance = map[string]string{
 	"service.SkillGetResult.Body":          SourceLibraryText,
 	"service.SkillFileView.Text":           SourceLibraryText,
 	"service.LibraryReindexResult.Ignored": SourceLibraryText,
+
+	// publishing (SDD-020): the channel, the video the network named and what a person would approve
+	"service.PublishResult.RemoteID": SourceNetworkText,
+	"service.PublishResult.URL":      SourceNetworkText,
 }
