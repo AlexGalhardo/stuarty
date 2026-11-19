@@ -11231,6 +11231,119 @@
         "summary": "Make one request through a connection"
       }
     },
+    "/api/v1/cost": {
+      "get": {
+        "operationId": "cost.get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CostSummaryResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Read the cost ceilings and what was spent"
+      }
+    },
+    "/api/v1/cost/ceilings": {
+      "put": {
+        "operationId": "cost.ceilings.set",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "currency": {
+                    "description": "Three upper-case letters, for example USD.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "per_day_micros": {
+                    "description": "The most that may be spent in one UTC day, in millionths of the currency unit. With neither limit, the ceiling is removed.",
+                    "format": "int64",
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
+                  },
+                  "per_item_micros": {
+                    "description": "The most one action may cost, in millionths of the currency unit.",
+                    "format": "int64",
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
+                  },
+                  "project_id": {
+                    "description": "The project the ceiling is for; leave out for the whole workspace.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "currency"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CostSummaryResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Set or remove a cost ceiling (a person in the browser only; the local token and keys get 403)"
+      }
+    },
     "/api/v1/export-presets": {
       "get": {
         "operationId": "export.presets",
@@ -14602,6 +14715,10 @@
                     "minItems": 1,
                     "type": "array"
                   },
+                  "timeline_id": {
+                    "description": "The timeline of the project; required when the project has several.",
+                    "type": "string"
+                  },
                   "wait_ms": {
                     "description": "0 to 25000: hold the call until the job is final.",
                     "type": "integer"
@@ -14664,6 +14781,14 @@
       "get": {
         "operationId": "export.check",
         "parameters": [
+          {
+            "description": "The timeline of the project; required when the project has several.",
+            "in": "query",
+            "name": "timeline_id",
+            "schema": {
+              "type": "string"
+            }
+          },
           {
             "description": "A preset id, as listed by GET /export-presets.",
             "in": "query",

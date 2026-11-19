@@ -1980,7 +1980,7 @@ The result carries `isError: true` and no `structuredContent`; `content[0]` is t
 ```json
 {
   "name":"command_help",
-  "description":"Describe edit operations. Without name: one line each. With name (e.g. item.split): description, args schema, example, error codes. Read it before using an unfamiliar operation. domain=export: the export presets and the codecs this machine writes.",
+  "description":"Describe edit operations. Without name: one line each. With name (e.g. item.split): description, args schema, example, error codes. Read it before using an unfamiliar operation. domain=export: presets and codecs.",
   "inputSchema":{
     "type":"object",
     "properties":{
@@ -2537,72 +2537,76 @@ The `image` block follows the text block: `{"type": "image", "mimeType": "image/
 
 ```json
 {
-  "name":"lint",
-  "description":"Check a project for problems: code, severity, item, message, hint. Errors block export; run after edits, before export. Runs every rule. preset (see command_help domain=export) checks the fit to that export preset instead, over start..end.",
-  "inputSchema":{
-    "type":"object",
-    "properties":{
-      "project_id":{
-        "type":"string",
-        "pattern":"^prj_[0-9a-hjkmnp-tv-z]{10}$"
+  "name": "lint",
+  "description": "Check a project for problems: code, severity, item, message, hint. Errors block export; run after edits, before export. Runs every rule, unlike an edit's lint block (lint_scope fast). preset: fit to an export preset over start..end.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "project_id": {
+        "type": "string",
+        "pattern": "^prj_[0-9a-hjkmnp-tv-z]{10}$"
       },
-      "severity":{
-        "enum":[
+      "timeline_id": {
+        "type": "string",
+        "pattern": "^prj_[0-9a-hjkmnp-tv-z]{10}$"
+      },
+      "severity": {
+        "enum": [
           "error",
           "warning"
         ],
-        "default":"warning"
+        "default": "warning"
       },
-      "cursor":{
-        "type":"string"
+      "cursor": {
+        "type": "string"
       },
-      "limit":{
-        "type":"integer",
-        "minimum":1,
-        "maximum":100,
-        "default":25
+      "limit": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 100,
+        "default": 25
       },
-      "preset":{
-        "type":"string"
+      "preset": {
+        "type": "string"
       },
-      "start":{
-        "type":"string"
+      "start": {
+        "type": "string"
       },
-      "end":{
-        "type":"string"
+      "end": {
+        "type": "string"
       }
     },
-    "required":[
+    "required": [
       "project_id"
     ],
-    "additionalProperties":false
+    "additionalProperties": false
   },
-  "outputSchema":{
-    "type":"object",
-    "properties":{
-      "revision":{
-        "type":"integer"
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "revision": {
+        "type": "integer"
       },
-      "errors":{
-        "type":"integer"
+      "errors": {
+        "type": "integer"
       },
-      "warnings":{
-        "type":"integer"
+      "warnings": {
+        "type": "integer"
       },
-      "findings":{
-        "type":"array",
-        "items":{
-          "type":"object"
+      "findings": {
+        "type": "array",
+        "items": {
+          "type": "object"
         }
       },
-      "next_cursor":{
-        "type":[
+      "next_cursor": {
+        "type": [
           "string",
           "null"
         ]
       }
     },
-    "required":[
+    "required": [
       "revision",
       "errors",
       "warnings",
@@ -2631,33 +2635,37 @@ Example (the text of §3.6): `{"name": "lint", "arguments": {"project_id": "prj_
 
 ```json
 {
-  "name":"job_start",
-  "description":"Start long work. export renders a workspace file: args {start?, end?, format?, at? (the png frame), preset?, codec?}. export_batch runs args.items [{preset, format, codec, start, end}] in turn. transcribe: args {asset_id, language?, model?}. Poll job_get.",
-  "inputSchema":{
-    "type":"object",
-    "properties":{
-      "project_id":{
-        "type":"string",
-        "pattern":"^prj_[0-9a-hjkmnp-tv-z]{10}$"
+  "name": "job_start",
+  "description": "Start long work. export renders a workspace file: args {start?, end?, format?, at? (the png frame), preset?, codec?}. export_batch runs args.items (export args) in turn. transcribe: args {asset_id, language?, model?}. Poll job_get.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "project_id": {
+        "type": "string",
+        "pattern": "^prj_[0-9a-hjkmnp-tv-z]{10}$"
       },
-      "kind":{
-        "enum":[
+      "timeline_id": {
+        "type": "string",
+        "pattern": "^prj_[0-9a-hjkmnp-tv-z]{10}$"
+      },
+      "kind": {
+        "enum": [
           "export",
           "export_batch",
           "transcribe"
         ]
       },
-      "args":{
-        "type":"object",
-        "properties":{
-          "start":{
-            "type":"string"
+      "args": {
+        "type": "object",
+        "properties": {
+          "start": {
+            "type": "string"
           },
-          "end":{
-            "type":"string"
+          "end": {
+            "type": "string"
           },
-          "format":{
-            "enum":[
+          "format": {
+            "enum": [
               "mp4",
               "gif",
               "wav",
@@ -2665,57 +2673,54 @@ Example (the text of §3.6): `{"name": "lint", "arguments": {"project_id": "prj_
               "png"
             ]
           },
-          "at":{
-            "type":"string"
+          "at": {
+            "type": "string"
           },
-          "preset":{
-            "type":"string"
+          "preset": {
+            "type": "string"
           },
-          "codec":{
-            "enum":[
+          "codec": {
+            "enum": [
               "h264",
               "hevc",
               "av1"
             ]
           },
-          "items":{
-            "type":"array",
-            "items":{
-              "type":"object"
-            }
+          "items": {
+            "type": "array"
           }
         }
       },
-      "wait_ms":{
-        "type":"integer",
-        "minimum":0,
-        "maximum":25000,
-        "default":0
+      "wait_ms": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 25000,
+        "default": 0
       }
     },
-    "required":[
+    "required": [
       "project_id",
       "kind"
     ],
-    "additionalProperties":false
+    "additionalProperties": false
   },
-  "outputSchema":{
-    "type":"object",
-    "properties":{
-      "job_id":{
-        "type":"string"
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "job_id": {
+        "type": "string"
       },
-      "kind":{
-        "type":"string"
+      "kind": {
+        "type": "string"
       },
-      "state":{
-        "type":"string"
+      "state": {
+        "type": "string"
       },
-      "progress":{
-        "type":"number"
+      "progress": {
+        "type": "number"
       }
     },
-    "required":[
+    "required": [
       "job_id",
       "kind",
       "state",

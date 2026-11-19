@@ -289,11 +289,12 @@ func history(ctx context.Context, svc service.Service, raw json.RawMessage) (*to
 
 func lintTool(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolOutput, error) {
 	in, err := decode[struct {
-		ProjectID string `json:"project_id"`
-		Severity  string `json:"severity"`
-		Preset    string `json:"preset"`
-		Start     string `json:"start"`
-		End       string `json:"end"`
+		ProjectID  string `json:"project_id"`
+		TimelineID string `json:"timeline_id"`
+		Severity   string `json:"severity"`
+		Preset     string `json:"preset"`
+		Start      string `json:"start"`
+		End        string `json:"end"`
 		pageArgs
 	}](raw)
 	if err != nil {
@@ -304,7 +305,7 @@ func lintTool(ctx context.Context, svc service.Service, raw json.RawMessage) (*t
 	// given, as export:check and GET /projects/{id}/export-check take it.
 	if in.Preset != "" {
 		chk, cerr := svc.ExportCheck(ctx, service.ExportCheckRequest{
-			ProjectID: in.ProjectID, Preset: in.Preset, Start: in.Start, End: in.End,
+			ProjectID: in.ProjectID, TimelineID: in.TimelineID, Preset: in.Preset, Start: in.Start, End: in.End,
 		})
 		if cerr != nil {
 			return nil, cerr
@@ -320,7 +321,10 @@ func lintTool(ctx context.Context, svc service.Service, raw json.RawMessage) (*t
 		}
 	}
 
-	res, err := svc.Lint(ctx, service.LintRequest{ProjectID: in.ProjectID, Severity: in.Severity, Page: in.page()})
+	res, err := svc.Lint(
+		ctx,
+		service.LintRequest{ProjectID: in.ProjectID, TimelineID: in.TimelineID, Severity: in.Severity, Page: in.page()},
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -430,7 +434,9 @@ func jobStart(ctx context.Context, svc service.Service, raw json.RawMessage) (*t
 	}
 
 	if in.Kind == service.JobExportBatch {
-		return exportBatch(ctx, svc, in.ProjectID, in.Args, in.WaitMS)
+		return exportBatch(ctx, svc, service.ExportBatchRequest{
+			ProjectID: in.ProjectID, TimelineID: in.TimelineID, WaitMS: in.WaitMS,
+		}, in.Args)
 	}
 
 	res, err := svc.JobStart(ctx, service.JobStartRequest{
@@ -445,7 +451,7 @@ func jobStart(ctx context.Context, svc service.Service, raw json.RawMessage) (*t
 
 // exportBatch is job_start with kind export_batch: args.items are the exports (SDD-004 section 8.4).
 func exportBatch(
-	ctx context.Context, svc service.Service, projectID string, args json.RawMessage, waitMS int,
+	ctx context.Context, svc service.Service, req service.ExportBatchRequest, args json.RawMessage,
 ) (*toolOutput, error) {
 	in, err := decode[struct {
 		Items []service.ExportBatchItem `json:"items"`
@@ -457,7 +463,9 @@ func exportBatch(
 		}
 	}
 
-	res, err := svc.ExportBatch(ctx, service.ExportBatchRequest{ProjectID: projectID, Items: in.Items, WaitMS: waitMS})
+	req.Items = in.Items
+
+	res, err := svc.ExportBatch(ctx, req)
 	if err != nil {
 		return nil, err
 	}

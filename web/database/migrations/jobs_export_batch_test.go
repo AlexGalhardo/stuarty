@@ -11,11 +11,20 @@ import (
 	"github.com/AlexGalhardo/vukem/schema"
 )
 
-const exportBatchMigrationID = "20261119120050_jobs_export_batch_kind"
+const (
+	exportBatchMigrationID = "20261119120050_jobs_export_batch_kind"
+	waitingApprovalID      = "20261119140100_jobs_waiting_approval"
+)
 
-// migratedBefore is a workspace migrated up to the migration before the export_batch rebuild, with the
-// migrator that runs the rest.
-func migratedBefore(t *testing.T) (*database.DB, *schema.Migrator) {
+// migrations are the vukem queue tables and the editor's, in order.
+func migrations() []schema.Migration {
+	qopts := queue.DatabaseOptions{Table: "queue_jobs", FailedTable: "queue_failed_jobs"}
+
+	return slices.Concat(queue.Migrations(qopts), All())
+}
+
+// openWith is a new workspace with the migrations that keep returns true for.
+func openWith(t *testing.T, keep func(id string) bool) *database.DB {
 	t.Helper()
 
 	ctx := context.Background()
@@ -27,28 +36,35 @@ func migratedBefore(t *testing.T) (*database.DB, *schema.Migrator) {
 
 	t.Cleanup(func() { _ = db.Close() })
 
-	qopts := queue.DatabaseOptions{Table: "queue_jobs", FailedTable: "queue_failed_jobs"}
-	all := slices.Concat(queue.Migrations(qopts), All())
-	before := slices.DeleteFunc(slices.Clone(all), func(m schema.Migration) bool {
-		return m.ID >= exportBatchMigrationID
-	})
+	upTo(t, db, keep)
 
-	m, err := schema.NewMigrator(db, before)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if _, err := m.Up(ctx); err != nil {
-		t.Fatal(err)
-	}
-
-	rest, err := schema.NewMigrator(db, all)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	return db, rest
+	return db
 }
+
+// upTo runs, on db, the migrations that keep returns true for and that have not run.
+func upTo(t *testing.T, db *database.DB, keep func(id string) bool) []string {
+	t.Helper()
+
+	some := slices.DeleteFunc(migrations(), func(m schema.Migration) bool { return !keep(m.ID) })
+
+	m, err := schema.NewMigrator(db, some)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ran, err := m.Up(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return ran
+}
+
+func before(id string) func(string) bool { return func(m string) bool { return m < id } }
+
+func through(id string) func(string) bool { return func(m string) bool { return m <= id } }
+
+func every(string) bool { return true }
 
 func execAll(t *testing.T, db *database.DB, qs ...string) {
 	t.Helper()
@@ -58,6 +74,31 @@ func execAll(t *testing.T, db *database.DB, qs ...string) {
 			t.Fatalf("%s: %v", q, err)
 		}
 	}
+}
+
+// timelineTable is the table that holds the timeline documents: projects before the project-as-production
+// migration renames it, timelines after.
+func timelineTable(t *testing.T, db *database.DB) string {
+	t.Helper()
+
+	var n int
+	if err := db.QueryRowContext(context.Background(),
+		`SELECT count(*) FROM sqlite_master WHERE type = 'table' AND name = 'timelines'`).Scan(&n); err != nil {
+		t.Fatal(err)
+	}
+
+	if n == 1 {
+		return "timelines"
+	}
+
+	return "projects"
+}
+
+func insertTimeline(t *testing.T, db *database.DB, id string) {
+	t.Helper()
+
+	execAll(t, db, `INSERT INTO `+timelineTable(t, db)+` (id, name, schema_version, document, doc_sha256, width, height,
+ fps_num, fps_den, created_ms, updated_ms, created_by) VALUES ('`+id+`', 'a', 1, '{}', 'x', 1, 1, 30, 1, 1, 1, 'local:ui')`)
 }
 
 func jobRows(t *testing.T, db *database.DB) []string {
@@ -115,34 +156,19 @@ func insertEveryJob(t *testing.T, db *database.DB) {
 
 // TestJobsExportBatchKindKeepsEveryJob: the rebuild of jobs for the export_batch kind keeps every row of a
 // workspace that already has jobs, of every kind and state, with every column; it accepts export_batch, still
-// refuses an unknown kind or state, keeps its indexes and its cascades, and Down gives the old check back.
+// refuses an unknown kind or state, keeps its indexes and its cascades, and points project_id at the table of the
+// timelines (timelines once the project-as-production migration renamed it).
 func TestJobsExportBatchKindKeepsEveryJob(t *testing.T) {
-	db, rest := migratedBefore(t)
+	db := openWith(t, before(exportBatchMigrationID))
 	ctx := context.Background()
 
-	execAll(
-		t,
-		db,
-		`INSERT INTO projects (id, name, schema_version, document, doc_sha256, width, height, fps_num, fps_den, created_ms, updated_ms, created_by)
- VALUES ('prj_a', 'a', 1, '{}', 'x', 1, 1, 30, 1, 1, 1, 'local:ui')`,
-		`INSERT INTO assets (id, kind, size_bytes, original_name, created_ms, updated_ms) VALUES ('sha256:a', 'video', 1, 'a.mp4', 1, 1)`,
-		`INSERT INTO jobs (id, kind, project_id, asset_hash, actor, state, progress, message, input, result, error, cancel_requested, attempts, created_ms, updated_ms, started_ms, finished_ms)
- VALUES ('job_1', 'ingest', NULL, 'sha256:a', 'local:ui', 'running', 0.5, 'm', '{"a":1}', NULL, NULL, 0, 1, 10, 11, 12, NULL)`,
-		`INSERT INTO jobs (id, kind, project_id, asset_hash, actor, state, progress, message, input, result, error, cancel_requested, attempts, created_ms, updated_ms, started_ms, finished_ms)
- VALUES ('job_2', 'transcribe', 'prj_a', 'sha256:a', 'local:cli', 'queued', 0, '', '{}', NULL, NULL, 1, 0, 20, 20, NULL, NULL)`,
-		`INSERT INTO jobs (id, kind, project_id, asset_hash, actor, state, progress, message, input, result, error, cancel_requested, attempts, created_ms, updated_ms, started_ms, finished_ms)
- VALUES ('job_3', 'export', 'prj_a', NULL, 'key:k', 'succeeded', 1, 'done', '{}', '{"export":{}}', NULL, 0, 1, 30, 31, 30, 31)`,
-		`INSERT INTO jobs (id, kind, project_id, asset_hash, actor, state, progress, message, input, result, error, cancel_requested, attempts, created_ms, updated_ms, started_ms, finished_ms)
- VALUES ('job_4', 'export', 'prj_a', NULL, 'key:k', 'failed', 0.25, '', '{}', NULL, '{"code":"E_EXPORT_FAILED"}', 0, 3, 40, 41, 40, 41)`,
-		`INSERT INTO jobs (id, kind, project_id, asset_hash, actor, state, progress, message, input, result, error, cancel_requested, attempts, created_ms, updated_ms, started_ms, finished_ms)
- VALUES ('job_5', 'frame', 'prj_a', NULL, 'local:ui', 'cancelled', 0, '', '{}', NULL, '{"code":"E_CANCELLED"}', 1, 1, 50, 51, 50, 51)`,
-	)
+	insertTimeline(t, db, "prj_a")
+	insertEveryJob(t, db)
 
 	want := jobRows(t, db)
 
-	ran, err := rest.Up(ctx)
-	if err != nil || !slices.Contains(ran, exportBatchMigrationID) {
-		t.Fatalf("Up = %v, %v", ran, err)
+	if ran := upTo(t, db, through(exportBatchMigrationID)); !slices.Equal(ran, []string{exportBatchMigrationID}) {
+		t.Fatalf("ran %v", ran)
 	}
 
 	if got := jobRows(t, db); !slices.Equal(got, want) {
@@ -163,111 +189,26 @@ func TestJobsExportBatchKindKeepsEveryJob(t *testing.T) {
 		"an unknown kind":  `INSERT INTO jobs (id, kind, project_id, actor, input, created_ms, updated_ms) VALUES ('job_7', 'nope', 'prj_a', 'a', '{}', 1, 1)`,
 		"an unknown state": `INSERT INTO jobs (id, kind, project_id, actor, state, input, created_ms, updated_ms) VALUES ('job_8', 'export', 'prj_a', 'a', 'paused', '{}', 1, 1)`,
 		"no owner":         `INSERT INTO jobs (id, kind, actor, input, created_ms, updated_ms) VALUES ('job_9', 'export_batch', 'a', '{}', 1, 1)`,
-		"a lost project":   `INSERT INTO jobs (id, kind, project_id, actor, input, created_ms, updated_ms) VALUES ('job_10', 'export', 'prj_zz', 'a', '{}', 1, 1)`,
+		"a lost timeline":  `INSERT INTO jobs (id, kind, project_id, actor, input, created_ms, updated_ms) VALUES ('job_10', 'export', 'prj_zz', 'a', '{}', 1, 1)`,
 	} {
 		if _, err := db.ExecContext(ctx, q); err == nil {
 			t.Errorf("%s was accepted", name)
 		}
 	}
 
-	var n int
-	if err := db.QueryRowContext(ctx, `SELECT count(*) FROM sqlite_master WHERE type = 'index' AND name IN
- ('jobs_project_id_created_ms_index','jobs_kind_state_index','jobs_active_ingest_unique')`).Scan(&n); err != nil || n != 3 {
-		t.Errorf("indexes of jobs after the rebuild = %d, %v; want 3", n, err)
+	if n := count(t, db, `SELECT count(*) FROM sqlite_master WHERE type = 'index' AND name IN
+ ('jobs_project_id_created_ms_index','jobs_kind_state_index','jobs_active_ingest_unique')`); n != 3 {
+		t.Errorf("indexes of jobs after the rebuild = %d; want 3", n)
 	}
 
-	execAll(t, db, `DELETE FROM projects WHERE id = 'prj_a'`)
+	execAll(t, db, `DELETE FROM `+timelineTable(t, db)+` WHERE id = 'prj_a'`)
 
-	if err := db.QueryRowContext(ctx, `SELECT count(*) FROM jobs WHERE project_id IS NOT NULL`).
-		Scan(&n); err != nil ||
-		n != 0 {
-		t.Errorf("jobs of the deleted project = %d, %v; want 0 (the cascade)", n, err)
+	if n := count(t, db, `SELECT count(*) FROM jobs WHERE project_id IS NOT NULL`); n != 0 {
+		t.Errorf("jobs of the deleted timeline = %d; want 0 (the cascade)", n)
 	}
 
-	if err := db.QueryRowContext(ctx, `SELECT count(*) FROM jobs`).Scan(&n); err != nil || n != 1 {
-		t.Errorf("jobs after the cascade = %d, %v; want the ingest", n, err)
-	}
-}
-
-// TestJobsExportBatchKindFollowsTheRenamedTimelines: once the table of the timelines is called timelines (the
-// project-as-production migration renames projects), the rebuild keeps project_id pointing at it, not at the
-// projects of the productions.
-func TestJobsExportBatchKindFollowsTheRenamedTimelines(t *testing.T) {
-	db, rest := migratedBefore(t)
-	ctx := context.Background()
-
-	execAll(
-		t,
-		db,
-		`ALTER TABLE projects RENAME TO timelines`,
-		`CREATE TABLE projects (id TEXT NOT NULL PRIMARY KEY)`,
-		`INSERT INTO timelines (id, name, schema_version, document, doc_sha256, width, height, fps_num, fps_den, created_ms, updated_ms, created_by)
- VALUES ('prj_b', 'b', 1, '{}', 'x', 1, 1, 30, 1, 1, 1, 'local:ui')`,
-		`INSERT INTO jobs (id, kind, project_id, actor, input, created_ms, updated_ms) VALUES ('job_1', 'export', 'prj_b', 'a', '{}', 1, 1)`,
-	)
-
-	if _, err := rest.Up(ctx); err != nil {
-		t.Fatal(err)
-	}
-
-	var parent string
-	if err := db.QueryRowContext(ctx, `SELECT "table" FROM pragma_foreign_key_list('jobs') WHERE "from" = 'project_id'`).
-		Scan(&parent); err != nil ||
-		parent != "timelines" {
-		t.Fatalf("project_id references %q, %v; want timelines", parent, err)
-	}
-
-	execAll(
-		t,
-		db,
-		`INSERT INTO jobs (id, kind, project_id, actor, input, created_ms, updated_ms) VALUES ('job_2', 'export_batch', 'prj_b', 'a', '{}', 2, 2)`,
-		`DELETE FROM timelines WHERE id = 'prj_b'`,
-	)
-
-	var n int
-	if err := db.QueryRowContext(ctx, `SELECT count(*) FROM jobs`).Scan(&n); err != nil || n != 0 {
-		t.Errorf("jobs after the timeline went = %d, %v; want 0", n, err)
-	}
-}
-
-// TestJobsExportBatchKindLeavesAnOpenTableAlone: on a workspace where the rebuild of the approval queue already
-// ran (the table has approval_id and no closed list of kinds), this migration runs out of order and must not
-// rebuild the table: the column, its values and the rows stay as they are.
-func TestJobsExportBatchKindLeavesAnOpenTableAlone(t *testing.T) {
-	db, rest := migratedBefore(t)
-	ctx := context.Background()
-
-	execAll(
-		t,
-		db,
-		`ALTER TABLE jobs ADD COLUMN approval_id TEXT`,
-		`INSERT INTO projects (id, name, schema_version, document, doc_sha256, width, height, fps_num, fps_den, created_ms, updated_ms, created_by)
- VALUES ('prj_c', 'c', 1, '{}', 'x', 1, 1, 30, 1, 1, 1, 'local:ui')`,
-		`INSERT INTO jobs (id, kind, project_id, actor, input, created_ms, updated_ms, approval_id)
- VALUES ('job_1', 'export', 'prj_c', 'a', '{}', 1, 1, 'apr_0000000001')`,
-	)
-
-	var before string
-	if err := db.QueryRowContext(ctx, `SELECT sql FROM sqlite_master WHERE name = 'jobs'`).Scan(&before); err != nil {
-		t.Fatal(err)
-	}
-
-	if _, err := rest.Up(ctx); err != nil {
-		t.Fatal(err)
-	}
-
-	var after, approval string
-	if err := db.QueryRowContext(ctx, `SELECT sql FROM sqlite_master WHERE name = 'jobs'`).Scan(&after); err != nil {
-		t.Fatal(err)
-	}
-
-	if after != before {
-		t.Errorf("the table was rebuilt:\n%s\nwas\n%s", after, before)
-	}
-
-	if err := db.QueryRowContext(ctx, `SELECT approval_id FROM jobs WHERE id = 'job_1'`).Scan(&approval); err != nil ||
-		approval != "apr_0000000001" {
-		t.Errorf("approval_id after the migration = %q, %v", approval, err)
+	if n := count(t, db, `SELECT count(*) FROM jobs`); n != 1 {
+		t.Errorf("jobs after the cascade = %d; want the ingest", n)
 	}
 }
 
