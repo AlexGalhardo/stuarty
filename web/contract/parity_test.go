@@ -64,6 +64,8 @@ var parity = []row{
 	{method: "JobList", tool: "job_get", command: "job:list", route: "GET /projects/{}/jobs"},
 	{method: "ViewFrame", tool: "view", command: "view", route: "GET /projects/{}/frame"},
 	{method: "ViewSheet", tool: "view", command: "view", route: "GET /projects/{}/sheet"},
+	// The hand-off from an external motion engine (SDD-011 section 15): view with mode motion.
+	{method: "MotionBrief", tool: "view", command: "motion:brief", route: "GET /projects/{}/motion/brief"},
 	{method: "TrashEmpty", route: "POST /trash/empty", httpOnly: true},
 	{method: "Doctor", command: "doctor", route: "GET /system"},
 	{method: "SnapPoints", route: "GET /projects/{}/snap-points", httpOnly: true},

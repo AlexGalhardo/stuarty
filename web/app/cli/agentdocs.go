@@ -33,6 +33,11 @@ func AgentDocsInputs() agentdocs.Inputs {
 		inLibrary[s.name] = true
 	}
 
+	// And for the hand-off from an external motion engine: the skill motion-with-an-external-engine carries it.
+	for _, s := range []*spec{motionBriefCmd} {
+		inLibrary[s.name] = true
+	}
+
 	for i := range commands {
 		c := &commands[i]
 		if c.Person || inLibrary[c.Name] {

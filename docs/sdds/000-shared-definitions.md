@@ -29,7 +29,8 @@
 | `JobCancel` | `job_cancel` | `job:cancel` | `POST /jobs/{job_id}/cancel` | render; media is enough for the caller's own `transcribe` or `ingest` job |
 | `TemplateList`, `TemplateSave`, `TemplateInstantiate`, `TemplateExport`, `TemplateImport` | `template` | `template:list`, `template:save`, `template:new`, `template:export`, `template:import` | `GET /templates`, `POST /templates`, `POST /templates/{id}/instantiate`, `GET /templates/{id}/file`, `POST /templates/import` | read, edit |
 | `Doctor` | none | `doctor` | `GET /system` | read |
-| `MotionBrief`, `MotionCheck` | `view` with `mode` `motion` (given `asset_id` it also checks) | `motion:brief`, `motion:check` | `GET /projects/{id}/motion/brief`, `GET /projects/{id}/motion/check` (what an external motion render must fit, and whether a file does; SDD-011 §15) | read |
+| `MotionBrief` | `view` with `mode` `motion` | `motion:brief` | `GET /projects/{id}/motion/brief` (what an external motion render must fit; SDD-011 §15) | read |
+| `MotionCheck` | none (the tool list has no room, SDD-011 §15.5) | `motion:check` | `GET /projects/{id}/motion/check` (whether a rendered file fits the brief; SDD-011 §15.3) | read |
 | `MotionReplace` | `edit` (a batch of `clip.replace_media`) | `motion:replace` | `POST /projects/{id}/motion/replace` (every clip that reads an earlier render of the same `render_key`, in one undoable batch; SDD-011 §15.4) | edit |
 | event stream | none | `events` (prints the stream) | `GET /projects/{id}/events` | read |
 | `PlanWindow` | none | none | `GET /projects/{id}/plan` (SDD-004 §10) | read |

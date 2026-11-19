@@ -341,6 +341,10 @@ func (s stub) BriefingAnswer(context.Context, service.BriefingAnswerRequest) (*s
 	return reply[service.BriefResult](s.err)
 }
 
+func (s stub) MotionBrief(context.Context, service.MotionBriefRequest) (*service.MotionBriefResult, error) {
+	return reply[service.MotionBriefResult](s.err)
+}
+
 func (s stub) MemoryList(context.Context, service.MemoryListRequest) (*service.LibraryListResult, error) {
 	return reply[service.LibraryListResult](s.err)
 }

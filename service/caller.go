@@ -159,6 +159,8 @@ var Scopes = map[string]string{
 	"AssetUses":    ScopeRead,
 	"AssetSetInfo": ScopeMedia,
 	"AssetTag":     ScopeMedia,
+
+	"MotionBrief": ScopeRead,
 }
 
 // authorize checks the caller first, as every method does: a missing caller
