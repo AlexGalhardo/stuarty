@@ -43,7 +43,7 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | [21](21-desktop-background-service.md) | Desktop background service for scheduled posts | M | 20 | TODO |
 | [22](22-x-and-tiktok-drafts.md) | X and TikTok drafts | M | 20 | TODO |
 | [23](23-blog-and-its-destinations.md) | Blog posts and their four destinations | L | 17, 20 | TODO |
-| [24](24-google-account-and-server-login.md) | Optional Google account and login on a server | M | 04, 18 | TODO |
+| [24](24-google-account-and-server-login.md) | Optional Google account and login on a server | M | 04, 18 | IN PROGRESS (senior-e, 2026-11-20) |
 | [25](25-vps-package.md) | VPS package: Caddy, install, update and backup | M | 24 | TODO |
 
 ### 1.3 Editor track (two seniors)
