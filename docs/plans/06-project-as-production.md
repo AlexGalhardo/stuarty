@@ -38,7 +38,7 @@ A creator opens one project and finds the whole production in it: the brief, the
 
 - [x] 1. Amend SDD-005, SDD-003 and SDD-000 with the model, the id rule and the new operations. Verify: `task lint:md` exits 0 and the reading tests of SDD-003 pass.
 - [x] 2. Implement `core/project` with table tests. Verify: `go test ./core/project/...` passes.
-- [ ] 3. Write the migration and its down path, with fixtures of workspaces of earlier releases. Verify: `go test ./web/database/... -run TestProjectItemsMigration` passes for every fixture.
+- [x] 3. Write the migration and its down path, with fixtures of workspaces of earlier releases. Verify: `go test ./web/database/... -run TestProjectItemsMigration` passes for every fixture.
 - [ ] 4. Implement the service operations and the compatibility rule for `project_id`. Verify: `go test ./service/... -run "TestProject|TestBrief"` passes.
 - [ ] 5. Update bundle export and import. Verify: `go test ./service/... -run TestBundle` passes, including a bundle made by release 0.29.0.
 - [ ] 6. Expose on HTTP, CLI and MCP with the text view. Verify: `go test ./web/contract/...` passes and the reference scenario (`bash scripts/smoke-e2e.sh`) still exports.
