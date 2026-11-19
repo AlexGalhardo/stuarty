@@ -174,3 +174,40 @@ func randomCurve(rng *rand.Rand, anyY bool) []float64 {
 
 	return []float64{rng.Float64(), y(), rng.Float64(), y()}
 }
+
+// The crop and the mask are sampled by the plan like any property: each frame carries the value on the
+// curve, so no executor evaluates one (SDD-013 section 2.3).
+func TestEasingCropAndMaskFollowTheCurve(t *testing.T) {
+	t.Parallel()
+
+	curve := []float64{0.42, 0, 0.58, 1}
+	d := newDoc()
+	it := clip("itm_a", trkBottom, 0, 10)
+	it.Mask = &timeline.Mask{Shape: "rect", X: 0, Y: 0, Width: 0.2, Height: 1}
+	it.Keyframes = timeline.Keyframes{
+		"crop_left": {
+			{T: 0, Value: 0, Easing: timeline.EasingBezier, Bezier: curve},
+			{T: 10, Value: 0.4, Easing: "linear"},
+		},
+		"mask_width": {
+			{T: 0, Value: 0.2, Easing: timeline.EasingBezier, Bezier: curve},
+			{T: 10, Value: 0.8, Easing: "linear"},
+		},
+	}
+	put(d, it)
+
+	sw := float64(d.Assets[it.Asset].Width)
+
+	for f := range 10 {
+		e := timeline.BezierEase(curve, float64(f)/10)
+		l := Frame(d, f).Layers[0]
+
+		if want := round3(0.2 + 0.6*e); l.Mask.Width != want {
+			t.Errorf("frame %d: mask width %v, want %v", f, l.Mask.Width, want)
+		}
+
+		if want := round3(0.4 * e * sw); l.Crop.X != want {
+			t.Errorf("frame %d: crop x %v, want %v", f, l.Crop.X, want)
+		}
+	}
+}
