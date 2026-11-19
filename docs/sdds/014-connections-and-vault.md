@@ -174,7 +174,7 @@ Added to SDD-000 section 8:
 
 - The file `vault.json` is added to the workspace layout of SDD-000 section 9.
 - The table `connections` (migration `20261119100000_create_connections_table`): `id` (primary key), `kind`, `label`, `endpoint`, `hosts` (JSON text), `accepts` (JSON text), `secret_ref`, `created_ms`, `created_by`, `last_used_ms` (null). It holds no secret.
-- The variables `STUARTY_MASTER_KEY` and `STUARTY_MASTER_KEY_FILE` (SDD-000 section 10). `doctor` reports them as `set` or `unset` and never their values, and reports which provider is active and whether a vault file exists.
+- The variables `STUARTY_MASTER_KEY` and `STUARTY_MASTER_KEY_FILE` (SDD-000 section 10). The owner reads them once at start-up and removes them from its environment, so no child process inherits them and the `environment` check of `doctor` no longer lists them. `doctor --full` reports the key source in its own check, `vault`, for the same callers as `environment`: `detail` is `master key from <provider>; vault.json present` (or `no vault file yet`), where the provider is `environment (STUARTY_MASTER_KEY)`, `file (STUARTY_MASTER_KEY_FILE)`, `operating system keychain` or `none`, never a value or a path; `ok` is false when the vault exists and the key does not open it, with the recovery text of section 4 in `hint`. The service sees the vault only through `Manager.VaultStatus` (the provider, whether the file exists, whether the key opens it), never the vault itself.
 
 ## 9. Logs and the diagnostic bundle
 

@@ -119,8 +119,20 @@ func (m *Manager) Kinds() []string {
 // Redact replaces every credential of the vault and its master key in data (SDD-014 section 9).
 func (m *Manager) Redact(data []byte) []byte { return m.vault.Redact(data) }
 
-// Vault is the vault of the manager, for doctor and the tests of the wiring.
-func (m *Manager) Vault() *vault.Vault { return m.vault }
+// VaultStatus is what doctor and the diagnostic bundle may know of the vault: where the master key
+// comes from, whether the file exists, and whether the key opens it. It carries no key and no secret.
+type VaultStatus struct {
+	Provider string
+	Exists   bool
+	// Err is nil when the vault opens or does not exist yet; else an error that Locked explains.
+	Err error
+}
+
+// VaultStatus reports the state of the vault. The manager never hands the vault itself out, so no
+// package but this one can call Vault.Get (SDD-014 section 3).
+func (m *Manager) VaultStatus() VaultStatus {
+	return VaultStatus{Provider: m.vault.Provider(), Exists: m.vault.Exists(), Err: m.vault.Verify()}
+}
 
 // List returns every connection, oldest first.
 func (m *Manager) List(ctx context.Context) ([]Connection, error) {

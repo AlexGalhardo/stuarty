@@ -95,7 +95,7 @@ func (s *svc) connectionsText(ctx context.Context) string {
 
 	var b strings.Builder
 
-	fmt.Fprintf(&b, "%d connection(s); vault: %s\n", len(list), s.conns.Vault().Provider())
+	fmt.Fprintf(&b, "%d connection(s); vault: %s\n", len(list), s.conns.VaultStatus().Provider)
 
 	for i := range list {
 		c := &list[i]

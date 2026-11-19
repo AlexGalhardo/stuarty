@@ -2,6 +2,7 @@ package servicetest
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -415,6 +416,65 @@ func TestVaultKeyLostAndWrong(t *testing.T) {
 
 	if dst.hits() != 0 {
 		t.Error("a locked vault let a request through")
+	}
+}
+
+// SDD-014 section 8: the owner removes the key variables from its environment, so doctor reports the
+// key source in its own check: the provider by name, whether the vault exists, and a hint to recover
+// when the key does not open it. Neither the key nor the secret is in the report.
+func TestDoctorReportsTheVault(t *testing.T) {
+	master := bytes32(0x3C)
+	e := newConnEnv(t, vault.NewMemoryProvider(master))
+	ctx := service.WithCaller(context.Background(), operator())
+
+	vaultCheck := func(svc service.Service) service.DoctorCheck {
+		t.Helper()
+
+		res, err := svc.Doctor(ctx, service.DoctorRequest{Full: true})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		raw, _ := json.Marshal(res)
+		if strings.Contains(string(raw), "tok-DOCTOR-CANARY") ||
+			strings.Contains(string(raw), base64.StdEncoding.EncodeToString(master)) {
+			t.Error("the doctor report holds the secret or the master key")
+		}
+
+		for _, c := range res.Checks {
+			if c.Name == "vault" {
+				return c
+			}
+		}
+
+		t.Fatal("no vault check in the doctor report")
+
+		return service.DoctorCheck{}
+	}
+
+	if c := vaultCheck(e.svc); !c.OK || c.Detail != "master key from memory; no vault file yet" {
+		t.Errorf("before the first credential: %+v", c)
+	}
+
+	dst := newDestination(t)
+	if _, err := e.svc.ConnectionCreate(e.as(ui), connectionRequest(dst.srv.URL, "tok-DOCTOR-CANARY")); err != nil {
+		t.Fatal(err)
+	}
+
+	if c := vaultCheck(e.svc); !c.OK || c.Detail != "master key from memory; vault.json present" {
+		t.Errorf("with a credential: %+v", c)
+	}
+
+	lost := newEnvWith(t, func(_ *env, o *service.Options) {
+		o.Workspace = string(e.dir)
+		o.Connections = connections.NewManager(connections.Options{
+			Store: o.Store.Connections(), Vault: vault.Open(e.vaultPath, vault.NoProvider()),
+		})
+	})
+
+	if c := vaultCheck(lost.svc); c.OK || c.Detail != "master key from none; vault.json present" ||
+		!strings.Contains(c.Hint, "STUARTY_MASTER_KEY") {
+		t.Errorf("without the key: %+v", c)
 	}
 }
 
