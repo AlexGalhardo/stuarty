@@ -1721,6 +1721,108 @@
       "font_remove": "Remove font family {name}",
       "save": "Save brand kit",
       "saved": "Brand kit saved."
+    },
+    "library": {
+      "intro": {
+        "memory": "What you learned from past productions, one fact per file. Agents read it before they plan the next one.",
+        "skill": "Procedures an agent follows, in the Agent Skills format. A skill from outside is not offered to an agent until you have read it.",
+        "prompt": "Texts you reuse, with variables that you fill in when you use them."
+      },
+      "list": {
+        "memory": "Memory notes",
+        "skill": "Skills",
+        "prompt": "Prompts"
+      },
+      "search": "Search",
+      "search_button": "Search",
+      "new": "New",
+      "rescan": "Read the files again",
+      "rescanned": "Files read again: {memory} notes, {skills} skills, {prompts} prompts, {invalid} invalid.",
+      "loading": "Loading.",
+      "load_failed": "The list could not be loaded.",
+      "empty": "Nothing here yet.",
+      "no_match": "Nothing matches.",
+      "pick": "Choose an entry, or create a new one.",
+      "saved": "Saved.",
+      "preview_label": "Text of the entry",
+      "badge": {
+        "invalid": "Invalid file",
+        "reviewed": "Reviewed",
+        "unreviewed": "Not reviewed",
+        "scripts": "Has scripts",
+        "kept": "Kept",
+        "pending": "Pending"
+      },
+      "origin": {
+        "built-in": "Built in",
+        "user": "Yours",
+        "imported": "Imported"
+      },
+      "tab": {
+        "edit": "Edit",
+        "preview": "Preview"
+      },
+      "field": {
+        "name": "Name",
+        "name_optional": "Name (optional)",
+        "name_hint": "Lower case letters, digits and hyphens, for example weekly-recap.",
+        "description": "Description",
+        "body": "Text",
+        "scope": "Scope",
+        "tags": "Tags, separated by commas",
+        "license": "Licence"
+      },
+      "action": {
+        "save": "Save",
+        "remove": "Remove"
+      },
+      "memory": {
+        "description": "The fact, in one line",
+        "keep": "Keep this note",
+        "pending_hint": "An agent wrote this note. Agents are not offered it until you keep it."
+      },
+      "prompt": {
+        "variables_hint": "Write {{variable}} where a value goes.",
+        "save_first": "Save the prompt, then fill in its variables here.",
+        "no_variables": "This prompt has no variables.",
+        "value": "Value of {name}",
+        "render": "Render",
+        "rendered": "Rendered text"
+      },
+      "skill": {
+        "origin": "Origin",
+        "source": "Source",
+        "no_licence": "None named",
+        "review_hint": "Read the text below and its files, then mark the skill as read. Until then no agent is offered it. Any change to it takes the mark away.",
+        "mark_reviewed": "Mark as read",
+        "reviewed_done": "Marked as read.",
+        "text": "Full text",
+        "full_text": "Full text of the skill",
+        "files": "Files",
+        "bytes": "size: {count} bytes",
+        "script": "Script: stored, never run",
+        "lint": "Lint",
+        "instructions": "Instructions"
+      },
+      "lint": {
+        "none": "No findings.",
+        "error": "Error",
+        "warning": "Warning"
+      },
+      "import": {
+        "heading": "Import or export skills",
+        "hint": "Stuarty opens no connection to fetch a skill. Download it first, then give the folder or the archive (.zip, .tar.gz) that is on the machine of the service.",
+        "path": "Folder or archive on the machine of the service",
+        "source": "Where it came from",
+        "replace": "Replace a skill of the same name",
+        "button": "Import",
+        "done": "Imported {name}. It is not reviewed yet."
+      },
+      "export": {
+        "button": "Export reviewed skills",
+        "done": "{count} skills written to {path}.",
+        "none": "No reviewed skill to export."
+      }
     }
   }
 }
