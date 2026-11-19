@@ -832,7 +832,7 @@ State of a `project_assets` row:
 ```sql
 CREATE TABLE jobs (
   id               TEXT    NOT NULL,                -- job_...
-  kind             TEXT    NOT NULL CHECK (kind IN ('ingest','transcribe','export','frame')),
+  kind             TEXT    NOT NULL CHECK (kind IN ('ingest','transcribe','export','export_batch','frame')),
   project_id       TEXT    REFERENCES projects (id) ON DELETE CASCADE,   -- NULL for ingest
   asset_hash       TEXT    REFERENCES assets (id) ON DELETE CASCADE,     -- ingest and transcribe
   actor            TEXT    NOT NULL,
@@ -856,7 +856,7 @@ CREATE INDEX jobs_kind_state_index ON jobs (kind, state);
 CREATE UNIQUE INDEX jobs_active_ingest_unique ON jobs (asset_hash) WHERE kind = 'ingest' AND state IN ('queued','running');
 ```
 
-An ingest job belongs to the content, not to a project, so that trashing or deleting the project that started it does not kill an ingest another project waits for. The partial unique index makes "one active ingest per file" a database fact. Protocol in section 14.
+An ingest job belongs to the content, not to a project, so that trashing or deleting the project that started it does not kill an ingest another project waits for. The partial unique index makes "one active ingest per file" a database fact. Protocol in section 14. An `export_batch` job is the parent of the `export` jobs of one `ExportBatch` (SDD-004 section 8.4); migration `20261119120050_jobs_export_batch_kind` rebuilds the table to add the kind, keeping every row.
 
 ### 5.7 `templates`
 
