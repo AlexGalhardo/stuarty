@@ -40,13 +40,55 @@ The types named in the tables of the operations. The arguments of each editing c
 | `sample_count` | `integer` | no |  |
 | `width` | `integer` | no |  |
 
+### AssetInfo
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `description` | `string` | no |  |
+| `reusable` | `boolean` or `null` | no |  |
+| `tags` | array of `string` | no |  |
+
 ### AssetListResult
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `assets` | array of [`LibraryAsset`](/docs/api/schemas#libraryasset) | no |  |
+| `next_cursor` | `string` or `null` | no |  |
+| `text` | `string` | no |  |
+| `total` | `integer` | no |  |
+| `untrusted_notice` | `string` | no |  |
+
+### AssetResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `bytes` | `integer (int64)` | no |  |
+| `created_at` | `string` | no |  |
+| `created_by` | `string` | no |  |
+| `description` | `string` | no |  |
+| `duration_ms` | `integer (int64)` | no |  |
+| `hash` | `string` | no |  |
+| `height` | `integer` | no |  |
+| `kind` | `string` | no |  |
+| `name` | `string` | no |  |
+| `origin` | [`Origin`](/docs/api/schemas#origin) | no |  |
+| `projects` | `integer` | no |  |
+| `reusable` | `boolean` | no |  |
+| `tags` | array of `string` | no |  |
 | `text` | `string` | no |  |
 | `untrusted_notice` | `string` | no |  |
+| `uses` | array of [`Use`](/docs/api/schemas#use) | no |  |
+| `width` | `integer` | no |  |
+
+### AssetUsesResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `hash` | `string` | no |  |
+| `next_cursor` | `string` or `null` | no |  |
+| `text` | `string` | no |  |
+| `untrusted_notice` | `string` | no |  |
+| `uses` | array of [`Use`](/docs/api/schemas#use) | no |  |
 
 ### AuditEntry
 
@@ -816,7 +858,8 @@ The types named in the tables of the operations. The arguments of each editing c
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `asset_id` | `string` | no | An id of your own; ignored for a duplicate.. pattern `^ast_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
-| `path` | `string` | yes | An absolute path on the machine that runs the server.. min length 1 |
+| `hash` | `string` | no | sha256: and 64 hex digits of a file the library holds, in place of a path: the project uses it with no copy. |
+| `path` | `string` | no | An absolute path on the machine that runs the server; or a hash. |
 
 ### InstalledTool
 
@@ -1023,11 +1066,19 @@ The types named in the tables of the operations. The arguments of each editing c
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `bytes` | `integer (int64)` | no |  |
+| `created_at` | `string` | no |  |
+| `created_by` | `string` | no |  |
+| `description` | `string` | no |  |
+| `duration_ms` | `integer (int64)` | no |  |
 | `hash` | `string` | no |  |
 | `height` | `integer` | no |  |
 | `kind` | `string` | no |  |
 | `name` | `string` | no |  |
+| `origin` | [`Origin`](/docs/api/schemas#origin) | no |  |
 | `projects` | `integer` | no |  |
+| `reusable` | `boolean` | no |  |
+| `tags` | array of `string` | no |  |
+| `uses` | array of [`Use`](/docs/api/schemas#use) | no |  |
 | `width` | `integer` | no |  |
 
 ### LibraryEntry
@@ -1302,6 +1353,18 @@ The types named in the tables of the operations. The arguments of each editing c
 | --- | --- | --- | --- |
 | `args` | map of `any` | no | The arguments of the command. |
 | `op` | `string`, one of 76 values | yes | A command name, as listed by GET /commands.. min length 1 |
+
+### Origin
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `cost_micros` | `integer (int64)` or `null` | no |  |
+| `kind` | `string` | no |  |
+| `model` | `string` | no |  |
+| `prompt` | `string` | no |  |
+| `provider` | `string` | no |  |
+| `rights_note` | `string` | no |  |
+| `source` | `string` | no |  |
 
 ### OtioLost
 
@@ -2055,6 +2118,15 @@ The types named in the tables of the operations. The arguments of each editing c
 | `metadata` | map of `string` | no |  |
 | `name` | `string` | no |  |
 | `transcript` | array of [`TranscriptLine`](/docs/api/schemas#transcriptline) | no |  |
+
+### Use
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `asset_id` | `string` | no |  |
+| `name` | `string` | no |  |
+| `project_id` | `string` | no |  |
+| `timelines` | array of `string` | no |  |
 
 ### userListOut
 

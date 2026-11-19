@@ -370,6 +370,8 @@
       "summary": "import media files into a project",
       "usage": [
         "stuarty media:import <path>... --project <id> [--asset-id ast_...] [--wait] [--timeout d]",
+        "stuarty media:import --hash sha256:... --project <id>   (a file the library already holds: no copy)",
+        "origin and reuse: [--origin-kind k] [--origin-source s] [--provider p] [--model m] [--prompt t] [--rights-note t] [--tag t] [--reusable] [--description t]",
         "formats: MP4, MOV, MKV, WebM, AVI, MP3, WAV, FLAC, OGG, PNG, JPEG, WebP, GIF and .cube; not SVG"
       ],
       "example": "stuarty media:import clip.mov --project prj_7k2m9x4q1b --json",
@@ -379,6 +381,63 @@
           "type": "string",
           "usage": "id to give the asset, once per path, in order",
           "repeat": true
+        },
+        {
+          "name": "hash",
+          "type": "string",
+          "usage": "the hash of a file of the library to use in the project, in place of a path",
+          "repeat": true
+        },
+        {
+          "name": "origin-kind",
+          "type": "string",
+          "usage": "imported (default), generated, fetched_by_agent or rendered_externally"
+        },
+        {
+          "name": "origin-source",
+          "type": "string",
+          "usage": "a path, a URL or a tool name, as plain text (required for fetched_by_agent and rendered_externally)"
+        },
+        {
+          "name": "provider",
+          "type": "string",
+          "usage": "the provider that generated the files (required for generated)"
+        },
+        {
+          "name": "model",
+          "type": "string",
+          "usage": "the model that generated the files (required for generated)"
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "usage": "the prompt that generated the files"
+        },
+        {
+          "name": "cost-micros",
+          "type": "integer",
+          "usage": "what the files cost, in millionths of a US dollar"
+        },
+        {
+          "name": "rights-note",
+          "type": "string",
+          "usage": "your own record of the licence or the permission (required for fetched_by_agent)"
+        },
+        {
+          "name": "tag",
+          "type": "string",
+          "usage": "a tag for the files; repeat it or give a comma list",
+          "repeat": true
+        },
+        {
+          "name": "reusable",
+          "type": "boolean",
+          "usage": "mark the files to be offered again"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "usage": "what the files are, in your words"
         }
       ],
       "globals": [
@@ -2156,398 +2215,58 @@
       ]
     },
     {
-      "name": "memory:list",
-      "summary": "list the memory notes",
+      "name": "asset:list",
+      "summary": "list the files of the library, with origin, tags and reuse",
       "usage": [
-        "stuarty memory:list [--scope workspace|<project id>] [--tag t]... [--all]"
+        "stuarty asset:list [--tag t] [--text w]"
       ],
-      "example": "stuarty memory:list --tag hooks --json",
+      "example": "stuarty asset:list --tag logo --reusable --json",
       "flags": [
         {
-          "name": "scope",
+          "name": "section",
           "type": "string",
-          "usage": "workspace or a project id"
+          "usage": "visual (images and LUTs) or video (video and audio)"
         },
-        {
-          "name": "tag",
-          "type": "string",
-          "usage": "a tag; repeat it for several",
-          "repeat": true
-        },
-        {
-          "name": "all",
-          "type": "boolean",
-          "default": "false",
-          "usage": "also what is not reviewed (skills) or not kept (notes): an agent is not offered those"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "memory:show",
-      "summary": "show a memory note",
-      "usage": [
-        "stuarty memory:show <name>"
-      ],
-      "example": "stuarty memory:show viewers-skip-intros",
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "memory:write",
-      "summary": "write a memory note: one fact, with what was learned",
-      "usage": [
-        "stuarty memory:write [<name>] --description <one line> [--body <text>|--body-file <file|->] [--scope s] [--tag t]...",
-        "a note written here is pending until a person keeps it in the Memory section"
-      ],
-      "example": "stuarty memory:write --description \"Viewers skip long intros\" --body \"Cut the intro to two seconds.\"",
-      "flags": [
-        {
-          "name": "description",
-          "type": "string",
-          "usage": "the fact, in one line (required)"
-        },
-        {
-          "name": "scope",
-          "type": "string",
-          "usage": "workspace (default) or a project id"
-        },
-        {
-          "name": "tag",
-          "type": "string",
-          "usage": "a tag; repeat it for several",
-          "repeat": true
-        },
-        {
-          "name": "body",
-          "type": "string",
-          "usage": "the text of the entry"
-        },
-        {
-          "name": "body-file",
-          "type": "string",
-          "usage": "read the text from a file, or - for standard input"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "memory:remove",
-      "summary": "delete a memory note (a note a person kept stays)",
-      "usage": [
-        "stuarty memory:remove <name>"
-      ],
-      "example": "stuarty memory:remove old-note",
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "skill:list",
-      "summary": "list the skills that are reviewed",
-      "usage": [
-        "stuarty skill:list [--origin built-in|user|imported] [--all]"
-      ],
-      "example": "stuarty skill:list --all --json",
-      "flags": [
-        {
-          "name": "origin",
-          "type": "string",
-          "usage": "built-in, user or imported"
-        },
-        {
-          "name": "all",
-          "type": "boolean",
-          "default": "false",
-          "usage": "also what is not reviewed (skills) or not kept (notes): an agent is not offered those"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "skill:show",
-      "summary": "show a skill: its text, its files and the findings of the lint",
-      "usage": [
-        "stuarty skill:show <name>"
-      ],
-      "example": "stuarty skill:show hook-writer",
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "skill:write",
-      "summary": "write a skill; it stays unreviewed until a person reads it in the Skills section",
-      "usage": [
-        "stuarty skill:write <name> --description <text> [--body <text>|--body-file <file|->] [--license l]",
-        "                    [--file <path in the skill>=<local file>]..."
-      ],
-      "example": "stuarty skill:write hook-writer --description \"Write the first three seconds.\" --body-file hook.md",
-      "flags": [
-        {
-          "name": "description",
-          "type": "string",
-          "usage": "what the skill does and when to use it (required)"
-        },
-        {
-          "name": "license",
-          "type": "string",
-          "usage": "the licence of the text"
-        },
-        {
-          "name": "file",
-          "type": "string",
-          "usage": "another file of the folder: <path in the skill>=<local file>",
-          "repeat": true
-        },
-        {
-          "name": "body",
-          "type": "string",
-          "usage": "the text of the entry"
-        },
-        {
-          "name": "body-file",
-          "type": "string",
-          "usage": "read the text from a file, or - for standard input"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "skill:import",
-      "summary": "import a skill from a folder or an archive (.zip, .tar.gz) you already have; it starts unreviewed",
-      "usage": [
-        "stuarty skill:import <folder|archive> [--source <text>] [--replace]"
-      ],
-      "example": "stuarty skill:import ./downloads/hook-writer.zip --source \"a friend\"",
-      "flags": [
-        {
-          "name": "source",
-          "type": "string",
-          "usage": "where it came from; the name of the folder or file if omitted"
-        },
-        {
-          "name": "replace",
-          "type": "boolean",
-          "default": "false",
-          "usage": "replace a skill of the same name"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "skill:lint",
-      "summary": "run the lint on a skill",
-      "usage": [
-        "stuarty skill:lint <name>"
-      ],
-      "example": "stuarty skill:lint hook-writer --json",
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "skill:export",
-      "summary": "write skills as folders in the Agent Skills layout, to install them in your own agent",
-      "usage": [
-        "stuarty skill:export [<name>...]",
-        "with no name, every reviewed skill; the folders are written under exports/library/ of the workspace"
-      ],
-      "example": "stuarty skill:export hook-writer",
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "prompt:list",
-      "summary": "list the prompts",
-      "usage": [
-        "stuarty prompt:list [--tag t]..."
-      ],
-      "example": "stuarty prompt:list --json",
-      "flags": [
-        {
-          "name": "tag",
-          "type": "string",
-          "usage": "a tag; repeat it for several",
-          "repeat": true
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "prompt:show",
-      "summary": "show a prompt and its variables",
-      "usage": [
-        "stuarty prompt:show <name>"
-      ],
-      "example": "stuarty prompt:show video-intro",
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "prompt:write",
-      "summary": "write a prompt: a reusable text with {{variables}}",
-      "usage": [
-        "stuarty prompt:write <name> --description <text> [--body <text>|--body-file <file|->] [--default <variable>=<value>]... [--tag t]..."
-      ],
-      "example": "stuarty prompt:write video-intro --description \"An intro\" --body \"Write an intro about {{topic}}.\"",
-      "flags": [
-        {
-          "name": "description",
-          "type": "string",
-          "usage": "what the prompt is for (required)"
-        },
-        {
-          "name": "default",
-          "type": "string",
-          "usage": "a default value: <variable>=<value>",
-          "repeat": true
-        },
-        {
-          "name": "tag",
-          "type": "string",
-          "usage": "a tag; repeat it for several",
-          "repeat": true
-        },
-        {
-          "name": "body",
-          "type": "string",
-          "usage": "the text of the entry"
-        },
-        {
-          "name": "body-file",
-          "type": "string",
-          "usage": "read the text from a file, or - for standard input"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "prompt:render",
-      "summary": "replace the variables of a prompt and print the text; nothing is sent anywhere",
-      "usage": [
-        "stuarty prompt:render <name> [--value <variable>=<value>]..."
-      ],
-      "example": "stuarty prompt:render video-intro --value topic=cats",
-      "flags": [
-        {
-          "name": "value",
-          "type": "string",
-          "usage": "a value: <variable>=<value>",
-          "repeat": true
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "library:search",
-      "summary": "search memory, skills and prompts with one query",
-      "usage": [
-        "stuarty library:search <word>... [--kind memory|skill|prompt]... [--scope s] [--tag t]... [--origin o] [--all]",
-        "                       [--limit n] [--budget characters]"
-      ],
-      "example": "stuarty library:search intro --kind prompt --json",
-      "flags": [
         {
           "name": "kind",
           "type": "string",
-          "usage": "memory, skill or prompt; repeat it for several",
-          "repeat": true
-        },
-        {
-          "name": "scope",
-          "type": "string",
-          "usage": "memory: workspace or a project id"
+          "usage": "image, video, audio or lut"
         },
         {
           "name": "tag",
           "type": "string",
-          "usage": "a tag; repeat it for several",
-          "repeat": true
+          "usage": "only the files with this tag"
+        },
+        {
+          "name": "project",
+          "type": "string",
+          "usage": "only the files this project, or one of its timelines, uses"
         },
         {
           "name": "origin",
           "type": "string",
-          "usage": "skills: built-in, user or imported"
+          "usage": "imported, generated, fetched_by_agent or rendered_externally"
         },
         {
-          "name": "all",
+          "name": "reusable",
           "type": "boolean",
-          "default": "false",
-          "usage": "also what is not reviewed (skills) or not kept (notes): an agent is not offered those"
+          "usage": "only the files marked reusable; --no-reusable keeps the others"
+        },
+        {
+          "name": "text",
+          "type": "string",
+          "usage": "a full-text query over name, tags, description and origin"
+        },
+        {
+          "name": "cursor",
+          "type": "string",
+          "usage": "continue a list from this cursor"
         },
         {
           "name": "limit",
           "type": "integer",
-          "default": "20",
-          "usage": "results, at most 50"
-        },
-        {
-          "name": "budget",
-          "type": "integer",
-          "default": "4000",
-          "usage": "characters of the answer, at most 16000"
+          "default": "50",
+          "usage": "items per page"
         }
       ],
       "globals": [
@@ -2558,12 +2277,98 @@
       ]
     },
     {
-      "name": "library:reindex",
-      "summary": "rebuild the index of the library from its files",
+      "name": "asset:show",
+      "summary": "show a file of the library: its origin, its tags and the projects that use it",
       "usage": [
-        "stuarty library:reindex"
+        "stuarty asset:show <hash>"
       ],
-      "example": "stuarty library:reindex",
+      "example": "stuarty asset:show sha256:3b4c0a1d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b --json",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "asset:uses",
+      "summary": "list the projects that use a file of the library",
+      "usage": [
+        "stuarty asset:uses <hash>"
+      ],
+      "example": "stuarty asset:uses sha256:3b4c0a1d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b --json",
+      "flags": [
+        {
+          "name": "cursor",
+          "type": "string",
+          "usage": "continue a list from this cursor"
+        },
+        {
+          "name": "limit",
+          "type": "integer",
+          "default": "50",
+          "usage": "items per page"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "asset:set",
+      "summary": "set the description, the rights note and the reuse mark of a file of the library",
+      "usage": [
+        "stuarty asset:set <hash> [--reusable]"
+      ],
+      "example": "stuarty asset:set sha256:3b4c0a1d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b --reusable",
+      "flags": [
+        {
+          "name": "description",
+          "type": "string",
+          "usage": "what the file is, in your words; an empty value clears it"
+        },
+        {
+          "name": "rights-note",
+          "type": "string",
+          "usage": "your own record of the licence or the permission; the product does not check it"
+        },
+        {
+          "name": "reusable",
+          "type": "boolean",
+          "usage": "mark the file to be offered again; --no-reusable takes the mark off"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "asset:tag",
+      "summary": "add and remove the tags of a file of the library",
+      "usage": [
+        "stuarty asset:tag <hash> --add t"
+      ],
+      "example": "stuarty asset:tag sha256:3b4c0a1d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b --add logo,brand",
+      "flags": [
+        {
+          "name": "add",
+          "type": "string",
+          "usage": "tags to add; repeat it or give a comma list",
+          "repeat": true
+        },
+        {
+          "name": "remove",
+          "type": "string",
+          "usage": "tags to take off",
+          "repeat": true
+        }
+      ],
       "globals": [
         "json",
         "workspace",

@@ -40,6 +40,10 @@
       "tag": "Media",
       "pages": [
         "assets.list",
+        "assets.get",
+        "assets.set",
+        "assets.tag",
+        "assets.uses",
         "media.list",
         "media.import",
         "media.inspect",

@@ -114,6 +114,16 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.MediaImport)
 	case "MediaList":
 		return invoke(ctx, s, svc.MediaList)
+	case "AssetList":
+		return invoke(ctx, s, svc.AssetList)
+	case "AssetGet":
+		return invoke(ctx, s, svc.AssetGet)
+	case "AssetUses":
+		return invoke(ctx, s, svc.AssetUses)
+	case "AssetSetInfo":
+		return invoke(ctx, s, svc.AssetSetInfo)
+	case "AssetTag":
+		return invoke(ctx, s, svc.AssetTag)
 	case "MediaInspect":
 		return invoke(ctx, s, svc.MediaInspect)
 	case "JobStart":
@@ -413,6 +423,8 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 	}
 
 	switch s.Call {
+	case "AssetList", "AssetGet", "AssetUses", "AssetSetInfo", "AssetTag":
+		return assetToolCall(s.Call, args)
 	case "ImageCreate", "ImageList", "ImageDescribe", "ImageEdit", "ImageUndo", "ImageRedo", "ImageExport":
 		args["action"] = imageActions[s.Call]
 
@@ -450,7 +462,11 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 
 		for _, f := range files {
 			m, _ := f.(map[string]any)
-			paths = append(paths, m["path"])
+			if h, ok := m["hash"]; ok {
+				paths = append(paths, h)
+			} else {
+				paths = append(paths, m["path"])
+			}
 
 			if id, ok := m["asset_id"]; ok {
 				ids = append(ids, id)
@@ -740,6 +756,10 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 	}
 
 	switch s.Call {
+	case "AssetList", "AssetGet", "AssetUses", "AssetSetInfo", "AssetTag":
+		name, argv, err = assetArgv(s.Call, s.Args)
+
+		return name, argv, "", err
 	case "ImageCreate", "ImageList", "ImageDescribe", "ImageEdit", "ImageUndo", "ImageRedo", "ImageExport":
 		return imageArgv(s)
 	case "ProjectList":
@@ -764,12 +784,20 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 		return "lint", proj, "", nil
 	case "MediaImport":
 		for _, f := range a.Files {
-			argv = append(argv, f.Path)
+			if f.Path != "" {
+				argv = append(argv, f.Path)
+			}
+		}
+
+		for _, f := range a.Files {
+			argv = append(argv, flag("hash", f.Hash)...)
 		}
 
 		for _, f := range a.Files {
 			argv = append(argv, flag("asset-id", f.AssetID)...)
 		}
+
+		argv = append(argv, importFlags(s.Args)...)
 
 		return "media:import", append(argv, proj...), "", nil
 	case "MediaList":

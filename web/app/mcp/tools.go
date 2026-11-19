@@ -334,12 +334,31 @@ func lintTool(ctx context.Context, svc service.Service, raw json.RawMessage) (*t
 
 func mediaImport(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolOutput, error) {
 	in, err := decode[struct {
-		ProjectID  string   `json:"project_id"`
-		TimelineID string   `json:"timeline_id"`
-		Paths      []string `json:"paths"`
-		AssetIDs   []string `json:"asset_ids"`
-		WaitMS     *int     `json:"wait_ms"`
+		ProjectID  string          `json:"project_id"`
+		TimelineID string          `json:"timeline_id"`
+		Paths      []string        `json:"paths"`
+		AssetIDs   []string        `json:"asset_ids"`
+		WaitMS     *int            `json:"wait_ms"`
+		Hash       string          `json:"hash"`
+		Origin     json.RawMessage `json:"origin"`
+		Info       json.RawMessage `json:"info"`
 	}](raw)
+	if err != nil {
+		return nil, err
+	}
+
+	if in.Hash != "" && len(in.Paths) == 0 {
+		return libraryEdit(ctx, svc, in.Hash, in.Info)
+	}
+
+	if in.ProjectID == "" || len(in.Paths) == 0 {
+		return nil, &service.Error{
+			Code: command.CodeValidation, Path: "paths",
+			Message: "media_import needs project_id and paths, or a hash to edit.",
+		}
+	}
+
+	origin, info, err := importBlocks(in.Origin, in.Info)
 	if err != nil {
 		return nil, err
 	}
@@ -353,7 +372,11 @@ func mediaImport(ctx context.Context, svc service.Service, raw json.RawMessage) 
 
 	files := make([]service.ImportFile, len(in.Paths))
 	for i, p := range in.Paths {
-		files[i].Path = p
+		if strings.HasPrefix(p, "sha256:") {
+			files[i].Hash = p
+		} else {
+			files[i].Path = p
+		}
 
 		if len(in.AssetIDs) > 0 {
 			files[i].AssetID = in.AssetIDs[i]
@@ -367,7 +390,9 @@ func mediaImport(ctx context.Context, svc service.Service, raw json.RawMessage) 
 
 	res, err := svc.MediaImport(
 		ctx,
-		service.MediaImportRequest{ProjectID: in.ProjectID, TimelineID: in.TimelineID, Files: files, WaitMS: wait},
+		service.MediaImportRequest{
+			ProjectID: in.ProjectID, TimelineID: in.TimelineID, Files: files, WaitMS: wait, Origin: origin, Info: info,
+		},
 	)
 	if err != nil {
 		return nil, err
@@ -383,15 +408,21 @@ const defaultImportWaitMS = 10000
 // asset_id it describes the asset, without one it lists the assets.
 func mediaInspect(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolOutput, error) {
 	in, err := decode[struct {
-		ProjectID  string   `json:"project_id"`
-		TimelineID string   `json:"timeline_id"`
-		AssetID    string   `json:"asset_id"`
-		Sections   []string `json:"sections"`
-		MinSilence string   `json:"min_silence"`
+		ProjectID  string          `json:"project_id"`
+		TimelineID string          `json:"timeline_id"`
+		AssetID    string          `json:"asset_id"`
+		Sections   []string        `json:"sections"`
+		MinSilence string          `json:"min_silence"`
+		Hash       string          `json:"hash"`
+		Library    json.RawMessage `json:"library"`
 		pageArgs
 	}](raw)
 	if err != nil {
 		return nil, err
+	}
+
+	if in.Hash != "" || in.Library != nil || in.ProjectID == "" {
+		return libraryInspect(ctx, svc, in.Hash, in.ProjectID, in.Library, in.page())
 	}
 
 	if in.AssetID == "" {

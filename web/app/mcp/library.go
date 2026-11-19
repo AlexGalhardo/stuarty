@@ -1,215 +1,156 @@
 package mcp
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
-	"slices"
 
+	"github.com/AlexGalhardo/stuarty/core/asset"
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/service"
 )
 
-// libraryMembers are the members each action of the library tool uses (SDD-003 section 4.2): the others are
-// refused, and the required ones must be there. write has its own list per kind.
-var libraryMembers = map[string]struct{ required, optional []string }{
-	"search": {[]string{"query"}, []string{"kinds"}},
-	"list":   {[]string{"kind"}, []string{"tags"}},
-	"get":    {[]string{"kind", "name"}, nil},
-	"render": {[]string{"name"}, []string{"kind", "values"}},
-	"lint":   {[]string{"name"}, []string{"kind"}},
-}
+// The asset library through the media tools (SDD-011 section 14.5): the tool list has no room for another tool
+// (NFR-020), so media_inspect without a project lists the library and with a hash reads one entry, and
+// media_import with a hash and no paths edits one.
 
-var libraryWriteMembers = map[string]struct{ required, optional []string }{
-	"memory": {[]string{"description"}, []string{"name", "body", "tags"}},
-	"skill":  {[]string{"name", "description", "body"}, []string{"files"}},
-	"prompt": {[]string{"name", "description", "body"}, []string{"tags"}},
-}
-
-// checkLibraryMembers refuses a member the action does not use and names the path of a missing one.
-func checkLibraryMembers(action, kind string, raw json.RawMessage) error {
-	var given map[string]json.RawMessage
-	if err := json.Unmarshal(raw, &given); err != nil {
-		return &service.Error{Code: command.CodeValidation, Message: "the arguments are not valid."}
+// strict decodes an object member and refuses a key it does not know.
+func strict(raw json.RawMessage, field string, into any) error {
+	if len(raw) == 0 || string(raw) == "null" {
+		return nil
 	}
 
-	want, known := libraryMembers[action]
+	dec := json.NewDecoder(bytes.NewReader(raw))
+	dec.DisallowUnknownFields()
 
-	if action == "write" {
-		if kind == "" {
-			return &service.Error{
-				Code: command.CodeValidation, Path: "kind", Message: "kind is required by the action write.",
-			}
-		}
-
-		want, known = libraryWriteMembers[kind]
-		want.required = append([]string{"kind"}, want.required...)
-	}
-
-	if !known {
+	if err := dec.Decode(into); err != nil {
 		return &service.Error{
-			Code:    command.CodeValidation,
-			Path:    "action",
-			Message: "action " + action + " is not a library action.",
-			Hint:    "use search, list, get, write, render or lint",
-		}
-	}
-
-	for name := range given {
-		if name != "action" && name != "kind" && !slices.Contains(want.required, name) &&
-			!slices.Contains(want.optional, name) {
-			return &service.Error{
-				Code: command.CodeValidation, Path: name, Message: name + " is not used by the action " + action + ".",
-			}
-		}
-	}
-
-	if _, ok := given["kind"]; ok && !slices.Contains(want.required, "kind") &&
-		!slices.Contains(want.optional, "kind") {
-		return &service.Error{
-			Code: command.CodeValidation, Path: "kind", Message: "kind is not used by the action " + action + ".",
-		}
-	}
-
-	for _, name := range want.required {
-		if _, ok := given[name]; !ok {
-			return &service.Error{
-				Code: command.CodeValidation, Path: name, Message: name + " is required by the action " + action + ".",
-			}
+			Code: command.CodeValidation, Path: field, Message: field + " is not a valid object: " + err.Error() + ".",
 		}
 	}
 
 	return nil
 }
 
-// libraryTool is the tool of the library. Every call is made as an agent (agent_view): it never sees a skill
-// nobody reviewed or a note nobody kept, and it removes nothing and imports nothing.
-func libraryTool(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolOutput, error) {
-	in, err := decode[struct {
-		Action      string                   `json:"action"`
-		Kind        string                   `json:"kind"`
-		Name        string                   `json:"name"`
-		Query       string                   `json:"query"`
-		Kinds       []string                 `json:"kinds"`
-		Description string                   `json:"description"`
-		Body        string                   `json:"body"`
-		Tags        []string                 `json:"tags"`
-		Values      map[string]string        `json:"values"`
-		Files       []service.SkillFileInput `json:"files"`
-	}](raw)
+// defaultLibraryLimit keeps the answer of a list inside the budget of a tool result.
+const defaultLibraryLimit = 50
+
+func libraryInspect(
+	ctx context.Context,
+	svc service.Service,
+	hash, projectID string,
+	rawLib json.RawMessage,
+	page service.Page,
+) (*toolOutput, error) {
+	if hash != "" {
+		res, err := svc.AssetGet(ctx, service.AssetRef{Hash: hash})
+		if err != nil {
+			return nil, err
+		}
+
+		return &toolOutput{value: res, text: res.Text}, nil
+	}
+
+	var lib struct {
+		Tag      string `json:"tag"`
+		Reusable *bool  `json:"reusable"`
+		Origin   string `json:"origin"`
+		Text     string `json:"text"`
+		Kind     string `json:"kind"`
+		Section  string `json:"section"`
+		Project  string `json:"project"`
+	}
+
+	if err := strict(rawLib, "library", &lib); err != nil {
+		return nil, err
+	}
+
+	if lib.Project == "" {
+		lib.Project = projectID
+	}
+
+	if page.Limit == 0 {
+		page.Limit = defaultLibraryLimit
+	}
+
+	res, err := svc.AssetList(ctx, service.AssetListRequest{
+		Kind: lib.Kind, Section: lib.Section, Tag: lib.Tag, Project: lib.Project, Origin: lib.Origin,
+		Reusable: lib.Reusable, Text: lib.Text, Limit: page.Limit, Cursor: page.Cursor,
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	if err := checkLibraryMembers(in.Action, in.Kind, raw); err != nil {
-		return nil, err
-	}
-
-	switch in.Action {
-	case "search":
-		res, err := svc.LibrarySearch(ctx, service.LibrarySearchRequest{
-			Query: in.Query, Kinds: in.Kinds, AgentView: true,
-		})
-
-		return libraryOutput(res, err, func() string { return res.Text })
-	case "render":
-		if in.Kind != "" && in.Kind != "prompt" {
-			return nil, &service.Error{
-				Code:    command.CodeValidation,
-				Path:    "kind",
-				Message: "only a prompt is rendered.",
-			}
-		}
-
-		res, err := svc.PromptRender(
-			ctx,
-			service.PromptRenderRequest{Name: in.Name, Values: in.Values, AgentView: true},
-		)
-
-		return libraryOutput(res, err, func() string { return res.Text })
-	case "lint":
-		if in.Kind != "" && in.Kind != "skill" {
-			return nil, &service.Error{Code: command.CodeValidation, Path: "kind", Message: "only a skill is linted."}
-		}
-
-		res, err := svc.SkillLint(ctx, service.LibraryRef{Name: in.Name})
-
-		return libraryOutput(res, err, func() string { return res.Text })
-	case "list":
-		return libraryList(ctx, svc, in.Kind, in.Tags)
-	case "get":
-		return libraryGet(ctx, svc, in.Kind, in.Name)
-	}
-
-	return libraryWrite(ctx, svc, in.Kind, in.Name, in.Description, in.Body, in.Tags, in.Files)
+	return &toolOutput{value: res, text: res.Text}, nil
 }
 
-func libraryOutput[T any](res *T, err error, text func() string) (*toolOutput, error) {
-	if err != nil {
-		return nil, err
-	}
-
-	return &toolOutput{value: res, text: text()}, nil
-}
-
-func libraryList(ctx context.Context, svc service.Service, kind string, tags []string) (*toolOutput, error) {
+// importBlocks reads the origin and the info of an import.
+func importBlocks(rawOrigin, rawInfo json.RawMessage) (*asset.Origin, *service.AssetInfo, error) {
 	var (
-		res *service.LibraryListResult
-		err error
+		origin *asset.Origin
+		info   *service.AssetInfo
 	)
 
-	switch kind {
-	case "memory":
-		res, err = svc.MemoryList(ctx, service.MemoryListRequest{Tags: tags, AgentView: true})
-	case "skill":
-		res, err = svc.SkillList(ctx, service.SkillListRequest{AgentView: true})
-	default:
-		res, err = svc.PromptList(ctx, service.PromptListRequest{Tags: tags, AgentView: true})
+	if len(rawOrigin) > 0 && string(rawOrigin) != "null" {
+		origin = new(asset.Origin)
+		if err := strict(rawOrigin, "origin", origin); err != nil {
+			return nil, nil, err
+		}
 	}
 
-	return libraryOutput(res, err, func() string { return res.Text })
+	if len(rawInfo) > 0 && string(rawInfo) != "null" {
+		info = new(service.AssetInfo)
+		if err := strict(rawInfo, "info", info); err != nil {
+			return nil, nil, err
+		}
+	}
+
+	return origin, info, nil
 }
 
-func libraryGet(ctx context.Context, svc service.Service, kind, name string) (*toolOutput, error) {
-	ref := service.LibraryRef{Name: name, AgentView: true}
-
-	switch kind {
-	case "memory":
-		res, err := svc.MemoryGet(ctx, ref)
-
-		return libraryOutput(res, err, func() string { return res.Text })
-	case "skill":
-		res, err := svc.SkillGet(ctx, ref)
-
-		return libraryOutput(res, err, func() string { return res.Text })
+// libraryEdit is media_import with a hash and no paths: the description, the rights note and the reuse mark are
+// set, then the tags are added and removed.
+func libraryEdit(ctx context.Context, svc service.Service, hash string, rawInfo json.RawMessage) (*toolOutput, error) {
+	var in struct {
+		Tags       []string `json:"tags"`
+		RemoveTags []string `json:"remove_tags"`
+		Reusable   *bool    `json:"reusable"`
+		Desc       *string  `json:"description"`
+		RightsNote *string  `json:"rights_note"`
 	}
 
-	res, err := svc.PromptGet(ctx, ref)
-
-	return libraryOutput(res, err, func() string { return res.Text })
-}
-
-func libraryWrite(
-	ctx context.Context, svc service.Service, kind, name, description, body string, tags []string,
-	files []service.SkillFileInput,
-) (*toolOutput, error) {
-	switch kind {
-	case "memory":
-		res, err := svc.MemoryWrite(ctx, service.MemoryWriteRequest{
-			Name: name, Description: description, Tags: tags, Body: body,
-		})
-
-		return libraryOutput(res, err, func() string { return res.Text })
-	case "skill":
-		res, err := svc.SkillWrite(ctx, service.SkillWriteRequest{
-			Name: name, Description: description, Body: body, Files: files,
-		})
-
-		return libraryOutput(res, err, func() string { return res.Text })
+	if err := strict(rawInfo, "info", &in); err != nil {
+		return nil, err
 	}
 
-	res, err := svc.PromptWrite(ctx, service.PromptWriteRequest{
-		Name: name, Description: description, Tags: tags, Body: body,
-	})
+	var res *service.AssetResult
 
-	return libraryOutput(res, err, func() string { return res.Text })
+	if in.Reusable != nil || in.Desc != nil || in.RightsNote != nil {
+		var err error
+
+		res, err = svc.AssetSetInfo(ctx, service.AssetSetInfoRequest{
+			Hash: hash, Description: in.Desc, RightsNote: in.RightsNote, Reusable: in.Reusable,
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if len(in.Tags) > 0 || len(in.RemoveTags) > 0 {
+		var err error
+
+		res, err = svc.AssetTag(ctx, service.AssetTagRequest{Hash: hash, Add: in.Tags, Remove: in.RemoveTags})
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if res == nil {
+		return nil, &service.Error{
+			Code: command.CodeValidation, Path: "info",
+			Message: "info has nothing to change: give tags, remove_tags, reusable, description or rights_note.",
+		}
+	}
+
+	return &toolOutput{value: res, text: res.Text}, nil
 }

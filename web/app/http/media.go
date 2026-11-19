@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/AlexGalhardo/stuarty/core/asset"
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/service"
 
@@ -16,16 +17,19 @@ import (
 )
 
 type importFileIn struct {
-	Path    string `json:"path"               validate:"required" doc:"An absolute path on the machine that runs the server."`
-	AssetID string `json:"asset_id,omitempty"                     doc:"An id of your own; ignored for a duplicate."`
+	Path    string `json:"path,omitempty"     doc:"An absolute path on the machine that runs the server; or a hash."`
+	Hash    string `json:"hash,omitempty"     doc:"sha256: and 64 hex digits of a file the library holds, in place of a path: the project uses it with no copy."`
+	AssetID string `json:"asset_id,omitempty" doc:"An id of your own; ignored for a duplicate."`
 }
 
 type mediaImportIn struct {
-	ID         string         `json:"id"                    validate:"required"`
-	TimelineID string         `json:"timeline_id,omitempty"                                  doc:"The timeline of the project; required when the project has several."`
-	Files      []importFileIn `json:"files"                 validate:"required,min=1,max=50"`
-	WaitMS     int            `json:"wait_ms,omitempty"                                      doc:"0 to 25000: hold the call until the assets are ready."`
-	DryRun     any            `json:"dry_run,omitempty"                                      doc:"Checks the paths and limits only: the format is probed on the real import, so a file that is refused there (SVG, for one) still answers 202."`
+	ID         string             `json:"id"                    validate:"required"`
+	TimelineID string             `json:"timeline_id,omitempty"                                  doc:"The timeline of the project; required when the project has several."`
+	Files      []importFileIn     `json:"files"                 validate:"required,min=1,max=50"`
+	WaitMS     int                `json:"wait_ms,omitempty"                                      doc:"0 to 25000: hold the call until the assets are ready."`
+	DryRun     any                `json:"dry_run,omitempty"                                      doc:"Checks the paths and limits only: the format is probed on the real import, so a file that is refused there (SVG, for one) still answers 202."`
+	Origin     *asset.Origin      `json:"origin,omitempty"                                       doc:"Where the files came from: kind imported (default), generated (provider and model), fetched_by_agent (source and rights_note) or rendered_externally (source)."`
+	Info       *service.AssetInfo `json:"info,omitempty"                                         doc:"Tags, the reuse mark and a description for the files of the call."`
 }
 
 type mediaListIn struct {
@@ -78,7 +82,7 @@ type jobGetIn struct {
 func (h *apiHandler) mediaImport(c *web.Ctx, in mediaImportIn) (service.MediaImportResult, error) {
 	files := make([]service.ImportFile, len(in.Files))
 	for i, f := range in.Files {
-		files[i] = service.ImportFile{Path: f.Path, AssetID: f.AssetID}
+		files[i] = service.ImportFile{Path: f.Path, Hash: f.Hash, AssetID: f.AssetID}
 	}
 
 	dryRun, err := readDryRun(c, in.DryRun)
@@ -88,6 +92,7 @@ func (h *apiHandler) mediaImport(c *web.Ctx, in mediaImportIn) (service.MediaImp
 
 	res, err := h.Service.MediaImport(c.Context(), service.MediaImportRequest{
 		ProjectID: in.ID, TimelineID: in.TimelineID, Files: files, WaitMS: in.WaitMS, DryRun: dryRun,
+		Origin: in.Origin, Info: in.Info,
 	})
 	if err != nil {
 		return service.MediaImportResult{}, err

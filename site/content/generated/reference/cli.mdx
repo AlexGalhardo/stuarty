@@ -265,12 +265,25 @@ Import media files into a project
 
 ```text
 stuarty media:import <path>... --project <id> [--asset-id ast_...] [--wait] [--timeout d]
+stuarty media:import --hash sha256:... --project <id>   (a file the library already holds: no copy)
+origin and reuse: [--origin-kind k] [--origin-source s] [--provider p] [--model m] [--prompt t] [--rights-note t] [--tag t] [--reusable] [--description t]
 formats: MP4, MOV, MKV, WebM, AVI, MP3, WAV, FLAC, OGG, PNG, JPEG, WebP, GIF and .cube; not SVG
 ```
 
 | Flag | Type | Default | Meaning |
 | --- | --- | --- | --- |
 | `--asset-id` | string, repeatable |  | id to give the asset, once per path, in order |
+| `--hash` | string, repeatable |  | the hash of a file of the library to use in the project, in place of a path |
+| `--origin-kind` | string |  | imported (default), generated, fetched_by_agent or rendered_externally |
+| `--origin-source` | string |  | a path, a URL or a tool name, as plain text (required for fetched_by_agent and rendered_externally) |
+| `--provider` | string |  | the provider that generated the files (required for generated) |
+| `--model` | string |  | the model that generated the files (required for generated) |
+| `--prompt` | string |  | the prompt that generated the files |
+| `--cost-micros` | integer |  | what the files cost, in millionths of a US dollar |
+| `--rights-note` | string |  | your own record of the licence or the permission (required for fetched_by_agent) |
+| `--tag` | string, repeatable |  | a tag for the files; repeat it or give a comma list |
+| `--reusable` | boolean |  | mark the files to be offered again |
+| `--description` | string |  | what the files are, in your words |
 
 Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--wait`, `--timeout`.
 
@@ -1574,34 +1587,40 @@ Example:
 stuarty image:export img_7k2m9x4q1b --format jpeg --quality 85
 ```
 
-## `memory:list`
+## `asset:list`
 
-List the memory notes
+List the files of the library, with origin, tags and reuse
 
 ```text
-stuarty memory:list [--scope workspace|<project id>] [--tag t]... [--all]
+stuarty asset:list [--tag t] [--text w]
 ```
 
 | Flag | Type | Default | Meaning |
 | --- | --- | --- | --- |
-| `--scope` | string |  | workspace or a project id |
-| `--tag` | string, repeatable |  | a tag; repeat it for several |
-| `--all` | boolean | `false` | also what is not reviewed (skills) or not kept (notes): an agent is not offered those |
+| `--section` | string |  | visual (images and LUTs) or video (video and audio) |
+| `--kind` | string |  | image, video, audio or lut |
+| `--tag` | string |  | only the files with this tag |
+| `--project` | string |  | only the files this project, or one of its timelines, uses |
+| `--origin` | string |  | imported, generated, fetched_by_agent or rendered_externally |
+| `--reusable` | boolean |  | only the files marked reusable; --no-reusable keeps the others |
+| `--text` | string |  | a full-text query over name, tags, description and origin |
+| `--cursor` | string |  | continue a list from this cursor |
+| `--limit` | integer | `50` | items per page |
 
 Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
 
 Example:
 
 ```bash
-stuarty memory:list --tag hooks --json
+stuarty asset:list --tag logo --reusable --json
 ```
 
-## `memory:show`
+## `asset:show`
 
-Show a memory note
+Show a file of the library: its origin, its tags and the projects that use it
 
 ```text
-stuarty memory:show <name>
+stuarty asset:show <hash>
 ```
 
 Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
@@ -1609,287 +1628,71 @@ Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
 Example:
 
 ```bash
-stuarty memory:show viewers-skip-intros
+stuarty asset:show sha256:3b4c0a1d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b --json
 ```
 
-## `memory:write`
+## `asset:uses`
 
-Write a memory note: one fact, with what was learned
+List the projects that use a file of the library
 
 ```text
-stuarty memory:write [<name>] --description <one line> [--body <text>|--body-file <file|->] [--scope s] [--tag t]...
-a note written here is pending until a person keeps it in the Memory section
+stuarty asset:uses <hash>
 ```
 
 | Flag | Type | Default | Meaning |
 | --- | --- | --- | --- |
-| `--description` | string |  | the fact, in one line (required) |
-| `--scope` | string |  | workspace (default) or a project id |
-| `--tag` | string, repeatable |  | a tag; repeat it for several |
-| `--body` | string |  | the text of the entry |
-| `--body-file` | string |  | read the text from a file, or - for standard input |
+| `--cursor` | string |  | continue a list from this cursor |
+| `--limit` | integer | `50` | items per page |
 
 Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
 
 Example:
 
 ```bash
-stuarty memory:write --description "Viewers skip long intros" --body "Cut the intro to two seconds."
+stuarty asset:uses sha256:3b4c0a1d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b --json
 ```
 
-## `memory:remove`
+## `asset:set`
 
-Delete a memory note (a note a person kept stays)
+Set the description, the rights note and the reuse mark of a file of the library
 
 ```text
-stuarty memory:remove <name>
-```
-
-Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
-
-Example:
-
-```bash
-stuarty memory:remove old-note
-```
-
-## `skill:list`
-
-List the skills that are reviewed
-
-```text
-stuarty skill:list [--origin built-in|user|imported] [--all]
+stuarty asset:set <hash> [--reusable]
 ```
 
 | Flag | Type | Default | Meaning |
 | --- | --- | --- | --- |
-| `--origin` | string |  | built-in, user or imported |
-| `--all` | boolean | `false` | also what is not reviewed (skills) or not kept (notes): an agent is not offered those |
+| `--description` | string |  | what the file is, in your words; an empty value clears it |
+| `--rights-note` | string |  | your own record of the licence or the permission; the product does not check it |
+| `--reusable` | boolean |  | mark the file to be offered again; --no-reusable takes the mark off |
 
 Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
 
 Example:
 
 ```bash
-stuarty skill:list --all --json
+stuarty asset:set sha256:3b4c0a1d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b --reusable
 ```
 
-## `skill:show`
+## `asset:tag`
 
-Show a skill: its text, its files and the findings of the lint
+Add and remove the tags of a file of the library
 
 ```text
-stuarty skill:show <name>
-```
-
-Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
-
-Example:
-
-```bash
-stuarty skill:show hook-writer
-```
-
-## `skill:write`
-
-Write a skill; it stays unreviewed until a person reads it in the Skills section
-
-```text
-stuarty skill:write <name> --description <text> [--body <text>|--body-file <file|->] [--license l]
-                    [--file <path in the skill>=<local file>]...
+stuarty asset:tag <hash> --add t
 ```
 
 | Flag | Type | Default | Meaning |
 | --- | --- | --- | --- |
-| `--description` | string |  | what the skill does and when to use it (required) |
-| `--license` | string |  | the licence of the text |
-| `--file` | string, repeatable |  | another file of the folder: &lt;path in the skill&gt;=&lt;local file&gt; |
-| `--body` | string |  | the text of the entry |
-| `--body-file` | string |  | read the text from a file, or - for standard input |
+| `--add` | string, repeatable |  | tags to add; repeat it or give a comma list |
+| `--remove` | string, repeatable |  | tags to take off |
 
 Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
 
 Example:
 
 ```bash
-stuarty skill:write hook-writer --description "Write the first three seconds." --body-file hook.md
-```
-
-## `skill:import`
-
-Import a skill from a folder or an archive (.zip, .tar.gz) you already have; it starts unreviewed
-
-```text
-stuarty skill:import <folder|archive> [--source <text>] [--replace]
-```
-
-| Flag | Type | Default | Meaning |
-| --- | --- | --- | --- |
-| `--source` | string |  | where it came from; the name of the folder or file if omitted |
-| `--replace` | boolean | `false` | replace a skill of the same name |
-
-Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
-
-Example:
-
-```bash
-stuarty skill:import ./downloads/hook-writer.zip --source "a friend"
-```
-
-## `skill:lint`
-
-Run the lint on a skill
-
-```text
-stuarty skill:lint <name>
-```
-
-Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
-
-Example:
-
-```bash
-stuarty skill:lint hook-writer --json
-```
-
-## `skill:export`
-
-Write skills as folders in the Agent Skills layout, to install them in your own agent
-
-```text
-stuarty skill:export [<name>...]
-with no name, every reviewed skill; the folders are written under exports/library/ of the workspace
-```
-
-Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
-
-Example:
-
-```bash
-stuarty skill:export hook-writer
-```
-
-## `prompt:list`
-
-List the prompts
-
-```text
-stuarty prompt:list [--tag t]...
-```
-
-| Flag | Type | Default | Meaning |
-| --- | --- | --- | --- |
-| `--tag` | string, repeatable |  | a tag; repeat it for several |
-
-Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
-
-Example:
-
-```bash
-stuarty prompt:list --json
-```
-
-## `prompt:show`
-
-Show a prompt and its variables
-
-```text
-stuarty prompt:show <name>
-```
-
-Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
-
-Example:
-
-```bash
-stuarty prompt:show video-intro
-```
-
-## `prompt:write`
-
-Write a prompt: a reusable text with \{\{variables\}\}
-
-```text
-stuarty prompt:write <name> --description <text> [--body <text>|--body-file <file|->] [--default <variable>=<value>]... [--tag t]...
-```
-
-| Flag | Type | Default | Meaning |
-| --- | --- | --- | --- |
-| `--description` | string |  | what the prompt is for (required) |
-| `--default` | string, repeatable |  | a default value: &lt;variable&gt;=&lt;value&gt; |
-| `--tag` | string, repeatable |  | a tag; repeat it for several |
-| `--body` | string |  | the text of the entry |
-| `--body-file` | string |  | read the text from a file, or - for standard input |
-
-Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
-
-Example:
-
-```bash
-stuarty prompt:write video-intro --description "An intro" --body "Write an intro about {{topic}}."
-```
-
-## `prompt:render`
-
-Replace the variables of a prompt and print the text; nothing is sent anywhere
-
-```text
-stuarty prompt:render <name> [--value <variable>=<value>]...
-```
-
-| Flag | Type | Default | Meaning |
-| --- | --- | --- | --- |
-| `--value` | string, repeatable |  | a value: &lt;variable&gt;=&lt;value&gt; |
-
-Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
-
-Example:
-
-```bash
-stuarty prompt:render video-intro --value topic=cats
-```
-
-## `library:search`
-
-Search memory, skills and prompts with one query
-
-```text
-stuarty library:search <word>... [--kind memory|skill|prompt]... [--scope s] [--tag t]... [--origin o] [--all]
-                       [--limit n] [--budget characters]
-```
-
-| Flag | Type | Default | Meaning |
-| --- | --- | --- | --- |
-| `--kind` | string, repeatable |  | memory, skill or prompt; repeat it for several |
-| `--scope` | string |  | memory: workspace or a project id |
-| `--tag` | string, repeatable |  | a tag; repeat it for several |
-| `--origin` | string |  | skills: built-in, user or imported |
-| `--all` | boolean | `false` | also what is not reviewed (skills) or not kept (notes): an agent is not offered those |
-| `--limit` | integer | `20` | results, at most 50 |
-| `--budget` | integer | `4000` | characters of the answer, at most 16000 |
-
-Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
-
-Example:
-
-```bash
-stuarty library:search intro --kind prompt --json
-```
-
-## `library:reindex`
-
-Rebuild the index of the library from its files
-
-```text
-stuarty library:reindex
-```
-
-Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
-
-Example:
-
-```bash
-stuarty library:reindex
+stuarty asset:tag sha256:3b4c0a1d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b --add logo,brand
 ```
 
 ## `serve`
