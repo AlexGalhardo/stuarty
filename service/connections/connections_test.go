@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"html"
@@ -423,12 +424,28 @@ func hasField(v any, name string) bool {
 	return ok
 }
 
+// jsonEscaped is the secret as a JSON string writes it (Go escapes <, > and & as <, >
+// and &), without the quotes.
+func jsonEscaped(t *testing.T, secret string) string {
+	t.Helper()
+
+	b, err := json.Marshal(secret)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return string(b[1 : len(b)-1])
+}
+
 // leaks says whether message holds any run of n bytes of any form of the secret.
-func leaks(message, secret string, n int) (string, bool) {
+func leaks(t *testing.T, message, secret string, n int) (string, bool) {
+	t.Helper()
+
 	forms := []string{
 		secret, html.EscapeString(secret), url.QueryEscape(secret), url.PathEscape(secret),
-		strings.NewReplacer("<", `<`, ">", `>`, "&", `&`).Replace(secret),
+		jsonEscaped(t, secret), strings.ReplaceAll(jsonEscaped(t, secret), "/", `\/`),
 		base64.StdEncoding.EncodeToString([]byte(secret)), hex.EncodeToString([]byte(secret)),
+		strings.ToUpper(hex.EncodeToString([]byte(secret))),
 	}
 
 	for _, f := range forms {
@@ -445,20 +462,29 @@ func leaks(message, secret string, n int) (string, bool) {
 func TestTestMessageHoldsNoPartOfAnEchoedSecret(t *testing.T) {
 	const secret = "zq<Kp9&Xw7#Lm2>Yv5"
 
-	escape := strings.NewReplacer("<", `<`, ">", `>`, "&", `&`)
-	bodies := map[string]string{
-		"plain":            "hello " + secret + " bye",
-		"split by budget":  strings.Repeat("a", testMessageBudget-len(secret)/2) + secret + " tail",
-		"json escaped":     `{"echo":"` + escape.Replace(secret) + `"}`,
-		"html escaped":     "echo " + html.EscapeString(secret),
-		"url escaped":      "echo " + url.QueryEscape(secret),
-		"prefix only":      "echo " + secret[:9] + " cut",
-		"base64":           "echo " + base64.StdEncoding.EncodeToString([]byte(secret)),
-		"hex":              "echo " + hex.EncodeToString([]byte(secret)),
-		"split in the end": strings.Repeat("b", testMessageBudget-5) + secret,
+	// A secret that starts and ends with a character JSON escapes, so no raw prefix or suffix of it
+	// is left in its JSON form.
+	const quoted = `"/zq<Kp9&Xw7#Lm2>Yv5/"`
+
+	escaped, slashed := jsonEscaped(t, quoted), strings.ReplaceAll(jsonEscaped(t, quoted), "/", `\/`)
+	bodies := map[string][2]string{
+		"plain":            {secret, "hello " + secret + " bye"},
+		"split by budget":  {secret, strings.Repeat("a", testMessageBudget-len(secret)/2) + secret + " tail"},
+		"json escaped":     {secret, `{"echo":"` + jsonEscaped(t, secret) + `"}`},
+		"json quoted":      {quoted, `{"echo":"` + escaped + `"}`},
+		"json slashed":     {quoted, `{"echo":"` + slashed + `"}`},
+		"upper hex":        {secret, "echo " + strings.ToUpper(hex.EncodeToString([]byte(secret)))},
+		"html escaped":     {secret, "echo " + html.EscapeString(secret)},
+		"url escaped":      {secret, "echo " + url.QueryEscape(secret)},
+		"prefix only":      {secret, "echo " + secret[:9] + " cut"},
+		"base64":           {secret, "echo " + base64.StdEncoding.EncodeToString([]byte(secret))},
+		"hex":              {secret, "echo " + hex.EncodeToString([]byte(secret))},
+		"split in the end": {secret, strings.Repeat("b", testMessageBudget-5) + secret},
 	}
 
-	for name, body := range bodies {
+	for name, c := range bodies {
+		secret, body := c[0], c[1]
+
 		t.Run(name, func(t *testing.T) {
 			srv := newServer(t, http.StatusUnauthorized, body)
 			m, st, v := newManager(t)
@@ -473,7 +499,7 @@ func TestTestMessageHoldsNoPartOfAnEchoedSecret(t *testing.T) {
 				t.Errorf("the status was lost: %+v", res)
 			}
 
-			if part, bad := leaks(res.Message, secret, 6); bad {
+			if part, bad := leaks(t, res.Message, secret, 6); bad {
 				t.Errorf("the answer holds %q of the secret: %.300q", part, res.Message)
 			}
 		})
