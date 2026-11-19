@@ -43,18 +43,7 @@ func Interpolate(keys []Keyframe, r float64) float64 {
 		}
 	}
 	u := (r - float64(keys[lo].T)) / float64(keys[hi].T-keys[lo].T)
-	return keys[lo].Value + (keys[hi].Value-keys[lo].Value)*keys[lo].EaseOf(u)
-}
-
-// ValueAtProp is ValueAt for the named property, kept inside the range of that property: a curve that
-// overshoots never gives a keyframe written by a trim or a split a value the property cannot hold.
-func ValueAtProp(prop string, keys []Keyframe, r int, static float64) float64 {
-	v := ValueAt(keys, r, static)
-	if lo, hi, ok := KeyframeRange(prop); ok && len(keys) > 0 {
-		v = min(max(v, lo), hi)
-	}
-
-	return v
+	return keys[lo].Value + (keys[hi].Value-keys[lo].Value)*Ease(keys[lo].Easing, u)
 }
 
 // ValueAt is the value of an animated property at frame r inside the item, rounded

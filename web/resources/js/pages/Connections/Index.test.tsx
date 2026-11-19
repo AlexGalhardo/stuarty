@@ -5,7 +5,7 @@ import { I18nProvider } from "@/lib/i18n";
 import type { Connection, ConnectionTestResult } from "../../editor/api/types";
 import { ConnectionRow } from "./Index";
 
-vi.mock("@inertiajs/react", () => ({ Head: () => null, Link: () => null }));
+vi.mock("@inertiajs/react", () => ({ Head: () => null }));
 
 const PAYLOAD = "<img src=x onerror=window.__pwned=1>";
 

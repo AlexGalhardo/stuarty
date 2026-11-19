@@ -42,10 +42,6 @@ var visualTypes = []timeline.ItemType{
 	timeline.ItemClip, timeline.ItemText, timeline.ItemCaption, timeline.ItemShape,
 }
 
-// withComposition is the visual types and the composition: the attributes every visual field of a composition
-// shares with them (SDD-001 section 3.5.1); chroma key, colour, framing and audio are not among them.
-var withComposition = append(slices.Clone(visualTypes), timeline.ItemComposition)
-
 var pasteGroups = []pasteGroup{
 	{"color", []timeline.ItemType{timeline.ItemClip}, timeline.ColourProps, func(d, s *timeline.Item) {
 		d.Brightness, d.Contrast, d.Saturation = s.Brightness, s.Contrast, s.Saturation
@@ -53,29 +49,28 @@ var pasteGroups = []pasteGroup{
 		d.Lut = s.Lut
 		d.Hsl, d.Wheels, d.Curves = s.Hsl, s.Wheels, s.Curves
 	}},
-	{"filter", withComposition, nil, func(d, s *timeline.Item) { d.Filter, d.FilterAmount = s.Filter, s.FilterAmount }},
-	{"blur", withComposition, nil, func(d, s *timeline.Item) { d.Blur = s.Blur }},
+	{"filter", visualTypes, nil, func(d, s *timeline.Item) { d.Filter, d.FilterAmount = s.Filter, s.FilterAmount }},
+	{"blur", visualTypes, nil, func(d, s *timeline.Item) { d.Blur = s.Blur }},
 	{
 		"framing",
 		[]timeline.ItemType{timeline.ItemClip},
 		timeline.CropProps,
 		func(d, s *timeline.Item) { d.Fit, d.Crop = s.Fit, s.Crop },
 	},
-	{"transform", withComposition, []string{"x", "y", "scale", "rotation", "opacity"}, func(d, s *timeline.Item) {
+	{"transform", visualTypes, []string{"x", "y", "scale", "rotation", "opacity"}, func(d, s *timeline.Item) {
 		d.X, d.Y, d.Scale, d.Rotation, d.Opacity = s.X, s.Y, s.Scale, s.Rotation, s.Opacity
 	}},
-	{"blend", withComposition, nil, func(d, s *timeline.Item) { d.Blend = s.Blend }},
-	{"mask", withComposition, timeline.MaskProps, func(d, s *timeline.Item) { d.Mask = s.Mask }},
-	{"flip", withComposition, nil, func(d, s *timeline.Item) { d.FlipX, d.FlipY = s.FlipX, s.FlipY }},
+	{"blend", visualTypes, nil, func(d, s *timeline.Item) { d.Blend = s.Blend }},
+	{"mask", visualTypes, timeline.MaskProps, func(d, s *timeline.Item) { d.Mask = s.Mask }},
+	{"flip", visualTypes, nil, func(d, s *timeline.Item) { d.FlipX, d.FlipY = s.FlipX, s.FlipY }},
 	{"chroma_key", visualTypes, nil, func(d, s *timeline.Item) { d.ChromaKey = s.ChromaKey }},
-	{"effects", withComposition, nil, func(d, s *timeline.Item) { d.Effects = s.Effects }},
+	{"effects", visualTypes, nil, func(d, s *timeline.Item) { d.Effects = s.Effects }},
 	{
 		"audio",
 		[]timeline.ItemType{timeline.ItemClip, timeline.ItemAudio},
 		[]string{"volume"},
 		func(d, s *timeline.Item) {
 			d.Volume, d.Denoise, d.Voice = s.Volume, s.Denoise, s.Voice
-			d.Processors = timeline.CloneProcessors(s.Processors)
 		},
 	},
 }

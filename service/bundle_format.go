@@ -66,7 +66,6 @@ type BundleItem struct {
 	Kind     string          `json:"kind"`
 	Title    string          `json:"title"`
 	Position int             `json:"position"`
-	TextKind string          `json:"text_kind,omitempty"` // kind text: script, copy or caption (SDD-019)
 	Text     *BundleDocument `json:"text,omitempty"`
 	Format   string          `json:"format,omitempty"`
 	Timeline string          `json:"timeline,omitempty"`

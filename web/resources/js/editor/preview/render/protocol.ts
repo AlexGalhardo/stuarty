@@ -74,9 +74,6 @@ export type ToRenderWorker<S = PixelSource> =
 			seq: number;
 			// The render input of SDD-013 section 2.1.
 			input: RenderInput;
-			// The groups the frame holds, drawn first (SDD-013 section 3.12): the
-			// inner ones before the ones that hold them.
-			surfaces?: RenderSurface[];
 	  }
 	| { type: "dispose" };
 
@@ -84,15 +81,6 @@ export interface RenderInput {
 	version: 1;
 	output: { width: number; height: number; scale: number };
 	plan: unknown;
-}
-
-// The nested frame of a group, drawn by the module on a surface of its own and
-// stored as the texture `id`; the frame then draws that texture as the media
-// layer of the group (SDD-013 section 3.12). The surface is the output size
-// of `input`.
-export interface RenderSurface {
-	id: string;
-	input: RenderInput;
 }
 
 export type FromRenderWorker<B = ImageBitmap> =

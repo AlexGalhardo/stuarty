@@ -44,18 +44,6 @@ var parity = []row{
 	{method: "HistoryList", tool: "history", command: "history", route: "GET /projects/{}/history"},
 	{method: "Undo", tool: "history", command: "undo", route: "POST /projects/{}/undo"},
 	{method: "Redo", tool: "history", command: "redo", route: "POST /projects/{}/redo"},
-	{method: "HistoryRevert", tool: "history", command: "revert", route: "POST /projects/{}/revert"},
-	{method: "HistoryDiff", tool: "history", command: "diff", route: "GET /projects/{}/diff"},
-	{method: "CheckpointCreate", tool: "history", command: "checkpoint:create", route: "POST /projects/{}/checkpoints"},
-	{method: "CheckpointList", tool: "history", command: "checkpoint:list", route: "GET /projects/{}/checkpoints"},
-	{
-		method: "CheckpointRename", tool: "history", command: "checkpoint:rename",
-		route: "PATCH /projects/{}/checkpoints/{}",
-	},
-	{
-		method: "CheckpointRemove", tool: "history", command: "checkpoint:remove",
-		route: "DELETE /projects/{}/checkpoints/{}",
-	},
 	{method: "MediaImport", tool: "media_import", command: "media:import", route: "POST /projects/{}/media"},
 	{method: "MediaInspect", tool: "media_inspect", command: "media:inspect", route: "GET /projects/{}/media/{}"},
 	{method: "MediaList", tool: "media_inspect", command: "media:list", route: "GET /projects/{}/media"},
@@ -76,22 +64,11 @@ var parity = []row{
 	{method: "JobList", tool: "job_get", command: "job:list", route: "GET /projects/{}/jobs"},
 	{method: "ViewFrame", tool: "view", command: "view", route: "GET /projects/{}/frame"},
 	{method: "ViewSheet", tool: "view", command: "view", route: "GET /projects/{}/sheet"},
-	{method: "AudioMeasure", tool: "view", command: "view", route: "GET /projects/{}/audio-measure"},
-	// The hand-off from an external motion engine (SDD-011 section 15): view with mode motion.
-	{method: "MotionBrief", tool: "view", command: "motion:brief", route: "GET /projects/{}/motion/brief"},
-	// The check has no tool: the tool list has no room for it (SDD-011 section 15.5).
-	{method: "MotionCheck", command: "motion:check", route: "GET /projects/{}/motion/check"},
-	// The replacement is a batch of clip.replace_media in one edit call over MCP: it has no tool of its own.
-	{method: "MotionReplace", command: "motion:replace", route: "POST /projects/{}/motion/replace"},
 	{method: "TrashEmpty", route: "POST /trash/empty", httpOnly: true},
 	{method: "Doctor", command: "doctor", route: "GET /system"},
 	{method: "SnapPoints", route: "GET /projects/{}/snap-points", httpOnly: true},
 	{method: "FontList", command: "fonts", route: "GET /fonts"},
-	{method: "AssetList", tool: "media_inspect", command: "asset:list", route: "GET /assets"},
-	{method: "AssetGet", tool: "media_inspect", command: "asset:show", route: "GET /assets/{}"},
-	{method: "AssetUses", command: "asset:uses", route: "GET /assets/{}/uses"},
-	{method: "AssetSetInfo", tool: "media_import", command: "asset:set", route: "PUT /assets/{}"},
-	{method: "AssetTag", tool: "media_import", command: "asset:tag", route: "POST /assets/{}/tags"},
+	{method: "AssetList", route: "GET /assets", httpOnly: true},
 	{method: "AuditList", command: "audit", route: "GET /audit"},
 	{method: "ExportFile", route: "GET /jobs/{}/file", httpOnly: true},
 	// The CLI command tools:install is for the person at the terminal and has
@@ -116,6 +93,48 @@ var parity = []row{
 	// OpenTimelineIO moves a timeline as a file: no MCP tool (SDD-003 section 7.1, exception E-3).
 	{method: "ProjectOtioExport", command: "otio:export", route: "GET /projects/{}/otio"},
 	{method: "ProjectOtioImport", command: "otio:import", route: "POST /projects/{}/otio"},
+	// The production of a project (SDD-003 section 2.3.1): the description is project_get with detail overview, a
+	// copy is project_create with from, and the brief is project_item with action brief.
+	{method: "ProjectDescribe", tool: "project_get", command: "project:describe", route: "GET /projects/{}/describe"},
+	{
+		method:  "ProjectDuplicate",
+		tool:    "project_create",
+		command: "project:duplicate",
+		route:   "POST /projects/{}/duplicate",
+	},
+	{method: "ProjectItemAdd", tool: "project_item", command: "item:add", route: "POST /projects/{}/items"},
+	{method: "ProjectItemMove", tool: "project_item", command: "item:move", route: "POST /projects/{}/items/{}/move"},
+	{
+		method: "ProjectItemRename", tool: "project_item", command: "item:rename",
+		route: "POST /projects/{}/items/{}/rename",
+	},
+	{
+		method:  "ProjectItemTrash",
+		tool:    "project_item",
+		command: "item:trash",
+		route:   "POST /projects/{}/items/{}/trash",
+	},
+	{
+		method: "ProjectItemRestore", tool: "project_item", command: "item:restore",
+		route: "POST /projects/{}/items/{}/restore",
+	},
+	{method: "BriefGet", tool: "project_item", command: "brief:show", route: "GET /projects/{}/brief"},
+	{method: "BriefSet", tool: "project_item", command: "brief:set", route: "PUT /projects/{}/brief"},
+	// Connections (SDD-014 section 10): the read-only tool lists or reads one; creating, removing and
+	// testing one take a credential or reach the network, so they have no tool.
+	{method: "ConnectionList", tool: "connection", command: "connection:list", route: "GET /connections"},
+	{method: "ConnectionGet", tool: "connection", command: "connection:show", route: "GET /connections/{}"},
+	{method: "ConnectionCreate", command: "connection:add", route: "POST /connections"},
+	{method: "ConnectionRemove", command: "connection:remove", route: "DELETE /connections/{}"},
+	{method: "ConnectionTest", command: "connection:test", route: "POST /connections/{}/test"},
+	// The image documents of SDD-021: one MCP tool with an action per operation.
+	{method: "ImageCreate", tool: "image", command: "image:create", route: "POST /images"},
+	{method: "ImageList", tool: "image", command: "image:list", route: "GET /images"},
+	{method: "ImageDescribe", tool: "image", command: "image:show", route: "GET /images/{}"},
+	{method: "ImageEdit", tool: "image", command: "image:edit", route: "POST /images/{}/edit"},
+	{method: "ImageUndo", tool: "image", command: "image:undo", route: "POST /images/{}/undo"},
+	{method: "ImageRedo", tool: "image", command: "image:redo", route: "POST /images/{}/redo"},
+	{method: "ImageExport", tool: "image", command: "image:export", route: "POST /images/{}/export"},
 	// The library (SDD-018): one MCP tool, library, serves the lists, reads, writes, searches, renders and
 	// lints. Removing a note, importing and exporting skills read and write files by path (no tool), and
 	// marking a skill as read is for a person at the browser (HTTP only).
@@ -385,6 +404,7 @@ func TestBudgetsOfTheSurfacesArePrinted(t *testing.T) {
 	}
 
 	raw := encode(t, list)
+	tokens := len(raw) / 3 // the conservative 3 bytes per token of SDD-003 section 4.1
 
 	t.Logf("NFR-020: tools/list is %d bytes, about %d tokens (limit 7500)", len(raw), tokens)
 

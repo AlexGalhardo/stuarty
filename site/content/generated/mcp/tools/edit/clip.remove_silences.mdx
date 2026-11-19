@@ -1,6 +1,6 @@
 ---
 title: "clip.remove_silences"
-description: "Cuts the silences out of a clip or audio item, one item per stretch of speech."
+description: "Cuts the silent stretches out of a clip or an audio item, leaving one item per stretch of speech."
 wide: true
 ---
 
@@ -20,6 +20,7 @@ Replaces the clip or audio item by one item per non-silent stretch of its source
 | `min_silence` | `string` | no | A length; shorter silences are ignored. Default "0.4s". |
 | `new_ids` | array of `string` | no | Ids for the second, third, ... pieces, in order. |
 | `padding` | `string` | no | A length, may be 0; speech kept around each cut. Default "0.1s". |
+| `resolved` | `object` | no | Filled by the service from the silence analysis of the asset; never sent by a caller. |
 | `ripple` | `track`, `none` | no | Track (default) or none. |
 | `threshold_db` | `integer` | no | Noise level of silence: -30, -35 (default), -40 or -45. |
 

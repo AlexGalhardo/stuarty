@@ -8,10 +8,12 @@ import (
 	"os"
 	"testing"
 	"time"
+
+	"github.com/AlexGalhardo/stuarty/core/command"
 )
 
 // TestToolListVendorTokens is the release measure of NFR-020: `tools/list` has at
-// most 7,000 tokens by the vendor's own count. It sends the definitions to the
+// most 6,000 tokens by the vendor's own count. It sends the definitions to the
 // token-count endpoint, so it is not part of CI: it runs once per release, with
 //
 //	STUARTY_BUDGET_RELEASE=1 ANTHROPIC_API_KEY=... ANTHROPIC_MODEL=<model> go test ./web/app/mcp -run TestToolListVendorTokens -v
@@ -29,7 +31,7 @@ func TestToolListVendorTokens(t *testing.T) {
 		t.Fatal("ANTHROPIC_API_KEY and ANTHROPIC_MODEL are required")
 	}
 
-	defs, err := loadDefinitions()
+	defs, err := loadDefinitions(command.Default())
 	if err != nil {
 		t.Fatal(err)
 	}

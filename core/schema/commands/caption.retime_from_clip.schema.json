@@ -6,6 +6,40 @@
       "description": "A clip of a video asset with audio, or an audio item.",
       "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
       "type": "string"
+    },
+    "resolved": {
+      "additionalProperties": false,
+      "description": "Filled by the service from the transcript of the asset; never sent by a caller.",
+      "properties": {
+        "words": {
+          "description": "Words in order, not overlapping, in asset frames, half-open.",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "end": {
+                "type": "integer"
+              },
+              "start": {
+                "type": "integer"
+              },
+              "text": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "text",
+              "start",
+              "end"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "words"
+      ],
+      "type": "object"
     }
   },
   "required": [

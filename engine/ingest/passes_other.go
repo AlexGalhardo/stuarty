@@ -161,13 +161,10 @@ func (j *job) image(ctx context.Context) error {
 	}
 	j.res.Facts = Facts{Width: plan.W, Height: plan.H, HasAlpha: plan.Alpha}
 	if delays := sum.FrameDelays; len(delays) > 1 {
-		// animated reads the alpha of every frame (SDD-011 section 4.3.6).
 		if err := j.timed(StepVideo, func() error { return j.animated(ctx, plan) }); err != nil {
 			return err
 		}
 		j.res.Facts.FrameCount, j.res.Facts.FrameDelays = len(delays), delays
-	} else {
-		j.markAlphaOpaque(func() bool { return pngAlphaOpaque(j.path("normalized.png"), nil) })
 	}
 	j.prog.set(StepVideo, 1)
 	j.add(workFile{kind: "normalized", profile: ProfileNormalized, ext: "png", name: "normalized.png"})

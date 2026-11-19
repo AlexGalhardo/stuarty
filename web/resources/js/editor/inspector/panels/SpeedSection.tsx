@@ -17,11 +17,8 @@ import SpeedCurve from "./SpeedCurve";
 // ripple toggle is a choice for the next change, not a command of its own.
 export default function SpeedSection({
 	itemId,
-	constantOnly = false,
 }: {
 	itemId: string;
-	// A composition item has a constant speed only (epic 53): no Reverse, no curve.
-	constantOnly?: boolean;
 }): ReactNode {
 	const t = useT();
 	const canEdit = useCanEdit();
@@ -51,22 +48,18 @@ export default function SpeedSection({
 					return { ok: true };
 				}}
 			/>
-			{!constantOnly && (
-				<>
-					<ToggleField
-						label={t("ui.editor.clip.reverse")}
-						stored={item.reverse === true}
-						disabled={!canEdit}
-						commit={(next) => send(reverseOperations(itemId, next))}
-					/>
-					<SpeedCurve
-						itemId={itemId}
-						curve={item.speed_curve}
-						speed={speed}
-						ripple={ripple}
-					/>
-				</>
-			)}
+			<ToggleField
+				label={t("ui.editor.clip.reverse")}
+				stored={item.reverse === true}
+				disabled={!canEdit}
+				commit={(next) => send(reverseOperations(itemId, next))}
+			/>
+			<SpeedCurve
+				itemId={itemId}
+				curve={item.speed_curve}
+				speed={speed}
+				ripple={ripple}
+			/>
 		</Section>
 	);
 }

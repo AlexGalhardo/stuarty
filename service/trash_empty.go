@@ -50,7 +50,7 @@ type doomed struct {
 // TrashEmpty deletes what is in the trash for good. It is the only operation
 // that removes data, and no agent surface reaches it (RF-131, T-28).
 func (s *svc) TrashEmpty(ctx context.Context, req TrashEmptyRequest) (*TrashEmptyResult, error) {
-	c, err := s.authorizeProject(ctx, "TrashEmpty", req.ProjectID)
+	c, err := authorize(ctx, "TrashEmpty", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}

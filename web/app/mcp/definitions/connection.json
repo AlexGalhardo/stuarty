@@ -1,6 +1,6 @@
 {
  "name": "connection",
- "description": "The user's connected destinations (id, kind, label, hosts, what each accepts, last use), or one by id. Never returns a credential. Only a person adds, removes or tests one.",
+ "description": "List the destinations the user connected (id, kind, label, hosts, what each accepts, last use), or read one with id. Never returns a credential. Adding, removing and testing a connection is for a person.",
  "inputSchema": {
   "type": "object",
   "properties": {

@@ -1,7 +1,0 @@
-{
-  "code": "E_VALIDATION",
-  "message": "args.params.threshold_db 5 is out of range: -80 to 0 dBFS.",
-  "hint": "Send threshold_db between -80 and 0.",
-  "retryable": false,
-  "path": "args.params.threshold_db"
-}

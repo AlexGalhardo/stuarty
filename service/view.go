@@ -82,15 +82,15 @@ func (s *svc) ViewFrame(ctx context.Context, req ViewFrameRequest) (*ViewResult,
 		}
 	}
 
-	jpeg, rerr := s.framesFor(v.doc, v.nested).FrameSized(ctx, v.doc, v.ref(), int(at), width, height)
+	jpeg, rerr := s.framesFor(v.doc).FrameSized(ctx, v.doc, v.ref(), int(at), width, height)
 	if rerr != nil {
 		return nil, viewError(rerr)
 	}
 
 	w, h := jpegSize(jpeg, width, st.Width, st.Height)
-	key := cache.FrameKey(v.row.ID, v.keyRev, int(at), width)
+	key := cache.FrameKey(v.row.ID, v.row.Revision, int(at), width)
 	if height != 0 {
-		key = cache.FrameKeyHeight(v.row.ID, v.keyRev, int(at), width, height)
+		key = cache.FrameKeyHeight(v.row.ID, v.row.Revision, int(at), width, height)
 	}
 	path := s.viewPath(v.caller, key)
 
@@ -101,7 +101,6 @@ func (s *svc) ViewFrame(ctx context.Context, req ViewFrameRequest) (*ViewResult,
 		Width:       w,
 		Height:      h,
 		ImageTokens: frame.Tokens(w, h),
-		Composite:   len(v.nested) > 0,
 		MIME:        "image/jpeg",
 		Cells:       []ViewCell{{Index: 1, At: timeValue(st.FPS, at)}},
 		Path:        path,
@@ -137,7 +136,7 @@ func (s *svc) ViewSheet(ctx context.Context, req ViewSheetRequest) (*ViewResult,
 			withPath("cols")
 	}
 
-	sheet, rerr := s.framesFor(v.doc, v.nested).Sheet(
+	sheet, rerr := s.framesFor(v.doc).Sheet(
 		ctx,
 		v.doc,
 		v.ref(),
@@ -168,17 +167,8 @@ func (s *svc) ViewSheet(ctx context.Context, req ViewSheetRequest) (*ViewResult,
 	path := s.viewPath(v.caller, sheet.Key)
 
 	res := &ViewResult{
-		ProjectID:   v.row.ID,
-		Revision:    v.row.Revision,
-		Mode:        "sheet",
-		Composite:   len(v.nested) > 0,
-		Width:       sheet.Width,
-		Height:      sheet.Height,
-		ImageTokens: sheet.Tokens,
-		MIME:        "image/jpeg",
-		Cells:       cells,
-		Path:        path,
-		Image:       sheet.JPEG,
+		ProjectID: v.row.ID, Revision: v.row.Revision, Mode: "sheet", Width: sheet.Width, Height: sheet.Height,
+		ImageTokens: sheet.Tokens, MIME: "image/jpeg", Cells: cells, Path: path, Image: sheet.JPEG,
 	}
 	res.Text = fmt.Sprintf("sheet %dx%d of %s r%d: %dx%d jpeg, about %d image tokens%s\ncells:%s",
 		cols, rows, res.ProjectID, res.Revision, res.Width, res.Height, res.ImageTokens, saved(path), labels.String())
@@ -199,13 +189,9 @@ type view struct {
 	caller Caller
 	row    ProjectRow
 	doc    *timeline.Document
-	// nested are the timelines the compositions of doc use, and keyRev the revision the frame caches are keyed
-	// by: the revision of the project, or one that also changes with the revision of each of them.
-	nested map[string]*timeline.Document
-	keyRev int64
 }
 
-func (v *view) ref() frame.Ref { return frame.Ref{Project: v.row.ID, Revision: v.keyRev} }
+func (v *view) ref() frame.Ref { return frame.Ref{Project: v.row.ID, Revision: v.row.Revision} }
 
 func (v *view) fps() timeval.FPS {
 	return timeval.FPS{Num: int64(v.doc.Settings.FPS.Num), Den: int64(v.doc.Settings.FPS.Den)}
@@ -223,7 +209,7 @@ func pinMismatch(current int64) *Error {
 }
 
 func (s *svc) beginView(ctx context.Context, method, projectID, timelineID string, pin int64) (*view, error) {
-	c, err := s.authorizeProject(ctx, method, projectID)
+	c, err := authorize(ctx, method, projectID)
 	if err != nil {
 		return nil, err
 	}
@@ -252,9 +238,7 @@ func (s *svc) beginView(ctx context.Context, method, projectID, timelineID strin
 		return nil, derr
 	}
 
-	nested, keyRev := s.nestedFor(ctx, s.store, doc)
-
-	return &view{caller: c, row: row, doc: doc, nested: nested, keyRev: keyRev(row.Revision)}, nil
+	return &view{caller: c, row: row, doc: doc}, nil
 }
 
 // parseTime reads a time and refuses one past the last frame, naming the last

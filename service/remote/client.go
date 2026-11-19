@@ -19,7 +19,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/AlexGalhardo/stuarty/core/asset"
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/connections"
@@ -67,13 +66,6 @@ func withTimeline(ctx context.Context, id string) context.Context {
 	return context.WithValue(ctx, timelineKey{}, id)
 }
 
-// fileBody is a body that is sent as it is: the bytes of a file (ImageImportFile). size is its length, or -1. The
-// server reads the bytes whatever the declared content type is (SDD-021 section 10.2).
-type fileBody struct {
-	r    io.Reader
-	size int64
-}
-
 // do sends one request and decodes a 2xx body into out, or the error envelope.
 func (c *Client) do(ctx context.Context, method, path string, query url.Values, body, out any) error {
 	if id, ok := ctx.Value(timelineKey{}).(string); ok && id != "" {
@@ -83,18 +75,13 @@ func (c *Client) do(ctx context.Context, method, path string, query url.Values, 
 
 	var reader io.Reader = http.NoBody
 
-	file, isFile := body.(fileBody)
-
-	switch {
-	case isFile:
-		reader = file.r
-	case body != nil:
-		encoded, err := json.Marshal(body)
+	if body != nil {
+		raw, err := json.Marshal(body)
 		if err != nil {
 			return internal("encode the request: %v", err)
 		}
 
-		reader = bytes.NewReader(encoded)
+		reader = bytes.NewReader(raw)
 	}
 
 	u := c.base + apiBase + path
@@ -109,10 +96,6 @@ func (c *Client) do(ctx context.Context, method, path string, query url.Values, 
 
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Authorization", "Bearer "+c.token)
-
-	if isFile {
-		req.ContentLength = file.size
-	}
 
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")
@@ -318,16 +301,11 @@ func (c *Client) Edit(ctx context.Context, req service.EditRequest) (*service.Ed
 
 // CommandHelp implements service.Service.
 func (c *Client) CommandHelp(ctx context.Context, req service.CommandHelpRequest) (*service.CommandHelpResult, error) {
-	var q url.Values
-	if req.Domain != "" {
-		q = url.Values{"domain": {req.Domain}}
-	}
-
 	if req.Name == "" {
-		return get[service.CommandHelpResult](ctx, c, "/commands", q)
+		return get[service.CommandHelpResult](ctx, c, "/commands", nil)
 	}
 
-	return get[service.CommandHelpResult](ctx, c, "/commands/"+url.PathEscape(req.Name), q)
+	return get[service.CommandHelpResult](ctx, c, "/commands/"+url.PathEscape(req.Name), nil)
 }
 
 // HistoryList implements service.Service.
@@ -367,9 +345,7 @@ func (c *Client) MediaImport(ctx context.Context, req service.MediaImportRequest
 		Files  []service.ImportFile `json:"files"`
 		WaitMS int                  `json:"wait_ms,omitempty"`
 		DryRun bool                 `json:"dry_run,omitempty"`
-		Origin *asset.Origin        `json:"origin,omitempty"`
-		Info   *service.AssetInfo   `json:"info,omitempty"`
-	}{req.Files, req.WaitMS, req.DryRun, req.Origin, req.Info}
+	}{req.Files, req.WaitMS, req.DryRun}
 
 	return post[service.MediaImportResult](ctx, c, projectPath(req.ProjectID, "/media"), body)
 }
@@ -422,59 +398,6 @@ func (c *Client) JobStart(ctx context.Context, req service.JobStartRequest) (*se
 	}{req.Kind, req.Args, req.WaitMS, req.DryRun}
 
 	return jobText(post[service.Job](ctx, c, projectPath(req.ProjectID, "/jobs"), body))
-}
-
-// ExportPresetList implements service.Service.
-func (c *Client) ExportPresetList(
-	ctx context.Context,
-	req service.ExportPresetListRequest,
-) (*service.ExportPresetListResult, error) {
-	q := url.Values{}
-	if req.Codecs {
-		q.Set("codecs", "true")
-	}
-
-	return get[service.ExportPresetListResult](ctx, c, "/export-presets", q)
-}
-
-// ExportCheck implements service.Service.
-func (c *Client) ExportCheck(
-	ctx context.Context,
-	req service.ExportCheckRequest,
-) (*service.ExportCheckResult, error) {
-	ctx = withTimeline(ctx, req.TimelineID)
-	q := url.Values{}
-	setIf(q, "preset", req.Preset)
-	setIf(q, "start", req.Start)
-	setIf(q, "end", req.End)
-	setIf(q, "codec", req.Codec)
-
-	return get[service.ExportCheckResult](ctx, c, projectPath(req.ProjectID, "/export-check"), q)
-}
-
-// AudioMeasure implements service.Service.
-func (c *Client) AudioMeasure(
-	ctx context.Context,
-	req service.AudioMeasureRequest,
-) (*service.AudioMeasureResult, error) {
-	ctx = withTimeline(ctx, req.TimelineID)
-	q := url.Values{}
-	setIf(q, "item_id", req.ItemID)
-	setIf(q, "start", req.Start)
-	setIf(q, "end", req.End)
-
-	return get[service.AudioMeasureResult](ctx, c, projectPath(req.ProjectID, "/audio-measure"), q)
-}
-
-// ExportBatch implements service.Service.
-func (c *Client) ExportBatch(ctx context.Context, req service.ExportBatchRequest) (*service.Job, error) {
-	ctx = withTimeline(ctx, req.TimelineID)
-	body := struct {
-		Items  []service.ExportBatchItem `json:"items"`
-		WaitMS int                       `json:"wait_ms,omitempty"`
-	}{req.Items, req.WaitMS}
-
-	return jobText(post[service.Job](ctx, c, projectPath(req.ProjectID, "/export-batches"), body))
 }
 
 // jobText turns the HTTP form of the next call in the text of a job ("call GET /api/v1/jobs/{id}")
@@ -672,50 +595,11 @@ func (c *Client) FontList(ctx context.Context, _ service.FontListRequest) (*serv
 // AssetList implements service.Service.
 func (c *Client) AssetList(ctx context.Context, req service.AssetListRequest) (*service.AssetListResult, error) {
 	q := url.Values{}
-	setIf(q, "kind", req.Kind)
-	setIf(q, "section", req.Section)
-	setIf(q, "tag", req.Tag)
-	setIf(q, "project", req.Project)
-	setIf(q, "origin", req.Origin)
-	setIf(q, "text", req.Text)
-
-	if req.Reusable != nil {
-		q.Set("reusable", strconv.FormatBool(*req.Reusable))
+	if req.Kind != "" {
+		q.Set("kind", req.Kind)
 	}
 
-	return get[service.AssetListResult](
-		ctx,
-		c,
-		"/assets",
-		pageQuery(q, service.Page{Cursor: req.Cursor, Limit: req.Limit}),
-	)
-}
-
-func assetPath(hash, suffix string) string { return "/assets/" + url.PathEscape(hash) + suffix }
-
-// AssetGet implements service.Service.
-func (c *Client) AssetGet(ctx context.Context, req service.AssetRef) (*service.AssetResult, error) {
-	return get[service.AssetResult](ctx, c, assetPath(req.Hash, ""), nil)
-}
-
-// AssetUses implements service.Service.
-func (c *Client) AssetUses(ctx context.Context, req service.AssetUsesRequest) (*service.AssetUsesResult, error) {
-	return get[service.AssetUsesResult](ctx, c, assetPath(req.Hash, "/uses"), pageQuery(url.Values{}, req.Page))
-}
-
-// AssetSetInfo implements service.Service.
-func (c *Client) AssetSetInfo(ctx context.Context, req service.AssetSetInfoRequest) (*service.AssetResult, error) {
-	out := new(service.AssetResult)
-	if err := c.do(ctx, http.MethodPut, assetPath(req.Hash, ""), nil, req, out); err != nil {
-		return nil, err
-	}
-
-	return out, nil
-}
-
-// AssetTag implements service.Service.
-func (c *Client) AssetTag(ctx context.Context, req service.AssetTagRequest) (*service.AssetResult, error) {
-	return post[service.AssetResult](ctx, c, assetPath(req.Hash, "/tags"), req)
+	return get[service.AssetListResult](ctx, c, "/assets", q)
 }
 
 // AuditList implements service.Service.

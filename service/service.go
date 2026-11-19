@@ -2,9 +2,7 @@ package service
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
-	"io/fs"
 	"log/slog"
 	"path/filepath"
 	"sync"
@@ -20,6 +18,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/engine/rasterize"
 	enginestore "github.com/AlexGalhardo/stuarty/engine/store"
 	"github.com/AlexGalhardo/stuarty/engine/transcribe"
+	"github.com/AlexGalhardo/stuarty/service/connections"
 	"github.com/AlexGalhardo/stuarty/service/library"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
 )
@@ -31,11 +30,6 @@ import (
 // failure and never a partial result with a non-nil error.
 type Service interface {
 	ProductionService
-	WritingService
-	BriefingService
-	AssetLibraryService
-	ChatService
-	MotionService
 
 	ProjectList(ctx context.Context, req ProjectListRequest) (*ProjectListResult, error)
 	ProjectCreate(ctx context.Context, req ProjectCreateRequest) (*ProjectCreateResult, error)
@@ -49,12 +43,6 @@ type Service interface {
 	HistoryList(ctx context.Context, req HistoryListRequest) (*HistoryListResult, error)
 	Undo(ctx context.Context, req UndoRequest) (*UndoResult, error)
 	Redo(ctx context.Context, req UndoRequest) (*UndoResult, error)
-	HistoryRevert(ctx context.Context, req HistoryRevertRequest) (*HistoryRevertResult, error)
-	HistoryDiff(ctx context.Context, req HistoryDiffRequest) (*HistoryDiffResult, error)
-	CheckpointCreate(ctx context.Context, req CheckpointCreateRequest) (*Checkpoint, error)
-	CheckpointList(ctx context.Context, req CheckpointListRequest) (*CheckpointListResult, error)
-	CheckpointRename(ctx context.Context, req CheckpointRenameRequest) (*Checkpoint, error)
-	CheckpointRemove(ctx context.Context, req CheckpointRemoveRequest) (*Checkpoint, error)
 
 	Lint(ctx context.Context, req LintRequest) (*LintResult, error)
 
@@ -111,14 +99,6 @@ type Service interface {
 	// AssetList lists the files the projects hold, by content hash, for the picker of a brand logo (VV-117).
 	AssetList(ctx context.Context, req AssetListRequest) (*AssetListResult, error)
 	ExportFile(ctx context.Context, req ExportFileRequest) (*File, error)
-	// ExportPresetList, ExportCheck and ExportBatch are the export presets, the check against one and the batch of
-	// exports of SDD-004 sections 8.2 to 8.4 (RF-087 to RF-089).
-	ExportPresetList(ctx context.Context, req ExportPresetListRequest) (*ExportPresetListResult, error)
-	ExportCheck(ctx context.Context, req ExportCheckRequest) (*ExportCheckResult, error)
-	ExportBatch(ctx context.Context, req ExportBatchRequest) (*Job, error)
-	// AudioMeasure is the loudness, true peak and noise floor of a range or an item with and without its audio
-	// processors (SDD-004 section 7.1, epic 34).
-	AudioMeasure(ctx context.Context, req AudioMeasureRequest) (*AudioMeasureResult, error)
 	AuditList(ctx context.Context, req AuditListRequest) (*AuditListResult, error)
 
 	// Doctor is the diagnostic report (SDD-003 section 2, SDD-011 section 8.6).
@@ -160,14 +140,6 @@ type Service interface {
 	ImageUndo(ctx context.Context, req ImageStepRequest) (*ImageStepResult, error)
 	ImageRedo(ctx context.Context, req ImageStepRequest) (*ImageStepResult, error)
 	ImageExport(ctx context.Context, req ImageExportRequest) (*ImageExportResult, error)
-	// ImageImport brings an image file into an image document: a new one, or a layer of ImageID (SDD-021 section 10.1).
-	ImageImport(ctx context.Context, req ImageImportRequest) (*ImageImportResult, error)
-	// ImageImportFile is ImageImport for a file that arrives as the bytes of a request (SDD-021 section 10.2); HTTP only.
-	ImageImportFile(ctx context.Context, req ImageImportFileRequest) (*ImageImportResult, error)
-	// ImageFrame, ImageHistory and ImageFile are the reads of the image editor screen (SDD-012 section 24.3); HTTP only.
-	ImageFrame(ctx context.Context, req ImageFrameRequest) (*ImageFrameResult, error)
-	ImageHistory(ctx context.Context, req ImageHistoryRequest) (*ImageHistoryResult, error)
-	ImageFile(ctx context.Context, req ImageFileRequest) (*File, error)
 	// ConnectionList and ConnectionGet read the destinations the user connected; ConnectionCreate,
 	// ConnectionRemove and ConnectionTest are for an administrator. No result carries a credential
 	// (SDD-014 section 5).
@@ -176,49 +148,13 @@ type Service interface {
 	ConnectionCreate(ctx context.Context, req ConnectionCreateRequest) (*connections.Connection, error)
 	ConnectionRemove(ctx context.Context, req ConnectionRef) (*connections.Connection, error)
 	ConnectionTest(ctx context.Context, req ConnectionRef) (*ConnectionTestResult, error)
-
-	// The approval queue, its rules and the cost ceilings (SDD-015). Reading is for every caller that
-	// may read; ApprovalDecide, ApprovalRuleSet, ApprovalRuleRemove and CostCeilingSet are for a
-	// person in a privileged browser session and answer E_PRIVILEGED_SESSION to everyone else.
-	ApprovalList(ctx context.Context, req ApprovalListRequest) (*ApprovalListResult, error)
-	ApprovalGet(ctx context.Context, req ApprovalRef) (*approval.Request, error)
-	ApprovalDecide(ctx context.Context, req ApprovalDecideRequest) (*approval.Request, error)
-	ApprovalRuleList(ctx context.Context, req ApprovalRuleListRequest) (*ApprovalRuleListResult, error)
-	ApprovalRuleSet(ctx context.Context, req ApprovalRuleSetRequest) (*approval.RuleView, error)
-	ApprovalRuleRemove(ctx context.Context, req ApprovalRef) (*approval.RuleView, error)
-	CostSummary(ctx context.Context, req CostSummaryRequest) (*CostSummaryResult, error)
-	CostCeilingSet(ctx context.Context, req CostCeilingSetRequest) (*CostSummaryResult, error)
-
-	// The social networks and publishing (SDD-020). A publication is a job of a kind that needs approval:
-	// PublishNow answers a job in waiting_approval, and nothing leaves the machine before a person approves.
-	SocialNetworkList(ctx context.Context, req SocialNetworkListRequest) (*SocialNetworkListResult, error)
-	SocialConnectBegin(ctx context.Context, req SocialConnectBeginRequest) (*SocialConnectBeginResult, error)
-	SocialConnectComplete(ctx context.Context, req SocialConnectCompleteRequest) (*SocialAccount, error)
-	SocialAccountList(ctx context.Context, req SocialAccountListRequest) (*SocialAccountListResult, error)
-	SocialAccountSelect(ctx context.Context, req SocialAccountSelectRequest) (*SocialAccount, error)
-	SocialPriceSet(ctx context.Context, req SocialPriceSetRequest) (*SocialAccount, error)
-	PublishValidate(ctx context.Context, req PublishValidateRequest) (*PublishValidateResult, error)
-	PublishNow(ctx context.Context, req PublishNowRequest) (*Job, error)
-	PublishStatus(ctx context.Context, req PublishStatusRequest) (*PublishStatusResult, error)
-
-	// The calendar of publications (SDD-020 sections 23 to 31): a publication with one target per account, each
-	// with its time. PublicationSchedule, PublicationSendNow and PublicationRetry only ask for approval: a
-	// target is sent by the scheduler, after a person or a rule the person wrote approved it.
-	PublicationCreate(ctx context.Context, req PublicationCreateRequest) (*Publication, error)
-	PublicationGet(ctx context.Context, req PublicationGetRequest) (*Publication, error)
-	PublicationList(ctx context.Context, req PublicationListRequest) (*PublicationListResult, error)
-	PublicationUpdate(ctx context.Context, req PublicationUpdateRequest) (*Publication, error)
-	PublicationSchedule(ctx context.Context, req PublicationScheduleRequest) (*Publication, error)
-	PublicationSendNow(ctx context.Context, req PublicationSendNowRequest) (*Publication, error)
-	PublicationRetry(ctx context.Context, req PublicationRetryRequest) (*Publication, error)
-	PublicationCancel(ctx context.Context, req PublicationCancelRequest) (*Publication, error)
 }
 
 // Event is what the service publishes after the change is durable (SDD-006
 // section 3). The hub that carries it is the business of the events task; the
 // service only calls Options.Publish.
 type Event struct {
-	// Type is "batch.committed", "project.updated", "nested.updated", "job.updated" or
+	// Type is "batch.committed", "project.updated", "job.updated" or
 	// "asset.updated".
 	Type        string
 	ProjectID   string
@@ -230,31 +166,14 @@ type Event struct {
 
 	// The members below are set by job.updated and asset.updated, which are
 	// not replayable and carry no revision.
-	JobID   string
-	AssetID string // the asset id of this project, for asset.updated
-	// TimelineID is the timeline that changed, for nested.updated: ProjectID is then a timeline that holds it.
-	TimelineID string
-	State      string
-	Progress   float64
-	Message    string
-	Error      *Error
-	Result     *JobResult
-	// Approval is the request of approval.requested and approval.decided (SDD-015 section 7), and
-	// Owner the user it belongs to in network mode, so that a member's stream carries their own only.
-	Approval *approval.Request
-	Owner    string
-	// Publication is the publication of publication.updated (SDD-020 section 29).
-	Publication *pub.Publication
-
-	// The members below are set by image.updated (SDD-006 section 12): ImageID names the document, and
-	// Revision, Kind, Actor and At are those of the committed batch.
-	ImageID      string
-	BaseRevision int64
-	Diff         json.RawMessage
+	JobID    string
+	AssetID  string // the asset id of this project, for asset.updated
+	State    string
+	Progress float64
+	Message  string
+	Error    *Error
+	Result   *JobResult
 }
-
-// EventImageUpdated is the type of the event a committed batch of an image document publishes.
-const EventImageUpdated = "image.updated"
 
 // Options configure New. Store is required.
 type Options struct {
@@ -287,9 +206,6 @@ type Options struct {
 	Limits Limits
 	// Version is the binary version written into the template files.
 	Version string
-	// BuiltInSkills is the set of skills that ship with the product, one folder per skill; the service
-	// installs it into the library at start (SDD-018 section 16). Nil installs none.
-	BuiltInSkills fs.FS
 	// Transcriber is the transcription provider of the transcribe job; without
 	// one JobStart for it answers E_TRANSCRIBE_UNAVAILABLE.
 	Transcriber transcribe.Provider
@@ -304,18 +220,6 @@ type Options struct {
 	// credentials; without one the service builds a registry over the store with a vault in the
 	// workspace that has no master key source, so a connection cannot be created (SDD-014).
 	Connections *connections.Manager
-	// Social is the registry of the social network connectors (SDD-020); without one the build publishes
-	// to no network and the social operations answer empty lists.
-	Social *social.Registry
-	// Providers is the registry of the AI providers, with their adapters registered (SDD-016); without one
-	// the service has a registry with no provider, so no generation can start.
-	Providers *providers.Registry
-	// SignIns are the sign-ins to an AI provider of this build (SDD-016 section 12); without any the
-	// sign-in operations answer that none is built in, and no credential is ever renewed.
-	SignIns *oauth.SignIns
-	// JobKinds are the job kinds that need approval, registered by the epics of publishing and
-	// generation (SDD-015 section 5). The product registers none of its own; tests register one.
-	JobKinds []ApprovableKind
 	// Heavy limits the heavy operations (jobs, media, template, font, bundle and OpenTimelineIO imports and exports) per actor; nil counts nothing.
 	Heavy RateLimiter
 	// HeavyPerMinute is the limit Heavy enforces, for the error message; zero is HeavyPerMinute.
@@ -326,12 +230,6 @@ type Options struct {
 	WebP export.WebPEncoder
 	// JobWait is how long TrashEmpty waits for the jobs of a trashed project to stop; zero is 15 s.
 	JobWait time.Duration
-	// SchedulerClock is the clock the publication scheduler sleeps on; tests move it. Default: the service
-	// clock to read and the system timer to wait.
-	SchedulerClock pub.Clock
-	// Agents hosts the agent a user installed, for the chat (SDD-017). Nil in a process that only runs a
-	// command: the chat operations that need a process then answer E_AGENT_UNAVAILABLE, and the reads work.
-	Agents *agenthost.Host
 }
 
 type svc struct {
@@ -352,20 +250,15 @@ type svc struct {
 	toolsState  toolsState
 	doctor      DoctorOptions
 	keys        KeyStore
+	conns       *connections.Manager
 	lib         *library.Manager // the files of memory, skills and prompts; nil without a workspace
 	heavy       RateLimiter
 	heavyLimitN int
 	log         *slog.Logger
 	jobWait     time.Duration
-	agents      *agenthost.Host // the hosted agent chat; nil without a host (SDD-017)
 	webp        export.WebPEncoder
 	doctorMu    sync.Mutex
 	doctorCaps  *ffmpeg.Capabilities
-
-	// pubs is the calendar of publications and sched the loop that sends the approved ones at their time
-	// (SDD-020 sections 23 to 29).
-	pubs  *pub.Manager
-	sched *pub.Scheduler
 
 	storeMu sync.RWMutex
 
@@ -375,11 +268,9 @@ type svc struct {
 
 	running registry
 	bitmaps bitmaps
-	// previews are the processed sounds of the timeline preview that a plan window handed out (SDD-004 section 7.1).
-	previews audioPreviews
-	fonts    *enginestore.Fonts // user fonts of the workspace; nil without one
-	snaps    snapCache
-	sems     map[string]chan struct{}
+	fonts   *enginestore.Fonts // user fonts of the workspace; nil without one
+	snaps   snapCache
+	sems    map[string]chan struct{}
 
 	// defaultIngest is true when New installed ingest.Run. A substitute ingester
 	// does not touch the runner, so a nil runner is not a missing tool.
@@ -414,33 +305,21 @@ func New(o Options) (Service, error) {
 		doctor:      o.Doctor,
 		keys:        o.Keys,
 		conns:       o.Connections,
-		social:      o.Social,
-		signInSet:   o.SignIns,
 		heavy:       o.Heavy,
 		heavyLimitN: o.HeavyPerMinute,
 		log:         o.Log,
 		jobWait:     o.JobWait,
-		agents:      o.Agents,
 		webp:        o.WebP,
 		startedAt:   time.Now(),
 	}
 
-	s.providers = o.Providers
-
-	kinds, err := registerKinds(append(slices.Clone(o.JobKinds),
-		s.textGenerateKind(), s.imageGenerateKind(), s.voiceGenerateKind(), s.textDraftKind(),
-		s.videoGenerateKind()))
-	if err != nil {
-		return nil, err
-	}
-
-	s.kinds = kinds
-	s.registerPublishKind()
-	s.registerImageEditKind()
-
 	if s.workspace != "" {
 		s.fonts = enginestore.NewFonts(s.workspace)
 		s.lib = library.New(filepath.Join(s.workspace, "library"), o.Store.Library(), o.Now)
+	}
+
+	if s.conns == nil {
+		s.conns = connections.NewDefault(o.Store.Connections(), s.workspace, s.now)
 	}
 
 	s.sems = map[string]chan struct{}{
@@ -466,27 +345,12 @@ func New(o Options) (Service, error) {
 		s.now = time.Now
 	}
 
-	s.flows = oauth.NewFlows(s.now)
-	s.signFlows = oauth.NewFlows(s.now)
-
-	// A sign-in credential is renewed by the manager before a closure gets it (SDD-014 section 13).
-	if s.signInSet != nil {
-		s.conns.SetRefresher(oauth.NewRefresher(s.signInSet, s.now))
-	}
-
 	if s.jobWait <= 0 {
 		s.jobWait = jobWait
 	}
 
 	if s.log == nil {
 		s.log = slog.New(slog.DiscardHandler)
-	}
-
-	if s.lib != nil && o.BuiltInSkills != nil {
-		// A failure here must not stop the product: the library works without the built-in skills.
-		if _, err := s.lib.InstallBuiltInSet(context.Background(), o.BuiltInSkills, s.version); err != nil {
-			s.log.Warn("the built-in skills were not installed", "error", err)
-		}
 	}
 
 	if s.newIDs == nil {
@@ -499,15 +363,6 @@ func New(o Options) (Service, error) {
 			return int(r.X), int(r.Y), int(r.W), int(r.H)
 		}
 	}
-
-	s.pubs = pub.NewManager(pubEnv{s}, pubGateway{s})
-
-	clock := o.SchedulerClock
-	if clock == nil {
-		clock = svcClock{now: s.now}
-	}
-
-	s.sched = pub.NewScheduler(s.pubs, pub.SchedulerOptions{Clock: clock, Log: s.log, Housekeeping: s.expireDue})
 
 	return s, nil
 }

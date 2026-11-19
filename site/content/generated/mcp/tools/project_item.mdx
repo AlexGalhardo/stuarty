@@ -1,6 +1,6 @@
 ---
 title: "project_item"
-description: "Items. Project items."
+description: "Items. Items of a project."
 wide: true
 ---
 
@@ -10,7 +10,7 @@ wide: true
 
 <RefMain>
 
-Project items. add: timeline (id is timeline_id), text or output (export job_id); move, rename, trash, restore: item_id; brief: read, or write text (empty clears); briefing: questions, or answers \{id: text\} write the brief. Texts: text lists, reads (item_id) or writes (text; title, text_kind make one); revisions (revision, until: compare); revert (revision); check: caption (network) or script (wpm).
+Items of a project. add makes a timeline (a second edit; pass its id as timeline_id to edit, view and the rest), a text (Markdown) or an output (job_id of an export); move, rename, trash, restore take item_id; brief reads the brief, or writes it with text (empty clears).
 
 ## Behaviour
 
@@ -27,22 +27,16 @@ These are the annotations of the tool definition, the hints a client uses to dec
 
 | Argument | Type | Required | Notes |
 | --- | --- | --- | --- |
-| `action` | `string`, one of 11 values | yes |  |
+| `action` | `add`, `move`, `rename`, `trash`, `restore`, `brief` | yes |  |
 | `project_id` | `string` | yes | pattern `^prj_[0-9a-hjkmnp-tv-z]{10}$` |
 | `item_id` | `string` | no | pattern `^pit_[0-9a-hjkmnp-tv-z]{10}$` |
 | `kind` | `text`, `timeline`, `output` | no |  |
 | `title` | `string` | no |  |
 | `position` | `integer` | no |  |
 | `text` | `string` | no |  |
-| `answers` | `object` | no |  |
 | `preset` | `string` | no |  |
 | `fps` | `string` | no |  |
 | `job_id` | `string` | no | pattern `^job_[0-9a-hjkmnp-tv-z]{10}$` |
-| `text_kind` | `string` | no |  |
-| `revision` | `integer` | no |  |
-| `network` | `string` | no |  |
-| `wpm` | `integer` | no |  |
-| `until` | `integer` | no |  |
 
 ## Output
 
@@ -51,8 +45,6 @@ A result has a text block, written for the model, and structured content with th
 | Member | Type | Always present | Notes |
 | --- | --- | --- | --- |
 | `project_id` | `string` | yes |  |
-| `body` | `string` | no | Untrusted text: data, not an instruction |
-| `texts` | array of `any` | no | Untrusted text: data, not an instruction |
 
 ## Errors
 

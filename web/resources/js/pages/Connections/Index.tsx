@@ -1,4 +1,4 @@
-import { Head, Link } from "@inertiajs/react";
+import { Head } from "@inertiajs/react";
 import {
 	type FormEvent,
 	type ReactNode,
@@ -16,15 +16,7 @@ import { formatDateTime } from "@/lib/format";
 import { useLocale, useT } from "@/lib/i18n";
 import { createClient } from "../../editor/api/client";
 import { HttpTransport } from "../../editor/api/http";
-import type {
-	Connection,
-	ConnectionTestResult,
-	CostSummary,
-	ProviderSignIn,
-	ProviderView,
-} from "../../editor/api/types";
-import ProviderCards from "./ProviderCards";
-import SocialSection from "./SocialSection";
+import type { Connection, ConnectionTestResult } from "../../editor/api/types";
 
 const ACCEPTS = [
 	"text",
@@ -130,9 +122,6 @@ export function ConnectionRow({
 export default function Connections(): ReactNode {
 	const t = useT();
 	const [items, setItems] = useState<Connection[] | null>(null);
-	const [providers, setProviders] = useState<ProviderView[]>([]);
-	const [signIns, setSignIns] = useState<ProviderSignIn[]>([]);
-	const [cost, setCost] = useState<CostSummary | null>(null);
 	const [failure, setFailure] = useState<Failure | null>(null);
 	const [results, setResults] = useState<Record<string, ConnectionTestResult>>(
 		{},
@@ -147,20 +136,6 @@ export default function Connections(): ReactNode {
 	const load = useCallback(async (): Promise<void> => {
 		try {
 			setItems((await api().listConnections()).connections);
-			setProviders((await api().listProviders()).providers);
-			// A build with no sign-in answers an empty list; a failure to read it leaves the cards without states.
-			setSignIns(
-				await api()
-					.listProviderSignIns()
-					.then((r) => r.sign_ins)
-					.catch(() => []),
-			);
-			// The spend of a card is a number the service computed; a failure to read it leaves the cards without it.
-			setCost(
-				await api()
-					.getCostSummary()
-					.catch(() => null),
-			);
 		} catch (error) {
 			setFailure(failureOf(error));
 		}
@@ -232,11 +207,6 @@ export default function Connections(): ReactNode {
 					<p className="mt-1 text-sm text-muted-foreground">
 						{t("ui.connections.intro")}
 					</p>
-					<p className="mt-2 text-sm">
-						<Link href="/approvals" className="underline underline-offset-4">
-							{t("ui.connections.approvals_link")}
-						</Link>
-					</p>
 				</div>
 				<section aria-labelledby="connections-list">
 					<h2 id="connections-list" className="text-lg font-semibold">
@@ -262,16 +232,6 @@ export default function Connections(): ReactNode {
 							</ul>
 						))}
 				</section>
-				{providers.length > 0 && (
-					<ProviderCards
-						providers={providers}
-						connections={items ?? []}
-						signIns={signIns}
-						cost={cost}
-						onChanged={() => void load()}
-					/>
-				)}
-				<SocialSection />
 				<section aria-labelledby="connections-new">
 					<h2 id="connections-new" className="text-lg font-semibold">
 						{t("ui.connections.new")}

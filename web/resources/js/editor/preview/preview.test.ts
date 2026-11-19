@@ -290,28 +290,6 @@ describe("PlanWindows", () => {
 		expect(windows.peek(0)).toBeUndefined();
 	});
 
-	test("invalidate drops the windows of the same revision and a late answer", async () => {
-		let resolve: (p: PlanWindow) => void = () => undefined;
-		let calls = 0;
-		const windows = new PlanWindows((from, _to, rev) => {
-			calls++;
-			if (calls === 2) return new Promise<PlanWindow>((r) => (resolve = r));
-			return Promise.resolve(plan([], from, rev));
-		});
-		windows.setRevision(4);
-		await windows.ensure(0);
-		windows.invalidate();
-		expect(windows.peek(0)).toBeUndefined();
-		const late = windows.ensure(0);
-		windows.invalidate();
-		resolve(plan([], 0, 4));
-		await late;
-		expect(windows.peek(0)).toBeUndefined();
-		await windows.ensure(0);
-		expect(windows.peek(0)).toBeDefined();
-		expect(calls).toBe(3);
-	});
-
 	test("a new revision aborts the request in flight and caches nothing", async () => {
 		const signals: AbortSignal[] = [];
 		const windows = new PlanWindows(

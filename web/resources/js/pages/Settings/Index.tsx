@@ -13,7 +13,6 @@ import {
 	type TimeUnit,
 	writeTimeUnit,
 } from "../../editor/state/prefs";
-import Background from "./Background";
 import Transcription from "./Transcription";
 
 type Loaded =
@@ -108,7 +107,6 @@ export default function SettingsIndex() {
 						</Button>
 					</div>
 				</section>
-				<Background />
 				<Transcription />
 				<section
 					aria-labelledby="settings-about"

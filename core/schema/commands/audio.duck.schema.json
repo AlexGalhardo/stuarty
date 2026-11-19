@@ -23,6 +23,55 @@
       "type": "string",
       "x-vv-kind": "time"
     },
+    "resolved": {
+      "additionalProperties": false,
+      "description": "Filled by the service from the speech of the items; never sent by a caller.",
+      "properties": {
+        "speech": {
+          "description": "One entry per speech item, in any order.",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "item_id": {
+                "description": "One of the speech items.",
+                "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+                "type": "string"
+              },
+              "ranges": {
+                "description": "Sorted, non-overlapping ranges of speech in asset frames, half-open.",
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "end": {
+                      "type": "integer"
+                    },
+                    "start": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "start",
+                    "end"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "item_id",
+              "ranges"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "speech"
+      ],
+      "type": "object"
+    },
     "speech_item_ids": {
       "description": "Clips or audio items that carry the speech.",
       "items": {

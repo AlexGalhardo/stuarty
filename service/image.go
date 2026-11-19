@@ -9,7 +9,6 @@ import (
 	"slices"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/AlexGalhardo/stuarty/core/command"
 	coreimage "github.com/AlexGalhardo/stuarty/core/image"
@@ -42,7 +41,8 @@ func (s *svc) imageEnv(ctx context.Context, tx Repos, c Caller, ids func(string)
 			}
 
 			row, err := tx.Assets().Get(ctx, hash)
-			if err != nil || row.IngestState != IngestReady {
+			if err != nil || row.Kind != "image" || row.IngestState != IngestReady ||
+				row.Facts.Width == nil || row.Facts.Height == nil {
 				return coreimage.AssetInfo{}, false
 			}
 
@@ -53,41 +53,13 @@ func (s *svc) imageEnv(ctx context.Context, tx Repos, c Caller, ids func(string)
 				name = scopedName
 			}
 
-			switch row.Kind {
-			case "image":
-				if row.Facts.Width == nil || row.Facts.Height == nil {
-					return coreimage.AssetInfo{}, false
-				}
-
-				if name == "" {
-					name = "Image"
-				}
-
-				return coreimage.AssetInfo{
-					Name: filepath.Base(
-						name,
-					),
-					Kind:   coreimage.AssetImage,
-					Width:  *row.Facts.Width,
-					Height: *row.Facts.Height,
-				}, true
-			case "lut":
-				// A lookup table of the workspace (SDD-021 section 3.1): a ready file has no size, and the core
-				// tells it from an image by its kind.
-				if name == "" {
-					name = "Lookup table"
-				}
-
-				return coreimage.AssetInfo{Name: filepath.Base(name), Kind: coreimage.AssetLUT}, true
-			}
-
-			// A ready video or audio file is no image: the core refuses it by its kind (a table asked for is
-			// E_TYPE_MISMATCH) and never reads a size from it.
 			if name == "" {
-				name = "File"
+				name = "Image"
 			}
 
-			return coreimage.AssetInfo{Name: filepath.Base(name), Kind: row.Kind}, true
+			return coreimage.AssetInfo{
+				Name: filepath.Base(name), Width: *row.Facts.Width, Height: *row.Facts.Height,
+			}, true
 		},
 		Measure: rasterize.Measure(rasterize.Bundled()),
 	}
@@ -98,8 +70,7 @@ func (s *svc) imageEnv(ctx context.Context, tx Repos, c Caller, ids func(string)
 // the asset library (AssetList): a hash alone proves nothing, and the name of the file of another user must not
 // leak through an image. The projects are scanned once, when the first file is asked for.
 // It also gives the name the file is known by to the caller: in network mode the name of the project entry of
-// the caller, never the global one, which another user may have set. A file the caller imported straight into an
-// image (ImageImport) is held by the library row of the caller instead.
+// the caller, never the global one, which another user may have set.
 func (s *svc) imageAssetAccess(ctx context.Context, c Caller) func(hash string) (name string, scoped, ok bool) {
 	if c.OwnerUserID == "" {
 		return func(string) (string, bool, bool) { return "", false, true }
@@ -120,19 +91,12 @@ func (s *svc) imageAssetAccess(ctx context.Context, c Caller) func(hash string) 
 			held, done = scan, true
 		}
 
-		if e, ok := held[hash]; ok {
-			return e.name, true, true
+		e, ok := held[hash]
+		if !ok {
+			return "", false, false
 		}
 
-		// A file the caller brought in with ImageImport belongs to no project: the library row of the caller is
-		// the proof that they imported it (SDD-021 section 10.1). Its name is not known here, so it is neutral.
-		if lib := s.store.AssetLibrary(); lib != nil {
-			if _, err := lib.Get(ctx, c.OwnerUserID, hash); err == nil {
-				return "", true, true
-			}
-		}
-
-		return "", false, false
+		return e.name, true, true
 	}
 }
 
@@ -836,17 +800,6 @@ func (s *svc) commitImage(ctx context.Context, tx Tx, row *ImageRow, b *imageBat
 
 	if err := tx.Images().Commit(ctx, row.ID, row.Revision, u); err != nil {
 		return 0, err
-	}
-
-	// The stream of the image hears of a batch that changed something, after the commit and in revision order
-	// (SDD-006 section 12); a step whose primitives were all skipped has an empty diff and says nothing.
-	if len(b.diff) > 0 {
-		ev := Event{
-			Type: EventImageUpdated, ImageID: row.ID, Revision: rev, BaseRevision: b.base, Kind: string(b.kind),
-			Actor: b.actor, Diff: diff, At: time.UnixMilli(now).UTC(),
-		}
-
-		tx.AfterCommit(func() { s.emit(ev) })
 	}
 
 	return rev, nil

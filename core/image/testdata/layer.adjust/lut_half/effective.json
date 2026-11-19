@@ -1,9 +1,0 @@
-{
-  "adjust": {
-    "lut": {
-      "asset": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
-      "intensity": 50
-    }
-  },
-  "layer_id": "lyr_bbbbbbbbbb"
-}

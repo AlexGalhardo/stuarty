@@ -121,10 +121,6 @@ STUARTY_EXPORT_RENDERER=gpu stuarty serve
 
 `stuarty-render --probe` tells whether the machine has an adapter. When the helper is missing, has no adapter, or runs inside a sandbox that hides the devices, the export falls back to the CPU path and still succeeds.
 
-## Export an image
-
-An image document exports to PNG (the default), JPEG or WebP with `stuarty image:export <id> --format webp`. WebP is lossless unless you give `--quality` from 1 to 100, and it keeps transparency; PNG does too, and JPEG is flattened on white. `--preset` or `--width` and `--height` resample the result. The file lands in `exports/images/<id>/` of the workspace. WebP is encoded by the bundled FFmpeg, so a build without the `libwebp` encoder answers `E_EXPORT_FAILED` with the reason `webp_unavailable`; PNG and JPEG still export.
-
 ## Common mistakes
 
 - No <Term id="h264">H.264</Term> encoder works on this machine: `E_NO_ENCODER`. `gif`, `wav` and `aac` still export.

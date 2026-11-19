@@ -83,7 +83,6 @@ const (
 type Production struct {
 	HasBrief         bool `json:"has_brief"`
 	HasScript        bool `json:"has_script"`
-	Texts            int  `json:"texts"`
 	Timelines        int  `json:"timelines"`
 	Outputs          int  `json:"outputs"`
 	PendingApprovals int  `json:"pending_approvals"`
@@ -106,7 +105,6 @@ func ProductionState(items []Item) Production {
 			p.HasBrief = p.HasBrief || strings.TrimSpace(it.Text) != ""
 		case Text:
 			p.HasScript = p.HasScript || strings.TrimSpace(it.Text) != ""
-			p.Texts++
 		case Timeline:
 			p.Timelines++
 		case Output:

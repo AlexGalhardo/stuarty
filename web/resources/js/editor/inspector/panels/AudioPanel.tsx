@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 
 import InspectorTabs from "../InspectorTabs";
-import AudioProcessors from "./AudioProcessors";
 import AudioSection from "./AudioSection";
 import BeatMarkers from "./BeatMarkers";
 import DuckingSection from "./DuckingSection";
@@ -27,7 +26,6 @@ export default function AudioPanel({ itemId }: { itemId: string }): ReactNode {
 					content: (
 						<>
 							<AudioSection itemId={itemId} />
-							<AudioProcessors target={{ itemId }} />
 							<DuckingSection itemId={itemId} />
 							<BeatMarkers itemId={itemId} />
 						</>

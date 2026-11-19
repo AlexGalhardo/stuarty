@@ -7,8 +7,5 @@ site/out
 .env
 .env.*
 !.env.example
-deploy/.env
-deploy/secrets
-deploy/backups
 coverage*
 *.log

@@ -28,7 +28,6 @@ type ProductionView struct {
 	State     string
 	HasBrief  bool
 	HasScript bool
-	Texts     int
 	Timelines int
 	Outputs   int
 	Pending   int
@@ -57,17 +56,8 @@ func Production(v *ProductionView, maxTokens int) string {
 
 	head.WriteString(Note + "\n")
 	fmt.Fprintf(&head, "project %s %s %s\n", v.ID, Quote(v.Name, 60), v.State)
-	fmt.Fprintf(
-		&head,
-		"production: brief %s, script %s, texts %d, timelines %d, outputs %d, pending approvals %d, published %d",
-		yesNo(v.HasBrief),
-		yesNo(v.HasScript),
-		v.Texts,
-		v.Timelines,
-		v.Outputs,
-		v.Pending,
-		v.Published,
-	)
+	fmt.Fprintf(&head, "production: brief %s, script %s, timelines %d, outputs %d, pending approvals %d, published %d",
+		yesNo(v.HasBrief), yesNo(v.HasScript), v.Timelines, v.Outputs, v.Pending, v.Published)
 
 	var items strings.Builder
 

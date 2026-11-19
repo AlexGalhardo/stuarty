@@ -1,7 +1,0 @@
-{
-  "op": "audio.processor_remove",
-  "args": {
-    "item_id": "itm_zzzzzzzzzz",
-    "index": 0
-  }
-}

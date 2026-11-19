@@ -1,8 +1,0 @@
-{
-  "args": {
-    "kind": "layer",
-    "layer_id": "lyr_dddddddddd",
-    "source": "lyr_bbbbbbbbbb"
-  },
-  "op": "layer.mask_set"
-}

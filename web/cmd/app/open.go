@@ -55,10 +55,6 @@ type opener struct {
 	startSrv func(self string, host, port string, env []string, log string) (exited <-chan error, err error)
 	browse   func(rawURL string) error
 	timeout  time.Duration
-	// ownerWait bounds the wait for an owner that holds the workspace lock; poll is the pause
-	// between its probes. Zero means the defaults (workspace.WaitLimit, startPoll).
-	ownerWait time.Duration
-	poll      time.Duration
 }
 
 func newOpener(stdout, stderr io.Writer) *opener {
@@ -82,19 +78,9 @@ func runOpen(args []string, stdout, stderr io.Writer) int {
 	defer cancel()
 	if err := newOpener(stdout, stderr).run(ctx); err != nil {
 		_, _ = fmt.Fprintln(stderr, "stuarty open:", err)
-		return runExitCode(err)
+		return 1
 	}
 	return 0
-}
-
-// runExitCode is 2 for a retryable error of the workspace (E_WORKSPACE_LOCKED), 1 otherwise, as the
-// exit codes of SDD-003 section 5.4.
-func runExitCode(err error) int {
-	var werr *workspace.Error
-	if errors.As(err, &werr) && werr.Retryable {
-		return 2
-	}
-	return 1
 }
 
 // resolveAddr returns the host and port to reach: STUARTY_ADDR, else HOST and PORT (the
@@ -163,10 +149,6 @@ func (o *opener) run(ctx context.Context) error {
 	// default address, so open never starts a second server beside it (VV-079).
 	if rb, ok := o.runningServer(ctx); ok {
 		base = rb
-	} else if rb, ok, err := o.waitForLockOwner(ctx, base); err != nil {
-		return err
-	} else if ok {
-		base = rb
 	} else if !o.isUp(ctx, base) {
 		if err := o.start(ctx, host, port, base); err != nil {
 			return err
@@ -185,73 +167,6 @@ func (o *opener) run(ctx context.Context) error {
 		return fmt.Errorf("the server is running but the browser could not be started: %w", err)
 	}
 	return nil
-}
-
-// lockHeld reports whether another process holds the workspace lock, that is, whether an owner
-// lives, whatever it answers on /up (VV-258). A lock that cannot be tried says nothing: not held.
-func lockHeld(ws workspace.Dir) bool {
-	l, err := ws.TryLock()
-	if err != nil {
-		return errors.Is(err, workspace.ErrLocked)
-	}
-	_ = l.Release()
-	return false
-}
-
-// waitForLockOwner is for an owner that holds the lock but is not answering /up yet (busy, starting
-// or stuck). It never lets open start a second server beside it: it waits up to ownerWait for the
-// owner's /up, at the address of runtime.json or the default one, and then gives up with
-// E_WORKSPACE_LOCKED. When the lock is free, or is released while waiting, it answers false with no
-// error and open goes on as with no owner.
-func (o *opener) waitForLockOwner(ctx context.Context, defaultBase string) (string, bool, error) {
-	ws, err := workspace.Resolve(o.getenv)
-	if err != nil || !lockHeld(ws) {
-		return "", false, nil
-	}
-	limit, poll := o.ownerWait, o.poll
-	if limit <= 0 {
-		limit = workspace.WaitLimit
-	}
-	if poll <= 0 {
-		poll = startPoll
-	}
-	_, _ = fmt.Fprintln(o.stderr, "Another Stuarty owns this workspace; waiting for it to answer")
-	deadline := time.NewTimer(limit)
-	defer deadline.Stop()
-	tick := time.NewTicker(poll)
-	defer tick.Stop()
-	for {
-		if rb, ok := o.runningServer(ctx); ok {
-			return rb, true, nil
-		}
-		if o.isUp(ctx, defaultBase) {
-			return defaultBase, true, nil
-		}
-		if !lockHeld(ws) {
-			return "", false, nil
-		}
-		select {
-		case <-ctx.Done():
-			return "", false, ctx.Err()
-		case <-deadline.C:
-			return "", false, &workspace.Error{
-				Code: workspace.CodeWorkspaceLocked,
-				Message: fmt.Sprintf(
-					"another Stuarty is running and not answering within %s; wait a few seconds and run open again, "+
-						"or stop it (%s)", limit, ownerHint(ws)),
-				Retryable: true,
-				Err:       workspace.ErrLocked,
-			}
-		case <-tick.C:
-		}
-	}
-}
-
-func ownerHint(ws workspace.Dir) string {
-	if rt, err := ws.ReadRuntime(); err == nil {
-		return fmt.Sprintf("pid %d, %s", rt.PID, rt.Addr)
-	}
-	return "its process holds " + ws.Path("lock")
 }
 
 var launchCode = regexp.MustCompile(`^[0-9a-f]{64}$`)

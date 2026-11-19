@@ -14,7 +14,6 @@ pub mod colour;
 pub mod compose;
 pub mod effects;
 pub mod error;
-pub mod filters;
 pub mod grade;
 pub mod host;
 pub mod image;
@@ -25,7 +24,6 @@ pub mod math;
 pub mod plan;
 pub mod rasterhost;
 pub mod resize;
-pub mod tone;
 
 #[cfg(target_arch = "wasm32")]
 mod ffi;

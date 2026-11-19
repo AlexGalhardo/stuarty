@@ -6,11 +6,6 @@
 # line of stdout. Everything else goes to stderr. When GITHUB_PATH is set (GitHub
 # Actions) the bin folder is appended to it.
 #
-# An installed folder is never deleted in place, because a running FFmpeg may hold it open
-# (VV-227): a folder whose .archive-sha256 holds the pinned digest is reused without a download,
-# and any other is replaced by unpacking beside it and swapping by rename. A swap that fails
-# leaves the installed folder as it was. scripts/install-ffmpeg-test.sh proves it offline.
-#
 # FFMPEG_SOURCE (environment, else the value of the pin file) is btbn (the BtbN asset) or own
 # (the release asset of ffmpeg-build.yml, D-017, FFMPEG_OWN_* of the pin file). macOS has no
 # BtbN build: with btbn, Homebrew ffmpeg is installed FOR TESTS ONLY and is never distributed
@@ -111,40 +106,7 @@ mkdir -p "$dl_dir"
 archive="$dl_dir/$asset"
 url="$base_url/$release_tag/$asset"
 
-root_name="${asset%.tar.xz}"
-root_name="${root_name%.zip}"
-exe=""
-[ "$key" = "WINDOWS_AMD64" ] && exe=".exe"
-marker=".archive-sha256"
-
-# check_tree <folder>: the folder holds a complete, LGPL FFmpeg tree; sets banner.
-check_tree() {
-	local root="$1/$root_name" tool
-	[ -d "$root/bin" ] || die "unexpected archive layout: $root/bin not found"
-	for tool in ffmpeg ffprobe; do
-		[ -f "$root/bin/$tool$exe" ] || die "$tool$exe is missing in $root/bin"
-	done
-	[ -f "$root/LICENSE.txt" ] || die "LICENSE.txt is missing in $root"
-	banner="$("$root/bin/ffmpeg$exe" -version)"
-	case "$banner" in
-	*--enable-gpl* | *--enable-nonfree*) die "the build is not LGPL: its configure line has --enable-gpl or --enable-nonfree" ;;
-	esac
-	if [ "$source_kind" = own ]; then
-		case "$banner" in
-		*--enable-libopenh264*) die "the own build has OpenH264 compiled in (D-017)" ;;
-		esac
-	fi
-}
-
-# An installed folder whose marker holds the digest of this archive and whose tree is complete is
-# reused as it is: it is never deleted or rewritten, because a running FFmpeg may hold it open (VV-227).
-reuse=0
-if [ -f "$out_dir/$marker" ] && [ "$(cat "$out_dir/$marker")" = "$expected" ] \
-	&& [ -f "$out_dir/$root_name/bin/ffmpeg$exe" ] && [ -f "$out_dir/$root_name/bin/ffprobe$exe" ] \
-	&& [ -f "$out_dir/$root_name/LICENSE.txt" ]; then
-	reuse=1
-	log "install-ffmpeg: reusing the installed folder $out_dir (archive digest matches)"
-elif [ -f "$archive" ] && [ "$(sha256_of "$archive")" = "$expected" ]; then
+if [ -f "$archive" ] && [ "$(sha256_of "$archive")" = "$expected" ]; then
 	log "install-ffmpeg: reusing the verified download $archive"
 else
 	log "install-ffmpeg: downloading $url"
@@ -158,42 +120,39 @@ else
 	log "install-ffmpeg: SHA-256 verified ($expected)"
 fi
 
-if [ "$reuse" = 0 ]; then
-	# Unpack beside the target and swap by rename, so a failure or an FFmpeg in use never leaves a
-	# half-written install.
-	stage="$base/.$release_tag-$key.new.$$"
-	rm -rf "$stage"
-	mkdir -p "$stage"
-	trap 'rm -rf "$stage"' EXIT
-	case "$asset" in
-	*.tar.xz) tar -xJf "$archive" -C "$stage" || die "could not unpack $archive" ;;
-	*.zip)
-		# Git Bash tar is GNU tar and cannot read zip.
-		powershell.exe -NoProfile -NonInteractive -Command \
-			"Expand-Archive -LiteralPath '$(cygpath -w "$archive")' -DestinationPath '$(cygpath -w "$stage")' -Force" >&2 \
-			|| die "could not unpack $archive"
-		;;
-	*) die "unknown archive type: $asset" ;;
-	esac
-	check_tree "$stage"
-	printf '%s\n' "$expected" >"$stage/$marker"
-	old=""
-	if [ -e "$out_dir" ]; then
-		old="$base/.$release_tag-$key.old.$$"
-		mv "$out_dir" "$old" || die "cannot replace $out_dir (is FFmpeg running from it?); it was left untouched"
-	fi
-	if ! mv "$stage" "$out_dir"; then
-		if [ -n "$old" ]; then
-			mv "$old" "$out_dir" || die "could not move the new install into $out_dir, nor the old one back from $old"
-		fi
-		die "could not move the new install into $out_dir; the installed folder was left as it was"
-	fi
-	[ -z "$old" ] || rm -rf "$old" 2>/dev/null || log "install-ffmpeg: could not remove the old folder $old; delete it by hand"
-fi
+rm -rf "$out_dir"
+mkdir -p "$out_dir"
+case "$asset" in
+*.tar.xz) tar -xJf "$archive" -C "$out_dir" ;;
+*.zip)
+	# Git Bash tar is GNU tar and cannot read zip.
+	powershell.exe -NoProfile -NonInteractive -Command \
+		"Expand-Archive -LiteralPath '$(cygpath -w "$archive")' -DestinationPath '$(cygpath -w "$out_dir")' -Force" >&2 \
+		|| die "could not unpack $archive"
+	;;
+*) die "unknown archive type: $asset" ;;
+esac
 
-root="$out_dir/$root_name"
+root="$out_dir/${asset%.tar.xz}"
+root="${root%.zip}"
 bin_dir="$root/bin"
-check_tree "$out_dir"
+[ -d "$bin_dir" ] || die "unexpected archive layout: $bin_dir not found"
+exe=""
+[ "$key" = "WINDOWS_AMD64" ] && exe=".exe"
+for tool in ffmpeg ffprobe; do
+	[ -f "$bin_dir/$tool$exe" ] || die "$tool$exe is missing in $bin_dir"
+done
+[ -f "$root/LICENSE.txt" ] || die "LICENSE.txt is missing in $root"
+
+banner="$("$bin_dir/ffmpeg$exe" -version)"
+case "$banner" in
+*--enable-gpl* | *--enable-nonfree*) die "the build is not LGPL: its configure line has --enable-gpl or --enable-nonfree" ;;
+esac
+if [ "$source_kind" = own ]; then
+	case "$banner" in
+	*--enable-libopenh264*) die "the own build has OpenH264 compiled in (D-017)" ;;
+	esac
+fi
 printf '%s\n' "$banner" | head -n 1 >&2
 
 if [ -n "${GITHUB_PATH:-}" ]; then printf '%s\n' "$bin_dir" >>"$GITHUB_PATH"; fi

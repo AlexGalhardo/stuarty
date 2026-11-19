@@ -27,7 +27,7 @@ func (r *Renderer) MixFrom(ctx context.Context, from, n int, sink func([]float32
 		return nil
 	}
 
-	srcs := plan.AudioWith(doc, from, from+n, r.s.opts)
+	srcs := plan.Audio(doc, from, from+n)
 	for i := range srcs {
 		srcs[i].StartSample -= start
 	}

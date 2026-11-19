@@ -1,8 +1,0 @@
-{
-  "op": "audio.processor_add",
-  "args": {
-    "item_id": "itm_c3d4e5f6g7",
-    "track_id": "trk_m1n2p3q4r5",
-    "kind": "limiter"
-  }
-}

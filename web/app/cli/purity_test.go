@@ -66,30 +66,6 @@ func (s stub) Redo(context.Context, service.UndoRequest) (*service.UndoResult, e
 	return reply[service.UndoResult](s.err)
 }
 
-func (s stub) HistoryRevert(context.Context, service.HistoryRevertRequest) (*service.HistoryRevertResult, error) {
-	return reply[service.HistoryRevertResult](s.err)
-}
-
-func (s stub) HistoryDiff(context.Context, service.HistoryDiffRequest) (*service.HistoryDiffResult, error) {
-	return reply[service.HistoryDiffResult](s.err)
-}
-
-func (s stub) CheckpointCreate(context.Context, service.CheckpointCreateRequest) (*service.Checkpoint, error) {
-	return reply[service.Checkpoint](s.err)
-}
-
-func (s stub) CheckpointList(context.Context, service.CheckpointListRequest) (*service.CheckpointListResult, error) {
-	return reply[service.CheckpointListResult](s.err)
-}
-
-func (s stub) CheckpointRename(context.Context, service.CheckpointRenameRequest) (*service.Checkpoint, error) {
-	return reply[service.Checkpoint](s.err)
-}
-
-func (s stub) CheckpointRemove(context.Context, service.CheckpointRemoveRequest) (*service.Checkpoint, error) {
-	return reply[service.Checkpoint](s.err)
-}
-
 func (s stub) Lint(context.Context, service.LintRequest) (*service.LintResult, error) {
 	return reply[service.LintResult](s.err)
 }
@@ -132,25 +108,6 @@ func (s stub) JobGet(context.Context, service.JobGetRequest) (*service.Job, erro
 
 func (s stub) JobCancel(context.Context, service.JobCancelRequest) (*service.Job, error) {
 	return final(s.err)
-}
-
-func (s stub) ExportBatch(context.Context, service.ExportBatchRequest) (*service.Job, error) {
-	return final(s.err)
-}
-
-func (s stub) ExportCheck(context.Context, service.ExportCheckRequest) (*service.ExportCheckResult, error) {
-	return reply[service.ExportCheckResult](s.err)
-}
-
-func (s stub) AudioMeasure(context.Context, service.AudioMeasureRequest) (*service.AudioMeasureResult, error) {
-	return reply[service.AudioMeasureResult](s.err)
-}
-
-func (s stub) ExportPresetList(
-	context.Context,
-	service.ExportPresetListRequest,
-) (*service.ExportPresetListResult, error) {
-	return reply[service.ExportPresetListResult](s.err)
 }
 
 func (s stub) JobList(context.Context, service.JobListRequest) (*service.JobListResult, error) {
@@ -300,6 +257,42 @@ func (s stub) BrandKitGet(context.Context, service.BrandKitGetRequest) (*service
 
 func (s stub) BrandKitSet(context.Context, service.BrandKitSetRequest) (*service.BrandKit, error) {
 	return reply[service.BrandKit](s.err)
+}
+
+func (s stub) ProjectDescribe(context.Context, service.ProjectDescribeRequest) (*service.ProjectDescribeResult, error) {
+	return reply[service.ProjectDescribeResult](s.err)
+}
+
+func (s stub) ProjectDuplicate(context.Context, service.ProjectDuplicateRequest) (*service.ProjectCreateResult, error) {
+	return reply[service.ProjectCreateResult](s.err)
+}
+
+func (s stub) ProjectItemAdd(context.Context, service.ProjectItemAddRequest) (*service.ProjectItemResult, error) {
+	return reply[service.ProjectItemResult](s.err)
+}
+
+func (s stub) ProjectItemMove(context.Context, service.ProjectItemMoveRequest) (*service.ProjectItemResult, error) {
+	return reply[service.ProjectItemResult](s.err)
+}
+
+func (s stub) ProjectItemRename(context.Context, service.ProjectItemRenameRequest) (*service.ProjectItemResult, error) {
+	return reply[service.ProjectItemResult](s.err)
+}
+
+func (s stub) ProjectItemTrash(context.Context, service.ProjectItemTrashRequest) (*service.ProjectItemResult, error) {
+	return reply[service.ProjectItemResult](s.err)
+}
+
+func (s stub) ProjectItemRestore(context.Context, service.ProjectItemTrashRequest) (*service.ProjectItemResult, error) {
+	return reply[service.ProjectItemResult](s.err)
+}
+
+func (s stub) BriefGet(context.Context, service.BriefGetRequest) (*service.BriefResult, error) {
+	return reply[service.BriefResult](s.err)
+}
+
+func (s stub) BriefSet(context.Context, service.BriefSetRequest) (*service.BriefResult, error) {
+	return reply[service.BriefResult](s.err)
 }
 
 func (s stub) MemoryList(context.Context, service.MemoryListRequest) (*service.LibraryListResult, error) {

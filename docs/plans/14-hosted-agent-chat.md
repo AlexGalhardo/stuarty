@@ -37,15 +37,15 @@ A creator talks to their own coding agent inside Stuarty, in a panel that is alw
 
 ## Tasks
 
-- [x] 1. Read the protocol specification again; write SDD-017 (profiles, process, messages used, errors) and SDD-000 names; add SDD-007 rows (a profile as command injection, agent text as markup, a token wider than the project, an agent that never exits). Verify: `task lint:md` exits 0.
-- [x] 2. Implement `core/chat` with table tests. Verify: `go test ./core/chat/...` passes.
-- [x] 3. Implement the protocol client against a fake agent binary built in the tests. Verify: `go test ./service/agenthost/... -run TestProtocol` passes.
-- [x] 4. Implement process supervision: start, cancel, time limits, kill on shutdown, one process tree per session. Verify: `go test ./service/agenthost/... -run TestProcess` passes on Windows and in `bash scripts/test-linux-docker.sh ./service/agenthost/...`.
-- [x] 5. Issue the project-scoped token and pass the MCP address to the agent. Verify: `go test ./service/agenthost/... -run TestScopedToken` passes (a call to another project is refused).
-- [x] 6. Store transcripts and expose the service operations and the SSE stream. Verify: `go test ./service/... -run TestChat` and `go test ./web/contract/...` pass.
-- [x] 7. Build the panel: messages, tool calls, permission prompts, cancel, new session, profile picker; both languages; keyboard and screen reader labels. Verify: `task test:web` and `web/e2e/specs/agent-chat.spec.ts` pass with the fake agent.
-- [x] 8. Security tests of the new rows. Verify: `go test -run TestSecurity_ ./...` and `go run ./internal/tools/threatcheck` exit 0.
-- [x] 9. Manual run with one real agent installed on the author's machine, or marked as not verified. Not verified: it needs the author's installed agent; the hand-off says so. Verify: the transcript or the note is in the hand-off.
+- [ ] 1. Read the protocol specification again; write SDD-017 (profiles, process, messages used, errors) and SDD-000 names; add SDD-007 rows (a profile as command injection, agent text as markup, a token wider than the project, an agent that never exits). Verify: `task lint:md` exits 0.
+- [ ] 2. Implement `core/chat` with table tests. Verify: `go test ./core/chat/...` passes.
+- [ ] 3. Implement the protocol client against a fake agent binary built in the tests. Verify: `go test ./service/agenthost/... -run TestProtocol` passes.
+- [ ] 4. Implement process supervision: start, cancel, time limits, kill on shutdown, one process tree per session. Verify: `go test ./service/agenthost/... -run TestProcess` passes on Windows and in `bash scripts/test-linux-docker.sh ./service/agenthost/...`.
+- [ ] 5. Issue the project-scoped token and pass the MCP address to the agent. Verify: `go test ./service/agenthost/... -run TestScopedToken` passes (a call to another project is refused).
+- [ ] 6. Store transcripts and expose the service operations and the SSE stream. Verify: `go test ./service/... -run TestChat` and `go test ./web/contract/...` pass.
+- [ ] 7. Build the panel: messages, tool calls, permission prompts, cancel, new session, profile picker; both languages; keyboard and screen reader labels. Verify: `task test:web` and `web/e2e/specs/agent-chat.spec.ts` pass with the fake agent.
+- [ ] 8. Security tests of the new rows. Verify: `go test -run TestSecurity_ ./...` and `go run ./internal/tools/threatcheck` exit 0.
+- [ ] 9. Manual run with one real agent installed on the author's machine, or marked as not verified. Verify: the transcript or the note is in the hand-off.
 
 ## Test strategy
 

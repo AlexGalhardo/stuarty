@@ -102,15 +102,15 @@ test.describe("keyframes", () => {
 		const keys = (await storedKeyframes(page, itemId)).scale ?? [];
 		expect(keys.map((k) => k.easing)).toEqual(["ease_in_out", "hold"]);
 
-		// A row's easing reaches the core as picked, in the registry spelling (keyframe.set_easing).
+		// A row's easing reaches the core as picked, in the registry spelling.
 		await page
 			.getByLabel(/^Easing of the Scale keyframe at/)
 			.first()
 			.selectOption("ease_out");
 		await expect.poll(() => posted.length).toBe(3);
 		expect(posted[2]?.operations[0]).toMatchObject({
-			op: "keyframe.set_easing",
-			args: { property: "scale", at: "0f", easing: "ease_out" },
+			op: "keyframe.set",
+			args: { property: "scale", at: "0f", value: 1.5, easing: "ease_out" },
 		});
 
 		// Delete on a selected diamond removes that keyframe only.

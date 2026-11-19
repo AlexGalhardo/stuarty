@@ -13,33 +13,11 @@ test.describe("project overview", () => {
 		const created = await call("POST", "/projects", { name: label });
 		const id = created.project_id as string;
 
-		// The save is held until the spec has seen the button disabled, so a read that did not wait for the
-		// write would fail on every run, not only on a loaded machine (VV-262).
-		let release = (): void => {};
-		const held = new Promise<void>((resolve) => {
-			release = resolve;
-		});
-		await page.route("**/api/v1/projects/*/brief", async (route) => {
-			if (route.request().method() === "PUT") await held;
-			await route.continue();
-		});
-
 		await page.goto(`/projects/${id}`);
 		await expect(page.getByRole("heading", { level: 1 })).toContainText(label);
 
 		await page.locator("#brief-text").fill("A teaser for the launch.");
-		// The button is disabled the moment it is clicked (saving) and again once the
-		// saved text is back, so "disabled" does not say the write ended: wait for the
-		// response of the PUT, or the read below races it on a loaded machine (VV-262).
-		const saved = page.waitForResponse(
-			(r) => r.request().method() === "PUT" && r.url().endsWith("/brief"),
-		);
 		await page.getByRole("button", { name: "Save brief" }).click();
-		await expect(
-			page.getByRole("button", { name: "Save brief" }),
-		).toBeDisabled();
-		release();
-		expect((await saved).ok()).toBe(true);
 		await expect(
 			page.getByRole("button", { name: "Save brief" }),
 		).toBeDisabled();

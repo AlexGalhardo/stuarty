@@ -23,7 +23,6 @@ A connection **to** the server, from a browser or a client you use, is inbound a
 | Desktop update check | you answered Yes to the first-use question, or you choose **Help**, **Check for updates** | `video.vukem.dev`, one signed file, nothing about you | asked once; nothing connects before the answer |
 | CLI and stdio MCP as clients | a server owns the workspace | the loopback address of that server, or `STUARTY_URL` when you set it | loopback only |
 | Browser launch | `serve` opens your browser | your browser connects to loopback; the product makes no connection | loopback only |
-| Google sign-in | on a server in network mode where you turned [Google sign-in](/docs/self-hosting/google-sign-in) on, a person signs in with Google or links a Google account | the hosts of the connection you chose (`oauth2.googleapis.com` and `www.googleapis.com`), for the code and the keys; the browser, not the server, opens Google's sign-in page | off |
 
 That is the whole list. The transcription provider receives only the normalised audio of the asset and the key. It receives no project, no file name and no path, the certificate is always verified, redirects are refused and the job says which host receives the audio. The helper download is announced with its size and host before it starts.
 

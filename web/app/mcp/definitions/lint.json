@@ -1,6 +1,6 @@
 {
  "name": "lint",
- "description": "A project's problems: code, severity, item, message, hint. Errors block export: run after edits, before export. Runs every rule, unlike an edit's lint block (lint_scope fast). preset: fit to an export preset over start..end.",
+ "description": "Check a project for problems and get them as text: code, severity, item, message, hint. Errors block export. Run it after edits, before export. Runs every rule, unlike the lint block of an edit result (lint_scope fast). Rules include gaps, missing media, text outside the safe area, audio clipping, unfilled slots.",
  "inputSchema": {
   "type": "object",
   "properties": {
@@ -27,15 +27,6 @@
     "minimum": 1,
     "maximum": 100,
     "default": 25
-   },
-   "preset": {
-    "type": "string"
-   },
-   "start": {
-    "type": "string"
-   },
-   "end": {
-    "type": "string"
    }
   },
   "required": [

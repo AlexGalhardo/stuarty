@@ -1,6 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
-	canBackground,
 	canDropPaths,
 	canPickFiles,
 	canPickTemplate,
@@ -8,11 +7,8 @@ import {
 	cleanPaths,
 	DESKTOP_READY_EVENT,
 	getDesktopBridge,
-	parseBackground,
-	readBackground,
 	showInFolder,
 	subscribeDesktopBridge,
-	writeBackground,
 } from "./desktopBridge";
 
 afterEach(() => {
@@ -92,49 +88,5 @@ describe("desktopBridge", () => {
 		off();
 		target.dispatchEvent(new Event(DESKTOP_READY_EVENT));
 		expect(listener).toHaveBeenCalledTimes(1);
-	});
-});
-
-describe("the background mode of the shell", () => {
-	const held = { keep_running: true, start_at_sign_in: false, asked: true };
-
-	it("is offered only when the shell has both members", () => {
-		expect(canBackground(null)).toBe(false);
-		expect(canBackground({ getBackground: async () => held })).toBe(false);
-		expect(
-			canBackground({
-				getBackground: async () => held,
-				setBackground: async () => held,
-			}),
-		).toBe(true);
-	});
-
-	it("takes only what the shell sends as settings", () => {
-		expect(parseBackground(held)).toEqual(held);
-		expect(parseBackground({ ...held, error: "denied" })).toEqual({
-			...held,
-			error: "denied",
-		});
-		expect(parseBackground({ ...held, error: "" })).toEqual(held);
-		expect(parseBackground({ keep_running: true })).toBeNull();
-		expect(parseBackground({ ...held, asked: "yes" })).toBeNull();
-		expect(parseBackground(null)).toBeNull();
-		expect(parseBackground("on")).toBeNull();
-	});
-
-	it("reads and writes through the bridge, and does nothing without one", async () => {
-		const sent: unknown[] = [];
-		const bridge = {
-			getBackground: async () => held,
-			setBackground: async (s: unknown) => {
-				sent.push(s);
-				return s;
-			},
-		};
-		expect(await readBackground(bridge)).toEqual(held);
-		expect(await writeBackground(bridge, held)).toEqual(held);
-		expect(sent).toEqual([held]);
-		expect(await readBackground(null)).toBeNull();
-		expect(await writeBackground({}, held)).toBeNull();
 	});
 });

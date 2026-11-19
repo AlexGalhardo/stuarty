@@ -42,33 +42,9 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			return err
 		},
 		"CommandHelp": func() error { _, err := e.svc.CommandHelp(ctx, service.CommandHelpRequest{}); return err },
-		"HistoryRevert": func() error {
-			_, err := e.svc.HistoryRevert(ctx, service.HistoryRevertRequest{ProjectID: "prj_0000000001"})
-			return err
-		},
-		"HistoryDiff": func() error {
-			_, err := e.svc.HistoryDiff(ctx, service.HistoryDiffRequest{ProjectID: "prj_0000000001"})
-			return err
-		},
-		"CheckpointCreate": func() error {
-			_, err := e.svc.CheckpointCreate(ctx, service.CheckpointCreateRequest{ProjectID: "prj_0000000001"})
-			return err
-		},
-		"CheckpointList": func() error {
-			_, err := e.svc.CheckpointList(ctx, service.CheckpointListRequest{ProjectID: "prj_0000000001"})
-			return err
-		},
-		"CheckpointRename": func() error {
-			_, err := e.svc.CheckpointRename(ctx, service.CheckpointRenameRequest{ProjectID: "prj_0000000001"})
-			return err
-		},
-		"CheckpointRemove": func() error {
-			_, err := e.svc.CheckpointRemove(ctx, service.CheckpointRemoveRequest{ProjectID: "prj_0000000001"})
-			return err
-		},
-		"Undo": func() error { _, err := e.svc.Undo(ctx, service.UndoRequest{ProjectID: "prj_0000000001"}); return err },
-		"Redo": func() error { _, err := e.svc.Redo(ctx, service.UndoRequest{ProjectID: "prj_0000000001"}); return err },
-		"Lint": func() error { _, err := e.svc.Lint(ctx, service.LintRequest{ProjectID: "prj_0000000001"}); return err },
+		"Undo":        func() error { _, err := e.svc.Undo(ctx, service.UndoRequest{ProjectID: "prj_0000000001"}); return err },
+		"Redo":        func() error { _, err := e.svc.Redo(ctx, service.UndoRequest{ProjectID: "prj_0000000001"}); return err },
+		"Lint":        func() error { _, err := e.svc.Lint(ctx, service.LintRequest{ProjectID: "prj_0000000001"}); return err },
 		"MediaImport": func() error {
 			_, err := e.svc.MediaImport(ctx, service.MediaImportRequest{ProjectID: "prj_0000000001"})
 			return err
@@ -91,24 +67,6 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 		},
 		"JobStart": func() error {
 			_, err := e.svc.JobStart(ctx, service.JobStartRequest{ProjectID: "prj_0000000001"})
-			return err
-		},
-		"ExportPresetList": func() error {
-			_, err := e.svc.ExportPresetList(ctx, service.ExportPresetListRequest{Codecs: true})
-			return err
-		},
-		"ExportCheck": func() error {
-			_, err := e.svc.ExportCheck(ctx, service.ExportCheckRequest{ProjectID: "prj_0000000001", Preset: "tiktok"})
-			return err
-		},
-		"AudioMeasure": func() error {
-			_, err := e.svc.AudioMeasure(ctx, service.AudioMeasureRequest{ProjectID: "prj_0000000001"})
-			return err
-		},
-		"ExportBatch": func() error {
-			_, err := e.svc.ExportBatch(ctx, service.ExportBatchRequest{
-				ProjectID: "prj_0000000001", Items: []service.ExportBatchItem{{Preset: "tiktok"}},
-			})
 			return err
 		},
 		"JobGet": func() error { _, err := e.svc.JobGet(ctx, service.JobGetRequest{JobID: "job_0000000001"}); return err },
@@ -175,29 +133,6 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.ImageExport(ctx, service.ImageExportRequest{ImageID: "img_0000000001"})
 			return err
 		},
-		"ImageImport": func() error {
-			_, err := e.svc.ImageImport(ctx, service.ImageImportRequest{Hash: "sha256:" + strings.Repeat("a", 64)})
-			return err
-		},
-		"ImageImportFile": func() error {
-			_, err := e.svc.ImageImportFile(ctx, service.ImageImportFileRequest{Body: strings.NewReader("x"), Size: 1})
-			return err
-		},
-		"ImageFrame": func() error {
-			_, err := e.svc.ImageFrame(ctx, service.ImageFrameRequest{ImageID: "img_0000000001"})
-			return err
-		},
-		"ImageHistory": func() error {
-			_, err := e.svc.ImageHistory(ctx, service.ImageHistoryRequest{ImageID: "img_0000000001"})
-			return err
-		},
-		"ImageFile": func() error {
-			_, err := e.svc.ImageFile(
-				ctx,
-				service.ImageFileRequest{ImageID: "img_0000000001", Name: "1-000000000000.png"},
-			)
-			return err
-		},
 		"FontImport": func() error {
 			_, err := e.svc.FontImport(ctx, service.FontImportRequest{Path: "/x"})
 			return err
@@ -262,22 +197,6 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.AssetList(ctx, service.AssetListRequest{})
 			return err
 		},
-		"AssetGet": func() error {
-			_, err := e.svc.AssetGet(ctx, service.AssetRef{Hash: "sha256:" + strings.Repeat("0", 64)})
-			return err
-		},
-		"AssetUses": func() error {
-			_, err := e.svc.AssetUses(ctx, service.AssetUsesRequest{Hash: "sha256:" + strings.Repeat("0", 64)})
-			return err
-		},
-		"AssetSetInfo": func() error {
-			_, err := e.svc.AssetSetInfo(ctx, service.AssetSetInfoRequest{Hash: "sha256:" + strings.Repeat("0", 64)})
-			return err
-		},
-		"AssetTag": func() error {
-			_, err := e.svc.AssetTag(ctx, service.AssetTagRequest{Hash: "sha256:" + strings.Repeat("0", 64)})
-			return err
-		},
 		"ExportFile": func() error {
 			_, err := e.svc.ExportFile(ctx, service.ExportFileRequest{JobID: "job_0000000001"})
 			return err
@@ -296,6 +215,62 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 		},
 		"KeyRevoke": func() error {
 			_, err := e.svc.KeyRevoke(ctx, service.KeyRevokeRequest{KeyID: "key_0000000001"})
+			return err
+		},
+		"ProjectDescribe": func() error {
+			_, err := e.svc.ProjectDescribe(ctx, service.ProjectDescribeRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"ProjectDuplicate": func() error {
+			_, err := e.svc.ProjectDuplicate(ctx, service.ProjectDuplicateRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"ProjectItemAdd": func() error {
+			_, err := e.svc.ProjectItemAdd(ctx, service.ProjectItemAddRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"ProjectItemMove": func() error {
+			_, err := e.svc.ProjectItemMove(ctx, service.ProjectItemMoveRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"ProjectItemRename": func() error {
+			_, err := e.svc.ProjectItemRename(ctx, service.ProjectItemRenameRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"ProjectItemTrash": func() error {
+			_, err := e.svc.ProjectItemTrash(ctx, service.ProjectItemTrashRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"ProjectItemRestore": func() error {
+			_, err := e.svc.ProjectItemRestore(ctx, service.ProjectItemTrashRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"BriefGet": func() error {
+			_, err := e.svc.BriefGet(ctx, service.BriefGetRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"BriefSet": func() error {
+			_, err := e.svc.BriefSet(ctx, service.BriefSetRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"ConnectionList": func() error {
+			_, err := e.svc.ConnectionList(ctx, service.ConnectionListRequest{})
+			return err
+		},
+		"ConnectionGet": func() error {
+			_, err := e.svc.ConnectionGet(ctx, service.ConnectionRef{ID: "con_0000000001"})
+			return err
+		},
+		"ConnectionCreate": func() error {
+			_, err := e.svc.ConnectionCreate(ctx, service.ConnectionCreateRequest{})
+			return err
+		},
+		"ConnectionRemove": func() error {
+			_, err := e.svc.ConnectionRemove(ctx, service.ConnectionRef{ID: "con_0000000001"})
+			return err
+		},
+		"ConnectionTest": func() error {
+			_, err := e.svc.ConnectionTest(ctx, service.ConnectionRef{ID: "con_0000000001"})
 			return err
 		},
 		"MemoryList": func() error {
@@ -902,33 +877,6 @@ func TestCommandHelp(t *testing.T) {
 		if c.Name == "asset.add" {
 			t.Error("the list shows the internal command asset.add")
 		}
-	}
-
-	// The call with no name and no domain also lists the domains (SDD-003 section 4.8); one with a domain does not.
-	if len(list.Domains) != len(command.Domains()) || !strings.Contains(list.Text, "\nimage: ") {
-		t.Errorf("the discovery lists %d domains, want %d, in %q", len(list.Domains), len(command.Domains()), list.Text)
-	}
-
-	imageList, err := e.svc.CommandHelp(e.as(ui), service.CommandHelpRequest{Domain: command.DomainImage})
-	if err != nil || len(imageList.Commands) == 0 || len(imageList.Domains) != 0 {
-		t.Errorf("image list = %+v, %v", imageList, err)
-	}
-
-	for _, d := range []string{"publish", "memory"} {
-		empty, derr := e.svc.CommandHelp(e.as(ui), service.CommandHelpRequest{Domain: d})
-		if derr != nil || len(empty.Commands) != 0 || !strings.Contains(empty.Text, "No edit operations") {
-			t.Errorf("%s list = %+v, %v", d, empty, derr)
-		}
-	}
-
-	if _, err = e.svc.CommandHelp(
-		e.as(ui),
-		service.CommandHelpRequest{Domain: "nope"},
-	); serviceError(
-		t,
-		err,
-	).Path != "domain" {
-		t.Errorf("an unknown domain: %v", err)
 	}
 
 	one, err := e.svc.CommandHelp(e.as(ui), service.CommandHelpRequest{Name: "item.move"})

@@ -38,13 +38,13 @@ A creator connects the AI services they already pay for, once, and every part of
 
 ## Tasks
 
-- [x] 1. Write SDD-016 and the SDD-000 names; add SDD-007 rows (prompt with untrusted text, provider output as instructions, cost run-away). Verify: `task lint:md` exits 0.
-- [x] 2. Propose the first two text providers with their API, pricing source and terms; STOP for approval. Verify: the approval is in the hand-off.
-- [x] 3. Implement `core/provider` with table tests. Verify: `go test ./core/provider/...` passes.
-- [x] 4. Implement the registry, the interfaces and the model catalogue with caching. Verify: `go test ./service/providers/...` passes against recorded responses.
-- [x] 5. Implement the two adapters with contract tests from recorded responses. Verify: `go test ./service/providers/...` passes with no network (`bash scripts/no-egress.sh` still passes).
-- [x] 6. Implement the `text.generate` job with estimate, ledger and ceiling. Verify: `go test ./service/... -run TestTextGenerate` passes.
-- [x] 7. Expose on HTTP, CLI and MCP; add provider cards (connect with a key, test, models, spend) to the Connections page. Verify: `go test ./web/contract/...`, `task test:web` and `web/e2e/specs/providers.spec.ts` pass.
+- [ ] 1. Write SDD-016 and the SDD-000 names; add SDD-007 rows (prompt with untrusted text, provider output as instructions, cost run-away). Verify: `task lint:md` exits 0.
+- [ ] 2. Propose the first two text providers with their API, pricing source and terms; STOP for approval. Verify: the approval is in the hand-off.
+- [ ] 3. Implement `core/provider` with table tests. Verify: `go test ./core/provider/...` passes.
+- [ ] 4. Implement the registry, the interfaces and the model catalogue with caching. Verify: `go test ./service/providers/...` passes against recorded responses.
+- [ ] 5. Implement the two adapters with contract tests from recorded responses. Verify: `go test ./service/providers/...` passes with no network (`bash scripts/no-egress.sh` still passes).
+- [ ] 6. Implement the `text.generate` job with estimate, ledger and ceiling. Verify: `go test ./service/... -run TestTextGenerate` passes.
+- [ ] 7. Expose on HTTP, CLI and MCP; add provider cards (connect with a key, test, models, spend) to the Connections page. Verify: `go test ./web/contract/...`, `task test:web` and `web/e2e/specs/providers.spec.ts` pass.
 - [ ] 8. Manual check with one real key of the author, if the author provides it; otherwise mark as not verified. Verify: the transcript or the "not verified" note is in the hand-off.
 
 ## Test strategy

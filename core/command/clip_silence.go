@@ -11,7 +11,7 @@ import (
 func init() {
 	Register(Define(Spec{
 		Name:    "clip.remove_silences",
-		Summary: "Cuts the silences out of a clip or audio item, one item per stretch of speech.",
+		Summary: "Cuts the silent stretches out of a clip or an audio item, leaving one item per stretch of speech.",
 		Description: "Replaces the clip or audio item by one item per non-silent stretch of its source range. Silences shorter than " +
 			"min_silence are kept; padding of speech is kept on each side of a cut. With ripple track the pieces " +
 			"close up and the later items of the track follow. The silences come from the analysis of the asset " +
@@ -42,7 +42,7 @@ type removeSilencesArgs struct {
 	ThresholdDB *int              `json:"threshold_db,omitempty" desc:"Noise level of silence: -30, -35 (default), -40 or -45."`
 	Ripple      string            `json:"ripple,omitempty"       desc:"track (default) or none."                                                                                                                     enum:"track,none"`
 	NewIDs      []string          `json:"new_ids,omitempty"      desc:"Ids for the second, third, ... pieces, in order."                                      pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
-	Resolved    *ResolvedSilences `json:"resolved,omitempty"     desc:"Filled by the service from the silence analysis of the asset; never sent by a caller."                                                                          internal:"true"`
+	Resolved    *ResolvedSilences `json:"resolved,omitempty"     desc:"Filled by the service from the silence analysis of the asset; never sent by a caller."`
 }
 
 // validateNewIDs checks the form and the uniqueness of a new_ids argument (R6, row 14

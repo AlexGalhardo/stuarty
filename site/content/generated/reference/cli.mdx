@@ -259,158 +259,18 @@ Example:
 claude mcp add stuarty -- stuarty mcp
 ```
 
-## `revert`
-
-Go back to the document of an earlier revision, as a new step that undo takes back
-
-```text
-stuarty revert --project <id> (--revision n | --checkpoint name) [--base n] [--dry-run]
-```
-
-| Flag | Type | Default | Meaning |
-| --- | --- | --- | --- |
-| `--revision` | integer |  | the revision to go back to |
-| `--checkpoint` | string |  | the name of a checkpoint to go back to |
-| `--base` | integer |  | the revision you read (default the current one); an older one conflicts with other actors' changes |
-
-Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--dry-run`.
-
-Example:
-
-```bash
-stuarty revert --project prj_7k2m9x4q1b --checkpoint "before the intro" --dry-run
-```
-
-## `diff`
-
-List what changed between two revisions, most significant first
-
-```text
-stuarty diff --project <id> (--from n | --from-checkpoint name) [--until n]
-```
-
-| Flag | Type | Default | Meaning |
-| --- | --- | --- | --- |
-| `--from` | integer |  | the revision the diff starts from |
-| `--from-checkpoint` | string |  | the name of a checkpoint the diff starts from |
-| `--until` | integer |  | the revision the diff ends at (default the current one) |
-
-Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`.
-
-Example:
-
-```bash
-stuarty diff --project prj_7k2m9x4q1b --from 12
-```
-
-## `checkpoint:create`
-
-Name a revision so that it can be gone back to
-
-```text
-stuarty checkpoint:create --project <id> --name <name> [--note t] [--revision n]
-```
-
-| Flag | Type | Default | Meaning |
-| --- | --- | --- | --- |
-| `--name` | string |  | 1 to 60 characters, no slash |
-| `--note` | string |  | up to 300 characters |
-| `--revision` | integer |  | the revision to name (default the current one) |
-
-Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`.
-
-Example:
-
-```bash
-stuarty checkpoint:create --project prj_7k2m9x4q1b --name "before the intro"
-```
-
-## `checkpoint:list`
-
-List the checkpoints of a project, newest revision first
-
-```text
-stuarty checkpoint:list --project <id>
-```
-
-Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`.
-
-Example:
-
-```bash
-stuarty checkpoint:list --project prj_7k2m9x4q1b --json
-```
-
-## `checkpoint:rename`
-
-Rename a checkpoint, and change its note
-
-```text
-stuarty checkpoint:rename --project <id> --name <name> --new-name <name> [--note t]
-```
-
-| Flag | Type | Default | Meaning |
-| --- | --- | --- | --- |
-| `--name` | string |  | the checkpoint to rename |
-| `--new-name` | string |  | the new name |
-| `--note` | string |  | replaces the note when given |
-
-Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`.
-
-Example:
-
-```bash
-stuarty checkpoint:rename --project prj_7k2m9x4q1b --name draft --new-name "first cut"
-```
-
-## `checkpoint:remove`
-
-Remove a checkpoint; no revision is removed
-
-```text
-stuarty checkpoint:remove --project <id> --name <name>
-```
-
-| Flag | Type | Default | Meaning |
-| --- | --- | --- | --- |
-| `--name` | string |  | the checkpoint to remove |
-
-Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`.
-
-Example:
-
-```bash
-stuarty checkpoint:remove --project prj_7k2m9x4q1b --name draft
-```
-
 ## `media:import`
 
 Import media files into a project
 
 ```text
 stuarty media:import <path>... --project <id> [--asset-id ast_...] [--wait] [--timeout d]
-stuarty media:import --hash sha256:... --project <id>   (a file the library already holds: no copy)
-origin and reuse: [--origin-kind k] [--origin-source s] [--provider p] [--model m] [--prompt t] [--rights-note t] [--engine e] [--engine-version v] [--render-key k] [--tag t] [--reusable] [--description t]
 formats: MP4, MOV, MKV, WebM, AVI, MP3, WAV, FLAC, OGG, PNG, JPEG, WebP, GIF and .cube; not SVG
 ```
 
 | Flag | Type | Default | Meaning |
 | --- | --- | --- | --- |
 | `--asset-id` | string, repeatable |  | id to give the asset, once per path, in order |
-| `--hash` | string, repeatable |  | the hash of a file of the library to use in the project, in place of a path |
-| `--origin-kind` | string |  | imported (default), generated, fetched_by_agent or rendered_externally |
-| `--origin-source` | string |  | a path, a URL or a tool name, as plain text (required for fetched_by_agent and rendered_externally) |
-| `--provider` | string |  | the provider that generated the files (required for generated) |
-| `--model` | string |  | the model that generated the files (required for generated) |
-| `--prompt` | string |  | the prompt that generated the files |
-| `--cost-micros` | integer |  | what the files cost, in millionths of a US dollar |
-| `--engine` | string |  | the motion engine that rendered the files (rendered_externally) |
-| `--engine-version` | string |  | the version of that engine (rendered_externally) |
-| `--render-key` | string |  | a stable name for the animation, the same each time it is rendered again (rendered_externally) |
-| `--rights-note` | string |  | your own record of the licence or the permission (required for fetched_by_agent) |
-| `--tag` | string, repeatable |  | a tag for the files; repeat it or give a comma list |
-| `--reusable` | boolean |  | mark the files to be offered again |
-| `--description` | string |  | what the files are, in your words |
 
 Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--wait`, `--timeout`.
 
@@ -498,21 +358,20 @@ stuarty media:restore ast_3c5v8n2w6d --project prj_7k2m9x4q1b
 
 ## `view`
 
-Render a frame or a contact sheet of a project, or measure its sound
+Render a frame or a contact sheet of a project
 
 ```text
-stuarty view --project <id> [--mode frame|sheet|audio] [--at t] [--times t1,t2,...]
-    [--from t --until t --count n] [--cols n] [--max-tokens n] [--width px] [--item id]
+stuarty view --project <id> [--mode frame|sheet] [--at t] [--times t1,t2,...]
+    [--from t --until t --count n] [--cols n] [--max-tokens n] [--width px]
 ```
 
 | Flag | Type | Default | Meaning |
 | --- | --- | --- | --- |
-| `--mode` | string | `frame` | frame (one image at --at), sheet (a grid) or audio (the loudness, true peak and noise floor with and without the audio processors) |
-| `--item` | string |  | audio: measure this clip or audio item alone |
+| `--mode` | string | `frame` | frame (one image at --at) or sheet (a grid) |
 | `--at` | string |  | frame: the time to show |
 | `--times` | string |  | sheet: 2 to 16 times, comma separated |
-| `--from` | string |  | sheet: first time (default 0s); audio: start of the range |
-| `--until` | string |  | sheet: last time, included (default the last frame); audio: end of the range, excluded |
+| `--from` | string |  | sheet: first time (default 0s) |
+| `--until` | string |  | sheet: last time, included (default the last frame) |
 | `--count` | integer | `9` | sheet: frames evenly spaced from --from to --until |
 | `--cols` | integer |  | sheet: columns (default ceil(sqrt(count))) |
 | `--max-tokens` | integer |  | image token budget (default 800, a sheet 1,500; at most 1,568) |
@@ -531,7 +390,7 @@ stuarty view --project prj_7k2m9x4q1b --at 1s --json
 Export a project to a file
 
 ```text
-stuarty export --project <id> [--start t] [--end t] [--format f] [--at t] [--preset p] [--codec c] [--wait] [--out f] [--force]
+stuarty export --project <id> [--start t] [--end t] [--format f] [--at t] [--wait] [--timeout d] [--out f] [--force]
 ```
 
 | Flag | Type | Default | Meaning |
@@ -539,8 +398,6 @@ stuarty export --project <id> [--start t] [--end t] [--format f] [--at t] [--pre
 | `--start` | string |  | first time to export (default: the start) |
 | `--end` | string |  | end of the export (default: the end of the timeline) |
 | `--at` | string |  | the time of the frame, only with --format png (default: the start) |
-| `--preset` | string |  | a platform preset, as export:presets lists them (mp4 only) |
-| `--codec` | string |  | h264 (default), hevc or av1 (mp4 only) |
 | `--format` | string |  | mp4 (default), gif, wav, aac or png |
 | `--out` | string |  | copy the file to this path when the job succeeds (implies --wait; the workspace keeps its own copy) |
 | `--force` | boolean | `false` | replace the --out file when it exists |
@@ -551,75 +408,6 @@ Example:
 
 ```bash
 stuarty export --project prj_7k2m9x4q1b --json
-```
-
-## `export:presets`
-
-List the export presets of the platforms
-
-```text
-stuarty export:presets [--codecs]
-```
-
-| Flag | Type | Default | Meaning |
-| --- | --- | --- | --- |
-| `--codecs` | boolean | `false` | also tell which codecs this machine can write (runs the test encodes the first time) |
-
-Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
-
-Example:
-
-```bash
-stuarty export:presets --codecs --json
-```
-
-## `export:check`
-
-Check that a project fits an export preset, before any encoding
-
-```text
-stuarty export:check --project <id> --preset <id> [--start t] [--end t] [--codec c]
-```
-
-| Flag | Type | Default | Meaning |
-| --- | --- | --- | --- |
-| `--preset` | string |  | the preset id, as export:presets lists them |
-| `--start` | string |  | first time to export (default: the start) |
-| `--end` | string |  | end of the export (default: the end of the timeline) |
-| `--codec` | string |  | h264, hevc or av1, for the estimate of the size (default: the preset's first) |
-
-Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`.
-
-Example:
-
-```bash
-stuarty export:check --project prj_7k2m9x4q1b --preset tiktok --json
-```
-
-## `export:batch`
-
-Export a project several times, one after the other, as one job
-
-```text
-stuarty export:batch --project <id> --preset <id>... [--codec c] [--start t] [--end t] [--wait]
-stuarty export:batch --project <id> --items '<json array of {preset, format, codec, start, end}>' [--wait]
-```
-
-| Flag | Type | Default | Meaning |
-| --- | --- | --- | --- |
-| `--preset` | string, repeatable |  | a preset id; give the flag once for each export |
-| `--items` | string |  | the exports as a JSON array of \{preset, format, codec, start, end\}, instead of --preset |
-| `--format` | string |  | the format of every --preset export that is not mp4 (default mp4) |
-| `--codec` | string |  | h264, hevc or av1 for every --preset export (default: the choice of the preset) |
-| `--start` | string |  | first time to export, for every --preset export (default: the start) |
-| `--end` | string |  | end of the export, for every --preset export (default: the end of the timeline) |
-
-Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--wait`, `--timeout`.
-
-Example:
-
-```bash
-stuarty export:batch --project prj_7k2m9x4q1b --preset tiktok --preset youtube-shorts --wait
 ```
 
 ## `job:show`
@@ -704,16 +492,15 @@ stuarty events --project prj_7k2m9x4q1b --since 4 --count 3
 
 ## `command:help`
 
-List the editing commands and the domains, or describe one command
+List the editing commands, or describe one
 
 ```text
 stuarty command:help [<name>]
-stuarty command:help --domain <domain>
 ```
 
 | Flag | Type | Default | Meaning |
 | --- | --- | --- | --- |
-| `--domain` | string |  | a domain of the product: its commands (without it, the video commands and the list of domains) |
+| `--domain` | string | `video` | video, or image for the commands of image documents |
 
 Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
 
@@ -875,12 +662,11 @@ Print or write the material for agents: the skill, the AGENTS.md snippet, the MC
 ```text
 stuarty agent:docs --print skill|agents|instructions
 stuarty agent:docs --write <dir>
-stuarty agent:docs --print guide:<domain>
 ```
 
 | Flag | Type | Default | Meaning |
 | --- | --- | --- | --- |
-| `--print` | string |  | print one of skill, agents or instructions, or guide:&lt;domain&gt; for the page of a domain |
+| `--print` | string |  | print one of skill, agents or instructions |
 | `--write` | string |  | write the three files into this directory |
 
 Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
@@ -1104,6 +890,415 @@ Example:
 
 ```bash
 stuarty otio:import cut.otio --project prj_7k2m9x4q1b --dry-run
+```
+
+## `project:describe`
+
+Describe a project as text: brief, items and state
+
+```text
+stuarty project:describe <id>
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--max-tokens` | integer |  | the budget of the text in tokens, 200 to 6000 (default 1500) |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`.
+
+Example:
+
+```bash
+stuarty project:describe prj_7k2m9x4q1b
+```
+
+## `project:duplicate`
+
+Copy a project: its brief, texts and timelines
+
+```text
+stuarty project:duplicate <id> [--name n]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--name` | string |  | the name of the copy (default: the name and the word copy) |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--dry-run`.
+
+Example:
+
+```bash
+stuarty project:duplicate prj_7k2m9x4q1b --name "Teaser, second cut"
+```
+
+## `item:add`
+
+Add a text, a timeline or an output to a project
+
+```text
+stuarty item:add --project <id> --kind text|timeline|output --title <t>
+stuarty item:add --project <id> --kind text --title <t> --text <file|->
+stuarty item:add --project <id> --kind output --title <t> --job <export job id>
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--kind` | string |  | text, timeline or output (required) |
+| `--title` | string |  | 1 to 120 characters (required) |
+| `--position` | integer |  | where in the order of the items, from 0 (default: the end) |
+| `--text` | string |  | a text item: a file with its Markdown, or - for standard input |
+| `--preset` | string |  | a timeline: 9:16 (default), 1:1, 16:9 or 4:5 |
+| `--fps` | string |  | a timeline: 30 (default), or n/1001 |
+| `--job` | string |  | an output: a succeeded export job of this project |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--dry-run`.
+
+Example:
+
+```bash
+stuarty item:add --project prj_7k2m9x4q1b --kind timeline --title "Wide cut" --preset 16:9
+```
+
+## `item:move`
+
+Move an item to a position in the order of the project
+
+```text
+stuarty item:move <item> --project <id> --position n
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--position` | integer |  | where in the order of the items, from 0 (required) |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--dry-run`.
+
+Example:
+
+```bash
+stuarty item:move pit_3c5v8n2w6d --project prj_7k2m9x4q1b --position n
+```
+
+## `item:rename`
+
+Change the title of an item
+
+```text
+stuarty item:rename <item> --project <id> --title "..."
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--title` | string |  | the new title, 1 to 120 characters (required) |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--dry-run`.
+
+Example:
+
+```bash
+stuarty item:rename pit_3c5v8n2w6d --project prj_7k2m9x4q1b --title "..."
+```
+
+## `item:trash`
+
+Move an item to the trash of its project
+
+```text
+stuarty item:trash <item> --project <id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--dry-run`.
+
+Example:
+
+```bash
+stuarty item:trash pit_3c5v8n2w6d --project prj_7k2m9x4q1b
+```
+
+## `item:restore`
+
+Restore an item from the trash of its project
+
+```text
+stuarty item:restore <item> --project <id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--dry-run`.
+
+Example:
+
+```bash
+stuarty item:restore pit_3c5v8n2w6d --project prj_7k2m9x4q1b
+```
+
+## `brief:show`
+
+Show the brief of a project
+
+```text
+stuarty brief:show --project <id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`.
+
+Example:
+
+```bash
+stuarty brief:show --project prj_7k2m9x4q1b
+```
+
+## `brief:set`
+
+Write the brief of a project from a Markdown file
+
+```text
+stuarty brief:set --project <id> --text <file|->
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--text` | string |  | the Markdown: a file, or - for standard input; an empty text clears the brief (required) |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--dry-run`.
+
+Example:
+
+```bash
+stuarty brief:set --project prj_7k2m9x4q1b --text brief.md
+```
+
+## `connection:list`
+
+List the destinations Stuarty may reach
+
+```text
+stuarty connection:list
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty connection:list --json
+```
+
+## `connection:show`
+
+Show one connection: destinations, what it accepts and its last use
+
+```text
+stuarty connection:show <id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty connection:show con_0123456789
+```
+
+## `connection:add`
+
+Connect a destination; the secret is read from standard input or a file, never from an argument
+
+```text
+stuarty connection:add --kind <k> --label <t> --endpoint <url> --accepts <list>
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--kind` | string |  | the kind of connection (required) |
+| `--label` | string |  | a name for the person, 1 to 60 characters (required) |
+| `--endpoint` | string |  | the URL the connector calls first, https (required) |
+| `--accepts` | string |  | what it may receive, a comma list of text, image, video, audio, metadata, document (required) |
+| `--hosts` | string |  | further hosts it may reach, a comma list; the endpoint host is always allowed |
+| `--secret-file` | string |  | a file that holds the secret; without it the secret is read from standard input |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+echo $TOKEN | stuarty connection:add --kind test --label Blog --endpoint https://video.example.com --accepts text
+```
+
+## `connection:remove`
+
+Remove a connection and its credential
+
+```text
+stuarty connection:remove <id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty connection:remove con_0123456789
+```
+
+## `connection:test`
+
+Make one request through a connection and show how the destination answered
+
+```text
+stuarty connection:test <id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty connection:test con_0123456789
+```
+
+## `image:create`
+
+Create an image document, blank or from a template
+
+```text
+stuarty image:create --preset p
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--preset` | string |  | video_thumbnail (1280x720), square_post (1080x1080) or vertical_cover (1080x1920) |
+| `--width` | integer |  | pixels, 1 to 4096, with --height |
+| `--height` | integer |  | pixels, 1 to 4096, with --width |
+| `--name` | string |  | name of the image |
+| `--background` | string |  | a colour or transparent (default #FFFFFF) |
+| `--template` | boolean | `false` | make a template whose text and image layers may be slots |
+| `--from-template` | string |  | make the image from this template |
+| `--values` | string |  | a JSON object of slot name to \{"text": "..."\} or \{"asset": "sha256:..."\}: a file, or - for standard input |
+| `--id` | string |  | identifier for the image (omit it in network mode: the server chooses) |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty image:create --preset video_thumbnail --name "Episode 12" --background "#101820"
+```
+
+## `image:list`
+
+List the image documents and templates
+
+```text
+stuarty image:list
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--templates` | string |  | only for the templates, none for the others |
+| `--cursor` | string |  | continue a list from this cursor |
+| `--limit` | integer | `20` | items per page |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty image:list --templates only --json
+```
+
+## `image:show`
+
+Describe an image document: its layers, its findings and its revision
+
+```text
+stuarty image:show <id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty image:show img_7k2m9x4q1b
+```
+
+## `image:edit`
+
+Apply a batch of image operations (stuarty command:help --domain image lists them)
+
+```text
+stuarty image:edit <id> <op> k=v...
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--ops` | string |  | a JSON file with the batch, or - for standard input: \{"operations":[\{"op":"item.move","args":\{"item_id":"itm_m1n2p3q4r5","start":"2s"\}\}]\}, or only the array of \{op, args\}; base_revision, idempotency_key and dry_run may sit beside operations |
+| `--base` | integer |  | the revision the batch was planned against (default: the current one) |
+| `--key` | string |  | idempotency key |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--dry-run`.
+
+Example:
+
+```bash
+stuarty image:edit img_7k2m9x4q1b layer.add_text text="HOW IT WORKS" slot=title
+```
+
+## `image:undo`
+
+Undo the last step of the caller on an image
+
+```text
+stuarty image:undo <id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--dry-run`.
+
+Example:
+
+```bash
+stuarty image:undo img_7k2m9x4q1b
+```
+
+## `image:redo`
+
+Redo the last undone step of the caller on an image
+
+```text
+stuarty image:redo <id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--dry-run`.
+
+Example:
+
+```bash
+stuarty image:redo img_7k2m9x4q1b
+```
+
+## `image:export`
+
+Export an image document to a PNG, JPEG or WebP file
+
+```text
+stuarty image:export <id> [--format f]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--format` | string | `png` | png, jpeg or webp |
+| `--quality` | integer |  | 1 to 100, for jpeg and lossy webp |
+| `--preset` | string |  | resample to video_thumbnail, square_post or vertical_cover |
+| `--width` | integer |  | resample to this width (0 keeps the aspect) |
+| `--height` | integer |  | resample to this height (0 keeps the aspect) |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty image:export img_7k2m9x4q1b --format jpeg --quality 85
 ```
 
 ## `memory:list`
@@ -1478,32 +1673,4 @@ Example:
 
 ```bash
 stuarty user:passwd ana@example.com
-```
-
-## `workspace:backup`
-
-Write a consistent backup of the workspace to a folder (never with the master key); a server may keep running
-
-```text
-stuarty workspace:backup <folder>
-```
-
-Example:
-
-```bash
-stuarty workspace:backup ~/stuarty-backup-2026-11-19
-```
-
-## `workspace:restore`
-
-Restore a backup folder into an empty workspace, checked against its manifest and the master key at hand
-
-```text
-stuarty workspace:restore <folder> [--replace] [--without-vault]
-```
-
-Example:
-
-```bash
-stuarty workspace:restore ~/stuarty-backup-2026-11-19
 ```

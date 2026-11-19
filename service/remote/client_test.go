@@ -92,10 +92,6 @@ func TestRequestsMatchTheRoutes(t *testing.T) {
 			_, err := c.CommandHelp(ctx, service.CommandHelpRequest{})
 			return err
 		}, "GET", "/api/v1/commands", "", "", `{"commands":[]}`, true},
-		{"help domain", func(c *Client) error {
-			_, err := c.CommandHelp(ctx, service.CommandHelpRequest{Domain: "image"})
-			return err
-		}, "GET", "/api/v1/commands", "domain=image", "", `{"commands":[]}`, true},
 		{"help one", func(c *Client) error {
 			_, err := c.CommandHelp(ctx, service.CommandHelpRequest{Name: "item.move"})
 			return err

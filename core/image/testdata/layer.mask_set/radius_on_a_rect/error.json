@@ -1,8 +1,0 @@
-{
-  "code": "E_VALIDATION",
-  "hint": "Use kind rounded_rect with radius.",
-  "message": "args.radius is only valid for kind \"rounded_rect\", got \"rect\".",
-  "op_index": 0,
-  "path": "args.radius",
-  "retryable": false
-}

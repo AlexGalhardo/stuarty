@@ -16,7 +16,7 @@ import (
 // TestDashboardSectionsMatchTheSidebar compares the two lists.
 var dashboardSections = []string{
 	"edit-video", "edit-image", "write", "visual-assets", "video-assets",
-	"publish", "connections",
+	"publish",
 }
 
 // dashboardPages installs the home and one empty-state route for each section

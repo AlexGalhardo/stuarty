@@ -174,32 +174,6 @@ describe("ALPHA tools and keys", () => {
 		]);
 	});
 
-	test("revert, the diff and checkpoints use the documented routes", async () => {
-		const { transport, requests } = fake(ok({}));
-		const client = createClient(transport);
-		await client.getCheckpoints("prj_a");
-		await client.createCheckpoint("prj_a", { name: "two texts" });
-		await client.removeCheckpoint("prj_a", "two/texts");
-		await client.getHistoryDiff("prj_a", { from: 2, until: 4 });
-		await client.getHistoryDiff("prj_a", { from: 2 });
-		await client.revertTo("prj_a", { checkpoint: "two texts", dry_run: true });
-		expect(
-			requests.map((r) => [r.method, r.path, r.timeoutMs, r.body]),
-		).toEqual([
-			["GET", "/projects/prj_a/checkpoints", 10_000, undefined],
-			["POST", "/projects/prj_a/checkpoints", 30_000, { name: "two texts" }],
-			["DELETE", "/projects/prj_a/checkpoints/two%2Ftexts", 30_000, undefined],
-			["GET", "/projects/prj_a/diff?from=2&until=4", 10_000, undefined],
-			["GET", "/projects/prj_a/diff?from=2", 10_000, undefined],
-			[
-				"POST",
-				"/projects/prj_a/revert",
-				30_000,
-				{ checkpoint: "two texts", dry_run: true },
-			],
-		]);
-	});
-
 	test("a refused key call maps to ApiError", async () => {
 		const { transport } = fake({
 			status: 404,

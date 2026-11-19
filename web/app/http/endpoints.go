@@ -144,15 +144,6 @@ var Endpoints = []Endpoint{
 		Service: "BriefSet", Status: 200, Summary: "Write the brief of a project",
 	},
 	{
-		ID: "briefing.questions", Method: http.MethodGet, Path: "/briefing/questions", Scope: service.ScopeRead,
-		Service: "BriefingQuestions", Status: 200, Summary: "The questions of the guided briefing",
-	},
-	{
-		ID: "projects.briefing.answer", Method: http.MethodPut, Path: "/projects/{id}/briefing",
-		Scope: service.ScopeEdit, Service: "BriefingAnswer", Status: 200,
-		Summary: "Answer the briefing: the answers become the brief of the project",
-	},
-	{
 		ID: "projects.trash", Method: http.MethodPost, Path: "/projects/{id}/trash", Scope: service.ScopeEdit,
 		Service: "ProjectTrash", Status: 200, Summary: "Move a project to the trash",
 	},
@@ -188,35 +179,6 @@ var Endpoints = []Endpoint{
 	{
 		ID: "projects.redo", Method: http.MethodPost, Path: "/projects/{id}/redo", Scope: service.ScopeEdit,
 		Service: "Redo", Status: 200, Summary: "Redo the caller's latest undone step",
-	},
-	{
-		ID: "projects.revert", Method: http.MethodPost, Path: "/projects/{id}/revert", Scope: service.ScopeEdit,
-		Service: "HistoryRevert", Status: 200, Summary: "Go back to an earlier revision as a new step",
-	},
-	{
-		ID: "projects.diff", Method: http.MethodGet, Path: "/projects/{id}/diff", Scope: service.ScopeRead,
-		Service: "HistoryDiff", Status: 200, Summary: "List what changed between two revisions",
-	},
-	{
-		ID: "projects.checkpoints.list", Method: http.MethodGet, Path: "/projects/{id}/checkpoints",
-		Scope: service.ScopeRead, Service: "CheckpointList", Status: 200, Summary: "List the checkpoints of a project",
-	},
-	{
-		ID: "projects.checkpoints.create", Method: http.MethodPost, Path: "/projects/{id}/checkpoints",
-		Scope: service.ScopeEdit, Service: "CheckpointCreate", Status: 201, Summary: "Name a revision",
-	},
-	{
-		ID: "projects.checkpoints.rename", Method: http.MethodPatch, Path: "/projects/{id}/checkpoints/{name}",
-		Scope: service.ScopeEdit, Service: "CheckpointRename", Status: 200, Summary: "Rename a checkpoint",
-	},
-	{
-		ID:      "projects.checkpoints.remove",
-		Method:  http.MethodDelete,
-		Path:    "/projects/{id}/checkpoints/{name}",
-		Scope:   service.ScopeEdit,
-		Service: "CheckpointRemove",
-		Status:  200,
-		Summary: "Remove a checkpoint, never a revision",
 	},
 	{
 		ID: "projects.lint", Method: http.MethodGet, Path: "/projects/{id}/lint", Scope: service.ScopeRead,
@@ -258,27 +220,6 @@ var Endpoints = []Endpoint{
 	{
 		ID: "jobs.cancel", Method: http.MethodPost, Path: "/jobs/{job_id}/cancel", Scope: service.ScopeRender,
 		AlsoScope: service.ScopeMedia, Service: "JobCancel", Status: 200, Summary: "Cancel a job",
-	},
-	{
-		ID: "export.presets", Method: http.MethodGet, Path: "/export-presets", Scope: service.ScopeRead,
-		Service: "ExportPresetList", Status: 200, Summary: "List the export presets of the platforms",
-	},
-	{
-		ID: "export.check", Method: http.MethodGet, Path: "/projects/{id}/export-check", Scope: service.ScopeRead,
-		Service: "ExportCheck", Status: 200, Summary: "Check a project against an export preset",
-	},
-	{
-		ID: "audio.measure", Method: http.MethodGet, Path: "/projects/{id}/audio-measure", Scope: service.ScopeRead,
-		Service: "AudioMeasure", Status: 200, Summary: "Measure the sound with and without the audio processors",
-	},
-	{
-		ID:      "export.batch",
-		Method:  http.MethodPost,
-		Path:    "/projects/{id}/export-batches",
-		Scope:   service.ScopeRender,
-		Service: "ExportBatch",
-		Status:  202,
-		Summary: "Export a project several times, one after the other",
 	},
 	{
 		ID: "templates.list", Method: http.MethodGet, Path: "/templates", Scope: service.ScopeRead,
@@ -332,33 +273,6 @@ var Endpoints = []Endpoint{
 		Service: "ViewSheet", Status: 200, Summary: "Render a contact sheet",
 	},
 	{
-		ID:      "projects.motion.brief",
-		Method:  http.MethodGet,
-		Path:    "/projects/{id}/motion/brief",
-		Scope:   service.ScopeRead,
-		Service: "MotionBrief",
-		Status:  200,
-		Summary: "What a render by an external motion engine must fit: size, rate, length, safe area, brand kit, captions and reference frames",
-	},
-	{
-		ID:      "projects.motion.check",
-		Method:  http.MethodGet,
-		Path:    "/projects/{id}/motion/check",
-		Scope:   service.ScopeRead,
-		Service: "MotionCheck",
-		Status:  200,
-		Summary: "Check a rendered asset against the brief: each mismatch of size, rate, length or alpha with the value expected",
-	},
-	{
-		ID:      "projects.motion.replace",
-		Method:  http.MethodPost,
-		Path:    "/projects/{id}/motion/replace",
-		Scope:   service.ScopeEdit,
-		Service: "MotionReplace",
-		Status:  200,
-		Summary: "Replace, in one undoable batch, every clip that reads an earlier render of an animation with a new render of it",
-	},
-	{
 		ID:      "projects.snap_points",
 		Method:  http.MethodGet,
 		Path:    "/projects/{id}/snap-points",
@@ -372,39 +286,8 @@ var Endpoints = []Endpoint{
 		Service: "Doctor", Status: 200, Summary: "Read the diagnostic report",
 	},
 	{
-		ID:      "assets.list",
-		Method:  http.MethodGet,
-		Path:    "/assets",
-		Scope:   service.ScopeRead,
-		Service: "AssetList",
-		Status:  200,
-		Summary: "List the files of the library by content hash, with origin, tags and reuse",
-	},
-	{
-		ID:      "assets.get",
-		Method:  http.MethodGet,
-		Path:    "/assets/{hash}",
-		Scope:   service.ScopeRead,
-		Service: "AssetGet",
-		Status:  200,
-		Summary: "Read one file of the library with its origin and the projects that use it",
-	},
-	{
-		ID: "assets.uses", Method: http.MethodGet, Path: "/assets/{hash}/uses", Scope: service.ScopeRead,
-		Service: "AssetUses", Status: 200, Summary: "List the projects that use a file of the library",
-	},
-	{
-		ID:      "assets.set",
-		Method:  http.MethodPut,
-		Path:    "/assets/{hash}",
-		Scope:   service.ScopeMedia,
-		Service: "AssetSetInfo",
-		Status:  200,
-		Summary: "Set the description, the rights note and the reuse mark of a file",
-	},
-	{
-		ID: "assets.tag", Method: http.MethodPost, Path: "/assets/{hash}/tags", Scope: service.ScopeMedia,
-		Service: "AssetTag", Status: 200, Summary: "Add and remove the tags of a file",
+		ID: "assets.list", Method: http.MethodGet, Path: "/assets", Scope: service.ScopeRead,
+		Service: "AssetList", Status: 200, Summary: "List the files of the workspace by content hash",
 	},
 	{
 		ID: "fonts.list", Method: http.MethodGet, Path: "/fonts", Scope: service.ScopeRead,
@@ -421,6 +304,26 @@ var Endpoints = []Endpoint{
 	{
 		ID: "brand.set", Method: http.MethodPut, Path: "/brand-kit", Scope: service.ScopeEdit,
 		Service: "BrandKitSet", Status: 200, Summary: "Replace the brand kit",
+	},
+	{
+		ID: "connections.list", Method: http.MethodGet, Path: "/connections", Scope: service.ScopeRead,
+		Service: "ConnectionList", Status: 200, Summary: "List the destinations the user connected (never a secret)",
+	},
+	{
+		ID: "connections.get", Method: http.MethodGet, Path: "/connections/{id}", Scope: service.ScopeRead,
+		Service: "ConnectionGet", Status: 200, Summary: "Read one connection (never a secret)",
+	},
+	{
+		ID: "connections.create", Method: http.MethodPost, Path: "/connections", Scope: service.ScopeAdmin,
+		Service: "ConnectionCreate", Status: 201, Summary: "Connect a destination; the secret goes into the vault",
+	},
+	{
+		ID: "connections.remove", Method: http.MethodDelete, Path: "/connections/{id}", Scope: service.ScopeAdmin,
+		Service: "ConnectionRemove", Status: 200, Summary: "Remove a connection and its credential",
+	},
+	{
+		ID: "connections.test", Method: http.MethodPost, Path: "/connections/{id}/test", Scope: service.ScopeAdmin,
+		Service: "ConnectionTest", Status: 200, Summary: "Make one request through a connection",
 	},
 	{
 		ID: "library.memory.list", Method: http.MethodGet, Path: "/library/memory", Scope: service.ScopeRead,
@@ -586,11 +489,6 @@ var Endpoints = []Endpoint{
 		ID: "bitmaps.get", Method: http.MethodGet, Path: "/projects/{id}/bitmaps/{key}", Scope: service.ScopeRead,
 		Uncounted: true, Status: 200, Summary: "Download a rasterized text or shape",
 	},
-	{
-		ID: "audio_previews.get", Method: http.MethodGet, Path: "/projects/{id}/audio-previews/{key}",
-		Scope: service.ScopeRead, Uncounted: true, Status: 200,
-		Summary: "Download the processed sound of an item, or start rendering it",
-	},
 
 	{
 		ID: "handshake.get", Method: http.MethodGet, Path: "/handshake", Status: 200,
@@ -599,11 +497,6 @@ var Endpoints = []Endpoint{
 	{
 		ID: "system.launch", Method: http.MethodPost, Path: "/system/launch", Scope: service.ScopeAdmin, Status: 200,
 		Summary: "Issue a one-time browser launch code",
-	},
-	{
-		ID: "system.scheduler", Method: http.MethodPost, Path: "/system/scheduler", Scope: service.ScopeAdmin,
-		Status:  200,
-		Summary: "Read, pause or resume the publication scheduler (pause and resume only for the desktop shell)",
 	},
 
 	{
@@ -667,42 +560,6 @@ var Endpoints = []Endpoint{
 		ID: "auth.logout", Method: http.MethodPost, Path: "/auth/logout", Root: true, Status: 200,
 		Summary: "End the browser session (network mode)",
 	},
-	// The optional Google sign-in of network mode (SDD-007 section 4.7, SDD-014 section 12).
-	{
-		ID: "google.status", Method: http.MethodGet, Path: "/auth/google", Root: true, Status: 200,
-		Summary: "Whether Google sign-in is on, and the Google account the session has linked (network mode)",
-	},
-	{
-		ID: "google.start", Method: http.MethodPost, Path: "/auth/google/start", Root: true, Status: 200,
-		Summary: "Begin a sign-in with Google (network mode)",
-	},
-	{
-		ID: "google.complete", Method: http.MethodPost, Path: "/auth/google/complete", Root: true, Status: 200,
-		Summary: "Finish a sign-in with Google or the linking of a Google account (network mode)",
-	},
-	{
-		ID:      "google.link",
-		Method:  http.MethodPost,
-		Path:    "/auth/google/link",
-		Root:    true,
-		Scope:   service.ScopeRead,
-		Status:  200,
-		Summary: "Begin linking your Google account, with your password (a logged-in session only; network mode)",
-	},
-	{
-		ID: "google.unlink", Method: http.MethodPost, Path: "/auth/google/unlink", Root: true, Scope: service.ScopeRead,
-		Status: 200, Summary: "Unlink your Google account, with your password (a logged-in session only; network mode)",
-	},
-	{
-		ID: "google.settings.get", Method: http.MethodGet, Path: "/auth/google/settings", Root: true,
-		Scope: service.ScopeAdmin, Status: 200,
-		Summary: "Read the Google sign-in settings (an administrator session only; network mode)",
-	},
-	{
-		ID: "google.settings.put", Method: http.MethodPut, Path: "/auth/google/settings", Root: true,
-		Scope: service.ScopeAdmin, Status: 200,
-		Summary: "Turn Google sign-in on or off and set who may use it (an administrator session only; network mode)",
-	},
 	// The image documents of SDD-021.
 	{
 		ID: "images.create", Method: http.MethodPost, Path: "/images", Scope: service.ScopeEdit,
@@ -731,120 +588,6 @@ var Endpoints = []Endpoint{
 	{
 		ID: "images.export", Method: http.MethodPost, Path: "/images/{id}/export", Scope: service.ScopeEdit,
 		Service: "ImageExport", Status: 200, Summary: "Export an image document to a PNG, JPEG or WebP file",
-	},
-	{
-		ID: "images.import", Method: http.MethodPost, Path: "/images/import", Scope: service.ScopeEdit,
-		Service: "ImageImport", Status: 200,
-		Summary: "Import an image file into a new image document, or as a layer of one",
-	},
-	{
-		ID: "images.import_file", Method: http.MethodPost, Path: "/images/import/file", Scope: service.ScopeEdit,
-		Service: "ImageImportFile", Status: 200,
-		Summary: "Import an image file sent as the body of the request into a new image document, or as a layer of one",
-	},
-	// The reads of the image editor screen (SDD-012 section 24.3).
-	{
-		ID: "images.frame", Method: http.MethodGet, Path: "/images/{id}/frame", Scope: service.ScopeRead,
-		Service: "ImageFrame", Uncounted: true, MaxInFlight: 2, Status: 200,
-		Summary: "Render the picture of an image document",
-	},
-	{
-		ID: "images.history", Method: http.MethodGet, Path: "/images/{id}/history", Scope: service.ScopeRead,
-		Service: "ImageHistory", Status: 200, Summary: "List the latest batches of an image document",
-	},
-	{
-		ID: "images.file", Method: http.MethodGet, Path: "/images/{id}/exports/{name}", Scope: service.ScopeRead,
-		Service: "ImageFile", Status: 200, Summary: "Download a file that an image export wrote",
-	},
-	{
-		ID: "images.events", Method: http.MethodGet, Path: "/images/{id}/events", Scope: service.ScopeRead,
-		Uncounted: true, Status: 200, Summary: "Stream the events of an image document",
-	},
-	{
-		ID: "agents.profiles.list", Method: http.MethodGet, Path: "/agents/profiles", Scope: service.ScopeRead,
-		Service: "AgentProfileList", Status: 200, Summary: "List the agents the chat may host and the suggestions",
-	},
-	{
-		ID:      "agents.profiles.set",
-		Method:  http.MethodPut,
-		Path:    "/agents/profiles/{name}",
-		Scope:   service.ScopeAdmin,
-		Service: "AgentProfileSet",
-		Status:  200,
-		Summary: "Write an agent profile, a command that will run on the machine (a person in the browser only; others get 403)",
-	},
-	{
-		ID:      "agents.profiles.remove",
-		Method:  http.MethodDelete,
-		Path:    "/agents/profiles/{name}",
-		Scope:   service.ScopeAdmin,
-		Service: "AgentProfileRemove",
-		Status:  200,
-		Summary: "Remove an agent profile (a person in the browser only; others get 403)",
-	},
-	{
-		ID:      "chat.sessions.start",
-		Method:  http.MethodPost,
-		Path:    "/projects/{id}/chat/sessions",
-		Scope:   service.ScopeEdit,
-		Service: "ChatSessionStart",
-		Status:  201,
-		Summary: "Start the agent of a profile on a project (a person in the browser only; others get 403)",
-	},
-	{
-		ID:      "chat.sessions.list",
-		Method:  http.MethodGet,
-		Path:    "/projects/{id}/chat/sessions",
-		Scope:   service.ScopeRead,
-		Service: "ChatSessionList",
-		Status:  200,
-		Summary: "List the chat sessions of a project",
-	},
-	{
-		ID: "chat.sessions.get", Method: http.MethodGet, Path: "/chat/sessions/{id}", Scope: service.ScopeRead,
-		Service: "ChatSessionGet", Status: 200, Summary: "Read one chat session",
-	},
-	{
-		ID:        "chat.sessions.events",
-		Method:    http.MethodGet,
-		Path:      "/chat/sessions/{id}/events",
-		Scope:     service.ScopeRead,
-		Uncounted: true,
-		Status:    200,
-		Summary:   "Stream what the agent of a session says and does",
-	},
-	{
-		ID: "chat.sessions.transcript", Method: http.MethodGet, Path: "/chat/sessions/{id}/transcript",
-		Scope: service.ScopeRead, Service: "ChatTranscriptGet", Status: 200,
-		Summary: "Read the transcript of a session as events or as Markdown",
-	},
-	{
-		ID:      "chat.sessions.send",
-		Method:  http.MethodPost,
-		Path:    "/chat/sessions/{id}/messages",
-		Scope:   service.ScopeEdit,
-		Service: "ChatSend",
-		Status:  200,
-		Summary: "Send a message to the agent (a person in the browser only; others get 403)",
-	},
-	{
-		ID:      "chat.sessions.cancel",
-		Method:  http.MethodPost,
-		Path:    "/chat/sessions/{id}/cancel",
-		Scope:   service.ScopeEdit,
-		Service: "ChatCancel",
-		Status:  200,
-		Summary: "Cancel the turn in progress, or end the session (a person in the browser only; others get 403)",
-	},
-	{
-		ID: "chat.sessions.answer", Method: http.MethodPost, Path: "/chat/sessions/{id}/permissions/{request_id}",
-		Scope: service.ScopeEdit, Service: "ChatAnswerPermission", Status: 200,
-		Summary: "Answer a permission request of the agent (a person in the browser only; others get 403)",
-	},
-	{
-		ID: "chat.sessions.delete", Method: http.MethodDelete, Path: "/chat/sessions/{id}", Scope: service.ScopeEdit,
-		Service: "ChatSessionDelete", Status: 200,
-		Summary: "Delete a session and its transcript (a person in the browser only; others get 403)",
 	},
 }
 

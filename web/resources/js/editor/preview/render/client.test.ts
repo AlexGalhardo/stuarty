@@ -5,12 +5,7 @@ import {
 	type RenderFailure,
 	type RenderWorkerLike,
 } from "./client";
-import type {
-	FromRenderWorker,
-	RenderInput,
-	RenderSurface,
-	ToRenderWorker,
-} from "./protocol";
+import type { FromRenderWorker, RenderInput, ToRenderWorker } from "./protocol";
 
 type Bitmap = { name: string; closed: boolean };
 type Src = { close(): void };
@@ -84,19 +79,6 @@ describe("RenderClient", () => {
 		worker.say(frame(3));
 		expect(frames).toEqual([1, 3]);
 		expect(worker.renders()).toEqual([1, 3]);
-	});
-
-	it("sends the surfaces of a render with it, and replaces them with the render waiting", () => {
-		const { worker, client } = setup();
-		const surface = (id: string): RenderSurface => ({ id, input: input(0) });
-		client.render(input(1), [surface("~a")]);
-		client.render(input(2), [surface("~b")]);
-		client.render(input(3), [surface("~c")]);
-		worker.say(frame(1));
-		const surfaces = worker.sent.flatMap((m) =>
-			m.type === "render" ? [m.surfaces] : [],
-		);
-		expect(surfaces).toEqual([[surface("~a")], [surface("~c")]]);
 	});
 
 	it("closes a frame that is not the one in flight", () => {

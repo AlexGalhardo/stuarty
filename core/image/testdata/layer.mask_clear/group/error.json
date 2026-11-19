@@ -1,8 +1,0 @@
-{
-  "code": "E_TYPE_MISMATCH",
-  "hint": "Apply it to each child, or to a layer that is not a group.",
-  "message": "Layer lyr_eeeeeeeeee is a group; layer.mask_clear changes the layers inside it.",
-  "op_index": 0,
-  "path": "args.layer_id",
-  "retryable": false
-}

@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	exportcore "github.com/AlexGalhardo/stuarty/core/export"
 	"github.com/AlexGalhardo/stuarty/core/timeline"
 	"github.com/AlexGalhardo/stuarty/engine/ffmpeg/ffargs"
 )
@@ -44,11 +43,10 @@ type Verified struct {
 	Width, Height int
 }
 
-// verify applies section 8 step 7 to the partial file: one video stream of the codec that was written and one
-// AAC stream, the project's size, yuv420p, both durations within one frame of N / fps, one packet per frame,
-// moov before mdat, and boxes that fill the file; with a preset, also the limits of the preset on the real file
-// (SDD-004 section 8.2). Any failure is E_VERIFY_FAILED with the list of failed checks.
-func (s *state) verify(ctx context.Context, partial string, frames int, codec exportcore.Codec) (Verified, error) {
+// verify applies section 8 step 7 to the partial file: one H.264 and one AAC stream, the project's
+// size, yuv420p, both durations within one frame of N / fps, one packet per frame, moov before mdat,
+// and boxes that fill the file. Any failure is E_VERIFY_FAILED with the list of failed checks.
+func (s *state) verify(ctx context.Context, partial string, frames int) (Verified, error) {
 	st := s.job.Doc.Settings
 	fps := st.FPS
 	want := float64(frames) * float64(fps.Den) / float64(fps.Num)
@@ -89,9 +87,8 @@ func (s *state) verify(ctx context.Context, partial string, frames int, codec ex
 			audio = append(audio, x)
 		}
 	}
-	name := string(codec.Normal())
-	if len(video) != 1 || video[0].CodecName != name {
-		fail("video_stream", "one "+name+" stream", describe(video))
+	if len(video) != 1 || video[0].CodecName != "h264" {
+		fail("video_stream", "one h264 stream", describe(video))
 	}
 	if len(audio) != 1 || audio[0].CodecName != "aac" {
 		fail("audio_stream", "one aac stream", describe(audio))
@@ -115,7 +112,7 @@ func (s *state) verify(ctx context.Context, partial string, frames int, codec ex
 		}
 		checkDuration(&failed, "video_duration", v.Duration, want, frameSec)
 		got := strings.TrimSpace(string(pkts))
-		if exp := name + "," + strconv.Itoa(frames); got != exp {
+		if exp := "h264," + strconv.Itoa(frames); got != exp {
 			fail("video_packets", exp, got)
 		}
 	}
@@ -133,10 +130,6 @@ func (s *state) verify(ctx context.Context, partial string, frames int, codec ex
 		fail("faststart", "moov before mdat", fmt.Sprintf("moov at %d, mdat at %d", b.moov, b.mdat))
 	}
 
-	for _, f := range s.presetFindings(partial, want, codec) {
-		fail(f.CheckName(), f.Limit, f.Got)
-	}
-
 	if len(failed) > 0 {
 		return Verified{}, verifyError(failed)
 	}
@@ -148,27 +141,6 @@ func (s *state) verify(ctx context.Context, partial string, frames int, codec ex
 		out.Size = fi.Size()
 	}
 	return out, nil
-}
-
-// presetFindings are the limits of the preset of the job that the written file breaks: the same function as
-// ExportCheck, over the real duration and size (SDD-004 section 8.2).
-func (s *state) presetFindings(partial string, seconds float64, codec exportcore.Codec) []exportcore.Finding {
-	p := s.job.Preset
-	if p == nil {
-		return nil
-	}
-
-	st := s.job.Doc.Settings
-	size := int64(0)
-
-	if fi, err := os.Stat(partial); err == nil {
-		size = fi.Size()
-	}
-
-	return p.Check(exportcore.Input{
-		Width: st.Width, Height: st.Height, FPSNum: st.FPS.Num, FPSDen: st.FPS.Den,
-		DurationMS: int64(math.Round(seconds * 1000)), Bytes: max(size, 1), Codec: codec,
-	})
 }
 
 func describe(ss []probedStream) string {

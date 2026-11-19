@@ -11,8 +11,6 @@ export interface DesktopBridge {
 	onDropPaths?: (callback: (paths: string[]) => void) => Unsubscribe;
 	pickTemplate?: () => Promise<string[]>;
 	showInFolder?: (path: string) => Promise<unknown>;
-	getBackground?: () => Promise<unknown>;
-	setBackground?: (settings: BackgroundSettings) => Promise<unknown>;
 	// The native menu calls an action id of the editor menu (SDD-012 section 6.4).
 	onMenuAction?: (callback: (action: string) => void) => Unsubscribe;
 }
@@ -74,63 +72,6 @@ export async function showInFolder(
 	path: string,
 ): Promise<void> {
 	await bridge?.showInFolder?.(path);
-}
-
-// The background mode of the shell (SDD-012 section 21.3 item 7): whether Stuarty stays resident behind a
-// tray icon when the window closes with a post scheduled, and whether it starts hidden at sign-in. The
-// shell keeps the choice; the page only shows and sends it. `error` is the reason the system refused the
-// registration of the start at sign-in.
-export interface BackgroundSettings {
-	keep_running: boolean;
-	start_at_sign_in: boolean;
-	asked: boolean;
-}
-
-export interface BackgroundAnswer extends BackgroundSettings {
-	error?: string;
-}
-
-export function canBackground(bridge: DesktopBridge | null): boolean {
-	return (
-		typeof bridge?.getBackground === "function" &&
-		typeof bridge?.setBackground === "function"
-	);
-}
-
-// The answer of the shell as typed settings, or null when it is not what the shell sends.
-export function parseBackground(value: unknown): BackgroundAnswer | null {
-	if (typeof value !== "object" || value === null) return null;
-	const v = value as Record<string, unknown>;
-	if (
-		typeof v.keep_running !== "boolean" ||
-		typeof v.start_at_sign_in !== "boolean" ||
-		typeof v.asked !== "boolean"
-	) {
-		return null;
-	}
-	return {
-		keep_running: v.keep_running,
-		start_at_sign_in: v.start_at_sign_in,
-		asked: v.asked,
-		...(typeof v.error === "string" && v.error !== ""
-			? { error: v.error }
-			: {}),
-	};
-}
-
-export async function readBackground(
-	bridge: DesktopBridge | null,
-): Promise<BackgroundAnswer | null> {
-	if (!bridge?.getBackground) return null;
-	return parseBackground(await bridge.getBackground());
-}
-
-export async function writeBackground(
-	bridge: DesktopBridge | null,
-	settings: BackgroundSettings,
-): Promise<BackgroundAnswer | null> {
-	if (!bridge?.setBackground) return null;
-	return parseBackground(await bridge.setBackground(settings));
 }
 
 export function subscribeDesktopBridge(listener: () => void): Unsubscribe {

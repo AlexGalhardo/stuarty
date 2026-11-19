@@ -55,25 +55,24 @@ export const BASE_URL = "http://127.0.0.1:7878";
 const METHOD_ORDER = ["get", "post", "put", "patch", "delete"];
 
 /** The sidebar groups of the API reference, in order. The OpenAPI document has no tags, so the route decides. */
-export const TAGS = ["Projects", "Media", "Jobs", "Events", "Commands", "Templates", "Fonts", "Brand kit", "Library", "System", "API keys", "Users", "Audit"] as const;
+export const TAGS = ["Projects", "Media", "Jobs", "Events", "Commands", "Templates", "Fonts", "Brand kit", "Library", "Connections", "Images", "System", "API keys", "Users", "Audit"] as const;
 export type Tag = (typeof TAGS)[number];
 
 export function tagOf(route: string): Tag {
 	const shown = route.replace(/^\/api\/v1/, "");
 	const parts = shown.split("/").filter(Boolean);
 	if (parts[0] === "projects" && parts[2] === "media") return "Media";
-	if ((parts[0] === "projects" && ["jobs", "export-check", "export-batches"].includes(parts[2] ?? "")) || parts[0] === "jobs" || parts[0] === "export-presets") return "Jobs";
+	if ((parts[0] === "projects" && parts[2] === "jobs") || parts[0] === "jobs") return "Jobs";
 	if (parts[0] === "projects" && parts[2] === "events") return "Events";
-	if (parts[0] === "projects" && parts[2] === "texts") return "Writing";
-	if (parts[0] === "projects" && parts[2] === "chat") return "Agent chat";
 	if (parts[0] === "projects" || parts[0] === "trash") return "Projects";
 	const byRoot: Record<string, Tag> = {
 		assets: "Media",
-		briefing: "Projects",
 		commands: "Commands",
 		templates: "Templates",
 		fonts: "Fonts",
 		"brand-kit": "Brand kit",
+		connections: "Connections",
+		images: "Images",
 		library: "Library",
 		system: "System",
 		handshake: "System",

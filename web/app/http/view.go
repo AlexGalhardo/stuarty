@@ -101,7 +101,7 @@ func writeView(c *web.Ctx, res *service.ViewResult, pinned bool, kind string, ha
 	c.SetHeader("X-Vukem-Image-Height", strconv.Itoa(res.Height))
 	c.SetHeader("X-Vukem-Image-Tokens", strconv.Itoa(res.ImageTokens))
 
-	if pinned && !res.Composite {
+	if pinned {
 		c.SetHeader("Cache-Control", "private, max-age=31536000, immutable")
 	} else {
 		c.SetHeader("Cache-Control", "private, no-cache")
@@ -215,27 +215,13 @@ func (h *apiHandler) fontList(c *web.Ctx, _ noIn) (service.FontListResult, error
 }
 
 type assetListIn struct {
-	pageIn
-	Kind     string `json:"kind,omitempty"     doc:"image, video, audio or lut; omit it for every kind."`
-	Section  string `json:"section,omitempty"  doc:"visual (image, lut) or video (video, audio): the two sections of the library."`
-	Tag      string `json:"tag,omitempty"      doc:"Keep the files that carry this tag."`
-	Project  string `json:"project,omitempty"  doc:"Keep the files a project, or one of its timelines, uses."`
-	Origin   string `json:"origin,omitempty"   doc:"imported, generated, fetched_by_agent or rendered_externally."`
-	Reusable string `json:"reusable,omitempty" doc:"true keeps the files marked reusable, false the others."`
-	Text     string `json:"text,omitempty"     doc:"A full-text query over name, tags, description and origin; at most 8 words."`
+	Limit int    `json:"limit,omitempty" doc:"Keep the first files of the list; the default and the largest are 500."`
+	Kind  string `json:"kind,omitempty"  doc:"image, video or audio; omit it for every kind."`
 }
 
-// assetList is GET /assets: the files of the library by content hash (VV-117, SDD-011 section 14).
+// assetList is GET /assets: the files of the workspace by content hash (VV-117).
 func (h *apiHandler) assetList(c *web.Ctx, in assetListIn) (service.AssetListResult, error) {
-	reusable, err := parseReusable(in.Reusable)
-	if err != nil {
-		return service.AssetListResult{}, err
-	}
-
-	res, err := h.Service.AssetList(c.Context(), service.AssetListRequest{
-		Kind: in.Kind, Section: in.Section, Tag: in.Tag, Project: in.Project, Origin: in.Origin,
-		Reusable: reusable, Text: in.Text, Limit: in.Limit, Cursor: in.Cursor,
-	})
+	res, err := h.Service.AssetList(c.Context(), service.AssetListRequest{Kind: in.Kind, Limit: in.Limit})
 
 	return deref(res), err
 }

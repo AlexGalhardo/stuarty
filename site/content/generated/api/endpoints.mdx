@@ -11,23 +11,14 @@ Every operation has its own page with the parameters, the body, the responses an
 
 | Method | Path | Operation | Summary |
 | --- | --- | --- | --- |
-| `GET` | `/api/v1/briefing/questions` | [`briefing.questions`](/docs/api/briefing.questions) | The questions of the guided briefing |
 | `GET` | `/api/v1/projects` | [`projects.list`](/docs/api/projects.list) | List projects |
 | `POST` | `/api/v1/projects` | [`projects.create`](/docs/api/projects.create) | Create a project |
 | `GET` | `/api/v1/projects/{id}` | [`projects.get`](/docs/api/projects.get) | Read a project |
-| `GET` | `/api/v1/projects/{id}/audio-measure` | [`audio.measure`](/docs/api/audio.measure) | Measure the sound with and without the audio processors |
-| `GET` | `/api/v1/projects/{id}/audio-previews/{key}` | [`audio_previews.get`](/docs/api/audio_previews.get) | Download the processed sound of an item, or start rendering it |
 | `GET` | `/api/v1/projects/{id}/bitmaps/{key}` | [`bitmaps.get`](/docs/api/bitmaps.get) | Download a rasterized text or shape |
 | `GET` | `/api/v1/projects/{id}/brief` | [`projects.brief.get`](/docs/api/projects.brief.get) | Read the brief of a project |
 | `PUT` | `/api/v1/projects/{id}/brief` | [`projects.brief.set`](/docs/api/projects.brief.set) | Write the brief of a project |
-| `PUT` | `/api/v1/projects/{id}/briefing` | [`projects.briefing.answer`](/docs/api/projects.briefing.answer) | Answer the briefing: the answers become the brief of the project |
 | `POST` | `/api/v1/projects/{id}/bundle` | [`projects.bundle.export`](/docs/api/projects.bundle.export) | Export a project as a .vvbundle |
-| `GET` | `/api/v1/projects/{id}/checkpoints` | [`projects.checkpoints.list`](/docs/api/projects.checkpoints.list) | List the checkpoints of a project |
-| `POST` | `/api/v1/projects/{id}/checkpoints` | [`projects.checkpoints.create`](/docs/api/projects.checkpoints.create) | Name a revision |
-| `PATCH` | `/api/v1/projects/{id}/checkpoints/{name}` | [`projects.checkpoints.rename`](/docs/api/projects.checkpoints.rename) | Rename a checkpoint |
-| `DELETE` | `/api/v1/projects/{id}/checkpoints/{name}` | [`projects.checkpoints.remove`](/docs/api/projects.checkpoints.remove) | Remove a checkpoint, never a revision |
 | `GET` | `/api/v1/projects/{id}/describe` | [`projects.describe`](/docs/api/projects.describe) | Describe a project as text: brief, items and state |
-| `GET` | `/api/v1/projects/{id}/diff` | [`projects.diff`](/docs/api/projects.diff) | List what changed between two revisions |
 | `POST` | `/api/v1/projects/{id}/duplicate` | [`projects.duplicate`](/docs/api/projects.duplicate) | Duplicate a project |
 | `POST` | `/api/v1/projects/{id}/edit` | [`projects.edit`](/docs/api/projects.edit) | Apply a batch of operations (lint_scope fast) |
 | `GET` | `/api/v1/projects/{id}/frame` | [`projects.frame`](/docs/api/projects.frame) | Render one frame |
@@ -38,15 +29,11 @@ Every operation has its own page with the parameters, the body, the responses an
 | `POST` | `/api/v1/projects/{id}/items/{item_id}/restore` | [`projects.items.restore`](/docs/api/projects.items.restore) | Restore an item from the trash |
 | `POST` | `/api/v1/projects/{id}/items/{item_id}/trash` | [`projects.items.trash`](/docs/api/projects.items.trash) | Move an item to the trash |
 | `GET` | `/api/v1/projects/{id}/lint` | [`projects.lint`](/docs/api/projects.lint) | Lint a project with every rule |
-| `GET` | `/api/v1/projects/{id}/motion/brief` | [`projects.motion.brief`](/docs/api/projects.motion.brief) | What a render by an external motion engine must fit: size, rate, length, safe area, brand kit, captions and reference frames |
-| `GET` | `/api/v1/projects/{id}/motion/check` | [`projects.motion.check`](/docs/api/projects.motion.check) | Check a rendered asset against the brief: each mismatch of size, rate, length or alpha with the value expected |
-| `POST` | `/api/v1/projects/{id}/motion/replace` | [`projects.motion.replace`](/docs/api/projects.motion.replace) | Replace, in one undoable batch, every clip that reads an earlier render of an animation with a new render of it |
 | `GET` | `/api/v1/projects/{id}/otio` | [`projects.otio.export`](/docs/api/projects.otio.export) | Export a project as OpenTimelineIO |
 | `POST` | `/api/v1/projects/{id}/otio` | [`projects.otio.import`](/docs/api/projects.otio.import) | Import an OpenTimelineIO file into a project |
 | `GET` | `/api/v1/projects/{id}/plan` | [`projects.plan`](/docs/api/projects.plan) | Read the render plan of a window |
 | `POST` | `/api/v1/projects/{id}/redo` | [`projects.redo`](/docs/api/projects.redo) | Redo the caller's latest undone step |
 | `POST` | `/api/v1/projects/{id}/restore` | [`projects.restore`](/docs/api/projects.restore) | Restore a project from the trash |
-| `POST` | `/api/v1/projects/{id}/revert` | [`projects.revert`](/docs/api/projects.revert) | Go back to an earlier revision as a new step |
 | `GET` | `/api/v1/projects/{id}/sheet` | [`projects.sheet`](/docs/api/projects.sheet) | Render a contact sheet |
 | `GET` | `/api/v1/projects/{id}/snap-points` | [`projects.snap_points`](/docs/api/projects.snap_points) | Read the snap points and trim limits |
 | `POST` | `/api/v1/projects/{id}/trash` | [`projects.trash`](/docs/api/projects.trash) | Move a project to the trash |
@@ -58,11 +45,7 @@ Every operation has its own page with the parameters, the body, the responses an
 
 | Method | Path | Operation | Summary |
 | --- | --- | --- | --- |
-| `GET` | `/api/v1/assets` | [`assets.list`](/docs/api/assets.list) | List the files of the library by content hash, with origin, tags and reuse |
-| `GET` | `/api/v1/assets/{hash}` | [`assets.get`](/docs/api/assets.get) | Read one file of the library with its origin and the projects that use it |
-| `PUT` | `/api/v1/assets/{hash}` | [`assets.set`](/docs/api/assets.set) | Set the description, the rights note and the reuse mark of a file |
-| `POST` | `/api/v1/assets/{hash}/tags` | [`assets.tag`](/docs/api/assets.tag) | Add and remove the tags of a file |
-| `GET` | `/api/v1/assets/{hash}/uses` | [`assets.uses`](/docs/api/assets.uses) | List the projects that use a file of the library |
+| `GET` | `/api/v1/assets` | [`assets.list`](/docs/api/assets.list) | List the files of the workspace by content hash |
 | `GET` | `/api/v1/projects/{id}/media` | [`media.list`](/docs/api/media.list) | List the assets of a project |
 | `POST` | `/api/v1/projects/{id}/media` | [`media.import`](/docs/api/media.import) | Import media files |
 | `GET` | `/api/v1/projects/{id}/media/{asset_id}` | [`media.inspect`](/docs/api/media.inspect) | Inspect an asset |
@@ -79,12 +62,9 @@ Every operation has its own page with the parameters, the body, the responses an
 
 | Method | Path | Operation | Summary |
 | --- | --- | --- | --- |
-| `GET` | `/api/v1/export-presets` | [`export.presets`](/docs/api/export.presets) | List the export presets of the platforms |
 | `GET` | `/api/v1/jobs/{job_id}` | [`jobs.get`](/docs/api/jobs.get) | Read a job |
 | `POST` | `/api/v1/jobs/{job_id}/cancel` | [`jobs.cancel`](/docs/api/jobs.cancel) | Cancel a job |
 | `GET` | `/api/v1/jobs/{job_id}/file` | [`jobs.file`](/docs/api/jobs.file) | Download the file of a finished export |
-| `POST` | `/api/v1/projects/{id}/export-batches` | [`export.batch`](/docs/api/export.batch) | Export a project several times, one after the other |
-| `GET` | `/api/v1/projects/{id}/export-check` | [`export.check`](/docs/api/export.check) | Check a project against an export preset |
 | `GET` | `/api/v1/projects/{id}/jobs` | [`jobs.list`](/docs/api/jobs.list) | List the jobs of a project |
 | `POST` | `/api/v1/projects/{id}/jobs` | [`jobs.start`](/docs/api/jobs.start) | Start a job |
 
@@ -148,6 +128,28 @@ Every operation has its own page with the parameters, the body, the responses an
 | `POST` | `/api/v1/library/skills/export` | [`library.skills.export`](/docs/api/library.skills.export) | Export skills as folders in the Agent Skills layout |
 | `POST` | `/api/v1/library/skills/import` | [`library.skills.import`](/docs/api/library.skills.import) | Import a skill from a folder or an archive; it starts unreviewed |
 
+## Connections
+
+| Method | Path | Operation | Summary |
+| --- | --- | --- | --- |
+| `GET` | `/api/v1/connections` | [`connections.list`](/docs/api/connections.list) | List the destinations the user connected (never a secret) |
+| `POST` | `/api/v1/connections` | [`connections.create`](/docs/api/connections.create) | Connect a destination; the secret goes into the vault |
+| `GET` | `/api/v1/connections/{id}` | [`connections.get`](/docs/api/connections.get) | Read one connection (never a secret) |
+| `DELETE` | `/api/v1/connections/{id}` | [`connections.remove`](/docs/api/connections.remove) | Remove a connection and its credential |
+| `POST` | `/api/v1/connections/{id}/test` | [`connections.test`](/docs/api/connections.test) | Make one request through a connection |
+
+## Images
+
+| Method | Path | Operation | Summary |
+| --- | --- | --- | --- |
+| `GET` | `/api/v1/images` | [`images.list`](/docs/api/images.list) | List the image documents and templates |
+| `POST` | `/api/v1/images` | [`images.create`](/docs/api/images.create) | Create an image document, blank or from a template |
+| `GET` | `/api/v1/images/{id}` | [`images.get`](/docs/api/images.get) | Describe an image document: layers, findings and text view |
+| `POST` | `/api/v1/images/{id}/edit` | [`images.edit`](/docs/api/images.edit) | Apply a batch of image operations |
+| `POST` | `/api/v1/images/{id}/export` | [`images.export`](/docs/api/images.export) | Export an image document to a PNG, JPEG or WebP file |
+| `POST` | `/api/v1/images/{id}/redo` | [`images.redo`](/docs/api/images.redo) | Redo the latest undone step of the caller on an image |
+| `POST` | `/api/v1/images/{id}/undo` | [`images.undo`](/docs/api/images.undo) | Undo the latest step of the caller on an image |
+
 ## System
 
 | Method | Path | Operation | Summary |
@@ -155,7 +157,6 @@ Every operation has its own page with the parameters, the body, the responses an
 | `GET` | `/api/v1/handshake` | [`handshake.get`](/docs/api/handshake.get) | Prove that the server knows the local token |
 | `GET` | `/api/v1/system` | [`system.get`](/docs/api/system.get) | Read the diagnostic report |
 | `POST` | `/api/v1/system/launch` | [`system.launch`](/docs/api/system.launch) | Issue a one-time browser launch code |
-| `POST` | `/api/v1/system/scheduler` | [`system.scheduler`](/docs/api/system.scheduler) | Read, pause or resume the publication scheduler (pause and resume only for the desktop shell) |
 | `GET` | `/api/v1/system/tools` | [`system.tools`](/docs/api/system.tools) | List the installed helpers and the install progress |
 | `POST` | `/api/v1/system/tools/install` | [`system.tools.install`](/docs/api/system.tools.install) | Install the transcription helper (a browser session or an admin key only; the local token gets 403) |
 

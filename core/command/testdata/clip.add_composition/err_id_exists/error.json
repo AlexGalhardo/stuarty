@@ -1,7 +1,0 @@
-{
-  "code": "E_ID_EXISTS",
-  "message": "Item id itm_s6t7v8w9x0 already exists.",
-  "hint": "Omit id or use an unused id.",
-  "retryable": false,
-  "path": "args.id"
-}

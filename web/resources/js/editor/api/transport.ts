@@ -7,10 +7,6 @@ export interface TransportRequest {
 	// Relative to the API base, starting with "/": "/projects/prj_x".
 	path: string;
 	body?: unknown;
-	// A file sent as it is, instead of a JSON body (SDD-021 section 10.2). The server reads its bytes whatever
-	// the declared type is; the request says application/json because a cookie session needs a type that a page
-	// of another origin cannot send without a preflight (SDD-007 section 3.6 step 6).
-	file?: Blob;
 	timeoutMs: number;
 	signal?: AbortSignal;
 }

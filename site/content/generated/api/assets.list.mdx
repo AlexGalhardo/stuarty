@@ -1,6 +1,6 @@
 ---
-title: "List the files of the library by content hash, with origin, tags and reuse"
-description: "GET /api/v1/assets: List the files of the library by content hash, with origin, tags and reuse"
+title: "List the files of the workspace by content hash"
+description: "GET /api/v1/assets: List the files of the workspace by content hash"
 badge: "GET"
 wide: true
 ---
@@ -21,15 +21,8 @@ Send the secret in the header `Authorization: Bearer <secret>`: the local token 
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
-| `cursor` | `string` | no | The next_cursor of the previous page. |
-| `limit` | `integer` | no | The page size; the default depends on the operation. |
-| `kind` | `string` | no | image, video, audio or lut; omit it for every kind. |
-| `section` | `string` | no | visual (image, lut) or video (video, audio): the two sections of the library. |
-| `tag` | `string` | no | Keep the files that carry this tag. |
-| `project` | `string` | no | Keep the files a project, or one of its timelines, uses. |
-| `origin` | `string` | no | imported, generated, fetched_by_agent or rendered_externally. |
-| `reusable` | `string` | no | true keeps the files marked reusable, false the others. |
-| `text` | `string` | no | A full-text query over name, tags, description and origin; at most 8 words. |
+| `limit` | `integer` | no | Keep the first files of the list; the default and the largest are 500. |
+| `kind` | `string` | no | image, video or audio; omit it for every kind. |
 
 ## Responses
 
@@ -40,9 +33,7 @@ Content type `application/json`. Schema: [`AssetListResult`](/docs/api/schemas#a
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `assets` | array of [`LibraryAsset`](/docs/api/schemas#libraryasset) | no |  |
-| `next_cursor` | `string` or `null` | no |  |
 | `text` | `string` | no |  |
-| `total` | `integer` | no |  |
 | `untrusted_notice` | `string` | no |  |
 
 ### 400
@@ -221,26 +212,15 @@ puts "#{response.code} #{response.body}"
   "assets": [
     {
       "bytes": 0,
-      "created_at": "string",
-      "created_by": "string",
-      "description": "string",
-      "duration_ms": 0,
       "hash": "string",
       "height": 0,
       "kind": "string",
       "name": "string",
-      "origin": {},
-      "poster": {},
       "projects": 0,
-      "reusable": false,
-      "tags": [],
-      "uses": [],
       "width": 0
     }
   ],
-  "next_cursor": "string",
   "text": "string",
-  "total": 0,
   "untrusted_notice": "string"
 }
 ```

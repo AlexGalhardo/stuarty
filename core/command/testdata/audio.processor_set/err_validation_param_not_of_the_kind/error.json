@@ -1,7 +1,0 @@
-{
-  "code": "E_VALIDATION",
-  "message": "args.params.ceiling_db is not a parameter of compressor.",
-  "hint": "The parameters of compressor are threshold_db, ratio, attack_ms, release_ms, knee_db, makeup_db.",
-  "retryable": false,
-  "path": "args.params.ceiling_db"
-}

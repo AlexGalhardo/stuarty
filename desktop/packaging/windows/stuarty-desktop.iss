@@ -12,13 +12,6 @@
 ; %LOCALAPPDATA%\Programs\Stuarty Desktop. A Start menu shortcut runs the desktop application.
 ; Uninstall removes the program and the shortcuts and keeps the workspace (%USERPROFILE%\.stuarty, or
 ; STUARTY_HOME): the user's projects and media are never deleted by an uninstall.
-;
-; Background mode (epic 21, SDD-012 section 21.3 item 7): when the person turns on "Start when I sign in",
-; the application writes the value StuartyDesktop in HKCU\Software\Microsoft\Windows\CurrentVersion\Run (the
-; value and the key are desktop/service RunValueName and RunSubKey; a test keeps this file in step with
-; them). Nothing here writes it: the installer never registers anything that starts by itself. The uninstaller
-; deletes the value, twice over ([Registry] and [UninstallRun]) so that no registration is left behind, and
-; stops the resident application, whose window may be hidden, before it removes the files.
 
 #ifndef AppVersion
   #define AppVersion "0.0.0"
@@ -86,11 +79,6 @@ Source: "..\..\..\licenses\*"; DestDir: "{app}\licenses"; Flags: ignoreversion r
 Name: "{autoprograms}\{#AppName}"; Filename: "{app}\{#AppExe}"; IconFilename: "{app}\stuarty.ico"; Comment: "Open the Stuarty desktop application"
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExe}"; IconFilename: "{app}\stuarty.ico"; Tasks: desktopicon
 
-[Registry]
-; Written by the application when the person turns on "Start when I sign in", never by the installer: with
-; ValueType none Setup creates nothing, and the flags delete the value when the program is uninstalled.
-Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueName: "StuartyDesktop"; ValueType: none; Flags: dontcreatekey uninsdeletevalue
-
 [InstallDelete]
 ; An upgrade of an installed Vukem Video Desktop (same AppId, so the same folder): remove what carried the former
 ; name. Only program files and shortcuts, never the workspace (SDD-009 section 10.5).
@@ -104,9 +92,6 @@ Type: files; Name: "{autodesktop}\Vukem Video Desktop.lnk"
 Filename: "{app}\{#AppExe}"; Description: "Open {#AppName} now"; Flags: postinstall nowait skipifsilent
 
 [UninstallRun]
-; The start at sign-in is removed first, so a stopped application is never started again by the next sign-in
-; (the [Registry] entry does the same; a value that is already gone is not an error).
-Filename: "{sys}\reg.exe"; Parameters: "delete ""HKCU\Software\Microsoft\Windows\CurrentVersion\Run"" /v StuartyDesktop /f"; Flags: runhidden; RunOnceId: "RemoveStartAtSignIn"
 ; The server the application started may outlive it: stop both so the program can be removed. The workspace is not touched.
 Filename: "{sys}\taskkill.exe"; Parameters: "/F /IM {#AppExe}"; Flags: runhidden; RunOnceId: "StopDesktop"
 Filename: "{sys}\taskkill.exe"; Parameters: "/F /IM {#ServerExe}"; Flags: runhidden; RunOnceId: "StopServer"

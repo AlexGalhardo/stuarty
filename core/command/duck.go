@@ -44,13 +44,13 @@ type duckArgs struct {
 	GainDB        *float64        `json:"gain_db,omitempty"  desc:"Change of volume while speech sounds, -40 to -1; default -12."                                                                      min:"-40" max:"-1"`
 	Attack        Time            `json:"attack,omitempty"   desc:"A length, may be 0; the ramp down before speech. Default \"0.2s\"."`
 	Release       Time            `json:"release,omitempty"  desc:"A length, may be 0; the ramp up after speech. Default \"0.5s\"."`
-	Resolved      *ResolvedSpeech `json:"resolved,omitempty" desc:"Filled by the service from the speech of the items; never sent by a caller."                                                                           internal:"true"`
+	Resolved      *ResolvedSpeech `json:"resolved,omitempty" desc:"Filled by the service from the speech of the items; never sent by a caller."`
 }
 
 func checkSpeech(ids []string, r *ResolvedSpeech) *Error {
 	if r == nil {
 		return Errorf(CodeValidation, "args.resolved is missing: the speech of the items is not known.").
-			WithHint("The service fills it from the speech map made when a file is imported (no transcript is needed): call media_inspect on the speech assets, and if one is still analysing wait for its job (job_get) and retry; an asset without audio has no speech. The cause is the state of the assets, not the arguments.").
+			WithHint("The service fills it from the speech found when a file is imported: call media_inspect on the speech assets and retry once they are ready (an asset without audio has no speech); the cause is the state of the assets, not the arguments.").
 			WithPath("args.resolved")
 	}
 	seen := map[string]bool{}

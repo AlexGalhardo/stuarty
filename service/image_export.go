@@ -14,7 +14,6 @@ import (
 	coreimage "github.com/AlexGalhardo/stuarty/core/image"
 	"github.com/AlexGalhardo/stuarty/engine/export"
 	"github.com/AlexGalhardo/stuarty/engine/ingest"
-	enginestore "github.com/AlexGalhardo/stuarty/engine/store"
 )
 
 var imageExtensions = map[string]string{export.ImagePNG: "png", export.ImageJPEG: "jpg", export.ImageWebP: "webp"}
@@ -60,7 +59,7 @@ func (s *svc) ImageExport(ctx context.Context, req ImageExportRequest) (*ImageEx
 			withHint("fix them with image:edit, then export again").withDetail("findings", blocking)
 	}
 
-	pix, rerr := export.RenderImage(ctx, doc, s.imageRenderConfig(ctx, c))
+	pix, rerr := export.RenderImage(ctx, doc, export.ImageConfig{AssetPath: s.imageAssetPath(ctx, c)})
 	if rerr != nil {
 		return nil, imageExportError(rerr)
 	}
@@ -97,8 +96,14 @@ func (s *svc) ImageExport(ctx context.Context, req ImageExportRequest) (*ImageEx
 
 	width, height := doc.Width, doc.Height
 	if w != 0 || h != 0 {
-		// one side alone keeps the aspect: the other is the one the encoder computed, not the canvas's
-		width, height = export.ImageOutputSize(pix.Rect.Dx(), pix.Rect.Dy(), w, h)
+		width, height = pix.Rect.Dx(), pix.Rect.Dy()
+		if w != 0 {
+			width = w
+		}
+
+		if h != 0 {
+			height = h
+		}
 	}
 
 	return &ImageExportResult{
@@ -186,35 +191,9 @@ func (s *svc) imageAssetPath(ctx context.Context, c Caller) func(hash string) (s
 	}
 }
 
-// imageLUTPath is the normalized .cube file of a lookup table of the workspace, by content hash (SDD-021 section
-// 3.1). The same access rule as an image applies: a table the caller may not use is as missing as one that is not
-// there.
-func (s *svc) imageLUTPath(ctx context.Context, c Caller) func(hash string) (string, error) {
-	allowed := s.imageAssetAccess(ctx, c)
-
-	return func(hash string) (string, error) {
-		if _, _, ok := allowed(hash); !ok {
-			return "", fmt.Errorf("the lookup table %s is not available to this caller", hash)
-		}
-
-		return s.preparedArtifactPath(hash, "cube", "lookup table")
-	}
-}
-
-// imageRenderConfig is what the render of an image needs from the workspace for this caller.
-func (s *svc) imageRenderConfig(ctx context.Context, c Caller) export.ImageConfig {
-	return export.ImageConfig{AssetPath: s.imageAssetPath(ctx, c), LUTPath: s.imageLUTPath(ctx, c)}
-}
-
 func (s *svc) preparedImagePath(hash string) (string, error) {
-	return s.preparedArtifactPath(hash, "png", "image")
-}
-
-// preparedArtifactPath is the normalized artifact of a file of the workspace with the extension, if it exists.
-// The digits are checked here again, whatever the caller did, because they become a folder name (T-94).
-func (s *svc) preparedArtifactPath(hash, ext, what string) (string, error) {
 	hexDigest, ok := strings.CutPrefix(hash, "sha256:")
-	if !ok || !enginestore.ValidHash(hexDigest) {
+	if !ok || len(hexDigest) != 64 {
 		return "", fmt.Errorf("%q is not a content hash", hash)
 	}
 
@@ -222,11 +201,11 @@ func (s *svc) preparedArtifactPath(hash, ext, what string) (string, error) {
 		s.workspace,
 		"artifacts",
 		hexDigest,
-		ingest.ArtifactName("normalized", ingest.ProfileNormalized, "", ext),
+		ingest.ArtifactName("normalized", ingest.ProfileNormalized, "", "png"),
 	)
 	if _, err := os.Stat(p); err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			return "", fmt.Errorf("the prepared %s %s is missing; import it again", what, hash)
+			return "", fmt.Errorf("the prepared image %s is missing; import it again", hash)
 		}
 
 		return "", err

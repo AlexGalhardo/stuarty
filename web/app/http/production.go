@@ -24,15 +24,14 @@ type duplicateIn struct {
 }
 
 type itemAddIn struct {
-	ID       string  `json:"id"                  validate:"required"`
-	Kind     string  `json:"kind"                validate:"required" doc:"text, timeline or output; the brief is written with PUT /brief."`
-	Title    string  `json:"title"               validate:"required" doc:"1 to 120 characters."`
-	Position *int    `json:"position,omitempty"                      doc:"Where in the order of the items, from 0; default the end."`
-	Text     string  `json:"text,omitempty"                          doc:"Markdown of a text item, at most 256 KiB."`
-	TextKind string  `json:"text_kind,omitempty"                     doc:"A text item: script, copy (default) or caption."`
-	Preset   string  `json:"preset,omitempty"                        doc:"A timeline: 9:16 (default), 1:1, 16:9 or 4:5."`
-	FPS      fpsText `json:"fps,omitempty"                           doc:"A timeline: 30 (default); n or n/1001."`
-	JobID    string  `json:"job_id,omitempty"                        doc:"An output: a succeeded export job of this project."`
+	ID       string  `json:"id"                 validate:"required"`
+	Kind     string  `json:"kind"               validate:"required" doc:"text, timeline or output; the brief is written with PUT /brief."`
+	Title    string  `json:"title"              validate:"required" doc:"1 to 120 characters."`
+	Position *int    `json:"position,omitempty"                     doc:"Where in the order of the items, from 0; default the end."`
+	Text     string  `json:"text,omitempty"                         doc:"Markdown of a text item, at most 256 KiB."`
+	Preset   string  `json:"preset,omitempty"                       doc:"A timeline: 9:16 (default), 1:1, 16:9 or 4:5."`
+	FPS      fpsText `json:"fps,omitempty"                          doc:"A timeline: 30 (default); n or n/1001."`
+	JobID    string  `json:"job_id,omitempty"                       doc:"An output: a succeeded export job of this project."`
 	DryRun   any     `json:"dry_run,omitempty"`
 }
 
@@ -104,8 +103,8 @@ func (h *apiHandler) projectItemAdd(c *web.Ctx, in itemAddIn) (service.ProjectIt
 	}
 
 	res, err := h.Service.ProjectItemAdd(c.Context(), service.ProjectItemAddRequest{
-		ProjectID: in.ID, Kind: in.Kind, Title: in.Title, Position: in.Position, Text: in.Text,
-		TextKind: in.TextKind, Preset: in.Preset, FPS: string(in.FPS), JobID: in.JobID, DryRun: dryRun,
+		ProjectID: in.ID, Kind: in.Kind, Title: in.Title, Position: in.Position, Text: in.Text, Preset: in.Preset,
+		FPS: string(in.FPS), JobID: in.JobID, DryRun: dryRun,
 	})
 	if err != nil {
 		return service.ProjectItemResult{}, err

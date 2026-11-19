@@ -1,8 +1,0 @@
-{
-  "code": "E_VALIDATION",
-  "hint": "Give the id of another layer.",
-  "message": "A mask of kind layer needs source.",
-  "op_index": 0,
-  "path": "args.source",
-  "retryable": false
-}

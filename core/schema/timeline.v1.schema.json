@@ -601,12 +601,6 @@
         "outline": {
           "$ref": "#/$defs/Outline"
         },
-        "processors": {
-          "items": {
-            "$ref": "#/$defs/Processor"
-          },
-          "type": "array"
-        },
         "radius": {
           "minimum": 0,
           "type": "number"
@@ -688,10 +682,6 @@
           "minLength": 1,
           "type": "string"
         },
-        "timeline": {
-          "pattern": "^prj_[0-9a-hjkmnp-tv-z]{10}$",
-          "type": "string"
-        },
         "tint": {
           "maximum": 1,
           "minimum": -1,
@@ -713,8 +703,7 @@
             "audio",
             "text",
             "caption",
-            "shape",
-            "composition"
+            "shape"
           ],
           "type": "string"
         },
@@ -767,12 +756,6 @@
     },
     "Keyframe": {
       "properties": {
-        "bezier": {
-          "items": {
-            "type": "number"
-          },
-          "type": "array"
-        },
         "easing": {
           "default": "linear",
           "enum": [
@@ -780,8 +763,7 @@
             "ease_in",
             "ease_out",
             "ease_in_out",
-            "hold",
-            "bezier"
+            "hold"
           ],
           "type": "string"
         },
@@ -896,34 +878,6 @@
       "required": [
         "color",
         "width"
-      ],
-      "type": "object"
-    },
-    "Processor": {
-      "properties": {
-        "disabled": {
-          "type": "boolean"
-        },
-        "kind": {
-          "enum": [
-            "eq",
-            "compressor",
-            "limiter",
-            "gate",
-            "deesser",
-            "noise_reduction"
-          ],
-          "type": "string"
-        },
-        "params": {
-          "additionalProperties": {
-            "type": "number"
-          },
-          "type": "object"
-        }
-      },
-      "required": [
-        "kind"
       ],
       "type": "object"
     },
@@ -1164,12 +1118,6 @@
         "order": {
           "pattern": "^[0-9a-z]+$",
           "type": "string"
-        },
-        "processors": {
-          "items": {
-            "$ref": "#/$defs/Processor"
-          },
-          "type": "array"
         },
         "solo": {
           "type": "boolean"

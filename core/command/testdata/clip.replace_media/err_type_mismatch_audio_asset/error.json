@@ -1,7 +1,0 @@
-{
-  "code": "E_TYPE_MISMATCH",
-  "message": "Asset ast_4h6j8k2m3n is an audio asset; clip.replace_media places video or images.",
-  "hint": "Use audio.add on an audio track.",
-  "retryable": false,
-  "path": "args.asset_id"
-}

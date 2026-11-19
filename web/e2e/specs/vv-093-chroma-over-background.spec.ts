@@ -1,4 +1,3 @@
-import { NO_VIDEO_DECODE_REASON, noVideoDecode } from "../support/browsers";
 import { canvasOf } from "../support/webcodecs";
 import { caller, expect, seedProject, solidClip, test } from "./helpers";
 
@@ -10,9 +9,7 @@ for (const executor of ["rust", "pixi"] as const) {
 	test(`vv-093: a keyed clip shows the background below it (${executor})`, async ({
 		page,
 		request,
-		browserName,
 	}) => {
-		test.skip(noVideoDecode(browserName), NO_VIDEO_DECODE_REASON); // verify:env-skip the browser cannot decode the proxy
 		const seeded = await seedProject(request, {
 			// The first track is the bottom one: the blue background, then the green clip.
 			files: [solidClip("blue"), solidClip("green")],

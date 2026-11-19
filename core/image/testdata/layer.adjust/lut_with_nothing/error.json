@@ -1,8 +1,0 @@
-{
-  "code": "E_VALIDATION",
-  "hint": "Send {\"asset\": \"sha256:...\", \"intensity\": 100}, or {\"intensity\": 0} to remove it.",
-  "message": "Give the asset or the intensity of the lookup table.",
-  "op_index": 0,
-  "path": "args.lut",
-  "retryable": false
-}

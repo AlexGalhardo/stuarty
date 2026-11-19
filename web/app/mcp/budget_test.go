@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+
+	"github.com/AlexGalhardo/stuarty/core/command"
 )
 
 // charsPerToken is the estimate of SDD-003 section 3.10: tokens are characters
@@ -19,7 +21,7 @@ func tokens(s string) int { return int(float64(len([]rune(s))) / charsPerToken) 
 func TestToolDefinitionBudget(t *testing.T) {
 	t.Parallel()
 
-	defs, err := loadDefinitions()
+	defs, err := loadDefinitions(command.Default())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -30,8 +32,13 @@ func TestToolDefinitionBudget(t *testing.T) {
 		raw := marshal(t, defs[name].tool)
 		total += len(raw)
 
-		if len(raw) > MaxToolBytes {
-			t.Errorf("%s is %d bytes, at most %d", name, len(raw), MaxToolBytes)
+		limit := 1600
+		if name == "edit" {
+			limit = 2700
+		}
+
+		if len(raw) > limit {
+			t.Errorf("%s is %d bytes, at most %d", name, len(raw), limit)
 		}
 	}
 
@@ -105,23 +112,5 @@ func TestConciseViewOfAnItemHeavyProjectFitsTwoPages(t *testing.T) {
 
 	if pages > 2 || items != 199 {
 		t.Fatalf("%d pages and %d items, want at most 2 pages and 199 items", pages, items)
-	}
-}
-
-// D-088: project_get takes detail document over MCP as the CLI and the HTTP API do, and the description says what it
-// costs, because that one call is outside the per-call caps of SDD-003 section 3.10.
-func TestProjectGetDescriptionStatesTheCostOfTheDocument(t *testing.T) {
-	t.Parallel()
-
-	defs, err := loadDefinitions()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	d := defs["project_get"].tool.Description
-	for _, want := range []string{"document", "unbounded", "tokens"} {
-		if !strings.Contains(d, want) {
-			t.Errorf("the description of project_get does not say %q: %s", want, d)
-		}
 	}
 }

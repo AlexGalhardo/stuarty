@@ -17,13 +17,15 @@ func registry() []*spec {
 	return append([]*spec{
 		projectList, projectCreate, projectShow, projectTrash, projectRestore,
 		edit, history, undo, redo, lintCmd, version, mcpCmd,
-		revertCmd, diffCmd, checkpointCreateCmd, checkpointListCmd, checkpointRenameCmd, checkpointRemoveCmd,
 		mediaImport, mediaInspect, mediaList, mediaTrash, mediaRestore, view, export,
-		exportPresets, exportCheck, exportBatch,
 		jobShow, jobCancel, jobList, eventsCmd, commandHelp,
 		templateList, templateSave, templateNew, templateExport, templateImport, bundleExport, bundleImport,
 		agentDocs, transcribeCmd, doctorCmd, fontsCmd, auditCmd, toolsInstallCmd, tokenRotate,
 		fontImportCmd, brandShowCmd, brandSetCmd, otioExport, otioImport,
+		projectDescribeCmd, projectDuplicateCmd, itemAddCmd, itemMoveCmd, itemRenameCmd, itemTrashCmd, itemRestoreCmd,
+		briefShowCmd, briefSetCmd,
+		connectionListCmd, connectionShowCmd, connectionAddCmd, connectionRemoveCmd, connectionTestCmd,
+		imageCreate, imageList, imageShow, imageEdit, imageUndo, imageRedo, imageExport,
 	}, libraryCommands()...)
 }
 
@@ -286,15 +288,16 @@ var lintCmd = &spec{
 
 var commandHelp = &spec{
 	name:       "command:help",
-	summary:    "list the editing commands and the domains, or describe one command",
-	usage:      []string{"stuarty command:help [<name>]", "stuarty command:help --domain <domain>"},
+	summary:    "list the editing commands, or describe one",
+	usage:      []string{"stuarty command:help [<name>]"},
 	example:    "stuarty command:help item.move",
 	positional: true,
 	flags: []flagDef{
 		{
-			Name:  "domain",
-			Kind:  kindString,
-			Usage: "a domain of the product: its commands (without it, the video commands and the list of domains)",
+			Name:    "domain",
+			Kind:    kindString,
+			Default: "video",
+			Usage:   "video, or image for the commands of image documents",
 		},
 	},
 	run: func(ctx context.Context, c *call) (*output, error) {

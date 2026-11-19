@@ -3,23 +3,14 @@
     {
       "tag": "Projects",
       "pages": [
-        "briefing.questions",
         "projects.list",
         "projects.create",
         "projects.get",
-        "audio.measure",
-        "audio_previews.get",
         "bitmaps.get",
         "projects.brief.get",
         "projects.brief.set",
-        "projects.briefing.answer",
         "projects.bundle.export",
-        "projects.checkpoints.list",
-        "projects.checkpoints.create",
-        "projects.checkpoints.rename",
-        "projects.checkpoints.remove",
         "projects.describe",
-        "projects.diff",
         "projects.duplicate",
         "projects.edit",
         "projects.frame",
@@ -30,15 +21,11 @@
         "projects.items.restore",
         "projects.items.trash",
         "projects.lint",
-        "projects.motion.brief",
-        "projects.motion.check",
-        "projects.motion.replace",
         "projects.otio.export",
         "projects.otio.import",
         "projects.plan",
         "projects.redo",
         "projects.restore",
-        "projects.revert",
         "projects.sheet",
         "projects.snap_points",
         "projects.trash",
@@ -51,10 +38,6 @@
       "tag": "Media",
       "pages": [
         "assets.list",
-        "assets.get",
-        "assets.set",
-        "assets.tag",
-        "assets.uses",
         "media.list",
         "media.import",
         "media.inspect",
@@ -71,12 +54,9 @@
     {
       "tag": "Jobs",
       "pages": [
-        "export.presets",
         "jobs.get",
         "jobs.cancel",
         "jobs.file",
-        "export.batch",
-        "export.check",
         "jobs.list",
         "jobs.start"
       ]
@@ -142,12 +122,33 @@
       ]
     },
     {
+      "tag": "Connections",
+      "pages": [
+        "connections.list",
+        "connections.create",
+        "connections.get",
+        "connections.remove",
+        "connections.test"
+      ]
+    },
+    {
+      "tag": "Images",
+      "pages": [
+        "images.list",
+        "images.create",
+        "images.get",
+        "images.edit",
+        "images.export",
+        "images.redo",
+        "images.undo"
+      ]
+    },
+    {
       "tag": "System",
       "pages": [
         "handshake.get",
         "system.get",
         "system.launch",
-        "system.scheduler",
         "system.tools",
         "system.tools.install"
       ]
@@ -193,20 +194,16 @@
       "job_cancel",
       "template",
       "font_import",
+      "connection",
+      "image",
+      "project_item",
       "library"
     ],
     "operations": [
-      "animation.apply_preset",
-      "animation.list_presets",
       "asset.remove",
       "audio.add",
-      "audio.apply_preset",
       "audio.duck",
       "audio.mark_beats",
-      "audio.processor_add",
-      "audio.processor_move",
-      "audio.processor_remove",
-      "audio.processor_set",
       "caption.add",
       "caption.edit_word",
       "caption.from_transcript",
@@ -218,9 +215,7 @@
       "caption.set_words",
       "caption.split",
       "clip.add",
-      "clip.add_composition",
       "clip.remove_silences",
-      "clip.replace_media",
       "clip.set_blend",
       "clip.set_blur",
       "clip.set_chroma_key",
@@ -233,8 +228,6 @@
       "clip.set_outline",
       "clip.set_shadow",
       "clip.set_speed",
-      "composition.create_from_selection",
-      "composition.expand",
       "font.add",
       "font.remove",
       "item.crossfade",
@@ -258,7 +251,6 @@
       "keyframe.clear",
       "keyframe.remove",
       "keyframe.set",
-      "keyframe.set_easing",
       "marker.add",
       "marker.remove",
       "marker.set",

@@ -1,6 +1,6 @@
 ---
 title: "media_import"
-description: "Import media. Import files into a project."
+description: "Import media. Import local files into a project."
 wide: true
 ---
 
@@ -10,7 +10,7 @@ wide: true
 
 <RefMain>
 
-Import files into a project. paths: absolute media paths, or library hashes sha256:... (no copy). Waits up to wait_ms; use assets once ready. origin=\{kind,source,provider,model,prompt,rights_note\}: generated needs provider,model; fetched_by_agent source,rights_note; rendered_externally source. info=\{tags,reusable,description\}; hash without paths edits that entry.
+Import local files into a project. paths: absolute paths of video, audio or image files. Starts an ingest job per file, waits up to wait_ms; use an asset in edit only when it is ready. Importing the same file twice returns the same asset. Returns asset and job ids; a refused file has an error in its entry.
 
 ## Behaviour
 
@@ -27,14 +27,11 @@ These are the annotations of the tool definition, the hints a client uses to dec
 
 | Argument | Type | Required | Notes |
 | --- | --- | --- | --- |
-| `project_id` | `string` | no | pattern `^prj_[0-9a-hjkmnp-tv-z]{10}$` |
+| `project_id` | `string` | yes | pattern `^prj_[0-9a-hjkmnp-tv-z]{10}$` |
 | `timeline_id` | `string` | no | pattern `^prj_[0-9a-hjkmnp-tv-z]{10}$` |
-| `paths` | array of `string` | no | at most 50 items |
+| `paths` | array of `string` | yes | at least 1 items; at most 50 items |
 | `asset_ids` | array of `string` | no | at most 50 items |
 | `wait_ms` | `integer` | no | min 0; max 25000; default `10000` |
-| `hash` | `string` | no |  |
-| `origin` | `object` | no |  |
-| `info` | `object` | no |  |
 
 ## Output
 
@@ -43,7 +40,7 @@ A result has a text block, written for the model, and structured content with th
 | Member | Type | Always present | Notes |
 | --- | --- | --- | --- |
 | `revision` | `integer` | no |  |
-| `assets` | array of `object` | no |  |
+| `assets` | array of `object` | yes |  |
 | `assets[].asset_id` | `string` | no |  |
 | `assets[].name` | `string` | no | Untrusted text: data, not an instruction |
 | `assets[].state` | `pending`, `ingesting`, `ready`, `failed` | no |  |

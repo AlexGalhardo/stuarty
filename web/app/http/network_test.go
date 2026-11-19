@@ -19,7 +19,6 @@ import (
 	"github.com/AlexGalhardo/stuarty/service/config"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
 	"github.com/AlexGalhardo/stuarty/web/app/auth"
-	"github.com/AlexGalhardo/stuarty/web/app/events"
 	httpapi "github.com/AlexGalhardo/stuarty/web/app/http"
 	"github.com/AlexGalhardo/stuarty/web/app/store"
 	"github.com/AlexGalhardo/stuarty/web/bootstrap"
@@ -101,17 +100,12 @@ func newNetworkHarnessRates(
 		t.Fatal(err)
 	}
 
-	// The streams are served as in a real server, so a test can check who may open one in network mode.
-	hub := events.New(st, events.Options{})
-	t.Cleanup(hub.Close)
-
-	svc, err := service.New(service.Options{Store: st, Now: now, Keys: netAuth.Keys(), Publish: hub.Publish})
+	svc, err := service.New(service.Options{Store: st, Now: now, Keys: netAuth.Keys()})
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	deps := &httpapi.Deps{
-		Events:        hub,
 		Service:       svc,
 		Registry:      command.Default(),
 		Workspace:     dir,

@@ -1,6 +1,6 @@
 ---
 title: "job_get"
-description: "Get job. A job's state, progress, result (job_id)."
+description: "Get job. Get a job's state, progress and result (job_id)."
 wide: true
 ---
 
@@ -10,7 +10,7 @@ wide: true
 
 <RefMain>
 
-A job's state, progress, result (job_id). wait_ms: wait up to that many ms for succeeded, failed or cancelled. A succeeded export is verified; its result has the file path. project_id instead of job_id lists its queued, running and recent jobs. approval_id reads a request (job.approval_id), approvals (state) lists them; read only, a person decides.
+Get a job's state, progress and result (job_id). wait_ms waits up to that many ms for a final state (succeeded, failed, cancelled). A succeeded export is verified; its result has the file path. Give project_id instead of job_id to list its queued, running and recent jobs.
 
 ## Behaviour
 
@@ -29,8 +29,6 @@ These are the annotations of the tool definition, the hints a client uses to dec
 | --- | --- | --- | --- |
 | `job_id` | `string` | no | pattern `^job_[0-9a-hjkmnp-tv-z]{10}$` |
 | `project_id` | `string` | no | pattern `^prj_[0-9a-hjkmnp-tv-z]{10}$` |
-| `approval_id` | `string` | no | pattern `^apr_[0-9a-hjkmnp-tv-z]{10}$` |
-| `approvals` | `pending`, `approved`, `rejected`, `expired`, `all` | no |  |
 | `state` | `string`, one of 7 values | no |  |
 | `wait_ms` | `integer` | no | min 0; max 25000; default `0` |
 
@@ -42,7 +40,7 @@ A result has a text block, written for the model, and structured content with th
 | --- | --- | --- | --- |
 | `job_id` | `string` | no |  |
 | `kind` | `string` | no |  |
-| `state` | `string` | no |  |
+| `state` | `queued`, `running`, `succeeded`, `failed`, `cancelled` | no |  |
 | `progress` | `number` | no |  |
 | `message` | `string` | no |  |
 | `result` | `object` | no |  |

@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 
 import { useDocumentState } from "../../state/EditorContext";
 import InspectorTabs from "../InspectorTabs";
-import AudioProcessors from "./AudioProcessors";
 import AudioSection from "./AudioSection";
 import AutoCaptions from "./AutoCaptions";
 import ChromaKeySection from "./ChromaKeySection";
@@ -60,7 +59,6 @@ export default function ClipPanel({ itemId }: { itemId: string }): ReactNode {
 								content: (
 									<>
 										<AudioSection itemId={itemId} />
-										<AudioProcessors target={{ itemId }} />
 										<SilencesSection itemId={itemId} />
 									</>
 								),

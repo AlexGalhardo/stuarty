@@ -1,6 +1,6 @@
 {
  "name": "media_import",
- "description": "Import files into a project. paths: absolute media paths, or library hashes sha256:... (no copy). Waits up to wait_ms; use assets once ready. origin={kind,source,provider,model,prompt,rights_note}: generated needs provider,model; fetched_by_agent source,rights_note; rendered_externally source. info={tags,reusable,description}; hash without paths edits that entry.",
+ "description": "Import local files into a project. paths: absolute paths of video, audio or image files. Starts an ingest job per file, waits up to wait_ms; use an asset in edit only when it is ready. Importing the same file twice returns the same asset. Returns asset and job ids; a refused file has an error in its entry.",
  "inputSchema": {
   "type": "object",
   "properties": {
@@ -14,6 +14,7 @@
    },
    "paths": {
     "type": "array",
+    "minItems": 1,
     "maxItems": 50,
     "items": {
      "type": "string"
@@ -32,17 +33,12 @@
     "minimum": 0,
     "maximum": 25000,
     "default": 10000
-   },
-   "hash": {
-    "type": "string"
-   },
-   "origin": {
-    "type": "object"
-   },
-   "info": {
-    "type": "object"
    }
   },
+  "required": [
+   "project_id",
+   "paths"
+  ],
   "additionalProperties": false
  },
  "outputSchema": {
@@ -86,7 +82,10 @@
    "failed": {
     "type": "integer"
    }
-  }
+  },
+  "required": [
+   "assets"
+  ]
  },
  "annotations": {
   "title": "Import media",

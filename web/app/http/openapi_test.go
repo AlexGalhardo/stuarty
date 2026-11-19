@@ -349,7 +349,7 @@ func TestOpenAPIMarksTheHeavyOperations(t *testing.T) {
 
 	want := []string{
 		"jobs.start", "media.import", "templates.import", "fonts.import",
-		"projects.bundle.import", "projects.bundle.export", "projects.otio.import", "audio.measure",
+		"projects.bundle.import", "projects.bundle.export", "projects.otio.import",
 	}
 
 	if len(marked) != len(want) {

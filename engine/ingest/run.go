@@ -85,9 +85,6 @@ type Facts struct {
 	HasAudio    bool     `json:"has_audio"`
 	// HasAlpha is true for a video whose normalized file keeps an alpha channel (SDD-011 4.3.5).
 	HasAlpha bool `json:"has_alpha,omitempty"`
-	// AlphaOpaque is true when HasAlpha is and every sampled picture of the asset is fully opaque: the file
-	// declares transparency and has none (SDD-011 4.3.6). It is a fact of the normalized artifact, not of the asset.
-	AlphaOpaque bool `json:"alpha_opaque,omitempty"`
 	// FrameDelays is the display time in milliseconds of each frame of an animated image, whose
 	// FrameCount is its length (SDD-001 3.2). Empty for every other asset.
 	FrameDelays []int `json:"frame_delays,omitempty"`

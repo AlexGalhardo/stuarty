@@ -11,7 +11,7 @@ description: "Change a property over time with keyframes: position, scale, rotat
 
 ## The idea
 
-A **keyframe** fixes the value of a property at one time inside an item. Between two keyframes the value moves with the <Term id="easing">easing</Term> of the first one: `linear` (the default), `ease_in`, `ease_out`, `ease_in_out`, `hold`, which keeps the value until the next keyframe, or `bezier`, a cubic curve of your own (see [Easing curves](#easing-curves)). The properties are `x`, `y`, `scale`, `rotation`, `opacity` and, for clips and audio, `volume`.
+A **keyframe** fixes the value of a property at one time inside an item. Between two keyframes the value moves with the <Term id="easing">easing</Term> of the first one: `linear` (the default), `ease_in`, `ease_out`, `ease_in_out` or `hold`, which keeps the value until the next keyframe. The properties are `x`, `y`, `scale`, `rotation`, `opacity` and, for clips and audio, `volume`.
 
 The time of a keyframe is an absolute position on the timeline and must be inside the item, its end included. The first keyframe you add after the item's start also creates a keyframe at the start with the current static value, so the animation begins from where the item was. Removing the last keyframe of a property writes its value back as the static value.
 
@@ -50,33 +50,6 @@ stuarty edit --project prj_7k2m9x4q1b keyframe.clear item_id=itm_m1n2p3q4r5
 </Tabs>
 
 `keyframe.clear` without a property clears every animated property; the value at the first frame of the item becomes the static value.
-
-## Easing curves
-
-A segment can follow a custom curve: set its easing to **Custom curve** in the row of the keyframe and press **Curve**. Drag the two handles, move one with the arrow keys (Shift for a larger step), pick a named curve (ease in, ease out, ease in and out, back, overshoot) or type the four numbers `x1, y1, x2, y2`. `x1` and `x2` stay from 0 to 1; `y1` and `y2` may go from -2 to 3, so a curve can pull back or overshoot. The same curve works on a crop side and on a mask property, and the preview and the export draw it the same, because the core works out every frame and the renderers only receive the value. A value that overshoots is kept inside the range of its property.
-
-With a command:
-
-```json
-{ "op": "keyframe.set_easing", "args": {
-  "item_id": "itm_m1n2p3q4r5", "property": "scale", "at": "1s", "preset": "overshoot"
-} }
-{ "op": "keyframe.set_easing", "args": {
-  "item_id": "itm_m1n2p3q4r5", "property": "scale", "at": "1s", "bezier": [0.34, 1.56, 0.64, 1]
-} }
-```
-
-## Motion presets
-
-**Motion presets** in the inspector apply the most used moves at the start (**In**) or the end (**Out**) of an item: fade, slide, scale, pop, push in and pull out. The core writes them as ordinary keyframes, so you edit them afterwards like any others. `animation.list_presets` describes them, and `animation.apply_preset` applies one:
-
-```json
-{ "op": "animation.apply_preset", "args": {
-  "item_id": "itm_m1n2p3q4r5", "preset": "slide", "edge": "in", "direction": "left", "duration": "0.5s"
-} }
-```
-
-A preset longer than the item is refused (`E_INVALID_TIME`); applying the start and the end of the same property keeps both.
 
 ## Common mistakes
 

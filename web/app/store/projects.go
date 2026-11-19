@@ -60,11 +60,7 @@ func projectFilter(q service.ProjectQuery) ([]string, []any) {
 		where, args = append(where, "owner_user_id = ?"), append(args, q.OwnerUserID)
 	}
 	if q.ProjectID != "" {
-		// A key limited to one project reaches every timeline of it (SDD-003 section 1.7 rule 4), not only the
-		// one whose id is the project's.
-		where = append(where,
-			"(id = ? OR id IN (SELECT i.ref FROM project_items i WHERE i.kind = 'timeline' AND i.project_id = ?))")
-		args = append(args, q.ProjectID, q.ProjectID)
+		where, args = append(where, "id = ?"), append(args, q.ProjectID)
 	}
 	return where, args
 }

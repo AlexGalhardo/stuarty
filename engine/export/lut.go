@@ -20,7 +20,7 @@ func (f *frameSource) lut(asset string) (*lut.Table, error) {
 		return t, nil
 	}
 
-	a, ok := f.s.asset(asset)
+	a, ok := f.s.job.Doc.Assets[asset]
 	if !ok || a.Kind != timeline.AssetLUT {
 		return nil, fmt.Errorf("the asset %s is not a lookup table of the document", asset)
 	}

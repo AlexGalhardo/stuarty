@@ -67,7 +67,7 @@ func (s *svc) resolveBundleSource(
 
 // ProjectBundleExport starts the export job with input.format "bundle" (SDD-005 section 16).
 func (s *svc) ProjectBundleExport(ctx context.Context, req ProjectBundleExportRequest) (*Job, error) {
-	c, err := s.authorizeProjectScope(ctx, ScopeRender, req.ProjectID)
+	c, err := authorizeScope(ctx, ScopeRender, req.ProjectID)
 	if err != nil {
 		return nil, err
 	}
@@ -545,9 +545,6 @@ func describeProduction(m *BundleManifest, snaps []*bundleSnapshot, items []Item
 		}
 
 		bi := BundleItem{Kind: it.Kind, Title: it.Title, Position: len(p.Items)}
-		if it.Kind == string(project.Text) {
-			bi.TextKind = it.TextKind
-		}
 
 		switch it.Kind {
 		case string(project.Timeline):

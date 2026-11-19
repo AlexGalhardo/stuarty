@@ -1,6 +1,0 @@
-{
-  "model": "tts-1",
-  "input": "Welcome to the channel.",
-  "voice": "alloy",
-  "response_format": "mp3"
-}

@@ -166,38 +166,6 @@ func TestSecurity_T01_SameSiteDifferentPortRefused(t *testing.T) {
 	}
 }
 
-// The redirect from a consent screen is a cross-site navigation, and the sign-in page is the one place
-// it may land (SDD-007 section 3.6 item 4): a GET that loads a document, of that path and no other.
-func TestSecurity_T01_SignInRedirectIsTheOnlyCrossSiteNavigationAllowed(t *testing.T) {
-	t.Parallel()
-
-	h := newHarness(t)
-
-	navigate := map[string]string{
-		"Sec-Fetch-Site": "cross-site",
-		"Sec-Fetch-Mode": "navigate",
-		"Sec-Fetch-Dest": "document",
-	}
-
-	if res := h.do(req{path: httpapi.SignInCallbackPath, headers: navigate}); res.status == http.StatusForbidden {
-		t.Errorf("the cross-site navigation to the sign-in page = %d, want it let in", res.status)
-	}
-
-	for name, r := range map[string]req{
-		"another page":              {path: "/connections", headers: navigate},
-		"the API":                   {path: "/api/v1/projects", headers: navigate},
-		"the callback by a fetch":   {path: httpapi.SignInCallbackPath, headers: map[string]string{"Sec-Fetch-Site": "cross-site", "Sec-Fetch-Mode": "cors", "Sec-Fetch-Dest": "empty"}},
-		"the callback in a frame":   {path: httpapi.SignInCallbackPath, headers: map[string]string{"Sec-Fetch-Site": "cross-site", "Sec-Fetch-Mode": "navigate", "Sec-Fetch-Dest": "iframe"}},
-		"the callback by a POST":    {method: http.MethodPost, path: httpapi.SignInCallbackPath, body: "{}", headers: navigate},
-		"the API complete by POST":  {method: http.MethodPost, path: "/api/v1/social/complete", body: `{"state":"x"}`, headers: navigate},
-		"a callback with an Origin": {path: httpapi.SignInCallbackPath, headers: map[string]string{"Sec-Fetch-Site": "cross-site", "Sec-Fetch-Mode": "navigate", "Sec-Fetch-Dest": "document", "Origin": "http://evil.example"}},
-	} {
-		if res := h.do(r); res.status != http.StatusForbidden {
-			t.Errorf("%s = %d, want 403", name, res.status)
-		}
-	}
-}
-
 func otherPort(p string) string {
 	if p == "3000" {
 		return "3001"
@@ -300,13 +268,6 @@ func TestSecurity_T04_SecretsNeverAppear(t *testing.T) {
 	var seen []resp
 
 	for _, ep := range httpapi.Endpoints {
-		// The approval stream never ends for a caller with a session: it is read with a deadline by
-		// TestApprovalsStreamSendsThePendingAndThenTheDecisions, which checks its frames for the token; the
-		// publication stream is the same kind of stream.
-		if ep.ID == "approvals.events" || ep.ID == "publications.events" {
-			continue
-		}
-
 		for _, bad := range []string{"", `{"name":`, `{"unknown":1}`} {
 			for _, hd := range creds {
 				seen = append(seen, h.do(req{

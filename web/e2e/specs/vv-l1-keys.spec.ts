@@ -170,11 +170,7 @@ test.describe("palette Escape, documented keys and the attributes menu", () => {
 		});
 		await page.goto(`/editor/${seeded.id}`);
 		await expect(page.locator("[data-item-id]")).toHaveCount(1);
-		// The menu of the asset card, in the library: the tracks have an
-		// "Actions for track" button too, which comes first while the library is
-		// still listing its files.
 		await page
-			.getByRole("region", { name: "Media" })
 			.getByRole("button", { name: /^Actions for/ })
 			.first()
 			.click();

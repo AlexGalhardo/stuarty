@@ -1,8 +1,0 @@
-{
-  "args": {
-    "kind": "sharpen",
-    "layer_id": "lyr_bbbbbbbbbb",
-    "radius": 50
-  },
-  "op": "layer.filter_add"
-}

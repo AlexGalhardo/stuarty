@@ -1,4 +1,0 @@
-lint r1 prj_7k2m9x4q1b: errors=0 warnings=1 (showing 1 of 1)
-warning L_AUDIO_LIMITER_NOT_LAST itm_m 0s/0f-5s/150f
-  The limiter at place 0 of the chain of itm_m is not the last processor.
-  hint: move it last with audio.processor_move

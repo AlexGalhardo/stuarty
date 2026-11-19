@@ -19,7 +19,6 @@ import (
 	"github.com/AlexGalhardo/stuarty/core/command"
 	coreimage "github.com/AlexGalhardo/stuarty/core/image"
 	"github.com/AlexGalhardo/stuarty/engine/ingest"
-	assetlib "github.com/AlexGalhardo/stuarty/service/assets"
 	"github.com/AlexGalhardo/stuarty/service/connections"
 	"github.com/AlexGalhardo/stuarty/service/library"
 	"github.com/AlexGalhardo/stuarty/service/textview"
@@ -123,15 +122,6 @@ func (m *memImages) OpsSince(_ context.Context, id string, revision int64) ([]Im
 	return out, nil
 }
 
-func (m *memImages) OpsPage(ctx context.Context, id string, revision int64, limit int) ([]ImageOpRow, error) {
-	out, err := m.OpsSince(ctx, id, revision)
-	if limit >= 0 && len(out) > limit {
-		out = out[:limit]
-	}
-
-	return out, err
-}
-
 func (m *memImages) LastOpen(_ context.Context, id, actor string, kinds []OperationKind) (ImageOpRow, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -232,41 +222,14 @@ func (t memTx) Images() ImageRepo  { return t.st.images }
 func (t memTx) Assets() AssetRepo  { return t.st.assets }
 func (t memTx) AfterCommit(func()) {}
 
-// memLibrary is the library side of the files, by owner and hash: the rows an import writes.
-type memLibrary struct {
-	assetlib.Store
-	rows map[string]assetlib.Row
-}
-
-func (m memLibrary) Get(_ context.Context, owner, hash string) (assetlib.Row, error) {
-	r, ok := m.rows[owner+"|"+hash]
-	if !ok {
-		return assetlib.Row{}, assetlib.ErrNotFound
-	}
-
-	return r, nil
-}
-
-// noJobs holds no job: the image tests never queue an ingest.
-type noJobs struct{ JobRepo }
-
-func (noJobs) ActiveIngestForHash(context.Context, string) (JobRow, error) {
-	return JobRow{}, ErrNotFound
-}
-
 type memStore struct {
 	Store
 	images   *memImages
 	assets   memAssets
 	projects memProjects
-	library  memLibrary
 }
 
 func (m *memStore) Images() ImageRepo { return m.images }
-
-func (m *memStore) AssetLibrary() assetlib.Store { return m.library }
-
-func (m *memStore) Jobs() JobRepo { return noJobs{} }
 
 // No test here reads a connection; the manager the service builds only needs a store to hold.
 func (m *memStore) Connections() connections.Store { return nil }
@@ -290,8 +253,7 @@ func newImageService(t *testing.T) (*svc, string) {
 	w, h := 64, 48
 
 	st := &memStore{
-		library: memLibrary{rows: map[string]assetlib.Row{}},
-		images:  &memImages{rows: map[string]*ImageRow{}, ops: map[string][]ImageOpRow{}},
+		images: &memImages{rows: map[string]*ImageRow{}, ops: map[string][]ImageOpRow{}},
 		assets: memAssets{projects: map[string][]ProjectAssetRow{}, rows: map[string]AssetRow{imgHash: {
 			Hash: imgHash, Kind: "image", OriginalName: "/home/me/face.png", IngestState: IngestReady,
 			Facts: AssetFacts{Width: &w, Height: &h},
@@ -452,41 +414,10 @@ func TestImageFlow(t *testing.T) {
 		t.Fatalf("%v %+v", err, small)
 	}
 
-	// one side alone keeps the aspect, and the result gives the size of the file, not the canvas's other side
-	narrow, err := s.ImageExport(ctx, ImageExportRequest{ImageID: id, Width: 640})
-	if err != nil || narrow.Width != 640 || narrow.Height != 360 {
-		t.Fatalf("%v %+v", err, narrow)
-	}
-
-	narrowBody, err := os.ReadFile(narrow.Path)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	cfg, err := png.DecodeConfig(bytes.NewReader(narrowBody))
-	if err != nil || cfg.Width != 640 || cfg.Height != 360 {
-		t.Fatalf("the file is %v %+v", err, cfg)
-	}
-
 	_, err = s.ImageExport(ctx, ImageExportRequest{ImageID: id, Format: "webp"})
 	if se := mustCode(t, err, CodeExportFailed); se.Details["reason"] != "webp_unavailable" {
 		t.Fatalf("%+v", se)
 	}
-
-	// with an encoder wired, the same request writes a .webp file and the quality reaches the encoder
-	enc := &recordingWebP{}
-	s.webp = enc
-
-	webp, err := s.ImageExport(ctx, ImageExportRequest{ImageID: id, Format: "webp", Quality: 55, Preset: "square_post"})
-	if err != nil || !strings.HasSuffix(webp.Path, ".webp") || enc.quality != 55 || webp.Width != 1080 {
-		t.Fatalf("%v %+v quality %d", err, webp, enc.quality)
-	}
-
-	if body, rerr := os.ReadFile(webp.Path); rerr != nil || string(body) != "RIFFxxxxWEBP" {
-		t.Fatalf("%v %q", rerr, body)
-	}
-
-	s.webp = nil
 
 	_, err = s.ImageExport(ctx, ImageExportRequest{ImageID: id, Width: -1})
 	mustCode(t, err, command.CodeValidation)
@@ -1021,12 +952,4 @@ func TestImageEmptyScopedNameDoesNotFallBackToTheGlobalOne(t *testing.T) {
 	if len(d.Layers) != 1 || strings.Contains(d.Layers[0].Name, "private") || d.Layers[0].Name != "Image" {
 		t.Fatalf("the name is neutral: %+v", d.Layers)
 	}
-}
-
-type recordingWebP struct{ quality int }
-
-func (r *recordingWebP) EncodeWebP(_ context.Context, _ []byte, quality int) ([]byte, error) {
-	r.quality = quality
-
-	return []byte("RIFFxxxxWEBP"), nil
 }

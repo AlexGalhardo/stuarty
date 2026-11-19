@@ -1,7 +1,6 @@
 package connections
 
 import (
-	"bytes"
 	"context"
 	"encoding/base64"
 	"encoding/hex"
@@ -613,83 +612,5 @@ func TestTestMessageKeepsABodyThatDoesNotEchoTheSecret(t *testing.T) {
 	res, _ := m.Test(context.Background(), "con_a")
 	if !strings.Contains(res.Message, "all good") {
 		t.Errorf("the body was dropped: %q", res.Message)
-	}
-}
-
-func TestRotateWritesTheNewSecretOverTheOldOneInTheVault(t *testing.T) {
-	srv := newServer(t, http.StatusOK, "ok")
-	m, st, v := newManager(t)
-	connect(t, m, st, v, srv, "refresh-one")
-
-	err := m.With(context.Background(), "con_a", func(c Credential) error {
-		if string(c.Secret) != "refresh-one" {
-			t.Errorf("the closure was given %q", c.Secret)
-		}
-
-		return c.Rotate(func(current []byte) ([]byte, error) {
-			if string(current) != "refresh-one" {
-				t.Errorf("the update was given %q", current)
-			}
-
-			return []byte("refresh-two"), nil
-		})
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// The next use reads the secret that was written, under the same reference.
-	err = m.With(context.Background(), "con_a", func(c Credential) error {
-		if string(c.Secret) != "refresh-two" {
-			t.Errorf("the next closure was given %q, want the rotated secret", c.Secret)
-		}
-
-		return nil
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if conn, gerr := m.Get(context.Background(), "con_a"); gerr != nil || !conn.SecretSet {
-		t.Errorf("after a rotation: %+v, %v", conn, gerr)
-	}
-}
-
-// A rotation reads the secret the vault holds when it writes, under the lock of the connection: a change made
-// since the closure began (a price edited, a sign-in done again) is what it updates, never lost under the
-// secret the closure was given.
-func TestRotateUpdatesTheSecretTheVaultHoldsNow(t *testing.T) {
-	srv := newServer(t, http.StatusOK, "ok")
-	m, st, v := newManager(t)
-	connect(t, m, st, v, srv, "refresh-one")
-
-	err := m.With(context.Background(), "con_a", func(c Credential) error {
-		if uerr := m.UpdateSecret(context.Background(), "con_a", func(cur []byte) ([]byte, error) {
-			return append(bytes.Clone(cur), "+price"...), nil
-		}); uerr != nil {
-			return uerr
-		}
-
-		return c.Rotate(func(current []byte) ([]byte, error) {
-			return append(bytes.Clone(current), "+token"...), nil
-		})
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	got, err := v.Get("con_a")
-	if err != nil || string(got) != "refresh-one+price+token" {
-		t.Fatalf("the vault holds %q, %v: a change was lost", got, err)
-	}
-
-	// An update that returns nothing writes nothing.
-	nothing := func([]byte) ([]byte, error) { return nil, nil }
-	if err := m.UpdateSecret(context.Background(), "con_a", nothing); err != nil {
-		t.Fatal(err)
-	}
-
-	if again, _ := v.Get("con_a"); string(again) != "refresh-one+price+token" {
-		t.Fatalf("the vault holds %q after an update that wrote nothing", again)
 	}
 }

@@ -10,6 +10,7 @@ import (
 	"sync"
 
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/connections"
 	"github.com/AlexGalhardo/stuarty/service/library"
 
 	"github.com/AlexGalhardo/vukem/database"
@@ -99,9 +100,10 @@ func (p *projectTx) Jobs() service.JobRepo                { return p.tx.Jobs() }
 func (p *projectTx) Templates() service.TemplateRepo      { return p.tx.Templates() }
 func (p *projectTx) Backups() service.BackupRepo          { return p.tx.Backups() }
 func (p *projectTx) Audit() service.AuditRepo             { return p.tx.Audit() }
-func (p *projectTx) Checkpoints() service.CheckpointRepo  { return p.tx.Checkpoints() }
 func (p *projectTx) Fonts() service.FontRepo              { return p.tx.Fonts() }
 func (p *projectTx) BrandKit() service.BrandKitRepo       { return p.tx.BrandKit() }
+func (p *projectTx) Connections() connections.Store       { return p.tx.Connections() }
+func (p *projectTx) Images() service.ImageRepo            { return p.tx.Images() }
 func (p *projectTx) Library() library.Index               { return p.tx.Library() }
 func (p *projectTx) AfterCommit(fn func())                { p.tx.AfterCommit(fn) }
 func (p *projectTx) Project() service.ProjectRow          { return p.row }

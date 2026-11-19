@@ -17,9 +17,6 @@ import (
 type ImageConfig struct {
 	// AssetPath gives the path of the normalized PNG of an image asset, by content hash.
 	AssetPath func(hash string) (string, error)
-	// LUTPath gives the path of the normalized .cube file of a lookup-table asset (SDD-021 section 3.1), by
-	// content hash. It is needed only by a document with a layer that has a table.
-	LUTPath func(hash string) (string, error)
 	// Fonts is the font set of the text layers; the bundled fonts when nil.
 	Fonts *rasterize.FontSet
 }
@@ -37,7 +34,6 @@ func RenderImage(ctx context.Context, doc *coreimage.Document, cfg ImageConfig) 
 	fp := coreimage.Plan(doc, plan.Options{Measure: rasterize.Measure(fonts), OutputScale: 1})
 	cache := rasterize.NewCache(fonts, 0)
 	kept := make([]plan.Layer, 0, len(fp.Layers))
-	tables := map[string]bool{}
 
 	host, err := renderhost.New(ctx, renderhost.Config{})
 	if err != nil {
@@ -78,20 +74,12 @@ func RenderImage(ctx context.Context, doc *coreimage.Document, cfg ImageConfig) 
 			if err := host.PutBitmap(ctx, l.Bitmap.Key(), bm); err != nil {
 				return nil, rendererError(err)
 			}
-		case plan.Group:
-			// An image document has layers of its own kinds; a group is the plan of nested timelines (SDD-004 §3.16).
-			return nil, fmt.Errorf("layer %s: %w: an image has no group", l.ItemID, compositor.ErrSource)
-		}
-
-		// A table is in the module before the layer that names it is drawn: a layer is never drawn without it.
-		if err := putImageLUT(ctx, host, &l, tables, cfg); err != nil {
-			return nil, err
 		}
 
 		kept = append(kept, l)
 	}
 
-	fp.Layers = withoutLostClips(kept)
+	fp.Layers = kept
 
 	dst := image.NewRGBA(image.Rect(0, 0, doc.Width, doc.Height))
 	out := renderhost.Output{Width: doc.Width, Height: doc.Height, Scale: 1}
@@ -101,34 +89,6 @@ func RenderImage(ctx context.Context, doc *coreimage.Document, cfg ImageConfig) 
 	}
 
 	return dst, nil
-}
-
-// withoutLostClips drops the layers whose mask source did not make it to the renderer (a text with no pixels, an
-// opacity that rounds to none): a layer clipped to nothing draws nothing, and the renderer refuses a clip whose
-// source it does not hold (SDD-013 section 3.11.4).
-func withoutLostClips(layers []plan.Layer) []plan.Layer {
-	for {
-		have := make(map[string]bool, len(layers))
-		for i := range layers {
-			have[layers[i].ItemID] = true
-		}
-
-		kept := layers[:0]
-
-		for i := range layers {
-			if c := layers[i].Clip; c != nil && !have[c.Source] {
-				continue
-			}
-
-			kept = append(kept, layers[i])
-		}
-
-		if len(kept) == len(layers) {
-			return kept
-		}
-
-		layers = kept
-	}
 }
 
 // imageTexture is the pixels of an image layer: the part of the source the layer shows, scaled down to the box

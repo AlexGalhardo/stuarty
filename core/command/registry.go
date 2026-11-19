@@ -30,9 +30,6 @@ type Spec struct {
 	Errors      []string // the error codes the command can return
 	Scope       Scope
 	Internal    bool // only the service may issue it (SDD-002 §A.9)
-	// Domain is the domain of the command (SDD-000 section 1.1). It is the domain of the registry that holds it:
-	// a command may leave it empty and inherit, or name it and be refused by a registry of another domain.
-	Domain string
 }
 
 // Command is a registered kind of edit: its Spec, the Go struct that is the schema
@@ -107,10 +104,6 @@ func (c Command) Check() error {
 	if c.Scope != ScopeEdit && c.Scope != ScopeMedia {
 		add("scope must be edit or media")
 	}
-
-	if !KnownDomain(c.Domain) {
-		add("no domain (%q is not one of %s)", c.Domain, strings.Join(DomainNames(), ", "))
-	}
 	if len(problems) == 0 {
 		return nil
 	}
@@ -123,37 +116,17 @@ type Registry struct {
 	// violation as E_INTERNAL (SDD-002 §A.3 rule 3). Tests turn it on.
 	Debug bool
 
-	domain string
-	cmds   map[string]*Command
+	cmds map[string]*Command
 }
 
-// NewRegistry returns an empty registry of one domain, the kind of document its commands edit (the timeline
-// registry is DomainVideo, the image registry DomainImage). A domain that is not one of SDD-000 section 1.1
-// makes every Register fail, so a later epic cannot register operations that no domain owns.
-func NewRegistry(domain string) *Registry {
-	return &Registry{domain: domain, cmds: map[string]*Command{}}
+// NewRegistry returns an empty registry.
+func NewRegistry() *Registry {
+	return &Registry{cmds: map[string]*Command{}}
 }
 
-// Domain is the domain of the registry.
-func (r *Registry) Domain() string { return r.domain }
-
-// Register adds a command. An incomplete command, one whose name is taken and one with no domain, or with a
-// domain other than its registry's, is an error. The command takes the domain of the registry.
+// Register adds a command. An incomplete command, or one whose name is taken, is an
+// error.
 func (r *Registry) Register(c Command) error {
-	if !KnownDomain(r.domain) {
-		return fmt.Errorf("command %q: the registry has no domain (%q is not one of %s)",
-			c.Name, r.domain, strings.Join(DomainNames(), ", "))
-	}
-
-	if c.Domain != "" && c.Domain != r.domain {
-		return fmt.Errorf(
-			"command %q: domain %q differs from the domain %q of its registry",
-			c.Name, c.Domain, r.domain,
-		)
-	}
-
-	c.Domain = r.domain
-
 	if err := c.Check(); err != nil {
 		return err
 	}
@@ -300,14 +273,14 @@ var (
 // Default is the registry of this binary, filled by the init functions of the
 // command files: every registered command is exposed.
 func Default() *Registry {
-	defaultOnce.Do(func() { defaultReg = NewRegistry(DomainVideo) })
+	defaultOnce.Do(func() { defaultReg = NewRegistry() })
 	return defaultReg
 }
 
 // FullRegistry returns a new registry with every registered command. Tests and
 // the generators use it when they need a registry of their own.
 func FullRegistry() *Registry {
-	r := NewRegistry(DomainVideo)
+	r := NewRegistry()
 	for i := range registered {
 		if err := r.Register(registered[i]); err != nil {
 			panic(err)

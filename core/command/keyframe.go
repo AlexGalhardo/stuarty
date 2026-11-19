@@ -49,7 +49,7 @@ func init() {
 // propApplies is precondition 3: volume belongs to clips and audio items, the other
 // properties to visual items.
 func propApplies(it *timeline.Item, prop string) *Error {
-	hasVolume := it.Type == timeline.ItemClip || it.Type == timeline.ItemAudio || it.Type == timeline.ItemComposition
+	hasVolume := it.Type == timeline.ItemClip || it.Type == timeline.ItemAudio
 	switch {
 	case prop == "volume" && !hasVolume:
 		return Errorf(CodeTypeMismatch, "Property volume does not apply to %s item %s.", it.Type, it.ID).
@@ -178,12 +178,11 @@ func (c *Context) keyframeT(it *timeline.Item, at Time) (int, *Error) {
 }
 
 type keyframeSetArgs struct {
-	ItemID   string    `json:"item_id"          pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
-	Property string    `json:"property"                                                                enum:"x,y,scale,rotation,opacity,volume,brightness,contrast,saturation,temperature,tint,hue,mask_x,mask_y,mask_width,mask_height,mask_feather,crop_left,crop_top,crop_right,crop_bottom"`
-	At       Time      `json:"at"                                                                                                                                                                                                                                                               desc:"Position on the project timeline, from the item start to its end inclusive."`
-	Value    float64   `json:"value"                                                                                                                                                                                                                                                            desc:"Valid for the property: scale above 0 up to 20, opacity 0 to 1, volume 0 to 4."`
-	Easing   string    `json:"easing,omitempty"                                                        enum:"linear,ease_in,ease_out,ease_in_out,hold,bezier"                                                                                                                                   desc:"From this keyframe to the next. Default linear. bezier needs the bezier argument."`
-	Bezier   []float64 `json:"bezier,omitempty"                                                                                                                                                                                                                                                 desc:"x1, y1, x2, y2 of the curve of easing bezier: x1 and x2 from 0 to 1, y1 and y2 from -2 to 3." min:"4" max:"4"`
+	ItemID   string  `json:"item_id"          pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	Property string  `json:"property"                                                                enum:"x,y,scale,rotation,opacity,volume,brightness,contrast,saturation,temperature,tint,hue,mask_x,mask_y,mask_width,mask_height,mask_feather,crop_left,crop_top,crop_right,crop_bottom"`
+	At       Time    `json:"at"                                                                                                                                                                                                                                                               desc:"Position on the project timeline, from the item start to its end inclusive."`
+	Value    float64 `json:"value"                                                                                                                                                                                                                                                            desc:"Valid for the property: scale above 0 up to 20, opacity 0 to 1, volume 0 to 4."`
+	Easing   string  `json:"easing,omitempty"                                                        enum:"linear,ease_in,ease_out,ease_in_out,hold"                                                                                                                                          desc:"From this keyframe to the next. Default linear."`
 }
 
 func applyKeyframeSet(c *Context, a *keyframeSetArgs) error {
@@ -191,10 +190,6 @@ func applyKeyframeSet(c *Context, a *keyframeSetArgs) error {
 		return err
 	}
 	if err := checkKeyframeValue(a.Property, a.Value); err != nil {
-		return err
-	}
-	curve, err := keyframeEasingArgs(a.Easing, a.Bezier)
-	if err != nil {
 		return err
 	}
 	it, err := c.item(a.ItemID)
@@ -231,7 +226,7 @@ func applyKeyframeSet(c *Context, a *keyframeSetArgs) error {
 	}
 	nk := timeline.NewKeyframe(t, round3(a.Value))
 	if a.Easing != "" {
-		setEasing(&nk, a.Easing, curve)
+		nk.Easing = a.Easing
 	}
 	i, found := slices.BinarySearchFunc(list, t, func(k timeline.Keyframe, t int) int { return k.T - t })
 	if found {
@@ -358,7 +353,7 @@ func applyKeyframeClear(c *Context, a *keyframeClearArgs) error {
 	cleared := []string{}
 	for _, p := range props {
 		if list := it.Keyframes[p]; len(list) > 0 {
-			dropKeyframes(&it, p, timeline.ValueAtProp(p, list, 0, 0))
+			dropKeyframes(&it, p, timeline.ValueAt(list, 0, 0))
 			cleared = append(cleared, p)
 		}
 	}

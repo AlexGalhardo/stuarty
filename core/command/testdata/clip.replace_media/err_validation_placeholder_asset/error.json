@@ -1,7 +1,0 @@
-{
-  "code": "E_VALIDATION",
-  "message": "args.asset_id \"ast_placeholder\" is not an asset id: an id is \"ast_\" followed by 10 characters from 0-9 and a-z without i, l, o and u.",
-  "hint": "Use an id like \"ast_s6t7v8w9x0\" or omit it.",
-  "retryable": false,
-  "path": "args.asset_id"
-}

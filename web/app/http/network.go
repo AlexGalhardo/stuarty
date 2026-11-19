@@ -107,7 +107,7 @@ func (n *Network) allowed(r *http.Request) bool {
 		return fetchSiteAllowed(r)
 	}
 
-	return n.schemeAllowed(r) && n.hostAllowed(r.Host) && fetchSiteAllowedIn(r, true) && n.originAllowed(r)
+	return n.schemeAllowed(r) && n.hostAllowed(r.Host) && fetchSiteAllowed(r) && n.originAllowed(r)
 }
 
 func (n *Network) hostAllowed(host string) bool {

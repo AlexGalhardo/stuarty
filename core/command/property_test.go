@@ -151,7 +151,7 @@ type docPick struct {
 	rng                                *rand.Rand
 	items, tracks, visual, audio, asts []string
 	captions, slots, clips, audios     []string
-	fonts, comps                       []string
+	fonts                              []string
 	keys                               []keyAt
 }
 
@@ -177,10 +177,6 @@ func newDocPick(rng *rand.Rand, doc *timeline.Document) *docPick {
 
 		if it := doc.Items[id]; it.Type == timeline.ItemAudio {
 			p.audios = append(p.audios, id)
-		}
-
-		if it := doc.Items[id]; it.Type == timeline.ItemComposition {
-			p.comps = append(p.comps, id)
 		}
 
 		for prop, ks := range doc.Items[id].Keyframes {
@@ -211,9 +207,7 @@ func newDocPick(rng *rand.Rand, doc *timeline.Document) *docPick {
 		p.fonts = append(p.fonts, family)
 	}
 
-	for _, l := range [][]string{
-		p.items, p.tracks, p.visual, p.audio, p.asts, p.captions, p.slots, p.clips, p.audios, p.fonts, p.comps,
-	} {
+	for _, l := range [][]string{p.items, p.tracks, p.visual, p.audio, p.asts, p.captions, p.slots, p.clips, p.audios, p.fonts} {
 		slices.Sort(l)
 	}
 
@@ -334,19 +328,6 @@ var alphaOps = map[string]func(p *docPick) string{
 	"audio.add": func(p *docPick) string {
 		return fmt.Sprintf(`{"track_id":%q,"asset_id":%q,"start":%q}`, p.atrack(), p.asset(), p.frames(2000))
 	},
-	"clip.add_composition": func(p *docPick) string {
-		if p.n(2) == 0 {
-			return fmt.Sprintf(`{"track_id":%q,"timeline_id":%q,"start":%q}`, p.vtrack(), tlB, p.frames(2500))
-		}
-		return fmt.Sprintf(`{"track_id":%q,"timeline_id":%q,"start":%q,"duration":"%df"}`,
-			p.vtrack(), tlB, p.frames(2500), 1+p.n(120))
-	},
-	"composition.create_from_selection": func(p *docPick) string {
-		return fmt.Sprintf(`{"item_ids":[%q],"name":"Part %d"}`, p.item(), p.n(100))
-	},
-	"composition.expand": func(p *docPick) string {
-		return fmt.Sprintf(`{"item_id":%q}`, p.of(p.comps, "itm_zzzzzzzzzz"))
-	},
 	"clip.set_framing": func(p *docPick) string {
 		return fmt.Sprintf(`{"item_id":%q,"fit":%q,"crop":{"left":%.2f,"top":%.2f}}`, p.clip(),
 			p.oneOf("cover", "contain", "none"), float64(p.n(40))/100, float64(p.n(40))/100)
@@ -394,11 +375,6 @@ var alphaOps = map[string]func(p *docPick) string{
 			float64(p.n(101))/100,
 		)
 	},
-	// The random documents hold one video, so a swap succeeds only as the same asset (a no-op); an image for a
-	// video is the refusal the sequences should also meet.
-	"clip.replace_media": func(p *docPick) string {
-		return fmt.Sprintf(`{"item_id":%q,"asset_id":%q}`, p.clip(), p.oneOf(vidAsset, vidAsset, imgAsset))
-	},
 	"clip.set_blur": func(p *docPick) string {
 		return fmt.Sprintf(`{"item_id":%q,"radius":%d}`, p.clip(), p.n(101))
 	},
@@ -419,23 +395,6 @@ var alphaOps = map[string]func(p *docPick) string{
 	},
 	"item.freeze_frame": func(p *docPick) string {
 		return fmt.Sprintf(`{"item_id":%q,"at":%q,"duration":%q}`, p.clip(), p.frames(400), p.frames(60))
-	},
-	"audio.processor_add": func(p *docPick) string {
-		kind := p.oneOf("eq", "compressor", "limiter", "gate", "deesser", "noise_reduction")
-		return fmt.Sprintf(`{"item_id":%q,"kind":%q,"index":%d}`, p.audioItem(), kind, p.n(3))
-	},
-	"audio.processor_set": func(p *docPick) string {
-		return fmt.Sprintf(`{"item_id":%q,"index":%d,"enabled":%s}`, p.audioItem(), p.n(3), p.oneOf("true", "false"))
-	},
-	"audio.processor_move": func(p *docPick) string {
-		return fmt.Sprintf(`{"item_id":%q,"index":%d,"to":%d}`, p.audioItem(), p.n(3), p.n(3))
-	},
-	"audio.processor_remove": func(p *docPick) string {
-		return fmt.Sprintf(`{"item_id":%q,"index":%d}`, p.audioItem(), p.n(3))
-	},
-	"audio.apply_preset": func(p *docPick) string {
-		presets := []string{"voice", "voice_with_music", "podcast", "clean_noisy_room"}
-		return fmt.Sprintf(`{"item_id":%q,"preset":%q}`, p.audioItem(), p.oneOf(presets...))
 	},
 	"item.set_enabled": func(p *docPick) string {
 		return fmt.Sprintf(`{"item_id":%q,"enabled":%s}`, p.clip(), p.oneOf("true", "false"))
@@ -601,38 +560,6 @@ var alphaOps = map[string]func(p *docPick) string{
 			p.oneOf("scale", "opacity", "x", "y", "rotation", "volume"), p.frames(500), float64(p.n(100))/100+0.1,
 			p.oneOf("linear", "ease_in", "ease_out", "ease_in_out", "hold"))
 	},
-	"animation.apply_preset": func(p *docPick) string {
-		preset := p.oneOf("fade", "slide", "scale", "pop", "push_in", "pull_out")
-		edge := p.oneOf("in", "out")
-		extra := ""
-
-		if preset == "slide" && p.n(2) == 0 {
-			extra = fmt.Sprintf(`,"direction":%q`, p.oneOf("left", "right", "up", "down"))
-		}
-
-		return fmt.Sprintf(`{"item_id":%q,"preset":%q,"edge":%q,"duration":%q%s}`, p.item(), preset, edge,
-			p.frames(120), extra)
-	},
-	"animation.list_presets": func(_ *docPick) string { return `{}` },
-	"keyframe.set_easing": func(p *docPick) string {
-		item, prop, at := p.item(), "scale", p.frames(500)
-		if len(p.keys) > 0 && p.n(4) != 0 {
-			k := p.keys[p.n(len(p.keys))]
-			item, prop, at = k.item, k.prop, fmt.Sprintf("%df", k.at)
-		}
-
-		switch p.n(3) {
-		case 0:
-			return fmt.Sprintf(`{"item_id":%q,"property":%q,"at":%q,"preset":%q}`, item, prop, at,
-				p.oneOf("in", "out", "in_out", "back", "overshoot"))
-		case 1:
-			return fmt.Sprintf(`{"item_id":%q,"property":%q,"at":%q,"bezier":[%.2f,%.2f,%.2f,%.2f]}`, item, prop, at,
-				float64(p.n(100))/100, float64(p.n(500))/100-2, float64(p.n(100))/100, float64(p.n(500))/100-2)
-		}
-
-		return fmt.Sprintf(`{"item_id":%q,"property":%q,"at":%q,"easing":%q}`, item, prop, at,
-			p.oneOf("linear", "ease_in", "ease_out", "ease_in_out", "hold"))
-	},
 	"keyframe.remove": func(p *docPick) string {
 		if len(p.keys) > 0 && p.n(4) != 0 {
 			k := p.keys[p.n(len(p.keys))]
@@ -750,7 +677,7 @@ func checkStepEchoing(
 ) (next *timeline.Document, err error) {
 	before := timeline.Canonical(doc)
 
-	res, applyErr := fullRegistry().Apply(doc, o, Env{NewIDs: ids.next, Timelines: propGraph(doc)})
+	res, applyErr := fullRegistry().Apply(doc, o, Env{NewIDs: ids.next})
 	if !bytes.Equal(timeline.Canonical(doc), before) {
 		return nil, fmt.Errorf("%s changed its input", o.Op)
 	}

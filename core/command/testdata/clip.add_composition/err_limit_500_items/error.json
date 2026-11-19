@@ -1,6 +1,0 @@
-{
-  "code": "E_LIMIT",
-  "message": "The document already has 500 items; the limit is 500.",
-  "hint": "Delete unused items first.",
-  "retryable": false
-}

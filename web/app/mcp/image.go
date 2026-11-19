@@ -22,9 +22,6 @@ var imageMembers = map[string]struct{ required, optional []string }{
 	"undo":   {[]string{"image_id"}, []string{"dry_run"}},
 	"redo":   {[]string{"image_id"}, []string{"dry_run"}},
 	"export": {[]string{"image_id"}, []string{"format", "quality", "preset", "width", "height"}},
-	"import": {nil, []string{
-		"path", "hash", "image_id", "name", "preset", "width", "height", "base_revision", "idempotency_key", "dry_run",
-	}},
 }
 
 func checkImageMembers(action string, raw json.RawMessage) error {
@@ -38,7 +35,7 @@ func checkImageMembers(action string, raw json.RawMessage) error {
 		return &service.Error{
 			Code: command.CodeValidation, Path: "action",
 			Message: "action " + action + " is not an image action.",
-			Hint:    "use create, list, show, edit, undo, redo, export or import",
+			Hint:    "use create, list, show, edit, undo, redo or export",
 		}
 	}
 
@@ -77,8 +74,6 @@ type imageArgs struct {
 	Values         map[string]coreimage.SlotValue `json:"values"`
 	Format         string                         `json:"format"`
 	Quality        int                            `json:"quality"`
-	Path           string                         `json:"path"`
-	Hash           string                         `json:"hash"`
 	pageArgs
 }
 
@@ -142,16 +137,6 @@ func imageTool(ctx context.Context, svc service.Service, raw json.RawMessage) (*
 		}
 
 		return &toolOutput{value: res, text: service.ImageStepText(res)}, nil
-	case "import":
-		res, err := svc.ImageImport(ctx, service.ImageImportRequest{
-			Path: in.Path, Hash: in.Hash, ImageID: in.ImageID, Name: in.Name, Width: in.Width, Height: in.Height,
-			Preset: in.Preset, BaseRevision: in.BaseRevision, IdempotencyKey: in.IdempotencyKey, DryRun: in.DryRun,
-		})
-		if err != nil {
-			return nil, err
-		}
-
-		return &toolOutput{value: res, text: res.Text}, nil
 	}
 
 	res, err := svc.ImageExport(ctx, service.ImageExportRequest{

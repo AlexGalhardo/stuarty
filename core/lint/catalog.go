@@ -167,29 +167,5 @@ func Catalog() []Rule {
 			"trim the timeline or accept it",
 			true,
 		},
-		{
-			CodeAlphaMissing,
-			SeverityWarning,
-			"full",
-			"a clip reads a file that declares an alpha channel but whose sampled pictures are all opaque",
-			"render it with alpha",
-			true,
-		},
-		{
-			CodeAudioLimiterNotLast,
-			SeverityWarning,
-			"doc",
-			"a limiter in a processor chain is followed by another enabled processor",
-			"move it last with audio.processor_move",
-			true,
-		},
-		{
-			CodeAudioNoiseReductionRepeats,
-			SeverityWarning,
-			"doc",
-			"a processor chain has more than one enabled noise reduction",
-			"remove one",
-			true,
-		},
 	}
 }

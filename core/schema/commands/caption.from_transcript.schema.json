@@ -36,6 +36,40 @@
       "description": "Remove the captions linked to this clip on this track first. Default true.",
       "type": "boolean"
     },
+    "resolved": {
+      "additionalProperties": false,
+      "description": "Filled by the service from the transcript of the asset; never sent by a caller.",
+      "properties": {
+        "words": {
+          "description": "Words in order, not overlapping, in asset frames, half-open.",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "end": {
+                "type": "integer"
+              },
+              "start": {
+                "type": "integer"
+              },
+              "text": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "text",
+              "start",
+              "end"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "words"
+      ],
+      "type": "object"
+    },
     "track_id": {
       "description": "A visual track that receives the captions.",
       "pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",

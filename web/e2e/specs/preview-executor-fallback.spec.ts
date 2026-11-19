@@ -1,4 +1,3 @@
-import { NO_VIDEO_DECODE_REASON, noVideoDecode } from "../support/browsers";
 import { canvasOf } from "../support/webcodecs";
 import { expect, seedProject, test } from "./helpers";
 
@@ -10,9 +9,7 @@ test.describe("preview-executor-fallback", () => {
 	test("a browser without VideoDecoder previews with PixiJS and names the missing feature", async ({
 		page,
 		request,
-		browserName,
 	}) => {
-		test.skip(noVideoDecode(browserName), NO_VIDEO_DECODE_REASON); // verify:env-skip the browser cannot decode the proxy
 		const lines: string[] = [];
 		page.on("console", (message) => {
 			if (message.text().startsWith("preview:")) lines.push(message.text());
@@ -41,9 +38,7 @@ test.describe("preview-executor-fallback", () => {
 	test("a renderer module that does not load falls back to PixiJS", async ({
 		page,
 		request,
-		browserName,
 	}) => {
-		test.skip(noVideoDecode(browserName), NO_VIDEO_DECODE_REASON); // verify:env-skip the browser cannot decode the proxy
 		await page.route("**/*.wasm", (route) => route.abort());
 		const seeded = await seedProject(request, {
 			tracks: 1,
@@ -64,9 +59,7 @@ test.describe("preview-executor-fallback", () => {
 	test("the setting forces PixiJS, and the editor chooses by itself without one", async ({
 		page,
 		request,
-		browserName,
 	}) => {
-		test.skip(noVideoDecode(browserName), NO_VIDEO_DECODE_REASON); // verify:env-skip the browser cannot decode the proxy
 		const seeded = await seedProject(request, {
 			tracks: 1,
 			perTrack: 1,

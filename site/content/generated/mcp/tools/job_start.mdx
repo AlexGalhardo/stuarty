@@ -1,6 +1,6 @@
 ---
 title: "job_start"
-description: "Start job. Start long work; args by kind."
+description: "Start job. Start long work."
 wide: true
 ---
 
@@ -10,7 +10,7 @@ wide: true
 
 <RefMain>
 
-Start long work; args by kind. export: args properties (at: png frame); export_batch: items (export args); transcribe \{asset_id, language?, model?\}; publish.upload \{connection_id, export (job_id), title, made_for_kids, thumbnail?, description?, tags?, visibility?, ai_disclosure?\}; with connection_id, model: text.generate \{prompt\}; image.generate \{prompt, size?, count?\}; voice.generate \{text, voice, format?\}; image.edit \{image_id, operation, layer_id?, prompt?\}; text.draft \{item_id, instruction\}; video.generate \{prompt, seconds?, aspect?, first_frame?\}. A person approves; poll job_get.
+Start long work. kind=export renders to a workspace file: args \{start?, end?, format?, at?\}, format mp4 (default), gif, wav, aac or png (the frame at `at`). kind=transcribe makes a transcript: args \{asset_id, language?, model?\}. Lint errors block export. Returns after wait_ms at most; poll job_get.
 
 ## Behaviour
 
@@ -29,15 +29,12 @@ These are the annotations of the tool definition, the hints a client uses to dec
 | --- | --- | --- | --- |
 | `project_id` | `string` | yes | pattern `^prj_[0-9a-hjkmnp-tv-z]{10}$` |
 | `timeline_id` | `string` | no | pattern `^prj_[0-9a-hjkmnp-tv-z]{10}$` |
-| `kind` | `string`, one of 10 values | yes |  |
+| `kind` | `export`, `transcribe` | yes |  |
 | `args` | `object` | no |  |
 | `args.start` | `string` | no |  |
 | `args.end` | `string` | no |  |
 | `args.format` | `mp4`, `gif`, `wav`, `aac`, `png` | no |  |
 | `args.at` | `string` | no |  |
-| `args.preset` | `string` | no |  |
-| `args.codec` | `h264`, `hevc`, `av1` | no |  |
-| `args.items` | array of `any` | no |  |
 | `wait_ms` | `integer` | no | min 0; max 25000; default `0` |
 
 ## Output
@@ -48,8 +45,11 @@ A result has a text block, written for the model, and structured content with th
 | --- | --- | --- | --- |
 | `job_id` | `string` | yes |  |
 | `kind` | `string` | yes |  |
-| `state` | `string` | yes |  |
+| `state` | `queued`, `running`, `succeeded`, `failed`, `cancelled` | yes |  |
 | `progress` | `number` | yes |  |
+| `message` | `string` | no |  |
+| `result` | `object` | no |  |
+| `error` | `object` | no |  |
 
 ## Errors
 

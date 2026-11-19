@@ -1,7 +1,7 @@
 {
   "code": "E_VALIDATION",
   "message": "args.resolved is missing: the speech of the items is not known.",
-  "hint": "The service fills it from the speech map made when a file is imported (no transcript is needed): call media_inspect on the speech assets, and if one is still analysing wait for its job (job_get) and retry; an asset without audio has no speech. The cause is the state of the assets, not the arguments.",
+  "hint": "The service fills it from the speech found when a file is imported: call media_inspect on the speech assets and retry once they are ready (an asset without audio has no speech); the cause is the state of the assets, not the arguments.",
   "retryable": false,
   "path": "args.resolved"
 }

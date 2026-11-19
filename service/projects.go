@@ -351,7 +351,7 @@ func decodeViewCursor(s, project string, revision int64) (viewCursor, error) {
 }
 
 func (s *svc) ProjectGet(ctx context.Context, req ProjectGetRequest) (*ProjectGetResult, error) {
-	c, err := s.authorizeProject(ctx, "ProjectGet", req.ProjectID)
+	c, err := authorize(ctx, "ProjectGet", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}
@@ -382,9 +382,6 @@ func (s *svc) ProjectGet(ctx context.Context, req ProjectGetRequest) (*ProjectGe
 	if err != nil {
 		return nil, asError(err)
 	}
-
-	// The publications of the project are items of its overview (SDD-020 section 23).
-	rows = s.withPublications(ctx, head.ID, rows)
 
 	timelineID := req.TimelineID
 
@@ -545,7 +542,7 @@ func (s *svc) setProjectState(
 	to ProjectState,
 	action string,
 ) (*ProjectStateResult, error) {
-	c, err := s.authorizeProject(ctx, method, req.ProjectID)
+	c, err := authorize(ctx, method, req.ProjectID)
 	if err != nil {
 		return nil, err
 	}

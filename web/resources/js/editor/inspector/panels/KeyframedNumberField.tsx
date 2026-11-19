@@ -89,7 +89,6 @@ export default function KeyframedNumberField({
 								frame: playhead,
 								value,
 								easing: here?.easing,
-								bezier: here?.bezier,
 							})
 						: staticOperations(value),
 				)

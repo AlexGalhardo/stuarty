@@ -164,17 +164,11 @@ func scanImageOp(sc interface{ Scan(...any) error }) (service.ImageOpRow, error)
 }
 
 func (r imageRepo) OpsSince(ctx context.Context, id string, revision int64) ([]service.ImageOpRow, error) {
-	return r.OpsPage(ctx, id, revision, -1) // a negative limit is no limit in SQLite
-}
-
-func (r imageRepo) OpsPage(ctx context.Context, id string, revision int64, limit int) ([]service.ImageOpRow, error) {
 	rows, err := r.ex.QueryContext(
 		ctx,
-		`SELECT `+imageOpColumns+
-			` FROM image_operations WHERE image_id = ? AND revision > ? ORDER BY revision LIMIT ?`,
+		`SELECT `+imageOpColumns+` FROM image_operations WHERE image_id = ? AND revision > ? ORDER BY revision`,
 		id,
 		revision,
-		limit,
 	)
 	if err != nil {
 		return nil, err

@@ -69,7 +69,7 @@ func TestRegisterRejectsIncompleteCommands(t *testing.T) {
 		},
 	}
 	for name, c := range cases {
-		r := NewRegistry(DomainVideo)
+		r := NewRegistry()
 		err := r.Register(c.cmd)
 		if err == nil || !strings.Contains(err.Error(), c.want) {
 			t.Errorf("%s: got %v, want %q", name, err, c.want)
@@ -86,7 +86,7 @@ func withSpec(c Command, f func(*Spec)) Command {
 }
 
 func TestRegistryDuplicates(t *testing.T) {
-	r := NewRegistry(DomainVideo)
+	r := NewRegistry()
 	cmds := testCommands()
 	for i := range cmds {
 		if err := r.Register(cmds[i]); err != nil {
@@ -110,7 +110,7 @@ func TestMustRegisterPanicsOnIncomplete(t *testing.T) {
 			t.Error("no panic")
 		}
 	}()
-	NewRegistry(DomainVideo).MustRegister(Command{})
+	NewRegistry().MustRegister(Command{})
 }
 
 func TestRegisterOnDefaultPanicsOnIncomplete(t *testing.T) {
@@ -180,7 +180,6 @@ func TestListNamesSchemaHelp(t *testing.T) {
 type snapshotEntry struct {
 	Name     string `json:"name"`
 	Internal bool   `json:"internal"`
-	Domain   string `json:"domain"`
 }
 
 // TestRegistryMatchesSnapshot compares the registry, which the init function of every
@@ -214,8 +213,6 @@ func TestRegistryMatchesSnapshot(t *testing.T) {
 			t.Errorf("%s is registered but absent from commands.json (run go run ./internal/tools/contractgen)", c.Name)
 		case e.Internal != c.Internal:
 			t.Errorf("%s: the snapshot says internal %v, the registry %v", c.Name, e.Internal, c.Internal)
-		case e.Domain != c.Domain:
-			t.Errorf("%s: the snapshot says domain %q, the registry %q", c.Name, e.Domain, c.Domain)
 		}
 
 		delete(want, c.Name)
@@ -255,8 +252,8 @@ func goldenCaseDirs(t *testing.T, name string) (ok, failing []string) {
 // case carries the inverse that the runner applies to get the starting bytes back.
 func TestEveryCommandHasGoldenAndUndo(t *testing.T) {
 	cmds := fullRegistry().List()
-	if len(cmds) != 86 {
-		t.Errorf("the registry has %d commands, want 86", len(cmds))
+	if len(cmds) != 74 {
+		t.Errorf("the registry has %d commands, want 74", len(cmds))
 	}
 
 	for _, c := range cmds {

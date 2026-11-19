@@ -11,10 +11,6 @@ const (
 	hashFace = "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 	hashLogo = "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
 	docID    = "img_aaaaaaaaaa"
-
-	hashCube  = "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
-	hashCube2 = "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
-	hashNone  = "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
 )
 
 // lid is a layer id made of one letter, for readable fixtures.
@@ -24,9 +20,6 @@ func lid(c byte) string { return "lyr_" + strings.Repeat(string(c), 10) }
 var testAssets = map[string]AssetInfo{
 	hashFace: {Name: "face.png", Width: 1600, Height: 900},
 	hashLogo: {Name: "logo.png", Width: 400, Height: 400},
-
-	hashCube:  {Name: "warm.cube", Kind: AssetLUT},
-	hashCube2: {Name: "teal.cube", Kind: AssetLUT},
 }
 
 // testMeasure is a deterministic text measurer: a character is half the size wide, a line is size times

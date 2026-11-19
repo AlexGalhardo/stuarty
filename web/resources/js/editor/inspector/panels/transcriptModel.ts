@@ -9,7 +9,7 @@ export const NEW_TRACK = "";
 // a new track (the empty id).
 export function defaultCaptionTrack(
 	orderedIds: readonly string[],
-	tracks: Readonly<Record<string, Pick<Track, "kind" | "caption_style">>>,
+	tracks: Readonly<Record<string, Track>>,
 ): string {
 	for (const id of orderedIds) {
 		const track = tracks[id];

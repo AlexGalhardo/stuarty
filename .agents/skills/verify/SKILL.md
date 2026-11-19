@@ -24,7 +24,6 @@ Run it from the repository or worktree root, with `STUARTY_TEST_FFMPEG_DIR` set 
   - the commit headers (`skills/ci-preflight/scripts/check-commits.sh`);
   - the flaky-pattern check (`scripts/check-flaky-patterns.sh`, section 5).
 - **Go files changed:** `gofmt`, `go build ./...`, then `go vet`, `go test -count=1` and `golangci-lint` on the touched packages.
-- **Only `go.mod` or `go.sum` changed** (a module added, edited or deleted): `go build ./...` of the root module and of each changed module that still exists.
 - **`web/app`, `core/schema` or agent docs changed:** `go run ./web/cmd/gen-agent-docs -check`.
 - **`web/` UI changed:** `bun run lint`, `typecheck`, `check:thin-client`, `check:i18n`, `bunx vitest run`.
 - **`site/` or the reference changed:** `check:last-updated` and `reference:check`.
@@ -36,9 +35,7 @@ The last line is `VERIFY_OK` (exit 0), `VERIFY_FAIL=<n>` (exit 1) or `VERIFY_NEE
 
 ## 3. The checks come from the default branch
 
-`verify.sh` reads its own scripts, `check-commits.sh`, `gate.sh` and `smoke-e2e.sh` from `origin/main` (or the `--base` ref) with `git show` and runs those against the working tree, so a change can never loosen the checks that judge it.
-
-A base that is not a commit, or a check that is on the base and cannot be read, stops the run with exit 2. Only a base that has no `verify.sh` at all (the first rollout) runs the working copy, and the script says so.
+`verify.sh` reads its own scripts, `check-commits.sh`, `gate.sh` and `smoke-e2e.sh` from `origin/main` with `git show` and runs those against the working tree, so a change can never loosen the checks that judge it.
 
 A change that edits a check is reported as `CHECKS_CHANGED` and ends with `VERIFY_NEEDS_HUMAN`. The checks are this skill, `REVIEW.md`, `.agents/rules/`, `.github/workflows/`, `.github/CODEOWNERS`, `scripts/gate.sh`, `scripts/smoke-e2e.sh`, and the Playwright and Vitest configs. Stop, and ask the author to review those files. An agent never approves a change to its own checks, and CODEOWNERS plus the `protect-main` ruleset require the author's review on GitHub.
 

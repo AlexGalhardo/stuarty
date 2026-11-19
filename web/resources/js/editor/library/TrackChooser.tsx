@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
-	DropdownMenuGroup,
 	DropdownMenuItem,
 	DropdownMenuLabel,
 	DropdownMenuSeparator,
@@ -53,28 +52,25 @@ export default function TrackChooser({
 				</Button>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end">
-				{/* Base UI throws (error 31) for a label outside a group: the label and the tracks are one labelled group. */}
-				<DropdownMenuGroup>
-					<DropdownMenuLabel>
-						{t("ui.editor.library.add_to_track")}
-					</DropdownMenuLabel>
-					{candidates.map((id) => {
-						const given = tracks?.[id]?.name;
-						return (
-							<DropdownMenuItem
-								key={id}
-								data-track-id={id}
-								onSelect={() => void actions.addToTimeline(assetId, id)}
-							>
-								{given === undefined || given === "" ? (
-									trackLabel(id, order, kindOf)
-								) : (
-									<UntrustedText>{given}</UntrustedText>
-								)}
-							</DropdownMenuItem>
-						);
-					})}
-				</DropdownMenuGroup>
+				<DropdownMenuLabel>
+					{t("ui.editor.library.add_to_track")}
+				</DropdownMenuLabel>
+				{candidates.map((id) => {
+					const given = tracks?.[id]?.name;
+					return (
+						<DropdownMenuItem
+							key={id}
+							data-track-id={id}
+							onSelect={() => void actions.addToTimeline(assetId, id)}
+						>
+							{given === undefined || given === "" ? (
+								trackLabel(id, order, kindOf)
+							) : (
+								<UntrustedText>{given}</UntrustedText>
+							)}
+						</DropdownMenuItem>
+					);
+				})}
 				{candidates.length > 0 && <DropdownMenuSeparator />}
 				<DropdownMenuItem
 					onSelect={() => void actions.addToTimeline(assetId, null)}

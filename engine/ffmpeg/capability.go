@@ -92,13 +92,8 @@ func (r *Runner) testEncoderAt(ctx context.Context, c Candidate, p SizeProbe) er
 		return fmt.Errorf("%w: %s", ErrEncoderSize, firstFailureLine(pres.Stderr, err))
 	}
 
-	codec := CodecOf(c.Name)
-	if codec == "" {
-		codec = CodecH264
-	}
-
-	if got := strings.TrimSpace(string(b)); got != codec+",15" {
-		return fmt.Errorf("%w: the test file has %s instead of 15 %s packets", ErrEncoderSize, scrub(got, 40), codec)
+	if got := strings.TrimSpace(string(b)); got != "h264,15" {
+		return fmt.Errorf("%w: the test file has %s instead of 15 h264 packets", ErrEncoderSize, scrub(got, 40))
 	}
 
 	return nil

@@ -5,7 +5,7 @@
 		{"cmd": "project:create --name \"Talk\" --id prj_7k2m9x4q1b", "hidden": true},
 		{"cmd": "media:import clip.mp4 --project prj_7k2m9x4q1b --asset-id ast_3c5v8n2w6d", "hidden": true},
 		{"cmd": "edit --project prj_7k2m9x4q1b --ops -", "hidden": true, "stdin": "[{\"op\":\"track.add\",\"args\":{\"kind\":\"visual\",\"name\":\"Video\",\"id\":\"trk_f6g7h8j9k0\"}},\n {\"op\":\"track.add\",\"args\":{\"kind\":\"visual\",\"name\":\"Captions\",\"id\":\"trk_a1b2c3d4e5\"}},\n {\"op\":\"clip.add\",\"args\":{\"track_id\":\"trk_f6g7h8j9k0\",\"asset_id\":\"ast_3c5v8n2w6d\",\"start\":\"0s\",\"duration\":\"2s\",\"id\":\"itm_m1n2p3q4r5\"}}]"},
-		{"cmd": "transcribe --project prj_7k2m9x4q1b --asset ast_3c5v8n2w6d --language en --wait", "note": "tools:install whisper first"},
+		{"cmd": "transcribe --project prj_7k2m9x4q1b --asset ast_3c5v8n2w6d --language en --wait", "note": "needs tools:install whisper once"},
 		{"cmd": "edit --project prj_7k2m9x4q1b caption.from_transcript clip_item_id=itm_m1n2p3q4r5 track_id=trk_a1b2c3d4e5 new_ids:='[\"itm_c1c2c3c4c5\",\"itm_c6c7c8c9c0\"]'", "note": "one new id per caption line"}
 	]
 }

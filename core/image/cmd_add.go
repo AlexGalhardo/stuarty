@@ -149,7 +149,7 @@ func lookup(env *Env, hash string) (AssetInfo, bool) {
 	}
 
 	info, ok := env.Asset(hash)
-	if !ok || info.Kind == AssetLUT || info.Width < 1 || info.Height < 1 {
+	if !ok || info.Width < 1 || info.Height < 1 {
 		return AssetInfo{}, false
 	}
 

@@ -16,15 +16,9 @@ export function isActive(
 	return frame >= layer.first && frame <= layer.last;
 }
 
-// The layers with pixels of their own drawn at a frame, in plan order (bottom
-// to top). A group layer (a composition drawn as one unit) is not one of them:
-// the executors draw it through a surface (render/groups.ts, SDD-013 section
-// 3.12), and its geometry is not a layer's for the selection box.
+// The layers drawn at a frame, in plan order (bottom to top).
 export function layersAt(plan: PlanWindow, frame: number): PlanLayer[] {
-	return plan.layers.filter(
-		(layer): layer is PlanLayer =>
-			layer.kind !== "group" && isActive(layer, frame),
-	);
+	return plan.layers.filter((layer) => isActive(layer, frame));
 }
 
 export function geometryOf(layer: PlanLayer, frame: number): LayerGeometry {

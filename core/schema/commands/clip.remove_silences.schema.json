@@ -25,6 +25,36 @@
       "type": "string",
       "x-vv-kind": "time"
     },
+    "resolved": {
+      "additionalProperties": false,
+      "description": "Filled by the service from the silence analysis of the asset; never sent by a caller.",
+      "properties": {
+        "silences": {
+          "description": "Sorted, non-overlapping ranges in asset frames, half-open.",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "end": {
+                "type": "integer"
+              },
+              "start": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "start",
+              "end"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "silences"
+      ],
+      "type": "object"
+    },
     "ripple": {
       "description": "track (default) or none.",
       "enum": [

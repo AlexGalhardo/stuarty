@@ -19,7 +19,6 @@
 | `Edit` | `edit` | `edit` | `POST /projects/{id}/edit` | edit (or media, per command) |
 | `CommandHelp` | `command_help` | `command:help` | `GET /commands`, `GET /commands/{name}` | read |
 | `HistoryList`, `Undo`, `Redo` | `history` | `history`, `undo`, `redo` | `GET /projects/{id}/history`, `POST /projects/{id}/undo`, `POST /projects/{id}/redo` | read, edit |
-| `HistoryRevert`, `HistoryDiff`, `CheckpointCreate`, `CheckpointList`, `CheckpointRename`, `CheckpointRemove` | `history` (`action` `revert`, `diff`, `checkpoint`, `checkpoints`, `rename_checkpoint`, `remove_checkpoint`) | `revert`, `diff`, `checkpoint:create`, `checkpoint:list`, `checkpoint:rename`, `checkpoint:remove` | `POST /projects/{id}/revert`, `GET /projects/{id}/diff`, `/projects/{id}/checkpoints` (`GET`, `POST`) and `/projects/{id}/checkpoints/{name}` (`PATCH`, `DELETE`) | read, edit |
 | `MediaImport` | `media_import` | `media:import` | `POST /projects/{id}/media` | media |
 | `MediaInspect` | `media_inspect` | `media:inspect` | `GET /projects/{id}/media/{asset_id}` | read |
 | `MediaTrash`, `MediaRestore` | none (CLI and HTTP only) | `media:trash`, `media:restore` | `POST /projects/{id}/media/{asset_id}/trash`, `.../restore` | media |
@@ -30,17 +29,12 @@
 | `JobCancel` | `job_cancel` | `job:cancel` | `POST /jobs/{job_id}/cancel` | render; media is enough for the caller's own `transcribe` or `ingest` job |
 | `TemplateList`, `TemplateSave`, `TemplateInstantiate`, `TemplateExport`, `TemplateImport` | `template` | `template:list`, `template:save`, `template:new`, `template:export`, `template:import` | `GET /templates`, `POST /templates`, `POST /templates/{id}/instantiate`, `GET /templates/{id}/file`, `POST /templates/import` | read, edit |
 | `Doctor` | none | `doctor` | `GET /system` | read |
-| `MotionBrief` | `view` with `mode` `motion` | `motion:brief` | `GET /projects/{id}/motion/brief` (what an external motion render must fit; SDD-011 §15) | read |
-| `MotionCheck` | none (the tool list has no room, SDD-011 §15.5) | `motion:check` | `GET /projects/{id}/motion/check` (whether a rendered file fits the brief; SDD-011 §15.3) | read |
-| `MotionReplace` | `edit` (a batch of `clip.replace_media`) | `motion:replace` | `POST /projects/{id}/motion/replace` (every clip that reads an earlier render of the same `render_key`, in one undoable batch; SDD-011 §15.4) | edit |
 | event stream | none | `events` (prints the stream) | `GET /projects/{id}/events` | read |
 | `PlanWindow` | none | none | `GET /projects/{id}/plan` (SDD-004 §10) | read |
 | `MediaList` | `media_inspect` called without an asset | `media:list` | `GET /projects/{id}/media` (every asset of the project, including those still ingesting or failed, which are not in the document) | read |
 | `JobList` | `job_get` called with a project and no job | `job:list` | `GET /projects/{id}/jobs` | read |
 | `SnapPoints` | none | none | `GET /projects/{id}/snap-points` (SDD-012 §7.8) | read |
-| `AssetList` | `media_inspect` called with no `project_id` (the library) | `asset:list` | `GET /assets` (the ready files of the workspace by content hash, with the origin, tags and reuse of SDD-011 §14; filters `kind`, `section`, `tag`, `project`, `origin`, `reusable`, `text`; the picker of a brand logo) | read |
-| `AssetGet`, `AssetUses` | `media_inspect` called with a `hash` (`AssetGet` only; its entry carries the uses) | `asset:show`, `asset:uses` | `GET /assets/{hash}`, `GET /assets/{hash}/uses` (one library entry with its origin and the projects that use it, SDD-011 §14) | read |
-| `AssetSetInfo`, `AssetTag` | `media_import` called with a `hash` and no `paths` | `asset:set`, `asset:tag` | `PUT /assets/{hash}`, `POST /assets/{hash}/tags` (the description, the rights note, the reuse mark and the tags of a library entry, SDD-011 §14) | media |
+| `AssetList` | none | none | `GET /assets` (the ready files of the workspace by content hash, `kind` image, video or audio; the picker of a brand logo) | read |
 | `FontList` | none | `fonts` | `GET /fonts` (families and weights available, and the imported font files with their hash) | read |
 | `OpenFile` | none | none (the job result gives the path to local callers; with a remote server the CLI downloads the file) | `GET /jobs/{job_id}/file` and the byte-serving routes listed below | read |
 | `AuditList` | none | `audit` | `GET /audit` | admin |
@@ -51,6 +45,18 @@
 | `FontImport` | none | `font:import` | `POST /fonts` | media |
 | `BrandKitGet`, `BrandKitSet` | none | `brand:show`, `brand:set` | `GET /brand-kit`, `PUT /brand-kit` | read, edit |
 | `ProjectOtioExport`, `ProjectOtioImport` | none | `otio:export`, `otio:import` | `GET /projects/{id}/otio`, `POST /projects/{id}/otio` | read; edit (the batch is applied through `Edit`, so each operation needs its own scope too) |
+| `ProjectDescribe` | `project_get` called with `detail` `overview` | `project:describe` | `GET /projects/{id}/describe` (the production as text: brief, items, state; SDD-003 §2.3) | read |
+| `ProjectDuplicate` | `project_create` called with `from` | `project:duplicate` | `POST /projects/{id}/duplicate` (a copy of the production; its timelines get new ids, SDD-003 §2.3) | edit |
+| `ProjectItemAdd`, `ProjectItemMove`, `ProjectItemRename`, `ProjectItemTrash`, `ProjectItemRestore` | `project_item` (argument `action`) | `item:add`, `item:move`, `item:rename`, `item:trash`, `item:restore` | `POST /projects/{id}/items`, `POST /projects/{id}/items/{item_id}/move`, `.../rename`, `.../trash`, `.../restore` | edit |
+| `BriefGet`, `BriefSet` | `project_item` (`action` `brief`; given `text`, it sets) | `brief:show`, `brief:set` | `GET /projects/{id}/brief`, `PUT /projects/{id}/brief` | read, edit |
+| `ConnectionList`, `ConnectionGet` | `connection` (list, or one by id) | `connection:list`, `connection:show` | `GET /connections`, `GET /connections/{id}` | read |
+| `ConnectionCreate`, `ConnectionRemove`, `ConnectionTest` | none | `connection:add`, `connection:remove`, `connection:test` | `POST /connections`, `DELETE /connections/{id}`, `POST /connections/{id}/test` | admin (SDD-014) |
+| `ImageCreate` | `image` (`action` create) | `image:create` | `POST /images` | edit |
+| `ImageList` | `image` (`action` list) | `image:list` | `GET /images` | read |
+| `ImageDescribe` | `image` (`action` show) | `image:show` | `GET /images/{id}` | read |
+| `ImageEdit` | `image` (`action` edit) | `image:edit` | `POST /images/{id}/edit` | edit |
+| `ImageUndo`, `ImageRedo` | `image` (`action` undo, redo) | `image:undo`, `image:redo` | `POST /images/{id}/undo`, `POST /images/{id}/redo` | edit |
+| `ImageExport` | `image` (`action` export) | `image:export` | `POST /images/{id}/export` | edit |
 | `MemoryList`, `MemoryGet`, `MemoryWrite` | `library` (kind `memory`; actions `list`, `get`, `write`) | `memory:list`, `memory:show`, `memory:write` | `GET /library/memory`, `GET /library/memory/{name}`, `POST /library/memory`, `DELETE /library/memory/{name}` | read, edit (SDD-018) |
 | `MemoryRemove` | none (an agent tool removes nothing) | `memory:remove` | `DELETE /library/memory/{name}` | edit |
 | `SkillList`, `SkillGet`, `SkillWrite`, `SkillLint` | `library` (kind `skill`; actions `list`, `get`, `write`, `lint`) | `skill:list`, `skill:show`, `skill:write`, `skill:lint` | `GET /library/skills`, `GET /library/skills/{name}`, `PUT /library/skills/{name}`, `GET /library/skills/{name}/lint` | read, edit |
@@ -59,31 +65,13 @@
 | `PromptList`, `PromptGet`, `PromptWrite`, `PromptRender` | `library` (kind `prompt`; actions `list`, `get`, `write`, `render`) | `prompt:list`, `prompt:show`, `prompt:write`, `prompt:render` | `GET /library/prompts`, `GET /library/prompts/{name}`, `PUT /library/prompts/{name}`, `POST /library/prompts/{name}/render` | read, edit |
 | `LibrarySearch`, `LibraryReindex` | `library` (action `search`), none | `library:search`, `library:reindex` | `GET /library/search`, `POST /library/reindex` | read, edit |
 
-Routes that are not service operations: `POST /mcp` (the MCP server over Streamable HTTP, SDD-003 §4.3; `GET` and `DELETE` on the path are not routes and answer 405 `E_METHOD_NOT_ALLOWED`, because the server is stateless; every tool call behind it is a service operation with the scope of its tool), `GET /api/v1/handshake` (the server proves it knows the local token, SDD-007 §3.8), `GET /auth/launch` and `POST /api/v1/system/launch` (browser session from a one-time code, SDD-007 §3.4), `POST /api/v1/system/scheduler` (the desktop shell reads, pauses and resumes the publication scheduler and counts the targets that wait, SDD-020 §27; `admin` bearer, and the launcher secret to pause or resume; local mode only, in network mode it answers 404 `E_NOT_FOUND`), `POST /auth/login` and `POST /auth/logout` (network mode: the browser session of a user, SDD-007 §4.1; in local mode they answer 404 `E_NOT_FOUND`), the optional Google sign-in of network mode (`GET /auth/google`, `POST /auth/google/start`, `/link`, `/unlink` and `/complete`, `GET /login/google/callback`, `GET` and `PUT /auth/google/settings`; SDD-007 §4.7 and SDD-014 §12.4; in local mode they answer 404 `E_NOT_FOUND`), `GET /up` (vukem health probe), `GET /openapi.json` and `GET /api/docs` (the OpenAPI document and its viewer), `POST /api/v1/system/tools/install` and `GET /api/v1/system/tools` (the explicit install of a helper such as whisper.cpp from the editor, and its state with the progress of a running install; the same step as the CLI command `tools:install`; the install is allowed only to a browser session in local mode or an `admin` key in network mode, never to the local token and never on an agent surface, SDD-007 §6.8; the `GET` only reads and takes the `read` scope, so an agent can tell whether a helper is installed before it asks for a transcript), and the byte-serving routes that the editor uses, all `read`, all under the project so that access is checked against it, all with HTTP Range and long-lived caching because their content never changes: `GET /projects/{id}/media/{asset_id}/proxy`, `.../thumbnail`, `.../strip`, `.../peaks`, `.../lut` (the parsed table of a lookup table asset, SDD-004 §3.6), `GET /projects/{id}/bitmaps/{key}` (rasterized text and shapes by content key), and `GET /projects/{id}/audio-previews/{key}` (the processed sound of an item by content key, SDD-004 §7.1; it answers 202 while the file is rendered). What each returns is in SDD-011 and SDD-004.
+Routes that are not service operations: `POST /mcp` (the MCP server over Streamable HTTP, SDD-003 §4.3; `GET` and `DELETE` on the path are not routes and answer 405 `E_METHOD_NOT_ALLOWED`, because the server is stateless; every tool call behind it is a service operation with the scope of its tool), `GET /api/v1/handshake` (the server proves it knows the local token, SDD-007 §3.8), `GET /auth/launch` and `POST /api/v1/system/launch` (browser session from a one-time code, SDD-007 §3.4), `POST /auth/login` and `POST /auth/logout` (network mode: the browser session of a user, SDD-007 §4.1; in local mode they answer 404 `E_NOT_FOUND`), `GET /up` (vukem health probe), `GET /openapi.json` and `GET /api/docs` (the OpenAPI document and its viewer), `POST /api/v1/system/tools/install` and `GET /api/v1/system/tools` (the explicit install of a helper such as whisper.cpp from the editor, and its state with the progress of a running install; the same step as the CLI command `tools:install`; the install is allowed only to a browser session in local mode or an `admin` key in network mode, never to the local token and never on an agent surface, SDD-007 §6.8; the `GET` only reads and takes the `read` scope, so an agent can tell whether a helper is installed before it asks for a transcript), and the byte-serving routes that the editor uses, all `read`, all under the project so that access is checked against it, all with HTTP Range and long-lived caching because their content never changes: `GET /projects/{id}/media/{asset_id}/proxy`, `.../thumbnail`, `.../strip`, `.../peaks`, `.../lut` (the parsed table of a lookup table asset, SDD-004 §3.6), and `GET /projects/{id}/bitmaps/{key}` (rasterized text and shapes by content key). What each returns is in SDD-011 and SDD-004.
 
-The MCP catalogue is 17 tools: `project_list`, `project_create`, `project_get`, `project_trash`, `edit`, `command_help`, `history`, `media_import`, `media_inspect`, `view`, `lint`, `job_start`, `job_get`, `job_cancel`, `template`, `font_import`, `library` (memory, skills and prompts: search, list, get, write, render and lint; SDD-018).
+The MCP catalogue is 20 tools: `project_list`, `project_create`, `project_get`, `project_trash`, `edit`, `command_help`, `history`, `media_import`, `media_inspect`, `view`, `lint`, `job_start`, `job_get`, `job_cancel`, `template`, `font_import`, `connection` (read only: the destinations the user connected, SDD-014), `image` (the image documents of SDD-021, one tool with an `action`), `project_item` (the items and the brief of a production, SDD-003 section 2.3), `library` (memory, skills and prompts: search, list, get, write, render and lint; SDD-018).
 
-**Projects and timelines (ADR-0039).** A project is a production; its timelines are items of it. Every operation above that edits or reads a timeline document (`Edit`, `HistoryList`, `Undo`, `Redo`, `HistoryRevert`, `HistoryDiff`, `Checkpoint*`, `Lint`, `MediaImport`, `MediaInspect`, `MediaList`, `MediaTrash`, `MediaRestore`, `ViewFrame`, `ViewSheet`, `JobStart`, `JobList`, `PlanWindow`, `SnapPoints`, `ProjectOtioExport`, `ProjectOtioImport`, `ProjectBundleExport`, `ExportCheck`, `ExportBatch`, and `ProjectGet` with a detail) accepts an optional `timeline_id` next to `project_id`; the rule is SDD-003 §1.7.
+**Projects and timelines (ADR-0039).** A project is a production; its timelines are items of it. Every operation above that edits or reads a timeline document (`Edit`, `HistoryList`, `Undo`, `Redo`, `Lint`, `MediaImport`, `MediaInspect`, `MediaList`, `MediaTrash`, `MediaRestore`, `ViewFrame`, `ViewSheet`, `JobStart`, `JobList`, `PlanWindow`, `SnapPoints`, `ProjectOtioExport`, `ProjectOtioImport`, `ProjectBundleExport`, and `ProjectGet` with a detail) accepts an optional `timeline_id` next to `project_id`; the rule is SDD-003 §1.7.
 
-Other CLI commands that are not service operations: `serve` (start the owner process), `mcp` (stdio MCP server), `open` (open the UI of a running server with a fresh launch code), `token:rotate`, `user:create` and `user:passwd` (network mode; they need the workspace lock, so no server may be running), `workspace:backup` (a consistent copy of the data of the workspace to a folder, with a checksum manifest and never the master key; no lock, a server may run) and `workspace:restore` (that folder into an empty workspace, under the lock; SDD-009 §21.4), `tools:install` (download a helper such as whisper.cpp after stating its size), `agent:docs` (print or write the generated material for agents, SDD-003 §8), plus vukem's built-in commands.
-
-### 1.1 Domains (ADR-0043, epic 13)
-
-Every operation belongs to one **domain**. The domain names are fixed here; a new domain is added here first.
-
-| Domain | What it holds | Operations today |
-| --- | --- | --- |
-| `project` | productions: projects, their items, the brief, bundles | `ProjectList`, `ProjectCreate`, `ProjectGet`, `ProjectTrash`, `ProjectRestore`, `ProjectDescribe`, `ProjectDuplicate`, `ProjectItem*`, `Brief*`, `ProjectBundle*`, the event stream |
-| `video` | the timeline document: its edit commands, history, lint, frames, jobs, templates, OpenTimelineIO, the hand-off from a motion engine | `Edit` and the commands of the timeline registry, `HistoryList`, `Undo`, `Redo`, `HistoryRevert`, `HistoryDiff`, `Checkpoint*`, `Lint`, `View*`, `Motion*` (brief, check, replace; epic 33), `JobStart`, `JobGet`, `JobList`, `JobCancel`, `ExportFile`, `Template*`, `SnapPoints`, `ProjectOtio*`, `Export*` (presets, the check against one, the batch) |
-| `image` | image documents (SDD-021) | `Image*` and the commands of the image registry |
-| `writing` | written documents: scripts, copy and captions, with their revisions (SDD-019) | `Text*`, `CaptionValidate`, `ScriptEstimate` |
-| `asset` | files of the workspace: media, the asset library, fonts | `Media*`, `Asset*` (the library of epic 08: list, get, uses, set info, tag), `FontImport`, `FontList` |
-| `publish` | publications and their approval | `Approval*` (the queue that gates a publication and a costly generation, SDD-015), `Social*` (the networks and the accounts a publication goes to), `Publish*` (validate, publish now, status; SDD-020), `Publication*` (the calendar: create, list, edit, schedule, send now, retry, cancel; SDD-020 §23 to §31) |
-| `provider` | AI providers and generation | `Provider*` (the providers, their models and the price table, SDD-016), `TextGenerate`, `ImageGenerate`, `VoiceGenerate`, `VoiceList`, `VideoGenerate`, `ImageModelEdit`, `Cost*` (the spend on providers and its ceilings) |
-| `memory` | the library: notes, skills, prompts, search | `Memory*`, `Skill*`, `Prompt*`, `Library*` |
-| `workspace` | the installation: help, connections, brand kit, health, keys, audit, trash, helpers, the hosted agent chat | `CommandHelp`, `Connection*`, `BrandKit*`, `Doctor`, `AuditList`, `TrashEmpty`, `Tools*`, `Key*`, `AgentProfile*`, `Chat*` (SDD-017) |
-
-Rules: a command (an operation of a registry in `core/command`) takes its domain from the registry that holds it (`command.NewRegistry(domain)`); the registry refuses a command whose own `Domain` differs, and a registry with no domain. The timeline registry is `video`, the image registry `image`. A Service operation has its domain in the table `service.OperationDomains`, and `TestOperationDomains` fails when a Service method has none. The `domain` argument of an MCP tool (SDD-003 section 4.8) takes these names; a missing one means `video`.
+Other CLI commands that are not service operations: `serve` (start the owner process), `mcp` (stdio MCP server), `open` (open the UI of a running server with a fresh launch code), `token:rotate`, `user:create` and `user:passwd` (network mode; they need the workspace lock, so no server may be running), `tools:install` (download a helper such as whisper.cpp after stating its size), `agent:docs` (print or write the generated material for agents, SDD-003 §8), plus vukem's built-in commands.
 
 ## 2. Identifiers
 
@@ -101,19 +89,12 @@ Rules: a command (an operation of a registry in `core/command`) takes its domain
 | `con_` | connection (SDD-014) | SDD-014 |
 | `img_` | image document | SDD-021 |
 | `lyr_` | layer of an image document | SDD-021 |
-| `apr_` | approval request (SDD-015) | SDD-015 |
-| `rul_` | approval rule (SDD-015) | SDD-015 |
-| `led_` | cost ledger entry (SDD-015) | SDD-015 |
-| `pub_` | publication (SDD-020 §23) | SDD-020 |
-| `tgt_` | target of a publication: one account, one time (SDD-020 §23) | SDD-020 |
-| `cht_` | hosted agent chat session (SDD-017) | SDD-017 |
-| `cpr_` | permission request of a hosted agent (SDD-017 §7) | SDD-017 |
 
 All have the form `<prefix>_<10 lower-case Crockford base32 characters>`.
 
 ## 3. Actors
 
-An actor string is one of `user:<id>`, `key:<key id>`, `local:<label>`. `<label>` is supplied by the client in local mode (for example `local:ui`, `local:cli`, `local:claude-code`), limited to `[a-z0-9-]{1,32}`, default `local:cli` for the CLI, `local:mcp` for the MCP server, `local:ui` for the browser and `local:api` for a raw HTTP client that sends no label. A client never obtains `local:ui` by asking for it: that label belongs to the browser session. The stdio MCP server, when it is not given `--actor`, builds its label from the client name and a session id (`local:claude-code-k3m9x2`, SDD-003 section 4.5), so two agents with the same client name are two actors and undo never crosses sessions or reconnections; the label stays within the same `[a-z0-9-]{1,32}` rule. The agent hosted in the chat (SDD-017 section 6.1) is the actor `local:chat-<10 characters of its session id>` in local mode and `key:<session id>` (`cht_` and 10 characters) in network mode, fixed by its token whatever label the client sends.
+An actor string is one of `user:<id>`, `key:<key id>`, `local:<label>`. `<label>` is supplied by the client in local mode (for example `local:ui`, `local:cli`, `local:claude-code`), limited to `[a-z0-9-]{1,32}`, default `local:cli` for the CLI, `local:mcp` for the MCP server, `local:ui` for the browser and `local:api` for a raw HTTP client that sends no label. A client never obtains `local:ui` by asking for it: that label belongs to the browser session. The stdio MCP server, when it is not given `--actor`, builds its label from the client name and a session id (`local:claude-code-k3m9x2`, SDD-003 section 4.5), so two agents with the same client name are two actors and undo never crosses sessions or reconnections; the label stays within the same `[a-z0-9-]{1,32}` rule.
 
 ## 4. Scopes
 
@@ -125,20 +106,15 @@ An actor string is one of `user:<id>`, `key:<key id>`, `local:<label>`. `<label>
 | --- | --- | --- |
 | `batch.committed` | a batch was committed | `revision`, `actor`, `diff`, `at` |
 | `project.updated` | project metadata outside the document changed (trash, restore) | `project_id`, `state` |
-| `nested.updated` | a timeline that this one uses as a composition, directly or through others, committed a batch (SDD-006 §3.3.1) | `project_id`, `timeline_id`, `revision`, `at` |
 | `asset.updated` | an asset's ingest state or progress changed | `asset_id`, `state`, `progress` |
 | `job.updated` | a job's state or progress changed | `job_id`, `kind`, `state`, `progress`, `message` |
 | `resync.required` | the client is too far behind to replay | `revision` |
 
-Two events are not on a project stream but on the approval queue stream `GET /approvals/events` (SDD-015 §7): `approval.requested` (a request was made, or is pending when the stream opens) and `approval.decided` (a request was approved, rejected or expired); both carry the request. A third, `publication.updated`, is on the stream `GET /publications/events` (SDD-020 §29) and carries the publication with its targets.
-
 The event `id` of `batch.committed` is the revision. Details in SDD-006.
-
-An image document has a stream of its own, `GET /images/{id}/events` (SDD-006 §12), with one event name besides `resync.required`: `image.updated` (a batch of the image was committed), with the revision as its `id` and `image_id`, `revision`, `base_revision`, `kind`, `actor`, `diff` and `at` in its payload. It follows the rules of `batch.committed`, on the topic `image:<id>`.
 
 ## 6. Jobs
 
-Kinds: `ingest`, `transcribe`, `export`, `export_batch`, `frame`, `text.generate` (SDD-016 §6), `image.generate` and `voice.generate` (SDD-016 §6.1), `text.draft` (SDD-019 §6), `video.generate` (SDD-016 §6.4; the job stores the task id of the provider and resumes it after a restart), `image.edit` (SDD-016 §6.5), and the kinds a feature epic registers as needing approval (SDD-015 §5). States: `queued`, `running`, `succeeded`, `failed`, `cancelled`, and `waiting_approval` (a job of a kind that needs approval, until a person or a rule approves it; it is not running and counts as active; at most 50 per submitter and 1000 in the workspace, `E_LIMIT_EXCEEDED` past either, SDD-015 §5). Asset ingest states: `pending`, `ingesting`, `ready`, `failed`.
+Kinds: `ingest`, `transcribe`, `export`, `frame`. States: `queued`, `running`, `succeeded`, `failed`, `cancelled`. Asset ingest states: `pending`, `ingesting`, `ready`, `failed`.
 
 ## 7. Database tables
 
@@ -146,8 +122,6 @@ Kinds: `ingest`, `transcribe`, `export`, `export_batch`, `frame`, `text.generate
 | --- | --- | --- |
 | `projects` | one row per project (a production): name, trash state, owner | SDD-005 §5.12 |
 | `project_items` | the items of a project: brief, text, timeline, output; their order and trash state | SDD-005 §5.12 |
-| `text_revisions` | one row per save of a text item: body, actor, source (`created`, `write`, `generated`, `revert`), and for a generated one the provider, model, cost and job | SDD-019 §3 |
-| `checkpoints` | the names and notes a person or an agent put on a revision of a timeline, and the automatic ones before an agent's first edit of the day | SDD-005 §5.14 |
 | `timelines` | one row per timeline document: current document, revision, schema version, trash state (the former `projects` table, renamed) | SDD-005 §5.2 |
 | `operations` | the append-only log, one row per committed batch of a timeline (its `project_id` column holds the timeline id) | SDD-005 |
 | `idempotency_keys` | stored batch results by key | SDD-005 |
@@ -163,6 +137,8 @@ Kinds: `ingest`, `transcribe`, `export`, `export_batch`, `frame`, `text.generate
 | `users` | network mode: email, argon2id password hash, role (`admin` or `member`), session version | SDD-007 |
 | `brand_kits` | the brand kit: logo, named colours and fonts, one row per owner  | SDD-005 §5.11 |
 | `font_owners` | which user imported or brought each stored font file, network mode  | SDD-005 §5.11, SDD-007 §7.7 |
+| `connections` | the destinations the user connected: kind, label, hosts, what each may receive, last use and the id of its secret in the vault; no secret | SDD-014 |
+| `image_documents`, `image_operations` | image documents, and their append-only log of batches | SDD-005 §5.13, SDD-021 |
 | `library_entries`, `library_fts` | the index of memory, skills and prompts for search and lists; rebuilt from the files, holds no content that the files lack | SDD-018 §9 |
 | vukem's own tables for sessions (`sessions`) and tokens (`access_tokens`) | network mode | vukem |
 
@@ -181,9 +157,9 @@ The core's codes are in SDD-002 §A.8. The service adds:
 | `E_FILE_NOT_FOUND` | the path does not exist or cannot be read | no |
 | `E_UNSUPPORTED_MEDIA` | the file is not media FFmpeg can decode, or has no usable stream | no |
 | `E_INGEST_FAILED` | ingest failed; `details.reason` | no |
-| `E_ASSET_NOT_READY` | the asset is still ingesting; `details` has `asset_id`, `state` and `progress` (0 to 1) when an edit names it | yes |
+| `E_ASSET_NOT_READY` | the asset is still ingesting | yes |
 | `E_FFMPEG_MISSING` | no usable FFmpeg was found | no |
-| `E_NO_ENCODER` | no encoder works on this machine for the codec the export needs (H.264, or the `details.codec` that was asked for: `hevc` or `av1`, SDD-004 section 8.3); `details.reason` `codec_unavailable` and `details.candidates` | no |
+| `E_NO_ENCODER` | no H.264 encoder works on this machine | no |
 | `E_EXPORT_FAILED` | the export process failed; `details.reason` | no |
 | `E_VERIFY_FAILED` | the exported file did not pass verification; `details.checks` | no |
 | `E_TRANSCRIBE_UNAVAILABLE` | no transcription provider is installed or configured; `details` names what is missing, its download size, the install command and the `tool` and `model` it installs | no |
@@ -201,18 +177,8 @@ The core's codes are in SDD-002 §A.8. The service adds:
 | `E_CONNECTION_NOT_FOUND` | the connection does not exist or was removed (SDD-014 §7) | no |
 | `E_CONNECTION_DESTINATION` | a request through a connection is for a host or a scheme it does not allow (SDD-014 §6) | no |
 | `E_VAULT_LOCKED` | the vault cannot be opened: master key missing, wrong or not storable; `details.reason` (SDD-014 §4) | no |
-| `E_PRIVILEGED_SESSION` | the operation is for a person in a privileged browser session; the caller is the local token, a key or an agent surface (SDD-015 §4) | no |
-| `E_APPROVAL_NOT_FOUND` | the approval request or the approval rule does not exist (SDD-015 §8) | no |
-| `E_COST_CEILING` | an estimate is over a cost ceiling; `details` hold `scope`, `reason`, `limit_micros`, `spent_micros`, `estimate_micros`, `currency`; nothing was spent (SDD-015 §6) | no |
-| `E_APPROVAL_EXPIRED` | in the error of a job whose approval request expired before a person answered (SDD-015 §3) | no |
-| `E_PUBLISH` | a network refused or failed a publication; `details.kind` is `quota`, `not_eligible`, `auth`, `invalid`, `rejected` or `unavailable`, with `network` and, for a quota, `retry_after`; the `retryable` of the error is true for the kinds `quota`, `auth` and `unavailable` (SDD-020 §7.3) | no |
-| `E_PROVIDER` | an AI provider refused or failed a request; `details.kind` is `auth`, `rate_limited`, `bad_request`, `unavailable`, `unreadable`, `refused` (a prompt the provider declined) or `timeout`, with `status`, `code` and `retry_after_seconds` when known; the body of the provider is never in it (SDD-016 §8) | no |
-| `E_PRICE_UNKNOWN` | no price is known for the model of a generation, so no estimate can be made; `details` hold `provider` and `model` (SDD-016 §4.2) | no |
-| `E_AGENT_NOT_FOUND` | the agent profile does not exist (SDD-017 §11) | no |
-| `E_CHAT_NOT_FOUND` | the chat session does not exist, or the caller may not see its project (SDD-017 §11) | no |
-| `E_AGENT_UNAVAILABLE` | the hosted agent could not be started or opened; `details.reason` `not_found`, `start_failed`, `exited`, `timeout`, `protocol`, `protocol_version`, `no_http_mcp`, `sign_in_required`, `limit` (SDD-017 §11) | no |
 
-HTTP status mapping: `E_VALIDATION`, `E_INVALID_TIME`, `E_UNKNOWN_COMMAND` 400; `E_UNAUTHORIZED` 401; `E_FORBIDDEN`, `E_PATH_NOT_ALLOWED`, `E_CONNECTION_DESTINATION`, `E_PRIVILEGED_SESSION` 403; `E_NOT_FOUND`, `E_FILE_NOT_FOUND`, `E_CONNECTION_NOT_FOUND`, `E_APPROVAL_NOT_FOUND`, `E_AGENT_NOT_FOUND`, `E_CHAT_NOT_FOUND` 404; `E_REVISION_CONFLICT`, `E_IDEMPOTENCY_MISMATCH`, `E_OVERLAP`, `E_INVALID_STATE`, `E_IN_USE`, `E_NOT_EMPTY`, `E_ID_EXISTS`, `E_ASSET_NOT_READY` 409; `E_PAYLOAD_TOO_LARGE` 413; `E_METHOD_NOT_ALLOWED` 405; `E_LIMIT`, `E_LIMIT_EXCEEDED`, `E_UNSUPPORTED_MEDIA`, `E_TYPE_MISMATCH`, `E_OUT_OF_SOURCE`, `E_FONT_UNKNOWN`, `E_SLOT`, `E_LINT_BLOCKING`, `E_COST_CEILING`, `E_PRICE_UNKNOWN` 422; `E_QUEUE_FULL`, `E_RATE_LIMITED` 429; `E_NOTHING_TO_UNDO`, `E_NOTHING_TO_REDO`, `E_APPROVAL_EXPIRED` 409; `E_CLIENT_CLOSED` 499; `E_WORKSPACE_LOCKED`, `E_TRANSCRIBE_UNAVAILABLE`, `E_FFMPEG_MISSING`, `E_NO_ENCODER`, `E_VAULT_LOCKED`, `E_AGENT_UNAVAILABLE` 503; `E_PUBLISH`, `E_PROVIDER` 502; `E_INTERNAL` and everything else 500. The job codes `E_INGEST_FAILED`, `E_EXPORT_FAILED`, `E_VERIFY_FAILED`, `E_TRANSCRIBE_FAILED` and `E_CANCELLED` normally travel inside a job object in a 200 answer; they are 500 only when a call itself raises them.
+HTTP status mapping: `E_VALIDATION`, `E_INVALID_TIME`, `E_UNKNOWN_COMMAND` 400; `E_UNAUTHORIZED` 401; `E_FORBIDDEN`, `E_PATH_NOT_ALLOWED`, `E_CONNECTION_DESTINATION` 403; `E_NOT_FOUND`, `E_FILE_NOT_FOUND`, `E_CONNECTION_NOT_FOUND` 404; `E_REVISION_CONFLICT`, `E_IDEMPOTENCY_MISMATCH`, `E_OVERLAP`, `E_INVALID_STATE`, `E_IN_USE`, `E_NOT_EMPTY`, `E_ID_EXISTS`, `E_ASSET_NOT_READY` 409; `E_PAYLOAD_TOO_LARGE` 413; `E_METHOD_NOT_ALLOWED` 405; `E_LIMIT`, `E_LIMIT_EXCEEDED`, `E_UNSUPPORTED_MEDIA`, `E_TYPE_MISMATCH`, `E_OUT_OF_SOURCE`, `E_FONT_UNKNOWN`, `E_SLOT`, `E_LINT_BLOCKING` 422; `E_QUEUE_FULL`, `E_RATE_LIMITED` 429; `E_NOTHING_TO_UNDO`, `E_NOTHING_TO_REDO` 409; `E_CLIENT_CLOSED` 499; `E_WORKSPACE_LOCKED`, `E_TRANSCRIBE_UNAVAILABLE`, `E_FFMPEG_MISSING`, `E_NO_ENCODER`, `E_VAULT_LOCKED` 503; `E_INTERNAL` and everything else 500. The job codes `E_INGEST_FAILED`, `E_EXPORT_FAILED`, `E_VERIFY_FAILED`, `E_TRANSCRIBE_FAILED` and `E_CANCELLED` normally travel inside a job object in a 200 answer; they are 500 only when a call itself raises them.
 
 CLI exit codes: `0` success; `2` for every code marked retryable; `1` for the rest.
 
@@ -225,6 +191,7 @@ CLI exit codes: `0` success; `2` for every code marked retryable; `1` for the re
 ├── lock                     empty file that carries the operating-system lock of the owner process (SDD-005 §6.2)
 ├── runtime.json             owner process: schema, pid, addr, mode, started_at, version (present only while a server runs; no secret)
 ├── token                    local token, file mode 0600 (local mode only)
+├── vault.json               encrypted credentials of the connections, file mode 0600; created with the first credential (SDD-014 §3)
 ├── library/                 memory/, prompts/ and skills/<name>/SKILL.md: the files of the library, the truth of the index; .review-key seals the review marks (SDD-018 §2, §7)
 ├── store/                   content-addressed originals: store/<first 2 hex>/<sha256>; store/.incoming/ holds copies in progress
 ├── artifacts/               derived files: artifacts/<asset sha256>/<kind>-<profile version>[-<variant>].<ext> (SDD-011 §6.1)
@@ -232,10 +199,8 @@ CLI exit codes: `0` success; `2` for every code marked retryable; `1` for the re
 │   └── images/              exported images: exports/images/<image id>/<revision>-<digest>.<ext> (SDD-021 §6)
 ├── frames/                  cache of rendered frames: frames/<project id>/<revision>/<frame>-<width>.jpg
 ├── bitmaps/                 cache of rasterized text and shapes, by content hash
-├── audio-previews/          cache of the processed sound of clips and audio items, by content hash: audio-previews/<key>.wav (SDD-004 §7.1)
 ├── fonts/                   user fonts, by hash 
 ├── tools/                   installed helpers (whisper.cpp, models); tools/.download/ holds downloads in progress
-├── chat/                    the working directory of a hosted agent, one folder per project: chat/<project id>/, mode 0700 (SDD-017 §4)
 ├── tmp/                     one directory per running child process: tmp/<job id>/ (SDD-007 §6.4)
 ├── backups/                 copies of db.sqlite made before a migration (SDD-005 §7)
 ├── logs/                    rotating log files
@@ -261,9 +226,6 @@ Environment variables, all optional. Names are final. Ceilings that have no vari
 | `STUARTY_TRANSCRIBE_URL`, `STUARTY_TRANSCRIBE_KEY`, `STUARTY_TRANSCRIBE_MODEL` | none | OpenAI-compatible transcription API; when unset, the local provider is used |
 | `STUARTY_WHISPER_MODEL` | `small` | local model name: `tiny`, `base`, `small` or `large-v3-turbo` |
 | `STUARTY_TEST_TRANSCRIBER` | none | test only: `stub` selects a provider that answers every audio with four fixed words (`hello` 100-400 ms, `brave` 400-700, `new` 1100-1400, `world` 1400-1900, language `en`). Honoured only with `APP_ENV=test` in local mode; with any other `APP_ENV`, in network mode, or with any other value the server refuses to start. Never set in production |
-| `STUARTY_TEST_SOCIAL_URL` | none | test only: the address (`http://127.0.0.1:<port>`) of a server on loopback that plays a social network; the build then also offers the network `fake`, which speaks only to that address (SDD-020 §12). Honoured in local mode only; any other address, scheme or mode and the server refuses to start. Honoured only with `APP_ENV=test`; with any other `APP_ENV` the server refuses to start and names the variable (SDD-007 T-67). Never set in production |
-| `STUARTY_TEST_GOOGLE_URL` | none | test only: the address (`http://127.0.0.1:<port>`) of a server on loopback that plays Google for the optional Google sign-in; the authorization, token and key addresses and the issuer then are that address with `/authorize`, `/token`, `/certs` and the bare address (SDD-014 §12.1). Honoured in both modes, but the connection chosen for the sign-in must list that host or the gate refuses it; any other address or scheme and the server refuses to start. Honoured only with `APP_ENV=test`; with any other `APP_ENV` the server refuses to start and names the variable (SDD-007 T-67). Never set in production |
-| `STUARTY_TEST_SIGNIN_URL` | none | test only: the address (`http://127.0.0.1:<port>`) of a server on loopback that plays the sign-in to an AI provider; Sign in with ChatGPT and OpenRouter then authorize, exchange and call the API at that address (SDD-016 §12.5). Honoured in local mode only; any other address, scheme or mode and the server refuses to start. Honoured only with `APP_ENV=test`; with any other `APP_ENV` the server refuses to start and names the variable (SDD-007 T-67). Never set in production |
 | `STUARTY_MAX_EXPORTS_PER_KEY` | `1` | concurrent exports running per actor (two more may wait) |
 | `STUARTY_MAX_INGESTS` | `2` | concurrent ingests per workspace |
 | `STUARTY_MAX_TRANSCRIBES` | `1` | concurrent transcriptions per workspace |
@@ -273,10 +235,10 @@ Environment variables, all optional. Names are final. Ceilings that have no vari
 | `STUARTY_MAX_TRANSCRIBE_SECONDS` | `7200` | longest audio per transcription job |
 | `STUARTY_MAX_EXPORT_BYTES` | `4294967296` (4 GiB) | largest exported file |
 | `STUARTY_MIN_FREE_BYTES` | `2147483648` (2 GiB) | writes are refused below this free space on the workspace volume |
-| `STUARTY_CACHE_MAX_BYTES` | `2147483648` (2 GiB) | size of the frame, bitmap and processed-sound caches (`frames/`, `bitmaps/`, `audio-previews/`) before eviction |
+| `STUARTY_CACHE_MAX_BYTES` | `2147483648` (2 GiB) | size of the frame and bitmap caches before eviction |
 | `STUARTY_RATE_LIMIT_PER_MINUTE` | `300` | requests per minute per key or local token |
 | `STUARTY_RATE_LIMIT_SESSION_PER_MINUTE` | `1800` | requests per minute per browser session |
-| `STUARTY_RATE_LIMIT_HEAVY_PER_MINUTE` | `10` | calls of `JobStart`, `MediaImport`, `TemplateImport`, `ProjectBundleExport`, `ProjectBundleImport`, `FontImport`, `ProjectOtioImport` and `AudioMeasure` per minute per credential (SDD-007 section 4.4); one list, the same on the documentation pages and in the OpenAPI document |
+| `STUARTY_RATE_LIMIT_HEAVY_PER_MINUTE` | `10` | calls of `JobStart`, `MediaImport`, `TemplateImport`, `ProjectBundleExport`, `ProjectBundleImport`, `FontImport` and `ProjectOtioImport` per minute per credential (SDD-007 section 4.4); one list, the same on the documentation pages and in the OpenAPI document |
 | `STUARTY_SANDBOX` | `none` | `bwrap` runs FFmpeg and whisper.cpp in a sandbox on Linux |
 | `STUARTY_INSECURE_ALLOW_ROOT` | `false` | allow network mode as root |
 | `STUARTY_LAUNCHER_SECRET` | none | set only by the desktop shell in the environment of the server it starts (SDD-007 §5.3); the server reads it once and removes it; never set it by hand or write it to a file |
@@ -286,7 +248,7 @@ Environment variables, all optional. Names are final. Ceilings that have no vari
 | `STUARTY_PROJECT` | none | client side: the default project of CLI commands that take one |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | none | turns on OpenTelemetry (ADR-0026) |
 
-The limits and their errors are specified in SDD-007 §9. Variables read by vukem itself and used by the product (`APP_URL`, `APP_KEY`, `TLS_CERT_FILE`, `TLS_KEY_FILE`, `TRUSTED_PROXIES`, `TRUST_FORWARDED_PROTO`, `SHUTDOWN_TIMEOUT`, `DB_MAX_OPEN`) keep vukem's names. The variables of `deploy/.env` (`STUARTY_DOMAIN`, `STUARTY_VERSION`, `STUARTY_ACME_EMAIL`, `STUARTY_TLS_DIRECTIVE`, `STUARTY_SUBNET`, `STUARTY_CADDY_IP`, `STUARTY_MAX_BODY`) and the timeouts of the scripts of `deploy/` (`STUARTY_HEALTH_TIMEOUT`, `STUARTY_HTTPS_TIMEOUT`) are read by the compose file and the scripts, never by the binary (SDD-009 §21); `STUARTY_ADMIN_EMAIL` and `STUARTY_ADMIN_PASSWORD` are the two of the table above.
+The limits and their errors are specified in SDD-007 §9. Variables read by vukem itself and used by the product (`APP_URL`, `APP_KEY`, `TLS_CERT_FILE`, `TLS_KEY_FILE`, `TRUSTED_PROXIES`, `TRUST_FORWARDED_PROTO`, `SHUTDOWN_TIMEOUT`, `DB_MAX_OPEN`) keep vukem's names.
 
 ## 11. Headers and cookies
 
@@ -452,40 +414,10 @@ The operations of the registry of domain `image` (`core/command` registry built 
 | `layer.add_image`, `layer.add_text`, `layer.add_shape`, `layer.add_fill` | operation | add a layer of that kind |
 | `layer.group`, `layer.ungroup`, `layer.move` | operation | structure: group, ungroup, change order and parent |
 | `layer.transform`, `layer.set`, `layer.crop`, `layer.duplicate`, `layer.remove` | operation | geometry, common properties, crop of an image layer, copy, removal |
-| `layer.replace_source` | operation | give an image layer another file and keep the layer (SDD-021 section 3.2) |
-| `image_edit` | provider capability | a provider that edits a picture it is sent (SDD-016 section 2.4), with the operation `remove_background` of the job `image.edit`; the other operation of that job, `generate`, uses the capability `image` |
 | `layer.set_text`, `layer.set_shape` | operation | change the content or style of a text layer, the look of a shape |
 | `layer.align`, `layer.fit` | operation | align to the canvas or to a layer, fit (cover, contain) |
-| `layer.adjust`, `layer.blend` | operation | the adjustments of a layer (brightness, contrast, saturation, temperature, tint, hue, exposure, levels, tone curve) and its blend mode (SDD-021 section 3, epic 29) |
-| `layer.filter_add`, `layer.filter_set`, `layer.filter_remove`, `layer.filter_move` | operation | the ordered filters of a layer |
-| `layer.mask_set`, `layer.mask_clear` | operation | the mask of a layer: a shape, or the alpha of another layer |
-| `grayscale`, `sepia`, `invert`, `warm`, `cool`, `blur`, `sharpen`, `vignette`, `grain`, `shadow`, `glow`, `stroke` | image filter kind | the `kind` of a filter of a layer, each at most once per layer (SDD-021 section 3.1) |
-| `rect`, `rounded_rect`, `ellipse`, `layer` | image mask kind | the `kind` of the mask of a layer |
-| `normal`, `multiply`, `screen`, `overlay`, `soft_light`, `hard_light`, `darken`, `lighten`, `color_dodge`, `color_burn`, `difference` | image blend mode | the `mode` of `layer.blend`; the renderer also reads `add` (SDD-013 section 3.11) |
 | `video_thumbnail`, `square_post`, `vertical_cover` | preset | 1280 x 720, 1080 x 1080, 1080 x 1920 |
 | `L_IMAGE_EMPTY_SLOT`, `L_IMAGE_TEXT_OUTSIDE`, `L_IMAGE_TEXT_SMALL`, `L_IMAGE_LOW_CONTRAST`, `L_IMAGE_UPSCALED` | lint code | the rules of SDD-021 section 8; the first blocks an export |
 | `png`, `jpeg`, `webp` | image export format | the formats of `ImageExport` |
 | `E_SLOT` `details.reason` `unknown_slot`, `wrong_kind`, `invalid_value`, `missing` | error detail | a template filled badly (SDD-021 section 7) |
-| `E_EXPORT_FAILED` `details.reason` `webp_unavailable` | error detail | the FFmpeg in use has no `libwebp` encoder, or there is no FFmpeg (SDD-021 §6) |
-
-## 15. Export presets, codecs and batches (SDD-004 sections 8.2 to 8.4)
-
-| Name | Kind | Meaning |
-| --- | --- | --- |
-| `youtube-shorts`, `instagram-reels`, `facebook-reels`, `tiktok`, `x-video` | export preset id | the five presets of RF-087, in this order in `ExportPresetList` |
-| `h264`, `hevc`, `av1` | export codec | the codecs of an export; `h264` is the default |
-| `X_DURATION_TOO_LONG`, `X_DURATION_TOO_SHORT`, `X_FPS_TOO_HIGH`, `X_FPS_TOO_LOW`, `X_RESOLUTION_TOO_SMALL`, `X_RESOLUTION_TOO_LARGE`, `X_ASPECT_RATIO`, `X_SIZE_TOO_LARGE` | export check finding | what `ExportCheck` reports (SDD-002 A.13) |
-| `export_batch` | job kind | the parent job of `ExportBatch`; its children are `export` jobs (SDD-004 section 8.4) |
-| `E_VALIDATION` `details.reason` `preset_mismatch` | error detail | an export with a preset was refused because the project does not fit it; `details.findings` |
-| `E_NO_ENCODER` `details.reason` `codec_unavailable` | error detail | the codec asked for has no allowed encoder that passes the test encode on this machine |
-| `preset_<finding>` | verification check | a check of the finished file against its preset, named after the finding (`preset_duration_too_long`) |
-| `video_codec`, `codec_fallback`, `preset`, `notes` | export result member | the codec written (`video_codec`, as before), the codec wanted when the export fell back to `h264`, the preset id, and the notes that say so |
-
-## 16. Asset library (SDD-011 §14)
-
-| Name | Kind | Meaning |
-| --- | --- | --- |
-| `imported`, `generated`, `fetched_by_agent`, `rendered_externally` | origin kind | where an asset came from: a file the user brought, a file a provider generated, a file an agent downloaded on its own side, a file rendered by another tool |
-| `visual`, `video` | library section | the two sections over one library: Visual Assets (kinds `image`, `lut`) and Video Assets (kinds `video`, `audio`) |
-| `E_VALIDATION` `details.reason` `origin_kind_unknown`, `source_required`, `rights_note_required`, `provider_required`, `model_required`, `too_long`, `cost_invalid`, `tags_invalid`, `kind_unknown`, `section_unknown`, `origin_member_not_allowed`, `origin_member_invalid` | error detail | an origin, a tag set or a list filter the library refuses (`path` is `origin.<field>`, `tags`, `kind`, `section`, `origin` or `tag`); the last two refuse `engine`, `engine_version` or `render_key` on another kind than `rendered_externally`, or in a form that is not a token (SDD-011 §14.2, epic 33); stable for agents |
-| `asset_hash`, `hash` | field | the content hash `sha256:<64 hex>` of an asset, the key of the library (a bare 64 hex string is accepted and normalised) |
+| `E_EXPORT_FAILED` `details.reason` `webp_unavailable` | error detail | no WebP encoder is wired (SDD-021 §6) |

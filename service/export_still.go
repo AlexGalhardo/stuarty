@@ -16,19 +16,6 @@ import (
 	"github.com/AlexGalhardo/stuarty/core/timeval"
 )
 
-// jobExportRange is the frames of an export job: the one frame of a png, else the range; at is for a png only.
-func jobExportRange(doc *timeline.Document, a ExportArgs) (start, end int64, err *Error) {
-	switch {
-	case a.Format == FormatPNG:
-		return stillRange(doc, a)
-	case a.At != "":
-		return 0, 0, newError(command.CodeValidation, "at is for a png export.").withPath("args.at").
-			withHint("set format to png, or use start and end")
-	}
-
-	return exportRange(doc, a)
-}
-
 // stillRange is the one frame of a png export (VV-037): args.at, "0s" when it is not given, as the
 // frame [at, at+1). start and end belong to a video and are refused. A time past the last frame is
 // refused too, so a typo does not silently export the last frame.
@@ -76,12 +63,7 @@ func (s *svc) runStillExport(ctx context.Context, job *JobRow, pw *progress, in 
 
 	pw.report(ctx, 0.05, "Rendering the frame")
 
-	nested, nerr := decodeNested(in.Nested)
-	if nerr != nil {
-		return nil, nerr
-	}
-
-	body, err := s.framesFor(doc, nested).Still(ctx, doc, int(in.Start))
+	body, err := s.framesFor(doc).Still(ctx, doc, int(in.Start))
 	if err != nil {
 		return nil, viewError(err)
 	}

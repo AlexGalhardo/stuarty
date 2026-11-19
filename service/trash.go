@@ -13,7 +13,7 @@ import (
 // the caller, so the log records it and undo reaches the same state; a pending
 // one has no document to edit and its row changes directly. No file is removed.
 func (s *svc) MediaTrash(ctx context.Context, req MediaTrashRequest) (*MediaStateResult, error) {
-	c, err := s.authorizeProject(ctx, "MediaTrash", req.ProjectID)
+	c, err := authorize(ctx, "MediaTrash", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +87,7 @@ func (s *svc) MediaTrash(ctx context.Context, req MediaTrashRequest) (*MediaStat
 // identifier comes back; one that never was goes back to pending, and is added
 // at once when its file is already ingested.
 func (s *svc) MediaRestore(ctx context.Context, req MediaTrashRequest) (*MediaStateResult, error) {
-	c, err := s.authorizeProject(ctx, "MediaRestore", req.ProjectID)
+	c, err := authorize(ctx, "MediaRestore", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}

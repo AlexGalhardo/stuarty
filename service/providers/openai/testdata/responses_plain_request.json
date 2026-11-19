@@ -1,7 +1,0 @@
-{
-  "model": "gpt-plan-1",
-  "input": "Caption a video about sourdough.",
-  "max_output_tokens": 1024,
-  "store": false,
-  "stream": true
-}

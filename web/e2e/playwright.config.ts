@@ -9,14 +9,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "@playwright/test";
 import { CHROMIUM_ONLY, NOT_IN_MATRIX } from "./support/browsers";
-import { LAUNCHER_SECRET } from "./support/launcher";
-import {
-	GOOGLE_PORT,
-	NETWORK_ADMIN,
-	NETWORK_PORT,
-	NETWORK_URL,
-	SIGNIN_PORT,
-} from "./support/network";
+import { NETWORK_ADMIN, NETWORK_PORT, NETWORK_URL } from "./support/network";
 
 // The server serves resources/public/build, which is not the sources: a build
 // older than them runs the specs against an old editor (a stale one once drew
@@ -207,14 +200,6 @@ export default defineConfig({
 				// The master key of the vault (SDD-014 section 4) lives next to the workspace, never in it, so
 				// the connections spec does not write into the keychain of the machine that runs it.
 				STUARTY_MASTER_KEY_FILE: `${home}.master.key`,
-				// The test addresses below are honoured only with APP_ENV=test (SDD-007 T-67).
-				APP_ENV: "test",
-				// A fake social network of the youtube-connect spec, on loopback (SDD-020 section 12).
-				STUARTY_TEST_SOCIAL_URL: `http://127.0.0.1:${port + 3}`,
-				// A fake authorization server of the provider-sign-in spec, on loopback (SDD-016 section 12.5).
-				STUARTY_TEST_SIGNIN_URL: `http://127.0.0.1:${SIGNIN_PORT}`,
-				// The desktop shell's secret, so a spec can sign in as a person (the approval queue).
-				STUARTY_LAUNCHER_SECRET: LAUNCHER_SECRET,
 				// One token drives the whole suite, faster and with more exports a minute
 				// than one person would (the limits of SDD-007 4.4 apply in local mode).
 				STUARTY_RATE_LIMIT_HEAVY_PER_MINUTE: "1000",
@@ -258,12 +243,6 @@ export default defineConfig({
 				STUARTY_ADMIN_PASSWORD: NETWORK_ADMIN.password,
 				// Only for a container running as root; harmless elsewhere.
 				STUARTY_INSECURE_ALLOW_ROOT: "true",
-				// The vault key of the connection of the Google sign-in spec, next to the workspace and never in it.
-				STUARTY_MASTER_KEY_FILE: `${networkHome}.master.key`,
-				// The test address below is honoured only with APP_ENV=test (SDD-007 T-67).
-				APP_ENV: "test",
-				// The fake Google of the google-sign-in spec, on loopback (SDD-014 section 12.1).
-				STUARTY_TEST_GOOGLE_URL: `http://127.0.0.1:${GOOGLE_PORT}`,
 				...ffmpegEnv(),
 			},
 		},

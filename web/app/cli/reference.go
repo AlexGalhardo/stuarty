@@ -11,9 +11,7 @@ type FlagDoc struct {
 
 // CommandDoc is a command in the generated CLI reference.
 type CommandDoc struct {
-	Name string `json:"name"`
-	// Domain is the domain the command belongs to (SDD-000 section 1.1): `stuarty <domain> <verb>` runs it.
-	Domain  string    `json:"domain,omitempty"`
+	Name    string    `json:"name"`
 	Summary string    `json:"summary"`
 	Usage   []string  `json:"usage"`
 	Example string    `json:"example,omitempty"`
@@ -22,8 +20,6 @@ type CommandDoc struct {
 	Globals []string `json:"globals"`
 	// Pending names the task that delivers a command that is still a stub.
 	Pending string `json:"pending,omitempty"`
-	// Person marks a command only a person in the app may succeed at; the skill for agents leaves it out.
-	Person bool `json:"-"`
 }
 
 // ReferenceDoc is what the documentation site renders as the CLI reference
@@ -68,10 +64,7 @@ func Reference() ReferenceDoc {
 	}
 
 	for _, s := range registry() {
-		c := CommandDoc{
-			Name: s.name, Domain: domainOf(s.name), Summary: s.summary, Usage: s.usage, Example: s.example,
-			Pending: s.pending, Person: s.person,
-		}
+		c := CommandDoc{Name: s.name, Summary: s.summary, Usage: s.usage, Example: s.example, Pending: s.pending}
 
 		c.Globals = append(c.Globals, baseGlobals...)
 		if s.project {

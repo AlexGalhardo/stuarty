@@ -57,16 +57,6 @@ The application can look for a newer version, and only with your consent. The fi
 The site moved to `https://video.vukem.dev` in v0.21.0, and the feed moved with it (`https://video.vukem.dev/updates/feed.json`). The update address is built into each application, and the update client follows no redirect. Applications up to v0.20.0 still ask the old address (`alexgalhardo.github.io/stuarty`), so they will not find v0.21.0 or later. Download the installer of the latest release from the [release page](https://github.com/AlexGalhardo/stuarty/releases) and install it once. From v0.21.0 on, updates work again as described above.
 </Callout>
 
-## Keep running in the background
-
-A post you schedule goes out only while Stuarty is running. On Windows you can let the application stay running behind an icon in the notification area after you close the window, so a scheduled post still goes out. It is off until you turn it on: the first time you schedule a post in the desktop window, a dialog explains the choice and asks once, and **Settings**, **Background** changes it later.
-
-- **Keep running in the background.** Closing the window while at least one post is scheduled hides it instead of quitting, and the icon shows that Stuarty is still there. With nothing scheduled, or with the option off, closing the window quits as before. The icon's menu has **Open Stuarty**, **Pause publishing** and **Quit**; **Quit** says how many scheduled posts will wait until Stuarty runs again.
-- **Start when I sign in.** Starts Stuarty hidden when you sign in to Windows, only for your user and with no administrator rights. Turning the option off, or uninstalling Stuarty, removes it. Nothing is registered unless you turn it on.
-- **The limits.** A post goes out only if the computer is on and you are signed in: Stuarty does not wake the computer and is not a system service. A post whose time passed while Stuarty was not running is never sent on its own; it waits for your decision on the calendar. Starting Stuarty a second time shows the window that is already running instead of opening another one.
-
-The background mode opens no connection of its own: only the connections you set up are used, as before. On macOS and Linux the same settings exist and are not verified.
-
 ## Common mistakes
 
 - The build is not signed with a paid certificate, so Windows SmartScreen warns before the first run. See [Installation](/docs/installation) for the steps on Windows and macOS.

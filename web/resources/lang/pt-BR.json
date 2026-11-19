@@ -135,44 +135,6 @@
         "delete_title": "Excluir este projeto?",
         "delete_body": "O projeto vai para a lixeira, de onde você pode restaurá-lo."
       },
-      "briefing": {
-        "title": "Briefing guiado",
-        "intro": "Responda a algumas perguntas. As respostas viram o briefing desta produção, e o seu agente as lê.",
-        "required": "obrigatória",
-        "optional": "opcional",
-        "submit": "Salvar as respostas como briefing",
-        "saved": "O briefing foi salvo a partir das suas respostas.",
-        "hand_written": "O briefing desta produção foi escrito à mão. Salvar estas respostas o substitui.",
-        "replace": "Substituir o briefing que escrevi",
-        "seconds_hint": "De {min} a {max} segundos",
-        "q": {
-          "audience": "Para quem é este vídeo?",
-          "goal": "O que o espectador deve fazer ou sentir depois de assistir?",
-          "platform": "Onde ele será publicado?",
-          "format": "Qual formato?",
-          "duration": "Quanto tempo, em segundos?",
-          "tone": "Qual tom de voz?",
-          "references": "Há referências a seguir (links, criadores, vídeos)?",
-          "must_include": "O que deve aparecer nele?",
-          "must_avoid": "O que não deve aparecer nele?",
-          "deadline": "Para quando?"
-        },
-        "option": {
-          "platform": {
-            "youtube-shorts": "YouTube Shorts",
-            "tiktok": "TikTok",
-            "instagram-reels": "Instagram Reels",
-            "facebook-reels": "Facebook Reels",
-            "other": "Outro lugar"
-          },
-          "format": {
-            "vertical-9x16": "Vertical, proporção 9:16",
-            "square-1x1": "Quadrado, 1:1",
-            "horizontal-16x9": "Horizontal, proporção 16:9"
-          }
-        },
-        "choose": "Escolha uma"
-      },
       "overview": {
         "brief": "Briefing",
         "brief_empty": "Escreva o briefing desta produção: a ideia, o público, o tom.",
@@ -185,7 +147,6 @@
         "item_title": "Título",
         "item_text": "Texto",
         "rename_title": "Renomear item",
-        "write": "Escrever",
         "move_up": "Mover para cima",
         "move_down": "Mover para baixo",
         "kind": {
@@ -239,391 +200,6 @@
         "forbidden": "Esta sessão não pode instalar arquivos. Rode o comando abaixo em um terminal.",
         "command": "Comando de instalação",
         "copy_command": "Copiar o comando"
-      },
-      "background": {
-        "title": "Segundo plano",
-        "intro": "Uma publicação agendada só sai na hora se o Stuarty estiver rodando. Com isto ligado, fechar a janela com uma publicação agendada mantém o Stuarty rodando atrás de um ícone na bandeja do sistema, e a publicação sai do mesmo jeito.",
-        "keep_running": "Continuar rodando em segundo plano",
-        "start_at_sign_in": "Iniciar quando eu entrar no computador",
-        "start_at_sign_in_hint": "Inicia o Stuarty escondido, só para você, sem direitos de administrador. Desligar isto, ou desinstalar o Stuarty, remove o registro.",
-        "limit_computer": "Uma publicação só sai se o computador estiver ligado e você estiver conectado. O Stuarty não acorda o computador.",
-        "limit_missed": "Uma publicação cuja hora passou enquanto o Stuarty não estava rodando não é enviada sozinha. Ela espera a sua decisão.",
-        "limit_quit": "Sair no ícone da bandeja para de publicar. Pausar as publicações fica no mesmo menu.",
-        "failed": "Não foi possível mudar a configuração.",
-        "ask_title": "Manter o Stuarty rodando para as publicações agendadas saírem?",
-        "ask_yes": "Continuar rodando em segundo plano",
-        "ask_no": "Agora não",
-        "ask_later": "Você pode mudar isto em Configurações, Segundo plano."
-      }
-    },
-    "image": {
-      "editor": {
-        "title": "Editor de imagem",
-        "loading": "Abrindo a imagem…",
-        "failed": "Não foi possível abrir a imagem.",
-        "back": "Voltar para Editar imagem",
-        "size": "{w} × {h} px",
-        "revision": "revisão {revision}"
-      },
-      "canvas": {
-        "label": "Tela da imagem",
-        "picture": "A imagem como está desenhada agora",
-        "loading": "Desenhando a imagem…",
-        "failed": "Não foi possível desenhar a imagem.",
-        "retry": "Tentar de novo",
-        "locked": "Bloqueada",
-        "none_selected": "Nada selecionado",
-        "many_selected": "{count} camadas selecionadas",
-        "selected": "Camada {name}, {kind}, em {x}, {y}, {w} por {h}"
-      },
-      "view": {
-        "zoom_out": "Diminuir o zoom",
-        "zoom_in": "Aumentar o zoom",
-        "fit": "Ajustar à janela",
-        "actual": "Tamanho real (100%)"
-      },
-      "kind": {
-        "image": "imagem",
-        "text": "texto",
-        "shape": "forma",
-        "fill": "preenchimento",
-        "group": "grupo"
-      },
-      "layers": {
-        "title": "Camadas",
-        "label": "Camadas, a de cima primeiro",
-        "empty_title": "A imagem não tem camadas",
-        "empty_body": "Adicione um texto, uma forma ou uma foto pela barra de ferramentas.",
-        "hidden": "oculta",
-        "locked": "bloqueada",
-        "rename": "Nome da camada"
-      },
-      "arrange": {
-        "group": "Agrupar camadas",
-        "ungroup": "Desagrupar",
-        "duplicate": "Duplicar",
-        "remove": "Remover",
-        "forward": "Trazer para frente",
-        "back": "Enviar para trás"
-      },
-      "history": {
-        "undo": "Desfazer meu último passo",
-        "redo": "Refazer meu passo",
-        "title": "Histórico",
-        "empty": "Nenhuma mudança ainda. Toda mudança sua ou de um agente aparece aqui.",
-        "undo_of": "desfez a revisão {revision}",
-        "redo_of": "refez a revisão {revision}",
-        "revision": "revisão {revision}",
-        "you": "Você",
-        "undone": "Desfeito pela revisão {revision}",
-        "skipped": {
-          "one": "{count} mudança deixada como estava porque outro autor a alterou depois",
-          "other": "{count} mudanças deixadas como estavam porque outro autor as alterou depois"
-        },
-        "agent_changed_prefix": "A imagem foi alterada por",
-        "agent_changed_suffix": "e a tela já mostra a mudança."
-      },
-      "add": {
-        "text": "Adicionar texto",
-        "text_default": "Seu texto",
-        "rectangle": "Adicionar retângulo",
-        "ellipse": "Adicionar elipse",
-        "fill": "Adicionar preenchimento",
-        "image": "Adicionar imagem",
-        "image_hint": "Escolha uma imagem do seu espaço de trabalho.",
-        "image_none": "Ainda não há imagens no espaço de trabalho. Importe uma em um projeto primeiro."
-      },
-      "model": {
-        "remove": "Remover o fundo",
-        "remove_needs_layer": "Remover o fundo (selecione antes uma camada de imagem)",
-        "generate": "Gerar imagem",
-        "title": {
-          "remove_background": "Remover o fundo",
-          "generate": "Gerar uma imagem dentro desta"
-        },
-        "intro": {
-          "remove_background": "O fundo da camada é removido pelo modelo de um provedor que você conectou. O resultado é a mesma camada com a imagem nova, e um Desfazer traz o original de volta.",
-          "generate": "Uma camada nova é feita a partir do seu texto pelo modelo de um provedor que você conectou. Um Desfazer a tira. O preço aparece antes de qualquer pedido ao provedor."
-        },
-        "sent": {
-          "remove_background": "A imagem da camada {layer} será enviada para {provider}. Nada é enviado até você aprovar o custo.",
-          "generate": "Somente o texto que você escrever abaixo será enviado para {provider}. Nada é enviado até você aprovar o custo."
-        },
-        "no_provider": {
-          "remove_background": "Nenhum provedor conectado remove fundos ainda. A conexão precisa aceitar imagens.",
-          "generate": "Nenhum provedor conectado gera imagens ainda."
-        },
-        "open_connections": "Conecte um na página Conexões",
-        "project": "Projeto",
-        "project_hint": "O projeto que guarda o arquivo novo e o custo. A imagem em si não pertence a nenhum projeto.",
-        "no_project": "Crie um projeto antes: ele guarda o arquivo novo e o custo.",
-        "connection": "Conexão",
-        "model": "Modelo",
-        "no_price": "sem preço ainda",
-        "prompt": "O que desenhar",
-        "cover_layer": "Cobrir a camada",
-        "estimate": "Mostrar a estimativa",
-        "estimated": "Custo estimado: {amount}",
-        "submit": "Começar",
-        "working": {
-          "remove_background": "Removendo o fundo de",
-          "generate": "Gerando uma imagem"
-        },
-        "layer_working": "em andamento",
-        "state": {
-          "queued": "Esperando para começar.",
-          "waiting_approval": "Esperando a sua aprovação.",
-          "running": "Trabalhando.",
-          "succeeded": "Pronto.",
-          "failed": "Não deu certo.",
-          "cancelled": "Cancelado."
-        },
-        "progress": "{percent}% concluído",
-        "open_approvals": "Abrir a página Aprovações",
-        "done": {
-          "applied": "A camada está na imagem e custou {amount}.",
-          "kept": "A imagem não foi alterada. O arquivo está na sua biblioteca e custou {amount}."
-        },
-        "dismiss": "Fechar esta mensagem"
-      },
-      "import": {
-        "open_new": "Importar imagem",
-        "open_layer": "Colocar um arquivo nesta imagem",
-        "title_new": "Importar uma imagem",
-        "title_layer": "Colocar um arquivo nesta imagem",
-        "description_new": "Crie uma imagem nova a partir de uma foto ou de uma figura que você tem.",
-        "description_layer": "Acrescente uma foto ou uma figura como mais uma camada desta imagem.",
-        "file": "Escolher um arquivo",
-        "file_help": "Uma figura de até 64 MB. Para uma maior, informe o caminho dela no servidor.",
-        "path": "Ou o caminho de um arquivo no servidor",
-        "path_placeholder": "/home/ana/imagens/foto.jpg",
-        "name": "Nome",
-        "name_placeholder": "O nome do arquivo",
-        "size": "Tamanho da imagem nova",
-        "size_file": "O tamanho do arquivo",
-        "submit": "Importar",
-        "working": "Importando…",
-        "cancel": "Cancelar",
-        "need_source": "Escolha um arquivo ou informe um caminho."
-      },
-      "brand": {
-        "place_logo": "Colocar logotipo",
-        "logo_name": "Logotipo",
-        "swatches": "Cores da marca para {label}",
-        "use_color": "Usar {name} ({value})"
-      },
-      "align": {
-        "left": "Esquerda",
-        "center": "Centro",
-        "right": "Direita",
-        "top": "Topo",
-        "middle": "Meio",
-        "bottom": "Base"
-      },
-      "shape": {
-        "rect": "Retângulo",
-        "rounded_rect": "Retângulo arredondado",
-        "ellipse": "Elipse"
-      },
-      "inspector": {
-        "title": "Inspetor",
-        "x": "Posição X",
-        "y": "Posição Y",
-        "selection": "Seleção",
-        "document": "Tela",
-        "canvas_width": "Largura",
-        "canvas_height": "Altura",
-        "resize_mode": "Quando o tamanho mudar",
-        "resize_keep": "Manter as camadas onde estão",
-        "resize_scale": "Escalar as camadas com a tela",
-        "document_hint": "Selecione uma camada para editá-la.",
-        "align": "Alinhar",
-        "align_to": "Alinhar a",
-        "canvas": "Tela",
-        "layer": "Camada",
-        "name": "Nome",
-        "opacity": "Opacidade",
-        "visible": "Visível",
-        "locked": "Bloqueada",
-        "slot": "Campo do modelo",
-        "box": "Posição e tamanho",
-        "width": "Largura",
-        "height": "Altura",
-        "rotation": "Rotação",
-        "image": "Imagem",
-        "replace": "Trocar a foto",
-        "current_image": "Imagem atual",
-        "fit_cover": "Cobrir a tela",
-        "fit_contain": "Caber na tela",
-        "crop": "Corte da origem",
-        "crop_reset": "Restaurar o corte",
-        "text": "Texto",
-        "content": "Conteúdo",
-        "font": "Fonte",
-        "font_default": "Fonte padrão",
-        "weight": "Peso",
-        "size": "Tamanho",
-        "color": "Cor",
-        "align_text": "Alinhamento do texto",
-        "uppercase": "Maiúsculas",
-        "stroke_color": "Cor do contorno",
-        "stroke_width": "Largura do contorno",
-        "shape": "Forma",
-        "shape_kind": "Tipo",
-        "fill": "Preenchimento",
-        "radius": "Raio dos cantos",
-        "bad_number": "Digite um número inteiro de pixels, como 120, 120px ou 50%.",
-        "pick_color": "Escolher {label}",
-        "none": "nenhum"
-      },
-      "look": {
-        "adjust": "Ajustes",
-        "brightness": "Brilho",
-        "contrast": "Contraste",
-        "saturation": "Saturação",
-        "temperature": "Temperatura",
-        "tint": "Matiz de cor (tint)",
-        "hue": "Tonalidade",
-        "exposure": "Exposição (centésimos de stop)",
-        "levels": "Níveis",
-        "levels_black": "Ponto preto",
-        "levels_white": "Ponto branco",
-        "levels_gamma": "Gama (centésimos)",
-        "curve": "Curva de tons",
-        "curve_hint": "Pontos de x e y de 0 a 255, como 64:48, 192:208. Vazio remove a curva.",
-        "adjust_reset": "Zerar os ajustes",
-        "lut": "Tabela de cores (.cube)",
-        "lut_file": "Tabela",
-        "lut_none": "Sem tabela",
-        "lut_intensity": "Intensidade",
-        "lut_hint": "Os mesmos arquivos .cube de um vídeo. Importe um em um projeto antes; a imagem é a renderização do servidor.",
-        "filters": "Filtros",
-        "filters_none": "Nenhum filtro. Eles agem na ordem da lista.",
-        "filter_add_kind": "Filtro a adicionar",
-        "filter_add": "Adicionar filtro",
-        "filter_up": "Subir {name}",
-        "filter_down": "Descer {name}",
-        "filter_remove": "Remover {name}",
-        "move_up": "Subir",
-        "move_down": "Descer",
-        "remove": "Remover",
-        "filter_grayscale": "Tons de cinza",
-        "filter_sepia": "Sépia",
-        "filter_invert": "Inverter",
-        "filter_warm": "Quente",
-        "filter_cool": "Frio",
-        "filter_blur": "Desfoque",
-        "filter_sharpen": "Nitidez",
-        "filter_vignette": "Vinheta",
-        "filter_grain": "Granulação",
-        "filter_shadow": "Sombra projetada",
-        "filter_glow": "Brilho externo",
-        "filter_stroke": "Contorno",
-        "param_amount": "Quantidade",
-        "param_radius": "Raio",
-        "param_softness": "Suavidade",
-        "param_size": "Tamanho do grão",
-        "param_seed": "Semente",
-        "param_opacity": "Opacidade",
-        "param_dx": "Deslocamento X",
-        "param_dy": "Deslocamento Y",
-        "param_blur": "Desfoque",
-        "param_width": "Largura",
-        "param_color": "Cor",
-        "mask": "Máscara",
-        "mask_kind": "Máscara",
-        "mask_none": "Sem máscara",
-        "mask_rect": "Retângulo",
-        "mask_rounded_rect": "Retângulo arredondado",
-        "mask_ellipse": "Elipse",
-        "mask_layer": "Forma de outra camada",
-        "mask_x": "Esquerda",
-        "mask_y": "Topo",
-        "mask_w": "Largura",
-        "mask_h": "Altura",
-        "mask_radius": "Raio do canto",
-        "mask_feather": "Borda suave",
-        "mask_invert": "Inverter a máscara",
-        "mask_source": "Tomar a forma de",
-        "blend": "Mistura",
-        "blend_mode": "Modo de mistura",
-        "blend_normal": "Sem mistura (normal)",
-        "blend_multiply": "Multiplicar",
-        "blend_screen": "Tela",
-        "blend_overlay": "Sobrepor",
-        "blend_soft_light": "Luz suave",
-        "blend_hard_light": "Luz direta",
-        "blend_darken": "Escurecer",
-        "blend_lighten": "Clarear",
-        "blend_color_dodge": "Subexposição de cor",
-        "blend_color_burn": "Superexposição de cor",
-        "blend_difference": "Diferença"
-      },
-      "export": {
-        "open": "Exportar imagem",
-        "title": "Exportar imagem",
-        "hint": "Desenha a revisão atual e salva um arquivo no seu espaço de trabalho.",
-        "format": "Formato",
-        "size": "Tamanho",
-        "original": "Original ({w} × {h})",
-        "quality": "Qualidade",
-        "lossless": "Sem perdas",
-        "findings": "Problemas encontrados",
-        "no_findings": "Nenhum problema encontrado. A imagem está pronta para exportar.",
-        "error": "Erro",
-        "warning": "Aviso",
-        "go_to_layer": "Ir para a camada",
-        "blocked": {
-          "one": "{count} erro impede a exportação. Corrija-o primeiro.",
-          "other": "{count} erros impedem a exportação. Corrija-os primeiro."
-        },
-        "done": "Exportada em {w} × {h}, {bytes} bytes.",
-        "digest": "Resumo SHA-256 {hash}",
-        "download": "Baixar o arquivo",
-        "close": "Fechar",
-        "run": "Exportar",
-        "exporting": "Exportando…"
-      },
-      "toolbar": {
-        "label": "Ferramentas da imagem"
-      },
-      "error": {
-        "dismiss": "Dispensar o erro"
-      },
-      "index": {
-        "title": "Editar imagem",
-        "new": "Nova imagem",
-        "name": "Nome",
-        "name_placeholder": "Sem título",
-        "size": "Tamanho",
-        "width": "Largura",
-        "height": "Altura",
-        "create": "Criar imagem",
-        "as_template": "Criar como modelo",
-        "templates": "Seus modelos",
-        "documents": "Suas imagens",
-        "loading": "Carregando…",
-        "empty": "Nenhuma imagem ainda. Crie uma acima.",
-        "layers": {
-          "one": "{count} camada",
-          "other": "{count} camadas"
-        }
-      },
-      "preset": {
-        "video_thumbnail": "Miniatura de vídeo (16:9)",
-        "square_post": "Post quadrado (1:1)",
-        "vertical_cover": "Capa vertical (9:16)",
-        "custom": "Tamanho próprio"
-      },
-      "template": {
-        "title": "Novo a partir de um modelo",
-        "none": "Ainda não há modelos de imagem. Transforme uma imagem em modelo e ela aparece aqui.",
-        "pick": "Modelo",
-        "choose": "Escolha um modelo",
-        "required": "obrigatório",
-        "no_image": "Nenhuma imagem",
-        "create": "Criar a partir do modelo",
-        "slot_hint": "Preencha os campos marcados como obrigatórios e crie de novo."
       }
     },
     "editor": {
@@ -768,10 +344,6 @@
         "text": "Texto",
         "caption": "Legenda",
         "shape": "Forma",
-        "composition": "Composição",
-        "composition_open": "Abrir composição",
-        "composition_missing": "Timeline não encontrada",
-        "from_breadcrumb": "Voltar para {name}",
         "speed_badge": "Velocidade {speed}",
         "slot_badge": "Espaço do modelo: {name}",
         "asset_missing": "A mídia original deste item não está no projeto",
@@ -825,15 +397,6 @@
         "E_NETWORK": "Erro de rede",
         "E_UNAUTHORIZED": "Sessão encerrada",
         "E_FORBIDDEN": "Não permitido",
-        "E_PRIVILEGED_SESSION": "Só você, no aplicativo, pode fazer isso",
-        "E_AGENT_NOT_FOUND": "Agente não encontrado",
-        "E_CHAT_NOT_FOUND": "Conversa não encontrada",
-        "E_AGENT_UNAVAILABLE": "Não foi possível iniciar o agente",
-        "E_COST_CEILING": "Acima de um teto de custo",
-        "E_PUBLISH": "A rede recusou ou falhou na publicação",
-        "E_PROVIDER": "O provedor de IA recusou ou falhou",
-        "E_PRICE_UNKNOWN": "Sem preço para esse modelo",
-        "E_APPROVAL_NOT_FOUND": "Pedido ou regra não encontrado",
         "E_ASSET_NOT_READY": "A mídia ainda está sendo preparada",
         "E_NOTHING_TO_UNDO": "Nada para desfazer",
         "E_NOTHING_TO_REDO": "Nada para refazer",
@@ -947,8 +510,7 @@
         "add_video_track": "Adicionar faixa de vídeo",
         "add_audio_track": "Adicionar faixa de áudio",
         "marker": "Marcador no cabeçote",
-        "shortcuts": "Atalhos de teclado",
-        "tour": "Fazer o tour"
+        "shortcuts": "Atalhos de teclado"
       },
       "edit": {
         "label": "Edição",
@@ -973,11 +535,9 @@
         "link": "Vincular itens",
         "unlink": "Desvincular itens",
         "extract_audio": "Extrair o áudio",
-        "create_composition": "Criar composição da seleção",
-        "expand_composition": "Expandir composição",
         "freeze_frame": "Congelar quadro",
         "copy_attributes": "Copiar atributos",
-        "paste_attributes": "Colar atributos (sem espelhamento)",
+        "paste_attributes": "Colar atributos",
         "enable": "Ativar",
         "disable": "Desativar",
         "repeat": "Repetir…"
@@ -1061,65 +621,9 @@
             "aac": "Somente áudio AAC",
             "png": "Imagem PNG do quadro no cabeçote de reprodução"
           }
-        },
-        "presets": {
-          "title": "Plataformas",
-          "hint": "Escolha uma ou mais: cada uma vira um arquivo que cabe naquela rede.",
-          "loading": "Carregando as plataformas",
-          "unavailable": "Não foi possível carregar as plataformas.",
-          "limit_duration_max": "até {seconds} s",
-          "limit_duration_range": "{min} a {max} s",
-          "limit_duration_min": "pelo menos {seconds} s",
-          "limit_fps": "{min} a {max} fps",
-          "limit_fps_max": "até {max} fps",
-          "limit_aspect": "proporção {ratio}",
-          "limit_size": "arquivo de até {size}",
-          "source": "Limites lidos em {date}",
-          "source_link": "Fonte",
-          "checking": "Verificando",
-          "fits": "O projeto cabe.",
-          "does_not_fit": "O projeto não cabe:",
-          "limit_line": "limite {limit}, agora {got}",
-          "misfit": "{count} das plataformas escolhidas não cabem e vão falhar; ajuste o projeto ou tire-as da escolha.",
-          "start_many": "Exportar {count} arquivos"
-        },
-        "codec": {
-          "label": "Codec de vídeo",
-          "auto": "Automático (como a plataforma prefere)",
-          "h264": "H.264 (funciona em todo lugar)",
-          "hevc": "H.265 (HEVC, arquivos menores)",
-          "av1": "AV1 (arquivos ainda menores, aparelhos novos)",
-          "unavailable": "{name} (indisponível nesta máquina)",
-          "fallback_note": "Se esta máquina não codifica o codec preferido, usa-se H.264 e o resultado avisa."
-        },
-        "batch": {
-          "title": "Exportações",
-          "summary": "{done} de {total} prontas",
-          "state": {
-            "queued": "Aguardando",
-            "running": "Exportando",
-            "succeeded": "Pronta",
-            "failed": "Falhou",
-            "cancelled": "Cancelada"
-          },
-          "item": "Exportação {index}: {name}",
-          "queued_behind": "Outra exportação está em andamento: esta espera por ela e começa sozinha.",
-          "finished": "Exportações concluídas",
-          "some_failed": "Algumas exportações falharam",
-          "download": "Baixar {name}",
-          "codec_note": "Arquivo: {codec}, {size} MB",
-          "plain": "Exportação"
         }
       },
       "commands": {
-        "animation": {
-          "apply_preset": {
-            "title": "Aplicar uma predefinição de movimento"
-          },
-          "list_presets": {
-            "title": "Listar as predefinições de movimento"
-          }
-        },
         "asset": {
           "remove": {
             "title": "Remover mídia"
@@ -1129,26 +633,11 @@
           "add": {
             "title": "Adicionar áudio"
           },
-          "apply_preset": {
-            "title": "Aplicar um preset de áudio"
-          },
           "duck": {
             "title": "Baixar a música sob a fala"
           },
           "mark_beats": {
             "title": "Marcar batidas"
-          },
-          "processor_add": {
-            "title": "Adicionar um processador de áudio"
-          },
-          "processor_move": {
-            "title": "Mover um processador de áudio"
-          },
-          "processor_remove": {
-            "title": "Remover um processador de áudio"
-          },
-          "processor_set": {
-            "title": "Alterar um processador de áudio"
           }
         },
         "caption": {
@@ -1187,9 +676,6 @@
           "add": {
             "title": "Adicionar clipe"
           },
-          "add_composition": {
-            "title": "Adicionar uma linha do tempo como clipe"
-          },
           "set_blur": {
             "title": "Definir desfoque do clipe"
           },
@@ -1226,19 +712,8 @@
           "set_framing": {
             "title": "Definir enquadramento do clipe"
           },
-          "replace_media": {
-            "title": "Trocar a mídia de um clipe"
-          },
           "set_speed": {
             "title": "Definir velocidade do clipe"
-          }
-        },
-        "composition": {
-          "create_from_selection": {
-            "title": "Criar uma composição a partir da seleção"
-          },
-          "expand": {
-            "title": "Expandir a composição em seus itens"
           }
         },
         "font": {
@@ -1314,9 +789,6 @@
           },
           "set": {
             "title": "Definir quadro-chave"
-          },
-          "set_easing": {
-            "title": "Definir a curva do quadro-chave"
           }
         },
         "project": {
@@ -1423,10 +895,7 @@
         "L_SLOT_UNFILLED": "Espaço do modelo não preenchido",
         "L_AUDIO_CLIP": "Áudio saturado",
         "L_LOUDNESS": "Volume fora do alvo",
-        "L_DURATION_LIMIT": "Acima do limite de duração",
-        "L_ALPHA_MISSING": "Transparência declarada, mas ausente",
-        "L_AUDIO_LIMITER_NOT_LAST": "O limitador não é o último da cadeia",
-        "L_AUDIO_NOISE_REDUCTION_REPEATED": "Mais de uma redução de ruído"
+        "L_DURATION_LIMIT": "Acima do limite de duração"
       },
       "shortcuts": {
         "title": "Atalhos de teclado",
@@ -1442,50 +911,30 @@
         "reset": "Restaurar o padrão",
         "also": "Também {keys}",
         "saved": "Salvo. Toda edição é salva ao ser feita.",
-        "search": "Buscar atalhos",
-        "none": "Nenhum atalho corresponde.",
-        "preset": "Conjunto",
-        "presets": {
-          "short": "Vídeo curto",
-          "classic": "Clássico"
-        },
-        "dropped": "Estas teclas voltaram ao padrão do conjunto porque o novo conjunto as usa: {actions}.",
         "rows": {
           "play_pause": "Reproduzir ou pausar",
-          "shuttle_back": "Voltar um segundo (player)",
-          "pause": "Pausar",
-          "shuttle_play": "Reproduzir",
-          "step_back": "Voltar um quadro",
-          "step_forward": "Avançar um quadro",
-          "step_second_back": "Voltar um segundo",
-          "step_second_forward": "Avançar um segundo",
-          "go_start": "Ir ao início",
-          "go_end": "Ir ao fim",
-          "prev_cut": "Ir ao corte anterior",
-          "next_cut": "Ir ao corte seguinte",
-          "prev_marker": "Ir ao marcador anterior",
-          "next_marker": "Ir ao marcador seguinte",
+          "step_frame": "Avançar ou voltar um quadro",
+          "step_second": "Avançar ou voltar um segundo",
+          "go_to_edge": "Ir ao início ou ao fim",
+          "next_cut": "Ir ao corte anterior ou ao seguinte",
+          "shuttle": "Reproduzir (L), pausar (K), voltar um segundo (J)",
+          "next_marker": "Ir ao marcador anterior ou ao seguinte",
           "marker": "Adicionar um marcador na posição de reprodução, ou remover o que estiver nela",
-          "range_in": "Definir o ponto de entrada",
-          "range_out": "Definir o ponto de saída",
+          "range_in_out": "Definir o ponto de entrada (I) e o de saída (O)",
           "range_select": "Definir os pontos de entrada e saída pelos itens selecionados",
           "range_clear": "Limpar os pontos de entrada e saída",
-          "tool_blade": "Ferramenta lâmina",
-          "tool_select": "Ferramenta de seleção",
+          "tool": "Ferramenta lâmina (B), ferramenta de seleção (A)",
           "split": "Dividir o item selecionado na posição de reprodução",
           "split_all": "Dividir todas as trilhas na posição de reprodução",
           "trim_start": "Excluir o que está à esquerda da posição de reprodução",
           "trim_end": "Excluir o que está à direita da posição de reprodução",
-          "slide_back": "Deslizar o item selecionado para trás, os vizinhos continuam encostados (1 quadro)",
-          "slide_forward": "Deslizar o item selecionado para frente, os vizinhos continuam encostados (1 quadro)",
-          "roll_back": "Rolar para trás o corte depois do item selecionado (1 quadro)",
-          "roll_forward": "Rolar para frente o corte depois do item selecionado (1 quadro)",
-          "slip_back": "Deslocar a fonte do clipe selecionado para trás, mostrando um trecho anterior (1 quadro)",
-          "slip_forward": "Deslocar a fonte do clipe selecionado para frente, mostrando um trecho posterior (1 quadro)",
-          "select_left": "Selecionar tudo à esquerda da posição de reprodução",
-          "select_right": "Selecionar tudo à direita da posição de reprodução",
+          "slide": "Deslizar o item selecionado, os vizinhos continuam encostados (1 quadro)",
+          "roll": "Rolar o corte depois do item selecionado (1 quadro)",
+          "slip": "Deslocar a fonte do clipe selecionado, mostrando outro trecho (1 quadro)",
+          "select_side": "Selecionar tudo à esquerda ou à direita da posição de reprodução",
           "undo": "Desfazer",
           "redo": "Refazer",
+          "redo_alt": "Refazer (alternativa)",
           "zoom_in": "Aumentar o zoom",
           "zoom_out": "Diminuir o zoom",
           "zoom_fit": "Ajustar a linha do tempo",
@@ -1504,28 +953,23 @@
           "toggle_enabled": "Ativar ou desativar os itens selecionados",
           "link": "Vincular ou desvincular os itens selecionados",
           "extract_audio": "Extrair o áudio dos clipes selecionados",
+          "toggle_snap": "Ativar ou desativar o encaixe",
           "toggle_magnet": "Ativar ou desativar o ímã da faixa",
           "copy_attributes": "Copiar o visual do item selecionado",
-          "paste_attributes": "Colar o visual copiado, exceto o espelhamento, nos itens selecionados",
-          "toggle_snap": "Ativar ou desativar o encaixe",
+          "paste_attributes": "Colar o visual copiado nos itens selecionados",
           "keyframe_panel": "Mostrar ou ocultar os keyframes do item selecionado",
           "speed_curve": "Abrir a curva de velocidade do clipe selecionado",
           "scroll": "Rolar a linha do tempo: roda para cima e para baixo, Alt+roda para os lados",
-          "preview_fit": "Ajustar a prévia",
-          "preview_zoom_in": "Aumentar o zoom da prévia",
-          "preview_zoom_out": "Diminuir o zoom da prévia",
+          "preview_zoom": "Ajustar a prévia, aumentar o zoom, diminuir o zoom",
           "import": "Importar mídia",
           "export": "Exportar",
           "save": "Salvar (toda edição já é salva)",
           "palette": "Paleta de comandos",
           "find": "Buscar no projeto",
-          "panel_library": "Mostrar ou ocultar a biblioteca",
-          "panel_inspector": "Mostrar ou ocultar o inspetor",
-          "panel_history": "Mostrar ou ocultar o histórico",
+          "toggle_panel": "Mostrar ou ocultar biblioteca, inspetor e histórico",
           "select_all": "Selecionar todos os itens",
           "cancel": "Cancelar, fechar ou limpar a seleção",
           "next_landmark": "Ir para a próxima região",
-          "prev_landmark": "Ir para a região anterior",
           "grid_keys": "Mover-se na linha do tempo",
           "cheat_sheet": "Abrir esta lista"
         }
@@ -1638,72 +1082,6 @@
           "other": "{count} marcadores"
         },
         "beats_apply": "Marcar batidas"
-      },
-      "processors": {
-        "title": "Processadores de áudio",
-        "empty": "Nenhum processador ainda. Adicione um ou aplique um preset.",
-        "preset_label": "Predefinição",
-        "preset_apply": "Aplicar predefinição",
-        "presets": {
-          "voice": "Voz",
-          "voice_with_music": "Voz com música",
-          "podcast": "Podcast de voz",
-          "clean_noisy_room": "Limpar um ambiente com ruído"
-        },
-        "add_kind": "Processador",
-        "add": "Adicionar processador",
-        "kind": {
-          "eq": "Equalizador",
-          "compressor": "Compressor de dinâmica",
-          "limiter": "Limitador",
-          "gate": "Gate de ruído",
-          "deesser": "Redutor de sibilância",
-          "noise_reduction": "Redução de ruído"
-        },
-        "enabled": "Ligado",
-        "move_up": "Subir",
-        "move_down": "Descer",
-        "remove": "Remover",
-        "params": "Parâmetros",
-        "param": {
-          "hp_hz": "Frequência do passa-altas (0 desliga)",
-          "lp_hz": "Frequência do passa-baixas (0 desliga)",
-          "threshold_db": "Limiar",
-          "ratio": "Razão",
-          "attack_ms": "Ataque",
-          "release_ms": "Liberação",
-          "knee_db": "Joelho",
-          "makeup_db": "Ganho de compensação",
-          "ceiling_db": "Teto",
-          "range_db": "Faixa",
-          "hold_ms": "Espera",
-          "frequency_hz": "Frequência",
-          "strength": "Intensidade",
-          "profile_start_ms": "Início do perfil de ruído (0 é automático)",
-          "profile_end_ms": "Fim do perfil de ruído"
-        },
-        "band": {
-          "hz": "Frequência da banda {n}",
-          "gain_db": "Ganho da banda {n}",
-          "q": "Largura da banda {n} (Q)"
-        },
-        "measure": "Medir o som",
-        "measuring": "Medindo...",
-        "measure_failed": "Não foi possível medir o som.",
-        "before": "Antes",
-        "after": "Depois",
-        "loudness": "Volume",
-        "true_peak": "Pico real",
-        "noise_floor": "Nível de ruído",
-        "speech_to_noise": "Fala sobre ruído",
-        "no_level": "nenhum",
-        "listen": "Ouvir o som processado",
-        "rendering": "Gerando o som...",
-        "listen_failed": "Não foi possível gerar o som.",
-        "player": "Som processado",
-        "preview_processing": "Processando o som para a prévia. A linha do tempo o toca sem processar até lá.",
-        "preview_ready": "A linha do tempo toca o som processado.",
-        "track_not_previewed": "A linha do tempo não toca os processadores de uma trilha. A exportação toca."
       },
       "markers": {
         "title": {
@@ -1972,29 +1350,7 @@
           "one": "{count} alteração",
           "other": "{count} alterações",
           "zero": "Nenhuma alteração"
-        },
-        "compare": "Comparar rev {revision}",
-        "revert_here": "Voltar até aqui",
-        "revert_row": "Voltar para a rev {revision}",
-        "diff_title": "Alterações entre a rev {from} e a rev {to}",
-        "diff_hint": "Marque dois passos para ver em palavras o que mudou entre eles.",
-        "diff_empty": "Os dois estados são iguais.",
-        "diff_failed": "Não foi possível ler as alterações.",
-        "checkpoints_title": "Pontos de retorno",
-        "checkpoints_empty": "Nenhum ponto de retorno ainda. Dê um nome a um estado para voltar a ele.",
-        "checkpoint_label": "Nome deste estado",
-        "checkpoint_add": "Adicionar ponto de retorno",
-        "checkpoint_auto": "Automático",
-        "checkpoint_remove": "Remover {name}",
-        "checkpoint_revert": "Voltar para {name}",
-        "revert_title": "Voltar para a rev {revision}?",
-        "revert_title_named": "Voltar para {name}?",
-        "revert_body": "Isso adiciona um passo novo que leva o projeto de volta. Os passos do meio continuam no histórico e você pode desfazer.",
-        "revert_changes": "O que mudaria",
-        "revert_same": "O projeto já está assim. Nada mudaria.",
-        "revert_cancel": "Cancelar",
-        "revert_confirm": "Voltar",
-        "revert_loading": "Lendo o que mudaria"
+        }
       },
       "shape": {
         "title": "Forma",
@@ -2119,26 +1475,7 @@
           "ease_in": "Entrada suave",
           "ease_out": "Saída suave",
           "ease_in_out": "Entrada e saída suaves",
-          "hold": "Manter",
-          "bezier": "Curva personalizada"
-        },
-        "curve": "Curva",
-        "curve_edit": "Editar a curva do quadro-chave de {property} em {time}",
-        "curve_close": "Fechar o editor de curva do quadro-chave de {property} em {time}",
-        "curve_plot": "Curva do quadro-chave de {property}",
-        "curve_hint": "Arraste as duas alças, mova uma com as setas (Shift para um passo maior) ou digite os quatro números.",
-        "curve_handle": "Ponto de controle {n} da curva",
-        "curve_handle_value": "x {x}; y {y}",
-        "curve_preset": "Curva nomeada",
-        "curve_preset_of": "Curva nomeada para o quadro-chave de {property}",
-        "curve_preset_none": "Escolha uma...",
-        "curve_number": "{name} da curva de {property}",
-        "curve_preset_name": {
-          "in": "Entrada suave",
-          "out": "Saída suave",
-          "in_out": "Entrada e saída suaves",
-          "back": "Recuo (puxa para trás primeiro)",
-          "overshoot": "Ultrapassagem (passa do ponto, depois assenta)"
+          "hold": "Manter"
         }
       },
       "effects": {
@@ -2215,36 +1552,6 @@
           "slide_right": "Deslizar para a direita"
         }
       },
-      "motion": {
-        "title": "Predefinições de movimento",
-        "preset": "Predefinição",
-        "preset_of": "Predefinição de movimento",
-        "edge_of": "Extremidade da predefinição de movimento",
-        "duration_of": "Duração da predefinição de movimento",
-        "apply": "Adicionar movimento",
-        "direction": "Direção",
-        "use_default": "Padrão",
-        "preset_name": {
-          "fade": "Esmaecer",
-          "slide": "Deslizar",
-          "scale": "Escala",
-          "pop": "Surgir",
-          "push_in": "Aproximar devagar",
-          "pull_out": "Afastar devagar"
-        },
-        "direction_name": {
-          "left": "Da esquerda",
-          "right": "Da direita",
-          "up": "De cima",
-          "down": "De baixo"
-        },
-        "amount_of": {
-          "slide": "Distância (px)",
-          "scale": "Fator de escala",
-          "push_in": "Fator de zoom",
-          "pull_out": "Fator de zoom"
-        }
-      },
       "template": {
         "title": "Modelo",
         "slot": "Espaço do modelo",
@@ -2309,36 +1616,16 @@
         "undone": "Desfeito",
         "redone": "Refeito"
       },
-      "tour": {
-        "step": "Passo {current} de {total}",
-        "back": "Voltar",
-        "next": "Avançar",
-        "done": "Concluir",
-        "skip": "Pular o tour",
-        "replay": "Rever o tour",
-        "steps": {
-          "library": {
-            "title": "Sua mídia",
-            "body": "Seus arquivos ficam aqui. Cole o caminho de um arquivo de mídia e pressione Importar, ou pressione {import} para ir ao campo de importação."
-          },
-          "library_desktop": "Seus arquivos ficam aqui. Escolha arquivos, solte-os aqui ou cole um caminho e pressione Importar. Pressione {import} para começar.",
-          "preview": {
-            "title": "Prévia",
-            "body": "Assista ao seu vídeo aqui. Pressione {play} para reproduzir ou pausar."
-          },
-          "timeline": {
-            "title": "Linha do tempo",
-            "body": "Organize os clipes nas trilhas. Pressione {split} para dividir na posição de reprodução e {undo} para desfazer."
-          },
-          "inspector": {
-            "title": "Inspetor",
-            "body": "Selecione um item para mudar sua aparência, som e velocidade. Toda alteração é salva ao ser feita."
-          },
-          "export": {
-            "title": "Exportar",
-            "body": "Quando estiver satisfeito, exporte o vídeo aqui ({export}). Pressione {shortcuts} para ver todos os atalhos e {palette} para buscar todos os comandos."
-          }
-        }
+      "tips": {
+        "title": "Primeiros passos",
+        "items": {
+          "library": "Cole o caminho de um arquivo de mídia na biblioteca e pressione Importar.",
+          "library_desktop": "Escolha arquivos na biblioteca, solte-os ali ou cole um caminho e pressione Importar.",
+          "palette": "Pressione Ctrl+K para buscar todos os comandos.",
+          "shortcuts": "Pressione ? para ver e alterar os atalhos de teclado."
+        },
+        "dismiss": "Entendi",
+        "show_again": "Mostrar as dicas de novo"
       },
       "repeat": {
         "title": "Repetir item",
@@ -2365,7 +1652,6 @@
     },
     "connections": {
       "title": "Conexões",
-      "approvals_link": "Aprovações e tetos de custo",
       "intro": "Cada lugar com o qual o Stuarty pode falar. Enquanto você não conectar nada, nada sai do seu computador.",
       "list": "Suas conexões",
       "empty": "Nenhuma conexão ainda. Nada sai deste computador.",
@@ -2395,480 +1681,6 @@
       "secret_missing": "Sem credencial: conecte de novo",
       "test_ok": "O destino respondeu {status}.",
       "test_failed": "O destino não respondeu bem (status {status})."
-    },
-    "generate": {
-      "open": {
-        "visual": "Gerar uma imagem",
-        "video": "Gerar uma locução",
-        "clip": "Gerar um clipe de vídeo"
-      },
-      "title": {
-        "image": "Gerar uma imagem",
-        "voice": "Gerar uma locução",
-        "video": "Gerar um clipe de vídeo"
-      },
-      "intro": {
-        "image": "O preço aparece antes de qualquer pedido ao provedor. A imagem vai para a biblioteca, com o modelo e o prompt de onde veio.",
-        "voice": "O preço aparece antes de qualquer pedido ao provedor. A narração vai para a biblioteca, com o modelo e o texto de onde veio.",
-        "video": "O preço aparece antes de qualquer pedido ao provedor. O clipe vai para a biblioteca, com o modelo e o prompt de onde veio."
-      },
-      "no_provider": {
-        "image": "Nenhum provedor conectado faz imagens ainda.",
-        "voice": "Nenhum provedor conectado faz voz ainda.",
-        "video": "Nenhum provedor conectado faz vídeo ainda."
-      },
-      "no_maker": {
-        "image": "Nenhum provedor com que o Stuarty trabalha faz imagens ainda, então não há o que conectar.",
-        "voice": "Nenhum provedor com que o Stuarty trabalha faz voz ainda, então não há o que conectar.",
-        "video": "Nenhum provedor com que o Stuarty trabalha faz vídeo ainda, então não há o que conectar. A geração de vídeo está pronta e espera um provedor ser adicionado."
-      },
-      "open_connections": "Conecte um na página Conexões",
-      "project": "Projeto",
-      "connection": "Conexão",
-      "model": "Modelo",
-      "no_price": "sem preço ainda",
-      "voice": "Voz",
-      "prompt": {
-        "image": "O que desenhar",
-        "voice": "O que ler em voz alta",
-        "video": "O que o clipe mostra"
-      },
-      "seconds": "Segundos",
-      "aspect": "Proporção",
-      "first_frame": "Primeiro quadro (opcional)",
-      "no_first_frame": "Sem primeiro quadro",
-      "always_asks": "Um vídeo sempre espera a sua aprovação, qualquer que seja o custo, a menos que você tenha escrito uma regra para ele. Nada é enviado ao provedor antes disso.",
-      "size": "Tamanho",
-      "count": "Quantas",
-      "format": "Formato",
-      "language": "Idioma",
-      "disclosure": "Avise que esta voz é gerada por IA a quem a ouvir: o provedor pede isso.",
-      "estimate": "Mostrar a estimativa",
-      "estimated": "Custo estimado: {amount}",
-      "submit": "Gerar",
-      "state": {
-        "queued": "Esperando para começar.",
-        "waiting_approval": "Esperando a sua aprovação.",
-        "running": "Gerando.",
-        "succeeded": "Pronto.",
-        "failed": "Não deu certo.",
-        "cancelled": "Cancelado."
-      },
-      "open_approvals": "Abrir a página Aprovações",
-      "done": "{delivered} de {requested} feitas, custou {amount}."
-    },
-    "social": {
-      "title": "Redes sociais",
-      "intro": "Conecte o seu próprio canal com o seu próprio projeto de desenvolvedor. Nada é publicado até você aprovar em Aprovações.",
-      "price_title": "Preço de um post",
-      "price_now": "Um post custa {post}, e {link} quando o texto tem um link (preço de {date}). A aprovação mostra o preço de cada post antes de você dizer sim.",
-      "price_post": "Um post ({currency})",
-      "price_link": "Um post com link ({currency})",
-      "price_save": "Salvar os preços",
-      "connect": "Configurar {name}",
-      "close": "Fechar",
-      "guide_title": "Conectar {name} com o seu próprio projeto de desenvolvedor",
-      "guide_again_title": "Entrar de novo em {name}",
-      "guide_intro": "O Stuarty não tem app próprio em {name}: você cria um na sua conta, e assim seus vídeos e suas chaves ficam com você. Siga os passos e cole abaixo o id e o segredo do cliente.",
-      "redirect_label": "Endereço de redirecionamento para colar no seu projeto",
-      "official_page": "Leia a página oficial",
-      "client_id": "Id do cliente",
-      "client_secret": "Segredo do cliente",
-      "account_label": "Nome desta conexão (opcional)",
-      "start_sign_in": "Salvar e entrar",
-      "sign_in_again": "Entrar de novo",
-      "signed_in_as": "Conectado como",
-      "needs_sign_in": "Ainda sem login",
-      "publish_now": "Publicar agora",
-      "publish_title": "Publicar um vídeo",
-      "publish_intro": "Vai para",
-      "project": "Projeto",
-      "choose": "Escolha...",
-      "video": "Vídeo exportado",
-      "thumbnail": "Miniatura (um quadro exportado)",
-      "no_thumbnail": "Sem miniatura",
-      "post_title": "Título",
-      "description": "Descrição",
-      "tags": "Tags (separadas por vírgulas)",
-      "visibility": "Quem pode assistir",
-      "visibility_private": "Só você (privado)",
-      "visibility_unlisted": "Quem tiver o link (não listado)",
-      "visibility_public": "Todos (público)",
-      "kids": "Este vídeo é feito para crianças?",
-      "kids_yes": "Sim",
-      "kids_no": "Não",
-      "synthetic": "Tem conteúdo realista alterado ou sintético",
-      "check": "Verificar",
-      "send": "Enviar para aprovação",
-      "check_ok": "A publicação cabe nos limites da rede. Uma pessoa será chamada para aprovar:",
-      "check_issues": "Corrija isto antes de enviar:",
-      "waiting_title": "Esperando a sua aprovação",
-      "waiting_body": "Nada foi enviado ainda. Abra Aprovações, leia o que vai sair e aprove ou rejeite.",
-      "open_approvals": "Abrir Aprovações",
-      "callback_title": "Entrando",
-      "callback_working": "Concluindo o login...",
-      "callback_done": "Conectado como",
-      "callback_failed": "Não foi possível concluir o login. Comece de novo pela página Conexões.",
-      "back": "Voltar para Conexões",
-      "needs_account": "Login feito. Escolha a conta em que esta conexão publica.",
-      "pick_title": "Escolha a conta",
-      "pick_hint": "O seu login alcançou estas contas. O Stuarty publica só na que você escolher, e só depois que você aprovar cada publicação.",
-      "pick_use": "Usar esta conta",
-      "callback_choose": "Login feito. Volte para Conexões e escolha a conta em que publicar.",
-      "instagram": {
-        "step": {
-          "project": "Em developers.facebook.com crie um app do tipo \"Business\" na sua própria conta. Ele é seu; o Stuarty nunca o vê. Deixe-o em modo de desenvolvimento, com você como administrador: isso é Acesso Padrão, e a Meta não pede revisão para um app usado só nas suas próprias contas.",
-          "api": "Adicione ao app o produto \"Facebook Login for Business\" (ou \"Facebook Login\"). Um Reel chega ao Instagram pela Página do Facebook à qual a sua conta do Instagram está ligada.",
-          "consent": "Confirme que a sua conta do Instagram é profissional (Business ou Creator) e está ligada a uma Página do Facebook que você administra: no Instagram, Configurações, Tipo de conta e ferramentas, depois o vínculo com a Página. Não dá para publicar numa conta pessoal do Instagram.",
-          "client": "No app, em Configurações, Básico, copie o ID do app e a Chave secreta do app.",
-          "redirect": "Em Facebook Login, Configurações, adicione exatamente este endereço em \"URIs de redirecionamento do OAuth válidos\": {redirect}",
-          "paste": "Cole o id e o segredo do app no formulário abaixo. O Stuarty pede estas permissões: {scopes}. Depois do login, você escolhe em qual conta do Instagram esta conexão publica."
-        },
-        "research": "O que a Meta disse em {read}: um app usado só para um negócio que você possui ou administra não precisa de App Review no Acesso Padrão. O Instagram publica só em contas profissionais. O arquivo vai do seu computador para a Meta pelo envio retomável, então nenhum endereço público do seu vídeo é preciso, e nenhum é criado. Um Reel tem de 3 segundos a 15 minutos, até 300 MB, com legenda de até 2.200 caracteres e 30 hashtags; a imagem de capa não é oferecida, porque a Meta só a aceita a partir de um endereço público. Um Reel não tem modo privado, então toda publicação sai como pública. Um app pode publicar 100 posts em 24 horas corridas."
-      },
-      "facebook": {
-        "step": {
-          "project": "Em developers.facebook.com crie um app do tipo \"Business\" na sua própria conta. Ele é seu; o Stuarty nunca o vê. Deixe-o em modo de desenvolvimento, com você como administrador: isso é Acesso Padrão, e a Meta não pede revisão para um app usado só nas suas próprias Páginas.",
-          "api": "Adicione ao app o produto \"Facebook Login for Business\" (ou \"Facebook Login\"). Reels são publicados em uma Página do Facebook; a Meta não publica em perfil pessoal.",
-          "consent": "Você precisa de uma função na Página que possa criar conteúdo (Administrador ou Editor, por exemplo). O login lista as suas Páginas e você escolhe uma.",
-          "client": "No app, em Configurações, Básico, copie o ID do app e a Chave secreta do app.",
-          "redirect": "Em Facebook Login, Configurações, adicione exatamente este endereço em \"URIs de redirecionamento do OAuth válidos\": {redirect}",
-          "paste": "Cole o id e o segredo do app no formulário abaixo. O Stuarty pede estas permissões: {scopes}. Depois do login, você escolhe em qual Página esta conexão publica."
-        },
-        "research": "O que a Meta disse em {read}: um app usado só para um negócio que você possui ou administra não precisa de App Review no Acesso Padrão. O arquivo vai do seu computador para a Meta pelo envio retomável, então nenhum endereço público do seu vídeo é preciso, e nenhum é criado. Um Reel de Página tem de 3 a 90 segundos, 9:16, ao menos 540 por 960, de 24 a 60 quadros por segundo; um app pode publicar 30 em 24 horas corridas. A Meta não informa um arquivo máximo nem uma descrição máxima, então o Stuarty aplica 1 GiB e 2.200 caracteres. Só Reels são oferecidos: um vídeo mais longo ou mais largo é recusado com o limite que ele quebra. Não há campo de capa nem modo privado, então toda publicação sai como pública."
-      },
-      "x": {
-        "step": {
-          "project": "No console de desenvolvedor do X crie um projeto e um app na sua própria conta. É seu; o Stuarty nunca o vê.",
-          "api": "A API do X é paga por uso: adicione créditos à sua conta de desenvolvedor. Um post custa US$ 0,015, e US$ 0,200 quando o texto tem um link, na data lida abaixo; o Stuarty mostra o preço de cada post antes de você aprovar e o conta nos seus tetos de custo.",
-          "consent": "Nas configurações de autenticação do app ative o OAuth 2.0, escolha o tipo \"Web App\" (um cliente confidencial) e dê as permissões de leitura e escrita.",
-          "client": "Copie o Client ID e o Client Secret do OAuth 2.0 (não a chave de API).",
-          "redirect": "Adicione exatamente este endereço como URL de callback: {redirect}",
-          "paste": "Cole o client id e o client secret no formulário abaixo. O Stuarty pede estas permissões: {scopes}. Entrar lê a sua conta uma vez, e o X cobra US$ 0,010 por isso."
-        },
-        "research": "O que o X disse em {read}: um post é cobrado por requisição, US$ 0,015, ou US$ 0,200 para um post com URL, e os preços mudam, então você pode corrigi-los aqui quando mudarem. Um post tem até 280 caracteres ponderados (um link conta 23) e um vídeo de até 20 minutos e 8 GB. O vídeo sobe do seu computador em partes, então nenhum endereço público dele é preciso. Se uma resposta se perder depois de um post enviado, o Stuarty não o envia de novo sozinho, porque cada post custa dinheiro: olhe a sua linha do tempo antes. Não verificado sem o seu app: se o X troca o refresh token a cada uso, e se um callback localhost é aceito."
-      },
-      "tiktok": {
-        "step": {
-          "project": "Em developers.tiktok.com crie um app na sua própria conta. É seu; o Stuarty nunca o vê.",
-          "api": "Adicione os produtos \"Login Kit\" e \"Content Posting API\" ao app, e peça o escopo video.upload. Adicione a sua própria conta do TikTok como usuário de teste enquanto o app não for aprovado.",
-          "consent": "O que o Stuarty envia é um rascunho: o vídeo vai para a caixa de entrada do seu app do TikTok. Você abre a notificação por lá, escreve a legenda, escolhe quem pode assistir e publica você mesmo.",
-          "client": "Copie a Client Key e o Client Secret do app.",
-          "redirect": "Registre exatamente este endereço como URI de redirecionamento do Login Kit para desktop (o TikTok exige a porta nele): {redirect}",
-          "paste": "Cole a client key e o client secret no formulário abaixo. O Stuarty pede estas permissões: {scopes}."
-        },
-        "research": "O que o TikTok disse em {read}: o envio para a caixa de entrada deixa um rascunho para você revisar e publicar no app do TikTok; leva o arquivo e mais nada, então o título, o texto e as tags que você escreve aqui não são enviados e não há rótulo de IA a marcar (marque no TikTok). Um app que não foi auditado não pode postar publicamente e a auditoria é para um produto de público amplo, não para uma ferramenta que posta nas suas próprias contas, então o Stuarty não oferece post público nem jeito de contornar isso. O arquivo sobe do seu computador em partes, então nenhum endereço público dele é preciso. O TikTok guarda no máximo 5 rascunhos esperando em 24 horas pela API. Não verificado sem o seu app: se o TikTok aprova o escopo video.upload para um app seu."
-      },
-      "youtube": {
-        "step": {
-          "project": "No console do Google Cloud, crie um projeto (ou escolha um que você já tenha). Ele é seu; o Stuarty nunca o vê.",
-          "api": "Ative a \"YouTube Data API v3\" para esse projeto.",
-          "consent": "Configure a tela de consentimento OAuth: tipo de usuário Externo, e adicione o seu próprio endereço do Google como usuário de teste. Enquanto o projeto está no status Teste, o login expira em 7 dias e você entra de novo.",
-          "client": "Crie um cliente OAuth do tipo \"Aplicativo da Web\".",
-          "redirect": "Em \"URIs de redirecionamento autorizados\" cole exatamente: {redirect}",
-          "paste": "Copie o id e o segredo do cliente no formulário abaixo. O Stuarty pede estas permissões: {scopes}."
-        },
-        "research": "O que o Google disse em {read}: um vídeo enviado de um projeto não verificado deixou de ser forçado a privado desde 2 de novembro de 2026; o Stuarty continua enviando todo vídeo como privado, a menos que você escolha outra opção. Um envio custa cerca de 1 unidade de uma cota própria de 100 por dia, e uma miniatura 50 unidades das 10.000 por dia."
-      },
-      "generic": {
-        "step": {
-          "project": "Crie um projeto de desenvolvedor na rede, na sua própria conta.",
-          "api": "Ative a API de publicação para esse projeto.",
-          "consent": "Configure a tela de consentimento e adicione a sua própria conta como usuário de teste.",
-          "client": "Crie um cliente OAuth do tipo \"Aplicativo da Web\".",
-          "redirect": "Autorize exatamente este endereço de redirecionamento: {redirect}",
-          "paste": "Copie o id e o segredo do cliente no formulário abaixo. O Stuarty pede: {scopes}."
-        },
-        "research": "As regras da rede foram lidas em {read}; elas mudam, então confira a página oficial."
-      }
-    },
-    "providers": {
-      "title": "Provedores de IA",
-      "intro": "Conecte os serviços de IA que você já paga, com a sua própria chave. O preço aparece antes de qualquer coisa rodar, e o trabalho que custa dinheiro espera por você na página de Aprovações.",
-      "docs": "Onde achar a chave",
-      "none": "Ainda não conectado.",
-      "connect_title": "Conectar {provider} com uma chave de API",
-      "connect_name": "Nome desta conexão",
-      "connect_address": "Endereço base da API",
-      "connect_key": "Chave de API",
-      "connect_hint": "Guardada criptografada neste computador. Nunca é mostrada de novo e nenhum agente consegue lê-la.",
-      "connect_submit": "Guardar a chave",
-      "check": "Verificar a chave",
-      "models": "Mostrar os modelos",
-      "models_refresh": "Ler os modelos de novo",
-      "models_empty": "O provedor não lista nenhum modelo.",
-      "fetched": "Lido do provedor em {date}",
-      "limits": "Até {context} tokens, {output} deles na resposta",
-      "price": "Por milhão de tokens: {input} de entrada, {output} de saída ({source})",
-      "price_none": "Ainda sem preço: nada pode ser gerado com este modelo até você definir um.",
-      "price_unit": {
-        "image": "Por imagem: {amount} ({source})",
-        "mchar": "Por milhão de caracteres: {amount} ({source})",
-        "second": "Por segundo de vídeo: {amount} ({source})"
-      },
-      "price_per": {
-        "image": "Preço de uma imagem",
-        "mchar": "Preço de um milhão de caracteres",
-        "second": "Preço de um segundo de vídeo"
-      },
-      "source": {
-        "user": "preço seu",
-        "catalogue": "publicado pelo provedor",
-        "none": "nenhum"
-      },
-      "set_price": "Definir o preço",
-      "price_currency": "Moeda",
-      "price_input": "Entrada, por milhão de tokens",
-      "price_output": "Saída, por milhão de tokens",
-      "price_save": "Guardar o preço",
-      "spend": "Gasto hoje: {amount}",
-      "spend_none": "Nada gasto hoje.",
-      "signin_title": "Ou entre com a sua conta, sem copiar chave",
-      "signin": {
-        "openai": "Entrar com o ChatGPT",
-        "openrouter": "Entrar com o OpenRouter",
-        "generic": "Entrar em {provider}"
-      },
-      "signin_hint": {
-        "openai": "Usa o seu plano do ChatGPT, dentro dos limites do plano. Para entrar, abra o Stuarty em http://127.0.0.1 no computador onde ele roda.",
-        "openrouter": "O OpenRouter entrega ao Stuarty uma chave da sua conta. Ela fica no cofre desta máquina e gasta os seus créditos do OpenRouter.",
-        "generic": "Você entra na página do provedor. O acesso fica no cofre desta máquina."
-      },
-      "signin_account": "Conectado como {account}",
-      "signin_ready": "Conectado",
-      "signin_needs": "Precisa entrar de novo",
-      "signin_needs_help": "O provedor não aceita mais esta conexão. Nada foi apagado: entre de novo para voltar a usá-la.",
-      "signin_again": "Entrar de novo",
-      "callback_title": "Entrada em um provedor de IA",
-      "callback_working": "Concluindo a entrada...",
-      "callback_done": "Conectado:",
-      "callback_failed": "A entrada não foi concluída.",
-      "back": "Voltar às conexões"
-    },
-    "publish": {
-      "title": "Publicar",
-      "intro": "Planeje qual peça vai para qual conta e quando. Cada post espera o seu sim em Aprovações antes de ser enviado.",
-      "new": "Nova publicação",
-      "view": "Visão",
-      "view_month": "Mês",
-      "view_week": "Semana",
-      "view_list": "Lista",
-      "previous": "Anterior",
-      "next": "Próximo",
-      "today": "Hoje",
-      "live": "Ao vivo",
-      "moving": "Movendo para {time}. Use as setas: esquerda e direita movem um dia, para cima e para baixo uma hora. Enter solta, Escape desiste.",
-      "empty": "Nada planejado aqui ainda.",
-      "list_caption": "Publicações planejadas, uma linha para cada conta",
-      "no_time": "Sem horário ainda",
-      "open": "Abrir",
-      "error": "Erro",
-      "preview": "Prévia",
-      "title_count": "{count} de {max} caracteres",
-      "description_count": "{count} de {max} bytes",
-      "filter": {
-        "state": "Estado",
-        "network": "Rede",
-        "all": "Todos"
-      },
-      "col": {
-        "when": "Quando",
-        "title": "Título",
-        "account": "Conta",
-        "state": "Estado",
-        "result": "Resultado",
-        "actions": "Ações"
-      },
-      "state": {
-        "draft": "Rascunho",
-        "waiting_approval": "Aguardando aprovação",
-        "approved": "Aprovado",
-        "scheduled": "Agendado",
-        "publishing": "Publicando",
-        "published": "Publicado",
-        "sent_as_draft": "Enviado como rascunho",
-        "failed": "Falhou",
-        "missed": "Perdido",
-        "cancelled": "Cancelado"
-      },
-      "draft_note": "Enviado como rascunho, não publicado: abra a notificação no app da rede, escreva a legenda e publique por lá.",
-      "draft_warning": "O {name} recebe só o vídeo como rascunho: este título, texto e tags não são enviados, e você termina e publica no app do {name}.",
-      "price": "Um post custa {post}, e {link} quando o texto tem um link (preço de {date}). A aprovação mostra o preço deste post antes de você dizer sim.",
-      "editor": {
-        "new": "Nova publicação",
-        "edit": "Publicação",
-        "intro": "O título e a legenda valem para todas as contas; cada conta pode ter os seus. Nada é enviado antes de você aprovar em Aprovações.",
-        "caption": "Legenda",
-        "targets": "Contas",
-        "no_targets": "Nenhuma conta ainda. Adicione uma para planejar para onde isto vai.",
-        "target": "Conta {number}",
-        "account": "Conta",
-        "at": "Data e hora",
-        "zone": "Fuso horário",
-        "late": "Enviar com atraso até (minutos)",
-        "late_help": "0 significa que um post cujo horário passou nunca é enviado sozinho; você escolhe enviar agora ou dar um novo horário.",
-        "target_title": "Título para esta conta",
-        "target_description": "Descrição para esta conta",
-        "waits": "Este post espera a sua aprovação.",
-        "remove": "Remover",
-        "add_target": "Adicionar uma conta",
-        "save": "Salvar",
-        "save_first": "Salve as alterações primeiro",
-        "schedule": "Agendar e pedir aprovação",
-        "send_now": "Enviar agora (pede aprovação)",
-        "retry": "Tentar de novo (pede aprovação)",
-        "cancel": "Cancelar este post"
-      }
-    },
-    "approvals": {
-      "title": "Aprovações",
-      "intro": "Publicações e gerações que custam dinheiro esperam aqui por você. Um agente pode prepará-las; só você pode dizer sim, ou escrever uma regra que diz sim por você.",
-      "queue": "Esperando por você",
-      "live": "Ao vivo: os pedidos novos aparecem aqui sozinhos.",
-      "offline": "Sem conexão ao vivo: recarregue a página para ver pedidos novos.",
-      "empty": "Nada está esperando por você.",
-      "kind": "Tipo",
-      "destination": "Vai para",
-      "no_destination": "Sem destino",
-      "cost": "Custo estimado",
-      "no_cost": "Grátis",
-      "actor": "Pedido por",
-      "asked": "Pedido em",
-      "reason": "Motivo (opcional, ao rejeitar)",
-      "approve": "Aprovar",
-      "reject": "Rejeitar",
-      "currency": "Moeda",
-      "per_item": "Máximo por item",
-      "per_day": "Máximo por dia",
-      "cost_title": "Custo",
-      "cost_intro": "Um teto impede mais gastos, seja quem for que aprove: aumente-o aqui primeiro. O dia é um dia UTC.",
-      "spent_today": "Gasto hoje",
-      "nothing_spent": "Nada gasto hoje.",
-      "scope_workspace": "Todo o espaço de trabalho",
-      "ceilings": "Tetos",
-      "no_ceilings": "Sem tetos: todo pedido que custa dinheiro continua esperando por você.",
-      "set_ceiling": "Definir um teto",
-      "ceiling_note": "Deixe os dois limites vazios para remover o teto dessa moeda.",
-      "save_ceiling": "Salvar teto",
-      "rules": {
-        "title": "Regras que aprovam por você",
-        "intro": "Uma regra deixa um tipo de ação passar sem perguntar. Só você pode escrever uma; nenhum agente pode.",
-        "empty": "Sem regras: tudo espera por você.",
-        "new": "Nova regra",
-        "kind": "Tipo de ação (por exemplo publish.post)",
-        "destination": "Destino",
-        "project": "Id do projeto (opcional)",
-        "any_destination": "Qualquer destino",
-        "any_project": "Qualquer projeto",
-        "disabled": "(desligada)",
-        "applies": "Destino: {destination}. Projeto: {project}.",
-        "no_limits": "Sem limites.",
-        "limits": "Máximo por item: {item}. Máximo por dia: {day}.",
-        "disable": "Desligar",
-        "enable": "Ligar",
-        "remove": "Remover",
-        "add": "Adicionar regra",
-        "note": "Uma regra sem limite por item nunca aprova algo que custa dinheiro.",
-        "bad_amount": "Um valor é um número com no máximo seis casas decimais, por exemplo 2,50."
-      }
-    },
-    "google": {
-      "nav": "Entrar com Google",
-      "sign_in": "Entrar com o Google",
-      "title": "Entrar com o Google",
-      "off": "Entrar com o Google está desligado neste servidor. Um administrador pode ligar aqui.",
-      "account": "Sua conta Google",
-      "linked": "Conta Google vinculada:",
-      "not_linked": "Nenhuma conta Google vinculada. Vincule a sua para entrar com ela; a senha continua funcionando.",
-      "unlink_note": "Desvincular não muda sua senha nem encerra suas sessões.",
-      "password": "Sua senha",
-      "link": "Vincular minha conta Google",
-      "unlink": "Desvincular",
-      "owner": "Para o dono deste servidor",
-      "owner_intro": "Os usuários entram com um projeto Google que você mesmo criou. Crie a conexão desse projeto na página Conexões (uma conexão do YouTube com o client id e o segredo; não precisa entrar no YouTube).",
-      "redirect": "Adicione este endereço aos URIs de redirecionamento autorizados do seu projeto Google:",
-      "enabled": "Permitir que usuários entrem com o Google",
-      "connection": "Conexão do seu projeto Google",
-      "connection_none": "Escolha uma conexão",
-      "allowed": "Somente estes e-mails do Google (opcional)",
-      "allowed_hint": "Um por linha. Deixe vazio para permitir todo usuário vinculado. O usuário precisa estar vinculado antes: não há cadastro pelo Google.",
-      "save": "Salvar",
-      "saved": "Salvo.",
-      "callback_title": "Entrando com o Google",
-      "callback_working": "Concluindo a entrada…",
-      "callback_failed": "A entrada com o Google não funcionou.",
-      "back_to_login": "Voltar ao login"
-    },
-    "chat": {
-      "open": "Conversar com o seu agente",
-      "close": "Fechar o chat",
-      "manage": "Agentes",
-      "title": "Chat com o agente",
-      "loading": "Carregando…",
-      "no_profile_title": "Nenhum agente conectado",
-      "no_profile_text": "O Stuarty hospeda o agente que você já usa, com o seu próprio login. Instale um você mesmo e conecte aqui: o Stuarty nunca instala um agente e nunca faz login nele por você.",
-      "not_available": "Este processo não consegue rodar um agente. Abra o aplicativo Stuarty ou um servidor em execução.",
-      "known_title": "Agentes que o Stuarty conhece",
-      "found": "Encontrado neste computador",
-      "not_found": "Não encontrado neste computador",
-      "use_suggestion": "Preencher o formulário com este agente",
-      "connect_title": "Conectar um agente",
-      "profile_name": "Nome",
-      "profile_command": "Programa (o caminho completo, ou o nome quando ele está no caminho de busca)",
-      "profile_args": "Argumentos, um por linha",
-      "full_command": "O comando completo que vai rodar neste computador:",
-      "profile_warning": "É um programa que roda com o seu acesso. Conecte só um agente em que você confia.",
-      "save_profile": "Conectar o agente",
-      "remove_profile": "Remover",
-      "ask_admin": "Peça ao administrador para conectar um agente neste servidor.",
-      "project": "Projeto",
-      "agent_label": "Agente",
-      "start": "Começar uma conversa",
-      "new_session": "Nova sessão",
-      "stop": "Parar",
-      "end_session": "Encerrar a sessão",
-      "export": "Exportar como Markdown",
-      "delete": "Apagar a transcrição",
-      "delete_confirm": "Apagar de vez",
-      "no_session": "Ainda não há conversa neste projeto.",
-      "state_starting": "Iniciando",
-      "state_idle": "Esperando você",
-      "state_running": "Trabalhando",
-      "state_awaiting_permission": "Pedindo a sua permissão",
-      "state_ended": "Encerrada",
-      "live": "Ao vivo",
-      "reconnecting": "Reconectando",
-      "not_running": "Parado",
-      "ended_user": "encerrada por você",
-      "ended_exited": "o agente saiu",
-      "ended_protocol": "o agente quebrou o protocolo",
-      "ended_timeout": "demorou demais",
-      "ended_idle": "ficou parada por muito tempo",
-      "ended_flood": "o agente falou demais",
-      "ended_shutdown": "o Stuarty foi fechado",
-      "ended_start_failed": "não conseguiu iniciar",
-      "conversation": "Conversa com o agente",
-      "composer_label": "Mensagem para o agente",
-      "composer_hint": "Enter envia, Shift+Enter pula uma linha.",
-      "send": "Enviar",
-      "you": "Você",
-      "agent": "Agente",
-      "thought": "Pensando",
-      "plan": "Plano",
-      "tool": "Ferramenta",
-      "tool_status_pending": "esperando",
-      "tool_status_in_progress": "rodando",
-      "tool_status_completed": "concluída",
-      "tool_status_failed": "falhou",
-      "permission_title": "O agente pede para executar:",
-      "allow_once": "Permitir esta vez",
-      "reject": "Recusar",
-      "cancel_request": "Cancelar",
-      "approvals_note": "Publicações e gerações com custo são decididas em Aprovações, não aqui.",
-      "approvals_link": "Abrir Aprovações",
-      "answer_allow": "Você permitiu:",
-      "answer_reject": "Você recusou:",
-      "answer_cancel": "Cancelado:"
     },
     "keys": {
       "title": "Chaves de API",

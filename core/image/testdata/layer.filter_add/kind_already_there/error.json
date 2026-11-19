@@ -1,8 +1,0 @@
-{
-  "code": "E_INVALID_STATE",
-  "hint": "Change it with layer.filter_set.",
-  "message": "Layer lyr_bbbbbbbbbb already has a blur filter.",
-  "op_index": 0,
-  "path": "args.kind",
-  "retryable": false
-}

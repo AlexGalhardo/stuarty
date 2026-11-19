@@ -171,32 +171,5 @@
     ],
     "key": "lint.rule.L_DURATION_LIMIT.title",
     "severity": "warning"
-  },
-  {
-    "blocking": false,
-    "code": "L_ALPHA_MISSING",
-    "depth": [
-      "full"
-    ],
-    "key": "lint.rule.L_ALPHA_MISSING.title",
-    "severity": "warning"
-  },
-  {
-    "blocking": false,
-    "code": "L_AUDIO_LIMITER_NOT_LAST",
-    "depth": [
-      "doc"
-    ],
-    "key": "lint.rule.L_AUDIO_LIMITER_NOT_LAST.title",
-    "severity": "warning"
-  },
-  {
-    "blocking": false,
-    "code": "L_AUDIO_NOISE_REDUCTION_REPEATED",
-    "depth": [
-      "doc"
-    ],
-    "key": "lint.rule.L_AUDIO_NOISE_REDUCTION_REPEATED.title",
-    "severity": "warning"
   }
 ]

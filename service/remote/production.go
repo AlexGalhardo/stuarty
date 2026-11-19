@@ -45,12 +45,11 @@ func (c *Client) ProjectItemAdd(
 		Title    string `json:"title"`
 		Position *int   `json:"position,omitempty"`
 		Text     string `json:"text,omitempty"`
-		TextKind string `json:"text_kind,omitempty"`
 		Preset   string `json:"preset,omitempty"`
 		FPS      string `json:"fps,omitempty"`
 		JobID    string `json:"job_id,omitempty"`
 		DryRun   bool   `json:"dry_run,omitempty"`
-	}{req.Kind, req.Title, req.Position, req.Text, req.TextKind, req.Preset, req.FPS, req.JobID, req.DryRun}
+	}{req.Kind, req.Title, req.Position, req.Text, req.Preset, req.FPS, req.JobID, req.DryRun}
 
 	return post[service.ProjectItemResult](ctx, c, projectPath(req.ProjectID, "/items"), body)
 }

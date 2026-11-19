@@ -72,7 +72,7 @@ The key goes only in the `Authorization: Bearer` header. `GET /keys` lists your 
 
 ## Rate limits
 
-A key is limited to 300 requests per minute with a burst of 60 (`STUARTY_RATE_LIMIT_PER_MINUTE`); a browser session to 1,800 (`STUARTY_RATE_LIMIT_SESSION_PER_MINUTE`). Eight heavy calls share one limit of 10 per minute per credential (`STUARTY_RATE_LIMIT_HEAVY_PER_MINUTE`): `job_start`, `media_import`, `template:import`, `font:import`, `bundle:import`, `bundle:export`, `otio:import` and the sound measure (`view --mode audio`). In local mode the CLI and the API share one credential, the local token, so their calls add up; the browser session has its own. Before authentication an address has 600 requests per minute, and 20 failed authentications per minute, after which it is refused before any key or login is checked. Behind a proxy, set `TRUSTED_PROXIES`, or every client shares one address.
+A key is limited to 300 requests per minute with a burst of 60 (`STUARTY_RATE_LIMIT_PER_MINUTE`); a browser session to 1,800 (`STUARTY_RATE_LIMIT_SESSION_PER_MINUTE`). Seven heavy calls share one limit of 10 per minute per credential (`STUARTY_RATE_LIMIT_HEAVY_PER_MINUTE`): `job_start`, `media_import`, `template:import`, `font:import`, `bundle:import`, `bundle:export` and `otio:import`. In local mode the CLI and the API share one credential, the local token, so their calls add up; the browser session has its own. Before authentication an address has 600 requests per minute, and 20 failed authentications per minute, after which it is refused before any key or login is checked. Behind a proxy, set `TRUSTED_PROXIES`, or every client shares one address.
 
 The answer to a limit is HTTP 429 with `Retry-After` and `E_RATE_LIMITED`, which is retryable.
 

@@ -1,24 +1,11 @@
 package service
 
-import (
-	"time"
+import "time"
 
-	"github.com/AlexGalhardo/stuarty/core/asset"
-)
-
-// ImportFile is one file of a MediaImport call (SDD-003 section 2.6): a path, or the hash of a file that the
-// library already holds (SDD-011 section 14.3).
+// ImportFile is one path of a MediaImport call (SDD-003 section 2.6).
 type ImportFile struct {
-	Path    string `json:"path,omitempty"`     // absolute
-	Hash    string `json:"hash,omitempty"`     // sha256:<64 hex> of a file of the library, in place of a path
+	Path    string `json:"path"`               // absolute
 	AssetID string `json:"asset_id,omitempty"` // optional caller-chosen id; ignored for a duplicate
-}
-
-// AssetInfo is what an import says about the files it brings, beyond their origin (SDD-011 section 14.4).
-type AssetInfo struct {
-	Tags        []string `json:"tags,omitempty"`
-	Reusable    *bool    `json:"reusable,omitempty"`
-	Description string   `json:"description,omitempty"`
 }
 
 // MediaImportRequest imports 1 to 50 files into a project.
@@ -28,10 +15,6 @@ type MediaImportRequest struct {
 	Files      []ImportFile `json:"files"`
 	WaitMS     int          `json:"wait_ms,omitempty"` // 0 to 25000
 	DryRun     bool         `json:"dry_run,omitempty"` // checks paths and limits, copies nothing
-	// Origin says where the files came from; every file of the call shares it (SDD-011 section 14.2).
-	Origin *asset.Origin `json:"origin,omitempty"`
-	// Info is applied to the files of the call (SDD-011 section 14.4).
-	Info *AssetInfo `json:"info,omitempty"`
 }
 
 // ProbeSummary is what the probe says about an asset.
@@ -69,9 +52,6 @@ type ImportedAsset struct {
 	Deduplicated bool          `json:"deduplicated"`
 	Probe        *ProbeSummary `json:"probe,omitempty"`
 	Error        *Error        `json:"error,omitempty"`
-	// Replaces is the offer of a file imported with a render key that clips of the timeline already use under an
-	// earlier render (SDD-011 section 15.4): nothing is replaced until MotionReplace or clip.replace_media.
-	Replaces []RenderOffer `json:"replaces,omitempty"`
 
 	// newInProject is true when this import created the asset in the project; MediaImport reads it to
 	// tell a refused new file from a retry (VV-193).
@@ -210,10 +190,10 @@ type MediaInspectResult struct {
 
 // FileRef names a stored file for download (SDD-003 section 2.9).
 type FileRef struct {
-	Kind      string `json:"kind"` // "proxy", "chunks", "thumbnail", "strip", "peaks", "bitmap" or "audio_preview"
+	Kind      string `json:"kind"` // "proxy", "chunks", "thumbnail", "strip", "peaks" or "bitmap"
 	ProjectID string `json:"project_id,omitempty"`
-	ID        string `json:"id"`                // the asset id; the key of a bitmap or of a processed sound
-	Variant   string `json:"variant,omitempty"` // thumbnail width: 160, 320 or 640; the first frame of a processed window
+	ID        string `json:"id"`                // the asset id
+	Variant   string `json:"variant,omitempty"` // thumbnail width: 160, 320 or 640
 }
 
 // File is a stored file, resolved to a path inside the workspace.
@@ -227,8 +207,4 @@ type File struct {
 	Immutable    bool
 	MaxAge       int    // seconds of the Cache-Control header
 	Body         []byte // the bytes to send when the file is built from the artifact (kind lut); Path is then not read
-	// Header is added to the answer of a file that is served (the frames a processed window covers).
-	Header map[string]string
-	// Pending says the file does not exist yet and is being made: the answer is 202, not a file (kind audio_preview).
-	Pending bool
 }

@@ -42,7 +42,7 @@ By default the CLI waits for the job up to `--timeout` (10 minutes). Exit code 2
 ## Common mistakes
 
 - Starting a second export of the same project at once: it waits behind the first or fails with `E_QUEUE_FULL`. Wait for the first.
-- Treating `E_RATE_LIMITED` as final. Heavy calls (`job_start`, `media_import`, `template:import`, `font:import`, `bundle:import`, `bundle:export`, `otio:import` and `view --mode audio`) share their own limit per minute for one credential; wait for `Retry-After`.
+- Treating `E_RATE_LIMITED` as final. Heavy calls (`job_start`, `media_import`, `template:import`, `font:import`, `bundle:import`, `bundle:export` and `otio:import`) share their own limit per minute for one credential; wait for `Retry-After`.
 - Cancelling a succeeded job: the file stays; there is nothing to cancel.
 
 ## Next steps

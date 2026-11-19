@@ -1,16 +1,9 @@
 {
  "name": "edit",
- "description": "Change a project (project_id) or image (domain=image, image_id). Atomic batch, one undo step. base_revision: last revision read. Times need a unit. Operation names, args: command_help. dry_run: check only. idempotency_key: safe retries.",
+ "description": "Change a project. Atomic batch, one undo step. base_revision: last revision read. Times need a unit. See command_help. dry_run: check only. idempotency_key: safe retries.",
  "inputSchema": {
   "type": "object",
   "properties": {
-   "domain": {
-    "enum": [
-     "video",
-     "image"
-    ],
-    "default": "video"
-   },
    "project_id": {
     "type": "string",
     "pattern": "^prj_[0-9a-hjkmnp-tv-z]{10}$"
@@ -18,10 +11,6 @@
    "timeline_id": {
     "type": "string",
     "pattern": "^prj_[0-9a-hjkmnp-tv-z]{10}$"
-   },
-   "image_id": {
-    "type": "string",
-    "pattern": "^img_[0-9a-hjkmnp-tv-z]{10}$"
    },
    "base_revision": {
     "type": "integer",
@@ -35,7 +24,81 @@
      "type": "object",
      "properties": {
       "op": {
-       "type": "string"
+       "enum": [
+        "project.rename",
+        "settings.set",
+        "settings.set_fps",
+        "settings.reframe",
+        "asset.remove",
+        "track.add",
+        "track.update",
+        "track.move",
+        "track.remove",
+        "track.set_caption_style",
+        "item.move",
+        "item.trim",
+        "item.slip",
+        "item.split",
+        "item.delete",
+        "item.duplicate",
+        "item.repeat",
+        "item.rename",
+        "item.set_transform",
+        "item.set_transition",
+        "item.set_audio",
+        "item.crossfade",
+        "timeline.close_gap",
+        "clip.add",
+        "audio.add",
+        "audio.duck",
+        "audio.mark_beats",
+        "clip.set_framing",
+        "clip.set_speed",
+        "clip.set_color",
+        "clip.set_blur",
+        "clip.set_chroma_key",
+        "clip.set_blend",
+        "clip.set_mask",
+        "clip.set_shadow",
+        "clip.set_outline",
+        "clip.set_flip",
+        "clip.set_effects",
+        "item.set_enabled",
+        "item.link",
+        "item.unlink",
+        "item.extract_audio",
+        "item.paste_attributes",
+        "item.freeze_frame",
+        "marker.add",
+        "marker.set",
+        "marker.remove",
+        "clip.set_filter",
+        "clip.remove_silences",
+        "text.add",
+        "text.set",
+        "text.apply_preset",
+        "shape.add",
+        "shape.set",
+        "caption.add",
+        "caption.set_words",
+        "caption.edit_word",
+        "caption.split",
+        "caption.merge",
+        "caption.set_breaks",
+        "caption.set_style",
+        "caption.from_transcript",
+        "caption.import_subtitles",
+        "caption.retime_from_clip",
+        "keyframe.set",
+        "keyframe.remove",
+        "keyframe.clear",
+        "slot.mark",
+        "slot.unmark",
+        "slot.fill",
+        "template.set_info",
+        "font.add",
+        "font.remove"
+       ]
       },
       "args": {
        "type": "object"
@@ -58,6 +121,7 @@
    }
   },
   "required": [
+   "project_id",
    "base_revision",
    "operations"
   ],

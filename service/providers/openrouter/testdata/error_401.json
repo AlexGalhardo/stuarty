@@ -1,6 +1,0 @@
-{
-  "error": {
-    "code": 401,
-    "message": "No auth credentials found for the key sk-or-v1-SECRET0123456789"
-  }
-}
