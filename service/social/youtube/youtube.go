@@ -148,7 +148,22 @@ func (c *Connector) Describe() social.Description {
 		Network: publish.NetworkYouTube, Name: "YouTube", Publishes: []string{"video", "thumbnail"},
 		Limits: Limits(), Endpoint: c.cfg.APIBase, Hosts: hosts, Scopes: []string{ScopeUpload, ScopeReadonly},
 		Guide: "https://developers.google.com/youtube/v3/guides/auth/server-side-web-apps", GuideRead: "2026-11-19",
+		AIDisclosure: true, Hints: hints,
 	}
+}
+
+// hints are what a person does about an error of YouTube, by the kind of the error (SDD-020 section 7.3).
+var hints = map[string]string{
+	social.KindQuota: "the limit of the day was used and it comes back at midnight Pacific Time; publish the same " +
+		"post again then, and the upload resumes where it stopped",
+	social.KindAuth: "sign in to the account again from the Connections page; if your Google project is in the " +
+		"Testing status, its sign-in expires after 7 days",
+	social.KindNotEligible: "check the channel in YouTube Studio: verification, restrictions and the privacy " +
+		"setting; then publish again",
+	social.KindInvalid: "fix the title, the description, the tags or the files named in the reason and publish again",
+	social.KindRejected: "the network refused the video itself; read its reason in YouTube Studio before trying " +
+		"again",
+	social.KindUnavailable: "try again later; publishing the same post again resumes the upload",
 }
 
 // Validate implements social.Connector.
