@@ -604,6 +604,18 @@ func view(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolO
 		return nil, err
 	}
 
+	if in.Mode == "motion" {
+		if in.At != "" || len(in.Times) > 0 || in.Count != 0 || in.MaxTokens != 0 {
+			return nil, &service.Error{
+				Code: command.CodeValidation, Path: "mode",
+				Message: "at, times, count and max_tokens are not accepted in mode motion.",
+				Hint:    "use from and until for the range",
+			}
+		}
+
+		return motionTool(ctx, svc, in.ProjectID, in.TimelineID, in.From, in.Until)
+	}
+
 	var res *service.ViewResult
 
 	if in.Mode == "sheet" {

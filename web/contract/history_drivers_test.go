@@ -64,6 +64,13 @@ type historyStep struct {
 	Note           *string `json:"note"`
 }
 
+// historyCalls are the operations these drivers encode; a step of any other operation is never decoded here, since
+// its members (a motion step's string "from", for one) need not fit historyStep.
+var historyCalls = map[string]bool{
+	"HistoryRevert": true, "HistoryDiff": true, "CheckpointCreate": true, "CheckpointList": true,
+	"CheckpointRename": true, "CheckpointRemove": true,
+}
+
 func readHistoryStep(s step) (historyStep, error) {
 	var a historyStep
 
@@ -79,6 +86,10 @@ func readHistoryStep(s step) (historyStep, error) {
 // historyTool maps a step to a call of the MCP tool history. ok is false for a step that is not one of these
 // operations. The tool has no base_revision: a step that carries one is not encodable and fails the scenario.
 func historyTool(s step) (tool string, args map[string]any, ok bool, err error) {
+	if !historyCalls[s.Call] {
+		return "", nil, false, nil
+	}
+
 	a, err := readHistoryStep(s)
 	if err != nil {
 		return "", nil, true, err
@@ -161,6 +172,10 @@ func (e *toolMemberError) Error() string { return e.msg }
 
 // historyCommand maps a step to a command of the CLI.
 func historyCommand(s step) (name string, argv []string, ok bool, err error) {
+	if !historyCalls[s.Call] {
+		return "", nil, false, nil
+	}
+
 	a, err := readHistoryStep(s)
 	if err != nil {
 		return "", nil, true, err

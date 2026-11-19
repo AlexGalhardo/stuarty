@@ -556,7 +556,7 @@
       "usage": [
         "stuarty media:import <path>... --project <id> [--asset-id ast_...] [--wait] [--timeout d]",
         "stuarty media:import --hash sha256:... --project <id>   (a file the library already holds: no copy)",
-        "origin and reuse: [--origin-kind k] [--origin-source s] [--provider p] [--model m] [--prompt t] [--rights-note t] [--tag t] [--reusable] [--description t]",
+        "origin and reuse: [--origin-kind k] [--origin-source s] [--provider p] [--model m] [--prompt t] [--rights-note t] [--engine e] [--engine-version v] [--render-key k] [--tag t] [--reusable] [--description t]",
         "formats: MP4, MOV, MKV, WebM, AVI, MP3, WAV, FLAC, OGG, PNG, JPEG, WebP, GIF and .cube; not SVG"
       ],
       "example": "stuarty media:import clip.mov --project prj_7k2m9x4q1b --json",
@@ -602,6 +602,21 @@
           "name": "cost-micros",
           "type": "integer",
           "usage": "what the files cost, in millionths of a US dollar"
+        },
+        {
+          "name": "engine",
+          "type": "string",
+          "usage": "the motion engine that rendered the files (rendered_externally)"
+        },
+        {
+          "name": "engine-version",
+          "type": "string",
+          "usage": "the version of that engine (rendered_externally)"
+        },
+        {
+          "name": "render-key",
+          "type": "string",
+          "usage": "a stable name for the animation, the same each time it is rendered again (rendered_externally)"
         },
         {
           "name": "rights-note",
@@ -2763,6 +2778,106 @@
         "workspace",
         "actor",
         "key-file"
+      ]
+    },
+    {
+      "name": "motion:brief",
+      "domain": "video",
+      "summary": "what a render by an external motion engine must fit: size, rate, length, safe area, brand kit, captions",
+      "usage": [
+        "stuarty motion:brief --project <id> [--from t] [--until t] [--track <trk_id>]"
+      ],
+      "example": "stuarty motion:brief --project prj_7k2m9x4q1b --from 2s --until 5s --track trk_f6g7h8j9k0",
+      "flags": [
+        {
+          "name": "from",
+          "type": "string",
+          "usage": "start of the range, a time (default 0s)"
+        },
+        {
+          "name": "until",
+          "type": "string",
+          "usage": "end of the range, exclusive (default the end of the timeline)"
+        },
+        {
+          "name": "track",
+          "type": "string",
+          "usage": "the visual track the clip will go on: tells whether the render needs alpha"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project"
+      ]
+    },
+    {
+      "name": "motion:check",
+      "domain": "video",
+      "summary": "check a rendered asset against the brief: each mismatch of size, rate, length or alpha, with the value expected",
+      "usage": [
+        "stuarty motion:check --project <id> --asset <ast_id> [--from t] [--until t] [--track <trk_id>]"
+      ],
+      "example": "stuarty motion:check --project prj_7k2m9x4q1b --asset ast_3c5v8n2w6d --from 2s --until 5s --track trk_f6g7h8j9k0",
+      "flags": [
+        {
+          "name": "asset",
+          "type": "string",
+          "usage": "the asset to check: an asset of the project, ready (required)"
+        },
+        {
+          "name": "from",
+          "type": "string",
+          "usage": "start of the range, a time (default 0s)"
+        },
+        {
+          "name": "until",
+          "type": "string",
+          "usage": "end of the range, exclusive (default the end of the timeline)"
+        },
+        {
+          "name": "track",
+          "type": "string",
+          "usage": "the visual track the clip will go on: tells whether the render needs alpha"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project"
+      ]
+    },
+    {
+      "name": "motion:replace",
+      "domain": "video",
+      "summary": "replace, in one undoable batch, every clip that reads an earlier render of an animation with a new render",
+      "usage": [
+        "stuarty motion:replace --project <id> --asset <ast_id> [--render-key <key>] [--dry-run]"
+      ],
+      "example": "stuarty motion:replace --project prj_7k2m9x4q1b --asset ast_k8m2n4p6q9",
+      "flags": [
+        {
+          "name": "asset",
+          "type": "string",
+          "usage": "the new render: an asset of the timeline, ready (required)"
+        },
+        {
+          "name": "render-key",
+          "type": "string",
+          "usage": "the key of the animation (default the render key of the origin of the new asset)"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project",
+        "dry-run"
       ]
     },
     {

@@ -36,7 +36,7 @@ var mediaImport = &spec{
 	usage: []string{
 		"stuarty media:import <path>... --project <id> [--asset-id ast_...] [--wait] [--timeout d]",
 		"stuarty media:import --hash sha256:... --project <id>   (a file the library already holds: no copy)",
-		"origin and reuse: [--origin-kind k] [--origin-source s] [--provider p] [--model m] [--prompt t] [--rights-note t] [--tag t] [--reusable] [--description t]",
+		"origin and reuse: [--origin-kind k] [--origin-source s] [--provider p] [--model m] [--prompt t] [--rights-note t] [--engine e] [--engine-version v] [--render-key k] [--tag t] [--reusable] [--description t]",
 		"formats: MP4, MOV, MKV, WebM, AVI, MP3, WAV, FLAC, OGG, PNG, JPEG, WebP, GIF and .cube; not SVG",
 	},
 	example:    "stuarty media:import clip.mov --project prj_7k2m9x4q1b --json",

@@ -1104,6 +1104,9 @@
           "set_framing": {
             "title": "Definir enquadramento do clipe"
           },
+          "replace_media": {
+            "title": "Trocar a mídia de um clipe"
+          },
           "set_speed": {
             "title": "Definir velocidade do clipe"
           }
@@ -1290,7 +1293,8 @@
         "L_SLOT_UNFILLED": "Espaço do modelo não preenchido",
         "L_AUDIO_CLIP": "Áudio saturado",
         "L_LOUDNESS": "Volume fora do alvo",
-        "L_DURATION_LIMIT": "Acima do limite de duração"
+        "L_DURATION_LIMIT": "Acima do limite de duração",
+        "L_ALPHA_MISSING": "Transparência declarada, mas ausente"
       },
       "shortcuts": {
         "title": "Atalhos de teclado",

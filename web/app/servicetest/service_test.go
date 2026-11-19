@@ -330,6 +330,18 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.BriefingAnswer(ctx, service.BriefingAnswerRequest{ProjectID: "prj_0000000001"})
 			return err
 		},
+		"MotionBrief": func() error {
+			_, err := e.svc.MotionBrief(ctx, service.MotionBriefRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"MotionCheck": func() error {
+			_, err := e.svc.MotionCheck(ctx, service.MotionCheckRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"MotionReplace": func() error {
+			_, err := e.svc.MotionReplace(ctx, service.MotionReplaceRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
 		"ConnectionList": func() error {
 			_, err := e.svc.ConnectionList(ctx, service.ConnectionListRequest{})
 			return err

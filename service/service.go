@@ -38,6 +38,7 @@ type Service interface {
 	ProductionService
 	BriefingService
 	AssetLibraryService
+	MotionService
 
 	ProjectList(ctx context.Context, req ProjectListRequest) (*ProjectListResult, error)
 	ProjectCreate(ctx context.Context, req ProjectCreateRequest) (*ProjectCreateResult, error)

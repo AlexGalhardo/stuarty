@@ -47,6 +47,11 @@ func AgentDocsInputs() agentdocs.Inputs {
 		inLibrary[s.name] = true
 	}
 
+	// And for the hand-off from an external motion engine: the skill motion-with-an-external-engine carries it.
+	for _, s := range []*spec{motionBriefCmd, motionCheckCmd, motionReplaceCmd} {
+		inLibrary[s.name] = true
+	}
+
 	// The commands of publishing (SDD-020 section 13) wait for the skills of publishing for the same reason.
 	for _, s := range publishingCommands() {
 		inLibrary[s.name] = true

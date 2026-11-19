@@ -8,7 +8,7 @@ metadata:
 
 # stuarty
 
-Edit video by commands: CLI `stuarty` or MCP server (`stuarty mcp`). Output is text; `--json` is JSON.
+Edit video by commands: CLI `stuarty` or MCP (`stuarty mcp`). Output is text; `--json` is JSON.
 
 Workspace: `~/.stuarty` or `$STUARTY_HOME`.
 
@@ -19,14 +19,14 @@ Workspace: `~/.stuarty` or `$STUARTY_HOME`.
 3. Apply: `edit --project <id> --base <rev> ...`; read the diff.
 4. `lint --project <id>`. Errors block export.
 5. Look if needed: `view --at 1s`, then `view --mode sheet`.
-6. `export --project <id>`, then check the job `checks`.
+6. `export --project <id>`; check the job `checks`.
 
 ## Rules that prevent mistakes
 
-- Times need a unit: `12.5s`, `375f`, `00:00:12.500`.
+- Times need a unit: `12.5s` or `375f`.
 - Ids (`prj_`, `ast_`, `trk_`, `itm_`, `job_`) are never positions. List first.
 - The top track draws over the others (`top`, `bottom`).
-- `--base` is your last result's `revision`; default: current.
+- `--base`: your last `revision` (default: current).
 - Give your own `id` to what you use later.
 
 ## Command reference
@@ -37,11 +37,11 @@ Workspace: `~/.stuarty` or `$STUARTY_HOME`.
 {{end}}
 ## CLI cheat sheet
 
-Prefix each with `stuarty`.
+Prefix: `stuarty`.
 
 {{range .CLI}}{{if not .Pending}}- `{{.Usage}}`
 {{end}}{{end}}
-`--ops <file|->` reads a JSON array; `edit --project <id> item.move item_id=itm_x start=2s` is one operation (`k=v` string, `k:=json` JSON). `--dry-run` saves nothing; `--key <k>` makes retries safe; `--out f` copies the file out (`--force` replaces). Revert, diff, checkpoints: `agent:docs --print guide:video|skill|agents|instructions`.
+`--ops <file|->` reads a JSON array; `edit --project <id> item.move item_id=itm_x start=2s` is one operation (`k=v` string, `k:=json` JSON). `--dry-run` saves nothing; `--key <k>` makes retries safe; `--out f` copies the file out. Revert, diff, checkpoints: `agent:docs --print guide:video|skill|agents|instructions`.
 
 ## Reading results
 

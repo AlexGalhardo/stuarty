@@ -5,9 +5,9 @@ import "github.com/AlexGalhardo/vukem/schema"
 // The checkpoints of a timeline (SDD-005 section 5.14, RF-121): a name and a note on a revision, made by a person or an
 // agent, or by the service before an agent's first edit of the day. A checkpoint points at a revision of the append-only
 // log and holds no copy of the document, so it has no foreign key to `operations`.
-func m20261119160000CreateCheckpoints() schema.Migration {
+func m20261119220000CreateCheckpoints() schema.Migration {
 	return schema.Migration{
-		ID: "20261119160000_create_checkpoints",
+		ID: "20261119220000_create_checkpoints",
 		Up: func(s *schema.Schema) error {
 			stmts := []string{
 				`CREATE TABLE checkpoints (
