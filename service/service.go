@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"io/fs"
 	"log/slog"
 	"path/filepath"
 	"sync"
@@ -233,6 +234,9 @@ type Options struct {
 	Limits Limits
 	// Version is the binary version written into the template files.
 	Version string
+	// BuiltInSkills is the set of skills that ship with the product, one folder per skill; the service
+	// installs it into the library at start (SDD-018 section 16). Nil installs none.
+	BuiltInSkills fs.FS
 	// Transcriber is the transcription provider of the transcribe job; without
 	// one JobStart for it answers E_TRANSCRIBE_UNAVAILABLE.
 	Transcriber transcribe.Provider
@@ -389,6 +393,13 @@ func New(o Options) (Service, error) {
 
 	if s.log == nil {
 		s.log = slog.New(slog.DiscardHandler)
+	}
+
+	if s.lib != nil && o.BuiltInSkills != nil {
+		// A failure here must not stop the product: the library works without the built-in skills.
+		if _, err := s.lib.InstallBuiltInSet(context.Background(), o.BuiltInSkills, s.version); err != nil {
+			s.log.Warn("the built-in skills were not installed", "error", err)
+		}
 	}
 
 	if s.newIDs == nil {
