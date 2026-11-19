@@ -641,7 +641,7 @@
       "name": "export:check",
       "summary": "check that a project fits an export preset, before any encoding",
       "usage": [
-        "stuarty export:check --project <id> --preset <preset id> [--start t] [--end t] [--codec c]"
+        "stuarty export:check --project <id> --preset <id> [--start t] [--end t] [--codec c]"
       ],
       "example": "stuarty export:check --project prj_7k2m9x4q1b --preset tiktok --json",
       "flags": [
@@ -678,7 +678,7 @@
       "name": "export:batch",
       "summary": "export a project several times, one after the other, as one job",
       "usage": [
-        "stuarty export:batch --project <id> --preset <id> [--preset <id> ...] [--codec c] [--start t] [--end t] [--wait] [--timeout d]",
+        "stuarty export:batch --project <id> --preset <id>... [--codec c] [--start t] [--end t] [--wait]",
         "stuarty export:batch --project <id> --items '<json array of {preset, format, codec, start, end}>' [--wait]"
       ],
       "example": "stuarty export:batch --project prj_7k2m9x4q1b --preset tiktok --preset youtube-shorts --wait",
