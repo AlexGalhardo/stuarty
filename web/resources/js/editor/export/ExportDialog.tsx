@@ -69,7 +69,7 @@ import {
 	exportPhase,
 	groupFindings,
 } from "./exportPhase";
-import { batchItems, queuedItem } from "./presetText";
+import { batchItems, plainOptions, queuedItem } from "./presetText";
 
 const POLL_AFTER_MS = 5000;
 const POLL_EVERY_MS = 2000;
@@ -437,10 +437,7 @@ export default function ExportDialog({
 	async function start(): Promise<void> {
 		setFailure(null);
 		setQueuedBehind(false);
-		const withCodec: ExportOptions = {
-			...options,
-			codec: codec === "" ? undefined : codec,
-		};
+		const withCodec = plainOptions(options, codec);
 		try {
 			if (selected.length > 0) {
 				begin(
