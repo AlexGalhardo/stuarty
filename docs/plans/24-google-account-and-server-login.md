@@ -36,8 +36,8 @@ A creator who runs Stuarty on their own server signs in with a password, as toda
 
 ## Tasks
 
-- [ ] 1. Amend SDD-007 and SDD-014 with the flow, the stored fields and new threat rows (an unlinked identity signing in, account takeover by e-mail match, callback CSRF, session fixation). Verify: `task lint:md` exits 0.
-- [ ] 2. Implement ID token verification with a fake issuer in tests. Verify: `go test ./web/app/... -run TestIDToken` passes (wrong audience, expired, bad signature, wrong nonce).
+- [x] 1. Amend SDD-007 and SDD-014 with the flow, the stored fields and new threat rows (an unlinked identity signing in, account takeover by e-mail match, callback CSRF, session fixation). Verify: `task lint:md` exits 0.
+- [x] 2. Implement ID token verification with a fake issuer in tests. Verify: `go test ./web/app/... -run TestIDToken` passes (wrong audience, expired, bad signature, wrong nonce).
 - [ ] 3. Implement linking and unlinking from settings. Verify: `go test ./web/app/... -run TestLinkIdentity` passes.
 - [ ] 4. Implement sign-in with a linked identity and the refusal of an unlinked one. Verify: `go test ./web/app/... -run TestGoogleSignIn` passes.
 - [ ] 5. Implement the admin controls. Verify: `go test ./web/app/... -run TestGoogleSignInPolicy` passes.
