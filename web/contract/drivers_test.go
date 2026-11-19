@@ -168,6 +168,8 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.MotionBrief)
 	case "MotionCheck":
 		return invoke(ctx, s, svc.MotionCheck)
+	case "MotionReplace":
+		return invoke(ctx, s, svc.MotionReplace)
 	case "Doctor":
 		return invoke(ctx, s, svc.Doctor)
 	case "FontList":

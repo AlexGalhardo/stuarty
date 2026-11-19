@@ -18,6 +18,21 @@ func (c *Client) MotionBrief(ctx context.Context, req service.MotionBriefRequest
 	return get[service.MotionBriefResult](ctx, c, projectPath(req.ProjectID, "/motion/brief"), q)
 }
 
+// MotionReplace implements service.Service.
+func (c *Client) MotionReplace(
+	ctx context.Context,
+	req service.MotionReplaceRequest,
+) (*service.MotionReplaceResult, error) {
+	ctx = withTimeline(ctx, req.TimelineID)
+	body := struct {
+		AssetID   string `json:"asset_id"`
+		RenderKey string `json:"render_key,omitempty"`
+		DryRun    bool   `json:"dry_run,omitempty"`
+	}{req.AssetID, req.RenderKey, req.DryRun}
+
+	return post[service.MotionReplaceResult](ctx, c, projectPath(req.ProjectID, "/motion/replace"), body)
+}
+
 // MotionCheck implements service.Service.
 func (c *Client) MotionCheck(ctx context.Context, req service.MotionCheckRequest) (*service.MotionCheckResult, error) {
 	ctx = withTimeline(ctx, req.TimelineID)

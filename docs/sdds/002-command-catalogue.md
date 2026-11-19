@@ -1,7 +1,7 @@
 # SDD-002: Command catalogue of the core
 
 - Amended (2026-11-18) for Stuarty: this is the catalogue of the video domain. Other domains get their own catalogue (ADR-0031, ADR-0038).
-- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen: all 77 commands have golden cases and pass the registry-wide gates. The binary exposes all 77 commands, 76 of them public; `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
+- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen: all 78 commands have golden cases and pass the registry-wide gates. The binary exposes all 78 commands, 77 of them public; `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
 - Depends on: SDD-001 (document), ADR-0002 (command core), ADR-0004 (time), ADR-0006 (log, concurrency, undo), ADR-0014 (JSON Schema)
 - Implements: RF-010 to RF-016, RF-020 to RF-026, RF-030 to RF-036, RF-040, RF-041, RF-050, RF-051, RF-100, RF-105, RF-107, RF-112 to RF-115, RF-119, NFR-001, NFR-025
 - Owner area: senior-a (command core and schema)

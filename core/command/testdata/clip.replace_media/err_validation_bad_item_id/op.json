@@ -1,0 +1,7 @@
+{
+  "op": "clip.replace_media",
+  "args": {
+    "item_id": "item1",
+    "asset_id": "ast_p4q5r6s7t8"
+  }
+}

@@ -30,6 +30,12 @@ func libraryFlags() []flagDef {
 		{Name: "model", Kind: kindString, Usage: "the model that generated the files (required for generated)"},
 		{Name: "prompt", Kind: kindString, Usage: "the prompt that generated the files"},
 		{Name: "cost-micros", Kind: kindInt, Usage: "what the files cost, in millionths of a US dollar"},
+		{Name: "engine", Kind: kindString, Usage: "the motion engine that rendered the files (rendered_externally)"},
+		{Name: "engine-version", Kind: kindString, Usage: "the version of that engine (rendered_externally)"},
+		{
+			Name: "render-key", Kind: kindString,
+			Usage: "a stable name for the animation, the same each time it is rendered again (rendered_externally)",
+		},
 		{
 			Name: "rights-note", Kind: kindString,
 			Usage: "your own record of the licence or the permission (required for fetched_by_agent)",
@@ -49,6 +55,7 @@ func importBlocks(p *parsed) (*asset.Origin, *service.AssetInfo) {
 
 	for _, f := range []string{
 		"origin-kind", "origin-source", "provider", "model", "prompt", "cost-micros", "rights-note",
+		"engine", "engine-version", "render-key",
 	} {
 		if !p.has(f) {
 			continue
@@ -57,7 +64,8 @@ func importBlocks(p *parsed) (*asset.Origin, *service.AssetInfo) {
 		o := asset.Origin{
 			Kind: asset.OriginKind(p.str("origin-kind")), Source: p.str("origin-source"),
 			Provider: p.str("provider"), Model: p.str("model"), Prompt: p.str("prompt"),
-			RightsNote: p.str("rights-note"),
+			RightsNote: p.str("rights-note"), Engine: p.str("engine"), EngineVersion: p.str("engine-version"),
+			RenderKey: p.str("render-key"),
 		}
 
 		if p.has("cost-micros") {
