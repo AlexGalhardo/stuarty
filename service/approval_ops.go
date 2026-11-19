@@ -134,8 +134,8 @@ func (s *svc) person(ctx context.Context, method string) (Caller, error) {
 
 func privilegedError() *Error {
 	return newError(CodePrivilegedSession, "only a person in the app can do this.").
-		withHint("open the Approvals page of the app; the local token, API keys and the agent surfaces cannot approve, " +
-			"write a rule or set a ceiling")
+		withHint("a person decides in the Approvals page of the Stuarty desktop app, or of a server with login; the local " +
+			"token, API keys and the agent surfaces cannot approve, write a rule or set a ceiling")
 }
 
 // approvalFilter narrows a list to what the caller may read: a key limited to one project reads

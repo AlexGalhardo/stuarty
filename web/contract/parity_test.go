@@ -100,6 +100,17 @@ var parity = []row{
 	{method: "ConnectionCreate", command: "connection:add", route: "POST /connections"},
 	{method: "ConnectionRemove", command: "connection:remove", route: "DELETE /connections/{}"},
 	{method: "ConnectionTest", command: "connection:test", route: "POST /connections/{}/test"},
+	// The approval queue (SDD-015 section 10, SDD-003 exception E-6): the read-only tool lists or reads
+	// one request; deciding, writing a rule and setting a ceiling are for a person, so they have no tool
+	// and their commands always fail for an agent.
+	{method: "ApprovalList", tool: "approval", command: "approval:list", route: "GET /approvals"},
+	{method: "ApprovalGet", tool: "approval", command: "approval:show", route: "GET /approvals/{}"},
+	{method: "ApprovalDecide", command: "approval:decide", route: "POST /approvals/{}/decide"},
+	{method: "ApprovalRuleList", command: "approval:rule:list", route: "GET /approval-rules"},
+	{method: "ApprovalRuleSet", command: "approval:rule:set", route: "POST /approval-rules"},
+	{method: "ApprovalRuleRemove", command: "approval:rule:remove", route: "DELETE /approval-rules/{}"},
+	{method: "CostSummary", command: "cost:show", route: "GET /cost"},
+	{method: "CostCeilingSet", command: "cost:ceiling", route: "PUT /cost/ceilings"},
 }
 
 // notOperations are Service methods that are not operations an agent calls

@@ -1281,7 +1281,7 @@ A frame is one JPEG (quality 80, 4:2:0). A sheet is one JPEG:
 | Implementation | the official Go SDK `github.com/modelcontextprotocol/go-sdk` v1.8.0 (it implements revision `2026-07-28` and still serves older revisions: `mcp/shared.go` lines 50 to 91, 555 to 580) |
 | Server identity | `name` `stuarty`, `version` the binary version |
 | Capabilities | `tools` only. No resources, prompts, completions, logging, sampling, roots or elicitation (ADR-0015 item 10) |
-| `tools/list` | the 17 tools below, always in the order of the table, never paged, with `ttlMs` 3,600,000 and `cacheScope` `public` (the SDK type `Cacheable`, `mcp/protocol.go` lines 1148 to 1166; the list changes only when the binary is upgraded). |
+| `tools/list` | the 18 tools below, always in the order of the table, never paged, with `ttlMs` 3,600,000 and `cacheScope` `public` (the SDK type `Cacheable`, `mcp/protocol.go` lines 1148 to 1166; the list changes only when the binary is upgraded). |
 | Tool registration | each tool is registered with the SDK's raw `(*Server).AddTool` (`mcp/server.go` line 315) with `inputSchema` and `outputSchema` taken from the registry generator, **not** with the generic `mcp.AddTool[In, Out]`, which infers schemas from Go types and would not produce the `edit` schema of §4.4. The adapter validates `arguments` against `inputSchema` with the validator of ADR-0014 and converts a failure into `E_VALIDATION` with the `path` of the first invalid value (a failure of the `operations[].op` enum is `E_UNKNOWN_COMMAND`, §2.4 rule 5). The message names the path and the constraint, never the value (§1.2 rule 9) |
 | Call result | `CallToolResult` (`Content`, `StructuredContent`, `IsError`) built as §1.3 and §1.4 say |
 | Cost | the minified `tools/list` result is at most **19,500 bytes**: at the conservative 3 bytes per token of JSON this is 6,500 tokens, the NFR-020 limit (raised from 6,000 tokens, 18,000 bytes, by D-040; before that from 17,500 bytes when `font_import` became the 16th tool, VV-024; at the 3.2 characters per token of check 2 it is 5,625 tokens). The definitions of this section measure about 17,814 bytes in total, under the cap, so a new parameter must shorten a description. `edit` is 2,534 bytes (limit 2,700 since VV-122 added `clip.set_shadow` and `clip.set_outline`, raised from 2,500; each new operation name costs about 25 bytes) and the largest other tool is `view` at 1,518 (limit 1,600); `media_inspect` is 1,428 and `template` 1,315. No single tool is larger than 2,700 bytes (`edit`) or 1,600 bytes (the others). **Verified by** `TestToolDefinitionBudget` and, once per release, a count with the model vendor's token counting endpoint (if it exceeds 6,500 tokens the descriptions are shortened; no field is removed) |
@@ -1308,6 +1308,7 @@ Tool and Service mapping, scope and annotations (annotations are hints and clien
 | `template` | `TemplateList`, `TemplateSave`, `TemplateInstantiate`, `TemplateExport`, `TemplateImport` | read (list, export), edit (the others) | false | false | false | false |
 | `font_import` | `FontImport` | media | false | false | true | false |
 | `connection` | `ConnectionList` (without `id`), `ConnectionGet` (with `id`) | read | true | n/a | true | false |
+| `approval` | `ApprovalList` (without `id`), `ApprovalGet` (with `id`) | read | true | n/a | true | false |
 
 `destructiveHint` is `false` on every tool: every write is undoable and recorded per actor, and nothing is removed for good (ADR-0020 items 2 and 3). A client that prompts on destructive tools therefore never prompts for this server, which is what unattended use needs (D-011). `openWorldHint` is `false` on every tool: no tool reaches an address chosen by the caller (RF-130). `TestNoOutboundTools` asserts both hints for every registered tool and that `web/app/mcp` imports no HTTP client.
 
@@ -2233,6 +2234,33 @@ The `outputSchema` and the `title` are minimal, to stay under the budget of §4.
 
 The only tool of the connections domain (ADR-0043 item 3: an intent no other tool expresses, the question "where may this product send data?"; about 560 bytes, 175 tokens). It reads the registry and nothing else: it has no argument that names a destination, and creating, removing and testing a connection take a credential or reach the network, so they have a CLI command and a route and no tool (SDD-014 section 10). The result is a `ConnectionListResult` or a `Connection` in `structuredContent`; the label is delimited as untrusted text in the text part (SDD-007 section 8). It never carries a secret, only `secret_set`.
 
+#### `approval`
+
+```json
+{
+  "name":"approval",
+  "description":"List the approval queue (pending; state: approved, rejected, expired, all) or read one with id. Publishing and costly generation wait for a person: you cannot approve or reject.",
+  "inputSchema":{
+    "type":"object",
+    "properties":{
+      "id":{"type":"string","pattern":"^apr_[0-9a-hjkmnp-tv-z]{10}$"},
+      "state":{"type":"string"}
+    },
+    "additionalProperties":false
+  },
+  "outputSchema":{"type":"object"},
+  "annotations":{
+    "title":"Approvals",
+    "readOnlyHint":true,
+    "destructiveHint":false,
+    "idempotentHint":true,
+    "openWorldHint":false
+  }
+}
+```
+
+The only tool of the approval queue (ADR-0043 item 3: an intent no other tool expresses, the question "what is waiting for a person?"; 536 bytes minified, about 180 tokens; the 18 definitions total 19,440 bytes of the 19,500 allowed, so the next tool needs the budget revised; `state` is not an enum for that reason, and the service answers `E_VALIDATION` for a state it does not know). It reads the queue and nothing else. A request is made by `job_start` of a kind that needs approval, which answers the job in the state `waiting_approval` with `approval_id`; `job_get` shows the same state. Deciding, writing a rule and setting a ceiling have no tool and no argument (RF-136, SDD-015 section 10): any member other than `id` and `state` is refused by the input schema. The result is an `ApprovalListResult` or an `approval.Request` in `structuredContent`; the summary of a request is delimited as untrusted text in the text part (SDD-007 section 8).
+
 ### 4.3 `command_help`
 
 `command_help` is the only place that serves a command's schema over MCP. Without `name` it returns one line per public command of the build (`<name> [<scope>] <summary>`, under 2,000 tokens). With a name it returns the description, the `args` JSON Schema, an example and the error codes of that command, from `Registry.Get` and `Registry.Schema`, in the format of §3.9. Descriptions and summaries come from the registry's `summary` and `description` fields, so the tool, the CLI `command:help`, `GET /commands/{name}` and the skill file always agree.
@@ -2855,6 +2883,14 @@ Every `Service` operation has an encoding on each surface. The table is the proo
 | `ConnectionCreate` | none (exception E-5: it carries a credential) | `connection:add` | `POST /connections` |
 | `ConnectionRemove` | none (exception E-5) | `connection:remove` | `DELETE /connections/{id}` |
 | `ConnectionTest` | none (exception E-5: it reaches the network) | `connection:test` | `POST /connections/{id}/test` |
+| `ApprovalList` | `approval` (no `id`) | `approval:list` | `GET /approvals` |
+| `ApprovalGet` | `approval` (`id`) | `approval:show` | `GET /approvals/{id}` |
+| `ApprovalDecide` | none (exception E-6: a person decides) | `approval:decide` | `POST /approvals/{id}/decide` |
+| `ApprovalRuleList` | none | `approval:rule:list` | `GET /approval-rules` |
+| `ApprovalRuleSet` | none (exception E-6) | `approval:rule:set` | `POST /approval-rules` |
+| `ApprovalRuleRemove` | none (exception E-6) | `approval:rule:remove` | `DELETE /approval-rules/{id}` |
+| `CostSummary` | none | `cost:show` | `GET /cost` |
+| `CostCeilingSet` | none (exception E-6) | `cost:ceiling` | `PUT /cost/ceilings` |
 | `ProjectBundleExport` | none (exception E-3) | `bundle:export` | `POST /projects/{id}/bundle` |
 | `ProjectBundleImport` | none (exception E-3) | `bundle:import` | `POST /projects/import` |
 | `ProjectOtioExport` | none (exception E-3) | `otio:export` | `GET /projects/{id}/otio` |
@@ -2867,6 +2903,7 @@ Every `Service` operation has an encoding on each surface. The table is the proo
 - **E-3.** `PlanWindow`, `SnapPoints`, `FontList`, `AuditList`, `ProjectBundleExport`, `ProjectBundleImport`, `ProjectOtioExport` and `ProjectOtioImport` serve the UI, the administrator or a file workflow, not an agent editing a project: HTTP, and the CLI command where the table names one, but no MCP tool (SDD-000 §1). An agent that needs the `format` of an export uses the `format` member of `job_start` `args`.
 - **E-4.** `TrashEmpty`, `KeyCreate`, `KeyList`, `KeyRevoke` and `AssetList` are HTTP only, with the callers SDD-007 §5.3 allows. `TrashEmpty` is not an MCP tool and not a CLI command (RF-131, ADR-0020 item 2): no agent surface can reach the one operation that deletes data for good.
 - **E-5.** `ConnectionCreate`, `ConnectionRemove` and `ConnectionTest` have a CLI command and a route and no MCP tool: creating takes a credential, which an agent must not handle (RF-137), and testing makes a request to a destination. The tool `connection` lists and reads only (SDD-014 section 10, ADR-0043 item 3).
+- **E-6.** `ApprovalDecide`, `ApprovalRuleSet`, `ApprovalRuleRemove` and `CostCeilingSet` have a CLI command and a route and no MCP tool: a person decides (RF-136, ADR-0032 item 4). The commands exist so that an agent that tries gets `E_PRIVILEGED_SESSION` and its hint; with the local token or a key they always fail, on HTTP, in the CLI and in process, and the tool `approval` has no argument that decides. `ApprovalRuleList` and `CostSummary` are read operations with a command and a route and no tool: an agent learns the state of its own request from `job_get` and `approval` (SDD-015 section 10).
 
 The CLI commands of SDD-000 §1 that are not service operations (`serve`, `mcp`, `open`, `token:rotate`, `user:create`, `user:passwd`, `tools:install`, `agent:docs`) are in §5.4 and have no row here. `MediaList` and `JobList` close the gap SDD-012 §13.2 and Appendix B (B2, B3) left: they are the operations behind the library list and the job list of the UI.
 
@@ -3006,7 +3043,7 @@ The implementation of this SDD is complete when every check below passes. "Test"
 | # | Check | How verified |
 | --- | --- | --- |
 | 1 | Every `service.Service` method has an MCP tool, CLI command and HTTP route, or is in the exceptions of §7.1; the §7.1 table equals the one derived from the code | `TestParityTableCoversTheService`, `TestDriversCoverService`, `TestEveryOperationIsReachableOnEverySurface` (`web/contract`) |
-| 2 | `tools/list` holds exactly the 17 tools of SDD-000 §1 in the order of §4.1, byte-equal across two calls, at most 19,500 bytes minified, `edit` at most 2,700 bytes and every other tool at most 1,600 (NFR-020) | `TestToolDefinitionBudget`; release checklist: token count with the vendor endpoint at most 6,500 |
+| 2 | `tools/list` holds exactly the 18 tools of SDD-000 §1 in the order of §4.1, byte-equal across two calls, at most 19,500 bytes minified, `edit` at most 2,700 bytes and every other tool at most 1,600 (NFR-020) | `TestToolDefinitionBudget`; release checklist: token count with the vendor endpoint at most 6,500 |
 | 3 | Every `inputSchema` and `outputSchema` is valid JSON Schema 2020-12; every `inputSchema` has `additionalProperties: false`; the `edit` operation enum equals the public command names of the build; the annotations equal the table of §4.1; every output path that holds text from media or other actors carries `"x-untrusted": true` and a result with such a value has `untrusted_notice` | `TestToolSchemas` |
 | 4 | The first 512 characters of `instructions` (after the generated header line is stripped) are those of §4.6, the whole is at most 2,100 bytes, it names the tools by their exact names and does not mention locks | `TestInstructionsHead` |
 | 5 | The MCP server is stateless: no `Mcp-Session-Id` is sent or read, `GET /mcp` and `DELETE /mcp` answer 405, two interleaved clients do not influence each other; revisions `2026-07-28` and `2025-11-25` both work over stdio and HTTP | `TestHTTPIsStateless` (`web/app/mcp`), `TestMCPOverStdioThroughTheBinary` (`web/cmd/app`); no single test runs both revisions with the SDK client |
@@ -3044,7 +3081,7 @@ Numbers measured on the reference machine (AMD Ryzen 7 5700X3D, Windows 11, FFmp
 
 | Budget | Measured | Limit |
 | --- | --- | --- |
-| `tools/list` definitions, 17 tools | about 18,560 bytes, about 5,800 tokens by the 3.2 characters per token estimate | at most 19,500 bytes (check 2) |
+| `tools/list` definitions, 18 tools | about 19,440 bytes, about 6,075 tokens by the 3.2 characters per token estimate | at most 19,500 bytes (check 2) |
 | `tools/list` by the vendor token count | not measured: needs `ANTHROPIC_API_KEY` (`TestToolListVendorTokens`, release only) | at most 6,500 tokens |
 | Concise view of the reference project | 1 page, 11,785 characters | at most 2 pages, cap 12,800 characters (check 7) |
 | Frame and sheet image tokens | `TestViewImageSizeTable` passes for the four presets | frame at most 800, sheet at most 1,500 (check 8) |
