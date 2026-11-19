@@ -111,6 +111,12 @@ func TestPages(t *testing.T) {
 		}
 	}
 
+	// The approval queue has its own page (epic 05).
+	if res := page("/approvals"); res.status != http.StatusOK ||
+		!strings.Contains(string(res.body), `Approvals\/Index`) {
+		t.Errorf("/approvals = %d, want the approvals page", res.status)
+	}
+
 	if res := h.do(req{path: "/projects", noAuth: true}); res.status != http.StatusUnauthorized {
 		t.Errorf("/projects without a session = %d", res.status)
 	}
