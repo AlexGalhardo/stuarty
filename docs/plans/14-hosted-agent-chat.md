@@ -38,7 +38,7 @@ A creator talks to their own coding agent inside Stuarty, in a panel that is alw
 ## Tasks
 
 - [x] 1. Read the protocol specification again; write SDD-017 (profiles, process, messages used, errors) and SDD-000 names; add SDD-007 rows (a profile as command injection, agent text as markup, a token wider than the project, an agent that never exits). Verify: `task lint:md` exits 0.
-- [ ] 2. Implement `core/chat` with table tests. Verify: `go test ./core/chat/...` passes.
+- [x] 2. Implement `core/chat` with table tests. Verify: `go test ./core/chat/...` passes.
 - [ ] 3. Implement the protocol client against a fake agent binary built in the tests. Verify: `go test ./service/agenthost/... -run TestProtocol` passes.
 - [ ] 4. Implement process supervision: start, cancel, time limits, kill on shutdown, one process tree per session. Verify: `go test ./service/agenthost/... -run TestProcess` passes on Windows and in `bash scripts/test-linux-docker.sh ./service/agenthost/...`.
 - [ ] 5. Issue the project-scoped token and pass the MCP address to the agent. Verify: `go test ./service/agenthost/... -run TestScopedToken` passes (a call to another project is refused).
