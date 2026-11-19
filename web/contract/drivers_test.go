@@ -804,6 +804,9 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 
 		Answers map[string]string `json:"answers"`
 		Replace bool              `json:"replace"`
+
+		Start string `json:"start"`
+		End   string `json:"end"`
 	}
 
 	if len(s.Args) > 0 {
@@ -976,8 +979,9 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 	case "AudioMeasure":
 		argv = append(slices.Clone(proj), "--mode", "audio")
 		argv = append(argv, flag("item", a.ItemID)...)
+		argv = append(argv, flag("from", a.Start)...)
 
-		return "view", append(argv, flag("until", a.Until)...), "", nil
+		return "view", append(argv, flag("until", a.End)...), "", nil
 	case "Doctor":
 		return "doctor", []string{"--full"}, "", nil
 	case "FontList":
