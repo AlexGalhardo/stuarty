@@ -38,6 +38,12 @@ type Description struct {
 	// Guide is the official page the setup guide links to, and GuideRead the date it was read.
 	Guide     string `json:"guide"`
 	GuideRead string `json:"guide_read"`
+	// Hints say what a person does about an error of this network, by the kind of the error (KindQuota...).
+	// Each connector writes its own, so an error of one network never sends the person to another's screen;
+	// a kind with no hint gets the generic one of the service.
+	Hints map[string]string `json:"hints,omitempty"`
+	// AIDisclosure is true when the network takes a flag that says the video has synthetic content.
+	AIDisclosure bool `json:"ai_disclosure"`
 }
 
 // AuthConfig is what the generic sign-in needs from a network (SDD-020 section 6).
@@ -111,6 +117,19 @@ type Connector interface {
 	Exchange(ctx context.Context, c connections.Credential, code, verifier, redirectURI string) ([]byte, error)
 	// Test is the harmless request of the Connections page.
 	connections.Connector
+}
+
+// Chooser is implemented by a connector whose sign-in reaches several accounts, such as the Pages and the
+// Instagram accounts of one Meta login (SDD-020 section 17). The sign-in keeps what it reached and a person
+// chooses which account the connection is for; until then SignedIn says false. A connector that signs in as
+// one account (YouTube) does not implement it.
+type Chooser interface {
+	// Choices lists the accounts the sign-in reached and none is chosen of; empty once an account is chosen.
+	// It never returns a token.
+	Choices(secret []byte) []Account
+	// Choose returns the new secret of the connection with the one account chosen, and only its credential
+	// kept. An id that is not among the choices is an error.
+	Choose(secret []byte, accountID string) ([]byte, error)
 }
 
 // The kinds of a connector error.
