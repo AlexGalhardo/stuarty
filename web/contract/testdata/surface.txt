@@ -34,6 +34,8 @@ command item:trash
 command job:cancel
 command job:list
 command job:show
+command library:reindex
+command library:search
 command lint
 command mcp
 command media:import
@@ -41,6 +43,10 @@ command media:inspect
 command media:list
 command media:restore
 command media:trash
+command memory:list
+command memory:remove
+command memory:show
+command memory:write
 command otio:export
 command otio:import
 command project:create
@@ -50,7 +56,17 @@ command project:list
 command project:restore
 command project:show
 command project:trash
+command prompt:list
+command prompt:render
+command prompt:show
+command prompt:write
 command redo
+command skill:export
+command skill:import
+command skill:lint
+command skill:list
+command skill:show
+command skill:write
 command template:export
 command template:import
 command template:list
@@ -64,6 +80,7 @@ command version
 command view
 route DELETE /connections/{}
 route DELETE /keys/{}
+route DELETE /library/memory/{}
 route GET /assets
 route GET /audit
 route GET /brand-kit
@@ -78,6 +95,14 @@ route GET /images/{}
 route GET /jobs/{}
 route GET /jobs/{}/file
 route GET /keys
+route GET /library/memory
+route GET /library/memory/{}
+route GET /library/prompts
+route GET /library/prompts/{}
+route GET /library/search
+route GET /library/skills
+route GET /library/skills/{}
+route GET /library/skills/{}/lint
 route GET /projects
 route GET /projects/{}
 route GET /projects/{}/bitmaps/{}
@@ -116,6 +141,12 @@ route POST /images/{}/redo
 route POST /images/{}/undo
 route POST /jobs/{}/cancel
 route POST /keys
+route POST /library/memory
+route POST /library/prompts/{}/render
+route POST /library/reindex
+route POST /library/skills/export
+route POST /library/skills/import
+route POST /library/skills/{}/review
 route POST /projects
 route POST /projects/import
 route POST /projects/{}/bundle
@@ -144,7 +175,8 @@ route POST /templates/{}/instantiate
 route POST /trash/empty
 route POST /users
 route PUT /brand-kit
-route PUT /projects/{}/brief
+route PUT /library/prompts/{}
+route PUT /library/skills/{}
 tool command_help
 tool connection
 tool edit
@@ -154,6 +186,7 @@ tool image
 tool job_cancel
 tool job_get
 tool job_start
+tool library
 tool lint
 tool media_import
 tool media_inspect

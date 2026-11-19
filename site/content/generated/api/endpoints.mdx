@@ -106,27 +106,27 @@ Every operation has its own page with the parameters, the body, the responses an
 | `GET` | `/api/v1/brand-kit` | [`brand.get`](/docs/api/brand.get) | Read the brand kit |
 | `PUT` | `/api/v1/brand-kit` | [`brand.set`](/docs/api/brand.set) | Replace the brand kit |
 
-## Connections
+## Library
 
 | Method | Path | Operation | Summary |
 | --- | --- | --- | --- |
-| `GET` | `/api/v1/connections` | [`connections.list`](/docs/api/connections.list) | List the destinations the user connected (never a secret) |
-| `POST` | `/api/v1/connections` | [`connections.create`](/docs/api/connections.create) | Connect a destination; the secret goes into the vault |
-| `GET` | `/api/v1/connections/{id}` | [`connections.get`](/docs/api/connections.get) | Read one connection (never a secret) |
-| `DELETE` | `/api/v1/connections/{id}` | [`connections.remove`](/docs/api/connections.remove) | Remove a connection and its credential |
-| `POST` | `/api/v1/connections/{id}/test` | [`connections.test`](/docs/api/connections.test) | Make one request through a connection |
-
-## Images
-
-| Method | Path | Operation | Summary |
-| --- | --- | --- | --- |
-| `GET` | `/api/v1/images` | [`images.list`](/docs/api/images.list) | List the image documents and templates |
-| `POST` | `/api/v1/images` | [`images.create`](/docs/api/images.create) | Create an image document, blank or from a template |
-| `GET` | `/api/v1/images/{id}` | [`images.get`](/docs/api/images.get) | Describe an image document: layers, findings and text view |
-| `POST` | `/api/v1/images/{id}/edit` | [`images.edit`](/docs/api/images.edit) | Apply a batch of image operations |
-| `POST` | `/api/v1/images/{id}/export` | [`images.export`](/docs/api/images.export) | Export an image document to a PNG, JPEG or WebP file |
-| `POST` | `/api/v1/images/{id}/redo` | [`images.redo`](/docs/api/images.redo) | Redo the latest undone step of the caller on an image |
-| `POST` | `/api/v1/images/{id}/undo` | [`images.undo`](/docs/api/images.undo) | Undo the latest step of the caller on an image |
+| `GET` | `/api/v1/library/memory` | [`library.memory.list`](/docs/api/library.memory.list) | List the memory notes |
+| `POST` | `/api/v1/library/memory` | [`library.memory.write`](/docs/api/library.memory.write) | Create or replace a memory note |
+| `GET` | `/api/v1/library/memory/{name}` | [`library.memory.get`](/docs/api/library.memory.get) | Read a memory note |
+| `DELETE` | `/api/v1/library/memory/{name}` | [`library.memory.remove`](/docs/api/library.memory.remove) | Remove a memory note |
+| `GET` | `/api/v1/library/prompts` | [`library.prompts.list`](/docs/api/library.prompts.list) | List the prompts |
+| `GET` | `/api/v1/library/prompts/{name}` | [`library.prompts.get`](/docs/api/library.prompts.get) | Read a prompt |
+| `PUT` | `/api/v1/library/prompts/{name}` | [`library.prompts.write`](/docs/api/library.prompts.write) | Create or replace a prompt |
+| `POST` | `/api/v1/library/prompts/{name}/render` | [`library.prompts.render`](/docs/api/library.prompts.render) | Replace the variables of a prompt |
+| `POST` | `/api/v1/library/reindex` | [`library.reindex`](/docs/api/library.reindex) | Rebuild the index of the library from its files |
+| `GET` | `/api/v1/library/search` | [`library.search`](/docs/api/library.search) | Search memory, skills and prompts |
+| `GET` | `/api/v1/library/skills` | [`library.skills.list`](/docs/api/library.skills.list) | List the skills |
+| `GET` | `/api/v1/library/skills/{name}` | [`library.skills.get`](/docs/api/library.skills.get) | Read a skill |
+| `PUT` | `/api/v1/library/skills/{name}` | [`library.skills.write`](/docs/api/library.skills.write) | Create or replace a skill |
+| `GET` | `/api/v1/library/skills/{name}/lint` | [`library.skills.lint`](/docs/api/library.skills.lint) | Run the lint on a skill |
+| `POST` | `/api/v1/library/skills/{name}/review` | [`library.skills.review`](/docs/api/library.skills.review) | Mark a skill as read (a browser session only) |
+| `POST` | `/api/v1/library/skills/export` | [`library.skills.export`](/docs/api/library.skills.export) | Export skills as folders in the Agent Skills layout |
+| `POST` | `/api/v1/library/skills/import` | [`library.skills.import`](/docs/api/library.skills.import) | Import a skill from a folder or an archive; it starts unreviewed |
 
 ## System
 

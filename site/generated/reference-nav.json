@@ -100,25 +100,25 @@
       ]
     },
     {
-      "tag": "Connections",
+      "tag": "Library",
       "pages": [
-        "connections.list",
-        "connections.create",
-        "connections.get",
-        "connections.remove",
-        "connections.test"
-      ]
-    },
-    {
-      "tag": "Images",
-      "pages": [
-        "images.list",
-        "images.create",
-        "images.get",
-        "images.edit",
-        "images.export",
-        "images.redo",
-        "images.undo"
+        "library.memory.list",
+        "library.memory.write",
+        "library.memory.get",
+        "library.memory.remove",
+        "library.prompts.list",
+        "library.prompts.get",
+        "library.prompts.write",
+        "library.prompts.render",
+        "library.reindex",
+        "library.search",
+        "library.skills.list",
+        "library.skills.get",
+        "library.skills.write",
+        "library.skills.lint",
+        "library.skills.review",
+        "library.skills.export",
+        "library.skills.import"
       ]
     },
     {
@@ -172,9 +172,7 @@
       "job_cancel",
       "template",
       "font_import",
-      "connection",
-      "image",
-      "project_item"
+      "library"
     ],
     "operations": [
       "asset.remove",

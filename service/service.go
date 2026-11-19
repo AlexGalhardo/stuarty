@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log/slog"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -17,7 +18,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/engine/rasterize"
 	enginestore "github.com/AlexGalhardo/stuarty/engine/store"
 	"github.com/AlexGalhardo/stuarty/engine/transcribe"
-	"github.com/AlexGalhardo/stuarty/service/connections"
+	"github.com/AlexGalhardo/stuarty/service/library"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
 )
 
@@ -59,6 +60,26 @@ type Service interface {
 	FontImport(ctx context.Context, req FontImportRequest) (*FontImportResult, error)
 	BrandKitGet(ctx context.Context, req BrandKitGetRequest) (*BrandKit, error)
 	BrandKitSet(ctx context.Context, req BrandKitSetRequest) (*BrandKit, error)
+
+	// The library: memory notes, skills and prompts kept as files in the workspace (SDD-018). The text of every
+	// entry is untrusted; a skill that a person has not reviewed is not offered to an agent.
+	MemoryList(ctx context.Context, req MemoryListRequest) (*LibraryListResult, error)
+	MemoryGet(ctx context.Context, req LibraryRef) (*MemoryGetResult, error)
+	MemoryWrite(ctx context.Context, req MemoryWriteRequest) (*MemoryWriteResult, error)
+	MemoryRemove(ctx context.Context, req LibraryRef) (*LibraryRemoveResult, error)
+	SkillList(ctx context.Context, req SkillListRequest) (*LibraryListResult, error)
+	SkillGet(ctx context.Context, req LibraryRef) (*SkillGetResult, error)
+	SkillWrite(ctx context.Context, req SkillWriteRequest) (*SkillWriteResult, error)
+	SkillImport(ctx context.Context, req SkillImportRequest) (*SkillImportResult, error)
+	SkillMarkReviewed(ctx context.Context, req LibraryRef) (*SkillReviewResult, error)
+	SkillLint(ctx context.Context, req LibraryRef) (*SkillLintResult, error)
+	SkillExport(ctx context.Context, req SkillExportRequest) (*SkillExportResult, error)
+	PromptList(ctx context.Context, req PromptListRequest) (*LibraryListResult, error)
+	PromptGet(ctx context.Context, req LibraryRef) (*PromptGetResult, error)
+	PromptWrite(ctx context.Context, req PromptWriteRequest) (*PromptWriteResult, error)
+	PromptRender(ctx context.Context, req PromptRenderRequest) (*PromptRenderResult, error)
+	LibrarySearch(ctx context.Context, req LibrarySearchRequest) (*LibrarySearchResult, error)
+	LibraryReindex(ctx context.Context, req LibraryReindexRequest) (*LibraryReindexResult, error)
 
 	JobGet(ctx context.Context, req JobGetRequest) (*Job, error)
 	JobList(ctx context.Context, req JobListRequest) (*JobListResult, error)
@@ -228,7 +249,7 @@ type svc struct {
 	toolsState  toolsState
 	doctor      DoctorOptions
 	keys        KeyStore
-	conns       *connections.Manager
+	lib         *library.Manager // the files of memory, skills and prompts; nil without a workspace
 	heavy       RateLimiter
 	heavyLimitN int
 	log         *slog.Logger
@@ -292,6 +313,7 @@ func New(o Options) (Service, error) {
 
 	if s.workspace != "" {
 		s.fonts = enginestore.NewFonts(s.workspace)
+		s.lib = library.New(filepath.Join(s.workspace, "library"), o.Store.Library(), o.Now)
 	}
 
 	if s.conns == nil {

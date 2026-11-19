@@ -13,17 +13,12 @@ const (
 	SourceMetadata     = "metadata"
 	SourceProjectText  = "project_text"
 	SourceTemplateText = "template_text"
-	SourceNetworkText  = "network_text"
+	SourceLibraryText  = "library_text"
 )
 
 // Sources lists every source kind.
 var Sources = []string{
-	SourceTranscript,
-	SourceAssetName,
-	SourceMetadata,
-	SourceProjectText,
-	SourceTemplateText,
-	SourceNetworkText,
+	SourceTranscript, SourceAssetName, SourceMetadata, SourceProjectText, SourceTemplateText, SourceLibraryText,
 }
 
 // Attrs are the orientation attributes of a block: asset, project or item.
