@@ -18,6 +18,7 @@
 9. Logs and the diagnostic bundle
 10. Surfaces
 11. Tests
+12. Google sign-in on a server (epic 24)
 
 ## 1. Overview
 
@@ -199,3 +200,73 @@ A secret is never an argument of a log call, never a field of an error and never
 | No surface returns a secret | `TestSecurity_T43_NoSurfaceReturnsASecret` (in `web/contract`, over the Service, HTTP, MCP and the CLI) |
 
 Unit tests cover the vault round trip, a wrong key, a corrupted file, rotation, concurrent use and each provider; the gate has a fake destination server that records what it receives.
+
+## 12. Google sign-in on a server (epic 24)
+
+Network mode (SDD-007 section 4) lets a user sign in with a password. A server owner may also let their users sign in with Google, through a Google project they own (ADR-0034, D-057). This section is the connection side of that feature; the threat rows and the session rules are SDD-007 section 4.7.
+
+### 12.1 What it uses
+
+- **The connection.** Google sign-in is a connection like any other (ADR-0032). It is a connection of kind `youtube` that the owner already made for epic 18: its secret holds the `client_id` and the `client_secret` of the owner's own Google OAuth client, and its hosts are `www.googleapis.com` and `oauth2.googleapis.com`. An owner who does not publish to YouTube makes the same connection on the Connections page (the client id and the secret of the project) and never completes the YouTube sign-in. No new connection kind exists; the sign-in needs no refresh token and stores none.
+- **The flow.** `service/connections/oauth`, unchanged: `Flows.Begin` makes the single-use `state` and the PKCE verifier, `AuthorizeURL` builds the address, `Exchange` trades the code through the gated client of the connection. The flow asks for the scopes `openid` and `email`, with no `access_type=offline` and no `prompt=consent`, so no refresh token is issued.
+- **The addresses of the identity provider.** Google's: authorization `https://accounts.google.com/o/oauth2/v2/auth`, token `https://oauth2.googleapis.com/token`, keys `https://www.googleapis.com/oauth2/v3/certs`, issuer `https://accounts.google.com`. Only the browser reaches the first; the server reaches the other two, through the gate, with the hosts of the connection.
+- **Only for tests**, the variable `STUARTY_TEST_GOOGLE_URL` (SDD-000 section 10) replaces the four addresses by `<base>/authorize`, `<base>/token`, `<base>/certs` and the issuer `<base>`, where `<base>` is an `http` address on loopback; anything else is a start-up error. The gate still applies: the connection must list that host.
+
+### 12.2 The ID token
+
+The token answer carries an `id_token`. The server verifies it with vukem `auth/jwt` (already a dependency; there is no OIDC library), in this order, and any failure is one error that names no claim and echoes no token:
+
+1. the algorithm is `RS256` (no other is accepted, `none` and `HS256` included) and the key `kid` is in the key set fetched through the gate with the connection, on every sign-in (nothing is cached, so a removed or switched-off connection stops it at the next request);
+2. the signature verifies;
+3. `iss` equals the issuer above; `aud` contains the `client_id` of the connection; `exp` is in the future and `iat` and `nbf` are not, with 30 seconds of leeway;
+4. `nonce` equals the nonce of this flow: `HMAC-SHA256(k, state)` with a key `k` of 32 random bytes that the process makes at start and never writes or sends, so a token obtained for another flow fails;
+5. `sub` is 1 to 255 bytes, `email` is a plain mailbox (the product check of SDD-007 section 4.1) and `email_verified` is `true`.
+
+Only `sub` and the lower-cased `email` are kept, in `user_identities`. The ID token, the access token and the authorization code are held for the length of the call and are in no response, log, file or database row.
+
+### 12.3 Stored fields
+
+| Table | Columns | Notes |
+| --- | --- | --- |
+| `user_identities` | `provider` (`google`), `subject`, `user_id` (references `users`, deleted with the user), `email`, `created_ms` | primary key `(provider, subject)`; unique `(user_id, provider)`: a user has one Google identity and a Google account links to one user. `email` is shown in Settings and is **never** used to find a user |
+| `auth_settings` | `key`, `value`, `updated_ms` | primary key `key`. Keys: `google.enabled` (`true` or `false`; absent is off), `google.connection_id`, `google.allowed_emails` (a JSON array of at most 100 lower-case addresses; empty or absent is no restriction) |
+
+The migration is `20261119160000_create_user_identities_and_auth_settings`.
+
+### 12.4 Routes
+
+All exist in network mode only; in local mode every one answers `E_NOT_FOUND`, as `POST /auth/login` does. None is a service operation, none is on MCP or the CLI (they are for a person at a browser, like the login), and none takes a bearer key.
+
+| Route | Caller | What it does |
+| --- | --- | --- |
+| `GET /auth/google` | none | `{"enabled": bool}`; with a session cookie also `linked` (`email`, `linked_ms`) or `null`. It opens no connection |
+| `POST /auth/google/start` | none | Begins a sign-in: answers `{"authorize_url"}` and sets the sign-in cookie of 12.5. `E_NOT_FOUND` while Google sign-in is off |
+| `POST /auth/google/link` | a browser session, and the `password` of that user in the body | Begins the linking of the user's own Google account; the flow is bound to that user |
+| `POST /auth/google/unlink` | a browser session, and the `password` in the body | Removes the link; the password login is untouched |
+| `GET /auth/google/callback` | none (a cross-site navigation, SDD-007 section 3.6 item 4) | The page `Auth/GoogleCallback`; it holds no data and hands the `state` and the `code` to the next route |
+| `POST /auth/google/complete` | the sign-in cookie, or a browser session for a link | Finishes: verifies the token, then signs in the linked user or links the account |
+| `GET /auth/google/settings`, `PUT /auth/google/settings` | an administrator browser session | Read and set `enabled`, `connection_id` and `allowed_emails`; the answer carries the redirect address to register in the Google project |
+
+The redirect address is `APP_URL` followed by `/auth/google/callback`, built by the server and never taken from a request. The owner adds it, next to the one of epic 18, to the authorised redirect URIs of the Google project.
+
+### 12.5 The sign-in cookie and the `state`
+
+The `state` the browser carries is `l.` (sign-in) or `k.` (linking) followed by the `state` of the flow. The prefix only chooses which actor to check; the flow records its purpose in `Pending.Network` (`google:login`, `google:link`), and a mismatch spends the state and refuses.
+
+- **Linking** binds the flow to the actor of the browser session, `user:<id>`, which `Flows.Take` already checks.
+- **Signing in** has no session, so the flow is bound to a random cookie: `__Host-stuarty_gsi` (`stuarty_gsi` without TLS, the case of SDD-007 section 4.3 item 4; both `HttpOnly`, `SameSite=Lax`, `Path=/`, 10 minutes). The actor of the flow is `gsi:` plus the SHA-256 of its value. A callback for a `state` that another browser began, which is what a forged callback is, finds no cookie or another one, and is refused after the `state` is spent. `complete` clears the cookie whatever the result.
+
+### 12.6 Admin controls
+
+`google.enabled` off (the default) refuses every route above but the two reads, and the server then opens no connection to Google. `google.allowed_emails`, when not empty, is checked against the verified `email` at sign-in and at linking: an address not in the list is refused. Changing the settings needs an administrator browser session; a key cannot.
+
+### 12.7 Tests
+
+| What | Test |
+| --- | --- |
+| Token verification: wrong audience, expired, bad signature, wrong nonce, wrong issuer, wrong algorithm, unverified email | `TestIDToken...` (`web/app/auth`) |
+| Linking and unlinking | `TestLinkIdentity...` |
+| Sign-in with a linked identity, refusal of an unlinked one | `TestGoogleSignIn...` |
+| The admin controls | `TestGoogleSignInPolicy...` |
+| The rows of SDD-007 section 2 | `TestSecurity_T80` to `TestSecurity_T85` |
+| Link, sign out, sign in with a fake issuer; an unlinked identity refused | `web/e2e/specs/google-sign-in.spec.ts` |
