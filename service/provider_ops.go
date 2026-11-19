@@ -128,12 +128,27 @@ func (s *svc) ProviderModels(ctx context.Context, req ProviderModelsRequest) (*P
 		FetchedAt: cat.FetchedAt.UTC(), Cached: cat.Cached,
 	}
 
+	// The table is read once for the whole list: a catalogue has up to 2,000 models, and a lookup per model
+	// would read the file as many times.
+	entries, perr := s.providers.Prices().List()
+	if perr != nil {
+		return nil, providerError(perr)
+	}
+
+	table := make(map[string]provider.Price, len(entries))
+
+	for i := range entries {
+		if entries[i].Provider == cat.Provider.ID {
+			table[entries[i].Model] = entries[i].Price
+		}
+	}
+
 	for i := range cat.Models {
 		m := &cat.Models[i]
 
-		user, perr := s.providers.Prices().Lookup(cat.Provider.ID, m.ID)
-		if perr != nil {
-			return nil, providerError(perr)
+		var user *provider.Price
+		if p, ok := table[m.ID]; ok {
+			user = &p
 		}
 
 		price, source := provider.ResolvePrice(user, m.Price)
