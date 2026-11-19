@@ -193,6 +193,10 @@ func AdoptFormer(opts AdoptOptions) (*Adoption, error) {
 	return a, nil
 }
 
+// AdoptedNoticePrefix starts the line of Notice, and only that line on Resolve's Notice writer, so that a
+// surface that captures the writer (the desktop shell) can tell an adoption from the other notice.
+const AdoptedNoticePrefix = "stuarty: the workspace of Vukem Video, "
+
 // Notice is the one line printed the first time the former workspace is adopted.
 func (a *Adoption) Notice() string {
 	how := "moved"
@@ -205,7 +209,7 @@ func (a *Adoption) Notice() string {
 		backup = "a backup of its database is in " + a.Backup
 	}
 
-	return fmt.Sprintf("stuarty: the workspace of Vukem Video, %s, was %s to %s; %s.\n", a.Former, how, a.Dir, backup)
+	return fmt.Sprintf("%s%s, was %s to %s; %s.\n", AdoptedNoticePrefix, a.Former, how, a.Dir, backup)
 }
 
 func ensureUnowned(d Dir) error {

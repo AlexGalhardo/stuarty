@@ -3,6 +3,8 @@ package shell
 import (
 	"os"
 	"strings"
+
+	"github.com/AlexGalhardo/stuarty/service/workspace"
 )
 
 // The few texts of the native menu and dialogs, in the languages of the editor
@@ -37,6 +39,7 @@ const (
 	TextNoFeed        = "no_feed"
 	TextCheckFailed   = "check_failed"
 	TextInstallFailed = "install_failed"
+	TextAdopted       = "adopted"
 )
 
 var catalogues = map[string]map[string]string{
@@ -60,6 +63,7 @@ var catalogues = map[string]map[string]string{
 			"Download new versions from %s",
 		TextCheckFailed:      "Could not check for updates: ",
 		TextInstallFailed:    "The update was not installed and this version is unchanged: ",
+		TextAdopted:          "Your projects from Vukem Video are now in Stuarty.",
 		TextMenuEdit:         "Edit",
 		TextMenuClip:         "Clip",
 		TextMenuTimeline:     "Timeline",
@@ -125,6 +129,7 @@ var catalogues = map[string]map[string]string{
 			"Baixe as versões novas em %s",
 		TextCheckFailed:      "Não foi possível verificar atualizações: ",
 		TextInstallFailed:    "A atualização não foi instalada e esta versão continua como estava: ",
+		TextAdopted:          "Seus projetos do Vukem Video agora estão no Stuarty.",
 		TextMenuEdit:         "Editar",
 		TextMenuClip:         "Clipe",
 		TextMenuTimeline:     "Linha do tempo",
@@ -179,3 +184,18 @@ func Text(language, key string) string {
 
 // SystemLanguage is the catalogue for the language of the system.
 func SystemLanguage() string { return Language(systemLocale(os.Getenv)) }
+
+// AdoptionMessage is the text of the dialog that tells a person, once, that the workspace of Vukem Video
+// was adopted (ADR-0044, PRD-003 RF-221): a sentence in the language, then the line Resolve printed, with
+// its folders and its backup. Notices captures what Resolve wrote; with no adoption among them it is "".
+func AdoptionMessage(language, notices string) string {
+	for line := range strings.Lines(notices) {
+		if strings.HasPrefix(line, workspace.AdoptedNoticePrefix) {
+			detail := strings.TrimSpace(strings.TrimPrefix(line, "stuarty: "))
+
+			return Text(language, TextAdopted) + "\n\n" + strings.ToUpper(detail[:1]) + detail[1:]
+		}
+	}
+
+	return ""
+}
