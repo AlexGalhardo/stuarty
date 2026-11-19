@@ -1104,6 +1104,9 @@
           "set_framing": {
             "title": "Definir enquadramento do clipe"
           },
+          "replace_media": {
+            "title": "Trocar a mídia de um clipe"
+          },
           "set_speed": {
             "title": "Definir velocidade do clipe"
           }
