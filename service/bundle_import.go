@@ -225,7 +225,7 @@ func (s *svc) writeImportedProject(
 ) error {
 	id := row.ID
 
-	if err := tx.Projects().Create(ctx, *row); err != nil {
+	if err := s.putProduction(ctx, tx, row); err != nil {
 		return err
 	}
 

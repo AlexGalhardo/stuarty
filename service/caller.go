@@ -113,13 +113,27 @@ var Scopes = map[string]string{
 	"ConnectionTest":   ScopeAdmin,
 }
 
+// productionScopes is the scope of each ProductionService method. It joins Scopes when the surfaces carry the
+// operations and ProductionService becomes part of Service.
+var productionScopes = map[string]string{
+	"ProjectDescribe":    ScopeRead,
+	"ProjectDuplicate":   ScopeEdit,
+	"ProjectItemAdd":     ScopeEdit,
+	"ProjectItemMove":    ScopeEdit,
+	"ProjectItemRename":  ScopeEdit,
+	"ProjectItemTrash":   ScopeEdit,
+	"ProjectItemRestore": ScopeEdit,
+	"BriefGet":           ScopeRead,
+	"BriefSet":           ScopeEdit,
+}
+
 // authorize checks the caller first, as every method does: a missing caller
 // is E_UNAUTHORIZED, a missing scope or a key limited to another project is
 // E_FORBIDDEN. projectID is "" for operations that do not name a project.
 func authorize(ctx context.Context, method, projectID string) (Caller, error) {
 	scope, listed := Scopes[method]
 	if !listed {
-		scope = ""
+		scope = productionScopes[method]
 	}
 
 	return authorizeScope(ctx, scope, projectID)
