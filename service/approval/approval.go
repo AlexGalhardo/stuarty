@@ -280,6 +280,9 @@ type Store interface {
 
 	// Reserve adds a ledger entry in the state reserved.
 	Reserve(ctx context.Context, e *Entry) error
+	// Record adds a ledger entry already settled at e.ActualMicros: what a run spent before it was
+	// interrupted, while the reservation of the job stays for the run that follows.
+	Record(ctx context.Context, e *Entry) error
 	// Settle records the real cost of a reserved entry of a job; false when there is none.
 	Settle(ctx context.Context, jobID string, actualMicros, atMs int64) (bool, error)
 	// Release gives a reserved entry of a job back; false when there is none.
