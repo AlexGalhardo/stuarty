@@ -75,7 +75,7 @@ var Errors = []ErrorRow{
 	{"E_INGEST_FAILED", false, "see details.reason"},
 	{"E_ASSET_NOT_READY", true, "poll job:show until ready"},
 	{"E_FFMPEG_MISSING", false, "install FFmpeg"},
-	{"E_NO_ENCODER", false, "no H.264 encoder"},
+	{"E_NO_ENCODER", false, "use another codec"},
 	{"E_EXPORT_FAILED", false, "see details.reason"},
 	{"E_VERIFY_FAILED", false, "see details.checks"},
 	{"E_TRANSCRIBE_UNAVAILABLE", false, "install the helper"},
