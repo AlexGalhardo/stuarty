@@ -220,6 +220,12 @@ func (s *svc) RunJob(ctx context.Context, jobID string) (err error) {
 	case JobTranscribe:
 		result, herr = s.runTranscribe(jctx, &job, pw)
 	default:
+		if k := s.kindOf(job.Kind); k != nil {
+			result, herr = s.runApprovable(jctx, k, &job, pw)
+
+			break
+		}
+
 		herr = newError(command.CodeInternal, "jobs of the kind %s are not available in this build.", job.Kind)
 	}
 
