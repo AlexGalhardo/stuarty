@@ -194,9 +194,14 @@ func applyTextPreset(c *Context, a *textPresetArgs) error {
 		preset: a.Preset, in: in, n: n, d: d, h: round3(0.05 * float64(c.Doc.Settings.Height)),
 		base: map[string]float64{}, tail: map[string]string{},
 	}
+	// The curve of a "bezier" tail goes with it, or the keyframe would carry the easing without its numbers.
+	curves := map[string][]float64{}
 	for _, prop := range []string{"y", "scale", "opacity"} {
 		plan.base[prop] = c.presetBase(&it, prop, at)
 		plan.tail[prop] = easingAt(it.Keyframes[prop], at)
+		if gov := governing(it.Keyframes[prop], at); gov != nil {
+			curves[prop] = gov.Bezier
+		}
 	}
 	writes := plan.writes()
 	written := slices.Sorted(maps.Keys(writes))
@@ -219,7 +224,7 @@ func applyTextPreset(c *Context, a *textPresetArgs) error {
 		for _, k := range writes[prop] {
 			nk := timeline.NewKeyframe(k.t, round3(k.value))
 			if k.easing != "" {
-				nk.Easing = k.easing
+				setEasing(&nk, k.easing, slices.Clone(curves[prop]))
 			}
 			merged = append(merged, nk)
 		}

@@ -156,3 +156,25 @@ func TestAnimationPresetListIsAppliable(t *testing.T) {
 		}
 	}
 }
+
+// text.apply_preset gives the last keyframe of an in edge the easing in force there (SDD-002 C.30); when
+// that easing is a Bezier curve, the keyframe gets its four numbers too, so the document stays valid.
+func TestTextPresetInheritsABezierCurveWithItsNumbers(t *testing.T) {
+	t.Parallel()
+
+	curve := []float64{0.2, 0.8, 0.3, 1}
+	doc := applyBeta(t, presetDoc(), "keyframe.set", fmt.Sprintf(
+		`{"item_id": %q, "property": "opacity", "at": "0f", "value": 0.5, "easing": "bezier", "bezier": [0.2, 0.8, 0.3, 1]}`,
+		itemA))
+	doc = applyBeta(t, doc, "keyframe.set", fmt.Sprintf(`{"item_id": %q, "property": "opacity", "at": "60f", "value": 1}`, itemA))
+	doc = applyBeta(t, doc, "text.apply_preset", fmt.Sprintf(`{"item_id": %q, "preset": "fade_up", "edge": "in"}`, itemA))
+
+	if vs := timeline.Validate(doc); len(vs) != 0 {
+		t.Fatalf("the document is not valid: %v", vs)
+	}
+
+	keys := doc.Items[itemA].Keyframes["opacity"]
+	if len(keys) != 3 || keys[1].Easing != timeline.EasingBezier || !slices.Equal(keys[1].Bezier, curve) {
+		t.Errorf("the tail keyframe does not continue the curve: %+v", keys)
+	}
+}
