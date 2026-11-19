@@ -1042,6 +1042,55 @@ CREATE UNIQUE INDEX project_items_brief_unique ON project_items (project_id) WHE
 - **Migration.** Backup first: `Open` copies the database with `VACUUM INTO` before a migration runs (section 7 step 3). Then, in one transaction: `ALTER TABLE projects RENAME TO timelines` (SQLite rewrites the foreign keys that name it), rename the index, create the two tables, and for every row of `timelines` insert one `projects` row with the same `id`, `name`, `state`, times, actor, owner and trash columns, and one `project_items` row (kind `timeline`, title = name, position 0, `ref` = the id, the `pit_` id with the characters of the project id, state `active`: the trash of a former project is that of the project, and its restore brings the timeline back through the mirror of the trash rule of this section). Every id a surface exposed is kept. **Down** deletes the items and productions, drops them, and renames `timelines` back to `projects`; a timeline that is not the first of its project (its id differs from its project's) is deleted with its log, which is why the backup comes first. Tests run both directions over fixtures of the workspaces of releases 0.2.0, 0.17.0 and 0.29.0.
 - **Document backups.** `document_backups.owner_kind` stays `project`; `owner_id` is a timeline id.
 
+### 5.13 `image_documents` and `image_operations` (SDD-021)
+
+Migration `20261119110000_create_image_documents_and_operations`. They follow `projects` and `operations` with the columns an image needs and no more.
+
+```sql
+CREATE TABLE image_documents (
+  id             TEXT    NOT NULL,                 -- img_...
+  name           TEXT    NOT NULL,
+  template       INTEGER NOT NULL DEFAULT 0 CHECK (template IN (0,1)),
+  revision       INTEGER NOT NULL DEFAULT 0,
+  schema_version INTEGER NOT NULL,
+  document       TEXT    NOT NULL,                 -- canonical JSON of the document
+  doc_sha256     TEXT    NOT NULL,
+  width          INTEGER NOT NULL,
+  height         INTEGER NOT NULL,
+  layers         INTEGER NOT NULL DEFAULT 0,       -- count, so that listing never parses a document
+  created_ms     INTEGER NOT NULL,
+  updated_ms     INTEGER NOT NULL,
+  created_by     TEXT    NOT NULL,                 -- actor
+  owner_user_id  TEXT,                             -- network mode only
+  PRIMARY KEY (id)
+);
+CREATE INDEX image_documents_updated_ms_index ON image_documents (updated_ms);
+CREATE TABLE image_operations (
+  image_id        TEXT    NOT NULL REFERENCES image_documents (id) ON DELETE CASCADE,
+  revision        INTEGER NOT NULL CHECK (revision >= 1),
+  kind            TEXT    NOT NULL CHECK (kind IN ('edit','undo','redo')),
+  actor           TEXT    NOT NULL,
+  base_revision   INTEGER NOT NULL,
+  target_revision INTEGER,
+  at_ms           INTEGER NOT NULL,
+  ops             TEXT    NOT NULL,                -- JSON array of {op, args}, identifiers filled in
+  inverse         TEXT    NOT NULL,                -- JSON array of primitives
+  diff            TEXT    NOT NULL,                -- JSON array of changes
+  skipped         TEXT,
+  doc_sha256      TEXT    NOT NULL,
+  closed_by       INTEGER,
+  idempotency_key TEXT,
+  request_hash    TEXT,
+  result          TEXT,                            -- the stored result of a keyed edit
+  PRIMARY KEY (image_id, revision)
+);
+CREATE INDEX image_operations_actor_index ON image_operations (image_id, actor, revision);
+CREATE UNIQUE INDEX image_operations_key_index ON image_operations (image_id, actor, idempotency_key)
+  WHERE idempotency_key IS NOT NULL;
+```
+
+The log is append-only except `closed_by`, which moves from `NULL` to a revision, as in section 5.3; undo and redo follow section 12 with the rules of SDD-021 section 4. `Repos` gains `Images() ImageRepo` with `Create`, `Get`, `List`, `Commit` (a compare-and-set on the revision, `ErrStale` otherwise), `AppendOperation`, `Operation`, `LastOpen` (the actor's last step open to undo or redo), `Close`, `CloseOpenRedo` and `ByKey`. The writer is the one write transaction of `Store.Write`.
+
 ## 6. Workspace ownership
 
 ADR-0008 decides that one process owns a workspace. This section fixes how.
