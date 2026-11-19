@@ -270,6 +270,61 @@ func TestChatSessionFromStartToTranscript(t *testing.T) {
 	}
 }
 
+// A read of the transcript while the agent is still writing a message shows what it wrote so far,
+// and stores nothing: the rest of the message continues the same event.
+func TestChatReadingTheTranscriptDoesNotCutAMessage(t *testing.T) {
+	t.Parallel()
+
+	w := newChatWorld(t)
+	project := w.newProject("Two parts")
+	w.profile(t, "two", "two-part")
+	s := w.start(t, project, "two")
+
+	if _, err := w.svc.ChatSend(person(), service.ChatSendRequest{SessionID: s.ID, Text: "go"}); err != nil {
+		t.Fatal(err)
+	}
+
+	first := w.wait(t, s.ID, isKind(chat.KindAgentMessage))
+
+	agentTexts := func(events []chat.Event) []string {
+		var out []string
+
+		for _, ev := range events {
+			if ev.Kind == chat.KindAgentMessage {
+				out = append(out, ev.Text)
+			}
+		}
+
+		return out
+	}
+
+	mid, err := w.svc.ChatTranscriptGet(w.as(ui), service.ChatTranscriptRequest{SessionID: s.ID})
+	if err != nil || !slices.Equal(agentTexts(mid.Events), []string{"first part"}) {
+		t.Fatalf("the transcript while the message grows = %+v, %v", mid, err)
+	}
+
+	md, err := w.svc.ChatTranscriptGet(
+		w.as(ui),
+		service.ChatTranscriptRequest{SessionID: s.ID, Format: service.ChatFormatMarkdown},
+	)
+	if err != nil || !strings.Contains(md.Markdown, "first part") {
+		t.Fatalf("the Markdown while the message grows = %q, %v", md.Markdown, err)
+	}
+
+	if _, err := w.svc.ChatCancel(person(), service.ChatCancelRequest{SessionID: s.ID}); err != nil {
+		t.Fatal(err)
+	}
+
+	w.wait(t, s.ID, func(e chat.Event) bool {
+		return e.Kind == chat.KindState && e.State.State == chat.StateIdle && e.Seq > first.Seq
+	})
+
+	after, err := w.svc.ChatTranscriptGet(w.as(ui), service.ChatTranscriptRequest{SessionID: s.ID})
+	if err != nil || !slices.Equal(agentTexts(after.Events), []string{"first part second part"}) {
+		t.Fatalf("the agent messages after the turn = %q, %v", agentTexts(after.Events), err)
+	}
+}
+
 func TestChatPermissionRequestIsAnsweredByAPerson(t *testing.T) {
 	t.Parallel()
 

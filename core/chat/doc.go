@@ -26,6 +26,12 @@ const (
 	MaxOptions         = 8
 	MaxOptionName      = 120
 	MaxTranscriptPage  = 500
+	// MaxOpenPermissions is how many permission requests may wait for a person at once; one more
+	// is answered cancelled at once.
+	MaxOpenPermissions = 100
+	// MaxAgentRequests is how many requests of the agent may wait for their answer at once; one
+	// more breaks the protocol and ends the session.
+	MaxAgentRequests = 128
 )
 
 // The times of SDD-017 section 4.

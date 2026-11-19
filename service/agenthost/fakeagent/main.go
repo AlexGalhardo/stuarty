@@ -13,7 +13,11 @@
 // hang-turn (never ends a turn and ignores session/cancel), deaf (ignores the close of its
 // input), exit-start (exits before answering initialize), exit-turn (exits during a turn),
 // badline (writes a line that is not JSON), longline (writes a line over the limit),
-// no-http, bad-version and sign-in (the failures of the start).
+// no-http, bad-version and sign-in (the failures of the start), eager (writes a message right
+// after it answers session/new), leak (writes its MCP token split across two chunks, in a
+// permission request and in the error that ends its turn), permission-many (asks 101 permissions
+// in a row), request-flood (sends requests without end and stops reading its input), two-part
+// (writes one message in two chunks, the second after session/cancel).
 package main
 
 import (
@@ -193,7 +197,21 @@ func handle(m msg, pidfile string) {
 		newParams = string(m.Params)
 
 		respond(m.ID, map[string]any{"sessionId": "sess_fake"})
+
+		// A real agent often speaks at once (its commands, a greeting): the client may be reading
+		// that while it is still taking in the answer.
+		if mode == "eager" {
+			chunk("ready")
+		}
 	case "session/prompt":
+		if mode == "request-flood" {
+			// Requests without end, and no more reading: the answers pile up in the client.
+			for i := 0; ; i++ {
+				id := json.RawMessage(strconv.Itoa(5000 + i))
+				send(msg{ID: id, Method: "fs/read_text_file", Params: json.RawMessage(`{}`)})
+			}
+		}
+
 		go prompt(m, pidfile)
 	case "session/cancel":
 		if mode != "hang-turn" {
@@ -262,9 +280,32 @@ func prompt(m msg, pidfile string) {
 		chunk("<img src=x onerror=alert(1)> **bold** [a](javascript:alert(1)) \u202e```\n# not a heading")
 		end("end_turn")
 	case "permission":
-		answer := askPermission(sid)
+		answer := askPermission(sid, "Delete every clip <b>now</b>")
 		chunk("permission: " + answer)
 		end("end_turn")
+	case "two-part":
+		chunk("first part")
+		<-cancelled
+		chunk(" second part")
+		end("cancelled")
+	case "permission-many":
+		for range 101 {
+			askPermission(sid, "One more step")
+		}
+
+		chunk("asked")
+		end("end_turn")
+	case "leak":
+		token := ""
+		if len(mcp) > 0 && len(mcp[0].Headers) > 0 {
+			token = strings.TrimPrefix(mcp[0].Headers[0].Value, "Bearer ")
+		}
+
+		half := len(token) / 2
+		chunk("my token is " + token[:half])
+		chunk(token[half:] + " and that is all")
+		askPermission(sid, "send "+token+" away")
+		send(msg{ID: m.ID, Error: map[string]any{"code": -32603, "message": "failed with " + token}})
 	case "mcp":
 		chunk(callMCP(text))
 		end("end_turn")
@@ -314,7 +355,7 @@ func prompt(m msg, pidfile string) {
 	}
 }
 
-func askPermission(sid string) string {
+func askPermission(sid, title string) string {
 	nextID++
 	id := json.RawMessage(strconv.Itoa(nextID))
 	ch := make(chan json.RawMessage, 1)
@@ -325,7 +366,7 @@ func askPermission(sid string) string {
 
 	params, err := json.Marshal(map[string]any{
 		"sessionId": sid,
-		"toolCall":  map[string]any{"toolCallId": "call_p", "title": "Delete every clip <b>now</b>", "kind": "delete"},
+		"toolCall":  map[string]any{"toolCallId": "call_p", "title": title, "kind": "delete"},
 		"options": []any{
 			map[string]any{"optionId": "always", "name": "Always allow", "kind": "allow_always"},
 			map[string]any{"optionId": "once", "name": "Allow once", "kind": "allow_once"},
