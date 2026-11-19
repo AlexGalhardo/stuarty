@@ -53,6 +53,13 @@ func AgentDocsInputs() agentdocs.Inputs {
 		inLibrary[s.name] = true
 	}
 
+	// The commands of the writing domain (SDD-019 section 8) are in the guide of that domain, not in the editor
+	// skill, which has no room for them: the skills short-script and caption-per-network carry the steps, and
+	// project_item (actions text, revisions, revert, check) is the MCP form.
+	for _, s := range writingCommands() {
+		inLibrary[s.name] = true
+	}
+
 	for i := range commands {
 		c := &commands[i]
 		if c.Person {

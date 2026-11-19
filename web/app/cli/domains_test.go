@@ -131,7 +131,7 @@ func TestGroupWithOnlyADomainListsItsCommands(t *testing.T) {
 	t.Parallel()
 
 	for domain, want := range map[string]string{
-		"image": "image:edit", "video": "lint", "memory": "skill:list", "project": "project:create", "writing": "no commands yet",
+		"image": "image:edit", "video": "lint", "memory": "skill:list", "project": "project:create", "writing": "text:write",
 	} {
 		var out, errOut bytes.Buffer
 

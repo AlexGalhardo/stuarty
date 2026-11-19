@@ -19,6 +19,7 @@ command briefing:answer
 command briefing:questions
 command bundle:export
 command bundle:import
+command caption:validate
 command command:help
 command connection:add
 command connection:list
@@ -82,6 +83,7 @@ command provider:list
 command provider:models
 command provider:price
 command redo
+command script:estimate
 command skill:export
 command skill:import
 command skill:lint
@@ -93,7 +95,13 @@ command template:import
 command template:list
 command template:new
 command template:save
+command text:draft
 command text:generate
+command text:list
+command text:revert
+command text:revisions
+command text:show
+command text:write
 command token:rotate
 command tools:install
 command transcribe
@@ -162,16 +170,20 @@ route GET /projects/{}/otio
 route GET /projects/{}/plan
 route GET /projects/{}/sheet
 route GET /projects/{}/snap-points
+route GET /projects/{}/texts/{}
+route GET /projects/{}/texts/{}/revisions
 route GET /providers
 route GET /system
 route GET /system/tools
 route GET /templates
 route GET /templates/{}/file
+route GET /texts
 route GET /users
 route PATCH /users/{}
 route POST /approval-rules
 route POST /approvals/{}/decide
 route POST /assets/{}/tags
+route POST /captions/validate
 route POST /connections
 route POST /connections/{}/test
 route POST /fonts
@@ -206,8 +218,12 @@ route POST /projects/{}/media/{}/trash
 route POST /projects/{}/otio
 route POST /projects/{}/redo
 route POST /projects/{}/restore
+route POST /projects/{}/texts
+route POST /projects/{}/texts/{}/draft
+route POST /projects/{}/texts/{}/revert
 route POST /projects/{}/trash
 route POST /projects/{}/undo
+route POST /scripts/estimate
 route POST /system/launch
 route POST /system/tools/install
 route POST /templates
@@ -224,6 +240,7 @@ route PUT /library/prompts/{}
 route PUT /library/skills/{}
 route PUT /projects/{}/brief
 route PUT /projects/{}/briefing
+route PUT /projects/{}/texts/{}
 route PUT /providers/prices
 tool command_help
 tool connection

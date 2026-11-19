@@ -12,9 +12,18 @@ Scripts, copy and captions of a production: revisions, network limits, duration 
 
 ## How to reach it
 
-MCP tools: `command_help`. Tools that take `domain=writing`: `command_help`.
+MCP tools: `command_help`, `job_start`, `project_item`. Tools that take `domain=writing`: `command_help`.
 
-CLI: no command yet.
+CLI: `stuarty writing` lists the commands of the domain and `stuarty writing <verb>` runs one; the full names stay valid.
+
+- `text:list`: list the scripts, copy and captions of a project, or of every project
+- `text:show`: show a text, or one of its revisions
+- `text:write`: make a text, or save a new revision of one, from a Markdown file
+- `text:revisions`: list the revisions of a text, and compare two by paragraph
+- `text:revert`: bring an older revision of a text back as a new revision
+- `text:draft`: ask a model for a draft of a text; the job shows its estimate and waits for approval
+- `caption:validate`: measure a caption against the limits of each network
+- `script:estimate`: estimate how long a script takes when read aloud
 
 ## Operations
 

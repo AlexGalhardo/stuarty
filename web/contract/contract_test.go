@@ -92,6 +92,9 @@ var mcpSession = regexp.MustCompile(`(local:contract)-[0-9a-hjkmnp-tv-z]{6}\b`)
 // so a scenario reads it back as "$template:0", the first one a result named.
 var templateID = regexp.MustCompile(`tpl_[0-9a-hjkmnp-tv-z]{10}`)
 
+// itemID is the identifier of a project item (SDD-000 section 2), read back as "$item:n".
+var itemID = regexp.MustCompile(`pit_[0-9a-hjkmnp-tv-z]{10}`)
+
 // normalize makes a result comparable across runs: job identifiers and
 // workspace paths are placeholders, and the text and the bulk members are
 // dropped (the text is compared on its own).
@@ -225,7 +228,7 @@ func run(t *testing.T, d driver, steps []step, fixtures map[string]string) []out
 	// bundles are the paths of the bundles the exports wrote, read back as "$bundle:0"; imported are the
 	// ids the server gave to imported projects, read back as "$project:0" and masked in the results,
 	// because the server chooses them.
-	var jobs, templates, bundles, imported, timelines []string
+	var jobs, templates, bundles, imported, timelines, items []string
 
 	for i, s := range steps {
 		s = withFixtures(t, d, s, fixtures)
@@ -240,6 +243,10 @@ func run(t *testing.T, d driver, steps []step, fixtures map[string]string) []out
 
 		for n, id := range templates {
 			s.Args = json.RawMessage(strings.ReplaceAll(string(s.Args), `"$template:`+strconv.Itoa(n)+`"`, `"`+id+`"`))
+		}
+
+		for n, id := range items {
+			s.Args = json.RawMessage(strings.ReplaceAll(string(s.Args), `"$item:`+strconv.Itoa(n)+`"`, `"`+id+`"`))
 		}
 
 		for n, p := range bundles {
@@ -289,6 +296,13 @@ func run(t *testing.T, d driver, steps []step, fixtures map[string]string) []out
 			for _, id := range templateID.FindAllString(string(raw), -1) {
 				if !slices.Contains(templates, id) {
 					templates = append(templates, id)
+				}
+			}
+
+			// The text items a result named, in order: a scenario of the writing domain reads the first as "$item:0".
+			for _, id := range itemID.FindAllString(string(raw), -1) {
+				if !slices.Contains(items, id) {
+					items = append(items, id)
 				}
 			}
 		}

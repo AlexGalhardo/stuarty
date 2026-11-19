@@ -114,7 +114,7 @@ The unit of the length is part of the row (`bytes`, `characters`, `utf16_units`,
 | `forbidden_character` | the text holds a character the network refuses (`limit` 0; the sentence names it) |
 | `unknown_network` | the network is not in the table |
 
-A **hashtag** is `#` at the start of the text or after a character that is not a letter, a digit, `_` or `&`, followed by letters, digits and `_` with at least one letter. A **mention** is `@` in the same position followed by 1 to 30 letters, digits, `.` and `_`. A **link** is `http://` or `https://` followed by non-space characters. A link that is clickable adds nothing to the problems; for a network where it is not, the report carries the count so a person can see that the link will be dead text (`links` and `links_clickable`). The counting never changes the text.
+The report of a variant also carries `name`, the name of the network in the table, so that a surface draws it without a table of its own. A **hashtag** is `#` at the start of the text or after a character that is not a letter, a digit, `_` or `&`, followed by letters, digits and `_` with at least one letter. A **mention** is `@` in the same position followed by 1 to 30 letters, digits, `.` and `_`. A **link** is `http://` or `https://` followed by non-space characters. A link that is clickable adds nothing to the problems; for a network where it is not, the report carries the count so a person can see that the link will be dead text (`links` and `links_clickable`). The counting never changes the text.
 
 `CaptionValidate` reads either a text and a network, or a stored caption (`project_id`, `item_id`) and optionally one network: for a stored caption it validates every variant of the body against its network (the common variant against none: it is reported with the counts and no problem) and the answer lists the variants in the order of the body.
 
@@ -159,9 +159,9 @@ A key limited to one project reaches the texts of that project only. In network 
 | `TextRevert` | `project_item` (`action` `revert`) | `text:revert` | `POST /projects/{id}/texts/{item}/revert` |
 | `TextDraft` | `job_start` (`kind` `text.draft`) | `text:draft` | `POST /projects/{id}/texts/{item}/draft` |
 | `CaptionValidate` | `project_item` (`action` `check`, with `network`) | `caption:validate` | `POST /captions/validate` |
-| `ScriptEstimate` | `project_item` (`action` `check`, with `words_per_minute`) | `script:estimate` | `POST /scripts/estimate` |
+| `ScriptEstimate` | `project_item` (`action` `check`, with `wpm`) | `script:estimate` | `POST /scripts/estimate` |
 
-No new MCP tool: the catalogue stays at 20 and its budget (SDD-003 section 4.8) is paid by the shortening of the descriptions of `project_item` and `job_start`. The writing commands are listed by `stuarty writing` and by `command_help` with `domain` `writing`.
+No new MCP tool: the catalogue stays at 20 and its budget (SDD-003 section 4.8, 22,389 of 22,400 bytes after this epic) is paid by short names (`wpm`, `until`; `to` is refused by the outbound check of SDD-003 section 9) and a shorter description of `job_get`. In `project_item`, `action` `text` with no `item_id` lists the texts of the project, or with `text` makes one (`title`, `text_kind`); with an `item_id` it reads the text (`revision` for an older one), or with `text` saves a new revision (`revision` is the one the writer read, the `base_revision` of the Service); `revisions` compares `revision` with `until` when `revision` is given; `check` with `network` measures a caption, otherwise estimates a script at `wpm`, and with an `item_id` alone the kind of the text decides. The cross-project list of `TextList` has no MCP form: an agent lists the texts of one project. The draft is `job_start` with `kind` `text.draft` and `args` `item_id`, `connection_id`, `model`, `instruction`. The writing commands are listed by `stuarty writing` and by `command_help` with `domain` `writing`.
 
 ## 9. Errors and limits
 

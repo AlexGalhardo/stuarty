@@ -420,6 +420,10 @@ Scopes: `read`, `edit`, `media`, `render`, `admin` (SDD-000 §4). They are indep
 | `PromptWrite` | `PUT /library/prompts/{name}` | - | R | - | - | - | |
 | `LibrarySearch` | `GET /library/search` | R | - | - | - | - | Results fit the budget and are delimited as untrusted text (SDD-018 section 10) |
 | `LibraryReindex` | `POST /library/reindex` | - | R | - | - | - | Rebuilds the index from the files; changes no file |
+| `TextList`, `TextGet`, `TextRevisions` | `GET /texts`, `GET /projects/{id}/texts/{item_id}`, `GET /projects/{id}/texts/{item_id}/revisions` | R | - | - | - | - | Network mode: only the texts of the caller's own projects, and a key limited to a project reaches that project's only; every body, title and project name is untrusted text, delimited as `project_text` (SDD-019 section 10) |
+| `TextWrite`, `TextRevert` | `POST /projects/{id}/texts`, `PUT /projects/{id}/texts/{item_id}`, `POST /projects/{id}/texts/{item_id}/revert` | - | R | - | - | - | A revision with the actor, never a rewrite; 256 KiB a text, 500 revisions a text; refused for a text or a project in the trash; audited |
+| `TextDraft` | `POST /projects/{id}/texts/{item_id}/draft` | - | R | - | - | - | A job of the kind `text.draft`, which needs approval like `text.generate` (T-54); the brief and the current text go to the model as delimited material; the answer is a new revision marked `generated`, stored as text and never rendered as markup (T-53) |
+| `CaptionValidate`, `ScriptEstimate` | `POST /captions/validate`, `POST /scripts/estimate` | R | - | - | - | - | Pure counts of the text of the request or of a stored text; no outbound call |
 | `JobGet` | `GET /jobs/{job_id}` | R | - | - | - | - | The job's project must be allowed. Result carries no server path to remote callers |
 | `JobCancel` | `POST /jobs/{job_id}/cancel` | - | - | - | R | - | Also allowed with `media` instead of `render` when the job kind is `transcribe` or `ingest` and the caller started it. **Decision of this SDD** |
 | `TemplateList` | `GET /templates` | R | - | - | - | - | Refused for a project-limited key |

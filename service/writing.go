@@ -160,7 +160,12 @@ func (s *svc) TextList(ctx context.Context, req TextListRequest) (*TextListResul
 		return nil, asError(err)
 	}
 
-	res := &TextListResult{UntrustedNotice: UntrustedNotice, Texts: make([]TextItem, 0, len(heads)), NextCursor: next}
+	res := &TextListResult{
+		UntrustedNotice: UntrustedNotice,
+		ProjectID:       q.ProjectID,
+		Texts:           make([]TextItem, 0, len(heads)),
+		NextCursor:      next,
+	}
 
 	var b strings.Builder
 
@@ -748,6 +753,7 @@ func (s *svc) CaptionValidate(ctx context.Context, req CaptionValidateRequest) (
 
 	res := &CaptionValidateResult{
 		UntrustedNotice: UntrustedNotice,
+		ProjectID:       req.ProjectID,
 		Variants:        make([]CaptionVariantReport, 0, len(variants)),
 		OK:              true,
 	}
@@ -760,7 +766,7 @@ func (s *svc) CaptionValidate(ctx context.Context, req CaptionValidateRequest) (
 		r := writing.ValidateCaption(variants[i].Text, variants[i].Network)
 		res.Variants = append(
 			res.Variants,
-			CaptionVariantReport{Report: r, Words: writing.CountWords(variants[i].Text)},
+			CaptionVariantReport{CaptionReport: r, Words: writing.CountWords(variants[i].Text)},
 		)
 		res.OK = res.OK && r.OK
 
@@ -772,7 +778,7 @@ func (s *svc) CaptionValidate(ctx context.Context, req CaptionValidateRequest) (
 	return res, nil
 }
 
-func variantLine(r *writing.Report) string {
+func variantLine(r *writing.CaptionReport) string {
 	name := r.Network
 	if name == "" {
 		name = "common"
@@ -831,7 +837,7 @@ func (s *svc) ScriptEstimate(ctx context.Context, req ScriptEstimateRequest) (*S
 		return nil, writingViolation(v)
 	}
 
-	res := &ScriptEstimateResult{UntrustedNotice: UntrustedNotice, Estimate: est}
+	res := &ScriptEstimateResult{UntrustedNotice: UntrustedNotice, ProjectID: req.ProjectID, Estimate: est}
 
 	var b strings.Builder
 

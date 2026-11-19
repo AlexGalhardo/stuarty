@@ -69,8 +69,8 @@ func networkHeading(line string) (string, bool) {
 	return id, true
 }
 
-// Counts are what a variant measures: its length in the unit of its network and what it holds.
-type Counts struct {
+// CaptionCounts are what a variant measures: its length in the unit of its network and what it holds.
+type CaptionCounts struct {
 	Length   int `json:"length"`
 	Hashtags int `json:"hashtags"`
 	Mentions int `json:"mentions"`
@@ -88,8 +88,8 @@ const (
 	maxMentionNameRunes = 30
 )
 
-// Problem is one thing wrong with a variant, with the limit and the actual value so that a person sees how far.
-type Problem struct {
+// CaptionProblem is one thing wrong with a variant, with the limit and the actual value so that a person sees how far.
+type CaptionProblem struct {
 	Code    string `json:"code"`
 	Message string `json:"message"`
 	Limit   int    `json:"limit"`
@@ -97,27 +97,29 @@ type Problem struct {
 	Unit    Unit   `json:"unit,omitempty"`
 }
 
-// Report is the validation of one variant against one network.
-type Report struct {
-	Network        string    `json:"network"`
-	Unit           Unit      `json:"unit,omitempty"`
-	MaxLength      int       `json:"max_length"`
-	Counts         Counts    `json:"counts"`
-	LinksClickable bool      `json:"links_clickable"`
-	Problems       []Problem `json:"problems"`
-	OK             bool      `json:"ok"`
+// CaptionReport is the validation of one variant against one network.
+type CaptionReport struct {
+	Network string `json:"network"`
+	// Name is the name of the network in the table of limits, for a person to read; empty for the common variant.
+	Name           string           `json:"name,omitempty"`
+	Unit           Unit             `json:"unit,omitempty"`
+	MaxLength      int              `json:"max_length"`
+	Counts         CaptionCounts    `json:"counts"`
+	LinksClickable bool             `json:"links_clickable"`
+	Problems       []CaptionProblem `json:"problems"`
+	OK             bool             `json:"ok"`
 }
 
 // ValidateCaption measures the text of a variant against the limits of a network and reports every limit it
 // breaks (SDD-019 section 5.2). An empty network is the common variant: it is measured in characters and has no
 // limit. An unknown network is one problem.
-func ValidateCaption(text, network string) Report {
+func ValidateCaption(text, network string) CaptionReport {
 	text = strings.TrimSpace(text)
-	r := Report{Network: network, Problems: []Problem{}}
+	r := CaptionReport{Network: network, Problems: []CaptionProblem{}}
 
 	n, known := Lookup(network)
 	if network != "" && !known {
-		r.Problems = append(r.Problems, Problem{
+		r.Problems = append(r.Problems, CaptionProblem{
 			Code: ProblemUnknownNet, Message: fmt.Sprintf("%q is not a network of the table of limits", network),
 		})
 		r.Counts = measure(text, Network{Unit: UnitCharacters})
@@ -130,10 +132,14 @@ func ValidateCaption(text, network string) Report {
 	}
 
 	r.Unit, r.MaxLength, r.LinksClickable = n.Unit, n.MaxLength, n.LinksClickable
+	r.Name = n.Name
 	r.Counts = measure(text, n)
 
 	if !strings.ContainsFunc(text, func(c rune) bool { return !unicode.IsSpace(c) && !unicode.Is(unicode.Cf, c) }) {
-		r.Problems = append(r.Problems, Problem{Code: ProblemEmpty, Message: "the variant has no visible character"})
+		r.Problems = append(
+			r.Problems,
+			CaptionProblem{Code: ProblemEmpty, Message: "the variant has no visible character"},
+		)
 	}
 
 	r.Problems = append(r.Problems, limitProblems(text, &n, r.Counts)...)
@@ -142,11 +148,11 @@ func ValidateCaption(text, network string) Report {
 	return r
 }
 
-func limitProblems(text string, n *Network, c Counts) []Problem {
-	var out []Problem
+func limitProblems(text string, n *Network, c CaptionCounts) []CaptionProblem {
+	var out []CaptionProblem
 
 	if n.MaxLength > 0 && c.Length > n.MaxLength {
-		out = append(out, Problem{
+		out = append(out, CaptionProblem{
 			Code:   ProblemTooLong,
 			Limit:  n.MaxLength,
 			Actual: c.Length,
@@ -162,14 +168,14 @@ func limitProblems(text string, n *Network, c Counts) []Problem {
 	}
 
 	if n.MaxHashtags > 0 && c.Hashtags > n.MaxHashtags {
-		out = append(out, Problem{
+		out = append(out, CaptionProblem{
 			Code: ProblemTooManyTags, Limit: n.MaxHashtags, Actual: c.Hashtags,
 			Message: fmt.Sprintf("%s allows %d hashtags and the text has %d", n.Name, n.MaxHashtags, c.Hashtags),
 		})
 	}
 
 	if n.MaxMentions > 0 && c.Mentions > n.MaxMentions {
-		out = append(out, Problem{
+		out = append(out, CaptionProblem{
 			Code: ProblemTooManyMen, Limit: n.MaxMentions, Actual: c.Mentions,
 			Message: fmt.Sprintf("%s allows %d mentions and the text has %d", n.Name, n.MaxMentions, c.Mentions),
 		})
@@ -188,7 +194,7 @@ func limitProblems(text string, n *Network, c Counts) []Problem {
 	}
 
 	if bad > 0 {
-		out = append(out, Problem{
+		out = append(out, CaptionProblem{
 			Code: ProblemForbidden, Actual: bad,
 			Message: fmt.Sprintf("%s refuses the characters %s and the text has %d of them", n.Name,
 				quoted(n.Forbidden), bad),
@@ -223,10 +229,10 @@ func unitName(u Unit) string {
 }
 
 // measure counts a variant for a network.
-func measure(text string, n Network) Counts {
+func measure(text string, n Network) CaptionCounts {
 	links := findLinks(text)
 
-	var c Counts
+	var c CaptionCounts
 
 	c.Links = len(links)
 

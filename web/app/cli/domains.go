@@ -59,6 +59,10 @@ var commandDomains = map[string]string{
 	"provider:list": command.DomainProvider, "provider:models": command.DomainProvider,
 	"provider:price": command.DomainProvider, "text:generate": command.DomainProvider,
 
+	"text:list": command.DomainWriting, "text:show": command.DomainWriting, "text:write": command.DomainWriting,
+	"text:revisions": command.DomainWriting, "text:revert": command.DomainWriting, "text:draft": command.DomainWriting,
+	"caption:validate": command.DomainWriting, "script:estimate": command.DomainWriting,
+
 	"command:help": command.DomainWorkspace, "connection:list": command.DomainWorkspace,
 	"connection:show": command.DomainWorkspace, "connection:add": command.DomainWorkspace,
 	"connection:remove": command.DomainWorkspace, "connection:test": command.DomainWorkspace,

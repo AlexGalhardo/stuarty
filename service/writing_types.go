@@ -61,6 +61,8 @@ type TextListRequest struct {
 // TextListResult is a page of texts, newest first.
 type TextListResult struct {
 	Envelope
+	// ProjectID echoes the project the list was asked for; empty for a list across projects.
+	ProjectID  string     `json:"project_id,omitempty"`
 	Texts      []TextItem `json:"texts"`
 	NextCursor string     `json:"next_cursor,omitempty"`
 	Text       string     `json:"text"`
@@ -126,14 +128,14 @@ type TextRevisionsRequest struct {
 // TextRevisionsResult is a page of revisions, newest first, and the difference when asked.
 type TextRevisionsResult struct {
 	Envelope
-	ProjectID  string              `json:"project_id"`
-	ItemID     string              `json:"item_id"`
-	Revisions  []TextRevision      `json:"revisions"`
-	NextBefore int                 `json:"next_before,omitempty"`
-	Diff       *writing.DiffResult `json:"diff,omitempty"`
-	DiffFrom   int                 `json:"diff_from,omitempty"`
-	DiffTo     int                 `json:"diff_to,omitempty"`
-	Text       string              `json:"text"`
+	ProjectID  string            `json:"project_id"`
+	ItemID     string            `json:"item_id"`
+	Revisions  []TextRevision    `json:"revisions"`
+	NextBefore int               `json:"next_before,omitempty"`
+	Diff       *writing.TextDiff `json:"diff,omitempty"`
+	DiffFrom   int               `json:"diff_from,omitempty"`
+	DiffTo     int               `json:"diff_to,omitempty"`
+	Text       string            `json:"text"`
 }
 
 // TextRevertRequest brings an older revision back as a new one.
@@ -172,7 +174,7 @@ type CaptionValidateRequest struct {
 
 // CaptionVariantReport is the report of one variant.
 type CaptionVariantReport struct {
-	writing.Report
+	writing.CaptionReport
 	// Words is the number of words of the variant text, for the person who reads the counters.
 	Words int `json:"words"`
 }
@@ -180,7 +182,8 @@ type CaptionVariantReport struct {
 // CaptionValidateResult is the report of every variant, in the order of the caption.
 type CaptionValidateResult struct {
 	Envelope
-	Variants []CaptionVariantReport `json:"variants"`
+	ProjectID string                 `json:"project_id,omitempty"`
+	Variants  []CaptionVariantReport `json:"variants"`
 	// OK is true when no variant has a problem.
 	OK   bool   `json:"ok"`
 	Text string `json:"text"`
@@ -197,6 +200,7 @@ type ScriptEstimateRequest struct {
 // ScriptEstimateResult is the estimate of a script.
 type ScriptEstimateResult struct {
 	Envelope
+	ProjectID string `json:"project_id,omitempty"`
 	writing.Estimate
 	Text string `json:"text"`
 }
