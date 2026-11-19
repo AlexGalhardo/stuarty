@@ -83,3 +83,24 @@ func TestValueAtPropKeepsTheValueInsideTheRange(t *testing.T) {
 		t.Errorf("x has no range, got %v", v)
 	}
 }
+
+// The fixed-point arithmetic of SDD-004 section 3.1 gives the same bits on every system: these were measured
+// once and must not change on another operating system, architecture or Go release. A Q30 result divided by
+// 2^30 leaves the low bits of the mantissa zero.
+func TestBezierEaseBitsArePinned(t *testing.T) {
+	for _, c := range []struct {
+		curve []float64
+		u     float64
+		bits  uint64
+	}{
+		{[]float64{0.34, 1.56, 0.64, 1}, 0.4321, 0x3ff0e0c851000000},
+		{[]float64{0.36, 0, 0.66, -0.56}, 0.3, 0xbfb3660f5c000000},
+		{[]float64{0.25, 0.1, 0.25, 1}, 0.5, 0x3fe9ad49dd800000},
+		{[]float64{0.42, 0, 1, 1}, 1.0 / 3, 0x3fc3fd2dec000000},
+		{[]float64{0, 3, 1, -2}, 0.7, 0x3fc0ba34da000000},
+	} {
+		if got := math.Float64bits(BezierEase(c.curve, c.u)); got != c.bits {
+			t.Errorf("e(%v) of %v has bits %#016x, want %#016x", c.u, c.curve, got, c.bits)
+		}
+	}
+}
