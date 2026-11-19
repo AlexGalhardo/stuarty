@@ -5,6 +5,11 @@ command brand:show
 command bundle:export
 command bundle:import
 command command:help
+command connection:add
+command connection:list
+command connection:remove
+command connection:show
+command connection:test
 command doctor
 command edit
 command events
@@ -41,12 +46,15 @@ command transcribe
 command undo
 command version
 command view
+route DELETE /connections/{}
 route DELETE /keys/{}
 route GET /assets
 route GET /audit
 route GET /brand-kit
 route GET /commands
 route GET /commands/{}
+route GET /connections
+route GET /connections/{}
 route GET /fonts
 route GET /handshake
 route GET /jobs/{}
@@ -78,6 +86,8 @@ route GET /templates
 route GET /templates/{}/file
 route GET /users
 route PATCH /users/{}
+route POST /connections
+route POST /connections/{}/test
 route POST /fonts
 route POST /jobs/{}/cancel
 route POST /keys
@@ -104,6 +114,7 @@ route POST /trash/empty
 route POST /users
 route PUT /brand-kit
 tool command_help
+tool connection
 tool edit
 tool font_import
 tool history

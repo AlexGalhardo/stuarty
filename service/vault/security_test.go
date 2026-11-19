@@ -177,7 +177,7 @@ func TestSecurity_T40_WorkspaceCopyRevealsNoCredential(t *testing.T) {
 
 	for name, keys := range map[string]KeyProvider{
 		"no key":        NewMemoryProvider(nil),
-		"a guessed key": NewMemoryProvider(bytes.Repeat([]byte{0}, KeySize)),
+		"a guessed key": NewMemoryProvider(make([]byte, KeySize)),
 		"another key":   NewMemoryProvider(bytes.Repeat([]byte{0xFF}, KeySize)),
 		"no provider":   NoProvider(),
 	} {
