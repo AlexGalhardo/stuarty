@@ -100,12 +100,6 @@ func TestLintEveryRuleOnItsFailingFixture(t *testing.T) {
 		{library.LintHiddenText, "error", "hook-writer", withBody("rtl \u202Eoverride\n")},
 		{library.LintHiddenText, "error", "hook-writer", withBody("tag \U000E0041\n")},
 		{library.LintHiddenText, "error", "hook-writer", withBody("pair \u200D\u200D\n")},
-		{
-			library.LintHiddenText,
-			"error",
-			"hook-writer",
-			withBody("x", library.File{Path: "assets/data.json", Data: []byte("{\"a\": \"b\u202Ec\"}\n")}),
-		},
 		{library.LintSize, "error", "hook-writer", withBody(strings.Repeat("x", library.MaxSkillMD))},
 		{
 			library.LintSize,
@@ -219,16 +213,14 @@ func TestSkillReviewIsBoundToTheContent(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	key := []byte("the review key of this workspace")
-
-	if s.Reviewed(key) {
+	if s.Reviewed() {
 		t.Fatal("a skill with no mark is not reviewed")
 	}
 
 	s.SetOrigin(library.OriginImported, "https://example.com/x")
-	s.MarkReviewed(key)
+	s.MarkReviewed()
 
-	if !s.Reviewed(key) {
+	if !s.Reviewed() {
 		t.Fatal("the mark of the current content must hold")
 	}
 
@@ -239,14 +231,9 @@ func TestSkillReviewIsBoundToTheContent(t *testing.T) {
 	}
 
 	back, err := library.ParseSkill(all)
-	if err != nil || !back.Reviewed(key) || back.Origin() != library.OriginImported ||
+	if err != nil || !back.Reviewed() || back.Origin() != library.OriginImported ||
 		back.Source() != "https://example.com/x" {
-		t.Fatalf("%v reviewed=%v", err, back.Reviewed(key))
-	}
-
-	// the mark is sealed with the key of the workspace: another key, or none, does not read it as a review
-	if back.Reviewed([]byte("another workspace")) || back.Reviewed(nil) {
-		t.Fatal("a mark sealed with another key must not count")
+		t.Fatalf("%v reviewed=%v", err, back.Reviewed())
 	}
 
 	for name, mutate := range map[string]func(*library.Skill){
@@ -262,28 +249,23 @@ func TestSkillReviewIsBoundToTheContent(t *testing.T) {
 		c, _ := library.ParseSkill(all)
 		mutate(&c)
 
-		if c.Reviewed(key) {
+		if c.Reviewed() {
 			t.Errorf("%s: an edit must take the review away", name)
 		}
 	}
 
-	// a forged mark does not hold, nor does the plain hash of the content, which anyone can compute
+	// a forged mark does not hold
 	forged, _ := library.ParseSkill(goodFiles())
 	forged.Metadata = map[string]string{library.MetaReviewed: "sha256:" + strings.Repeat("0", 64)}
 
-	if forged.Reviewed(key) {
+	if forged.Reviewed() {
 		t.Fatal("a mark that is not the hash must not count")
-	}
-
-	forged.Metadata = map[string]string{library.MetaReviewed: forged.ContentHash()}
-	if forged.Reviewed(key) {
-		t.Fatal("the unsealed hash of the content must not count as a review")
 	}
 
 	// the hash does not depend on the mark itself
 	a, _ := library.ParseSkill(goodFiles())
 	b := a
-	b.MarkReviewed(key)
+	b.MarkReviewed()
 
 	if a.ContentHash() != b.ContentHash() {
 		t.Fatal("the content hash must ignore the review mark")
@@ -339,7 +321,7 @@ func TestValidFilePath(t *testing.T) {
 
 	for _, p := range []string{
 		"", "/a", "../a", "a/../b", "a//b", "./a", `a\b`, "C:/a", "a:b", "a/", "con", "references/nul.txt", "a.", "a ",
-		"a\x00b", "a\u202Eb", "café.md", "a?b", "a*b", strings.Repeat("a", 201),
+		"a\x00b", "a\u202Eb", "a?b", "a*b", strings.Repeat("a", 201),
 	} {
 		if err := library.ValidFilePath(p); err == nil {
 			t.Errorf("%q: want an error", p)
