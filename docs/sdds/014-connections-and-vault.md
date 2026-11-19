@@ -104,7 +104,7 @@ The providers, in the order the owner tries them (the first that is configured i
 | 3 | the operating system keychain | nothing; used on a desktop when the platform has a store | yes |
 | 4 | none | - | no |
 
-A key in the environment or a file is 32 bytes written as base64 or as 64 hex digits, with surrounding white space ignored. Setting both variables is a start-up error (SDD-007 section 4.5). The keychain item is named `stuarty`, with the account `vault:` and 16 hex digits of the SHA-256 of the absolute workspace path, so two workspaces do not share a key. This build reads the Windows Credential Manager; the other platforms have no keychain client yet and use provider 1 or 2 (a question for the author is open, `development/QUESTIONS.md`).
+A key in the environment or a file is 32 bytes written as base64 or as 64 hex digits, with surrounding white space ignored. Setting both variables is a start-up error (SDD-007 section 4.5). The keychain item is named `stuarty`, with the account `vault:` and 16 hex digits of the SHA-256 of the absolute workspace path, so two workspaces do not share a key. This build reads the Windows Credential Manager; the other platforms have no keychain client yet and use provider 1 or 2 (the macOS Keychain and the Linux Secret Service need a client that is not chosen yet; that choice is the author's).
 
 Opening rules:
 
@@ -115,7 +115,7 @@ Opening rules:
 
 ## 5. Service operations and scopes
 
-Five operations on `service.Service`, in `service/connections.go`:
+Five operations on `service.Service`, in `service/connection_ops.go`:
 
 | Operation | Scope | Result |
 | --- | --- | --- |
@@ -141,8 +141,10 @@ type Registry interface {
 	Used(ctx context.Context, id string, at time.Time)
 }
 
-func Connection(reg Registry, id string, timeout time.Duration) *http.Client
+func Connection(reg Registry, id string, timeout time.Duration, test *TestOptions) *http.Client
 ```
+
+`test` is nil in the product; a test with a local TLS server passes the CA to trust, as for the other constructors of `internal/outbound`.
 
 For every request, and for every redirect hop (none is followed; a redirect is returned to the caller):
 
@@ -164,7 +166,7 @@ Added to SDD-000 section 8:
 | --- | --- | --- |
 | `E_CONNECTION_NOT_FOUND` | the connection does not exist or was removed | 404 |
 | `E_CONNECTION_DESTINATION` | the request is for a host the connection does not list, or the scheme is not allowed | 403 |
-| `E_VAULT_LOCKED` | the vault cannot be opened: the master key is missing, wrong or cannot be stored; `details.reason` is `key_missing`, `wrong_key`, `no_key_provider` or `corrupt`, and the hint says how to recover | 503 |
+| `E_VAULT_LOCKED` | the vault cannot be opened: the master key is missing, wrong or cannot be stored; `details.reason` is `key_missing`, `wrong_key`, `no_key_provider`, `corrupt`, `bad_key` (the key the provider holds is not 32 bytes) or `secret_missing` (the connection has no entry in the vault: connect it again), and the hint says how to recover | 503 |
 
 `E_VALIDATION` covers a bad kind, label, host or `accepts`, with `path` naming the field.
 
