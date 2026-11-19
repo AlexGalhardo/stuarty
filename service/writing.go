@@ -112,7 +112,7 @@ func (s *svc) latestRevision(ctx context.Context, repo ProductionRepo, itemID st
 
 // TextList lists the texts of a project, or of every project the caller may see.
 func (s *svc) TextList(ctx context.Context, req TextListRequest) (*TextListResult, error) {
-	c, err := authorize(ctx, "TextList", req.ProjectID)
+	c, err := s.authorizeProject(ctx, "TextList", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}
@@ -195,7 +195,7 @@ func (s *svc) TextList(ctx context.Context, req TextListRequest) (*TextListResul
 
 // TextGet reads a text with its body, or one of its revisions.
 func (s *svc) TextGet(ctx context.Context, req TextGetRequest) (*TextGetResult, error) {
-	c, err := authorize(ctx, "TextGet", req.ProjectID)
+	c, err := s.authorizeProject(ctx, "TextGet", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}
@@ -259,7 +259,7 @@ func (s *svc) TextGet(ctx context.Context, req TextGetRequest) (*TextGetResult, 
 
 // TextWrite makes a text or saves a new revision of one.
 func (s *svc) TextWrite(ctx context.Context, req TextWriteRequest) (*TextWriteResult, error) {
-	c, err := authorize(ctx, "TextWrite", req.ProjectID)
+	c, err := s.authorizeProject(ctx, "TextWrite", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}
@@ -439,7 +439,7 @@ func (s *svc) writeResult(head *ProductionHead, out *writeOutcome) *TextWriteRes
 
 // TextRevert brings an older revision back as a new one; the history is never rewritten.
 func (s *svc) TextRevert(ctx context.Context, req TextRevertRequest) (*TextWriteResult, error) {
-	c, err := authorize(ctx, "TextRevert", req.ProjectID)
+	c, err := s.authorizeProject(ctx, "TextRevert", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}
@@ -516,7 +516,7 @@ func (s *svc) TextRevert(ctx context.Context, req TextRevertRequest) (*TextWrite
 
 // TextRevisions lists the revisions of a text, newest first, and the difference between two when asked.
 func (s *svc) TextRevisions(ctx context.Context, req TextRevisionsRequest) (*TextRevisionsResult, error) {
-	c, err := authorize(ctx, "TextRevisions", req.ProjectID)
+	c, err := s.authorizeProject(ctx, "TextRevisions", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}
@@ -697,7 +697,7 @@ func (s *svc) textSource(
 
 // CaptionValidate measures a caption against the limits of its networks.
 func (s *svc) CaptionValidate(ctx context.Context, req CaptionValidateRequest) (*CaptionValidateResult, error) {
-	c, err := authorize(ctx, "CaptionValidate", req.ProjectID)
+	c, err := s.authorizeProject(ctx, "CaptionValidate", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}
@@ -814,7 +814,7 @@ func variantLine(r *writing.CaptionReport) string {
 
 // ScriptEstimate estimates how long a script takes when read aloud.
 func (s *svc) ScriptEstimate(ctx context.Context, req ScriptEstimateRequest) (*ScriptEstimateResult, error) {
-	c, err := authorize(ctx, "ScriptEstimate", req.ProjectID)
+	c, err := s.authorizeProject(ctx, "ScriptEstimate", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}
