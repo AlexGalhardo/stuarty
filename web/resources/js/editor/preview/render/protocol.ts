@@ -55,6 +55,10 @@ export type ToRenderWorker<S = PixelSource> =
 			frame: S;
 			// The part of the frame to keep, in its pixels; absent is all of it.
 			rect?: Rect;
+			// The size to deliver that part at: the drawn size, in output pixels, of a
+			// layer that is not rotated, as the Go host delivers it (SDD-013 section
+			// 5.1 item 4). Absent is the size of the part.
+			size?: [number, number];
 	  }
 	| {
 			type: "bitmap";

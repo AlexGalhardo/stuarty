@@ -27,8 +27,13 @@ export interface Pixels {
 export interface ServiceDeps<S extends PixelSource, B> {
 	fetchModule(url: string): Promise<ArrayBuffer>;
 	sha256(bytes: ArrayBuffer): Promise<string>;
-	// The pixels of a frame or bitmap, cut to `rect` when given.
-	read(source: S, rect: Rect | undefined): Promise<Pixels>;
+	// The pixels of a frame or bitmap, cut to `rect` and delivered at `size`
+	// when given.
+	read(
+		source: S,
+		rect: Rect | undefined,
+		size?: [number, number],
+	): Promise<Pixels>;
 	toBitmap(
 		rgba: Uint8ClampedArray<ArrayBuffer>,
 		width: number,
@@ -113,7 +118,12 @@ export class RenderService<S extends PixelSource, B> {
 				await this.init(message);
 				return;
 			case "texture":
-				await this.texture(message.id, message.frame, message.rect);
+				await this.texture(
+					message.id,
+					message.frame,
+					message.rect,
+					message.size,
+				);
 				return;
 			case "bitmap":
 				await this.bitmap(message);
@@ -209,9 +219,10 @@ export class RenderService<S extends PixelSource, B> {
 		id: string,
 		frame: S,
 		rect: Rect | undefined,
+		size: [number, number] | undefined,
 	): Promise<void> {
 		try {
-			const pixels = await this.deps.read(frame, rect);
+			const pixels = await this.deps.read(frame, rect, size);
 			premultiply(pixels.rgba);
 			this.need().putTexture(
 				id,

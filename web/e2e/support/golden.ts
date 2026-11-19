@@ -795,7 +795,6 @@ export async function compareFrame(
 	id: string,
 	frame: number,
 	label: string,
-	minSsim = MIN_SSIM,
 ): Promise<void> {
 	const {
 		canvas,
@@ -911,7 +910,7 @@ export async function compareFrame(
 	);
 	expect
 		.soft(ssim, `${name} frame ${frame}: SSIM(luma)`)
-		.toBeGreaterThanOrEqual(minSsim);
+		.toBeGreaterThanOrEqual(MIN_SSIM);
 	expect
 		.soft(shift.distance, `${name} frame ${frame}: picture displacement`)
 		.toBeLessThanOrEqual(MAX_DISPLACEMENT);
@@ -921,7 +920,7 @@ export async function compareFrame(
 			.toBeLessThanOrEqual(MAX_DISPLACEMENT);
 	}
 	const missed =
-		ssim < minSsim ||
+		ssim < MIN_SSIM ||
 		shift.distance > MAX_DISPLACEMENT ||
 		markers.some((m) => m.distance > MAX_DISPLACEMENT);
 	if (missed) {
