@@ -2,7 +2,7 @@ package migrations
 
 import "github.com/AlexGalhardo/vukem/schema"
 
-// The image documents and their log of batches (SDD-005 section 5.12, SDD-021). They follow projects and
+// The image documents and their log of batches (SDD-005 section 5.13, SDD-021). They follow projects and
 // operations with the columns an image needs and no more; owner_user_id is NULL in local mode.
 func m20261119110000CreateImageDocumentsAndOperations() schema.Migration {
 	return schema.Migration{

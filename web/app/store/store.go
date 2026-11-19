@@ -12,6 +12,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/approval"
 	"github.com/AlexGalhardo/stuarty/service/connections"
+	"github.com/AlexGalhardo/stuarty/service/library"
 
 	"github.com/AlexGalhardo/vukem/database"
 )
@@ -92,6 +93,7 @@ type projectTx struct {
 }
 
 func (p *projectTx) Projects() service.ProjectRepo        { return p.tx.Projects() }
+func (p *projectTx) Productions() service.ProductionRepo  { return p.tx.Productions() }
 func (p *projectTx) Operations() service.OperationRepo    { return p.tx.Operations() }
 func (p *projectTx) Idempotency() service.IdempotencyRepo { return p.tx.Idempotency() }
 func (p *projectTx) Assets() service.AssetRepo            { return p.tx.Assets() }
@@ -104,6 +106,7 @@ func (p *projectTx) BrandKit() service.BrandKitRepo       { return p.tx.BrandKit
 func (p *projectTx) Connections() connections.Store       { return p.tx.Connections() }
 func (p *projectTx) Approvals() approval.Store            { return p.tx.Approvals() }
 func (p *projectTx) Images() service.ImageRepo            { return p.tx.Images() }
+func (p *projectTx) Library() library.Index               { return p.tx.Library() }
 func (p *projectTx) AfterCommit(fn func())                { p.tx.AfterCommit(fn) }
 func (p *projectTx) Project() service.ProjectRow          { return p.row }
 func (p *projectTx) Executor() database.Executor          { return p.tx.Executor() }

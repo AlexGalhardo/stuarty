@@ -506,6 +506,104 @@ func TestTestMessageHoldsNoPartOfAnEchoedSecret(t *testing.T) {
 	}
 }
 
+// TestTestMessageHoldsNoMiddleOfAnEchoedSecret: a destination that echoes only ten bytes from the
+// middle of a long secret, in any form, has echoed it (VV-245).
+func TestTestMessageHoldsNoMiddleOfAnEchoedSecret(t *testing.T) {
+	const secret = `zq<Kp9&Xw7#Lm2>Yv5/Ab3"Cd4+Ef6=Gh8?Ij0_N`
+
+	if len(secret) != 40 {
+		t.Fatalf("the fixture secret is %d bytes, want 40", len(secret))
+	}
+
+	forms := map[string]string{
+		"plain":        secret,
+		"html":         html.EscapeString(secret),
+		"url query":    url.QueryEscape(secret),
+		"url path":     url.PathEscape(secret),
+		"json":         jsonEscaped(t, secret),
+		"json slashed": strings.ReplaceAll(jsonEscaped(t, secret), "/", `\/`),
+		"base64":       base64.StdEncoding.EncodeToString([]byte(secret)),
+		"hex":          hex.EncodeToString([]byte(secret)),
+		"upper hex":    strings.ToUpper(hex.EncodeToString([]byte(secret))),
+	}
+
+	for name, f := range forms {
+		mid := len(f)/2 - 5
+		body := "echo " + f[mid:mid+10] + " cut"
+
+		t.Run(name, func(t *testing.T) {
+			srv := newServer(t, http.StatusUnauthorized, body)
+			m, st, v := newManager(t)
+			connect(t, m, st, v, srv, secret)
+
+			res, err := m.Test(context.Background(), "con_a")
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if part, bad := leaks(t, res.Message, secret, 6); bad {
+				t.Errorf("the answer holds %q of the secret: %.300q", part, res.Message)
+			}
+		})
+	}
+}
+
+// TestEchoOfAPartOfTheSecretEncodedOnItsOwnIsFound: a destination that encodes only a part of the
+// secret, from any offset, writes a base64 text that is not a part of the base64 of the whole secret
+// unless the offset is a multiple of three; every alignment is looked for (VV-245 review).
+func TestEchoOfAPartOfTheSecretEncodedOnItsOwnIsFound(t *testing.T) {
+	const secret = `zq<Kp9&Xw7#Lm2>Yv5/Ab3"Cd4+Ef6=Gh8?Ij0_N`
+
+	encoders := map[string]func([]byte) string{
+		"std":     base64.StdEncoding.EncodeToString,
+		"raw std": base64.RawStdEncoding.EncodeToString,
+		"url":     base64.URLEncoding.EncodeToString,
+		"raw url": base64.RawURLEncoding.EncodeToString,
+		"hex":     hex.EncodeToString,
+	}
+
+	for name, enc := range encoders {
+		for off := 0; off+8 <= len(secret); off++ {
+			part := enc([]byte(secret[off : off+8]))
+			if !echoesSecret([]byte("echo "+part+" cut"), []byte(secret)) {
+				t.Errorf("%s of secret[%d:%d] (%s) was not found", name, off, off+8, part)
+			}
+		}
+	}
+
+	misaligned := base64.StdEncoding.EncodeToString([]byte(secret[16:26]))
+	srv := newServer(t, http.StatusUnauthorized, "echo "+misaligned+" cut")
+	m, st, v := newManager(t)
+	connect(t, m, st, v, srv, secret)
+
+	res, err := m.Test(context.Background(), "con_a")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !strings.Contains(res.Message, droppedBody) {
+		t.Errorf("the body that echoes a misaligned part of the secret was kept: %q", res.Message)
+	}
+}
+
+// TestEchoOfTheMiddleOfTheLargestSecretIsFound: the window search holds for a secret of MaxSecret
+// bytes, and a body of the same alphabet that echoes no window of it is kept.
+func TestEchoOfTheMiddleOfTheLargestSecretIsFound(t *testing.T) {
+	secret := make([]byte, MaxSecret)
+	for i := range secret {
+		secret[i] = "abcdefghijklmnopqrstuvwxyz0123456789"[(i*7+i/36)%36]
+	}
+
+	mid := len(secret) / 2
+	if !echoesSecret([]byte("echo "+string(secret[mid:mid+8])+" cut"), secret) {
+		t.Error("an echo of eight bytes from the middle of the largest secret was not found")
+	}
+
+	if echoesSecret([]byte("all good, nothing echoed here"), secret) {
+		t.Error("a body that echoes nothing was dropped")
+	}
+}
+
 func TestTestMessageKeepsABodyThatDoesNotEchoTheSecret(t *testing.T) {
 	srv := newServer(t, http.StatusOK, "all good")
 	m, st, v := newManager(t)

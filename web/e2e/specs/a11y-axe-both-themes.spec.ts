@@ -204,7 +204,8 @@ for (const lang of ["en", "pt-BR"] as const) {
 				await scan(page, "empty project", found);
 
 				// A failed card in the library.
-				await page.route("**/api/v1/projects/*/media", async (route) => {
+				// media* also takes the timeline_id the editor puts in the query (SDD-003 section 1.7).
+				await page.route("**/api/v1/projects/*/media*", async (route) => {
 					if (route.request().method() !== "GET") {
 						await route.fallback();
 						return;
@@ -233,7 +234,7 @@ for (const lang of ["en", "pt-BR"] as const) {
 					page.getByText("The file could not be read."),
 				).toBeVisible();
 				await scan(page, "library with an error card", found);
-				await page.unroute("**/api/v1/projects/*/media");
+				await page.unroute("**/api/v1/projects/*/media*");
 				await page.reload();
 				await expect(page.locator("[data-item-id]")).toHaveCount(5);
 				await scan(page, "project with items", found);

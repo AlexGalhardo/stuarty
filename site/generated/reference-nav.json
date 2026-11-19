@@ -7,10 +7,19 @@
         "projects.create",
         "projects.get",
         "bitmaps.get",
+        "projects.brief.get",
+        "projects.brief.set",
         "projects.bundle.export",
+        "projects.describe",
+        "projects.duplicate",
         "projects.edit",
         "projects.frame",
         "projects.history",
+        "projects.items.add",
+        "projects.items.move",
+        "projects.items.rename",
+        "projects.items.restore",
+        "projects.items.trash",
         "projects.lint",
         "projects.otio.export",
         "projects.otio.import",
@@ -88,6 +97,28 @@
       "pages": [
         "brand.get",
         "brand.set"
+      ]
+    },
+    {
+      "tag": "Library",
+      "pages": [
+        "library.memory.list",
+        "library.memory.write",
+        "library.memory.get",
+        "library.memory.remove",
+        "library.prompts.list",
+        "library.prompts.get",
+        "library.prompts.write",
+        "library.prompts.render",
+        "library.reindex",
+        "library.search",
+        "library.skills.list",
+        "library.skills.get",
+        "library.skills.write",
+        "library.skills.lint",
+        "library.skills.review",
+        "library.skills.export",
+        "library.skills.import"
       ]
     },
     {
@@ -178,7 +209,9 @@
       "template",
       "font_import",
       "connection",
-      "image"
+      "image",
+      "project_item",
+      "library"
     ],
     "operations": [
       "asset.remove",

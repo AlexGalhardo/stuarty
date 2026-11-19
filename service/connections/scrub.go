@@ -1,7 +1,6 @@
 package connections
 
 import (
-	"bytes"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
@@ -12,53 +11,73 @@ import (
 	"github.com/AlexGalhardo/stuarty/service/untrusted"
 )
 
-// minScrubbed is the shortest secret a body is checked for, and the length of the prefix and of the
-// suffix of a longer one that is enough to drop the body: a destination that echoes eight bytes of a
-// credential has echoed it, even when the rest was cut or escaped on the way (SDD-014 section 9). It
-// is the same floor as the vault redaction (a shorter secret would drop any text it is in).
+// minScrubbed is the shortest secret a body is checked for, and the length of the window that drops
+// the body: a destination that echoes any eight consecutive bytes of a credential, in any form it
+// writes it back, has echoed it, even when the rest was cut or escaped on the way (SDD-014 section 9).
+// It is the same floor as the vault redaction (a shorter secret would drop any text it is in).
 const minScrubbed = 8
 
 // droppedBody replaces the body of an answer that held the credential.
 const droppedBody = "the destination echoed the credential: its answer was dropped."
 
-// echoesSecret says whether body holds the secret, or minScrubbed bytes of its start or its end, in
+// echoesSecret says whether body holds the secret, or any minScrubbed consecutive bytes of it, in
 // the forms a destination writes it back: as is, HTML, URL and JSON escaped, base64 and hex (lower
-// and upper case). It
-// looks at the raw bytes, before any cut or escape, and also at them after the cleaning the text
-// goes through, so a secret split by a control character is found too.
+// and upper case). It looks at the raw bytes, before any cut or escape, and also at them after the
+// cleaning the text goes through, so a secret split by a control character is found too. The windows
+// of the two bodies go into a set once, and every window of every form is looked up in it, so the cost
+// is linear in the body plus the forms, whatever the size of the secret (up to MaxSecret).
 func echoesSecret(body, secret []byte) bool {
 	if len(secret) < minScrubbed {
 		return false
 	}
 
+	seen := make(map[[minScrubbed]byte]struct{}, 2*len(body))
+
+	for _, h := range [][]byte{body, []byte(untrusted.Clean(string(body)))} {
+		for i := 0; i+minScrubbed <= len(h); i++ {
+			seen[[minScrubbed]byte(h[i:i+minScrubbed])] = struct{}{}
+		}
+	}
+
+	for _, f := range secretForms(secret) {
+		for i := 0; i+minScrubbed <= len(f); i++ {
+			if _, ok := seen[[minScrubbed]byte(f[i:i+minScrubbed])]; ok {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
+// secretForms are the forms a destination writes the secret back in. Base64 is taken from the three
+// byte alignments of the secret, so the base64 of a part of it that starts anywhere shares a window
+// with one of them; the unpadded base64 is a prefix of the padded one and needs no form of its own.
+// Hex, HTML, URL and JSON escape byte by byte, so a part of the secret is a part of their form.
+func secretForms(secret []byte) [][]byte {
 	text := string(secret)
 	forms := []string{
 		text,
 		html.EscapeString(text),
 		url.QueryEscape(text),
 		url.PathEscape(text),
-		base64.StdEncoding.EncodeToString(secret),
-		base64.RawStdEncoding.EncodeToString(secret),
-		base64.URLEncoding.EncodeToString(secret),
-		base64.RawURLEncoding.EncodeToString(secret),
 		hex.EncodeToString(secret),
 		strings.ToUpper(hex.EncodeToString(secret)),
 	}
-	forms = append(forms, jsonForms(text)...)
 
-	haystacks := [][]byte{body, []byte(untrusted.Clean(string(body)))}
-
-	for _, f := range forms {
-		for _, needle := range []string{f[:minScrubbed], f[len(f)-minScrubbed:]} {
-			for _, h := range haystacks {
-				if bytes.Contains(h, []byte(needle)) {
-					return true
-				}
-			}
-		}
+	for k := range min(3, len(secret)) {
+		part := secret[k:]
+		forms = append(forms, base64.StdEncoding.EncodeToString(part), base64.URLEncoding.EncodeToString(part))
 	}
 
-	return false
+	forms = append(forms, jsonForms(text)...)
+
+	out := make([][]byte, len(forms))
+	for i, f := range forms {
+		out[i] = []byte(f)
+	}
+
+	return out
 }
 
 // jsonForms are text inside a JSON string, without the quotes, as the encoders write it: with the

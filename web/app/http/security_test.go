@@ -237,8 +237,16 @@ func TestSecurity_T05_EveryOperationHasScope(t *testing.T) {
 	// The browser pages are not API operations: they authenticate like the API
 	// (authenticate runs first) and call the Service, which checks the scope.
 	builtin := []string{
-		"GET /up", "GET /{$}", "GET /projects", "POST /projects", "GET /editor/{project_id}",
-		"GET /settings", "GET /settings/brand-kit", "GET /login", "GET /settings/keys",
+		"GET /up",
+		"GET /{$}",
+		"GET /projects",
+		"POST /projects",
+		"GET /projects/{project_id}",
+		"GET /editor/{project_id}",
+		"GET /settings",
+		"GET /settings/brand-kit",
+		"GET /login",
+		"GET /settings/keys",
 		// The empty-state pages of the dashboard sections (web/routes/dashboard.go).
 		"GET /edit-video", "GET /edit-image", "GET /write", "GET /visual-assets", "GET /video-assets",
 		"GET /publish", "GET /skills", "GET /prompts", "GET /memory", "GET /connections",

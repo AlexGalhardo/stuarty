@@ -108,6 +108,42 @@ var Endpoints = []Endpoint{
 		Service: "ProjectOtioImport", Status: 200, Summary: "Import an OpenTimelineIO file into a project",
 	},
 	{
+		ID: "projects.describe", Method: http.MethodGet, Path: "/projects/{id}/describe", Scope: service.ScopeRead,
+		Service: "ProjectDescribe", Status: 200, Summary: "Describe a project as text: brief, items and state",
+	},
+	{
+		ID: "projects.duplicate", Method: http.MethodPost, Path: "/projects/{id}/duplicate", Scope: service.ScopeEdit,
+		Service: "ProjectDuplicate", Status: 201, Summary: "Duplicate a project",
+	},
+	{
+		ID: "projects.items.add", Method: http.MethodPost, Path: "/projects/{id}/items", Scope: service.ScopeEdit,
+		Service: "ProjectItemAdd", Status: 201, Summary: "Add an item (text, timeline or output) to a project",
+	},
+	{
+		ID: "projects.items.move", Method: http.MethodPost, Path: "/projects/{id}/items/{item_id}/move",
+		Scope: service.ScopeEdit, Service: "ProjectItemMove", Status: 200, Summary: "Move an item of a project",
+	},
+	{
+		ID: "projects.items.rename", Method: http.MethodPost, Path: "/projects/{id}/items/{item_id}/rename",
+		Scope: service.ScopeEdit, Service: "ProjectItemRename", Status: 200, Summary: "Rename an item of a project",
+	},
+	{
+		ID: "projects.items.trash", Method: http.MethodPost, Path: "/projects/{id}/items/{item_id}/trash",
+		Scope: service.ScopeEdit, Service: "ProjectItemTrash", Status: 200, Summary: "Move an item to the trash",
+	},
+	{
+		ID: "projects.items.restore", Method: http.MethodPost, Path: "/projects/{id}/items/{item_id}/restore",
+		Scope: service.ScopeEdit, Service: "ProjectItemRestore", Status: 200, Summary: "Restore an item from the trash",
+	},
+	{
+		ID: "projects.brief.get", Method: http.MethodGet, Path: "/projects/{id}/brief", Scope: service.ScopeRead,
+		Service: "BriefGet", Status: 200, Summary: "Read the brief of a project",
+	},
+	{
+		ID: "projects.brief.set", Method: http.MethodPut, Path: "/projects/{id}/brief", Scope: service.ScopeEdit,
+		Service: "BriefSet", Status: 200, Summary: "Write the brief of a project",
+	},
+	{
 		ID: "projects.trash", Method: http.MethodPost, Path: "/projects/{id}/trash", Scope: service.ScopeEdit,
 		Service: "ProjectTrash", Status: 200, Summary: "Move a project to the trash",
 	},
@@ -328,6 +364,99 @@ var Endpoints = []Endpoint{
 		ID: "cost.ceilings.set", Method: http.MethodPut, Path: "/cost/ceilings", Scope: service.ScopeAdmin,
 		Service: "CostCeilingSet", Status: 200,
 		Summary: "Set or remove a cost ceiling (a person in the browser only; the local token and keys get 403)",
+	},
+	{
+		ID: "library.memory.list", Method: http.MethodGet, Path: "/library/memory", Scope: service.ScopeRead,
+		Service: "MemoryList", Status: 200, Summary: "List the memory notes",
+	},
+	{
+		ID: "library.memory.get", Method: http.MethodGet, Path: "/library/memory/{name}", Scope: service.ScopeRead,
+		Service: "MemoryGet", Status: 200, Summary: "Read a memory note",
+	},
+	{
+		ID: "library.memory.write", Method: http.MethodPost, Path: "/library/memory", Scope: service.ScopeEdit,
+		Service: "MemoryWrite", Status: 200, Summary: "Create or replace a memory note",
+	},
+	{
+		ID:      "library.memory.remove",
+		Method:  http.MethodDelete,
+		Path:    "/library/memory/{name}",
+		Scope:   service.ScopeEdit,
+		Service: "MemoryRemove",
+		Status:  200,
+		Summary: "Remove a memory note",
+	},
+	{
+		ID: "library.skills.list", Method: http.MethodGet, Path: "/library/skills", Scope: service.ScopeRead,
+		Service: "SkillList", Status: 200, Summary: "List the skills",
+	},
+	{
+		ID: "library.skills.get", Method: http.MethodGet, Path: "/library/skills/{name}", Scope: service.ScopeRead,
+		Service: "SkillGet", Status: 200, Summary: "Read a skill",
+	},
+	{
+		ID: "library.skills.write", Method: http.MethodPut, Path: "/library/skills/{name}", Scope: service.ScopeEdit,
+		Service: "SkillWrite", Status: 200, Summary: "Create or replace a skill",
+	},
+	{
+		ID:      "library.skills.import",
+		Method:  http.MethodPost,
+		Path:    "/library/skills/import",
+		Scope:   service.ScopeMedia,
+		Service: "SkillImport",
+		Status:  201,
+		Summary: "Import a skill from a folder or an archive; it starts unreviewed",
+	},
+	{
+		ID: "library.skills.export", Method: http.MethodPost, Path: "/library/skills/export", Scope: service.ScopeMedia,
+		Service: "SkillExport", Status: 200, Summary: "Export skills as folders in the Agent Skills layout",
+	},
+	{
+		ID:      "library.skills.review",
+		Method:  http.MethodPost,
+		Path:    "/library/skills/{name}/review",
+		Scope:   service.ScopeEdit,
+		Service: "SkillMarkReviewed",
+		Status:  200,
+		Summary: "Mark a skill as read (a browser session only)",
+	},
+	{
+		ID:      "library.skills.lint",
+		Method:  http.MethodGet,
+		Path:    "/library/skills/{name}/lint",
+		Scope:   service.ScopeRead,
+		Service: "SkillLint",
+		Status:  200,
+		Summary: "Run the lint on a skill",
+	},
+	{
+		ID: "library.prompts.list", Method: http.MethodGet, Path: "/library/prompts", Scope: service.ScopeRead,
+		Service: "PromptList", Status: 200, Summary: "List the prompts",
+	},
+	{
+		ID: "library.prompts.get", Method: http.MethodGet, Path: "/library/prompts/{name}", Scope: service.ScopeRead,
+		Service: "PromptGet", Status: 200, Summary: "Read a prompt",
+	},
+	{
+		ID: "library.prompts.write", Method: http.MethodPut, Path: "/library/prompts/{name}", Scope: service.ScopeEdit,
+		Service: "PromptWrite", Status: 200, Summary: "Create or replace a prompt",
+	},
+	{
+		ID:      "library.prompts.render",
+		Method:  http.MethodPost,
+		Path:    "/library/prompts/{name}/render",
+		Scope:   service.ScopeRead,
+		Service: "PromptRender",
+		Status:  200,
+		Summary: "Replace the variables of a prompt",
+	},
+	{
+		ID: "library.search", Method: http.MethodGet, Path: "/library/search", Scope: service.ScopeRead,
+		Service: "LibrarySearch", Status: 200, Summary: "Search memory, skills and prompts",
+	},
+	{
+		ID: "library.reindex", Method: http.MethodPost, Path: "/library/reindex", Scope: service.ScopeEdit,
+		Service: "LibraryReindex", Status: 200, Summary: "Rebuild the index of the library from its files",
 	},
 	{
 		ID: "audit.list", Method: http.MethodGet, Path: "/audit", Scope: service.ScopeAdmin,
