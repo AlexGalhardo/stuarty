@@ -279,7 +279,7 @@ func TestMemoryScopeAndProjectKeys(t *testing.T) {
 	if _, _, err := m.SaveMemory(
 		ctx,
 		limited,
-		MemoryInput{Name: "w", Description: "d", Body: "x"},
+		MemoryInput{Name: "w", Description: "d", Scope: "workspace", Body: "x"},
 	); !errors.Is(
 		err,
 		ErrForbidden,
@@ -327,6 +327,12 @@ func TestMemoryScopeAndProjectKeys(t *testing.T) {
 		MemoryInput{Name: "bad", Description: "d", Scope: "elsewhere", Body: "x"},
 	); err == nil {
 		t.Fatal("a scope that is not workspace or a project is refused")
+	}
+
+	// with no scope, the note of such a key goes to its project (the MCP tool has no scope argument)
+	if mem, _, err := m.SaveMemory(ctx, limited, MemoryInput{Name: "n", Description: "d", Body: "x"}); err != nil ||
+		mem.Scope != prj {
+		t.Fatalf("%v %+v", err, mem)
 	}
 }
 

@@ -423,7 +423,7 @@ func TestLibraryScopesAndProjectKeys(t *testing.T) {
 
 	if _, err := m.svc.MemoryWrite(
 		limited,
-		service.MemoryWriteRequest{Name: "w", Description: "d"},
+		service.MemoryWriteRequest{Name: "w", Description: "d", Scope: "workspace"},
 	); libCode(
 		err,
 	) != service.CodeForbidden {

@@ -73,7 +73,7 @@ One fact per file, `library/memory/<name>.md`.
 | --- | --- |
 | `name` | the file name, required |
 | `description` | one line: the fact, required, at most 200 characters |
-| `scope` | `workspace`, or a project id (`prj_...`), default `workspace` |
+| `scope` | `workspace`, or a project id (`prj_...`), default `workspace`; for a key limited to a project the default is that project, the only scope it may write |
 | `tags` | a list of at most 10 tags, each a name |
 | `actor` | who wrote it (SDD-000 section 3); set by the service from the caller, never from the request |
 | `kept` | `true` when a person kept it; a note written by an agent starts `false` |
