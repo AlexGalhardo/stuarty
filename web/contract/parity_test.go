@@ -93,6 +93,13 @@ var parity = []row{
 	// OpenTimelineIO moves a timeline as a file: no MCP tool (SDD-003 section 7.1, exception E-3).
 	{method: "ProjectOtioExport", command: "otio:export", route: "GET /projects/{}/otio"},
 	{method: "ProjectOtioImport", command: "otio:import", route: "POST /projects/{}/otio"},
+	// Connections (SDD-014 section 10): the read-only tool lists or reads one; creating, removing and
+	// testing one take a credential or reach the network, so they have no tool.
+	{method: "ConnectionList", tool: "connection", command: "connection:list", route: "GET /connections"},
+	{method: "ConnectionGet", tool: "connection", command: "connection:show", route: "GET /connections/{}"},
+	{method: "ConnectionCreate", command: "connection:add", route: "POST /connections"},
+	{method: "ConnectionRemove", command: "connection:remove", route: "DELETE /connections/{}"},
+	{method: "ConnectionTest", command: "connection:test", route: "POST /connections/{}/test"},
 }
 
 // notOperations are Service methods that are not operations an agent calls

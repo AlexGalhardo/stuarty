@@ -164,15 +164,45 @@ func TestOutboundRule(t *testing.T) {
 	t.Parallel()
 
 	root := t.TempDir()
-	write(t, root, "service/leak/a.go", "package leak\n\nimport \"net/http\"\n\nfunc f() { _, _ = http.Get(\"https://example.com\") }\n")
+	write(
+		t,
+		root,
+		"service/leak/a.go",
+		"package leak\n\nimport \"net/http\"\n\nfunc f() { _, _ = http.Get(\"https://example.com\") }\n",
+	)
 	write(t, root, "service/leak/b.go", "package leak\n\nimport h \"net/http\"\n\nvar c = &h.Client{}\n")
-	write(t, root, "service/leak/c.go", "package leak\n\nimport \"net\"\n\nfunc g() { _, _ = net.Dial(\"tcp\", \"example.com:80\") }\n")
-	write(t, root, "service/leak/ok.go", "package leak\n\nimport \"net/http\"\n\n// A loopback probe.\nvar c = &http.Client{} //nolint:forbidigo // loopback only: the probe\n")
-	write(t, root, "service/leak/above.go", "package leak\n\nimport \"net/http\"\n\n//nolint:forbidigo // loopback only: the probe\nvar c = &http.Client{}\n")
-	write(t, root, "service/leak/unmarked.go", "package leak\n\nimport \"net/http\"\n\nvar c = &http.Client{} //nolint:forbidigo // because\n")
+	write(
+		t,
+		root,
+		"service/leak/c.go",
+		"package leak\n\nimport \"net\"\n\nfunc g() { _, _ = net.Dial(\"tcp\", \"example.com:80\") }\n",
+	)
+	write(
+		t,
+		root,
+		"service/leak/ok.go",
+		"package leak\n\nimport \"net/http\"\n\n// A loopback probe.\nvar c = &http.Client{} //nolint:forbidigo // loopback only: the probe\n",
+	)
+	write(
+		t,
+		root,
+		"service/leak/above.go",
+		"package leak\n\nimport \"net/http\"\n\n//nolint:forbidigo // loopback only: the probe\nvar c = &http.Client{}\n",
+	)
+	write(
+		t,
+		root,
+		"service/leak/unmarked.go",
+		"package leak\n\nimport \"net/http\"\n\nvar c = &http.Client{} //nolint:forbidigo // because\n",
+	)
 	write(t, root, "service/leak/a_test.go", "package leak\n\nimport \"net/http\"\n\nvar c = &http.Client{}\n")
 	write(t, root, "internal/outbound/o.go", "package outbound\n\nimport \"net/http\"\n\nvar c = &http.Client{}\n")
-	write(t, root, "service/leak/server.go", "package leak\n\nimport \"net/http\"\n\nvar _ = http.StatusOK\nvar _ http.Handler\n")
+	write(
+		t,
+		root,
+		"service/leak/server.go",
+		"package leak\n\nimport \"net/http\"\n\nvar _ = http.StatusOK\nvar _ http.Handler\n",
+	)
 
 	got, err := CheckOutbound(root)
 	if err != nil {
