@@ -10,7 +10,7 @@ wide: true
 
 <RefMain>
 
-Check a project for problems: code, severity, item, message, hint. Errors block export; run after edits, before export. Runs every rule. preset (see command_help domain=export) checks the fit to that export preset instead.
+Check a project for problems: code, severity, item, message, hint. Errors block export; run after edits, before export. Runs every rule. preset (see command_help domain=export) checks the fit to that export preset instead, over start..end.
 
 ## Behaviour
 
@@ -33,6 +33,8 @@ These are the annotations of the tool definition, the hints a client uses to dec
 | `cursor` | `string` | no |  |
 | `limit` | `integer` | no | min 1; max 100; default `25` |
 | `preset` | `string` | no |  |
+| `start` | `string` | no |  |
+| `end` | `string` | no |  |
 
 ## Output
 

@@ -1,6 +1,6 @@
 {
  "name": "lint",
- "description": "Check a project for problems: code, severity, item, message, hint. Errors block export; run after edits, before export. Runs every rule. preset (see command_help domain=export) checks the fit to that export preset instead.",
+ "description": "Check a project for problems: code, severity, item, message, hint. Errors block export; run after edits, before export. Runs every rule. preset (see command_help domain=export) checks the fit to that export preset instead, over start..end.",
  "inputSchema": {
   "type": "object",
   "properties": {
@@ -29,6 +29,12 @@
     "default": 25
    },
    "preset": {
+    "type": "string"
+   },
+   "start": {
+    "type": "string"
+   },
+   "end": {
     "type": "string"
    }
   },
