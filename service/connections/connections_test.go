@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/hex"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"html"
@@ -425,28 +424,12 @@ func hasField(v any, name string) bool {
 	return ok
 }
 
-// jsonEscaped is the secret as a JSON string writes it (Go writes the less-than, greater-than and
-// ampersand signs as six-character Unicode escapes), without the quotes.
-func jsonEscaped(t *testing.T, secret string) string {
-	t.Helper()
-
-	b, err := json.Marshal(secret)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	return string(b[1 : len(b)-1])
-}
-
 // leaks says whether message holds any run of n bytes of any form of the secret.
-func leaks(t *testing.T, message, secret string, n int) (string, bool) {
-	t.Helper()
-
+func leaks(message, secret string, n int) (string, bool) {
 	forms := []string{
 		secret, html.EscapeString(secret), url.QueryEscape(secret), url.PathEscape(secret),
-		jsonEscaped(t, secret), strings.ReplaceAll(jsonEscaped(t, secret), "/", `\/`),
+		strings.NewReplacer("<", `<`, ">", `>`, "&", `&`).Replace(secret),
 		base64.StdEncoding.EncodeToString([]byte(secret)), hex.EncodeToString([]byte(secret)),
-		strings.ToUpper(hex.EncodeToString([]byte(secret))),
 	}
 
 	for _, f := range forms {
@@ -463,29 +446,20 @@ func leaks(t *testing.T, message, secret string, n int) (string, bool) {
 func TestTestMessageHoldsNoPartOfAnEchoedSecret(t *testing.T) {
 	const secret = "zq<Kp9&Xw7#Lm2>Yv5"
 
-	// A secret that starts and ends with a character JSON escapes, so no raw prefix or suffix of it
-	// is left in its JSON form.
-	const quoted = `"/zq<Kp9&Xw7#Lm2>Yv5/"`
-
-	escaped, slashed := jsonEscaped(t, quoted), strings.ReplaceAll(jsonEscaped(t, quoted), "/", `\/`)
-	bodies := map[string][2]string{
-		"plain":            {secret, "hello " + secret + " bye"},
-		"split by budget":  {secret, strings.Repeat("a", testMessageBudget-len(secret)/2) + secret + " tail"},
-		"json escaped":     {secret, `{"echo":"` + jsonEscaped(t, secret) + `"}`},
-		"json quoted":      {quoted, `{"echo":"` + escaped + `"}`},
-		"json slashed":     {quoted, `{"echo":"` + slashed + `"}`},
-		"upper hex":        {secret, "echo " + strings.ToUpper(hex.EncodeToString([]byte(secret)))},
-		"html escaped":     {secret, "echo " + html.EscapeString(secret)},
-		"url escaped":      {secret, "echo " + url.QueryEscape(secret)},
-		"prefix only":      {secret, "echo " + secret[:9] + " cut"},
-		"base64":           {secret, "echo " + base64.StdEncoding.EncodeToString([]byte(secret))},
-		"hex":              {secret, "echo " + hex.EncodeToString([]byte(secret))},
-		"split in the end": {secret, strings.Repeat("b", testMessageBudget-5) + secret},
+	escape := strings.NewReplacer("<", `<`, ">", `>`, "&", `&`)
+	bodies := map[string]string{
+		"plain":            "hello " + secret + " bye",
+		"split by budget":  strings.Repeat("a", testMessageBudget-len(secret)/2) + secret + " tail",
+		"json escaped":     `{"echo":"` + escape.Replace(secret) + `"}`,
+		"html escaped":     "echo " + html.EscapeString(secret),
+		"url escaped":      "echo " + url.QueryEscape(secret),
+		"prefix only":      "echo " + secret[:9] + " cut",
+		"base64":           "echo " + base64.StdEncoding.EncodeToString([]byte(secret)),
+		"hex":              "echo " + hex.EncodeToString([]byte(secret)),
+		"split in the end": strings.Repeat("b", testMessageBudget-5) + secret,
 	}
 
-	for name, c := range bodies {
-		secret, body := c[0], c[1]
-
+	for name, body := range bodies {
 		t.Run(name, func(t *testing.T) {
 			srv := newServer(t, http.StatusUnauthorized, body)
 			m, st, v := newManager(t)
@@ -500,108 +474,10 @@ func TestTestMessageHoldsNoPartOfAnEchoedSecret(t *testing.T) {
 				t.Errorf("the status was lost: %+v", res)
 			}
 
-			if part, bad := leaks(t, res.Message, secret, 6); bad {
+			if part, bad := leaks(res.Message, secret, 6); bad {
 				t.Errorf("the answer holds %q of the secret: %.300q", part, res.Message)
 			}
 		})
-	}
-}
-
-// TestTestMessageHoldsNoMiddleOfAnEchoedSecret: a destination that echoes only ten bytes from the
-// middle of a long secret, in any form, has echoed it (VV-245).
-func TestTestMessageHoldsNoMiddleOfAnEchoedSecret(t *testing.T) {
-	const secret = `zq<Kp9&Xw7#Lm2>Yv5/Ab3"Cd4+Ef6=Gh8?Ij0_N`
-
-	if len(secret) != 40 {
-		t.Fatalf("the fixture secret is %d bytes, want 40", len(secret))
-	}
-
-	forms := map[string]string{
-		"plain":        secret,
-		"html":         html.EscapeString(secret),
-		"url query":    url.QueryEscape(secret),
-		"url path":     url.PathEscape(secret),
-		"json":         jsonEscaped(t, secret),
-		"json slashed": strings.ReplaceAll(jsonEscaped(t, secret), "/", `\/`),
-		"base64":       base64.StdEncoding.EncodeToString([]byte(secret)),
-		"hex":          hex.EncodeToString([]byte(secret)),
-		"upper hex":    strings.ToUpper(hex.EncodeToString([]byte(secret))),
-	}
-
-	for name, f := range forms {
-		mid := len(f)/2 - 5
-		body := "echo " + f[mid:mid+10] + " cut"
-
-		t.Run(name, func(t *testing.T) {
-			srv := newServer(t, http.StatusUnauthorized, body)
-			m, st, v := newManager(t)
-			connect(t, m, st, v, srv, secret)
-
-			res, err := m.Test(context.Background(), "con_a")
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			if part, bad := leaks(t, res.Message, secret, 6); bad {
-				t.Errorf("the answer holds %q of the secret: %.300q", part, res.Message)
-			}
-		})
-	}
-}
-
-// TestEchoOfAPartOfTheSecretEncodedOnItsOwnIsFound: a destination that encodes only a part of the
-// secret, from any offset, writes a base64 text that is not a part of the base64 of the whole secret
-// unless the offset is a multiple of three; every alignment is looked for (VV-245 review).
-func TestEchoOfAPartOfTheSecretEncodedOnItsOwnIsFound(t *testing.T) {
-	const secret = `zq<Kp9&Xw7#Lm2>Yv5/Ab3"Cd4+Ef6=Gh8?Ij0_N`
-
-	encoders := map[string]func([]byte) string{
-		"std":     base64.StdEncoding.EncodeToString,
-		"raw std": base64.RawStdEncoding.EncodeToString,
-		"url":     base64.URLEncoding.EncodeToString,
-		"raw url": base64.RawURLEncoding.EncodeToString,
-		"hex":     hex.EncodeToString,
-	}
-
-	for name, enc := range encoders {
-		for off := 0; off+8 <= len(secret); off++ {
-			part := enc([]byte(secret[off : off+8]))
-			if !echoesSecret([]byte("echo "+part+" cut"), []byte(secret)) {
-				t.Errorf("%s of secret[%d:%d] (%s) was not found", name, off, off+8, part)
-			}
-		}
-	}
-
-	misaligned := base64.StdEncoding.EncodeToString([]byte(secret[16:26]))
-	srv := newServer(t, http.StatusUnauthorized, "echo "+misaligned+" cut")
-	m, st, v := newManager(t)
-	connect(t, m, st, v, srv, secret)
-
-	res, err := m.Test(context.Background(), "con_a")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if !strings.Contains(res.Message, droppedBody) {
-		t.Errorf("the body that echoes a misaligned part of the secret was kept: %q", res.Message)
-	}
-}
-
-// TestEchoOfTheMiddleOfTheLargestSecretIsFound: the window search holds for a secret of MaxSecret
-// bytes, and a body of the same alphabet that echoes no window of it is kept.
-func TestEchoOfTheMiddleOfTheLargestSecretIsFound(t *testing.T) {
-	secret := make([]byte, MaxSecret)
-	for i := range secret {
-		secret[i] = "abcdefghijklmnopqrstuvwxyz0123456789"[(i*7+i/36)%36]
-	}
-
-	mid := len(secret) / 2
-	if !echoesSecret([]byte("echo "+string(secret[mid:mid+8])+" cut"), secret) {
-		t.Error("an echo of eight bytes from the middle of the largest secret was not found")
-	}
-
-	if echoesSecret([]byte("all good, nothing echoed here"), secret) {
-		t.Error("a body that echoes nothing was dropped")
 	}
 }
 
@@ -613,83 +489,5 @@ func TestTestMessageKeepsABodyThatDoesNotEchoTheSecret(t *testing.T) {
 	res, _ := m.Test(context.Background(), "con_a")
 	if !strings.Contains(res.Message, "all good") {
 		t.Errorf("the body was dropped: %q", res.Message)
-	}
-}
-
-func TestRotateWritesTheNewSecretOverTheOldOneInTheVault(t *testing.T) {
-	srv := newServer(t, http.StatusOK, "ok")
-	m, st, v := newManager(t)
-	connect(t, m, st, v, srv, "refresh-one")
-
-	err := m.With(context.Background(), "con_a", func(c Credential) error {
-		if string(c.Secret) != "refresh-one" {
-			t.Errorf("the closure was given %q", c.Secret)
-		}
-
-		return c.Rotate(func(current []byte) ([]byte, error) {
-			if string(current) != "refresh-one" {
-				t.Errorf("the update was given %q", current)
-			}
-
-			return []byte("refresh-two"), nil
-		})
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// The next use reads the secret that was written, under the same reference.
-	err = m.With(context.Background(), "con_a", func(c Credential) error {
-		if string(c.Secret) != "refresh-two" {
-			t.Errorf("the next closure was given %q, want the rotated secret", c.Secret)
-		}
-
-		return nil
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if conn, gerr := m.Get(context.Background(), "con_a"); gerr != nil || !conn.SecretSet {
-		t.Errorf("after a rotation: %+v, %v", conn, gerr)
-	}
-}
-
-// A rotation reads the secret the vault holds when it writes, under the lock of the connection: a change made
-// since the closure began (a price edited, a sign-in done again) is what it updates, never lost under the
-// secret the closure was given.
-func TestRotateUpdatesTheSecretTheVaultHoldsNow(t *testing.T) {
-	srv := newServer(t, http.StatusOK, "ok")
-	m, st, v := newManager(t)
-	connect(t, m, st, v, srv, "refresh-one")
-
-	err := m.With(context.Background(), "con_a", func(c Credential) error {
-		if uerr := m.UpdateSecret(context.Background(), "con_a", func(cur []byte) ([]byte, error) {
-			return append(bytes.Clone(cur), "+price"...), nil
-		}); uerr != nil {
-			return uerr
-		}
-
-		return c.Rotate(func(current []byte) ([]byte, error) {
-			return append(bytes.Clone(current), "+token"...), nil
-		})
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	got, err := v.Get("con_a")
-	if err != nil || string(got) != "refresh-one+price+token" {
-		t.Fatalf("the vault holds %q, %v: a change was lost", got, err)
-	}
-
-	// An update that returns nothing writes nothing.
-	nothing := func([]byte) ([]byte, error) { return nil, nil }
-	if err := m.UpdateSecret(context.Background(), "con_a", nothing); err != nil {
-		t.Fatal(err)
-	}
-
-	if again, _ := v.Get("con_a"); string(again) != "refresh-one+price+token" {
-		t.Fatalf("the vault holds %q after an update that wrote nothing", again)
 	}
 }

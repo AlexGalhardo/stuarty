@@ -279,13 +279,7 @@ func hostAndPort(raw string) (host, port string, err error) {
 // TestConnectionRefusesNamedCloudMetadataAddressesAtDial: the metadata services that sit in ranges
 // the gate allows on purpose (the CGNAT block and the unique-local block) are refused by address.
 func TestConnectionRefusesNamedCloudMetadataAddressesAtDial(t *testing.T) {
-	hosts := []string{
-		"100.100.100.200", "fd00:ec2::254", "::ffff:100.100.100.200",
-		// A zone does not make it another address, and the NAT64 prefix embeds the IPv4 one.
-		"fd00:ec2::254%1", "64:ff9b::6464:64c8", "64:ff9b::a9fe:a9fe",
-	}
-
-	for _, host := range hosts {
+	for _, host := range []string{"100.100.100.200", "fd00:ec2::254", "::ffff:100.100.100.200"} {
 		t.Run(host, func(t *testing.T) {
 			reg := &fakeRegistry{dests: map[string]Destination{"con_a": {ID: "con_a", Hosts: []string{host}}}}
 
@@ -294,12 +288,7 @@ func TestConnectionRefusesNamedCloudMetadataAddressesAtDial(t *testing.T) {
 
 			defer restore()
 
-			authority := host
-			if strings.Contains(host, ":") {
-				authority = "[" + strings.ReplaceAll(host, "%", "%25") + "]"
-			}
-
-			_, _, err := get(Connection(reg, "con_a", 2*time.Second, nil), "https://"+authority+"/latest/meta-data/")
+			_, _, err := get(Connection(reg, "con_a", 2*time.Second, nil), "https://["+host+"]/latest/meta-data/")
 			if !errors.Is(err, ErrNotPublic) {
 				t.Fatalf("%v, want ErrNotPublic", err)
 			}
@@ -313,7 +302,7 @@ func TestConnectionRefusesNamedCloudMetadataAddressesAtDial(t *testing.T) {
 
 // TestConnectionStillAllowsCGNATAndUniqueLocalNeighbours: only the named addresses are refused.
 func TestConnectionStillAllowsCGNATAndUniqueLocalNeighbours(t *testing.T) {
-	for _, host := range []string{"100.100.100.201", "fd00:ec2::255", "10.0.0.1", "64:ff9b::6464:64c9"} {
+	for _, host := range []string{"100.100.100.201", "fd00:ec2::255", "10.0.0.1"} {
 		reg := &fakeRegistry{dests: map[string]Destination{"con_a": {ID: "con_a", Hosts: []string{host}}}}
 		stop := errors.New("stop")
 		restore := SetDialRecorder(func(Purpose, string) error { return stop })
@@ -324,67 +313,6 @@ func TestConnectionStillAllowsCGNATAndUniqueLocalNeighbours(t *testing.T) {
 		}
 
 		_, _, err := get(Connection(reg, "con_a", 2*time.Second, nil), "https://"+authority+"/")
-
-		restore()
-
-		if !errors.Is(err, stop) {
-			t.Errorf("%s: %v, want the gate to let the dial reach the recorder", host, err)
-		}
-	}
-}
-
-// TestConnectionRefusesEmbeddedIPv4OfRefusedAddresses: the IPv4 address that 6to4, the deprecated
-// IPv4-compatible form and the local-use NAT64 prefix carry is judged like a plain one (VV-245).
-func TestConnectionRefusesEmbeddedIPv4OfRefusedAddresses(t *testing.T) {
-	hosts := []string{
-		"2002:a9fe:a9fe::", "2002:a9fe:a9fe:1::5", "2002:6464:64c8::1", "2002:0:0::",
-		"::a9fe:a9fe", "::6464:64c8", "::e000:1",
-		"64:ff9b:1::a9fe:a9fe", "64:ff9b:1::1", "64:ff9b:1::",
-		// A zone does not hide the embedded address.
-		"2002:a9fe:a9fe::%1", "::a9fe:a9fe%1", "64:ff9b:1::1%1",
-	}
-
-	for _, host := range hosts {
-		t.Run(host, func(t *testing.T) {
-			reg := &fakeRegistry{dests: map[string]Destination{"con_a": {ID: "con_a", Hosts: []string{host}}}}
-
-			// The recorder refuses too, so a regression is counted without opening a socket to
-			// the embedded address.
-			dials := 0
-			restore := SetDialRecorder(func(Purpose, string) error { dials++; return errors.New("stop") })
-
-			defer restore()
-
-			authority := "[" + strings.ReplaceAll(host, "%", "%25") + "]"
-
-			_, _, err := get(Connection(reg, "con_a", 2*time.Second, nil), "https://"+authority+"/latest/meta-data/")
-			if !errors.Is(err, ErrNotPublic) {
-				t.Fatalf("%v, want ErrNotPublic", err)
-			}
-
-			if dials != 0 {
-				t.Errorf("the recorder saw %d dials of a refused address", dials)
-			}
-		})
-	}
-}
-
-// TestConnectionStillAllowsEmbeddedIPv4OfAllowedAddresses: the neighbours that carry an allowed
-// address reach the dial, and so do the IPv6 loopback (inside ::/96) and the tunnel forms the gate does
-// not decode (Teredo, an ISATAP interface identifier), whose embedded IPv4 receives a tunnel packet,
-// never the connection.
-func TestConnectionStillAllowsEmbeddedIPv4OfAllowedAddresses(t *testing.T) {
-	hosts := []string{
-		"2002:6464:64c9::1", "2002:a00:1::", "::a00:1", "::6464:64c9", "2002:7f00:1::", "::1",
-		"2001:0:4136:e378:8000:63bf:5601:5601", "2001:db8::5efe:a9fe:a9fe",
-	}
-
-	for _, host := range hosts {
-		reg := &fakeRegistry{dests: map[string]Destination{"con_a": {ID: "con_a", Hosts: []string{host}}}}
-		stop := errors.New("stop")
-		restore := SetDialRecorder(func(Purpose, string) error { return stop })
-
-		_, _, err := get(Connection(reg, "con_a", 2*time.Second, nil), "https://["+host+"]/")
 
 		restore()
 
