@@ -36,7 +36,7 @@ A creator publishes the same short video as a Reel on Instagram and on their Fac
 
 ## Tasks
 
-- [ ] 1. Read the official pages again and record, in SDD-020, the flow, the permissions, the limits, the upload path per case and the date; STOP if own-app use now needs a review the user cannot pass alone. Verify: `task lint:md` exits 0 and the links are in the hand-off.
+- [x] 1. Read the official pages again and record, in SDD-020, the flow, the permissions, the limits, the upload path per case and the date; STOP if own-app use now needs a review the user cannot pass alone. Verify: `task lint:md` exits 0 and the links are in the hand-off.
 - [ ] 2. Implement the shared sign-in and Graph client with a fake server. Verify: `go test ./service/social/meta/...` passes.
 - [ ] 3. Add the limits and fields to `core/publish` with table tests. Verify: `go test ./core/publish/...` passes.
 - [ ] 4. Implement the Instagram adapter with contract fixtures (container, processing, publish, errors). Verify: `go test ./service/social/instagram/...` passes with no network.
