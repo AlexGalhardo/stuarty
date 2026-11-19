@@ -764,6 +764,7 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 		From        string          `json:"from"`
 		Until       string          `json:"until"`
 		TrackID     string          `json:"track_id"`
+		RenderKey   string          `json:"render_key"`
 		IncludeLog  *bool           `json:"include_log"`
 		AsNew       bool            `json:"as_new"`
 		DryRun      bool            `json:"dry_run"`
@@ -968,6 +969,15 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 		argv = append(argv, flag("until", a.Until)...)
 
 		return "motion:check", append(argv, flag("track", a.TrackID)...), "", nil
+	case "MotionReplace":
+		argv = append(slices.Clone(proj), flag("asset", a.AssetID)...)
+		argv = append(argv, flag("render-key", a.RenderKey)...)
+
+		if a.DryRun {
+			argv = append(argv, "--dry-run")
+		}
+
+		return "motion:replace", argv, "", nil
 	case "Doctor":
 		return "doctor", []string{"--full"}, "", nil
 	case "FontList":
