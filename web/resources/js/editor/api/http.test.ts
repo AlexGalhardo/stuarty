@@ -227,7 +227,7 @@ describe("endpoints and URLs", () => {
 
 	test("binary URLs carry time as a string with a unit", () => {
 		expect(frameUrl("prj_x", 375, 540, 12)).toBe(
-			"/api/v1/projects/prj_x/frame?at=375f&width=540&rev=12&timeline_id=prj_x",
+			"/api/v1/projects/prj_x/frame?at=375f&width=540&rev=12",
 		);
 		expect(thumbnailUrl("prj_x", "ast_1", 160)).toBe(
 			"/api/v1/projects/prj_x/media/ast_1/thumbnail?width=160",

@@ -2,8 +2,6 @@ import { type ReactNode, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
-import { rowFor } from "../commands/keymapStore";
-import { inOverlay, isEditable } from "../commands/keyTarget";
 import { useSurfaceRequest } from "../commands/surface";
 import { useStore } from "../state/createStore";
 import { useDocumentState, useRuntime } from "../state/EditorContext";
@@ -31,15 +29,23 @@ export default function ExportButton(): ReactNode {
 	useSurfaceRequest("export", () => {
 		if (ready) setOpen(true);
 	});
-	// The `export` row of the registry (SDD-012 sections 18.7 and 18.9), not
-	// inside a field or another dialog.
+	// Mod+E (SDD-012 section 18.7), not inside a field or another dialog.
 	useEffect(() => {
 		const onKey = (event: KeyboardEvent): void => {
 			if (
-				!ready ||
-				isEditable(event.target) ||
-				inOverlay(event.target) ||
-				rowFor(event, ["global"]) !== "export"
+				!(event.ctrlKey || event.metaKey) ||
+				event.altKey ||
+				event.shiftKey ||
+				event.key.toLowerCase() !== "e" ||
+				!ready
+			)
+				return;
+			const target = event.target;
+			if (
+				target instanceof HTMLElement &&
+				(target.isContentEditable ||
+					["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName) ||
+					target.closest('[role="dialog"], [role="alertdialog"]') !== null)
 			)
 				return;
 			event.preventDefault();
@@ -54,7 +60,6 @@ export default function ExportButton(): ReactNode {
 			<Button
 				type="button"
 				size="sm"
-				data-tour="export"
 				disabled={!ready}
 				onClick={() => setOpen(true)}
 			>

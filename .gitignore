@@ -34,8 +34,6 @@ site/out/
 .env
 .env.*
 !.env.example
-deploy/secrets/
-deploy/backups/
 
 # OS and editors
 .DS_Store

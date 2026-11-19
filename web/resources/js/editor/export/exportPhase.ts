@@ -35,10 +35,7 @@ export function exportIsStale(
 	job: Job | undefined,
 	revision: number | null,
 ): boolean {
-	const exported =
-		job?.result?.export?.revision ??
-		job?.result?.batch?.items.find((item) => item.result !== undefined)?.result
-			?.revision;
+	const exported = job?.result?.export?.revision;
 	return (
 		job?.state === "succeeded" &&
 		exported !== undefined &&

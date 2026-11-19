@@ -280,29 +280,9 @@ func TestErrorEnvelope(t *testing.T) {
 			400,
 			"E_VALIDATION",
 		},
-		"missing member": {
-			req{method: http.MethodPost, path: "/api/v1/projects", body: `{}`},
-			400,
-			"E_VALIDATION",
-		},
-		"bad limit":           {req{path: "/api/v1/projects?limit=abc"}, 400, "E_VALIDATION"},
-		"bad assets limit":    {req{path: "/api/v1/assets?limit=abc"}, 400, "E_VALIDATION"},
-		"bad assets reusable": {req{path: "/api/v1/assets?reusable=maybe"}, 400, "E_VALIDATION"},
-		"bad assets origin":   {req{path: "/api/v1/assets?origin=stolen"}, 400, "E_VALIDATION"},
-		"bad asset hash":      {req{path: "/api/v1/assets/nonsense"}, 400, "E_VALIDATION"},
-		"unknown asset":       {req{path: "/api/v1/assets/sha256:" + strings.Repeat("0", 64)}, 404, "E_NOT_FOUND"},
-		"unknown asset uses": {
-			req{path: "/api/v1/assets/sha256:" + strings.Repeat("0", 64) + "/uses"},
-			404,
-			"E_NOT_FOUND",
-		},
-		"tag an unknown asset": {req{
-			method: http.MethodPost, path: "/api/v1/assets/sha256:" + strings.Repeat("0", 64) + "/tags",
-			body: `{"add":["x"]}`,
-		}, 404, "E_NOT_FOUND"},
-		"set an unknown asset": {req{
-			method: http.MethodPut, path: "/api/v1/assets/sha256:" + strings.Repeat("0", 64), body: `{"reusable":true}`,
-		}, 404, "E_NOT_FOUND"},
+		"missing member":   {req{method: http.MethodPost, path: "/api/v1/projects", body: `{}`}, 400, "E_VALIDATION"},
+		"bad limit":        {req{path: "/api/v1/projects?limit=abc"}, 400, "E_VALIDATION"},
+		"bad assets limit": {req{path: "/api/v1/assets?limit=abc"}, 400, "E_VALIDATION"},
 		"too large": {
 			req{
 				method: http.MethodPost,

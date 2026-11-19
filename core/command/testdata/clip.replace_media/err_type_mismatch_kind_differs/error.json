@@ -1,7 +1,0 @@
-{
-  "code": "E_TYPE_MISMATCH",
-  "message": "Asset ast_h7j8k9m2n3 is an image asset; clip itm_m1n2p3q4r5 plays a video asset.",
-  "hint": "Replace a video with a video and an image with an image; to change the kind, add a new clip with clip.add.",
-  "retryable": false,
-  "path": "args.asset_id"
-}

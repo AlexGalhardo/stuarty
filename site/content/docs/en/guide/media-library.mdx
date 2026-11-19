@@ -52,12 +52,6 @@ A GIF, an animated WebP or an APNG with more than one frame becomes an image ass
 
 An animation of more than 1,000 frames, or whose frames add up to more than 134,217,728 pixels, is refused with `E_LIMIT_EXCEEDED`. In the editor the <Term id="proxy">proxy</Term> of an animated image is its first frame.
 
-## Import a picture into an image document
-
-`stuarty image:import --path /home/ana/photo.jpg` makes a new image document with the picture as its one layer, fitted and centred; the canvas is the size of the picture when both sides are at most 4,096 pixels, otherwise give `--preset` or `--width` and `--height`. With `--id img_...` the picture becomes one more layer of that image instead. `--hash` takes a picture already in the workspace. Over MCP it is the `image` tool with `action` `import`.
-
-In the editor, the image list has **Import image** and the image editor has **Put a file in this image**: choose a file of your computer (up to 64 MiB) or type the path of a file on the server. The file goes through the same ingest as any import, so a file that is not a picture is refused and makes no image. When the ingest takes longer than the wait (10 seconds by default), the answer is `pending` with the hash of the file and nothing is made yet: import it again once it is ready.
-
 ## Common mistakes
 
 - Editing with an asset that is still ingesting: `E_ASSET_NOT_READY`, which is retryable.

@@ -88,7 +88,7 @@ func TestReferenceDocumentsTheProcessCommands(t *testing.T) {
 		}
 	}
 
-	for _, want := range []string{"serve", "open", "user:create", "user:passwd", "workspace:backup", "workspace:restore"} {
+	for _, want := range []string{"serve", "open", "user:create", "user:passwd"} {
 		if !names[want] {
 			t.Errorf("the reference lacks %s", want)
 		}

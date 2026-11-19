@@ -27,7 +27,7 @@ Send the secret in the header `Authorization: Bearer <secret>`: the local token 
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
-| `domain` | `string` | no | A domain of the product, video by default. |
+| `domain` | `string` | no | video (default) or image. |
 
 ## Responses
 
@@ -39,7 +39,6 @@ Content type `application/json`. Schema: [`CommandHelpResult`](/docs/api/schemas
 | --- | --- | --- | --- |
 | `command` | [`CommandDetail`](/docs/api/schemas#commanddetail) or `any` or `null` or `null` | no |  |
 | `commands` | array of [`CommandSummary`](/docs/api/schemas#commandsummary) | no |  |
-| `domains` | array of [`DomainSummary`](/docs/api/schemas#domainsummary) | no |  |
 | `text` | `string` | no |  |
 
 ### 400
@@ -237,13 +236,6 @@ puts "#{response.code} #{response.body}"
     {
       "name": "string",
       "scope": "string",
-      "summary": "string"
-    }
-  ],
-  "domains": [
-    {
-      "name": "string",
-      "operations": 0,
       "summary": "string"
     }
   ],

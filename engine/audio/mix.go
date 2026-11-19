@@ -52,24 +52,7 @@ type track struct {
 	r    *bufio.Reader
 	done bool // the stream ended before src.Samples
 	seg  int  // index of the envelope point at or before the next sample
-
-	// The processor chain of the source (SDD-004 section 7.1): built when the source first sounds. pulled counts the
-	// frames of the source read for it, which runs ahead of the output by the latency of the chain.
-	run    *runner
-	pulled int64
-	ctx    context.Context
-	open   Opener
 }
-
-// unit is what the mix adds up: a source, or a track bus that holds sources.
-type unit interface {
-	// add adds the part of the unit that falls in the output range [b0, b0+n) to out, interleaved stereo.
-	add(ctx context.Context, open Opener, out []float32, b0, n int64) error
-	close()
-	name() string
-}
-
-func (t *track) name() string { return t.src.ItemID }
 
 func (t *track) close() {
 	if t.rc != nil {
@@ -107,10 +90,13 @@ func Mix(
 	open Opener,
 	sink func(block []float32) error,
 ) error {
-	units := buildUnits(srcs)
+	tracks := make([]*track, len(srcs))
+	for i := range srcs {
+		tracks[i] = &track{src: srcs[i]}
+	}
 	defer func() {
-		for _, u := range units {
-			u.close()
+		for _, t := range tracks {
+			t.close()
 		}
 	}()
 
@@ -123,9 +109,9 @@ func Mix(
 		out := block[:n*Channels]
 		clear(out)
 
-		for _, u := range units {
-			if err := u.add(ctx, open, out, b0, n); err != nil {
-				return fmt.Errorf("audio source %s: %w", u.name(), err)
+		for _, t := range tracks {
+			if err := t.mixInto(ctx, open, out, b0, n); err != nil {
+				return fmt.Errorf("audio source %s: %w", t.src.ItemID, err)
 			}
 		}
 		if err := sink(out); err != nil {
@@ -135,8 +121,8 @@ func Mix(
 	return nil
 }
 
-// add adds the part of the source that falls in [b0, b0+n) to out.
-func (t *track) add(ctx context.Context, open Opener, out []float32, b0, n int64) error {
+// mixInto adds the part of the source that falls in [b0, b0+n) to out.
+func (t *track) mixInto(ctx context.Context, open Opener, out []float32, b0, n int64) error {
 	start, end := t.src.StartSample, t.src.StartSample+t.src.Samples
 	lo, hi := max(start, b0), min(end, b0+n)
 	if lo >= hi {
@@ -144,9 +130,6 @@ func (t *track) add(ctx context.Context, open Opener, out []float32, b0, n int64
 			t.close()
 		}
 		return nil
-	}
-	if len(t.src.Chain) > 0 {
-		return t.addChained(ctx, open, out, b0, lo, hi)
 	}
 	if t.r == nil && !t.done {
 		rc, err := open.Open(ctx, t.src)

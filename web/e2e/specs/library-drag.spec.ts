@@ -125,7 +125,7 @@ test.describe("library-drag", () => {
 		request,
 	}) => {
 		const seeded = await seedProject(request, { tracks: 1, perTrack: 0 });
-		await page.route("**/media*", async (route) => {
+		await page.route("**/media", async (route) => {
 			if (route.request().method() !== "GET") return route.continue();
 			const response = await route.fetch();
 			const body = (await response.json()) as {

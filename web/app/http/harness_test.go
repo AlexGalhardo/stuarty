@@ -100,21 +100,6 @@ func newHarnessLimited(
 ) *harness {
 	tb.Helper()
 
-	return newHarnessBuilt(tb, eo, wrap, rate, nil, extra...)
-}
-
-// newHarnessBuilt is newHarnessLimited with the chance to complete the options of the service (the media
-// machinery of the image import) before it is built; the workspace folder is given.
-func newHarnessBuilt(
-	tb testing.TB,
-	eo events.Options,
-	wrap func(service.Service) service.Service,
-	rate httpapi.RateLimits,
-	mutate func(dir workspace.Dir, o *service.Options),
-	extra ...vukem.Option,
-) *harness {
-	tb.Helper()
-
 	dir, err := workspace.Resolve(func(string) string { return filepath.Join(tb.TempDir(), "ws") })
 	if err != nil {
 		tb.Fatal(err)
@@ -134,12 +119,7 @@ func newHarnessBuilt(
 	hub := events.New(st, eo)
 	tb.Cleanup(hub.Close)
 
-	opts := service.Options{Store: st, Publish: hub.Publish}
-	if mutate != nil {
-		mutate(dir, &opts)
-	}
-
-	svc, err := service.New(opts)
+	svc, err := service.New(service.Options{Store: st, Publish: hub.Publish})
 	if err != nil {
 		tb.Fatal(err)
 	}

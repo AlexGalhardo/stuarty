@@ -64,9 +64,6 @@ export interface PreviewExecutor {
 	setProject(info: ProjectInfo): void;
 	// Invalidates the plan windows, keeps the media elements.
 	setRevision(revision: number): void;
-	// A timeline this one uses as a composition changed (nested.updated): the
-	// revision is the same, the plan windows are dropped and the frame drawn again.
-	refresh(): void;
 	// Paused or scrubbing.
 	seek(frame: number, options?: { scrubbing?: boolean }): void;
 	// Resumes the AudioContext, so it must run inside a user gesture.

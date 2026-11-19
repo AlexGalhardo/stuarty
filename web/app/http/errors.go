@@ -1,8 +1,6 @@
 package httpapi
 
 import (
-	"context"
-	"errors"
 	"net/http"
 	"strconv"
 
@@ -25,27 +23,7 @@ const CodeMethodNotAllowed = service.CodeMethodNotAllowed
 // them, code, message, hint, retryable, op_index, path and details.
 func installErrors(s *web.Services) {
 	web.MapError(s, func(_ *web.Ctx, e *service.Error) error { return httpError(e.ForSurface(service.SurfaceHTTP)) })
-	s.ErrorMappers = append(s.ErrorMappers, clientGone)
 	s.ProblemDecorator = decorate
-}
-
-// clientGone maps a context error to E_CLIENT_CLOSED (499) when the request
-// itself has ended, so a caller that gave up is not logged as a 5xx. vukem
-// renders any error it does not know as 500 (VF-068). A context error on a
-// request that is still live stays a real fault.
-func clientGone(c *web.Ctx, err error) (error, bool) { //nolint:revive // the signature of web.Services.ErrorMappers
-
-	if !errors.Is(err, context.Canceled) && !errors.Is(err, context.DeadlineExceeded) {
-		return nil, false
-	}
-
-	if c.Context().Err() == nil {
-		return nil, false
-	}
-
-	return httpError((&service.Error{
-		Code: service.CodeClientClosed, Message: "the caller closed the request before it finished.",
-	}).ForSurface(service.SurfaceHTTP)), true
 }
 
 func httpError(e *service.Error) *errs.HTTPError {

@@ -33,8 +33,6 @@ export const ACTIONS: Readonly<Record<string, readonly string[]>> = {
 	"timeline.delete": ["item.delete"],
 	"timeline.ripple_delete": ["item.delete"],
 	"timeline.duplicate": ["item.duplicate"],
-	"timeline.create_composition": ["composition.create_from_selection"],
-	"timeline.expand_composition": ["composition.expand"],
 	"timeline.repeat": ["item.repeat"],
 	"inspector.shadow": ["clip.set_shadow"],
 	"inspector.outline": ["clip.set_outline"],
@@ -51,8 +49,7 @@ export const ACTIONS: Readonly<Record<string, readonly string[]>> = {
 	"inspector.transform": ["item.set_transform", "keyframe.set"],
 	"notice.use_keyframes": ["keyframe.set"],
 	"inspector.keyframe_add": ["keyframe.set"],
-	"inspector.keyframe_easing": ["keyframe.set_easing"],
-	"inspector.keyframe_curve": ["keyframe.set_easing"],
+	"inspector.keyframe_easing": ["keyframe.set"],
 	"inspector.keyframe_value": ["keyframe.set"],
 	"inspector.keyframe_remove": ["keyframe.remove"],
 	"inspector.keyframe_clear": ["keyframe.clear"],
@@ -60,7 +57,6 @@ export const ACTIONS: Readonly<Record<string, readonly string[]>> = {
 	"inspector.transition": ["item.set_transition"],
 	"timeline.crossfade": ["item.crossfade"],
 	"inspector.animation": ["text.apply_preset"],
-	"inspector.motion": ["animation.apply_preset"],
 	"timeline.edit_word": ["caption.edit_word"],
 	"inspector.word_text": ["caption.edit_word"],
 	"timeline.word_boundary": ["caption.set_words"],
@@ -102,13 +98,6 @@ export const ACTIONS: Readonly<Record<string, readonly string[]>> = {
 	"inspector.blur": ["clip.set_blur"],
 	"inspector.duck": ["audio.duck"],
 	"inspector.mark_beats": ["audio.mark_beats"],
-	"inspector.audio_processors": [
-		"audio.processor_add",
-		"audio.processor_set",
-		"audio.processor_move",
-		"audio.processor_remove",
-		"audio.apply_preset",
-	],
 	"inspector.font_add": ["font.add"],
 	"inspector.font_remove": ["font.remove"],
 	"topbar.rename": ["project.rename"],
@@ -136,38 +125,13 @@ const palette: EntryPoint = {
 };
 
 export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
-	"animation.apply_preset": [
-		{ kind: "inspector", action: "inspector.motion" },
-		palette,
-	],
-	"animation.list_presets": [palette],
 	"asset.remove": [{ kind: "menu", action: "library.remove" }, palette],
 	"audio.add": [
 		{ kind: "gesture", action: "library.add_to_timeline" },
 		{ kind: "gesture", action: "library.drag" },
 		palette,
 	],
-	"audio.apply_preset": [
-		{ kind: "inspector", action: "inspector.audio_processors" },
-		palette,
-	],
 	"audio.duck": [{ kind: "inspector", action: "inspector.duck" }, palette],
-	"audio.processor_add": [
-		{ kind: "inspector", action: "inspector.audio_processors" },
-		palette,
-	],
-	"audio.processor_move": [
-		{ kind: "inspector", action: "inspector.audio_processors" },
-		palette,
-	],
-	"audio.processor_remove": [
-		{ kind: "inspector", action: "inspector.audio_processors" },
-		palette,
-	],
-	"audio.processor_set": [
-		{ kind: "inspector", action: "inspector.audio_processors" },
-		palette,
-	],
 	"audio.mark_beats": [
 		{ kind: "inspector", action: "inspector.mark_beats" },
 		palette,
@@ -214,20 +178,10 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 		{ kind: "gesture", action: "library.drag" },
 		palette,
 	],
-	"clip.add_composition": [palette],
-	"composition.create_from_selection": [
-		{ kind: "menu", action: "timeline.create_composition" },
-		palette,
-	],
-	"composition.expand": [
-		{ kind: "menu", action: "timeline.expand_composition" },
-		palette,
-	],
 	"clip.remove_silences": [
 		{ kind: "inspector", action: "inspector.silences" },
 		palette,
 	],
-	"clip.replace_media": [palette],
 	"clip.set_blur": [{ kind: "inspector", action: "inspector.blur" }, palette],
 	"clip.set_chroma_key": [
 		{ kind: "inspector", action: "inspector.chroma_key" },
@@ -376,12 +330,8 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 		{ kind: "menu", action: "notice.use_keyframes" },
 		{ kind: "inspector", action: "inspector.keyframe_add" },
 		{ kind: "inspector", action: "inspector.color_keyframe" },
-		{ kind: "inspector", action: "inspector.keyframe_value" },
-		palette,
-	],
-	"keyframe.set_easing": [
 		{ kind: "inspector", action: "inspector.keyframe_easing" },
-		{ kind: "inspector", action: "inspector.keyframe_curve" },
+		{ kind: "inspector", action: "inspector.keyframe_value" },
 		palette,
 	],
 	"project.rename": [{ kind: "toolbar", action: "topbar.rename" }, palette],

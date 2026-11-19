@@ -1,7 +1,0 @@
-{
-  "args": {
-    "asset": "sha256:2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b",
-    "layer_id": "lyr_bbbbbbbbbb"
-  },
-  "op": "layer.replace_source"
-}

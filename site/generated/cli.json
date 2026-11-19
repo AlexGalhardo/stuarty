@@ -63,7 +63,6 @@
   "commands": [
     {
       "name": "project:list",
-      "domain": "project",
       "summary": "list the projects of the workspace",
       "usage": [
         "stuarty project:list [--state active|trashed|all] [--cursor c] [--limit n]"
@@ -97,7 +96,6 @@
     },
     {
       "name": "project:create",
-      "domain": "project",
       "summary": "create a project",
       "usage": [
         "stuarty project:create --name <name> [--preset 9:16|1:1|16:9|4:5] [--fps 30] [--id prj_...]"
@@ -137,7 +135,6 @@
     },
     {
       "name": "project:show",
-      "domain": "project",
       "summary": "show a project",
       "usage": [
         "stuarty project:show [<project id>] [--detail concise|full|document] [--cursor c] [--limit n]"
@@ -171,7 +168,6 @@
     },
     {
       "name": "project:trash",
-      "domain": "project",
       "summary": "move a project to the trash",
       "usage": [
         "stuarty project:trash <project id>"
@@ -188,7 +184,6 @@
     },
     {
       "name": "project:restore",
-      "domain": "project",
       "summary": "restore a trashed project",
       "usage": [
         "stuarty project:restore <project id>"
@@ -205,7 +200,6 @@
     },
     {
       "name": "edit",
-      "domain": "video",
       "summary": "apply a batch of operations to a project (its lint block is lint_scope fast: lint runs every rule)",
       "usage": [
         "stuarty edit --project <id> --ops <file|-> [--base n] [--key k]",
@@ -240,7 +234,6 @@
     },
     {
       "name": "history",
-      "domain": "video",
       "summary": "list the steps of a project history",
       "usage": [
         "stuarty history --project <id> [--by a] [--cursor c] [--limit n]"
@@ -274,7 +267,6 @@
     },
     {
       "name": "undo",
-      "domain": "video",
       "summary": "undo the last step of the caller",
       "usage": [
         "stuarty undo --project <id>"
@@ -291,7 +283,6 @@
     },
     {
       "name": "redo",
-      "domain": "video",
       "summary": "redo the last undone step of the caller",
       "usage": [
         "stuarty redo --project <id>"
@@ -308,7 +299,6 @@
     },
     {
       "name": "lint",
-      "domain": "video",
       "summary": "check a project against every lint rule (an edit result runs only the fast rules, lint_scope fast)",
       "usage": [
         "stuarty lint --project <id> [--severity error|warning] [--cursor c] [--limit n] [--strict]"
@@ -349,7 +339,6 @@
     },
     {
       "name": "version",
-      "domain": "workspace",
       "summary": "print the version of this binary",
       "usage": [
         "stuarty version [--json]"
@@ -364,7 +353,6 @@
     },
     {
       "name": "mcp",
-      "domain": "workspace",
       "summary": "serve the MCP tools on standard input and output",
       "usage": [
         "stuarty mcp [--actor <label>]"
@@ -378,185 +366,10 @@
       ]
     },
     {
-      "name": "revert",
-      "domain": "video",
-      "summary": "go back to the document of an earlier revision, as a new step that undo takes back",
-      "usage": [
-        "stuarty revert --project <id> (--revision n | --checkpoint name) [--base n] [--dry-run]"
-      ],
-      "example": "stuarty revert --project prj_7k2m9x4q1b --checkpoint \"before the intro\" --dry-run",
-      "flags": [
-        {
-          "name": "revision",
-          "type": "integer",
-          "usage": "the revision to go back to"
-        },
-        {
-          "name": "checkpoint",
-          "type": "string",
-          "usage": "the name of a checkpoint to go back to"
-        },
-        {
-          "name": "base",
-          "type": "integer",
-          "usage": "the revision you read (default the current one); an older one conflicts with other actors' changes"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file",
-        "project",
-        "dry-run"
-      ]
-    },
-    {
-      "name": "diff",
-      "domain": "video",
-      "summary": "list what changed between two revisions, most significant first",
-      "usage": [
-        "stuarty diff --project <id> (--from n | --from-checkpoint name) [--until n]"
-      ],
-      "example": "stuarty diff --project prj_7k2m9x4q1b --from 12",
-      "flags": [
-        {
-          "name": "from",
-          "type": "integer",
-          "usage": "the revision the diff starts from"
-        },
-        {
-          "name": "from-checkpoint",
-          "type": "string",
-          "usage": "the name of a checkpoint the diff starts from"
-        },
-        {
-          "name": "until",
-          "type": "integer",
-          "usage": "the revision the diff ends at (default the current one)"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file",
-        "project"
-      ]
-    },
-    {
-      "name": "checkpoint:create",
-      "domain": "video",
-      "summary": "name a revision so that it can be gone back to",
-      "usage": [
-        "stuarty checkpoint:create --project <id> --name <name> [--note t] [--revision n]"
-      ],
-      "example": "stuarty checkpoint:create --project prj_7k2m9x4q1b --name \"before the intro\"",
-      "flags": [
-        {
-          "name": "name",
-          "type": "string",
-          "usage": "1 to 60 characters, no slash"
-        },
-        {
-          "name": "note",
-          "type": "string",
-          "usage": "up to 300 characters"
-        },
-        {
-          "name": "revision",
-          "type": "integer",
-          "usage": "the revision to name (default the current one)"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file",
-        "project"
-      ]
-    },
-    {
-      "name": "checkpoint:list",
-      "domain": "video",
-      "summary": "list the checkpoints of a project, newest revision first",
-      "usage": [
-        "stuarty checkpoint:list --project <id>"
-      ],
-      "example": "stuarty checkpoint:list --project prj_7k2m9x4q1b --json",
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file",
-        "project"
-      ]
-    },
-    {
-      "name": "checkpoint:rename",
-      "domain": "video",
-      "summary": "rename a checkpoint, and change its note",
-      "usage": [
-        "stuarty checkpoint:rename --project <id> --name <name> --new-name <name> [--note t]"
-      ],
-      "example": "stuarty checkpoint:rename --project prj_7k2m9x4q1b --name draft --new-name \"first cut\"",
-      "flags": [
-        {
-          "name": "name",
-          "type": "string",
-          "usage": "the checkpoint to rename"
-        },
-        {
-          "name": "new-name",
-          "type": "string",
-          "usage": "the new name"
-        },
-        {
-          "name": "note",
-          "type": "string",
-          "usage": "replaces the note when given"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file",
-        "project"
-      ]
-    },
-    {
-      "name": "checkpoint:remove",
-      "domain": "video",
-      "summary": "remove a checkpoint; no revision is removed",
-      "usage": [
-        "stuarty checkpoint:remove --project <id> --name <name>"
-      ],
-      "example": "stuarty checkpoint:remove --project prj_7k2m9x4q1b --name draft",
-      "flags": [
-        {
-          "name": "name",
-          "type": "string",
-          "usage": "the checkpoint to remove"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file",
-        "project"
-      ]
-    },
-    {
       "name": "media:import",
-      "domain": "asset",
       "summary": "import media files into a project",
       "usage": [
         "stuarty media:import <path>... --project <id> [--asset-id ast_...] [--wait] [--timeout d]",
-        "stuarty media:import --hash sha256:... --project <id>   (a file the library already holds: no copy)",
-        "origin and reuse: [--origin-kind k] [--origin-source s] [--provider p] [--model m] [--prompt t] [--rights-note t] [--engine e] [--engine-version v] [--render-key k] [--tag t] [--reusable] [--description t]",
         "formats: MP4, MOV, MKV, WebM, AVI, MP3, WAV, FLAC, OGG, PNG, JPEG, WebP, GIF and .cube; not SVG"
       ],
       "example": "stuarty media:import clip.mov --project prj_7k2m9x4q1b --json",
@@ -566,78 +379,6 @@
           "type": "string",
           "usage": "id to give the asset, once per path, in order",
           "repeat": true
-        },
-        {
-          "name": "hash",
-          "type": "string",
-          "usage": "the hash of a file of the library to use in the project, in place of a path",
-          "repeat": true
-        },
-        {
-          "name": "origin-kind",
-          "type": "string",
-          "usage": "imported (default), generated, fetched_by_agent or rendered_externally"
-        },
-        {
-          "name": "origin-source",
-          "type": "string",
-          "usage": "a path, a URL or a tool name, as plain text (required for fetched_by_agent and rendered_externally)"
-        },
-        {
-          "name": "provider",
-          "type": "string",
-          "usage": "the provider that generated the files (required for generated)"
-        },
-        {
-          "name": "model",
-          "type": "string",
-          "usage": "the model that generated the files (required for generated)"
-        },
-        {
-          "name": "prompt",
-          "type": "string",
-          "usage": "the prompt that generated the files"
-        },
-        {
-          "name": "cost-micros",
-          "type": "integer",
-          "usage": "what the files cost, in millionths of a US dollar"
-        },
-        {
-          "name": "engine",
-          "type": "string",
-          "usage": "the motion engine that rendered the files (rendered_externally)"
-        },
-        {
-          "name": "engine-version",
-          "type": "string",
-          "usage": "the version of that engine (rendered_externally)"
-        },
-        {
-          "name": "render-key",
-          "type": "string",
-          "usage": "a stable name for the animation, the same each time it is rendered again (rendered_externally)"
-        },
-        {
-          "name": "rights-note",
-          "type": "string",
-          "usage": "your own record of the licence or the permission (required for fetched_by_agent)"
-        },
-        {
-          "name": "tag",
-          "type": "string",
-          "usage": "a tag for the files; repeat it or give a comma list",
-          "repeat": true
-        },
-        {
-          "name": "reusable",
-          "type": "boolean",
-          "usage": "mark the files to be offered again"
-        },
-        {
-          "name": "description",
-          "type": "string",
-          "usage": "what the files are, in your words"
         }
       ],
       "globals": [
@@ -652,7 +393,6 @@
     },
     {
       "name": "media:inspect",
-      "domain": "asset",
       "summary": "show what is known about an asset",
       "usage": [
         "stuarty media:inspect <asset id> --project <id> [--sections probe,transcript,silences,loudness]"
@@ -692,7 +432,6 @@
     },
     {
       "name": "media:list",
-      "domain": "asset",
       "summary": "list the assets of a project",
       "usage": [
         "stuarty media:list --project <id> [--cursor c] [--limit n]"
@@ -721,7 +460,6 @@
     },
     {
       "name": "media:trash",
-      "domain": "asset",
       "summary": "move an asset to the trash",
       "usage": [
         "stuarty media:trash <asset id> --project <id>"
@@ -738,7 +476,6 @@
     },
     {
       "name": "media:restore",
-      "domain": "asset",
       "summary": "restore a trashed asset",
       "usage": [
         "stuarty media:restore <asset id> --project <id>"
@@ -755,11 +492,10 @@
     },
     {
       "name": "view",
-      "domain": "video",
-      "summary": "render a frame or a contact sheet of a project, or measure its sound",
+      "summary": "render a frame or a contact sheet of a project",
       "usage": [
-        "stuarty view --project <id> [--mode frame|sheet|audio] [--at t] [--times t1,t2,...]",
-        "    [--from t --until t --count n] [--cols n] [--max-tokens n] [--width px] [--item id]"
+        "stuarty view --project <id> [--mode frame|sheet] [--at t] [--times t1,t2,...]",
+        "    [--from t --until t --count n] [--cols n] [--max-tokens n] [--width px]"
       ],
       "example": "stuarty view --project prj_7k2m9x4q1b --at 1s --json",
       "flags": [
@@ -767,12 +503,7 @@
           "name": "mode",
           "type": "string",
           "default": "frame",
-          "usage": "frame (one image at --at), sheet (a grid) or audio (the loudness, true peak and noise floor with and without the audio processors)"
-        },
-        {
-          "name": "item",
-          "type": "string",
-          "usage": "audio: measure this clip or audio item alone"
+          "usage": "frame (one image at --at) or sheet (a grid)"
         },
         {
           "name": "at",
@@ -787,12 +518,12 @@
         {
           "name": "from",
           "type": "string",
-          "usage": "sheet: first time (default 0s); audio: start of the range"
+          "usage": "sheet: first time (default 0s)"
         },
         {
           "name": "until",
           "type": "string",
-          "usage": "sheet: last time, included (default the last frame); audio: end of the range, excluded"
+          "usage": "sheet: last time, included (default the last frame)"
         },
         {
           "name": "count",
@@ -826,10 +557,9 @@
     },
     {
       "name": "export",
-      "domain": "video",
       "summary": "export a project to a file",
       "usage": [
-        "stuarty export --project <id> [--start t] [--end t] [--format f] [--at t] [--preset p] [--codec c] [--wait] [--out f] [--force]"
+        "stuarty export --project <id> [--start t] [--end t] [--format f] [--at t] [--wait] [--timeout d] [--out f] [--force]"
       ],
       "example": "stuarty export --project prj_7k2m9x4q1b --json",
       "flags": [
@@ -847,16 +577,6 @@
           "name": "at",
           "type": "string",
           "usage": "the time of the frame, only with --format png (default: the start)"
-        },
-        {
-          "name": "preset",
-          "type": "string",
-          "usage": "a platform preset, as export:presets lists them (mp4 only)"
-        },
-        {
-          "name": "codec",
-          "type": "string",
-          "usage": "h264 (default), hevc or av1 (mp4 only)"
         },
         {
           "name": "format",
@@ -886,121 +606,7 @@
       ]
     },
     {
-      "name": "export:presets",
-      "domain": "video",
-      "summary": "list the export presets of the platforms",
-      "usage": [
-        "stuarty export:presets [--codecs]"
-      ],
-      "example": "stuarty export:presets --codecs --json",
-      "flags": [
-        {
-          "name": "codecs",
-          "type": "boolean",
-          "default": "false",
-          "usage": "also tell which codecs this machine can write (runs the test encodes the first time)"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "export:check",
-      "domain": "video",
-      "summary": "check that a project fits an export preset, before any encoding",
-      "usage": [
-        "stuarty export:check --project <id> --preset <id> [--start t] [--end t] [--codec c]"
-      ],
-      "example": "stuarty export:check --project prj_7k2m9x4q1b --preset tiktok --json",
-      "flags": [
-        {
-          "name": "preset",
-          "type": "string",
-          "usage": "the preset id, as export:presets lists them"
-        },
-        {
-          "name": "start",
-          "type": "string",
-          "usage": "first time to export (default: the start)"
-        },
-        {
-          "name": "end",
-          "type": "string",
-          "usage": "end of the export (default: the end of the timeline)"
-        },
-        {
-          "name": "codec",
-          "type": "string",
-          "usage": "h264, hevc or av1, for the estimate of the size (default: the preset's first)"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file",
-        "project"
-      ]
-    },
-    {
-      "name": "export:batch",
-      "domain": "video",
-      "summary": "export a project several times, one after the other, as one job",
-      "usage": [
-        "stuarty export:batch --project <id> --preset <id>... [--codec c] [--start t] [--end t] [--wait]",
-        "stuarty export:batch --project <id> --items '<json array of {preset, format, codec, start, end}>' [--wait]"
-      ],
-      "example": "stuarty export:batch --project prj_7k2m9x4q1b --preset tiktok --preset youtube-shorts --wait",
-      "flags": [
-        {
-          "name": "preset",
-          "type": "string",
-          "usage": "a preset id; give the flag once for each export",
-          "repeat": true
-        },
-        {
-          "name": "items",
-          "type": "string",
-          "usage": "the exports as a JSON array of {preset, format, codec, start, end}, instead of --preset"
-        },
-        {
-          "name": "format",
-          "type": "string",
-          "usage": "the format of every --preset export that is not mp4 (default mp4)"
-        },
-        {
-          "name": "codec",
-          "type": "string",
-          "usage": "h264, hevc or av1 for every --preset export (default: the choice of the preset)"
-        },
-        {
-          "name": "start",
-          "type": "string",
-          "usage": "first time to export, for every --preset export (default: the start)"
-        },
-        {
-          "name": "end",
-          "type": "string",
-          "usage": "end of the export, for every --preset export (default: the end of the timeline)"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file",
-        "project",
-        "wait",
-        "timeout"
-      ]
-    },
-    {
       "name": "job:show",
-      "domain": "video",
       "summary": "show a job",
       "usage": [
         "stuarty job:show <job id> [--wait] [--timeout d]"
@@ -1024,7 +630,6 @@
     },
     {
       "name": "job:cancel",
-      "domain": "video",
       "summary": "cancel a queued or running job",
       "usage": [
         "stuarty job:cancel <job id>"
@@ -1039,7 +644,6 @@
     },
     {
       "name": "job:list",
-      "domain": "video",
       "summary": "list the jobs of a project",
       "usage": [
         "stuarty job:list --project <id> [--state s] [--cursor c] [--limit n]"
@@ -1073,7 +677,6 @@
     },
     {
       "name": "events",
-      "domain": "project",
       "summary": "print the events of a project as they arrive",
       "usage": [
         "stuarty events --project <id> [--from-id n] [--since n] [--count n]"
@@ -1107,18 +710,17 @@
     },
     {
       "name": "command:help",
-      "domain": "workspace",
-      "summary": "list the editing commands and the domains, or describe one command",
+      "summary": "list the editing commands, or describe one",
       "usage": [
-        "stuarty command:help [<name>]",
-        "stuarty command:help --domain <domain>"
+        "stuarty command:help [<name>]"
       ],
       "example": "stuarty command:help item.move",
       "flags": [
         {
           "name": "domain",
           "type": "string",
-          "usage": "a domain of the product: its commands (without it, the video commands and the list of domains)"
+          "default": "video",
+          "usage": "video, or image for the commands of image documents"
         }
       ],
       "globals": [
@@ -1130,7 +732,6 @@
     },
     {
       "name": "template:list",
-      "domain": "video",
       "summary": "list the templates of the library",
       "usage": [
         "stuarty template:list [--cursor c] [--limit n]"
@@ -1158,7 +759,6 @@
     },
     {
       "name": "template:save",
-      "domain": "video",
       "summary": "make a template from a project",
       "usage": [
         "stuarty template:save --project <id> --name <name> [--description d]"
@@ -1187,7 +787,6 @@
     },
     {
       "name": "template:new",
-      "domain": "video",
       "summary": "create a project from a template",
       "usage": [
         "stuarty template:new <template id> --name <name> [--fill <file|->] [--id prj_...]"
@@ -1232,7 +831,6 @@
     },
     {
       "name": "template:export",
-      "domain": "video",
       "summary": "write a template to a file the workspace keeps",
       "usage": [
         "stuarty template:export <template id> [--out f] [--force]"
@@ -1260,7 +858,6 @@
     },
     {
       "name": "template:import",
-      "domain": "video",
       "summary": "add a template file to the library",
       "usage": [
         "stuarty template:import <path>"
@@ -1276,7 +873,6 @@
     },
     {
       "name": "bundle:export",
-      "domain": "project",
       "summary": "export a project as a .vvbundle to share or to back up",
       "usage": [
         "stuarty bundle:export --project <id> [--no-log] [--wait] [--out f] [--force]"
@@ -1313,7 +909,6 @@
     },
     {
       "name": "bundle:import",
-      "domain": "project",
       "summary": "create a project from a .vvbundle file",
       "usage": [
         "stuarty bundle:import <path> [--as-new]"
@@ -1337,19 +932,17 @@
     },
     {
       "name": "agent:docs",
-      "domain": "workspace",
       "summary": "print or write the material for agents: the skill, the AGENTS.md snippet, the MCP instructions",
       "usage": [
         "stuarty agent:docs --print skill|agents|instructions",
-        "stuarty agent:docs --write <dir>",
-        "stuarty agent:docs --print guide:<domain>"
+        "stuarty agent:docs --write <dir>"
       ],
       "example": "stuarty agent:docs --write ~/.claude/skills/stuarty",
       "flags": [
         {
           "name": "print",
           "type": "string",
-          "usage": "print one of skill, agents or instructions, or guide:<domain> for the page of a domain"
+          "usage": "print one of skill, agents or instructions"
         },
         {
           "name": "write",
@@ -1366,7 +959,6 @@
     },
     {
       "name": "transcribe",
-      "domain": "video",
       "summary": "transcribe the audio of an asset",
       "usage": [
         "stuarty transcribe --project <id> --asset <id> [--language auto] [--model <name>] [--wait] [--timeout d]"
@@ -1402,7 +994,6 @@
     },
     {
       "name": "doctor",
-      "domain": "workspace",
       "summary": "check the installation and the workspace",
       "usage": [
         "stuarty doctor [--full] [--verify] [--bundle] [--gc]"
@@ -1443,7 +1034,6 @@
     },
     {
       "name": "fonts",
-      "domain": "asset",
       "summary": "list the bundled font families",
       "usage": [
         "stuarty fonts"
@@ -1458,7 +1048,6 @@
     },
     {
       "name": "audit",
-      "domain": "workspace",
       "summary": "list the audit table",
       "usage": [
         "stuarty audit [--project <id>] [--cursor c] [--limit n]"
@@ -1491,7 +1080,6 @@
     },
     {
       "name": "tools:install",
-      "domain": "workspace",
       "summary": "download a helper such as the transcription program",
       "usage": [
         "stuarty tools:install <name> [--model <model>] [--force] [--yes] [--timeout d]"
@@ -1526,7 +1114,6 @@
     },
     {
       "name": "token:rotate",
-      "domain": "workspace",
       "summary": "replace the local token; clients that hold the old one must be set up again",
       "usage": [
         "stuarty token:rotate"
@@ -1541,7 +1128,6 @@
     },
     {
       "name": "font:import",
-      "domain": "asset",
       "summary": "add a TrueType or OpenType font file to the font store",
       "usage": [
         "stuarty font:import <path>"
@@ -1556,7 +1142,6 @@
     },
     {
       "name": "brand:show",
-      "domain": "workspace",
       "summary": "show the brand kit: logo, colours and fonts",
       "usage": [
         "stuarty brand:show"
@@ -1571,7 +1156,6 @@
     },
     {
       "name": "brand:set",
-      "domain": "workspace",
       "summary": "replace the brand kit",
       "usage": [
         "stuarty brand:set --kit <file|->"
@@ -1593,7 +1177,6 @@
     },
     {
       "name": "otio:export",
-      "domain": "video",
       "summary": "write the timeline of a project as an OpenTimelineIO file",
       "usage": [
         "stuarty otio:export --project <id> [--out f] [--force]"
@@ -1622,7 +1205,6 @@
     },
     {
       "name": "otio:import",
-      "domain": "video",
       "summary": "apply an OpenTimelineIO file to a project as one undo step",
       "usage": [
         "stuarty otio:import <path> --project <id> [--base-revision n]"
@@ -1651,297 +1233,7 @@
       ]
     },
     {
-      "name": "project:describe",
-      "domain": "project",
-      "summary": "describe a project as text: brief, items and state",
-      "usage": [
-        "stuarty project:describe <id>"
-      ],
-      "example": "stuarty project:describe prj_7k2m9x4q1b",
-      "flags": [
-        {
-          "name": "max-tokens",
-          "type": "integer",
-          "usage": "the budget of the text in tokens, 200 to 6000 (default 1500)"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file",
-        "project"
-      ]
-    },
-    {
-      "name": "project:duplicate",
-      "domain": "project",
-      "summary": "copy a project: its brief, texts and timelines",
-      "usage": [
-        "stuarty project:duplicate <id> [--name n]"
-      ],
-      "example": "stuarty project:duplicate prj_7k2m9x4q1b --name \"Teaser, second cut\"",
-      "flags": [
-        {
-          "name": "name",
-          "type": "string",
-          "usage": "the name of the copy (default: the name and the word copy)"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file",
-        "project",
-        "dry-run"
-      ]
-    },
-    {
-      "name": "item:add",
-      "domain": "project",
-      "summary": "add a text, a timeline or an output to a project",
-      "usage": [
-        "stuarty item:add --project <id> --kind text|timeline|output --title <t>",
-        "stuarty item:add --project <id> --kind text --title <t> --text <file|-> [--text-kind script|copy|caption]",
-        "stuarty item:add --project <id> --kind output --title <t> --job <export job id>"
-      ],
-      "example": "stuarty item:add --project prj_7k2m9x4q1b --kind timeline --title \"Wide cut\" --preset 16:9",
-      "flags": [
-        {
-          "name": "kind",
-          "type": "string",
-          "usage": "text, timeline or output (required)"
-        },
-        {
-          "name": "title",
-          "type": "string",
-          "usage": "1 to 120 characters (required)"
-        },
-        {
-          "name": "position",
-          "type": "integer",
-          "usage": "where in the order of the items, from 0 (default: the end)"
-        },
-        {
-          "name": "text",
-          "type": "string",
-          "usage": "a text item: a file with its Markdown, or - for standard input"
-        },
-        {
-          "name": "text-kind",
-          "type": "string",
-          "usage": "a text item: script, copy (default) or caption"
-        },
-        {
-          "name": "preset",
-          "type": "string",
-          "usage": "a timeline: 9:16 (default), 1:1, 16:9 or 4:5"
-        },
-        {
-          "name": "fps",
-          "type": "string",
-          "usage": "a timeline: 30 (default), or n/1001"
-        },
-        {
-          "name": "job",
-          "type": "string",
-          "usage": "an output: a succeeded export job of this project"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file",
-        "project",
-        "dry-run"
-      ]
-    },
-    {
-      "name": "item:move",
-      "domain": "project",
-      "summary": "move an item to a position in the order of the project",
-      "usage": [
-        "stuarty item:move <item> --project <id> --position n"
-      ],
-      "example": "stuarty item:move pit_3c5v8n2w6d --project prj_7k2m9x4q1b --position n",
-      "flags": [
-        {
-          "name": "position",
-          "type": "integer",
-          "usage": "where in the order of the items, from 0 (required)"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file",
-        "project",
-        "dry-run"
-      ]
-    },
-    {
-      "name": "item:rename",
-      "domain": "project",
-      "summary": "change the title of an item",
-      "usage": [
-        "stuarty item:rename <item> --project <id> --title \"...\""
-      ],
-      "example": "stuarty item:rename pit_3c5v8n2w6d --project prj_7k2m9x4q1b --title \"...\"",
-      "flags": [
-        {
-          "name": "title",
-          "type": "string",
-          "usage": "the new title, 1 to 120 characters (required)"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file",
-        "project",
-        "dry-run"
-      ]
-    },
-    {
-      "name": "item:trash",
-      "domain": "project",
-      "summary": "move an item to the trash of its project",
-      "usage": [
-        "stuarty item:trash <item> --project <id>"
-      ],
-      "example": "stuarty item:trash pit_3c5v8n2w6d --project prj_7k2m9x4q1b",
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file",
-        "project",
-        "dry-run"
-      ]
-    },
-    {
-      "name": "item:restore",
-      "domain": "project",
-      "summary": "restore an item from the trash of its project",
-      "usage": [
-        "stuarty item:restore <item> --project <id>"
-      ],
-      "example": "stuarty item:restore pit_3c5v8n2w6d --project prj_7k2m9x4q1b",
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file",
-        "project",
-        "dry-run"
-      ]
-    },
-    {
-      "name": "brief:show",
-      "domain": "project",
-      "summary": "show the brief of a project",
-      "usage": [
-        "stuarty brief:show --project <id>"
-      ],
-      "example": "stuarty brief:show --project prj_7k2m9x4q1b",
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file",
-        "project"
-      ]
-    },
-    {
-      "name": "brief:set",
-      "domain": "project",
-      "summary": "write the brief of a project from a Markdown file",
-      "usage": [
-        "stuarty brief:set --project <id> --text <file|->"
-      ],
-      "example": "stuarty brief:set --project prj_7k2m9x4q1b --text brief.md",
-      "flags": [
-        {
-          "name": "text",
-          "type": "string",
-          "usage": "the Markdown: a file, or - for standard input; an empty text clears the brief (required)"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file",
-        "project",
-        "dry-run"
-      ]
-    },
-    {
-      "name": "briefing:questions",
-      "domain": "project",
-      "summary": "list the questions of the guided briefing; with --project, also what its brief already answers",
-      "usage": [
-        "stuarty briefing:questions [--project <id>]"
-      ],
-      "example": "stuarty briefing:questions --project prj_7k2m9x4q1b",
-      "flags": [
-        {
-          "name": "project",
-          "type": "string",
-          "usage": "a project: also the answers its brief holds"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "briefing:answer",
-      "domain": "project",
-      "summary": "answer the guided briefing: the answers become the brief of a project",
-      "usage": [
-        "stuarty briefing:answer --project <id> --answer <question>=<text> [--answer ...] [--replace]",
-        "stuarty briefing:answer --project <id> --answers <file|-> [--replace]"
-      ],
-      "example": "stuarty briefing:answer --project prj_7k2m9x4q1b --answer audience=\"indie developers\" --answer goal=\"get sign-ups\" --answer platform=youtube-shorts --answer format=vertical-9x16 --answer duration=30",
-      "flags": [
-        {
-          "name": "answer",
-          "type": "string",
-          "usage": "one answer as <question id>=<text>; repeat for each question",
-          "repeat": true
-        },
-        {
-          "name": "answers",
-          "type": "string",
-          "usage": "a JSON object of question id to answer: a file, or - for standard input"
-        },
-        {
-          "name": "replace",
-          "type": "boolean",
-          "default": "false",
-          "usage": "replace a brief that was written by hand"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file",
-        "project",
-        "dry-run"
-      ]
-    },
-    {
       "name": "connection:list",
-      "domain": "workspace",
       "summary": "list the destinations Stuarty may reach",
       "usage": [
         "stuarty connection:list"
@@ -1956,7 +1248,6 @@
     },
     {
       "name": "connection:show",
-      "domain": "workspace",
       "summary": "show one connection: destinations, what it accepts and its last use",
       "usage": [
         "stuarty connection:show <id>"
@@ -1971,7 +1262,6 @@
     },
     {
       "name": "connection:add",
-      "domain": "workspace",
       "summary": "connect a destination; the secret is read from standard input or a file, never from an argument",
       "usage": [
         "stuarty connection:add --kind <k> --label <t> --endpoint <url> --accepts <list>"
@@ -2018,7 +1308,6 @@
     },
     {
       "name": "connection:remove",
-      "domain": "workspace",
       "summary": "remove a connection and its credential",
       "usage": [
         "stuarty connection:remove <id>"
@@ -2033,7 +1322,6 @@
     },
     {
       "name": "connection:test",
-      "domain": "workspace",
       "summary": "make one request through a connection and show how the destination answered",
       "usage": [
         "stuarty connection:test <id>"
@@ -2047,607 +1335,7 @@
       ]
     },
     {
-      "name": "approval:list",
-      "domain": "publish",
-      "summary": "list the approval queue: what waits for a person (pending by default)",
-      "usage": [
-        "stuarty approval:list"
-      ],
-      "example": "stuarty approval:list --state all",
-      "flags": [
-        {
-          "name": "state",
-          "type": "string",
-          "usage": "pending (default), approved, rejected, expired or all"
-        },
-        {
-          "name": "project",
-          "type": "string",
-          "usage": "only the requests of one project"
-        },
-        {
-          "name": "cursor",
-          "type": "string",
-          "usage": "continue a list from this cursor"
-        },
-        {
-          "name": "limit",
-          "type": "integer",
-          "default": "50",
-          "usage": "items per page"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "approval:show",
-      "domain": "publish",
-      "summary": "show one approval request: what will be sent, where, the cost and its state",
-      "usage": [
-        "stuarty approval:show <id>"
-      ],
-      "example": "stuarty approval:show apr_0123456789",
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "approval:decide",
-      "domain": "publish",
-      "summary": "approve or reject a request (for a person in the app; the local token is refused)",
-      "usage": [
-        "stuarty approval:decide <id> --approve|--reject"
-      ],
-      "example": "stuarty approval:decide apr_0123456789 --reject --reason \"wrong channel\"",
-      "flags": [
-        {
-          "name": "approve",
-          "type": "boolean",
-          "usage": "approve the request"
-        },
-        {
-          "name": "reject",
-          "type": "boolean",
-          "usage": "reject the request"
-        },
-        {
-          "name": "reason",
-          "type": "string",
-          "usage": "why a request is rejected"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "approval:rule:list",
-      "domain": "publish",
-      "summary": "list the rules that approve without asking",
-      "usage": [
-        "stuarty approval:rule:list"
-      ],
-      "example": "stuarty approval:rule:list --json",
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "approval:rule:set",
-      "domain": "publish",
-      "summary": "create or replace a rule that approves a kind of action (for a person in the app; the local token is refused)",
-      "usage": [
-        "stuarty approval:rule:set --kind <k>"
-      ],
-      "example": "stuarty approval:rule:set --kind publish.post --connection con_0123456789",
-      "flags": [
-        {
-          "name": "id",
-          "type": "string",
-          "usage": "the rule to replace; leave out to create one"
-        },
-        {
-          "name": "kind",
-          "type": "string",
-          "usage": "the kind of action the rule covers (required)"
-        },
-        {
-          "name": "connection",
-          "type": "string",
-          "usage": "only this destination"
-        },
-        {
-          "name": "project",
-          "type": "string",
-          "usage": "only this project"
-        },
-        {
-          "name": "currency",
-          "type": "string",
-          "usage": "three upper-case letters, needed with a limit"
-        },
-        {
-          "name": "per-item",
-          "type": "string",
-          "usage": "the most one action may cost, in millionths of the currency unit"
-        },
-        {
-          "name": "per-day",
-          "type": "string",
-          "usage": "the most the rule may approve in a UTC day, in millionths"
-        },
-        {
-          "name": "disabled",
-          "type": "boolean",
-          "usage": "keep the rule but stop it"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "approval:rule:remove",
-      "domain": "publish",
-      "summary": "remove a rule (for a person in the app; the local token is refused)",
-      "usage": [
-        "stuarty approval:rule:remove <id>"
-      ],
-      "example": "stuarty approval:rule:remove rul_0123456789",
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "cost:show",
-      "domain": "provider",
-      "summary": "show the cost ceilings and what was spent today and over the last 30 days",
-      "usage": [
-        "stuarty cost:show"
-      ],
-      "example": "stuarty cost:show --json",
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "cost:ceiling",
-      "domain": "provider",
-      "summary": "set or remove a cost ceiling (for a person in the app; the local token is refused)",
-      "usage": [
-        "stuarty cost:ceiling --currency USD"
-      ],
-      "example": "stuarty cost:ceiling --currency USD --per-day 5000000",
-      "flags": [
-        {
-          "name": "currency",
-          "type": "string",
-          "usage": "three upper-case letters (required)"
-        },
-        {
-          "name": "project",
-          "type": "string",
-          "usage": "the project the ceiling is for; leave out for the whole workspace"
-        },
-        {
-          "name": "per-item",
-          "type": "string",
-          "usage": "the most one action may cost, in millionths of the currency unit"
-        },
-        {
-          "name": "per-day",
-          "type": "string",
-          "usage": "the most that may be spent in a UTC day, in millionths; with neither limit the ceiling is removed"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "provider:list",
-      "domain": "provider",
-      "summary": "list the AI providers, the connections of each and the price table",
-      "usage": [
-        "stuarty provider:list"
-      ],
-      "example": "stuarty provider:list --json",
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "provider:models",
-      "domain": "provider",
-      "summary": "list the models a provider offers through a connection, read from the provider now, with their price",
-      "usage": [
-        "stuarty provider:models <connection id> [--refresh]"
-      ],
-      "example": "stuarty provider:models con_0123456789",
-      "flags": [
-        {
-          "name": "refresh",
-          "type": "boolean",
-          "default": "false",
-          "usage": "read the list from the provider again"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "provider:price",
-      "domain": "provider",
-      "summary": "set or remove the price of a model (for a person in the app; the local token is refused)",
-      "usage": [
-        "stuarty provider:price --provider <id> --model <id> --currency USD --price-in <micros> --price-out <micros>"
-      ],
-      "example": "stuarty provider:price --provider openai --model a-model --currency USD --price-in 2500000 --price-out 10000000",
-      "flags": [
-        {
-          "name": "provider",
-          "type": "string",
-          "usage": "the provider id (required)"
-        },
-        {
-          "name": "model",
-          "type": "string",
-          "usage": "the model id (required)"
-        },
-        {
-          "name": "currency",
-          "type": "string",
-          "usage": "three letters, such as USD; needed to set a price"
-        },
-        {
-          "name": "price-in",
-          "type": "string",
-          "usage": "the price of a million input tokens, in millionths of the currency unit"
-        },
-        {
-          "name": "price-out",
-          "type": "string",
-          "usage": "the price of a million output tokens; leave all prices out to remove the entry"
-        },
-        {
-          "name": "unit",
-          "type": "string",
-          "usage": "image for the price of one image, mchar for the price of a million characters of speech, second for one second of video; leave out for tokens"
-        },
-        {
-          "name": "unit-micros",
-          "type": "string",
-          "usage": "with --unit: the price of one image, of a million characters or of one second, in millionths of the currency unit"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "text:generate",
-      "domain": "provider",
-      "summary": "generate text with the provider of a connection; the job shows its estimate and waits for approval",
-      "usage": [
-        "stuarty text:generate --project <id> --connection <id> --model <id> [--prompt <text> | --prompt-file <file>] [--system <text>] [--max-tokens <n>] [--temperature <t>] [--dry-run]"
-      ],
-      "example": "stuarty text:generate --project prj_7k2m9x4q1b --connection con_0123456789 --model a-model --prompt \"Write a caption\"",
-      "flags": [
-        {
-          "name": "connection",
-          "type": "string",
-          "usage": "the connection to the provider (required)"
-        },
-        {
-          "name": "model",
-          "type": "string",
-          "usage": "the model id, as provider:models lists it (required)"
-        },
-        {
-          "name": "prompt",
-          "type": "string",
-          "usage": "what to write; without it and without --prompt-file the prompt is read from standard input"
-        },
-        {
-          "name": "prompt-file",
-          "type": "string",
-          "usage": "a file that holds the prompt"
-        },
-        {
-          "name": "system",
-          "type": "string",
-          "usage": "instructions for the model"
-        },
-        {
-          "name": "max-tokens",
-          "type": "integer",
-          "usage": "the most tokens the model may write (default 1024); the estimate counts all of them"
-        },
-        {
-          "name": "temperature",
-          "type": "string",
-          "usage": "0 to 2"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file",
-        "project",
-        "dry-run"
-      ]
-    },
-    {
-      "name": "image:generate",
-      "domain": "provider",
-      "summary": "generate images with the provider of a connection; the job shows its estimate, waits for approval and stores the images as assets",
-      "usage": [
-        "stuarty image:generate --project <id> --connection <id> --model <id> [--prompt <text> | --prompt-file <file>] [--size <width>x<height>] [--count <n>] [--dry-run]"
-      ],
-      "example": "stuarty image:generate --project prj_7k2m9x4q1b --connection con_0123456789 --model a-model --prompt \"A red fox\" --count 2",
-      "flags": [
-        {
-          "name": "connection",
-          "type": "string",
-          "usage": "the connection to the provider (required)"
-        },
-        {
-          "name": "model",
-          "type": "string",
-          "usage": "the model id, as provider:models lists it (required)"
-        },
-        {
-          "name": "prompt",
-          "type": "string",
-          "usage": "what to draw; without it and without --prompt-file the prompt is read from standard input"
-        },
-        {
-          "name": "prompt-file",
-          "type": "string",
-          "usage": "a file that holds the prompt"
-        },
-        {
-          "name": "size",
-          "type": "string",
-          "usage": "width and height in pixels joined by x (default 1024x1024)"
-        },
-        {
-          "name": "count",
-          "type": "integer",
-          "usage": "how many images, 1 to 10 (default 1); the estimate counts all of them"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file",
-        "project",
-        "dry-run"
-      ]
-    },
-    {
-      "name": "voice:generate",
-      "domain": "provider",
-      "summary": "generate speech with the provider of a connection; the job shows its estimate, waits for approval and stores the audio as an asset",
-      "usage": [
-        "stuarty voice:generate --project <id> --connection <id> --model <id> --voice <id> [--text <text> | --text-file <file>] [--language <tag>] [--format mp3|wav|flac|opus|aac] [--dry-run]"
-      ],
-      "example": "stuarty voice:generate --project prj_7k2m9x4q1b --connection con_0123456789 --model a-model --voice alloy --text \"Welcome\"",
-      "flags": [
-        {
-          "name": "connection",
-          "type": "string",
-          "usage": "the connection to the provider (required)"
-        },
-        {
-          "name": "model",
-          "type": "string",
-          "usage": "the model id, as provider:models lists it (required)"
-        },
-        {
-          "name": "voice",
-          "type": "string",
-          "usage": "the voice id, as voice:list names it (required)"
-        },
-        {
-          "name": "text",
-          "type": "string",
-          "usage": "what to read out; without it and without --text-file the text is read from standard input"
-        },
-        {
-          "name": "text-file",
-          "type": "string",
-          "usage": "a file that holds the text"
-        },
-        {
-          "name": "language",
-          "type": "string",
-          "usage": "a language tag such as pt-BR"
-        },
-        {
-          "name": "format",
-          "type": "string",
-          "usage": "mp3 (default), wav, flac, opus or aac"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file",
-        "project",
-        "dry-run"
-      ]
-    },
-    {
-      "name": "video:generate",
-      "domain": "provider",
-      "summary": "generate a video clip with the provider of a connection; the job shows its estimate, always waits for a person unless a rule covers it, and stores the clip as an asset",
-      "usage": [
-        "stuarty video:generate --project <id> --connection <id> --model <id> [--prompt <text> | --prompt-file <file>] [--seconds <n>] [--aspect 16:9|9:16|1:1|4:3|3:4] [--first-frame <asset id>] [--dry-run]"
-      ],
-      "example": "stuarty video:generate --project prj_7k2m9x4q1b --connection con_0123456789 --model a-model --prompt \"A red fox\" --seconds 6 --aspect 9:16",
-      "flags": [
-        {
-          "name": "connection",
-          "type": "string",
-          "usage": "the connection to the provider (required)"
-        },
-        {
-          "name": "model",
-          "type": "string",
-          "usage": "the model id, as provider:models lists it (required)"
-        },
-        {
-          "name": "prompt",
-          "type": "string",
-          "usage": "what the clip shows; without it and without --prompt-file the prompt is read from standard input"
-        },
-        {
-          "name": "prompt-file",
-          "type": "string",
-          "usage": "a file that holds the prompt"
-        },
-        {
-          "name": "seconds",
-          "type": "integer",
-          "usage": "the length of the clip, 1 to 60 (default 5); the model may make fewer lengths"
-        },
-        {
-          "name": "aspect",
-          "type": "string",
-          "usage": "16:9 (default), 9:16, 1:1, 4:3 or 3:4"
-        },
-        {
-          "name": "first-frame",
-          "type": "string",
-          "usage": "the id of an image asset of the project the clip starts from"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file",
-        "project",
-        "dry-run"
-      ]
-    },
-    {
-      "name": "voice:list",
-      "domain": "provider",
-      "summary": "list the voices of the provider of a connection",
-      "usage": [
-        "stuarty voice:list <connection id>"
-      ],
-      "example": "stuarty voice:list con_0123456789",
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "image:model-edit",
-      "domain": "provider",
-      "summary": "remove the background of a layer, or generate an image into a document, with the provider of a connection; the job says that the picture is sent, shows its estimate, waits for approval and puts the result in the document as one undoable step",
-      "usage": [
-        "stuarty image:model-edit --project <id> --image <id> --operation remove_background|generate --connection <id> --model <id> [--layer <id>] [--prompt <text> | --prompt-file <file>] [--size <width>x<height>] [--dry-run]"
-      ],
-      "example": "stuarty image:model-edit --project prj_7k2m9x4q1b --image img_7k2m9x4q1b --operation remove_background --connection con_0123456789 --model a-model --layer lyr_7k2m9x4q1b",
-      "flags": [
-        {
-          "name": "image",
-          "type": "string",
-          "usage": "the image document (required)"
-        },
-        {
-          "name": "operation",
-          "type": "string",
-          "usage": "remove_background or generate (required)"
-        },
-        {
-          "name": "connection",
-          "type": "string",
-          "usage": "the connection to the provider (required)"
-        },
-        {
-          "name": "model",
-          "type": "string",
-          "usage": "the model id, as provider:models lists it (required)"
-        },
-        {
-          "name": "layer",
-          "type": "string",
-          "usage": "remove_background: the image layer (required); generate: a layer whose box the picture must cover"
-        },
-        {
-          "name": "prompt",
-          "type": "string",
-          "usage": "generate only: what to draw; without it and without --prompt-file a generation reads it from standard input"
-        },
-        {
-          "name": "prompt-file",
-          "type": "string",
-          "usage": "generate only: a file that holds the prompt"
-        },
-        {
-          "name": "size",
-          "type": "string",
-          "usage": "generate only: width and height in pixels joined by x"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file",
-        "project",
-        "dry-run"
-      ]
-    },
-    {
       "name": "image:create",
-      "domain": "image",
       "summary": "create an image document, blank or from a template",
       "usage": [
         "stuarty image:create --preset p"
@@ -2710,7 +1398,6 @@
     },
     {
       "name": "image:list",
-      "domain": "image",
       "summary": "list the image documents and templates",
       "usage": [
         "stuarty image:list"
@@ -2743,7 +1430,6 @@
     },
     {
       "name": "image:show",
-      "domain": "image",
       "summary": "describe an image document: its layers, its findings and its revision",
       "usage": [
         "stuarty image:show <id>"
@@ -2758,7 +1444,6 @@
     },
     {
       "name": "image:edit",
-      "domain": "image",
       "summary": "apply a batch of image operations (stuarty command:help --domain image lists them)",
       "usage": [
         "stuarty image:edit <id> <op> k=v..."
@@ -2791,7 +1476,6 @@
     },
     {
       "name": "image:undo",
-      "domain": "image",
       "summary": "undo the last step of the caller on an image",
       "usage": [
         "stuarty image:undo <id>"
@@ -2807,7 +1491,6 @@
     },
     {
       "name": "image:redo",
-      "domain": "image",
       "summary": "redo the last undone step of the caller on an image",
       "usage": [
         "stuarty image:redo <id>"
@@ -2823,7 +1506,6 @@
     },
     {
       "name": "image:export",
-      "domain": "image",
       "summary": "export an image document to a PNG, JPEG or WebP file",
       "usage": [
         "stuarty image:export <id> [--format f]"
@@ -2855,1672 +1537,6 @@
           "name": "height",
           "type": "integer",
           "usage": "resample to this height (0 keeps the aspect)"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "image:import",
-      "domain": "image",
-      "summary": "bring an image file into a new image document, or into an existing one as a layer",
-      "usage": [
-        "stuarty image:import --path <file>",
-        "stuarty image:import --hash <sha256:...> [--id <image>] [--name n] [--preset p | --width w --height h]"
-      ],
-      "example": "stuarty image:import --path /home/ana/photos/face.jpg --preset video_thumbnail",
-      "flags": [
-        {
-          "name": "path",
-          "type": "string",
-          "usage": "an absolute path to an image file on the machine of the server"
-        },
-        {
-          "name": "hash",
-          "type": "string",
-          "usage": "an image already in the workspace (asset:list shows its hash)"
-        },
-        {
-          "name": "id",
-          "type": "string",
-          "usage": "put the file in this image as a layer (default: a new image)"
-        },
-        {
-          "name": "name",
-          "type": "string",
-          "usage": "the name of the new image, or of the layer with --id"
-        },
-        {
-          "name": "preset",
-          "type": "string",
-          "usage": "the canvas of a new image: video_thumbnail, square_post or vertical_cover"
-        },
-        {
-          "name": "width",
-          "type": "integer",
-          "usage": "the canvas of a new image, with --height (default: the size of the file, up to 4096)"
-        },
-        {
-          "name": "height",
-          "type": "integer",
-          "usage": "the canvas of a new image, with --width"
-        },
-        {
-          "name": "wait-ms",
-          "type": "integer",
-          "usage": "how long to wait for the file to be ingested, 0 to 25000 (default 10000)"
-        },
-        {
-          "name": "base",
-          "type": "integer",
-          "usage": "with --id: the revision the layer was planned against (default: the current one)"
-        },
-        {
-          "name": "key",
-          "type": "string",
-          "usage": "with --id: idempotency key"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file",
-        "dry-run"
-      ]
-    },
-    {
-      "name": "asset:list",
-      "domain": "asset",
-      "summary": "list the files of the library, with origin, tags and reuse",
-      "usage": [
-        "stuarty asset:list"
-      ],
-      "example": "stuarty asset:list --tag logo --reusable --json",
-      "flags": [
-        {
-          "name": "section",
-          "type": "string",
-          "usage": "visual (images and LUTs) or video (video and audio)"
-        },
-        {
-          "name": "kind",
-          "type": "string",
-          "usage": "image, video, audio or lut"
-        },
-        {
-          "name": "tag",
-          "type": "string",
-          "usage": "only the files with this tag"
-        },
-        {
-          "name": "project",
-          "type": "string",
-          "usage": "only the files this project, or one of its timelines, uses"
-        },
-        {
-          "name": "origin",
-          "type": "string",
-          "usage": "imported, generated, fetched_by_agent or rendered_externally"
-        },
-        {
-          "name": "reusable",
-          "type": "boolean",
-          "usage": "only the files marked reusable; --no-reusable keeps the others"
-        },
-        {
-          "name": "text",
-          "type": "string",
-          "usage": "a full-text query over name, tags, description and origin"
-        },
-        {
-          "name": "cursor",
-          "type": "string",
-          "usage": "continue a list from this cursor"
-        },
-        {
-          "name": "limit",
-          "type": "integer",
-          "default": "50",
-          "usage": "items per page"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "asset:show",
-      "domain": "asset",
-      "summary": "show a file of the library: its origin, its tags and the projects that use it",
-      "usage": [
-        "stuarty asset:show <hash>"
-      ],
-      "example": "stuarty asset:show sha256:3b4c0a1d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b --json",
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "asset:uses",
-      "domain": "asset",
-      "summary": "list the projects that use a file of the library",
-      "usage": [
-        "stuarty asset:uses <hash>"
-      ],
-      "example": "stuarty asset:uses sha256:3b4c0a1d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b --json",
-      "flags": [
-        {
-          "name": "cursor",
-          "type": "string",
-          "usage": "continue a list from this cursor"
-        },
-        {
-          "name": "limit",
-          "type": "integer",
-          "default": "50",
-          "usage": "items per page"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "asset:set",
-      "domain": "asset",
-      "summary": "set the description, the rights note and the reuse mark of a file of the library",
-      "usage": [
-        "stuarty asset:set <hash>"
-      ],
-      "example": "stuarty asset:set sha256:3b4c0a1d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b --reusable",
-      "flags": [
-        {
-          "name": "description",
-          "type": "string",
-          "usage": "what the file is, in your words; an empty value clears it"
-        },
-        {
-          "name": "rights-note",
-          "type": "string",
-          "usage": "your own record of the licence or the permission; the product does not check it"
-        },
-        {
-          "name": "reusable",
-          "type": "boolean",
-          "usage": "mark the file to be offered again; --no-reusable takes the mark off"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "asset:tag",
-      "domain": "asset",
-      "summary": "add and remove the tags of a file of the library",
-      "usage": [
-        "stuarty asset:tag <hash>"
-      ],
-      "example": "stuarty asset:tag sha256:3b4c0a1d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b --add logo,brand",
-      "flags": [
-        {
-          "name": "add",
-          "type": "string",
-          "usage": "tags to add; repeat it or give a comma list",
-          "repeat": true
-        },
-        {
-          "name": "remove",
-          "type": "string",
-          "usage": "tags to take off",
-          "repeat": true
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "motion:brief",
-      "domain": "video",
-      "summary": "what a render by an external motion engine must fit: size, rate, length, safe area, brand kit, captions",
-      "usage": [
-        "stuarty motion:brief --project <id> [--from t] [--until t] [--track <trk_id>]"
-      ],
-      "example": "stuarty motion:brief --project prj_7k2m9x4q1b --from 2s --until 5s --track trk_f6g7h8j9k0",
-      "flags": [
-        {
-          "name": "from",
-          "type": "string",
-          "usage": "start of the range, a time (default 0s)"
-        },
-        {
-          "name": "until",
-          "type": "string",
-          "usage": "end of the range, exclusive (default the end of the timeline)"
-        },
-        {
-          "name": "track",
-          "type": "string",
-          "usage": "the visual track the clip will go on: tells whether the render needs alpha"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file",
-        "project"
-      ]
-    },
-    {
-      "name": "motion:check",
-      "domain": "video",
-      "summary": "check a rendered asset against the brief: each mismatch of size, rate, length or alpha, with the value expected",
-      "usage": [
-        "stuarty motion:check --project <id> --asset <ast_id> [--from t] [--until t] [--track <trk_id>]"
-      ],
-      "example": "stuarty motion:check --project prj_7k2m9x4q1b --asset ast_3c5v8n2w6d --from 2s --until 5s --track trk_f6g7h8j9k0",
-      "flags": [
-        {
-          "name": "asset",
-          "type": "string",
-          "usage": "the asset to check: an asset of the project, ready (required)"
-        },
-        {
-          "name": "from",
-          "type": "string",
-          "usage": "start of the range, a time (default 0s)"
-        },
-        {
-          "name": "until",
-          "type": "string",
-          "usage": "end of the range, exclusive (default the end of the timeline)"
-        },
-        {
-          "name": "track",
-          "type": "string",
-          "usage": "the visual track the clip will go on: tells whether the render needs alpha"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file",
-        "project"
-      ]
-    },
-    {
-      "name": "motion:replace",
-      "domain": "video",
-      "summary": "replace, in one undoable batch, every clip that reads an earlier render of an animation with a new render",
-      "usage": [
-        "stuarty motion:replace --project <id> --asset <ast_id> [--render-key <key>] [--dry-run]"
-      ],
-      "example": "stuarty motion:replace --project prj_7k2m9x4q1b --asset ast_k8m2n4p6q9",
-      "flags": [
-        {
-          "name": "asset",
-          "type": "string",
-          "usage": "the new render: an asset of the timeline, ready (required)"
-        },
-        {
-          "name": "render-key",
-          "type": "string",
-          "usage": "the key of the animation (default the render key of the origin of the new asset)"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file",
-        "project",
-        "dry-run"
-      ]
-    },
-    {
-      "name": "agent:profiles",
-      "domain": "workspace",
-      "summary": "list the agents the chat may host, with their full command, and the known agents found on this machine",
-      "usage": [
-        "stuarty agent:profiles"
-      ],
-      "example": "stuarty agent:profiles --json",
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "chat:sessions",
-      "domain": "workspace",
-      "summary": "list the chat sessions of a project, newest first",
-      "usage": [
-        "stuarty chat:sessions --project <id>"
-      ],
-      "example": "stuarty chat:sessions --project prj_7k2m9x4q1b",
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file",
-        "project"
-      ]
-    },
-    {
-      "name": "chat:session",
-      "domain": "workspace",
-      "summary": "show one chat session: its agent, its state and how many events it holds",
-      "usage": [
-        "stuarty chat:session <id>"
-      ],
-      "example": "stuarty chat:session cht_7k2m9x4q1b",
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "chat:transcript",
-      "domain": "workspace",
-      "summary": "read the transcript of a chat session as events, or the whole of it as Markdown",
-      "usage": [
-        "stuarty chat:transcript <id> [--format json|markdown] [--after n] [--limit n]"
-      ],
-      "example": "stuarty chat:transcript cht_7k2m9x4q1b --format markdown",
-      "flags": [
-        {
-          "name": "format",
-          "type": "string",
-          "usage": "json (the default: events after a number) or markdown"
-        },
-        {
-          "name": "after",
-          "type": "integer",
-          "default": "0",
-          "usage": "only the events with a number above this one"
-        },
-        {
-          "name": "limit",
-          "type": "integer",
-          "default": "0",
-          "usage": "the most events in the page, at most 500 (0 is 500)"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "memory:list",
-      "domain": "memory",
-      "summary": "list the memory notes",
-      "usage": [
-        "stuarty memory:list [--scope workspace|<project id>] [--tag t]... [--all]"
-      ],
-      "example": "stuarty memory:list --tag hooks --json",
-      "flags": [
-        {
-          "name": "scope",
-          "type": "string",
-          "usage": "workspace or a project id"
-        },
-        {
-          "name": "tag",
-          "type": "string",
-          "usage": "a tag; repeat it for several",
-          "repeat": true
-        },
-        {
-          "name": "all",
-          "type": "boolean",
-          "default": "false",
-          "usage": "also what is not reviewed (skills) or not kept (notes): an agent is not offered those"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "memory:show",
-      "domain": "memory",
-      "summary": "show a memory note",
-      "usage": [
-        "stuarty memory:show <name>"
-      ],
-      "example": "stuarty memory:show viewers-skip-intros",
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "memory:write",
-      "domain": "memory",
-      "summary": "write a memory note: one fact, with what was learned",
-      "usage": [
-        "stuarty memory:write [<name>] --description <one line> [--body <text>|--body-file <file|->] [--scope s] [--tag t]...",
-        "a note written here is pending until a person keeps it in the Memory section"
-      ],
-      "example": "stuarty memory:write --description \"Viewers skip long intros\" --body \"Cut the intro to two seconds.\"",
-      "flags": [
-        {
-          "name": "description",
-          "type": "string",
-          "usage": "the fact, in one line (required)"
-        },
-        {
-          "name": "scope",
-          "type": "string",
-          "usage": "workspace (default) or a project id"
-        },
-        {
-          "name": "tag",
-          "type": "string",
-          "usage": "a tag; repeat it for several",
-          "repeat": true
-        },
-        {
-          "name": "body",
-          "type": "string",
-          "usage": "the text of the entry"
-        },
-        {
-          "name": "body-file",
-          "type": "string",
-          "usage": "read the text from a file, or - for standard input"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "memory:remove",
-      "domain": "memory",
-      "summary": "delete a memory note (a note a person kept stays)",
-      "usage": [
-        "stuarty memory:remove <name>"
-      ],
-      "example": "stuarty memory:remove old-note",
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "skill:list",
-      "domain": "memory",
-      "summary": "list the skills that are reviewed",
-      "usage": [
-        "stuarty skill:list [--origin built-in|user|imported] [--all]"
-      ],
-      "example": "stuarty skill:list --all --json",
-      "flags": [
-        {
-          "name": "origin",
-          "type": "string",
-          "usage": "built-in, user or imported"
-        },
-        {
-          "name": "all",
-          "type": "boolean",
-          "default": "false",
-          "usage": "also what is not reviewed (skills) or not kept (notes): an agent is not offered those"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "skill:show",
-      "domain": "memory",
-      "summary": "show a skill: its text, its files and the findings of the lint",
-      "usage": [
-        "stuarty skill:show <name>"
-      ],
-      "example": "stuarty skill:show hook-writer",
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "skill:write",
-      "domain": "memory",
-      "summary": "write a skill; it stays unreviewed until a person reads it in the Skills section",
-      "usage": [
-        "stuarty skill:write <name> --description <text> [--body <text>|--body-file <file|->] [--license l]",
-        "                    [--file <path in the skill>=<local file>]..."
-      ],
-      "example": "stuarty skill:write hook-writer --description \"Write the first three seconds.\" --body-file hook.md",
-      "flags": [
-        {
-          "name": "description",
-          "type": "string",
-          "usage": "what the skill does and when to use it (required)"
-        },
-        {
-          "name": "license",
-          "type": "string",
-          "usage": "the licence of the text"
-        },
-        {
-          "name": "file",
-          "type": "string",
-          "usage": "another file of the folder: <path in the skill>=<local file>",
-          "repeat": true
-        },
-        {
-          "name": "body",
-          "type": "string",
-          "usage": "the text of the entry"
-        },
-        {
-          "name": "body-file",
-          "type": "string",
-          "usage": "read the text from a file, or - for standard input"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "skill:import",
-      "domain": "memory",
-      "summary": "import a skill from a folder or an archive (.zip, .tar.gz) you already have; it starts unreviewed",
-      "usage": [
-        "stuarty skill:import <folder|archive> [--source <text>] [--replace]"
-      ],
-      "example": "stuarty skill:import ./downloads/hook-writer.zip --source \"a friend\"",
-      "flags": [
-        {
-          "name": "source",
-          "type": "string",
-          "usage": "where it came from; the name of the folder or file if omitted"
-        },
-        {
-          "name": "replace",
-          "type": "boolean",
-          "default": "false",
-          "usage": "replace a skill of the same name"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "skill:lint",
-      "domain": "memory",
-      "summary": "run the lint on a skill",
-      "usage": [
-        "stuarty skill:lint <name>"
-      ],
-      "example": "stuarty skill:lint hook-writer --json",
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "skill:export",
-      "domain": "memory",
-      "summary": "write skills as folders in the Agent Skills layout, to install them in your own agent",
-      "usage": [
-        "stuarty skill:export [<name>...]",
-        "with no name, every reviewed skill; the folders are written under exports/library/ of the workspace"
-      ],
-      "example": "stuarty skill:export hook-writer",
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "prompt:list",
-      "domain": "memory",
-      "summary": "list the prompts",
-      "usage": [
-        "stuarty prompt:list [--tag t]..."
-      ],
-      "example": "stuarty prompt:list --json",
-      "flags": [
-        {
-          "name": "tag",
-          "type": "string",
-          "usage": "a tag; repeat it for several",
-          "repeat": true
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "prompt:show",
-      "domain": "memory",
-      "summary": "show a prompt and its variables",
-      "usage": [
-        "stuarty prompt:show <name>"
-      ],
-      "example": "stuarty prompt:show video-intro",
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "prompt:write",
-      "domain": "memory",
-      "summary": "write a prompt: a reusable text with {{variables}}",
-      "usage": [
-        "stuarty prompt:write <name> --description <text> [--body <text>|--body-file <file|->] [--default <variable>=<value>]... [--tag t]..."
-      ],
-      "example": "stuarty prompt:write video-intro --description \"An intro\" --body \"Write an intro about {{topic}}.\"",
-      "flags": [
-        {
-          "name": "description",
-          "type": "string",
-          "usage": "what the prompt is for (required)"
-        },
-        {
-          "name": "default",
-          "type": "string",
-          "usage": "a default value: <variable>=<value>",
-          "repeat": true
-        },
-        {
-          "name": "tag",
-          "type": "string",
-          "usage": "a tag; repeat it for several",
-          "repeat": true
-        },
-        {
-          "name": "body",
-          "type": "string",
-          "usage": "the text of the entry"
-        },
-        {
-          "name": "body-file",
-          "type": "string",
-          "usage": "read the text from a file, or - for standard input"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "prompt:render",
-      "domain": "memory",
-      "summary": "replace the variables of a prompt and print the text; nothing is sent anywhere",
-      "usage": [
-        "stuarty prompt:render <name> [--value <variable>=<value>]..."
-      ],
-      "example": "stuarty prompt:render video-intro --value topic=cats",
-      "flags": [
-        {
-          "name": "value",
-          "type": "string",
-          "usage": "a value: <variable>=<value>",
-          "repeat": true
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "library:search",
-      "domain": "memory",
-      "summary": "search memory, skills and prompts with one query",
-      "usage": [
-        "stuarty library:search <word>... [--kind memory|skill|prompt]... [--scope s] [--tag t]... [--origin o] [--all]",
-        "                       [--limit n] [--budget characters]"
-      ],
-      "example": "stuarty library:search intro --kind prompt --json",
-      "flags": [
-        {
-          "name": "kind",
-          "type": "string",
-          "usage": "memory, skill or prompt; repeat it for several",
-          "repeat": true
-        },
-        {
-          "name": "scope",
-          "type": "string",
-          "usage": "memory: workspace or a project id"
-        },
-        {
-          "name": "tag",
-          "type": "string",
-          "usage": "a tag; repeat it for several",
-          "repeat": true
-        },
-        {
-          "name": "origin",
-          "type": "string",
-          "usage": "skills: built-in, user or imported"
-        },
-        {
-          "name": "all",
-          "type": "boolean",
-          "default": "false",
-          "usage": "also what is not reviewed (skills) or not kept (notes): an agent is not offered those"
-        },
-        {
-          "name": "limit",
-          "type": "integer",
-          "default": "20",
-          "usage": "results, at most 50"
-        },
-        {
-          "name": "budget",
-          "type": "integer",
-          "default": "4000",
-          "usage": "characters of the answer, at most 16000"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "library:reindex",
-      "domain": "memory",
-      "summary": "rebuild the index of the library from its files",
-      "usage": [
-        "stuarty library:reindex"
-      ],
-      "example": "stuarty library:reindex",
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "social:network:list",
-      "domain": "publish",
-      "summary": "list the social networks this build can publish to, with their limits and where they were read",
-      "usage": [
-        "stuarty social:network:list"
-      ],
-      "example": "stuarty social:network:list --json",
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "social:connect",
-      "domain": "publish",
-      "summary": "start the sign-in to a network with your own developer app; the client secret is read from standard input or a file, never from an argument",
-      "usage": [
-        "stuarty social:connect --network <n> --client-id <id> --redirect-uri <url> [--label <t>]",
-        "stuarty social:connect --network <n> --connection <id> --redirect-uri <url>"
-      ],
-      "example": "echo $CLIENT_SECRET | stuarty social:connect --network youtube --client-id 123.apps.googleusercontent.com --redirect-uri http://127.0.0.1:7878/social/callback",
-      "flags": [
-        {
-          "name": "network",
-          "type": "string",
-          "usage": "the network, for example youtube (required)"
-        },
-        {
-          "name": "client-id",
-          "type": "string",
-          "usage": "the client id of your developer project"
-        },
-        {
-          "name": "redirect-uri",
-          "type": "string",
-          "usage": "the address of this app followed by /social/callback (required)"
-        },
-        {
-          "name": "label",
-          "type": "string",
-          "usage": "a name for the connection"
-        },
-        {
-          "name": "connection",
-          "type": "string",
-          "usage": "sign in again an existing connection instead of making one"
-        },
-        {
-          "name": "secret-file",
-          "type": "string",
-          "usage": "a file that holds the client secret; without it it is read from standard input"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "social:account:list",
-      "domain": "publish",
-      "summary": "list the connected social accounts and whether each is signed in",
-      "usage": [
-        "stuarty social:account:list"
-      ],
-      "example": "stuarty social:account:list",
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "publish:validate",
-      "domain": "publish",
-      "summary": "check a post against the limits of its network and show what a person would approve; sends nothing",
-      "usage": [
-        "stuarty publish:validate --project <id> --connection <id> --export <job> --title <t> --made-for-kids yes|no"
-      ],
-      "example": "stuarty publish:validate --project prj_7k2m9x4q1b --connection con_0123456789 --export job_0123456789 --title \"My short\" --made-for-kids no",
-      "flags": [
-        {
-          "name": "connection",
-          "type": "string",
-          "usage": "the connection the video goes to (required)"
-        },
-        {
-          "name": "export",
-          "type": "string",
-          "usage": "the id of a succeeded export job of the project: the video (required)"
-        },
-        {
-          "name": "thumbnail",
-          "type": "string",
-          "usage": "the id of a succeeded export job of a still: the cover"
-        },
-        {
-          "name": "title",
-          "type": "string",
-          "usage": "the title (required)"
-        },
-        {
-          "name": "description",
-          "type": "string",
-          "usage": "the description"
-        },
-        {
-          "name": "tags",
-          "type": "string",
-          "usage": "the tags, a comma list"
-        },
-        {
-          "name": "visibility",
-          "type": "string",
-          "usage": "private (the default), unlisted or public"
-        },
-        {
-          "name": "made-for-kids",
-          "type": "string",
-          "usage": "yes or no: whether the video is made for kids (required)"
-        },
-        {
-          "name": "ai-disclosure",
-          "type": "boolean",
-          "default": "false",
-          "usage": "the video has realistic altered or synthetic content"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file",
-        "project"
-      ]
-    },
-    {
-      "name": "publish:now",
-      "domain": "publish",
-      "summary": "prepare the publication of an exported video: it waits for a person to approve it in the app, then it is sent; you cannot approve it",
-      "usage": [
-        "stuarty publish:now --project <id> --connection <id> --export <job> --title <t> --made-for-kids yes|no"
-      ],
-      "example": "stuarty publish:now --project prj_7k2m9x4q1b --connection con_0123456789 --export job_0123456789 --title \"My short\" --made-for-kids no --visibility private",
-      "flags": [
-        {
-          "name": "connection",
-          "type": "string",
-          "usage": "the connection the video goes to (required)"
-        },
-        {
-          "name": "export",
-          "type": "string",
-          "usage": "the id of a succeeded export job of the project: the video (required)"
-        },
-        {
-          "name": "thumbnail",
-          "type": "string",
-          "usage": "the id of a succeeded export job of a still: the cover"
-        },
-        {
-          "name": "title",
-          "type": "string",
-          "usage": "the title (required)"
-        },
-        {
-          "name": "description",
-          "type": "string",
-          "usage": "the description"
-        },
-        {
-          "name": "tags",
-          "type": "string",
-          "usage": "the tags, a comma list"
-        },
-        {
-          "name": "visibility",
-          "type": "string",
-          "usage": "private (the default), unlisted or public"
-        },
-        {
-          "name": "made-for-kids",
-          "type": "string",
-          "usage": "yes or no: whether the video is made for kids (required)"
-        },
-        {
-          "name": "ai-disclosure",
-          "type": "boolean",
-          "default": "false",
-          "usage": "the video has realistic altered or synthetic content"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file",
-        "project",
-        "dry-run"
-      ]
-    },
-    {
-      "name": "publish:status",
-      "domain": "publish",
-      "summary": "show the state of a publication: waiting_approval, uploading, processing, published, sent_as_draft or failed",
-      "usage": [
-        "stuarty publish:status <job id>"
-      ],
-      "example": "stuarty publish:status job_0123456789",
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "publication:create",
-      "domain": "publish",
-      "summary": "plan a publication: a video for one or more accounts, each with its own time; nothing is asked or sent until you schedule it",
-      "usage": [
-        "stuarty publication:create --project <id> --title <t> --export <job> --connection <id> --at <time> --zone <zone> --made-for-kids yes|no",
-        "stuarty publication:create --project <id> --title <t> --export <job> --targets <json>"
-      ],
-      "example": "stuarty publication:create --project prj_7k2m9x4q1b --title \"Week one\" --export job_0123456789 --connection con_0123456789 --at 2026-11-20T09:00 --zone America/Sao_Paulo --made-for-kids no",
-      "flags": [
-        {
-          "name": "title",
-          "type": "string",
-          "usage": "the title (required)"
-        },
-        {
-          "name": "text",
-          "type": "string",
-          "usage": "the caption the accounts use unless they have their own"
-        },
-        {
-          "name": "export",
-          "type": "string",
-          "usage": "the id of a succeeded export job of the project: the video (required)"
-        },
-        {
-          "name": "thumbnail",
-          "type": "string",
-          "usage": "the id of a succeeded export job of a still: the cover"
-        },
-        {
-          "name": "connection",
-          "type": "string",
-          "usage": "the connection of the account the post goes to"
-        },
-        {
-          "name": "at",
-          "type": "string",
-          "usage": "the time: 2026-11-20T09:00 read in --zone, or an instant such as 2026-11-20T12:00:00Z"
-        },
-        {
-          "name": "zone",
-          "type": "string",
-          "usage": "the IANA zone the time is read in, for example America/Sao_Paulo (default UTC)"
-        },
-        {
-          "name": "late-window",
-          "type": "string",
-          "usage": "minutes, 0 to 1440, a late post may still be sent without asking (default 0)"
-        },
-        {
-          "name": "target-title",
-          "type": "string",
-          "usage": "a title for this account instead of the publication's"
-        },
-        {
-          "name": "target-description",
-          "type": "string",
-          "usage": "a description for this account instead of the caption"
-        },
-        {
-          "name": "tags",
-          "type": "string",
-          "usage": "the tags, a comma list"
-        },
-        {
-          "name": "visibility",
-          "type": "string",
-          "usage": "private (the default), unlisted or public"
-        },
-        {
-          "name": "made-for-kids",
-          "type": "string",
-          "usage": "yes or no: whether the video is made for kids"
-        },
-        {
-          "name": "ai-disclosure",
-          "type": "boolean",
-          "default": "false",
-          "usage": "the video has realistic altered or synthetic content"
-        },
-        {
-          "name": "targets",
-          "type": "string",
-          "usage": "a JSON list of targets, for several accounts at once"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file",
-        "project"
-      ]
-    },
-    {
-      "name": "publication:list",
-      "domain": "publish",
-      "summary": "list the publications of the calendar, by project, state, network or time range",
-      "usage": [
-        "stuarty publication:list [--project <id>] [--state <state>] [--from <time>] [--until <time>]"
-      ],
-      "example": "stuarty publication:list --from 2026-11-16T00:00:00Z --until 2026-11-23T00:00:00Z --json",
-      "flags": [
-        {
-          "name": "project",
-          "type": "string",
-          "usage": "only the publications of this project"
-        },
-        {
-          "name": "state",
-          "type": "string",
-          "usage": "only those with a target in this state, for example waiting_approval or failed"
-        },
-        {
-          "name": "network",
-          "type": "string",
-          "usage": "only those with a target on this network"
-        },
-        {
-          "name": "from",
-          "type": "string",
-          "usage": "only those with a target at or after this time (RFC 3339)"
-        },
-        {
-          "name": "until",
-          "type": "string",
-          "usage": "only those with a target before this time (RFC 3339)"
-        },
-        {
-          "name": "limit",
-          "type": "integer",
-          "usage": "the page size, 1 to 500 (default 100)"
-        },
-        {
-          "name": "offset",
-          "type": "integer",
-          "usage": "how many to skip"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "publication:show",
-      "domain": "publish",
-      "summary": "show one publication with each target: its time, its state, its approval, its address or its error",
-      "usage": [
-        "stuarty publication:show <publication id>"
-      ],
-      "example": "stuarty publication:show pub_0123456789",
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "publication:update",
-      "domain": "publish",
-      "summary": "change a publication or its targets; a post that waited for approval or was approved goes back to waiting for approval",
-      "usage": [
-        "stuarty publication:update <publication id> [--title <t>] [--text <t>] [--export <job>] [--targets <json>]"
-      ],
-      "example": "stuarty publication:update pub_0123456789 --title \"A better title\"",
-      "flags": [
-        {
-          "name": "title",
-          "type": "string",
-          "usage": "the new title"
-        },
-        {
-          "name": "text",
-          "type": "string",
-          "usage": "the new caption"
-        },
-        {
-          "name": "export",
-          "type": "string",
-          "usage": "the new video: a succeeded export job of the project"
-        },
-        {
-          "name": "thumbnail",
-          "type": "string",
-          "usage": "the new cover; an empty text removes it"
-        },
-        {
-          "name": "targets",
-          "type": "string",
-          "usage": "a JSON list of targets to change (with an id), add (without) or remove (\"remove\":true)"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "publication:schedule",
-      "domain": "publish",
-      "summary": "give a target its time and ask for approval: it is sent at that time only after a person approves it in the app; you cannot approve it",
-      "usage": [
-        "stuarty publication:schedule <publication id> [--target <id>] [--at <time>] [--zone <zone>] [--late-window <min>]"
-      ],
-      "example": "stuarty publication:schedule pub_0123456789 --target tgt_0123456789 --at 2026-11-20T09:00 --zone America/Sao_Paulo",
-      "flags": [
-        {
-          "name": "target",
-          "type": "string",
-          "usage": "the target; leave out for every draft target that has a time"
-        },
-        {
-          "name": "at",
-          "type": "string",
-          "usage": "the time: 2026-11-20T09:00 read in --zone, or an instant such as 2026-11-20T12:00:00Z"
-        },
-        {
-          "name": "zone",
-          "type": "string",
-          "usage": "the IANA zone the time is read in (default UTC)"
-        },
-        {
-          "name": "late-window",
-          "type": "string",
-          "usage": "minutes, 0 to 1440, a late post may still be sent without asking (default 0)"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "publication:send-now",
-      "domain": "publish",
-      "summary": "ask for approval to send a target as soon as it is approved; use it for a missed target too",
-      "usage": [
-        "stuarty publication:send-now <publication id> --target <id>"
-      ],
-      "example": "stuarty publication:send-now pub_0123456789 --target tgt_0123456789",
-      "flags": [
-        {
-          "name": "target",
-          "type": "string",
-          "usage": "the target, tgt_ and 10 characters"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "publication:retry",
-      "domain": "publish",
-      "summary": "ask for approval to send a failed target again; read why it failed with publication:show",
-      "usage": [
-        "stuarty publication:retry <publication id> --target <id>"
-      ],
-      "example": "stuarty publication:retry pub_0123456789 --target tgt_0123456789",
-      "flags": [
-        {
-          "name": "target",
-          "type": "string",
-          "usage": "the target, tgt_ and 10 characters"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "publication:cancel",
-      "domain": "publish",
-      "summary": "cancel a target, or every target that has not gone out when --target is left out",
-      "usage": [
-        "stuarty publication:cancel <publication id> --target <id>"
-      ],
-      "example": "stuarty publication:cancel pub_0123456789 --target tgt_0123456789",
-      "flags": [
-        {
-          "name": "target",
-          "type": "string",
-          "usage": "the target, tgt_ and 10 characters"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "text:list",
-      "domain": "writing",
-      "summary": "list the scripts, copy and captions of a project, or of every project",
-      "usage": [
-        "stuarty text:list [--project <id>] [--kind script|copy|caption] [--state active|trashed]"
-      ],
-      "example": "stuarty text:list --kind caption --json",
-      "flags": [
-        {
-          "name": "project",
-          "type": "string",
-          "usage": "only the texts of this project"
-        },
-        {
-          "name": "kind",
-          "type": "string",
-          "usage": "script, copy or caption"
-        },
-        {
-          "name": "state",
-          "type": "string",
-          "usage": "active (default) or trashed"
-        },
-        {
-          "name": "cursor",
-          "type": "string",
-          "usage": "continue a list from this cursor"
-        },
-        {
-          "name": "limit",
-          "type": "integer",
-          "default": "50",
-          "usage": "items per page"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "text:show",
-      "domain": "writing",
-      "summary": "show a text, or one of its revisions",
-      "usage": [
-        "stuarty text:show <item> --project <id> [--revision n]"
-      ],
-      "example": "stuarty text:show pit_3c5v8n2w6d --project prj_7k2m9x4q1b",
-      "flags": [
-        {
-          "name": "revision",
-          "type": "integer",
-          "usage": "a revision number from 1; default the latest"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file",
-        "project"
-      ]
-    },
-    {
-      "name": "text:write",
-      "domain": "writing",
-      "summary": "make a text, or save a new revision of one, from a Markdown file",
-      "usage": [
-        "stuarty text:write --project <id> --title <t> [--kind script|copy|caption] --text <file|->",
-        "stuarty text:write <item> --project <id> --text <file|-> [--title <t>] [--base <revision>]"
-      ],
-      "example": "stuarty text:write --project prj_7k2m9x4q1b --title Hook --kind script --text hook.md",
-      "flags": [
-        {
-          "name": "text",
-          "type": "string",
-          "usage": "the Markdown: a file, or - for standard input (required)"
-        },
-        {
-          "name": "title",
-          "type": "string",
-          "usage": "the title: needed to make a text, a new title when saving one"
-        },
-        {
-          "name": "kind",
-          "type": "string",
-          "usage": "making a text: script, copy (default) or caption"
-        },
-        {
-          "name": "base",
-          "type": "integer",
-          "usage": "the revision you read: a newer one is refused"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file",
-        "project",
-        "dry-run"
-      ]
-    },
-    {
-      "name": "text:revisions",
-      "domain": "writing",
-      "summary": "list the revisions of a text, and compare two by paragraph",
-      "usage": [
-        "stuarty text:revisions <item> --project <id> [--from n [--until n]]"
-      ],
-      "example": "stuarty text:revisions pit_3c5v8n2w6d --project prj_7k2m9x4q1b --from 1",
-      "flags": [
-        {
-          "name": "before",
-          "type": "integer",
-          "usage": "start under this revision (the next_before of the last page)"
-        },
-        {
-          "name": "limit",
-          "type": "integer",
-          "usage": "revisions per page, 1 to 100 (default 50)"
-        },
-        {
-          "name": "from",
-          "type": "integer",
-          "usage": "compare this revision with --until"
-        },
-        {
-          "name": "until",
-          "type": "integer",
-          "usage": "the revision to compare with (default the latest)"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file",
-        "project"
-      ]
-    },
-    {
-      "name": "text:revert",
-      "domain": "writing",
-      "summary": "bring an older revision of a text back as a new revision",
-      "usage": [
-        "stuarty text:revert <item> --project <id> --revision n"
-      ],
-      "example": "stuarty text:revert pit_3c5v8n2w6d --project prj_7k2m9x4q1b --revision 2",
-      "flags": [
-        {
-          "name": "revision",
-          "type": "integer",
-          "usage": "the revision whose text comes back (required)"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file",
-        "project",
-        "dry-run"
-      ]
-    },
-    {
-      "name": "text:draft",
-      "domain": "writing",
-      "summary": "ask a model for a draft of a text; the job shows its estimate and waits for approval",
-      "usage": [
-        "stuarty text:draft <item> --project <id> --connection <id> --model <id> --instruction <text> [--network <n>] [--max-tokens <n>] [--temperature <t>] [--dry-run]"
-      ],
-      "example": "stuarty text:draft pit_3c5v8n2w6d --project prj_7k2m9x4q1b --connection con_0123456789 --model a-model --instruction \"A hook in 20 seconds\"",
-      "flags": [
-        {
-          "name": "connection",
-          "type": "string",
-          "usage": "the connection to the provider (required)"
-        },
-        {
-          "name": "model",
-          "type": "string",
-          "usage": "the model id, as provider:models lists it (required)"
-        },
-        {
-          "name": "instruction",
-          "type": "string",
-          "usage": "what to write, 1 to 4000 characters (required)"
-        },
-        {
-          "name": "network",
-          "type": "string",
-          "usage": "a caption: draft the variant of this network only"
-        },
-        {
-          "name": "max-tokens",
-          "type": "integer",
-          "usage": "the most tokens the model may write; the estimate counts all of them"
-        },
-        {
-          "name": "temperature",
-          "type": "string",
-          "usage": "0 to 2"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file",
-        "project",
-        "dry-run"
-      ]
-    },
-    {
-      "name": "caption:validate",
-      "domain": "writing",
-      "summary": "measure a caption against the limits of each network",
-      "usage": [
-        "stuarty caption:validate <item> --project <id> [--network <n>]",
-        "stuarty caption:validate --body <file|->",
-        "stuarty caption:validate --text <file|-> --network <n>"
-      ],
-      "example": "stuarty caption:validate pit_3c5v8n2w6d --project prj_7k2m9x4q1b",
-      "flags": [
-        {
-          "name": "project",
-          "type": "string",
-          "usage": "the project of the text (default $STUARTY_PROJECT)"
-        },
-        {
-          "name": "body",
-          "type": "string",
-          "usage": "a whole caption, saved or not: a file, or - for standard input"
-        },
-        {
-          "name": "text",
-          "type": "string",
-          "usage": "one variant: a file, or - for standard input (needs --network)"
-        },
-        {
-          "name": "network",
-          "type": "string",
-          "usage": "youtube, instagram, facebook, x or tiktok"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "script:estimate",
-      "domain": "writing",
-      "summary": "estimate how long a script takes when read aloud",
-      "usage": [
-        "stuarty script:estimate <item> --project <id> [--wpm n]",
-        "stuarty script:estimate --text <file|-> [--wpm n]"
-      ],
-      "example": "stuarty script:estimate pit_3c5v8n2w6d --project prj_7k2m9x4q1b --wpm 130",
-      "flags": [
-        {
-          "name": "project",
-          "type": "string",
-          "usage": "the project of the text (default $STUARTY_PROJECT)"
-        },
-        {
-          "name": "text",
-          "type": "string",
-          "usage": "a script that is not saved: a file, or - for standard input"
-        },
-        {
-          "name": "wpm",
-          "type": "integer",
-          "usage": "words per minute, 60 to 300 (default 150)"
         }
       ],
       "globals": [
@@ -4566,24 +1582,6 @@
         "stuarty user:passwd <email>"
       ],
       "example": "stuarty user:passwd ana@example.com",
-      "globals": []
-    },
-    {
-      "name": "workspace:backup",
-      "summary": "write a consistent backup of the workspace to a folder (never with the master key); a server may keep running",
-      "usage": [
-        "stuarty workspace:backup <folder>"
-      ],
-      "example": "stuarty workspace:backup ~/stuarty-backup-2026-11-19",
-      "globals": []
-    },
-    {
-      "name": "workspace:restore",
-      "summary": "restore a backup folder into an empty workspace, checked against its manifest and the master key at hand",
-      "usage": [
-        "stuarty workspace:restore <folder> [--replace] [--without-vault]"
-      ],
-      "example": "stuarty workspace:restore ~/stuarty-backup-2026-11-19",
       "globals": []
     }
   ]

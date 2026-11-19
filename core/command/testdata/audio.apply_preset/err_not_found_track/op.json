@@ -1,7 +1,0 @@
-{
-  "op": "audio.apply_preset",
-  "args": {
-    "track_id": "trk_zzzzzzzzzz",
-    "preset": "voice"
-  }
-}

@@ -60,8 +60,8 @@ func TestAgentDocsGenerated(t *testing.T) {
 
 	skill := string(files[agentdocs.SkillFile])
 
-	if n := len([]rune(skill)); n > 12400 {
-		t.Errorf("SKILL.md is %d characters, at most 12,400", n)
+	if n := len([]rune(skill)); n > 12000 {
+		t.Errorf("SKILL.md is %d characters, at most 12,000", n)
 	}
 
 	if !strings.Contains(skill, "metadata:\n  version: \""+agentdocs.Version+"\"") {

@@ -1,7 +1,0 @@
-{
-  "op": "animation.apply_preset",
-  "args": {
-    "item_id": "itm_zzzzzzzzzz",
-    "preset": "fade"
-  }
-}

@@ -14,28 +14,17 @@ import (
 
 // registry lists the commands in the order the short list prints them.
 func registry() []*spec {
-	return append([]*spec{
+	return []*spec{
 		projectList, projectCreate, projectShow, projectTrash, projectRestore,
 		edit, history, undo, redo, lintCmd, version, mcpCmd,
-		revertCmd, diffCmd, checkpointCreateCmd, checkpointListCmd, checkpointRenameCmd, checkpointRemoveCmd,
 		mediaImport, mediaInspect, mediaList, mediaTrash, mediaRestore, view, export,
-		exportPresets, exportCheck, exportBatch,
 		jobShow, jobCancel, jobList, eventsCmd, commandHelp,
 		templateList, templateSave, templateNew, templateExport, templateImport, bundleExport, bundleImport,
 		agentDocs, transcribeCmd, doctorCmd, fontsCmd, auditCmd, toolsInstallCmd, tokenRotate,
 		fontImportCmd, brandShowCmd, brandSetCmd, otioExport, otioImport,
-		projectDescribeCmd, projectDuplicateCmd, itemAddCmd, itemMoveCmd, itemRenameCmd, itemTrashCmd, itemRestoreCmd,
-		briefShowCmd, briefSetCmd, briefingQuestionsCmd, briefingAnswerCmd,
 		connectionListCmd, connectionShowCmd, connectionAddCmd, connectionRemoveCmd, connectionTestCmd,
-		approvalListCmd, approvalShowCmd, approvalDecideCmd, approvalRuleListCmd, approvalRuleSetCmd,
-		approvalRuleRemoveCmd, costShowCmd, costCeilingCmd,
-		providerListCmd, providerModelsCmd, providerPriceCmd, textGenerateCmd,
-		imageGenerateCmd, voiceGenerateCmd, videoGenerateCmd, voiceListCmd, imageModelEditCmd,
-		imageCreate, imageList, imageShow, imageEdit, imageUndo, imageRedo, imageExport, imageImport,
-		assetListCmd, assetShowCmd, assetUsesCmd, assetSetCmd, assetTagCmd,
-		motionBriefCmd, motionCheckCmd, motionReplaceCmd,
-		agentProfilesCmd, chatSessionsCmd, chatSessionCmd, chatTranscriptCmd,
-	}, append(append(libraryCommands(), publishingCommands()...), writingCommands()...)...)
+		imageCreate, imageList, imageShow, imageEdit, imageUndo, imageRedo, imageExport,
+	}
 }
 
 // CommandNames lists the commands the binary knows, and those among them that
@@ -127,9 +116,8 @@ var projectCreate = &spec{
 }
 
 var projectShow = &spec{
-	name:     "project:show",
-	timeline: true,
-	summary:  "show a project",
+	name:    "project:show",
+	summary: "show a project",
 	usage: []string{
 		"stuarty project:show [<project id>] [--detail concise|full|document] [--cursor c] [--limit n]",
 	},
@@ -140,7 +128,7 @@ var projectShow = &spec{
 		pageFlags("")...),
 	run: func(ctx context.Context, c *call) (*output, error) {
 		res, err := c.svc.ProjectGet(ctx, service.ProjectGetRequest{
-			ProjectID: c.projectID, TimelineID: c.timelineID, Detail: c.args.str("detail"), Page: page(c.args),
+			ProjectID: c.projectID, Detail: c.args.str("detail"), Page: page(c.args),
 		})
 		if err != nil {
 			return nil, err
@@ -200,17 +188,16 @@ var projectRestore = projectStateCommand("project:restore", "restore a trashed p
 	})
 
 var history = &spec{
-	name:     "history",
-	timeline: true,
-	summary:  "list the steps of a project history",
-	usage:    []string{"stuarty history --project <id> [--by a] [--cursor c] [--limit n]"},
-	example:  "stuarty history --project prj_7k2m9x4q1b --json",
-	project:  true,
+	name:    "history",
+	summary: "list the steps of a project history",
+	usage:   []string{"stuarty history --project <id> [--by a] [--cursor c] [--limit n]"},
+	example: "stuarty history --project prj_7k2m9x4q1b --json",
+	project: true,
 	flags: append([]flagDef{{Name: "by", Kind: kindString, Usage: "only the steps of this actor"}},
 		pageFlags("20")...),
 	run: func(ctx context.Context, c *call) (*output, error) {
 		res, err := c.svc.HistoryList(ctx, service.HistoryListRequest{
-			ProjectID: c.projectID, TimelineID: c.timelineID, Actor: c.args.str("by"), Page: page(c.args),
+			ProjectID: c.projectID, Actor: c.args.str("by"), Page: page(c.args),
 		})
 		if err != nil {
 			return nil, err
@@ -222,20 +209,15 @@ var history = &spec{
 
 func undoCommand(name, summary string, redo bool) *spec {
 	return &spec{
-		name:     name,
-		timeline: true,
-		summary:  summary,
-		usage:    []string{"stuarty " + name + " --project <id>"},
-		example:  "stuarty " + name + " --project prj_7k2m9x4q1b",
-		project:  true,
-		globals:  []string{"dry-run"},
-		write:    true,
+		name:    name,
+		summary: summary,
+		usage:   []string{"stuarty " + name + " --project <id>"},
+		example: "stuarty " + name + " --project prj_7k2m9x4q1b",
+		project: true,
+		globals: []string{"dry-run"},
+		write:   true,
 		run: func(ctx context.Context, c *call) (*output, error) {
-			req := service.UndoRequest{
-				ProjectID:  c.projectID,
-				TimelineID: c.timelineID,
-				DryRun:     c.args.boolean("dry-run"),
-			}
+			req := service.UndoRequest{ProjectID: c.projectID, DryRun: c.args.boolean("dry-run")}
 
 			var (
 				res *service.UndoResult
@@ -263,12 +245,11 @@ var (
 )
 
 var lintCmd = &spec{
-	name:     "lint",
-	timeline: true,
-	summary:  "check a project against every lint rule (an edit result runs only the fast rules, lint_scope fast)",
-	usage:    []string{"stuarty lint --project <id> [--severity error|warning] [--cursor c] [--limit n] [--strict]"},
-	example:  "stuarty lint --project prj_7k2m9x4q1b --json",
-	project:  true,
+	name:    "lint",
+	summary: "check a project against every lint rule (an edit result runs only the fast rules, lint_scope fast)",
+	usage:   []string{"stuarty lint --project <id> [--severity error|warning] [--cursor c] [--limit n] [--strict]"},
+	example: "stuarty lint --project prj_7k2m9x4q1b --json",
+	project: true,
 	flags: append([]flagDef{
 		{
 			Name:    "severity",
@@ -280,7 +261,7 @@ var lintCmd = &spec{
 	}, pageFlags("25")...),
 	run: func(ctx context.Context, c *call) (*output, error) {
 		res, err := c.svc.Lint(ctx, service.LintRequest{
-			ProjectID: c.projectID, TimelineID: c.timelineID, Severity: c.args.str("severity"), Page: page(c.args),
+			ProjectID: c.projectID, Severity: c.args.str("severity"), Page: page(c.args),
 		})
 		if err != nil {
 			return nil, err
@@ -297,15 +278,16 @@ var lintCmd = &spec{
 
 var commandHelp = &spec{
 	name:       "command:help",
-	summary:    "list the editing commands and the domains, or describe one command",
-	usage:      []string{"stuarty command:help [<name>]", "stuarty command:help --domain <domain>"},
+	summary:    "list the editing commands, or describe one",
+	usage:      []string{"stuarty command:help [<name>]"},
 	example:    "stuarty command:help item.move",
 	positional: true,
 	flags: []flagDef{
 		{
-			Name:  "domain",
-			Kind:  kindString,
-			Usage: "a domain of the product: its commands (without it, the video commands and the list of domains)",
+			Name:    "domain",
+			Kind:    kindString,
+			Default: "video",
+			Usage:   "video, or image for the commands of image documents",
 		},
 	},
 	run: func(ctx context.Context, c *call) (*output, error) {

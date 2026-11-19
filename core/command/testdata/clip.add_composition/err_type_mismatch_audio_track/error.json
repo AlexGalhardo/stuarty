@@ -1,7 +1,0 @@
-{
-  "code": "E_TYPE_MISMATCH",
-  "message": "Track trk_m1n2p3q4r5 is an audio track; a composition goes on a visual track.",
-  "hint": "Use a visual track.",
-  "retryable": false,
-  "path": "args.track_id"
-}

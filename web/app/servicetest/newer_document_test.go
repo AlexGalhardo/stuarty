@@ -22,7 +22,7 @@ func TestNewerDocumentIsRefusedByEveryLoad(t *testing.T) {
 
 	_, err := e.store.DB().ExecContext(
 		e.as(ui),
-		"UPDATE timelines SET document = replace(document, ?, ?) WHERE id = ?",
+		"UPDATE projects SET document = replace(document, ?, ?) WHERE id = ?",
 		fmt.Sprintf(`"schema_version":%d`, timeline.CurrentSchemaVersion),
 		fmt.Sprintf(`"schema_version":%d`, newer),
 		project,

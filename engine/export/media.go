@@ -111,7 +111,7 @@ func newFrameSource(s *state, infos map[string]*layerInfo) *frameSource {
 
 // media is the compositor.MediaSource.
 func (f *frameSource) media(l *plan.Layer) (compositor.Image, error) {
-	a, ok := f.s.asset(l.AssetID)
+	a, ok := f.s.job.Doc.Assets[l.AssetID]
 	if !ok {
 		return compositor.Image{}, fmt.Errorf("the asset %s is not in the document", l.AssetID)
 	}
@@ -359,7 +359,7 @@ func (f *frameSource) prestart(fp *plan.FramePlan) {
 			continue
 		}
 
-		a, ok := f.s.asset(l.AssetID)
+		a, ok := f.s.job.Doc.Assets[l.AssetID]
 		if !ok || a.Kind == timeline.AssetImage {
 			continue
 		}

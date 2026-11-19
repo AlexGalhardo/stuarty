@@ -7,7 +7,6 @@ import ProjectPanel from "./ProjectPanel";
 import AudioPanel from "./panels/AudioPanel";
 import CaptionPanel from "./panels/CaptionPanel";
 import ClipPanel from "./panels/ClipPanel";
-import CompositionPanel from "./panels/CompositionPanel";
 import ShapePanel from "./panels/ShapePanel";
 import TemplateSection from "./panels/TemplateSection";
 import TextPanel from "./panels/TextPanel";
@@ -27,8 +26,6 @@ function ItemPanel({ itemId }: { itemId: string }): ReactNode {
 			return <CaptionPanel itemId={itemId} />;
 		case "shape":
 			return <ShapePanel itemId={itemId} />;
-		case "composition":
-			return <CompositionPanel itemId={itemId} />;
 		default:
 			return null;
 	}

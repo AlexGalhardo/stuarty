@@ -1,7 +1,0 @@
-{
-  "args": {
-    "asset": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-    "layer_id": "title"
-  },
-  "op": "layer.replace_source"
-}

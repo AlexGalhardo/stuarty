@@ -1,7 +1,0 @@
-{
-  "code": "E_VALIDATION",
-  "message": "args.direction applies to slide only, not to fade.",
-  "hint": "Leave direction out.",
-  "retryable": false,
-  "path": "args.direction"
-}

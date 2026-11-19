@@ -29,19 +29,6 @@ func main() {
 	args := os.Args
 
 	if len(args) > 1 {
-		// `stuarty <domain> <verb>` is the command of that domain, written as a group (SDD-003 section 5.1); the
-		// former names stay as they were, so the arguments become the ones of the command it names.
-		rewritten, code, matched := cli.Group(args[1:], os.Stdout, os.Stderr)
-		if matched && rewritten == nil {
-			os.Exit(code)
-		}
-
-		if matched {
-			args = append([]string{args[0]}, rewritten...)
-		}
-	}
-
-	if len(args) > 1 {
 		// Help comes from the product table, never from the framework (VV-029).
 		if code, handled := cli.Help(args[1:], os.Stdout, os.Stderr); handled {
 			os.Exit(code)
@@ -70,11 +57,6 @@ func main() {
 	case isUserCommand(args[1]):
 		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 		code := runUser(ctx, args[1], args[2:], processUserIO())
-		stop()
-		os.Exit(code)
-	case isWorkspaceCommand(args[1]):
-		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-		code := runWorkspace(ctx, args[1], args[2:], processWorkspaceIO())
 		stop()
 		os.Exit(code)
 	case args[1] == "mcp":

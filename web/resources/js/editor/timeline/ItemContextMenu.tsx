@@ -6,10 +6,8 @@ import {
 	Eye,
 	EyeOff,
 	Gauge,
-	Layers,
 	Link2,
 	Link2Off,
-	Maximize2,
 	Merge,
 	Music,
 	Pencil,
@@ -29,8 +27,8 @@ import {
 	ContextMenuShortcut,
 } from "@/components/ui/context-menu";
 import { useT } from "@/lib/i18n";
-import { IS_MAC } from "../commands/keymap";
-import { keyLabel, useKeymap } from "../commands/keymapStore";
+import { IS_MAC, keyLabel } from "../commands/keymap";
+import { useBindings } from "../commands/keymapStore";
 import { useActions, useCanCut } from "../commands/useActions";
 import { useCommandNames } from "../commands/useExposedCommands";
 import { useMenuRunner } from "../commands/useMenuRunner";
@@ -39,11 +37,10 @@ import {
 	useRuntime,
 	useUiState,
 } from "../state/EditorContext";
-import { openComposition } from "./openComposition";
 
 // The key of a row of the cheat sheet, at the right of an entry.
 function RowKey({ row }: { row: string }): ReactNode {
-	const key = keyLabel(row, useKeymap(), IS_MAC);
+	const key = keyLabel(row, useBindings(), IS_MAC);
 	return key === null ? null : <ContextMenuShortcut>{key}</ContextMenuShortcut>;
 }
 
@@ -124,35 +121,8 @@ export default function ItemContextMenuItems({
 			s.document?.assets[asset]?.kind === "video"
 		);
 	});
-	// A composition opens the timeline it uses, and expands when it only places it.
-	const compositionTimeline = useDocumentState((s) => {
-		const item = s.document?.items[itemId];
-		return item?.type === "composition" ? item.timeline : undefined;
-	});
 	return (
 		<>
-			{compositionTimeline !== undefined && (
-				<>
-					<ContextMenuItem
-						onSelect={() =>
-							openComposition(runtime.projectId, compositionTimeline)
-						}
-					>
-						<Layers aria-hidden="true" />
-						{t("ui.editor.item.composition_open")}
-					</ContextMenuItem>
-					<ContextMenuItem
-						onSelect={() => void actions.expandComposition(itemId)}
-					>
-						<Maximize2 aria-hidden="true" />
-						{t("ui.editor.edit.expand_composition")}
-					</ContextMenuItem>
-				</>
-			)}
-			<ContextMenuItem onSelect={() => void actions.createComposition()}>
-				<Layers aria-hidden="true" />
-				{t("ui.editor.edit.create_composition")}
-			</ContextMenuItem>
 			{isCaption && word !== null && (
 				<ContextMenuItem
 					disabled={word < 1}

@@ -27,14 +27,13 @@ var templateList = &spec{
 }
 
 var templateSave = &spec{
-	name:     "template:save",
-	timeline: true,
-	summary:  "make a template from a project",
-	usage:    []string{"stuarty template:save --project <id> --name <name> [--description d]"},
-	example:  `stuarty template:save --project prj_7k2m9x4q1b --name "Spring sale"`,
-	project:  true,
-	globals:  []string{"dry-run"},
-	write:    true,
+	name:    "template:save",
+	summary: "make a template from a project",
+	usage:   []string{"stuarty template:save --project <id> --name <name> [--description d]"},
+	example: `stuarty template:save --project prj_7k2m9x4q1b --name "Spring sale"`,
+	project: true,
+	globals: []string{"dry-run"},
+	write:   true,
 	flags: []flagDef{
 		{Name: "name", Kind: kindString, Usage: "template name (required)"},
 		{Name: "description", Kind: kindString, Usage: "what the template is for"},
@@ -45,11 +44,8 @@ var templateSave = &spec{
 		}
 
 		res, err := c.svc.TemplateSave(ctx, service.TemplateSaveRequest{
-			ProjectID:   c.projectID,
-			TimelineID:  c.timelineID,
-			Name:        c.args.str("name"),
-			Description: c.args.str("description"),
-			DryRun:      c.args.boolean("dry-run"),
+			ProjectID: c.projectID, Name: c.args.str("name"), Description: c.args.str("description"),
+			DryRun: c.args.boolean("dry-run"),
 		})
 		if err != nil {
 			return nil, err

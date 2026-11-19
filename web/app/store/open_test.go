@@ -140,7 +140,7 @@ func TestOpenRefusesUnknownMigration(t *testing.T) {
 func TestOpenRefusesNewerSchemaVersion(t *testing.T) {
 	d := newDir(t)
 	s := openStore(t, d, Options{SchemaVersion: 1})
-	if _, err := s.db.ExecContext(context.Background(), `INSERT INTO timelines
+	if _, err := s.db.ExecContext(context.Background(), `INSERT INTO projects
  (id, name, schema_version, document, doc_sha256, width, height, fps_num, fps_den, created_ms, updated_ms, created_by)
  VALUES ('prj_new', 'n', 2, '{}', 'x', 1, 1, 30, 1, 1, 1, 'local:ui')`); err != nil {
 		t.Fatal(err)

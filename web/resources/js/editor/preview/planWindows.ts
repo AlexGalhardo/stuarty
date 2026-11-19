@@ -27,9 +27,6 @@ export class PlanWindows {
 	private readonly cache = new Lru<number, PlanWindow>(MAX_WINDOWS);
 	private readonly inFlight = new Map<number, Promise<PlanWindow>>();
 	private readonly controllers = new Map<number, AbortController>();
-	// Bumped by invalidate: an answer asked for before it is stale even at the
-	// same revision and width.
-	private generation = 0;
 
 	constructor(private readonly getPlan: GetPlan) {}
 
@@ -47,14 +44,6 @@ export class PlanWindows {
 	setWidth(width: number | undefined): void {
 		if (width === this.width) return;
 		this.width = width;
-		this.cache.clear();
-		this.dropInFlight();
-	}
-
-	// A timeline this one uses as a composition changed (nested.updated, SDD-006
-	// section 3.3.1): the revision is the same but the windows are not.
-	invalidate(): void {
-		this.generation++;
 		this.cache.clear();
 		this.dropInFlight();
 	}
@@ -79,7 +68,6 @@ export class PlanWindows {
 		if (running) return running;
 		const revision = this.revision;
 		const width = this.width;
-		const generation = this.generation;
 		const controller = new AbortController();
 		this.controllers.set(from, controller);
 		const request = this.getPlan(
@@ -89,13 +77,8 @@ export class PlanWindows {
 			width,
 			controller.signal,
 		).then((plan) => {
-			// A revision or width change, or an invalidation, while waiting makes the
-			// answer stale.
-			if (
-				revision === this.revision &&
-				width === this.width &&
-				generation === this.generation
-			) {
+			// A revision or width change while waiting makes the answer stale.
+			if (revision === this.revision && width === this.width) {
 				this.cache.set(from, plan);
 			}
 			return plan;

@@ -48,7 +48,7 @@ SELECT ?, i, 'edit', 'local:pad', i - 1, 0, '[]', '[]', '[]', ?, ?, i FROM n`,
 	}
 
 	if _, err = e.store.DB().
-		ExecContext(ctx, "UPDATE timelines SET revision = ? WHERE id = ?", last, project); err != nil {
+		ExecContext(ctx, "UPDATE projects SET revision = ? WHERE id = ?", last, project); err != nil {
 		tb.Fatal(err)
 	}
 }

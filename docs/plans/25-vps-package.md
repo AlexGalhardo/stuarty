@@ -36,14 +36,14 @@ A creator with a small rented server runs one command and has their own Stuarty 
 
 ## Tasks
 
-- [x] 1. Amend SDD-009 with the deployment layout, what a backup contains and the update procedure. Verify: `task lint:md` exits 0.
-- [x] 2. Write `compose.yml`, the `Caddyfile` and `.env.example` with fixed tags. Verify: `docker compose -f deploy/compose.yml config` exits 0 and `task image:build && task image:smoke` pass.
-- [x] 3. Write `install.sh` and test it in a clean container that has Docker available, or with a local domain and Caddy's internal certificates. Verify: `bash deploy/test/install-test.sh` (new) exits 0.
-- [x] 4. Implement the consistent workspace backup command if missing, and `backup.sh` and `restore.sh`. Verify: `go test ./service/... -run TestWorkspaceBackup` passes and `bash deploy/test/backup-restore-test.sh` (new) exits 0 with matching checksums.
-- [x] 5. Write `update.sh` with rollback. Verify: `bash deploy/test/update-test.sh` (new) exits 0, including a forced health failure that rolls back.
-- [x] 6. Check hardening. Verify: `bash scripts/image-smoke.sh stuarty:local` passes with the non-root and read-only checks.
-- [x] 7. Write the installation, update, backup and restore guide in English and in Portuguese. Verify: `task lint:md` exits 0 and `bash scripts/docs-commands-smoke.sh` passes for the guide's commands.
-- [x] 8. One real installation on a rented server by the author, or marked as not verified. Verify: the result or the note is in the hand-off. (Marked as not verified: it needs a server and the author; the manual steps are in the hand-off.)
+- [ ] 1. Amend SDD-009 with the deployment layout, what a backup contains and the update procedure. Verify: `task lint:md` exits 0.
+- [ ] 2. Write `compose.yml`, the `Caddyfile` and `.env.example` with fixed tags. Verify: `docker compose -f deploy/compose.yml config` exits 0 and `task image:build && task image:smoke` pass.
+- [ ] 3. Write `install.sh` and test it in a clean container that has Docker available, or with a local domain and Caddy's internal certificates. Verify: `bash deploy/test/install-test.sh` (new) exits 0.
+- [ ] 4. Implement the consistent workspace backup command if missing, and `backup.sh` and `restore.sh`. Verify: `go test ./service/... -run TestWorkspaceBackup` passes and `bash deploy/test/backup-restore-test.sh` (new) exits 0 with matching checksums.
+- [ ] 5. Write `update.sh` with rollback. Verify: `bash deploy/test/update-test.sh` (new) exits 0, including a forced health failure that rolls back.
+- [ ] 6. Check hardening. Verify: `bash scripts/image-smoke.sh stuarty:local` passes with the non-root and read-only checks.
+- [ ] 7. Write the installation, update, backup and restore guide in English and in Portuguese. Verify: `task lint:md` exits 0 and `bash scripts/docs-commands-smoke.sh` passes for the guide's commands.
+- [ ] 8. One real installation on a rented server by the author, or marked as not verified. Verify: the result or the note is in the hand-off.
 
 ## Test strategy
 

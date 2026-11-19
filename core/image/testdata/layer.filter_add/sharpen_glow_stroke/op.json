@@ -1,9 +1,0 @@
-{
-  "args": {
-    "color": "#FFAA00",
-    "kind": "glow",
-    "layer_id": "lyr_bbbbbbbbbb",
-    "radius": 20
-  },
-  "op": "layer.filter_add"
-}

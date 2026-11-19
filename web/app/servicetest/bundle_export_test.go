@@ -150,7 +150,7 @@ func TestBundleExport(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if man.Format != "stuarty-bundle" || man.BundleVersion != 2 || man.Project.ID != project ||
+	if man.Format != "stuarty-bundle" || man.BundleVersion != 1 || man.Project.ID != project ||
 		man.Project.Revision != head.Revision || man.Project.SchemaVersion != timeline.CurrentSchemaVersion {
 		t.Errorf("manifest = %+v", man)
 	}

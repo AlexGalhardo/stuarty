@@ -36,24 +36,14 @@ try {
 	$version = & (Join-Path $app 'stuarty.exe') version
 	Assert ($LASTEXITCODE -eq 0 -and $version) 'the installed server runs: stuarty version'
 
-	# The application writes this value when the person turns on "Start when I sign in" (epic 21); the installer
-	# never does. It is written here the way the application writes it, to prove the uninstaller removes it.
-	$run = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'
-	$command = '"' + (Join-Path $app 'stuarty-desktop.exe') + '" --background'
-	New-ItemProperty -Path $run -Name 'StuartyDesktop' -PropertyType String -Value $command -Force | Out-Null
-
 	$u = Start-Process -FilePath (Join-Path $app 'unins000.exe') -Wait -PassThru -ArgumentList @('/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART')
 	Assert ($u.ExitCode -eq 0) 'the uninstaller exits 0'
 	Start-Sleep -Seconds 2
 	Assert (-not (Test-Path (Join-Path $app 'stuarty-desktop.exe'))) 'the program is removed'
 	Assert (-not (Test-Path $lnk)) 'the shortcut is removed'
-	$left = Get-ItemProperty -Path $run -Name 'StuartyDesktop' -ErrorAction SilentlyContinue
-	Assert ($null -eq $left) 'the start at sign-in is removed'
 	Assert (Test-Path (Join-Path $workspace 'mine.txt')) 'the workspace is kept'
 }
 finally {
-	# Whatever happened above, the check leaves no start at sign-in behind on the machine it ran on.
-	Remove-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run' -Name 'StuartyDesktop' -ErrorAction SilentlyContinue
 	Remove-Item Env:STUARTY_HOME -ErrorAction SilentlyContinue
 	Get-Process stuarty, stuarty-desktop -ErrorAction SilentlyContinue | Stop-Process -Force
 	Remove-Item -Recurse -Force $root -ErrorAction SilentlyContinue

@@ -21,27 +21,6 @@
 			{"op": "layer.remove", "args": {"layer_id": "lyr_zzzzzzzzzz"}}]}, "expect_error": {"code": "E_NOT_FOUND"}},
 		{"call": "ImageEdit", "args": {"image_id": "img_0000000001", "base_revision": 4, "operations": [
 			{"op": "image.create", "args": {"preset": "square_post"}}]}, "expect_error": {"code": "E_INVALID_STATE"}},
-		{"call": "ImageEdit", "args": {"image_id": "img_0000000001", "base_revision": 4, "operations": [
-			{"op": "layer.adjust", "args": {"layer_id": "lyr_cccccccccc", "brightness": 10, "contrast": 20, "exposure": 50, "levels": {"black": 10, "white": 240, "gamma": 120}, "curve": [{"x": 64, "y": 48}, {"x": 192, "y": 208}]}},
-			{"op": "layer.filter_add", "args": {"layer_id": "lyr_cccccccccc", "kind": "blur", "radius": 4}},
-			{"op": "layer.filter_add", "args": {"layer_id": "lyr_cccccccccc", "kind": "shadow", "color": "#112233", "dx": 6, "dy": 6}},
-			{"op": "layer.filter_add", "args": {"layer_id": "lyr_cccccccccc", "kind": "glow", "radius": 8, "amount": 150, "color": "#FFAA00"}},
-			{"op": "layer.filter_set", "args": {"layer_id": "lyr_cccccccccc", "kind": "blur", "radius": 6}},
-			{"op": "layer.filter_move", "args": {"layer_id": "lyr_cccccccccc", "kind": "glow", "index": 0}},
-			{"op": "layer.mask_set", "args": {"layer_id": "lyr_cccccccccc", "kind": "rounded_rect", "x": 50, "w": 900, "radius": 12, "feather": 3}},
-			{"op": "layer.blend", "args": {"layer_id": "lyr_cccccccccc", "mode": "soft_light"}},
-			{"op": "layer.mask_set", "args": {"layer_id": "lyr_bbbbbbbbbb", "kind": "layer", "source": "lyr_cccccccccc", "invert": true}}]}},
-		{"call": "ImageDescribe", "args": {"image_id": "img_0000000001"}},
-		{"call": "ImageEdit", "args": {"image_id": "img_0000000001", "base_revision": 5, "operations": [
-			{"op": "layer.filter_remove", "args": {"layer_id": "lyr_cccccccccc", "kind": "shadow"}},
-			{"op": "layer.mask_clear", "args": {"layer_id": "lyr_bbbbbbbbbb"}},
-			{"op": "layer.blend", "args": {"layer_id": "lyr_cccccccccc", "mode": "normal"}},
-			{"op": "layer.adjust", "args": {"layer_id": "lyr_cccccccccc", "reset": true}}]}},
-		{"call": "ImageEdit", "args": {"image_id": "img_0000000001", "base_revision": 6, "operations": [
-			{"op": "layer.filter_add", "args": {"layer_id": "lyr_cccccccccc", "kind": "blur"}}]}, "expect_error": {"code": "E_INVALID_STATE"}},
-		{"call": "ImageEdit", "args": {"image_id": "img_0000000001", "base_revision": 6, "operations": [
-			{"op": "layer.mask_set", "args": {"layer_id": "lyr_cccccccccc", "kind": "layer", "source": "lyr_cccccccccc"}}]}, "expect_error": {"code": "E_VALIDATION"}},
-		{"call": "ImageUndo", "args": {"image_id": "img_0000000001"}},
 		{"call": "ImageCreate", "args": {"preset": "square_post", "name": "Cover", "template": true}},
 		{"call": "ImageEdit", "args": {"image_id": "img_0000000002", "base_revision": 1, "operations": [
 			{"op": "layer.add_text", "args": {"text": "", "slot": "title", "id": "lyr_dddddddddd"}}]}},

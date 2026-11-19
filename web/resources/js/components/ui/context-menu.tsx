@@ -86,21 +86,13 @@ function ContextMenuItem({
   className,
   inset,
   variant = "default",
-  onSelect,
-  onClick,
   ...props
-}: Omit<React.ComponentProps<typeof ContextMenuPrimitive.Item>, "onSelect"> & {
+}: React.ComponentProps<typeof ContextMenuPrimitive.Item> & {
   inset?: boolean
   variant?: "default" | "destructive"
-  onSelect?: () => void
 }) {
-  // Base UI has no select event on an item: it runs onClick when the item is chosen (see DropdownMenuItem).
   return (
     <ContextMenuPrimitive.Item
-      onClick={(event) => {
-        onClick?.(event)
-        onSelect?.()
-      }}
       data-slot="context-menu-item"
       data-inset={inset ? "" : undefined}
       data-variant={variant}

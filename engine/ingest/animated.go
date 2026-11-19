@@ -132,7 +132,6 @@ func (j *job) animated(ctx context.Context, plan ImagePlan) error {
 		return ingestErr(ReasonDecodeFailed, "The frames of the animated image could not be packed.",
 			map[string]any{"step": StepVideo}, err)
 	}
-	j.markAlphaOpaque(func() bool { return rawAlphaOpaque(j.path("frames.rgba")) })
 	_ = os.Remove(j.path("frames.rgba"))
 	j.add(workFile{kind: AnimKind, profile: ProfileNormalized, ext: AnimExt, name: "frames.anim"})
 	return nil

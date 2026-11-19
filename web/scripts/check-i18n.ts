@@ -358,11 +358,6 @@ const SAME_IN_PORTUGUESE: ReadonlySet<string> = new Set([
 	"ui.editor.clip.volume",
 	"ui.editor.clip.hsl_range_name.magenta",
 	"ui.editor.keyframes.easing_name.linear",
-	// Names of networks and placements are brand names: they are not translated (VV-260).
-	"ui.projects.briefing.option.platform.youtube-shorts",
-	"ui.projects.briefing.option.platform.tiktok",
-	"ui.projects.briefing.option.platform.instagram-reels",
-	"ui.projects.briefing.option.platform.facebook-reels",
 ]);
 
 const en = flatten(loadCatalog("en.json"));

@@ -37,12 +37,8 @@ func templateRefused(c Caller) error {
 // The media of the slots become placeholders; no log row is written, and saving
 // again makes another template.
 func (s *svc) TemplateSave(ctx context.Context, req TemplateSaveRequest) (*TemplateResult, error) {
-	c, err := s.authorizeProject(ctx, "TemplateSave", req.ProjectID)
+	c, err := authorize(ctx, "TemplateSave", req.ProjectID)
 	if err != nil {
-		return nil, err
-	}
-
-	if err := s.useTimeline(ctx, c, &req.ProjectID, req.TimelineID); err != nil {
 		return nil, err
 	}
 
@@ -577,7 +573,7 @@ func (s *svc) createFromTemplate(ctx context.Context, c Caller, doc *timeline.Do
 	}
 
 	err := s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
-		if err := s.putProduction(ctx, tx, &row); err != nil {
+		if err := tx.Projects().Create(ctx, row); err != nil {
 			return err
 		}
 
@@ -600,7 +596,7 @@ func (s *svc) createFromTemplate(ctx context.Context, c Caller, doc *timeline.Do
 func (s *svc) discard(ctx context.Context, c Caller, id string) {
 	_ = s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
 		now := s.nowMs()
-		if err := tx.Productions().SetState(ctx, id, ProjectTrashed, c.Actor, now); err != nil {
+		if err := tx.Projects().SetState(ctx, id, ProjectTrashed, c.Actor, now); err != nil {
 			return err
 		}
 

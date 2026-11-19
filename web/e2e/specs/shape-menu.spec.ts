@@ -23,9 +23,10 @@ test.describe("shape-menu", () => {
 			name: "Rectangle",
 			exact: true,
 		});
-		// One item, although the mask shape select of the inspector, a native
-		// select, also has an option named Rectangle (an option is not a menu item).
 		await expect(rectangle).toHaveCount(1);
+		await expect(page.getByRole("option", { name: "Rectangle" })).toHaveCount(
+			0,
+		);
 
 		const posted: string[] = [];
 		page.on("request", (r) => {

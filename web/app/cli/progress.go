@@ -191,7 +191,7 @@ func (c *call) cancelStarted(ctx context.Context, since time.Time) *service.Job 
 	defer cancel()
 
 	list, err := c.svc.JobList(ctx, service.JobListRequest{
-		ProjectID: c.projectID, TimelineID: c.timelineID, State: "active",
+		ProjectID: c.projectID, State: "active",
 	})
 	if err != nil {
 		return nil
@@ -224,7 +224,7 @@ func (c *call) watchJobs(p *progress, since time.Time) func(context.Context) {
 
 	return func(ctx context.Context) {
 		list, err := c.svc.JobList(ctx, service.JobListRequest{
-			ProjectID: c.projectID, TimelineID: c.timelineID, State: "active",
+			ProjectID: c.projectID, State: "active",
 		})
 		if err != nil {
 			return
@@ -245,7 +245,7 @@ func (c *call) watchAssets(p *progress, total int) func(context.Context) {
 	}
 
 	return func(ctx context.Context) {
-		list, err := c.svc.MediaList(ctx, service.MediaListRequest{ProjectID: c.projectID, TimelineID: c.timelineID})
+		list, err := c.svc.MediaList(ctx, service.MediaListRequest{ProjectID: c.projectID})
 		if err != nil {
 			return
 		}
@@ -354,7 +354,7 @@ func (c *call) importExpired(ctx context.Context) (*output, error) {
 	ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), cleanupTimeout)
 	defer cancel()
 
-	list, err := c.svc.MediaList(ctx, service.MediaListRequest{ProjectID: c.projectID, TimelineID: c.timelineID})
+	list, err := c.svc.MediaList(ctx, service.MediaListRequest{ProjectID: c.projectID})
 	if err != nil {
 		return nil, err
 	}

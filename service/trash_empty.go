@@ -50,7 +50,7 @@ type doomed struct {
 // TrashEmpty deletes what is in the trash for good. It is the only operation
 // that removes data, and no agent surface reaches it (RF-131, T-28).
 func (s *svc) TrashEmpty(ctx context.Context, req TrashEmptyRequest) (*TrashEmptyResult, error) {
-	c, err := s.authorizeProject(ctx, "TrashEmpty", req.ProjectID)
+	c, err := authorize(ctx, "TrashEmpty", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}
@@ -84,9 +84,7 @@ func (s *svc) TrashEmpty(ctx context.Context, req TrashEmptyRequest) (*TrashEmpt
 	}
 
 	for _, id := range targets {
-		for _, tl := range s.timelineIDs(ctx, id) {
-			s.stopProjectJobs(ctx, tl)
-		}
+		s.stopProjectJobs(ctx, id)
 	}
 
 	res := &TrashEmptyResult{}
@@ -123,14 +121,14 @@ func (s *svc) trashTargets(ctx context.Context, c Caller, req *TrashEmptyRequest
 		cutoff = s.nowMs() - int64(req.OlderThanDays)*24*int64(time.Hour/time.Millisecond)
 	}
 
-	matches := func(h *ProductionHead) bool {
+	matches := func(h *ProjectHead) bool {
 		return h.State == ProjectTrashed && visible(c, h.OwnerUserID) &&
 			(c.ProjectID == "" || h.ID == c.ProjectID) &&
 			(cutoff == 0 || h.TrashedMs != nil && *h.TrashedMs <= cutoff)
 	}
 
 	if req.ProjectID != "" {
-		h, err := s.store.Productions().Get(ctx, req.ProjectID)
+		h, err := s.store.Projects().Head(ctx, req.ProjectID)
 		if err != nil || !matches(&h) {
 			return nil, newError(command.CodeNotFound, "there is no trashed project %s.", req.ProjectID).
 				withHint("a project must be in the trash before it can be emptied")
@@ -144,7 +142,7 @@ func (s *svc) trashTargets(ctx context.Context, c Caller, req *TrashEmptyRequest
 	after := ""
 
 	for {
-		heads, next, err := s.store.Productions().List(ctx, ProductionQuery{
+		heads, next, err := s.store.Projects().List(ctx, ProjectQuery{
 			State: ProjectTrashed, OwnerUserID: c.OwnerUserID, After: after, Limit: 200,
 		})
 		if err != nil {
@@ -165,24 +163,6 @@ func (s *svc) trashTargets(ctx context.Context, c Caller, req *TrashEmptyRequest
 	}
 }
 
-// timelineIDs lists every timeline of a project, trashed ones included: they are all deleted with it.
-func (s *svc) timelineIDs(ctx context.Context, projectID string) []string {
-	rows, err := s.store.Productions().Items(ctx, projectID)
-	if err != nil {
-		return nil
-	}
-
-	var ids []string
-
-	for i := range rows {
-		if rows[i].Kind == "timeline" {
-			ids = append(ids, rows[i].Ref)
-		}
-	}
-
-	return ids
-}
-
 // stopProjectJobs asks the queued and running jobs of a project to stop and
 // waits for them, up to jobWait.
 func (s *svc) stopProjectJobs(ctx context.Context, projectID string) {
@@ -198,48 +178,6 @@ func (s *svc) stopProjectJobs(ctx context.Context, projectID string) {
 	}
 }
 
-// deleteProduction deletes a trashed project: its timelines first (their log, assets and jobs cascade), then the
-// project and its items. A project with a job that outlived the wait of stopProjectJobs is kept: the cascade
-// would delete the job without a final state, and the next emptying takes the project.
-func (s *svc) deleteProduction(ctx context.Context, tx Tx, id string) (timelines []string, deleted bool, err error) {
-	items, err := tx.Productions().Items(ctx, id)
-	if err != nil {
-		return nil, false, err
-	}
-
-	for i := range items {
-		if items[i].Kind != "timeline" {
-			continue
-		}
-
-		timelines = append(timelines, items[i].Ref)
-
-		active, lerr := tx.Jobs().List(ctx, items[i].Ref, []string{JobQueued, JobRunning}, 1)
-		if lerr != nil {
-			return nil, false, lerr
-		}
-
-		if len(active) > 0 {
-			s.log.LogAttrs(ctx, slog.LevelWarn, "trash empty: project kept, a job is still active",
-				slog.String("project", id))
-
-			return nil, false, nil
-		}
-	}
-
-	for _, tl := range timelines {
-		if derr := tx.Projects().Delete(ctx, tl); derr != nil && !isNotFound(derr) {
-			return nil, false, derr
-		}
-	}
-
-	if err := tx.Productions().Delete(ctx, id); err != nil {
-		return nil, false, err
-	}
-
-	return timelines, true, nil
-}
-
 // deleteInTx is the transaction of section 13.3: the projects (which cascade),
 // the trashed references of the other projects, then every asset nothing
 // references any more.
@@ -253,16 +191,27 @@ func (s *svc) deleteInTx(
 	plan *doomed,
 ) error {
 	for _, id := range targets {
-		timelines, deleted, err := s.deleteProduction(ctx, tx, id)
+		// A job that outlived the wait of stopProjectJobs would be deleted by
+		// the cascade without a final state; the next emptying takes the project.
+		active, err := tx.Jobs().List(ctx, id, []string{JobQueued, JobRunning}, 1)
 		if err != nil {
 			return err
 		}
 
-		if deleted {
-			res.Projects++
+		if len(active) > 0 {
+			s.log.LogAttrs(ctx, slog.LevelWarn, "trash empty: project kept, a job is still active",
+				slog.String("project", id))
 
-			plan.projects = append(plan.projects, timelines...)
+			continue
 		}
+
+		if err := tx.Projects().Delete(ctx, id); err != nil {
+			return err
+		}
+
+		res.Projects++
+
+		plan.projects = append(plan.projects, id)
 	}
 
 	// With neither filter the trashed assets of every visible active project go

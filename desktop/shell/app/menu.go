@@ -43,9 +43,7 @@ func editorItems(menu *application.Menu, win *application.WebviewWindow, name st
 // menus of SDD-012 section 6.4, whose editor items call the page, and the shell's
 // own items (Open workspace folder, Quit, Reload, full screen, updates, About with
 // the version).
-func buildMenu(
-	app *application.App, win *application.WebviewWindow, ws workspace.Dir, up *updater, quit func(),
-) *application.Menu {
+func buildMenu(app *application.App, win *application.WebviewWindow, ws workspace.Dir, up *updater) *application.Menu {
 	menu := app.NewMenu()
 
 	file := menu.AddSubmenu(tr(shell.TextFile))
@@ -57,7 +55,7 @@ func buildMenu(
 		}
 	})
 	file.AddSeparator()
-	file.Add(tr(shell.TextQuit)).SetAccelerator("CmdOrCtrl+Q").OnClick(func(*application.Context) { quit() })
+	file.Add(tr(shell.TextQuit)).SetAccelerator("CmdOrCtrl+Q").OnClick(func(*application.Context) { app.Quit() })
 
 	editorItems(menu.AddSubmenu(tr(shell.TextMenuEdit)), win, "edit")
 	editorItems(menu.AddSubmenu(tr(shell.TextMenuClip)), win, "clip")

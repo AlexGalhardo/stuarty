@@ -80,52 +80,6 @@ pub fn blurred(src: &Image, p: &Placement, sigma: f64) -> Option<(Image, Placeme
 	))
 }
 
-/// `src` blurred like [`blurred`] but with the edge pixels repeated beyond the layer instead of
-/// transparent ones, and kept at its size: the blurred copy an unsharp mask subtracts (SDD-013
-/// section 3.11.3), so an opaque picture has no bright fringe. `rx` and `ry` are the box radii.
-pub fn blurred_replicate(src: &Image, rx: usize, ry: usize) -> Image {
-	let (px, py) = (3 * rx, 3 * ry);
-	let (w, h) = (src.w, src.h);
-
-	let mut rows = vec![0_u8; w * h * 4];
-	let mut a = vec![0_u8; (w + 2 * px) * 4];
-	let mut b = vec![0_u8; (w + 2 * px) * 4];
-	for sy in 0..h {
-		let line = &src.pix[sy * w * 4..(sy + 1) * w * 4];
-		for x in 0..w + 2 * px {
-			let sx = x.saturating_sub(px).min(w - 1);
-			a[x * 4..x * 4 + 4].copy_from_slice(&line[sx * 4..sx * 4 + 4]);
-		}
-		box_pass(&a, &mut b, rx);
-		box_pass(&b, &mut a, rx);
-		box_pass(&a, &mut b, rx);
-		rows[sy * w * 4..(sy + 1) * w * 4].copy_from_slice(&b[px * 4..(px + w) * 4]);
-	}
-
-	let mut out = vec![0_u8; w * h * 4];
-	let mut ca = vec![0_u8; (h + 2 * py) * 4];
-	let mut cb = vec![0_u8; (h + 2 * py) * 4];
-	for x in 0..w {
-		for y in 0..h + 2 * py {
-			let sy = y.saturating_sub(py).min(h - 1);
-			ca[y * 4..y * 4 + 4].copy_from_slice(&rows[(sy * w + x) * 4..(sy * w + x) * 4 + 4]);
-		}
-		box_pass(&ca, &mut cb, ry);
-		box_pass(&cb, &mut ca, ry);
-		box_pass(&ca, &mut cb, ry);
-		for y in 0..h {
-			out[(y * w + x) * 4..(y * w + x) * 4 + 4]
-				.copy_from_slice(&cb[(y + py) * 4..(y + py) * 4 + 4]);
-		}
-	}
-	Image {
-		pix: out,
-		w,
-		h,
-		opaque: false,
-	}
-}
-
 /// One box pass over a line of RGBA pixels: each output pixel is the mean of the `2r + 1` pixels
 /// centred on it, the outside counting as zero, rounded half up.
 fn box_pass(line: &[u8], out: &mut [u8], r: usize) {

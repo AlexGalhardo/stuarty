@@ -246,7 +246,7 @@ func describeStepBodies(doc *openapi.Document) {
 // exactly these (TestHeavyLimitCallSites in service keeps the count).
 var heavyOperations = []string{
 	"jobs.start", "media.import", "templates.import", "fonts.import",
-	"projects.bundle.import", "projects.bundle.export", "projects.otio.import", "audio.measure",
+	"projects.bundle.import", "projects.bundle.export", "projects.otio.import",
 }
 
 // describeHeavyOperations says on each heavy operation that it shares the heavy-call limit, so

@@ -4,13 +4,11 @@
 
 use std::collections::BTreeMap;
 
-use crate::compose::{
-	Layer, LayerExt, Source, Target, compose, frame_fill, layer_opacity, premultiply,
-};
+use crate::compose::{Layer, Source, Target, compose, frame_fill, layer_opacity, premultiply};
 use crate::error::{Error, Reason};
 use crate::image::Image;
 use crate::lut::{Lut, lut_mix};
-use crate::plan::{LayerSpec, MAX_ID_BYTES, Pixels, RenderInput, decode};
+use crate::plan::{MAX_ID_BYTES, Pixels, RenderInput, decode};
 
 /// The largest side of a texture or bitmap.
 pub const MAX_TEXTURE_SIDE: usize = 8192;
@@ -186,7 +184,6 @@ impl Renderer {
 	/// an error. The CPU and the GPU path both draw this list.
 	pub fn layers<'a>(&'a self, r: &RenderInput) -> Result<Vec<Layer<'a>>, Error> {
 		let mut layers = Vec::with_capacity(r.layers.len());
-		let mut kept: Vec<&LayerSpec> = Vec::with_capacity(r.layers.len());
 		for l in &r.layers {
 			// A layer that rounds to no opacity is not drawn, so the host need not have uploaded it.
 			if layer_opacity(l.opacity) == 0 {
@@ -238,30 +235,7 @@ impl Renderer {
 				frame: r.frame,
 				shadow: l.shadow.clone(),
 				outline: l.outline.clone(),
-				ext: LayerExt {
-					tone: l.tone.clone(),
-					filters: l.filters.clone(),
-					clip: None,
-					stencil: l.stencil,
-				},
 			});
-			kept.push(l);
-		}
-		// A clip names its source by item id: the index of that layer in the list drawn. The source
-		// must be there and must not be clipped itself (section 3.11.4).
-		for (i, l) in kept.iter().enumerate() {
-			let Some(c) = &l.clip else { continue };
-			let source = kept
-				.iter()
-				.position(|k| k.item == c.source)
-				.filter(|&j| j != i && kept[j].clip.is_none())
-				.ok_or_else(|| {
-					Error::new(
-						Reason::InvalidPlan,
-						format!("layer {}: the clip source is not a layer to read", l.item),
-					)
-				})?;
-			layers[i].ext.clip = Some((source, c.invert));
 		}
 		Ok(layers)
 	}

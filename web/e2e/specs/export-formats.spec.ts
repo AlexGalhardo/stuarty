@@ -155,7 +155,6 @@ test.describe("export-formats", () => {
 		expect(bodies.at(-1)).toEqual({
 			kind: "export",
 			args: { format: "gif" },
-			timeline_id: seeded.id,
 		});
 		await expect(
 			dialog.getByRole("link", { name: "Download" }),

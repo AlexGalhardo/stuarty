@@ -1,7 +1,7 @@
 # SDD-002: Command catalogue of the core
 
 - Amended (2026-11-18) for Stuarty: this is the catalogue of the video domain. Other domains get their own catalogue (ADR-0031, ADR-0038).
-- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen: all 86 commands have golden cases and pass the registry-wide gates. The binary exposes all 86 commands, 85 of them public (epic 32 added three, C.84 to C.86); `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
+- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen: all 74 commands have golden cases and pass the registry-wide gates. The binary exposes all 74 commands, 73 of them public; `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
 - Depends on: SDD-001 (document), ADR-0002 (command core), ADR-0004 (time), ADR-0006 (log, concurrency, undo), ADR-0014 (JSON Schema)
 - Implements: RF-010 to RF-016, RF-020 to RF-026, RF-030 to RF-036, RF-040, RF-041, RF-050, RF-051, RF-100, RF-105, RF-107, RF-112 to RF-115, RF-119, NFR-001, NFR-025
 - Owner area: senior-a (command core and schema)
@@ -42,8 +42,7 @@
 func (r *Registry) Apply(doc *timeline.Document, op Operation, env Env) (Result, error)
 
 type Env struct {
-    NewIDs    func(prefix string) string // deterministic in tests; random in production
-    Timelines timeline.Graph             // the other timelines of the production (epic 32); nil when the caller has none
+    NewIDs func(prefix string) string // deterministic in tests; random in production
 }
 
 type Result struct {
@@ -51,18 +50,8 @@ type Result struct {
     Inverse   []Primitive        // undo, section A.6
     Diff      []Change           // section A.5
     Effective map[string]any     // values actually applied, section A.4
-    Spawned   []*timeline.Document // timelines the command made besides Doc (composition.create_from_selection); the caller stores them
-}
-
-// timeline.Graph is what the three composition commands read of the production: pure lookups the caller
-// answers from its own store. The documents it returns are read-only.
-type Graph interface {
-    Doc(id string) (*timeline.Document, bool) // a timeline of the production by its id
-    Users(id string) []string                 // the ids of the timelines that hold a composition of id, sorted
 }
 ```
-
-`Env.Timelines` is how a command that places one timeline in another stays pure: it never opens a store. A command that needs it and finds it nil answers `E_NOT_FOUND` for the timeline (the production is unknown). The golden runner builds it from the optional file `timelines.json` of a case (the other documents of the production as an array of canonical documents). `Result.Spawned` holds the new documents of a command that makes a timeline; the service creates their rows in the transaction of the commit, with the rows of the assets their documents name (copied from the timeline they came from, so their files are served and kept under them), and an undo of the batch leaves them in place (it restores the document, and the timeline is the user's to trash).
 
 Rules:
 
@@ -103,8 +92,6 @@ For `settings.updated` and `project.updated` the `id` is the project identifier.
 
 `core/command.DescribeDiff(doc, diff)` renders the diff as text, one line per change, with times in seconds and frames, for agents and for the history view. Its exact format is in SDD-003.
 
-**Diff of two documents (RF-121, epic 36).** `core/command.Diff(a, b)` returns the changes that turn document `a` into document `b`, in the form above (the form of a fetched document, whole objects for `added` and `removed`, `[before, after]` for a changed field), in the order of a batch diff. It is computed from the two documents and never from the log, so it is the same after any sequence of edits, undos and redos that led to them. `core/command.DiffEntries(a, b)` classifies each change and sorts them most significant first: a track added or removed, then an item added or removed, then `settings.updated` and `project.updated`, then an item **trimmed** (`duration` or `source_in` changed), then an item **moved** (`start` or `track` changed, and neither of those two), then any other change of an item or a track, then assets and fonts; ties by kind and identifier. An entry has the change, its `verb` (`added`, `removed`, `moved`, `trimmed`, `changed`), its `noun` (`track`, the type of an item: `clip`, `audio`, `text`, `caption` or `shape`, then `asset`, `font`, `settings`, `project`) and the `DescribeDiff` line of the change. Equal documents give no entry.
-
 ### A.6 Undo
 
 The inverse of an operation is not another catalogue command. It is a list of three **primitives** computed from the before-state of the objects the operation touched:
@@ -121,8 +108,6 @@ Undo and redo are service operations (SDD-003). The rule from ADR-0006 that they
 
 The primitives of one undo are applied together to a working copy, with no validation between them, and the result is validated once at the end. Intermediate states may therefore break an invariant (two items overlapping while a ripple is being reversed); only the final document must be valid. Their order matters in one way only: an object must exist before it is patched and must not exist before it is put. If the final document is invalid, the primitives that touch an object named in a violation are dropped and the application starts again from the document before the undo; this ends because each round drops at least one primitive (SDD-005 §12.2).
 
-**Revert (RF-120, epic 36).** `history.revert` is a service operation, not a catalogue command, because it needs a document the batch itself cannot carry: the document at an earlier revision. The service rebuilds that document (SDD-005 §12.4) and the core computes the change: `core/command.Revert(current, target)` returns a `BatchResult` whose `Doc` is `target`, whose `Diff` is `Diff(current, target)` and whose `Inverse` is the primitives that turn `target` back into `current`. Reverting is therefore an ordinary batch: it is one revision with an inverse, so it is undone by `Undo` of the actor who asked and redone by `Redo`; it is validated as any batch (the target was a valid document); and it changes the locked tracks like undo does (it is not an edit of an item, it restores a state). The document equals the target in canonical bytes, which `TestRevertProperty` checks over a random sequence of edits for every earlier revision. `core/command.RebuildAt(current, inverses)` is the other half: it applies the stored inverses of the revisions after the target, newest first and each in reverse order, all together on a working copy with no guard, and returns the document at the target, or an error when any primitive is skipped (the log does not fit the document). The service compares its hash with the `doc_sha256` of the target row before it trusts it.
-
 ### A.7 Concurrency and idempotency
 
 A batch request carries `base_revision`. The service decides:
@@ -138,8 +123,6 @@ A batch whose `base_revision` is more than 1,000 revisions behind is rejected wi
 A batch may carry an `idempotency_key` (8 to 64 characters from `[A-Za-z0-9._~-]`). The service stores the result of a committed batch under `(project, actor, key)` for 24 hours. A second request with the same key returns the stored result with `"replayed": true` and changes nothing; if the second request's operations differ from the first's, the answer is `E_IDEMPOTENCY_MISMATCH`.
 
 `dry_run: true` runs steps 1 and 2 and returns the result that would be committed, with `"applied": false`, without writing.
-
-A revert (A.6) carries `base_revision` too, the revision the caller read when it chose the target; absent, it is the current revision. When it is older, a revert conflicts when another actor's change in between added, updated or removed an object that the revert changes (the objects of `Diff(current, target)`, and the project or the settings when those differ). The error is the same `E_REVISION_CONFLICT` with the text diff, so a person reads what the other actor did before going back over it.
 
 ### A.8 Errors
 
@@ -230,20 +213,6 @@ These are the decisions of the implementation (task P1-ENG-001) that Part A leav
    - `caption.add` with `text` refuses a word of more than 80 characters with `E_VALIDATION`; the error codes of `track.remove` are `E_NOT_FOUND` and `E_NOT_EMPTY` (there is no schema error to report).
    - The `order` strings, the seconds in hints and the messages in Part C are examples; the golden files hold the real ones.
 
-### A.13 Export presets and the fit check (`core/export`)
-
-The rules of exporting for a network are pure and live in `core/export`, not in a handler: the table of presets (SDD-004 section 8.2), `Check` and the codec names. No command is added to the registry and the document is never changed: a preset does not edit the timeline, it says whether the timeline as it is fits a network. `Check(preset, input)` takes the pixels, the frame rate, the duration in milliseconds and, when the file exists, its size in bytes, and returns the findings below in a fixed order (duration, frame rate, resolution, aspect ratio, size), each with `code`, `severity`, `message`, `limit` and `got`. A limit of `0` in a preset is not checked. The aspect ratio is compared as a fraction of integers, with the tolerance the preset states.
-
-| Finding code | Raised when |
-| --- | --- |
-| `X_DURATION_TOO_LONG`, `X_DURATION_TOO_SHORT` | the duration is over the maximum or under the minimum of the preset |
-| `X_FPS_TOO_HIGH`, `X_FPS_TOO_LOW` | the frame rate is over or under the preset's range |
-| `X_RESOLUTION_TOO_SMALL`, `X_RESOLUTION_TOO_LARGE` | a side, or the width, is outside the preset's range |
-| `X_ASPECT_RATIO` | the width over the height is outside the preset's range |
-| `X_SIZE_TOO_LARGE` | the file, or the estimate of it (the targets of the preset times the duration), is over the maximum |
-
-These are findings of a check, not errors of a call: they travel in the result of `ExportCheck` and, when an export is refused for them, in `details.findings` of `E_VALIDATION` with `details.reason = "preset_mismatch"`. They are listed in SDD-000 section 15.
-
 ## Part B: the catalogue
 
 Scope is `edit` unless stated. "Time" marks arguments parsed by A.4. Optional arguments are written with `?`.
@@ -297,15 +266,11 @@ Scope is `edit` unless stated. "Time" marks arguments parsed by A.4. Optional ar
 | --- | --- | --- |
 | `clip.add` | `track_id`, `asset_id`, `start?` (time; default the end of the last item of the track), `source_in?` (time, offset into the asset; default 0), `duration?` (time, as a length; default: the rest of the asset from `source_in`, or `"5s"` for an image), `fit?`, `id?` | Places a video or image asset on a visual track |
 | `audio.add` | `track_id`, `asset_id`, `start?` (default the end of the last item of the track), `source_in?`, `duration?`, `id?` | Places an audio asset, or the audio of a video asset, on an audio track |
-| `clip.add_composition` | `track_id`, `timeline_id`, `start?`, `source_in?`, `duration?` (default the rest of the nested timeline from `source_in`), `fit?`, `id?` | Places another timeline of the production on a visual track as one clip (RF-083, SDD-001 section 3.5.1). Refuses a cycle and a nesting deeper than 4. See C.84 |
-| `composition.create_from_selection` | `item_ids` (1 to 100), `name?`, `timeline_id?`, `id?` | Moves the selected items into a new timeline of the production and puts one composition clip in their place, in one batch. See C.85 |
-| `composition.expand` | `item_id` | The inverse: puts the items of the nested timeline back on the timeline in place of a composition that uses no group feature. See C.86 |
 | `clip.set_framing` | `item_id`, `fit?`, `crop?` | Sets fit and crop |
-| `clip.set_speed` | `item_id`, `speed` (`"1.5x"`, `"0.5x"` or a rational object) or `curve` (2 to 8 `{t, speed}` points), `ripple?` (`"none"` default, `"track"`) | Changes speed keeping the same source range: the new duration is `ceil(duration × old / new)`, reduced by the rounding excess if that would read past the end of the asset. Keyframe times and transition and fade lengths are scaled by the same ratio and rounded. With `ripple: "track"`, later items on the track shift by the change in length; otherwise a resulting overlap is `E_OVERLAP`. Captions linked to the clip are not changed; the lint reports them as out of sync until `caption.retime_from_clip` runs. A `composition` item takes a constant `speed` by the same rule (epic 53, C.25); a `curve` or a `reverse` on it is `E_VALIDATION` |
+| `clip.set_speed` | `item_id`, `speed` (`"1.5x"`, `"0.5x"` or a rational object) or `curve` (2 to 8 `{t, speed}` points), `ripple?` (`"none"` default, `"track"`) | Changes speed keeping the same source range: the new duration is `ceil(duration × old / new)`, reduced by the rounding excess if that would read past the end of the asset. Keyframe times and transition and fade lengths are scaled by the same ratio and rounded. With `ripple: "track"`, later items on the track shift by the change in length; otherwise a resulting overlap is `E_OVERLAP`. Captions linked to the clip are not changed; the lint reports them as out of sync until `caption.retime_from_clip` runs |
 | `clip.set_color` | `item_id`, `brightness?`, `contrast?`, `saturation?`, `temperature?`, `tint?`, `hue?` | Sets colour adjustment; also white balance and hue rotation (TASK-0233). See C.26 |
 | `clip.set_filter` | `item_id`, `filter?`, `amount?` | Sets the colour filter of a clip and how much of it is mixed in |
 | `clip.set_blur` | `item_id`, `radius` | Sets the blur radius of a clip in pixels; 0 removes it |
-| `clip.replace_media` | `item_id`, `asset_id` | Swaps the asset of a clip for another of the same kind, keeping its place, trim, transform, keyframes and effects (the re-render of an animation, SDD-011 section 15). See C.78 |
 | `item.repeat` | `item_id`, `copies?` or `until?` (exactly one), `ripple?` (`none` default, `track`), `link?`, `new_ids?` | Repeats an item back to back after its end, a number of times or until a time, such as a looping background (VV-123). See C.74 |
 | `clip.set_shadow` | `item_id`, `shadow` (`{color?, opacity?, dx?, dy?, blur?}` or null) | Gives a clip a drop shadow that follows its visible shape (VV-122); null removes it. See C.72 |
 | `clip.set_outline` | `item_id`, `outline` (`{color?, width?}` or null) | Gives a clip an outline that follows its visible shape (VV-122); null removes it. See C.73 |
@@ -323,11 +288,6 @@ Scope is `edit` unless stated. "Time" marks arguments parsed by A.4. Optional ar
 | `item.extract_audio` | `item_id`, `track_id`, `id?` | Creates a linked audio item from the audio of a video clip and mutes the clip. See C.67 |
 | `clip.remove_silences` | `item_id`, `min_silence?` (length, default `"0.4s"`), `padding?` (length kept on each side of speech, default `"0.1s"`), `threshold_db?` (-30, -35, -40 or -45, default -35), `ripple?` (`"track"` default, `"none"`), `new_ids?` | Replaces the clip, or an audio item, by one item per non-silent stretch of its source range (A.9). With ripple the pieces are placed back to back from the original start and later items on the track move earlier; without, each piece keeps its original position. The first piece keeps the item's identifier, its `transition_in` and `fade_in`; the last keeps `transition_out` and `fade_out`. `effective.removed` is the total length removed. With no silence found the document is unchanged |
 | `audio.duck` | `item_id`, `speech_item_ids` (1 to 20 items), `gain_db?` (-40 to -1, default -12), `attack?` (length, default `"0.2s"`), `release?` (length, default `"0.5s"`) | Lowers a music item while speech sounds, as generated `volume` keyframes; the speech comes through `resolved` (A.9). `keyframe.clear` on `volume` undoes it |
-| `audio.processor_add` | `item_id` or `track_id`, `kind`, `params?`, `index?`, `enabled?` | Adds an audio processor (equaliser, compressor, limiter, gate, de-esser, noise reduction) to the chain of an item or a track. See C.79 |
-| `audio.processor_set` | `item_id` or `track_id`, `index`, `params?`, `enabled?` | Changes the parameters or the switch of one processor of a chain. See C.80 |
-| `audio.processor_move` | `item_id` or `track_id`, `index`, `to` | Moves a processor to another place of its chain. See C.81 |
-| `audio.processor_remove` | `item_id` or `track_id`, `index` | Removes a processor from a chain. See C.82 |
-| `audio.apply_preset` | `item_id` or `track_id`, `preset` | Replaces a chain with a preset: voice, voice with music, podcast or clean up a noisy room. See C.83 |
 | `marker.add` | `item_id?`, `at`, `label?` | Puts a marker at a frame of the timeline, or of an item with `item_id` (TASK-0254); see C.56 |
 | `marker.set` | `item_id?`, `at`, `to?`, `label?` | Moves or relabels the marker at a frame, of the timeline or of an item; see C.57 |
 | `marker.remove` | `item_id?`, `at` or `all` | Removes the marker at a frame, or every marker, of the timeline or of an item; see C.58 |
@@ -361,12 +321,9 @@ Scope is `edit` unless stated. "Time" marks arguments parsed by A.4. Optional ar
 
 | Command | Arguments | Effect |
 | --- | --- | --- |
-| `keyframe.set` | `item_id`, `property`, `at` (time, absolute timeline position inside the item), `value`, `easing?`, `bezier?` | Adds a keyframe at that frame or replaces the one there. If the property had no keyframes and `at` is not the item's first frame, a keyframe with the property's current static value is also added at the item's first frame |
+| `keyframe.set` | `item_id`, `property`, `at` (time, absolute timeline position inside the item), `value`, `easing?` | Adds a keyframe at that frame or replaces the one there. If the property had no keyframes and `at` is not the item's first frame, a keyframe with the property's current static value is also added at the item's first frame |
 | `keyframe.remove` | `item_id`, `property`, `at` (time) | Removes the keyframe at that frame. Removing the last keyframe of a property writes its value into the static field |
 | `keyframe.clear` | `item_id`, `property?` | Removes all keyframes of the property, or of every property. The value at the item's first frame becomes the static value |
-| `keyframe.set_easing` | `item_id`, `property`, `at`, one of `easing?`, `bezier?` (four numbers) and `preset?` | Changes the easing of the segment that starts at an existing keyframe: a named easing, a custom cubic Bezier or a named Bezier preset (epic 31, RF-080). See C.75. `keyframe.set` takes `bezier` too |
-| `animation.apply_preset` | `item_id`, `preset`, `edge?`, `duration?`, `direction?`, `amount?` | Writes a layer animation (fade, slide, scale, pop, push in, pull out) as ordinary keyframes at the start or the end of a visual item (epic 31, RF-082). See C.76 |
-| `animation.list_presets` | none | Describes the animation presets and the named Bezier presets, for agents. Changes nothing. See C.77 |
 
 ### B.9 Templates
 
@@ -2372,13 +2329,13 @@ At least one of `fit` and `crop` is required.
 
 ### C.25 `clip.set_speed`
 
-Changes the speed of a clip or audio item, constant or along a curve (TASK-0275), while keeping the same source range. A `composition` item (SDD-001 section 3.5.1) takes a constant speed only (epic 53): the nested timeline plays the part of the asset, the rules below hold with the frames of the nested timeline as the source range, and a curve or a reverse is refused.
+Changes the speed of a clip or audio item, constant or along a curve (TASK-0275), while keeping the same source range.
 
 **Arguments**
 
 | Name | Type | Required | Default | Rule |
 | --- | --- | --- | --- | --- |
-| `item_id` | item id | yes | none | a `clip` of a video asset, an `audio` item, or a `composition` item |
+| `item_id` | item id | yes | none | a `clip` of a video asset, or an `audio` item |
 | `speed` | string or rational object | one of `speed`, `curve`, `reverse` | none | `"<decimal>x"` with at most 3 decimals (`"1.5x"` is 3/2, `"0.5x"` is 1/2, `"0.333x"` is 333/1000), or `{"num","den"}`; stored reduced to lowest terms; from 1/4 to 4 inclusive. Clears the curve |
 | `reverse` | boolean | one of `speed`, `curve`, `reverse` | none | `true` plays the same source range backwards, `false` plays it forwards (the field is then absent). Alone it changes nothing else: the duration, the speed and the curve stay |
 | `curve` | array of `{"t", "speed"}` | one of `speed`, `curve` | none | 2 to 8 points; `t` is the position inside the item as a fraction of its duration, a multiple of 0.001, strictly increasing, the first 0 and the last 1; `speed` is a string `"<decimal>x"` of at most 3 decimals (or a `{"num","den"}` whose `den` divides 1000), from 1/4 to 4 inclusive. The speed ramps linearly between points |
@@ -2388,8 +2345,8 @@ Changes the speed of a clip or audio item, constant or along a curve (TASK-0275)
 
 1. Arguments match the schema; at least one of `speed`, `curve` and `reverse` is given and not both `speed` and `curve`; `speed` parses and is within 1/4 to 4; `curve` has 2 to 8 points that meet the rules above (`E_VALIDATION`).
 2. The item exists (`E_NOT_FOUND`).
-3. The item is a `clip` whose asset is a video, an `audio` item or a `composition` item, and is not a freeze frame (`E_TYPE_MISMATCH`; a freeze frame has no speed, TASK-0254). On a `composition` item, `curve` and `reverse` are refused with `E_VALIDATION` (`details.reason` `composition_speed_constant`) and the hint to use a constant speed (`speed`): a speed curve and a reverse of a nested timeline are out of scope, and a curve is refused, never approximated by its mean.
-4. At least one frame fits in the source range at the new speed: `maxdur(source_in)` at the new speed is at least 1 (`E_OUT_OF_SOURCE`). A composition has no asset facts (the nested timeline is another document), so no source range is checked for it here and postcondition 1 applies with no reduction; the lint reports a source range past the end of the nested timeline (`L_SOURCE_RANGE`, SDD-003 section 3.6). A new duration that fails R9 only because of rounding is not an error: it is reduced (postcondition 1).
+3. The item is a `clip` whose asset is a video, or an `audio` item, and is not a freeze frame (`E_TYPE_MISMATCH`; a freeze frame has no speed, TASK-0254).
+4. At least one frame fits in the source range at the new speed: `maxdur(source_in)` at the new speed is at least 1 (`E_OUT_OF_SOURCE`). A new duration that fails R9 only because of rounding is not an error: it is reduced (postcondition 1).
 5. Every item ends at or before 108,000 after the change (`E_INVALID_TIME`).
 6. Without ripple, a longer item does not overlap its neighbour (`E_OVERLAP`, R8).
 
@@ -2410,7 +2367,6 @@ Changes the speed of a clip or audio item, constant or along a curve (TASK-0275)
 | --- | --- | --- | --- |
 | `E_VALIDATION` | unparsable speed, or outside 1/4 to 4; both or neither of `speed` and `curve`; a curve that is not valid | `args.speed "5x" is above the maximum 4x.` | `Use a speed from "0.25x" to "4x".` |
 | `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
-| `E_VALIDATION` | a `curve` or a `reverse` on a composition item (`details.reason` `composition_speed_constant`) | `Item itm_k1k1k1k1k1 is a composition, which has a constant speed only.` | `Use speed, for example "0.5x"; a composition has no curve and no reverse.` |
 | `E_TYPE_MISMATCH` | text, shape, caption or image clip | `Item itm_s6t7v8w9x0 is a text item and has no speed.` | `Change the duration with item.trim instead.` |
 | `E_OUT_OF_SOURCE` | not even one frame fits at the asset end | `At speed 4x the clip needs 4 source frames from frame 898; asset ast_3c5v8n2w6d has 900.` | `Use item.trim to move source_in earlier, or choose a lower speed.` |
 | `E_INVALID_TIME` | an item would end after 108,000 | `Item itm_s6t7v8w9x0 would end at frame 108040; the limit is 108000.` | `Use a higher speed, or shorten the clip first.` |
@@ -2508,12 +2464,6 @@ Changes the speed of a clip or audio item, constant or along a curve (TASK-0275)
 - `err_type_mismatch_reverse_on_image_clip`
 - `err_out_of_source_reverse_speed_no_frame_fits`
 - `err_type_mismatch_freeze_frame`
-- `ok_composition_double_speed_halves_the_duration`
-- `ok_composition_half_speed_doubles_the_duration`
-- `ok_composition_speed_rescales_fades_and_keyframes`
-- `ok_composition_speed_back_to_one`
-- `err_validation_composition_curve`
-- `err_validation_composition_reverse`
 
 ### C.26 `clip.set_color`
 
@@ -2920,7 +2870,7 @@ Writes the keyframes or the transition of a named animation preset on one edge o
 | `slide_left` | in or out | no keyframes: `transition_<edge> = {kind: "slide_left", duration: n}` |
 | `slide_right` | in or out | no keyframes: `transition_<edge> = {kind: "slide_right", duration: n}` |
 
-`q = round(0.7 × n)`; the middle `pop` keyframe is omitted when `n = 1`. "Up" means the item moves up the frame on both edges (`y` grows downward): `fade_up` in starts lower and rises into place, `fade_up` out rises away; `fade_down` is the opposite. `zoom_in` grows the item on both edges. `pop` out is the time mirror of `pop` in. The last keyframe of an `in` preset, `(n, b)`, carries the easing in force at frame `n` before the command (the easing of the last keyframe at or before `n`, with its `bezier` numbers when it is a curve, linear when there is none); the last keyframe of an `out` preset has no easing. A keyframe whose easing is linear is stored without `easing`.
+`q = round(0.7 × n)`; the middle `pop` keyframe is omitted when `n = 1`. "Up" means the item moves up the frame on both edges (`y` grows downward): `fade_up` in starts lower and rises into place, `fade_up` out rises away; `fade_down` is the opposite. `zoom_in` grows the item on both edges. `pop` out is the time mirror of `pop` in. The last keyframe of an `in` preset, `(n, b)`, carries the easing in force at frame `n` before the command (the easing of the last keyframe at or before `n`, linear when there is none); the last keyframe of an `out` preset has no easing. A keyframe whose easing is linear is stored without `easing`.
 
 **Postconditions.**
 
@@ -3878,12 +3828,11 @@ Adds or replaces a keyframe of one property.
 | `property` | `"x"`, `"y"`, `"scale"`, `"rotation"`, `"opacity"`, `"volume"`, `"brightness"`, `"contrast"`, `"saturation"`, `"temperature"`, `"tint"`, `"hue"`, `"mask_x"`, `"mask_y"`, `"mask_width"`, `"mask_height"`, `"mask_feather"`, `"crop_left"`, `"crop_top"`, `"crop_right"`, `"crop_bottom"` | yes | none | `volume` for `audio` items and clips of a video (not of an image); `brightness`, `contrast`, `saturation`, `temperature`, `tint` and `hue` (added by TASK-0254 and NEW-15) for clips only; `mask_x`, `mask_y`, `mask_width`, `mask_height` and `mask_feather` (VV-120) for a visual item that has a mask (`clip.set_mask`); `crop_left`, `crop_top`, `crop_right` and `crop_bottom` (VV-120) for clips only; the others for visual items |
 | `at` | time | yes | none | absolute; from the item's `start` to `start + duration` inclusive |
 | `value` | number | yes | none | valid for the property: `scale` above 0 and at most 20, `opacity` 0 to 1, `volume` 0 to 4, a colour property the range of `clip.set_color` (-1 to 1 for `brightness`, `temperature` and `tint`, 0 to 2 for `contrast` and `saturation`, -180 to 180 for `hue`), a mask or crop property the range of its static field (`mask_x`, `mask_y` 0 to 1, `mask_width`, `mask_height` 0.001 to 1, `mask_feather` 0 to 200, a crop side 0 to 1), `x`, `y`, `rotation` finite |
-| `easing` | `"linear"`, `"ease_in"`, `"ease_out"`, `"ease_in_out"`, `"hold"`, `"bezier"` | no | `"linear"` | applies from this keyframe to the next |
-| `bezier` | array of 4 numbers | when `easing` is `"bezier"` | none | `[x1, y1, x2, y2]` as in SDD-001 §3.8: `x1`, `x2` from 0 to 1, `y1`, `y2` from -2 to 3. Given with any other easing, or `"bezier"` without it, is `E_VALIDATION` (epic 31) |
+| `easing` | `"linear"`, `"ease_in"`, `"ease_out"`, `"ease_in_out"`, `"hold"` | no | `"linear"` | applies from this keyframe to the next |
 
 **Preconditions.**
 
-1. Arguments match the schema and `at` parses (`E_VALIDATION`, `E_INVALID_TIME`); `bezier` goes with `easing` `"bezier"` and with nothing else.
+1. Arguments match the schema and `at` parses (`E_VALIDATION`, `E_INVALID_TIME`).
 2. The item exists (`E_NOT_FOUND`).
 3. The property applies to the item type (`E_TYPE_MISMATCH`); a `mask_*` property needs the item to have a mask (`E_INVALID_STATE`, hint to use `clip.set_mask`).
 4. `at` lies in the inclusive range `start` to `start + duration` (`E_INVALID_TIME`, `path` `args.at`, `details.range`). A keyframe may sit at `start + duration`, because `t` ranges from 0 to `duration`.
@@ -3962,10 +3911,6 @@ Adds or replaces a keyframe of one property.
 - `ok_crop_bottom_on_cropped_clip`
 - `err_validation_crop_above_range`
 - `err_type_mismatch_crop_on_text`
-- `ok_bezier_easing`
-- `err_validation_bezier_without_the_easing`
-- `err_validation_bezier_easing_without_numbers`
-- `err_validation_bezier_x_above_1`
 
 ### C.43 `keyframe.remove`
 
@@ -6097,670 +6042,3 @@ The copies start at frames 90 and 180; the sequence ends at frame 270 (`effectiv
 - `err_limit_caption_words_over_document_limit`
 - `err_overlap_next_item`
 - `err_id_exists`
-
-### C.75 `keyframe.set_easing`
-
-Changes how the segment that starts at an existing keyframe moves (RF-080): a named easing, a custom cubic Bezier curve or a named Bezier preset. The value and the time of the keyframe do not change, so it is the command of the curve editor. The core is the only place that evaluates a curve (SDD-004 §3.1).
-
-**Arguments**
-
-| Name | Type | Required | Default | Rule |
-| --- | --- | --- | --- | --- |
-| `item_id` | item id | yes | none | |
-| `property` | the properties of `keyframe.set` | yes | none | |
-| `at` | time | yes | none | absolute position of an existing keyframe |
-| `easing` | `"linear"`, `"ease_in"`, `"ease_out"`, `"ease_in_out"`, `"hold"` | one of three | none | exactly one of `easing`, `bezier` and `preset` is given |
-| `bezier` | array of 4 numbers | one of three | none | `[x1, y1, x2, y2]`; sets `easing` to `"bezier"`. `x1`, `x2` from 0 to 1, `y1`, `y2` from -2 to 3, at most 3 decimals |
-| `preset` | `"in"`, `"out"`, `"in_out"`, `"back"`, `"overshoot"` | one of three | none | a named curve, stored as its four numbers: `in` 0.42, 0, 1, 1; `out` 0, 0, 0.58, 1; `in_out` 0.42, 0, 0.58, 1; `back` 0.36, 0, 0.66, -0.56 (pulls back, then goes); `overshoot` 0.34, 1.56, 0.64, 1 (goes past, then settles) |
-
-**Preconditions.**
-
-1. Arguments match the schema and `at` parses; exactly one of `easing`, `bezier` and `preset`; the `bezier` numbers are in range (`E_VALIDATION`, `E_INVALID_TIME`).
-2. The item exists (`E_NOT_FOUND`).
-3. The property applies to the item type (`E_TYPE_MISMATCH`).
-4. `at` lies in the inclusive range of the item (`E_INVALID_TIME`, `path` `args.at`).
-5. The property has a keyframe at `at - start` (`E_NOT_FOUND`, `details.kind` `keyframe`).
-
-**Postconditions.**
-
-1. The keyframe at `t = at - start` has the new easing. A `linear` easing is stored without the key and a non-Bezier easing without `bezier`, as everywhere in the document. Value and `t` of the keyframe and all other keyframes are unchanged.
-2. `diff` has one `item.updated` with `keyframes`. `effective` has `at` (the A.4 triple), `t`, `easing` and, for a Bezier, `bezier`.
-
-**Errors.**
-
-| Code | When | Example message | Example hint |
-| --- | --- | --- | --- |
-| `E_VALIDATION` | none or several of the three, a Bezier out of range, an unknown preset | `args.bezier[0] must be from 0 to 1, got 1.5.` | `Keep x1 and x2 from 0 to 1; y1 and y2 may go from -2 to 3.` |
-| `E_INVALID_TIME` | malformed `at`, or outside the item | as `keyframe.set` | as `keyframe.set` |
-| `E_NOT_FOUND` | unknown item, or no keyframe at `at` | `Property scale of itm_s6t7v8w9x0 has no keyframe at frame 60; keyframes are at frames 30, 90.` | `Use at "30f" (1s), or list the keyframes with project_get.` |
-| `E_TYPE_MISMATCH` | the property does not apply | as `keyframe.set` | as `keyframe.set` |
-
-**Inverse.** `patch {collection: "items", id, set: {keyframes: <old>}}`.
-
-**Idempotency.** Same result.
-
-**Example.**
-
-```json
-{"op": "keyframe.set_easing", "args": {"item_id": "itm_s6t7v8w9x0", "property": "scale", "at": "1s", "preset": "overshoot"}}
-```
-
-**Golden cases.**
-
-- `ok_custom_bezier`
-- `ok_preset_overshoot`
-- `ok_preset_back_on_crop`
-- `ok_bezier_on_mask_width`
-- `ok_named_easing_clears_the_bezier`
-- `ok_linear_is_stored_absent`
-- `ok_last_keyframe_of_the_property`
-- `ok_bezier_is_rounded_to_3_decimals`
-- `err_validation_none_of_the_three`
-- `err_validation_easing_and_preset`
-- `err_validation_bezier_x_above_1`
-- `err_validation_bezier_y_below_range`
-- `err_validation_bezier_wrong_length`
-- `err_validation_unknown_preset`
-- `err_validation_easing_bezier_is_not_a_name`
-- `err_not_found`
-- `err_not_found_no_keyframe_at`
-- `err_invalid_time_outside_the_item`
-- `err_type_mismatch_crop_on_text`
-
-### C.76 `animation.apply_preset`
-
-Applies a layer animation to a visual item (RF-082). The preset expands in the core into ordinary keyframes (SDD-001 §3.8, with a Bezier easing where the preset needs a curve), so the result is edited with the keyframe commands and nothing new reaches the plan, the export or the preview. `animation.list_presets` (C.77) describes the presets.
-
-**Arguments**
-
-| Name | Type | Required | Default | Rule |
-| --- | --- | --- | --- | --- |
-| `item_id` | item id | yes | none | a `clip`, `text`, `caption` or `shape` item |
-| `preset` | `"fade"`, `"slide"`, `"scale"`, `"pop"`, `"push_in"`, `"pull_out"` | yes | none | table below |
-| `edge` | `"in"`, `"out"` | no | `"in"` | `in` animates the first `duration` frames of the item, `out` the last `duration` frames |
-| `duration` | time, as a length | no | `"0.5s"`; for `push_in` and `pull_out` the whole item | 1 frame up to the duration of the item |
-| `direction` | `"left"`, `"right"`, `"up"`, `"down"` | no | `"left"` | `slide` only (else `E_VALIDATION`): the side the item comes from (`in`) or leaves to (`out`) |
-| `amount` | number | no | per preset | `slide`: the distance in project pixels, 1 to 10,000, default a quarter of the width (`left`, `right`) or of the height (`up`, `down`); `scale`: the factor at the far end, 0.01 to 20, default 0.5; `push_in` and `pull_out`: the zoom factor, above 1 up to 4, default 1.2; `fade` and `pop` take none (else `E_VALIDATION`) |
-
-Let `v` be the value of the property where the animation meets the rest of the item: its static value, or its keyframed value at the inner edge of the window (the end of an `in` window, the start of an `out` window). For `push_in` and `pull_out` it is the value at the start of the window.
-
-| Preset | Property | `edge` `in` | `edge` `out` | Easing of the segment |
-| --- | --- | --- | --- | --- |
-| `fade` | `opacity` | 0 to `v` | `v` to 0 | linear |
-| `slide` | `x` for `left` and `right`, `y` for `up` and `down` | from `v` minus (`left`, `up`) or plus (`right`, `down`) the distance, to `v` | the reverse | `out` for in, `in` for out (the Bezier presets of C.75) |
-| `scale` | `scale` | `amount` × `v` to `v` | `v` to `amount` × `v` | `out` for in, `in` for out |
-| `pop` | `scale` | 0.001 to `v` | `v` to 0.001 | `overshoot` for in, `back` for out |
-| `push_in` | `scale` | `v` to `v` × `amount` | the same | `in_out` |
-| `pull_out` | `scale` | `v` to `v` ÷ `amount` | the same | `in_out` |
-
-**Preconditions.**
-
-1. Arguments match the schema; `duration` parses (`E_VALIDATION`, `E_INVALID_TIME`); `direction` and `amount` are given only where the table takes them (`E_VALIDATION`).
-2. The item exists (`E_NOT_FOUND`) and is not an `audio` item (`E_TYPE_MISMATCH`).
-3. `duration` is at most the duration of the item (`E_INVALID_TIME`, `path` `args.duration`): a preset longer than its item is refused, not cut.
-4. A value the preset would write is valid for the property (`scale` above 0 and at most 20: `E_VALIDATION`, `path` `args.amount`).
-5. The property ends with at most 100 keyframes (`E_LIMIT`).
-
-**Postconditions.** Let `D` be the duration of the item and `d` the duration of the preset.
-
-1. For `edge` `in`, the window is `t` from 0 to `d`: the keyframes of the property inside it are removed and two are written, `{0, from}` with the easing of the table and `{d, v}` (the easing of the keyframe that governed `d` before, or linear: the segment it cuts keeps its shape). Keyframes after `d` stay. For `edge` `out`, the window is `t` from `D - d` to `D`: the keyframes inside it are removed and `{D - d, start}` with the easing of the table and `{D, end}` (linear) are written; keyframes before `D - d` stay. When the property had no keyframes, `v` is its static value (R10, which is the frame centre for an unset `x` or `y`).
-2. A property the preset does not animate, and the static fields, are not changed. Applying `in` and then `out` to one item gives both ends.
-3. `diff` has one `item.updated` with `keyframes`. `effective` has `properties` (the animated property names), `edge`, `duration` (the A.4 triple) and `keyframes` (how many were written).
-
-**Errors.**
-
-| Code | When | Example message | Example hint |
-| --- | --- | --- | --- |
-| `E_VALIDATION` | unknown preset or direction, `direction` or `amount` where it is not taken, an amount out of range | `args.amount 30 makes a scale above 20 for itm_s6t7v8w9x0.` | `Use a smaller amount.` |
-| `E_INVALID_TIME` | malformed or zero `duration`, or longer than the item | `args.duration "5s" is 150 frames; item itm_s6t7v8w9x0 lasts 90.` | `Use a duration of at most "90f".` |
-| `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
-| `E_TYPE_MISMATCH` | an audio item | `Animation presets apply to visual items; item itm_s6t7v8w9x0 is an audio item.` | `Use keyframe.set with volume for audio items.` |
-| `E_LIMIT` | would pass 100 keyframes | as `keyframe.set` | as `keyframe.set` |
-
-**Inverse.** `patch {collection: "items", id, set: {keyframes: <old>}}` or `unset: ["keyframes"]`.
-
-**Idempotency.** Same result when applied twice with the same arguments.
-
-**Example.** 30 fps; text item `itm_s6t7v8w9x0`, `start` 30, `duration` 90, no keyframes.
-
-```json
-{"op": "animation.apply_preset", "args": {"item_id": "itm_s6t7v8w9x0", "preset": "fade", "duration": "1s"}}
-```
-
-It writes the `opacity` keyframes `{"t": 0, "value": 0}` and `{"t": 30, "value": 1}`.
-
-**Golden cases.**
-
-- `ok_fade_in`
-- `ok_fade_out`
-- `ok_slide_in_from_left`
-- `ok_slide_out_to_the_bottom`
-- `ok_slide_with_distance`
-- `ok_scale_in`
-- `ok_pop_in`
-- `ok_pop_out`
-- `ok_push_in_the_whole_item`
-- `ok_pull_out_on_text`
-- `ok_in_then_out_gives_both_ends`
-- `ok_replaces_the_keyframes_inside_the_window`
-- `ok_keeps_the_keyframes_outside_the_window`
-- `ok_shape_item`
-- `err_validation_unknown_preset`
-- `err_validation_direction_on_fade`
-- `err_validation_amount_on_pop`
-- `err_validation_scale_above_20`
-- `err_invalid_time_duration_longer_than_the_item`
-- `err_invalid_time_duration_zero`
-- `err_not_found`
-- `err_type_mismatch_audio_item`
-- `err_limit_101_keyframes`
-
-### C.77 `animation.list_presets`
-
-Describes what `animation.apply_preset` and `keyframe.set_easing` accept, for an agent that has not read this document. It changes nothing: `diff` is empty and so is the inverse.
-
-**Arguments.** None.
-
-**Postconditions.** `effective` has `presets`, a list in the order of the table of C.76, each `{"id", "summary", "properties", "edges", "parameters"}` (`parameters` lists `duration` and, where taken, `direction` and `amount` with their range and default), and `bezier_presets`, an object from each preset name of C.75 to its four numbers.
-
-**Errors.** `E_VALIDATION` when an argument is given.
-
-**Golden cases.**
-
-- `ok_lists_the_presets`
-- `err_validation_takes_no_arguments`
-
-### C.78 `clip.replace_media`
-
-Swaps the asset of a clip for another asset of the same kind and changes nothing else: the animation that an external engine rendered again takes the place of the one it replaces (epic 33, SDD-011 section 15). Position, duration, trim (`source_in`), speed, transform, keyframes, effects, transitions and the links to captions stay as they are. Nothing is stretched or trimmed to make the new media fit.
-
-**Arguments**
-
-| Name | Type | Required | Default | Rule |
-| --- | --- | --- | --- | --- |
-| `item_id` | item id | yes | none | a `clip` |
-| `asset_id` | asset id | yes | none | a video or image asset of the document, of the same kind as the clip's current asset |
-
-**Preconditions.**
-
-1. Both ids have the form of an identifier (`E_VALIDATION`); `ast_placeholder` does not match it.
-2. The item exists (`E_NOT_FOUND`) and is a `clip` (`E_TYPE_MISMATCH`).
-3. The clip reads a real asset: a template slot holder (`ast_placeholder`) is `E_INVALID_STATE` with the hint to use `slot.fill`.
-4. The new asset exists in the document (`E_NOT_FOUND`).
-5. The new asset is a video or an image asset of the same kind as the current one (`E_TYPE_MISMATCH`): a video is replaced by a video, an image (a still or an animated image) by an image.
-6. Video: the source range of the clip (R9: `source_in` plus the source frames of its duration, speed included) holds inside the new asset (`E_OUT_OF_SOURCE`, with `details.available` of R9: the length of the new asset and the most the clip may keep).
-
-**Postconditions.**
-
-1. `asset` is `asset_id`. Every other field of the item is unchanged, and so is every other item.
-2. The old asset stays in the document (`asset.remove` is a separate command).
-3. `diff` has one `item.updated` with `changes.asset`; empty when the asset is the same one. `effective` has `asset_id` and `previous_asset_id`.
-
-**Errors.**
-
-| Code | When | Example message | Example hint |
-| --- | --- | --- | --- |
-| `E_VALIDATION` | an id is malformed | `The value of args.asset_id is "x", not an asset id.` | `Use the id of an asset listed by project_get.` |
-| `E_NOT_FOUND` | unknown item or asset | `Asset ast_zzzzzzzzzz does not exist.` | `Import the file first, then use its asset id.` |
-| `E_TYPE_MISMATCH` | the item is not a clip, or the kinds differ | `Asset ast_k8m2n4p6q9 is an image asset; clip itm_m1n2p3q4r5 plays a video asset.` | `Replace a video with a video; to change the kind, add a new clip with clip.add.` |
-| `E_INVALID_STATE` | the clip is a template slot holder | `Item itm_m1n2p3q4r5 is a template slot holder.` | `Use slot.fill to put media in a slot.` |
-| `E_OUT_OF_SOURCE` | the clip's range does not fit the new video | `The range of 90 frames from source frame 0 would read to frame 90; asset ast_k8m2n4p6q9 has 60 frames.` | `Use a duration of at most "60f"; or render the animation at the length the clip needs.` |
-
-**Inverse.** `patch {collection: "items", id, set: {asset: <old>}}`.
-
-**Idempotency.** Same result.
-
-**Example.** Clip `itm_m1n2p3q4r5` plays `ast_3c5v8n2w6d`; the animation was rendered again as `ast_k8m2n4p6q9`.
-
-```json
-{"op": "clip.replace_media", "args": {"item_id": "itm_m1n2p3q4r5", "asset_id": "ast_k8m2n4p6q9"}}
-```
-
-```json
-[{"kind": "item.updated", "id": "itm_m1n2p3q4r5", "changes": {"asset": ["ast_3c5v8n2w6d", "ast_k8m2n4p6q9"]}}]
-```
-
-**Golden cases.**
-
-- `ok_video_for_video`
-- `ok_keeps_trim_speed_and_transform`
-- `ok_keeps_keyframes_and_effects`
-- `ok_image_for_image`
-- `ok_animated_image_for_image`
-- `ok_same_asset_noop`
-- `ok_longer_video_keeps_duration`
-- `err_validation_bad_item_id`
-- `err_validation_placeholder_asset`
-- `err_not_found_item`
-- `err_not_found_asset`
-- `err_type_mismatch_audio_item`
-- `err_type_mismatch_kind_differs`
-- `err_type_mismatch_audio_asset`
-- `err_invalid_state_slot_holder`
-- `err_out_of_source_new_video_too_short`
-
-### C.79 `audio.processor_add`
-
-Adds an audio processor (epic 34, SDD-004 section 7.1) to the `processors` chain of an item or of a track (SDD-001 section 3.5). The five commands C.79 to C.83 share the rules below.
-
-**Shared rules.** The target is exactly one of `item_id` (a `clip` or `audio` item) or `track_id`; both or neither is `E_VALIDATION`. An unknown item or track is `E_NOT_FOUND`; a `text`, `caption` or `shape` item is `E_TYPE_MISMATCH`. `index` and `to` are 0-based positions in the chain; one outside it is `E_VALIDATION` with the length of the chain in the hint. `params` is an object from the names of the kind (SDD-004 section 7.1) to numbers: an unknown name, or a number outside its range, is `E_VALIDATION` naming the parameter, its unit and its range. The stored `params` of a processor hold only the values that differ from the default, so a value equal to its default is removed and an empty object is not written; an emptied chain removes the `processors` field. The commands do not run on a locked track's items (`E_INVALID_STATE`, as every item command) but a track chain can be edited on a locked track. The inverse is the usual `patch` of the item or track.
-
-**Arguments**
-
-| Name | Type | Required | Default | Rule |
-| --- | --- | --- | --- | --- |
-| `item_id` | item id | one of the two | none | a `clip` or `audio` item |
-| `track_id` | track id | one of the two | none | any track |
-| `kind` | string | yes | none | `eq`, `compressor`, `limiter`, `gate`, `deesser` or `noise_reduction` |
-| `params` | object | no | `{}` | parameters of the kind, SDD-004 section 7.1 |
-| `index` | integer | no | the end | where to insert; 0 to the length of the chain |
-| `enabled` | boolean | no | true | false adds it switched off |
-
-**Preconditions.** The shared rules; the chain has fewer than 12 processors (`E_LIMIT`); `profile_start_ms` and `profile_end_ms` are both 0 or the first is at least 1,024 samples (22 ms) below the second, and only on an item (`E_VALIDATION`).
-
-**Postconditions.** The processor is in the chain at `index`; the processors from there on move one place later. `diff` has one `item.updated` or `track.updated` (`processors`). `effective` has `index`, `kind` and `params` (the complete parameters with their defaults).
-
-**Errors.**
-
-| Code | When | Example message | Example hint |
-| --- | --- | --- | --- |
-| `E_VALIDATION` | no or two targets, unknown kind or parameter, a value out of range, `index` out of the chain, a bad noise profile | `args.params.threshold_db 5 is out of range: -60 to 0 dB.` | `Send a threshold between -60 and 0.` |
-| `E_NOT_FOUND` | the item or the track does not exist | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
-| `E_TYPE_MISMATCH` | the item is a text, caption or shape item | `Item itm_s6t7v8w9x0 is a text item and has no audio.` | `Use an audio item or a clip.` |
-| `E_LIMIT` | the chain already has 12 processors | `The chain of itm_m1n2p3q4r5 already has 12 processors.` | `Remove one first.` |
-
-**Inverse.** `patch` of `processors` (set the old list, or unset when there was none). **Idempotency.** Not idempotent: a second call adds a second processor.
-
-**Example.**
-
-```json
-{"op": "audio.processor_add", "args": {"item_id": "itm_m1n2p3q4r5", "kind": "compressor", "params": {"threshold_db": -24, "ratio": 4}}}
-```
-
-**Golden cases.**
-
-- `ok_add_compressor_to_clip`
-- `ok_add_eq_with_params_to_audio_item`
-- `ok_add_to_track`
-- `ok_add_at_index`
-- `ok_add_disabled`
-- `ok_default_values_are_not_stored`
-- `ok_add_noise_reduction_marked_profile`
-- `err_validation_no_target`
-- `err_validation_both_targets`
-- `err_validation_unknown_kind`
-- `err_validation_unknown_param`
-- `err_validation_param_out_of_range`
-- `err_validation_eq_high_pass_between_0_and_20`
-- `err_validation_profile_on_track`
-- `err_validation_profile_range_inverted`
-- `err_validation_index_out_of_range`
-- `err_not_found_item`
-- `err_not_found_track`
-- `err_type_mismatch_text_item`
-- `err_limit_13th_processor`
-
-### C.80 `audio.processor_set`
-
-Changes one processor of a chain (the shared rules of C.79).
-
-**Arguments**
-
-| Name | Type | Required | Default | Rule |
-| --- | --- | --- | --- | --- |
-| `item_id` | item id | one of the two | none | a `clip` or `audio` item |
-| `track_id` | track id | one of the two | none | any track |
-| `index` | integer | yes | none | the processor, 0-based |
-| `params` | object | no | none | the values to change; the others stay. A value equal to the default is removed from the stored `params` |
-| `enabled` | boolean | no | none | true or false switches it on or off |
-
-**Preconditions.** The shared rules; at least one of `params` and `enabled` is given (`E_VALIDATION`); `index` names a processor.
-
-**Postconditions.** The `params` are merged and checked as a whole (so a marked noise profile stays consistent). `diff` has one `item.updated` or `track.updated`, none when nothing changed. `effective` has `index`, `kind`, `params` (complete) and `enabled`.
-
-**Errors.** As C.79 without `E_LIMIT`.
-
-**Inverse.** `patch` of `processors`. **Idempotency.** Same result.
-
-**Example.**
-
-```json
-{"op": "audio.processor_set", "args": {"track_id": "trk_m1n2p3q4r5", "index": 0, "enabled": false}}
-```
-
-**Golden cases.**
-
-- `ok_set_param`
-- `ok_set_disabled`
-- `ok_set_back_to_default_drops_the_param`
-- `ok_set_on_track`
-- `ok_set_same_value_noop`
-- `err_validation_nothing_to_change`
-- `err_validation_param_not_of_the_kind`
-- `err_validation_param_out_of_range`
-- `err_validation_index_out_of_range`
-- `err_not_found_item`
-- `err_type_mismatch_text_item`
-
-### C.81 `audio.processor_move`
-
-Moves one processor to another place in its chain: the order is the user's and changes the sound (the shared rules of C.79).
-
-**Arguments**
-
-| Name | Type | Required | Default | Rule |
-| --- | --- | --- | --- | --- |
-| `item_id` | item id | one of the two | none | a `clip` or `audio` item |
-| `track_id` | track id | one of the two | none | any track |
-| `index` | integer | yes | none | the processor to move |
-| `to` | integer | yes | none | its new place, 0 to the length minus 1 |
-
-**Postconditions.** The processor is at `to`; the ones between the two places shift by one. Moving to the same place changes nothing. `effective` has `index`, `to` and `kind`.
-
-**Errors.** `E_VALIDATION` (no or two targets, `index` or `to` out of the chain), `E_NOT_FOUND`, `E_TYPE_MISMATCH`, as C.79.
-
-**Inverse.** `patch` of `processors`. **Idempotency.** Same result.
-
-**Example.**
-
-```json
-{"op": "audio.processor_move", "args": {"item_id": "itm_m1n2p3q4r5", "index": 0, "to": 2}}
-```
-
-**Golden cases.**
-
-- `ok_move_first_to_last`
-- `ok_move_last_to_first`
-- `ok_move_to_the_same_place_noop`
-- `ok_move_on_track`
-- `err_validation_to_out_of_range`
-- `err_validation_index_out_of_range`
-- `err_not_found_item`
-- `err_type_mismatch_text_item`
-
-### C.82 `audio.processor_remove`
-
-Removes one processor from a chain (the shared rules of C.79).
-
-**Arguments**
-
-| Name | Type | Required | Default | Rule |
-| --- | --- | --- | --- | --- |
-| `item_id` | item id | one of the two | none | a `clip` or `audio` item |
-| `track_id` | track id | one of the two | none | any track |
-| `index` | integer | yes | none | the processor to remove |
-
-**Postconditions.** The later processors move one place earlier; an emptied chain removes the `processors` field. `effective` has `index`, `kind` and `remaining`.
-
-**Errors.** `E_VALIDATION` (no or two targets, `index` out of the chain), `E_NOT_FOUND`, `E_TYPE_MISMATCH`, as C.79.
-
-**Inverse.** `patch` of `processors`. **Idempotency.** Not idempotent: the processor that followed takes the index.
-
-**Example.**
-
-```json
-{"op": "audio.processor_remove", "args": {"item_id": "itm_m1n2p3q4r5", "index": 1}}
-```
-
-**Golden cases.**
-
-- `ok_remove_middle`
-- `ok_remove_last_leaves_no_field`
-- `ok_remove_on_track`
-- `err_validation_index_out_of_range`
-- `err_not_found_item`
-- `err_type_mismatch_text_item`
-
-### C.83 `audio.apply_preset`
-
-Replaces the chain of an item or a track with a preset (epic 34; the shared rules of C.79). The presets are `voice` ("voice"), `voice_with_music`, `podcast` and `clean_noisy_room` ("clean up a noisy room"); each is a fixed chain of the processors of SDD-004 section 7.1 with the values of the table below, and the user can then change any of them with `audio.processor_set`.
-
-| Preset | Chain, in order |
-| --- | --- |
-| `voice` | `noise_reduction` strength 0.5; `eq` high-pass 80 Hz, band 2 250 Hz -2 dB, band 4 3000 Hz +2 dB; `deesser` defaults; `compressor` threshold -20 dB, ratio 3, makeup 3 dB; `limiter` ceiling -1 dB |
-| `voice_with_music` | `eq` high-pass 100 Hz, band 2 250 Hz -2 dB, band 4 3500 Hz +2.5 dB; `deesser` defaults; `compressor` threshold -22 dB, ratio 2.5, makeup 2 dB; `limiter` ceiling -1 dB |
-| `podcast` | `noise_reduction` strength 0.4; `gate` threshold -55 dB, range -20 dB; `eq` high-pass 70 Hz, band 2 200 Hz -2 dB, band 4 4000 Hz +2 dB; `deesser` defaults; `compressor` threshold -22 dB, ratio 3.5, makeup 4 dB; `limiter` ceiling -1 dB |
-| `clean_noisy_room` | `noise_reduction` strength 0.8; `gate` threshold -45 dB, range -15 dB; `eq` high-pass 100 Hz, band 2 300 Hz -3 dB, band 4 3000 Hz +2 dB; `deesser` defaults; `compressor` threshold -20 dB, ratio 3, makeup 3 dB; `limiter` ceiling -1 dB |
-
-**Arguments**
-
-| Name | Type | Required | Default | Rule |
-| --- | --- | --- | --- | --- |
-| `item_id` | item id | one of the two | none | a `clip` or `audio` item |
-| `track_id` | track id | one of the two | none | any track |
-| `preset` | string | yes | none | one of the four ids |
-
-**Postconditions.** The chain is exactly the preset (what was there is replaced). `effective` has `preset` and `processors` (their count). Applying the preset that is already the chain changes nothing.
-
-**Errors.** `E_VALIDATION` (no or two targets, unknown preset), `E_NOT_FOUND`, `E_TYPE_MISMATCH`, as C.79.
-
-**Inverse.** `patch` of `processors`. **Idempotency.** Same result.
-
-**Example.**
-
-```json
-{"op": "audio.apply_preset", "args": {"item_id": "itm_m1n2p3q4r5", "preset": "voice"}}
-```
-
-**Golden cases.**
-
-- `ok_voice_on_clip`
-- `ok_voice_with_music_on_track`
-- `ok_podcast_on_audio_item`
-- `ok_clean_noisy_room`
-- `ok_replaces_the_chain`
-- `ok_same_preset_noop`
-- `err_validation_unknown_preset`
-- `err_validation_no_target`
-- `err_type_mismatch_text_item`
-- `err_not_found_track`
-
-### C.84 `clip.add_composition`
-
-Places another timeline of the production on a visual track as one `composition` item (SDD-001 section 3.5.1, RF-083). Nothing is copied: the item names the timeline.
-
-**Arguments**
-
-| Name | Type | Required | Default | Rule |
-| --- | --- | --- | --- | --- |
-| `track_id` | track id | yes | none | a visual track |
-| `timeline_id` | timeline id | yes | none | a timeline of the production, read through `Env.Timelines` (A.3) |
-| `start` | time | no | the end of the last item of the track (`"0s"` on an empty track) | absolute; omitted, the item goes to the first free position at or after the end of the track |
-| `source_in` | time | no | `"0s"` | the first frame shown of the nested timeline, in frames of this timeline |
-| `duration` | time, as a length | no | the rest of the nested timeline from `source_in`, in frames of this timeline (the nested end frame converted with the frame rates, rounded up) | at least 1 frame |
-| `fit` | `"cover"`, `"contain"`, `"none"` | no | `"cover"` | SDD-001 section 3.5.1 |
-| `id` | item id | no | generated | R6 |
-
-**Preconditions.**
-
-1. Arguments match the schema and times parse (`E_VALIDATION`, `E_INVALID_TIME`).
-2. The track exists and is visual (`E_NOT_FOUND`, `E_TYPE_MISMATCH`); the timeline is in the production (`E_NOT_FOUND`; with no `Env.Timelines` no timeline is).
-3. The timeline is not this timeline and does not hold, at any depth, a composition of this timeline (`E_INVALID_STATE`, `details.reason` `composition_cycle`, `details.path` the ids from the nested timeline to this one).
-4. The nesting stays within 4: the number of timelines above this one (through `Env.Timelines.Users`), plus one, plus the depth of the nested timeline is at most 4 (`E_LIMIT`, `details.reason` `composition_depth`, `details.depth` the depth it would have).
-5. The nested timeline is not empty (`E_INVALID_STATE`); `id` is not used (`E_ID_EXISTS`); the document has fewer than 500 items (`E_LIMIT`).
-6. `source_in` is below the converted length `L` of the nested timeline and `source_in + duration` is at most `L` (`E_OUT_OF_SOURCE`). The later edits of the nested timeline do not move this check: a composition that is longer than a shortened nested timeline shows nothing after its end and the lint says so.
-7. The item ends at or before 108,000 (`E_INVALID_TIME`) and does not overlap an item of the track (`E_OVERLAP`, R8).
-
-**Postconditions.**
-
-1. A `composition` item is added: `start`, `track`, `timeline`, `duration`, plus `source_in` above 0 and `fit` when not `"cover"`. Every other field is absent.
-2. `diff` has one `item.added`. `effective` has `id`, `start`, `source_in`, `duration` (A.4 triples; `requested` is `null` for a default).
-
-**Errors.**
-
-| Code | When | Example message | Example hint |
-| --- | --- | --- | --- |
-| `E_VALIDATION` | bad argument | `args.fit "stretch" is not one of cover, contain, none.` | `Use cover, contain or none.` |
-| `E_INVALID_TIME` | malformed time, zero duration, item ending after 108,000 | `The item would occupy frames 108000-108099, past the limit 108000.` | `Use a start of at most "7800f" for this 300-frame item.` |
-| `E_NOT_FOUND` | unknown track, or a timeline that is not in the production | `Timeline prj_zzzzzzzzzz is not in this production.` | `Use the id of a timeline listed by project_get.` |
-| `E_TYPE_MISMATCH` | audio track | `Track trk_a1b2c3d4e5 is an audio track; a composition goes on a visual track.` | `Use a visual track.` |
-| `E_INVALID_STATE` | a cycle, or an empty nested timeline | `Timeline prj_f6g7h8j9k0 holds this timeline, so placing it here would make a loop.` | `Use a timeline that does not contain this one.` |
-| `E_LIMIT` | nesting deeper than 4, or 500 items | `Placing this timeline would nest compositions 5 deep; the limit is 4.` | `Flatten a level with composition.expand.` |
-| `E_ID_EXISTS` | `id` used | `Item id itm_m1n2p3q4r5 already exists.` | `Omit id or use an unused id.` |
-| `E_OUT_OF_SOURCE` | the range leaves the nested timeline | `The composition would show frames 0 to 449 of timeline prj_a1b2c3d4e5, which has 300 frames.` | `Use a duration of at most "300f" (10.000s), the most this timeline allows from source_in 0.` |
-| `E_OVERLAP` | overlap on the track | `Item itm_m1n2p3q4r5 would occupy frames 100-249 on track trk_f6g7h8j9k0, where item itm_c3d4e5f6g7 already is (frames 90-179).` | `Use start "180f" (6.000s), the next free position, or another track.` |
-
-**Inverse.** `remove {collection: "items", id: <new id>}`.
-
-**Idempotency.** With `id`: the second application returns `E_ID_EXISTS`. Without: the copy overlaps the first (`E_OVERLAP`).
-
-**Example.** 30 fps; empty track `trk_f6g7h8j9k0`; timeline `prj_a1b2c3d4e5` of 300 frames.
-
-```json
-{"op": "clip.add_composition", "args": {"track_id": "trk_f6g7h8j9k0", "timeline_id": "prj_a1b2c3d4e5", "start": "0s", "id": "itm_m1n2p3q4r5"}}
-```
-
-**Golden cases.**
-
-- `ok_default_duration_rest_of_nested`
-- `ok_explicit_duration`
-- `ok_source_in`
-- `ok_other_frame_rate_converts_the_length`
-- `ok_start_omitted_goes_to_the_end_of_the_track`
-- `ok_fit_contain`
-- `ok_supplied_id`
-- `ok_nested_two_levels`
-- `ok_depth_exactly_four`
-- `err_validation_bad_fit`
-- `err_invalid_time_malformed`
-- `err_invalid_time_zero_duration`
-- `err_not_found_track`
-- `err_not_found_timeline`
-- `err_not_found_no_production`
-- `err_type_mismatch_audio_track`
-- `err_invalid_state_itself`
-- `err_invalid_state_cycle_direct`
-- `err_invalid_state_cycle_indirect`
-- `err_invalid_state_empty_timeline`
-- `err_limit_depth_five`
-- `err_limit_depth_through_the_timelines_above`
-- `err_limit_500_items`
-- `err_id_exists`
-- `err_out_of_source_one_frame_too_long`
-- `err_out_of_source_source_in_at_the_end`
-- `err_overlap`
-
-### C.85 `composition.create_from_selection`
-
-Moves the selected items into a new timeline of the production and puts one composition item in their place, in one batch (RF-083): the way a creator turns a part they built into something they can reuse. The command is pure: it makes the new document and returns it in `Result.Spawned` (A.3); the service stores it in the same transaction as the commit.
-
-**Arguments**
-
-| Name | Type | Required | Default | Rule |
-| --- | --- | --- | --- | --- |
-| `item_ids` | list of item ids, 1 to 100 | yes | none | items of this timeline, each once |
-| `name` | string, 1 to 120 characters | no | `"Composition"` | the name of the new timeline |
-| `timeline_id` | timeline id | no | generated (`prj_`) | the id of the new timeline |
-| `id` | item id | no | generated | the id of the composition item |
-
-**Preconditions.**
-
-1. Arguments match the schema; the ids are distinct (`E_VALIDATION`); every item exists (`E_NOT_FOUND`); none is on a locked track (`E_INVALID_STATE`, A.3 rule 5).
-2. The document is not a template (`E_INVALID_STATE`): the slots and the colours of a template do not move into a timeline.
-3. `timeline_id` is not a timeline of the production and `id` is not an item (`E_ID_EXISTS`).
-4. The composition goes on the top-most visual track of the selected items (the smallest `order`; for a selection of audio items only, the top-most visual track of the document, and `E_INVALID_STATE` when there is none) and covers `[first start, last end)` of the selection. An item of that track that is not selected and lies in that range is `E_OVERLAP`.
-5. The new timeline has the depth of the deepest composition of the selection plus one, and the production's limit of 4 holds with the timelines above this one (`E_LIMIT`, `details.reason` `composition_depth`). The count of items of this document never grows (n items leave, one comes).
-
-**Postconditions.**
-
-1. The new document has this document's `width`, `height`, `fps`, `background` and `loudness_target`, the given or default `name`, and: the tracks that held selected items, with the same ids, kinds, names and orders (their `locked`, `hidden`, `muted`, `solo`, `volume` and `magnet` kept); the selected items with the same ids, moved earlier by the first start (so the new timeline begins at frame 0); the assets they use and the fonts of this document. An item's `slot` is dropped. A `link` whose other members were not all selected is removed from the moved items, and a caption whose `linked_item` was not selected loses it.
-2. This document loses the selected items and gains one `composition` item (`id`) on the track of precondition 4: `start` the first start, `duration` the length of the selection, `timeline` the new id. The tracks stay, empty or not.
-3. `diff` has one `item.removed` per selected item and one `item.added`. `effective` has `id`, `timeline_id`, `name`, `start`, `duration` and `moved` (the ids moved, sorted). The inverse restores the selected items exactly; the new timeline is left to the user, who may trash it (SDD-001 section 3.5.1 rule 3).
-
-**Errors.**
-
-| Code | When | Example message | Example hint |
-| --- | --- | --- | --- |
-| `E_VALIDATION` | no item, more than 100, or a repeated item | `args.item_ids repeats itm_m1n2p3q4r5.` | `Name each item once.` |
-| `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
-| `E_INVALID_STATE` | a locked track, a template, or no visual track | `Track trk_f6g7h8j9k0 is locked.` | `Unlock the track first.` |
-| `E_ID_EXISTS` | `timeline_id` or `id` used | `Timeline id prj_a1b2c3d4e5 already exists.` | `Omit timeline_id or use an unused id.` |
-| `E_OVERLAP` | an item that is not selected lies in the range of the composition | `The composition would cover frames 0-149 of track trk_a1b2c3d4e5, where item itm_s6t7v8w9x0 (frames 60-89) is not selected.` | `Select that item too, or move it to another track.` |
-| `E_LIMIT` | nesting deeper than 4 | `Placing this timeline would nest compositions 6 deep; the limit is 4.` | `Flatten a level with composition.expand.` |
-
-**Inverse.** As for any command, the exact inverse of the net change of this document (A.6).
-
-**Idempotency.** With `timeline_id` and `id`: the second application returns `E_ID_EXISTS`.
-
-**Example.**
-
-```json
-{"op": "composition.create_from_selection", "args": {"item_ids": ["itm_m1n2p3q4r5", "itm_c3d4e5f6g7"], "name": "Intro", "timeline_id": "prj_a1b2c3d4e5", "id": "itm_k1k2k3k4k5"}}
-```
-
-**Golden cases.**
-
-- `ok_one_clip`
-- `ok_two_clips_on_two_tracks`
-- `ok_selection_not_at_zero_starts_the_nested_timeline_at_zero`
-- `ok_with_an_audio_item`
-- `ok_a_link_that_is_not_whole_is_removed`
-- `ok_supplied_name_and_ids`
-- `ok_nests_a_composition`
-- `err_validation_no_items`
-- `err_validation_repeated_item`
-- `err_not_found_item`
-- `err_invalid_state_track_locked`
-- `err_id_exists_timeline`
-- `err_id_exists_item`
-- `err_overlap_unselected_item_in_range`
-- `err_limit_depth_five`
-
-### C.86 `composition.expand`
-
-Puts the items of a nested timeline on this timeline in place of a composition item that uses no group feature: the inverse of `composition.create_from_selection`. The nested timeline stays in the production, unchanged.
-
-**Arguments**
-
-| Name | Type | Required | Default | Rule |
-| --- | --- | --- | --- | --- |
-| `item_id` | item id | yes | none | a `composition` item |
-
-**Preconditions.**
-
-1. The item exists and is a composition (`E_NOT_FOUND`, `E_TYPE_MISMATCH`); its timeline is in the production (`E_NOT_FOUND`); its track is not locked (`E_INVALID_STATE`, A.3 rule 5).
-2. The item only places its timeline (`E_INVALID_STATE`, `details.reason` and `details.feature`): no `opacity`, `scale`, `rotation`, position, keyframe, transition, mask, effect, shadow, outline, blur, filter, blend or flip of its own, and no volume, fade or mute, and no speed other than 1/1 (`details.feature` `speed`, epic 53: the items would play at their own speed); and it is drawn: not disabled and not on a hidden track, `details.feature` `disabled` or `hidden_track`, since its items would be drawn on their new tracks (`composition_group_feature`); `source_in` 0 and a duration that shows the whole nested timeline (`composition_window`); and the nested timeline has this timeline's `width`, `height` and `fps` (`composition_geometry`).
-3. No item id of the nested timeline is used here (`E_ID_EXISTS`); an asset of the nested timeline that has the id of one here has the same file (`E_INVALID_STATE`, `details.reason` `composition_asset_clash`); the document stays within 50 tracks, 500 items and 200 assets (`E_LIMIT`).
-
-**Postconditions.**
-
-1. The composition item is removed. Every track of the nested timeline that holds an item is added here with a new id (`effective.tracks`, in the order of the nested track ids): its visual tracks, keeping their relative order, take the places directly above the track of the item (`order` strings between that track and the one above it), and its audio tracks go after the last track. Every item of the nested timeline is added to its new track with the same id, moved later by the `start` of the item; the assets and fonts it uses are added when missing.
-2. `diff` has the `item.removed`, `track.added` and `item.added` entries and the added assets. `effective` has `item_id`, `timeline_id`, `tracks` (the new ids) and `items` (the added ids, sorted).
-
-**Errors.**
-
-| Code | When | Example message | Example hint |
-| --- | --- | --- | --- |
-| `E_VALIDATION` | bad argument | `args.item_id "x" is not an item id.` | `Use an id like itm_m1n2p3q4r5.` |
-| `E_NOT_FOUND` | unknown item, or a timeline that is not in the production | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
-| `E_TYPE_MISMATCH` | the item is not a composition | `Item itm_m1n2p3q4r5 is a clip item; composition.expand needs a composition.` | `Use it on a composition item.` |
-| `E_INVALID_STATE` | a group feature, a window or a geometry that makes the picture differ, a locked track, or a differing asset | `Item itm_m1n2p3q4r5 has its own opacity, so it is drawn as one unit and cannot be expanded.` | `Remove it first, or keep the composition.` |
-| `E_ID_EXISTS` | an item id of the nested timeline is used here | `Item id itm_c3d4e5f6g7 of the nested timeline already exists here.` | `Rename the clash first.` |
-| `E_LIMIT` | 50 tracks, 500 items or 200 assets | `Expanding would give the document 501 items; the limit is 500.` | `Delete unused items first.` |
-
-**Inverse.** The exact inverse of the net change (A.6).
-
-**Idempotency.** Not idempotent: the second call is `E_NOT_FOUND`.
-
-**Example.**
-
-```json
-{"op": "composition.expand", "args": {"item_id": "itm_k1k2k3k4k5"}}
-```
-
-**Golden cases.**
-
-- `ok_one_visual_track`
-- `ok_two_visual_tracks_keep_their_order`
-- `ok_with_an_audio_track`
-- `ok_later_start_shifts_the_items`
-- `err_validation_bad_item_id`
-- `err_not_found_item`
-- `err_not_found_timeline`
-- `err_type_mismatch_not_a_composition`
-- `err_invalid_state_opacity`
-- `err_invalid_state_window`
-- `err_invalid_state_other_size`
-- `err_invalid_state_track_locked`
-- `err_id_exists`
-- `err_limit_500_items`

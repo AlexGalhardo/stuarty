@@ -499,7 +499,6 @@ test.describe("auto captions", () => {
 			expect(route.request().postDataJSON()).toEqual({
 				kind: "transcribe",
 				args: { asset_id: clip.assetId },
-				timeline_id: clip.id,
 			});
 			await route.fulfill({
 				status: 202,
@@ -675,7 +674,7 @@ test.describe("auto captions", () => {
 		request,
 	}) => {
 		const seeded = await seedLinkedCaption(request);
-		await page.route("**/api/v1/projects/*/lint*", (route) =>
+		await page.route("**/api/v1/projects/*/lint", (route) =>
 			route.fulfill({
 				contentType: "application/json",
 				json: {

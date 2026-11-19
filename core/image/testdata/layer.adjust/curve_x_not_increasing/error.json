@@ -1,8 +1,0 @@
-{
-  "code": "E_VALIDATION",
-  "hint": "Keep each adjustment inside its range, the white point above the black point and the curve x increasing.",
-  "message": "the points of the curve must have x strictly increasing",
-  "op_index": 0,
-  "path": "args.curve[1].x",
-  "retryable": false
-}

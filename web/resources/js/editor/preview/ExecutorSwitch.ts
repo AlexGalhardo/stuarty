@@ -117,10 +117,6 @@ export class ExecutorSwitch implements PreviewExecutor {
 		this.current.setRevision(revision);
 	}
 
-	refresh(): void {
-		this.current.refresh();
-	}
-
 	seek(frame: number, options?: { scrubbing?: boolean }): void {
 		this.lastFrame = frame;
 		this.current.seek(frame, options);

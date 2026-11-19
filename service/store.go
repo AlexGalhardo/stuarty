@@ -5,12 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/AlexGalhardo/stuarty/service/agenthost"
-	"github.com/AlexGalhardo/stuarty/service/approval"
-	"github.com/AlexGalhardo/stuarty/service/assets"
 	"github.com/AlexGalhardo/stuarty/service/connections"
-	"github.com/AlexGalhardo/stuarty/service/library"
-	"github.com/AlexGalhardo/stuarty/service/publish"
 )
 
 // Sentinel errors returned by the store (SDD-005 section 2 item 8). The
@@ -60,7 +55,6 @@ type Store interface {
 // Repos groups the repositories. On a Tx they are bound to the transaction.
 type Repos interface {
 	Projects() ProjectRepo
-	Productions() ProductionRepo
 	Operations() OperationRepo
 	Idempotency() IdempotencyRepo
 	Assets() AssetRepo
@@ -68,16 +62,10 @@ type Repos interface {
 	Templates() TemplateRepo
 	Backups() BackupRepo
 	Audit() AuditRepo
-	Checkpoints() CheckpointRepo
 	Fonts() FontRepo
 	BrandKit() BrandKitRepo
 	Images() ImageRepo
 	Connections() connections.Store
-	Approvals() approval.Store
-	Library() library.Index
-	AssetLibrary() assets.Store
-	Publications() publish.Store
-	Chat() agenthost.Store
 }
 
 // Tx is a write transaction.
@@ -143,7 +131,7 @@ type ProjectQuery struct {
 	State          ProjectState // "" means active only
 	IncludeTrashed bool         // both states; wins over State
 	OwnerUserID    string       // network mode: only this user's projects, applied in SQL
-	ProjectID      string       // a key limited to one project: the timelines of that one
+	ProjectID      string       // a key limited to one project: only that one
 	After          string       // opaque cursor from the previous page
 	Limit          int          // 1 to 200; 0 means 50
 }
@@ -175,136 +163,6 @@ type ProjectRepo interface {
 	// Delete is a hard delete; it cascades, and also removes the
 	// document_backups of the project. Only TrashEmpty calls it.
 	Delete(ctx context.Context, id string) error
-}
-
-// Productions (SDD-005 section 5.12)
-
-// ProductionHead is a project in the sense of ADR-0039: the production row, the number of its active timelines
-// and the head of the first of them, which is what the list shows.
-type ProductionHead struct {
-	ID          string
-	Name        string
-	State       ProjectState
-	CreatedMs   int64
-	UpdatedMs   int64
-	CreatedBy   string
-	OwnerUserID *string // network mode only (SDD-007 4.1)
-	TrashedMs   *int64
-	TrashedBy   *string
-	// Timelines counts the active timeline items.
-	Timelines int
-	// Timeline is the head of the first active timeline by position; its ID is empty when there is none.
-	Timeline ProjectHead
-}
-
-// ProductionQuery selects a page of the list of projects; the members are those of ProjectQuery.
-type ProductionQuery = ProjectQuery
-
-// ItemRow is a row of project_items.
-type ItemRow struct {
-	ID        string
-	ProjectID string
-	Kind      string
-	Title     string
-	Position  int
-	State     ProjectState
-	Ref       string // timeline: the timeline id; output: the export job id
-	Body      string // brief and text
-	Format    string // output
-	TextKind  string // text: script, copy or caption (SDD-019); empty for any other kind
-	CreatedMs int64
-	UpdatedMs int64
-	CreatedBy string
-	TrashedMs *int64
-}
-
-// TimelineRef is an active timeline item of a project.
-type TimelineRef struct {
-	ItemID     string
-	TimelineID string
-	Title      string
-}
-
-// ProductionRepo stores projects as productions and their items.
-type ProductionRepo interface {
-	List(ctx context.Context, q ProductionQuery) (items []ProductionHead, next string, err error)
-	Count(ctx context.Context, q ProductionQuery) (int, error)
-	Get(ctx context.Context, id string) (ProductionHead, error) // ErrNotFound
-	Create(ctx context.Context, h ProductionHead) error         // ErrExists
-	// SetState writes the state of the project and mirrors it on the rows of the timelines of its active timeline
-	// items. ErrNotFound when there is no such project.
-	SetState(ctx context.Context, id string, st ProjectState, by string, atMs int64) error
-	// Touch sets updated_ms.
-	Touch(ctx context.Context, id string, atMs int64) error
-	// Delete is a hard delete that cascades the items; the timeline rows are the business of the caller. Only
-	// TrashEmpty calls it.
-	Delete(ctx context.Context, id string) error
-
-	Items(ctx context.Context, projectID string) ([]ItemRow, error) // by position, then id
-	Item(ctx context.Context, itemID string) (ItemRow, error)       // ErrNotFound
-	CreateItem(
-		ctx context.Context,
-		it ItemRow,
-	) error // ErrExists for a second brief or a timeline already in an item
-	UpdateItem(ctx context.Context, it ItemRow) error // title, body, state, trashed_ms, updated_ms
-	// SetPositions numbers the items 0 to n-1 in the order of ids.
-	SetPositions(ctx context.Context, projectID string, ids []string) error
-	// ProjectOfTimeline is the project whose timeline item has ref timelineID; ErrNotFound when none.
-	ProjectOfTimeline(ctx context.Context, timelineID string) (string, error)
-	// ActiveTimelines lists the active timeline items of a project by position.
-	ActiveTimelines(ctx context.Context, projectID string) ([]TimelineRef, error)
-
-	// The texts of a production and their revisions (SDD-019). CreateItem of a text item writes its revision 1
-	// ('created') in the same call, so a text item never exists without a revision.
-	//
-	// TextItems lists text items with the facts of their latest revision, newest first, with the body of each.
-	TextItems(ctx context.Context, q TextQuery) (items []TextHead, next string, err error)
-	// TextRevisions lists the revisions of a text, newest first, without bodies; before is a revision number to
-	// start under (0 for the latest); the answer has at most limit rows.
-	TextRevisions(ctx context.Context, itemID string, before, limit int) ([]TextRevisionRow, error)
-	// TextRevision reads one revision with its body; ErrNotFound when there is none.
-	TextRevision(ctx context.Context, itemID string, revision int) (TextRevisionRow, error)
-	// TextLatest is the latest revision of a text, with its body; ErrNotFound when the item has none.
-	TextLatest(ctx context.Context, itemID string) (TextRevisionRow, error)
-	// AddTextRevision appends a revision and drops those below pruneBefore, and sets the body and the
-	// updated_ms of the item to those of the revision.
-	AddTextRevision(ctx context.Context, rev TextRevisionRow, pruneBefore int) error
-}
-
-// TextRevisionRow is a row of text_revisions.
-type TextRevisionRow struct {
-	ItemID     string
-	Revision   int
-	Body       string // empty in a list
-	Actor      string
-	Source     string // created, write, generated or revert
-	RevertedTo *int
-	Provider   string
-	Model      string
-	CostMicros *int64
-	Currency   string
-	JobID      string
-	CreatedMs  int64
-}
-
-// TextQuery selects a page of text items.
-type TextQuery struct {
-	ProjectID   string // one project; empty for every project the caller may see
-	OwnerUserID string // network mode: only this user's projects
-	TextKind    string // empty for every kind
-	State       ProjectState
-	After       string // opaque cursor from the previous page
-	Limit       int    // 1 to 100; 0 means 50
-}
-
-// TextHead is a text item with the project it is in and the facts of its latest revision.
-type TextHead struct {
-	Item         ItemRow
-	ProjectName  string
-	Revision     int
-	RevisionBy   string
-	RevisionSrc  string
-	ProjectOwner *string
 }
 
 // Operations
@@ -373,31 +231,6 @@ type OperationRepo interface {
 	CloseOpenRedo(ctx context.Context, projectID, actor string, by int64) error
 	// CloseAllOpen closes every open row of the project (a migration or import ends all undo chains).
 	CloseAllOpen(ctx context.Context, projectID string, by int64) error
-}
-
-// CheckpointRow is a name and a note on a revision of a timeline (SDD-005 section 5.14).
-type CheckpointRow struct {
-	ProjectID string
-	Name      string
-	Note      string
-	Revision  int64
-	Actor     string
-	Auto      bool
-	AtMs      int64
-}
-
-// CheckpointRepo stores the checkpoints of a timeline. No method touches the log.
-type CheckpointRepo interface {
-	Create(ctx context.Context, row CheckpointRow) error // ErrExists on a duplicate name
-	Get(ctx context.Context, projectID, name string) (CheckpointRow, error)
-	// List returns the checkpoints of the project, newest revision first, then by name.
-	List(ctx context.Context, projectID string) ([]CheckpointRow, error)
-	// Rename changes the name, and the note when note is not nil, and makes the checkpoint a named one (Auto
-	// false). ErrNotFound; ErrExists on a taken name.
-	Rename(ctx context.Context, projectID, name, newName string, note *string) error
-	Remove(ctx context.Context, projectID, name string) error // ErrNotFound
-	// TrimAuto removes the oldest automatic checkpoints until at most keep remain.
-	TrimAuto(ctx context.Context, projectID string, keep int) error
 }
 
 // Idempotency
@@ -575,9 +408,6 @@ type JobRow struct {
 	UpdatedMs       int64
 	StartedMs       *int64
 	FinishedMs      *int64
-	// ApprovalID is the approval request a job in state waiting_approval waits on, and the request
-	// that released it afterwards (SDD-015 section 5); empty for a job that needs none.
-	ApprovalID string
 }
 
 // JobLimit is the concurrency limit checked by CreateLimited.
@@ -602,9 +432,6 @@ type JobRepo interface {
 	Progress(ctx context.Context, id string, progress float64, message string, nowMs int64) (updated bool, err error)
 	// Finish moves a running job to a terminal state; false when it was not running.
 	Finish(ctx context.Context, id, state string, result, errJSON json.RawMessage, nowMs int64) (bool, error)
-	// SaveInput replaces the input of a running job; false when it was not running. A job that must resume
-	// after a restart (video.generate) stores there what it needs, such as the task id of a provider.
-	SaveInput(ctx context.Context, id string, input json.RawMessage, nowMs int64) (bool, error)
 	// Requeue moves a running job back to queued (shutdown interruption or recovery).
 	Requeue(ctx context.Context, id, message string, nowMs int64) (bool, error)
 	// RequestCancel sets cancel_requested; a queued job becomes cancelled at once.
@@ -615,15 +442,6 @@ type JobRepo interface {
 	// QueuedBefore returns the jobs still queued that were created before
 	// the instant, oldest first (recovery dispatches them again).
 	QueuedBefore(ctx context.Context, createdBeforeMs int64) ([]JobRow, error)
-
-	// CreateWaiting inserts a job in state waiting_approval, with the request it waits on in
-	// row.ApprovalID (SDD-015 section 5). Call it inside Write.
-	CreateWaiting(ctx context.Context, row JobRow) error
-	// Release moves a waiting_approval job to queued; false when it was not waiting.
-	Release(ctx context.Context, id string, nowMs int64) (bool, error)
-	// FinishWaiting moves a waiting_approval job to a terminal state with its error; false when it
-	// was not waiting.
-	FinishWaiting(ctx context.Context, id, state string, errJSON json.RawMessage, nowMs int64) (bool, error)
 }
 
 // TemplateRow is a saved template document.

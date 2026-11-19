@@ -16,14 +16,10 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/AlexGalhardo/stuarty/core/asset"
 	"github.com/AlexGalhardo/stuarty/core/command"
-	"github.com/AlexGalhardo/stuarty/core/project"
 	"github.com/AlexGalhardo/stuarty/core/timeline"
 	"github.com/AlexGalhardo/stuarty/core/timeval"
-	"github.com/AlexGalhardo/stuarty/core/writing"
 	enginestore "github.com/AlexGalhardo/stuarty/engine/store"
-	assetlib "github.com/AlexGalhardo/stuarty/service/assets"
 	"github.com/AlexGalhardo/stuarty/service/crashpoint"
 	"github.com/AlexGalhardo/stuarty/service/textview"
 )
@@ -44,7 +40,7 @@ const (
 // bundleEntryName is every name a bundle may hold. The names are flat and lower case, so an entry
 // with a path, a drive, a dot segment, a control character or a differently cased twin is not in it.
 var bundleEntryName = regexp.MustCompile(
-	`^(manifest\.json|document\.json|operations\.ndjson|timeline\.t[0-9]{1,3}\.(json|ndjson)|item\.[0-9]{1,3}\.md|(media|font)\.[0-9a-f]{64})$`,
+	`^(manifest\.json|document\.json|operations\.ndjson|(media|font)\.[0-9a-f]{64})$`,
 )
 
 var bundleHashRe = regexp.MustCompile(`^sha256:[0-9a-f]{64}$`)
@@ -83,11 +79,6 @@ type bundleParts struct {
 	// fromVersion is the schema version of document.json before the migration.
 	fromVersion int
 	logSum      string
-	// main is the first timeline as a whole and extra the others (version 2); main is set when every check passed.
-	main  *bundleTimeline
-	extra []*bundleTimeline
-	// texts are the Markdown of the items of version 2, by index of the item; an item with no entry has none.
-	texts map[int]string
 }
 
 // ProjectBundleImport reads a bundle, checks all of it and then stores the project in one transaction.
@@ -151,24 +142,18 @@ func (s *svc) ProjectBundleImport(ctx context.Context, req ProjectBundleImportRe
 		return nil, asError(herr)
 	}
 
+	original := parts.document
 	doc := parts.doc
 	doc.ID = projectID
+	canon := timeline.Canonical(doc)
 
-	if err := s.numberImportedTimelines(ctx, parts, req.AsNew); err != nil {
-		return nil, err
+	revision := int64(1)
+	if !req.AsNew {
+		revision = parts.manifest.Project.Revision
+		if parts.migrated {
+			revision++
+		}
 	}
-
-	// A copy gives the timelines new ids: its compositions use the copies (SDD-001 §3.5.1).
-	renamed := map[string]string{}
-	for _, t := range parts.timelines() {
-		renamed[t.id] = t.doc.ID
-	}
-
-	for _, t := range parts.timelines() {
-		timeline.RenameCompositions(t.doc, renamed)
-	}
-
-	revision := parts.main.newRevision(req.AsNew)
 
 	res := &ProjectCreateResult{
 		UntrustedNotice: UntrustedNotice,
@@ -195,14 +180,19 @@ func (s *svc) ProjectBundleImport(ctx context.Context, req ProjectBundleImportRe
 	crashpoint.Hit("bundle_import.after_copy")
 
 	now := s.nowMs()
+	row := ProjectRow{
+		ID: projectID, Name: doc.Name, State: ProjectActive, Revision: revision, SchemaVersion: doc.SchemaVersion,
+		Summary: summarize(doc), CreatedMs: now, UpdatedMs: now, CreatedBy: c.Actor, ResyncFloor: revision,
+		Document: canon, DocSHA256: sha256Hex(canon),
+	}
 
-	for _, t := range parts.timelines() {
-		t.row = importedRow(c, t, req.AsNew, now)
-		t.original = t.document
+	if c.OwnerUserID != "" {
+		owner := c.OwnerUserID
+		row.OwnerUserID = &owner
 	}
 
 	err = s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
-		return s.writeImportedProject(ctx, tx, c, parts, sizes, req.AsNew, now)
+		return s.writeImportedProject(ctx, tx, c, parts, &row, original, sizes, req.AsNew, now)
 	})
 	if err != nil {
 		if errors.Is(err, ErrExists) {
@@ -228,184 +218,21 @@ func (s *svc) ProjectBundleImport(ctx context.Context, req ProjectBundleImportRe
 	return res, nil
 }
 
-// bundleTimeline is a timeline of a bundle after the checks: the first one is made from the parts of the bundle
-// (mainTimeline), the others by readBundleTimelines.
-type bundleTimeline struct {
-	key         string
-	id          string // the id in the bundle
-	document    []byte
-	doc         *timeline.Document
-	migrated    bool
-	fromVersion int
-	revision    int64 // the revision in the bundle
-	logEntry    *zip.File
-	logInfo     *BundleLog
-	hasLog      bool
-	logSum      string
-
-	// row and original are set by the import once the id of the new project is known.
-	row      ProjectRow
-	original []byte
-}
-
-// mainTimeline is the first timeline of the bundle.
-func (p *bundleParts) mainTimeline() *bundleTimeline {
-	return &bundleTimeline{
-		key: bundleMainKey, id: p.manifest.Project.ID, document: p.document, doc: p.doc, migrated: p.migrated,
-		fromVersion: p.fromVersion, revision: p.manifest.Project.Revision, logEntry: p.entries[bundleOperationsName],
-		logInfo: p.manifest.Operations, hasLog: p.hasLog, logSum: p.logSum,
-	}
-}
-
-// timelines are every timeline of the bundle, the first first.
-func (p *bundleParts) timelines() []*bundleTimeline {
-	return append([]*bundleTimeline{p.main}, p.extra...)
-}
-
-// newRevision is the revision a timeline has once imported: that of the bundle, one more when the import
-// migrated the document, and 1 when the log is left out.
-func (t *bundleTimeline) newRevision(asNew bool) int64 {
-	switch {
-	case asNew:
-		return 1
-	case t.migrated:
-		return t.revision + 1
-	}
-
-	return t.revision
-}
-
-// numberImportedTimelines gives the timelines after the first the ids they will have: their own, or new ones for
-// a copy. Keeping an id that exists is E_ID_EXISTS, as it is for the first.
-func (s *svc) numberImportedTimelines(ctx context.Context, p *bundleParts, asNew bool) error {
-	for _, t := range p.extra {
-		id := t.id
-		if asNew {
-			id = s.newIDs(timeline.PrefixProject)
-		} else if _, err := s.store.Projects().Head(ctx, id); err == nil {
-			return newError(command.CodeIDExists, "a project with the identifier %s already exists.", id).
-				withHint("import it with as_new to get a new id")
-		} else if !isNotFound(err) {
-			return asError(err)
-		}
-
-		t.doc.ID = id
-	}
-
-	return nil
-}
-
-// importedRow is the row of a timeline of an import.
-func importedRow(c Caller, t *bundleTimeline, asNew bool, now int64) ProjectRow {
-	canon := timeline.Canonical(t.doc)
-	revision := t.newRevision(asNew)
-
-	row := ProjectRow{
-		ID: t.doc.ID, Name: t.doc.Name, State: ProjectActive, Revision: revision, SchemaVersion: t.doc.SchemaVersion,
-		Summary: summarize(t.doc), CreatedMs: now, UpdatedMs: now, CreatedBy: c.Actor, ResyncFloor: revision,
-		Document: canon, DocSHA256: sha256Hex(canon),
-	}
-
-	if c.OwnerUserID != "" {
-		owner := c.OwnerUserID
-		row.OwnerUserID = &owner
-	}
-
-	return row
-}
-
-// writeImportedProject is the one Write of an import (SDD-005 section 16.3 step 7): the project with its
-// items and timelines, the log and the asset links of every timeline, the font owners and the audit row.
+// writeImportedProject is the one Write of an import (SDD-005 section 16.3 step 7).
 func (s *svc) writeImportedProject(
-	ctx context.Context, tx Tx, c Caller, p *bundleParts, sizes map[string]int64, asNew bool, now int64,
+	ctx context.Context, tx Tx, c Caller, p *bundleParts, row *ProjectRow, original []byte, sizes map[string]int64,
+	asNew bool, now int64,
 ) error {
-	if err := s.putImportedProduction(ctx, tx, p); err != nil {
+	id := row.ID
+
+	if err := tx.Projects().Create(ctx, *row); err != nil {
 		return err
 	}
 
-	for _, t := range p.timelines() {
-		if err := s.writeImportedTimeline(ctx, tx, c, t, asNew, now); err != nil {
-			return err
-		}
+	rev := p.manifest.Project.Revision
 
-		if err := s.linkBundleAssets(ctx, tx, c, t.doc, sizes, now); err != nil {
-			return err
-		}
-	}
-
-	// The importer brought these bytes, and the hash was checked against the manifest, so they own them.
-	if err := recordFontOwner(ctx, tx, c, now, bundleFontHashes(p)...); err != nil {
-		return err
-	}
-
-	if err := appendAudit(ctx, tx, now, c.Actor, "project.import", p.main.row.ID, ""); err != nil {
-		return err
-	}
-
-	crashpoint.Hit("bundle_import.before_commit")
-
-	return nil
-}
-
-// putImportedProduction writes the project, its items and its timeline rows. A bundle of version 1 has one
-// timeline and no other item; one of version 2 brings its items, each timeline item pointing at the row of
-// the timeline the item names.
-func (s *svc) putImportedProduction(ctx context.Context, tx Tx, p *bundleParts) error {
-	row := &p.main.row
-	if p.manifest.Production == nil {
-		return s.putProduction(ctx, tx, row)
-	}
-
-	head := ProductionHead{
-		ID: row.ID, Name: row.Name, State: ProjectActive, CreatedMs: row.CreatedMs, UpdatedMs: row.UpdatedMs,
-		CreatedBy: row.CreatedBy, OwnerUserID: row.OwnerUserID,
-	}
-	if err := tx.Productions().Create(ctx, head); err != nil {
-		return err
-	}
-
-	byKey := map[string]*bundleTimeline{}
-	for _, t := range p.timelines() {
-		byKey[t.key] = t
-		if err := tx.Projects().Create(ctx, t.row); err != nil {
-			return err
-		}
-	}
-
-	for i, bi := range p.manifest.Production.Items {
-		it := s.newItem(row.ID, bi.Kind, bi.Title, i, row.CreatedBy, row.CreatedMs)
-		it.Body, it.Format = p.texts[i], bi.Format
-
-		if bi.Kind == string(project.Text) {
-			it.TextKind = bi.TextKind
-		}
-
-		if bi.Kind == string(project.Timeline) {
-			it.Ref = byKey[bi.Timeline].row.ID
-		}
-
-		if err := tx.Productions().CreateItem(ctx, it); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// writeImportedTimeline writes what belongs to one timeline of the import: its log, and the migration row and
-// the backup when the document was migrated or the import is a copy.
-func (s *svc) writeImportedTimeline(
-	ctx context.Context,
-	tx Tx,
-	c Caller,
-	t *bundleTimeline,
-	asNew bool,
-	now int64,
-) error {
-	id, row := t.row.ID, &t.row
-
-	if t.hasLog && !asNew {
-		sum, err := s.streamLog(ctx, t.logEntry, func(op *bundleOperation) error {
+	if p.hasLog && !asNew {
+		sum, err := s.streamLog(ctx, p.entries[bundleOperationsName], func(op *bundleOperation) error {
 			// An imported row is history, not a step of this workspace: nobody here made it, so nobody
 			// may undo it (SDD-007 section 6.9).
 			closed := op.ClosedBy
@@ -424,40 +251,58 @@ func (s *svc) writeImportedTimeline(
 			return err
 		}
 
-		if sum.sha256 != t.logSum {
+		if sum.sha256 != p.logSum {
 			return bundleRefused("the file changed while it was read")
 		}
 	}
 
-	if !asNew && !t.migrated {
-		return nil
+	if asNew || p.migrated {
+		kind, reason := OpMigrate, fmt.Sprintf("migrate v%d to v%d", p.fromVersion, row.SchemaVersion)
+		base := rev
+		actor := migrateActor
+		diff := json.RawMessage("[]")
+
+		if asNew {
+			kind, reason, base, actor = OpImport, "import", 0, c.Actor
+		}
+
+		last := row.Revision
+		if err := tx.Backups().Put(ctx, BackupRow{
+			OwnerKind: "project", OwnerID: id, Revision: base, SchemaVersion: p.fromVersion,
+			Document: original, Reason: reason, CreatedMs: now,
+		}); err != nil {
+			return err
+		}
+
+		if err := tx.Operations().Append(ctx, OperationRow{
+			ProjectID: id, Revision: last, Kind: kind, Actor: actor, BaseRevision: base, AtMs: now,
+			Ops: json.RawMessage("[]"), Inverse: json.RawMessage("[]"), Diff: diff, SchemaVersion: row.SchemaVersion,
+			DocSHA256: row.DocSHA256, ClosedBy: &last,
+		}); err != nil {
+			return err
+		}
+
+		if err := tx.Operations().CloseAllOpen(ctx, id, last); err != nil {
+			return err
+		}
 	}
 
-	kind, reason := OpMigrate, fmt.Sprintf("migrate v%d to v%d", t.fromVersion, row.SchemaVersion)
-	base := t.revision
-	actor := migrateActor
-
-	if asNew {
-		kind, reason, base, actor = OpImport, "import", 0, c.Actor
-	}
-
-	last := row.Revision
-	if err := tx.Backups().Put(ctx, BackupRow{
-		OwnerKind: "project", OwnerID: id, Revision: base, SchemaVersion: t.fromVersion,
-		Document: t.original, Reason: reason, CreatedMs: now,
-	}); err != nil {
+	if err := s.linkBundleAssets(ctx, tx, c, p, sizes, now); err != nil {
 		return err
 	}
 
-	if err := tx.Operations().Append(ctx, OperationRow{
-		ProjectID: id, Revision: last, Kind: kind, Actor: actor, BaseRevision: base, AtMs: now,
-		Ops: json.RawMessage("[]"), Inverse: json.RawMessage("[]"), Diff: json.RawMessage("[]"),
-		SchemaVersion: row.SchemaVersion, DocSHA256: row.DocSHA256, ClosedBy: &last,
-	}); err != nil {
+	// The importer brought these bytes, and the hash was checked against the manifest, so they own them.
+	if err := recordFontOwner(ctx, tx, c, now, bundleFontHashes(p)...); err != nil {
 		return err
 	}
 
-	return tx.Operations().CloseAllOpen(ctx, id, last)
+	if err := appendAudit(ctx, tx, now, c.Actor, "project.import", id, ""); err != nil {
+		return err
+	}
+
+	crashpoint.Hit("bundle_import.before_commit")
+
+	return nil
 }
 
 // linkBundleAssets inserts the assets rows of new hashes as pending, the project_assets rows as
@@ -466,14 +311,14 @@ func (s *svc) linkBundleAssets(
 	ctx context.Context,
 	tx Tx,
 	c Caller,
-	doc *timeline.Document,
+	p *bundleParts,
 	sizes map[string]int64,
 	now int64,
 ) error {
-	id := doc.ID
+	id := p.doc.ID
 
-	for _, assetID := range sortedKeys(doc.Assets) {
-		a := doc.Assets[assetID]
+	for _, assetID := range sortedKeys(p.doc.Assets) {
+		a := p.doc.Assets[assetID]
 
 		ar, _, err := tx.Assets().Upsert(ctx, AssetRow{
 			Hash: a.Hash, SizeBytes: sizes[a.Hash], OriginalName: a.Name, IngestState: IngestPending,
@@ -504,14 +349,6 @@ func (s *svc) linkBundleAssets(
 				return err
 			}
 		}
-
-		// The library side belongs to the owner who imports the bundle, which also makes the file found by name.
-		if err := assetlib.RecordImport(
-			ctx, tx.AssetLibrary(), c.OwnerUserID, a.Hash, asset.Origin{Kind: asset.Imported}, assetlib.ImportInfo{},
-			c.Actor, now,
-		); err != nil {
-			return err
-		}
 	}
 
 	return nil
@@ -533,14 +370,6 @@ func (s *svc) readBundle(ctx context.Context, c Caller, zr *zip.Reader) (*bundle
 		return nil, e
 	}
 
-	if e := s.readBundleTimelines(p); e != nil {
-		return nil, e
-	}
-
-	if e := readBundleItemTexts(p); e != nil {
-		return nil, e
-	}
-
 	if e := s.matchBundleFiles(ctx, c, p); e != nil {
 		return nil, e
 	}
@@ -553,115 +382,7 @@ func (s *svc) readBundle(ctx context.Context, c Caller, zr *zip.Reader) (*bundle
 		return nil, e
 	}
 
-	p.main = p.mainTimeline()
-
 	return p, nil
-}
-
-// readBundleTimelines reads the document of every timeline after the first (version 2), with the checks of
-// the first: its hash and size against the manifest, depth, migration and validation. An entry named for a
-// timeline that the manifest does not list is refused.
-func (s *svc) readBundleTimelines(p *bundleParts) *Error {
-	declared := map[string]bool{}
-
-	for i := range p.manifest.Timelines {
-		t := &p.manifest.Timelines[i]
-		declared[bundleTimelineDocEntry(t.Key)] = true
-		declared[bundleTimelineLogEntry(t.Key)] = true
-
-		en := p.entries[bundleTimelineDocEntry(t.Key)]
-		if en == nil {
-			return bundleRefused("a timeline listed in the manifest is not in the bundle")
-		}
-
-		body, err := readEntry(en, bundleDocumentMax)
-		if err != nil {
-			return bundleRefused("a timeline document is larger than it declares or cannot be read")
-		}
-
-		if sha256Hex(body) != t.Document.SHA256 || int64(len(body)) != t.Document.Bytes {
-			return bundleRefused("a timeline document does not match the manifest")
-		}
-
-		if err := checkJSONDepth(body); err != nil {
-			return bundleRefused("a timeline document is nested too deeply or is not valid JSON")
-		}
-
-		doc, from, verr := migrateBundleDocument(body)
-		if verr != nil {
-			return verr
-		}
-
-		if doc.ID != t.ID {
-			return bundleRefused("the manifest names another timeline than the document")
-		}
-
-		if utf8.RuneCountInString(doc.Name) > maxProjectName {
-			return bundleRefused("the project name is too long")
-		}
-
-		p.extra = append(p.extra, &bundleTimeline{
-			key: t.Key, id: t.ID, document: body, doc: doc, migrated: from < timeline.CurrentSchemaVersion,
-			fromVersion: from, revision: t.Revision, logEntry: p.entries[bundleTimelineLogEntry(t.Key)],
-			logInfo: t.Operations,
-		})
-	}
-
-	for name := range p.entries {
-		if strings.HasPrefix(name, bundleTimelinePrefix) && !declared[name] {
-			return bundleRefused("it holds a timeline that the manifest does not list")
-		}
-	}
-
-	return nil
-}
-
-// readBundleItemTexts reads the Markdown of the items of version 2: each entry item.<n>.md that an item
-// declares, checked against its hash and size and by the rule of a text of core/project. An entry that no item
-// declares is refused.
-func readBundleItemTexts(p *bundleParts) *Error {
-	declared := map[string]bool{}
-
-	if p.manifest.Production != nil {
-		for i := range p.manifest.Production.Items {
-			meta := p.manifest.Production.Items[i].Text
-			if meta == nil {
-				continue
-			}
-
-			name := bundleItemTextEntry(i)
-			declared[name] = true
-
-			en := p.entries[name]
-			if en == nil {
-				return bundleRefused("the text of an item listed in the manifest is not in the bundle")
-			}
-
-			body, err := readEntry(en, project.MaxText)
-			if err != nil {
-				return bundleRefused("the text of an item is larger than it declares or cannot be read")
-			}
-
-			if sha256Hex(body) != meta.SHA256 || int64(len(body)) != meta.Bytes ||
-				project.CheckText(string(body)) != nil {
-				return bundleRefused("the text of an item does not match the manifest or is not valid")
-			}
-
-			if p.texts == nil {
-				p.texts = map[int]string{}
-			}
-
-			p.texts[i] = string(body)
-		}
-	}
-
-	for name := range p.entries {
-		if strings.HasPrefix(name, bundleItemPrefix) && !declared[name] {
-			return bundleRefused("it holds a text that the manifest does not list")
-		}
-	}
-
-	return nil
 }
 
 // entryCap is the cap of one entry by its name.
@@ -673,18 +394,6 @@ func (s *svc) entryCap(name string) int64 {
 		return bundleDocumentMax
 	case bundleOperationsName:
 		return bundleOperationsMax
-	}
-
-	if strings.HasPrefix(name, bundleItemPrefix) {
-		return project.MaxText
-	}
-
-	if strings.HasPrefix(name, bundleTimelinePrefix) {
-		if strings.HasSuffix(name, ".ndjson") {
-			return bundleOperationsMax
-		}
-
-		return bundleDocumentMax
 	}
 
 	return s.limits.MaxImportBytes
@@ -786,106 +495,7 @@ func (s *svc) readBundleManifest(p *bundleParts) *Error {
 			withHint("update stuarty, then import it again").withDetail("code", "V_BUNDLE_VERSION")
 	}
 
-	return checkBundleProduction(m)
-}
-
-// The most timelines and items a bundle may bring.
-const (
-	bundleTimelinesMax = project.MaxTimelines
-	bundleItemsMax     = project.MaxItems
-)
-
-var bundleKeyRe = regexp.MustCompile(`^t\d{1,3}$`)
-
-// checkBundleProduction judges the members of version 2 of the manifest before any entry is read: every key and
-// id is of the right form and once, every timeline is named by exactly one item, and the items obey the rules of
-// core/project.
-func checkBundleProduction(m *BundleManifest) *Error {
-	if m.Production == nil {
-		if len(m.Timelines) > 0 {
-			return bundleRefused("manifest.json lists timelines but no production")
-		}
-
-		return nil
-	}
-
-	if len(m.Timelines) >= bundleTimelinesMax || len(m.Production.Items) > bundleItemsMax {
-		return bundleOverLimit("bundle_items", "it holds too many timelines or items",
-			uint64(len(m.Timelines)+len(m.Production.Items)), bundleTimelinesMax+bundleItemsMax)
-	}
-
-	keys := map[string]bool{bundleMainKey: true}
-	ids := map[string]bool{m.Project.ID: true}
-
-	for i := range m.Timelines {
-		t := &m.Timelines[i]
-		if !bundleKeyRe.MatchString(t.Key) || keys[t.Key] || !timeline.ValidID(timeline.PrefixProject, t.ID) ||
-			ids[t.ID] || t.Revision < 0 || t.SchemaVersion < 1 || !isHex64(t.Document.SHA256) || t.Document.Bytes < 0 {
-			return bundleRefused("manifest.json lists a timeline that is not valid")
-		}
-
-		if t.Operations != nil && (t.Operations.Count < 0 || !isHex64(t.Operations.SHA256)) {
-			return bundleRefused("manifest.json lists a log that is not valid")
-		}
-
-		keys[t.Key], ids[t.ID] = true, true
-	}
-
-	used := map[string]bool{}
-	briefs := 0
-
-	for i := range m.Production.Items {
-		it := &m.Production.Items[i]
-		if v := checkBundleItem(it, keys, used); v != "" {
-			return bundleRefused(v)
-		}
-
-		if it.Kind == string(project.Brief) {
-			briefs++
-		}
-	}
-
-	if briefs > 1 || len(used) != len(keys) {
-		return bundleRefused("the items do not name every timeline once, or hold two briefs")
-	}
-
 	return nil
-}
-
-// checkBundleItem is why an item of a bundle is refused, or empty.
-func checkBundleItem(it *BundleItem, keys, used map[string]bool) string {
-	if !project.Kind(it.Kind).Allowed() || project.CheckTitle(it.Title) != nil || len(it.Format) > 16 {
-		return "an item of the project is not valid"
-	}
-
-	// A text kind belongs to a text, and is one of the three (a bundle of before epic 17 has none: it is a copy).
-	if it.TextKind != "" {
-		if _, v := writing.CheckKind(it.TextKind); v != nil || it.Kind != string(project.Text) {
-			return "an item declares a text kind that is not valid"
-		}
-	}
-
-	// Only a brief or a text has a text, and its entry is at most the limit of a text.
-	if t := it.Text; t != nil && (it.Kind != string(project.Brief) && it.Kind != string(project.Text) ||
-		!isHex64(t.SHA256) || t.Bytes < 1 || t.Bytes > project.MaxText) {
-		return "an item declares a text that is not valid"
-	}
-
-	if it.Kind != string(project.Timeline) {
-		if it.Timeline != "" {
-			return "an item that is not a timeline names a timeline"
-		}
-
-		return ""
-	}
-
-	if !keys[it.Timeline] || used[it.Timeline] {
-		return "an item names a timeline that is not in the bundle, or names one twice"
-	}
-
-	used[it.Timeline] = true
-
-	return ""
 }
 
 func (s *svc) readBundleDocument(p *bundleParts) *Error {
@@ -977,40 +587,28 @@ func (s *svc) matchBundleFiles(ctx context.Context, c Caller, p *bundleParts) *E
 
 	needed := map[string]string{} // hash to entry name
 
+	for _, id := range sortedKeys(p.doc.Assets) {
+		h := p.doc.Assets[id].Hash
+		if media[h] {
+			needed[h] = bundleMediaEntry(h)
+		} else if !s.unshippedAllowed(ctx, c, h) {
+			return bundleRefused("a file of the document is not in the bundle")
+		}
+	}
+
 	var owned fontScope
 
-	for _, doc := range p.documents() {
-		for _, id := range sortedKeys(doc.Assets) {
-			h := doc.Assets[id].Hash
-			if media[h] {
-				needed[h] = bundleMediaEntry(h)
-			} else if !s.unshippedAllowed(ctx, c, h) {
+	for _, family := range sortedKeys(p.doc.Fonts) {
+		for _, f := range p.doc.Fonts[family].Files {
+			if fonts[f.Hash] {
+				needed[f.Hash] = bundleFontEntry(f.Hash)
+			} else if !owned.allowed(ctx, s.store, s, f.Hash) {
 				return bundleRefused("a file of the document is not in the bundle")
-			}
-		}
-
-		for _, family := range sortedKeys(doc.Fonts) {
-			for _, f := range doc.Fonts[family].Files {
-				if fonts[f.Hash] {
-					needed[f.Hash] = bundleFontEntry(f.Hash)
-				} else if !owned.allowed(ctx, s.store, s, f.Hash) {
-					return bundleRefused("a file of the document is not in the bundle")
-				}
 			}
 		}
 	}
 
 	return pairBundleEntries(p, needed, listed)
-}
-
-// documents are the documents of every timeline of the bundle, the first first.
-func (p *bundleParts) documents() []*timeline.Document {
-	docs := []*timeline.Document{p.doc}
-	for _, t := range p.extra {
-		docs = append(docs, t.doc)
-	}
-
-	return docs
 }
 
 // listManifestFiles reads the media and fonts the manifest lists: their declared sizes by hash and
@@ -1061,8 +659,7 @@ func pairBundleEntries(p *bundleParts, needed map[string]string, listed map[stri
 	}
 
 	for name := range p.entries {
-		if name == bundleManifestEntry || name == bundleDocumentEntry || name == bundleOperationsName ||
-			strings.HasPrefix(name, bundleTimelinePrefix) || strings.HasPrefix(name, bundleItemPrefix) {
+		if name == bundleManifestEntry || name == bundleDocumentEntry || name == bundleOperationsName {
 			continue
 		}
 
@@ -1097,53 +694,18 @@ func pairBundleEntries(p *bundleParts, needed map[string]string, listed map[stri
 	return nil
 }
 
-// checkBundleLog is step 5 for every timeline of the bundle.
+// checkBundleLog is step 5: contiguous revisions, operations.sha256 and the last document hash.
 func (s *svc) checkBundleLog(ctx context.Context, p *bundleParts) *Error {
 	m := &p.manifest
+	en := p.entries[bundleOperationsName]
 
-	var e *Error
-
-	p.hasLog, p.logSum, e = s.checkTimelineLog(ctx, p.entries[bundleOperationsName], m.Operations,
-		m.Project.Revision, m.Document.SHA256, p.migrated)
-	if e != nil {
-		return e
-	}
-
-	for _, t := range p.extra {
-		var sha string
-
-		for i := range m.Timelines {
-			if m.Timelines[i].Key == t.key {
-				sha = m.Timelines[i].Document.SHA256
-			}
-		}
-
-		if t.hasLog, t.logSum, e = s.checkTimelineLog(
-			ctx,
-			t.logEntry,
-			t.logInfo,
-			t.revision,
-			sha,
-			t.migrated,
-		); e != nil {
-			return e
-		}
-	}
-
-	return nil
-}
-
-// checkTimelineLog checks the log of one timeline: contiguous revisions, the hash of the file, and the last
-// document hash. It returns whether there is a log and its hash.
-func (s *svc) checkTimelineLog(
-	ctx context.Context, en *zip.File, info *BundleLog, revision int64, docSHA string, migrated bool,
-) (bool, string, *Error) {
-	if (en != nil) != (info != nil) {
-		return false, "", bundleRefused("a log and the manifest disagree about it")
+	p.hasLog = en != nil
+	if (en != nil) != (m.Operations != nil) {
+		return bundleRefused("operations.ndjson and the manifest disagree about the log")
 	}
 
 	if en == nil {
-		return false, "", nil
+		return nil
 	}
 
 	var last string
@@ -1155,29 +717,31 @@ func (s *svc) checkTimelineLog(
 	})
 	if err != nil {
 		if e, ok := errors.AsType[*Error](err); ok {
-			return false, "", e
+			return e
 		}
 
 		if ctx.Err() != nil {
-			return false, "", asErr(ctx.Err())
+			return asErr(ctx.Err())
 		}
 
-		return false, "", bundleRefused("operations.ndjson cannot be read")
+		return bundleRefused("operations.ndjson cannot be read")
 	}
 
-	if sum.count != info.Count || sum.sha256 != info.SHA256 {
-		return false, "", bundleRefused("operations.ndjson does not match the manifest")
+	if sum.count != m.Operations.Count || sum.sha256 != m.Operations.SHA256 {
+		return bundleRefused("operations.ndjson does not match the manifest")
 	}
 
-	if sum.count != revision {
-		return false, "", bundleRefused("the log does not end at the revision of the manifest")
+	if sum.count != m.Project.Revision {
+		return bundleRefused("the log does not end at the revision of the manifest")
 	}
 
-	if !migrated && sum.count > 0 && last != docSHA {
-		return false, "", bundleRefused("the last revision of the log is not the document of the bundle")
+	if !p.migrated && sum.count > 0 && last != m.Document.SHA256 {
+		return bundleRefused("the last revision of the log is not the document of the bundle")
 	}
 
-	return true, sum.sha256, nil
+	p.logSum = sum.sha256
+
+	return nil
 }
 
 // streamLog reads operations.ndjson once, line by line, holding it to its cap and checking that the
@@ -1358,20 +922,18 @@ func (s *svc) copyBundleFiles(ctx context.Context, p *bundleParts) (map[string]i
 	}
 
 	// The assets of the document that the store already held.
-	for _, doc := range p.documents() {
-		for _, id := range sortedKeys(doc.Assets) {
-			a := doc.Assets[id]
-			if _, ok := sizes[a.Hash]; ok {
-				continue
-			}
-
-			size, e := s.storedSize(a.Hash)
-			if e != nil {
-				return nil, bundleRefused("a file of the store is missing").withDetail("hash", a.Hash)
-			}
-
-			sizes[a.Hash] = size
+	for _, id := range sortedKeys(p.doc.Assets) {
+		a := p.doc.Assets[id]
+		if _, ok := sizes[a.Hash]; ok {
+			continue
 		}
+
+		size, e := s.storedSize(a.Hash)
+		if e != nil {
+			return nil, bundleRefused("a file of the store is missing").withDetail("hash", a.Hash)
+		}
+
+		sizes[a.Hash] = size
 	}
 
 	return sizes, nil

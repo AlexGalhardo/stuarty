@@ -1,7 +1,0 @@
-{
-  "code": "E_INVALID_STATE",
-  "message": "Timeline prj_b1b1b1b1b1 is empty, so there is nothing to show.",
-  "hint": "Add items to that timeline first.",
-  "retryable": false,
-  "path": "args.timeline_id"
-}

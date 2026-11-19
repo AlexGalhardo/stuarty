@@ -1,8 +1,0 @@
-{
-  "args": {
-    "kind": "blur",
-    "layer_id": "lyr_bbbbbbbbbb",
-    "radius": 30
-  },
-  "op": "layer.filter_set"
-}

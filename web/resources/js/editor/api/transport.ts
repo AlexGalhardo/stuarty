@@ -7,10 +7,6 @@ export interface TransportRequest {
 	// Relative to the API base, starting with "/": "/projects/prj_x".
 	path: string;
 	body?: unknown;
-	// A file sent as it is, instead of a JSON body (SDD-021 section 10.2). The server reads its bytes whatever
-	// the declared type is; the request says application/json because a cookie session needs a type that a page
-	// of another origin cannot send without a preflight (SDD-007 section 3.6 step 6).
-	file?: Blob;
 	timeoutMs: number;
 	signal?: AbortSignal;
 }
@@ -49,43 +45,6 @@ export interface StreamConnection {
 export interface Transport {
 	send(request: TransportRequest): Promise<TransportResponse>;
 	openStream(path: string, handlers: StreamHandlers): StreamConnection;
-}
-
-// A transport for the editor of one timeline. The address of the editor is the id of a timeline, and a call
-// under /projects/<that id> says it again as timeline_id, so a project with several timelines is never
-// ambiguous, whichever of its timelines it is (SDD-003 section 1.7). A request with a JSON object body carries
-// it as a member of the body and leaves its path as it was; any other request carries it in the query.
-export function scopedToTimeline(
-	transport: Transport,
-	timelineId: string,
-): Transport {
-	const prefix = `/projects/${encodeURIComponent(timelineId)}`;
-	const scoped = (request: TransportRequest): TransportRequest => {
-		const { path, body } = request;
-		if (
-			path !== prefix &&
-			!path.startsWith(`${prefix}/`) &&
-			!path.startsWith(`${prefix}?`)
-		)
-			return request;
-		if (/[?&]timeline_id=/.test(path)) return request;
-		if (
-			body !== null &&
-			typeof body === "object" &&
-			Object.getPrototypeOf(body) === Object.prototype
-		) {
-			if ("timeline_id" in body) return request;
-			return { ...request, body: { ...body, timeline_id: timelineId } };
-		}
-		return {
-			...request,
-			path: `${path}${path.includes("?") ? "&" : "?"}timeline_id=${encodeURIComponent(timelineId)}`,
-		};
-	};
-	return {
-		send: (request) => transport.send(scoped(request)),
-		openStream: (path, handlers) => transport.openStream(path, handlers),
-	};
 }
 
 // A transport that tells `onUnauthorized` about every 401, so an expired

@@ -1,9 +1,0 @@
-{
-  "op": "keyframe.set_easing",
-  "args": {
-    "item_id": "itm_zzzzzzzzzz",
-    "property": "scale",
-    "at": "0f",
-    "preset": "out"
-  }
-}

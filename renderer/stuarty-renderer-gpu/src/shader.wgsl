@@ -13,8 +13,7 @@ struct Layer {
 	texels: vec2<f32>,
 	// The opacity, 0..255 on the CPU path, as a fraction.
 	opacity: f32,
-	// The blend mode: 1 multiply, 2 screen, 3 overlay, 4 add, 5 soft light, 6 hard light, 7 darken,
-	// 8 lighten, 9 colour dodge, 10 colour burn, 11 difference (0 is the fixed-function path).
+	// The blend mode: 1 multiply, 2 screen, 3 overlay, 4 add (0 is the fixed-function path).
 	mode: u32,
 }
 
@@ -23,16 +22,13 @@ struct Layer {
 // position of the centre of the pixel (x, y) in the rectangle is (ax x + bx y + ox, ay x + by y + oy).
 // `enabled` is 1 for a shape and 2 for a wipe alone (no shape: the coverage of the shape is 1). The wipe
 // direction is 0 for none, 1 left, 2 right, 3 up and 4 down (SDD-004 section 3.2). `shape` is (left,
-// top, half width, half height) and `edge` is (feather, shape, invert, the edge of the wipe) with shape 0 a
-// rectangle, 1 an ellipse and 2 a rounded rectangle (SDD-013 section 3.11.3): the
+// top, half width, half height) and `edge` is (feather, ellipse, invert, the edge of the wipe): the
 // wipe covers `u < edge` (left), `u >= edge` (right), `v < edge` (up) or `v >= edge` (down).
 struct Mask {
 	map_x: vec4<f32>,
 	map_y: vec4<f32>,
 	shape: vec4<f32>,
 	edge: vec4<f32>,
-	// (corner radius in pixels, 0, 0, 0): the radius of a rounded rectangle, which `edge.y` says is shape 2.
-	extra: vec4<f32>,
 }
 
 @group(0) @binding(0) var<uniform> frame: Frame;
@@ -90,15 +86,7 @@ fn coverage(at: vec2<f32>) -> f32 {
 		let half = mask.shape.zw;
 		let corner = mask.shape.xy;
 		var d: f32;
-		if mask.edge.y == 2.0 {
-			let rq = min(mask.extra.x, min(half.x, half.y));
-			let q = abs(l - corner - half) - (half - vec2<f32>(rq, rq));
-			if q.x > 0.0 || q.y > 0.0 {
-				d = rq - length(max(q, vec2<f32>(0.0, 0.0)));
-			} else {
-				d = rq - max(q.x, q.y);
-			}
-		} else if mask.edge.y != 0.0 {
+		if mask.edge.y != 0.0 {
 			let q = abs(l - corner - half) / half;
 			d = (1.0 - length(q)) * min(half.x, half.y);
 		} else {
@@ -134,84 +122,28 @@ fn fs_main(in: Varying) -> @location(0) vec4<f32> {
 	return sampled(in.uv) * coverage(in.position.xy);
 }
 
-fn hard_light(s: vec3<f32>, b: vec3<f32>) -> vec3<f32> {
-	let t = 2.0 * s - vec3<f32>(1.0);
-	return select(b + t - b * t, b * 2.0 * s, s <= vec3<f32>(0.5));
-}
-
-fn soft_light(s: vec3<f32>, b: vec3<f32>) -> vec3<f32> {
-	let d = select(sqrt(b), ((16.0 * b - vec3<f32>(12.0)) * b + vec3<f32>(4.0)) * b, b <= vec3<f32>(0.25));
-	let low = b - (vec3<f32>(1.0) - 2.0 * s) * b * (vec3<f32>(1.0) - b);
-	let high = b + (2.0 * s - vec3<f32>(1.0)) * (d - b);
-	return select(high, low, s <= vec3<f32>(0.5));
-}
-
-// The separable blend function B(s, b) of the straight source and destination colours, the formulas
-// of SDD-013 section 3.11.2 in floating point.
-fn blend_fn(mode: u32, s: vec3<f32>, b: vec3<f32>) -> vec3<f32> {
-	let one = vec3<f32>(1.0);
-	let zero = vec3<f32>(0.0);
-	if mode == 1u {
-		return s * b;
-	} else if mode == 2u {
-		return s + b - s * b;
-	} else if mode == 3u {
-		return hard_light(b, s);
-	} else if mode == 4u {
-		return min(s + b, one);
-	} else if mode == 5u {
-		return soft_light(s, b);
-	} else if mode == 6u {
-		return hard_light(s, b);
-	} else if mode == 7u {
-		return min(s, b);
-	} else if mode == 8u {
-		return max(s, b);
-	} else if mode == 9u {
-		let q = min(one, b / max(one - s, vec3<f32>(1e-6)));
-		return select(select(q, one, s >= one), zero, b <= zero);
-	} else if mode == 10u {
-		let q = one - min(one, (one - b) / max(s, vec3<f32>(1e-6)));
-		return select(select(q, zero, s <= zero), one, b >= one);
-	}
-	return abs(s - b);
-}
-
 // The mix of SDD-004 section 3.8 on the opaque backdrop, in floating point: `s` is the premultiplied
-// source with the opacity applied and `d` the destination colour. The first four modes keep the
-// destination alpha on an opaque backdrop; the others, and every mode over a backdrop with alpha
-// below 1, are the general form of SDD-013 section 3.11.2.
+// source with the opacity applied and `d` the destination colour. The destination alpha stays 1.
 @fragment
 fn fs_blend(in: Varying) -> @location(0) vec4<f32> {
 	let s = sampled(in.uv) * coverage(in.position.xy);
-	let back = textureLoad(backdrop, vec2<i32>(in.position.xy), 0);
-	let d = back.rgb;
+	let d = textureLoad(backdrop, vec2<i32>(in.position.xy), 0).rgb;
 	let c = s.rgb;
 	let ia = 1.0 - s.a;
+	var v: vec3<f32>;
+	if layer.mode == 1u {
+		v = d * (c + vec3<f32>(ia));
+	} else if layer.mode == 2u {
+		v = c + d - c * d;
+	} else if layer.mode == 3u {
+		let low = d * (2.0 * c + vec3<f32>(ia));
+		let high = c + d * ia + (2.0 * d - vec3<f32>(1.0)) * (vec3<f32>(s.a) - c);
+		v = select(high, low, d <= vec3<f32>(0.5));
+	} else {
+		v = c + d;
+	}
 	if s.a <= 0.0 {
-		return back;
+		v = d;
 	}
-	if layer.mode <= 4u && back.a >= 1.0 {
-		var v: vec3<f32>;
-		if layer.mode == 1u {
-			v = d * (c + vec3<f32>(ia));
-		} else if layer.mode == 2u {
-			v = c + d - c * d;
-		} else if layer.mode == 3u {
-			let low = d * (2.0 * c + vec3<f32>(ia));
-			let high = c + d * ia + (2.0 * d - vec3<f32>(1.0)) * (vec3<f32>(s.a) - c);
-			v = select(high, low, d <= vec3<f32>(0.5));
-		} else {
-			v = c + d;
-		}
-		return vec4<f32>(clamp(v, vec3<f32>(0.0), vec3<f32>(1.0)), 1.0);
-	}
-	if back.a <= 0.0 {
-		return s;
-	}
-	let sc = clamp(c / s.a, vec3<f32>(0.0), vec3<f32>(1.0));
-	let bc = clamp(d / back.a, vec3<f32>(0.0), vec3<f32>(1.0));
-	let t = s.a * back.a;
-	let out_c = c * (1.0 - back.a) + d * ia + t * blend_fn(layer.mode, sc, bc);
-	return vec4<f32>(clamp(out_c, vec3<f32>(0.0), vec3<f32>(1.0)), s.a + back.a - t);
+	return vec4<f32>(clamp(v, vec3<f32>(0.0), vec3<f32>(1.0)), 1.0);
 }

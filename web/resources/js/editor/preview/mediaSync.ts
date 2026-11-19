@@ -107,21 +107,6 @@ export function audioDrive(
 	};
 }
 
-// The processed file of an item has its speed in it and starts at the frame
-// `zero` of the timeline: it plays at rate 1 and is never silent, a reversed item
-// included (SDD-004 section 7.1).
-export function processedDrive(
-	frame: number,
-	zero: number,
-	fps: FrameRate,
-): AudioDrive {
-	return {
-		seconds: Math.max(frame - zero, 0) * frameSeconds(fps),
-		rate: 1,
-		silent: false,
-	};
-}
-
 // How the video element follows a layer while playing: at a rate, or, when the
 // source runs backwards (a reversed item), by a seek at every frame, because a
 // media element cannot play backwards. The rate is the slope of the next

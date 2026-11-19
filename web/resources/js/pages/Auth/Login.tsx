@@ -1,5 +1,5 @@
 import { Head } from "@inertiajs/react";
-import { type FormEvent, type ReactNode, useEffect, useState } from "react";
+import { type FormEvent, type ReactNode, useState } from "react";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,6 @@ import { useT } from "@/lib/i18n";
 import { safeNext } from "@/lib/safeNext";
 import { createClient } from "../../editor/api/client";
 import { HttpTransport } from "../../editor/api/http";
-import { GOOGLE_NEXT_KEY } from "./GoogleCallback";
 
 // The login of network mode (SDD-012 section 2.1, SDD-007 section 4.1): email
 // and password go to `POST /auth/login`, which sets the session cookie; the page
@@ -20,29 +19,6 @@ export default function Login(): ReactNode {
 	const [password, setPassword] = useState("");
 	const [failure, setFailure] = useState<Failure | null>(null);
 	const [busy, setBusy] = useState(false);
-	// Whether the owner of the server turned Google sign-in on (GET /auth/google, SDD-007 section 4.7).
-	const [google, setGoogle] = useState(false);
-
-	useEffect(() => {
-		createClient(new HttpTransport(""))
-			.googleStatus()
-			.then((status) => setGoogle(status.enabled))
-			.catch(() => setGoogle(false));
-	}, []);
-
-	async function signInWithGoogle(): Promise<void> {
-		setBusy(true);
-		setFailure(null);
-		try {
-			const next = new URLSearchParams(window.location.search).get("next");
-			window.sessionStorage.setItem(GOOGLE_NEXT_KEY, safeNext(next));
-			const started = await createClient(new HttpTransport("")).googleStart();
-			window.location.assign(started.authorize_url);
-		} catch (error) {
-			setFailure(failureOf(error));
-			setBusy(false);
-		}
-	}
 
 	async function submit(event: FormEvent<HTMLFormElement>): Promise<void> {
 		event.preventDefault();
@@ -98,17 +74,6 @@ export default function Login(): ReactNode {
 						</Button>
 					</div>
 				</form>
-				{google && (
-					<Button
-						type="button"
-						variant="outline"
-						disabled={busy}
-						data-google-sign-in=""
-						onClick={() => void signInWithGoogle()}
-					>
-						{t("ui.google.sign_in")}
-					</Button>
-				)}
 			</div>
 		</>
 	);

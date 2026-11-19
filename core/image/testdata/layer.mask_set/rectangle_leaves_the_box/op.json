@@ -1,9 +1,0 @@
-{
-  "args": {
-    "kind": "rect",
-    "layer_id": "lyr_bbbbbbbbbb",
-    "w": 600,
-    "x": 600
-  },
-  "op": "layer.mask_set"
-}

@@ -5,7 +5,6 @@ import type {
 	RenderBudgets,
 	RenderInput,
 	RenderReason,
-	RenderSurface,
 	ToRenderWorker,
 } from "./protocol";
 import { RenderError } from "./renderCore";
@@ -36,11 +35,7 @@ export interface RenderClientHooks<B> {
 export class RenderClient<S extends PixelSource, B> {
 	private seq = 0;
 	private inflight: number | null = null;
-	private waiting: {
-		input: RenderInput;
-		surfaces: RenderSurface[];
-		seq: number;
-	} | null = null;
+	private waiting: { input: RenderInput; seq: number } | null = null;
 	private ready: ((path: "cpu" | "gpu") => void) | null = null;
 	private failed: ((failure: RenderError) => void) | null = null;
 	private open = 0;
@@ -112,16 +107,13 @@ export class RenderClient<S extends PixelSource, B> {
 	}
 
 	// Asks for a frame. Returns the sequence number it will answer with.
-	// The surfaces of the groups the frame holds go with it, so the newest request
-	// replaces them too (SDD-013 section 3.12): a frame is never drawn with the
-	// surfaces of another.
-	render(input: RenderInput, surfaces: RenderSurface[] = []): number {
+	render(input: RenderInput): number {
 		const seq = ++this.seq;
 		if (this.inflight !== null) {
-			this.waiting = { input, surfaces, seq };
+			this.waiting = { input, seq };
 			return seq;
 		}
-		this.send(input, surfaces, seq);
+		this.send(input, seq);
 		return seq;
 	}
 
@@ -133,26 +125,16 @@ export class RenderClient<S extends PixelSource, B> {
 		this.worker.terminate();
 	}
 
-	private send(
-		input: RenderInput,
-		surfaces: RenderSurface[],
-		seq: number,
-	): void {
+	private send(input: RenderInput, seq: number): void {
 		this.inflight = seq;
-		this.worker.postMessage(
-			surfaces.length > 0
-				? { type: "render", seq, input, surfaces }
-				: { type: "render", seq, input },
-		);
+		this.worker.postMessage({ type: "render", seq, input });
 	}
 
 	private flush(): void {
 		this.inflight = null;
 		const next = this.waiting;
 		this.waiting = null;
-		if (next !== null && !this.disposed) {
-			this.send(next.input, next.surfaces, next.seq);
-		}
+		if (next !== null && !this.disposed) this.send(next.input, next.seq);
 	}
 
 	private receive(message: FromRenderWorker<B>): void {

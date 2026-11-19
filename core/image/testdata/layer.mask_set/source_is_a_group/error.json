@@ -1,8 +1,0 @@
-{
-  "code": "E_TYPE_MISMATCH",
-  "hint": "Use a layer inside the group as the source.",
-  "message": "Layer lyr_eeeeeeeeee is a group; a mask takes the alpha of a layer that is not a group.",
-  "op_index": 0,
-  "path": "args.source",
-  "retryable": false
-}

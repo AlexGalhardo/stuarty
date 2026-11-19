@@ -164,11 +164,15 @@ for (const theme of ["dark", "light"] as const) {
 			await page.locator(`[data-item-id="${clip}"]`).click();
 			await scan("clip selected");
 			await page.getByRole("button", { name: "Export" }).click();
-			await expect(page.locator("[role=dialog][data-open]")).toBeVisible();
+			await expect(
+				page.locator("[role=dialog][data-state=open]"),
+			).toBeVisible();
 			await scan("export dialog");
 			await page.keyboard.press("Escape");
 			await page.keyboard.press("Control+k");
-			await expect(page.locator("[role=dialog][data-open]")).toBeVisible();
+			await expect(
+				page.locator("[role=dialog][data-state=open]"),
+			).toBeVisible();
 			await scan("palette");
 			expect(found, "undersized targets").toEqual([]);
 		});

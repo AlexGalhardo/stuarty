@@ -1,4 +1,0 @@
-lint r1 prj_7k2m9x4q1b: errors=0 warnings=1 (showing 1 of 1)
-warning L_ALPHA_MISSING itm_a 0s/0f-3s/90f
-  the file of asset ast_video000001 declares an alpha channel but every sampled picture is opaque, so the clip covers what is below it.
-  hint: render it with alpha, or place it on the lowest track

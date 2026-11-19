@@ -18,7 +18,7 @@ func init() {
 			"duration, the fades, the transitions and the keyframes by the ratio of the old to the new mean speed. With " +
 			"ripple track the later items of the track follow the change in length. Captions linked to the clip are " +
 			"listed, not changed. reverse true plays the same source range backwards (false restores it), alone or " +
-			"with a speed or a curve. A composition item takes a constant speed only: a curve or a reverse on it is refused.",
+			"with a speed or a curve.",
 		Example: `{"item_id": "itm_m1n2p3q4r5", "curve": [{"t": 0, "speed": "1x"}, {"t": 0.5, "speed": "3x"}, {"t": 1, "speed": "1x"}]}`,
 		Errors: []string{
 			CodeValidation, CodeNotFound, CodeTypeMismatch, CodeOutOfSource, CodeInvalidTime, CodeOverlap,
@@ -28,7 +28,7 @@ func init() {
 }
 
 type clipSpeedArgs struct {
-	ItemID  string           `json:"item_id"           desc:"A clip of a video asset, an audio item, or a composition item."                          pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	ItemID  string           `json:"item_id"           desc:"A clip of a video asset, or an audio item."                                              pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
 	Speed   any              `json:"speed,omitempty"   desc:"\"1.5x\" (up to 3 decimals) or {\"num\": 3, \"den\": 2}; 1/4 to 4. Not with curve."                                                             schema:"speed"`
 	Curve   []speedPointArgs `json:"curve,omitempty"   desc:"Speed ramp: 2 to 8 points, linear between them, first t 0 and last t 1. Not with speed."                                                                       minitems:"2" maxitems:"8"`
 	Reverse *bool            `json:"reverse,omitempty" desc:"true plays the source range backwards; false plays it forwards."`
@@ -157,9 +157,6 @@ func applyClipSetSpeed(c *Context, a *clipSpeedArgs) error {
 		return Errorf(CodeTypeMismatch, "Item %s is %s item and has no speed.", a.ItemID, article(it.Type)).
 			WithHint("Change the duration with item.trim instead.").WithPath("args.item_id")
 	}
-	if err := compositionSpeedOnly(&it, a); err != nil {
-		return err
-	}
 	if it.Freeze {
 		return Errorf(CodeTypeMismatch, "Item %s is a freeze frame, which has no speed.", a.ItemID).
 			WithHint("Change its duration with item.trim, or slip the held frame with item.slip.").
@@ -234,23 +231,6 @@ func applyClipSetSpeed(c *Context, a *clipSpeedArgs) error {
 	c.SetEffective("adjusted", adjusted)
 	c.SetEffective("linked_captions", linked)
 	return nil
-}
-
-// compositionSpeedOnly refuses a curve and a reverse on a composition item, which has a constant speed only
-// (SDD-002 C.25, epic 53). The curve is refused, never approximated by its mean.
-func compositionSpeedOnly(it *timeline.Item, a *clipSpeedArgs) *Error {
-	if it.Type != timeline.ItemComposition || len(a.Curve) == 0 && a.Reverse == nil {
-		return nil
-	}
-
-	path := "args.curve"
-	if len(a.Curve) == 0 {
-		path = "args.reverse"
-	}
-
-	return Errorf(CodeValidation, "Item %s is a composition, which has a constant speed only.", it.ID).
-		WithHint(`Use speed, for example "0.5x"; a composition has no curve and no reverse.`).
-		WithDetail("reason", "composition_speed_constant").WithPath(path)
 }
 
 // clampKeyframes moves a keyframe past the end of the item to the end.

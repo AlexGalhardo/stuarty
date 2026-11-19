@@ -7,7 +7,6 @@ import (
 	"os"
 	"time"
 
-	exportcore "github.com/AlexGalhardo/stuarty/core/export"
 	"github.com/AlexGalhardo/stuarty/core/timeline"
 	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
 	"github.com/AlexGalhardo/stuarty/engine/ffmpeg/ffargs"
@@ -29,91 +28,41 @@ func bitrateK(baseM, highM, w, h int, fps timeline.Rational) int {
 	return max(2000, base*1000*w*h/refPixels)
 }
 
-// encoderOpts are the options of SDD-004 section 8 for the chosen encoder. kbps is the video bit rate the caller
-// asks for (a preset), or zero for the default of the encoder and the codec.
-func encoderOpts(name string, codec exportcore.Codec, w, h int, fps timeline.Rational, kbps int) []ffargs.Opt {
+// encoderOpts are the options of SDD-004 section 8 for the chosen encoder.
+func encoderOpts(name string, w, h int, fps timeline.Rational) []ffargs.Opt {
 	opts := []ffargs.Opt{ffargs.Enum("-c:v", name)}
-	rate := func(base, high int) ffargs.Opt {
-		k := kbps
-		if k == 0 {
-			k = codec.ScaleKbps(bitrateK(base, high, w, h, fps))
-		}
-
-		return ffargs.Bitrate("-b:v", fmt.Sprintf("%dk", k))
+	kbps := func(base, high int) ffargs.Opt {
+		return ffargs.Bitrate("-b:v", fmt.Sprintf("%dk", bitrateK(base, high, w, h, fps)))
 	}
-
-	g := ffargs.Int("-g", max(1, (fps.Num+2*fps.Den-1)/(2*fps.Den)))
-
-	// HEVC and AV1 take the bit rate and the default profile of the encoder (the 8-bit 4:2:0 one the export
-	// writes), no B-frame option (the hardware encoders disagree on it) and, for HEVC in MP4, the tag that
-	// Apple players need.
-	switch name {
-	case "libsvtav1":
-		return append(opts, rate(8, 12), ffargs.Enum("-preset", "8"), g)
-	case "libaom-av1":
-		return append(opts, rate(8, 12), ffargs.Int("-cpu-used", 8), ffargs.Enum("-row-mt", "1"), g)
-	}
-
-	switch ffmpeg.CodecOf(name) {
-	case ffmpeg.CodecHEVC:
-		return append(opts, rate(8, 12), ffargs.Enum("-tag:v", "hvc1"), g)
-	case ffmpeg.CodecAV1:
-		return append(opts, rate(8, 12), g)
-	}
-
 	bframes := true
-
 	switch name {
 	case "libx264":
 		opts = append(opts, ffargs.Int("-crf", 18), ffargs.Enum("-preset", "medium"), ffargs.Enum("-profile:v", "high"))
 	case "h264_mf":
-		opts = append(opts, rate(12, 16))
+		opts = append(opts, kbps(12, 16))
 	case "libopenh264":
-		opts = append(opts, rate(8, 12))
+		opts = append(opts, kbps(8, 12))
 		bframes = false
 	case "h264_vaapi":
-		opts = append(opts, rate(8, 12))
+		opts = append(opts, kbps(8, 12))
 	default:
-		opts = append(opts, rate(8, 12), ffargs.Enum("-profile:v", "high"))
+		opts = append(opts, kbps(8, 12), ffargs.Enum("-profile:v", "high"))
 	}
-
-	opts = append(opts, g)
+	opts = append(opts, ffargs.Int("-g", max(1, (fps.Num+2*fps.Den-1)/(2*fps.Den))))
 	if bframes {
 		opts = append(opts, ffargs.Int("-bf", 2))
 	}
-
 	return opts
 }
 
-// presetKbps is the video bit rate of the preset of the job for the project, or zero without a preset.
-func (s *state) presetKbps(codec exportcore.Codec) int {
-	p := s.job.Preset
-	if p == nil {
-		return 0
-	}
-
-	st := s.job.Doc.Settings
-
-	return p.VideoKbps(st.Width, st.Height, st.FPS.Num, st.FPS.Den, codec)
-}
-
-// audioKbps is the AAC bit rate: the one of the preset, else 192.
-func (s *state) audioKbps() int {
-	if p := s.job.Preset; p != nil && p.Targets.AudioKbps > 0 {
-		return p.Targets.AudioKbps
-	}
-
-	return 192
-}
-
 // encodeArgv is the encoder command of SDD-004 section 8 step 4.
-func (s *state) encodeArgv(cand ffmpeg.Candidate, codec exportcore.Codec, mix, partial string) ([]string, error) {
+func (s *state) encodeArgv(cand ffmpeg.Candidate, mix, partial string) ([]string, error) {
 	st := s.job.Doc.Settings
-	opts := encoderOpts(cand.Name, codec, st.Width, st.Height, st.FPS, s.presetKbps(codec))
+	opts := encoderOpts(cand.Name, st.Width, st.Height, st.FPS)
 	opts = append(opts,
 		ffargs.Enum("-colorspace", "bt709"), ffargs.Enum("-color_primaries", "bt709"),
 		ffargs.Enum("-color_trc", "bt709"), ffargs.Enum("-color_range", "tv"),
-		ffargs.Enum("-c:a", "aac"), ffargs.Bitrate("-b:a", fmt.Sprintf("%dk", s.audioKbps())),
+		ffargs.Enum("-c:a", "aac"), ffargs.Bitrate("-b:a", "192k"),
 		ffargs.Int("-ar", 48000), ffargs.Int("-ac", 2),
 		ffargs.Enum("-movflags", "+faststart"),
 	)
@@ -148,12 +97,11 @@ type encoderResult struct {
 func (s *state) encode(
 	ctx context.Context,
 	cand ffmpeg.Candidate,
-	codec exportcore.Codec,
 	mix, partial string,
 	rd *renderer,
 ) error {
 	st := s.job.Doc.Settings
-	argv, err := s.encodeArgv(cand, codec, mix, partial)
+	argv, err := s.encodeArgv(cand, mix, partial)
 	if err != nil {
 		return exportErr(ReasonEncoder, "The encoder command was refused.", err, "")
 	}

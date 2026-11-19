@@ -9,7 +9,6 @@ import (
 	"github.com/wailsapp/wails/v3/pkg/application"
 	"github.com/wailsapp/wails/v3/pkg/events"
 
-	"github.com/AlexGalhardo/stuarty/desktop/service"
 	"github.com/AlexGalhardo/stuarty/desktop/shell"
 )
 
@@ -20,39 +19,6 @@ type bridge struct {
 	app  *application.App
 	win  atomic.Pointer[application.WebviewWindow]
 	port atomic.Int64
-	bg   atomic.Pointer[background]
-}
-
-// backgroundAnswer is what the page gets for the background mode: the settings, and the reason the system
-// refused the registration of the start at sign-in when it did.
-type backgroundAnswer struct {
-	shell.BackgroundSettings
-	Error string `json:"error,omitempty"`
-}
-
-func (b *bridge) background(win *application.WebviewWindow, req shell.BridgeRequest) {
-	bg := b.bg.Load()
-	if bg == nil {
-		win.ExecJS(shell.ResolveValueScript(req.ID, nil, "the background mode is not ready"))
-		return
-	}
-	var answer backgroundAnswer
-	if req.Op == shell.OpSetBackground {
-		in := *req.Background
-		applied, err := bg.SetSettings(service.Settings{
-			KeepRunning: in.KeepRunning, StartAtSignIn: in.StartAtSignIn, Asked: in.Asked,
-		})
-		answer = backgroundAnswer{
-			KeepRunning: applied.KeepRunning, StartAtSignIn: applied.StartAtSignIn, Asked: applied.Asked,
-		}
-		if err != nil {
-			answer.Error = err.Error()
-		}
-	} else {
-		s := bg.Settings()
-		answer = backgroundAnswer{KeepRunning: s.KeepRunning, StartAtSignIn: s.StartAtSignIn, Asked: s.Asked}
-	}
-	win.ExecJS(shell.ResolveValueScript(req.ID, answer, ""))
 }
 
 // handle is the application's raw message handler. A message counts only when
@@ -73,8 +39,6 @@ func (b *bridge) handle(_ application.Window, message string, origin *applicatio
 		go b.pickTemplate(win, req.ID)
 	case shell.OpShowInFolder:
 		go b.showInFolder(win, req)
-	case shell.OpGetBackground, shell.OpSetBackground:
-		go b.background(win, req)
 	}
 }
 

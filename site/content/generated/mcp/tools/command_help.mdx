@@ -1,6 +1,6 @@
 ---
 title: "command_help"
-description: "Operation help. Discover operations."
+description: "Operation help. Describe edit operations."
 wide: true
 ---
 
@@ -10,7 +10,7 @@ wide: true
 
 <RefMain>
 
-Discover operations. No arguments: video operations, a line each, then the domains. domain=&lt;name&gt;: its operations; domain=export: presets, codecs. name (e.g. item.split): description, args JSON Schema, example, error codes; read before using a new operation.
+Describe edit operations. Without name: one line per operation. With name (for example item.split): returns its description, args JSON Schema, an example and error codes. Read it before using an operation you have not used.
 
 ## Behaviour
 
@@ -28,7 +28,7 @@ These are the annotations of the tool definition, the hints a client uses to dec
 | Argument | Type | Required | Notes |
 | --- | --- | --- | --- |
 | `name` | `string` | no |  |
-| `domain` | `string`, one of 10 values | no |  |
+| `domain` | `video`, `image` | no |  |
 
 ## Output
 
@@ -38,7 +38,6 @@ A result has a text block, written for the model, and structured content with th
 | --- | --- | --- | --- |
 | `commands` | array of `object` | no |  |
 | `command` | `object` | no |  |
-| `domains` | array of `object` | no |  |
 
 ## Errors
 

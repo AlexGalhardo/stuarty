@@ -91,7 +91,7 @@ func resizedByReframe(it *timeline.Item) bool {
 	switch it.Type {
 	case timeline.ItemText, timeline.ItemShape:
 		return true
-	case timeline.ItemClip, timeline.ItemComposition:
+	case timeline.ItemClip:
 		return it.Fit == "none"
 	case timeline.ItemAudio, timeline.ItemCaption:
 		return false

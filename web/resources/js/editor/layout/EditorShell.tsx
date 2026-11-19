@@ -4,7 +4,6 @@ import ReleaseMark from "@/components/ReleaseMark";
 import { Button } from "@/components/ui/button";
 import { useLocale, useT } from "@/lib/i18n";
 import LiveRegion from "../a11y/LiveRegion";
-import { rowFor } from "../commands/keymapStore";
 import { useSurfaceRequest } from "../commands/surface";
 import { fpsOf, localizeDecimalInput, timeToFrame } from "../commands/units";
 import { useShellShortcuts } from "../commands/useShellShortcuts";
@@ -21,12 +20,12 @@ import RepeatDialog from "../timeline/RepeatDialog";
 import Timeline from "../timeline/Timeline";
 import { useShortcuts } from "../timeline/useShortcuts";
 import { FailureView } from "../ui/FailureView";
+import FirstRunTips from "./FirstRunTips";
 import InUseHost from "./InUseHost";
 import LeftPanel from "./LeftPanel";
 import PlayerRatioSelect from "./PlayerRatioSelect";
 import TopBar from "./TopBar";
 import TrashedBanner from "./TrashedBanner";
-import Tour from "./tour/Tour";
 import { useDesktopMenu } from "./useDesktopMenu";
 import { usePanelShortcuts } from "./usePanelShortcuts";
 
@@ -43,10 +42,6 @@ export function panelSizes(viewportWidth: number): PanelSizes {
 		return { library: 320, inspector: 360, timeline: 300 };
 	return { library: 240, inspector: 280, timeline: 240 };
 }
-
-// The keys of the player (play, pause, shuttle) are rows of the registry.
-const previewShortcutRow = (event: KeyboardEvent): string | null =>
-	rowFor(event, ["preview"]);
 
 const MIN_SUPPORTED_WIDTH = 1024;
 // The collapsed material region keeps its tab rail (docs/design-system.md 3.4.4).
@@ -124,6 +119,7 @@ export default function EditorShell({
 						onCaptionOpenChange={setCaptionOpen}
 					/>
 				</section>
+				<FirstRunTips />
 				{status === "failed" && (
 					<div
 						role="alert"
@@ -165,7 +161,6 @@ export default function EditorShell({
 							timeToFrame(localizeDecimalInput(text, locale), fpsOf(fps))
 						}
 						trailing={<PlayerRatioSelect />}
-						shortcutRow={previewShortcutRow}
 					/>
 				)}
 			</main>
@@ -182,7 +177,6 @@ export default function EditorShell({
 			<LiveRegion />
 			<InUseHost />
 			<RepeatDialog />
-			<Tour />
 		</div>
 	);
 }

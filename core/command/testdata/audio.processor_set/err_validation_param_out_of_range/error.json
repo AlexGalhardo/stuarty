@@ -1,7 +1,0 @@
-{
-  "code": "E_VALIDATION",
-  "message": "args.params.ratio 40 is out of range: 1 to 20 ratio.",
-  "hint": "Send ratio between 1 and 20.",
-  "retryable": false,
-  "path": "args.params.ratio"
-}

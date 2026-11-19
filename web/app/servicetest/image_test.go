@@ -86,7 +86,7 @@ func TestImageOverTheRealStore(t *testing.T) {
 		t.Fatalf("%v %+v", err, list)
 	}
 
-	// the log is append-only: a row cannot be rewritten (SDD-005 section 5.13)
+	// the log is append-only: a row cannot be rewritten (SDD-005 section 5.12)
 	if _, err := e.store.DB().
 		ExecContext(ctx, `UPDATE image_operations SET actor = 'x' WHERE image_id = ?`, id); err == nil {
 		t.Error("the log of an image was rewritten")

@@ -30,7 +30,7 @@ stuarty serve
 
 Stop the server with `Ctrl+C` or by sending `SIGTERM`. It waits up to 15 seconds for running jobs to reach a safe point; a job that is still running then is interrupted and requeued, and the next start recovers it.
 
-`stuarty open` starts a local server first when none runs, then opens the browser. When another process owns the workspace but does not answer yet (it is starting or busy), `open` never starts a second server: it waits up to 10 seconds for the owner, and then fails with `E_WORKSPACE_LOCKED` and exit code `2` ([the workspace is locked](/docs/troubleshooting/workspace-locked)). With `STUARTY_NO_BROWSER` set it prints the one-time link instead of starting a browser; open it once, it works for two minutes.
+`stuarty open` starts a local server first when none runs, then opens the browser. With `STUARTY_NO_BROWSER` set it prints the one-time link instead of starting a browser; open it once, it works for two minutes.
 
 ## What it uses
 

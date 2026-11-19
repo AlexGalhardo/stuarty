@@ -39,11 +39,8 @@ import { createClient } from "../api/client";
 import { ApiError } from "../api/errors";
 import { HttpTransport } from "../api/http";
 import type {
-	CodecAvailability,
 	ExportCapabilities,
 	ExportOptions,
-	ExportPreset,
-	Job,
 	JsonValue,
 	LintFinding,
 } from "../api/types";
@@ -56,12 +53,7 @@ import { useDocumentState, useRuntime } from "../state/EditorContext";
 import { readTimeDisplay } from "../state/prefs";
 import { errorHeadline } from "../ui/errorHeadline";
 import { formatDecimal } from "../ui/format";
-import BatchProgress from "./BatchProgress";
-import ExportOptionsFields, {
-	formatOptions,
-	type Unsupported,
-} from "./ExportOptions";
-import ExportPresets, { type PresetCheck } from "./ExportPresets";
+import ExportOptionsFields, { type Unsupported } from "./ExportOptions";
 import { exportCapabilities } from "./exportCapabilities";
 import {
 	announcedPercent,
@@ -69,13 +61,9 @@ import {
 	exportPhase,
 	groupFindings,
 } from "./exportPhase";
-import { batchItems, plainOptions, queuedItem } from "./presetText";
 
 const POLL_AFTER_MS = 5000;
 const POLL_EVERY_MS = 2000;
-// A batch job is read every second: the events of the job carry its progress,
-// not the state of its children.
-const BATCH_POLL_MS = 1000;
 
 interface Failure {
 	code: string;
@@ -214,21 +202,6 @@ export default function ExportDialog({
 	);
 	const [options, setOptions] = useState<ExportOptions>({});
 	const [unsupported, setUnsupported] = useState<Unsupported | null>(null);
-	// The platform presets the person picks (RF-087), the codec asked for ("" is
-	// the preset's own preference), what each preset says about the project, and
-	// the codecs this machine writes once the core has tried them.
-	const [presets, setPresets] = useState<readonly ExportPreset[] | null>(null);
-	const [codecInfo, setCodecInfo] = useState<
-		readonly CodecAvailability[] | null
-	>(null);
-	const [selected, setSelected] = useState<readonly string[]>([]);
-	const [codec, setCodec] = useState("");
-	const [presetChecks, setPresetChecks] = useState<
-		Readonly<Record<string, PresetCheck>>
-	>({});
-	// A plain export that found every export slot busy was queued as a batch of
-	// one (VV-220): the dialog says it waits.
-	const [queuedBehind, setQueuedBehind] = useState(false);
 
 	const check = useCallback(async (): Promise<void> => {
 		setChecking(true);
@@ -273,69 +246,6 @@ export default function ExportDialog({
 			);
 	}, [open, capabilities]);
 
-	// The platforms, then which codecs this machine writes: the second call runs
-	// the test encodes the first time, so the list does not wait for it.
-	useEffect(() => {
-		if (!open || presets !== null) return;
-		let live = true;
-		runtime.client.getExportPresets().then(
-			(list) => {
-				if (live) setPresets(list.presets);
-			},
-			() => {
-				if (live) setPresets([]);
-			},
-		);
-		runtime.client.getExportPresets(true).then(
-			(list) => {
-				if (live && list.codecs !== undefined) setCodecInfo(list.codecs);
-			},
-			() => undefined,
-		);
-		return () => {
-			live = false;
-		};
-	}, [open, presets, runtime]);
-
-	// What the core says about the project against each chosen preset, again
-	// when the range or the revision changes. Only the core knows the limits.
-	// biome-ignore lint/correctness/useExhaustiveDependencies: revision restarts the check.
-	useEffect(() => {
-		if (!open || jobId !== null || selected.length === 0) return;
-		let live = true;
-		setPresetChecks(
-			(prev) =>
-				Object.fromEntries(
-					selected.map((id) => [
-						id,
-						prev[id] === undefined ? "pending" : prev[id],
-					]),
-				) as Record<string, PresetCheck>,
-		);
-		for (const id of selected) {
-			runtime.client
-				.checkExport(runtime.projectId, id, {
-					start: options.start,
-					end: options.end,
-				})
-				.then(
-					(result) => {
-						if (live) setPresetChecks((prev) => ({ ...prev, [id]: result }));
-					},
-					() => {
-						if (live)
-							setPresetChecks((prev) => {
-								const { [id]: _gone, ...rest } = prev;
-								return rest;
-							});
-					},
-				);
-		}
-		return () => {
-			live = false;
-		};
-	}, [open, jobId, selected, options.start, options.end, revision, runtime]);
-
 	// A choice the machine cannot encode is the core to say: a dry run of the
 	// start returns its error and hint without queuing anything.
 	useEffect(() => {
@@ -378,19 +288,6 @@ export default function ExportDialog({
 		return () => clearInterval(timer);
 	}, [open, running, jobId, runtime, lastEventAt]);
 
-	// The children of a batch change without an event for the job itself.
-	const isBatch = job?.kind === "export_batch";
-	useEffect(() => {
-		if (!open || !running || !isBatch || jobId === null) return;
-		const timer = setInterval(() => {
-			runtime.client
-				.getJob(jobId)
-				.then((fresh) => runtime.jobsWriter.upsert(fresh))
-				.catch(() => undefined);
-		}, BATCH_POLL_MS);
-		return () => clearInterval(timer);
-	}, [open, running, isBatch, jobId, runtime]);
-
 	async function cancel(): Promise<void> {
 		if (jobId === null) return;
 		setCancelling(true);
@@ -419,65 +316,18 @@ export default function ExportDialog({
 		}
 	}
 
-	function begin(started: Job): void {
-		startedAt.current = Date.now();
-		runtime.jobsWriter.upsert(started);
-		runtime.jobsWriter.setExportJob(started.job_id);
-	}
-
-	function toggle(id: string): void {
-		const next = selected.includes(id)
-			? selected.filter((other) => other !== id)
-			: [...selected, id];
-		setSelected(next);
-		// A preset is an mp4: the format goes back to the video, and the range stays.
-		if (next.length > 0) setOptions(formatOptions(options, "mp4", playhead));
-	}
-
 	async function start(): Promise<void> {
 		setFailure(null);
-		setQueuedBehind(false);
-		const withCodec = plainOptions(options, codec);
 		try {
-			if (selected.length > 0) {
-				begin(
-					await runtime.client.startExportBatch(
-						runtime.projectId,
-						batchItems(selected, codec, options),
-					),
-				);
-				return;
-			}
-			begin(await runtime.client.startExport(runtime.projectId, withCodec));
+			const started = await runtime.client.startExport(
+				runtime.projectId,
+				options,
+			);
+			startedAt.current = Date.now();
+			runtime.jobsWriter.upsert(started);
+			runtime.jobsWriter.setExportJob(started.job_id);
 		} catch (error) {
 			if (!(error instanceof ApiError)) throw error;
-			// Every export slot is busy: the core queues the export behind them
-			// as a batch of one, and starts it by itself (VV-220). A png is one
-			// frame and has no batch.
-			if (
-				error.code === "E_QUEUE_FULL" &&
-				selected.length === 0 &&
-				withCodec.format !== "png"
-			) {
-				try {
-					begin(
-						await runtime.client.startExportBatch(runtime.projectId, [
-							queuedItem(withCodec),
-						]),
-					);
-					setQueuedBehind(true);
-					return;
-				} catch (again) {
-					if (!(again instanceof ApiError)) throw again;
-					setFailure({
-						code: again.code,
-						message: again.message,
-						hint: again.hint,
-						details: again.details,
-					});
-					return;
-				}
-			}
 			const raw = error.details?.findings;
 			if (error.code === "E_LINT_BLOCKING" && Array.isArray(raw)) {
 				setFindings(raw as unknown as LintFinding[]);
@@ -495,7 +345,6 @@ export default function ExportDialog({
 	function again(): void {
 		runtime.jobsWriter.setExportJob(null);
 		setFailure(null);
-		setQueuedBehind(false);
 	}
 
 	// The clip a caption is linked to comes from the read model; the core retimes.
@@ -516,7 +365,6 @@ export default function ExportDialog({
 	const groups = groupFindings(findings);
 	const percent = Math.round((job?.progress ?? 0) * 100);
 	const result = job?.result?.export;
-	const batch = job?.result?.batch;
 	const newer =
 		result !== undefined && revision !== null && revision > result.revision;
 	const shown: Failure | null = job?.error ?? failure;
@@ -557,33 +405,6 @@ export default function ExportDialog({
 									range={range}
 									playhead={playhead}
 									onChange={setOptions}
-								/>
-							)}
-							{phase === "ready" && presets === null && (
-								<p className="mb-3 text-xs text-muted-foreground">
-									{t("ui.editor.export.presets.loading")}
-								</p>
-							)}
-							{phase === "ready" && presets?.length === 0 && (
-								<p className="mb-3 text-xs text-muted-foreground">
-									{t("ui.editor.export.presets.unavailable")}
-								</p>
-							)}
-							{phase === "ready" && presets !== null && presets.length > 0 && (
-								<ExportPresets
-									presets={presets}
-									selected={selected}
-									checks={presetChecks}
-									codecs={codecInfo}
-									codec={codec}
-									codecDisabled={
-										selected.length === 0 &&
-										options.format !== undefined &&
-										options.format !== "mp4"
-									}
-									disabled={false}
-									onToggle={toggle}
-									onCodec={setCodec}
 								/>
 							)}
 							{findings.length === 0 && (
@@ -646,31 +467,10 @@ export default function ExportDialog({
 									</span>
 								)}
 							</p>
-							{queuedBehind && (
-								<p role="status" className="mt-1 text-xs text-muted-foreground">
-									{t("ui.editor.export.batch.queued_behind")}
-								</p>
-							)}
 							<p className="mt-2 text-xs text-muted-foreground">
 								{t("ui.editor.export.keeps_running")}
 							</p>
 						</div>
-					)}
-
-					{batch !== undefined && phase === "failed" && (
-						<p role="status" className="mt-2 text-sm font-medium">
-							{t("ui.editor.export.batch.some_failed")}
-						</p>
-					)}
-					{batch !== undefined && phase !== "ready" && (
-						<BatchProgress batch={batch} presets={presets ?? []} />
-					)}
-
-					{phase === "succeeded" && batch !== undefined && (
-						<p className="flex items-center gap-1.5 text-sm font-medium">
-							<CircleCheck aria-hidden="true" className="size-4 text-success" />
-							{t("ui.editor.export.batch.finished")}
-						</p>
 					)}
 
 					{phase === "succeeded" && result !== undefined && (
@@ -794,11 +594,7 @@ export default function ExportDialog({
 							>
 								{failure?.code === "E_QUEUE_FULL"
 									? t("ui.editor.export.try_again")
-									: selected.length > 1
-										? t("ui.editor.export.presets.start_many", {
-												count: selected.length,
-											})
-										: t("ui.editor.export.start")}
+									: t("ui.editor.export.start")}
 							</Button>
 						</>
 					)}
@@ -820,20 +616,6 @@ export default function ExportDialog({
 								onClick={() => onOpenChange(false)}
 							>
 								{t("ui.editor.export.close")}
-							</Button>
-						</>
-					)}
-					{phase === "succeeded" && batch !== undefined && (
-						<>
-							<Button
-								type="button"
-								variant="outline"
-								onClick={() => onOpenChange(false)}
-							>
-								{t("ui.editor.export.close")}
-							</Button>
-							<Button type="button" variant="outline" onClick={again}>
-								{t("ui.editor.export.again")}
 							</Button>
 						</>
 					)}

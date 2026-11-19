@@ -5,12 +5,7 @@ import (
 	"encoding/json"
 
 	"github.com/AlexGalhardo/stuarty/service"
-	"github.com/AlexGalhardo/stuarty/service/agenthost"
-	"github.com/AlexGalhardo/stuarty/service/approval"
-	"github.com/AlexGalhardo/stuarty/service/assets"
 	"github.com/AlexGalhardo/stuarty/service/connections"
-	"github.com/AlexGalhardo/stuarty/service/library"
-	"github.com/AlexGalhardo/stuarty/service/publish"
 
 	"github.com/AlexGalhardo/vukem/database"
 )
@@ -20,7 +15,6 @@ import (
 type repos struct{ ex database.Executor }
 
 func (r repos) Projects() service.ProjectRepo        { return projectRepo(r) }
-func (r repos) Productions() service.ProductionRepo  { return productionRepo(r) }
 func (r repos) Operations() service.OperationRepo    { return operationRepo(r) }
 func (r repos) Idempotency() service.IdempotencyRepo { return idempotencyRepo(r) }
 func (r repos) Assets() service.AssetRepo            { return assetRepo(r) }
@@ -28,16 +22,10 @@ func (r repos) Jobs() service.JobRepo                { return jobRepo(r) }
 func (r repos) Templates() service.TemplateRepo      { return templateRepo(r) }
 func (r repos) Backups() service.BackupRepo          { return backupRepo(r) }
 func (r repos) Audit() service.AuditRepo             { return auditRepo(r) }
-func (r repos) Checkpoints() service.CheckpointRepo  { return checkpointRepo(r) }
 func (r repos) Fonts() service.FontRepo              { return fontRepo(r) }
 func (r repos) BrandKit() service.BrandKitRepo       { return brandKitRepo(r) }
 func (r repos) Connections() connections.Store       { return connectionRepo(r) }
-func (r repos) Approvals() approval.Store            { return approvalRepo(r) }
 func (r repos) Images() service.ImageRepo            { return imageRepo(r) }
-func (r repos) Library() library.Index               { return libraryRepo(r) }
-func (r repos) AssetLibrary() assets.Store           { return assetLibraryRepo(r) }
-func (r repos) Publications() publish.Store          { return publicationRepo(r) }
-func (r repos) Chat() agenthost.Store                { return chatRepo(r) }
 
 // nullJSON stores an empty raw message as NULL.
 func nullJSON(m json.RawMessage) any {

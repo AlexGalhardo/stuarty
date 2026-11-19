@@ -11,14 +11,13 @@ import (
 // person or the script at the terminal (SDD-003 section 7.1, exception E-3).
 
 var bundleExport = &spec{
-	name:     "bundle:export",
-	timeline: true,
-	summary:  "export a project as a .vvbundle to share or to back up",
-	usage:    []string{"stuarty bundle:export --project <id> [--no-log] [--wait] [--out f] [--force]"},
-	example:  "stuarty bundle:export --project prj_7k2m9x4q1b --out ~/teaser.vvbundle",
-	project:  true,
-	globals:  []string{"wait", "timeout"},
-	write:    true,
+	name:    "bundle:export",
+	summary: "export a project as a .vvbundle to share or to back up",
+	usage:   []string{"stuarty bundle:export --project <id> [--no-log] [--wait] [--out f] [--force]"},
+	example: "stuarty bundle:export --project prj_7k2m9x4q1b --out ~/teaser.vvbundle",
+	project: true,
+	globals: []string{"wait", "timeout"},
+	write:   true,
 	flags: append([]flagDef{
 		{
 			Name: "log", Kind: kindBool, Default: "true",
@@ -32,11 +31,7 @@ var bundleExport = &spec{
 		}
 
 		includeLog := c.args.boolean("log")
-		req := service.ProjectBundleExportRequest{
-			ProjectID:  c.projectID,
-			TimelineID: c.timelineID,
-			IncludeLog: &includeLog,
-		}
+		req := service.ProjectBundleExportRequest{ProjectID: c.projectID, IncludeLog: &includeLog}
 
 		deadline := time.Now().Add(c.args.timeout())
 		wait := c.args.boolean("wait") || dest != ""

@@ -15,28 +15,13 @@ import (
 // The keys are the paths the sidebar links to in resources/js/dashboard/sections.ts;
 // TestDashboardSectionsMatchTheSidebar compares the two lists.
 var dashboardSections = []string{
-	"edit-video",
+	"edit-video", "edit-image", "write", "visual-assets", "video-assets",
+	"publish", "skills", "prompts", "memory",
 }
 
 // dashboardPages installs the home and one empty-state route for each section
 // of dashboardSections. A handler only names the page; it computes nothing.
 func dashboardPages(r *router.Router) {
-	// Memory, skills and prompts have pages of their own (epic 15, SDD-018 section 14): the pages read and
-	// write the library through /api/v1/library.
-	for _, page := range []struct{ path, component string }{
-		{"skills", "Skills/Index"}, {"prompts", "Prompts/Index"}, {"memory", "Memory/Index"},
-	} {
-		r.Get("/"+page.path, func(c *web.Ctx) error {
-			return inertia.Render(c, page.component, inertia.Props{})
-		}).Name("library." + page.path)
-	}
-
-	// Write has its page too (epic 17, SDD-019 section 11): the page reads and writes the texts of the projects
-	// through /api/v1/texts and /api/v1/projects/{id}/texts.
-	r.Get("/write", func(c *web.Ctx) error {
-		return inertia.Render(c, "Write/Index", inertia.Props{})
-	}).Name("write.index")
-
 	r.Get("/{$}", func(c *web.Ctx) error {
 		return inertia.Render(c, "Dashboard/Home", inertia.Props{})
 	}).Name("home")

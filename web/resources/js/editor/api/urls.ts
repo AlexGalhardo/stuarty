@@ -12,17 +12,7 @@ export function frameUrl(
 	width: number,
 	revision: number,
 ): string {
-	return `${project(projectId)}/frame?at=${frame}f&width=${width}&rev=${revision}&timeline_id=${encodeURIComponent(projectId)}`;
-}
-
-// The current frame of a timeline, asked for without a revision, so the answer
-// follows the edits of that timeline (the picture of a composition item).
-export function currentFrameUrl(
-	timelineId: string,
-	frame: number,
-	width: number,
-): string {
-	return `${project(timelineId)}/frame?at=${frame}f&width=${width}&timeline_id=${encodeURIComponent(timelineId)}`;
+	return `${project(projectId)}/frame?at=${frame}f&width=${width}&rev=${revision}`;
 }
 
 export function thumbnailUrl(
@@ -51,17 +41,6 @@ export function templateFileUrl(templateId: string): string {
 
 export function bitmapUrl(projectId: string, key: string): string {
 	return `${project(projectId)}/bitmaps/${encodeURIComponent(key)}`;
-}
-
-// The processed sound of an item; `from` asks for the window that starts at
-// that frame of the file, counted from its first (SDD-004 section 7.1).
-export function audioPreviewUrl(
-	projectId: string,
-	key: string,
-	from?: number,
-): string {
-	const url = `${project(projectId)}/audio-previews/${encodeURIComponent(key)}`;
-	return from === undefined ? url : `${url}?from=${from}`;
 }
 
 export function stripUrl(projectId: string, assetId: string): string {

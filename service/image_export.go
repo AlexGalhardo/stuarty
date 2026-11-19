@@ -96,8 +96,14 @@ func (s *svc) ImageExport(ctx context.Context, req ImageExportRequest) (*ImageEx
 
 	width, height := doc.Width, doc.Height
 	if w != 0 || h != 0 {
-		// one side alone keeps the aspect: the other is the one the encoder computed, not the canvas's
-		width, height = export.ImageOutputSize(pix.Rect.Dx(), pix.Rect.Dy(), w, h)
+		width, height = pix.Rect.Dx(), pix.Rect.Dy()
+		if w != 0 {
+			width = w
+		}
+
+		if h != 0 {
+			height = h
+		}
 	}
 
 	return &ImageExportResult{

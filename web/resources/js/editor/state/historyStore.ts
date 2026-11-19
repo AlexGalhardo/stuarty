@@ -11,10 +11,9 @@ export interface HistoryRow {
 	actor: string;
 	at: string;
 	kind: string;
-	// The description of the core, English, shown as received: from the event on
-	// a provisional row, from the page of the history on the others (VV-266).
+	// The description of the event, English, shown as received.
 	description?: string;
-	// What a row says only when its description is empty.
+	// What the page of the history says instead of a description.
 	ops?: readonly string[];
 	changes?: number;
 	undone: boolean;
@@ -54,7 +53,6 @@ function fromEntry(entry: HistoryEntry): HistoryRow {
 		actor: entry.actor,
 		at: entry.at,
 		kind: entry.kind,
-		description: entry.description,
 		ops: entry.ops,
 		changes: entry.changes,
 		undone: entry.undone_by !== null && entry.undone_by !== undefined,

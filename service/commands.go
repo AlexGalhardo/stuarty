@@ -13,16 +13,8 @@ import (
 // CommandHelpRequest asks for one command or for the list of them.
 type CommandHelpRequest struct {
 	Name string `json:"name,omitempty"` // empty: list every public command
-	// Domain is the domain whose commands are listed or explained: one of SDD-000 section 1.1, "video" when empty.
-	// With no Name and no Domain the result also lists the domains (SDD-003 section 4.8).
+	// Domain is the kind of document the commands edit: "video" (default) or "image" (SDD-021).
 	Domain string `json:"domain,omitempty"`
-}
-
-// DomainSummary is a domain in the discovery list: its description and how many edit operations it has.
-type DomainSummary struct {
-	Name       string `json:"name"`
-	Summary    string `json:"summary"`
-	Operations int    `json:"operations"`
 }
 
 // CommandSummary is a command in the list.
@@ -45,9 +37,7 @@ type CommandDetail struct {
 type CommandHelpResult struct {
 	Commands []CommandSummary `json:"commands,omitempty"` // when Name is empty
 	Command  *CommandDetail   `json:"command,omitempty"`  // when Name is set
-	// Domains is every domain with its operation count, when neither Name nor Domain was asked.
-	Domains []DomainSummary `json:"domains,omitempty"`
-	Text    string          `json:"text"`
+	Text     string           `json:"text"`
 }
 
 // CommandHelp lists the public commands of the build, or explains one. An
@@ -64,16 +54,7 @@ func (s *svc) CommandHelp(ctx context.Context, req CommandHelpRequest) (*Command
 	}
 
 	if req.Name == "" {
-		if req.Domain == "" {
-			return Discovery(s.reg), nil
-		}
-
-		res := commandList(reg)
-		if len(res.Commands) == 0 {
-			res.Text = "No edit operations in the domain " + reg.Domain() + " yet."
-		}
-
-		return res, nil
+		return commandList(reg), nil
 	}
 
 	cmd, ok := reg.Get(req.Name)
@@ -142,68 +123,19 @@ func unknownCommand(reg *command.Registry, name string) *Error {
 		}
 	}
 
-	if len(known) == 0 {
-		return newError(command.CodeUnknownCommand, "there is no command named %q.", name).
-			withHint("this domain has no edit operations yet; command_help without a domain lists the domains").
-			withDetail("known", known)
-	}
-
 	return newError(command.CodeUnknownCommand, "there is no command named %q.", name).
 		withHint("use one of the known commands: %s", strings.Join(known, ", ")).withDetail("known", known)
 }
 
-// Discovery is the first discovery call: command_help with no name and no domain. It lists the operations of the
-// timeline registry, then one line per domain and the structured member (SDD-003 section 4.8). It needs no store, so
-// the budget check of NFR-020 measures it without a workspace.
-func Discovery(video *command.Registry) *CommandHelpResult {
-	res := commandList(video)
-
-	var b strings.Builder
-
-	b.WriteString(res.Text)
-	b.WriteString("\n\nDomains (command_help domain=<name> lists the operations of one):")
-
-	for _, d := range command.Domains() {
-		reg, _ := registryFor(video, d.Name)
-		n := 0
-
-		for _, c := range reg.List() {
-			if !c.Internal {
-				n++
-			}
-		}
-
-		res.Domains = append(res.Domains, DomainSummary{Name: d.Name, Summary: d.Summary, Operations: n})
-		fmt.Fprintf(&b, "\n%s: %s", d.Name, d.Summary)
-
-		if n > 0 {
-			fmt.Fprintf(&b, " (%d operations)", n)
-		}
-	}
-
-	res.Text = b.String()
-
-	return res
-}
-
-// registryOf is the registry of a domain: the timeline's for video (the default), the image documents' for image,
-// and an empty one for a domain that has no edit commands yet.
+// registryOf is the registry of a domain: the video's by default, or the image's.
 func (s *svc) registryOf(domain string) (*command.Registry, *Error) {
-	return registryFor(s.reg, domain)
-}
-
-func registryFor(video *command.Registry, domain string) (*command.Registry, *Error) {
 	switch domain {
-	case "", command.DomainVideo:
-		return video, nil
-	case command.DomainImage:
+	case "", "video":
+		return s.reg, nil
+	case "image":
 		return coreimage.Registry(), nil
 	}
 
-	if !command.KnownDomain(domain) {
-		return nil, newError(command.CodeValidation, "the domain %q is not one of the domains of the product.", domain).
-			withPath("domain").withHint("use one of %s", strings.Join(command.DomainNames(), ", "))
-	}
-
-	return command.NewRegistry(domain), nil
+	return nil, newError(command.CodeValidation, "the domain %q is not video or image.", domain).
+		withPath("domain").withHint("use video or image")
 }

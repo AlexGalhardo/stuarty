@@ -1,7 +1,0 @@
-{
-  "args": {
-    "kind": "rounded_rect",
-    "layer_id": "lyr_bbbbbbbbbb"
-  },
-  "op": "layer.mask_set"
-}

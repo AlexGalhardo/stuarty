@@ -1,12 +1,5 @@
-import { Link } from "@inertiajs/react";
 import { Film, MoreVertical } from "lucide-react";
-import {
-	type FormEvent,
-	type ReactNode,
-	useEffect,
-	useRef,
-	useState,
-} from "react";
+import { type FormEvent, type ReactNode, useState } from "react";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
 import UntrustedText from "@/components/UntrustedText";
@@ -38,7 +31,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatDateTime } from "@/lib/format";
 import { useT } from "@/lib/i18n";
-import { createSlotQueue, type Release, whileNear } from "@/lib/slotQueue";
 import type { ProjectSummary } from "@/types";
 import { createClient } from "../../editor/api/client";
 import { HttpTransport } from "../../editor/api/http";
@@ -48,78 +40,25 @@ import { BundleExport } from "./Bundles";
 const NAME_MAX = 120;
 const THUMBNAIL_WIDTH = 270;
 
-// The frame endpoint refuses a credential with more than two frames in flight
-// (429, SDD-007 section 4.4), so every card draws its picture through this
-// queue, and only while it is near the viewport.
-const thumbnails = createSlotQueue(2);
-
 // The picture of a card: the frame at the start, as the player draws it. A
 // project with nothing on its timeline has no picture, and a frame that cannot
 // be read leaves the placeholder.
 function Thumbnail({ project }: { project: ProjectSummary }): ReactNode {
 	const [failed, setFailed] = useState(false);
-	const [src, setSrc] = useState<string | null>(null);
-	const box = useRef<HTMLDivElement>(null);
-	const release = useRef<Release | null>(null);
-	const wanted = project.items > 0 && !failed;
-	const url = frameUrl(
-		project.timeline_id,
-		0,
-		THUMBNAIL_WIDTH,
-		project.revision,
-	);
-
-	useEffect(() => {
-		release.current = null;
-		setSrc(null);
-		const element = box.current;
-		if (!wanted || !element) return;
-
-		const ticket = whileNear(thumbnails, (done) => {
-			release.current = done;
-			setSrc(url);
-		});
-		// The last record of a batch is the current state of the element.
-		const observer = new IntersectionObserver(
-			(entries) => {
-				const last = entries.at(-1);
-				if (last) ticket.near(last.isIntersecting);
-			},
-			{ rootMargin: "200px" },
-		);
-		observer.observe(element);
-
-		return () => {
-			observer.disconnect();
-			ticket.stop();
-			release.current = null;
-		};
-	}, [wanted, url]);
-
-	const settle = (): void => {
-		release.current?.();
-		release.current = null;
-	};
-
+	const drawn = project.items > 0 && !failed;
 	return (
 		<div
-			ref={box}
 			aria-hidden="true"
 			className="flex h-36 items-center justify-center bg-muted text-muted-foreground"
 		>
-			{wanted ? (
-				src && (
-					<img
-						src={src}
-						alt=""
-						className="max-h-full max-w-full object-contain"
-						onLoad={settle}
-						onError={() => {
-							settle();
-							setFailed(true);
-						}}
-					/>
-				)
+			{drawn ? (
+				<img
+					src={frameUrl(project.id, 0, THUMBNAIL_WIDTH, project.revision)}
+					alt=""
+					loading="lazy"
+					className="max-h-full max-w-full object-contain"
+					onError={() => setFailed(true)}
+				/>
 			) : (
 				<Film aria-hidden="true" className="size-8" />
 			)}
@@ -149,19 +88,6 @@ export default function ProjectCard({
 	const [name, setName] = useState(project.name);
 	const [busy, setBusy] = useState(false);
 	const [failure, setFailure] = useState<Failure | null>(null);
-
-	// The copy is a new project with the brief, the texts and the timelines of this one (VV-225).
-	const duplicate = async (): Promise<void> => {
-		setFailure(null);
-		try {
-			await createClient(new HttpTransport("/api/v1")).duplicateProject(
-				project.id,
-			);
-			onChanged();
-		} catch (error) {
-			setFailure(failureOf(error));
-		}
-	};
 
 	const submitRename = async (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
@@ -207,9 +133,6 @@ export default function ProjectCard({
 							})}
 						</p>
 						<p className="text-xs text-muted-foreground">
-							{t("ui.projects.card.timelines", { count: project.timelines })}
-						</p>
-						<p className="text-xs text-muted-foreground">
 							{t("ui.projects.updated", {
 								date: formatDateTime(project.updated_at, locale),
 							})}
@@ -235,9 +158,6 @@ export default function ProjectCard({
 							>
 								{t("ui.projects.card.rename")}
 							</DropdownMenuItem>
-							<DropdownMenuItem onSelect={() => void duplicate()}>
-								{t("ui.projects.card.duplicate")}
-							</DropdownMenuItem>
 							<DropdownMenuItem
 								variant="destructive"
 								onSelect={() => setConfirming(true)}
@@ -247,12 +167,10 @@ export default function ProjectCard({
 						</DropdownMenuContent>
 					</DropdownMenu>
 				</div>
-				{/* The editor is another document, so this is a plain link, not an Inertia visit (SDD-012 section 2.2).
-				    It opens the first active timeline, the one the card draws: the timeline with the id of the project
-				    may be in the trash of the project. */}
+				{/* The editor is another document, so this is a plain link, not an Inertia visit (SDD-012 section 2.2). */}
 				<div className="mt-auto flex flex-wrap gap-2">
 					<Button asChild variant="outline">
-						<a href={`/editor/${project.timeline_id || project.id}`}>
+						<a href={`/editor/${project.id}`}>
 							{t("ui.projects.open")}
 							<span className="sr-only">
 								{" "}
@@ -260,18 +178,8 @@ export default function ProjectCard({
 							</span>
 						</a>
 					</Button>
-					<Button asChild variant="outline">
-						<Link href={`/projects/${project.id}`}>
-							{t("ui.projects.card.details")}
-							<span className="sr-only">
-								{" "}
-								<UntrustedText>{project.name}</UntrustedText>
-							</span>
-						</Link>
-					</Button>
 					<BundleExport projectId={project.id} />
 				</div>
-				<FailureNote failure={failure} />
 			</div>
 
 			<Dialog open={renaming} onOpenChange={setRenaming}>

@@ -47,9 +47,6 @@ type Runner struct {
 
 	capMu    sync.Mutex
 	capCache map[sizeKey]error
-
-	codecMu  sync.Mutex
-	codecDet map[string]codecResult
 }
 
 // NewRunner returns a runner for the installation and the workspace root.

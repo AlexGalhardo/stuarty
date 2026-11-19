@@ -29,7 +29,6 @@ import FlipSection from "./FlipSection";
 import KeyframesSection from "./KeyframesSection";
 import MarkersSection from "./MarkersSection";
 import MaskSection from "./MaskSection";
-import MotionSection from "./MotionSection";
 import TransformSection from "./TransformSection";
 import TransitionsSection from "./TransitionsSection";
 
@@ -131,14 +130,9 @@ export function ItemVisual({ itemId }: { itemId: string }): ReactNode {
 	);
 }
 
-// The animation presets of the item (`text.apply_preset`) and the motion presets (`animation.apply_preset`).
+// The animation presets of the item (`text.apply_preset`).
 export function ItemAnimation({ itemId }: { itemId: string }): ReactNode {
-	return (
-		<>
-			<AnimationSection itemId={itemId} />
-			<MotionSection itemId={itemId} />
-		</>
-	);
+	return <AnimationSection itemId={itemId} />;
 }
 
 // Keyframes and markers.

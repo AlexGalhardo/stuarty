@@ -1,8 +1,0 @@
-{
-  "code": "E_VALIDATION",
-  "hint": "Remove the adjustments, or remove reset.",
-  "message": "Give reset, or the adjustments, not both.",
-  "op_index": 0,
-  "path": "args.reset",
-  "retryable": false
-}

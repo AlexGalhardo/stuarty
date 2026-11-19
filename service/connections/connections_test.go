@@ -1,7 +1,6 @@
 package connections
 
 import (
-	"bytes"
 	"context"
 	"encoding/base64"
 	"encoding/hex"

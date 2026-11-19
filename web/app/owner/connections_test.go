@@ -109,11 +109,12 @@ func TestOwnerKeepsTheMasterKeyInTheFileOfTheSecret(t *testing.T) {
 	}
 }
 
-func TestOwnerRefusesAnAmbiguousMasterKey(t *testing.T) {
+func TestOwnerRefusesAnAmbiguousOrMalformedMasterKey(t *testing.T) {
 	root := t.TempDir()
 
 	for name, env := range map[string]map[string]string{
 		"both": {vault.EnvMasterKey: "x", vault.EnvMasterKeyFile: filepath.Join(root, "k")},
+		"bad":  {vault.EnvMasterKey: "not-a-key-CANARYKEY"},
 	} {
 		env[workspace.EnvHome] = filepath.Join(root, name)
 
@@ -130,71 +131,4 @@ func TestOwnerRefusesAnAmbiguousMasterKey(t *testing.T) {
 			t.Errorf("%s: the error echoes the key: %v", name, err)
 		}
 	}
-}
-
-// VV-269: a master key that is named and is not a key does not stop the start: `doctor --full` reports it as
-// a failed vault check with the hint of the error, a credential answers E_VAULT_LOCKED, and the bytes of the
-// key are in neither (SDD-014 sections 4 and 8).
-func TestOwnerReportsAMalformedMasterKeyInsteadOfStopping(t *testing.T) {
-	for name, env := range map[string]map[string]string{
-		"variable": {vault.EnvMasterKey: "not-a-key-CANARYKEY"},
-		"file":     nil,
-	} {
-		root := t.TempDir()
-
-		if env == nil {
-			keyFile := filepath.Join(root, "wrong.key")
-			if err := os.WriteFile(keyFile, []byte("not-a-key-CANARYKEY\n"), 0o600); err != nil {
-				t.Fatal(err)
-			}
-
-			env = map[string]string{vault.EnvMasterKeyFile: keyFile}
-		}
-
-		env[workspace.EnvHome] = filepath.Join(root, "ws")
-
-		o := connect(t, env)
-
-		res, err := o.Service.Doctor(person(), service.DoctorRequest{Full: true})
-		if err != nil {
-			t.Fatalf("%s: doctor failed instead of reporting: %v", name, err)
-		}
-
-		var check *service.DoctorCheck
-
-		for i := range res.Checks {
-			if res.Checks[i].Name == "vault" {
-				check = &res.Checks[i]
-			}
-		}
-
-		if check == nil || check.OK || !strings.Contains(check.Hint, "32 bytes") {
-			t.Errorf("%s: vault check = %+v", name, check)
-		}
-
-		_, err = o.Service.ConnectionCreate(admin(), service.ConnectionCreateRequest{
-			Kind:     "test",
-			Label:    "Blog",
-			Endpoint: "https://blog.example.com",
-			Accepts:  []string{"text"},
-			Secret:   "tok-X",
-		})
-		if err == nil || !strings.Contains(err.Error(), service.CodeVaultLocked) {
-			t.Errorf("%s: a credential with a bad key: %v, want E_VAULT_LOCKED", name, err)
-		}
-
-		if err == nil || check == nil {
-			continue
-		}
-
-		if strings.Contains(err.Error(), "CANARYKEY") || strings.Contains(check.Hint+check.Detail, "CANARYKEY") {
-			t.Errorf("%s: the key is echoed", name)
-		}
-	}
-}
-
-func person() context.Context {
-	return service.WithCaller(context.Background(), service.Caller{
-		Actor: "local:cli", Scopes: service.AllScopes, Operator: true,
-	})
 }
