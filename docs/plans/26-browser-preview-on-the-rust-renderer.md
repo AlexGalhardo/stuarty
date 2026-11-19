@@ -39,7 +39,7 @@ What a creator sees while editing is what the exported file will contain, becaus
 
 ## Tasks
 
-- [ ] 1. Read SDD-013 and the parity skill; list in SDD-013 what of sections 4.7, 5.3 and 6 is implemented today and what this epic adds. Verify: `task lint:md` exits 0.
+- [x] 1. Read SDD-013 and the parity skill; list in SDD-013 what of sections 4.7, 5.3 and 6 is implemented today and what this epic adds. Verify: `task lint:md` exits 0.
 - [ ] 2. Build the worker and the protocol with a still-frame path (no playback). Verify: `task test:web` passes with the worker's unit tests and `bash scripts/build-renderer.sh` reproduces the pinned digest or updates it with the reason.
 - [ ] 3. Decode proxy frames through WebCodecs and the chunk index, with seeking. Verify: `web/e2e/specs/preview-rust-seek.spec.ts` (new) passes in Chromium.
 - [ ] 4. Present on `OffscreenCanvas` with playback driven by the audio clock. Verify: `web/e2e/specs/preview-rust-playback.spec.ts` (new) passes.
