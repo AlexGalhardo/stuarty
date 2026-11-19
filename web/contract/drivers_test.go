@@ -877,6 +877,7 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 		ItemID   string `json:"item_id"`
 		Title    string `json:"title"`
 		Text     string `json:"text"`
+		TextKind string `json:"text_kind"`
 		Position *int   `json:"position"`
 
 		Answers map[string]string `json:"answers"`
@@ -1261,6 +1262,7 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 	case "ProjectItemAdd":
 		argv = append(slices.Clone(proj), "--kind", a.Kind, "--title", a.Title)
 		argv = append(argv, flag("preset", a.Preset)...)
+		argv = append(argv, flag("text-kind", a.TextKind)...)
 
 		if a.Position != nil {
 			argv = append(argv, "--position", strconv.Itoa(*a.Position))
