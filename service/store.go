@@ -337,7 +337,8 @@ type CheckpointRepo interface {
 	Get(ctx context.Context, projectID, name string) (CheckpointRow, error)
 	// List returns the checkpoints of the project, newest revision first, then by name.
 	List(ctx context.Context, projectID string) ([]CheckpointRow, error)
-	// Rename changes the name, and the note when note is not nil. ErrNotFound; ErrExists on a taken name.
+	// Rename changes the name, and the note when note is not nil, and makes the checkpoint a named one (Auto
+	// false). ErrNotFound; ErrExists on a taken name.
 	Rename(ctx context.Context, projectID, name, newName string, note *string) error
 	Remove(ctx context.Context, projectID, name string) error // ErrNotFound
 	// TrimAuto removes the oldest automatic checkpoints until at most keep remain.
