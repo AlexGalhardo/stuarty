@@ -111,7 +111,7 @@ The body is the text, at most 32 KiB. A variable is `{{name}}` or `{{ name }}` w
 
 - `SkillWrite` always records the origin `user`; the caller cannot set `built-in` or `imported`. A skill written by a person at the browser is reviewed at once (they wrote it); one written through any other surface is not.
 - `SkillImport` records `imported` and the licence and source it finds or is given, and never reviews.
-- `SkillMarkReviewed` is for a person at the browser (a caller with the `edit` scope that proved it with the session cookie, as in SDD-007 section 5.3). It is refused while the lint reports an error. A built-in skill is installed by the product with its hash.
+- `SkillMarkReviewed` is for a person at the browser: a caller with the `edit` scope and `Caller.Browser`, which is a signed-in session of network mode or a session of the desktop application opened with the launcher secret (SDD-007 section 3.4 item 7). A local web session without the secret is refused, because an agent that holds the token can open one. It is refused while the lint reports an error. A built-in skill is installed by the product with its hash.
 - The default agent listing (`SkillList` without `include_unreviewed`, and every skill an agent reads through search) holds only reviewed skills. `SkillGet` of an unreviewed skill is allowed (a person must be able to read it) and its result says `reviewed: false` and carries the warning text.
 
 ### 7.1 The skill lint
