@@ -795,11 +795,15 @@ func variantLine(r *writing.Report) string {
 		return line + ", ok"
 	}
 
+	var b strings.Builder
+
+	b.WriteString(line)
+
 	for _, p := range r.Problems {
-		line += "; " + p.Code + ": " + p.Message
+		b.WriteString("; " + p.Code + ": " + p.Message)
 	}
 
-	return line
+	return b.String()
 }
 
 // ScriptEstimate estimates how long a script takes when read aloud.

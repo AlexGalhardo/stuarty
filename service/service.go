@@ -365,7 +365,7 @@ func New(o Options) (Service, error) {
 
 	s.providers = o.Providers
 
-	kinds, err := registerKinds(append(slices.Clone(o.JobKinds), s.textGenerateKind()))
+	kinds, err := registerKinds(append(slices.Clone(o.JobKinds), s.textGenerateKind(), s.textDraftKind()))
 	if err != nil {
 		return nil, err
 	}

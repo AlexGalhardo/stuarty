@@ -919,7 +919,7 @@ func (s *svc) jobView(c Caller, r JobRow, waited bool) *Job {
 		}
 	}
 
-	if r.Kind == JobTextGenerate {
+	if r.Kind == JobTextGenerate || r.Kind == JobTextDraft {
 		var in textInput
 		if json.Unmarshal(r.Input, &in) == nil {
 			estimate := in.Estimate
