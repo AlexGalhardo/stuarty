@@ -35,7 +35,7 @@ An agent can prepare a post or an expensive generation, and nothing is sent or s
 
 ## Tasks
 
-- [ ] 1. Write SDD-015 and the SDD-000 names; add SDD-007 rows (an agent approving its own request, a rule created by an agent, a cost ceiling bypass). Verify: `task lint:md` exits 0.
+- [x] 1. Write SDD-015 and the SDD-000 names; add SDD-007 rows (an agent approving its own request, a rule created by an agent, a cost ceiling bypass). Verify: `task lint:md` exits 0.
 - [ ] 2. Implement `core/approval` with table tests. Verify: `go test ./core/approval/...` passes with every branch of `Decide` covered.
 - [ ] 3. Add the tables and the service operations, with the privileged-session check. Verify: `go test ./service/approval/...` passes, including a test where a local-token caller is refused.
 - [ ] 4. Wire jobs: the `waiting_approval` state, start on approval, reject on cancel. Verify: `go test ./service/... -run TestJobApproval` passes.
