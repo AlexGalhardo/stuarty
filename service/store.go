@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 
+	"github.com/AlexGalhardo/stuarty/service/approval"
 	"github.com/AlexGalhardo/stuarty/service/connections"
 	"github.com/AlexGalhardo/stuarty/service/library"
 )
@@ -68,7 +69,7 @@ type Repos interface {
 	BrandKit() BrandKitRepo
 	Images() ImageRepo
 	Connections() connections.Store
-	Library() library.Index
+	Approvals() approval.Store
 }
 
 // Tx is a write transaction.
@@ -488,6 +489,9 @@ type JobRow struct {
 	UpdatedMs       int64
 	StartedMs       *int64
 	FinishedMs      *int64
+	// ApprovalID is the approval request a job in state waiting_approval waits on, and the request
+	// that released it afterwards (SDD-015 section 5); empty for a job that needs none.
+	ApprovalID string
 }
 
 // JobLimit is the concurrency limit checked by CreateLimited.
@@ -522,6 +526,15 @@ type JobRepo interface {
 	// QueuedBefore returns the jobs still queued that were created before
 	// the instant, oldest first (recovery dispatches them again).
 	QueuedBefore(ctx context.Context, createdBeforeMs int64) ([]JobRow, error)
+
+	// CreateWaiting inserts a job in state waiting_approval, with the request it waits on in
+	// row.ApprovalID (SDD-015 section 5). Call it inside Write.
+	CreateWaiting(ctx context.Context, row JobRow) error
+	// Release moves a waiting_approval job to queued; false when it was not waiting.
+	Release(ctx context.Context, id string, nowMs int64) (bool, error)
+	// FinishWaiting moves a waiting_approval job to a terminal state with its error; false when it
+	// was not waiting.
+	FinishWaiting(ctx context.Context, id, state string, errJSON json.RawMessage, nowMs int64) (bool, error)
 }
 
 // TemplateRow is a saved template document.

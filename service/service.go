@@ -18,6 +18,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/engine/rasterize"
 	enginestore "github.com/AlexGalhardo/stuarty/engine/store"
 	"github.com/AlexGalhardo/stuarty/engine/transcribe"
+	"github.com/AlexGalhardo/stuarty/service/approval"
 	"github.com/AlexGalhardo/stuarty/service/connections"
 	"github.com/AlexGalhardo/stuarty/service/library"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
@@ -148,6 +149,18 @@ type Service interface {
 	ConnectionCreate(ctx context.Context, req ConnectionCreateRequest) (*connections.Connection, error)
 	ConnectionRemove(ctx context.Context, req ConnectionRef) (*connections.Connection, error)
 	ConnectionTest(ctx context.Context, req ConnectionRef) (*ConnectionTestResult, error)
+
+	// The approval queue, its rules and the cost ceilings (SDD-015). Reading is for every caller that
+	// may read; ApprovalDecide, ApprovalRuleSet, ApprovalRuleRemove and CostCeilingSet are for a
+	// person in a privileged browser session and answer E_PRIVILEGED_SESSION to everyone else.
+	ApprovalList(ctx context.Context, req ApprovalListRequest) (*ApprovalListResult, error)
+	ApprovalGet(ctx context.Context, req ApprovalRef) (*approval.Request, error)
+	ApprovalDecide(ctx context.Context, req ApprovalDecideRequest) (*approval.Request, error)
+	ApprovalRuleList(ctx context.Context, req ApprovalRuleListRequest) (*ApprovalRuleListResult, error)
+	ApprovalRuleSet(ctx context.Context, req ApprovalRuleSetRequest) (*approval.RuleView, error)
+	ApprovalRuleRemove(ctx context.Context, req ApprovalRef) (*approval.RuleView, error)
+	CostSummary(ctx context.Context, req CostSummaryRequest) (*CostSummaryResult, error)
+	CostCeilingSet(ctx context.Context, req CostCeilingSetRequest) (*CostSummaryResult, error)
 }
 
 // Event is what the service publishes after the change is durable (SDD-006
@@ -173,6 +186,8 @@ type Event struct {
 	Message  string
 	Error    *Error
 	Result   *JobResult
+	// Approval is the request of approval.requested and approval.decided (SDD-015 section 7).
+	Approval *approval.Request
 }
 
 // Options configure New. Store is required.
@@ -220,6 +235,9 @@ type Options struct {
 	// credentials; without one the service builds a registry over the store with a vault in the
 	// workspace that has no master key source, so a connection cannot be created (SDD-014).
 	Connections *connections.Manager
+	// JobKinds are the job kinds that need approval, registered by the epics of publishing and
+	// generation (SDD-015 section 5). The product registers none of its own; tests register one.
+	JobKinds []ApprovableKind
 	// Heavy limits the heavy operations (jobs, media, template, font, bundle and OpenTimelineIO imports and exports) per actor; nil counts nothing.
 	Heavy RateLimiter
 	// HeavyPerMinute is the limit Heavy enforces, for the error message; zero is HeavyPerMinute.
@@ -251,7 +269,7 @@ type svc struct {
 	doctor      DoctorOptions
 	keys        KeyStore
 	conns       *connections.Manager
-	lib         *library.Manager // the files of memory, skills and prompts; nil without a workspace
+	kinds       map[string]*ApprovableKind
 	heavy       RateLimiter
 	heavyLimitN int
 	log         *slog.Logger
@@ -312,6 +330,13 @@ func New(o Options) (Service, error) {
 		webp:        o.WebP,
 		startedAt:   time.Now(),
 	}
+
+	kinds, err := registerKinds(o.JobKinds)
+	if err != nil {
+		return nil, err
+	}
+
+	s.kinds = kinds
 
 	if s.workspace != "" {
 		s.fonts = enginestore.NewFonts(s.workspace)
