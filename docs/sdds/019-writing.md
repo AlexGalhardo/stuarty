@@ -146,7 +146,7 @@ All in the domain `writing` (SDD-000 section 1.1).
 | `CaptionValidate` | the counts and the problems of section 5.2 | read |
 | `ScriptEstimate` | the estimate of section 4 for a stored script or for a text | read |
 
-A key limited to one project reaches the texts of that project only. In network mode a user sees the texts of their own projects (`TextList` without a project lists those only).
+A key limited to one project reaches the texts of that project only, named by the project or by any of its timelines (SDD-003 section 1.7 rule 4); a timeline of another project, that project and an id of nothing get the same refusal. In network mode a user sees the texts of their own projects (`TextList` without a project lists those only).
 
 ## 8. Surfaces
 
