@@ -60,22 +60,22 @@ jobs:
       - name: Build the binary and make the sample clip
         run: |
           mkdir -p "$RUNNER_TEMP/harness"
-          go build -o "$RUNNER_TEMP/harness/vukem-video" ./web/cmd/app
+          go build -o "$RUNNER_TEMP/harness/stuarty" ./web/cmd/app
           ffmpeg -v error -f lavfi -i testsrc2=size=640x360:rate=30:duration=6 -f lavfi -i sine=frequency=220:duration=6 \
             -c:v mpeg4 -c:a aac -shortest "$RUNNER_TEMP/harness/clip.mp4"
       - name: Run the scenarios
         env:
-          VUKEM_VIDEO_HARNESS: "1"
+          STUARTY_HARNESS: "1"
         run: |
           mkdir -p agent-harness-results
           go run ./internal/tools/agentharness \
             --runs "$RUNS" --scenario "$SCENARIO" --model "$MODEL" \
-            --bin "$RUNNER_TEMP/harness/vukem-video" --clip "$RUNNER_TEMP/harness/clip.mp4" \
+            --bin "$RUNNER_TEMP/harness/stuarty" --clip "$RUNNER_TEMP/harness/clip.mp4" \
             --out agent-harness-results/transcripts | tee agent-harness-results/run.log
       - name: Count the tokens of tools/list
         if: ${{ !cancelled() }}
         env:
-          VUKEM_VIDEO_BUDGET_RELEASE: "1"
+          STUARTY_BUDGET_RELEASE: "1"
         run: |
           mkdir -p agent-harness-results
           go test ./web/app/mcp -run TestToolListVendorTokens -count=1 -v | tee agent-harness-results/tools-list-tokens.log

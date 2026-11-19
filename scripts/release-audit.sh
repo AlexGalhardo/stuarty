@@ -11,7 +11,7 @@
 #   - any artifact without THIRD_PARTY_NOTICES.md;
 #   - the size of the largest archive against NFR-041 (60,000,000 bytes, SDD-009 section 20 check 5) and
 #     the asset count.
-# The container image is read with docker (REF defaults to ghcr.io/alexgalhardo/vukem-video:X.Y.Z); without a
+# The container image is read with docker (REF defaults to ghcr.io/alexgalhardo/stuarty:X.Y.Z); without a
 # docker daemon, or with --no-image, it is reported as not inspected.
 #
 # The Inno Setup .exe is opened with innoextract, a CLI like 7z (apt install innoextract). An artifact that cannot
@@ -25,7 +25,7 @@
 # Needs: go, jq, tar, unzip, 7z (or 7zz) for .deb/.pkg/.AppImage, innoextract for the .exe (optional), and gh for a tag.
 set -euo pipefail
 
-repo="AlexGalhardo/vukem-video"
+repo="AlexGalhardo/stuarty"
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 root="$(cd "$script_dir/.." && pwd)"
 max_archive=60000000
@@ -264,14 +264,14 @@ fi
 echo "assets: $assets"
 
 if [ "$check_image" -eq 1 ] && [ -n "$version" ]; then
-	image="${image:-ghcr.io/alexgalhardo/vukem-video:$version}"
+	image="${image:-ghcr.io/alexgalhardo/stuarty:$version}"
 	if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1 && docker pull "$image" >/dev/null 2>&1; then
 		cid="$(docker create "$image")"
 		mkdir -p "$work/image"
-		if docker cp "$cid:/usr/share/doc/vukem-video/." "$work/image/" >/dev/null 2>&1; then
+		if docker cp "$cid:/usr/share/doc/stuarty/." "$work/image/" >/dev/null 2>&1; then
 			audit_extracted "image $image" "$work/image"
 		else
-			finding "image $image: /usr/share/doc/vukem-video is missing"
+			finding "image $image: /usr/share/doc/stuarty is missing"
 		fi
 		docker rm "$cid" >/dev/null
 		flags="$(docker run --rm --entrypoint ffmpeg "$image" -version 2>/dev/null | grep -E -o -e '--enable-(gpl|nonfree|version3)' | sort -u | tr '\n' ' ' || true)"
