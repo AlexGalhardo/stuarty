@@ -254,12 +254,16 @@ func (h *Host) End(id string, reason chat.EndReason) {
 	}
 }
 
-// Flush writes the event of a live session that is still being written, so that a read of the
-// store has it whole. It is a no-op for a session that is not live.
-func (h *Host) Flush(id string) {
-	if s, err := h.get(id); err == nil {
-		s.rec.Flush()
+// Pending is the event of a live session that is still being written, which the store does not
+// hold yet; false when there is none. A read of the transcript adds it and changes nothing: the
+// next chunk of the agent still continues it.
+func (h *Host) Pending(id string) (chat.Event, bool) {
+	s, err := h.get(id)
+	if err != nil {
+		return chat.Event{}, false
 	}
+
+	return s.rec.Pending()
 }
 
 // Subscribe follows a live session after the event numbered after.
