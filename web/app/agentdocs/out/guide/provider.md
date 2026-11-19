@@ -5,7 +5,7 @@ AI providers and generation: the spend on providers and its ceilings.
 
 ## How to reach it
 
-MCP tools: `command_help`. Tools that take `domain=provider`: `command_help`.
+MCP tools: `command_help`, `job_start`. Tools that take `domain=provider`: `command_help`.
 
 CLI: `stuarty provider` lists the commands of the domain and `stuarty provider <verb>` runs one; the full names stay valid.
 
