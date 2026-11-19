@@ -1422,8 +1422,8 @@ A library entry is one file by hash, with the facts of the probe and the library
 | --- | --- |
 | `hash`, `kind`, `bytes`, `width`, `height`, `duration_ms` | the file and its facts (`kind` is `image`, `video`, `audio` or `lut`) |
 | `name` | the name it was first imported under; untrusted |
-| `origin` | `{kind, source, provider, model, prompt, cost_micros}`; `source` and `prompt` are untrusted |
-| `rights_note`, `description` | the user's own text; untrusted |
+| `origin` | `{kind, source, provider, model, prompt, cost_micros, rights_note}`; `source`, `prompt` and `rights_note` are untrusted |
+| `description` | the user's own text; untrusted |
 | `reusable`, `tags` | the reuse mark and the normalised tags |
 | `created_by`, `created_at` | the actor and the time of the first import |
 | `projects` | how many projects use it (a project counted once, however many timelines hold it) |
@@ -1455,7 +1455,7 @@ A missing required member is `E_VALIDATION` with `path` `origin.<member>` and `d
 | `AssetList` | `kind`, `section`, `tag`, `project` (a production or a timeline id), `origin` (an origin kind), `reusable`, `text`, `limit`, `cursor` | `LibraryAsset` entries, `next_cursor`, `text` |
 | `AssetGet` | `hash` | the entry with `uses` |
 | `AssetUses` | `hash`, `limit`, `cursor` | the `uses` |
-| `AssetSetInfo` | `hash`, and any of `description`, `rights_note`, `reusable` | the entry |
+| `AssetSetInfo` | `hash`, and any of `description`, `rights_note` (it edits `origin.rights_note`), `reusable` | the entry |
 | `AssetTag` | `hash`, `add`, `remove` (lists of tags) | the entry |
 
 The first three are `read`; the last two are `media`. The result of every operation is an entry or a list of them, in `LibraryAsset` form; the text carries `source`, `prompt`, `rights_note` and `description` as delimited untrusted text (SDD-007 §8.2, source `metadata`, with the member as the attribute `field`) and the text of a list is cut to the budget of SDD-003 §3.10 with a `next_cursor`. `AssetList` keeps the order name, then hash, and the section filter: `visual` is the kinds `image` and `lut`, `video` is `video` and `audio`. `text` is a full-text query over name, tags, description and origin (SDD-005 §5.5.1), at most 8 terms, every term a prefix; it is never an SQL or FTS expression. An unknown hash is `E_NOT_FOUND`; in network mode a hash no visible project holds is the same.

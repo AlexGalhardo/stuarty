@@ -36,7 +36,7 @@ A creator stops hunting through folders: every image, clip, sound and font they 
 ## Tasks
 
 - [x] 1. Amend SDD-011, SDD-005 and SDD-000 (model, origin kinds, operations). Verify: `task lint:md` exits 0.
-- [ ] 2. Implement `core/asset` with table tests. Verify: `go test ./core/asset/...` passes.
+- [x] 2. Implement `core/asset` with table tests. Verify: `go test ./core/asset/...` passes.
 - [ ] 3. Write the migration to workspace assets with fixtures of earlier workspaces. Verify: `go test ./web/database/... -run TestWorkspaceAssetsMigration` passes.
 - [ ] 4. Implement the service operations, the origin on import and the search index. Verify: `go test ./service/assets/...` passes.
 - [ ] 5. Expose on HTTP, CLI and MCP with parity tests and untrusted-text marking. Verify: `go test ./web/contract/...` and `go test -run TestSecurity_ ./...` pass.
