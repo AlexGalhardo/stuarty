@@ -1,0 +1,8 @@
+{
+  "code": "E_VALIDATION",
+  "hint": "Give source and, if you want, invert.",
+  "message": "A mask of kind layer has no feather.",
+  "op_index": 0,
+  "path": "args.feather",
+  "retryable": false
+}

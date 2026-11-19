@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "layer_id": {
+      "pattern": "^lyr_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+      "type": "string"
+    }
+  },
+  "required": [
+    "layer_id"
+  ],
+  "type": "object"
+}

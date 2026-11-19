@@ -1,0 +1,19 @@
+[
+  {
+    "changes": {
+      "filters": [
+        null,
+        [
+          {
+            "amount": 60,
+            "kind": "grain",
+            "seed": 7,
+            "size": 3
+          }
+        ]
+      ]
+    },
+    "id": "lyr_bbbbbbbbbb",
+    "kind": "layer.updated"
+  }
+]

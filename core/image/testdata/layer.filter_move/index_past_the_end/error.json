@@ -1,0 +1,8 @@
+{
+  "code": "E_VALIDATION",
+  "hint": "Use 0 to 2.",
+  "message": "index is 3; the layer has 3 filters.",
+  "op_index": 0,
+  "path": "args.index",
+  "retryable": false
+}

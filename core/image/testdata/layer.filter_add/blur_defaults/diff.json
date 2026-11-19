@@ -1,0 +1,17 @@
+[
+  {
+    "changes": {
+      "filters": [
+        null,
+        [
+          {
+            "kind": "blur",
+            "radius": 8
+          }
+        ]
+      ]
+    },
+    "id": "lyr_bbbbbbbbbb",
+    "kind": "layer.updated"
+  }
+]

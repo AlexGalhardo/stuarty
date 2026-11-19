@@ -1,0 +1,10 @@
+{
+  "args": {
+    "layer_id": "lyr_bbbbbbbbbb",
+    "levels": {
+      "black": 200,
+      "white": 100
+    }
+  },
+  "op": "layer.adjust"
+}

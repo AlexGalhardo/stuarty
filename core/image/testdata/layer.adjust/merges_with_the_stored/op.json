@@ -1,0 +1,10 @@
+{
+  "args": {
+    "layer_id": "lyr_bbbbbbbbbb",
+    "levels": {
+      "gamma": 150
+    },
+    "saturation": 40
+  },
+  "op": "layer.adjust"
+}

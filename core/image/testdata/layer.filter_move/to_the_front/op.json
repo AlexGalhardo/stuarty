@@ -1,0 +1,8 @@
+{
+  "args": {
+    "index": 0,
+    "kind": "vignette",
+    "layer_id": "lyr_bbbbbbbbbb"
+  },
+  "op": "layer.filter_move"
+}

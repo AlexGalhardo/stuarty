@@ -1,0 +1,7 @@
+{
+  "args": {
+    "kind": "blur",
+    "layer_id": "lyr_eeeeeeeeee"
+  },
+  "op": "layer.filter_remove"
+}
