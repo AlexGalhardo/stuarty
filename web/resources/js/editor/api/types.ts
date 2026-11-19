@@ -764,6 +764,40 @@ export interface KeyListResult {
 
 export type KeyRevokeResult = ApiKey;
 
+// /connections (SDD-014): the destinations the user connected. A result never carries a
+// credential, only secret_set.
+export interface Connection {
+	id: string;
+	kind: string;
+	label: string;
+	endpoint: string;
+	hosts: string[];
+	accepts: string[];
+	created_at: string;
+	last_used_at: string | null;
+	secret_set: boolean;
+}
+
+export interface ConnectionListResult {
+	connections: Connection[];
+}
+
+export interface ConnectionCreateRequest {
+	kind: string;
+	label: string;
+	endpoint: string;
+	hosts?: string[];
+	accepts: string[];
+	secret: string;
+}
+
+export interface ConnectionTestResult {
+	id: string;
+	ok: boolean;
+	status: number;
+	message: string;
+}
+
 // GET /users: an administrator session only (SDD-007 section 4.1 item 2). The
 // editor reads it once, to show the name of the actors `user:<id>`.
 export interface UserSummary {
