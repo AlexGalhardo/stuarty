@@ -561,7 +561,7 @@ All interactive components use the same visual states. "Disabled" never relies o
 | State | Selector | Treatment |
 | --- | --- | --- |
 | default | | as the variant says |
-| hover | `:hover` (pointer only; never the only cue) | surface one step (`bg-muted`, `bg-accent`, or `primary/80` for the primary button) |
+| hover | `:hover` (pointer only; never the only cue) | surface one step (`bg-muted`, `bg-accent`, or, for the primary button, `--primary` mixed with 10% black in OKLab: a fade to `primary/80` left white text at 3.7:1 in the light theme) |
 | focus-visible | `:focus-visible` | 2 px `--ring` outline, 2 px offset (section 2.10); never removed |
 | active (pressed) | `:active`, `aria-pressed="true"`, `data-state="active"` | shadcn's 1 px press offset for buttons; toggles show the pressed surface `bg-accent` plus `aria-pressed` |
 | disabled | `disabled`, `aria-disabled="true"` | 50% opacity, `pointer-events: none` (shadcn); exempt from contrast; keyboard focus skips native disabled controls; controls that must explain why use `aria-disabled` with a tooltip |
