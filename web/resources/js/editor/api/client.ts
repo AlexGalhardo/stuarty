@@ -7,6 +7,7 @@ import type {
 	AuditQuery,
 	BrandKit,
 	BrandKitBody,
+	BriefResult,
 	BundleImportResult,
 	CommandHelpResult,
 	Connection,
@@ -38,6 +39,8 @@ import type {
 	PlanWindowHead,
 	ProjectCreateResult,
 	ProjectGetResult,
+	ProjectItemAddRequest,
+	ProjectItemResult,
 	ProjectListResult,
 	ProjectStateResult,
 	SessionResult,
@@ -150,6 +153,33 @@ export interface ApiClient {
 	listUsers(): Promise<UserListResult>;
 	listTrashedProjects(): Promise<ProjectListResult>;
 	createProject(name: string, preset: string): Promise<ProjectCreateResult>;
+	duplicateProject(
+		projectId: string,
+		name?: string,
+	): Promise<ProjectCreateResult>;
+	addProjectItem(
+		projectId: string,
+		request: ProjectItemAddRequest,
+	): Promise<ProjectItemResult>;
+	moveProjectItem(
+		projectId: string,
+		itemId: string,
+		position: number,
+	): Promise<ProjectItemResult>;
+	renameProjectItem(
+		projectId: string,
+		itemId: string,
+		title: string,
+	): Promise<ProjectItemResult>;
+	trashProjectItem(
+		projectId: string,
+		itemId: string,
+	): Promise<ProjectItemResult>;
+	restoreProjectItem(
+		projectId: string,
+		itemId: string,
+	): Promise<ProjectItemResult>;
+	setBrief(projectId: string, text: string): Promise<BriefResult>;
 	trashProject(projectId: string): Promise<ProjectStateResult>;
 	restoreProject(projectId: string): Promise<ProjectStateResult>;
 	// The two routes of network mode live at the root, not under /api/v1: a client
@@ -360,6 +390,45 @@ export function createClient(
 			call("GET", "/projects?state=trashed", READ_TIMEOUT_MS),
 		createProject: (name, preset) =>
 			call("POST", "/projects", EDIT_TIMEOUT_MS, { name, preset }),
+		duplicateProject: (id, name) =>
+			call(
+				"POST",
+				`${project(id)}/duplicate`,
+				EDIT_TIMEOUT_MS,
+				name === undefined ? {} : { name },
+			),
+		addProjectItem: (id, request) =>
+			call("POST", `${project(id)}/items`, EDIT_TIMEOUT_MS, request),
+		moveProjectItem: (id, itemId, position) =>
+			call(
+				"POST",
+				`${project(id)}/items/${encodeURIComponent(itemId)}/move`,
+				EDIT_TIMEOUT_MS,
+				{ position },
+			),
+		renameProjectItem: (id, itemId, title) =>
+			call(
+				"POST",
+				`${project(id)}/items/${encodeURIComponent(itemId)}/rename`,
+				EDIT_TIMEOUT_MS,
+				{ title },
+			),
+		trashProjectItem: (id, itemId) =>
+			call(
+				"POST",
+				`${project(id)}/items/${encodeURIComponent(itemId)}/trash`,
+				EDIT_TIMEOUT_MS,
+				{},
+			),
+		restoreProjectItem: (id, itemId) =>
+			call(
+				"POST",
+				`${project(id)}/items/${encodeURIComponent(itemId)}/restore`,
+				EDIT_TIMEOUT_MS,
+				{},
+			),
+		setBrief: (id, text) =>
+			call("PUT", `${project(id)}/brief`, EDIT_TIMEOUT_MS, { text }),
 		trashProject: (id) =>
 			call("POST", `${project(id)}/trash`, EDIT_TIMEOUT_MS, {}),
 		restoreProject: (id) =>

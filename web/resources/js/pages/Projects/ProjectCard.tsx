@@ -1,3 +1,4 @@
+import { Link } from "@inertiajs/react";
 import { Film, MoreVertical } from "lucide-react";
 import { type FormEvent, type ReactNode, useState } from "react";
 
@@ -53,7 +54,12 @@ function Thumbnail({ project }: { project: ProjectSummary }): ReactNode {
 		>
 			{drawn ? (
 				<img
-					src={frameUrl(project.id, 0, THUMBNAIL_WIDTH, project.revision)}
+					src={frameUrl(
+						project.timeline_id,
+						0,
+						THUMBNAIL_WIDTH,
+						project.revision,
+					)}
 					alt=""
 					loading="lazy"
 					className="max-h-full max-w-full object-contain"
@@ -88,6 +94,19 @@ export default function ProjectCard({
 	const [name, setName] = useState(project.name);
 	const [busy, setBusy] = useState(false);
 	const [failure, setFailure] = useState<Failure | null>(null);
+
+	// The copy is a new project with the brief, the texts and the timelines of this one (VV-225).
+	const duplicate = async (): Promise<void> => {
+		setFailure(null);
+		try {
+			await createClient(new HttpTransport("/api/v1")).duplicateProject(
+				project.id,
+			);
+			onChanged();
+		} catch (error) {
+			setFailure(failureOf(error));
+		}
+	};
 
 	const submitRename = async (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
@@ -133,6 +152,9 @@ export default function ProjectCard({
 							})}
 						</p>
 						<p className="text-xs text-muted-foreground">
+							{t("ui.projects.card.timelines", { count: project.timelines })}
+						</p>
+						<p className="text-xs text-muted-foreground">
 							{t("ui.projects.updated", {
 								date: formatDateTime(project.updated_at, locale),
 							})}
@@ -158,6 +180,9 @@ export default function ProjectCard({
 							>
 								{t("ui.projects.card.rename")}
 							</DropdownMenuItem>
+							<DropdownMenuItem onSelect={() => void duplicate()}>
+								{t("ui.projects.card.duplicate")}
+							</DropdownMenuItem>
 							<DropdownMenuItem
 								variant="destructive"
 								onSelect={() => setConfirming(true)}
@@ -178,8 +203,18 @@ export default function ProjectCard({
 							</span>
 						</a>
 					</Button>
+					<Button asChild variant="outline">
+						<Link href={`/projects/${project.id}`}>
+							{t("ui.projects.card.details")}
+							<span className="sr-only">
+								{" "}
+								<UntrustedText>{project.name}</UntrustedText>
+							</span>
+						</Link>
+					</Button>
 					<BundleExport projectId={project.id} />
 				</div>
+				<FailureNote failure={failure} />
 			</div>
 
 			<Dialog open={renaming} onOpenChange={setRenaming}>
