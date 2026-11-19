@@ -235,6 +235,27 @@
         "fill": "fill",
         "group": "group"
       },
+      "layers": {
+        "title": "Layers",
+        "label": "Layers, top first",
+        "empty_title": "The image has no layers",
+        "empty_body": "Add a text, a shape or a photo from the toolbar.",
+        "hidden": "hidden",
+        "locked": "locked",
+        "rename": "Layer name"
+      },
+      "arrange": {
+        "group": "Group layers",
+        "ungroup": "Ungroup",
+        "duplicate": "Duplicate",
+        "remove": "Remove",
+        "forward": "Bring forward",
+        "back": "Send backward"
+      },
+      "history": {
+        "undo": "Undo my last step",
+        "redo": "Redo my step"
+      },
       "toolbar": {
         "label": "Image tools"
       },

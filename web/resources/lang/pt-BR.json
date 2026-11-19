@@ -235,6 +235,27 @@
         "fill": "preenchimento",
         "group": "grupo"
       },
+      "layers": {
+        "title": "Camadas",
+        "label": "Camadas, a de cima primeiro",
+        "empty_title": "A imagem não tem camadas",
+        "empty_body": "Adicione um texto, uma forma ou uma foto pela barra de ferramentas.",
+        "hidden": "oculta",
+        "locked": "bloqueada",
+        "rename": "Nome da camada"
+      },
+      "arrange": {
+        "group": "Agrupar camadas",
+        "ungroup": "Desagrupar",
+        "duplicate": "Duplicar",
+        "remove": "Remover",
+        "forward": "Trazer para frente",
+        "back": "Enviar para trás"
+      },
+      "history": {
+        "undo": "Desfazer meu último passo",
+        "redo": "Refazer meu passo"
+      },
       "toolbar": {
         "label": "Ferramentas da imagem"
       },
