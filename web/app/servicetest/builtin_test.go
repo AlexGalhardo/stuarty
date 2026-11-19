@@ -17,7 +17,10 @@ func TestBuiltInSkillsAreInstalledWhenTheServiceStarts(t *testing.T) {
 		o.Workspace = string(e.dir)
 		o.BuiltInSkills = skills.FS()
 	})
-	agent := service.WithCaller(context.Background(), service.Caller{Actor: "local:claude-code-k3m9x2", Scopes: service.AllScopes})
+	agent := service.WithCaller(
+		context.Background(),
+		service.Caller{Actor: "local:claude-code-k3m9x2", Scopes: service.AllScopes},
+	)
 
 	// An agent sees them without any review by a person: the product wrote and read them.
 	list, err := e.svc.SkillList(agent, service.SkillListRequest{AgentView: true})
@@ -53,7 +56,10 @@ func TestBuiltInSkillsAreInstalledWhenTheServiceStarts(t *testing.T) {
 		t.Fatalf("%+v %v", got, err)
 	}
 
-	person := service.WithCaller(context.Background(), service.Caller{Actor: "local:ui", Scopes: service.AllScopes, Browser: true})
+	person := service.WithCaller(
+		context.Background(),
+		service.Caller{Actor: "local:ui", Scopes: service.AllScopes, Browser: true},
+	)
 
 	if _, err := e.svc.SkillWrite(person, service.SkillWriteRequest{
 		Name: "start-here", Description: got.Entry.Description, Body: "My own router.",
