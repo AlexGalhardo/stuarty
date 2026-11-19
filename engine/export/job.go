@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"image"
 	"io"
+	"maps"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 
@@ -31,6 +33,10 @@ type Job struct {
 	// Caps is ffmpeg's capability list, for the encoder detection.
 	Caps *ffmpeg.Capabilities
 	Doc  *timeline.Document
+	// Nested are the other timelines of the project that the composition items of Doc use, directly or through
+	// each other, by id (SDD-004 section 3.16); nil for a document with no composition. The pictures and the
+	// sound of those items are made from them, and their assets are read like the assets of Doc.
+	Nested map[string]*timeline.Document
 	// JobID names the run directory under <workspace>/tmp.
 	JobID string
 	// ArtifactsDir is <workspace>/artifacts, where the normalized media of the assets is.
@@ -130,7 +136,7 @@ func newState(ctx context.Context, job *Job, dir *ffmpeg.RunDir, frames int) *st
 	secs := time.Duration(float64(frames) * float64(fps.Den) / float64(fps.Num) * float64(time.Second))
 	return &state{
 		job: job, ctx: ctx, dir: dir, frames: frames, fonts: fonts, scale: 1,
-		opts:      plan.Options{Measure: rasterize.Measure(fonts)},
+		opts:      plan.Options{Measure: rasterize.Measure(fonts), Nested: job.nestedDoc},
 		deadline:  exportDeadline(secs),
 		inputDirs: assetDirs(job),
 	}
@@ -154,15 +160,25 @@ func (s *state) newRenderer(bands int) *renderer {
 	fs := newFrameSource(s, infos)
 	cache := rasterize.NewCache(s.fonts, 0)
 	rd := &renderer{
-		s:    s,
-		fs:   fs,
-		comp: &compositor.Compositor{Media: fs.media, Bitmaps: cache.Get, LUTs: fs.lut, Bands: bands},
+		s:  s,
+		fs: fs,
+		comp: &compositor.Compositor{
+			Media: fs.media, Bitmaps: cache.Get, LUTs: fs.lut, Bands: bands, Scoped: s.scoped,
+		},
 	}
 	if s.job.PixelRenderer == PixelRendererRust || s.job.PixelRenderer == PixelRendererGPU {
 		rd.rust = newRustRenderer(s, fs, cache.Get, bands)
 	}
 
 	return rd
+}
+
+// scoped sets the output scale the frame source sizes its pixels by to that of the nested frame of a group, and
+// returns what puts the scale of the frame back (compositor.Compositor.Scoped).
+func (s *state) scoped(scale float64) func() {
+	old := s.scale
+	s.scale = scale
+	return func() { s.scale = old }
 }
 
 // render composes frame t into dst, then stops the decoders of the clips that are no longer drawn.
@@ -246,11 +262,16 @@ func run(ctx context.Context, job *Job) (*Result, error) {
 		)
 	}
 
-	// 1. Check.
+	// 1. Check, the timelines that compositions use as much as the one that is exported.
+	if err := job.checkNested(); err != nil {
+		return nil, exportErr(ReasonRender, "The timelines of the project do not agree on their media.", err, "")
+	}
 	var blocking []lint.Finding
-	for _, f := range lint.Lint(doc, job.Lint, lint.Full) {
-		if lint.Blocking(f.Code) {
-			blocking = append(blocking, f)
+	for _, d := range job.documents() {
+		for _, f := range lint.Lint(d, job.Lint, lint.Full) {
+			if lint.Blocking(f.Code) {
+				blocking = append(blocking, f)
+			}
 		}
 	}
 	if len(blocking) > 0 {
@@ -342,17 +363,62 @@ func endFrame(doc *timeline.Document) int {
 	return end
 }
 
+// nestedDoc is the plan.Nested of the job: a timeline that a composition of Doc uses.
+func (j *Job) nestedDoc(id string) (*timeline.Document, bool) {
+	d, ok := j.Nested[id]
+	return d, ok && d != nil
+}
+
+// documents are Doc and the nested timelines, Doc first and the others by id.
+func (j *Job) documents() []*timeline.Document {
+	docs := []*timeline.Document{j.Doc}
+	for _, id := range slices.Sorted(maps.Keys(j.Nested)) {
+		if d := j.Nested[id]; d != nil {
+			docs = append(docs, d)
+		}
+	}
+	return docs
+}
+
+// checkNested refuses a job in which one asset id names two different files: a plan layer names its asset by id
+// alone, and the assets of the nested timelines are read together with those of Doc (SDD-004 section 3.16).
+func (j *Job) checkNested() error {
+	have := map[string]string{}
+	for _, d := range j.documents() {
+		for id := range d.Assets {
+			hash := d.Assets[id].Hash
+			if prev, ok := have[id]; ok && prev != hash {
+				return fmt.Errorf("the asset %s is two different files in two timelines of the project", id)
+			}
+			have[id] = hash
+		}
+	}
+	return nil
+}
+
+// asset is an asset of Doc or of a nested timeline.
+func (s *state) asset(id string) (timeline.Asset, bool) {
+	for _, d := range s.job.documents() {
+		if a, ok := d.Assets[id]; ok {
+			return a, true
+		}
+	}
+	return timeline.Asset{}, false
+}
+
 // assetDirs are the artifact folders of the assets, where the children may read the normalized media.
 func assetDirs(job *Job) []string {
 	seen := map[string]bool{}
 	var dirs []string
-	for id := range job.Doc.Assets {
-		hash, ok := strings.CutPrefix(job.Doc.Assets[id].Hash, "sha256:")
-		if !ok || seen[hash] {
-			continue
+	for _, d := range job.documents() {
+		for id := range d.Assets {
+			hash, ok := strings.CutPrefix(d.Assets[id].Hash, "sha256:")
+			if !ok || seen[hash] {
+				continue
+			}
+			seen[hash] = true
+			dirs = append(dirs, filepath.Join(job.ArtifactsDir, hash))
 		}
-		seen[hash] = true
-		dirs = append(dirs, filepath.Join(job.ArtifactsDir, hash))
 	}
 	return dirs
 }
