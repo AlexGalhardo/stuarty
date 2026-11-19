@@ -1,0 +1,36 @@
+[
+  {
+    "kind": "track.updated",
+    "id": "trk_m1n2p3q4r5",
+    "changes": {
+      "processors": [
+        null,
+        [
+          {
+            "kind": "eq",
+            "params": {
+              "b2_gain_db": -2,
+              "b4_gain_db": 2.5,
+              "b4_hz": 3500,
+              "hp_hz": 100
+            }
+          },
+          {
+            "kind": "deesser"
+          },
+          {
+            "kind": "compressor",
+            "params": {
+              "makeup_db": 2,
+              "ratio": 2.5,
+              "threshold_db": -22
+            }
+          },
+          {
+            "kind": "limiter"
+          }
+        ]
+      ]
+    }
+  }
+]

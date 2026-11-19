@@ -1,0 +1,19 @@
+[
+  {
+    "kind": "track.updated",
+    "id": "trk_m1n2p3q4r5",
+    "changes": {
+      "processors": [
+        null,
+        [
+          {
+            "kind": "limiter",
+            "params": {
+              "ceiling_db": -2
+            }
+          }
+        ]
+      ]
+    }
+  }
+]

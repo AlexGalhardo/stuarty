@@ -84,6 +84,21 @@ export interface AudioAddArgs {
   track_id: string;
 }
 
+export interface AudioApplyPresetArgs {
+  /**
+   * A clip or audio item; give this or track_id.
+   */
+  item_id?: string;
+  /**
+   * voice, voice_with_music, podcast or clean_noisy_room.
+   */
+  preset: "voice" | "voice_with_music" | "podcast" | "clean_noisy_room";
+  /**
+   * A track; give this or item_id.
+   */
+  track_id?: string;
+}
+
 export interface AudioDuckArgs {
   /**
    * A length, may be 0; the ramp down before speech. Default "0.2s".
@@ -296,6 +311,94 @@ export interface AudioMarkBeatsArgs {
      */
     beats: number[];
   };
+}
+
+export interface AudioProcessorAddArgs {
+  /**
+   * false adds it switched off; default true.
+   */
+  enabled?: boolean;
+  /**
+   * Where to insert, 0 to the length of the chain; default the end.
+   */
+  index?: number;
+  /**
+   * A clip or audio item; give this or track_id.
+   */
+  item_id?: string;
+  /**
+   * eq, compressor, limiter, gate, deesser or noise_reduction.
+   */
+  kind: "eq" | "compressor" | "limiter" | "gate" | "deesser" | "noise_reduction";
+  /**
+   * Parameter values by name; the rest keep their default.
+   */
+  params?: {
+    [k: string]: number;
+  };
+  /**
+   * A track; give this or item_id.
+   */
+  track_id?: string;
+}
+
+export interface AudioProcessorMoveArgs {
+  /**
+   * The processor to move, 0-based.
+   */
+  index: number;
+  /**
+   * A clip or audio item; give this or track_id.
+   */
+  item_id?: string;
+  /**
+   * Its new place, 0 to the length minus one.
+   */
+  to: number;
+  /**
+   * A track; give this or item_id.
+   */
+  track_id?: string;
+}
+
+export interface AudioProcessorRemoveArgs {
+  /**
+   * The processor to remove, 0-based.
+   */
+  index: number;
+  /**
+   * A clip or audio item; give this or track_id.
+   */
+  item_id?: string;
+  /**
+   * A track; give this or item_id.
+   */
+  track_id?: string;
+}
+
+export interface AudioProcessorSetArgs {
+  /**
+   * true switches it on, false off.
+   */
+  enabled?: boolean;
+  /**
+   * The processor to change, 0-based.
+   */
+  index: number;
+  /**
+   * A clip or audio item; give this or track_id.
+   */
+  item_id?: string;
+  /**
+   * Values to change; the others stay.
+   */
+  params?: {
+    [k: string]: number;
+  };
+  /**
+   * A track; give this or item_id.
+   */
+  track_id?: string;
 }
 
 export interface CaptionAddArgs {
@@ -2548,7 +2651,7 @@ export interface TrackUpdateArgs {
   volume?: number;
 }
 
-export type CommandName = "animation.apply_preset" | "animation.list_presets" | "asset.add" | "asset.remove" | "audio.add" | "audio.duck" | "audio.mark_beats" | "caption.add" | "caption.edit_word" | "caption.from_transcript" | "caption.import_subtitles" | "caption.merge" | "caption.retime_from_clip" | "caption.set_breaks" | "caption.set_style" | "caption.set_words" | "caption.split" | "clip.add" | "clip.remove_silences" | "clip.replace_media" | "clip.set_blend" | "clip.set_blur" | "clip.set_chroma_key" | "clip.set_color" | "clip.set_effects" | "clip.set_filter" | "clip.set_flip" | "clip.set_framing" | "clip.set_mask" | "clip.set_outline" | "clip.set_shadow" | "clip.set_speed" | "font.add" | "font.remove" | "item.crossfade" | "item.delete" | "item.duplicate" | "item.extract_audio" | "item.freeze_frame" | "item.link" | "item.move" | "item.paste_attributes" | "item.rename" | "item.repeat" | "item.set_audio" | "item.set_enabled" | "item.set_transform" | "item.set_transition" | "item.slip" | "item.split" | "item.trim" | "item.unlink" | "keyframe.clear" | "keyframe.remove" | "keyframe.set" | "keyframe.set_easing" | "marker.add" | "marker.remove" | "marker.set" | "project.rename" | "settings.reframe" | "settings.set" | "settings.set_fps" | "shape.add" | "shape.set" | "slot.fill" | "slot.mark" | "slot.unmark" | "template.set_info" | "text.add" | "text.apply_preset" | "text.set" | "timeline.close_gap" | "track.add" | "track.move" | "track.remove" | "track.set_caption_style" | "track.update";
+export type CommandName = "animation.apply_preset" | "animation.list_presets" | "asset.add" | "asset.remove" | "audio.add" | "audio.apply_preset" | "audio.duck" | "audio.mark_beats" | "audio.processor_add" | "audio.processor_move" | "audio.processor_remove" | "audio.processor_set" | "caption.add" | "caption.edit_word" | "caption.from_transcript" | "caption.import_subtitles" | "caption.merge" | "caption.retime_from_clip" | "caption.set_breaks" | "caption.set_style" | "caption.set_words" | "caption.split" | "clip.add" | "clip.remove_silences" | "clip.set_blend" | "clip.set_blur" | "clip.set_chroma_key" | "clip.set_color" | "clip.set_effects" | "clip.set_filter" | "clip.set_flip" | "clip.set_framing" | "clip.set_mask" | "clip.set_outline" | "clip.set_shadow" | "clip.set_speed" | "font.add" | "font.remove" | "item.crossfade" | "item.delete" | "item.duplicate" | "item.extract_audio" | "item.freeze_frame" | "item.link" | "item.move" | "item.paste_attributes" | "item.rename" | "item.repeat" | "item.set_audio" | "item.set_enabled" | "item.set_transform" | "item.set_transition" | "item.slip" | "item.split" | "item.trim" | "item.unlink" | "keyframe.clear" | "keyframe.remove" | "keyframe.set" | "keyframe.set_easing" | "marker.add" | "marker.remove" | "marker.set" | "project.rename" | "settings.reframe" | "settings.set" | "settings.set_fps" | "shape.add" | "shape.set" | "slot.fill" | "slot.mark" | "slot.unmark" | "template.set_info" | "text.add" | "text.apply_preset" | "text.set" | "timeline.close_gap" | "track.add" | "track.move" | "track.remove" | "track.set_caption_style" | "track.update";
 
 export interface CommandArgsMap {
 	"animation.apply_preset": AnimationApplyPresetArgs;
@@ -2556,8 +2659,13 @@ export interface CommandArgsMap {
 	"asset.add": AssetAddArgs;
 	"asset.remove": AssetRemoveArgs;
 	"audio.add": AudioAddArgs;
+	"audio.apply_preset": AudioApplyPresetArgs;
 	"audio.duck": AudioDuckArgs;
 	"audio.mark_beats": AudioMarkBeatsArgs;
+	"audio.processor_add": AudioProcessorAddArgs;
+	"audio.processor_move": AudioProcessorMoveArgs;
+	"audio.processor_remove": AudioProcessorRemoveArgs;
+	"audio.processor_set": AudioProcessorSetArgs;
 	"caption.add": CaptionAddArgs;
 	"caption.edit_word": CaptionEditWordArgs;
 	"caption.from_transcript": CaptionFromTranscriptArgs;
@@ -2639,8 +2747,13 @@ export const COMMANDS: Record<CommandName, { summary: string; scope: "edit" | "m
 	"asset.add": { summary: "Adds an asset that the import flow has already ingested.", scope: "media", internal: true, errors: ["E_VALIDATION","E_ID_EXISTS","E_LIMIT"] },
 	"asset.remove": { summary: "Removes an asset that no item uses.", scope: "media", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_IN_USE"] },
 	"audio.add": { summary: "Places an audio asset, or the audio of a video asset, on an audio track.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_ID_EXISTS","E_LIMIT","E_OUT_OF_SOURCE","E_OVERLAP"] },
+	"audio.apply_preset": { summary: "Apply preset", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"audio.duck": { summary: "Lowers a music item while speech sounds, with a ramp down before and a ramp up after.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_LIMIT"] },
 	"audio.mark_beats": { summary: "Writes markers on a music item at the beats of its audio.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_LIMIT"] },
+	"audio.processor_add": { summary: "Add processor", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_LIMIT"] },
+	"audio.processor_move": { summary: "Move processor", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
+	"audio.processor_remove": { summary: "Remove processor", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
+	"audio.processor_set": { summary: "Set processor", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"caption.add": { summary: "Adds a caption item with timed words.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_ID_EXISTS","E_LIMIT","E_OVERLAP"] },
 	"caption.edit_word": { summary: "Changes the text of one word of a caption, or removes the word.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE"] },
 	"caption.from_transcript": { summary: "Creates captions for the speech of a clip from its transcript.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_ID_EXISTS","E_LIMIT","E_OVERLAP"] },

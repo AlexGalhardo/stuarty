@@ -1028,11 +1028,26 @@
           "add": {
             "title": "Add audio"
           },
+          "apply_preset": {
+            "title": "Apply an audio preset"
+          },
           "duck": {
             "title": "Duck music under speech"
           },
           "mark_beats": {
             "title": "Mark beats"
+          },
+          "processor_add": {
+            "title": "Add an audio processor"
+          },
+          "processor_move": {
+            "title": "Move an audio processor"
+          },
+          "processor_remove": {
+            "title": "Remove an audio processor"
+          },
+          "processor_set": {
+            "title": "Change an audio processor"
           }
         },
         "caption": {
@@ -1297,7 +1312,8 @@
         "L_AUDIO_CLIP": "Audio clipping",
         "L_LOUDNESS": "Loudness off target",
         "L_DURATION_LIMIT": "Over the duration limit",
-        "L_ALPHA_MISSING": "Transparency declared but missing"
+        "L_AUDIO_LIMITER_NOT_LAST": "Limiter is not last in the chain",
+        "L_AUDIO_NOISE_REDUCTION_REPEATED": "More than one noise reduction"
       },
       "shortcuts": {
         "title": "Keyboard shortcuts",
