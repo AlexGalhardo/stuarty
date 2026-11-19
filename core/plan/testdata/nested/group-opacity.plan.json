@@ -576,6 +576,25 @@
         "opacity": 0.5
       }
     ],
-    "audio": []
+    "audio": [
+      {
+        "item": "itm_comp0000001/itm_c1",
+        "asset": "ast_video000001",
+        "first": 5,
+        "last": 94,
+        "source_seconds": 0,
+        "speed": 1,
+        "gain": 1
+      },
+      {
+        "item": "itm_comp0000001/itm_c2",
+        "asset": "ast_video000001",
+        "first": 15,
+        "last": 74,
+        "source_seconds": 0,
+        "speed": 1,
+        "gain": 1
+      }
+    ]
   }
 }
