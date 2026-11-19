@@ -326,6 +326,46 @@ var Endpoints = []Endpoint{
 		Service: "ConnectionTest", Status: 200, Summary: "Make one request through a connection",
 	},
 	{
+		ID: "approvals.list", Method: http.MethodGet, Path: "/approvals", Scope: service.ScopeRead,
+		Service: "ApprovalList", Status: 200, Summary: "List the approval queue (pending requests by default)",
+	},
+	{
+		ID: "approvals.events", Method: http.MethodGet, Path: "/approvals/events", Scope: service.ScopeRead,
+		Uncounted: true, Status: 200, Summary: "Stream the events of the approval queue",
+	},
+	{
+		ID: "approvals.get", Method: http.MethodGet, Path: "/approvals/{id}", Scope: service.ScopeRead,
+		Service: "ApprovalGet", Status: 200, Summary: "Read one approval request",
+	},
+	{
+		ID: "approvals.decide", Method: http.MethodPost, Path: "/approvals/{id}/decide", Scope: service.ScopeRead,
+		Service: "ApprovalDecide", Status: 200,
+		Summary: "Approve or reject a request (a person in the browser only; the local token and keys get 403)",
+	},
+	{
+		ID: "approval-rules.list", Method: http.MethodGet, Path: "/approval-rules", Scope: service.ScopeRead,
+		Service: "ApprovalRuleList", Status: 200, Summary: "List the rules that approve without asking",
+	},
+	{
+		ID: "approval-rules.set", Method: http.MethodPost, Path: "/approval-rules", Scope: service.ScopeAdmin,
+		Service: "ApprovalRuleSet", Status: 200,
+		Summary: "Create or replace a rule (a person in the browser only; the local token and keys get 403)",
+	},
+	{
+		ID: "approval-rules.remove", Method: http.MethodDelete, Path: "/approval-rules/{id}", Scope: service.ScopeAdmin,
+		Service: "ApprovalRuleRemove", Status: 200,
+		Summary: "Remove a rule (a person in the browser only; the local token and keys get 403)",
+	},
+	{
+		ID: "cost.get", Method: http.MethodGet, Path: "/cost", Scope: service.ScopeRead,
+		Service: "CostSummary", Status: 200, Summary: "Read the cost ceilings and what was spent",
+	},
+	{
+		ID: "cost.ceilings.set", Method: http.MethodPut, Path: "/cost/ceilings", Scope: service.ScopeAdmin,
+		Service: "CostCeilingSet", Status: 200,
+		Summary: "Set or remove a cost ceiling (a person in the browser only; the local token and keys get 403)",
+	},
+	{
 		ID: "library.memory.list", Method: http.MethodGet, Path: "/library/memory", Scope: service.ScopeRead,
 		Service: "MemoryList", Status: 200, Summary: "List the memory notes",
 	},
@@ -588,6 +628,20 @@ var Endpoints = []Endpoint{
 	{
 		ID: "images.export", Method: http.MethodPost, Path: "/images/{id}/export", Scope: service.ScopeEdit,
 		Service: "ImageExport", Status: 200, Summary: "Export an image document to a PNG, JPEG or WebP file",
+	},
+	// The reads of the image editor screen (SDD-012 section 24.3).
+	{
+		ID: "images.frame", Method: http.MethodGet, Path: "/images/{id}/frame", Scope: service.ScopeRead,
+		Service: "ImageFrame", Uncounted: true, MaxInFlight: 2, Status: 200,
+		Summary: "Render the picture of an image document",
+	},
+	{
+		ID: "images.history", Method: http.MethodGet, Path: "/images/{id}/history", Scope: service.ScopeRead,
+		Service: "ImageHistory", Status: 200, Summary: "List the latest batches of an image document",
+	},
+	{
+		ID: "images.file", Method: http.MethodGet, Path: "/images/{id}/exports/{name}", Scope: service.ScopeRead,
+		Service: "ImageFile", Status: 200, Summary: "Download a file that an image export wrote",
 	},
 }
 

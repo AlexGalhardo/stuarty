@@ -103,7 +103,7 @@ Rules of reading:
 ### 2.3 What is not in the plan
 
 - **Transitions.** `fade` is already in `opacity` and the slides are already in `cx` and `cy` (SDD-004 §3.2). The renderer receives no transition kind, no progress and no second layer to cross-fade; a transition is an ordinary layer whose numbers are those of this frame. This is what keeps the renderer from deciding anything an agent could see differently from a person (ADR-0029 item 1).
-- **Keyframes and easing.** Evaluated by `core/plan` (SDD-004 §3.1); the plan holds the value at this frame.
+- **Keyframes and easing.** Evaluated by `core/plan` (SDD-004 §3.1); the plan holds the value at this frame. This includes the Bezier easing of epic 31: the fixed-point evaluation lives in the core only, the renderer, the compositor and the PixiJS preview receive the sampled `opacity`, `scale`, `cx`, `cy`, `rotation`, `mask` and `crop` of the frame and have no curve code. A new easing therefore adds no field to the plan and needs no change in the renderer; the parity cases of `preview-export-parity` prove it.
 - **Speed, trims and source time.** Evaluated by the plan (§3.3 of SDD-004); the host fetches the right source frame and hands over its pixels.
 - **Audio.** The renderer draws pictures only.
 

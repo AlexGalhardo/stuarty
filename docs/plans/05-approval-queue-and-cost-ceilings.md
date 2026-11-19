@@ -35,14 +35,14 @@ An agent can prepare a post or an expensive generation, and nothing is sent or s
 
 ## Tasks
 
-- [ ] 1. Write SDD-015 and the SDD-000 names; add SDD-007 rows (an agent approving its own request, a rule created by an agent, a cost ceiling bypass). Verify: `task lint:md` exits 0.
-- [ ] 2. Implement `core/approval` with table tests. Verify: `go test ./core/approval/...` passes with every branch of `Decide` covered.
-- [ ] 3. Add the tables and the service operations, with the privileged-session check. Verify: `go test ./service/approval/...` passes, including a test where a local-token caller is refused.
-- [ ] 4. Wire jobs: the `waiting_approval` state, start on approval, reject on cancel. Verify: `go test ./service/... -run TestJobApproval` passes.
-- [ ] 5. Implement the cost ledger and the ceilings. Verify: `go test ./service/approval/... -run TestCeiling` passes (per item, per day, per project).
-- [ ] 6. Expose on HTTP, CLI and MCP (read and submit for agents; decide only for a privileged session) with parity tests. Verify: `go test ./web/contract/...` passes.
-- [ ] 7. Build the approval queue component and the rules screen in both languages. Verify: `task test:web` and `web/e2e/specs/approval.spec.ts` pass.
-- [ ] 8. Add the security tests of the new rows. Verify: `go test -run TestSecurity_ ./...` and `go run ./internal/tools/threatcheck` exit 0.
+- [x] 1. Write SDD-015 and the SDD-000 names; add SDD-007 rows (an agent approving its own request, a rule created by an agent, a cost ceiling bypass). Verify: `task lint:md` exits 0.
+- [x] 2. Implement `core/approval` with table tests. Verify: `go test ./core/approval/...` passes with every branch of `Decide` covered.
+- [x] 3. Add the tables and the service operations, with the privileged-session check. Verify: `go test ./service/approval/...` passes, including a test where a local-token caller is refused.
+- [x] 4. Wire jobs: the `waiting_approval` state, start on approval, reject on cancel. Verify: `go test ./service/... ./web/app/servicetest/... -run TestJobApproval` passes (the lifecycle tests need the SQLite store, which `service/` may not import, so they live in `web/app/servicetest`).
+- [x] 5. Implement the cost ledger and the ceilings. Verify: `go test ./service/approval/... ./web/app/servicetest/... -run TestCeiling` passes (per item, per day, per project).
+- [x] 6. Expose on HTTP, CLI and MCP (read and submit for agents; decide only for a privileged session) with parity tests. Verify: `go test ./web/contract/...` passes.
+- [x] 7. Build the approval queue component and the rules screen in both languages. Verify: `task test:web` and `web/e2e/specs/approval.spec.ts` pass.
+- [x] 8. Add the security tests of the new rows. Verify: `go test -run TestSecurity_ ./...` and `go run ./internal/tools/threatcheck` exit 0.
 
 ## Test strategy
 

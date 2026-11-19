@@ -1,0 +1,184 @@
+{
+  "bezier_presets": {
+    "back": [
+      0.36,
+      0,
+      0.66,
+      -0.56
+    ],
+    "in": [
+      0.42,
+      0,
+      1,
+      1
+    ],
+    "in_out": [
+      0.42,
+      0,
+      0.58,
+      1
+    ],
+    "out": [
+      0,
+      0,
+      0.58,
+      1
+    ],
+    "overshoot": [
+      0.34,
+      1.56,
+      0.64,
+      1
+    ]
+  },
+  "presets": [
+    {
+      "edges": [
+        "in",
+        "out"
+      ],
+      "id": "fade",
+      "parameters": {
+        "duration": {
+          "default": "0.5s",
+          "max": "the item's duration",
+          "min": 1,
+          "unit": "frames"
+        }
+      },
+      "properties": [
+        "opacity"
+      ],
+      "summary": "Opacity from 0 to its value (in) or to 0 (out)."
+    },
+    {
+      "edges": [
+        "in",
+        "out"
+      ],
+      "id": "slide",
+      "parameters": {
+        "amount": {
+          "default": "a quarter of the width (left, right) or of the height (up, down)",
+          "max": 10000,
+          "min": 1,
+          "unit": "project pixels"
+        },
+        "direction": {
+          "default": "left",
+          "values": [
+            "left",
+            "right",
+            "up",
+            "down"
+          ]
+        },
+        "duration": {
+          "default": "0.5s",
+          "max": "the item's duration",
+          "min": 1,
+          "unit": "frames"
+        }
+      },
+      "properties": [
+        "x",
+        "y"
+      ],
+      "summary": "Moves in from a side of the frame (in) or out to it (out)."
+    },
+    {
+      "edges": [
+        "in",
+        "out"
+      ],
+      "id": "scale",
+      "parameters": {
+        "amount": {
+          "default": 0.5,
+          "max": 20,
+          "min": 0.01,
+          "unit": "factor"
+        },
+        "duration": {
+          "default": "0.5s",
+          "max": "the item's duration",
+          "min": 1,
+          "unit": "frames"
+        }
+      },
+      "properties": [
+        "scale"
+      ],
+      "summary": "Scale from a factor of its value to its value (in) or the reverse (out)."
+    },
+    {
+      "edges": [
+        "in",
+        "out"
+      ],
+      "id": "pop",
+      "parameters": {
+        "duration": {
+          "default": "0.5s",
+          "max": "the item's duration",
+          "min": 1,
+          "unit": "frames"
+        }
+      },
+      "properties": [
+        "scale"
+      ],
+      "summary": "Pops in from nothing with an overshoot (in), or shrinks away (out)."
+    },
+    {
+      "edges": [
+        "in",
+        "out"
+      ],
+      "id": "push_in",
+      "parameters": {
+        "amount": {
+          "default": 1.2,
+          "max": 4,
+          "min": 1.01,
+          "unit": "factor"
+        },
+        "duration": {
+          "default": "the whole item",
+          "max": "the item's duration",
+          "min": 1,
+          "unit": "frames"
+        }
+      },
+      "properties": [
+        "scale"
+      ],
+      "summary": "A steady zoom in: scale grows by the factor over the window."
+    },
+    {
+      "edges": [
+        "in",
+        "out"
+      ],
+      "id": "pull_out",
+      "parameters": {
+        "amount": {
+          "default": 1.2,
+          "max": 4,
+          "min": 1.01,
+          "unit": "factor"
+        },
+        "duration": {
+          "default": "the whole item",
+          "max": "the item's duration",
+          "min": 1,
+          "unit": "frames"
+        }
+      },
+      "properties": [
+        "scale"
+      ],
+      "summary": "A steady zoom out: scale shrinks by the factor over the window."
+    }
+  ]
+}

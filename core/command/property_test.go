@@ -560,6 +560,38 @@ var alphaOps = map[string]func(p *docPick) string{
 			p.oneOf("scale", "opacity", "x", "y", "rotation", "volume"), p.frames(500), float64(p.n(100))/100+0.1,
 			p.oneOf("linear", "ease_in", "ease_out", "ease_in_out", "hold"))
 	},
+	"animation.apply_preset": func(p *docPick) string {
+		preset := p.oneOf("fade", "slide", "scale", "pop", "push_in", "pull_out")
+		edge := p.oneOf("in", "out")
+		extra := ""
+
+		if preset == "slide" && p.n(2) == 0 {
+			extra = fmt.Sprintf(`,"direction":%q`, p.oneOf("left", "right", "up", "down"))
+		}
+
+		return fmt.Sprintf(`{"item_id":%q,"preset":%q,"edge":%q,"duration":%q%s}`, p.item(), preset, edge,
+			p.frames(120), extra)
+	},
+	"animation.list_presets": func(_ *docPick) string { return `{}` },
+	"keyframe.set_easing": func(p *docPick) string {
+		item, prop, at := p.item(), "scale", p.frames(500)
+		if len(p.keys) > 0 && p.n(4) != 0 {
+			k := p.keys[p.n(len(p.keys))]
+			item, prop, at = k.item, k.prop, fmt.Sprintf("%df", k.at)
+		}
+
+		switch p.n(3) {
+		case 0:
+			return fmt.Sprintf(`{"item_id":%q,"property":%q,"at":%q,"preset":%q}`, item, prop, at,
+				p.oneOf("in", "out", "in_out", "back", "overshoot"))
+		case 1:
+			return fmt.Sprintf(`{"item_id":%q,"property":%q,"at":%q,"bezier":[%.2f,%.2f,%.2f,%.2f]}`, item, prop, at,
+				float64(p.n(100))/100, float64(p.n(500))/100-2, float64(p.n(100))/100, float64(p.n(500))/100-2)
+		}
+
+		return fmt.Sprintf(`{"item_id":%q,"property":%q,"at":%q,"easing":%q}`, item, prop, at,
+			p.oneOf("linear", "ease_in", "ease_out", "ease_in_out", "hold"))
+	},
 	"keyframe.remove": func(p *docPick) string {
 		if len(p.keys) > 0 && p.n(4) != 0 {
 			k := p.keys[p.n(len(p.keys))]

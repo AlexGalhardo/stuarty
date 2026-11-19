@@ -440,7 +440,12 @@ func sharedProps(it *timeline.Item, props object) {
 		for name, list := range it.Keyframes {
 			out := make([]any, 0, len(list))
 			for _, k := range list {
-				out = append(out, object{"t": k.T, "value": k.Value, "easing": k.Easing})
+				key := object{"t": k.T, "value": k.Value, "easing": k.Easing}
+				if k.Bezier != nil {
+					key["bezier"] = k.Bezier
+				}
+
+				out = append(out, key)
 			}
 
 			kfs[name] = out

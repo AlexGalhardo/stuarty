@@ -247,9 +247,13 @@ func TestSecurity_T05_EveryOperationHasScope(t *testing.T) {
 		"GET /settings/brand-kit",
 		"GET /login",
 		"GET /settings/keys",
+		// The image editor (web/routes/image_pages.go): the pages read and change the document through /api/v1/images.
+		"GET /edit-image", "GET /edit-image/{image_id}",
 		// The empty-state pages of the dashboard sections (web/routes/dashboard.go).
-		"GET /edit-video", "GET /edit-image", "GET /write", "GET /visual-assets", "GET /video-assets",
+		"GET /edit-video", "GET /write", "GET /visual-assets", "GET /video-assets",
 		"GET /publish", "GET /skills", "GET /prompts", "GET /memory", "GET /connections",
+		// The approval page (epic 05): it reads the queue through /api/v1/approvals.
+		"GET /approvals",
 	}
 
 	for _, r := range h.vapp.Router.Routes() {

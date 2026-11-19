@@ -46,6 +46,7 @@ Content type `application/json`. Schema: [`Job`](/docs/api/schemas#job).
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `actor` | `string` | no |  |
+| `approval_id` | `string` | no |  |
 | `created_at` | `string (date-time)` | no |  |
 | `error` | [`Error`](/docs/api/schemas#error) or `any` or `null` or `null` | no |  |
 | `finished_at` | `string (date-time)` or `null` | no |  |
@@ -68,6 +69,7 @@ Content type `application/json`. Schema: [`Job`](/docs/api/schemas#job).
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `actor` | `string` | no |  |
+| `approval_id` | `string` | no |  |
 | `created_at` | `string (date-time)` | no |  |
 | `error` | [`Error`](/docs/api/schemas#error) or `any` or `null` or `null` | no |  |
 | `finished_at` | `string (date-time)` or `null` | no |  |
@@ -296,6 +298,7 @@ puts "#{response.code} #{response.body}"
 ```json title="200"
 {
   "actor": "string",
+  "approval_id": "string",
   "created_at": "2006-01-02T15:04:05Z",
   "error": {
     "code": "string",
@@ -352,6 +355,7 @@ puts "#{response.code} #{response.body}"
 ```json title="202"
 {
   "actor": "string",
+  "approval_id": "string",
   "created_at": "2006-01-02T15:04:05Z",
   "error": {
     "code": "string",

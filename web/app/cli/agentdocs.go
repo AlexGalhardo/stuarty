@@ -44,6 +44,9 @@ func AgentDocsInputs() agentdocs.Inputs {
 
 	for i := range commands {
 		c := &commands[i]
+		if c.Person {
+			continue
+		}
 
 		usage := ""
 		if len(c.Usage) > 0 {
