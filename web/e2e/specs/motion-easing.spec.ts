@@ -226,12 +226,12 @@ test.describe("motion and easing", () => {
 
 		const tabs = page.getByRole("tablist", { name: "Properties" });
 		await tabs.getByRole("tab", { name: "Animation" }).click();
+		// The Animation section shares the tab: every control has a name of its own.
 		await page
-			.getByLabel("Preset", { exact: true })
-			.last()
+			.getByLabel("Motion preset", { exact: true })
 			.selectOption("slide");
 		await page.getByLabel("Direction", { exact: true }).selectOption("up");
-		await page.getByRole("button", { name: "Apply" }).last().click();
+		await page.getByRole("button", { name: "Add motion" }).click();
 		await expect.poll(() => posted.length).toBe(1);
 		expect(posted[0]?.operations).toEqual([
 			{
@@ -252,8 +252,10 @@ test.describe("motion and easing", () => {
 
 		// A preset longer than the item is refused by the core and changes nothing.
 		await tabs.getByRole("tab", { name: "Animation" }).click();
-		await page.getByLabel("Duration", { exact: true }).last().fill("60s");
-		await page.getByRole("button", { name: "Apply" }).last().click();
+		await page
+			.getByLabel("Duration of the motion preset", { exact: true })
+			.fill("60s");
+		await page.getByRole("button", { name: "Add motion" }).click();
 		await expect.poll(() => posted.length).toBe(2);
 		expect(await storedKeys(page, itemId, "y")).toHaveLength(2);
 		// The refusal shows under the section as the core sent it.
