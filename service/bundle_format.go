@@ -14,12 +14,15 @@ const (
 	// formerBundleFormat is the value written before the rename (ADR-0044); a bundle that carries it is
 	// still imported.
 	formerBundleFormat = "vukem-video-bundle"
-	// BundleVersion is the layout of the container; an importer refuses a higher one.
-	BundleVersion = 1
+	// BundleVersion is the layout of the container; an importer refuses a higher one. Version 2 adds the
+	// production and the timelines after the first (SDD-005 section 16.1.1); version 1 is still read.
+	BundleVersion = 2
 
 	bundleManifestEntry  = "manifest.json"
 	bundleDocumentEntry  = "document.json"
 	bundleOperationsName = "operations.ndjson"
+	bundleTimelinePrefix = "timeline."
+	bundleMainKey        = "main"
 	bundleMediaPrefix    = "media."
 	bundleFontPrefix     = "font."
 	bundleExt            = ".vvbundle"
@@ -38,7 +41,44 @@ type BundleManifest struct {
 	Operations    *BundleLog       `json:"operations,omitempty"`
 	Media         []BundleMedia    `json:"media"`
 	Fonts         []BundleFontFile `json:"fonts"`
+	// Production and Timelines are the members of version 2: the items of the project, and every timeline but
+	// the first (the first is Document and Operations).
+	Production *BundleProduction `json:"production,omitempty"`
+	Timelines  []BundleTimeline  `json:"timelines,omitempty"`
 }
+
+// BundleProduction is the project around its timelines.
+type BundleProduction struct {
+	Name  string       `json:"name"`
+	Items []BundleItem `json:"items"`
+}
+
+// BundleItem is an active item of the project. Timeline names the timeline by its key in the bundle ("main",
+// "t1", ...); an output keeps its format and no job, because the file is not in the bundle.
+type BundleItem struct {
+	Kind     string `json:"kind"`
+	Title    string `json:"title"`
+	Position int    `json:"position"`
+	Body     string `json:"body,omitempty"`
+	Format   string `json:"format,omitempty"`
+	Timeline string `json:"timeline,omitempty"`
+}
+
+// BundleTimeline is a timeline other than the first: its document entry timeline.<key>.json and its log
+// timeline.<key>.ndjson, described as Document and Operations are for the first.
+type BundleTimeline struct {
+	Key           string         `json:"key"`
+	ID            string         `json:"id"`
+	Name          string         `json:"name"`
+	SchemaVersion int            `json:"schema_version"`
+	Revision      int64          `json:"revision"`
+	Document      BundleDocument `json:"document"`
+	Operations    *BundleLog     `json:"operations,omitempty"`
+}
+
+// bundleTimelineDocEntry and bundleTimelineLogEntry name the entries of a timeline other than the first.
+func bundleTimelineDocEntry(key string) string { return bundleTimelinePrefix + key + ".json" }
+func bundleTimelineLogEntry(key string) string { return bundleTimelinePrefix + key + ".ndjson" }
 
 // BundleProject names the project the bundle was taken from.
 type BundleProject struct {

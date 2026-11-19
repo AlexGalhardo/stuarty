@@ -147,4 +147,7 @@ type exportInput struct {
 	Format string `json:"format,omitempty"`
 	// IncludeLog false leaves the operation log out of a bundle; nil means true.
 	IncludeLog *bool `json:"include_log,omitempty"`
+	// Whole makes the bundle of the whole project (version 2) instead of one timeline; the job is kept on the
+	// first active timeline.
+	Whole bool `json:"whole,omitempty"`
 }
