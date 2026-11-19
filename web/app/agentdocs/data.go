@@ -35,7 +35,7 @@ var Tools = []ToolRow{
 		"project_item",
 		[]string{"item:add", "brief:set"},
 	},
-	{"library", []string{"library:search", "memory:list", "skill:list", "prompt:list"}},
+	{"library", []string{"library:search"}},
 }
 
 // ErrorRow is one error code of SDD-000 section 8 and SDD-002 section A.8, with
