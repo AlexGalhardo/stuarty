@@ -596,11 +596,14 @@ func TestJobsRebuildKeepsTheRowsOfAnExistingWorkspace(t *testing.T) {
 	}
 	t.Cleanup(func() { _ = db.Close() })
 
+	// Up to the rebuild of jobs and no further: a later migration would be the one a Rollback undoes.
 	all := All()
-	before := all[:len(all)-1] // everything but the rebuild of jobs
-	if all[len(all)-1].ID != "20261119140100_jobs_waiting_approval" {
-		t.Fatalf("the last migration is %s: update this test", all[len(all)-1].ID)
+	at := slices.IndexFunc(all, func(m schema.Migration) bool { return m.ID == "20261119140100_jobs_waiting_approval" })
+	if at < 0 {
+		t.Fatal("the rebuild of jobs is not registered: update this test")
 	}
+	all = all[:at+1]
+	before := all[:at] // everything before the rebuild of jobs
 
 	qopts := queue.DatabaseOptions{Table: "queue_jobs", FailedTable: "queue_failed_jobs"}
 	old, err := schema.NewMigrator(db, slices.Concat(queue.Migrations(qopts), before))
