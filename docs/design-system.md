@@ -750,6 +750,15 @@ Keys: `ui.editor.<area>.empty.title` and `.body` (SDD-012 §16.2).
 
 - 40 px collapsed: revision (`tabular-nums`, `--muted-foreground`), actor chip, relative time, first line of the description (`UntrustedText`); expanded shows the whole text in `text-sm`. Undone steps: strikethrough plus the label "Undone" (not strikethrough alone).
 
+#### 4.3.18 Tour card
+
+- The first-run tour (SDD-012 §18.5): a card of at most `w-80` (`bg-popover`, `text-popover-foreground`, `rounded-md`, `shadow-md`, z-index of the popover layer) beside the region of the step, which gets a 2 px `--ring` outline drawn over it with `pointer-events: none`. Content: the step counter ("2 of 5", `text-xs text-muted-foreground`), a title (`text-sm font-semibold`), one sentence (`text-sm`), and the buttons "Back" (`ghost`, hidden on step 1), "Next" or "Done" (`default`) and "Skip tour" (`ghost`). Focus goes to "Next" when a step opens; `Esc` skips. No animation. Below 1280 px the card sits at the bottom centre instead of beside the region.
+- Keys: `ui.editor.tour.*`.
+
+#### 4.3.19 Shortcuts dialog
+
+- A search field at the top (`Input`, `type="search"` role searchbox, label "Search shortcuts"), the preset `Select` beside it, then the table of rows (action, key button), a `text-sm text-muted-foreground` line "No shortcut matches" when the filter is empty, the conflict message in `role="alert"`, and a footer with "Reset to defaults" and "Replay the tour". A key button shows the key as `kbd`; while capturing it reads "Press a key".
+
 #### 4.3.17 `ui/UntrustedText`
 
 Every name or text from an agent or a file (project, track, item, asset names, caption words, history text) is rendered through it: `dir="auto"`, `unicode-bidi: isolate` (SDD-012 §1.2). Visually identical to plain text; truncation with an ellipsis and a tooltip carrying the full text.
@@ -881,7 +890,8 @@ The keyboard map is SDD-012 §18.2 (global keys) and §7.10 (timeline grid keys)
 2. Single letters (`S`, `C`, `T`, `N`) are ignored while focus is in an editable field; `Mod` combinations follow the editable-field exceptions of §18.2.
 3. `Mod` is `Ctrl` on Windows and Linux and `Cmd` on macOS; tooltips show the platform's form (`Ctrl+K`, `⌘K`).
 4. No shortcut needs a key that a common keyboard layout lacks without a modifier; `[` and `]` have toolbar buttons as an alternative.
-5. Customization and the cheat sheet (`?`) are specified by RF-074.
+5. Customization and the cheat sheet (`?`) are specified by RF-074 and SDD-012 §18.9: one registry, two presets (`short`, `classic`), every row remappable, a conflicting key refused with the name of the row it collides with.
+6. A handler never names a key: it asks the registry. Tooltips show the key that is current (`Split (Ctrl+B)`), so a rebound key is never stated wrong.
 
 ### 7.4 Screen reader names
 
@@ -1016,6 +1026,7 @@ Decisions taken here (each is cheap to undo). "Recorded in" names where the spec
 | DS-11 | Native menus show `Mod+Z`, `Mod+Shift+Z` and `Mod+A` without registering them as accelerators; menu items and the title-bar theme go through `onMenuAction` and `setTheme` | 8.3 | decided by D-030; SDD-012 §13.1, §21.3 |
 | DS-12 | The familiar layout (D-038): a 40 px tab rail inside the library width, a 36 px tab strip in the inspector, a selected tab shown by a 2 px `--ring` bar, a save indicator and a Menu button in the top bar, the timeline toolbar in two labelled groups; no new token | 3.4 | SDD-012 §6.4, §6.5 |
 | DS-13 | The dashboard has its own sidebar built from checked tokens; the shadcn `Sidebar` stays unused | 3.5 | SDD-012 §23 |
+| DS-14 | The first-run tour is a card beside the region of each step (outline in `--ring`), not a full-screen overlay, so the keyboard and the screen reader are never trapped; the shortcuts dialog gets a search field and a preset select | 4.3.18, 4.3.19 | SDD-012 §18.5, §18.9 |
 
 Open points found in the specifications while writing this document, and how each was closed:
 

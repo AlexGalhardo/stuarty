@@ -38,7 +38,7 @@ A creator who knows another editor feels at home in an afternoon: the shortcuts 
 
 ## Tasks
 
-- [ ] 1. Amend SDD-012 (the shortcut registry, presets, remapping, the tour) and the design system. Verify: `task lint:md` exits 0.
+- [x] 1. Amend SDD-012 (the shortcut registry, presets, remapping, the tour) and the design system. Verify: `task lint:md` exits 0.
 - [ ] 2. Build the registry and move every existing handler onto it. Verify: `task test:web` passes and a lint test fails on a hard-coded key (`web/resources/js/editor` scan in `check:hooks` or a new check script).
 - [ ] 3. Add the two presets, the dialog and remapping with validation. Verify: `web/e2e/specs/shortcuts.spec.ts` passes.
 - [ ] 4. Build the first-run tour. Verify: `web/e2e/specs/first-run-tour.spec.ts` passes.
