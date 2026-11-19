@@ -811,3 +811,30 @@ func TestImageCreateRefusesAnIDOfTheCallerInNetworkMode(t *testing.T) {
 	_, err = s.ImageCreate(networkUser("bob"), ImageCreateRequest{Width: 10, Height: 10, ID: "img_bbbbbbbbbb"})
 	mustCode(t, err, command.CodeValidation)
 }
+
+// A project entry with no name must not fall back to the global name, which another user may have set.
+func TestImageEmptyScopedNameDoesNotFallBackToTheGlobalOne(t *testing.T) {
+	s, _ := newImageService(t)
+	holdAsset(s, "alice")
+
+	st := s.store.(*memStore)
+	st.assets.projects["prj_alice"][0].Name = ""
+
+	row := st.assets.rows[imgHash]
+	row.OriginalName = "/home/bob/private-name.png"
+	st.assets.rows[imgHash] = row
+
+	alice := networkUser("alice")
+	c, _ := s.ImageCreate(alice, ImageCreateRequest{Width: 100, Height: 100})
+
+	if _, err := s.ImageEdit(alice, ImageEditRequest{
+		ImageID: c.ImageID, BaseRevision: 1, Operations: ops("layer.add_image", `{"asset": "`+imgHash+`"}`),
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	d, _ := s.ImageDescribe(alice, ImageDescribeRequest{ImageID: c.ImageID})
+	if len(d.Layers) != 1 || strings.Contains(d.Layers[0].Name, "private") || d.Layers[0].Name != "Image" {
+		t.Fatalf("the name is neutral: %+v", d.Layers)
+	}
+}
