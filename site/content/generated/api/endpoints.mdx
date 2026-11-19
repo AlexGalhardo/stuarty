@@ -188,17 +188,22 @@ Every operation has its own page with the parameters, the body, the responses an
 | `GET` | `/api/v1/cost` | [`cost.get`](/docs/api/cost.get) | Read the cost ceilings and what was spent |
 | `PUT` | `/api/v1/cost/ceilings` | [`cost.ceilings.set`](/docs/api/cost.ceilings.set) | Set or remove a cost ceiling (a person in the browser only; the local token and keys get 403) |
 
-## Publishing
+## Agent chat
 
 | Method | Path | Operation | Summary |
 | --- | --- | --- | --- |
-| `POST` | `/api/v1/publish` | [`publish.now`](/docs/api/publish.now) | Prepare the publication of an exported video; it waits for a person to approve it |
-| `GET` | `/api/v1/publish/{job_id}` | [`publish.status`](/docs/api/publish.status) | Read the state of a publication |
-| `POST` | `/api/v1/publish/validate` | [`publish.validate`](/docs/api/publish.validate) | Check a post against the limits of its network; sends nothing |
-| `GET` | `/api/v1/social/accounts` | [`social.accounts`](/docs/api/social.accounts) | List the connected social accounts and their state |
-| `POST` | `/api/v1/social/complete` | [`social.complete`](/docs/api/social.complete) | Finish the sign-in with what the network sent to the redirect address (a person in the browser only) |
-| `POST` | `/api/v1/social/connect` | [`social.connect`](/docs/api/social.connect) | Start the sign-in to a network with your own developer app; answers the address of the consent screen |
-| `GET` | `/api/v1/social/networks` | [`social.networks`](/docs/api/social.networks) | List the social networks of this build and their limits |
+| `GET` | `/api/v1/agents/profiles` | [`agents.profiles.list`](/docs/api/agents.profiles.list) | List the agents the chat may host and the suggestions |
+| `PUT` | `/api/v1/agents/profiles/{name}` | [`agents.profiles.set`](/docs/api/agents.profiles.set) | Write an agent profile, a command that will run on the machine (a person in the browser only; others get 403) |
+| `DELETE` | `/api/v1/agents/profiles/{name}` | [`agents.profiles.remove`](/docs/api/agents.profiles.remove) | Remove an agent profile (a person in the browser only; others get 403) |
+| `GET` | `/api/v1/chat/sessions/{id}` | [`chat.sessions.get`](/docs/api/chat.sessions.get) | Read one chat session |
+| `DELETE` | `/api/v1/chat/sessions/{id}` | [`chat.sessions.delete`](/docs/api/chat.sessions.delete) | Delete a session and its transcript (a person in the browser only; others get 403) |
+| `POST` | `/api/v1/chat/sessions/{id}/cancel` | [`chat.sessions.cancel`](/docs/api/chat.sessions.cancel) | Cancel the turn in progress, or end the session (a person in the browser only; others get 403) |
+| `GET` | `/api/v1/chat/sessions/{id}/events` | [`chat.sessions.events`](/docs/api/chat.sessions.events) | Stream what the agent of a session says and does |
+| `POST` | `/api/v1/chat/sessions/{id}/messages` | [`chat.sessions.send`](/docs/api/chat.sessions.send) | Send a message to the agent (a person in the browser only; others get 403) |
+| `POST` | `/api/v1/chat/sessions/{id}/permissions/{request_id}` | [`chat.sessions.answer`](/docs/api/chat.sessions.answer) | Answer a permission request of the agent (a person in the browser only; others get 403) |
+| `GET` | `/api/v1/chat/sessions/{id}/transcript` | [`chat.sessions.transcript`](/docs/api/chat.sessions.transcript) | Read the transcript of a session as events or as Markdown |
+| `GET` | `/api/v1/projects/{id}/chat/sessions` | [`chat.sessions.list`](/docs/api/chat.sessions.list) | List the chat sessions of a project |
+| `POST` | `/api/v1/projects/{id}/chat/sessions` | [`chat.sessions.start`](/docs/api/chat.sessions.start) | Start the agent of a profile on a project (a person in the browser only; others get 403) |
 
 ## System
 
