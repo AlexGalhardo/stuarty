@@ -41,6 +41,7 @@ Content type `application/json`. Schema: [`Job`](/docs/api/schemas#job).
 | `approval_id` | `string` | no |  |
 | `created_at` | `string (date-time)` | no |  |
 | `error` | [`Error`](/docs/api/schemas#error) or `any` or `null` or `null` | no |  |
+| `estimate` | [`Money`](/docs/api/schemas#money) or `any` or `null` or `null` | no |  |
 | `finished_at` | `string (date-time)` or `null` | no |  |
 | `job_id` | `string` | no |  |
 | `kind` | `string` | no |  |
@@ -277,6 +278,10 @@ puts "#{response.code} #{response.body}"
     "path": "string",
     "retryable": false
   },
+  "estimate": {
+    "currency": "string",
+    "micros": 0
+  },
   "finished_at": "2006-01-02T15:04:05Z",
   "job_id": "string",
   "kind": "string",
@@ -314,6 +319,15 @@ puts "#{response.code} #{response.body}"
       "sha256": "string",
       "video_codec": "string",
       "width": 0
+    },
+    "text": {
+      "cost": {},
+      "finish_reason": "string",
+      "input_tokens": 0,
+      "model": "string",
+      "output_tokens": 0,
+      "provider": "string",
+      "text": "string"
     },
     "transcribe": {
       "asset_id": "string",
