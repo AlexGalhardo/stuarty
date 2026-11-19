@@ -18,6 +18,7 @@
 9. Safety
 10. Surfaces
 11. Tests
+12. Sign-in connections (epic 12)
 
 ## 1. Overview
 
@@ -30,7 +31,7 @@ Four rules carry the design:
 3. **Nothing about a model is fixed in code.** The list of models is read from the provider at run time. A price is read from the catalogue of the provider when it publishes one, or from a table the person edits; a model with no price is refused, never estimated at zero.
 4. **A provider answers with untrusted text.** The text a model wrote is untrusted (SDD-007 section 8); the error body of a provider is never shown.
 
-What this document does not specify: no chat and no agent loop (one request, one answer, ADR-0037); no streaming (an adapter may offer it later behind the same interface); no video; no sign-in; no editing of an image with a model and no cloning of a voice from a recording of a person (epic 10 leaves both out). Transcription (`engine/transcribe`, SDD-011 section 10) keeps working as it is, with its own provider settings; moving it onto this layer is left for the epic that adds the transcription capability.
+What this epic does not do: no chat and no agent loop (one request, one answer, ADR-0037); no streaming (an adapter may offer it later behind the same interface); no image, voice or video; no sign-in (section 12, added by epic 12). Transcription (`engine/transcribe`, SDD-011 section 10) keeps working as it is, with its own provider settings; moving it onto this layer is left for the epic that adds the transcription capability.
 
 ## 2. Providers and connections
 
@@ -360,3 +361,76 @@ A result URL on a host outside the destinations of the connection is `E_CONNECTI
 | The Generate dialog against a fake provider server | `web/e2e/specs/generate-assets.spec.ts` |
 
 No test calls a real provider. The recorded responses are written by hand from the public documentation of each API and kept in `testdata/` next to the adapter; the manual check with a real key of the author (task 8) is not part of the suite.
+
+## 12. Sign-in connections (epic 12)
+
+Two providers can be connected with a sign-in in the browser instead of an API key: **Sign in with ChatGPT** (provider `openai`, credential kind `oauth`) and **OpenRouter** (provider `openrouter`, credential kinds `api_key` and `oauth`). The credential of a sign-in lives only in the vault, like a key (SDD-014 section 12). A person who has no such account, or who prefers a key, keeps the API key path of section 2. There is **no** sign-in with a Claude.ai subscription, or with any login a provider forbids third-party applications to use (RF-365).
+
+### 12.1 What the providers document (read on 2026-11-19)
+
+| Page | Used for |
+| --- | --- |
+| <https://developers.openai.com/siwc/quickstart> | the open-source clients flow, the scopes, no client secret |
+| <https://developers.openai.com/siwc/token-sharing-open-source/sign-in> | endpoints, parameters, registration, refresh |
+| <https://developers.openai.com/siwc/token-sharing-open-source/models-and-inference> | model list and inference with the plan token |
+| <https://developers.openai.com/siwc/token-sharing-open-source/self-hosted-vms> | host identifier, credential transfer, the loopback limit |
+| <https://openrouter.ai/docs/guides/overview/auth/oauth> | the PKCE flow, the key, the callback rules |
+
+**OpenAI (Sign in with ChatGPT, the flow for open-source and locally hosted clients).** It is an OpenID Connect authorization code flow with PKCE (`S256`), for a public client: no client secret and no partner key.
+
+- Authorization: `https://auth.openai.com/api/accounts/authorize`, opened in the system browser. Token: `https://auth.openai.com/api/accounts/oauth/token`, a form-encoded `authorization_code` grant.
+- **Registration.** The first sign-in on a host uses `client_id=dynamic_agent_client` with `ext_agent_host_id` (a stable identifier of the host, distinct for each host, kept and reused) and `agent_name_hint` (the name of the application). After the person names and authorises the agent, the callback carries the **issued** client id (`oaiapp_...`) in the `client_id` query parameter. It is kept with the sign-in and used for every later request of that account; `dynamic_agent_client` is never kept, a callback with no issued id is an incomplete registration, and a different id on a later sign-in is refused.
+- **Parameters** of the authorization request: `client_id`, `agent_name_hint`, `ext_agent_host_id`, `response_type=code`, `redirect_uri`, `scope`, `resource=https://api.openai.com/v1`, `state`, `nonce`, `code_challenge_method=S256`, `code_challenge`. Scopes: `openid profile email offline_access resource.invoke chatgpt.tokens.use.direct`. The plan can be used only when `chatgpt.tokens.use.direct` is granted. The code exchange repeats `redirect_uri` and `resource`.
+- **Redirect.** An HTTP loopback address on `127.0.0.1`, `http://127.0.0.1:<port>/auth/callback`; only the port may change between sign-ins, `localhost` is not accepted, and the same address is sent in both requests. HTTPS and custom schemes are not documented.
+- **Tokens.** The answer carries the access token, a rotating refresh token (requested with `offline_access`), `expires_in` and an ID token. After a refresh the access token, the expiry, the scopes and the refresh token are replaced together. The ID token is checked for issuer, audience (the issued client id), expiry and nonce.
+- **Use.** `GET https://api.openai.com/v1/models` with `Authorization: Bearer <access token>` answers `{"models": [...]}`; an entry is shown when `visibility` is `list`, its `slug` is the model id and `display_name` the name. `POST https://api.openai.com/v1/responses` (the public Responses API, never the `backend-api` of ChatGPT) with `store: false` and `stream: true`; the request counts as successful only after the event `response.completed`; `response.failed` may carry `subscription_sharing_usage_limit_exceeded` or `subscription_sharing_usage_unavailable`. The model list is read again when the account changes.
+- **Terms.** The plan is available to "all open-source partners and selected private clients"; Stuarty is open source (MIT) and a local application, so the use is inside what the pages document. The terms and eligibility page was not reachable on the date (a 404), and the pages do not say whether a server shared by several people is covered: see section 12.3.
+- **Not documented on the pages read:** the refresh request (the standard `refresh_token` grant on the token endpoint is used, with the issued client id), the JWKS address, rate limits and the models a plan grants.
+
+**OpenRouter (OAuth PKCE).**
+
+- Authorization address: `https://openrouter.ai/auth?callback_url=<address>&code_challenge=<challenge>&code_challenge_method=S256&state=<state>`. `code_challenge_method` must be `S256`. The `state` is echoed on the callback, and is not returned when the person denies.
+- Callback: `https://` for a hosted application, or `http://localhost:<port>/...` on any port. The page does not say whether `127.0.0.1` is accepted; the address of the page the person is at is used as it is.
+- Exchange: `POST https://openrouter.ai/api/v1/auth/keys` with a JSON body `{"code", "code_verifier", "code_challenge_method": "S256"}`; the answer has `key`, a key of the person bound to their account, which spends their credits until they revoke it. The code lives 10 minutes and is single-use. Errors: 400 (method), 403 (invalid or expired code or verifier), 405.
+- Use: `Authorization: Bearer <key>` on `https://openrouter.ai/api/v1/chat/completions`; the catalogue is `GET /api/v1/models`, whose `pricing.prompt` and `pricing.completion` are USD per token, as decimal text. No terms of third-party applications are on the page.
+
+Neither provider changed in a way that forbids this use: task 1 of the epic does not stop.
+
+### 12.2 The adapters and the credential
+
+- **`openrouter`** (`service/providers/openrouter`). The Chat Completions wire of OpenRouter: `POST {endpoint}/chat/completions` with `model`, `messages`, `max_tokens`, optional `temperature`; the answer has the shape of section 2.1 (the model the answer names, the text, the finish reason and `usage`). `Models` reads `GET {endpoint}/models`: `id`, `name`, `context_length`, `top_provider.max_completion_tokens` and the price, which the catalogue publishes: a price of `-1` (a router with a variable price) or one that is not a non-negative decimal gives no price, so that model is refused as in section 4.2. The price in micros per million tokens is the decimal price per token times 10^12, rounded up. The key is the secret of the connection, whether the person typed it or the sign-in made it; the adapter does not tell them apart.
+- **`openai` with a sign-in.** The same adapter, with the credential kind `oauth`: the connection manager says it (`Credential.SignedIn`, set from the secret in the vault) and hands the adapter the access token as the secret. The adapter uses it as the bearer and speaks the Responses API of section 12.1. `GenerateText` sends `model`, `input` (the prompt), `instructions` (the system text, when there is one), `max_output_tokens`, optional `temperature`, `store: false` and `stream: true`, reads the events, joins `response.output_text.delta` into the text and takes the usage from `response.completed`. A stream that ends before `response.completed`, a `response.failed` and any other end are errors of kind `unreadable`, `rate_limited` (the two usage codes) or `unavailable`, built from the event type and the safe code, never from a body. A `response.incomplete` that says `max_output_tokens` is a finish `length`. `Models` reads `GET {endpoint}/models` as above.
+- **The price of a plan model.** The plan has no price per token: its use counts against the limits of the plan, not against a bill. The catalogue of a sign-in connection therefore publishes a price of zero for every model (`price_source` `catalogue`), so a generation through a plan is estimated at zero and is not refused for a missing price, and the ceilings of epic 05 never refuse it. The person can still enter a price in the table, which wins (section 4.2). A zero price is set only by the sign-in adapter, never by a missing entry.
+- **Hosts.** A sign-in connection of `openai` has the hosts `api.openai.com` and `auth.openai.com`, so that the refresh passes through the gate of the connection like any request; one of `openrouter` has `openrouter.ai`.
+
+### 12.3 Where a sign-in can be made
+
+The redirect address is a page of this server, `/auth/callback` (SDD-007 section 3.6 item 4), at the address the person opens the application with.
+
+- **OpenRouter** accepts an https address, or `http://localhost:<port>`, so it works on the desktop, on a local server and on a deployment with a public https address.
+- **OpenAI** accepts only `http://127.0.0.1:<port>/auth/callback`. A sign-in therefore needs the application opened at `127.0.0.1` on the machine of the person: the desktop application and a local server do; a server on another machine does not, and the begin operation refuses the address with a hint. For such a server the route is to use an API key there; copying a plan credential to a server is a transfer the provider documents as lacking host attribution and revocation, and Stuarty does not offer it. This is a question for the author (`QUESTIONS.md`, "Sign in with ChatGPT on a network deployment").
+
+### 12.4 The operations
+
+Three operations on `service.Service`, in `service/provider_signin_ops.go`, all HTTP only (a person's browser makes a sign-in; there is no command and no tool, SDD-003 section 7.1 exception E-4):
+
+| Operation | Scope | Result |
+| --- | --- | --- |
+| `ProviderSignInBegin` | admin, and only from a privileged browser session | `connection_id` and `authorize_url`. The request carries `provider`, `label` (optional), `connection_id` (to sign in again an existing connection) and `redirect_uri`. A new connection is made first, with a placeholder credential that holds no token, so the exchange can pass through the gate of that connection; it lists as needing a sign-in until the sign-in ends |
+| `ProviderSignInComplete` | admin, and only from a privileged browser session | the sign-in: `connection_id`, `provider`, `label`, `account` (untrusted text) and `state`. The request carries `state`, `code`, `error` and, for OpenAI, `client_id` (the issued id, from the callback) |
+| `ProviderSignInList` | read | one entry per connection made by a sign-in: `connection_id`, `provider`, `label`, `account`, `state` (`ready` or `needs_sign_in`); never a token |
+
+`ConnectionRemove` of a connection made by a sign-in is also for a privileged browser session only (an agent cannot remove a sign-in), and `ConnectionCreate` refuses a secret that is the stored form of a sign-in. Begin and complete are audited (`provider.signin.begin`, `provider.signin`), with no token. `E_PROVIDER` gains the code `needs_sign_in` (`details.kind` `auth`): the refresh failed for good and the person must sign in again from the Connections page.
+
+### 12.5 Tests
+
+| What | Test |
+| --- | --- |
+| The generic flow, the single-use and bound state, the wrong verifier, the expiry, the refresh and its lock | `service/connections/oauth` tests (`TestRefresh*`) |
+| The two sign-ins and the adapters over a fake authorization server and recorded responses | `service/providers/openai`, `service/providers/openrouter` tests |
+| A sign-in ends with the tokens only in the vault; a replayed or foreign state creates nothing; an agent cannot begin, complete or remove one | `TestSignIn*` in `web/app/servicetest`, `TestSecurity_T75` to `T78` |
+| The Connections page with a fake authorization server | `web/e2e/specs/provider-sign-in.spec.ts` |
+
+A real sign-in needs an account of the author: it is the manual check below, and not part of the suite.
+
+**Manual check (the author).** Run `stuarty serve` and open `http://127.0.0.1:7878`. On the Connections page, choose "Sign in with ChatGPT" (a Plus or Pro plan), name the agent on the page of OpenAI, accept, and expect to land on the sign-in page of Stuarty with "signed in". Open the models of the connection and run `stuarty text:generate` with one of them. For OpenRouter choose "Sign in with OpenRouter" and expect a connection whose models list shows prices. Then revoke access in the provider account and expect "needs sign-in" on the card.
