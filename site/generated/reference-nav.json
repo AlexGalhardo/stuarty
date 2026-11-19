@@ -181,6 +181,15 @@
     {
       "tag": "Publishing",
       "pages": [
+        "publications.list",
+        "publications.create",
+        "publications.get",
+        "publications.update",
+        "publications.cancel",
+        "publications.retry",
+        "publications.schedule",
+        "publications.send-now",
+        "publications.events",
         "publish.now",
         "publish.status",
         "publish.validate",

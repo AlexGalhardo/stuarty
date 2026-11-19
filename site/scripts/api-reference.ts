@@ -81,6 +81,7 @@ export function tagOf(route: string): Tag {
 		cost: "Approvals",
 		social: "Publishing",
 		publish: "Publishing",
+		publications: "Publishing",
 		library: "Library",
 		system: "System",
 		handshake: "System",

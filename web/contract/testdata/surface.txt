@@ -81,6 +81,14 @@ command prompt:write
 command provider:list
 command provider:models
 command provider:price
+command publication:cancel
+command publication:create
+command publication:list
+command publication:retry
+command publication:schedule
+command publication:send-now
+command publication:show
+command publication:update
 command publish:now
 command publish:status
 command publish:validate
@@ -169,6 +177,9 @@ route GET /projects/{}/plan
 route GET /projects/{}/sheet
 route GET /projects/{}/snap-points
 route GET /providers
+route GET /publications
+route GET /publications/events
+route GET /publications/{}
 route GET /publish/{}
 route GET /social/accounts
 route GET /social/networks
@@ -217,6 +228,11 @@ route POST /projects/{}/redo
 route POST /projects/{}/restore
 route POST /projects/{}/trash
 route POST /projects/{}/undo
+route POST /publications
+route POST /publications/{}/cancel
+route POST /publications/{}/retry
+route POST /publications/{}/schedule
+route POST /publications/{}/send-now
 route POST /publish
 route POST /publish/validate
 route POST /social/complete
@@ -238,6 +254,7 @@ route PUT /library/skills/{}
 route PUT /projects/{}/brief
 route PUT /projects/{}/briefing
 route PUT /providers/prices
+route PUT /publications/{}
 tool command_help
 tool connection
 tool edit
