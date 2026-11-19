@@ -50,7 +50,7 @@ func (e Endpoint) FullPath() string {
 	return BasePath + e.Path
 }
 
-// Endpoints is every route of the Prototype (SDD-000 section 1, phase P),
+// Endpoints is every route of the first service (SDD-000 section 1),
 // plus the trash and restore routes whose Service methods already exist.
 var Endpoints = []Endpoint{
 	{

@@ -38,7 +38,6 @@ type Command = {
 	errors: string[];
 	example: unknown;
 	internal: boolean;
-	phase: string;
 	scope: string;
 	args_schema: Schema;
 };

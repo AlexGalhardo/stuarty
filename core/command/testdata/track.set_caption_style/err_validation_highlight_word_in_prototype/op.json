@@ -1,9 +1,0 @@
-{
-  "op": "track.set_caption_style",
-  "args": {
-    "track_id": "trk_a1b2c3d4e5",
-    "style": {
-      "highlight": "word"
-    }
-  }
-}

@@ -27,7 +27,6 @@ func init() {
 			CodeValidation, CodeInvalidTime, CodeNotFound, CodeInvalidState, CodeIDExists, CodeLimit, CodeOverlap,
 		},
 		Scope: ScopeEdit,
-		Phase: Beta,
 	}, applyItemRepeat))
 }
 

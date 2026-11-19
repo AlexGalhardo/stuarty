@@ -7,7 +7,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/service"
 	httpapi "github.com/AlexGalhardo/stuarty/web/app/http"
 	"github.com/AlexGalhardo/stuarty/web/resources"
@@ -20,10 +19,6 @@ import (
 	"github.com/AlexGalhardo/vukem/router"
 	"github.com/AlexGalhardo/vukem/web"
 )
-
-// phase is the build's feature gate that the editor reads from its bootstrap
-// (SDD-012 section 10).
-var phase = string(command.Build)
 
 var projectID = regexp.MustCompile(`^prj_[0-9a-hjkmnp-tv-z]{10}$`)
 
@@ -39,7 +34,6 @@ type editorBootstrap struct {
 	Locales   []string       `json:"locales"`
 	Messages  map[string]any `json:"messages"`
 	User      *struct{}      `json:"user"`
-	Phase     string         `json:"phase"`
 	Version   string         `json:"version"`
 }
 
@@ -221,7 +215,7 @@ func editorPage(c *web.Ctx, d *httpapi.Deps, app *vukem.App) error {
 	return c.Render("editor", map[string]any{"Bootstrap": editorBootstrap{
 		ProjectID: id, Mode: "local", APIBase: httpapi.BasePath, Locale: locale, Locales: app.I18n.Locales(),
 		Messages: app.I18n.Messages(locale, "ui.editor.", "ui.common.", "ui.theme.", "ui.nav."),
-		Phase:    phase, Version: d.Version,
+		Version:  d.Version,
 	}})
 }
 

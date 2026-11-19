@@ -11,29 +11,6 @@ import (
 	"sync"
 )
 
-// Phase is the product phase that introduces a command.
-type Phase string
-
-// The phases of the roadmap. A command is registered only in builds of its phase
-// or later (SDD-002 §A.2).
-const (
-	Prototype Phase = "prototype"
-	Alpha     Phase = "alpha"
-	Beta      Phase = "beta"
-)
-
-func (p Phase) rank() int {
-	switch p {
-	case Prototype:
-		return 1
-	case Alpha:
-		return 2
-	case Beta:
-		return 3
-	}
-	return 0
-}
-
 // Scope is the permission a caller needs to issue a command (ADR-0019).
 type Scope string
 
@@ -52,7 +29,6 @@ type Spec struct {
 	Example     string   // a valid args value, as JSON
 	Errors      []string // the error codes the command can return
 	Scope       Scope
-	Phase       Phase
 	Internal    bool // only the service may issue it (SDD-002 §A.9)
 }
 
@@ -85,7 +61,7 @@ func Define[A any](s Spec, apply func(c *Context, a *A) error) Command {
 var namePattern = regexp.MustCompile(`^[a-z][a-z0-9]*\.[a-z][a-z0-9_]*$`)
 
 // Check returns every way in which the command is incomplete: no schema, example,
-// error list, description, scope or phase, an example that its own schema rejects,
+// error list, description or scope, an example that its own schema rejects,
 // or an unknown error code.
 func (c Command) Check() error {
 	var problems []string
@@ -128,9 +104,6 @@ func (c Command) Check() error {
 	if c.Scope != ScopeEdit && c.Scope != ScopeMedia {
 		add("scope must be edit or media")
 	}
-	if c.Phase.rank() == 0 {
-		add("phase must be prototype, alpha or beta")
-	}
 	if len(problems) == 0 {
 		return nil
 	}
@@ -143,26 +116,22 @@ type Registry struct {
 	// violation as E_INTERNAL (SDD-002 §A.3 rule 3). Tests turn it on.
 	Debug bool
 
-	phase Phase
-	cmds  map[string]*Command
+	cmds map[string]*Command
 }
 
-// NewRegistry returns an empty registry for a build of the given phase.
-func NewRegistry(build Phase) *Registry {
-	return &Registry{phase: build, cmds: map[string]*Command{}}
+// NewRegistry returns an empty registry.
+func NewRegistry() *Registry {
+	return &Registry{cmds: map[string]*Command{}}
 }
 
 // Register adds a command. An incomplete command, or one whose name is taken, is an
-// error. A command of a later phase than the build is checked and then left out.
+// error.
 func (r *Registry) Register(c Command) error {
 	if err := c.Check(); err != nil {
 		return err
 	}
 	if _, dup := r.cmds[c.Name]; dup {
 		return fmt.Errorf("command %q is registered twice", c.Name)
-	}
-	if c.Phase.rank() > r.phase.rank() {
-		return nil
 	}
 	r.cmds[c.Name] = &c
 	return nil
@@ -259,7 +228,7 @@ func (r *Registry) Help(name string) (string, error) {
 	b.WriteString(
 		"The ids in the example are placeholders; replace them with ids from the project before editing, or the command fails with E_NOT_FOUND.\n",
 	)
-	fmt.Fprintf(&b, "Errors: %s\nScope: %s, phase: %s\n", strings.Join(c.Errors, ", "), c.Scope, c.Phase)
+	fmt.Fprintf(&b, "Errors: %s\nScope: %s\n", strings.Join(c.Errors, ", "), c.Scope)
 	if schema, err := r.Schema(name); err == nil {
 		fmt.Fprintf(&b, "JSON Schema: %s\n", schema)
 	}
@@ -301,22 +270,17 @@ var (
 	registered  []Command
 )
 
-// Build is the phase this binary exposes: Default holds the commands of that phase
-// and every earlier one. Raise it at the phase switch of the roadmap; commands of
-// a later phase stay registered and are visible to BetaBuild only.
-const Build = Beta
-
-// Default is the registry of this build (the commands up to Build), filled by the
-// init functions of the command files.
+// Default is the registry of this binary, filled by the init functions of the
+// command files: every registered command is exposed.
 func Default() *Registry {
-	defaultOnce.Do(func() { defaultReg = NewRegistry(Build) })
+	defaultOnce.Do(func() { defaultReg = NewRegistry() })
 	return defaultReg
 }
 
-// BetaBuild returns a registry of the Beta phase with every registered command,
-// exposed or not. Tests and the generators of later phases use it.
-func BetaBuild() *Registry {
-	r := NewRegistry(Beta)
+// FullRegistry returns a new registry with every registered command. Tests and
+// the generators use it when they need a registry of their own.
+func FullRegistry() *Registry {
+	r := NewRegistry()
 	for i := range registered {
 		if err := r.Register(registered[i]); err != nil {
 			panic(err)

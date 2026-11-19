@@ -41,7 +41,6 @@ export type Command = {
 	errors: string[];
 	example: unknown;
 	internal: boolean;
-	phase: string;
 	scope: string;
 	args_schema: JsonSchema;
 };
@@ -150,7 +149,7 @@ const EXAMPLES: Record<string, Example> = {
 	command_help: {
 		prompt: "How do I trim a clip? Read the operation before using it.",
 		args: { name: "item.trim" },
-		result: { command: { name: "item.trim", scope: "edit", phase: "P" } },
+		result: { command: { name: "item.trim", scope: "edit" } },
 	},
 	history: {
 		prompt: "Undo my last change.",
@@ -321,7 +320,7 @@ function jsonRpcResult(ex: Example): string {
 
 /** The text of `edit` operations in a catalogue: one row per operation, linking to its page. */
 function operationTable(commands: Command[]): string {
-	return table(["Operation", "Summary", "Scope", "Phase"], commands.map((c) => [`[${code(c.name)}](/docs/mcp/tools/edit/${c.name})`, esc(sentence(c.summary)), code(c.scope), c.phase]));
+	return table(["Operation", "Summary", "Scope"], commands.map((c) => [`[${code(c.name)}](/docs/mcp/tools/edit/${c.name})`, esc(sentence(c.summary)), code(c.scope)]));
 }
 
 function toolPage(t: ToolDef, commands: Command[]): string {
@@ -411,8 +410,8 @@ function operationPage(c: Command, edit: ToolDef): string {
 		rows.length ? table(["Argument", "Type", "Required", "Notes"], rows) : "This operation takes no arguments.",
 		"## Errors",
 		c.errors.length ? c.errors.map((e) => `- ${errorLink(e)}`).join("\n") : "No error is specific to this operation. An `edit` call can still fail with `E_REVISION_CONFLICT` or `E_VALIDATION`.",
-		"## Scope and phase",
-		`Scope ${code(c.scope)}, phase ${code(c.phase)}. The scope is the one an API key needs in network mode. Run ${code(`stuarty command:help ${c.name}`)} for the same description from the binary, or call the [${code("command_help")}](/docs/mcp/tools/command_help) tool.`,
+		"## Scope",
+		`Scope ${code(c.scope)}. The scope is the one an API key needs in network mode. Run ${code(`stuarty command:help ${c.name}`)} for the same description from the binary, or call the [${code("command_help")}](/docs/mcp/tools/command_help) tool.`,
 		"## Next steps",
 		["- [The edit tool](/docs/mcp/tools/edit)", "- [Batches, revisions and idempotency](/docs/agents/batches)"].join("\n"),
 	];

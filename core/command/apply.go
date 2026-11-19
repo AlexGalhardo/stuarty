@@ -49,10 +49,6 @@ type Context struct {
 	Doc *timeline.Document
 	Env Env
 
-	// build is the phase of the registry running the command; a few values are
-	// accepted only from ALPHA on (decision 36 of SDD-002 Part C).
-	build Phase
-
 	effective map[string]any
 }
 
@@ -143,7 +139,7 @@ func (r *Registry) run(work *timeline.Document, op Operation, env Env) (effectiv
 	if e != nil {
 		return nil, e
 	}
-	ctx := &Context{Doc: work, Env: env, build: r.phase, effective: map[string]any{}}
+	ctx := &Context{Doc: work, Env: env, effective: map[string]any{}}
 	locks := lockedItems(work)
 	defer func() {
 		if recover() != nil {

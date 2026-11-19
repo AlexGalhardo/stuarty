@@ -11,7 +11,6 @@ func init() {
 		Example: `{"item_id": "itm_m1n2p3q4r5", "source_in": "2s"}`,
 		Errors:  []string{CodeValidation, CodeInvalidTime, CodeNotFound, CodeTypeMismatch, CodeOutOfSource},
 		Scope:   ScopeEdit,
-		Phase:   Beta,
 	}, applyItemSlip))
 }
 
