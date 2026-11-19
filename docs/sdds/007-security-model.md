@@ -390,6 +390,13 @@ Scopes: `read`, `edit`, `media`, `render`, `admin` (SDD-000 §4). They are indep
 | `TemplateInstantiate` | `POST /templates/{id}/instantiate` | - | R | - | - | - | Refused for a project-limited key (it creates a project) |
 | `TemplateExport` | `GET /templates/{id}/file` | R | - | - | - | - | Refused for a project-limited key |
 | `TemplateImport` | `POST /templates/import` | - | R | - | - | - | Archive rules of 7.6; refused for a project-limited key |
+| `ImageCreate` | `POST /images` | - | R | - | - | - | Blank or from a template; the owner is the caller; at most the sizes of SDD-021 |
+| `ImageList` | `GET /images` | R | - | - | - | - | Only the caller's images in network mode |
+| `ImageDescribe` | `GET /images/{id}` | R | - | - | - | - | In network mode an image is visible to its owner and to an administrator, `E_NOT_FOUND` otherwise (SDD-021) |
+| `ImageEdit` | `POST /images/{id}/edit` | - | R | - | - | - | In network mode an image is visible to its owner and to an administrator, `E_NOT_FOUND` otherwise (SDD-021); a batch is atomic and checked against the revision |
+| `ImageUndo` | `POST /images/{id}/undo` | - | R | - | - | - | In network mode an image is visible to its owner and to an administrator, `E_NOT_FOUND` otherwise (SDD-021) |
+| `ImageRedo` | `POST /images/{id}/redo` | - | R | - | - | - | In network mode an image is visible to its owner and to an administrator, `E_NOT_FOUND` otherwise (SDD-021) |
+| `ImageExport` | `POST /images/{id}/export` | - | R | - | - | - | In network mode an image is visible to its owner and to an administrator, `E_NOT_FOUND` otherwise (SDD-021); writes one file under `exports/images` of the workspace |
 | `Doctor` | `GET /system` | R | - | - | - | - | Server paths and environment details only for local mode or `admin`; others get versions and capability facts without paths |
 | `AuditList` | `GET /audit` | - | - | - | - | R | Never lists secrets |
 | Byte-serving routes and bitmaps (`OpenFile`, `ExportFile`) | `GET /projects/{id}/media/{asset_id}/proxy`, `/chunks`, `/thumbnail`, `/strip`, `/peaks`, `/lut` (the table is parsed by `engine/lut` with the limits of SDD-004 §3.6 and sent as binary, so the browser never parses an untrusted `.cube`), `GET /projects/{id}/bitmaps/{key}`, `GET /jobs/{job_id}/file` | R | - | - | - | - | Project check through the path (the job's project for the export file); fixed `Content-Type`; not counted by the per-credential limiter (4.4) |
