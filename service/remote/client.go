@@ -19,6 +19,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/AlexGalhardo/stuarty/core/asset"
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/connections"
@@ -345,7 +346,9 @@ func (c *Client) MediaImport(ctx context.Context, req service.MediaImportRequest
 		Files  []service.ImportFile `json:"files"`
 		WaitMS int                  `json:"wait_ms,omitempty"`
 		DryRun bool                 `json:"dry_run,omitempty"`
-	}{req.Files, req.WaitMS, req.DryRun}
+		Origin *asset.Origin        `json:"origin,omitempty"`
+		Info   *service.AssetInfo   `json:"info,omitempty"`
+	}{req.Files, req.WaitMS, req.DryRun, req.Origin, req.Info}
 
 	return post[service.MediaImportResult](ctx, c, projectPath(req.ProjectID, "/media"), body)
 }
@@ -634,11 +637,50 @@ func (c *Client) FontList(ctx context.Context, _ service.FontListRequest) (*serv
 // AssetList implements service.Service.
 func (c *Client) AssetList(ctx context.Context, req service.AssetListRequest) (*service.AssetListResult, error) {
 	q := url.Values{}
-	if req.Kind != "" {
-		q.Set("kind", req.Kind)
+	setIf(q, "kind", req.Kind)
+	setIf(q, "section", req.Section)
+	setIf(q, "tag", req.Tag)
+	setIf(q, "project", req.Project)
+	setIf(q, "origin", req.Origin)
+	setIf(q, "text", req.Text)
+
+	if req.Reusable != nil {
+		q.Set("reusable", strconv.FormatBool(*req.Reusable))
 	}
 
-	return get[service.AssetListResult](ctx, c, "/assets", q)
+	return get[service.AssetListResult](
+		ctx,
+		c,
+		"/assets",
+		pageQuery(q, service.Page{Cursor: req.Cursor, Limit: req.Limit}),
+	)
+}
+
+func assetPath(hash, suffix string) string { return "/assets/" + url.PathEscape(hash) + suffix }
+
+// AssetGet implements service.Service.
+func (c *Client) AssetGet(ctx context.Context, req service.AssetRef) (*service.AssetResult, error) {
+	return get[service.AssetResult](ctx, c, assetPath(req.Hash, ""), nil)
+}
+
+// AssetUses implements service.Service.
+func (c *Client) AssetUses(ctx context.Context, req service.AssetUsesRequest) (*service.AssetUsesResult, error) {
+	return get[service.AssetUsesResult](ctx, c, assetPath(req.Hash, "/uses"), pageQuery(url.Values{}, req.Page))
+}
+
+// AssetSetInfo implements service.Service.
+func (c *Client) AssetSetInfo(ctx context.Context, req service.AssetSetInfoRequest) (*service.AssetResult, error) {
+	out := new(service.AssetResult)
+	if err := c.do(ctx, http.MethodPut, assetPath(req.Hash, ""), nil, req, out); err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}
+
+// AssetTag implements service.Service.
+func (c *Client) AssetTag(ctx context.Context, req service.AssetTagRequest) (*service.AssetResult, error) {
+	return post[service.AssetResult](ctx, c, assetPath(req.Hash, "/tags"), req)
 }
 
 // AuditList implements service.Service.
