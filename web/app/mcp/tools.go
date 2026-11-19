@@ -663,6 +663,14 @@ func view(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolO
 		return &toolOutput{value: measure, text: measure.Text}, nil
 	}
 
+	// As the CLI refuses --item outside --mode audio: a frame or a sheet is of the whole timeline.
+	if in.ItemID != "" {
+		return nil, &service.Error{
+			Code: command.CodeValidation, Path: "item_id", Message: "item_id is for mode audio.",
+			Hint: "a frame or a sheet shows the whole timeline; use mode audio to measure one item",
+		}
+	}
+
 	var res *service.ViewResult
 
 	if in.Mode == "sheet" {
