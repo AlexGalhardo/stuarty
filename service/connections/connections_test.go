@@ -509,7 +509,7 @@ func TestTestMessageHoldsNoPartOfAnEchoedSecret(t *testing.T) {
 // TestTestMessageHoldsNoMiddleOfAnEchoedSecret: a destination that echoes only ten bytes from the
 // middle of a long secret, in any form, has echoed it (VV-245).
 func TestTestMessageHoldsNoMiddleOfAnEchoedSecret(t *testing.T) {
-	const secret = `zq<Kp9&Xw7#Lm2>Yv5/Ab3"Cd4+Ef6=Gh8?Ij0_Nr1`
+	const secret = `zq<Kp9&Xw7#Lm2>Yv5/Ab3"Cd4+Ef6=Gh8?Ij0_N`
 
 	if len(secret) != 40 {
 		t.Fatalf("the fixture secret is %d bytes, want 40", len(secret))
