@@ -1588,6 +1588,10 @@
       "motion": {
         "title": "Predefinições de movimento",
         "preset": "Predefinição",
+        "preset_of": "Predefinição de movimento",
+        "edge_of": "Extremidade da predefinição de movimento",
+        "duration_of": "Duração da predefinição de movimento",
+        "apply": "Adicionar movimento",
         "direction": "Direção",
         "use_default": "Padrão",
         "preset_name": {

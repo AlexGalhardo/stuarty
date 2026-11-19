@@ -1588,6 +1588,10 @@
       "motion": {
         "title": "Motion presets",
         "preset": "Preset",
+        "preset_of": "Motion preset",
+        "edge_of": "Edge of the motion preset",
+        "duration_of": "Duration of the motion preset",
+        "apply": "Add motion",
         "direction": "Direction",
         "use_default": "Default",
         "preset_name": {
