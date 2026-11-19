@@ -109,7 +109,13 @@ func TestAssetLibraryReusesAFileAcrossProjects(t *testing.T) {
 
 	uses, err := m.svc.AssetUses(ctx, service.AssetUsesRequest{Hash: strings.TrimPrefix(hash, "sha256:")})
 	if err != nil || len(uses.Uses) != 2 {
-		t.Errorf("uses by the bare hash = %+v, %v", uses, err)
+		t.Fatalf("uses by the bare hash = %+v, %v", uses, err)
+	}
+
+	// The text of the uses speaks of the uses only: it reads no facts of the file, so it must not print empty ones.
+	if !strings.Contains(uses.Text, hash+" used by 2 projects") || strings.Contains(uses.Text, "in 0 projects") ||
+		strings.Count(uses.Text, "\nused by ") != 2 {
+		t.Errorf("uses text = %q", uses.Text)
 	}
 
 	byProject, err := m.svc.AssetList(ctx, service.AssetListRequest{Project: two})
