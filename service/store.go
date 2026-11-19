@@ -64,7 +64,7 @@ type Repos interface {
 	Audit() AuditRepo
 	Fonts() FontRepo
 	BrandKit() BrandKitRepo
-	Connections() connections.Store
+	Images() ImageRepo
 }
 
 // Tx is a write transaction.
