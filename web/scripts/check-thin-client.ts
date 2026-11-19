@@ -188,8 +188,12 @@ function checkFile(sf: SourceFile, rel: string, fileLabel: string): Finding[] {
 	const folder = rel.split("/")[0];
 	// The decode worker of the preview reads the proxy and its chunk index in byte
 	// ranges (SDD-013 section 5.3); it edits nothing and holds no project data.
-	const isDecodeWorker = rel === "preview/decode/decodeWorker.ts";
-	const mayCreateWorker = rel === "preview/decode/createWorker.ts";
+	// The render worker fetches the renderer module, a same-origin asset, and nothing
+	// else (SDD-013 section 4.7 rule 4); the one that creates it is createRenderWorker.ts.
+	const isDecodeWorker =
+		rel === "preview/decode/decodeWorker.ts" || rel === "preview/render/renderWorker.ts";
+	const mayCreateWorker =
+		rel === "preview/decode/createWorker.ts" || rel === "preview/render/createRenderWorker.ts";
 	const inApiOrBoot = folder === "api" || folder === "boot" || isDecodeWorker;
 	const isSync = rel === "state/sync.ts";
 	const isPrefs = rel === "state/prefs.ts";
