@@ -171,10 +171,18 @@ func TestWorkspaceAssetsMigrationDown(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// The render origin of epic 33 is newer than the library: it comes off first.
-	rolled, err := m.Rollback(ctx, 2)
-	if err != nil || !slices.Equal(rolled, []string{renderOriginID, assetLibraryID}) {
-		t.Fatalf("Rollback = %v, %v", rolled, err)
+	// The migrations that came after this one are rolled back first, newest first.
+	all := All()
+	at := slices.IndexFunc(all, func(mig schema.Migration) bool { return mig.ID == assetLibraryID })
+
+	var want []string
+	for i := len(all) - 1; i >= at; i-- {
+		want = append(want, all[i].ID)
+	}
+
+	rolled, err := m.Rollback(ctx, len(want))
+	if err != nil || !slices.Equal(rolled, want) {
+		t.Fatalf("Rollback = %v, %v; want %v", rolled, err, want)
 	}
 
 	for _, table := range []string{"asset_info", "asset_tags", "asset_search"} {

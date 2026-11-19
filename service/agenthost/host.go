@@ -254,6 +254,14 @@ func (h *Host) End(id string, reason chat.EndReason) {
 	}
 }
 
+// Flush writes the event of a live session that is still being written, so that a read of the
+// store has it whole. It is a no-op for a session that is not live.
+func (h *Host) Flush(id string) {
+	if s, err := h.get(id); err == nil {
+		s.rec.Flush()
+	}
+}
+
 // Subscribe follows a live session after the event numbered after.
 func (h *Host) Subscribe(ctx context.Context, id string, after int64) (*Subscription, error) {
 	s, err := h.get(id)

@@ -60,6 +60,9 @@ type Deps struct {
 	// AgentTokens is the registry of the session tokens of the hosted agent chat (SDD-017 section 6.1); nil
 	// means no hosted agent can authenticate.
 	AgentTokens auth.AgentTokens
+	// Chat is the host of the hosted agent, for the event stream of a session (SDD-017 section 8); nil serves the stored
+	// events only.
+	Chat ChatStreams
 }
 
 type apiHandler struct {
