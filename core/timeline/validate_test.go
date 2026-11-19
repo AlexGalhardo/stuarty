@@ -379,6 +379,34 @@ func TestValidateRejectsEveryInvariant(t *testing.T) {
 		{"keyframe t negative", func(d *Document) {
 			editItem(d, clipID, func(i *Item) { i.Keyframes = Keyframes{"x": {NewKeyframe(-1, 1)}} })
 		}, VKeyframes},
+		{"keyframe bezier without numbers", func(d *Document) {
+			editItem(d, clipID, func(i *Item) {
+				k := NewKeyframe(0, 1)
+				k.Easing = EasingBezier
+				i.Keyframes = Keyframes{"scale": {k}}
+			})
+		}, VKeyframes},
+		{"keyframe bezier x out of range", func(d *Document) {
+			editItem(d, clipID, func(i *Item) {
+				k := NewKeyframe(0, 1)
+				k.Easing, k.Bezier = EasingBezier, []float64{1.5, 0, 0.5, 1}
+				i.Keyframes = Keyframes{"scale": {k}}
+			})
+		}, VKeyframes},
+		{"keyframe bezier y out of range", func(d *Document) {
+			editItem(d, clipID, func(i *Item) {
+				k := NewKeyframe(0, 1)
+				k.Easing, k.Bezier = EasingBezier, []float64{0.5, 3.5, 0.5, 1}
+				i.Keyframes = Keyframes{"scale": {k}}
+			})
+		}, VKeyframes},
+		{"keyframe bezier with a named easing", func(d *Document) {
+			editItem(d, clipID, func(i *Item) {
+				k := NewKeyframe(0, 1)
+				k.Easing, k.Bezier = "ease_in", []float64{0.5, 0, 0.5, 1}
+				i.Keyframes = Keyframes{"scale": {k}}
+			})
+		}, VKeyframes},
 		{"keyframe order", func(d *Document) {
 			editItem(d, clipID, func(i *Item) { i.Keyframes = Keyframes{"y": {NewKeyframe(5, 1), NewKeyframe(5, 2)}} })
 		}, VKeyframes},
