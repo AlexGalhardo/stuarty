@@ -152,18 +152,16 @@ var Scopes = map[string]string{
 	"ApprovalRuleList":   ScopeRead,
 	"ApprovalRuleSet":    ScopeAdmin,
 	"ApprovalRuleRemove": ScopeAdmin,
-	"CostSummary":        ScopeRead,
-	"CostCeilingSet":     ScopeAdmin,
-
-	"AssetGet":     ScopeRead,
-	"AssetUses":    ScopeRead,
-	"AssetSetInfo": ScopeMedia,
-	"AssetTag":     ScopeMedia,
-
-	"ProviderList":     ScopeRead,
-	"ProviderModels":   ScopeRead,
-	"ProviderPriceSet": ScopeAdmin,
-	"TextGenerate":     ScopeEdit,
+	// The social networks and publishing (SDD-020 section 9).
+	"SocialNetworkList":     ScopeRead,
+	"SocialConnectBegin":    ScopeAdmin,
+	"SocialConnectComplete": ScopeAdmin,
+	"SocialAccountList":     ScopeRead,
+	"PublishValidate":       ScopeRead,
+	"PublishNow":            ScopeRender,
+	"PublishStatus":         ScopeRead,
+	"CostSummary":           ScopeRead,
+	"CostCeilingSet":        ScopeAdmin,
 }
 
 // authorize checks the caller first, as every method does: a missing caller
