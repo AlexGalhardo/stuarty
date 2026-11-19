@@ -39,7 +39,7 @@ A creator opens "Edit Image", sees their thumbnail on a canvas, moves a title, s
 
 ## Tasks
 
-- [ ] 1. Add the image editor section to SDD-012 and its components to the design system. Verify: `task lint:md` exits 0.
+- [x] 1. Add the image editor section to SDD-012 and its components to the design system. Verify: `task lint:md` exits 0.
 - [ ] 2. Build the page, the document loading and the canvas with zoom and pan. Verify: `task test:web` passes with the new component tests.
 - [ ] 3. Implement selection, move, scale and rotate on the canvas with snapping. Verify: `web/e2e/specs/image-transform.spec.ts` passes and `bun run check:thin-client` passes.
 - [ ] 4. Build the layer panel. Verify: `web/e2e/specs/image-layers.spec.ts` passes.

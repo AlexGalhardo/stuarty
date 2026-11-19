@@ -754,6 +754,19 @@ Keys: `ui.editor.<area>.empty.title` and `.body` (SDD-012 §16.2).
 
 Every name or text from an agent or a file (project, track, item, asset names, caption words, history text) is rendered through it: `dir="auto"`, `unicode-bidi: isolate` (SDD-012 §1.2). Visually identical to plain text; truncation with an ellipsis and a tooltip carrying the full text.
 
+#### 4.3.18 Image editor components
+
+The screen of SDD-012 section 24. It is the editor shell of section 3.1 over an image: a toolbar on top, the layer panel on the left, the canvas in the middle, the inspector and the history on the right.
+
+- `image-editor/toolbar/Toolbar`: the `role="toolbar"` of 4.3.1 with groups (add: text, shape, fill, image, logo; arrange: group, ungroup, forward, back, duplicate, remove; align: six buttons; history: undo, redo; view: zoom out, zoom in, fit, 100%; export). Every button has an icon, an `aria-label` and a tooltip; the disabled ones keep their name.
+- `image-editor/canvas/Canvas`: one focusable region (`role="application"` is not used; it is a `group` named by `ui.image.canvas.label`) over the picture. The picture sits on `--ed-preview-surround`; the selection outline is 2 px of `--ed-handle`; the eight handles are 10 px squares with a 24 px hit area and the rotate handle is 24 px above the top edge; guides are 1 px of `--ed-snap` (a 2:1 dash as well as a colour); the outline of a layer an agent changed is 2 px of `--agent`. Nothing on the canvas is conveyed by colour alone: the selection also shows its size as a text badge, and the agent outline comes with the live-region message.
+- `image-editor/layers/LayerPanel`: a `role="tree"` (4.3.2 panel, variant `layers`). A row is 32 px: indent 16 px per level, disclosure for a group, kind icon, name, visibility and lock toggles (`aria-pressed`, 24 px targets with 32 px rows). The selected row uses `--ed-selection` as background with the text token of that pair (2.6); a dragged row shows an insertion line, and the same move is available from the keyboard.
+- `image-editor/inspector/Inspector`: the inspector of 12.1 with sections per kind. Numeric fields are `ui/TimeField`-style fields with `inputMode="numeric"`, a visible label and a unit suffix; a colour field is a text field with a swatch button that opens the brand swatches.
+- `image-editor/export/ExportDialog`: the dialog of 14.1 with a findings list (each finding a button that selects the layer) and a download link when the file is ready.
+- `image-editor/history/HistoryPanel`: the history row of 4.3.16 with the actor chip; an undone row says "Undone" in text.
+- Empty and error states: no layer ("The image has no layers", "Add a text, a shape or a photo from the toolbar"), no frame yet (a skeleton the size of the canvas), a frame that failed (the core's message with a Retry button).
+- Keys: `ui.image.<area>.<name>` (SDD-012 section 16.2).
+
 ## 5. Iconography, illustration and the product mark
 
 ### 5.1 Icons
