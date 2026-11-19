@@ -388,6 +388,8 @@
         "width": "Width",
         "height": "Height",
         "create": "Create image",
+        "as_template": "Make it a template",
+        "templates": "Your templates",
         "documents": "Your images",
         "loading": "Loading…",
         "empty": "No images yet. Create one above.",

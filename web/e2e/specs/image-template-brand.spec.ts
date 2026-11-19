@@ -145,4 +145,49 @@ test.describe("image brand kit and templates", () => {
 			page.getByTestId("image-list").getByText("Thumbnail template"),
 		).toHaveCount(0);
 	});
+
+	test("a person makes a template from the list, gives a text its slot, and new from template offers it", async ({
+		page,
+		request,
+	}) => {
+		const call = await caller(request, "agent");
+		const name = `UI template ${Date.now()}`;
+
+		// image.create with the template flag, from the form of the list
+		await page.goto("/edit-image");
+		await page.getByLabel("Name").first().fill(name);
+		await page.getByTestId("image-new-template").check();
+		await page.getByRole("button", { name: "Create image" }).click();
+		await expect(page).toHaveURL(/\/edit-image\/img_/);
+		const id = page.url().split("/").pop() ?? "";
+		expect(
+			((await call("GET", `/images/${id}`)) as { template: boolean }).template,
+		).toBe(true);
+
+		// a text with no content and a slot: the core says the slot is required
+		await expect(page.getByTestId("image-add-text")).toBeEnabled();
+		await page.getByTestId("image-add-text").click();
+		await expect(row(page, "Text")).toBeVisible();
+		await page.getByTestId("image-field-text").fill("");
+		await page.getByTestId("image-field-text").blur();
+		await page.getByTestId("image-field-slot").fill("headline");
+		await page.getByTestId("image-field-slot").press("Enter");
+		await expect
+			.poll(
+				async () =>
+					layerByName((await imageState(call, id)).layers, "Text")?.slot,
+			)
+			.toBe("headline");
+
+		// the template has its own list and is offered by new from template
+		await page.goto("/edit-image");
+		await expect(
+			page.getByTestId("image-template-list").getByText(name),
+		).toBeVisible();
+		await expect(page.getByTestId("image-list").getByText(name)).toHaveCount(0);
+		await page
+			.getByLabel("Template", { exact: true })
+			.selectOption({ label: name });
+		await expect(page.getByLabel(/Text .*headline, required/)).toBeVisible();
+	});
 });

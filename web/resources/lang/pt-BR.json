@@ -388,6 +388,8 @@
         "width": "Largura",
         "height": "Altura",
         "create": "Criar imagem",
+        "as_template": "Criar como modelo",
+        "templates": "Seus modelos",
         "documents": "Suas imagens",
         "loading": "Carregando…",
         "empty": "Nenhuma imagem ainda. Crie uma acima.",
