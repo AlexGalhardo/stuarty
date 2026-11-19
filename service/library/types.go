@@ -72,6 +72,7 @@ type ValidationError struct {
 	Field    string
 	Msg      string
 	Findings []core.Finding
+	Details  map[string]any
 }
 
 func (e *ValidationError) Error() string {
