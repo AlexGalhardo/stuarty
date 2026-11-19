@@ -92,7 +92,7 @@ func displayName(p string) string {
 }
 
 func (s *svc) MediaImport(ctx context.Context, req MediaImportRequest) (*MediaImportResult, error) {
-	c, err := authorize(ctx, "MediaImport", req.ProjectID)
+	c, err := s.authorizeProject(ctx, "MediaImport", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}
@@ -811,7 +811,7 @@ func decodeOffset(cur, kind, project string) (int, *Error) {
 }
 
 func (s *svc) MediaList(ctx context.Context, req MediaListRequest) (*MediaListResult, error) {
-	c, err := authorize(ctx, "MediaList", req.ProjectID)
+	c, err := s.authorizeProject(ctx, "MediaList", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}
@@ -948,7 +948,7 @@ func stripOf(arts []ArtifactRow) *Strip {
 var inspectSections = []string{"probe", "transcript", "silences", "loudness", "beats"}
 
 func (s *svc) MediaInspect(ctx context.Context, req MediaInspectRequest) (*MediaInspectResult, error) {
-	c, err := authorize(ctx, "MediaInspect", req.ProjectID)
+	c, err := s.authorizeProject(ctx, "MediaInspect", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}
@@ -1259,7 +1259,7 @@ func (s *svc) silencesSection(arts []ArtifactRow, row *ProjectRow, minSilence st
 
 // OpenFile resolves the byte-serving routes of an asset (SDD-003 section 6.5).
 func (s *svc) OpenFile(ctx context.Context, ref FileRef) (*File, error) {
-	c, err := authorize(ctx, "OpenFile", ref.ProjectID)
+	c, err := s.authorizeProject(ctx, "OpenFile", ref.ProjectID)
 	if err != nil {
 		return nil, err
 	}

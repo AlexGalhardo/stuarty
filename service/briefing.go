@@ -68,7 +68,7 @@ type BriefingAnswerRequest struct {
 
 // BriefingQuestions returns the questions of the briefing, and what the brief of a project answers so far.
 func (s *svc) BriefingQuestions(ctx context.Context, req BriefingQuestionsRequest) (*BriefingQuestionsResult, error) {
-	c, err := authorize(ctx, "BriefingQuestions", req.ProjectID)
+	c, err := s.authorizeProject(ctx, "BriefingQuestions", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}
@@ -146,7 +146,7 @@ func questionLine(q BriefingQuestion) string {
 // replace is true (project.CheckBriefingReplace, checked in the same transaction as the write), so a briefing
 // never destroys text a person wrote. It needs the edit scope only.
 func (s *svc) BriefingAnswer(ctx context.Context, req BriefingAnswerRequest) (*BriefResult, error) {
-	c, err := authorize(ctx, "BriefingAnswer", req.ProjectID)
+	c, err := s.authorizeProject(ctx, "BriefingAnswer", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}

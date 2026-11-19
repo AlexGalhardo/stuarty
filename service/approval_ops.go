@@ -299,7 +299,7 @@ func (s *svc) auditApproval(
 
 // ApprovalList returns the requests of the queue.
 func (s *svc) ApprovalList(ctx context.Context, req ApprovalListRequest) (*ApprovalListResult, error) {
-	c, err := authorize(ctx, "ApprovalList", req.ProjectID)
+	c, err := s.authorizeProject(ctx, "ApprovalList", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}
