@@ -34,7 +34,9 @@
 | `MediaList` | `media_inspect` called without an asset | `media:list` | `GET /projects/{id}/media` (every asset of the project, including those still ingesting or failed, which are not in the document) | read |
 | `JobList` | `job_get` called with a project and no job | `job:list` | `GET /projects/{id}/jobs` | read |
 | `SnapPoints` | none | none | `GET /projects/{id}/snap-points` (SDD-012 §7.8) | read |
-| `AssetList` | none | none | `GET /assets` (the ready files of the workspace by content hash, `kind` image, video or audio; the picker of a brand logo) | read |
+| `AssetList` | `media_inspect` called with no `project_id` (the library) | `asset:list` | `GET /assets` (the ready files of the workspace by content hash, with the origin, tags and reuse of SDD-011 §14; filters `kind`, `section`, `tag`, `project`, `origin`, `reusable`, `text`; the picker of a brand logo) | read |
+| `AssetGet`, `AssetUses` | `media_inspect` called with a `hash` | `asset:show`, `asset:uses` | `GET /assets/{hash}`, `GET /assets/{hash}/uses` (one library entry with its origin and the projects that use it, SDD-011 §14) | read |
+| `AssetSetInfo`, `AssetTag` | `media_import` called with a `hash` and no `paths` | `asset:set`, `asset:tag` | `PUT /assets/{hash}`, `POST /assets/{hash}/tags` (the description, the rights note, the reuse mark and the tags of a library entry, SDD-011 §14) | media |
 | `FontList` | none | `fonts` | `GET /fonts` (families and weights available, and the imported font files with their hash) | read |
 | `OpenFile` | none | none (the job result gives the path to local callers; with a remote server the CLI downloads the file) | `GET /jobs/{job_id}/file` and the byte-serving routes listed below | read |
 | `AuditList` | none | `audit` | `GET /audit` | admin |
@@ -160,7 +162,7 @@ Kinds: `ingest`, `transcribe`, `export`, `export_batch`, `frame`, and the kinds 
 | `image_documents`, `image_operations` | image documents, and their append-only log of batches | SDD-005 §5.12, SDD-021 |
 | `approval_requests`, `approval_rules`, `cost_ceilings`, `cost_ledger` | the approval queue, the rules that approve without asking, the cost ceilings and the record of every estimate and real cost; no secret | SDD-015 |
 | `image_documents`, `image_operations` | image documents, and their append-only log of batches | SDD-005 §5.13, SDD-021 |
-| `library_entries`, `library_fts` | the index of memory, skills and prompts for search and lists; rebuilt from the files, holds no content that the files lack | SDD-018 §9 |
+| `asset_info`, `asset_tags`, `asset_search` | the library side of an asset by hash: origin, rights note, description, the reuse mark, the tags and the full-text index over them | SDD-005 §5.5, SDD-011 §14 |
 | vukem's own tables for sessions (`sessions`) and tokens (`access_tokens`) | network mode | vukem |
 
 A document with a `template` member is a template draft, or an instance when `template.instance` is true (SDD-001 section 3.10). `TemplateInstantiate` writes the flag; lint reads it (`L_SLOT_UNFILLED`, SDD-003).
@@ -447,15 +449,11 @@ The operations of the registry of domain `image` (`core/command` registry built 
 | `E_SLOT` `details.reason` `unknown_slot`, `wrong_kind`, `invalid_value`, `missing` | error detail | a template filled badly (SDD-021 section 7) |
 | `E_EXPORT_FAILED` `details.reason` `webp_unavailable` | error detail | no WebP encoder is wired (SDD-021 §6) |
 
-## 15. Export presets, codecs and batches (SDD-004 sections 8.2 to 8.4)
+## 15. Asset library (SDD-011 §14)
 
 | Name | Kind | Meaning |
 | --- | --- | --- |
-| `youtube-shorts`, `instagram-reels`, `facebook-reels`, `tiktok`, `x-video` | export preset id | the five presets of RF-087, in this order in `ExportPresetList` |
-| `h264`, `hevc`, `av1` | export codec | the codecs of an export; `h264` is the default |
-| `X_DURATION_TOO_LONG`, `X_DURATION_TOO_SHORT`, `X_FPS_TOO_HIGH`, `X_FPS_TOO_LOW`, `X_RESOLUTION_TOO_SMALL`, `X_RESOLUTION_TOO_LARGE`, `X_ASPECT_RATIO`, `X_SIZE_TOO_LARGE` | export check finding | what `ExportCheck` reports (SDD-002 A.13) |
-| `export_batch` | job kind | the parent job of `ExportBatch`; its children are `export` jobs (SDD-004 section 8.4) |
-| `E_VALIDATION` `details.reason` `preset_mismatch` | error detail | an export with a preset was refused because the project does not fit it; `details.findings` |
-| `E_NO_ENCODER` `details.reason` `codec_unavailable` | error detail | the codec asked for has no allowed encoder that passes the test encode on this machine |
-| `preset_<finding>` | verification check | a check of the finished file against its preset, named after the finding (`preset_duration_too_long`) |
-| `video_codec`, `codec_fallback`, `preset`, `notes` | export result member | the codec written (`video_codec`, as before), the codec wanted when the export fell back to `h264`, the preset id, and the notes that say so |
+| `imported`, `generated`, `fetched_by_agent`, `rendered_externally` | origin kind | where an asset came from: a file the user brought, a file a provider generated, a file an agent downloaded on its own side, a file rendered by another tool |
+| `visual`, `video` | library section | the two sections over one library: Visual Assets (kinds `image`, `lut`) and Video Assets (kinds `video`, `audio`) |
+| `E_VALIDATION` `details.reason` `origin_kind_unknown`, `source_required`, `rights_note_required`, `provider_required`, `model_required`, `too_long`, `cost_invalid`, `tags_invalid` | error detail | an origin or a tag set the library refuses (`path` is `origin.<field>` or `tags`); stable for agents |
+| `asset_hash`, `hash` | field | the content hash `sha256:<64 hex>` of an asset, the key of the library (a bare 64 hex string is accepted and normalised) |

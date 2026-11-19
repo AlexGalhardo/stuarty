@@ -385,6 +385,8 @@ type AssetRepo interface {
 }
 ```
 
+`Repos` also has `Library() assets.Store` (package `service/assets`, as `Connections()` has `connections.Store`): `Get(hash)`, `Put(row)` (the `asset_info` row, its tags and its `asset_search` row in one call, inside the caller's transaction), `Find(query)` (the hashes that match the filters of the library, SQL and full-text, section 5.5.1) and `Names(hashes)`. `AssetRepo.Delete` also removes the `asset_search` row of the hash.
+
 ### 3.5 Jobs, templates, backups
 
 ```go
@@ -826,6 +828,47 @@ State of a `project_assets` row:
 **Importing a file already in the project.** `UNIQUE (project_id, asset_hash)` means the same file maps to one identifier per project. Importing a hash whose row is `trashed` behaves as `MediaRestore` and returns the old identifier; a row in any other state is returned unchanged.
 
 **Facts.** The `assets` fact columns are the denormalized probe facts used by the media library list; they are written by `SetFacts` when ingest reaches `ready`, in the same transaction as the `ingest_state` change. The authoritative copy for editing is the Asset object in the document.
+
+#### 5.5.1 The library side of an asset (`asset_info`, `asset_tags`, `asset_search`)
+
+Migration `20261119130100_asset_library`. `assets` is already one row per file by hash and shared by every project, so the library is workspace-wide without moving a file (ADR-0010, ADR-0039); what the library adds is the record of where a file came from, what the user may do with it and how to find it. It lives beside `assets`, keyed by the same hash, so that the ingest never writes it and a release that does not know it still opens the workspace.
+
+```sql
+CREATE TABLE asset_info (
+  asset_hash  TEXT    NOT NULL REFERENCES assets (id) ON DELETE CASCADE,
+  origin_kind TEXT    NOT NULL DEFAULT 'imported' CHECK (origin_kind IN ('imported','generated','fetched_by_agent','rendered_externally')),
+  source      TEXT    NOT NULL DEFAULT '',          -- a path, a URL or a tool name, as plain text; untrusted
+  provider    TEXT    NOT NULL DEFAULT '',          -- generated: the provider of the connection
+  model       TEXT    NOT NULL DEFAULT '',          -- generated: the model
+  prompt      TEXT    NOT NULL DEFAULT '',          -- generated: the prompt; untrusted
+  cost_micros INTEGER CHECK (cost_micros IS NULL OR cost_micros >= 0), -- millionths of a US dollar, NULL when unknown
+  rights_note TEXT    NOT NULL DEFAULT '',          -- the user's own record of the licence or the permission; untrusted
+  description TEXT    NOT NULL DEFAULT '',          -- untrusted
+  reusable    INTEGER NOT NULL DEFAULT 0 CHECK (reusable IN (0,1)),
+  created_by  TEXT    NOT NULL,                     -- the actor of the first import
+  created_ms  INTEGER NOT NULL,
+  updated_ms  INTEGER NOT NULL,
+  PRIMARY KEY (asset_hash)
+);
+CREATE INDEX asset_info_reusable_index ON asset_info (asset_hash) WHERE reusable = 1;
+
+CREATE TABLE asset_tags (
+  asset_hash TEXT NOT NULL REFERENCES assets (id) ON DELETE CASCADE,
+  tag        TEXT NOT NULL,                         -- normalised by core/asset (SDD-011 section 14.3)
+  PRIMARY KEY (asset_hash, tag)
+);
+CREATE INDEX asset_tags_tag_index ON asset_tags (tag, asset_hash);
+
+CREATE VIRTUAL TABLE asset_search USING fts5(
+  asset_hash UNINDEXED, name, tags, description, origin, tokenize = 'unicode61 remove_diacritics 2'
+);
+```
+
+- **A row is optional.** An asset with no `asset_info` row reads as `origin_kind = 'imported'`, no source, not reusable, no tags (the writers of `assets` that are not `MediaImport`, for example a bundle import, need not know the library). `MediaImport` writes the row when it creates the asset, and the migration writes one for every asset that exists.
+- **Origin is written once.** The row of a hash keeps the origin of its first import. `rights_note`, `description`, `reusable` and the tags are the user's and change through `AssetSetInfo` and `AssetTag`. A later import of the same bytes with an origin block is validated and does not replace the origin.
+- **`asset_search`** has one row per hash, written by the service in the same transaction as every change of `asset_info`, `asset_tags`, `assets.original_name` or a `project_assets.name`: `name` is the names the file is known by (the first one and those of the projects), `tags` the tags joined by spaces, `origin` the source, provider, model and prompt. A virtual table holds no foreign key, so `Assets().Delete` (the emptying of the trash) deletes its row too. A query is built by `core/asset` (every term quoted, a prefix match on the last) and never concatenated from the caller's text.
+- **Migration.** For every `assets` row: an `asset_info` row with `origin_kind = 'imported'`, `created_by` the importer of its oldest `project_assets` row (`migration` when there is none) and `created_ms` of the asset, and its `asset_search` row. `Down` drops the three tables. No `project_assets` row and no file changes: a clip still resolves its media by the hash.
+- **Uses.** The projects that use an asset are computed, never stored: the `project_assets` rows of the hash in state `active` (`pending` is an import not yet added; `trashed` is removed), each timeline mapped to its production by `project_items` (section 5.12). The same hash held by two timelines of one project is one use.
 
 ### 5.6 `jobs`
 
