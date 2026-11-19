@@ -279,7 +279,13 @@ func hostAndPort(raw string) (host, port string, err error) {
 // TestConnectionRefusesNamedCloudMetadataAddressesAtDial: the metadata services that sit in ranges
 // the gate allows on purpose (the CGNAT block and the unique-local block) are refused by address.
 func TestConnectionRefusesNamedCloudMetadataAddressesAtDial(t *testing.T) {
-	for _, host := range []string{"100.100.100.200", "fd00:ec2::254", "::ffff:100.100.100.200"} {
+	hosts := []string{
+		"100.100.100.200", "fd00:ec2::254", "::ffff:100.100.100.200",
+		// A zone does not make it another address, and the NAT64 prefix embeds the IPv4 one.
+		"fd00:ec2::254%1", "64:ff9b::6464:64c8", "64:ff9b::a9fe:a9fe",
+	}
+
+	for _, host := range hosts {
 		t.Run(host, func(t *testing.T) {
 			reg := &fakeRegistry{dests: map[string]Destination{"con_a": {ID: "con_a", Hosts: []string{host}}}}
 
@@ -290,7 +296,7 @@ func TestConnectionRefusesNamedCloudMetadataAddressesAtDial(t *testing.T) {
 
 			authority := host
 			if strings.Contains(host, ":") {
-				authority = "[" + host + "]"
+				authority = "[" + strings.ReplaceAll(host, "%", "%25") + "]"
 			}
 
 			_, _, err := get(Connection(reg, "con_a", 2*time.Second, nil), "https://"+authority+"/latest/meta-data/")
@@ -307,7 +313,7 @@ func TestConnectionRefusesNamedCloudMetadataAddressesAtDial(t *testing.T) {
 
 // TestConnectionStillAllowsCGNATAndUniqueLocalNeighbours: only the named addresses are refused.
 func TestConnectionStillAllowsCGNATAndUniqueLocalNeighbours(t *testing.T) {
-	for _, host := range []string{"100.100.100.201", "fd00:ec2::255", "10.0.0.1"} {
+	for _, host := range []string{"100.100.100.201", "fd00:ec2::255", "10.0.0.1", "64:ff9b::6464:64c9"} {
 		reg := &fakeRegistry{dests: map[string]Destination{"con_a": {ID: "con_a", Hosts: []string{host}}}}
 		stop := errors.New("stop")
 		restore := SetDialRecorder(func(Purpose, string) error { return stop })
