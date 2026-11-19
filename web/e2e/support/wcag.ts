@@ -136,6 +136,11 @@ export async function clippedText(page: Page): Promise<string[]> {
 			const style = getComputedStyle(el);
 			if (style.display === "none" || style.visibility === "hidden") continue;
 			if (el.closest(".sr-only, [aria-hidden=true]")) continue;
+			// Text hidden on purpose with a variant of sr-only (`max-2xl:sr-only`
+			// keeps the name of a toolbar button and shows only its icon below
+			// 1536 px): a box of one pixel is not text the spacing can clip.
+			const box = (el as HTMLElement).getBoundingClientRect();
+			if (box.width <= 1 && box.height <= 1) continue;
 			const clipsY = ["hidden", "clip"].includes(style.overflowY);
 			const clipsX = ["hidden", "clip"].includes(style.overflowX);
 			const truncates = style.textOverflow === "ellipsis";

@@ -167,7 +167,7 @@ func planOutputScale(width, projectWidth int) (float64, *Error) {
 // PlanWindow reads the render plan of a window of the current revision. The
 // editor draws what it says and computes nothing (ADR-0007).
 func (s *svc) PlanWindow(ctx context.Context, req PlanWindowRequest) (*PlanWindowResult, error) {
-	c, err := authorize(ctx, "PlanWindow", req.ProjectID)
+	c, err := s.authorizeProject(ctx, "PlanWindow", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}

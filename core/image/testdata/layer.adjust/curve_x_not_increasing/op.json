@@ -1,0 +1,16 @@
+{
+  "args": {
+    "curve": [
+      {
+        "x": 100,
+        "y": 10
+      },
+      {
+        "x": 100,
+        "y": 20
+      }
+    ],
+    "layer_id": "lyr_bbbbbbbbbb"
+  },
+  "op": "layer.adjust"
+}

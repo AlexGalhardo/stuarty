@@ -25,6 +25,70 @@ export interface TextStyle {
 	[key: string]: unknown;
 }
 
+export interface CurvePoint {
+	x: number;
+	y: number;
+}
+
+// The adjustments of a layer that differ from neutral (SDD-021 section 3.1): whole numbers, so the server is
+// the only place that turns them into pixels.
+export interface Adjust {
+	brightness?: number;
+	contrast?: number;
+	saturation?: number;
+	temperature?: number;
+	tint?: number;
+	hue?: number;
+	exposure?: number;
+	levels?: { black: number; white: number; gamma: number };
+	curve?: CurvePoint[];
+}
+
+export type FilterKind =
+	| "grayscale"
+	| "sepia"
+	| "invert"
+	| "warm"
+	| "cool"
+	| "blur"
+	| "sharpen"
+	| "vignette"
+	| "grain"
+	| "shadow"
+	| "glow"
+	| "stroke";
+
+// A filter of a layer: its kind and every parameter of the kind (SDD-021 section 3.1).
+export interface Filter {
+	kind: FilterKind;
+	amount?: number;
+	radius?: number;
+	softness?: number;
+	size?: number;
+	seed?: number;
+	opacity?: number;
+	dx?: number;
+	dy?: number;
+	blur?: number;
+	width?: number;
+	color?: string;
+}
+
+export type MaskKind = "rect" | "rounded_rect" | "ellipse" | "layer";
+
+// The mask of a layer: a shape in thousandths of its box, or the alpha of the layer named by `source`.
+export interface Mask {
+	kind: MaskKind;
+	x?: number;
+	y?: number;
+	w?: number;
+	h?: number;
+	radius?: number;
+	feather?: number;
+	invert?: boolean;
+	source?: string;
+}
+
 export interface Layer {
 	id: string;
 	kind: LayerKind;
@@ -47,6 +111,10 @@ export interface Layer {
 	stroke_color?: string;
 	stroke_width?: number;
 	radius?: number;
+	adjust?: Adjust;
+	filters?: Filter[];
+	mask?: Mask;
+	blend?: string;
 	children?: Layer[];
 }
 

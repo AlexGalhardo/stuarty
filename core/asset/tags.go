@@ -6,8 +6,6 @@ import (
 	"strings"
 	"unicode"
 	"unicode/utf8"
-
-	"golang.org/x/text/unicode/norm"
 )
 
 // The limits of the tags of one asset (SDD-011 section 14.3).
@@ -16,11 +14,14 @@ const (
 	MaxTagLength = 40
 )
 
-// NormalizeTag turns what a person typed into the form that is stored and searched: trimmed, NFC, lower case,
+// NormalizeTag turns what a person typed into the form that is stored and searched: trimmed, lower case,
 // a leading # removed, runs of white space one hyphen. ok is false when nothing valid is left: empty, too long,
 // or a character other than a letter, a digit, a hyphen or an underscore.
+//
+// The text arrives already in NFC: core/ imports only the standard library (ADR-0001), so the composition is
+// done by the caller (service/assets). A decomposed accent is a combining mark, not a letter, and is refused.
 func NormalizeTag(s string) (tag string, ok bool) {
-	s = strings.TrimSpace(norm.NFC.String(s))
+	s = strings.TrimSpace(s)
 	s = strings.TrimLeft(s, "#")
 	s = strings.ToLower(strings.Join(strings.Fields(s), "-"))
 

@@ -1,0 +1,24 @@
+[
+  {
+    "changes": {
+      "mask": [
+        {
+          "feather": 12,
+          "h": 800,
+          "kind": "ellipse",
+          "w": 800,
+          "x": 100,
+          "y": 100
+        },
+        {
+          "h": 500,
+          "invert": true,
+          "kind": "ellipse",
+          "w": 500
+        }
+      ]
+    },
+    "id": "lyr_bbbbbbbbbb",
+    "kind": "layer.updated"
+  }
+]

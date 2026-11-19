@@ -1,0 +1,8 @@
+{
+  "args": {
+    "kind": "rect",
+    "layer_id": "lyr_bbbbbbbbbb",
+    "radius": 8
+  },
+  "op": "layer.mask_set"
+}

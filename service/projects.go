@@ -351,7 +351,7 @@ func decodeViewCursor(s, project string, revision int64) (viewCursor, error) {
 }
 
 func (s *svc) ProjectGet(ctx context.Context, req ProjectGetRequest) (*ProjectGetResult, error) {
-	c, err := authorize(ctx, "ProjectGet", req.ProjectID)
+	c, err := s.authorizeProject(ctx, "ProjectGet", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}
@@ -542,7 +542,7 @@ func (s *svc) setProjectState(
 	to ProjectState,
 	action string,
 ) (*ProjectStateResult, error) {
-	c, err := authorize(ctx, method, req.ProjectID)
+	c, err := s.authorizeProject(ctx, method, req.ProjectID)
 	if err != nil {
 		return nil, err
 	}

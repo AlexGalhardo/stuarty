@@ -1,0 +1,8 @@
+{
+  "code": "E_VALIDATION",
+  "hint": "The blur filter takes: radius.",
+  "message": "The blur filter has no colour.",
+  "op_index": 0,
+  "path": "args.color",
+  "retryable": false
+}

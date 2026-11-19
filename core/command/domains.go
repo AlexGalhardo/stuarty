@@ -38,7 +38,7 @@ var domains = []DomainInfo{
 		"Files of the workspace: media import and inspection, the asset library (origin, tags, reuse), fonts.",
 	},
 	{DomainPublish, "Publications and the approval queue that gates them and costly generations."},
-	{DomainProvider, "AI providers and generation: the spend on providers and its ceilings."},
+	{DomainProvider, "AI providers and generation: models, prices, text generation, the spend and its ceilings."},
 	{DomainMemory, "The library: memory notes, skills, prompts and search."},
 	{DomainWorkspace, "The installation: command help, connections, brand kit, health, audit."},
 }

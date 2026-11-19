@@ -58,9 +58,14 @@ const tabsListVariants = cva(
   }
 )
 
+// A tab is selected when an arrow key moves the focus to it (the automatic
+// activation of the WAI-ARIA tabs pattern, which the rail and the strips of the
+// editor follow, SDD-012 section 6.4); Base UI selects on Enter or Space only
+// unless activateOnFocus is set (VV-248, VV-251).
 function TabsList({
   className,
   variant = "default",
+  activateOnFocus = true,
   ...props
 }: React.ComponentProps<typeof TabsPrimitive.List> &
   VariantProps<typeof tabsListVariants>) {
@@ -68,6 +73,7 @@ function TabsList({
     <TabsPrimitive.List
       data-slot="tabs-list"
       data-variant={variant}
+      activateOnFocus={activateOnFocus}
       className={cn(tabsListVariants({ variant }), className)}
       {...props}
     />

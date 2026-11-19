@@ -26,7 +26,7 @@ const (
 )
 
 func (s *svc) HistoryList(ctx context.Context, req HistoryListRequest) (*HistoryListResult, error) {
-	c, err := authorize(ctx, "HistoryList", req.ProjectID)
+	c, err := s.authorizeProject(ctx, "HistoryList", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}
@@ -182,7 +182,7 @@ func (s *svc) Redo(ctx context.Context, req UndoRequest) (*UndoResult, error) {
 // step is Undo and Redo: the same transaction as an edit with the differences
 // of SDD-005 section 12.2.
 func (s *svc) step(ctx context.Context, method string, req UndoRequest, redo bool) (*UndoResult, error) {
-	c, err := authorize(ctx, method, req.ProjectID)
+	c, err := s.authorizeProject(ctx, method, req.ProjectID)
 	if err != nil {
 		return nil, err
 	}
@@ -468,7 +468,7 @@ func (s *svc) undoResult(
 }
 
 func (s *svc) Lint(ctx context.Context, req LintRequest) (*LintResult, error) {
-	c, err := authorize(ctx, "Lint", req.ProjectID)
+	c, err := s.authorizeProject(ctx, "Lint", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}

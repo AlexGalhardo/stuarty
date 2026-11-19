@@ -56,6 +56,34 @@ test.describe("desktop-bridge", () => {
 		expect(imports).toEqual([[picked[0]], [picked[1]]]);
 	});
 
+	// VV-217: the import shortcut reaches the chooser of the window, as it
+	// reaches the path field in a browser, also when the library is hidden.
+	test("Ctrl+I opens the file chooser of the window, with the library shown or hidden", async ({
+		page,
+		request,
+	}) => {
+		const seeded = await seedProject(request, { tracks: 1, perTrack: 0 });
+		const picked = [testClip(1)];
+		await fakeBridge(page, picked);
+		await page.goto(`/editor/${seeded.id}`);
+		await expect(
+			page.getByRole("button", { name: "Choose files" }),
+		).toBeVisible();
+		const imports = recordImports(page);
+
+		await page.keyboard.press("Control+i");
+		await expect.poll(() => imports.length).toBe(1);
+		expect(imports[0]).toEqual(picked);
+
+		// Hide the library region, then press the shortcut again.
+		await page.keyboard.press("Alt+1");
+		await expect(
+			page.getByRole("button", { name: "Choose files" }),
+		).toHaveCount(0);
+		await page.keyboard.press("Control+i");
+		await expect.poll(() => imports.length).toBe(2);
+	});
+
 	test("dropped paths go to importMedia and the browser message stays hidden", async ({
 		page,
 		request,
@@ -130,31 +158,32 @@ test.describe("desktop-bridge show in folder", () => {
 	});
 });
 
-test.describe("desktop-bridge first-run tip", () => {
+test.describe("desktop-bridge first-run tour", () => {
 	test.use({ tipsSeen: false });
 
-	// VV-054: the tip does not say "paste a path" only, as the window also has
-	// the button and the drop.
-	test("the library tip names Choose files in the window", async ({
+	// VV-054: the library step does not say "paste a path" only, as the window
+	// also has the button and the drop.
+	test("the library step names Choose files in the window", async ({
 		page,
 		request,
 	}) => {
 		const seeded = await seedProject(request, { tracks: 1, perTrack: 0 });
 		await fakeBridge(page, []);
 		await page.goto(`/editor/${seeded.id}`);
-		const tips = page.getByRole("region", { name: "First steps" });
-		await expect(tips).toContainText("Choose files in the library, drop them");
+		await expect(page.locator("[data-tour-card]")).toContainText(
+			"Choose files, drop them here",
+		);
 	});
 
-	test("the library tip says to paste a path in a browser", async ({
+	test("the library step says to paste a path in a browser", async ({
 		page,
 		request,
 	}) => {
 		const seeded = await seedProject(request, { tracks: 1, perTrack: 0 });
 		await page.goto(`/editor/${seeded.id}`);
-		await expect(
-			page.getByRole("region", { name: "First steps" }),
-		).toContainText("Paste the path of a media file in the library");
+		await expect(page.locator("[data-tour-card]")).toContainText(
+			"Paste the path of a media file",
+		);
 	});
 });
 

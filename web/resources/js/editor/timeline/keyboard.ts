@@ -201,9 +201,7 @@ export type GridCommand =
 	| { kind: "focus"; direction: Direction; extend: boolean }
 	| { kind: "activate" }
 	| { kind: "nudge"; unit: "frame" | "second"; sign: 1 | -1 }
-	| { kind: "move-track"; sign: 1 | -1 }
-	| { kind: "slide" | "roll" | "slip"; sign: 1 | -1 }
-	| { kind: "select-all" };
+	| { kind: "move-track"; sign: 1 | -1 };
 
 type KeyEvent = Pick<
 	KeyboardEvent,
@@ -220,34 +218,15 @@ const FOCUS_KEYS: Readonly<Record<string, Direction>> = {
 	End: "end",
 };
 
-// The key table of SDD-012 section 7.10 for the keys of this task. Keys that
-// mean something elsewhere ([, ], S, Delete, Esc) are handled where they
-// already live. Space is never taken: it always toggles play.
+// The grid keys of SDD-012 section 7.10: the arrows move the focus, Alt with
+// the arrows nudges or moves to another track, Enter activates. They are
+// widget keys of the focused cell, not rows of the registry (the `grid_keys`
+// row lists them); every other key of the timeline is a row (SDD-012 section
+// 18.9). Space is never taken: it always toggles play.
 export function gridCommand(event: KeyEvent): GridCommand | null {
-	if (event.ctrlKey || event.metaKey) {
-		// Mod+Alt+arrows: slide; with Shift, roll (VV-036). Without Alt the key
-		// is the global next-marker or select-all.
-		if (
-			event.altKey &&
-			(event.key === "ArrowLeft" || event.key === "ArrowRight")
-		) {
-			return {
-				kind: event.shiftKey ? "roll" : "slide",
-				sign: event.key === "ArrowLeft" ? -1 : 1,
-			};
-		}
-		return event.key.toLowerCase() === "a" && !event.altKey && !event.shiftKey
-			? { kind: "select-all" }
-			: null;
-	}
+	// Mod with the arrows is the registry's (the markers, slide and roll).
+	if (event.ctrlKey || event.metaKey) return null;
 	if (event.altKey) {
-		// Alt+, and Alt+.: slip. `code`, because Option rewrites `key` on a Mac.
-		if (!event.shiftKey && event.code === "Comma") {
-			return { kind: "slip", sign: -1 };
-		}
-		if (!event.shiftKey && event.code === "Period") {
-			return { kind: "slip", sign: 1 };
-		}
 		const unit = event.shiftKey ? "second" : "frame";
 		if (event.key === "ArrowLeft") return { kind: "nudge", unit, sign: -1 };
 		if (event.key === "ArrowRight") return { kind: "nudge", unit, sign: 1 };

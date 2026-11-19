@@ -19,8 +19,19 @@ test.describe("export-failure", () => {
 		await expect(
 			dialog.getByText(/No encoder available|Export failed/),
 		).toBeVisible({ timeout: 60_000 });
-		// The core's hint follows the headline.
-		await expect(dialog.locator("[lang='en']").first()).toBeVisible();
+		// The hint follows the headline: worded in the language of the page when
+		// the catalogue has the code (VV-126), else the core's English, marked
+		// lang="en". The code is shown too.
+		const alert = dialog.getByRole("alert");
+		await expect(
+			alert
+				.getByText("No H.264 encoder works on this machine.")
+				.or(alert.locator("[lang='en']"))
+				.first(),
+		).toBeVisible();
+		await expect(
+			alert.getByText(/^E_(NO_ENCODER|EXPORT_FAILED)$/),
+		).toBeVisible();
 		await expect(dialog.getByRole("link", { name: "Download" })).toHaveCount(0);
 	});
 });

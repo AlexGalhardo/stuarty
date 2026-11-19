@@ -1,0 +1,12 @@
+{
+  "code": "E_NOT_FOUND",
+  "details": {
+    "id": "lyr_zzzzzzzzzz",
+    "kind": "layer"
+  },
+  "hint": "Use the id of a layer listed by the description of the image.",
+  "message": "Layer lyr_zzzzzzzzzz does not exist.",
+  "op_index": 0,
+  "path": "args.layer_id",
+  "retryable": false
+}

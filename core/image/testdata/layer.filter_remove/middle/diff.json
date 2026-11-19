@@ -1,0 +1,40 @@
+[
+  {
+    "changes": {
+      "filters": [
+        [
+          {
+            "kind": "blur",
+            "radius": 8
+          },
+          {
+            "blur": 8,
+            "color": "#000000",
+            "dx": 4,
+            "dy": 4,
+            "kind": "shadow",
+            "opacity": 50
+          },
+          {
+            "amount": 50,
+            "kind": "vignette",
+            "softness": 50
+          }
+        ],
+        [
+          {
+            "kind": "blur",
+            "radius": 8
+          },
+          {
+            "amount": 50,
+            "kind": "vignette",
+            "softness": 50
+          }
+        ]
+      ]
+    },
+    "id": "lyr_bbbbbbbbbb",
+    "kind": "layer.updated"
+  }
+]
