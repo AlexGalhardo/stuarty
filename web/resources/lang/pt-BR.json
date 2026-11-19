@@ -336,6 +336,30 @@
         "pick_color": "Escolher {label}",
         "none": "nenhum"
       },
+      "export": {
+        "open": "Exportar imagem",
+        "title": "Exportar imagem",
+        "hint": "Desenha a revisão atual e salva um arquivo no seu espaço de trabalho.",
+        "format": "Formato",
+        "size": "Tamanho",
+        "original": "Original ({w} × {h})",
+        "quality": "Qualidade",
+        "findings": "Problemas encontrados",
+        "no_findings": "Nenhum problema encontrado. A imagem está pronta para exportar.",
+        "error": "Erro",
+        "warning": "Aviso",
+        "go_to_layer": "Ir para a camada",
+        "blocked": {
+          "one": "{count} erro impede a exportação. Corrija-o primeiro.",
+          "other": "{count} erros impedem a exportação. Corrija-os primeiro."
+        },
+        "done": "Exportada em {w} × {h}, {bytes} bytes.",
+        "digest": "Resumo SHA-256 {hash}",
+        "download": "Baixar o arquivo",
+        "close": "Fechar",
+        "run": "Exportar",
+        "exporting": "Exportando…"
+      },
       "toolbar": {
         "label": "Ferramentas da imagem"
       },
