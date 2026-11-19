@@ -119,21 +119,7 @@ func (s *svc) JobStart(ctx context.Context, req JobStartRequest) (*Job, error) {
 		return nil, gerr
 	}
 
-	var (
-		start, end int64
-		terr       *Error
-	)
-
-	switch {
-	case args.Format == FormatPNG:
-		start, end, terr = stillRange(doc, args)
-	case args.At != "":
-		terr = newError(command.CodeValidation, "at is for a png export.").withPath("args.at").
-			withHint("set format to png, or use start and end")
-	default:
-		start, end, terr = exportRange(doc, args)
-	}
-
+	start, end, terr := jobExportRange(doc, args)
 	if terr != nil {
 		return nil, terr
 	}
