@@ -20,6 +20,7 @@ Stuarty is where a person creates, edits and manages a production. This skill sa
 | the text under the video on a network | `caption-per-network` |
 | a cover, a thumbnail | `thumbnail` |
 | a clip that lives on a web page or another service | `fetch-clip` |
+| an animation the editor cannot make: an animated title, a lower third, a logo sting | `motion-with-an-external-engine` |
 | what was learned before, "have we done this before" | `recall-learnings` |
 | a review after the video is done | `production-retro` |
 

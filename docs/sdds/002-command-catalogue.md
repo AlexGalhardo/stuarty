@@ -1,7 +1,7 @@
 # SDD-002: Command catalogue of the core
 
 - Amended (2026-11-18) for Stuarty: this is the catalogue of the video domain. Other domains get their own catalogue (ADR-0031, ADR-0038).
-- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen: all 77 commands have golden cases and pass the registry-wide gates. The binary exposes all 77 commands, 76 of them public; `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
+- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen: all 78 commands have golden cases and pass the registry-wide gates. The binary exposes all 78 commands, 77 of them public; `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
 - Depends on: SDD-001 (document), ADR-0002 (command core), ADR-0004 (time), ADR-0006 (log, concurrency, undo), ADR-0014 (JSON Schema)
 - Implements: RF-010 to RF-016, RF-020 to RF-026, RF-030 to RF-036, RF-040, RF-041, RF-050, RF-051, RF-100, RF-105, RF-107, RF-112 to RF-115, RF-119, NFR-001, NFR-025
 - Owner area: senior-a (command core and schema)
@@ -285,6 +285,7 @@ Scope is `edit` unless stated. "Time" marks arguments parsed by A.4. Optional ar
 | `clip.set_color` | `item_id`, `brightness?`, `contrast?`, `saturation?`, `temperature?`, `tint?`, `hue?` | Sets colour adjustment; also white balance and hue rotation (TASK-0233). See C.26 |
 | `clip.set_filter` | `item_id`, `filter?`, `amount?` | Sets the colour filter of a clip and how much of it is mixed in |
 | `clip.set_blur` | `item_id`, `radius` | Sets the blur radius of a clip in pixels; 0 removes it |
+| `clip.replace_media` | `item_id`, `asset_id` | Swaps the asset of a clip for another of the same kind, keeping its place, trim, transform, keyframes and effects (the re-render of an animation, SDD-011 section 15). See C.78 |
 | `item.repeat` | `item_id`, `copies?` or `until?` (exactly one), `ripple?` (`none` default, `track`), `link?`, `new_ids?` | Repeats an item back to back after its end, a number of times or until a time, such as a looping background (VV-123). See C.74 |
 | `clip.set_shadow` | `item_id`, `shadow` (`{color?, opacity?, dx?, dy?, blur?}` or null) | Gives a clip a drop shadow that follows its visible shape (VV-122); null removes it. See C.72 |
 | `clip.set_outline` | `item_id`, `outline` (`{color?, width?}` or null) | Gives a clip an outline that follows its visible shape (VV-122); null removes it. See C.73 |
@@ -6236,3 +6237,72 @@ Describes what `animation.apply_preset` and `keyframe.set_easing` accept, for an
 
 - `ok_lists_the_presets`
 - `err_validation_takes_no_arguments`
+
+### C.78 `clip.replace_media`
+
+Swaps the asset of a clip for another asset of the same kind and changes nothing else: the animation that an external engine rendered again takes the place of the one it replaces (epic 33, SDD-011 section 15). Position, duration, trim (`source_in`), speed, transform, keyframes, effects, transitions and the links to captions stay as they are. Nothing is stretched or trimmed to make the new media fit.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | yes | none | a `clip` |
+| `asset_id` | asset id | yes | none | a video or image asset of the document, of the same kind as the clip's current asset |
+
+**Preconditions.**
+
+1. Both ids have the form of an identifier (`E_VALIDATION`); `ast_placeholder` does not match it.
+2. The item exists (`E_NOT_FOUND`) and is a `clip` (`E_TYPE_MISMATCH`).
+3. The clip reads a real asset: a template slot holder (`ast_placeholder`) is `E_INVALID_STATE` with the hint to use `slot.fill`.
+4. The new asset exists in the document (`E_NOT_FOUND`).
+5. The new asset is a video or an image asset of the same kind as the current one (`E_TYPE_MISMATCH`): a video is replaced by a video, an image (a still or an animated image) by an image.
+6. Video: the source range of the clip (R9: `source_in` plus the source frames of its duration, speed included) holds inside the new asset (`E_OUT_OF_SOURCE`, with `details.available` of R9: the length of the new asset and the most the clip may keep).
+
+**Postconditions.**
+
+1. `asset` is `asset_id`. Every other field of the item is unchanged, and so is every other item.
+2. The old asset stays in the document (`asset.remove` is a separate command).
+3. `diff` has one `item.updated` with `changes.asset`; empty when the asset is the same one. `effective` has `asset_id` and `previous_asset_id`.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | an id is malformed | `The value of args.asset_id is "x", not an asset id.` | `Use the id of an asset listed by project_get.` |
+| `E_NOT_FOUND` | unknown item or asset | `Asset ast_zzzzzzzzzz does not exist.` | `Import the file first, then use its asset id.` |
+| `E_TYPE_MISMATCH` | the item is not a clip, or the kinds differ | `Asset ast_k8m2n4p6q9 is an image asset; clip itm_m1n2p3q4r5 plays a video asset.` | `Replace a video with a video; to change the kind, add a new clip with clip.add.` |
+| `E_INVALID_STATE` | the clip is a template slot holder | `Item itm_m1n2p3q4r5 is a template slot holder.` | `Use slot.fill to put media in a slot.` |
+| `E_OUT_OF_SOURCE` | the clip's range does not fit the new video | `The range of 90 frames from source frame 0 would read to frame 90; asset ast_k8m2n4p6q9 has 60 frames.` | `Use a duration of at most "60f"; or render the animation at the length the clip needs.` |
+
+**Inverse.** `patch {collection: "items", id, set: {asset: <old>}}`.
+
+**Idempotency.** Same result.
+
+**Example.** Clip `itm_m1n2p3q4r5` plays `ast_3c5v8n2w6d`; the animation was rendered again as `ast_k8m2n4p6q9`.
+
+```json
+{"op": "clip.replace_media", "args": {"item_id": "itm_m1n2p3q4r5", "asset_id": "ast_k8m2n4p6q9"}}
+```
+
+```json
+[{"kind": "item.updated", "id": "itm_m1n2p3q4r5", "changes": {"asset": ["ast_3c5v8n2w6d", "ast_k8m2n4p6q9"]}}]
+```
+
+**Golden cases.**
+
+- `ok_video_for_video`
+- `ok_keeps_trim_speed_and_transform`
+- `ok_keeps_keyframes_and_effects`
+- `ok_image_for_image`
+- `ok_animated_image_for_image`
+- `ok_same_asset_noop`
+- `ok_longer_video_keeps_duration`
+- `err_validation_bad_item_id`
+- `err_validation_placeholder_asset`
+- `err_not_found_item`
+- `err_not_found_asset`
+- `err_type_mismatch_audio_item`
+- `err_type_mismatch_kind_differs`
+- `err_type_mismatch_audio_asset`
+- `err_invalid_state_slot_holder`
+- `err_out_of_source_new_video_too_short`

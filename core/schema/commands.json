@@ -1494,6 +1494,46 @@
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "additionalProperties": false,
       "properties": {
+        "asset_id": {
+          "description": "A video or image asset of the document, of the same kind as the clip's asset.",
+          "pattern": "^ast_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+          "type": "string"
+        },
+        "item_id": {
+          "description": "A clip.",
+          "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "item_id",
+        "asset_id"
+      ],
+      "type": "object"
+    },
+    "description": "Replaces the asset a clip plays, a video by a video or an image by an image, and keeps its position, duration, trim, speed, transform, keyframes and effects: the animation an external engine rendered again takes the place of the one it replaces. Nothing is stretched or trimmed: a video the clip's range does not fit is refused.",
+    "domain": "video",
+    "errors": [
+      "E_VALIDATION",
+      "E_NOT_FOUND",
+      "E_TYPE_MISMATCH",
+      "E_INVALID_STATE",
+      "E_OUT_OF_SOURCE"
+    ],
+    "example": {
+      "asset_id": "ast_k8m2n4p6q9",
+      "item_id": "itm_m1n2p3q4r5"
+    },
+    "internal": false,
+    "name": "clip.replace_media",
+    "scope": "edit",
+    "summary": "Swaps the asset of a clip for another of the same kind and keeps everything else."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
         "item_id": {
           "description": "A visual item.",
           "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",

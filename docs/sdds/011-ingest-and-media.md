@@ -21,6 +21,7 @@
 12. Acceptance
 13. Decisions of this SDD and changes it required in other documents
 14. The workspace asset library
+15. The hand-off from an external motion engine
 
 ## 1. Overview, packages and conventions
 
@@ -559,6 +560,24 @@ A source video whose pixel format carries alpha (`yuva*`, `rgba`, `bgra`, `argb`
 | Thumbnails (4.5) | JPEG tiles, posters and sheet | PNG tiles, posters and sheet, with the alpha |
 
 The proxy and the thumbnails take their input from the same split, so they are cut from the same picture; they keep the alpha so that the preview shows the overlay over the layers below it (VV-013). The proxy video is `-c:v libvpx-vp9 -crf 33 -b:v 0 -deadline realtime -cpu-used 8 -row-mt 1 -tile-columns 1 -lag-in-frames 0 -auto-alt-ref 0 -g <G> -keyint_min <G> -pix_fmt yuva420p`, the colour tags and `-fps_mode cfr`, in `-f webm` (the options of 4.3.2 for the proxy with `-auto-alt-ref 0`, which libvpx needs to carry an alpha plane, and without the mov-only timescale); the format filter of its chain is `yuva420p`. Its audio is the 48 kHz stereo WAV encoded with `-c:a libopus -b:a 128k -ar 48000 -ac 2` in WebM (WebM does not hold AAC). The two are muxed with `-c copy -f webm` and `-metadata:s:v:0 alpha_mode=1`: `-map_metadata -1` (SDD-007 FF-08) erases the `alpha_mode` tag that the muxer turns into the `AlphaMode` element of the track, and a browser ignores the alpha plane of a track without it, so the tag is written back (the one constant `-metadata` the policy allows). The tiles are `-c:v png -pix_fmt rgba` (the filter chain ends in `format=rgba`; a letterbox pad stays opaque black), the posters `-c:v png` after `format=rgba`, and the posters and the sheet are read from the proxy with `-c:v libvpx-vp9` before `-i`, the decoder that carries its alpha plane. Verification (4.9) expects codec `prores` and pixel format `yuva444p10le` (ffprobe reports the 4444 stream as `yuva444p12le`, also accepted); the GOP check passes because ProRes is intra only. It expects the proxy to be `vp9` with the stream tag `alpha_mode=1`, its audio `opus`, no `faststart` check (WebM has no `moov`), and the PNG posters and sheet to decode with the planned sizes. The fact `has_alpha` is true exactly for these assets. VP9 alpha in WebM is not detected: the probe reports `yuv420p` and the alpha lives in a side channel that the native decoder drops. An alpha asset ingested before this section existed has `has_alpha` false until it is imported again, and one ingested before its proxy kept the alpha has an MP4 proxy that flattens it until it is imported again. The asset's `proxy` route answers `video/webm` for the alpha proxy and `video/mp4` for any other, `thumbnail` and `strip` answer `image/png` or `image/jpeg` by the file, and `chunks` answers 404 for an alpha asset (the index reads MP4 only, 4.4.1): a client plays an asset with `has_alpha` through the `<video>` element and not through WebCodecs.
+
+#### 4.3.6 The inputs with alpha that are accepted (epic 33)
+
+A clip rendered by another tool (section 15) arrives as one of the files below. Every one is imported like any media, keeps its alpha through the pipeline of 4.3.5 (video) or 4.7 (image), and has a test that ingests a generated fixture and reads the result back (`go test ./engine/ingest/... -run TestAlpha`). **The alpha of every accepted input is straight (not premultiplied)**: the colour of a half transparent pixel is the colour of the picture, not the colour times the alpha. The normalized file, the proxy and the posters keep it straight, and the fixtures carry a soft edge (alpha rising from 0 to 255 across a quarter of the width) so that a decoder that treated a straight input as premultiplied, or the reverse, fails the edge test; the composed frames of the export are held to the same edge (`engine/export`, `TestAlphaInputsComposeWithCorrectEdges`).
+
+| Input | Container and codec | Pixel format the probe reports | Notes |
+| --- | --- | --- | --- |
+| ProRes 4444 | MOV, `prores` | `yuva444p10le` (the decoder reports `yuva444p12le`) | the format the normalized file uses; the preferred hand-off format |
+| VP9 with alpha | WebM, `vp9` with the stream tag `alpha_mode=1` | `yuv420p` (the plane is a side channel, 4.3.5) | read with `libvpx-vp9`; lossy, 4:2:0 colour at the edge |
+| QuickTime Animation | MOV, `qtrle` | `argb` | lossless; large files |
+| PNG | `png`, a still | `rgba` | a still image asset (4.7) |
+| Animated GIF | `gif` | `bgra` for every GIF; the file declares alpha with a transparent colour index | alpha is on or off, no soft edge |
+| APNG | `apng` | `rgba` | animated image (4.7) |
+| Animated WebP | `webp_anim` | `argb` for every animated or lossless WebP; the file declares alpha with the alpha flag of its `VP8X` header (the alpha hint of a lossless `VP8L` still) | animated image (4.7) |
+
+Any other container or codec is not refused, but its alpha is accepted only when the probe reports a pixel format with an alpha channel (4.3.5); a file whose alpha is carried in a way the probe cannot see (VP9 with `alpha_mode` missing) is read as opaque.
+
+**A file that claims alpha and has none.** A file declares alpha by the pixel format of its probe, except a GIF and a WebP, whose decoder reports an alpha format for every file: the ingest reads their own declaration (the transparent colour flag of a graphic control extension; the `VP8X` alpha flag or the `VP8L` alpha hint), and a GIF or a WebP that declares none is never reported. After the verification (section 5), the pictures the ingest already made are read for their alpha plane: the tiles of the sheet (video), every decoded frame (animated image) or the normalized picture (still image). When every sampled pixel is fully opaque, the normalized artifact's `meta` records `alpha_opaque: true` and the job reports the warning `alpha_opaque`; the asset keeps `has_alpha`, so an opaque clip is never silently turned into a different kind of asset. The lint rule `L_ALPHA_MISSING` (SDD-003 section 3.6, a warning, depth `full`) reports a clip of such an asset: the file declares an alpha channel but every sampled frame is opaque, so the animation will cover what is below it. A clip with transparency in any sampled tile, or in the picture, does not raise it. The sample is the tiles of the sheet (one per interval, 4.5), so transparency that exists only between two tiles is not seen; the finding says "sampled" for that reason.
 
 ### 4.4 Proxy of a video asset
 
@@ -1438,9 +1457,9 @@ The rights note is the user's own record of a licence or a permission. The produ
 | `imported` | nothing | `source` (a path or a name the caller chooses to record), `rights_note` |
 | `generated` | `provider`, `model` | `prompt`, `cost_micros`, `source`, `rights_note` |
 | `fetched_by_agent` | `source` (a URL or a page, as plain text; the product never opens it), `rights_note` | `cost_micros` |
-| `rendered_externally` | `source` (the tool or the project it was rendered by) | `rights_note` |
+| `rendered_externally` | `source` (the tool or the project it was rendered by, or a description of it) | `engine`, `engine_version`, `render_key` (section 15), `rights_note` |
 
-A missing required member is `E_VALIDATION` with `path` `origin.<member>` and `details.reason` `<member>_required` (`source_required`, `rights_note_required`, `provider_required`, `model_required`); an unknown kind is `origin_kind_unknown`; a text over its cap (source 2,000, prompt 8,000, rights note 2,000, description 2,000, provider and model 100 characters) is `too_long`; a negative `cost_micros` is `cost_invalid`. The check runs before any file of the call is read, so one bad block refuses the whole call and writes nothing. A call with no block records `imported` with no source: the product never stores the directory of an import by itself (SDD-007 §7).
+A missing required member is `E_VALIDATION` with `path` `origin.<member>` and `details.reason` `<member>_required` (`source_required`, `rights_note_required`, `provider_required`, `model_required`); an unknown kind is `origin_kind_unknown`; a text over its cap (source 2,000, prompt 8,000, rights note 2,000, description 2,000, provider and model 100 characters) is `too_long`; a negative `cost_micros` is `cost_invalid`. `engine` and `engine_version` (each 1 to 64 characters from letters, digits, `.`, `_`, `+` and `-`, starting with a letter or a digit) and `render_key` (1 to 120 characters from the same set and `:` and `/`) belong to the kind `rendered_externally` only: on any other kind they are `origin_member_not_allowed`, and one that breaks its form is `origin_member_invalid`. They are tokens, not free text, so they are not delimited as untrusted. The check runs before any file of the call is read, so one bad block refuses the whole call and writes nothing. A call with no block records `imported` with no source: the product never stores the directory of an import by itself (SDD-007 §7).
 
 ### 14.3 Tags, reuse and uses
 
@@ -1479,3 +1498,70 @@ The UI has two sections over the library, Visual Assets (`image`, `lut`) and Vid
 | DS-20 | A refused origin is `E_VALIDATION` with `details.reason`, not a new code. |
 | DS-21 | MCP gains no tool: the library reads live in `media_inspect` and its writes in `media_import`. |
 | DS-22 | Decided (VV-254): the library side is kept per owner, not per file. `asset_info`, `asset_tags` and `asset_search` are keyed by `(owner_user_id, asset_hash)`, the empty owner being local mode, and every read and write of the library (`AssetGet`, `AssetUses`, `AssetSetInfo`, `AssetTag`, `AssetList` with its search, the import that records a file) carries the owner of the caller and filters by it. Two network users who hold the same bytes each have their own origin, prompt, cost, rights note, description, tags and reuse mark, and neither reads, searches or changes the other's; the search text of an owner names the file only by the names that owner's projects give it. A user who does not hold the bytes still sees nothing, and a refused hash answers as a missing one (14.3). Reuse by hash across the projects of one owner is unchanged and makes no second copy. |
+
+## 15. The hand-off from an external motion engine
+
+PRD-001 RF-084, PRD-004 RF-389, ADR-0042, ADR-0027, ADR-0020 item 6. When a video needs an animation the editor cannot make, the agent (or the person) builds it in a motion engine, on their own side, and brings it back as a clip that fits. **The product never runs, bundles or downloads the engine**: it gives the engine what it must fit (the brief), takes the rendered file like any other import (with its origin), says what does not fit (the check) and swaps a clip's media when the animation is rendered again (the replacement). The first engine the skill covers is HyperFrames (Apache-2.0, built-in skill `motion-with-an-external-engine`, SDD-018 section 16); nothing in the product is specific to it.
+
+The rules (what a brief holds, what a mismatch is, which clips a render key reaches) are in `core/motion`; `service` composes them with the project, the brand kit and the frames.
+
+### 15.1 The motion brief (`MotionBrief`)
+
+Request: `project_id`, `timeline_id?`, `from?` (a time, default `0s`), `until?` (a time, exclusive, default the end of the timeline), `track_id?` (the visual track the clip will go on). Result, `MotionBrief`:
+
+| Member | Meaning |
+| --- | --- |
+| `project_id`, `revision` | what the brief was made from (`project_id` is the timeline asked for) |
+| `from`, `until` | the range as times (`{frame, seconds}`); `until` is exclusive |
+| `width`, `height` | the pixel size to render at: the size of the project |
+| `frame_rate` | the project frame rate, `{num, den}` |
+| `duration_frames`, `duration` | the length of the range in project frames and as a time |
+| `safe_area` | `{x, y, width, height}` from `plan.SafeArea` (SDD-004 section 4.1, the only place the margins exist) and `margins` `{left, right, top, bottom}` in pixels, so the animation keeps its text clear of what the platforms cover |
+| `track` | with `track_id`: `{id, name, overlay}`; `overlay` is true when another visual track lies below it, which is when the render needs alpha (15.3) |
+| `needs_alpha` | the same as `track.overlay`; false with no track |
+| `brand_kit` | the caller's brand kit: `colors` (name to `#RRGGBB`), `fonts` (family names; the files are not given), `logo` (the library hash of the logo asset, or empty). Empty when none was set; a key limited to one project gets no brand kit (SDD-005 5.11) |
+| `captions` | the captions that show inside the range: `{item_id, start, end, text}` with `start` and `end` relative to `from`, in frames. `text` is delimited as untrusted (source `project_text`) |
+| `frames` | the reference pictures: `before` (the frame just before `from`) and `after` (the frame at `until`), each `{role, at, width, height, mime, path}` of the composed timeline at the current revision, a JPEG cut at no more than 800 image tokens. A role is left out when it would lie outside the timeline. `path` is the cached file for a local caller; the bytes are in `image_base64` for any other caller, like `ViewResult` |
+| `image_tokens` | the total of the reference frames |
+| `text` | the brief as text for an agent, with the captions in untrusted blocks |
+
+A range that is empty or reversed, or a time that is not a time, is `E_INVALID_TIME`; one longer than 3,600 frames is `E_LIMIT_EXCEEDED` (a motion clip is a short piece, `details.ceiling`); an unknown track is `E_NOT_FOUND` and an audio track `E_TYPE_MISMATCH`. A range may reach past the end of the timeline (the animation may be longer than what is there now). Up to 200 captions are listed. The operation changes nothing, takes the `read` scope and renders at most two frames.
+
+### 15.2 Import with origin
+
+A rendered file is imported with `MediaImport` and the origin block `{kind: rendered_externally, source, engine?, engine_version?, render_key?}` (14.2). `source` is where the engine's project lives or what it was, as plain text (untrusted). The agent chooses the `render_key`: a stable name for "this animation" (for example `lower-third-intro`), the same every time it renders that animation again. The origin is written once for the owner and the bytes (14.4): a re-render has other bytes, so it is another entry with the same `render_key`.
+
+### 15.3 The check (`MotionCheck`)
+
+Request: the request of the brief plus `asset_id` (an asset of the project, ready). The result lists each mismatch between the asset and the brief, with the exact value expected and the value found, and nothing is changed or stretched:
+
+| Field | A mismatch when | Expected | Found |
+| --- | --- | --- | --- |
+| `size` | the asset is not `width` x `height` of the brief | `1080x1920` | `1920x1080` |
+| `frame_rate` | a video asset's rate differs from the project's | `30/1` | `24/1` |
+| `duration` | a video asset's length in project frames differs from `duration_frames` | `90f` | `120f` |
+| `alpha` | `needs_alpha` and the asset has no alpha channel | `alpha` | `no alpha` |
+| `kind` | the asset is audio or a lookup table | `video or image` | `audio` |
+
+An image has no frame rate and no length (a still is held for any time), so only `size`, `alpha` and `kind` apply to it. The result is `{ok, mismatches[], brief_summary, text}` with `ok` true when there is no mismatch; each mismatch carries a `hint` (what to ask the engine for). A file with `alpha_opaque` (4.3.6) is not a mismatch here: the lint finding reports it once the clip is placed. `MotionCheck` takes the `read` scope.
+
+### 15.4 Replacing the media (`clip.replace_media`, `MotionReplace`)
+
+`clip.replace_media` (SDD-002 C.78) swaps the asset of one clip and keeps its place, trim, transform, keyframes and effects. The re-render of an animation is one batch of these commands:
+
+- **The offer.** `MediaImport` of a file with an origin `render_key` answers, for each imported asset, `replaces`: the other assets of the same project whose origin has that `render_key`, and for each the clips that use it (`{asset_id, name, item_ids}`). The text of the answer says so, and gives the command to run. Nothing is replaced by an import.
+- **The replacement** (`MotionReplace`: `project_id`, `timeline_id?`, `asset_id` (the new asset), `render_key?` (default the key of the new asset's origin), `dry_run?`): every clip of the timeline that reads an asset with that `render_key` other than the new one gets `clip.replace_media`. All the commands are applied as **one batch**: one revision, one `history` entry, all or nothing, undone by one `undo`. A clip the new asset does not fit (`E_OUT_OF_SOURCE`) refuses the whole batch and names the clip. The result is the `EditResult` of the batch, plus `replaced` (the item ids). Scope `edit`. Over MCP the agent sends the same commands in one `edit` call (the item ids come from `replaces`).
+- **No automatic link.** Nothing re-renders by itself and nothing is replaced unless asked (out of scope: a live link to an engine).
+
+### 15.5 Surfaces
+
+HTTP: `GET /projects/{id}/motion/brief`, `GET /projects/{id}/motion/check`, `POST /projects/{id}/motion/replace`. CLI: `motion:brief`, `motion:check`, `motion:replace`. MCP: no new tool (NFR-020, the catalogue is at its budget, and what a tool definition may add is a few bytes): `view` with `mode` `motion` is `MotionBrief` (arguments `from` and `until`; no `track_id`, so `needs_alpha` is false and the agent decides from `project_get`; `at`, `times`, `count` and `max_tokens` are refused); `media_import` takes the origin members of 15.2 and answers `replaces`; the replacement is one `edit` call with the `clip.replace_media` commands. **`MotionCheck` has no MCP tool**: it is on HTTP and in the CLI (`motion:check`), and an agent that has only MCP compares the probe of `media_inspect` (size, frame rate, duration) with the brief, which are the three comparisons of 15.3; a later budget may add `asset_id` to `view`.
+
+### 15.6 Decisions
+
+| # | Decision |
+| --- | --- |
+| DS-23 | The motion rules (the brief, the mismatches, which clips a key reaches) are `core/motion`, pure; the service reads the project and renders the two frames. |
+| DS-24 | The product runs no engine: no process, no runtime, no download (ADR-0042, ADR-0020 item 6). The hand-off is files in and files out. |
+| DS-25 | Nothing is stretched or trimmed silently: a mismatch is reported with the value expected, and `clip.replace_media` refuses a media that does not fit the clip's range. |
+| DS-26 | The replacement by `render_key` is one batch, so one undo restores every clip; the key is library data of the caller (`asset_info` of the owner, SDD-005 5.5.1), not a field of the timeline. |
