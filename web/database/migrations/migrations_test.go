@@ -558,7 +558,7 @@ func TestJobsAcceptWaitingApprovalAndRegisteredKinds(t *testing.T) {
 	}
 
 	if err := exec(
-		`INSERT INTO projects (id, name, schema_version, document, doc_sha256, width, height, fps_num, fps_den, created_ms, updated_ms, created_by)
+		`INSERT INTO timelines (id, name, schema_version, document, doc_sha256, width, height, fps_num, fps_den, created_ms, updated_ms, created_by)
  VALUES ('prj_a', 'a', 1, '{}', 'x', 1, 1, 30, 1, 1, 1, 'local:ui')`,
 	); err != nil {
 		t.Fatal(err)
@@ -598,7 +598,7 @@ func TestJobsRebuildKeepsTheRowsOfAnExistingWorkspace(t *testing.T) {
 
 	all := All()
 	before := all[:len(all)-1] // everything but the rebuild of jobs
-	if all[len(all)-1].ID != "20261119120100_jobs_waiting_approval" {
+	if all[len(all)-1].ID != "20261119140100_jobs_waiting_approval" {
 		t.Fatalf("the last migration is %s: update this test", all[len(all)-1].ID)
 	}
 
@@ -612,7 +612,7 @@ func TestJobsRebuildKeepsTheRowsOfAnExistingWorkspace(t *testing.T) {
 	}
 
 	for _, q := range []string{
-		`INSERT INTO projects (id, name, schema_version, document, doc_sha256, width, height, fps_num, fps_den, created_ms, updated_ms, created_by)
+		`INSERT INTO timelines (id, name, schema_version, document, doc_sha256, width, height, fps_num, fps_den, created_ms, updated_ms, created_by)
  VALUES ('prj_a', 'a', 1, '{}', 'x', 1, 1, 30, 1, 1, 1, 'local:ui')`,
 		`INSERT INTO jobs (id, kind, project_id, actor, state, progress, message, input, result, cancel_requested, attempts, created_ms, updated_ms, started_ms, finished_ms)
  VALUES ('job_a', 'export', 'prj_a', 'local:cli', 'succeeded', 1, 'm', '{"k":1}', '{"r":2}', 0, 2, 10, 20, 11, 19)`,
