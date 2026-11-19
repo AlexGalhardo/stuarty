@@ -158,6 +158,16 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.BrandKitGet)
 	case "BrandKitSet":
 		return invoke(ctx, s, svc.BrandKitSet)
+	case "ConnectionList":
+		return invoke(ctx, s, svc.ConnectionList)
+	case "ConnectionGet":
+		return invoke(ctx, s, svc.ConnectionGet)
+	case "ConnectionCreate":
+		return invoke(ctx, s, svc.ConnectionCreate)
+	case "ConnectionRemove":
+		return invoke(ctx, s, svc.ConnectionRemove)
+	case "ConnectionTest":
+		return invoke(ctx, s, svc.ConnectionTest)
 	case "AuditList":
 		return invoke(ctx, s, svc.AuditList)
 	case "ToolsInstall":
@@ -384,6 +394,8 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 		return "media_import", args, nil
 	case "FontImport":
 		return "font_import", args, nil
+	case "ConnectionList", "ConnectionGet":
+		return "connection", args, nil
 	case "MediaList":
 		return "media_inspect", args, nil
 	case "MediaInspect":
@@ -696,6 +708,24 @@ func command2argv(s step) (name string, argv []string, stdin string, err error) 
 		return "brand:show", nil, "", nil
 	case "BrandKitSet":
 		return "brand:set", []string{"--kit", "-"}, string(s.Args), nil
+	case "ConnectionList":
+		return "connection:list", nil, "", nil
+	case "ConnectionGet":
+		return "connection:show", []string{a.ID}, "", nil
+	case "ConnectionRemove":
+		return "connection:remove", []string{a.ID}, "", nil
+	case "ConnectionTest":
+		return "connection:test", []string{a.ID}, "", nil
+	case "ConnectionCreate":
+		var c service.ConnectionCreateRequest
+		if err := json.Unmarshal(s.Args, &c); err != nil {
+			return "", nil, "", err
+		}
+
+		return "connection:add", []string{
+			"--kind", c.Kind, "--label", c.Label, "--endpoint", c.Endpoint, "--accepts", strings.Join(c.Accepts, ","),
+			"--hosts", strings.Join(c.Hosts, ","),
+		}, c.Secret, nil
 	case "AuditList":
 		return "audit", flag("project", a.ProjectID), "", nil
 	case "ToolsInstall":

@@ -28,5 +28,6 @@ func All() []schema.Migration {
 		m20261116100000AssetsHasAlpha(),
 		m20261116120000ArtifactsChunksKind(),
 		m20261116130000AssetsLutKind(),
+		m20261119100000CreateConnectionsTable(),
 	}
 }
