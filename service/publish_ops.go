@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/AlexGalhardo/stuarty/core/approval"
@@ -386,17 +387,9 @@ func (s *svc) runPublish(ctx context.Context, run JobRun) (JobOutcome, error) {
 	}
 
 	up := social.Upload{
-		Post: in.post(),
-		Path: full,
-		Key: social.UploadKey(
-			in.Args.ConnectionID,
-			in.Output.Rel,
-			in.Output.SHA256,
-			in.Args.Title,
-			in.Args.Description,
-			strings.Join(in.Args.Tags, ","),
-			in.Args.Visibility,
-		),
+		Post:     in.post(),
+		Path:     full,
+		Key:      uploadKey(&in),
 		Sessions: social.FileSessions{Dir: filepath.Join(s.workspace, "publish", "uploads")},
 		Report:   func(p float64, m string) { run.Report(ctx, p, m) },
 	}
@@ -444,16 +437,37 @@ func (s *svc) approvedFile(f publishFile) (string, error) {
 		return "", internalError()
 	}
 
+	changed := newError(command.CodeInvalidState, "the file changed or is gone since the publication was approved.").
+		withHint("export it again and publish again")
+
 	st, err := os.Stat(full)
 	if err != nil || !st.Mode().IsRegular() || st.Size() != f.Bytes {
-		return "", newError(
-			command.CodeInvalidState,
-			"the file changed or is gone since the publication was approved.",
-		).
-			withHint("export it again and publish again")
+		return "", changed
+	}
+
+	// The size alone misses a file rewritten with as many bytes; the export recorded its digest.
+	if f.SHA256 != "" {
+		if sum, herr := fileSHA256(full); herr != nil || sum != f.SHA256 {
+			return "", changed
+		}
 	}
 
 	return full, nil
+}
+
+// uploadKey names the upload session of a post (SDD-020 section 7.4): the connection, the file and every
+// member of the post the network receives when the session starts. A post that differs in any of them,
+// made_for_kids or ai_disclosure included, starts a new session instead of resuming one made with the
+// former metadata. The thumbnail is sent after the upload, so it is not part of the key.
+func uploadKey(in *publishInput) string {
+	post := in.Args
+	post.Thumbnail = ""
+
+	raw, _ := json.Marshal(post)
+
+	return social.UploadKey(
+		in.Args.ConnectionID, in.Output.Rel, strconv.FormatInt(in.Output.Bytes, 10), in.Output.SHA256, string(raw),
+	)
 }
 
 // PublishValidate checks a post and says what a person would be asked to approve. It sends nothing.
