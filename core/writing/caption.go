@@ -5,9 +5,12 @@ import (
 	"strings"
 	"unicode"
 	"unicode/utf8"
-
-	"golang.org/x/text/unicode/norm"
 )
+
+// Normalizer turns a text into its Unicode NFC form. A network that counts after NFC (X, SDD-019 section 5.1) is
+// measured on what it returns. core/ carries no Unicode tables of its own (ADR-0001, internal/tools/importcheck), so
+// the caller passes one: the service passes norm.NFC.String of golang.org/x/text. nil measures the text as it is.
+type Normalizer func(string) string
 
 // Variant is the part of a caption that goes to one network; Network is empty for the common variant, the text
 // before the first network heading.
@@ -112,8 +115,8 @@ type CaptionReport struct {
 
 // ValidateCaption measures the text of a variant against the limits of a network and reports every limit it
 // breaks (SDD-019 section 5.2). An empty network is the common variant: it is measured in characters and has no
-// limit. An unknown network is one problem.
-func ValidateCaption(text, network string) CaptionReport {
+// limit. An unknown network is one problem. nfc is the normalization of a network that counts after NFC.
+func ValidateCaption(text, network string, nfc Normalizer) CaptionReport {
 	text = strings.TrimSpace(text)
 	r := CaptionReport{Network: network, Problems: []CaptionProblem{}}
 
@@ -122,7 +125,7 @@ func ValidateCaption(text, network string) CaptionReport {
 		r.Problems = append(r.Problems, CaptionProblem{
 			Code: ProblemUnknownNet, Message: fmt.Sprintf("%q is not a network of the table of limits", network),
 		})
-		r.Counts = measure(text, Network{Unit: UnitCharacters})
+		r.Counts = measure(text, Network{Unit: UnitCharacters}, nfc)
 
 		return r
 	}
@@ -133,7 +136,7 @@ func ValidateCaption(text, network string) CaptionReport {
 
 	r.Unit, r.MaxLength, r.LinksClickable = n.Unit, n.MaxLength, n.LinksClickable
 	r.Name = n.Name
-	r.Counts = measure(text, n)
+	r.Counts = measure(text, n, nfc)
 
 	if !strings.ContainsFunc(text, func(c rune) bool { return !unicode.IsSpace(c) && !unicode.Is(unicode.Cf, c) }) {
 		r.Problems = append(
@@ -229,7 +232,7 @@ func unitName(u Unit) string {
 }
 
 // measure counts a variant for a network.
-func measure(text string, n Network) CaptionCounts {
+func measure(text string, n Network, nfc Normalizer) CaptionCounts {
 	links := findLinks(text)
 
 	var c CaptionCounts
@@ -251,7 +254,11 @@ func measure(text string, n Network) CaptionCounts {
 			}
 		}
 	case UnitWeighted:
-		c.Length = weightedLength(text, n.LinkWeight)
+		if nfc != nil {
+			c.Length = weightedLength(nfc(text), n.LinkWeight)
+		} else {
+			c.Length = weightedLength(text, n.LinkWeight)
+		}
 	case UnitCharacters:
 		c.Length = utf8.RuneCountInString(text)
 	}
@@ -392,11 +399,10 @@ func countMentions(text string) int {
 	return n
 }
 
-// weightedLength is the length of text for X (SDD-019 section 5.1): the text after Unicode NFC, a link weighing
-// linkWeight, an emoji weighing 2 however many code points it is made of, and any other character weighing 1 when
-// it is in the ranges X counts once and 2 otherwise.
+// weightedLength is the length of text for X (SDD-019 section 5.1), on the text after Unicode NFC (measure applies
+// it): a link weighing linkWeight, an emoji weighing 2 however many code points it is made of, and any other
+// character weighing 1 when it is in the ranges X counts once and 2 otherwise.
 func weightedLength(text string, linkWeight int) int {
-	text = norm.NFC.String(text)
 	links := findLinks(text)
 	total := len(links) * linkWeight
 	runes := []rune(maskLinks(text, links))
