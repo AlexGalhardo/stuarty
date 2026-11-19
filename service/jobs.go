@@ -673,8 +673,16 @@ func (s *svc) JobCancel(ctx context.Context, req JobCancelRequest) (*Job, error)
 			return s.jobView(c, after, false), nil
 		}
 	} else if row.State == JobWaitingApproval {
-		// Cancelling a job that waits rejects its request (SDD-015 section 5).
-		if err := s.cancelWaiting(ctx, c.Actor, &row); err != nil {
+		// Cancelling a job that waits rejects its request (SDD-015 section 5); one approved since it
+		// was read is cancelled as a queued job, so a cancel never lets it run.
+		err := s.cancelWaiting(ctx, c.Actor, &row)
+		if errors.Is(err, errNoLongerWaiting) {
+			if err = s.cancelJob(ctx, row.ID); err == nil {
+				s.waitJob(ctx, row.ID, cancelWait)
+			}
+		}
+
+		if err != nil {
 			return nil, asError(err)
 		}
 	} else if err := s.cancelJob(ctx, row.ID); err != nil {
@@ -807,7 +815,14 @@ func (s *svc) cancelJob(ctx context.Context, id string) error {
 	}
 
 	if before.State == JobWaitingApproval {
-		return s.cancelWaiting(ctx, "system", &before)
+		if err := s.cancelWaiting(ctx, "system", &before); !errors.Is(err, errNoLongerWaiting) {
+			return err
+		}
+
+		// Approved since it was read: it is queued or running now, and is cancelled as such.
+		if before, err = s.store.Jobs().Get(ctx, id); err != nil || JobFinal(before.State) {
+			return err
+		}
 	}
 
 	after, err := s.store.Jobs().RequestCancel(ctx, id, s.nowMs())
@@ -819,7 +834,7 @@ func (s *svc) cancelJob(ctx context.Context, id string) error {
 		s.running.cancel(id)
 	}
 
-	if before.State == JobQueued && after.State == JobCancelled {
+	if before.State != JobRunning && after.State == JobCancelled {
 		s.afterQueuedCancel(ctx, &after)
 	}
 
