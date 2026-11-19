@@ -1,0 +1,28 @@
+[
+  {
+    "changes": {
+      "background": [
+        "",
+        "transparent"
+      ],
+      "height": [
+        0,
+        600
+      ],
+      "name": [
+        "",
+        "Untitled"
+      ],
+      "template": [
+        false,
+        true
+      ],
+      "width": [
+        0,
+        800
+      ]
+    },
+    "id": "img_aaaaaaaaaa",
+    "kind": "document.updated"
+  }
+]

@@ -41,7 +41,7 @@ A creator's agent makes a thumbnail the same way it edits a video: by sending co
 ## Tasks
 
 - [x] 1. Write SDD-021 (document, catalogue with schemas, plan mapping, export, lint) and the SDD-000 names. Verify: `task lint:md` exits 0.
-- [ ] 2. Implement the document and the first half of the catalogue (create, canvas, add, remove, order, group) with golden cases. Verify: `go test ./core/image/...` passes.
+- [x] 2. Implement the document and the first half of the catalogue (create, canvas, add, remove, order, group) with golden cases. Verify: `go test ./core/image/...` passes.
 - [ ] 3. Implement transform, set, crop, align, fit, text and shape commands with golden cases. Verify: `go test ./core/image/...` passes.
 - [ ] 4. Wire the shared batch machinery: log, undo and redo, conflicts, dry run. Verify: `go test ./core/image/... -run "TestUndo|TestConflict|TestDryRun"` passes.
 - [ ] 5. Produce the one-frame plan and render it through the Go host. Verify: `go test ./engine/export/... -run TestImageRender` passes against golden PNG files.

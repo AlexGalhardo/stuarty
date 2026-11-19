@@ -1,0 +1,8 @@
+{
+  "args": {
+    "asset": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "fit": "cover",
+    "name": "Logo"
+  },
+  "op": "layer.add_image"
+}

@@ -1,0 +1,29 @@
+[
+  {
+    "changes": {
+      "parent": [
+        "",
+        "lyr_mmmmmmmmmm"
+      ]
+    },
+    "id": "lyr_bbbbbbbbbb",
+    "kind": "layer.updated"
+  },
+  {
+    "id": "lyr_mmmmmmmmmm",
+    "kind": "layer.added",
+    "object": {
+      "h": 0,
+      "id": "lyr_mmmmmmmmmm",
+      "kind": "group",
+      "name": "Group",
+      "opacity": 100,
+      "order": "o",
+      "parent": "",
+      "visible": true,
+      "w": 0,
+      "x": 0,
+      "y": 0
+    }
+  }
+]

@@ -1,0 +1,8 @@
+{
+  "code": "E_VALIDATION",
+  "hint": "Remove width and height, or remove preset.",
+  "message": "Give a preset or a width and a height, not both.",
+  "op_index": 0,
+  "path": "args.preset",
+  "retryable": false
+}

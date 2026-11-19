@@ -1,0 +1,7 @@
+{
+  "args": {
+    "color": "#101820",
+    "name": "Backdrop"
+  },
+  "op": "layer.add_fill"
+}

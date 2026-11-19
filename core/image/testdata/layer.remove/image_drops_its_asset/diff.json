@@ -1,0 +1,30 @@
+[
+  {
+    "id": "lyr_bbbbbbbbbb",
+    "kind": "layer.removed",
+    "object": {
+      "asset": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "h": 720,
+      "id": "lyr_bbbbbbbbbb",
+      "kind": "image",
+      "name": "Photo",
+      "opacity": 100,
+      "order": "r",
+      "parent": "",
+      "visible": true,
+      "w": 1280,
+      "x": 0,
+      "y": 0
+    }
+  },
+  {
+    "id": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "kind": "asset.removed",
+    "object": {
+      "hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "height": 900,
+      "name": "face.png",
+      "width": 1600
+    }
+  }
+]

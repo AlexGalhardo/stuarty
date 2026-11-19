@@ -1,0 +1,8 @@
+{
+  "code": "E_VALIDATION",
+  "hint": "List each layer once.",
+  "message": "Layer lyr_cccccccccc is listed twice.",
+  "op_index": 0,
+  "path": "args.layer_ids[1]",
+  "retryable": false
+}
