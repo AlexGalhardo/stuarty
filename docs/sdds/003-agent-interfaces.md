@@ -139,6 +139,12 @@ type Service interface {
 	HistoryList(ctx context.Context, req HistoryListRequest) (*HistoryListResult, error)
 	Undo(ctx context.Context, req UndoRequest) (*UndoResult, error)
 	Redo(ctx context.Context, req UndoRequest) (*UndoResult, error)
+	HistoryRevert(ctx context.Context, req HistoryRevertRequest) (*HistoryRevertResult, error)   // §2.5.1
+	HistoryDiff(ctx context.Context, req HistoryDiffRequest) (*HistoryDiffResult, error)
+	CheckpointCreate(ctx context.Context, req CheckpointCreateRequest) (*Checkpoint, error)
+	CheckpointList(ctx context.Context, req CheckpointListRequest) (*CheckpointListResult, error)
+	CheckpointRename(ctx context.Context, req CheckpointRenameRequest) (*Checkpoint, error)
+	CheckpointRemove(ctx context.Context, req CheckpointRemoveRequest) (*Checkpoint, error)
 
 	MediaImport(ctx context.Context, req MediaImportRequest) (*MediaImportResult, error)
 	MediaInspect(ctx context.Context, req MediaInspectRequest) (*MediaInspectResult, error)
@@ -605,6 +611,89 @@ type SkippedOp struct {
 ```
 
 `Undo` and `Redo` return an `*UndoResult` (the undo is a batch with its own revision and diff). `Revision` is the new revision, `BaseRevision` the revision before the call, so the undo of r4 on a project at r4 is r5 with base r4. `Effective` has no entry for them. `Applied` is false in a dry run (`UndoRequest.DryRun`) and when nothing was applied. With no step to undo the error is `E_NOTHING_TO_UNDO` (`E_NOTHING_TO_REDO`), without `details` (SDD-005 §12.3). There is no multi-step form: one call undoes one step, so an agent that wants three undoes calls three times and reads the skipped list of each.
+
+#### 2.5.1 Revert, the diff and checkpoints (RF-120, RF-121, epic 36)
+
+Six operations of the `video` domain, named `history.revert`, `history.diff` and `history.checkpoint_create`, `history.checkpoint_list`, `history.checkpoint_rename` and `history.checkpoint_remove`; the Service methods are `HistoryRevert`, `HistoryDiff`, `CheckpointCreate`, `CheckpointList`, `CheckpointRename` and `CheckpointRemove`. All accept `timeline_id` (§1.7). A revision is named by its number or by the name of a checkpoint, never both.
+
+```go
+type HistoryRevertRequest struct {
+	ProjectID    string `json:"project_id"`
+	Revision     int64  `json:"revision,omitempty"`      // the revision to go back to; or
+	Checkpoint   string `json:"checkpoint,omitempty"`    // the name of a checkpoint
+	BaseRevision int64  `json:"base_revision,omitempty"` // the revision the caller read; default the current one (SDD-002 A.7)
+	DryRun       bool   `json:"dry_run,omitempty"`
+}
+
+// HistoryRevertResult is an EditResult (the diff is the change the revert makes) plus these.
+type HistoryRevertResult struct {
+	EditResult
+	Kind   string `json:"kind"`   // "revert"
+	Target int64  `json:"target"` // the revision the document was taken back to
+	Same   bool   `json:"same"`   // the document already equals that revision: nothing was written
+	Text   string `json:"text"`
+}
+
+type HistoryDiffRequest struct {
+	ProjectID      string `json:"project_id"`
+	From           int64  `json:"from,omitempty"`            // a revision; or
+	FromCheckpoint string `json:"from_checkpoint,omitempty"` // the name of a checkpoint
+	To             int64  `json:"to,omitempty"`              // a revision; default the current one
+}
+
+type HistoryDiffResult struct {
+	ProjectID string      `json:"project_id"`
+	From      int64       `json:"from"`
+	To        int64       `json:"to"`
+	Count     int         `json:"count"`   // changes between the two documents
+	Entries   []DiffEntry `json:"entries"` // most significant first (SDD-002 A.5)
+	Text      string      `json:"text"`    // §3.8
+}
+type DiffEntry struct {
+	Verb   string         `json:"verb"` // added | removed | moved | trimmed | changed
+	Noun   string         `json:"noun"` // track | clip | caption | asset | font | settings | project
+	Change command.Change `json:"change"`
+	Line   string         `json:"line"` // DescribeDiff of the change
+}
+
+type Checkpoint struct {
+	Name     string    `json:"name"`     // 1 to 60 characters, unique in the timeline, no "/" and no control character
+	Note     string    `json:"note"`     // up to 300 characters, may be empty
+	Revision int64     `json:"revision"` // the revision it marks
+	Actor    string    `json:"actor"`
+	At       time.Time `json:"at"`
+	Auto     bool      `json:"auto"` // made by the service before an agent's first edit of the day
+}
+type CheckpointCreateRequest struct {
+	ProjectID string `json:"project_id"`
+	Name      string `json:"name"`
+	Note      string `json:"note,omitempty"`
+	Revision  int64  `json:"revision,omitempty"` // default the current revision
+}
+type CheckpointListRequest struct{ ProjectID string `json:"project_id"` }
+type CheckpointRenameRequest struct {
+	ProjectID string `json:"project_id"`
+	Name      string `json:"name"`
+	NewName   string `json:"new_name"`
+	Note      *string `json:"note,omitempty"` // replaces the note when present
+}
+type CheckpointRemoveRequest struct {
+	ProjectID string `json:"project_id"`
+	Name      string `json:"name"`
+}
+type CheckpointListResult struct {
+	ProjectID   string       `json:"project_id"`
+	Revision    int64        `json:"revision"`
+	Checkpoints []Checkpoint `json:"checkpoints"` // newest revision first
+	Text        string       `json:"text"`
+}
+// CheckpointCreate and CheckpointRename return a Checkpoint; CheckpointRemove returns the removed one.
+```
+
+- **`HistoryRevert`** takes the project back to the document it had at a revision, as one **new** revision made by the caller: the log is never rewritten (SDD-005 §12.4). It is an `EditResult` with `kind` `revert`, so a result has the diff, the findings and `applied`. The revision it makes is undone by `Undo` of the same actor, which is the way back from a revert. A revert to the current revision, or to one whose document is the current one, writes nothing: `applied` false, `same` true and the text says so. `dry_run` returns the diff it would make and writes nothing, which is what the UI shows before the person confirms. A revision that does not exist, or is ahead, is `E_VALIDATION` (`path` `revision`); one before a `migrate` or an `import` of the log, whose document the log cannot rebuild, is `E_INVALID_STATE` with the hint to revert to a later revision; a checkpoint that does not exist is `E_NOT_FOUND` (`details.checkpoint`). A trashed project is `E_INVALID_STATE`, as for `Undo`.
+- **`HistoryDiff`** returns the difference between two revisions: the structured `entries` and the text of §3.8. It reads only; a revision that cannot be rebuilt is the same errors as above.
+- **Checkpoints** are a name and a note on a revision. The creator, a person or an agent, names the moment ("before the cut of the intro"); removing a checkpoint never removes a revision; renaming changes the name (and the note when given). A name already used in the timeline is `E_ID_EXISTS` (`path` `name`); an unknown one `E_NOT_FOUND`. `Auto` checkpoints are made by the Service itself, the first time in a day (UTC) that an agent edits a timeline, named `auto <actor> <YYYY-MM-DD>` and pointing at the revision the edit started from; there are at most 30 per timeline and the oldest automatic one is removed when a new one would be the 31st. An agent is any actor that is not `local:ui`, `local:cli` or `user:<id>` (the actors of SDD-000 §3).
+- **Scopes.** `HistoryDiff` and `CheckpointList` need `read`; the others need `edit`.
 
 ### 2.6 Media
 
@@ -1323,6 +1412,31 @@ r1 2026-11-14T10:22:40Z local:cli ops=1 asset.add
 
 The cap is 6,400 characters, the default limit 20.
 
+#### 3.7.1 The diff and checkpoint texts (epic 36)
+
+The diff of two revisions, most significant change first (SDD-002 A.5), one line per change:
+
+```text
+diff <prj id> r<from> -> r<to> (<n> changes)
+removed item itm_k3m9x2p4q1 video was 4s/120f 2s/60f on trk_v1a2b3c4d5 asset ast_7k2m9x4q1b
+trimmed item itm_b4n6p8r0t2: duration 3s/90f -> 2s/60f
+moved item itm_c5d6e7f8g9: start 10s/300f -> 12s/360f
+changed item itm_h1j2k3m4n5: opacity 1 -> 0.5
+added item itm_p2q3r4s5t6 caption on trk_c1d2e3f4g5 12s/360f 2s/60f "Welcome"
+... and <k> more changes: read the diff of a narrower range, or the history
+```
+
+The first line says how many changes there are. The text is cut at **6,400 characters** (2,000 tokens) at a line boundary, never in the middle of a line; when it is cut, the last line is `... and <k> more changes ...` with the exact count of the lines left out, so an agent knows that the list is partial. The lines are `DescribeDiff` lines (§3.4) whose leading mark is replaced by the verb; the structured `entries` carry every change whatever the text shows. Two equal revisions give `diff <prj id> r<from> -> r<to> (no changes)`. The text of a revert is the edit text of §3.5 with the state `reverted` and the target at the end of the first line (`reverted r9 (base r8) by <actor>: changes=<n>, to r5`), or `reverted nothing: the document already equals r5` when `same`.
+
+The checkpoint list:
+
+```text
+checkpoints <prj id> rev <revision> (<n>)
+r<rev> <name> <actor> <UTC time to the second>[ auto][ - <note>]
+```
+
+with one line per checkpoint, newest revision first, cut at 6,400 characters with the count of what was left out. A name and a note are free text that a person or an agent wrote, so the text writes each as an inline untrusted block (SDD-007 §8.2, `untrusted.Inline` with source `checkpoint`), the structured result marks them `x-untrusted` with the `untrusted_notice`, and both are cleaned of control and bidirectional characters when they are stored.
+
 ### 3.8 The media inspection text
 
 Untrusted text delimiter (ADR-0020 item 5, SDD-007 §8.2). A block is:
@@ -1403,6 +1517,7 @@ The unit is the character: tokens are estimated as characters divided by 3.2 eve
 | full timeline view | 25,600 | 8,000 | all items | 500 | item |
 | project list | 6,400 | 2,000 | 20 | 100 | project |
 | history list | 6,400 | 2,000 | 20 | 100 | step |
+| history diff, checkpoint list | 6,400 | 2,000 | all that fit | none | line, truncated with a count |
 | lint report | 9,600 | 3,000 | 25 | 100 | finding |
 | media inspection, whole text | 12,800 | 4,000 | one transcript page of 6,000 characters, at most 20 lines | 200 | transcript line |
 | media list | 12,800 | 4,000 | 50 | 200 | asset |
@@ -1472,7 +1587,7 @@ Tool and Service mapping, scope and annotations (annotations are hints and clien
 | `project_trash` | `ProjectTrash`, `ProjectRestore` | edit | false | false | true | false |
 | `edit` | `Edit` | edit (media for `asset.remove`) | false | false | false | false |
 | `command_help` | `CommandHelp` | read | true | n/a | true | false |
-| `history` | `HistoryList`, `Undo`, `Redo` | read (list), edit (undo, redo) | false | false | false | false |
+| `history` | `HistoryList`, `Undo`, `Redo`, `HistoryRevert`, `HistoryDiff`, `Checkpoint*` | read (list, diff, checkpoints), edit (the others) | false | false | false | false |
 | `media_import` | `MediaImport` | media | false | false | true | false |
 | `media_inspect` | `MediaInspect` (with `asset_id`), `MediaList` (without) | read | true | n/a | true | false |
 | `view` | `ViewFrame`, `ViewSheet`, `AudioMeasure` (`mode` audio) | read | true | n/a | true | false |
@@ -2158,6 +2273,8 @@ lint (fast rules): no new findings (errors=0 warnings=0 in total)
 ```
 
 The structured result of `undo` is an `UndoResult` (§2.5: the `EditResult` members plus `kind`, `undone` and `skipped`); of `list` a `HistoryListResult`.
+
+**Revert, diff and checkpoints on this tool (epic 36).** The six operations of §2.5.1 are more `action` values of `history`, not a new tool (the budget of §4.1 leaves no room for one, and each is an intent of reading or changing the log): `revert` is `HistoryRevert`, `diff` `HistoryDiff`, `checkpoints` `CheckpointList`, `checkpoint` `CheckpointCreate`, `rename_checkpoint` `CheckpointRename` and `remove_checkpoint` `CheckpointRemove`. The members are `revision` (the revision to revert to, the revision of a checkpoint, or the start of a diff), `to` (the end of a diff, default the current revision), `name` (the checkpoint, to revert to, to start a diff from, to create, to rename or to remove), `new_name`, `note`, `base_revision` and `dry_run`. A member that an action does not use is `E_VALIDATION`, as in S-11 of §7.1. `domain=image` serves undo and redo only. `revert` with `dry_run=true` is the preview an agent reads before it goes back.
 
 #### `media_import`
 
@@ -3486,6 +3603,12 @@ Every command that reads or edits a timeline (those whose result is about one do
 | `history` | `history --project <id> [--by a] [--cursor c] [--limit n]` | `--by` string, only steps by this actor (the global `--actor` names the caller); `--cursor`; `--limit` int 20 | none | `HistoryListResult` |
 | `undo` | `undo --project <id>` | none (one step per call) | none | `UndoResult` |
 | `redo` | `redo --project <id>` | none (one step per call) | none | `UndoResult` |
+| `revert` | `revert --project <id> (--revision n \| --checkpoint name) [--base n]` | `--revision` int or `--checkpoint` string (one of them), `--base` int (default the current revision) | `--dry-run` | `HistoryRevertResult` |
+| `diff` | `diff --project <id> (--from n \| --from-checkpoint name) [--to n]` | `--from` int or `--from-checkpoint` string, `--to` int (default the current revision) | none | `HistoryDiffResult` |
+| `checkpoint:create` | `checkpoint:create --project <id> --name <name> [--note t] [--revision n]` | `--name` string, `--note` string, `--revision` int (default the current one) | none | `Checkpoint` |
+| `checkpoint:list` | `checkpoint:list --project <id>` | none | none | `CheckpointListResult` |
+| `checkpoint:rename` | `checkpoint:rename --project <id> --name <name> --new-name <name> [--note t]` | `--name`, `--new-name`, `--note` strings | none | `Checkpoint` |
+| `checkpoint:remove` | `checkpoint:remove --project <id> --name <name>` | `--name` string | none | `Checkpoint` (the one removed) |
 | `media:import` | `media:import <path>... --project <id> [--asset-id ast_...]` | `--asset-id` string, repeatable, in the order of the paths, as many as paths; `--wait`, `--timeout` as above. Exit 1 when at least one file failed (§5.1) | none | `MediaImportResult` |
 | `media:inspect` | `media:inspect <asset id> --project <id> [--sections probe,transcript,silences,loudness] [--min-silence 0.4s] [--cursor c] [--limit n]` | `--sections` comma list `probe`; `--min-silence` string `0.4s`; `--cursor`; `--limit` int 20, transcript lines | none | `MediaInspectResult` |
 | `media:list` | `media:list --project <id> [--cursor c] [--limit n]` | `--cursor`; `--limit` int 50 | none | `MediaListResult` |
@@ -3747,6 +3870,12 @@ Success codes are the `Op.Status`. Error statuses are the table of SDD-000 §8; 
 | `projects.history` | `GET /projects/{id}/history` | `actor`, `cursor`, `limit` | none | 200 `HistoryListResult` | read | none |
 | `projects.undo` | `POST /projects/{id}/undo` | none | `{dry_run?}` | 200 `UndoResult` | edit | 409 `E_NOTHING_TO_UNDO` |
 | `projects.redo` | `POST /projects/{id}/redo` | none | `{dry_run?}` | 200 `UndoResult` | edit | 409 `E_NOTHING_TO_REDO` |
+| `projects.revert` | `POST /projects/{id}/revert` | none | `{revision \| checkpoint, base_revision?, dry_run?}` | 200 `HistoryRevertResult` | edit | 404 `E_NOT_FOUND` (checkpoint); 409 `E_REVISION_CONFLICT`; 422 `E_VALIDATION`, `E_INVALID_STATE` |
+| `projects.diff` | `GET /projects/{id}/diff` | `from` or `from_checkpoint`, `to` | none | 200 `HistoryDiffResult` | read | 404 `E_NOT_FOUND`; 422 `E_VALIDATION`, `E_INVALID_STATE` |
+| `projects.checkpoints.list` | `GET /projects/{id}/checkpoints` | none | none | 200 `CheckpointListResult` | read | none |
+| `projects.checkpoints.create` | `POST /projects/{id}/checkpoints` | none | `{name, note?, revision?}` | 201 `Checkpoint` | edit | 409 `E_ID_EXISTS`; 422 `E_VALIDATION` |
+| `projects.checkpoints.rename` | `PATCH /projects/{id}/checkpoints/{name}` | none | `{new_name, note?}` | 200 `Checkpoint` | edit | 404 `E_NOT_FOUND`; 409 `E_ID_EXISTS` |
+| `projects.checkpoints.remove` | `DELETE /projects/{id}/checkpoints/{name}` | none | none | 200 `Checkpoint` | edit | 404 `E_NOT_FOUND` |
 | `media.import` | `POST /projects/{id}/media` | none | `{files, wait_ms?, dry_run?}` (1 to 50 files) | 202 `MediaImportResult` when every file was accepted; 200 when at least one was refused (per-file errors in `assets[].error`) | media | a single refused file, or an invalid request, is the call's error: 403 `E_PATH_NOT_ALLOWED` (a relative path too); 404 `E_FILE_NOT_FOUND`; 413; 422 `E_UNSUPPORTED_MEDIA`, `E_LIMIT_EXCEEDED` |
 | `media.list` | `GET /projects/{id}/media` | `cursor`, `limit` | none | 200 `MediaListResult` (every asset, including pending and failed) | read | none |
 | `media.inspect` | `GET /projects/{id}/media/{asset_id}` | `sections`, `min_silence`, `cursor`, `limit` | none | 200 `MediaInspectResult` | read | 409 `E_ASSET_NOT_READY` |
@@ -3961,6 +4090,12 @@ Every `Service` operation has an encoding on each surface. The table is the proo
 | `HistoryList` | `history` (`action` `list`) | `history` | `GET /projects/{id}/history` |
 | `Undo` | `history` (`action` `undo`) | `undo` | `POST /projects/{id}/undo` |
 | `Redo` | `history` (`action` `redo`) | `redo` | `POST /projects/{id}/redo` |
+| `HistoryRevert` | `history` (`action` `revert`) | `revert` | `POST /projects/{id}/revert` |
+| `HistoryDiff` | `history` (`action` `diff`) | `diff` | `GET /projects/{id}/diff` |
+| `CheckpointList` | `history` (`action` `checkpoints`) | `checkpoint:list` | `GET /projects/{id}/checkpoints` |
+| `CheckpointCreate` | `history` (`action` `checkpoint`) | `checkpoint:create` | `POST /projects/{id}/checkpoints` |
+| `CheckpointRename` | `history` (`action` `rename_checkpoint`) | `checkpoint:rename` | `PATCH /projects/{id}/checkpoints/{name}` |
+| `CheckpointRemove` | `history` (`action` `remove_checkpoint`) | `checkpoint:remove` | `DELETE /projects/{id}/checkpoints/{name}` |
 | `MediaImport` | `media_import` | `media:import` | `POST /projects/{id}/media` |
 | `MediaInspect` | `media_inspect` (with `asset_id`) | `media:inspect` | `GET /projects/{id}/media/{asset_id}` |
 | `MediaList` | `media_inspect` (without `asset_id`) | `media:list` | `GET /projects/{id}/media` |
