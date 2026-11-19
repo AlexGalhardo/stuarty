@@ -193,8 +193,9 @@ func decimalSize(n int64) string {
 
 // ExportCheckRequest asks whether a project fits a preset before anything is encoded.
 type ExportCheckRequest struct {
-	ProjectID string `json:"project_id"`
-	Preset    string `json:"preset"`
+	ProjectID  string `json:"project_id"`
+	TimelineID string `json:"timeline_id,omitempty"` // SDD-003 section 1.7
+	Preset     string `json:"preset"`
 	// Start and End are the range to export, as in an export job; both empty is the whole timeline.
 	Start string `json:"start,omitempty"`
 	End   string `json:"end,omitempty"`
@@ -221,6 +222,10 @@ type ExportCheckResult struct {
 func (s *svc) ExportCheck(ctx context.Context, req ExportCheckRequest) (*ExportCheckResult, error) {
 	c, err := authorize(ctx, "ExportCheck", req.ProjectID)
 	if err != nil {
+		return nil, err
+	}
+
+	if err := s.useTimeline(ctx, c, &req.ProjectID, req.TimelineID); err != nil {
 		return nil, err
 	}
 
@@ -262,7 +267,7 @@ func (s *svc) ExportCheck(ctx context.Context, req ExportCheckRequest) (*ExportC
 
 	res.Errors = len(res.Findings)
 
-	res.Text = checkText(res, &preset, start, end)
+	res.Text = exportCheckText(res, &preset, start, end)
 
 	return res, nil
 }
@@ -284,7 +289,7 @@ func presetInput(doc *timeline.Document, p *exportcore.Preset, frames int64, cod
 	}
 }
 
-func checkText(r *ExportCheckResult, p *exportcore.Preset, start, end int64) string {
+func exportCheckText(r *ExportCheckResult, p *exportcore.Preset, start, end int64) string {
 	var b strings.Builder
 
 	fmt.Fprintf(&b, "export check %s for %s, frames %d to %d (%.3f s), estimated %s\n",

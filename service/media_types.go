@@ -10,10 +10,11 @@ type ImportFile struct {
 
 // MediaImportRequest imports 1 to 50 files into a project.
 type MediaImportRequest struct {
-	ProjectID string       `json:"project_id"`
-	Files     []ImportFile `json:"files"`
-	WaitMS    int          `json:"wait_ms,omitempty"` // 0 to 25000
-	DryRun    bool         `json:"dry_run,omitempty"` // checks paths and limits, copies nothing
+	ProjectID  string       `json:"project_id"`
+	TimelineID string       `json:"timeline_id,omitempty"` // SDD-003 section 1.7
+	Files      []ImportFile `json:"files"`
+	WaitMS     int          `json:"wait_ms,omitempty"` // 0 to 25000
+	DryRun     bool         `json:"dry_run,omitempty"` // checks paths and limits, copies nothing
 }
 
 // ProbeSummary is what the probe says about an asset.
@@ -70,7 +71,8 @@ type MediaImportResult struct {
 
 // MediaListRequest lists every asset of a project.
 type MediaListRequest struct {
-	ProjectID string `json:"project_id"`
+	ProjectID  string `json:"project_id"`
+	TimelineID string `json:"timeline_id,omitempty"` // SDD-003 section 1.7
 	Page
 }
 
@@ -111,9 +113,10 @@ type MediaListResult struct {
 
 // MediaTrashRequest trashes or restores an asset of a project.
 type MediaTrashRequest struct {
-	ProjectID string `json:"project_id"`
-	AssetID   string `json:"asset_id"`
-	DryRun    bool   `json:"dry_run,omitempty"`
+	ProjectID  string `json:"project_id"`
+	TimelineID string `json:"timeline_id,omitempty"` // SDD-003 section 1.7
+	AssetID    string `json:"asset_id"`
+	DryRun     bool   `json:"dry_run,omitempty"`
 }
 
 // MediaStateResult is the state an asset ended in.
@@ -126,6 +129,7 @@ type MediaStateResult struct {
 // MediaInspectRequest reads one asset.
 type MediaInspectRequest struct {
 	ProjectID  string   `json:"project_id"`
+	TimelineID string   `json:"timeline_id,omitempty"` // SDD-003 section 1.7
 	AssetID    string   `json:"asset_id"`
 	Sections   []string `json:"sections,omitempty"` // default ["probe"]: probe, transcript, silences, loudness
 	MinSilence string   `json:"min_silence,omitempty"`

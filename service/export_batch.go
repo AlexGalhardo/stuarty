@@ -43,9 +43,10 @@ type ExportBatchItem struct {
 
 // ExportBatchRequest starts the exports of one project, one after the other, as one job (RF-088).
 type ExportBatchRequest struct {
-	ProjectID string            `json:"project_id"`
-	Items     []ExportBatchItem `json:"items"`
-	WaitMS    int               `json:"wait_ms,omitempty"`
+	ProjectID  string            `json:"project_id"`
+	TimelineID string            `json:"timeline_id,omitempty"` // SDD-003 section 1.7
+	Items      []ExportBatchItem `json:"items"`
+	WaitMS     int               `json:"wait_ms,omitempty"`
 }
 
 // batchItem is an item as it is stored: the arguments and the frames they resolved to at the start.
@@ -107,6 +108,10 @@ func batchChildID(parentID string, i int) string {
 func (s *svc) ExportBatch(ctx context.Context, req ExportBatchRequest) (*Job, error) {
 	c, err := authorize(ctx, "ExportBatch", req.ProjectID)
 	if err != nil {
+		return nil, err
+	}
+
+	if err := s.useTimeline(ctx, c, &req.ProjectID, req.TimelineID); err != nil {
 		return nil, err
 	}
 

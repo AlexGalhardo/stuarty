@@ -119,7 +119,7 @@ func TestSecurity_T43_NoSurfaceReturnsASecret(t *testing.T) {
 				}
 			}
 
-			if name != "mcp" && !strings.Contains(seen.String(), "[redacted]") {
+			if name != "mcp" && !strings.Contains(seen.String(), "answer was dropped") {
 				t.Error("the echoed credential was not redacted: the test did not reach the destination")
 			}
 

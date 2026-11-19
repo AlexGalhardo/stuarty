@@ -2,17 +2,25 @@ import { fromResponse, networkError } from "./errors";
 import { type RetryDeps, withRetry } from "./retry";
 import { type Transport, TransportError } from "./transport";
 import type {
+	ApprovalListResult,
+	ApprovalRequest,
+	ApprovalRule,
+	ApprovalRuleListResult,
+	ApprovalRuleSetRequest,
 	AssetListResult,
 	AuditListResult,
 	AuditQuery,
 	BrandKit,
 	BrandKitBody,
+	BriefResult,
 	BundleImportResult,
 	CommandHelpResult,
 	Connection,
 	ConnectionCreateRequest,
 	ConnectionListResult,
 	ConnectionTestResult,
+	CostCeilingSetRequest,
+	CostSummary,
 	EditRequest,
 	EditResult,
 	ExportBatchItem,
@@ -41,6 +49,8 @@ import type {
 	PlanWindowHead,
 	ProjectCreateResult,
 	ProjectGetResult,
+	ProjectItemAddRequest,
+	ProjectItemResult,
 	ProjectListResult,
 	ProjectStateResult,
 	SessionResult,
@@ -163,10 +173,50 @@ export interface ApiClient {
 	createConnection(request: ConnectionCreateRequest): Promise<Connection>;
 	removeConnection(id: string): Promise<Connection>;
 	testConnection(id: string): Promise<ConnectionTestResult>;
+	// The approval queue (SDD-015). Deciding, the rules and the ceilings are for a person in a
+	// browser session; any other caller gets E_PRIVILEGED_SESSION.
+	listApprovals(state?: string): Promise<ApprovalListResult>;
+	decideApproval(
+		id: string,
+		decision: "approve" | "reject",
+		reason?: string,
+	): Promise<ApprovalRequest>;
+	listApprovalRules(): Promise<ApprovalRuleListResult>;
+	setApprovalRule(request: ApprovalRuleSetRequest): Promise<ApprovalRule>;
+	removeApprovalRule(id: string): Promise<ApprovalRule>;
+	getCostSummary(): Promise<CostSummary>;
+	setCostCeiling(request: CostCeilingSetRequest): Promise<CostSummary>;
 	// An administrator session; any other caller gets E_FORBIDDEN.
 	listUsers(): Promise<UserListResult>;
 	listTrashedProjects(): Promise<ProjectListResult>;
 	createProject(name: string, preset: string): Promise<ProjectCreateResult>;
+	duplicateProject(
+		projectId: string,
+		name?: string,
+	): Promise<ProjectCreateResult>;
+	addProjectItem(
+		projectId: string,
+		request: ProjectItemAddRequest,
+	): Promise<ProjectItemResult>;
+	moveProjectItem(
+		projectId: string,
+		itemId: string,
+		position: number,
+	): Promise<ProjectItemResult>;
+	renameProjectItem(
+		projectId: string,
+		itemId: string,
+		title: string,
+	): Promise<ProjectItemResult>;
+	trashProjectItem(
+		projectId: string,
+		itemId: string,
+	): Promise<ProjectItemResult>;
+	restoreProjectItem(
+		projectId: string,
+		itemId: string,
+	): Promise<ProjectItemResult>;
+	setBrief(projectId: string, text: string): Promise<BriefResult>;
 	trashProject(projectId: string): Promise<ProjectStateResult>;
 	restoreProject(projectId: string): Promise<ProjectStateResult>;
 	// The two routes of network mode live at the root, not under /api/v1: a client
@@ -395,12 +445,78 @@ export function createClient(
 				EDIT_TIMEOUT_MS,
 				{},
 			),
+		listApprovals: (state) =>
+			call(
+				"GET",
+				`/approvals?state=${encodeURIComponent(state ?? "pending")}&limit=200`,
+				READ_TIMEOUT_MS,
+			),
+		decideApproval: (id, decision, reason) =>
+			call(
+				"POST",
+				`/approvals/${encodeURIComponent(id)}/decide`,
+				EDIT_TIMEOUT_MS,
+				reason === undefined || reason === ""
+					? { decision }
+					: { decision, reason },
+			),
+		listApprovalRules: () => call("GET", "/approval-rules", READ_TIMEOUT_MS),
+		setApprovalRule: (request) =>
+			call("POST", "/approval-rules", EDIT_TIMEOUT_MS, request),
+		removeApprovalRule: (id) =>
+			call(
+				"DELETE",
+				`/approval-rules/${encodeURIComponent(id)}`,
+				EDIT_TIMEOUT_MS,
+			),
+		getCostSummary: () => call("GET", "/cost", READ_TIMEOUT_MS),
+		setCostCeiling: (request) =>
+			call("PUT", "/cost/ceilings", EDIT_TIMEOUT_MS, request),
 		revokeKey: (keyId) =>
 			call("DELETE", `/keys/${encodeURIComponent(keyId)}`, EDIT_TIMEOUT_MS),
 		listTrashedProjects: () =>
 			call("GET", "/projects?state=trashed", READ_TIMEOUT_MS),
 		createProject: (name, preset) =>
 			call("POST", "/projects", EDIT_TIMEOUT_MS, { name, preset }),
+		duplicateProject: (id, name) =>
+			call(
+				"POST",
+				`${project(id)}/duplicate`,
+				EDIT_TIMEOUT_MS,
+				name === undefined ? {} : { name },
+			),
+		addProjectItem: (id, request) =>
+			call("POST", `${project(id)}/items`, EDIT_TIMEOUT_MS, request),
+		moveProjectItem: (id, itemId, position) =>
+			call(
+				"POST",
+				`${project(id)}/items/${encodeURIComponent(itemId)}/move`,
+				EDIT_TIMEOUT_MS,
+				{ position },
+			),
+		renameProjectItem: (id, itemId, title) =>
+			call(
+				"POST",
+				`${project(id)}/items/${encodeURIComponent(itemId)}/rename`,
+				EDIT_TIMEOUT_MS,
+				{ title },
+			),
+		trashProjectItem: (id, itemId) =>
+			call(
+				"POST",
+				`${project(id)}/items/${encodeURIComponent(itemId)}/trash`,
+				EDIT_TIMEOUT_MS,
+				{},
+			),
+		restoreProjectItem: (id, itemId) =>
+			call(
+				"POST",
+				`${project(id)}/items/${encodeURIComponent(itemId)}/restore`,
+				EDIT_TIMEOUT_MS,
+				{},
+			),
+		setBrief: (id, text) =>
+			call("PUT", `${project(id)}/brief`, EDIT_TIMEOUT_MS, { text }),
 		trashProject: (id) =>
 			call("POST", `${project(id)}/trash`, EDIT_TIMEOUT_MS, {}),
 		restoreProject: (id) =>

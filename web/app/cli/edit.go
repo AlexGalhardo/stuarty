@@ -13,8 +13,9 @@ import (
 )
 
 var edit = &spec{
-	name:    "edit",
-	summary: "apply a batch of operations to a project (its lint block is lint_scope fast: lint runs every rule)",
+	name:     "edit",
+	timeline: true,
+	summary:  "apply a batch of operations to a project (its lint block is lint_scope fast: lint runs every rule)",
 	usage: []string{
 		"stuarty edit --project <id> --ops <file|-> [--base n] [--key k]",
 		"stuarty edit --project <id> <op> [k=v | k:=json]...",
@@ -41,7 +42,7 @@ func runEdit(ctx context.Context, c *call) (*output, error) {
 	}
 
 	if !c.args.has("base") && !req.baseGiven {
-		cur, gerr := c.svc.ProjectGet(ctx, service.ProjectGetRequest{ProjectID: c.projectID})
+		cur, gerr := c.svc.ProjectGet(ctx, service.ProjectGetRequest{ProjectID: c.projectID, TimelineID: c.timelineID})
 		if gerr != nil {
 			return nil, gerr
 		}
@@ -74,7 +75,7 @@ type batchObject struct {
 // editRequest builds the EditRequest from either input form of SDD-003
 // section 5.5. Flags override the members of the object form.
 func editRequest(c *call) (*batchRequest, error) {
-	req := &batchRequest{ProjectID: c.projectID}
+	req := &batchRequest{ProjectID: c.projectID, TimelineID: c.timelineID}
 	positional := c.args.Positional
 
 	switch {

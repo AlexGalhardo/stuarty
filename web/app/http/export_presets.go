@@ -13,11 +13,12 @@ type exportPresetsIn struct {
 }
 
 type exportCheckIn struct {
-	ID     string `json:"id"              validate:"required"`
-	Preset string `json:"preset"          validate:"required" doc:"A preset id, as listed by GET /export-presets."`
-	Start  string `json:"start,omitempty"                     doc:"The start of the range to export; empty is the start of the timeline."`
-	End    string `json:"end,omitempty"                       doc:"The end of the range to export; empty is the end of the timeline."`
-	Codec  string `json:"codec,omitempty"                     doc:"h264, hevc or av1: the codec of the estimate of the size; empty is the first of the preset."`
+	ID         string `json:"id"                    validate:"required"`
+	TimelineID string `json:"timeline_id,omitempty"                     doc:"The timeline of the project; required when the project has several."`
+	Preset     string `json:"preset"                validate:"required" doc:"A preset id, as listed by GET /export-presets."`
+	Start      string `json:"start,omitempty"                           doc:"The start of the range to export; empty is the start of the timeline."`
+	End        string `json:"end,omitempty"                             doc:"The end of the range to export; empty is the end of the timeline."`
+	Codec      string `json:"codec,omitempty"                           doc:"h264, hevc or av1: the codec of the estimate of the size; empty is the first of the preset."`
 }
 
 type exportBatchItemIn struct {
@@ -29,9 +30,10 @@ type exportBatchItemIn struct {
 }
 
 type exportBatchIn struct {
-	ID     string              `json:"id"                validate:"required"`
-	Items  []exportBatchItemIn `json:"items"             validate:"required,min=1,max=12" doc:"The exports, one after the other."`
-	WaitMS int                 `json:"wait_ms,omitempty"                                  doc:"0 to 25000: hold the call until the job is final."`
+	ID         string              `json:"id"                    validate:"required"`
+	TimelineID string              `json:"timeline_id,omitempty"                                  doc:"The timeline of the project; required when the project has several."`
+	Items      []exportBatchItemIn `json:"items"                 validate:"required,min=1,max=12" doc:"The exports, one after the other."`
+	WaitMS     int                 `json:"wait_ms,omitempty"                                      doc:"0 to 25000: hold the call until the job is final."`
 }
 
 func (h *apiHandler) exportPresetList(c *web.Ctx, in exportPresetsIn) (service.ExportPresetListResult, error) {
@@ -45,7 +47,7 @@ func (h *apiHandler) exportPresetList(c *web.Ctx, in exportPresetsIn) (service.E
 
 func (h *apiHandler) exportCheck(c *web.Ctx, in exportCheckIn) (service.ExportCheckResult, error) {
 	res, err := h.Service.ExportCheck(c.Context(), service.ExportCheckRequest{
-		ProjectID: in.ID, Preset: in.Preset, Start: in.Start, End: in.End, Codec: in.Codec,
+		ProjectID: in.ID, TimelineID: in.TimelineID, Preset: in.Preset, Start: in.Start, End: in.End, Codec: in.Codec,
 	})
 	if res != nil {
 		res.Text = service.TextFor(service.SurfaceHTTP, res.Text)
@@ -67,7 +69,7 @@ func (h *apiHandler) exportBatch(c *web.Ctx, in exportBatchIn) (service.Job, err
 	}
 
 	res, err := h.Service.ExportBatch(c.Context(), service.ExportBatchRequest{
-		ProjectID: in.ID, Items: items, WaitMS: in.WaitMS,
+		ProjectID: in.ID, TimelineID: in.TimelineID, Items: items, WaitMS: in.WaitMS,
 	})
 	if err != nil {
 		return service.Job{}, err

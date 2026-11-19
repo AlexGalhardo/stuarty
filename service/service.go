@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log/slog"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -17,7 +18,9 @@ import (
 	"github.com/AlexGalhardo/stuarty/engine/rasterize"
 	enginestore "github.com/AlexGalhardo/stuarty/engine/store"
 	"github.com/AlexGalhardo/stuarty/engine/transcribe"
+	"github.com/AlexGalhardo/stuarty/service/approval"
 	"github.com/AlexGalhardo/stuarty/service/connections"
+	"github.com/AlexGalhardo/stuarty/service/library"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
 )
 
@@ -27,6 +30,8 @@ import (
 // bundles, OpenTimelineIO and system. Every method returns a *Error on
 // failure and never a partial result with a non-nil error.
 type Service interface {
+	ProductionService
+
 	ProjectList(ctx context.Context, req ProjectListRequest) (*ProjectListResult, error)
 	ProjectCreate(ctx context.Context, req ProjectCreateRequest) (*ProjectCreateResult, error)
 	ProjectGet(ctx context.Context, req ProjectGetRequest) (*ProjectGetResult, error)
@@ -57,6 +62,26 @@ type Service interface {
 	FontImport(ctx context.Context, req FontImportRequest) (*FontImportResult, error)
 	BrandKitGet(ctx context.Context, req BrandKitGetRequest) (*BrandKit, error)
 	BrandKitSet(ctx context.Context, req BrandKitSetRequest) (*BrandKit, error)
+
+	// The library: memory notes, skills and prompts kept as files in the workspace (SDD-018). The text of every
+	// entry is untrusted; a skill that a person has not reviewed is not offered to an agent.
+	MemoryList(ctx context.Context, req MemoryListRequest) (*LibraryListResult, error)
+	MemoryGet(ctx context.Context, req LibraryRef) (*MemoryGetResult, error)
+	MemoryWrite(ctx context.Context, req MemoryWriteRequest) (*MemoryWriteResult, error)
+	MemoryRemove(ctx context.Context, req LibraryRef) (*LibraryRemoveResult, error)
+	SkillList(ctx context.Context, req SkillListRequest) (*LibraryListResult, error)
+	SkillGet(ctx context.Context, req LibraryRef) (*SkillGetResult, error)
+	SkillWrite(ctx context.Context, req SkillWriteRequest) (*SkillWriteResult, error)
+	SkillImport(ctx context.Context, req SkillImportRequest) (*SkillImportResult, error)
+	SkillMarkReviewed(ctx context.Context, req SkillReviewRequest) (*SkillReviewResult, error)
+	SkillLint(ctx context.Context, req LibraryRef) (*SkillLintResult, error)
+	SkillExport(ctx context.Context, req SkillExportRequest) (*SkillExportResult, error)
+	PromptList(ctx context.Context, req PromptListRequest) (*LibraryListResult, error)
+	PromptGet(ctx context.Context, req LibraryRef) (*PromptGetResult, error)
+	PromptWrite(ctx context.Context, req PromptWriteRequest) (*PromptWriteResult, error)
+	PromptRender(ctx context.Context, req PromptRenderRequest) (*PromptRenderResult, error)
+	LibrarySearch(ctx context.Context, req LibrarySearchRequest) (*LibrarySearchResult, error)
+	LibraryReindex(ctx context.Context, req LibraryReindexRequest) (*LibraryReindexResult, error)
 
 	JobGet(ctx context.Context, req JobGetRequest) (*Job, error)
 	JobList(ctx context.Context, req JobListRequest) (*JobListResult, error)
@@ -129,6 +154,18 @@ type Service interface {
 	ConnectionCreate(ctx context.Context, req ConnectionCreateRequest) (*connections.Connection, error)
 	ConnectionRemove(ctx context.Context, req ConnectionRef) (*connections.Connection, error)
 	ConnectionTest(ctx context.Context, req ConnectionRef) (*ConnectionTestResult, error)
+
+	// The approval queue, its rules and the cost ceilings (SDD-015). Reading is for every caller that
+	// may read; ApprovalDecide, ApprovalRuleSet, ApprovalRuleRemove and CostCeilingSet are for a
+	// person in a privileged browser session and answer E_PRIVILEGED_SESSION to everyone else.
+	ApprovalList(ctx context.Context, req ApprovalListRequest) (*ApprovalListResult, error)
+	ApprovalGet(ctx context.Context, req ApprovalRef) (*approval.Request, error)
+	ApprovalDecide(ctx context.Context, req ApprovalDecideRequest) (*approval.Request, error)
+	ApprovalRuleList(ctx context.Context, req ApprovalRuleListRequest) (*ApprovalRuleListResult, error)
+	ApprovalRuleSet(ctx context.Context, req ApprovalRuleSetRequest) (*approval.RuleView, error)
+	ApprovalRuleRemove(ctx context.Context, req ApprovalRef) (*approval.RuleView, error)
+	CostSummary(ctx context.Context, req CostSummaryRequest) (*CostSummaryResult, error)
+	CostCeilingSet(ctx context.Context, req CostCeilingSetRequest) (*CostSummaryResult, error)
 }
 
 // Event is what the service publishes after the change is durable (SDD-006
@@ -154,6 +191,10 @@ type Event struct {
 	Message  string
 	Error    *Error
 	Result   *JobResult
+	// Approval is the request of approval.requested and approval.decided (SDD-015 section 7), and
+	// Owner the user it belongs to in network mode, so that a member's stream carries their own only.
+	Approval *approval.Request
+	Owner    string
 }
 
 // Options configure New. Store is required.
@@ -201,6 +242,9 @@ type Options struct {
 	// credentials; without one the service builds a registry over the store with a vault in the
 	// workspace that has no master key source, so a connection cannot be created (SDD-014).
 	Connections *connections.Manager
+	// JobKinds are the job kinds that need approval, registered by the epics of publishing and
+	// generation (SDD-015 section 5). The product registers none of its own; tests register one.
+	JobKinds []ApprovableKind
 	// Heavy limits the heavy operations (jobs, media, template, font, bundle and OpenTimelineIO imports and exports) per actor; nil counts nothing.
 	Heavy RateLimiter
 	// HeavyPerMinute is the limit Heavy enforces, for the error message; zero is HeavyPerMinute.
@@ -232,6 +276,8 @@ type svc struct {
 	doctor      DoctorOptions
 	keys        KeyStore
 	conns       *connections.Manager
+	kinds       map[string]*ApprovableKind
+	lib         *library.Manager // the files of memory, skills and prompts; nil without a workspace
 	heavy       RateLimiter
 	heavyLimitN int
 	log         *slog.Logger
@@ -293,8 +339,16 @@ func New(o Options) (Service, error) {
 		startedAt:   time.Now(),
 	}
 
+	kinds, err := registerKinds(o.JobKinds)
+	if err != nil {
+		return nil, err
+	}
+
+	s.kinds = kinds
+
 	if s.workspace != "" {
 		s.fonts = enginestore.NewFonts(s.workspace)
+		s.lib = library.New(filepath.Join(s.workspace, "library"), o.Store.Library(), o.Now)
 	}
 
 	if s.conns == nil {

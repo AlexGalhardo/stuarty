@@ -7,7 +7,7 @@
 
 ## 1. Purpose
 
-This document defines the JSON document that represents one project: the single thing every command changes, the frame plan reads and the database stores. It is detailed enough to write `core/timeline` (Go types, validation, canonical encoding, migrations) and its generated JSON Schema without further questions.
+This document defines the JSON document that represents one timeline. Since ADR-0039 a project is a production that holds timelines (SDD-005 section 5.12), and in this document "project" still means the timeline document: its name, its `prj_` identifier and its fields do not change. The document is the single thing every command changes, the frame plan reads and the database stores. It is detailed enough to write `core/timeline` (Go types, validation, canonical encoding, migrations) and its generated JSON Schema without further questions.
 
 Out of this document: how commands change the document (SDD-002), how it becomes pixels (SDD-004), how it is stored (SDD-005).
 

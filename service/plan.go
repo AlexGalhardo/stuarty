@@ -18,9 +18,10 @@ import (
 // PlanWindowRequest asks for the render plan of frames From up to, not
 // including, Until (SDD-004 section 10).
 type PlanWindowRequest struct {
-	ProjectID string `json:"project_id"`
-	From      int    `json:"from"`
-	Until     int    `json:"until"`
+	ProjectID  string `json:"project_id"`
+	TimelineID string `json:"timeline_id,omitempty"` // SDD-003 section 1.7
+	From       int    `json:"from"`
+	Until      int    `json:"until"`
 	// Width is the output width in pixels the preview draws at; 0 is the project width. The
 	// bitmaps of the plan are rasterized at that scale, as ViewFrame does (SDD-004 section 10).
 	Width int `json:"width,omitempty"`
@@ -168,6 +169,10 @@ func planOutputScale(width, projectWidth int) (float64, *Error) {
 func (s *svc) PlanWindow(ctx context.Context, req PlanWindowRequest) (*PlanWindowResult, error) {
 	c, err := authorize(ctx, "PlanWindow", req.ProjectID)
 	if err != nil {
+		return nil, err
+	}
+
+	if err := s.useTimeline(ctx, c, &req.ProjectID, req.TimelineID); err != nil {
 		return nil, err
 	}
 

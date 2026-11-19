@@ -93,6 +93,12 @@ func TestPages(t *testing.T) {
 		t.Errorf("/connections = %d, want the connections page", res.status)
 	}
 
+	// The approval queue has its own page (epic 05).
+	if res := page("/approvals"); res.status != http.StatusOK ||
+		!strings.Contains(string(res.body), `Approvals\/Index`) {
+		t.Errorf("/approvals = %d, want the approvals page", res.status)
+	}
+
 	if res := h.do(req{path: "/projects", noAuth: true}); res.status != http.StatusUnauthorized {
 		t.Errorf("/projects without a session = %d", res.status)
 	}
@@ -148,7 +154,7 @@ func TestEditorPageShowsWhyAProjectCannotOpen(t *testing.T) {
 
 	_, err := h.store.DB().ExecContext(
 		context.Background(),
-		"UPDATE projects SET document = replace(document, ?, ?) WHERE id = ?",
+		"UPDATE timelines SET document = replace(document, ?, ?) WHERE id = ?",
 		fmt.Sprintf(`"schema_version":%d`, timeline.CurrentSchemaVersion),
 		fmt.Sprintf(`"schema_version":%d`, timeline.CurrentSchemaVersion+1),
 		id,

@@ -16,6 +16,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/core/timeline"
 	"github.com/AlexGalhardo/stuarty/service/connections"
+	"github.com/AlexGalhardo/stuarty/service/library"
 )
 
 // An in-memory store of the job tables and one project, enough to run ExportBatch and its worker: the sqlite
@@ -221,6 +222,18 @@ type batchStore struct {
 
 // No test here reads a connection; the manager the service builds only needs a store to hold.
 func (b *batchStore) Connections() connections.Store { return nil }
+
+// Nor does any test here use the library; its manager only needs an index to hold.
+func (b *batchStore) Library() library.Index { return nil }
+
+// The project of these tests has one timeline, whose id is its own (SDD-003 section 1.7).
+func (b *batchStore) Productions() ProductionRepo { return batchProductions{} }
+
+type batchProductions struct{ ProductionRepo }
+
+func (batchProductions) ActiveTimelines(context.Context, string) ([]TimelineRef, error) {
+	return nil, nil
+}
 
 func (b *batchStore) Jobs() JobRepo         { return b.jobs }
 func (b *batchStore) Audit() AuditRepo      { return batchAudit{} }
