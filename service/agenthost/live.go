@@ -124,15 +124,31 @@ func (s *liveSession) open(ctx context.Context) error {
 		return s.failStart(&StartError{Reason: ReasonStartFailed, Detail: "the working directory could not be made"})
 	}
 
+	// The child is started under the lock that end takes first: a session ended while it was
+	// starting (a second start in the project, a delete, the shutdown) either never launches its
+	// child or has it in s.proc when end looks for it, so no child outlives its session.
+	s.mu.Lock()
+	if s.state == chat.StateEnded {
+		s.mu.Unlock()
+
+		// The row was written as starting, possibly after end wrote it as ended.
+		s.save()
+
+		return errEndedWhileStarting()
+	}
+
 	proc, err := startProcess(StartSpec{
 		Command: s.req.Profile.Command, Args: s.req.Profile.Args, Dir: dir, Env: Environment(o.Environ()),
 	})
+	if err == nil {
+		s.proc = proc
+		s.conn = NewConn(proc.Stdout(), proc.Stdin(), s)
+	}
+	s.mu.Unlock()
+
 	if err != nil {
 		return s.failStart(&StartError{Reason: startReason(err), Detail: "the program could not be started"})
 	}
-
-	s.proc = proc
-	s.conn = NewConn(proc.Stdout(), proc.Stdin(), s)
 
 	sctx, cancel := context.WithTimeout(ctx, s.h.lim.Start)
 	defer cancel()
@@ -165,10 +181,19 @@ func (s *liveSession) open(ctx context.Context) error {
 		return s.failStart(s.startFailure(err))
 	}
 
+	// The id is read by the goroutine that reads the agent, which may already be handling an
+	// update that followed the answer.
+	s.mu.Lock()
 	s.acpID = id
 
-	s.mu.Lock()
-	next, _ := chat.Next(s.state, chat.InputStarted)
+	next, nerr := chat.Next(s.state, chat.InputStarted)
+	if nerr != nil {
+		// Ended while the protocol was being opened: end stopped the child already.
+		s.mu.Unlock()
+
+		return errEndedWhileStarting()
+	}
+
 	s.state = next
 	s.mu.Unlock()
 
@@ -176,8 +201,10 @@ func (s *liveSession) open(ctx context.Context) error {
 	s.save()
 
 	s.mu.Lock()
-	s.idle = time.AfterFunc(s.h.lim.Idle, func() { s.end(chat.EndIdle) })
-	s.life = time.AfterFunc(s.h.lim.Lifetime, func() { s.end(chat.EndTimeout) })
+	if s.state != chat.StateEnded {
+		s.idle = time.AfterFunc(s.h.lim.Idle, func() { s.end(chat.EndIdle) })
+		s.life = time.AfterFunc(s.h.lim.Lifetime, func() { s.end(chat.EndTimeout) })
+	}
 	s.mu.Unlock()
 
 	go s.watch()
@@ -226,8 +253,18 @@ func (s *liveSession) mcpServers(init *InitializeResult) ([]MCPServer, error) {
 	}
 
 	s.mu.Lock()
-	s.revoke = revoke
+	ended := s.state == chat.StateEnded
+	if !ended {
+		s.revoke = revoke
+	}
 	s.mu.Unlock()
+
+	// A session that ended meanwhile revoked nothing: its token dies here, never handed out.
+	if ended {
+		revoke()
+
+		return nil, errEndedWhileStarting()
+	}
 
 	s.rec.AddSecret(secret)
 
@@ -245,7 +282,7 @@ func (s *liveSession) failStart(err error) error {
 	}
 
 	if s.proc != nil && se.Detail == "" {
-		if diag := s.proc.Diagnostic(); diag != "" {
+		if diag := s.rec.Scrub(s.proc.Diagnostic()); diag != "" {
 			s.h.o.Log.Debug("the agent failed to start", "session", s.req.SessionID, "stderr", diag)
 		}
 	}
@@ -253,6 +290,11 @@ func (s *liveSession) failStart(err error) error {
 	s.end(chat.EndStartFailed)
 
 	return se
+}
+
+// errEndedWhileStarting is the start of a session that was ended before it opened.
+func errEndedWhileStarting() *StartError {
+	return &StartError{Reason: ReasonStartFailed, Detail: "the session ended while it started"}
 }
 
 // abandon forgets a session whose row could not be written.
@@ -319,27 +361,51 @@ func (s *liveSession) finish(reason chat.EndReason) {
 			p.ch <- permResult{cancelled: true}
 		}
 	}
+
+	// open starts the child under this lock and only while the state is not ended, so what is
+	// read here is every child this session will ever have.
+	proc, conn := s.proc, s.conn
+	s.cancel()
 	s.mu.Unlock()
 
 	if revoke != nil {
 		revoke()
 	}
 
-	s.cancel()
-
 	s.rec.State(chat.StateInfo{State: chat.StateEnded, EndReason: reason})
 
-	if s.proc != nil {
-		s.proc.Stop(s.h.lim.InputClose)
+	if proc != nil {
+		proc.Stop(s.h.lim.InputClose)
 	}
 
-	if s.conn != nil {
-		s.conn.Close()
+	if conn != nil {
+		conn.Close()
 	}
 
 	s.rec.Close()
 	s.save()
 	s.h.remove(s)
+}
+
+// agentSession is the id the agent gave the session; empty until session/new was answered.
+func (s *liveSession) agentSession() string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	return s.acpID
+}
+
+// waitingPermissionsLocked is how many permission requests wait for a person.
+func (s *liveSession) waitingPermissionsLocked() int {
+	n := 0
+
+	for _, p := range s.perms {
+		if !p.answered {
+			n++
+		}
+	}
+
+	return n
 }
 
 // Notify handles a notification of the agent: session/update becomes events.
@@ -354,7 +420,7 @@ func (s *liveSession) Notify(method string, params json.RawMessage) {
 	}
 
 	u, ok := ParseUpdate(params)
-	if !ok || u.SessionID != s.acpID {
+	if !ok || u.SessionID != s.agentSession() {
 		return
 	}
 
@@ -380,7 +446,7 @@ func (s *liveSession) Request(ctx context.Context, method string, params json.Ra
 	}
 
 	req, err := ParsePermission(params)
-	if err != nil || req.SessionID != s.acpID {
+	if err != nil || req.SessionID != s.agentSession() {
 		return nil, InvalidParams()
 	}
 
@@ -390,7 +456,9 @@ func (s *liveSession) Request(ctx context.Context, method string, params json.Ra
 	}
 
 	s.mu.Lock()
-	if len(s.perms) >= 100 {
+	// The cap is on the requests that wait for a person; the answered ones stay known only so a
+	// second answer is refused, and never count against it.
+	if s.waitingPermissionsLocked() >= chat.MaxOpenPermissions {
 		s.mu.Unlock()
 
 		return PermissionOutcome("", true), nil
@@ -515,7 +583,7 @@ func (s *liveSession) runTurn(gen int, blocks []string) {
 	timer := time.AfterFunc(s.h.lim.Turn, func() { s.stopTurn(gen) })
 	defer timer.Stop()
 
-	stop, err := s.conn.Prompt(s.ctx, s.acpID, blocks...)
+	stop, err := s.conn.Prompt(s.ctx, s.agentSession(), blocks...)
 
 	s.finishTurn(gen, stop, err)
 }
@@ -531,7 +599,7 @@ func (s *liveSession) stopTurn(gen int) {
 		return
 	}
 
-	_ = s.conn.Cancel(s.acpID)
+	_ = s.conn.Cancel(s.agentSession())
 	s.cancelPermissions()
 
 	time.AfterFunc(s.h.lim.CancelGrace, func() {

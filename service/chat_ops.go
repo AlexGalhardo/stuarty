@@ -41,7 +41,7 @@ func (s *svc) chatPerson(ctx context.Context, method, projectID string) (Caller,
 		return Caller{}, chatPersonError()
 	}
 
-	return authorize(ctx, method, projectID)
+	return s.authorizeProject(ctx, method, projectID)
 }
 
 func chatSessionNotFound() *Error {
@@ -530,7 +530,7 @@ func (s *svc) ChatAnswerPermission(ctx context.Context, req ChatAnswerRequest) (
 }
 
 func (s *svc) ChatSessionList(ctx context.Context, req ChatSessionListRequest) (*ChatSessionListResult, error) {
-	c, err := authorize(ctx, "ChatSessionList", req.ProjectID)
+	c, err := s.authorizeProject(ctx, "ChatSessionList", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}
@@ -569,9 +569,23 @@ func (s *svc) ChatTranscriptGet(ctx context.Context, req ChatTranscriptRequest) 
 		return nil, err
 	}
 
-	// The event that is still being written is stored now, so that the page has it whole.
+	// The event that is still being written is not in the store yet: it is read from the live
+	// session, before the store, and added when the store does not have it by then. A read stores
+	// nothing, so it never cuts a message the agent is still writing in two.
+	var pending *chat.Event
+
 	if s.agents != nil {
-		s.agents.Flush(row.ID)
+		if ev, ok := s.agents.Pending(row.ID); ok {
+			pending = &ev
+		}
+	}
+
+	withPending := func(events []chat.Event, after int64) []chat.Event {
+		if pending == nil || pending.Seq <= after || (len(events) > 0 && pending.Seq <= events[len(events)-1].Seq) {
+			return events
+		}
+
+		return append(events, *pending)
 	}
 
 	// The count is that of the store, written with the event.
@@ -593,6 +607,10 @@ func (s *svc) ChatTranscriptGet(ctx context.Context, req ChatTranscriptRequest) 
 		events, err := s.store.Chat().EventList(ctx, row.ID, after, limit)
 		if err != nil {
 			return nil, asError(err)
+		}
+
+		if len(events) < limit {
+			events = withPending(events, after)
 		}
 
 		res := &ChatTranscriptResult{Session: view, Events: events}
@@ -619,6 +637,8 @@ func (s *svc) ChatTranscriptGet(ctx context.Context, req ChatTranscriptRequest) 
 
 			after = page[len(page)-1].Seq
 		}
+
+		all = withPending(all, 0)
 
 		return &ChatTranscriptResult{Session: view, Markdown: chat.RenderMarkdown(chat.Transcript{
 			SessionID: row.ID, ProjectID: row.ProjectID, Profile: row.Profile, Title: row.Title,

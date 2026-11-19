@@ -43,6 +43,9 @@ type recorder struct {
 	seq    int64
 	open   *chat.Event
 	openID string
+	// sent is how much of the text of open the subscribers have: a tail that could be the start of
+	// a secret is held back until the next chunk shows whether it is one.
+	sent   int
 	tools  map[string]*chat.Event
 	subs   map[chan chat.Event]struct{}
 	closed bool
@@ -80,6 +83,85 @@ func (r *recorder) scrub(text string) string {
 	}
 
 	return text
+}
+
+// Scrub replaces the secrets of the session in a text that is not an event (the diagnostic of a
+// failed start).
+func (r *recorder) Scrub(text string) string {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	return r.scrub(text)
+}
+
+// heldLocked is how many bytes at the end of text could be the start of a secret; the stream holds
+// them back, so a secret that an agent splits across chunks never reaches a subscriber whole.
+func (r *recorder) heldLocked(text string) int {
+	held := 0
+
+	for _, s := range r.secrets {
+		for k := min(len(s)-1, len(text)); k > held; k-- {
+			if strings.HasSuffix(text, s[:k]) {
+				held = k
+				break
+			}
+		}
+	}
+
+	return held
+}
+
+// scrubEventLocked replaces the secrets in every text of an event the recorder did not build from
+// chunks: a notice with the agent's error, a permission request and its options.
+func (r *recorder) scrubEventLocked(ev *chat.Event) {
+	ev.Text = r.scrub(ev.Text)
+
+	if ev.Permission != nil {
+		p := *ev.Permission
+		p.Title, p.ToolKind = r.scrub(p.Title), r.scrub(p.ToolKind)
+
+		opts := make([]chat.Option, len(p.Options))
+		for i, o := range p.Options {
+			opts[i] = chat.Option{ID: r.scrub(o.ID), Name: r.scrub(o.Name), Kind: o.Kind}
+		}
+
+		p.Options = opts
+		ev.Permission = &p
+	}
+
+	if ev.Tool != nil {
+		t := *ev.Tool
+		t.Title, t.Kind, t.Output = r.scrub(t.Title), r.scrub(t.Kind), r.scrub(t.Output)
+		ev.Tool = &t
+	}
+}
+
+// publishOpenLocked sends what subscribers do not have yet of the event still growing: the whole
+// event the first time, then the new text as an append frame, short of a tail that could be the
+// start of a secret. With all, the held tail goes too: the event is complete.
+func (r *recorder) publishOpenLocked(first, all bool) {
+	text := r.open.Text
+
+	visible := len(text)
+	if !all {
+		visible -= r.heldLocked(text)
+	}
+
+	if first {
+		ev := clone(*r.open)
+		ev.Text = text[:visible]
+		r.sent = visible
+		r.publish(ev)
+
+		return
+	}
+
+	if visible <= r.sent {
+		return
+	}
+
+	r.publish(chat.Event{Seq: r.open.Seq, Kind: r.open.Kind, At: r.open.At, Text: text[r.sent:visible], Append: true})
+	r.sent = visible
 }
 
 // count is how many events the transcript holds.
@@ -154,8 +236,10 @@ func (r *recorder) flushLocked() {
 		return
 	}
 
+	// The event is complete: a tail held back as the possible start of a secret was not one.
+	r.publishOpenLocked(false, true)
 	r.persist(r.open)
-	r.open, r.openID = nil, ""
+	r.open, r.openID, r.sent = nil, "", 0
 }
 
 // Flush writes the event that is still growing.
@@ -166,9 +250,26 @@ func (r *recorder) Flush() {
 	r.flushLocked()
 }
 
+// Pending is the event still growing, whole, as a read of the transcript shows it; false when
+// there is none. Reading it changes nothing: the next chunk still continues it.
+func (r *recorder) Pending() (chat.Event, bool) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	if r.open == nil {
+		return chat.Event{}, false
+	}
+
+	ev := clone(*r.open)
+	ev.Text = ev.Text[:len(ev.Text)-r.heldLocked(ev.Text)]
+
+	return ev, true
+}
+
 // emitLocked records a complete event.
 func (r *recorder) emitLocked(ev chat.Event) (chat.Event, bool) {
 	r.flushLocked()
+	r.scrubEventLocked(&ev)
 
 	if !r.next(&ev) {
 		return ev, false
@@ -237,8 +338,10 @@ func (r *recorder) Chunk(kind chat.Kind, messageID, text string) bool {
 			text, _ = chat.Clip(text, room)
 		}
 
+		// A secret may be split across chunks: the whole text is scrubbed again, and the stream
+		// is sent only what can no longer turn out to be part of one.
 		r.open.Text = r.scrub(r.open.Text + text)
-		r.publish(chat.Event{Seq: r.open.Seq, Kind: kind, At: r.open.At, Text: text, Append: true})
+		r.publishOpenLocked(false, false)
 
 		return true
 	}
@@ -253,7 +356,7 @@ func (r *recorder) Chunk(kind chat.Kind, messageID, text string) bool {
 	}
 
 	r.open, r.openID = &ev, messageID
-	r.publish(ev)
+	r.publishOpenLocked(true, false)
 
 	return true
 }
@@ -276,7 +379,7 @@ func (r *recorder) Tool(u Update) bool {
 		}
 
 		if u.HasTool["kind"] {
-			ev.Tool.Kind = u.Tool.Kind
+			ev.Tool.Kind = r.scrub(u.Tool.Kind)
 		}
 
 		if u.HasTool["status"] {
@@ -294,7 +397,7 @@ func (r *recorder) Tool(u Update) bool {
 	}
 
 	tool := *u.Tool
-	tool.Title, tool.Output = r.scrub(tool.Title), r.scrub(tool.Output)
+	tool.Title, tool.Kind, tool.Output = r.scrub(tool.Title), r.scrub(tool.Kind), r.scrub(tool.Output)
 	ev := chat.Event{Kind: chat.KindToolCall, Tool: &tool}
 
 	if !r.next(&ev) {
@@ -352,8 +455,12 @@ func (r *recorder) Subscribe(ctx context.Context, after int64) (*Subscription, e
 		after = page[len(page)-1].Seq
 	}
 
+	// The open event as the other subscribers have it, so the append frames that follow continue
+	// it exactly.
 	if r.open != nil && (len(snap) == 0 || r.open.Seq > snap[len(snap)-1].Seq) {
-		snap = append(snap, clone(*r.open))
+		ev := clone(*r.open)
+		ev.Text = ev.Text[:r.sent]
+		snap = append(snap, ev)
 	}
 
 	ch := make(chan chat.Event, subBuffer)
