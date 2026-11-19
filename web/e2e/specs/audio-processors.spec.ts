@@ -130,6 +130,19 @@ test.describe("audio processors", () => {
 			timeout: 60_000,
 		});
 		await expect(meters.getByRole("row", { name: /After/ })).toBeVisible();
+
+		// The processed sound is an audio-only render of the item (format wav) by the mixer of the export, then played
+		// from the file of the job (SDD-004 section 7.1).
+		const render = page.waitForRequest(
+			(r) => r.method() === "POST" && (r.postData() ?? "").includes('"wav"'),
+		);
+		await section
+			.getByRole("button", { name: "Listen to the processed sound" })
+			.click();
+		await render;
+		const player = section.getByLabel("Processed sound");
+		await expect(player).toBeVisible({ timeout: 90_000 });
+		await expect(player).toHaveAttribute("src", /.+/);
 	});
 
 	test("a track has a chain of its own", async ({ page, request }) => {
