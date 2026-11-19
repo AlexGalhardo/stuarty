@@ -1962,7 +1962,7 @@ Implements RF-341 and RF-342 (PRD-004), author decisions D-062 and D-075, and ep
 
 | Route | Page component | Holds |
 | --- | --- | --- |
-| `GET /edit-image` | `pages/EditImage/Index.tsx` | the documents and the templates, newest first, "New image" (a preset or a size) and "New from template" |
+| `GET /edit-image` | `pages/EditImage/Index.tsx` | the documents and, in a list of their own, the templates, newest first; "New image" (a preset or a size, and "Make it a template", the `template` flag of `image.create`) and "New from template" |
 | `GET /edit-image/{image_id}` | `pages/EditImage/Show.tsx` | the editor of one document |
 
 A controller validates the shape of `image_id` (`img_` and ten characters, SDD-000 section 2) and renders the page with that id; it computes nothing. The page reads the document through `GET /api/v1/images/{id}` and sends every change through `POST /api/v1/images/{id}/edit`, the calls of SDD-021 section 11. `edit-image` leaves the list of empty sections of section 23.1.
