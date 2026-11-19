@@ -8,7 +8,7 @@ import (
 )
 
 // Golden cases of audio.processor_add, audio.processor_set, audio.processor_move, audio.processor_remove and
-// audio.apply_preset (SDD-002 C.78 to C.82).
+// audio.apply_preset (SDD-002 C.79 to C.83).
 
 func init() {
 	processorAddCases()

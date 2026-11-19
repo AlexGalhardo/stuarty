@@ -195,7 +195,7 @@ func TestAudioMeasureRefusesWhatItCannotMeasure(t *testing.T) {
 	}
 }
 
-// The presets of audio.apply_preset (SDD-002 C.82): each gives a valid chain that reaches the plan of the mix, with the
+// The presets of audio.apply_preset (SDD-002 C.83): each gives a valid chain that reaches the plan of the mix, with the
 // parameters complete, and applying one twice changes nothing more.
 func TestAudioPresetsReachThePlan(t *testing.T) {
 	t.Parallel()

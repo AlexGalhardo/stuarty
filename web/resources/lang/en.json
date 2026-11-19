@@ -1312,6 +1312,7 @@
         "L_AUDIO_CLIP": "Audio clipping",
         "L_LOUDNESS": "Loudness off target",
         "L_DURATION_LIMIT": "Over the duration limit",
+        "L_ALPHA_MISSING": "Transparency declared but missing",
         "L_AUDIO_LIMITER_NOT_LAST": "Limiter is not last in the chain",
         "L_AUDIO_NOISE_REDUCTION_REPEATED": "More than one noise reduction"
       },

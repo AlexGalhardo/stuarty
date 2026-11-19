@@ -166,6 +166,12 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.ViewSheet)
 	case "AudioMeasure":
 		return invoke(ctx, s, svc.AudioMeasure)
+	case "MotionBrief":
+		return invoke(ctx, s, svc.MotionBrief)
+	case "MotionCheck":
+		return invoke(ctx, s, svc.MotionCheck)
+	case "MotionReplace":
+		return invoke(ctx, s, svc.MotionReplace)
 	case "Doctor":
 		return invoke(ctx, s, svc.Doctor)
 	case "FontList":
@@ -618,6 +624,12 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 		}
 
 		return "view", args, nil
+	case "MotionBrief":
+		delete(args, "track_id") // the tool has no track: SDD-011 section 15.5
+
+		args["mode"] = "motion"
+
+		return "view", args, nil
 	case "ProjectDescribe":
 		args["detail"] = "overview"
 
@@ -993,6 +1005,26 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 		argv = append(argv, flag("from", a.Start)...)
 
 		return "view", append(argv, flag("until", a.End)...), "", nil
+	case "MotionBrief":
+		argv = append(slices.Clone(proj), flag("from", a.From)...)
+		argv = append(argv, flag("until", a.Until)...)
+
+		return "motion:brief", append(argv, flag("track", a.TrackID)...), "", nil
+	case "MotionCheck":
+		argv = append(slices.Clone(proj), flag("asset", a.AssetID)...)
+		argv = append(argv, flag("from", a.From)...)
+		argv = append(argv, flag("until", a.Until)...)
+
+		return "motion:check", append(argv, flag("track", a.TrackID)...), "", nil
+	case "MotionReplace":
+		argv = append(slices.Clone(proj), flag("asset", a.AssetID)...)
+		argv = append(argv, flag("render-key", a.RenderKey)...)
+
+		if a.DryRun {
+			argv = append(argv, "--dry-run")
+		}
+
+		return "motion:replace", argv, "", nil
 	case "Doctor":
 		return "doctor", []string{"--full"}, "", nil
 	case "FontList":

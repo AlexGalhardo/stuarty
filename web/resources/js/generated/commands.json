@@ -354,7 +354,7 @@
 		"internal": false,
 		"name": "audio.apply_preset",
 		"scope": "edit",
-		"summary": "Apply preset"
+		"summary": "Preset"
 	},
 	{
 		"args_schema": {
@@ -975,7 +975,7 @@
 		"internal": false,
 		"name": "audio.processor_move",
 		"scope": "edit",
-		"summary": "Move processor"
+		"summary": "Move"
 	},
 	{
 		"args_schema": {
@@ -1017,7 +1017,7 @@
 		"internal": false,
 		"name": "audio.processor_remove",
 		"scope": "edit",
-		"summary": "Remove processor"
+		"summary": "Remove"
 	},
 	{
 		"args_schema": {
