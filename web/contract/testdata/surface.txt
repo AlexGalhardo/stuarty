@@ -1,4 +1,5 @@
 command agent:docs
+command agent:profiles
 command approval:decide
 command approval:list
 command approval:rule:list
@@ -19,6 +20,9 @@ command briefing:answer
 command briefing:questions
 command bundle:export
 command bundle:import
+command chat:session
+command chat:sessions
+command chat:transcript
 command command:help
 command connection:add
 command connection:list
@@ -109,10 +113,13 @@ command transcribe
 command undo
 command version
 command view
+route DELETE /agents/profiles/{}
 route DELETE /approval-rules/{}
+route DELETE /chat/sessions/{}
 route DELETE /connections/{}
 route DELETE /keys/{}
 route DELETE /library/memory/{}
+route GET /agents/profiles
 route GET /approval-rules
 route GET /approvals
 route GET /approvals/events
@@ -123,6 +130,9 @@ route GET /assets/{}/uses
 route GET /audit
 route GET /brand-kit
 route GET /briefing/questions
+route GET /chat/sessions/{}
+route GET /chat/sessions/{}/events
+route GET /chat/sessions/{}/transcript
 route GET /commands
 route GET /commands/{}
 route GET /connections
@@ -152,6 +162,7 @@ route GET /projects
 route GET /projects/{}
 route GET /projects/{}/bitmaps/{}
 route GET /projects/{}/brief
+route GET /projects/{}/chat/sessions
 route GET /projects/{}/describe
 route GET /projects/{}/events
 route GET /projects/{}/export-check
@@ -186,6 +197,9 @@ route PATCH /users/{}
 route POST /approval-rules
 route POST /approvals/{}/decide
 route POST /assets/{}/tags
+route POST /chat/sessions/{}/cancel
+route POST /chat/sessions/{}/messages
+route POST /chat/sessions/{}/permissions/{}
 route POST /connections
 route POST /connections/{}/test
 route POST /fonts
@@ -205,6 +219,7 @@ route POST /library/skills/{}/review
 route POST /projects
 route POST /projects/import
 route POST /projects/{}/bundle
+route POST /projects/{}/chat/sessions
 route POST /projects/{}/duplicate
 route POST /projects/{}/edit
 route POST /projects/{}/export-batches
@@ -236,6 +251,7 @@ route POST /templates/{}/instantiate
 route POST /text/generate
 route POST /trash/empty
 route POST /users
+route PUT /agents/profiles/{}
 route PUT /assets/{}
 route PUT /brand-kit
 route PUT /cost/ceilings

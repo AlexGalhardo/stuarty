@@ -357,7 +357,11 @@ func askPermission(sid string) string {
 
 // callMCP runs "mcp <tool> <json arguments>" against the first MCP server it was given.
 func callMCP(text string) string {
-	fields := strings.SplitN(strings.TrimSpace(text), " ", 3)
+	// The person's message is the last line: the sentence Stuarty puts ahead of the first message
+	// comes before it.
+	lines := strings.Split(strings.TrimSpace(text), "\n")
+	fields := strings.SplitN(strings.TrimSpace(lines[len(lines)-1]), " ", 3)
+
 	if len(fields) < 2 || fields[0] != "mcp" || len(mcp) == 0 {
 		return "mcp: nothing to call"
 	}
