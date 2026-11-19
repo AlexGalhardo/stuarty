@@ -64,6 +64,7 @@ var parity = []row{
 	{method: "JobList", tool: "job_get", command: "job:list", route: "GET /projects/{}/jobs"},
 	{method: "ViewFrame", tool: "view", command: "view", route: "GET /projects/{}/frame"},
 	{method: "ViewSheet", tool: "view", command: "view", route: "GET /projects/{}/sheet"},
+	{method: "AudioMeasure", tool: "view", command: "view", route: "GET /projects/{}/audio-measure"},
 	// The hand-off from an external motion engine (SDD-011 section 15): view with mode motion.
 	{method: "MotionBrief", tool: "view", command: "motion:brief", route: "GET /projects/{}/motion/brief"},
 	// The check has no tool: the tool list has no room for it (SDD-011 section 15.5).

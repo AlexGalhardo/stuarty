@@ -10,8 +10,6 @@ metadata:
 
 Edit video by commands: CLI `stuarty` or MCP (`stuarty mcp`). Output is text; `--json` is JSON.
 
-Workspace: `~/.stuarty` or `$STUARTY_HOME`; `serve` shares it with the browser.
-
 ## The loop
 
 1. Read: `project:show --project <id>` (text; note `rev`).
@@ -47,9 +45,9 @@ Prefix: `stuarty`.
 
 `project:show` lists tracks top to bottom, then items timed `2s/60f`. Diff: `+` added, `~` changed, `-` removed.
 
-Lint rules (`!` blocks export):
+Lint rules (`!` blocks export, the rest warn):
 
-{{range .Rules}}- `{{.Code}}`{{if eq .Blocks "yes"}} !{{end}} {{.Severity}}: {{.Fix}}
+{{range .Rules}}- `{{.Code}}`{{if eq .Blocks "yes"}} !{{end}}: {{.Fix}}
 {{end}}
 ## Errors and recovery
 

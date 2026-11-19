@@ -1,6 +1,6 @@
 ---
 title: "view"
-description: "View frame or sheet. See the result."
+description: "View frame, sheet or sound. See the result."
 wide: true
 ---
 
@@ -10,7 +10,7 @@ wide: true
 
 <RefMain>
 
-See the result. mode=frame: one image at time at; sheet: a grid of frames with their times (count frames from..until, or times); motion: what an external render of from..until must fit (size, rate, safe area, brand kit, captions, frames). Images cost tokens: read project_get and lint first.
+See the result. mode=frame: one image at time at; sheet: a grid of frames with their times (count frames from..until, or times); motion: what an external render of from..until must fit (size, rate, safe area, brand kit, captions, frames); audio: loudness, true peak and noise floor before and after the audio processors, of item_id or from..until. Images cost tokens: read project_get and lint first.
 
 ## Behaviour
 
@@ -29,7 +29,8 @@ These are the annotations of the tool definition, the hints a client uses to dec
 | --- | --- | --- | --- |
 | `project_id` | `string` | yes | pattern `^prj_[0-9a-hjkmnp-tv-z]{10}$` |
 | `timeline_id` | `string` | no | pattern `^prj_[0-9a-hjkmnp-tv-z]{10}$` |
-| `mode` | `frame`, `sheet`, `motion` | no | default `"frame"` |
+| `mode` | `frame`, `sheet`, `motion`, `audio` | no | default `"frame"` |
+| `item_id` | `string` | no | pattern `^itm_[0-9a-hjkmnp-tv-z]{10}$` |
 | `at` | `string` | no | Time: 12.5s or 375f. Required in mode frame. |
 | `times` | array of `string` | no | at least 2 items; at most 16 items |
 | `from` | `string` | no |  |
@@ -44,9 +45,9 @@ A result has a text block, written for the model, and structured content with th
 | Member | Type | Always present | Notes |
 | --- | --- | --- | --- |
 | `revision` | `integer` | yes |  |
-| `width` | `integer` | yes |  |
-| `height` | `integer` | yes |  |
-| `image_tokens` | `integer` | yes |  |
+| `width` | `integer` | no |  |
+| `height` | `integer` | no |  |
+| `image_tokens` | `integer` | no |  |
 | `cells` | array of `object` | no |  |
 | `path` | `string` | no |  |
 

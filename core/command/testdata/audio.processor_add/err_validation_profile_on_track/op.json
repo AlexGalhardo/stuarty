@@ -1,0 +1,11 @@
+{
+  "op": "audio.processor_add",
+  "args": {
+    "track_id": "trk_m1n2p3q4r5",
+    "kind": "noise_reduction",
+    "params": {
+      "profile_start_ms": 0,
+      "profile_end_ms": 500
+    }
+  }
+}

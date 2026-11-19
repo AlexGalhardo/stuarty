@@ -45,7 +45,7 @@ func init() {
 
 	Register(Define(Spec{
 		Name:    "item.set_audio",
-		Summary: "Sets the volume, the fades, the mute flag, the noise reduction or the voice of a clip or audio item.",
+		Summary: "Sets the volume, fades, mute, noise reduction or voice of a clip or audio item.",
 		Description: "Sets the given values. Volume 1, fades of 0, audio_muted false, denoise 0 and voice none clear " +
 			"the stored value. audio_muted applies to clip items only. denoise is the noise reduction strength, 0 to " +
 			"1. voice is a preset for speech: clear, warm, deep, bright or radio. The two fades together cannot be " +
