@@ -167,6 +167,8 @@
       "image"
     ],
     "operations": [
+      "animation.apply_preset",
+      "animation.list_presets",
       "asset.remove",
       "audio.add",
       "audio.duck",

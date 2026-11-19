@@ -4,6 +4,100 @@
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "additionalProperties": false,
       "properties": {
+        "amount": {
+          "description": "slide: distance in pixels; scale: factor at the far end; push_in and pull_out: zoom factor. Per preset default.",
+          "type": "number"
+        },
+        "direction": {
+          "description": "slide only: the side it comes from or leaves to. Default left.",
+          "enum": [
+            "left",
+            "right",
+            "up",
+            "down"
+          ],
+          "type": "string"
+        },
+        "duration": {
+          "description": "A length, at most the item's duration. Default 0.5s; the whole item for push_in and pull_out.",
+          "type": "string",
+          "x-vv-kind": "time"
+        },
+        "edge": {
+          "description": "in animates the start of the item, out its end. Default in.",
+          "enum": [
+            "in",
+            "out"
+          ],
+          "type": "string"
+        },
+        "item_id": {
+          "description": "A clip, text, caption or shape item.",
+          "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+          "type": "string"
+        },
+        "preset": {
+          "description": "The animation.",
+          "enum": [
+            "fade",
+            "slide",
+            "scale",
+            "pop",
+            "push_in",
+            "pull_out"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "item_id",
+        "preset"
+      ],
+      "type": "object"
+    },
+    "description": "Writes ordinary keyframes (with a Bezier easing where the preset needs a curve) on the first duration frames (edge in) or the last ones (edge out) of a clip, text, caption or shape item; edit them afterwards with keyframe.set and keyframe.set_easing. Keyframes of the same properties inside that window are replaced, the rest are kept. duration is at most the item's duration, default 0.5s (the whole item for push_in and pull_out). direction is for slide; amount is the slide distance in pixels, the scale factor of scale, or the zoom factor of push_in and pull_out. animation.list_presets describes them.",
+    "errors": [
+      "E_VALIDATION",
+      "E_INVALID_TIME",
+      "E_NOT_FOUND",
+      "E_TYPE_MISMATCH",
+      "E_LIMIT"
+    ],
+    "example": {
+      "direction": "left",
+      "duration": "0.5s",
+      "edge": "in",
+      "item_id": "itm_s6t7v8w9x0",
+      "preset": "slide"
+    },
+    "internal": false,
+    "name": "animation.apply_preset",
+    "scope": "edit",
+    "summary": "Animates the start or the end of a visual item with a preset: fade, slide, scale, pop, push in or pull out."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {},
+      "required": [],
+      "type": "object"
+    },
+    "description": "Changes nothing. The result lists, for each preset of animation.apply_preset, what it animates and the range and default of its parameters, and the four numbers of each named curve of keyframe.set_easing.",
+    "errors": [
+      "E_VALIDATION"
+    ],
+    "example": {},
+    "internal": false,
+    "name": "animation.list_presets",
+    "scope": "edit",
+    "summary": "Describes the animation presets and the named Bezier curves."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
         "asset": {
           "additionalProperties": false,
           "description": "An Asset object of SDD-001 section 3.2.",

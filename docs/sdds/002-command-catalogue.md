@@ -1,7 +1,7 @@
 # SDD-002: Command catalogue of the core
 
 - Amended (2026-11-18) for Stuarty: this is the catalogue of the video domain. Other domains get their own catalogue (ADR-0031, ADR-0038).
-- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen: all 75 commands have golden cases and pass the registry-wide gates. The binary exposes all 75 commands, 74 of them public; `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
+- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen: all 77 commands have golden cases and pass the registry-wide gates. The binary exposes all 77 commands, 76 of them public; `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
 - Depends on: SDD-001 (document), ADR-0002 (command core), ADR-0004 (time), ADR-0006 (log, concurrency, undo), ADR-0014 (JSON Schema)
 - Implements: RF-010 to RF-016, RF-020 to RF-026, RF-030 to RF-036, RF-040, RF-041, RF-050, RF-051, RF-100, RF-105, RF-107, RF-112 to RF-115, RF-119, NFR-001, NFR-025
 - Owner area: senior-a (command core and schema)
@@ -6119,3 +6119,106 @@ Changes how the segment that starts at an existing keyframe moves (RF-080): a na
 - `err_not_found_no_keyframe_at`
 - `err_invalid_time_outside_the_item`
 - `err_type_mismatch_crop_on_text`
+
+### C.76 `animation.apply_preset`
+
+Applies a layer animation to a visual item (RF-082). The preset expands in the core into ordinary keyframes (SDD-001 §3.8, with a Bezier easing where the preset needs a curve), so the result is edited with the keyframe commands and nothing new reaches the plan, the export or the preview. `animation.list_presets` (C.77) describes the presets.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | yes | none | a `clip`, `text`, `caption` or `shape` item |
+| `preset` | `"fade"`, `"slide"`, `"scale"`, `"pop"`, `"push_in"`, `"pull_out"` | yes | none | table below |
+| `edge` | `"in"`, `"out"` | no | `"in"` | `in` animates the first `duration` frames of the item, `out` the last `duration` frames |
+| `duration` | time, as a length | no | `"0.5s"`; for `push_in` and `pull_out` the whole item | 1 frame up to the duration of the item |
+| `direction` | `"left"`, `"right"`, `"up"`, `"down"` | no | `"left"` | `slide` only (else `E_VALIDATION`): the side the item comes from (`in`) or leaves to (`out`) |
+| `amount` | number | no | per preset | `slide`: the distance in project pixels, 1 to 10,000, default a quarter of the width (`left`, `right`) or of the height (`up`, `down`); `scale`: the factor at the far end, 0.01 to 20, default 0.5; `push_in` and `pull_out`: the zoom factor, above 1 up to 4, default 1.2; `fade` and `pop` take none (else `E_VALIDATION`) |
+
+Let `v` be the value of the property where the animation meets the rest of the item: its static value, or its keyframed value at the inner edge of the window (the end of an `in` window, the start of an `out` window). For `push_in` and `pull_out` it is the value at the start of the window.
+
+| Preset | Property | `edge` `in` | `edge` `out` | Easing of the segment |
+| --- | --- | --- | --- | --- |
+| `fade` | `opacity` | 0 to `v` | `v` to 0 | linear |
+| `slide` | `x` for `left` and `right`, `y` for `up` and `down` | from `v` minus (`left`, `up`) or plus (`right`, `down`) the distance, to `v` | the reverse | `out` for in, `in` for out (the Bezier presets of C.75) |
+| `scale` | `scale` | `amount` × `v` to `v` | `v` to `amount` × `v` | `out` for in, `in` for out |
+| `pop` | `scale` | 0.001 to `v` | `v` to 0.001 | `overshoot` for in, `back` for out |
+| `push_in` | `scale` | `v` to `v` × `amount` | the same | `in_out` |
+| `pull_out` | `scale` | `v` to `v` ÷ `amount` | the same | `in_out` |
+
+**Preconditions.**
+
+1. Arguments match the schema; `duration` parses (`E_VALIDATION`, `E_INVALID_TIME`); `direction` and `amount` are given only where the table takes them (`E_VALIDATION`).
+2. The item exists (`E_NOT_FOUND`) and is not an `audio` item (`E_TYPE_MISMATCH`).
+3. `duration` is at most the duration of the item (`E_INVALID_TIME`, `path` `args.duration`): a preset longer than its item is refused, not cut.
+4. A value the preset would write is valid for the property (`scale` above 0 and at most 20: `E_VALIDATION`, `path` `args.amount`).
+5. The property ends with at most 100 keyframes (`E_LIMIT`).
+
+**Postconditions.** Let `D` be the duration of the item and `d` the duration of the preset.
+
+1. For `edge` `in`, the window is `t` from 0 to `d`: the keyframes of the property inside it are removed and two are written, `{0, from}` with the easing of the table and `{d, v}` (the easing of the keyframe that governed `d` before, or linear: the segment it cuts keeps its shape). Keyframes after `d` stay. For `edge` `out`, the window is `t` from `D - d` to `D`: the keyframes inside it are removed and `{D - d, start}` with the easing of the table and `{D, end}` (linear) are written; keyframes before `D - d` stay. When the property had no keyframes, `v` is its static value (R10, which is the frame centre for an unset `x` or `y`).
+2. A property the preset does not animate, and the static fields, are not changed. Applying `in` and then `out` to one item gives both ends.
+3. `diff` has one `item.updated` with `keyframes`. `effective` has `properties` (the animated property names), `edge`, `duration` (the A.4 triple) and `keyframes` (how many were written).
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | unknown preset or direction, `direction` or `amount` where it is not taken, an amount out of range | `args.amount 30 makes a scale above 20 for itm_s6t7v8w9x0.` | `Use a smaller amount.` |
+| `E_INVALID_TIME` | malformed or zero `duration`, or longer than the item | `args.duration "5s" is 150 frames; item itm_s6t7v8w9x0 lasts 90.` | `Use a duration of at most "90f".` |
+| `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
+| `E_TYPE_MISMATCH` | an audio item | `Animation presets apply to visual items; item itm_s6t7v8w9x0 is an audio item.` | `Use keyframe.set with volume for audio items.` |
+| `E_LIMIT` | would pass 100 keyframes | as `keyframe.set` | as `keyframe.set` |
+
+**Inverse.** `patch {collection: "items", id, set: {keyframes: <old>}}` or `unset: ["keyframes"]`.
+
+**Idempotency.** Same result when applied twice with the same arguments.
+
+**Example.** 30 fps; text item `itm_s6t7v8w9x0`, `start` 30, `duration` 90, no keyframes.
+
+```json
+{"op": "animation.apply_preset", "args": {"item_id": "itm_s6t7v8w9x0", "preset": "fade", "duration": "1s"}}
+```
+
+It writes the `opacity` keyframes `{"t": 0, "value": 0}` and `{"t": 30, "value": 1}`.
+
+**Golden cases.**
+
+- `ok_fade_in`
+- `ok_fade_out`
+- `ok_slide_in_from_left`
+- `ok_slide_out_to_the_bottom`
+- `ok_slide_with_distance`
+- `ok_scale_in`
+- `ok_pop_in`
+- `ok_pop_out`
+- `ok_push_in_the_whole_item`
+- `ok_pull_out_on_text`
+- `ok_in_then_out_gives_both_ends`
+- `ok_replaces_the_keyframes_inside_the_window`
+- `ok_keeps_the_keyframes_outside_the_window`
+- `ok_shape_item`
+- `err_validation_unknown_preset`
+- `err_validation_direction_on_fade`
+- `err_validation_amount_on_pop`
+- `err_validation_scale_above_20`
+- `err_invalid_time_duration_longer_than_the_item`
+- `err_invalid_time_duration_zero`
+- `err_not_found`
+- `err_type_mismatch_audio_item`
+- `err_limit_101_keyframes`
+
+### C.77 `animation.list_presets`
+
+Describes what `animation.apply_preset` and `keyframe.set_easing` accept, for an agent that has not read this document. It changes nothing: `diff` is empty and so is the inverse.
+
+**Arguments.** None.
+
+**Postconditions.** `effective` has `presets`, a list in the order of the table of C.76, each `{"id", "summary", "properties", "edges", "parameters"}` (`parameters` lists `duration` and, where taken, `direction` and `amount` with their range and default), and `bezier_presets`, an object from each preset name of C.75 to its four numbers.
+
+**Errors.** `E_VALIDATION` when an argument is given.
+
+**Golden cases.**
+
+- `ok_lists_the_presets`
+- `err_validation_takes_no_arguments`
