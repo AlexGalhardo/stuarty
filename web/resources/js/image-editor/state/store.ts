@@ -1,0 +1,291 @@
+import { createStore, type StoreApi } from "zustand/vanilla";
+
+import { ApiError } from "../../editor/api/errors";
+import type { ImageApi } from "../api/imageApi";
+import type {
+	ImageDocument,
+	ImageEditResult,
+	ImageHistoryEntry,
+	ImageOperation,
+	Layer,
+} from "../api/types";
+import {
+	effectiveZoom,
+	type Point,
+	type Size,
+	zoomAbout,
+} from "../canvas/viewport";
+
+// A view of the document in the browser (SDD-012 section 24.2): the last answer of the server, the selection,
+// the viewport and what the screen says about the other actors. Nothing here is a result of an edit: every
+// change goes out as a batch, and the answer replaces `doc`.
+
+export type LoadState = "loading" | "ready" | "failed";
+
+export interface Viewport {
+	// 1 is 100%. `fit` follows the size of the stage until a person zooms.
+	zoom: number;
+	fit: boolean;
+	panX: number;
+	panY: number;
+}
+
+export interface Notice {
+	kind: "agent";
+	actor: string;
+}
+
+export interface ImageState {
+	imageId: string;
+	doc: ImageDocument | null;
+	load: LoadState;
+	error: ApiError | null;
+	busy: boolean;
+	selection: readonly string[];
+	view: Viewport;
+	// The size of the stage the canvas is drawn in, reported by the canvas.
+	stage: Size;
+	history: readonly ImageHistoryEntry[];
+	// The layers another actor changed with the latest revision, for the outline.
+	changedByOthers: readonly string[];
+	notice: Notice | null;
+}
+
+export interface ImageActions {
+	open(): Promise<void>;
+	// Sends one batch against the revision on screen; resolves with the result, or null when it failed (the
+	// failure is in `error`). `select` picks the layers to select from the result.
+	send(
+		operations: readonly ImageOperation[],
+		select?: (result: ImageEditResult) => readonly string[] | undefined,
+	): Promise<ImageEditResult | null>;
+	undo(): Promise<void>;
+	redo(): Promise<void>;
+	poll(): Promise<void>;
+	refreshHistory(): Promise<void>;
+	select(ids: readonly string[]): void;
+	setView(view: Partial<Viewport>): void;
+	setStage(stage: Size): void;
+	// Zoom by a factor about a point of the stage (the centre when omitted); fit and 100% reset the pan.
+	zoomBy(factor: number, at?: Point): void;
+	fitView(): void;
+	actualSize(): void;
+	clearError(): void;
+	clearNotice(): void;
+}
+
+export type ImageStore = StoreApi<ImageState & ImageActions>;
+
+const INITIAL_VIEW: Viewport = { zoom: 1, fit: true, panX: 0, panY: 0 };
+
+// The ids of the layers of the tree, parents first.
+export function layerIds(layers: readonly Layer[]): string[] {
+	const ids: string[] = [];
+	for (const layer of layers) {
+		ids.push(layer.id);
+		if (layer.children) ids.push(...layerIds(layer.children));
+	}
+	return ids;
+}
+
+function flat(layers: readonly Layer[]): Map<string, string> {
+	const out = new Map<string, string>();
+	const visit = (list: readonly Layer[]): void => {
+		for (const layer of list) {
+			const { children, ...own } = layer;
+			out.set(layer.id, JSON.stringify(own));
+			if (children) visit(children);
+		}
+	};
+	visit(layers);
+	return out;
+}
+
+// The layers that differ between two revisions, for the outline of what another actor did. Display only.
+export function changedLayers(
+	before: readonly Layer[],
+	after: readonly Layer[],
+): string[] {
+	const old = flat(before);
+	const out: string[] = [];
+	for (const [id, text] of flat(after)) {
+		if (old.get(id) !== text) out.push(id);
+	}
+	return out;
+}
+
+function asApiError(error: unknown): ApiError {
+	return error instanceof ApiError
+		? error
+		: new ApiError(0, { code: "E_INTERNAL", message: String(error) });
+}
+
+export function createImageStore(api: ImageApi, imageId: string): ImageStore {
+	let queue: Promise<unknown> = Promise.resolve();
+	// Every call that changes the document runs after the one before it, so each batch is planned against the
+	// revision the previous one made.
+	const enqueue = <T>(task: () => Promise<T>): Promise<T> => {
+		const next = queue.then(task, task);
+		queue = next.catch(() => undefined);
+		return next;
+	};
+
+	return createStore<ImageState & ImageActions>()((set, get) => {
+		const keepSelection = (doc: ImageDocument): readonly string[] => {
+			const ids = new Set(layerIds(doc.layers));
+			return get().selection.filter((id) => ids.has(id));
+		};
+
+		const replace = (
+			doc: ImageDocument,
+			extra: Partial<ImageState> = {},
+		): void => {
+			set({ doc, load: "ready", selection: keepSelection(doc), ...extra });
+		};
+
+		const step = (kind: "undo" | "redo"): Promise<void> =>
+			enqueue(async () => {
+				if (get().doc === null) return;
+				set({ busy: true, error: null });
+				try {
+					await (kind === "undo" ? api.undo(imageId) : api.redo(imageId));
+					replace(await api.describe(imageId), { busy: false });
+					await get().refreshHistory();
+				} catch (error) {
+					set({ busy: false, error: asApiError(error) });
+				}
+			});
+
+		return {
+			imageId,
+			doc: null,
+			load: "loading",
+			error: null,
+			busy: false,
+			selection: [],
+			view: INITIAL_VIEW,
+			stage: { w: 0, h: 0 },
+			history: [],
+			changedByOthers: [],
+			notice: null,
+
+			async open() {
+				try {
+					replace(await api.describe(imageId), { error: null });
+					await get().refreshHistory();
+				} catch (error) {
+					set({ load: "failed", error: asApiError(error) });
+				}
+			},
+
+			send(operations, select) {
+				return enqueue(async () => {
+					const doc = get().doc;
+					if (doc === null) return null;
+					set({ busy: true, error: null });
+					try {
+						const result = await api.edit(imageId, doc.revision, operations);
+						const fresh = await api.describe(imageId);
+						replace(fresh, { busy: false });
+						const picked = select?.(result);
+						if (picked !== undefined) set({ selection: picked });
+						await get().refreshHistory();
+						return result;
+					} catch (error) {
+						const failure = asApiError(error);
+						set({ busy: false, error: failure });
+						// A refused batch leaves the screen as it was; a stale base means another actor moved on.
+						if (failure.code === "E_REVISION_CONFLICT") {
+							try {
+								replace(await api.describe(imageId));
+							} catch {
+								// The next poll catches up.
+							}
+						}
+						return null;
+					}
+				});
+			},
+
+			async undo() {
+				await step("undo");
+			},
+			async redo() {
+				await step("redo");
+			},
+
+			async poll() {
+				const before = get().doc;
+				if (before === null || get().busy) return;
+				try {
+					const fresh = await api.describe(imageId);
+					const now = get().doc;
+					if (now === null || get().busy || fresh.revision <= now.revision)
+						return;
+					const changed = changedLayers(now.layers, fresh.layers);
+					replace(fresh, { changedByOthers: changed });
+					const seen = now.revision;
+					await get().refreshHistory();
+					const other = get().history.find(
+						(entry) => entry.revision > seen && !entry.mine,
+					);
+					if (other) set({ notice: { kind: "agent", actor: other.actor } });
+				} catch {
+					// A poll that fails is tried again at the next tick; a command shows its own errors.
+				}
+			},
+
+			async refreshHistory() {
+				try {
+					const result = await api.history(imageId);
+					set({ history: result.entries });
+				} catch {
+					// The list is a convenience; the document is what matters.
+				}
+			},
+
+			select(ids) {
+				set({ selection: ids });
+			},
+			setView(view) {
+				set({ view: { ...get().view, ...view } });
+			},
+			setStage(stage) {
+				const now = get().stage;
+				if (now.w !== stage.w || now.h !== stage.h) set({ stage });
+			},
+			zoomBy(factor, at) {
+				const { doc, view, stage } = get();
+				if (doc === null) return;
+				const size = { w: doc.width, h: doc.height };
+				const point = at ?? { x: stage.w / 2, y: stage.h / 2 };
+				set({ view: zoomAbout(view, stage, size, factor, point) });
+			},
+			fitView() {
+				set({ view: INITIAL_VIEW });
+			},
+			actualSize() {
+				const { doc, view, stage } = get();
+				if (doc === null) return;
+				const size = { w: doc.width, h: doc.height };
+				const now = effectiveZoom(view, stage, size);
+				set({
+					view: {
+						...zoomAbout(view, stage, size, 1 / now, {
+							x: stage.w / 2,
+							y: stage.h / 2,
+						}),
+						panX: 0,
+						panY: 0,
+					},
+				});
+			},
+			clearError() {
+				set({ error: null });
+			},
+			clearNotice() {
+				set({ notice: null, changedByOthers: [] });
+			},
+		};
+	});
+}
