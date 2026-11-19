@@ -41,6 +41,10 @@ type Exchange struct {
 	Status int
 	// Response is a fixture with the recorded body of the answer.
 	Response string
+	// Body is the literal body of the answer, for a binary answer (an image, audio) that a text fixture cannot
+	// hold; the content type is ContentType. Response and Body are not given together.
+	Body        []byte
+	ContentType string
 	// ResponseHeader is set on the answer.
 	ResponseHeader map[string]string
 }
@@ -100,6 +104,10 @@ func Serve(t *testing.T, dir string, exchanges ...Exchange) *Recorder {
 			w.Header().Set("Content-Type", "application/json")
 		}
 
+		if x.Body != nil && x.ContentType != "" {
+			w.Header().Set("Content-Type", x.ContentType)
+		}
+
 		status := x.Status
 		if status == 0 {
 			status = http.StatusOK
@@ -108,7 +116,13 @@ func Serve(t *testing.T, dir string, exchanges ...Exchange) *Recorder {
 		w.WriteHeader(status)
 
 		if x.Response != "" {
-			_, _ = w.Write(Fixture(t, dir, x.Response))
+			// A recorded answer that names a file of the same server (an image by URL) writes {{ENDPOINT}}.
+			doc := strings.ReplaceAll(string(Fixture(t, dir, x.Response)), "{{ENDPOINT}}", r.Server.URL)
+			_, _ = w.Write([]byte(doc))
+		}
+
+		if x.Body != nil {
+			_, _ = w.Write(x.Body)
 		}
 	}))
 
