@@ -36,7 +36,7 @@ Nobody reading the code or the specifications meets a schedule that no longer ex
 - [x] 1. Remove the phase from the registry and from the snapshot; update the generators. Verify: `task codegen` leaves no diff after a second run; `go build ./...` exits 0.
 - [x] 2. Rewrite the tests that read a phase. Verify: `go test ./core/command/... ./core/schema/...` passes and the count of Part C sections is asserted.
 - [x] 3. Remove the phase column and labels from SDD-002 and the other SDDs. Verify: `git grep -nE "\b(ALPHA|BETA|Prototype)\b|phase [PAB]\b" -- docs/sdds docs/design-system.md` prints nothing.
-- [ ] 4. Simplify `threatcheck`. Verify: `go test ./internal/tools/threatcheck/...` passes and `go run ./internal/tools/threatcheck` prints that every threat has its tests.
+- [x] 4. Simplify `threatcheck`. Verify: `go test ./internal/tools/threatcheck/...` passes and `go run ./internal/tools/threatcheck` prints that every threat has its tests.
 - [ ] 5. Regenerate the TypeScript types and the site reference; fix UI or site text that shows a phase. Verify: `bun run typecheck` in `web/` and `task site:build` exit 0.
 - [ ] 6. Remove the explanatory notes from `docs/README.md` and the "Amended" lines of SDD-002 and SDD-009 that only spoke of phases. Verify: `task lint:md` exits 0.
 
