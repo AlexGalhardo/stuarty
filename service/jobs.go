@@ -984,6 +984,19 @@ func (s *svc) jobView(c Caller, r JobRow, waited bool) *Job {
 		}
 	}
 
+	if r.Kind == JobImageGenerate || r.Kind == JobVoiceGenerate {
+		var in generateInput
+		if json.Unmarshal(r.Input, &in) == nil {
+			estimate := in.Estimate
+			j.Estimate = &estimate
+		}
+
+		var res JobResult
+		if len(r.Result) > 0 && json.Unmarshal(r.Result, &res) == nil && res.Generated != nil {
+			j.Result = &res
+		}
+	}
+
 	j.Text = jobText(j, waited)
 
 	return j
@@ -1014,6 +1027,22 @@ func jobText(j *Job, waited bool) string {
 		// The text of a model is network text: delimited, cleaned and cut like every other (SDD-007 section 8).
 		v.Output = untrusted.Block(untrusted.SourceNetworkText,
 			untrusted.Attrs{"provider": t.Provider, "model": t.Model}, t.Text, untrusted.TranscriptFull)
+	}
+
+	if j.Result != nil && j.Result.Generated != nil {
+		g := j.Result.Generated
+		v.Cost = money(g.Cost.Micros, g.Cost.Currency)
+
+		for i := range g.Items {
+			v.Files = append(
+				v.Files,
+				fmt.Sprintf("%s %s %s", g.Items[i].AssetID, g.Items[i].Kind, textview.Size(g.Items[i].Bytes)),
+			)
+		}
+
+		for _, n := range g.Notes {
+			v.Warnings = append(v.Warnings, "warning: "+n)
+		}
 	}
 
 	for _, w := range j.Warnings {

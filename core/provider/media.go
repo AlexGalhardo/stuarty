@@ -33,6 +33,14 @@ var (
 	sizeRe     = regexp.MustCompile(`^(\d{2,4})x(\d{2,4})$`)
 )
 
+// ValidVoice reports whether s can be a voice id: 1 to 100 characters of letters, digits and . _ : / @ + -, the
+// first a letter or a digit. A voice a provider lists that does not match is dropped, so an id carries no text.
+func ValidVoice(s string) bool { return voiceRe.MatchString(s) }
+
+// ValidLanguage reports whether s is a language tag such as pt-BR: two or three letters, then parts of letters and
+// digits joined by dashes, at most MaxLanguage characters.
+func ValidLanguage(s string) bool { return len(s) <= MaxLanguage && languageRe.MatchString(s) }
+
 // ImageRequest is one request for images (SDD-016 section 5.1).
 type ImageRequest struct {
 	Model  string `json:"model"`
@@ -155,11 +163,11 @@ func ValidateVoice(r VoiceRequest, l VoiceLimits) *FieldError {
 		return f
 	}
 
-	if !voiceRe.MatchString(r.Voice) {
+	if !ValidVoice(r.Voice) {
 		return bad("voice", "must be 1 to %d characters of letters, digits and . _ : / @ + -", MaxVoiceID)
 	}
 
-	if r.Language != "" && (len(r.Language) > MaxLanguage || !languageRe.MatchString(r.Language)) {
+	if r.Language != "" && !ValidLanguage(r.Language) {
 		return bad("language", "must be a language tag such as pt-BR")
 	}
 

@@ -17,6 +17,8 @@ type providerPriceIn struct {
 	Currency            string `json:"currency,omitempty"                                   doc:"Three letters, for example USD; needed to set a price."`
 	InputMicrosPerMTok  *int64 `json:"input_micros_per_mtok,omitempty"                      doc:"The price of a million input tokens, in millionths of the currency unit. Leave both prices out to remove the entry."`
 	OutputMicrosPerMTok *int64 `json:"output_micros_per_mtok,omitempty"                     doc:"The price of a million output tokens, in millionths of the currency unit."`
+	Unit                string `json:"unit,omitempty"                                       doc:"Empty for a price of tokens, image for the price of one image, mchar for the price of a million characters of speech."`
+	UnitMicros          *int64 `json:"unit_micros,omitempty"                                doc:"With a unit of image or mchar: the price of one image or of a million characters, in millionths of the currency unit; the token prices stay out."`
 }
 
 type textGenerateIn struct {
