@@ -1042,6 +1042,27 @@ CREATE UNIQUE INDEX project_items_brief_unique ON project_items (project_id) WHE
 - **Migration.** Backup first: `Open` copies the database with `VACUUM INTO` before a migration runs (section 7 step 3). Then, in one transaction: `ALTER TABLE projects RENAME TO timelines` (SQLite rewrites the foreign keys that name it), rename the index, create the two tables, and for every row of `timelines` insert one `projects` row with the same `id`, `name`, `state`, times, actor, owner and trash columns, and one `project_items` row (kind `timeline`, title = name, position 0, `ref` = the id, the `pit_` id with the characters of the project id, state `active`: the trash of a former project is that of the project, and its restore brings the timeline back through the mirror of the trash rule of this section). Every id a surface exposed is kept. **Down** deletes the items and productions, drops them, and renames `timelines` back to `projects`; a timeline that is not the first of its project (its id differs from its project's) is deleted with its log, which is why the backup comes first. Tests run both directions over fixtures of the workspaces of releases 0.2.0, 0.17.0 and 0.29.0.
 - **Document backups.** `document_backups.owner_kind` stays `project`; `owner_id` is a timeline id.
 
+### 5.12.1 The guided briefing and the brief schema (RF-301, RF-302)
+
+The brief is still one item with one Markdown body (section 5.12); the guided briefing is a way to fill it, and it adds no table and no column. The questions and the rules are data and pure functions of `core/project` (`briefing.go`), so a form, the CLI, the HTTP API and an agent in a chat ask and store the same thing.
+
+| Id | Heading in the brief | Answer | Required |
+| --- | --- | --- | --- |
+| `audience` | Audience | text, at most 400 characters | yes |
+| `goal` | Goal | text, at most 400 | yes |
+| `platform` | Platform | one of `youtube-shorts`, `tiktok`, `instagram-reels`, `facebook-reels`, `other` | yes |
+| `format` | Format | one of `vertical-9x16`, `square-1x1`, `horizontal-16x9` | yes |
+| `duration` | Duration (seconds) | a whole number from 1 to 180 | yes |
+| `tone` | Tone | text, at most 200 | no |
+| `references` | References | text, at most 2000 | no |
+| `must_include` | Must appear | text, at most 1000 | no |
+| `must_avoid` | Must not appear | text, at most 1000 | no |
+| `deadline` | Deadline | a date, `YYYY-MM-DD` | no |
+
+**The schema of the brief the briefing writes** is Markdown: the line `# Brief`, then for each answered question, in the order above, a blank line, `## <heading>`, a blank line and the answer. An unanswered optional question has no section. A line of an answer that starts with `#` is written with a backslash in front, so an answer never makes a heading, and is read back without it. `ParseBriefing` reads the answers back and answers `ok` only for a text of this shape (the title, only known headings, each at most once): a brief written by hand is never taken for one.
+
+**`BriefingAnswer`** validates every answer (`CheckAnswers`: white space trimmed, line ends as LF, an empty answer left out, no control or text direction character, an id that is not a question refused, a required question left unanswered refused; `E_VALIDATION` with `path` `answers.<id>`), writes the Markdown with `BriefSet` (so the audit row is `project.brief.set`, the dry run and the item rules are those of `BriefSet`), and replaces the whole brief. A brief that has text and is not a guided one is not replaced unless `replace` is true (`E_INVALID_STATE`, `path` `replace`), so a briefing never destroys text a person wrote. **`BriefingQuestions`** returns the questions and, given a project, whether it `has_brief`, whether it is `guided` and the answers it holds, for a form to start from what is there. The text of an answer is the user's and is untrusted (SDD-007 section 8).
+
 ### 5.13 `image_documents` and `image_operations` (SDD-021)
 
 Migration `20261119110000_create_image_documents_and_operations`. They follow `projects` and `operations` with the columns an image needs and no more.
