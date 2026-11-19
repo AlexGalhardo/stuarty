@@ -30,7 +30,7 @@ func (r repos) BrandKit() service.BrandKitRepo       { return brandKitRepo(r) }
 func (r repos) Connections() connections.Store       { return connectionRepo(r) }
 func (r repos) Approvals() approval.Store            { return approvalRepo(r) }
 func (r repos) Images() service.ImageRepo            { return imageRepo(r) }
-func (r repos) Library() assets.Store                { return libraryRepo(r) }
+func (r repos) AssetLibrary() assets.Store           { return assetLibraryRepo(r) }
 
 // nullJSON stores an empty raw message as NULL.
 func nullJSON(m json.RawMessage) any {

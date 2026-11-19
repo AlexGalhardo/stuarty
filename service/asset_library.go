@@ -215,7 +215,7 @@ func (s *svc) AssetList(ctx context.Context, req AssetListRequest) (*AssetListRe
 		return nil, serr
 	}
 
-	lib := assets.Library{Store: s.store.Library()}
+	lib := assets.Library{Store: s.store.AssetLibrary()}
 
 	page, lerr := lib.List(ctx, held, &assets.Query{
 		Filter: asset.Filter{
@@ -233,7 +233,7 @@ func (s *svc) AssetList(ctx context.Context, req AssetListRequest) (*AssetListRe
 		res.Assets = []LibraryAsset{}
 	}
 
-	res.Text = libraryText(res.Assets, page.Total)
+	res.Text = assetListText(res.Assets, page.Total)
 
 	if page.Next >= 0 {
 		cur := offsetCursor("assets", "", page.Next)
@@ -244,18 +244,18 @@ func (s *svc) AssetList(ctx context.Context, req AssetListRequest) (*AssetListRe
 	return res, nil
 }
 
-// libraryTextCap is the budget of the text of a list, in characters (SDD-003 section 3.10).
-const libraryTextCap = textview.CapMediaList
+// assetListTextCap is the budget of the text of a list, in characters (SDD-003 section 3.10).
+const assetListTextCap = textview.CapMediaList
 
-func libraryText(list []LibraryAsset, total int) string {
+func assetListText(list []LibraryAsset, total int) string {
 	var b strings.Builder
 
 	b.WriteString(textview.Note + "\n")
 	fmt.Fprintf(&b, "%d files in the library", total)
 
 	for i := range list {
-		line := libraryLine(&list[i])
-		if b.Len()+len(line)+1 > libraryTextCap {
+		line := assetLine(&list[i])
+		if b.Len()+len(line)+1 > assetListTextCap {
 			fmt.Fprintf(&b, "\n... %d more in this page: ask for a smaller limit or use next_cursor", len(list)-i)
 
 			break
@@ -267,7 +267,7 @@ func libraryText(list []LibraryAsset, total int) string {
 	return b.String()
 }
 
-func libraryLine(a *LibraryAsset) string {
+func assetLine(a *LibraryAsset) string {
 	var b strings.Builder
 
 	fmt.Fprintf(&b, "%s %s %s", a.Hash, orDash(a.Kind), textview.Quote(a.Name, 80))
@@ -295,11 +295,11 @@ func libraryLine(a *LibraryAsset) string {
 	return b.String()
 }
 
-// libraryDetailText is the text of one entry: the facts, and the text from outside as delimited untrusted text.
-func libraryDetailText(a *LibraryAsset) string {
+// assetDetailText is the text of one entry: the facts, and the text from outside as delimited untrusted text.
+func assetDetailText(a *LibraryAsset) string {
 	var b strings.Builder
 
-	b.WriteString(textview.Note + "\n" + libraryLine(a))
+	b.WriteString(textview.Note + "\n" + assetLine(a))
 
 	field := func(name, value string, budget int) {
 		if value != "" {

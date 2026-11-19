@@ -12,8 +12,8 @@ import (
 	"github.com/AlexGalhardo/vukem/database"
 )
 
-// libraryRepo is assets.Store over the tables asset_info, asset_tags and asset_search (SDD-005 section 5.5.1).
-type libraryRepo struct{ ex database.Executor }
+// assetLibraryRepo is assets.Store over the tables asset_info, asset_tags and asset_search (SDD-005 section 5.5.1).
+type assetLibraryRepo struct{ ex database.Executor }
 
 // maxSearchHits bounds the hashes a full-text query returns.
 const maxSearchHits = 5000
@@ -46,7 +46,7 @@ func scanInfo(sc interface{ Scan(...any) error }) (assets.Row, error) {
 	return r, nil
 }
 
-func (r libraryRepo) Get(ctx context.Context, hash string) (assets.Row, error) {
+func (r assetLibraryRepo) Get(ctx context.Context, hash string) (assets.Row, error) {
 	row, err := scanInfo(r.ex.QueryRowContext(ctx, `SELECT `+infoColumns+` FROM asset_info WHERE asset_hash = ?`, hash))
 	if errors.Is(err, sql.ErrNoRows) {
 		return row, assets.ErrNotFound
@@ -62,7 +62,7 @@ func (r libraryRepo) Get(ctx context.Context, hash string) (assets.Row, error) {
 	return row, err
 }
 
-func (r libraryRepo) tags(ctx context.Context, hashes []string) (map[string][]string, error) {
+func (r assetLibraryRepo) tags(ctx context.Context, hashes []string) (map[string][]string, error) {
 	out := map[string][]string{}
 
 	for start := 0; start < len(hashes); start += manyChunk {
@@ -94,7 +94,7 @@ func (r libraryRepo) tags(ctx context.Context, hashes []string) (map[string][]st
 }
 
 // query runs a read and hands every row to each.
-func (r libraryRepo) query(ctx context.Context, q string, args []any, each func(*sql.Rows) error) error {
+func (r assetLibraryRepo) query(ctx context.Context, q string, args []any, each func(*sql.Rows) error) error {
 	rows, err := r.ex.QueryContext(ctx, q, args...)
 	if err != nil {
 		return err
@@ -110,7 +110,7 @@ func (r libraryRepo) query(ctx context.Context, q string, args []any, each func(
 	return rows.Err()
 }
 
-func (r libraryRepo) GetMany(ctx context.Context, hashes []string) (map[string]assets.Row, error) {
+func (r assetLibraryRepo) GetMany(ctx context.Context, hashes []string) (map[string]assets.Row, error) {
 	out := map[string]assets.Row{}
 
 	for start := 0; start < len(hashes); start += manyChunk {
@@ -147,7 +147,7 @@ func (r libraryRepo) GetMany(ctx context.Context, hashes []string) (map[string]a
 	return out, nil
 }
 
-func (r libraryRepo) Put(ctx context.Context, row assets.Row) error {
+func (r assetLibraryRepo) Put(ctx context.Context, row assets.Row) error {
 	o := row.Origin
 	if o.Kind == "" {
 		o.Kind = asset.Imported
@@ -183,7 +183,7 @@ func (r libraryRepo) Put(ctx context.Context, row assets.Row) error {
 	return r.Reindex(ctx, row.Hash)
 }
 
-func (r libraryRepo) Reindex(ctx context.Context, hash string) error {
+func (r assetLibraryRepo) Reindex(ctx context.Context, hash string) error {
 	if _, err := r.ex.ExecContext(ctx, `DELETE FROM asset_search WHERE asset_hash = ?`, hash); err != nil {
 		return err
 	}
@@ -203,7 +203,7 @@ func (r libraryRepo) Reindex(ctx context.Context, hash string) error {
 	return err
 }
 
-func (r libraryRepo) Search(ctx context.Context, match string) (map[string]bool, error) {
+func (r assetLibraryRepo) Search(ctx context.Context, match string) (map[string]bool, error) {
 	rows, err := r.ex.QueryContext(ctx,
 		`SELECT asset_hash FROM asset_search WHERE asset_search MATCH ? LIMIT ?`, match, maxSearchHits)
 	if err != nil {

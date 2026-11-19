@@ -31,6 +31,6 @@ func All() []schema.Migration {
 		m20261119100000CreateConnectionsTable(),
 		m20261119110000CreateImageDocumentsAndOperations(),
 		m20261119120000ProjectItems(),
-		m20261119130100AssetLibrary(),
+		m20261119150000AssetLibrary(),
 	}
 }

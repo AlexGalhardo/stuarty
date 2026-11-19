@@ -5,9 +5,9 @@ import "github.com/AlexGalhardo/vukem/schema"
 // The library side of an asset (SDD-005 section 5.5.1, SDD-011 section 14): where a file came from, the user's
 // record of its rights, the reuse mark, the tags and the full-text index over them. They sit beside assets, by the
 // same hash, so a file that is already stored needs no move: every asset that exists gets an imported row.
-func m20261119130100AssetLibrary() schema.Migration {
+func m20261119150000AssetLibrary() schema.Migration {
 	return schema.Migration{
-		ID: "20261119130100_asset_library",
+		ID: "20261119150000_asset_library",
 		Up: func(s *schema.Schema) error {
 			stmts := []string{
 				`CREATE TABLE asset_info (
