@@ -256,5 +256,9 @@ test.describe("motion and easing", () => {
 		await page.getByRole("button", { name: "Apply" }).last().click();
 		await expect.poll(() => posted.length).toBe(2);
 		expect(await storedKeys(page, itemId, "y")).toHaveLength(2);
+		// The refusal shows under the section as the core sent it.
+		await expect(
+			page.getByRole("alert").filter({ hasText: /lasts \d+/ }),
+		).toBeVisible();
 	});
 });
