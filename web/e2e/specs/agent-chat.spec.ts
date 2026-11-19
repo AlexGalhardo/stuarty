@@ -492,7 +492,7 @@ test.describe("agent chat", () => {
 		page,
 		browserName,
 	}) => {
-		test.skip(browserName === "webkit", "axe runs on Chromium and Firefox");
+		test.skip(browserName === "webkit", "axe runs on Chromium and Firefox"); // verify:env-skip axe is not run on WebKit
 		for (const lang of ["en", "pt-BR"] as const) {
 			await page.addInitScript((l) => localStorage.setItem("vv.lang", l), lang);
 			await signInAsPerson(page);
