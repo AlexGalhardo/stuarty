@@ -27,7 +27,7 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | [05](05-approval-queue-and-cost-ceilings.md) | Approval queue, rules and cost ceilings | M | 04 | DONE (2026-11-19, fe07849a..174a7b89; the MCP approval tool waits for epic 13's budget) |
 | [06](06-project-as-production.md) | The project as the container of a production | L | 03 | DONE (2026-11-19, 08a630f5..77cf52b7; closes VV-225, VV-237, VV-241) |
 | [07](07-dashboard-shell.md) | Dashboard: sidebar, navigation, profile, theme | M | 03 | DONE (2026-11-19, 70387363..171fb786) |
-| [08](08-asset-library.md) | Asset library with origin, rights and reuse | M | 06, 07 | IN PROGRESS (senior-b, 2026-11-19) |
+| [08](08-asset-library.md) | Asset library with origin, rights and reuse | M | 06, 07 | DONE (2026-11-19, `ba30f86f`..`fdcdc23a`, merge `86c682f9`) |
 | [09](09-ai-provider-layer.md) | AI provider layer with API keys, text generation and cost | L | 04, 05 | IN PROGRESS (senior-c, 2026-11-19) |
 | [10](10-image-and-voice-generation.md) | Image and voice generation | M | 08, 09 | TODO |
 | [11](11-video-generation.md) | Video generation | M | 10 | TODO |
