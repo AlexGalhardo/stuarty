@@ -49,7 +49,8 @@ func Pages(d *httpapi.Deps) func(r *router.Router, app *vukem.App) error {
 		r.UseServer(middleware.StaticFS(resources.Public(), middleware.StaticConfig{Prefix: "/"}))
 		r.Use(app.Inertia.Middleware, inertia.I18n("ui."), sharedProps(d))
 
-		r.Get("/{$}", func(c *web.Ctx) error { return c.Redirect("/projects") }).Name("home")
+		// The home and the sections that have no page of their own yet (dashboard.go).
+		dashboardPages(r)
 
 		r.Get("/projects", func(c *web.Ctx) error { return projectsPage(c, d) }).Name("projects.index")
 		r.Post("/projects", func(c *web.Ctx) error { return projectCreate(c, d) }).Name("projects.store")

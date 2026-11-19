@@ -34,6 +34,52 @@
         "toggle": "Alternar barra lateral"
       }
     },
+    "dashboard": {
+      "home": {
+        "title": "Início",
+        "lead": "Tudo o que você cria, em um só lugar. Escolha uma seção para começar."
+      },
+      "empty": {
+        "status": "Esta seção ainda não está disponível. Ela chega em uma versão futura.",
+        "via_projects": "O editor de vídeo abre a partir de um projeto. Abra ou crie um em Projetos.",
+        "goto": "Ir para Projetos"
+      },
+      "section": {
+        "projects": {
+          "holds": "Suas produções: o briefing, as mídias e tudo o que você publica, projeto por projeto."
+        },
+        "edit-video": {
+          "holds": "O editor de vídeo: linha do tempo, legendas, efeitos e exportação."
+        },
+        "edit-image": {
+          "holds": "O editor de imagem: camadas, texto e miniaturas."
+        },
+        "write": {
+          "holds": "Roteiros, textos de divulgação e artigos de blog, escritos sozinho ou com um agente."
+        },
+        "visual-assets": {
+          "holds": "Imagens, logotipos e arte gerada que você reutiliza entre projetos."
+        },
+        "video-assets": {
+          "holds": "Gravações, clipes, músicas e locuções que você reutiliza entre projetos."
+        },
+        "publish": {
+          "holds": "O calendário do que vai ao ar e a fila de aprovação que espera por você."
+        },
+        "skills": {
+          "holds": "Habilidades reutilizáveis que seus agentes podem executar."
+        },
+        "prompts": {
+          "holds": "Instruções salvas para os seus agentes."
+        },
+        "memory": {
+          "holds": "O que seus agentes lembram sobre você, sua marca e seus projetos."
+        },
+        "connections": {
+          "holds": "Suas redes sociais e provedores de IA, e o acesso que você deu a cada um."
+        }
+      }
+    },
     "theme": {
       "light": "Mudar para o tema claro",
       "dark": "Mudar para o tema escuro"
