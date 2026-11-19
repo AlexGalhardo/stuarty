@@ -9,9 +9,11 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/wailsapp/wails/v3/pkg/application"
@@ -63,6 +65,10 @@ func run() error {
 	}
 
 	br := &bridge{}
+	// A window has no standard error to read: what Resolve says about the workspace of Vukem Video is kept
+	// and the adoption is shown in a dialog once the loop runs (PRD-003 RF-221).
+	var notices strings.Builder
+	workspace.Notice = io.MultiWriter(os.Stderr, &notices)
 	ws, wsErr := workspace.Resolve(os.Getenv)
 	app := application.New(application.Options{
 		Name:              "Stuarty",
@@ -119,6 +125,9 @@ func run() error {
 	// A dialog shown before the loop runs is dropped (VV-006), so the launcher starts with the loop.
 	app.Event.OnApplicationEvent(events.Common.ApplicationStarted, func(*application.ApplicationEvent) {
 		go confirmStart()
+		if msg := shell.AdoptionMessage(shell.SystemLanguage(), notices.String()); msg != "" {
+			go application.InvokeSync(func() { app.Dialog.Info().SetTitle("Stuarty").SetMessage(msg).Show() })
+		}
 		up.start()
 	})
 
