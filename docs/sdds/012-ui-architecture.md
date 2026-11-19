@@ -2013,7 +2013,7 @@ Fields for the document (name, canvas size and the resize mode, `canvas.resize`)
 
 ### 24.7 Brand kit and templates
 
-The brand kit (RF-342) is read from `GET /api/v1/brand-kit`: its colours are swatches in the colour fields (one click sets the colour), its font families are choices of the font field, and "Place logo" adds an image layer with the hash of the logo (`layer.add_image`). "New from template" lists `ImageList` with `templates=only`, asks for the value of each slot (a text for a text slot, an image of the library for an image slot) and calls `ImageCreate` with `template_id` and `values`; a missing required slot is the core's `E_SLOT` with the list, shown beside the form.
+The brand kit (RF-342) is read from `GET /api/v1/brand-kit`: its colours are swatches in the colour fields (one click sets the colour), its font families are choices of the font field, and "Place logo" adds an image layer with the hash of the logo (`layer.add_image`). "New from template" lists `ImageList` with `templates=only`, asks for the value of each slot (a text for a text slot, an image of the library for an image slot), marks as required the slots whose layer has the core's finding `L_IMAGE_EMPTY_SLOT` in the read model of the template (the screen has no rule of its own for it), and calls `ImageCreate` with `template_id` and `values`; a missing required slot is the core's `E_SLOT` with the list, shown beside the form.
 
 ### 24.8 Export
 
