@@ -334,6 +334,24 @@ func (r approvalRepo) Reserve(ctx context.Context, e *approval.Entry) error {
 	return err
 }
 
+func (r approvalRepo) Record(ctx context.Context, e *approval.Entry) error {
+	if e.ActualMicros == nil || e.SettledMs == nil {
+		return errors.New("store: a recorded ledger entry needs its actual cost and its time")
+	}
+
+	_, err := r.ex.ExecContext(
+		ctx,
+		`INSERT INTO cost_ledger
+ (id, request_id, job_id, connection_id, project_id, kind, currency, estimate_micros, actual_micros, state, day,
+ created_ms, settled_ms)
+ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'settled', ?, ?, ?)`,
+		e.ID, e.RequestID, e.JobID, e.ConnectionID, e.ProjectID, e.Kind, e.Currency, e.EstimateMicros,
+		*e.ActualMicros, e.Day, e.CreatedMs, *e.SettledMs,
+	)
+
+	return err
+}
+
 func (r approvalRepo) Settle(ctx context.Context, jobID string, actualMicros, atMs int64) (bool, error) {
 	n, err := rowsAffected(
 		r.ex.ExecContext(ctx, `UPDATE cost_ledger SET state = 'settled', actual_micros = ?, settled_ms = ?
