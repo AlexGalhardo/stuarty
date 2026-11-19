@@ -770,16 +770,17 @@ func projectDescribe(
 // projectItem is five operations behind one tool (SDD-003 section 4.1): add, move, rename, trash and restore.
 func projectItem(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolOutput, error) {
 	in, err := decode[struct {
-		Action    string  `json:"action"`
-		ProjectID string  `json:"project_id"`
-		ItemID    string  `json:"item_id"`
-		Kind      string  `json:"kind"`
-		Title     string  `json:"title"`
-		Text      *string `json:"text"`
-		Preset    string  `json:"preset"`
-		FPS       fpsArg  `json:"fps"`
-		JobID     string  `json:"job_id"`
-		Position  *int    `json:"position"`
+		Action    string            `json:"action"`
+		ProjectID string            `json:"project_id"`
+		ItemID    string            `json:"item_id"`
+		Kind      string            `json:"kind"`
+		Title     string            `json:"title"`
+		Text      *string           `json:"text"`
+		Answers   map[string]string `json:"answers"`
+		Preset    string            `json:"preset"`
+		FPS       fpsArg            `json:"fps"`
+		JobID     string            `json:"job_id"`
+		Position  *int              `json:"position"`
 	}](raw)
 	if err != nil {
 		return nil, err
@@ -787,6 +788,10 @@ func projectItem(ctx context.Context, svc service.Service, raw json.RawMessage) 
 
 	if in.Action == "brief" {
 		return briefTool(ctx, svc, in.ProjectID, in.Text)
+	}
+
+	if in.Action == "briefing" {
+		return briefingTool(ctx, svc, in.ProjectID, in.Answers)
 	}
 
 	var res *service.ProjectItemResult

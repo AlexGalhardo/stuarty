@@ -144,6 +144,15 @@ var Endpoints = []Endpoint{
 		Service: "BriefSet", Status: 200, Summary: "Write the brief of a project",
 	},
 	{
+		ID: "briefing.questions", Method: http.MethodGet, Path: "/briefing/questions", Scope: service.ScopeRead,
+		Service: "BriefingQuestions", Status: 200, Summary: "The questions of the guided briefing",
+	},
+	{
+		ID: "projects.briefing.answer", Method: http.MethodPut, Path: "/projects/{id}/briefing",
+		Scope: service.ScopeEdit, Service: "BriefingAnswer", Status: 200,
+		Summary: "Answer the briefing: the answers become the brief of the project",
+	},
+	{
 		ID: "projects.trash", Method: http.MethodPost, Path: "/projects/{id}/trash", Scope: service.ScopeEdit,
 		Service: "ProjectTrash", Status: 200, Summary: "Move a project to the trash",
 	},
