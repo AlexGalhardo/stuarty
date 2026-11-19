@@ -10,6 +10,7 @@ import (
 	"image/png"
 	"slices"
 
+	coreimage "github.com/AlexGalhardo/stuarty/core/image"
 	"github.com/AlexGalhardo/stuarty/engine/compositor"
 )
 
@@ -62,7 +63,14 @@ func EncodeImage(ctx context.Context, img *image.RGBA, o ImageEncodeOptions) ([]
 		return nil, exportErr(ReasonRender, "The quality must be 1 to 100.", fmt.Errorf("quality %d", o.Quality), "")
 	}
 
-	img = resample(img, o.Width, o.Height)
+	if err := checkImageSize(img, o.Width, o.Height); err != nil {
+		return nil, err
+	}
+
+	img, err := resample(img, o.Width, o.Height)
+	if err != nil {
+		return nil, err
+	}
 
 	switch o.Format {
 	case ImageJPEG:
@@ -91,10 +99,41 @@ func EncodeImage(ctx context.Context, img *image.RGBA, o ImageEncodeOptions) ([]
 	return encodePNG(img)
 }
 
-func resample(img *image.RGBA, w, h int) *image.RGBA {
+// checkImageSize refuses a picture with no pixels and a size that is negative or past the limits of SDD-021
+// section 6, before anything is allocated for it.
+func checkImageSize(img *image.RGBA, w, h int) error {
+	if img == nil || img.Bounds().Dx() < 1 || img.Bounds().Dy() < 1 {
+		return exportErr(ReasonRender, "There is no picture to export.", errors.New("empty picture"), "")
+	}
+
+	if w < 0 || h < 0 || w > coreimage.MaxExportSide || h > coreimage.MaxExportSide {
+		return exportErr(ReasonBadFormat, "The size of the export is outside 1 to 8192 pixels on each side.",
+			fmt.Errorf("size %dx%d", w, h), "")
+	}
+
+	b := img.Bounds()
+	tw, th := w, h
+
+	if tw == 0 && th != 0 {
+		tw = max(round(float64(b.Dx())*float64(th)/float64(b.Dy())), 1)
+	}
+
+	if th == 0 && tw != 0 {
+		th = max(round(float64(b.Dy())*float64(tw)/float64(b.Dx())), 1)
+	}
+
+	if tw > coreimage.MaxExportSide || th > coreimage.MaxExportSide || tw*th > coreimage.MaxExportPixels {
+		return exportErr(ReasonBadFormat, "The export would have more pixels than the limit of 33177600.",
+			fmt.Errorf("size %dx%d", tw, th), "")
+	}
+
+	return nil
+}
+
+func resample(img *image.RGBA, w, h int) (*image.RGBA, error) {
 	b := img.Bounds()
 	if (w == 0 && h == 0) || (w == b.Dx() && h == b.Dy()) {
-		return img
+		return img, nil
 	}
 
 	if w == 0 {
@@ -106,8 +145,16 @@ func resample(img *image.RGBA, w, h int) *image.RGBA {
 	}
 
 	out := compositor.Resize(compositor.Image{Pix: img.Pix, W: b.Dx(), H: b.Dy()}, w, h)
+	if out.W != w || out.H != h || len(out.Pix) < w*h*4 {
+		return nil, exportErr(
+			ReasonRender,
+			"The picture could not be resized.",
+			errors.New("resize returned no pixels"),
+			"",
+		)
+	}
 
-	return &image.RGBA{Pix: out.Pix, Stride: w * 4, Rect: image.Rect(0, 0, w, h)}
+	return &image.RGBA{Pix: out.Pix, Stride: w * 4, Rect: image.Rect(0, 0, w, h)}, nil
 }
 
 func encodePNG(img *image.RGBA) ([]byte, error) {
