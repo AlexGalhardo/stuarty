@@ -1,4 +1,4 @@
-import { expect, seedProject, test } from "./helpers";
+import { caller, expect, test } from "./helpers";
 
 const SKELETON = '[data-slot="skeleton"]';
 
@@ -11,7 +11,12 @@ test.describe("loading states of the editor", () => {
 		page,
 		request,
 	}) => {
-		const seeded = await seedProject(request, { tracks: 1, perTrack: 0 });
+		// A project with nothing in it, so the sentences are the true ones once loaded.
+		const call = await caller(request);
+		const created = await call("POST", "/projects", {
+			name: `Loading ${Date.now()}`,
+		});
+		const id = created.project_id as string;
 		let release: () => void = () => undefined;
 		const gate = new Promise<void>((resolve) => {
 			release = resolve;
@@ -20,7 +25,7 @@ test.describe("loading states of the editor", () => {
 			if (route.request().method() === "GET") await gate;
 			await route.continue();
 		});
-		await page.goto(`/editor/${seeded.id}`);
+		await page.goto(`/editor/${id}`);
 
 		// Still loading: skeletons in both regions, no claim that they are empty.
 		await expect(page.getByRole("status").getByText("Loading")).toBeVisible();
@@ -34,8 +39,9 @@ test.describe("loading states of the editor", () => {
 		await expect(page.getByText("The timeline is empty")).toHaveCount(0);
 
 		release();
-		// Loaded: the project has one track and no media.
+		// Loaded: the project is empty, and now the regions say so.
 		await expect(page.getByText("No media yet")).toBeVisible();
+		await expect(page.getByText("The timeline is empty")).toBeVisible();
 		await expect(page.locator(SKELETON)).toHaveCount(0);
 	});
 });
