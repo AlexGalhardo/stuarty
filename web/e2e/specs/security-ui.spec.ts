@@ -24,7 +24,7 @@ declare global {
 }
 
 function hostileFont(): string {
-	const dir = join(tmpdir(), "vukem-video-e2e-hostile");
+	const dir = join(tmpdir(), "stuarty-e2e-hostile");
 	mkdirSync(dir, { recursive: true });
 	const out = join(dir, `${ASSET_NAME}.ttf`);
 	copyFileSync(
@@ -35,7 +35,7 @@ function hostileFont(): string {
 }
 
 function hostileAsset(): string {
-	const dir = join(tmpdir(), "vukem-video-e2e-hostile");
+	const dir = join(tmpdir(), "stuarty-e2e-hostile");
 	mkdirSync(dir, { recursive: true });
 	const out = join(dir, `${ASSET_NAME}.mp4`);
 	copyFileSync(testClip(3), out);

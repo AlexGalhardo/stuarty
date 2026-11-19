@@ -50,7 +50,7 @@ test.describe("export-formats", () => {
 			(await link.getAttribute("href")) as string,
 		);
 		expect(file.ok()).toBe(true);
-		const dir = join(tmpdir(), "vukem-video-e2e-bundles");
+		const dir = join(tmpdir(), "stuarty-e2e-bundles");
 		mkdirSync(dir, { recursive: true });
 		const outside = join(dir, `${seeded.id}.vvbundle`);
 		writeFileSync(outside, await file.body());
