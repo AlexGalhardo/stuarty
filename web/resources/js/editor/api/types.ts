@@ -1221,6 +1221,39 @@ export interface SessionResult {
 	scopes: string[];
 }
 
+// The optional Google sign-in of network mode (SDD-007 section 4.7, SDD-014 section 12.4).
+export interface GoogleLinked {
+	email: string;
+	linked_ms: number;
+}
+
+export interface GoogleStatus {
+	enabled: boolean;
+	linked: GoogleLinked | null;
+}
+
+export interface GoogleStart {
+	authorize_url: string;
+}
+
+export interface GoogleComplete {
+	user?: SessionResult;
+	linked?: GoogleLinked;
+}
+
+export interface GoogleSettingsRequest {
+	enabled: boolean;
+	connection_id?: string;
+	allowed_emails?: string[];
+}
+
+export interface GoogleSettings {
+	enabled: boolean;
+	connection_id: string;
+	allowed_emails: string[];
+	redirect_url: string;
+}
+
 // The brand kit and the font import (SDD-005 section 5.11, SDD-007 section 7.7).
 export interface BrandFontFile {
 	weight: number;

@@ -2327,6 +2327,33 @@
         "bad_amount": "An amount is a number with at most six decimals, for example 2.50."
       }
     },
+    "google": {
+      "nav": "Google sign-in",
+      "sign_in": "Sign in with Google",
+      "title": "Google sign-in",
+      "off": "Google sign-in is off on this server. An administrator can turn it on here.",
+      "account": "Your Google account",
+      "linked": "Linked Google account:",
+      "not_linked": "No Google account is linked. Link yours to sign in with it; your password keeps working.",
+      "unlink_note": "Unlinking does not change your password or end your sessions.",
+      "password": "Your password",
+      "link": "Link my Google account",
+      "unlink": "Unlink",
+      "owner": "For the owner of this server",
+      "owner_intro": "Users sign in with a Google project that you own. Make the connection of that project on the Connections page (a YouTube connection with the client id and the secret; you do not need to sign in to YouTube).",
+      "redirect": "Add this address to the authorised redirect URIs of your Google project:",
+      "enabled": "Let users sign in with Google",
+      "connection": "Connection of your Google project",
+      "connection_none": "Choose a connection",
+      "allowed": "Only these Google e-mail addresses (optional)",
+      "allowed_hint": "One per line. Leave empty to allow every linked user. A user must be linked first: there is no registration with Google.",
+      "save": "Save",
+      "saved": "Saved.",
+      "callback_title": "Signing in with Google",
+      "callback_working": "Finishing the sign-in…",
+      "callback_failed": "The sign-in with Google did not work.",
+      "back_to_login": "Back to the login"
+    },
     "keys": {
       "title": "API keys",
       "nav": "API keys",
