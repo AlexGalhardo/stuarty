@@ -629,6 +629,20 @@ var Endpoints = []Endpoint{
 		ID: "images.export", Method: http.MethodPost, Path: "/images/{id}/export", Scope: service.ScopeEdit,
 		Service: "ImageExport", Status: 200, Summary: "Export an image document to a PNG, JPEG or WebP file",
 	},
+	// The reads of the image editor screen (SDD-012 section 24.3).
+	{
+		ID: "images.frame", Method: http.MethodGet, Path: "/images/{id}/frame", Scope: service.ScopeRead,
+		Service: "ImageFrame", Uncounted: true, MaxInFlight: 2, Status: 200,
+		Summary: "Render the picture of an image document",
+	},
+	{
+		ID: "images.history", Method: http.MethodGet, Path: "/images/{id}/history", Scope: service.ScopeRead,
+		Service: "ImageHistory", Status: 200, Summary: "List the latest batches of an image document",
+	},
+	{
+		ID: "images.file", Method: http.MethodGet, Path: "/images/{id}/exports/{name}", Scope: service.ScopeRead,
+		Service: "ImageFile", Status: 200, Summary: "Download a file that an image export wrote",
+	},
 }
 
 // Endpoint returns the row of an operation id.

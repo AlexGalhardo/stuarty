@@ -133,6 +133,21 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.ImageExport(ctx, service.ImageExportRequest{ImageID: "img_0000000001"})
 			return err
 		},
+		"ImageFrame": func() error {
+			_, err := e.svc.ImageFrame(ctx, service.ImageFrameRequest{ImageID: "img_0000000001"})
+			return err
+		},
+		"ImageHistory": func() error {
+			_, err := e.svc.ImageHistory(ctx, service.ImageHistoryRequest{ImageID: "img_0000000001"})
+			return err
+		},
+		"ImageFile": func() error {
+			_, err := e.svc.ImageFile(
+				ctx,
+				service.ImageFileRequest{ImageID: "img_0000000001", Name: "1-000000000000.png"},
+			)
+			return err
+		},
 		"FontImport": func() error {
 			_, err := e.svc.FontImport(ctx, service.FontImportRequest{Path: "/x"})
 			return err

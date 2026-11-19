@@ -106,6 +106,9 @@ route GET /fonts
 route GET /handshake
 route GET /images
 route GET /images/{}
+route GET /images/{}/exports/{}
+route GET /images/{}/frame
+route GET /images/{}/history
 route GET /jobs/{}
 route GET /jobs/{}/file
 route GET /keys

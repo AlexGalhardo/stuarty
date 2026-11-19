@@ -1553,6 +1553,72 @@
         },
         "type": "object"
       },
+      "ImageHistoryEntry": {
+        "properties": {
+          "actor": {
+            "type": "string"
+          },
+          "at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "changes": {
+            "type": "integer"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "mine": {
+            "type": "boolean"
+          },
+          "ops": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "skipped": {
+            "type": "integer"
+          },
+          "undo_of": {
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "undone_by": {
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "type": "object"
+      },
+      "ImageHistoryResult": {
+        "properties": {
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/ImageHistoryEntry"
+            },
+            "type": "array"
+          },
+          "image_id": {
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
       "ImageListResult": {
         "properties": {
           "images": {
@@ -11495,6 +11561,183 @@
           }
         ],
         "summary": "Export an image document to a PNG, JPEG or WebP file"
+      }
+    },
+    "/api/v1/images/{id}/exports/{name}": {
+      "get": {
+        "operationId": "images.file",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "description": "The file name ImageExport returned: <revision>-<12 hex>.<png|jpg|webp>.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Download a file that an image export wrote"
+      }
+    },
+    "/api/v1/images/{id}/frame": {
+      "get": {
+        "operationId": "images.frame",
+        "parameters": [
+          {
+            "description": "Pixels, 16 to 4096; default the canvas width.",
+            "in": "query",
+            "name": "width",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Only a cache key of the caller: the answer is always the current revision.",
+            "in": "query",
+            "name": "rev",
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Render the picture of an image document"
+      }
+    },
+    "/api/v1/images/{id}/history": {
+      "get": {
+        "operationId": "images.history",
+        "parameters": [
+          {
+            "description": "1 to 100; default 30.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageHistoryResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the latest batches of an image document"
       }
     },
     "/api/v1/images/{id}/redo": {

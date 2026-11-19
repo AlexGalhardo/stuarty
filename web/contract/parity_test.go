@@ -135,6 +135,10 @@ var parity = []row{
 	{method: "ImageUndo", tool: "image", command: "image:undo", route: "POST /images/{}/undo"},
 	{method: "ImageRedo", tool: "image", command: "image:redo", route: "POST /images/{}/redo"},
 	{method: "ImageExport", tool: "image", command: "image:export", route: "POST /images/{}/export"},
+	// The reads of the image editor screen (SDD-012 section 24.3): HTTP only, an agent has the text view.
+	{method: "ImageFrame", route: "GET /images/{}/frame", httpOnly: true},
+	{method: "ImageHistory", route: "GET /images/{}/history", httpOnly: true},
+	{method: "ImageFile", route: "GET /images/{}/exports/{}", httpOnly: true},
 	// The approval queue (SDD-015 section 10): no MCP tool, the budget of the tool list leaves no room
 	// for one; deciding, writing a rule and setting a ceiling are for a person, and their commands
 	// always fail for an agent.
