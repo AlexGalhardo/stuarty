@@ -6,7 +6,7 @@ import (
 	"slices"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/stuarty/core/command"
 )
 
 // Limits of API keys (SDD-007 section 4.2).

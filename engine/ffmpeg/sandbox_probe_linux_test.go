@@ -18,7 +18,7 @@ func TestSecurity_T16_BwrapProbeEnvironmentMinimal(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Setenv("PATH", bin+":/usr/bin:/bin")
-	t.Setenv("VUKEM_VIDEO_KEY", "s3cret")
+	t.Setenv("STUARTY_KEY", "s3cret")
 	t.Setenv("APP_KEY", "s3cret")
 
 	if _, err := ResolveSandbox(context.Background(), SandboxBwrap); err != nil {
@@ -29,7 +29,7 @@ func TestSecurity_T16_BwrapProbeEnvironmentMinimal(t *testing.T) {
 	if err != nil {
 		t.Fatalf("the probe did not run: %v", err)
 	}
-	if strings.Contains(string(got), "s3cret") || strings.Contains(string(got), "VUKEM_VIDEO_KEY") {
+	if strings.Contains(string(got), "s3cret") || strings.Contains(string(got), "STUARTY_KEY") {
 		t.Errorf("the bwrap probe inherited the application environment:\n%s", got)
 	}
 }

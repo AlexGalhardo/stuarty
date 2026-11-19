@@ -9,8 +9,8 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/service"
 )
 
 // The plan of a window at an output width hands out bitmaps rasterized at that scale, under keys

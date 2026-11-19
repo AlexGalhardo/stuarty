@@ -17,7 +17,7 @@ import (
 )
 
 // module is the import path prefix of every package of the repository.
-const module = "github.com/AlexGalhardo/vukem-video"
+const module = "github.com/AlexGalhardo/stuarty"
 
 // Floors of SDD-009 section 13.2: the packages under core/ are pure and cheap
 // to cover, everything else has the default floor.

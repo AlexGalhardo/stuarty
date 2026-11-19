@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/web/app/agentdocs"
+	"github.com/AlexGalhardo/stuarty/web/app/agentdocs"
 )
 
 func TestAgentDocsPrintEqualsTheCommittedFile(t *testing.T) {

@@ -10,7 +10,10 @@ import (
 // flat entry names.
 const (
 	// BundleFormat is the value of the manifest's "format".
-	BundleFormat = "vukem-video-bundle"
+	BundleFormat = "stuarty-bundle"
+	// formerBundleFormat is the value written before the rename (ADR-0044); a bundle that carries it is
+	// still imported.
+	formerBundleFormat = "vukem-video-bundle"
 	// BundleVersion is the layout of the container; an importer refuses a higher one.
 	BundleVersion = 1
 

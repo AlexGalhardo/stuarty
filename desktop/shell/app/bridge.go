@@ -9,7 +9,7 @@ import (
 	"github.com/wailsapp/wails/v3/pkg/application"
 	"github.com/wailsapp/wails/v3/pkg/events"
 
-	"github.com/AlexGalhardo/vukem-video/desktop/shell"
+	"github.com/AlexGalhardo/stuarty/desktop/shell"
 )
 
 // bridge answers the requests of window.vukemDesktop (SDD-012 section 13.1

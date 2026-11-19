@@ -4,17 +4,17 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/service"
-	"github.com/AlexGalhardo/vukem-video/service/config"
+	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/config"
 )
 
 func envOf(env map[string]string) func(string) string { return func(k string) string { return env[k] } }
 
 func TestLimitsFromEnvReadsTheTranscribeAndExportCeilings(t *testing.T) {
 	env := map[string]string{
-		"VUKEM_VIDEO_MAX_TRANSCRIBES":        "3",
-		"VUKEM_VIDEO_MAX_TRANSCRIBE_SECONDS": "600",
-		"VUKEM_VIDEO_MAX_EXPORT_BYTES":       "1048576",
+		"STUARTY_MAX_TRANSCRIBES":        "3",
+		"STUARTY_MAX_TRANSCRIBE_SECONDS": "600",
+		"STUARTY_MAX_EXPORT_BYTES":       "1048576",
 	}
 
 	l, err := limitsFromEnv(envOf(env), false)
@@ -50,7 +50,7 @@ func TestLimitsZeroOrNegativeByMode(t *testing.T) {
 			env := envOf(map[string]string{name: raw})
 
 			_, err := limitsFromEnv(env, true)
-			if name == "VUKEM_VIDEO_CACHE_MAX_BYTES" {
+			if name == "STUARTY_CACHE_MAX_BYTES" {
 				_, err = cacheLimit(env, true)
 			}
 
@@ -64,8 +64,8 @@ func TestLimitsZeroOrNegativeByMode(t *testing.T) {
 func TestLimitsNotANumberIsRefusedInBothModes(t *testing.T) {
 	for _, network := range []bool{false, true} {
 		for _, raw := range []string{"many", "1.5"} {
-			if _, err := limitsFromEnv(envOf(map[string]string{"VUKEM_VIDEO_MAX_EXPORTS": raw}), network); err == nil ||
-				!strings.Contains(err.Error(), "VUKEM_VIDEO_MAX_EXPORTS") {
+			if _, err := limitsFromEnv(envOf(map[string]string{"STUARTY_MAX_EXPORTS": raw}), network); err == nil ||
+				!strings.Contains(err.Error(), "STUARTY_MAX_EXPORTS") {
 				t.Errorf("network=%v %q: %v", network, raw, err)
 			}
 		}

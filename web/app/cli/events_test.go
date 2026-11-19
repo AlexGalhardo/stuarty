@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/internal/outbound"
+	"github.com/AlexGalhardo/stuarty/internal/outbound"
 )
 
 const sseStream = "retry: 1000\ndata: \n\n" +

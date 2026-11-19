@@ -9,17 +9,17 @@ import (
 	"os"
 	"strings"
 
-	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/stuarty/service"
 )
 
 var view = &spec{
 	name:    "view",
 	summary: "render a frame or a contact sheet of a project",
 	usage: []string{
-		"vukem-video view --project <id> [--mode frame|sheet] [--at t] [--times t1,t2,...]",
+		"stuarty view --project <id> [--mode frame|sheet] [--at t] [--times t1,t2,...]",
 		"    [--from t --until t --count n] [--cols n] [--max-tokens n] [--width px]",
 	},
-	example: "vukem-video view --project prj_7k2m9x4q1b --at 1s --json",
+	example: "stuarty view --project prj_7k2m9x4q1b --at 1s --json",
 	project: true,
 	flags: []flagDef{
 		{Name: "mode", Kind: kindString, Default: "frame", Usage: "frame (one image at --at) or sheet (a grid)"},
@@ -95,7 +95,7 @@ func viewOutput(res *service.ViewResult) (*output, error) {
 	out.Image = nil
 
 	if out.Path == "" && len(res.Image) > 0 {
-		f, err := os.CreateTemp("", "vukem-video-view-*.jpg")
+		f, err := os.CreateTemp("", "stuarty-view-*.jpg")
 		if err != nil {
 			return nil, fmt.Errorf("save the image: %w", err)
 		}

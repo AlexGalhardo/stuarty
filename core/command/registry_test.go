@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 // ROADMAP P1-ENG-001: a command registered without a schema, an example or its error

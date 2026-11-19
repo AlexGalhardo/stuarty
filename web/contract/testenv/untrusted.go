@@ -8,7 +8,7 @@ import (
 	"testing"
 	"unicode"
 
-	"github.com/AlexGalhardo/vukem-video/service/textview"
+	"github.com/AlexGalhardo/stuarty/service/textview"
 )
 
 // HostileName is one file name of web/app/mcp/testdata/untrusted/names.json;

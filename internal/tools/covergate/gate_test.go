@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-const m = "github.com/AlexGalhardo/vukem-video"
+const m = "github.com/AlexGalhardo/stuarty"
 
 func profile(lines ...string) string {
 	return "mode: atomic\n" + strings.Join(lines, "\n") + "\n"

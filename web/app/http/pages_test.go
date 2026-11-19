@@ -9,10 +9,10 @@ import (
 	"testing"
 	"testing/fstest"
 
-	vukem "github.com/AlexGalhardo/vukem"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/web/app/events"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/web/app/events"
+	vukem "github.com/AlexGalhardo/vukem"
 )
 
 // manifest stands in for the output of `vite build`, which the Go tests do not run.
@@ -146,7 +146,7 @@ func TestEditorPageShowsWhyAProjectCannotOpen(t *testing.T) {
 		t.Errorf("status = %d, want a client error", res.status)
 	}
 
-	for _, want := range []string{`data-page="app"`, `Error`, "V_SCHEMA_VERSION", "update vukem-video"} {
+	for _, want := range []string{`data-page="app"`, `Error`, "V_SCHEMA_VERSION", "update stuarty"} {
 		if !strings.Contains(body, want) {
 			t.Errorf("body lacks %q\n%s", want, body)
 		}
@@ -154,7 +154,7 @@ func TestEditorPageShowsWhyAProjectCannotOpen(t *testing.T) {
 }
 
 // The language is a preference of each browser (SDD-012 section 16.3): the
-// Vukem-Video-Lang header decides, the shared lang cookie is neither read nor
+// Stuarty-Lang header decides, the shared lang cookie is neither read nor
 // written, and the old POST /locale is gone.
 func TestPagesLanguageIsPerBrowser(t *testing.T) {
 	h := pagesHarness(t)
@@ -165,7 +165,7 @@ func TestPagesLanguageIsPerBrowser(t *testing.T) {
 		return h.do(req{path: "/projects" + query, noAuth: true, headers: headers})
 	}
 
-	if got := page(map[string]string{"Vukem-Video-Lang": "pt-BR"}, "").header.Get("Content-Language"); got != "pt-BR" {
+	if got := page(map[string]string{"Stuarty-Lang": "pt-BR"}, "").header.Get("Content-Language"); got != "pt-BR" {
 		t.Errorf("the language header = %q, want pt-BR", got)
 	}
 

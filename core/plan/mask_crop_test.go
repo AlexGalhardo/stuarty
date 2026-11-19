@@ -3,7 +3,7 @@ package plan
 import (
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 func TestAnimatedMaskGivesEachFrameItsRectangle(t *testing.T) {

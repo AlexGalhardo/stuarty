@@ -8,7 +8,7 @@ package httpapi
 import (
 	"net/http"
 
-	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/stuarty/service"
 )
 
 // BasePath is where the API lives (SDD-003 section 6.1).

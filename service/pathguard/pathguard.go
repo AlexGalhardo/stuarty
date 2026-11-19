@@ -156,7 +156,7 @@ type Config struct {
 	// Network is true in network mode (SDD-007 section 4): failures after
 	// step 6 are all the same refusal, and an empty Roots refuses every path.
 	Network bool
-	// Roots is VUKEM_VIDEO_IMPORT_ROOTS. Each is canonicalised with steps 1
+	// Roots is STUARTY_IMPORT_ROOTS. Each is canonicalised with steps 1
 	// to 7 by New.
 	Roots []string
 	// Workspace is the workspace root: no root may lie inside it and no file
@@ -281,7 +281,7 @@ func (g *Guard) open(path string, exported bool) (*os.File, error) {
 	}
 
 	if g.network && len(g.roots) == 0 {
-		return nil, refuse("this server has no import roots.", "Ask the operator to set VUKEM_VIDEO_IMPORT_ROOTS.")
+		return nil, refuse("this server has no import roots.", "Ask the operator to set STUARTY_IMPORT_ROOTS.")
 	}
 
 	resolved, err := g.resolve(path)

@@ -6,8 +6,8 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/AlexGalhardo/vukem-video/service/logging"
-	"github.com/AlexGalhardo/vukem-video/service/workspace"
+	"github.com/AlexGalhardo/stuarty/service/logging"
+	"github.com/AlexGalhardo/stuarty/service/workspace"
 )
 
 // openLog is the logger of an owner (ADR-0026 item 2): standard error and a
@@ -28,7 +28,7 @@ func openLog(getenv func(string) string, stderr io.Writer) (*slog.Logger, io.Clo
 		o.Dir = ""
 		log, closer, _ = logging.New(o)
 
-		_, _ = fmt.Fprintln(stderr, "vukem-video: the log file is not available, logging to standard error only:", lerr)
+		_, _ = fmt.Fprintln(stderr, "stuarty: the log file is not available, logging to standard error only:", lerr)
 	}
 
 	return log, closer

@@ -15,7 +15,7 @@ import (
 	"regexp"
 )
 
-const handshakeMessage = "vukem-video-handshake-v1"
+const handshakeMessage = "stuarty-handshake-v1"
 
 // HandshakePath is the route of the proof (SDD-007 section 3.8).
 const HandshakePath = "/api/v1/handshake"
@@ -25,7 +25,7 @@ var nonceRe = regexp.MustCompile(`^[0-9a-f]{32}$`)
 // ValidNonce is a nonce of 32 lower-case hex characters.
 func ValidNonce(n string) bool { return nonceRe.MatchString(n) }
 
-// Proof is HMAC-SHA256(key = token, message = "vukem-video-handshake-v1" + nonce) in hex.
+// Proof is HMAC-SHA256(key = token, message = "stuarty-handshake-v1" + nonce) in hex.
 func Proof(token, nonce string) string {
 	m := hmac.New(sha256.New, []byte(token))
 	m.Write([]byte(handshakeMessage + nonce))

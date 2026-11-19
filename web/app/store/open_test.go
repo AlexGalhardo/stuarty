@@ -9,10 +9,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/AlexGalhardo/stuarty/service/workspace"
+
 	"github.com/AlexGalhardo/vukem/database"
 	"github.com/AlexGalhardo/vukem/schema"
-
-	"github.com/AlexGalhardo/vukem-video/service/workspace"
 )
 
 func newDir(t *testing.T) workspace.Dir {
@@ -83,7 +83,7 @@ func TestOpenRefusesPathCharacters(t *testing.T) {
 // the Windows case is the one that matters).
 func TestOpenUnderSpaceAndNonASCIIPath(t *testing.T) {
 	d, err := workspace.Resolve(func(string) string {
-		return filepath.Join(t.TempDir(), "Test User", "é", ".vukem-video")
+		return filepath.Join(t.TempDir(), "Test User", "é", ".stuarty")
 	})
 	if err != nil {
 		t.Fatal(err)

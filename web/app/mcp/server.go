@@ -22,9 +22,9 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/jsonrpc"
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/service"
-	"github.com/AlexGalhardo/vukem-video/web/app/agentdocs"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/web/app/agentdocs"
 )
 
 // Options configure the adapter.
@@ -73,7 +73,7 @@ func New(svc service.Service, o Options) (*sdk.Server, error) {
 	}
 
 	srv := sdk.NewServer(
-		&sdk.Implementation{Name: "vukem-video", Version: o.Version, Description: o.Description},
+		&sdk.Implementation{Name: "stuarty", Version: o.Version, Description: o.Description},
 		&sdk.ServerOptions{
 			Instructions: agentdocs.Instructions(),
 			SetCacheable: func(_ context.Context, req sdk.Request, c *sdk.Cacheable) {
@@ -286,7 +286,7 @@ func runDraining(ctx context.Context, svc service.Service, o Options, t sdk.Tran
 }
 
 // drainTransport keeps the connection open after the input ends until every
-// request already read has been answered, so `echo <request> | vukem-video mcp`
+// request already read has been answered, so `echo <request> | stuarty mcp`
 // gets its response instead of exiting while the call is still running.
 type drainTransport struct {
 	inner sdk.Transport

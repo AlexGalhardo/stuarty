@@ -493,7 +493,7 @@ vukem opens SQLite through `database.Open` and applies these settings to every c
 
 **Durability note. Decision of this SDD.** With `synchronous=NORMAL` in WAL mode a committed transaction is in the operating system's cache. It survives a crash of the process (kill, panic, `os.Exit`), which is the guarantee of NFR-013 ("a crash of the process"). It can be lost if the machine loses power or the OS crashes before the next checkpoint; the database is never corrupted and rolls back to an earlier commit. We accept this and document it; raising it to `FULL` needs a vukem change because the pragma is appended after any user value and cannot be overridden through the URL (VF candidate 1 in the report). Verified by the crash tests of section 18 (kill the process, not the machine). Re-confirmed by the ALPHA gate (P2-SRV-022): the crash suite kills the process at every commit, undo, redo, trash-emptying and start-up migration point, and a `SIGKILL` in the middle of 200 concurrent HTTP commits loses no acknowledged revision; `PRAGMA integrity_check` is `ok` every time.
 
-**Path rules.** The database file is `<workspace>/db.sqlite`, passed to vukem as `file:<path>` with forward slashes. vukem does not escape the path (`sqliteDSN` splits on the first `?`), so a workspace path containing `?`, `#` or `%` is refused at start-up with an error that names the offending character. Spaces, non-ASCII characters and a Windows drive letter are accepted; verified by a test that opens a workspace under `C:\Users\Test User\é\.vukem-video` on the Windows CI job.
+**Path rules.** The database file is `<workspace>/db.sqlite`, passed to vukem as `file:<path>` with forward slashes. vukem does not escape the path (`sqliteDSN` splits on the first `?`), so a workspace path containing `?`, `#` or `%` is refused at start-up with an error that names the offending character. Spaces, non-ASCII characters and a Windows drive letter are accepted; verified by a test that opens a workspace under `C:\Users\Test User\é\.stuarty` on the Windows CI job.
 
 **Checkpoints.** SQLite's automatic checkpoint (1000 pages) is kept. On graceful shutdown the owner runs `PRAGMA wal_checkpoint(TRUNCATE)` so that `db.sqlite` is self-contained when copied by hand.
 
@@ -996,7 +996,7 @@ package workspace
 
 type Dir string
 
-func Resolve(getenv func(string) string) (Dir, error) // VUKEM_VIDEO_HOME or ~/.vukem-video; creates it (0700 on Unix); refuses ? # % in the path
+func Resolve(getenv func(string) string) (Dir, error) // STUARTY_HOME or ~/.stuarty; creates it (0700 on Unix); refuses ? # % in the path
 
 var ErrLocked = errors.New("workspace: locked by another process")
 
@@ -1052,7 +1052,7 @@ Implemented in `web/app/workspace/open.go`: `func Open(ctx context.Context, o Op
 
 ```text
 Open (Auto)                                  (the order of SDD-003 §5.2)
-  1. VUKEM_VIDEO_URL set -> remote client (service/remote) with VUKEM_VIDEO_KEY or --key-file.
+  1. STUARTY_URL set -> remote client (service/remote) with STUARTY_KEY or --key-file.
      No local file is read. Return it.
   2. d := Resolve(env)
      rt, err := d.ReadRuntime()
@@ -1078,9 +1078,9 @@ Open (Auto)                                  (the order of SDD-003 §5.2)
 
 - `host(addr)`: an unspecified address (`0.0.0.0`, `::`) is replaced by `127.0.0.1` or `::1`.
 - `processAlive`: `os.FindProcess` then, on Unix, `Signal(0)`; on Windows `os.FindProcess` already fails when `OpenProcess` fails. A `PermissionDenied` answer counts as alive.
-- The probe is `GET /up`, which vukem registers by default (`http.go`, `r.Get("/up", ...)`), answers 200 with `{"status":"ok"}` and is outside `/api/v1`. The token is sent only after `/up` succeeds on a loopback address of a live pid and the server has proved that it knows the token (the handshake of SDD-007 §3.8), so it is never sent to a stranger that took the port of a dead owner. When `runtime.json` says `mode` is `network`, no local token exists: the command needs `VUKEM_VIDEO_KEY` (SDD-007 §4.6) and fails with `E_UNAUTHORIZED` and that hint when it is unset.
+- The probe is `GET /up`, which vukem registers by default (`http.go`, `r.Get("/up", ...)`), answers 200 with `{"status":"ok"}` and is outside `/api/v1`. The token is sent only after `/up` succeeds on a loopback address of a live pid and the server has proved that it knows the token (the handshake of SDD-007 §3.8), so it is never sent to a stranger that took the port of a dead owner. When `runtime.json` says `mode` is `network`, no local token exists: the command needs `STUARTY_KEY` (SDD-007 §4.6) and fails with `E_UNAUTHORIZED` and that hint when it is unset.
 - In-process Service built here uses `queue.Sync{}` (`vukem.WithQueueDriver`) so jobs run inline (ADR-0008 item 6); section 14. This is the path of a one-shot CLI command.
-- `vukem-video mcp` over stdio does not use this path when no owner exists: it becomes the owner. It runs the owner start-up order of 6.3 (lock for its lifetime, listener on loopback, queue worker, event hub, `runtime.json`) and adds the stdio adapter, so jobs run on the worker, `wait_ms` works, and the UI and the CLI reach it over HTTP. When standard input closes it shuts down like `serve`. With an owner present it is an HTTP client like the CLI (SDD-003 §4.5).
+- `stuarty mcp` over stdio does not use this path when no owner exists: it becomes the owner. It runs the owner start-up order of 6.3 (lock for its lifetime, listener on loopback, queue worker, event hub, `runtime.json`) and adds the stdio adapter, so jobs run on the worker, `wait_ms` works, and the UI and the CLI reach it over HTTP. When standard input closes it shuts down like `serve`. With an owner present it is an HTTP client like the CLI (SDD-003 §4.5).
 - Credentials for the HTTP client in network mode are chosen by SDD-007; this SDD decides only the transport.
 - NFR-024 (300 ms for a read when a server owns the workspace): `TryLock` fails in microseconds; reading `runtime.json`, `/up` and one request on loopback add a few milliseconds. Verified by an acceptance benchmark.
 - A contention case: two CLI commands started together with no server. One takes the lock and runs in process; the other sees `ErrLocked`, finds no `runtime.json` and waits up to 10 s, then runs in its turn (it re-runs step 3 on each loop pass; **Decision of this SDD**: the loop in step 4 retries `TryLock` before reading `runtime.json`, so the waiting command becomes the owner as soon as the first one exits).
@@ -1397,7 +1397,7 @@ ADR-0018. State vocabulary in SDD-000 §6; table in section 5.6.
 | Driver in an in-process command | `queue.Sync{}` (jobs run inside `Dispatch`) | `vukem.WithQueueDriver(queue.Sync{})` |
 | Queues, strict priority | `ingest,export,default` | `QUEUE_NAMES` |
 | Workers | `QUEUE_CONCURRENCY=6` | |
-| Per-queue cap | `QUEUE_LIMITS=ingest=<VUKEM_VIDEO_MAX_INGESTS>,export=<VUKEM_VIDEO_MAX_EXPORTS>`; the transcribe concurrency is `VUKEM_VIDEO_MAX_TRANSCRIBES` (defaults: ingest 2, transcribe 1) | caps running jobs per process; a second guard behind the check of 14.2 |
+| Per-queue cap | `QUEUE_LIMITS=ingest=<STUARTY_MAX_INGESTS>,export=<STUARTY_MAX_EXPORTS>`; the transcribe concurrency is `STUARTY_MAX_TRANSCRIBES` (defaults: ingest 2, transcribe 1) | caps running jobs per process; a second guard behind the check of 14.2 |
 | Worker in `serve` | on (`QUEUE_IN_SERVE` default `true`) | |
 | Handler options | `queue.Retries(0)`, `queue.OnQueue(...)`, `queue.Timeout(...)` | timeouts: the per-run ceilings of SDD-007 §6.5 plus 10 minutes (ingest 4 h 10 min, transcribe 7 h 10 min, export 2 h 10 min, frame 2 min), so the queue never kills a job that its own deadline still allows |
 | Kinds | `video.ingest`, `video.transcribe`, `video.export`, `video.frame` | `Kind()` strings, stable |
@@ -1415,7 +1415,7 @@ Enforced in `CreateLimited` before the row exists, inside the write transaction,
 
 ```sql
 SELECT id FROM jobs WHERE kind = ? AND state IN ('queued','running') ORDER BY created_ms;
--- len >= Max (VUKEM_VIDEO_MAX_EXPORTS for export): return *QueueFullError{Running: ids}
+-- len >= Max (STUARTY_MAX_EXPORTS for export): return *QueueFullError{Running: ids}
 SELECT id FROM jobs WHERE kind = ? AND state IN ('queued','running') AND actor = ?;
 -- when MaxPerActor > 0: same, for every kind of actor (SDD-007 9.1)
 ```
@@ -1477,7 +1477,7 @@ A handler writes progress at most every 250 ms and only when the value moved by 
 
 - **Crash suite.** `go test -tags crashtest ./web/app/servicetest/ -run "^(TestCrash|TestKillMid)" -count=100` passes on Windows (355 s): the commit, undo, redo, trash-emptying, migration and bundle import points and, new in this task, the two bundle export points `bundle_export.after_write` (a kill before the rename leaves no bundle at a final name) and `bundle_export.after_rename` (a kill after it leaves a whole archive). After each kill every acknowledged revision is in the log and `PRAGMA integrity_check` is `ok`.
 - **Kill of a real `serve`.** `TestKillRealServeDuringConcurrentHTTPCommits` repeated 20 times (164 s), each time the process is killed with `Process.Kill` (`TerminateProcess` on Windows, `SIGKILL` elsewhere) in the middle of four clients committing.
-- **Soak.** `TestSoak` (build tag `soak`, `VUKEM_VIDEO_SOAK_DURATION`, one hour by default; the nightly job owned by REL runs `go test -tags soak -run TestSoak -timeout 90m ./web/app/servicetest/`): four workers in process and four over HTTP on loopback run edits (60%), undos (15%), reads (15%), exports (7%) and bundle exports (3%), the HTTP workers paced under the 600 requests a minute of the one local credential. The baseline is taken at rest after a 30 s warm-up; the end is taken after the workers stop and the server closes. Local run of 10 minutes: 93,842 calls (56,125 edits, 14,227 undos, 14,130 reads, 6,639 exports, 2,721 bundle exports), no 5xx; 1,837 calls were refused by a documented limit (`E_QUEUE_FULL` 300, `E_RATE_LIMITED` 1,537); goroutines 7 at the baseline and 6 at the end; resident memory 19.3 MiB at the baseline and 19.8 MiB at the end (the runtime's mapped memory less what it returned; 24 to 28 MiB while running); no `running` job after the shutdown. The full hour is left to the nightly job.
+- **Soak.** `TestSoak` (build tag `soak`, `STUARTY_SOAK_DURATION`, one hour by default; the nightly job owned by REL runs `go test -tags soak -run TestSoak -timeout 90m ./web/app/servicetest/`): four workers in process and four over HTTP on loopback run edits (60%), undos (15%), reads (15%), exports (7%) and bundle exports (3%), the HTTP workers paced under the 600 requests a minute of the one local credential. The baseline is taken at rest after a 30 s warm-up; the end is taken after the workers stop and the server closes. Local run of 10 minutes: 93,842 calls (56,125 edits, 14,227 undos, 14,130 reads, 6,639 exports, 2,721 bundle exports), no 5xx; 1,837 calls were refused by a documented limit (`E_QUEUE_FULL` 300, `E_RATE_LIMITED` 1,537); goroutines 7 at the baseline and 6 at the end; resident memory 19.3 MiB at the baseline and 19.8 MiB at the end (the runtime's mapped memory less what it returned; 24 to 28 MiB while running); no `running` job after the shutdown. The full hour is left to the nightly job.
 
 ## 15. Templates
 
@@ -1486,7 +1486,7 @@ ADR-0022; SDD-001 §3.10. A template is a timeline document stored in `templates
 - **Save** (`TemplateSave`): the service builds the template document from a project (placeholders for marked media items, `template` info), validates it, and calls `Templates.Create` with the denormalized `slots` and summary. No log row: templates have no revisions and are immutable once saved. Saving again from the edited project creates a new template.
 - **Instantiate** (`TemplateInstantiate`): in one `Write`, read the template, create the project (revision 0, then a batch of `slot.fill` operations as one revision when values were given), and return the project and the unfilled required slots. The project is a copy; later template changes do not exist.
 - **Migration.** Templates migrate with projects (section 8), without log rows.
-- **Template file** (RF-052; `TemplateExport`, `TemplateImport`): a zip with the container rules of section 16.1: `manifest.json` (`{"format":"vukem-video-template","template_version":1,"app_version":"0.5.0","schema_version":1,"name":...}`), `template.json` (the canonical document) an optional `preview.jpg` and, from BETA, `font.<hex>` for each user font in `fonts` (SDD-001 §3.9). The file is served and accepted as `application/zip`, named `<template id>.vukem-template.zip`, with the entry allowlist and the size limits of SDD-007 §7.6 (at most 64 MiB compressed, 64 entries, 256 MiB declared). Import validates the document (`timeline.Migrate`, `timeline.Validate`), copies fonts into `<workspace>/fonts/<hash>` after checking their hash, and inserts the row. A template with a newer `schema_version` is refused with `E_VALIDATION` and `details.code = "V_SCHEMA_VERSION"`.
+- **Template file** (RF-052; `TemplateExport`, `TemplateImport`): a zip with the container rules of section 16.1: `manifest.json` (`{"format":"stuarty-template","template_version":1,"app_version":"0.5.0","schema_version":1,"name":...}`), `template.json` (the canonical document) an optional `preview.jpg` and, from BETA, `font.<hex>` for each user font in `fonts` (SDD-001 §3.9). The file is served and accepted as `application/zip`, named `<template id>.stuarty-template.zip`, with the entry allowlist and the size limits of SDD-007 §7.6 (at most 64 MiB compressed, 64 entries, 256 MiB declared). Import validates the document (`timeline.Migrate`, `timeline.Validate`), copies fonts into `<workspace>/fonts/<hash>` after checking their hash, and inserts the row. A template with a newer `schema_version` is refused with `E_VALIDATION` and `details.code = "V_SCHEMA_VERSION"`.
 
 ## 16. The project bundle (BETA)
 
@@ -1506,7 +1506,7 @@ A zip file with extension `.vvbundle`, deflate-compressed (the `media.*` and `fo
 
 ```json
 {
-  "format": "vukem-video-bundle",
+  "format": "stuarty-bundle",
   "bundle_version": 1,
   "app_version": "0.5.0",
   "created_at": "2026-11-14T12:30:00Z",
@@ -1529,7 +1529,7 @@ A line of `operations.ndjson` is the `operations` row as JSON with the parsed co
 
 ### 16.3 Import
 
-1. Open the file and call `archive.Zip(r, size, archive.Policy{MaxEntries: 1024, MaxTotalSize: 32 << 30, MaxEntrySize: VUKEM_VIDEO_MAX_IMPORT_BYTES, Key: identity})`. Violations are `E_LIMIT_EXCEEDED`, `E_VALIDATION` or `E_UNSUPPORTED_MEDIA` per `archive.Err*`. The service applies stricter caps by entry: `manifest.json` 1 MiB, `document.json` 64 MiB, `operations.ndjson` 2 GiB. Free disk space must exceed the declared total plus 10%.
+1. Open the file and call `archive.Zip(r, size, archive.Policy{MaxEntries: 1024, MaxTotalSize: 32 << 30, MaxEntrySize: STUARTY_MAX_IMPORT_BYTES, Key: identity})`. Violations are `E_LIMIT_EXCEEDED`, `E_VALIDATION` or `E_UNSUPPORTED_MEDIA` per `archive.Err*`. The service applies stricter caps by entry: `manifest.json` 1 MiB, `document.json` 64 MiB, `operations.ndjson` 2 GiB. Free disk space must exceed the declared total plus 10%.
 2. Read `manifest.json`. `format` must match. `bundle_version` above the supported value: `E_VALIDATION` with the instruction to upgrade. Read `document.json`, check its `sha256`.
 3. Run `timeline.Migrate` if `schema_version` is older; refuse a newer one with `E_VALIDATION` and `details.code = "V_SCHEMA_VERSION"`, the message naming both versions (the convention of template and bundle import; every load of a stored document goes through the same decode, so ProjectGet, edit, plan, view and export answer it alike, and the editor page shows that code, message and hint); `timeline.Validate`; any violation is `E_VALIDATION` listing all.
 4. Every `assets` entry of the document must have a `media.<hex>` entry or an existing store file; every `fonts` entry likewise. A file that is not shipped but is in the store is accepted only in local mode (the store is the caller's own). In network mode the store is shared, so such a file is accepted only for an asset whose hash is already linked to a project the caller can see; a font is always required in the bundle. The refusal is one generic `E_VALIDATION` without the hash, the same whether the hash is stored or not, so a user can neither link another user's media nor probe for it (SDD-007 T-20). Copy each missing file to a temporary name in `store/` while computing its SHA-256, compare with the manifest hash, rename into place (holding `storeMu` read lock, section 13.4). A `font.<hex>` entry is not copied to `store/`: it is validated and stored by `engine/store.Fonts` in `fonts/<sha256>` (SDD-007 section 7.7), before any media is copied, so a crafted font refuses the whole bundle and stores nothing.
@@ -1575,7 +1575,7 @@ The implementation of this SDD is complete when every check passes. File paths a
 **Commit transaction and crash safety**
 
 5. `go test ./service/ -run TestCommit` covers: base equal to current; base older without conflict (applies); base older with conflict (`E_REVISION_CONFLICT` with current revision and text diff of all batches since base); base newer (`E_VALIDATION`); a failing operation (`op_index`, nothing written); `dry_run` (nothing written, `applied: false`); a trashed project (`E_INVALID_STATE`).
-6. Crash-injection suite, `go test -tags crashtest ./web/app/servicetest/...` (the suite lives in `web/` because `service/` may not import `web/`, ADR-0001, and the checks need the SQLite store). The binary is built with `-tags crashtest`, which compiles `crashpoint.Hit(name)` into the commit path; a parent test starts the test binary as a child with the point name in the environment variable `VUKEM_VIDEO_CRASH_AT`, the child exits with code 137 at that point, the parent reopens the database and checks the invariants of section 9.2. Points: `commit.after_lock`, `commit.after_load`, `commit.after_apply`, `commit.after_operation_append`, `commit.after_project_commit`, `commit.after_assets_sync`, `commit.after_idempotency_put`, `commit.before_commit`, `commit.after_commit`, `commit.after_publish`. Expected: for every point up to `before_commit` the project is at revision R with the old document; from `after_commit` it is at R+1; in both cases all invariants hold and `PRAGMA integrity_check` is `ok`. The same suite runs for `Undo` and `Redo` (P1-SRV-003); `TrashEmpty`, a bundle import and a document migration get their own points when those paths exist.
+6. Crash-injection suite, `go test -tags crashtest ./web/app/servicetest/...` (the suite lives in `web/` because `service/` may not import `web/`, ADR-0001, and the checks need the SQLite store). The binary is built with `-tags crashtest`, which compiles `crashpoint.Hit(name)` into the commit path; a parent test starts the test binary as a child with the point name in the environment variable `STUARTY_CRASH_AT`, the child exits with code 137 at that point, the parent reopens the database and checks the invariants of section 9.2. Points: `commit.after_lock`, `commit.after_load`, `commit.after_apply`, `commit.after_operation_append`, `commit.after_project_commit`, `commit.after_assets_sync`, `commit.after_idempotency_put`, `commit.before_commit`, `commit.after_commit`, `commit.after_publish`. Expected: for every point up to `before_commit` the project is at revision R with the old document; from `after_commit` it is at R+1; in both cases all invariants hold and `PRAGMA integrity_check` is `ok`. The same suite runs for `Undo` and `Redo` (P1-SRV-003); `TrashEmpty`, a bundle import and a document migration get their own points when those paths exist.
 7. A test kills (`SIGKILL`; `taskkill /F` on Windows) a real `serve` process in the middle of 200 concurrent commits from 4 goroutines over HTTP, restarts it, and asserts: every revision the clients saw acknowledged exists in the log with an equal `doc_sha256`; revisions are contiguous; the final document equals the replay of the log from the initial document (rewind by inverses reaches the revision-0 document).
 8. A race test (`go test -race`) runs 8 goroutines committing to the same project and 8 to others: the revisions of the first project are exactly `1..N` with no gap and no duplicate, and the events captured on the hub topic arrive in revision order.
 9. The idempotency tests: same key and same operations returns the stored result with `replayed: true` and writes nothing (row count unchanged); same key with different operations is `E_IDEMPOTENCY_MISMATCH`; an expired key (clock advanced 24 h 1 s) runs again; keys of different actors do not collide; a failed batch stores nothing.
@@ -1614,7 +1614,7 @@ The implementation of this SDD is complete when every check passes. File paths a
 **Jobs**
 
 29. Claim: 20 concurrent claims of one job: exactly one returns true. A redelivered queue message for a finished job does nothing.
-30. Limits: with `VUKEM_VIDEO_MAX_EXPORTS=2`, the third `JobStart` of kind `export` returns `E_QUEUE_FULL` with the two job ids in `details.running`, and no row is created; 20 concurrent `JobStart` calls create exactly 2.
+30. Limits: with `STUARTY_MAX_EXPORTS=2`, the third `JobStart` of kind `export` returns `E_QUEUE_FULL` with the two job ids in `details.running`, and no row is created; 20 concurrent `JobStart` calls create exactly 2.
 31. Progress: a handler emitting 1,000 progress calls in 1 s produces at most 5 `UPDATE`s of the row and at most 5 `job.updated` events, and the last state is delivered.
 32. Cancel: cancelling a queued job ends `cancelled` before any claim; cancelling a running export ends `cancelled` within 2 s with its FFmpeg process tree gone and no file at the final output path; cancelling after completion returns the final row; cancelling twice is idempotent.
 33. Verification gate: a handler whose output fails verification ends `failed` with `E_VERIFY_FAILED`, never `succeeded`.

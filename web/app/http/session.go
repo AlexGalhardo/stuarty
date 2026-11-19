@@ -6,10 +6,10 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/AlexGalhardo/vukem/web"
+	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/web/app/auth"
 
-	"github.com/AlexGalhardo/vukem-video/service"
-	"github.com/AlexGalhardo/vukem-video/web/app/auth"
+	"github.com/AlexGalhardo/vukem/web"
 )
 
 // launch is GET /auth/launch?code=...: the one route that takes a credential in
@@ -27,7 +27,7 @@ func (h *apiHandler) launch(c *web.Ctx) error {
 	if !ok {
 		return &service.Error{
 			Code: service.CodeUnauthorized, Message: "the launch code is not valid.",
-			Hint: "run vukem-video open for a new one",
+			Hint: "run stuarty open for a new one",
 		}
 	}
 
@@ -57,7 +57,7 @@ func (h *apiHandler) launch(c *web.Ctx) error {
 // systemLaunch is POST /api/v1/system/launch: a new launch code (SDD-007 section 3.4 item 3). The
 // bearer token alone cannot tell the desktop shell from an agent, so only a request that also
 // proves the launcher secret gets a code whose session has the browser-only privileges (section
-// 5.3); `vukem-video open` and any other bearer caller get a session without them.
+// 5.3); `stuarty open` and any other bearer caller get a session without them.
 func (h *apiHandler) systemLaunch(c *web.Ctx, _ noIn) (launchOut, error) {
 	if err := requireJSONOrEmptyBody(c.Request()); err != nil {
 		return launchOut{}, err

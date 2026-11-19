@@ -4,7 +4,7 @@ import (
 	"math"
 	"slices"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 // keyframeValue evaluates keyframes at r, the frame inside the item (SDD-004

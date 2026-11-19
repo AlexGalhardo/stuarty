@@ -14,7 +14,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/stuarty/service"
 )
 
 // patchDeclaredSize rewrites the uncompressed size that the central directory of a zip declares for
@@ -235,7 +235,7 @@ func fuzzBundleZip(entries map[string]string) []byte {
 // panics, and a refusal leaves no project and no file in the stores (SDD-007 T-20, T-21).
 func FuzzBundleArchive(f *testing.F) {
 	hexName := strings.Repeat("ab", 32)
-	manifest := `{"format":"vukem-video-bundle","bundle_version":1,"project":{"id":"prj_0000000000"}}`
+	manifest := `{"format":"stuarty-bundle","bundle_version":1,"project":{"id":"prj_0000000000"}}`
 
 	f.Add(fuzzBundleZip(map[string]string{"manifest.json": manifest, "document.json": "{}"}))
 	f.Add(fuzzBundleZip(map[string]string{

@@ -52,7 +52,7 @@ func TestHashes(t *testing.T) {
 	sum := sha256.Sum256([]byte(doc))
 	docHash := hex.EncodeToString(sum[:])
 	manifestFor := func(hash string) string {
-		return `{"format":"vukem-video-bundle","document":{"sha256":"` + hash + `"},"media":[{"hash":"bbb"},{"hash":"aaa"}]}`
+		return `{"format":"stuarty-bundle","document":{"sha256":"` + hash + `"},"media":[{"hash":"bbb"},{"hash":"aaa"}]}`
 	}
 
 	t.Run("document and sorted media", func(t *testing.T) {

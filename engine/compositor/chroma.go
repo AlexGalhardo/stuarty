@@ -4,7 +4,7 @@ import (
 	"math"
 	"math/bits"
 
-	"github.com/AlexGalhardo/vukem-video/core/plan"
+	"github.com/AlexGalhardo/stuarty/core/plan"
 )
 
 // chromaScale is the chroma distance that a similarity or a smoothness of 1 stands for, in 1/256 of an 8-bit

@@ -12,7 +12,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/AlexGalhardo/vukem-video/core/plan"
+	"github.com/AlexGalhardo/stuarty/core/plan"
 )
 
 // Layout of the mix and of the decoded streams.

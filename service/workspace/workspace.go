@@ -24,11 +24,11 @@ var Subdirectories = []string{
 
 const (
 	// EnvHome overrides the workspace location (SDD-000 section 10).
-	EnvHome    = "VUKEM_VIDEO_HOME"
-	defaultDir = ".vukem-video"
+	EnvHome    = "STUARTY_HOME"
+	defaultDir = ".stuarty"
 )
 
-// Resolve returns the workspace directory: VUKEM_VIDEO_HOME or ~/.vukem-video.
+// Resolve returns the workspace directory: STUARTY_HOME or ~/.stuarty.
 // It creates the directory (mode 0700 on Unix) and refuses a path that holds
 // ?, # or %, which break the file: DSN of the database (SDD-005 section 6.2).
 func Resolve(getenv func(string) string) (Dir, error) {

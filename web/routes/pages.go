@@ -7,6 +7,11 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/service"
+	httpapi "github.com/AlexGalhardo/stuarty/web/app/http"
+	"github.com/AlexGalhardo/stuarty/web/resources"
+
 	vukem "github.com/AlexGalhardo/vukem"
 	"github.com/AlexGalhardo/vukem/errs"
 	"github.com/AlexGalhardo/vukem/i18n"
@@ -14,11 +19,6 @@ import (
 	"github.com/AlexGalhardo/vukem/middleware"
 	"github.com/AlexGalhardo/vukem/router"
 	"github.com/AlexGalhardo/vukem/web"
-
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/service"
-	httpapi "github.com/AlexGalhardo/vukem-video/web/app/http"
-	"github.com/AlexGalhardo/vukem-video/web/resources"
 )
 
 // phase is the build's feature gate that the editor reads from its bootstrap
@@ -96,7 +96,7 @@ func Pages(d *httpapi.Deps) func(r *router.Router, app *vukem.App) error {
 }
 
 // appName is the name the layout shows and gives the logo as its accessible name.
-const appName = "Vukem Video"
+const appName = "Stuarty"
 
 // sharedUser is the account that network mode shows in the header; the layout
 // draws the keys link and the log out button when it is not null.

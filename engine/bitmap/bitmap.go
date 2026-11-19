@@ -8,7 +8,7 @@ import (
 	"image"
 	"image/png"
 
-	"github.com/AlexGalhardo/vukem-video/core/plan"
+	"github.com/AlexGalhardo/stuarty/core/plan"
 )
 
 // Bitmap is a rendered bitmap and its metrics.

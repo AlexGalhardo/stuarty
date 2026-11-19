@@ -3,7 +3,7 @@ package renderhost
 import (
 	"encoding/json"
 
-	"github.com/AlexGalhardo/vukem-video/core/plan"
+	"github.com/AlexGalhardo/stuarty/core/plan"
 )
 
 // RenderInputVersion is the version of the render input this host writes (SDD-000 section 12).

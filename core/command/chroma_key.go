@@ -1,7 +1,7 @@
 package command
 
 import (
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 // The values a chroma key starts with when the clip has none and the command does not give them.

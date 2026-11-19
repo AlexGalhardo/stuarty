@@ -8,21 +8,21 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/engine/transcribe"
+	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/untrusted"
+
 	"github.com/AlexGalhardo/vukem/openapi"
 	"github.com/AlexGalhardo/vukem/web"
-
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/engine/transcribe"
-	"github.com/AlexGalhardo/vukem-video/service"
-	"github.com/AlexGalhardo/vukem-video/service/untrusted"
 )
 
 // Info is the base of the OpenAPI document: the problem members of the error
 // envelope (SDD-003 section 6.7 item 3) and the bearer scheme.
 func Info() openapi.Info {
 	return openapi.Info{
-		Title:       "Vukem Video",
-		Description: "The HTTP API of Vukem Video. Every operation is the HTTP form of one service operation. This document needs the same Bearer token as the API.",
+		Title:       "Stuarty",
+		Description: "The HTTP API of Stuarty. Every operation is the HTTP form of one service operation. This document needs the same Bearer token as the API.",
 		PathPrefix:  BasePath,
 		ProblemExtensions: map[string]openapi.Schema{
 			"code":      {"type": "string", "description": "A stable error code, for example E_OVERLAP."},

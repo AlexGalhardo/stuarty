@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"math"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 // BitmapVersion is part of every bitmap key; bump it with any change that

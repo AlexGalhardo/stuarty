@@ -12,9 +12,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/core/timeval"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeval"
 )
 
 // decodeRow reads the stored document of a project row.
@@ -25,7 +25,7 @@ func decodeRow(row *ProjectRow) (*timeline.Document, error) {
 			for _, v := range ve.Violations {
 				if v.Code == timeline.VSchemaVersion {
 					return nil, newError(command.CodeValidation, "%s", v.Message).
-						withHint("update vukem-video, then open the project again").
+						withHint("update stuarty, then open the project again").
 						withDetail("code", timeline.VSchemaVersion)
 				}
 			}

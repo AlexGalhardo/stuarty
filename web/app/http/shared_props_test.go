@@ -8,11 +8,11 @@ import (
 	"testing/fstest"
 	"time"
 
+	"github.com/AlexGalhardo/stuarty/service"
+	httpapi "github.com/AlexGalhardo/stuarty/web/app/http"
+
 	vukem "github.com/AlexGalhardo/vukem"
 	"github.com/AlexGalhardo/vukem/ratelimit"
-
-	"github.com/AlexGalhardo/vukem-video/service"
-	httpapi "github.com/AlexGalhardo/vukem-video/web/app/http"
 )
 
 // inertiaProps reads the props that the first visit of an Inertia page writes into the HTML.
@@ -56,7 +56,7 @@ func TestNetworkPagesShareTheUserAndTheAppName(t *testing.T) {
 	}
 
 	props := inertiaProps(t, res)
-	if props["appName"] != "Vukem Video" {
+	if props["appName"] != "Stuarty" {
 		t.Errorf("appName = %v", props["appName"])
 	}
 
@@ -85,7 +85,7 @@ func TestLocalPagesShareTheAppNameAndNoUser(t *testing.T) {
 	}
 
 	props := inertiaProps(t, netResp{status: res.status, body: res.body})
-	if props["appName"] != "Vukem Video" || props["auth"] != nil {
+	if props["appName"] != "Stuarty" || props["auth"] != nil {
 		t.Errorf("local props: appName %v, auth %v", props["appName"], props["auth"])
 	}
 }

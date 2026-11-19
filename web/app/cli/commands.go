@@ -7,9 +7,9 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/AlexGalhardo/vukem-video/service"
-	"github.com/AlexGalhardo/vukem-video/web/app/agentdocs"
-	"github.com/AlexGalhardo/vukem-video/web/app/mcp"
+	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/web/app/agentdocs"
+	"github.com/AlexGalhardo/stuarty/web/app/mcp"
 )
 
 // registry lists the commands in the order the short list prints them.
@@ -64,8 +64,8 @@ func page(p *parsed) service.Page {
 var projectList = &spec{
 	name:    "project:list",
 	summary: "list the projects of the workspace",
-	usage:   []string{"vukem-video project:list [--state active|trashed|all] [--cursor c] [--limit n]"},
-	example: "vukem-video project:list --json",
+	usage:   []string{"stuarty project:list [--state active|trashed|all] [--cursor c] [--limit n]"},
+	example: "stuarty project:list --json",
 	flags: append([]flagDef{{Name: "state", Kind: kindString, Default: "active", Usage: "active, trashed or all"}},
 		pageFlags("20")...),
 	run: func(ctx context.Context, c *call) (*output, error) {
@@ -82,9 +82,9 @@ var projectCreate = &spec{
 	name:    "project:create",
 	summary: "create a project",
 	usage: []string{
-		"vukem-video project:create --name <name> [--preset 9:16|1:1|16:9|4:5] [--fps 30] [--id prj_...]",
+		"stuarty project:create --name <name> [--preset 9:16|1:1|16:9|4:5] [--fps 30] [--id prj_...]",
 	},
-	example: `vukem-video project:create --name "Launch teaser" --json`,
+	example: `stuarty project:create --name "Launch teaser" --json`,
 	globals: []string{"dry-run"},
 	write:   true,
 	flags: []flagDef{
@@ -117,9 +117,9 @@ var projectShow = &spec{
 	name:    "project:show",
 	summary: "show a project",
 	usage: []string{
-		"vukem-video project:show [<project id>] [--detail concise|full|document] [--cursor c] [--limit n]",
+		"stuarty project:show [<project id>] [--detail concise|full|document] [--cursor c] [--limit n]",
 	},
-	example:           "vukem-video project:show --project prj_7k2m9x4q1b",
+	example:           "stuarty project:show --project prj_7k2m9x4q1b",
 	project:           true,
 	projectPositional: true,
 	flags: append([]flagDef{{Name: "detail", Kind: kindString, Default: "concise", Usage: "concise, full or document"}},
@@ -154,8 +154,8 @@ func projectStateCommand(
 	return &spec{
 		name:              name,
 		summary:           summary,
-		usage:             []string{"vukem-video " + name + " <project id>"},
-		example:           "vukem-video " + name + " prj_7k2m9x4q1b",
+		usage:             []string{"stuarty " + name + " <project id>"},
+		example:           "stuarty " + name + " prj_7k2m9x4q1b",
 		project:           true,
 		projectPositional: true,
 		globals:           []string{"dry-run"},
@@ -188,8 +188,8 @@ var projectRestore = projectStateCommand("project:restore", "restore a trashed p
 var history = &spec{
 	name:    "history",
 	summary: "list the steps of a project history",
-	usage:   []string{"vukem-video history --project <id> [--by a] [--cursor c] [--limit n]"},
-	example: "vukem-video history --project prj_7k2m9x4q1b --json",
+	usage:   []string{"stuarty history --project <id> [--by a] [--cursor c] [--limit n]"},
+	example: "stuarty history --project prj_7k2m9x4q1b --json",
 	project: true,
 	flags: append([]flagDef{{Name: "by", Kind: kindString, Usage: "only the steps of this actor"}},
 		pageFlags("20")...),
@@ -209,8 +209,8 @@ func undoCommand(name, summary string, redo bool) *spec {
 	return &spec{
 		name:    name,
 		summary: summary,
-		usage:   []string{"vukem-video " + name + " --project <id>"},
-		example: "vukem-video " + name + " --project prj_7k2m9x4q1b",
+		usage:   []string{"stuarty " + name + " --project <id>"},
+		example: "stuarty " + name + " --project prj_7k2m9x4q1b",
 		project: true,
 		globals: []string{"dry-run"},
 		write:   true,
@@ -245,8 +245,8 @@ var (
 var lintCmd = &spec{
 	name:    "lint",
 	summary: "check a project against every lint rule (an edit result runs only the fast rules, lint_scope fast)",
-	usage:   []string{"vukem-video lint --project <id> [--severity error|warning] [--cursor c] [--limit n] [--strict]"},
-	example: "vukem-video lint --project prj_7k2m9x4q1b --json",
+	usage:   []string{"stuarty lint --project <id> [--severity error|warning] [--cursor c] [--limit n] [--strict]"},
+	example: "stuarty lint --project prj_7k2m9x4q1b --json",
 	project: true,
 	flags: append([]flagDef{
 		{
@@ -277,8 +277,8 @@ var lintCmd = &spec{
 var commandHelp = &spec{
 	name:       "command:help",
 	summary:    "list the editing commands, or describe one",
-	usage:      []string{"vukem-video command:help [<name>]"},
-	example:    "vukem-video command:help item.move",
+	usage:      []string{"stuarty command:help [<name>]"},
+	example:    "stuarty command:help item.move",
 	positional: true,
 	run: func(ctx context.Context, c *call) (*output, error) {
 		if len(c.args.Positional) > 1 {
@@ -308,21 +308,21 @@ type versionDoc struct {
 var version = &spec{
 	name:    "version",
 	summary: "print the version of this binary",
-	usage:   []string{"vukem-video version [--json]"},
-	example: "vukem-video version",
+	usage:   []string{"stuarty version [--json]"},
+	example: "stuarty version",
 	offline: true,
 	run: func(_ context.Context, _ *call) (*output, error) {
 		v := agentdocs.Version
-		text := "vukem-video " + v
+		text := "stuarty " + v
 
 		return &output{value: versionDoc{Version: v, Text: text}, text: text}, nil
 	},
 }
 
 // mcpDescription tells the client which workspace and server its tools act on, because a server
-// started without VUKEM_VIDEO_HOME or VUKEM_VIDEO_ADDR opens the default workspace of the user (VV-114).
+// started without STUARTY_HOME or STUARTY_ADDR opens the default workspace of the user (VV-114).
 func mcpDescription(workspace, server string) string {
-	text := "Vukem Video MCP server"
+	text := "Stuarty MCP server"
 
 	if workspace != "" {
 		text += " for the workspace " + workspace
@@ -344,8 +344,8 @@ func mcpDescription(workspace, server string) string {
 var mcpCmd = &spec{
 	name:    "mcp",
 	summary: "serve the MCP tools on standard input and output",
-	usage:   []string{"vukem-video mcp [--actor <label>]"},
-	example: "claude mcp add vukem-video -- vukem-video mcp",
+	usage:   []string{"stuarty mcp [--actor <label>]"},
+	example: "claude mcp add stuarty -- stuarty mcp",
 	stream:  true,
 	run: func(ctx context.Context, c *call) (*output, error) {
 		o := mcp.Options{Description: mcpDescription(c.workspace, c.server)}

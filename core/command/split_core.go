@@ -1,6 +1,6 @@
 package command
 
-import "github.com/AlexGalhardo/vukem-video/core/timeline"
+import "github.com/AlexGalhardo/stuarty/core/timeline"
 
 // splitCore is S(X, Tc) of R17, without the words (the command handles those):
 // the left part keeps the id and the front, the right part is a copy with newID

@@ -9,10 +9,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/AlexGalhardo/stuarty/service"
+
 	"github.com/AlexGalhardo/vukem/ratelimit"
 	"github.com/AlexGalhardo/vukem/web"
-
-	"github.com/AlexGalhardo/vukem-video/service"
 )
 
 // Denied is the error of a request that a limiter refused: E_RATE_LIMITED in the

@@ -8,9 +8,9 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/core/lint"
-	"github.com/AlexGalhardo/vukem-video/web/app/agentdocs"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/core/lint"
+	"github.com/AlexGalhardo/stuarty/web/app/agentdocs"
 )
 
 // AgentDocsInputs is what the generator of the agent material reads from the
@@ -25,7 +25,7 @@ func AgentDocsInputs() agentdocs.Inputs {
 		c := &commands[i]
 		usage := ""
 		if len(c.Usage) > 0 {
-			usage = strings.TrimPrefix(c.Usage[0], "vukem-video ")
+			usage = strings.TrimPrefix(c.Usage[0], "stuarty ")
 		}
 
 		in.CLI = append(in.CLI, agentdocs.CLICommand{
@@ -40,10 +40,10 @@ var agentDocs = &spec{
 	name:    "agent:docs",
 	summary: "print or write the material for agents: the skill, the AGENTS.md snippet, the MCP instructions",
 	usage: []string{
-		"vukem-video agent:docs --print skill|agents|instructions",
-		"vukem-video agent:docs --write <dir>",
+		"stuarty agent:docs --print skill|agents|instructions",
+		"stuarty agent:docs --write <dir>",
 	},
-	example: "vukem-video agent:docs --write ~/.claude/skills/vukem-video",
+	example: "stuarty agent:docs --write ~/.claude/skills/stuarty",
 	offline: true,
 	flags: []flagDef{
 		{Name: "print", Kind: kindString, Usage: "print one of skill, agents or instructions"},

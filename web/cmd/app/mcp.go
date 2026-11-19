@@ -9,19 +9,19 @@ import (
 	"os"
 	"time"
 
-	vukem "github.com/AlexGalhardo/vukem"
+	"github.com/AlexGalhardo/stuarty/service/workspace"
+	"github.com/AlexGalhardo/stuarty/web/app/agentdocs"
+	"github.com/AlexGalhardo/stuarty/web/app/cli"
+	"github.com/AlexGalhardo/stuarty/web/app/owner"
 
-	"github.com/AlexGalhardo/vukem-video/service/workspace"
-	"github.com/AlexGalhardo/vukem-video/web/app/agentdocs"
-	"github.com/AlexGalhardo/vukem-video/web/app/cli"
-	"github.com/AlexGalhardo/vukem-video/web/app/owner"
+	vukem "github.com/AlexGalhardo/vukem"
 )
 
 // announceTimeout bounds the wait for the listener of a stdio MCP server that
 // became the owner.
 const announceTimeout = 30 * time.Second
 
-// runMCP is `vukem-video mcp`. With no owner running, this process becomes the
+// runMCP is `stuarty mcp`. With no owner running, this process becomes the
 // owner of the workspace (SDD-003 section 4.7, SDD-005 section 6.3): it serves
 // the HTTP API and the UI on a loopback port, runs the workers and writes
 // runtime.json, so the browser and the other commands reach the same project
@@ -108,7 +108,7 @@ func becomeOwner(
 }
 
 // freePortIfBusy returns an address on any free loopback port when the address
-// was not chosen (VUKEM_VIDEO_ADDR unset) and the default one is taken; empty
+// was not chosen (STUARTY_ADDR unset) and the default one is taken; empty
 // means keep what is configured.
 func freePortIfBusy(ctx context.Context, getenv func(string) string, def string) string {
 	if getenv(envAddr) != "" {

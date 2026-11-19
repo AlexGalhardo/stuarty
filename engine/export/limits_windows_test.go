@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem/contrib/engine"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
 
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
+	"github.com/AlexGalhardo/vukem/contrib/engine"
 )
 
 // A child killed by its Job Object limit surfaces from contrib/engine as ErrRun; the export turns it into E_EXPORT_FAILED.

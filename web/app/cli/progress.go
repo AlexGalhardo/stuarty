@@ -7,8 +7,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/service"
 )
 
 const (
@@ -112,7 +112,7 @@ func (c *call) noWaitInProcess() error {
 	return &service.Error{
 		Code: command.CodeValidation, Path: "wait",
 		Message: "--no-wait needs a server: no server owns this workspace, so a job would end with this command.",
-		Hint:    "start vukem-video serve to run jobs in the background",
+		Hint:    "start stuarty serve to run jobs in the background",
 	}
 }
 
@@ -323,7 +323,7 @@ func (c *call) runJob(
 // expiredText is what a command that ran out of --timeout in process says.
 func (c *call) expiredText() string {
 	return fmt.Sprintf("timed out after %s: no server owns this workspace, so the work was stopped with the "+
-		"command. Run \"vukem-video serve\" to keep it running, or raise --timeout.", c.args.timeout())
+		"command. Run \"stuarty serve\" to keep it running, or raise --timeout.", c.args.timeout())
 }
 
 func (c *call) expiredOutput(job *service.Job) *output {

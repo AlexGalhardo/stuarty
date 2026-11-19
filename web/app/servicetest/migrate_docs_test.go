@@ -9,9 +9,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/core/timeline/migrate"
-	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeline/migrate"
+	"github.com/AlexGalhardo/stuarty/service"
 )
 
 // stored is a schema version that no binary writes: the migration of the tests

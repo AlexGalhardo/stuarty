@@ -13,7 +13,7 @@ An asset is any file the project can use. It sits in the library until you put i
 
 **Example.** A song, a photo and three videos are five assets.
 
-**In Vukem Video.** Imported files become assets in the [media library](/docs/guide/media-library).
+**In Stuarty.** Imported files become assets in the [media library](/docs/guide/media-library).
 
 **Also called:** media. **See also:** [Media library](#media-library), [Clip](#clip).
 
@@ -25,7 +25,7 @@ A batch groups several small changes. Either all of them happen, or none does, s
 
 **Example.** Add a track, put a clip on it and name it, all in one go.
 
-**In Vukem Video.** An `edit` call is a batch. See [Batches, revisions and idempotency](/docs/agents/batches).
+**In Stuarty.** An `edit` call is a batch. See [Batches, revisions and idempotency](/docs/agents/batches).
 
 **See also:** [Revision](#revision).
 
@@ -35,7 +35,7 @@ A brand kit keeps the look of a person or a company. Every new video can start w
 
 **Example.** A shop always uses the same orange and the same font in its videos.
 
-**In Vukem Video.** See [Brand kit](/docs/guide/brand-kit).
+**In Stuarty.** See [Brand kit](/docs/guide/brand-kit).
 
 **See also:** [Template](#template), [Font](/docs/glossary/text-and-captions#font).
 
@@ -45,7 +45,7 @@ A clip is a piece of an asset on the timeline. You can make it shorter, move it 
 
 **Example.** From a 5-minute asset you use only 10 seconds as a clip.
 
-**In Vukem Video.** `clip.add` puts one on the timeline.
+**In Stuarty.** `clip.add` puts one on the timeline.
 
 **See also:** [Asset](#asset), [Item](#item), [Trim](#trim).
 
@@ -57,7 +57,7 @@ An editor is a person who cuts and arranges video. People also call the program 
 
 **Example.** "I am the editor of our school video" means you decide the cuts.
 
-**In Vukem Video.** Vukem Video is an editor that both people and AI agents can use.
+**In Stuarty.** Stuarty is an editor that both people and AI agents can use.
 
 **See also:** [Video editing](#video-editing).
 
@@ -69,7 +69,7 @@ A frame-accurate editor shows the same frame every time you stop on it. That is 
 
 **Example.** Cutting on the exact frame where a door shuts.
 
-**In Vukem Video.** The paused preview is the frame that the export produces.
+**In Stuarty.** The paused preview is the frame that the export produces.
 
 **See also:** [Frame](/docs/glossary/shooting-and-footage#frame), [Timecode](#timecode).
 
@@ -79,7 +79,7 @@ A gap shows black (or the layer below) when played. Editors usually close gaps, 
 
 **Example.** You delete a clip and a hole is left, a gap, until you close it.
 
-**In Vukem Video.** `timeline.close_gap`.
+**In Stuarty.** `timeline.close_gap`.
 
 **See also:** [Ripple](#ripple).
 
@@ -103,11 +103,11 @@ An insert makes room: the new clip goes in, and what came after moves to the rig
 
 ### Item
 
-In Vukem Video, item is the general word for everything you place on a track, whatever its kind.
+In Stuarty, item is the general word for everything you place on a track, whatever its kind.
 
 **Example.** A video clip, a title and a rectangle behind the title are three items.
 
-**In Vukem Video.** Every operation names an `item_id`. See [Tracks, clips and items](/docs/concepts/tracks-clips-items).
+**In Stuarty.** Every operation names an `item_id`. See [Tracks, clips and items](/docs/concepts/tracks-clips-items).
 
 **See also:** [Clip](#clip), [Track](#track).
 
@@ -127,7 +127,7 @@ A marker is a small flag with an optional name. It does not change the video. It
 
 **Example.** A marker on every beat of a song, to line up the cuts.
 
-**In Vukem Video.** `marker.add`, `marker.set` and `marker.remove`; `M` in the editor. See [Basic timeline editing](/docs/guide/timeline).
+**In Stuarty.** `marker.add`, `marker.set` and `marker.remove`; `M` in the editor. See [Basic timeline editing](/docs/guide/timeline).
 
 **See also:** [Beat](/docs/glossary/audio#beat), [Timeline](#timeline).
 
@@ -147,7 +147,7 @@ Metadata is data about data: the date, the camera, the length of a file. It is n
 
 **Example.** A phone video file knows the time it was recorded.
 
-**In Vukem Video.** `media_inspect` shows an asset's metadata. Text taken from a file is treated as untrusted. See [Safety](/docs/agents/safety).
+**In Stuarty.** `media_inspect` shows an asset's metadata. Text taken from a file is treated as untrusted. See [Safety](/docs/agents/safety).
 
 **Learn more:** [Wikipedia: Metadata](https://en.wikipedia.org/wiki/Metadata)
 
@@ -195,7 +195,7 @@ The preview window plays what you have built so far. It may be a little rougher 
 
 **Example.** You press play to check that the title appears at the right time.
 
-**In Vukem Video.** See [Preview and playback](/docs/guide/preview).
+**In Stuarty.** See [Preview and playback](/docs/guide/preview).
 
 **See also:** [Render](#render), [Proxy](/docs/glossary/delivery-and-platforms#proxy).
 
@@ -205,7 +205,7 @@ A project keeps your list of clips, where you put them and every change. Your or
 
 **Example.** Closing the program and opening it tomorrow, your video is exactly as you left it.
 
-**In Vukem Video.** A [project](/docs/projects) is one JSON document; every change is a batch of operations that raises its revision.
+**In Stuarty.** A [project](/docs/projects) is one JSON document; every change is a batch of operations that raises its revision.
 
 **See also:** [Timeline](#timeline), [Asset](#asset).
 
@@ -217,7 +217,7 @@ Rendering is when the computer works out every frame, with all the layers, colou
 
 **Example.** After you press export, a bar fills while the computer renders your video.
 
-**In Vukem Video.** See [Render: one plan, two executors](/docs/concepts/render).
+**In Stuarty.** See [Render: one plan, two executors](/docs/concepts/render).
 
 **See also:** [Export](/docs/glossary/delivery-and-platforms#export), [Preview](#preview).
 
@@ -229,7 +229,7 @@ Think of saving a game after every move. The revision is the move number. It let
 
 **Example.** You and an agent both look at revision 12. You change it, so it is 13. The agent has to look again before changing anything.
 
-**In Vukem Video.** See [Commands, batches and revisions](/docs/concepts/commands-and-revisions).
+**In Stuarty.** See [Commands, batches and revisions](/docs/concepts/commands-and-revisions).
 
 **See also:** [Batch](#batch), [Undo and redo](#undo-and-redo).
 
@@ -239,7 +239,7 @@ In a ripple edit, if you make a clip shorter, all the clips after it slide to th
 
 **Example.** Ripple delete a clip and the next clips move closer by themselves.
 
-**In Vukem Video.** `ripple` on `item.trim` and `item.delete`; `Shift+Delete`.
+**In Stuarty.** `ripple` on `item.trim` and `item.delete`; `Shift+Delete`.
 
 **See also:** [Gap](#gap), [Roll](#roll), [Slide](#slide).
 
@@ -251,7 +251,7 @@ A roll edit moves the point where one clip ends and the next begins. One clip ge
 
 **Example.** You want the next shot to appear half a second sooner: roll the cut left.
 
-**In Vukem Video.** `roll: true` on `item.trim`.
+**In Stuarty.** `roll: true` on `item.trim`.
 
 **Also called:** rolling edit. **See also:** [Ripple](#ripple), [Slide](#slide), [Slip](#slip).
 
@@ -281,7 +281,7 @@ In a slide edit the clip keeps showing the same piece of video, but starts and e
 
 **Example.** Slide a short clip a bit to the right so it covers a different moment of the talk.
 
-**In Vukem Video.** `slide: true` on `item.move`.
+**In Stuarty.** `slide: true` on `item.move`.
 
 **See also:** [Roll](#roll), [Slip](#slip).
 
@@ -293,7 +293,7 @@ In a slip edit the clip stays in the same place on the timeline, with the same l
 
 **Example.** A 3-second clip of a jump: slip it to show the moment a little later.
 
-**In Vukem Video.** `item.slip`; `Alt+,` and `Alt+.` in the editor.
+**In Stuarty.** `item.slip`; `Alt+,` and `Alt+.` in the editor.
 
 **See also:** [Slide](#slide), [Roll](#roll), [Trim](#trim).
 
@@ -305,7 +305,7 @@ A slot says: put a picture here, or a name here. Fill every slot and the templat
 
 **Example.** A product teaser template has slots for the product photo and the price.
 
-**In Vukem Video.** `slot.mark`, `slot.fill`. See [Templates](/docs/guide/templates).
+**In Stuarty.** `slot.mark`, `slot.fill`. See [Templates](/docs/guide/templates).
 
 **See also:** [Template](#template).
 
@@ -315,7 +315,7 @@ With snapping on, a clip you drag jumps neatly against the nearby edge, like a m
 
 **Example.** Drag a title toward the end of a clip and it clicks right at the edge.
 
-**In Vukem Video.** `N` turns snapping on and off.
+**In Stuarty.** `N` turns snapping on and off.
 
 **See also:** [Gap](#gap), [Marker](#marker).
 
@@ -335,7 +335,7 @@ Splitting puts a cut in the middle of a clip. You get two clips side by side, an
 
 **Example.** Split a long clip where the boring part starts, then delete the boring part.
 
-**In Vukem Video.** `item.split`, and `Mod+B` in the editor.
+**In Stuarty.** `item.split`, and `Mod+B` in the editor.
 
 **Also called:** blade, razor, cut. **See also:** [Trim](#trim).
 
@@ -345,7 +345,7 @@ A template is a finished design where you only swap the picture, the words or th
 
 **Example.** A quote card where you change only the quote and the author.
 
-**In Vukem Video.** See [Templates](/docs/guide/templates).
+**In Stuarty.** See [Templates](/docs/guide/templates).
 
 **See also:** [Slot](#slot), [Brand kit](#brand-kit).
 
@@ -355,7 +355,7 @@ Timecode gives every frame an exact address, like 00:01:30:12. It is how editors
 
 **Example.** "Cut at one minute thirty" is 00:01:30:00.
 
-**In Vukem Video.** Vukem Video writes times like `2s` or `97f`. See [Time](/docs/concepts/time).
+**In Stuarty.** Stuarty writes times like `2s` or `97f`. See [Time](/docs/concepts/time).
 
 **See also:** [Frame](/docs/glossary/shooting-and-footage#frame), [Frame rate](/docs/glossary/shooting-and-footage#frame-rate).
 
@@ -367,7 +367,7 @@ The timeline is a long ruler of time. Left is the start of the video, right is t
 
 **Example.** Drag a clip to the right and it plays later in the video.
 
-**In Vukem Video.** See [Basic timeline editing](/docs/guide/timeline).
+**In Stuarty.** See [Basic timeline editing](/docs/guide/timeline).
 
 **See also:** [Track](#track), [Clip](#clip), [Playhead](#playhead).
 
@@ -379,7 +379,7 @@ Tracks are rows. A clip on a higher video track is drawn on top of the clips bel
 
 **Example.** Put a title on the track above your video so the title shows on top of it.
 
-**In Vukem Video.** A track is either visual or audio. See [Tracks, clips and items](/docs/concepts/tracks-clips-items).
+**In Stuarty.** A track is either visual or audio. See [Tracks, clips and items](/docs/concepts/tracks-clips-items).
 
 **Also called:** layer, channel. **See also:** [Layer](#layer), [Clip](#clip), [Timeline](#timeline).
 
@@ -391,7 +391,7 @@ Trimming cuts off the beginning or the end of a clip. You are not deleting the v
 
 **Example.** Trim the first two seconds of a clip where nothing happens yet.
 
-**In Vukem Video.** `item.trim`. See [Trim, split and move clips](/docs/guide/editing-tools).
+**In Stuarty.** `item.trim`. See [Trim, split and move clips](/docs/guide/editing-tools).
 
 **See also:** [Split](#split), [In point and out point](#in-point-and-out-point).
 
@@ -403,7 +403,7 @@ Mistakes are cheap in a video editor. Undo steps back, redo steps forward again.
 
 **Example.** You delete the wrong clip, press undo, and it is back.
 
-**In Vukem Video.** Each person or agent has their own undo history. See [Undo and history](/docs/guide/undo-and-history).
+**In Stuarty.** Each person or agent has their own undo history. See [Undo and history](/docs/guide/undo-and-history).
 
 **See also:** [Revision](#revision).
 

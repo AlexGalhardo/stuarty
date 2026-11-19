@@ -8,9 +8,9 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/service"
-	"github.com/AlexGalhardo/vukem-video/web/app/agentdocs"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/web/app/agentdocs"
 )
 
 // call is what a handler receives: the connected Service, the parsed flags
@@ -42,7 +42,7 @@ type spec struct {
 	// globals names the global flags the command accepts (see globalFlag).
 	globals []string
 	// project is true when the command acts on a project: the id comes from
-	// the first positional argument, --project or VUKEM_VIDEO_PROJECT.
+	// the first positional argument, --project or STUARTY_PROJECT.
 	project bool
 	// projectPositional lets the first positional argument be the project id.
 	projectPositional bool
@@ -73,7 +73,7 @@ func globalFlag(name string) flagDef {
 		return flagDef{
 			Name:  "workspace",
 			Kind:  kindString,
-			Usage: "workspace directory (default $VUKEM_VIDEO_HOME, else ~/.vukem-video)",
+			Usage: "workspace directory (default $STUARTY_HOME, else ~/.stuarty)",
 		}
 	case "actor":
 		return flagDef{
@@ -196,7 +196,7 @@ func (rt *Runtime) Execute(ctx context.Context, name string, args []string) int 
 
 	if s.write && conn.InProcess && !asJSON {
 		fmt.Fprintf(rt.Stderr, "note: no server owns %s; this ran in process. "+
-			"Run \"vukem-video serve\" to share the workspace with the UI and other clients.\n", conn.Workspace)
+			"Run \"stuarty serve\" to share the workspace with the UI and other clients.\n", conn.Workspace)
 	}
 
 	return writeOutput(rt, asJSON, out)
@@ -373,28 +373,28 @@ var processCommands = []processCommand{
 	{
 		name:    "serve",
 		summary: "run the server that owns the workspace, configured by environment variables (see the configuration reference)",
-		usage:   []string{"vukem-video serve"},
-		example: "VUKEM_VIDEO_ADDR=127.0.0.1:7878 vukem-video serve",
+		usage:   []string{"stuarty serve"},
+		example: "STUARTY_ADDR=127.0.0.1:7878 stuarty serve",
 		noArgs:  true,
 	},
 	{
 		name:    "open",
 		summary: "open the editor in the browser of the running server",
-		usage:   []string{"vukem-video open"},
-		example: "vukem-video open",
+		usage:   []string{"stuarty open"},
+		example: "stuarty open",
 		noArgs:  true,
 	},
 	{
 		name:    "user:create",
 		summary: "create a user of network mode (the password is asked, never an argument)",
-		usage:   []string{"vukem-video user:create <email> [--admin]"},
-		example: "vukem-video user:create ana@example.com --admin",
+		usage:   []string{"stuarty user:create <email> [--admin]"},
+		example: "stuarty user:create ana@example.com --admin",
 	},
 	{
 		name:    "user:passwd",
 		summary: "change the password of a user of network mode",
-		usage:   []string{"vukem-video user:passwd <email>"},
-		example: "vukem-video user:passwd ana@example.com",
+		usage:   []string{"stuarty user:passwd <email>"},
+		example: "stuarty user:passwd ana@example.com",
 	},
 }
 
@@ -422,9 +422,9 @@ func (p *processCommand) help() string {
 	return b.String()
 }
 
-// List prints the short command list of "vukem-video" with no arguments.
+// List prints the short command list of "stuarty" with no arguments.
 func List(w io.Writer) {
-	fmt.Fprintln(w, "vukem-video commands:")
+	fmt.Fprintln(w, "stuarty commands:")
 
 	for _, s := range registry() {
 		fmt.Fprintf(w, "  %-16s %s\n", s.name, s.summary)
@@ -434,7 +434,7 @@ func List(w io.Writer) {
 		fmt.Fprintf(w, "  %-16s %s\n", processCommands[i].name, processCommands[i].summary)
 	}
 
-	fmt.Fprintln(w, "\nrun vukem-video help <command> or vukem-video <command> --help for the arguments of a command")
+	fmt.Fprintln(w, "\nrun stuarty help <command> or stuarty <command> --help for the arguments of a command")
 }
 
 // Help answers the help requests of the binary before any framework code runs:
@@ -452,7 +452,7 @@ func Help(args []string, stdout, stderr io.Writer) (code int, handled bool) {
 
 		return ExitOK, true
 	case args[0] == "--version" || args[0] == "-v":
-		fmt.Fprintln(stdout, "vukem-video "+agentdocs.Version)
+		fmt.Fprintln(stdout, "stuarty "+agentdocs.Version)
 
 		return ExitOK, true
 	case args[0] == "help" && len(args) >= 2:
@@ -477,7 +477,7 @@ func helpFor(name string, stdout, stderr io.Writer) int {
 		return ExitOK
 	}
 
-	fmt.Fprintf(stderr, "error E_VALIDATION: unknown command %q; run vukem-video help to list the commands\n", name)
+	fmt.Fprintf(stderr, "error E_VALIDATION: unknown command %q; run stuarty help to list the commands\n", name)
 
 	return ExitFailure
 }
@@ -502,10 +502,10 @@ func unknownHint(name string) string {
 	}
 
 	if best == "" {
-		return "run vukem-video help to list the commands"
+		return "run stuarty help to list the commands"
 	}
 
-	return fmt.Sprintf("did you mean %q? run vukem-video help to list the commands", best)
+	return fmt.Sprintf("did you mean %q? run stuarty help to list the commands", best)
 }
 
 // editDistance is the Levenshtein distance of two short command names.
@@ -551,7 +551,7 @@ func RejectArgs(name string, args []string, stdout, stderr io.Writer) (code int,
 	rt := &Runtime{Stdout: stdout, Stderr: stderr}
 	err := &service.Error{
 		Code: command.CodeValidation, Message: msg,
-		Hint: fmt.Sprintf("%s is configured by environment variables: run vukem-video help %s", name, name),
+		Hint: fmt.Sprintf("%s is configured by environment variables: run stuarty help %s", name, name),
 	}
 
 	return writeError(rt, jsonRequested(args), err), true
@@ -561,7 +561,7 @@ func RejectArgs(name string, args []string, stdout, stderr io.Writer) (code int,
 func IsCommand(name string) bool { return lookup(name) != nil }
 
 // namingWorkspace adds the workspace this process opened to a not-found answer when no server owns it.
-// Without VUKEM_VIDEO_HOME or --workspace that is the default ~/.vukem-video, which may not be the
+// Without STUARTY_HOME or --workspace that is the default ~/.stuarty, which may not be the
 // workspace of a running server, so a project that exists there looks missing (VV-151).
 func namingWorkspace(err error, conn *Connection) error {
 	se := asServiceError(err)
@@ -571,7 +571,7 @@ func namingWorkspace(err error, conn *Connection) error {
 
 	out := *se
 	note := fmt.Sprintf("this command read the workspace %s, which no server owns; "+
-		"to read another one use --workspace <dir> or set VUKEM_VIDEO_HOME", conn.Workspace)
+		"to read another one use --workspace <dir> or set STUARTY_HOME", conn.Workspace)
 
 	if out.Hint == "" {
 		out.Hint = note

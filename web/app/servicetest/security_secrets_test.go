@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/stuarty/service"
 )
 
 // runtimeCanary is a secret made at run time, so no literal that looks like a
@@ -33,12 +33,12 @@ func TestSecurity_T04_BundleAndEnvironmentHoldNoSecret(t *testing.T) {
 	t.Parallel()
 
 	names := []string{
-		"APP_KEY", "VUKEM_VIDEO_KEY", "VUKEM_VIDEO_TRANSCRIBE_KEY", "VUKEM_VIDEO_ADMIN_PASSWORD",
-		"OTEL_EXPORTER_OTLP_HEADERS", "VUKEM_VIDEO_TRANSCRIBE_TOKEN",
-		"VUKEM_VIDEO_FUTURE_SECRET", // a secret nobody listed yet: the name pattern must catch it
+		"APP_KEY", "STUARTY_KEY", "STUARTY_TRANSCRIBE_KEY", "STUARTY_ADMIN_PASSWORD",
+		"OTEL_EXPORTER_OTLP_HEADERS", "STUARTY_TRANSCRIBE_TOKEN",
+		"STUARTY_FUTURE_SECRET", // a secret nobody listed yet: the name pattern must catch it
 	}
 	canaries := map[string]string{}
-	environ := []string{"PATH=/usr/bin", "VUKEM_VIDEO_MAX_EXPORTS=3"}
+	environ := []string{"PATH=/usr/bin", "STUARTY_MAX_EXPORTS=3"}
 
 	for _, n := range names {
 		canaries[n] = runtimeCanary(t, strings.ToLower(n[len(n)-6:]))
@@ -71,7 +71,7 @@ func TestSecurity_T04_BundleAndEnvironmentHoldNoSecret(t *testing.T) {
 		line.WriteString(" " + strings.ToLower(n[len(n)-3:]) + "=" + c)
 	}
 
-	if err := os.WriteFile(filepath.Join(logs, "vukem-video.log"), []byte(line.String()+"\n"), 0o600); err != nil {
+	if err := os.WriteFile(filepath.Join(logs, "stuarty.log"), []byte(line.String()+"\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
 

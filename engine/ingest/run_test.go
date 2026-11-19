@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
 )
 
 func mustGen(t *testing.T, path string, err error) string {
@@ -363,10 +363,12 @@ func TestIngestSameBytesTwice(t *testing.T) {
 }
 
 // TestIngestLong60Seconds is the NFR-005 measurement: 60 s 1080x1920 within 30 s on the reference
-// machine. It is opt-in (VUKEM_VIDEO_NFR=1) because the fixture alone takes about a minute to make.
+// machine. It is opt-in (STUARTY_NFR=1) because the fixture alone takes about a minute to make.
 func TestIngestLong60Seconds(t *testing.T) {
-	if os.Getenv("VUKEM_VIDEO_NFR") == "" {
-		t.Skip("set VUKEM_VIDEO_NFR=1 to run the 60 s 1080p ingest benchmark")
+	if os.Getenv("STUARTY_NFR") == "" {
+		t.Skip( // verify:env-skip a benchmark that runs only on request
+			"set STUARTY_NFR=1 to run the 60 s 1080p ingest benchmark",
+		)
 	}
 	e := newEnv(t)
 	p, err := e.gen.Long(context.Background())

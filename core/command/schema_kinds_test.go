@@ -5,7 +5,7 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 // timeArgPaths lists where the arguments type holds a Time, as schema paths.

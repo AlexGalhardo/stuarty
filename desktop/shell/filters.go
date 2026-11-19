@@ -25,7 +25,7 @@ func pattern(groups ...[]string) string {
 }
 
 // TemplateFilters lists the dialog filters for importing a template file (a zip
-// named <id>.vukem-template.zip, SDD-005 section 15), then any file.
+// named <id>.stuarty-template.zip, SDD-005 section 15), then any file.
 func TemplateFilters() []FileFilter {
 	return []FileFilter{
 		{"Vukem templates", "*.zip"},

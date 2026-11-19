@@ -3,10 +3,10 @@ package owner
 import (
 	"errors"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/service"
-	"github.com/AlexGalhardo/vukem-video/service/workspace"
-	"github.com/AlexGalhardo/vukem-video/web/app/store"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/workspace"
+	"github.com/AlexGalhardo/stuarty/web/app/store"
 )
 
 // StartupError turns the start-up refusals that a person must read into the
@@ -19,7 +19,7 @@ func StartupError(err error) error {
 		return &service.Error{
 			Code:    command.CodeInvalidState,
 			Message: newer.Error(),
-			Hint:    "Nothing was written. Install a version of vukem-video that is at least as new as the one that wrote this workspace.",
+			Hint:    "Nothing was written. Install a version of stuarty that is at least as new as the one that wrote this workspace.",
 		}
 	}
 

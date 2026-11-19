@@ -1,6 +1,6 @@
 // Package remote is service.Service over the HTTP API of a running owner
 // (SDD-003 section 5.2, ADR-0008 item 5): the CLI and the stdio MCP server use
-// it when a server owns the workspace or VUKEM_VIDEO_URL is set. It encodes the
+// it when a server owns the workspace or STUARTY_URL is set. It encodes the
 // request structs as the routes of SDD-003 section 6 and decodes the error
 // envelope of section 1.4 back into *service.Error. It holds no rule.
 package remote
@@ -18,8 +18,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/service"
 )
 
 // Doer is the part of an HTTP client the package needs. The caller builds the
@@ -31,7 +31,7 @@ type Doer interface {
 const (
 	apiBase = "/api/v1"
 	// ClientHeader carries the actor label of a local client (SDD-007 section 3.7).
-	ClientHeader = "Vukem-Video-Client"
+	ClientHeader = "Stuarty-Client"
 	// maxBody bounds what the client reads, so a wrong server cannot fill memory.
 	maxBody = 64 << 20
 )

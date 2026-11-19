@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/desktop/update"
+	"github.com/AlexGalhardo/stuarty/desktop/update"
 )
 
 func TestSettingsDefaultToOff(t *testing.T) {

@@ -18,7 +18,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/internal/outbound"
+	"github.com/AlexGalhardo/stuarty/internal/outbound"
 )
 
 const ciscoHost = "ciscobinary.openh264.org"

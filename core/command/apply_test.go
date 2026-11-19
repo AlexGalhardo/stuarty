@@ -6,8 +6,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/core/timeval"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeval"
 )
 
 func mustApply(t *testing.T, r *Registry, doc *timeline.Document, op Operation) Result {

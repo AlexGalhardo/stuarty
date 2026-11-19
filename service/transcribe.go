@@ -15,9 +15,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
-	"github.com/AlexGalhardo/vukem-video/engine/transcribe"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
+	"github.com/AlexGalhardo/stuarty/engine/transcribe"
 )
 
 // JobTranscribe is the kind of a transcription job (SDD-011 section 10).
@@ -107,7 +107,7 @@ func (s *svc) providerFor(model string) (transcribe.Provider, *Error) {
 
 	installed := picker.InstalledModels()
 	if !slices.Contains(installed, model) {
-		hint := "install it with: vukem-video tools:install whisper --model " + model
+		hint := "install it with: stuarty tools:install whisper --model " + model
 		if slices.Contains(transcribe.Models, model) {
 			hint = fmt.Sprintf("installed models: %s; or %s", listOrNone(installed), hint)
 		} else {
@@ -145,7 +145,7 @@ func unavailable(err error, model string) *Error {
 		parts = append(parts, fmt.Sprintf("%s (%s)", it.Name, sizesText(it.Bytes)))
 	}
 
-	install := "vukem-video tools:install whisper --model " + model
+	install := "stuarty tools:install whisper --model " + model
 
 	items := make([]map[string]any, 0, len(missing.Items))
 	for _, it := range missing.Items {
@@ -212,12 +212,12 @@ func (s *svc) startTranscribe(ctx context.Context, c Caller, req JobStartRequest
 
 	if secs := *ar.Facts.SampleCount / transcriptSampleRate; secs > s.limits.MaxTranscribeSeconds {
 		return nil, newError("E_LIMIT_EXCEEDED", "The audio is %d seconds; the transcription limit is %d seconds "+
-			"(VUKEM_VIDEO_MAX_TRANSCRIBE_SECONDS).", secs, s.limits.MaxTranscribeSeconds).
+			"(STUARTY_MAX_TRANSCRIBE_SECONDS).", secs, s.limits.MaxTranscribeSeconds).
 			withHint("transcribe a shorter file; the person running the server can raise "+
-				"VUKEM_VIDEO_MAX_TRANSCRIBE_SECONDS").
+				"STUARTY_MAX_TRANSCRIBE_SECONDS").
 			withDetail("limit", "transcribe_seconds").withDetail("value", secs).
 			withDetail("ceiling", s.limits.MaxTranscribeSeconds).
-			withDetail("variable", "VUKEM_VIDEO_MAX_TRANSCRIBE_SECONDS")
+			withDetail("variable", "STUARTY_MAX_TRANSCRIBE_SECONDS")
 	}
 
 	if s.transcriber == nil {
@@ -317,7 +317,7 @@ func transcribeLimitError(err error, l Limits) error {
 	if e, ok := errors.AsType[*Error](out); ok && e.Code == CodeQueueFull {
 		return e.withHint("at most %d transcriptions run at the same time and %d per key: wait for one to finish "+
 			"with job_get or stop it with job_cancel; the person running the server can raise "+
-			"VUKEM_VIDEO_MAX_TRANSCRIBES or VUKEM_VIDEO_MAX_TRANSCRIBES_PER_KEY",
+			"STUARTY_MAX_TRANSCRIBES or STUARTY_MAX_TRANSCRIBES_PER_KEY",
 			l.MaxTranscribes, l.MaxTranscribesPerActor)
 	}
 

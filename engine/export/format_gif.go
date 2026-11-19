@@ -15,7 +15,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/core/plan"
+	"github.com/AlexGalhardo/stuarty/core/plan"
 )
 
 // The GIF the export writes is made here, not by FFmpeg (SDD-004 section 8): the palette is a fixed

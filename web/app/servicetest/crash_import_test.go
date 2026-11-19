@@ -10,16 +10,16 @@ import (
 	"os/exec"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	enginestore "github.com/AlexGalhardo/vukem-video/engine/store"
-	"github.com/AlexGalhardo/vukem-video/service"
-	"github.com/AlexGalhardo/vukem-video/service/crashpoint"
-	"github.com/AlexGalhardo/vukem-video/service/pathguard"
-	"github.com/AlexGalhardo/vukem-video/service/workspace"
-	"github.com/AlexGalhardo/vukem-video/web/app/store"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	enginestore "github.com/AlexGalhardo/stuarty/engine/store"
+	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/crashpoint"
+	"github.com/AlexGalhardo/stuarty/service/pathguard"
+	"github.com/AlexGalhardo/stuarty/service/workspace"
+	"github.com/AlexGalhardo/stuarty/web/app/store"
 )
 
-const bundleEnv = "VUKEM_VIDEO_CRASH_BUNDLE"
+const bundleEnv = "STUARTY_CRASH_BUNDLE"
 
 // TestCrashBundleImportChild is the body of the child of TestCrashBundleImport.
 func TestCrashBundleImportChild(t *testing.T) {

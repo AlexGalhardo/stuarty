@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/web/app/events"
-	httpapi "github.com/AlexGalhardo/vukem-video/web/app/http"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/web/app/events"
+	httpapi "github.com/AlexGalhardo/stuarty/web/app/http"
 )
 
 // BenchmarkEditRoundTrip is NFR-001 through the HTTP handler: a project of 200

@@ -13,11 +13,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
-	"github.com/AlexGalhardo/vukem-video/engine/transcribe"
-	"github.com/AlexGalhardo/vukem-video/service"
-	"github.com/AlexGalhardo/vukem-video/web/app/owner"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
+	"github.com/AlexGalhardo/stuarty/engine/transcribe"
+	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/web/app/owner"
 )
 
 // asOperator marks the caller as the person at the terminal of the owner
@@ -37,8 +37,8 @@ func (c *call) asOperator(ctx context.Context) context.Context {
 var doctorCmd = &spec{
 	name:    "doctor",
 	summary: "check the installation and the workspace",
-	usage:   []string{"vukem-video doctor [--full] [--verify] [--bundle] [--gc]"},
-	example: "vukem-video doctor --full",
+	usage:   []string{"stuarty doctor [--full] [--verify] [--bundle] [--gc]"},
+	example: "stuarty doctor --full",
 	flags: []flagDef{
 		{Name: "full", Kind: kindBool, Default: "false", Usage: "run every check, not only the identity"},
 		{Name: "verify", Kind: kindBool, Default: "false", Usage: "recompute the digests of FFmpeg and the helpers"},
@@ -76,8 +76,8 @@ var doctorCmd = &spec{
 var fontsCmd = &spec{
 	name:    "fonts",
 	summary: "list the bundled font families",
-	usage:   []string{"vukem-video fonts"},
-	example: "vukem-video fonts --json",
+	usage:   []string{"stuarty fonts"},
+	example: "stuarty fonts --json",
 	run: func(ctx context.Context, c *call) (*output, error) {
 		res, err := c.svc.FontList(ctx, service.FontListRequest{})
 		if err != nil {
@@ -111,8 +111,8 @@ func fontsText(res *service.FontListResult) string {
 var auditCmd = &spec{
 	name:    "audit",
 	summary: "list the audit table",
-	usage:   []string{"vukem-video audit [--project <id>] [--cursor c] [--limit n]"},
-	example: "vukem-video audit --limit 20 --json",
+	usage:   []string{"stuarty audit [--project <id>] [--cursor c] [--limit n]"},
+	example: "stuarty audit --limit 20 --json",
 	flags: append([]flagDef{
 		{Name: "project", Kind: kindString, Usage: "only the entries of this project"},
 	}, pageFlags("50")...),
@@ -153,9 +153,9 @@ var transcribeCmd = &spec{
 	name:    "transcribe",
 	summary: "transcribe the audio of an asset",
 	usage: []string{
-		"vukem-video transcribe --project <id> --asset <id> [--language auto] [--model <name>] [--wait] [--timeout d]",
+		"stuarty transcribe --project <id> --asset <id> [--language auto] [--model <name>] [--wait] [--timeout d]",
 	},
-	example: "vukem-video transcribe --project prj_7k2m9x4q1b --asset ast_3c5v8n2w6d --language en",
+	example: "stuarty transcribe --project prj_7k2m9x4q1b --asset ast_3c5v8n2w6d --language en",
 	project: true,
 	globals: []string{"wait", "timeout"},
 	write:   true,
@@ -203,8 +203,8 @@ type toolsInstallDoc struct {
 var toolsInstallCmd = &spec{
 	name:       "tools:install",
 	summary:    "download a helper such as the transcription program",
-	usage:      []string{"vukem-video tools:install <name> [--model <model>] [--force] [--yes] [--timeout d]"},
-	example:    "vukem-video tools:install whisper --model small",
+	usage:      []string{"stuarty tools:install <name> [--model <model>] [--force] [--yes] [--timeout d]"},
+	example:    "stuarty tools:install whisper --model small",
 	positional: true,
 	write:      true,
 	globals:    []string{"timeout"},
@@ -308,7 +308,7 @@ func runToolsInstall(ctx context.Context, c *call) (*output, error) {
 	case "running":
 		return &output{
 			value: doc,
-			text:  doc.Text + "\nstill running: run vukem-video doctor --full to see when it ends",
+			text:  doc.Text + "\nstill running: run stuarty doctor --full to see when it ends",
 			exit:  ExitTransient,
 		}, nil
 	}

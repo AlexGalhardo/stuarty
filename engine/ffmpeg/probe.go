@@ -7,14 +7,14 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg/ffargs"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg/ffargs"
 )
 
 // Ceilings of SDD-007 9.1 that the probe enforces before any decode (9.2 item 1). A zero
 // field takes its default; the variable names are those of SDD-000 section 10.
 type Ceilings struct {
-	MaxPixels  int64   // VUKEM_VIDEO_MAX_IMPORT_PIXELS
-	MaxSeconds float64 // VUKEM_VIDEO_MAX_IMPORT_SECONDS
+	MaxPixels  int64   // STUARTY_MAX_IMPORT_PIXELS
+	MaxSeconds float64 // STUARTY_MAX_IMPORT_SECONDS
 }
 
 const (
@@ -23,9 +23,9 @@ const (
 	// MaxStreams is the stream limit of FF-06.
 	MaxStreams = 16
 
-	// DefaultMaxPixels is the default of VUKEM_VIDEO_MAX_IMPORT_PIXELS.
+	// DefaultMaxPixels is the default of STUARTY_MAX_IMPORT_PIXELS.
 	DefaultMaxPixels int64 = 33_177_600
-	// DefaultMaxSeconds is the default of VUKEM_VIDEO_MAX_IMPORT_SECONDS.
+	// DefaultMaxSeconds is the default of STUARTY_MAX_IMPORT_SECONDS.
 	DefaultMaxSeconds float64 = 14400
 )
 
@@ -182,7 +182,7 @@ func CheckProbe(raw []byte, c Ceilings) (*ProbeResult, error) {
 				"import_pixels",
 				px,
 				maxPixels,
-				"VUKEM_VIDEO_MAX_IMPORT_PIXELS",
+				"STUARTY_MAX_IMPORT_PIXELS",
 				"The picture has "+strconv.FormatInt(
 					px,
 					10,
@@ -198,7 +198,7 @@ func CheckProbe(raw []byte, c Ceilings) (*ProbeResult, error) {
 			"import_seconds",
 			int64(pr.Format.Seconds),
 			int64(maxSeconds),
-			"VUKEM_VIDEO_MAX_IMPORT_SECONDS",
+			"STUARTY_MAX_IMPORT_SECONDS",
 			"The media is "+strconv.FormatInt(
 				int64(pr.Format.Seconds),
 				10,

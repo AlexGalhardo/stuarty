@@ -11,7 +11,7 @@ import (
 	"testing"
 )
 
-const hashesEnv = "VUKEM_VIDEO_TEST_COMPOSE_HASHES"
+const hashesEnv = "STUARTY_TEST_COMPOSE_HASHES"
 
 // composeHashes is the SHA-256 of every sampled frame of every reference scene, one line each.
 func composeHashes(t *testing.T) []string {

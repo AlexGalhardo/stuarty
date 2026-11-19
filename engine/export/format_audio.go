@@ -11,9 +11,9 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/AlexGalhardo/vukem-video/engine/audio"
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg/ffargs"
+	"github.com/AlexGalhardo/stuarty/engine/audio"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg/ffargs"
 )
 
 // buildAudio makes an audio only export: the mix of section 7 as a WAV, or as AAC in an MP4 container

@@ -22,7 +22,7 @@ func TestLocateGPUHost(t *testing.T) {
 	t.Run("next to the executable", func(t *testing.T) {
 		root := t.TempDir()
 		bin := filepath.Join(root, "bin")
-		want := filepath.Join(bin, "vukem-render.exe")
+		want := filepath.Join(bin, "stuarty-render.exe")
 		touch(t, want)
 
 		if got := locateGPUHost(bin, "windows"); got != want {
@@ -37,7 +37,7 @@ func TestLocateGPUHost(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		want := filepath.Join(root, "libexec", "vukem-video", "vukem-render")
+		want := filepath.Join(root, "libexec", "stuarty", "stuarty-render")
 		touch(t, want)
 
 		if got := locateGPUHost(bin, "linux"); got != want {
@@ -53,8 +53,8 @@ func TestLocateGPUHost(t *testing.T) {
 
 	t.Run("only for the gpu renderer", func(t *testing.T) {
 		root := t.TempDir()
-		touch(t, filepath.Join(root, "vukem-render"))
-		touch(t, filepath.Join(root, "vukem-render.exe"))
+		touch(t, filepath.Join(root, "stuarty-render"))
+		touch(t, filepath.Join(root, "stuarty-render.exe"))
 
 		if got := gpuHostForRenderer("rust", root); got != "" {
 			t.Fatalf("rust renderer got %q", got)

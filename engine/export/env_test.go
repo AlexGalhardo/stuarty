@@ -11,14 +11,14 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
-	"github.com/AlexGalhardo/vukem-video/engine/ingest"
-	"github.com/AlexGalhardo/vukem-video/engine/ingest/mediagen"
-	"github.com/AlexGalhardo/vukem-video/engine/store"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
+	"github.com/AlexGalhardo/stuarty/engine/ingest"
+	"github.com/AlexGalhardo/stuarty/engine/ingest/mediagen"
+	"github.com/AlexGalhardo/stuarty/engine/store"
 )
 
-const envTestFFmpegDir = "VUKEM_VIDEO_TEST_FFMPEG_DIR"
+const envTestFFmpegDir = "STUARTY_TEST_FFMPEG_DIR"
 
 var update = flag.Bool("update", false, "rewrite the golden files of testdata/golden")
 
@@ -57,7 +57,7 @@ func exe(n string) string {
 }
 
 // setup finds the pinned LGPL FFmpeg and makes the workspace, or records why the tests skip. A test
-// never downloads: run scripts/install-ffmpeg.sh and set VUKEM_VIDEO_TEST_FFMPEG_DIR to the folder it prints.
+// never downloads: run scripts/install-ffmpeg.sh and set STUARTY_TEST_FFMPEG_DIR to the folder it prints.
 func setup(tb testing.TB) {
 	tb.Helper()
 	shared.once.Do(func() {
@@ -82,7 +82,7 @@ func setup(tb testing.TB) {
 			ffmpeg.Config{
 				FFmpegPath: filepath.Join(dir, exe("ffmpeg")),
 				CPUCount:   runtime.NumCPU(),
-				ToolsDir:   os.Getenv("VUKEM_VIDEO_TEST_TOOLS_DIR"),
+				ToolsDir:   os.Getenv("STUARTY_TEST_TOOLS_DIR"),
 			},
 		)
 		if err != nil || in.Info.License.Name != "lgpl" {

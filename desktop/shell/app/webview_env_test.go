@@ -6,11 +6,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/desktop/shell"
-	"github.com/AlexGalhardo/vukem-video/desktop/shell/webviewenv"
+	"github.com/AlexGalhardo/stuarty/desktop/shell"
+	"github.com/AlexGalhardo/stuarty/desktop/shell/webviewenv"
 )
 
-const helperEnv = "VUKEM_VIDEO_TEST_STARTUP_ENV_HELPER"
+const helperEnv = "STUARTY_TEST_STARTUP_ENV_HELPER"
 
 // The Wails WebView2 loader blanks WEBVIEW2_* in its initialiser (VV-144). The shell must still see the
 // value the process was started with, so the check runs in a child of this binary, which has all the

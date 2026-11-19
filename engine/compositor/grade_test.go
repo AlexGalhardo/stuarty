@@ -3,8 +3,8 @@ package compositor
 import (
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/core/plan"
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/plan"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 func testGrade() *grade {
@@ -24,7 +24,7 @@ func testGrade() *grade {
 	})
 }
 
-// The same pixels are pinned in renderer/vukem-renderer/src/grade.rs: an implementation that disagrees on one of
+// The same pixels are pinned in renderer/stuarty-renderer/src/grade.rs: an implementation that disagrees on one of
 // them is not the grade of SDD-004 section 3.14.
 var gradePinned = []struct{ in, want [3]int64 }{
 	{[3]int64{200, 60, 40}, [3]int64{230, 33, 221}},

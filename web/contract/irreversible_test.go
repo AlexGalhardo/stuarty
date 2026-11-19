@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/web/app/cli"
+	"github.com/AlexGalhardo/stuarty/web/app/cli"
 )
 
 // RF-131, T-28: no MCP tool and no CLI command can delete data for good. The

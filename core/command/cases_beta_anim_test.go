@@ -3,7 +3,7 @@ package command
 import (
 	"strings"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 // Golden cases of clip.add with an animated image and a sticker (SDD-002 C.5,

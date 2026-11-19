@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/service/crashpoint"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/service/crashpoint"
 )
 
 // jobWait is how long TrashEmpty waits for the jobs of a trashed project to

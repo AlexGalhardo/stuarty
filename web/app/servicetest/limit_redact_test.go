@@ -6,10 +6,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
-	"github.com/AlexGalhardo/vukem-video/engine/ingest"
-	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
+	"github.com/AlexGalhardo/stuarty/engine/ingest"
+	"github.com/AlexGalhardo/stuarty/service"
 )
 
 func networkCaller(actor, owner string, scopes []string) context.Context {
@@ -24,7 +24,7 @@ func assertNamesNoVariable(t *testing.T, se *service.Error) {
 	}
 
 	for _, text := range []string{se.Message, se.Hint} {
-		if strings.Contains(text, "VUKEM_VIDEO_") {
+		if strings.Contains(text, "STUARTY_") {
 			t.Errorf("the text names a variable: %q", text)
 		}
 	}
@@ -64,8 +64,8 @@ func TestLimitErrorsHideTheVariableFromNonAdmins(t *testing.T) {
 		se := serviceError(t, err)
 		if hidden {
 			assertNamesNoVariable(t, se)
-		} else if se.Details["variable"] != "VUKEM_VIDEO_MAX_IMPORT_BYTES" ||
-			!strings.Contains(se.Message, "(VUKEM_VIDEO_MAX_IMPORT_BYTES)") {
+		} else if se.Details["variable"] != "STUARTY_MAX_IMPORT_BYTES" ||
+			!strings.Contains(se.Message, "(STUARTY_MAX_IMPORT_BYTES)") {
 			t.Errorf("%s: the administrator lost the variable: %+v", name, se)
 		}
 
@@ -97,7 +97,7 @@ func TestLimitErrorsHideTheVariableFromNonAdmins(t *testing.T) {
 
 		if hidden {
 			assertNamesNoVariable(t, se)
-		} else if se.Details["variable"] != "VUKEM_VIDEO_MAX_EXPORTS" {
+		} else if se.Details["variable"] != "STUARTY_MAX_EXPORTS" {
 			t.Errorf("%s: the administrator lost the variable: %+v", name, se.Details)
 		}
 	}
@@ -110,10 +110,10 @@ func TestFailedIngestLimitIsTheSameOnTheAssetAndTheJob(t *testing.T) {
 	limitErr := func(context.Context, ingest.Input) (*ingest.Result, error) {
 		return nil, &ffmpeg.Error{
 			Code: "E_LIMIT_EXCEEDED", Reason: "import_seconds", Message: "The media is 9000 seconds long.",
-			Hint: "Ask the operator to raise VUKEM_VIDEO_MAX_IMPORT_SECONDS, or cut the file first.",
+			Hint: "Ask the operator to raise STUARTY_MAX_IMPORT_SECONDS, or cut the file first.",
 			Details: map[string]any{
 				"limit": "import_seconds", "value": int64(9000), "ceiling": int64(7200),
-				"variable": "VUKEM_VIDEO_MAX_IMPORT_SECONDS",
+				"variable": "STUARTY_MAX_IMPORT_SECONDS",
 			},
 		}
 	}
@@ -155,7 +155,7 @@ func TestFailedIngestLimitIsTheSameOnTheAssetAndTheJob(t *testing.T) {
 
 		if name == "member" {
 			assertNamesNoVariable(t, got)
-		} else if got.Details["variable"] != "VUKEM_VIDEO_MAX_IMPORT_SECONDS" {
+		} else if got.Details["variable"] != "STUARTY_MAX_IMPORT_SECONDS" {
 			t.Errorf("admin lost the variable: %+v", got)
 		}
 	}

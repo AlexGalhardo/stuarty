@@ -3,7 +3,7 @@ package command
 import (
 	"fmt"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 // maxRepeatCopies is the most copies one item.repeat adds; a link group holds at most 20 items.

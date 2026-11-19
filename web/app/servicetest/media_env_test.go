@@ -14,19 +14,19 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/vukem/queue"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/engine/cache"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
+	"github.com/AlexGalhardo/stuarty/engine/frame"
+	"github.com/AlexGalhardo/stuarty/engine/ingest"
+	enginestore "github.com/AlexGalhardo/stuarty/engine/store"
+	"github.com/AlexGalhardo/stuarty/engine/transcribe"
+	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/exporter"
+	"github.com/AlexGalhardo/stuarty/service/pathguard"
+	"github.com/AlexGalhardo/stuarty/web/app/jobs"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/engine/cache"
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
-	"github.com/AlexGalhardo/vukem-video/engine/frame"
-	"github.com/AlexGalhardo/vukem-video/engine/ingest"
-	enginestore "github.com/AlexGalhardo/vukem-video/engine/store"
-	"github.com/AlexGalhardo/vukem-video/engine/transcribe"
-	"github.com/AlexGalhardo/vukem-video/service"
-	"github.com/AlexGalhardo/vukem-video/service/exporter"
-	"github.com/AlexGalhardo/vukem-video/service/pathguard"
-	"github.com/AlexGalhardo/vukem-video/web/app/jobs"
+	"github.com/AlexGalhardo/vukem/queue"
 )
 
 // lazyRunner lets the queue handlers exist before the service that they call.
@@ -382,7 +382,7 @@ func pinnedFFmpeg(tb testing.TB) *ffmpeg.Installation {
 		exe += ".exe"
 	}
 
-	dir := os.Getenv("VUKEM_VIDEO_TEST_FFMPEG_DIR")
+	dir := os.Getenv("STUARTY_TEST_FFMPEG_DIR")
 
 	if dir == "" {
 		for _, base := range []string{os.Getenv("RUNNER_TEMP"), os.Getenv("TEMP"), os.Getenv("TMPDIR")} {
@@ -399,7 +399,7 @@ func pinnedFFmpeg(tb testing.TB) *ffmpeg.Installation {
 	}
 
 	if dir == "" {
-		tb.Skip("no pinned FFmpeg: run scripts/install-ffmpeg.sh and set VUKEM_VIDEO_TEST_FFMPEG_DIR")
+		tb.Skip("no pinned FFmpeg: run scripts/install-ffmpeg.sh and set STUARTY_TEST_FFMPEG_DIR")
 	}
 
 	in, err := ffmpeg.Discover(
@@ -407,7 +407,7 @@ func pinnedFFmpeg(tb testing.TB) *ffmpeg.Installation {
 		ffmpeg.Config{FFmpegPath: filepath.Join(dir, exe), CPUCount: runtime.NumCPU()},
 	)
 	if err != nil || in.Info.License.Name != "lgpl" {
-		tb.Skip("the FFmpeg in VUKEM_VIDEO_TEST_FFMPEG_DIR is not the pinned LGPL build")
+		tb.Skip("the FFmpeg in STUARTY_TEST_FFMPEG_DIR is not the pinned LGPL build")
 	}
 
 	return in

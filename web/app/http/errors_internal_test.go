@@ -3,9 +3,9 @@ package httpapi
 import (
 	"testing"
 
-	"github.com/AlexGalhardo/vukem/errs"
+	"github.com/AlexGalhardo/stuarty/service"
 
-	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/vukem/errs"
 )
 
 func TestClientClosedIsNotAServerStatus(t *testing.T) {

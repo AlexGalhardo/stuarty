@@ -1,9 +1,9 @@
 package httpapi
 
 import (
-	"github.com/AlexGalhardo/vukem/web"
+	"github.com/AlexGalhardo/stuarty/web/app/auth"
 
-	"github.com/AlexGalhardo/vukem-video/web/app/auth"
+	"github.com/AlexGalhardo/vukem/web"
 )
 
 type userCreateIn struct {

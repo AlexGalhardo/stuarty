@@ -14,13 +14,13 @@ import (
 	"sync"
 	"time"
 
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/service"
+	wire "github.com/AlexGalhardo/stuarty/service/events"
+
 	"github.com/AlexGalhardo/vukem/sse"
 	"github.com/AlexGalhardo/vukem/web"
-
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/service"
-	wire "github.com/AlexGalhardo/vukem-video/service/events"
 )
 
 // Defaults of SDD-006 sections 3.1 and 9.

@@ -14,7 +14,7 @@ import (
 // wraps its tools in bubblewrap: the wrapper hides the devices, so the caller uses its fallback.
 var ErrHelperSandboxed = errors.New("ffmpeg: a graphics helper cannot run inside the sandbox")
 
-// HelperTool resolves a helper of this product (the GPU host vukem-render) as a tool that runs under
+// HelperTool resolves a helper of this product (the GPU host stuarty-render) as a tool that runs under
 // the limits of an export with a hardware encoder: a CPU backstop and no address space ceiling, because
 // graphics drivers map very large ranges (SDD-007 6.5). The path must be absolute; the helper answers
 // --version, which the discovery reads.

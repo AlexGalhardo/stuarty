@@ -8,18 +8,18 @@ import (
 	"os"
 	"strings"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/service"
 )
 
 var edit = &spec{
 	name:    "edit",
 	summary: "apply a batch of operations to a project (its lint block is lint_scope fast: lint runs every rule)",
 	usage: []string{
-		"vukem-video edit --project <id> --ops <file|-> [--base n] [--key k]",
-		"vukem-video edit --project <id> <op> [k=v | k:=json]...",
+		"stuarty edit --project <id> --ops <file|-> [--base n] [--key k]",
+		"stuarty edit --project <id> <op> [k=v | k:=json]...",
 	},
-	example:    "vukem-video edit --project prj_7k2m9x4q1b item.move item_id=itm_m1n2p3q4r5 start=2s",
+	example:    "stuarty edit --project prj_7k2m9x4q1b item.move item_id=itm_m1n2p3q4r5 start=2s",
 	project:    true,
 	positional: true,
 	globals:    []string{"dry-run"},
