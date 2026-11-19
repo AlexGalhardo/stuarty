@@ -59,6 +59,9 @@
 | `ImageEdit` | `image` (`action` edit) | `image:edit` | `POST /images/{id}/edit` | edit |
 | `ImageUndo`, `ImageRedo` | `image` (`action` undo, redo) | `image:undo`, `image:redo` | `POST /images/{id}/undo`, `POST /images/{id}/redo` | edit |
 | `ImageExport` | `image` (`action` export) | `image:export` | `POST /images/{id}/export` | edit |
+| `ImageFrame` | none | none | `GET /images/{id}/frame` (SDD-012 §24.3) | read |
+| `ImageHistory` | none | none | `GET /images/{id}/history` (SDD-012 §24.3) | read |
+| `ImageFile` | none | none | `GET /images/{id}/exports/{name}` (SDD-012 §24.3) | read |
 | `ApprovalList`, `ApprovalGet` | none | `approval:list`, `approval:show` | `GET /approvals`, `GET /approvals/{id}` | read (SDD-015) |
 | `ApprovalDecide` | none | `approval:decide` | `POST /approvals/{id}/decide` | read, and only from a privileged browser session; the local token and keys get `E_PRIVILEGED_SESSION` (SDD-015 §4) |
 | `ApprovalRuleList` | none | `approval:rule:list` | `GET /approval-rules` | read |

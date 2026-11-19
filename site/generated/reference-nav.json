@@ -143,6 +143,9 @@
         "images.get",
         "images.edit",
         "images.export",
+        "images.file",
+        "images.frame",
+        "images.history",
         "images.redo",
         "images.undo"
       ]
