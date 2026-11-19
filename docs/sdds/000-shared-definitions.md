@@ -347,6 +347,7 @@ These are read only by tests, scripts and developer tools. They are renamed with
 | `~/.vukem-video` | `~/.stuarty` | the workspace folder; adopted at the first start (SDD-005 §6.6) |
 | `vukem-video.log` | `stuarty.log` | the log file in `logs/` |
 | `Vukem-Video-Client`, `Vukem-Video-Launcher`, `Vukem-Video-Lang` | `Stuarty-Client`, `Stuarty-Launcher`, `Stuarty-Lang` | request headers (section 11) |
+| `urn:vukem-video:error:<code>` | `urn:stuarty:error:<code>` | the `type` of an HTTP problem body (SDD-003 §1.4); a client matches on `code`, which does not change |
 | `vukem_video_session` | `stuarty_session` | the session cookie (section 11); a browser signs in again once |
 | `vukem-video-bundle`, `vukem-video-template` | `stuarty-bundle`, `stuarty-template` | the `format` of a bundle and of a template file; a file with the former value is still imported |
 | `<template id>.vukem-template.zip` | `<template id>.stuarty-template.zip` | the file name of a template download |
