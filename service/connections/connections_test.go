@@ -571,7 +571,8 @@ func TestEchoOfAPartOfTheSecretEncodedOnItsOwnIsFound(t *testing.T) {
 		}
 	}
 
-	srv := newServer(t, http.StatusUnauthorized, "echo "+base64.StdEncoding.EncodeToString([]byte(secret[16:26]))+" cut")
+	misaligned := base64.StdEncoding.EncodeToString([]byte(secret[16:26]))
+	srv := newServer(t, http.StatusUnauthorized, "echo "+misaligned+" cut")
 	m, st, v := newManager(t)
 	connect(t, m, st, v, srv, secret)
 
