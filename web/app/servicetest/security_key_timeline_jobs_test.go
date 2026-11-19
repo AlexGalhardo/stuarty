@@ -139,3 +139,66 @@ func TestSecurity_T06_LimitedKeyReachesJobsOfItsSecondTimeline(t *testing.T) {
 		t.Error("JobCancel of a job of B by the key of A succeeded")
 	}
 }
+
+// VV-250 beyond the jobs (SDD-003 section 1.7 rules 2 and 4): every operation that takes a project id accepts the
+// id of a timeline in its place, and a key limited to project A reaches A's second timeline that way. A timeline
+// of B, B itself and an id of nothing get one refusal, the one a project id outside the key always got.
+func TestSecurity_T06_LimitedKeyReachesItsSecondTimelineByID(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{exporter: goodExporter()})
+	a := m.exportable()
+	a2 := m.exportableSecond(a)
+	b := m.exportable()
+	b2 := m.exportableSecond(b)
+
+	key := service.WithCaller(context.Background(), service.Caller{
+		Actor: "key:limited", Scopes: service.AllScopes, ProjectID: a,
+	})
+
+	calls := map[string]func(id string) error{
+		"ProjectGet": func(id string) error {
+			_, err := m.svc.ProjectGet(key, service.ProjectGetRequest{ProjectID: id})
+			return err
+		},
+		"HistoryList": func(id string) error {
+			_, err := m.svc.HistoryList(key, service.HistoryListRequest{ProjectID: id})
+			return err
+		},
+		"MediaList": func(id string) error {
+			_, err := m.svc.MediaList(key, service.MediaListRequest{ProjectID: id})
+			return err
+		},
+		"Lint": func(id string) error {
+			_, err := m.svc.Lint(key, service.LintRequest{ProjectID: id})
+			return err
+		},
+	}
+
+	for name, call := range calls {
+		if err := call(a2); err != nil {
+			t.Errorf("%s of the second timeline of A by its id: %v", name, err)
+		}
+	}
+
+	if _, err := m.svc.Edit(key, service.EditRequest{
+		ProjectID: a2, BaseRevision: m.head(a2).Revision,
+		Operations: []command.Operation{op("track.add", `{"kind":"audio","name":"A"}`)},
+	}); err != nil {
+		t.Errorf("Edit of the second timeline of A by its id: %v", err)
+	}
+
+	answer := func(err error) string {
+		se := serviceError(t, err)
+
+		return fmt.Sprintf("%s|%s|%s", se.Code, se.Message, se.Hint)
+	}
+
+	for name, call := range calls {
+		want := answer(call("prj_0000000000zz"))
+
+		for what, id := range map[string]string{"timeline of B": b2, "project B": b} {
+			if got := answer(call(id)); got != want || code(call(id)) != service.CodeForbidden {
+				t.Errorf("%s of the %s = %q, want the refusal of a missing id %q", name, what, got, want)
+			}
+		}
+	}
+}
