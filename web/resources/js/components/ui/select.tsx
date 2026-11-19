@@ -1,8 +1,10 @@
 "use client"
 
 import * as React from "react"
+import { CSPProvider } from "@base-ui/react/csp-provider"
 import { Select as SelectPrimitive } from "@base-ui/react/select"
 import { cn } from "@/lib/cn"
+import { pageNonce } from "@/lib/cspNonce"
 import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react"
 
 function Select({
@@ -20,18 +22,23 @@ function Select({
   name?: string
   children?: React.ReactNode
 }) {
+  // The popup draws an inline <style> (it hides the scrollbar of its list); the
+  // provider gives it the nonce of the page, so the content security policy
+  // (style-src 'nonce-...') accepts it without being weakened (VV-236).
   return (
-    <SelectPrimitive.Root
-      value={value}
-      defaultValue={defaultValue}
-      disabled={disabled}
-      name={name}
-      onValueChange={(next) => {
-        if (typeof next === "string") onValueChange?.(next)
-      }}
-    >
-      {children}
-    </SelectPrimitive.Root>
+    <CSPProvider nonce={pageNonce()}>
+      <SelectPrimitive.Root
+        value={value}
+        defaultValue={defaultValue}
+        disabled={disabled}
+        name={name}
+        onValueChange={(next) => {
+          if (typeof next === "string") onValueChange?.(next)
+        }}
+      >
+        {children}
+      </SelectPrimitive.Root>
+    </CSPProvider>
   )
 }
 
@@ -87,7 +94,7 @@ function SelectContent({
         data-align-trigger={position === "item-aligned"}
         alignItemWithTrigger={position === "item-aligned"}
         align={align}
-        className={cn(position === "popper" && "w-(--anchor-width)")}
+        className={cn("isolate z-50", position === "popper" && "w-(--anchor-width)")}
       >
         <SelectPrimitive.Popup
           data-slot="select-content"
