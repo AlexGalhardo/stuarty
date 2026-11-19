@@ -30,6 +30,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/service/connections"
 	"github.com/AlexGalhardo/stuarty/service/exporter"
 	"github.com/AlexGalhardo/stuarty/service/pathguard"
+	"github.com/AlexGalhardo/stuarty/service/social"
 	"github.com/AlexGalhardo/stuarty/service/vault"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
 	"github.com/AlexGalhardo/stuarty/web/app/agentdocs"
@@ -271,7 +272,7 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 		return err
 	}
 
-	conns, provs, err := o.destinations(cfg.Getenv, st, cfg.Now)
+	conns, socials, err := o.destinations(cfg.Getenv, st, cfg.Now)
 	if err != nil {
 		return err
 	}
@@ -282,7 +283,7 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 	}
 
 	o.Service, err = service.New(service.Options{
-		Keys: o.keyStore(), Connections: conns, Providers: provs, HeavyPerMinute: heavy,
+		Keys: o.keyStore(), Connections: conns, Social: socials, HeavyPerMinute: heavy,
 		Heavy: middleware.ServiceLimiter{L: ratelimit.NewMemory(heavy, time.Minute)},
 		Store: st, Registry: command.Default(), Now: cfg.Now, Workspace: string(o.Dir), Media: media,
 		Exporter: exp, Enqueue: jobs.Dispatcher{Queue: o.Queue}, Limits: limits, Publish: publish, Version: o.version,
@@ -683,6 +684,24 @@ func (o *Owner) connections(
 		Store: st.Connections(), Now: now,
 		Vault: vault.Open(filepath.Join(string(o.Dir), connections.VaultFile), keys),
 	}), nil
+}
+
+// destinations builds what the service reaches out through: the registry of connections over the vault
+// and the registry of the social network connectors.
+func (o *Owner) destinations(
+	getenv func(string) string, st service.Store, now func() time.Time,
+) (*connections.Manager, *social.Registry, error) {
+	conns, err := o.connections(getenv, st, now)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	socials, err := socialRegistry(getenv, o.mode)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return conns, socials, nil
 }
 
 // keyStore is the API key store of network mode; local mode has none.

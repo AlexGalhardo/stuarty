@@ -201,6 +201,8 @@ export default defineConfig({
 				// The master key of the vault (SDD-014 section 4) lives next to the workspace, never in it, so
 				// the connections spec does not write into the keychain of the machine that runs it.
 				STUARTY_MASTER_KEY_FILE: `${home}.master.key`,
+				// A fake social network of the youtube-connect spec, on loopback (SDD-020 section 12).
+				STUARTY_TEST_SOCIAL_URL: `http://127.0.0.1:${port + 3}`,
 				// The desktop shell's secret, so a spec can sign in as a person (the approval queue).
 				STUARTY_LAUNCHER_SECRET: LAUNCHER_SECRET,
 				// One token drives the whole suite, faster and with more exports a minute
