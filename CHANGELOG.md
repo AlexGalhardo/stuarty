@@ -7,58 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.30.0] - 2026-11-20
-
-### Added
-
-- **desktop:** Redraw the desktop editor with gio ([f14a062](https://github.com/AlexGalhardo/stuarty/commit/f14a062b685f982379cc54706d2dfe1eccd053b7))
-- **desktop:** Play the preview from a live decode ([a9488e1](https://github.com/AlexGalhardo/stuarty/commit/a9488e119436443e2613f52c24b4c4d9498dd463))
-- **desktop:** Add a light theme and remember it ([39a2157](https://github.com/AlexGalhardo/stuarty/commit/39a21577a8165bd6dfdc27aee1a72d468cfb47cb))
-- **ui:** Match the desktop palette with Base UI primitives ([d316d74](https://github.com/AlexGalhardo/stuarty/commit/d316d749c68ca1c52116b5ba4914c7ca9f457495))
-- **service:** Read the former VUKEM_VIDEO_* variables with one warning ([552d8c8](https://github.com/AlexGalhardo/stuarty/commit/552d8c82da33733c2b59a6d7ac536c4103e7403a))
-- **workspace:** Adopt the workspace of Vukem Video at the first start ([a6f7745](https://github.com/AlexGalhardo/stuarty/commit/a6f7745110d02c6aa393af996c37d1cbfd3c2016))
-- **ui:** Add the dashboard layout with the sidebar, the profile and the theme toggle ([58e2865](https://github.com/AlexGalhardo/stuarty/commit/58e2865056972b2e1dad1f9bd1da0d02a7cb57b8))
-- **ui:** Add the dashboard home and the section routes with their empty states ([7cfa7be](https://github.com/AlexGalhardo/stuarty/commit/7cfa7bed0b7dd48a5cdf8bc9e4ffa08142bd039f))
-- **ui:** Add the dashboard link to the editor top bar and the navigation spec ([69ddc6f](https://github.com/AlexGalhardo/stuarty/commit/69ddc6fc0d0b6c8b7f3e6b2aaa03ad49566faa1b))
-- **ui:** Add the render worker and its protocol over the core module ([39d9d2e](https://github.com/AlexGalhardo/stuarty/commit/39d9d2e34c24f869f5aeebf77c50d3687ea46963))
-- **ui:** Draw the preview with the renderer of the export in a worker ([48b6c94](https://github.com/AlexGalhardo/stuarty/commit/48b6c94248a33dce3de9f7885658307eeeb7e801))
-- **service:** Add connections, their table and the service operations ([6c90e95](https://github.com/AlexGalhardo/stuarty/commit/6c90e952a7ce32f274096ca6ba569340dd8f1c7c))
-- **api:** Expose connections on HTTP, the CLI and MCP ([6310307](https://github.com/AlexGalhardo/stuarty/commit/6310307de1d29c8a5791bec6091d24fc887a611d))
-- **ui:** Add the Connections page ([527a58a](https://github.com/AlexGalhardo/stuarty/commit/527a58af3f4a11d1be37d294f14c73ba1752ceb7))
-
-### Fixed
-
-- **ci:** Clear the checks blocking release 0.29.0 ([bbf3ab6](https://github.com/AlexGalhardo/stuarty/commit/bbf3ab6568e3bfb4e23db867755facb0453f3208))
-- **ui:** Let the preview follow the page theme ([daa8682](https://github.com/AlexGalhardo/stuarty/commit/daa8682baa7cbfda95c35bbb9b316ad2e18aa5d0))
-- **workspace:** Ask to close Vukem Video instead of reporting an internal error ([015f1c8](https://github.com/AlexGalhardo/stuarty/commit/015f1c8c577e70373feb587b704c4c9430fc442a))
-- **desktop:** Confirm an update from Vukem Video in its own state folder ([1dec0a2](https://github.com/AlexGalhardo/stuarty/commit/1dec0a2be576cb7468fd54247a87b95ea5604e77))
-- **installers:** Upgrade an installed Vukem Video instead of leaving it running ([b9fec27](https://github.com/AlexGalhardo/stuarty/commit/b9fec27eac182a991848a7b5921169de2ec47407))
-- **workspace:** Answer an adoption failure with its reason ([e688fdf](https://github.com/AlexGalhardo/stuarty/commit/e688fdfdccd52c93a2e3c0a1a37926c6186abfb7))
-- **workspace:** Report a failed note after a verified copy as adopted ([b60fc92](https://github.com/AlexGalhardo/stuarty/commit/b60fc92a21a349edb7a2ee7c03a2ef27473c4ce8))
-- **desktop:** Show the adoption of the Vukem Video workspace in a dialog ([7b0e607](https://github.com/AlexGalhardo/stuarty/commit/7b0e607ac04afbb3d185caacee0915cff00ec638))
-- **service:** Say where to put a former variable that the new name overrides ([dfb9393](https://github.com/AlexGalhardo/stuarty/commit/dfb939343610ebeda6223af4eab1e19dea2d93f4))
-- **ui:** Keep the pages in the dashboard at 320 px and let an anchor button be a link ([2579c59](https://github.com/AlexGalhardo/stuarty/commit/2579c596577e51c833c404aaed8580846d2a7403))
-- **ui:** Keep the button role of an asChild button that is not a link ([5c7e117](https://github.com/AlexGalhardo/stuarty/commit/5c7e11774a04dde14384b3593e8a90968c39a489))
-- **ui:** Make the sidebar strip accessible and keep every control in a landmark ([979ae65](https://github.com/AlexGalhardo/stuarty/commit/979ae65d7ca53c17bc25962b8cbfc5c75266ac5f))
-- **ui:** Copy an odd crop of a decoded frame from even pixels ([8c148e6](https://github.com/AlexGalhardo/stuarty/commit/8c148e6b7831706d59d8d0055685e09aebba3e29))
-- **preview:** Start a new renderer instance after a trap ([49602a0](https://github.com/AlexGalhardo/stuarty/commit/49602a0f79a887e10749dd44cf8aaabac8a30f6d))
-- **ui:** Read the forced preview executor through prefs ([e4fec44](https://github.com/AlexGalhardo/stuarty/commit/e4fec44605155bc5bfb70aee2deadf3b0bfad5bd))
-- **ui:** Let the render worker call fetch and nothing else of R6 ([b10fe40](https://github.com/AlexGalhardo/stuarty/commit/b10fe409646820c76506994cefaf9f570bc4da15))
-- **preview:** Deliver layers at the size the export does and restore the gate ([2e0c9ec](https://github.com/AlexGalhardo/stuarty/commit/2e0c9ecae6b66169f570502b87a71c3bd9907390))
-- **preview:** Draw a frame of playback once with the renderer ([9c75031](https://github.com/AlexGalhardo/stuarty/commit/9c7503193caf4f321f74187dcd7b0deaa7f75003))
-- **service:** Keep the doctor vault check safe without a registry ([de65008](https://github.com/AlexGalhardo/stuarty/commit/de65008b9d454b878ad1720af2be8f5561171717))
-
-### Security
-
-- **repo:** Close the gaps in the project permission rules ([715f276](https://github.com/AlexGalhardo/stuarty/commit/715f27645884b5b3a9abd7f5bf8df72233275d0c))
-- **security:** Allow WebAssembly compilation for the render worker ([420f641](https://github.com/AlexGalhardo/stuarty/commit/420f64176afae9b52ff180b0b5bbc122118d5cf8))
-- **security:** Add the encrypted secret vault ([792c9a0](https://github.com/AlexGalhardo/stuarty/commit/792c9a0c1c190e0569b46dd0d0272c22f87ea8a5))
-- **security:** Add the master key providers of the vault ([232f8f0](https://github.com/AlexGalhardo/stuarty/commit/232f8f06f57817ddbf1faae80cfaf6fb05f0196c))
-- **security:** Add the outbound rule check and the T-38 to T-41 tests ([654a821](https://github.com/AlexGalhardo/stuarty/commit/654a8214a0ec95d806361141719b555495f6521c))
-- **security:** Keep secrets out of the bundle, the logs and the answers ([3a2e776](https://github.com/AlexGalhardo/stuarty/commit/3a2e776c353abc169a8fc778c14ca893eb606e5e))
-- **security:** Report the vault in doctor and stop handing the vault out ([19c1159](https://github.com/AlexGalhardo/stuarty/commit/19c115988972ad405f633bc5b0a4b5602369536e))
-- **security:** Make the outbound rule see TLS dials and DNS lookups ([0f0c61d](https://github.com/AlexGalhardo/stuarty/commit/0f0c61d138b394b353849faab26dd0463d765ce1))
-- **security:** Check the modes of the vault and the key file on Unix ([2ea2526](https://github.com/AlexGalhardo/stuarty/commit/2ea2526dd1c87c37a503499508ada31a0041b428))
 ## [0.29.0] - 2026-11-18
 
 ### Added
@@ -1400,8 +1348,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.30.0...HEAD
-[0.30.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.29.0...v0.30.0
+[Unreleased]: https://github.com/AlexGalhardo/vukem-video/compare/v0.29.0...HEAD
 [0.29.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.28.0...v0.29.0
 [0.28.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.27.0...v0.28.0
 [0.27.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.26.0...v0.27.0
