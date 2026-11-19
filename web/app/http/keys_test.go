@@ -427,6 +427,67 @@ func TestKeyLimitedToAProject(t *testing.T) {
 	}
 }
 
+// VV-246: a key is limited to a project, never to the id of one of its timelines: that id is refused with
+// the answer for an id that names nothing, and another user's project is not found either.
+func TestSecurity_VV246_KeyIsNotLimitedToATimelineID(t *testing.T) {
+	h := newNetworkHarness(t, resolved(), true)
+	h.user(t, "ana@example.com", service.RoleMember)
+	h.user(t, "bob@example.com", service.RoleMember)
+	ana := h.session(t, "ana@example.com")
+	bob := h.session(t, "bob@example.com")
+
+	res := h.send(t, http.MethodPost, "/api/v1/projects", `{"name":"p"}`, ana, nil)
+
+	var p struct {
+		ProjectID string `json:"project_id"`
+	}
+
+	_ = json.Unmarshal(res.body, &p)
+
+	res = h.send(
+		t, http.MethodPost, "/api/v1/projects/"+p.ProjectID+"/items",
+		`{"kind":"timeline","title":"Wide","preset":"16:9"}`, ana, nil,
+	)
+
+	var added struct {
+		Item struct {
+			TimelineID string `json:"timeline_id"`
+		} `json:"item"`
+	}
+
+	if err := json.Unmarshal(res.body, &added); err != nil || added.Item.TimelineID == "" {
+		t.Fatalf("the second timeline = %d %s", res.status, res.body)
+	}
+
+	missing := h.send(
+		t, http.MethodPost, "/api/v1/keys", `{"name":"a","scopes":["read"],"project_id":"prj_0000000000"}`, ana, nil,
+	)
+
+	for name, c := range map[string]struct{ session, id string }{
+		"a timeline of mine":          {ana, added.Item.TimelineID},
+		"the project of another user": {bob, p.ProjectID},
+		"a timeline of another user":  {bob, added.Item.TimelineID},
+	} {
+		got := h.send(
+			t,
+			http.MethodPost,
+			"/api/v1/keys",
+			`{"name":"a","scopes":["read"],"project_id":"`+c.id+`"}`,
+			c.session,
+			nil,
+		)
+		if got.status != missing.status || got.status == http.StatusCreated {
+			t.Errorf(
+				"%s = %d %s, want the refusal of an id that names nothing (%d)",
+				name,
+				got.status,
+				got.body,
+				missing.status,
+			)
+		}
+	}
+}
+
 // Concurrent creations by one user create at most the limit; the rest get the
 // limit error (the count and the insert are one step).
 func TestKeyCreationLimitHoldsUnderConcurrency(t *testing.T) {
