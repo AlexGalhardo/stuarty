@@ -123,7 +123,9 @@ func (m *Manager) finishSkill(
 	}
 
 	if review {
-		s.MarkReviewed()
+		if err := m.sealReview(&s); err != nil {
+			return core.Skill{}, Entry{}, nil, err
+		}
 	}
 
 	if err := m.WriteSkill(ctx, s); err != nil {
@@ -135,16 +137,31 @@ func (m *Manager) finishSkill(
 	return got, entry, findings, err
 }
 
-// MarkReviewed records that a person read the skill as it is now. It is for a
-// person at the browser, and refused while the lint reports an error.
-func (m *Manager) MarkReviewed(ctx context.Context, c Caller, name string) (Entry, []core.Finding, error) {
+// MarkReviewed records that a person read the skill. It is for a person at the
+// browser, and refused while the lint reports an error. contentHash is the
+// content hash of the skill as the person read it (SkillGet gives it): when the
+// skill changed since, the mark is refused with ErrChanged, so a review never
+// covers a text that was swapped while the person was reading the old one.
+func (m *Manager) MarkReviewed(
+	ctx context.Context,
+	c Caller,
+	name, contentHash string,
+) (Entry, []core.Finding, error) {
 	if !c.Person {
 		return Entry{}, nil, fmt.Errorf("%w: only a person at the browser marks a skill as read", ErrForbidden)
+	}
+
+	if contentHash == "" {
+		return Entry{}, nil, invalid("content_hash", "it is required: the content hash of the skill as it was read")
 	}
 
 	s, _, err := m.ReadSkill(ctx, name)
 	if err != nil {
 		return Entry{}, nil, err
+	}
+
+	if s.ContentHash() != contentHash {
+		return Entry{}, nil, ErrChanged
 	}
 
 	_, entry, findings, err := m.finishSkill(ctx, s, true)

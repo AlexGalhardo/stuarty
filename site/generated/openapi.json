@@ -4287,6 +4287,9 @@
             "type": "string",
             "x-untrusted": true
           },
+          "content_hash": {
+            "type": "string"
+          },
           "entry": {
             "$ref": "#/components/schemas/LibraryEntry"
           },
@@ -12119,11 +12122,15 @@
             "application/json": {
               "schema": {
                 "properties": {
-                  "agent_view": {
-                    "description": "Set by an agent: only what is reviewed or kept is returned.",
-                    "type": "boolean"
+                  "content_hash": {
+                    "description": "The content_hash of the skill as it was read (GET /library/skills/{name}); a skill that changed since is not marked.",
+                    "minLength": 1,
+                    "type": "string"
                   }
                 },
+                "required": [
+                  "content_hash"
+                ],
                 "type": "object"
               }
             }
