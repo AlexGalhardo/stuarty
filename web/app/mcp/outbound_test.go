@@ -7,8 +7,6 @@ import (
 	"slices"
 	"strings"
 	"testing"
-
-	"github.com/AlexGalhardo/stuarty/core/command"
 )
 
 // TestNoOutboundTools is SDD-003 section 9 check 25 and T10: no tool takes a
@@ -16,7 +14,7 @@ import (
 func TestNoOutboundTools(t *testing.T) {
 	t.Parallel()
 
-	defs, err := loadDefinitions(command.Default())
+	defs, err := loadDefinitions()
 	if err != nil {
 		t.Fatal(err)
 	}
