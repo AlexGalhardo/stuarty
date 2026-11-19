@@ -88,7 +88,9 @@ func (*Adapter) GenerateImages(
 
 	var res providers.ImageResult
 
-	for i := range ans.Data {
+	// Only the images asked for are fetched and held: the disk was checked, and the person approved, for that
+	// count, and a server that lists more must not make the product download or keep them.
+	for i := range min(len(ans.Data), req.Count) {
 		d := &ans.Data[i]
 
 		data, err := imageBytes(ctx, c, d.B64, d.URL, maxBytes)
@@ -111,11 +113,6 @@ func (*Adapter) GenerateImages(
 		res.Files = append(res.Files, providers.GeneratedFile{Data: data, RevisedPrompt: d.RevisedPrompt})
 	}
 
-	// More answers than asked for are not kept: the person pays for and sees what was asked.
-	if len(res.Files) > req.Count {
-		res.Files = res.Files[:req.Count]
-	}
-
 	if len(res.Files) == 0 {
 		return providers.ImageResult{}, res.Err
 	}
@@ -130,8 +127,9 @@ func imageBytes(ctx context.Context, c connections.Credential, b64, rawURL strin
 			return nil, &providers.Error{Kind: providers.KindUnreadable, Status: http.StatusOK}
 		}
 
+		// The length check above lets through up to a few bytes over maxBytes; the decoded file is held to it.
 		data, err := base64.StdEncoding.DecodeString(b64)
-		if err != nil {
+		if err != nil || int64(len(data)) > maxBytes {
 			return nil, &providers.Error{Kind: providers.KindUnreadable, Status: http.StatusOK}
 		}
 
