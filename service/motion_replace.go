@@ -46,15 +46,15 @@ type MotionReplaceResult struct {
 	Replaced  []string `json:"replaced"` // the item ids
 }
 
-// docOrigins reads the library origin of every asset of the document, by asset id; an asset with no row is
-// imported.
-func (s *svc) docOrigins(ctx context.Context, doc *timeline.Document) (map[string]asset.Origin, error) {
+// docOrigins reads the library origin of every asset of the document, by asset id, from the rows of the owner (the
+// library is kept per owner, SDD-011 DS-22); an asset with no row is imported.
+func (s *svc) docOrigins(ctx context.Context, owner string, doc *timeline.Document) (map[string]asset.Origin, error) {
 	hashes := make([]string, 0, len(doc.Assets))
 	for id := range doc.Assets {
 		hashes = append(hashes, doc.Assets[id].Hash)
 	}
 
-	rows, err := s.store.AssetLibrary().GetMany(ctx, hashes)
+	rows, err := s.store.AssetLibrary().GetMany(ctx, owner, hashes)
 	if err != nil {
 		return nil, asError(err)
 	}
@@ -84,7 +84,7 @@ func earlierRenders(origins map[string]asset.Origin, key, newAsset string) map[s
 
 // renderOffers lists, for a file just imported under a render key, the earlier renders of the key that clips of
 // the timeline use (SDD-011 section 15.4). It offers and changes nothing; an error reading the project is no offer.
-func (s *svc) renderOffers(ctx context.Context, projectID, newAsset, key string) []RenderOffer {
+func (s *svc) renderOffers(ctx context.Context, owner, projectID, newAsset, key string) []RenderOffer {
 	row, err := s.store.Projects().Get(ctx, projectID)
 	if err != nil {
 		return nil
@@ -95,7 +95,7 @@ func (s *svc) renderOffers(ctx context.Context, projectID, newAsset, key string)
 		return nil
 	}
 
-	origins, oerr := s.docOrigins(ctx, doc)
+	origins, oerr := s.docOrigins(ctx, owner, doc)
 	if oerr != nil {
 		return nil
 	}
@@ -118,7 +118,13 @@ func (s *svc) renderOffers(ctx context.Context, projectID, newAsset, key string)
 
 // offerReplacements adds to an import under a render key the offer of each file: the earlier renders of the key that
 // clips use, in the result and in its text (SDD-011 section 15.4).
-func (s *svc) offerReplacements(ctx context.Context, projectID, key string, dryRun bool, res *MediaImportResult) {
+func (s *svc) offerReplacements(
+	ctx context.Context,
+	c Caller,
+	projectID, key string,
+	dryRun bool,
+	res *MediaImportResult,
+) {
 	if key == "" || dryRun {
 		return
 	}
@@ -129,7 +135,7 @@ func (s *svc) offerReplacements(ctx context.Context, projectID, key string, dryR
 			continue
 		}
 
-		a.Replaces = s.renderOffers(ctx, projectID, a.AssetID, key)
+		a.Replaces = s.renderOffers(ctx, c.OwnerUserID, projectID, a.AssetID, key)
 		for j := range a.Replaces {
 			res.Text += "\n" + strings.TrimRight(offerText(a.AssetID, &a.Replaces[j]), "\n")
 		}
@@ -148,7 +154,7 @@ func offerText(newAsset string, o *RenderOffer) string {
 // MotionReplace replaces the media of every clip that reads an earlier render of the animation by the new render,
 // in one batch: one revision, one history entry, all or nothing, undone by one undo (SDD-011 section 15.4).
 func (s *svc) MotionReplace(ctx context.Context, req MotionReplaceRequest) (*MotionReplaceResult, error) {
-	c, err := authorize(ctx, "MotionReplace", req.ProjectID)
+	c, err := s.authorizeProject(ctx, "MotionReplace", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}
@@ -176,7 +182,7 @@ func (s *svc) MotionReplace(ctx context.Context, req MotionReplaceRequest) (*Mot
 		return nil, s.motionAssetMissing(ctx, row.ID, req.AssetID)
 	}
 
-	origins, oerr := s.docOrigins(ctx, doc)
+	origins, oerr := s.docOrigins(ctx, c.OwnerUserID, doc)
 	if oerr != nil {
 		return nil, oerr
 	}

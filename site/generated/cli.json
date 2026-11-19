@@ -2610,6 +2610,7 @@
     },
     {
       "name": "motion:brief",
+      "domain": "video",
       "summary": "what a render by an external motion engine must fit: size, rate, length, safe area, brand kit, captions",
       "usage": [
         "stuarty motion:brief --project <id> [--from t] [--until t] [--track <trk_id>]"
@@ -2642,6 +2643,7 @@
     },
     {
       "name": "motion:check",
+      "domain": "video",
       "summary": "check a rendered asset against the brief: each mismatch of size, rate, length or alpha, with the value expected",
       "usage": [
         "stuarty motion:check --project <id> --asset <ast_id> [--from t] [--until t] [--track <trk_id>]"
@@ -2679,6 +2681,7 @@
     },
     {
       "name": "motion:replace",
+      "domain": "video",
       "summary": "replace, in one undoable batch, every clip that reads an earlier render of an animation with a new render",
       "usage": [
         "stuarty motion:replace --project <id> --asset <ast_id> [--render-key <key>] [--dry-run]"
