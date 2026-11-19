@@ -141,6 +141,10 @@ type Service interface {
 	ImageUndo(ctx context.Context, req ImageStepRequest) (*ImageStepResult, error)
 	ImageRedo(ctx context.Context, req ImageStepRequest) (*ImageStepResult, error)
 	ImageExport(ctx context.Context, req ImageExportRequest) (*ImageExportResult, error)
+	// ImageFrame, ImageHistory and ImageFile are the reads of the image editor screen (SDD-012 section 24.3); HTTP only.
+	ImageFrame(ctx context.Context, req ImageFrameRequest) (*ImageFrameResult, error)
+	ImageHistory(ctx context.Context, req ImageHistoryRequest) (*ImageHistoryResult, error)
+	ImageFile(ctx context.Context, req ImageFileRequest) (*File, error)
 	// ConnectionList and ConnectionGet read the destinations the user connected; ConnectionCreate,
 	// ConnectionRemove and ConnectionTest are for an administrator. No result carries a credential
 	// (SDD-014 section 5).
