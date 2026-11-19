@@ -580,8 +580,8 @@ func TestSecurity_T06_NetworkKeyDoesNotCrossProductionsByTimeline(t *testing.T) 
 		t.Errorf("the project of the stale key is %q (%v), want it active", state, err)
 	}
 
-	if res := h.send(t, http.MethodGet, "/api/v1/projects/"+theirs+"/brief", "", bob, nil); res.status != http.StatusOK ||
-		strings.Contains(string(res.body), "taken") {
+	res := h.send(t, http.MethodGet, "/api/v1/projects/"+theirs+"/brief", "", bob, nil)
+	if res.status != http.StatusOK || strings.Contains(string(res.body), "taken") {
 		t.Errorf("the brief of the other user = %d %s", res.status, res.body)
 	}
 }
