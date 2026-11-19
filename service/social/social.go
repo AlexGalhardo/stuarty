@@ -101,6 +101,9 @@ type Connector interface {
 	// SignedIn says whether the secret of a connection holds a refresh token and who it names;
 	// it never returns the token.
 	SignedIn(secret []byte) (Account, bool)
+	// ClientID is the client id kept in the secret of a connection, for the authorization address; false
+	// when the secret holds none.
+	ClientID(secret []byte) (string, bool)
 	// Begin makes the secret of a new connection from the client id and secret of the person's own app.
 	Begin(clientID, clientSecret string) ([]byte, error)
 	// Exchange trades an authorization code for the tokens and returns the new secret of the connection.
