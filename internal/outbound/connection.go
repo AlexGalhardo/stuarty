@@ -52,17 +52,44 @@ var metadataAddrs = map[netip.Addr]bool{
 	netip.MustParseAddr("fd00:ec2::254"):   true,
 }
 
-// nat64 is the well-known NAT64 prefix (RFC 6052): on an IPv6-only network a gateway turns
-// 64:ff9b::a.b.c.d into a.b.c.d, so the embedded address is the one judged.
-var nat64 = netip.MustParsePrefix("64:ff9b::/96")
+// The IPv6 forms that carry an IPv4 address a gateway or a stack turns into that IPv4 one, so the
+// embedded address is the one judged (SDD-014 section 6): the well-known NAT64 prefix (RFC 6052,
+// 64:ff9b::a.b.c.d), 6to4 (RFC 3056, 2002:aabb:ccdd::, the IPv4 in bits 16 to 47) and the deprecated
+// IPv4-compatible form (::a.b.c.d). The local-use NAT64 prefix (RFC 8215) embeds the IPv4 at a
+// position that depends on the deployment, so the whole prefix is refused.
+var (
+	nat64      = netip.MustParsePrefix("64:ff9b::/96")
+	nat64Local = netip.MustParsePrefix("64:ff9b:1::/48")
+	sixToFour  = netip.MustParsePrefix("2002::/16")
+	v4Compat   = netip.MustParsePrefix("::/96")
+)
+
+// embeddedIPv4 returns the IPv4 address an IPv6 one carries, when it is one of the forms above.
+func embeddedIPv4(ip netip.Addr) (netip.Addr, bool) {
+	b := ip.As16()
+
+	switch {
+	case nat64.Contains(ip), v4Compat.Contains(ip):
+		return netip.AddrFrom4([4]byte(b[12:])), true
+	case sixToFour.Contains(ip):
+		return netip.AddrFrom4([4]byte(b[2:6])), true
+	}
+
+	return netip.Addr{}, false
+}
 
 // refusedAtDial says whether the gate refuses an address it is about to dial. The zone is dropped
 // first: fd00:ec2::254%eth0 is still the metadata address.
 func refusedAtDial(addr netip.Addr) bool {
 	ip := addr.Unmap().WithZone("")
-	if nat64.Contains(ip) {
-		b := ip.As16()
-		ip = netip.AddrFrom4([4]byte(b[12:]))
+	if ip.Is6() && nat64Local.Contains(ip) {
+		return true
+	}
+
+	if ip.Is6() {
+		if v4, ok := embeddedIPv4(ip); ok {
+			ip = v4
+		}
 	}
 
 	return ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() || ip.IsUnspecified() ||
