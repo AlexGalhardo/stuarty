@@ -331,7 +331,7 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			return err
 		},
 		"SkillMarkReviewed": func() error {
-			_, err := e.svc.SkillMarkReviewed(ctx, service.LibraryRef{Name: "a"})
+			_, err := e.svc.SkillMarkReviewed(ctx, service.SkillReviewRequest{Name: "a"})
 			return err
 		},
 		"SkillLint": func() error {

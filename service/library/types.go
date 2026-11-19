@@ -64,6 +64,8 @@ var (
 	ErrNotFound  = errors.New("library: not found")
 	ErrExists    = errors.New("library: the name is taken")
 	ErrForbidden = errors.New("library: not allowed for this caller")
+	// ErrChanged is a review of a skill whose content is no longer the one the person read.
+	ErrChanged = errors.New("library: the skill changed since it was read")
 )
 
 // ValidationError is a refusal of the content: a field that breaks a rule, an

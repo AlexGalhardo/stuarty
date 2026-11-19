@@ -334,7 +334,7 @@ func (s stub) SkillImport(context.Context, service.SkillImportRequest) (*service
 	return reply[service.SkillImportResult](s.err)
 }
 
-func (s stub) SkillMarkReviewed(context.Context, service.LibraryRef) (*service.SkillReviewResult, error) {
+func (s stub) SkillMarkReviewed(context.Context, service.SkillReviewRequest) (*service.SkillReviewResult, error) {
 	return reply[service.SkillReviewResult](s.err)
 }
 

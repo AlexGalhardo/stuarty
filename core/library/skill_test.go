@@ -219,14 +219,16 @@ func TestSkillReviewIsBoundToTheContent(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if s.Reviewed() {
+	key := []byte("the review key of this workspace")
+
+	if s.Reviewed(key) {
 		t.Fatal("a skill with no mark is not reviewed")
 	}
 
 	s.SetOrigin(library.OriginImported, "https://example.com/x")
-	s.MarkReviewed()
+	s.MarkReviewed(key)
 
-	if !s.Reviewed() {
+	if !s.Reviewed(key) {
 		t.Fatal("the mark of the current content must hold")
 	}
 
@@ -237,9 +239,14 @@ func TestSkillReviewIsBoundToTheContent(t *testing.T) {
 	}
 
 	back, err := library.ParseSkill(all)
-	if err != nil || !back.Reviewed() || back.Origin() != library.OriginImported ||
+	if err != nil || !back.Reviewed(key) || back.Origin() != library.OriginImported ||
 		back.Source() != "https://example.com/x" {
-		t.Fatalf("%v reviewed=%v", err, back.Reviewed())
+		t.Fatalf("%v reviewed=%v", err, back.Reviewed(key))
+	}
+
+	// the mark is sealed with the key of the workspace: another key, or none, does not read it as a review
+	if back.Reviewed([]byte("another workspace")) || back.Reviewed(nil) {
+		t.Fatal("a mark sealed with another key must not count")
 	}
 
 	for name, mutate := range map[string]func(*library.Skill){
@@ -255,23 +262,28 @@ func TestSkillReviewIsBoundToTheContent(t *testing.T) {
 		c, _ := library.ParseSkill(all)
 		mutate(&c)
 
-		if c.Reviewed() {
+		if c.Reviewed(key) {
 			t.Errorf("%s: an edit must take the review away", name)
 		}
 	}
 
-	// a forged mark does not hold
+	// a forged mark does not hold, nor does the plain hash of the content, which anyone can compute
 	forged, _ := library.ParseSkill(goodFiles())
 	forged.Metadata = map[string]string{library.MetaReviewed: "sha256:" + strings.Repeat("0", 64)}
 
-	if forged.Reviewed() {
+	if forged.Reviewed(key) {
 		t.Fatal("a mark that is not the hash must not count")
+	}
+
+	forged.Metadata = map[string]string{library.MetaReviewed: forged.ContentHash()}
+	if forged.Reviewed(key) {
+		t.Fatal("the unsealed hash of the content must not count as a review")
 	}
 
 	// the hash does not depend on the mark itself
 	a, _ := library.ParseSkill(goodFiles())
 	b := a
-	b.MarkReviewed()
+	b.MarkReviewed(key)
 
 	if a.ContentHash() != b.ContentHash() {
 		t.Fatal("the content hash must ignore the review mark")

@@ -39,6 +39,7 @@ The rules (names, front matter, variables, the lint, limits) are in `core/librar
 
 ```text
 <workspace>/library/
+├── .review-key                     the key that seals the review marks (section 7); made at the first review
 ├── memory/<name>.md                one fact per file
 ├── prompts/<name>.md               one prompt per file
 └── skills/<name>/                  the Agent Skills layout
@@ -105,13 +106,13 @@ The body is the text, at most 32 KiB. A variable is `{{name}}` or `{{ name }}` w
 | --- | --- |
 | `stuarty-origin` | `built-in` (shipped with the product), `user` (written here) or `imported` (RF-387) |
 | `stuarty-source` | free text: where it came from (a repository, a folder, an author) |
-| `stuarty-reviewed` | `sha256:<hex>` of the content a person read, or absent |
+| `stuarty-reviewed` | `hmac-sha256:<hex>`: the content hash a person read, sealed with the review key of the library, or absent |
 
-**Reviewed** is not a flag a file can claim: a skill is reviewed only when `stuarty-reviewed` equals the content hash computed now. The content hash is the SHA-256 of the canonical front matter without `stuarty-reviewed`, the body and every other file of the folder (path, length and bytes, in path order). Any edit, from any tool, takes the review away. A skill file placed in the workspace by hand is therefore unreviewed until a person reviews it, whatever it says.
+**Reviewed** is not a flag a file can claim: a skill is reviewed only when `stuarty-reviewed` equals the HMAC-SHA256, under the review key, of the content hash computed now. The content hash is `sha256:` and the SHA-256 of the canonical front matter without `stuarty-reviewed`, the body and every other file of the folder (path, length and bytes, in path order). Any edit, from any tool, takes the review away. The review key is 32 random bytes in `library/.review-key` (hex, file mode 0600), made at the first review of the workspace; a dot file is never scanned, imported or exported. A plain hash would not be enough, because anyone can compute it: a skill folder copied into the workspace by hand, or shipped by a repository with the hash of its own content, would pass as read. With the key, a skill file placed in the workspace by hand is unreviewed until a person reviews it, whatever it says. A key that is missing or not valid is replaced at the next review, which takes every earlier review away: the safe side. Copying the whole `library/` folder, key included, to another machine keeps the reviews.
 
-- `SkillWrite` always records the origin `user`; the caller cannot set `built-in` or `imported`. A skill written by a person at the browser is reviewed at once (they wrote it); one written through any other surface is not.
+- `SkillWrite` always records the origin `user`; the caller cannot set `built-in` or `imported`. A skill written by a person at the browser is reviewed at once (they wrote it); one written through any other surface is not. The skill that exists is the start of the write: its front matter keys the product does not know are written back, and a request with no `metadata` (or no `files`) keeps the metadata (or the files) the skill has; an empty map (or list) removes them.
 - `SkillImport` records `imported` and the licence and source it finds or is given, and never reviews.
-- `SkillMarkReviewed` is for a person at the browser: a caller with the `edit` scope and `Caller.Browser`, which is a signed-in session of network mode or a session of the desktop application opened with the launcher secret (SDD-007 section 3.4 item 7). A local web session without the secret is refused, because an agent that holds the token can open one. It is refused while the lint reports an error. A built-in skill is installed by the product with its hash.
+- `SkillMarkReviewed` is for a person at the browser: a caller with the `edit` scope and `Caller.Browser`, which is a signed-in session of network mode or a session of the desktop application opened with the launcher secret (SDD-007 section 3.4 item 7). A local web session without the secret is refused, because an agent that holds the token can open one. The request carries the `content_hash` that `SkillGet` returned with the text the person read; when the skill changed since, the mark is refused with `E_REVISION_CONFLICT` and the person reads it again, so a text swapped while the person was reading the old one is never marked. It is refused while the lint reports an error. A built-in skill is installed by the product reviewed.
 - The default agent listing (`SkillList` without `include_unreviewed`, and every skill an agent reads through search) holds only reviewed skills. `SkillGet` of an unreviewed skill is allowed (a person must be able to read it) and its result says `reviewed: false` and carries the warning text.
 
 ### 7.1 The skill lint
@@ -176,13 +177,13 @@ The answer fits a budget: `budget` characters (default 4000, at most 16000, abou
 | `MemoryList`, `MemoryGet`, `SkillList`, `SkillGet`, `PromptList`, `PromptGet`, `LibrarySearch`, `SkillLint`, `PromptRender` | read | lists and searches leave out unreviewed skills and pending notes unless `include_unreviewed` is true (HTTP and CLI take it; the MCP tool has no such argument, and its calls are made with `agent_view`, which also refuses `SkillGet` of an unreviewed skill with `E_FORBIDDEN` and the hint to ask the person to review it) |
 | `MemoryWrite`, `MemoryRemove`, `SkillWrite`, `PromptWrite`, `LibraryReindex` | edit | the rules of sections 5 to 7 |
 | `SkillImport`, `SkillExport` | media | reads or writes files by path rules; no MCP tool |
-| `SkillMarkReviewed` | edit | a person at the browser only (the session cookie); no MCP tool and no CLI command |
+| `SkillMarkReviewed` | edit | a person at the browser only (the session cookie), with the `content_hash` of the text read; no MCP tool and no CLI command |
 
 In network mode the library belongs to the workspace and is shared by its users. A key limited to one project may read and write only memory whose scope is that project or `workspace` (read only). `MemoryRemove` deletes the file; a caller that is not a person at the browser cannot remove a kept note (`E_FORBIDDEN`). Every write, import, export, review and removal appends an audit row (`library.memory.write`, `library.skill.import`, and so on) with the actor.
 
 ## 12. Errors, limits and files
 
-No new error code: `E_VALIDATION` (a name, a field, a variable, an archive entry; `details.findings` for the lint), `E_NOT_FOUND`, `E_ID_EXISTS` (a taken name), `E_FORBIDDEN`, `E_LIMIT_EXCEEDED`, `E_PAYLOAD_TOO_LARGE`, `E_PATH_NOT_ALLOWED` and `E_FILE_NOT_FOUND` (import paths).
+No new error code: `E_VALIDATION` (a name, a field, a variable, an archive entry; `details.findings` for the lint), `E_NOT_FOUND`, `E_ID_EXISTS` (a taken name), `E_FORBIDDEN`, `E_REVISION_CONFLICT` (a review of a skill that changed since it was read), `E_LIMIT_EXCEEDED`, `E_PAYLOAD_TOO_LARGE`, `E_PATH_NOT_ALLOWED` and `E_FILE_NOT_FOUND` (import paths).
 
 | Limit | Value |
 | --- | --- |
@@ -197,7 +198,7 @@ Files: `library/` in the workspace (SDD-000 section 9), `exports/library/` for e
 
 ## 13. Untrusted text
 
-A person at the browser edits the text of an entry, so the service returns it to that caller exactly as the file has it (the page escapes it when it draws it). Every other caller gets the text cleaned. Every text of the library that reaches an agent is untrusted: a description, a body, a snippet, a tag, a source and a rendered prompt. The fields are tagged `untrusted:"true"` and listed in the provenance table of SDD-007 section 8.1 with the source `library_text`. In the text part of a result the library text is a block `<untrusted_media_text source="library_text" ...>` with its `kind` and `name`; in structured content it is a plain string cleaned and with `<` escaped (`untrusted.Value`). The names, kinds, flags and counts are the product's own and are not. A skill's `SKILL.md` is shown whole to a person who asks for it: the warning for an unreviewed skill is a sentence of the product outside the block.
+The pages edit the text of an entry, so the service returns it to a session of the UI (a person at the browser, or a session of local mode opened without the launcher secret, actor `local:ui`) exactly as the file has it (the page escapes it when it draws it): a page that got the cleaned text would write it back over the file on its next save. Every other caller gets the text cleaned. Every text of the library that reaches an agent is untrusted: a description, a body, a snippet, a tag, a source and a rendered prompt. The fields are tagged `untrusted:"true"` and listed in the provenance table of SDD-007 section 8.1 with the source `library_text`. In the text part of a result the library text is a block `<untrusted_media_text source="library_text" ...>` with its `kind` and `name`; in structured content it is a plain string cleaned and with `<` escaped (`untrusted.Value`). The names, kinds, flags and counts are the product's own and are not. The paths of the files of a skill are not the product's (an archive names them): in the text of `SkillGet` and `SkillLint` the file list and the findings are blocks of their own (`field` `files` and `findings`). A skill's `SKILL.md` is shown whole to a person who asks for it: the warning for an unreviewed skill is a sentence of the product outside the block.
 
 ## 14. Surfaces
 

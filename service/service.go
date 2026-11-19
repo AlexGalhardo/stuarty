@@ -84,7 +84,7 @@ type Service interface {
 	SkillGet(ctx context.Context, req LibraryRef) (*SkillGetResult, error)
 	SkillWrite(ctx context.Context, req SkillWriteRequest) (*SkillWriteResult, error)
 	SkillImport(ctx context.Context, req SkillImportRequest) (*SkillImportResult, error)
-	SkillMarkReviewed(ctx context.Context, req LibraryRef) (*SkillReviewResult, error)
+	SkillMarkReviewed(ctx context.Context, req SkillReviewRequest) (*SkillReviewResult, error)
 	SkillLint(ctx context.Context, req LibraryRef) (*SkillLintResult, error)
 	SkillExport(ctx context.Context, req SkillExportRequest) (*SkillExportResult, error)
 	PromptList(ctx context.Context, req PromptListRequest) (*LibraryListResult, error)
