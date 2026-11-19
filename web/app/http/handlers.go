@@ -128,11 +128,11 @@ type lintIn struct {
 
 type commandIn struct {
 	Name   string `json:"name"             validate:"required"`
-	Domain string `json:"domain,omitempty"                     doc:"video (default) or image."`
+	Domain string `json:"domain,omitempty"                     doc:"A domain of the product, video by default."`
 }
 
 type commandListIn struct {
-	Domain string `json:"domain,omitempty" doc:"video (default) or image."`
+	Domain string `json:"domain,omitempty" doc:"A domain of the product, video by default."`
 }
 
 type noIn struct{}
