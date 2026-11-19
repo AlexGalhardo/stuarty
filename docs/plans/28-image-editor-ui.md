@@ -47,7 +47,7 @@ A creator opens "Edit Image", sees their thumbnail on a canvas, moves a title, s
 - [x] 6. Add the brand kit actions and "new from template". Verify: `web/e2e/specs/image-template-brand.spec.ts` passes.
 - [x] 7. Build the export dialog with lint findings. Verify: `web/e2e/specs/image-export.spec.ts` passes and the downloaded file equals the CLI export of the same document.
 - [x] 8. Add history, keyboard paths and both languages. Verify: `bun run check:i18n`, `bun run check:contrast` and `web/e2e/specs/a11y-image-editor.spec.ts` (axe and keyboard) pass.
-- [ ] 9. Walk the editor in the Windows shell. Verify: screenshots in the hand-off.
+- [x] 9. Walk the editor in the Windows shell. Verify: screenshots in the hand-off.
 
 ## Test strategy
 
