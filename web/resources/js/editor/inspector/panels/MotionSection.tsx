@@ -17,6 +17,8 @@ import {
 } from "../../commands/builders";
 import { localizeDecimalInput, normalizeTimeInput } from "../../commands/units";
 import { useCanEdit } from "../../commands/useActions";
+import type { FieldError } from "../fields/commitField";
+import { FieldMessage } from "../fields/FieldFrame";
 import Section from "../Section";
 import { useFieldCommit } from "../useFieldCommit";
 
@@ -47,6 +49,9 @@ export default function MotionSection({
 	const [direction, setDirection] = useState<MotionDirection>("left");
 	const [length, setLength] = useState("");
 	const [amount, setAmount] = useState("");
+	// The core's refusal of the last "Apply" (a length longer than the item, an
+	// amount out of range), shown as received.
+	const [error, setError] = useState<FieldError | null>(null);
 
 	const typed = length.trim();
 	const time =
@@ -176,12 +181,16 @@ export default function MotionSection({
 								direction: takesDirection ? direction : undefined,
 								amount: takesAmount ? amountValue : undefined,
 							}),
-						)
+						).then((result) => setError(result.ok ? null : result.error))
 					}
 				>
 					{t("ui.editor.animation.apply")}
 				</Button>
 			</div>
+			<FieldMessage
+				id={`motion-${itemId}-message`}
+				state={{ error, remoteActor: null }}
+			/>
 		</Section>
 	);
 }
