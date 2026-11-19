@@ -360,7 +360,8 @@ func (s *svc) ledgerEntry(req *approval.Row, estimate, now int64) *approval.Entr
 // (SDD-015 section 6). A job that succeeded is settled at the cost it reports, or at its estimate when
 // it reports none; one that failed or was cancelled is settled at the cost it reports, and gives its
 // reservation back only when it spent nothing; one that was requeued (a shutdown interrupted it) keeps
-// its reservation, since it will run again and must stay counted against the ceilings.
+// its reservation, since it will run again and must stay counted against the ceilings, and what the
+// interrupted run reports as spent is recorded besides.
 func (s *svc) finishCost(ctx context.Context, job *JobRow, cost *core.Money) {
 	ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), finishTimeout)
 	defer cancel()
@@ -380,10 +381,28 @@ func (s *svc) finishCost(ctx context.Context, job *JobRow, cost *core.Money) {
 			_, err := st.Release(ctx, job.ID, now)
 
 			return err
+		case cost != nil && cost.Micros > 0:
+			// Requeued after it spent: what this run spent is recorded now, and the reservation stays
+			// for the run that follows, so the day never counts less than was spent.
+			return s.recordInterrupted(ctx, st, job.ID, cost.Micros, now)
 		}
 
 		return nil
 	})
+}
+
+// recordInterrupted records what a run spent before a shutdown interrupted it, as a settled entry of
+// its own, without touching the reservation of the job.
+func (s *svc) recordInterrupted(ctx context.Context, st approval.Store, jobID string, spent, now int64) error {
+	req, err := st.RequestOfJob(ctx, jobID)
+	if err != nil {
+		return nil //nolint:nilerr // a job with no request has no ledger
+	}
+
+	e := s.ledgerEntry(&req, 0, now)
+	e.ActualMicros, e.SettledMs = &spent, &now
+
+	return st.Record(ctx, e)
 }
 
 // recordActual settles the reserved entry of a job at its real cost; with none reserved it records a

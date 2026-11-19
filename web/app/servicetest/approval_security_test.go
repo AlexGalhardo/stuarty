@@ -8,6 +8,7 @@ import (
 	"sync/atomic"
 	"testing"
 
+	core "github.com/AlexGalhardo/stuarty/core/approval"
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/web/app/jobs"
 
@@ -95,6 +96,8 @@ type waiting struct {
 	block chan struct{}
 	// during runs inside Run, before it waits.
 	during func()
+	// interrupted is the cost an interrupted run reports as already spent; nil reports none.
+	interrupted *core.Money
 }
 
 func (w *waiting) kind() service.ApprovableKind {
@@ -110,8 +113,8 @@ func (w *waiting) kind() service.ApprovableKind {
 		case <-w.block:
 			return service.JobOutcome{Result: json.RawMessage(`{"ok":true}`), Cost: w.p.cost}, nil
 		case <-ctx.Done():
-			// An interrupted run reports no cost and an error: the job is requeued, not failed.
-			return service.JobOutcome{}, ctx.Err()
+			// An interrupted run reports an error, and what it spent: the job is requeued, not failed.
+			return service.JobOutcome{Cost: w.interrupted}, ctx.Err()
 		}
 	}
 
