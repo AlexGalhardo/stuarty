@@ -425,8 +425,8 @@ func hasField(v any, name string) bool {
 	return ok
 }
 
-// jsonEscaped is the secret as a JSON string writes it (Go escapes <, > and & as <, >
-// and &), without the quotes.
+// jsonEscaped is the secret as a JSON string writes it (Go writes the less-than, greater-than and
+// ampersand signs as six-character Unicode escapes), without the quotes.
 func jsonEscaped(t *testing.T, secret string) string {
 	t.Helper()
 

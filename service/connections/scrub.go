@@ -61,8 +61,9 @@ func echoesSecret(body, secret []byte) bool {
 	return false
 }
 
-// jsonForms are text inside a JSON string, without the quotes, as the encoders write it: with <, >
-// and & as <, > and & (Go) or as is, and with the slash as is or as \/ (PHP).
+// jsonForms are text inside a JSON string, without the quotes, as the encoders write it: with the
+// less-than, greater-than and ampersand signs as six-character Unicode escapes (Go) or as is, and
+// with the slash as is or escaped with a backslash (PHP).
 func jsonForms(text string) []string {
 	var forms []string
 
