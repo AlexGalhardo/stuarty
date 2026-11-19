@@ -34,8 +34,8 @@ var domains = []DomainInfo{
 	{DomainImage, "Image documents: layers, text, shapes, templates with slots, export to PNG, JPEG or WebP."},
 	{DomainWriting, "Written documents. No operations yet."},
 	{DomainAsset, "Files of the workspace: media import and inspection, fonts."},
-	{DomainPublish, "Publications and their approval. No operations yet."},
-	{DomainProvider, "AI providers and generation. No operations yet."},
+	{DomainPublish, "Publications and the approval queue that gates them and costly generations."},
+	{DomainProvider, "AI providers and generation: the spend on providers and its ceilings."},
 	{DomainMemory, "The library: memory notes, skills, prompts and search."},
 	{DomainWorkspace, "The installation: command help, connections, brand kit, health, audit."},
 }
