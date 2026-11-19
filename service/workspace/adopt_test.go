@@ -292,6 +292,13 @@ func TestAdoptFormerWorkspace(t *testing.T) {
 			t.Fatalf("AdoptFormer = %v, %v, want ErrFormerInUse", a, err)
 		}
 
+		// The surfaces answer it as E_WORKSPACE_LOCKED, never as an internal error.
+		if we, ok := errors.AsType[*Error](err); !ok || we.Code != CodeWorkspaceLocked || !we.Retryable ||
+			!strings.Contains(we.Message, "close Vukem Video") || strings.Contains(we.Message, home) {
+			t.Errorf("err = %#v, want a retryable %s that asks to close Vukem Video and names no folder",
+				err, CodeWorkspaceLocked)
+		}
+
 		if _, err := os.Stat(current); !errors.Is(err, fs.ErrNotExist) {
 			t.Errorf("the new folder exists: %v", err)
 		}
