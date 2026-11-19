@@ -70,16 +70,11 @@ export interface SkillGetResult {
 	body: string;
 	files?: SkillFileView[];
 	findings?: LibraryFinding[];
-	// What the person reads is what they mark: the review sends this hash back (SDD-018 section 7).
-	content_hash: string;
 }
 
 export interface SkillWriteBody {
 	description: string;
 	license?: string;
-	// Sent back as read, so a save of the other fields does not drop them.
-	compatibility?: string;
-	allowed_tools?: string;
 	body: string;
 	// Null keeps the files the skill has.
 	files: null;
@@ -161,10 +156,7 @@ export interface LibraryClient {
 	getSkill(name: string): Promise<SkillGetResult>;
 	writeSkill(name: string, body: SkillWriteBody): Promise<SkillWriteResult>;
 	importSkill(body: SkillImportBody): Promise<SkillImportResult>;
-	reviewSkill(
-		name: string,
-		contentHash: string,
-	): Promise<{ entry: LibraryEntry }>;
+	reviewSkill(name: string): Promise<{ entry: LibraryEntry }>;
 	exportSkills(names: readonly string[]): Promise<SkillExportResult>;
 	getPrompt(name: string): Promise<PromptGetResult>;
 	writePrompt(
@@ -221,10 +213,8 @@ export function libraryClient(transport: Transport): LibraryClient {
 		writeSkill: (name, body) =>
 			call("PUT", `/library/skills/${one(name)}`, body),
 		importSkill: (body) => call("POST", "/library/skills/import", body),
-		reviewSkill: (name, contentHash) =>
-			call("POST", `/library/skills/${one(name)}/review`, {
-				content_hash: contentHash,
-			}),
+		reviewSkill: (name) =>
+			call("POST", `/library/skills/${one(name)}/review`, {}),
 		exportSkills: (names) =>
 			call("POST", "/library/skills/export", { names: [...names] }),
 		getPrompt: (name) => call("GET", `/library/prompts/${one(name)}`),

@@ -608,7 +608,7 @@ func (s *svc) SkillMarkReviewed(ctx context.Context, req LibraryRef) (*SkillRevi
 
 	if !c.Browser {
 		return nil, newError(CodeForbidden, "only a person at the browser marks a skill as read.").
-			withHint("open the skill in the Skills section and mark it as read there")
+			withHint("open the skill in the Skills section of the desktop application or of a signed-in session of network mode, and mark it as read there")
 	}
 
 	entry, _, rerr := m.MarkReviewed(ctx, libCaller(c), req.Name)
