@@ -71,8 +71,8 @@ type AdoptionRecordFile struct {
 	AdoptedAt string `json:"adopted_at"`
 }
 
-// FormerExists reports whether a workspace of the former name is waiting to be adopted next to current:
-// the former folder exists, has not been moved already and current does not exist.
+// formerState says whether a workspace of the former name waits to be adopted next to current: the former
+// folder exists, has not been moved already and current does not exist.
 type formerState int
 
 const (
