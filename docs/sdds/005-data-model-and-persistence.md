@@ -296,7 +296,8 @@ type CheckpointRepo interface {
 	Create(ctx context.Context, row CheckpointRow) error // ErrExists on a duplicate name
 	Get(ctx context.Context, projectID, name string) (CheckpointRow, error)
 	List(ctx context.Context, projectID string) ([]CheckpointRow, error) // newest revision first, then name
-	// Rename changes the name, and the note when note is not nil; ErrNotFound, ErrExists on a taken name.
+	// Rename changes the name, and the note when note is not nil, and makes the checkpoint a named one (auto 0);
+	// ErrNotFound, ErrExists on a taken name.
 	Rename(ctx context.Context, projectID, name, newName string, note *string) error
 	Remove(ctx context.Context, projectID, name string) error // ErrNotFound; no revision is touched
 	// TrimAuto removes the oldest automatic checkpoints until at most keep remain.
@@ -1200,7 +1201,7 @@ CREATE INDEX checkpoints_revision_index ON checkpoints (project_id, revision DES
 
 The name is unique inside a timeline (`ErrExists` becomes `E_ID_EXISTS`), 1 to 60 characters after `untrusted.Clean` and trimming, with no `/`; the note is cut at 300 characters. A checkpoint is removed with its project (the cascade of `Delete`, section 13.3) and never otherwise except by `CheckpointRemove` and by the ceiling of the automatic ones below; it holds no foreign key to `operations`, which is append-only. `Repos` gains `Checkpoints() CheckpointRepo` (section 3.2).
 
-**Automatic checkpoint.** In the transaction of `Edit`, after the checks that can refuse the batch and before the commit, when the batch is not a dry run and changes the document (not a no-op), and the actor is an agent (SDD-003 §2.5.1), the service makes the checkpoint `auto <actor> <YYYY-MM-DD>` (UTC date of the service clock) at the revision the batch started from, unless that name exists in the timeline. The name is the whole "once a day per actor" rule: the first edit of the day creates it, the later ones find it. At most 30 automatic checkpoints are kept per timeline: after creating one, `TrimAuto(project, 30)` removes the oldest automatic ones. A checkpoint made by a person or an agent by name is never removed by the ceiling.
+**Automatic checkpoint.** In the transaction of `Edit` (and of `HistoryRevert`, which commits a batch the same way), after the checks that can refuse the batch and before the commit, when the batch is not a dry run and changes the document (not a no-op), and the actor is an agent (SDD-003 §2.5.1), the service makes the checkpoint `auto <actor> <YYYY-MM-DD>` (UTC date of the service clock) at the revision the batch started from, unless that name exists in the timeline. The name is the whole "once a day per actor" rule: the first edit of the day creates it, the later ones find it. At most 30 automatic checkpoints are kept per timeline: after creating one, `TrimAuto(project, 30)` removes the oldest automatic ones. A checkpoint made by a person or an agent by name is never removed by the ceiling, and neither is an automatic one that a person or an agent renamed: the rename makes it a named one (`auto` 0).
 
 ## 6. Workspace ownership
 
