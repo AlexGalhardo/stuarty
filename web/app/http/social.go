@@ -45,6 +45,7 @@ type publishNowIn struct {
 	Visibility   string   `json:"visibility,omitempty"                        doc:"private (the default), unlisted or public."`
 	MadeForKids  *bool    `json:"made_for_kids,omitempty"                     doc:"Required: whether the video is made for kids."`
 	AIDisclosure bool     `json:"ai_disclosure,omitempty"                     doc:"The video has realistic altered or synthetic content."`
+	TimelineID   string   `json:"timeline_id,omitempty"                       doc:"The timeline the job is kept on; required when the project has several."`
 	WaitMS       int      `json:"wait_ms,omitempty"                           doc:"0 to 25000: hold the call until the job is final."`
 	DryRun       any      `json:"dry_run,omitempty"`
 }
@@ -110,7 +111,7 @@ func (h *apiHandler) publishNow(c *web.Ctx, in publishNowIn) (service.Job, error
 	}
 
 	res, err := h.Service.PublishNow(c.Context(), service.PublishNowRequest{
-		ProjectID: in.ProjectID, PublishArgs: in.args(), WaitMS: in.WaitMS, DryRun: dryRun,
+		ProjectID: in.ProjectID, TimelineID: in.TimelineID, PublishArgs: in.args(), WaitMS: in.WaitMS, DryRun: dryRun,
 	})
 
 	return deref(res), err
