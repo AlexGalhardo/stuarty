@@ -89,11 +89,11 @@ The shell was copied from vukem commit `c9a3fcca` (the last commit that touched 
 
 - **Base path.** `lib/site.ts` reads `import.meta.env.SITE` and `import.meta.env.BASE_URL` (both set by `astro.config.mjs` from `SITE_URL`, default `https://video.vukem.dev`, so `BASE_URL` is `/`) and exports `withBase`, used by `Link` and by every component that wrote a root-relative path. Astro does not add the base to the destination of a `redirects` entry, so `astro.config.mjs` writes `/docs` to `<base>/docs/introduction/` in full. `robots.txt` has no `Host:` line.
 - **No versions, no i18n yet.** `lib/versions.ts`, the snapshot tree, `legacy-path-redirect` and the `/pt-br` redirect script of `404.astro` are not copied; `lib/content.ts`, the sidebar, the header, `doc-article` and `check-mdx` have no version parameter. Only English docs exist (an introduction and `quick-start`, "Getting started"); the locale layout of sections 2 to 4 comes with P1-DOC-001. The landing page has an English and a Brazilian Portuguese version (`lib/landing.ts`, `src/components/Landing.astro`, `src/pages/index.astro`, `src/pages/pt-br/index.astro`).
-- **Landing page (D-028).** Hero, feature tour (each item marked Prototype or Later from PRD-001), how agents drive the editor, open source and local-first, footer. Copy, mark and colours are the product's own (violet `#7c5cff` mark; dark by default, D-024: the theme script and `ThemeToggle` default to `dark` instead of `system`); `--faint` was darkened in both themes and the primary button uses `#6446f0` so text meets contrast 4.5:1. The vukem gopher asset, `lib/landing.ts` of vukem (Go sample code) and `public/CNAME` are not copied; `public/.nojekyll` is.
+- **Landing page (D-028).** Hero, feature tour (each item marked built or planned from PRD-001), how agents drive the editor, open source and local-first, footer. Copy, mark and colours are the product's own (violet `#7c5cff` mark; dark by default, D-024: the theme script and `ThemeToggle` default to `dark` instead of `system`); `--faint` was darkened in both themes and the primary button uses `#6446f0` so text meets contrast 4.5:1. The vukem gopher asset, `lib/landing.ts` of vukem (Go sample code) and `public/CNAME` are not copied; `public/.nojekyll` is.
 - **Landing page, one viewport (TASK-0264, 2026-11-16).** The structure follows <https://vukem.dev> (hero with a terminal block and four check-marked points, a link to the quick start), with the Stuarty tokens, and replaces the long page of D-028. On a window at least 1024 px wide and 700 px tall it is exactly one viewport with two columns and no scroll (`fit` variant in `app/globals.css`; on a window up to 896 px tall the base type scale drops to 100%, and the point list is hidden under 760 px); on a smaller window the columns stack and the page scrolls. Left column: the status pill with the latest version, the title, the lead, and the one command that starts the latest release with Docker. Right column: a tabbed gallery of the editor with five features (captions; cuts; chroma key, blend modes and masks; agents through MCP and the CLI; export), each with a screenshot, a short text and the operation it is driven by. The screenshots are placeholders (`public/placeholders/*.svg`, 1600 x 1000, marked in the image) to be replaced by real ones. `lib/landing.ts` holds the copy (English only), `lib/latest-release.ts` reads the newest `## [X.Y.Z]` heading of `CHANGELOG.md` at build time (no network) and builds the command from the documented flags of the Docker page (port published on `127.0.0.1`, the `/data` volume, `APP_KEY`, the first administrator): the version cannot be older than the changelog that the release commit updates.
 - **`check:built` exists early.** `scripts/check-built.ts` (and its test) implements only the properties P1-DOC-002 needs: static files only, no resource from another origin and no host other than the inert ones listed in the script, and every root-relative `href` or `src` carrying the base path. The checks on twins, `llms.txt` and the section 4.3 table remain for P1-DOC-001. `test:scripts` includes its test.
 - **Not copied yet:** `scripts/refresh-last-updated.sh` and the `docs-last-updated.yml` workflow (CI owner), `check:translations`, `reference`, `reference:check`, `test:base-path`. `site.yml` therefore has no `setup-go` step and no `reference:check`; they are added with P1-DOC-001.
-- **What P1-DOC-001 built, and where it differs from sections 2 to 9.** Both locales are served (sections 2 and 4): the content is `content/docs/en/`, `content/docs/pt-br/` and `content/generated/`; `lib/page-files.ts` finds the file of a page (its own, else the generated one, else the English one as a fallback); `lib/locale.ts`, `lib/locale-context.tsx` and `lib/ui-text.ts` (a typed dictionary per locale) carry the locale to the components, and `Link` rewrites `/docs/...` to `/pt-br/docs/...` in a Portuguese page. The switcher is two plain links (`EN`, `PT`) in the header; hreflang, canonicals, the sitemap alternates, the fallback notice, the twins, `llms.txt`, `llms-full.txt` and the search index exist per locale, and the search folds accents. `navigation.ts` has `title` per locale and a flat `pages` list per category (no sub-groups yet). `check:translations` (section 6, with `translations.config.json`), the extended `check:mdx` and `check:built` (twins, `llms.txt`, the section 4.3 table, the bilingual 404) and `docs-last-updated.yml` exist. The reference is generated by `scripts/generate-reference.ts` into `content/generated/reference/` (committed; `reference:check` and `site.yml` fail on a difference). It reads `core/schema/commands.json` (one page per public command), `core/schema/errors.json` with the meanings of SDD-000 section 8, `core/schema/timeline.v1.schema.json`, the table of SDD-000 section 10, `content/glossary.json`, `site/generated/cli.json`, which `go run ./internal/tools/clidoc` writes from the declarations of `web/app/cli`, and `site/generated/openapi.json`, which `UPDATE_OPENAPI=1 go test ./web/contract/ -run OpenAPI` writes from the running API (the test fails when the file is stale). The warmup mode of vukem's `openapi:export` cannot see the routes that need the Service, so the document comes from the contract environment instead; the binary has no `command:help --json` with a `cli` block and no `configref` yet, so section 8.1 is met with these sources. Generated pages have English text in both locales and a note says so in Portuguese. The Prototype pages written in both locales: getting started (introduction, installation, quick start, workspace, projects), concepts (how it works, time, commands and revisions, tracks), guide (media library, timeline, editing tools, text and captions, undo, exporting) and agents (overview, connect, MCP, CLI, verify, batches). **Not written:** the other pages of section 7 (concepts and guide pages of ALPHA, self-hosting, troubleshooting, contributing, `reference/workspace-layout`), `check:translations` ran report-only then (`strict` is true since P3-DOC-002), and `scripts/locale-routing.test.ts` of section 12.1 does not exist (`check:built` covers the locale properties on the built output); `scripts/base-path.test.ts` exists since TASK-0168.
+- **What P1-DOC-001 built, and where it differs from sections 2 to 9.** Both locales are served (sections 2 and 4): the content is `content/docs/en/`, `content/docs/pt-br/` and `content/generated/`; `lib/page-files.ts` finds the file of a page (its own, else the generated one, else the English one as a fallback); `lib/locale.ts`, `lib/locale-context.tsx` and `lib/ui-text.ts` (a typed dictionary per locale) carry the locale to the components, and `Link` rewrites `/docs/...` to `/pt-br/docs/...` in a Portuguese page. The switcher is two plain links (`EN`, `PT`) in the header; hreflang, canonicals, the sitemap alternates, the fallback notice, the twins, `llms.txt`, `llms-full.txt` and the search index exist per locale, and the search folds accents. `navigation.ts` has `title` per locale and a flat `pages` list per category (no sub-groups yet). `check:translations` (section 6, with `translations.config.json`), the extended `check:mdx` and `check:built` (twins, `llms.txt`, the section 4.3 table, the bilingual 404) and `docs-last-updated.yml` exist. The reference is generated by `scripts/generate-reference.ts` into `content/generated/reference/` (committed; `reference:check` and `site.yml` fail on a difference). It reads `core/schema/commands.json` (one page per public command), `core/schema/errors.json` with the meanings of SDD-000 section 8, `core/schema/timeline.v1.schema.json`, the table of SDD-000 section 10, `content/glossary.json`, `site/generated/cli.json`, which `go run ./internal/tools/clidoc` writes from the declarations of `web/app/cli`, and `site/generated/openapi.json`, which `UPDATE_OPENAPI=1 go test ./web/contract/ -run OpenAPI` writes from the running API (the test fails when the file is stale). The warmup mode of vukem's `openapi:export` cannot see the routes that need the Service, so the document comes from the contract environment instead; the binary has no `command:help --json` with a `cli` block and no `configref` yet, so section 8.1 is met with these sources. Generated pages have English text in both locales and a note says so in Portuguese. The first pages written in both locales: getting started (introduction, installation, quick start, workspace, projects), concepts (how it works, time, commands and revisions, tracks), guide (media library, timeline, editing tools, text and captions, undo, exporting) and agents (overview, connect, MCP, CLI, verify, batches). **Not written:** the other pages of section 7 (concepts and guide pages, self-hosting, troubleshooting, contributing, `reference/workspace-layout`), `check:translations` ran report-only then (`strict` is true since P3-DOC-002), and `scripts/locale-routing.test.ts` of section 12.1 does not exist (`check:built` covers the locale properties on the built output); `scripts/base-path.test.ts` exists since TASK-0168.
 - **Formatting.** The copied `.ts`, `.tsx`, `.astro` and `.mjs` files were reformatted to tabs with Biome (indent tab 4, line width 120) in the isolated commit `style(site)`; the `.astro` templates were re-indented by hand because Biome formats only their front matter.
 
 ## 2. Content tree and URLs
@@ -264,7 +264,7 @@ Rules:
 1. `title` and `description` are required. `since` (the first release in which the page is true) is optional. `generated: true` appears only in generated pages.
 2. "The idea" and "Next steps" are required in every page. "Quick start" is required in every page that teaches an action. "Common mistakes" is required where an error code or a known failure exists. "You will learn" is required in guide and getting-started pages.
 3. Every action that exists in the UI, the CLI and the agent tools is shown for each surface that has it: a `Tabs` block with `UI`, `CLI`, `MCP` and `HTTP` tabs, the command names being those of SDD-000 section 1. The CLI tab shows the exact command; the MCP tab shows the tool name and the arguments object.
-4. A feature that is not implemented in the released version carries `<Callout type="warning">Planned for ALPHA</Callout>` (or BETA), as vukem's `site/README.md` says. The callout is removed in the pull request that ships the feature.
+4. A feature that is not implemented in the released version carries `<Callout type="warning">Planned</Callout>`, as vukem's `site/README.md` says. The callout is removed in the pull request that ships the feature.
 5. Page links are root-relative `/docs/...` links with a trailing slash; `check:mdx` fails a link to a page that does not exist (vukem's check, `scripts/check-mdx.ts`), and `link-anchors.ts` fails a fragment that does not exist.
 6. No bare `{` or `<` in prose (MDX), no HTML other than the MDX components, code lines at most 100 characters (`MAX_CODE_LINE`, `scripts/check-mdx.ts:16`). A fenced block names its language.
 7. Code, command names, flag names, error codes, field names and identifiers (`E_REVISION_CONFLICT`, `prj_...`) are written exactly as the program prints them.
@@ -287,141 +287,141 @@ The translation staleness check of ADR-0024 item 3 (`check-translations.ts`, `tr
 
 ## 7. Page list
 
-Phase: `P` Prototype, `A` ALPHA, `B` BETA (RF-211: skeleton and reference in the Prototype, guide in ALPHA, complete in BETA). A page is written in the phase shown; it may be updated in later phases as features land. Source: **H** hand-written, **G** generated (section 8). Slugs are `<dir>/<slug>`; the Getting started pages have no `<dir>` in the URL.
+A page is written when its feature exists and is updated as features land (RF-211). Source: **H** hand-written, **G** generated (section 8). Slugs are `<dir>/<slug>`; the Getting started pages have no `<dir>` in the URL.
 
 The user guide follows the FreeCut outline of research note `notes/vukem` section 4.3 (Start, Core editing, Creative tools, Output, Reference), without the FreeCut pages for features this product does not have (source monitor, motion workspace, scene browser with AI analysis; their purpose is covered by Transcription, Silence removal and Templates). The Agents section is specific to this product.
 
 ### 7.1 Getting started (`getting-started`, no URL prefix)
 
-| Page title | Slug | Phase | Source |
-| --- | --- | --- | --- |
-| Introduction | `introduction` | P | H |
-| Installation | `installation` | P | H |
-| Quick start: your first export | `quick-start` | P | H |
-| Workspace and storage | `workspace` | P | H |
-| Projects | `projects` | P | H |
+| Page title | Slug | Source |
+| --- | --- | --- |
+| Introduction | `introduction` | H |
+| Installation | `installation` | H |
+| Quick start: your first export | `quick-start` | H |
+| Workspace and storage | `workspace` | H |
+| Projects | `projects` | H |
 
 `quick-start` is the page NFR-040 measures: from download to the first exported video in under ten minutes, written for a person and ending with the agent route in a "Next steps" link.
 
 ### 7.2 Concepts (`concepts`)
 
-| Page title | Slug | Phase | Source |
-| --- | --- | --- | --- |
-| How Stuarty works | `concepts/how-it-works` | P | H |
-| Time and frames | `concepts/time` | P | H |
-| Commands, batches and revisions | `concepts/commands-and-revisions` | P | H |
-| Tracks, clips and items | `concepts/tracks-clips-items` | P | H |
-| Render: one plan, two executors | `concepts/render` | A | H |
-| Local mode and network mode | `concepts/local-and-network-mode` | A | H |
+| Page title | Slug | Source |
+| --- | --- | --- |
+| How Stuarty works | `concepts/how-it-works` | H |
+| Time and frames | `concepts/time` | H |
+| Commands, batches and revisions | `concepts/commands-and-revisions` | H |
+| Tracks, clips and items | `concepts/tracks-clips-items` | H |
+| Render: one plan, two executors | `concepts/render` | H |
+| Local mode and network mode | `concepts/local-and-network-mode` | H |
 
 ### 7.3 Editing guide (`guide`)
 
-| Group | Page title | Slug | Phase | Source |
-| --- | --- | --- | --- | --- |
-| Core editing | Media library | `guide/media-library` | P | H |
-| Core editing | Basic timeline editing | `guide/timeline` | P | H |
-| Core editing | Trim, split and move clips | `guide/editing-tools` | P | H |
-| Core editing | Preview and playback | `guide/preview` | P | H |
-| Core editing | Clip properties | `guide/clip-properties` | A | H |
-| Core editing | Undo and history | `guide/undo-and-history` | P | H |
-| Creative tools | Text and captions | `guide/text-and-captions` | P | H |
-| Creative tools | Shapes | `guide/shapes` | A | H |
-| Creative tools | Audio editing | `guide/audio` | A | H |
-| Creative tools | Effects and color | `guide/effects-and-color` | A | H |
-| Creative tools | Transitions | `guide/transitions` | A | H |
-| Creative tools | Animate with keyframes | `guide/keyframes` | A | H |
-| Creative tools | Transcription | `guide/transcription` | A | H |
-| Creative tools | Remove silence | `guide/silence-removal` | A | H |
-| Creative tools | The safe area | `guide/safe-area` | A | H |
-| Creative tools | Templates | `guide/templates` | A | H |
-| Creative tools | Template: vertical cut with captions | `guide/template-vertical-cut` | A | H |
-| Creative tools | Template: product teaser | `guide/template-product-teaser` | A | H |
-| Creative tools | Template: quote card | `guide/template-quote-card` | A | H |
-| Output | Exporting | `guide/exporting` | P | H |
-| Output | Jobs and the queue | `guide/jobs` | A | H |
-| Output | Encoders and export presets | `guide/encoders-and-presets` | A | H |
-| Interface | Keyboard shortcuts (the basic shortcuts that exist in ALPHA; RF-074, advanced and customizable shortcuts, is BETA and extends this page then) | `guide/keyboard-shortcuts` | A | H |
-| Interface | Settings | `guide/settings` | A | H |
-| Tutorials | Make a vertical short with captions | `guide/tutorial-vertical-short` | B | H |
-| Tutorials | Edit by prompting an agent, end to end | `guide/tutorial-agent-edit` | B | H |
-| Tutorials | The desktop application | `guide/desktop` | B | H |
+| Group | Page title | Slug | Source |
+| --- | --- | --- | --- |
+| Core editing | Media library | `guide/media-library` | H |
+| Core editing | Basic timeline editing | `guide/timeline` | H |
+| Core editing | Trim, split and move clips | `guide/editing-tools` | H |
+| Core editing | Preview and playback | `guide/preview` | H |
+| Core editing | Clip properties | `guide/clip-properties` | H |
+| Core editing | Undo and history | `guide/undo-and-history` | H |
+| Creative tools | Text and captions | `guide/text-and-captions` | H |
+| Creative tools | Shapes | `guide/shapes` | H |
+| Creative tools | Audio editing | `guide/audio` | H |
+| Creative tools | Effects and color | `guide/effects-and-color` | H |
+| Creative tools | Transitions | `guide/transitions` | H |
+| Creative tools | Animate with keyframes | `guide/keyframes` | H |
+| Creative tools | Transcription | `guide/transcription` | H |
+| Creative tools | Remove silence | `guide/silence-removal` | H |
+| Creative tools | The safe area | `guide/safe-area` | H |
+| Creative tools | Templates | `guide/templates` | H |
+| Creative tools | Template: vertical cut with captions | `guide/template-vertical-cut` | H |
+| Creative tools | Template: product teaser | `guide/template-product-teaser` | H |
+| Creative tools | Template: quote card | `guide/template-quote-card` | H |
+| Output | Exporting | `guide/exporting` | H |
+| Output | Jobs and the queue | `guide/jobs` | H |
+| Output | Encoders and export presets | `guide/encoders-and-presets` | H |
+| Interface | Keyboard shortcuts (the basic shortcuts; RF-074, advanced and customizable shortcuts, extends this page) | `guide/keyboard-shortcuts` | H |
+| Interface | Settings | `guide/settings` | H |
+| Tutorials | Make a vertical short with captions | `guide/tutorial-vertical-short` | H |
+| Tutorials | Edit by prompting an agent, end to end | `guide/tutorial-agent-edit` | H |
+| Tutorials | The desktop application | `guide/desktop` | H |
 
-(The three template pages are one per template of D-019; their names change if the template names change in SDD-005/SDD-002. The group `Tutorials` is added to `navigation.ts` by the BETA task.)
+(The three template pages are one per template of D-019; their names change if the template names change in SDD-005/SDD-002. The group `Tutorials` is added to `navigation.ts` by its own task.)
 
 ### 7.4 Agents (`agents`)
 
-| Page title | Slug | Phase | Source |
-| --- | --- | --- | --- |
-| Agents overview | `agents/overview` | P | H |
-| Connect an agent (Claude Code, Cursor and others) | `agents/connect` | P | H |
-| The MCP server | `agents/mcp` | P | H |
-| The CLI for agents | `agents/cli` | P | H |
-| How an agent verifies its work: view and lint | `agents/verify` | P | H |
-| Batches, revisions and idempotency | `agents/batches` | P | H |
-| The agent skill | `agents/skill` | A | H |
-| Safety: undo, trash and limits | `agents/safety` | A | H |
-| Recipes: cut, caption, export | `agents/recipes` | A | H |
+| Page title | Slug | Source |
+| --- | --- | --- |
+| Agents overview | `agents/overview` | H |
+| Connect an agent (Claude Code, Cursor and others) | `agents/connect` | H |
+| The MCP server | `agents/mcp` | H |
+| The CLI for agents | `agents/cli` | H |
+| How an agent verifies its work: view and lint | `agents/verify` | H |
+| Batches, revisions and idempotency | `agents/batches` | H |
+| The agent skill | `agents/skill` | H |
+| Safety: undo, trash and limits | `agents/safety` | H |
+| Recipes: cut, caption, export | `agents/recipes` | H |
 
 ### 7.5 Reference (`reference`)
 
-| Page title | Slug | Phase | Source |
-| --- | --- | --- | --- |
-| Command catalogue | `reference/commands` | P | G |
-| One page per command (48 commands in SDD-002, 47 of them public; for example `Add a clip`) | `reference/commands/<command>` | P | G |
-| Timeline schema | `reference/timeline-schema` | P | G |
-| CLI reference | `reference/cli` | P | G |
-| HTTP API | `reference/http-api` | P | G |
-| Error codes | `reference/error-codes` | P | G |
-| Configuration variables | `reference/configuration` | P | G |
-| Workspace layout | `reference/workspace-layout` | P | H |
-| Events stream | `reference/events` | A | H |
-| Glossary | `reference/glossary` | P | G (from `glossary.json`) |
+| Page title | Slug | Source |
+| --- | --- | --- |
+| Command catalogue | `reference/commands` | G |
+| One page per command (48 commands in SDD-002, 47 of them public; for example `Add a clip`) | `reference/commands/<command>` | G |
+| Timeline schema | `reference/timeline-schema` | G |
+| CLI reference | `reference/cli` | G |
+| HTTP API | `reference/http-api` | G |
+| Error codes | `reference/error-codes` | G |
+| Configuration variables | `reference/configuration` | G |
+| Workspace layout | `reference/workspace-layout` | H |
+| Events stream | `reference/events` | H |
+| Glossary | `reference/glossary` | G (from `glossary.json`) |
 
 ### 7.6 Self-hosting (`self-hosting`)
 
-| Page title | Slug | Phase | Source |
-| --- | --- | --- | --- |
-| Run the binary | `self-hosting/binary` | P | H |
-| Run the Docker image | `self-hosting/docker` | A | H |
-| Network mode and login | `self-hosting/network-mode` | A | H |
-| API keys and scopes | `self-hosting/api-keys` | A | H |
-| Put Caddy in front | `self-hosting/caddy` | A | H |
-| Backups and upgrades | `self-hosting/backups-and-upgrades` | A | H |
-| FFmpeg, codecs and licences | `self-hosting/ffmpeg-and-licences` | A | H |
-| Verify a release | `self-hosting/verify-a-release` | A | H |
-| Logs and OpenTelemetry | `self-hosting/observability` | A | H |
-| Privacy: nothing leaves your machine | `self-hosting/privacy` | A | H |
+| Page title | Slug | Source |
+| --- | --- | --- |
+| Run the binary | `self-hosting/binary` | H |
+| Run the Docker image | `self-hosting/docker` | H |
+| Network mode and login | `self-hosting/network-mode` | H |
+| API keys and scopes | `self-hosting/api-keys` | H |
+| Put Caddy in front | `self-hosting/caddy` | H |
+| Backups and upgrades | `self-hosting/backups-and-upgrades` | H |
+| FFmpeg, codecs and licences | `self-hosting/ffmpeg-and-licences` | H |
+| Verify a release | `self-hosting/verify-a-release` | H |
+| Logs and OpenTelemetry | `self-hosting/observability` | H |
+| Privacy: nothing leaves your machine | `self-hosting/privacy` | H |
 
 ### 7.7 Troubleshooting (`troubleshooting`)
 
-| Page title | Slug | Phase | Source |
-| --- | --- | --- | --- |
-| Common problems | `troubleshooting/common-problems` | P | H |
-| FFmpeg is not found | `troubleshooting/ffmpeg-missing` | P | H |
-| No H.264 encoder works | `troubleshooting/no-encoder` | P | H |
-| The workspace is locked | `troubleshooting/workspace-locked` | P | H |
-| An import fails | `troubleshooting/import-fails` | A | H |
-| Export is slow | `troubleshooting/slow-export` | A | H |
-| The diagnostic bundle | `troubleshooting/diagnostic-bundle` | A | H |
+| Page title | Slug | Source |
+| --- | --- | --- |
+| Common problems | `troubleshooting/common-problems` | H |
+| FFmpeg is not found | `troubleshooting/ffmpeg-missing` | H |
+| No H.264 encoder works | `troubleshooting/no-encoder` | H |
+| The workspace is locked | `troubleshooting/workspace-locked` | H |
+| An import fails | `troubleshooting/import-fails` | H |
+| Export is slow | `troubleshooting/slow-export` | H |
+| The diagnostic bundle | `troubleshooting/diagnostic-bundle` | H |
 
 ### 7.8 Contributing (`contributing`)
 
-| Page title | Slug | Phase | Source |
-| --- | --- | --- | --- |
-| Contributing guide | `contributing/guide` | P | H |
-| Development setup | `contributing/setup` | P | H |
-| Repository layout | `contributing/repository-layout` | P | H |
-| Commits and pull requests | `contributing/commits-and-prs` | P | H |
-| Writing documentation | `contributing/writing-docs` | P | H |
-| The release process | `contributing/releases` | A | H |
+| Page title | Slug | Source |
+| --- | --- | --- |
+| Contributing guide | `contributing/guide` | H |
+| Development setup | `contributing/setup` | H |
+| Repository layout | `contributing/repository-layout` | H |
+| Commits and pull requests | `contributing/commits-and-prs` | H |
+| Writing documentation | `contributing/writing-docs` | H |
+| The release process | `contributing/releases` | H |
 
 ### 7.9 Outside the sidebar
 
-| Page | URL | Phase | Source |
-| --- | --- | --- | --- |
-| Landing page | `/` | P | H |
-| Changelog | `/changelog/` | P | generated from `CHANGELOG.md` (section 11.3) |
-| 404 | `/404.html` | P | H |
+| Page | URL | Source |
+| --- | --- | --- |
+| Landing page | `/` | H |
+| Changelog | `/changelog/` | generated from `CHANGELOG.md` (section 11.3) |
+| 404 | `/404.html` | H |
 
 ## 8. Generated reference pages
 
@@ -613,8 +613,7 @@ Identifiers for the ROADMAP; all `senior-d` unless stated.
 | `SITE-AGENT` | `llms.txt`, `llms-full.txt`, twins, sitemap, robots, `check-built.ts`, with the no-external-resource assertion | acceptance checks 11 to 13 and 18 |
 | `SITE-TRANSLATE-CHECK` | (superseded by TASK-0265) `check-translations.ts` and its tests | removed |
 | `SITE-CI` | `site.yml`, `docs-last-updated.yml` changes (with `REL-CI` of SDD-009) | acceptance check 14 |
-| `SITE-P` | The Prototype pages of section 7 (English, by `senior-d` and feature seniors) | every `P` row exists |
-| `SITE-A`, `SITE-B` | The ALPHA and BETA pages | every `A` or `B` row exists |
+| `SITE-PAGES` | The pages of section 7 (English, by `senior-d` and feature seniors) | every row exists |
 
 ## 14. Acceptance
 
@@ -636,6 +635,6 @@ Each check is verifiable from this document and the repository alone.
 14. `site.yml` on a pull request that edits `site/content/docs/en/guide/exporting.mdx` runs `build` and `last-updated`; there is no translation step.
 15. `npm run test:base-path` (or `scripts/base-path.test.ts`) passes with `SITE_URL=https://example.org/stuarty` (a base path) and with `SITE_URL=https://video.vukem.dev` (base `/`): no absolute link lacks the base.
 16. `content/glossary.json` has the 30 terms of section 10, each with `en` and `pt-br` (the editor's Portuguese), and is the file SDD-012 imports (a grep of `web/resources/js` finds no second copy of the term list once SDD-012 is implemented).
-17. Every `P` row of section 7 exists at the end of the Prototype; every `A` row at the end of ALPHA; every `B` row at the end of BETA.
+17. Every row of section 7 exists.
 18. No external resource (D-015, D-016): `npm run check:built` passes on the real `out/` and fails on a scratch change that adds `<script src="https://example.org/x.js">`, an external stylesheet or an external font to a page; the built site makes no request to another origin when opened with the network blocked (property 7 of section 9).
-19. A person following only `getting-started/quick-start` reaches an exported MP4 in under ten minutes on a clean machine (NFR-040), timed by the author at the end of the Prototype and recorded in the ROADMAP.
+19. A person following only `getting-started/quick-start` reaches an exported MP4 in under ten minutes on a clean machine (NFR-040), timed by the author and recorded in the ROADMAP.

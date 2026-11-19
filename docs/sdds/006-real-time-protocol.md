@@ -292,7 +292,7 @@ What the browser does, and what the UI adds:
 | Browser tab hidden for a long time | may throttle timers | on becoming visible, if no event arrived for 40 s, reconnects as above |
 | Several tabs of the same project | each tab would hold one of the browser's six HTTP/1.1 connections per origin (ADR-0017) | one tab owns the stream: it takes the Web Lock `vv-events-<project id>` (`navigator.locks.request`) and relays events to the other tabs on a `BroadcastChannel` with the same name; when the owner closes, another tab takes the lock and opens the stream with its own revision |
 
-The last row is **Decision of this SDD** (a UI requirement for SDD-012). It is an ALPHA item; in the Prototype each tab opens its own stream. Over cleartext loopback the browser uses HTTP/1.1 (browsers do not speak h2c), so the six-connection limit is real, and media range requests need connections too.
+The last row is **Decision of this SDD** (a UI requirement for SDD-012). A tab that does not share a stream opens its own. Over cleartext loopback the browser uses HTTP/1.1 (browsers do not speak h2c), so the six-connection limit is real, and media range requests need connections too.
 
 ## 5. Server algorithm and vukem's SSE hub
 
@@ -393,7 +393,7 @@ Points that make it correct:
 - **Fixed per-subscriber buffer of 64 events** (`sse/hub.go`, `subscriberBuffer`, not configurable); a subscriber 64 events behind is removed and its channel closed (section 9.1).
 - Fan-out cost is proportional to the number of subscribers of the topic and is done under the hub's mutex with non-blocking sends; with the stream limits of section 9.4 (32 per project) it is negligible.
 - A string in an `sse.Event` is shared by all subscribers' buffers, so memory is bounded by events in flight, not multiplied by subscribers.
-- If a deployment ever needs several processes on one database, the hub takes a `sse.Broker` (Redis or PostgreSQL, vukem drivers) and the log-based replay of this SDD still works, because the log is in the database. That is out of scope for the MVP.
+- If a deployment ever needs several processes on one database, the hub takes a `sse.Broker` (Redis or PostgreSQL, vukem drivers) and the log-based replay of this SDD still works, because the log is in the database. That is out of scope.
 
 ## 6. Reconciling a response with the event of the same revision
 
@@ -612,11 +612,11 @@ A browser holds one stream per project (section 4.6), but scripts and CLI instan
 
 ## 10. Out of scope: presence
 
-Presence is out of scope for the MVP. There is no event for "a user opened the project", no cursor or selection sharing, no list of connected actors, and no "is typing" signal. `hub.Subscribers(topic)` is used for diagnostics and tests only and is never sent to clients. Actor attribution of **changes** (who made revision N) is in scope and is the `actor` field of `batch.committed` (RF-118).
+Presence is out of scope. There is no event for "a user opened the project", no cursor or selection sharing, no list of connected actors, and no "is typing" signal. `hub.Subscribers(topic)` is used for diagnostics and tests only and is never sent to clients. Actor attribution of **changes** (who made revision N) is in scope and is the `actor` field of `batch.committed` (RF-118).
 
 ## 11. Acceptance
 
-The implementation of this SDD is complete when every check passes. Server tests run with `go test` (Linux, macOS, Windows); client tests with the repository's TypeScript test runner; browser tests with Playwright in Chromium, the supported browser of the MVP (ADR-0013); Firefox and WebKit join in BETA.
+The implementation of this SDD is complete when every check passes. Server tests run with `go test` (Linux, macOS, Windows); client tests with the repository's TypeScript test runner; browser tests with Playwright in Chromium, the supported browser (ADR-0013); Firefox and WebKit are tested after it.
 
 **Wire format**
 
