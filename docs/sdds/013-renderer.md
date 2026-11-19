@@ -399,6 +399,21 @@ Rules:
 5. **WebGPU loss.** On `device lost` the worker answers every pending and following `render` with `error` and `reason: "device_lost"`, then tries once to re-create the device; if that fails it switches to the CPU path and sends `ready` with `path: "cpu"`. The main thread then resends the textures it still has.
 6. **Fallback.** With no adapter (`navigator.gpu` missing or `requestAdapter()` null) or `prefer: "cpu"`, the worker uses the core module and draws on a 2D canvas (`ImageData`), the same pixels as the export's CPU path.
 
+#### 4.7.1 What is implemented, and what epic 26 adds
+
+State on 2026-11-19, before epic 26 (`docs/plans/26-browser-preview-on-the-rust-renderer.md`):
+
+| Part | State |
+| --- | --- |
+| §5.3 decode worker: chunk index fetch and checks, `isConfigSupported`, `Range` fetch, seek from the key frame, forward play with a bounded queue, per-asset fallback to `<video>`, the main-thread frame cache and the `openFrames` ledger (`preview/decode/`) | implemented, used by the PixiJS executor |
+| §6 consumer of the chunk index (`decode/chunkIndex.ts`) | implemented |
+| §2.4 expansion of a plan window to the render input of one frame, in TypeScript | not implemented; the PixiJS executor reads the window directly |
+| §4.7 render worker (`renderWorker.ts`), its protocol and the main-thread client | not implemented; the module is loaded only by the Go host |
+| the executor that feeds the worker (textures, bitmaps, lookup tables, audio clock) behind `PreviewExecutor` | not implemented |
+| §4.7 GPU path (`wasm-bindgen` GPU module, `OffscreenCanvas` presented by `wgpu`) | not implemented; there is no GPU module for the browser |
+
+Epic 26 adds the CPU path of the worker: the core module (no import, §4.1) is loaded by `render/renderWorker.ts` from a same-origin asset whose SHA-256 is checked against `renderer.wasm.sha256`, and a second executor, `RustExecutor`, implements `PreviewExecutor` over it. The choice between the executors is by feature detection and a setting (SDD-012 §11.1). The GPU module stays a later stage: the worker's `path` is always `"cpu"` and `prefer: "gpu"` is answered as `cpu`.
+
 ### 4.8 Acceptance of this section
 
 - `TestCoreModuleHasNoImports` (Go): the embedded module has zero imported functions, memories, tables and globals, exports exactly `memory` and the functions of §4.2, and `vr_api_version` returns 3.
