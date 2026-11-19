@@ -167,6 +167,7 @@ func (j *job) image(ctx context.Context) error {
 		j.res.Facts.FrameCount, j.res.Facts.FrameDelays = len(delays), delays
 	}
 	j.prog.set(StepVideo, 1)
+	j.markAlphaOpaque(j.path("normalized.png"), nil)
 	j.add(workFile{kind: "normalized", profile: ProfileNormalized, ext: "png", name: "normalized.png"})
 	j.add(workFile{kind: "proxy", profile: ProfileProxy, ext: proxyExt, name: proxyName})
 	if err := j.timed(
