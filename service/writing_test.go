@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"slices"
 	"strings"
 	"testing"
@@ -24,7 +25,7 @@ func readerOnly() context.Context {
 func wantCode(t *testing.T, err error, code, path string) {
 	t.Helper()
 
-	e, ok := err.(*Error)
+	e, ok := errors.AsType[*Error](err)
 	if !ok || e == nil {
 		t.Fatalf("want %s at %q, got %v", code, path, err)
 	}
@@ -179,7 +180,7 @@ func TestCaptionValidateRefusesAmbiguousOrIncompleteRequests(t *testing.T) {
 		"a network that is not in table": {CaptionValidateRequest{Text: "a", Network: "myspace"}, "network"},
 	} {
 		_, err := s.CaptionValidate(readerOnly(), tc.req)
-		if e, ok := err.(*Error); !ok || e.Code != "E_VALIDATION" || e.Path != tc.path {
+		if e, ok := errors.AsType[*Error](err); !ok || e.Code != "E_VALIDATION" || e.Path != tc.path {
 			t.Errorf("%s: %v", name, err)
 		}
 	}
