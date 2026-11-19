@@ -37,7 +37,7 @@ When a video needs an animation the editor cannot make, a creator's agent builds
 
 ## Tasks
 
-- [ ] 1. Amend SDD-011 (alpha inputs), SDD-002 (`clip.replace_media`) and SDD-018 (the skill). Verify: `task lint:md` exits 0.
+- [x] 1. Amend SDD-011 (alpha inputs), SDD-002 (`clip.replace_media`) and SDD-018 (the skill). Verify: `task lint:md` exits 0.
 - [ ] 2. Implement `MotionBrief` on the three surfaces. Verify: `go test ./service/... -run TestMotionBrief` and `go test ./web/contract/...` pass.
 - [ ] 3. Add ingest tests for each accepted alpha input and the "claims alpha, has none" finding. Verify: `go test ./engine/ingest/... -run TestAlpha` passes.
 - [ ] 4. Implement `MotionCheck`. Verify: `go test ./service/... -run TestMotionCheck` passes.
