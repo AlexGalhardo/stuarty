@@ -536,7 +536,7 @@ func (s *svc) approve(ctx context.Context, tx Tx, row *approval.Row, decidedBy, 
 				"led",
 			),
 			RequestID:      row.ID,
-			JobID:          row.JobID,
+			JobID:          ledgerKey(row),
 			ConnectionID:   row.ConnectionID,
 			ProjectID:      row.ProjectID,
 			Kind:           row.Kind,
@@ -551,7 +551,12 @@ func (s *svc) approve(ctx context.Context, tx Tx, row *approval.Row, decidedBy, 
 		}
 	}
 
-	return s.releaseJob(ctx, tx, row, now)
+	if err := s.releaseJob(ctx, tx, row, now); err != nil {
+		return err
+	}
+
+	// The request of a scheduled post has no job: its target becomes scheduled (SDD-020 section 18).
+	return s.targetApproved(ctx, tx, row)
 }
 
 // ApprovalRuleList returns every rule.
