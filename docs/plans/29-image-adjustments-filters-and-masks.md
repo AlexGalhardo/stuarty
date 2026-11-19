@@ -46,7 +46,7 @@ A creator makes a photo pop behind a title: brighter, more contrast, a blurred b
 - [x] 5. Implement the six blend modes and clipping masks on the CPU path. Verify: the same commands pass with new goldens.
 - [x] 6. Implement the GPU path for the new operations. Verify: the parity tests of `renderer-parity` pass within tolerance.
 - [x] 7. Register the operations that apply to video clips, with one golden case each. Verify: `go test ./core/command/...` passes with the updated registry snapshot.
-- [ ] 8. Expose on the three surfaces and regenerate documents. Verify: `go test ./web/contract/...` and `task generate:check` pass.
+- [x] 8. Expose on the three surfaces and regenerate documents. Verify: `go test ./web/contract/...` and `task generate:check` pass.
 - [ ] 9. Add the inspector controls when epic 28 is merged; otherwise leave the note. Verify: `web/e2e/specs/image-adjustments.spec.ts` passes, or the note is in the hand-off.
 - [ ] 10. Run the Rust gate and record the NFR-061 number. Verify: `cargo fmt --check && cargo clippy -- -D warnings && cargo test && cargo deny check` exits 0; the number is in the hand-off.
 
