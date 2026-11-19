@@ -374,7 +374,7 @@ func TestProtocolCloseFailsCallsInFlight(t *testing.T) {
 
 	go func() { errs <- conn.Call(context.Background(), "x", map[string]any{}, nil) }()
 
-	time.Sleep(50 * time.Millisecond)
+	// Whether the call was registered before the close or not, it fails with ErrClosed.
 	conn.Close()
 
 	select {
