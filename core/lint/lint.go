@@ -35,6 +35,7 @@ const (
 	CodeCaptionDesync   = "L_CAPTION_DESYNC"
 	CodeAudioClip       = "L_AUDIO_CLIP"
 	CodeLoudness        = "L_LOUDNESS"
+	CodeAlphaMissing    = "L_ALPHA_MISSING"
 )
 
 // Finding is one result of a rule (SDD-003 §3.6).
@@ -98,6 +99,9 @@ type Env struct {
 	// MediaFrames is the frame count of the normalized media actually in the
 	// store, on the asset's own frame rate (Full only): L_SOURCE_RANGE.
 	MediaFrames func(assetID string) (frames int, ok bool)
+	// AlphaOpaque reports that an asset which declares an alpha channel has only opaque pictures in what the
+	// ingest sampled (Full only): L_ALPHA_MISSING. known is false when the fact is not stored.
+	AlphaOpaque func(assetID string) (opaque, known bool)
 }
 
 // Lint runs the rules over doc and returns the findings in report order:
@@ -129,6 +133,7 @@ func Lint(doc *timeline.Document, env Env, mode Mode) []Finding {
 		c.sourceRange()
 		c.audioClip()
 		c.loudness()
+		c.alphaMissing()
 	}
 
 	Sort(c.out)

@@ -171,5 +171,14 @@
     ],
     "key": "lint.rule.L_DURATION_LIMIT.title",
     "severity": "warning"
+  },
+  {
+    "blocking": false,
+    "code": "L_ALPHA_MISSING",
+    "depth": [
+      "full"
+    ],
+    "key": "lint.rule.L_ALPHA_MISSING.title",
+    "severity": "warning"
   }
 ]
