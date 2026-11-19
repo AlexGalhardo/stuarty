@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/AlexGalhardo/stuarty/core/command"
@@ -147,11 +148,11 @@ func presetListText(res *ExportPresetListResult) string {
 		fmt.Fprintf(&b, "%s: %s, codecs %s", p.ID, p.Label, strings.Join(p.Codecs, ", "))
 
 		if p.Limits.MaxDurationMS > 0 {
-			fmt.Fprintf(&b, ", at most %d s", p.Limits.MaxDurationMS/1000)
+			fmt.Fprintf(&b, ", at most %s s", strconv.FormatFloat(float64(p.Limits.MaxDurationMS)/1000, 'f', -1, 64))
 		}
 
 		if p.Limits.MinDurationMS > 0 {
-			fmt.Fprintf(&b, ", at least %d s", p.Limits.MinDurationMS/1000)
+			fmt.Fprintf(&b, ", at least %s s", strconv.FormatFloat(float64(p.Limits.MinDurationMS)/1000, 'f', -1, 64))
 		}
 
 		if p.Limits.AspectRatio != "" {
@@ -159,7 +160,7 @@ func presetListText(res *ExportPresetListResult) string {
 		}
 
 		if p.Limits.MaxBytes > 0 {
-			fmt.Fprintf(&b, ", file at most %s", textview.Size(p.Limits.MaxBytes))
+			fmt.Fprintf(&b, ", file at most %s", decimalSize(p.Limits.MaxBytes))
 		}
 
 		if len(p.Sources) > 0 {
@@ -178,6 +179,16 @@ func presetListText(res *ExportPresetListResult) string {
 	}
 
 	return strings.TrimRight(b.String(), "\n")
+}
+
+// decimalSize writes a limit of bytes in the decimal units the networks state them in (300 MB is 300,000,000
+// bytes), as the findings of the check do.
+func decimalSize(n int64) string {
+	if n >= 1_000_000_000 {
+		return strconv.FormatFloat(float64(n)/1e9, 'f', -1, 64) + " GB"
+	}
+
+	return strconv.FormatFloat(float64(n)/1e6, 'f', -1, 64) + " MB"
 }
 
 // ExportCheckRequest asks whether a project fits a preset before anything is encoded.
