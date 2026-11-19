@@ -332,3 +332,51 @@ func TestConnectionStillAllowsCGNATAndUniqueLocalNeighbours(t *testing.T) {
 		}
 	}
 }
+
+// TestConnectionRefusesEmbeddedIPv4OfRefusedAddresses: the IPv4 address that 6to4, the deprecated
+// IPv4-compatible form and the local-use NAT64 prefix carry is judged like a plain one (VV-245).
+func TestConnectionRefusesEmbeddedIPv4OfRefusedAddresses(t *testing.T) {
+	hosts := []string{
+		"2002:a9fe:a9fe::", "2002:a9fe:a9fe:1::5", "2002:6464:64c8::1", "2002:0:0::",
+		"::a9fe:a9fe", "::6464:64c8", "::e000:1",
+		"64:ff9b:1::a9fe:a9fe", "64:ff9b:1::1", "64:ff9b:1::",
+	}
+
+	for _, host := range hosts {
+		t.Run(host, func(t *testing.T) {
+			reg := &fakeRegistry{dests: map[string]Destination{"con_a": {ID: "con_a", Hosts: []string{host}}}}
+
+			dials := 0
+			restore := SetDialRecorder(func(Purpose, string) error { dials++; return nil })
+
+			defer restore()
+
+			_, _, err := get(Connection(reg, "con_a", 2*time.Second, nil), "https://["+host+"]/latest/meta-data/")
+			if !errors.Is(err, ErrNotPublic) {
+				t.Fatalf("%v, want ErrNotPublic", err)
+			}
+
+			if dials != 0 {
+				t.Errorf("the recorder saw %d dials of a refused address", dials)
+			}
+		})
+	}
+}
+
+// TestConnectionStillAllowsEmbeddedIPv4OfAllowedAddresses: the neighbours that carry an allowed
+// address reach the dial.
+func TestConnectionStillAllowsEmbeddedIPv4OfAllowedAddresses(t *testing.T) {
+	for _, host := range []string{"2002:6464:64c9::1", "2002:a00:1::", "::a00:1", "::6464:64c9", "2002:7f00:1::"} {
+		reg := &fakeRegistry{dests: map[string]Destination{"con_a": {ID: "con_a", Hosts: []string{host}}}}
+		stop := errors.New("stop")
+		restore := SetDialRecorder(func(Purpose, string) error { return stop })
+
+		_, _, err := get(Connection(reg, "con_a", 2*time.Second, nil), "https://["+host+"]/")
+
+		restore()
+
+		if !errors.Is(err, stop) {
+			t.Errorf("%s: %v, want the gate to let the dial reach the recorder", host, err)
+		}
+	}
+}
