@@ -108,7 +108,8 @@ func TestSecurity_T42_SecretNeverInLogsOrBundle(t *testing.T) {
 	tested, err := e.svc.ConnectionTest(ctx, service.ConnectionRef{ID: good.ID})
 	record(tested, err)
 
-	if err != nil || tested.Status != http.StatusUnauthorized || !strings.Contains(tested.Message, "answer was dropped") {
+	if err != nil || tested.Status != http.StatusUnauthorized ||
+		!strings.Contains(tested.Message, "answer was dropped") {
 		t.Fatalf("the test of an echoing destination: %+v, %v", tested, err)
 	}
 
