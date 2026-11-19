@@ -59,6 +59,8 @@ var Scopes = map[string]string{
 	"HistoryList":         ScopeRead,
 	"Undo":                ScopeEdit,
 	"Redo":                ScopeEdit,
+	"HistoryRevert":       ScopeEdit,
+	"HistoryDiff":         ScopeRead,
 	"CheckpointCreate":    ScopeEdit,
 	"CheckpointList":      ScopeRead,
 	"CheckpointRename":    ScopeEdit,
