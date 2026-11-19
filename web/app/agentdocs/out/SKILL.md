@@ -31,23 +31,23 @@ Check with `project:list`. Workspace: `~/.stuarty` or `$STUARTY_HOME`; `serve` s
 
 ## Command reference
 
-`edit` operations; a star marks those added after the Prototype. `command_help [name]` shows arguments. `asset.remove` and `font.*` need the media scope.
+`edit` operations. `command_help [name]` shows arguments. `asset.remove` and `font.*` need the media scope.
 
-- `asset`: remove*
-- `audio`: add*, duck*, mark_beats*
-- `caption`: add, edit_word*, from_transcript*, import_subtitles*, merge*, retime_from_clip*, set_breaks*, set_style*, set_words*, split*
-- `clip`: add, remove_silences*, set_blend*, set_blur*, set_chroma_key*, set_color*, set_effects*, set_filter*, set_flip*, set_framing*, set_mask*, set_outline*, set_shadow*, set_speed*
-- `font`: add*, remove*
-- `item`: crossfade*, delete, duplicate*, extract_audio*, freeze_frame*, link*, move, paste_attributes*, rename*, repeat*, set_audio*, set_enabled*, set_transform*, set_transition*, slip*, split, trim, unlink*
-- `keyframe`: clear*, remove*, set*
-- `marker`: add*, remove*, set*
+- `asset`: remove
+- `audio`: add, duck, mark_beats
+- `caption`: add, edit_word, from_transcript, import_subtitles, merge, retime_from_clip, set_breaks, set_style, set_words, split
+- `clip`: add, remove_silences, set_blend, set_blur, set_chroma_key, set_color, set_effects, set_filter, set_flip, set_framing, set_mask, set_outline, set_shadow, set_speed
+- `font`: add, remove
+- `item`: crossfade, delete, duplicate, extract_audio, freeze_frame, link, move, paste_attributes, rename, repeat, set_audio, set_enabled, set_transform, set_transition, slip, split, trim, unlink
+- `keyframe`: clear, remove, set
+- `marker`: add, remove, set
 - `project`: rename
-- `settings`: reframe*, set, set_fps*
-- `shape`: add*, set*
-- `slot`: fill*, mark*, unmark*
-- `template`: set_info*
-- `text`: add, apply_preset*, set
-- `timeline`: close_gap*
+- `settings`: reframe, set, set_fps
+- `shape`: add, set
+- `slot`: fill, mark, unmark
+- `template`: set_info
+- `text`: add, apply_preset, set
+- `timeline`: close_gap
 - `track`: add, move, remove, set_caption_style, update
 
 ## CLI cheat sheet

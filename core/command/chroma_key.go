@@ -23,7 +23,6 @@ func init() {
 		Example: `{"item_id": "itm_m1n2p3q4r5", "color": "#00FF00", "similarity": 0.35, "smoothness": 0.1, "spill": 0.2}`,
 		Errors:  []string{CodeValidation, CodeNotFound, CodeTypeMismatch},
 		Scope:   ScopeEdit,
-		Phase:   Beta,
 	}, applyClipSetChromaKey))
 }
 

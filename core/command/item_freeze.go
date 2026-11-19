@@ -20,7 +20,6 @@ func init() {
 			CodeValidation, CodeInvalidTime, CodeNotFound, CodeTypeMismatch, CodeInvalidState, CodeIDExists, CodeLimit,
 		},
 		Scope: ScopeEdit,
-		Phase: Beta,
 	}, applyItemFreezeFrame))
 }
 

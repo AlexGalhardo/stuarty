@@ -78,7 +78,7 @@ func run(out string) error {
 }
 
 // lintRules is the rule table of core/lint as data for the surfaces: the code, the
-// severity, the phase, the depths it runs at, whether it blocks an export and the key
+// severity, the depths it runs at, whether it blocks an export and the key
 // of its title in the catalogue of texts.
 func lintRules() []map[string]any {
 	var rules []map[string]any
@@ -86,7 +86,6 @@ func lintRules() []map[string]any {
 		rules = append(rules, map[string]any{
 			"code":     r.Code,
 			"severity": r.Severity,
-			"phase":    r.Phase,
 			"depth":    strings.Split(strings.ReplaceAll(r.Run, " ", ""), ","),
 			"blocking": lint.Blocking(r.Code),
 			"key":      "lint.rule." + r.Code + ".title",
@@ -122,7 +121,6 @@ func writeCommands(out string) error {
 			"example":     example,
 			"errors":      slices.Clone(c.Errors),
 			"scope":       c.Scope,
-			"phase":       c.Phase,
 			"internal":    c.Internal,
 		})
 	}

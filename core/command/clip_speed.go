@@ -24,7 +24,6 @@ func init() {
 			CodeValidation, CodeNotFound, CodeTypeMismatch, CodeOutOfSource, CodeInvalidTime, CodeOverlap,
 		},
 		Scope: ScopeEdit,
-		Phase: Alpha,
 	}, applyClipSetSpeed))
 }
 

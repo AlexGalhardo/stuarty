@@ -5,7 +5,6 @@ export type LintCode = "L_EMPTY_TIMELINE" | "L_GAP" | "L_BLACK_FRAMES" | "L_MEDI
 export interface LintRule {
 	code: LintCode;
 	severity: "error" | "warning";
-	phase: "P" | "A";
 	depth: ("doc" | "item" | "full")[];
 	blocking: boolean;
 	key: string;
@@ -19,7 +18,6 @@ export const LINT_RULES: LintRule[] = [
 			"doc"
 		],
 		"key": "lint.rule.L_EMPTY_TIMELINE.title",
-		"phase": "P",
 		"severity": "error"
 	},
 	{
@@ -29,7 +27,6 @@ export const LINT_RULES: LintRule[] = [
 			"doc"
 		],
 		"key": "lint.rule.L_GAP.title",
-		"phase": "P",
 		"severity": "warning"
 	},
 	{
@@ -39,7 +36,6 @@ export const LINT_RULES: LintRule[] = [
 			"doc"
 		],
 		"key": "lint.rule.L_BLACK_FRAMES.title",
-		"phase": "P",
 		"severity": "warning"
 	},
 	{
@@ -50,7 +46,6 @@ export const LINT_RULES: LintRule[] = [
 			"full"
 		],
 		"key": "lint.rule.L_MEDIA_MISSING.title",
-		"phase": "P",
 		"severity": "error"
 	},
 	{
@@ -60,7 +55,6 @@ export const LINT_RULES: LintRule[] = [
 			"doc"
 		],
 		"key": "lint.rule.L_MEDIA_UNREADY.title",
-		"phase": "P",
 		"severity": "error"
 	},
 	{
@@ -70,7 +64,6 @@ export const LINT_RULES: LintRule[] = [
 			"full"
 		],
 		"key": "lint.rule.L_SOURCE_RANGE.title",
-		"phase": "P",
 		"severity": "error"
 	},
 	{
@@ -80,7 +73,6 @@ export const LINT_RULES: LintRule[] = [
 			"doc"
 		],
 		"key": "lint.rule.L_ODD_DIMENSIONS.title",
-		"phase": "P",
 		"severity": "error"
 	},
 	{
@@ -90,7 +82,6 @@ export const LINT_RULES: LintRule[] = [
 			"doc"
 		],
 		"key": "lint.rule.L_SILENT_EXPORT.title",
-		"phase": "P",
 		"severity": "warning"
 	},
 	{
@@ -100,7 +91,6 @@ export const LINT_RULES: LintRule[] = [
 			"doc"
 		],
 		"key": "lint.rule.L_SLIVER.title",
-		"phase": "P",
 		"severity": "warning"
 	},
 	{
@@ -110,7 +100,6 @@ export const LINT_RULES: LintRule[] = [
 			"doc"
 		],
 		"key": "lint.rule.L_OCCLUDED.title",
-		"phase": "A",
 		"severity": "warning"
 	},
 	{
@@ -120,7 +109,6 @@ export const LINT_RULES: LintRule[] = [
 			"doc"
 		],
 		"key": "lint.rule.L_AUDIO_OVERLAP.title",
-		"phase": "A",
 		"severity": "warning"
 	},
 	{
@@ -130,7 +118,6 @@ export const LINT_RULES: LintRule[] = [
 			"item"
 		],
 		"key": "lint.rule.L_SAFE_AREA.title",
-		"phase": "A",
 		"severity": "warning"
 	},
 	{
@@ -140,7 +127,6 @@ export const LINT_RULES: LintRule[] = [
 			"item"
 		],
 		"key": "lint.rule.L_OFF_FRAME.title",
-		"phase": "A",
 		"severity": "warning"
 	},
 	{
@@ -150,7 +136,6 @@ export const LINT_RULES: LintRule[] = [
 			"item"
 		],
 		"key": "lint.rule.L_TRANSITION_EMPTY.title",
-		"phase": "A",
 		"severity": "warning"
 	},
 	{
@@ -161,7 +146,6 @@ export const LINT_RULES: LintRule[] = [
 			"full"
 		],
 		"key": "lint.rule.L_CAPTION_DESYNC.title",
-		"phase": "A",
 		"severity": "warning"
 	},
 	{
@@ -171,7 +155,6 @@ export const LINT_RULES: LintRule[] = [
 			"doc"
 		],
 		"key": "lint.rule.L_SLOT_UNFILLED.title",
-		"phase": "A",
 		"severity": "error"
 	},
 	{
@@ -181,7 +164,6 @@ export const LINT_RULES: LintRule[] = [
 			"full"
 		],
 		"key": "lint.rule.L_AUDIO_CLIP.title",
-		"phase": "A",
 		"severity": "warning"
 	},
 	{
@@ -191,7 +173,6 @@ export const LINT_RULES: LintRule[] = [
 			"full"
 		],
 		"key": "lint.rule.L_LOUDNESS.title",
-		"phase": "A",
 		"severity": "warning"
 	},
 	{
@@ -201,7 +182,6 @@ export const LINT_RULES: LintRule[] = [
 			"doc"
 		],
 		"key": "lint.rule.L_DURATION_LIMIT.title",
-		"phase": "A",
 		"severity": "warning"
 	}
 ];

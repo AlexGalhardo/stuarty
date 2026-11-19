@@ -16,7 +16,6 @@ func init() {
 		Example: `{"item_id": "itm_m1n2p3q4r5", "fit": "contain", "crop": {"left": 0.1, "right": 0.1}}`,
 		Errors:  []string{CodeValidation, CodeNotFound, CodeTypeMismatch, CodeInvalidState},
 		Scope:   ScopeEdit,
-		Phase:   Alpha,
 	}, applyClipSetFraming))
 
 	Register(Define(Spec{
@@ -32,7 +31,6 @@ func init() {
 		Example: `{"item_id": "itm_m1n2p3q4r5", "brightness": 0.1, "temperature": 0.3}`,
 		Errors:  []string{CodeValidation, CodeNotFound, CodeTypeMismatch, CodeInvalidState},
 		Scope:   ScopeEdit,
-		Phase:   Alpha,
 	}, applyClipSetColor))
 }
 

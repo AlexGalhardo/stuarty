@@ -20,7 +20,6 @@ func init() {
 			CodeValidation, CodeNotFound, CodeTypeMismatch, CodeSlot, CodeInvalidState,
 		},
 		Scope: ScopeEdit,
-		Phase: Alpha,
 	}, applySlotMark))
 
 	Register(Define(Spec{
@@ -30,7 +29,6 @@ func init() {
 		Example:     `{"item_id": "itm_s6t7v8w9x0"}`,
 		Errors:      []string{CodeNotFound, CodeSlot, CodeInvalidState},
 		Scope:       ScopeEdit,
-		Phase:       Alpha,
 	}, applySlotUnmark))
 
 	Register(Define(Spec{
@@ -45,7 +43,6 @@ func init() {
 			CodeOverlap, CodeInvalidState,
 		},
 		Scope: ScopeEdit,
-		Phase: Alpha,
 	}, applySlotFill))
 }
 
