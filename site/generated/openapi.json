@@ -4123,6 +4123,37 @@
         },
         "type": "object"
       },
+      "ModelView": {
+        "properties": {
+          "context_tokens": {
+            "type": "integer"
+          },
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "output_tokens": {
+            "type": "integer"
+          },
+          "price": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Price"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "price_source": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "Money": {
         "properties": {
           "currency": {
