@@ -1,6 +1,6 @@
 {
  "name": "template",
- "description": "Templates are projects with named slots. action=list; save (project_id, name); new (template_id, name, fill, id?) creates a project, fill maps slot name to {asset_id}, {text} or {words}; export returns a template file path; import (path) reads one.",
+ "description": "Templates are projects with named slots. action=list; save (project_id, name) makes one from a project; new (template_id, name, fill, id?) creates a project, fill maps slot name to {asset_id}, {text} or {words}; export returns a file path; import (path) reads one.",
  "inputSchema": {
   "type": "object",
   "properties": {
@@ -18,6 +18,10 @@
     "pattern": "^tpl_[0-9a-hjkmnp-tv-z]{10}$"
    },
    "project_id": {
+    "type": "string",
+    "pattern": "^prj_[0-9a-hjkmnp-tv-z]{10}$"
+   },
+   "timeline_id": {
     "type": "string",
     "pattern": "^prj_[0-9a-hjkmnp-tv-z]{10}$"
    },

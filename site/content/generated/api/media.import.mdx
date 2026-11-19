@@ -33,6 +33,7 @@ Content type `application/json`.
 | --- | --- | --- | --- |
 | `dry_run` | `boolean` | no | Checks the paths and limits only: the format is probed on the real import, so a file that is refused there (SVG, for one) still answers 202. |
 | `files` | array of [`importFileIn`](/docs/api/schemas#importfilein) | yes | at least 1 items; at most 50 items |
+| `timeline_id` | `string` | no | The timeline of the project; required when the project has several. |
 | `wait_ms` | `integer` | no | 0 to 25000: hold the call until the assets are ready. |
 
 ## Responses

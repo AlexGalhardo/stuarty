@@ -47,6 +47,31 @@ export interface Transport {
 	openStream(path: string, handlers: StreamHandlers): StreamConnection;
 }
 
+// A transport for the editor of one timeline. The address of the editor is the id of a timeline, and a call
+// under /projects/<that id> says it again as timeline_id, so a project with several timelines is never
+// ambiguous, whichever of its timelines it is (SDD-003 section 1.7).
+export function scopedToTimeline(
+	transport: Transport,
+	timelineId: string,
+): Transport {
+	const prefix = `/projects/${encodeURIComponent(timelineId)}`;
+	const scoped = (path: string): string => {
+		if (
+			path !== prefix &&
+			!path.startsWith(`${prefix}/`) &&
+			!path.startsWith(`${prefix}?`)
+		)
+			return path;
+		if (/[?&]timeline_id=/.test(path)) return path;
+		return `${path}${path.includes("?") ? "&" : "?"}timeline_id=${encodeURIComponent(timelineId)}`;
+	};
+	return {
+		send: (request) =>
+			transport.send({ ...request, path: scoped(request.path) }),
+		openStream: (path, handlers) => transport.openStream(path, handlers),
+	};
+}
+
 // A transport that tells `onUnauthorized` about every 401, so an expired
 // session in network mode goes to the login whichever call met it (SDD-012
 // section 4.4). The answer is passed on unchanged.

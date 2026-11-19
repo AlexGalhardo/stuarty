@@ -1,10 +1,14 @@
 {
  "name": "media_import",
- "description": "Import local files into a project. paths: absolute paths of video, audio or image files. Starts an ingest job per file, waits up to wait_ms; use an asset in edit only when it is ready. Importing the same file twice returns the same asset. Returns asset and job ids; a refused file has an error in its entry.",
+ "description": "Import local files (absolute paths of video, audio or image) into a project. Starts an ingest job per file and waits up to wait_ms; an asset can be used in edit only when its state is ready. Returns asset and job ids; a refused file has an error.",
  "inputSchema": {
   "type": "object",
   "properties": {
    "project_id": {
+    "type": "string",
+    "pattern": "^prj_[0-9a-hjkmnp-tv-z]{10}$"
+   },
+   "timeline_id": {
     "type": "string",
     "pattern": "^prj_[0-9a-hjkmnp-tv-z]{10}$"
    },

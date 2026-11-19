@@ -93,6 +93,8 @@ func TestProjectResolveTimeline(t *testing.T) {
 		{"the first of two named", local, "prj_two", "prj_two", "prj_two", "", ""},
 		{"the second of two named", local, "prj_two", "prj_2b", "prj_2b", "", ""},
 		{"the second alone", local, "", "prj_2b", "prj_2b", "", ""},
+		{"the second in both places", local, "prj_2b", "prj_2b", "prj_2b", "", ""},
+		{"the first in both places", local, "prj_two", "prj_two", "prj_two", "", ""},
 		{"a timeline of another project", local, "prj_one", "prj_2b", "", "E_NOT_FOUND", ""},
 		{"a timeline that does not exist", local, "", "prj_zzz", "", "E_NOT_FOUND", ""},
 		{"a project of another user, ambiguous", alice, "prj_bob", "", "", "E_NOT_FOUND", ""},
