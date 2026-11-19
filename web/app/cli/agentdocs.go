@@ -47,14 +47,8 @@ func AgentDocsInputs() agentdocs.Inputs {
 		inLibrary[s.name] = true
 	}
 
-	// The commands of publishing (SDD-020 section 13) wait for the skills of publishing for the same reason.
-	for _, s := range publishingCommands() {
-		inLibrary[s.name] = true
-	}
-
-	// The commands of the AI provider layer (SDD-016 section 10) are in the guide of the provider domain, not in the
-	// editor skill, which has no room for them. An agent starts a generation with job_start (kind text.generate).
-	for _, s := range providerCommands() {
+	// And for the hand-off from an external motion engine: the skill motion-with-an-external-engine carries it.
+	for _, s := range []*spec{motionBriefCmd} {
 		inLibrary[s.name] = true
 	}
 

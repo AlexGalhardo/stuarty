@@ -300,6 +300,7 @@ func (h *apiHandler) registerAll() {
 	})
 	register(h, "projects.frame", h.projectsFrame)
 	register(h, "projects.sheet", h.projectsSheet)
+	register(h, "projects.motion.brief", h.motionBrief)
 
 	for i := range Endpoints {
 		if Endpoints[i].Pending != "" {

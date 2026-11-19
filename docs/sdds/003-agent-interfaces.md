@@ -2398,7 +2398,7 @@ Example (the text of §3.8; `structuredContent` has `asset_id`, `kind`, `availab
 ```json
 {
   "name": "view",
-  "description": "See the result. mode=frame returns one image of the timeline at time at; mode=sheet returns a grid of frames, each with its time printed (count evenly spaced between from and until, or explicit times). Costs image tokens: read project_get and lint first. frame needs at; sheet takes times, or from, to and count (not both).",
+  "description": "See the result. mode=frame: one image at time at; sheet: a grid of frames with their times (count frames from..until, or times); motion: what an external render of from..until must fit (size, rate, safe area, brand kit, captions, frames). Images cost tokens: read project_get and lint first.",
   "inputSchema": {
     "type": "object",
     "properties": {
@@ -2413,13 +2413,14 @@ Example (the text of §3.8; `structuredContent` has `asset_id`, `kind`, `availab
       "mode": {
         "enum": [
           "frame",
-          "sheet"
+          "sheet",
+          "motion"
         ],
         "default": "frame"
       },
       "at": {
         "type": "string",
-        "description": "Time: 12.5s, 375f or 00:00:12.500. Required in mode frame (the default)."
+        "description": "Time: 12.5s or 375f. Required in mode frame."
       },
       "times": {
         "type": "array",

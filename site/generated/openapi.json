@@ -3733,6 +3733,23 @@
         },
         "type": "object"
       },
+      "Margins": {
+        "properties": {
+          "bottom": {
+            "type": "integer"
+          },
+          "left": {
+            "type": "integer"
+          },
+          "right": {
+            "type": "integer"
+          },
+          "top": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
       "Marker": {
         "properties": {
           "frame": {
@@ -4121,6 +4138,150 @@
           },
           "micros": {
             "format": "int64",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "MotionBrand": {
+        "properties": {
+          "colors": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "fonts": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "logo": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "MotionBriefResult": {
+        "properties": {
+          "brand_kit": {
+            "$ref": "#/components/schemas/MotionBrand"
+          },
+          "captions": {
+            "items": {
+              "$ref": "#/components/schemas/MotionCaption"
+            },
+            "type": "array"
+          },
+          "duration": {
+            "$ref": "#/components/schemas/TimeValue"
+          },
+          "duration_frames": {
+            "type": "integer"
+          },
+          "frame_rate": {
+            "$ref": "#/components/schemas/Rational"
+          },
+          "frames": {
+            "items": {
+              "$ref": "#/components/schemas/MotionFrame"
+            },
+            "type": "array"
+          },
+          "from": {
+            "$ref": "#/components/schemas/TimeValue"
+          },
+          "height": {
+            "type": "integer"
+          },
+          "image_tokens": {
+            "type": "integer"
+          },
+          "margins": {
+            "$ref": "#/components/schemas/Margins"
+          },
+          "needs_alpha": {
+            "type": "boolean"
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "safe_area": {
+            "$ref": "#/components/schemas/Rect"
+          },
+          "text": {
+            "type": "string"
+          },
+          "track": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TrackInfo"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "until": {
+            "$ref": "#/components/schemas/TimeValue"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          },
+          "width": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "MotionCaption": {
+        "properties": {
+          "end": {
+            "type": "integer"
+          },
+          "item_id": {
+            "type": "string"
+          },
+          "start": {
+            "type": "integer"
+          },
+          "text": {
+            "type": "string",
+            "x-untrusted": true
+          }
+        },
+        "type": "object"
+      },
+      "MotionFrame": {
+        "properties": {
+          "at": {
+            "$ref": "#/components/schemas/TimeValue"
+          },
+          "height": {
+            "type": "integer"
+          },
+          "image_base64": {
+            "contentEncoding": "base64",
+            "type": "string"
+          },
+          "image_tokens": {
+            "type": "integer"
+          },
+          "mime": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "width": {
             "type": "integer"
           }
         },
@@ -5457,6 +5618,23 @@
         },
         "type": "object"
       },
+      "Rect": {
+        "properties": {
+          "height": {
+            "type": "integer"
+          },
+          "width": {
+            "type": "integer"
+          },
+          "x": {
+            "type": "integer"
+          },
+          "y": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
       "Request": {
         "properties": {
           "actor": {
@@ -6478,6 +6656,20 @@
               "number",
               "null"
             ]
+          }
+        },
+        "type": "object"
+      },
+      "TrackInfo": {
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "overlay": {
+            "type": "boolean"
           }
         },
         "type": "object"
@@ -18118,6 +18310,90 @@
           }
         ],
         "summary": "Move an asset to the trash"
+      }
+    },
+    "/api/v1/projects/{id}/motion/brief": {
+      "get": {
+        "operationId": "projects.motion.brief",
+        "parameters": [
+          {
+            "description": "The timeline of the project; required when the project has several.",
+            "in": "query",
+            "name": "timeline_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Start of the range, a time; default 0s.",
+            "in": "query",
+            "name": "from",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "End of the range, exclusive; default the end of the timeline.",
+            "in": "query",
+            "name": "until",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The visual track the clip will go on; tells whether the render needs alpha.",
+            "in": "query",
+            "name": "track_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MotionBriefResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "What a render by an external motion engine must fit: size, rate, length, safe area, brand kit, captions and reference frames"
       }
     },
     "/api/v1/projects/{id}/otio": {

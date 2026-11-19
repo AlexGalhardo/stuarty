@@ -880,3 +880,11 @@ func TestProductionScenarioIsTheSameThroughEverySurface(t *testing.T) {
 func TestBriefingScenarioIsTheSameThroughEverySurface(t *testing.T) {
 	sameThroughEverySurface(t, "briefing")
 }
+
+// TestMotionHandoffScenarioIsTheSameThroughEverySurface (epic 33): the brief of a whole timeline and of a range,
+// with the captions inside it, and the refusals of a bad range and of an unknown project. The results are the
+// same on the four surfaces (the environment renders no frame, so the paths of the reference frames, which differ
+// by workspace, are not compared).
+func TestMotionHandoffScenarioIsTheSameThroughEverySurface(t *testing.T) {
+	sameThroughEverySurface(t, "motion-handoff", "prj_7k2m9x4q1b")
+}
