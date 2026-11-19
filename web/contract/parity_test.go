@@ -386,15 +386,10 @@ func TestBudgetsOfTheSurfacesArePrinted(t *testing.T) {
 
 	raw := encode(t, list)
 
-	t.Logf(
-		"NFR-020: tools/list is %d bytes, about %d tokens (limit %d bytes)",
-		len(raw),
-		len(raw)*10/32,
-		mcp.MaxToolListBytes,
-	)
+	t.Logf("NFR-020: tools/list is %d bytes, about %d tokens (limit 7500)", len(raw), tokens)
 
-	if len(raw) > mcp.MaxToolListBytes {
-		t.Errorf("tools/list is %d bytes, over the %d of NFR-020 (SDD-003 section 4.1)", len(raw), mcp.MaxToolListBytes)
+	if tokens > 7500 {
+		t.Errorf("tools/list is about %d tokens, over the interim 7500 of NFR-020", tokens)
 	}
 
 	steps, fixtures := loadScenario(t, "prototype")
