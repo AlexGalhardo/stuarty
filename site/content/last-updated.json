@@ -145,7 +145,7 @@
   "generated/api/jobs.cancel.mdx": "2026-11-19T13:11:51-03:00",
   "generated/api/jobs.file.mdx": "2026-11-18T22:33:57-03:00",
   "generated/api/jobs.get.mdx": "2026-11-19T13:11:51-03:00",
-  "generated/api/jobs.list.mdx": "2026-11-19T08:04:27-03:00",
+  "generated/api/jobs.list.mdx": "2026-11-19T12:45:57-03:00",
   "generated/api/jobs.start.mdx": "2026-11-19T13:11:51-03:00",
   "generated/api/keys.create.mdx": "2026-11-18T22:33:57-03:00",
   "generated/api/keys.list.mdx": "2026-11-18T22:33:57-03:00",
@@ -206,6 +206,9 @@
   "generated/api/projects.snap_points.mdx": "2026-11-19T05:43:49-03:00",
   "generated/api/projects.trash.mdx": "2026-11-18T22:33:57-03:00",
   "generated/api/projects.undo.mdx": "2026-11-19T05:43:49-03:00",
+  "generated/api/providers.list.mdx": "2026-11-19T12:45:57-03:00",
+  "generated/api/providers.models.mdx": "2026-11-19T12:45:57-03:00",
+  "generated/api/providers.prices.set.mdx": "2026-11-19T12:45:57-03:00",
   "generated/api/publish.now.mdx": "2026-11-19T14:15:17-03:00",
   "generated/api/publish.status.mdx": "2026-11-19T13:11:51-03:00",
   "generated/api/publish.validate.mdx": "2026-11-19T13:11:51-03:00",
@@ -340,7 +343,7 @@
   "generated/mcp/tools/view.mdx": "2026-11-19T05:43:49-03:00",
   "generated/reference/cli.mdx": "2026-11-19T13:11:51-03:00",
   "generated/reference/configuration.mdx": "2026-11-19T13:42:29-03:00",
-  "generated/reference/error-codes.mdx": "2026-11-19T12:02:07-03:00",
+  "generated/reference/error-codes.mdx": "2026-11-19T12:45:57-03:00",
   "generated/reference/glossary.mdx": "2026-11-16T11:48:35-03:00",
   "generated/reference/timeline-schema.mdx": "2026-11-19T08:46:53-03:00"
 }
