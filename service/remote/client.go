@@ -418,6 +418,7 @@ func (c *Client) ExportCheck(
 	ctx context.Context,
 	req service.ExportCheckRequest,
 ) (*service.ExportCheckResult, error) {
+	ctx = withTimeline(ctx, req.TimelineID)
 	q := url.Values{}
 	setIf(q, "preset", req.Preset)
 	setIf(q, "start", req.Start)
@@ -429,6 +430,7 @@ func (c *Client) ExportCheck(
 
 // ExportBatch implements service.Service.
 func (c *Client) ExportBatch(ctx context.Context, req service.ExportBatchRequest) (*service.Job, error) {
+	ctx = withTimeline(ctx, req.TimelineID)
 	body := struct {
 		Items  []service.ExportBatchItem `json:"items"`
 		WaitMS int                       `json:"wait_ms,omitempty"`

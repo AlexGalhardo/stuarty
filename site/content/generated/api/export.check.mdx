@@ -27,6 +27,7 @@ Send the secret in the header `Authorization: Bearer <secret>`: the local token 
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
+| `timeline_id` | `string` | no | The timeline of the project; required when the project has several. |
 | `preset` | `string` | yes | A preset id, as listed by GET /export-presets.. min length 1 |
 | `start` | `string` | no | The start of the range to export; empty is the start of the timeline. |
 | `end` | `string` | no | The end of the range to export; empty is the end of the timeline. |

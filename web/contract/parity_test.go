@@ -141,6 +141,41 @@ var parity = []row{
 	{method: "ExportPresetList", tool: "command_help", command: "export:presets", route: "GET /export-presets"},
 	{method: "ExportCheck", tool: "lint", command: "export:check", route: "GET /projects/{}/export-check"},
 	{method: "ExportBatch", tool: "job_start", command: "export:batch", route: "POST /projects/{}/export-batches"},
+	// The reads of the image editor screen (SDD-012 section 24.3): HTTP only, an agent has the text view.
+	{method: "ImageFrame", route: "GET /images/{}/frame", httpOnly: true},
+	{method: "ImageHistory", route: "GET /images/{}/history", httpOnly: true},
+	{method: "ImageFile", route: "GET /images/{}/exports/{}", httpOnly: true},
+	// The approval queue (SDD-015 section 10): no MCP tool, the budget of the tool list leaves no room
+	// for one; deciding, writing a rule and setting a ceiling are for a person, and their commands
+	// always fail for an agent.
+	{method: "ApprovalList", command: "approval:list", route: "GET /approvals"},
+	{method: "ApprovalGet", command: "approval:show", route: "GET /approvals/{}"},
+	{method: "ApprovalDecide", command: "approval:decide", route: "POST /approvals/{}/decide"},
+	{method: "ApprovalRuleList", command: "approval:rule:list", route: "GET /approval-rules"},
+	{method: "ApprovalRuleSet", command: "approval:rule:set", route: "POST /approval-rules"},
+	{method: "ApprovalRuleRemove", command: "approval:rule:remove", route: "DELETE /approval-rules/{}"},
+	{method: "CostSummary", command: "cost:show", route: "GET /cost"},
+	{method: "CostCeilingSet", command: "cost:ceiling", route: "PUT /cost/ceilings"},
+	// The library (SDD-018): one MCP tool, library, serves the lists, reads, writes, searches, renders and
+	// lints. Removing a note, importing and exporting skills read and write files by path (no tool), and
+	// marking a skill as read is for a person at the browser (HTTP only).
+	{method: "MemoryList", tool: "library", command: "memory:list", route: "GET /library/memory"},
+	{method: "MemoryGet", tool: "library", command: "memory:show", route: "GET /library/memory/{}"},
+	{method: "MemoryWrite", tool: "library", command: "memory:write", route: "POST /library/memory"},
+	{method: "MemoryRemove", command: "memory:remove", route: "DELETE /library/memory/{}"},
+	{method: "SkillList", tool: "library", command: "skill:list", route: "GET /library/skills"},
+	{method: "SkillGet", tool: "library", command: "skill:show", route: "GET /library/skills/{}"},
+	{method: "SkillWrite", tool: "library", command: "skill:write", route: "PUT /library/skills/{}"},
+	{method: "SkillImport", command: "skill:import", route: "POST /library/skills/import"},
+	{method: "SkillExport", command: "skill:export", route: "POST /library/skills/export"},
+	{method: "SkillMarkReviewed", route: "POST /library/skills/{}/review", httpOnly: true},
+	{method: "SkillLint", tool: "library", command: "skill:lint", route: "GET /library/skills/{}/lint"},
+	{method: "PromptList", tool: "library", command: "prompt:list", route: "GET /library/prompts"},
+	{method: "PromptGet", tool: "library", command: "prompt:show", route: "GET /library/prompts/{}"},
+	{method: "PromptWrite", tool: "library", command: "prompt:write", route: "PUT /library/prompts/{}"},
+	{method: "PromptRender", tool: "library", command: "prompt:render", route: "POST /library/prompts/{}/render"},
+	{method: "LibrarySearch", tool: "library", command: "library:search", route: "GET /library/search"},
+	{method: "LibraryReindex", command: "library:reindex", route: "POST /library/reindex"},
 }
 
 // notOperations are Service methods that are not operations an agent calls

@@ -10,7 +10,7 @@ wide: true
 
 <RefMain>
 
-Start long work. export renders a workspace file: args \{start?, end?, format?, at? (the png frame), preset?, codec?\}. export_batch runs args.items [\{preset, format, codec, start, end\}] in turn. transcribe: args \{asset_id, language?, model?\}. Poll job_get.
+Start long work. export renders a workspace file: args \{start?, end?, format?, at? (the png frame), preset?, codec?\}. export_batch runs args.items (export args) in turn. transcribe: args \{asset_id, language?, model?\}. Poll job_get.
 
 ## Behaviour
 
@@ -28,6 +28,7 @@ These are the annotations of the tool definition, the hints a client uses to dec
 | Argument | Type | Required | Notes |
 | --- | --- | --- | --- |
 | `project_id` | `string` | yes | pattern `^prj_[0-9a-hjkmnp-tv-z]{10}$` |
+| `timeline_id` | `string` | no | pattern `^prj_[0-9a-hjkmnp-tv-z]{10}$` |
 | `kind` | `export`, `export_batch`, `transcribe` | yes |  |
 | `args` | `object` | no |  |
 | `args.start` | `string` | no |  |
@@ -36,7 +37,7 @@ These are the annotations of the tool definition, the hints a client uses to dec
 | `args.at` | `string` | no |  |
 | `args.preset` | `string` | no |  |
 | `args.codec` | `h264`, `hevc`, `av1` | no |  |
-| `args.items` | array of `object` | no |  |
+| `args.items` | array of `any` | no |  |
 | `wait_ms` | `integer` | no | min 0; max 25000; default `0` |
 
 ## Output
