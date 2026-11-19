@@ -443,7 +443,7 @@ const unavailableBody = {
 			{ name: "whisper-cli", url_host: "example.test", bytes: 4_200_000 },
 		],
 		download_bytes: 4_200_000,
-		install_command: "vukem-video tools:install whisper --model small",
+		install_command: "stuarty tools:install whisper --model small",
 	},
 };
 
@@ -591,7 +591,7 @@ test.describe("auto captions", () => {
 		await expect(dialog).toContainText("example.test");
 		await expect(
 			dialog.getByLabel("Or run this command in a terminal"),
-		).toHaveValue("vukem-video tools:install whisper --model small");
+		).toHaveValue("stuarty tools:install whisper --model small");
 		expect(seen.filter((r) => r.method !== "GET")).toEqual([
 			{ method: "POST", path: `/api/v1/projects/${clip.id}/jobs` },
 		]);

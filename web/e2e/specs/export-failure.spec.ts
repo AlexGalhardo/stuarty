@@ -1,7 +1,7 @@
 import { expect, seedProject, test } from "./helpers";
 
 // Scenario 9 of SDD-012 section 20.1: the server runs with an encoder that
-// cannot work (VUKEM_VIDEO_ENCODER, the second web server of the config) and
+// cannot work (STUARTY_ENCODER, the second web server of the config) and
 // the export dialog shows the code headline with its hint.
 test.describe("export-failure", () => {
 	test("the dialog shows E_NO_ENCODER or E_EXPORT_FAILED with its hint", async ({
