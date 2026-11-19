@@ -7,6 +7,20 @@ description: "The objects the HTTP API takes and returns, from its OpenAPI docum
 
 The types named in the tables of the operations. The arguments of each editing command are on the pages of the [edit tool](/docs/mcp/tools/edit), where the `args` of an operation of a batch are described.
 
+### Adjust
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `brightness` | `integer` | no |  |
+| `contrast` | `integer` | no |  |
+| `curve` | array of [`image.CurvePoint`](/docs/api/schemas#imagecurvepoint) | no |  |
+| `exposure` | `integer` | no |  |
+| `hue` | `integer` | no |  |
+| `levels` | [`Levels`](/docs/api/schemas#levels) or `any` or `null` or `null` | no |  |
+| `saturation` | `integer` | no |  |
+| `temperature` | `integer` | no |  |
+| `tint` | `integer` | no |  |
+
 ### ApprovalListResult
 
 | Name | Type | Required | Description |
@@ -301,6 +315,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | --- | --- | --- | --- |
 | `command` | [`CommandDetail`](/docs/api/schemas#commanddetail) or `any` or `null` or `null` | no |  |
 | `commands` | array of [`CommandSummary`](/docs/api/schemas#commandsummary) | no |  |
+| `domains` | array of [`DomainSummary`](/docs/api/schemas#domainsummary) | no |  |
 | `text` | `string` | no |  |
 
 ### CommandSummary
@@ -423,6 +438,14 @@ The types named in the tables of the operations. The arguments of each editing c
 | `settings` | [`Settings`](/docs/api/schemas#settings) | no |  |
 | `template` | [`TemplateInfo`](/docs/api/schemas#templateinfo) or `any` or `null` or `null` | no |  |
 | `tracks` | map of [`Track`](/docs/api/schemas#track) | no |  |
+
+### DomainSummary
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `name` | `string` | no |  |
+| `operations` | `integer` | no |  |
+| `summary` | `string` | no |  |
 
 ### EditResult
 
@@ -582,6 +605,23 @@ The types named in the tables of the operations. The arguments of each editing c
 | `path` | `string` | no |  |
 | `text` | `string` | no |  |
 
+### Filter
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `amount` | `integer` or `null` | no |  |
+| `blur` | `integer` or `null` | no |  |
+| `color` | `string` | no |  |
+| `dx` | `integer` or `null` | no |  |
+| `dy` | `integer` or `null` | no |  |
+| `kind` | `string` | no |  |
+| `opacity` | `integer` or `null` | no |  |
+| `radius` | `integer` or `null` | no |  |
+| `seed` | `integer` or `null` | no |  |
+| `size` | `integer` or `null` | no |  |
+| `softness` | `integer` or `null` | no |  |
+| `width` | `integer` or `null` | no |  |
+
 ### Finding
 
 | Name | Type | Required | Description |
@@ -686,6 +726,27 @@ The types named in the tables of the operations. The arguments of each editing c
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `h` | `integer` | no |  |
+| `w` | `integer` | no |  |
+| `x` | `integer` | no |  |
+| `y` | `integer` | no |  |
+
+### image.CurvePoint
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `x` | `integer` | no |  |
+| `y` | `integer` | no |  |
+
+### image.Mask
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `feather` | `integer` | no |  |
+| `h` | `integer` | no |  |
+| `invert` | `boolean` | no |  |
+| `kind` | `string` | no |  |
+| `radius` | `integer` | no |  |
+| `source` | `string` | no |  |
 | `w` | `integer` | no |  |
 | `x` | `integer` | no |  |
 | `y` | `integer` | no |  |
@@ -963,6 +1024,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `approval_id` | `string` | no |  |
 | `created_at` | `string (date-time)` | no |  |
 | `error` | [`Error`](/docs/api/schemas#error) or `any` or `null` or `null` | no |  |
+| `estimate` | [`Money`](/docs/api/schemas#money) or `any` or `null` or `null` | no |  |
 | `finished_at` | `string (date-time)` or `null` | no |  |
 | `job_id` | `string` | no |  |
 | `kind` | `string` | no |  |
@@ -991,6 +1053,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | --- | --- | --- | --- |
 | `batch` | [`BatchResult`](/docs/api/schemas#batchresult) or `any` or `null` or `null` | no |  |
 | `export` | [`ExportResult`](/docs/api/schemas#exportresult) or `any` or `null` or `null` | no |  |
+| `text` | [`TextResult`](/docs/api/schemas#textresult) or `any` or `null` or `null` | no |  |
 | `transcribe` | [`TranscribeResult`](/docs/api/schemas#transcriberesult) or `any` or `null` or `null` | no |  |
 
 ### Key
@@ -1039,14 +1102,18 @@ The types named in the tables of the operations. The arguments of each editing c
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
+| `adjust` | [`Adjust`](/docs/api/schemas#adjust) or `any` or `null` or `null` | no |  |
 | `asset` | `string` | no |  |
+| `blend` | `string` | no |  |
 | `children` | array of [`Layer`](/docs/api/schemas#layer) | no |  |
 | `crop` | [`image.Crop`](/docs/api/schemas#imagecrop) or `any` or `null` or `null` | no |  |
 | `fill` | `string` | no |  |
+| `filters` | array of [`Filter`](/docs/api/schemas#filter) | no |  |
 | `h` | `integer` | no |  |
 | `id` | `string` | no |  |
 | `kind` | `string` | no |  |
 | `locked` | `boolean` | no |  |
+| `mask` | [`image.Mask`](/docs/api/schemas#imagemask) or `any` or `null` or `null` | no |  |
 | `name` | `string` | no |  |
 | `opacity` | `integer` | no |  |
 | `order` | `string` | no |  |
@@ -1062,6 +1129,14 @@ The types named in the tables of the operations. The arguments of each editing c
 | `w` | `integer` | no |  |
 | `x` | `integer` | no |  |
 | `y` | `integer` | no |  |
+
+### Levels
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `black` | `integer` | no |  |
+| `gamma` | `integer` | no |  |
+| `white` | `integer` | no |  |
 
 ### LibraryAsset
 
@@ -1253,6 +1328,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `feather` | `integer` | no |  |
 | `height` | `number (double)` | no |  |
 | `invert` | `boolean` | no |  |
+| `radius` | `integer` | no |  |
 | `shape` | `string` | no |  |
 | `width` | `number (double)` | no |  |
 | `x` | `number (double)` | no |  |
@@ -1351,6 +1427,17 @@ The types named in the tables of the operations. The arguments of each editing c
 | `field` | `string` | no |  |
 | `found` | `string` | no |  |
 | `hint` | `string` | no |  |
+
+### ModelView
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `context_tokens` | `integer` | no |  |
+| `id` | `string` | no |  |
+| `name` | `string` | no |  |
+| `output_tokens` | `integer` | no |  |
+| `price` | [`Price`](/docs/api/schemas#price) or `any` or `null` or `null` | no |  |
+| `price_source` | `string` | no |  |
 
 ### Money
 
@@ -1528,6 +1615,24 @@ The types named in the tables of the operations. The arguments of each editing c
 | --- | --- | --- | --- |
 | `asset_id` | `string` | no |  |
 | `timeline_id` | `string` | no |  |
+
+### Price
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `currency` | `string` | no |  |
+| `input_micros_per_mtok` | `integer (int64)` | no |  |
+| `output_micros_per_mtok` | `integer (int64)` | no |  |
+
+### PriceEntry
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `currency` | `string` | no |  |
+| `input_micros_per_mtok` | `integer (int64)` | no |  |
+| `model` | `string` | no |  |
+| `output_micros_per_mtok` | `integer (int64)` | no |  |
+| `provider` | `string` | no |  |
 
 ### Primitive
 
@@ -1771,6 +1876,41 @@ The types named in the tables of the operations. The arguments of each editing c
 | `text` | `string` | no |  |
 | `untrusted_notice` | `string` | no |  |
 | `variables` | array of `string` | no |  |
+
+### ProviderListResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `prices` | array of [`PriceEntry`](/docs/api/schemas#priceentry) | no |  |
+| `providers` | array of [`ProviderView`](/docs/api/schemas#providerview) | no |  |
+
+### ProviderModelsResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `cached` | `boolean` | no |  |
+| `connection_id` | `string` | no |  |
+| `fetched_at` | `string (date-time)` | no |  |
+| `models` | array of [`ModelView`](/docs/api/schemas#modelview) | no |  |
+| `provider` | `string` | no |  |
+
+### ProviderPricesResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `prices` | array of [`PriceEntry`](/docs/api/schemas#priceentry) | no |  |
+
+### ProviderView
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `capabilities` | array of `string` | no |  |
+| `connections` | array of `string` | no |  |
+| `credential_kinds` | array of `string` | no |  |
+| `default_endpoint` | `string` | no |  |
+| `docs_url` | `string` | no |  |
+| `id` | `string` | no |  |
+| `name` | `string` | no |  |
 
 ### Range
 
@@ -2116,6 +2256,18 @@ The types named in the tables of the operations. The arguments of each editing c
 | `slots` | array of [`SlotInfo`](/docs/api/schemas#slotinfo) | no |  |
 | `template_id` | `string` | no |  |
 | `width` | `integer` | no |  |
+
+### TextResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `cost` | [`Money`](/docs/api/schemas#money) | no |  |
+| `finish_reason` | `string` | no |  |
+| `input_tokens` | `integer` | no |  |
+| `model` | `string` | no |  |
+| `output_tokens` | `integer` | no |  |
+| `provider` | `string` | no |  |
+| `text` | `string` | no |  |
 
 ### TimeRange
 

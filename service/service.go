@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"log/slog"
 	"path/filepath"
+	"slices"
 	"sync"
 	"time"
 
@@ -22,6 +23,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/service/approval"
 	"github.com/AlexGalhardo/stuarty/service/connections"
 	"github.com/AlexGalhardo/stuarty/service/library"
+	"github.com/AlexGalhardo/stuarty/service/providers"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
 )
 
@@ -86,6 +88,13 @@ type Service interface {
 	PromptRender(ctx context.Context, req PromptRenderRequest) (*PromptRenderResult, error)
 	LibrarySearch(ctx context.Context, req LibrarySearchRequest) (*LibrarySearchResult, error)
 	LibraryReindex(ctx context.Context, req LibraryReindexRequest) (*LibraryReindexResult, error)
+
+	// The AI provider layer (SDD-016): the providers and their models, the price table, and a text generation,
+	// which is a job of a kind that needs approval (SDD-015 section 5).
+	ProviderList(ctx context.Context, req ProviderListRequest) (*ProviderListResult, error)
+	ProviderModels(ctx context.Context, req ProviderModelsRequest) (*ProviderModelsResult, error)
+	ProviderPriceSet(ctx context.Context, req ProviderPriceSetRequest) (*ProviderPricesResult, error)
+	TextGenerate(ctx context.Context, req TextGenerateRequest) (*Job, error)
 
 	JobGet(ctx context.Context, req JobGetRequest) (*Job, error)
 	JobList(ctx context.Context, req JobListRequest) (*JobListResult, error)
@@ -253,6 +262,9 @@ type Options struct {
 	// credentials; without one the service builds a registry over the store with a vault in the
 	// workspace that has no master key source, so a connection cannot be created (SDD-014).
 	Connections *connections.Manager
+	// Providers is the registry of the AI providers, with their adapters registered (SDD-016); without one
+	// the service has a registry with no provider, so no generation can start.
+	Providers *providers.Registry
 	// JobKinds are the job kinds that need approval, registered by the epics of publishing and
 	// generation (SDD-015 section 5). The product registers none of its own; tests register one.
 	JobKinds []ApprovableKind
@@ -288,6 +300,7 @@ type svc struct {
 	keys        KeyStore
 	conns       *connections.Manager
 	kinds       map[string]*ApprovableKind
+	providers   *providers.Registry
 	lib         *library.Manager // the files of memory, skills and prompts; nil without a workspace
 	heavy       RateLimiter
 	heavyLimitN int
@@ -350,7 +363,9 @@ func New(o Options) (Service, error) {
 		startedAt:   time.Now(),
 	}
 
-	kinds, err := registerKinds(o.JobKinds)
+	s.providers = o.Providers
+
+	kinds, err := registerKinds(append(slices.Clone(o.JobKinds), s.textGenerateKind()))
 	if err != nil {
 		return nil, err
 	}
@@ -364,6 +379,15 @@ func New(o Options) (Service, error) {
 
 	if s.conns == nil {
 		s.conns = connections.NewDefault(o.Store.Connections(), s.workspace, s.now)
+	}
+
+	if s.providers == nil {
+		prices := ""
+		if s.workspace != "" {
+			prices = filepath.Join(s.workspace, "providers", providers.PriceFile)
+		}
+
+		s.providers = providers.NewRegistry(s.conns, providers.NewPriceBook(prices), s.now)
 	}
 
 	s.sems = map[string]chan struct{}{

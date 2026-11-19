@@ -23,6 +23,48 @@
       }
     },
     "schemas": {
+      "Adjust": {
+        "properties": {
+          "brightness": {
+            "type": "integer"
+          },
+          "contrast": {
+            "type": "integer"
+          },
+          "curve": {
+            "items": {
+              "$ref": "#/components/schemas/image.CurvePoint"
+            },
+            "type": "array"
+          },
+          "exposure": {
+            "type": "integer"
+          },
+          "hue": {
+            "type": "integer"
+          },
+          "levels": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Levels"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "saturation": {
+            "type": "integer"
+          },
+          "temperature": {
+            "type": "integer"
+          },
+          "tint": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
       "ApprovalListResult": {
         "properties": {
           "next_cursor": {
@@ -868,6 +910,12 @@
             },
             "type": "array"
           },
+          "domains": {
+            "items": {
+              "$ref": "#/components/schemas/DomainSummary"
+            },
+            "type": "array"
+          },
           "text": {
             "type": "string"
           }
@@ -1190,6 +1238,20 @@
               "$ref": "#/components/schemas/Track"
             },
             "type": "object"
+          }
+        },
+        "type": "object"
+      },
+      "DomainSummary": {
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "operations": {
+            "type": "integer"
+          },
+          "summary": {
+            "type": "string"
           }
         },
         "type": "object"
@@ -1593,6 +1655,77 @@
           },
           "text": {
             "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "Filter": {
+        "properties": {
+          "amount": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "blur": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "color": {
+            "type": "string"
+          },
+          "dx": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "dy": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "kind": {
+            "type": "string"
+          },
+          "opacity": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "radius": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "seed": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "size": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "softness": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "width": {
+            "type": [
+              "integer",
+              "null"
+            ]
           }
         },
         "type": "object"
@@ -2741,6 +2874,16 @@
               }
             ]
           },
+          "estimate": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Money"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "finished_at": {
             "format": "date-time",
             "type": [
@@ -2848,6 +2991,16 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/ExportResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "text": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TextResult"
               },
               {
                 "type": "null"
@@ -2969,7 +3122,20 @@
       },
       "Layer": {
         "properties": {
+          "adjust": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Adjust"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "asset": {
+            "type": "string"
+          },
+          "blend": {
             "type": "string"
           },
           "children": {
@@ -2991,6 +3157,12 @@
           "fill": {
             "type": "string"
           },
+          "filters": {
+            "items": {
+              "$ref": "#/components/schemas/Filter"
+            },
+            "type": "array"
+          },
           "h": {
             "type": "integer"
           },
@@ -3002,6 +3174,16 @@
           },
           "locked": {
             "type": "boolean"
+          },
+          "mask": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/image.Mask"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "name": {
             "type": "string"
@@ -3053,6 +3235,20 @@
             "type": "integer"
           },
           "y": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "Levels": {
+        "properties": {
+          "black": {
+            "type": "integer"
+          },
+          "gamma": {
+            "type": "integer"
+          },
+          "white": {
             "type": "integer"
           }
         },
@@ -3524,6 +3720,9 @@
           "invert": {
             "type": "boolean"
           },
+          "radius": {
+            "type": "integer"
+          },
           "shape": {
             "type": "string"
           },
@@ -3826,6 +4025,37 @@
             "type": "string"
           },
           "hint": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ModelView": {
+        "properties": {
+          "context_tokens": {
+            "type": "integer"
+          },
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "output_tokens": {
+            "type": "integer"
+          },
+          "price": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Price"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "price_source": {
             "type": "string"
           }
         },
@@ -4584,6 +4814,44 @@
         },
         "type": "object"
       },
+      "Price": {
+        "properties": {
+          "currency": {
+            "type": "string"
+          },
+          "input_micros_per_mtok": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "output_micros_per_mtok": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "PriceEntry": {
+        "properties": {
+          "currency": {
+            "type": "string"
+          },
+          "input_micros_per_mtok": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "model": {
+            "type": "string"
+          },
+          "output_micros_per_mtok": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "provider": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "Primitive": {
         "properties": {
           "collection": {
@@ -5223,6 +5491,93 @@
               "type": "string"
             },
             "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "ProviderListResult": {
+        "properties": {
+          "prices": {
+            "items": {
+              "$ref": "#/components/schemas/PriceEntry"
+            },
+            "type": "array"
+          },
+          "providers": {
+            "items": {
+              "$ref": "#/components/schemas/ProviderView"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "ProviderModelsResult": {
+        "properties": {
+          "cached": {
+            "type": "boolean"
+          },
+          "connection_id": {
+            "type": "string"
+          },
+          "fetched_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "models": {
+            "items": {
+              "$ref": "#/components/schemas/ModelView"
+            },
+            "type": "array"
+          },
+          "provider": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ProviderPricesResult": {
+        "properties": {
+          "prices": {
+            "items": {
+              "$ref": "#/components/schemas/PriceEntry"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "ProviderView": {
+        "properties": {
+          "capabilities": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "connections": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "credential_kinds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "default_endpoint": {
+            "type": "string"
+          },
+          "docs_url": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
           }
         },
         "type": "object"
@@ -6050,6 +6405,33 @@
           },
           "width": {
             "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "TextResult": {
+        "properties": {
+          "cost": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "finish_reason": {
+            "type": "string"
+          },
+          "input_tokens": {
+            "type": "integer"
+          },
+          "model": {
+            "type": "string"
+          },
+          "output_tokens": {
+            "type": "integer"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string",
+            "x-untrusted": true
           }
         },
         "type": "object"
@@ -10808,6 +11190,49 @@
         },
         "type": "object"
       },
+      "image.CurvePoint": {
+        "properties": {
+          "x": {
+            "type": "integer"
+          },
+          "y": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "image.Mask": {
+        "properties": {
+          "feather": {
+            "type": "integer"
+          },
+          "h": {
+            "type": "integer"
+          },
+          "invert": {
+            "type": "boolean"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "radius": {
+            "type": "integer"
+          },
+          "source": {
+            "type": "string"
+          },
+          "w": {
+            "type": "integer"
+          },
+          "x": {
+            "type": "integer"
+          },
+          "y": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
       "image.SlotValue": {
         "properties": {
           "asset": {
@@ -11922,7 +12347,7 @@
         "operationId": "commands.list",
         "parameters": [
           {
-            "description": "video (default) or image.",
+            "description": "A domain of the product, video by default.",
             "in": "query",
             "name": "domain",
             "schema": {
@@ -11970,7 +12395,7 @@
         "operationId": "commands.get",
         "parameters": [
           {
-            "description": "video (default) or image.",
+            "description": "A domain of the product, video by default.",
             "in": "query",
             "name": "domain",
             "schema": {
@@ -12257,6 +12682,67 @@
           }
         ],
         "summary": "Read one connection (never a secret)"
+      }
+    },
+    "/api/v1/connections/{id}/models": {
+      "get": {
+        "operationId": "providers.models",
+        "parameters": [
+          {
+            "description": "true reads the list from the provider again; the default serves a list at most ten minutes old.",
+            "in": "query",
+            "name": "refresh",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "description": "The id of a connection to an AI provider, con_ and 10 characters.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderModelsResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Read the current models of a provider through its connection"
       }
     },
     "/api/v1/connections/{id}/test": {
@@ -18784,6 +19270,125 @@
         "summary": "Undo the caller's latest step"
       }
     },
+    "/api/v1/providers": {
+      "get": {
+        "operationId": "providers.list",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderListResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the AI providers, the connections of each and the price table"
+      }
+    },
+    "/api/v1/providers/prices": {
+      "put": {
+        "operationId": "providers.prices.set",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "currency": {
+                    "description": "Three letters, for example USD; needed to set a price.",
+                    "type": "string"
+                  },
+                  "input_micros_per_mtok": {
+                    "description": "The price of a million input tokens, in millionths of the currency unit. Leave both prices out to remove the entry.",
+                    "format": "int64",
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
+                  },
+                  "model": {
+                    "description": "The model id, as provider:models lists it.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "output_micros_per_mtok": {
+                    "description": "The price of a million output tokens, in millionths of the currency unit.",
+                    "format": "int64",
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
+                  },
+                  "provider": {
+                    "description": "The id of the provider, for example openai.",
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "provider",
+                  "model"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderPricesResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Set or remove the price of a model (a person in the browser only; the local token and keys get 403)"
+      }
+    },
     "/api/v1/system": {
       "get": {
         "operationId": "system.get",
@@ -19405,6 +20010,112 @@
           }
         ],
         "summary": "Make a project from a template"
+      }
+    },
+    "/api/v1/text/generate": {
+      "post": {
+        "operationId": "text.generate",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "connection_id": {
+                    "description": "The connection to the provider that writes the text.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "dry_run": {
+                    "description": "true answers the job it would create, with its estimate, and writes and sends nothing.",
+                    "type": "boolean"
+                  },
+                  "max_tokens": {
+                    "description": "The most tokens the model may write; the default is 1024. The estimate counts all of them.",
+                    "type": "integer"
+                  },
+                  "model": {
+                    "description": "The model id, as provider:models lists it.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "project_id": {
+                    "description": "The project the generation belongs to, prj_ and 10 characters.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "prompt": {
+                    "description": "What to write, 1 to 100000 characters.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "system": {
+                    "description": "Instructions for the model, at most 20000 characters.",
+                    "type": "string"
+                  },
+                  "temperature": {
+                    "description": "0 to 2; leave out for the default of the provider.",
+                    "format": "double",
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "wait_ms": {
+                    "description": "Wait up to this many milliseconds for the job to finish.",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "project_id",
+                  "connection_id",
+                  "model",
+                  "prompt"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            },
+            "description": "Accepted"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Start a text generation with the provider of a connection; the job waits for approval and shows its estimate"
       }
     },
     "/api/v1/trash/empty": {

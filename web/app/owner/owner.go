@@ -271,7 +271,7 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 		return err
 	}
 
-	conns, err := o.connections(cfg.Getenv, st, cfg.Now)
+	conns, provs, err := o.destinations(cfg.Getenv, st, cfg.Now)
 	if err != nil {
 		return err
 	}
@@ -282,7 +282,7 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 	}
 
 	o.Service, err = service.New(service.Options{
-		Keys: o.keyStore(), Connections: conns, HeavyPerMinute: heavy,
+		Keys: o.keyStore(), Connections: conns, Providers: provs, HeavyPerMinute: heavy,
 		Heavy: middleware.ServiceLimiter{L: ratelimit.NewMemory(heavy, time.Minute)},
 		Store: st, Registry: command.Default(), Now: cfg.Now, Workspace: string(o.Dir), Media: media,
 		Exporter: exp, Enqueue: jobs.Dispatcher{Queue: o.Queue}, Limits: limits, Publish: publish, Version: o.version,

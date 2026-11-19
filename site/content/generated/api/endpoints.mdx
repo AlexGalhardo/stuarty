@@ -148,7 +148,16 @@ Every operation has its own page with the parameters, the body, the responses an
 | `POST` | `/api/v1/connections` | [`connections.create`](/docs/api/connections.create) | Connect a destination; the secret goes into the vault |
 | `GET` | `/api/v1/connections/{id}` | [`connections.get`](/docs/api/connections.get) | Read one connection (never a secret) |
 | `DELETE` | `/api/v1/connections/{id}` | [`connections.remove`](/docs/api/connections.remove) | Remove a connection and its credential |
+| `GET` | `/api/v1/connections/{id}/models` | [`providers.models`](/docs/api/providers.models) | Read the current models of a provider through its connection |
 | `POST` | `/api/v1/connections/{id}/test` | [`connections.test`](/docs/api/connections.test) | Make one request through a connection |
+
+## AI providers
+
+| Method | Path | Operation | Summary |
+| --- | --- | --- | --- |
+| `GET` | `/api/v1/providers` | [`providers.list`](/docs/api/providers.list) | List the AI providers, the connections of each and the price table |
+| `PUT` | `/api/v1/providers/prices` | [`providers.prices.set`](/docs/api/providers.prices.set) | Set or remove the price of a model (a person in the browser only; the local token and keys get 403) |
+| `POST` | `/api/v1/text/generate` | [`text.generate`](/docs/api/text.generate) | Start a text generation with the provider of a connection; the job waits for approval and shows its estimate |
 
 ## Images
 

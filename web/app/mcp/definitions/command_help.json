@@ -1,6 +1,6 @@
 {
  "name": "command_help",
- "description": "Describe edit operations. Without name: one line each. With name (e.g. item.split): description, args schema, example, error codes. Read it before using an unfamiliar operation. domain=export: presets and codecs.",
+ "description": "Discover operations. No arguments: the video operations, one line each, then every domain. domain=<name>: the operations of that domain; domain=export: presets and codecs. name (for example item.split): description, args JSON Schema, example and error codes; read it before using an operation you have not used.",
  "inputSchema": {
   "type": "object",
   "properties": {
@@ -9,8 +9,15 @@
    },
    "domain": {
     "enum": [
+     "project",
      "video",
      "image",
+     "writing",
+     "asset",
+     "publish",
+     "provider",
+     "memory",
+     "workspace",
      "export"
     ]
    }
@@ -28,6 +35,12 @@
    },
    "command": {
     "type": "object"
+   },
+   "domains": {
+    "type": "array",
+    "items": {
+     "type": "object"
+    }
    }
   }
  },

@@ -128,11 +128,11 @@ type lintIn struct {
 
 type commandIn struct {
 	Name   string `json:"name"             validate:"required"`
-	Domain string `json:"domain,omitempty"                     doc:"video (default) or image."`
+	Domain string `json:"domain,omitempty"                     doc:"A domain of the product, video by default."`
 }
 
 type commandListIn struct {
-	Domain string `json:"domain,omitempty" doc:"video (default) or image."`
+	Domain string `json:"domain,omitempty" doc:"A domain of the product, video by default."`
 }
 
 type noIn struct{}
@@ -418,6 +418,10 @@ func (h *apiHandler) registerAll() {
 	register(h, "approval-rules.remove", h.approvalRulesRemove)
 	register(h, "cost.get", h.costGet)
 	register(h, "cost.ceilings.set", h.costCeilingSet)
+	register(h, "providers.list", h.providersList)
+	register(h, "providers.models", h.providersModels)
+	register(h, "providers.prices.set", h.providersPriceSet)
+	register(h, "text.generate", h.textGenerate)
 	register(h, "library.memory.list", h.memoryList)
 	register(h, "library.memory.get", h.memoryGet)
 	register(h, "library.memory.write", h.memoryWrite)

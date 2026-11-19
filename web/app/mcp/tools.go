@@ -193,16 +193,51 @@ func projectTrash(ctx context.Context, svc service.Service, raw json.RawMessage)
 	return &toolOutput{value: res, text: res.Text}, nil
 }
 
+// edit applies a batch to the document of its domain: a timeline (video, the default) or an image (SDD-003
+// section 4.8). The operations are the registry's of that domain; the Service refuses a name it does not have.
 func edit(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolOutput, error) {
 	in, err := decode[struct {
+		Domain         string              `json:"domain"`
 		ProjectID      string              `json:"project_id"`
 		TimelineID     string              `json:"timeline_id"`
+		ImageID        string              `json:"image_id"`
 		BaseRevision   int64               `json:"base_revision"`
 		Operations     []command.Operation `json:"operations"`
 		IdempotencyKey string              `json:"idempotency_key"`
 		DryRun         bool                `json:"dry_run"`
 	}](raw)
 	if err != nil {
+		return nil, err
+	}
+
+	domain, err := routeDomain("edit", in.Domain)
+	if err != nil {
+		return nil, err
+	}
+
+	if domain == command.DomainImage {
+		if err := checkMembers(
+			"edit",
+			domain,
+			raw,
+			[]string{"image_id"},
+			[]string{"project_id", "timeline_id"},
+		); err != nil {
+			return nil, err
+		}
+
+		res, err := svc.ImageEdit(ctx, service.ImageEditRequest{
+			ImageID: in.ImageID, BaseRevision: in.BaseRevision, Operations: in.Operations,
+			IdempotencyKey: in.IdempotencyKey, DryRun: in.DryRun,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		return &toolOutput{value: res, text: service.ImageEditText(res)}, nil
+	}
+
+	if err := checkMembers("edit", domain, raw, []string{"project_id"}, []string{"image_id"}); err != nil {
 		return nil, err
 	}
 
@@ -242,6 +277,8 @@ func commandHelp(ctx context.Context, svc service.Service, raw json.RawMessage) 
 // and redo.
 func history(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolOutput, error) {
 	in, err := decode[struct {
+		Domain     string `json:"domain"`
+		ImageID    string `json:"image_id"`
 		ProjectID  string `json:"project_id"`
 		TimelineID string `json:"timeline_id"`
 		Action     string `json:"action"`
@@ -249,6 +286,19 @@ func history(ctx context.Context, svc service.Service, raw json.RawMessage) (*to
 		pageArgs
 	}](raw)
 	if err != nil {
+		return nil, err
+	}
+
+	domain, err := routeDomain("history", in.Domain)
+	if err != nil {
+		return nil, err
+	}
+
+	if domain == command.DomainImage {
+		return imageHistory(ctx, svc, raw, in.Action, in.ImageID)
+	}
+
+	if err := checkMembers("history", domain, raw, []string{"project_id"}, []string{"image_id"}); err != nil {
 		return nil, err
 	}
 

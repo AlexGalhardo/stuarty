@@ -1,0 +1,8 @@
+{
+  "args": {
+    "index": 2,
+    "kind": "blur",
+    "layer_id": "lyr_bbbbbbbbbb"
+  },
+  "op": "layer.filter_move"
+}

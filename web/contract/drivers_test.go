@@ -206,6 +206,14 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.CostSummary)
 	case "CostCeilingSet":
 		return invoke(ctx, s, svc.CostCeilingSet)
+	case "ProviderList":
+		return invoke(ctx, s, svc.ProviderList)
+	case "ProviderModels":
+		return invoke(ctx, s, svc.ProviderModels)
+	case "ProviderPriceSet":
+		return invoke(ctx, s, svc.ProviderPriceSet)
+	case "TextGenerate":
+		return invoke(ctx, s, svc.TextGenerate)
 	case "AuditList":
 		return invoke(ctx, s, svc.AuditList)
 	case "ToolsInstall":
@@ -553,6 +561,23 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 		return "job_start", args, nil
 	case "JobCancel":
 		return "job_cancel", args, nil
+	case "TextGenerate":
+		// a generation starts with job_start; the model and the prompt are its arguments
+		delete(args, "dry_run")
+
+		inner := map[string]any{}
+
+		for _, k := range []string{"connection_id", "model", "prompt", "system", "max_tokens", "temperature"} {
+			if v, ok := args[k]; ok {
+				inner[k] = v
+
+				delete(args, k)
+			}
+		}
+
+		args["kind"], args["args"] = "text.generate", inner
+
+		return "job_start", args, nil
 	case "ViewFrame":
 		args["mode"] = "frame"
 
@@ -744,6 +769,17 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 		DryRun      bool            `json:"dry_run"`
 		BrandColors []string        `json:"brand_colors"`
 		BrandFonts  []string        `json:"brand_fonts"`
+
+		ConnectionID string `json:"connection_id"`
+		Model        string `json:"model"`
+		Prompt       string `json:"prompt"`
+		System       string `json:"system"`
+		MaxTokens    int    `json:"max_tokens"`
+		Provider     string `json:"provider"`
+		Currency     string `json:"currency"`
+		InMicros     *int64 `json:"input_micros_per_mtok"`
+		OutMicros    *int64 `json:"output_micros_per_mtok"`
+		Refresh      bool   `json:"refresh"`
 
 		ItemID   string `json:"item_id"`
 		Title    string `json:"title"`
@@ -994,6 +1030,44 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 		}
 
 		return "cost:ceiling", slices.Concat([]string{"--currency", c.Currency}, flag("project", c.ProjectID)), "", nil
+	case "ProviderList":
+		return "provider:list", nil, "", nil
+	case "ProviderModels":
+		argv = []string{a.ConnectionID}
+		if a.Refresh {
+			argv = append(argv, "--refresh")
+		}
+
+		return "provider:models", argv, "", nil
+	case "ProviderPriceSet":
+		argv = slices.Concat(
+			[]string{"--provider", a.Provider, "--model", a.Model}, flag("currency", a.Currency),
+		)
+
+		if a.InMicros != nil {
+			argv = append(argv, "--price-in", strconv.FormatInt(*a.InMicros, 10))
+		}
+
+		if a.OutMicros != nil {
+			argv = append(argv, "--price-out", strconv.FormatInt(*a.OutMicros, 10))
+		}
+
+		return "provider:price", argv, "", nil
+	case "TextGenerate":
+		argv = slices.Concat(
+			proj, []string{"--connection", a.ConnectionID, "--model", a.Model, "--prompt", a.Prompt},
+			flag("system", a.System),
+		)
+
+		if a.MaxTokens > 0 {
+			argv = append(argv, "--max-tokens", strconv.Itoa(a.MaxTokens))
+		}
+
+		if a.DryRun {
+			argv = append(argv, "--dry-run")
+		}
+
+		return "text:generate", argv, "", nil
 	case "AuditList":
 		return "audit", flag("project", a.ProjectID), "", nil
 	case "ToolsInstall":

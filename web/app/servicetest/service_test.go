@@ -373,6 +373,22 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.CostCeilingSet(ctx, service.CostCeilingSetRequest{Currency: "USD"})
 			return err
 		},
+		"ProviderList": func() error {
+			_, err := e.svc.ProviderList(ctx, service.ProviderListRequest{})
+			return err
+		},
+		"ProviderModels": func() error {
+			_, err := e.svc.ProviderModels(ctx, service.ProviderModelsRequest{ConnectionID: "con_0000000001"})
+			return err
+		},
+		"ProviderPriceSet": func() error {
+			_, err := e.svc.ProviderPriceSet(ctx, service.ProviderPriceSetRequest{Provider: "openai", Model: "m"})
+			return err
+		},
+		"TextGenerate": func() error {
+			_, err := e.svc.TextGenerate(ctx, service.TextGenerateRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
 		"MemoryList": func() error {
 			_, err := e.svc.MemoryList(ctx, service.MemoryListRequest{})
 			return err
@@ -977,6 +993,33 @@ func TestCommandHelp(t *testing.T) {
 		if c.Name == "asset.add" {
 			t.Error("the list shows the internal command asset.add")
 		}
+	}
+
+	// The call with no name and no domain also lists the domains (SDD-003 section 4.8); one with a domain does not.
+	if len(list.Domains) != len(command.Domains()) || !strings.Contains(list.Text, "\nimage: ") {
+		t.Errorf("the discovery lists %d domains, want %d, in %q", len(list.Domains), len(command.Domains()), list.Text)
+	}
+
+	imageList, err := e.svc.CommandHelp(e.as(ui), service.CommandHelpRequest{Domain: command.DomainImage})
+	if err != nil || len(imageList.Commands) == 0 || len(imageList.Domains) != 0 {
+		t.Errorf("image list = %+v, %v", imageList, err)
+	}
+
+	for _, d := range []string{"publish", "memory"} {
+		empty, derr := e.svc.CommandHelp(e.as(ui), service.CommandHelpRequest{Domain: d})
+		if derr != nil || len(empty.Commands) != 0 || !strings.Contains(empty.Text, "No edit operations") {
+			t.Errorf("%s list = %+v, %v", d, empty, derr)
+		}
+	}
+
+	if _, err = e.svc.CommandHelp(
+		e.as(ui),
+		service.CommandHelpRequest{Domain: "nope"},
+	); serviceError(
+		t,
+		err,
+	).Path != "domain" {
+		t.Errorf("an unknown domain: %v", err)
 	}
 
 	one, err := e.svc.CommandHelp(e.as(ui), service.CommandHelpRequest{Name: "item.move"})
