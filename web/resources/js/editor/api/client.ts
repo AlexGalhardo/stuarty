@@ -41,7 +41,11 @@ import type {
 	ExportPresetListResult,
 	FontImportResult,
 	FontListResult,
-	HistoryDiffResult,
+	GoogleComplete,
+	GoogleSettings,
+	GoogleSettingsRequest,
+	GoogleStart,
+	GoogleStatus,
 	HistoryListResult,
 	HistoryQuery,
 	HistoryRevertResult,
@@ -339,6 +343,18 @@ export interface ApiClient {
 	// for them is built on a transport with an empty base.
 	login(email: string, password: string): Promise<SessionResult>;
 	logout(): Promise<void>;
+	// The optional Google sign-in of network mode (SDD-007 section 4.7): root routes too.
+	googleStatus(): Promise<GoogleStatus>;
+	googleStart(): Promise<GoogleStart>;
+	googleLink(password: string): Promise<GoogleStart>;
+	googleUnlink(password: string): Promise<GoogleStatus>;
+	googleComplete(request: {
+		state: string;
+		code?: string;
+		error?: string;
+	}): Promise<GoogleComplete>;
+	googleSettings(): Promise<GoogleSettings>;
+	setGoogleSettings(request: GoogleSettingsRequest): Promise<GoogleSettings>;
 	listTemplates(): Promise<TemplateListResult>;
 	instantiateTemplate(
 		templateId: string,
@@ -789,6 +805,17 @@ export function createClient(
 		logout: async () => {
 			await call("POST", "/auth/logout", EDIT_TIMEOUT_MS, {});
 		},
+		googleStatus: () => call("GET", "/auth/google", READ_TIMEOUT_MS),
+		googleStart: () => call("POST", "/auth/google/start", EDIT_TIMEOUT_MS, {}),
+		googleLink: (password) =>
+			call("POST", "/auth/google/link", EDIT_TIMEOUT_MS, { password }),
+		googleUnlink: (password) =>
+			call("POST", "/auth/google/unlink", EDIT_TIMEOUT_MS, { password }),
+		googleComplete: (request) =>
+			call("POST", "/auth/google/complete", EDIT_TIMEOUT_MS, request),
+		googleSettings: () => call("GET", "/auth/google/settings", READ_TIMEOUT_MS),
+		setGoogleSettings: (request) =>
+			call("PUT", "/auth/google/settings", EDIT_TIMEOUT_MS, request),
 		listTemplates: () => call("GET", "/templates", READ_TIMEOUT_MS),
 		instantiateTemplate: (templateId, request) =>
 			call(
