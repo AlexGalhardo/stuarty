@@ -49,25 +49,37 @@ export interface Transport {
 
 // A transport for the editor of one timeline. The address of the editor is the id of a timeline, and a call
 // under /projects/<that id> says it again as timeline_id, so a project with several timelines is never
-// ambiguous, whichever of its timelines it is (SDD-003 section 1.7).
+// ambiguous, whichever of its timelines it is (SDD-003 section 1.7). A request with a JSON object body carries
+// it as a member of the body and leaves its path as it was; any other request carries it in the query.
 export function scopedToTimeline(
 	transport: Transport,
 	timelineId: string,
 ): Transport {
 	const prefix = `/projects/${encodeURIComponent(timelineId)}`;
-	const scoped = (path: string): string => {
+	const scoped = (request: TransportRequest): TransportRequest => {
+		const { path, body } = request;
 		if (
 			path !== prefix &&
 			!path.startsWith(`${prefix}/`) &&
 			!path.startsWith(`${prefix}?`)
 		)
-			return path;
-		if (/[?&]timeline_id=/.test(path)) return path;
-		return `${path}${path.includes("?") ? "&" : "?"}timeline_id=${encodeURIComponent(timelineId)}`;
+			return request;
+		if (/[?&]timeline_id=/.test(path)) return request;
+		if (
+			body !== null &&
+			typeof body === "object" &&
+			Object.getPrototypeOf(body) === Object.prototype
+		) {
+			if ("timeline_id" in body) return request;
+			return { ...request, body: { ...body, timeline_id: timelineId } };
+		}
+		return {
+			...request,
+			path: `${path}${path.includes("?") ? "&" : "?"}timeline_id=${encodeURIComponent(timelineId)}`,
+		};
 	};
 	return {
-		send: (request) =>
-			transport.send({ ...request, path: scoped(request.path) }),
+		send: (request) => transport.send(scoped(request)),
 		openStream: (path, handlers) => transport.openStream(path, handlers),
 	};
 }
