@@ -70,8 +70,8 @@ type processorAddArgs struct {
 	ItemID  string             `json:"item_id,omitempty"  desc:"A clip or audio item; give this or track_id."                    pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
 	TrackID string             `json:"track_id,omitempty" desc:"A track; give this or item_id."                                  pattern:"^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
 	Kind    string             `json:"kind"               desc:"eq, compressor, limiter, gate, deesser or noise_reduction."                                                             enum:"eq,compressor,limiter,gate,deesser,noise_reduction"`
-	Params  map[string]float64 `json:"params,omitempty"   desc:"Parameter values by name; the rest keep their default."`
-	Index   *int               `json:"index,omitempty"    desc:"Where to insert, 0 to the length of the chain; default the end."                                                                                                                  min:"0"`
+	Params  map[string]float64 `json:"params,omitempty"   desc:"Parameter values by name; the rest keep their default."                                                                                                                           schema:"processor_params"`
+	Index   *int               `json:"index,omitempty"    desc:"Where to insert, 0 to the length of the chain; default the end."                                                                                                                                            min:"0"`
 	Enabled *bool              `json:"enabled,omitempty"  desc:"false adds it switched off; default true."`
 }
 
@@ -79,7 +79,7 @@ type processorSetArgs struct {
 	ItemID  string             `json:"item_id,omitempty"  desc:"A clip or audio item; give this or track_id." pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
 	TrackID string             `json:"track_id,omitempty" desc:"A track; give this or item_id."               pattern:"^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
 	Index   *int               `json:"index"              desc:"The processor to change, 0-based."                                                                   min:"0"`
-	Params  map[string]float64 `json:"params,omitempty"   desc:"Values to change; the others stay."`
+	Params  map[string]float64 `json:"params,omitempty"   desc:"Values to change; the others stay."                                                                          schema:"processor_params"`
 	Enabled *bool              `json:"enabled,omitempty"  desc:"true switches it on, false off."`
 }
 

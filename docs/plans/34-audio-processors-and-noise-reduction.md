@@ -45,8 +45,8 @@ A creator who recorded in their bedroom gets a voice that sounds clean and even:
 - [x] 6. Wire the chain into the mixer for clips and tracks, in preview and export. Verify: `go test ./engine/export/... -run TestAudioChain` passes and the exported audio equals the previewed render for the same revision.
 - [x] 7. Implement the presets and `AudioMeasure`. Verify: `go test ./service/... -run "TestAudioPreset|TestAudioMeasure"` passes.
 - [x] 8. Expose on the three surfaces and regenerate documents. Verify: `go test ./web/contract/...` and `task generate:check` pass.
-- [ ] 9. Build the audio inspector (chain, per-processor controls, presets, before and after meters), in both languages. Verify: `task test:web`, `bun run check:thin-client` and `web/e2e/specs/audio-processors.spec.ts` pass.
-- [ ] 10. Propose a model-based noise reduction with its licence, size and source, and STOP for the author; implement it only if approved. Verify: the proposal and the decision are in the hand-off.
+- [x] 9. Build the audio inspector (chain, per-processor controls, presets, before and after meters), in both languages. Verify: `task test:web`, `bun run check:thin-client` and `web/e2e/specs/audio-processors.spec.ts` pass.
+- [x] 10. Propose a model-based noise reduction with its licence, size and source, and STOP for the author; implement it only if approved. Verify: the proposal and the decision are in the hand-off.
 
 ## Test strategy
 
