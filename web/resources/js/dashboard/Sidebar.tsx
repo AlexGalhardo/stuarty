@@ -1,6 +1,7 @@
 import { Link } from "@inertiajs/react";
 import {
 	KeyRound,
+	LogIn,
 	LogOut,
 	PanelLeftClose,
 	PanelLeftOpen,
@@ -149,6 +150,13 @@ function Profile({
 						current={path.startsWith("/settings/keys")}
 						icon={<KeyRound aria-hidden="true" className="size-4 shrink-0" />}
 						label={t("ui.keys.nav")}
+						collapsed={collapsed}
+					/>
+					<Item
+						href="/settings/google"
+						current={path.startsWith("/settings/google")}
+						icon={<LogIn aria-hidden="true" className="size-4 shrink-0" />}
+						label={t("ui.google.nav")}
 						collapsed={collapsed}
 					/>
 					<Button
