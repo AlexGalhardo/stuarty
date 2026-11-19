@@ -57,8 +57,9 @@ const ARROWS: Record<string, readonly [number, number]> = {
 	ArrowDown: [0, -1],
 };
 
-// shortcut-ok: Delete and Backspace remove the focused point of the curve; they are keys of the widget, not editor shortcuts.
+// Delete and Backspace remove the focused point of the curve.
 const isRemovePointKey = (key: string): boolean =>
+	// shortcut-ok: keys of the widget, not editor shortcuts.
 	key === "Delete" || key === "Backspace";
 
 // The tone curves (SDD-012 section 12.1): one editor for the channel the
