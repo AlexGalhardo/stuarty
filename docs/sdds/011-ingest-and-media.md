@@ -1511,10 +1511,10 @@ Request: `project_id`, `timeline_id?`, `from?` (a time, default `0s`), `until?` 
 
 | Member | Meaning |
 | --- | --- |
-| `timeline_id`, `revision` | what the brief was made from |
-| `range` | `{from, until}` as times, and `from_frame`, `until_frame` |
+| `project_id`, `revision` | what the brief was made from (`project_id` is the timeline asked for) |
+| `from`, `until` | the range as times (`{frame, seconds}`); `until` is exclusive |
 | `width`, `height` | the pixel size to render at: the size of the project |
-| `frame_rate` | the project frame rate, `{num, den}` and as text |
+| `frame_rate` | the project frame rate, `{num, den}` |
 | `duration_frames`, `duration` | the length of the range in project frames and as a time |
 | `safe_area` | `{x, y, width, height}` from `plan.SafeArea` (SDD-004 section 4.1, the only place the margins exist) and `margins` `{left, right, top, bottom}` in pixels, so the animation keeps its text clear of what the platforms cover |
 | `track` | with `track_id`: `{id, name, overlay}`; `overlay` is true when another visual track lies below it, which is when the render needs alpha (15.3) |
@@ -1522,9 +1522,10 @@ Request: `project_id`, `timeline_id?`, `from?` (a time, default `0s`), `until?` 
 | `brand_kit` | the caller's brand kit: `colors` (name to `#RRGGBB`), `fonts` (family names; the files are not given), `logo` (the library hash of the logo asset, or empty). Empty when none was set; a key limited to one project gets no brand kit (SDD-005 5.11) |
 | `captions` | the captions that show inside the range: `{item_id, start, end, text}` with `start` and `end` relative to `from`, in frames. `text` is delimited as untrusted (source `project_text`) |
 | `frames` | the reference pictures: `before` (the frame just before `from`) and `after` (the frame at `until`), each `{role, at, width, height, mime, path}` of the composed timeline at the current revision, a JPEG cut at no more than 800 image tokens. A role is left out when it would lie outside the timeline. `path` is the cached file for a local caller; the bytes are in `image_base64` for any other caller, like `ViewResult` |
+| `image_tokens` | the total of the reference frames |
 | `text` | the brief as text for an agent, with the captions in untrusted blocks |
 
-The time is in project frames; a range that is empty, reversed or past the end is `E_INVALID_TIME`, one longer than 3,600 frames is `E_LIMIT_EXCEEDED` (a motion clip is a short piece). The operation changes nothing, takes the `read` scope and renders at most two frames.
+A range that is empty or reversed, or a time that is not a time, is `E_INVALID_TIME`; one longer than 3,600 frames is `E_LIMIT_EXCEEDED` (a motion clip is a short piece, `details.ceiling`); an unknown track is `E_NOT_FOUND` and an audio track `E_TYPE_MISMATCH`. A range may reach past the end of the timeline (the animation may be longer than what is there now). Up to 200 captions are listed. The operation changes nothing, takes the `read` scope and renders at most two frames.
 
 ### 15.2 Import with origin
 
@@ -1554,7 +1555,7 @@ An image has no frame rate and no length (a still is held for any time), so only
 
 ### 15.5 Surfaces
 
-HTTP: `GET /projects/{id}/motion/brief`, `GET /projects/{id}/motion/check`, `POST /projects/{id}/motion/replace`. CLI: `motion:brief`, `motion:check`, `motion:replace`. MCP: no new tool (NFR-020, the catalogue is at its budget): `view` with `mode` `motion` is `MotionBrief` (arguments `from`, `until`; given `asset_id` it is `MotionCheck`, the brief and the mismatches in one answer); `media_import` takes the origin members of 15.2 and answers `replaces`; the replacement is one `edit` call with the `clip.replace_media` commands. The brief and the check have no `track_id` over MCP: with no track the brief says `needs_alpha` false and the agent decides from `project_get`.
+HTTP: `GET /projects/{id}/motion/brief`, `GET /projects/{id}/motion/check`, `POST /projects/{id}/motion/replace`. CLI: `motion:brief`, `motion:check`, `motion:replace`. MCP: no new tool (NFR-020, the catalogue is at its budget, and what a tool definition may add is a few bytes): `view` with `mode` `motion` is `MotionBrief` (arguments `from` and `until`; no `track_id`, so `needs_alpha` is false and the agent decides from `project_get`; `at`, `times`, `count` and `max_tokens` are refused); `media_import` takes the origin members of 15.2 and answers `replaces`; the replacement is one `edit` call with the `clip.replace_media` commands. **`MotionCheck` has no MCP tool**: it is on HTTP and in the CLI (`motion:check`), and an agent that has only MCP compares the probe of `media_inspect` (size, frame rate, duration) with the brief, which are the three comparisons of 15.3; a later budget may add `asset_id` to `view`.
 
 ### 15.6 Decisions
 
