@@ -41,7 +41,7 @@ const (
 // bundleEntryName is every name a bundle may hold. The names are flat and lower case, so an entry
 // with a path, a drive, a dot segment, a control character or a differently cased twin is not in it.
 var bundleEntryName = regexp.MustCompile(
-	`^(manifest\.json|document\.json|operations\.ndjson|timeline\.t[0-9]{1,3}\.(json|ndjson)|(media|font)\.[0-9a-f]{64})$`,
+	`^(manifest\.json|document\.json|operations\.ndjson|timeline\.t[0-9]{1,3}\.(json|ndjson)|item\.[0-9]{1,3}\.md|(media|font)\.[0-9a-f]{64})$`,
 )
 
 var bundleHashRe = regexp.MustCompile(`^sha256:[0-9a-f]{64}$`)
@@ -83,6 +83,8 @@ type bundleParts struct {
 	// main is the first timeline as a whole and extra the others (version 2); main is set when every check passed.
 	main  *bundleTimeline
 	extra []*bundleTimeline
+	// texts are the Markdown of the items of version 2, by index of the item; an item with no entry has none.
+	texts map[int]string
 }
 
 // ProjectBundleImport reads a bundle, checks all of it and then stores the project in one transaction.
@@ -359,7 +361,7 @@ func (s *svc) putImportedProduction(ctx context.Context, tx Tx, p *bundleParts) 
 
 	for i, bi := range p.manifest.Production.Items {
 		it := s.newItem(row.ID, bi.Kind, bi.Title, i, row.CreatedBy, row.CreatedMs)
-		it.Body, it.Format = bi.Body, bi.Format
+		it.Body, it.Format = p.texts[i], bi.Format
 
 		if bi.Kind == string(project.Timeline) {
 			it.Ref = byKey[bi.Timeline].row.ID
@@ -510,6 +512,10 @@ func (s *svc) readBundle(ctx context.Context, c Caller, zr *zip.Reader) (*bundle
 		return nil, e
 	}
 
+	if e := readBundleItemTexts(p); e != nil {
+		return nil, e
+	}
+
 	if e := s.matchBundleFiles(ctx, c, p); e != nil {
 		return nil, e
 	}
@@ -585,6 +591,53 @@ func (s *svc) readBundleTimelines(p *bundleParts) *Error {
 	return nil
 }
 
+// readBundleItemTexts reads the Markdown of the items of version 2: each entry item.<n>.md that an item
+// declares, checked against its hash and size and by the rule of a text of core/project. An entry that no item
+// declares is refused.
+func readBundleItemTexts(p *bundleParts) *Error {
+	declared := map[string]bool{}
+
+	if p.manifest.Production != nil {
+		for i := range p.manifest.Production.Items {
+			meta := p.manifest.Production.Items[i].Text
+			if meta == nil {
+				continue
+			}
+
+			name := bundleItemTextEntry(i)
+			declared[name] = true
+
+			en := p.entries[name]
+			if en == nil {
+				return bundleRefused("the text of an item listed in the manifest is not in the bundle")
+			}
+
+			body, err := readEntry(en, project.MaxText)
+			if err != nil {
+				return bundleRefused("the text of an item is larger than it declares or cannot be read")
+			}
+
+			if sha256Hex(body) != meta.SHA256 || int64(len(body)) != meta.Bytes || project.CheckText(string(body)) != nil {
+				return bundleRefused("the text of an item does not match the manifest or is not valid")
+			}
+
+			if p.texts == nil {
+				p.texts = map[int]string{}
+			}
+
+			p.texts[i] = string(body)
+		}
+	}
+
+	for name := range p.entries {
+		if strings.HasPrefix(name, bundleItemPrefix) && !declared[name] {
+			return bundleRefused("it holds a text that the manifest does not list")
+		}
+	}
+
+	return nil
+}
+
 // entryCap is the cap of one entry by its name.
 func (s *svc) entryCap(name string) int64 {
 	switch name {
@@ -594,6 +647,10 @@ func (s *svc) entryCap(name string) int64 {
 		return bundleDocumentMax
 	case bundleOperationsName:
 		return bundleOperationsMax
+	}
+
+	if strings.HasPrefix(name, bundleItemPrefix) {
+		return project.MaxText
 	}
 
 	if strings.HasPrefix(name, bundleTimelinePrefix) {
@@ -771,9 +828,14 @@ func checkBundleProduction(m *BundleManifest) *Error {
 
 // checkBundleItem is why an item of a bundle is refused, or empty.
 func checkBundleItem(it *BundleItem, keys, used map[string]bool) string {
-	if !project.Kind(it.Kind).Allowed() || project.CheckTitle(it.Title) != nil || project.CheckText(it.Body) != nil ||
-		len(it.Format) > 16 {
+	if !project.Kind(it.Kind).Allowed() || project.CheckTitle(it.Title) != nil || len(it.Format) > 16 {
 		return "an item of the project is not valid"
+	}
+
+	// Only a brief or a text has a text, and its entry is at most the limit of a text.
+	if t := it.Text; t != nil && (it.Kind != string(project.Brief) && it.Kind != string(project.Text) ||
+		!isHex64(t.SHA256) || t.Bytes < 1 || t.Bytes > project.MaxText) {
+		return "an item declares a text that is not valid"
 	}
 
 	if it.Kind != string(project.Timeline) {
@@ -967,7 +1029,7 @@ func pairBundleEntries(p *bundleParts, needed map[string]string, listed map[stri
 
 	for name := range p.entries {
 		if name == bundleManifestEntry || name == bundleDocumentEntry || name == bundleOperationsName ||
-			strings.HasPrefix(name, bundleTimelinePrefix) {
+			strings.HasPrefix(name, bundleTimelinePrefix) || strings.HasPrefix(name, bundleItemPrefix) {
 			continue
 		}
 

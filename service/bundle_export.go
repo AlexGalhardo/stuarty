@@ -555,7 +555,16 @@ func describeProduction(m *BundleManifest, snaps []*bundleSnapshot, items []Item
 
 			bi.Timeline = key
 		case string(project.Brief), string(project.Text):
-			bi.Body = it.Body
+			if it.Body != "" {
+				sum := sha256.Sum256([]byte(it.Body))
+				bi.Text = &BundleDocument{SHA256: hex.EncodeToString(sum[:]), Bytes: int64(len(it.Body))}
+
+				if m.texts == nil {
+					m.texts = map[string]string{}
+				}
+
+				m.texts[bundleItemTextEntry(len(p.Items))] = it.Body
+			}
 		case string(project.Output):
 			bi.Format = it.Format
 		}
@@ -648,6 +657,12 @@ func (s *svc) writeBundleFile(
 
 	if err := text(bundleManifestEntry, strings.NewReader(string(manifest))); err != nil {
 		return 0, "", copyError(ctx, err)
+	}
+
+	for _, name := range sortedKeys(m.texts) {
+		if err := text(name, strings.NewReader(m.texts[name])); err != nil {
+			return 0, "", copyError(ctx, err)
+		}
 	}
 
 	for _, sn := range snaps {
