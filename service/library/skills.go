@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
+	"strings"
 
 	core "github.com/AlexGalhardo/stuarty/core/library"
 )
@@ -16,10 +18,8 @@ type SkillInput struct {
 	License       string
 	Compatibility string
 	AllowedTools  string
-	// Metadata keys of the product (stuarty-*) are dropped. Nil keeps the metadata of the skill as it is; an
-	// empty map removes it.
-	Metadata map[string]string
-	Body     string
+	Metadata      map[string]string // keys of the product (stuarty-*) are dropped
+	Body          string
 	// Files are the other files of the folder. Nil keeps the files of the skill as they are;
 	// an empty list removes them.
 	Files []core.File
@@ -77,11 +77,12 @@ func (m *Manager) SaveSkill(ctx context.Context, c Caller, in SkillInput) (core.
 		}
 	}
 
-	// Nil metadata keeps what the skill has, as nil files do: a caller that edits the text (the page does)
-	// does not wipe the keys it was not shown.
-	meta := withoutProduct(in.Metadata)
-	if in.Metadata == nil {
-		meta = withoutProduct(skill.Metadata)
+	meta := map[string]string{}
+
+	for k, v := range in.Metadata {
+		if !strings.HasPrefix(k, "stuarty-") {
+			meta[k] = v
+		}
 	}
 
 	origin, source := core.OriginUser, ""
@@ -90,12 +91,10 @@ func (m *Manager) SaveSkill(ctx context.Context, c Caller, in SkillInput) (core.
 		origin, source = core.OriginImported, skill.Source()
 	}
 
-	// The skill that exists is the start, so the keys of its front matter the product does not know are written
-	// back unchanged (SDD-018 section 3).
-	next := skill
-	next.Name, next.Description, next.License = in.Name, in.Description, in.License
-	next.Compatibility, next.AllowedTools, next.Metadata = in.Compatibility, in.AllowedTools, meta
-	next.Body, next.Files = in.Body, files
+	next := core.Skill{
+		Name: in.Name, Description: in.Description, License: in.License, Compatibility: in.Compatibility,
+		AllowedTools: in.AllowedTools, Metadata: meta, Body: in.Body, Files: files,
+	}
 	next.SetOrigin(origin, source)
 
 	return m.finishSkill(ctx, next, c.Person)
@@ -122,9 +121,7 @@ func (m *Manager) finishSkill(
 	}
 
 	if review {
-		if err := m.sealReview(&s); err != nil {
-			return core.Skill{}, Entry{}, nil, err
-		}
+		s.MarkReviewed()
 	}
 
 	if err := m.WriteSkill(ctx, s); err != nil {
@@ -136,31 +133,16 @@ func (m *Manager) finishSkill(
 	return got, entry, findings, err
 }
 
-// MarkReviewed records that a person read the skill. It is for a person at the
-// browser, and refused while the lint reports an error. contentHash is the
-// content hash of the skill as the person read it (SkillGet gives it): when the
-// skill changed since, the mark is refused with ErrChanged, so a review never
-// covers a text that was swapped while the person was reading the old one.
-func (m *Manager) MarkReviewed(
-	ctx context.Context,
-	c Caller,
-	name, contentHash string,
-) (Entry, []core.Finding, error) {
+// MarkReviewed records that a person read the skill as it is now. It is for a
+// person at the browser, and refused while the lint reports an error.
+func (m *Manager) MarkReviewed(ctx context.Context, c Caller, name string) (Entry, []core.Finding, error) {
 	if !c.Person {
 		return Entry{}, nil, fmt.Errorf("%w: only a person at the browser marks a skill as read", ErrForbidden)
-	}
-
-	if contentHash == "" {
-		return Entry{}, nil, invalid("content_hash", "it is required: the content hash of the skill as it was read")
 	}
 
 	s, _, err := m.ReadSkill(ctx, name)
 	if err != nil {
 		return Entry{}, nil, err
-	}
-
-	if s.ContentHash() != contentHash {
-		return Entry{}, nil, ErrChanged
 	}
 
 	_, entry, findings, err := m.finishSkill(ctx, s, true)
@@ -189,6 +171,18 @@ func (m *Manager) LintSkill(ctx context.Context, name string) ([]core.Finding, e
 	}
 
 	return core.LintSkill(name, all), nil
+}
+
+// InstallBuiltIn writes a skill that ships with the product: origin built-in,
+// and reviewed, because the project wrote and read it. It is not an operation
+// of the service.
+func (m *Manager) InstallBuiltIn(ctx context.Context, s core.Skill) error {
+	s.Metadata = maps.Clone(s.Metadata)
+	s.SetOrigin(core.OriginBuiltIn, s.Source())
+
+	_, _, _, err := m.finishSkill(ctx, s, true)
+
+	return err
 }
 
 func isNotFoundOrInvalid(err error) bool {
