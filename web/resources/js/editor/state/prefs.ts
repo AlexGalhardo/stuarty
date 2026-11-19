@@ -143,6 +143,16 @@ export function readLocale(): string | null {
 	}
 }
 
+// The preview executor this browser forces (SDD-012 section 11.1), for
+// comparison and bug reports; `preview/executorChoice.ts` reads the value.
+export function readPreviewExecutor(): string | null {
+	try {
+		return localStorage.getItem("stuarty.preview.executor");
+	} catch {
+		return null;
+	}
+}
+
 export function writeLocale(locale: string): void {
 	try {
 		localStorage.setItem("vv.lang", locale);
