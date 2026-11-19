@@ -2281,103 +2281,51 @@
       "test_ok": "The destination answered {status}.",
       "test_failed": "The destination did not answer well (status {status})."
     },
-    "social": {
-      "title": "Social networks",
-      "intro": "Connect your own channel with your own developer project. Nothing is published until you approve it in Approvals.",
-      "connect": "Set up {name}",
-      "close": "Close",
-      "guide_title": "Connect {name} with your own developer project",
-      "guide_again_title": "Sign in to {name} again",
-      "guide_intro": "Stuarty has no app of its own on {name}: you create one in your own account, so your videos and your keys stay with you. Follow the steps, then paste the client id and the secret below.",
-      "redirect_label": "Redirect address to paste in your developer project",
-      "official_page": "Read the official page",
-      "client_id": "Client id",
-      "client_secret": "Client secret",
-      "account_label": "Name for this connection (optional)",
-      "start_sign_in": "Save and sign in",
-      "sign_in_again": "Sign in again",
-      "signed_in_as": "Signed in as",
-      "needs_sign_in": "Not signed in yet",
-      "publish_now": "Publish now",
-      "publish_title": "Publish a video",
-      "publish_intro": "It goes to",
+    "generate": {
+      "open": {
+        "visual": "Generate an image",
+        "video": "Generate a voice-over"
+      },
+      "title": {
+        "image": "Generate an image",
+        "voice": "Generate a voice-over"
+      },
+      "intro": {
+        "image": "The price is shown before anything is asked of the provider. The image lands in the library, with the model and the prompt it came from.",
+        "voice": "The price is shown before anything is asked of the provider. The narration lands in the library, with the model and the text it came from."
+      },
+      "no_provider": {
+        "image": "No connected provider makes images yet.",
+        "voice": "No connected provider makes speech yet."
+      },
+      "open_connections": "Connect one on the Connections page",
       "project": "Project",
-      "choose": "Choose...",
-      "video": "Exported video",
-      "thumbnail": "Thumbnail (an exported still)",
-      "no_thumbnail": "No thumbnail",
-      "post_title": "Title",
-      "description": "Description",
-      "tags": "Tags (separated by commas)",
-      "visibility": "Who can watch",
-      "visibility_private": "Only you (private)",
-      "visibility_unlisted": "Anyone with the link (unlisted)",
-      "visibility_public": "Everyone (public)",
-      "kids": "Is this video made for kids?",
-      "kids_yes": "Yes",
-      "kids_no": "No",
-      "synthetic": "It has realistic altered or synthetic content",
-      "check": "Check",
-      "send": "Send for approval",
-      "check_ok": "The post fits the limits of the network. A person will be asked to approve:",
-      "check_issues": "Fix these before sending:",
-      "waiting_title": "Waiting for your approval",
-      "waiting_body": "Nothing has been sent yet. Open Approvals, read what will go out, and approve or reject it.",
-      "open_approvals": "Open Approvals",
-      "callback_title": "Signing in",
-      "callback_working": "Finishing the sign-in...",
-      "callback_done": "Signed in as",
-      "callback_failed": "The sign-in could not be finished. Start it again from the Connections page.",
-      "back": "Back to Connections",
-      "needs_account": "Signed in. Choose the account this connection publishes to.",
-      "pick_title": "Choose the account",
-      "pick_hint": "Your sign-in reached these accounts. Stuarty publishes only to the one you choose, and only after you approve each post.",
-      "pick_use": "Use this account",
-      "callback_choose": "Signed in. Now go back to Connections and choose the account to publish to.",
-      "instagram": {
-        "step": {
-          "project": "At developers.facebook.com create an app of the type \"Business\" in your own account. It is yours; Stuarty never sees it. Keep it in development mode with yourself as administrator: that is Standard Access, and Meta asks for no review of an app used only for your own accounts.",
-          "api": "Add the product \"Facebook Login for Business\" (or \"Facebook Login\") to the app. A Reel reaches Instagram through the Facebook Page that your Instagram account is linked to.",
-          "consent": "Make sure your Instagram account is a professional account (Business or Creator) linked to a Facebook Page you administer: in Instagram, Settings, Account type and tools, then the Page link. A personal Instagram account cannot be published to.",
-          "client": "In the app, under Settings, Basic, copy the App ID and the App Secret.",
-          "redirect": "Under Facebook Login, Settings, add exactly this address to \"Valid OAuth Redirect URIs\": {redirect}",
-          "paste": "Paste the app id and the app secret into the form below. Stuarty asks for these permissions: {scopes}. After you sign in you choose which Instagram account this connection publishes to."
-        },
-        "research": "What Meta said on {read}: an app used only for a business you own or manage needs no App Review at Standard Access. Instagram publishes only to professional accounts. The file goes from your computer to Meta with the resumable upload, so no public address of your video is needed, and none is created. A Reel is 3 seconds to 15 minutes, up to 300 MB, with a caption of up to 2,200 characters and 30 hashtags; a cover image is not offered, because Meta takes it only from a public address. A Reel has no private mode, so every post goes out as public. An app may publish 100 posts in a moving 24 hours."
+      "connection": "Connection",
+      "model": "Model",
+      "no_price": "no price yet",
+      "voice": "Voice",
+      "prompt": {
+        "image": "What to draw",
+        "voice": "What to read out"
       },
-      "facebook": {
-        "step": {
-          "project": "At developers.facebook.com create an app of the type \"Business\" in your own account. It is yours; Stuarty never sees it. Keep it in development mode with yourself as administrator: that is Standard Access, and Meta asks for no review of an app used only for your own Pages.",
-          "api": "Add the product \"Facebook Login for Business\" (or \"Facebook Login\") to the app. Reels are published to a Facebook Page; Meta does not publish to a personal profile.",
-          "consent": "You need a role on the Page that can create content (Admin or Editor, for example). The sign-in lists your Pages and you choose one.",
-          "client": "In the app, under Settings, Basic, copy the App ID and the App Secret.",
-          "redirect": "Under Facebook Login, Settings, add exactly this address to \"Valid OAuth Redirect URIs\": {redirect}",
-          "paste": "Paste the app id and the app secret into the form below. Stuarty asks for these permissions: {scopes}. After you sign in you choose which Page this connection publishes to."
-        },
-        "research": "What Meta said on {read}: an app used only for a business you own or manage needs no App Review at Standard Access. The file goes from your computer to Meta with the resumable upload, so no public address of your video is needed, and none is created. A Page Reel is 3 to 90 seconds, 9:16, at least 540 by 960, 24 to 60 frames a second; an app may publish 30 in a moving 24 hours. Meta states no largest file and no longest description, so Stuarty applies 1 GiB and 2,200 characters. Only Reels are offered: a longer or wider video is refused with the limit it breaks. There is no cover image field and no private mode, so every post goes out as public."
+      "size": "Size",
+      "count": "How many",
+      "format": "Format",
+      "language": "Language",
+      "disclosure": "Say that this voice is AI-generated to the people who hear it: the provider asks for it.",
+      "estimate": "Show the estimate",
+      "estimated": "Estimated cost: {amount}",
+      "submit": "Generate",
+      "state": {
+        "queued": "Waiting to start.",
+        "waiting_approval": "Waiting for your approval.",
+        "running": "Generating.",
+        "succeeded": "Done.",
+        "failed": "It did not work.",
+        "cancelled": "Cancelled."
       },
-      "youtube": {
-        "step": {
-          "project": "In the Google Cloud console, create a project (or choose one you already have). It is yours; Stuarty never sees it.",
-          "api": "Enable \"YouTube Data API v3\" for that project.",
-          "consent": "Configure the OAuth consent screen: user type External, and add your own Google address as a test user. While the project is in the Testing status, the sign-in expires after 7 days and you will sign in again.",
-          "client": "Create an OAuth client of the type \"Web application\".",
-          "redirect": "Under \"Authorised redirect URIs\" paste exactly: {redirect}",
-          "paste": "Copy the client id and the client secret into the form below. Stuarty asks for these permissions: {scopes}."
-        },
-        "research": "What Google said on {read}: a video uploaded from a project that has not been verified is no longer forced to private since 2 November 2026; Stuarty still sends every video as private unless you choose otherwise. An upload costs about 1 unit of its own quota of 100 a day, and a thumbnail 50 units of the 10,000 a day."
-      },
-      "generic": {
-        "step": {
-          "project": "Create a developer project on the network, in your own account.",
-          "api": "Enable the publishing API for that project.",
-          "consent": "Configure the consent screen and add your own account as a test user.",
-          "client": "Create an OAuth client of the type \"Web application\".",
-          "redirect": "Authorise exactly this redirect address: {redirect}",
-          "paste": "Copy the client id and the client secret into the form below. Stuarty asks for: {scopes}."
-        },
-        "research": "The rules of the network were read on {read}; they change, so check the official page."
-      }
+      "open_approvals": "Open the Approvals page",
+      "done": "{delivered} of {requested} made, it cost {amount}."
     },
     "providers": {
       "title": "AI providers",
@@ -2398,6 +2346,14 @@
       "limits": "Up to {context} tokens, {output} of them in the answer",
       "price": "Per million tokens: {input} in, {output} out ({source})",
       "price_none": "No price yet: nothing can be generated with this model until you set one.",
+      "price_unit": {
+        "image": "Per image: {amount} ({source})",
+        "mchar": "Per million characters: {amount} ({source})"
+      },
+      "price_per": {
+        "image": "Price of one image",
+        "mchar": "Price of a million characters"
+      },
       "source": {
         "user": "your price",
         "catalogue": "published by the provider",
