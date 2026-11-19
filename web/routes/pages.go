@@ -62,6 +62,12 @@ func Pages(d *httpapi.Deps) func(r *router.Router, app *vukem.App) error {
 			return inertia.Render(c, "Settings/Index", inertia.Props{})
 		}).Name("settings.index")
 
+		// The Connections section (epic 04, SDD-014): the page reads and changes the connections
+		// through /api/v1/connections.
+		r.Get("/connections", func(c *web.Ctx) error {
+			return inertia.Render(c, "Connections/Index", inertia.Props{})
+		}).Name("connections.index")
+
 		// The brand kit is read and saved by the page through /api/v1/brand-kit.
 		r.Get("/settings/brand-kit", func(c *web.Ctx) error {
 			return inertia.Render(c, "Settings/BrandKit", inertia.Props{})

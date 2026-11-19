@@ -1626,6 +1626,38 @@
       "submit": "Entrar",
       "logout": "Sair"
     },
+    "connections": {
+      "title": "Conexões",
+      "intro": "Cada lugar com o qual o Stuarty pode falar. Enquanto você não conectar nada, nada sai do seu computador.",
+      "list": "Suas conexões",
+      "empty": "Nenhuma conexão ainda. Nada sai deste computador.",
+      "new": "Adicionar uma conexão",
+      "label": "Nome",
+      "endpoint": "Endereço (https)",
+      "hosts": "Outros hosts que ela pode acessar (opcional, separados por vírgula)",
+      "accepts_legend": "O que ela pode receber",
+      "accept": {
+        "text": "Texto",
+        "image": "Imagens",
+        "video": "Vídeo",
+        "audio": "Áudio",
+        "metadata": "Metadados",
+        "document": "Documentos"
+      },
+      "secret": "Credencial",
+      "secret_hint": "Guardada criptografada nesta máquina. Nunca é mostrada de novo e nenhum agente consegue lê-la.",
+      "add": "Conectar",
+      "test": "Testar",
+      "remove": "Remover",
+      "destinations": "Acessa: {hosts}",
+      "accepts": "Pode receber: {list}",
+      "never_used": "Nunca usada",
+      "last_used": "Usada pela última vez em {date}",
+      "secret_set": "Credencial guardada",
+      "secret_missing": "Sem credencial: conecte de novo",
+      "test_ok": "O destino respondeu {status}.",
+      "test_failed": "O destino não respondeu bem (status {status})."
+    },
     "keys": {
       "title": "Chaves de API",
       "nav": "Chaves de API",
