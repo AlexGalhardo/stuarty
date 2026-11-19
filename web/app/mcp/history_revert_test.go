@@ -123,3 +123,45 @@ func TestHistoryRefusesMembersOfOtherActions(t *testing.T) {
 		}
 	}
 }
+
+// The members epic 36 added are of the video domain: with domain=image they are refused before anything runs, so an
+// undo sent with dry_run=true never undoes an image step for real.
+func TestHistoryImageRefusesTheRevertMembers(t *testing.T) {
+	t.Parallel()
+
+	cs := connect(t, newService(t), Options{}, "claude-code")
+	img, _ := structured(t, ok(t, call(t, cs, "image", map[string]any{
+		"action": "create", "preset": "video_thumbnail", "name": "Cover",
+	})))["image_id"].(string)
+
+	ok(t, call(t, cs, "edit", map[string]any{
+		"domain": "image", "image_id": img, "base_revision": 1,
+		"operations": []any{map[string]any{"op": "layer.add_fill", "args": map[string]any{"color": "#203040"}}},
+	}))
+
+	for _, member := range []string{"dry_run", "revision", "until", "name", "new_name", "note"} {
+		var value any = "x"
+
+		switch member {
+		case "dry_run":
+			value = true
+		case "revision", "until":
+			value = 1
+		}
+
+		res := call(
+			t,
+			cs,
+			"history",
+			map[string]any{"domain": "image", "image_id": img, "action": "undo", member: value},
+		)
+		if text := textOf(t, res); !res.IsError || !strings.Contains(text, `"path":"`+member+`"`) {
+			t.Errorf("history domain=image undo with %s: %s", member, text)
+		}
+	}
+
+	shown := textOf(t, ok(t, call(t, cs, "image", map[string]any{"action": "show", "image_id": img})))
+	if !strings.Contains(shown, "fill") {
+		t.Errorf("a refused call undid the image step: %s", shown)
+	}
+}
