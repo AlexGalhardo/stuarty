@@ -439,6 +439,14 @@ func (s *svc) BriefSet(ctx context.Context, req BriefSetRequest) (*BriefResult, 
 		return nil, err
 	}
 
+	return s.writeBrief(ctx, c, req, nil)
+}
+
+// writeBrief is BriefSet for a caller already authorized. keep, when set, is given the brief there is inside the
+// write transaction and may refuse the write, so that no other write lands between the check and the write.
+func (s *svc) writeBrief(
+	ctx context.Context, c Caller, req BriefSetRequest, keep func(current string) *project.RuleError,
+) (*BriefResult, error) {
 	if v := project.CheckText(req.Text); v != nil {
 		return nil, violation(v)
 	}
@@ -446,6 +454,18 @@ func (s *svc) BriefSet(ctx context.Context, req BriefSetRequest) (*BriefResult, 
 	head, change, err := s.changeProduction(ctx, c, "project.brief.set", req.ProjectID, req.DryRun,
 		func(_ context.Context, _ Tx, head *ProductionHead, rows []ItemRow) (*productionChange, error) {
 			b := briefOf(rows)
+
+			if keep != nil {
+				current := ""
+				if b != nil {
+					current = b.Body
+				}
+
+				if v := keep(current); v != nil {
+					return nil, violation(v)
+				}
+			}
+
 			if (b == nil && req.Text == "") || (b != nil && b.Body == req.Text) {
 				return &productionChange{rows: rows}, nil
 			}

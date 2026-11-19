@@ -162,4 +162,41 @@ func TestBriefingScopes(t *testing.T) {
 	) != "E_FORBIDDEN" {
 		t.Fatalf("a read key answered: %v", err)
 	}
+
+	// The edit scope is enough to answer (SDD-003 section 2.3): the check of the brief there is reads nothing
+	// through a read operation.
+	edit := service.WithCaller(context.Background(), service.Caller{Actor: agent, Scopes: []string{service.ScopeEdit}})
+	if _, err := e.svc.BriefingAnswer(
+		edit, service.BriefingAnswerRequest{ProjectID: id, Answers: briefingAnswers()},
+	); err != nil {
+		t.Fatalf("an edit key could not answer: %v", err)
+	}
+}
+
+// A brief a person wrote with the headings of the briefing is still theirs: answering does not replace it.
+func TestBriefingKeepsAHandWrittenBriefWithTheSameHeadings(t *testing.T) {
+	t.Parallel()
+
+	e := newEnv(t)
+	id := e.newProject("Launch")
+	ctx := e.as(ui)
+	mine := "# Brief\n\n## Goal\n\n" + strings.Repeat("A long plan I wrote myself. ", 40) + "\n"
+
+	if _, err := e.prod().BriefSet(ctx, service.BriefSetRequest{ProjectID: id, Text: mine}); err != nil {
+		t.Fatal(err)
+	}
+
+	q, err := e.svc.BriefingQuestions(ctx, service.BriefingQuestionsRequest{ProjectID: id})
+	if err != nil || !q.HasBrief || q.Guided || len(q.Answers) != 0 {
+		t.Fatalf("a brief written by hand reads as guided: %+v %v", q, err)
+	}
+
+	req := service.BriefingAnswerRequest{ProjectID: id, Answers: briefingAnswers()}
+	if _, err := e.svc.BriefingAnswer(e.as(agent), req); code(err) != "E_INVALID_STATE" {
+		t.Fatalf("a brief written by hand was replaced: %v", err)
+	}
+
+	if got, _ := e.prod().BriefGet(ctx, service.BriefGetRequest{ProjectID: id}); got.Text != mine {
+		t.Fatalf("the brief changed: %q", got.Text)
+	}
 }

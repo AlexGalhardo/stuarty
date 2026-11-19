@@ -150,7 +150,49 @@ func TestBriefingParseRefusesWhatItDidNotWrite(t *testing.T) {
 		}
 	}
 
-	if got, ok := project.ParseBriefing("# Brief\r\n\r\n## Goal\r\n\r\nsell\r\n"); !ok || got["goal"] != "sell" {
+	// The headings of the briefing written by hand are not enough: the answers must be ones the briefing takes,
+	// and the text the one it writes.
+	full := project.BriefingMarkdown(validAnswers())
+	for name, text := range map[string]string{
+		"a required answer missing": "# Brief\n\n## Goal\n\nsell\n",
+		"an answer too long":        strings.Replace(full, "indie developers", strings.Repeat("a", 401), 1),
+		"a bad choice":              strings.Replace(full, "youtube-shorts", "myspace", 1),
+		"a heading indented":        strings.Replace(full, "## Goal", "##  Goal", 1),
+		"text before the title":     "notes\n" + full,
+	} {
+		if _, ok := project.ParseBriefing(text); ok {
+			t.Errorf("%s was taken for a briefing", name)
+		}
+	}
+
+	got, ok := project.ParseBriefing(strings.ReplaceAll(full, "\n", "\r\n"))
+	if !ok || got["goal"] != "sign up for the newsletter" {
 		t.Fatalf("%v %v", ok, got)
+	}
+}
+
+func TestBriefingKeepsABriefWrittenByHand(t *testing.T) {
+	t.Parallel()
+
+	guided := project.BriefingMarkdown(validAnswers())
+	byHand := "# Brief\n\n## Goal\n\n" + strings.Repeat("A long plan written by hand. ", 30) + "\n"
+
+	for name, c := range map[string]struct {
+		current string
+		replace bool
+		refused bool
+	}{
+		"empty":               {"", false, false},
+		"blank":               {" \n", false, false},
+		"guided":              {guided, false, false},
+		"by hand":             {"My own plan.", false, true},
+		"by hand, headings":   {byHand, false, true},
+		"by hand, replace":    {"My own plan.", true, false},
+		"guided, then edited": {guided + "\nOne more line.\n", false, true},
+	} {
+		v := project.CheckBriefingReplace(c.current, c.replace)
+		if (v != nil) != c.refused || (v != nil && (v.Code != "E_INVALID_STATE" || v.Path != "replace")) {
+			t.Errorf("%s: %+v", name, v)
+		}
 	}
 }

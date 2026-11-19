@@ -228,8 +228,9 @@ func BriefingMarkdown(answers map[string]string) string {
 }
 
 // ParseBriefing reads the answers back from a brief. ok is false when the text is not a brief that the briefing
-// wrote (no title, a heading that is not a question's, a section twice), so a brief written by hand is never
-// taken for one and never rewritten by accident.
+// wrote (no title, a heading that is not a question's, a section twice, an answer CheckAnswers refuses, or any
+// text BriefingMarkdown would not write), so a brief written by hand is never taken for one and never
+// rewritten by accident.
 func ParseBriefing(text string) (answers map[string]string, ok bool) {
 	lines := strings.Split(strings.ReplaceAll(text, "\r\n", "\n"), "\n")
 	if len(lines) == 0 || strings.TrimSpace(lines[0]) != BriefTitle {
@@ -286,5 +287,35 @@ func ParseBriefing(text string) (answers map[string]string, ok bool) {
 
 	flush()
 
-	return answers, true
+	// The shape is not enough: a person may write the same headings by hand, with a long text or without the
+	// required answers. Only a text whose answers pass CheckAnswers and that the briefing writes again as it
+	// is counts, so that answering again never loses a word of it.
+	checked, v := CheckAnswers(answers)
+	if v != nil {
+		return nil, false
+	}
+
+	if strings.TrimRight(BriefingMarkdown(checked), "\n") != strings.TrimRight(strings.Join(lines, "\n"), "\n") {
+		return nil, false
+	}
+
+	return checked, true
+}
+
+// CheckBriefingReplace is the rule that keeps a brief a person wrote (SDD-005 section 5.12.1): the answers of
+// the briefing replace an empty brief or one the briefing wrote, and a brief written by hand only with replace.
+func CheckBriefingReplace(current string, replace bool) *RuleError {
+	if replace || strings.TrimSpace(current) == "" {
+		return nil
+	}
+
+	if _, guided := ParseBriefing(current); guided {
+		return nil
+	}
+
+	return &RuleError{
+		Code: "E_INVALID_STATE", Path: "replace",
+		Hint:    "send replace true to replace it, or clear it first with the brief operation and an empty text",
+		Message: "the brief was written by hand and is not replaced",
+	}
 }
