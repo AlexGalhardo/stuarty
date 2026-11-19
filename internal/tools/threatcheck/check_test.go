@@ -119,8 +119,9 @@ func TestTheRealModelParses(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if len(threats) != 51 {
-		t.Errorf("the model has %d threats, want 51 (T-51, one submitter fills the approval queue)", len(threats))
+	// T-52 to T-55 are kept for epic 09; T-56 to T-59 are the publishing threats of epic 18.
+	if len(threats) != 55 {
+		t.Errorf("the model has %d threats, want 55 (T-59, a hijacked sign-in callback)", len(threats))
 	}
 }
 
