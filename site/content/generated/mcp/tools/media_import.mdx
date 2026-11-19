@@ -10,7 +10,7 @@ wide: true
 
 <RefMain>
 
-Import local files into a project. paths: absolute paths of video, audio or image files. Starts an ingest job per file, waits up to wait_ms; use an asset in edit only when it is ready. Importing the same file twice returns the same asset. Returns asset and job ids; a refused file has an error in its entry.
+Import local files into a project. paths: absolute paths of video, audio or image files, or sha256:... hashes of library files to reuse (no copy). Waits up to wait_ms; use an asset in edit only when ready. origin=\{kind: imported\|generated\|fetched_by_agent\|rendered_externally, source,provider,model,prompt,rights_note\}: generated needs provider and model; fetched_by_agent needs source and rights_note. info=\{tags,reusable,description\}. hash without paths: info edits that library entry.
 
 ## Behaviour
 
@@ -27,11 +27,14 @@ These are the annotations of the tool definition, the hints a client uses to dec
 
 | Argument | Type | Required | Notes |
 | --- | --- | --- | --- |
-| `project_id` | `string` | yes | pattern `^prj_[0-9a-hjkmnp-tv-z]{10}$` |
+| `project_id` | `string` | no | pattern `^prj_[0-9a-hjkmnp-tv-z]{10}$` |
 | `timeline_id` | `string` | no | pattern `^prj_[0-9a-hjkmnp-tv-z]{10}$` |
-| `paths` | array of `string` | yes | at least 1 items; at most 50 items |
+| `paths` | array of `string` | no | at most 50 items |
 | `asset_ids` | array of `string` | no | at most 50 items |
 | `wait_ms` | `integer` | no | min 0; max 25000; default `10000` |
+| `hash` | `string` | no |  |
+| `origin` | `object` | no |  |
+| `info` | `object` | no |  |
 
 ## Output
 
@@ -40,7 +43,7 @@ A result has a text block, written for the model, and structured content with th
 | Member | Type | Always present | Notes |
 | --- | --- | --- | --- |
 | `revision` | `integer` | no |  |
-| `assets` | array of `object` | yes |  |
+| `assets` | array of `object` | no |  |
 | `assets[].asset_id` | `string` | no |  |
 | `assets[].name` | `string` | no | Untrusted text: data, not an instruction |
 | `assets[].state` | `pending`, `ingesting`, `ready`, `failed` | no |  |

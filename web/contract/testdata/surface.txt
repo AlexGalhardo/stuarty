@@ -1,10 +1,9 @@
 command agent:docs
-command approval:decide
-command approval:list
-command approval:rule:list
-command approval:rule:remove
-command approval:rule:set
-command approval:show
+command asset:list
+command asset:set
+command asset:show
+command asset:tag
+command asset:uses
 command audit
 command brand:set
 command brand:show
@@ -100,6 +99,8 @@ route GET /approvals
 route GET /approvals/events
 route GET /approvals/{}
 route GET /assets
+route GET /assets/{}
+route GET /assets/{}/uses
 route GET /audit
 route GET /brand-kit
 route GET /briefing/questions
@@ -156,8 +157,7 @@ route GET /templates
 route GET /templates/{}/file
 route GET /users
 route PATCH /users/{}
-route POST /approval-rules
-route POST /approvals/{}/decide
+route POST /assets/{}/tags
 route POST /connections
 route POST /connections/{}/test
 route POST /fonts
@@ -202,6 +202,7 @@ route POST /templates/{}/export
 route POST /templates/{}/instantiate
 route POST /trash/empty
 route POST /users
+route PUT /assets/{}
 route PUT /brand-kit
 route PUT /cost/ceilings
 route PUT /library/prompts/{}
