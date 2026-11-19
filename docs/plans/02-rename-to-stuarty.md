@@ -41,7 +41,7 @@ The product is called Stuarty everywhere a person or an agent meets it: the comm
 
 ## Tasks
 
-- [ ] 1. Rename in SDD-000 every name that carries the product name, and list the pairs old to new in the specification. Verify: `task lint:md` exits 0 and the list covers every `VUKEM_VIDEO_` variable found by `git grep -oh "VUKEM_VIDEO_[A-Z_]*" | sort -u`.
+- [x] 1. Rename in SDD-000 every name that carries the product name, and list the pairs old to new in the specification. Verify: `task lint:md` exits 0 and the list covers every `VUKEM_VIDEO_` variable found by `git grep -oh "VUKEM_VIDEO_[A-Z_]*" | sort -u`.
 - [ ] 2. Change the module path and every import; rename the commands under `web/cmd/` and `desktop/`. Verify: `go build ./...` and `go vet ./...` exit 0 in the root module and in `desktop/shell/app`.
 - [ ] 3. Rename the environment variables with the fallback table and its test. Verify: `go test ./service/config/... -run TestFormerVariables` passes.
 - [ ] 4. Implement the workspace adoption with backup and its tests (same volume, other volume, both folders exist, former folder newer than supported). Verify: `go test ./service/workspace/... -run TestAdoptFormerWorkspace` passes.
