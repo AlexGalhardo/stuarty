@@ -194,6 +194,24 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.ImageExport)
 	case "ProjectOtioImport":
 		return invoke(ctx, s, svc.ProjectOtioImport)
+	case "ProjectDescribe":
+		return invoke(ctx, s, svc.ProjectDescribe)
+	case "ProjectDuplicate":
+		return invoke(ctx, s, svc.ProjectDuplicate)
+	case "ProjectItemAdd":
+		return invoke(ctx, s, svc.ProjectItemAdd)
+	case "ProjectItemMove":
+		return invoke(ctx, s, svc.ProjectItemMove)
+	case "ProjectItemRename":
+		return invoke(ctx, s, svc.ProjectItemRename)
+	case "ProjectItemTrash":
+		return invoke(ctx, s, svc.ProjectItemTrash)
+	case "ProjectItemRestore":
+		return invoke(ctx, s, svc.ProjectItemRestore)
+	case "BriefGet":
+		return invoke(ctx, s, svc.BriefGet)
+	case "BriefSet":
+		return invoke(ctx, s, svc.BriefSet)
 	}
 
 	return nil, fmt.Errorf("no mapping for %s", s.Call)
@@ -475,6 +493,33 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 		args["mode"] = "sheet"
 
 		return "view", args, nil
+	case "ProjectDescribe":
+		args["detail"] = "overview"
+
+		return "project_get", args, nil
+	case "ProjectDuplicate":
+		delete(args, "dry_run")
+
+		args["from"] = args["project_id"]
+		delete(args, "project_id")
+
+		return "project_create", args, nil
+	case "ProjectItemAdd", "ProjectItemMove", "ProjectItemRename", "ProjectItemTrash", "ProjectItemRestore":
+		delete(args, "dry_run")
+
+		args["action"] = strings.ToLower(strings.TrimPrefix(s.Call, "ProjectItem"))
+
+		return "project_item", args, nil
+	case "BriefGet":
+		args["action"] = "brief"
+
+		return "project_item", args, nil
+	case "BriefSet":
+		delete(args, "dry_run")
+
+		args["action"] = "brief"
+
+		return "project_item", args, nil
 	}
 
 	return "", nil, fmt.Errorf("no tool for %s", s.Call)
@@ -550,7 +595,29 @@ func (r fixedResolver) Resolve(context.Context, cli.Target) (*cli.Connection, er
 
 // command is how a Service operation is encoded as a command line (SDD-003
 // 7.1): the name, the arguments and what goes on standard input.
+// command2argv is the command of a step with the --timeline of the calls that take one (SDD-003 section 1.7).
 func command2argv(s step) (name string, argv []string, stdin string, err error) {
+	name, argv, stdin, err = commandOf(s)
+	if err != nil {
+		return name, argv, stdin, err
+	}
+
+	var t struct {
+		TimelineID string `json:"timeline_id"`
+	}
+
+	if len(s.Args) > 0 {
+		_ = json.Unmarshal(s.Args, &t)
+	}
+
+	if t.TimelineID != "" {
+		argv = append(argv, "--timeline", t.TimelineID)
+	}
+
+	return name, argv, stdin, nil
+}
+
+func commandOf(s step) (name string, argv []string, stdin string, err error) {
 	var a struct {
 		ProjectID string               `json:"project_id"`
 		AssetID   string               `json:"asset_id"`
@@ -583,6 +650,11 @@ func command2argv(s step) (name string, argv []string, stdin string, err error) 
 		DryRun      bool            `json:"dry_run"`
 		BrandColors []string        `json:"brand_colors"`
 		BrandFonts  []string        `json:"brand_fonts"`
+
+		ItemID   string `json:"item_id"`
+		Title    string `json:"title"`
+		Text     string `json:"text"`
+		Position *int   `json:"position"`
 	}
 
 	if len(s.Args) > 0 {
@@ -757,6 +829,40 @@ func command2argv(s step) (name string, argv []string, stdin string, err error) 
 		return "audit", flag("project", a.ProjectID), "", nil
 	case "ToolsInstall":
 		return "tools:install", append([]string{a.Name}, "--yes"), "", nil
+	case "ProjectDescribe":
+		return "project:describe", []string{a.ProjectID}, "", nil
+	case "ProjectDuplicate":
+		return "project:duplicate", append([]string{a.ProjectID}, flag("name", a.Name)...), "", nil
+	case "ProjectItemAdd":
+		argv = append(slices.Clone(proj), "--kind", a.Kind, "--title", a.Title)
+		argv = append(argv, flag("preset", a.Preset)...)
+
+		if a.Position != nil {
+			argv = append(argv, "--position", strconv.Itoa(*a.Position))
+		}
+
+		if a.Text != "" {
+			return "item:add", append(argv, "--text", "-"), a.Text, nil
+		}
+
+		return "item:add", argv, "", nil
+	case "ProjectItemMove":
+		position := 0
+		if a.Position != nil {
+			position = *a.Position
+		}
+
+		return "item:move", append([]string{a.ItemID, "--position", strconv.Itoa(position)}, proj...), "", nil
+	case "ProjectItemRename":
+		return "item:rename", append([]string{a.ItemID, "--title", a.Title}, proj...), "", nil
+	case "ProjectItemTrash":
+		return "item:trash", append([]string{a.ItemID}, proj...), "", nil
+	case "ProjectItemRestore":
+		return "item:restore", append([]string{a.ItemID}, proj...), "", nil
+	case "BriefGet":
+		return "brief:show", proj, "", nil
+	case "BriefSet":
+		return "brief:set", append(slices.Clone(proj), "--text", "-"), a.Text, nil
 	case "TemplateInstantiate":
 		argv = append([]string{a.TemplateID}, flag("name", a.Name)...)
 		argv = append(argv, flag("id", a.ID)...)
@@ -887,6 +993,7 @@ func withoutProject(args json.RawMessage) string {
 
 	_ = json.Unmarshal(args, &m)
 	delete(m, "project_id")
+	delete(m, "timeline_id")
 
 	raw, err := json.Marshal(m)
 	if err != nil {

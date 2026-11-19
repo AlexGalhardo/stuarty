@@ -84,6 +84,16 @@ The types named in the tables of the operations. The arguments of each editing c
 | `text` | `string` | no |  |
 | `updated_ms` | `integer (int64)` | no |  |
 
+### BriefResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `item_id` | `string` | no |  |
+| `project_id` | `string` | no |  |
+| `text` | `string` | no |  |
+| `untrusted_notice` | `string` | no |  |
+| `updated_at` | `string (date-time)` or `null` | no |  |
+
 ### CaptionStyle
 
 | Name | Type | Required | Description |
@@ -1044,6 +1054,17 @@ The types named in the tables of the operations. The arguments of each editing c
 | `title` | `string` | no |  |
 | `type` | `string` | no |  |
 
+### Production
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `has_brief` | `boolean` | no |  |
+| `has_script` | `boolean` | no |  |
+| `outputs` | `integer` | no |  |
+| `pending_approvals` | `integer` | no |  |
+| `published` | `integer` | no |  |
+| `timelines` | `integer` | no |  |
+
 ### ProjectCounts
 
 | Name | Type | Required | Description |
@@ -1067,6 +1088,18 @@ The types named in the tables of the operations. The arguments of each editing c
 | `untrusted_notice` | `string` | no |  |
 | `width` | `integer` | no |  |
 
+### ProjectDescribeResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `items` | array of [`ProjectItem`](/docs/api/schemas#projectitem) | no |  |
+| `name` | `string` | no |  |
+| `production` | [`Production`](/docs/api/schemas#production) | no |  |
+| `project_id` | `string` | no |  |
+| `state` | `string` | no |  |
+| `text` | `string` | no |  |
+| `untrusted_notice` | `string` | no |  |
+
 ### ProjectFont
 
 | Name | Type | Required | Description |
@@ -1083,14 +1116,42 @@ The types named in the tables of the operations. The arguments of each editing c
 | `duration_frames` | `integer (int64)` | no |  |
 | `fps` | `string` | no |  |
 | `height` | `integer` | no |  |
+| `items` | array of [`ProjectItem`](/docs/api/schemas#projectitem) | no |  |
 | `name` | `string` | no |  |
 | `next_cursor` | `string` or `null` | no |  |
+| `production` | [`Production`](/docs/api/schemas#production) | no |  |
 | `project_id` | `string` | no |  |
 | `revision` | `integer (int64)` | no |  |
 | `state` | `string` | no |  |
 | `text` | `string` | no |  |
+| `timeline_id` | `string` | no |  |
 | `untrusted_notice` | `string` | no |  |
 | `width` | `integer` | no |  |
+
+### ProjectItem
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `format` | `string` | no |  |
+| `id` | `string` | no |  |
+| `job_id` | `string` | no |  |
+| `kind` | `string` | no |  |
+| `position` | `integer` | no |  |
+| `state` | `string` | no |  |
+| `text` | `string` | no |  |
+| `timeline_id` | `string` | no |  |
+| `title` | `string` | no |  |
+| `updated_at` | `string (date-time)` | no |  |
+
+### ProjectItemResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `item` | [`ProjectItem`](/docs/api/schemas#projectitem) | no |  |
+| `production` | [`Production`](/docs/api/schemas#production) | no |  |
+| `project_id` | `string` | no |  |
+| `text` | `string` | no |  |
+| `untrusted_notice` | `string` | no |  |
 
 ### ProjectListResult
 
@@ -1150,6 +1211,8 @@ The types named in the tables of the operations. The arguments of each editing c
 | `project_id` | `string` | no |  |
 | `revision` | `integer (int64)` | no |  |
 | `state` | `string` | no |  |
+| `timeline_id` | `string` | no |  |
+| `timelines` | `integer` | no |  |
 | `tracks` | `integer` | no |  |
 | `updated_at` | `string (date-time)` | no |  |
 | `width` | `integer` | no |  |

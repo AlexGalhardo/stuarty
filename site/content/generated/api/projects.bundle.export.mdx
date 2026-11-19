@@ -32,6 +32,7 @@ Content type `application/json`.
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `include_log` | `boolean` or `null` | no | false leaves the history out, to share a project without it. Default true. |
+| `timeline_id` | `string` | no | One timeline only (the format of releases up to 0.29.0); without it, the whole project. |
 | `wait_ms` | `integer` | no | 0 to 25000: hold the call until the job is final. |
 
 ## Responses

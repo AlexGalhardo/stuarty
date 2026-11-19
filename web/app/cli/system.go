@@ -150,8 +150,9 @@ func auditText(res *service.AuditListResult) string {
 }
 
 var transcribeCmd = &spec{
-	name:    "transcribe",
-	summary: "transcribe the audio of an asset",
+	name:     "transcribe",
+	timeline: true,
+	summary:  "transcribe the audio of an asset",
 	usage: []string{
 		"stuarty transcribe --project <id> --asset <id> [--language auto] [--model <name>] [--wait] [--timeout d]",
 	},
@@ -179,7 +180,12 @@ var transcribeCmd = &spec{
 		deadline := time.Now().Add(c.args.timeout())
 		wait := c.args.boolean("wait")
 
-		req := service.JobStartRequest{ProjectID: c.projectID, Kind: service.JobTranscribe, Args: raw}
+		req := service.JobStartRequest{
+			ProjectID:  c.projectID,
+			TimelineID: c.timelineID,
+			Kind:       service.JobTranscribe,
+			Args:       raw,
+		}
 
 		return c.runJob(ctx, wait, deadline, func(ctx context.Context, waitMS int) (*service.Job, error) {
 			req.WaitMS = waitMS

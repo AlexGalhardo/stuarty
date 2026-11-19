@@ -27,6 +27,8 @@ import (
 // bundles, OpenTimelineIO and system. Every method returns a *Error on
 // failure and never a partial result with a non-nil error.
 type Service interface {
+	ProductionService
+
 	ProjectList(ctx context.Context, req ProjectListRequest) (*ProjectListResult, error)
 	ProjectCreate(ctx context.Context, req ProjectCreateRequest) (*ProjectCreateResult, error)
 	ProjectGet(ctx context.Context, req ProjectGetRequest) (*ProjectGetResult, error)

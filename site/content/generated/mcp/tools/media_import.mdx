@@ -1,6 +1,6 @@
 ---
 title: "media_import"
-description: "Import media. Import local files into a project."
+description: "Import media. Import local files (absolute paths of video, audio or image) into a project."
 wide: true
 ---
 
@@ -10,7 +10,7 @@ wide: true
 
 <RefMain>
 
-Import local files into a project. paths: absolute paths of video, audio or image files. Starts an ingest job per file, waits up to wait_ms; use an asset in edit only when it is ready. Importing the same file twice returns the same asset. Returns asset and job ids; a refused file has an error in its entry.
+Import local files (absolute paths of video, audio or image) into a project. Starts an ingest job per file and waits up to wait_ms; an asset can be used in edit only when its state is ready. Returns asset and job ids; a refused file has an error.
 
 ## Behaviour
 
@@ -28,6 +28,7 @@ These are the annotations of the tool definition, the hints a client uses to dec
 | Argument | Type | Required | Notes |
 | --- | --- | --- | --- |
 | `project_id` | `string` | yes | pattern `^prj_[0-9a-hjkmnp-tv-z]{10}$` |
+| `timeline_id` | `string` | no | pattern `^prj_[0-9a-hjkmnp-tv-z]{10}$` |
 | `paths` | array of `string` | yes | at least 1 items; at most 50 items |
 | `asset_ids` | array of `string` | no | at most 50 items |
 | `wait_ms` | `integer` | no | min 0; max 25000; default `10000` |
