@@ -25,6 +25,10 @@ func checkImportBlocks(req *MediaImportRequest) (libraryRecord, error) {
 		case f.Hash != "" && f.Path != "":
 			return libraryRecord{}, newError(command.CodeValidation, "file %d has both a path and a hash.", i).
 				withPath(fmt.Sprintf("files[%d]", i)).withHint("give a path, or the hash of a file of the library")
+		case f.Hash == "" && f.Path == "":
+			return libraryRecord{}, newError(command.CodeValidation, "file %d has neither a path nor a hash.", i).
+				withPath(fmt.Sprintf("files[%d].path", i)).
+				withHint("give an absolute path, or the hash of a file of the library")
 		case f.Hash != "":
 			if _, err := parseHash(f.Hash); err != nil {
 				return libraryRecord{}, err

@@ -370,6 +370,8 @@
       "summary": "import media files into a project",
       "usage": [
         "stuarty media:import <path>... --project <id> [--asset-id ast_...] [--wait] [--timeout d]",
+        "stuarty media:import --hash sha256:... --project <id>   (a file the library already holds: no copy)",
+        "origin and reuse: [--origin-kind k] [--origin-source s] [--provider p] [--model m] [--prompt t] [--rights-note t] [--tag t] [--reusable] [--description t]",
         "formats: MP4, MOV, MKV, WebM, AVI, MP3, WAV, FLAC, OGG, PNG, JPEG, WebP, GIF and .cube; not SVG"
       ],
       "example": "stuarty media:import clip.mov --project prj_7k2m9x4q1b --json",
@@ -379,6 +381,63 @@
           "type": "string",
           "usage": "id to give the asset, once per path, in order",
           "repeat": true
+        },
+        {
+          "name": "hash",
+          "type": "string",
+          "usage": "the hash of a file of the library to use in the project, in place of a path",
+          "repeat": true
+        },
+        {
+          "name": "origin-kind",
+          "type": "string",
+          "usage": "imported (default), generated, fetched_by_agent or rendered_externally"
+        },
+        {
+          "name": "origin-source",
+          "type": "string",
+          "usage": "a path, a URL or a tool name, as plain text (required for fetched_by_agent and rendered_externally)"
+        },
+        {
+          "name": "provider",
+          "type": "string",
+          "usage": "the provider that generated the files (required for generated)"
+        },
+        {
+          "name": "model",
+          "type": "string",
+          "usage": "the model that generated the files (required for generated)"
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "usage": "the prompt that generated the files"
+        },
+        {
+          "name": "cost-micros",
+          "type": "integer",
+          "usage": "what the files cost, in millionths of a US dollar"
+        },
+        {
+          "name": "rights-note",
+          "type": "string",
+          "usage": "your own record of the licence or the permission (required for fetched_by_agent)"
+        },
+        {
+          "name": "tag",
+          "type": "string",
+          "usage": "a tag for the files; repeat it or give a comma list",
+          "repeat": true
+        },
+        {
+          "name": "reusable",
+          "type": "boolean",
+          "usage": "mark the files to be offered again"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "usage": "what the files are, in your words"
         }
       ],
       "globals": [
@@ -1753,6 +1812,168 @@
           "name": "height",
           "type": "integer",
           "usage": "resample to this height (0 keeps the aspect)"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "asset:list",
+      "summary": "list the files of the library, with origin, tags and reuse",
+      "usage": [
+        "stuarty asset:list [--tag t] [--text w]"
+      ],
+      "example": "stuarty asset:list --tag logo --reusable --json",
+      "flags": [
+        {
+          "name": "section",
+          "type": "string",
+          "usage": "visual (images and LUTs) or video (video and audio)"
+        },
+        {
+          "name": "kind",
+          "type": "string",
+          "usage": "image, video, audio or lut"
+        },
+        {
+          "name": "tag",
+          "type": "string",
+          "usage": "only the files with this tag"
+        },
+        {
+          "name": "project",
+          "type": "string",
+          "usage": "only the files this project, or one of its timelines, uses"
+        },
+        {
+          "name": "origin",
+          "type": "string",
+          "usage": "imported, generated, fetched_by_agent or rendered_externally"
+        },
+        {
+          "name": "reusable",
+          "type": "boolean",
+          "usage": "only the files marked reusable; --no-reusable keeps the others"
+        },
+        {
+          "name": "text",
+          "type": "string",
+          "usage": "a full-text query over name, tags, description and origin"
+        },
+        {
+          "name": "cursor",
+          "type": "string",
+          "usage": "continue a list from this cursor"
+        },
+        {
+          "name": "limit",
+          "type": "integer",
+          "default": "50",
+          "usage": "items per page"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "asset:show",
+      "summary": "show a file of the library: its origin, its tags and the projects that use it",
+      "usage": [
+        "stuarty asset:show <hash>"
+      ],
+      "example": "stuarty asset:show sha256:3b4c0a1d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b --json",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "asset:uses",
+      "summary": "list the projects that use a file of the library",
+      "usage": [
+        "stuarty asset:uses <hash>"
+      ],
+      "example": "stuarty asset:uses sha256:3b4c0a1d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b --json",
+      "flags": [
+        {
+          "name": "cursor",
+          "type": "string",
+          "usage": "continue a list from this cursor"
+        },
+        {
+          "name": "limit",
+          "type": "integer",
+          "default": "50",
+          "usage": "items per page"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "asset:set",
+      "summary": "set the description, the rights note and the reuse mark of a file of the library",
+      "usage": [
+        "stuarty asset:set <hash> [--reusable]"
+      ],
+      "example": "stuarty asset:set sha256:3b4c0a1d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b --reusable",
+      "flags": [
+        {
+          "name": "description",
+          "type": "string",
+          "usage": "what the file is, in your words; an empty value clears it"
+        },
+        {
+          "name": "rights-note",
+          "type": "string",
+          "usage": "your own record of the licence or the permission; the product does not check it"
+        },
+        {
+          "name": "reusable",
+          "type": "boolean",
+          "usage": "mark the file to be offered again; --no-reusable takes the mark off"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "asset:tag",
+      "summary": "add and remove the tags of a file of the library",
+      "usage": [
+        "stuarty asset:tag <hash> --add t"
+      ],
+      "example": "stuarty asset:tag sha256:3b4c0a1d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b --add logo,brand",
+      "flags": [
+        {
+          "name": "add",
+          "type": "string",
+          "usage": "tags to add; repeat it or give a comma list",
+          "repeat": true
+        },
+        {
+          "name": "remove",
+          "type": "string",
+          "usage": "tags to take off",
+          "repeat": true
         }
       ],
       "globals": [

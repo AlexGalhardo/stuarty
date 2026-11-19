@@ -1,4 +1,9 @@
 command agent:docs
+command asset:list
+command asset:set
+command asset:show
+command asset:tag
+command asset:uses
 command audit
 command brand:set
 command brand:show
@@ -65,6 +70,8 @@ command view
 route DELETE /connections/{}
 route DELETE /keys/{}
 route GET /assets
+route GET /assets/{}
+route GET /assets/{}/uses
 route GET /audit
 route GET /brand-kit
 route GET /commands
@@ -106,6 +113,7 @@ route GET /templates
 route GET /templates/{}/file
 route GET /users
 route PATCH /users/{}
+route POST /assets/{}/tags
 route POST /connections
 route POST /connections/{}/test
 route POST /fonts
@@ -143,6 +151,7 @@ route POST /templates/{}/export
 route POST /templates/{}/instantiate
 route POST /trash/empty
 route POST /users
+route PUT /assets/{}
 route PUT /brand-kit
 route PUT /projects/{}/brief
 tool command_help

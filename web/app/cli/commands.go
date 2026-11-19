@@ -26,6 +26,7 @@ func registry() []*spec {
 		briefShowCmd, briefSetCmd,
 		connectionListCmd, connectionShowCmd, connectionAddCmd, connectionRemoveCmd, connectionTestCmd,
 		imageCreate, imageList, imageShow, imageEdit, imageUndo, imageRedo, imageExport,
+		assetListCmd, assetShowCmd, assetUsesCmd, assetSetCmd, assetTagCmd,
 	}
 }
 

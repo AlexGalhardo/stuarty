@@ -1,0 +1,24 @@
+{
+	"name": "assets",
+	"actor": "contract",
+	"fixtures": {"clip": "a reaction clip, only bytes the fake ingest accepts"},
+	"steps": [
+		{"call": "ProjectCreate", "args": {"id": "prj_7k2m9x4q1b", "name": "Teaser"}},
+		{"call": "ProjectCreate", "args": {"id": "prj_8m3q6w9e2r", "name": "Trailer"}},
+		{"call": "MediaImport", "args": {"project_id": "prj_7k2m9x4q1b", "files": [{"path": "$clip", "asset_id": "ast_3c5v8n2w6d"}], "wait_ms": 20000,
+			"origin": {"kind": "fetched_by_agent", "source": "https://example.test/reaction"}}, "expect_error": {"code": "E_VALIDATION"}},
+		{"call": "MediaImport", "args": {"project_id": "prj_7k2m9x4q1b", "files": [{"path": "$clip", "asset_id": "ast_3c5v8n2w6d"}], "wait_ms": 20000,
+			"origin": {"kind": "fetched_by_agent", "source": "https://example.test/reaction", "rights_note": "CC0 per the page"},
+			"info": {"tags": ["Reaction", "funny"], "reusable": true, "description": "the cat looks up"}}},
+		{"call": "AssetList", "args": {"tag": "reaction", "reusable": true}},
+		{"call": "AssetList", "args": {"text": "funny"}},
+		{"call": "AssetList", "args": {"section": "visual"}},
+		{"call": "AssetList", "args": {"section": "video", "origin": "fetched_by_agent"}},
+		{"call": "MediaImport", "args": {"project_id": "prj_8m3q6w9e2r", "files": [{"hash": "sha256:926740d102dff40b0c0afdd2d37465ac2574348af2d4734e2e4e0878e762e76e", "asset_id": "ast_5n7p2q4r6s"}], "wait_ms": 20000}},
+		{"call": "AssetTag", "args": {"hash": "sha256:926740d102dff40b0c0afdd2d37465ac2574348af2d4734e2e4e0878e762e76e", "add": ["cat"], "remove": ["funny"]}},
+		{"call": "AssetSetInfo", "args": {"hash": "sha256:926740d102dff40b0c0afdd2d37465ac2574348af2d4734e2e4e0878e762e76e", "rights_note": "CC0 per the page, checked", "reusable": false}},
+		{"call": "AssetGet", "args": {"hash": "sha256:926740d102dff40b0c0afdd2d37465ac2574348af2d4734e2e4e0878e762e76e"}},
+		{"call": "AssetList", "args": {"project": "prj_8m3q6w9e2r"}},
+		{"call": "AssetList", "args": {"reusable": true}}
+	]
+}
