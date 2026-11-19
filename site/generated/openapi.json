@@ -110,6 +110,26 @@
         },
         "type": "object"
       },
+      "AssetInfo": {
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "reusable": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
       "AssetListResult": {
         "properties": {
           "assets": {
@@ -118,11 +138,110 @@
             },
             "type": "array"
           },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "text": {
+            "type": "string"
+          },
+          "total": {
+            "type": "integer"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "AssetResult": {
+        "properties": {
+          "bytes": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "created_by": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "duration_ms": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "hash": {
+            "type": "string"
+          },
+          "height": {
+            "type": "integer"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "origin": {
+            "$ref": "#/components/schemas/Origin"
+          },
+          "projects": {
+            "type": "integer"
+          },
+          "reusable": {
+            "type": "boolean"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "text": {
             "type": "string"
           },
           "untrusted_notice": {
             "type": "string"
+          },
+          "uses": {
+            "items": {
+              "$ref": "#/components/schemas/Use"
+            },
+            "type": "array"
+          },
+          "width": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "AssetUsesResult": {
+        "properties": {
+          "hash": {
+            "type": "string"
+          },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "text": {
+            "type": "string"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          },
+          "uses": {
+            "items": {
+              "$ref": "#/components/schemas/Use"
+            },
+            "type": "array"
           }
         },
         "type": "object"
@@ -2929,6 +3048,20 @@
             "format": "int64",
             "type": "integer"
           },
+          "created_at": {
+            "type": "string"
+          },
+          "created_by": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "duration_ms": {
+            "format": "int64",
+            "type": "integer"
+          },
           "hash": {
             "type": "string"
           },
@@ -2942,8 +3075,26 @@
             "type": "string",
             "x-untrusted": true
           },
+          "origin": {
+            "$ref": "#/components/schemas/Origin"
+          },
           "projects": {
             "type": "integer"
+          },
+          "reusable": {
+            "type": "boolean"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "uses": {
+            "items": {
+              "$ref": "#/components/schemas/Use"
+            },
+            "type": "array"
           },
           "width": {
             "type": "integer"
@@ -3978,6 +4129,39 @@
             "$ref": "#/components/schemas/args.track.update"
           }
         }
+      },
+      "Origin": {
+        "properties": {
+          "cost_micros": {
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "kind": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string"
+          },
+          "prompt": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "provider": {
+            "type": "string"
+          },
+          "rights_note": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "source": {
+            "type": "string",
+            "x-untrusted": true
+          }
+        },
+        "type": "object"
       },
       "OtioLost": {
         "properties": {
@@ -5869,6 +6053,27 @@
           "transcript": {
             "items": {
               "$ref": "#/components/schemas/TranscriptLine"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "Use": {
+        "properties": {
+          "asset_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "timelines": {
+            "items": {
+              "type": "string"
             },
             "type": "array"
           }
@@ -10205,15 +10410,15 @@
             "pattern": "^ast_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
             "type": "string"
           },
+          "hash": {
+            "description": "sha256: and 64 hex digits of a file the library holds, in place of a path: the project uses it with no copy.",
+            "type": "string"
+          },
           "path": {
-            "description": "An absolute path on the machine that runs the server.",
-            "minLength": 1,
+            "description": "An absolute path on the machine that runs the server; or a hash.",
             "type": "string"
           }
         },
-        "required": [
-          "path"
-        ],
         "type": "object"
       },
       "launchOut": {
@@ -10682,7 +10887,15 @@
         "operationId": "assets.list",
         "parameters": [
           {
-            "description": "Keep the first files of the list; the default and the largest are 500.",
+            "description": "The next_cursor of the previous page.",
+            "in": "query",
+            "name": "cursor",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The page size; the default depends on the operation.",
             "in": "query",
             "name": "limit",
             "schema": {
@@ -10690,9 +10903,57 @@
             }
           },
           {
-            "description": "image, video or audio; omit it for every kind.",
+            "description": "image, video, audio or lut; omit it for every kind.",
             "in": "query",
             "name": "kind",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "visual (image, lut) or video (video, audio): the two sections of the library.",
+            "in": "query",
+            "name": "section",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Keep the files that carry this tag.",
+            "in": "query",
+            "name": "tag",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Keep the files a project, or one of its timelines, uses.",
+            "in": "query",
+            "name": "project",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "imported, generated, fetched_by_agent or rendered_externally.",
+            "in": "query",
+            "name": "origin",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "true keeps the files marked reusable, false the others.",
+            "in": "query",
+            "name": "reusable",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "A full-text query over name, tags, description and origin; at most 8 words.",
+            "in": "query",
+            "name": "text",
             "schema": {
               "type": "string"
             }
@@ -10730,7 +10991,298 @@
             "bearer": []
           }
         ],
-        "summary": "List the files of the workspace by content hash"
+        "summary": "List the files of the library by content hash, with origin, tags and reuse"
+      }
+    },
+    "/api/v1/assets/{hash}": {
+      "get": {
+        "operationId": "assets.get",
+        "parameters": [
+          {
+            "description": "sha256: and 64 hex digits, as the library lists it.",
+            "in": "path",
+            "name": "hash",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Read one file of the library with its origin and the projects that use it"
+      },
+      "put": {
+        "operationId": "assets.set",
+        "parameters": [
+          {
+            "description": "sha256: and 64 hex digits, as the library lists it.",
+            "in": "path",
+            "name": "hash",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "description": {
+                    "description": "What the file is, in your words; at most 2,000 characters.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "reusable": {
+                    "description": "Mark the file to be offered again, or take the mark off.",
+                    "type": [
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "rights_note": {
+                    "description": "Your own record of the licence or the permission; the product does not check it.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Set the description, the rights note and the reuse mark of a file"
+      }
+    },
+    "/api/v1/assets/{hash}/tags": {
+      "post": {
+        "operationId": "assets.tag",
+        "parameters": [
+          {
+            "description": "sha256: and 64 hex digits, as the library lists it.",
+            "in": "path",
+            "name": "hash",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "add": {
+                    "description": "Tags to add; at most 20 tags on a file.",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "remove": {
+                    "description": "Tags to take off.",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Add and remove the tags of a file"
+      }
+    },
+    "/api/v1/assets/{hash}/uses": {
+      "get": {
+        "operationId": "assets.uses",
+        "parameters": [
+          {
+            "description": "The next_cursor of the previous page.",
+            "in": "query",
+            "name": "cursor",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The page size; the default depends on the operation.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "sha256: and 64 hex digits, as the library lists it.",
+            "in": "path",
+            "name": "hash",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetUsesResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the projects that use a file of the library"
       }
     },
     "/api/v1/audit": {
@@ -16114,6 +16666,28 @@
                     "maxItems": 50,
                     "minItems": 1,
                     "type": "array"
+                  },
+                  "info": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/components/schemas/AssetInfo"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "Tags, the reuse mark and a description for the files of the call."
+                  },
+                  "origin": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/components/schemas/Origin"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "Where the files came from: kind imported (default), generated (provider and model), fetched_by_agent (source and rights_note) or rendered_externally (source)."
                   },
                   "timeline_id": {
                     "description": "The timeline of the project; required when the project has several.",

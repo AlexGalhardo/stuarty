@@ -35,7 +35,7 @@
 | `JobList` | `job_get` called with a project and no job | `job:list` | `GET /projects/{id}/jobs` | read |
 | `SnapPoints` | none | none | `GET /projects/{id}/snap-points` (SDD-012 §7.8) | read |
 | `AssetList` | `media_inspect` called with no `project_id` (the library) | `asset:list` | `GET /assets` (the ready files of the workspace by content hash, with the origin, tags and reuse of SDD-011 §14; filters `kind`, `section`, `tag`, `project`, `origin`, `reusable`, `text`; the picker of a brand logo) | read |
-| `AssetGet`, `AssetUses` | `media_inspect` called with a `hash` | `asset:show`, `asset:uses` | `GET /assets/{hash}`, `GET /assets/{hash}/uses` (one library entry with its origin and the projects that use it, SDD-011 §14) | read |
+| `AssetGet`, `AssetUses` | `media_inspect` called with a `hash` (`AssetGet` only; its entry carries the uses) | `asset:show`, `asset:uses` | `GET /assets/{hash}`, `GET /assets/{hash}/uses` (one library entry with its origin and the projects that use it, SDD-011 §14) | read |
 | `AssetSetInfo`, `AssetTag` | `media_import` called with a `hash` and no `paths` | `asset:set`, `asset:tag` | `PUT /assets/{hash}`, `POST /assets/{hash}/tags` (the description, the rights note, the reuse mark and the tags of a library entry, SDD-011 §14) | media |
 | `FontList` | none | `fonts` | `GET /fonts` (families and weights available, and the imported font files with their hash) | read |
 | `OpenFile` | none | none (the job result gives the path to local callers; with a remote server the CLI downloads the file) | `GET /jobs/{job_id}/file` and the byte-serving routes listed below | read |
