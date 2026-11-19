@@ -313,3 +313,54 @@ func TestCheckpointAutomaticCeilingKeepsNamedOnes(t *testing.T) {
 		t.Errorf("newest = %+v, want an automatic checkpoint at r%d", newest, base-1)
 	}
 }
+
+// A person who renames an automatic checkpoint has named it: it stops being automatic, so the ceiling of the
+// automatic ones never removes it (SDD-005 section 5.14).
+func TestCheckpointRenamedAutomaticIsKeptByTheCeiling(t *testing.T) {
+	t.Parallel()
+
+	e := newEnv(t)
+	project, track := e.withTrack()
+
+	first, err := e.addText(agent, project, track, 1, "0s", "x")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	list := e.checkpoints(project)
+	if len(list) != 1 || !list[0].Auto {
+		t.Fatalf("checkpoints after the agent's first edit = %+v", list)
+	}
+
+	renamed, err := e.svc.CheckpointRename(e.as(ui), service.CheckpointRenameRequest{
+		ProjectID: project, Name: list[0].Name, NewName: "before the agent",
+	})
+	if err != nil || renamed.Auto {
+		t.Fatalf("rename of the automatic checkpoint = %+v, %v; want a named one", renamed, err)
+	}
+
+	base := first.Revision
+
+	for day := 1; day <= 35; day++ {
+		e.clock.advance(24 * time.Hour)
+
+		res, err := e.addText(agent, project, track, base, fmt.Sprintf("%ds", day), "x")
+		if err != nil {
+			t.Fatalf("day %d: %v", day, err)
+		}
+
+		base = res.Revision
+	}
+
+	kept := false
+
+	for _, c := range e.checkpoints(project) {
+		if c.Name == "before the agent" {
+			kept = !c.Auto
+		}
+	}
+
+	if !kept {
+		t.Error("the ceiling of the automatic checkpoints removed the one a person renamed")
+	}
+}
