@@ -135,6 +135,44 @@
         "delete_title": "Excluir este projeto?",
         "delete_body": "O projeto vai para a lixeira, de onde você pode restaurá-lo."
       },
+      "briefing": {
+        "title": "Briefing guiado",
+        "intro": "Responda a algumas perguntas. As respostas viram o briefing desta produção, e o seu agente as lê.",
+        "required": "obrigatória",
+        "optional": "opcional",
+        "submit": "Salvar as respostas como briefing",
+        "saved": "O briefing foi salvo a partir das suas respostas.",
+        "hand_written": "O briefing desta produção foi escrito à mão. Salvar estas respostas o substitui.",
+        "replace": "Substituir o briefing que escrevi",
+        "seconds_hint": "De {min} a {max} segundos",
+        "q": {
+          "audience": "Para quem é este vídeo?",
+          "goal": "O que o espectador deve fazer ou sentir depois de assistir?",
+          "platform": "Onde ele será publicado?",
+          "format": "Qual formato?",
+          "duration": "Quanto tempo, em segundos?",
+          "tone": "Qual tom de voz?",
+          "references": "Há referências a seguir (links, criadores, vídeos)?",
+          "must_include": "O que deve aparecer nele?",
+          "must_avoid": "O que não deve aparecer nele?",
+          "deadline": "Para quando?"
+        },
+        "option": {
+          "platform": {
+            "youtube-shorts": "Shorts do YouTube",
+            "tiktok": "TikTok (vídeo curto)",
+            "instagram-reels": "Reels do Instagram",
+            "facebook-reels": "Reels do Facebook",
+            "other": "Outro lugar"
+          },
+          "format": {
+            "vertical-9x16": "Vertical, proporção 9:16",
+            "square-1x1": "Quadrado, 1:1",
+            "horizontal-16x9": "Horizontal, proporção 16:9"
+          }
+        },
+        "choose": "Escolha uma"
+      },
       "overview": {
         "brief": "Briefing",
         "brief_empty": "Escreva o briefing desta produção: a ideia, o público, o tom.",
