@@ -96,7 +96,7 @@ func (s *svc) useNames(ctx context.Context, h *assets.Held) map[string]string {
 }
 
 func (s *svc) assetResult(a *LibraryAsset) *AssetResult {
-	return &AssetResult{UntrustedNotice: UntrustedNotice, LibraryAsset: *a, Text: libraryDetailText(a)}
+	return &AssetResult{UntrustedNotice: UntrustedNotice, LibraryAsset: *a, Text: assetDetailText(a)}
 }
 
 // AssetGet is the entry of one file, with its origin and the projects that use it (RF-321).
@@ -111,7 +111,7 @@ func (s *svc) AssetGet(ctx context.Context, req AssetRef) (*AssetResult, error) 
 		return nil, ferr
 	}
 
-	lib := assets.Library{Store: s.store.Library()}
+	lib := assets.Library{Store: s.store.AssetLibrary()}
 
 	entry, gerr := lib.Get(ctx, &h, s.useNames(ctx, &h))
 	if gerr != nil {
@@ -156,7 +156,7 @@ func (s *svc) AssetUses(ctx context.Context, req AssetUsesRequest) (*AssetUsesRe
 		res.Uses = []AssetUse{}
 	}
 
-	res.Text = libraryDetailText(&LibraryAsset{Hash: hash, Uses: res.Uses})
+	res.Text = assetDetailText(&LibraryAsset{Hash: hash, Uses: res.Uses})
 
 	if end < len(all) {
 		cur := offsetCursor("asset-uses", "", end)
@@ -184,7 +184,7 @@ func (s *svc) AssetSetInfo(ctx context.Context, req AssetSetInfoRequest) (*Asset
 	var entry LibraryAsset
 
 	werr := s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
-		lib := assets.Library{Store: tx.Library()}
+		lib := assets.Library{Store: tx.AssetLibrary()}
 
 		var uerr error
 
@@ -219,7 +219,7 @@ func (s *svc) AssetTag(ctx context.Context, req AssetTagRequest) (*AssetResult, 
 	var entry LibraryAsset
 
 	werr := s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
-		lib := assets.Library{Store: tx.Library()}
+		lib := assets.Library{Store: tx.AssetLibrary()}
 
 		var uerr error
 

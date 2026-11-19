@@ -69,7 +69,7 @@ type Repos interface {
 	BrandKit() BrandKitRepo
 	Images() ImageRepo
 	Connections() connections.Store
-	Library() assets.Store
+	AssetLibrary() assets.Store
 }
 
 // Tx is a write transaction.
