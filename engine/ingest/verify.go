@@ -267,7 +267,7 @@ func (j *job) verifyVideo(ctx context.Context, plan VideoPlan, frames int, sampl
 	}
 	if plan.Alpha {
 		layout := j.layout
-		j.markAlphaOpaque(j.path("thumbnails."+plan.TileExt()), &layout)
+		j.markAlphaOpaque(func() bool { return pngAlphaOpaque(j.path("thumbnails."+plan.TileExt()), &layout) })
 	}
 	if j.decodeErrs > 0 {
 		j.res.Warnings = append(j.res.Warnings, "decode_errors: "+strconv.Itoa(j.decodeErrs))
