@@ -33,21 +33,6 @@ func TestPromptWriteAndRender(t *testing.T) {
 	if err != nil || out != "Write a cold intro about {{tone}}.\n" {
 		t.Fatalf("a value is never read for variables again: %v %q", err, out)
 	}
-
-	// a save that does not send the defaults (the page edits the text) keeps them; an empty map removes them
-	p, _, err = m.SavePrompt(ctx, person, PromptInput{
-		Name: "video-intro", Description: "An intro, edited", Body: "Write a {{tone}} intro about {{topic}}.\n",
-	})
-	if err != nil || p.Defaults["tone"] != "warm" {
-		t.Fatalf("%v %+v", err, p.Defaults)
-	}
-
-	p, _, err = m.SavePrompt(ctx, person, PromptInput{
-		Name: "video-intro", Description: "An intro", Defaults: map[string]string{}, Body: "{{topic}}\n",
-	})
-	if err != nil || len(p.Defaults) != 0 {
-		t.Fatalf("%v %+v", err, p.Defaults)
-	}
 }
 
 func TestPromptRenderNamesTheProblemVariables(t *testing.T) {

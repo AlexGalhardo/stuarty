@@ -21,7 +21,7 @@ func seedSearch(t *testing.T, m *Manager) {
 		Files: []core.File{{Path: "references/patterns.md", Data: []byte("Pattern: open with a question.\n")}},
 	}
 	reviewed.SetOrigin(core.OriginUser, "")
-	seal(t, m, &reviewed)
+	reviewed.MarkReviewed()
 
 	imported := core.Skill{
 		Name: "thumbnail-pack", Description: "Thumbnails with a face and a short video title.", License: "MIT",

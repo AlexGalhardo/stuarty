@@ -460,10 +460,17 @@ type Filter struct {
 	Tags              []string
 	Origin            string
 	IncludeUnreviewed bool // skills that are not reviewed, and notes no person kept
+	// ProjectID is the project a key is limited to: it sees the notes of the workspace and of
+	// that project, and every skill and prompt.
+	ProjectID string
 }
 
 func (f Filter) match(e Entry) bool {
 	if len(f.Kinds) > 0 && !slices.Contains(f.Kinds, e.Kind) {
+		return false
+	}
+
+	if !visibleTo(&e, f.ProjectID) {
 		return false
 	}
 
