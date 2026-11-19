@@ -56,6 +56,34 @@ test.describe("desktop-bridge", () => {
 		expect(imports).toEqual([[picked[0]], [picked[1]]]);
 	});
 
+	// VV-217: the import shortcut reaches the chooser of the window, as it
+	// reaches the path field in a browser, also when the library is hidden.
+	test("Ctrl+I opens the file chooser of the window, with the library shown or hidden", async ({
+		page,
+		request,
+	}) => {
+		const seeded = await seedProject(request, { tracks: 1, perTrack: 0 });
+		const picked = [testClip(1)];
+		await fakeBridge(page, picked);
+		await page.goto(`/editor/${seeded.id}`);
+		await expect(
+			page.getByRole("button", { name: "Choose files" }),
+		).toBeVisible();
+		const imports = recordImports(page);
+
+		await page.keyboard.press("Control+i");
+		await expect.poll(() => imports.length).toBe(1);
+		expect(imports[0]).toEqual(picked);
+
+		// Hide the library region, then press the shortcut again.
+		await page.keyboard.press("Alt+1");
+		await expect(
+			page.getByRole("button", { name: "Choose files" }),
+		).toHaveCount(0);
+		await page.keyboard.press("Control+i");
+		await expect.poll(() => imports.length).toBe(2);
+	});
+
 	test("dropped paths go to importMedia and the browser message stays hidden", async ({
 		page,
 		request,
