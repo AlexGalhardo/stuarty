@@ -39,7 +39,7 @@ A creator publishes the same short video as a Reel on Instagram and on their Fac
 - [x] 1. Read the official pages again and record, in SDD-020, the flow, the permissions, the limits, the upload path per case and the date; STOP if own-app use now needs a review the user cannot pass alone. Verify: `task lint:md` exits 0 and the links are in the hand-off.
 - [x] 2. Implement the shared sign-in and Graph client with a fake server. Verify: `go test ./service/social/meta/...` passes.
 - [x] 3. Add the limits and fields to `core/publish` with table tests. Verify: `go test ./core/publish/...` passes.
-- [ ] 4. Implement the Instagram adapter with contract fixtures (container, processing, publish, errors). Verify: `go test ./service/social/instagram/...` passes with no network.
+- [x] 4. Implement the Instagram adapter with contract fixtures (container, processing, publish, errors). Verify: `go test ./service/social/instagram/...` passes with no network.
 - [ ] 5. Implement the Facebook Page adapter the same way. Verify: `go test ./service/social/facebook/...` passes with no network.
 - [ ] 6. Implement the disclosure flag from asset origins. Verify: `go test ./service/... -run TestDisclosure` passes.
 - [ ] 7. Write the setup guide for a Meta app and the account picker, in both languages. Verify: `task test:web` and `web/e2e/specs/meta-connect.spec.ts` pass with the fake server.
