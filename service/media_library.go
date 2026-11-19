@@ -88,15 +88,23 @@ func (s *svc) reuseFile(
 	notThere := newError(command.CodeValidation, "the library has no file with this hash.").
 		withPath("hash").withHint("list the files with asset:list")
 
-	if c.OwnerUserID != "" || c.ProjectID != "" {
+	// The name of the first import is the caller's own only in local mode; otherwise the new use takes the name
+	// a project of the caller gives the file, since the first import may be another user's (VV-254).
+	var scopedName string
+
+	scoped := c.OwnerUserID != "" || c.ProjectID != ""
+	if scoped {
 		scan, serr := s.libraryScan(ctx, c)
 		if serr != nil {
 			return refuse(serr)
 		}
 
-		if _, held := scan[hash]; !held {
+		e, held := scan[hash]
+		if !held {
 			return refuse(notThere)
 		}
+
+		scopedName = e.name
 	}
 
 	ar, gerr := s.store.Assets().Get(ctx, hash)
@@ -108,7 +116,12 @@ func (s *svc) reuseFile(
 		return refuse(gerr)
 	}
 
-	out.Name, out.Kind = ar.OriginalName, ar.Kind
+	name := ar.OriginalName
+	if scoped {
+		name = scopedName
+	}
+
+	out.Name, out.Kind = name, ar.Kind
 
 	if dryRun {
 		return out
@@ -128,7 +141,7 @@ func (s *svc) reuseFile(
 		}
 
 		var aerr error
-		if att, aerr = s.attach(ctx, tx, project, row, ar.OriginalName, f.AssetID, c.Actor, now); aerr != nil {
+		if att, aerr = s.attach(ctx, tx, project, row, name, f.AssetID, c.Actor, now); aerr != nil {
 			return aerr
 		}
 
