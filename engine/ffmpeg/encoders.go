@@ -189,7 +189,11 @@ func (r *Runner) detectNames(
 
 	for _, name := range names {
 		c := Candidate{Name: name}
-		if g := r.encoderGate(name, caps, opt); g.skip {
+		// A forced or listed name of another codec (STUARTY_ENCODER=hevc_nvenc) is not an encoder of this one: it
+		// would pass its own test encode and then write the wrong codec.
+		if known := CodecOf(name); known != "" && known != codec {
+			c.Status, c.StderrTail = EncoderFailed, "a "+known+" encoder, not a "+codec+" one"
+		} else if g := r.encoderGate(name, caps, opt); g.skip {
 			c.Status, c.StderrTail, c.Reason = g.status, g.why, g.reason
 		} else if err := r.testEncoder(ctx, dir, &c); err != nil && ctx.Err() != nil {
 			return nil, err
