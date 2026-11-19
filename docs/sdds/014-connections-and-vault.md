@@ -243,11 +243,11 @@ All exist in network mode only; in local mode every one answers `E_NOT_FOUND`, a
 | `POST /auth/google/start` | none | Begins a sign-in: answers `{"authorize_url"}` and sets the sign-in cookie of 12.5. `E_NOT_FOUND` while Google sign-in is off |
 | `POST /auth/google/link` | a browser session, and the `password` of that user in the body | Begins the linking of the user's own Google account; the flow is bound to that user |
 | `POST /auth/google/unlink` | a browser session, and the `password` in the body | Removes the link; the password login is untouched |
-| `GET /auth/google/callback` | none (a cross-site navigation, SDD-007 section 3.6 item 4) | The page `Auth/GoogleCallback`; it holds no data and hands the `state` and the `code` to the next route |
+| `GET /login/google/callback` | none (a cross-site navigation, SDD-007 section 3.6 item 4) | The page `Auth/GoogleCallback`; it holds no data and hands the `state` and the `code` to the next route |
 | `POST /auth/google/complete` | the sign-in cookie, or a browser session for a link | Finishes: verifies the token, then signs in the linked user or links the account |
 | `GET /auth/google/settings`, `PUT /auth/google/settings` | an administrator browser session | Read and set `enabled`, `connection_id` and `allowed_emails`; the answer carries the redirect address to register in the Google project |
 
-The redirect address is `APP_URL` followed by `/auth/google/callback`, built by the server and never taken from a request. The owner adds it, next to the one of epic 18, to the authorised redirect URIs of the Google project.
+The redirect address is `APP_URL` followed by `/login/google/callback`, built by the server and never taken from a request. It is a page, so it is not under `/auth/`, whose routes answer JSON (SDD-007 section 3.6). The owner adds it, next to the one of epic 18, to the authorised redirect URIs of the Google project.
 
 ### 12.5 The sign-in cookie and the `state`
 
