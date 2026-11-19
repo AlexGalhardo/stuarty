@@ -175,7 +175,7 @@ CLI exit codes: `0` success; `2` for every code marked retryable; `1` for the re
 ├── lock                     empty file that carries the operating-system lock of the owner process (SDD-005 §6.2)
 ├── runtime.json             owner process: schema, pid, addr, mode, started_at, version (present only while a server runs; no secret)
 ├── token                    local token, file mode 0600 (local mode only)
-├── library/                 memory/, prompts/ and skills/<name>/SKILL.md: the files of the library, the truth of the index (SDD-018 §2)
+├── library/                 memory/, prompts/ and skills/<name>/SKILL.md: the files of the library, the truth of the index; .review-key seals the review marks (SDD-018 §2, §7)
 ├── store/                   content-addressed originals: store/<first 2 hex>/<sha256>; store/.incoming/ holds copies in progress
 ├── artifacts/               derived files: artifacts/<asset sha256>/<kind>-<profile version>[-<variant>].<ext> (SDD-011 §6.1)
 ├── exports/                 exported files: exports/<project id>/<job id>.mp4 (`.gif`, `.wav` or `.m4a` for the other formats of SDD-004 §8.1)

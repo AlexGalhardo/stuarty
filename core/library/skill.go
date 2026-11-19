@@ -1,6 +1,7 @@
 package library
 
 import (
+	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
@@ -139,22 +140,38 @@ func (s *Skill) setMeta(key, value string) {
 	s.Metadata = m
 }
 
-// ReviewedMark is the review a file records: the hash a person read, or "".
+// ReviewedMark is the review a file records: the sealed hash a person read, or "".
 func (s Skill) ReviewedMark() string { return s.Metadata[MetaReviewed] }
 
+// ReviewMark is the mark of the content as it is now, sealed with the review key
+// of the workspace: "hmac-sha256:" and the hex HMAC of the content hash. A plain
+// hash would not do, because anyone can compute it: a skill folder copied into
+// the workspace by hand could carry the hash of its own content and pass as read.
+// With no key there is no mark.
+func (s Skill) ReviewMark(key []byte) string {
+	if len(key) == 0 {
+		return ""
+	}
+
+	mac := hmac.New(sha256.New, key)
+	_, _ = mac.Write([]byte(s.ContentHash()))
+
+	return "hmac-sha256:" + hex.EncodeToString(mac.Sum(nil))
+}
+
 // MarkReviewed records that a person read the content as it is now.
-func (s *Skill) MarkReviewed() { s.setMeta(MetaReviewed, s.ContentHash()) }
+func (s *Skill) MarkReviewed(key []byte) { s.setMeta(MetaReviewed, s.ReviewMark(key)) }
 
 // ClearReview removes the review mark.
 func (s *Skill) ClearReview() { s.setMeta(MetaReviewed, "") }
 
-// Reviewed reports whether the recorded review is of the content as it is now:
-// the mark is the content hash, so any edit from any tool takes the review
-// away, and a file cannot claim a review it does not carry the hash of.
-func (s Skill) Reviewed() bool {
-	mark := s.ReviewedMark()
+// Reviewed reports whether the recorded review is of the content as it is now,
+// sealed with the key: any edit from any tool takes the review away, and a file
+// cannot claim a review that this workspace did not seal.
+func (s Skill) Reviewed(key []byte) bool {
+	mark, want := s.ReviewedMark(), s.ReviewMark(key)
 
-	return mark != "" && mark == s.ContentHash()
+	return mark != "" && want != "" && hmac.Equal([]byte(mark), []byte(want))
 }
 
 // ContentHash is "sha256:" and the hex digest of what a person reads: the front

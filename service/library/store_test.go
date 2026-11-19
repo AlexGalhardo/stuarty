@@ -25,6 +25,25 @@ func newManager(t *testing.T) (*Manager, *memIndex, string) {
 	return New(dir, idx, func() time.Time { return testNow }), idx, dir
 }
 
+// markRead reads a skill as a person does and marks it as read with the content hash of what it read.
+func markRead(ctx context.Context, m *Manager, c Caller, name string) (Entry, []core.Finding, error) {
+	hash := "sha256:unread"
+	if s, _, err := m.ReadSkill(ctx, name); err == nil {
+		hash = s.ContentHash()
+	}
+
+	return m.MarkReviewed(ctx, c, name, hash)
+}
+
+// seal marks a skill value as read with the key of the library, before it is written.
+func seal(t *testing.T, m *Manager, s *core.Skill) {
+	t.Helper()
+
+	if err := m.Review(s); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func sampleMemory(name string) core.Memory {
 	return core.Memory{
 		Name: name, Description: "Open with the result", Scope: "workspace", Tags: []string{"hooks"},
@@ -414,7 +433,7 @@ func TestReindexRestoresEveryResult(t *testing.T) {
 
 	s := sampleSkill("hook-writer")
 	s.SetOrigin(core.OriginUser, "")
-	s.MarkReviewed()
+	seal(t, m, &s)
 
 	for _, err := range []error{
 		m.WriteMemory(ctx, sampleMemory("hook-first")), m.WriteMemory(ctx, sampleMemory("second-note")),
@@ -519,7 +538,7 @@ func TestStoreReviewedIsComputedFromTheContent(t *testing.T) {
 
 	s := sampleSkill("s")
 	s.SetOrigin(core.OriginImported, "somewhere")
-	s.MarkReviewed()
+	seal(t, m, &s)
 
 	if err := m.WriteSkill(ctx, s); err != nil {
 		t.Fatal(err)

@@ -25,6 +25,9 @@ type Manager struct {
 	exportDir string
 
 	mu sync.Mutex
+
+	keyMu sync.Mutex // guards key; taken after mu when both are held, never before
+	key   []byte     // the review key, once read or made
 }
 
 // New returns the manager of the library folder dir (the library/ folder of the
@@ -389,7 +392,7 @@ func (m *Manager) loadSkill(root *os.Root, name string) (Entry, string, core.Ski
 
 	entry.Description = skill.Description
 	entry.Origin = skill.Origin()
-	entry.Reviewed = skill.Reviewed() && !core.HasError(findings)
+	entry.Reviewed = m.isReviewed(&skill) && !core.HasError(findings)
 	entry.LintErrors, entry.LintWarnings = countFindings(findings)
 	entry.HasScripts = slices.ContainsFunc(findings, func(f core.Finding) bool { return f.Code == core.LintScript })
 

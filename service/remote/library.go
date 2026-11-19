@@ -108,8 +108,15 @@ func (c *Client) SkillImport(ctx context.Context, req service.SkillImportRequest
 }
 
 // SkillMarkReviewed implements service.Service.
-func (c *Client) SkillMarkReviewed(ctx context.Context, req service.LibraryRef) (*service.SkillReviewResult, error) {
-	return post[service.SkillReviewResult](ctx, c, libraryPath("skills", req.Name, "/review"), nil)
+func (c *Client) SkillMarkReviewed(
+	ctx context.Context,
+	req service.SkillReviewRequest,
+) (*service.SkillReviewResult, error) {
+	body := struct {
+		ContentHash string `json:"content_hash"`
+	}{req.ContentHash}
+
+	return post[service.SkillReviewResult](ctx, c, libraryPath("skills", req.Name, "/review"), body)
 }
 
 // SkillLint implements service.Service.
