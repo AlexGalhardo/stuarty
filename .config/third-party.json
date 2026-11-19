@@ -187,6 +187,36 @@
     ]
   },
   {
+    "group": "vendored",
+    "name": "coreyhaines31/marketingskills (adapted skill text)",
+    "version": "73573e94a06a39965978b3fa1f9c1eace8cebc7c",
+    "spdx": "MIT",
+    "copyright": "Copyright (c) 2025 Corey Haines",
+    "files": [
+      "licenses/vendored/marketingskills-MIT.txt"
+    ],
+    "note": "adapted, with attribution, into the skills write-a-hook, short-script and caption-per-network (web/resources/skills); see licenses/vendored/NOTICE-skills.md",
+    "shipped_in": [
+      "archive",
+      "image"
+    ]
+  },
+  {
+    "group": "vendored",
+    "name": "heygen-com/hyperframes (adapted skill text)",
+    "version": "77ea9d80cfc8b347ccca966487a8ff902ce28320",
+    "spdx": "Apache-2.0",
+    "copyright": "Copyright 2026 HeyGen, Inc.",
+    "files": [
+      "licenses/vendored/hyperframes-Apache-2.0.txt"
+    ],
+    "note": "adapted, with attribution, into the skill captions-for-shorts (web/resources/skills); see licenses/vendored/NOTICE-skills.md",
+    "shipped_in": [
+      "archive",
+      "image"
+    ]
+  },
+  {
     "group": "fonts",
     "name": "Anton",
     "version": "Google Fonts cc39c4c",
