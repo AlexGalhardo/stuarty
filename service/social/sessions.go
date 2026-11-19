@@ -15,7 +15,10 @@ import (
 // Session is the address of an upload session a network gave, and the size of the file it is for.
 // The address is useless without the access token, so it holds no credential (SDD-020 section 7.4).
 type Session struct {
-	URI     string `json:"uri"`
+	URI string `json:"uri"`
+	// ID is what the network named the upload (a container or a video), for a network that needs it besides
+	// the address.
+	ID      string `json:"id,omitempty"`
 	Size    int64  `json:"size"`
 	Created int64  `json:"created_ms"`
 }
