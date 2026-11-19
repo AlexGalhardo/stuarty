@@ -13,7 +13,7 @@ import (
 func assetSearchOf(t *testing.T, s *Store, match string) []string {
 	t.Helper()
 
-	got, err := s.AssetLibrary().Search(ctx, match)
+	got, err := s.AssetLibrary().Search(ctx, "", match)
 	if err != nil {
 		t.Fatalf("Search(%s): %v", match, err)
 	}
@@ -42,8 +42,13 @@ func TestAssetLibraryRepo(t *testing.T) {
 		}
 	}
 
-	if _, err := s.AssetLibrary().Get(ctx, "sha256:aa"); !errors.Is(err, assets.ErrNotFound) {
+	if _, err := s.AssetLibrary().Get(ctx, "", "sha256:aa"); !errors.Is(err, assets.ErrNotFound) {
 		t.Fatalf("Get with no row = %v", err)
+	}
+
+	// A file is found by its name from the moment the library writes its row, here only the search row of bb.
+	if err := s.AssetLibrary().Reindex(ctx, "", "sha256:bb"); err != nil {
+		t.Fatal(err)
 	}
 
 	cost := int64(2500)
@@ -60,7 +65,7 @@ func TestAssetLibraryRepo(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	got, err := s.AssetLibrary().Get(ctx, "sha256:aa")
+	got, err := s.AssetLibrary().Get(ctx, "", "sha256:aa")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -71,7 +76,7 @@ func TestAssetLibraryRepo(t *testing.T) {
 		t.Errorf("Get = %+v", got)
 	}
 
-	many, err := s.AssetLibrary().GetMany(ctx, []string{"sha256:aa", "sha256:bb", "sha256:none"})
+	many, err := s.AssetLibrary().GetMany(ctx, "", []string{"sha256:aa", "sha256:bb", "sha256:none"})
 	if err != nil || len(many) != 1 || !slices.Equal(many["sha256:aa"].Tags, row.Tags) {
 		t.Errorf("GetMany = %+v, %v", many, err)
 	}
@@ -82,7 +87,7 @@ func TestAssetLibraryRepo(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	got, _ = s.AssetLibrary().Get(ctx, "sha256:aa")
+	got, _ = s.AssetLibrary().Get(ctx, "", "sha256:aa")
 	if got.CreatedBy != "agent" || got.CreatedMs != 5 || !slices.Equal(got.Tags, []string{"harbour"}) {
 		t.Errorf("after the update: %+v", got)
 	}
@@ -103,7 +108,7 @@ func TestAssetLibraryRepo(t *testing.T) {
 	}
 
 	// A bad expression is an error, never a wrong answer: the query builder of core/asset never makes one.
-	if _, err := s.AssetLibrary().Search(ctx, `"unterminated`); err == nil {
+	if _, err := s.AssetLibrary().Search(ctx, "", `"unterminated`); err == nil {
 		t.Error("a malformed expression was accepted")
 	}
 
@@ -115,7 +120,59 @@ func TestAssetLibraryRepo(t *testing.T) {
 		t.Errorf("the search row outlived the asset: %v", got)
 	}
 
-	if _, err := s.AssetLibrary().Get(ctx, "sha256:aa"); !errors.Is(err, assets.ErrNotFound) {
+	if _, err := s.AssetLibrary().Get(ctx, "", "sha256:aa"); !errors.Is(err, assets.ErrNotFound) {
 		t.Errorf("the library row outlived the asset: %v", err)
+	}
+}
+
+// The three tables are keyed by the owner: a row, its tags and its search text written for one owner are
+// invisible to another, and both can hold the same hash (VV-254).
+func TestAssetLibraryRepoKeepsOwnersApart(t *testing.T) {
+	s := testStore(t)
+
+	if _, _, err := s.Assets().Upsert(ctx, service.AssetRow{
+		Hash: "sha256:cc", SizeBytes: 1, OriginalName: "shared.mp4", IngestState: service.IngestReady,
+		CreatedMs: 1, UpdatedMs: 1,
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	for _, owner := range []string{"alice", "bob"} {
+		row := assets.Row{
+			Owner: owner, Hash: "sha256:cc", CreatedBy: "user:" + owner, CreatedMs: 5, UpdatedMs: 5,
+			Description: owner + " describes", Tags: []string{owner + "tag"},
+			Origin: asset.Origin{Kind: asset.Imported, RightsNote: owner + " note"},
+		}
+
+		if err := s.AssetLibrary().Put(ctx, row); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	for owner, other := range map[string]string{"alice": "bob", "bob": "alice"} {
+		got, err := s.AssetLibrary().Get(ctx, owner, "sha256:cc")
+		if err != nil || got.Owner != owner || got.Origin.RightsNote != owner+" note" ||
+			!slices.Equal(got.Tags, []string{owner + "tag"}) {
+			t.Errorf("Get(%s) = %+v, %v", owner, got, err)
+		}
+
+		many, err := s.AssetLibrary().GetMany(ctx, owner, []string{"sha256:cc"})
+		if err != nil || len(many) != 1 || many["sha256:cc"].Description != owner+" describes" {
+			t.Errorf("GetMany(%s) = %+v, %v", owner, many, err)
+		}
+
+		hits, err := s.AssetLibrary().Search(ctx, owner, `"`+owner+`tag"`)
+		if err != nil || len(hits) != 1 {
+			t.Errorf("Search(%s) for its own tag = %v, %v", owner, hits, err)
+		}
+
+		hits, err = s.AssetLibrary().Search(ctx, owner, `"`+other+`tag"`)
+		if err != nil || len(hits) != 0 {
+			t.Errorf("Search(%s) for the tag of %s = %v, %v", owner, other, hits, err)
+		}
+	}
+
+	if _, err := s.AssetLibrary().Get(ctx, "", "sha256:cc"); !errors.Is(err, assets.ErrNotFound) {
+		t.Errorf("the local owner reads a network row: %v", err)
 	}
 }
