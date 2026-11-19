@@ -292,16 +292,15 @@ var lintCmd = &spec{
 
 var commandHelp = &spec{
 	name:       "command:help",
-	summary:    "list the editing commands, or describe one",
-	usage:      []string{"stuarty command:help [<name>]"},
+	summary:    "list the editing commands and the domains, or describe one command",
+	usage:      []string{"stuarty command:help [<name>]", "stuarty command:help --domain <domain>"},
 	example:    "stuarty command:help item.move",
 	positional: true,
 	flags: []flagDef{
 		{
-			Name:    "domain",
-			Kind:    kindString,
-			Default: "video",
-			Usage:   "video, or image for the commands of image documents",
+			Name:  "domain",
+			Kind:  kindString,
+			Usage: "a domain of the product: its commands (without it, the video commands and the list of domains)",
 		},
 	},
 	run: func(ctx context.Context, c *call) (*output, error) {

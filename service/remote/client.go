@@ -302,11 +302,16 @@ func (c *Client) Edit(ctx context.Context, req service.EditRequest) (*service.Ed
 
 // CommandHelp implements service.Service.
 func (c *Client) CommandHelp(ctx context.Context, req service.CommandHelpRequest) (*service.CommandHelpResult, error) {
-	if req.Name == "" {
-		return get[service.CommandHelpResult](ctx, c, "/commands", nil)
+	var q url.Values
+	if req.Domain != "" {
+		q = url.Values{"domain": {req.Domain}}
 	}
 
-	return get[service.CommandHelpResult](ctx, c, "/commands/"+url.PathEscape(req.Name), nil)
+	if req.Name == "" {
+		return get[service.CommandHelpResult](ctx, c, "/commands", q)
+	}
+
+	return get[service.CommandHelpResult](ctx, c, "/commands/"+url.PathEscape(req.Name), q)
 }
 
 // HistoryList implements service.Service.

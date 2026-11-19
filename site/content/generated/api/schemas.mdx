@@ -301,6 +301,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | --- | --- | --- | --- |
 | `command` | [`CommandDetail`](/docs/api/schemas#commanddetail) or `any` or `null` or `null` | no |  |
 | `commands` | array of [`CommandSummary`](/docs/api/schemas#commandsummary) | no |  |
+| `domains` | array of [`DomainSummary`](/docs/api/schemas#domainsummary) | no |  |
 | `text` | `string` | no |  |
 
 ### CommandSummary
@@ -423,6 +424,14 @@ The types named in the tables of the operations. The arguments of each editing c
 | `settings` | [`Settings`](/docs/api/schemas#settings) | no |  |
 | `template` | [`TemplateInfo`](/docs/api/schemas#templateinfo) or `any` or `null` or `null` | no |  |
 | `tracks` | map of [`Track`](/docs/api/schemas#track) | no |  |
+
+### DomainSummary
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `name` | `string` | no |  |
+| `operations` | `integer` | no |  |
+| `summary` | `string` | no |  |
 
 ### EditResult
 

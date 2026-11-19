@@ -31,6 +31,10 @@ stuarty export --project prj_7k2m9x4q1b --json
 
 Every command and flag is in the [CLI reference](/docs/reference/cli).
 
+## Commands by domain
+
+Every command belongs to a domain: `project`, `video`, `image`, `writing`, `asset`, `publish`, `provider`, `memory` or `workspace`. `stuarty <domain>` lists the commands of one, and `stuarty <domain> <verb>` runs one: `stuarty image edit` is `image:edit`, `stuarty project list` is `project:list` and `stuarty memory skill list` is `skill:list`. A verb that two commands of a domain share, such as `import` in `asset`, is refused with both full names. The full names (`edit`, `project:list`, `image:create`, ...) keep working and are what the reference and scripts use. `stuarty command:help --domain <domain>` lists the edit operations of a domain, and each domain has a page in [the guide by domain](/docs/agents/domain-video).
+
 ## Next steps
 
 - [Connect an agent](/docs/agents/connect)
