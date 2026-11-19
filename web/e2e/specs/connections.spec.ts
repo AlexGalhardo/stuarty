@@ -99,6 +99,44 @@ test.describe("connections", () => {
 		await expect(page.getByRole("button", { name: "Conectar" })).toBeDisabled();
 	});
 
+	test("in Portuguese the page lists a connection with its destinations and its last use", async ({
+		page,
+		request,
+	}) => {
+		const dest = await destination();
+		try {
+			const api = await caller(request);
+			await api("POST", "/connections", {
+				kind: "test",
+				label: "Meu blog",
+				endpoint: dest.url,
+				accepts: ["text", "video"],
+				secret: SECRET,
+			});
+
+			await page.addInitScript(() => localStorage.setItem("vv.lang", "pt-BR"));
+			await page.goto("/connections");
+			const row = page.locator("[data-connection-id]").first();
+			await expect(row).toContainText("Meu blog");
+			await expect(row).toContainText("Acessa: 127.0.0.1");
+			await expect(row).toContainText("Pode receber: Texto, Vídeo");
+			await expect(row).toContainText("Nunca usada");
+			await expect(row).toContainText("Credencial guardada");
+
+			await row.getByRole("button", { name: "Testar" }).click();
+			await expect(row.locator("[data-test-result]")).toContainText(
+				"O destino respondeu 200.",
+			);
+			await expect(row).toContainText("Usada pela última vez em");
+
+			await row.getByRole("button", { name: "Remover" }).click();
+			await expect(page.locator("[data-connection-id]")).toHaveCount(0);
+			await expect(page.getByText("Nada sai deste computador.")).toBeVisible();
+		} finally {
+			await dest.close();
+		}
+	});
+
 	test("a destination that is not https is refused in words, and nothing is added", async ({
 		page,
 	}) => {
