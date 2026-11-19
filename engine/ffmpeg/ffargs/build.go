@@ -560,6 +560,14 @@ func EncoderTestAt(pol Policy, encoder string, di DetectInput, out string, w, h 
 		opts = append(opts, Int("-crf", 18), Enum("-preset", "medium"), Enum("-profile:v", "high"))
 	case "h264_vaapi", "h264_mf", "libopenh264":
 		opts = append(opts, Bitrate("-b:v", "8M"))
+	case "libsvtav1":
+		opts = append(opts, Bitrate("-b:v", "8M"), Enum("-preset", "8"))
+	case "libaom-av1":
+		opts = append(opts, Bitrate("-b:v", "8M"), Int("-cpu-used", 8), Enum("-row-mt", "1"))
+	case "hevc_videotoolbox", "hevc_nvenc", "hevc_qsv", "hevc_amf", "hevc_mf", "hevc_vaapi",
+		"av1_nvenc", "av1_qsv", "av1_amf", "av1_vaapi":
+		// The default profile of the encoder is the 8-bit 4:2:0 one the export writes: no -profile:v.
+		opts = append(opts, Bitrate("-b:v", "8M"))
 	default:
 		opts = append(opts, Bitrate("-b:v", "8M"), Enum("-profile:v", "high"))
 	}
