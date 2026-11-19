@@ -45,7 +45,7 @@ The product is called Stuarty everywhere a person or an agent meets it: the comm
 - [x] 2. Change the module path and every import; rename the commands under `web/cmd/` and `desktop/`. Verify: `go build ./...` and `go vet ./...` exit 0 in the root module and in `desktop/shell/app`.
 - [x] 3. Rename the environment variables with the fallback table and its test. Verify: `go test ./service/config/... -run TestFormerVariables` passes.
 - [x] 4. Implement the workspace adoption with backup and its tests (same volume, other volume, both folders exist, former folder newer than supported). Verify: `go test ./service/workspace/... -run TestAdoptFormerWorkspace` passes.
-- [ ] 5. Rename the renderer crates and rebuild the module. Verify: `bash scripts/build-renderer.sh check` exits 0 and the Rust gate of `.agents/rules/rust.md` passes.
+- [x] 5. Rename the renderer crates and rebuild the module. Verify: `bash scripts/build-renderer.sh check` exits 0 and the Rust gate of `.agents/rules/rust.md` passes.
 - [ ] 6. Rename in `web/resources/` (UI strings in both languages, generated types) and run the generators. Verify: `task codegen` leaves no diff; `bun run typecheck`, `bun run check:i18n` and `task test:web` pass.
 - [ ] 7. Rename the image, the Dockerfile, the installers, `.config/`, `Taskfile.yml`, scripts and workflow paths. Verify: `task image:build` and `task image:smoke` pass.
 - [ ] 8. Rename the specifications, the site and the generated reference; remove the "former name" notes from `README.md`, `AGENTS.md`, `CLAUDE.md`, `.agents/` and the "Amended" lines that only explained the name. Verify: `task lint:md`, `task lint:site` and `task site:build` exit 0.
