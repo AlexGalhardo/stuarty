@@ -88,6 +88,14 @@ func (r approvalRepo) ListRequests(ctx context.Context, f approval.Filter) ([]ap
 		where, args = append(where, "project_id = ?"), append(args, f.ProjectID)
 	}
 
+	if f.KeyProjectID != "" {
+		where = append(
+			where,
+			"(project_id = ? OR project_id IN (SELECT i.ref FROM project_items i WHERE i.kind = 'timeline' AND i.project_id = ?))",
+		)
+		args = append(args, f.KeyProjectID, f.KeyProjectID)
+	}
+
 	if f.OwnerUserID != "" {
 		where, args = append(where, "owner_user_id = ?"), append(args, f.OwnerUserID)
 	}

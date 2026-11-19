@@ -32,7 +32,8 @@ func registry() []*spec {
 		imageGenerateCmd, voiceGenerateCmd, voiceListCmd,
 		imageCreate, imageList, imageShow, imageEdit, imageUndo, imageRedo, imageExport,
 		assetListCmd, assetShowCmd, assetUsesCmd, assetSetCmd, assetTagCmd,
-	}, libraryCommands()...)
+		motionBriefCmd, motionCheckCmd, motionReplaceCmd,
+	}, append(libraryCommands(), publishingCommands()...)...)
 }
 
 // CommandNames lists the commands the binary knows, and those among them that

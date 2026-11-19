@@ -1116,6 +1116,47 @@
         },
         "type": "object"
       },
+      "Description": {
+        "properties": {
+          "endpoint": {
+            "type": "string"
+          },
+          "guide": {
+            "type": "string"
+          },
+          "guide_read": {
+            "type": "string"
+          },
+          "hosts": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "limits": {
+            "$ref": "#/components/schemas/Limits"
+          },
+          "name": {
+            "type": "string"
+          },
+          "network": {
+            "type": "string"
+          },
+          "publishes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "scopes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
       "DoctorCheck": {
         "properties": {
           "detail": {
@@ -2466,6 +2507,12 @@
             "format": "double",
             "type": "number"
           },
+          "replaces": {
+            "items": {
+              "$ref": "#/components/schemas/RenderOffer"
+            },
+            "type": "array"
+          },
           "state": {
             "type": "string"
           }
@@ -2512,18 +2559,8 @@
           "code": {
             "type": "string"
           },
-          "key": {
-            "type": "string"
-          },
           "message": {
             "type": "string"
-          },
-          "on": {
-            "type": "string"
-          },
-          "params": {
-            "additionalProperties": {},
-            "type": "object"
           },
           "path": {
             "type": "string"
@@ -3052,6 +3089,16 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/GeneratedResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "publish": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PublishResult"
               },
               {
                 "type": "null"
@@ -3613,6 +3660,58 @@
         },
         "type": "object"
       },
+      "Limits": {
+        "properties": {
+          "description_max_bytes": {
+            "type": "integer"
+          },
+          "file_max_bytes": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "forbidden": {
+            "type": "string"
+          },
+          "formats": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "needs_kids_declaration": {
+            "type": "boolean"
+          },
+          "read": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "tags_max_chars": {
+            "type": "integer"
+          },
+          "thumbnail_formats": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "thumbnail_max_bytes": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "title_max": {
+            "type": "integer"
+          },
+          "visibilities": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
       "LintResult": {
         "properties": {
           "errors": {
@@ -3703,6 +3802,23 @@
           "intensity": {
             "format": "double",
             "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "Margins": {
+        "properties": {
+          "bottom": {
+            "type": "integer"
+          },
+          "left": {
+            "type": "integer"
+          },
+          "right": {
+            "type": "integer"
+          },
+          "top": {
+            "type": "integer"
           }
         },
         "type": "object"
@@ -4057,6 +4173,23 @@
         },
         "type": "object"
       },
+      "Mismatch": {
+        "properties": {
+          "expected": {
+            "type": "string"
+          },
+          "field": {
+            "type": "string"
+          },
+          "found": {
+            "type": "string"
+          },
+          "hint": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "ModelView": {
         "properties": {
           "capability": {
@@ -4099,6 +4232,272 @@
           "micros": {
             "format": "int64",
             "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "MotionBrand": {
+        "properties": {
+          "colors": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "fonts": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "logo": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "MotionBriefResult": {
+        "properties": {
+          "brand_kit": {
+            "$ref": "#/components/schemas/MotionBrand"
+          },
+          "captions": {
+            "items": {
+              "$ref": "#/components/schemas/MotionCaption"
+            },
+            "type": "array"
+          },
+          "duration": {
+            "$ref": "#/components/schemas/TimeValue"
+          },
+          "duration_frames": {
+            "type": "integer"
+          },
+          "frame_rate": {
+            "$ref": "#/components/schemas/Rational"
+          },
+          "frames": {
+            "items": {
+              "$ref": "#/components/schemas/MotionFrame"
+            },
+            "type": "array"
+          },
+          "from": {
+            "$ref": "#/components/schemas/TimeValue"
+          },
+          "height": {
+            "type": "integer"
+          },
+          "image_tokens": {
+            "type": "integer"
+          },
+          "margins": {
+            "$ref": "#/components/schemas/Margins"
+          },
+          "needs_alpha": {
+            "type": "boolean"
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "safe_area": {
+            "$ref": "#/components/schemas/Rect"
+          },
+          "text": {
+            "type": "string"
+          },
+          "track": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TrackInfo"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "until": {
+            "$ref": "#/components/schemas/TimeValue"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          },
+          "width": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "MotionCaption": {
+        "properties": {
+          "end": {
+            "type": "integer"
+          },
+          "item_id": {
+            "type": "string"
+          },
+          "start": {
+            "type": "integer"
+          },
+          "text": {
+            "type": "string",
+            "x-untrusted": true
+          }
+        },
+        "type": "object"
+      },
+      "MotionCheckResult": {
+        "properties": {
+          "asset_id": {
+            "type": "string"
+          },
+          "asset_name": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "duration_frames": {
+            "type": "integer"
+          },
+          "frame_rate": {
+            "$ref": "#/components/schemas/Rational"
+          },
+          "height": {
+            "type": "integer"
+          },
+          "mismatches": {
+            "items": {
+              "$ref": "#/components/schemas/Mismatch"
+            },
+            "type": "array"
+          },
+          "needs_alpha": {
+            "type": "boolean"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "text": {
+            "type": "string"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          },
+          "width": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "MotionFrame": {
+        "properties": {
+          "at": {
+            "$ref": "#/components/schemas/TimeValue"
+          },
+          "height": {
+            "type": "integer"
+          },
+          "image_base64": {
+            "contentEncoding": "base64",
+            "type": "string"
+          },
+          "image_tokens": {
+            "type": "integer"
+          },
+          "mime": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "width": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "MotionReplaceResult": {
+        "properties": {
+          "actor": {
+            "type": "string"
+          },
+          "applied": {
+            "type": "boolean"
+          },
+          "asset_id": {
+            "type": "string"
+          },
+          "base_revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "created": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "description": {
+            "type": "string"
+          },
+          "diff": {
+            "items": {
+              "$ref": "#/components/schemas/Change"
+            },
+            "type": "array"
+          },
+          "dry_run": {
+            "type": "boolean"
+          },
+          "effective": {
+            "items": {
+              "$ref": "#/components/schemas/OpEffect"
+            },
+            "type": "array"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/Finding"
+            },
+            "type": "array"
+          },
+          "lint": {
+            "$ref": "#/components/schemas/LintTotals"
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "render_key": {
+            "type": "string"
+          },
+          "replaced": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "replayed": {
+            "type": "boolean"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "untrusted_notice": {
+            "type": "string"
           }
         },
         "type": "object"
@@ -4152,6 +4551,7 @@
               "caption.split",
               "clip.add",
               "clip.remove_silences",
+              "clip.replace_media",
               "clip.set_blend",
               "clip.set_blur",
               "clip.set_chroma_key",
@@ -4273,6 +4673,9 @@
           },
           "clip.remove_silences": {
             "$ref": "#/components/schemas/args.clip.remove_silences"
+          },
+          "clip.replace_media": {
+            "$ref": "#/components/schemas/args.clip.replace_media"
           },
           "clip.set_blend": {
             "$ref": "#/components/schemas/args.clip.set_blend"
@@ -4459,6 +4862,12 @@
               "null"
             ]
           },
+          "engine": {
+            "type": "string"
+          },
+          "engine_version": {
+            "type": "string"
+          },
           "kind": {
             "type": "string"
           },
@@ -4470,6 +4879,9 @@
             "x-untrusted": true
           },
           "provider": {
+            "type": "string"
+          },
+          "render_key": {
             "type": "string"
           },
           "rights_note": {
@@ -4735,7 +5147,7 @@
           },
           "issues": {
             "items": {
-              "$ref": "#/components/schemas/Issue"
+              "$ref": "#/components/schemas/errs.Issue"
             },
             "type": "array"
           },
@@ -5347,6 +5759,83 @@
         },
         "type": "object"
       },
+      "PublishResult": {
+        "properties": {
+          "connection_id": {
+            "type": "string"
+          },
+          "network": {
+            "type": "string"
+          },
+          "remote_id": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "state": {
+            "type": "string"
+          },
+          "thumbnail_error": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string",
+            "x-untrusted": true
+          }
+        },
+        "type": "object"
+      },
+      "PublishStatusResult": {
+        "properties": {
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Error"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "job_id": {
+            "type": "string"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PublishResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "state": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "PublishValidateResult": {
+        "properties": {
+          "issues": {
+            "items": {
+              "$ref": "#/components/schemas/Issue"
+            },
+            "type": "array"
+          },
+          "network": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string",
+            "x-untrusted": true
+          }
+        },
+        "type": "object"
+      },
       "Range": {
         "properties": {
           "end": {
@@ -5367,6 +5856,41 @@
           },
           "num": {
             "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "Rect": {
+        "properties": {
+          "height": {
+            "type": "integer"
+          },
+          "width": {
+            "type": "integer"
+          },
+          "x": {
+            "type": "integer"
+          },
+          "y": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "RenderOffer": {
+        "properties": {
+          "asset_id": {
+            "type": "string"
+          },
+          "item_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "name": {
+            "type": "string",
+            "x-untrusted": true
           }
         },
         "type": "object"
@@ -5935,6 +6459,67 @@
         },
         "type": "object"
       },
+      "SocialAccount": {
+        "properties": {
+          "account_id": {
+            "type": "string"
+          },
+          "account_title": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "connection_id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "network": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "SocialAccountListResult": {
+        "properties": {
+          "accounts": {
+            "items": {
+              "$ref": "#/components/schemas/SocialAccount"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "SocialConnectBeginResult": {
+        "properties": {
+          "authorize_url": {
+            "type": "string"
+          },
+          "connection_id": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "SocialNetworkListResult": {
+        "properties": {
+          "networks": {
+            "items": {
+              "$ref": "#/components/schemas/Description"
+            },
+            "type": "array"
+          },
+          "redirect_path": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "Source": {
         "properties": {
           "read": {
@@ -6331,6 +6916,20 @@
               "number",
               "null"
             ]
+          }
+        },
+        "type": "object"
+      },
+      "TrackInfo": {
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "overlay": {
+            "type": "boolean"
           }
         },
         "type": "object"
@@ -8004,6 +8603,26 @@
         },
         "required": [
           "item_id"
+        ],
+        "type": "object"
+      },
+      "args.clip.replace_media": {
+        "additionalProperties": false,
+        "properties": {
+          "asset_id": {
+            "description": "A video or image asset of the document, of the same kind as the clip's asset.",
+            "pattern": "^ast_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          },
+          "item_id": {
+            "description": "A clip.",
+            "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "item_id",
+          "asset_id"
         ],
         "type": "object"
       },
@@ -10850,6 +11469,30 @@
         "required": [
           "track_id"
         ],
+        "type": "object"
+      },
+      "errs.Issue": {
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "on": {
+            "type": "string"
+          },
+          "params": {
+            "additionalProperties": {},
+            "type": "object"
+          },
+          "path": {
+            "type": "string"
+          }
+        },
         "type": "object"
       },
       "export.Finding": {
@@ -18135,6 +18778,273 @@
         "summary": "Move an asset to the trash"
       }
     },
+    "/api/v1/projects/{id}/motion/brief": {
+      "get": {
+        "operationId": "projects.motion.brief",
+        "parameters": [
+          {
+            "description": "The timeline of the project; required when the project has several.",
+            "in": "query",
+            "name": "timeline_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Start of the range, a time; default 0s.",
+            "in": "query",
+            "name": "from",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "End of the range, exclusive; default the end of the timeline.",
+            "in": "query",
+            "name": "until",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The visual track the clip will go on; tells whether the render needs alpha.",
+            "in": "query",
+            "name": "track_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MotionBriefResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "What a render by an external motion engine must fit: size, rate, length, safe area, brand kit, captions and reference frames"
+      }
+    },
+    "/api/v1/projects/{id}/motion/check": {
+      "get": {
+        "operationId": "projects.motion.check",
+        "parameters": [
+          {
+            "description": "The asset to check: an asset of the project, ready.",
+            "in": "query",
+            "name": "asset_id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "description": "The timeline of the project; required when the project has several.",
+            "in": "query",
+            "name": "timeline_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Start of the range, a time; default 0s.",
+            "in": "query",
+            "name": "from",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "End of the range, exclusive; default the end of the timeline.",
+            "in": "query",
+            "name": "until",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The visual track the clip will go on; tells whether the render needs alpha.",
+            "in": "query",
+            "name": "track_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MotionCheckResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Check a rendered asset against the brief: each mismatch of size, rate, length or alpha with the value expected"
+      }
+    },
+    "/api/v1/projects/{id}/motion/replace": {
+      "post": {
+        "operationId": "projects.motion.replace",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "asset_id": {
+                    "description": "The new render: an asset of the timeline, ready.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "dry_run": {
+                    "type": "boolean"
+                  },
+                  "render_key": {
+                    "description": "The key of the animation; default the render key of the origin of the new asset.",
+                    "type": "string"
+                  },
+                  "timeline_id": {
+                    "description": "The timeline of the project; required when the project has several.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "asset_id"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MotionReplaceResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Replace, in one undoable batch, every clip that reads an earlier render of an animation with a new render of it"
+      }
+    },
     "/api/v1/projects/{id}/otio": {
       "get": {
         "operationId": "projects.otio.export",
@@ -19014,6 +19924,518 @@
           }
         ],
         "summary": "Set or remove the price of a model (a person in the browser only; the local token and keys get 403)"
+      }
+    },
+    "/api/v1/publish": {
+      "post": {
+        "operationId": "publish.now",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "ai_disclosure": {
+                    "description": "The video has realistic altered or synthetic content.",
+                    "type": "boolean"
+                  },
+                  "connection_id": {
+                    "description": "The connection of the network and the account the video goes to.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "description": {
+                    "description": "The description, at most 5,000 bytes on YouTube.",
+                    "type": "string"
+                  },
+                  "dry_run": {
+                    "type": "boolean"
+                  },
+                  "export": {
+                    "description": "The id of a succeeded export job of the project: the video.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "made_for_kids": {
+                    "description": "Required: whether the video is made for kids.",
+                    "type": [
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "project_id": {
+                    "description": "The project the video was exported from.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "tags": {
+                    "description": "The tags, at most 500 characters in all on YouTube.",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "thumbnail": {
+                    "description": "The id of a succeeded export job of a still of the project: the cover.",
+                    "type": "string"
+                  },
+                  "timeline_id": {
+                    "description": "The timeline the job is kept on; required when the project has several.",
+                    "type": "string"
+                  },
+                  "title": {
+                    "description": "The title, at most 100 characters on YouTube.",
+                    "type": "string"
+                  },
+                  "visibility": {
+                    "description": "private (the default), unlisted or public.",
+                    "type": "string"
+                  },
+                  "wait_ms": {
+                    "description": "0 to 25000: hold the call until the job is final.",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "project_id",
+                  "connection_id",
+                  "export"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            },
+            "description": "Accepted"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Prepare the publication of an exported video; it waits for a person to approve it"
+      }
+    },
+    "/api/v1/publish/validate": {
+      "post": {
+        "operationId": "publish.validate",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "ai_disclosure": {
+                    "description": "The video has realistic altered or synthetic content.",
+                    "type": "boolean"
+                  },
+                  "connection_id": {
+                    "description": "The connection of the network and the account the video goes to.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "description": {
+                    "description": "The description, at most 5,000 bytes on YouTube.",
+                    "type": "string"
+                  },
+                  "export": {
+                    "description": "The id of a succeeded export job of the project: the video.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "made_for_kids": {
+                    "description": "Required: whether the video is made for kids.",
+                    "type": [
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "project_id": {
+                    "description": "The project the video was exported from.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "tags": {
+                    "description": "The tags, at most 500 characters in all on YouTube.",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "thumbnail": {
+                    "description": "The id of a succeeded export job of a still of the project: the cover.",
+                    "type": "string"
+                  },
+                  "title": {
+                    "description": "The title, at most 100 characters on YouTube.",
+                    "type": "string"
+                  },
+                  "visibility": {
+                    "description": "private (the default), unlisted or public.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "project_id",
+                  "connection_id",
+                  "export"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublishValidateResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Check a post against the limits of its network; sends nothing"
+      }
+    },
+    "/api/v1/publish/{job_id}": {
+      "get": {
+        "operationId": "publish.status",
+        "parameters": [
+          {
+            "description": "The job id that PublishNow answered.",
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublishStatusResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Read the state of a publication"
+      }
+    },
+    "/api/v1/social/accounts": {
+      "get": {
+        "operationId": "social.accounts",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SocialAccountListResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the connected social accounts and their state"
+      }
+    },
+    "/api/v1/social/complete": {
+      "post": {
+        "operationId": "social.complete",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "code": {
+                    "description": "The authorization code the network sent back.",
+                    "type": "string"
+                  },
+                  "error": {
+                    "description": "The error the network sent back instead of a code, for example access_denied.",
+                    "type": "string"
+                  },
+                  "state": {
+                    "description": "The state the network sent back to the redirect address.",
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "state"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SocialAccount"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Finish the sign-in with what the network sent to the redirect address (a person in the browser only)"
+      }
+    },
+    "/api/v1/social/connect": {
+      "post": {
+        "operationId": "social.connect",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "client_id": {
+                    "description": "The client id of the developer project you created on the network.",
+                    "type": "string"
+                  },
+                  "client_secret": {
+                    "description": "The client secret of that project. It goes into the vault and is in no answer.",
+                    "type": "string"
+                  },
+                  "connection_id": {
+                    "description": "Sign in again an existing connection of the network, instead of making one.",
+                    "type": "string"
+                  },
+                  "label": {
+                    "description": "A name for the connection, 1 to 60 characters; the name of the network when left out.",
+                    "type": "string"
+                  },
+                  "network": {
+                    "description": "The network to sign in to, for example youtube.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "redirect_uri": {
+                    "description": "The address of this app followed by /social/callback; it must be the redirect address you authorised in the developer project.",
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "network",
+                  "redirect_uri"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SocialConnectBeginResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Start the sign-in to a network with your own developer app; answers the address of the consent screen"
+      }
+    },
+    "/api/v1/social/networks": {
+      "get": {
+        "operationId": "social.networks",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SocialNetworkListResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the social networks of this build and their limits"
       }
     },
     "/api/v1/system": {

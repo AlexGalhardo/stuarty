@@ -8,7 +8,7 @@ metadata:
 
 # stuarty
 
-Edit video by commands: CLI `stuarty` or MCP server (`stuarty mcp`). Output is text; `--json` is JSON.
+Edit video by commands: CLI `stuarty` or MCP (`stuarty mcp`). Output is text; `--json` is JSON.
 
 Workspace: `~/.stuarty` or `$STUARTY_HOME`; `serve` shares it with the browser.
 
@@ -19,14 +19,14 @@ Workspace: `~/.stuarty` or `$STUARTY_HOME`; `serve` shares it with the browser.
 3. Apply: `edit --project <id> --base <rev> ...`; read the diff.
 4. `lint --project <id>`. Errors block export.
 5. Look if needed: `view --at 1s`, then `view --mode sheet`.
-6. `export --project <id>`, then check the job `checks`.
+6. `export --project <id>`; check the job `checks`.
 
 ## Rules that prevent mistakes
 
-- Times need a unit: `12.5s`, `375f`, `00:00:12.500`.
+- Times need a unit: `12.5s` or `375f`.
 - Ids (`prj_`, `ast_`, `trk_`, `itm_`, `job_`) are never positions. List first.
 - The top track draws over the others (`top`, `bottom`).
-- `--base` is your last result's `revision`; default: current.
+- `--base`: your last `revision` (default: current).
 - Give your own `id` to what you use later.
 
 ## Command reference
@@ -37,7 +37,7 @@ Workspace: `~/.stuarty` or `$STUARTY_HOME`; `serve` shares it with the browser.
 - `asset`: remove
 - `audio`: add, duck, mark_beats
 - `caption`: add, edit_word, from_transcript, import_subtitles, merge, retime_from_clip, set_breaks, set_style, set_words, split
-- `clip`: add, remove_silences, set_blend, set_blur, set_chroma_key, set_color, set_effects, set_filter, set_flip, set_framing, set_mask, set_outline, set_shadow, set_speed
+- `clip`: add, remove_silences, replace_media, set_blend, set_blur, set_chroma_key, set_color, set_effects, set_filter, set_flip, set_framing, set_mask, set_outline, set_shadow, set_speed
 - `font`: add, remove
 - `item`: crossfade, delete, duplicate, extract_audio, freeze_frame, link, move, paste_attributes, rename, repeat, set_audio, set_enabled, set_transform, set_transition, slip, split, trim, unlink
 - `keyframe`: clear, remove, set, set_easing
@@ -53,7 +53,7 @@ Workspace: `~/.stuarty` or `$STUARTY_HOME`; `serve` shares it with the browser.
 
 ## CLI cheat sheet
 
-Prefix each with `stuarty`.
+Prefix: `stuarty`.
 
 - `project:list [--state active|trashed|all] [--cursor c] [--limit n]`
 - `project:create --name <name> [--preset 9:16|1:1|16:9|4:5] [--fps 30] [--id prj_...]`
@@ -132,7 +132,7 @@ Prefix each with `stuarty`.
 - `asset:set <hash>`
 - `asset:tag <hash>`
 
-`--ops <file|->` reads a JSON array; `edit --project <id> item.move item_id=itm_x start=2s` is one operation (`k=v` string, `k:=json` JSON). `--dry-run` saves nothing; `--key <k>` makes retries safe; `--out f` copies the file out (`--force` replaces).
+`--ops <file|->` reads a JSON array; `edit --project <id> item.move item_id=itm_x start=2s` is one operation (`k=v` string, `k:=json` JSON). `--dry-run` saves nothing; `--key <k>` makes retries safe; `--out f` copies the file out.
 
 ## Reading results
 
@@ -159,6 +159,7 @@ Lint rules (`!` blocks export):
 - `L_AUDIO_CLIP` warning: lower volume with item.set_audio
 - `L_LOUDNESS` warning: adjust volumes or accept the normalization
 - `L_DURATION_LIMIT` warning: trim the timeline or accept it
+- `L_ALPHA_MISSING` warning: render it with alpha
 
 ## Errors and recovery
 

@@ -306,6 +306,18 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.BriefingAnswer(ctx, service.BriefingAnswerRequest{ProjectID: "prj_0000000001"})
 			return err
 		},
+		"MotionBrief": func() error {
+			_, err := e.svc.MotionBrief(ctx, service.MotionBriefRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"MotionCheck": func() error {
+			_, err := e.svc.MotionCheck(ctx, service.MotionCheckRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"MotionReplace": func() error {
+			_, err := e.svc.MotionReplace(ctx, service.MotionReplaceRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
 		"ConnectionList": func() error {
 			_, err := e.svc.ConnectionList(ctx, service.ConnectionListRequest{})
 			return err
@@ -359,6 +371,34 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 		},
 		"CostCeilingSet": func() error {
 			_, err := e.svc.CostCeilingSet(ctx, service.CostCeilingSetRequest{Currency: "USD"})
+			return err
+		},
+		"SocialNetworkList": func() error {
+			_, err := e.svc.SocialNetworkList(ctx, service.SocialNetworkListRequest{})
+			return err
+		},
+		"SocialConnectBegin": func() error {
+			_, err := e.svc.SocialConnectBegin(ctx, service.SocialConnectBeginRequest{})
+			return err
+		},
+		"SocialConnectComplete": func() error {
+			_, err := e.svc.SocialConnectComplete(ctx, service.SocialConnectCompleteRequest{})
+			return err
+		},
+		"SocialAccountList": func() error {
+			_, err := e.svc.SocialAccountList(ctx, service.SocialAccountListRequest{})
+			return err
+		},
+		"PublishValidate": func() error {
+			_, err := e.svc.PublishValidate(ctx, service.PublishValidateRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"PublishNow": func() error {
+			_, err := e.svc.PublishNow(ctx, service.PublishNowRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"PublishStatus": func() error {
+			_, err := e.svc.PublishStatus(ctx, service.PublishStatusRequest{JobID: "job_0000000001"})
 			return err
 		},
 		"ProviderList": func() error {

@@ -27,8 +27,8 @@ import {
 	ContextMenuShortcut,
 } from "@/components/ui/context-menu";
 import { useT } from "@/lib/i18n";
-import { IS_MAC, keyLabel } from "../commands/keymap";
-import { useBindings } from "../commands/keymapStore";
+import { IS_MAC } from "../commands/keymap";
+import { keyLabel, useKeymap } from "../commands/keymapStore";
 import { useActions, useCanCut } from "../commands/useActions";
 import { useCommandNames } from "../commands/useExposedCommands";
 import { useMenuRunner } from "../commands/useMenuRunner";
@@ -40,7 +40,7 @@ import {
 
 // The key of a row of the cheat sheet, at the right of an entry.
 function RowKey({ row }: { row: string }): ReactNode {
-	const key = keyLabel(row, useBindings(), IS_MAC);
+	const key = keyLabel(row, useKeymap(), IS_MAC);
 	return key === null ? null : <ContextMenuShortcut>{key}</ContextMenuShortcut>;
 }
 

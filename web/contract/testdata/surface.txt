@@ -66,6 +66,9 @@ command memory:list
 command memory:remove
 command memory:show
 command memory:write
+command motion:brief
+command motion:check
+command motion:replace
 command otio:export
 command otio:import
 command project:create
@@ -82,6 +85,9 @@ command prompt:write
 command provider:list
 command provider:models
 command provider:price
+command publish:now
+command publish:status
+command publish:validate
 command redo
 command skill:export
 command skill:import
@@ -89,6 +95,9 @@ command skill:lint
 command skill:list
 command skill:show
 command skill:write
+command social:account:list
+command social:connect
+command social:network:list
 command template:export
 command template:import
 command template:list
@@ -162,11 +171,16 @@ route GET /projects/{}/media/{}/peaks
 route GET /projects/{}/media/{}/proxy
 route GET /projects/{}/media/{}/strip
 route GET /projects/{}/media/{}/thumbnail
+route GET /projects/{}/motion/brief
+route GET /projects/{}/motion/check
 route GET /projects/{}/otio
 route GET /projects/{}/plan
 route GET /projects/{}/sheet
 route GET /projects/{}/snap-points
 route GET /providers
+route GET /publish/{}
+route GET /social/accounts
+route GET /social/networks
 route GET /system
 route GET /system/tools
 route GET /templates
@@ -208,11 +222,16 @@ route POST /projects/{}/jobs
 route POST /projects/{}/media
 route POST /projects/{}/media/{}/restore
 route POST /projects/{}/media/{}/trash
+route POST /projects/{}/motion/replace
 route POST /projects/{}/otio
 route POST /projects/{}/redo
 route POST /projects/{}/restore
 route POST /projects/{}/trash
 route POST /projects/{}/undo
+route POST /publish
+route POST /publish/validate
+route POST /social/complete
+route POST /social/connect
 route POST /system/launch
 route POST /system/tools/install
 route POST /templates

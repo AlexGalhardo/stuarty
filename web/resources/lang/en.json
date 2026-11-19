@@ -728,6 +728,7 @@
         "E_FORBIDDEN": "Not allowed",
         "E_PRIVILEGED_SESSION": "Only you in the app can do this",
         "E_COST_CEILING": "Over a cost ceiling",
+        "E_PUBLISH": "The network refused or failed the publication",
         "E_PROVIDER": "The AI provider refused or failed",
         "E_PRICE_UNKNOWN": "No price for that model",
         "E_APPROVAL_NOT_FOUND": "No such request or rule",
@@ -844,7 +845,8 @@
         "add_video_track": "Add video track",
         "add_audio_track": "Add audio track",
         "marker": "Marker at the playhead",
-        "shortcuts": "Keyboard shortcuts"
+        "shortcuts": "Keyboard shortcuts",
+        "tour": "Take the tour"
       },
       "edit": {
         "label": "Editing",
@@ -1102,6 +1104,9 @@
           "set_framing": {
             "title": "Set clip framing"
           },
+          "replace_media": {
+            "title": "Replace the media of a clip"
+          },
           "set_speed": {
             "title": "Set clip speed"
           }
@@ -1288,7 +1293,8 @@
         "L_SLOT_UNFILLED": "Template slot not filled",
         "L_AUDIO_CLIP": "Audio clipping",
         "L_LOUDNESS": "Loudness off target",
-        "L_DURATION_LIMIT": "Over the duration limit"
+        "L_DURATION_LIMIT": "Over the duration limit",
+        "L_ALPHA_MISSING": "Transparency declared but missing"
       },
       "shortcuts": {
         "title": "Keyboard shortcuts",
@@ -1304,30 +1310,50 @@
         "reset": "Reset to defaults",
         "also": "Also {keys}",
         "saved": "Saved. Every edit is saved as you make it.",
+        "search": "Search shortcuts",
+        "none": "No shortcut matches.",
+        "preset": "Preset",
+        "presets": {
+          "short": "Short video",
+          "classic": "Classic"
+        },
+        "dropped": "These keys went back to the preset because the new one uses them: {actions}.",
         "rows": {
           "play_pause": "Play or pause",
-          "step_frame": "Step one frame",
-          "step_second": "Step one second",
-          "go_to_edge": "Go to start or end",
-          "next_cut": "Go to the previous or next cut",
-          "shuttle": "Play (L), pause (K), back one second (J)",
-          "next_marker": "Go to the previous or next marker",
+          "shuttle_back": "Back one second (player)",
+          "pause": "Pause",
+          "shuttle_play": "Play",
+          "step_back": "Step back one frame",
+          "step_forward": "Step forward one frame",
+          "step_second_back": "Step back one second",
+          "step_second_forward": "Step forward one second",
+          "go_start": "Go to the start",
+          "go_end": "Go to the end",
+          "prev_cut": "Go to the previous cut",
+          "next_cut": "Go to the next cut",
+          "prev_marker": "Go to the previous marker",
+          "next_marker": "Go to the next marker",
           "marker": "Add a marker at the playhead, or remove the one there",
-          "range_in_out": "Set the in point (I) and the out point (O)",
+          "range_in": "Set the in point",
+          "range_out": "Set the out point",
           "range_select": "Set the in and out points to the selected items",
           "range_clear": "Clear the in and out points",
-          "tool": "Blade tool (B), select tool (A)",
+          "tool_blade": "Blade tool",
+          "tool_select": "Select tool",
           "split": "Split the selected item at the playhead",
           "split_all": "Split every track at the playhead",
           "trim_start": "Delete what is left of the playhead",
           "trim_end": "Delete what is right of the playhead",
-          "slide": "Slide the selected item, its neighbours keep touching it (1 frame)",
-          "roll": "Roll the cut after the selected item (1 frame)",
-          "slip": "Slip the selected clip, showing another part of its source (1 frame)",
-          "select_side": "Select everything left, right of the playhead",
+          "slide_back": "Slide the selected item back, its neighbours keep touching it (1 frame)",
+          "slide_forward": "Slide the selected item forward, its neighbours keep touching it (1 frame)",
+          "roll_back": "Roll the cut after the selected item back (1 frame)",
+          "roll_forward": "Roll the cut after the selected item forward (1 frame)",
+          "slip_back": "Slip the selected clip back, showing an earlier part of its source (1 frame)",
+          "slip_forward": "Slip the selected clip forward, showing a later part of its source (1 frame)",
+          "select_left": "Select everything left of the playhead",
+          "select_right": "Select everything right of the playhead",
           "undo": "Undo",
           "redo": "Redo",
-          "redo_alt": "Redo (alternative)",
           "zoom_in": "Zoom in",
           "zoom_out": "Zoom out",
           "zoom_fit": "Fit the timeline",
@@ -1346,23 +1372,28 @@
           "toggle_enabled": "Turn the selected items on or off",
           "link": "Link or unlink the selected items",
           "extract_audio": "Extract the audio of the selected clips",
-          "toggle_snap": "Toggle snapping",
           "toggle_magnet": "Turn the magnet of the track on or off",
           "copy_attributes": "Copy the look of the selected item",
           "paste_attributes": "Paste the copied look onto the selected items",
+          "toggle_snap": "Toggle snapping",
           "keyframe_panel": "Show or hide the keyframes of the selected item",
           "speed_curve": "Open the speed curve of the selected clip",
           "scroll": "Scroll the timeline: wheel up and down, Alt+wheel sideways",
-          "preview_zoom": "Fit the preview, zoom it in, zoom it out",
+          "preview_fit": "Fit the preview",
+          "preview_zoom_in": "Zoom the preview in",
+          "preview_zoom_out": "Zoom the preview out",
           "import": "Import media",
           "export": "Export",
           "save": "Save (every edit is saved already)",
           "palette": "Command palette",
           "find": "Find in the project",
-          "toggle_panel": "Toggle library, inspector and history",
+          "panel_library": "Show or hide the library",
+          "panel_inspector": "Show or hide the inspector",
+          "panel_history": "Show or hide the history",
           "select_all": "Select all items",
           "cancel": "Cancel, close or clear the selection",
           "next_landmark": "Jump to the next region",
+          "prev_landmark": "Jump to the previous region",
           "grid_keys": "Move inside the timeline",
           "cheat_sheet": "Open this list"
         }
@@ -2058,16 +2089,36 @@
         "undone": "Undone",
         "redone": "Redone"
       },
-      "tips": {
-        "title": "First steps",
-        "items": {
-          "library": "Paste the path of a media file in the library and press Import.",
-          "library_desktop": "Choose files in the library, drop them there or paste a path, then press Import.",
-          "palette": "Press Ctrl+K to search every command.",
-          "shortcuts": "Press ? to see and change the keyboard shortcuts."
-        },
-        "dismiss": "Got it",
-        "show_again": "Show tips again"
+      "tour": {
+        "step": "Step {current} of {total}",
+        "back": "Back",
+        "next": "Next",
+        "done": "Done",
+        "skip": "Skip tour",
+        "replay": "Replay the tour",
+        "steps": {
+          "library": {
+            "title": "Your media",
+            "body": "Your files live here. Paste the path of a media file and press Import, or press {import} to go to the import field."
+          },
+          "library_desktop": "Your files live here. Choose files, drop them here or paste a path, then press Import. Press {import} to start.",
+          "preview": {
+            "title": "Preview",
+            "body": "Watch your video here. Press {play} to play or pause."
+          },
+          "timeline": {
+            "title": "Timeline",
+            "body": "Arrange clips on tracks. Press {split} to split at the playhead and {undo} to undo."
+          },
+          "inspector": {
+            "title": "Inspector",
+            "body": "Select an item to change its look, sound and speed. Every change is saved as you make it."
+          },
+          "export": {
+            "title": "Export",
+            "body": "When you are happy, export your video here ({export}). Press {shortcuts} to see every shortcut and {palette} to search every command."
+          }
+        }
       },
       "repeat": {
         "title": "Repeat item",
@@ -2170,6 +2221,77 @@
       },
       "open_approvals": "Open the Approvals page",
       "done": "{delivered} of {requested} made, it cost {amount}."
+    },
+    "social": {
+      "title": "Social networks",
+      "intro": "Connect your own channel with your own developer project. Nothing is published until you approve it in Approvals.",
+      "connect": "Set up {name}",
+      "close": "Close",
+      "guide_title": "Connect {name} with your own developer project",
+      "guide_again_title": "Sign in to {name} again",
+      "guide_intro": "Stuarty has no app of its own on {name}: you create one in your own account, so your videos and your keys stay with you. Follow the steps, then paste the client id and the secret below.",
+      "redirect_label": "Redirect address to paste in your developer project",
+      "official_page": "Read the official page",
+      "client_id": "Client id",
+      "client_secret": "Client secret",
+      "account_label": "Name for this connection (optional)",
+      "start_sign_in": "Save and sign in",
+      "sign_in_again": "Sign in again",
+      "signed_in_as": "Signed in as",
+      "needs_sign_in": "Not signed in yet",
+      "publish_now": "Publish now",
+      "publish_title": "Publish a video",
+      "publish_intro": "It goes to",
+      "project": "Project",
+      "choose": "Choose...",
+      "video": "Exported video",
+      "thumbnail": "Thumbnail (an exported still)",
+      "no_thumbnail": "No thumbnail",
+      "post_title": "Title",
+      "description": "Description",
+      "tags": "Tags (separated by commas)",
+      "visibility": "Who can watch",
+      "visibility_private": "Only you (private)",
+      "visibility_unlisted": "Anyone with the link (unlisted)",
+      "visibility_public": "Everyone (public)",
+      "kids": "Is this video made for kids?",
+      "kids_yes": "Yes",
+      "kids_no": "No",
+      "synthetic": "It has realistic altered or synthetic content",
+      "check": "Check",
+      "send": "Send for approval",
+      "check_ok": "The post fits the limits of the network. A person will be asked to approve:",
+      "check_issues": "Fix these before sending:",
+      "waiting_title": "Waiting for your approval",
+      "waiting_body": "Nothing has been sent yet. Open Approvals, read what will go out, and approve or reject it.",
+      "open_approvals": "Open Approvals",
+      "callback_title": "Signing in",
+      "callback_working": "Finishing the sign-in...",
+      "callback_done": "Signed in as",
+      "callback_failed": "The sign-in could not be finished. Start it again from the Connections page.",
+      "back": "Back to Connections",
+      "youtube": {
+        "step": {
+          "project": "In the Google Cloud console, create a project (or choose one you already have). It is yours; Stuarty never sees it.",
+          "api": "Enable \"YouTube Data API v3\" for that project.",
+          "consent": "Configure the OAuth consent screen: user type External, and add your own Google address as a test user. While the project is in the Testing status, the sign-in expires after 7 days and you will sign in again.",
+          "client": "Create an OAuth client of the type \"Web application\".",
+          "redirect": "Under \"Authorised redirect URIs\" paste exactly: {redirect}",
+          "paste": "Copy the client id and the client secret into the form below. Stuarty asks for these permissions: {scopes}."
+        },
+        "research": "What Google said on {read}: a video uploaded from a project that has not been verified is no longer forced to private since 2 November 2026; Stuarty still sends every video as private unless you choose otherwise. An upload costs about 1 unit of its own quota of 100 a day, and a thumbnail 50 units of the 10,000 a day."
+      },
+      "generic": {
+        "step": {
+          "project": "Create a developer project on the network, in your own account.",
+          "api": "Enable the publishing API for that project.",
+          "consent": "Configure the consent screen and add your own account as a test user.",
+          "client": "Create an OAuth client of the type \"Web application\".",
+          "redirect": "Authorise exactly this redirect address: {redirect}",
+          "paste": "Copy the client id and the client secret into the form below. Stuarty asks for: {scopes}."
+        },
+        "research": "The rules of the network were read on {read}; they change, so check the official page."
+      }
     },
     "providers": {
       "title": "AI providers",

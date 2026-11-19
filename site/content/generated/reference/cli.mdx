@@ -266,7 +266,7 @@ Import media files into a project
 ```text
 stuarty media:import <path>... --project <id> [--asset-id ast_...] [--wait] [--timeout d]
 stuarty media:import --hash sha256:... --project <id>   (a file the library already holds: no copy)
-origin and reuse: [--origin-kind k] [--origin-source s] [--provider p] [--model m] [--prompt t] [--rights-note t] [--tag t] [--reusable] [--description t]
+origin and reuse: [--origin-kind k] [--origin-source s] [--provider p] [--model m] [--prompt t] [--rights-note t] [--engine e] [--engine-version v] [--render-key k] [--tag t] [--reusable] [--description t]
 formats: MP4, MOV, MKV, WebM, AVI, MP3, WAV, FLAC, OGG, PNG, JPEG, WebP, GIF and .cube; not SVG
 ```
 
@@ -280,6 +280,9 @@ formats: MP4, MOV, MKV, WebM, AVI, MP3, WAV, FLAC, OGG, PNG, JPEG, WebP, GIF and
 | `--model` | string |  | the model that generated the files (required for generated) |
 | `--prompt` | string |  | the prompt that generated the files |
 | `--cost-micros` | integer |  | what the files cost, in millionths of a US dollar |
+| `--engine` | string |  | the motion engine that rendered the files (rendered_externally) |
+| `--engine-version` | string |  | the version of that engine (rendered_externally) |
+| `--render-key` | string |  | a stable name for the animation, the same each time it is rendered again (rendered_externally) |
 | `--rights-note` | string |  | your own record of the licence or the permission (required for fetched_by_agent) |
 | `--tag` | string, repeatable |  | a tag for the files; repeat it or give a comma list |
 | `--reusable` | boolean |  | mark the files to be offered again |
@@ -1852,6 +1855,72 @@ Example:
 stuarty asset:tag sha256:3b4c0a1d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b --add logo,brand
 ```
 
+## `motion:brief`
+
+What a render by an external motion engine must fit: size, rate, length, safe area, brand kit, captions
+
+```text
+stuarty motion:brief --project <id> [--from t] [--until t] [--track <trk_id>]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--from` | string |  | start of the range, a time (default 0s) |
+| `--until` | string |  | end of the range, exclusive (default the end of the timeline) |
+| `--track` | string |  | the visual track the clip will go on: tells whether the render needs alpha |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`.
+
+Example:
+
+```bash
+stuarty motion:brief --project prj_7k2m9x4q1b --from 2s --until 5s --track trk_f6g7h8j9k0
+```
+
+## `motion:check`
+
+Check a rendered asset against the brief: each mismatch of size, rate, length or alpha, with the value expected
+
+```text
+stuarty motion:check --project <id> --asset <ast_id> [--from t] [--until t] [--track <trk_id>]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--asset` | string |  | the asset to check: an asset of the project, ready (required) |
+| `--from` | string |  | start of the range, a time (default 0s) |
+| `--until` | string |  | end of the range, exclusive (default the end of the timeline) |
+| `--track` | string |  | the visual track the clip will go on: tells whether the render needs alpha |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`.
+
+Example:
+
+```bash
+stuarty motion:check --project prj_7k2m9x4q1b --asset ast_3c5v8n2w6d --from 2s --until 5s --track trk_f6g7h8j9k0
+```
+
+## `motion:replace`
+
+Replace, in one undoable batch, every clip that reads an earlier render of an animation with a new render
+
+```text
+stuarty motion:replace --project <id> --asset <ast_id> [--render-key <key>] [--dry-run]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--asset` | string |  | the new render: an asset of the timeline, ready (required) |
+| `--render-key` | string |  | the key of the animation (default the render key of the origin of the new asset) |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--dry-run`.
+
+Example:
+
+```bash
+stuarty motion:replace --project prj_7k2m9x4q1b --asset ast_k8m2n4p6q9
+```
+
 ## `memory:list`
 
 List the memory notes
@@ -2168,6 +2237,136 @@ Example:
 
 ```bash
 stuarty library:reindex
+```
+
+## `social:network:list`
+
+List the social networks this build can publish to, with their limits and where they were read
+
+```text
+stuarty social:network:list
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty social:network:list --json
+```
+
+## `social:connect`
+
+Start the sign-in to a network with your own developer app; the client secret is read from standard input or a file, never from an argument
+
+```text
+stuarty social:connect --network <n> --client-id <id> --redirect-uri <url> [--label <t>]
+stuarty social:connect --network <n> --connection <id> --redirect-uri <url>
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--network` | string |  | the network, for example youtube (required) |
+| `--client-id` | string |  | the client id of your developer project |
+| `--redirect-uri` | string |  | the address of this app followed by /social/callback (required) |
+| `--label` | string |  | a name for the connection |
+| `--connection` | string |  | sign in again an existing connection instead of making one |
+| `--secret-file` | string |  | a file that holds the client secret; without it it is read from standard input |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+echo $CLIENT_SECRET | stuarty social:connect --network youtube --client-id 123.apps.googleusercontent.com --redirect-uri http://127.0.0.1:7878/social/callback
+```
+
+## `social:account:list`
+
+List the connected social accounts and whether each is signed in
+
+```text
+stuarty social:account:list
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty social:account:list
+```
+
+## `publish:validate`
+
+Check a post against the limits of its network and show what a person would approve; sends nothing
+
+```text
+stuarty publish:validate --project <id> --connection <id> --export <job> --title <t> --made-for-kids yes|no
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--connection` | string |  | the connection the video goes to (required) |
+| `--export` | string |  | the id of a succeeded export job of the project: the video (required) |
+| `--thumbnail` | string |  | the id of a succeeded export job of a still: the cover |
+| `--title` | string |  | the title (required) |
+| `--description` | string |  | the description |
+| `--tags` | string |  | the tags, a comma list |
+| `--visibility` | string |  | private (the default), unlisted or public |
+| `--made-for-kids` | string |  | yes or no: whether the video is made for kids (required) |
+| `--ai-disclosure` | boolean | `false` | the video has realistic altered or synthetic content |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`.
+
+Example:
+
+```bash
+stuarty publish:validate --project prj_7k2m9x4q1b --connection con_0123456789 --export job_0123456789 --title "My short" --made-for-kids no
+```
+
+## `publish:now`
+
+Prepare the publication of an exported video: it waits for a person to approve it in the app, then it is sent; you cannot approve it
+
+```text
+stuarty publish:now --project <id> --connection <id> --export <job> --title <t> --made-for-kids yes|no
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--connection` | string |  | the connection the video goes to (required) |
+| `--export` | string |  | the id of a succeeded export job of the project: the video (required) |
+| `--thumbnail` | string |  | the id of a succeeded export job of a still: the cover |
+| `--title` | string |  | the title (required) |
+| `--description` | string |  | the description |
+| `--tags` | string |  | the tags, a comma list |
+| `--visibility` | string |  | private (the default), unlisted or public |
+| `--made-for-kids` | string |  | yes or no: whether the video is made for kids (required) |
+| `--ai-disclosure` | boolean | `false` | the video has realistic altered or synthetic content |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--dry-run`.
+
+Example:
+
+```bash
+stuarty publish:now --project prj_7k2m9x4q1b --connection con_0123456789 --export job_0123456789 --title "My short" --made-for-kids no --visibility private
+```
+
+## `publish:status`
+
+Show the state of a publication: waiting_approval, uploading, processing, published or failed
+
+```text
+stuarty publish:status <job id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty publish:status job_0123456789
 ```
 
 ## `serve`

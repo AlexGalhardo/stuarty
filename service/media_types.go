@@ -69,6 +69,9 @@ type ImportedAsset struct {
 	Deduplicated bool          `json:"deduplicated"`
 	Probe        *ProbeSummary `json:"probe,omitempty"`
 	Error        *Error        `json:"error,omitempty"`
+	// Replaces is the offer of a file imported with a render key that clips of the timeline already use under an
+	// earlier render (SDD-011 section 15.4): nothing is replaced until MotionReplace or clip.replace_media.
+	Replaces []RenderOffer `json:"replaces,omitempty"`
 
 	// newInProject is true when this import created the asset in the project; MediaImport reads it to
 	// tell a refused new file from a retry (VV-193).

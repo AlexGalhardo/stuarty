@@ -469,7 +469,13 @@ func (s *svc) storeGenerated(
 		return GeneratedItem{}, asErr(ruleError(bad))
 	}
 
-	got := s.putAndAttach(ctx, run.Actor, &row, bytes.NewReader(data), "",
+	// The file belongs to the library of the owner of the project, as an import by that owner would.
+	owner := ""
+	if row.OwnerUserID != nil {
+		owner = *row.OwnerUserID
+	}
+
+	got := s.putAndAttach(ctx, run.Actor, owner, &row, bytes.NewReader(data), "",
 		ImportedAsset{Name: displayName(name), State: string(IngestPending)}, &libraryRecord{origin: o})
 	if got.Error != nil {
 		return GeneratedItem{}, got.Error

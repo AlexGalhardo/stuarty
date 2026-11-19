@@ -62,18 +62,14 @@ var OperationDomains = map[string]string{
 	"ImageHistory":  command.DomainImage,
 	"ImageFile":     command.DomainImage,
 
-	"MediaImport":  command.DomainAsset,
-	"MediaInspect": command.DomainAsset,
-	"MediaList":    command.DomainAsset,
-	"MediaTrash":   command.DomainAsset,
-	"MediaRestore": command.DomainAsset,
-	"AssetList":    command.DomainAsset,
-	"FontImport":   command.DomainAsset,
-	"FontList":     command.DomainAsset,
-	"AssetGet":     command.DomainAsset,
-	"AssetUses":    command.DomainAsset,
-	"AssetSetInfo": command.DomainAsset,
-	"AssetTag":     command.DomainAsset,
+	// The hand-off from an external motion engine (epic 33) works on the clips of a timeline.
+	"MotionBrief": command.DomainVideo, "MotionCheck": command.DomainVideo, "MotionReplace": command.DomainVideo,
+
+	"MediaImport": command.DomainAsset, "MediaInspect": command.DomainAsset, "MediaList": command.DomainAsset,
+	"MediaTrash": command.DomainAsset, "MediaRestore": command.DomainAsset, "AssetList": command.DomainAsset,
+	"FontImport": command.DomainAsset, "FontList": command.DomainAsset,
+	"AssetGet": command.DomainAsset, "AssetUses": command.DomainAsset, "AssetSetInfo": command.DomainAsset,
+	"AssetTag": command.DomainAsset,
 
 	"MemoryList":        command.DomainMemory,
 	"MemoryGet":         command.DomainMemory,
@@ -95,21 +91,19 @@ var OperationDomains = map[string]string{
 
 	// The approval queue is the gate of a publication and of a costly generation (ADR-0032); the cost summary and
 	// its ceilings are the spend on providers.
-	"ApprovalList":       command.DomainPublish,
-	"ApprovalGet":        command.DomainPublish,
-	"ApprovalDecide":     command.DomainPublish,
-	"ApprovalRuleList":   command.DomainPublish,
-	"ApprovalRuleSet":    command.DomainPublish,
-	"ApprovalRuleRemove": command.DomainPublish,
-	"CostSummary":        command.DomainProvider,
-	"CostCeilingSet":     command.DomainProvider,
-	"ProviderList":       command.DomainProvider,
-	"ProviderModels":     command.DomainProvider,
-	"ProviderPriceSet":   command.DomainProvider,
-	"TextGenerate":       command.DomainProvider,
-	"ImageGenerate":      command.DomainProvider,
-	"VoiceGenerate":      command.DomainProvider,
-	"VoiceList":          command.DomainProvider,
+	"ApprovalList": command.DomainPublish, "ApprovalGet": command.DomainPublish,
+	"ApprovalDecide": command.DomainPublish, "ApprovalRuleList": command.DomainPublish,
+	"ApprovalRuleSet": command.DomainPublish, "ApprovalRuleRemove": command.DomainPublish,
+	// The social networks a publication goes to, and the publication itself (SDD-020 section 9).
+	"SocialNetworkList": command.DomainPublish, "SocialConnectBegin": command.DomainPublish,
+	"SocialConnectComplete": command.DomainPublish, "SocialAccountList": command.DomainPublish,
+	"PublishValidate": command.DomainPublish, "PublishNow": command.DomainPublish,
+	"PublishStatus": command.DomainPublish,
+
+	"CostSummary": command.DomainProvider, "CostCeilingSet": command.DomainProvider,
+	"ProviderList": command.DomainProvider, "ProviderModels": command.DomainProvider,
+	"ProviderPriceSet": command.DomainProvider, "TextGenerate": command.DomainProvider,
+	"ImageGenerate": command.DomainProvider, "VoiceGenerate": command.DomainProvider, "VoiceList": command.DomainProvider,
 
 	"CommandHelp":      command.DomainWorkspace,
 	"ConnectionList":   command.DomainWorkspace,

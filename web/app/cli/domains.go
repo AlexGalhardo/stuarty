@@ -45,6 +45,8 @@ var commandDomains = map[string]string{
 	"fonts": command.DomainAsset, "asset:list": command.DomainAsset, "asset:show": command.DomainAsset,
 	"asset:uses": command.DomainAsset, "asset:set": command.DomainAsset, "asset:tag": command.DomainAsset,
 
+	"motion:brief": command.DomainVideo, "motion:check": command.DomainVideo, "motion:replace": command.DomainVideo,
+
 	"memory:list": command.DomainMemory, "memory:show": command.DomainMemory, "memory:write": command.DomainMemory,
 	"memory:remove": command.DomainMemory, "skill:list": command.DomainMemory, "skill:show": command.DomainMemory,
 	"skill:write": command.DomainMemory, "skill:import": command.DomainMemory, "skill:export": command.DomainMemory,
@@ -55,6 +57,9 @@ var commandDomains = map[string]string{
 	"approval:list": command.DomainPublish, "approval:show": command.DomainPublish,
 	"approval:decide": command.DomainPublish, "approval:rule:list": command.DomainPublish,
 	"approval:rule:set": command.DomainPublish, "approval:rule:remove": command.DomainPublish,
+	"social:network:list": command.DomainPublish, "social:connect": command.DomainPublish,
+	"social:account:list": command.DomainPublish, "publish:validate": command.DomainPublish,
+	"publish:now": command.DomainPublish, "publish:status": command.DomainPublish,
 	"cost:show": command.DomainProvider, "cost:ceiling": command.DomainProvider,
 	"provider:list": command.DomainProvider, "provider:models": command.DomainProvider,
 	"provider:price": command.DomainProvider, "text:generate": command.DomainProvider,

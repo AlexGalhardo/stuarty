@@ -29,7 +29,7 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | [07](07-dashboard-shell.md) | Dashboard: sidebar, navigation, profile, theme | M | 03 | DONE (2026-11-19, 70387363..171fb786) |
 | [08](08-asset-library.md) | Asset library with origin, rights and reuse | M | 06, 07 | DONE (2026-11-19, `ba30f86f`..`fdcdc23a`, merge `86c682f9`) |
 | [09](09-ai-provider-layer.md) | AI provider layer with API keys, text generation and cost | L | 04, 05 | DONE (2026-11-19, `96540531`..`7b5f1caa`, merge `5a97458e`; task 2 provider choice and task 8 real call wait for the author) |
-| [10](10-image-and-voice-generation.md) | Image and voice generation | M | 08, 09 | TODO |
+| [10](10-image-and-voice-generation.md) | Image and voice generation | M | 08, 09 | IN PROGRESS (senior-d, 2026-11-20) |
 | [11](11-video-generation.md) | Video generation | M | 10 | TODO |
 | [12](12-ai-oauth-connections.md) | Sign in with ChatGPT and OpenRouter | M | 09 | TODO |
 | [13](13-mcp-domains-and-agent-docs.md) | MCP tools by domain and generated agent documentation | M | 06 | DONE (2026-11-19, `773674ed`..`e9e671d4`, merge `c3be54a0`) |
@@ -37,13 +37,13 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | [15](15-memory-skills-and-prompts.md) | Memory, skills and prompts | L | 07 | DONE (2026-11-19, 65d33593..d2e8660f) |
 | [16](16-curated-skills-and-briefing.md) | Curated skills and the guided briefing | M | 06, 15 | DONE (2026-11-19, `6a134407`..`6771dee1`, merge `7aff38e0`) |
 | [17](17-writing.md) | Writing: scripts, copy and captions | M | 06, 09 | IN PROGRESS (senior-e, 2026-11-19) |
-| [18](18-social-connectors-and-youtube.md) | Social connectors and YouTube | L | 04, 05 | IN PROGRESS (senior-a, 2026-11-19) |
-| [19](19-instagram-and-facebook.md) | Instagram and Facebook | L | 18 | TODO |
-| [20](20-publishing-calendar-and-scheduler.md) | Publishing: calendar, approval and scheduler | L | 06, 07, 18 | TODO |
+| [18](18-social-connectors-and-youtube.md) | Social connectors and YouTube | L | 04, 05 | DONE (2026-11-20, `4cfc130a`..`375f681d`, merge `f4c35c228`; task 10 real upload waits for the author) |
+| [19](19-instagram-and-facebook.md) | Instagram and Facebook | L | 18 | IN PROGRESS (senior-c, 2026-11-20) |
+| [20](20-publishing-calendar-and-scheduler.md) | Publishing: calendar, approval and scheduler | L | 06, 07, 18 | IN PROGRESS (senior-b, 2026-11-20) |
 | [21](21-desktop-background-service.md) | Desktop background service for scheduled posts | M | 20 | TODO |
 | [22](22-x-and-tiktok-drafts.md) | X and TikTok drafts | M | 20 | TODO |
 | [23](23-blog-and-its-destinations.md) | Blog posts and their four destinations | L | 17, 20 | TODO |
-| [24](24-google-account-and-server-login.md) | Optional Google account and login on a server | M | 04, 18 | TODO |
+| [24](24-google-account-and-server-login.md) | Optional Google account and login on a server | M | 04, 18 | IN PROGRESS (senior-e, 2026-11-20) |
 | [25](25-vps-package.md) | VPS package: Caddy, install, update and backup | M | 24 | TODO |
 
 ### 1.3 Editor track (two seniors)
@@ -56,12 +56,12 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | [29](29-image-adjustments-filters-and-masks.md) | Image adjustments, filters, masks and blend modes | L | 27 | DONE (2026-11-19, `5d7680de`..`525c359b`, merge `1ee6a61d`; image LUT waits for the author) |
 | [30](30-image-operations-with-a-model.md) | Image operations with a model | S | 10, 28 | TODO |
 | [31](31-motion-easing-crop-and-mask.md) | Motion: easing curves, animated crop and mask, presets | L | 03 | DONE (2026-11-19, `e914c99b`..`a88f8e63`, merge `4c2c5c85`) |
-| [32](32-nested-compositions.md) | Nested compositions | M | 06, 31 | TODO |
-| [33](33-external-motion-engine-hand-off.md) | Hand-off from an external motion engine | M | 08 | IN PROGRESS (senior-d, 2026-11-19) |
+| [32](32-nested-compositions.md) | Nested compositions | M | 06, 31 | IN PROGRESS (senior-a, 2026-11-20) |
+| [33](33-external-motion-engine-hand-off.md) | Hand-off from an external motion engine | M | 08 | DONE (2026-11-20, `4f4022cc`..`bb19aa733` replayed, merge `3d693ba1d`; real HyperFrames round and no-egress on Linux not verified) |
 | [34](34-audio-processors-and-noise-reduction.md) | Audio processors and noise reduction | L | 03 | IN PROGRESS (senior-c, 2026-11-19) |
 | [35](35-export-presets-batch-and-codecs.md) | Export presets, batch queue, H.265 and AV1 | M | 03 | DONE (2026-11-19, `c1bb77fa`..`c718fdb2`, merge `1063ec42`) |
 | [36](36-revert-checkpoints-and-diff.md) | Revert to a revision, checkpoints and a diff | M | 03 | IN PROGRESS (senior-b, 2026-11-19) |
-| [37](37-editor-ui-and-shortcuts.md) | Final editor UI, shortcuts and open fixes | L | 07 | IN PROGRESS (senior-e, 2026-11-19) |
+| [37](37-editor-ui-and-shortcuts.md) | Final editor UI, shortcuts and open fixes | L | 07 | DONE (2026-11-19, `7921c340`..`2715dcc0`, merge `46691bb3`; criterion 4 not met on this Windows machine: WebKit/Firefox limits and VV-238, VV-253, VV-260 to VV-264) |
 
 ### 1.4 Closing (after the tracks)
 
