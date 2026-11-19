@@ -116,6 +116,14 @@ type Service interface {
 	ImageUndo(ctx context.Context, req ImageStepRequest) (*ImageStepResult, error)
 	ImageRedo(ctx context.Context, req ImageStepRequest) (*ImageStepResult, error)
 	ImageExport(ctx context.Context, req ImageExportRequest) (*ImageExportResult, error)
+	// ConnectionList and ConnectionGet read the destinations the user connected; ConnectionCreate,
+	// ConnectionRemove and ConnectionTest are for an administrator. No result carries a credential
+	// (SDD-014 section 5).
+	ConnectionList(ctx context.Context, req ConnectionListRequest) (*ConnectionListResult, error)
+	ConnectionGet(ctx context.Context, req ConnectionRef) (*connections.Connection, error)
+	ConnectionCreate(ctx context.Context, req ConnectionCreateRequest) (*connections.Connection, error)
+	ConnectionRemove(ctx context.Context, req ConnectionRef) (*connections.Connection, error)
+	ConnectionTest(ctx context.Context, req ConnectionRef) (*ConnectionTestResult, error)
 }
 
 // Event is what the service publishes after the change is durable (SDD-006
