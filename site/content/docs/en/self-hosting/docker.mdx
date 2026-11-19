@@ -90,8 +90,15 @@ When you connect an account (the Connections page), Stuarty keeps its credential
 
 ```bash
 openssl rand -base64 32 > master.key
-docker run -d --name stuarty   -v stuarty:/data   -v "$PWD/master.key:/run/secrets/master_key:ro"   -e STUARTY_MASTER_KEY_FILE=/run/secrets/master_key   ...
+docker run -d --name stuarty \
+  -p 127.0.0.1:7878:7878 \
+  -v stuarty:/data \
+  -v "$PWD/master.key:/run/secrets/master_key:ro" \
+  -e STUARTY_MASTER_KEY_FILE=/run/secrets/master_key \
+  ghcr.io/alexgalhardo/stuarty:X.Y.Z
 ```
+
+Add the other variables of the command above (`APP_KEY` and the first administrator) to the same `docker run`.
 
 `STUARTY_MASTER_KEY` takes the key itself instead of a file. Keep a copy of the key next to your backups: without it the connections cannot be opened and you connect the accounts again (projects and media are not encrypted and are not affected). Nothing is created until the first credential, so a server with no connection needs no key.
 
