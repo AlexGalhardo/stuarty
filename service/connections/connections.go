@@ -18,6 +18,7 @@ import (
 	"unicode"
 
 	"github.com/AlexGalhardo/stuarty/internal/outbound"
+	"github.com/AlexGalhardo/stuarty/service/untrusted"
 	"github.com/AlexGalhardo/stuarty/service/vault"
 )
 
@@ -276,4 +277,23 @@ func View(r Row, secretSet bool) Connection {
 	}
 
 	return c
+}
+
+// Summary is the connection as one line of text for the CLI and MCP text views. The label is text
+// a person typed, so it is delimited as untrusted text; the secret is never printed, only whether
+// one is set.
+func (c *Connection) Summary() string {
+	used := "never used"
+	if c.LastUsedAt != nil {
+		used = "last used " + c.LastUsedAt.Format("2006-01-02 15:04")
+	}
+
+	secret := "secret set"
+	if !c.SecretSet {
+		secret = "NO SECRET"
+	}
+
+	return fmt.Sprintf("%s  %s  %s  hosts: %s  accepts: %s  %s  %s", c.ID, c.Kind,
+		untrusted.Inline(untrusted.SourceProjectText, nil, c.Label, MaxLabel),
+		strings.Join(c.Hosts, ", "), strings.Join(c.Accepts, ", "), used, secret)
 }

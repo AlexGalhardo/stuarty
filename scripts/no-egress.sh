@@ -13,7 +13,10 @@
 #      import, bundle export and import, source import (media and a font file), a template saved, written
 #      and imported, the brand kit (colours, a font and a logo) and the helper install, which must stop at
 #      its question or be refused, so it connects to nothing;
-#   4. `mcp` on stdio: initialize and tools/list.
+#   4. `mcp` on stdio: initialize and tools/list;
+#   5. the connections (ADR-0032, SDD-014): with none configured, `connection:list` is empty and a test of a
+#      connection that does not exist is refused by the gate before any socket, so the product still opens
+#      no outbound connection until the user connects a destination.
 #
 # It fails on any socket address that is not loopback (127.0.0.0/8, ::1, ::ffff:127.x) or a Unix socket, and
 # fails when the trace shows no loopback connect at all (then strace saw nothing and the result is void).
@@ -181,6 +184,11 @@ grep -q "nothing was downloaded" "$work/cli-tools-install.out" || { cat "$work/c
 # SDD-007 section 6.8): the helper download itself is the one allowed outbound path (HTTPS to the hosts of
 # the embedded manifest) and is not run here, so the trace stays free of non-loopback addresses.
 vv_refused cli-tools-install-yes tools:install whisper --yes </dev/null
+
+log "CLI session: no connection configured, so nothing can leave"
+vv cli-connection-list connection:list --json
+grep -qF '"connections":[]' "$work/cli-connection-list.out" || { cat "$work/cli-connection-list.out" >&2; die "a fresh workspace lists a connection"; }
+vv_refused cli-connection-test connection:test con_0000000000
 
 log "MCP session on stdio: initialize, tools/list"
 mcp_out="$work/mcp.out"

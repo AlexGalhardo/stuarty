@@ -91,6 +91,16 @@
       ]
     },
     {
+      "tag": "Connections",
+      "pages": [
+        "connections.list",
+        "connections.create",
+        "connections.get",
+        "connections.remove",
+        "connections.test"
+      ]
+    },
+    {
       "tag": "System",
       "pages": [
         "handshake.get",
@@ -140,7 +150,8 @@
       "job_get",
       "job_cancel",
       "template",
-      "font_import"
+      "font_import",
+      "connection"
     ],
     "operations": [
       "asset.remove",

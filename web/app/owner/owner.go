@@ -27,8 +27,10 @@ import (
 	"github.com/AlexGalhardo/stuarty/internal/ffmpegpins"
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/config"
+	"github.com/AlexGalhardo/stuarty/service/connections"
 	"github.com/AlexGalhardo/stuarty/service/exporter"
 	"github.com/AlexGalhardo/stuarty/service/pathguard"
+	"github.com/AlexGalhardo/stuarty/service/vault"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
 	"github.com/AlexGalhardo/stuarty/web/app/agentdocs"
 	"github.com/AlexGalhardo/stuarty/web/app/auth"
@@ -268,9 +270,9 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 		return err
 	}
 
-	var keys service.KeyStore
-	if o.netAuth != nil {
-		keys = o.netAuth.Keys()
+	conns, err := o.connections(cfg.Getenv, st, cfg.Now)
+	if err != nil {
+		return err
 	}
 
 	heavy := rates.Heavy
@@ -279,7 +281,7 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 	}
 
 	o.Service, err = service.New(service.Options{
-		Keys: keys, HeavyPerMinute: heavy,
+		Keys: o.keyStore(), Connections: conns, HeavyPerMinute: heavy,
 		Heavy: middleware.ServiceLimiter{L: ratelimit.NewMemory(heavy, time.Minute)},
 		Store: st, Registry: command.Default(), Now: cfg.Now, Workspace: string(o.Dir), Media: media,
 		Exporter: exp, Enqueue: jobs.Dispatcher{Queue: o.Queue}, Limits: limits, Publish: publish, Version: o.version,
@@ -651,4 +653,42 @@ func rateLimitsFromEnv(getenv func(string) string, network bool) (httpapi.RateLi
 	}
 
 	return r, nil
+}
+
+// connections builds the registry of connections over the vault of the workspace. The master key
+// comes from the environment, a file or the operating system keychain (SDD-014 section 4). It is
+// read once and removed from the environment, so no child process inherits it. A key that is named
+// and malformed, or named twice, stops the start; a key that is merely absent does not: the vault
+// is created with the first credential.
+func (o *Owner) connections(
+	getenv func(string) string, st service.Store, now func() time.Time,
+) (*connections.Manager, error) {
+	keys, err := vault.Resolve(vault.ConfigFromEnv(getenv, string(o.Dir)))
+	if err != nil {
+		return nil, err
+	}
+
+	if _, err := keys.Load(); err != nil && !errors.Is(err, vault.ErrKeyNotFound) {
+		return nil, fmt.Errorf("owner: the master key of the vault from %s is not usable: %w", keys.Name(), err)
+	}
+
+	for _, name := range []string{vault.EnvMasterKey, vault.EnvMasterKeyFile} {
+		if getenv(name) != "" {
+			_ = os.Unsetenv(name)
+		}
+	}
+
+	return connections.NewManager(connections.Options{
+		Store: st.Connections(), Now: now,
+		Vault: vault.Open(filepath.Join(string(o.Dir), connections.VaultFile), keys),
+	}), nil
+}
+
+// keyStore is the API key store of network mode; local mode has none.
+func (o *Owner) keyStore() service.KeyStore {
+	if o.netAuth == nil {
+		return nil
+	}
+
+	return o.netAuth.Keys()
 }
