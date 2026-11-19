@@ -1,6 +1,14 @@
 import { execFileSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
-import { mkdirSync, mkdtempSync, readFileSync } from "node:fs";
+import {
+	closeSync,
+	mkdirSync,
+	mkdtempSync,
+	openSync,
+	readFileSync,
+	rmSync,
+	writeSync,
+} from "node:fs";
 import { readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -19,6 +27,84 @@ test.describe.configure({ mode: "serial" });
 const root = fileURLToPath(new URL("../../..", import.meta.url));
 
 let fakeAgent = "";
+
+// The agent profiles and the live sessions (at most 4) belong to the whole workspace, which every
+// browser project of a run shares, and this file asserts what the workspace holds ("no agent is
+// connected"). So one browser holds the workspace for the whole file: the others wait for the lock,
+// a file that names the worker holding it; the lock of a worker that is gone is taken over.
+const lockPath = (): string => join(home, "agent-chat.e2e.lock");
+
+function takeLock(): boolean {
+	try {
+		const fd = openSync(lockPath(), "wx");
+		writeSync(fd, String(process.pid));
+		closeSync(fd);
+		return true;
+	} catch {
+		let holder = Number.NaN;
+		try {
+			holder = Number(readFileSync(lockPath(), "utf8"));
+		} catch {
+			return false; // released between the two calls: the next poll takes it
+		}
+		try {
+			process.kill(holder, 0);
+			return false;
+		} catch {
+			rmSync(lockPath(), { force: true });
+			return false;
+		}
+	}
+}
+
+test.beforeAll(async () => {
+	test.setTimeout(20 * 60_000);
+	await expect
+		.poll(takeLock, {
+			message: "another browser holds the workspace of the chat tests",
+			timeout: 19 * 60_000,
+		})
+		.toBe(true);
+});
+
+test.afterAll(() => {
+	try {
+		if (Number(readFileSync(lockPath(), "utf8")) === process.pid) {
+			rmSync(lockPath(), { force: true });
+		}
+	} catch {
+		// no lock to release
+	}
+});
+
+// Every project a test made, so that the sessions it left running end with it.
+const made: string[] = [];
+
+test.afterEach(async ({ page, request }) => {
+	const api = await caller(request);
+	const live: string[] = [];
+	for (const project of made.splice(0)) {
+		const list = (await api("GET", `/projects/${project}/chat/sessions`)) as {
+			sessions: { id: string; live: boolean }[];
+		};
+		for (const s of list.sessions) if (s.live) live.push(s.id);
+	}
+	if (live.length === 0) return;
+	await signInAsPerson(page);
+	for (const id of live) {
+		const ended = await page.request.post(
+			`/api/v1/chat/sessions/${id}/cancel`,
+			{
+				data: { end: true },
+				headers: {
+					"Content-Type": "application/json",
+					"Sec-Fetch-Site": "same-origin",
+				},
+			},
+		);
+		expect(ended.ok()).toBe(true);
+	}
+});
 
 test.beforeAll(() => {
 	const dir = mkdtempSync(join(tmpdir(), "stuarty-e2e-fakeagent-"));
@@ -55,8 +141,10 @@ async function makeProject(
 	api: Awaited<ReturnType<typeof caller>>,
 	name: string,
 ): Promise<string> {
-	const made = await api("POST", "/projects", { name });
-	return String(made.project_id);
+	const created = await api("POST", "/projects", { name });
+	const id = String(created.project_id);
+	made.push(id);
+	return id;
 }
 
 // A person removes every agent profile, so that a run on a workspace that already has some starts
@@ -225,6 +313,25 @@ test.describe("agent chat", () => {
 		// ... the project is at revision 1 ...
 		const got = await api("GET", `/projects/${project}`);
 		expect(got.revision).toBe(1);
+
+		// ... and the edit is undone through the same MCP endpoint: undo is scoped to the actor, so
+		// the agent undoes its own step, which is in the log as a step of the agent too.
+		await say(page, `mcp history {"project_id":"${project}","action":"undo"}`);
+		await expect(page.getByTestId("chat-agent").last()).toContainText(
+			"undid r1",
+		);
+		await expect(page.getByTestId("chat-state")).toContainText(
+			"Waiting for you",
+		);
+		expect((await api("GET", `/projects/${project}`)).revision).toBe(2);
+		const after = (await api("GET", `/projects/${project}/history`)) as {
+			entries: { actor: string; revision: number }[];
+		};
+		expect(
+			after.entries.some(
+				(e) => e.revision === 2 && e.actor === agentStep?.actor,
+			),
+		).toBe(true);
 
 		// ... and an edit of another project is refused: the token is bound to this one.
 		const other = await makeProject(api, `Other ${unique(browserName)}`);
