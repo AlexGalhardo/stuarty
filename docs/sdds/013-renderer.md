@@ -267,7 +267,7 @@ out_c = div255(c x (255 - da)) + div255(dc x (255 - a)) + div255(t x B)
 out_a = a + da - t
 ```
 
-`out_c` and `out_a` are clamped to 255. With `da == 255` this is `div255(dc x (255 - a)) + div255(a x B)`. The general form also draws `multiply`, `screen`, `overlay` and `add` on a transparent canvas, with `B` of the table; on an opaque one those four keep SDD-004 section 3.8 and agree with the general form within one level (a property test). `mul(x, y) = div255(x x y)` and `scr(x, y) = x + y - mul(x, y)`:
+`out_c` and `out_a` are clamped to 255. With `da == 255` this is `div255(dc x (255 - a)) + div255(a x B)`. The general form also draws `multiply`, `screen`, `overlay` and `add` on a transparent canvas, with `B` of the table; on an opaque one those four keep SDD-004 section 3.8, and `multiply`, `screen` and `overlay` agree with the general form within two levels (a property test); `add` differs by design, SDD-004 adding the premultiplied source without the clamp of `B`. `mul(x, y) = div255(x x y)` and `scr(x, y) = x + y - mul(x, y)`:
 
 | Mode | `B(s, b)` |
 | --- | --- |
@@ -279,7 +279,7 @@ out_a = a + da - t
 | `lighten` | `max(s, b)` |
 | `difference` | `abs(s - b)` |
 | `hard_light` | `mul(b, 2 s)` when `s <= 127`, else `scr(b, 2 s - 255)` (the `mul` argument is held to 255) |
-| `soft_light` | `s <= 127`: `b - div255((255 - 2 s) x mul(b, 255 - b))`; else `b + round((2 s - 255) x (D(b) - b) / 255)`, rounding half away from zero, with `D(b) = ((16 b' - 12) b' + 4) b'` for `b <= 64` taken in 8 bits as `round(((16 b - 3060) x b + 260100) x b / 16581375)` and `D(b) = round(sqrt(255 b))` above 64 (the integer root, plus 1 when `255 b - r^2 > r`); the result is clamped to 0 to 255 |
+| `soft_light` | `s <= 127`: `b - div255((255 - 2 s) x mul(b, 255 - b))`; else `b + round((2 s - 255) x (D(b) - b) / 255)`, rounding half away from zero, with `D(b) = ((16 b' - 12) b' + 4) b'` for `b <= 64` taken in 8 bits as `(((16 b - 3060) x b + 260100) x b + 32512) / 65025` (integer division) and `D(b) = round(sqrt(255 b))` above 64 (the integer root, plus 1 when `255 b - r^2 > r`); the result is clamped to 0 to 255 |
 | `color_dodge` | `0` when `b == 0`, `255` when `s == 255`, else `min(255, (b x 255 + (255 - s) / 2) / (255 - s))` |
 | `color_burn` | `255` when `b == 255`, `0` when `s == 0`, else `255 - min(255, ((255 - b) x 255 + s / 2) / s)` |
 
@@ -302,6 +302,8 @@ These are the separable blend functions of the W3C compositing specification in 
 **Unsharp mask.** `rx`, `ry` are the box radii of the blur of §3.5 for `sigma = mul(radius, outScale)` (both 0 draws nothing). The premultiplied pixels are blurred by the three box passes of §3.5 with the edge pixels repeated beyond the layer instead of transparent ones (so an opaque picture has no bright fringe), and the layer keeps its size. With `ap = round_half_away(mul(amount, 1000))`, each colour channel `c` with blurred value `u` becomes `clamp(c + q, 0, a)` where `q = ((c - u) x ap + 500) / 1000` for a positive product and `-((u - c) x ap + 500) / 1000` for a negative one (integer division, half away from zero); alpha is unchanged.
 
 **Outer glow.** `sigma = mul(radius, outScale)`; the silhouette (the alpha of the layer, colour 0) is blurred as in §3.5 (the layer grows by 3 radii on every side; a zero radius draws nothing), the blurred alpha `g` becomes `ga = div255(min(255, (g x ag + 500) / 1000) x ca)` with `ag = round_half_away(mul(amount, 1000))` and `ca` the alpha of the colour, the glow pixel is the colour premultiplied by `ga`, and the layer is drawn over it with the premultiplied source-over of §3.7: `out = c + div255(glow x (255 - a))` for every channel including alpha.
+
+**Limits.** A shadow offset is held to 2048 pixels of the layer's own bitmap, so a plan that is not valid cannot ask for an unbounded padding (a valid one is far below it); the filters are fuzzed like the rest of the plan. The dilation of the outline (SDD-004 section 3.15) takes, for each row of the disc, the maximum of a window of the source row with a monotonic queue, so its cost is the pixels times the height of the disc and its bytes are those of the definition (a test compares the two); a stroke of 100 pixels on a large layer would otherwise cost the area of the disc for every pixel.
 
 **Mask shape `rounded_rect`** (§3.9). The shape of §3.9 step 2 with the corner radius `rq = min(round_half_away(mul(mul(radius, outScale), 256)), a, b)` (24.8; `a`, `b` the half-extents), and in step 3, with `qx = abs(lx - (L + a)) - (a - rq)` and `qy = abs(ly - (T + b)) - (b - rq)`: `d = rq - max(qx, qy)` when both are at most 0, else `d = rq - isqrt(max(qx, 0)^2 + max(qy, 0)^2)`. Feather and invert are unchanged. `radius` 0 is the `rect` of §3.9.
 
