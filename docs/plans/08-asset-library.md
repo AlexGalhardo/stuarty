@@ -41,7 +41,7 @@ A creator stops hunting through folders: every image, clip, sound and font they 
 - [x] 4. Implement the service operations, the origin on import and the search index. Verify: `go test ./service/assets/...` passes.
 - [x] 5. Expose on HTTP, CLI and MCP with parity tests and untrusted-text marking. Verify: `go test ./web/contract/...` and `go test -run TestSecurity_ ./...` pass.
 - [x] 6. Build the two sections and the detail panel in both languages. Verify: `task test:web` and `web/e2e/specs/asset-library.spec.ts` pass.
-- [ ] 7. Keep the editor's media library working on top of the new model. Verify: the existing library specs pass.
+- [x] 7. Keep the editor's media library working on top of the new model. Verify: the existing library specs pass.
 
 ## Test strategy
 
