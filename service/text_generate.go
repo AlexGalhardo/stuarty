@@ -142,7 +142,10 @@ func (s *svc) textProvider(
 	id string,
 ) (conn connections.Connection, gen providers.TextGenerator, err error) {
 	if id == "" {
-		return conn, nil, newError(command.CodeValidation, "connection_id is required.").withPath("args.connection_id")
+		// The job_start description has no room for the arguments (NFR-020), so the first refusal names them all.
+		return conn, nil, newError(command.CodeValidation, "connection_id is required.").withPath("args.connection_id").
+			withHint("args are connection_id, model, prompt and optionally system, max_tokens and temperature; " +
+				"provider:list names the connections")
 	}
 
 	conn, cerr := s.conns.Get(ctx, id)
