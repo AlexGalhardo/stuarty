@@ -436,13 +436,24 @@ func (p *processCommand) help() string {
 	return b.String()
 }
 
-// List prints the short command list of "stuarty" with no arguments.
+// List prints the short command list of "stuarty" with no arguments, grouped by domain: stuarty <domain> lists one.
 func List(w io.Writer) {
-	fmt.Fprintln(w, "stuarty commands:")
+	fmt.Fprintln(w, "stuarty commands, by domain (stuarty <domain> <verb> runs one of a domain):")
 
-	for _, s := range registry() {
-		fmt.Fprintf(w, "  %-16s %s\n", s.name, s.summary)
+	for _, d := range command.DomainNames() {
+		in := domainCommands(d)
+		if len(in) == 0 {
+			continue
+		}
+
+		fmt.Fprintf(w, "%s:\n", d)
+
+		for _, s := range in {
+			fmt.Fprintf(w, "  %-16s %s\n", s.name, s.summary)
+		}
 	}
+
+	fmt.Fprintln(w, "process:")
 
 	for i := range processCommands {
 		fmt.Fprintf(w, "  %-16s %s\n", processCommands[i].name, processCommands[i].summary)
@@ -467,6 +478,10 @@ func Help(args []string, stdout, stderr io.Writer) (code int, handled bool) {
 		return ExitOK, true
 	case args[0] == "--version" || args[0] == "-v":
 		fmt.Fprintln(stdout, "stuarty "+agentdocs.Version)
+
+		return ExitOK, true
+	case args[0] == "help" && len(args) == 2 && command.KnownDomain(args[1]) && lookup(args[1]) == nil:
+		listDomain(stdout, args[1])
 
 		return ExitOK, true
 	case args[0] == "help" && len(args) >= 2:

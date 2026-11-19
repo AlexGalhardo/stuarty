@@ -63,6 +63,7 @@
   "commands": [
     {
       "name": "project:list",
+      "domain": "project",
       "summary": "list the projects of the workspace",
       "usage": [
         "stuarty project:list [--state active|trashed|all] [--cursor c] [--limit n]"
@@ -96,6 +97,7 @@
     },
     {
       "name": "project:create",
+      "domain": "project",
       "summary": "create a project",
       "usage": [
         "stuarty project:create --name <name> [--preset 9:16|1:1|16:9|4:5] [--fps 30] [--id prj_...]"
@@ -135,6 +137,7 @@
     },
     {
       "name": "project:show",
+      "domain": "project",
       "summary": "show a project",
       "usage": [
         "stuarty project:show [<project id>] [--detail concise|full|document] [--cursor c] [--limit n]"
@@ -168,6 +171,7 @@
     },
     {
       "name": "project:trash",
+      "domain": "project",
       "summary": "move a project to the trash",
       "usage": [
         "stuarty project:trash <project id>"
@@ -184,6 +188,7 @@
     },
     {
       "name": "project:restore",
+      "domain": "project",
       "summary": "restore a trashed project",
       "usage": [
         "stuarty project:restore <project id>"
@@ -200,6 +205,7 @@
     },
     {
       "name": "edit",
+      "domain": "video",
       "summary": "apply a batch of operations to a project (its lint block is lint_scope fast: lint runs every rule)",
       "usage": [
         "stuarty edit --project <id> --ops <file|-> [--base n] [--key k]",
@@ -234,6 +240,7 @@
     },
     {
       "name": "history",
+      "domain": "video",
       "summary": "list the steps of a project history",
       "usage": [
         "stuarty history --project <id> [--by a] [--cursor c] [--limit n]"
@@ -267,6 +274,7 @@
     },
     {
       "name": "undo",
+      "domain": "video",
       "summary": "undo the last step of the caller",
       "usage": [
         "stuarty undo --project <id>"
@@ -283,6 +291,7 @@
     },
     {
       "name": "redo",
+      "domain": "video",
       "summary": "redo the last undone step of the caller",
       "usage": [
         "stuarty redo --project <id>"
@@ -299,6 +308,7 @@
     },
     {
       "name": "lint",
+      "domain": "video",
       "summary": "check a project against every lint rule (an edit result runs only the fast rules, lint_scope fast)",
       "usage": [
         "stuarty lint --project <id> [--severity error|warning] [--cursor c] [--limit n] [--strict]"
@@ -339,6 +349,7 @@
     },
     {
       "name": "version",
+      "domain": "workspace",
       "summary": "print the version of this binary",
       "usage": [
         "stuarty version [--json]"
@@ -353,6 +364,7 @@
     },
     {
       "name": "mcp",
+      "domain": "workspace",
       "summary": "serve the MCP tools on standard input and output",
       "usage": [
         "stuarty mcp [--actor <label>]"
@@ -367,6 +379,7 @@
     },
     {
       "name": "media:import",
+      "domain": "asset",
       "summary": "import media files into a project",
       "usage": [
         "stuarty media:import <path>... --project <id> [--asset-id ast_...] [--wait] [--timeout d]",
@@ -452,6 +465,7 @@
     },
     {
       "name": "media:inspect",
+      "domain": "asset",
       "summary": "show what is known about an asset",
       "usage": [
         "stuarty media:inspect <asset id> --project <id> [--sections probe,transcript,silences,loudness]"
@@ -491,6 +505,7 @@
     },
     {
       "name": "media:list",
+      "domain": "asset",
       "summary": "list the assets of a project",
       "usage": [
         "stuarty media:list --project <id> [--cursor c] [--limit n]"
@@ -519,6 +534,7 @@
     },
     {
       "name": "media:trash",
+      "domain": "asset",
       "summary": "move an asset to the trash",
       "usage": [
         "stuarty media:trash <asset id> --project <id>"
@@ -535,6 +551,7 @@
     },
     {
       "name": "media:restore",
+      "domain": "asset",
       "summary": "restore a trashed asset",
       "usage": [
         "stuarty media:restore <asset id> --project <id>"
@@ -551,6 +568,7 @@
     },
     {
       "name": "view",
+      "domain": "video",
       "summary": "render a frame or a contact sheet of a project",
       "usage": [
         "stuarty view --project <id> [--mode frame|sheet] [--at t] [--times t1,t2,...]",
@@ -616,6 +634,7 @@
     },
     {
       "name": "export",
+      "domain": "video",
       "summary": "export a project to a file",
       "usage": [
         "stuarty export --project <id> [--start t] [--end t] [--format f] [--at t] [--preset p] [--codec c] [--wait] [--out f] [--force]"
@@ -786,6 +805,7 @@
     },
     {
       "name": "job:show",
+      "domain": "video",
       "summary": "show a job",
       "usage": [
         "stuarty job:show <job id> [--wait] [--timeout d]"
@@ -809,6 +829,7 @@
     },
     {
       "name": "job:cancel",
+      "domain": "video",
       "summary": "cancel a queued or running job",
       "usage": [
         "stuarty job:cancel <job id>"
@@ -823,6 +844,7 @@
     },
     {
       "name": "job:list",
+      "domain": "video",
       "summary": "list the jobs of a project",
       "usage": [
         "stuarty job:list --project <id> [--state s] [--cursor c] [--limit n]"
@@ -856,6 +878,7 @@
     },
     {
       "name": "events",
+      "domain": "project",
       "summary": "print the events of a project as they arrive",
       "usage": [
         "stuarty events --project <id> [--from-id n] [--since n] [--count n]"
@@ -889,6 +912,7 @@
     },
     {
       "name": "command:help",
+      "domain": "workspace",
       "summary": "list the editing commands, or describe one",
       "usage": [
         "stuarty command:help [<name>]"
@@ -911,6 +935,7 @@
     },
     {
       "name": "template:list",
+      "domain": "video",
       "summary": "list the templates of the library",
       "usage": [
         "stuarty template:list [--cursor c] [--limit n]"
@@ -938,6 +963,7 @@
     },
     {
       "name": "template:save",
+      "domain": "video",
       "summary": "make a template from a project",
       "usage": [
         "stuarty template:save --project <id> --name <name> [--description d]"
@@ -966,6 +992,7 @@
     },
     {
       "name": "template:new",
+      "domain": "video",
       "summary": "create a project from a template",
       "usage": [
         "stuarty template:new <template id> --name <name> [--fill <file|->] [--id prj_...]"
@@ -1010,6 +1037,7 @@
     },
     {
       "name": "template:export",
+      "domain": "video",
       "summary": "write a template to a file the workspace keeps",
       "usage": [
         "stuarty template:export <template id> [--out f] [--force]"
@@ -1037,6 +1065,7 @@
     },
     {
       "name": "template:import",
+      "domain": "video",
       "summary": "add a template file to the library",
       "usage": [
         "stuarty template:import <path>"
@@ -1052,6 +1081,7 @@
     },
     {
       "name": "bundle:export",
+      "domain": "project",
       "summary": "export a project as a .vvbundle to share or to back up",
       "usage": [
         "stuarty bundle:export --project <id> [--no-log] [--wait] [--out f] [--force]"
@@ -1088,6 +1118,7 @@
     },
     {
       "name": "bundle:import",
+      "domain": "project",
       "summary": "create a project from a .vvbundle file",
       "usage": [
         "stuarty bundle:import <path> [--as-new]"
@@ -1111,6 +1142,7 @@
     },
     {
       "name": "agent:docs",
+      "domain": "workspace",
       "summary": "print or write the material for agents: the skill, the AGENTS.md snippet, the MCP instructions",
       "usage": [
         "stuarty agent:docs --print skill|agents|instructions",
@@ -1138,6 +1170,7 @@
     },
     {
       "name": "transcribe",
+      "domain": "video",
       "summary": "transcribe the audio of an asset",
       "usage": [
         "stuarty transcribe --project <id> --asset <id> [--language auto] [--model <name>] [--wait] [--timeout d]"
@@ -1173,6 +1206,7 @@
     },
     {
       "name": "doctor",
+      "domain": "workspace",
       "summary": "check the installation and the workspace",
       "usage": [
         "stuarty doctor [--full] [--verify] [--bundle] [--gc]"
@@ -1213,6 +1247,7 @@
     },
     {
       "name": "fonts",
+      "domain": "asset",
       "summary": "list the bundled font families",
       "usage": [
         "stuarty fonts"
@@ -1227,6 +1262,7 @@
     },
     {
       "name": "audit",
+      "domain": "workspace",
       "summary": "list the audit table",
       "usage": [
         "stuarty audit [--project <id>] [--cursor c] [--limit n]"
@@ -1259,6 +1295,7 @@
     },
     {
       "name": "tools:install",
+      "domain": "workspace",
       "summary": "download a helper such as the transcription program",
       "usage": [
         "stuarty tools:install <name> [--model <model>] [--force] [--yes] [--timeout d]"
@@ -1293,6 +1330,7 @@
     },
     {
       "name": "token:rotate",
+      "domain": "workspace",
       "summary": "replace the local token; clients that hold the old one must be set up again",
       "usage": [
         "stuarty token:rotate"
@@ -1307,6 +1345,7 @@
     },
     {
       "name": "font:import",
+      "domain": "asset",
       "summary": "add a TrueType or OpenType font file to the font store",
       "usage": [
         "stuarty font:import <path>"
@@ -1321,6 +1360,7 @@
     },
     {
       "name": "brand:show",
+      "domain": "workspace",
       "summary": "show the brand kit: logo, colours and fonts",
       "usage": [
         "stuarty brand:show"
@@ -1335,6 +1375,7 @@
     },
     {
       "name": "brand:set",
+      "domain": "workspace",
       "summary": "replace the brand kit",
       "usage": [
         "stuarty brand:set --kit <file|->"
@@ -1356,6 +1397,7 @@
     },
     {
       "name": "otio:export",
+      "domain": "video",
       "summary": "write the timeline of a project as an OpenTimelineIO file",
       "usage": [
         "stuarty otio:export --project <id> [--out f] [--force]"
@@ -1384,6 +1426,7 @@
     },
     {
       "name": "otio:import",
+      "domain": "video",
       "summary": "apply an OpenTimelineIO file to a project as one undo step",
       "usage": [
         "stuarty otio:import <path> --project <id> [--base-revision n]"
@@ -1413,6 +1456,7 @@
     },
     {
       "name": "project:describe",
+      "domain": "project",
       "summary": "describe a project as text: brief, items and state",
       "usage": [
         "stuarty project:describe <id>"
@@ -1435,6 +1479,7 @@
     },
     {
       "name": "project:duplicate",
+      "domain": "project",
       "summary": "copy a project: its brief, texts and timelines",
       "usage": [
         "stuarty project:duplicate <id> [--name n]"
@@ -1458,6 +1503,7 @@
     },
     {
       "name": "item:add",
+      "domain": "project",
       "summary": "add a text, a timeline or an output to a project",
       "usage": [
         "stuarty item:add --project <id> --kind text|timeline|output --title <t>",
@@ -1513,6 +1559,7 @@
     },
     {
       "name": "item:move",
+      "domain": "project",
       "summary": "move an item to a position in the order of the project",
       "usage": [
         "stuarty item:move <item> --project <id> --position n"
@@ -1536,6 +1583,7 @@
     },
     {
       "name": "item:rename",
+      "domain": "project",
       "summary": "change the title of an item",
       "usage": [
         "stuarty item:rename <item> --project <id> --title \"...\""
@@ -1559,6 +1607,7 @@
     },
     {
       "name": "item:trash",
+      "domain": "project",
       "summary": "move an item to the trash of its project",
       "usage": [
         "stuarty item:trash <item> --project <id>"
@@ -1575,6 +1624,7 @@
     },
     {
       "name": "item:restore",
+      "domain": "project",
       "summary": "restore an item from the trash of its project",
       "usage": [
         "stuarty item:restore <item> --project <id>"
@@ -1591,6 +1641,7 @@
     },
     {
       "name": "brief:show",
+      "domain": "project",
       "summary": "show the brief of a project",
       "usage": [
         "stuarty brief:show --project <id>"
@@ -1606,6 +1657,7 @@
     },
     {
       "name": "brief:set",
+      "domain": "project",
       "summary": "write the brief of a project from a Markdown file",
       "usage": [
         "stuarty brief:set --project <id> --text <file|->"
@@ -1686,6 +1738,7 @@
     },
     {
       "name": "connection:list",
+      "domain": "workspace",
       "summary": "list the destinations Stuarty may reach",
       "usage": [
         "stuarty connection:list"
@@ -1700,6 +1753,7 @@
     },
     {
       "name": "connection:show",
+      "domain": "workspace",
       "summary": "show one connection: destinations, what it accepts and its last use",
       "usage": [
         "stuarty connection:show <id>"
@@ -1714,6 +1768,7 @@
     },
     {
       "name": "connection:add",
+      "domain": "workspace",
       "summary": "connect a destination; the secret is read from standard input or a file, never from an argument",
       "usage": [
         "stuarty connection:add --kind <k> --label <t> --endpoint <url> --accepts <list>"
@@ -1760,6 +1815,7 @@
     },
     {
       "name": "connection:remove",
+      "domain": "workspace",
       "summary": "remove a connection and its credential",
       "usage": [
         "stuarty connection:remove <id>"
@@ -1774,6 +1830,7 @@
     },
     {
       "name": "connection:test",
+      "domain": "workspace",
       "summary": "make one request through a connection and show how the destination answered",
       "usage": [
         "stuarty connection:test <id>"
@@ -2004,6 +2061,7 @@
     },
     {
       "name": "image:create",
+      "domain": "image",
       "summary": "create an image document, blank or from a template",
       "usage": [
         "stuarty image:create --preset p"
@@ -2066,6 +2124,7 @@
     },
     {
       "name": "image:list",
+      "domain": "image",
       "summary": "list the image documents and templates",
       "usage": [
         "stuarty image:list"
@@ -2098,6 +2157,7 @@
     },
     {
       "name": "image:show",
+      "domain": "image",
       "summary": "describe an image document: its layers, its findings and its revision",
       "usage": [
         "stuarty image:show <id>"
@@ -2112,6 +2172,7 @@
     },
     {
       "name": "image:edit",
+      "domain": "image",
       "summary": "apply a batch of image operations (stuarty command:help --domain image lists them)",
       "usage": [
         "stuarty image:edit <id> <op> k=v..."
@@ -2144,6 +2205,7 @@
     },
     {
       "name": "image:undo",
+      "domain": "image",
       "summary": "undo the last step of the caller on an image",
       "usage": [
         "stuarty image:undo <id>"
@@ -2159,6 +2221,7 @@
     },
     {
       "name": "image:redo",
+      "domain": "image",
       "summary": "redo the last undone step of the caller on an image",
       "usage": [
         "stuarty image:redo <id>"
@@ -2174,6 +2237,7 @@
     },
     {
       "name": "image:export",
+      "domain": "image",
       "summary": "export an image document to a PNG, JPEG or WebP file",
       "usage": [
         "stuarty image:export <id> [--format f]"
@@ -2378,6 +2442,7 @@
     },
     {
       "name": "memory:list",
+      "domain": "memory",
       "summary": "list the memory notes",
       "usage": [
         "stuarty memory:list [--scope workspace|<project id>] [--tag t]... [--all]"
@@ -2411,6 +2476,7 @@
     },
     {
       "name": "memory:show",
+      "domain": "memory",
       "summary": "show a memory note",
       "usage": [
         "stuarty memory:show <name>"
@@ -2425,6 +2491,7 @@
     },
     {
       "name": "memory:write",
+      "domain": "memory",
       "summary": "write a memory note: one fact, with what was learned",
       "usage": [
         "stuarty memory:write [<name>] --description <one line> [--body <text>|--body-file <file|->] [--scope s] [--tag t]...",
@@ -2468,6 +2535,7 @@
     },
     {
       "name": "memory:remove",
+      "domain": "memory",
       "summary": "delete a memory note (a note a person kept stays)",
       "usage": [
         "stuarty memory:remove <name>"
@@ -2482,6 +2550,7 @@
     },
     {
       "name": "skill:list",
+      "domain": "memory",
       "summary": "list the skills that are reviewed",
       "usage": [
         "stuarty skill:list [--origin built-in|user|imported] [--all]"
@@ -2509,6 +2578,7 @@
     },
     {
       "name": "skill:show",
+      "domain": "memory",
       "summary": "show a skill: its text, its files and the findings of the lint",
       "usage": [
         "stuarty skill:show <name>"
@@ -2523,6 +2593,7 @@
     },
     {
       "name": "skill:write",
+      "domain": "memory",
       "summary": "write a skill; it stays unreviewed until a person reads it in the Skills section",
       "usage": [
         "stuarty skill:write <name> --description <text> [--body <text>|--body-file <file|->] [--license l]",
@@ -2566,6 +2637,7 @@
     },
     {
       "name": "skill:import",
+      "domain": "memory",
       "summary": "import a skill from a folder or an archive (.zip, .tar.gz) you already have; it starts unreviewed",
       "usage": [
         "stuarty skill:import <folder|archive> [--source <text>] [--replace]"
@@ -2593,6 +2665,7 @@
     },
     {
       "name": "skill:lint",
+      "domain": "memory",
       "summary": "run the lint on a skill",
       "usage": [
         "stuarty skill:lint <name>"
@@ -2607,6 +2680,7 @@
     },
     {
       "name": "skill:export",
+      "domain": "memory",
       "summary": "write skills as folders in the Agent Skills layout, to install them in your own agent",
       "usage": [
         "stuarty skill:export [<name>...]",
@@ -2622,6 +2696,7 @@
     },
     {
       "name": "prompt:list",
+      "domain": "memory",
       "summary": "list the prompts",
       "usage": [
         "stuarty prompt:list [--tag t]..."
@@ -2644,6 +2719,7 @@
     },
     {
       "name": "prompt:show",
+      "domain": "memory",
       "summary": "show a prompt and its variables",
       "usage": [
         "stuarty prompt:show <name>"
@@ -2658,6 +2734,7 @@
     },
     {
       "name": "prompt:write",
+      "domain": "memory",
       "summary": "write a prompt: a reusable text with {{variables}}",
       "usage": [
         "stuarty prompt:write <name> --description <text> [--body <text>|--body-file <file|->] [--default <variable>=<value>]... [--tag t]..."
@@ -2701,6 +2778,7 @@
     },
     {
       "name": "prompt:render",
+      "domain": "memory",
       "summary": "replace the variables of a prompt and print the text; nothing is sent anywhere",
       "usage": [
         "stuarty prompt:render <name> [--value <variable>=<value>]..."
@@ -2723,6 +2801,7 @@
     },
     {
       "name": "library:search",
+      "domain": "memory",
       "summary": "search memory, skills and prompts with one query",
       "usage": [
         "stuarty library:search <word>... [--kind memory|skill|prompt]... [--scope s] [--tag t]... [--origin o] [--all]",
@@ -2780,6 +2859,7 @@
     },
     {
       "name": "library:reindex",
+      "domain": "memory",
       "summary": "rebuild the index of the library from its files",
       "usage": [
         "stuarty library:reindex"
