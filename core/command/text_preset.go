@@ -137,6 +137,20 @@ func easingAt(keys []timeline.Keyframe, t int) string {
 	return e
 }
 
+// fillPresetPlan sets the base value and the tail easing of each property a preset may write, and returns
+// the curve of each "bezier" tail: it goes with the easing, or the keyframe would carry it without its numbers.
+func (c *Context) fillPresetPlan(plan *presetPlan, it *timeline.Item, at int) map[string][]float64 {
+	curves := map[string][]float64{}
+	for _, prop := range []string{"y", "scale", "opacity"} {
+		plan.base[prop] = c.presetBase(it, prop, at)
+		plan.tail[prop] = easingAt(it.Keyframes[prop], at)
+		if gov := governing(it.Keyframes[prop], at); gov != nil {
+			curves[prop] = gov.Bezier
+		}
+	}
+	return curves
+}
+
 func applyTextPreset(c *Context, a *textPresetArgs) error {
 	if err := idForm("args.item_id", timeline.PrefixItem, a.ItemID); err != nil {
 		return err
@@ -194,15 +208,7 @@ func applyTextPreset(c *Context, a *textPresetArgs) error {
 		preset: a.Preset, in: in, n: n, d: d, h: round3(0.05 * float64(c.Doc.Settings.Height)),
 		base: map[string]float64{}, tail: map[string]string{},
 	}
-	// The curve of a "bezier" tail goes with it, or the keyframe would carry the easing without its numbers.
-	curves := map[string][]float64{}
-	for _, prop := range []string{"y", "scale", "opacity"} {
-		plan.base[prop] = c.presetBase(&it, prop, at)
-		plan.tail[prop] = easingAt(it.Keyframes[prop], at)
-		if gov := governing(it.Keyframes[prop], at); gov != nil {
-			curves[prop] = gov.Bezier
-		}
-	}
+	curves := c.fillPresetPlan(&plan, &it, at)
 	writes := plan.writes()
 	written := slices.Sorted(maps.Keys(writes))
 	lo, hi := 0, n
