@@ -292,20 +292,32 @@ func lintTool(ctx context.Context, svc service.Service, raw json.RawMessage) (*t
 		ProjectID string `json:"project_id"`
 		Severity  string `json:"severity"`
 		Preset    string `json:"preset"`
+		Start     string `json:"start"`
+		End       string `json:"end"`
 		pageArgs
 	}](raw)
 	if err != nil {
 		return nil, err
 	}
 
-	// With a preset the lint is the fit check of SDD-004 section 8.2 (ExportCheck).
+	// With a preset the lint is the fit check of SDD-004 section 8.2 (ExportCheck), over the range when one is
+	// given, as export:check and GET /projects/{id}/export-check take it.
 	if in.Preset != "" {
-		chk, cerr := svc.ExportCheck(ctx, service.ExportCheckRequest{ProjectID: in.ProjectID, Preset: in.Preset})
+		chk, cerr := svc.ExportCheck(ctx, service.ExportCheckRequest{
+			ProjectID: in.ProjectID, Preset: in.Preset, Start: in.Start, End: in.End,
+		})
 		if cerr != nil {
 			return nil, cerr
 		}
 
 		return &toolOutput{value: chk, text: chk.Text}, nil
+	}
+
+	if in.Start != "" || in.End != "" {
+		return nil, &service.Error{
+			Code: command.CodeValidation, Path: "start",
+			Message: "start and end are the range of the fit check: they need preset.",
+		}
 	}
 
 	res, err := svc.Lint(ctx, service.LintRequest{ProjectID: in.ProjectID, Severity: in.Severity, Page: in.page()})

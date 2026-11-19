@@ -2538,7 +2538,7 @@ The `image` block follows the text block: `{"type": "image", "mimeType": "image/
 ```json
 {
   "name":"lint",
-  "description":"Check a project for problems: code, severity, item, message, hint. Errors block export; run after edits, before export. Runs every rule. preset (see command_help domain=export) checks the fit to that export preset instead.",
+  "description":"Check a project for problems: code, severity, item, message, hint. Errors block export; run after edits, before export. Runs every rule. preset (see command_help domain=export) checks the fit to that export preset instead, over start..end.",
   "inputSchema":{
     "type":"object",
     "properties":{
@@ -2563,6 +2563,12 @@ The `image` block follows the text block: `{"type": "image", "mimeType": "image/
         "default":25
       },
       "preset":{
+        "type":"string"
+      },
+      "start":{
+        "type":"string"
+      },
+      "end":{
         "type":"string"
       }
     },
@@ -3918,7 +3924,7 @@ Every `Service` operation has an encoding on each surface. The table is the proo
 | `JobStart` (`export`) | `job_start` (`kind` `export`) | `export` | `POST /projects/{id}/jobs` |
 | `JobStart` (`transcribe`) | `job_start` (`kind` `transcribe`) | `transcribe` | `POST /projects/{id}/jobs` |
 | `ExportPresetList` | `command_help` (`domain` `export`: the presets and the codecs of this machine) | `export:presets [--codecs]` | `GET /export-presets` |
-| `ExportCheck` | `lint` (with `preset`: the fit check instead of the lint) | `export:check --project <id> --preset <id> [--start t] [--end t] [--codec c]` | `GET /projects/{id}/export-check` |
+| `ExportCheck` | `lint` (with `preset`, and `start` and `end` for a range: the fit check instead of the lint) | `export:check --project <id> --preset <id> [--start t] [--end t] [--codec c]` | `GET /projects/{id}/export-check` |
 | `ExportBatch` | `job_start` (`kind` `export_batch`) | `export:batch --project <id> --preset <id> [--preset <id> ...] \| --items <json>` | `POST /projects/{id}/export-batches` |
 | `JobGet` | `job_get` (with `job_id`) | `job:show` | `GET /jobs/{job_id}` |
 | `JobList` | `job_get` (with `project_id`, no `job_id`) | `job:list` | `GET /projects/{id}/jobs` |
