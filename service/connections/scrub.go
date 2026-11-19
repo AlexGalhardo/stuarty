@@ -12,20 +12,21 @@ import (
 	"github.com/AlexGalhardo/stuarty/service/untrusted"
 )
 
-// minScrubbed is the shortest secret a body is checked for, and the length of the prefix and of the
-// suffix of a longer one that is enough to drop the body: a destination that echoes eight bytes of a
-// credential has echoed it, even when the rest was cut or escaped on the way (SDD-014 section 9). It
-// is the same floor as the vault redaction (a shorter secret would drop any text it is in).
+// minScrubbed is the shortest secret a body is checked for, and the length of the window that drops
+// the body: a destination that echoes any eight consecutive bytes of a credential, in any form it
+// writes it back, has echoed it, even when the rest was cut or escaped on the way (SDD-014 section 9).
+// It is the same floor as the vault redaction (a shorter secret would drop any text it is in).
 const minScrubbed = 8
 
 // droppedBody replaces the body of an answer that held the credential.
 const droppedBody = "the destination echoed the credential: its answer was dropped."
 
-// echoesSecret says whether body holds the secret, or minScrubbed bytes of its start or its end, in
+// echoesSecret says whether body holds the secret, or any minScrubbed consecutive bytes of it, in
 // the forms a destination writes it back: as is, HTML, URL and JSON escaped, base64 and hex (lower
-// and upper case). It
-// looks at the raw bytes, before any cut or escape, and also at them after the cleaning the text
-// goes through, so a secret split by a control character is found too.
+// and upper case). It looks at the raw bytes, before any cut or escape, and also at them after the
+// cleaning the text goes through, so a secret split by a control character is found too. The cost is
+// one search of the body per window of each form: a secret is short (a few hundred bytes at most) and
+// the body is capped by the response budget, so it stays linear in the body for a given secret.
 func echoesSecret(body, secret []byte) bool {
 	if len(secret) < minScrubbed {
 		return false
@@ -49,9 +50,9 @@ func echoesSecret(body, secret []byte) bool {
 	haystacks := [][]byte{body, []byte(untrusted.Clean(string(body)))}
 
 	for _, f := range forms {
-		for _, needle := range []string{f[:minScrubbed], f[len(f)-minScrubbed:]} {
+		for i := 0; i+minScrubbed <= len(f); i++ {
 			for _, h := range haystacks {
-				if bytes.Contains(h, []byte(needle)) {
+				if bytes.Contains(h, []byte(f[i:i+minScrubbed])) {
 					return true
 				}
 			}
