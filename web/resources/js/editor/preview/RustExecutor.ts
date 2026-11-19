@@ -104,6 +104,8 @@ export class RustExecutor implements PreviewExecutor {
 	private readonly stillImages = new Map<string, HTMLImageElement>();
 	private readonly presented = new Map<number, Presented>();
 	private resyncs = 0;
+	// Frames the worker drew that reached the canvas, for the playback specs.
+	private shown = 0;
 	private readonly frameListeners = new Set<(frame: number) => void>();
 	private readonly stateListeners = new Set<(state: PreviewState) => void>();
 
@@ -306,6 +308,7 @@ export class RustExecutor implements PreviewExecutor {
 		}
 		this.audioClock = await audioClockReady(this.audioContext);
 		if (this.disposed) return;
+		this.canvas?.setAttribute("data-clock", this.audioClock ? "audio" : "wall");
 		this.playing = true;
 		this.generation++;
 		this.clock.start(this.frame);
@@ -481,6 +484,11 @@ export class RustExecutor implements PreviewExecutor {
 			context.drawImage(bitmap, 0, 0);
 		}
 		bitmap.close();
+		this.shown++;
+		// While playing, frames come too fast to be worth an attribute write each.
+		if (!this.playing || this.shown % 10 === 0) {
+			canvas.setAttribute("data-presented", String(this.shown));
+		}
 		if (result === undefined || this.playing) return;
 		if (result.decodedUs >= 0 && result.complete) {
 			canvas.setAttribute("data-frame-us", String(result.decodedUs));
