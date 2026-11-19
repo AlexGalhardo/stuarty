@@ -28,6 +28,13 @@ func AgentDocsInputs() agentdocs.Inputs {
 		inLibrary[s.name] = true
 	}
 
+	// The commands of the AI provider layer (SDD-016 section 10) wait for the budget epic 13 gives the skill: the
+	// editor skill has no room for them. An agent starts a generation with job_start (kind text.generate) and
+	// reads these commands from --help.
+	for _, s := range providerCommands() {
+		inLibrary[s.name] = true
+	}
+
 	for i := range commands {
 		c := &commands[i]
 		if c.Person || inLibrary[c.Name] {
