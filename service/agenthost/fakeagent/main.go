@@ -8,7 +8,7 @@
 // The modes: echo (answers with the text it got), permission (asks before a tool call and
 // reports the answer), mcp (the prompt "mcp <tool> <json>" calls that tool of the MCP server it
 // was given, with its header, and reports the result), markup (answers with hostile markup),
-// env (reports the names of its environment), spawn (starts a child that sleeps and writes its
+// mcp-info (reports the params of session/new), env (reports the names of its environment), spawn (starts a child that sleeps and writes its
 // pid to --pidfile), flood (writes thousands of chunks), hang-start (never answers initialize),
 // hang-turn (never ends a turn and ignores session/cancel), deaf (ignores the close of its
 // input), exit-start (exits before answering initialize), exit-turn (exits during a turn),
@@ -190,6 +190,7 @@ func handle(m msg, pidfile string) {
 
 		_ = json.Unmarshal(m.Params, &p)
 		mcp = p.MCP
+		newParams = string(m.Params)
 
 		respond(m.ID, map[string]any{"sessionId": "sess_fake"})
 	case "session/prompt":
@@ -208,7 +209,11 @@ func handle(m msg, pidfile string) {
 	}
 }
 
-var cancelled = make(chan struct{}, 4)
+var (
+	cancelled = make(chan struct{}, 4)
+	// newParams are the params of session/new, as the agent got them.
+	newParams string
+)
 
 func promptText(m msg) string {
 	var p struct {
@@ -262,6 +267,9 @@ func prompt(m msg, pidfile string) {
 		end("end_turn")
 	case "mcp":
 		chunk(callMCP(text))
+		end("end_turn")
+	case "mcp-info":
+		chunk(newParams)
 		end("end_turn")
 	case "env":
 		var names []string
