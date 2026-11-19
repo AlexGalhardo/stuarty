@@ -82,12 +82,6 @@ func (r assetRepo) Upsert(ctx context.Context, a service.AssetRow) (service.Asse
 	if err != nil {
 		return service.AssetRow{}, false, err
 	}
-	if n == 1 {
-		// Every file is found by its name from the moment it exists, whatever writer made it (SDD-005 section 5.5.1).
-		if err := assetLibraryRepo(r).Reindex(ctx, a.Hash); err != nil {
-			return service.AssetRow{}, false, err
-		}
-	}
 	existing, err := r.Get(ctx, a.Hash)
 	return existing, n == 1, err
 }

@@ -111,7 +111,7 @@ func (s *svc) AssetGet(ctx context.Context, req AssetRef) (*AssetResult, error) 
 		return nil, ferr
 	}
 
-	lib := assets.Library{Store: s.store.AssetLibrary()}
+	lib := assets.Library{Store: s.store.AssetLibrary(), Owner: c.OwnerUserID}
 
 	entry, gerr := lib.Get(ctx, &h, s.useNames(ctx, &h))
 	if gerr != nil {
@@ -184,7 +184,7 @@ func (s *svc) AssetSetInfo(ctx context.Context, req AssetSetInfoRequest) (*Asset
 	var entry LibraryAsset
 
 	werr := s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
-		lib := assets.Library{Store: tx.AssetLibrary()}
+		lib := assets.Library{Store: tx.AssetLibrary(), Owner: c.OwnerUserID}
 
 		var uerr error
 
@@ -219,7 +219,7 @@ func (s *svc) AssetTag(ctx context.Context, req AssetTagRequest) (*AssetResult, 
 	var entry LibraryAsset
 
 	werr := s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
-		lib := assets.Library{Store: tx.AssetLibrary()}
+		lib := assets.Library{Store: tx.AssetLibrary(), Owner: c.OwnerUserID}
 
 		var uerr error
 

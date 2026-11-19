@@ -644,9 +644,21 @@ func (s *svc) writeDuplicate(ctx context.Context, tx Tx, c Caller, src *Producti
 		}
 	}
 
+	indexed := map[string]bool{}
+
 	for i := range plan.assets {
 		if err := tx.Assets().PutProjectAsset(ctx, plan.assets[i]); err != nil {
 			return err
+		}
+
+		// The copy may belong to an owner with no search row for the file yet (a local copy of a user's
+		// project): the file is found by the names the copy gives it (VV-254).
+		if h := plan.assets[i].AssetHash; !indexed[h] {
+			indexed[h] = true
+
+			if err := tx.AssetLibrary().Reindex(ctx, ownerOf(head.OwnerUserID), h); err != nil {
+				return err
+			}
 		}
 	}
 
