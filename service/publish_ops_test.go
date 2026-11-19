@@ -212,3 +212,50 @@ func TestPublishNow_UploadKeyCoversEveryMemberOfThePost(t *testing.T) {
 		t.Error("a new thumbnail starts a new upload session")
 	}
 }
+
+func TestDisclosure_TextSaysWhetherAndWhyTheFlagIsSet(t *testing.T) {
+	t.Parallel()
+
+	takes, takesNone := social.Description{Name: "Instagram", AIDisclosure: true}, social.Description{Name: "Old net"}
+
+	for name, tc := range map[string]struct {
+		t    publishTarget
+		want string
+	}{
+		"nothing set":            {publishTarget{desc: takes}, "not set"},
+		"the person set it":      {publishTarget{desc: takes, input: publishInput{Args: PublishArgs{AIDisclosure: true}}}, "set"},
+		"a generated asset":      {publishTarget{desc: takes, generated: true, input: publishInput{Args: PublishArgs{AIDisclosure: true}}}, "set (a generated asset is used)"},
+		"a network with no flag": {publishTarget{desc: takesNone, input: publishInput{Args: PublishArgs{AIDisclosure: true}}}, "wanted, but Old net takes no such flag"},
+		"no flag and no ai":      {publishTarget{desc: takesNone}, "not set"},
+	} {
+		if got := disclosureText(&tc.t); got != tc.want {
+			t.Errorf("%s: %q, want %q", name, got, tc.want)
+		}
+	}
+}
+
+func TestDisclosure_MediaComesFromWhatTheExportMeasured(t *testing.T) {
+	t.Parallel()
+
+	got := exportMedia(&ExportResult{
+		Width:      1080,
+		Height:     1920,
+		FPS:        "30000/1001",
+		Duration:   TimeValue{Seconds: 12.3456},
+		VideoCodec: "H264",
+		AudioCodec: "AAC",
+	})
+	if got == nil || got.Width != 1080 || got.Height != 1920 || got.FPSNum != 30000 || got.FPSDen != 1001 ||
+		got.DurationMS != 12346 || got.VideoCodec != "h264" || got.AudioCodec != "aac" {
+		t.Fatalf("media = %+v", got)
+	}
+
+	for name, e := range map[string]*ExportResult{
+		"an image": {Width: 1080, Height: 1920},
+		"no size":  {VideoCodec: "h264"},
+	} {
+		if exportMedia(e) != nil {
+			t.Errorf("%s: media was made from nothing", name)
+		}
+	}
+}
