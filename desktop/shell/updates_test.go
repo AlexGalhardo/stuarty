@@ -178,3 +178,88 @@ func TestUpdateMessagesFollowTheLanguage(t *testing.T) {
 		t.Errorf("message %q", got)
 	}
 }
+
+// TestSettingsOfTheFormerNameAreAdopted: the answer a person gave to Vukem Video about updates is read from
+// its folder once and kept in the new one (ADR-0044); the former file is left in place, and an answer
+// already recorded under the new name wins.
+func TestSettingsOfTheFormerNameAreAdopted(t *testing.T) {
+	config := t.TempDir()
+	t.Setenv("APPDATA", config)
+	t.Setenv("XDG_CONFIG_HOME", config)
+	t.Setenv("HOME", config)
+
+	base, err := os.UserConfigDir()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	former := filepath.Join(base, "vukem-video", "desktop.json")
+	if err := (Settings{}).WithAutoCheck(true).Save(former); err != nil {
+		t.Fatal(err)
+	}
+
+	path, err := SettingsPath()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if want := filepath.Join(base, "stuarty", "desktop.json"); path != want {
+		t.Fatalf("SettingsPath = %s, want %s", path, want)
+	}
+
+	if s, err := LoadSettings(path); err != nil || !s.AutoCheck() {
+		t.Errorf("adopted settings = %+v, %v, want the answer yes", s, err)
+	}
+
+	if _, err := os.Stat(former); err != nil {
+		t.Errorf("the former file was removed: %v", err)
+	}
+
+	// The person changes the answer under the new name; reading the path again must not bring the old one back.
+	if err := (Settings{}).WithAutoCheck(false).Save(path); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := SettingsPath(); err != nil {
+		t.Fatal(err)
+	}
+
+	if s, err := LoadSettings(path); err != nil || s.AutoCheck() || !s.Asked() {
+		t.Errorf("settings = %+v, %v, want the new answer no", s, err)
+	}
+}
+
+// TestSettingsOfTheFormerNameThatAreDamagedAreIgnored: a former file that cannot be read gives the defaults.
+func TestSettingsOfTheFormerNameThatAreDamagedAreIgnored(t *testing.T) {
+	config := t.TempDir()
+	t.Setenv("APPDATA", config)
+	t.Setenv("XDG_CONFIG_HOME", config)
+	t.Setenv("HOME", config)
+
+	base, err := os.UserConfigDir()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	former := filepath.Join(base, "vukem-video", "desktop.json")
+	if err := os.MkdirAll(filepath.Dir(former), 0o700); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := os.WriteFile(former, []byte("{not json"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	path, err := SettingsPath()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := os.Stat(path); err == nil {
+		t.Error("a damaged former file was copied")
+	}
+
+	if s, err := LoadSettings(path); err != nil || s.Asked() {
+		t.Errorf("settings = %+v, %v, want the defaults", s, err)
+	}
+}

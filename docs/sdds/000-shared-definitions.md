@@ -154,6 +154,7 @@ CLI exit codes: `0` success; `2` for every code marked retryable; `1` for the re
 ```text
 <workspace>/                 default ~/.stuarty, or $STUARTY_HOME
 ├── db.sqlite                database
+├── adopted.json             present only in a workspace adopted from `~/.vukem-video`: where it came from, how and the backup (SDD-005 §6.6)
 ├── lock                     empty file that carries the operating-system lock of the owner process (SDD-005 §6.2)
 ├── runtime.json             owner process: schema, pid, addr, mode, started_at, version (present only while a server runs; no secret)
 ├── token                    local token, file mode 0600 (local mode only)
@@ -343,7 +344,7 @@ These are read only by tests, scripts and developer tools. They are renamed with
 | `vukem-render` | `stuarty-render` | the native GPU host (SDD-013 §4.9) |
 | `vukem-renderer`, `vukem-renderer-text`, `vukem-renderer-gpu` | `stuarty-renderer`, `stuarty-renderer-text`, `stuarty-renderer-gpu` | the Rust crates of `renderer/` |
 | `github.com/AlexGalhardo/vukem-video` | `github.com/AlexGalhardo/stuarty` | the Go module path |
-| `~/.vukem-video` | `~/.stuarty` | the workspace folder; adopted at the first start (SDD-005 §6.5) |
+| `~/.vukem-video` | `~/.stuarty` | the workspace folder; adopted at the first start (SDD-005 §6.6) |
 | `vukem-video.log` | `stuarty.log` | the log file in `logs/` |
 | `Vukem-Video-Client`, `Vukem-Video-Launcher`, `Vukem-Video-Lang` | `Stuarty-Client`, `Stuarty-Launcher`, `Stuarty-Lang` | request headers (section 11) |
 | `vukem_video_session` | `stuarty_session` | the session cookie (section 11); a browser signs in again once |
@@ -360,4 +361,7 @@ These identifiers outlive the rename on purpose, because changing them would bre
 | `vvl_`, `vvk_` (token prefixes), `.vvbundle` (bundle extension) | existing tokens, API keys and bundle files; they carry the initials, not the name |
 | `vukem-video-update-feed-v1`, `vukem-video-update-artifact-v1` (the signing labels of the update feed, SDD-009 §10.5) | an installed Vukem Video verifies the feed with these labels; a feed signed under other labels would be refused, so Stuarty could not be offered to it as its update |
 | `VUKEM_VIDEO_OPENH264_DIR` | read by the pinned own FFmpeg build `ffmpeg-9.0.2-2` (its patch, `.config/ffmpeg-build/patches/`); it changes with the next rebuild of that build, and the server sets it for the FFmpeg child process only |
+| `https://vukem-video.dev/schema/timeline.v1.schema.json` (the `$id` of the timeline schema) | an identifier of the first release; the address of the documentation site is a setting of the author, so the identifier does not move with the name |
+| `dev.vukem.vukem-video`, `dev.vukem.vukem-video.launcher` and `dev.vukem.vukem-video.desktop` (the macOS package and bundle identifiers) | the identity macOS upgrades by: a package of Stuarty with them replaces an installed Vukem Video; the Windows `AppId` GUIDs stay for the same reason |
+| `--extra-version=vukem<N>` (the configure line of the own FFmpeg build) | read by `engine/ffmpeg/flavour.go` to recognise the own build; it changes with the next rebuild of that build |
 | `vukem` as the OTIO metadata namespace, `X-Vukem-*` response headers, `window.vukemDesktop` | the short name of the framework era, not the product name; a wire and file format identifier, changed only by a decision of its own |
