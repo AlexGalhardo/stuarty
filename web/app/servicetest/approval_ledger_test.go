@@ -3,10 +3,103 @@ package servicetest
 import (
 	"context"
 	"errors"
+	"sync"
 	"testing"
 
 	"github.com/AlexGalhardo/stuarty/service"
 )
+
+// SDD-007 T-50: the check of the ceiling and the reservation are one transaction, so people approving
+// at the same moment, or a rule approving submissions that arrive together, never pass the ceiling.
+func TestSecurity_T50_ConcurrentApprovalsNeverPassTheCeiling(t *testing.T) {
+	t.Parallel()
+
+	const n = 10
+
+	w := &waiting{p: &probe{estimate: usd(300_000)}, block: make(chan struct{})}
+	close(w.block)
+
+	e, _ := newHeldEnv(t, w)
+	project := e.newProject("p")
+	e.setCeiling("", 0, 1_000_000)
+
+	ids := make([]string, 0, n)
+
+	for range n {
+		job, err := e.submit(e.as(token), project)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		ids = append(ids, job.ApprovalID)
+	}
+
+	var (
+		wg       sync.WaitGroup
+		mu       sync.Mutex
+		approved int
+	)
+
+	for _, id := range ids {
+		wg.Go(func() {
+			err := e.approve(id)
+
+			mu.Lock()
+			defer mu.Unlock()
+
+			switch code(err) {
+			case "":
+				approved++
+			case service.CodeCostCeiling:
+			default:
+				t.Errorf("approving %s = %v", id, err)
+			}
+		})
+	}
+
+	wg.Wait()
+
+	if approved != 3 || e.spentToday() != 900_000 {
+		t.Fatalf("%d approved at once, %d reserved; want 3 and 900000 under a ceiling of 1000000",
+			approved, e.spentToday())
+	}
+
+	// A rule approving submissions that arrive together holds the same line.
+	perItem := int64(300_000)
+	if _, err := e.svc.ApprovalRuleSet(e.asPerson(), service.ApprovalRuleSetRequest{
+		Kind: testKind, Currency: "USD", PerItemMicros: &perItem,
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	e.setCeiling("", 0, 2_000_000)
+
+	var queued int
+
+	for range n {
+		wg.Go(func() {
+			job, err := e.submit(e.as("local:agent-burst"), project)
+
+			mu.Lock()
+			defer mu.Unlock()
+
+			switch {
+			case err == nil && job.State == service.JobQueued:
+				queued++
+			case code(err) == service.CodeCostCeiling:
+			default:
+				t.Errorf("a submission under the rule = %+v, %v", job, err)
+			}
+		})
+	}
+
+	wg.Wait()
+
+	if queued != 3 || e.spentToday() != 1_800_000 {
+		t.Errorf("the rule approved %d at once, %d reserved; want 3 more and 1800000 under 2000000",
+			queued, e.spentToday())
+	}
+}
 
 // SDD-007 T-50: a run that spends and is then interrupted by a shutdown is requeued with its
 // reservation kept, and what it already spent is recorded too, so the next run cannot spend past the
