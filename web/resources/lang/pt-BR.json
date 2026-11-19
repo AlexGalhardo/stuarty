@@ -837,6 +837,54 @@
             "aac": "Somente áudio AAC",
             "png": "Imagem PNG do quadro no cabeçote de reprodução"
           }
+        },
+        "presets": {
+          "title": "Plataformas",
+          "hint": "Escolha uma ou mais: cada uma vira um arquivo que cabe naquela rede.",
+          "loading": "Carregando as plataformas",
+          "unavailable": "Não foi possível carregar as plataformas.",
+          "limit_duration_max": "até {seconds} s",
+          "limit_duration_range": "{min} a {max} s",
+          "limit_duration_min": "pelo menos {seconds} s",
+          "limit_fps": "{min} a {max} fps",
+          "limit_fps_max": "até {max} fps",
+          "limit_aspect": "proporção {ratio}",
+          "limit_size": "arquivo de até {size}",
+          "source": "Limites lidos em {date}",
+          "source_link": "Fonte",
+          "checking": "Verificando",
+          "fits": "O projeto cabe.",
+          "does_not_fit": "O projeto não cabe:",
+          "limit_line": "limite {limit}, agora {got}",
+          "misfit": "{count} das plataformas escolhidas não cabem e vão falhar; ajuste o projeto ou tire-as da escolha.",
+          "start_many": "Exportar {count} arquivos"
+        },
+        "codec": {
+          "label": "Codec de vídeo",
+          "auto": "Automático (como a plataforma prefere)",
+          "h264": "H.264 (funciona em todo lugar)",
+          "hevc": "H.265 (HEVC, arquivos menores)",
+          "av1": "AV1 (arquivos ainda menores, aparelhos novos)",
+          "unavailable": "{name} (indisponível nesta máquina)",
+          "fallback_note": "Se esta máquina não codifica o codec preferido, usa-se H.264 e o resultado avisa."
+        },
+        "batch": {
+          "title": "Exportações",
+          "summary": "{done} de {total} prontas",
+          "state": {
+            "queued": "Aguardando",
+            "running": "Exportando",
+            "succeeded": "Pronta",
+            "failed": "Falhou",
+            "cancelled": "Cancelada"
+          },
+          "item": "Exportação {index}: {name}",
+          "queued_behind": "Outra exportação está em andamento: esta espera por ela e começa sozinha.",
+          "finished": "Exportações concluídas",
+          "some_failed": "Algumas exportações falharam",
+          "download": "Baixar {name}",
+          "codec_note": "Arquivo: {codec}, {size} MB",
+          "plain": "Exportação"
         }
       },
       "commands": {

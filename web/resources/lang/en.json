@@ -837,6 +837,54 @@
             "aac": "AAC audio only",
             "png": "PNG image of the frame at the playhead"
           }
+        },
+        "presets": {
+          "title": "Platforms",
+          "hint": "Pick one or more: each becomes a file that fits that network.",
+          "loading": "Loading the platforms",
+          "unavailable": "The platforms could not be loaded.",
+          "limit_duration_max": "up to {seconds} s",
+          "limit_duration_range": "{min} to {max} s",
+          "limit_duration_min": "at least {seconds} s",
+          "limit_fps": "{min} to {max} fps",
+          "limit_fps_max": "up to {max} fps",
+          "limit_aspect": "aspect {ratio}",
+          "limit_size": "file up to {size}",
+          "source": "Limits read on {date}",
+          "source_link": "Source",
+          "checking": "Checking",
+          "fits": "The project fits.",
+          "does_not_fit": "The project does not fit:",
+          "limit_line": "limit {limit}, now {got}",
+          "misfit": "{count} of the chosen platforms do not fit and will fail; fix the project or leave them out.",
+          "start_many": "Export {count} files"
+        },
+        "codec": {
+          "label": "Video codec",
+          "auto": "Automatic (as the platform prefers)",
+          "h264": "H.264 (works everywhere)",
+          "hevc": "H.265 (HEVC, smaller files)",
+          "av1": "AV1 (smallest files, newer devices)",
+          "unavailable": "{name} (not available on this machine)",
+          "fallback_note": "If this machine cannot encode the preferred codec, H.264 is used and the result says so."
+        },
+        "batch": {
+          "title": "Exports",
+          "summary": "{done} of {total} done",
+          "state": {
+            "queued": "Waiting",
+            "running": "Exporting",
+            "succeeded": "Done",
+            "failed": "Failed",
+            "cancelled": "Cancelled"
+          },
+          "item": "Export {index}: {name}",
+          "queued_behind": "Another export is running: this one waits for it and starts by itself.",
+          "finished": "Exports finished",
+          "some_failed": "Some exports failed",
+          "download": "Download {name}",
+          "codec_note": "File: {codec}, {size} MB",
+          "plain": "Export"
         }
       },
       "commands": {
