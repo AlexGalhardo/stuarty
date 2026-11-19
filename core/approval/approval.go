@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"unicode"
+	"unicode/utf8"
 )
 
 // Limits of SDD-015 section 3.
@@ -339,16 +341,31 @@ func checkLimits(prefix, currency string, perItem, perDay *int64) *FieldError {
 	return nil
 }
 
-// ValidSummary reports whether s is a summary of a request: 1 to MaxSummary characters, no control
-// character other than a line feed.
-func ValidSummary(s string) bool {
-	n := len([]rune(s))
-	if n < 1 || n > MaxSummary {
+// ValidSummary reports whether s is a summary of a request: valid UTF-8 of 1 to MaxSummary
+// characters with no control or format character other than a line feed.
+func ValidSummary(s string) bool { return validText(s, 1, MaxSummary) }
+
+// ValidReason reports whether s is the note of a rejection: as a summary, and it may be empty.
+func ValidReason(s string) bool { return validText(s, 0, MaxReason) }
+
+// validText is the text a person reads before deciding. An agent writes it, so it must not look like
+// something else: every control (Cc, which holds the C1 controls), every format character (Cf: the
+// bidirectional controls, the zero-width characters, the byte order mark, the tag characters) and
+// the line and paragraph separators are refused, and so is invalid UTF-8. The service refuses the
+// further characters service/untrusted drops from text an agent reads.
+func validText(s string, minLen, maxLen int) bool {
+	if !utf8.ValidString(s) {
+		return false
+	}
+
+	n := utf8.RuneCountInString(s)
+	if n < minLen || n > maxLen {
 		return false
 	}
 
 	for _, r := range s {
-		if r < 0x20 && r != '\n' || r == 0x7f {
+		if r != '\n' && (unicode.Is(unicode.Cc, r) || unicode.Is(unicode.Cf, r) || unicode.Is(unicode.Zl, r) ||
+			unicode.Is(unicode.Zp, r)) {
 			return false
 		}
 	}
