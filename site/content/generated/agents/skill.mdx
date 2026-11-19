@@ -73,7 +73,10 @@ Prefix each with `stuarty`.
 - `media:trash <asset id> --project <id>`
 - `media:restore <asset id> --project <id>`
 - `view --project <id> [--mode frame|sheet] [--at t] [--times t1,t2,...]`
-- `export --project <id> [--start t] [--end t] [--format f] [--at t] [--wait] [--timeout d] [--out f] [--force]`
+- `export --project <id> [--start t] [--end t] [--format f] [--at t] [--preset p] [--codec c] [--wait] [--timeout d] [--out f] [--force]`
+- `export:presets [--codecs]`
+- `export:check --project <id> --preset <preset id> [--start t] [--end t] [--codec c]`
+- `export:batch --project <id> --preset <id> [--preset <id> ...] [--codec c] [--start t] [--end t] [--wait] [--timeout d]`
 - `job:show <job id> [--wait] [--timeout d]`
 - `job:cancel <job id>`
 - `job:list --project <id> [--state s] [--cursor c] [--limit n]`
