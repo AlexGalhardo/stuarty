@@ -125,6 +125,21 @@ export const navigation: NavCategory[] = [
 		pages: ["overview", "connect", "mcp", "cli", "verify", "batches", "skill", "safety", "recipes", "drive-the-editor"],
 	},
 	{
+		dir: "agents",
+		title: "Agents by domain",
+		pages: [
+			"domain-project",
+			"domain-video",
+			"domain-image",
+			"domain-writing",
+			"domain-asset",
+			"domain-publish",
+			"domain-provider",
+			"domain-memory",
+			"domain-workspace",
+		],
+	},
+	{
 		dir: "prompts",
 		title: "Prompts",
 		pages: ["overview", "claude-code", "codex", "opencode", "cursor", "gemini-cli", "other-clients"],

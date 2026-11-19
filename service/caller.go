@@ -66,6 +66,9 @@ var Scopes = map[string]string{
 	"MediaTrash":          ScopeMedia,
 	"MediaRestore":        ScopeMedia,
 	"JobStart":            ScopeRender,
+	"ExportPresetList":    ScopeRead,
+	"ExportCheck":         ScopeRead,
+	"ExportBatch":         ScopeRender,
 	"ProjectBundleExport": ScopeRender,
 	"ProjectBundleImport": ScopeEdit,
 	"ProjectOtioExport":   ScopeRead,
@@ -125,6 +128,8 @@ var Scopes = map[string]string{
 	"ProjectItemRestore": ScopeEdit,
 	"BriefGet":           ScopeRead,
 	"BriefSet":           ScopeEdit,
+	"BriefingQuestions":  ScopeRead,
+	"BriefingAnswer":     ScopeEdit,
 	"ImageCreate":        ScopeEdit,
 	"ImageList":          ScopeRead,
 	"ImageDescribe":      ScopeRead,
@@ -132,6 +137,9 @@ var Scopes = map[string]string{
 	"ImageUndo":          ScopeEdit,
 	"ImageRedo":          ScopeEdit,
 	"ImageExport":        ScopeEdit,
+	"ImageFrame":         ScopeRead,
+	"ImageHistory":       ScopeRead,
+	"ImageFile":          ScopeRead,
 	"ConnectionList":     ScopeRead,
 	"ConnectionGet":      ScopeRead,
 	"ConnectionCreate":   ScopeAdmin,
@@ -154,6 +162,11 @@ var Scopes = map[string]string{
 	"PublishStatus":         ScopeRead,
 	"CostSummary":           ScopeRead,
 	"CostCeilingSet":        ScopeAdmin,
+
+	"AssetGet":     ScopeRead,
+	"AssetUses":    ScopeRead,
+	"AssetSetInfo": ScopeMedia,
+	"AssetTag":     ScopeMedia,
 }
 
 // authorize checks the caller first, as every method does: a missing caller

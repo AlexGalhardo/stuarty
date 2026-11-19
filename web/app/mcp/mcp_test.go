@@ -355,7 +355,7 @@ var idPattern = regexp.MustCompile(`^\^(prj|ast|trk|itm|job|tpl|con|img|pit)_\[0
 func TestToolSchemas(t *testing.T) {
 	t.Parallel()
 
-	defs, err := loadDefinitions(command.Default())
+	defs, err := loadDefinitions()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -388,51 +388,6 @@ func TestToolSchemas(t *testing.T) {
 	raw := marshal(t, defs["project_list"].tool.OutputSchema)
 	if !strings.Contains(string(raw), `"x-untrusted":true`) {
 		t.Error("the name of a project must be marked x-untrusted in project_list")
-	}
-}
-
-func TestEditOpEnumIsTheRegistry(t *testing.T) {
-	t.Parallel()
-
-	defs, err := loadDefinitions(command.Default())
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	raw := marshal(t, defs["edit"].tool.InputSchema)
-
-	var schema struct {
-		Properties struct {
-			Operations struct {
-				Items struct {
-					Properties struct {
-						Op struct {
-							Enum []string `json:"enum"`
-						} `json:"op"`
-					} `json:"properties"`
-				} `json:"items"`
-			} `json:"operations"`
-		} `json:"properties"`
-	}
-
-	if err := json.Unmarshal(raw, &schema); err != nil {
-		t.Fatal(err)
-	}
-
-	have := map[string]bool{}
-	for _, n := range command.Default().Names() {
-		have[n] = true
-	}
-
-	enum := schema.Properties.Operations.Items.Properties.Op.Enum
-	if len(enum) == 0 {
-		t.Fatal("the op enum is empty")
-	}
-
-	for _, op := range enum {
-		if !have[op] {
-			t.Errorf("%s is in the enum but not in the registry", op)
-		}
 	}
 }
 

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"maps"
 
 	core "github.com/AlexGalhardo/stuarty/core/library"
 )
@@ -190,18 +189,6 @@ func (m *Manager) LintSkill(ctx context.Context, name string) ([]core.Finding, e
 	}
 
 	return core.LintSkill(name, all), nil
-}
-
-// InstallBuiltIn writes a skill that ships with the product: origin built-in,
-// and reviewed, because the project wrote and read it. It is not an operation
-// of the service.
-func (m *Manager) InstallBuiltIn(ctx context.Context, s core.Skill) error {
-	s.Metadata = maps.Clone(s.Metadata)
-	s.SetOrigin(core.OriginBuiltIn, s.Source())
-
-	_, _, _, err := m.finishSkill(ctx, s, true)
-
-	return err
 }
 
 func isNotFoundOrInvalid(err error) bool {

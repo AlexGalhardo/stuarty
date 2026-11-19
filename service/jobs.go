@@ -120,21 +120,7 @@ func (s *svc) JobStart(ctx context.Context, req JobStartRequest) (*Job, error) {
 		return nil, gerr
 	}
 
-	var (
-		start, end int64
-		terr       *Error
-	)
-
-	switch {
-	case args.Format == FormatPNG:
-		start, end, terr = stillRange(doc, args)
-	case args.At != "":
-		terr = newError(command.CodeValidation, "at is for a png export.").withPath("args.at").
-			withHint("set format to png, or use start and end")
-	default:
-		start, end, terr = exportRange(doc, args)
-	}
-
+	start, end, terr := jobExportRange(doc, args)
 	if terr != nil {
 		return nil, terr
 	}
@@ -148,10 +134,14 @@ func (s *svc) JobStart(ctx context.Context, req JobStartRequest) (*Job, error) {
 		return nil, lerr
 	}
 
+	if perr := checkPresetArgs(doc, format, args, end-start); perr != nil {
+		return nil, perr
+	}
+
 	input := marshalOrNull(
 		exportInput{
 			Revision: row.Revision, Start: start, End: end, Lint: &totals, Document: row.Document, Format: format,
-			Warnings: exportWarnings(doc, format, end-start),
+			Warnings: exportWarnings(doc, format, end-start), Preset: args.Preset, Codec: args.Codec,
 		},
 	)
 	projectID := row.ID
@@ -207,7 +197,7 @@ func (s *svc) JobStart(ctx context.Context, req JobStartRequest) (*Job, error) {
 		return nil, asError(gerr2)
 	}
 
-	return s.jobView(c, cur, req.WaitMS > 0), nil
+	return s.jobViewCtx(ctx, c, cur, req.WaitMS > 0), nil
 }
 
 // stamp gives a job that is never stored the times of a new one.
@@ -262,14 +252,17 @@ func decodeExportArgs(raw json.RawMessage) (ExportArgs, *Error) {
 	}
 
 	for name := range probe {
-		if name != "start" && name != "end" && name != "format" && name != "at" {
+		if name != "start" && name != "end" && name != "format" && name != "at" && name != "preset" && name != "codec" {
 			return a, newError(command.CodeValidation, "the export does not take the argument %q.", name).
-				withPath("args." + name).withHint("use start, end, format and at, all optional; at is for format png")
+				withPath("args." + name).
+				withHint("use start, end, format, at, preset and codec, all optional; at is for format png; " +
+					"preset and codec are for format mp4")
 		}
 	}
 
 	if err := json.Unmarshal(raw, &a); err != nil {
-		return a, newError(command.CodeValidation, "start, end, format and at must be strings.").withPath("args")
+		return a, newError(command.CodeValidation, "start, end, format, at, preset and codec must be strings.").
+			withPath("args")
 	}
 
 	return a, nil
@@ -474,7 +467,7 @@ func (s *svc) JobGet(ctx context.Context, req JobGetRequest) (*Job, error) {
 		}
 	}
 
-	return s.jobView(c, row, req.WaitMS > 0), nil
+	return s.jobViewCtx(ctx, c, row, req.WaitMS > 0), nil
 }
 
 // waitJob holds until the job is final or the time passes.
@@ -671,7 +664,7 @@ func (s *svc) JobCancel(ctx context.Context, req JobCancelRequest) (*Job, error)
 				return nil, asError(gerr)
 			}
 
-			return s.jobView(c, after, false), nil
+			return s.jobViewCtx(ctx, c, after, false), nil
 		}
 	} else if row.State == JobWaitingApproval {
 		if err := s.cancelWaitingJob(ctx, c.Actor, &row); err != nil {
@@ -690,7 +683,7 @@ func (s *svc) JobCancel(ctx context.Context, req JobCancelRequest) (*Job, error)
 		return nil, asError(gerr)
 	}
 
-	return s.jobView(c, after, false), nil
+	return s.jobViewCtx(ctx, c, after, false), nil
 }
 
 // cancelSharedIngest decides and applies the cancellation of an ingest, which
@@ -815,6 +808,10 @@ func (s *svc) cancelJob(ctx context.Context, id string) error {
 		if before, err = s.store.Jobs().Get(ctx, id); err != nil || JobFinal(before.State) {
 			return err
 		}
+	}
+
+	if before.Kind == JobExportBatch {
+		s.cancelBatchChildren(ctx, &before)
 	}
 
 	after, err := s.store.Jobs().RequestCancel(ctx, id, s.nowMs())
