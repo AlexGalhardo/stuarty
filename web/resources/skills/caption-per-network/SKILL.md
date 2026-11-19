@@ -9,30 +9,30 @@ metadata:
 
 # Caption per network
 
-The words under a video are not the captions on it. Each network shows a different amount of text before it cuts the rest, allows a different number of hashtags and rewards a different way of writing. This skill is adapted from the social content skill and the platform limits reference of the marketing skills set named above (MIT licence); it is rewritten for Stuarty. The limits are the ones that set recorded when it was read; they change, so check the network before you rely on a limit that matters.
+The words under a video are not the captions on it. Each network shows a different amount of text before it cuts the rest, allows a different number of hashtags and rewards a different way of writing. This skill is adapted from the social content skill and the platform limits reference of the marketing skills set named above (MIT licence); it is rewritten for Stuarty. The limits are the ones the table of the core recorded, with the date it was read; they change, so check the network before you rely on a limit that matters.
 
 ## Steps
 
 1. Read the brief and the script: `brief:show --project <project id>`. The platforms to write for come from the brief; write for no network the person did not name.
 2. Write the first line for the viewer who reads only that: the hook of the video in other words, not a copy of it.
-3. Write one text per network from the table, in the language of the video:
+3. Write one text per network, in the language of the video, as one `caption` text of the project: the words every network shares first, then a part for each network that starts with a line `## youtube`, `## instagram`, `## facebook`, `## x` or `## tiktok`. Keep it with `text:write --project <project id> --title "Caption" --kind caption --text <file|->`; in MCP, `project_item` with `action` `text`, `text_kind` `caption`, a `title` and the `text`. How much is shown before "more", and which tone each network rewards, is below.
 
-   | Network | Characters allowed | Shown before "more" | Hashtags |
-   | --- | --- | --- | --- |
-   | Instagram | 2,200 | about 125 | at most 5 |
-   | TikTok | 4,000 | about 150 | at most 5 |
-   | YouTube Shorts | 5,000 in the description; title 100, about 70 shown | about 100 | at most 15, three to five works |
-   | Facebook | 63,206 | short is better: 40 to 80 characters do well | one or two |
-   | LinkedIn | 3,000 | about 210 | three to five |
-   | X | 280 on a standard account | all of it | one or two |
+   | Network | Shown before "more" | Hashtags that work |
+   | --- | --- | --- |
+   | Instagram | about 125 characters | at most 5 |
+   | TikTok | about 150 | at most 5 |
+   | YouTube Shorts | about 100; the title about 70 | three to five |
+   | Facebook | short is better: 40 to 80 characters do well | one or two |
+   | LinkedIn | about 210 | three to five |
+   | X | all of it | one or two |
 
 4. Fit each text to its network:
    - Everything the viewer must read goes before the cut. Put the link or the call to action there too.
    - Short paragraphs written the way a person would say them. No line break after every sentence.
    - Hashtags at the end, relevant to the video, never more than the table allows.
    - On LinkedIn and X, a plain statement of the point; on Instagram and TikTok, closer and more casual; on YouTube, a title that says what the video is about and a description that says why to watch.
-5. Check each text against the limit by counting its characters, and against the list in `write-a-hook` of machine-sounding phrases.
-6. Give the person the texts, one block per network, with the character count of each, and say which are ready to paste.
+5. Let the core measure it: `caption:validate <item id> --project <project id>`. In MCP: `project_item` with `action` `check` and the `item_id`. The answer gives, for each network, the length in the unit that network counts, the hashtags, the mentions and the links, and says which limit a text breaks and by how much. Fix every problem it names; the limits are in the table of the core, with the date each was read, and LinkedIn is not in it yet, so check that one by hand. Then check each text against the list in `write-a-hook` of machine-sounding phrases.
+6. Give the person the texts, one block per network, with the count of each from the core, and say which are ready to paste.
 
 Not available yet: placing these texts in a publication that waits in the approval queue is added by the publishing epics. Until then the person copies them.
 
