@@ -15,6 +15,8 @@ import (
 	"crypto/hkdf"
 	"crypto/rand"
 	"crypto/sha256"
+	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -522,4 +524,60 @@ func openCheck(key []byte, c sealed) error {
 	}
 
 	return nil
+}
+
+// minRedacted is the shortest secret Redact replaces: a shorter one would shred any text it is in.
+const minRedacted = 8
+
+// redacted stands for a secret in text that leaves the product.
+const redacted = "[redacted]"
+
+// Redact returns data with every secret of the vault, and the master key, replaced, in the forms a
+// careless log line would write them: as is, as base64 and as hex. It is for the diagnostic bundle
+// and the logs (SDD-014 section 9). A vault that cannot be opened has nothing readable in it, so
+// only the master key is looked for then.
+func (v *Vault) Redact(data []byte) []byte {
+	v.mu.Lock()
+	defer v.mu.Unlock()
+
+	key := v.key
+	if key == nil {
+		if k, err := v.keys.Load(); err == nil && len(k) == KeySize {
+			key = k
+		}
+	}
+
+	var needles [][]byte
+
+	if key != nil {
+		needles = append(needles, spellings(key)...)
+
+		if f, err := v.read(); err == nil && f != nil {
+			if ek, err := entryKey(key, f.Salt); err == nil && openCheck(ek, f.Check) == nil {
+				for id, s := range f.Entries {
+					if plain, err := open(ek, aadFor(id), s); err == nil && len(plain) >= minRedacted {
+						needles = append(needles, spellings(plain)...)
+					}
+				}
+			}
+		}
+	}
+
+	for _, n := range needles {
+		data = bytes.ReplaceAll(data, n, []byte(redacted))
+	}
+
+	return data
+}
+
+// spellings are a value as is, as base64 (standard and URL, padded or not) and as hex.
+func spellings(b []byte) [][]byte {
+	return [][]byte{
+		b,
+		[]byte(base64.StdEncoding.EncodeToString(b)),
+		[]byte(base64.RawStdEncoding.EncodeToString(b)),
+		[]byte(base64.URLEncoding.EncodeToString(b)),
+		[]byte(base64.RawURLEncoding.EncodeToString(b)),
+		[]byte(hex.EncodeToString(b)),
+	}
 }

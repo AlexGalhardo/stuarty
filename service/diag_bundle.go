@@ -51,6 +51,7 @@ func (s *svc) writeBundle(ctx context.Context, c Caller, res *DoctorResult, proj
 	files["doctor.txt"] = []byte(report.Text + "\n")
 	files["versions.txt"] = []byte(s.versionsText())
 	files["environment.txt"] = []byte(s.environmentNames())
+	files["connections.txt"] = []byte(s.connectionsText(ctx))
 
 	for name, data := range s.recentLogs() {
 		files["logs/"+name] = data
@@ -72,11 +73,36 @@ func (s *svc) writeBundle(ctx context.Context, c Caller, res *DoctorResult, proj
 		return "", internalError()
 	}
 
+	// A credential of a connection and the master key are not in the environment: the vault knows them.
+	for name, data := range files {
+		files[name] = s.conns.Redact(data)
+	}
+
 	if err := writeZip(abs, files, secrets); err != nil {
 		return "", internalError()
 	}
 
 	return rel, nil
+}
+
+// connectionsText lists the connections by id, kind, label and hosts: never a credential, and no
+// endpoint, which can carry a path a person would rather not send.
+func (s *svc) connectionsText(ctx context.Context) string {
+	list, err := s.conns.List(ctx)
+	if err != nil {
+		return "connections: not readable\n"
+	}
+
+	var b strings.Builder
+
+	fmt.Fprintf(&b, "%d connection(s); vault: %s\n", len(list), s.conns.Vault().Provider())
+
+	for i := range list {
+		c := &list[i]
+		fmt.Fprintf(&b, "%s %s %q hosts=%s\n", c.ID, c.Kind, c.Label, strings.Join(c.Hosts, ","))
+	}
+
+	return b.String()
 }
 
 func (s *svc) localToken() string {

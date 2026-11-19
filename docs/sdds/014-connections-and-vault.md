@@ -80,7 +80,7 @@ func (v *Vault) Delete(id string) error                // absent is not an error
 func (v *Vault) Rotate(newKey []byte) error            // re-encrypts every entry; the caller then saves newKey
 ```
 
-- **Who may call `Get`.** `Get` is not part of `service.Service`. Only `service/connections` and the owner wiring import `service/vault`; `internal/tools/importcheck` fails the build when another package does.
+- **Who may call `Get`.** `Get` is not part of `service.Service`. Only `service/connections`, the owner wiring (`web/app/owner`) and the contract test environment (`web/contract/testenv`) import `service/vault` (tests may too); `internal/tools/importcheck` fails the build when another package does. The same tool fails the build when a package other than `internal/outbound` opens a connection to a host (`CheckOutbound`): a loopback client says so with `//nolint:forbidigo // loopback only: <why>`.
 - **Entry ids** match `^[a-z0-9_.:-]{1,80}$`.
 
 ## 4. The master key
@@ -176,7 +176,7 @@ Added to SDD-000 section 8:
 
 ## 9. Logs and the diagnostic bundle
 
-A secret is never an argument of a log call, never a field of an error and never in a bundle. The master key and the vault file are not part of `doctor --bundle`; the bundle lists the connections by id, kind, label and hosts only. `TestSecurity_T42_SecretNeverInLogsOrBundle` seeds canaries as secrets and as the master key, runs the operations, a failing test connector and the bundle, and searches the logs, the answers and the bundle for them.
+A secret is never an argument of a log call, never a field of an error and never in a bundle. The master key and the vault file are not part of `doctor --bundle`; the bundle lists the connections by id, kind, label and hosts only (`connections.txt`). As a second line of defence, `Vault.Redact` replaces every credential of the vault and the master key, as is, as base64 and as hex, in every file of the bundle, and in the answer of `ConnectionTest`, so a destination that echoes the credential it was sent does not hand it to the caller. A secret shorter than 8 bytes is not redacted, since it would shred the text around it. `STUARTY_MASTER_KEY` is a secret variable of `doctor` (name ending in `_KEY`). The service writes no log line for a connection operation, so the log test is about what a later connector might write. `TestSecurity_T42_SecretNeverInLogsOrBundle` seeds canaries as secrets and as the master key, runs the operations, a failing test connector and the bundle, and searches the logs, the answers and the bundle for them.
 
 ## 10. Surfaces
 
@@ -194,6 +194,6 @@ A secret is never an argument of a log call, never a field of an error and never
 | A copy of the workspace without the key reveals no credential | `TestSecurity_T40_WorkspaceCopyRevealsNoCredential` |
 | A connection is refused for another host, and stops when removed | `TestSecurity_T41_ConnectionRefusesOtherHostAndRemoved` |
 | A secret is not in a log or a bundle | `TestSecurity_T42_SecretNeverInLogsOrBundle` |
-| No surface returns a secret | `TestSecurity_T43_NoSurfaceReturnsASecret` |
+| No surface returns a secret | `TestSecurity_T43_NoSurfaceReturnsASecret` (in `web/contract`, over the Service, HTTP, MCP and the CLI) |
 
 Unit tests cover the vault round trip, a wrong key, a corrupted file, rotation, concurrent use and each provider; the gate has a fake destination server that records what it receives.
