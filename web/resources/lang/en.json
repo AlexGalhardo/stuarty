@@ -1626,6 +1626,38 @@
       "submit": "Log in",
       "logout": "Log out"
     },
+    "connections": {
+      "title": "Connections",
+      "intro": "Every place Stuarty is allowed to talk to. Until you connect something, nothing leaves your computer.",
+      "list": "Your connections",
+      "empty": "No connections yet. Nothing leaves this computer.",
+      "new": "Add a connection",
+      "label": "Name",
+      "endpoint": "Address (https)",
+      "hosts": "More hosts it may reach (optional, separated by commas)",
+      "accepts_legend": "What it may receive",
+      "accept": {
+        "text": "Text",
+        "image": "Images",
+        "video": "Video",
+        "audio": "Audio",
+        "metadata": "Metadata",
+        "document": "Documents"
+      },
+      "secret": "Credential",
+      "secret_hint": "Stored encrypted on this machine. It is never shown again and no agent can read it.",
+      "add": "Connect",
+      "test": "Test",
+      "remove": "Remove",
+      "destinations": "Reaches: {hosts}",
+      "accepts": "May receive: {list}",
+      "never_used": "Never used",
+      "last_used": "Last used {date}",
+      "secret_set": "Credential stored",
+      "secret_missing": "No credential: connect it again",
+      "test_ok": "The destination answered {status}.",
+      "test_failed": "The destination did not answer well (status {status})."
+    },
     "keys": {
       "title": "API keys",
       "nav": "API keys",
