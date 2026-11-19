@@ -135,6 +135,44 @@
         "delete_title": "Delete this project?",
         "delete_body": "The project moves to the trash, where you can restore it."
       },
+      "briefing": {
+        "title": "Guided briefing",
+        "intro": "Answer a few questions. The answers become the brief of this production, and your agent reads them.",
+        "required": "required",
+        "optional": "optional",
+        "submit": "Save the answers as the brief",
+        "saved": "The brief was saved from your answers.",
+        "hand_written": "The brief of this production was written by hand. Saving these answers replaces it.",
+        "replace": "Replace the brief I wrote",
+        "seconds_hint": "From {min} to {max} seconds",
+        "q": {
+          "audience": "Who is this video for?",
+          "goal": "What should the viewer do or feel after watching?",
+          "platform": "Where will it be published?",
+          "format": "Which format?",
+          "duration": "How long, in seconds?",
+          "tone": "Which tone of voice?",
+          "references": "Any references to follow (links, creators, videos)?",
+          "must_include": "What must appear in it?",
+          "must_avoid": "What must not appear in it?",
+          "deadline": "By when?"
+        },
+        "option": {
+          "platform": {
+            "youtube-shorts": "YouTube Shorts",
+            "tiktok": "TikTok",
+            "instagram-reels": "Instagram Reels",
+            "facebook-reels": "Facebook Reels",
+            "other": "Another place"
+          },
+          "format": {
+            "vertical-9x16": "Vertical, 9:16",
+            "square-1x1": "Square, 1:1",
+            "horizontal-16x9": "Horizontal, 16:9"
+          }
+        },
+        "choose": "Choose one"
+      },
       "overview": {
         "brief": "Brief",
         "brief_empty": "Write the brief of this production: the idea, the audience, the tone.",

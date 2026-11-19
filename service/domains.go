@@ -12,6 +12,7 @@ var OperationDomains = map[string]string{
 	"ProjectItemAdd": command.DomainProject, "ProjectItemMove": command.DomainProject,
 	"ProjectItemRename": command.DomainProject, "ProjectItemTrash": command.DomainProject,
 	"ProjectItemRestore": command.DomainProject, "BriefGet": command.DomainProject, "BriefSet": command.DomainProject,
+	"BriefingQuestions": command.DomainProject, "BriefingAnswer": command.DomainProject,
 	"ProjectBundleExport": command.DomainProject, "ProjectBundleImport": command.DomainProject,
 
 	"Edit": command.DomainVideo, "HistoryList": command.DomainVideo, "Undo": command.DomainVideo,
