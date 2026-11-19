@@ -1,0 +1,7 @@
+{
+  "args": {
+    "color": "#ff000080",
+    "index": 0
+  },
+  "op": "layer.add_fill"
+}

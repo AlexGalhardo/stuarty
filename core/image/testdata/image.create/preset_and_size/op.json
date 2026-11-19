@@ -1,0 +1,8 @@
+{
+  "args": {
+    "height": 10,
+    "preset": "square_post",
+    "width": 10
+  },
+  "op": "image.create"
+}

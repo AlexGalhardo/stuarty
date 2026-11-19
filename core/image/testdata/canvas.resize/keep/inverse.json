@@ -1,0 +1,12 @@
+[
+  {
+    "collection": "document",
+    "id": "img_aaaaaaaaaa",
+    "set": {
+      "height": 720,
+      "preset": "video_thumbnail",
+      "width": 1280
+    },
+    "type": "patch"
+  }
+]

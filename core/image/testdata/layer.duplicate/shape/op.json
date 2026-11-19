@@ -1,0 +1,8 @@
+{
+  "args": {
+    "dx": 40,
+    "dy": 40,
+    "layer_id": "lyr_dddddddddd"
+  },
+  "op": "layer.duplicate"
+}

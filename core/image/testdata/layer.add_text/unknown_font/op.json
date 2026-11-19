@@ -1,0 +1,9 @@
+{
+  "args": {
+    "style": {
+      "font_family": "Comic Nope"
+    },
+    "text": "x"
+  },
+  "op": "layer.add_text"
+}
