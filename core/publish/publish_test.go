@@ -48,6 +48,23 @@ func TestValidate(t *testing.T) {
 		{"title over the limit", func(p *Post) { p.Title = strings.Repeat("é", 101) }, []string{"title:too_long"}},
 		{"angle bracket in the title", func(p *Post) { p.Title = "a <b>" }, []string{"title:forbidden_character"}},
 		{"control character in the title", func(p *Post) { p.Title = "a\x00b" }, []string{"title:invalid"}},
+		{
+			"a right-to-left override in the title",
+			func(p *Post) { p.Title = "safe \u202eexe.gnp" },
+			[]string{"title:invalid"},
+		},
+		{"a zero-width space in the title", func(p *Post) { p.Title = "pay\u200bment" }, []string{"title:invalid"}},
+		{"a zero-width joiner stays for emoji", func(p *Post) { p.Title = "family \U0001F468\u200d\U0001F469" }, nil},
+		{
+			"an invisible character in the description",
+			func(p *Post) { p.Description = "a\ufeffb" },
+			[]string{"description:invalid"},
+		},
+		{
+			"an invisible character in a tag",
+			func(p *Post) { p.Tags = []string{"a\u202db"[:1] + "\u2066"} },
+			[]string{"tags[0]:invalid"},
+		},
 		{"description at the limit in bytes", func(p *Post) { p.Description = strings.Repeat("a", 5000) }, nil},
 		{
 			"description over the limit in bytes",

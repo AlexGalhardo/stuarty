@@ -27,6 +27,19 @@ const (
 	NetworkYouTube = "youtube"
 )
 
+// Invisible says whether r is a character that shows nothing or changes the direction of the text around
+// it: the zero-width space and joiner marks, the byte order mark, the bidirectional controls and the tag
+// characters. A title with one can read as another word to the person who approves it (SDD-020 section 3);
+// the zero-width joiner and non-joiner stay, since emoji and several scripts need them.
+func Invisible(r rune) bool {
+	switch r {
+	case 0x200B, 0x2060, 0xFEFF, 0x061C, 0x200E, 0x200F:
+		return true
+	}
+
+	return (r >= 0x202A && r <= 0x202E) || (r >= 0x2066 && r <= 0x2069) || (r >= 0xE0000 && r <= 0xE007F)
+}
+
 // File is what the rules need to know of a file: its size and its format (the extension without a dot).
 type File struct {
 	Bytes  int64  `json:"bytes"`
@@ -149,7 +162,8 @@ func Validate(p Post, l Limits) []Issue {
 	}
 
 	for i, t := range p.Tags {
-		if strings.TrimSpace(t) == "" || strings.ContainsFunc(t, unicode.IsControl) {
+		if strings.TrimSpace(t) == "" || strings.ContainsFunc(t, unicode.IsControl) ||
+			strings.ContainsFunc(t, Invisible) {
 			add(fmt.Sprintf("tags[%d]", i), CodeInvalid, "a tag is empty or has a control character.")
 		}
 	}
@@ -190,6 +204,10 @@ func textIssues(path, text, forbidden string, add adder) {
 
 	if strings.ContainsFunc(text, func(r rune) bool { return unicode.IsControl(r) && r != '\n' && r != '\t' }) {
 		add(path, CodeInvalid, "the %s has a control character.", path)
+	}
+
+	if strings.ContainsFunc(text, Invisible) {
+		add(path, CodeInvalid, "the %s has an invisible or direction-changing character.", path)
 	}
 
 	if forbidden != "" && strings.ContainsAny(text, forbidden) {

@@ -32,6 +32,7 @@ Content type `application/json`.
 | `project_id` | `string` | yes | The project the video was exported from.. min length 1 |
 | `tags` | array of `string` | no | The tags, at most 500 characters in all on YouTube. |
 | `thumbnail` | `string` | no | The id of a succeeded export job of a still of the project: the cover. |
+| `timeline_id` | `string` | no | The timeline the job is kept on; required when the project has several. |
 | `title` | `string` | no | The title, at most 100 characters on YouTube. |
 | `visibility` | `string` | no | private (the default), unlisted or public. |
 | `wait_ms` | `integer` | no | 0 to 25000: hold the call until the job is final. |

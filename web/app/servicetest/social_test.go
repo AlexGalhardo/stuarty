@@ -35,6 +35,8 @@ type fakeNet struct {
 	forms    []url.Values
 	videos   map[string]string // id to the state it answers
 	badCode  bool
+	// videoURL, when set, is the address of a video the network answers.
+	videoURL string
 }
 
 func newFakeNet(t *testing.T) *fakeNet {
@@ -69,8 +71,12 @@ func newFakeNet(t *testing.T) *fakeNet {
 			id := "vid" + string(rune('a'+len(n.videos)))
 			n.videos[id] = "published"
 
-			_ = json.NewEncoder(w).
-				Encode(map[string]string{"id": id, "url": "https://fake.example/watch/" + id, "state": "published"})
+			address := "https://fake.example/watch/" + id
+			if n.videoURL != "" {
+				address = n.videoURL
+			}
+
+			_ = json.NewEncoder(w).Encode(map[string]string{"id": id, "url": address, "state": "published"})
 		case strings.HasPrefix(r.URL.Path, "/videos/"):
 			id := strings.TrimPrefix(r.URL.Path, "/videos/")
 			_ = json.NewEncoder(w).Encode(map[string]string{"id": id, "state": n.videos[id]})
@@ -141,6 +147,15 @@ func newSocialEnvWith(t *testing.T, extra func(o *service.Options)) *socialEnv {
 	if err := reg.Register(conn); err != nil {
 		t.Fatal(err)
 	}
+
+	return newSocialEnvFor(t, n, conn, reg, extra)
+}
+
+// newSocialEnvFor is the environment over a network, its connector and the registry that holds it.
+func newSocialEnvFor(
+	t *testing.T, n *fakeNet, conn *fake.Connector, reg *social.Registry, extra func(o *service.Options),
+) *socialEnv {
+	t.Helper()
 
 	e := newEnvWith(t, func(e *env, o *service.Options) {
 		o.Workspace = string(e.dir)

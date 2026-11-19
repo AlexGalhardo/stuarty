@@ -44,8 +44,8 @@ A creator connects their YouTube channel once, with their own Google developer p
 - [x] 6. Implement `publish.upload` with approval and the state machine. Verify: `go test ./service/... ./web/app/servicetest/... -run TestPublishNow` passes (no outbound call before approval; the lifecycle tests are in `web/app/servicetest` because `service/` may not import the store).
 - [x] 7. Expose on HTTP, CLI and MCP with parity (MCP: no tool, the catalogue is at its interim cap until epic 13; SDD-020 section 13 records what epic 13 adds). Verify: `go test ./web/contract/...` passes.
 - [x] 8. Build the setup guide and the "publish now" dialog in both languages. Verify: `task test:web` and `web/e2e/specs/youtube-connect.spec.ts` pass with the fake connector.
-- [ ] 9. Security tests of the new rows. Verify: `go test -run TestSecurity_ ./...` and `go run ./internal/tools/threatcheck` exit 0.
-- [ ] 10. One real private upload by the author with their own project, or marked as not verified. Verify: the result or the note is in the hand-off.
+- [x] 9. Security tests of the new rows. Verify: `go test -run TestSecurity_ ./...` and `go run ./internal/tools/threatcheck` exit 0.
+- [x] 10. One real private upload by the author with their own project, or marked as not verified. Verify: the result or the note is in the hand-off. (Not verified: it needs the author's own Google project and consent screen, which no agent may use. The whole flow is proven against a fake server, and the manual steps are in the hand-off.)
 
 ## Test strategy
 

@@ -42,6 +42,8 @@ type PublishArgs struct {
 // PublishNowRequest starts the publication of one post.
 type PublishNowRequest struct {
 	ProjectID string `json:"project_id"`
+	// TimelineID anchors the job on one timeline, as every job does; needed when the project has several.
+	TimelineID string `json:"timeline_id,omitempty"`
 	PublishArgs
 	WaitMS int  `json:"wait_ms,omitempty"`
 	DryRun bool `json:"dry_run,omitempty"`
@@ -226,6 +228,21 @@ func (s *svc) resolvePublish(ctx context.Context, c Caller, projectID string, a 
 	return t, nil
 }
 
+// inProject says whether the id a job carries is the project or one of its timelines: the export of a
+// timeline is kept under the id of the timeline (SDD-005 section 5.12), and it belongs to its project.
+func (s *svc) inProject(ctx context.Context, carried, projectID string) bool {
+	return carried == projectID || s.projectOf(ctx, carried) == s.projectOf(ctx, projectID)
+}
+
+// projectOf is the project an id belongs to: the id of a timeline names its project, any other id is its own.
+func (s *svc) projectOf(ctx context.Context, id string) string {
+	if owner, err := s.store.Productions().ProjectOfTimeline(ctx, id); err == nil {
+		return owner
+	}
+
+	return id
+}
+
 // publishFile resolves the file of an export job of the project, from the database and never from the
 // request, and checks it is the file the job recorded.
 func (s *svc) publishFile(ctx context.Context, c Caller, projectID, path, jobID string) (*publishFile, error) {
@@ -237,7 +254,7 @@ func (s *svc) publishFile(ctx context.Context, c Caller, projectID, path, jobID 
 	}
 
 	row, err := s.store.Jobs().Get(ctx, jobID)
-	if err != nil || !s.canSee(ctx, c, &row) || row.ProjectID == nil || *row.ProjectID != projectID {
+	if err != nil || !s.canSee(ctx, c, &row) || row.ProjectID == nil || !s.inProject(ctx, *row.ProjectID, projectID) {
 		return nil, validationAt(path, "that export is not a job of this project.")
 	}
 
@@ -480,7 +497,8 @@ func (s *svc) PublishNow(ctx context.Context, req PublishNowRequest) (*Job, erro
 	}
 
 	return s.JobStart(ctx, JobStartRequest{
-		ProjectID: req.ProjectID, Kind: JobPublishUpload, Args: raw, WaitMS: req.WaitMS, DryRun: req.DryRun,
+		ProjectID: req.ProjectID, TimelineID: req.TimelineID, Kind: JobPublishUpload, Args: raw, WaitMS: req.WaitMS,
+		DryRun: req.DryRun,
 	})
 }
 
