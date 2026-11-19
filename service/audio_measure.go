@@ -81,6 +81,11 @@ func (s *svc) AudioMeasure(ctx context.Context, req AudioMeasureRequest) (*Audio
 		return nil, err
 	}
 
+	// A read, but it decodes up to 600 s of sound with FFmpeg and mixes it twice: a heavy call (SDD-007 section 4.4).
+	if err := s.heavyLimit(ctx, c); err != nil {
+		return nil, err
+	}
+
 	if err := s.useTimeline(ctx, c, &req.ProjectID, req.TimelineID); err != nil {
 		return nil, err
 	}
