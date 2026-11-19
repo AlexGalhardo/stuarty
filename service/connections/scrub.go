@@ -66,7 +66,8 @@ func secretForms(secret []byte) [][]byte {
 	}
 
 	for k := range min(3, len(secret)) {
-		forms = append(forms, base64.StdEncoding.EncodeToString(secret[k:]), base64.URLEncoding.EncodeToString(secret[k:]))
+		part := secret[k:]
+		forms = append(forms, base64.StdEncoding.EncodeToString(part), base64.URLEncoding.EncodeToString(part))
 	}
 
 	forms = append(forms, jsonForms(text)...)
