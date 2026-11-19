@@ -13,6 +13,8 @@ wide: true
 
 <RefMain>
 
+Heavy call: shares the limit of 10 a minute per credential (E_RATE_LIMITED with Retry-After).
+
 ## Authentication
 
 Send the secret in the header `Authorization: Bearer <secret>`: the local token in local mode, an [API key](/docs/self-hosting/api-keys) in network mode. An API key needs the `read` scope; the local token has every scope. See the [API overview](/docs/api/overview) for both modes.
