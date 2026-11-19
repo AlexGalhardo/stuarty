@@ -2,156 +2,242 @@ package store
 
 import (
 	"context"
-	"encoding/json"
+	"database/sql"
+	"errors"
 	"strings"
 
-	core "github.com/AlexGalhardo/stuarty/core/library"
-	"github.com/AlexGalhardo/stuarty/service/library"
+	"github.com/AlexGalhardo/stuarty/core/asset"
+	"github.com/AlexGalhardo/stuarty/service/assets"
 
 	"github.com/AlexGalhardo/vukem/database"
 )
 
-// libraryRepo is library.Index over the tables library_entries and library_fts (SDD-018 section 9).
-// It holds an index and nothing else: every row can be rebuilt from the files of the workspace.
+// libraryRepo is assets.Store over the tables asset_info, asset_tags and asset_search (SDD-005 section 5.5.1).
 type libraryRepo struct{ ex database.Executor }
 
-const libraryColumns = `key, kind, name, description, scope, origin, reviewed, kept, actor, tags, state, error, path, sig,
-  lint_errors, lint_warnings, has_scripts, created_ms, updated_ms`
+// maxSearchHits bounds the hashes a full-text query returns.
+const maxSearchHits = 5000
 
-func (r libraryRepo) All(ctx context.Context) ([]library.Entry, error) {
-	rows, err := r.ex.QueryContext(ctx, `SELECT `+libraryColumns+` FROM library_entries ORDER BY key`)
+// manyChunk is how many hashes one IN list holds, below the variable limit of SQLite.
+const manyChunk = 400
+
+const infoColumns = `asset_hash, origin_kind, source, provider, model, prompt, cost_micros, rights_note, description,
+ reusable, created_by, created_ms, updated_ms`
+
+func scanInfo(sc interface{ Scan(...any) error }) (assets.Row, error) {
+	var (
+		r    assets.Row
+		kind string
+		cost sql.NullInt64
+		re   int
+	)
+
+	if err := sc.Scan(
+		&r.Hash, &kind, &r.Origin.Source, &r.Origin.Provider, &r.Origin.Model, &r.Origin.Prompt, &cost,
+		&r.Origin.RightsNote, &r.Description, &re, &r.CreatedBy, &r.CreatedMs, &r.UpdatedMs,
+	); err != nil {
+		return r, err
+	}
+
+	r.Origin.Kind = asset.OriginKind(kind)
+	r.Origin.CostMicros = ptrInt64(cost)
+	r.Reusable = re == 1
+
+	return r, nil
+}
+
+func (r libraryRepo) Get(ctx context.Context, hash string) (assets.Row, error) {
+	row, err := scanInfo(r.ex.QueryRowContext(ctx, `SELECT `+infoColumns+` FROM asset_info WHERE asset_hash = ?`, hash))
+	if errors.Is(err, sql.ErrNoRows) {
+		return row, assets.ErrNotFound
+	}
+
+	if err != nil {
+		return row, err
+	}
+
+	tags, err := r.tags(ctx, []string{hash})
+	row.Tags = tags[hash]
+
+	return row, err
+}
+
+func (r libraryRepo) tags(ctx context.Context, hashes []string) (map[string][]string, error) {
+	out := map[string][]string{}
+
+	for start := 0; start < len(hashes); start += manyChunk {
+		part := hashes[start:min(start+manyChunk, len(hashes))]
+
+		err := r.query(
+			ctx,
+			`SELECT asset_hash, tag FROM asset_tags WHERE asset_hash IN (`+placeholders(
+				len(part),
+			)+`) ORDER BY asset_hash, tag`,
+			anys(part),
+			func(sc *sql.Rows) error {
+				var h, t string
+				if err := sc.Scan(&h, &t); err != nil {
+					return err
+				}
+
+				out[h] = append(out[h], t)
+
+				return nil
+			},
+		)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return out, nil
+}
+
+// query runs a read and hands every row to each.
+func (r libraryRepo) query(ctx context.Context, q string, args []any, each func(*sql.Rows) error) error {
+	rows, err := r.ex.QueryContext(ctx, q, args...)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		if err := each(rows); err != nil {
+			return err
+		}
+	}
+
+	return rows.Err()
+}
+
+func (r libraryRepo) GetMany(ctx context.Context, hashes []string) (map[string]assets.Row, error) {
+	out := map[string]assets.Row{}
+
+	for start := 0; start < len(hashes); start += manyChunk {
+		part := hashes[start:min(start+manyChunk, len(hashes))]
+
+		err := r.query(ctx,
+			`SELECT `+infoColumns+` FROM asset_info WHERE asset_hash IN (`+placeholders(len(part))+`)`,
+			anys(part), func(sc *sql.Rows) error {
+				row, err := scanInfo(sc)
+				if err != nil {
+					return err
+				}
+
+				out[row.Hash] = row
+
+				return nil
+			})
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	tags, err := r.tags(ctx, hashes)
 	if err != nil {
 		return nil, err
 	}
 
-	defer func() { _ = rows.Close() }()
+	for h := range out {
+		row := out[h]
+		row.Tags = tags[h]
+		out[h] = row
+	}
 
-	var out []library.Entry
+	return out, nil
+}
+
+func (r libraryRepo) Put(ctx context.Context, row assets.Row) error {
+	o := row.Origin
+	if o.Kind == "" {
+		o.Kind = asset.Imported
+	}
+
+	if _, err := r.ex.ExecContext(ctx,
+		`INSERT INTO asset_info (`+infoColumns+`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+ ON CONFLICT (asset_hash) DO UPDATE SET origin_kind = excluded.origin_kind, source = excluded.source,
+ provider = excluded.provider, model = excluded.model, prompt = excluded.prompt, cost_micros = excluded.cost_micros,
+ rights_note = excluded.rights_note, description = excluded.description, reusable = excluded.reusable,
+ updated_ms = excluded.updated_ms`,
+		row.Hash, string(o.Kind), o.Source, o.Provider, o.Model, o.Prompt, o.CostMicros, o.RightsNote,
+		row.Description, boolInt(row.Reusable), row.CreatedBy, row.CreatedMs, row.UpdatedMs,
+	); err != nil {
+		return err
+	}
+
+	if _, err := r.ex.ExecContext(ctx, `DELETE FROM asset_tags WHERE asset_hash = ?`, row.Hash); err != nil {
+		return err
+	}
+
+	for _, t := range row.Tags {
+		if _, err := r.ex.ExecContext(
+			ctx,
+			`INSERT INTO asset_tags (asset_hash, tag) VALUES (?, ?)`,
+			row.Hash,
+			t,
+		); err != nil {
+			return err
+		}
+	}
+
+	return r.Reindex(ctx, row.Hash)
+}
+
+func (r libraryRepo) Reindex(ctx context.Context, hash string) error {
+	if _, err := r.ex.ExecContext(ctx, `DELETE FROM asset_search WHERE asset_hash = ?`, hash); err != nil {
+		return err
+	}
+
+	_, err := r.ex.ExecContext(ctx,
+		`INSERT INTO asset_search (asset_hash, name, tags, description, origin)
+ SELECT a.id,
+        a.original_name || COALESCE((SELECT ' ' || group_concat(DISTINCT p.name) FROM project_assets p
+                                     WHERE p.asset_hash = a.id AND p.name <> a.original_name), ''),
+        COALESCE((SELECT group_concat(t.tag, ' ') FROM asset_tags t WHERE t.asset_hash = a.id), ''),
+        COALESCE(i.description, ''),
+        TRIM(COALESCE(i.source, '') || ' ' || COALESCE(i.provider, '') || ' ' || COALESCE(i.model, '') || ' ' ||
+             COALESCE(i.prompt, ''))
+ FROM assets a LEFT JOIN asset_info i ON i.asset_hash = a.id
+ WHERE a.id = ?`, hash)
+
+	return err
+}
+
+func (r libraryRepo) Search(ctx context.Context, match string) (map[string]bool, error) {
+	rows, err := r.ex.QueryContext(ctx,
+		`SELECT asset_hash FROM asset_search WHERE asset_search MATCH ? LIMIT ?`, match, maxSearchHits)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	out := map[string]bool{}
 
 	for rows.Next() {
-		var (
-			e                       library.Entry
-			kind, tags              string
-			reviewed, kept, scripts int
-		)
-
-		if err := rows.Scan(
-			&e.Key, &kind, &e.Name, &e.Description, &e.Scope, &e.Origin, &reviewed, &kept, &e.Actor, &tags, &e.State,
-			&e.Error, &e.Path, &e.Sig, &e.LintErrors, &e.LintWarnings, &scripts, &e.CreatedMs, &e.UpdatedMs,
-		); err != nil {
+		var h string
+		if err := rows.Scan(&h); err != nil {
 			return nil, err
 		}
 
-		e.Kind = core.Kind(kind)
-		e.Reviewed, e.Kept, e.HasScripts = reviewed != 0, kept != 0, scripts != 0
-
-		if err := json.Unmarshal([]byte(tags), &e.Tags); err != nil {
-			return nil, err
-		}
-
-		out = append(out, e)
+		out[h] = true
 	}
 
 	return out, rows.Err()
 }
 
-func (r libraryRepo) Put(ctx context.Context, e library.Entry, body string) error {
-	tags, err := json.Marshal(append([]string{}, e.Tags...))
-	if err != nil {
-		return err
+func placeholders(n int) string {
+	if n == 0 {
+		return "NULL"
 	}
 
-	if _, err := r.ex.ExecContext(
-		ctx,
-		`INSERT OR REPLACE INTO library_entries (`+libraryColumns+`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		e.Key,
-		string(e.Kind),
-		e.Name,
-		e.Description,
-		e.Scope,
-		e.Origin,
-		boolInt(e.Reviewed),
-		boolInt(e.Kept),
-		e.Actor,
-		string(tags),
-		e.State,
-		e.Error,
-		e.Path,
-		e.Sig,
-		e.LintErrors,
-		e.LintWarnings,
-		boolInt(e.HasScripts),
-		e.CreatedMs,
-		e.UpdatedMs,
-	); err != nil {
-		return err
-	}
-
-	if _, err := r.ex.ExecContext(ctx, `DELETE FROM library_fts WHERE key = ?`, e.Key); err != nil {
-		return err
-	}
-
-	_, err = r.ex.ExecContext(ctx,
-		`INSERT INTO library_fts (key, name, description, tags, body) VALUES (?, ?, ?, ?, ?)`,
-		e.Key, e.Name, e.Description, strings.Join(e.Tags, " "), body,
-	)
-
-	return err
+	return strings.TrimSuffix(strings.Repeat("?,", n), ",")
 }
 
-func (r libraryRepo) Delete(ctx context.Context, key string) error {
-	if _, err := r.ex.ExecContext(ctx, `DELETE FROM library_entries WHERE key = ?`, key); err != nil {
-		return err
+func anys(in []string) []any {
+	out := make([]any, len(in))
+	for i, s := range in {
+		out[i] = s
 	}
 
-	_, err := r.ex.ExecContext(ctx, `DELETE FROM library_fts WHERE key = ?`, key)
-
-	return err
-}
-
-func (r libraryRepo) Clear(ctx context.Context) error {
-	if _, err := r.ex.ExecContext(ctx, `DELETE FROM library_entries`); err != nil {
-		return err
-	}
-
-	_, err := r.ex.ExecContext(ctx, `DELETE FROM library_fts`)
-
-	return err
-}
-
-// Search matches every term as a prefix, best first: a hit in the name weighs most, then the
-// description, the tags and the body. The terms come from core/library.Terms, which keeps letters
-// and digits only, so a term quoted here can never be an expression of the full-text engine.
-func (r libraryRepo) Search(ctx context.Context, terms []string, limit int) ([]string, error) {
-	if len(terms) == 0 {
-		return nil, nil
-	}
-
-	quoted := make([]string, len(terms))
-	for i, t := range terms {
-		quoted[i] = `"` + strings.ReplaceAll(t, `"`, ``) + `"*`
-	}
-
-	rows, err := r.ex.QueryContext(ctx,
-		`SELECT key FROM library_fts WHERE library_fts MATCH ? ORDER BY bm25(library_fts, 0, 10, 5, 3, 1), key LIMIT ?`,
-		strings.Join(quoted, " AND "), limit,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	defer func() { _ = rows.Close() }()
-
-	var keys []string
-
-	for rows.Next() {
-		var k string
-		if err := rows.Scan(&k); err != nil {
-			return nil, err
-		}
-
-		keys = append(keys, k)
-	}
-
-	return keys, rows.Err()
+	return out
 }

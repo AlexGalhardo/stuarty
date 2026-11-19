@@ -226,6 +226,22 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.AssetList(ctx, service.AssetListRequest{})
 			return err
 		},
+		"AssetGet": func() error {
+			_, err := e.svc.AssetGet(ctx, service.AssetRef{Hash: "sha256:" + strings.Repeat("0", 64)})
+			return err
+		},
+		"AssetUses": func() error {
+			_, err := e.svc.AssetUses(ctx, service.AssetUsesRequest{Hash: "sha256:" + strings.Repeat("0", 64)})
+			return err
+		},
+		"AssetSetInfo": func() error {
+			_, err := e.svc.AssetSetInfo(ctx, service.AssetSetInfoRequest{Hash: "sha256:" + strings.Repeat("0", 64)})
+			return err
+		},
+		"AssetTag": func() error {
+			_, err := e.svc.AssetTag(ctx, service.AssetTagRequest{Hash: "sha256:" + strings.Repeat("0", 64)})
+			return err
+		},
 		"ExportFile": func() error {
 			_, err := e.svc.ExportFile(ctx, service.ExportFileRequest{JobID: "job_0000000001"})
 			return err
