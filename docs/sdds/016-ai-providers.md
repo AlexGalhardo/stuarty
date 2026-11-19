@@ -213,6 +213,7 @@ A missing or removed connection is `E_CONNECTION_NOT_FOUND`; a connection whose 
 - **The output as untrusted text.** The text is delimited as network text wherever a text view shows it to an agent (SDD-007 section 8), is never run, never fed to a tool by the service and never written into a document by this epic (T-53).
 - **The cost.** Every generation has an estimate before it exists; the price table is for a person only; a model with no price is refused; `max_tokens` bounds the output; the ceilings are checked when the job is submitted, when a person approves it and again before it spends; the number of requests waiting for a person is bounded per submitter (T-54).
 - **The error body.** A provider may echo the prompt or the key in an error. The body is read to a bound of 8 KiB to take the short code and is then dropped (T-55).
+- **An echo.** A server that speaks the protocol, such as one a connection names with its own base address, may repeat the key it was sent. The text of an answer, the id and the name of a model and an error code are checked for the key, or any eight consecutive bytes of it, in the forms of SDD-014 section 9 (`Credential.Echoes`): a model that echoes it is not listed, an answer that echoes it is replaced by a fixed sentence (the cost is still recorded), and a code that echoes it is not shown (T-55).
 
 ## 10. Surfaces
 

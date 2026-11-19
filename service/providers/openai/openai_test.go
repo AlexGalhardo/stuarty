@@ -169,6 +169,14 @@ func TestFailures(t *testing.T) {
 			0,
 		},
 		{
+			"a code that echoes the key",
+			providertest.Exchange{Status: 400, Response: "error_400_echo.json"},
+			providers.KindBadRequest,
+			400,
+			"invalid_request_error",
+			0,
+		},
+		{
 			"server error",
 			providertest.Exchange{Status: 500, Response: "error_500.json"},
 			providers.KindUnavailable,

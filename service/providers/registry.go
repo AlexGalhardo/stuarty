@@ -180,6 +180,7 @@ func (r *Registry) Models(ctx context.Context, connectionID string, refresh bool
 		var merr error
 
 		models, merr = p.Models(ctx, cred)
+		models = withoutEchoes(cred, models)
 
 		return merr
 	})
@@ -235,6 +236,22 @@ func (r *Registry) PriceOf(providerID, connectionID, model string) (provider.Pri
 	p, src := provider.ResolvePrice(user, cat)
 
 	return p, src, nil
+}
+
+// withoutEchoes drops the models whose id or name holds the credential: a provider, or a server that
+// speaks its protocol, may repeat the key it was sent, and a catalogue is shown to every caller (T-55).
+func withoutEchoes(cred connections.Credential, models []Model) []Model {
+	out := models[:0:0]
+
+	for i := range models {
+		if cred.Echoes(models[i].ID) || cred.Echoes(models[i].Name) {
+			continue
+		}
+
+		out = append(out, models[i])
+	}
+
+	return out
 }
 
 // connector makes a provider the connector of its kind: its test is the read of the catalogue.
