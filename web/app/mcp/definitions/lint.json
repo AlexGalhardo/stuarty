@@ -1,6 +1,6 @@
 {
  "name": "lint",
- "description": "Check a project for problems and get them as text: code, severity (error or warning), item, message, hint. Errors block export; warnings do not. Run it after edits and before export. Runs every rule, unlike the lint block of an edit result (lint_scope fast). Rules include gaps, missing media, text outside the safe area, audio clipping and unfilled template slots.",
+ "description": "Check a project for problems and get them as text: code, severity, item, message, hint. Errors block export. Run it after edits, before export. Runs every rule, unlike the lint block of an edit result (lint_scope fast). Rules include gaps, missing media, text outside the safe area, audio clipping, unfilled slots.",
  "inputSchema": {
   "type": "object",
   "properties": {
