@@ -1,5 +1,7 @@
 // The thin-client check of SDD-012 section 1.4: rules R1 to R8 over every file
-// under resources/js/editor/. It fails with file, line and rule id.
+// under resources/js/editor/, and R1 to R7 over every file under
+// resources/js/image-editor/ (SDD-012 section 24.2). It fails with file, line
+// and rule id.
 //
 //   bun run check:thin-client          the tree, then the fixtures
 //
