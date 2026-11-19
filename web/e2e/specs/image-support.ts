@@ -4,7 +4,18 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { APIRequestContext } from "@playwright/test";
 
-import { caller, ffmpegExe, seedProject } from "./helpers";
+import {
+	expect as baseExpect,
+	caller,
+	ffmpegExe,
+	seedProject,
+} from "./helpers";
+
+export { test } from "./helpers";
+
+// The first picture of a run is drawn by a renderer that is still compiling, and a worker of the run may
+// compile it for several pages at once: an assertion of these specs waits for the server, not for 5 seconds.
+export const expect = baseExpect.configure({ timeout: 30_000 });
 
 // The support of the image editor specs (epic 28): the images and the photos are made through the HTTP API, the
 // way an agent or the CLI makes them, so a spec checks what the screen does with a real document.

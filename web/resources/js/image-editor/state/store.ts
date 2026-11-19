@@ -51,12 +51,19 @@ export interface ImageState {
 	notice: Notice | null;
 }
 
+// What a command sends: the operations, or a function of the document at the moment its turn comes, for a key
+// that repeats faster than the server answers (an arrow, Alt with an arrow): each press is planned against the
+// document the one before it made.
+export type Operations =
+	| readonly ImageOperation[]
+	| ((doc: ImageDocument) => readonly ImageOperation[]);
+
 export interface ImageActions {
 	open(): Promise<void>;
 	// Sends one batch against the revision on screen; resolves with the result, or null when it failed (the
 	// failure is in `error`). `select` picks the layers to select from the result.
 	send(
-		operations: readonly ImageOperation[],
+		operations: Operations,
 		select?: (result: ImageEditResult) => readonly string[] | undefined,
 	): Promise<ImageEditResult | null>;
 	undo(): Promise<void>;
@@ -182,9 +189,12 @@ export function createImageStore(api: ImageApi, imageId: string): ImageStore {
 				return enqueue(async () => {
 					const doc = get().doc;
 					if (doc === null) return null;
+					const ops =
+						typeof operations === "function" ? operations(doc) : operations;
+					if (ops.length === 0) return null;
 					set({ busy: true, error: null });
 					try {
-						const result = await api.edit(imageId, doc.revision, operations);
+						const result = await api.edit(imageId, doc.revision, ops);
 						const fresh = await api.describe(imageId);
 						replace(fresh, { busy: false });
 						const picked = select?.(result);

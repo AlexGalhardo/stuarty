@@ -1,8 +1,8 @@
-import { expect, test } from "./helpers";
-import { editImage, imageState, newImage } from "./image-support";
+import { editImage, expect, imageState, newImage, test } from "./image-support";
 
 // Epic 28 task 2: the page, the loading of the document and the canvas with zoom and pan.
 test.describe("image canvas", () => {
+	test.describe.configure({ timeout: 90_000 });
 	test("opens a document, draws the picture of its revision and shows its name", async ({
 		page,
 		request,

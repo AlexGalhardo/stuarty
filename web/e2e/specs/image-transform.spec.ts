@@ -1,7 +1,13 @@
 import type { Page } from "@playwright/test";
 
-import { expect, test } from "./helpers";
-import { editImage, imageState, layerByName, newImage } from "./image-support";
+import {
+	editImage,
+	expect,
+	imageState,
+	layerByName,
+	newImage,
+	test,
+} from "./image-support";
 
 // Epic 28 task 3: select, move, scale and rotate on the canvas, with snapping, by pointer and by keyboard. The
 // server decides every result; the spec reads what it stored.
@@ -67,6 +73,7 @@ const revisionOf = async (
 ): Promise<number> => (await imageState(call, id)).revision;
 
 test.describe("image transform", () => {
+	test.describe.configure({ timeout: 90_000 });
 	test("a click selects the layer under the pointer and a click on nothing clears it", async ({
 		page,
 		request,

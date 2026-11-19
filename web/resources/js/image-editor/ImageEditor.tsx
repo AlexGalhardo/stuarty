@@ -9,8 +9,10 @@ import { HttpTransport } from "../editor/api/http";
 import { API_BASE, createImageApi } from "./api/imageApi";
 import Canvas from "./canvas/Canvas";
 import ErrorBar from "./ErrorBar";
+import LayerPanel from "./layers/LayerPanel";
 import { ImageEditorProvider, useImage } from "./state/context";
 import { createImageStore } from "./state/store";
+import { ArrangeTools, HistoryTools } from "./toolbar/ArrangeTools";
 import { Toolbar, ViewTools } from "./toolbar/Toolbar";
 
 // How often the screen asks whether another actor changed the document (SDD-012 section 24.3).
@@ -104,11 +106,24 @@ function Shell(): ReactNode {
 				)}
 			</header>
 			<Toolbar label={t("ui.image.toolbar.label")}>
+				<HistoryTools />
+				<ArrangeTools />
 				<ViewTools />
 			</Toolbar>
 			<ErrorBar />
-			<div className="min-h-0 flex-1">
-				<Canvas />
+			<div className="flex min-h-0 flex-1">
+				<aside
+					aria-label={t("ui.image.layers.title")}
+					className="flex w-64 shrink-0 flex-col border-r"
+				>
+					<h2 className="border-b px-3 py-2 text-sm font-semibold">
+						{t("ui.image.layers.title")}
+					</h2>
+					<LayerPanel />
+				</aside>
+				<div className="min-w-0 flex-1">
+					<Canvas />
+				</div>
 			</div>
 		</section>
 	);

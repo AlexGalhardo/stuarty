@@ -42,7 +42,7 @@ A creator opens "Edit Image", sees their thumbnail on a canvas, moves a title, s
 - [x] 1. Add the image editor section to SDD-012 and its components to the design system. Verify: `task lint:md` exits 0.
 - [x] 2. Build the page, the document loading and the canvas with zoom and pan. Verify: `task test:web` passes with the new component tests.
 - [x] 3. Implement selection, move, scale and rotate on the canvas with snapping. Verify: `web/e2e/specs/image-transform.spec.ts` passes and `bun run check:thin-client` passes.
-- [ ] 4. Build the layer panel. Verify: `web/e2e/specs/image-layers.spec.ts` passes.
+- [x] 4. Build the layer panel. Verify: `web/e2e/specs/image-layers.spec.ts` passes.
 - [ ] 5. Build the inspector for image, text, shape and fill layers. Verify: `web/e2e/specs/image-inspector.spec.ts` passes.
 - [ ] 6. Add the brand kit actions and "new from template". Verify: `web/e2e/specs/image-template-brand.spec.ts` passes.
 - [ ] 7. Build the export dialog with lint findings. Verify: `web/e2e/specs/image-export.spec.ts` passes and the downloaded file equals the CLI export of the same document.
