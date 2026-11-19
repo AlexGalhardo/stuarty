@@ -82,6 +82,10 @@ export class RustExecutor implements PreviewExecutor {
 	private render: RenderClient<PixelSource, ImageBitmap> | null = null;
 	// False while a layer of the frame being drawn lacks pixels.
 	private complete = true;
+	// The frame, revision and size of the last render whose layers were all in
+	// it. Playback draws once per animation frame, several times per frame of a
+	// 30 fps project; a frame already drawn whole is not drawn again.
+	private drawnWhole: string | null = null;
 	private generation = 0;
 	private disposed = false;
 	private audioContext: AudioContext | null = null;
@@ -238,6 +242,7 @@ export class RustExecutor implements PreviewExecutor {
 
 	setProject(info: ProjectInfo): void {
 		this.info = info;
+		this.drawnWhole = null;
 		this.clock = new PlaybackClock(
 			() =>
 				this.audioClock && this.audioContext !== null
@@ -324,6 +329,9 @@ export class RustExecutor implements PreviewExecutor {
 		this.sounds.pauseAll();
 		this.setState("idle");
 		this.emitFrame();
+		// The paused frame is drawn as a paused one, which marks the canvas with
+		// it: the last render of playback may have come back before the pause.
+		this.redraw();
 	}
 
 	onFrame(cb: (frame: number) => void): Unsubscribe {
@@ -393,12 +401,18 @@ export class RustExecutor implements PreviewExecutor {
 				this.pause();
 				return;
 			}
-			this.draw(plan, this.frame, { playing: true, scrubbing: false });
+			if (this.drawKey(this.frame) !== this.drawnWhole) {
+				this.draw(plan, this.frame, { playing: true, scrubbing: false });
+			}
 			this.windows.prefetch(this.frame);
 		}
 		this.emitFrame();
 		this.raf = requestAnimationFrame(this.tick);
 	};
+
+	private drawKey(frame: number): string {
+		return `${frame}:${this.revision}:${this.buffer?.width}x${this.buffer?.height}`;
+	}
 
 	private redraw(): void {
 		if (this.render === null || this.playing || this.info === null) return;
@@ -453,6 +467,7 @@ export class RustExecutor implements PreviewExecutor {
 			scale,
 		});
 		const seq = render.render(input);
+		this.drawnWhole = this.complete ? this.drawKey(frame) : null;
 		this.presented.set(seq, {
 			frame,
 			complete: this.complete,
@@ -508,6 +523,7 @@ export class RustExecutor implements PreviewExecutor {
 	// (SDD-013 section 4.7); a reason that repeats stops.
 	private failed(reason: string, detail: string): void {
 		console.debug("preview render failed", reason, detail);
+		this.drawnWhole = null;
 		this.uploaded.clear();
 		this.bitmaps.clear();
 		this.luts.clear();
