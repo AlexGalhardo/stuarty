@@ -73,6 +73,13 @@
 | `CostSummary` | none | `cost:show` | `GET /cost` | read |
 | `CostCeilingSet` | none | `cost:ceiling` | `PUT /cost/ceilings` | admin, and only from a privileged browser session |
 | approval queue stream | none | none | `GET /approvals/events` (SDD-015 §7) | read |
+| `SocialNetworkList` | none | `social:network:list` | `GET /social/networks` | read (SDD-020) |
+| `SocialConnectBegin` | none | `social:connect` | `POST /social/connect` | admin |
+| `SocialConnectComplete` | none | none | `POST /social/complete` (the page `/social/callback` posts to it) | admin, and only from a browser session |
+| `SocialAccountList` | none | `social:account:list` | `GET /social/accounts` | read |
+| `PublishValidate` | none | `publish:validate` | `POST /publish/validate` | read |
+| `PublishNow` | none yet (later `job_start` with kind `publish.upload`, SDD-020 §13) | `publish:now` | `POST /publish` | render; the job waits for approval |
+| `PublishStatus` | none | `publish:status` | `GET /publish/{job_id}` | read |
 | `ProviderList` | none | `provider:list` | `GET /providers` | read (SDD-016) |
 | `ProviderModels` | none | `provider:models` | `GET /connections/{id}/models` | read |
 | `ProviderPriceSet` | none | `provider:price` | `PUT /providers/prices` | admin, and only from a privileged browser session (SDD-016 §7) |
@@ -111,7 +118,7 @@ Every operation belongs to one **domain**. The domain names are fixed here; a ne
 | `image` | image documents (SDD-021) | `Image*` and the commands of the image registry |
 | `writing` | written documents: scripts, copy and captions, with their revisions (SDD-019) | `Text*`, `CaptionValidate`, `ScriptEstimate` |
 | `asset` | files of the workspace: media, the asset library, fonts | `Media*`, `Asset*` (the library of epic 08: list, get, uses, set info, tag), `FontImport`, `FontList` |
-| `publish` | publications and their approval | `Approval*` (the queue that gates a publication and a costly generation, SDD-015) |
+| `publish` | publications and their approval | `Approval*` (the queue that gates a publication and a costly generation, SDD-015), `Social*` (the networks and the accounts a publication goes to), `Publish*` (validate, publish now, status; SDD-020) |
 | `provider` | AI providers and generation | `Provider*` (the providers, their models and the price table, SDD-016), `TextGenerate`, `Cost*` (the spend on providers and its ceilings) |
 | `memory` | the library: notes, skills, prompts, search | `Memory*`, `Skill*`, `Prompt*`, `Library*` |
 | `workspace` | the installation: help, connections, brand kit, health, keys, audit, trash, helpers | `CommandHelp`, `Connection*`, `BrandKit*`, `Doctor`, `AuditList`, `TrashEmpty`, `Tools*`, `Key*` |
@@ -235,10 +242,11 @@ The core's codes are in SDD-002 §A.8. The service adds:
 | `E_APPROVAL_NOT_FOUND` | the approval request or the approval rule does not exist (SDD-015 §8) | no |
 | `E_COST_CEILING` | an estimate is over a cost ceiling; `details` hold `scope`, `reason`, `limit_micros`, `spent_micros`, `estimate_micros`, `currency`; nothing was spent (SDD-015 §6) | no |
 | `E_APPROVAL_EXPIRED` | in the error of a job whose approval request expired before a person answered (SDD-015 §3) | no |
+| `E_PUBLISH` | a network refused or failed a publication; `details.kind` is `quota`, `not_eligible`, `auth`, `invalid`, `rejected` or `unavailable`, with `network` and, for a quota, `retry_after`; the `retryable` of the error is true for the kinds `quota`, `auth` and `unavailable` (SDD-020 §7.3) | no |
 | `E_PROVIDER` | an AI provider refused or failed a request; `details.kind` is `auth`, `rate_limited`, `bad_request`, `unavailable` or `unreadable`, with `status`, `code` and `retry_after_seconds` when known; the body of the provider is never in it (SDD-016 §8) | no |
 | `E_PRICE_UNKNOWN` | no price is known for the model of a generation, so no estimate can be made; `details` hold `provider` and `model` (SDD-016 §4.2) | no |
 
-HTTP status mapping: `E_VALIDATION`, `E_INVALID_TIME`, `E_UNKNOWN_COMMAND` 400; `E_UNAUTHORIZED` 401; `E_FORBIDDEN`, `E_PATH_NOT_ALLOWED`, `E_CONNECTION_DESTINATION`, `E_PRIVILEGED_SESSION` 403; `E_NOT_FOUND`, `E_FILE_NOT_FOUND`, `E_CONNECTION_NOT_FOUND`, `E_APPROVAL_NOT_FOUND` 404; `E_REVISION_CONFLICT`, `E_IDEMPOTENCY_MISMATCH`, `E_OVERLAP`, `E_INVALID_STATE`, `E_IN_USE`, `E_NOT_EMPTY`, `E_ID_EXISTS`, `E_ASSET_NOT_READY` 409; `E_PAYLOAD_TOO_LARGE` 413; `E_METHOD_NOT_ALLOWED` 405; `E_LIMIT`, `E_LIMIT_EXCEEDED`, `E_UNSUPPORTED_MEDIA`, `E_TYPE_MISMATCH`, `E_OUT_OF_SOURCE`, `E_FONT_UNKNOWN`, `E_SLOT`, `E_LINT_BLOCKING`, `E_COST_CEILING`, `E_PRICE_UNKNOWN` 422; `E_QUEUE_FULL`, `E_RATE_LIMITED` 429; `E_NOTHING_TO_UNDO`, `E_NOTHING_TO_REDO`, `E_APPROVAL_EXPIRED` 409; `E_CLIENT_CLOSED` 499; `E_WORKSPACE_LOCKED`, `E_TRANSCRIBE_UNAVAILABLE`, `E_FFMPEG_MISSING`, `E_NO_ENCODER`, `E_VAULT_LOCKED` 503; `E_PROVIDER` 502; `E_INTERNAL` and everything else 500. The job codes `E_INGEST_FAILED`, `E_EXPORT_FAILED`, `E_VERIFY_FAILED`, `E_TRANSCRIBE_FAILED` and `E_CANCELLED` normally travel inside a job object in a 200 answer; they are 500 only when a call itself raises them.
+HTTP status mapping: `E_VALIDATION`, `E_INVALID_TIME`, `E_UNKNOWN_COMMAND` 400; `E_UNAUTHORIZED` 401; `E_FORBIDDEN`, `E_PATH_NOT_ALLOWED`, `E_CONNECTION_DESTINATION`, `E_PRIVILEGED_SESSION` 403; `E_NOT_FOUND`, `E_FILE_NOT_FOUND`, `E_CONNECTION_NOT_FOUND`, `E_APPROVAL_NOT_FOUND` 404; `E_REVISION_CONFLICT`, `E_IDEMPOTENCY_MISMATCH`, `E_OVERLAP`, `E_INVALID_STATE`, `E_IN_USE`, `E_NOT_EMPTY`, `E_ID_EXISTS`, `E_ASSET_NOT_READY` 409; `E_PAYLOAD_TOO_LARGE` 413; `E_METHOD_NOT_ALLOWED` 405; `E_LIMIT`, `E_LIMIT_EXCEEDED`, `E_UNSUPPORTED_MEDIA`, `E_TYPE_MISMATCH`, `E_OUT_OF_SOURCE`, `E_FONT_UNKNOWN`, `E_SLOT`, `E_LINT_BLOCKING`, `E_COST_CEILING`, `E_PRICE_UNKNOWN` 422; `E_QUEUE_FULL`, `E_RATE_LIMITED` 429; `E_NOTHING_TO_UNDO`, `E_NOTHING_TO_REDO`, `E_APPROVAL_EXPIRED` 409; `E_CLIENT_CLOSED` 499; `E_WORKSPACE_LOCKED`, `E_TRANSCRIBE_UNAVAILABLE`, `E_FFMPEG_MISSING`, `E_NO_ENCODER`, `E_VAULT_LOCKED` 503; `E_PUBLISH`, `E_PROVIDER` 502; `E_INTERNAL` and everything else 500. The job codes `E_INGEST_FAILED`, `E_EXPORT_FAILED`, `E_VERIFY_FAILED`, `E_TRANSCRIBE_FAILED` and `E_CANCELLED` normally travel inside a job object in a 200 answer; they are 500 only when a call itself raises them.
 
 CLI exit codes: `0` success; `2` for every code marked retryable; `1` for the rest.
 
@@ -252,6 +260,7 @@ CLI exit codes: `0` success; `2` for every code marked retryable; `1` for the re
 ├── runtime.json             owner process: schema, pid, addr, mode, started_at, version (present only while a server runs; no secret)
 ├── token                    local token, file mode 0600 (local mode only)
 ├── vault.json               encrypted credentials of the connections, file mode 0600; created with the first credential (SDD-014 §3)
+├── publish/                 uploads/<key>.json: the address of an upload session of a publication in progress, file mode 0600, no token (SDD-020 §7.4)
 ├── providers/               prices.json: the price table the person edits for the models whose provider publishes no price, file mode 0600 (SDD-016 §4.3)
 ├── library/                 memory/, prompts/ and skills/<name>/SKILL.md: the files of the library, the truth of the index; .review-key seals the review marks (SDD-018 §2, §7)
 ├── store/                   content-addressed originals: store/<first 2 hex>/<sha256>; store/.incoming/ holds copies in progress
@@ -287,6 +296,7 @@ Environment variables, all optional. Names are final. Ceilings that have no vari
 | `STUARTY_TRANSCRIBE_URL`, `STUARTY_TRANSCRIBE_KEY`, `STUARTY_TRANSCRIBE_MODEL` | none | OpenAI-compatible transcription API; when unset, the local provider is used |
 | `STUARTY_WHISPER_MODEL` | `small` | local model name: `tiny`, `base`, `small` or `large-v3-turbo` |
 | `STUARTY_TEST_TRANSCRIBER` | none | test only: `stub` selects a provider that answers every audio with four fixed words (`hello` 100-400 ms, `brave` 400-700, `new` 1100-1400, `world` 1400-1900, language `en`). Honoured only with `APP_ENV=test` in local mode; with any other `APP_ENV`, in network mode, or with any other value the server refuses to start. Never set in production |
+| `STUARTY_TEST_SOCIAL_URL` | none | test only: the address (`http://127.0.0.1:<port>`) of a server on loopback that plays a social network; the build then also offers the network `fake`, which speaks only to that address (SDD-020 §12). Honoured in local mode only; any other address, scheme or mode and the server refuses to start. Never set in production |
 | `STUARTY_MAX_EXPORTS_PER_KEY` | `1` | concurrent exports running per actor (two more may wait) |
 | `STUARTY_MAX_INGESTS` | `2` | concurrent ingests per workspace |
 | `STUARTY_MAX_TRANSCRIBES` | `1` | concurrent transcriptions per workspace |
@@ -477,6 +487,12 @@ The operations of the registry of domain `image` (`core/command` registry built 
 | `layer.transform`, `layer.set`, `layer.crop`, `layer.duplicate`, `layer.remove` | operation | geometry, common properties, crop of an image layer, copy, removal |
 | `layer.set_text`, `layer.set_shape` | operation | change the content or style of a text layer, the look of a shape |
 | `layer.align`, `layer.fit` | operation | align to the canvas or to a layer, fit (cover, contain) |
+| `layer.adjust`, `layer.blend` | operation | the adjustments of a layer (brightness, contrast, saturation, temperature, tint, hue, exposure, levels, tone curve) and its blend mode (SDD-021 section 3, epic 29) |
+| `layer.filter_add`, `layer.filter_set`, `layer.filter_remove`, `layer.filter_move` | operation | the ordered filters of a layer |
+| `layer.mask_set`, `layer.mask_clear` | operation | the mask of a layer: a shape, or the alpha of another layer |
+| `grayscale`, `sepia`, `invert`, `warm`, `cool`, `blur`, `sharpen`, `vignette`, `grain`, `shadow`, `glow`, `stroke` | image filter kind | the `kind` of a filter of a layer, each at most once per layer (SDD-021 section 3.1) |
+| `rect`, `rounded_rect`, `ellipse`, `layer` | image mask kind | the `kind` of the mask of a layer |
+| `normal`, `multiply`, `screen`, `overlay`, `soft_light`, `hard_light`, `darken`, `lighten`, `color_dodge`, `color_burn`, `difference` | image blend mode | the `mode` of `layer.blend`; the renderer also reads `add` (SDD-013 section 3.11) |
 | `video_thumbnail`, `square_post`, `vertical_cover` | preset | 1280 x 720, 1080 x 1080, 1080 x 1920 |
 | `L_IMAGE_EMPTY_SLOT`, `L_IMAGE_TEXT_OUTSIDE`, `L_IMAGE_TEXT_SMALL`, `L_IMAGE_LOW_CONTRAST`, `L_IMAGE_UPSCALED` | lint code | the rules of SDD-021 section 8; the first blocks an export |
 | `png`, `jpeg`, `webp` | image export format | the formats of `ImageExport` |

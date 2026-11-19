@@ -215,7 +215,7 @@ func (s *svc) AssetList(ctx context.Context, req AssetListRequest) (*AssetListRe
 		return nil, serr
 	}
 
-	lib := assets.Library{Store: s.store.AssetLibrary()}
+	lib := assets.Library{Store: s.store.AssetLibrary(), Owner: c.OwnerUserID}
 
 	page, lerr := lib.List(ctx, held, &assets.Query{
 		Filter: asset.Filter{

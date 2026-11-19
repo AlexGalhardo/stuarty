@@ -67,7 +67,7 @@ func (s *svc) resolveBundleSource(
 
 // ProjectBundleExport starts the export job with input.format "bundle" (SDD-005 section 16).
 func (s *svc) ProjectBundleExport(ctx context.Context, req ProjectBundleExportRequest) (*Job, error) {
-	c, err := authorizeScope(ctx, ScopeRender, req.ProjectID)
+	c, err := s.authorizeProjectScope(ctx, ScopeRender, req.ProjectID)
 	if err != nil {
 		return nil, err
 	}

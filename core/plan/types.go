@@ -78,6 +78,18 @@ type Layer struct {
 	// Mask limits where the layer is drawn (SDD-004 §3.9); nil means no mask.
 	Mask *MaskSpec `json:"mask,omitempty"`
 
+	// Tone is the 256-entry table of the exposure, levels and curve of an image layer, applied to every colour
+	// channel before the colour matrix (SDD-013 §3.11.1); nil means none.
+	Tone *[256]uint8 `json:"tone,omitempty"`
+
+	// Filters are the ordered pixel filters of an image layer, drawn after the blur (SDD-013 §3.11.3).
+	Filters []FilterSpec `json:"filters,omitempty"`
+
+	// Clip limits the layer to the alpha of another layer of the plan; Stencil marks a layer that only gives
+	// that alpha and is not drawn (SDD-013 §3.11.4).
+	Clip    *ClipSpec `json:"clip,omitempty"`
+	Stencil bool      `json:"stencil,omitempty"`
+
 	// Shadow and Outline are the drop shadow and the contour of a media layer (SDD-004 §3.15); nil means none.
 	Shadow  *ShadowSpec  `json:"shadow,omitempty"`
 	Outline *OutlineSpec `json:"outline,omitempty"`
@@ -148,6 +160,32 @@ type MaskSpec struct {
 	Height  float64 `json:"height"`
 	Feather int     `json:"feather,omitempty"`
 	Invert  bool    `json:"invert,omitempty"`
+	Radius  int     `json:"radius,omitempty"` // the corner of shape rounded_rect, in project pixels
+}
+
+// ClipSpec is the mask of a layer from the alpha of another layer, named by its item id (SDD-013 §3.11.4).
+type ClipSpec struct {
+	Source string `json:"source"`
+	Invert bool   `json:"invert,omitempty"`
+}
+
+// FilterSpec is one pixel filter of an image layer (SDD-013 §3.11.3): the kind and the members it uses, the
+// others absent. Kinds: matrix, blur, sharpen, vignette, grain, shadow, stroke and outer_glow.
+type FilterSpec struct {
+	Kind     string       `json:"kind"`
+	Matrix   *[12]float64 `json:"matrix,omitempty"`
+	Sigma    float64      `json:"sigma,omitempty"`
+	Amount   float64      `json:"amount,omitempty"`
+	Radius   float64      `json:"radius,omitempty"`
+	Softness float64      `json:"softness,omitempty"`
+	Size     int          `json:"size,omitempty"`
+	Seed     int          `json:"seed,omitempty"`
+	Color    string       `json:"color,omitempty"`
+	Opacity  float64      `json:"opacity,omitempty"`
+	DX       float64      `json:"dx,omitempty"`
+	DY       float64      `json:"dy,omitempty"`
+	Blur     float64      `json:"blur,omitempty"`
+	Width    float64      `json:"width,omitempty"`
 }
 
 // BitmapSpec says what the rasterizer draws (SDD-004 §5). It lives here so

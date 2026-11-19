@@ -79,7 +79,7 @@ func RenderImage(ctx context.Context, doc *coreimage.Document, cfg ImageConfig) 
 		kept = append(kept, l)
 	}
 
-	fp.Layers = kept
+	fp.Layers = withoutLostClips(kept)
 
 	dst := image.NewRGBA(image.Rect(0, 0, doc.Width, doc.Height))
 	out := renderhost.Output{Width: doc.Width, Height: doc.Height, Scale: 1}
@@ -89,6 +89,34 @@ func RenderImage(ctx context.Context, doc *coreimage.Document, cfg ImageConfig) 
 	}
 
 	return dst, nil
+}
+
+// withoutLostClips drops the layers whose mask source did not make it to the renderer (a text with no pixels, an
+// opacity that rounds to none): a layer clipped to nothing draws nothing, and the renderer refuses a clip whose
+// source it does not hold (SDD-013 section 3.11.4).
+func withoutLostClips(layers []plan.Layer) []plan.Layer {
+	for {
+		have := make(map[string]bool, len(layers))
+		for i := range layers {
+			have[layers[i].ItemID] = true
+		}
+
+		kept := layers[:0]
+
+		for i := range layers {
+			if c := layers[i].Clip; c != nil && !have[c.Source] {
+				continue
+			}
+
+			kept = append(kept, layers[i])
+		}
+
+		if len(kept) == len(layers) {
+			return kept
+		}
+
+		layers = kept
+	}
 }
 
 // imageTexture is the pixels of an image layer: the part of the source the layer shows, scaled down to the box

@@ -3026,6 +3026,228 @@
       ]
     },
     {
+      "name": "social:network:list",
+      "domain": "publish",
+      "summary": "list the social networks this build can publish to, with their limits and where they were read",
+      "usage": [
+        "stuarty social:network:list"
+      ],
+      "example": "stuarty social:network:list --json",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "social:connect",
+      "domain": "publish",
+      "summary": "start the sign-in to a network with your own developer app; the client secret is read from standard input or a file, never from an argument",
+      "usage": [
+        "stuarty social:connect --network <n> --client-id <id> --redirect-uri <url> [--label <t>]",
+        "stuarty social:connect --network <n> --connection <id> --redirect-uri <url>"
+      ],
+      "example": "echo $CLIENT_SECRET | stuarty social:connect --network youtube --client-id 123.apps.googleusercontent.com --redirect-uri http://127.0.0.1:7878/social/callback",
+      "flags": [
+        {
+          "name": "network",
+          "type": "string",
+          "usage": "the network, for example youtube (required)"
+        },
+        {
+          "name": "client-id",
+          "type": "string",
+          "usage": "the client id of your developer project"
+        },
+        {
+          "name": "redirect-uri",
+          "type": "string",
+          "usage": "the address of this app followed by /social/callback (required)"
+        },
+        {
+          "name": "label",
+          "type": "string",
+          "usage": "a name for the connection"
+        },
+        {
+          "name": "connection",
+          "type": "string",
+          "usage": "sign in again an existing connection instead of making one"
+        },
+        {
+          "name": "secret-file",
+          "type": "string",
+          "usage": "a file that holds the client secret; without it it is read from standard input"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "social:account:list",
+      "domain": "publish",
+      "summary": "list the connected social accounts and whether each is signed in",
+      "usage": [
+        "stuarty social:account:list"
+      ],
+      "example": "stuarty social:account:list",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "publish:validate",
+      "domain": "publish",
+      "summary": "check a post against the limits of its network and show what a person would approve; sends nothing",
+      "usage": [
+        "stuarty publish:validate --project <id> --connection <id> --export <job> --title <t> --made-for-kids yes|no"
+      ],
+      "example": "stuarty publish:validate --project prj_7k2m9x4q1b --connection con_0123456789 --export job_0123456789 --title \"My short\" --made-for-kids no",
+      "flags": [
+        {
+          "name": "connection",
+          "type": "string",
+          "usage": "the connection the video goes to (required)"
+        },
+        {
+          "name": "export",
+          "type": "string",
+          "usage": "the id of a succeeded export job of the project: the video (required)"
+        },
+        {
+          "name": "thumbnail",
+          "type": "string",
+          "usage": "the id of a succeeded export job of a still: the cover"
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "usage": "the title (required)"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "usage": "the description"
+        },
+        {
+          "name": "tags",
+          "type": "string",
+          "usage": "the tags, a comma list"
+        },
+        {
+          "name": "visibility",
+          "type": "string",
+          "usage": "private (the default), unlisted or public"
+        },
+        {
+          "name": "made-for-kids",
+          "type": "string",
+          "usage": "yes or no: whether the video is made for kids (required)"
+        },
+        {
+          "name": "ai-disclosure",
+          "type": "boolean",
+          "default": "false",
+          "usage": "the video has realistic altered or synthetic content"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project"
+      ]
+    },
+    {
+      "name": "publish:now",
+      "domain": "publish",
+      "summary": "prepare the publication of an exported video: it waits for a person to approve it in the app, then it is sent; you cannot approve it",
+      "usage": [
+        "stuarty publish:now --project <id> --connection <id> --export <job> --title <t> --made-for-kids yes|no"
+      ],
+      "example": "stuarty publish:now --project prj_7k2m9x4q1b --connection con_0123456789 --export job_0123456789 --title \"My short\" --made-for-kids no --visibility private",
+      "flags": [
+        {
+          "name": "connection",
+          "type": "string",
+          "usage": "the connection the video goes to (required)"
+        },
+        {
+          "name": "export",
+          "type": "string",
+          "usage": "the id of a succeeded export job of the project: the video (required)"
+        },
+        {
+          "name": "thumbnail",
+          "type": "string",
+          "usage": "the id of a succeeded export job of a still: the cover"
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "usage": "the title (required)"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "usage": "the description"
+        },
+        {
+          "name": "tags",
+          "type": "string",
+          "usage": "the tags, a comma list"
+        },
+        {
+          "name": "visibility",
+          "type": "string",
+          "usage": "private (the default), unlisted or public"
+        },
+        {
+          "name": "made-for-kids",
+          "type": "string",
+          "usage": "yes or no: whether the video is made for kids (required)"
+        },
+        {
+          "name": "ai-disclosure",
+          "type": "boolean",
+          "default": "false",
+          "usage": "the video has realistic altered or synthetic content"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project",
+        "dry-run"
+      ]
+    },
+    {
+      "name": "publish:status",
+      "domain": "publish",
+      "summary": "show the state of a publication: waiting_approval, uploading, processing, published or failed",
+      "usage": [
+        "stuarty publish:status <job id>"
+      ],
+      "example": "stuarty publish:status job_0123456789",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
       "name": "text:list",
       "domain": "writing",
       "summary": "list the scripts, copy and captions of a project, or of every project",

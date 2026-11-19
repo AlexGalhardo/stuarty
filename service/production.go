@@ -312,7 +312,7 @@ func (s *svc) itemResult(head *ProductionHead, rows []ItemRow, id string) *Proje
 
 // BriefGet reads the brief of a project.
 func (s *svc) BriefGet(ctx context.Context, req BriefGetRequest) (*BriefResult, error) {
-	c, err := authorize(ctx, "BriefGet", req.ProjectID)
+	c, err := s.authorizeProject(ctx, "BriefGet", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}
@@ -353,7 +353,7 @@ func briefResult(head *ProductionHead, rows []ItemRow) *BriefResult {
 
 // ProjectDescribe is the text view of a production, for an agent that has never seen it (RF-303).
 func (s *svc) ProjectDescribe(ctx context.Context, req ProjectDescribeRequest) (*ProjectDescribeResult, error) {
-	c, err := authorize(ctx, "ProjectDescribe", req.ProjectID)
+	c, err := s.authorizeProject(ctx, "ProjectDescribe", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}
@@ -444,7 +444,7 @@ func (s *svc) timelineDetail(ctx context.Context, id string) string {
 // ProjectDuplicate copies a project: its brief and texts and every active timeline, each timeline as a new
 // document at revision 0 with no log, using the same assets. Outputs are not copied.
 func (s *svc) ProjectDuplicate(ctx context.Context, req ProjectDuplicateRequest) (*ProjectCreateResult, error) {
-	c, err := authorize(ctx, "ProjectDuplicate", req.ProjectID)
+	c, err := s.authorizeProject(ctx, "ProjectDuplicate", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}
@@ -650,9 +650,21 @@ func (s *svc) writeDuplicate(ctx context.Context, tx Tx, c Caller, src *Producti
 		}
 	}
 
+	indexed := map[string]bool{}
+
 	for i := range plan.assets {
 		if err := tx.Assets().PutProjectAsset(ctx, plan.assets[i]); err != nil {
 			return err
+		}
+
+		// The copy may belong to an owner with no search row for the file yet (a local copy of a user's
+		// project): the file is found by the names the copy gives it (VV-254).
+		if h := plan.assets[i].AssetHash; !indexed[h] {
+			indexed[h] = true
+
+			if err := tx.AssetLibrary().Reindex(ctx, ownerOf(head.OwnerUserID), h); err != nil {
+				return err
+			}
 		}
 	}
 

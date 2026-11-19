@@ -118,7 +118,7 @@ type ProjectOtioImportResult struct {
 
 // ProjectOtioExport converts the head revision of a project to OpenTimelineIO. It writes nothing.
 func (s *svc) ProjectOtioExport(ctx context.Context, req ProjectOtioExportRequest) (*ProjectOtioExportResult, error) {
-	c, err := authorize(ctx, "ProjectOtioExport", req.ProjectID)
+	c, err := s.authorizeProject(ctx, "ProjectOtioExport", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}
@@ -155,7 +155,7 @@ func (s *svc) ProjectOtioExport(ctx context.Context, req ProjectOtioExportReques
 // import is one undo step by the actor of the caller and every rule of the command core holds.
 // No media reference is opened: a reference is matched by name to an asset the project has.
 func (s *svc) ProjectOtioImport(ctx context.Context, req ProjectOtioImportRequest) (*ProjectOtioImportResult, error) {
-	c, err := authorize(ctx, "ProjectOtioImport", req.ProjectID)
+	c, err := s.authorizeProject(ctx, "ProjectOtioImport", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}

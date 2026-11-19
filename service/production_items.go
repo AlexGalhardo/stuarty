@@ -147,7 +147,7 @@ func (s *svc) checkItemAdd(req *ProjectItemAddRequest) (*timeline.Document, erro
 
 // ProjectItemAdd adds an item to a production.
 func (s *svc) ProjectItemAdd(ctx context.Context, req ProjectItemAddRequest) (*ProjectItemResult, error) {
-	c, err := authorize(ctx, "ProjectItemAdd", req.ProjectID)
+	c, err := s.authorizeProject(ctx, "ProjectItemAdd", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}
@@ -298,7 +298,7 @@ func outputFormat(job *JobRow) string {
 
 // ProjectItemMove moves an item to a position of the order of the production.
 func (s *svc) ProjectItemMove(ctx context.Context, req ProjectItemMoveRequest) (*ProjectItemResult, error) {
-	c, err := authorize(ctx, "ProjectItemMove", req.ProjectID)
+	c, err := s.authorizeProject(ctx, "ProjectItemMove", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}
@@ -335,7 +335,7 @@ func (s *svc) ProjectItemMove(ctx context.Context, req ProjectItemMoveRequest) (
 
 // ProjectItemRename changes the title of an item; the document of a timeline is not touched.
 func (s *svc) ProjectItemRename(ctx context.Context, req ProjectItemRenameRequest) (*ProjectItemResult, error) {
-	c, err := authorize(ctx, "ProjectItemRename", req.ProjectID)
+	c, err := s.authorizeProject(ctx, "ProjectItemRename", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}
@@ -379,7 +379,7 @@ func (s *svc) ProjectItemRestore(ctx context.Context, req ProjectItemTrashReques
 func (s *svc) setItemState(
 	ctx context.Context, method string, req ProjectItemTrashRequest, to ProjectState, action string,
 ) (*ProjectItemResult, error) {
-	c, err := authorize(ctx, method, req.ProjectID)
+	c, err := s.authorizeProject(ctx, method, req.ProjectID)
 	if err != nil {
 		return nil, err
 	}
@@ -449,7 +449,7 @@ func (s *svc) setItemState(
 // BriefSet writes the brief of a project: the Markdown the answers of the briefing are kept in (RF-302). The
 // first call makes the brief item, at the head of the production; an empty text clears it.
 func (s *svc) BriefSet(ctx context.Context, req BriefSetRequest) (*BriefResult, error) {
-	c, err := authorize(ctx, "BriefSet", req.ProjectID)
+	c, err := s.authorizeProject(ctx, "BriefSet", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}

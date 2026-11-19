@@ -2101,6 +2101,136 @@ Example:
 stuarty library:reindex
 ```
 
+## `social:network:list`
+
+List the social networks this build can publish to, with their limits and where they were read
+
+```text
+stuarty social:network:list
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty social:network:list --json
+```
+
+## `social:connect`
+
+Start the sign-in to a network with your own developer app; the client secret is read from standard input or a file, never from an argument
+
+```text
+stuarty social:connect --network <n> --client-id <id> --redirect-uri <url> [--label <t>]
+stuarty social:connect --network <n> --connection <id> --redirect-uri <url>
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--network` | string |  | the network, for example youtube (required) |
+| `--client-id` | string |  | the client id of your developer project |
+| `--redirect-uri` | string |  | the address of this app followed by /social/callback (required) |
+| `--label` | string |  | a name for the connection |
+| `--connection` | string |  | sign in again an existing connection instead of making one |
+| `--secret-file` | string |  | a file that holds the client secret; without it it is read from standard input |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+echo $CLIENT_SECRET | stuarty social:connect --network youtube --client-id 123.apps.googleusercontent.com --redirect-uri http://127.0.0.1:7878/social/callback
+```
+
+## `social:account:list`
+
+List the connected social accounts and whether each is signed in
+
+```text
+stuarty social:account:list
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty social:account:list
+```
+
+## `publish:validate`
+
+Check a post against the limits of its network and show what a person would approve; sends nothing
+
+```text
+stuarty publish:validate --project <id> --connection <id> --export <job> --title <t> --made-for-kids yes|no
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--connection` | string |  | the connection the video goes to (required) |
+| `--export` | string |  | the id of a succeeded export job of the project: the video (required) |
+| `--thumbnail` | string |  | the id of a succeeded export job of a still: the cover |
+| `--title` | string |  | the title (required) |
+| `--description` | string |  | the description |
+| `--tags` | string |  | the tags, a comma list |
+| `--visibility` | string |  | private (the default), unlisted or public |
+| `--made-for-kids` | string |  | yes or no: whether the video is made for kids (required) |
+| `--ai-disclosure` | boolean | `false` | the video has realistic altered or synthetic content |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`.
+
+Example:
+
+```bash
+stuarty publish:validate --project prj_7k2m9x4q1b --connection con_0123456789 --export job_0123456789 --title "My short" --made-for-kids no
+```
+
+## `publish:now`
+
+Prepare the publication of an exported video: it waits for a person to approve it in the app, then it is sent; you cannot approve it
+
+```text
+stuarty publish:now --project <id> --connection <id> --export <job> --title <t> --made-for-kids yes|no
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--connection` | string |  | the connection the video goes to (required) |
+| `--export` | string |  | the id of a succeeded export job of the project: the video (required) |
+| `--thumbnail` | string |  | the id of a succeeded export job of a still: the cover |
+| `--title` | string |  | the title (required) |
+| `--description` | string |  | the description |
+| `--tags` | string |  | the tags, a comma list |
+| `--visibility` | string |  | private (the default), unlisted or public |
+| `--made-for-kids` | string |  | yes or no: whether the video is made for kids (required) |
+| `--ai-disclosure` | boolean | `false` | the video has realistic altered or synthetic content |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--dry-run`.
+
+Example:
+
+```bash
+stuarty publish:now --project prj_7k2m9x4q1b --connection con_0123456789 --export job_0123456789 --title "My short" --made-for-kids no --visibility private
+```
+
+## `publish:status`
+
+Show the state of a publication: waiting_approval, uploading, processing, published or failed
+
+```text
+stuarty publish:status <job id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty publish:status job_0123456789
+```
+
 ## `text:list`
 
 List the scripts, copy and captions of a project, or of every project

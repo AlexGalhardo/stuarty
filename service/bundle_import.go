@@ -16,12 +16,14 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/AlexGalhardo/stuarty/core/asset"
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/core/project"
 	"github.com/AlexGalhardo/stuarty/core/timeline"
 	"github.com/AlexGalhardo/stuarty/core/timeval"
 	"github.com/AlexGalhardo/stuarty/core/writing"
 	enginestore "github.com/AlexGalhardo/stuarty/engine/store"
+	assetlib "github.com/AlexGalhardo/stuarty/service/assets"
 	"github.com/AlexGalhardo/stuarty/service/crashpoint"
 	"github.com/AlexGalhardo/stuarty/service/textview"
 )
@@ -491,6 +493,14 @@ func (s *svc) linkBundleAssets(
 			if _, err := s.ensureIngestJob(ctx, tx, a.Hash, c.Actor, now); err != nil {
 				return err
 			}
+		}
+
+		// The library side belongs to the owner who imports the bundle, which also makes the file found by name.
+		if err := assetlib.RecordImport(
+			ctx, tx.AssetLibrary(), c.OwnerUserID, a.Hash, asset.Origin{Kind: asset.Imported}, assetlib.ImportInfo{},
+			c.Actor, now,
+		); err != nil {
+			return err
 		}
 	}
 

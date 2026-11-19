@@ -1,0 +1,10 @@
+{
+  "args": {
+    "amount": 60,
+    "kind": "grain",
+    "layer_id": "lyr_bbbbbbbbbb",
+    "seed": 7,
+    "size": 3
+  },
+  "op": "layer.filter_add"
+}

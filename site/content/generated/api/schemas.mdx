@@ -7,6 +7,20 @@ description: "The objects the HTTP API takes and returns, from its OpenAPI docum
 
 The types named in the tables of the operations. The arguments of each editing command are on the pages of the [edit tool](/docs/mcp/tools/edit), where the `args` of an operation of a batch are described.
 
+### Adjust
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `brightness` | `integer` | no |  |
+| `contrast` | `integer` | no |  |
+| `curve` | array of [`image.CurvePoint`](/docs/api/schemas#imagecurvepoint) | no |  |
+| `exposure` | `integer` | no |  |
+| `hue` | `integer` | no |  |
+| `levels` | [`Levels`](/docs/api/schemas#levels) or `any` or `null` or `null` | no |  |
+| `saturation` | `integer` | no |  |
+| `temperature` | `integer` | no |  |
+| `tint` | `integer` | no |  |
+
 ### ApprovalListResult
 
 | Name | Type | Required | Description |
@@ -427,6 +441,20 @@ The types named in the tables of the operations. The arguments of each editing c
 | `master` | array of [`CurvePoint`](/docs/api/schemas#curvepoint) | no |  |
 | `red` | array of [`CurvePoint`](/docs/api/schemas#curvepoint) | no |  |
 
+### Description
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `endpoint` | `string` | no |  |
+| `guide` | `string` | no |  |
+| `guide_read` | `string` | no |  |
+| `hosts` | array of `string` | no |  |
+| `limits` | [`Limits`](/docs/api/schemas#limits) | no |  |
+| `name` | `string` | no |  |
+| `network` | `string` | no |  |
+| `publishes` | array of `string` | no |  |
+| `scopes` | array of `string` | no |  |
+
 ### DoctorCheck
 
 | Name | Type | Required | Description |
@@ -520,6 +548,17 @@ The types named in the tables of the operations. The arguments of each editing c
 | `op_index` | `integer` or `null` | no |  |
 | `path` | `string` | no |  |
 | `retryable` | `boolean` | no |  |
+
+### errs.Issue
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `code` | `string` | no |  |
+| `key` | `string` | no |  |
+| `message` | `string` | no |  |
+| `on` | `string` | no |  |
+| `params` | map of `any` | no |  |
+| `path` | `string` | no |  |
 
 ### export.Finding
 
@@ -634,6 +673,23 @@ The types named in the tables of the operations. The arguments of each editing c
 | `path` | `string` | no |  |
 | `text` | `string` | no |  |
 
+### Filter
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `amount` | `integer` or `null` | no |  |
+| `blur` | `integer` or `null` | no |  |
+| `color` | `string` | no |  |
+| `dx` | `integer` or `null` | no |  |
+| `dy` | `integer` or `null` | no |  |
+| `kind` | `string` | no |  |
+| `opacity` | `integer` or `null` | no |  |
+| `radius` | `integer` or `null` | no |  |
+| `seed` | `integer` or `null` | no |  |
+| `size` | `integer` or `null` | no |  |
+| `softness` | `integer` or `null` | no |  |
+| `width` | `integer` or `null` | no |  |
+
 ### Finding
 
 | Name | Type | Required | Description |
@@ -738,6 +794,27 @@ The types named in the tables of the operations. The arguments of each editing c
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `h` | `integer` | no |  |
+| `w` | `integer` | no |  |
+| `x` | `integer` | no |  |
+| `y` | `integer` | no |  |
+
+### image.CurvePoint
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `x` | `integer` | no |  |
+| `y` | `integer` | no |  |
+
+### image.Mask
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `feather` | `integer` | no |  |
+| `h` | `integer` | no |  |
+| `invert` | `boolean` | no |  |
+| `kind` | `string` | no |  |
+| `radius` | `integer` | no |  |
+| `source` | `string` | no |  |
 | `w` | `integer` | no |  |
 | `x` | `integer` | no |  |
 | `y` | `integer` | no |  |
@@ -930,10 +1007,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `code` | `string` | no |  |
-| `key` | `string` | no |  |
 | `message` | `string` | no |  |
-| `on` | `string` | no |  |
-| `params` | map of `any` | no |  |
 | `path` | `string` | no |  |
 
 ### Item
@@ -1043,6 +1117,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | --- | --- | --- | --- |
 | `batch` | [`BatchResult`](/docs/api/schemas#batchresult) or `any` or `null` or `null` | no |  |
 | `export` | [`ExportResult`](/docs/api/schemas#exportresult) or `any` or `null` or `null` | no |  |
+| `publish` | [`PublishResult`](/docs/api/schemas#publishresult) or `any` or `null` or `null` | no |  |
 | `text` | [`TextResult`](/docs/api/schemas#textresult) or `any` or `null` or `null` | no |  |
 | `transcribe` | [`TranscribeResult`](/docs/api/schemas#transcriberesult) or `any` or `null` or `null` | no |  |
 
@@ -1092,14 +1167,18 @@ The types named in the tables of the operations. The arguments of each editing c
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
+| `adjust` | [`Adjust`](/docs/api/schemas#adjust) or `any` or `null` or `null` | no |  |
 | `asset` | `string` | no |  |
+| `blend` | `string` | no |  |
 | `children` | array of [`Layer`](/docs/api/schemas#layer) | no |  |
 | `crop` | [`image.Crop`](/docs/api/schemas#imagecrop) or `any` or `null` or `null` | no |  |
 | `fill` | `string` | no |  |
+| `filters` | array of [`Filter`](/docs/api/schemas#filter) | no |  |
 | `h` | `integer` | no |  |
 | `id` | `string` | no |  |
 | `kind` | `string` | no |  |
 | `locked` | `boolean` | no |  |
+| `mask` | [`image.Mask`](/docs/api/schemas#imagemask) or `any` or `null` or `null` | no |  |
 | `name` | `string` | no |  |
 | `opacity` | `integer` | no |  |
 | `order` | `string` | no |  |
@@ -1115,6 +1194,14 @@ The types named in the tables of the operations. The arguments of each editing c
 | `w` | `integer` | no |  |
 | `x` | `integer` | no |  |
 | `y` | `integer` | no |  |
+
+### Levels
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `black` | `integer` | no |  |
+| `gamma` | `integer` | no |  |
+| `white` | `integer` | no |  |
 
 ### LibraryAsset
 
@@ -1229,6 +1316,23 @@ The types named in the tables of the operations. The arguments of each editing c
 | `truncated` | `boolean` | no |  |
 | `untrusted_notice` | `string` | no |  |
 
+### Limits
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `description_max_bytes` | `integer` | no |  |
+| `file_max_bytes` | `integer (int64)` | no |  |
+| `forbidden` | `string` | no |  |
+| `formats` | array of `string` | no |  |
+| `needs_kids_declaration` | `boolean` | no |  |
+| `read` | `string` | no |  |
+| `source` | `string` | no |  |
+| `tags_max_chars` | `integer` | no |  |
+| `thumbnail_formats` | array of `string` | no |  |
+| `thumbnail_max_bytes` | `integer (int64)` | no |  |
+| `title_max` | `integer` | no |  |
+| `visibilities` | array of `string` | no |  |
+
 ### LintResult
 
 | Name | Type | Required | Description |
@@ -1297,6 +1401,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `feather` | `integer` | no |  |
 | `height` | `number (double)` | no |  |
 | `invert` | `boolean` | no |  |
+| `radius` | `integer` | no |  |
 | `shape` | `string` | no |  |
 | `width` | `number (double)` | no |  |
 | `x` | `number (double)` | no |  |
@@ -1537,7 +1642,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `errors` | map of array of `string` | no |  |
 | `hint` | `string` | no | What to do next. |
 | `instance` | `string` | no |  |
-| `issues` | array of [`Issue`](/docs/api/schemas#issue) | no |  |
+| `issues` | array of [`errs.Issue`](/docs/api/schemas#errsissue) | no |  |
 | `message` | `string` | no | What went wrong, in one or two sentences. |
 | `op_index` | `integer` | no | The operation of the batch that failed. |
 | `path` | `string` | no | The member or argument at fault. |
@@ -1775,6 +1880,35 @@ The types named in the tables of the operations. The arguments of each editing c
 | `docs_url` | `string` | no |  |
 | `id` | `string` | no |  |
 | `name` | `string` | no |  |
+
+### PublishResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `connection_id` | `string` | no |  |
+| `network` | `string` | no |  |
+| `remote_id` | `string` | no |  |
+| `state` | `string` | no |  |
+| `thumbnail_error` | `string` | no |  |
+| `url` | `string` | no |  |
+
+### PublishStatusResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `error` | [`Error`](/docs/api/schemas#error) or `any` or `null` or `null` | no |  |
+| `job_id` | `string` | no |  |
+| `result` | [`PublishResult`](/docs/api/schemas#publishresult) or `any` or `null` or `null` | no |  |
+| `state` | `string` | no |  |
+
+### PublishValidateResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `issues` | array of [`Issue`](/docs/api/schemas#issue) | no |  |
+| `network` | `string` | no |  |
+| `state` | `string` | no |  |
+| `summary` | `string` | no |  |
 
 ### Range
 
@@ -2034,6 +2168,37 @@ The types named in the tables of the operations. The arguments of each editing c
 | `limits` | map of [`SnapLimit`](/docs/api/schemas#snaplimit) | no |  |
 | `points` | array of [`SnapPoint`](/docs/api/schemas#snappoint) | no |  |
 | `revision` | `integer (int64)` | no |  |
+
+### SocialAccount
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `account_id` | `string` | no |  |
+| `account_title` | `string` | no |  |
+| `connection_id` | `string` | no |  |
+| `label` | `string` | no |  |
+| `network` | `string` | no |  |
+| `state` | `string` | no |  |
+
+### SocialAccountListResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `accounts` | array of [`SocialAccount`](/docs/api/schemas#socialaccount) | no |  |
+
+### SocialConnectBeginResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `authorize_url` | `string` | no |  |
+| `connection_id` | `string` | no |  |
+
+### SocialNetworkListResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `networks` | array of [`Description`](/docs/api/schemas#description) | no |  |
+| `redirect_path` | `string` | no |  |
 
 ### Source
 

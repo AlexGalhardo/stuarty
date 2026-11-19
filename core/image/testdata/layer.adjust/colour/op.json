@@ -1,0 +1,12 @@
+{
+  "args": {
+    "brightness": 10,
+    "contrast": 20,
+    "hue": 15,
+    "layer_id": "lyr_bbbbbbbbbb",
+    "saturation": -30,
+    "temperature": 5,
+    "tint": -5
+  },
+  "op": "layer.adjust"
+}

@@ -152,8 +152,16 @@ var Scopes = map[string]string{
 	"ApprovalRuleList":   ScopeRead,
 	"ApprovalRuleSet":    ScopeAdmin,
 	"ApprovalRuleRemove": ScopeAdmin,
-	"CostSummary":        ScopeRead,
-	"CostCeilingSet":     ScopeAdmin,
+	// The social networks and publishing (SDD-020 section 9).
+	"SocialNetworkList":     ScopeRead,
+	"SocialConnectBegin":    ScopeAdmin,
+	"SocialConnectComplete": ScopeAdmin,
+	"SocialAccountList":     ScopeRead,
+	"PublishValidate":       ScopeRead,
+	"PublishNow":            ScopeRender,
+	"PublishStatus":         ScopeRead,
+	"CostSummary":           ScopeRead,
+	"CostCeilingSet":        ScopeAdmin,
 
 	"AssetGet":     ScopeRead,
 	"AssetUses":    ScopeRead,
@@ -176,7 +184,9 @@ var Scopes = map[string]string{
 
 // authorize checks the caller first, as every method does: a missing caller
 // is E_UNAUTHORIZED, a missing scope or a key limited to another project is
-// E_FORBIDDEN. projectID is "" for operations that do not name a project.
+// E_FORBIDDEN. projectID is "" for operations that do not name a project; an
+// operation that names one calls s.authorizeProject, since the id it receives
+// may be a timeline of the key's project (SDD-003 section 1.7 rule 4).
 func authorize(ctx context.Context, method, projectID string) (Caller, error) {
 	scope, listed := Scopes[method]
 	if !listed {
@@ -210,6 +220,34 @@ func authorizeScope(ctx context.Context, scope, projectID string) (Caller, error
 	}
 
 	return c, nil
+}
+
+// authorizeProject is authorize for an operation that names a project or, in its place, a timeline (SDD-003
+// section 1.7 rule 2): a key limited to one project reaches every timeline of it (rule 4), so the id is resolved to
+// its project before it is held to the key, and before anything of that project is read. A timeline of another
+// project and an id of nothing are refused alike, with the refusal authorize gives a project outside the key.
+func (s *svc) authorizeProject(ctx context.Context, method, id string) (Caller, error) {
+	return authorize(ctx, method, s.keyProjectOf(ctx, id))
+}
+
+// authorizeProjectScope is authorizeProject for a method whose scope depends on the request.
+func (s *svc) authorizeProjectScope(ctx context.Context, scope, id string) (Caller, error) {
+	return authorizeScope(ctx, scope, s.keyProjectOf(ctx, id))
+}
+
+// keyProjectOf is the project an id stands for, as a key limited to one project is held to it: the project of a
+// timeline, or the id itself when it is no timeline (a project made before ADR-0039, or nothing). For any other
+// caller the id is returned as it is and nothing is read.
+func (s *svc) keyProjectOf(ctx context.Context, id string) string {
+	if c, ok := CallerFrom(ctx); !ok || c.ProjectID == "" || id == "" {
+		return id
+	}
+
+	if owner, err := s.store.Productions().ProjectOfTimeline(ctx, id); err == nil {
+		return owner
+	}
+
+	return id
 }
 
 // Roles of network mode (SDD-007 section 4.1).

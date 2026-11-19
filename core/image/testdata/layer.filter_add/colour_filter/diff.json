@@ -1,0 +1,17 @@
+[
+  {
+    "changes": {
+      "filters": [
+        null,
+        [
+          {
+            "amount": 70,
+            "kind": "sepia"
+          }
+        ]
+      ]
+    },
+    "id": "lyr_bbbbbbbbbb",
+    "kind": "layer.updated"
+  }
+]

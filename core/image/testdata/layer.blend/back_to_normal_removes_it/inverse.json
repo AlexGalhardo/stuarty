@@ -1,0 +1,10 @@
+[
+  {
+    "collection": "layers",
+    "id": "lyr_dddddddddd",
+    "set": {
+      "blend": "multiply"
+    },
+    "type": "patch"
+  }
+]
