@@ -2278,6 +2278,79 @@
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "additionalProperties": false,
       "properties": {
+        "duration": {
+          "description": "A length; default the rest of the nested timeline from source_in.",
+          "type": "string",
+          "x-vv-kind": "time"
+        },
+        "fit": {
+          "enum": [
+            "cover",
+            "contain",
+            "none"
+          ],
+          "type": "string"
+        },
+        "id": {
+          "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+          "type": "string"
+        },
+        "source_in": {
+          "description": "Where in the nested timeline to start, as a length from its start; default 0s.",
+          "type": "string",
+          "x-vv-kind": "time"
+        },
+        "start": {
+          "description": "Absolute position; omitted, the end of the last item of the track (0s on an empty track).",
+          "type": "string",
+          "x-vv-kind": "time"
+        },
+        "timeline_id": {
+          "description": "Another timeline of the same project.",
+          "pattern": "^prj_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+          "type": "string"
+        },
+        "track_id": {
+          "description": "A visual track.",
+          "pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "track_id",
+        "timeline_id"
+      ],
+      "type": "object"
+    },
+    "description": "Adds a composition: the timeline named by timeline_id, used as a clip (RF-083). Nothing is copied, so changing that timeline changes every composition that uses it. The default duration is the rest of the nested timeline from source_in. A timeline cannot contain itself at any depth, and compositions nest at most 4 deep.",
+    "domain": "video",
+    "errors": [
+      "E_VALIDATION",
+      "E_INVALID_TIME",
+      "E_NOT_FOUND",
+      "E_TYPE_MISMATCH",
+      "E_INVALID_STATE",
+      "E_LIMIT",
+      "E_ID_EXISTS",
+      "E_OUT_OF_SOURCE",
+      "E_OVERLAP"
+    ],
+    "example": {
+      "id": "itm_m1n2p3q4r5",
+      "start": "0s",
+      "timeline_id": "prj_a1b2c3d4e5",
+      "track_id": "trk_f6g7h8j9k0"
+    },
+    "internal": false,
+    "name": "clip.add_composition",
+    "scope": "edit",
+    "summary": "Places another timeline of the project on a visual track as one clip."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
         "item_id": {
           "description": "A clip of a video asset with audio, or an audio item.",
           "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",

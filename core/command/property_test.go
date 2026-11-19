@@ -328,6 +328,10 @@ var alphaOps = map[string]func(p *docPick) string{
 	"audio.add": func(p *docPick) string {
 		return fmt.Sprintf(`{"track_id":%q,"asset_id":%q,"start":%q}`, p.atrack(), p.asset(), p.frames(2000))
 	},
+	"clip.add_composition": func(p *docPick) string {
+		return fmt.Sprintf(`{"track_id":%q,"timeline_id":%q,"start":%q,"duration":"%df"}`,
+			p.vtrack(), tlB, p.frames(2500), 1+p.n(120))
+	},
 	"clip.set_framing": func(p *docPick) string {
 		return fmt.Sprintf(`{"item_id":%q,"fit":%q,"crop":{"left":%.2f,"top":%.2f}}`, p.clip(),
 			p.oneOf("cover", "contain", "none"), float64(p.n(40))/100, float64(p.n(40))/100)
@@ -731,7 +735,7 @@ func checkStepEchoing(
 ) (next *timeline.Document, err error) {
 	before := timeline.Canonical(doc)
 
-	res, applyErr := fullRegistry().Apply(doc, o, Env{NewIDs: ids.next})
+	res, applyErr := fullRegistry().Apply(doc, o, Env{NewIDs: ids.next, Timelines: propGraph(doc)})
 	if !bytes.Equal(timeline.Canonical(doc), before) {
 		return nil, fmt.Errorf("%s changed its input", o.Op)
 	}

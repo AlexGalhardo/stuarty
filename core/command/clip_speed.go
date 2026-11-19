@@ -153,7 +153,7 @@ func applyClipSetSpeed(c *Context, a *clipSpeedArgs) error {
 		return err
 	}
 	asset, ok := c.sourceAsset(&it)
-	if !ok {
+	if !ok || it.Type == timeline.ItemComposition {
 		return Errorf(CodeTypeMismatch, "Item %s is %s item and has no speed.", a.ItemID, article(it.Type)).
 			WithHint("Change the duration with item.trim instead.").WithPath("args.item_id")
 	}

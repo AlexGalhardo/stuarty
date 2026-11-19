@@ -148,17 +148,28 @@ type goldenCase struct {
 	build     func() *B
 	op        string
 	generated []string // ids the generator returns, in order (newids.json)
+	// others are the other timelines of the production for the composition commands (timelines.json); nil
+	// when the case has no production, which is what Env.Timelines nil means.
+	others []*timeline.Document
 }
 
 var goldenCases []goldenCase
 
 func gc(cmd, name string, build func() *B, op string) {
-	goldenCases = append(goldenCases, goldenCase{cmd, name, build, op, nil})
+	goldenCases = append(goldenCases, goldenCase{cmd, name, build, op, nil, nil})
 }
 
 // gcIDs is gc for a case whose command draws these ids from the generator.
 func gcIDs(cmd, name string, build func() *B, op string, generated ...string) {
-	goldenCases = append(goldenCases, goldenCase{cmd, name, build, op, generated})
+	goldenCases = append(goldenCases, goldenCase{cmd, name, build, op, generated, nil})
+}
+
+// gcTL is gcIDs for a case that has a production: the other timelines, which may be none.
+func gcTL(cmd, name string, build func() *B, op string, others []*timeline.Document, generated ...string) {
+	if others == nil {
+		others = []*timeline.Document{}
+	}
+	goldenCases = append(goldenCases, goldenCase{cmd, name, build, op, generated, others})
 }
 
 // op builds the operation JSON of a case.
@@ -197,6 +208,17 @@ func TestGenerateGoldenInputs(t *testing.T) {
 				t.Fatal(err)
 			}
 			write("newids.json", ids)
+		}
+		if c.others != nil {
+			docs := make([]json.RawMessage, len(c.others))
+			for i, o := range c.others {
+				docs[i] = timeline.Canonical(o)
+			}
+			b, err := json.MarshalIndent(docs, "", "  ")
+			if err != nil {
+				t.Fatal(err)
+			}
+			write("timelines.json", b)
 		}
 	}
 }

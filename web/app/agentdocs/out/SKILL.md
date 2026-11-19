@@ -8,7 +8,9 @@ metadata:
 
 # stuarty
 
-Edit video by commands: CLI `stuarty` or MCP (`stuarty mcp`). Output is text; `--json` is JSON.
+Edit video by commands: CLI `stuarty` or MCP (`stuarty mcp`). Text output; `--json` for JSON.
+
+Workspace: `~/.stuarty` or `$STUARTY_HOME`; `serve` shares it with the browser.
 
 ## The loop
 
@@ -35,7 +37,7 @@ Edit video by commands: CLI `stuarty` or MCP (`stuarty mcp`). Output is text; `-
 - `asset`: remove
 - `audio`: add, apply_preset, duck, mark_beats, processor_add, processor_move, processor_remove, processor_set
 - `caption`: add, edit_word, from_transcript, import_subtitles, merge, retime_from_clip, set_breaks, set_style, set_words, split
-- `clip`: add, remove_silences, replace_media, set_blend, set_blur, set_chroma_key, set_color, set_effects, set_filter, set_flip, set_framing, set_mask, set_outline, set_shadow, set_speed
+- `clip`: add, add_composition, remove_silences, set_blend, set_blur, set_chroma_key, set_color, set_effects, set_filter, set_flip, set_framing, set_mask, set_outline, set_shadow, set_speed
 - `font`: add, remove
 - `item`: crossfade, delete, duplicate, extract_audio, freeze_frame, link, move, paste_attributes, rename, repeat, set_audio, set_enabled, set_transform, set_transition, slip, split, trim, unlink
 - `keyframe`: clear, remove, set, set_easing
@@ -129,7 +131,7 @@ Prefix: `stuarty`.
 - `asset:set <hash>`
 - `asset:tag <hash>`
 
-`--ops <file|->` reads a JSON array; `edit --project <id> item.move item_id=itm_x start=2s` is one operation (`k=v` string, `k:=json` JSON). `--dry-run` saves nothing; `--key <k>` makes retries safe; `--out f` copies the file out. Back: `agent:docs --print guide:video|skill|agents|instructions`
+`--ops <file|->` reads a JSON array; `edit --project <id> item.move item_id=itm_x start=2s` is one operation (`k=v` string, `k:=json` JSON). `--dry-run` saves nothing; `--key <k>` makes retries safe.
 
 ## Reading results
 
