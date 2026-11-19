@@ -63,7 +63,7 @@ describe("a load the core refuses", () => {
 					"E_VALIDATION",
 					"this project was saved by a newer version",
 				),
-				hint: "update vukem-video",
+				hint: "update stuarty",
 			},
 		});
 		const runtime = createRuntime({
@@ -81,7 +81,7 @@ describe("a load the core refuses", () => {
 		expect(state.loadError).toEqual({
 			code: "E_VALIDATION",
 			message: "this project was saved by a newer version",
-			hint: "update vukem-video",
+			hint: "update stuarty",
 		});
 	});
 

@@ -82,15 +82,15 @@ function freePort(): Promise<number> {
 }
 
 function ffmpegEnv(): Record<string, string> {
-	const dir = process.env.VUKEM_VIDEO_TEST_FFMPEG_DIR;
+	const dir = process.env.STUARTY_TEST_FFMPEG_DIR;
 	if (!dir) return {};
 	const exe = process.platform === "win32" ? ".exe" : "";
 	const bin = existsSync(join(dir, "bin", `ffmpeg${exe}`))
 		? join(dir, "bin")
 		: dir;
 	return {
-		VUKEM_VIDEO_FFMPEG: join(bin, `ffmpeg${exe}`),
-		VUKEM_VIDEO_FFPROBE: join(bin, `ffprobe${exe}`),
+		STUARTY_FFMPEG: join(bin, `ffmpeg${exe}`),
+		STUARTY_FFPROBE: join(bin, `ffprobe${exe}`),
 	};
 }
 
@@ -99,11 +99,11 @@ function ffmpegEnv(): Record<string, string> {
 let candidate: string | null = null;
 function candidateBinary(): string {
 	if (candidate) return candidate;
-	const dir = join(tmpdir(), `vukem-video-upgrade-open-${process.pid}`);
+	const dir = join(tmpdir(), `stuarty-upgrade-open-${process.pid}`);
 	mkdirSync(dir, { recursive: true });
 	const out = join(
 		dir,
-		process.platform === "win32" ? "vukem-video.exe" : "vukem-video",
+		process.platform === "win32" ? "stuarty.exe" : "stuarty",
 	);
 	execFileSync("go", ["build", "-trimpath", "-o", out, "./web/cmd/app"], {
 		cwd: repoRoot,
@@ -137,10 +137,10 @@ async function start(home: string): Promise<Started> {
 			APP_KEY: `base64:${Buffer.alloc(32, "e2e").toString("base64")}`,
 			HOST: "127.0.0.1",
 			PORT: String(port),
-			VUKEM_VIDEO_HOME: home,
-			VUKEM_VIDEO_RATE_LIMIT_HEAVY_PER_MINUTE: "1000",
-			VUKEM_VIDEO_RATE_LIMIT_PER_MINUTE: "100000",
-			VUKEM_VIDEO_RATE_LIMIT_SESSION_PER_MINUTE: "100000",
+			STUARTY_HOME: home,
+			STUARTY_RATE_LIMIT_HEAVY_PER_MINUTE: "1000",
+			STUARTY_RATE_LIMIT_PER_MINUTE: "100000",
+			STUARTY_RATE_LIMIT_SESSION_PER_MINUTE: "100000",
 			...ffmpegEnv(),
 		},
 		stdio: ["ignore", "pipe", "pipe"],
@@ -169,10 +169,7 @@ async function start(home: string): Promise<Started> {
 // A copy of a workspace nobody holds: the lock, the runtime file and the token
 // belong to a process.
 function copyWorkspace(label: string, source: string): string {
-	const home = join(
-		tmpdir(),
-		`vukem-video-upgrade-open-${process.pid}-${label}`,
-	);
+	const home = join(tmpdir(), `stuarty-upgrade-open-${process.pid}-${label}`);
 	cpSync(source, home, {
 		recursive: true,
 		filter: (path) =>
@@ -251,7 +248,7 @@ async function projectOf(
 	return (await response.json()) as { revision: number; document: Doc };
 }
 
-// A page logged in the way `vukem-video open` does it, with every error of the
+// A page logged in the way `stuarty open` does it, with every error of the
 // page collected: the upgrade path must not raise one.
 async function openPage(
 	page: Page,

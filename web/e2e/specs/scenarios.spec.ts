@@ -17,11 +17,11 @@ test.describe("import-errors", () => {
 		await page.goto(`/editor/${seeded.id}`);
 		const path = page.getByLabel("Path of a file to import");
 
-		await path.fill(join(tmpdir(), "vukem-video-e2e-no-such-file.mp4"));
+		await path.fill(join(tmpdir(), "stuarty-e2e-no-such-file.mp4"));
 		await page.getByRole("button", { name: "Import" }).click();
 		await expect(page.getByText("File not found").first()).toBeVisible();
 
-		const text = join(tmpdir(), "vukem-video-e2e-not-media.txt");
+		const text = join(tmpdir(), "stuarty-e2e-not-media.txt");
 		writeFileSync(text, "this is not a video\n");
 		await path.fill(text);
 		await page.getByRole("button", { name: "Import" }).click();
