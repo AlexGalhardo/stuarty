@@ -244,7 +244,7 @@ The product was called Vukem Video until release 0.29.0. The code, the documents
 
 ### 13.1 Variables the program reads
 
-Each variable is read under its new name first. When the new one is unset and the former one is set, the former value is used and one warning per variable is written to the standard error at each start (`stuarty: VUKEM_VIDEO_HOME is deprecated and is read only until release 1.0.0: set STUARTY_HOME instead`). The former names are read until release 1.0.0. One table in `service/config` holds the pairs, and a test walks it.
+Each variable is read under its new name first. When the new one is unset and the former one is set, the former value is used and one warning per variable is written to the standard error at each start (`stuarty: VUKEM_VIDEO_HOME is deprecated and is read only until release 1.0.0: set STUARTY_HOME instead`). When both names are set the new one wins and one line says so (`stuarty: VUKEM_VIDEO_MODE is ignored because STUARTY_MODE is set; set the value you want under STUARTY_MODE and remove VUKEM_VIDEO_MODE`); the container image sets `STUARTY_MODE`, `STUARTY_HOME`, `STUARTY_FFMPEG` and `STUARTY_FFPROBE` itself, so those four given under the former name to the image are ignored this way. The former names are read until release 1.0.0. One table in `service/config` holds the pairs, and a test walks it.
 
 | Former name | Name |
 | --- | --- |
