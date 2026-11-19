@@ -74,9 +74,11 @@ var projectItemsUp = []string{
 	`INSERT INTO projects (id, name, state, created_ms, updated_ms, created_by, owner_user_id, trashed_ms, trashed_by)
 SELECT id, name, state, created_ms, updated_ms, created_by, owner_user_id, trashed_ms, trashed_by FROM timelines`,
 	// The item id is a function of the row, so the migration gives the same answer every time it runs on the
-	// same data; hex digits are inside the alphabet of an identifier.
+	// same data: the characters of the project id when it has the usual form (what the service writes for a new
+	// project), and the row number in hex, which is inside the alphabet of an identifier, otherwise.
 	`INSERT INTO project_items (id, project_id, kind, title, position, state, ref, body, created_ms, updated_ms, created_by, trashed_ms)
-SELECT printf('pit_%010x', rowid), id, 'timeline', name, 0, 'active', id, '', created_ms, updated_ms, created_by, NULL
+SELECT CASE WHEN length(id) = 14 AND substr(id, 1, 4) = 'prj_' THEN 'pit_' || substr(id, 5) ELSE printf('pit_%010x', rowid) END,
+ id, 'timeline', name, 0, 'active', id, '', created_ms, updated_ms, created_by, NULL
 FROM timelines`,
 }
 
