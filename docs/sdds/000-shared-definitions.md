@@ -65,6 +65,7 @@
 | `ImageExport` | `image` (`action` export) | `image:export` | `POST /images/{id}/export` | edit |
 | `ExportPresetList` | `command_help` (`domain` export) | `export:presets` | `GET /export-presets` | read |
 | `ExportCheck` | `lint` (with `preset`) | `export:check` | `GET /projects/{id}/export-check` | read |
+| `AudioMeasure` | `view` (`mode` audio) | `view --mode audio` | `GET /projects/{id}/audio-measure` | read |
 | `ExportBatch` | `job_start` (`kind` export_batch) | `export:batch` | `POST /projects/{id}/export-batches` | render |
 | `ImageFrame` | none | none | `GET /images/{id}/frame` (SDD-012 §24.3) | read |
 | `ImageHistory` | none | none | `GET /images/{id}/history` (SDD-012 §24.3) | read |
@@ -319,7 +320,7 @@ Environment variables, all optional. Names are final. Ceilings that have no vari
 | `STUARTY_CACHE_MAX_BYTES` | `2147483648` (2 GiB) | size of the frame and bitmap caches before eviction |
 | `STUARTY_RATE_LIMIT_PER_MINUTE` | `300` | requests per minute per key or local token |
 | `STUARTY_RATE_LIMIT_SESSION_PER_MINUTE` | `1800` | requests per minute per browser session |
-| `STUARTY_RATE_LIMIT_HEAVY_PER_MINUTE` | `10` | calls of `JobStart`, `MediaImport`, `TemplateImport`, `ProjectBundleExport`, `ProjectBundleImport`, `FontImport` and `ProjectOtioImport` per minute per credential (SDD-007 section 4.4); one list, the same on the documentation pages and in the OpenAPI document |
+| `STUARTY_RATE_LIMIT_HEAVY_PER_MINUTE` | `10` | calls of `JobStart`, `MediaImport`, `TemplateImport`, `ProjectBundleExport`, `ProjectBundleImport`, `FontImport`, `ProjectOtioImport` and `AudioMeasure` per minute per credential (SDD-007 section 4.4); one list, the same on the documentation pages and in the OpenAPI document |
 | `STUARTY_SANDBOX` | `none` | `bwrap` runs FFmpeg and whisper.cpp in a sandbox on Linux |
 | `STUARTY_INSECURE_ALLOW_ROOT` | `false` | allow network mode as root |
 | `STUARTY_LAUNCHER_SECRET` | none | set only by the desktop shell in the environment of the server it starts (SDD-007 §5.3); the server reads it once and removes it; never set it by hand or write it to a file |

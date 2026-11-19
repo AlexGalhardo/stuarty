@@ -126,6 +126,29 @@ The types named in the tables of the operations. The arguments of each editing c
 | `untrusted_notice` | `string` | no |  |
 | `uses` | array of [`Use`](/docs/api/schemas#use) | no |  |
 
+### AudioLevels
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `integrated_lufs` | `number (double)` or `null` | no |  |
+| `noise_floor_dbfs` | `number (double)` | no |  |
+| `speech_to_noise_db` | `number (double)` or `null` | no |  |
+| `true_peak_dbtp` | `number (double)` or `null` | no |  |
+
+### AudioMeasureResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `after` | [`AudioLevels`](/docs/api/schemas#audiolevels) | no |  |
+| `before` | [`AudioLevels`](/docs/api/schemas#audiolevels) | no |  |
+| `end_frame` | `integer (int64)` | no |  |
+| `item_id` | `string` | no |  |
+| `project_id` | `string` | no |  |
+| `revision` | `integer (int64)` | no |  |
+| `seconds` | `number (double)` | no |  |
+| `start_frame` | `integer (int64)` | no |  |
+| `text` | `string` | no |  |
+
 ### AuditEntry
 
 | Name | Type | Required | Description |
@@ -1096,6 +1119,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `name` | `string` | no |  |
 | `opacity` | `number (double)` | no |  |
 | `outline` | [`Outline`](/docs/api/schemas#outline) or `any` or `null` or `null` | no |  |
+| `processors` | array of [`Processor`](/docs/api/schemas#processor) | no |  |
 | `radius` | `number (double)` | no |  |
 | `reverse` | `boolean` | no |  |
 | `rotation` | `number (double)` | no |  |
@@ -1684,7 +1708,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `args` | map of `any` | no | The arguments of the command. |
-| `op` | `string`, one of 77 values | yes | A command name, as listed by GET /commands.. min length 1 |
+| `op` | `string`, one of 82 values | yes | A command name, as listed by GET /commands.. min length 1 |
 
 ### Option
 
@@ -1837,6 +1861,14 @@ The types named in the tables of the operations. The arguments of each editing c
 | `status` | `integer` | no |  |
 | `title` | `string` | no |  |
 | `type` | `string` | no |  |
+
+### Processor
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `disabled` | `boolean` | no |  |
+| `kind` | `eq`, `compressor`, `limiter`, `gate`, `deesser`, `noise_reduction` | no |  |
+| `params` | map of `number (double)` | no |  |
 
 ### Production
 
@@ -2575,6 +2607,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `muted` | `boolean` | no |  |
 | `name` | `string` | no |  |
 | `order` | `string` | no |  |
+| `processors` | array of [`Processor`](/docs/api/schemas#processor) | no |  |
 | `solo` | `boolean` | no |  |
 | `volume` | `number (double)` or `null` | no |  |
 

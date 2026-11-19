@@ -345,6 +345,7 @@ func (h *apiHandler) registerAll() {
 	register(h, "jobs.cancel", h.jobCancel)
 	register(h, "export.presets", h.exportPresetList)
 	register(h, "export.check", h.exportCheck)
+	register(h, "audio.measure", h.audioMeasure)
 	register(h, "export.batch", h.exportBatch)
 	register(h, "templates.list", h.templateList)
 	register(h, "templates.save", h.templateSave)

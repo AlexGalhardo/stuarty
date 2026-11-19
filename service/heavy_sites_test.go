@@ -32,9 +32,9 @@ func TestHeavyLimitCallSites(t *testing.T) {
 		sites += strings.Count(string(src), "s.heavyLimit(ctx, c)")
 	}
 
-	if sites != 7 {
+	if sites != 8 {
 		t.Errorf(
-			"%d call sites of heavyLimit, want 7: update the heavyOperations of web/app/http, the pages api-keys and jobs of the site and SDD-000",
+			"%d call sites of heavyLimit, want 8: update the heavyOperations of web/app/http, the pages api-keys and jobs of the site and SDD-000",
 			sites,
 		)
 	}

@@ -374,20 +374,21 @@ stuarty media:restore ast_3c5v8n2w6d --project prj_7k2m9x4q1b
 
 ## `view`
 
-Render a frame or a contact sheet of a project
+Render a frame or a contact sheet of a project, or measure its sound
 
 ```text
-stuarty view --project <id> [--mode frame|sheet] [--at t] [--times t1,t2,...]
-    [--from t --until t --count n] [--cols n] [--max-tokens n] [--width px]
+stuarty view --project <id> [--mode frame|sheet|audio] [--at t] [--times t1,t2,...]
+    [--from t --until t --count n] [--cols n] [--max-tokens n] [--width px] [--item id]
 ```
 
 | Flag | Type | Default | Meaning |
 | --- | --- | --- | --- |
-| `--mode` | string | `frame` | frame (one image at --at) or sheet (a grid) |
+| `--mode` | string | `frame` | frame (one image at --at), sheet (a grid) or audio (the loudness, true peak and noise floor with and without the audio processors) |
+| `--item` | string |  | audio: measure this clip or audio item alone |
 | `--at` | string |  | frame: the time to show |
 | `--times` | string |  | sheet: 2 to 16 times, comma separated |
-| `--from` | string |  | sheet: first time (default 0s) |
-| `--until` | string |  | sheet: last time, included (default the last frame) |
+| `--from` | string |  | sheet: first time (default 0s); audio: start of the range |
+| `--until` | string |  | sheet: last time, included (default the last frame); audio: end of the range, excluded |
 | `--count` | integer | `9` | sheet: frames evenly spaced from --from to --until |
 | `--cols` | integer |  | sheet: columns (default ceil(sqrt(count))) |
 | `--max-tokens` | integer |  | image token budget (default 800, a sheet 1,500; at most 1,568) |

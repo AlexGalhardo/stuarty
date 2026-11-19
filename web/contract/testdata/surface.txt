@@ -164,6 +164,7 @@ route GET /library/skills/{}
 route GET /library/skills/{}/lint
 route GET /projects
 route GET /projects/{}
+route GET /projects/{}/audio-measure
 route GET /projects/{}/bitmaps/{}
 route GET /projects/{}/brief
 route GET /projects/{}/chat/sessions

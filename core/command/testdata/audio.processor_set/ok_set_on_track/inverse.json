@@ -1,0 +1,14 @@
+[
+  {
+    "type": "patch",
+    "collection": "tracks",
+    "id": "trk_m1n2p3q4r5",
+    "set": {
+      "processors": [
+        {
+          "kind": "limiter"
+        }
+      ]
+    }
+  }
+]

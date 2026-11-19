@@ -1292,6 +1292,8 @@ warning L_SAFE_AREA itm_s6t7v8w9x0 0.4s/12f-2s/60f
 | `L_LOUDNESS` | warning | full | the estimated integrated loudness of the mix (from the assets' loudness artifacts) differs from `settings.loudness_target` by more than 6 LU, so the export normalization would need a large gain. The message states the gain | adjust volumes or accept the normalization |
 | `L_DURATION_LIMIT` | warning | doc | a portrait or square timeline is longer than 180 s (the YouTube Shorts limit, not checked in a landscape project; research note `features-20-80` §5) | trim the timeline or accept it |
 | `L_ALPHA_MISSING` | warning | full | a clip reads an asset that has an alpha channel (`has_alpha`) whose pictures are all opaque in what the ingest sampled (the `alpha_opaque` fact of its normalized artifact, SDD-011 §4.3.6): the file declares transparency and has none, so the animation covers what is below it. Reported once per clip | render it with alpha |
+| `L_AUDIO_LIMITER_NOT_LAST` | warning | doc | an enabled `limiter` of a processor chain (SDD-001 section 3.5) of an item or a track is followed by another enabled processor, which can lift the peaks again | move it last with audio.processor_move |
+| `L_AUDIO_NOISE_REDUCTION_REPEATED` | warning | doc | a processor chain has more than one enabled `noise_reduction` (the second one only adds artefacts) | remove one |
 
 Blocking set, stated once: `L_EMPTY_TIMELINE`, `L_MEDIA_MISSING`, `L_MEDIA_UNREADY`, `L_SOURCE_RANGE`, `L_ODD_DIMENSIONS`, `L_SLOT_UNFILLED`. Everything else is a warning. A template draft (a document with a `template` member whose `instance` is not true) is exempt from `L_SLOT_UNFILLED`; an instance (`template.instance: true`, written by `TemplateInstantiate`) is not, so export of an instance with open required slots is `E_LINT_BLOCKING`. Any document with a `template` member is exempt from `L_MEDIA_MISSING` for the placeholder, which `L_SLOT_UNFILLED` covers.
 
@@ -1474,7 +1476,7 @@ Tool and Service mapping, scope and annotations (annotations are hints and clien
 | `history` | `HistoryList`, `Undo`, `Redo` | read (list), edit (undo, redo) | false | false | false | false |
 | `media_import` | `MediaImport` | media | false | false | true | false |
 | `media_inspect` | `MediaInspect` (with `asset_id`), `MediaList` (without) | read | true | n/a | true | false |
-| `view` | `ViewFrame`, `ViewSheet` | read | true | n/a | true | false |
+| `view` | `ViewFrame`, `ViewSheet`, `AudioMeasure` (`mode` audio) | read | true | n/a | true | false |
 | `lint` | `Lint`, `ExportCheck` (with `preset`) | read | true | n/a | true | false |
 | `job_start` | `JobStart`, `ExportBatch` (`kind` `export_batch`) | render (export, export_batch), media (transcribe) | false | false | false | false |
 | `job_get` | `JobGet` (with `job_id`), `JobList` (with `project_id` and no `job_id`) | read | true | n/a | true | false |
@@ -2399,7 +2401,7 @@ Example (the text of §3.8; `structuredContent` has `asset_id`, `kind`, `availab
 ```json
 {
   "name": "view",
-  "description": "See the result. mode=frame: one image at time at; sheet: a grid of frames with their times (count frames from..until, or times); motion: what an external render of from..until must fit (size, rate, safe area, brand kit, captions, frames). Images cost tokens: read project_get and lint first.",
+  "description": "See the result. mode=frame: one image at time at; sheet: a grid of frames with their times (count frames from..until, or times); motion: what an external render of from..until must fit (size, rate, safe area, brand kit, captions, frames); audio: loudness, true peak and noise floor before and after the audio processors, of item_id or from..until. Images cost tokens: read project_get and lint first.",
   "inputSchema": {
     "type": "object",
     "properties": {
@@ -2415,9 +2417,14 @@ Example (the text of §3.8; `structuredContent` has `asset_id`, `kind`, `availab
         "enum": [
           "frame",
           "sheet",
-          "motion"
+          "motion",
+          "audio"
         ],
         "default": "frame"
+      },
+      "item_id": {
+        "type": "string",
+        "pattern": "^itm_[0-9a-hjkmnp-tv-z]{10}$"
       },
       "at": {
         "type": "string",
@@ -2480,14 +2487,11 @@ Example (the text of §3.8; `structuredContent` has `asset_id`, `kind`, `availab
       }
     },
     "required": [
-      "revision",
-      "width",
-      "height",
-      "image_tokens"
+      "revision"
     ]
   },
   "annotations": {
-    "title": "View frame or sheet",
+    "title": "View frame, sheet or sound",
     "readOnlyHint": true,
     "destructiveHint": false,
     "idempotentHint": true,
@@ -2500,7 +2504,7 @@ Example (the text of §3.8; `structuredContent` has `asset_id`, `kind`, `availab
 
 | Parameter | Meaning |
 | --- | --- |
-| `mode` | `frame` (default): one image at `at` (required; `E_VALIDATION` with `path: "at"` when missing). `sheet`: a grid; `at` is not accepted |
+| `mode` | `frame` (default): one image at `at` (required; `E_VALIDATION` with `path: "at"` when missing). `sheet`: a grid; `at` is not accepted. `audio` (epic 34): `AudioMeasure` of `item_id`, or of `from` to `until`, with no image; `at`, `times`, `count` and `max_tokens` are `E_VALIDATION`, and so is `item_id` in any other mode |
 | `at` | time of the frame; a time beyond the timeline is `E_INVALID_TIME` |
 | `times` | sheet: 2 to 16 explicit times; exclusive with `from`, `until`, `count` (`E_VALIDATION` with the `path` of the second member) |
 | `from`, `until`, `count` | sheet: `count` (default 9) frames evenly spaced from `from` (default `0s`) to `until` (default the last frame), both ends included |
@@ -3490,7 +3494,7 @@ Every command that reads or edits a timeline (those whose result is about one do
 | `media:list` | `media:list --project <id> [--cursor c] [--limit n]` | `--cursor`; `--limit` int 50 | none | `MediaListResult` |
 | `media:trash` | `media:trash <asset id> --project <id>` | none | none | `MediaStateResult` |
 | `media:restore` | `media:restore <asset id> --project <id>` | none | none | `MediaStateResult` |
-| `view` | `view --project <id> [--mode frame\|sheet] [--at t] [--times t1,t2,...] [--from t --until t --count n] [--cols n] [--max-tokens n] [--width px]` | `--mode` string `frame`; `--at`; `--times`; `--from`; `--until`; `--count` int 9; `--cols` int; `--max-tokens` int 800 (sheet 1,500); `--width` int | none | `ViewResult` without `image_base64` (the image is the file in `path`; with a remote server the CLI downloads the image from the byte-serving route to a temporary file on the client and prints that path) |
+| `view` | `view --project <id> [--mode frame\|sheet\|audio] [--at t] [--times t1,t2,...] [--from t --until t --count n] [--cols n] [--max-tokens n] [--width px] [--item id]` | `--mode` string `frame`; `--at`; `--times`; `--from`; `--until`; `--count` int 9; `--cols` int; `--max-tokens` int 800 (sheet 1,500); `--width` int; `--item` string, mode audio only | none | `ViewResult` without `image_base64` (the image is the file in `path`; with a remote server the CLI downloads the image from the byte-serving route to a temporary file on the client and prints that path); with `--mode audio`, `AudioMeasureResult` (the sound of the item or the range before and after its audio processors: `--item` one clip or audio item, `--from` and `--until` the range, the item's own or the whole timeline by default) |
 | `lint` | `lint --project <id> [--severity error\|warning] [--cursor c] [--limit n] [--strict]` | `--severity` string `warning`; `--cursor`; `--limit` int 25; `--strict` bool false | none | `LintResult` |
 | `export:presets` | `export:presets [--codecs]` | `--codecs` bool false: also tell which codecs this machine writes | none | `ExportPresetListResult` |
 | `export:check` | `export:check --project <id> --preset <id> [--start t] [--end t] [--codec c]` | `--preset` string, required; `--start`; `--end`; `--codec` | none | `ExportCheckResult`; exit 1 when the project does not fit |
@@ -3762,6 +3766,7 @@ Success codes are the `Op.Status`. Error statuses are the table of SDD-000 §8; 
 | `jobs.start` | `POST /projects/{id}/jobs` | none | `{kind, args?, wait_ms?, dry_run?}` | 202 `Job` | render (export), media (transcribe) | 422 `E_LINT_BLOCKING`; 429 `E_QUEUE_FULL`; 503 `E_TRANSCRIBE_UNAVAILABLE`, `E_FFMPEG_MISSING`, `E_NO_ENCODER` |
 | `export.presets` | `GET /export-presets` | `codecs` | none | 200 `ExportPresetListResult` | read | none |
 | `export.check` | `GET /projects/{id}/export-check` | `preset` (required), `start`, `end`, `codec` | none | 200 `ExportCheckResult` | read | 400 `E_VALIDATION` for an unknown preset or codec |
+| `audio.measure` | `GET /projects/{id}/audio-measure` | `item_id`, `start`, `end`, `timeline_id` | none | 200 `AudioMeasureResult` | read | 404 `E_NOT_FOUND` for an unknown item; 422 `E_TYPE_MISMATCH` for an item with no audio and `E_LIMIT` for a range over 600 s |
 | `export.batch` | `POST /projects/{id}/export-batches` | none | `{items, wait_ms?}` | 202 `Job` (200 when final) | render | 400 `E_VALIDATION` with `items[i]` paths; 429 `E_QUEUE_FULL` |
 | `jobs.list` | `GET /projects/{id}/jobs` | `state`, `cursor`, `limit` | none | 200 `JobListResult` | read | 400 `E_VALIDATION` for an unknown `state` |
 | `jobs.get` | `GET /jobs/{job_id}` | `wait_ms` | none | 200 `Job` (an ingest job has a null `project_id`; allowed to a caller who can read a project that uses the asset, §2.8) | read | none |
@@ -3971,6 +3976,7 @@ Every `Service` operation has an encoding on each surface. The table is the proo
 | `JobStart` (`transcribe`) | `job_start` (`kind` `transcribe`) | `transcribe` | `POST /projects/{id}/jobs` |
 | `ExportPresetList` | `command_help` (`domain` `export`: the presets and the codecs of this machine) | `export:presets [--codecs]` | `GET /export-presets` |
 | `ExportCheck` | `lint` (with `preset`, and `start` and `end` for a range: the fit check instead of the lint) | `export:check --project <id> --preset <id> [--start t] [--end t] [--codec c]` | `GET /projects/{id}/export-check` |
+| `AudioMeasure` | `view` (`mode` `audio`, with `item_id`, and `from` and `until` for a range: the measurement of the sound, no image; `item_id` in mode frame or sheet is `E_VALIDATION`, as `--item` is in the CLI) | `view --project <id> --mode audio [--item id] [--from t] [--until t]` | `GET /projects/{id}/audio-measure` |
 | `ExportBatch` | `job_start` (`kind` `export_batch`) | `export:batch --project <id> --preset <id> [--preset <id> ...] \| --items <json>` | `POST /projects/{id}/export-batches` |
 | `JobGet` | `job_get` (with `job_id`) | `job:show` | `GET /jobs/{job_id}` |
 | `JobList` | `job_get` (with `project_id`, no `job_id`) | `job:list` | `GET /projects/{id}/jobs` |
