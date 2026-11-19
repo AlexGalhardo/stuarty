@@ -5,6 +5,8 @@ import (
 	"strings"
 	"testing"
 
+	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
+
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/web/contract/testenv"
 )
@@ -105,6 +107,39 @@ func noToolDecides(t *testing.T, _ string) {
 			if strings.Contains(name, word) {
 				t.Errorf("the tool %s is a surface of the approval queue", tool.Name)
 			}
+		}
+	}
+
+	// An agent that guesses a tool is refused by the protocol, with a stable error, and nothing changes.
+	for _, guess := range []struct {
+		name string
+		args map[string]any
+	}{
+		{"approval", map[string]any{"action": "decide", "id": "apr_0000000001", "decision": "approve"}},
+		{"approval_decide", map[string]any{"id": "apr_0000000001", "decision": "approve"}},
+		{"approval_rule_set", map[string]any{"kind": "publish.post"}},
+		{"cost_ceiling_set", map[string]any{"currency": "USD", "per_day_micros": 999999999999}},
+	} {
+		res, err := d.cs.CallTool(t.Context(), &sdk.CallToolParams{Name: guess.name, Arguments: guess.args})
+		if err == nil && (res == nil || !res.IsError) {
+			t.Errorf("the guessed tool %s answered %+v, want a refusal", guess.name, res)
+		}
+	}
+
+	for _, check := range []step{
+		{Call: "ApprovalRuleList", Args: json.RawMessage(`{}`)},
+		{Call: "CostSummary", Args: json.RawMessage(`{}`)},
+	} {
+		reader := service.WithCaller(t.Context(), service.Caller{Actor: "local:check", Scopes: service.AllScopes})
+
+		result, err := callService(reader, d.service(), check)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		raw, _ := json.Marshal(result)
+		if strings.Contains(string(raw), "publish.post") || strings.Contains(string(raw), "999999999999") {
+			t.Errorf("%s shows what a guessed tool wrote: %s", check.Call, raw)
 		}
 	}
 }
