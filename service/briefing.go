@@ -4,7 +4,6 @@ import (
 	"context"
 	"strings"
 
-	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/core/project"
 	"github.com/AlexGalhardo/stuarty/service/textview"
 	"github.com/AlexGalhardo/stuarty/service/untrusted"
@@ -142,11 +141,13 @@ func questionLine(q BriefingQuestion) string {
 	return line
 }
 
-// BriefingAnswer checks the answers and writes them as the brief of the project (BriefSet does the write, so
-// the audit row, the dry run and the revision rules are the same). A brief written by hand is not replaced
-// unless replace is true, so a briefing never destroys text a person wrote.
+// BriefingAnswer checks the answers and writes them as the brief of the project (the write of BriefSet, so the
+// audit row, the dry run and the item rules are the same). A brief written by hand is not replaced unless
+// replace is true (project.CheckBriefingReplace, checked in the same transaction as the write), so a briefing
+// never destroys text a person wrote. It needs the edit scope only.
 func (s *svc) BriefingAnswer(ctx context.Context, req BriefingAnswerRequest) (*BriefResult, error) {
-	if _, err := authorize(ctx, "BriefingAnswer", req.ProjectID); err != nil {
+	c, err := authorize(ctx, "BriefingAnswer", req.ProjectID)
+	if err != nil {
 		return nil, err
 	}
 
@@ -155,25 +156,9 @@ func (s *svc) BriefingAnswer(ctx context.Context, req BriefingAnswerRequest) (*B
 		return nil, violation(v)
 	}
 
-	text := project.BriefingMarkdown(answers)
-	if v := project.CheckText(text); v != nil {
-		return nil, violation(v)
-	}
+	keep := func(current string) *project.RuleError { return project.CheckBriefingReplace(current, req.Replace) }
 
-	if !req.Replace {
-		cur, err := s.BriefGet(ctx, BriefGetRequest{ProjectID: req.ProjectID})
-		if err != nil {
-			return nil, err
-		}
-
-		if strings.TrimSpace(cur.Text) != "" {
-			if _, guided := project.ParseBriefing(cur.Text); !guided {
-				return nil, newError(command.CodeInvalidState, "the brief was written by hand and is not replaced.").
-					withPath("replace").
-					withHint("send replace true to replace it, or clear it first with the brief operation and an empty text")
-			}
-		}
-	}
-
-	return s.BriefSet(ctx, BriefSetRequest{ProjectID: req.ProjectID, Text: text, DryRun: req.DryRun})
+	return s.writeBrief(ctx, c, BriefSetRequest{
+		ProjectID: req.ProjectID, Text: project.BriefingMarkdown(answers), DryRun: req.DryRun,
+	}, keep)
 }
