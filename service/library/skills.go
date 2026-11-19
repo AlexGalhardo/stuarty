@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"maps"
-	"strings"
 
 	core "github.com/AlexGalhardo/stuarty/core/library"
 )
@@ -18,8 +17,10 @@ type SkillInput struct {
 	License       string
 	Compatibility string
 	AllowedTools  string
-	Metadata      map[string]string // keys of the product (stuarty-*) are dropped
-	Body          string
+	// Metadata keys of the product (stuarty-*) are dropped. Nil keeps the metadata of the skill as it is; an
+	// empty map removes it.
+	Metadata map[string]string
+	Body     string
 	// Files are the other files of the folder. Nil keeps the files of the skill as they are;
 	// an empty list removes them.
 	Files []core.File
@@ -77,12 +78,11 @@ func (m *Manager) SaveSkill(ctx context.Context, c Caller, in SkillInput) (core.
 		}
 	}
 
-	meta := map[string]string{}
-
-	for k, v := range in.Metadata {
-		if !strings.HasPrefix(k, "stuarty-") {
-			meta[k] = v
-		}
+	// Nil metadata keeps what the skill has, as nil files do: a caller that edits the text (the page does)
+	// does not wipe the keys it was not shown.
+	meta := withoutProduct(in.Metadata)
+	if in.Metadata == nil {
+		meta = withoutProduct(skill.Metadata)
 	}
 
 	origin, source := core.OriginUser, ""
@@ -91,10 +91,12 @@ func (m *Manager) SaveSkill(ctx context.Context, c Caller, in SkillInput) (core.
 		origin, source = core.OriginImported, skill.Source()
 	}
 
-	next := core.Skill{
-		Name: in.Name, Description: in.Description, License: in.License, Compatibility: in.Compatibility,
-		AllowedTools: in.AllowedTools, Metadata: meta, Body: in.Body, Files: files,
-	}
+	// The skill that exists is the start, so the keys of its front matter the product does not know are written
+	// back unchanged (SDD-018 section 3).
+	next := skill
+	next.Name, next.Description, next.License = in.Name, in.Description, in.License
+	next.Compatibility, next.AllowedTools, next.Metadata = in.Compatibility, in.AllowedTools, meta
+	next.Body, next.Files = in.Body, files
 	next.SetOrigin(origin, source)
 
 	return m.finishSkill(ctx, next, c.Person)
