@@ -1,13 +1,14 @@
 import { usePage } from "@inertiajs/react";
 import type { ReactNode } from "react";
 
+import ChatDock from "@/dashboard/chat/ChatDock";
 import Sidebar from "@/dashboard/Sidebar";
 import type { SharedProps } from "@/types";
 import ReleaseMark from "../components/ReleaseMark";
 
 // The frame of every page except the editor and the login (SDD-012 section
-// 23.2): the sidebar, the main region and the right dock, which stays empty
-// until the agent chat of epic 14 takes it.
+// 23.2): the sidebar, the main region and the right dock, which holds the
+// panel of the agent chat (SDD-017) behind one button.
 export default function DashboardLayout({
 	children,
 }: {
@@ -37,7 +38,9 @@ export default function DashboardLayout({
 				)}
 				{children}
 			</main>
-			<div data-testid="right-dock" data-dock="right" />
+			<div data-testid="right-dock" data-dock="right">
+				<ChatDock />
+			</div>
 		</div>
 	);
 }

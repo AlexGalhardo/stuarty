@@ -485,6 +485,55 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.LibraryReindex(ctx, service.LibraryReindexRequest{})
 			return err
 		},
+		"AgentProfileList": func() error {
+			_, err := e.svc.AgentProfileList(ctx, service.AgentProfileListRequest{})
+			return err
+		},
+		"AgentProfileSet": func() error {
+			_, err := e.svc.AgentProfileSet(ctx, service.AgentProfileSetRequest{Name: "a", Command: "a"})
+			return err
+		},
+		"AgentProfileRemove": func() error {
+			_, err := e.svc.AgentProfileRemove(ctx, service.AgentProfileRemoveRequest{Name: "a"})
+			return err
+		},
+		"ChatSessionStart": func() error {
+			_, err := e.svc.ChatSessionStart(
+				ctx, service.ChatSessionStartRequest{ProjectID: "prj_0000000001", Profile: "a"},
+			)
+			return err
+		},
+		"ChatSend": func() error {
+			_, err := e.svc.ChatSend(ctx, service.ChatSendRequest{SessionID: "cht_0000000001", Text: "a"})
+			return err
+		},
+		"ChatCancel": func() error {
+			_, err := e.svc.ChatCancel(ctx, service.ChatCancelRequest{SessionID: "cht_0000000001"})
+			return err
+		},
+		"ChatAnswerPermission": func() error {
+			_, err := e.svc.ChatAnswerPermission(
+				ctx,
+				service.ChatAnswerRequest{SessionID: "cht_0000000001", RequestID: "cpr_0000000001", Answer: "allow"},
+			)
+			return err
+		},
+		"ChatSessionList": func() error {
+			_, err := e.svc.ChatSessionList(ctx, service.ChatSessionListRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"ChatSessionGet": func() error {
+			_, err := e.svc.ChatSessionGet(ctx, service.ChatRef{SessionID: "cht_0000000001"})
+			return err
+		},
+		"ChatTranscriptGet": func() error {
+			_, err := e.svc.ChatTranscriptGet(ctx, service.ChatTranscriptRequest{SessionID: "cht_0000000001"})
+			return err
+		},
+		"ChatSessionDelete": func() error {
+			_, err := e.svc.ChatSessionDelete(ctx, service.ChatRef{SessionID: "cht_0000000001"})
+			return err
+		},
 		"OpenFile": func() error {
 			_, err := e.svc.OpenFile(
 				ctx,
