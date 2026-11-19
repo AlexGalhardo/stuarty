@@ -24,18 +24,7 @@ func registry() []*spec {
 		templateList, templateSave, templateNew, templateExport, templateImport, bundleExport, bundleImport,
 		agentDocs, transcribeCmd, doctorCmd, fontsCmd, auditCmd, toolsInstallCmd, tokenRotate,
 		fontImportCmd, brandShowCmd, brandSetCmd, otioExport, otioImport,
-		projectDescribeCmd, projectDuplicateCmd, itemAddCmd, itemMoveCmd, itemRenameCmd, itemTrashCmd, itemRestoreCmd,
-		briefShowCmd, briefSetCmd, briefingQuestionsCmd, briefingAnswerCmd,
-		connectionListCmd, connectionShowCmd, connectionAddCmd, connectionRemoveCmd, connectionTestCmd,
-		approvalListCmd, approvalShowCmd, approvalDecideCmd, approvalRuleListCmd, approvalRuleSetCmd,
-		approvalRuleRemoveCmd, costShowCmd, costCeilingCmd,
-		providerListCmd, providerModelsCmd, providerPriceCmd, textGenerateCmd,
-		imageGenerateCmd, voiceGenerateCmd, videoGenerateCmd, voiceListCmd, imageModelEditCmd,
-		imageCreate, imageList, imageShow, imageEdit, imageUndo, imageRedo, imageExport, imageImport,
-		assetListCmd, assetShowCmd, assetUsesCmd, assetSetCmd, assetTagCmd,
-		motionBriefCmd, motionCheckCmd, motionReplaceCmd,
-		agentProfilesCmd, chatSessionsCmd, chatSessionCmd, chatTranscriptCmd,
-	}, append(append(libraryCommands(), publishingCommands()...), writingCommands()...)...)
+	}, libraryCommands()...)
 }
 
 // CommandNames lists the commands the binary knows, and those among them that

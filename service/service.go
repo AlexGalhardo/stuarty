@@ -7,7 +7,6 @@ import (
 	"io/fs"
 	"log/slog"
 	"path/filepath"
-	"slices"
 	"sync"
 	"time"
 
@@ -21,14 +20,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/engine/rasterize"
 	enginestore "github.com/AlexGalhardo/stuarty/engine/store"
 	"github.com/AlexGalhardo/stuarty/engine/transcribe"
-	"github.com/AlexGalhardo/stuarty/service/agenthost"
-	"github.com/AlexGalhardo/stuarty/service/approval"
-	"github.com/AlexGalhardo/stuarty/service/connections"
-	"github.com/AlexGalhardo/stuarty/service/connections/oauth"
 	"github.com/AlexGalhardo/stuarty/service/library"
-	"github.com/AlexGalhardo/stuarty/service/providers"
-	pub "github.com/AlexGalhardo/stuarty/service/publish"
-	"github.com/AlexGalhardo/stuarty/service/social"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
 )
 
@@ -92,7 +84,7 @@ type Service interface {
 	SkillGet(ctx context.Context, req LibraryRef) (*SkillGetResult, error)
 	SkillWrite(ctx context.Context, req SkillWriteRequest) (*SkillWriteResult, error)
 	SkillImport(ctx context.Context, req SkillImportRequest) (*SkillImportResult, error)
-	SkillMarkReviewed(ctx context.Context, req SkillReviewRequest) (*SkillReviewResult, error)
+	SkillMarkReviewed(ctx context.Context, req LibraryRef) (*SkillReviewResult, error)
 	SkillLint(ctx context.Context, req LibraryRef) (*SkillLintResult, error)
 	SkillExport(ctx context.Context, req SkillExportRequest) (*SkillExportResult, error)
 	PromptList(ctx context.Context, req PromptListRequest) (*LibraryListResult, error)
@@ -101,24 +93,6 @@ type Service interface {
 	PromptRender(ctx context.Context, req PromptRenderRequest) (*PromptRenderResult, error)
 	LibrarySearch(ctx context.Context, req LibrarySearchRequest) (*LibrarySearchResult, error)
 	LibraryReindex(ctx context.Context, req LibraryReindexRequest) (*LibraryReindexResult, error)
-
-	// The AI provider layer (SDD-016): the providers and their models, the price table, and a text generation,
-	// which is a job of a kind that needs approval (SDD-015 section 5).
-	ProviderList(ctx context.Context, req ProviderListRequest) (*ProviderListResult, error)
-	ProviderModels(ctx context.Context, req ProviderModelsRequest) (*ProviderModelsResult, error)
-	ProviderPriceSet(ctx context.Context, req ProviderPriceSetRequest) (*ProviderPricesResult, error)
-	TextGenerate(ctx context.Context, req TextGenerateRequest) (*Job, error)
-	ImageGenerate(ctx context.Context, req ImageGenerateRequest) (*Job, error)
-	VoiceGenerate(ctx context.Context, req VoiceGenerateRequest) (*Job, error)
-	VideoGenerate(ctx context.Context, req VideoGenerateRequest) (*Job, error)
-	VoiceList(ctx context.Context, req VoiceListRequest) (*VoiceListResult, error)
-	// ImageModelEdit removes the background of a layer, or generates an image into a document, with a provider
-	// (SDD-016 section 6.5); a job of a kind that needs approval.
-	ImageModelEdit(ctx context.Context, req ImageModelEditRequest) (*Job, error)
-	// The sign-in to an AI provider in the browser (SDD-016 section 12): only a person begins and completes one.
-	ProviderSignInBegin(ctx context.Context, req ProviderSignInBeginRequest) (*ProviderSignInBeginResult, error)
-	ProviderSignInComplete(ctx context.Context, req ProviderSignInCompleteRequest) (*ProviderSignIn, error)
-	ProviderSignInList(ctx context.Context, req ProviderSignInListRequest) (*ProviderSignInListResult, error)
 
 	JobGet(ctx context.Context, req JobGetRequest) (*Job, error)
 	JobList(ctx context.Context, req JobListRequest) (*JobListResult, error)
@@ -378,13 +352,6 @@ type svc struct {
 	toolsState  toolsState
 	doctor      DoctorOptions
 	keys        KeyStore
-	conns       *connections.Manager
-	kinds       map[string]*ApprovableKind
-	social      *social.Registry
-	flows       *oauth.Flows
-	signInSet   *oauth.SignIns
-	signFlows   *oauth.Flows
-	providers   *providers.Registry
 	lib         *library.Manager // the files of memory, skills and prompts; nil without a workspace
 	heavy       RateLimiter
 	heavyLimitN int
@@ -474,23 +441,6 @@ func New(o Options) (Service, error) {
 	if s.workspace != "" {
 		s.fonts = enginestore.NewFonts(s.workspace)
 		s.lib = library.New(filepath.Join(s.workspace, "library"), o.Store.Library(), o.Now)
-	}
-
-	if s.conns == nil {
-		s.conns = connections.NewDefault(o.Store.Connections(), s.workspace, s.now)
-	}
-
-	if s.social != nil {
-		s.social.Bind(s.conns)
-	}
-
-	if s.providers == nil {
-		prices := ""
-		if s.workspace != "" {
-			prices = filepath.Join(s.workspace, "providers", providers.PriceFile)
-		}
-
-		s.providers = providers.NewRegistry(s.conns, providers.NewPriceBook(prices), s.now)
 	}
 
 	s.sems = map[string]chan struct{}{

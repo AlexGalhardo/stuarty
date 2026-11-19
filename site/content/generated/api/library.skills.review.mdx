@@ -29,7 +29,7 @@ Content type `application/json`.
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
-| `content_hash` | `string` | yes | The content_hash of the skill as it was read (GET /library/skills/\{name\}); a skill that changed since is not marked.. min length 1 |
+| `agent_view` | `boolean` | no | Set by an agent: only what is reviewed or kept is returned. |
 
 ## Responses
 
@@ -101,9 +101,7 @@ Content type `application/problem+json`. Schema: [`Problem`](/docs/api/schemas#p
 curl -X POST "http://127.0.0.1:7878/api/v1/library/skills/NAME/review" \
   -H "Authorization: Bearer $STUARTY_KEY" \
   -H "Content-Type: application/json" \
-  -d '{
-  "content_hash": "string"
-}'
+  -d '{}'
 ```
 
 ```python title="Python"
@@ -114,9 +112,7 @@ import requests
 response = requests.post(
     "http://127.0.0.1:7878/api/v1/library/skills/NAME/review",
     headers={"Authorization": f"Bearer {os.environ['STUARTY_KEY']}"},
-    json={
-        "content_hash": "string",
-    },
+    json={},
     timeout=30,
 )
 response.raise_for_status()
@@ -130,9 +126,7 @@ const response = await fetch("http://127.0.0.1:7878/api/v1/library/skills/NAME/r
     Authorization: `Bearer ${process.env.STUARTY_KEY}`,
     "Content-Type": "application/json",
   },
-  body: JSON.stringify({
-    "content_hash": "string"
-  }),
+  body: JSON.stringify({}),
 });
 if (!response.ok) throw new Error(`${response.status} ${await response.text()}`);
 console.log(await response.json());
@@ -150,9 +144,7 @@ import (
 )
 
 func main() {
-	body := strings.NewReader(`{
-  "content_hash": "string"
-}`)
+	body := strings.NewReader(`{}`)
 	url := "http://127.0.0.1:7878/api/v1/library/skills/NAME/review"
 	req, err := http.NewRequest("POST", url, body)
 	if err != nil {
@@ -186,9 +178,7 @@ curl_setopt_array($ch, [
         "Authorization: Bearer " . getenv("STUARTY_KEY"),
         "Content-Type: application/json",
     ],
-    CURLOPT_POSTFIELDS => '{
-  "content_hash": "string"
-}',
+    CURLOPT_POSTFIELDS => '{}',
 ]);
 
 $response = curl_exec($ch);
@@ -211,9 +201,7 @@ public class Example {
             .header("Authorization", "Bearer " + System.getenv("STUARTY_KEY"))
             .header("Content-Type", "application/json")
             .method("POST", HttpRequest.BodyPublishers.ofString("""
-                {
-                  "content_hash": "string"
-                }
+                {}
                 """))
             .build();
 
@@ -236,9 +224,7 @@ using var request = new HttpRequestMessage(
 request.Headers.Authorization = new AuthenticationHeaderValue(
     "Bearer", Environment.GetEnvironmentVariable("STUARTY_KEY"));
 request.Content = new StringContent("""
-{
-  "content_hash": "string"
-}
+{}
 """, Encoding.UTF8, "application/json");
 
 using var response = await client.SendAsync(request);
@@ -253,9 +239,7 @@ uri = URI("http://127.0.0.1:7878/api/v1/library/skills/NAME/review")
 request = Net::HTTP::Post.new(uri)
 request["Authorization"] = "Bearer #{ENV.fetch('STUARTY_KEY')}"
 request["Content-Type"] = "application/json"
-request.body = '{
-  "content_hash": "string"
-}'
+request.body = '{}'
 
 response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: uri.scheme == "https") do |http|
   http.request(request)

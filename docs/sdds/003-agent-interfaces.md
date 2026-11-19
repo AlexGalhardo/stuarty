@@ -1577,10 +1577,10 @@ A frame is one JPEG (quality 80, 4:2:0). A sheet is one JPEG:
 | Implementation | the official Go SDK `github.com/modelcontextprotocol/go-sdk` v1.8.0 (it implements revision `2026-07-28` and still serves older revisions: `mcp/shared.go` lines 50 to 91, 555 to 580) |
 | Server identity | `name` `stuarty`, `version` the binary version |
 | Capabilities | `tools` only. No resources, prompts, completions, logging, sampling, roots or elicitation (ADR-0015 item 10) |
-| `tools/list` | the 20 tools below, always in the order of the table, never paged, with `ttlMs` 3,600,000 and `cacheScope` `public` (the SDK type `Cacheable`, `mcp/protocol.go` lines 1148 to 1166; the list changes only when the binary is upgraded). |
-| Tool registration | each tool is registered with the SDK's raw `(*Server).AddTool` (`mcp/server.go` line 315) with `inputSchema` and `outputSchema` taken from the registry generator, **not** with the generic `mcp.AddTool[In, Out]`, which infers schemas from Go types and would not produce the `edit` schema of §4.4. The adapter validates `arguments` against `inputSchema` with the validator of ADR-0014 and converts a failure into `E_VALIDATION` with the `path` of the first invalid value (an operation name the Service does not know is `E_UNKNOWN_COMMAND`, §2.4 rule 5). The message names the path and the constraint, never the value (§1.2 rule 9) |
+| `tools/list` | the 17 tools below, always in the order of the table, never paged, with `ttlMs` 3,600,000 and `cacheScope` `public` (the SDK type `Cacheable`, `mcp/protocol.go` lines 1148 to 1166; the list changes only when the binary is upgraded). |
+| Tool registration | each tool is registered with the SDK's raw `(*Server).AddTool` (`mcp/server.go` line 315) with `inputSchema` and `outputSchema` taken from the registry generator, **not** with the generic `mcp.AddTool[In, Out]`, which infers schemas from Go types and would not produce the `edit` schema of §4.4. The adapter validates `arguments` against `inputSchema` with the validator of ADR-0014 and converts a failure into `E_VALIDATION` with the `path` of the first invalid value (a failure of the `operations[].op` enum is `E_UNKNOWN_COMMAND`, §2.4 rule 5). The message names the path and the constraint, never the value (§1.2 rule 9) |
 | Call result | `CallToolResult` (`Content`, `StructuredContent`, `IsError`) built as §1.3 and §1.4 say |
-| Cost | NFR-020 as set by epic 13 (D-069) and raised by the author (D-094, when epics 10 and 17 met the ceiling at 22,400 bytes and 7,500 characters), measured by `go run ./internal/tools/surfacebudget` (which `task lint` runs) and held by `TestToolDefinitionBudget`: the minified `tools/list` result is at most **23,400 bytes** (about 7,300 tokens at the 3.2 characters per token of §3.10), no single tool definition is larger than **1,700 bytes**, there are at most **20 tools**, the text of the first discovery call (`command_help` with no argument, §4.8) is at most **8,500 characters** (about 2,650 tokens), and the description of a domain is at most 160 characters. Measured when the limits were set: the list a client receives 21,830 bytes (6,821 tokens), the largest definitions `edit` (1,589 bytes) and `media_inspect` (1,567), the discovery call 7,201 characters (2,250 tokens: about 90 more for every operation a later epic adds to the video domain, which is why its limit leaves room for a few). The shape of §4.8 is what made the figure: the operation names left the definition of `edit` (about 950 bytes, and 25 more for every command a later epic registers), which paid for the `domain` and `image_id` arguments of `edit` and `history`, the `domains` of `command_help` and the cost sentence of `project_get`. The history of the figure (6,000 tokens by D-040, then raised for `font_import`, `project_item` and `library`, each time as an interim measure) continued with D-094: **only the author raises the budget**, never an epic. A new domain adds operations and no tool, and its only cost is its description line in the discovery call; a tool is added only when no existing intent fits, with the reason written in §4.8, and the budget is then measured again by the epic that adds it. `project_get` with `detail` `document` is outside the per-call caps of §3.10 (D-088): the document is unbounded, and the description of the tool says what it costs. **Verified by** `surfacebudget`, `TestToolDefinitionBudget` and, once per release, a count with the model vendor's token counting endpoint (`TestToolListVendorTokens`: if it exceeds 7,300 tokens the descriptions are shortened; no field is removed) |
+| Cost | the minified `tools/list` result is at most **19,500 bytes**: at the conservative 3 bytes per token of JSON this is 6,500 tokens, the NFR-020 limit (raised from 6,000 tokens, 18,000 bytes, by D-040; before that from 17,500 bytes when `font_import` became the 16th tool, VV-024; at the 3.2 characters per token of check 2 it is 5,625 tokens). The definitions of this section measure about 19,480 bytes in total (the `library` tool is about 1,250 of them, written to fit), at the cap, so a new parameter or a new tool needs the cap raised first. `edit` is 2,534 bytes (limit 2,700 since VV-122 added `clip.set_shadow` and `clip.set_outline`, raised from 2,500; each new operation name costs about 25 bytes) and the largest other tool is `view` at 1,518 (limit 1,600); `media_inspect` is 1,428 and `template` 1,315. No single tool is larger than 2,700 bytes (`edit`) or 1,600 bytes (the others). **Verified by** `TestToolDefinitionBudget` and, once per release, a count with the model vendor's token counting endpoint (if it exceeds 6,500 tokens the descriptions are shortened; no field is removed) |
 | Order | deterministic (MCP `2026-07-28` Tools: "SHOULD return tools in a deterministic order"), so prompt caches hit |
 
 Tool and Service mapping, scope and annotations (annotations are hints and clients treat them as untrusted; they are never a security control, ADR-0020):
@@ -1603,9 +1603,6 @@ Tool and Service mapping, scope and annotations (annotations are hints and clien
 | `job_cancel` | `JobCancel` | render, or media for the caller's own `transcribe` or `ingest` job | false | false | true | false |
 | `template` | `TemplateList`, `TemplateSave`, `TemplateInstantiate`, `TemplateExport`, `TemplateImport` | read (list, export), edit (the others) | false | false | false | false |
 | `font_import` | `FontImport` | media | false | false | true | false |
-| `connection` | `ConnectionList` (without `id`), `ConnectionGet` (with `id`) | read | true | n/a | true | false |
-| `image` | `ImageCreate`, `ImageList`, `ImageDescribe`, `ImageEdit`, `ImageUndo`, `ImageRedo`, `ImageExport`, `ImageImport` (SDD-021) | read (list, show), edit (the others) | false | false | false | false |
-| `project_item` | `ProjectItemAdd`, `ProjectItemMove`, `ProjectItemRename`, `ProjectItemTrash`, `ProjectItemRestore`, `BriefGet`, `BriefSet`, `BriefingQuestions`, `BriefingAnswer`, and the texts of SDD-019: `TextList`, `TextGet`, `TextWrite`, `TextRevisions`, `TextRevert`, `CaptionValidate`, `ScriptEstimate` (argument `action`: `text`, `revisions`, `revert`, `check`) | edit (read for `brief` without `text`, for `briefing` without `answers`, and for the actions `revisions` and `check` and the action `text` without `text`) | false | false | false | false |
 | `library` | `LibrarySearch`, `MemoryList`, `SkillList`, `PromptList`, `MemoryGet`, `SkillGet`, `PromptGet`, `MemoryWrite`, `SkillWrite`, `PromptWrite`, `PromptRender`, `SkillLint` | read (search, list, get, render, lint), edit (write) | false | false | false | false |
 
 `destructiveHint` is `false` on every tool: every write is undoable and recorded per actor, and nothing is removed for good (ADR-0020 items 2 and 3). A client that prompts on destructive tools therefore never prompts for this server, which is what unattended use needs (D-011). `openWorldHint` is `false` on every tool: no tool reaches an address chosen by the caller (RF-130). `TestNoOutboundTools` asserts both hints for every registered tool and that `web/app/mcp` imports no HTTP client.
@@ -3154,262 +3151,12 @@ The result is a `TemplateInstantiateResult` (§2.9): `project_id`, `revision`, `
 
 The `outputSchema` and the `title` are minimal, to stay under the budget of §4.1; the result is a `FontImportResult` (`hash`, `bytes`, `deduplicated`) in `structuredContent`; the hash goes into `files[].hash` of a `font.add` edit. The same bytes twice store one file. The tool is the MCP form of `font:import` and `POST /fonts` (VV-024).
 
-#### `connection`
-
-```json
-{
-  "name":"connection",
-  "description":"The user's connected destinations (id, kind, label, hosts, what each accepts, last use), or one by id. Never returns a credential. Only a person adds, removes or tests one.",
-  "inputSchema":{
-    "type":"object",
-    "properties":{
-      "id":{"type":"string","pattern":"^con_[0-9a-hjkmnp-tv-z]{10}$"}
-    },
-    "additionalProperties":false
-  },
-  "outputSchema":{"type":"object"},
-  "annotations":{
-    "title":"Connections",
-    "readOnlyHint":true,
-    "destructiveHint":false,
-    "idempotentHint":true,
-    "openWorldHint":false
-  }
-}
-```
-
-The only tool of the connections domain (ADR-0043 item 3: an intent no other tool expresses, the question "where may this product send data?"; about 560 bytes, 175 tokens). It reads the registry and nothing else: it has no argument that names a destination, and creating, removing and testing a connection take a credential or reach the network, so they have a CLI command and a route and no tool (SDD-014 section 10). The result is a `ConnectionListResult` or a `Connection` in `structuredContent`; the label is delimited as untrusted text in the text part (SDD-007 section 8). It never carries a secret, only `secret_set`.
-
-#### `image`
-
-```json
-{
-  "name": "image",
-  "description": "Images. action=create (preset or width+height; or from_template+values), list, show, edit (operations: command_help domain=image), undo, redo, export, import (path or hash of an image file; image_id adds a layer).",
-  "inputSchema": {
-    "type": "object",
-    "properties": {
-      "action": {
-        "enum": [
-          "create",
-          "list",
-          "show",
-          "edit",
-          "undo",
-          "redo",
-          "export",
-          "import"
-        ]
-      },
-      "image_id": {
-        "type": "string",
-        "pattern": "^img_[0-9a-hjkmnp-tv-z]{10}$"
-      },
-      "base_revision": {
-        "type": "integer"
-      },
-      "operations": {
-        "type": "array",
-        "items": {
-          "type": "object",
-          "properties": {
-            "op": {
-              "type": "string"
-            },
-            "args": {
-              "type": "object"
-            }
-          }
-        }
-      },
-      "idempotency_key": {
-        "type": "string"
-      },
-      "dry_run": {
-        "type": "boolean"
-      },
-      "preset": {
-        "type": "string"
-      },
-      "width": {
-        "type": "integer"
-      },
-      "height": {
-        "type": "integer"
-      },
-      "name": {
-        "type": "string"
-      },
-      "template": {
-        "type": "boolean"
-      },
-      "values": {
-        "type": "object"
-      },
-      "format": {
-        "type": "string"
-      },
-      "quality": {
-        "type": "integer"
-      },
-      "from_template": {
-        "type": "string"
-      },
-      "path": {
-        "type": "string"
-      },
-      "hash": {
-        "type": "string"
-      }
-    },
-    "required": [
-      "action"
-    ],
-    "additionalProperties": false
-  },
-  "outputSchema": {
-    "type": "object",
-    "properties": {
-      "text": {
-        "type": "string",
-        "x-untrusted": true
-      }
-    }
-  },
-  "annotations": {
-    "title": "Images",
-    "readOnlyHint": false,
-    "destructiveHint": false,
-    "idempotentHint": false,
-    "openWorldHint": false
-  }
-}
-```
-
-The `image` tool is the image documents of SDD-021 behind one tool, as `template` is the templates: `action` picks the Service operation (`create` is `ImageCreate`, `list` `ImageList`, `show` `ImageDescribe`, `edit` `ImageEdit`, `undo` and `redo` `ImageUndo` and `ImageRedo`, `export` `ImageExport`) and a member the action does not use is refused. `operations` of `edit` are the operations of the image registry, which `command_help` serves with `domain` `image` (the video `edit` enum does not list them). The definition is as small as the budget of §4.1 allows, so some members are CLI and HTTP only: the background, the id, the paging and the template filter of the list, and the output schema names only `text`. The template to start from is `from_template` (an image id, not an `_id` member, to save the pattern). An agent sets a background with `layer.add_fill`.
-
-`import` is `ImageImport` (epic 48): `path` (an absolute path on the machine of the server, read with the path rules of `MediaImport`, §2.6) or `hash` (an image already in the workspace, as `media_import` accepts) makes a new image document, sized as the file when both sides are at most 4,096 pixels, otherwise by `width` and `height` or a `preset`; with `image_id` the file is one more layer of that document (`base_revision`, `idempotency_key` and `dry_run` as in `edit`). It is one more action and two members (`path`, `hash`) of the same tool, not a tool of its own, and the wait for the ingest (`wait_ms`) is CLI and HTTP only, so the budget of §4.1 is held. The result is `ImageImportResult`.
-
-#### `project_item`
-
-```json
-{
-  "name": "project_item",
-  "description": "Project items. add: timeline (id is timeline_id), text or output (export job_id); move, rename, trash, restore: item_id; brief: read, or write text (empty clears); briefing: questions, or answers {id: text} write the brief. Texts: text lists, reads (item_id) or writes (text; title, text_kind make one); revisions (revision, until: compare); revert (revision); check: caption (network) or script (wpm).",
-  "inputSchema": {
-    "type": "object",
-    "properties": {
-      "action": {
-        "enum": [
-          "add",
-          "move",
-          "rename",
-          "trash",
-          "restore",
-          "brief",
-          "briefing",
-          "text",
-          "revisions",
-          "revert",
-          "check"
-        ]
-      },
-      "project_id": {
-        "type": "string",
-        "pattern": "^prj_[0-9a-hjkmnp-tv-z]{10}$"
-      },
-      "item_id": {
-        "type": "string",
-        "pattern": "^pit_[0-9a-hjkmnp-tv-z]{10}$"
-      },
-      "kind": {
-        "enum": [
-          "text",
-          "timeline",
-          "output"
-        ]
-      },
-      "title": {
-        "type": "string"
-      },
-      "position": {
-        "type": "integer"
-      },
-      "text": {
-        "type": "string"
-      },
-      "answers": {
-        "type": "object"
-      },
-      "preset": {
-        "type": "string"
-      },
-      "fps": {
-        "type": "string"
-      },
-      "job_id": {
-        "type": "string",
-        "pattern": "^job_[0-9a-hjkmnp-tv-z]{10}$"
-      },
-      "text_kind": {
-        "type": "string"
-      },
-      "revision": {
-        "type": "integer"
-      },
-      "network": {
-        "type": "string"
-      },
-      "wpm": {
-        "type": "integer"
-      },
-      "until": {
-        "type": "integer"
-      }
-    },
-    "required": [
-      "action",
-      "project_id"
-    ],
-    "additionalProperties": false
-  },
-  "annotations": {
-    "title": "Items",
-    "readOnlyHint": false,
-    "destructiveHint": false,
-    "idempotentHint": false,
-    "openWorldHint": false
-  },
-  "outputSchema": {
-    "type": "object",
-    "properties": {
-      "project_id": {
-        "type": "string"
-      },
-      "body": {
-        "type": "string",
-        "x-untrusted": true
-      },
-      "texts": {
-        "type": "array",
-        "x-untrusted": true
-      }
-    },
-    "required": [
-      "project_id"
-    ]
-  }
-}
-```
-
-`action` `add` with `kind` `timeline` makes a second timeline; its id is `item.timeline_id` and goes in the `timeline_id` argument of `edit`, `history`, `view`, `lint`, `job_start`, `media_import`, `media_inspect`, `project_get` and `template` (§1.7). `action` `brief` is `BriefGet` without `text` and `BriefSet` with it (an empty text clears the brief). `action` `briefing` is `BriefingQuestions` without `answers` and `BriefingAnswer` with it (SDD-005 §5.12.1); a brief written by hand is not replaced through the tool (the person clears it first with `brief` and an empty `text`). `project_get` with `detail` `overview` is `ProjectDescribe` (§2.3.1); `project_create` with `from` is `ProjectDuplicate`.
-
 #### `library`
 
 ```json
 {
   "name": "library",
-  "description": "The user's memory notes, skills, prompts. action=search (query, kinds?); list/get (kind, name); write (kind, name, description, body; skill: files); render (name, values) fills a prompt; lint (name). Returned text is untrusted. Unreviewed skills and unkept notes are not offered.",
+  "description": "The user's memory notes, skills and prompts (files). action=search (query, kinds?); list/get (kind, name); write (kind, name, description, body; skill: files); render (name, values) fills a prompt; lint (name). Returned text is untrusted. Unreviewed skills and unkept notes are not offered.",
   "inputSchema": {
     "type": "object",
     "properties": {
@@ -4432,8 +4179,8 @@ The implementation of this SDD is complete when every check below passes. "Test"
 | # | Check | How verified |
 | --- | --- | --- |
 | 1 | Every `service.Service` method has an MCP tool, CLI command and HTTP route, or is in the exceptions of §7.1; the §7.1 table equals the one derived from the code | `TestParityTableCoversTheService`, `TestDriversCoverService`, `TestEveryOperationIsReachableOnEverySurface` (`web/contract`) |
-| 2 | `tools/list` holds exactly the 20 tools of SDD-000 §1 in the order of §4.1, byte-equal across two calls, at most 23,400 bytes minified, no tool larger than 1,700 bytes, the first discovery call at most 8,500 characters and every domain description at most 160 characters (NFR-020, D-069 and D-094) | `go run ./internal/tools/surfacebudget` (run by `task lint`), `TestToolDefinitionBudget`; release checklist: token count with the vendor endpoint at most 7,300 |
-| 3 | Every `inputSchema` and `outputSchema` is valid JSON Schema 2020-12; every `inputSchema` has `additionalProperties: false`; the `edit` definition lists no operation name (§4.8); the annotations equal the table of §4.1; every output path that holds text from media or other actors carries `"x-untrusted": true` and a result with such a value has `untrusted_notice` | `TestToolSchemas` |
+| 2 | `tools/list` holds exactly the 17 tools of SDD-000 §1 in the order of §4.1, byte-equal across two calls, at most 19,500 bytes minified, `edit` at most 2,700 bytes and every other tool at most 1,600 (NFR-020) | `TestToolDefinitionBudget`; release checklist: token count with the vendor endpoint at most 6,500 |
+| 3 | Every `inputSchema` and `outputSchema` is valid JSON Schema 2020-12; every `inputSchema` has `additionalProperties: false`; the `edit` operation enum equals the public command names of the build; the annotations equal the table of §4.1; every output path that holds text from media or other actors carries `"x-untrusted": true` and a result with such a value has `untrusted_notice` | `TestToolSchemas` |
 | 4 | The first 512 characters of `instructions` (after the generated header line is stripped) are those of §4.6, the whole is at most 2,100 bytes, it names the tools by their exact names and does not mention locks | `TestInstructionsHead` |
 | 5 | The MCP server is stateless: no `Mcp-Session-Id` is sent or read, `GET /mcp` and `DELETE /mcp` answer 405, two interleaved clients do not influence each other; revisions `2026-07-28` and `2025-11-25` both work over stdio and HTTP | `TestHTTPIsStateless` (`web/app/mcp`), `TestMCPOverStdioThroughTheBinary` (`web/cmd/app`); no single test runs both revisions with the SDK client |
 | 6 | Every text format of §3 matches its golden file: the concise and full views (including an empty project, a project with a hidden and a muted track, captions, text, shapes, audio, flags), `DescribeDiff` for all 12 change kinds and the empty diff, the edit text in its four states and the undo and redo texts, the lint report with every rule of §3.6, the history list, the media inspection (probe, transcript, silences, loudness, missing sections) and the media list, and all texts of §3.9 | `service/textview` golden tests |
@@ -4470,8 +4217,8 @@ Numbers measured on the reference machine (AMD Ryzen 7 5700X3D, Windows 11, FFmp
 
 | Budget | Measured | Limit |
 | --- | --- | --- |
-| `tools/list` as a client receives it, 20 tools | 23,249 bytes, about 7,265 tokens by the 3.2 characters per token estimate; largest definition `job_start` 1,699 bytes, with `image.edit` (epic 30) and `publish.upload` (D-093), the arguments of `export` being the `args` properties of its schema; first discovery call 7,915 characters (`surfacebudget`, D-093) | at most 23,400 bytes, 8,500 characters (check 2) |
-| `tools/list` by the vendor token count | not measured: needs `ANTHROPIC_API_KEY` (`TestToolListVendorTokens`, release only) | at most 7,300 tokens |
+| `tools/list` definitions, 17 tools | about 17,990 bytes, about 5,620 tokens by the 3.2 characters per token estimate | at most 19,500 bytes (check 2) |
+| `tools/list` by the vendor token count | not measured: needs `ANTHROPIC_API_KEY` (`TestToolListVendorTokens`, release only) | at most 6,500 tokens |
 | Concise view of the reference project | 1 page, 11,785 characters | at most 2 pages, cap 12,800 characters (check 7) |
 | Frame and sheet image tokens | `TestViewImageSizeTable` passes for the four presets | frame at most 800, sheet at most 1,500 (check 8) |
 | 9-cell sheet, median | 149 ms (`BenchmarkViewSheet9`) | under 2 s (check 9) |

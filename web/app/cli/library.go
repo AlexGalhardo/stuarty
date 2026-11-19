@@ -5,6 +5,8 @@ package cli
 
 import (
 	"context"
+	"io"
+	"os"
 	"strings"
 
 	"github.com/AlexGalhardo/stuarty/service"
@@ -43,6 +45,26 @@ func (c *call) readBody() (string, error) {
 	}
 
 	return c.readText("body-file", c.args.str("body-file"))
+}
+
+// readText reads a file of the current directory, or standard input for -.
+func (c *call) readText(flag, src string) (string, error) {
+	var (
+		raw []byte
+		err error
+	)
+
+	if src == "-" {
+		raw, err = io.ReadAll(c.rt.Stdin)
+	} else {
+		raw, err = os.ReadFile(src)
+	}
+
+	if err != nil {
+		return "", validation(flag, "cannot read %s: %s.", src, readReason(err))
+	}
+
+	return string(raw), nil
 }
 
 // oneName is the single positional argument that names an entry.

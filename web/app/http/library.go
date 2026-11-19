@@ -17,11 +17,6 @@ type libraryNameIn struct {
 	AgentView bool   `json:"agent_view,omitempty"                     doc:"Set by an agent: only what is reviewed or kept is returned."`
 }
 
-type skillReviewIn struct {
-	Name        string `json:"name"         validate:"required"`
-	ContentHash string `json:"content_hash" validate:"required" doc:"The content_hash of the skill as it was read (GET /library/skills/{name}); a skill that changed since is not marked."`
-}
-
 type memoryListIn struct {
 	Scope             string `json:"scope,omitempty"              doc:"workspace or a project id."`
 	Tags              string `json:"tags,omitempty"               doc:"Comma separated; every tag must be on the note."`
@@ -173,10 +168,8 @@ func (h *apiHandler) skillImport(c *web.Ctx, in skillImportIn) (service.SkillImp
 	return service.SkillImportResult{}, c.JSON(http.StatusCreated, res)
 }
 
-func (h *apiHandler) skillReview(c *web.Ctx, in skillReviewIn) (service.SkillReviewResult, error) {
-	res, err := h.Service.SkillMarkReviewed(c.Context(), service.SkillReviewRequest{
-		Name: in.Name, ContentHash: in.ContentHash,
-	})
+func (h *apiHandler) skillReview(c *web.Ctx, in libraryNameIn) (service.SkillReviewResult, error) {
+	res, err := h.Service.SkillMarkReviewed(c.Context(), service.LibraryRef{Name: in.Name})
 
 	return deref(res), err
 }

@@ -302,85 +302,6 @@ func (s stub) BrandKitSet(context.Context, service.BrandKitSetRequest) (*service
 	return reply[service.BrandKit](s.err)
 }
 
-func (s stub) ProjectDescribe(context.Context, service.ProjectDescribeRequest) (*service.ProjectDescribeResult, error) {
-	return reply[service.ProjectDescribeResult](s.err)
-}
-
-func (s stub) ProjectDuplicate(context.Context, service.ProjectDuplicateRequest) (*service.ProjectCreateResult, error) {
-	return reply[service.ProjectCreateResult](s.err)
-}
-
-func (s stub) ProjectItemAdd(context.Context, service.ProjectItemAddRequest) (*service.ProjectItemResult, error) {
-	return reply[service.ProjectItemResult](s.err)
-}
-
-func (s stub) ProjectItemMove(context.Context, service.ProjectItemMoveRequest) (*service.ProjectItemResult, error) {
-	return reply[service.ProjectItemResult](s.err)
-}
-
-func (s stub) ProjectItemRename(context.Context, service.ProjectItemRenameRequest) (*service.ProjectItemResult, error) {
-	return reply[service.ProjectItemResult](s.err)
-}
-
-func (s stub) ProjectItemTrash(context.Context, service.ProjectItemTrashRequest) (*service.ProjectItemResult, error) {
-	return reply[service.ProjectItemResult](s.err)
-}
-
-func (s stub) ProjectItemRestore(context.Context, service.ProjectItemTrashRequest) (*service.ProjectItemResult, error) {
-	return reply[service.ProjectItemResult](s.err)
-}
-
-func (s stub) BriefGet(context.Context, service.BriefGetRequest) (*service.BriefResult, error) {
-	return reply[service.BriefResult](s.err)
-}
-
-func (s stub) BriefSet(context.Context, service.BriefSetRequest) (*service.BriefResult, error) {
-	return reply[service.BriefResult](s.err)
-}
-
-func (s stub) AssetList(context.Context, service.AssetListRequest) (*service.AssetListResult, error) {
-	return reply[service.AssetListResult](s.err)
-}
-
-func (s stub) AssetGet(context.Context, service.AssetRef) (*service.AssetResult, error) {
-	return reply[service.AssetResult](s.err)
-}
-
-func (s stub) AssetUses(context.Context, service.AssetUsesRequest) (*service.AssetUsesResult, error) {
-	return reply[service.AssetUsesResult](s.err)
-}
-
-func (s stub) AssetSetInfo(context.Context, service.AssetSetInfoRequest) (*service.AssetResult, error) {
-	return reply[service.AssetResult](s.err)
-}
-
-func (s stub) AssetTag(context.Context, service.AssetTagRequest) (*service.AssetResult, error) {
-	return reply[service.AssetResult](s.err)
-}
-
-func (s stub) BriefingQuestions(
-	context.Context,
-	service.BriefingQuestionsRequest,
-) (*service.BriefingQuestionsResult, error) {
-	return reply[service.BriefingQuestionsResult](s.err)
-}
-
-func (s stub) BriefingAnswer(context.Context, service.BriefingAnswerRequest) (*service.BriefResult, error) {
-	return reply[service.BriefResult](s.err)
-}
-
-func (s stub) MotionBrief(context.Context, service.MotionBriefRequest) (*service.MotionBriefResult, error) {
-	return reply[service.MotionBriefResult](s.err)
-}
-
-func (s stub) MotionCheck(context.Context, service.MotionCheckRequest) (*service.MotionCheckResult, error) {
-	return reply[service.MotionCheckResult](s.err)
-}
-
-func (s stub) MotionReplace(context.Context, service.MotionReplaceRequest) (*service.MotionReplaceResult, error) {
-	return reply[service.MotionReplaceResult](s.err)
-}
-
 func (s stub) MemoryList(context.Context, service.MemoryListRequest) (*service.LibraryListResult, error) {
 	return reply[service.LibraryListResult](s.err)
 }
@@ -413,7 +334,7 @@ func (s stub) SkillImport(context.Context, service.SkillImportRequest) (*service
 	return reply[service.SkillImportResult](s.err)
 }
 
-func (s stub) SkillMarkReviewed(context.Context, service.SkillReviewRequest) (*service.SkillReviewResult, error) {
+func (s stub) SkillMarkReviewed(context.Context, service.LibraryRef) (*service.SkillReviewResult, error) {
 	return reply[service.SkillReviewResult](s.err)
 }
 

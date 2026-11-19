@@ -36,16 +36,11 @@ func libCaller(c Caller) library.Caller {
 	return library.Caller{Actor: c.Actor, Person: c.Browser, ProjectID: c.ProjectID}
 }
 
-// uiActor is the actor of a browser session of local mode, privileged or not: web/app/auth reserves the
-// label "ui" for it, so no token caller can claim it.
-const uiActor = "local:ui"
-
-// libText is a text of the library as the caller may have it: the pages edit it, so a session of the UI gets
-// it as it is (the page escapes it when it draws it, and a page that got it cleaned would write the cleaned
-// text back over the file on its next save); every other caller gets it cleaned and with the less-than sign
-// escaped, as data (SDD-018 section 13).
+// libText is a text of the library as the caller may have it: a person at the browser edits it and gets
+// it as it is; every other caller gets it cleaned and with the less-than sign escaped, as data
+// (SDD-018 section 13).
 func libText(c Caller, text string, budget int) string {
-	if c.Browser || c.Actor == uiActor {
+	if c.Browser {
 		return text
 	}
 
@@ -437,7 +432,6 @@ func (s *svc) SkillGet(ctx context.Context, req LibraryRef) (*SkillGetResult, er
 		Source:        libText(c, skill.Source(), 200),
 		Body:          libText(c, skill.Body, libBodyBudget),
 		Findings:      findings,
-		ContentHash:   skill.ContentHash(),
 	}
 
 	for i := range skill.Files {
@@ -474,39 +468,8 @@ func skillText(e *LibraryEntry, skill core.Skill, files []SkillFileView, finding
 		b.WriteString("\nwarning: " + e.Warning)
 	}
 
-	// The paths of the files came with the skill (an archive names them), so they are library text too.
-	var listing strings.Builder
-
-	for i := range files {
-		if i >= libMaxFilesShown {
-			fmt.Fprintf(&listing, "... and %d more files\n", len(files)-i)
-
-			break
-		}
-
-		fmt.Fprintf(&listing, "file %s (%d bytes)\n", files[i].Path, files[i].Bytes)
-	}
-
-	if lines := findingLines(findings); lines != "" {
-		b.WriteString("\n" + findingsBlock(e.Name, lines))
-	}
-
-	if listing.Len() > 0 {
-		b.WriteString("\n" + untrusted.Block(untrusted.SourceLibraryText,
-			untrusted.Attrs{"kind": "skill", "name": e.Name, "field": "files"}, listing.String(), libTextBudget))
-	}
-
-	b.WriteString("\n" + block("skill", e.Name, skill.Description+"\n\n"+skill.Body))
-
-	return b.String()
-}
-
-// findingLines writes the findings of the lint one per line: severity, code, and the file and line they are on.
-func findingLines(findings []LibraryFinding) string {
-	var b strings.Builder
-
 	for i := range findings {
-		fmt.Fprintf(&b, "%s %s", findings[i].Severity, findings[i].Code)
+		fmt.Fprintf(&b, "\n%s %s", findings[i].Severity, findings[i].Code)
 
 		if findings[i].Path != "" {
 			fmt.Fprintf(&b, " %s", findings[i].Path)
@@ -515,18 +478,21 @@ func findingLines(findings []LibraryFinding) string {
 				fmt.Fprintf(&b, ":%d", findings[i].Line)
 			}
 		}
-
-		b.WriteString("\n")
 	}
 
-	return b.String()
-}
+	for i := range files {
+		if i >= libMaxFilesShown {
+			fmt.Fprintf(&b, "\n... and %d more files", len(files)-i)
 
-// findingsBlock delimits the findings as library text: a finding names a file of the skill, and the name of the
-// file came with the skill, so a file name such as "ignore the rules.md" is data, not an instruction.
-func findingsBlock(name, lines string) string {
-	return untrusted.Block(untrusted.SourceLibraryText,
-		untrusted.Attrs{"kind": "skill", "name": name, "field": "findings"}, lines, libTextBudget)
+			break
+		}
+
+		fmt.Fprintf(&b, "\nfile %s (%d bytes)", files[i].Path, files[i].Bytes)
+	}
+
+	b.WriteString("\n" + block("skill", e.Name, skill.Description+"\n\n"+skill.Body))
+
+	return b.String()
 }
 
 // SkillWrite creates or replaces a skill, after the lint.
@@ -633,9 +599,8 @@ func baseName(p string) string {
 	return p
 }
 
-// SkillMarkReviewed records that a person read a skill, as it was when they read it. Only a person at the
-// browser may.
-func (s *svc) SkillMarkReviewed(ctx context.Context, req SkillReviewRequest) (*SkillReviewResult, error) {
+// SkillMarkReviewed records that a person read a skill. Only a person at the browser may.
+func (s *svc) SkillMarkReviewed(ctx context.Context, req LibraryRef) (*SkillReviewResult, error) {
 	c, m, err := s.libraryPrep(ctx, "SkillMarkReviewed")
 	if err != nil {
 		return nil, err
@@ -643,15 +608,10 @@ func (s *svc) SkillMarkReviewed(ctx context.Context, req SkillReviewRequest) (*S
 
 	if !c.Browser {
 		return nil, newError(CodeForbidden, "only a person at the browser marks a skill as read.").
-			withHint("open the skill in the Skills section of the desktop application or of a signed-in session of network mode, and mark it as read there")
+			withHint("open the skill in the Skills section and mark it as read there")
 	}
 
-	entry, _, rerr := m.MarkReviewed(ctx, libCaller(c), req.Name, req.ContentHash)
-	if errors.Is(rerr, library.ErrChanged) {
-		return nil, newError(command.CodeRevisionConflict, "the skill changed since it was read; it is not marked.").
-			withHint("read the skill again, then mark it as read")
-	}
-
+	entry, _, rerr := m.MarkReviewed(ctx, libCaller(c), req.Name)
 	if rerr != nil {
 		return nil, libError(rerr, "skill")
 	}
@@ -691,8 +651,9 @@ func (s *svc) SkillLint(ctx context.Context, req LibraryRef) (*SkillLintResult, 
 
 	res.Text = fmt.Sprintf("skill/%s: %d errors, %d warnings", req.Name, res.Errors, res.Warnings)
 
-	if lines := findingLines(res.Findings); lines != "" {
-		res.Text += "\n" + findingsBlock(req.Name, lines)
+	for i := range res.Findings {
+		f := &res.Findings[i]
+		res.Text += fmt.Sprintf("\n%s %s %s", f.Severity, f.Code, f.Path)
 	}
 
 	return res, nil

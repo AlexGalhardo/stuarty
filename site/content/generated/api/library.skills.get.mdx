@@ -40,7 +40,6 @@ Content type `application/json`. Schema: [`SkillGetResult`](/docs/api/schemas#sk
 | `allowed_tools` | `string` | no |  |
 | `body` | `string` | no |  |
 | `compatibility` | `string` | no |  |
-| `content_hash` | `string` | no |  |
 | `entry` | [`LibraryEntry`](/docs/api/schemas#libraryentry) | no |  |
 | `files` | array of [`SkillFileView`](/docs/api/schemas#skillfileview) | no |  |
 | `findings` | array of [`LibraryFinding`](/docs/api/schemas#libraryfinding) | no |  |
@@ -232,7 +231,6 @@ puts "#{response.code} #{response.body}"
   "allowed_tools": "string",
   "body": "string",
   "compatibility": "string",
-  "content_hash": "string",
   "entry": {
     "actor": "string",
     "description": "string",

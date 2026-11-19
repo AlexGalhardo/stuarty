@@ -1548,31 +1548,6 @@ The types named in the tables of the operations. The arguments of each editing c
 | `truncated` | `boolean` | no |  |
 | `untrusted_notice` | `string` | no |  |
 
-### Limits
-
-| Name | Type | Required | Description |
-| --- | --- | --- | --- |
-| `audio_codecs` | array of `string` | no |  |
-| `caption_max` | `integer` | no |  |
-| `caption_network` | `string` | no |  |
-| `daily_posts` | `integer` | no |  |
-| `description_max_bytes` | `integer` | no |  |
-| `file_max_bytes` | `integer (int64)` | no |  |
-| `forbidden` | `string` | no |  |
-| `formats` | array of `string` | no |  |
-| `hashtags_max` | `integer` | no |  |
-| `needs_kids_declaration` | `boolean` | no |  |
-| `no_caption` | `boolean` | no |  |
-| `preset` | `string` | no |  |
-| `read` | `string` | no |  |
-| `source` | `string` | no |  |
-| `tags_max_chars` | `integer` | no |  |
-| `thumbnail_formats` | array of `string` | no |  |
-| `thumbnail_max_bytes` | `integer (int64)` | no |  |
-| `title_max` | `integer` | no |  |
-| `video_codecs` | array of `string` | no |  |
-| `visibilities` | array of `string` | no |  |
-
 ### LintResult
 
 | Name | Type | Required | Description |
@@ -1746,128 +1721,6 @@ The types named in the tables of the operations. The arguments of each editing c
 | --- | --- | --- | --- |
 | `entry` | [`LibraryEntry`](/docs/api/schemas#libraryentry) | no |  |
 | `text` | `string` | no |  |
-| `untrusted_notice` | `string` | no |  |
-
-### Mismatch
-
-| Name | Type | Required | Description |
-| --- | --- | --- | --- |
-| `expected` | `string` | no |  |
-| `field` | `string` | no |  |
-| `found` | `string` | no |  |
-| `hint` | `string` | no |  |
-
-### ModelView
-
-| Name | Type | Required | Description |
-| --- | --- | --- | --- |
-| `capability` | `string` | no |  |
-| `context_tokens` | `integer` | no |  |
-| `id` | `string` | no |  |
-| `name` | `string` | no |  |
-| `output_tokens` | `integer` | no |  |
-| `price` | [`provider.Price`](/docs/api/schemas#providerprice) or `any` or `null` or `null` | no |  |
-| `price_source` | `string` | no |  |
-
-### Money
-
-| Name | Type | Required | Description |
-| --- | --- | --- | --- |
-| `currency` | `string` | no |  |
-| `micros` | `integer (int64)` | no |  |
-
-### MotionBrand
-
-| Name | Type | Required | Description |
-| --- | --- | --- | --- |
-| `colors` | map of `string` | no |  |
-| `fonts` | array of `string` | no |  |
-| `logo` | `string` | no |  |
-
-### MotionBriefResult
-
-| Name | Type | Required | Description |
-| --- | --- | --- | --- |
-| `brand_kit` | [`MotionBrand`](/docs/api/schemas#motionbrand) | no |  |
-| `captions` | array of [`MotionCaption`](/docs/api/schemas#motioncaption) | no |  |
-| `duration` | [`TimeValue`](/docs/api/schemas#timevalue) | no |  |
-| `duration_frames` | `integer` | no |  |
-| `frame_rate` | [`Rational`](/docs/api/schemas#rational) | no |  |
-| `frames` | array of [`MotionFrame`](/docs/api/schemas#motionframe) | no |  |
-| `from` | [`TimeValue`](/docs/api/schemas#timevalue) | no |  |
-| `height` | `integer` | no |  |
-| `image_tokens` | `integer` | no |  |
-| `margins` | [`Margins`](/docs/api/schemas#margins) | no |  |
-| `needs_alpha` | `boolean` | no |  |
-| `project_id` | `string` | no |  |
-| `revision` | `integer (int64)` | no |  |
-| `safe_area` | [`Rect`](/docs/api/schemas#rect) | no |  |
-| `text` | `string` | no |  |
-| `track` | [`TrackInfo`](/docs/api/schemas#trackinfo) or `any` or `null` or `null` | no |  |
-| `until` | [`TimeValue`](/docs/api/schemas#timevalue) | no |  |
-| `untrusted_notice` | `string` | no |  |
-| `width` | `integer` | no |  |
-
-### MotionCaption
-
-| Name | Type | Required | Description |
-| --- | --- | --- | --- |
-| `end` | `integer` | no |  |
-| `item_id` | `string` | no |  |
-| `start` | `integer` | no |  |
-| `text` | `string` | no |  |
-
-### MotionCheckResult
-
-| Name | Type | Required | Description |
-| --- | --- | --- | --- |
-| `asset_id` | `string` | no |  |
-| `asset_name` | `string` | no |  |
-| `duration_frames` | `integer` | no |  |
-| `frame_rate` | [`Rational`](/docs/api/schemas#rational) | no |  |
-| `height` | `integer` | no |  |
-| `mismatches` | array of [`Mismatch`](/docs/api/schemas#mismatch) | no |  |
-| `needs_alpha` | `boolean` | no |  |
-| `ok` | `boolean` | no |  |
-| `project_id` | `string` | no |  |
-| `revision` | `integer (int64)` | no |  |
-| `text` | `string` | no |  |
-| `untrusted_notice` | `string` | no |  |
-| `width` | `integer` | no |  |
-
-### MotionFrame
-
-| Name | Type | Required | Description |
-| --- | --- | --- | --- |
-| `at` | [`TimeValue`](/docs/api/schemas#timevalue) | no |  |
-| `height` | `integer` | no |  |
-| `image_base64` | `string` | no |  |
-| `image_tokens` | `integer` | no |  |
-| `mime` | `string` | no |  |
-| `path` | `string` | no |  |
-| `role` | `string` | no |  |
-| `width` | `integer` | no |  |
-
-### MotionReplaceResult
-
-| Name | Type | Required | Description |
-| --- | --- | --- | --- |
-| `actor` | `string` | no |  |
-| `applied` | `boolean` | no |  |
-| `asset_id` | `string` | no |  |
-| `base_revision` | `integer (int64)` | no |  |
-| `created` | array of `string` | no |  |
-| `description` | `string` | no |  |
-| `diff` | array of [`Change`](/docs/api/schemas#change) | no |  |
-| `dry_run` | `boolean` | no |  |
-| `effective` | array of [`OpEffect`](/docs/api/schemas#opeffect) | no |  |
-| `findings` | array of [`Finding`](/docs/api/schemas#finding) | no |  |
-| `lint` | [`LintTotals`](/docs/api/schemas#linttotals) | no |  |
-| `project_id` | `string` | no |  |
-| `render_key` | `string` | no |  |
-| `replaced` | array of `string` | no |  |
-| `replayed` | `boolean` | no |  |
-| `revision` | `integer (int64)` | no |  |
 | `untrusted_notice` | `string` | no |  |
 
 ### OpEffect
@@ -2261,125 +2114,6 @@ The types named in the tables of the operations. The arguments of each editing c
 | `untrusted_notice` | `string` | no |  |
 | `variables` | array of `string` | no |  |
 
-### provider.Price
-
-| Name | Type | Required | Description |
-| --- | --- | --- | --- |
-| `currency` | `string` | no |  |
-| `input_micros_per_mtok` | `integer (int64)` | no |  |
-| `output_micros_per_mtok` | `integer (int64)` | no |  |
-| `unit` | `string` | no |  |
-| `unit_micros` | `integer (int64)` | no |  |
-
-### ProviderListResult
-
-| Name | Type | Required | Description |
-| --- | --- | --- | --- |
-| `prices` | array of [`PriceEntry`](/docs/api/schemas#priceentry) | no |  |
-| `providers` | array of [`ProviderView`](/docs/api/schemas#providerview) | no |  |
-
-### ProviderModelsResult
-
-| Name | Type | Required | Description |
-| --- | --- | --- | --- |
-| `cached` | `boolean` | no |  |
-| `connection_id` | `string` | no |  |
-| `fetched_at` | `string (date-time)` | no |  |
-| `models` | array of [`ModelView`](/docs/api/schemas#modelview) | no |  |
-| `provider` | `string` | no |  |
-
-### ProviderPricesResult
-
-| Name | Type | Required | Description |
-| --- | --- | --- | --- |
-| `prices` | array of [`PriceEntry`](/docs/api/schemas#priceentry) | no |  |
-
-### ProviderSignIn
-
-| Name | Type | Required | Description |
-| --- | --- | --- | --- |
-| `account` | `string` | no |  |
-| `connection_id` | `string` | no |  |
-| `label` | `string` | no |  |
-| `provider` | `string` | no |  |
-| `state` | `string` | no |  |
-
-### ProviderSignInBeginResult
-
-| Name | Type | Required | Description |
-| --- | --- | --- | --- |
-| `authorize_url` | `string` | no |  |
-| `connection_id` | `string` | no |  |
-
-### ProviderSignInListResult
-
-| Name | Type | Required | Description |
-| --- | --- | --- | --- |
-| `sign_ins` | array of [`ProviderSignIn`](/docs/api/schemas#providersignin) | no |  |
-
-### ProviderView
-
-| Name | Type | Required | Description |
-| --- | --- | --- | --- |
-| `capabilities` | array of `string` | no |  |
-| `connections` | array of `string` | no |  |
-| `credential_kinds` | array of `string` | no |  |
-| `default_endpoint` | `string` | no |  |
-| `docs_url` | `string` | no |  |
-| `id` | `string` | no |  |
-| `name` | `string` | no |  |
-
-### Publication
-
-| Name | Type | Required | Description |
-| --- | --- | --- | --- |
-| `created_at` | `string (date-time)` | no |  |
-| `export` | `string` | no |  |
-| `id` | `string` | no |  |
-| `notes` | array of `string` | no |  |
-| `project_id` | `string` | no |  |
-| `targets` | array of [`Target`](/docs/api/schemas#target) | no |  |
-| `text` | `string` | no |  |
-| `thumbnail` | `string` | no |  |
-| `title` | `string` | no |  |
-| `updated_at` | `string (date-time)` | no |  |
-
-### PublicationListResult
-
-| Name | Type | Required | Description |
-| --- | --- | --- | --- |
-| `publications` | array of [`Publication`](/docs/api/schemas#publication) | no |  |
-| `total` | `integer` | no |  |
-
-### PublishResult
-
-| Name | Type | Required | Description |
-| --- | --- | --- | --- |
-| `connection_id` | `string` | no |  |
-| `network` | `string` | no |  |
-| `remote_id` | `string` | no |  |
-| `state` | `string` | no |  |
-| `thumbnail_error` | `string` | no |  |
-| `url` | `string` | no |  |
-
-### PublishStatusResult
-
-| Name | Type | Required | Description |
-| --- | --- | --- | --- |
-| `error` | [`Error`](/docs/api/schemas#error) or `any` or `null` or `null` | no |  |
-| `job_id` | `string` | no |  |
-| `result` | [`PublishResult`](/docs/api/schemas#publishresult) or `any` or `null` or `null` | no |  |
-| `state` | `string` | no |  |
-
-### PublishValidateResult
-
-| Name | Type | Required | Description |
-| --- | --- | --- | --- |
-| `issues` | array of [`Issue`](/docs/api/schemas#issue) | no |  |
-| `network` | `string` | no |  |
-| `state` | `string` | no |  |
-| `summary` | `string` | no |  |
-
 ### Range
 
 | Name | Type | Required | Description |
@@ -2539,7 +2273,6 @@ The types named in the tables of the operations. The arguments of each editing c
 | `allowed_tools` | `string` | no |  |
 | `body` | `string` | no |  |
 | `compatibility` | `string` | no |  |
-| `content_hash` | `string` | no |  |
 | `entry` | [`LibraryEntry`](/docs/api/schemas#libraryentry) | no |  |
 | `files` | array of [`SkillFileView`](/docs/api/schemas#skillfileview) | no |  |
 | `findings` | array of [`LibraryFinding`](/docs/api/schemas#libraryfinding) | no |  |
@@ -2584,18 +2317,6 @@ The types named in the tables of the operations. The arguments of each editing c
 | `findings` | array of [`LibraryFinding`](/docs/api/schemas#libraryfinding) | no |  |
 | `text` | `string` | no |  |
 | `untrusted_notice` | `string` | no |  |
-
-### Skipped
-
-| Name | Type | Required | Description |
-| --- | --- | --- | --- |
-| `by_actor` | `string` | no |  |
-| `by_revision` | `integer (int64)` or `null` | no |  |
-| `details` | map of `any` | no |  |
-| `fields` | array of `string` | no |  |
-| `primitive` | [`Primitive`](/docs/api/schemas#primitive) | no |  |
-| `primitive_index` | `integer` | no |  |
-| `reason` | `string` | no |  |
 
 ### SkippedOp
 

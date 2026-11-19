@@ -42,55 +42,9 @@ func AgentDocsInputs() agentdocs.Inputs {
 		inLibrary[s.name] = true
 	}
 
-	// The same for the guided briefing: the skill brief-a-production carries it (SDD-018 section 16).
-	for _, s := range []*spec{briefingQuestionsCmd, briefingAnswerCmd} {
-		inLibrary[s.name] = true
-	}
-
-	// And for the hand-off from an external motion engine: the skill motion-with-an-external-engine carries it.
-	for _, s := range []*spec{motionBriefCmd, motionCheckCmd, motionReplaceCmd} {
-		inLibrary[s.name] = true
-	}
-
-	// The chat commands read a transcript and the profiles for a person (SDD-017 section 10): an agent has no use
-	// for the chat of another one, so the editor skill leaves them out; the guide of the workspace domain lists them.
-	for _, s := range []*spec{agentProfilesCmd, chatSessionsCmd, chatSessionCmd, chatTranscriptCmd} {
-		inLibrary[s.name] = true
-	}
-
-	// The commands of publishing (SDD-020 section 13) wait for the skills of publishing for the same reason.
-	for _, s := range publishingCommands() {
-		inLibrary[s.name] = true
-	}
-
-	// The commands of the AI provider layer (SDD-016 section 10) are in the guide of the provider domain, not in the
-	// editor skill, which has no room for them. An agent starts a generation with job_start (kind text.generate, image.generate or voice.generate).
-	for _, s := range providerCommands() {
-		inLibrary[s.name] = true
-	}
-
-	// The commands of the writing domain (SDD-019 section 8) are in the guide of that domain, not in the editor
-	// skill, which has no room for them: the skills short-script and caption-per-network carry the steps, and
-	// project_item (actions text, revisions, revert, check) is the MCP form.
-	for _, s := range writingCommands() {
-		inLibrary[s.name] = true
-	}
-
-	// Revert, the diff and the checkpoints (epic 36) are in the guide of the video domain: the skill was at its cap
-	// and has no room for six lines, so it points at the guide with one sentence. That sentence is also where the skill
-	// names agent:docs, so its own line is left out too.
-	// Importing a file into an image (epic 48) is in the guide of the image domain for the same reason: the skill is
-	// at its cap (12,400 characters, D-094) and the image tool of MCP carries the import action.
-	for _, s := range []*spec{
-		revertCmd, diffCmd, checkpointCreateCmd, checkpointListCmd, checkpointRenameCmd, checkpointRemoveCmd, agentDocs,
-		imageImport,
-	} {
-		inLibrary[s.name] = true
-	}
-
 	for i := range commands {
 		c := &commands[i]
-		if c.Person {
+		if inLibrary[c.Name] {
 			continue
 		}
 

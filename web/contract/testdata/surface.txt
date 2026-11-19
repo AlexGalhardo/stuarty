@@ -78,9 +78,6 @@ command memory:list
 command memory:remove
 command memory:show
 command memory:write
-command motion:brief
-command motion:check
-command motion:replace
 command otio:export
 command otio:import
 command project:create
@@ -94,32 +91,13 @@ command prompt:list
 command prompt:render
 command prompt:show
 command prompt:write
-command provider:list
-command provider:models
-command provider:price
-command publication:cancel
-command publication:create
-command publication:list
-command publication:retry
-command publication:schedule
-command publication:send-now
-command publication:show
-command publication:update
-command publish:now
-command publish:status
-command publish:validate
 command redo
-command revert
-command script:estimate
 command skill:export
 command skill:import
 command skill:lint
 command skill:list
 command skill:show
 command skill:write
-command social:account:list
-command social:connect
-command social:network:list
 command template:export
 command template:import
 command template:list
@@ -147,12 +125,6 @@ route DELETE /chat/sessions/{}
 route DELETE /connections/{}
 route DELETE /keys/{}
 route DELETE /library/memory/{}
-route DELETE /projects/{}/checkpoints/{}
-route GET /agents/profiles
-route GET /approval-rules
-route GET /approvals
-route GET /approvals/events
-route GET /approvals/{}
 route GET /assets
 route GET /assets/{}
 route GET /assets/{}/uses
@@ -320,14 +292,8 @@ route POST /voice/generate
 route PUT /agents/profiles/{}
 route PUT /assets/{}
 route PUT /brand-kit
-route PUT /cost/ceilings
 route PUT /library/prompts/{}
 route PUT /library/skills/{}
-route PUT /projects/{}/brief
-route PUT /projects/{}/briefing
-route PUT /projects/{}/texts/{}
-route PUT /providers/prices
-route PUT /publications/{}
 tool command_help
 tool connection
 tool edit
