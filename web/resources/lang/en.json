@@ -1110,6 +1110,14 @@
             "title": "Set clip speed"
           }
         },
+        "composition": {
+          "create_from_selection": {
+            "title": "Make a composition from the selection"
+          },
+          "expand": {
+            "title": "Expand the composition into its items"
+          }
+        },
         "font": {
           "add": {
             "title": "Add font"

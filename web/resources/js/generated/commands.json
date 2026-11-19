@@ -2689,6 +2689,101 @@
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"additionalProperties": false,
 			"properties": {
+				"id": {
+					"description": "The id of the composition item.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+					"type": "string"
+				},
+				"item_ids": {
+					"description": "The items to move, each once.",
+					"items": {
+						"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+						"type": "string"
+					},
+					"maxItems": 100,
+					"minItems": 1,
+					"type": "array"
+				},
+				"name": {
+					"description": "The name of the new timeline; default Composition.",
+					"maxLength": 120,
+					"minLength": 1,
+					"type": "string"
+				},
+				"timeline_id": {
+					"description": "The id of the new timeline.",
+					"pattern": "^prj_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+					"type": "string"
+				}
+			},
+			"required": [
+				"item_ids"
+			],
+			"type": "object"
+		},
+		"description": "Makes a new timeline of the project from the selected items (same tracks, same frame size and rate, starting at frame 0) and replaces them with one composition of it, on the top-most visual track of the selection, for the same frames. The inverse puts the items back; the new timeline stays in the project.",
+		"domain": "video",
+		"errors": [
+			"E_VALIDATION",
+			"E_NOT_FOUND",
+			"E_INVALID_STATE",
+			"E_ID_EXISTS",
+			"E_OVERLAP",
+			"E_LIMIT"
+		],
+		"example": {
+			"id": "itm_k1k2k3k4k5",
+			"item_ids": [
+				"itm_m1n2p3q4r5",
+				"itm_c3d4e5f6g7"
+			],
+			"name": "Intro",
+			"timeline_id": "prj_a1b2c3d4e5"
+		},
+		"internal": false,
+		"name": "composition.create_from_selection",
+		"scope": "edit",
+		"summary": "Moves the selected items into a new timeline and puts one composition clip in their place."
+	},
+	{
+		"args_schema": {
+			"$schema": "https://json-schema.org/draft/2020-12/schema",
+			"additionalProperties": false,
+			"properties": {
+				"item_id": {
+					"description": "A composition item.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+					"type": "string"
+				}
+			},
+			"required": [
+				"item_id"
+			],
+			"type": "object"
+		},
+		"description": "The inverse of composition.create_from_selection, for a composition that only places its timeline: no opacity, mask, effect, transform, keyframe, transition, blend or volume of its own, the whole timeline shown, and the same frame size and rate. The nested timeline stays in the project.",
+		"domain": "video",
+		"errors": [
+			"E_VALIDATION",
+			"E_NOT_FOUND",
+			"E_TYPE_MISMATCH",
+			"E_INVALID_STATE",
+			"E_ID_EXISTS",
+			"E_LIMIT"
+		],
+		"example": {
+			"item_id": "itm_k1k2k3k4k5"
+		},
+		"internal": false,
+		"name": "composition.expand",
+		"scope": "edit",
+		"summary": "Puts the items of a composition's timeline back on this timeline in place of the composition."
+	},
+	{
+		"args_schema": {
+			"$schema": "https://json-schema.org/draft/2020-12/schema",
+			"additionalProperties": false,
+			"properties": {
 				"family": {
 					"description": "1 to 60 characters: letters, digits, space, dot, hyphen, underscore; not a bundled family.",
 					"maxLength": 60,
