@@ -188,6 +188,17 @@ func (h *apiHandler) authenticate(next http.Handler) http.Handler {
 
 			caller = service.Caller{Actor: "local:" + auth.UILabel, Scopes: service.AllScopes, Browser: privileged}
 		} else {
+			// The consent screen of a social network sends the browser back to the sign-in page by a
+			// cross-site navigation, which carries no SameSite=Strict session cookie. The page is drawn
+			// with no caller: it holds no data, calls no operation, and hands the state and the code to
+			// POST /api/v1/social/complete, a same-origin call that does carry the cookie and is
+			// authenticated as every other one (SDD-007 section 3.7, SDD-020 section 6).
+			if r.Method == http.MethodGet && r.URL.Path == SignInCallbackPath {
+				next.ServeHTTP(w, r)
+
+				return
+			}
+
 			// A browser that opens a page with no session is told how to get in (VV-157):
 			// the page is plain HTML and carries no secret, since the launch code is
 			// issued only to a caller that proves the token (SDD-007 section 3.4).

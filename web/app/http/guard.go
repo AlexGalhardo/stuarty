@@ -188,13 +188,39 @@ func hostAllowed(r *http.Request) bool {
 	return false
 }
 
+// SignInCallbackPath is the one page a person may reach from another site: the redirect address of the
+// sign-in to a social network (SDD-020 section 6). The network sends the browser there, so the request is
+// a cross-site navigation by nature.
+const SignInCallbackPath = "/social/callback"
+
+// signInRedirect says whether r is the top-level navigation of the browser coming back from a consent
+// screen: a GET of the sign-in page, as a navigation that loads a document. The page holds no data and
+// changes nothing; it hands the state and the code to POST /api/v1/social/complete, which is a
+// same-origin request with every check of this guard, and the state is single-use and bound to the
+// session that began it (SDD-007 section 3.6 item 4, T-59).
+func signInRedirect(r *http.Request) bool {
+	return r.Method == http.MethodGet && r.URL.Path == SignInCallbackPath &&
+		r.Header.Get("Sec-Fetch-Mode") == "navigate" && r.Header.Get("Sec-Fetch-Dest") == "document"
+}
+
 func fetchSiteAllowed(r *http.Request) bool {
 	site, present := r.Header["Sec-Fetch-Site"]
 	if !present {
 		return true
 	}
 
-	return len(site) == 1 && (site[0] == "same-origin" || site[0] == "none")
+	if len(site) != 1 {
+		return false
+	}
+
+	switch site[0] {
+	case "same-origin", "none":
+		return true
+	case "same-site", "cross-site":
+		return signInRedirect(r)
+	}
+
+	return false
 }
 
 func originAllowed(r *http.Request) bool {
