@@ -19,6 +19,13 @@ type Use struct {
 	AssetID   string   `json:"asset_id"`
 }
 
+// Poster says where a picture of the file is served from: the timeline that holds it and its identifier there
+// (the thumbnail route of SDD-011 section 6.5 is addressed by them).
+type Poster struct {
+	TimelineID string `json:"timeline_id"`
+	AssetID    string `json:"asset_id"`
+}
+
 // LibraryAsset is one file of the library (SDD-011 section 14.1).
 type LibraryAsset struct {
 	Hash        string       `json:"hash"`
@@ -35,6 +42,7 @@ type LibraryAsset struct {
 	CreatedBy   string       `json:"created_by,omitempty"`
 	CreatedAt   string       `json:"created_at,omitempty"`
 	Projects    int          `json:"projects"` // how many projects use it
+	Poster      *Poster      `json:"poster,omitempty"`
 	Uses        []Use        `json:"uses,omitempty"`
 }
 
@@ -102,8 +110,17 @@ func base(h *Held, row Row) LibraryAsset {
 		tags = []string{}
 	}
 
+	var poster *Poster
+
+	for _, hd := range h.Holdings {
+		if poster == nil || hd.TimelineID < poster.TimelineID {
+			poster = &Poster{TimelineID: hd.TimelineID, AssetID: hd.AssetID}
+		}
+	}
+
 	return LibraryAsset{
-		Hash: h.Hash, Name: h.Name, Kind: h.MediaKind, Bytes: h.Bytes, Width: h.Width, Height: h.Height,
+		Poster: poster,
+		Hash:   h.Hash, Name: h.Name, Kind: h.MediaKind, Bytes: h.Bytes, Width: h.Width, Height: h.Height,
 		DurationMS: h.DurationMS, Origin: row.Origin, Description: row.Description, Reusable: row.Reusable,
 		Tags: tags, CreatedBy: row.CreatedBy, CreatedAt: stamp(row.CreatedMs),
 		Projects: len(asset.Uses(h.Holdings)),

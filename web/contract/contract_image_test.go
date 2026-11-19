@@ -38,6 +38,16 @@ func TestAssetLibraryScenarioSaysWhatItShould(t *testing.T) {
 		}
 	}
 
+	// step 10: the PUT body reaches the Service with every member it names, the reuse mark included
+	if !strings.Contains(got[10].result, `"reusable":true`) || !strings.Contains(got[10].result, "checked") {
+		t.Errorf("AssetSetInfo did not apply its members: %s", got[10].result)
+	}
+
+	// the last step lists the reusable files: the mark set in step 10 keeps the file in
+	if !strings.Contains(got[len(got)-1].result, `"name":"clip.mov"`) {
+		t.Errorf("the reusable filter lost the file: %s", got[len(got)-1].result)
+	}
+
 	if strings.Contains(got[6].result, `"name":`) {
 		t.Errorf("the visual section holds a video: %s", got[6].result)
 	}

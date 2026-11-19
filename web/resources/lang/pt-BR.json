@@ -2137,106 +2137,63 @@
       "save": "Salvar kit de marca",
       "saved": "Kit de marca salvo."
     },
-    "library": {
+    "assets": {
       "intro": {
-        "memory": "O que você aprendeu em produções passadas, um fato por arquivo. Os agentes leem antes de planejar a próxima.",
-        "skill": "Procedimentos que um agente segue, no formato Agent Skills. Uma skill de fora não é oferecida a um agente antes de você lê-la.",
-        "prompt": "Textos que você reaproveita, com variáveis que você preenche ao usar."
+        "visual": "As imagens e tabelas de cor do seu espaço de trabalho, com a origem de cada uma e onde é usada.",
+        "video": "Os vídeos e áudios do seu espaço de trabalho, com a origem de cada um e onde é usado."
       },
-      "list": {
-        "memory": "Notas de memória",
-        "skill": "Lista de skills",
-        "prompt": "Lista de prompts"
-      },
-      "search": "Buscar",
-      "search_button": "Buscar",
-      "new": "Novo",
-      "rescan": "Ler os arquivos de novo",
-      "rescanned": "Arquivos lidos de novo: {memory} notas, {skills} skills, {prompts} prompts, {invalid} inválidos.",
-      "loading": "Carregando.",
-      "load_failed": "Não foi possível carregar a lista.",
-      "empty": "Nada aqui ainda.",
-      "no_match": "Nada corresponde.",
-      "pick": "Escolha uma entrada ou crie uma nova.",
-      "saved": "Salvo.",
-      "preview_label": "Texto da entrada",
-      "badge": {
-        "invalid": "Arquivo inválido",
-        "reviewed": "Revisada",
-        "unreviewed": "Não revisada",
-        "scripts": "Tem scripts",
-        "kept": "Mantida",
-        "pending": "Pendente"
+      "filter": {
+        "text": "Buscar",
+        "tag": "Etiqueta",
+        "origin": "Origem",
+        "any_origin": "Qualquer origem",
+        "reusable": "Só reutilizáveis",
+        "apply": "Aplicar",
+        "clear": "Limpar"
       },
       "origin": {
-        "built-in": "Do produto",
-        "user": "Sua",
-        "imported": "Importada"
+        "imported": "Importado",
+        "generated": "Gerado",
+        "fetched_by_agent": "Baixado por um agente",
+        "rendered_externally": "Renderizado fora"
       },
-      "tab": {
-        "edit": "Editar",
-        "preview": "Prévia"
+      "kind": {
+        "image": "Imagem",
+        "video": "Vídeo",
+        "audio": "Áudio",
+        "lut": "Tabela de cor"
       },
-      "field": {
-        "name": "Nome",
-        "name_optional": "Nome (opcional)",
-        "name_hint": "Letras minúsculas, dígitos e hífens, por exemplo resumo-semanal.",
-        "description": "Descrição",
-        "body": "Texto",
-        "scope": "Escopo",
-        "tags": "Tags, separadas por vírgulas",
-        "license": "Licença"
+      "reusable_badge": "Reutilizável",
+      "count": "{count} arquivos",
+      "empty": {
+        "visual": "Nenhuma imagem ainda. Importe um arquivo em um projeto e ele aparece aqui.",
+        "video": "Nenhum vídeo ou áudio ainda. Importe um arquivo em um projeto e ele aparece aqui."
       },
-      "action": {
-        "save": "Salvar",
-        "remove": "Remover"
-      },
-      "memory": {
-        "description": "O fato, em uma linha",
-        "keep": "Manter esta nota",
-        "pending_hint": "Um agente escreveu esta nota. Os agentes não a recebem antes de você mantê-la."
-      },
-      "prompt": {
-        "variables_hint": "Escreva {{variable}} onde entra um valor.",
-        "save_first": "Salve o prompt e depois preencha as variáveis aqui.",
-        "no_variables": "Este prompt não tem variáveis.",
-        "value": "Valor de {name}",
-        "render": "Gerar o texto",
-        "rendered": "Texto gerado"
-      },
-      "skill": {
+      "empty_filtered": "Nenhum arquivo corresponde a esses filtros.",
+      "more": "Carregar mais",
+      "detail": {
+        "title": "Detalhes",
+        "close": "Fechar",
         "origin": "Origem",
-        "source": "Fonte",
-        "no_licence": "Nenhuma informada",
-        "review_hint": "Leia o texto abaixo e os arquivos, depois marque a skill como lida. Até lá nenhum agente a recebe. Qualquer mudança tira a marca.",
-        "mark_reviewed": "Marcar como lida",
-        "reviewed_done": "Marcada como lida.",
-        "text": "Texto completo",
-        "full_text": "Texto completo da skill",
-        "files": "Arquivos",
-        "bytes": "tamanho: {count} bytes",
-        "script": "Script: guardado, nunca executado",
-        "lint": "Verificação",
-        "instructions": "Instruções"
-      },
-      "lint": {
-        "none": "Nenhum achado.",
-        "error": "Erro",
-        "warning": "Aviso"
-      },
-      "import": {
-        "heading": "Importar ou exportar skills",
-        "hint": "O Stuarty não abre conexão para buscar uma skill. Baixe antes e informe a pasta ou o arquivo (.zip, .tar.gz) que está na máquina do serviço.",
-        "path": "Pasta ou arquivo na máquina do serviço",
-        "source": "De onde veio",
-        "replace": "Substituir uma skill de mesmo nome",
-        "button": "Importar",
-        "done": "{name} importada. Ainda não foi revisada."
-      },
-      "export": {
-        "button": "Exportar skills revisadas",
-        "done": "{count} skills escritas em {path}.",
-        "none": "Nenhuma skill revisada para exportar."
+        "facts": "Arquivo",
+        "provider": "Provedor {provider}, modelo {model}",
+        "cost": "Custo: {amount} USD",
+        "created": "adicionado em {date}",
+        "description": "Descrição",
+        "rights": "Nota de direitos",
+        "rights_notice": "Esta nota é o seu próprio registro da licença ou da permissão. O produto não a confere com nenhuma licença.",
+        "reusable": "Oferecer este arquivo de novo (reutilizável)",
+        "save": "Salvar",
+        "saved": "Salvo.",
+        "tags": "Etiquetas",
+        "tag_add_label": "Nova etiqueta",
+        "tag_add": "Adicionar etiqueta",
+        "tag_remove": "Remover a etiqueta {tag}",
+        "uses": "Usado por",
+        "no_uses": "Nenhum projeto usa este arquivo.",
+        "use_in": "Usar em um projeto",
+        "use": "Usar",
+        "used": "Adicionado ao projeto. Nenhuma cópia foi feita."
       }
     }
   }
