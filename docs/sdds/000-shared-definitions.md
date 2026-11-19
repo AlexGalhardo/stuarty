@@ -469,6 +469,12 @@ The operations of the registry of domain `image` (`core/command` registry built 
 | `layer.transform`, `layer.set`, `layer.crop`, `layer.duplicate`, `layer.remove` | operation | geometry, common properties, crop of an image layer, copy, removal |
 | `layer.set_text`, `layer.set_shape` | operation | change the content or style of a text layer, the look of a shape |
 | `layer.align`, `layer.fit` | operation | align to the canvas or to a layer, fit (cover, contain) |
+| `layer.adjust`, `layer.blend` | operation | the adjustments of a layer (brightness, contrast, saturation, temperature, tint, hue, exposure, levels, tone curve) and its blend mode (SDD-021 section 3, epic 29) |
+| `layer.filter_add`, `layer.filter_set`, `layer.filter_remove`, `layer.filter_move` | operation | the ordered filters of a layer |
+| `layer.mask_set`, `layer.mask_clear` | operation | the mask of a layer: a shape, or the alpha of another layer |
+| `grayscale`, `sepia`, `invert`, `warm`, `cool`, `blur`, `sharpen`, `vignette`, `grain`, `shadow`, `glow`, `stroke` | image filter kind | the `kind` of a filter of a layer, each at most once per layer (SDD-021 section 3.1) |
+| `rect`, `rounded_rect`, `ellipse`, `layer` | image mask kind | the `kind` of the mask of a layer |
+| `normal`, `multiply`, `screen`, `overlay`, `soft_light`, `hard_light`, `darken`, `lighten`, `color_dodge`, `color_burn`, `difference` | image blend mode | the `mode` of `layer.blend`; the renderer also reads `add` (SDD-013 section 3.11) |
 | `video_thumbnail`, `square_post`, `vertical_cover` | preset | 1280 x 720, 1080 x 1080, 1080 x 1920 |
 | `L_IMAGE_EMPTY_SLOT`, `L_IMAGE_TEXT_OUTSIDE`, `L_IMAGE_TEXT_SMALL`, `L_IMAGE_LOW_CONTRAST`, `L_IMAGE_UPSCALED` | lint code | the rules of SDD-021 section 8; the first blocks an export |
 | `png`, `jpeg`, `webp` | image export format | the formats of `ImageExport` |

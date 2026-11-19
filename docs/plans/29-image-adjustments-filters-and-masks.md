@@ -39,7 +39,7 @@ A creator makes a photo pop behind a title: brighter, more contrast, a blurred b
 
 ## Tasks
 
-- [ ] 1. Specify each new operation in SDD-013 (formula, rounding, order) and the commands in SDD-021. Verify: `task lint:md` exits 0.
+- [x] 1. Specify each new operation in SDD-013 (formula, rounding, order) and the commands in SDD-021. Verify: `task lint:md` exits 0.
 - [ ] 2. Expose the existing adjustments, filters, masks and blend modes to image layers with golden cases. Verify: `go test ./core/image/... -run "TestAdjust|TestFilter|TestMask|TestBlend"` passes.
 - [ ] 3. Implement exposure, levels and the tone curve (tables built in Go) on the CPU path. Verify: `cargo test` in `renderer/` and `go test ./engine/renderhost/...` pass with new goldens.
 - [ ] 4. Implement sharpen and outer glow on the CPU path. Verify: the same commands pass with new goldens.
