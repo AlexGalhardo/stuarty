@@ -21,6 +21,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/core/project"
 	"github.com/AlexGalhardo/stuarty/core/timeline"
 	"github.com/AlexGalhardo/stuarty/core/timeval"
+	"github.com/AlexGalhardo/stuarty/core/writing"
 	enginestore "github.com/AlexGalhardo/stuarty/engine/store"
 	assetlib "github.com/AlexGalhardo/stuarty/service/assets"
 	"github.com/AlexGalhardo/stuarty/service/crashpoint"
@@ -364,6 +365,10 @@ func (s *svc) putImportedProduction(ctx context.Context, tx Tx, p *bundleParts) 
 	for i, bi := range p.manifest.Production.Items {
 		it := s.newItem(row.ID, bi.Kind, bi.Title, i, row.CreatedBy, row.CreatedMs)
 		it.Body, it.Format = p.texts[i], bi.Format
+
+		if bi.Kind == string(project.Text) {
+			it.TextKind = bi.TextKind
+		}
 
 		if bi.Kind == string(project.Timeline) {
 			it.Ref = byKey[bi.Timeline].row.ID
@@ -841,6 +846,13 @@ func checkBundleProduction(m *BundleManifest) *Error {
 func checkBundleItem(it *BundleItem, keys, used map[string]bool) string {
 	if !project.Kind(it.Kind).Allowed() || project.CheckTitle(it.Title) != nil || len(it.Format) > 16 {
 		return "an item of the project is not valid"
+	}
+
+	// A text kind belongs to a text, and is one of the three (a bundle of before epic 17 has none: it is a copy).
+	if it.TextKind != "" {
+		if _, v := writing.CheckKind(it.TextKind); v != nil || it.Kind != string(project.Text) {
+			return "an item declares a text kind that is not valid"
+		}
 	}
 
 	// Only a brief or a text has a text, and its entry is at most the limit of a text.
