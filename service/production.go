@@ -131,6 +131,14 @@ func (s *svc) loadProduction(ctx context.Context, repo ProductionRepo, c Caller,
 		}
 	}
 
+	// A key limited to one project reaches that project only, whatever id names it. An id that resolves to
+	// another project and one that resolves to nothing are refused alike, as resolveTimeline refuses them, so
+	// the answer does not say whether the id exists.
+	if c.ProjectID != "" && (err != nil && id != c.ProjectID || err == nil && head.ID != c.ProjectID) {
+		return ProductionHead{}, newError(CodeForbidden, "the key is limited to another project.").
+			withHint("use a key that covers this project")
+	}
+
 	if err != nil || !visible(c, head.OwnerUserID) {
 		return ProductionHead{}, projectNotFound(id, err)
 	}
