@@ -50,9 +50,9 @@ docker run --rm "ghcr.io/alexgalhardo/stuarty:$V" version
 
 The last command prints `stuarty vX.Y.Z`. The Windows and macOS installers are not signed with a paid code-signing certificate; the signed `checksums.txt` is how you verify them.
 
-## The BETA installers are not signed
+## The installers are not signed
 
-The BETA has no paid code signing: no Apple Developer ID or notarization, and no Windows code-signing certificate. This covers the installers of the local server and the installers of the [desktop application](/docs/guide/desktop) (`stuarty-desktop-X-Y-Z.exe`, `stuarty-desktop-X-Y-Z-arm64.dmg`, `stuarty-desktop-X-Y-Z-amd64.dmg`, `stuarty-desktop-X-Y-Z.AppImage` and `..._linux_amd64.deb`). Paid signing is decided again before 1.0. Until then the proof that a file is the one the project built is the signature of `checksums.txt` and the attestation of the file, and your system warns before it runs the file:
+There is no paid code signing: no Apple Developer ID or notarization, and no Windows code-signing certificate. This covers the installers of the local server and the installers of the [desktop application](/docs/guide/desktop) (`stuarty-desktop-X-Y-Z.exe`, `stuarty-desktop-X-Y-Z-arm64.dmg`, `stuarty-desktop-X-Y-Z-amd64.dmg`, `stuarty-desktop-X-Y-Z.AppImage` and `..._linux_amd64.deb`). Paid signing is decided again before 1.0. Until then the proof that a file is the one the project built is the signature of `checksums.txt` and the attestation of the file, and your system warns before it runs the file:
 
 - **Windows SmartScreen** shows "Windows protected your PC". Choose **More info**, then **Run anyway**. The publisher shows as unknown because there is no certificate.
 - **macOS Gatekeeper** says the app or package cannot be opened because Apple cannot check it. Control-click (right-click) it, choose **Open**, then **Open** again; or run `xattr -d com.apple.quarantine <path of the file or app>`.

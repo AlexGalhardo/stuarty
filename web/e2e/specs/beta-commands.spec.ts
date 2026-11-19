@@ -16,16 +16,45 @@ interface Posted {
 	operations: { op: string; args: Record<string, unknown> }[];
 }
 
-interface BetaCommand {
+interface RegistryCommand {
 	name: string;
 	summary: string;
 	scope: string;
-	phase: string;
 	args_schema: { properties: Record<string, unknown> };
 }
 
-const BETA = (registry as unknown as BetaCommand[]).filter(
-	(c) => c.phase === "beta",
+// The item commands that have an inspector control (P3-UI-007).
+const INSPECTOR_COMMANDS = new Set([
+	"audio.duck",
+	"audio.mark_beats",
+	"caption.import_subtitles",
+	"clip.set_blend",
+	"clip.set_blur",
+	"clip.set_chroma_key",
+	"clip.set_effects",
+	"clip.set_filter",
+	"clip.set_flip",
+	"clip.set_mask",
+	"clip.set_outline",
+	"clip.set_shadow",
+	"font.add",
+	"font.remove",
+	"item.extract_audio",
+	"item.freeze_frame",
+	"item.link",
+	"item.paste_attributes",
+	"item.repeat",
+	"item.set_enabled",
+	"item.slip",
+	"item.unlink",
+	"marker.add",
+	"marker.remove",
+	"marker.set",
+	"settings.reframe",
+]);
+
+const LISTED = (registry as unknown as RegistryCommand[]).filter((c) =>
+	INSPECTOR_COMMANDS.has(c.name),
 );
 
 function recordEdits(page: Page): Posted[] {
@@ -88,13 +117,13 @@ async function seed(
 }
 
 // P3-UI-007 (SDD-012 sections 9.3 and 12.1): the inspector entry points of the
-// BETA item commands.
+// item commands.
 test.describe("beta-commands", () => {
 	// Each test seeds a project with a clip and an audio item through the real
 	// server and imports two files: well above the default 30 s on a busy machine.
 	test.describe.configure({ timeout: 120_000 });
 
-	test("the BETA registry draws the BETA controls", async ({
+	test("the registry draws the inspector controls", async ({
 		page,
 		request,
 	}) => {
@@ -224,13 +253,13 @@ test.describe("beta-commands", () => {
 		]);
 	});
 
-	test("every BETA command opens a palette form with a control per property and no JSON fallback", async ({
+	test("every inspector command opens a palette form with a control per property and no JSON fallback", async ({
 		page,
 		request,
 	}) => {
 		const call = await caller(request);
 		const created = await call("POST", "/projects", {
-			name: `Beta palette ${Date.now()}`,
+			name: `Palette ${Date.now()}`,
 		});
 		await page.goto(`/editor/${created.project_id as string}`);
 		await expect(
@@ -238,7 +267,8 @@ test.describe("beta-commands", () => {
 		).toBeEnabled();
 		await page.keyboard.press("Control+k");
 		const search = page.getByRole("combobox", { name: "Search commands" });
-		for (const command of BETA) {
+		expect(LISTED).toHaveLength(INSPECTOR_COMMANDS.size);
+		for (const command of LISTED) {
 			await search.fill(command.name);
 			await page.locator(`[data-command="${command.name}"]`).click();
 			const form = page.locator(`[data-form="${command.name}"]`);
