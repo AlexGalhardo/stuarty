@@ -37,6 +37,8 @@ export default function Index(): ReactNode {
 	const [preset, setPreset] = useState<string>(PRESETS[0]);
 	const [width, setWidth] = useState("1280");
 	const [height, setHeight] = useState("720");
+	// `image.create` with `template`: a template is made here and filled from "New from template".
+	const [asTemplate, setAsTemplate] = useState(false);
 	const [busy, setBusy] = useState(false);
 	const [failure, setFailure] = useState<Failure | null>(null);
 
@@ -65,6 +67,7 @@ export default function Index(): ReactNode {
 				...(preset === CUSTOM
 					? { width: Number(width), height: Number(height) }
 					: { preset }),
+				...(asTemplate ? { template: true } : {}),
 			});
 			window.location.assign(`/edit-image/${made.image_id}`);
 		} catch (error) {
@@ -75,6 +78,9 @@ export default function Index(): ReactNode {
 
 	const documents =
 		loaded.state === "ready" ? loaded.images.filter((i) => !i.template) : [];
+	// The templates have a list of their own, so a person can open one and give it its slots.
+	const templates =
+		loaded.state === "ready" ? loaded.images.filter((i) => i.template) : [];
 
 	return (
 		<>
@@ -148,6 +154,15 @@ export default function Index(): ReactNode {
 								</div>
 							</>
 						)}
+						<label className="flex h-8 items-center gap-2 text-sm">
+							<input
+								type="checkbox"
+								checked={asTemplate}
+								onChange={(event) => setAsTemplate(event.target.checked)}
+								data-testid="image-new-template"
+							/>
+							{t("ui.image.index.as_template")}
+						</label>
 						<Button type="submit" disabled={busy}>
 							{t("ui.image.index.create")}
 						</Button>
@@ -202,6 +217,42 @@ export default function Index(): ReactNode {
 						</ul>
 					)}
 				</section>
+
+				{templates.length > 0 && (
+					<section
+						aria-labelledby="image-templates-title"
+						className="flex flex-col gap-3"
+					>
+						<h2 id="image-templates-title" className="text-lg font-medium">
+							{t("ui.image.index.templates")}
+						</h2>
+						<ul
+							className="grid gap-2 sm:grid-cols-2"
+							data-testid="image-template-list"
+						>
+							{templates.map((image) => (
+								<li key={image.image_id}>
+									<Link
+										href={`/edit-image/${image.image_id}`}
+										className="flex flex-col gap-0.5 rounded-lg border p-3 hover:bg-muted"
+									>
+										<span className="font-medium">
+											<UntrustedText>{image.name}</UntrustedText>
+										</span>
+										<span className="text-xs text-muted-foreground tabular-nums">
+											{t("ui.image.editor.size", {
+												w: image.width,
+												h: image.height,
+											})}
+											{" · "}
+											{t("ui.image.index.layers", { count: image.layers })}
+										</span>
+									</Link>
+								</li>
+							))}
+						</ul>
+					</section>
+				)}
 			</div>
 		</>
 	);
