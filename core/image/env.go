@@ -51,7 +51,7 @@ func register(cs ...command.Command) { catalogue = append(catalogue, cs...) }
 // Registry is the registry of the commands of domain image (SDD-021 section 3).
 func Registry() *command.Registry {
 	registryOnce.Do(func() {
-		registry = command.NewRegistry()
+		registry = command.NewRegistry(command.DomainImage)
 		registry.MustRegister(catalogue...)
 	})
 

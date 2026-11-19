@@ -257,7 +257,7 @@ func testCommands() []Command {
 
 func testRegistry(t *testing.T) *Registry {
 	t.Helper()
-	r := NewRegistry()
+	r := NewRegistry(DomainVideo)
 	r.Debug = true
 	cmds := testCommands()
 	for i := range cmds {
