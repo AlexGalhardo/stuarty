@@ -28,10 +28,16 @@ func imageNotFound(id string) *Error {
 }
 
 // imageEnv is the environment of a batch inside a transaction: ids, the files of the workspace and the measurer.
-func (s *svc) imageEnv(ctx context.Context, tx Repos, ids func(string) string) coreimage.Env {
+func (s *svc) imageEnv(ctx context.Context, tx Repos, c Caller, ids func(string) string) coreimage.Env {
+	allowed := s.imageAssetAccess(ctx, c)
+
 	return coreimage.Env{
 		NewIDs: ids,
 		Asset: func(hash string) (coreimage.AssetInfo, bool) {
+			if !allowed(hash) {
+				return coreimage.AssetInfo{}, false
+			}
+
 			row, err := tx.Assets().Get(ctx, hash)
 			if err != nil || row.Kind != "image" || row.IngestState != IngestReady ||
 				row.Facts.Width == nil || row.Facts.Height == nil {
@@ -44,6 +50,52 @@ func (s *svc) imageEnv(ctx context.Context, tx Repos, ids func(string) string) c
 		},
 		Measure: rasterize.Measure(rasterize.Bundled()),
 	}
+}
+
+// imageAssetAccess says whether the caller may put a file in an image. In local mode every file of the
+// workspace is the caller own. In network mode the file must be held by a project of the caller, the rule of
+// the asset library (AssetList): a hash alone proves nothing, and the name of the file of another user must not
+// leak through an image. The projects are scanned once, when the first file is asked for.
+func (s *svc) imageAssetAccess(ctx context.Context, c Caller) func(hash string) bool {
+	if c.OwnerUserID == "" {
+		return func(string) bool { return true }
+	}
+
+	var (
+		held map[string]*libraryEntry
+		done bool
+	)
+
+	return func(hash string) bool {
+		if !done {
+			scan, err := s.libraryScan(ctx, c)
+			if err != nil {
+				scan = nil
+			}
+
+			held, done = scan, true
+		}
+
+		_, ok := held[hash]
+
+		return ok
+	}
+}
+
+// imageAuthorize is authorize for the image operations: a key limited to one project reaches no image, since an
+// image belongs to no project until the production exists (SDD-021 section 10).
+func imageAuthorize(ctx context.Context, method string) (Caller, error) {
+	c, err := authorize(ctx, method, "")
+	if err != nil {
+		return Caller{}, err
+	}
+
+	if c.ProjectID != "" {
+		return Caller{}, newError(CodeForbidden, "the key is limited to one project and cannot use images.").
+			withHint("use a key without a project limit")
+	}
+
+	return c, nil
 }
 
 // loadImage reads a document the caller may see.
@@ -80,14 +132,16 @@ func imageUpdate(doc *coreimage.Document, now int64) ImageUpdate {
 }
 
 func (s *svc) ImageCreate(ctx context.Context, req ImageCreateRequest) (*ImageCreateResult, error) {
-	c, err := authorize(ctx, "ImageCreate", "")
+	c, err := imageAuthorize(ctx, "ImageCreate")
 	if err != nil {
 		return nil, err
 	}
 
-	if c.ProjectID != "" {
-		return nil, newError(CodeForbidden, "the key is limited to one project and cannot create images.").
-			withHint("use a key without a project limit")
+	// In network mode the server picks the identifier: a client-chosen one would answer E_ID_EXISTS for the
+	// image of another user (an existence oracle).
+	if c.OwnerUserID != "" && req.ID != "" {
+		return nil, newError(command.CodeValidation, "the id of an image is chosen by the server.").
+			withPath("id").withHint("leave id out")
 	}
 
 	if derr := s.checkDisk(); derr != nil {
@@ -174,7 +228,7 @@ func (s *svc) newImageDocument(
 			withPath("id").withHint("an image id is img_ and 10 characters from 0-9 and a-z, without i, l, o and u")
 	}
 
-	env := s.imageEnv(ctx, tx, s.newIDs)
+	env := s.imageEnv(ctx, tx, c, s.newIDs)
 
 	if req.TemplateID != "" {
 		if req.Preset != "" || req.Width != 0 || req.Height != 0 || req.Template {
@@ -241,7 +295,7 @@ func (s *svc) newImageDocument(
 func validImageID(id string) bool { return timeline.ValidID(coreimage.PrefixImage, id) }
 
 func (s *svc) ImageList(ctx context.Context, req ImageListRequest) (*ImageListResult, error) {
-	c, err := authorize(ctx, "ImageList", "")
+	c, err := imageAuthorize(ctx, "ImageList")
 	if err != nil {
 		return nil, err
 	}
@@ -312,7 +366,7 @@ func (s *svc) ImageList(ctx context.Context, req ImageListRequest) (*ImageListRe
 }
 
 func (s *svc) ImageDescribe(ctx context.Context, req ImageDescribeRequest) (*ImageDescribeResult, error) {
-	c, err := authorize(ctx, "ImageDescribe", "")
+	c, err := imageAuthorize(ctx, "ImageDescribe")
 	if err != nil {
 		return nil, err
 	}
@@ -359,7 +413,7 @@ func newFindings(before, after []lint.Finding) []lint.Finding {
 }
 
 func (s *svc) ImageEdit(ctx context.Context, req ImageEditRequest) (*ImageEditResult, error) {
-	c, err := authorize(ctx, "ImageEdit", "")
+	c, err := imageAuthorize(ctx, "ImageEdit")
 	if err != nil {
 		return nil, err
 	}
@@ -394,7 +448,7 @@ func (s *svc) ImageEdit(ctx context.Context, req ImageEditRequest) (*ImageEditRe
 			return err
 		}
 
-		out, aerr := coreimage.ApplyBatch(doc, req.Operations, s.imageEnv(ctx, tx, s.newIDs))
+		out, aerr := coreimage.ApplyBatch(doc, req.Operations, s.imageEnv(ctx, tx, c, s.newIDs))
 		if aerr != nil {
 			return fromCommand(aerr)
 		}
@@ -743,7 +797,7 @@ func (s *svc) ImageRedo(ctx context.Context, req ImageStepRequest) (*ImageStepRe
 
 // imageStep is ImageUndo and ImageRedo: the transaction of an edit with the differences of SDD-005 section 12.2.
 func (s *svc) imageStep(ctx context.Context, method string, req ImageStepRequest, redo bool) (*ImageStepResult, error) {
-	c, err := authorize(ctx, method, "")
+	c, err := imageAuthorize(ctx, method)
 	if err != nil {
 		return nil, err
 	}
