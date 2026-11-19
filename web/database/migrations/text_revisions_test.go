@@ -9,7 +9,7 @@ import (
 	"github.com/AlexGalhardo/vukem/schema"
 )
 
-const textRevisionsID = "20261119160000_text_revisions"
+const textRevisionsID = "20261119220000_text_revisions"
 
 // textWorkspace is the workspace of a release, taken to the project items, with a brief and two texts in its first
 // project: the texts epic 06 wrote, which had no kind and no history.

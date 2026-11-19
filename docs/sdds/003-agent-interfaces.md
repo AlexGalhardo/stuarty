@@ -1290,6 +1290,7 @@ warning L_SAFE_AREA itm_s6t7v8w9x0 0.4s/12f-2s/60f
 | `L_AUDIO_CLIP` | warning | full | the estimated mix peak exceeds 0 dBFS: at some 20 ms window the sum of each audible source's peak (from the `peaks` artifact) times its volume, fade and keyframe gain exceeds 1.0. The message gives the first range and the count of ranges | lower volume with item.set_audio |
 | `L_LOUDNESS` | warning | full | the estimated integrated loudness of the mix (from the assets' loudness artifacts) differs from `settings.loudness_target` by more than 6 LU, so the export normalization would need a large gain. The message states the gain | adjust volumes or accept the normalization |
 | `L_DURATION_LIMIT` | warning | doc | a portrait or square timeline is longer than 180 s (the YouTube Shorts limit, not checked in a landscape project; research note `features-20-80` §5) | trim the timeline or accept it |
+| `L_ALPHA_MISSING` | warning | full | a clip reads an asset that has an alpha channel (`has_alpha`) whose pictures are all opaque in what the ingest sampled (the `alpha_opaque` fact of its normalized artifact, SDD-011 §4.3.6): the file declares transparency and has none, so the animation covers what is below it. Reported once per clip | render it with alpha |
 
 Blocking set, stated once: `L_EMPTY_TIMELINE`, `L_MEDIA_MISSING`, `L_MEDIA_UNREADY`, `L_SOURCE_RANGE`, `L_ODD_DIMENSIONS`, `L_SLOT_UNFILLED`. Everything else is a warning. A template draft (a document with a `template` member whose `instance` is not true) is exempt from `L_SLOT_UNFILLED`; an instance (`template.instance: true`, written by `TemplateInstantiate`) is not, so export of an instance with open required slots is `E_LINT_BLOCKING`. Any document with a `template` member is exempt from `L_MEDIA_MISSING` for the placeholder, which `L_SLOT_UNFILLED` covers.
 
@@ -2397,7 +2398,7 @@ Example (the text of §3.8; `structuredContent` has `asset_id`, `kind`, `availab
 ```json
 {
   "name": "view",
-  "description": "See the result. mode=frame returns one image of the timeline at time at; mode=sheet returns a grid of frames, each with its time printed (count evenly spaced between from and until, or explicit times). Costs image tokens: read project_get and lint first. frame needs at; sheet takes times, or from, to and count (not both).",
+  "description": "See the result. mode=frame: one image at time at; sheet: a grid of frames with their times (count frames from..until, or times); motion: what an external render of from..until must fit (size, rate, safe area, brand kit, captions, frames). Images cost tokens: read project_get and lint first.",
   "inputSchema": {
     "type": "object",
     "properties": {
@@ -2412,13 +2413,14 @@ Example (the text of §3.8; `structuredContent` has `asset_id`, `kind`, `availab
       "mode": {
         "enum": [
           "frame",
-          "sheet"
+          "sheet",
+          "motion"
         ],
         "default": "frame"
       },
       "at": {
         "type": "string",
-        "description": "Time: 12.5s, 375f or 00:00:12.500. Required in mode frame (the default)."
+        "description": "Time: 12.5s or 375f. Required in mode frame."
       },
       "times": {
         "type": "array",
@@ -3432,7 +3434,7 @@ The tool list stays short while the product grows because a new domain adds **op
 
 `command_help` also takes the topic `export` (epic 35), which is not a domain: it answers with the export presets and codecs of this machine (`ExportPresetList`, a video operation), and takes no `name`. `export_batch` of `job_start` and the `preset` of `lint` are reached the same way, through the tools that already exist.
 
-**The writing domain (epic 17, SDD-019) adds no tool.** `project_item` serves it with four more values of `action`: `text` (no `item_id`: list the texts of the project, or with `text` make one from `title` and `text_kind`; with `item_id`: read it, or with `text` save a new revision, `revision` being the revision the writer read), `revisions` (`item_id`; `revision` and `until` compare two by paragraph), `revert` (`item_id`, `revision`) and `check` (`network` measures a caption, otherwise `wpm` estimates a script; an `item_id` alone is read as what its kind says). The draft is `job_start` with kind `text.draft` (args `item_id`, `connection_id`, `model`, `instruction`, and optionally `network`, `max_tokens`, `temperature`; a person approves; the project needs no `timeline_id`). To pay for the arguments (`text_kind`, `revision`, `until`, `network`, `wpm`) the tool list gave up no capability: the description of `job_get` lost two words and the budget measured 22,389 of 22,400 bytes. `project_item` and `job_start` list `writing` among their domains (`mcp.ToolDomains`). `until` and not `to`: `TestNoOutboundTools` refuses an argument named `to`.
+**The writing domain (epic 17, SDD-019) adds no tool.** `project_item` serves it with four more values of `action`: `text` (no `item_id`: list the texts of the project, or with `text` make one from `title` and `text_kind`; with `item_id`: read it, or with `text` save a new revision, `revision` being the revision the writer read), `revisions` (`item_id`; `revision` and `until` compare two by paragraph), `revert` (`item_id`, `revision`) and `check` (`network` measures a caption, otherwise `wpm` estimates a script; an `item_id` alone is read as what its kind says). The draft is `job_start` with kind `text.draft` (args `item_id`, `connection_id`, `model`, `instruction`, and optionally `network`, `max_tokens`, `temperature`; a person approves; the project needs no `timeline_id`). To pay for the arguments (`text_kind`, `revision`, `until`, `network`, `wpm`) the tool list gave up no capability: the description of `job_get` lost two words and the budget measured 22,389 of 22,400 bytes, and 22,338 once merged with the shorter `view` description of epic 33. `project_item` and `job_start` list `writing` among their domains (`mcp.ToolDomains`). `until` and not `to`: `TestNoOutboundTools` refuses an argument named `to`.
 
 A tool gets `domain` in the epic that registers the first non-video operation behind it, never earlier: every argument costs bytes of every `tools/list` (NFR-020). `lint`, `view`, `job_get` and `job_cancel` wait for such an operation. `job_start` belongs to the `provider` domain too, with no `domain` argument: its `kind` already names the operation, and `text.generate` (epic 09, SDD-016) is a generation of that domain. The `image` tool of §4.2 stays (the surface is frozen, §9.1); `edit` with `domain` `image` reaches the same `ImageEdit`, so an agent that learned one tool for timelines learns the same call for images.
 
@@ -3805,6 +3807,9 @@ Success codes are the `Op.Status`. Error statuses are the table of SDD-000 §8; 
 | `media.inspect` | `GET /projects/{id}/media/{asset_id}` | `sections`, `min_silence`, `cursor`, `limit` | none | 200 `MediaInspectResult` | read | 409 `E_ASSET_NOT_READY` |
 | `media.trash` | `POST /projects/{id}/media/{asset_id}/trash` | `dry_run` | none | 200 `MediaStateResult` | media | none |
 | `media.restore` | `POST /projects/{id}/media/{asset_id}/restore` | `dry_run` | none | 200 `MediaStateResult` | media | none |
+| `projects.motion.brief` | `GET /projects/{id}/motion/brief` | `timeline_id`, `from`, `until`, `track_id` | none | 200 `MotionBrief` (SDD-011 §15.1) | read | 400 `E_INVALID_TIME`; 422 `E_LIMIT_EXCEEDED` |
+| `projects.motion.check` | `GET /projects/{id}/motion/check` | `asset_id`, `timeline_id`, `from`, `until`, `track_id` | none | 200 `MotionCheckResult` (SDD-011 §15.3) | read | 404 `E_NOT_FOUND` for the asset; 400 `E_INVALID_TIME` |
+| `projects.motion.replace` | `POST /projects/{id}/motion/replace` | `dry_run` | `asset_id`, `timeline_id?`, `render_key?` | 200 `MotionReplaceResult`: the `EditResult` of the batch and `replaced` (SDD-011 §15.4) | edit | 404 `E_NOT_FOUND`; 422 `E_OUT_OF_SOURCE` naming the clip |
 | `projects.frame` | `GET /projects/{id}/frame` | `at`, `rev`, `max_tokens`, `width` | none | 200 `image/jpeg` (§6.5) | read | 400 `E_INVALID_TIME`; 409 `E_INVALID_STATE` when `rev` is given and is not the current revision (`details.current_revision`); 422 `E_LIMIT_EXCEEDED` |
 | `projects.sheet` | `GET /projects/{id}/sheet` | `times`, `from`, `until` (`to` is a deprecated alias until 1.0), `count`, `cols`, `rev`, `max_tokens` | none | 200 `image/jpeg` | read | as frame |
 | `projects.plan` | `GET /projects/{id}/plan` | `from`, `until` (`to` is a deprecated alias until 1.0), `rev`, `width` (SDD-004 §10) | none | 200 `PlanWindowResult` | read | 409 `E_INVALID_STATE` as frame |

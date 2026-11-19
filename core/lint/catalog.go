@@ -167,5 +167,13 @@ func Catalog() []Rule {
 			"trim the timeline or accept it",
 			true,
 		},
+		{
+			CodeAlphaMissing,
+			SeverityWarning,
+			"full",
+			"a clip reads a file that declares an alpha channel but whose sampled pictures are all opaque",
+			"render it with alpha",
+			true,
+		},
 	}
 }

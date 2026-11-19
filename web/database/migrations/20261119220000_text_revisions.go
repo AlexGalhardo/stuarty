@@ -5,9 +5,9 @@ import "github.com/AlexGalhardo/vukem/schema"
 // The kind and the revisions of a text (SDD-005 section 5.12, SDD-019 section 3). A text item gets a text kind
 // (the texts of epic 06 become `copy`, free text) and every text that exists gets a revision 1 holding its body, so
 // that no text item is ever without one. Down drops the revisions and the column: a body stays in project_items.
-func m20261119160000TextRevisions() schema.Migration {
+func m20261119220000TextRevisions() schema.Migration {
 	return schema.Migration{
-		ID: "20261119160000_text_revisions",
+		ID: "20261119220000_text_revisions",
 		Up: func(s *schema.Schema) error {
 			stmts := []string{
 				`ALTER TABLE project_items ADD COLUMN text_kind TEXT CHECK (text_kind IN ('script','copy','caption'))`,

@@ -189,6 +189,7 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 		{ kind: "inspector", action: "inspector.silences" },
 		palette,
 	],
+	"clip.replace_media": [palette],
 	"clip.set_blur": [{ kind: "inspector", action: "inspector.blur" }, palette],
 	"clip.set_chroma_key": [
 		{ kind: "inspector", action: "inspector.chroma_key" },

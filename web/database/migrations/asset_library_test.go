@@ -171,7 +171,8 @@ func TestWorkspaceAssetsMigrationDown(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// A later epic may add migrations after this one: they go first, and this one is the last that is undone.
+	// Later epics add migrations after this one (the render origin of epic 33, the texts of epic 17): they go
+	// first, and this one is the last that is undone.
 	all := All()
 	at := slices.IndexFunc(all, func(m schema.Migration) bool { return m.ID == assetLibraryID })
 	if at < 0 {
@@ -179,7 +180,8 @@ func TestWorkspaceAssetsMigrationDown(t *testing.T) {
 	}
 
 	rolled, err := m.Rollback(ctx, len(all)-at)
-	if err != nil || len(rolled) != len(all)-at || rolled[len(rolled)-1] != assetLibraryID {
+	if err != nil || len(rolled) != len(all)-at || rolled[len(rolled)-1] != assetLibraryID ||
+		!slices.Contains(rolled, renderOriginID) {
 		t.Fatalf("Rollback = %v, %v", rolled, err)
 	}
 

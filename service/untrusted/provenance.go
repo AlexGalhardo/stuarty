@@ -82,4 +82,9 @@ var Provenance = map[string]string{
 	"service.TextGetResult.Body":   SourceProjectText,
 	"writing.TextHunk.Text":        SourceProjectText,
 	"writing.SceneEstimate.Title":  SourceProjectText,
+
+	// the hand-off from an external motion engine (SDD-011 section 15): the words of the captions in the range
+	"service.MotionCaption.Text":          SourceProjectText,
+	"service.MotionCheckResult.AssetName": SourceAssetName,
+	"service.RenderOffer.Name":            SourceAssetName,
 }
