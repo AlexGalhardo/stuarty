@@ -110,9 +110,9 @@ func TestRateLimitCoversTheThreeHeavyOperations(t *testing.T) {
 	}
 }
 
-// P4-SRV-003: the operations of the BETA phase that read or write a file or a long job are heavy
+// P4-SRV-003: the later operations that read or write a file or a long job are heavy
 // too, and the refusal names the limit, what was counted and the ceiling.
-func TestRateLimitCoversTheBetaHeavyOperations(t *testing.T) {
+func TestRateLimitCoversTheHeavyOperations(t *testing.T) {
 	s := &svc{heavy: &perMinute{}, heavyLimitN: 7}
 	ctx := callerCtx()
 

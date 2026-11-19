@@ -11,7 +11,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
-// realOp returns a random operation of the Prototype catalogue that mostly makes
+// realOp returns a random operation of the first catalogue that mostly makes
 // sense for doc; some are wrong on purpose so that the error paths run too.
 func realOp(rng *rand.Rand, doc *timeline.Document) Operation {
 	pick := func(m []string) string {

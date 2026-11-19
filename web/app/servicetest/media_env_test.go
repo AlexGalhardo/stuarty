@@ -14,7 +14,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/engine/cache"
 	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
 	"github.com/AlexGalhardo/stuarty/engine/frame"
@@ -62,8 +61,6 @@ type mediaCfg struct {
 	onEvent func(service.Event)
 	// durable runs the jobs on the database queue with workers instead of inline.
 	durable bool
-	// beta serves the commands of the Beta phase.
-	beta bool
 	// tools is the install step of the helper.
 	tools *service.Tools
 	// transcriber is the provider of the transcribe job.
@@ -105,10 +102,6 @@ func newMediaEnv(tb testing.TB, cfg mediaCfg) *mediaEnv {
 
 	m.env = newEnvWith(tb, func(e *env, o *service.Options) {
 		m.ws = string(e.dir)
-
-		if cfg.beta {
-			o.Registry = command.BetaBuild()
-		}
 
 		gc := pathguard.Config{Workspace: m.ws}
 

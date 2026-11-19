@@ -44,7 +44,7 @@ func requireLimit(t *testing.T, what string, err error, wantCode, wantLimit stri
 
 // P4-SRV-003: the disk guard of every write operation, including the BETA ones.
 func TestLimitDiskLowCarriesValueAndCeiling(t *testing.T) {
-	m := newMediaEnv(t, mediaCfg{exporter: goodExporter(), beta: true})
+	m := newMediaEnv(t, mediaCfg{exporter: goodExporter()})
 	project, track := m.withTrack()
 	clip := m.write("a.mp4", clipBytes)
 	bundle := m.exportBundle(project, nil).Result.Export.Path

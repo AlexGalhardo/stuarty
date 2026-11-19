@@ -42,7 +42,7 @@ func (m *mediaEnv) musicOnClipAsset(project, clip string) (music string) {
 // SDD-002 C.51: the speech comes from the speech artifact of the asset of each speech item, in
 // asset frames, and the stored operation carries it.
 func TestResolveSpeechFromTheArtifact(t *testing.T) {
-	m := newMediaEnv(t, mediaCfg{beta: true})
+	m := newMediaEnv(t, mediaCfg{})
 	project, clip, _, _ := m.speechProject()
 	music := m.musicOnClipAsset(project, clip)
 
@@ -63,7 +63,7 @@ func TestResolveSpeechFromTheArtifact(t *testing.T) {
 
 // SDD-002 C.52: the beats of the grid become increasing asset frames.
 func TestResolveBeatsFromTheArtifact(t *testing.T) {
-	m := newMediaEnv(t, mediaCfg{beta: true})
+	m := newMediaEnv(t, mediaCfg{})
 	project, clip, _, _ := m.speechProject()
 	music := m.musicOnClipAsset(project, clip)
 
@@ -77,7 +77,7 @@ func TestResolveBeatsFromTheArtifact(t *testing.T) {
 
 // VV-083: clip.remove_silences on an audio item gets its silences from the artifact of the asset, like a clip.
 func TestResolveSilencesOfAnAudioItem(t *testing.T) {
-	m := newMediaEnv(t, mediaCfg{beta: true})
+	m := newMediaEnv(t, mediaCfg{})
 	project, clip, _, _ := m.speechProject()
 	music := m.musicOnClipAsset(project, clip)
 
@@ -94,7 +94,7 @@ func TestResolveSilencesOfAnAudioItem(t *testing.T) {
 // VV-153: a manual tempo builds the grid in the core, so the service resolves no beats and an
 // asset that was never analysed does not stop the edit.
 func TestMarkBeatsWithAManualTempoResolvesNothing(t *testing.T) {
-	m := newMediaEnv(t, mediaCfg{beta: true})
+	m := newMediaEnv(t, mediaCfg{})
 	project, clip, _, _ := m.speechProject()
 	music := m.musicOnClipAsset(project, clip)
 
@@ -110,7 +110,7 @@ func TestMarkBeatsWithAManualTempoResolvesNothing(t *testing.T) {
 
 // VV-206: `resolved` is internal to the service; a caller that sends it is refused, never obeyed.
 func TestCallerCannotSupplyResolved(t *testing.T) {
-	m := newMediaEnv(t, mediaCfg{beta: true})
+	m := newMediaEnv(t, mediaCfg{})
 	project, clip, _, _ := m.speechProject()
 	music := m.musicOnClipAsset(project, clip)
 

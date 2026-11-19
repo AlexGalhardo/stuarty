@@ -155,7 +155,6 @@ func TestStyleValidation(t *testing.T) {
 		{`{"color": 5}`, false, "colour string"},
 		{`{"color": "red"}`, false, "is not a colour"},
 		{`{"position": "top"}`, false, "not a style key"},
-		{`{"highlight": "word"}`, true, `must be "none"`},
 		{`{"position": "left"}`, true, "must be one of"},
 	}
 	for _, tc := range cases {

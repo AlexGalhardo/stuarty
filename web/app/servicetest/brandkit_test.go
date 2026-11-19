@@ -61,7 +61,7 @@ func storedFonts(t *testing.T, ws string) int {
 // SDD-007 section 15 check 21 and RF-053: the same font twice stores one file, a crafted file is
 // refused and stores nothing.
 func TestBrandKitFontImportStoresOnceAndRefusesACraftedFont(t *testing.T) {
-	m := newMediaEnv(t, mediaCfg{beta: true})
+	m := newMediaEnv(t, mediaCfg{})
 	anton := bundledFontFile(t, "Anton-Regular.ttf")
 	path := m.writeFont(m.files, "a.ttf", anton)
 
@@ -101,7 +101,7 @@ func TestBrandKitFontImportStoresOnceAndRefusesACraftedFont(t *testing.T) {
 }
 
 func TestBrandKitSetValidatesAndRoundTrips(t *testing.T) {
-	m := newMediaEnv(t, mediaCfg{beta: true})
+	m := newMediaEnv(t, mediaCfg{})
 	ctx := m.as(ui)
 	kit := m.svc.(fontImporter)
 
@@ -165,7 +165,7 @@ func TestBrandKitSetValidatesAndRoundTrips(t *testing.T) {
 // RF-053: a template that uses $accent takes the colour of the brand kit when it asks, and a kit
 // without the name is reported.
 func TestBrandKitTemplateTakesTheBrandColour(t *testing.T) {
-	m := newMediaEnv(t, mediaCfg{beta: true})
+	m := newMediaEnv(t, mediaCfg{})
 	ctx := m.as(ui)
 
 	project := m.templateProject()
@@ -227,7 +227,7 @@ func TestBrandKitTemplateTakesTheBrandColour(t *testing.T) {
 // a bundle export in network mode refuses a font the caller neither owns nor uses elsewhere.
 func TestSecurity_T21_BundleExportRefusesAFontTheCallerDoesNotOwn(t *testing.T) {
 	root := t.TempDir()
-	m := newMediaEnv(t, mediaCfg{beta: true, guard: &pathguard.Config{Roots: []string{root}, Network: true}})
+	m := newMediaEnv(t, mediaCfg{guard: &pathguard.Config{Roots: []string{root}, Network: true}})
 	alice, bob := memberCtx("alice"), memberCtx("bob")
 
 	hash, err := enginestore.NewFonts(m.ws).Put(bundledFontFile(t, "Anton-Regular.ttf"))
@@ -296,7 +296,7 @@ func TestSecurity_T21_BundleExportRefusesAFontTheCallerDoesNotOwn(t *testing.T) 
 
 // VV-094: an imported font is listed with the hash font.add takes.
 func TestFontListShowsTheImportedFontsWithTheirHash(t *testing.T) {
-	m := newMediaEnv(t, mediaCfg{beta: true})
+	m := newMediaEnv(t, mediaCfg{})
 
 	before, err := m.svc.FontList(m.as(ui), service.FontListRequest{})
 	if err != nil || len(before.Imported) != 0 {

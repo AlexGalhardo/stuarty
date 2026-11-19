@@ -264,10 +264,6 @@ func checkOperations(t *testing.T, skill string) {
 		}
 
 		name := c.Name
-		if c.Phase != command.Prototype {
-			name += "*"
-		}
-
 		want[name] = true
 	}
 
