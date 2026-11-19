@@ -1,0 +1,14 @@
+{
+  "code": "E_OUT_OF_SOURCE",
+  "details": {
+    "source": {
+      "h": 900,
+      "w": 1600
+    }
+  },
+  "hint": "Use a rectangle inside 0,0 1600x900.",
+  "message": "The crop 1000,0 700x900 is outside the source, which is 1600x900.",
+  "op_index": 0,
+  "path": "args",
+  "retryable": false
+}

@@ -1,0 +1,11 @@
+{
+  "args": {
+    "layer_id": "lyr_cccccccccc",
+    "style": {
+      "color": "#00ff00",
+      "size": 90
+    },
+    "text": "Hello world"
+  },
+  "op": "layer.set_text"
+}

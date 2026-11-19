@@ -1,0 +1,11 @@
+[
+  {
+    "collection": "layers",
+    "id": "lyr_dddddddddd",
+    "set": {
+      "radius": 20,
+      "shape": "rounded_rect"
+    },
+    "type": "patch"
+  }
+]

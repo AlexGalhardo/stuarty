@@ -1,0 +1,135 @@
+{
+  "assets": {
+    "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa": {
+      "hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "height": 900,
+      "name": "face.png",
+      "width": 1600
+    }
+  },
+  "background": "#101820",
+  "height": 720,
+  "id": "img_aaaaaaaaaa",
+  "layers": [
+    {
+      "fill": "#101820",
+      "h": 720,
+      "id": "lyr_aaaaaaaaaa",
+      "kind": "fill",
+      "name": "Backdrop",
+      "opacity": 100,
+      "order": "i",
+      "visible": true,
+      "w": 1280,
+      "x": 0,
+      "y": 0
+    },
+    {
+      "asset": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "h": 720,
+      "id": "lyr_bbbbbbbbbb",
+      "kind": "image",
+      "name": "Photo",
+      "opacity": 100,
+      "order": "r",
+      "visible": true,
+      "w": 1280,
+      "x": 0,
+      "y": 0
+    },
+    {
+      "h": 144,
+      "id": "lyr_cccccccccc",
+      "kind": "text",
+      "name": "Title",
+      "opacity": 100,
+      "order": "v",
+      "slot": "title",
+      "style": {
+        "color": "#FFE600",
+        "font_family": "Anton",
+        "size": 120
+      },
+      "text": "HOW IT WORKS",
+      "visible": true,
+      "w": 1000,
+      "x": 120,
+      "y": 300
+    },
+    {
+      "fill": "#E63946",
+      "h": 40,
+      "id": "lyr_dddddddddd",
+      "kind": "shape",
+      "name": "Bar",
+      "opacity": 100,
+      "order": "x",
+      "shape": "rect",
+      "visible": true,
+      "w": 600,
+      "x": 100,
+      "y": 500
+    },
+    {
+      "children": [
+        {
+          "fill": "#FFFFFF",
+          "h": 1280,
+          "id": "lyr_ffffffffff",
+          "kind": "shape",
+          "name": "Dot",
+          "opacity": 100,
+          "order": "i",
+          "shape": "ellipse",
+          "visible": true,
+          "w": 1280,
+          "x": -50,
+          "y": -320
+        },
+        {
+          "h": 36,
+          "id": "lyr_gggggggggg",
+          "kind": "text",
+          "name": "New",
+          "opacity": 100,
+          "order": "r",
+          "text": "NEW",
+          "visible": true,
+          "w": 80,
+          "x": 10,
+          "y": 30
+        }
+      ],
+      "h": 0,
+      "id": "lyr_eeeeeeeeee",
+      "kind": "group",
+      "name": "Badge",
+      "opacity": 80,
+      "order": "y",
+      "visible": true,
+      "w": 0,
+      "x": 50,
+      "y": 40
+    },
+    {
+      "fill": "#00FF00",
+      "h": 50,
+      "id": "lyr_hhhhhhhhhh",
+      "kind": "shape",
+      "locked": true,
+      "name": "Frame",
+      "opacity": 100,
+      "order": "z",
+      "shape": "rect",
+      "visible": true,
+      "w": 50,
+      "x": 10,
+      "y": 10
+    }
+  ],
+  "name": "Episode 12",
+  "preset": "video_thumbnail",
+  "schema_version": 1,
+  "template": false,
+  "width": 1280
+}

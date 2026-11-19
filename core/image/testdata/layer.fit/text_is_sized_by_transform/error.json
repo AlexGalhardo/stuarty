@@ -1,0 +1,8 @@
+{
+  "code": "E_TYPE_MISMATCH",
+  "hint": "Size a text layer or a group with layer.transform.",
+  "message": "Layer lyr_cccccccccc is a text; layer.fit changes images, shapes and fills.",
+  "op_index": 0,
+  "path": "args.layer_id",
+  "retryable": false
+}
