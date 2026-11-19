@@ -140,7 +140,7 @@ func TestImageReferenceDocument(t *testing.T) {
 	timed := os.Getenv("STUARTY_NFR061") != ""
 
 	if !timed && testing.Short() {
-		t.Skip("the reference document is rendered by hand or in the full run")
+		t.Skip("rendered by hand or in the full run") // verify:env-skip -short: two 4000x4000 exports
 	}
 
 	var first []byte
