@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"testing"
+	"time"
 
 	"github.com/AlexGalhardo/stuarty/core/command"
 )
@@ -252,5 +253,57 @@ func TestBatchIsDeterministic(t *testing.T) {
 
 	if !bytes.Equal(Canonical(a.Doc), Canonical(b.Doc)) || !bytes.Equal(pretty(t, a.Diff), pretty(t, b.Diff)) {
 		t.Fatal("the same batch gave two results")
+	}
+}
+
+// TestUndoTerminatesOnADocumentThatWasAlreadyInvalid reproduces the loop that never ended: the base document
+// has a violation no primitive explains, so every round found it again with nothing left to drop.
+func TestUndoTerminatesOnADocumentThatWasAlreadyInvalid(t *testing.T) {
+	d := baseDoc()
+	d.Layers[3].Opacity = 150 // invalid before the undo starts
+
+	prims := []command.Primitive{{
+		Type: command.PrimitivePatch, Collection: CollLayers, ID: lid('c'), Set: map[string]any{"name": "Renamed"},
+	}}
+
+	done := make(chan UndoResult, 1)
+
+	go func() {
+		res, _ := ApplyPrimitives(d, prims, nil)
+		done <- res
+	}()
+
+	select {
+	case res := <-done:
+		got, _ := Find(res.Doc, lid('c'))
+		if got.Name != "Renamed" {
+			t.Fatalf("a violation that was there before must not block the primitive: %q", got.Name)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("ApplyPrimitives does not end")
+	}
+}
+
+func TestUndoStopsWhenNothingLiveRemains(t *testing.T) {
+	d := baseDoc()
+	prims := []command.Primitive{{
+		Type: command.PrimitivePut, Collection: CollLayers, ID: lid('z'),
+		Object: map[string]any{"id": lid('z'), "parent": lid('y')}, // a group that is not there
+	}}
+
+	done := make(chan []command.Skipped, 1)
+
+	go func() {
+		_, sk := ApplyPrimitives(d, prims, nil)
+		done <- sk
+	}()
+
+	select {
+	case sk := <-done:
+		if len(sk) != 1 || sk[0].Reason != command.SkipInvalidResult {
+			t.Fatalf("want one invalid_result, got %+v", sk)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("ApplyPrimitives does not end")
 	}
 }
