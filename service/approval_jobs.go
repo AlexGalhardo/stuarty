@@ -17,9 +17,14 @@ import (
 // approves it (SDD-015 section 5). The job is not running and has made no call.
 const JobWaitingApproval = "waiting_approval"
 
-// MaxPendingApprovals is the most requests that may wait for a person at once: a flood of requests
-// by an agent must not bury the ones that matter.
-const MaxPendingApprovals = 200
+// The most requests that may wait for a person at once (SDD-015 section 5). A flood of requests by
+// one agent must not bury the ones that matter or block everyone else, so each submitter has a share
+// of its own: the user in network mode (every key of a user counts together), else the actor. The
+// workspace as a whole has a much larger bound.
+const (
+	MaxPendingPerSubmitter = 50
+	MaxPendingApprovals    = 1000
+)
 
 // Prepared is what a job kind says about an action before it is approved (SDD-015 section 5).
 type Prepared struct {
@@ -264,7 +269,9 @@ func (s *svc) cancelWaiting(ctx context.Context, actor string, job *JobRow) erro
 			return err
 		}
 
-		tx.AfterCommit(func() { s.emit(Event{Type: EventApprovalDecided, Approval: &view, At: s.now()}) })
+		tx.AfterCommit(func() {
+			s.emit(Event{Type: EventApprovalDecided, Approval: &view, Owner: row.OwnerUserID, At: s.now()})
+		})
 
 		return s.auditApproval(ctx, tx, now, actor, "approval.cancel", &row, nil)
 	})
@@ -272,14 +279,19 @@ func (s *svc) cancelWaiting(ctx context.Context, actor string, job *JobRow) erro
 	return err
 }
 
-// runApprovable is the handler of an approved job of a registered kind: it runs the kind and settles
-// the ledger with the real cost (SDD-015 section 6).
+// runApprovable is the handler of an approved job of a registered kind: it makes sure the cost is
+// reserved, runs the kind and returns the cost the kind reports. The ledger is settled by finishCost,
+// once the outcome of the job is known (SDD-015 section 6).
 func (s *svc) runApprovable(
 	ctx context.Context,
 	k *ApprovableKind,
 	job *JobRow,
 	pw *progress,
-) (json.RawMessage, error) {
+) (json.RawMessage, *core.Money, error) {
+	if err := s.ensureReserved(ctx, job); err != nil {
+		return nil, nil, err
+	}
+
 	project := ""
 	if job.ProjectID != nil {
 		project = *job.ProjectID
@@ -290,30 +302,113 @@ func (s *svc) runApprovable(
 		Report: func(ctx context.Context, p float64, msg string) { pw.report(ctx, p, msg) },
 	})
 
-	s.settleCost(ctx, job, out.Cost, err == nil)
-
-	return out.Result, err
+	return out.Result, out.Cost, err
 }
 
-// settleCost records the real cost of an ended job. A job that spent reports what it spent, also
-// when it failed afterwards; a job that succeeded and reports none is settled at its estimate; a job
-// that failed having spent nothing gives its reservation back.
-func (s *svc) settleCost(ctx context.Context, job *JobRow, cost *core.Money, succeeded bool) {
+// ensureReserved makes a job that is about to spend have its cost reserved. Approving reserves it and
+// an interruption keeps it, so this finds it; when it is gone (released by an earlier end, or lost) the
+// ceilings are checked again and it is reserved before anything is spent, and a job that no longer fits
+// is refused without running.
+func (s *svc) ensureReserved(ctx context.Context, job *JobRow) error {
+	return s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
+		st := tx.Approvals()
+
+		req, err := st.RequestOfJob(ctx, job.ID)
+		if err != nil || req.Estimate.Micros == 0 {
+			return nil //nolint:nilerr // a job with no request or no cost reserves nothing
+		}
+
+		if ok, err := st.Reserved(ctx, job.ID); err != nil || ok {
+			return err
+		}
+
+		now := s.nowMs()
+		action := core.Action{Kind: req.Kind, Connection: req.ConnectionID, Project: req.ProjectID, Cost: req.Estimate}
+
+		out, err := approval.Evaluate(ctx, st, action, time.UnixMilli(now))
+		if err != nil {
+			return err
+		}
+
+		if out.Verdict == core.Refused {
+			return costCeilingError(out.Refusal)
+		}
+
+		return st.Reserve(ctx, s.ledgerEntry(&req, req.Estimate.Micros, now))
+	})
+}
+
+func (s *svc) ledgerEntry(req *approval.Row, estimate, now int64) *approval.Entry {
+	return &approval.Entry{
+		ID: s.newIDs(
+			"led",
+		),
+		RequestID:      req.ID,
+		JobID:          req.JobID,
+		ConnectionID:   req.ConnectionID,
+		ProjectID:      req.ProjectID,
+		Kind:           req.Kind,
+		Currency:       req.Estimate.Currency,
+		EstimateMicros: estimate,
+		Day:            approval.Day(time.UnixMilli(now)),
+		CreatedMs:      now,
+	}
+}
+
+// finishCost settles the ledger once the outcome of a run is known, from the state the job reached
+// (SDD-015 section 6). A job that succeeded is settled at the cost it reports, or at its estimate when
+// it reports none; one that failed or was cancelled is settled at the cost it reports, and gives its
+// reservation back only when it spent nothing; one that was requeued (a shutdown interrupted it) keeps
+// its reservation, since it will run again and must stay counted against the ceilings.
+func (s *svc) finishCost(ctx context.Context, job *JobRow, cost *core.Money) {
 	ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), finishTimeout)
 	defer cancel()
 
-	st, now := s.store.Approvals(), s.nowMs()
-
-	switch {
-	case cost != nil:
-		_, _ = st.Settle(ctx, job.ID, max(cost.Micros, 0), now)
-	case succeeded:
-		if req, err := st.RequestOfJob(ctx, job.ID); err == nil {
-			_, _ = st.Settle(ctx, job.ID, req.Estimate.Micros, now)
-		}
-	default:
-		_, _ = st.Release(ctx, job.ID, now)
+	cur, err := s.store.Jobs().Get(ctx, job.ID)
+	if err != nil {
+		return
 	}
+
+	_ = s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
+		st, now := tx.Approvals(), s.nowMs()
+
+		switch {
+		case cur.State == JobSucceeded || JobFinal(cur.State) && cost != nil:
+			return s.recordActual(ctx, st, job.ID, cost, now)
+		case JobFinal(cur.State):
+			_, err := st.Release(ctx, job.ID, now)
+
+			return err
+		}
+
+		return nil
+	})
+}
+
+// recordActual settles the reserved entry of a job at its real cost; with none reserved it records a
+// settled entry, so what was spent is never lost.
+func (s *svc) recordActual(ctx context.Context, st approval.Store, jobID string, cost *core.Money, now int64) error {
+	req, err := st.RequestOfJob(ctx, jobID)
+	if err != nil {
+		return nil //nolint:nilerr // a job with no request has no ledger
+	}
+
+	actual := req.Estimate.Micros
+	if cost != nil {
+		actual = max(cost.Micros, 0)
+	}
+
+	if ok, err := st.Settle(ctx, jobID, actual, now); err != nil || ok || actual == 0 {
+		return err
+	}
+
+	if err := st.Reserve(ctx, s.ledgerEntry(&req, actual, now)); err != nil {
+		return err
+	}
+
+	_, err = st.Settle(ctx, jobID, actual, now)
+
+	return err
 }
 
 // kindOf is the registered approvable kind of a job kind, or nil.
@@ -350,11 +445,8 @@ func (s *svc) submit(ctx context.Context, tx Tx, sub *submission) error {
 		return costCeilingError(out.Refusal)
 	}
 
-	if _, pending, err := st.ListRequests(ctx, approval.Filter{State: approval.StatePending, Limit: 1}); err != nil {
+	if err := s.checkQueueShare(ctx, st, &sub.c); err != nil {
 		return err
-	} else if pending >= MaxPendingApprovals {
-		return newError("E_LIMIT_EXCEEDED", "%d requests are already waiting for a person.", pending).
-			withHint("wait for the person to answer the requests that are waiting")
 	}
 
 	row := approval.Row{
@@ -386,7 +478,9 @@ func (s *svc) submit(ctx context.Context, tx Tx, sub *submission) error {
 	}
 
 	requested := approval.View(&row)
-	tx.AfterCommit(func() { s.emit(Event{Type: EventApprovalRequested, Approval: &requested, At: s.now()}) })
+	tx.AfterCommit(func() {
+		s.emit(Event{Type: EventApprovalRequested, Approval: &requested, Owner: row.OwnerUserID, At: s.now()})
+	})
 
 	details := map[string]any{"kind": row.Kind, "connection_id": prep.ConnectionID, "estimate": prep.Estimate}
 
@@ -402,9 +496,36 @@ func (s *svc) submit(ctx context.Context, tx Tx, sub *submission) error {
 	}
 
 	decided := approval.View(&row)
-	tx.AfterCommit(func() { s.emit(Event{Type: EventApprovalDecided, Approval: &decided, At: s.now()}) })
+	tx.AfterCommit(func() {
+		s.emit(Event{Type: EventApprovalDecided, Approval: &decided, Owner: row.OwnerUserID, At: s.now()})
+	})
 
 	details["rule"] = out.RuleID
 
 	return s.auditApproval(ctx, tx, now, sub.c.Actor, "approval.auto", &row, details)
+}
+
+// checkQueueShare refuses a submission when the submitter already has its share of requests waiting,
+// or the workspace as a whole is full.
+func (s *svc) checkQueueShare(ctx context.Context, st approval.Store, c *Caller) error {
+	mine := approval.Filter{State: approval.StatePending, Limit: 1, Actor: c.Actor}
+	if c.OwnerUserID != "" {
+		mine = approval.Filter{State: approval.StatePending, Limit: 1, OwnerUserID: c.OwnerUserID}
+	}
+
+	if _, n, err := st.ListRequests(ctx, mine); err != nil {
+		return err
+	} else if n >= MaxPendingPerSubmitter {
+		return newError("E_LIMIT_EXCEEDED", "you already have %d requests waiting for a person.", n).
+			withHint("wait for the person to answer them, or cancel the ones you no longer need with job_cancel")
+	}
+
+	if _, n, err := st.ListRequests(ctx, approval.Filter{State: approval.StatePending, Limit: 1}); err != nil {
+		return err
+	} else if n >= MaxPendingApprovals {
+		return newError("E_LIMIT_EXCEEDED", "%d requests are already waiting for a person.", n).
+			withHint("try again when the person has answered some of them")
+	}
+
+	return nil
 }

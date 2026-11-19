@@ -17,6 +17,7 @@ import (
 	"sync"
 	"time"
 
+	core "github.com/AlexGalhardo/stuarty/core/approval"
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/core/timeline"
 	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
@@ -221,9 +222,16 @@ func (s *svc) RunJob(ctx context.Context, jobID string) (err error) {
 		result, herr = s.runTranscribe(jctx, &job, pw)
 	default:
 		if k := s.kindOf(job.Kind); k != nil {
-			result, herr = s.runApprovable(jctx, k, &job, pw)
+			var cost *core.Money
 
-			break
+			result, cost, herr = s.runApprovable(jctx, k, &job, pw)
+
+			// The ledger is settled after the outcome is final: a run a shutdown interrupted is requeued
+			// and keeps its reservation (SDD-015 section 6).
+			serr := s.settle(ctx, jctx, &job, result, herr)
+			s.finishCost(ctx, &job, cost)
+
+			return serr
 		}
 
 		herr = newError(command.CodeInternal, "jobs of the kind %s are not available in this build.", job.Kind)

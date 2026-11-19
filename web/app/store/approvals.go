@@ -92,6 +92,10 @@ func (r approvalRepo) ListRequests(ctx context.Context, f approval.Filter) ([]ap
 		where, args = append(where, "owner_user_id = ?"), append(args, f.OwnerUserID)
 	}
 
+	if f.Actor != "" {
+		where, args = append(where, "actor = ?"), append(args, f.Actor)
+	}
+
 	clause := ""
 	if len(where) > 0 {
 		clause = " WHERE " + strings.Join(where, " AND ")
@@ -394,3 +398,12 @@ func (r approvalRepo) Totals(ctx context.Context, fromDay string) ([]approval.To
 }
 
 var _ approval.Store = approvalRepo{}
+
+func (r approvalRepo) Reserved(ctx context.Context, jobID string) (bool, error) {
+	var n int
+
+	err := r.ex.QueryRowContext(ctx, `SELECT COUNT(*) FROM cost_ledger WHERE job_id = ? AND state = 'reserved'`, jobID).
+		Scan(&n)
+
+	return n > 0, err
+}
