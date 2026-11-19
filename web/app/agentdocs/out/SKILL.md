@@ -10,7 +10,7 @@ metadata:
 
 Edit video by commands: CLI `stuarty` or MCP server (`stuarty mcp`). Output is text; `--json` is JSON.
 
-Workspace: `~/.stuarty` or `$STUARTY_HOME`; `serve` shares it with the browser.
+Workspace: `~/.stuarty` or `$STUARTY_HOME`.
 
 ## The loop
 
@@ -89,7 +89,6 @@ Prefix each with `stuarty`.
 - `template:import <path>`
 - `bundle:export --project <id> [--no-log] [--wait] [--out f] [--force]`
 - `bundle:import <path> [--as-new]`
-- `agent:docs --print skill|agents|instructions`
 - `transcribe --project <id> --asset <id> [--language auto] [--model <name>] [--wait] [--timeout d]`
 - `doctor [--full] [--verify] [--bundle] [--gc]`
 - `fonts`
@@ -132,7 +131,7 @@ Prefix each with `stuarty`.
 - `asset:set <hash>`
 - `asset:tag <hash>`
 
-`--ops <file|->` reads a JSON array; `edit --project <id> item.move item_id=itm_x start=2s` is one operation (`k=v` string, `k:=json` JSON). `--dry-run` saves nothing; `--key <k>` makes retries safe; `--out f` copies the file out (`--force` replaces).
+`--ops <file|->` reads a JSON array; `edit --project <id> item.move item_id=itm_x start=2s` is one operation (`k=v` string, `k:=json` JSON). `--dry-run` saves nothing; `--key <k>` makes retries safe; `--out f` copies the file out (`--force` replaces). Back: `revert`, `diff`, `checkpoint:*` (`agent:docs --print guide:video`).
 
 ## Reading results
 

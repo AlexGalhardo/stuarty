@@ -276,6 +276,7 @@ func (h *apiHandler) registerAll() {
 	register(h, "projects.redo", func(c *web.Ctx, in stepIn) (service.UndoResult, error) {
 		return h.step(c, in, h.Service.Redo)
 	})
+	h.registerHistoryOps()
 	register(h, "projects.lint", func(c *web.Ctx, in lintIn) (service.LintResult, error) {
 		res, err := h.Service.Lint(
 			c.Context(),

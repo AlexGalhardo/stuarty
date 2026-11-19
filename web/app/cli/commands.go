@@ -17,6 +17,7 @@ func registry() []*spec {
 	return append([]*spec{
 		projectList, projectCreate, projectShow, projectTrash, projectRestore,
 		edit, history, undo, redo, lintCmd, version, mcpCmd,
+		revertCmd, diffCmd, checkpointCreateCmd, checkpointListCmd, checkpointRenameCmd, checkpointRemoveCmd,
 		mediaImport, mediaInspect, mediaList, mediaTrash, mediaRestore, view, export,
 		exportPresets, exportCheck, exportBatch,
 		jobShow, jobCancel, jobList, eventsCmd, commandHelp,

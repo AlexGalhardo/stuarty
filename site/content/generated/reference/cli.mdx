@@ -259,6 +259,130 @@ Example:
 claude mcp add stuarty -- stuarty mcp
 ```
 
+## `revert`
+
+Go back to the document of an earlier revision, as a new step that undo takes back
+
+```text
+stuarty revert --project <id> (--revision n | --checkpoint name) [--base n] [--dry-run]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--revision` | integer |  | the revision to go back to |
+| `--checkpoint` | string |  | the name of a checkpoint to go back to |
+| `--base` | integer |  | the revision you read (default the current one); an older one conflicts with other actors' changes |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--dry-run`.
+
+Example:
+
+```bash
+stuarty revert --project prj_7k2m9x4q1b --checkpoint "before the intro" --dry-run
+```
+
+## `diff`
+
+List what changed between two revisions, most significant first
+
+```text
+stuarty diff --project <id> (--from n | --from-checkpoint name) [--until n]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--from` | integer |  | the revision the diff starts from |
+| `--from-checkpoint` | string |  | the name of a checkpoint the diff starts from |
+| `--until` | integer |  | the revision the diff ends at (default the current one) |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`.
+
+Example:
+
+```bash
+stuarty diff --project prj_7k2m9x4q1b --from 12
+```
+
+## `checkpoint:create`
+
+Name a revision so that it can be gone back to
+
+```text
+stuarty checkpoint:create --project <id> --name <name> [--note t] [--revision n]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--name` | string |  | 1 to 60 characters, no slash |
+| `--note` | string |  | up to 300 characters |
+| `--revision` | integer |  | the revision to name (default the current one) |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`.
+
+Example:
+
+```bash
+stuarty checkpoint:create --project prj_7k2m9x4q1b --name "before the intro"
+```
+
+## `checkpoint:list`
+
+List the checkpoints of a project, newest revision first
+
+```text
+stuarty checkpoint:list --project <id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`.
+
+Example:
+
+```bash
+stuarty checkpoint:list --project prj_7k2m9x4q1b --json
+```
+
+## `checkpoint:rename`
+
+Rename a checkpoint, and change its note
+
+```text
+stuarty checkpoint:rename --project <id> --name <name> --new-name <name> [--note t]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--name` | string |  | the checkpoint to rename |
+| `--new-name` | string |  | the new name |
+| `--note` | string |  | replaces the note when given |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`.
+
+Example:
+
+```bash
+stuarty checkpoint:rename --project prj_7k2m9x4q1b --name draft --new-name "first cut"
+```
+
+## `checkpoint:remove`
+
+Remove a checkpoint; no revision is removed
+
+```text
+stuarty checkpoint:remove --project <id> --name <name>
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--name` | string |  | the checkpoint to remove |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`.
+
+Example:
+
+```bash
+stuarty checkpoint:remove --project prj_7k2m9x4q1b --name draft
+```
+
 ## `media:import`
 
 Import media files into a project

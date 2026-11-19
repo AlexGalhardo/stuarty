@@ -19,6 +19,10 @@ command briefing:answer
 command briefing:questions
 command bundle:export
 command bundle:import
+command checkpoint:create
+command checkpoint:list
+command checkpoint:remove
+command checkpoint:rename
 command command:help
 command connection:add
 command connection:list
@@ -27,6 +31,7 @@ command connection:show
 command connection:test
 command cost:ceiling
 command cost:show
+command diff
 command doctor
 command edit
 command events
@@ -79,6 +84,7 @@ command prompt:render
 command prompt:show
 command prompt:write
 command redo
+command revert
 command skill:export
 command skill:import
 command skill:lint
@@ -100,6 +106,7 @@ route DELETE /approval-rules/{}
 route DELETE /connections/{}
 route DELETE /keys/{}
 route DELETE /library/memory/{}
+route DELETE /projects/{}/checkpoints/{}
 route GET /approval-rules
 route GET /approvals
 route GET /approvals/events
@@ -138,7 +145,9 @@ route GET /projects
 route GET /projects/{}
 route GET /projects/{}/bitmaps/{}
 route GET /projects/{}/brief
+route GET /projects/{}/checkpoints
 route GET /projects/{}/describe
+route GET /projects/{}/diff
 route GET /projects/{}/events
 route GET /projects/{}/export-check
 route GET /projects/{}/frame
@@ -162,6 +171,7 @@ route GET /system/tools
 route GET /templates
 route GET /templates/{}/file
 route GET /users
+route PATCH /projects/{}/checkpoints/{}
 route PATCH /users/{}
 route POST /approval-rules
 route POST /approvals/{}/decide
@@ -185,6 +195,7 @@ route POST /library/skills/{}/review
 route POST /projects
 route POST /projects/import
 route POST /projects/{}/bundle
+route POST /projects/{}/checkpoints
 route POST /projects/{}/duplicate
 route POST /projects/{}/edit
 route POST /projects/{}/export-batches
@@ -200,6 +211,7 @@ route POST /projects/{}/media/{}/trash
 route POST /projects/{}/otio
 route POST /projects/{}/redo
 route POST /projects/{}/restore
+route POST /projects/{}/revert
 route POST /projects/{}/trash
 route POST /projects/{}/undo
 route POST /system/launch

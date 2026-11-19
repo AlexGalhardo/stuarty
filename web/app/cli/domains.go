@@ -29,7 +29,10 @@ var commandDomains = map[string]string{
 
 	"edit": command.DomainVideo, "history": command.DomainVideo, "undo": command.DomainVideo,
 	"redo": command.DomainVideo, "lint": command.DomainVideo, "view": command.DomainVideo,
-	"export": command.DomainVideo, "transcribe": command.DomainVideo, "job:show": command.DomainVideo,
+	"revert": command.DomainVideo, "diff": command.DomainVideo, "checkpoint:create": command.DomainVideo,
+	"checkpoint:list": command.DomainVideo, "checkpoint:rename": command.DomainVideo,
+	"checkpoint:remove": command.DomainVideo,
+	"export":            command.DomainVideo, "transcribe": command.DomainVideo, "job:show": command.DomainVideo,
 	"job:cancel": command.DomainVideo, "job:list": command.DomainVideo, "template:list": command.DomainVideo,
 	"template:save": command.DomainVideo, "template:new": command.DomainVideo,
 	"template:export": command.DomainVideo, "template:import": command.DomainVideo,

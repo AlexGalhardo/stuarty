@@ -346,13 +346,13 @@ func TestDiffThroughTheService(t *testing.T) {
 
 	byName, err := r.svc.HistoryDiff(
 		r.as(ui),
-		service.HistoryDiffRequest{ProjectID: r.project, FromCheckpoint: "mid", To: 4},
+		service.HistoryDiffRequest{ProjectID: r.project, FromCheckpoint: "mid", Until: 4},
 	)
 	if err != nil || byName.From != 3 || byName.Count != 1 {
 		t.Fatalf("diff by checkpoint = %+v, %v", byName, err)
 	}
 
-	backwards, err := r.svc.HistoryDiff(r.as(ui), service.HistoryDiffRequest{ProjectID: r.project, From: 4, To: 3})
+	backwards, err := r.svc.HistoryDiff(r.as(ui), service.HistoryDiffRequest{ProjectID: r.project, From: 4, Until: 3})
 	if err != nil || backwards.Count != 1 || backwards.Entries[0].Verb != command.VerbRemoved {
 		t.Fatalf("diff backwards = %+v, %v", backwards, err)
 	}
@@ -370,7 +370,7 @@ func TestDiffThroughTheService(t *testing.T) {
 		"neither":      {},
 		"both":         {From: 2, FromCheckpoint: "mid"},
 		"from ahead":   {From: 99},
-		"to ahead":     {From: 1, To: 99},
+		"to ahead":     {From: 1, Until: 99},
 		"from unknown": {FromCheckpoint: "nope"},
 	} {
 		req.ProjectID = r.project

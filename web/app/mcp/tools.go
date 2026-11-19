@@ -273,18 +273,10 @@ func commandHelp(ctx context.Context, svc service.Service, raw json.RawMessage) 
 	return &toolOutput{value: res, text: res.Text}, nil
 }
 
-// history is three operations behind one tool (SDD-003 section 4.1): list, undo
-// and redo.
+// history is the change log of a timeline behind one tool (SDD-003 section 4.1): list, undo and redo, and since
+// epic 36 revert, diff and the checkpoints.
 func history(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolOutput, error) {
-	in, err := decode[struct {
-		Domain     string `json:"domain"`
-		ImageID    string `json:"image_id"`
-		ProjectID  string `json:"project_id"`
-		TimelineID string `json:"timeline_id"`
-		Action     string `json:"action"`
-		Actor      string `json:"actor"`
-		pageArgs
-	}](raw)
+	in, err := decode[historyArgs](raw)
 	if err != nil {
 		return nil, err
 	}
@@ -302,39 +294,7 @@ func history(ctx context.Context, svc service.Service, raw json.RawMessage) (*to
 		return nil, err
 	}
 
-	switch in.Action {
-	case "undo", "redo":
-		req := service.UndoRequest{ProjectID: in.ProjectID, TimelineID: in.TimelineID}
-
-		var res *service.UndoResult
-
-		if in.Action == "undo" {
-			res, err = svc.Undo(ctx, req)
-		} else {
-			res, err = svc.Redo(ctx, req)
-		}
-
-		if err != nil {
-			return nil, err
-		}
-
-		return &toolOutput{value: res, text: service.UndoText(res)}, nil
-	default:
-		res, err := svc.HistoryList(
-			ctx,
-			service.HistoryListRequest{
-				ProjectID:  in.ProjectID,
-				TimelineID: in.TimelineID,
-				Actor:      in.Actor,
-				Page:       in.page(),
-			},
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		return &toolOutput{value: res, text: res.Text}, nil
-	}
+	return videoHistory(ctx, svc, raw, &in)
 }
 
 func lintTool(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolOutput, error) {

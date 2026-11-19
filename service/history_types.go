@@ -33,7 +33,7 @@ type HistoryDiffRequest struct {
 	TimelineID     string `json:"timeline_id,omitempty"`
 	From           int64  `json:"from,omitempty"`
 	FromCheckpoint string `json:"from_checkpoint,omitempty"`
-	To             int64  `json:"to,omitempty"`
+	Until          int64  `json:"until,omitempty"`
 }
 
 // DiffEntry is one change between two revisions (SDD-002 A.5), classified.
@@ -43,6 +43,7 @@ type DiffEntry = command.DiffEntry
 type HistoryDiffResult struct {
 	Envelope
 	ProjectID string      `json:"project_id"`
+	Revision  int64       `json:"revision"` // the current revision of the timeline
 	From      int64       `json:"from"`
 	To        int64       `json:"to"`
 	Count     int         `json:"count"`
