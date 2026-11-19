@@ -141,3 +141,6 @@ func ToolDomains(tool string) []string { return slices.Clone(toolDomains[tool]) 
 
 // ServesDomain reports whether a tool routes the operations of a domain through its domain argument.
 func ServesDomain(tool, domain string) bool { return slices.Contains(served[tool], domain) }
+
+// ToolNames lists the tools in the order of tools/list.
+func ToolNames() []string { return slices.Clone(order) }

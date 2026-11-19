@@ -320,6 +320,34 @@ function skillPage(): string {
 	);
 }
 
+/**
+ * The guide of the agents, one page per domain (SDD-003 section 8.1, epic 13): the body of
+ * web/app/agentdocs/out/guide/<domain>.md without its generated comment and its H1, as the skill page is.
+ */
+export function domainPages(): { file: string; text: string }[] {
+	const dir = path.join(root, "web", "app", "agentdocs", "out", "guide");
+	if (!fs.existsSync(dir)) return [];
+	return fs
+		.readdirSync(dir)
+		.filter((f) => f.endsWith(".md"))
+		.sort()
+		.map((f) => {
+			const domain = f.replace(/\.md$/, "");
+			const raw = fs.readFileSync(path.join(dir, f), "utf8").replace(/\r\n/g, "\n");
+			const body = raw.replace(/^<!--.*-->\n/m, "").replace(/^# .*\n/m, "");
+			const lines = body.split("\n").map((line) => escProse(line));
+			const intro = `This page is generated from the registry. Print it with \`stuarty agent:docs --print guide:${domain}\`; \`stuarty ${domain}\` lists the commands of the domain.`;
+			return {
+				file: `domain-${domain}.mdx`,
+				text: page(
+					`The ${domain} domain`,
+					`How an agent reaches the ${domain} domain: its MCP tools, its CLI commands and its edit operations.`,
+					[intro, lines.join("\n")].join("\n\n"),
+				),
+			};
+		});
+}
+
 function write(file: string, text: string, expected: Set<string>, base = outDir) {
 	const target = path.join(base, file);
 	fs.mkdirSync(path.dirname(target), { recursive: true });
@@ -343,6 +371,7 @@ async function main() {
 	write("configuration.mdx", configuration(), written);
 	write("glossary.mdx", glossary(), written);
 	write("skill.mdx", skillPage(), written, agentsDir);
+	for (const p of domainPages()) write(p.file, p.text, written, agentsDir);
 
 	const api = apiPages(readJson<OpenApi>("site/generated/openapi.json"), root, new Map(commands.map((c) => [c.name, c.example])));
 	for (const [file, text] of api.files) write(file, text, written, apiDir);

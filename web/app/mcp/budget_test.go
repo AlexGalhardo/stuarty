@@ -115,3 +115,21 @@ func TestConciseViewOfAnItemHeavyProjectFitsTwoPages(t *testing.T) {
 		t.Fatalf("%d pages and %d items, want at most 2 pages and 199 items", pages, items)
 	}
 }
+
+// D-088: project_get takes detail document over MCP as the CLI and the HTTP API do, and the description says what it
+// costs, because that one call is outside the per-call caps of SDD-003 section 3.10.
+func TestProjectGetDescriptionStatesTheCostOfTheDocument(t *testing.T) {
+	t.Parallel()
+
+	defs, err := loadDefinitions()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	d := defs["project_get"].tool.Description
+	for _, want := range []string{"document", "unbounded", "tokens"} {
+		if !strings.Contains(d, want) {
+			t.Errorf("the description of project_get does not say %q: %s", want, d)
+		}
+	}
+}
