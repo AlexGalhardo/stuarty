@@ -62,7 +62,7 @@ export function tagOf(route: string): Tag {
 	const shown = route.replace(/^\/api\/v1/, "");
 	const parts = shown.split("/").filter(Boolean);
 	if (parts[0] === "projects" && parts[2] === "media") return "Media";
-	if ((parts[0] === "projects" && parts[2] === "jobs") || parts[0] === "jobs") return "Jobs";
+	if ((parts[0] === "projects" && ["jobs", "export-check", "export-batches"].includes(parts[2] ?? "")) || parts[0] === "jobs" || parts[0] === "export-presets") return "Jobs";
 	if (parts[0] === "projects" && parts[2] === "events") return "Events";
 	if (parts[0] === "projects" || parts[0] === "trash") return "Projects";
 	const byRoot: Record<string, Tag> = {
