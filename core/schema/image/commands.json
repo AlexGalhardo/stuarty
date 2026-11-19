@@ -671,6 +671,7 @@
       "type": "object"
     },
     "description": "Each key given replaces that adjustment and the others stay; a value equal to its neutral one removes it. brightness, contrast, saturation, temperature and tint are -100 to 100, hue -180 to 180 degrees, exposure -300 to 300 hundredths of a stop. levels takes black (0 to 254), white (1 to 255, above black) and gamma (10 to 1000 hundredths, 100 is neutral); the keys left out keep their value. curve is up to 8 points {x, y} of 0 to 255 with x increasing, and an empty list removes it. reset true removes every adjustment. Not valid for a group.",
+    "domain": "image",
     "errors": [
       "E_VALIDATION",
       "E_NOT_FOUND",
@@ -784,6 +785,7 @@
       "type": "object"
     },
     "description": "mode is normal, multiply, screen, overlay, soft_light, hard_light, darken, lighten, color_dodge, color_burn or difference; normal removes the mode. Not valid for a group.",
+    "domain": "image",
     "errors": [
       "E_VALIDATION",
       "E_NOT_FOUND",
@@ -1018,6 +1020,7 @@
       "type": "object"
     },
     "description": "kind is grayscale, sepia, invert, warm, cool, blur, sharpen, vignette, grain, shadow, glow or stroke; a layer has at most one filter of each kind and at most 8. The parameters left out take the defaults of the kind. Filters act in list order; index is the position of the new one (0 is the first to act, absent means last). Not valid for a group.",
+    "domain": "image",
     "errors": [
       "E_VALIDATION",
       "E_NOT_FOUND",
@@ -1075,6 +1078,7 @@
       "type": "object"
     },
     "description": "index is the final position of the filter among the filters of the layer; the first acts first.",
+    "domain": "image",
     "errors": [
       "E_VALIDATION",
       "E_NOT_FOUND",
@@ -1125,6 +1129,7 @@
       "type": "object"
     },
     "description": "kind names the filter.",
+    "domain": "image",
     "errors": [
       "E_VALIDATION",
       "E_NOT_FOUND",
@@ -1238,6 +1243,7 @@
       "type": "object"
     },
     "description": "kind names the filter; the parameters given replace the old ones and the others stay.",
+    "domain": "image",
     "errors": [
       "E_VALIDATION",
       "E_NOT_FOUND",
@@ -1364,6 +1370,7 @@
       "type": "object"
     },
     "description": "A layer with no mask is left as it is.",
+    "domain": "image",
     "errors": [
       "E_NOT_FOUND",
       "E_TYPE_MISMATCH",
@@ -1447,6 +1454,7 @@
       "type": "object"
     },
     "description": "A shape mask is in thousandths of the box of the layer: x, y, w and h (default the whole box), radius (rounded_rect only, pixels), feather (the soft edge in pixels, 0 to 200) and invert. kind layer takes source, the id of another layer that is not a group and has no mask from a layer of its own, and invert: the layer shows only where the source has pixels. The old mask is replaced. Not valid for a group.",
+    "domain": "image",
     "errors": [
       "E_VALIDATION",
       "E_NOT_FOUND",
