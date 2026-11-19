@@ -429,7 +429,7 @@ func TestKeyLimitedToAProject(t *testing.T) {
 
 // VV-246: a key is limited to a project, never to the id of one of its timelines: that id is refused with
 // the answer for an id that names nothing, and another user's project is not found either.
-func TestSecurity_VV246_KeyIsNotLimitedToATimelineID(t *testing.T) {
+func TestSecurity_T06_KeyIsNotLimitedToATimelineID(t *testing.T) {
 	h := newNetworkHarness(t, resolved(), true)
 	h.user(t, "ana@example.com", service.RoleMember)
 	h.user(t, "bob@example.com", service.RoleMember)
@@ -491,7 +491,7 @@ func TestSecurity_VV246_KeyIsNotLimitedToATimelineID(t *testing.T) {
 // VV-246 in network mode: a key stored before the fix with the id of a timeline as its project reaches none of
 // the production that holds the timeline, and a key of project A asking for a timeline of another user's
 // project gets the answer of an id that names nothing.
-func TestSecurity_VV246_NetworkKeyDoesNotCrossProductionsByTimeline(t *testing.T) {
+func TestSecurity_T06_NetworkKeyDoesNotCrossProductionsByTimeline(t *testing.T) {
 	h := newNetworkHarness(t, resolved(), true)
 	h.user(t, "ana@example.com", service.RoleMember)
 	h.user(t, "bob@example.com", service.RoleMember)

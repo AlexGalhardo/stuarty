@@ -55,7 +55,7 @@ func productionCalls(m *mediaEnv, id string) map[string]func(ctx context.Context
 
 // VV-246: a key limited to one id never reaches the production of another project through the id of one of
 // its timelines, and learns no more than for an id that does not exist.
-func TestSecurity_VV246_LimitedKeyDoesNotReachAnotherProductionByTimeline(t *testing.T) {
+func TestSecurity_T06_LimitedKeyDoesNotReachAnotherProductionByTimeline(t *testing.T) {
 	m := newMediaEnv(t, mediaCfg{noQueue: true})
 	a, _ := m.productionProject()
 	b := m.newProject("other")
