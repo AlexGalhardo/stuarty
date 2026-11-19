@@ -73,7 +73,7 @@ Prefix each with `stuarty`.
 - `media:trash <asset id> --project <id>`
 - `media:restore <asset id> --project <id>`
 - `view --project <id> [--mode frame|sheet] [--at t] [--times t1,t2,...]`
-- `export --project <id> [--start t] [--end t] [--format f] [--at t] [--preset p] [--codec c] [--wait] [--timeout d] [--out f] [--force]`
+- `export --project <id> [--start t] [--end t] [--format f] [--at t] [--preset p] [--codec c] [--wait] [--out f] [--force]`
 - `export:presets [--codecs]`
 - `export:check --project <id> --preset <id> [--start t] [--end t] [--codec c]`
 - `export:batch --project <id> --preset <id>... [--codec c] [--start t] [--end t] [--wait]`
@@ -127,11 +127,11 @@ Prefix each with `stuarty`.
 - `image:redo <id>`
 - `image:export <id> [--format f]`
 
-Batches: `--ops <file|->` reads a JSON array; `edit --project <id> item.move item_id=itm_x start=2s` is one operation (`k=v` string, `k:=json` any JSON). `--dry-run` saves nothing; `--key <k>` makes retries safe. `--out f` copies the result file out (`--force` replaces).
+`--ops <file|->` reads a JSON array; `edit --project <id> item.move item_id=itm_x start=2s` is one operation (`k=v` string, `k:=json` JSON). `--dry-run` saves nothing; `--key <k>` makes retries safe; `--out f` copies the file out (`--force` replaces).
 
 ## Reading results
 
-`project:show` lists tracks top to bottom, then items timed as `2s/60f`. In a diff `+`, `~`, `-` are added, changed, removed.
+`project:show` lists tracks top to bottom, then items timed `2s/60f`. Diff: `+` added, `~` changed, `-` removed.
 
 Lint rules (`!` blocks export):
 
@@ -159,45 +159,45 @@ Lint rules (`!` blocks export):
 
 Exit codes: 0 success; 1 failure, do not retry; 2 retryable or a `--wait` timeout.
 
-- `E_VALIDATION` 400: fix the argument
-- `E_INVALID_TIME` 400: add a unit: 2s, 60f
-- `E_UNKNOWN_COMMAND` 400: run command:help for the names
-- `E_NOT_FOUND` 404: list, then use the id
-- `E_ID_EXISTS` 409: choose another id, or omit it
-- `E_TYPE_MISMATCH` 422: wrong kind of target
-- `E_OVERLAP` 409: move it, or use another track
-- `E_OUT_OF_SOURCE` 422: stay inside the source
-- `E_INVALID_STATE` 409: restore it, or wait for the job
-- `E_IN_USE` 409: remove its users first
-- `E_NOT_EMPTY` 409: empty it first
-- `E_LIMIT` 422: split the batch
-- `E_FONT_UNKNOWN` 422: use a listed font
-- `E_SLOT` 422: fill every required slot
-- `E_REVISION_CONFLICT` 409 retry: read details.diff, re-plan, resend
-- `E_IDEMPOTENCY_MISMATCH` 409: use a new key
-- `E_INTERNAL` 500: report it as a bug
-- `E_UNAUTHORIZED` 401: set the token or key
-- `E_FORBIDDEN` 403: use a key with that scope
-- `E_WORKSPACE_LOCKED` 503 retry: wait, then retry
-- `E_PATH_NOT_ALLOWED` 403: use an allowed path
-- `E_FILE_NOT_FOUND` 404: check the path
-- `E_UNSUPPORTED_MEDIA` 422: convert the file
-- `E_INGEST_FAILED` 500: see details.reason
-- `E_ASSET_NOT_READY` 409 retry: poll job:show until ready
-- `E_FFMPEG_MISSING` 503: install FFmpeg
-- `E_NO_ENCODER` 503: use another codec
-- `E_EXPORT_FAILED` 500: see details.reason
-- `E_VERIFY_FAILED` 500: see details.checks
-- `E_TRANSCRIBE_UNAVAILABLE` 503: install the helper
-- `E_TRANSCRIBE_FAILED` 500: see details.reason
-- `E_QUEUE_FULL` 429 retry: wait for a job, then retry
-- `E_RATE_LIMITED` 429 retry: wait Retry-After s
-- `E_LIMIT_EXCEEDED` 422: over a ceiling
-- `E_CANCELLED` 500: start the job again
-- `E_NOTHING_TO_UNDO` 409: nothing to undo
-- `E_NOTHING_TO_REDO` 409: nothing to redo
-- `E_LINT_BLOCKING` 422: fix details.findings
-- `E_PAYLOAD_TOO_LARGE` 413: send a smaller batch
+- `E_VALIDATION`: fix the argument
+- `E_INVALID_TIME`: add a unit: 2s, 60f
+- `E_UNKNOWN_COMMAND`: see command:help
+- `E_NOT_FOUND`: list, then use the id
+- `E_ID_EXISTS`: choose another id, or omit it
+- `E_TYPE_MISMATCH`: wrong kind of target
+- `E_OVERLAP`: move it, or use another track
+- `E_OUT_OF_SOURCE`: stay inside the source
+- `E_INVALID_STATE`: restore it, or wait for the job
+- `E_IN_USE`: remove its users first
+- `E_NOT_EMPTY`: empty it first
+- `E_LIMIT`: split the batch
+- `E_FONT_UNKNOWN`: use a listed font
+- `E_SLOT`: fill every required slot
+- `E_REVISION_CONFLICT` retry: read details.diff, re-plan, resend
+- `E_IDEMPOTENCY_MISMATCH`: use a new key
+- `E_INTERNAL`: report it as a bug
+- `E_UNAUTHORIZED`: set the token or key
+- `E_FORBIDDEN`: use a key with that scope
+- `E_WORKSPACE_LOCKED` retry: wait
+- `E_PATH_NOT_ALLOWED`: use an allowed path
+- `E_FILE_NOT_FOUND`: check the path
+- `E_UNSUPPORTED_MEDIA`: convert the file
+- `E_INGEST_FAILED`: see details.reason
+- `E_ASSET_NOT_READY` retry: poll job:show until ready
+- `E_FFMPEG_MISSING`: install FFmpeg
+- `E_NO_ENCODER`: use another codec
+- `E_EXPORT_FAILED`: see details.reason
+- `E_VERIFY_FAILED`: see details.checks
+- `E_TRANSCRIBE_UNAVAILABLE`: install the helper
+- `E_TRANSCRIBE_FAILED`: see details.reason
+- `E_QUEUE_FULL` retry: wait for a job
+- `E_RATE_LIMITED` retry: wait Retry-After s
+- `E_LIMIT_EXCEEDED`: over a ceiling
+- `E_CANCELLED`: start the job again
+- `E_NOTHING_TO_UNDO`: nothing to undo
+- `E_NOTHING_TO_REDO`: nothing to redo
+- `E_LINT_BLOCKING`: fix details.findings
+- `E_PAYLOAD_TOO_LARGE`: send a smaller batch
 
 ## Recipes
 
