@@ -393,19 +393,72 @@ func countMentions(text string) int {
 }
 
 // weightedLength is the length of text for X (SDD-019 section 5.1): the text after Unicode NFC, a link weighing
-// linkWeight and a character weighing 1 when it is in the ranges X counts once and 2 otherwise.
+// linkWeight, an emoji weighing 2 however many code points it is made of, and any other character weighing 1 when
+// it is in the ranges X counts once and 2 otherwise.
 func weightedLength(text string, linkWeight int) int {
 	text = norm.NFC.String(text)
 	links := findLinks(text)
 	total := len(links) * linkWeight
+	runes := []rune(maskLinks(text, links))
 
-	for _, r := range maskLinks(text, links) {
-		total += runeWeight(r)
+	for i := 0; i < len(runes); {
+		w, n := clusterWeight(runes[i:])
+		total += w
+		i += n
 	}
 
 	// maskLinks put one space for each link; take those back.
 	return total - len(links)
 }
+
+// emojiWeight is what X counts for an emoji, however many code points it is made of: a presentation selector, a
+// skin tone, a joined sequence, a flag, a keycap or a tag sequence is one emoji (docs.x.com, counting characters).
+const emojiWeight = 2
+
+// clusterWeight is the weight of the character that starts rs and the number of runes it takes: one rune, or a
+// whole emoji sequence.
+func clusterWeight(rs []rune) (weight, size int) {
+	if isRegionalIndicator(rs[0]) && len(rs) > 1 && isRegionalIndicator(rs[1]) {
+		return emojiWeight, 2
+	}
+
+	weight, size = runeWeight(rs[0]), 1
+	emoji := false
+
+	for size < len(rs) {
+		r := rs[size]
+
+		switch {
+		case isEmojiModifier(r):
+			emoji, size = true, size+1
+		case r == 0xFE0E: // text presentation: the character stays what it is
+			size++
+		case r == 0x200D && size+1 < len(rs) && (emoji || weight == emojiWeight) &&
+			runeWeight(rs[size+1]) == emojiWeight:
+			emoji, size = true, size+2
+		default:
+			return emojiOr(weight, emoji), size
+		}
+	}
+
+	return emojiOr(weight, emoji), size
+}
+
+// isEmojiModifier reports the code points that make the character before them an emoji and add nothing: the emoji
+// presentation selector, the keycap, the skin tones and the tags of a subdivision flag.
+func isEmojiModifier(r rune) bool {
+	return r == 0xFE0F || r == 0x20E3 || r >= 0x1F3FB && r <= 0x1F3FF || r >= 0xE0020 && r <= 0xE007F
+}
+
+func emojiOr(weight int, emoji bool) int {
+	if emoji {
+		return emojiWeight
+	}
+
+	return weight
+}
+
+func isRegionalIndicator(r rune) bool { return r >= 0x1F1E6 && r <= 0x1F1FF }
 
 func runeWeight(r rune) int {
 	switch {
