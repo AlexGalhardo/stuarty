@@ -715,6 +715,14 @@
         "stuarty command:help [<name>]"
       ],
       "example": "stuarty command:help item.move",
+      "flags": [
+        {
+          "name": "domain",
+          "type": "string",
+          "default": "video",
+          "usage": "video, or image for the commands of image documents"
+        }
+      ],
       "globals": [
         "json",
         "workspace",
@@ -1225,70 +1233,58 @@
       ]
     },
     {
-      "name": "connection:list",
-      "summary": "list the destinations Stuarty may reach",
+      "name": "image:create",
+      "summary": "create an image document, blank or from a template",
       "usage": [
-        "stuarty connection:list"
+        "stuarty image:create --preset p"
       ],
-      "example": "stuarty connection:list --json",
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "connection:show",
-      "summary": "show one connection: destinations, what it accepts and its last use",
-      "usage": [
-        "stuarty connection:show <id>"
-      ],
-      "example": "stuarty connection:show con_0123456789",
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "connection:add",
-      "summary": "connect a destination; the secret is read from standard input or a file, never from an argument",
-      "usage": [
-        "stuarty connection:add --kind <k> --label <t> --endpoint <url> --accepts <list>"
-      ],
-      "example": "echo $TOKEN | stuarty connection:add --kind test --label Blog --endpoint https://video.example.com --accepts text",
+      "example": "stuarty image:create --preset video_thumbnail --name \"Episode 12\" --background \"#101820\"",
       "flags": [
         {
-          "name": "kind",
+          "name": "preset",
           "type": "string",
-          "usage": "the kind of connection (required)"
+          "usage": "video_thumbnail (1280x720), square_post (1080x1080) or vertical_cover (1080x1920)"
         },
         {
-          "name": "label",
-          "type": "string",
-          "usage": "a name for the person, 1 to 60 characters (required)"
+          "name": "width",
+          "type": "integer",
+          "usage": "pixels, 1 to 4096, with --height"
         },
         {
-          "name": "endpoint",
-          "type": "string",
-          "usage": "the URL the connector calls first, https (required)"
+          "name": "height",
+          "type": "integer",
+          "usage": "pixels, 1 to 4096, with --width"
         },
         {
-          "name": "accepts",
+          "name": "name",
           "type": "string",
-          "usage": "what it may receive, a comma list of text, image, video, audio, metadata, document (required)"
+          "usage": "name of the image"
         },
         {
-          "name": "hosts",
+          "name": "background",
           "type": "string",
-          "usage": "further hosts it may reach, a comma list; the endpoint host is always allowed"
+          "usage": "a colour or transparent (default #FFFFFF)"
         },
         {
-          "name": "secret-file",
+          "name": "template",
+          "type": "boolean",
+          "default": "false",
+          "usage": "make a template whose text and image layers may be slots"
+        },
+        {
+          "name": "from-template",
           "type": "string",
-          "usage": "a file that holds the secret; without it the secret is read from standard input"
+          "usage": "make the image from this template"
+        },
+        {
+          "name": "values",
+          "type": "string",
+          "usage": "a JSON object of slot name to {\"text\": \"...\"} or {\"asset\": \"sha256:...\"}: a file, or - for standard input"
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "usage": "identifier for the image (omit it in network mode: the server chooses)"
         }
       ],
       "globals": [
@@ -1299,12 +1295,30 @@
       ]
     },
     {
-      "name": "connection:remove",
-      "summary": "remove a connection and its credential",
+      "name": "image:list",
+      "summary": "list the image documents and templates",
       "usage": [
-        "stuarty connection:remove <id>"
+        "stuarty image:list"
       ],
-      "example": "stuarty connection:remove con_0123456789",
+      "example": "stuarty image:list --templates only --json",
+      "flags": [
+        {
+          "name": "templates",
+          "type": "string",
+          "usage": "only for the templates, none for the others"
+        },
+        {
+          "name": "cursor",
+          "type": "string",
+          "usage": "continue a list from this cursor"
+        },
+        {
+          "name": "limit",
+          "type": "integer",
+          "default": "20",
+          "usage": "items per page"
+        }
+      ],
       "globals": [
         "json",
         "workspace",
@@ -1313,12 +1327,116 @@
       ]
     },
     {
-      "name": "connection:test",
-      "summary": "make one request through a connection and show how the destination answered",
+      "name": "image:show",
+      "summary": "describe an image document: its layers, its findings and its revision",
       "usage": [
-        "stuarty connection:test <id>"
+        "stuarty image:show <id>"
       ],
-      "example": "stuarty connection:test con_0123456789",
+      "example": "stuarty image:show img_7k2m9x4q1b",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "image:edit",
+      "summary": "apply a batch of image operations (stuarty command:help --domain image lists them)",
+      "usage": [
+        "stuarty image:edit <id> <op> k=v..."
+      ],
+      "example": "stuarty image:edit img_7k2m9x4q1b layer.add_text text=\"HOW IT WORKS\" slot=title",
+      "flags": [
+        {
+          "name": "ops",
+          "type": "string",
+          "usage": "a JSON file with the batch, or - for standard input: {\"operations\":[{\"op\":\"item.move\",\"args\":{\"item_id\":\"itm_m1n2p3q4r5\",\"start\":\"2s\"}}]}, or only the array of {op, args}; base_revision, idempotency_key and dry_run may sit beside operations"
+        },
+        {
+          "name": "base",
+          "type": "integer",
+          "usage": "the revision the batch was planned against (default: the current one)"
+        },
+        {
+          "name": "key",
+          "type": "string",
+          "usage": "idempotency key"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "dry-run"
+      ]
+    },
+    {
+      "name": "image:undo",
+      "summary": "undo the last step of the caller on an image",
+      "usage": [
+        "stuarty image:undo <id>"
+      ],
+      "example": "stuarty image:undo img_7k2m9x4q1b",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "dry-run"
+      ]
+    },
+    {
+      "name": "image:redo",
+      "summary": "redo the last undone step of the caller on an image",
+      "usage": [
+        "stuarty image:redo <id>"
+      ],
+      "example": "stuarty image:redo img_7k2m9x4q1b",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "dry-run"
+      ]
+    },
+    {
+      "name": "image:export",
+      "summary": "export an image document to a PNG, JPEG or WebP file",
+      "usage": [
+        "stuarty image:export <id> [--format f]"
+      ],
+      "example": "stuarty image:export img_7k2m9x4q1b --format jpeg --quality 85",
+      "flags": [
+        {
+          "name": "format",
+          "type": "string",
+          "default": "png",
+          "usage": "png, jpeg or webp"
+        },
+        {
+          "name": "quality",
+          "type": "integer",
+          "usage": "1 to 100, for jpeg and lossy webp"
+        },
+        {
+          "name": "preset",
+          "type": "string",
+          "usage": "resample to video_thumbnail, square_post or vertical_cover"
+        },
+        {
+          "name": "width",
+          "type": "integer",
+          "usage": "resample to this width (0 keeps the aspect)"
+        },
+        {
+          "name": "height",
+          "type": "integer",
+          "usage": "resample to this height (0 keeps the aspect)"
+        }
+      ],
       "globals": [
         "json",
         "workspace",

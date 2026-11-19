@@ -1,0 +1,161 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "layer_id": {
+      "pattern": "^lyr_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+      "type": "string"
+    },
+    "reset_style": {
+      "description": "Empty the stored style before applying style.",
+      "type": "boolean"
+    },
+    "style": {
+      "additionalProperties": false,
+      "description": "A partial TextStyle, merged; null removes a key.",
+      "properties": {
+        "align": {
+          "enum": [
+            "left",
+            "center",
+            "right",
+            null
+          ],
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "background_color": {
+          "description": "\"#RRGGBB\", \"#RRGGBBAA\" or \"$name\" of a template colour",
+          "pattern": "(^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$)|(^\\$[a-z][a-z0-9_]{0,39}$)",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "background_padding": {
+          "minimum": 0,
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "background_radius": {
+          "minimum": 0,
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "color": {
+          "description": "\"#RRGGBB\", \"#RRGGBBAA\" or \"$name\" of a template colour",
+          "pattern": "(^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$)|(^\\$[a-z][a-z0-9_]{0,39}$)",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "font_family": {
+          "minLength": 1,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "font_weight": {
+          "maximum": 900,
+          "minimum": 100,
+          "multipleOf": 100,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "line_height": {
+          "maximum": 3,
+          "minimum": 0.8,
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "max_width": {
+          "exclusiveMinimum": 0,
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "shadow_blur": {
+          "maximum": 100,
+          "minimum": 0,
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "shadow_color": {
+          "description": "\"#RRGGBB\", \"#RRGGBBAA\" or \"$name\" of a template colour",
+          "pattern": "(^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$)|(^\\$[a-z][a-z0-9_]{0,39}$)",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "shadow_dx": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "shadow_dy": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "size": {
+          "maximum": 1000,
+          "minimum": 8,
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "stroke_color": {
+          "description": "\"#RRGGBB\", \"#RRGGBBAA\" or \"$name\" of a template colour",
+          "pattern": "(^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$)|(^\\$[a-z][a-z0-9_]{0,39}$)",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "stroke_width": {
+          "maximum": 40,
+          "minimum": 0,
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "uppercase": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "required": [],
+      "type": "object"
+    },
+    "text": {
+      "maxLength": 2000,
+      "type": "string"
+    }
+  },
+  "required": [
+    "layer_id"
+  ],
+  "type": "object"
+}

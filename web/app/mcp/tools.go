@@ -32,7 +32,7 @@ func (a *adapter) handlers() map[string]callFunc {
 		"template":       template,
 		"view":           view,
 		"font_import":    fontImport,
-		"connection":     connection,
+		"image":          imageTool,
 	}
 }
 
@@ -194,13 +194,14 @@ func edit(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolO
 
 func commandHelp(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolOutput, error) {
 	in, err := decode[struct {
-		Name string `json:"name"`
+		Name   string `json:"name"`
+		Domain string `json:"domain"`
 	}](raw)
 	if err != nil {
 		return nil, err
 	}
 
-	res, err := svc.CommandHelp(ctx, service.CommandHelpRequest{Name: in.Name})
+	res, err := svc.CommandHelp(ctx, service.CommandHelpRequest{Name: in.Name, Domain: in.Domain})
 	if err != nil {
 		return nil, err
 	}

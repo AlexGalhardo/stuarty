@@ -314,7 +314,10 @@ func finalDocument(t *testing.T, d driver, project string) []byte {
 	return raw
 }
 
-var renderedByAdapter = map[string]bool{"Edit": true, "Undo": true, "Redo": true}
+var renderedByAdapter = map[string]bool{
+	"Edit": true, "Undo": true, "Redo": true, "ImageEdit": true, "ImageUndo": true, "ImageRedo": true,
+	"ImageExport": true,
+}
 
 func TestScenarioIsTheSameThroughEverySurface(t *testing.T) {
 	docs := sameThroughEverySurface(t, "prototype", "prj_7k2m9x4q1b")
