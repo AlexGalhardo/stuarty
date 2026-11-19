@@ -451,6 +451,13 @@ func TestApprovalRulesLifecycle(t *testing.T) {
 	if n := len(e.audits("approval.rule.set", "approval.rule.remove")); n != 3 {
 		t.Errorf("rule audit rows = %d, want 3", n)
 	}
+
+	// SDD-015 section 9: the row of a removal says what the rule covered, as the row of a write does.
+	removed := e.audits("approval.rule.remove")
+	if len(removed) != 1 || removed[0].SubjectID != made.ID || removed[0].Actor != ui ||
+		!strings.Contains(string(removed[0].Details), `"kind":"publish.story"`) {
+		t.Errorf("the removal audit row = %+v, want the rule id, the person and the kind it covered", removed)
+	}
 }
 
 func callRuleSet(ctx context.Context, e *env, req service.ApprovalRuleSetRequest) error {
