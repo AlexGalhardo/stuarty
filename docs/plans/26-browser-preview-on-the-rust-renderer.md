@@ -43,7 +43,7 @@ What a creator sees while editing is what the exported file will contain, becaus
 - [x] 2. Build the worker and the protocol with a still-frame path (no playback). Verify: `task test:web` passes with the worker's unit tests and `bash scripts/build-renderer.sh` reproduces the pinned digest or updates it with the reason.
 - [x] 3. Decode proxy frames through WebCodecs and the chunk index, with seeking. Verify: `web/e2e/specs/preview-rust-seek.spec.ts` (new) passes in Chromium.
 - [x] 4. Present on `OffscreenCanvas` with playback driven by the audio clock. Verify: `web/e2e/specs/preview-rust-playback.spec.ts` (new) passes.
-- [ ] 5. Add feature detection, the fallback and the setting. Verify: the existing preview specs pass with either executor forced.
+- [x] 5. Add feature detection, the fallback and the setting. Verify: the existing preview specs pass with either executor forced.
 - [ ] 6. Build the parity harness over the golden projects. Verify: `web/e2e/specs/preview-export-parity.spec.ts` (new) passes for every golden project within the ADR-0029 tolerance.
 - [ ] 7. Run the Rust gate. Verify: `cargo fmt --check && cargo clippy -- -D warnings && cargo test && cargo deny check` in `renderer/` exits 0.
 - [ ] 8. Measure playback on the reference project with every agent stopped (ask the orchestrator for the idle window). Verify: the numbers for both executors are in the hand-off.
