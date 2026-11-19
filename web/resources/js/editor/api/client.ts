@@ -217,6 +217,11 @@ export interface ApiClient {
 		itemId: string,
 	): Promise<ProjectItemResult>;
 	setBrief(projectId: string, text: string): Promise<BriefResult>;
+	answerBriefing(
+		projectId: string,
+		answers: Record<string, string>,
+		replace: boolean,
+	): Promise<BriefResult>;
 	trashProject(projectId: string): Promise<ProjectStateResult>;
 	restoreProject(projectId: string): Promise<ProjectStateResult>;
 	// The two routes of network mode live at the root, not under /api/v1: a client
@@ -517,6 +522,11 @@ export function createClient(
 			),
 		setBrief: (id, text) =>
 			call("PUT", `${project(id)}/brief`, EDIT_TIMEOUT_MS, { text }),
+		answerBriefing: (id, answers, replace) =>
+			call("PUT", `${project(id)}/briefing`, EDIT_TIMEOUT_MS, {
+				answers,
+				replace,
+			}),
 		trashProject: (id) =>
 			call("POST", `${project(id)}/trash`, EDIT_TIMEOUT_MS, {}),
 		restoreProject: (id) =>

@@ -202,9 +202,14 @@ func projectPageShow(c *web.Ctx, d *httpapi.Deps) error {
 		return err
 	}
 
+	briefing, err := d.Service.BriefingQuestions(c.Context(), service.BriefingQuestionsRequest{ProjectID: id})
+	if err != nil {
+		return err
+	}
+
 	return inertia.Render(c, "Projects/Show", inertia.Props{
 		"project":    map[string]any{"id": desc.ProjectID, "name": desc.Name, "state": desc.State},
-		"production": desc.Production, "items": nonNil(desc.Items), "brief": brief,
+		"production": desc.Production, "items": nonNil(desc.Items), "brief": brief, "briefing": briefing,
 	})
 }
 
