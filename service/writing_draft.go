@@ -47,7 +47,7 @@ func (s *svc) textDraftKind() ApprovableKind {
 // TextDraft asks a model for a draft of a text. It starts a text.draft job that shows its estimate and waits for a
 // person or a rule; when it succeeds the draft is a new revision of the text, never an overwrite.
 func (s *svc) TextDraft(ctx context.Context, req TextDraftRequest) (*Job, error) {
-	c, err := authorize(ctx, "TextDraft", req.ProjectID)
+	c, err := s.authorizeProject(ctx, "TextDraft", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}
