@@ -139,6 +139,12 @@ var parity = []row{
 	{method: "ImageUndo", tool: "image", command: "image:undo", route: "POST /images/{}/undo"},
 	{method: "ImageRedo", tool: "image", command: "image:redo", route: "POST /images/{}/redo"},
 	{method: "ImageExport", tool: "image", command: "image:export", route: "POST /images/{}/export"},
+	// The export presets, the check against one and the batch (SDD-004 sections 8.2 to 8.4). The MCP tools are the
+	// ones that already exist (NFR-020 leaves no room for three more): command_help with domain export, lint with a
+	// preset, and job_start with kind export_batch.
+	{method: "ExportPresetList", tool: "command_help", command: "export:presets", route: "GET /export-presets"},
+	{method: "ExportCheck", tool: "lint", command: "export:check", route: "GET /projects/{}/export-check"},
+	{method: "ExportBatch", tool: "job_start", command: "export:batch", route: "POST /projects/{}/export-batches"},
 	// The reads of the image editor screen (SDD-012 section 24.3): HTTP only, an agent has the text view.
 	{method: "ImageFrame", route: "GET /images/{}/frame", httpOnly: true},
 	{method: "ImageHistory", route: "GET /images/{}/history", httpOnly: true},

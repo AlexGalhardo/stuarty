@@ -618,7 +618,7 @@
       "name": "export",
       "summary": "export a project to a file",
       "usage": [
-        "stuarty export --project <id> [--start t] [--end t] [--format f] [--at t] [--wait] [--timeout d] [--out f] [--force]"
+        "stuarty export --project <id> [--start t] [--end t] [--format f] [--at t] [--preset p] [--codec c] [--wait] [--out f] [--force]"
       ],
       "example": "stuarty export --project prj_7k2m9x4q1b --json",
       "flags": [
@@ -638,6 +638,16 @@
           "usage": "the time of the frame, only with --format png (default: the start)"
         },
         {
+          "name": "preset",
+          "type": "string",
+          "usage": "a platform preset, as export:presets lists them (mp4 only)"
+        },
+        {
+          "name": "codec",
+          "type": "string",
+          "usage": "h264 (default), hevc or av1 (mp4 only)"
+        },
+        {
           "name": "format",
           "type": "string",
           "usage": "mp4 (default), gif, wav, aac or png"
@@ -652,6 +662,116 @@
           "type": "boolean",
           "default": "false",
           "usage": "replace the --out file when it exists"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project",
+        "wait",
+        "timeout"
+      ]
+    },
+    {
+      "name": "export:presets",
+      "summary": "list the export presets of the platforms",
+      "usage": [
+        "stuarty export:presets [--codecs]"
+      ],
+      "example": "stuarty export:presets --codecs --json",
+      "flags": [
+        {
+          "name": "codecs",
+          "type": "boolean",
+          "default": "false",
+          "usage": "also tell which codecs this machine can write (runs the test encodes the first time)"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "export:check",
+      "summary": "check that a project fits an export preset, before any encoding",
+      "usage": [
+        "stuarty export:check --project <id> --preset <id> [--start t] [--end t] [--codec c]"
+      ],
+      "example": "stuarty export:check --project prj_7k2m9x4q1b --preset tiktok --json",
+      "flags": [
+        {
+          "name": "preset",
+          "type": "string",
+          "usage": "the preset id, as export:presets lists them"
+        },
+        {
+          "name": "start",
+          "type": "string",
+          "usage": "first time to export (default: the start)"
+        },
+        {
+          "name": "end",
+          "type": "string",
+          "usage": "end of the export (default: the end of the timeline)"
+        },
+        {
+          "name": "codec",
+          "type": "string",
+          "usage": "h264, hevc or av1, for the estimate of the size (default: the preset's first)"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project"
+      ]
+    },
+    {
+      "name": "export:batch",
+      "summary": "export a project several times, one after the other, as one job",
+      "usage": [
+        "stuarty export:batch --project <id> --preset <id>... [--codec c] [--start t] [--end t] [--wait]",
+        "stuarty export:batch --project <id> --items '<json array of {preset, format, codec, start, end}>' [--wait]"
+      ],
+      "example": "stuarty export:batch --project prj_7k2m9x4q1b --preset tiktok --preset youtube-shorts --wait",
+      "flags": [
+        {
+          "name": "preset",
+          "type": "string",
+          "usage": "a preset id; give the flag once for each export",
+          "repeat": true
+        },
+        {
+          "name": "items",
+          "type": "string",
+          "usage": "the exports as a JSON array of {preset, format, codec, start, end}, instead of --preset"
+        },
+        {
+          "name": "format",
+          "type": "string",
+          "usage": "the format of every --preset export that is not mp4 (default mp4)"
+        },
+        {
+          "name": "codec",
+          "type": "string",
+          "usage": "h264, hevc or av1 for every --preset export (default: the choice of the preset)"
+        },
+        {
+          "name": "start",
+          "type": "string",
+          "usage": "first time to export, for every --preset export (default: the start)"
+        },
+        {
+          "name": "end",
+          "type": "string",
+          "usage": "end of the export, for every --preset export (default: the end of the timeline)"
         }
       ],
       "globals": [
@@ -2041,7 +2161,7 @@
       "name": "asset:list",
       "summary": "list the files of the library, with origin, tags and reuse",
       "usage": [
-        "stuarty asset:list [--tag t]"
+        "stuarty asset:list"
       ],
       "example": "stuarty asset:list --tag logo --reusable --json",
       "flags": [
@@ -2175,7 +2295,7 @@
       "name": "asset:tag",
       "summary": "add and remove the tags of a file of the library",
       "usage": [
-        "stuarty asset:tag <hash> --add t"
+        "stuarty asset:tag <hash>"
       ],
       "example": "stuarty asset:tag sha256:3b4c0a1d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b --add logo,brand",
       "flags": [

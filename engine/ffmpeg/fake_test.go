@@ -47,14 +47,21 @@ func fakeTool() bool {
 
 // fakeEncode answers the two commands of the encoder test (SDD-011 8.4) when a file named
 // works.txt sits next to the copy: ffmpeg writes its output for an encoder listed in it (one name per
-// line) and fails like a driver that cannot open otherwise; ffprobe reports 15 H.264 packets.
+// line) and fails like a driver that cannot open otherwise; ffprobe reports 15 packets of the codec
+// of the encoder that wrote the file (the file holds the codec), or of another codec when
+// wrongcodec.txt lists the encoder, like a driver that writes something else.
 func fakeEncode(base string) bool {
 	b, err := os.ReadFile(filepath.Join(filepath.Dir(os.Args[0]), "works.txt"))
 	if err != nil {
 		return false
 	}
 	if base == "ffprobe" {
-		fmt.Println("h264,15")
+		codec := "h264"
+		if got, err := os.ReadFile(strings.TrimPrefix(os.Args[len(os.Args)-1], "file:")); err == nil &&
+			strings.HasPrefix(string(got), "fake:") {
+			codec = strings.TrimPrefix(string(got), "fake:")
+		}
+		fmt.Println(codec + ",15")
 		return true
 	}
 	args := os.Args[1:]
@@ -74,7 +81,18 @@ func fakeEncode(base string) bool {
 		fmt.Fprintf(os.Stderr, "[%s @ 0000] Error while opening encoder: frame size too large\n", enc)
 		os.Exit(1)
 	}
-	if err := os.WriteFile(strings.TrimPrefix(args[len(args)-1], "file:"), []byte("fake"), 0o644); err != nil {
+	codec := "h264"
+	switch {
+	case strings.HasPrefix(enc, "hevc_"):
+		codec = "hevc"
+	case strings.HasPrefix(enc, "av1_"), enc == "libsvtav1", enc == "libaom-av1":
+		codec = "av1"
+	}
+	if w, err := os.ReadFile(filepath.Join(filepath.Dir(os.Args[0]), "wrongcodec.txt")); err == nil &&
+		slices.Contains(strings.Fields(string(w)), enc) {
+		codec = "mpeg4"
+	}
+	if err := os.WriteFile(strings.TrimPrefix(args[len(args)-1], "file:"), []byte("fake:"+codec), 0o644); err != nil {
 		os.Exit(2)
 	}
 	return true

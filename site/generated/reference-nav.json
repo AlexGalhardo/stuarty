@@ -58,9 +58,12 @@
     {
       "tag": "Jobs",
       "pages": [
+        "export.presets",
         "jobs.get",
         "jobs.cancel",
         "jobs.file",
+        "export.batch",
+        "export.check",
         "jobs.list",
         "jobs.start"
       ]

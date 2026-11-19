@@ -37,14 +37,14 @@ A creator picks "YouTube Shorts" or "Instagram Reel" instead of guessing bitrate
 
 ## Tasks
 
-- [ ] 1. Read the official upload specifications of YouTube Shorts, Instagram Reels, Facebook Reels, TikTok and X again; write the presets table with sources and dates into SDD-004; amend SDD-002 and SDD-000. Verify: `task lint:md` exits 0.
-- [ ] 2. Implement presets and `ExportCheck` in the core with table tests. Verify: `go test ./core/... -run "TestExportPreset|TestExportCheck"` passes.
-- [ ] 3. Extend encoder capabilities and the allow-list for HEVC and AV1, with the test encode. Verify: `go test ./engine/ffmpeg/... -run "TestEncoderAllowList|TestCapability"` passes, including a build that offers only a GPL encoder (refused).
-- [ ] 4. Implement HEVC and AV1 export and extend the post-export verification. Verify: `go test ./engine/export/... -run "TestHEVC|TestAV1"` passes where an allowed encoder exists and skips with a stated reason where none does.
-- [ ] 5. Implement `ExportBatch` with parent and child jobs. Verify: `go test ./service/... -run TestExportBatch` passes (partial failure, cancel, ceilings).
-- [ ] 6. Expose on the three surfaces and regenerate documents. Verify: `go test ./web/contract/...` and `task generate:check` pass.
-- [ ] 7. Rebuild the export dialog, in both languages. Verify: `task test:web` and `web/e2e/specs/export-presets-batch.spec.ts` pass.
-- [ ] 8. Record on the author's machine which encoders were found and one export per codec. Verify: the list and the verification outputs are in the hand-off.
+- [x] 1. Read the official upload specifications of YouTube Shorts, Instagram Reels, Facebook Reels, TikTok and X again; write the presets table with sources and dates into SDD-004; amend SDD-002 and SDD-000. Verify: `task lint:md` exits 0.
+- [x] 2. Implement presets and `ExportCheck` in the core with table tests. Verify: `go test ./core/... -run "TestExportPreset|TestExportCheck"` passes.
+- [x] 3. Extend encoder capabilities and the allow-list for HEVC and AV1, with the test encode. Verify: `go test ./engine/ffmpeg/... -run "TestEncoderAllowList|TestCapability"` passes, including a build that offers only a GPL encoder (refused).
+- [x] 4. Implement HEVC and AV1 export and extend the post-export verification. Verify: `go test ./engine/export/... -run "TestHEVC|TestAV1"` passes where an allowed encoder exists and skips with a stated reason where none does.
+- [x] 5. Implement `ExportBatch` with parent and child jobs. Verify: `go test ./service/... -run TestExportBatch` passes (partial failure, cancel, ceilings).
+- [x] 6. Expose on the three surfaces and regenerate documents. Verify: `go test ./web/contract/...` and `task generate:check` pass.
+- [x] 7. Rebuild the export dialog, in both languages. Verify: `task test:web` and `web/e2e/specs/export-presets-batch.spec.ts` pass.
+- [x] 8. Record on the author's machine which encoders were found and one export per codec. Verify: the list and the verification outputs are in the hand-off.
 
 ## Test strategy
 

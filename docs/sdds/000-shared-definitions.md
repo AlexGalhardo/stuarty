@@ -59,6 +59,9 @@
 | `ImageEdit` | `image` (`action` edit) | `image:edit` | `POST /images/{id}/edit` | edit |
 | `ImageUndo`, `ImageRedo` | `image` (`action` undo, redo) | `image:undo`, `image:redo` | `POST /images/{id}/undo`, `POST /images/{id}/redo` | edit |
 | `ImageExport` | `image` (`action` export) | `image:export` | `POST /images/{id}/export` | edit |
+| `ExportPresetList` | `command_help` (`domain` export) | `export:presets` | `GET /export-presets` | read |
+| `ExportCheck` | `lint` (with `preset`) | `export:check` | `GET /projects/{id}/export-check` | read |
+| `ExportBatch` | `job_start` (`kind` export_batch) | `export:batch` | `POST /projects/{id}/export-batches` | render |
 | `ImageFrame` | none | none | `GET /images/{id}/frame` (SDD-012 §24.3) | read |
 | `ImageHistory` | none | none | `GET /images/{id}/history` (SDD-012 §24.3) | read |
 | `ImageFile` | none | none | `GET /images/{id}/exports/{name}` (SDD-012 §24.3) | read |
@@ -81,7 +84,7 @@ Routes that are not service operations: `POST /mcp` (the MCP server over Streama
 
 The MCP catalogue is 20 tools: `project_list`, `project_create`, `project_get`, `project_trash`, `edit`, `command_help`, `history`, `media_import`, `media_inspect`, `view`, `lint`, `job_start`, `job_get`, `job_cancel`, `template`, `font_import`, `connection` (read only: the destinations the user connected, SDD-014), `image` (the image documents of SDD-021, one tool with an `action`), `project_item` (the items and the brief of a production, SDD-003 section 2.3), `library` (memory, skills and prompts: search, list, get, write, render and lint; SDD-018).
 
-**Projects and timelines (ADR-0039).** A project is a production; its timelines are items of it. Every operation above that edits or reads a timeline document (`Edit`, `HistoryList`, `Undo`, `Redo`, `Lint`, `MediaImport`, `MediaInspect`, `MediaList`, `MediaTrash`, `MediaRestore`, `ViewFrame`, `ViewSheet`, `JobStart`, `JobList`, `PlanWindow`, `SnapPoints`, `ProjectOtioExport`, `ProjectOtioImport`, `ProjectBundleExport`, and `ProjectGet` with a detail) accepts an optional `timeline_id` next to `project_id`; the rule is SDD-003 §1.7.
+**Projects and timelines (ADR-0039).** A project is a production; its timelines are items of it. Every operation above that edits or reads a timeline document (`Edit`, `HistoryList`, `Undo`, `Redo`, `Lint`, `MediaImport`, `MediaInspect`, `MediaList`, `MediaTrash`, `MediaRestore`, `ViewFrame`, `ViewSheet`, `JobStart`, `JobList`, `PlanWindow`, `SnapPoints`, `ProjectOtioExport`, `ProjectOtioImport`, `ProjectBundleExport`, `ExportCheck`, `ExportBatch`, and `ProjectGet` with a detail) accepts an optional `timeline_id` next to `project_id`; the rule is SDD-003 §1.7.
 
 Other CLI commands that are not service operations: `serve` (start the owner process), `mcp` (stdio MCP server), `open` (open the UI of a running server with a fresh launch code), `token:rotate`, `user:create` and `user:passwd` (network mode; they need the workspace lock, so no server may be running), `tools:install` (download a helper such as whisper.cpp after stating its size), `agent:docs` (print or write the generated material for agents, SDD-003 §8), plus vukem's built-in commands.
 
@@ -131,7 +134,7 @@ The event `id` of `batch.committed` is the revision. Details in SDD-006.
 
 ## 6. Jobs
 
-Kinds: `ingest`, `transcribe`, `export`, `frame`, and the kinds a feature epic registers as needing approval (SDD-015 §5). States: `queued`, `running`, `succeeded`, `failed`, `cancelled`, and `waiting_approval` (a job of a kind that needs approval, until a person or a rule approves it; it is not running and counts as active; at most 50 per submitter and 1000 in the workspace, `E_LIMIT_EXCEEDED` past either, SDD-015 §5). Asset ingest states: `pending`, `ingesting`, `ready`, `failed`.
+Kinds: `ingest`, `transcribe`, `export`, `export_batch`, `frame`, and the kinds a feature epic registers as needing approval (SDD-015 §5). States: `queued`, `running`, `succeeded`, `failed`, `cancelled`, and `waiting_approval` (a job of a kind that needs approval, until a person or a rule approves it; it is not running and counts as active; at most 50 per submitter and 1000 in the workspace, `E_LIMIT_EXCEEDED` past either, SDD-015 §5). Asset ingest states: `pending`, `ingesting`, `ready`, `failed`.
 
 ## 7. Database tables
 
@@ -179,7 +182,7 @@ The core's codes are in SDD-002 §A.8. The service adds:
 | `E_INGEST_FAILED` | ingest failed; `details.reason` | no |
 | `E_ASSET_NOT_READY` | the asset is still ingesting | yes |
 | `E_FFMPEG_MISSING` | no usable FFmpeg was found | no |
-| `E_NO_ENCODER` | no H.264 encoder works on this machine | no |
+| `E_NO_ENCODER` | no encoder works on this machine for the codec the export needs (H.264, or the `details.codec` that was asked for: `hevc` or `av1`, SDD-004 section 8.3); `details.reason` `codec_unavailable` and `details.candidates` | no |
 | `E_EXPORT_FAILED` | the export process failed; `details.reason` | no |
 | `E_VERIFY_FAILED` | the exported file did not pass verification; `details.checks` | no |
 | `E_TRANSCRIBE_UNAVAILABLE` | no transcription provider is installed or configured; `details` names what is missing, its download size, the install command and the `tool` and `model` it installs | no |
@@ -446,7 +449,20 @@ The operations of the registry of domain `image` (`core/command` registry built 
 | `E_SLOT` `details.reason` `unknown_slot`, `wrong_kind`, `invalid_value`, `missing` | error detail | a template filled badly (SDD-021 section 7) |
 | `E_EXPORT_FAILED` `details.reason` `webp_unavailable` | error detail | no WebP encoder is wired (SDD-021 §6) |
 
-## 15. Asset library (SDD-011 §14)
+## 15. Export presets, codecs and batches (SDD-004 sections 8.2 to 8.4)
+
+| Name | Kind | Meaning |
+| --- | --- | --- |
+| `youtube-shorts`, `instagram-reels`, `facebook-reels`, `tiktok`, `x-video` | export preset id | the five presets of RF-087, in this order in `ExportPresetList` |
+| `h264`, `hevc`, `av1` | export codec | the codecs of an export; `h264` is the default |
+| `X_DURATION_TOO_LONG`, `X_DURATION_TOO_SHORT`, `X_FPS_TOO_HIGH`, `X_FPS_TOO_LOW`, `X_RESOLUTION_TOO_SMALL`, `X_RESOLUTION_TOO_LARGE`, `X_ASPECT_RATIO`, `X_SIZE_TOO_LARGE` | export check finding | what `ExportCheck` reports (SDD-002 A.13) |
+| `export_batch` | job kind | the parent job of `ExportBatch`; its children are `export` jobs (SDD-004 section 8.4) |
+| `E_VALIDATION` `details.reason` `preset_mismatch` | error detail | an export with a preset was refused because the project does not fit it; `details.findings` |
+| `E_NO_ENCODER` `details.reason` `codec_unavailable` | error detail | the codec asked for has no allowed encoder that passes the test encode on this machine |
+| `preset_<finding>` | verification check | a check of the finished file against its preset, named after the finding (`preset_duration_too_long`) |
+| `video_codec`, `codec_fallback`, `preset`, `notes` | export result member | the codec written (`video_codec`, as before), the codec wanted when the export fell back to `h264`, the preset id, and the notes that say so |
+
+## 16. Asset library (SDD-011 §14)
 
 | Name | Kind | Meaning |
 | --- | --- | --- |

@@ -38,11 +38,15 @@ export function createJobsStore(): {
 				store.setState((s) => {
 					const jobs: Record<string, Job> = {};
 					for (const job of list) jobs[job.job_id] = job;
-					const running = list.find(
-						(j) =>
-							j.kind === "export" &&
-							(j.state === "running" || j.state === "queued"),
-					);
+					// A running batch is what the dialog follows; its children are
+					// exports of their own that it does not show.
+					const active = (kind: string): Job | undefined =>
+						list.find(
+							(j) =>
+								j.kind === kind &&
+								(j.state === "running" || j.state === "queued"),
+						);
+					const running = active("export_batch") ?? active("export");
 					return {
 						...s,
 						jobs,
