@@ -533,7 +533,7 @@ Focus is the 2 px `--ring` outline with 2 px offset everywhere (section 2.10); i
 
 #### 3.4.10 Judgement calls of the first build
 
-The comparison with the real CapCut app (TASK-0296) is pending: the author has not installed it yet, so nothing here is marked as the same or different. The calls the first build made, as SDD-012 section 6.4 lists them: the Adjust tab holds Color, Filters, Chroma key and Effects, and the Text tab holds Auto captions; several items show no inspector strip; the Transitions panel has no length field; Select and Blade are two `aria-pressed` buttons in the toolbar, with Undo and Redo moved there from the top bar; the ratio in the player row is a native `select` that sends `settings.reframe`; the toolbar and menu draw only what has an action (no Duplicate on a project card, no Zoom or Theme item in the menu); a text button collapses to its icon below 1536 px and keeps its name.
+The comparison with the real CapCut app was made by TASK-0296 (CapCut 9.8.0.4213, walked with the window on screen); its marks, row by row, are in SDD-012 section 6.4, and this section keeps only the calls the build made, as that section lists them: the Adjust tab holds Color, Filters, Chroma key and Effects, and the Text tab holds Auto captions; several items show no inspector strip; the Transitions panel has no length field; Select and Blade are two `aria-pressed` buttons in the toolbar, with Undo and Redo moved there from the top bar; the ratio in the player row is a native `select` that sends `settings.reframe`; the toolbar and menu draw only what has an action (no Duplicate on a project card, no Zoom or Theme item in the menu); a text button collapses to its icon below 1536 px and keeps its name.
 
 ### 3.5 Dashboard sidebar
 
@@ -745,6 +745,8 @@ The non-blocking notice of SDD-012 §4.5 for `E_REVISION_CONFLICT`.
 | Window too small | This window is too small | The editor needs at least 1024 pixels of width. | Back to projects |
 
 Keys: `ui.editor.<area>.empty.title` and `.body` (SDD-012 §16.2).
+
+An empty state is shown only when the region has been told it is empty: while the project is still loading, the library and the timeline draw two `Skeleton` blocks with `aria-busy="true"` instead (state model of section 4.1), so a person never reads "No media yet" about a project that has media.
 
 #### 4.3.16 History row
 

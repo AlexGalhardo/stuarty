@@ -42,10 +42,10 @@ A creator who knows another editor feels at home in an afternoon: the shortcuts 
 - [x] 2. Build the registry and move every existing handler onto it. Verify: `task test:web` passes and a lint test fails on a hard-coded key (`web/resources/js/editor` scan in `check:hooks` or a new check script).
 - [x] 3. Add the two presets, the dialog and remapping with validation. Verify: `web/e2e/specs/shortcuts.spec.ts` passes.
 - [x] 4. Build the first-run tour. Verify: `web/e2e/specs/first-run-tour.spec.ts` passes.
-- [ ] 5. Resolve the pre-release dependency question with the author. Verify: the decision and the resulting change, or the STOP note, are in the hand-off.
-- [ ] 6. Fix the editor specs in Firefox and WebKit. Verify: `bun run e2e -- --project=firefox` and `--project=webkit` pass for the editor specs, with the list of causes in the hand-off.
-- [ ] 7. Fix the open `VV` entries of the briefing, one commit each with its test. Verify: each new test fails before the fix and passes after (shown for one entry in the hand-off); `task test:web` passes.
-- [ ] 8. Do the polish pass against the design system's pending list. Verify: `bun run check:contrast`, `bun run check:i18n` and the axe spec for the editor pass.
+- [x] 5. Resolve the pre-release dependency question with the author. Verify: the decision and the resulting change, or the STOP note, are in the hand-off.
+- [x] 6. Fix the editor specs in Firefox and WebKit. Verify: `bun run e2e -- --project=firefox` and `--project=webkit` pass for the editor specs, with the list of causes in the hand-off.
+- [x] 7. Fix the open `VV` entries of the briefing, one commit each with its test. Verify: each new test fails before the fix and passes after (shown for one entry in the hand-off); `task test:web` passes.
+- [x] 8. Do the polish pass against the design system's pending list. Verify: `bun run check:contrast`, `bun run check:i18n` and the axe spec for the editor pass.
 
 ## Test strategy
 
