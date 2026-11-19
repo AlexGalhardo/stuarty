@@ -1925,6 +1925,7 @@ Implements RF-310, RF-311 and RF-312 (PRD-004), author decision D-075 and epic 0
 | `GET /projects` | `pages/Projects/Index.tsx` | Projects (epic 06 owns the content) |
 | `GET /edit-video`, `/edit-image`, `/write`, `/visual-assets`, `/video-assets`, `/publish`, `/skills`, `/prompts`, `/memory` | `pages/Dashboard/Section.tsx` | an honest empty state, until the epic of the section replaces the route's page |
 | `GET /connections` | `pages/Dashboard/Section.tsx` | an empty state until epic 04 puts the Connections page there |
+| `GET /approvals` | `pages/Approvals/Index.tsx` | the approval queue, the rules and the cost ceilings (epic 05, SDD-015), built from `dashboard/approval/`; not a section of the sidebar: it is linked from the Connections page, and the Publish section (epic 20) will link it too. The queue follows `GET /api/v1/approvals/events` and shows what the service answers (the summary and the actor as untrusted text, the amounts formatted and never summed) |
 | `GET /settings`, `/settings/*` | the existing pages | reached from the profile block, not a section |
 
 `GET /` stopped redirecting to `/projects`. A controller of these routes renders an Inertia page with the key of the section as its only prop; it computes nothing. The section list (key, path, icon) is data in `resources/js/dashboard/sections.ts`; the paths are the single list the sidebar, the home and the routes of `web/routes/pages.go` agree on, and a test compares the Go routes with it.
