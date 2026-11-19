@@ -97,6 +97,16 @@ Every operation has its own page with the parameters, the body, the responses an
 | `GET` | `/api/v1/brand-kit` | [`brand.get`](/docs/api/brand.get) | Read the brand kit |
 | `PUT` | `/api/v1/brand-kit` | [`brand.set`](/docs/api/brand.set) | Replace the brand kit |
 
+## Connections
+
+| Method | Path | Operation | Summary |
+| --- | --- | --- | --- |
+| `GET` | `/api/v1/connections` | [`connections.list`](/docs/api/connections.list) | List the destinations the user connected (never a secret) |
+| `POST` | `/api/v1/connections` | [`connections.create`](/docs/api/connections.create) | Connect a destination; the secret goes into the vault |
+| `GET` | `/api/v1/connections/{id}` | [`connections.get`](/docs/api/connections.get) | Read one connection (never a secret) |
+| `DELETE` | `/api/v1/connections/{id}` | [`connections.remove`](/docs/api/connections.remove) | Remove a connection and its credential |
+| `POST` | `/api/v1/connections/{id}/test` | [`connections.test`](/docs/api/connections.test) | Make one request through a connection |
+
 ## System
 
 | Method | Path | Operation | Summary |

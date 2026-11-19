@@ -165,6 +165,35 @@ The types named in the tables of the operations. The arguments of each editing c
 | `scope` | `string` | no |  |
 | `summary` | `string` | no |  |
 
+### Connection
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `accepts` | array of `string` | no |  |
+| `created_at` | `string (date-time)` | no |  |
+| `endpoint` | `string` | no |  |
+| `hosts` | array of `string` | no |  |
+| `id` | `string` | no |  |
+| `kind` | `string` | no |  |
+| `label` | `string` | no |  |
+| `last_used_at` | `string (date-time)` or `null` | no |  |
+| `secret_set` | `boolean` | no |  |
+
+### ConnectionListResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `connections` | array of [`Connection`](/docs/api/schemas#connection) | no |  |
+
+### ConnectionTestResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `id` | `string` | no |  |
+| `message` | `string` | no |  |
+| `ok` | `boolean` | no |  |
+| `status` | `integer` | no |  |
+
 ### Crop
 
 | Name | Type | Required | Description |
