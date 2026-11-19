@@ -1416,7 +1416,7 @@ PRD-004 RF-320 to RF-323, ADR-0010, ADR-0039, ADR-0036 item 6. The library is th
 
 ### 14.1 The entry
 
-A library entry is one file by hash, with the facts of the probe and the library side of SDD-005 §5.5.1. In `service` it is `LibraryAsset`; its members:
+A library entry is one file by hash for one owner, with the facts of the probe and the library side of SDD-005 §5.5.1. The bytes are one per hash and shared; the library side (origin, rights note, description, tags, reuse mark and the search text) belongs to the owner: the user in network mode, the one local owner in local mode (DS-22). In `service` it is `LibraryAsset`; its members:
 
 | Member | Meaning |
 | --- | --- |
@@ -1478,4 +1478,4 @@ The UI has two sections over the library, Visual Assets (`image`, `lut`) and Vid
 | DS-19 | Origin is written once, at the first import of the bytes; the user's fields change later. |
 | DS-20 | A refused origin is `E_VALIDATION` with `details.reason`, not a new code. |
 | DS-21 | MCP gains no tool: the library reads live in `media_inspect` and its writes in `media_import`. |
-| DS-22 | Open, for the author before a release with network mode: the library side is kept per file, not per user. In network mode two users who both hold the same bytes see one entry (its origin, prompt, cost, rights note, description and tags) and either can change the description, the rights note, the reuse mark and the tags; a user who does not hold the bytes sees nothing of it (14.3). The alternative is an entry per owner in network mode. Local mode has one user and is not affected. |
+| DS-22 | Decided (VV-254): the library side is kept per owner, not per file. `asset_info`, `asset_tags` and `asset_search` are keyed by `(owner_user_id, asset_hash)`, the empty owner being local mode, and every read and write of the library (`AssetGet`, `AssetUses`, `AssetSetInfo`, `AssetTag`, `AssetList` with its search, the import that records a file) carries the owner of the caller and filters by it. Two network users who hold the same bytes each have their own origin, prompt, cost, rights note, description, tags and reuse mark, and neither reads, searches or changes the other's; the search text of an owner names the file only by the names that owner's projects give it. A user who does not hold the bytes still sees nothing, and a refused hash answers as a missing one (14.3). Reuse by hash across the projects of one owner is unchanged and makes no second copy. |
