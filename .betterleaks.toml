@@ -90,7 +90,7 @@ condition = "AND"
 paths = ['''^web/app/(?:auth|http)/[^/]+\.go$''']
 regexTarget = "line"
 regexes = [
-	'''EnvAdminPassword\s*=\s*"VUKEM_VIDEO_ADMIN_PASSWORD"''',
+	'''EnvAdminPassword\s*=\s*"STUARTY_ADMIN_PASSWORD"''',
 	'''auth\.EnvAdminPassword:\s*"short"''',
 	'''"password":"`\s*\+\s*(?:password|goodPass)\s*\+\s*`"''',
 ]
@@ -124,7 +124,7 @@ paths = ['''^\.config/ffmpeg-build/sources\.env$''']
 regexTarget = "line"
 regexes = ['''[A-Z0-9_]+_SHA256="[0-9a-f]{64}"''']
 
-# The help test of the CLI maps a command name to its usage line ("user:passwd": "vukem-video
+# The help test of the CLI maps a command name to its usage line ("user:passwd": "stuarty
 # user:passwd <email>"); Betterleaks reads the usage as a password. Only that line shape, only in
 # that test file.
 [[allowlists]]
@@ -132,7 +132,7 @@ description = "usage lines of the user commands in the CLI help test"
 condition = "AND"
 paths = ['''^web/app/cli/help_test\.go$''']
 regexTarget = "line"
-regexes = ['''"user:(?:create|passwd)":\s*"vukem-video user:(?:create|passwd) <email>''']
+regexes = ['''"user:(?:create|passwd)":\s*"stuarty user:(?:create|passwd) <email>''']
 
 # The API reference pages are generated from the OpenAPI document, whose request examples put the
 # JSON type name where a value goes ("password": "string"). Only that placeholder, only in those pages.

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Verifies the FFmpeg that Vukem Video distributes (D-017, ADR-0011, NFR-043):
+# Verifies the FFmpeg that Stuarty distributes (D-017, ADR-0011, NFR-043):
 #   bash scripts/ffmpeg-verify.sh binary <ffmpeg> [<ffprobe>]   one built binary
 #   bash scripts/ffmpeg-verify.sh archive <archive>              unpacks it, then `binary`
 #   bash scripts/ffmpeg-verify.sh tree <dir>                     no GPL or nonfree marker in any file of a tree (archives, image export)

@@ -20,11 +20,11 @@ name="$(basename "$file")"
 dashed="${version#v}"
 dashed="${dashed//./-}"
 case "$name" in
-vukem-video-desktop_"${version#v}"_*|vukem-video-desktop-"${dashed}"*) ;;
-*) die "$name is not a desktop installer of $version (vukem-video-desktop-${dashed}... or vukem-video-desktop_${version#v}_...)" ;;
+stuarty-desktop_"${version#v}"_*|stuarty-desktop-"${dashed}"*) ;;
+*) die "$name is not a desktop installer of $version (stuarty-desktop-${dashed}... or stuarty-desktop_${version#v}_...)" ;;
 esac
 
-repo="${REPO:-AlexGalhardo/vukem-video}"
+repo="${REPO:-AlexGalhardo/stuarty}"
 issuer="https://token.actions.githubusercontent.com"
 identity="^https://github\.com/${repo//./\\.}/\.github/workflows/release\.yml@refs/(tags/v|heads/main$)"
 
