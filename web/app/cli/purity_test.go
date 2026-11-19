@@ -345,6 +345,10 @@ func (s stub) MotionBrief(context.Context, service.MotionBriefRequest) (*service
 	return reply[service.MotionBriefResult](s.err)
 }
 
+func (s stub) MotionCheck(context.Context, service.MotionCheckRequest) (*service.MotionCheckResult, error) {
+	return reply[service.MotionCheckResult](s.err)
+}
+
 func (s stub) MemoryList(context.Context, service.MemoryListRequest) (*service.LibraryListResult, error) {
 	return reply[service.LibraryListResult](s.err)
 }

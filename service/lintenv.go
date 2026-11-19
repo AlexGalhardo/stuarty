@@ -43,6 +43,16 @@ func (s *svc) lintEnvFor(ctx context.Context, doc *timeline.Document) lint.Env {
 	return env
 }
 
+// artifactReader is lint.ArtifactReader over the artifacts registered for the
+// assets of one document, read from the workspace when a rule asks.
+type artifactReader struct {
+	s    *svc
+	fps  timeline.Rational
+	rows map[string][]ArtifactRow // by asset id
+}
+
+var _ lint.ArtifactReader = (*artifactReader)(nil)
+
 // alphaOpaque is the alpha_opaque fact of the normalized artifact of an asset (SDD-011 section 4.3.6): the ingest
 // measured that a file which declares an alpha channel has only opaque pictures. known is false when the asset has
 // no normalized artifact or the artifact predates the fact, which reads as "not opaque", never as a finding.
@@ -63,16 +73,6 @@ func (r *artifactReader) alphaOpaque(asset string) (opaque, known bool) {
 
 	return facts.AlphaOpaque, true
 }
-
-// artifactReader is lint.ArtifactReader over the artifacts registered for the
-// assets of one document, read from the workspace when a rule asks.
-type artifactReader struct {
-	s    *svc
-	fps  timeline.Rational
-	rows map[string][]ArtifactRow // by asset id
-}
-
-var _ lint.ArtifactReader = (*artifactReader)(nil)
 
 func (r *artifactReader) Peaks(asset string) (lint.Peaks, bool) {
 	i := slices.IndexFunc(r.rows[asset], func(a ArtifactRow) bool { return a.Kind == "peaks" && a.Ext == "bin" })
