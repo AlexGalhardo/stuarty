@@ -189,6 +189,8 @@ Seven operations are added to `service.Service`, each with exactly one MCP actio
 
 No new code in the core: `E_VALIDATION`, `E_NOT_FOUND`, `E_ID_EXISTS`, `E_TYPE_MISMATCH`, `E_INVALID_STATE`, `E_OUT_OF_SOURCE`, `E_LIMIT`, `E_SLOT` and `E_REVISION_CONFLICT` keep their meaning. The service adds none. Limits (`E_LIMIT`, `details.limit`): 500 layers in a document, 8 levels of groups, 100 layers in one `layer.group` or `layer.align`, 64 distinct images, a canvas side of 4096, 2,000 characters in a text, 200 operations and 512 KiB in a batch (the video limits), and 25 slots in a template.
 
+An export renders in the request, on the caller thread, bounded by the canvas (4096 per side) and by the size of the output (8192 per side, 33,177,600 pixels). It is not yet in the group of heavy operations of SDD-000 section 10 (which is a list of seven call sites that the OpenAPI document and the site pages repeat), so only the general rate limit of the caller applies; adding it is a change of that list and of its tests, left to the epic that adds the image jobs (epic 28 or 42).
+
 ## 13. Tests
 
 - Golden cases per operation (section 3), a determinism test (same input, same result) and a property test that the inverse of every applied batch restores the document.
