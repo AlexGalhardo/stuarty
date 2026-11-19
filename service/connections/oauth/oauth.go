@@ -200,6 +200,8 @@ type Token struct {
 	RefreshToken string
 	ExpiresIn    time.Duration
 	Scope        string
+	// IDToken is the OpenID Connect ID token when the answer carries one (epic 24); it is not verified here.
+	IDToken string
 }
 
 // TokenError is a refusal of the token endpoint. Code is the OAuth error code (invalid_grant...), which
@@ -246,6 +248,7 @@ func Request(ctx context.Context, c Doer, tokenURL string, form url.Values) (Tok
 		RefreshToken string `json:"refresh_token"`
 		ExpiresIn    int64  `json:"expires_in"`
 		Scope        string `json:"scope"`
+		IDToken      string `json:"id_token"`
 		Error        string `json:"error"`
 	}
 
@@ -262,7 +265,7 @@ func Request(ctx context.Context, c Doer, tokenURL string, form url.Values) (Tok
 
 	return Token{
 		AccessToken: out.AccessToken, RefreshToken: out.RefreshToken,
-		ExpiresIn: time.Duration(out.ExpiresIn) * time.Second, Scope: out.Scope,
+		ExpiresIn: time.Duration(out.ExpiresIn) * time.Second, Scope: out.Scope, IDToken: out.IDToken,
 	}, nil
 }
 

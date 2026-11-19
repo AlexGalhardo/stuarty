@@ -171,9 +171,20 @@ func TestWorkspaceAssetsMigrationDown(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	rolled, err := m.Rollback(ctx, 1)
-	if err != nil || !slices.Equal(rolled, []string{assetLibraryID}) {
-		t.Fatalf("Rollback = %v, %v", rolled, err)
+	// The library is not the last migration for ever: undo what came after it, then the library itself.
+	var want []string
+
+	for _, mig := range slices.Backward(All()) {
+		want = append(want, mig.ID)
+
+		if mig.ID == assetLibraryID {
+			break
+		}
+	}
+
+	rolled, err := m.Rollback(ctx, len(want))
+	if err != nil || !slices.Equal(rolled, want) {
+		t.Fatalf("Rollback = %v, %v; want %v", rolled, err, want)
 	}
 
 	for _, table := range []string{"asset_info", "asset_tags", "asset_search"} {
