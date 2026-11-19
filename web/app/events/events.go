@@ -146,6 +146,8 @@ func (e *Events) Publish(ev service.Event) {
 		}
 	case wire.ProjectUpdated:
 		f = wire.ProjectFrame(&ev)
+	case wire.NestedUpdated:
+		f = wire.NestedFrame(&ev)
 	case wire.AssetUpdated:
 		f = wire.AssetFrame(&ev)
 	case wire.JobUpdated:
