@@ -1775,7 +1775,7 @@ trashed prj_2x5c8d1f4g; restore it with project_trash restore=true
 ```json
 {
   "name": "edit",
-  "description": "Change a project. Atomic batch, one undo step. base_revision: last revision read. Times need a unit. See command_help. dry_run: check only. idempotency_key: safe retries.",
+  "description": "Edit a project. Atomic, one undo step. base_revision: last revision read. Times need units. See command_help. dry_run: check only. idempotency_key: retries.",
   "inputSchema": {
     "type": "object",
     "properties": {
@@ -1831,6 +1831,7 @@ trashed prj_2x5c8d1f4g; restore it with project_trash restore=true
                 "clip.set_speed",
                 "clip.set_color",
                 "clip.set_blur",
+                "clip.replace_media",
                 "clip.set_chroma_key",
                 "clip.set_blend",
                 "clip.set_mask",

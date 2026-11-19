@@ -68,6 +68,8 @@ var parity = []row{
 	{method: "MotionBrief", tool: "view", command: "motion:brief", route: "GET /projects/{}/motion/brief"},
 	// The check has no tool: the tool list has no room for it (SDD-011 section 15.5).
 	{method: "MotionCheck", command: "motion:check", route: "GET /projects/{}/motion/check"},
+	// The replacement is a batch of clip.replace_media in one edit call over MCP: it has no tool of its own.
+	{method: "MotionReplace", command: "motion:replace", route: "POST /projects/{}/motion/replace"},
 	{method: "TrashEmpty", route: "POST /trash/empty", httpOnly: true},
 	{method: "Doctor", command: "doctor", route: "GET /system"},
 	{method: "SnapPoints", route: "GET /projects/{}/snap-points", httpOnly: true},

@@ -30,7 +30,7 @@ func registry() []*spec {
 		approvalRuleRemoveCmd, costShowCmd, costCeilingCmd,
 		imageCreate, imageList, imageShow, imageEdit, imageUndo, imageRedo, imageExport,
 		assetListCmd, assetShowCmd, assetUsesCmd, assetSetCmd, assetTagCmd,
-		motionBriefCmd, motionCheckCmd,
+		motionBriefCmd, motionCheckCmd, motionReplaceCmd,
 	}, libraryCommands()...)
 }
 

@@ -64,7 +64,7 @@ func (s *svc) MotionCheck(ctx context.Context, req MotionCheckRequest) (*MotionC
 
 	a, ok := v.doc.Assets[req.AssetID]
 	if !ok {
-		return nil, s.motionAssetMissing(ctx, v, req.AssetID)
+		return nil, s.motionAssetMissing(ctx, v.row.ID, req.AssetID)
 	}
 
 	res := &MotionCheckResult{
@@ -80,9 +80,9 @@ func (s *svc) MotionCheck(ctx context.Context, req MotionCheckRequest) (*MotionC
 
 // motionAssetMissing is the refusal for an asset the document does not hold: one that is still being prepared is
 // not there yet, any other is not the project's.
-func (s *svc) motionAssetMissing(ctx context.Context, v *motionView, assetID string) error {
+func (s *svc) motionAssetMissing(ctx context.Context, projectID, assetID string) error {
 	if row, err := s.store.Assets().
-		GetProjectAsset(ctx, v.row.ID, assetID); err == nil &&
+		GetProjectAsset(ctx, projectID, assetID); err == nil &&
 		row.State != ProjectAssetActive {
 		return newError("E_ASSET_NOT_READY", "asset %s is %s, not in the project yet.", assetID, row.State).
 			withPath("asset_id").withHint("wait for the import to finish; media:inspect tells its state")

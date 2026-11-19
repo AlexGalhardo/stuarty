@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strconv"
+	"strings"
 
 	"github.com/AlexGalhardo/stuarty/service"
 )
@@ -85,6 +87,48 @@ var motionCheckCmd = &spec{
 
 		return &output{value: res, text: res.Text}, nil
 	},
+}
+
+var motionReplaceCmd = &spec{
+	name:     "motion:replace",
+	timeline: true,
+	summary:  "replace, in one undoable batch, every clip that reads an earlier render of an animation with a new render",
+	usage: []string{
+		"stuarty motion:replace --project <id> --asset <ast_id> [--render-key <key>] [--dry-run]",
+	},
+	example: "stuarty motion:replace --project prj_7k2m9x4q1b --asset ast_k8m2n4p6q9",
+	project: true,
+	globals: []string{"dry-run"},
+	write:   true,
+	flags: []flagDef{
+		{Name: "asset", Kind: kindString, Usage: "the new render: an asset of the timeline, ready (required)"},
+		{
+			Name: "render-key", Kind: kindString,
+			Usage: "the key of the animation (default the render key of the origin of the new asset)",
+		},
+	},
+	run: func(ctx context.Context, c *call) (*output, error) {
+		res, err := c.svc.MotionReplace(ctx, service.MotionReplaceRequest{
+			ProjectID: c.projectID, TimelineID: c.timelineID, AssetID: c.args.str("asset"),
+			RenderKey: c.args.str("render-key"), DryRun: c.args.boolean("dry-run"),
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		return &output{value: res, text: motionReplaceText(res)}, nil
+	},
+}
+
+// motionReplaceText is the line of the replacement and the text of the edit it made.
+func motionReplaceText(res *service.MotionReplaceResult) string {
+	head := fmt.Sprintf("replaced %d clip(s) of the render key %s with %s: %s", len(res.Replaced), res.RenderKey,
+		res.AssetID, strings.Join(res.Replaced, ", "))
+	if res.DryRun {
+		head = "dry run: would have " + head
+	}
+
+	return head + "\nrevision " + strconv.FormatInt(res.Revision, 10) + "; undo restores every clip"
 }
 
 // motionOutput prints the brief without the bytes of the frames: a frame is the file in its path. A server on

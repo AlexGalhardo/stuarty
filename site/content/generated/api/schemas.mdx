@@ -845,6 +845,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `name` | `string` | no |  |
 | `probe` | [`ProbeSummary`](/docs/api/schemas#probesummary) or `any` or `null` or `null` | no |  |
 | `progress` | `number (double)` | no |  |
+| `replaces` | array of [`RenderOffer`](/docs/api/schemas#renderoffer) | no |  |
 | `state` | `string` | no |  |
 
 ### ImportedFont
@@ -1430,6 +1431,28 @@ The types named in the tables of the operations. The arguments of each editing c
 | `role` | `string` | no |  |
 | `width` | `integer` | no |  |
 
+### MotionReplaceResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `actor` | `string` | no |  |
+| `applied` | `boolean` | no |  |
+| `asset_id` | `string` | no |  |
+| `base_revision` | `integer (int64)` | no |  |
+| `created` | array of `string` | no |  |
+| `description` | `string` | no |  |
+| `diff` | array of [`Change`](/docs/api/schemas#change) | no |  |
+| `dry_run` | `boolean` | no |  |
+| `effective` | array of [`OpEffect`](/docs/api/schemas#opeffect) | no |  |
+| `findings` | array of [`Finding`](/docs/api/schemas#finding) | no |  |
+| `lint` | [`LintTotals`](/docs/api/schemas#linttotals) | no |  |
+| `project_id` | `string` | no |  |
+| `render_key` | `string` | no |  |
+| `replaced` | array of `string` | no |  |
+| `replayed` | `boolean` | no |  |
+| `revision` | `integer (int64)` | no |  |
+| `untrusted_notice` | `string` | no |  |
+
 ### OpEffect
 
 | Name | Type | Required | Description |
@@ -1444,7 +1467,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `args` | map of `any` | no | The arguments of the command. |
-| `op` | `string`, one of 76 values | yes | A command name, as listed by GET /commands.. min length 1 |
+| `op` | `string`, one of 77 values | yes | A command name, as listed by GET /commands.. min length 1 |
 
 ### Origin
 
@@ -1771,6 +1794,14 @@ The types named in the tables of the operations. The arguments of each editing c
 | `width` | `integer` | no |  |
 | `x` | `integer` | no |  |
 | `y` | `integer` | no |  |
+
+### RenderOffer
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `asset_id` | `string` | no |  |
+| `item_ids` | array of `string` | no |  |
+| `name` | `string` | no |  |
 
 ### Request
 

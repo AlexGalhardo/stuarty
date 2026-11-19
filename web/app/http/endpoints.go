@@ -317,6 +317,15 @@ var Endpoints = []Endpoint{
 		Summary: "Check a rendered asset against the brief: each mismatch of size, rate, length or alpha with the value expected",
 	},
 	{
+		ID:      "projects.motion.replace",
+		Method:  http.MethodPost,
+		Path:    "/projects/{id}/motion/replace",
+		Scope:   service.ScopeEdit,
+		Service: "MotionReplace",
+		Status:  200,
+		Summary: "Replace, in one undoable batch, every clip that reads an earlier render of an animation with a new render of it",
+	},
+	{
 		ID:      "projects.snap_points",
 		Method:  http.MethodGet,
 		Path:    "/projects/{id}/snap-points",

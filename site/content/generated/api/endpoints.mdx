@@ -33,6 +33,7 @@ Every operation has its own page with the parameters, the body, the responses an
 | `GET` | `/api/v1/projects/{id}/lint` | [`projects.lint`](/docs/api/projects.lint) | Lint a project with every rule |
 | `GET` | `/api/v1/projects/{id}/motion/brief` | [`projects.motion.brief`](/docs/api/projects.motion.brief) | What a render by an external motion engine must fit: size, rate, length, safe area, brand kit, captions and reference frames |
 | `GET` | `/api/v1/projects/{id}/motion/check` | [`projects.motion.check`](/docs/api/projects.motion.check) | Check a rendered asset against the brief: each mismatch of size, rate, length or alpha with the value expected |
+| `POST` | `/api/v1/projects/{id}/motion/replace` | [`projects.motion.replace`](/docs/api/projects.motion.replace) | Replace, in one undoable batch, every clip that reads an earlier render of an animation with a new render of it |
 | `GET` | `/api/v1/projects/{id}/otio` | [`projects.otio.export`](/docs/api/projects.otio.export) | Export a project as OpenTimelineIO |
 | `POST` | `/api/v1/projects/{id}/otio` | [`projects.otio.import`](/docs/api/projects.otio.import) | Import an OpenTimelineIO file into a project |
 | `GET` | `/api/v1/projects/{id}/plan` | [`projects.plan`](/docs/api/projects.plan) | Read the render plan of a window |
