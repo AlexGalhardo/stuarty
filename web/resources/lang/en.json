@@ -1104,6 +1104,9 @@
           "set_framing": {
             "title": "Set clip framing"
           },
+          "replace_media": {
+            "title": "Replace the media of a clip"
+          },
           "set_speed": {
             "title": "Set clip speed"
           }
