@@ -1,0 +1,8 @@
+{
+  "args": {
+    "layer_id": "lyr_cccccccccc",
+    "reset_style": true,
+    "text": "Plain"
+  },
+  "op": "layer.set_text"
+}

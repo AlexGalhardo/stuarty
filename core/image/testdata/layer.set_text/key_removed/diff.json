@@ -1,0 +1,19 @@
+[
+  {
+    "changes": {
+      "style": [
+        {
+          "color": "#FFE600",
+          "font_family": "Anton",
+          "size": 120
+        },
+        {
+          "font_family": "Anton",
+          "size": 120
+        }
+      ]
+    },
+    "id": "lyr_cccccccccc",
+    "kind": "layer.updated"
+  }
+]

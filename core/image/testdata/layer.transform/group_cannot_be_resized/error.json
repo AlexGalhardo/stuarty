@@ -1,0 +1,8 @@
+{
+  "code": "E_TYPE_MISMATCH",
+  "hint": "Move the group with x and y, or transform its children.",
+  "message": "Layer lyr_eeeeeeeeee is a group; it takes x and y only.",
+  "op_index": 0,
+  "path": "args.layer_id",
+  "retryable": false
+}

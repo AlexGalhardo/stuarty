@@ -1,0 +1,17 @@
+[
+  {
+    "changes": {
+      "crop": [
+        null,
+        {
+          "h": 900,
+          "w": 900,
+          "x": 200,
+          "y": 0
+        }
+      ]
+    },
+    "id": "lyr_bbbbbbbbbb",
+    "kind": "layer.updated"
+  }
+]

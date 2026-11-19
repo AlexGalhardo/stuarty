@@ -1,0 +1,8 @@
+{
+  "args": {
+    "layer_id": "lyr_eeeeeeeeee",
+    "x": 0,
+    "y": 0
+  },
+  "op": "layer.transform"
+}

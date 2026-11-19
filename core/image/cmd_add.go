@@ -169,16 +169,16 @@ func orElse(p *int, def int) int {
 }
 
 type addTextArgs struct {
-	Text   string         `json:"text"             desc:"1 to 2000 characters."                                              min:"1"      max:"2000"`
-	Name   string         `json:"name,omitempty"                                                                                          max:"120"`
-	X      *int           `json:"x,omitempty"                                                                                min:"-16384" max:"16384"`
-	Y      *int           `json:"y,omitempty"                                                                                min:"-16384" max:"16384"`
-	W      *int           `json:"w,omitempty"      desc:"The width the text wraps at; default 86% of the canvas."            min:"1"      max:"16384"`
+	Text   string         `json:"text"             desc:"Up to 2000 characters; an empty text is an empty slot."             max:"2000"`
+	Name   string         `json:"name,omitempty"                                                                             max:"120"`
+	X      *int           `json:"x,omitempty"                                                                                max:"16384" min:"-16384"`
+	Y      *int           `json:"y,omitempty"                                                                                max:"16384" min:"-16384"`
+	W      *int           `json:"w,omitempty"      desc:"The width the text wraps at; default 86% of the canvas."            max:"16384" min:"1"`
 	Style  map[string]any `json:"style,omitempty"  desc:"A partial TextStyle."                                                                        schema:"text_style_merge"`
 	Slot   string         `json:"slot,omitempty"   desc:"Make the layer a text slot of a template."`
 	ID     string         `json:"id,omitempty"                                                                                                                                  pattern:"^lyr_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
 	Parent string         `json:"parent,omitempty" desc:"A group; absent means the top level."                                                                                  pattern:"^lyr_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
-	Index  *int           `json:"index,omitempty"  desc:"Position among the siblings, 0 is the bottom; absent means on top." min:"0"      max:"500"`
+	Index  *int           `json:"index,omitempty"  desc:"Position among the siblings, 0 is the bottom; absent means on top." max:"500"   min:"0"`
 }
 
 func applyAddText(c *command.Context, d *Document, a *addTextArgs) error {

@@ -1,0 +1,11 @@
+[
+  {
+    "collection": "layers",
+    "id": "lyr_dddddddddd",
+    "set": {
+      "name": "Bar",
+      "opacity": 100
+    },
+    "type": "patch"
+  }
+]
