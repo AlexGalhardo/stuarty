@@ -8,7 +8,7 @@ import {
 	useRef,
 	useState,
 } from "react";
-
+import { Skeleton } from "@/components/ui/skeleton";
 import { useT } from "@/lib/i18n";
 import { rowFor } from "../commands/keymapStore";
 import { isEditable } from "../commands/keyTarget";
@@ -84,6 +84,8 @@ export default function Timeline({
 	const t = useT();
 	const runtime = useRuntime();
 	const trackIds = useDocumentState(selectOrderedTrackIds);
+	// A timeline still waiting for the project is loading, not empty.
+	const loading = useDocumentState((s) => s.status === "loading");
 	const endFrame = useDocumentState(selectEndFrame);
 	const fps: Fps = useDocumentState(selectFps) ?? DEFAULT_FPS;
 	const ppf = useUiState((s) => s.timeline.pxPerFrame);
@@ -443,7 +445,13 @@ export default function Timeline({
 							{trackIds.map((id) => (
 								<TrackRow key={id} id={id} />
 							))}
-							{trackIds.length === 0 && (
+							{trackIds.length === 0 && loading && (
+								<div aria-busy="true" className="flex flex-col gap-2 p-3">
+									<Skeleton className="h-10" />
+									<Skeleton className="h-10" />
+								</div>
+							)}
+							{trackIds.length === 0 && !loading && (
 								<EmptyState
 									icon={Clapperboard}
 									title={t("ui.editor.timeline.empty")}
