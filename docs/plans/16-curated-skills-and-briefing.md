@@ -37,7 +37,7 @@ A creator starts a production by answering a few questions, and their agent alre
 
 ## Tasks
 
-- [ ] 1. Amend SDD-018 (built-in skills, update rule, the registry check) and SDD-005 (the brief schema). Verify: `task lint:md` exits 0.
+- [x] 1. Amend SDD-018 (built-in skills, update rule, the registry check) and SDD-005 (the brief schema). Verify: `task lint:md` exits 0.
 - [ ] 2. Implement the briefing questions and answers in `core/project` and the service, on the three surfaces. Verify: `go test ./core/project/... ./service/... -run TestBriefing` and `go test ./web/contract/...` pass.
 - [ ] 3. Build the briefing form on the project overview, in both languages. Verify: `task test:web` and `web/e2e/specs/briefing.spec.ts` pass.
 - [ ] 4. Implement embedding, install and update of built-in skills. Verify: `go test ./service/library/... -run TestBuiltIn` passes (a user's edit survives an update).
