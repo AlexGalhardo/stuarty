@@ -169,31 +169,12 @@ func (h *apiHandler) authenticate(next http.Handler) http.Handler {
 		}
 
 		if header := r.Header.Get("Authorization"); header != "" {
-			token, ok := auth.Bearer(header)
-
-			// The session token of a hosted agent: bound to one project, never a person (SDD-017 section 6.1).
-			if g, found := h.agentGrant(token, ok); found {
-				next.ServeHTTP(w, r.WithContext(service.WithCaller(r.Context(), auth.AgentCaller(g, false))))
+			bearer, ok := h.bearerCaller(w, r, header)
+			if !ok {
 				return
 			}
 
-			if !ok || !auth.TokenMatches(h.Token, token) {
-				h.unauthorized(w, r, &service.Error{Code: service.CodeUnauthorized, Message: "the token is not valid."})
-
-				return
-			}
-
-			actor, err := auth.Actor(r.Header.Get(auth.ClientHeader))
-			if err != nil {
-				web.Fail(
-					w,
-					r,
-					&service.Error{Code: command.CodeValidation, Message: err.Error(), Path: auth.ClientHeader},
-				)
-				return
-			}
-
-			caller = service.Caller{Actor: actor, Scopes: service.AllScopes}
+			caller = bearer
 		} else if valid {
 			if !ambientAllowed(r) {
 				web.Fail(w, r, refused())
@@ -233,6 +214,32 @@ func (h *apiHandler) authenticate(next http.Handler) http.Handler {
 
 		next.ServeHTTP(w, r.WithContext(service.WithCaller(r.Context(), caller)))
 	})
+}
+
+// bearerCaller is the caller of an Authorization header in local mode: the session token of a hosted
+// agent, or the local token with the client header. A false ok means the refusal was written.
+func (h *apiHandler) bearerCaller(w http.ResponseWriter, r *http.Request, header string) (service.Caller, bool) {
+	token, ok := auth.Bearer(header)
+
+	// The session token of a hosted agent: bound to one project, never a person (SDD-017 section 6.1).
+	if g, found := h.agentGrant(token, ok); found {
+		return auth.AgentCaller(g, false), true
+	}
+
+	if !ok || !auth.TokenMatches(h.Token, token) {
+		h.unauthorized(w, r, &service.Error{Code: service.CodeUnauthorized, Message: "the token is not valid."})
+
+		return service.Caller{}, false
+	}
+
+	actor, err := auth.Actor(r.Header.Get(auth.ClientHeader))
+	if err != nil {
+		web.Fail(w, r, &service.Error{Code: command.CodeValidation, Message: err.Error(), Path: auth.ClientHeader})
+
+		return service.Caller{}, false
+	}
+
+	return service.Caller{Actor: actor, Scopes: service.AllScopes}, true
 }
 
 // agentGrant is the grant of a bearer credential that is a live session token.
