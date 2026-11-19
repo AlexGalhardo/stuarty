@@ -268,6 +268,12 @@ func TestSecurity_T04_SecretsNeverAppear(t *testing.T) {
 	var seen []resp
 
 	for _, ep := range httpapi.Endpoints {
+		// The approval stream never ends for a caller with a session: it is read with a deadline by
+		// TestApprovalsStreamSendsThePendingAndThenTheDecisions, which checks its frames for the token.
+		if ep.ID == "approvals.events" {
+			continue
+		}
+
 		for _, bad := range []string{"", `{"name":`, `{"unknown":1}`} {
 			for _, hd := range creds {
 				seen = append(seen, h.do(req{

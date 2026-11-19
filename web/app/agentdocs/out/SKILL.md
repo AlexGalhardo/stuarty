@@ -111,6 +111,10 @@ Prefix each with `stuarty`.
 - `connection:add --kind <k> --label <t> --endpoint <url> --accepts <list>`
 - `connection:remove <id>`
 - `connection:test <id>`
+- `approval:list`
+- `approval:show <id>`
+- `approval:rule:list`
+- `cost:show`
 - `image:create --preset p`
 - `image:list`
 - `image:show <id>`
@@ -218,19 +222,19 @@ stuarty export --project prj_7k2m9x4q1b
 Recover from a conflict:
 
 ```text
-# another actor changes the track first
+# someone edits first
 stuarty edit --project prj_7k2m9x4q1b --actor other track.update track_id=trk_f6g7h8j9k0 name=Theirs
 # conflict, exit 2
 stuarty edit --project prj_7k2m9x4q1b --base 1 track.update track_id=trk_f6g7h8j9k0 name=Mine
 stuarty project:show prj_7k2m9x4q1b
-# retry from the new revision
+# retry
 stuarty edit --project prj_7k2m9x4q1b --base 2 track.update track_id=trk_f6g7h8j9k0 name=Mine
 ```
 
 Fill a template:
 
 ```text
-# a text item is marked as slot headline (slot.mark)
+# headline is a slot
 stuarty template:save --project prj_7k2m9x4q1b --name "Spring sale"
 stuarty template:new <template id> --name "Spring sale" --id prj_6t4y2w8j1m --fill - <<'EOF'
 {"headline":{"text":"Spring sale"}}
@@ -241,7 +245,7 @@ stuarty export --project prj_6t4y2w8j1m
 Captions from a transcript:
 
 ```text
-# needs tools:install whisper once
+# tools:install whisper first
 stuarty transcribe --project prj_7k2m9x4q1b --asset ast_3c5v8n2w6d --language en --wait
 # one new id per caption line
 stuarty edit --project prj_7k2m9x4q1b caption.from_transcript clip_item_id=itm_m1n2p3q4r5 track_id=trk_a1b2c3d4e5 new_ids:='["itm_c1c2c3c4c5","itm_c6c7c8c9c0"]'

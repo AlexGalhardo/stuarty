@@ -135,6 +135,17 @@ var parity = []row{
 	{method: "ImageUndo", tool: "image", command: "image:undo", route: "POST /images/{}/undo"},
 	{method: "ImageRedo", tool: "image", command: "image:redo", route: "POST /images/{}/redo"},
 	{method: "ImageExport", tool: "image", command: "image:export", route: "POST /images/{}/export"},
+	// The approval queue (SDD-015 section 10): no MCP tool, the budget of the tool list leaves no room
+	// for one; deciding, writing a rule and setting a ceiling are for a person, and their commands
+	// always fail for an agent.
+	{method: "ApprovalList", command: "approval:list", route: "GET /approvals"},
+	{method: "ApprovalGet", command: "approval:show", route: "GET /approvals/{}"},
+	{method: "ApprovalDecide", command: "approval:decide", route: "POST /approvals/{}/decide"},
+	{method: "ApprovalRuleList", command: "approval:rule:list", route: "GET /approval-rules"},
+	{method: "ApprovalRuleSet", command: "approval:rule:set", route: "POST /approval-rules"},
+	{method: "ApprovalRuleRemove", command: "approval:rule:remove", route: "DELETE /approval-rules/{}"},
+	{method: "CostSummary", command: "cost:show", route: "GET /cost"},
+	{method: "CostCeilingSet", command: "cost:ceiling", route: "PUT /cost/ceilings"},
 	// The library (SDD-018): one MCP tool, library, serves the lists, reads, writes, searches, renders and
 	// lints. Removing a note, importing and exporting skills read and write files by path (no tool), and
 	// marking a skill as read is for a person at the browser (HTTP only).

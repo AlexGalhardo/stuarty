@@ -149,7 +149,7 @@ func TestTablesMatchSDD005Section5(t *testing.T) {
 			"actor TEXT 1 - 0", "state TEXT 1 'queued' 0", "progress REAL 1 0 0", "message TEXT 1 '' 0",
 			"input TEXT 1 - 0", "result TEXT 0 - 0", "error TEXT 0 - 0", "cancel_requested INTEGER 1 0 0",
 			"attempts INTEGER 1 0 0", "created_ms INTEGER 1 - 0", "updated_ms INTEGER 1 - 0",
-			"started_ms INTEGER 0 - 0", "finished_ms INTEGER 0 - 0",
+			"started_ms INTEGER 0 - 0", "finished_ms INTEGER 0 - 0", "approval_id TEXT 0 - 0",
 		},
 		"templates": {
 			"id TEXT 1 - 1", "name TEXT 1 - 0", "description TEXT 1 '' 0", "schema_version INTEGER 1 - 0",
@@ -180,6 +180,41 @@ func TestTablesMatchSDD005Section5(t *testing.T) {
 			"id TEXT 1 - 1", "kind TEXT 1 - 0", "label TEXT 1 - 0", "endpoint TEXT 1 - 0", "hosts TEXT 1 - 0",
 			"accepts TEXT 1 - 0", "secret_ref TEXT 1 - 0", "created_ms INTEGER 1 - 0", "created_by TEXT 1 - 0",
 			"last_used_ms INTEGER 0 - 0",
+		},
+		"approval_requests": {
+			"id TEXT 1 - 1",
+			"actor TEXT 1 - 0",
+			"owner_user_id TEXT 0 - 0",
+			"kind TEXT 1 - 0",
+			"summary TEXT 1 - 0",
+			"connection_id TEXT 0 - 0",
+			"project_id TEXT 0 - 0",
+			"job_id TEXT 0 - 0",
+			"payload_ref TEXT 1 '' 0",
+			"estimate_micros INTEGER 1 0 0",
+			"currency TEXT 1 '' 0",
+			"state TEXT 1 'pending' 0",
+			"decided_by TEXT 0 - 0",
+			"rule_id TEXT 0 - 0",
+			"reason TEXT 1 '' 0",
+			"created_ms INTEGER 1 - 0",
+			"decided_ms INTEGER 0 - 0",
+			"expires_ms INTEGER 1 - 0",
+		},
+		"approval_rules": {
+			"id TEXT 1 - 1", "kind TEXT 1 - 0", "connection_id TEXT 0 - 0", "project_id TEXT 0 - 0",
+			"currency TEXT 1 '' 0", "per_item_micros INTEGER 0 - 0", "per_day_micros INTEGER 0 - 0",
+			"enabled INTEGER 1 1 0", "created_by TEXT 1 - 0", "created_ms INTEGER 1 - 0",
+		},
+		"cost_ceilings": {
+			"project_id TEXT 1 '' 1", "currency TEXT 1 - 2", "per_item_micros INTEGER 0 - 0",
+			"per_day_micros INTEGER 0 - 0", "updated_by TEXT 1 - 0", "updated_ms INTEGER 1 - 0",
+		},
+		"cost_ledger": {
+			"id TEXT 1 - 1", "request_id TEXT 1 - 0", "job_id TEXT 1 - 0", "connection_id TEXT 1 '' 0",
+			"project_id TEXT 1 '' 0", "kind TEXT 1 - 0", "currency TEXT 1 - 0", "estimate_micros INTEGER 1 - 0",
+			"actual_micros INTEGER 0 - 0", "state TEXT 1 'reserved' 0", "day TEXT 1 - 0", "created_ms INTEGER 1 - 0",
+			"settled_ms INTEGER 0 - 0",
 		},
 		"library_entries": {
 			"key TEXT 1 - 1", "kind TEXT 1 - 0", "name TEXT 1 - 0", "description TEXT 1 - 0", "scope TEXT 1 - 0",
@@ -338,6 +373,10 @@ func TestResetDropsEveryEditorTableAndUpRunsAgain(t *testing.T) {
 		"connections",
 		"image_documents",
 		"image_operations",
+		"approval_requests",
+		"approval_rules",
+		"cost_ceilings",
+		"cost_ledger",
 		"library_entries",
 		"library_fts",
 	}
@@ -504,5 +543,123 @@ func TestAssetsAcceptLutKind(t *testing.T) {
 	var n int
 	if err := db.QueryRowContext(ctx, "SELECT count(*) FROM artifacts").Scan(&n); err != nil || n != 0 {
 		t.Errorf("artifacts after the cascade = %d, %v", n, err)
+	}
+}
+
+// SDD-015 section 5: a job of a registered kind may wait for approval, and the indexes of the table
+// survive its rebuild.
+func TestJobsAcceptWaitingApprovalAndRegisteredKinds(t *testing.T) {
+	db := openMigrated(t)
+	ctx := context.Background()
+
+	exec := func(q string) error {
+		_, err := db.ExecContext(ctx, q)
+		return err
+	}
+
+	if err := exec(
+		`INSERT INTO timelines (id, name, schema_version, document, doc_sha256, width, height, fps_num, fps_den, created_ms, updated_ms, created_by)
+ VALUES ('prj_a', 'a', 1, '{}', 'x', 1, 1, 30, 1, 1, 1, 'local:ui')`,
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := exec(
+		`INSERT INTO jobs (id, kind, project_id, actor, state, input, approval_id, created_ms, updated_ms) VALUES ('job_a', 'publish.post', 'prj_a', 'a', 'waiting_approval', '{}', 'apr_a', 1, 1)`,
+	); err != nil {
+		t.Errorf("a waiting job of a registered kind was refused: %v", err)
+	}
+
+	for name, q := range map[string]string{
+		"an unknown state":  `INSERT INTO jobs (id, kind, project_id, actor, state, input, created_ms, updated_ms) VALUES ('job_b', 'x', 'prj_a', 'a', 'paused', '{}', 1, 1)`,
+		"a job of no owner": `INSERT INTO jobs (id, kind, actor, input, created_ms, updated_ms) VALUES ('job_c', 'publish.post', 'a', '{}', 1, 1)`,
+	} {
+		if err := exec(q); err == nil {
+			t.Errorf("%s was accepted", name)
+		}
+	}
+
+	var n int
+	if err := db.QueryRowContext(ctx, `SELECT count(*) FROM sqlite_master WHERE name IN
+ ('jobs_project_id_created_ms_index','jobs_kind_state_index','jobs_active_ingest_unique')`).Scan(&n); err != nil || n != 3 {
+		t.Errorf("indexes of jobs after the rebuild = %d, %v; want 3", n, err)
+	}
+}
+
+// The rebuild of jobs for SDD-015 keeps the rows of a workspace that already has jobs, with their
+// values, and brings the state and the kinds along; Down puts the table back for the old kinds.
+func TestJobsRebuildKeepsTheRowsOfAnExistingWorkspace(t *testing.T) {
+	ctx := context.Background()
+	db, err := database.Open(ctx, "file:"+filepath.ToSlash(filepath.Join(t.TempDir(), "db.sqlite")))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = db.Close() })
+
+	all := All()
+	before := all[:len(all)-1] // everything but the rebuild of jobs
+	if all[len(all)-1].ID != "20261119140100_jobs_waiting_approval" {
+		t.Fatalf("the last migration is %s: update this test", all[len(all)-1].ID)
+	}
+
+	qopts := queue.DatabaseOptions{Table: "queue_jobs", FailedTable: "queue_failed_jobs"}
+	old, err := schema.NewMigrator(db, slices.Concat(queue.Migrations(qopts), before))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := old.Up(ctx); err != nil {
+		t.Fatal(err)
+	}
+
+	for _, q := range []string{
+		`INSERT INTO timelines (id, name, schema_version, document, doc_sha256, width, height, fps_num, fps_den, created_ms, updated_ms, created_by)
+ VALUES ('prj_a', 'a', 1, '{}', 'x', 1, 1, 30, 1, 1, 1, 'local:ui')`,
+		`INSERT INTO jobs (id, kind, project_id, actor, state, progress, message, input, result, cancel_requested, attempts, created_ms, updated_ms, started_ms, finished_ms)
+ VALUES ('job_a', 'export', 'prj_a', 'local:cli', 'succeeded', 1, 'm', '{"k":1}', '{"r":2}', 0, 2, 10, 20, 11, 19)`,
+		`INSERT INTO jobs (id, kind, project_id, actor, state, input, created_ms, updated_ms) VALUES ('job_b', 'frame', 'prj_a', 'local:cli', 'queued', '{}', 30, 30)`,
+	} {
+		if _, err := db.ExecContext(ctx, q); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	full, err := schema.NewMigrator(db, slices.Concat(queue.Migrations(qopts), all))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ran, err := full.Up(ctx); err != nil || len(ran) != 1 {
+		t.Fatalf("Up = %v, %v; want the one rebuild", ran, err)
+	}
+
+	var kind, state, input, result string
+	var attempts int
+	var approval sql.NullString
+	err = db.QueryRowContext(ctx, `SELECT kind, state, input, result, attempts, approval_id FROM jobs WHERE id = 'job_a'`).
+		Scan(&kind, &state, &input, &result, &attempts, &approval)
+	if err != nil || kind != "export" || state != "succeeded" || input != `{"k":1}` || result != `{"r":2}` ||
+		attempts != 2 || approval.Valid {
+		t.Fatalf("job_a after the rebuild = %q %q %q %q %d %v, %v", kind, state, input, result, attempts, approval, err)
+	}
+
+	var n int
+	if err := db.QueryRowContext(ctx, `SELECT count(*) FROM jobs`).Scan(&n); err != nil || n != 2 {
+		t.Fatalf("jobs after the rebuild = %d, %v; want 2", n, err)
+	}
+
+	// Down for the rebuild drops what the old table cannot hold (a waiting job, a registered kind).
+	if _, err := db.ExecContext(
+		ctx,
+		`INSERT INTO jobs (id, kind, project_id, actor, state, input, created_ms, updated_ms)
+ VALUES ('job_c', 'publish.post', 'prj_a', 'a', 'waiting_approval', '{}', 40, 40)`,
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := full.Rollback(ctx, 1); err != nil {
+		t.Fatalf("Rollback: %v", err)
+	}
+
+	if err := db.QueryRowContext(ctx, `SELECT count(*) FROM jobs`).Scan(&n); err != nil || n != 2 {
+		t.Fatalf("jobs after Down = %d, %v; want the 2 the old table can hold", n, err)
 	}
 }

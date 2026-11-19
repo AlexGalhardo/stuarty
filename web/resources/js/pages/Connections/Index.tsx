@@ -1,4 +1,4 @@
-import { Head } from "@inertiajs/react";
+import { Head, Link } from "@inertiajs/react";
 import {
 	type FormEvent,
 	type ReactNode,
@@ -206,6 +206,11 @@ export default function Connections(): ReactNode {
 					</h1>
 					<p className="mt-1 text-sm text-muted-foreground">
 						{t("ui.connections.intro")}
+					</p>
+					<p className="mt-2 text-sm">
+						<Link href="/approvals" className="underline underline-offset-4">
+							{t("ui.connections.approvals_link")}
+						</Link>
 					</p>
 				</div>
 				<section aria-labelledby="connections-list">
