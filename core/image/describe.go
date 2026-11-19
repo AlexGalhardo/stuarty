@@ -5,6 +5,7 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/core/lint"
 )
 
@@ -13,6 +14,7 @@ const (
 	DescribeBudget   = 4000
 	DescribeFindings = 1000
 	maxLineText      = 60
+	maxLineName      = 60
 )
 
 // oneLine makes untrusted text safe for one line of the text view: control characters and line breaks become
@@ -33,12 +35,18 @@ func oneLine(s string, limit int) string {
 	return string(r)
 }
 
+// quote is the compact form of an untrusted name or text on one line of a view (SDD-007 section 8.2): line breaks
+// become spaces, then it is quoted, cleaned, escaped and cut as the diff of a timeline does it.
+func quote(s string, limit int) string { return command.Compact(oneLine(s, len(s)), limit) }
+
 // Describe is the text view of an image document: a header, the tree of layers one line each with the top layer
 // first, then the findings of the lint, inside DescribeBudget characters. A tree that does not fit is cut at a
-// line and says how many layers it left out; the findings keep at least DescribeFindings characters.
+// line and says how many layers it left out; the findings keep at least DescribeFindings characters. The names
+// and the texts of the document are untrusted: they are quoted in the compact form and the view starts with the
+// note that says so.
 func Describe(d *Document, revision int64, findings []lint.Finding) string {
-	head := fmt.Sprintf("image %s r%d %q %dx%d background %s template=%t layers=%d",
-		d.ID, revision, oneLine(d.Name, MaxName), d.Width, d.Height, d.Background, d.Template, Count(d))
+	head := fmt.Sprintf("%s\nimage %s r%d %s %dx%d background %s template=%t layers=%d", command.UntrustedNote,
+		d.ID, revision, quote(d.Name, maxLineName), d.Width, d.Height, d.Background, d.Template, Count(d))
 
 	var fl []string
 
@@ -97,7 +105,7 @@ func describeLayers(ls []Layer, depth int, out *[]string) {
 func describeLayer(l *Layer) string {
 	var b strings.Builder
 
-	fmt.Fprintf(&b, "%s %s %q", l.ID, l.Kind, oneLine(l.Name, MaxName))
+	fmt.Fprintf(&b, "%s %s %s", l.ID, l.Kind, quote(l.Name, maxLineName))
 
 	if l.Kind == KindGroup {
 		fmt.Fprintf(&b, " offset %d,%d children %d", l.X, l.Y, len(l.Children))
@@ -135,7 +143,7 @@ func describeLayer(l *Layer) string {
 			fmt.Fprintf(&b, " crop %d,%d %dx%d", l.Crop.X, l.Crop.Y, l.Crop.W, l.Crop.H)
 		}
 	case KindText:
-		fmt.Fprintf(&b, " %q", oneLine(l.Text, maxLineText))
+		fmt.Fprintf(&b, " %s", quote(l.Text, maxLineText))
 
 		if l.Style != nil && l.Style.Size != nil {
 			fmt.Fprintf(&b, " size %g", *l.Style.Size)

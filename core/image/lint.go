@@ -287,7 +287,7 @@ func (r *linter) text(e entry) {
 
 	if outside(r.d, e) {
 		r.add(e.order, CodeTextOutside, "warning", e.l.ID,
-			fmt.Sprintf("The text layer %q is not entirely inside the canvas.", e.l.Name),
+			fmt.Sprintf("The text layer %s is not entirely inside the canvas.", e.l.ID),
 			"Move it with layer.transform or layer.align so that it sits inside the canvas.")
 	}
 
@@ -298,8 +298,8 @@ func (r *linter) text(e entry) {
 			"warning",
 			e.l.ID,
 			fmt.Sprintf(
-				"The text of %q is %s px; the smallest for this image is %d px.",
-				e.l.Name,
+				"The text of layer %s is %s px; the smallest for this image is %d px.",
+				e.l.ID,
 				trim(size),
 				r.floor,
 			),
@@ -314,8 +314,8 @@ func (r *linter) text(e entry) {
 			"warning",
 			e.l.ID,
 			fmt.Sprintf(
-				"The text of %q has a contrast of %.1f against what is under it; 3 is the least.",
-				e.l.Name,
+				"The text of layer %s has a contrast of %.1f against what is under it; 3 is the least.",
+				e.l.ID,
 				ratio,
 			),
 			"Change the text colour with layer.set_text, or the colour under it with layer.set_shape.",
@@ -337,8 +337,8 @@ func (r *linter) image(e entry) {
 			"warning",
 			e.l.ID,
 			fmt.Sprintf(
-				"The image layer %q is drawn at %dx%d from a source of %dx%d.",
-				e.l.Name,
+				"The image layer %s is drawn at %dx%d from a source of %dx%d.",
+				e.l.ID,
 				e.l.W,
 				e.l.H,
 				c.W,

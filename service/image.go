@@ -15,6 +15,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/core/lint"
 	"github.com/AlexGalhardo/stuarty/core/timeline"
 	"github.com/AlexGalhardo/stuarty/engine/rasterize"
+	"github.com/AlexGalhardo/stuarty/service/textview"
 )
 
 const (
@@ -366,10 +367,10 @@ func (s *svc) ImageList(ctx context.Context, req ImageListRequest) (*ImageListRe
 			ImageID: h.ID, Name: h.Name, Template: h.Template, Revision: h.Revision, Width: h.Width, Height: h.Height,
 			Layers: h.Layers, UpdatedMs: h.UpdatedMs,
 		})
-		fmt.Fprintf(&textSb293, "\n%s r%d %q %dx%d layers=%d template=%t",
+		fmt.Fprintf(&textSb293, "\n%s r%d %s %dx%d layers=%d template=%t",
 			h.ID,
 			h.Revision,
-			h.Name,
+			textview.Quote(h.Name, 60),
 			h.Width,
 			h.Height,
 			h.Layers,
@@ -377,7 +378,7 @@ func (s *svc) ImageList(ctx context.Context, req ImageListRequest) (*ImageListRe
 	}
 	text += textSb293.String()
 
-	res.Text = text
+	res.Text = withNote(text)
 
 	return res, nil
 }

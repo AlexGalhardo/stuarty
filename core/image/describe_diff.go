@@ -25,19 +25,20 @@ func DescribeDiff(doc *Document, diff []command.Change) string {
 		case KindLayerAdded:
 			lines = append(
 				lines,
-				fmt.Sprintf("added %s %q %s at %v,%v %vx%v", str(ch.Object["kind"]), str(ch.Object["name"]),
+				fmt.Sprintf("added %s %s %s at %v,%v %vx%v", str(ch.Object["kind"]),
+					quote(str(ch.Object["name"]), maxLineName),
 					ch.ID, num(ch.Object["x"]), num(ch.Object["y"]), num(ch.Object["w"]), num(ch.Object["h"])),
 			)
 		case KindLayerRemoved:
 			lines = append(
 				lines,
-				fmt.Sprintf("removed %s %q %s", str(ch.Object["kind"]), str(ch.Object["name"]), ch.ID),
+				fmt.Sprintf("removed %s %s %s", str(ch.Object["kind"]), quote(str(ch.Object["name"]), maxLineName), ch.ID),
 			)
 		case KindLayerUpdated:
 			name := ch.ID
 
 			if l, ok := Find(doc, ch.ID); ok {
-				name = fmt.Sprintf("%q %s", l.Name, ch.ID)
+				name = quote(l.Name, maxLineName) + " " + ch.ID
 			}
 
 			if text := pairs(ch.Changes, []string{"order"}); text != "" {
@@ -81,7 +82,7 @@ func show(v any) string {
 	case nil:
 		return "none"
 	case string:
-		return fmt.Sprintf("%q", x)
+		return quote(x, maxLineText) // a name, a text or a slot: untrusted
 	case map[string]any:
 		return "(set)"
 	default:
