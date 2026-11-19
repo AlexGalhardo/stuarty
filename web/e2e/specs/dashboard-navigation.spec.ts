@@ -136,8 +136,8 @@ test.describe("dashboard-navigation", () => {
 	test("a section that is not built says so and leads to the projects", async ({
 		page,
 	}) => {
-		await page.goto("/publish");
-		await expect(page.getByTestId("empty-publish")).toContainText(
+		await page.goto("/write");
+		await expect(page.getByTestId("empty-write")).toContainText(
 			"This section is not available yet",
 		);
 		await page.getByRole("link", { name: "Go to Projects" }).click();

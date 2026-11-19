@@ -1061,6 +1061,9 @@ export const APPROVAL_EVENT_NAMES = [
 	"approval.decided",
 ] as const;
 
+// The event of GET /publications/events: the data is a publication with its targets (SDD-020 section 21).
+export const PUBLICATION_EVENT_NAMES = ["publication.updated"] as const;
+
 // GET /users: an administrator session only (SDD-007 section 4.1 item 2). The
 // editor reads it once, to show the name of the actors `user:<id>`.
 export interface UserSummary {
