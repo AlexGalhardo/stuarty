@@ -11,6 +11,7 @@ import (
 
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/agenthost"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
 	"github.com/AlexGalhardo/stuarty/web/app/auth"
 	"github.com/AlexGalhardo/stuarty/web/app/events"
@@ -56,6 +57,9 @@ type Deps struct {
 	Events *events.Events
 	// Version is the binary version the editor page shows in bug reports.
 	Version string
+	// AgentTokens is the registry of the session tokens of the hosted agent chat (SDD-017 section 6.1); nil
+	// means no hosted agent can authenticate.
+	AgentTokens auth.AgentTokens
 }
 
 type apiHandler struct {
@@ -163,6 +167,13 @@ func (h *apiHandler) authenticate(next http.Handler) http.Handler {
 
 		if header := r.Header.Get("Authorization"); header != "" {
 			token, ok := auth.Bearer(header)
+
+			// The session token of a hosted agent: bound to one project, never a person (SDD-017 section 6.1).
+			if g, found := h.agentGrant(token, ok); found {
+				next.ServeHTTP(w, r.WithContext(service.WithCaller(r.Context(), auth.AgentCaller(g, false))))
+				return
+			}
+
 			if !ok || !auth.TokenMatches(h.Token, token) {
 				h.unauthorized(w, r, &service.Error{Code: service.CodeUnauthorized, Message: "the token is not valid."})
 
@@ -221,6 +232,15 @@ func (h *apiHandler) authenticate(next http.Handler) http.Handler {
 	})
 }
 
+// agentGrant is the grant of a bearer credential that is a live session token.
+func (h *apiHandler) agentGrant(token string, ok bool) (agenthost.Grant, bool) {
+	if !ok || h.AgentTokens == nil {
+		return agenthost.Grant{}, false
+	}
+
+	return h.AgentTokens.Lookup(token)
+}
+
 // authenticateNetwork is the authentication of network mode (SDD-007 sections
 // 4.1 and 5.1 item 3): the session cookie of a user who logged in. The local
 // token and the launch code do not exist in this mode, and the handshake exists
@@ -250,6 +270,11 @@ func (h *apiHandler) authenticateNetwork(w http.ResponseWriter, r *http.Request,
 		secret, ok := auth.Bearer(header)
 		if !ok {
 			deny()
+			return
+		}
+
+		if g, found := h.agentGrant(secret, true); found {
+			next.ServeHTTP(w, r.WithContext(service.WithCaller(r.Context(), auth.AgentCaller(g, true))))
 			return
 		}
 

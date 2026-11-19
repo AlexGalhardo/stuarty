@@ -3,6 +3,7 @@ package agenthost
 import (
 	"context"
 	"log/slog"
+	"strings"
 	"sync"
 	"time"
 
@@ -46,6 +47,9 @@ type recorder struct {
 	subs   map[chan chat.Event]struct{}
 	closed bool
 	full   bool
+	// secrets are credentials that were handed to the agent: they are replaced in everything the
+	// agent writes, so a transcript never holds one.
+	secrets []string
 }
 
 func newRecorder(store Store, sid string, now func() time.Time, log *slog.Logger) *recorder {
@@ -53,6 +57,29 @@ func newRecorder(store Store, sid string, now func() time.Time, log *slog.Logger
 		store: store, sid: sid, now: now, log: log,
 		tools: map[string]*chat.Event{}, subs: map[chan chat.Event]struct{}{},
 	}
+}
+
+// SecretMark replaces a credential in a text.
+const SecretMark = "[token]"
+
+// AddSecret makes the recorder keep a credential out of every text it stores or sends.
+func (r *recorder) AddSecret(s string) {
+	if s == "" {
+		return
+	}
+
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	r.secrets = append(r.secrets, s)
+}
+
+func (r *recorder) scrub(text string) string {
+	for _, s := range r.secrets {
+		text = strings.ReplaceAll(text, s, SecretMark)
+	}
+
+	return text
 }
 
 // count is how many events the transcript holds.
@@ -194,7 +221,7 @@ func (r *recorder) Chunk(kind chat.Kind, messageID, text string) bool {
 		return false
 	}
 
-	text = chat.CleanText(text)
+	text = r.scrub(chat.CleanText(text))
 	if text == "" {
 		return true
 	}
@@ -210,7 +237,7 @@ func (r *recorder) Chunk(kind chat.Kind, messageID, text string) bool {
 			text, _ = chat.Clip(text, room)
 		}
 
-		r.open.Text += text
+		r.open.Text = r.scrub(r.open.Text + text)
 		r.publish(chat.Event{Seq: r.open.Seq, Kind: kind, At: r.open.At, Text: text, Append: true})
 
 		return true
@@ -245,7 +272,7 @@ func (r *recorder) Tool(u Update) bool {
 
 	if ev, ok := r.tools[u.Tool.CallID]; ok {
 		if u.HasTool["title"] {
-			ev.Tool.Title = u.Tool.Title
+			ev.Tool.Title = r.scrub(u.Tool.Title)
 		}
 
 		if u.HasTool["kind"] {
@@ -257,7 +284,7 @@ func (r *recorder) Tool(u Update) bool {
 		}
 
 		if u.HasTool["output"] {
-			ev.Tool.Output = u.Tool.Output
+			ev.Tool.Output = r.scrub(u.Tool.Output)
 		}
 
 		r.persist(ev)
@@ -267,6 +294,7 @@ func (r *recorder) Tool(u Update) bool {
 	}
 
 	tool := *u.Tool
+	tool.Title, tool.Output = r.scrub(tool.Title), r.scrub(tool.Output)
 	ev := chat.Event{Kind: chat.KindToolCall, Tool: &tool}
 
 	if !r.next(&ev) {

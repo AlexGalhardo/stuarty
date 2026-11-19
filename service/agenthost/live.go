@@ -229,6 +229,8 @@ func (s *liveSession) mcpServers(init *InitializeResult) ([]MCPServer, error) {
 	s.revoke = revoke
 	s.mu.Unlock()
 
+	s.rec.AddSecret(secret)
+
 	return []MCPServer{{
 		Type: "http", Name: MCPServerName, URL: url,
 		Headers: []Header{{Name: "Authorization", Value: "Bearer " + secret}},
