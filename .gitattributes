@@ -7,3 +7,6 @@
 *.ico binary
 go.sum linguist-generated
 .githooks/* text eol=lf
+
+# A workspace written by the release 0.29.0 binary: byte for byte, never normalized (epic 02).
+service/testdata/former-workspace/** -text
