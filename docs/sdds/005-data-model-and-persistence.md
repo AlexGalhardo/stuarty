@@ -23,7 +23,7 @@
 13. Trash
 14. Jobs
 15. Templates
-16. The project bundle (BETA)
+16. The project bundle
 17. Decisions of this SDD
 18. Acceptance
 
@@ -491,7 +491,7 @@ vukem opens SQLite through `database.Open` and applies these settings to every c
 | Writer pool | exactly 1 connection, `_txlock=immediate` | Every `Write` is serialized and takes the write lock at `BEGIN`, so a transaction is never upgraded halfway (the classic `SQLITE_BUSY`). |
 | Reader pool | `mode=ro`, sized by `DB_MAX_OPEN` (default 10) | Reads run concurrently with the writer. |
 
-**Durability note. Decision of this SDD.** With `synchronous=NORMAL` in WAL mode a committed transaction is in the operating system's cache. It survives a crash of the process (kill, panic, `os.Exit`), which is the guarantee of NFR-013 ("a crash of the process"). It can be lost if the machine loses power or the OS crashes before the next checkpoint; the database is never corrupted and rolls back to an earlier commit. We accept this and document it; raising it to `FULL` needs a vukem change because the pragma is appended after any user value and cannot be overridden through the URL (VF candidate 1 in the report). Verified by the crash tests of section 18 (kill the process, not the machine). Re-confirmed by the ALPHA gate (P2-SRV-022): the crash suite kills the process at every commit, undo, redo, trash-emptying and start-up migration point, and a `SIGKILL` in the middle of 200 concurrent HTTP commits loses no acknowledged revision; `PRAGMA integrity_check` is `ok` every time.
+**Durability note. Decision of this SDD.** With `synchronous=NORMAL` in WAL mode a committed transaction is in the operating system's cache. It survives a crash of the process (kill, panic, `os.Exit`), which is the guarantee of NFR-013 ("a crash of the process"). It can be lost if the machine loses power or the OS crashes before the next checkpoint; the database is never corrupted and rolls back to an earlier commit. We accept this and document it; raising it to `FULL` needs a vukem change because the pragma is appended after any user value and cannot be overridden through the URL (VF candidate 1 in the report). Verified by the crash tests of section 18 (kill the process, not the machine). Re-confirmed by the crash suite (P2-SRV-022): the crash suite kills the process at every commit, undo, redo, trash-emptying and start-up migration point, and a `SIGKILL` in the middle of 200 concurrent HTTP commits loses no acknowledged revision; `PRAGMA integrity_check` is `ok` every time.
 
 **Path rules.** The database file is `<workspace>/db.sqlite`, passed to vukem as `file:<path>` with forward slashes. vukem does not escape the path (`sqliteDSN` splits on the first `?`), so a workspace path containing `?`, `#` or `%` is refused at start-up with an error that names the offending character. Spaces, non-ASCII characters and a Windows drive letter are accepted; verified by a test that opens a workspace under `C:\Users\Test User\é\.stuarty` on the Windows CI job.
 
@@ -536,7 +536,7 @@ The set of migrations of release 0.5.0, in order:
 | `20261114100500_create_templates_table` | `templates` |
 | `20261114100600_create_document_backups_table` | `document_backups` |
 | `20261114100700_create_audit_table` | `audit` |
-| `20261114100800_create_api_keys_table` (ALPHA, with network mode) | `api_keys` |
+| `20261114100800_create_api_keys_table` (with network mode) | `api_keys` |
 
 **As built (P1-SRV-001/002).** The migration files hold the `CREATE TABLE` and `CREATE INDEX` statements of this section through `s.Raw`, word for word, instead of the schema builder: the builder has no way to say `REAL`, a partial index or a trigger, and the effective SQL below is the contract. `templates` is in the set (the interfaces need it); `api_keys` waits for network mode. The code is in `web/database/migrations/` and the store in `web/app/store/`. The example that follows is the builder form of the first two, kept as a reference for tables the builder can express (vukem `schema.Table` methods exist for every call shown; `Primary` with one column and with several is supported in `Create`):
 
@@ -919,7 +919,7 @@ type AuditRepo interface {
 
 `HistoryList` merges nothing from this table: it stays the list of revisions. `doctor --bundle` includes the last 500 audit rows.
 
-### 5.10 `api_keys` and project ownership (network mode, ALPHA)
+### 5.10 `api_keys` and project ownership (network mode)
 
 SDD-007 §4 needs two things from persistence. Both are unused in local mode.
 
@@ -942,7 +942,7 @@ CREATE INDEX api_keys_user_id_index ON api_keys (user_id);
 
 Scopes, expiry, last use and revocation live in vukem's token row (SDD-007 §4.2); this table adds only what vukem's token cannot hold. `Repos` gains `Keys() KeyRepo` with `Create`, `Get`, `GetByTokenID`, `ListByUser`. vukem's own user, session and token tables are created by vukem's migrations and are not described here.
 
-### 5.11 `brand_kits` and `font_owners` (BETA, RF-053)
+### 5.11 `brand_kits` and `font_owners` (RF-053)
 
 Migration `20261115140000_create_brand_kits_and_font_owners`. Both tables are small and never joined to the document.
 
@@ -1385,7 +1385,7 @@ ADR-0020 items 2 and 3; RF-005, RF-131.
 
 ### 13.3 Emptying
 
-- **Who.** SDD-007 §5.3 decides: scope `admin`, and the request must come from a browser session in local mode or from an `admin` key in network mode. The local token is refused, and the operation is neither a CLI command nor an MCP tool (ADR-0020 item 2), so no agent surface can reach it. It is the only code path that calls `Projects.Delete`, `Assets.Delete`, `DeleteTrashedProjectAssets` or removes files from `store/`, `artifacts/`, `exports/` and `frames/`. The service operation is `TrashEmpty` (HTTP `POST /api/v1/trash/empty` only, phase A; SDD-000 §1).
+- **Who.** SDD-007 §5.3 decides: scope `admin`, and the request must come from a browser session in local mode or from an `admin` key in network mode. The local token is refused, and the operation is neither a CLI command nor an MCP tool (ADR-0020 item 2), so no agent surface can reach it. It is the only code path that calls `Projects.Delete`, `Assets.Delete`, `DeleteTrashedProjectAssets` or removes files from `store/`, `artifacts/`, `exports/` and `frames/`. The service operation is `TrashEmpty` (HTTP `POST /api/v1/trash/empty` only; SDD-000 §1).
 - **Request.** `{project_id?, older_than_days?}`: with neither, everything in the trash; with `project_id`, that project (and only if it is trashed); `older_than_days` limits by `trashed_ms`. Result: counts of projects, project assets and assets deleted and bytes freed.
 - **Transaction** (inside `Write`, with the store lock of 13.4 held):
   1. Select the trashed projects that match; for each, cancel its jobs that are still `queued` or `running` first and wait for them to finish (up to 15 s), then `Projects.Delete` (cascades `operations`, `idempotency_keys`, `project_assets`, `jobs` of that project); delete its `document_backups` rows explicitly (no foreign key).
@@ -1502,9 +1502,9 @@ ADR-0022; SDD-001 §3.10. A template is a timeline document stored in `templates
 - **Save** (`TemplateSave`): the service builds the template document from a project (placeholders for marked media items, `template` info), validates it, and calls `Templates.Create` with the denormalized `slots` and summary. No log row: templates have no revisions and are immutable once saved. Saving again from the edited project creates a new template.
 - **Instantiate** (`TemplateInstantiate`): in one `Write`, read the template, create the project (revision 0, then a batch of `slot.fill` operations as one revision when values were given), and return the project and the unfilled required slots. The project is a copy; later template changes do not exist.
 - **Migration.** Templates migrate with projects (section 8), without log rows.
-- **Template file** (RF-052; `TemplateExport`, `TemplateImport`): a zip with the container rules of section 16.1: `manifest.json` (`{"format":"stuarty-template","template_version":1,"app_version":"0.5.0","schema_version":1,"name":...}`), `template.json` (the canonical document) an optional `preview.jpg` and, from BETA, `font.<hex>` for each user font in `fonts` (SDD-001 §3.9). The file is served and accepted as `application/zip`, named `<template id>.stuarty-template.zip`, with the entry allowlist and the size limits of SDD-007 §7.6 (at most 64 MiB compressed, 64 entries, 256 MiB declared). Import validates the document (`timeline.Migrate`, `timeline.Validate`), copies fonts into `<workspace>/fonts/<hash>` after checking their hash, and inserts the row. A template with a newer `schema_version` is refused with `E_VALIDATION` and `details.code = "V_SCHEMA_VERSION"`.
+- **Template file** (RF-052; `TemplateExport`, `TemplateImport`): a zip with the container rules of section 16.1: `manifest.json` (`{"format":"stuarty-template","template_version":1,"app_version":"0.5.0","schema_version":1,"name":...}`), `template.json` (the canonical document) an optional `preview.jpg` and `font.<hex>` for each user font in `fonts` (SDD-001 §3.9). The file is served and accepted as `application/zip`, named `<template id>.stuarty-template.zip`, with the entry allowlist and the size limits of SDD-007 §7.6 (at most 64 MiB compressed, 64 entries, 256 MiB declared). Import validates the document (`timeline.Migrate`, `timeline.Validate`), copies fonts into `<workspace>/fonts/<hash>` after checking their hash, and inserts the row. A template with a newer `schema_version` is refused with `E_VALIDATION` and `details.code = "V_SCHEMA_VERSION"`.
 
-## 16. The project bundle (BETA)
+## 16. The project bundle
 
 ADR-0009 item 7; RF-006. Service operations for export and import of a bundle are missing from SDD-000 §1: this SDD names them `ProjectBundleExport` and `ProjectBundleImport` (reported).
 
@@ -1625,7 +1625,7 @@ The implementation of this SDD is complete when every check passes. File paths a
 
 26. Migration of stored documents: for every fixture of every schema version (`core/timeline/testdata/versions/vN/*.json`) a workspace with that document starts and migrates it; the `document_backups` row equals the original bytes; the log has a `migrate` row; `resync_floor` equals its revision. A deliberately failing migration function aborts start-up naming the project, with no backup row and the document unchanged.
 27. Template save, list, instantiate and file round trip: the instantiated project equals the template document with slots filled; the exported file imports on a fresh workspace; a newer `schema_version` is refused.
-28. Bundle round trip (BETA): export a project with two assets and a custom font, import on a fresh workspace, and assert: same document bytes, same log (all columns, except that actors carry the `imported:` prefix and no row is open to undo), same hashes, ingest jobs created, `project_assets` active. With `as_new: true` the id differs and the log is absent. Negative cases: a zip bomb (declared sizes over the policy), an entry name with `..`, two entries that collapse to one key, a media file whose bytes do not match the manifest hash, a log with a gap, a `document_sha256` mismatch, a newer `bundle_version`: each fails with the documented code and writes nothing to the database or `store/`.
+28. Bundle round trip : export a project with two assets and a custom font, import on a fresh workspace, and assert: same document bytes, same log (all columns, except that actors carry the `imported:` prefix and no row is open to undo), same hashes, ingest jobs created, `project_assets` active. With `as_new: true` the id differs and the log is absent. Negative cases: a zip bomb (declared sizes over the policy), an entry name with `..`, two entries that collapse to one key, a media file whose bytes do not match the manifest hash, a log with a gap, a `document_sha256` mismatch, a newer `bundle_version`: each fails with the documented code and writes nothing to the database or `store/`.
 
 **Jobs**
 
