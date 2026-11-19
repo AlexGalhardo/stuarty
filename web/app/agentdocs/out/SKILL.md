@@ -10,7 +10,7 @@ metadata:
 
 Edit video with commands: the CLI `stuarty` or the MCP server (`stuarty mcp`). Output is text; `--json` is JSON.
 
-Check with `project:list`. Workspace: `~/.stuarty` or `$STUARTY_HOME`; `serve` shares it with the browser.
+Workspace: `~/.stuarty` or `$STUARTY_HOME`; `serve` shares it with the browser.
 
 ## The loop
 
@@ -154,7 +154,7 @@ Lint rules (`!` blocks export):
 
 ## Errors and recovery
 
-Exit codes: 0 success; 1 a failure a retry will not fix; 2 retryable or a `--wait` timeout.
+Exit codes: 0 success; 1 failure, do not retry; 2 retryable or a `--wait` timeout.
 
 - `E_VALIDATION` 400: fix the argument
 - `E_INVALID_TIME` 400: add a unit: 2s, 60f
