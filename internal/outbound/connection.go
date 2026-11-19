@@ -42,13 +42,40 @@ type Registry interface {
 	Used(ctx context.Context, id string, at time.Time)
 }
 
+// metadataAddrs are the cloud metadata services that sit outside the ranges the gate refuses as a
+// whole: Alibaba Cloud in the shared (CGNAT) block and AWS over IPv6 in the unique-local block. The
+// blocks stay allowed (a self-hosted user reaches a service on a tailnet or a private network), so the
+// two addresses are named (SDD-014 section 6). The 169.254.0.0/16 services (AWS, GCP, Azure, ...) and
+// fe80::/10 are covered by the link-local rule.
+var metadataAddrs = map[netip.Addr]bool{
+	netip.MustParseAddr("100.100.100.200"): true,
+	netip.MustParseAddr("fd00:ec2::254"):   true,
+}
+
+// nat64 is the well-known NAT64 prefix (RFC 6052): on an IPv6-only network a gateway turns
+// 64:ff9b::a.b.c.d into a.b.c.d, so the embedded address is the one judged.
+var nat64 = netip.MustParsePrefix("64:ff9b::/96")
+
+// refusedAtDial says whether the gate refuses an address it is about to dial. The zone is dropped
+// first: fd00:ec2::254%eth0 is still the metadata address.
+func refusedAtDial(addr netip.Addr) bool {
+	ip := addr.Unmap().WithZone("")
+	if nat64.Contains(ip) {
+		b := ip.As16()
+		ip = netip.AddrFrom4([4]byte(b[12:]))
+	}
+
+	return ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() || ip.IsUnspecified() ||
+		ip.IsMulticast() || metadataAddrs[ip]
+}
+
 // Connection is the client of a destination the user connected. Every request
 // and every redirect is checked against the registry at that moment: the
 // connection must exist, the scheme must be https (http for a loopback host
 // only), the URL carries no userinfo, and its host is in the list of the
 // connection. No redirect is followed, no proxy is used, TLS is verified, and
-// at dial time an address that is link-local or unspecified is refused, so a
-// name that resolves to a cloud metadata address is not reachable. Loopback
+// at dial time an address that is link-local, unspecified or multicast, or a
+// named cloud metadata address, is refused, so a name that resolves to one is not reachable. Loopback
 // and private addresses are allowed: a self-hosted server on the same network
 // is a destination the user typed.
 func Connection(reg Registry, id string, timeout time.Duration, test *TestOptions) *http.Client {
@@ -60,8 +87,7 @@ func Connection(reg Registry, id string, timeout time.Duration, test *TestOption
 				return ErrNotPublic
 			}
 
-			ip := ap.Addr().Unmap()
-			if ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() || ip.IsUnspecified() || ip.IsMulticast() {
+			if refusedAtDial(ap.Addr()) {
 				return ErrNotPublic
 			}
 
