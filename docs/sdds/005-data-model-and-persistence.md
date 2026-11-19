@@ -1092,6 +1092,7 @@ CREATE TABLE project_items (
   ref        TEXT,                                 -- timeline: the timelines.id; output: the id of the export job; otherwise NULL
   body       TEXT    NOT NULL DEFAULT '',          -- brief and text: Markdown
   format     TEXT,                                 -- output: the destination format of the file (mp4, gif, wav, aac, png)
+  text_kind  TEXT CHECK (text_kind IN ('script','copy','caption')), -- text: its kind (SDD-019); NULL for any other kind of item
   created_ms INTEGER NOT NULL,
   updated_ms INTEGER NOT NULL,
   created_by TEXT    NOT NULL,
@@ -1101,13 +1102,28 @@ CREATE TABLE project_items (
 CREATE INDEX project_items_project_id_position_index ON project_items (project_id, position);
 CREATE UNIQUE INDEX project_items_timeline_ref_unique ON project_items (ref) WHERE kind = 'timeline';
 CREATE UNIQUE INDEX project_items_brief_unique ON project_items (project_id) WHERE kind = 'brief' AND state = 'active';
+CREATE TABLE text_revisions (                      -- SDD-019 section 3: one row per save of a text item
+  item_id     TEXT    NOT NULL REFERENCES project_items (id) ON DELETE CASCADE,
+  revision    INTEGER NOT NULL,                    -- 1, 2, 3 ...; never reused
+  body        TEXT    NOT NULL,
+  actor       TEXT    NOT NULL,
+  source      TEXT    NOT NULL CHECK (source IN ('created','write','generated','revert')),
+  reverted_to INTEGER,                             -- revert: the revision whose body it brought back
+  provider    TEXT,                                -- generated: the provider, the model, the real cost and the job
+  model       TEXT,
+  cost_micros INTEGER,
+  currency    TEXT,
+  job_id      TEXT,
+  created_ms  INTEGER NOT NULL,
+  PRIMARY KEY (item_id, revision)
+);
 ```
 
 - **Kinds.** `brief`, `text`, `timeline`, `output`. `image` (epic 27) and `publication` (epic 20) are reserved: the migration that adds them rebuilds the table with a longer check, as section 5.5 does for artifact kinds.
 - **A timeline item** has `ref` = the id of its row in `timelines`. The first timeline of a project has the id of the project (`timelines.id = projects.id`); a later one has a new `prj_` id (the document keeps the `prj_` prefix, SDD-001). The operation log, the revisions, the undo chain and the assets of a timeline stay keyed by the timeline id, so nothing of the timeline document or of `operations` changes. The item title is a label of the production and is independent of the document name.
 - **Name and time.** A commit of a timeline sets `projects.updated_ms`, and sets `projects.name` when the timeline has the same id as the project, in the same transaction as the commit (the store does it; the service writes no second row). The list of projects orders by `projects.updated_ms`, so a project rises in it when any of its timelines changes.
 - **Trash.** Trashing a project writes `projects.state` and mirrors it on every row of `timelines` of its active timeline items, so that the rules of section 13.1 (a trashed timeline rejects edits) stay one check on the row the commit loads. Trashing a timeline item mirrors the same on its row; the last active timeline of a project cannot be trashed (`E_INVALID_STATE`). Emptying (section 13.3) deletes the project, which cascades its items, and deletes the `timelines` rows its items referenced.
-- **Brief and texts.** `BriefSet` writes the `body` of the one active `brief` item, creating it at position 0 when the project has none; the text is at most 256 KiB (`E_LIMIT_EXCEEDED` above). A `text` item holds a script or any other Markdown, same limit. They have no revision history here: writing tools and their history belong to epic 17. The brief is cleared, never trashed. A project holds at most 256 active items and 64 active timelines (`core/project`), the most a bundle of the whole project carries (section 16.1.1), so that every project can be exported and imported again.
+- **Brief and texts.** `BriefSet` writes the `body` of the one active `brief` item, creating it at position 0 when the project has none; the text is at most 256 KiB (`E_LIMIT_EXCEEDED` above). A `text` item holds a script or any other Markdown, same limit. A text has a `text_kind` and a history of revisions in `text_revisions` (SDD-019): `body` always holds the body of the latest revision, creating a text item (`CreateItem`) writes its revision 1 in the same call, and the migration of epic 17 gives every existing text a revision 1 with `source` `created`. A revision is deleted with its item. The brief is cleared, never trashed. A project holds at most 256 active items and 64 active timelines (`core/project`), the most a bundle of the whole project carries (section 16.1.1), so that every project can be exported and imported again.
 - **Outputs.** An `output` item is added with the id of a succeeded export job of the same project and records its destination format; the file is read through the job, so an item never holds a path.
 - **Migration.** Backup first: `Open` copies the database with `VACUUM INTO` before a migration runs (section 7 step 3). Then, in one transaction: `ALTER TABLE projects RENAME TO timelines` (SQLite rewrites the foreign keys that name it), rename the index, create the two tables, and for every row of `timelines` insert one `projects` row with the same `id`, `name`, `state`, times, actor, owner and trash columns, and one `project_items` row (kind `timeline`, title = name, position 0, `ref` = the id, the `pit_` id with the characters of the project id, state `active`: the trash of a former project is that of the project, and its restore brings the timeline back through the mirror of the trash rule of this section). Every id a surface exposed is kept. **Down** deletes the items and productions, drops them, and renames `timelines` back to `projects`; a timeline that is not the first of its project (its id differs from its project's) is deleted with its log, which is why the backup comes first. Tests run both directions over fixtures of the workspaces of releases 0.2.0, 0.17.0 and 0.29.0.
 - **Document backups.** `document_backups.owner_kind` stays `project`; `owner_id` is a timeline id.
