@@ -1032,15 +1032,18 @@ func TestProjectItemsHaveRoom(t *testing.T) {
 		t.Fatalf("one item too many: %+v", se)
 	}
 
-	if _, err := e.prod().BriefSet(ctx, service.BriefSetRequest{ProjectID: p, Text: "x"}); code(err) != "E_LIMIT_EXCEEDED" {
+	_, err = e.prod().BriefSet(ctx, service.BriefSetRequest{ProjectID: p, Text: "x"})
+	if code(err) != "E_LIMIT_EXCEEDED" {
 		t.Fatalf("a brief beyond the limit: %v", err)
 	}
 
-	if _, err := e.prod().ProjectItemTrash(ctx, service.ProjectItemTrashRequest{ProjectID: p, ItemID: last}); err != nil {
+	trash := service.ProjectItemTrashRequest{ProjectID: p, ItemID: last}
+	if _, err := e.prod().ProjectItemTrash(ctx, trash); err != nil {
 		t.Fatal(err)
 	}
 
-	if _, err := e.prod().ProjectItemAdd(ctx, service.ProjectItemAddRequest{ProjectID: p, Kind: "text", Title: "T"}); err != nil {
+	text := service.ProjectItemAddRequest{ProjectID: p, Kind: "text", Title: "T"}
+	if _, err := e.prod().ProjectItemAdd(ctx, text); err != nil {
 		t.Fatalf("a trashed item still counted: %v", err)
 	}
 

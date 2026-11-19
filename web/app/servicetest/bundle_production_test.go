@@ -12,7 +12,6 @@ import (
 	"testing"
 
 	"github.com/AlexGalhardo/stuarty/core/command"
-	"github.com/AlexGalhardo/stuarty/core/project"
 	"github.com/AlexGalhardo/stuarty/service"
 )
 
@@ -448,7 +447,7 @@ func TestBundleLongTextsRoundTrip(t *testing.T) {
 		var b strings.Builder
 
 		x := uint32(seed*2654435761 + 1)
-		for b.Len() < project.MaxText-64 {
+		for b.Len() < 256<<10-64 { // just under the limit of a text
 			x ^= x << 13
 			x ^= x >> 17
 			x ^= x << 5
