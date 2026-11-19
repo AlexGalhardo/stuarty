@@ -45,7 +45,7 @@ A creator writes the script, the hook and the caption of each network inside the
 - [x] 4. Implement `TextDraft` on the provider layer with a fake provider. Verify: `go test ./service/... -run TestTextDraft` passes (a draft is a new revision; cost is recorded).
 - [x] 5. Expose on HTTP, CLI and MCP with parity. Verify: `go test ./web/contract/...` passes.
 - [x] 6. Build the Write section and the editor in both languages. Verify: `task test:web` and `web/e2e/specs/writing.spec.ts` pass.
-- [ ] 7. Finish the writing steps of the built-in skills when epic 16 is merged; otherwise leave the note for it. Verify: `go test ./web/resources/skills/...` passes, or the note is in the hand-off.
+- [x] 7. Finish the writing steps of the built-in skills when epic 16 is merged; otherwise leave the note for it. Verify: `go test ./web/resources/skills/...` passes, or the note is in the hand-off.
 
 ## Test strategy
 
