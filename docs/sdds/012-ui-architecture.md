@@ -1837,7 +1837,7 @@ The shell loads this UI with the same `app.css`, tokens, bundled fonts and compo
 10. The read model is never written outside `sync.ts` (rule R4), the edit queue sends one request at a time, and scenario 10 shows no optimistic change.
 11. Every error code of `ERROR_TABLE` has an entry in the policy table and an English headline key (test `errors.ts`).
 12. `COVERAGE` lists an entry point for each command and the coverage test passes.
-14. A running export is rehydrated after a reload (the jobs chip and the dialog at the Running state, §14.1 item 7), and the Download link of the export file works (§14.1 item 5).
+13. A running export is rehydrated after a reload (the jobs chip and the dialog at the Running state, §14.1 item 7), and the Download link of the export file works (§14.1 item 5).
 
 ### 22.2 Later checks
 
