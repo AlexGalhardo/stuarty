@@ -57,23 +57,9 @@
 | `ImageEdit` | `image` (`action` edit) | `image:edit` | `POST /images/{id}/edit` | edit |
 | `ImageUndo`, `ImageRedo` | `image` (`action` undo, redo) | `image:undo`, `image:redo` | `POST /images/{id}/undo`, `POST /images/{id}/redo` | edit |
 | `ImageExport` | `image` (`action` export) | `image:export` | `POST /images/{id}/export` | edit |
-| `ImageFrame` | none | none | `GET /images/{id}/frame` (SDD-012 §24.3) | read |
-| `ImageHistory` | none | none | `GET /images/{id}/history` (SDD-012 §24.3) | read |
-| `ImageFile` | none | none | `GET /images/{id}/exports/{name}` (SDD-012 §24.3) | read |
-| `ApprovalList`, `ApprovalGet` | none | `approval:list`, `approval:show` | `GET /approvals`, `GET /approvals/{id}` | read (SDD-015) |
-| `ApprovalDecide` | none | `approval:decide` | `POST /approvals/{id}/decide` | read, and only from a privileged browser session; the local token and keys get `E_PRIVILEGED_SESSION` (SDD-015 §4) |
-| `ApprovalRuleList` | none | `approval:rule:list` | `GET /approval-rules` | read |
-| `ApprovalRuleSet`, `ApprovalRuleRemove` | none | `approval:rule:set`, `approval:rule:remove` | `POST /approval-rules`, `DELETE /approval-rules/{id}` | admin, and only from a privileged browser session |
-| `CostSummary` | none | `cost:show` | `GET /cost` | read |
-| `CostCeilingSet` | none | `cost:ceiling` | `PUT /cost/ceilings` | admin, and only from a privileged browser session |
-| approval queue stream | none | none | `GET /approvals/events` (SDD-015 §7) | read |
-| `MemoryList`, `MemoryGet`, `MemoryWrite` | `library` (kind `memory`; actions `list`, `get`, `write`) | `memory:list`, `memory:show`, `memory:write` | `GET /library/memory`, `GET /library/memory/{name}`, `POST /library/memory`, `DELETE /library/memory/{name}` | read, edit (SDD-018) |
-| `MemoryRemove` | none (an agent tool removes nothing) | `memory:remove` | `DELETE /library/memory/{name}` | edit |
-| `SkillList`, `SkillGet`, `SkillWrite`, `SkillLint` | `library` (kind `skill`; actions `list`, `get`, `write`, `lint`) | `skill:list`, `skill:show`, `skill:write`, `skill:lint` | `GET /library/skills`, `GET /library/skills/{name}`, `PUT /library/skills/{name}`, `GET /library/skills/{name}/lint` | read, edit |
-| `SkillImport`, `SkillExport` | none | `skill:import`, `skill:export` | `POST /library/skills/import`, `POST /library/skills/export` | media |
-| `SkillMarkReviewed` | none | none | `POST /library/skills/{name}/review` | edit, and only from a browser session (SDD-018 section 7) |
-| `PromptList`, `PromptGet`, `PromptWrite`, `PromptRender` | `library` (kind `prompt`; actions `list`, `get`, `write`, `render`) | `prompt:list`, `prompt:show`, `prompt:write`, `prompt:render` | `GET /library/prompts`, `GET /library/prompts/{name}`, `PUT /library/prompts/{name}`, `POST /library/prompts/{name}/render` | read, edit |
-| `LibrarySearch`, `LibraryReindex` | `library` (action `search`), none | `library:search`, `library:reindex` | `GET /library/search`, `POST /library/reindex` | read, edit |
+| `ExportPresetList` | `command_help` (`domain` export) | `export:presets` | `GET /export-presets` | read |
+| `ExportCheck` | `lint` (with `preset`) | `export:check` | `GET /projects/{id}/export-check` | read |
+| `ExportBatch` | `job_start` (`kind` export_batch) | `export:batch` | `POST /projects/{id}/export-batches` | render |
 
 Routes that are not service operations: `POST /mcp` (the MCP server over Streamable HTTP, SDD-003 §4.3; `GET` and `DELETE` on the path are not routes and answer 405 `E_METHOD_NOT_ALLOWED`, because the server is stateless; every tool call behind it is a service operation with the scope of its tool), `GET /api/v1/handshake` (the server proves it knows the local token, SDD-007 §3.8), `GET /auth/launch` and `POST /api/v1/system/launch` (browser session from a one-time code, SDD-007 §3.4), `POST /auth/login` and `POST /auth/logout` (network mode: the browser session of a user, SDD-007 §4.1; in local mode they answer 404 `E_NOT_FOUND`), `GET /up` (vukem health probe), `GET /openapi.json` and `GET /api/docs` (the OpenAPI document and its viewer), `POST /api/v1/system/tools/install` and `GET /api/v1/system/tools` (the explicit install of a helper such as whisper.cpp from the editor, and its state with the progress of a running install; the same step as the CLI command `tools:install`; the install is allowed only to a browser session in local mode or an `admin` key in network mode, never to the local token and never on an agent surface, SDD-007 §6.8; the `GET` only reads and takes the `read` scope, so an agent can tell whether a helper is installed before it asks for a transcript), and the byte-serving routes that the editor uses, all `read`, all under the project so that access is checked against it, all with HTTP Range and long-lived caching because their content never changes: `GET /projects/{id}/media/{asset_id}/proxy`, `.../thumbnail`, `.../strip`, `.../peaks`, `.../lut` (the parsed table of a lookup table asset, SDD-004 §3.6), and `GET /projects/{id}/bitmaps/{key}` (rasterized text and shapes by content key). What each returns is in SDD-011 and SDD-004.
 
@@ -129,7 +115,7 @@ The event `id` of `batch.committed` is the revision. Details in SDD-006.
 
 ## 6. Jobs
 
-Kinds: `ingest`, `transcribe`, `export`, `frame`, and the kinds a feature epic registers as needing approval (SDD-015 §5). States: `queued`, `running`, `succeeded`, `failed`, `cancelled`, and `waiting_approval` (a job of a kind that needs approval, until a person or a rule approves it; it is not running and counts as active; at most 50 per submitter and 1000 in the workspace, `E_LIMIT_EXCEEDED` past either, SDD-015 §5). Asset ingest states: `pending`, `ingesting`, `ready`, `failed`.
+Kinds: `ingest`, `transcribe`, `export`, `export_batch`, `frame`. States: `queued`, `running`, `succeeded`, `failed`, `cancelled`. Asset ingest states: `pending`, `ingesting`, `ready`, `failed`.
 
 ## 7. Database tables
 
@@ -176,7 +162,7 @@ The core's codes are in SDD-002 §A.8. The service adds:
 | `E_INGEST_FAILED` | ingest failed; `details.reason` | no |
 | `E_ASSET_NOT_READY` | the asset is still ingesting | yes |
 | `E_FFMPEG_MISSING` | no usable FFmpeg was found | no |
-| `E_NO_ENCODER` | no H.264 encoder works on this machine | no |
+| `E_NO_ENCODER` | no encoder works on this machine for the codec the export needs (H.264, or the `details.codec` that was asked for: `hevc` or `av1`, SDD-004 section 8.3); `details.reason` `codec_unavailable` and `details.candidates` | no |
 | `E_EXPORT_FAILED` | the export process failed; `details.reason` | no |
 | `E_VERIFY_FAILED` | the exported file did not pass verification; `details.checks` | no |
 | `E_TRANSCRIBE_UNAVAILABLE` | no transcription provider is installed or configured; `details` names what is missing, its download size, the install command and the `tool` and `model` it installs | no |
@@ -442,3 +428,16 @@ The operations of the registry of domain `image` (`core/command` registry built 
 | `png`, `jpeg`, `webp` | image export format | the formats of `ImageExport` |
 | `E_SLOT` `details.reason` `unknown_slot`, `wrong_kind`, `invalid_value`, `missing` | error detail | a template filled badly (SDD-021 section 7) |
 | `E_EXPORT_FAILED` `details.reason` `webp_unavailable` | error detail | no WebP encoder is wired (SDD-021 §6) |
+
+## 15. Export presets, codecs and batches (SDD-004 sections 8.2 to 8.4)
+
+| Name | Kind | Meaning |
+| --- | --- | --- |
+| `youtube-shorts`, `instagram-reels`, `facebook-reels`, `tiktok`, `x-video` | export preset id | the five presets of RF-087, in this order in `ExportPresetList` |
+| `h264`, `hevc`, `av1` | export codec | the codecs of an export; `h264` is the default |
+| `X_DURATION_TOO_LONG`, `X_DURATION_TOO_SHORT`, `X_FPS_TOO_HIGH`, `X_FPS_TOO_LOW`, `X_RESOLUTION_TOO_SMALL`, `X_RESOLUTION_TOO_LARGE`, `X_ASPECT_RATIO`, `X_SIZE_TOO_LARGE` | export check finding | what `ExportCheck` reports (SDD-002 A.13) |
+| `export_batch` | job kind | the parent job of `ExportBatch`; its children are `export` jobs (SDD-004 section 8.4) |
+| `E_VALIDATION` `details.reason` `preset_mismatch` | error detail | an export with a preset was refused because the project does not fit it; `details.findings` |
+| `E_NO_ENCODER` `details.reason` `codec_unavailable` | error detail | the codec asked for has no allowed encoder that passes the test encode on this machine |
+| `preset_<finding>` | verification check | a check of the finished file against its preset, named after the finding (`preset_duration_too_long`) |
+| `codec`, `codec_fallback`, `preset`, `notes` | export result member | the codec written, the codec wanted when the export fell back to `h264`, the preset id, and the notes that say so |
