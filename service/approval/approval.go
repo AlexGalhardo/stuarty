@@ -223,12 +223,15 @@ type Entry struct {
 
 // Filter selects requests.
 type Filter struct {
-	State       string // empty means every state
-	ProjectID   string // a key limited to one project
-	OwnerUserID string // network mode, a caller who is not an administrator
-	Actor       string // the requests one actor submitted
-	Offset      int
-	Limit       int
+	State     string // empty means every state
+	ProjectID string // the requests of this project or timeline id
+	// KeyProjectID is the project of a key limited to one: the requests of every timeline of it, since a request
+	// carries the id of its timeline (SDD-003 section 1.7 rule 4).
+	KeyProjectID string
+	OwnerUserID  string // network mode, a caller who is not an administrator
+	Actor        string // the requests one actor submitted
+	Offset       int
+	Limit        int
 }
 
 // SpentQuery selects the ledger entries that count for one day.
