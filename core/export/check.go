@@ -64,15 +64,7 @@ func (p Preset) VideoKbps(w, h, fpsNum, fpsDen int, c Codec) int {
 		kbps = kbps * aboveThirtyPermille / 1000
 	}
 
-	switch c.Normal() {
-	case CodecHEVC:
-		kbps = kbps * hevcPermille / 1000
-	case CodecAV1:
-		kbps = kbps * av1Permille / 1000
-	case CodecH264:
-	}
-
-	kbps = max(kbps, MinVideoKbps)
+	kbps = int64(c.ScaleKbps(int(kbps)))
 
 	if m := int64(p.Limits.MaxVideoKbps); m > 0 {
 		kbps = min(kbps, m)

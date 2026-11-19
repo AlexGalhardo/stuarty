@@ -42,6 +42,20 @@ const (
 	MinVideoKbps = 1000
 )
 
+// ScaleKbps is the video bit rate of this codec for a picture that takes kbps with H.264 (SDD-004
+// section 8.2): HEVC takes 0.6 of it and AV1 0.5, never below MinVideoKbps.
+func (c Codec) ScaleKbps(kbps int) int {
+	switch c.Normal() {
+	case CodecHEVC:
+		kbps = kbps * hevcPermille / 1000
+	case CodecAV1:
+		kbps = kbps * av1Permille / 1000
+	case CodecH264:
+	}
+
+	return max(kbps, MinVideoKbps)
+}
+
 // Ratio is a fraction of two integers; the zero value means "no limit".
 type Ratio struct{ Num, Den int }
 
