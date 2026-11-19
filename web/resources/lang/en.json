@@ -1562,8 +1562,7 @@
         "title": "Motion presets",
         "preset": "Preset",
         "direction": "Direction",
-        "duration_default": "0.5s",
-        "amount_default": "Default",
+        "use_default": "Default",
         "preset_name": {
           "fade": "Fade",
           "slide": "Slide",
@@ -1580,7 +1579,7 @@
         },
         "amount_of": {
           "slide": "Distance (px)",
-          "scale": "Start scale",
+          "scale": "Scale factor",
           "push_in": "Zoom factor",
           "pull_out": "Zoom factor"
         }

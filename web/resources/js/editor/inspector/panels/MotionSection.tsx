@@ -110,7 +110,7 @@ export default function MotionSection({
 				<Input
 					id={`motion-length-${itemId}`}
 					value={length}
-					placeholder={t("ui.editor.motion.duration_default")}
+					placeholder={t("ui.editor.motion.use_default")}
 					autoComplete="off"
 					spellCheck={false}
 					disabled={!canEdit}
@@ -150,7 +150,7 @@ export default function MotionSection({
 						<Input
 							id={`motion-amount-${itemId}`}
 							value={amount}
-							placeholder={t("ui.editor.motion.amount_default")}
+							placeholder={t("ui.editor.motion.use_default")}
 							inputMode="decimal"
 							autoComplete="off"
 							disabled={!canEdit}
