@@ -508,7 +508,8 @@ func copyName(name string) string {
 	return string(runes[:maxProjectName-len(suffix)]) + suffix
 }
 
-// readableForCopy loads a project the caller may see, with its items, and refuses one in the trash.
+// readableForCopy loads a project the caller may see, with its items. A project in the trash may be copied: the
+// copy is a reading of it, and the copy itself is active.
 func (s *svc) readableForCopy(
 	ctx context.Context, tx Tx, c Caller, id string,
 ) (ProductionHead, []ItemRow, error) {
