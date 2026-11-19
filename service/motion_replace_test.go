@@ -59,11 +59,11 @@ func TestRenderKeyOfferNamesTheClipsAndDelimitsTheName(t *testing.T) {
 }
 
 // TestRenderKeyReplaceRefusesBeforeTouchingTheStore: the scope, the project of the key and the asset id are checked
-// before any read.
+// before any read but the project of the timeline an id names, which a key limited to one project needs (VV-250).
 func TestRenderKeyReplaceRefusesBeforeTouchingTheStore(t *testing.T) {
 	t.Parallel()
 
-	s := &svc{}
+	s := &svc{store: timelineMapOnly{}}
 	req := MotionReplaceRequest{ProjectID: "prj_a", AssetID: "ast_3c5v8n2w6d"}
 
 	if _, err := s.MotionReplace(context.Background(), req); codeOf(err) != CodeUnauthorized {

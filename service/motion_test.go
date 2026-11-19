@@ -11,11 +11,12 @@ import (
 )
 
 // TestMotionBriefRefusesBeforeTouchingTheStore: the scope and the project of the key are checked before any read,
-// so a store that panics on a call proves it was not reached.
+// so a store that panics on a call proves it was not reached. The one read allowed is the project of the timeline
+// an id names, which a key limited to one project needs before it is refused (VV-250).
 func TestMotionBriefRefusesBeforeTouchingTheStore(t *testing.T) {
 	t.Parallel()
 
-	s := &svc{}
+	s := &svc{store: timelineMapOnly{}}
 	req := MotionBriefRequest{ProjectID: "prj_a"}
 
 	if _, err := s.MotionBrief(context.Background(), req); codeOf(err) != CodeUnauthorized {
