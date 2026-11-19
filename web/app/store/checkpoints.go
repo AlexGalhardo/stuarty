@@ -79,11 +79,13 @@ func (r checkpointRepo) Rename(ctx context.Context, projectID, name, newName str
 		err error
 	)
 
+	// A renamed checkpoint is a named one: auto goes to 0, so the ceiling of the automatic ones keeps it.
 	if note != nil {
-		res, err = r.ex.ExecContext(ctx, `UPDATE checkpoints SET name = ?, note = ? WHERE project_id = ? AND name = ?`,
+		res, err = r.ex.ExecContext(ctx,
+			`UPDATE checkpoints SET name = ?, note = ?, auto = 0 WHERE project_id = ? AND name = ?`,
 			newName, *note, projectID, name)
 	} else {
-		res, err = r.ex.ExecContext(ctx, `UPDATE checkpoints SET name = ? WHERE project_id = ? AND name = ?`,
+		res, err = r.ex.ExecContext(ctx, `UPDATE checkpoints SET name = ?, auto = 0 WHERE project_id = ? AND name = ?`,
 			newName, projectID, name)
 	}
 
