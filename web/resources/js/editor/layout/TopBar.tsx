@@ -1,5 +1,6 @@
 import {
 	ArrowLeft,
+	House,
 	Loader,
 	Pencil,
 	RefreshCw,
@@ -167,6 +168,11 @@ export default function TopBar({
 			<Button asChild variant="ghost" size="icon-sm">
 				<a href="/projects" aria-label={t("ui.editor.back")}>
 					<ArrowLeft aria-hidden="true" />
+				</a>
+			</Button>
+			<Button asChild variant="ghost" size="icon-sm">
+				<a href="/" aria-label={t("ui.nav.dashboard")}>
+					<House aria-hidden="true" />
 				</a>
 			</Button>
 			{name !== undefined && <ProjectName name={name} />}

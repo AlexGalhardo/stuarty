@@ -53,6 +53,14 @@ function Button({
     asChild?: boolean
   }) {
   const render = childRender(asChild, children)
+  // Base UI gives a non-native button role="button"; a child with an href (an
+  // anchor or an Inertia Link) is a link, and a link that announces itself as
+  // a button breaks the name and the role that people and tests look for. Any
+  // other child keeps the button role: a role={undefined} prop would erase it.
+  const linkRole =
+    render !== undefined && render.props.href !== undefined
+      ? { role: "link" }
+      : {}
 
   return (
     <ButtonPrimitive
@@ -61,6 +69,7 @@ function Button({
       data-size={size}
       className={cn(buttonVariants({ variant, size, className }))}
       nativeButton={render ? false : true}
+      {...linkRole}
       render={render}
       {...props}
     >
