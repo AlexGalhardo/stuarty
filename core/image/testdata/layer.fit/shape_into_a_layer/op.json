@@ -1,0 +1,8 @@
+{
+  "args": {
+    "layer_id": "lyr_dddddddddd",
+    "mode": "contain",
+    "to": "lyr_cccccccccc"
+  },
+  "op": "layer.fit"
+}

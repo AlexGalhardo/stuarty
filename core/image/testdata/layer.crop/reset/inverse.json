@@ -1,0 +1,15 @@
+[
+  {
+    "collection": "layers",
+    "id": "lyr_bbbbbbbbbb",
+    "set": {
+      "crop": {
+        "h": 900,
+        "w": 900,
+        "x": 200,
+        "y": 0
+      }
+    },
+    "type": "patch"
+  }
+]

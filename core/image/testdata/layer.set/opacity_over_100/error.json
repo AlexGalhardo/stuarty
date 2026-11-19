@@ -1,0 +1,8 @@
+{
+  "code": "E_VALIDATION",
+  "hint": "Use a value between 0 and 100.",
+  "message": "The value of args.opacity is 101, outside the accepted range.",
+  "op_index": 0,
+  "path": "args.opacity",
+  "retryable": false
+}

@@ -1,0 +1,8 @@
+{
+  "args": {
+    "height": 360,
+    "mode": "scale",
+    "width": 640
+  },
+  "op": "canvas.resize"
+}

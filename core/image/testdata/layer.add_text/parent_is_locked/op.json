@@ -1,0 +1,7 @@
+{
+  "args": {
+    "parent": "lyr_hhhhhhhhhh",
+    "text": "Hi"
+  },
+  "op": "layer.add_text"
+}

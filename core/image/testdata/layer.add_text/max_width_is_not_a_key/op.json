@@ -1,0 +1,9 @@
+{
+  "args": {
+    "style": {
+      "max_width": 300
+    },
+    "text": "x"
+  },
+  "op": "layer.add_text"
+}

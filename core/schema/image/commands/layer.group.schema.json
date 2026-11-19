@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "pattern": "^lyr_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+      "type": "string"
+    },
+    "layer_ids": {
+      "description": "1 to 100 layers that share one parent.",
+      "items": {
+        "pattern": "^lyr_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+        "type": "string"
+      },
+      "maxItems": 100,
+      "minItems": 1,
+      "type": "array"
+    },
+    "name": {
+      "maxLength": 120,
+      "type": "string"
+    }
+  },
+  "required": [
+    "layer_ids"
+  ],
+  "type": "object"
+}

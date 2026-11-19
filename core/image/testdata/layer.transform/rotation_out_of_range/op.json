@@ -1,0 +1,7 @@
+{
+  "args": {
+    "layer_id": "lyr_dddddddddd",
+    "rotation": 400
+  },
+  "op": "layer.transform"
+}

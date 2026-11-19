@@ -1,0 +1,23 @@
+[
+  {
+    "collection": "layers",
+    "id": "lyr_ffffffffff",
+    "set": {
+      "parent": "lyr_eeeeeeeeee"
+    },
+    "type": "patch"
+  },
+  {
+    "collection": "layers",
+    "id": "lyr_gggggggggg",
+    "set": {
+      "parent": "lyr_eeeeeeeeee"
+    },
+    "type": "patch"
+  },
+  {
+    "collection": "layers",
+    "id": "lyr_kkkkkkkkkk",
+    "type": "remove"
+  }
+]

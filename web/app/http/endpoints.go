@@ -431,6 +431,35 @@ var Endpoints = []Endpoint{
 		ID: "auth.logout", Method: http.MethodPost, Path: "/auth/logout", Root: true, Status: 200,
 		Summary: "End the browser session (network mode)",
 	},
+	// The image documents of SDD-021.
+	{
+		ID: "images.create", Method: http.MethodPost, Path: "/images", Scope: service.ScopeEdit,
+		Service: "ImageCreate", Status: 200, Summary: "Create an image document, blank or from a template",
+	},
+	{
+		ID: "images.list", Method: http.MethodGet, Path: "/images", Scope: service.ScopeRead,
+		Service: "ImageList", Status: 200, Summary: "List the image documents and templates",
+	},
+	{
+		ID: "images.get", Method: http.MethodGet, Path: "/images/{id}", Scope: service.ScopeRead,
+		Service: "ImageDescribe", Status: 200, Summary: "Describe an image document: layers, findings and text view",
+	},
+	{
+		ID: "images.edit", Method: http.MethodPost, Path: "/images/{id}/edit", Scope: service.ScopeEdit,
+		Service: "ImageEdit", Status: 200, Summary: "Apply a batch of image operations",
+	},
+	{
+		ID: "images.undo", Method: http.MethodPost, Path: "/images/{id}/undo", Scope: service.ScopeEdit,
+		Service: "ImageUndo", Status: 200, Summary: "Undo the latest step of the caller on an image",
+	},
+	{
+		ID: "images.redo", Method: http.MethodPost, Path: "/images/{id}/redo", Scope: service.ScopeEdit,
+		Service: "ImageRedo", Status: 200, Summary: "Redo the latest undone step of the caller on an image",
+	},
+	{
+		ID: "images.export", Method: http.MethodPost, Path: "/images/{id}/export", Scope: service.ScopeEdit,
+		Service: "ImageExport", Status: 200, Summary: "Export an image document to a PNG, JPEG or WebP file",
+	},
 }
 
 // Endpoint returns the row of an operation id.

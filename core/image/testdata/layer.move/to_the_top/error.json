@@ -1,0 +1,8 @@
+{
+  "code": "E_VALIDATION",
+  "hint": "Add one of parent, index to the arguments.",
+  "message": "Give at least one of: parent, index.",
+  "op_index": 0,
+  "path": "args",
+  "retryable": false
+}

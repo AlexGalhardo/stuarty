@@ -1,0 +1,7 @@
+{
+  "args": {
+    "layer_id": "lyr_zzzzzzzzzz",
+    "reset": true
+  },
+  "op": "layer.crop"
+}

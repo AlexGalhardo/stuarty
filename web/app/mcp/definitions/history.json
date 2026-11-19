@@ -1,6 +1,6 @@
 {
  "name": "history",
- "description": "Read the change log of a project (action=list, newest first, with actor; actor, cursor, limit are for list only), or undo or redo your own latest step (action=undo or redo, one step per call). Undo skips a change another actor made after yours and reports it. Undo is itself a step and can be redone.",
+ "description": "Read the change log (action=list, newest first, with actor; actor, cursor, limit only for list), or undo or redo your own latest step (action=undo or redo, one step per call). Undo skips a later change by another actor and reports it; an undo is itself a step.",
  "inputSchema": {
   "type": "object",
   "properties": {

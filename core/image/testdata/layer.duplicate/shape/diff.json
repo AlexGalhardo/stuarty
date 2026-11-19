@@ -1,0 +1,21 @@
+[
+  {
+    "id": "lyr_kkkkkkkkkk",
+    "kind": "layer.added",
+    "object": {
+      "fill": "#E63946",
+      "h": 40,
+      "id": "lyr_kkkkkkkkkk",
+      "kind": "shape",
+      "name": "Bar copy",
+      "opacity": 100,
+      "order": "xi",
+      "parent": "",
+      "shape": "rect",
+      "visible": true,
+      "w": 600,
+      "x": 140,
+      "y": 540
+    }
+  }
+]

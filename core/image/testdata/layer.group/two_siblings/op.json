@@ -1,0 +1,10 @@
+{
+  "args": {
+    "layer_ids": [
+      "lyr_cccccccccc",
+      "lyr_dddddddddd"
+    ],
+    "name": "Title block"
+  },
+  "op": "layer.group"
+}

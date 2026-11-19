@@ -1240,6 +1240,326 @@
         },
         "type": "object"
       },
+      "ImageCreateResult": {
+        "properties": {
+          "height": {
+            "type": "integer"
+          },
+          "image_id": {
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "text": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "untrusted_notice": {
+            "type": "string"
+          },
+          "width": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "ImageDescribeResult": {
+        "properties": {
+          "background": {
+            "type": "string"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/Finding"
+            },
+            "type": "array"
+          },
+          "height": {
+            "type": "integer"
+          },
+          "image_id": {
+            "type": "string"
+          },
+          "layers": {
+            "items": {
+              "$ref": "#/components/schemas/Layer"
+            },
+            "type": "array",
+            "x-untrusted": true
+          },
+          "lint": {
+            "$ref": "#/components/schemas/LintTotals"
+          },
+          "name": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "template": {
+            "type": "boolean"
+          },
+          "text": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "untrusted_notice": {
+            "type": "string"
+          },
+          "width": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "ImageEditResult": {
+        "properties": {
+          "actor": {
+            "type": "string"
+          },
+          "applied": {
+            "type": "boolean"
+          },
+          "base_revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "created": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "description": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "diff": {
+            "items": {
+              "$ref": "#/components/schemas/Change"
+            },
+            "type": "array"
+          },
+          "dry_run": {
+            "type": "boolean"
+          },
+          "effective": {
+            "items": {
+              "$ref": "#/components/schemas/OpEffect"
+            },
+            "type": "array"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/Finding"
+            },
+            "type": "array"
+          },
+          "image_id": {
+            "type": "string"
+          },
+          "lint": {
+            "$ref": "#/components/schemas/LintTotals"
+          },
+          "replayed": {
+            "type": "boolean"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ImageExportResult": {
+        "properties": {
+          "bytes": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "format": {
+            "type": "string"
+          },
+          "height": {
+            "type": "integer"
+          },
+          "image_id": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "width": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "ImageListResult": {
+        "properties": {
+          "images": {
+            "items": {
+              "$ref": "#/components/schemas/ImageSummary"
+            },
+            "type": "array"
+          },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "text": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "untrusted_notice": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ImageOperation": {
+        "properties": {
+          "args": {
+            "additionalProperties": {},
+            "description": "The arguments of the command.",
+            "type": "object"
+          },
+          "op": {
+            "description": "A command name, as listed by GET /commands?domain=image.",
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "op"
+        ],
+        "type": "object"
+      },
+      "ImageStepResult": {
+        "properties": {
+          "actor": {
+            "type": "string"
+          },
+          "applied": {
+            "type": "boolean"
+          },
+          "base_revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "created": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "description": {
+            "type": "string"
+          },
+          "diff": {
+            "items": {
+              "$ref": "#/components/schemas/Change"
+            },
+            "type": "array"
+          },
+          "dry_run": {
+            "type": "boolean"
+          },
+          "effective": {
+            "items": {
+              "$ref": "#/components/schemas/OpEffect"
+            },
+            "type": "array"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/Finding"
+            },
+            "type": "array"
+          },
+          "image_id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "lint": {
+            "$ref": "#/components/schemas/LintTotals"
+          },
+          "replayed": {
+            "type": "boolean"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "skipped": {
+            "items": {
+              "$ref": "#/components/schemas/Skipped"
+            },
+            "type": "array"
+          },
+          "step": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ImageSummary": {
+        "properties": {
+          "height": {
+            "type": "integer"
+          },
+          "image_id": {
+            "type": "string"
+          },
+          "layers": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "template": {
+            "type": "boolean"
+          },
+          "updated_ms": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "width": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
       "ImportedAsset": {
         "properties": {
           "asset_id": {
@@ -1945,6 +2265,97 @@
           "value": {
             "format": "double",
             "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "Layer": {
+        "properties": {
+          "asset": {
+            "type": "string"
+          },
+          "children": {
+            "items": {
+              "$ref": "#/components/schemas/Layer"
+            },
+            "type": "array"
+          },
+          "crop": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/image.Crop"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fill": {
+            "type": "string"
+          },
+          "h": {
+            "type": "integer"
+          },
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "locked": {
+            "type": "boolean"
+          },
+          "name": {
+            "type": "string"
+          },
+          "opacity": {
+            "type": "integer"
+          },
+          "order": {
+            "type": "string"
+          },
+          "radius": {
+            "type": "integer"
+          },
+          "rotation": {
+            "type": "integer"
+          },
+          "shape": {
+            "type": "string"
+          },
+          "slot": {
+            "type": "string"
+          },
+          "stroke_color": {
+            "type": "string"
+          },
+          "stroke_width": {
+            "type": "integer"
+          },
+          "style": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CaptionStyle"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "text": {
+            "type": "string"
+          },
+          "visible": {
+            "type": "boolean"
+          },
+          "w": {
+            "type": "integer"
+          },
+          "x": {
+            "type": "integer"
+          },
+          "y": {
+            "type": "integer"
           }
         },
         "type": "object"
@@ -2792,6 +3203,34 @@
         },
         "type": "object"
       },
+      "Primitive": {
+        "properties": {
+          "collection": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "object": {
+            "additionalProperties": {},
+            "type": "object"
+          },
+          "set": {
+            "additionalProperties": {},
+            "type": "object"
+          },
+          "type": {
+            "type": "string"
+          },
+          "unset": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
       "ProbeSummary": {
         "properties": {
           "animated": {
@@ -3298,6 +3737,40 @@
           "opacity": {
             "format": "double",
             "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "Skipped": {
+        "properties": {
+          "by_actor": {
+            "type": "string"
+          },
+          "by_revision": {
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "details": {
+            "additionalProperties": {},
+            "type": "object"
+          },
+          "fields": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "primitive": {
+            "$ref": "#/components/schemas/Primitive"
+          },
+          "primitive_index": {
+            "type": "integer"
+          },
+          "reason": {
+            "type": "string"
           }
         },
         "type": "object"
@@ -8120,6 +8593,37 @@
         },
         "type": "object"
       },
+      "image.Crop": {
+        "properties": {
+          "h": {
+            "type": "integer"
+          },
+          "w": {
+            "type": "integer"
+          },
+          "x": {
+            "type": "integer"
+          },
+          "y": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "image.SlotValue": {
+        "properties": {
+          "asset": {
+            "type": "string"
+          },
+          "text": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "type": "object"
+      },
       "importFileIn": {
         "properties": {
           "asset_id": {
@@ -8401,6 +8905,16 @@
     "/api/v1/commands": {
       "get": {
         "operationId": "commands.list",
+        "parameters": [
+          {
+            "description": "video (default) or image.",
+            "in": "query",
+            "name": "domain",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -8411,6 +8925,9 @@
               }
             },
             "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
           },
           "401": {
             "$ref": "#/components/responses/Problem"
@@ -8437,6 +8954,14 @@
       "get": {
         "operationId": "commands.get",
         "parameters": [
+          {
+            "description": "video (default) or image.",
+            "in": "query",
+            "name": "domain",
+            "schema": {
+              "type": "string"
+            }
+          },
           {
             "in": "path",
             "name": "name",
@@ -8936,6 +9461,545 @@
           }
         ],
         "summary": "Prove that the server knows the local token"
+      }
+    },
+    "/api/v1/images": {
+      "get": {
+        "operationId": "images.list",
+        "parameters": [
+          {
+            "description": "only for the templates, none for the documents that are not; default both.",
+            "in": "query",
+            "name": "templates",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The next_cursor of the previous page.",
+            "in": "query",
+            "name": "cursor",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The page size; the default depends on the operation.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageListResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the image documents and templates"
+      },
+      "post": {
+        "operationId": "images.create",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "background": {
+                    "description": "#RRGGBB, #RRGGBBAA or transparent; default #FFFFFF.",
+                    "type": "string"
+                  },
+                  "height": {
+                    "description": "Pixels, 1 to 4096, with width.",
+                    "type": "integer"
+                  },
+                  "id": {
+                    "description": "An id of your own; E_ID_EXISTS when taken.",
+                    "type": "string"
+                  },
+                  "name": {
+                    "description": "1 to 120 characters; default Untitled.",
+                    "type": "string"
+                  },
+                  "preset": {
+                    "description": "video_thumbnail, square_post or vertical_cover.",
+                    "type": "string"
+                  },
+                  "template": {
+                    "description": "Make a template whose text and image layers may be slots.",
+                    "type": "boolean"
+                  },
+                  "template_id": {
+                    "description": "Make the image from this template.",
+                    "type": "string"
+                  },
+                  "values": {
+                    "additionalProperties": {
+                      "$ref": "#/components/schemas/image.SlotValue"
+                    },
+                    "description": "Slot name to {text} or {asset}, with template_id.",
+                    "type": "object"
+                  },
+                  "width": {
+                    "description": "Pixels, 1 to 4096, with height.",
+                    "type": "integer"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageCreateResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create an image document, blank or from a template"
+      }
+    },
+    "/api/v1/images/{id}": {
+      "get": {
+        "operationId": "images.get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageDescribeResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Describe an image document: layers, findings and text view"
+      }
+    },
+    "/api/v1/images/{id}/edit": {
+      "post": {
+        "operationId": "images.edit",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "base_revision": {
+                    "description": "The revision the batch was planned against.",
+                    "format": "int64",
+                    "type": "integer"
+                  },
+                  "dry_run": {
+                    "type": "boolean"
+                  },
+                  "idempotency_key": {
+                    "description": "8 to 64 characters; the Idempotency-Key header is the same.",
+                    "type": "string"
+                  },
+                  "operations": {
+                    "items": {
+                      "$ref": "#/components/schemas/ImageOperation"
+                    },
+                    "maxItems": 200,
+                    "minItems": 1,
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "base_revision",
+                  "operations"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageEditResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Apply a batch of image operations"
+      }
+    },
+    "/api/v1/images/{id}/export": {
+      "post": {
+        "operationId": "images.export",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "format": {
+                    "description": "png (default), jpeg or webp.",
+                    "type": "string"
+                  },
+                  "height": {
+                    "description": "Resample to this height; 0 keeps the aspect.",
+                    "type": "integer"
+                  },
+                  "preset": {
+                    "description": "Resample to a named size.",
+                    "type": "string"
+                  },
+                  "quality": {
+                    "description": "1 to 100, for jpeg and lossy webp.",
+                    "type": "integer"
+                  },
+                  "width": {
+                    "description": "Resample to this width; 0 keeps the aspect.",
+                    "type": "integer"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageExportResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Export an image document to a PNG, JPEG or WebP file"
+      }
+    },
+    "/api/v1/images/{id}/redo": {
+      "post": {
+        "operationId": "images.redo",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "dry_run": {
+                    "type": "boolean"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageStepResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Redo the latest undone step of the caller on an image"
+      }
+    },
+    "/api/v1/images/{id}/undo": {
+      "post": {
+        "operationId": "images.undo",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "dry_run": {
+                    "type": "boolean"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageStepResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Undo the latest step of the caller on an image"
       }
     },
     "/api/v1/jobs/{job_id}": {

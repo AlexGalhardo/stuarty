@@ -1,0 +1,32 @@
+{
+	"name": "image",
+	"actor": "contract",
+	"fixtures": {},
+	"steps": [
+		{"call": "ImageCreate", "args": {"preset": "video_thumbnail", "name": "Episode 12"}},
+		{"call": "ImageEdit", "args": {"image_id": "img_0000000001", "base_revision": 1, "operations": [
+			{"op": "layer.add_fill", "args": {"color": "#203040", "id": "lyr_aaaaaaaaaa"}},
+			{"op": "layer.add_text", "args": {"text": "HOW IT WORKS", "style": {"size": 120, "color": "#FFE600"}, "id": "lyr_bbbbbbbbbb"}},
+			{"op": "layer.add_shape", "args": {"shape": "rounded_rect", "w": 600, "h": 80, "radius": 20, "fill": "#E63946", "id": "lyr_cccccccccc"}},
+			{"op": "layer.align", "args": {"layer_ids": ["lyr_bbbbbbbbbb", "lyr_cccccccccc"], "to": "canvas", "horizontal": "center"}}]}},
+		{"call": "ImageDescribe", "args": {"image_id": "img_0000000001"}},
+		{"call": "ImageEdit", "args": {"image_id": "img_0000000001", "base_revision": 2, "dry_run": true, "operations": [
+			{"op": "layer.set", "args": {"layer_id": "lyr_cccccccccc", "opacity": 50}}]}},
+		{"call": "ImageEdit", "args": {"image_id": "img_0000000001", "base_revision": 2, "operations": [
+			{"op": "layer.set", "args": {"layer_id": "lyr_cccccccccc", "opacity": 50}}], "idempotency_key": "image-key-0001"}},
+		{"call": "ImageUndo", "args": {"image_id": "img_0000000001"}},
+		{"call": "ImageRedo", "args": {"image_id": "img_0000000001"}},
+		{"call": "ImageRedo", "args": {"image_id": "img_0000000001"}, "expect_error": {"code": "E_NOTHING_TO_REDO"}},
+		{"call": "ImageEdit", "args": {"image_id": "img_0000000001", "base_revision": 4, "operations": [
+			{"op": "layer.remove", "args": {"layer_id": "lyr_zzzzzzzzzz"}}]}, "expect_error": {"code": "E_NOT_FOUND"}},
+		{"call": "ImageEdit", "args": {"image_id": "img_0000000001", "base_revision": 4, "operations": [
+			{"op": "image.create", "args": {"preset": "square_post"}}]}, "expect_error": {"code": "E_INVALID_STATE"}},
+		{"call": "ImageCreate", "args": {"preset": "square_post", "name": "Cover", "template": true}},
+		{"call": "ImageEdit", "args": {"image_id": "img_0000000002", "base_revision": 1, "operations": [
+			{"op": "layer.add_text", "args": {"text": "", "slot": "title", "id": "lyr_dddddddddd"}}]}},
+		{"call": "ImageCreate", "args": {"template_id": "img_0000000002", "values": {"title": {"text": "Spring sale"}}}},
+		{"call": "ImageCreate", "args": {"template_id": "img_0000000002"}, "expect_error": {"code": "E_SLOT"}},
+		{"call": "ImageDescribe", "args": {"image_id": "img_0000000003"}},
+		{"call": "ImageList", "args": {}}
+	]
+}

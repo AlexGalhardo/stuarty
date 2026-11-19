@@ -17,6 +17,13 @@ command export
 command font:import
 command fonts
 command history
+command image:create
+command image:edit
+command image:export
+command image:list
+command image:redo
+command image:show
+command image:undo
 command job:cancel
 command job:list
 command job:show
@@ -57,6 +64,8 @@ route GET /connections
 route GET /connections/{}
 route GET /fonts
 route GET /handshake
+route GET /images
+route GET /images/{}
 route GET /jobs/{}
 route GET /jobs/{}/file
 route GET /keys
@@ -89,6 +98,11 @@ route PATCH /users/{}
 route POST /connections
 route POST /connections/{}/test
 route POST /fonts
+route POST /images
+route POST /images/{}/edit
+route POST /images/{}/export
+route POST /images/{}/redo
+route POST /images/{}/undo
 route POST /jobs/{}/cancel
 route POST /keys
 route POST /projects
@@ -118,6 +132,7 @@ tool connection
 tool edit
 tool font_import
 tool history
+tool image
 tool job_cancel
 tool job_get
 tool job_start

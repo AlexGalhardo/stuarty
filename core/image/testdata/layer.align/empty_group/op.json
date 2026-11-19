@@ -1,0 +1,10 @@
+{
+  "args": {
+    "horizontal": "left",
+    "layer_ids": [
+      "lyr_eeeeeeeeee"
+    ],
+    "to": "canvas"
+  },
+  "op": "layer.align"
+}

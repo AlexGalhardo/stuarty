@@ -1,0 +1,6 @@
+{
+  "args": {
+    "asset": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "op": "layer.add_image"
+}

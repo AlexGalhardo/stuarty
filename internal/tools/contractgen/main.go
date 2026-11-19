@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/AlexGalhardo/stuarty/core/command"
+	coreimage "github.com/AlexGalhardo/stuarty/core/image"
 	"github.com/AlexGalhardo/stuarty/core/lint"
 	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
@@ -57,6 +58,10 @@ func run(out string) error {
 	if err := writeCommands(out); err != nil {
 		return err
 	}
+
+	if err := writeImageCommands(out); err != nil {
+		return err
+	}
 	var errs []map[string]any
 	for _, code := range command.Codes() {
 		errs = append(
@@ -94,8 +99,17 @@ func lintRules() []map[string]any {
 	return rules
 }
 
+// writeImageCommands writes the registry of the image domain (SDD-021 section 3): one schema per operation under
+// core/schema/image/commands and the snapshot core/schema/image/commands.json.
+func writeImageCommands(out string) error {
+	return writeRegistry(coreimage.Registry(), filepath.Join(out, "image"))
+}
+
 func writeCommands(out string) error {
-	reg := command.Default()
+	return writeRegistry(command.Default(), out)
+}
+
+func writeRegistry(reg *command.Registry, out string) error {
 	var list []map[string]any
 	for _, c := range reg.List() {
 		raw, err := reg.Schema(c.Name)
