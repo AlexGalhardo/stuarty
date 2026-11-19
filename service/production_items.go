@@ -149,6 +149,10 @@ func (s *svc) ProjectItemAdd(ctx context.Context, req ProjectItemAddRequest) (*P
 
 	head, change, err := s.changeProduction(ctx, c, "project.item.add", req.ProjectID, req.DryRun,
 		func(ctx context.Context, tx Tx, head *ProductionHead, rows []ItemRow) (*productionChange, error) {
+			if v := project.CheckRoom(coreItems(rows), project.Kind(req.Kind)); v != nil {
+				return nil, violation(v)
+			}
+
 			now := s.nowMs()
 			it := s.newItem(head.ID, req.Kind, req.Title, len(rows), c.Actor, now)
 
@@ -379,10 +383,13 @@ func (s *svc) setItemState(
 				return ch, nil
 			}
 
-			if to == ProjectTrashed {
-				if v := project.CheckTrash(coreItems(rows), it.ID); v != nil {
-					return nil, violation(v)
-				}
+			check := project.CheckTrash(coreItems(rows), it.ID)
+			if to == ProjectActive {
+				check = project.CheckRoom(coreItems(rows), project.Kind(it.Kind))
+			}
+
+			if check != nil {
+				return nil, violation(check).withPath("item_id")
 			}
 
 			now := s.nowMs()
@@ -451,6 +458,10 @@ func (s *svc) BriefSet(ctx context.Context, req BriefSetRequest) (*BriefResult, 
 				return &productionChange{rows: rows, itemID: b.ID, write: func(ctx context.Context, tx Tx) error {
 					return tx.Productions().UpdateItem(ctx, *b)
 				}}, nil
+			}
+
+			if v := project.CheckRoom(coreItems(rows), project.Brief); v != nil {
+				return nil, violation(v).withPath("text")
 			}
 
 			it := s.newItem(head.ID, string(project.Brief), "Brief", 0, c.Actor, now)

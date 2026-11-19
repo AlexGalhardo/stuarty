@@ -708,8 +708,8 @@ func (s *svc) readBundleManifest(p *bundleParts) *Error {
 
 // The most timelines and items a bundle may bring.
 const (
-	bundleTimelinesMax = 64
-	bundleItemsMax     = 256
+	bundleTimelinesMax = project.MaxTimelines
+	bundleItemsMax     = project.MaxItems
 )
 
 var bundleKeyRe = regexp.MustCompile(`^t\d{1,3}$`)

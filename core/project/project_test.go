@@ -234,6 +234,55 @@ func TestCheckTrash(t *testing.T) {
 	if v := CheckTrash(one, "pit_zzzzzzzzzz"); v != nil {
 		t.Errorf("an unknown id is not a rule of the core: %v", v)
 	}
+
+	withBrief := []Item{{ID: "pit_a", Kind: Timeline}, {ID: "pit_d", Kind: Brief, Text: "x"}}
+	if v := CheckTrash(withBrief, "pit_d"); v == nil || v.Code != "E_INVALID_STATE" || v.Path != "item_id" {
+		t.Errorf("the brief was trashed: %v", v)
+	}
+}
+
+func TestCheckRoom(t *testing.T) {
+	t.Parallel()
+
+	fill := func(n int, k Kind, trashed bool) []Item {
+		out := make([]Item, n)
+		for i := range out {
+			out[i] = Item{Kind: k, Trashed: trashed}
+		}
+
+		return out
+	}
+
+	cases := []struct {
+		name  string
+		items []Item
+		kind  Kind
+		code  string
+	}{
+		{"empty", nil, Text, ""},
+		{"one short of the items", fill(MaxItems-1, Text, false), Text, ""},
+		{"at the items", fill(MaxItems, Text, false), Text, "E_LIMIT_EXCEEDED"},
+		{"trashed items do not count", append(fill(MaxItems, Text, true), fill(MaxItems-1, Text, false)...), Text, ""},
+		{"one short of the timelines", fill(MaxTimelines-1, Timeline, false), Timeline, ""},
+		{"at the timelines", fill(MaxTimelines, Timeline, false), Timeline, "E_LIMIT_EXCEEDED"},
+		{"at the timelines, a text still fits", fill(MaxTimelines, Timeline, false), Text, ""},
+		{"trashed timelines do not count", fill(MaxTimelines, Timeline, true), Timeline, ""},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			v := CheckRoom(tc.items, tc.kind)
+
+			switch {
+			case tc.code == "" && v != nil:
+				t.Errorf("refused: %v", v)
+			case tc.code != "" && (v == nil || v.Code != tc.code):
+				t.Errorf("got %v, want %s", v, tc.code)
+			}
+		})
+	}
 }
 
 func TestPositionAndOrder(t *testing.T) {
