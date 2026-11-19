@@ -14,10 +14,10 @@ const (
 
 // Scene is a part of a script: what is said, what is shown on the screen, and the directions for the editor.
 type Scene struct {
-	Title     string   `json:"title"     untrusted:"true"`
-	Narration []string `json:"narration" untrusted:"true"`
-	OnScreen  []string `json:"on_screen" untrusted:"true"`
-	Notes     []string `json:"notes"     untrusted:"true"`
+	Title     string   `json:"title"`
+	Narration []string `json:"narration"`
+	OnScreen  []string `json:"on_screen"`
+	Notes     []string `json:"notes"`
 }
 
 // Script is a script read from its Markdown.
