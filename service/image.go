@@ -34,7 +34,7 @@ func (s *svc) imageEnv(ctx context.Context, tx Repos, c Caller, ids func(string)
 	return coreimage.Env{
 		NewIDs: ids,
 		Asset: func(hash string) (coreimage.AssetInfo, bool) {
-			scoped, ok := allowed(hash)
+			scopedName, scoped, ok := allowed(hash)
 			if !ok {
 				return coreimage.AssetInfo{}, false
 			}
@@ -45,9 +45,15 @@ func (s *svc) imageEnv(ctx context.Context, tx Repos, c Caller, ids func(string)
 				return coreimage.AssetInfo{}, false
 			}
 
+			// the global name is the caller own only in local mode; in network mode the name of the project
+			// entry is used even when it is empty, and an empty one gives a neutral name
 			name := row.OriginalName
-			if scoped != "" {
-				name = scoped
+			if scoped {
+				name = scopedName
+			}
+
+			if name == "" {
+				name = "Image"
 			}
 
 			return coreimage.AssetInfo{
@@ -64,9 +70,9 @@ func (s *svc) imageEnv(ctx context.Context, tx Repos, c Caller, ids func(string)
 // leak through an image. The projects are scanned once, when the first file is asked for.
 // It also gives the name the file is known by to the caller: in network mode the name of the project entry of
 // the caller, never the global one, which another user may have set.
-func (s *svc) imageAssetAccess(ctx context.Context, c Caller) func(hash string) (string, bool) {
+func (s *svc) imageAssetAccess(ctx context.Context, c Caller) func(hash string) (name string, scoped, ok bool) {
 	if c.OwnerUserID == "" {
-		return func(string) (string, bool) { return "", true }
+		return func(string) (string, bool, bool) { return "", false, true }
 	}
 
 	var (
@@ -74,7 +80,7 @@ func (s *svc) imageAssetAccess(ctx context.Context, c Caller) func(hash string) 
 		done bool
 	)
 
-	return func(hash string) (string, bool) {
+	return func(hash string) (string, bool, bool) {
 		if !done {
 			scan, err := s.libraryScan(ctx, c)
 			if err != nil {
@@ -86,10 +92,10 @@ func (s *svc) imageAssetAccess(ctx context.Context, c Caller) func(hash string) 
 
 		e, ok := held[hash]
 		if !ok {
-			return "", false
+			return "", false, false
 		}
 
-		return e.name, true
+		return e.name, true, true
 	}
 }
 
