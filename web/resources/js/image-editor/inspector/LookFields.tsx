@@ -7,6 +7,7 @@ import type {
 	Filter,
 	FilterKind,
 	ImageDocument,
+	ImageOperation,
 	Layer,
 	Mask,
 	MaskKind,
@@ -406,6 +407,24 @@ function flatten(layers: readonly Layer[]): Layer[] {
 	return layers.flatMap((l) => [l, ...flatten(l.children ?? [])]);
 }
 
+// The command a field of a shape mask sends. layer.mask_set replaces the whole mask, so the members the field
+// does not change are read from `doc`, the document when the command's turn comes in the queue, and not from
+// the render the field belongs to: two fields committed before the server answers the first would otherwise
+// send the older mask back and undo the first change.
+export function maskChange(
+	doc: ImageDocument,
+	layerId: string,
+	patch: Partial<Mask>,
+): ImageOperation[] {
+	const mask = flatten(doc.layers).find((l) => l.id === layerId)?.mask;
+	return [
+		{
+			op: "layer.mask_set",
+			args: { layer_id: layerId, ...shapeArgs(mask), ...patch },
+		},
+	];
+}
+
 function MaskFields({
 	doc,
 	layer,
@@ -424,8 +443,10 @@ function MaskFields({
 	);
 	const set = (args: { [key: string]: unknown }) =>
 		send([{ op: "layer.mask_set", args: { layer_id: layer.id, ...args } }]);
+	const current = (d: ImageDocument): Mask | undefined =>
+		flatten(d.layers).find((l) => l.id === layer.id)?.mask;
 	const change = (patch: Partial<Mask>) =>
-		set({ ...shapeArgs(mask), ...patch });
+		send((d) => maskChange(d, layer.id, patch));
 
 	return (
 		<Section title={t("ui.image.look.mask")} testId="image-mask-fields">
@@ -504,7 +525,17 @@ function MaskFields({
 						testId="image-mask-source"
 						options={sources.map((l) => ({ value: l.id, label: l.name }))}
 						onCommit={(source) =>
-							set({ kind: "layer", source, invert: mask.invert === true })
+							send((d) => [
+								{
+									op: "layer.mask_set",
+									args: {
+										layer_id: layer.id,
+										kind: "layer",
+										source,
+										invert: current(d)?.invert === true,
+									},
+								},
+							])
 						}
 					/>
 					<ToggleField
@@ -513,7 +544,17 @@ function MaskFields({
 						disabled={locked}
 						testId="image-mask-invert"
 						onCommit={(invert) =>
-							set({ kind: "layer", source: mask.source, invert })
+							send((d) => [
+								{
+									op: "layer.mask_set",
+									args: {
+										layer_id: layer.id,
+										kind: "layer",
+										source: current(d)?.source ?? mask.source,
+										invert,
+									},
+								},
+							])
 						}
 					/>
 				</>
