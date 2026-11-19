@@ -1,7 +1,6 @@
 package connections
 
 import (
-	"bytes"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
@@ -24,42 +23,60 @@ const droppedBody = "the destination echoed the credential: its answer was dropp
 // echoesSecret says whether body holds the secret, or any minScrubbed consecutive bytes of it, in
 // the forms a destination writes it back: as is, HTML, URL and JSON escaped, base64 and hex (lower
 // and upper case). It looks at the raw bytes, before any cut or escape, and also at them after the
-// cleaning the text goes through, so a secret split by a control character is found too. The cost is
-// one search of the body per window of each form: a secret is short (a few hundred bytes at most) and
-// the body is capped by the response budget, so it stays linear in the body for a given secret.
+// cleaning the text goes through, so a secret split by a control character is found too. The windows
+// of the two bodies go into a set once, and every window of every form is looked up in it, so the cost
+// is linear in the body plus the forms, whatever the size of the secret (up to MaxSecret).
 func echoesSecret(body, secret []byte) bool {
 	if len(secret) < minScrubbed {
 		return false
 	}
 
+	seen := make(map[[minScrubbed]byte]struct{}, 2*len(body))
+
+	for _, h := range [][]byte{body, []byte(untrusted.Clean(string(body)))} {
+		for i := 0; i+minScrubbed <= len(h); i++ {
+			seen[[minScrubbed]byte(h[i:i+minScrubbed])] = struct{}{}
+		}
+	}
+
+	for _, f := range secretForms(secret) {
+		for i := 0; i+minScrubbed <= len(f); i++ {
+			if _, ok := seen[[minScrubbed]byte(f[i:i+minScrubbed])]; ok {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
+// secretForms are the forms a destination writes the secret back in. Base64 is taken from the three
+// byte alignments of the secret, so the base64 of a part of it that starts anywhere shares a window
+// with one of them; the unpadded base64 is a prefix of the padded one and needs no form of its own.
+// Hex, HTML, URL and JSON escape byte by byte, so a part of the secret is a part of their form.
+func secretForms(secret []byte) [][]byte {
 	text := string(secret)
 	forms := []string{
 		text,
 		html.EscapeString(text),
 		url.QueryEscape(text),
 		url.PathEscape(text),
-		base64.StdEncoding.EncodeToString(secret),
-		base64.RawStdEncoding.EncodeToString(secret),
-		base64.URLEncoding.EncodeToString(secret),
-		base64.RawURLEncoding.EncodeToString(secret),
 		hex.EncodeToString(secret),
 		strings.ToUpper(hex.EncodeToString(secret)),
 	}
-	forms = append(forms, jsonForms(text)...)
 
-	haystacks := [][]byte{body, []byte(untrusted.Clean(string(body)))}
-
-	for _, f := range forms {
-		for i := 0; i+minScrubbed <= len(f); i++ {
-			for _, h := range haystacks {
-				if bytes.Contains(h, []byte(f[i:i+minScrubbed])) {
-					return true
-				}
-			}
-		}
+	for k := range min(3, len(secret)) {
+		forms = append(forms, base64.StdEncoding.EncodeToString(secret[k:]), base64.URLEncoding.EncodeToString(secret[k:]))
 	}
 
-	return false
+	forms = append(forms, jsonForms(text)...)
+
+	out := make([][]byte, len(forms))
+	for i, f := range forms {
+		out[i] = []byte(f)
+	}
+
+	return out
 }
 
 // jsonForms are text inside a JSON string, without the quotes, as the encoders write it: with the
