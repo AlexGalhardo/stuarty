@@ -2,6 +2,8 @@ package servicetest
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"os"
@@ -106,10 +108,12 @@ func (p *pubEnv) seedExport(project, id, ext string, data []byte) string {
 		p.t.Fatal(err)
 	}
 
-	res, merr := json.Marshal(
+	// The digest is recorded as the exporter records it (service/exporter), so a run checks it.
+	sum := sha256.Sum256(data)
 
-		service.JobResult{Export: &service.ExportResult{Format: strings.TrimPrefix(ext, "."), Bytes: int64(len(data))}},
-	)
+	res, merr := json.Marshal(service.JobResult{Export: &service.ExportResult{
+		Format: strings.TrimPrefix(ext, "."), Bytes: int64(len(data)), SHA256: hex.EncodeToString(sum[:]),
+	}})
 	if merr != nil {
 		p.t.Fatal(merr)
 	}
@@ -405,32 +409,41 @@ func TestPublishNow_QuotaErrorIsActionableAndCanBeRetried(t *testing.T) {
 	}
 }
 
+// A file rewritten after the approval is not sent, whether it grew or kept the same size.
 func TestPublishNow_AFileThatChangedAfterApprovalIsNotSent(t *testing.T) {
-	p := newPubEnv(t)
-	exp := p.seedExport(p.project, "job_0000000908", ".mp4", []byte("fake mp4 bytes"))
+	for name, rewrite := range map[string]string{
+		"longer":         "another file, longer than the one that was shown",
+		"same size":      "FAKE MP4 BYTES",
+		"same size, one": "fake mp4 bytez",
+	} {
+		t.Run(name, func(t *testing.T) {
+			p := newPubEnv(t)
+			exp := p.seedExport(p.project, "job_0000000908", ".mp4", []byte("fake mp4 bytes"))
 
-	job, err := p.now(p.as(token), p.args(exp))
-	if err != nil {
-		t.Fatal(err)
-	}
+			job, err := p.now(p.as(token), p.args(exp))
+			if err != nil {
+				t.Fatal(err)
+			}
 
-	file := filepath.Join(string(p.dir), "exports", p.project, "job_0000000908.mp4")
-	if werr := os.WriteFile(file, []byte("another file, longer than the one that was shown"), 0o600); werr != nil {
-		t.Fatal(werr)
-	}
+			file := filepath.Join(string(p.dir), "exports", p.project, "job_0000000908.mp4")
+			if werr := os.WriteFile(file, []byte(rewrite), 0o600); werr != nil {
+				t.Fatal(werr)
+			}
 
-	before := p.net.count()
-	p.decide(job, "approve")
+			before := p.net.count()
+			p.decide(job, "approve")
 
-	if done := p.job(
-		job.JobID,
-	); done.State != service.JobFailed || done.Error == nil ||
-		done.Error.Code != "E_INVALID_STATE" {
-		t.Errorf("job = %+v, error %+v, want a refusal to send a changed file", done, done.Error)
-	}
+			if done := p.job(
+				job.JobID,
+			); done.State != service.JobFailed || done.Error == nil ||
+				done.Error.Code != "E_INVALID_STATE" {
+				t.Errorf("job = %+v, error %+v, want a refusal to send a changed file", done, done.Error)
+			}
 
-	if p.net.count() != before {
-		t.Errorf("the changed file was sent: %v", p.net.seen()[before:])
+			if p.net.count() != before {
+				t.Errorf("the changed file was sent: %v", p.net.seen()[before:])
+			}
+		})
 	}
 }
 

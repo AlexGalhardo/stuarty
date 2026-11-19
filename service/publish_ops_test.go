@@ -109,3 +109,49 @@ func TestPublishNow_RedirectAddressIsOnlyTheLocalCallback(t *testing.T) {
 		}
 	}
 }
+
+// A post that differs in what the network receives when the session starts does not resume a session made
+// with the former metadata (SDD-020 section 7.4); a new thumbnail, sent after the upload, does.
+func TestPublishNow_UploadKeyCoversEveryMemberOfThePost(t *testing.T) {
+	t.Parallel()
+
+	base := func() *publishInput {
+		return &publishInput{
+			Network: "youtube",
+			Args: PublishArgs{
+				ConnectionID: "con_a", Export: "job_a", Title: "t", Description: "d", Tags: []string{"a", "b"},
+				Visibility: "private", MadeForKids: new(false),
+			},
+			Output: publishFile{Rel: "exports/prj_a/job_a.mp4", Bytes: 10, SHA256: "00", Format: "mp4"},
+		}
+	}
+
+	key := uploadKey(base())
+
+	for name, change := range map[string]func(in *publishInput){
+		"connection":    func(in *publishInput) { in.Args.ConnectionID = "con_b" },
+		"title":         func(in *publishInput) { in.Args.Title = "u" },
+		"description":   func(in *publishInput) { in.Args.Description = "e" },
+		"tags joined":   func(in *publishInput) { in.Args.Tags = []string{"a,b"} },
+		"visibility":    func(in *publishInput) { in.Args.Visibility = "public" },
+		"made for kids": func(in *publishInput) { in.Args.MadeForKids = new(true) },
+		"ai disclosure": func(in *publishInput) { in.Args.AIDisclosure = true },
+		"file":          func(in *publishInput) { in.Output.Rel = "exports/prj_a/job_b.mp4" },
+		"size":          func(in *publishInput) { in.Output.Bytes = 11 },
+		"digest":        func(in *publishInput) { in.Output.SHA256 = "01" },
+	} {
+		in := base()
+		change(in)
+
+		if uploadKey(in) == key {
+			t.Errorf("a change of the %s keeps the upload session", name)
+		}
+	}
+
+	in := base()
+	in.Args.Thumbnail = "job_t"
+
+	if uploadKey(in) != key {
+		t.Error("a new thumbnail starts a new upload session")
+	}
+}
