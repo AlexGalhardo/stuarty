@@ -260,7 +260,7 @@ Responses on every route carry `X-Content-Type-Options: nosniff`, `Referrer-Poli
 ### 3.7 Authenticating a request
 
 1. `Authorization: Bearer <token>` is checked first. If present and wrong the answer is `401 E_UNAUTHORIZED` with no fall back to the cookie.
-2. Otherwise the cookie is looked up. Neither: `401 E_UNAUTHORIZED` with `WWW-Authenticate: Bearer`.
+2. Otherwise the cookie is looked up. Neither: `401 E_UNAUTHORIZED` with `WWW-Authenticate: Bearer`. One exception: a `GET` of the sign-in page `/social/callback` (SDD-020 section 6) is drawn with no caller. The consent screen of a social network sends the browser there by a cross-site navigation, which carries no `SameSite=Strict` cookie, so without the exception a real sign-in could never finish. The page holds no data and calls no operation; the call it makes, `POST /api/v1/social/complete`, is same-origin, carries the cookie and is authenticated as every other call (`TestSignInPageIsDrawnWithoutTheSessionCookie`).
 3. The token is compared with `subtle.ConstantTimeCompare` against the content of `token`, read once at start.
 4. The actor is `local:<label>`. A bearer client may send the header `Stuarty-Client: <label>` where `<label>` matches `[a-z0-9-]{1,32}`; the server prefixes `local:`. Absent: the client's default of SDD-000 §3. Malformed: `400 E_VALIDATION`. A cookie session is always `local:ui`. The label is a name, not an identity: whoever holds the token can claim any label, which is acceptable because the token already carries every scope. **Decision of this SDD** (header name).
 5. The local token carries the five scopes. Exception: `TrashEmpty` (5.3).
