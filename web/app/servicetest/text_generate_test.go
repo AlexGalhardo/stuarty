@@ -718,6 +718,17 @@ func TestTextGenerate_RequestIsValidated(t *testing.T) {
 		}
 	}
 
+	// The description of job_start has no room for the arguments, so the refusal of a start with none names
+	// them all.
+	_, err := te.svc.JobStart(
+		te.as(token),
+		service.JobStartRequest{ProjectID: te.prj, Kind: service.JobTextGenerate, Args: json.RawMessage(`{}`)},
+	)
+	if se, isErr := errors.AsType[*service.Error](err); !isErr || se.Path != "args.connection_id" ||
+		!strings.Contains(se.Hint, "connection_id, model, prompt") {
+		t.Errorf("job_start of text.generate with no arguments: %v, want a hint that names them", err)
+	}
+
 	// A default max_tokens applies when the request leaves it out.
 	if _, err := te.svc.TextGenerate(te.as(token), service.TextGenerateRequest{
 		ProjectID:    te.prj,
