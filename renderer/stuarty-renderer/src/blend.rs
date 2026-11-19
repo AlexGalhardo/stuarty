@@ -98,7 +98,7 @@ fn round_div_away(n: i64, d: i64) -> i64 {
 }
 
 /// `sqrt(n)` rounded to nearest, in integers.
-fn isqrt_round(n: u32) -> u32 {
+const fn isqrt_round(n: u32) -> u32 {
 	let mut r = 0_u32;
 	while (r + 1) * (r + 1) <= n {
 		r += 1;
@@ -106,14 +106,30 @@ fn isqrt_round(n: u32) -> u32 {
 	if n - r * r > r { r + 1 } else { r }
 }
 
-/// The `D` function of the soft light, in 8 bits.
-fn soft_light_d(b: u32) -> i64 {
+/// The `D` function of the soft light for one 8-bit value.
+const fn soft_light_d_of(b: u32) -> i64 {
 	if b <= 64 {
-		let b = i64::from(b);
+		let b = b as i64;
 		(((16 * b - 3060) * b + 260_100) * b + 32_512) / 65_025
 	} else {
-		i64::from(isqrt_round(255 * b))
+		isqrt_round(255 * b) as i64
 	}
+}
+
+/// `D` for every 8-bit value, made once at compile time: the soft light reads it per pixel.
+static SOFT_LIGHT_D: [i64; 256] = {
+	let mut t = [0_i64; 256];
+	let mut b = 0;
+	while b < 256 {
+		t[b] = soft_light_d_of(b as u32);
+		b += 1;
+	}
+	t
+};
+
+/// The `D` function of the soft light, in 8 bits.
+fn soft_light_d(b: u32) -> i64 {
+	SOFT_LIGHT_D[b.min(255) as usize]
 }
 
 /// The separable blend function `B(s, b)` of the straight source value `s` and the straight
