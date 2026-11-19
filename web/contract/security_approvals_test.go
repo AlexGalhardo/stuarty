@@ -119,28 +119,36 @@ func noToolDecides(t *testing.T, member string) {
 		}
 	}
 
-	for _, args := range []map[string]any{
-		{"id": "apr_0000000001", "decision": "approve"},
-		{"id": "apr_0000000001", "approve": true},
-		{"state": "pending", "rule": map[string]any{"kind": "publish.post"}},
-		{"member": member},
+	// An agent that guesses a tool is refused by the protocol, with a stable error, and nothing changes.
+	for _, guess := range []struct {
+		name string
+		args map[string]any
+	}{
+		{"approval", map[string]any{"action": "decide", "id": "apr_0000000001", "decision": "approve"}},
+		{"approval_decide", map[string]any{"id": "apr_0000000001", "decision": "approve"}},
+		{"approval_rule_set", map[string]any{"kind": "publish.post"}},
+		{"cost_ceiling_set", map[string]any{"currency": "USD", "per_day_micros": 999999999999}},
 	} {
-		res, err := d.cs.CallTool(t.Context(), &sdk.CallToolParams{Name: "approval", Arguments: args})
+		res, err := d.cs.CallTool(t.Context(), &sdk.CallToolParams{Name: guess.name, Arguments: guess.args})
 		if err == nil && (res == nil || !res.IsError) {
-			t.Errorf("the approval tool accepted %v", args)
+			t.Errorf("the guessed tool %s answered %+v, want a refusal", guess.name, res)
 		}
 	}
 
-	// And it reads: the queue is empty, and an unknown request is a stable error.
-	if _, _, fail := d.do(t, step{Call: "ApprovalList", Args: json.RawMessage(`{}`)}); fail != nil {
-		t.Errorf("the approval tool cannot list: %+v", fail)
-	}
+	for _, check := range []step{
+		{Call: "ApprovalRuleList", Args: json.RawMessage(`{}`)},
+		{Call: "CostSummary", Args: json.RawMessage(`{}`)},
+	} {
+		reader := service.WithCaller(t.Context(), service.Caller{Actor: "local:check", Scopes: service.AllScopes})
 
-	if _, _, fail := d.do(
-		t,
-		step{Call: "ApprovalGet", Args: json.RawMessage(`{"id":"apr_0000000001"}`)},
-	); fail == nil ||
-		fail.Code != service.CodeApprovalNotFound {
-		t.Errorf("an unknown request through the tool: %+v", fail)
+		result, err := callService(reader, d.service(), check)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		raw, _ := json.Marshal(result)
+		if strings.Contains(string(raw), "publish.post") || strings.Contains(string(raw), "999999999999") {
+			t.Errorf("%s shows what a guessed tool wrote: %s", check.Call, raw)
+		}
 	}
 }
