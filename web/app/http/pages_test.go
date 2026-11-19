@@ -151,6 +151,52 @@ func TestPages(t *testing.T) {
 	}
 }
 
+// The consent screen of a social network sends the browser back by a cross-site navigation, which carries
+// no SameSite=Strict session cookie: the sign-in page is drawn all the same, with nothing of the workspace
+// in it, and the call it makes, POST /api/v1/social/complete, still needs the session. Every other page
+// and the API still answer 401 without one (SDD-020 section 6).
+func TestSignInPageIsDrawnWithoutTheSessionCookie(t *testing.T) {
+	t.Parallel()
+
+	h := pagesHarness(t)
+
+	navigation := map[string]string{
+		"Accept":         "text/html",
+		"Sec-Fetch-Site": "cross-site",
+		"Sec-Fetch-Mode": "navigate",
+		"Sec-Fetch-Dest": "document",
+	}
+
+	res := h.do(req{path: "/social/callback?state=s&code=c", noAuth: true, headers: navigation})
+	if res.status != http.StatusOK || !strings.Contains(string(res.body), `Social\/Callback`) {
+		t.Fatalf("the sign-in page without a session = %d, want the page", res.status)
+	}
+
+	if strings.Contains(string(res.body), `"auth"`) || strings.Contains(string(res.body), "prj_") {
+		t.Errorf("the sign-in page carries data of the workspace: %.400s", res.body)
+	}
+
+	for name, r := range map[string]req{
+		"another page": {path: "/connections", noAuth: true, headers: map[string]string{"Accept": "text/html"}},
+		"the completion": {
+			method: http.MethodPost, path: "/api/v1/social/complete", body: `{"state":"s","code":"c"}`,
+			noAuth: true, headers: map[string]string{"Sec-Fetch-Site": "same-origin"},
+		},
+	} {
+		if got := h.do(r); got.status != http.StatusUnauthorized {
+			t.Errorf("%s without a session = %d, want 401", name, got.status)
+		}
+	}
+
+	// The exemption is the GET of the page: the path takes no other method.
+	if got := h.do(req{
+		method: http.MethodPost, path: "/social/callback", body: `{}`, noAuth: true,
+		headers: map[string]string{"Sec-Fetch-Site": "same-origin"},
+	}); got.status != http.StatusUnauthorized && got.status != http.StatusMethodNotAllowed {
+		t.Errorf("a POST of the page without a session = %d, want 401 or 405", got.status)
+	}
+}
+
 // A project that the editor cannot open answers with the Inertia error page carrying the code, the
 // message and the hint of the service, never a bare "500 Internal Server Error".
 func TestEditorPageShowsWhyAProjectCannotOpen(t *testing.T) {
