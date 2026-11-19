@@ -673,16 +673,7 @@ func (s *svc) JobCancel(ctx context.Context, req JobCancelRequest) (*Job, error)
 			return s.jobView(c, after, false), nil
 		}
 	} else if row.State == JobWaitingApproval {
-		// Cancelling a job that waits rejects its request (SDD-015 section 5); one approved since it
-		// was read is cancelled as a queued job, so a cancel never lets it run.
-		err := s.cancelWaiting(ctx, c.Actor, &row)
-		if errors.Is(err, errNoLongerWaiting) {
-			if err = s.cancelJob(ctx, row.ID); err == nil {
-				s.waitJob(ctx, row.ID, cancelWait)
-			}
-		}
-
-		if err != nil {
+		if err := s.cancelWaitingJob(ctx, c.Actor, &row); err != nil {
 			return nil, asError(err)
 		}
 	} else if err := s.cancelJob(ctx, row.ID); err != nil {

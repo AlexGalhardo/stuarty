@@ -29,15 +29,18 @@ func TestSecurity_T48_BrowserSessionWithoutTheLauncherSecretCannotDecide(t *test
 			"Cookie": h.sessionWith(t, secret), "Sec-Fetch-Site": "same-origin", "Origin": h.srv.URL,
 		}
 
-		if res := h.do(req{path: "/api/v1/approvals/apr_0000000001", noAuth: true, headers: headers}); res.status !=
-			http.StatusOK {
-			t.Errorf("%s: reading a request = %d %s, want 200", name, res.status, res.body)
+		read := h.do(req{path: "/api/v1/approvals/apr_0000000001", noAuth: true, headers: headers})
+		if read.status != http.StatusOK {
+			t.Errorf("%s: reading a request = %d %s, want 200", name, read.status, read.body)
 		}
 
 		for _, r := range writes("apr_0000000001") {
 			r.noAuth, r.headers = true, headers
-			if res := h.do(r); res.status != http.StatusForbidden || res.json(t)["code"] != "E_PRIVILEGED_SESSION" {
-				t.Errorf("%s: %s %s = %d %s, want 403 E_PRIVILEGED_SESSION", name, r.method, r.path, res.status, res.body)
+
+			res := h.do(r)
+			if res.status != http.StatusForbidden || res.json(t)["code"] != "E_PRIVILEGED_SESSION" {
+				t.Errorf("%s: %s %s = %d %s, want 403 E_PRIVILEGED_SESSION",
+					name, r.method, r.path, res.status, res.body)
 			}
 		}
 	}

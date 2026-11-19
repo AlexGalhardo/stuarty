@@ -86,8 +86,8 @@ func TestJobApproval_SummaryThatCouldLookLikeSomethingElseIsRefused(t *testing.T
 	t.Parallel()
 
 	for name, summary := range map[string]string{
-		"a bidirectional override": "Post to ‮TXT.exe",
-		"a zero-width space":       "Pay​ 1 USD",
+		"a bidirectional override": "Post to \xe2\x80\xaeTXT.exe",
+		"a zero-width space":       "Pay\xe2\x80\x8b 1 USD",
 		"a tag character":          "Post \U000E0041",
 		"a C1 control":             "Post \u0085 now",
 	} {
