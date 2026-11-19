@@ -11,6 +11,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/AlexGalhardo/stuarty/service/workspace"
 )
 
 // former029 is a workspace written by the binary of release v0.29.0 (service/testdata/former-workspace).
@@ -133,6 +135,38 @@ func TestFirstStartAdoptsTheWorkspaceOfRelease029(t *testing.T) {
 	again, stderr, code := runIn(t, bin, home, nil, "project:list", "--json")
 	if code != 0 || stderr != "" || !strings.Contains(again, "prj_1000000001") {
 		t.Errorf("second start: exit %d, %q, %q", code, stderr, again)
+	}
+}
+
+// TestFirstStartWhileVukemVideoRunsSaysToCloseIt: a server of Vukem Video that still owns ~/.vukem-video
+// stops the adoption; a command is told to close it (E_WORKSPACE_LOCKED, exit 2), not to report a bug, and
+// nothing is moved (SDD-005 section 6.6 step 1).
+func TestFirstStartWhileVukemVideoRunsSaysToCloseIt(t *testing.T) {
+	bin := buildBinary(t)
+	home := t.TempDir()
+	former := filepath.Join(home, ".vukem-video")
+
+	copyFixture(t, former)
+
+	lock, err := workspace.Dir(former).TryLock()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Cleanup(func() { _ = lock.Release() })
+
+	_, stderr, code := runIn(t, bin, home, nil, "project:list")
+	if code != 2 || !strings.Contains(stderr, "E_WORKSPACE_LOCKED") || !strings.Contains(stderr, "close Vukem Video") {
+		t.Errorf("exit %d, standard error %q, want exit 2 and E_WORKSPACE_LOCKED asking to close Vukem Video",
+			code, stderr)
+	}
+
+	if _, err := os.Stat(filepath.Join(home, ".stuarty")); !errors.Is(err, fs.ErrNotExist) {
+		t.Errorf("the new folder exists while Vukem Video owns the former one: %v", err)
+	}
+
+	if _, err := os.Stat(filepath.Join(former, "db.sqlite")); err != nil {
+		t.Errorf("the former workspace lost its database: %v", err)
 	}
 }
 
