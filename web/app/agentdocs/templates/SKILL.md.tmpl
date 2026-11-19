@@ -28,6 +28,7 @@ Check with `project:list`. Workspace: `~/.stuarty` or `$STUARTY_HOME`; `serve` s
 - The top track draws over the others (ends: `top`, `bottom`).
 - `--base` is your last result's `revision`; default: current.
 - Give your own `id` to what later operations use.
+- A job in `waiting_approval` waits for a person: you cannot approve it, so poll `job:show` and do not send it again (`approval:list` shows the queue). A cost ceiling refuses with `E_COST_CEILING`.
 
 ## Command reference
 

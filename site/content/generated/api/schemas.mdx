@@ -7,6 +7,22 @@ description: "The objects the HTTP API takes and returns, from its OpenAPI docum
 
 The types named in the tables of the operations. The arguments of each editing command are on the pages of the [edit tool](/docs/mcp/tools/edit), where the `args` of an operation of a batch are described.
 
+### ApprovalListResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `next_cursor` | `string` or `null` | no |  |
+| `requests` | array of [`Request`](/docs/api/schemas#request) | no |  |
+| `text` | `string` | no |  |
+| `total` | `integer` | no |  |
+| `untrusted_notice` | `string` | no |  |
+
+### ApprovalRuleListResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `rules` | array of [`RuleView`](/docs/api/schemas#ruleview) | no |  |
+
 ### Asset
 
 | Name | Type | Required | Description |
@@ -120,6 +136,17 @@ The types named in the tables of the operations. The arguments of each editing c
 | `stroke_width` | `number (double)` or `null` | no |  |
 | `uppercase` | `boolean` or `null` | no |  |
 
+### CeilingView
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `currency` | `string` | no |  |
+| `per_day_micros` | `integer (int64)` or `null` | no |  |
+| `per_item_micros` | `integer (int64)` or `null` | no |  |
+| `project_id` | `string` or `null` | no |  |
+| `updated_at` | `string (date-time)` | no |  |
+| `updated_by` | `string` | no |  |
+
 ### Change
 
 | Name | Type | Required | Description |
@@ -203,6 +230,24 @@ The types named in the tables of the operations. The arguments of each editing c
 | `message` | `string` | no |  |
 | `ok` | `boolean` | no |  |
 | `status` | `integer` | no |  |
+
+### CostLine
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `currency` | `string` | no |  |
+| `micros` | `integer (int64)` | no |  |
+| `project_id` | `string` | no |  |
+| `scope` | `string` | no |  |
+
+### CostSummaryResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `ceilings` | array of [`CeilingView`](/docs/api/schemas#ceilingview) | no |  |
+| `day` | `string` | no |  |
+| `days` | array of [`Total`](/docs/api/schemas#total) | no |  |
+| `today` | array of [`CostLine`](/docs/api/schemas#costline) | no |  |
 
 ### Crop
 
@@ -696,6 +741,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `actor` | `string` | no |  |
+| `approval_id` | `string` | no |  |
 | `created_at` | `string (date-time)` | no |  |
 | `error` | [`Error`](/docs/api/schemas#error) or `any` or `null` or `null` | no |  |
 | `finished_at` | `string (date-time)` or `null` | no |  |
@@ -1041,22 +1087,12 @@ The types named in the tables of the operations. The arguments of each editing c
 | `state` | `string` | no |  |
 | `text` | `string` | no |  |
 
-### MemoryGetResult
+### Money
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
-| `body` | `string` | no |  |
-| `entry` | [`LibraryEntry`](/docs/api/schemas#libraryentry) | no |  |
-| `text` | `string` | no |  |
-| `untrusted_notice` | `string` | no |  |
-
-### MemoryWriteResult
-
-| Name | Type | Required | Description |
-| --- | --- | --- | --- |
-| `entry` | [`LibraryEntry`](/docs/api/schemas#libraryentry) | no |  |
-| `text` | `string` | no |  |
-| `untrusted_notice` | `string` | no |  |
+| `currency` | `string` | no |  |
+| `micros` | `integer (int64)` | no |  |
 
 ### OpEffect
 
@@ -1369,6 +1405,42 @@ The types named in the tables of the operations. The arguments of each editing c
 | `den` | `integer` | no |  |
 | `num` | `integer` | no |  |
 
+### Request
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `actor` | `string` | no |  |
+| `connection_id` | `string` or `null` | no |  |
+| `created_at` | `string (date-time)` | no |  |
+| `decided_at` | `string (date-time)` or `null` | no |  |
+| `decided_by` | `string` or `null` | no |  |
+| `estimate` | [`Money`](/docs/api/schemas#money) | no |  |
+| `expires_at` | `string (date-time)` | no |  |
+| `id` | `string` | no |  |
+| `job_id` | `string` or `null` | no |  |
+| `kind` | `string` | no |  |
+| `payload_ref` | `string` | no |  |
+| `project_id` | `string` or `null` | no |  |
+| `reason` | `string` | no |  |
+| `rule_id` | `string` or `null` | no |  |
+| `state` | `string` | no |  |
+| `summary` | `string` | no |  |
+
+### RuleView
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `connection_id` | `string` or `null` | no |  |
+| `created_at` | `string (date-time)` | no |  |
+| `created_by` | `string` | no |  |
+| `currency` | `string` | no |  |
+| `enabled` | `boolean` | no |  |
+| `id` | `string` | no |  |
+| `kind` | `string` | no |  |
+| `per_day_micros` | `integer (int64)` or `null` | no |  |
+| `per_item_micros` | `integer (int64)` or `null` | no |  |
+| `project_id` | `string` or `null` | no |  |
+
 ### Settings
 
 | Name | Type | Required | Description |
@@ -1680,6 +1752,16 @@ The types named in the tables of the operations. The arguments of each editing c
 | `state` | `string` | no |  |
 | `text` | `string` | no |  |
 | `total_bytes` | `integer (int64)` | no |  |
+
+### Total
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `connection_id` | `string` | no |  |
+| `currency` | `string` | no |  |
+| `day` | `string` | no |  |
+| `micros` | `integer (int64)` | no |  |
+| `project_id` | `string` | no |  |
 
 ### Track
 

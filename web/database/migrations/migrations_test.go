@@ -574,3 +574,81 @@ func TestJobsAcceptWaitingApprovalAndRegisteredKinds(t *testing.T) {
 		t.Errorf("indexes of jobs after the rebuild = %d, %v; want 3", n, err)
 	}
 }
+
+// The rebuild of jobs for SDD-015 keeps the rows of a workspace that already has jobs, with their
+// values, and brings the state and the kinds along; Down puts the table back for the old kinds.
+func TestJobsRebuildKeepsTheRowsOfAnExistingWorkspace(t *testing.T) {
+	ctx := context.Background()
+	db, err := database.Open(ctx, "file:"+filepath.ToSlash(filepath.Join(t.TempDir(), "db.sqlite")))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = db.Close() })
+
+	all := All()
+	before := all[:len(all)-1] // everything but the rebuild of jobs
+	if all[len(all)-1].ID != "20261119110100_jobs_waiting_approval" {
+		t.Fatalf("the last migration is %s: update this test", all[len(all)-1].ID)
+	}
+
+	qopts := queue.DatabaseOptions{Table: "queue_jobs", FailedTable: "queue_failed_jobs"}
+	old, err := schema.NewMigrator(db, slices.Concat(queue.Migrations(qopts), before))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := old.Up(ctx); err != nil {
+		t.Fatal(err)
+	}
+
+	for _, q := range []string{
+		`INSERT INTO projects (id, name, schema_version, document, doc_sha256, width, height, fps_num, fps_den, created_ms, updated_ms, created_by)
+ VALUES ('prj_a', 'a', 1, '{}', 'x', 1, 1, 30, 1, 1, 1, 'local:ui')`,
+		`INSERT INTO jobs (id, kind, project_id, actor, state, progress, message, input, result, cancel_requested, attempts, created_ms, updated_ms, started_ms, finished_ms)
+ VALUES ('job_a', 'export', 'prj_a', 'local:cli', 'succeeded', 1, 'm', '{"k":1}', '{"r":2}', 0, 2, 10, 20, 11, 19)`,
+		`INSERT INTO jobs (id, kind, project_id, actor, state, input, created_ms, updated_ms) VALUES ('job_b', 'frame', 'prj_a', 'local:cli', 'queued', '{}', 30, 30)`,
+	} {
+		if _, err := db.ExecContext(ctx, q); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	full, err := schema.NewMigrator(db, slices.Concat(queue.Migrations(qopts), all))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ran, err := full.Up(ctx); err != nil || len(ran) != 1 {
+		t.Fatalf("Up = %v, %v; want the one rebuild", ran, err)
+	}
+
+	var kind, state, input, result string
+	var attempts int
+	var approval sql.NullString
+	err = db.QueryRowContext(ctx, `SELECT kind, state, input, result, attempts, approval_id FROM jobs WHERE id = 'job_a'`).
+		Scan(&kind, &state, &input, &result, &attempts, &approval)
+	if err != nil || kind != "export" || state != "succeeded" || input != `{"k":1}` || result != `{"r":2}` ||
+		attempts != 2 || approval.Valid {
+		t.Fatalf("job_a after the rebuild = %q %q %q %q %d %v, %v", kind, state, input, result, attempts, approval, err)
+	}
+
+	var n int
+	if err := db.QueryRowContext(ctx, `SELECT count(*) FROM jobs`).Scan(&n); err != nil || n != 2 {
+		t.Fatalf("jobs after the rebuild = %d, %v; want 2", n, err)
+	}
+
+	// Down for the rebuild drops what the old table cannot hold (a waiting job, a registered kind).
+	if _, err := db.ExecContext(
+		ctx,
+		`INSERT INTO jobs (id, kind, project_id, actor, state, input, created_ms, updated_ms)
+ VALUES ('job_c', 'publish.post', 'prj_a', 'a', 'waiting_approval', '{}', 40, 40)`,
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := full.Rollback(ctx, 1); err != nil {
+		t.Fatalf("Rollback: %v", err)
+	}
+
+	if err := db.QueryRowContext(ctx, `SELECT count(*) FROM jobs`).Scan(&n); err != nil || n != 2 {
+		t.Fatalf("jobs after Down = %d, %v; want the 2 the old table can hold", n, err)
+	}
+}
