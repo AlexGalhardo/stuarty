@@ -33,7 +33,7 @@ test("every sample sends the bearer secret from the environment", () => {
 		);
 		for (const s of list) {
 			assert.match(s.code, /Bearer/, `${s.label} has no bearer header`);
-			assert.match(s.code, /VUKEM_VIDEO_KEY/, `${s.label} does not read the secret from the environment`);
+			assert.match(s.code, /STUARTY_KEY/, `${s.label} does not read the secret from the environment`);
 			assert.ok(s.code.includes(request.url), `${s.label} lacks the url`);
 		}
 	}

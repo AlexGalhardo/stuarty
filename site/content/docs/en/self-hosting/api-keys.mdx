@@ -50,17 +50,17 @@ The second answer holds the secret. Store it in a file only you can read, and po
 <Tab title="CLI">
 
 ```bash
-export VUKEM_VIDEO_URL=https://video.example.com
-vukem-video project:list --key-file ~/.vukem-video-key
+export STUARTY_URL=https://video.example.com
+stuarty project:list --key-file ~/.stuarty-key
 ```
 
-Or set `VUKEM_VIDEO_KEY` in the environment. There is no `--key` flag, because other users can see command-line arguments. The same variables make the stdio MCP server (`vukem-video mcp`) talk to the remote server.
+Or set `STUARTY_KEY` in the environment. There is no `--key` flag, because other users can see command-line arguments. The same variables make the stdio MCP server (`stuarty mcp`) talk to the remote server.
 
 </Tab>
 <Tab title="HTTP">
 
 ```bash
-curl -fsS -H "Authorization: Bearer $(cat ~/.vukem-video-key)" "$APP/api/v1/projects"
+curl -fsS -H "Authorization: Bearer $(cat ~/.stuarty-key)" "$APP/api/v1/projects"
 curl -fsS -b jar.txt -H "Origin: $APP" "$APP/api/v1/keys"
 curl -fsS -b jar.txt -X DELETE -H "Origin: $APP" "$APP/api/v1/keys/key_7k2m9x4q1b"
 ```
@@ -72,7 +72,7 @@ The key goes only in the `Authorization: Bearer` header. `GET /keys` lists your 
 
 ## Rate limits
 
-A key is limited to 300 requests per minute with a burst of 60 (`VUKEM_VIDEO_RATE_LIMIT_PER_MINUTE`); a browser session to 1,800 (`VUKEM_VIDEO_RATE_LIMIT_SESSION_PER_MINUTE`). Seven heavy calls share one limit of 10 per minute per credential (`VUKEM_VIDEO_RATE_LIMIT_HEAVY_PER_MINUTE`): `job_start`, `media_import`, `template:import`, `font:import`, `bundle:import`, `bundle:export` and `otio:import`. In local mode the CLI and the API share one credential, the local token, so their calls add up; the browser session has its own. Before authentication an address has 600 requests per minute, and 20 failed authentications per minute, after which it is refused before any key or login is checked. Behind a proxy, set `TRUSTED_PROXIES`, or every client shares one address.
+A key is limited to 300 requests per minute with a burst of 60 (`STUARTY_RATE_LIMIT_PER_MINUTE`); a browser session to 1,800 (`STUARTY_RATE_LIMIT_SESSION_PER_MINUTE`). Seven heavy calls share one limit of 10 per minute per credential (`STUARTY_RATE_LIMIT_HEAVY_PER_MINUTE`): `job_start`, `media_import`, `template:import`, `font:import`, `bundle:import`, `bundle:export` and `otio:import`. In local mode the CLI and the API share one credential, the local token, so their calls add up; the browser session has its own. Before authentication an address has 600 requests per minute, and 20 failed authentications per minute, after which it is refused before any key or login is checked. Behind a proxy, set `TRUSTED_PROXIES`, or every client shares one address.
 
 The answer to a limit is HTTP 429 with `Retry-After` and `E_RATE_LIMITED`, which is retryable.
 

@@ -28,7 +28,7 @@ The steps below were written when commits were cherry-picked into a release bran
 
 ## Things that went wrong before
 
-- A test passed only in the agent's worktree because an environment variable was unset there: the sessions tests built `$VUKEM_VIDEO_TEST_FFMPEG_DIR/ffmpeg` without `.exe` on Windows. Run delivered tests from a clean worktree with the variables CI sets.
+- A test passed only in the agent's worktree because an environment variable was unset there: the sessions tests built `$STUARTY_TEST_FFMPEG_DIR/ffmpeg` without `.exe` on Windows. Run delivered tests from a clean worktree with the variables CI sets.
 - An agent's single report can be refused when it reports twice. If a notification says the report was refused, read the commits in its worktree (`git -C <worktree> log`).
 - A security review fires on pushed commits. Send each finding to the owner with the fix it needs (owner scoping, fail closed on lookup errors, one transaction for read-then-act), and integrate only the fixed version.
 - Timing tests flake when several agents build at once. A failure under load is re-run alone before it is called a defect, and is fixed only if it also fails alone.
