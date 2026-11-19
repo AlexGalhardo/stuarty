@@ -63,11 +63,17 @@ export default function RevertDialog({
 	}, [target, runtime]);
 
 	const confirm = (): void => {
-		if (target === null) return;
+		if (target === null || preview.status !== "ready") return;
 		setBusy(true);
 		setFailure(null);
+		// The revert is held to the revision the preview was made on: when another
+		// actor changed the document since, the core answers E_REVISION_CONFLICT
+		// instead of going back over a change the person never saw.
 		runtime.client
-			.revertTo(runtime.projectId, target)
+			.revertTo(runtime.projectId, {
+				...target,
+				base_revision: preview.result.base_revision,
+			})
 			.then(() => {
 				setBusy(false);
 				onClose();

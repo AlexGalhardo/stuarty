@@ -645,6 +645,9 @@ export interface HistoryRevertResult extends Omit<EditResult, "kind"> {
 export interface RevertRequest {
 	revision?: number;
 	checkpoint?: string;
+	// The revision the caller read; a change by another actor since then to what
+	// the revert changes is E_REVISION_CONFLICT (SDD-002 A.7).
+	base_revision?: number;
 	dry_run?: boolean;
 }
 
