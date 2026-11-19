@@ -132,20 +132,31 @@ func markedProfile(
 
 	defer func() { _ = rc.Close() }()
 
-	raw, err := io.ReadAll(io.LimitReader(rc, probe.Samples*BytesPerSample))
-	if err != nil {
-		return nil, err
+	// Streamed one sample at a time: the range may be an hour of the asset, which is not held in memory at once.
+	in := bufio.NewReaderSize(io.LimitReader(rc, probe.Samples*BytesPerSample), 1<<16)
+	m := newProfileMeter()
+
+	var buf [BytesPerSample]byte
+
+	for n := 0; ; n++ {
+		if n%SampleRate == 0 {
+			if err := ctx.Err(); err != nil {
+				return nil, err
+			}
+		}
+
+		if _, err := io.ReadFull(in, buf[:]); err != nil {
+			if errors.Is(err, io.EOF) || errors.Is(err, io.ErrUnexpectedEOF) {
+				break
+			}
+
+			return nil, err
+		}
+
+		m.write(float64(s16(buf[0:2]))/32768, float64(s16(buf[2:4]))/32768)
 	}
 
-	n := len(raw) / BytesPerSample
-	l, r := make([]float64, n), make([]float64, n)
-
-	for i := range n {
-		l[i] = float64(s16(raw[i*BytesPerSample:])) / 32768
-		r[i] = float64(s16(raw[i*BytesPerSample+2:])) / 32768
-	}
-
-	return measureNoiseProfile(l, r), nil
+	return m.result(), nil
 }
 
 // bus is the sources of one track and the chain that runs on their sum.

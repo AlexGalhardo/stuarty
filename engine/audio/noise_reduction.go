@@ -106,37 +106,72 @@ type noiseProfile []float64
 // measureNoiseProfile is the mean power per bin of the frames of the stereo samples l and r, or nil when they are
 // shorter than a frame.
 func measureNoiseProfile(l, r []float64) noiseProfile {
-	if len(l) < nrFrame {
+	m := newProfileMeter()
+	for i := range l {
+		m.write(l[i], r[i])
+	}
+
+	return m.result()
+}
+
+// profileMeter measures a noise profile as the samples arrive, holding one frame: a marked range may be as long as
+// the asset (up to an hour), which is not held in memory at once.
+type profileMeter struct {
+	win, prof        []float64
+	tr               *fft
+	l, r             []float64 // the frame being filled
+	fill             int
+	re, im, re2, im2 []float64
+	frames           int
+}
+
+func newProfileMeter() *profileMeter {
+	return &profileMeter{
+		win: sqrtHann(), prof: make([]float64, nrBins), tr: newFFT(nrFrame),
+		l: make([]float64, nrFrame), r: make([]float64, nrFrame),
+		re: make([]float64, nrFrame), im: make([]float64, nrFrame),
+		re2: make([]float64, nrFrame), im2: make([]float64, nrFrame),
+	}
+}
+
+// write adds one stereo sample; each full frame is analysed, then the frame moves on by a hop.
+func (m *profileMeter) write(l, r float64) {
+	m.l[m.fill], m.r[m.fill] = l, r
+	m.fill++
+
+	if m.fill < nrFrame {
+		return
+	}
+
+	for k := range nrFrame {
+		m.re[k], m.im[k] = mul(m.l[k], m.win[k]), 0
+		m.re2[k], m.im2[k] = mul(m.r[k], m.win[k]), 0
+	}
+
+	m.tr.transform(m.re, m.im, false)
+	m.tr.transform(m.re2, m.im2, false)
+
+	for k := range nrBins {
+		m.prof[k] += (mul(m.re[k], m.re[k]) + mul(m.im[k], m.im[k]) + mul(m.re2[k], m.re2[k]) +
+			mul(m.im2[k], m.im2[k])) / 2
+	}
+
+	m.frames++
+
+	copy(m.l, m.l[nrHop:])
+	copy(m.r, m.r[nrHop:])
+	m.fill = nrHop
+}
+
+// result is the mean power per bin, or nil when no whole frame was written.
+func (m *profileMeter) result() noiseProfile {
+	if m.frames == 0 {
 		return nil
 	}
 
-	var (
-		win      = sqrtHann()
-		tr       = newFFT(nrFrame)
-		prof     = make(noiseProfile, nrBins)
-		re, im   = make([]float64, nrFrame), make([]float64, nrFrame)
-		re2, im2 = make([]float64, nrFrame), make([]float64, nrFrame)
-		frames   int
-	)
-
-	for at := 0; at+nrFrame <= len(l); at += nrHop {
-		for k := range nrFrame {
-			re[k], im[k] = mul(l[at+k], win[k]), 0
-			re2[k], im2[k] = mul(r[at+k], win[k]), 0
-		}
-
-		tr.transform(re, im, false)
-		tr.transform(re2, im2, false)
-
-		for k := range nrBins {
-			prof[k] += (mul(re[k], re[k]) + mul(im[k], im[k]) + mul(re2[k], re2[k]) + mul(im2[k], im2[k])) / 2
-		}
-
-		frames++
-	}
-
+	prof := make(noiseProfile, nrBins)
 	for k := range prof {
-		prof[k] /= float64(frames)
+		prof[k] = m.prof[k] / float64(m.frames)
 	}
 
 	return prof
