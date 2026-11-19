@@ -34,7 +34,9 @@ const isDirection = (value: string): value is MotionDirection =>
 // out on the start or the end of a visual item, as ordinary keyframes written by
 // the core (`animation.apply_preset`), so they are edited afterwards in the
 // Keyframes section. The core judges the length, the distance and the factor; an
-// empty field takes the default of the preset.
+// empty field takes the default of the preset. The Animation section sits in the
+// same tab, so the controls named like its own (preset, edge, duration, apply)
+// carry names of their own.
 export default function MotionSection({
 	itemId,
 }: {
@@ -76,6 +78,7 @@ export default function MotionSection({
 				</Label>
 				<select
 					id={`motion-preset-${itemId}`}
+					aria-label={t("ui.editor.motion.preset_of")}
 					value={preset}
 					disabled={!canEdit}
 					className={SELECT_CLASS}
@@ -94,6 +97,7 @@ export default function MotionSection({
 				</Label>
 				<select
 					id={`motion-edge-${itemId}`}
+					aria-label={t("ui.editor.motion.edge_of")}
 					value={edge}
 					disabled={!canEdit}
 					className={SELECT_CLASS}
@@ -109,6 +113,7 @@ export default function MotionSection({
 				</Label>
 				<Input
 					id={`motion-length-${itemId}`}
+					aria-label={t("ui.editor.motion.duration_of")}
 					value={length}
 					placeholder={t("ui.editor.motion.use_default")}
 					autoComplete="off"
@@ -184,7 +189,7 @@ export default function MotionSection({
 						).then((result) => setError(result.ok ? null : result.error))
 					}
 				>
-					{t("ui.editor.animation.apply")}
+					{t("ui.editor.motion.apply")}
 				</Button>
 			</div>
 			<FieldMessage
