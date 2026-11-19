@@ -52,7 +52,8 @@ type TestResult struct {
 // Connector is the code of a kind of connection. The kinds of the real
 // providers are added by later epics; this epic has the test kind.
 type Connector interface {
-	// Test makes one harmless request to the destination.
+	// Test makes one harmless request to the destination. The Message of its result is built
+	// with SafeMessage from the raw body, so an echoed credential is found before any cut.
 	Test(ctx context.Context, c Credential) (TestResult, error)
 }
 
