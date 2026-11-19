@@ -51,7 +51,9 @@ func (p *planner) layers(ls []Layer, dx, dy int, opacity float64, shown bool, fp
 			continue
 		}
 
-		stencil := p.sources[l.ID] && (!vis || l.Opacity == 0)
+		// The renderer skips a layer whose opacity rounds to no weight (SDD-013 section 3.3 step 2.1), so a source
+		// with that opacity, its own or through its groups, is not drawn, like a hidden one.
+		stencil := p.sources[l.ID] && (!vis || math.Round(round3(op)*255) == 0)
 
 		switch {
 		case stencil:
