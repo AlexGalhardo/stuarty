@@ -467,6 +467,7 @@ export interface MediaImportResult {
 }
 
 export type JobState =
+	| "waiting_approval"
 	| "queued"
 	| "running"
 	| "succeeded"
@@ -475,6 +476,7 @@ export type JobState =
 
 export interface ExportResult {
 	revision: number;
+	format?: string;
 	path?: string;
 	download_url: string;
 	bytes: number;
@@ -523,6 +525,7 @@ export interface Job {
 		export?: ExportResult;
 		batch?: BatchResult;
 		transcribe?: { asset_id: string; language: string; words: number };
+		publish?: PublishResult;
 	};
 	error?: ApiErrorBody;
 	lint?: { errors: number; warnings: number };
@@ -1344,4 +1347,100 @@ export interface BundleImportResult {
 	name: string;
 	revision: number;
 	text: string;
+}
+
+// The social networks and publishing (SDD-020). No result carries a credential.
+export interface SocialLimits {
+	title_max: number;
+	description_max_bytes: number;
+	tags_max_chars: number;
+	file_max_bytes: number;
+	formats: string[];
+	source: string;
+	read: string;
+}
+
+export interface SocialNetwork {
+	network: string;
+	name: string;
+	publishes: string[];
+	limits: SocialLimits;
+	endpoint: string;
+	hosts: string[];
+	scopes: string[];
+	guide: string;
+	guide_read: string;
+}
+
+export interface SocialNetworkListResult {
+	networks: SocialNetwork[];
+	redirect_path: string;
+}
+
+export interface SocialConnectRequest {
+	network: string;
+	label?: string;
+	client_id?: string;
+	client_secret?: string;
+	connection_id?: string;
+	redirect_uri: string;
+}
+
+export interface SocialConnectResult {
+	connection_id: string;
+	authorize_url: string;
+}
+
+export interface SocialCompleteRequest {
+	state: string;
+	code?: string;
+	error?: string;
+}
+
+export interface SocialAccount {
+	connection_id: string;
+	network: string;
+	label: string;
+	account_id?: string;
+	account_title?: string;
+	state: "ready" | "needs_sign_in";
+}
+
+export interface SocialAccountListResult {
+	accounts: SocialAccount[];
+}
+
+export interface PublishRequest {
+	project_id: string;
+	connection_id: string;
+	export: string;
+	thumbnail?: string;
+	title: string;
+	description?: string;
+	tags?: string[];
+	visibility?: string;
+	made_for_kids?: boolean;
+	ai_disclosure?: boolean;
+}
+
+export interface PublishIssue {
+	path: string;
+	code: string;
+	message: string;
+}
+
+export interface PublishValidateResult {
+	network: string;
+	state: "prepared" | "invalid";
+	issues: PublishIssue[];
+	summary?: string;
+}
+
+export interface PublishResult {
+	network: string;
+	connection_id: string;
+	remote_id: string;
+	url: string;
+	state: "processing" | "published";
+	thumbnail_error?: string;
 }

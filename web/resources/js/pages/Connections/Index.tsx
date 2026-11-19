@@ -16,13 +16,8 @@ import { formatDateTime } from "@/lib/format";
 import { useLocale, useT } from "@/lib/i18n";
 import { createClient } from "../../editor/api/client";
 import { HttpTransport } from "../../editor/api/http";
-import type {
-	Connection,
-	ConnectionTestResult,
-	CostSummary,
-	ProviderView,
-} from "../../editor/api/types";
-import ProviderCards from "./ProviderCards";
+import type { Connection, ConnectionTestResult } from "../../editor/api/types";
+import SocialSection from "./SocialSection";
 
 const ACCEPTS = [
 	"text",
@@ -252,14 +247,7 @@ export default function Connections(): ReactNode {
 							</ul>
 						))}
 				</section>
-				{providers.length > 0 && (
-					<ProviderCards
-						providers={providers}
-						connections={items ?? []}
-						cost={cost}
-						onChanged={() => void load()}
-					/>
-				)}
+				<SocialSection />
 				<section aria-labelledby="connections-new">
 					<h2 id="connections-new" className="text-lg font-semibold">
 						{t("ui.connections.new")}
