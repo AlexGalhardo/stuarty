@@ -41,7 +41,7 @@ A creator makes a title slide in with a soft overshoot, reveals a photo through 
 
 - [x] 1. Amend SDD-001, SDD-002 and SDD-013 (easing kind and its arithmetic, animatable crop and mask, presets). Verify: `task lint:md` exits 0 and the tests that read SDD-002 pass.
 - [x] 2. Implement the bezier easing in `core/plan` with table tests and a property test (monotonic time, end points exact). Verify: `go test ./core/plan/... -run TestEasing` passes.
-- [ ] 3. Implement `keyframe.set_easing` with golden cases. Verify: `go test ./core/command/...` passes with the updated registry snapshot.
+- [x] 3. Implement `keyframe.set_easing` with golden cases. Verify: `go test ./core/command/...` passes with the updated registry snapshot.
 - [ ] 4. Prove what release 0.28.0 delivers for animated crop and mask, and list in the hand-off anything RF-081 still lacks. Verify: `go test ./core/plan/... -run "TestAnimatedMask|TestAnimatedCrop|TestMaskKeyframes"` and `go test ./engine/export/... -run TestAnimatedCropAndMaskFramesDiffer` pass.
 - [ ] 5. Add golden cases for a mask and a crop animated with the bezier easing, and preview and export parity cases for both. Verify: `go test ./core/command/... ./engine/compositor/... ./engine/export/...` passes with the new golden frames, and the parity tests of `renderer-parity` pass.
 - [ ] 6. Implement `animation.apply_preset` and `animation.list_presets` with golden cases. Verify: `go test ./core/command/... -run TestAnimationPreset` passes.

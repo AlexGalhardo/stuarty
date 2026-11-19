@@ -1,0 +1,7 @@
+{
+  "code": "E_TYPE_MISMATCH",
+  "message": "Property crop_left applies to clips; item itm_m1n2p3q4r5 is a text item.",
+  "hint": "Use opacity, scale, x, y or rotation.",
+  "retryable": false,
+  "path": "args.property"
+}

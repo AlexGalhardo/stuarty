@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.bezier[1] must be from -2 to 3, got -2.5.",
+  "hint": "Keep x1 and x2 from 0 to 1; y1 and y2 may go from -2 to 3.",
+  "retryable": false,
+  "path": "args.bezier[1]"
+}

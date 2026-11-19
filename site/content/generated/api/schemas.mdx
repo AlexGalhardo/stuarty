@@ -797,7 +797,8 @@ The types named in the tables of the operations. The arguments of each editing c
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
-| `easing` | `linear`, `ease_in`, `ease_out`, `ease_in_out`, `hold` | no |  |
+| `bezier` | array of `number (double)` | no |  |
+| `easing` | `linear`, `ease_in`, `ease_out`, `ease_in_out`, `hold`, `bezier` | no |  |
 | `t` | `integer` | no |  |
 | `value` | `number (double)` | no |  |
 
@@ -1125,7 +1126,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `args` | map of `any` | no | The arguments of the command. |
-| `op` | `string`, one of 73 values | yes | A command name, as listed by GET /commands.. min length 1 |
+| `op` | `string`, one of 74 values | yes | A command name, as listed by GET /commands.. min length 1 |
 
 ### OtioLost
 
