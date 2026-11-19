@@ -622,3 +622,66 @@ func TestPublicationTimeZoneAndDaylightSaving(t *testing.T) {
 		t.Errorf("stored target = %+v", again.Targets[0])
 	}
 }
+
+// A publication is an item of its project: the overview and the text view of the production show it, and the
+// production counts what waits for a person and what went out (ADR-0039, RF-303).
+func TestPublicationIsAnItemOfItsProject(t *testing.T) {
+	c := newCalendar(t)
+	p := c.create(c.target(c.at(time.Hour)))
+	id := p.Targets[0].ID
+
+	describe := func() *service.ProjectDescribeResult {
+		res, err := c.svc.ProjectDescribe(c.as(token), service.ProjectDescribeRequest{ProjectID: c.project})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		return res
+	}
+
+	item := func(res *service.ProjectDescribeResult) *service.ProjectItem {
+		for i := range res.Items {
+			if res.Items[i].ID == p.ID {
+				return &res.Items[i]
+			}
+		}
+
+		return nil
+	}
+
+	res := describe()
+	if it := item(res); it == nil || it.Kind != "publication" || it.Title != "Week one" || it.Status != "" ||
+		res.Production.PendingApprovals != 0 || res.Production.Published != 0 || !strings.Contains(res.Text, "Week one") {
+		t.Fatalf("a draft: item %+v, production %+v\n%s", item(res), res.Production, res.Text)
+	}
+
+	c.schedule(p, id)
+
+	if res = describe(); item(res).Status != "pending_approval" || res.Production.PendingApprovals != 1 {
+		t.Fatalf("waiting: item %+v, production %+v", item(res), res.Production)
+	}
+
+	c.approve(p, id)
+	c.clock.advance(time.Hour)
+	c.tick()
+
+	if res = describe(); item(res).Status != "published" || res.Production.Published != 1 ||
+		res.Production.PendingApprovals != 0 {
+		t.Fatalf("published: item %+v, production %+v", item(res), res.Production)
+	}
+
+	overview, err := c.svc.ProjectGet(c.as(token), service.ProjectGetRequest{ProjectID: c.project})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	found := false
+
+	for i := range overview.Items {
+		found = found || overview.Items[i].Kind == "publication" && overview.Items[i].Status == "published"
+	}
+
+	if !found || overview.Production.Published != 1 {
+		t.Errorf("the overview of the project lacks the publication: %+v", overview.Items)
+	}
+}
