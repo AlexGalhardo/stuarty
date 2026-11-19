@@ -26,7 +26,7 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | [04](04-secret-vault-and-connections.md) | Secret vault and connections | L | 03 | IN PROGRESS (senior-a, 2026-11-19) |
 | [05](05-approval-queue-and-cost-ceilings.md) | Approval queue, rules and cost ceilings | M | 04 | TODO |
 | [06](06-project-as-production.md) | The project as the container of a production | L | 03 | IN PROGRESS (senior-b, 2026-11-19) |
-| [07](07-dashboard-shell.md) | Dashboard: sidebar, navigation, profile, theme | M | 03 | IN PROGRESS (senior-c, 2026-11-19) |
+| [07](07-dashboard-shell.md) | Dashboard: sidebar, navigation, profile, theme | M | 03 | DONE (2026-11-19, 70387363..171fb786) |
 | [08](08-asset-library.md) | Asset library with origin, rights and reuse | M | 06, 07 | TODO |
 | [09](09-ai-provider-layer.md) | AI provider layer with API keys, text generation and cost | L | 04, 05 | TODO |
 | [10](10-image-and-voice-generation.md) | Image and voice generation | M | 08, 09 | TODO |
@@ -34,7 +34,7 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | [12](12-ai-oauth-connections.md) | Sign in with ChatGPT and OpenRouter | M | 09 | TODO |
 | [13](13-mcp-domains-and-agent-docs.md) | MCP tools by domain and generated agent documentation | M | 06 | TODO |
 | [14](14-hosted-agent-chat.md) | The user's agent hosted in the chat panel | L | 07, 13 | TODO |
-| [15](15-memory-skills-and-prompts.md) | Memory, skills and prompts | L | 07 | TODO |
+| [15](15-memory-skills-and-prompts.md) | Memory, skills and prompts | L | 07 | IN PROGRESS (senior-c, 2026-11-19) |
 | [16](16-curated-skills-and-briefing.md) | Curated skills and the guided briefing | M | 06, 15 | TODO |
 | [17](17-writing.md) | Writing: scripts, copy and captions | M | 06, 09 | TODO |
 | [18](18-social-connectors-and-youtube.md) | Social connectors and YouTube | L | 04, 05 | TODO |
