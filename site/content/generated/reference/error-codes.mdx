@@ -55,7 +55,7 @@ Raised around the commands: sign-in, imports, exports, jobs and limits. They app
 | `E_LIMIT_EXCEEDED` | 422 | no | a configured ceiling (file size, duration, resolution) is exceeded |
 | `E_LINT_BLOCKING` | 422 | no | an export was refused because the lint has errors; `details.findings` |
 | `E_METHOD_NOT_ALLOWED` | 405 | no | HTTP only: the route does not answer that method; `OPTIONS` is always refused (no CORS, SDD-007 §3.6) |
-| `E_NO_ENCODER` | 503 | no | no H.264 encoder works on this machine |
+| `E_NO_ENCODER` | 503 | no | no encoder works on this machine for the codec the export needs (H.264, or the `details.codec` that was asked for: `hevc` or `av1`, SDD-004 section 8.3); `details.reason` `codec_unavailable` and `details.candidates` |
 | `E_NOTHING_TO_REDO` | 409 | no | the actor has no step to undo or redo |
 | `E_NOTHING_TO_UNDO` | 409 | no | the actor has no step to undo or redo |
 | `E_PATH_NOT_ALLOWED` | 403 | no | a path is outside the allowed import roots or is not a regular file |

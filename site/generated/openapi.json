@@ -169,6 +169,76 @@
         },
         "type": "object"
       },
+      "BatchItem": {
+        "properties": {
+          "codec": {
+            "type": "string"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Error"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "format": {
+            "type": "string"
+          },
+          "index": {
+            "type": "integer"
+          },
+          "job_id": {
+            "type": "string"
+          },
+          "preset": {
+            "type": "string"
+          },
+          "progress": {
+            "format": "double",
+            "type": "number"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExportResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "state": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "BatchResult": {
+        "properties": {
+          "cancelled": {
+            "type": "integer"
+          },
+          "failed": {
+            "type": "integer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/BatchItem"
+            },
+            "type": "array"
+          },
+          "succeeded": {
+            "type": "integer"
+          },
+          "total": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
       "BeatGrid": {
         "properties": {
           "confidence": {
@@ -520,6 +590,23 @@
           "spill": {
             "format": "double",
             "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "CodecAvailability": {
+        "properties": {
+          "available": {
+            "type": "boolean"
+          },
+          "codec": {
+            "type": "string"
+          },
+          "encoder": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
           }
         },
         "type": "object"
@@ -1059,6 +1146,163 @@
         },
         "type": "object"
       },
+      "ExportCheckResult": {
+        "properties": {
+          "duration_ms": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "errors": {
+            "type": "integer"
+          },
+          "estimated_bytes": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/export.Finding"
+            },
+            "type": "array"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "preset": {
+            "type": "string"
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "text": {
+            "type": "string"
+          },
+          "warnings": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "ExportPresetInfo": {
+        "properties": {
+          "codecs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "container": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "limits": {
+            "$ref": "#/components/schemas/ExportPresetLimits"
+          },
+          "network": {
+            "type": "string"
+          },
+          "placement": {
+            "type": "string"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/Source"
+            },
+            "type": "array"
+          },
+          "targets": {
+            "$ref": "#/components/schemas/ExportPresetTargets"
+          }
+        },
+        "type": "object"
+      },
+      "ExportPresetLimits": {
+        "properties": {
+          "aspect_ratio": {
+            "type": "string"
+          },
+          "max_bytes": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "max_duration_ms": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "max_fps": {
+            "type": "integer"
+          },
+          "max_height": {
+            "type": "integer"
+          },
+          "max_video_kbps": {
+            "type": "integer"
+          },
+          "max_width": {
+            "type": "integer"
+          },
+          "min_duration_ms": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "min_fps": {
+            "type": "integer"
+          },
+          "min_height": {
+            "type": "integer"
+          },
+          "min_width": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "ExportPresetListResult": {
+        "properties": {
+          "codecs": {
+            "items": {
+              "$ref": "#/components/schemas/CodecAvailability"
+            },
+            "type": "array"
+          },
+          "presets": {
+            "items": {
+              "$ref": "#/components/schemas/ExportPresetInfo"
+            },
+            "type": "array"
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ExportPresetTargets": {
+        "properties": {
+          "audio_kbps": {
+            "type": "integer"
+          },
+          "height": {
+            "type": "integer"
+          },
+          "video_kbps": {
+            "type": "integer"
+          },
+          "width": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
       "ExportResult": {
         "properties": {
           "audio_codec": {
@@ -1073,6 +1317,9 @@
               "$ref": "#/components/schemas/VerifyCheck"
             },
             "type": "array"
+          },
+          "codec_fallback": {
+            "type": "string"
           },
           "download_url": {
             "type": "string"
@@ -1096,7 +1343,16 @@
               "null"
             ]
           },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "path": {
+            "type": "string"
+          },
+          "preset": {
             "type": "string"
           },
           "revision": {
@@ -2364,6 +2620,16 @@
       },
       "JobResult": {
         "properties": {
+          "batch": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BatchResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "export": {
             "anyOf": [
               {
@@ -4932,6 +5198,20 @@
           "revision": {
             "format": "int64",
             "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "Source": {
+        "properties": {
+          "read": {
+            "type": "string"
+          },
+          "says": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
           }
         },
         "type": "object"
@@ -9756,6 +10036,49 @@
         ],
         "type": "object"
       },
+      "export.Finding": {
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "got": {
+            "type": "string"
+          },
+          "limit": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "exportBatchItemIn": {
+        "properties": {
+          "codec": {
+            "description": "h264, hevc or av1, for mp4; empty is the choice of the preset.",
+            "type": "string"
+          },
+          "end": {
+            "type": "string"
+          },
+          "format": {
+            "description": "mp4 (default), gif, wav or aac.",
+            "type": "string"
+          },
+          "preset": {
+            "description": "A preset id; it needs the format mp4.",
+            "type": "string"
+          },
+          "start": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "handshakeOut": {
         "properties": {
           "proof": {
@@ -10908,90 +11231,25 @@
         "summary": "Make one request through a connection"
       }
     },
-    "/api/v1/cost": {
+    "/api/v1/export-presets": {
       "get": {
-        "operationId": "cost.get",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CostSummaryResult"
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "401": {
-            "$ref": "#/components/responses/Problem"
-          },
-          "403": {
-            "$ref": "#/components/responses/Problem"
-          },
-          "429": {
-            "$ref": "#/components/responses/Problem"
-          },
-          "default": {
-            "$ref": "#/components/responses/Problem"
-          }
-        },
-        "security": [
+        "operationId": "export.presets",
+        "parameters": [
           {
-            "bearer": []
+            "description": "true also tells which codecs this machine can write (runs the test encodes the first time).",
+            "in": "query",
+            "name": "codecs",
+            "schema": {
+              "type": "boolean"
+            }
           }
         ],
-        "summary": "Read the cost ceilings and what was spent"
-      }
-    },
-    "/api/v1/cost/ceilings": {
-      "put": {
-        "operationId": "cost.ceilings.set",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "properties": {
-                  "currency": {
-                    "description": "Three upper-case letters, for example USD.",
-                    "minLength": 1,
-                    "type": "string"
-                  },
-                  "per_day_micros": {
-                    "description": "The most that may be spent in one UTC day, in millionths of the currency unit. With neither limit, the ceiling is removed.",
-                    "format": "int64",
-                    "type": [
-                      "integer",
-                      "null"
-                    ]
-                  },
-                  "per_item_micros": {
-                    "description": "The most one action may cost, in millionths of the currency unit.",
-                    "format": "int64",
-                    "type": [
-                      "integer",
-                      "null"
-                    ]
-                  },
-                  "project_id": {
-                    "description": "The project the ceiling is for; leave out for the whole workspace.",
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "currency"
-                ],
-                "type": "object"
-              }
-            }
-          },
-          "required": true
-        },
         "responses": {
           "200": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CostSummaryResult"
+                  "$ref": "#/components/schemas/ExportPresetListResult"
                 }
               }
             },
@@ -11018,7 +11276,7 @@
             "bearer": []
           }
         ],
-        "summary": "Set or remove a cost ceiling (a person in the browser only; the local token and keys get 403)"
+        "summary": "List the export presets of the platforms"
       }
     },
     "/api/v1/fonts": {
@@ -14316,6 +14574,178 @@
         "summary": "Stream the events of a project"
       }
     },
+    "/api/v1/projects/{id}/export-batches": {
+      "post": {
+        "operationId": "export.batch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "items": {
+                    "description": "The exports, one after the other.",
+                    "items": {
+                      "$ref": "#/components/schemas/exportBatchItemIn"
+                    },
+                    "maxItems": 12,
+                    "minItems": 1,
+                    "type": "array"
+                  },
+                  "wait_ms": {
+                    "description": "0 to 25000: hold the call until the job is final.",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "items"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            },
+            "description": "Accepted"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Export a project several times, one after the other"
+      }
+    },
+    "/api/v1/projects/{id}/export-check": {
+      "get": {
+        "operationId": "export.check",
+        "parameters": [
+          {
+            "description": "A preset id, as listed by GET /export-presets.",
+            "in": "query",
+            "name": "preset",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "description": "The start of the range to export; empty is the start of the timeline.",
+            "in": "query",
+            "name": "start",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The end of the range to export; empty is the end of the timeline.",
+            "in": "query",
+            "name": "end",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "h264, hevc or av1: the codec of the estimate of the size; empty is the first of the preset.",
+            "in": "query",
+            "name": "codec",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExportCheckResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Check a project against an export preset"
+      }
+    },
     "/api/v1/projects/{id}/frame": {
       "get": {
         "operationId": "projects.frame",
@@ -15038,7 +15468,7 @@
                 "properties": {
                   "args": {
                     "additionalProperties": false,
-                    "description": "The arguments of the kind: start, end and format (mp4, gif, wav or aac; default mp4) for an export.",
+                    "description": "The arguments of the kind: start, end, format (mp4, gif, wav, aac or png; default mp4), preset and codec (h264, hevc or av1, for mp4) for an export.",
                     "properties": {
                       "asset_id": {
                         "description": "transcribe: the asset to transcribe.",

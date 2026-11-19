@@ -1,6 +1,6 @@
 {
  "name": "job_start",
- "description": "Start long work. kind=export renders to a workspace file: args {start?, end?, format?, at?}, format mp4 (default), gif, wav, aac or png (the frame at `at`). kind=transcribe makes a transcript: args {asset_id, language?, model?}. Lint errors block export. Returns after wait_ms at most; poll job_get.",
+ "description": "Start long work. export renders a workspace file: args {start?, end?, format?, at? (the png frame), preset?, codec?}. export_batch runs args.items [{preset, format, codec, start, end}] in turn. transcribe: args {asset_id, language?, model?}. Poll job_get.",
  "inputSchema": {
   "type": "object",
   "properties": {
@@ -15,6 +15,7 @@
    "kind": {
     "enum": [
      "export",
+     "export_batch",
      "transcribe"
     ]
    },
@@ -38,6 +39,22 @@
      },
      "at": {
       "type": "string"
+     },
+     "preset": {
+      "type": "string"
+     },
+     "codec": {
+      "enum": [
+       "h264",
+       "hevc",
+       "av1"
+      ]
+     },
+     "items": {
+      "type": "array",
+      "items": {
+       "type": "object"
+      }
      }
     }
    },
@@ -64,25 +81,10 @@
     "type": "string"
    },
    "state": {
-    "enum": [
-     "queued",
-     "running",
-     "succeeded",
-     "failed",
-     "cancelled"
-    ]
+    "type": "string"
    },
    "progress": {
     "type": "number"
-   },
-   "message": {
-    "type": "string"
-   },
-   "result": {
-    "type": "object"
-   },
-   "error": {
-    "type": "object"
    }
   },
   "required": [

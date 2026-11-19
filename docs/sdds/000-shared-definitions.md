@@ -440,4 +440,4 @@ The operations of the registry of domain `image` (`core/command` registry built 
 | `E_VALIDATION` `details.reason` `preset_mismatch` | error detail | an export with a preset was refused because the project does not fit it; `details.findings` |
 | `E_NO_ENCODER` `details.reason` `codec_unavailable` | error detail | the codec asked for has no allowed encoder that passes the test encode on this machine |
 | `preset_<finding>` | verification check | a check of the finished file against its preset, named after the finding (`preset_duration_too_long`) |
-| `codec`, `codec_fallback`, `preset`, `notes` | export result member | the codec written, the codec wanted when the export fell back to `h264`, the preset id, and the notes that say so |
+| `video_codec`, `codec_fallback`, `preset`, `notes` | export result member | the codec written (`video_codec`, as before), the codec wanted when the export fell back to `h264`, the preset id, and the notes that say so |

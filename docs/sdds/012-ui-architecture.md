@@ -1327,6 +1327,16 @@ stateDiagram-v2
 
 Shows the number of running jobs (ingest, transcribe, export) with the highest progress; click opens the export dialog if an export runs, else a small list. Ingest jobs are also shown on their asset cards.
 
+### 14.3 Platforms, codecs and batches (RF-087 to RF-089)
+
+In the Ready state the dialog lists the platform presets of `GET /export-presets` grouped by network (a fieldset per network), each with its limits as short phrases, a link to the page they were read on and the date (`Limits read on 2026-11-19`). The browser words the limits and decides nothing: whether the project fits is `GET /projects/{id}/export-check` (`ExportCheck`), asked again for each chosen preset when the range or the revision changes, and shown under the preset as `The project fits.` or as the findings with their code, message and exact limit (`limit 90 s, now 100 s`); a preset that does not fit stays selectable and the dialog says how many will fail.
+
+Several presets can be chosen at once. A preset is an mp4, so choosing one puts the format back on the video and keeps the range. **Start** then sends one `POST /projects/{id}/export-batches` with an item per preset (and the range, and the codec when one is chosen) and follows the batch job: the Running state lists the children from `result.batch.items` (the job is read every second, because its events carry the progress of the parent and not the state of the children), each row with its state, its progress, and, once done, its file with a copy and a Download link, or its error with the code and the hint. The batch ends Succeeded when every child did and Failed otherwise, and the list stays: a failed row never hides the files of the others.
+
+The **codec** select offers Automatic (the first codec of the preset that this machine can write, else H.264, and the result says so), H.264, H.265 and AV1; the second call of `GET /export-presets?codecs=true` runs the test encodes of SDD-004 §8.3 and the select disables the codecs the machine cannot write. A plain export (no preset) sends the codec as `args.codec`.
+
+**A busy server is not a dead end (VV-220).** When a plain export is refused with `E_QUEUE_FULL` because every export slot is taken, the dialog starts the same export as a batch of one: the core queues it behind the running exports and starts it by itself, and the dialog says it waits. A png is one frame and has no batch, so it keeps the error and the retry.
+
 ## 15. History panel
 
 A tab beside the library (A). It lists `getHistory(id, page)` newest first, 50 per page with "Load more":
