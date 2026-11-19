@@ -33,6 +33,10 @@
 		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "base_revision": 7, "operations": [
 			{"op": "audio.processor_add", "args": {"track_id": "trk_m1n2p3q4r5", "kind": "noise_reduction", "params": {"profile_start_ms": 100, "profile_end_ms": 600}}}]},
 			"expect_error": {"code": "E_VALIDATION"}},
+		{"call": "AudioMeasure", "args": {"project_id": "prj_7k2m9x4q1b", "item_id": "itm_0000000000"},
+			"expect_error": {"code": "E_NOT_FOUND"}},
+		{"call": "AudioMeasure", "args": {"project_id": "prj_7k2m9x4q1b", "item_id": "itm_m1n2p3q4r5", "start": "1.5s", "end": "0.5s"},
+			"expect_error": {"code": "E_VALIDATION"}},
 		{"call": "Lint", "args": {"project_id": "prj_7k2m9x4q1b"}},
 		{"call": "CommandHelp", "args": {"name": "audio.processor_add"}}
 	]
