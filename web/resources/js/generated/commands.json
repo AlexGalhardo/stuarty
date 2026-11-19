@@ -2344,7 +2344,7 @@
 		"internal": false,
 		"name": "clip.add_composition",
 		"scope": "edit",
-		"summary": "Places another timeline of the project on a visual track as one clip."
+		"summary": "Uses a timeline as a clip."
 	},
 	{
 		"args_schema": {
@@ -3665,7 +3665,7 @@
 		"internal": false,
 		"name": "composition.create_from_selection",
 		"scope": "edit",
-		"summary": "Moves the selected items into a new timeline and puts one composition clip in their place."
+		"summary": "Moves items into a new timeline."
 	},
 	{
 		"args_schema": {
@@ -3699,7 +3699,7 @@
 		"internal": false,
 		"name": "composition.expand",
 		"scope": "edit",
-		"summary": "Puts the items of a composition's timeline back on this timeline in place of the composition."
+		"summary": "Puts a composition's items back."
 	},
 	{
 		"args_schema": {
