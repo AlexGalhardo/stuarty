@@ -11,7 +11,9 @@ type FlagDoc struct {
 
 // CommandDoc is a command in the generated CLI reference.
 type CommandDoc struct {
-	Name    string    `json:"name"`
+	Name string `json:"name"`
+	// Domain is the domain the command belongs to (SDD-000 section 1.1): `stuarty <domain> <verb>` runs it.
+	Domain  string    `json:"domain,omitempty"`
 	Summary string    `json:"summary"`
 	Usage   []string  `json:"usage"`
 	Example string    `json:"example,omitempty"`
@@ -67,12 +69,8 @@ func Reference() ReferenceDoc {
 
 	for _, s := range registry() {
 		c := CommandDoc{
-			Name:    s.name,
-			Summary: s.summary,
-			Usage:   s.usage,
-			Example: s.example,
+			Name: s.name, Domain: domainOf(s.name), Summary: s.summary, Usage: s.usage, Example: s.example,
 			Pending: s.pending,
-			Person:  s.person,
 		}
 
 		c.Globals = append(c.Globals, baseGlobals...)
