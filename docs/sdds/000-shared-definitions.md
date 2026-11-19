@@ -45,6 +45,8 @@
 | `FontImport` | none | `font:import` | `POST /fonts` | media |
 | `BrandKitGet`, `BrandKitSet` | none | `brand:show`, `brand:set` | `GET /brand-kit`, `PUT /brand-kit` | read, edit |
 | `ProjectOtioExport`, `ProjectOtioImport` | none | `otio:export`, `otio:import` | `GET /projects/{id}/otio`, `POST /projects/{id}/otio` | read; edit (the batch is applied through `Edit`, so each operation needs its own scope too) |
+| `ConnectionList`, `ConnectionGet` | `connection` (list, or one by id) | `connection:list`, `connection:show` | `GET /connections`, `GET /connections/{id}` | read |
+| `ConnectionCreate`, `ConnectionRemove`, `ConnectionTest` | none | `connection:add`, `connection:remove`, `connection:test` | `POST /connections`, `DELETE /connections/{id}`, `POST /connections/{id}/test` | admin (SDD-014) |
 | `ImageCreate` | `image` (`action` create) | `image:create` | `POST /images` | edit |
 | `ImageList` | `image` (`action` list) | `image:list` | `GET /images` | read |
 | `ImageDescribe` | `image` (`action` show) | `image:show` | `GET /images/{id}` | read |
@@ -54,7 +56,7 @@
 
 Routes that are not service operations: `POST /mcp` (the MCP server over Streamable HTTP, SDD-003 §4.3; `GET` and `DELETE` on the path are not routes and answer 405 `E_METHOD_NOT_ALLOWED`, because the server is stateless; every tool call behind it is a service operation with the scope of its tool), `GET /api/v1/handshake` (the server proves it knows the local token, SDD-007 §3.8), `GET /auth/launch` and `POST /api/v1/system/launch` (browser session from a one-time code, SDD-007 §3.4), `POST /auth/login` and `POST /auth/logout` (network mode: the browser session of a user, SDD-007 §4.1; in local mode they answer 404 `E_NOT_FOUND`), `GET /up` (vukem health probe), `GET /openapi.json` and `GET /api/docs` (the OpenAPI document and its viewer), `POST /api/v1/system/tools/install` and `GET /api/v1/system/tools` (the explicit install of a helper such as whisper.cpp from the editor, and its state with the progress of a running install; the same step as the CLI command `tools:install`; the install is allowed only to a browser session in local mode or an `admin` key in network mode, never to the local token and never on an agent surface, SDD-007 §6.8; the `GET` only reads and takes the `read` scope, so an agent can tell whether a helper is installed before it asks for a transcript), and the byte-serving routes that the editor uses, all `read`, all under the project so that access is checked against it, all with HTTP Range and long-lived caching because their content never changes: `GET /projects/{id}/media/{asset_id}/proxy`, `.../thumbnail`, `.../strip`, `.../peaks`, `.../lut` (the parsed table of a lookup table asset, SDD-004 §3.6), and `GET /projects/{id}/bitmaps/{key}` (rasterized text and shapes by content key). What each returns is in SDD-011 and SDD-004.
 
-The MCP catalogue is 17 tools: `project_list`, `project_create`, `project_get`, `project_trash`, `edit`, `command_help`, `history`, `media_import`, `media_inspect`, `view`, `lint`, `job_start`, `job_get`, `job_cancel`, `template`, `font_import`, `image` (the image documents of SDD-021, one tool with an `action`).
+The MCP catalogue is 18 tools: `project_list`, `project_create`, `project_get`, `project_trash`, `edit`, `command_help`, `history`, `media_import`, `media_inspect`, `view`, `lint`, `job_start`, `job_get`, `job_cancel`, `template`, `font_import`, `connection` (read only: the destinations the user connected, SDD-014), `image` (the image documents of SDD-021, one tool with an `action`).
 
 Other CLI commands that are not service operations: `serve` (start the owner process), `mcp` (stdio MCP server), `open` (open the UI of a running server with a fresh launch code), `token:rotate`, `user:create` and `user:passwd` (network mode; they need the workspace lock, so no server may be running), `tools:install` (download a helper such as whisper.cpp after stating its size), `agent:docs` (print or write the generated material for agents, SDD-003 §8), plus vukem's built-in commands.
 
@@ -70,6 +72,7 @@ Other CLI commands that are not service operations: `serve` (start the owner pro
 | `tpl_` | template | SDD-005 |
 | `key_` | API key | SDD-007 |
 | `usr_` | user (network mode) | SDD-007 |
+| `con_` | connection (SDD-014) | SDD-014 |
 | `img_` | image document | SDD-021 |
 | `lyr_` | layer of an image document | SDD-021 |
 
@@ -118,6 +121,7 @@ Kinds: `ingest`, `transcribe`, `export`, `frame`. States: `queued`, `running`, `
 | `users` | network mode: email, argon2id password hash, role (`admin` or `member`), session version | SDD-007 |
 | `brand_kits` | the brand kit: logo, named colours and fonts, one row per owner  | SDD-005 §5.11 |
 | `font_owners` | which user imported or brought each stored font file, network mode  | SDD-005 §5.11, SDD-007 §7.7 |
+| `connections` | the destinations the user connected: kind, label, hosts, what each may receive, last use and the id of its secret in the vault; no secret | SDD-014 |
 | `image_documents`, `image_operations` | image documents, and their append-only log of batches | SDD-005 §5.12, SDD-021 |
 | vukem's own tables for sessions (`sessions`) and tokens (`access_tokens`) | network mode | vukem |
 
