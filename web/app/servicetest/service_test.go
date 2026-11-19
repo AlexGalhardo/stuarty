@@ -42,6 +42,14 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			return err
 		},
 		"CommandHelp": func() error { _, err := e.svc.CommandHelp(ctx, service.CommandHelpRequest{}); return err },
+		"HistoryRevert": func() error {
+			_, err := e.svc.HistoryRevert(ctx, service.HistoryRevertRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"HistoryDiff": func() error {
+			_, err := e.svc.HistoryDiff(ctx, service.HistoryDiffRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
 		"CheckpointCreate": func() error {
 			_, err := e.svc.CheckpointCreate(ctx, service.CheckpointCreateRequest{ProjectID: "prj_0000000001"})
 			return err

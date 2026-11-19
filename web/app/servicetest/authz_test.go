@@ -37,6 +37,14 @@ func projectCalls(m *mediaEnv, project, job string) map[string]func(ctx context.
 			_, err := m.svc.HistoryList(ctx, service.HistoryListRequest{ProjectID: project})
 			return err
 		},
+		"HistoryRevert": func(ctx context.Context) error {
+			_, err := m.svc.HistoryRevert(ctx, service.HistoryRevertRequest{ProjectID: project, Revision: 1})
+			return err
+		},
+		"HistoryDiff": func(ctx context.Context) error {
+			_, err := m.svc.HistoryDiff(ctx, service.HistoryDiffRequest{ProjectID: project, From: 1})
+			return err
+		},
 		"CheckpointList": func(ctx context.Context) error {
 			_, err := m.svc.CheckpointList(ctx, service.CheckpointListRequest{ProjectID: project})
 			return err
