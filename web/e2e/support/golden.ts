@@ -403,6 +403,9 @@ export function buildOperations(
 			ops.push({ op: "item.set_transform", args: transform });
 		}
 		for (const [property, keys] of Object.entries(item.keyframes ?? {})) {
+			// Without the mask (sent only when full) its keyframes have nothing to
+			// animate and the core refuses them (E_INVALID_STATE).
+			if (!full && property.startsWith("mask")) continue;
 			for (const k of keys) {
 				ops.push({
 					op: "keyframe.set",
