@@ -119,8 +119,11 @@ func TestTheRealModelParses(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if len(threats) != 51 {
-		t.Errorf("the model has %d threats, want 51 (T-51, one submitter fills the approval queue)", len(threats))
+	if len(threats) != 55 {
+		t.Errorf(
+			"the model has %d threats, want 55 (T-55, a key or an error body leaves through a provider call)",
+			len(threats),
+		)
 	}
 }
 

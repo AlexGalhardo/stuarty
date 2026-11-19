@@ -49,6 +49,8 @@ var OperationDomains = map[string]string{
 	"ApprovalDecide": command.DomainPublish, "ApprovalRuleList": command.DomainPublish,
 	"ApprovalRuleSet": command.DomainPublish, "ApprovalRuleRemove": command.DomainPublish,
 	"CostSummary": command.DomainProvider, "CostCeilingSet": command.DomainProvider,
+	"ProviderList": command.DomainProvider, "ProviderModels": command.DomainProvider,
+	"ProviderPriceSet": command.DomainProvider, "TextGenerate": command.DomainProvider,
 
 	"CommandHelp": command.DomainWorkspace, "ConnectionList": command.DomainWorkspace,
 	"ConnectionGet": command.DomainWorkspace, "ConnectionCreate": command.DomainWorkspace,

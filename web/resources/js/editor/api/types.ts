@@ -890,6 +890,66 @@ export interface ConnectionTestResult {
 	message: string;
 }
 
+// The AI providers (SDD-016): the providers, the models each connection offers, and the price table a
+// person edits. A result never carries a key. An amount is an integer in millionths of the currency
+// unit for a million tokens; the page formats it and decides nothing.
+export interface ProviderPrice {
+	currency: string;
+	input_micros_per_mtok: number;
+	output_micros_per_mtok: number;
+}
+
+export interface PriceEntry extends ProviderPrice {
+	provider: string;
+	model: string;
+}
+
+export interface ProviderView {
+	id: string;
+	name: string;
+	capabilities: string[];
+	credential_kinds: string[];
+	default_endpoint: string;
+	docs_url: string;
+	connections: string[];
+}
+
+export interface ProviderListResult {
+	providers: ProviderView[];
+	prices: PriceEntry[];
+}
+
+export type PriceSource = "user" | "catalogue" | "none";
+
+export interface ModelView {
+	id: string;
+	name: string;
+	context_tokens: number;
+	output_tokens: number;
+	price: ProviderPrice | null;
+	price_source: PriceSource;
+}
+
+export interface ProviderModelsResult {
+	connection_id: string;
+	provider: string;
+	models: ModelView[];
+	fetched_at: string;
+	cached: boolean;
+}
+
+export interface ProviderPriceSetRequest {
+	provider: string;
+	model: string;
+	currency?: string;
+	input_micros_per_mtok?: number;
+	output_micros_per_mtok?: number;
+}
+
+export interface ProviderPricesResult {
+	prices: PriceEntry[];
+}
+
 // The approval queue, its rules and the cost ceilings (SDD-015). An amount is an integer in
 // millionths of the currency unit; the page formats it and adds nothing.
 export interface Money {

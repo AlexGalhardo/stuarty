@@ -1445,6 +1445,92 @@ Example:
 stuarty cost:ceiling --currency USD --per-day 5000000
 ```
 
+## `provider:list`
+
+List the AI providers, the connections of each and the price table
+
+```text
+stuarty provider:list
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty provider:list --json
+```
+
+## `provider:models`
+
+List the models a provider offers through a connection, read from the provider now, with their price
+
+```text
+stuarty provider:models <connection id> [--refresh]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--refresh` | boolean | `false` | read the list from the provider again |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty provider:models con_0123456789
+```
+
+## `provider:price`
+
+Set or remove the price of a model (for a person in the app; the local token is refused)
+
+```text
+stuarty provider:price --provider <id> --model <id> --currency USD --price-in <micros> --price-out <micros>
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--provider` | string |  | the provider id (required) |
+| `--model` | string |  | the model id (required) |
+| `--currency` | string |  | three letters, such as USD; needed to set a price |
+| `--price-in` | string |  | the price of a million input tokens, in millionths of the currency unit |
+| `--price-out` | string |  | the price of a million output tokens; leave both prices out to remove the entry |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty provider:price --provider openai --model a-model --currency USD --price-in 2500000 --price-out 10000000
+```
+
+## `text:generate`
+
+Generate text with the provider of a connection; the job shows its estimate and waits for approval
+
+```text
+stuarty text:generate --project <id> --connection <id> --model <id> [--prompt <text> | --prompt-file <file>] [--system <text>] [--max-tokens <n>] [--temperature <t>] [--dry-run]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--connection` | string |  | the connection to the provider (required) |
+| `--model` | string |  | the model id, as provider:models lists it (required) |
+| `--prompt` | string |  | what to write; without it and without --prompt-file the prompt is read from standard input |
+| `--prompt-file` | string |  | a file that holds the prompt |
+| `--system` | string |  | instructions for the model |
+| `--max-tokens` | integer |  | the most tokens the model may write (default 1024); the estimate counts all of them |
+| `--temperature` | string |  | 0 to 2 |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--dry-run`.
+
+Example:
+
+```bash
+stuarty text:generate --project prj_7k2m9x4q1b --connection con_0123456789 --model a-model --prompt "Write a caption"
+```
+
 ## `image:create`
 
 Create an image document, blank or from a template
