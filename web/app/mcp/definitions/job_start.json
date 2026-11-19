@@ -62,6 +62,7 @@
    "state": {
     "enum": [
      "queued",
+     "waiting_approval",
      "running",
      "succeeded",
      "failed",
