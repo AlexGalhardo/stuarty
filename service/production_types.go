@@ -9,13 +9,14 @@ import (
 // ProjectItem is an item of a production (SDD-003 section 2.3.1).
 type ProjectItem struct {
 	ID         string    `json:"id"`
-	Kind       string    `json:"kind"` // "brief" | "text" | "timeline" | "output"
+	Kind       string    `json:"kind"` // "brief" | "text" | "timeline" | "output" | "publication"
 	Title      string    `json:"title"                 untrusted:"true"`
 	Position   int       `json:"position"`
 	State      string    `json:"state"`                 // "active" | "trashed"
 	TimelineID string    `json:"timeline_id,omitempty"` // kind timeline
 	JobID      string    `json:"job_id,omitempty"`      // kind output: the export job
-	Format     string    `json:"format,omitempty"`      // kind output: the destination format
+	Format     string    `json:"format,omitempty"`      // kind output: the destination format; publication: its networks
+	Status     string    `json:"status,omitempty"`      // kind publication: pending_approval or published, from its targets
 	Text       string    `json:"text,omitempty"        untrusted:"true"`
 	UpdatedAt  time.Time `json:"updated_at"`
 }
