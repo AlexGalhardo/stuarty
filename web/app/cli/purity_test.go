@@ -118,6 +118,10 @@ func (s stub) ExportCheck(context.Context, service.ExportCheckRequest) (*service
 	return reply[service.ExportCheckResult](s.err)
 }
 
+func (s stub) AudioMeasure(context.Context, service.AudioMeasureRequest) (*service.AudioMeasureResult, error) {
+	return reply[service.AudioMeasureResult](s.err)
+}
+
 func (s stub) ExportPresetList(
 	context.Context,
 	service.ExportPresetListRequest,

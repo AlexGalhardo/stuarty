@@ -164,6 +164,8 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.ViewFrame)
 	case "ViewSheet":
 		return invoke(ctx, s, svc.ViewSheet)
+	case "AudioMeasure":
+		return invoke(ctx, s, svc.AudioMeasure)
 	case "Doctor":
 		return invoke(ctx, s, svc.Doctor)
 	case "FontList":
@@ -555,6 +557,22 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 		args["mode"] = "sheet"
 
 		return "view", args, nil
+	case "AudioMeasure":
+		args["mode"] = "audio"
+
+		if v, ok := args["start"]; ok {
+			args["from"] = v
+
+			delete(args, "start")
+		}
+
+		if v, ok := args["end"]; ok {
+			args["until"] = v
+
+			delete(args, "end")
+		}
+
+		return "view", args, nil
 	case "ProjectDescribe":
 		args["detail"] = "overview"
 
@@ -905,6 +923,11 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 		return "view", append(slices.Clone(proj), flag("at", a.At)...), "", nil
 	case "ViewSheet":
 		argv = append(slices.Clone(proj), "--mode", "sheet")
+
+		return "view", append(argv, flag("until", a.Until)...), "", nil
+	case "AudioMeasure":
+		argv = append(slices.Clone(proj), "--mode", "audio")
+		argv = append(argv, flag("item", a.ItemID)...)
 
 		return "view", append(argv, flag("until", a.Until)...), "", nil
 	case "Doctor":
