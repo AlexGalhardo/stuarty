@@ -41,7 +41,7 @@ A creator starts a production by answering a few questions, and their agent alre
 - [x] 2. Implement the briefing questions and answers in `core/project` and the service, on the three surfaces. Verify: `go test ./core/project/... ./service/... -run TestBriefing` and `go test ./web/contract/...` pass.
 - [x] 3. Build the briefing form on the project overview, in both languages. Verify: `task test:web` and `web/e2e/specs/briefing.spec.ts` pass.
 - [x] 4. Implement embedding, install and update of built-in skills. Verify: `go test ./service/library/... -run TestBuiltIn` passes (a user's edit survives an update).
-- [ ] 5. Write the registry check for skills. Verify: `go test ./web/resources/skills/...` passes, and fails when a skill names an unknown operation (described in the hand-off).
+- [x] 5. Write the registry check for skills. Verify: `go test ./web/resources/skills/...` passes, and fails when a skill names an unknown operation (described in the hand-off).
 - [ ] 6. Write `start-here`, `brief-a-production`, `recall-learnings`, `production-retro` and `fetch-clip`. Verify: `SkillLint` reports nothing for each (`go test ./web/resources/skills/...`).
 - [ ] 7. Write `short-vertical-video`, `captions-for-shorts` and `thumbnail` against the operations that exist when this epic runs; mark the steps that depend on epics not yet merged. Verify: the registry check passes.
 - [ ] 8. Read the licences of the two adopted sources, adapt the writing skills, add attribution to `licenses/`. Verify: each adapted skill names a source whose licence text is in `licenses/` (a test in `web/resources/skills/` checks it) and `task notices:check` exits 0.
