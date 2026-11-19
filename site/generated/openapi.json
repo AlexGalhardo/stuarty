@@ -1116,6 +1116,47 @@
         },
         "type": "object"
       },
+      "Description": {
+        "properties": {
+          "endpoint": {
+            "type": "string"
+          },
+          "guide": {
+            "type": "string"
+          },
+          "guide_read": {
+            "type": "string"
+          },
+          "hosts": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "limits": {
+            "$ref": "#/components/schemas/Limits"
+          },
+          "name": {
+            "type": "string"
+          },
+          "network": {
+            "type": "string"
+          },
+          "publishes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "scopes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
       "DoctorCheck": {
         "properties": {
           "detail": {
@@ -2461,18 +2502,8 @@
           "code": {
             "type": "string"
           },
-          "key": {
-            "type": "string"
-          },
           "message": {
             "type": "string"
-          },
-          "on": {
-            "type": "string"
-          },
-          "params": {
-            "additionalProperties": {},
-            "type": "object"
           },
           "path": {
             "type": "string"
@@ -2991,6 +3022,16 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/ExportResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "publish": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PublishResult"
               },
               {
                 "type": "null"
@@ -3548,6 +3589,58 @@
           },
           "untrusted_notice": {
             "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "Limits": {
+        "properties": {
+          "description_max_bytes": {
+            "type": "integer"
+          },
+          "file_max_bytes": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "forbidden": {
+            "type": "string"
+          },
+          "formats": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "needs_kids_declaration": {
+            "type": "boolean"
+          },
+          "read": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "tags_max_chars": {
+            "type": "integer"
+          },
+          "thumbnail_formats": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "thumbnail_max_bytes": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "title_max": {
+            "type": "integer"
+          },
+          "visibilities": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           }
         },
         "type": "object"
@@ -4970,7 +5063,7 @@
           },
           "issues": {
             "items": {
-              "$ref": "#/components/schemas/Issue"
+              "$ref": "#/components/schemas/errs.Issue"
             },
             "type": "array"
           },
@@ -5578,6 +5671,83 @@
           },
           "name": {
             "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "PublishResult": {
+        "properties": {
+          "connection_id": {
+            "type": "string"
+          },
+          "network": {
+            "type": "string"
+          },
+          "remote_id": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "state": {
+            "type": "string"
+          },
+          "thumbnail_error": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string",
+            "x-untrusted": true
+          }
+        },
+        "type": "object"
+      },
+      "PublishStatusResult": {
+        "properties": {
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Error"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "job_id": {
+            "type": "string"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PublishResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "state": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "PublishValidateResult": {
+        "properties": {
+          "issues": {
+            "items": {
+              "$ref": "#/components/schemas/Issue"
+            },
+            "type": "array"
+          },
+          "network": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string",
+            "x-untrusted": true
           }
         },
         "type": "object"
@@ -6201,6 +6371,67 @@
           "revision": {
             "format": "int64",
             "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "SocialAccount": {
+        "properties": {
+          "account_id": {
+            "type": "string"
+          },
+          "account_title": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "connection_id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "network": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "SocialAccountListResult": {
+        "properties": {
+          "accounts": {
+            "items": {
+              "$ref": "#/components/schemas/SocialAccount"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "SocialConnectBeginResult": {
+        "properties": {
+          "authorize_url": {
+            "type": "string"
+          },
+          "connection_id": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "SocialNetworkListResult": {
+        "properties": {
+          "networks": {
+            "items": {
+              "$ref": "#/components/schemas/Description"
+            },
+            "type": "array"
+          },
+          "redirect_path": {
+            "type": "string"
           }
         },
         "type": "object"
@@ -11119,6 +11350,30 @@
         "required": [
           "track_id"
         ],
+        "type": "object"
+      },
+      "errs.Issue": {
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "on": {
+            "type": "string"
+          },
+          "params": {
+            "additionalProperties": {},
+            "type": "object"
+          },
+          "path": {
+            "type": "string"
+          }
+        },
         "type": "object"
       },
       "export.Finding": {
@@ -19387,6 +19642,518 @@
           }
         ],
         "summary": "Set or remove the price of a model (a person in the browser only; the local token and keys get 403)"
+      }
+    },
+    "/api/v1/publish": {
+      "post": {
+        "operationId": "publish.now",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "ai_disclosure": {
+                    "description": "The video has realistic altered or synthetic content.",
+                    "type": "boolean"
+                  },
+                  "connection_id": {
+                    "description": "The connection of the network and the account the video goes to.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "description": {
+                    "description": "The description, at most 5,000 bytes on YouTube.",
+                    "type": "string"
+                  },
+                  "dry_run": {
+                    "type": "boolean"
+                  },
+                  "export": {
+                    "description": "The id of a succeeded export job of the project: the video.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "made_for_kids": {
+                    "description": "Required: whether the video is made for kids.",
+                    "type": [
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "project_id": {
+                    "description": "The project the video was exported from.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "tags": {
+                    "description": "The tags, at most 500 characters in all on YouTube.",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "thumbnail": {
+                    "description": "The id of a succeeded export job of a still of the project: the cover.",
+                    "type": "string"
+                  },
+                  "timeline_id": {
+                    "description": "The timeline the job is kept on; required when the project has several.",
+                    "type": "string"
+                  },
+                  "title": {
+                    "description": "The title, at most 100 characters on YouTube.",
+                    "type": "string"
+                  },
+                  "visibility": {
+                    "description": "private (the default), unlisted or public.",
+                    "type": "string"
+                  },
+                  "wait_ms": {
+                    "description": "0 to 25000: hold the call until the job is final.",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "project_id",
+                  "connection_id",
+                  "export"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            },
+            "description": "Accepted"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Prepare the publication of an exported video; it waits for a person to approve it"
+      }
+    },
+    "/api/v1/publish/validate": {
+      "post": {
+        "operationId": "publish.validate",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "ai_disclosure": {
+                    "description": "The video has realistic altered or synthetic content.",
+                    "type": "boolean"
+                  },
+                  "connection_id": {
+                    "description": "The connection of the network and the account the video goes to.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "description": {
+                    "description": "The description, at most 5,000 bytes on YouTube.",
+                    "type": "string"
+                  },
+                  "export": {
+                    "description": "The id of a succeeded export job of the project: the video.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "made_for_kids": {
+                    "description": "Required: whether the video is made for kids.",
+                    "type": [
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "project_id": {
+                    "description": "The project the video was exported from.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "tags": {
+                    "description": "The tags, at most 500 characters in all on YouTube.",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "thumbnail": {
+                    "description": "The id of a succeeded export job of a still of the project: the cover.",
+                    "type": "string"
+                  },
+                  "title": {
+                    "description": "The title, at most 100 characters on YouTube.",
+                    "type": "string"
+                  },
+                  "visibility": {
+                    "description": "private (the default), unlisted or public.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "project_id",
+                  "connection_id",
+                  "export"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublishValidateResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Check a post against the limits of its network; sends nothing"
+      }
+    },
+    "/api/v1/publish/{job_id}": {
+      "get": {
+        "operationId": "publish.status",
+        "parameters": [
+          {
+            "description": "The job id that PublishNow answered.",
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublishStatusResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Read the state of a publication"
+      }
+    },
+    "/api/v1/social/accounts": {
+      "get": {
+        "operationId": "social.accounts",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SocialAccountListResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the connected social accounts and their state"
+      }
+    },
+    "/api/v1/social/complete": {
+      "post": {
+        "operationId": "social.complete",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "code": {
+                    "description": "The authorization code the network sent back.",
+                    "type": "string"
+                  },
+                  "error": {
+                    "description": "The error the network sent back instead of a code, for example access_denied.",
+                    "type": "string"
+                  },
+                  "state": {
+                    "description": "The state the network sent back to the redirect address.",
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "state"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SocialAccount"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Finish the sign-in with what the network sent to the redirect address (a person in the browser only)"
+      }
+    },
+    "/api/v1/social/connect": {
+      "post": {
+        "operationId": "social.connect",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "client_id": {
+                    "description": "The client id of the developer project you created on the network.",
+                    "type": "string"
+                  },
+                  "client_secret": {
+                    "description": "The client secret of that project. It goes into the vault and is in no answer.",
+                    "type": "string"
+                  },
+                  "connection_id": {
+                    "description": "Sign in again an existing connection of the network, instead of making one.",
+                    "type": "string"
+                  },
+                  "label": {
+                    "description": "A name for the connection, 1 to 60 characters; the name of the network when left out.",
+                    "type": "string"
+                  },
+                  "network": {
+                    "description": "The network to sign in to, for example youtube.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "redirect_uri": {
+                    "description": "The address of this app followed by /social/callback; it must be the redirect address you authorised in the developer project.",
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "network",
+                  "redirect_uri"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SocialConnectBeginResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Start the sign-in to a network with your own developer app; answers the address of the consent screen"
+      }
+    },
+    "/api/v1/social/networks": {
+      "get": {
+        "operationId": "social.networks",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SocialNetworkListResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the social networks of this build and their limits"
       }
     },
     "/api/v1/system": {

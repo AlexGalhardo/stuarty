@@ -450,6 +450,46 @@ var Endpoints = []Endpoint{
 		Summary: "Set or remove a cost ceiling (a person in the browser only; the local token and keys get 403)",
 	},
 	{
+		ID: "social.networks", Method: http.MethodGet, Path: "/social/networks", Scope: service.ScopeRead,
+		Service: "SocialNetworkList", Status: 200, Summary: "List the social networks of this build and their limits",
+	},
+	{
+		ID:      "social.connect",
+		Method:  http.MethodPost,
+		Path:    "/social/connect",
+		Scope:   service.ScopeAdmin,
+		Service: "SocialConnectBegin",
+		Status:  200,
+		Summary: "Start the sign-in to a network with your own developer app; answers the address of the consent screen",
+	},
+	{
+		ID: "social.complete", Method: http.MethodPost, Path: "/social/complete", Scope: service.ScopeAdmin,
+		Service: "SocialConnectComplete", Status: 200,
+		Summary: "Finish the sign-in with what the network sent to the redirect address (a person in the browser only)",
+	},
+	{
+		ID: "social.accounts", Method: http.MethodGet, Path: "/social/accounts", Scope: service.ScopeRead,
+		Service: "SocialAccountList", Status: 200, Summary: "List the connected social accounts and their state",
+	},
+	{
+		ID:      "publish.validate",
+		Method:  http.MethodPost,
+		Path:    "/publish/validate",
+		Scope:   service.ScopeRead,
+		Service: "PublishValidate",
+		Status:  200,
+		Summary: "Check a post against the limits of its network; sends nothing",
+	},
+	{
+		ID: "publish.now", Method: http.MethodPost, Path: "/publish", Scope: service.ScopeRender,
+		Service: "PublishNow", Status: 202,
+		Summary: "Prepare the publication of an exported video; it waits for a person to approve it",
+	},
+	{
+		ID: "publish.status", Method: http.MethodGet, Path: "/publish/{job_id}", Scope: service.ScopeRead,
+		Service: "PublishStatus", Status: 200, Summary: "Read the state of a publication",
+	},
+	{
 		ID:      "providers.list",
 		Method:  http.MethodGet,
 		Path:    "/providers",

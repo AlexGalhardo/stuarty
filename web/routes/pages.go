@@ -73,6 +73,12 @@ func Pages(d *httpapi.Deps) func(r *router.Router, app *vukem.App) error {
 			return inertia.Render(c, "Connections/Index", inertia.Props{})
 		}).Name("connections.index")
 
+		// The redirect address of the sign-in to a social network (epic 18, SDD-020 section 13): the page
+		// hands the state and the code to POST /api/v1/social/complete with the session of the browser.
+		r.Get("/social/callback", func(c *web.Ctx) error {
+			return inertia.Render(c, "Social/Callback", inertia.Props{})
+		}).Name("social.callback")
+
 		// The approval queue, the rules and the cost ceilings (epic 05, SDD-015): the page reads and
 		// changes them through /api/v1/approvals, /approval-rules and /cost, and follows the queue on
 		// /api/v1/approvals/events.

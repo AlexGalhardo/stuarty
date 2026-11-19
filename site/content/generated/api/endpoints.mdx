@@ -188,6 +188,18 @@ Every operation has its own page with the parameters, the body, the responses an
 | `GET` | `/api/v1/cost` | [`cost.get`](/docs/api/cost.get) | Read the cost ceilings and what was spent |
 | `PUT` | `/api/v1/cost/ceilings` | [`cost.ceilings.set`](/docs/api/cost.ceilings.set) | Set or remove a cost ceiling (a person in the browser only; the local token and keys get 403) |
 
+## Publishing
+
+| Method | Path | Operation | Summary |
+| --- | --- | --- | --- |
+| `POST` | `/api/v1/publish` | [`publish.now`](/docs/api/publish.now) | Prepare the publication of an exported video; it waits for a person to approve it |
+| `GET` | `/api/v1/publish/{job_id}` | [`publish.status`](/docs/api/publish.status) | Read the state of a publication |
+| `POST` | `/api/v1/publish/validate` | [`publish.validate`](/docs/api/publish.validate) | Check a post against the limits of its network; sends nothing |
+| `GET` | `/api/v1/social/accounts` | [`social.accounts`](/docs/api/social.accounts) | List the connected social accounts and their state |
+| `POST` | `/api/v1/social/complete` | [`social.complete`](/docs/api/social.complete) | Finish the sign-in with what the network sent to the redirect address (a person in the browser only) |
+| `POST` | `/api/v1/social/connect` | [`social.connect`](/docs/api/social.connect) | Start the sign-in to a network with your own developer app; answers the address of the consent screen |
+| `GET` | `/api/v1/social/networks` | [`social.networks`](/docs/api/social.networks) | List the social networks of this build and their limits |
+
 ## System
 
 | Method | Path | Operation | Summary |

@@ -152,8 +152,16 @@ var Scopes = map[string]string{
 	"ApprovalRuleList":   ScopeRead,
 	"ApprovalRuleSet":    ScopeAdmin,
 	"ApprovalRuleRemove": ScopeAdmin,
-	"CostSummary":        ScopeRead,
-	"CostCeilingSet":     ScopeAdmin,
+	// The social networks and publishing (SDD-020 section 9).
+	"SocialNetworkList":     ScopeRead,
+	"SocialConnectBegin":    ScopeAdmin,
+	"SocialConnectComplete": ScopeAdmin,
+	"SocialAccountList":     ScopeRead,
+	"PublishValidate":       ScopeRead,
+	"PublishNow":            ScopeRender,
+	"PublishStatus":         ScopeRead,
+	"CostSummary":           ScopeRead,
+	"CostCeilingSet":        ScopeAdmin,
 
 	"AssetGet":     ScopeRead,
 	"AssetUses":    ScopeRead,

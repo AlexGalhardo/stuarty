@@ -190,6 +190,18 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.ConnectionRemove)
 	case "ConnectionTest":
 		return invoke(ctx, s, svc.ConnectionTest)
+	case "SocialNetworkList":
+		return invoke(ctx, s, svc.SocialNetworkList)
+	case "SocialConnectBegin":
+		return invoke(ctx, s, svc.SocialConnectBegin)
+	case "SocialAccountList":
+		return invoke(ctx, s, svc.SocialAccountList)
+	case "PublishValidate":
+		return invoke(ctx, s, svc.PublishValidate)
+	case "PublishNow":
+		return invoke(ctx, s, svc.PublishNow)
+	case "PublishStatus":
+		return invoke(ctx, s, svc.PublishStatus)
 	case "ApprovalList":
 		return invoke(ctx, s, svc.ApprovalList)
 	case "ApprovalGet":
@@ -1006,6 +1018,41 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 			"--kind", c.Kind, "--label", c.Label, "--endpoint", c.Endpoint, "--accepts", strings.Join(c.Accepts, ","),
 			"--hosts", strings.Join(c.Hosts, ","),
 		}, c.Secret, nil
+	case "SocialNetworkList":
+		return "social:network:list", nil, "", nil
+	case "SocialAccountList":
+		return "social:account:list", nil, "", nil
+	case "SocialConnectBegin":
+		var r service.SocialConnectBeginRequest
+		if err := json.Unmarshal(s.Args, &r); err != nil {
+			return "", nil, "", err
+		}
+
+		return "social:connect", slices.Concat(
+			[]string{"--network", r.Network, "--redirect-uri", r.RedirectURI}, flag("client-id", r.ClientID),
+			flag("label", r.Label), flag("connection", r.ConnectionID),
+		), r.ClientSecret, nil
+	case "PublishValidate", "PublishNow":
+		var r service.PublishNowRequest
+		if err := json.Unmarshal(s.Args, &r); err != nil {
+			return "", nil, "", err
+		}
+
+		name := "publish:validate"
+		if s.Call == "PublishNow" {
+			name = "publish:now"
+		}
+
+		argv := slices.Concat(proj, flag("connection", r.ConnectionID), flag("export", r.Export),
+			flag("thumbnail", r.Thumbnail), flag("title", r.Title), flag("description", r.Description),
+			flag("tags", strings.Join(r.Tags, ",")), flag("visibility", r.Visibility))
+		if r.MadeForKids != nil {
+			argv = append(argv, "--made-for-kids", map[bool]string{true: "yes", false: "no"}[*r.MadeForKids])
+		}
+
+		return name, argv, "", nil
+	case "PublishStatus":
+		return "publish:status", []string{a.JobID}, "", nil
 	case "ApprovalList":
 		return "approval:list", slices.Concat(flag("state", a.State), flag("project", a.ProjectID)), "", nil
 	case "ApprovalGet":
