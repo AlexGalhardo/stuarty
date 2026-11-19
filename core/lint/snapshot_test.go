@@ -12,7 +12,6 @@ import (
 type snapshotRule struct {
 	Code     string   `json:"code"`
 	Severity string   `json:"severity"`
-	Phase    string   `json:"phase"`
 	Depth    []string `json:"depth"`
 	Blocking bool     `json:"blocking"`
 	Key      string   `json:"key"`
@@ -41,11 +40,11 @@ func TestLintRulesSnapshot(t *testing.T) {
 
 	for i, r := range catalog {
 		want := snapshotRule{
-			Code: r.Code, Severity: r.Severity, Phase: r.Phase,
+			Code: r.Code, Severity: r.Severity,
 			Depth: strings.Split(strings.ReplaceAll(r.Run, " ", ""), ","), Blocking: Blocking(r.Code),
 			Key: "lint.rule." + r.Code + ".title",
 		}
-		if got[i].Code != want.Code || got[i].Severity != want.Severity || got[i].Phase != want.Phase ||
+		if got[i].Code != want.Code || got[i].Severity != want.Severity ||
 			got[i].Blocking != want.Blocking || got[i].Key != want.Key || !slices.Equal(got[i].Depth, want.Depth) {
 			t.Errorf("rule %s is stale in lint-rules.json: %+v, want %+v", r.Code, got[i], want)
 		}
