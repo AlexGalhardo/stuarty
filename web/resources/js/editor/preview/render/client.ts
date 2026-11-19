@@ -81,8 +81,8 @@ export class RenderClient<S extends PixelSource, B> {
 
 	// The worker closes the source after copying; it is transferred, so this
 	// side holds no reference afterwards.
-	texture(id: string, frame: S, rect?: Rect): void {
-		this.worker.postMessage({ type: "texture", id, frame, rect }, [
+	texture(id: string, frame: S, rect?: Rect, size?: [number, number]): void {
+		this.worker.postMessage({ type: "texture", id, frame, rect, size }, [
 			frame as unknown as Transferable,
 		]);
 	}

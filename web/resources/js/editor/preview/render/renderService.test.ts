@@ -70,11 +70,22 @@ function rig(
 					wasm.byteOffset + wasm.byteLength,
 				) as ArrayBuffer,
 			sha256,
-			read: async (source): Promise<Pixels> => ({
-				width: source.width,
-				height: source.height,
-				rgba: new Uint8Array(source.rgba),
-			}),
+			// A delivered size is honoured by repeating the first pixel, enough to
+			// see that the size reached the reader.
+			read: async (source, _rect, size): Promise<Pixels> => {
+				if (size === undefined) {
+					return {
+						width: source.width,
+						height: source.height,
+						rgba: new Uint8Array(source.rgba),
+					};
+				}
+				const rgba = new Uint8Array(size[0] * size[1] * 4);
+				for (let i = 0; i < rgba.length; i++) {
+					rgba[i] = source.rgba[i % 4] ?? 0;
+				}
+				return { width: size[0], height: size[1], rgba };
+			},
 			toBitmap: async (rgba, width, height) =>
 				JSON.stringify({ width, height, pixels: [...rgba] }),
 			instantiate,
@@ -157,6 +168,22 @@ describe("the render worker logic", () => {
 		const out = pixels(frame);
 		expect(out).toHaveLength(4 * 4 * 4);
 		expect(out.slice(0, 4)).toEqual([200, 10, 30, 255]);
+	});
+
+	it("uploads a texture at the delivered size when one is given", async () => {
+		const r = rig();
+		await r.send(init);
+		await r.send({
+			type: "texture",
+			id: "itm_s",
+			// Red then blue: drawn at its own size the right half would be blue.
+			frame: new Source(2, 1, [255, 0, 0, 255, 0, 0, 255, 255]),
+			size: [4, 4],
+		});
+		await r.send({ type: "render", seq: 1, input: input([layer("itm_s")]) });
+		const out = pixels(r.posted.at(-1));
+		expect(out.slice(-4)).toEqual([255, 0, 0, 255]);
+		expect(r.service.openSources).toBe(0);
 	});
 
 	it("answers missing_texture by naming the item, and draws after the upload", async () => {

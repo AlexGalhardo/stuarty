@@ -619,16 +619,22 @@ export class RustExecutor implements PreviewExecutor {
 		else this.complete = false;
 		const crop = cropAt(layer, frame);
 		if (crop === null) return false;
-		const tag = `frame:${layer.asset}:${result.timestamp}:${crop.join(",")}`;
+		const size = this.deliveredSize(layer, frame);
+		const tag = `frame:${layer.asset}:${result.timestamp}:${crop.join(",")}:${size?.join("x") ?? ""}`;
 		if (this.uploaded.get(layer.item) !== tag) {
 			// The clone is the worker's: it closes it once the pixels are copied.
 			const copy = new VideoFrame(result.frame);
-			this.render?.texture(layer.item, copy as unknown as PixelSource, {
-				x: crop[0],
-				y: crop[1],
-				w: crop[2],
-				h: crop[3],
-			});
+			this.render?.texture(
+				layer.item,
+				copy as unknown as PixelSource,
+				{
+					x: crop[0],
+					y: crop[1],
+					w: crop[2],
+					h: crop[3],
+				},
+				size,
+			);
 			this.uploaded.set(layer.item, tag);
 		}
 		return true;
@@ -644,7 +650,8 @@ export class RustExecutor implements PreviewExecutor {
 		if (video.videoWidth === 0) return false;
 		const crop = cropAt(layer, frame);
 		if (crop === null) return false;
-		const tag = `video:${layer.asset}:${video.currentTime}:${crop.join(",")}`;
+		const size = this.deliveredSize(layer, frame);
+		const tag = `video:${layer.asset}:${video.currentTime}:${crop.join(",")}:${size?.join("x") ?? ""}`;
 		if (this.uploaded.get(layer.item) === tag) return true;
 		if (
 			video.seeking ||
@@ -652,14 +659,18 @@ export class RustExecutor implements PreviewExecutor {
 		) {
 			return this.uploaded.has(layer.item);
 		}
-		this.upload(layer.item, tag, () =>
-			createImageBitmap(
-				video,
-				Math.round(crop[0]),
-				Math.round(crop[1]),
-				Math.max(1, Math.round(crop[2])),
-				Math.max(1, Math.round(crop[3])),
-			),
+		this.upload(
+			layer.item,
+			tag,
+			() =>
+				createImageBitmap(
+					video,
+					Math.round(crop[0]),
+					Math.round(crop[1]),
+					Math.max(1, Math.round(crop[2])),
+					Math.max(1, Math.round(crop[3])),
+				),
+			size,
 		);
 		this.complete = false;
 		return this.uploaded.has(layer.item);
@@ -674,7 +685,8 @@ export class RustExecutor implements PreviewExecutor {
 	): boolean {
 		const crop = cropAt(layer, frame);
 		if (crop === null) return false;
-		const tag = `still:${layer.asset}:${crop.join(",")}`;
+		const size = this.deliveredSize(layer, frame);
+		const tag = `still:${layer.asset}:${crop.join(",")}:${size?.join("x") ?? ""}`;
 		if (this.uploaded.get(layer.item) === tag) return true;
 		const image = this.stillImages.get(layer.asset);
 		if (image === undefined) {
@@ -690,14 +702,18 @@ export class RustExecutor implements PreviewExecutor {
 			source?.width ?? image.naturalWidth,
 			source?.height ?? image.naturalHeight,
 		);
-		this.upload(layer.item, tag, () =>
-			createImageBitmap(
-				image,
-				Math.round(rect.x),
-				Math.round(rect.y),
-				Math.max(1, Math.round(rect.width)),
-				Math.max(1, Math.round(rect.height)),
-			),
+		this.upload(
+			layer.item,
+			tag,
+			() =>
+				createImageBitmap(
+					image,
+					Math.round(rect.x),
+					Math.round(rect.y),
+					Math.max(1, Math.round(rect.width)),
+					Math.max(1, Math.round(rect.height)),
+				),
+			size,
 		);
 		this.complete = false;
 		return this.uploaded.has(layer.item);
@@ -709,6 +725,7 @@ export class RustExecutor implements PreviewExecutor {
 		item: string,
 		tag: string,
 		make: () => Promise<ImageBitmap>,
+		size: [number, number] | undefined,
 	): void {
 		const id = `tex:${item}:${tag}`;
 		if (this.making.has(id)) return;
@@ -720,11 +737,38 @@ export class RustExecutor implements PreviewExecutor {
 					bitmap.close();
 					return;
 				}
-				this.render.texture(item, bitmap as unknown as PixelSource);
+				this.render.texture(
+					item,
+					bitmap as unknown as PixelSource,
+					undefined,
+					size,
+				);
 				this.uploaded.set(item, tag);
 				this.redraw();
 			})
 			.catch(() => this.making.delete(id));
+	}
+
+	// The size the pixels of a media layer are delivered at, as the Go host
+	// delivers a frame (`target` in engine/export/media.go, SDD-013 section 5.1
+	// item 4): the drawn size in output pixels when the layer is not rotated, else
+	// the cropped source size (undefined). The effects that work on the layer's
+	// own pixels see the same image as in the export.
+	private deliveredSize(
+		layer: PlanMediaLayer,
+		frame: number,
+	): [number, number] | undefined {
+		const info = this.info;
+		const buffer = this.buffer;
+		if (info === null || buffer === null) return undefined;
+		if (valueAt(layer.rotation, frame, layer.first) !== 0) return undefined;
+		const scale = buffer.width / info.width;
+		const pixels = (length: number): number =>
+			Math.max(Math.floor(length * scale + 0.5), 1);
+		return [
+			pixels(valueAt(layer.w, frame, layer.first)),
+			pixels(valueAt(layer.h, frame, layer.first)),
+		];
 	}
 
 	private loadStill(projectId: string, asset: string): void {

@@ -21,18 +21,9 @@ import { expect, test } from "./helpers";
 // of at least 0.97 and no layer displaced by more than 1 px
 // (ADR-0029, the tolerance of the CPU path against the export). A frame that
 // misses is attached as the canvas, the export's frame and their difference.
-// ViewFrame is a JPEG. Seeded grain is a blocky noise of one or two pixels and the
-// split of the red and blue channels is a one-pixel colour fringe: JPEG removes
-// both, so the luma SSIM of these two cases against it is lower than the
-// 0.97 of the rest although the picture is the same (the difference
-// picture shows the 8 x 8 blocks of the codec and no displacement: shift 0.04
-// px). They keep a floor of their own, measured on 2026-11-19; the renderer's CPU
-// path equals the export's compositor byte for byte (engine/export
-// rust_renderer_test.go), so the gap is the reference's.
-const JPEG_FLOOR: Record<string, number> = {
-	"effect-grain": 0.9,
-	"effect-rgb-split": 0.96,
-};
+// No case has a gate of its own: the effects that work on a layer's own pixels
+// (grain, the channel split) match because the preview delivers a layer at the
+// size the Go host delivers it (SDD-013 section 5.1 item 4).
 
 test.describe("preview-export-parity", () => {
 	test.use({ viewport: { width: 1920, height: 1300 } });
@@ -57,7 +48,6 @@ test.describe("preview-export-parity", () => {
 					loaded.id,
 					frame,
 					"preview-export-parity",
-					JPEG_FLOOR[name] ?? MIN_SSIM,
 				);
 			});
 		});
