@@ -42,9 +42,13 @@ func AgentDocsInputs() agentdocs.Inputs {
 		inLibrary[s.name] = true
 	}
 
-	// The commands of the AI provider layer (SDD-016 section 10) wait for the budget epic 13 gives the skill: the
-	// editor skill has no room for them. An agent starts a generation with job_start (kind text.generate) and
-	// reads these commands from --help.
+	// The same for the guided briefing: the skill brief-a-production carries it (SDD-018 section 16).
+	for _, s := range []*spec{briefingQuestionsCmd, briefingAnswerCmd} {
+		inLibrary[s.name] = true
+	}
+
+	// The commands of the AI provider layer (SDD-016 section 10) are in the guide of the provider domain, not in the
+	// editor skill, which has no room for them. An agent starts a generation with job_start (kind text.generate).
 	for _, s := range providerCommands() {
 		inLibrary[s.name] = true
 	}

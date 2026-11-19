@@ -123,7 +123,9 @@ type ExportResult struct {
 type JobResult struct {
 	Export     *ExportResult     `json:"export,omitempty"`
 	Transcribe *TranscribeResult `json:"transcribe,omitempty"`
-	Text       *TextResult       `json:"text,omitempty"`
+	// Batch is the state of the children of an export_batch job, read from them whenever the job is read.
+	Batch *BatchResult `json:"batch,omitempty"`
+	Text  *TextResult  `json:"text,omitempty"`
 }
 
 // Job is the job object of SDD-003 section 2.8.

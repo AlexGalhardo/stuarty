@@ -2075,6 +2075,7 @@
     },
     {
       "name": "provider:list",
+      "domain": "provider",
       "summary": "list the AI providers, the connections of each and the price table",
       "usage": [
         "stuarty provider:list"
@@ -2089,6 +2090,7 @@
     },
     {
       "name": "provider:models",
+      "domain": "provider",
       "summary": "list the models a provider offers through a connection, read from the provider now, with their price",
       "usage": [
         "stuarty provider:models <connection id> [--refresh]"
@@ -2111,6 +2113,7 @@
     },
     {
       "name": "provider:price",
+      "domain": "provider",
       "summary": "set or remove the price of a model (for a person in the app; the local token is refused)",
       "usage": [
         "stuarty provider:price --provider <id> --model <id> --currency USD --price-in <micros> --price-out <micros>"
@@ -2152,6 +2155,7 @@
     },
     {
       "name": "text:generate",
+      "domain": "provider",
       "summary": "generate text with the provider of a connection; the job shows its estimate and waits for approval",
       "usage": [
         "stuarty text:generate --project <id> --connection <id> --model <id> [--prompt <text> | --prompt-file <file>] [--system <text>] [--max-tokens <n>] [--temperature <t>] [--dry-run]"

@@ -4325,6 +4325,17 @@
         },
         "type": "object"
       },
+      "Poster": {
+        "properties": {
+          "asset_id": {
+            "type": "string"
+          },
+          "timeline_id": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "Price": {
         "properties": {
           "currency": {
