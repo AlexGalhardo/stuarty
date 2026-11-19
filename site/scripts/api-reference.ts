@@ -55,7 +55,7 @@ export const BASE_URL = "http://127.0.0.1:7878";
 const METHOD_ORDER = ["get", "post", "put", "patch", "delete"];
 
 /** The sidebar groups of the API reference, in order. The OpenAPI document has no tags, so the route decides. */
-export const TAGS = ["Projects", "Media", "Jobs", "Events", "Commands", "Templates", "Fonts", "Brand kit", "Library", "System", "API keys", "Users", "Audit"] as const;
+export const TAGS = ["Projects", "Media", "Jobs", "Events", "Commands", "Templates", "Fonts", "Brand kit", "Library", "Connections", "Images", "System", "API keys", "Users", "Audit"] as const;
 export type Tag = (typeof TAGS)[number];
 
 export function tagOf(route: string): Tag {
@@ -71,6 +71,8 @@ export function tagOf(route: string): Tag {
 		templates: "Templates",
 		fonts: "Fonts",
 		"brand-kit": "Brand kit",
+		connections: "Connections",
+		images: "Images",
 		library: "Library",
 		system: "System",
 		handshake: "System",

@@ -18,6 +18,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/engine/rasterize"
 	enginestore "github.com/AlexGalhardo/stuarty/engine/store"
 	"github.com/AlexGalhardo/stuarty/engine/transcribe"
+	"github.com/AlexGalhardo/stuarty/service/connections"
 	"github.com/AlexGalhardo/stuarty/service/library"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
 )
@@ -249,6 +250,7 @@ type svc struct {
 	toolsState  toolsState
 	doctor      DoctorOptions
 	keys        KeyStore
+	conns       *connections.Manager
 	lib         *library.Manager // the files of memory, skills and prompts; nil without a workspace
 	heavy       RateLimiter
 	heavyLimitN int

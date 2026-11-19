@@ -1477,6 +1477,18 @@ The types named in the tables of the operations. The arguments of each editing c
 | `text` | `string` | no |  |
 | `untrusted_notice` | `string` | no |  |
 
+### Skipped
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `by_actor` | `string` | no |  |
+| `by_revision` | `integer (int64)` or `null` | no |  |
+| `details` | map of `any` | no |  |
+| `fields` | array of `string` | no |  |
+| `primitive` | [`Primitive`](/docs/api/schemas#primitive) | no |  |
+| `primitive_index` | `integer` | no |  |
+| `reason` | `string` | no |  |
+
 ### SkippedOp
 
 | Name | Type | Required | Description |

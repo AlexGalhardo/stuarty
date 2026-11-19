@@ -6,9 +6,9 @@ import "github.com/AlexGalhardo/vukem/schema"
 // the workspace are the truth and these two tables can be dropped and rebuilt from them with
 // LibraryReindex; nothing in them is read as the content of an entry. library_fts is an FTS5 table
 // whose key column is stored and not indexed.
-func m20261119120000CreateLibraryIndex() schema.Migration {
+func m20261119130000CreateLibraryIndex() schema.Migration {
 	return schema.Migration{
-		ID: "20261119120000_create_library_index",
+		ID: "20261119130000_create_library_index",
 		Up: func(s *schema.Schema) error {
 			if err := s.Raw(`CREATE TABLE library_entries (
   key           TEXT    NOT NULL,

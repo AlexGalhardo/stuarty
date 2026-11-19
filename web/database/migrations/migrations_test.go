@@ -176,6 +176,11 @@ func TestTablesMatchSDD005Section5(t *testing.T) {
 		"font_owners": {
 			"hash TEXT 1 - 1", "owner_user_id TEXT 1 - 2", "created_ms INTEGER 1 - 0",
 		},
+		"connections": {
+			"id TEXT 1 - 1", "kind TEXT 1 - 0", "label TEXT 1 - 0", "endpoint TEXT 1 - 0", "hosts TEXT 1 - 0",
+			"accepts TEXT 1 - 0", "secret_ref TEXT 1 - 0", "created_ms INTEGER 1 - 0", "created_by TEXT 1 - 0",
+			"last_used_ms INTEGER 0 - 0",
+		},
 		"library_entries": {
 			"key TEXT 1 - 1", "kind TEXT 1 - 0", "name TEXT 1 - 0", "description TEXT 1 - 0", "scope TEXT 1 - 0",
 			"origin TEXT 1 - 0", "reviewed INTEGER 1 - 0", "kept INTEGER 1 - 0", "actor TEXT 1 - 0", "tags TEXT 1 - 0",
@@ -330,6 +335,9 @@ func TestResetDropsEveryEditorTableAndUpRunsAgain(t *testing.T) {
 		"api_keys",
 		"brand_kits",
 		"font_owners",
+		"connections",
+		"image_documents",
+		"image_operations",
 		"library_entries",
 		"library_fts",
 	}

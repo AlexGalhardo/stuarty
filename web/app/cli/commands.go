@@ -22,6 +22,10 @@ func registry() []*spec {
 		templateList, templateSave, templateNew, templateExport, templateImport, bundleExport, bundleImport,
 		agentDocs, transcribeCmd, doctorCmd, fontsCmd, auditCmd, toolsInstallCmd, tokenRotate,
 		fontImportCmd, brandShowCmd, brandSetCmd, otioExport, otioImport,
+		projectDescribeCmd, projectDuplicateCmd, itemAddCmd, itemMoveCmd, itemRenameCmd, itemTrashCmd, itemRestoreCmd,
+		briefShowCmd, briefSetCmd,
+		connectionListCmd, connectionShowCmd, connectionAddCmd, connectionRemoveCmd, connectionTestCmd,
+		imageCreate, imageList, imageShow, imageEdit, imageUndo, imageRedo, imageExport,
 	}, libraryCommands()...)
 }
 

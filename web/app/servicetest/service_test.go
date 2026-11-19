@@ -217,6 +217,62 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.KeyRevoke(ctx, service.KeyRevokeRequest{KeyID: "key_0000000001"})
 			return err
 		},
+		"ProjectDescribe": func() error {
+			_, err := e.svc.ProjectDescribe(ctx, service.ProjectDescribeRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"ProjectDuplicate": func() error {
+			_, err := e.svc.ProjectDuplicate(ctx, service.ProjectDuplicateRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"ProjectItemAdd": func() error {
+			_, err := e.svc.ProjectItemAdd(ctx, service.ProjectItemAddRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"ProjectItemMove": func() error {
+			_, err := e.svc.ProjectItemMove(ctx, service.ProjectItemMoveRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"ProjectItemRename": func() error {
+			_, err := e.svc.ProjectItemRename(ctx, service.ProjectItemRenameRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"ProjectItemTrash": func() error {
+			_, err := e.svc.ProjectItemTrash(ctx, service.ProjectItemTrashRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"ProjectItemRestore": func() error {
+			_, err := e.svc.ProjectItemRestore(ctx, service.ProjectItemTrashRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"BriefGet": func() error {
+			_, err := e.svc.BriefGet(ctx, service.BriefGetRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"BriefSet": func() error {
+			_, err := e.svc.BriefSet(ctx, service.BriefSetRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"ConnectionList": func() error {
+			_, err := e.svc.ConnectionList(ctx, service.ConnectionListRequest{})
+			return err
+		},
+		"ConnectionGet": func() error {
+			_, err := e.svc.ConnectionGet(ctx, service.ConnectionRef{ID: "con_0000000001"})
+			return err
+		},
+		"ConnectionCreate": func() error {
+			_, err := e.svc.ConnectionCreate(ctx, service.ConnectionCreateRequest{})
+			return err
+		},
+		"ConnectionRemove": func() error {
+			_, err := e.svc.ConnectionRemove(ctx, service.ConnectionRef{ID: "con_0000000001"})
+			return err
+		},
+		"ConnectionTest": func() error {
+			_, err := e.svc.ConnectionTest(ctx, service.ConnectionRef{ID: "con_0000000001"})
+			return err
+		},
 		"MemoryList": func() error {
 			_, err := e.svc.MemoryList(ctx, service.MemoryListRequest{})
 			return err

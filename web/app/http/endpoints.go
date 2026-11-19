@@ -306,6 +306,26 @@ var Endpoints = []Endpoint{
 		Service: "BrandKitSet", Status: 200, Summary: "Replace the brand kit",
 	},
 	{
+		ID: "connections.list", Method: http.MethodGet, Path: "/connections", Scope: service.ScopeRead,
+		Service: "ConnectionList", Status: 200, Summary: "List the destinations the user connected (never a secret)",
+	},
+	{
+		ID: "connections.get", Method: http.MethodGet, Path: "/connections/{id}", Scope: service.ScopeRead,
+		Service: "ConnectionGet", Status: 200, Summary: "Read one connection (never a secret)",
+	},
+	{
+		ID: "connections.create", Method: http.MethodPost, Path: "/connections", Scope: service.ScopeAdmin,
+		Service: "ConnectionCreate", Status: 201, Summary: "Connect a destination; the secret goes into the vault",
+	},
+	{
+		ID: "connections.remove", Method: http.MethodDelete, Path: "/connections/{id}", Scope: service.ScopeAdmin,
+		Service: "ConnectionRemove", Status: 200, Summary: "Remove a connection and its credential",
+	},
+	{
+		ID: "connections.test", Method: http.MethodPost, Path: "/connections/{id}/test", Scope: service.ScopeAdmin,
+		Service: "ConnectionTest", Status: 200, Summary: "Make one request through a connection",
+	},
+	{
 		ID: "library.memory.list", Method: http.MethodGet, Path: "/library/memory", Scope: service.ScopeRead,
 		Service: "MemoryList", Status: 200, Summary: "List the memory notes",
 	},

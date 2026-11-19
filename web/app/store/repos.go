@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/connections"
 	"github.com/AlexGalhardo/stuarty/service/library"
 
 	"github.com/AlexGalhardo/vukem/database"
@@ -25,6 +26,8 @@ func (r repos) Backups() service.BackupRepo          { return backupRepo(r) }
 func (r repos) Audit() service.AuditRepo             { return auditRepo(r) }
 func (r repos) Fonts() service.FontRepo              { return fontRepo(r) }
 func (r repos) BrandKit() service.BrandKitRepo       { return brandKitRepo(r) }
+func (r repos) Connections() connections.Store       { return connectionRepo(r) }
+func (r repos) Images() service.ImageRepo            { return imageRepo(r) }
 func (r repos) Library() library.Index               { return libraryRepo(r) }
 
 // nullJSON stores an empty raw message as NULL.

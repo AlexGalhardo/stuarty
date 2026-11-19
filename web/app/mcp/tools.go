@@ -33,6 +33,9 @@ func (a *adapter) handlers() map[string]callFunc {
 		"template":       template,
 		"view":           view,
 		"font_import":    fontImport,
+		"connection":     connection,
+		"image":          imageTool,
+		"project_item":   projectItem,
 		"library":        libraryTool,
 	}
 }

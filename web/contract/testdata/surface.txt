@@ -177,6 +177,7 @@ route POST /users
 route PUT /brand-kit
 route PUT /library/prompts/{}
 route PUT /library/skills/{}
+route PUT /projects/{}/brief
 tool command_help
 tool connection
 tool edit

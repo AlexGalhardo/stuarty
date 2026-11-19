@@ -1408,7 +1408,7 @@ A frame is one JPEG (quality 80, 4:2:0). A sheet is one JPEG:
 | Implementation | the official Go SDK `github.com/modelcontextprotocol/go-sdk` v1.8.0 (it implements revision `2026-07-28` and still serves older revisions: `mcp/shared.go` lines 50 to 91, 555 to 580) |
 | Server identity | `name` `stuarty`, `version` the binary version |
 | Capabilities | `tools` only. No resources, prompts, completions, logging, sampling, roots or elicitation (ADR-0015 item 10) |
-| `tools/list` | the 17 tools below, always in the order of the table, never paged, with `ttlMs` 3,600,000 and `cacheScope` `public` (the SDK type `Cacheable`, `mcp/protocol.go` lines 1148 to 1166; the list changes only when the binary is upgraded). |
+| `tools/list` | the 20 tools below, always in the order of the table, never paged, with `ttlMs` 3,600,000 and `cacheScope` `public` (the SDK type `Cacheable`, `mcp/protocol.go` lines 1148 to 1166; the list changes only when the binary is upgraded). |
 | Tool registration | each tool is registered with the SDK's raw `(*Server).AddTool` (`mcp/server.go` line 315) with `inputSchema` and `outputSchema` taken from the registry generator, **not** with the generic `mcp.AddTool[In, Out]`, which infers schemas from Go types and would not produce the `edit` schema of §4.4. The adapter validates `arguments` against `inputSchema` with the validator of ADR-0014 and converts a failure into `E_VALIDATION` with the `path` of the first invalid value (a failure of the `operations[].op` enum is `E_UNKNOWN_COMMAND`, §2.4 rule 5). The message names the path and the constraint, never the value (§1.2 rule 9) |
 | Call result | `CallToolResult` (`Content`, `StructuredContent`, `IsError`) built as §1.3 and §1.4 say |
 | Cost | the minified `tools/list` result is at most **22,500 bytes**: at the conservative 3 bytes per token of JSON this is 7,500 tokens, the NFR-020 limit, **interim until epic 13 revises NFR-020; the author has not yet decided the new figure** (it was 21,500 bytes and 7,200 tokens until epic 15 added the 20th tool, `library`, and 19,500 bytes and 6,500 tokens until epic 06 added the 19th tool, `project_item`; raised before that from 6,000 tokens, 18,000 bytes, by D-040; before that from 17,500 bytes when `font_import` became the 16th tool, VV-024; at the 3.2 characters per token of check 2 it is 5,625 tokens). The definitions of this section measure 22,318 bytes in total (the list a client receives, 22,497) with `library` (about 1,130 bytes), `image` (whose minified definition is about 1,080 bytes) and `project_item` (about 1,100 bytes, plus `timeline_id` on nine tools and `from` on `project_create`); the integration was at 19,492 bytes with 18 tools, and shortening descriptions could not recover the 1,700 bytes of the 19th tool, nor the 1,130 of the 20th, without dropping a capability, so the cap is interim. A new parameter should still shorten a description. `edit` is 2,534 bytes (limit 2,700 since VV-122 added `clip.set_shadow` and `clip.set_outline`, raised from 2,500; each new operation name costs about 25 bytes) and the largest other tool is `view` at 1,518 (limit 1,600); `media_inspect` is 1,428 and `template` 1,315. No single tool is larger than 2,700 bytes (`edit`) or 1,600 bytes (the others). **Verified by** `TestToolDefinitionBudget` and, once per release, a count with the model vendor's token counting endpoint (if it exceeds 7,500 tokens the descriptions are shortened; no field is removed) |
@@ -1434,6 +1434,9 @@ Tool and Service mapping, scope and annotations (annotations are hints and clien
 | `job_cancel` | `JobCancel` | render, or media for the caller's own `transcribe` or `ingest` job | false | false | true | false |
 | `template` | `TemplateList`, `TemplateSave`, `TemplateInstantiate`, `TemplateExport`, `TemplateImport` | read (list, export), edit (the others) | false | false | false | false |
 | `font_import` | `FontImport` | media | false | false | true | false |
+| `connection` | `ConnectionList` (without `id`), `ConnectionGet` (with `id`) | read | true | n/a | true | false |
+| `image` | `ImageCreate`, `ImageList`, `ImageDescribe`, `ImageEdit`, `ImageUndo`, `ImageRedo`, `ImageExport` (SDD-021) | read (list, show), edit (the others) | false | false | false | false |
+| `project_item` | `ProjectItemAdd`, `ProjectItemMove`, `ProjectItemRename`, `ProjectItemTrash`, `ProjectItemRestore`, `BriefGet`, `BriefSet` (argument `action`) | edit (read for `brief` without `text`) | false | false | false | false |
 | `library` | `LibrarySearch`, `MemoryList`, `SkillList`, `PromptList`, `MemoryGet`, `SkillGet`, `PromptGet`, `MemoryWrite`, `SkillWrite`, `PromptWrite`, `PromptRender`, `SkillLint` | read (search, list, get, render, lint), edit (write) | false | false | false | false |
 
 `destructiveHint` is `false` on every tool: every write is undoable and recorded per actor, and nothing is removed for good (ADR-0020 items 2 and 3). A client that prompts on destructive tools therefore never prompts for this server, which is what unattended use needs (D-011). `openWorldHint` is `false` on every tool: no tool reaches an address chosen by the caller (RF-130). `TestNoOutboundTools` asserts both hints for every registered tool and that `web/app/mcp` imports no HTTP client.
@@ -2965,6 +2968,213 @@ The result is a `TemplateInstantiateResult` (§2.9): `project_id`, `revision`, `
 ```
 
 The `outputSchema` and the `title` are minimal, to stay under the budget of §4.1; the result is a `FontImportResult` (`hash`, `bytes`, `deduplicated`) in `structuredContent`; the hash goes into `files[].hash` of a `font.add` edit. The same bytes twice store one file. The tool is the MCP form of `font:import` and `POST /fonts` (VV-024).
+
+#### `connection`
+
+```json
+{
+  "name":"connection",
+  "description":"List the destinations the user connected (id, kind, label, hosts, what each accepts, last use), or read one with id. Never returns a credential. Adding, removing and testing a connection is for a person.",
+  "inputSchema":{
+    "type":"object",
+    "properties":{
+      "id":{"type":"string","pattern":"^con_[0-9a-hjkmnp-tv-z]{10}$"}
+    },
+    "additionalProperties":false
+  },
+  "outputSchema":{"type":"object"},
+  "annotations":{
+    "title":"Connections",
+    "readOnlyHint":true,
+    "destructiveHint":false,
+    "idempotentHint":true,
+    "openWorldHint":false
+  }
+}
+```
+
+The only tool of the connections domain (ADR-0043 item 3: an intent no other tool expresses, the question "where may this product send data?"; about 560 bytes, 175 tokens). It reads the registry and nothing else: it has no argument that names a destination, and creating, removing and testing a connection take a credential or reach the network, so they have a CLI command and a route and no tool (SDD-014 section 10). The result is a `ConnectionListResult` or a `Connection` in `structuredContent`; the label is delimited as untrusted text in the text part (SDD-007 section 8). It never carries a secret, only `secret_set`.
+
+#### `image`
+
+```json
+{
+  "name": "image",
+  "description": "Images. action=create (preset or width+height; or from_template+values), list, show, edit (operations: command_help domain=image), undo, redo, export.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "action": {
+        "enum": [
+          "create",
+          "list",
+          "show",
+          "edit",
+          "undo",
+          "redo",
+          "export"
+        ]
+      },
+      "image_id": {
+        "type": "string",
+        "pattern": "^img_[0-9a-hjkmnp-tv-z]{10}$"
+      },
+      "base_revision": {
+        "type": "integer"
+      },
+      "operations": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "op": {
+              "type": "string"
+            },
+            "args": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "idempotency_key": {
+        "type": "string"
+      },
+      "dry_run": {
+        "type": "boolean"
+      },
+      "preset": {
+        "type": "string"
+      },
+      "width": {
+        "type": "integer"
+      },
+      "height": {
+        "type": "integer"
+      },
+      "name": {
+        "type": "string"
+      },
+      "template": {
+        "type": "boolean"
+      },
+      "values": {
+        "type": "object"
+      },
+      "format": {
+        "type": "string"
+      },
+      "from_template": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "action"
+    ],
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "text": {
+        "type": "string",
+        "x-untrusted": true
+      }
+    }
+  },
+  "annotations": {
+    "title": "Images",
+    "readOnlyHint": false,
+    "destructiveHint": false,
+    "idempotentHint": false,
+    "openWorldHint": false
+  }
+}
+```
+
+The `image` tool is the image documents of SDD-021 behind one tool, as `template` is the templates: `action` picks the Service operation (`create` is `ImageCreate`, `list` `ImageList`, `show` `ImageDescribe`, `edit` `ImageEdit`, `undo` and `redo` `ImageUndo` and `ImageRedo`, `export` `ImageExport`) and a member the action does not use is refused. `operations` of `edit` are the operations of the image registry, which `command_help` serves with `domain` `image` (the video `edit` enum does not list them). The definition is as small as the budget of §4.1 allows, so some members are CLI and HTTP only: the background, the id, the quality, the paging and the template filter of the list, and the output schema names only `text`. The template to start from is `from_template` (an image id, not an `_id` member, to save the pattern). An agent sets a background with `layer.add_fill`.
+
+#### `project_item`
+
+```json
+{
+  "name": "project_item",
+  "description": "Items of a project. add makes a timeline (a second edit; pass its id as timeline_id to edit, view and the rest), a text (Markdown) or an output (job_id of an export); move, rename, trash, restore take item_id; brief reads the brief, or writes it with text (empty clears).",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "action": {
+        "enum": [
+          "add",
+          "move",
+          "rename",
+          "trash",
+          "restore",
+          "brief"
+        ]
+      },
+      "project_id": {
+        "type": "string",
+        "pattern": "^prj_[0-9a-hjkmnp-tv-z]{10}$"
+      },
+      "item_id": {
+        "type": "string",
+        "pattern": "^pit_[0-9a-hjkmnp-tv-z]{10}$"
+      },
+      "kind": {
+        "enum": [
+          "text",
+          "timeline",
+          "output"
+        ]
+      },
+      "title": {
+        "type": "string"
+      },
+      "position": {
+        "type": "integer"
+      },
+      "text": {
+        "type": "string"
+      },
+      "preset": {
+        "type": "string"
+      },
+      "fps": {
+        "type": "string"
+      },
+      "job_id": {
+        "type": "string",
+        "pattern": "^job_[0-9a-hjkmnp-tv-z]{10}$"
+      }
+    },
+    "required": [
+      "action",
+      "project_id"
+    ],
+    "additionalProperties": false
+  },
+  "annotations": {
+    "title": "Items",
+    "readOnlyHint": false,
+    "destructiveHint": false,
+    "idempotentHint": false,
+    "openWorldHint": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "project_id": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "project_id"
+    ]
+  }
+}
+```
+
+`action` `add` with `kind` `timeline` makes a second timeline; its id is `item.timeline_id` and goes in the `timeline_id` argument of `edit`, `history`, `view`, `lint`, `job_start`, `media_import`, `media_inspect`, `project_get` and `template` (§1.7). `action` `brief` is `BriefGet` without `text` and `BriefSet` with it (an empty text clears the brief). `project_get` with `detail` `overview` is `ProjectDescribe` (§2.3.1); `project_create` with `from` is `ProjectDuplicate`.
 
 #### `library`
 
