@@ -67,7 +67,10 @@ export interface GoldenItem {
 	filter_amount?: number;
 	blur?: number;
 	speed?: { num: number; den: number };
-	keyframes?: Record<string, { t: number; value: number; easing?: string }[]>;
+	keyframes?: Record<
+		string,
+		{ t: number; value: number; easing?: string; bezier?: number[] }[]
+	>;
 	transition_in?: { kind: string; duration: number };
 	transition_out?: { kind: string; duration: number };
 	text?: string;
@@ -415,6 +418,7 @@ export function buildOperations(
 						at: frames(item.start + k.t),
 						value: k.value,
 						...(k.easing ? { easing: k.easing } : {}),
+						...(k.bezier ? { bezier: k.bezier } : {}),
 					},
 				});
 			}

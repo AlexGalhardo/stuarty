@@ -135,6 +135,8 @@ With keyframes `k0..kn` sorted by `t`:
 
 **Range.** A curve can overshoot, so after interpolation the plan keeps the value of `scale` from 0.001 to 20, of `opacity` from 0 to 1, of `volume` from 0 to 4, and of a colour, mask or crop property inside the range of its static field (SDD-001 §3.5, §3.4); `x`, `y` and `rotation` are not limited. Mask and crop were already kept inside their item (§3.4, §3.9).
 
+The golden cases `easing-bezier-scale`, `crop-animated-bezier` and `mask-animated-bezier` (SDD-008 §4) hold frames in the middle of a Bezier segment, where an eased value differs from a linear one; the preview of the renderer and the export are compared on them like on every other case.
+
 Rotation interpolates as a plain number; there is no shortest-path wrapping.
 
 ### 3.2 Transitions
