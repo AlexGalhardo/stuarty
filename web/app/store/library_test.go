@@ -30,10 +30,7 @@ func seedLibrary(t *testing.T, m *library.Manager) {
 		Files: []core.File{{Path: "references/patterns.md", Data: []byte("Pattern: open with a question.\n")}},
 	}
 	skill.SetOrigin(core.OriginUser, "")
-
-	if err := m.Review(&skill); err != nil {
-		t.Fatal(err)
-	}
+	skill.MarkReviewed()
 
 	for _, err := range []error{
 		m.WriteMemory(ctx, core.Memory{

@@ -19,15 +19,11 @@ import (
 // Manager owns the files of the library of one workspace and keeps the index in
 // step with them.
 type Manager struct {
-	files     files
-	idx       Index
-	now       func() time.Time
-	exportDir string
+	files files
+	idx   Index
+	now   func() time.Time
 
 	mu sync.Mutex
-
-	keyMu sync.Mutex // guards key; taken after mu when both are held, never before
-	key   []byte     // the review key, once read or made
 }
 
 // New returns the manager of the library folder dir (the library/ folder of the
@@ -37,7 +33,7 @@ func New(dir string, idx Index, now func() time.Time) *Manager {
 		now = time.Now
 	}
 
-	return &Manager{files: files{dir: dir}, idx: idx, now: now, exportDir: exportDirOf(dir)}
+	return &Manager{files: files{dir: dir}, idx: idx, now: now}
 }
 
 // Stats says what a scan or a rebuild found.
@@ -392,11 +388,7 @@ func (m *Manager) loadSkill(root *os.Root, name string) (Entry, string, core.Ski
 
 	entry.Description = skill.Description
 	entry.Origin = skill.Origin()
-	// A file can claim to be built in; it is, only while it is the text the product installed (SDD-018 section 16).
-	if entry.Origin == core.OriginBuiltIn && skill.ContentHash() != builtInHash(root, name) {
-		entry.Origin = core.OriginUser
-	}
-	entry.Reviewed = m.isReviewed(&skill) && !core.HasError(findings)
+	entry.Reviewed = skill.Reviewed() && !core.HasError(findings)
 	entry.LintErrors, entry.LintWarnings = countFindings(findings)
 	entry.HasScripts = slices.ContainsFunc(findings, func(f core.Finding) bool { return f.Code == core.LintScript })
 
@@ -468,17 +460,10 @@ type Filter struct {
 	Tags              []string
 	Origin            string
 	IncludeUnreviewed bool // skills that are not reviewed, and notes no person kept
-	// ProjectID is the project a key is limited to: it sees the notes of the workspace and of
-	// that project, and every skill and prompt.
-	ProjectID string
 }
 
 func (f Filter) match(e Entry) bool {
 	if len(f.Kinds) > 0 && !slices.Contains(f.Kinds, e.Kind) {
-		return false
-	}
-
-	if !visibleTo(&e, f.ProjectID) {
 		return false
 	}
 
