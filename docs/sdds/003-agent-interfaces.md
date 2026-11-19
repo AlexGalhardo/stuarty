@@ -2437,15 +2437,35 @@ The `image` block follows the text block: `{"type": "image", "mimeType": "image/
 
 ```json
 {
-  "name":"lint",
-  "description":"Check a project for problems and get them as text: code, severity, item, message, hint. Errors block export. Run it after edits, before export. Runs every rule, unlike the lint block of an edit result (lint_scope fast).",
-  "inputSchema":{
-    "type":"object",
-    "properties":{
-      "project_id":{"type":"string","pattern":"^prj_[0-9a-hjkmnp-tv-z]{10}$"},
-      "severity":{"enum":["error","warning"],"default":"warning"},
-      "cursor":{"type":"string"},
-      "limit":{"type":"integer","minimum":1,"maximum":100,"default":25}
+  "name": "lint",
+  "description": "Check a project for problems and get them as text: code, severity, item, message, hint. Errors block export. Run it after edits, before export. Runs every rule, unlike the lint block of an edit result (lint_scope fast).",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "project_id": {
+        "type": "string",
+        "pattern": "^prj_[0-9a-hjkmnp-tv-z]{10}$"
+      },
+      "timeline_id": {
+        "type": "string",
+        "pattern": "^prj_[0-9a-hjkmnp-tv-z]{10}$"
+      },
+      "severity": {
+        "enum": [
+          "error",
+          "warning"
+        ],
+        "default": "warning"
+      },
+      "cursor": {
+        "type": "string"
+      },
+      "limit": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 100,
+        "default": 25
+      }
     },
     "required": [
       "project_id"
