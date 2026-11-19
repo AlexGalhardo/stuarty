@@ -11,7 +11,7 @@ func m20261119160000CreateCheckpoints() schema.Migration {
 		Up: func(s *schema.Schema) error {
 			stmts := []string{
 				`CREATE TABLE checkpoints (
-  project_id TEXT    NOT NULL REFERENCES projects (id) ON DELETE CASCADE,
+  project_id TEXT    NOT NULL REFERENCES timelines (id) ON DELETE CASCADE,
   name       TEXT    NOT NULL CHECK (length(name) BETWEEN 1 AND 240),
   note       TEXT    NOT NULL DEFAULT '',
   revision   INTEGER NOT NULL CHECK (revision >= 1),
