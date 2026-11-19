@@ -129,6 +129,14 @@ func (s *svc) ImageExport(ctx context.Context, req ImageExportRequest) (*ImageEx
 
 // imageExportSize is the size asked for: a preset, or a width and a height (either may be 0 to keep the aspect).
 func (s *svc) imageExportSize(req *ImageExportRequest) (w, h int, err *Error) {
+	if req.Quality < 0 || req.Quality > 100 {
+		return 0, 0, newError(
+			command.CodeValidation,
+			"quality is %d; it must be 1 to 100.",
+			req.Quality,
+		).withPath("quality")
+	}
+
 	if req.Preset != "" {
 		if req.Width != 0 || req.Height != 0 {
 			return 0, 0, newError(command.CodeValidation, "give a preset or a size, not both.").
@@ -152,14 +160,6 @@ func (s *svc) imageExportSize(req *ImageExportRequest) (w, h int, err *Error) {
 		).
 			withPath("width").
 			withHint("give a width and a height from 1 to %d, or leave them out", coreimage.MaxExportSide)
-	}
-
-	if req.Quality < 0 || req.Quality > 100 {
-		return 0, 0, newError(
-			command.CodeValidation,
-			"quality is %d; it must be 1 to 100.",
-			req.Quality,
-		).withPath("quality")
 	}
 
 	return req.Width, req.Height, nil
