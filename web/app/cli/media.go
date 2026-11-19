@@ -299,8 +299,9 @@ var export = &spec{
 	timeline: true,
 	summary:  "export a project to a file",
 	usage: []string{
+		// The first line is the one of the agent skill, whose size is capped: --timeout is global.
 		"stuarty export --project <id> [--start t] [--end t] [--format f] [--at t] [--preset p] [--codec c] " +
-			"[--wait] [--timeout d] [--out f] [--force]",
+			"[--wait] [--out f] [--force]",
 	},
 	example: "stuarty export --project prj_7k2m9x4q1b --json",
 	project: true,
