@@ -9,6 +9,7 @@ import { HttpTransport } from "../editor/api/http";
 import { API_BASE, createImageApi } from "./api/imageApi";
 import Canvas from "./canvas/Canvas";
 import ErrorBar from "./ErrorBar";
+import { ExportTool } from "./export/ExportDialog";
 import Inspector from "./inspector/Inspector";
 import LayerPanel from "./layers/LayerPanel";
 import { ImageEditorProvider, useImage } from "./state/context";
@@ -115,6 +116,7 @@ function Shell(): ReactNode {
 				<AddTools />
 				<ArrangeTools />
 				<ViewTools />
+				<ExportTool />
 			</Toolbar>
 			<ErrorBar />
 			<div className="flex min-h-0 flex-1">
