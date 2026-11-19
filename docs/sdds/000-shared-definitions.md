@@ -78,7 +78,7 @@
 | `SocialConnectComplete` | none | none | `POST /social/complete` (the page `/social/callback` posts to it) | admin, and only from a browser session |
 | `SocialAccountList` | none | `social:account:list` | `GET /social/accounts` | read |
 | `PublishValidate` | none | `publish:validate` | `POST /publish/validate` | read |
-| `PublishNow` | none until epic 13 (then `job_start` with kind `publish.upload`) | `publish:now` | `POST /publish` | render; the job waits for approval |
+| `PublishNow` | none yet (later `job_start` with kind `publish.upload`, SDD-020 §13) | `publish:now` | `POST /publish` | render; the job waits for approval |
 | `PublishStatus` | none | `publish:status` | `GET /publish/{job_id}` | read |
 | `MemoryList`, `MemoryGet`, `MemoryWrite` | `library` (kind `memory`; actions `list`, `get`, `write`) | `memory:list`, `memory:show`, `memory:write` | `GET /library/memory`, `GET /library/memory/{name}`, `POST /library/memory`, `DELETE /library/memory/{name}` | read, edit (SDD-018) |
 | `MemoryRemove` | none (an agent tool removes nothing) | `memory:remove` | `DELETE /library/memory/{name}` | edit |
