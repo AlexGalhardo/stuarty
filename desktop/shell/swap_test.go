@@ -457,6 +457,59 @@ func TestWatchRollsBackWhenTheNewVersionCannotBeStarted(t *testing.T) {
 	assertRolledBack(t, req, target, s)
 }
 
+// TestAnUpdateFromVukemVideoIsConfirmedByStuarty: an installed Vukem Video replaces itself with Stuarty and
+// its watchdog waits in the update folder of the former name (ADR-0044). The start of Stuarty confirms
+// there too, so the update is kept instead of undone.
+func TestAnUpdateFromVukemVideoIsConfirmedByStuarty(t *testing.T) {
+	config := t.TempDir()
+	t.Setenv("APPDATA", config)
+	t.Setenv("XDG_CONFIG_HOME", config)
+	t.Setenv("HOME", config)
+
+	base, err := os.UserConfigDir()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	target, _ := bundle(t)
+	req := swapReq(t, target, newBundleZip(t))
+	req.StateDir = filepath.Join(base, "vukem-video", "update")
+
+	p, err := Swap(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var confirmErr error
+
+	// The watchdog starts the new version, which confirms as the application does once it has started.
+	start := func(string) (<-chan struct{}, error) {
+		confirmErr = ConfirmUpdates("0.21.0")
+
+		return nil, nil
+	}
+
+	// The confirmation is written before the watchdog first looks, so the timeout is never reached.
+	cfg := WatchConfig{
+		StateDir: req.StateDir, Start: start, Timeout: 400 * time.Millisecond, Poll: 5 * time.Millisecond,
+	}
+	if err := Watch(context.Background(), cfg); err != nil {
+		t.Fatalf("Watch = %v, want the update kept", err)
+	}
+
+	if confirmErr != nil {
+		t.Fatal(confirmErr)
+	}
+
+	if read(t, target.Exec) != "new" || !gone(p.Backup) {
+		t.Errorf("program %q, backup gone %v: want the new version kept", read(t, target.Exec), gone(p.Backup))
+	}
+
+	if _, failed := LoadFailed(req.StateDir); failed {
+		t.Error("the update was recorded as failed")
+	}
+}
+
 func TestConfirmIsIgnoredForAnotherVersion(t *testing.T) {
 	_, req, _ := swapped(t)
 

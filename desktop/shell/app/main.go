@@ -174,9 +174,8 @@ func defaultBinary() string {
 	return filepath.Join(filepath.Dir(exe), name)
 }
 
-// confirmStart tells the watchdog of an update that this version started (SDD-009 section 10.5 item 7).
+// confirmStart tells the watchdog of an update that this version started (SDD-009 section 10.5 item 7),
+// also the watchdog of an installed Vukem Video that replaced itself with Stuarty (ADR-0044).
 func confirmStart() {
-	if dir, err := shell.UpdateStateDir(); err == nil {
-		_ = shell.ConfirmStart(dir, version)
-	}
+	_ = shell.ConfirmUpdates(version)
 }
