@@ -87,8 +87,9 @@ test.describe("webcodecs", () => {
 	}) => {
 		test.skip(noVideoDecode(browserName), NO_VIDEO_DECODE_REASON);
 		let workers = 0;
-		page.on("worker", () => {
-			workers++;
+		// Only the decode worker: the renderer of the export has a worker of its own.
+		page.on("worker", (worker) => {
+			if (worker.url().includes("decodeWorker")) workers++;
 		});
 		const seeded = await seedProject(request, {
 			tracks: 1,
