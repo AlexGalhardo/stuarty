@@ -141,6 +141,46 @@ func TestAPartialBatchKeepsWhatArrived(t *testing.T) {
 	)
 }
 
+// A server that answers with more images than were asked for makes the adapter fetch, hold and check only the
+// ones that were asked for: the disk was checked, and the person approved, for that count.
+func TestMoreImagesThanAskedForAreNeitherFetchedNorKept(t *testing.T) {
+	t.Parallel()
+
+	run(t, func(ctx context.Context, c connections.Credential) {
+		req := imageReq
+		req.Count = 1
+
+		res, err := openai.New().GenerateImages(ctx, c, req, maxFile)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if len(res.Files) != 1 || res.Failed != 0 || res.Err != nil {
+			t.Fatalf("got %+v", res)
+		}
+	},
+		providertest.Exchange{
+			Method: "POST", Path: "/v1/images/generations", Header: auth, AnyBody: true, Response: "images_url.json",
+		},
+		providertest.Exchange{Method: "GET", Path: "/files/fox-1.png", Body: pngBytes},
+	)
+}
+
+// A base64 image is held to the same bound as a downloaded one, to the byte: the image of images_b64.json is 70
+// bytes in 96 characters of base64, which a bound of 69 bytes lets through the cheap check of the encoded length.
+func TestABase64ImageOneByteOverTheLimitIsNotKept(t *testing.T) {
+	t.Parallel()
+
+	run(t, func(ctx context.Context, c connections.Credential) {
+		_, err := openai.New().GenerateImages(ctx, c, imageReq, 69)
+
+		pe, ok := providers.AsError(err)
+		if !ok || pe.Kind != providers.KindUnreadable {
+			t.Fatalf("got %v", err)
+		}
+	}, imageExchange("images_b64.json"))
+}
+
 func TestAFileLargerThanTheLimitIsNotKept(t *testing.T) {
 	t.Parallel()
 
