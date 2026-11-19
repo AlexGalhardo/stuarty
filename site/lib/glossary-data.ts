@@ -16,7 +16,7 @@ export type Entry = {
 	meaning: string;
 	/** An everyday example. */
 	example: string;
-	/** Where the term shows up in Vukem Video (Markdown, may link to a docs page). */
+	/** Where the term shows up in Stuarty (Markdown, may link to a docs page). */
 	vukem?: string;
 	/** Other names for the same thing. */
 	aka?: string[];

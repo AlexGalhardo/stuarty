@@ -1,4 +1,4 @@
-export const IMAGE = "ghcr.io/alexgalhardo/vukem-video";
+export const IMAGE = "ghcr.io/alexgalhardo/stuarty";
 
 /**
  * The one command that starts the newest stable release from the container image (the release workflow moves
@@ -8,10 +8,10 @@ export const IMAGE = "ghcr.io/alexgalhardo/vukem-video";
  */
 export function dockerRunCommand(): string {
 	return [
-		"docker run --rm -p 127.0.0.1:7878:7878 -v vukem-video:/data",
+		"docker run --rm -p 127.0.0.1:7878:7878 -v stuarty:/data",
 		'-e APP_KEY="$(openssl rand -base64 32)"',
-		"-e VUKEM_VIDEO_ADMIN_EMAIL=admin@example.com",
-		"-e VUKEM_VIDEO_ADMIN_PASSWORD=choose-a-long-password",
+		"-e STUARTY_ADMIN_EMAIL=admin@example.com",
+		"-e STUARTY_ADMIN_PASSWORD=choose-a-long-password",
 		`${IMAGE}:latest`,
 	].join(" \\\n  ");
 }

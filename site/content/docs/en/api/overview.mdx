@@ -1,6 +1,6 @@
 ---
 title: "API overview"
-description: "How to call the HTTP API of Vukem Video: the address, the token or key, the conventions and the errors."
+description: "How to call the HTTP API of Stuarty: the address, the token or key, the conventions and the errors."
 ---
 
 ## You will learn
@@ -13,7 +13,7 @@ description: "How to call the HTTP API of Vukem Video: the address, the token or
 
 The HTTP API is the editor's own interface. The browser editor, the CLI and the [MCP server](/docs/mcp/overview) call the same service, so a request here does exactly what the same action does in the editor. Every operation has a page in this section, grouped by resource in the sidebar, with its parameters, its body, its responses and a request you can copy in eight languages.
 
-The pages are generated from the OpenAPI document that the server itself serves, so a route, a field or a status never drifts from the program. The document is at `GET /openapi.json` while `vukem-video serve` runs. Like every other route it needs the `Authorization: Bearer <token>` header; without it the answer is 401 `E_UNAUTHORIZED`. It has no `servers` member: the paths resolve against the address the document was fetched from.
+The pages are generated from the OpenAPI document that the server itself serves, so a route, a field or a status never drifts from the program. The document is at `GET /openapi.json` while `stuarty serve` runs. Like every other route it needs the `Authorization: Bearer <token>` header; without it the answer is 401 `E_UNAUTHORIZED`. It has no `servers` member: the paths resolve against the address the document was fetched from.
 
 ## Quick start
 
@@ -21,10 +21,10 @@ The pages are generated from the OpenAPI document that the server itself serves,
 <Step title="Start the server">
 
 ```bash
-vukem-video serve
+stuarty serve
 ```
 
-The server listens on `127.0.0.1:7878` unless `VUKEM_VIDEO_ADDR` says otherwise. The API lives under `/api/v1`.
+The server listens on `127.0.0.1:7878` unless `STUARTY_ADDR` says otherwise. The API lives under `/api/v1`.
 
 </Step>
 <Step title="Read the token">
@@ -32,7 +32,7 @@ The server listens on `127.0.0.1:7878` unless `VUKEM_VIDEO_ADDR` says otherwise.
 In local mode the server creates a random token in the [workspace](/docs/workspace), in the file `token`. Put it in a variable:
 
 ```bash
-export VUKEM_VIDEO_KEY="$(cat ~/.vukem-video/token)"
+export STUARTY_KEY="$(cat ~/.stuarty/token)"
 ```
 
 </Step>
@@ -40,7 +40,7 @@ export VUKEM_VIDEO_KEY="$(cat ~/.vukem-video/token)"
 
 ```bash
 curl -X POST "http://127.0.0.1:7878/api/v1/projects" \
-  -H "Authorization: Bearer $VUKEM_VIDEO_KEY" \
+  -H "Authorization: Bearer $STUARTY_KEY" \
   -H "Content-Type: application/json" \
   -d '{"name": "Launch teaser", "preset": "9:16"}'
 ```
@@ -69,7 +69,7 @@ An API key has scopes (`read`, `edit`, `media`, `render`, `admin`) and each oper
 
 ### Name your client
 
-The optional header `Vukem-Video-Client` names the actor of your edits, so the history shows who did what. It takes 1 to 32 characters from `a-z`, `0-9` and `-`, and not `ui`. The actor is then `local:<label>`; without the header it is `local:api`.
+The optional header `Stuarty-Client` names the actor of your edits, so the history shows who did what. It takes 1 to 32 characters from `a-z`, `0-9` and `-`, and not `ui`. The actor is then `local:<label>`; without the header it is `local:api`.
 
 ## Conventions
 
@@ -89,7 +89,7 @@ An error is `application/problem+json` with `code`, `message`, `hint` and `retry
   "status": 401,
   "code": "E_UNAUTHORIZED",
   "message": "the request carries no credentials.",
-  "hint": "send the local token as Authorization: Bearer <token>, or run `vukem-video open` to open the editor in a browser",
+  "hint": "send the local token as Authorization: Bearer <token>, or run `stuarty open` to open the editor in a browser",
   "retryable": false
 }
 ```
@@ -100,7 +100,7 @@ When `retryable` is true, a later retry can succeed. The [error codes](/docs/ref
 
 Each page has two columns. On the left: what the operation does, the authentication, the parameters, the request body and the responses. On the right: the same request in curl, Python, JavaScript, Go, PHP, Java, C# and Ruby, and an example of each response.
 
-The samples read the secret from the environment variable `VUKEM_VIDEO_KEY` and use the default address. Replace placeholders such as `PROJECT_ID` with real ids. The response examples are built from the schemas, so a value is a placeholder of its type; the tables hold the real fields.
+The samples read the secret from the environment variable `STUARTY_KEY` and use the default address. Replace placeholders such as `PROJECT_ID` with real ids. The response examples are built from the schemas, so a value is a placeholder of its type; the tables hold the real fields.
 
 ## Common mistakes
 

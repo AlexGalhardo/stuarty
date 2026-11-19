@@ -9,13 +9,13 @@ The desktop application is in BETA. A release lists an installer for Windows 11,
 
 ## You will learn
 
-- what the desktop application is and what it adds to `vukem-video serve`;
+- what the desktop application is and what it adds to `stuarty serve`;
 - how to build and start it on Windows;
 - what the menu, the file picker and full screen do.
 
 ## The idea
 
-The desktop application is a small shell around the same program. It starts `vukem-video serve` on a free port of `127.0.0.1`, waits until the server is up, and opens the editor in one native window. It has no editing logic of its own: the window shows the same editor you get in a browser, over the same [workspace](/docs/workspace), and no sign-in is needed because the server runs in local mode on your machine.
+The desktop application is a small shell around the same program. It starts `stuarty serve` on a free port of `127.0.0.1`, waits until the server is up, and opens the editor in one native window. It has no editing logic of its own: the window shows the same editor you get in a browser, over the same [workspace](/docs/workspace), and no sign-in is needed because the server runs in local mode on your machine.
 
 Closing the window, choosing Quit, or a crash of the shell stops the server it started. The window cannot leave its own server: if a page ends at another address, the shell sends the window back to the editor.
 
@@ -25,13 +25,13 @@ You need Go, Bun and, on Windows 11, nothing else (WebView2 ships with the syste
 
 ```bash
 cd web && bun install --frozen-lockfile && bun run build && cd ..
-go build -o dist/vukem-video.exe ./web/cmd/app
-cd desktop/shell/app && go build -ldflags "-H windowsgui" -o ../../../dist/vukem-video-desktop.exe .
+go build -o dist/stuarty.exe ./web/cmd/app
+cd desktop/shell/app && go build -ldflags "-H windowsgui" -o ../../../dist/stuarty-desktop.exe .
 ```
 
-Put the two files in one folder and double-click `vukem-video-desktop.exe`. To use a server program in another place, start it as `vukem-video-desktop -binary <path to vukem-video>`. The first start can take tens of seconds while the window component starts; later starts are faster.
+Put the two files in one folder and double-click `stuarty-desktop.exe`. To use a server program in another place, start it as `stuarty-desktop -binary <path to stuarty>`. The first start can take tens of seconds while the window component starts; later starts are faster.
 
-The workspace is `~/.vukem-video`, or the folder in `VUKEM_VIDEO_HOME` if you set it before you start the application. You can still run the same server with `vukem-video serve` and open it in a browser with `vukem-video open`; the two are the same data.
+The workspace is `~/.stuarty`, or the folder in `STUARTY_HOME` if you set it before you start the application. You can still run the same server with `stuarty serve` and open it in a browser with `stuarty open`; the two are the same data.
 
 ## Automate the window
 
@@ -54,14 +54,14 @@ In a browser you paste a file path to import media. In the desktop window the ed
 The application can look for a newer version, and only with your consent. The first time you start it, it asks **Check for updates automatically?** with **Yes** selected; nothing connects before you answer. With Yes it checks at start-up and every 24 hours; with No, or with **Help**, **Check for updates automatically** cleared, it opens no connection at all, and **Help**, **Check for updates** makes one check for that action. A check is one HTTPS request for a signed file, `feed.json`, on the GitHub Pages site of the project; the installer it offers is downloaded from the same address, and the application checks its SHA-256 and its signature before it runs it. A file that does not match is refused and the application keeps running. On Windows the installer is started for you and the application quits; on macOS and Linux the application shows the release page instead. A build made without the signing key built in (for example one you compiled yourself) has no update check and says so in the menu. What the request carries and how to turn it off are on [Desktop updates and how to turn them off](/docs/self-hosting/desktop-updates); how the feed is signed is on [Verify a release](/docs/self-hosting/verify-a-release).
 
 <Callout type="warning" title="Moving from v0.20.0 or older: one manual install">
-The site moved to `https://video.vukem.dev` in v0.21.0, and the feed moved with it (`https://video.vukem.dev/updates/feed.json`). The update address is built into each application, and the update client follows no redirect. Applications up to v0.20.0 still ask the old address (`alexgalhardo.github.io/vukem-video`), so they will not find v0.21.0 or later. Download the installer of the latest release from the [release page](https://github.com/AlexGalhardo/vukem-video/releases) and install it once. From v0.21.0 on, updates work again as described above.
+The site moved to `https://video.vukem.dev` in v0.21.0, and the feed moved with it (`https://video.vukem.dev/updates/feed.json`). The update address is built into each application, and the update client follows no redirect. Applications up to v0.20.0 still ask the old address (`alexgalhardo.github.io/stuarty`), so they will not find v0.21.0 or later. Download the installer of the latest release from the [release page](https://github.com/AlexGalhardo/stuarty/releases) and install it once. From v0.21.0 on, updates work again as described above.
 </Callout>
 
 ## Common mistakes
 
 - The build is not signed with a paid certificate, so Windows SmartScreen warns before the first run. See [Installation](/docs/installation) for the steps on Windows and macOS.
 - Every page answers with an error: the front end was not built. Run `bun run build` in `web/` before `go build`.
-- A second copy of the program on the same workspace: the workspace is locked and the second one cannot start. See [the workspace is locked](/docs/troubleshooting/workspace-locked) This includes a `vukem-video serve` that is already running on the workspace: the window says so, with the process and the address. Open that server with `vukem-video open`, stop it, or give the application another folder in `VUKEM_VIDEO_HOME`.
+- A second copy of the program on the same workspace: the workspace is locked and the second one cannot start. See [the workspace is locked](/docs/troubleshooting/workspace-locked) This includes a `stuarty serve` that is already running on the workspace: the window says so, with the process and the address. Open that server with `stuarty open`, stop it, or give the application another folder in `STUARTY_HOME`.
 - Looking for macOS or Linux builds: they are not verified, so nothing here is promised for them.
 
 ## Next steps

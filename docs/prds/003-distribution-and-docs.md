@@ -21,7 +21,7 @@ A tool that handles people's footage, holds the keys to their social accounts an
 
 | ID | Requirement |
 | --- | --- |
-| RF-200 | The product is one executable that contains the server, the CLI, the MCP server and the UI assets. It is named `stuarty` after the rename of ADR-0044 and `vukem-video` until then |
+| RF-200 | The product is one executable that contains the server, the CLI, the MCP server and the UI assets. It is named `stuarty` (ADR-0044; it was `vukem-video` until release 0.29.0) |
 | RF-201 | All data lives in one workspace directory with a documented layout; its location is configurable |
 | RF-202 | Started on the local machine, the UI opens without login; the CLI and MCP server authenticate with a local token; other web origins cannot reach the API |
 | RF-203 | Exposed on the network, login is mandatory and programmatic access uses API keys with scopes, optionally limited to a project |

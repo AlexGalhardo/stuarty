@@ -5,7 +5,7 @@ description: "What an agent can and cannot do to your projects: everything is un
 
 ## The idea
 
-An agent edits and exports without asking you first. Vukem Video makes that safe by removing the dangerous abilities instead of asking for confirmation. The worst a wrong or hostile instruction can do is make edits you can undo and use resources up to a ceiling.
+An agent edits and exports without asking you first. Stuarty makes that safe by removing the dangerous abilities instead of asking for confirmation. The worst a wrong or hostile instruction can do is make edits you can undo and use resources up to a ceiling.
 
 ## What an agent cannot do
 
@@ -19,8 +19,8 @@ An agent edits and exports without asking you first. Vukem Video makes that safe
 Every edit is a batch with a revision and the actor that made it. `undo` and `redo` step through the history of the caller, and `history` lists who changed what. Two actors changing the same property from the same revision do not overwrite each other: the second gets `E_REVISION_CONFLICT` with `details.diff`, and its batch changes nothing. See [Batches, revisions and idempotency](/docs/agents/batches).
 
 ```bash
-vukem-video history --project prj_7k2m9x4q1b
-vukem-video undo --project prj_7k2m9x4q1b
+stuarty history --project prj_7k2m9x4q1b
+stuarty undo --project prj_7k2m9x4q1b
 ```
 
 ## Limits
@@ -29,13 +29,13 @@ Each workspace has ceilings for the work an agent can start. A call that exceeds
 
 | Ceiling | Variable |
 | --- | --- |
-| Imported file size | `VUKEM_VIDEO_MAX_IMPORT_BYTES` |
-| Imported video resolution and duration | `VUKEM_VIDEO_MAX_IMPORT_PIXELS`, `VUKEM_VIDEO_MAX_IMPORT_SECONDS` |
-| Exports queued or running | `VUKEM_VIDEO_MAX_EXPORTS` |
-| Size of an exported file | `VUKEM_VIDEO_MAX_EXPORT_BYTES` |
-| Transcriptions running, and the longest audio | `VUKEM_VIDEO_MAX_TRANSCRIBES`, `VUKEM_VIDEO_MAX_TRANSCRIBE_SECONDS` |
+| Imported file size | `STUARTY_MAX_IMPORT_BYTES` |
+| Imported video resolution and duration | `STUARTY_MAX_IMPORT_PIXELS`, `STUARTY_MAX_IMPORT_SECONDS` |
+| Exports queued or running | `STUARTY_MAX_EXPORTS` |
+| Size of an exported file | `STUARTY_MAX_EXPORT_BYTES` |
+| Transcriptions running, and the longest audio | `STUARTY_MAX_TRANSCRIBES`, `STUARTY_MAX_TRANSCRIBE_SECONDS` |
 
-Requests are limited too, on every surface: the CLI, the stdio MCP server, `POST /mcp` and the HTTP API all reach the same server, so they are counted the same way. One key, or the local token in local mode, may send 300 requests a minute plus a burst of 60 (`VUKEM_VIDEO_RATE_LIMIT_PER_MINUTE`), so the 361st call within a minute is refused with `E_RATE_LIMITED`; a browser session has 1,800 plus 300 (`VUKEM_VIDEO_RATE_LIMIT_SESSION_PER_MINUTE`). Heavy calls (`job_start`, `media_import` and the other imports and bundle exports) share 10 a minute (`VUKEM_VIDEO_RATE_LIMIT_HEAVY_PER_MINUTE`). The error carries `retry_after`; wait that many seconds and retry. Details: [API keys, rate limits](/docs/self-hosting/api-keys).
+Requests are limited too, on every surface: the CLI, the stdio MCP server, `POST /mcp` and the HTTP API all reach the same server, so they are counted the same way. One key, or the local token in local mode, may send 300 requests a minute plus a burst of 60 (`STUARTY_RATE_LIMIT_PER_MINUTE`), so the 361st call within a minute is refused with `E_RATE_LIMITED`; a browser session has 1,800 plus 300 (`STUARTY_RATE_LIMIT_SESSION_PER_MINUTE`). Heavy calls (`job_start`, `media_import` and the other imports and bundle exports) share 10 a minute (`STUARTY_RATE_LIMIT_HEAVY_PER_MINUTE`). The error carries `retry_after`; wait that many seconds and retry. Details: [API keys, rate limits](/docs/self-hosting/api-keys).
 
 `E_QUEUE_FULL`, `E_RATE_LIMITED` and `E_REVISION_CONFLICT` are retryable: the CLI exits with `2` and the error says `retryable: true`. A limit such as `E_LIMIT_EXCEEDED` is not retryable until the input or the ceiling changes. The [error codes](/docs/reference/error-codes) page lists every code and its HTTP status. The [configuration variables](/docs/reference/configuration) page lists the defaults.
 

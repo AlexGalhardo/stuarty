@@ -4,7 +4,7 @@ The team protocol, the layout of the repository and the rules of the project are
 
 @AGENTS.md
 
-- The product is **Stuarty**: create, edit, manage and publish your content in one place. It was called Vukem Video; the code keeps the former name (`vukem-video`) until the rename epic of ADR-0044.
+- The product is **Stuarty**: create, edit, manage and publish your content in one place. It was called Vukem Video (ADR-0044).
 - The work: the epics of `docs/plans/` (index and order in `docs/plans/00-roadmap.md`; one epic is one unit of work for one senior; format and completion protocol in `.agents/rules/plans.md`). No phases and no milestones (ADR-0045).
 - The team: seven agents in `.claude/agents/` (`senior-a` to `senior-e`, `intern`, `specialist`); the main session is the orchestrator. The specialist reviews with no prior context: only the epic, its acceptance criteria and the diff.
 - One UI: the desktop app (Wails v3) is a window over the same web UI the binary serves; write a page once in `web/resources/` (ADR-0041).

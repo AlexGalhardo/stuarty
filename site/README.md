@@ -1,6 +1,6 @@
-# Vukem Video site
+# Stuarty site
 
-The public site of Vukem Video: a landing page at `/` and the documentation under `/docs/`. It is static HTML built with Astro (`output: "static"`, directory `out/`) and published to GitHub Pages by `.github/workflows/site.yml`. No server, no external script, font or analytics.
+The public site of Stuarty: a landing page at `/` and the documentation under `/docs/`. It is static HTML built with Astro (`output: "static"`, directory `out/`) and published to GitHub Pages by `.github/workflows/site.yml`. No server, no external script, font or analytics.
 
 The shell is copied from the vukem documentation site (`vukem/site/`, the template of vukem.dev/docs) as SDD-010 section 1 describes. It was copied from vukem commit `c9a3fcca` (the last commit that touched `site/` in the vukem clone at `c4949ed0`, the head of its pull request 222).
 

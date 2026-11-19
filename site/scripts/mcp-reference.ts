@@ -383,7 +383,7 @@ function toolPage(t: ToolDef, commands: Command[]): string {
 function toolsCatalogue(tools: ToolDef[]): string {
 	return page(
 		"MCP tools",
-		"The tools of the Vukem Video MCP server, in the order tools/list returns them.",
+		"The tools of the Stuarty MCP server, in the order tools/list returns them.",
 		[
 			`The server lists ${tools.length} tools. Each page has the input, the output, the errors, the safety notes and a real call.`,
 			table(
@@ -412,7 +412,7 @@ function operationPage(c: Command, edit: ToolDef): string {
 		"## Errors",
 		c.errors.length ? c.errors.map((e) => `- ${errorLink(e)}`).join("\n") : "No error is specific to this operation. An `edit` call can still fail with `E_REVISION_CONFLICT` or `E_VALIDATION`.",
 		"## Scope and phase",
-		`Scope ${code(c.scope)}, phase ${code(c.phase)}. The scope is the one an API key needs in network mode. Run ${code(`vukem-video command:help ${c.name}`)} for the same description from the binary, or call the [${code("command_help")}](/docs/mcp/tools/command_help) tool.`,
+		`Scope ${code(c.scope)}, phase ${code(c.phase)}. The scope is the one an API key needs in network mode. Run ${code(`stuarty command:help ${c.name}`)} for the same description from the binary, or call the [${code("command_help")}](/docs/mcp/tools/command_help) tool.`,
 		"## Next steps",
 		["- [The edit tool](/docs/mcp/tools/edit)", "- [Batches, revisions and idempotency](/docs/agents/batches)"].join("\n"),
 	];
@@ -422,9 +422,9 @@ function operationPage(c: Command, edit: ToolDef): string {
 		fence("json", jsonRpcCall("edit", args), "tools/call"),
 		"**As a batch file for the CLI**",
 		fence("json", batchFile, "batch.json"),
-		fence("bash", `vukem-video edit --project ${PROJECT} --ops batch.json --json`, "Terminal"),
+		fence("bash", `stuarty edit --project ${PROJECT} --ops batch.json --json`, "Terminal"),
 		"**Over HTTP**",
-		fence("bash", `curl -X POST "http://127.0.0.1:7878/api/v1/projects/${PROJECT}/edit" \\\n  -H "Authorization: Bearer $VUKEM_VIDEO_KEY" \\\n  -H "Content-Type: application/json" \\\n  -d '${JSON.stringify({ base_revision: 12, operations: [{ op: c.name, args: c.example }] }, null, 2)}'`, "curl"),
+		fence("bash", `curl -X POST "http://127.0.0.1:7878/api/v1/projects/${PROJECT}/edit" \\\n  -H "Authorization: Bearer $STUARTY_KEY" \\\n  -H "Content-Type: application/json" \\\n  -d '${JSON.stringify({ base_revision: 12, operations: [{ op: c.name, args: c.example }] }, null, 2)}'`, "curl"),
 		"The ids in the example are illustrative: read the real ones with `project_get`.",
 	];
 

@@ -10,23 +10,23 @@ const names: Names = {
 };
 
 test("a page that names real commands passes", () => {
-	const text = 'Run `vukem-video lint` or the `edit` tool with {"op": "shape.add"}. `job_start` exports.';
+	const text = 'Run `stuarty lint` or the `edit` tool with {"op": "shape.add"}. `job_start` exports.';
 	assert.deepEqual(checkPage("guide/x.mdx", text, names), []);
 });
 
 test("a page that names an operation that does not exist fails", () => {
-	const found = checkPage("guide/x.mdx", "Use `shape.explode` and `vukem-video lint`.", names);
+	const found = checkPage("guide/x.mdx", "Use `shape.explode` and `stuarty lint`.", names);
 	assert.equal(found.length, 1);
 	assert.match(found[0].message, /shape\.explode/);
 });
 
 test("a page that names an unknown CLI command or MCP tool fails", () => {
-	const found = checkPage("guide/x.mdx", "`vukem-video frobnicate` then `job_teleport`.", names);
+	const found = checkPage("guide/x.mdx", "`stuarty frobnicate` then `job_teleport`.", names);
 	assert.equal(found.length, 3);
 });
 
 test("a page that names nothing fails", () => {
-	const found = checkPage("guide/x.mdx", "Plain prose, a file named vukem-video.log and 1.5x.", names);
+	const found = checkPage("guide/x.mdx", "Plain prose, a file named stuarty.log and 1.5x.", names);
 	assert.deepEqual(found.map((f) => f.message), ["names no operation, CLI command or MCP tool"]);
 });
 

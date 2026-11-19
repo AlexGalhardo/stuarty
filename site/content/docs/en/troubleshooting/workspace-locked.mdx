@@ -11,20 +11,20 @@ description: "What E_WORKSPACE_LOCKED means, why a second process cannot write t
 
 ## The idea
 
-One process at a time owns a workspace and writes to it: `vukem-video serve`, or a `vukem-video mcp` session or a command when no server runs. The owner holds an exclusive lock on `<workspace>/lock` and writes its process id and address in `<workspace>/runtime.json`. A command that finds a live owner talks to it over HTTP. When it cannot reach the owner, or the owner is still starting, it retries for 10 seconds and then fails with `E_WORKSPACE_LOCKED`. The error is retryable, and the command exits with code `2`.
+One process at a time owns a workspace and writes to it: `stuarty serve`, or a `stuarty mcp` session or a command when no server runs. The owner holds an exclusive lock on `<workspace>/lock` and writes its process id and address in `<workspace>/runtime.json`. A command that finds a live owner talks to it over HTTP. When it cannot reach the owner, or the owner is still starting, it retries for 10 seconds and then fails with `E_WORKSPACE_LOCKED`. The error is retryable, and the command exits with code `2`.
 
 The operating system releases the lock when its process dies, so a crash never leaves a lock that you must remove by hand. A `runtime.json` left by a dead process is ignored and deleted by the next owner.
 
 ## Quick start
 
 1. Read the message. It names the owner: `another process owns this workspace (pid 4120, 127.0.0.1:7878)`.
-2. Check that the owner answers: open `http://127.0.0.1:7878/up`, or run `vukem-video doctor`.
+2. Check that the owner answers: open `http://127.0.0.1:7878/up`, or run `stuarty doctor`.
 3. If the owner is yours and fine, retry in a few seconds: it may have been starting or shutting down.
 4. If it is a server you forgot, stop it with `Ctrl+C` in its terminal or by ending the process, then run the command again.
 
 ```bash
-vukem-video doctor
-vukem-video user:create admin@example.com --admin
+stuarty doctor
+stuarty user:create admin@example.com --admin
 ```
 
 `user:create` and `user:passwd` are the commands that must run alone: they open the workspace in the process and fail with `E_WORKSPACE_LOCKED` while a server owns it. Stop the server, run them, start it again.
@@ -34,7 +34,7 @@ vukem-video user:create admin@example.com --admin
 - Starting two servers on one workspace, for example the desktop shortcut and a terminal. The second one is refused.
 - Pointing two programs at one workspace through a synchronised folder or a copy of the volume. Each machine needs its own workspace.
 - Deleting `lock` or `runtime.json` while the owner runs. It does not make the owner leave and it hides who the owner is; stop the owner instead.
-- Running a command against a container's workspace from the host without `VUKEM_VIDEO_URL` and `VUKEM_VIDEO_KEY`. Use the HTTP address and a key, as in [API keys and scopes](/docs/self-hosting/api-keys).
+- Running a command against a container's workspace from the host without `STUARTY_URL` and `STUARTY_KEY`. Use the HTTP address and a key, as in [API keys and scopes](/docs/self-hosting/api-keys).
 
 ## Next steps
 
