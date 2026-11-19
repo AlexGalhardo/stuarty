@@ -10,7 +10,8 @@ import {
 } from "react";
 
 import { useT } from "@/lib/i18n";
-import { bindingFor } from "../commands/keymapStore";
+import { rowFor } from "../commands/keymapStore";
+import { isEditable } from "../commands/keyTarget";
 import { useActions } from "../commands/useActions";
 import {
 	useDocumentState,
@@ -41,7 +42,6 @@ import {
 } from "./geometry";
 import { useMarquee } from "./gestures/marquee";
 import {
-	allItemIds,
 	extendSelection,
 	focusAfterRemoval,
 	focusTarget,
@@ -58,13 +58,6 @@ import { TrackRow } from "./TrackRow";
 import { type FrameWindow, frameWindow, VIRTUALIZE_ABOVE } from "./virtualize";
 import { TimelineWindowContext } from "./windowContext";
 
-const VIEW_BINDINGS = [
-	"zoom_in",
-	"zoom_out",
-	"zoom_fit",
-	"toggle_snap",
-] as const;
-
 // The same object while the window has the same edges.
 function useStableWindow(win: FrameWindow | null): FrameWindow | null {
 	const last = useRef(win);
@@ -76,14 +69,6 @@ function useStableWindow(win: FrameWindow | null): FrameWindow | null {
 		last.current = win;
 	}
 	return last.current;
-}
-
-function isEditable(target: EventTarget | null): boolean {
-	if (!(target instanceof HTMLElement)) return false;
-	return (
-		target.isContentEditable ||
-		["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName)
-	);
 }
 
 // The timeline of SDD-012 section 7 for the Prototype: tracks and items as
@@ -210,7 +195,7 @@ export default function Timeline({
 		if (command === null) return;
 		const cell = target.closest<HTMLElement>("[data-item-id]");
 		// The playhead slider and the headers keep their own keys.
-		if (cell === null && command.kind !== "select-all") return;
+		if (cell === null) return;
 		if (cell === null && target.closest('[role="slider"]') !== null) return;
 		const state = runtime.documents.getState();
 		const layout = gridLayout(state);
@@ -224,9 +209,6 @@ export default function Timeline({
 					: [focused];
 		event.preventDefault();
 		switch (command.kind) {
-			case "select-all":
-				runtime.uiWriter.select(allItemIds(layout));
-				break;
 			case "focus": {
 				const next = focusTarget(layout, focused, command.direction);
 				if (next === null) break;
@@ -252,19 +234,6 @@ export default function Timeline({
 			case "nudge": {
 				const unit = command.unit === "second" ? framesPerSecond(fps) : 1;
 				void actions.nudge(acted, command.sign * unit);
-				break;
-			}
-			case "slide":
-			case "roll":
-			case "slip": {
-				const sign = command.sign;
-				const run =
-					command.kind === "slide"
-						? actions.slideItems
-						: command.kind === "roll"
-							? actions.rollItems
-							: actions.slipItems;
-				void run(acted, sign);
 				break;
 			}
 			case "move-track":
@@ -344,11 +313,11 @@ export default function Timeline({
 	}, [ppf, zoomTo]);
 
 	// The keys of SDD-012 section 10.1 for the timeline: zoom in, out and fit and
-	// snapping, rebindable (section 18.2).
+	// snapping, rows of the registry (section 18.9).
 	useEffect(() => {
 		const onKeyDown = (event: KeyboardEvent): void => {
 			if (isEditable(event.target)) return;
-			const bound = bindingFor(event, VIEW_BINDINGS);
+			const bound = rowFor(event, ["timeline"]);
 			if (bound === "zoom_in") zoomStep(1);
 			else if (bound === "zoom_out") zoomStep(-1);
 			else if (bound === "zoom_fit") fitToView();

@@ -1,5 +1,12 @@
 import { Keyboard } from "lucide-react";
-import { type ReactNode, useCallback, useEffect, useState } from "react";
+import {
+	type ReactNode,
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 
 import LocaleSelect from "@/components/LocaleSelect";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -12,38 +19,47 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { useT } from "@/lib/i18n";
 import { useRuntime } from "../state/EditorContext";
 import { showTipsAgain } from "../state/tipsStore";
 import {
-	type BindingId,
+	aliasKeys,
 	comboFromEvent,
 	displayCombo,
-	isBindingId,
 	IS_MAC as MAC,
+	PRESET_IDS,
+	type PresetId,
 	SHORTCUTS,
 } from "./keymap";
-import { rebind, resetBindings, useBindings } from "./keymapStore";
+import {
+	keysOf,
+	rebind,
+	resetBindings,
+	rowFor,
+	setPreset,
+	useKeymap,
+} from "./keymapStore";
+import { isEditable } from "./keyTarget";
 import { useSurfaceRequest } from "./surface";
 
-function isEditable(target: EventTarget | null): boolean {
-	return (
-		target instanceof HTMLElement &&
-		(target.isContentEditable ||
-			["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName))
-	);
-}
-
 interface Conflict {
-	id: BindingId;
+	id: string;
 	key: string;
 	// A row id, or "reserved".
 	with: string;
 }
 
-// The cheat sheet of SDD-012 section 18.2: one row per entry of SHORTCUTS, with
-// the key that is current now. A rebindable row has a button that captures the
-// next key press; a key that another row holds is refused and named.
+// The text of the keys a row answers to now, as shown ("Ctrl+B"). A row the
+// person cannot rebind (the wheel, the grid keys) shows its own text.
+function shownKeys(keys: readonly string[]): string {
+	return keys.map((key) => displayCombo(key, MAC)).join(", ");
+}
+
+// The cheat sheet of SDD-012 sections 18.2 and 18.9: one row per entry of
+// SHORTCUTS, with the key that is current now, a search field and the preset.
+// Every row that is not fixed has a button that captures the next key press; a
+// key that another row holds is refused and named.
 export function ShortcutsDialog({
 	open,
 	onOpenChange,
@@ -71,29 +87,93 @@ export function ShortcutsDialog({
 			current = false;
 		};
 	}, [open, runtime]);
-	const bindings = useBindings();
-	const [capturing, setCapturing] = useState<BindingId | null>(null);
+	const keymap = useKeymap();
+	const [capturing, setCapturing] = useState<string | null>(null);
 	const [conflict, setConflict] = useState<Conflict | null>(null);
+	const [dropped, setDropped] = useState<string[]>([]);
+	const [query, setQuery] = useState("");
+	const search = useRef<HTMLInputElement>(null);
 
 	useEffect(() => {
 		if (!open) {
 			setCapturing(null);
 			setConflict(null);
+			setDropped([]);
+			setQuery("");
+			return;
 		}
+		const frame = requestAnimationFrame(() => search.current?.focus());
+		return () => cancelAnimationFrame(frame);
 	}, [open]);
 
-	const label = (id: string): string => t(`ui.editor.shortcuts.rows.${id}`);
+	const label = useCallback(
+		(id: string): string => t(`ui.editor.shortcuts.rows.${id}`),
+		[t],
+	);
+
+	const rows = useMemo(() => {
+		const needle = query.trim().toLowerCase();
+		if (needle === "") return SHORTCUTS;
+		return SHORTCUTS.filter((row) => {
+			const keys = shownKeys(
+				row.fixed === true ? [row.keys] : keysOf(row, keymap),
+			);
+			return (
+				label(row.id).toLowerCase().includes(needle) ||
+				keys.toLowerCase().includes(needle)
+			);
+		});
+	}, [query, keymap, label]);
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="max-w-xl" data-shortcuts="">
+			<DialogContent className="max-w-2xl" data-shortcuts="">
 				<DialogHeader>
 					<DialogTitle>{t("ui.editor.shortcuts.title")}</DialogTitle>
 					<DialogDescription>
 						{t("ui.editor.shortcuts.description")}
 					</DialogDescription>
 				</DialogHeader>
-				<div className="max-h-[60vh] overflow-auto">
+				<div className="flex flex-wrap items-center gap-2">
+					<Input
+						ref={search}
+						type="search"
+						value={query}
+						aria-label={t("ui.editor.shortcuts.search")}
+						placeholder={t("ui.editor.shortcuts.search")}
+						className="min-w-48 flex-1"
+						onChange={(event) => setQuery(event.target.value)}
+						onKeyDown={(event) => {
+							// Esc clears a search first and closes the dialog second.
+							if (event.key === "Escape" && query !== "") {
+								event.preventDefault();
+								event.stopPropagation();
+								setQuery("");
+							}
+						}}
+					/>
+					<label className="flex items-center gap-2 text-sm">
+						<span className="text-muted-foreground">
+							{t("ui.editor.shortcuts.preset")}
+						</span>
+						<select
+							value={keymap.preset}
+							data-shortcuts-preset=""
+							className="h-8 rounded-md border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
+							onChange={(event) => {
+								setConflict(null);
+								setDropped(setPreset(event.target.value as PresetId).dropped);
+							}}
+						>
+							{PRESET_IDS.map((id) => (
+								<option key={id} value={id}>
+									{t(`ui.editor.shortcuts.presets.${id}`)}
+								</option>
+							))}
+						</select>
+					</label>
+				</div>
+				<div className="max-h-[50vh] overflow-auto">
 					<table className="w-full text-sm">
 						<thead>
 							<tr className="text-left text-xs text-muted-foreground">
@@ -106,12 +186,13 @@ export function ShortcutsDialog({
 							</tr>
 						</thead>
 						<tbody>
-							{SHORTCUTS.map((row) => {
+							{rows.map((row) => {
 								const id = row.id;
-								const shown = displayCombo(
-									isBindingId(id) ? bindings[id] : row.keys,
-									MAC,
-								);
+								const fixed = row.fixed === true;
+								const current = fixed ? [row.keys] : keysOf(row, keymap);
+								const shown = shownKeys(current);
+								const own = keymap.overrides[id] === undefined;
+								const aliases = own ? aliasKeys(row) : [];
 								return (
 									<tr
 										key={id}
@@ -120,7 +201,9 @@ export function ShortcutsDialog({
 									>
 										<td className="py-1.5 pr-3">{label(id)}</td>
 										<td className="py-1.5">
-											{isBindingId(id) ? (
+											{fixed ? (
+												<kbd className="font-sans">{shown}</kbd>
+											) : (
 												<Button
 													type="button"
 													size="xs"
@@ -132,6 +215,7 @@ export function ShortcutsDialog({
 													})}
 													onClick={() => {
 														setConflict(null);
+														setDropped([]);
 														setCapturing(id);
 													}}
 													onBlur={() => setCapturing(null)}
@@ -160,23 +244,28 @@ export function ShortcutsDialog({
 														<kbd className="font-sans">{shown}</kbd>
 													)}
 												</Button>
-											) : (
-												<kbd className="font-sans">{shown}</kbd>
 											)}
-											{row.aliases !== undefined &&
-												(!isBindingId(id) || bindings[id] === row.keys) && (
-													<span className="ml-2 text-xs text-muted-foreground">
-														{t("ui.editor.shortcuts.also", {
-															keys: displayCombo(row.aliases, MAC),
-														})}
-													</span>
-												)}
+											{aliases.length > 0 && (
+												<span className="ml-2 text-xs text-muted-foreground">
+													{t("ui.editor.shortcuts.also", {
+														keys: displayCombo(aliases.join(", "), MAC),
+													})}
+												</span>
+											)}
 										</td>
 									</tr>
 								);
 							})}
 						</tbody>
 					</table>
+					{rows.length === 0 && (
+						<p
+							role="status"
+							className="py-6 text-center text-sm text-muted-foreground"
+						>
+							{t("ui.editor.shortcuts.none")}
+						</p>
+					)}
 				</div>
 				{conflict !== null && (
 					<p role="alert" className="text-sm text-destructive">
@@ -188,6 +277,13 @@ export function ShortcutsDialog({
 									key: displayCombo(conflict.key, MAC),
 									action: label(conflict.with),
 								})}
+					</p>
+				)}
+				{dropped.length > 0 && (
+					<p role="status" className="text-sm text-muted-foreground">
+						{t("ui.editor.shortcuts.dropped", {
+							actions: dropped.map(label).join(", "),
+						})}
 					</p>
 				)}
 				<div className="flex items-center justify-between gap-3 border-t pt-3">
@@ -207,6 +303,7 @@ export function ShortcutsDialog({
 						variant="outline"
 						onClick={() => {
 							setConflict(null);
+							setDropped([]);
 							resetBindings();
 						}}
 					>
@@ -228,8 +325,8 @@ export function ShortcutsDialog({
 	);
 }
 
-// The top-bar entry to the cheat sheet and the `?` key that opens it outside
-// an editable field or another dialog.
+// The top-bar entry to the cheat sheet and the `cheat_sheet` row that opens it
+// outside an editable field or another dialog.
 export default function ShortcutsButton({
 	onLocaleChange,
 }: {
@@ -243,11 +340,8 @@ export default function ShortcutsButton({
 	useEffect(() => {
 		const onKey = (event: KeyboardEvent): void => {
 			if (
-				event.key !== "?" ||
-				event.ctrlKey ||
-				event.metaKey ||
-				event.altKey ||
-				isEditable(event.target)
+				isEditable(event.target) ||
+				rowFor(event, ["global"]) !== "cheat_sheet"
 			)
 				return;
 			const target = event.target;
