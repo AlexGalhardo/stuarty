@@ -432,6 +432,134 @@ The types named in the tables of the operations. The arguments of each editing c
 | `range` | `string`, one of 8 values | no |  |
 | `saturation` | `number (double)` | no |  |
 
+### image.Crop
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `h` | `integer` | no |  |
+| `w` | `integer` | no |  |
+| `x` | `integer` | no |  |
+| `y` | `integer` | no |  |
+
+### image.SlotValue
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `asset` | `string` | no |  |
+| `text` | `string` or `null` | no |  |
+
+### ImageCreateResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `height` | `integer` | no |  |
+| `image_id` | `string` | no |  |
+| `revision` | `integer (int64)` | no |  |
+| `text` | `string` | no |  |
+| `untrusted_notice` | `string` | no |  |
+| `width` | `integer` | no |  |
+
+### ImageDescribeResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `background` | `string` | no |  |
+| `findings` | array of [`Finding`](/docs/api/schemas#finding) | no |  |
+| `height` | `integer` | no |  |
+| `image_id` | `string` | no |  |
+| `layers` | array of [`Layer`](/docs/api/schemas#layer) | no |  |
+| `lint` | [`LintTotals`](/docs/api/schemas#linttotals) | no |  |
+| `name` | `string` | no |  |
+| `revision` | `integer (int64)` | no |  |
+| `template` | `boolean` | no |  |
+| `text` | `string` | no |  |
+| `untrusted_notice` | `string` | no |  |
+| `width` | `integer` | no |  |
+
+### ImageEditResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `actor` | `string` | no |  |
+| `applied` | `boolean` | no |  |
+| `base_revision` | `integer (int64)` | no |  |
+| `created` | array of `string` | no |  |
+| `description` | `string` | no |  |
+| `diff` | array of [`Change`](/docs/api/schemas#change) | no |  |
+| `dry_run` | `boolean` | no |  |
+| `effective` | array of [`OpEffect`](/docs/api/schemas#opeffect) | no |  |
+| `findings` | array of [`Finding`](/docs/api/schemas#finding) | no |  |
+| `image_id` | `string` | no |  |
+| `lint` | [`LintTotals`](/docs/api/schemas#linttotals) | no |  |
+| `replayed` | `boolean` | no |  |
+| `revision` | `integer (int64)` | no |  |
+| `untrusted_notice` | `string` | no |  |
+
+### ImageExportResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `bytes` | `integer (int64)` | no |  |
+| `format` | `string` | no |  |
+| `height` | `integer` | no |  |
+| `image_id` | `string` | no |  |
+| `path` | `string` | no |  |
+| `revision` | `integer (int64)` | no |  |
+| `sha256` | `string` | no |  |
+| `text` | `string` | no |  |
+| `width` | `integer` | no |  |
+
+### ImageListResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `images` | array of [`ImageSummary`](/docs/api/schemas#imagesummary) | no |  |
+| `next_cursor` | `string` or `null` | no |  |
+| `text` | `string` | no |  |
+| `untrusted_notice` | `string` | no |  |
+
+### ImageOperation
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `args` | map of `any` | no | The arguments of the command. |
+| `op` | `string` | yes | A command name, as listed by GET /commands?domain=image.. min length 1 |
+
+### ImageStepResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `actor` | `string` | no |  |
+| `applied` | `boolean` | no |  |
+| `base_revision` | `integer (int64)` | no |  |
+| `created` | array of `string` | no |  |
+| `description` | `string` | no |  |
+| `diff` | array of [`Change`](/docs/api/schemas#change) | no |  |
+| `dry_run` | `boolean` | no |  |
+| `effective` | array of [`OpEffect`](/docs/api/schemas#opeffect) | no |  |
+| `findings` | array of [`Finding`](/docs/api/schemas#finding) | no |  |
+| `image_id` | `string` | no |  |
+| `kind` | `string` | no |  |
+| `lint` | [`LintTotals`](/docs/api/schemas#linttotals) | no |  |
+| `replayed` | `boolean` | no |  |
+| `revision` | `integer (int64)` | no |  |
+| `skipped` | array of [`Skipped`](/docs/api/schemas#skipped) | no |  |
+| `step` | `integer (int64)` | no |  |
+| `untrusted_notice` | `string` | no |  |
+
+### ImageSummary
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `height` | `integer` | no |  |
+| `image_id` | `string` | no |  |
+| `layers` | `integer` | no |  |
+| `name` | `string` | no |  |
+| `revision` | `integer (int64)` | no |  |
+| `template` | `boolean` | no |  |
+| `updated_ms` | `integer (int64)` | no |  |
+| `width` | `integer` | no |  |
+
 ### ImportedAsset
 
 | Name | Type | Required | Description |
@@ -629,6 +757,34 @@ The types named in the tables of the operations. The arguments of each editing c
 | --- | --- | --- | --- |
 | `code` | `string` | no | A one-time code, valid for 120 seconds. |
 | `url` | `string` | no | The address that exchanges the code for a browser session. |
+
+### Layer
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `asset` | `string` | no |  |
+| `children` | array of [`Layer`](/docs/api/schemas#layer) | no |  |
+| `crop` | [`image.Crop`](/docs/api/schemas#imagecrop) or `any` or `null` or `null` | no |  |
+| `fill` | `string` | no |  |
+| `h` | `integer` | no |  |
+| `id` | `string` | no |  |
+| `kind` | `string` | no |  |
+| `locked` | `boolean` | no |  |
+| `name` | `string` | no |  |
+| `opacity` | `integer` | no |  |
+| `order` | `string` | no |  |
+| `radius` | `integer` | no |  |
+| `rotation` | `integer` | no |  |
+| `shape` | `string` | no |  |
+| `slot` | `string` | no |  |
+| `stroke_color` | `string` | no |  |
+| `stroke_width` | `integer` | no |  |
+| `style` | [`CaptionStyle`](/docs/api/schemas#captionstyle) or `any` or `null` or `null` | no |  |
+| `text` | `string` | no |  |
+| `visible` | `boolean` | no |  |
+| `w` | `integer` | no |  |
+| `x` | `integer` | no |  |
+| `y` | `integer` | no |  |
 
 ### LibraryAsset
 
@@ -837,6 +993,17 @@ The types named in the tables of the operations. The arguments of each editing c
 | `color` | `string` | no |  |
 | `width` | `number (double)` | no |  |
 
+### Primitive
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `collection` | `string` | no |  |
+| `id` | `string` | no |  |
+| `object` | map of `any` | no |  |
+| `set` | map of `any` | no |  |
+| `type` | `string` | no |  |
+| `unset` | array of `string` | no |  |
+
 ### ProbeSummary
 
 | Name | Type | Required | Description |
@@ -1030,6 +1197,18 @@ The types named in the tables of the operations. The arguments of each editing c
 | `dx` | `number (double)` | no |  |
 | `dy` | `number (double)` | no |  |
 | `opacity` | `number (double)` | no |  |
+
+### Skipped
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `by_actor` | `string` | no |  |
+| `by_revision` | `integer (int64)` or `null` | no |  |
+| `details` | map of `any` | no |  |
+| `fields` | array of `string` | no |  |
+| `primitive` | [`Primitive`](/docs/api/schemas#primitive) | no |  |
+| `primitive_index` | `integer` | no |  |
+| `reason` | `string` | no |  |
 
 ### SkippedOp
 

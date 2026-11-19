@@ -1,0 +1,91 @@
+{
+ "name": "image",
+ "description": "Images. action=create (preset or width+height; or from_template+values), list, show, edit (operations: command_help domain=image), undo, redo, export.",
+ "inputSchema": {
+  "type": "object",
+  "properties": {
+   "action": {
+    "enum": [
+     "create",
+     "list",
+     "show",
+     "edit",
+     "undo",
+     "redo",
+     "export"
+    ]
+   },
+   "image_id": {
+    "type": "string",
+    "pattern": "^img_[0-9a-hjkmnp-tv-z]{10}$"
+   },
+   "base_revision": {
+    "type": "integer"
+   },
+   "operations": {
+    "type": "array",
+    "items": {
+     "type": "object",
+     "properties": {
+      "op": {
+       "type": "string"
+      },
+      "args": {
+       "type": "object"
+      }
+     }
+    }
+   },
+   "idempotency_key": {
+    "type": "string"
+   },
+   "dry_run": {
+    "type": "boolean"
+   },
+   "preset": {
+    "type": "string"
+   },
+   "width": {
+    "type": "integer"
+   },
+   "height": {
+    "type": "integer"
+   },
+   "name": {
+    "type": "string"
+   },
+   "template": {
+    "type": "boolean"
+   },
+   "values": {
+    "type": "object"
+   },
+   "format": {
+    "type": "string"
+   },
+   "from_template": {
+    "type": "string"
+   }
+  },
+  "required": [
+   "action"
+  ],
+  "additionalProperties": false
+ },
+ "outputSchema": {
+  "type": "object",
+  "properties": {
+   "text": {
+    "type": "string",
+    "x-untrusted": true
+   }
+  }
+ },
+ "annotations": {
+  "title": "Images",
+  "readOnlyHint": false,
+  "destructiveHint": false,
+  "idempotentHint": false,
+  "openWorldHint": false
+ }
+}

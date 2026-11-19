@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "h": {
+      "description": "Pixels of the source.",
+      "maximum": 65536,
+      "minimum": 1,
+      "type": "integer"
+    },
+    "layer_id": {
+      "pattern": "^lyr_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+      "type": "string"
+    },
+    "reset": {
+      "description": "Show the whole source again; no other argument.",
+      "type": "boolean"
+    },
+    "w": {
+      "description": "Pixels of the source.",
+      "maximum": 65536,
+      "minimum": 1,
+      "type": "integer"
+    },
+    "x": {
+      "description": "Pixels of the source.",
+      "maximum": 65536,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "y": {
+      "description": "Pixels of the source.",
+      "maximum": 65536,
+      "minimum": 0,
+      "type": "integer"
+    }
+  },
+  "required": [
+    "layer_id"
+  ],
+  "type": "object"
+}

@@ -121,7 +121,12 @@ type lintIn struct {
 }
 
 type commandIn struct {
-	Name string `json:"name" validate:"required"`
+	Name   string `json:"name"             validate:"required"`
+	Domain string `json:"domain,omitempty"                     doc:"video (default) or image."`
+}
+
+type commandListIn struct {
+	Domain string `json:"domain,omitempty" doc:"video (default) or image."`
 }
 
 type noIn struct{}
@@ -241,12 +246,12 @@ func (h *apiHandler) registerAll() {
 		)
 	})
 	register(h, "projects.edit", h.projectsEdit)
-	register(h, "commands.list", func(c *web.Ctx, _ noIn) (service.CommandHelpResult, error) {
-		res, err := h.Service.CommandHelp(c.Context(), service.CommandHelpRequest{})
+	register(h, "commands.list", func(c *web.Ctx, in commandListIn) (service.CommandHelpResult, error) {
+		res, err := h.Service.CommandHelp(c.Context(), service.CommandHelpRequest{Domain: in.Domain})
 		return deref(res), err
 	})
 	register(h, "commands.get", func(c *web.Ctx, in commandIn) (service.CommandHelpResult, error) {
-		res, err := h.Service.CommandHelp(c.Context(), service.CommandHelpRequest{Name: in.Name})
+		res, err := h.Service.CommandHelp(c.Context(), service.CommandHelpRequest{Name: in.Name, Domain: in.Domain})
 		return deref(res), err
 	})
 	register(h, "projects.history", func(c *web.Ctx, in historyIn) (service.HistoryListResult, error) {
@@ -327,6 +332,7 @@ func (h *apiHandler) registerAll() {
 	register(h, "templates.list", h.templateList)
 	register(h, "templates.save", h.templateSave)
 	register(h, "templates.instantiate", h.templateInstantiate)
+	h.registerImages()
 	register(h, "trash.empty", h.trashEmpty)
 	register(h, "system.tools.install", h.toolsInstall)
 	register(h, "system.tools", h.toolsStatus)

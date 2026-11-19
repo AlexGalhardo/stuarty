@@ -178,6 +178,20 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.ProjectBundleImport)
 	case "ProjectOtioExport":
 		return invoke(ctx, s, svc.ProjectOtioExport)
+	case "ImageCreate":
+		return invoke(ctx, s, svc.ImageCreate)
+	case "ImageList":
+		return invoke(ctx, s, svc.ImageList)
+	case "ImageDescribe":
+		return invoke(ctx, s, svc.ImageDescribe)
+	case "ImageEdit":
+		return invoke(ctx, s, svc.ImageEdit)
+	case "ImageUndo":
+		return invoke(ctx, s, svc.ImageUndo)
+	case "ImageRedo":
+		return invoke(ctx, s, svc.ImageRedo)
+	case "ImageExport":
+		return invoke(ctx, s, svc.ImageExport)
 	case "ProjectOtioImport":
 		return invoke(ctx, s, svc.ProjectOtioImport)
 	}
@@ -351,6 +365,17 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 	}
 
 	switch s.Call {
+	case "ImageCreate", "ImageList", "ImageDescribe", "ImageEdit", "ImageUndo", "ImageRedo", "ImageExport":
+		args["action"] = imageActions[s.Call]
+
+		// the tool names the template to start from from_template, which is not an id member
+		if v, ok := args["template_id"]; ok {
+			delete(args, "template_id")
+
+			args["from_template"] = v
+		}
+
+		return "image", args, nil
 	case "ProjectList":
 		return "project_list", args, nil
 	case "ProjectCreate":
@@ -576,6 +601,8 @@ func command2argv(s step) (name string, argv []string, stdin string, err error) 
 	}
 
 	switch s.Call {
+	case "ImageCreate", "ImageList", "ImageDescribe", "ImageEdit", "ImageUndo", "ImageRedo", "ImageExport":
+		return imageArgv(s)
 	case "ProjectList":
 		return "project:list", nil, "", nil
 	case "ProjectCreate":
@@ -860,6 +887,108 @@ func withoutProject(args json.RawMessage) string {
 
 	_ = json.Unmarshal(args, &m)
 	delete(m, "project_id")
+
+	raw, err := json.Marshal(m)
+	if err != nil {
+		return ""
+	}
+
+	return string(raw)
+}
+
+// imageActions are the actions of the image tool, by the Service operation they stand for.
+var imageActions = map[string]string{
+	"ImageCreate": "create", "ImageList": "list", "ImageDescribe": "show", "ImageEdit": "edit", "ImageUndo": "undo",
+	"ImageRedo": "redo", "ImageExport": "export",
+}
+
+// imageArgv encodes an image operation as the command line of the CLI (SDD-021 section 11).
+func imageArgv(s step) (name string, argv []string, stdin string, err error) {
+	var a map[string]any
+
+	if len(s.Args) > 0 {
+		if err := json.Unmarshal(s.Args, &a); err != nil {
+			return "", nil, "", err
+		}
+	}
+
+	str := func(k string) string {
+		v, _ := a[k].(string)
+
+		return v
+	}
+
+	num := func(k string) string {
+		if f, ok := a[k].(float64); ok {
+			return strconv.Itoa(int(f))
+		}
+
+		return ""
+	}
+
+	add := func(flag, v string) {
+		if v != "" {
+			argv = append(argv, "--"+flag, v)
+		}
+	}
+
+	switch s.Call {
+	case "ImageCreate":
+		add("preset", str("preset"))
+		add("width", num("width"))
+		add("height", num("height"))
+		add("name", str("name"))
+		add("background", str("background"))
+		add("from-template", str("template_id"))
+		add("id", str("id"))
+
+		if b, _ := a["template"].(bool); b {
+			argv = append(argv, "--template")
+		}
+
+		if v, ok := a["values"]; ok {
+			raw, merr := json.Marshal(v)
+			if merr != nil {
+				return "", nil, "", merr
+			}
+
+			argv, stdin = append(argv, "--values", "-"), string(raw)
+		}
+
+		return "image:create", argv, stdin, nil
+	case "ImageList":
+		add("templates", str("templates"))
+
+		return "image:list", argv, "", nil
+	case "ImageDescribe":
+		return "image:show", []string{str("image_id")}, "", nil
+	case "ImageEdit":
+		return "image:edit", []string{str("image_id"), "--ops", "-"}, withoutKey(s.Args, "image_id"), nil
+	case "ImageUndo", "ImageRedo":
+		argv = []string{str("image_id")}
+		if b, _ := a["dry_run"].(bool); b {
+			argv = append(argv, "--dry-run")
+		}
+
+		return "image:" + strings.ToLower(strings.TrimPrefix(s.Call, "Image")), argv, "", nil
+	}
+
+	argv = []string{str("image_id")}
+	add("format", str("format"))
+	add("quality", num("quality"))
+	add("preset", str("preset"))
+	add("width", num("width"))
+	add("height", num("height"))
+
+	return "image:export", argv, "", nil
+}
+
+// withoutKey is the arguments of a step without one member, as the JSON of the standard input of a batch.
+func withoutKey(args json.RawMessage, key string) string {
+	var m map[string]json.RawMessage
+
+	_ = json.Unmarshal(args, &m)
+	delete(m, key)
 
 	raw, err := json.Marshal(m)
 	if err != nil {
