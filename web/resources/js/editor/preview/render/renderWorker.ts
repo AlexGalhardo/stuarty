@@ -1,3 +1,4 @@
+import { cutRows, evenAround, whole } from "./pixels";
 import type {
 	FromRenderWorker,
 	PixelSource,
@@ -29,27 +30,20 @@ async function readSource(
 	rect: Rect | undefined,
 ): Promise<Pixels> {
 	if (typeof VideoFrame !== "undefined" && source instanceof VideoFrame) {
+		const frameWidth = source.visibleRect?.width ?? source.codedWidth;
+		const frameHeight = source.visibleRect?.height ?? source.codedHeight;
 		const area = rect
-			? {
-					x: Math.round(rect.x),
-					y: Math.round(rect.y),
-					width: Math.round(rect.w),
-					height: Math.round(rect.h),
-				}
-			: {
-					x: 0,
-					y: 0,
-					width: source.visibleRect?.width ?? source.codedWidth,
-					height: source.visibleRect?.height ?? source.codedHeight,
-				};
-		const rgba = new Uint8Array(area.width * area.height * 4);
+			? whole(rect)
+			: { x: 0, y: 0, w: frameWidth, h: frameHeight };
+		const outer = rect ? evenAround(area, frameWidth, frameHeight) : area;
+		const copy = new Uint8Array(outer.w * outer.h * 4);
 		// The browser converts from the colour tags of the proxy (SDD-013 5.3.6).
-		await source.copyTo(rgba, {
+		await source.copyTo(copy, {
 			format: "RGBA",
-			rect: area,
+			rect: { x: outer.x, y: outer.y, width: outer.w, height: outer.h },
 			colorSpace: "srgb",
 		});
-		return { width: area.width, height: area.height, rgba };
+		return { width: area.w, height: area.h, rgba: cutRows(copy, outer, area) };
 	}
 	const bitmap = source as unknown as ImageBitmap;
 	const x = Math.round(rect?.x ?? 0);
