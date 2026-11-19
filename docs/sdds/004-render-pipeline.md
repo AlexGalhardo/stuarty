@@ -129,6 +129,11 @@ With keyframes `k0..kn` sorted by `t`:
 | `ease_out` | `1 - (1 - u)³` |
 | `ease_in_out` | `4u³` when `u < 0.5`, else `1 - (-2u + 2)³ / 2` |
 | `hold` | `0` |
+| `bezier` | `y` of the cubic Bezier curve through (0, 0), (`x1`, `y1`), (`x2`, `y2`) and (1, 1) at the point whose `x` is `u` (epic 31) |
+
+**The `bezier` arithmetic is fixed-point, so every platform gets the same numbers.** The four control numbers and `u` are converted to Q30 integers (`round(v × 2^30)`). The parameter `s` with `x(s) = u`, where `x(s) = 3(1-s)²s·x1 + 3(1-s)s²·x2 + s³`, is found by bisection on the integers `0` to `2^30` in exactly 30 steps (`x` is non-decreasing because `x1` and `x2` are from 0 to 1); then `e(u) = y(s)` with the same polynomial in `y1` and `y2`, computed with 64-bit integers and a right shift of 30 after each product, and the result is divided by `2^30`. `e(0)` is exactly 0 and `e(1)` exactly 1 (those two are not iterated). The value is then rounded to 3 decimals like every sampled value.
+
+**Range.** A curve can overshoot, so after interpolation the plan keeps the value of `scale` from 0.001 to 20, of `opacity` from 0 to 1, of `volume` from 0 to 4, and of a colour, mask or crop property inside the range of its static field (SDD-001 §3.5, §3.4); `x`, `y` and `rotation` are not limited. Mask and crop were already kept inside their item (§3.4, §3.9).
 
 Rotation interpolates as a plain number; there is no shortest-path wrapping.
 
