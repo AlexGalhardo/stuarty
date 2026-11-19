@@ -11,6 +11,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/core/lint"
 	"github.com/AlexGalhardo/stuarty/core/plan"
 	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/engine/export"
 	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
 	"github.com/AlexGalhardo/stuarty/engine/ingest"
 	"github.com/AlexGalhardo/stuarty/engine/rasterize"
@@ -106,14 +107,15 @@ type Service interface {
 	KeyList(ctx context.Context, req KeyListRequest) (*KeyListResult, error)
 	KeyRevoke(ctx context.Context, req KeyRevokeRequest) (*Key, error)
 
-	// ConnectionList and ConnectionGet read the destinations the user connected; ConnectionCreate,
-	// ConnectionRemove and ConnectionTest are for an administrator. No result carries a credential
-	// (SDD-014 section 5).
-	ConnectionList(ctx context.Context, req ConnectionListRequest) (*ConnectionListResult, error)
-	ConnectionGet(ctx context.Context, req ConnectionRef) (*connections.Connection, error)
-	ConnectionCreate(ctx context.Context, req ConnectionCreateRequest) (*connections.Connection, error)
-	ConnectionRemove(ctx context.Context, req ConnectionRef) (*connections.Connection, error)
-	ConnectionTest(ctx context.Context, req ConnectionRef) (*ConnectionTestResult, error)
+	// The image documents of SDD-021: creation (blank or from a template), the list, the text view, batches of
+	// image operations, undo and redo, and the export to a file.
+	ImageCreate(ctx context.Context, req ImageCreateRequest) (*ImageCreateResult, error)
+	ImageList(ctx context.Context, req ImageListRequest) (*ImageListResult, error)
+	ImageDescribe(ctx context.Context, req ImageDescribeRequest) (*ImageDescribeResult, error)
+	ImageEdit(ctx context.Context, req ImageEditRequest) (*ImageEditResult, error)
+	ImageUndo(ctx context.Context, req ImageStepRequest) (*ImageStepResult, error)
+	ImageRedo(ctx context.Context, req ImageStepRequest) (*ImageStepResult, error)
+	ImageExport(ctx context.Context, req ImageExportRequest) (*ImageExportResult, error)
 }
 
 // Event is what the service publishes after the change is durable (SDD-006
@@ -192,6 +194,8 @@ type Options struct {
 	HeavyPerMinute int
 	// Log receives the job lines (start, end, failure); nil discards them.
 	Log *slog.Logger
+	// WebP encodes the WebP export of an image; without one that format answers webp_unavailable (SDD-021 section 6).
+	WebP export.WebPEncoder
 	// JobWait is how long TrashEmpty waits for the jobs of a trashed project to stop; zero is 15 s.
 	JobWait time.Duration
 }
@@ -219,6 +223,7 @@ type svc struct {
 	heavyLimitN int
 	log         *slog.Logger
 	jobWait     time.Duration
+	webp        export.WebPEncoder
 	doctorMu    sync.Mutex
 	doctorCaps  *ffmpeg.Capabilities
 
@@ -271,6 +276,7 @@ func New(o Options) (Service, error) {
 		heavyLimitN: o.HeavyPerMinute,
 		log:         o.Log,
 		jobWait:     o.JobWait,
+		webp:        o.WebP,
 		startedAt:   time.Now(),
 	}
 

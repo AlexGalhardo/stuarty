@@ -1,0 +1,11 @@
+image img_aaaaaaaaaa r12 "Episode 12" 1280x720 background #101820 template=false layers=8
+lyr_hhhhhhhhhh shape "Frame" at 10,10 50x50 opacity 100 locked rect fill #00FF00
+lyr_eeeeeeeeee group "Badge" offset 50,40 children 2 opacity 80
+  lyr_gggggggggg text "New" at 10,30 80x36 opacity 100 "NEW"
+  lyr_ffffffffff shape "Dot" at 0,0 100x100 opacity 100 ellipse fill #FFFFFF
+lyr_dddddddddd shape "Bar" at 100,500 600x40 opacity 100 rect fill #E63946
+lyr_cccccccccc text "Title" at 120,300 1000x144 opacity 100 slot=title "HOW IT WORKS" size 120
+lyr_bbbbbbbbbb image "Photo" at 0,0 1280x720 opacity 100 asset sha256:aaaaaaaaaaaa
+lyr_aaaaaaaaaa fill "Backdrop" at 0,0 1280x720 opacity 100 fill #101820
+findings:
+warning L_IMAGE_LOW_CONTRAST lyr_gggggggggg The text of "New" has a contrast of 1.0 against what is under it; 3 is the least.
