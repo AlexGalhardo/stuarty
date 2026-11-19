@@ -1,6 +1,6 @@
 ---
 title: "media_import"
-description: "Import media. Import local files into a project."
+description: "Import media. Import files into a project."
 wide: true
 ---
 
@@ -10,7 +10,7 @@ wide: true
 
 <RefMain>
 
-Import local files into a project. paths: absolute paths of video, audio or image files, or sha256:... hashes of library files to reuse (no copy). Waits up to wait_ms; use an asset in edit only when ready. origin=\{kind: imported\|generated\|fetched_by_agent\|rendered_externally, source,provider,model,prompt,rights_note\}: generated needs provider and model; fetched_by_agent needs source and rights_note. info=\{tags,reusable,description\}. hash without paths: info edits that library entry.
+Import files into a project. paths: absolute paths of media files, or sha256:... library hashes (no copy). Waits up to wait_ms; use assets once ready. origin=\{kind,source,provider,model,prompt,rights_note\}: generated needs provider,model; fetched_by_agent source,rights_note; rendered_externally source. info=\{tags,reusable,description\}. hash, no paths: info edits that entry.
 
 ## Behaviour
 
