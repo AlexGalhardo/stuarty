@@ -101,6 +101,10 @@ func (s *svc) MediaImport(ctx context.Context, req MediaImportRequest) (*MediaIm
 		return nil, err
 	}
 
+	if err := s.useTimeline(ctx, c, &req.ProjectID, req.TimelineID); err != nil {
+		return nil, err
+	}
+
 	if n := len(req.Files); n < 1 || n > maxImportFiles {
 		return nil, newError(command.CodeValidation, "the call has %d files; it must have 1 to %d.", n, maxImportFiles).
 			withPath("files")
@@ -812,6 +816,10 @@ func (s *svc) MediaList(ctx context.Context, req MediaListRequest) (*MediaListRe
 		return nil, err
 	}
 
+	if err := s.useTimeline(ctx, c, &req.ProjectID, req.TimelineID); err != nil {
+		return nil, err
+	}
+
 	row, lerr := s.loadProject(ctx, c, req.ProjectID)
 	if lerr != nil {
 		return nil, lerr
@@ -942,6 +950,10 @@ var inspectSections = []string{"probe", "transcript", "silences", "loudness", "b
 func (s *svc) MediaInspect(ctx context.Context, req MediaInspectRequest) (*MediaInspectResult, error) {
 	c, err := authorize(ctx, "MediaInspect", req.ProjectID)
 	if err != nil {
+		return nil, err
+	}
+
+	if err := s.useTimeline(ctx, c, &req.ProjectID, req.TimelineID); err != nil {
 		return nil, err
 	}
 

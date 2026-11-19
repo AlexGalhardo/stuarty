@@ -18,6 +18,10 @@ func (s *svc) MediaTrash(ctx context.Context, req MediaTrashRequest) (*MediaStat
 		return nil, err
 	}
 
+	if err := s.useTimeline(ctx, c, &req.ProjectID, req.TimelineID); err != nil {
+		return nil, err
+	}
+
 	project, lerr := s.loadProject(ctx, c, req.ProjectID)
 	if lerr != nil {
 		return nil, lerr
@@ -85,6 +89,10 @@ func (s *svc) MediaTrash(ctx context.Context, req MediaTrashRequest) (*MediaStat
 func (s *svc) MediaRestore(ctx context.Context, req MediaTrashRequest) (*MediaStateResult, error) {
 	c, err := authorize(ctx, "MediaRestore", req.ProjectID)
 	if err != nil {
+		return nil, err
+	}
+
+	if err := s.useTimeline(ctx, c, &req.ProjectID, req.TimelineID); err != nil {
 		return nil, err
 	}
 
