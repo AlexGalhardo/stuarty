@@ -970,7 +970,7 @@ CREATE TABLE font_owners (
 
 ### 5.12 `image_documents` and `image_operations` (SDD-021)
 
-Migration `20261119100000_create_image_documents_and_operations`. They follow `projects` and `operations` with the columns an image needs and no more.
+Migration `20261119110000_create_image_documents_and_operations`. They follow `projects` and `operations` with the columns an image needs and no more.
 
 ```sql
 CREATE TABLE image_documents (
