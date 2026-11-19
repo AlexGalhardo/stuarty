@@ -1200,6 +1200,165 @@ Example:
 stuarty connection:test con_0123456789
 ```
 
+## `approval:list`
+
+List the approval queue: what waits for a person (pending by default)
+
+```text
+stuarty approval:list
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--state` | string |  | pending (default), approved, rejected, expired or all |
+| `--project` | string |  | only the requests of one project |
+| `--cursor` | string |  | continue a list from this cursor |
+| `--limit` | integer | `50` | items per page |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty approval:list --state all
+```
+
+## `approval:show`
+
+Show one approval request: what will be sent, where, the cost and its state
+
+```text
+stuarty approval:show <id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty approval:show apr_0123456789
+```
+
+## `approval:decide`
+
+Approve or reject a request (for a person in the app; the local token is refused)
+
+```text
+stuarty approval:decide <id> --approve|--reject
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--approve` | boolean |  | approve the request |
+| `--reject` | boolean |  | reject the request |
+| `--reason` | string |  | why a request is rejected |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty approval:decide apr_0123456789 --reject --reason "wrong channel"
+```
+
+## `approval:rule:list`
+
+List the rules that approve without asking
+
+```text
+stuarty approval:rule:list
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty approval:rule:list --json
+```
+
+## `approval:rule:set`
+
+Create or replace a rule that approves a kind of action (for a person in the app; the local token is refused)
+
+```text
+stuarty approval:rule:set --kind <k>
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--id` | string |  | the rule to replace; leave out to create one |
+| `--kind` | string |  | the kind of action the rule covers (required) |
+| `--connection` | string |  | only this destination |
+| `--project` | string |  | only this project |
+| `--currency` | string |  | three upper-case letters, needed with a limit |
+| `--per-item` | string |  | the most one action may cost, in millionths of the currency unit |
+| `--per-day` | string |  | the most the rule may approve in a UTC day, in millionths |
+| `--disabled` | boolean |  | keep the rule but stop it |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty approval:rule:set --kind publish.post --connection con_0123456789
+```
+
+## `approval:rule:remove`
+
+Remove a rule (for a person in the app; the local token is refused)
+
+```text
+stuarty approval:rule:remove <id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty approval:rule:remove rul_0123456789
+```
+
+## `cost:show`
+
+Show the cost ceilings and what was spent today and over the last 30 days
+
+```text
+stuarty cost:show
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty cost:show --json
+```
+
+## `cost:ceiling`
+
+Set or remove a cost ceiling (for a person in the app; the local token is refused)
+
+```text
+stuarty cost:ceiling --currency USD
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--currency` | string |  | three upper-case letters (required) |
+| `--project` | string |  | the project the ceiling is for; leave out for the whole workspace |
+| `--per-item` | string |  | the most one action may cost, in millionths of the currency unit |
+| `--per-day` | string |  | the most that may be spent in a UTC day, in millionths; with neither limit the ceiling is removed |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty cost:ceiling --currency USD --per-day 5000000
+```
+
 ## `image:create`
 
 Create an image document, blank or from a template

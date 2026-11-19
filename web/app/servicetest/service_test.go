@@ -281,6 +281,41 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.ConnectionTest(ctx, service.ConnectionRef{ID: "con_0000000001"})
 			return err
 		},
+		"ApprovalList": func() error {
+			_, err := e.svc.ApprovalList(ctx, service.ApprovalListRequest{})
+			return err
+		},
+		"ApprovalGet": func() error {
+			_, err := e.svc.ApprovalGet(ctx, service.ApprovalRef{ID: "apr_0000000001"})
+			return err
+		},
+		"ApprovalDecide": func() error {
+			_, err := e.svc.ApprovalDecide(
+				ctx,
+				service.ApprovalDecideRequest{ID: "apr_0000000001", Decision: "approve"},
+			)
+			return err
+		},
+		"ApprovalRuleList": func() error {
+			_, err := e.svc.ApprovalRuleList(ctx, service.ApprovalRuleListRequest{})
+			return err
+		},
+		"ApprovalRuleSet": func() error {
+			_, err := e.svc.ApprovalRuleSet(ctx, service.ApprovalRuleSetRequest{Kind: "k"})
+			return err
+		},
+		"ApprovalRuleRemove": func() error {
+			_, err := e.svc.ApprovalRuleRemove(ctx, service.ApprovalRef{ID: "rul_0000000001"})
+			return err
+		},
+		"CostSummary": func() error {
+			_, err := e.svc.CostSummary(ctx, service.CostSummaryRequest{})
+			return err
+		},
+		"CostCeilingSet": func() error {
+			_, err := e.svc.CostCeilingSet(ctx, service.CostCeilingSetRequest{Currency: "USD"})
+			return err
+		},
 		"MemoryList": func() error {
 			_, err := e.svc.MemoryList(ctx, service.MemoryListRequest{})
 			return err

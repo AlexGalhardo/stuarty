@@ -435,6 +435,9 @@
         "E_NETWORK": "Network error",
         "E_UNAUTHORIZED": "Session ended",
         "E_FORBIDDEN": "Not allowed",
+        "E_PRIVILEGED_SESSION": "Only you in the app can do this",
+        "E_COST_CEILING": "Over a cost ceiling",
+        "E_APPROVAL_NOT_FOUND": "No such request or rule",
         "E_ASSET_NOT_READY": "The media is still being prepared",
         "E_NOTHING_TO_UNDO": "Nothing to undo",
         "E_NOTHING_TO_REDO": "Nothing to redo",
@@ -662,6 +665,14 @@
         }
       },
       "commands": {
+        "animation": {
+          "apply_preset": {
+            "title": "Apply a motion preset"
+          },
+          "list_presets": {
+            "title": "List the motion presets"
+          }
+        },
         "asset": {
           "remove": {
             "title": "Remove media"
@@ -827,6 +838,9 @@
           },
           "set": {
             "title": "Set keyframe"
+          },
+          "set_easing": {
+            "title": "Set keyframe easing"
           }
         },
         "project": {
@@ -1513,7 +1527,26 @@
           "ease_in": "Ease in",
           "ease_out": "Ease out",
           "ease_in_out": "Ease in and out",
-          "hold": "Hold"
+          "hold": "Hold",
+          "bezier": "Custom curve"
+        },
+        "curve": "Curve",
+        "curve_edit": "Edit the curve of the {property} keyframe at {time}",
+        "curve_close": "Close the curve editor of the {property} keyframe at {time}",
+        "curve_plot": "Curve of the {property} keyframe",
+        "curve_hint": "Drag the two handles, move one with the arrow keys (Shift for a larger step) or type the four numbers.",
+        "curve_handle": "Control point {n} of the curve",
+        "curve_handle_value": "x {x}, y {y}",
+        "curve_preset": "Named curve",
+        "curve_preset_of": "Named curve for the {property} keyframe",
+        "curve_preset_none": "Pick one...",
+        "curve_number": "{name} of the {property} curve",
+        "curve_preset_name": {
+          "in": "Ease in",
+          "out": "Ease out",
+          "in_out": "Ease in and out",
+          "back": "Back (pulls back first)",
+          "overshoot": "Overshoot (goes past, then settles)"
         }
       },
       "effects": {
@@ -1588,6 +1621,36 @@
           "zoom_in": "Zoom in",
           "slide_left": "Slide left",
           "slide_right": "Slide right"
+        }
+      },
+      "motion": {
+        "title": "Motion presets",
+        "preset": "Preset",
+        "preset_of": "Motion preset",
+        "edge_of": "Edge of the motion preset",
+        "duration_of": "Duration of the motion preset",
+        "apply": "Add motion",
+        "direction": "Direction",
+        "use_default": "Default",
+        "preset_name": {
+          "fade": "Fade",
+          "slide": "Slide",
+          "scale": "Scale",
+          "pop": "Pop",
+          "push_in": "Push in",
+          "pull_out": "Pull out"
+        },
+        "direction_name": {
+          "left": "From the left",
+          "right": "From the right",
+          "up": "From the top",
+          "down": "From the bottom"
+        },
+        "amount_of": {
+          "slide": "Distance (px)",
+          "scale": "Scale factor",
+          "push_in": "Zoom factor",
+          "pull_out": "Zoom factor"
         }
       },
       "template": {
@@ -1690,6 +1753,7 @@
     },
     "connections": {
       "title": "Connections",
+      "approvals_link": "Approvals and cost ceilings",
       "intro": "Every place Stuarty is allowed to talk to. Until you connect something, nothing leaves your computer.",
       "list": "Your connections",
       "empty": "No connections yet. Nothing leaves this computer.",
@@ -1719,6 +1783,58 @@
       "secret_missing": "No credential: connect it again",
       "test_ok": "The destination answered {status}.",
       "test_failed": "The destination did not answer well (status {status})."
+    },
+    "approvals": {
+      "title": "Approvals",
+      "intro": "Publishing and costly generation wait here for you. An agent can prepare them; only you can say yes, or write a rule that says yes for you.",
+      "queue": "Waiting for you",
+      "live": "Live: new requests appear here by themselves.",
+      "offline": "Not live: reload the page to see new requests.",
+      "empty": "Nothing is waiting for you.",
+      "kind": "Kind",
+      "destination": "Goes to",
+      "no_destination": "No destination",
+      "cost": "Estimated cost",
+      "no_cost": "Free",
+      "actor": "Asked by",
+      "asked": "Asked",
+      "reason": "Reason (optional, when rejecting)",
+      "approve": "Approve",
+      "reject": "Reject",
+      "currency": "Currency",
+      "per_item": "Most per item",
+      "per_day": "Most per day",
+      "cost_title": "Cost",
+      "cost_intro": "A ceiling stops further spending, whoever approves it: raise it here first. A day is a UTC day.",
+      "spent_today": "Spent today",
+      "nothing_spent": "Nothing spent today.",
+      "scope_workspace": "Whole workspace",
+      "ceilings": "Ceilings",
+      "no_ceilings": "No ceilings: every costly request still waits for you.",
+      "set_ceiling": "Set a ceiling",
+      "ceiling_note": "Leave both limits empty to remove the ceiling of that currency.",
+      "save_ceiling": "Save ceiling",
+      "rules": {
+        "title": "Rules that approve for you",
+        "intro": "A rule lets a kind of action go without asking. Only you can write one; no agent can.",
+        "empty": "No rules: everything waits for you.",
+        "new": "New rule",
+        "kind": "Kind of action (for example publish.post)",
+        "destination": "Destination",
+        "project": "Project id (optional)",
+        "any_destination": "Any destination",
+        "any_project": "Any project",
+        "disabled": "(off)",
+        "applies": "Destination: {destination}. Project: {project}.",
+        "no_limits": "No limits.",
+        "limits": "Most per item: {item}. Most per day: {day}.",
+        "disable": "Turn off",
+        "enable": "Turn on",
+        "remove": "Remove",
+        "add": "Add rule",
+        "note": "A rule with no limit per item never approves something that costs money.",
+        "bad_amount": "An amount is a number with at most six decimals, for example 2.50."
+      }
     },
     "keys": {
       "title": "API keys",

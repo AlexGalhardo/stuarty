@@ -122,6 +122,8 @@ type Job struct {
 	Result    *JobResult  `json:"result,omitempty"`
 	Error     *Error      `json:"error,omitempty"`
 	Lint      *LintTotals `json:"lint,omitempty"`
+	// ApprovalID is the approval request of a job of a kind that needs approval (SDD-015 section 5).
+	ApprovalID string `json:"approval_id,omitempty"`
 	// Warnings are notes about an accepted export that are not a reason to refuse it, such as a huge GIF.
 	Warnings   []string   `json:"warnings,omitempty"`
 	Actor      string     `json:"actor"`

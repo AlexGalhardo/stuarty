@@ -1,0 +1,25 @@
+[
+  {
+    "kind": "item.updated",
+    "id": "itm_m1n2p3q4r5",
+    "changes": {
+      "keyframes": [
+        null,
+        {
+          "opacity": [
+            {
+              "easing": "linear",
+              "t": 0,
+              "value": 0
+            },
+            {
+              "easing": "linear",
+              "t": 15,
+              "value": 1
+            }
+          ]
+        }
+      ]
+    }
+  }
+]

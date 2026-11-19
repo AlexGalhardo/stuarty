@@ -435,6 +435,9 @@
         "E_NETWORK": "Erro de rede",
         "E_UNAUTHORIZED": "Sessão encerrada",
         "E_FORBIDDEN": "Não permitido",
+        "E_PRIVILEGED_SESSION": "Só você, no aplicativo, pode fazer isso",
+        "E_COST_CEILING": "Acima de um teto de custo",
+        "E_APPROVAL_NOT_FOUND": "Pedido ou regra não encontrado",
         "E_ASSET_NOT_READY": "A mídia ainda está sendo preparada",
         "E_NOTHING_TO_UNDO": "Nada para desfazer",
         "E_NOTHING_TO_REDO": "Nada para refazer",
@@ -662,6 +665,14 @@
         }
       },
       "commands": {
+        "animation": {
+          "apply_preset": {
+            "title": "Aplicar uma predefinição de movimento"
+          },
+          "list_presets": {
+            "title": "Listar as predefinições de movimento"
+          }
+        },
         "asset": {
           "remove": {
             "title": "Remover mídia"
@@ -827,6 +838,9 @@
           },
           "set": {
             "title": "Definir quadro-chave"
+          },
+          "set_easing": {
+            "title": "Definir a curva do quadro-chave"
           }
         },
         "project": {
@@ -1513,7 +1527,26 @@
           "ease_in": "Entrada suave",
           "ease_out": "Saída suave",
           "ease_in_out": "Entrada e saída suaves",
-          "hold": "Manter"
+          "hold": "Manter",
+          "bezier": "Curva personalizada"
+        },
+        "curve": "Curva",
+        "curve_edit": "Editar a curva do quadro-chave de {property} em {time}",
+        "curve_close": "Fechar o editor de curva do quadro-chave de {property} em {time}",
+        "curve_plot": "Curva do quadro-chave de {property}",
+        "curve_hint": "Arraste as duas alças, mova uma com as setas (Shift para um passo maior) ou digite os quatro números.",
+        "curve_handle": "Ponto de controle {n} da curva",
+        "curve_handle_value": "x {x}; y {y}",
+        "curve_preset": "Curva nomeada",
+        "curve_preset_of": "Curva nomeada para o quadro-chave de {property}",
+        "curve_preset_none": "Escolha uma...",
+        "curve_number": "{name} da curva de {property}",
+        "curve_preset_name": {
+          "in": "Entrada suave",
+          "out": "Saída suave",
+          "in_out": "Entrada e saída suaves",
+          "back": "Recuo (puxa para trás primeiro)",
+          "overshoot": "Ultrapassagem (passa do ponto, depois assenta)"
         }
       },
       "effects": {
@@ -1588,6 +1621,36 @@
           "zoom_in": "Aproximar",
           "slide_left": "Deslizar para a esquerda",
           "slide_right": "Deslizar para a direita"
+        }
+      },
+      "motion": {
+        "title": "Predefinições de movimento",
+        "preset": "Predefinição",
+        "preset_of": "Predefinição de movimento",
+        "edge_of": "Extremidade da predefinição de movimento",
+        "duration_of": "Duração da predefinição de movimento",
+        "apply": "Adicionar movimento",
+        "direction": "Direção",
+        "use_default": "Padrão",
+        "preset_name": {
+          "fade": "Esmaecer",
+          "slide": "Deslizar",
+          "scale": "Escala",
+          "pop": "Surgir",
+          "push_in": "Aproximar devagar",
+          "pull_out": "Afastar devagar"
+        },
+        "direction_name": {
+          "left": "Da esquerda",
+          "right": "Da direita",
+          "up": "De cima",
+          "down": "De baixo"
+        },
+        "amount_of": {
+          "slide": "Distância (px)",
+          "scale": "Fator de escala",
+          "push_in": "Fator de zoom",
+          "pull_out": "Fator de zoom"
         }
       },
       "template": {
@@ -1690,6 +1753,7 @@
     },
     "connections": {
       "title": "Conexões",
+      "approvals_link": "Aprovações e tetos de custo",
       "intro": "Cada lugar com o qual o Stuarty pode falar. Enquanto você não conectar nada, nada sai do seu computador.",
       "list": "Suas conexões",
       "empty": "Nenhuma conexão ainda. Nada sai deste computador.",
@@ -1719,6 +1783,58 @@
       "secret_missing": "Sem credencial: conecte de novo",
       "test_ok": "O destino respondeu {status}.",
       "test_failed": "O destino não respondeu bem (status {status})."
+    },
+    "approvals": {
+      "title": "Aprovações",
+      "intro": "Publicações e gerações que custam dinheiro esperam aqui por você. Um agente pode prepará-las; só você pode dizer sim, ou escrever uma regra que diz sim por você.",
+      "queue": "Esperando por você",
+      "live": "Ao vivo: os pedidos novos aparecem aqui sozinhos.",
+      "offline": "Sem conexão ao vivo: recarregue a página para ver pedidos novos.",
+      "empty": "Nada está esperando por você.",
+      "kind": "Tipo",
+      "destination": "Vai para",
+      "no_destination": "Sem destino",
+      "cost": "Custo estimado",
+      "no_cost": "Grátis",
+      "actor": "Pedido por",
+      "asked": "Pedido em",
+      "reason": "Motivo (opcional, ao rejeitar)",
+      "approve": "Aprovar",
+      "reject": "Rejeitar",
+      "currency": "Moeda",
+      "per_item": "Máximo por item",
+      "per_day": "Máximo por dia",
+      "cost_title": "Custo",
+      "cost_intro": "Um teto impede mais gastos, seja quem for que aprove: aumente-o aqui primeiro. O dia é um dia UTC.",
+      "spent_today": "Gasto hoje",
+      "nothing_spent": "Nada gasto hoje.",
+      "scope_workspace": "Todo o espaço de trabalho",
+      "ceilings": "Tetos",
+      "no_ceilings": "Sem tetos: todo pedido que custa dinheiro continua esperando por você.",
+      "set_ceiling": "Definir um teto",
+      "ceiling_note": "Deixe os dois limites vazios para remover o teto dessa moeda.",
+      "save_ceiling": "Salvar teto",
+      "rules": {
+        "title": "Regras que aprovam por você",
+        "intro": "Uma regra deixa um tipo de ação passar sem perguntar. Só você pode escrever uma; nenhum agente pode.",
+        "empty": "Sem regras: tudo espera por você.",
+        "new": "Nova regra",
+        "kind": "Tipo de ação (por exemplo publish.post)",
+        "destination": "Destino",
+        "project": "Id do projeto (opcional)",
+        "any_destination": "Qualquer destino",
+        "any_project": "Qualquer projeto",
+        "disabled": "(desligada)",
+        "applies": "Destino: {destination}. Projeto: {project}.",
+        "no_limits": "Sem limites.",
+        "limits": "Máximo por item: {item}. Máximo por dia: {day}.",
+        "disable": "Desligar",
+        "enable": "Ligar",
+        "remove": "Remover",
+        "add": "Adicionar regra",
+        "note": "Uma regra sem limite por item nunca aprova algo que custa dinheiro.",
+        "bad_amount": "Um valor é um número com no máximo seis casas decimais, por exemplo 2,50."
+      }
     },
     "keys": {
       "title": "Chaves de API",

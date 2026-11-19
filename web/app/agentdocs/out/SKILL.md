@@ -10,7 +10,7 @@ metadata:
 
 Edit video with commands: the CLI `stuarty` or the MCP server (`stuarty mcp`). Output is text; `--json` is JSON.
 
-Check with `project:list`. Workspace: `~/.stuarty` or `$STUARTY_HOME`; `serve` shares it with the browser.
+Workspace: `~/.stuarty` or `$STUARTY_HOME`; `serve` shares it with the browser.
 
 ## The loop
 
@@ -33,13 +33,14 @@ Check with `project:list`. Workspace: `~/.stuarty` or `$STUARTY_HOME`; `serve` s
 
 `edit` operations. `command_help [name]` shows arguments. `asset.remove` and `font.*` need the media scope.
 
+- `animation`: apply_preset, list_presets
 - `asset`: remove
 - `audio`: add, duck, mark_beats
 - `caption`: add, edit_word, from_transcript, import_subtitles, merge, retime_from_clip, set_breaks, set_style, set_words, split
 - `clip`: add, remove_silences, set_blend, set_blur, set_chroma_key, set_color, set_effects, set_filter, set_flip, set_framing, set_mask, set_outline, set_shadow, set_speed
 - `font`: add, remove
 - `item`: crossfade, delete, duplicate, extract_audio, freeze_frame, link, move, paste_attributes, rename, repeat, set_audio, set_enabled, set_transform, set_transition, slip, split, trim, unlink
-- `keyframe`: clear, remove, set
+- `keyframe`: clear, remove, set, set_easing
 - `marker`: add, remove, set
 - `project`: rename
 - `settings`: reframe, set, set_fps
@@ -111,6 +112,10 @@ Prefix each with `stuarty`.
 - `connection:add --kind <k> --label <t> --endpoint <url> --accepts <list>`
 - `connection:remove <id>`
 - `connection:test <id>`
+- `approval:list`
+- `approval:show <id>`
+- `approval:rule:list`
+- `cost:show`
 - `image:create --preset p`
 - `image:list`
 - `image:show <id>`
@@ -149,7 +154,7 @@ Lint rules (`!` blocks export):
 
 ## Errors and recovery
 
-Exit codes: 0 success; 1 failure, do not retry; 2 retryable or a `--wait` timeout. `undo` reverts your last step.
+Exit codes: 0 success; 1 failure, do not retry; 2 retryable or a `--wait` timeout.
 
 - `E_VALIDATION` 400: fix the argument
 - `E_INVALID_TIME` 400: add a unit: 2s, 60f
@@ -218,19 +223,19 @@ stuarty export --project prj_7k2m9x4q1b
 Recover from a conflict:
 
 ```text
-# another actor changes the track first
+# someone edits first
 stuarty edit --project prj_7k2m9x4q1b --actor other track.update track_id=trk_f6g7h8j9k0 name=Theirs
 # conflict, exit 2
 stuarty edit --project prj_7k2m9x4q1b --base 1 track.update track_id=trk_f6g7h8j9k0 name=Mine
 stuarty project:show prj_7k2m9x4q1b
-# retry from the new revision
+# retry
 stuarty edit --project prj_7k2m9x4q1b --base 2 track.update track_id=trk_f6g7h8j9k0 name=Mine
 ```
 
 Fill a template:
 
 ```text
-# a text item is marked as slot headline (slot.mark)
+# headline is a slot
 stuarty template:save --project prj_7k2m9x4q1b --name "Spring sale"
 stuarty template:new <template id> --name "Spring sale" --id prj_6t4y2w8j1m --fill - <<'EOF'
 {"headline":{"text":"Spring sale"}}
@@ -241,7 +246,7 @@ stuarty export --project prj_6t4y2w8j1m
 Captions from a transcript:
 
 ```text
-# needs tools:install whisper once
+# tools:install whisper first
 stuarty transcribe --project prj_7k2m9x4q1b --asset ast_3c5v8n2w6d --language en --wait
 # one new id per caption line
 stuarty edit --project prj_7k2m9x4q1b caption.from_transcript clip_item_id=itm_m1n2p3q4r5 track_id=trk_a1b2c3d4e5 new_ids:='["itm_c1c2c3c4c5","itm_c6c7c8c9c0"]'

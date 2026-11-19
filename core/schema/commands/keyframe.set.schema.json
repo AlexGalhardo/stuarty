@@ -7,14 +7,24 @@
       "type": "string",
       "x-vv-kind": "time"
     },
+    "bezier": {
+      "description": "x1, y1, x2, y2 of the curve of easing bezier: x1 and x2 from 0 to 1, y1 and y2 from -2 to 3.",
+      "items": {
+        "type": "number"
+      },
+      "maxItems": 4,
+      "minItems": 4,
+      "type": "array"
+    },
     "easing": {
-      "description": "From this keyframe to the next. Default linear.",
+      "description": "From this keyframe to the next. Default linear. bezier needs the bezier argument.",
       "enum": [
         "linear",
         "ease_in",
         "ease_out",
         "ease_in_out",
-        "hold"
+        "hold",
+        "bezier"
       ],
       "type": "string"
     },
