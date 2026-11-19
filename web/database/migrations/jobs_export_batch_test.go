@@ -142,7 +142,9 @@ func insertEveryJob(t *testing.T, db *database.DB) {
 	cols := `(id, kind, project_id, asset_hash, actor, state, progress, message, input, result, error, cancel_requested,
  attempts, created_ms, updated_ms, started_ms, finished_ms)`
 
-	execAll(t, db,
+	execAll(
+		t,
+		db,
 		`INSERT INTO assets (id, kind, size_bytes, original_name, created_ms, updated_ms) VALUES ('sha256:a', 'video', 1, 'a.mp4', 1, 1)`,
 		`INSERT INTO jobs `+cols+` VALUES ('job_1', 'ingest', NULL, 'sha256:a', 'local:ui', 'running', 0.5, 'm', '{"a":1}', NULL, NULL, 0, 1, 10, 11, 12, NULL)`,
 		`INSERT INTO jobs `+cols+` VALUES ('job_2', 'transcribe', 'prj_a', 'sha256:a', 'local:cli', 'queued', 0, '', '{}', NULL, NULL, 1, 0, 20, 20, NULL, NULL)`,
@@ -175,7 +177,8 @@ func TestJobsExportBatchKindKeepsEveryJob(t *testing.T) {
 
 	var parent string
 	if err := db.QueryRowContext(ctx, `SELECT "table" FROM pragma_foreign_key_list('jobs') WHERE "from" = 'project_id'`).
-		Scan(&parent); err != nil || parent != timelineTable(t, db) {
+		Scan(&parent); err != nil ||
+		parent != timelineTable(t, db) {
 		t.Fatalf("project_id references %q, %v; want %s", parent, err, timelineTable(t, db))
 	}
 
@@ -232,7 +235,9 @@ func TestJobsMigrationsKeepEveryJobInAnyOrder(t *testing.T) {
 			t.Errorf("rows after both rebuilds:\n%q\nwant\n%q", got, want)
 		}
 
-		execAll(t, db,
+		execAll(
+			t,
+			db,
 			`INSERT INTO jobs (id, kind, project_id, actor, input, created_ms, updated_ms) VALUES ('job_6', 'export_batch', 'prj_a', 'a', '{}', 1, 1)`,
 			`INSERT INTO jobs (id, kind, project_id, actor, state, input, created_ms, updated_ms, approval_id) VALUES ('job_7', 'publish.post', 'prj_a', 'a', 'waiting_approval', '{}', 1, 1, 'apr_0000000001')`,
 		)
@@ -247,23 +252,36 @@ func TestJobsMigrationsKeepEveryJobInAnyOrder(t *testing.T) {
 		}
 
 		if n := count(t, db, `SELECT count(*) FROM jobs`); n != len(want)+1 {
-			t.Errorf("jobs after Down of the approval rebuild = %d; want %d (only the waiting one goes)", n, len(want)+1)
+			t.Errorf(
+				"jobs after Down of the approval rebuild = %d; want %d (only the waiting one goes)",
+				n,
+				len(want)+1,
+			)
 		}
 
-		execAll(t, db, `INSERT INTO jobs (id, kind, project_id, actor, input, created_ms, updated_ms) VALUES ('job_8', 'export_batch', 'prj_a', 'a', '{}', 1, 1)`)
+		execAll(
+			t,
+			db,
+			`INSERT INTO jobs (id, kind, project_id, actor, input, created_ms, updated_ms) VALUES ('job_8', 'export_batch', 'prj_a', 'a', '{}', 1, 1)`,
+		)
 	})
 
 	t.Run("approval first", func(t *testing.T) {
 		db := openWith(t, func(id string) bool { return id != exportBatchMigrationID })
 		insertTimeline(t, db, "prj_a")
 		insertEveryJob(t, db)
-		execAll(t, db, `INSERT INTO jobs (id, kind, project_id, actor, state, input, created_ms, updated_ms, approval_id)
- VALUES ('job_9', 'publish.post', 'prj_a', 'a', 'waiting_approval', '{}', 1, 1, 'apr_0000000001')`)
+		execAll(
+			t,
+			db,
+			`INSERT INTO jobs (id, kind, project_id, actor, state, input, created_ms, updated_ms, approval_id)
+ VALUES ('job_9', 'publish.post', 'prj_a', 'a', 'waiting_approval', '{}', 1, 1, 'apr_0000000001')`,
+		)
 
 		want := jobRows(t, db)
 		sql := func() string {
 			var s string
-			if err := db.QueryRowContext(ctx, `SELECT sql FROM sqlite_master WHERE name = 'jobs'`).Scan(&s); err != nil {
+			if err := db.QueryRowContext(ctx, `SELECT sql FROM sqlite_master WHERE name = 'jobs'`).
+				Scan(&s); err != nil {
 				t.Fatal(err)
 			}
 
@@ -287,6 +305,10 @@ func TestJobsMigrationsKeepEveryJobInAnyOrder(t *testing.T) {
 			t.Errorf("approval_id after the out-of-order rebuild: %d rows; want 1", n)
 		}
 
-		execAll(t, db, `INSERT INTO jobs (id, kind, project_id, actor, input, created_ms, updated_ms) VALUES ('job_10', 'export_batch', 'prj_a', 'a', '{}', 1, 1)`)
+		execAll(
+			t,
+			db,
+			`INSERT INTO jobs (id, kind, project_id, actor, input, created_ms, updated_ms) VALUES ('job_10', 'export_batch', 'prj_a', 'a', '{}', 1, 1)`,
+		)
 	})
 }
