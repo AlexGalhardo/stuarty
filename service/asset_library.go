@@ -325,17 +325,33 @@ func assetDetailText(a *LibraryAsset) string {
 	field("rights_note", a.Origin.RightsNote, asset.MaxRightsNote)
 	field("description", a.Description, asset.MaxDescription)
 
-	for i := range a.Uses {
-		u := &a.Uses[i]
-		fmt.Fprintf(
-			&b, "\nused by %s %s as %s in %d timelines", u.ProjectID, textview.Quote(u.Name, 80), u.AssetID,
-			len(u.Timelines),
-		)
-	}
+	writeUses(&b, a.Uses)
 
 	if a.Origin.RightsNote != "" {
 		b.WriteString("\nThe rights note is the record of the user, not a licence check.")
 	}
+
+	return b.String()
+}
+
+// writeUses writes one line for each project that uses a file.
+func writeUses(b *strings.Builder, uses []AssetUse) {
+	for i := range uses {
+		u := &uses[i]
+		fmt.Fprintf(
+			b, "\nused by %s %s as %s in %d timelines", u.ProjectID, textview.Quote(u.Name, 80), u.AssetID,
+			len(u.Timelines),
+		)
+	}
+}
+
+// assetUsesText is the text of AssetUses: the file and the page of projects that use it. It says nothing of the
+// facts of the file, which AssetUses does not read.
+func assetUsesText(hash string, uses []AssetUse) string {
+	var b strings.Builder
+
+	fmt.Fprintf(&b, "%s\n%s used by %d projects in this page", textview.Note, hash, len(uses))
+	writeUses(&b, uses)
 
 	return b.String()
 }
