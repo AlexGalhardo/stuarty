@@ -1589,8 +1589,7 @@
         "title": "Predefinições de movimento",
         "preset": "Predefinição",
         "direction": "Direção",
-        "duration_default": "0,5s",
-        "amount_default": "Padrão",
+        "use_default": "Padrão",
         "preset_name": {
           "fade": "Esmaecer",
           "slide": "Deslizar",
@@ -1607,7 +1606,7 @@
         },
         "amount_of": {
           "slide": "Distância (px)",
-          "scale": "Escala inicial",
+          "scale": "Fator de escala",
           "push_in": "Fator de zoom",
           "pull_out": "Fator de zoom"
         }
