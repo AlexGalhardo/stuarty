@@ -125,12 +125,13 @@ test.describe("image brand kit and templates", () => {
 
 		await page.getByLabel(/Title .*required/).fill("EPISODE 12");
 		await page.getByLabel(/Photo/).selectOption(second.hash);
-		await page.getByLabel("Name").last().fill("Episode 12");
+		const title = `Episode ${Date.now()}`;
+		await page.getByLabel("Name").last().fill(title);
 		await page.getByRole("button", { name: "Create from template" }).click();
 
 		await expect(page).toHaveURL(/\/edit-image\/img_/);
 		await expect(
-			page.getByRole("heading", { level: 1, name: "Episode 12" }),
+			page.getByRole("heading", { level: 1, name: title }),
 		).toBeVisible();
 		const id = page.url().split("/").pop() ?? "";
 		const state = await imageState(made.call, id);
@@ -139,9 +140,7 @@ test.describe("image brand kit and templates", () => {
 		await expect(page.getByTestId("image-frame")).toBeVisible();
 		// the template itself is untouched and is not listed among the images
 		await page.goto("/edit-image");
-		await expect(
-			page.getByTestId("image-list").getByText("Episode 12"),
-		).toBeVisible();
+		await expect(page.getByTestId("image-list").getByText(title)).toBeVisible();
 		await expect(
 			page.getByTestId("image-list").getByText("Thumbnail template"),
 		).toHaveCount(0);
