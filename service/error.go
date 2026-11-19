@@ -11,22 +11,27 @@ import (
 
 // Codes the service adds to those of the core (SDD-000 section 8).
 const (
-	CodeUnauthorized      = "E_UNAUTHORIZED"
-	CodeForbidden         = "E_FORBIDDEN"
-	CodePayloadTooLarge   = "E_PAYLOAD_TOO_LARGE"
-	CodeNothingToUndo     = "E_NOTHING_TO_UNDO"
-	CodeNothingToRedo     = "E_NOTHING_TO_REDO"
-	CodeQueueFull         = "E_QUEUE_FULL"
-	CodeRateLimited       = "E_RATE_LIMITED"
-	CodeWorkspaceLocked   = "E_WORKSPACE_LOCKED"
-	CodeLintBlocking      = "E_LINT_BLOCKING"
-	CodeClientClosed      = "E_CLIENT_CLOSED"
-	CodeMethodNotAllowed  = "E_METHOD_NOT_ALLOWED"
-	codeInternalMessage   = "the operation failed because of an internal error."
-	codeInternalHint      = "Report this as a bug with the operation that was sent."
-	hintRestoreProject    = "restore the project first"
-	hintReadProjectAgain  = "read the project again with project_get and plan the batch against its current revision"
-	maxOperationsPerBatch = 200
+	CodeUnauthorized     = "E_UNAUTHORIZED"
+	CodeForbidden        = "E_FORBIDDEN"
+	CodePayloadTooLarge  = "E_PAYLOAD_TOO_LARGE"
+	CodeNothingToUndo    = "E_NOTHING_TO_UNDO"
+	CodeNothingToRedo    = "E_NOTHING_TO_REDO"
+	CodeQueueFull        = "E_QUEUE_FULL"
+	CodeRateLimited      = "E_RATE_LIMITED"
+	CodeWorkspaceLocked  = "E_WORKSPACE_LOCKED"
+	CodeLintBlocking     = "E_LINT_BLOCKING"
+	CodeClientClosed     = "E_CLIENT_CLOSED"
+	CodeMethodNotAllowed = "E_METHOD_NOT_ALLOWED"
+
+	// CodeConnectionNotFound, CodeConnectionDestination and CodeVaultLocked are the codes of SDD-014 section 7.
+	CodeConnectionNotFound    = "E_CONNECTION_NOT_FOUND"
+	CodeConnectionDestination = "E_CONNECTION_DESTINATION"
+	CodeVaultLocked           = "E_VAULT_LOCKED"
+	codeInternalMessage       = "the operation failed because of an internal error."
+	codeInternalHint          = "Report this as a bug with the operation that was sent."
+	hintRestoreProject        = "restore the project first"
+	hintReadProjectAgain      = "read the project again with project_get and plan the batch against its current revision"
+	maxOperationsPerBatch     = 200
 )
 
 // Error is the error of every service method (SDD-003 section 2.2).
@@ -53,9 +58,9 @@ func (e *Error) HTTPStatus() int {
 		return http.StatusBadRequest
 	case CodeUnauthorized:
 		return http.StatusUnauthorized
-	case CodeForbidden, "E_PATH_NOT_ALLOWED":
+	case CodeForbidden, "E_PATH_NOT_ALLOWED", CodeConnectionDestination:
 		return http.StatusForbidden
-	case command.CodeNotFound, "E_FILE_NOT_FOUND":
+	case command.CodeNotFound, "E_FILE_NOT_FOUND", CodeConnectionNotFound:
 		return http.StatusNotFound
 	case command.CodeRevisionConflict, command.CodeIdempotencyMismatch, command.CodeOverlap, command.CodeInvalidState,
 		command.CodeInUse, command.CodeNotEmpty, command.CodeIDExists, "E_ASSET_NOT_READY", CodeNothingToUndo, CodeNothingToRedo:
@@ -77,7 +82,7 @@ func (e *Error) HTTPStatus() int {
 		return http.StatusTooManyRequests
 	case CodeClientClosed:
 		return StatusClientClosed
-	case CodeWorkspaceLocked, "E_TRANSCRIBE_UNAVAILABLE", "E_FFMPEG_MISSING", "E_NO_ENCODER":
+	case CodeWorkspaceLocked, "E_TRANSCRIBE_UNAVAILABLE", "E_FFMPEG_MISSING", "E_NO_ENCODER", CodeVaultLocked:
 		return http.StatusServiceUnavailable
 	}
 
