@@ -234,7 +234,7 @@ func TestSchemasMatch(t *testing.T) {
 	}
 }
 
-// TestSummariesMatch: the one-line summary and the phase and scope of every
+// TestSummariesMatch: the one-line summary and the scope of every
 // public command are the same in the list of every surface, which all read the
 // registry.
 func TestSummariesMatch(t *testing.T) {

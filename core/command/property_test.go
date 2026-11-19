@@ -277,7 +277,7 @@ func (p *docPick) silences() string {
 	return `{"silences":[` + strings.Join(parts, ",") + `]}`
 }
 
-// alphaOps are the generators of the ALPHA commands, one per command.
+// alphaOps are the generators of the later commands, one per command.
 var alphaOps = map[string]func(p *docPick) string{
 	"settings.set_fps": func(p *docPick) string {
 		return fmt.Sprintf(`{"fps":%q}`, p.oneOf("24", "25", "30", "60", "30000/1001"))
@@ -606,8 +606,8 @@ var alphaOps = map[string]func(p *docPick) string{
 	},
 }
 
-// randomRegistryOp returns a random operation of the whole registry: the Prototype
-// commands of realOp and the ALPHA commands of alphaOps.
+// randomRegistryOp returns a random operation of the whole registry: the first
+// commands of realOp and the later commands of alphaOps.
 func randomRegistryOp(rng *rand.Rand, doc *timeline.Document) Operation {
 	if rng.Intn(3) == 0 {
 		return realOp(rng, doc)
@@ -810,7 +810,7 @@ func FuzzApplyBatch(f *testing.F) {
 
 var genScale = flag.Bool("gen-scale", false, "write the 5 minute project of NFR-009 under testdata/scale")
 
-// scaleProject is the project of NFR-009 for the benchmarks of the ALPHA phase: 5
+// scaleProject is the project of NFR-009 for the benchmarks: 5
 // minutes at 30 fps, a clip, a music track, 164 text items and 34 captions of 60
 // words, 200 items and about 2,000 caption words.
 func scaleProject() *timeline.Document {
@@ -879,7 +879,7 @@ func TestScaleProject(t *testing.T) {
 }
 
 // FuzzApplyArgs feeds raw bytes as the arguments of any command of the registry,
-// Beta included, on a document with items, captions and slots: the answer is a
+// on a document with items, captions and slots: the answer is a
 // well formed error or a valid, undoable document, never E_INTERNAL (SDD-002 A.3, A.8).
 func FuzzApplyArgs(f *testing.F) {
 	cmds := fullRegistry().List()

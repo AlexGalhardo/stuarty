@@ -46,7 +46,7 @@ func TestEveryProblemIsReported(t *testing.T) {
 
 	root := repo(t, "func TestSecurity_T01_One(t *testing.T) {}\nfunc TestSecurity_T01_Extra(t *testing.T) {}\n")
 
-	problems, err := check(root, "docs/sdds/007-security-model.md", "")
+	problems, err := check(root, "docs/sdds/007-security-model.md")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -70,21 +70,6 @@ func TestEveryProblemIsReported(t *testing.T) {
 		if strings.Contains(got, unwanted) {
 			t.Errorf("%q is reported:\n%s", unwanted, got)
 		}
-	}
-}
-
-func TestPhaseRunChecksOnlyItsThreats(t *testing.T) {
-	t.Parallel()
-
-	root := repo(t, "func TestSecurity_T01_One(t *testing.T) {}\nfunc TestSecurity_T01_Two(t *testing.T) {}\n")
-
-	problems, err := check(root, "docs/sdds/007-security-model.md", "P1")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if got := strings.Join(problems, "\n"); !strings.Contains(got, "T-02") {
-		t.Errorf("T-02 is a threat of phase P1: %q", got)
 	}
 }
 

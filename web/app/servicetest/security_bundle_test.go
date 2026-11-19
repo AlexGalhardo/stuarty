@@ -139,10 +139,10 @@ func TestSecurity_T21_BundleWithACraftedFontStoresNothing(t *testing.T) {
 
 	for name, font := range crafted {
 		t.Run(name, func(t *testing.T) {
-			src := newMediaEnv(t, mediaCfg{beta: true})
+			src := newMediaEnv(t, mediaCfg{})
 			path, hash := fontBundle(t, src, font)
 
-			dst := newMediaEnv(t, mediaCfg{beta: true})
+			dst := newMediaEnv(t, mediaCfg{})
 
 			res, err := dst.importBundle(path, false)
 			if err == nil {
@@ -171,7 +171,7 @@ func TestSecurity_T21_BundleWithACraftedFontStoresNothing(t *testing.T) {
 // SDD-007 T-21, SDD-005 section 16.3 step 4: in network mode a bundle cannot link a font it does not
 // carry, and the refusal is the same whether the font store holds that hash or not.
 func TestSecurity_T21_BundleCannotNameAnotherUsersFont(t *testing.T) {
-	src := newMediaEnv(t, mediaCfg{beta: true})
+	src := newMediaEnv(t, mediaCfg{})
 	path, hash := fontBundle(t, src, bundledFontFile(t, "Anton-Regular.ttf"))
 
 	var kept []testEntry
@@ -189,7 +189,7 @@ func TestSecurity_T21_BundleCannotNameAnotherUsersFont(t *testing.T) {
 	bob := service.Caller{Actor: "user:bob", Scopes: service.RoleScopes(service.RoleMember), OwnerUserID: "bob"}
 
 	known, errKnown := src.svc.(bundleImporter).ProjectBundleImport(service.WithCaller(context.Background(), bob), req)
-	fresh := newMediaEnv(t, mediaCfg{beta: true})
+	fresh := newMediaEnv(t, mediaCfg{})
 	_, errUnknown := fresh.svc.(bundleImporter).ProjectBundleImport(service.WithCaller(context.Background(), bob), req)
 
 	if known != nil || !isCode(errKnown, "E_VALIDATION") || !isCode(errUnknown, "E_VALIDATION") {
@@ -248,7 +248,7 @@ func FuzzBundleArchive(f *testing.F) {
 
 	f.Fuzz(func(t *testing.T, data []byte) {
 		tb := plainTempTB{t}
-		dst := newMediaEnv(tb, mediaCfg{beta: true})
+		dst := newMediaEnv(tb, mediaCfg{})
 
 		path := filepath.Join(tb.TempDir(), "fuzz.vvbundle")
 		if err := os.WriteFile(path, data, 0o600); err != nil {
