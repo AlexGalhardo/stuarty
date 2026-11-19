@@ -114,7 +114,6 @@
     },
     "internal": true,
     "name": "asset.add",
-    "phase": "prototype",
     "scope": "media",
     "summary": "Adds an asset that the import flow has already ingested."
   },
@@ -145,7 +144,6 @@
     },
     "internal": false,
     "name": "asset.remove",
-    "phase": "alpha",
     "scope": "media",
     "summary": "Removes an asset that no item uses."
   },
@@ -209,7 +207,6 @@
     },
     "internal": false,
     "name": "audio.add",
-    "phase": "alpha",
     "scope": "edit",
     "summary": "Places an audio asset, or the audio of a video asset, on an audio track."
   },
@@ -323,7 +320,6 @@
     },
     "internal": false,
     "name": "audio.duck",
-    "phase": "beta",
     "scope": "edit",
     "summary": "Lowers a music item while speech sounds, with a ramp down before and a ramp up after."
   },
@@ -401,7 +397,6 @@
     },
     "internal": false,
     "name": "audio.mark_beats",
-    "phase": "beta",
     "scope": "edit",
     "summary": "Writes markers on a music item at the beats of its audio."
   },
@@ -498,7 +493,6 @@
     },
     "internal": false,
     "name": "caption.add",
-    "phase": "prototype",
     "scope": "edit",
     "summary": "Adds a caption item with timed words."
   },
@@ -545,7 +539,6 @@
     },
     "internal": false,
     "name": "caption.edit_word",
-    "phase": "alpha",
     "scope": "edit",
     "summary": "Changes the text of one word of a caption, or removes the word."
   },
@@ -652,7 +645,6 @@
     },
     "internal": false,
     "name": "caption.from_transcript",
-    "phase": "alpha",
     "scope": "edit",
     "summary": "Creates captions for the speech of a clip from its transcript."
   },
@@ -716,7 +708,6 @@
     },
     "internal": false,
     "name": "caption.import_subtitles",
-    "phase": "beta",
     "scope": "edit",
     "summary": "Creates one caption per cue of an SRT or WebVTT text."
   },
@@ -755,7 +746,6 @@
     },
     "internal": false,
     "name": "caption.merge",
-    "phase": "alpha",
     "scope": "edit",
     "summary": "Joins two captions of one track into one that spans both."
   },
@@ -822,7 +812,6 @@
     },
     "internal": false,
     "name": "caption.retime_from_clip",
-    "phase": "alpha",
     "scope": "edit",
     "summary": "Retimes the captions linked to a clip after the clip was moved, trimmed or sped up."
   },
@@ -864,7 +853,6 @@
     },
     "internal": false,
     "name": "caption.set_breaks",
-    "phase": "alpha",
     "scope": "edit",
     "summary": "Sets the forced line breaks of a caption."
   },
@@ -1087,7 +1075,6 @@
     },
     "internal": false,
     "name": "caption.set_style",
-    "phase": "alpha",
     "scope": "edit",
     "summary": "Sets, changes or clears the style override of one caption."
   },
@@ -1171,7 +1158,6 @@
     },
     "internal": false,
     "name": "caption.set_words",
-    "phase": "alpha",
     "scope": "edit",
     "summary": "Replaces the words of a caption."
   },
@@ -1217,7 +1203,6 @@
     },
     "internal": false,
     "name": "caption.split",
-    "phase": "alpha",
     "scope": "edit",
     "summary": "Splits a caption into two at a word boundary."
   },
@@ -1291,7 +1276,6 @@
     },
     "internal": false,
     "name": "clip.add",
-    "phase": "prototype",
     "scope": "edit",
     "summary": "Places a video or image asset on a visual track."
   },
@@ -1389,7 +1373,6 @@
     },
     "internal": false,
     "name": "clip.remove_silences",
-    "phase": "alpha",
     "scope": "edit",
     "summary": "Cuts the silent stretches out of a clip or an audio item, leaving one item per stretch of speech."
   },
@@ -1433,7 +1416,6 @@
     },
     "internal": false,
     "name": "clip.set_blend",
-    "phase": "beta",
     "scope": "edit",
     "summary": "Sets how a visual item is mixed with what is below it."
   },
@@ -1472,7 +1454,6 @@
     },
     "internal": false,
     "name": "clip.set_blur",
-    "phase": "beta",
     "scope": "edit",
     "summary": "Sets the blur radius of a visual item."
   },
@@ -1534,7 +1515,6 @@
     },
     "internal": false,
     "name": "clip.set_chroma_key",
-    "phase": "beta",
     "scope": "edit",
     "summary": "Keys out one colour of a clip, such as a green screen."
   },
@@ -1858,7 +1838,6 @@
     },
     "internal": false,
     "name": "clip.set_color",
-    "phase": "alpha",
     "scope": "edit",
     "summary": "Sets the brightness, contrast, saturation, temperature, tint, hue, lookup table, HSL bands, wheels and curves of a clip."
   },
@@ -1972,7 +1951,6 @@
     },
     "internal": false,
     "name": "clip.set_effects",
-    "phase": "beta",
     "scope": "edit",
     "summary": "Sets the visual effects of a clip: motion blur, glow, vignette, grain, RGB split and shake."
   },
@@ -2023,7 +2001,6 @@
     },
     "internal": false,
     "name": "clip.set_filter",
-    "phase": "beta",
     "scope": "edit",
     "summary": "Sets the colour filter of a visual item and how much of it is mixed in."
   },
@@ -2063,7 +2040,6 @@
     },
     "internal": false,
     "name": "clip.set_flip",
-    "phase": "beta",
     "scope": "edit",
     "summary": "Mirrors a visual item horizontally, vertically or both."
   },
@@ -2137,7 +2113,6 @@
     },
     "internal": false,
     "name": "clip.set_framing",
-    "phase": "alpha",
     "scope": "edit",
     "summary": "Sets how the asset of a clip is fitted into the frame and how much of each side is cropped."
   },
@@ -2236,7 +2211,6 @@
     },
     "internal": false,
     "name": "clip.set_mask",
-    "phase": "beta",
     "scope": "edit",
     "summary": "Limits where a visual item is drawn to a rectangle or an ellipse."
   },
@@ -2293,7 +2267,6 @@
     },
     "internal": false,
     "name": "clip.set_outline",
-    "phase": "beta",
     "scope": "edit",
     "summary": "Gives a clip an outline that follows its visible shape."
   },
@@ -2371,7 +2344,6 @@
     },
     "internal": false,
     "name": "clip.set_shadow",
-    "phase": "beta",
     "scope": "edit",
     "summary": "Gives a clip a drop shadow that follows its visible shape."
   },
@@ -2511,7 +2483,6 @@
     },
     "internal": false,
     "name": "clip.set_speed",
-    "phase": "alpha",
     "scope": "edit",
     "summary": "Changes the speed of a clip or audio item, constant or along a curve, or plays it backwards."
   },
@@ -2579,7 +2550,6 @@
     },
     "internal": false,
     "name": "font.add",
-    "phase": "beta",
     "scope": "media",
     "summary": "Adds a user font family to the project, or more weights to one it already has."
   },
@@ -2609,7 +2579,6 @@
     },
     "internal": false,
     "name": "font.remove",
-    "phase": "beta",
     "scope": "media",
     "summary": "Removes a user font family from the project."
   },
@@ -2663,7 +2632,6 @@
     },
     "internal": false,
     "name": "item.crossfade",
-    "phase": "alpha",
     "scope": "edit",
     "summary": "Sets a matching fade-out and fade-in on two overlapping visual items of different tracks."
   },
@@ -2711,7 +2679,6 @@
     },
     "internal": false,
     "name": "item.delete",
-    "phase": "prototype",
     "scope": "edit",
     "summary": "Removes items, and optionally closes the freed space."
   },
@@ -2763,7 +2730,6 @@
     },
     "internal": false,
     "name": "item.duplicate",
-    "phase": "alpha",
     "scope": "edit",
     "summary": "Copies an item to another position, optionally on another track."
   },
@@ -2810,7 +2776,6 @@
     },
     "internal": false,
     "name": "item.extract_audio",
-    "phase": "beta",
     "scope": "edit",
     "summary": "Creates an audio item from the audio of a video clip, linked to it, and mutes the clip."
   },
@@ -2868,7 +2833,6 @@
     },
     "internal": false,
     "name": "item.freeze_frame",
-    "phase": "beta",
     "scope": "edit",
     "summary": "Holds one frame of a clip: splits the clip at a frame and inserts a still of that frame."
   },
@@ -2912,7 +2876,6 @@
     },
     "internal": false,
     "name": "item.link",
-    "phase": "beta",
     "scope": "edit",
     "summary": "Links items so that they move, trim and split together."
   },
@@ -2961,7 +2924,6 @@
     },
     "internal": false,
     "name": "item.move",
-    "phase": "prototype",
     "scope": "edit",
     "summary": "Moves an item in time, to another track of the same kind, or both."
   },
@@ -3017,7 +2979,6 @@
     },
     "internal": false,
     "name": "item.paste_attributes",
-    "phase": "beta",
     "scope": "edit",
     "summary": "Copies the look of one item to other items."
   },
@@ -3055,7 +3016,6 @@
     },
     "internal": false,
     "name": "item.rename",
-    "phase": "alpha",
     "scope": "edit",
     "summary": "Sets the label of an item."
   },
@@ -3123,7 +3083,6 @@
     },
     "internal": false,
     "name": "item.repeat",
-    "phase": "beta",
     "scope": "edit",
     "summary": "Repeats an item back to back, a number of times or until a time, such as a looping background."
   },
@@ -3197,7 +3156,6 @@
     },
     "internal": false,
     "name": "item.set_audio",
-    "phase": "alpha",
     "scope": "edit",
     "summary": "Sets the volume, the fades, the mute flag, the noise reduction or the voice of a clip or audio item."
   },
@@ -3233,7 +3191,6 @@
     },
     "internal": false,
     "name": "item.set_enabled",
-    "phase": "beta",
     "scope": "edit",
     "summary": "Turns an item off or on without removing it from the timeline."
   },
@@ -3290,7 +3247,6 @@
     },
     "internal": false,
     "name": "item.set_transform",
-    "phase": "alpha",
     "scope": "edit",
     "summary": "Sets the position, scale, rotation or opacity of a visual item."
   },
@@ -3377,7 +3333,6 @@
     },
     "internal": false,
     "name": "item.set_transition",
-    "phase": "alpha",
     "scope": "edit",
     "summary": "Sets or removes the transition on one edge of a visual item."
   },
@@ -3417,7 +3372,6 @@
     },
     "internal": false,
     "name": "item.slip",
-    "phase": "beta",
     "scope": "edit",
     "summary": "Shows another part of the source in a clip or audio item without moving or resizing it."
   },
@@ -3471,7 +3425,6 @@
     },
     "internal": false,
     "name": "item.split",
-    "phase": "prototype",
     "scope": "edit",
     "summary": "Splits an item into two at a timeline frame."
   },
@@ -3532,7 +3485,6 @@
     },
     "internal": false,
     "name": "item.trim",
-    "phase": "prototype",
     "scope": "edit",
     "summary": "Moves the start edge or the end edge of an item to a timeline position."
   },
@@ -3568,7 +3520,6 @@
     },
     "internal": false,
     "name": "item.unlink",
-    "phase": "beta",
     "scope": "edit",
     "summary": "Removes items from their link group."
   },
@@ -3626,7 +3577,6 @@
     },
     "internal": false,
     "name": "keyframe.clear",
-    "phase": "alpha",
     "scope": "edit",
     "summary": "Removes all keyframes of one property, or of every property."
   },
@@ -3692,7 +3642,6 @@
     },
     "internal": false,
     "name": "keyframe.remove",
-    "phase": "alpha",
     "scope": "edit",
     "summary": "Removes the keyframe of a property at a frame."
   },
@@ -3778,7 +3727,6 @@
     },
     "internal": false,
     "name": "keyframe.set",
-    "phase": "alpha",
     "scope": "edit",
     "summary": "Adds or replaces a keyframe of one animated property of an item."
   },
@@ -3821,7 +3769,6 @@
     },
     "internal": false,
     "name": "marker.add",
-    "phase": "beta",
     "scope": "edit",
     "summary": "Puts a marker on the timeline, or on one item."
   },
@@ -3859,7 +3806,6 @@
     },
     "internal": false,
     "name": "marker.remove",
-    "phase": "beta",
     "scope": "edit",
     "summary": "Removes a marker of the timeline or of an item."
   },
@@ -3908,7 +3854,6 @@
     },
     "internal": false,
     "name": "marker.set",
-    "phase": "beta",
     "scope": "edit",
     "summary": "Moves or relabels a marker of the timeline or of an item."
   },
@@ -3938,7 +3883,6 @@
     },
     "internal": false,
     "name": "project.rename",
-    "phase": "prototype",
     "scope": "edit",
     "summary": "Sets the project name."
   },
@@ -3982,7 +3926,6 @@
     },
     "internal": false,
     "name": "settings.reframe",
-    "phase": "beta",
     "scope": "edit",
     "summary": "Re-targets the project to another aspect ratio and refits the items to the new frame."
   },
@@ -4027,7 +3970,6 @@
     },
     "internal": false,
     "name": "settings.set",
-    "phase": "prototype",
     "scope": "edit",
     "summary": "Sets the frame size, the background colour or the loudness target."
   },
@@ -4086,7 +4028,6 @@
     },
     "internal": false,
     "name": "settings.set_fps",
-    "phase": "alpha",
     "scope": "edit",
     "summary": "Changes the project frame rate and rescales every time quantity."
   },
@@ -4183,7 +4124,6 @@
     },
     "internal": false,
     "name": "shape.add",
-    "phase": "alpha",
     "scope": "edit",
     "summary": "Adds a rectangle, rounded rectangle or ellipse to a visual track."
   },
@@ -4249,7 +4189,6 @@
     },
     "internal": false,
     "name": "shape.set",
-    "phase": "alpha",
     "scope": "edit",
     "summary": "Changes the shape, size, colours, stroke or radius of a shape item."
   },
@@ -4331,7 +4270,6 @@
     },
     "internal": false,
     "name": "slot.fill",
-    "phase": "alpha",
     "scope": "edit",
     "summary": "Fills a template slot with media, text or caption words."
   },
@@ -4388,7 +4326,6 @@
     },
     "internal": false,
     "name": "slot.mark",
-    "phase": "alpha",
     "scope": "edit",
     "summary": "Marks an item as a template slot."
   },
@@ -4418,7 +4355,6 @@
     },
     "internal": false,
     "name": "slot.unmark",
-    "phase": "alpha",
     "scope": "edit",
     "summary": "Removes the slot marking of an item."
   },
@@ -4464,7 +4400,6 @@
     },
     "internal": false,
     "name": "template.set_info",
-    "phase": "alpha",
     "scope": "edit",
     "summary": "Sets the description and the named colours of the template."
   },
@@ -4622,7 +4557,6 @@
     },
     "internal": false,
     "name": "text.add",
-    "phase": "prototype",
     "scope": "edit",
     "summary": "Adds a text item to a visual track."
   },
@@ -4685,7 +4619,6 @@
     },
     "internal": false,
     "name": "text.apply_preset",
-    "phase": "alpha",
     "scope": "edit",
     "summary": "Animates one edge of a visual item with a named preset."
   },
@@ -4869,7 +4802,6 @@
     },
     "internal": false,
     "name": "text.set",
-    "phase": "prototype",
     "scope": "edit",
     "summary": "Changes the content or the style of a text item."
   },
@@ -4917,7 +4849,6 @@
     },
     "internal": false,
     "name": "timeline.close_gap",
-    "phase": "alpha",
     "scope": "edit",
     "summary": "Closes the empty range that contains a given frame on a track."
   },
@@ -4979,7 +4910,6 @@
     },
     "internal": false,
     "name": "track.add",
-    "phase": "prototype",
     "scope": "edit",
     "summary": "Adds an empty track at a place in the track order."
   },
@@ -5025,7 +4955,6 @@
     },
     "internal": false,
     "name": "track.move",
-    "phase": "prototype",
     "scope": "edit",
     "summary": "Changes the place of a track in the track order."
   },
@@ -5059,7 +4988,6 @@
     },
     "internal": false,
     "name": "track.remove",
-    "phase": "prototype",
     "scope": "edit",
     "summary": "Removes a track, and its items when with_items is true."
   },
@@ -5278,7 +5206,6 @@
     },
     "internal": false,
     "name": "track.set_caption_style",
-    "phase": "prototype",
     "scope": "edit",
     "summary": "Merges a partial caption style into a track, or replaces it."
   },
@@ -5339,7 +5266,6 @@
     },
     "internal": false,
     "name": "track.update",
-    "phase": "prototype",
     "scope": "edit",
     "summary": "Sets the name, hidden, muted, locked, solo or magnet flag or the volume of a track."
   }

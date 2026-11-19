@@ -10,7 +10,6 @@ func init() {
 		Example: `{"item_id": "itm_m1n2p3q4r5", "filter": "sepia", "amount": 0.6}`,
 		Errors:  []string{CodeValidation, CodeNotFound, CodeTypeMismatch},
 		Scope:   ScopeEdit,
-		Phase:   Beta,
 	}, applyClipSetFilter))
 
 	Register(Define(Spec{
@@ -20,7 +19,6 @@ func init() {
 		Example:     `{"item_id": "itm_m1n2p3q4r5", "radius": 12.5}`,
 		Errors:      []string{CodeValidation, CodeNotFound, CodeTypeMismatch},
 		Scope:       ScopeEdit,
-		Phase:       Beta,
 	}, applyClipSetBlur))
 }
 

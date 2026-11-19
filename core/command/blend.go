@@ -15,7 +15,6 @@ func init() {
 		Example: `{"item_id": "itm_m1n2p3q4r5", "mode": "screen"}`,
 		Errors:  []string{CodeValidation, CodeNotFound, CodeTypeMismatch},
 		Scope:   ScopeEdit,
-		Phase:   Beta,
 	}, applyClipSetBlend))
 }
 

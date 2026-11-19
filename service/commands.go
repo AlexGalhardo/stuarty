@@ -19,7 +19,6 @@ type CommandSummary struct {
 	Name    string `json:"name"`
 	Summary string `json:"summary"`
 	Scope   string `json:"scope"` // "edit" | "media"
-	Phase   string `json:"phase"` // "prototype" | "alpha" | "beta"
 }
 
 // CommandDetail is one command with its arguments.
@@ -103,7 +102,7 @@ func (s *svc) commandList() *CommandHelpResult {
 }
 
 func summaryOf(c *command.Command) CommandSummary {
-	return CommandSummary{Name: c.Name, Summary: c.Summary, Scope: string(c.Scope), Phase: string(c.Phase)}
+	return CommandSummary{Name: c.Name, Summary: c.Summary, Scope: string(c.Scope)}
 }
 
 // unknownCommand is E_UNKNOWN_COMMAND listing the public names only.

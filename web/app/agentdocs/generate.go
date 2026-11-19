@@ -87,10 +87,6 @@ func newView(in Inputs) (view, error) {
 		}
 
 		ns, action, _ := strings.Cut(c.Name, ".")
-		if c.Phase != command.Prototype {
-			action += "*"
-		}
-
 		if n := len(v.Ops); n > 0 && v.Ops[n-1].Namespace == ns {
 			v.Ops[n-1].Names += ", " + action
 

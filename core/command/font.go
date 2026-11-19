@@ -22,7 +22,6 @@ func init() {
 			`"}, {"weight": 700, "hash": "sha256:` + strings.Repeat("cd", 32) + `"}]}`,
 		Errors: []string{CodeValidation, CodeNotFound},
 		Scope:  ScopeMedia,
-		Phase:  Beta,
 	}, applyFontAdd))
 
 	Register(Define(Spec{
@@ -33,7 +32,6 @@ func init() {
 		Example: `{"family": "Brand Sans"}`,
 		Errors:  []string{CodeValidation, CodeNotFound, CodeInUse},
 		Scope:   ScopeMedia,
-		Phase:   Beta,
 	}, applyFontRemove))
 }
 

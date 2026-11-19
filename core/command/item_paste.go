@@ -20,7 +20,6 @@ func init() {
 			CodeValidation, CodeNotFound, CodeTypeMismatch, CodeInvalidState,
 		},
 		Scope: ScopeEdit,
-		Phase: Beta,
 	}, applyItemPasteAttributes))
 }
 

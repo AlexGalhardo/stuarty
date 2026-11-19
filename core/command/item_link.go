@@ -20,7 +20,6 @@ func init() {
 			CodeValidation, CodeNotFound, CodeTypeMismatch, CodeInvalidState, CodeIDExists,
 		},
 		Scope: ScopeEdit,
-		Phase: Beta,
 	}, applyItemLink))
 
 	Register(Define(Spec{
@@ -31,7 +30,6 @@ func init() {
 		Example: `{"item_ids": ["itm_c3d4e5f6g7"]}`,
 		Errors:  []string{CodeValidation, CodeNotFound, CodeInvalidState},
 		Scope:   ScopeEdit,
-		Phase:   Beta,
 	}, applyItemUnlink))
 
 	Register(Define(Spec{
@@ -45,7 +43,6 @@ func init() {
 			CodeValidation, CodeNotFound, CodeTypeMismatch, CodeInvalidState, CodeOverlap, CodeIDExists, CodeLimit,
 		},
 		Scope: ScopeEdit,
-		Phase: Beta,
 	}, applyItemExtractAudio))
 }
 

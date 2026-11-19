@@ -22,7 +22,6 @@ func init() {
 			CodeLimit, CodeOverlap,
 		},
 		Scope: ScopeEdit,
-		Phase: Beta,
 	}, applyCaptionImportSubtitles))
 }
 
