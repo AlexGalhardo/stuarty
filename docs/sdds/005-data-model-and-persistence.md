@@ -1157,6 +1157,60 @@ CREATE UNIQUE INDEX image_operations_key_index ON image_operations (image_id, ac
 
 The log is append-only except `closed_by`, which moves from `NULL` to a revision, as in section 5.3; undo and redo follow section 12 with the rules of SDD-021 section 4. `Repos` gains `Images() ImageRepo` with `Create`, `Get`, `List`, `Commit` (a compare-and-set on the revision, `ErrStale` otherwise), `AppendOperation`, `Operation`, `LastOpen` (the actor's last step open to undo or redo), `Close`, `CloseOpenRedo` and `ByKey`. The writer is the one write transaction of `Store.Write`.
 
+### 5.14 `publications` and `publication_targets` (SDD-020 sections 15 to 21)
+
+Migration `20261119160000_create_publications_tables`. A publication is an item of its project (ADR-0039) and is kept in tables of its own: the item the surfaces show is read from them (SDD-020 section 15), and `project_items` is not rebuilt for it.
+
+```sql
+CREATE TABLE publications (
+  id            TEXT    NOT NULL,                 -- pub_...
+  project_id    TEXT    NOT NULL REFERENCES projects (id) ON DELETE CASCADE,
+  title         TEXT    NOT NULL,
+  text          TEXT    NOT NULL DEFAULT '',      -- the default caption
+  export_job    TEXT    NOT NULL,                 -- the succeeded export job of the video
+  thumbnail_job TEXT    NOT NULL DEFAULT '',
+  created_ms    INTEGER NOT NULL,
+  updated_ms    INTEGER NOT NULL,
+  created_by    TEXT    NOT NULL,                 -- actor
+  owner_user_id TEXT,                             -- network mode only
+  PRIMARY KEY (id)
+);
+CREATE INDEX publications_project_id_index ON publications (project_id, updated_ms);
+CREATE TABLE publication_targets (
+  id              TEXT    NOT NULL,               -- tgt_...
+  publication_id  TEXT    NOT NULL REFERENCES publications (id) ON DELETE CASCADE,
+  position        INTEGER NOT NULL,
+  connection_id   TEXT    NOT NULL,               -- no foreign key: removing a connection fails the send, not the plan
+  network         TEXT    NOT NULL,
+  fields          TEXT    NOT NULL,               -- JSON: title, description, tags, visibility, made_for_kids, ai_disclosure
+  state           TEXT    NOT NULL CHECK (state IN ('draft','waiting_approval','approved','scheduled','publishing',
+                                                    'published','failed','missed','cancelled')),
+  scheduled_ms    INTEGER,                        -- the instant, UTC
+  zone            TEXT    NOT NULL DEFAULT '',    -- IANA zone the person chose
+  late_minutes    INTEGER NOT NULL DEFAULT 0 CHECK (late_minutes BETWEEN 0 AND 1440),
+  approval_id     TEXT,
+  snapshot        TEXT,                           -- JSON: the post as the person was shown it, with the digest of each file
+  payload_sha256  TEXT,                           -- SHA-256 of snapshot
+  attempts        INTEGER NOT NULL DEFAULT 0,
+  next_attempt_ms INTEGER,
+  lease_owner     TEXT,
+  lease_until_ms  INTEGER,
+  remote_id       TEXT,
+  url             TEXT,
+  remote_state    TEXT,
+  error           TEXT,                           -- JSON: code, kind, message, hint, retryable
+  published_ms    INTEGER,
+  created_ms      INTEGER NOT NULL,
+  updated_ms      INTEGER NOT NULL,
+  PRIMARY KEY (id)
+);
+CREATE INDEX publication_targets_publication_id_index ON publication_targets (publication_id, position);
+CREATE INDEX publication_targets_state_scheduled_ms_index ON publication_targets (state, scheduled_ms);
+CREATE INDEX publication_targets_approval_id_index ON publication_targets (approval_id);
+```
+
+`Repos` gains `Publications() publish.Store` (the package `service/publish`): `Insert`, `Get`, `Target`, `Save` (the publication and all its targets, in the transaction that read them), `List`, `Open` (the targets the scheduler looks at), `Next`, `Claim` and `Renew` (the lease, one conditional `UPDATE` each, so that a second scheduler changes no row) and `OfProject`. The writer is the one write transaction of `Store.Write`. Down drops both tables.
+
 ## 6. Workspace ownership
 
 ADR-0008 decides that one process owns a workspace. This section fixes how.
