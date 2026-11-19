@@ -61,7 +61,7 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | [34](34-audio-processors-and-noise-reduction.md) | Audio processors and noise reduction | L | 03 | IN PROGRESS (senior-c, 2026-11-19) |
 | [35](35-export-presets-batch-and-codecs.md) | Export presets, batch queue, H.265 and AV1 | M | 03 | DONE (2026-11-19, `c1bb77fa`..`c718fdb2`, merge `1063ec42`) |
 | [36](36-revert-checkpoints-and-diff.md) | Revert to a revision, checkpoints and a diff | M | 03 | IN PROGRESS (senior-b, 2026-11-19) |
-| [37](37-editor-ui-and-shortcuts.md) | Final editor UI, shortcuts and open fixes | L | 07 | IN PROGRESS (senior-e, 2026-11-19) |
+| [37](37-editor-ui-and-shortcuts.md) | Final editor UI, shortcuts and open fixes | L | 07 | DONE (2026-11-19, `7921c340`..`2715dcc0`, merge `46691bb3`; criterion 4 not met on this Windows machine: WebKit/Firefox limits and VV-238, VV-253, VV-260 to VV-264) |
 
 ### 1.4 Closing (after the tracks)
 
