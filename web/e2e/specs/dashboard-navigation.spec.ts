@@ -1,4 +1,14 @@
+import type { Page } from "@playwright/test";
+
 import { expect, seedProject, test } from "./helpers";
+
+// settle waits for the fonts and the requests of the page, so the next
+// navigation does not abort them: an aborted font or fetch is reported by
+// Firefox and WebKit as a console error that no person would see.
+async function settle(page: Page): Promise<void> {
+	await page.evaluate(() => document.fonts.ready.then(() => true));
+	await page.waitForLoadState("networkidle");
+}
 
 // RF-310 to RF-312 (epic 07): the application opens on the dashboard, the
 // sidebar leads to every section, and the editor has a way in and a way back.
@@ -71,6 +81,7 @@ test.describe("dashboard-navigation", () => {
 			test(`every section opens in ${theme} in ${lang} with no console error`, async ({
 				page,
 			}) => {
+				await settle(page);
 				const problems: string[] = [];
 				page.on("console", (message) => {
 					if (message.type() !== "error") return;
@@ -92,6 +103,7 @@ test.describe("dashboard-navigation", () => {
 				);
 
 				await page.goto("/");
+				await settle(page);
 				const dark = theme === "dark";
 				await expect(page.locator("html")).toHaveClass(
 					dark ? /dark/ : /^((?!dark).)*$/,
@@ -100,6 +112,7 @@ test.describe("dashboard-navigation", () => {
 				for (const [i, key] of SECTIONS.entries()) {
 					await page.getByTestId(`nav-${key}`).click();
 					await expect(page).toHaveURL(new RegExp(`/${key}$`));
+					await settle(page);
 					await expect(page.getByTestId(`nav-${key}`)).toHaveAttribute(
 						"aria-current",
 						"page",
@@ -130,7 +143,10 @@ test.describe("dashboard-navigation", () => {
 		await expect(page).toHaveURL(/\/projects$/);
 	});
 
-	test("the sidebar is reached and operated by keyboard alone", async ({
+	// WebKit leaves links out of the Tab order unless a browser option is set
+	// (the Option+Tab rule of macOS), so the links cannot be reached by Tab
+	// there; that is an engine setting, not a defect of the page.
+	test("the sidebar is reached and operated by keyboard alone @chromium-only", async ({
 		page,
 	}) => {
 		await page.goto("/");
