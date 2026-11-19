@@ -97,7 +97,7 @@ Browser scenarios are the list of SDD-012 §20.1, by name. Each one runs against
 
 `web/contract/` holds scenarios as data (a list of operations with supplied identifiers). A scenario runs through: the in-process `Service`, the HTTP client `Service`, the CLI as a subprocess with `--json`, and the MCP server over stdio. Assertions: the final documents are byte-equal; the diffs are equal; failure scenarios return the same code through every door; the exit code of the CLI follows SDD-000 §8.
 
-The parity table of SDD-003 §7.1 is itself a test: every operation of SDD-000 §1 must be reachable through each surface that the table lists for it, in the phase the table states. Removing a tool, a command or a route fails the test.
+The parity table of SDD-003 §7.1 is itself a test: every operation of SDD-000 §1 must be reachable through each surface that the table lists for it. Removing a tool, a command or a route fails the test.
 
 Generated contracts (ADR-0014) are tested by regeneration: `task codegen && git diff --exit-code`. The OpenAPI document is validated and compared with the router. The examples inside the SDDs are extracted from the Markdown and validated against the schemas (SDD-006 §11 check 2), so a document cannot drift from the code without a red job.
 

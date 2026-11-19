@@ -811,7 +811,7 @@ type TemplateInstantiateRequest struct {
 	Fill       map[string]SlotValue `json:"fill,omitempty"` // slot name to value
 	ID         string               `json:"id,omitempty"`   // optional project id (pattern of SDD-000 §2); MCP: the `id` member of action "new"
 	DryRun     bool                 `json:"dry_run,omitempty"`
-	// Phase B (SDD-005 §5.11): names of template.colors that take the brand kit's colour, and families
+	// SDD-005 §5.11: names of template.colors that take the brand kit's colour, and families
 	// of the kit added to the project's fonts.
 	BrandColors []string `json:"brand_colors,omitempty"`
 	BrandFonts  []string `json:"brand_fonts,omitempty"`
