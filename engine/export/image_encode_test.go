@@ -180,3 +180,37 @@ func TestResampleFailureIsAnError(t *testing.T) {
 		t.Fatalf("%v %+v", err, cfg)
 	}
 }
+
+// BenchmarkImageExport is the first number of NFR-061: a thumbnail of 1280 by 720 with a fill, a shape and a
+// text, rendered by the CPU path of the Rust renderer and encoded as PNG.
+func BenchmarkImageExport(b *testing.B) {
+	d := imageDoc("shapes")
+	d.Width, d.Height = 1280, 720
+	d.Layers[0].W, d.Layers[0].H = 1280, 720
+	d.Layers = append(d.Layers, coreimage.Layer{
+		ID: lyr(
+			'd',
+		),
+		Kind:    coreimage.KindText,
+		Name:    "Title",
+		Visible: true,
+		Opacity: 100,
+		X:       80,
+		Y:       300,
+		W:       1000,
+		H:       200,
+		Text:    "HOW IT WORKS",
+	})
+	coreimage.ReorderAll(d)
+
+	for b.Loop() {
+		img, err := RenderImage(context.Background(), d, ImageConfig{})
+		if err != nil {
+			b.Fatal(err)
+		}
+
+		if _, err := EncodeImage(context.Background(), img, ImageEncodeOptions{Format: ImagePNG}); err != nil {
+			b.Fatal(err)
+		}
+	}
+}
