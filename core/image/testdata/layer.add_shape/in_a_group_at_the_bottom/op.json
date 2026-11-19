@@ -1,0 +1,10 @@
+{
+  "args": {
+    "h": 10,
+    "index": 0,
+    "parent": "lyr_eeeeeeeeee",
+    "shape": "rect",
+    "w": 10
+  },
+  "op": "layer.add_shape"
+}

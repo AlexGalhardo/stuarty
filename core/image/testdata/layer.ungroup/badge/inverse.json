@@ -1,0 +1,44 @@
+[
+  {
+    "collection": "layers",
+    "id": "lyr_eeeeeeeeee",
+    "object": {
+      "h": 0,
+      "id": "lyr_eeeeeeeeee",
+      "kind": "group",
+      "name": "Badge",
+      "opacity": 80,
+      "order": "y",
+      "parent": "",
+      "visible": true,
+      "w": 0,
+      "x": 50,
+      "y": 40
+    },
+    "type": "put"
+  },
+  {
+    "collection": "layers",
+    "id": "lyr_ffffffffff",
+    "set": {
+      "opacity": 100,
+      "order": "i",
+      "parent": "lyr_eeeeeeeeee",
+      "x": 0,
+      "y": 0
+    },
+    "type": "patch"
+  },
+  {
+    "collection": "layers",
+    "id": "lyr_gggggggggg",
+    "set": {
+      "opacity": 100,
+      "order": "r",
+      "parent": "lyr_eeeeeeeeee",
+      "x": 10,
+      "y": 30
+    },
+    "type": "patch"
+  }
+]

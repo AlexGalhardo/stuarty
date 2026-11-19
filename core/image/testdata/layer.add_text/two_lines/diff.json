@@ -1,0 +1,20 @@
+[
+  {
+    "id": "lyr_kkkkkkkkkk",
+    "kind": "layer.added",
+    "object": {
+      "h": 173,
+      "id": "lyr_kkkkkkkkkk",
+      "kind": "text",
+      "name": "Lines",
+      "opacity": 100,
+      "order": "zi",
+      "parent": "",
+      "text": "One\nTwo",
+      "visible": true,
+      "w": 1101,
+      "x": 89,
+      "y": 273
+    }
+  }
+]

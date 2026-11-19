@@ -1,0 +1,92 @@
+[
+  {
+    "collection": "document",
+    "id": "img_aaaaaaaaaa",
+    "set": {
+      "height": 720,
+      "preset": "video_thumbnail",
+      "width": 1280
+    },
+    "type": "patch"
+  },
+  {
+    "collection": "layers",
+    "id": "lyr_aaaaaaaaaa",
+    "set": {
+      "h": 720,
+      "w": 1280
+    },
+    "type": "patch"
+  },
+  {
+    "collection": "layers",
+    "id": "lyr_bbbbbbbbbb",
+    "set": {
+      "h": 720,
+      "w": 1280
+    },
+    "type": "patch"
+  },
+  {
+    "collection": "layers",
+    "id": "lyr_cccccccccc",
+    "set": {
+      "h": 144,
+      "w": 1000,
+      "x": 120,
+      "y": 300
+    },
+    "type": "patch"
+  },
+  {
+    "collection": "layers",
+    "id": "lyr_dddddddddd",
+    "set": {
+      "h": 40,
+      "w": 600,
+      "x": 100,
+      "y": 500
+    },
+    "type": "patch"
+  },
+  {
+    "collection": "layers",
+    "id": "lyr_eeeeeeeeee",
+    "set": {
+      "x": 50,
+      "y": 40
+    },
+    "type": "patch"
+  },
+  {
+    "collection": "layers",
+    "id": "lyr_ffffffffff",
+    "set": {
+      "h": 100,
+      "w": 100
+    },
+    "type": "patch"
+  },
+  {
+    "collection": "layers",
+    "id": "lyr_gggggggggg",
+    "set": {
+      "h": 36,
+      "w": 80,
+      "x": 10,
+      "y": 30
+    },
+    "type": "patch"
+  },
+  {
+    "collection": "layers",
+    "id": "lyr_hhhhhhhhhh",
+    "set": {
+      "h": 50,
+      "w": 50,
+      "x": 10,
+      "y": 10
+    },
+    "type": "patch"
+  }
+]
