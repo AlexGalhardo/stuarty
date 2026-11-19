@@ -42,7 +42,8 @@ func TestBriefHoldsWhatARenderMustFit(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if b.Width != 1080 || b.Height != 1920 || b.FrameRate != (timeline.Rational{Num: 30, Den: 1}) || b.DurationFrames != 80 {
+	if b.Width != 1080 || b.Height != 1920 || b.FrameRate != (timeline.Rational{Num: 30, Den: 1}) ||
+		b.DurationFrames != 80 {
 		t.Errorf("size, rate or length: %+v", b)
 	}
 
