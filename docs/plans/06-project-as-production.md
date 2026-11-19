@@ -44,7 +44,7 @@ A creator opens one project and finds the whole production in it: the brief, the
 - [x] 5. Update bundle export and import. Verify: `go test ./service/... -run TestBundle` passes, including a bundle made by release 0.29.0.
 - [x] 6. Expose on HTTP, CLI and MCP with the text view. Verify: `go test ./web/contract/...` passes and the reference scenario (`bash scripts/smoke-e2e.sh`) still exports.
 - [x] 7. Build the project overview page and adapt the project list. Verify: `task test:web` and `web/e2e/specs/project-overview.spec.ts` pass.
-- [ ] 8. Regenerate agent documents and types. Verify: `task generate:check` exits 0.
+- [x] 8. Regenerate agent documents and types. Verify: `task generate:check` exits 0.
 
 ## Test strategy
 
