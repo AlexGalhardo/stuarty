@@ -482,6 +482,34 @@ export interface ExportResult {
 	duration: TimeValue;
 	width: number;
 	height: number;
+	// The preset the export was made for, and the codec the file holds. When the
+	// preset wanted a codec this machine cannot write, codec_fallback is the
+	// codec it wanted and notes say so (SDD-004 section 8.3).
+	preset?: string;
+	video_codec?: string;
+	codec_fallback?: string;
+	notes?: string[];
+}
+
+// One export of a batch, read from its child job (SDD-004 section 8.4).
+export interface BatchItem {
+	index: number;
+	preset?: string;
+	format: string;
+	codec?: string;
+	job_id?: string;
+	state: JobState;
+	progress: number;
+	result?: ExportResult;
+	error?: ApiErrorBody;
+}
+
+export interface BatchResult {
+	total: number;
+	succeeded: number;
+	failed: number;
+	cancelled: number;
+	items: BatchItem[];
 }
 
 export interface Job {
@@ -493,6 +521,7 @@ export interface Job {
 	message?: string;
 	result?: {
 		export?: ExportResult;
+		batch?: BatchResult;
 		transcribe?: { asset_id: string; language: string; words: number };
 	};
 	error?: ApiErrorBody;
@@ -649,12 +678,75 @@ export interface LibraryAsset {
 	bytes: number;
 	width?: number;
 	height?: number;
+	duration_ms?: number;
+	origin?: AssetOrigin;
+	description?: string;
+	reusable?: boolean;
+	tags?: string[];
+	created_by?: string;
+	created_at?: string;
 	projects: number;
+	// Where a picture of the file is served from: a timeline that holds it and its id there.
+	poster?: AssetPoster;
+	uses?: AssetUse[];
+}
+
+export type OriginKind =
+	| "imported"
+	| "generated"
+	| "fetched_by_agent"
+	| "rendered_externally";
+
+// SDD-011 section 14.2. source, prompt and rights_note are untrusted text.
+export interface AssetOrigin {
+	kind: OriginKind;
+	source?: string;
+	provider?: string;
+	model?: string;
+	prompt?: string;
+	cost_micros?: number;
+	rights_note?: string;
+}
+
+export interface AssetPoster {
+	timeline_id: string;
+	asset_id: string;
+}
+
+export interface AssetUse {
+	project_id: string;
+	name: string;
+	timelines: string[];
+	asset_id: string;
 }
 
 export interface AssetListResult {
 	assets: LibraryAsset[];
+	total: number;
+	next_cursor: string | null;
 	text: string;
+}
+
+// The filters of GET /assets (SDD-011 section 14.4).
+export interface AssetQuery {
+	section?: "visual" | "video";
+	kind?: "image" | "video" | "audio" | "lut";
+	tag?: string;
+	origin?: OriginKind;
+	reusable?: boolean;
+	text?: string;
+	project?: string;
+	cursor?: string;
+	limit?: number;
+}
+
+// GET /assets/{hash}, PUT /assets/{hash} and POST /assets/{hash}/tags answer one entry.
+export type AssetResult = LibraryAsset & { text: string };
+
+export interface AssetInfoBody {
+	description?: string;
+	rights_note?: string;
+	reusable?: boolean;
 }
 
 // GET /system (Doctor).
@@ -796,6 +888,66 @@ export interface ConnectionTestResult {
 	ok: boolean;
 	status: number;
 	message: string;
+}
+
+// The AI providers (SDD-016): the providers, the models each connection offers, and the price table a
+// person edits. A result never carries a key. An amount is an integer in millionths of the currency
+// unit for a million tokens; the page formats it and decides nothing.
+export interface ProviderPrice {
+	currency: string;
+	input_micros_per_mtok: number;
+	output_micros_per_mtok: number;
+}
+
+export interface PriceEntry extends ProviderPrice {
+	provider: string;
+	model: string;
+}
+
+export interface ProviderView {
+	id: string;
+	name: string;
+	capabilities: string[];
+	credential_kinds: string[];
+	default_endpoint: string;
+	docs_url: string;
+	connections: string[];
+}
+
+export interface ProviderListResult {
+	providers: ProviderView[];
+	prices: PriceEntry[];
+}
+
+export type PriceSource = "user" | "catalogue" | "none";
+
+export interface ModelView {
+	id: string;
+	name: string;
+	context_tokens: number;
+	output_tokens: number;
+	price: ProviderPrice | null;
+	price_source: PriceSource;
+}
+
+export interface ProviderModelsResult {
+	connection_id: string;
+	provider: string;
+	models: ModelView[];
+	fetched_at: string;
+	cached: boolean;
+}
+
+export interface ProviderPriceSetRequest {
+	provider: string;
+	model: string;
+	currency?: string;
+	input_micros_per_mtok?: number;
+	output_micros_per_mtok?: number;
+}
+
+export interface ProviderPricesResult {
+	prices: PriceEntry[];
 }
 
 // The approval queue, its rules and the cost ceilings (SDD-015). An amount is an integer in
@@ -1025,6 +1177,33 @@ export interface BriefResult {
 	text: string;
 }
 
+// The guided briefing (SDD-005 section 5.12.1): the questions are the core's, the page only draws them.
+export interface BriefingQuestion {
+	id: string;
+	heading: string;
+	text: string;
+	kind: "text" | "choice" | "seconds" | "date";
+	required: boolean;
+	options?: string[];
+	max_chars?: number;
+	min?: number;
+	max?: number;
+}
+
+export interface BriefingAnswer {
+	id: string;
+	value: string;
+}
+
+export interface BriefingQuestionsResult {
+	project_id?: string;
+	questions: BriefingQuestion[];
+	has_brief: boolean;
+	guided: boolean;
+	answers?: BriefingAnswer[];
+	text: string;
+}
+
 export interface ProjectStateResult {
 	project_id: string;
 	state: ProjectState;
@@ -1076,6 +1255,81 @@ export interface ExportOptions {
 	end?: string;
 	// The time of the frame of a png export (`120f`).
 	at?: string;
+	// h264, hevc or av1, for an mp4 export; absent is the choice of the preset or H.264.
+	codec?: string;
+}
+
+// One platform preset of GET /export-presets (SDD-004 section 8.2): the limits are
+// the core's, the browser only shows them.
+export interface ExportPreset {
+	id: string;
+	network: string;
+	placement: string;
+	label: string;
+	container: string;
+	codecs: string[];
+	limits: {
+		min_duration_ms?: number;
+		max_duration_ms?: number;
+		min_fps?: number;
+		max_fps?: number;
+		min_width?: number;
+		min_height?: number;
+		max_width?: number;
+		max_height?: number;
+		aspect_ratio?: string;
+		max_bytes?: number;
+		max_video_kbps?: number;
+	};
+	targets: {
+		width: number;
+		height: number;
+		video_kbps: number;
+		audio_kbps: number;
+	};
+	sources: { url: string; read: string; says: string }[];
+}
+
+export interface CodecAvailability {
+	codec: string;
+	available: boolean;
+	encoder?: string;
+	reason?: string;
+}
+
+export interface ExportPresetListResult {
+	presets: ExportPreset[];
+	codecs?: CodecAvailability[];
+	text: string;
+}
+
+export interface ExportFinding {
+	code: string;
+	severity: string;
+	message: string;
+	limit: string;
+	got: string;
+}
+
+// GET /projects/{id}/export-check: what does not fit a preset, with the exact limit.
+export interface ExportCheckResult {
+	project_id: string;
+	revision: number;
+	preset: string;
+	ok: boolean;
+	findings: ExportFinding[];
+	duration_ms: number;
+	estimated_bytes: number;
+	text: string;
+}
+
+// One export of a batch request.
+export interface ExportBatchItem {
+	preset?: string;
+	format?: string;
+	codec?: string;
+	start?: string;
+	end?: string;
 }
 
 export interface ExportCapabilities {

@@ -35,13 +35,13 @@ A creator stops hunting through folders: every image, clip, sound and font they 
 
 ## Tasks
 
-- [ ] 1. Amend SDD-011, SDD-005 and SDD-000 (model, origin kinds, operations). Verify: `task lint:md` exits 0.
-- [ ] 2. Implement `core/asset` with table tests. Verify: `go test ./core/asset/...` passes.
-- [ ] 3. Write the migration to workspace assets with fixtures of earlier workspaces. Verify: `go test ./web/database/... -run TestWorkspaceAssetsMigration` passes.
-- [ ] 4. Implement the service operations, the origin on import and the search index. Verify: `go test ./service/assets/...` passes.
-- [ ] 5. Expose on HTTP, CLI and MCP with parity tests and untrusted-text marking. Verify: `go test ./web/contract/...` and `go test -run TestSecurity_ ./...` pass.
-- [ ] 6. Build the two sections and the detail panel in both languages. Verify: `task test:web` and `web/e2e/specs/asset-library.spec.ts` pass.
-- [ ] 7. Keep the editor's media library working on top of the new model. Verify: the existing library specs pass.
+- [x] 1. Amend SDD-011, SDD-005 and SDD-000 (model, origin kinds, operations). Verify: `task lint:md` exits 0.
+- [x] 2. Implement `core/asset` with table tests. Verify: `go test ./core/asset/...` passes.
+- [x] 3. Write the migration to workspace assets with fixtures of earlier workspaces. Verify: `go test ./web/database/... -run TestWorkspaceAssetsMigration` passes.
+- [x] 4. Implement the service operations, the origin on import and the search index. Verify: `go test ./service/assets/...` passes.
+- [x] 5. Expose on HTTP, CLI and MCP with parity tests and untrusted-text marking. Verify: `go test ./web/contract/...` and `go test -run TestSecurity_ ./...` pass.
+- [x] 6. Build the two sections and the detail panel in both languages. Verify: `task test:web` and `web/e2e/specs/asset-library.spec.ts` pass.
+- [x] 7. Keep the editor's media library working on top of the new model. Verify: the existing library specs pass.
 
 ## Test strategy
 

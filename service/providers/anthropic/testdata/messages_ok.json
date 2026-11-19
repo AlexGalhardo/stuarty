@@ -1,0 +1,27 @@
+{
+  "id": "msg_01A",
+  "type": "message",
+  "role": "assistant",
+  "model": "claude-sonnet-x",
+  "content": [
+    {
+      "type": "text",
+      "text": "Sourdough, "
+    },
+    {
+      "type": "thinking",
+      "thinking": "hidden",
+      "signature": "s"
+    },
+    {
+      "type": "text",
+      "text": "from starter to slice."
+    }
+  ],
+  "stop_reason": "end_turn",
+  "stop_sequence": null,
+  "usage": {
+    "input_tokens": 21,
+    "output_tokens": 11
+  }
+}

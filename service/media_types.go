@@ -1,11 +1,24 @@
 package service
 
-import "time"
+import (
+	"time"
 
-// ImportFile is one path of a MediaImport call (SDD-003 section 2.6).
+	"github.com/AlexGalhardo/stuarty/core/asset"
+)
+
+// ImportFile is one file of a MediaImport call (SDD-003 section 2.6): a path, or the hash of a file that the
+// library already holds (SDD-011 section 14.3).
 type ImportFile struct {
-	Path    string `json:"path"`               // absolute
+	Path    string `json:"path,omitempty"`     // absolute
+	Hash    string `json:"hash,omitempty"`     // sha256:<64 hex> of a file of the library, in place of a path
 	AssetID string `json:"asset_id,omitempty"` // optional caller-chosen id; ignored for a duplicate
+}
+
+// AssetInfo is what an import says about the files it brings, beyond their origin (SDD-011 section 14.4).
+type AssetInfo struct {
+	Tags        []string `json:"tags,omitempty"`
+	Reusable    *bool    `json:"reusable,omitempty"`
+	Description string   `json:"description,omitempty"`
 }
 
 // MediaImportRequest imports 1 to 50 files into a project.
@@ -15,6 +28,10 @@ type MediaImportRequest struct {
 	Files      []ImportFile `json:"files"`
 	WaitMS     int          `json:"wait_ms,omitempty"` // 0 to 25000
 	DryRun     bool         `json:"dry_run,omitempty"` // checks paths and limits, copies nothing
+	// Origin says where the files came from; every file of the call shares it (SDD-011 section 14.2).
+	Origin *asset.Origin `json:"origin,omitempty"`
+	// Info is applied to the files of the call (SDD-011 section 14.4).
+	Info *AssetInfo `json:"info,omitempty"`
 }
 
 // ProbeSummary is what the probe says about an asset.

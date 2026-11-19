@@ -40,6 +40,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/web/app/jobs"
 	"github.com/AlexGalhardo/stuarty/web/app/mcp"
 	"github.com/AlexGalhardo/stuarty/web/app/store"
+	"github.com/AlexGalhardo/stuarty/web/resources/skills"
 
 	vukem "github.com/AlexGalhardo/vukem"
 	"github.com/AlexGalhardo/vukem/queue"
@@ -270,7 +271,7 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 		return err
 	}
 
-	conns, err := o.connections(cfg.Getenv, st, cfg.Now)
+	conns, provs, err := o.destinations(cfg.Getenv, st, cfg.Now)
 	if err != nil {
 		return err
 	}
@@ -281,11 +282,11 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 	}
 
 	o.Service, err = service.New(service.Options{
-		Keys: o.keyStore(), Connections: conns, HeavyPerMinute: heavy,
+		Keys: o.keyStore(), Connections: conns, Providers: provs, HeavyPerMinute: heavy,
 		Heavy: middleware.ServiceLimiter{L: ratelimit.NewMemory(heavy, time.Minute)},
 		Store: st, Registry: command.Default(), Now: cfg.Now, Workspace: string(o.Dir), Media: media,
 		Exporter: exp, Enqueue: jobs.Dispatcher{Queue: o.Queue}, Limits: limits, Publish: publish, Version: o.version,
-		Transcriber: transcriber, Tools: tools, Log: cfg.Log,
+		BuiltInSkills: skills.FS(), Transcriber: transcriber, Tools: tools, Log: cfg.Log,
 		Lint: lint.Env{Measurer: lintMeasurer{workspace: string(o.Dir)}},
 		Doctor: service.DoctorOptions{
 			Mode: o.mode, StartedAt: o.now().UTC(), Child: o.child, FFmpegPins: ffmpegpins.Current(),

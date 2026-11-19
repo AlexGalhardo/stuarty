@@ -392,6 +392,10 @@ func (m *Manager) loadSkill(root *os.Root, name string) (Entry, string, core.Ski
 
 	entry.Description = skill.Description
 	entry.Origin = skill.Origin()
+	// A file can claim to be built in; it is, only while it is the text the product installed (SDD-018 section 16).
+	if entry.Origin == core.OriginBuiltIn && skill.ContentHash() != builtInHash(root, name) {
+		entry.Origin = core.OriginUser
+	}
 	entry.Reviewed = m.isReviewed(&skill) && !core.HasError(findings)
 	entry.LintErrors, entry.LintWarnings = countFindings(findings)
 	entry.HasScripts = slices.ContainsFunc(findings, func(f core.Finding) bool { return f.Code == core.LintScript })

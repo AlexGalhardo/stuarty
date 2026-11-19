@@ -6,6 +6,7 @@ import (
 	"errors"
 
 	"github.com/AlexGalhardo/stuarty/service/approval"
+	"github.com/AlexGalhardo/stuarty/service/assets"
 	"github.com/AlexGalhardo/stuarty/service/connections"
 	"github.com/AlexGalhardo/stuarty/service/library"
 )
@@ -71,6 +72,7 @@ type Repos interface {
 	Connections() connections.Store
 	Approvals() approval.Store
 	Library() library.Index
+	AssetLibrary() assets.Store
 }
 
 // Tx is a write transaction.

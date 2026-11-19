@@ -42,13 +42,7 @@
     "type": "string"
    },
    "state": {
-    "enum": [
-     "queued",
-     "running",
-     "succeeded",
-     "failed",
-     "cancelled"
-    ]
+    "type": "string"
    },
    "progress": {
     "type": "number"

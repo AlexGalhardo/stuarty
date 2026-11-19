@@ -3,12 +3,14 @@
     {
       "tag": "Projects",
       "pages": [
+        "briefing.questions",
         "projects.list",
         "projects.create",
         "projects.get",
         "bitmaps.get",
         "projects.brief.get",
         "projects.brief.set",
+        "projects.briefing.answer",
         "projects.bundle.export",
         "projects.describe",
         "projects.duplicate",
@@ -38,6 +40,10 @@
       "tag": "Media",
       "pages": [
         "assets.list",
+        "assets.get",
+        "assets.set",
+        "assets.tag",
+        "assets.uses",
         "media.list",
         "media.import",
         "media.inspect",
@@ -54,9 +60,12 @@
     {
       "tag": "Jobs",
       "pages": [
+        "export.presets",
         "jobs.get",
         "jobs.cancel",
         "jobs.file",
+        "export.batch",
+        "export.check",
         "jobs.list",
         "jobs.start"
       ]
@@ -128,7 +137,16 @@
         "connections.create",
         "connections.get",
         "connections.remove",
+        "providers.models",
         "connections.test"
+      ]
+    },
+    {
+      "tag": "AI providers",
+      "pages": [
+        "providers.list",
+        "providers.prices.set",
+        "text.generate"
       ]
     },
     {
@@ -139,6 +157,9 @@
         "images.get",
         "images.edit",
         "images.export",
+        "images.file",
+        "images.frame",
+        "images.history",
         "images.redo",
         "images.undo"
       ]
