@@ -33,6 +33,8 @@ var OperationDomains = map[string]string{
 	"MediaImport": command.DomainAsset, "MediaInspect": command.DomainAsset, "MediaList": command.DomainAsset,
 	"MediaTrash": command.DomainAsset, "MediaRestore": command.DomainAsset, "AssetList": command.DomainAsset,
 	"FontImport": command.DomainAsset, "FontList": command.DomainAsset,
+	"AssetGet": command.DomainAsset, "AssetUses": command.DomainAsset, "AssetSetInfo": command.DomainAsset,
+	"AssetTag": command.DomainAsset,
 
 	"MemoryList": command.DomainMemory, "MemoryGet": command.DomainMemory, "MemoryWrite": command.DomainMemory,
 	"MemoryRemove": command.DomainMemory, "SkillList": command.DomainMemory, "SkillGet": command.DomainMemory,

@@ -42,7 +42,8 @@ var commandDomains = map[string]string{
 
 	"media:import": command.DomainAsset, "media:inspect": command.DomainAsset, "media:list": command.DomainAsset,
 	"media:trash": command.DomainAsset, "media:restore": command.DomainAsset, "font:import": command.DomainAsset,
-	"fonts": command.DomainAsset,
+	"fonts": command.DomainAsset, "asset:list": command.DomainAsset, "asset:show": command.DomainAsset,
+	"asset:uses": command.DomainAsset, "asset:set": command.DomainAsset, "asset:tag": command.DomainAsset,
 
 	"memory:list": command.DomainMemory, "memory:show": command.DomainMemory, "memory:write": command.DomainMemory,
 	"memory:remove": command.DomainMemory, "skill:list": command.DomainMemory, "skill:show": command.DomainMemory,

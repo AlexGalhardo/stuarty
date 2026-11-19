@@ -134,10 +134,20 @@ func workspaceOf(t *testing.T, r release) *database.DB {
 	return db
 }
 
+// upgrade runs the migrations through project_items and no further: these tests are about that one, and a
+// later migration would be the last one a Rollback undoes.
 func upgrade(t *testing.T, db *database.DB) *schema.Migrator {
 	t.Helper()
 
-	m, err := schema.NewMigrator(db, allMigrations())
+	var through []schema.Migration
+
+	for _, m := range allMigrations() {
+		if m.ID <= "20261119120000_project_items" {
+			through = append(through, m)
+		}
+	}
+
+	m, err := schema.NewMigrator(db, through)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -333,10 +343,9 @@ func TestProjectItemsMigrationDown(t *testing.T) {
  VALUES ('pit_000000000a', 'prj_0000000001', 'text', 'Script', 2, 'scene', 1, 1, 'local:cli')`,
 			)
 
-			// The export_batch kind (epic 35), the library index (epic 15) and the approval tables (epic 05) are newer
-			// than project_items: they go down first.
-			rolled, err := m.Rollback(ctx, 5)
-			if err != nil || len(rolled) != 5 || rolled[4] != "20261119120000_project_items" {
+			// upgrade stops at project_items, so it is the one migration a Rollback undoes.
+			rolled, err := m.Rollback(ctx, 1)
+			if err != nil || len(rolled) != 1 || rolled[0] != "20261119120000_project_items" {
 				t.Fatalf("Rollback = %v, %v", rolled, err)
 			}
 

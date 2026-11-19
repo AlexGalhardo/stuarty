@@ -11,6 +11,7 @@ import (
 
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/approval"
+	"github.com/AlexGalhardo/stuarty/service/assets"
 	"github.com/AlexGalhardo/stuarty/service/connections"
 	"github.com/AlexGalhardo/stuarty/service/library"
 
@@ -107,6 +108,7 @@ func (p *projectTx) Connections() connections.Store       { return p.tx.Connecti
 func (p *projectTx) Approvals() approval.Store            { return p.tx.Approvals() }
 func (p *projectTx) Images() service.ImageRepo            { return p.tx.Images() }
 func (p *projectTx) Library() library.Index               { return p.tx.Library() }
+func (p *projectTx) AssetLibrary() assets.Store           { return p.tx.AssetLibrary() }
 func (p *projectTx) AfterCommit(fn func())                { p.tx.AfterCommit(fn) }
 func (p *projectTx) Project() service.ProjectRow          { return p.row }
 func (p *projectTx) Executor() database.Executor          { return p.tx.Executor() }
