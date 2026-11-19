@@ -10031,6 +10031,10 @@
                 "properties": {
                   "dry_run": {
                     "type": "boolean"
+                  },
+                  "timeline_id": {
+                    "description": "The timeline of the project; required when the project has several.",
+                    "type": "string"
                   }
                 },
                 "type": "object"
@@ -10104,6 +10108,10 @@
                 "properties": {
                   "dry_run": {
                     "type": "boolean"
+                  },
+                  "timeline_id": {
+                    "description": "The timeline of the project; required when the project has several.",
+                    "type": "string"
                   }
                 },
                 "type": "object"

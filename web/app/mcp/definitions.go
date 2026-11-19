@@ -25,7 +25,7 @@ var definitionFiles embed.FS
 var order = []string{
 	"project_list", "project_create", "project_get", "project_trash", "edit", "command_help", "history",
 	"media_import", "media_inspect", "view", "lint", "job_start", "job_get", "job_cancel", "template",
-	"font_import", "project_item",
+	"font_import", "connection", "image", "project_item",
 }
 
 // definition is a tool definition and its compiled input schema.

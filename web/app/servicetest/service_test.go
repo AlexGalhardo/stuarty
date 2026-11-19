@@ -253,6 +253,26 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.BriefSet(ctx, service.BriefSetRequest{ProjectID: "prj_0000000001"})
 			return err
 		},
+		"ConnectionList": func() error {
+			_, err := e.svc.ConnectionList(ctx, service.ConnectionListRequest{})
+			return err
+		},
+		"ConnectionGet": func() error {
+			_, err := e.svc.ConnectionGet(ctx, service.ConnectionRef{ID: "con_0000000001"})
+			return err
+		},
+		"ConnectionCreate": func() error {
+			_, err := e.svc.ConnectionCreate(ctx, service.ConnectionCreateRequest{})
+			return err
+		},
+		"ConnectionRemove": func() error {
+			_, err := e.svc.ConnectionRemove(ctx, service.ConnectionRef{ID: "con_0000000001"})
+			return err
+		},
+		"ConnectionTest": func() error {
+			_, err := e.svc.ConnectionTest(ctx, service.ConnectionRef{ID: "con_0000000001"})
+			return err
+		},
 		"OpenFile": func() error {
 			_, err := e.svc.OpenFile(
 				ctx,

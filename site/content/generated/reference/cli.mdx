@@ -897,7 +897,7 @@ stuarty otio:import cut.otio --project prj_7k2m9x4q1b --dry-run
 Describe a project as text: brief, items and state
 
 ```text
-stuarty project:describe <project id>
+stuarty project:describe <id>
 ```
 
 | Flag | Type | Default | Meaning |
@@ -917,7 +917,7 @@ stuarty project:describe prj_7k2m9x4q1b
 Copy a project: its brief, texts and timelines
 
 ```text
-stuarty project:duplicate <project id> [--name n]
+stuarty project:duplicate <id> [--name n]
 ```
 
 | Flag | Type | Default | Meaning |
@@ -965,7 +965,7 @@ stuarty item:add --project prj_7k2m9x4q1b --kind timeline --title "Wide cut" --p
 Move an item to a position in the order of the project
 
 ```text
-stuarty item:move <item id> --project <id> --position n
+stuarty item:move <item> --project <id> --position n
 ```
 
 | Flag | Type | Default | Meaning |
@@ -985,7 +985,7 @@ stuarty item:move pit_3c5v8n2w6d --project prj_7k2m9x4q1b --position n
 Change the title of an item
 
 ```text
-stuarty item:rename <item id> --project <id> --title "..."
+stuarty item:rename <item> --project <id> --title "..."
 ```
 
 | Flag | Type | Default | Meaning |
@@ -1005,7 +1005,7 @@ stuarty item:rename pit_3c5v8n2w6d --project prj_7k2m9x4q1b --title "..."
 Move an item to the trash of its project
 
 ```text
-stuarty item:trash <item id> --project <id>
+stuarty item:trash <item> --project <id>
 ```
 
 Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--dry-run`.
@@ -1021,7 +1021,7 @@ stuarty item:trash pit_3c5v8n2w6d --project prj_7k2m9x4q1b
 Restore an item from the trash of its project
 
 ```text
-stuarty item:restore <item id> --project <id>
+stuarty item:restore <item> --project <id>
 ```
 
 Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--dry-run`.
@@ -1066,6 +1066,239 @@ Example:
 
 ```bash
 stuarty brief:set --project prj_7k2m9x4q1b --text brief.md
+```
+
+## `connection:list`
+
+List the destinations Stuarty may reach
+
+```text
+stuarty connection:list
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty connection:list --json
+```
+
+## `connection:show`
+
+Show one connection: destinations, what it accepts and its last use
+
+```text
+stuarty connection:show <id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty connection:show con_0123456789
+```
+
+## `connection:add`
+
+Connect a destination; the secret is read from standard input or a file, never from an argument
+
+```text
+stuarty connection:add --kind <k> --label <t> --endpoint <url> --accepts <list>
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--kind` | string |  | the kind of connection (required) |
+| `--label` | string |  | a name for the person, 1 to 60 characters (required) |
+| `--endpoint` | string |  | the URL the connector calls first, https (required) |
+| `--accepts` | string |  | what it may receive, a comma list of text, image, video, audio, metadata, document (required) |
+| `--hosts` | string |  | further hosts it may reach, a comma list; the endpoint host is always allowed |
+| `--secret-file` | string |  | a file that holds the secret; without it the secret is read from standard input |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+echo $TOKEN | stuarty connection:add --kind test --label Blog --endpoint https://video.example.com --accepts text
+```
+
+## `connection:remove`
+
+Remove a connection and its credential
+
+```text
+stuarty connection:remove <id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty connection:remove con_0123456789
+```
+
+## `connection:test`
+
+Make one request through a connection and show how the destination answered
+
+```text
+stuarty connection:test <id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty connection:test con_0123456789
+```
+
+## `image:create`
+
+Create an image document, blank or from a template
+
+```text
+stuarty image:create --preset p
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--preset` | string |  | video_thumbnail (1280x720), square_post (1080x1080) or vertical_cover (1080x1920) |
+| `--width` | integer |  | pixels, 1 to 4096, with --height |
+| `--height` | integer |  | pixels, 1 to 4096, with --width |
+| `--name` | string |  | name of the image |
+| `--background` | string |  | a colour or transparent (default #FFFFFF) |
+| `--template` | boolean | `false` | make a template whose text and image layers may be slots |
+| `--from-template` | string |  | make the image from this template |
+| `--values` | string |  | a JSON object of slot name to \{"text": "..."\} or \{"asset": "sha256:..."\}: a file, or - for standard input |
+| `--id` | string |  | identifier for the image (omit it in network mode: the server chooses) |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty image:create --preset video_thumbnail --name "Episode 12" --background "#101820"
+```
+
+## `image:list`
+
+List the image documents and templates
+
+```text
+stuarty image:list
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--templates` | string |  | only for the templates, none for the others |
+| `--cursor` | string |  | continue a list from this cursor |
+| `--limit` | integer | `20` | items per page |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty image:list --templates only --json
+```
+
+## `image:show`
+
+Describe an image document: its layers, its findings and its revision
+
+```text
+stuarty image:show <id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty image:show img_7k2m9x4q1b
+```
+
+## `image:edit`
+
+Apply a batch of image operations (stuarty command:help --domain image lists them)
+
+```text
+stuarty image:edit <id> <op> k=v...
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--ops` | string |  | a JSON file with the batch, or - for standard input: \{"operations":[\{"op":"item.move","args":\{"item_id":"itm_m1n2p3q4r5","start":"2s"\}\}]\}, or only the array of \{op, args\}; base_revision, idempotency_key and dry_run may sit beside operations |
+| `--base` | integer |  | the revision the batch was planned against (default: the current one) |
+| `--key` | string |  | idempotency key |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--dry-run`.
+
+Example:
+
+```bash
+stuarty image:edit img_7k2m9x4q1b layer.add_text text="HOW IT WORKS" slot=title
+```
+
+## `image:undo`
+
+Undo the last step of the caller on an image
+
+```text
+stuarty image:undo <id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--dry-run`.
+
+Example:
+
+```bash
+stuarty image:undo img_7k2m9x4q1b
+```
+
+## `image:redo`
+
+Redo the last undone step of the caller on an image
+
+```text
+stuarty image:redo <id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--dry-run`.
+
+Example:
+
+```bash
+stuarty image:redo img_7k2m9x4q1b
+```
+
+## `image:export`
+
+Export an image document to a PNG, JPEG or WebP file
+
+```text
+stuarty image:export <id> [--format f]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--format` | string | `png` | png, jpeg or webp |
+| `--quality` | integer |  | 1 to 100, for jpeg and lossy webp |
+| `--preset` | string |  | resample to video_thumbnail, square_post or vertical_cover |
+| `--width` | integer |  | resample to this width (0 keeps the aspect) |
+| `--height` | integer |  | resample to this height (0 keeps the aspect) |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty image:export img_7k2m9x4q1b --format jpeg --quality 85
 ```
 
 ## `serve`
