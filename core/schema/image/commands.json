@@ -32,6 +32,7 @@
       "type": "object"
     },
     "description": "mode keep (default) leaves every layer where it is. mode scale multiplies the x, y, w and h of every layer by the ratio of the new size to the old, rounded half up; text sizes and stroke widths are not scaled. The size is 1 to 4096 on each side.",
+    "domain": "image",
     "errors": [
       "E_VALIDATION"
     ],
@@ -89,6 +90,7 @@
       "type": "object"
     },
     "description": "Gives a new document its size, from a preset (video_thumbnail 1280x720, square_post 1080x1080, vertical_cover 1080x1920) or from width and height (1 to 4096 each), its name and its background (a colour, default #FFFFFF, or transparent). template true makes a template whose text and image layers may be slots. Refused on a document that already has a canvas.",
+    "domain": "image",
     "errors": [
       "E_VALIDATION",
       "E_INVALID_STATE"
@@ -137,6 +139,7 @@
       "type": "object"
     },
     "description": "A fill is a rectangle the size of the canvas that can be moved and resized like any layer.",
+    "domain": "image",
     "errors": [
       "E_VALIDATION",
       "E_NOT_FOUND",
@@ -223,6 +226,7 @@
       "type": "object"
     },
     "description": "asset is the content hash of an image file already imported (media:import gives it). Without x, y, w and h the layer is the fit (contain by default, or cover) of the whole source on the canvas, centred. effective.layer_id names the layer.",
+    "domain": "image",
     "errors": [
       "E_VALIDATION",
       "E_NOT_FOUND",
@@ -324,6 +328,7 @@
       "type": "object"
     },
     "description": "w and h are pixels. x and y default to centre the shape on the canvas, fill to #FFFFFF. radius is for rounded_rect only.",
+    "domain": "image",
     "errors": [
       "E_VALIDATION",
       "E_NOT_FOUND",
@@ -539,6 +544,7 @@
       "type": "object"
     },
     "description": "The text wraps at w (default 86% of the canvas) and its box is measured, so h is the height of the text. x defaults to centre the box on the canvas and y to centre it vertically. style is a partial text style (font_family, font_weight, size, color, stroke_color, stroke_width, shadow_*, background_*, align, line_height, uppercase); max_width is not a text-layer key, w is.",
+    "domain": "image",
     "errors": [
       "E_VALIDATION",
       "E_NOT_FOUND",
@@ -604,6 +610,7 @@
       "type": "object"
     },
     "description": "to is canvas or a layer id. horizontal puts the left edge, the centre or the right edge of each layer on that of the target; vertical the top, the middle or the bottom. The box of a group is the union of its children; rotation is ignored. At least one axis.",
+    "domain": "image",
     "errors": [
       "E_VALIDATION",
       "E_NOT_FOUND",
@@ -666,6 +673,7 @@
       "type": "object"
     },
     "description": "x, y, w and h are pixels of the source and must lie inside it. The box of the layer keeps its size, so use layer.fit afterwards to keep the aspect. reset true shows the whole source again.",
+    "domain": "image",
     "errors": [
       "E_VALIDATION",
       "E_NOT_FOUND",
@@ -719,6 +727,7 @@
       "type": "object"
     },
     "description": "The copy sits just above the original, moved by dx and dy (default 0). A slot is not copied: a slot name is unique in a document. effective.layer_id names the copy.",
+    "domain": "image",
     "errors": [
       "E_VALIDATION",
       "E_NOT_FOUND",
@@ -763,6 +772,7 @@
       "type": "object"
     },
     "description": "The aspect of an image layer is that of its crop (or of the source), of a shape or a fill that of its box. The result is centred on the target. A text layer and a group are sized with layer.transform.",
+    "domain": "image",
     "errors": [
       "E_VALIDATION",
       "E_NOT_FOUND",
@@ -808,6 +818,7 @@
       "type": "object"
     },
     "description": "The group takes the place of the topmost of the layers and they keep their relative order inside it. The group has an offset (x, y, 0 at first) added to its children and its opacity multiplies theirs.",
+    "domain": "image",
     "errors": [
       "E_VALIDATION",
       "E_NOT_FOUND",
@@ -853,6 +864,7 @@
       "type": "object"
     },
     "description": "parent is a group id, or root for the top level; index is the final position among the new siblings, 0 is the bottom, and absent means on top. Without parent the layer stays in its group. A layer cannot be moved into itself or into its own descendants.",
+    "domain": "image",
     "errors": [
       "E_VALIDATION",
       "E_NOT_FOUND",
@@ -885,6 +897,7 @@
       "type": "object"
     },
     "description": "Undo puts the layer back. A group that holds a locked layer cannot be removed.",
+    "domain": "image",
     "errors": [
       "E_VALIDATION",
       "E_NOT_FOUND",
@@ -934,6 +947,7 @@
       "type": "object"
     },
     "description": "opacity is a whole percent. A locked layer accepts this command, to unlock it. slot names a template slot (a text or an image layer; the name is unique in the document) and an empty slot removes it.",
+    "domain": "image",
     "errors": [
       "E_VALIDATION",
       "E_NOT_FOUND",
@@ -991,6 +1005,7 @@
       "type": "object"
     },
     "description": "A fill layer takes only fill. A radius is valid with rounded_rect only, and changing the shape to another one removes a stored radius. An empty stroke_color removes the stroke colour.",
+    "domain": "image",
     "errors": [
       "E_VALIDATION",
       "E_NOT_FOUND",
@@ -1171,6 +1186,7 @@
       "type": "object"
     },
     "description": "style is a partial text style merged key by key; a null value removes a key and reset_style empties the stored style first. The height of the box is measured again.",
+    "domain": "image",
     "errors": [
       "E_VALIDATION",
       "E_NOT_FOUND",
@@ -1231,6 +1247,7 @@
       "type": "object"
     },
     "description": "x and y are the top left corner in pixels of the parent (the canvas, or the origin of the group); w and h the size; rotation whole degrees clockwise around the centre, -360 to 360. A group takes only x and y, which move all its children. Changing w of a text layer measures its height again unless h is given.",
+    "domain": "image",
     "errors": [
       "E_VALIDATION",
       "E_NOT_FOUND",
@@ -1265,6 +1282,7 @@
       "type": "object"
     },
     "description": "The children take the place of the group, their x and y gain the offset of the group and their opacity is multiplied by the group's (rounded half up).",
+    "domain": "image",
     "errors": [
       "E_NOT_FOUND",
       "E_TYPE_MISMATCH",
