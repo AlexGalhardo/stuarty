@@ -1452,7 +1452,7 @@ A frame is one JPEG (quality 80, 4:2:0). A sheet is one JPEG:
 | Server identity | `name` `stuarty`, `version` the binary version |
 | Capabilities | `tools` only. No resources, prompts, completions, logging, sampling, roots or elicitation (ADR-0015 item 10) |
 | `tools/list` | the 20 tools below, always in the order of the table, never paged, with `ttlMs` 3,600,000 and `cacheScope` `public` (the SDK type `Cacheable`, `mcp/protocol.go` lines 1148 to 1166; the list changes only when the binary is upgraded). |
-| Tool registration | each tool is registered with the SDK's raw `(*Server).AddTool` (`mcp/server.go` line 315) with `inputSchema` and `outputSchema` taken from the registry generator, **not** with the generic `mcp.AddTool[In, Out]`, which infers schemas from Go types and would not produce the `edit` schema of §4.4. The adapter validates `arguments` against `inputSchema` with the validator of ADR-0014 and converts a failure into `E_VALIDATION` with the `path` of the first invalid value (a failure of the `operations[].op` enum is `E_UNKNOWN_COMMAND`, §2.4 rule 5). The message names the path and the constraint, never the value (§1.2 rule 9) |
+| Tool registration | each tool is registered with the SDK's raw `(*Server).AddTool` (`mcp/server.go` line 315) with `inputSchema` and `outputSchema` taken from the registry generator, **not** with the generic `mcp.AddTool[In, Out]`, which infers schemas from Go types and would not produce the `edit` schema of §4.4. The adapter validates `arguments` against `inputSchema` with the validator of ADR-0014 and converts a failure into `E_VALIDATION` with the `path` of the first invalid value (an operation name the Service does not know is `E_UNKNOWN_COMMAND`, §2.4 rule 5). The message names the path and the constraint, never the value (§1.2 rule 9) |
 | Call result | `CallToolResult` (`Content`, `StructuredContent`, `IsError`) built as §1.3 and §1.4 say |
 | Cost | the minified `tools/list` result is at most **22,500 bytes**: at the conservative 3 bytes per token of JSON this is 7,500 tokens, the NFR-020 limit, **interim until epic 13 revises NFR-020; the author has not yet decided the new figure** (it was 21,500 bytes and 7,200 tokens until epic 15 added the 20th tool, `library`, and 19,500 bytes and 6,500 tokens until epic 06 added the 19th tool, `project_item`; raised before that from 6,000 tokens, 18,000 bytes, by D-040; before that from 17,500 bytes when `font_import` became the 16th tool, VV-024; at the 3.2 characters per token of check 2 it is 5,625 tokens). The definitions of this section measure 22,318 bytes in total (the list a client receives, 22,497) with `library` (about 1,130 bytes), `image` (whose minified definition is about 1,080 bytes) and `project_item` (about 1,100 bytes, plus `timeline_id` on nine tools and `from` on `project_create`); the integration was at 19,492 bytes with 18 tools, and shortening descriptions could not recover the 1,700 bytes of the 19th tool, nor the 1,130 of the 20th, without dropping a capability, so the cap is interim. A new parameter should still shorten a description. `edit` is 2,534 bytes (limit 2,700 since VV-122 added `clip.set_shadow` and `clip.set_outline`, raised from 2,500; each new operation name costs about 25 bytes) and the largest other tool is `view` at 1,518 (limit 1,600); `media_inspect` is 1,428 and `template` 1,315. No single tool is larger than 2,700 bytes (`edit`) or 1,600 bytes (the others). **Verified by** `TestToolDefinitionBudget` and, once per release, a count with the model vendor's token counting endpoint (if it exceeds 7,500 tokens the descriptions are shortened; no field is removed) |
 | Order | deterministic (MCP `2026-07-28` Tools: "SHOULD return tools in a deterministic order"), so prompt caches hit |
@@ -1774,10 +1774,17 @@ trashed prj_2x5c8d1f4g; restore it with project_trash restore=true
 ```json
 {
   "name": "edit",
-  "description": "Change a project. Atomic batch, one undo step. base_revision: last revision read. Times need a unit. See command_help. dry_run: check only. idempotency_key: safe retries.",
+  "description": "Change a project (project_id) or an image (domain=image, image_id). Atomic batch, one undo step. base_revision: last revision read. Times need a unit. Operation names and args: command_help. dry_run: check only. idempotency_key: safe retries.",
   "inputSchema": {
     "type": "object",
     "properties": {
+      "domain": {
+        "enum": [
+          "video",
+          "image"
+        ],
+        "default": "video"
+      },
       "project_id": {
         "type": "string",
         "pattern": "^prj_[0-9a-hjkmnp-tv-z]{10}$"
@@ -1785,6 +1792,10 @@ trashed prj_2x5c8d1f4g; restore it with project_trash restore=true
       "timeline_id": {
         "type": "string",
         "pattern": "^prj_[0-9a-hjkmnp-tv-z]{10}$"
+      },
+      "image_id": {
+        "type": "string",
+        "pattern": "^img_[0-9a-hjkmnp-tv-z]{10}$"
       },
       "base_revision": {
         "type": "integer",
@@ -1798,84 +1809,7 @@ trashed prj_2x5c8d1f4g; restore it with project_trash restore=true
           "type": "object",
           "properties": {
             "op": {
-              "enum": [
-                "project.rename",
-                "settings.set",
-                "settings.set_fps",
-                "settings.reframe",
-                "asset.remove",
-                "track.add",
-                "track.update",
-                "track.move",
-                "track.remove",
-                "track.set_caption_style",
-                "item.move",
-                "item.trim",
-                "item.slip",
-                "item.split",
-                "item.delete",
-                "item.duplicate",
-                "item.repeat",
-                "item.rename",
-                "item.set_transform",
-                "item.set_transition",
-                "item.set_audio",
-                "item.crossfade",
-                "timeline.close_gap",
-                "clip.add",
-                "audio.add",
-                "audio.duck",
-                "audio.mark_beats",
-                "clip.set_framing",
-                "clip.set_speed",
-                "clip.set_color",
-                "clip.set_blur",
-                "clip.set_chroma_key",
-                "clip.set_blend",
-                "clip.set_mask",
-                "clip.set_shadow",
-                "clip.set_outline",
-                "clip.set_flip",
-                "clip.set_effects",
-                "item.set_enabled",
-                "item.link",
-                "item.unlink",
-                "item.extract_audio",
-                "item.paste_attributes",
-                "item.freeze_frame",
-                "marker.add",
-                "marker.set",
-                "marker.remove",
-                "clip.set_filter",
-                "clip.remove_silences",
-                "text.add",
-                "text.set",
-                "text.apply_preset",
-                "shape.add",
-                "shape.set",
-                "caption.add",
-                "caption.set_words",
-                "caption.edit_word",
-                "caption.split",
-                "caption.merge",
-                "caption.set_breaks",
-                "caption.set_style",
-                "caption.from_transcript",
-                "caption.import_subtitles",
-                "caption.retime_from_clip",
-                "keyframe.set",
-                "keyframe.remove",
-                "keyframe.clear",
-                "keyframe.set_easing",
-                "animation.apply_preset",
-                "animation.list_presets",
-                "slot.mark",
-                "slot.unmark",
-                "slot.fill",
-                "template.set_info",
-                "font.add",
-                "font.remove"
-              ]
+              "type": "string"
             },
             "args": {
               "type": "object"
@@ -1898,7 +1832,6 @@ trashed prj_2x5c8d1f4g; restore it with project_trash restore=true
       }
     },
     "required": [
-      "project_id",
       "base_revision",
       "operations"
     ],
@@ -1960,9 +1893,9 @@ trashed prj_2x5c8d1f4g; restore it with project_trash restore=true
 }
 ```
 
-How the schema stays small (ADR-0015 consequences). The input schema lists the operation names as an `enum` and types `args` as a bare object. It does not embed the argument schemas of the commands. Three mechanisms make that safe:
+How the schema stays small (ADR-0015 consequences). The input schema types `op` as a string and `args` as a bare object: the operation names are not in the definition (epic 13, ADR-0043 item 2), so `tools/list` does not grow with the registry and the same `edit` serves the operations of every domain. It does not embed the argument schemas of the commands. Three mechanisms make that safe:
 
-1. The `enum` is generated from `Registry.List()` of the running build, so a name outside it fails shape validation. The adapter reports that failure as `E_UNKNOWN_COMMAND` with `op_index`, `path` `operations[<i>].op` and `details.known` (the allowed names), the same on every surface, not as `E_VALIDATION`. `asset.add` (internal) is not in the enum.
+1. The Service checks each name against the registry of the domain of the call (§4.8) and answers `E_UNKNOWN_COMMAND` with `op_index`, `path` `operations[<i>].op` and `details.known` (the allowed names), the same on every surface, not as `E_VALIDATION`. `asset.add` (internal) is not among the known names. The names are listed by `command_help` (§4.3), whose list the test `TestDiscoveryListsTheRegistry` holds equal to the registry.
 2. The adapter validates each operation's `args` against that command's schema (`Registry.Schema(name)`), and on failure returns `E_VALIDATION` with `op_index`, `path` (for example `args.start`), a message that names the path and the constraint that failed and never quotes the value (§1.2 rule 9), and `hint: "call command_help with name \"<op>\" for the schema"`. The agent learns the schema from the error at the cost of one retry, or beforehand from `command_help`.
 3. `command_help` returns one command's schema (§4.3), so the model pays for a schema only when it uses the operation.
 
@@ -2105,10 +2038,21 @@ errors: E_VALIDATION, E_INVALID_TIME, E_NOT_FOUND, E_ID_EXISTS, E_INVALID_STATE,
 ```json
 {
   "name": "history",
-  "description": "Read the change log (action=list, newest first, with actor; actor, cursor, limit only for list), or undo or redo your own latest step (action=undo or redo, one step per call). Undo skips a later change by another actor and reports it; an undo is itself a step.",
+  "description": "Read the change log (action=list, newest first, with actor; actor, cursor, limit only for list), or undo or redo your own latest step (action=undo or redo, one step per call). Undo skips a later change by another actor and reports it; an undo is itself a step. domain=image (image_id): undo or redo only.",
   "inputSchema": {
     "type": "object",
     "properties": {
+      "domain": {
+        "enum": [
+          "video",
+          "image"
+        ],
+        "default": "video"
+      },
+      "image_id": {
+        "type": "string",
+        "pattern": "^img_[0-9a-hjkmnp-tv-z]{10}$"
+      },
       "project_id": {
         "type": "string",
         "pattern": "^prj_[0-9a-hjkmnp-tv-z]{10}$"
@@ -2138,9 +2082,6 @@ errors: E_VALIDATION, E_INVALID_TIME, E_NOT_FOUND, E_ID_EXISTS, E_INVALID_STATE,
         "default": 20
       }
     },
-    "required": [
-      "project_id"
-    ],
     "additionalProperties": false
   },
   "outputSchema": {
@@ -3410,7 +3351,7 @@ A started export or import keeps running after the call returns: keep polling jo
 
 ### 4.7 What P1-AGT-002 has built, and where it differs from §4.1 to §4.6
 
-The package is `web/app/mcp` (`mcp.New`, `mcp.Handler` for `POST /mcp`, `mcp.RunStdio` for `stuarty mcp`). A method that `POST /mcp` does not know is answered with the JSON-RPC error `-32601` and the id of the request, as JSON (VV-195). The definitions of §4.2 are copied, one file each, to `web/app/mcp/definitions/`, and `TestDefinitionsMatchTheSDD` fails when a file and this section differ. The `op` enum of `edit` is cut to the commands of the registry. The SDK lists tools by name, so a receiving middleware puts `tools/list` in the order of §4.1; `tools/list` carries `ttlMs` 3,600,000 and `cacheScope` public through `ServerOptions.SetCacheable`.
+The package is `web/app/mcp` (`mcp.New`, `mcp.Handler` for `POST /mcp`, `mcp.RunStdio` for `stuarty mcp`). A method that `POST /mcp` does not know is answered with the JSON-RPC error `-32601` and the id of the request, as JSON (VV-195). The definitions of §4.2 are copied, one file each, to `web/app/mcp/definitions/`, and `TestDefinitionsMatchTheSDD` fails when a file and this section differ. The `op` of `edit` has no enum since epic 13: the operations are discovered through `command_help` (§4.8). The SDK lists tools by name, so a receiving middleware puts `tools/list` in the order of §4.1; `tools/list` carries `ttlMs` 3,600,000 and `cacheScope` public through `ServerOptions.SetCacheable`.
 
 - **Built:** `project_list`, `project_create`, `project_get`, `edit`, `command_help`, `history` (list, undo and redo), `lint`. Arguments are validated against the `inputSchema` with the validator of ADR-0014 (`santhosh-tekuri/jsonschema/v6`); a failure is `E_VALIDATION` with the path and the constraint, never the value, and a bad `operations[].op` is `E_UNKNOWN_COMMAND`. A result is the text as the one content block and the result struct as structured content without `text` and without the document of `project_get`; an error is `isError` with the text of §3.9 (no details line) and the envelope on one line, `details.diff` cut first when it exceeds 4,000 characters. The edit and error texts are shared with the CLI (`service/render.go`).
 - **`project_trash`** (`ProjectTrash`, or `ProjectRestore` with `restore` true) is registered because both operations exist in the Service and the HTTP API, so `tools/list` holds 13 tools until `JobCancel` and the template operations land (P2-AGT-001 closes the list at 15). `TestMCPTrashRestore` shows the revision unchanged after a round trip.
@@ -4236,7 +4177,7 @@ The implementation of this SDD is complete when every check below passes. "Test"
 | --- | --- | --- |
 | 1 | Every `service.Service` method has an MCP tool, CLI command and HTTP route, or is in the exceptions of §7.1; the §7.1 table equals the one derived from the code | `TestParityTableCoversTheService`, `TestDriversCoverService`, `TestEveryOperationIsReachableOnEverySurface` (`web/contract`) |
 | 2 | `tools/list` holds exactly the 20 tools of SDD-000 §1 in the order of §4.1, byte-equal across two calls, at most 22,500 bytes minified (interim until epic 13), `edit` at most 2,700 bytes and every other tool at most 1,600 (NFR-020) | `TestToolDefinitionBudget`; release checklist: token count with the vendor endpoint at most 7,500 |
-| 3 | Every `inputSchema` and `outputSchema` is valid JSON Schema 2020-12; every `inputSchema` has `additionalProperties: false`; the `edit` operation enum equals the public command names of the build; the annotations equal the table of §4.1; every output path that holds text from media or other actors carries `"x-untrusted": true` and a result with such a value has `untrusted_notice` | `TestToolSchemas` |
+| 3 | Every `inputSchema` and `outputSchema` is valid JSON Schema 2020-12; every `inputSchema` has `additionalProperties: false`; the `edit` definition lists no operation name (§4.8); the annotations equal the table of §4.1; every output path that holds text from media or other actors carries `"x-untrusted": true` and a result with such a value has `untrusted_notice` | `TestToolSchemas` |
 | 4 | The first 512 characters of `instructions` (after the generated header line is stripped) are those of §4.6, the whole is at most 2,100 bytes, it names the tools by their exact names and does not mention locks | `TestInstructionsHead` |
 | 5 | The MCP server is stateless: no `Mcp-Session-Id` is sent or read, `GET /mcp` and `DELETE /mcp` answer 405, two interleaved clients do not influence each other; revisions `2026-07-28` and `2025-11-25` both work over stdio and HTTP | `TestHTTPIsStateless` (`web/app/mcp`), `TestMCPOverStdioThroughTheBinary` (`web/cmd/app`); no single test runs both revisions with the SDK client |
 | 6 | Every text format of §3 matches its golden file: the concise and full views (including an empty project, a project with a hidden and a muted track, captions, text, shapes, audio, flags), `DescribeDiff` for all 12 change kinds and the empty diff, the edit text in its four states and the undo and redo texts, the lint report with every rule of §3.6, the history list, the media inspection (probe, transcript, silences, loudness, missing sections) and the media list, and all texts of §3.9 | `service/textview` golden tests |
