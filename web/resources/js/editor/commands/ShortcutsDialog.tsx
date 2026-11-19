@@ -209,10 +209,17 @@ export function ShortcutsDialog({
 													size="xs"
 													variant="outline"
 													data-shortcut-key={id}
-													aria-label={t("ui.editor.shortcuts.change", {
-														action: label(id),
-														key: shown,
-													})}
+													// While capturing, the name says so: a label that
+													// kept naming the old key would hide the prompt from
+													// a screen reader.
+													aria-label={
+														capturing === id
+															? t("ui.editor.shortcuts.press_key")
+															: t("ui.editor.shortcuts.change", {
+																	action: label(id),
+																	key: shown,
+																})
+													}
 													onClick={() => {
 														setConflict(null);
 														setDropped([]);
