@@ -21,7 +21,7 @@ var imageExtensions = map[string]string{export.ImagePNG: "png", export.ImageJPEG
 // ImageExport renders the current revision of a document to a file in the workspace (SDD-021 section 6): the
 // lint first (an error that blocks refuses the export), then the Rust renderer on its CPU path, then the encoder.
 func (s *svc) ImageExport(ctx context.Context, req ImageExportRequest) (*ImageExportResult, error) {
-	c, err := authorize(ctx, "ImageExport", "")
+	c, err := imageAuthorize(ctx, "ImageExport")
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +59,7 @@ func (s *svc) ImageExport(ctx context.Context, req ImageExportRequest) (*ImageEx
 			withHint("fix them with image:edit, then export again").withDetail("findings", blocking)
 	}
 
-	pix, rerr := export.RenderImage(ctx, doc, export.ImageConfig{AssetPath: s.imageAssetPath})
+	pix, rerr := export.RenderImage(ctx, doc, export.ImageConfig{AssetPath: s.imageAssetPath(ctx, c)})
 	if rerr != nil {
 		return nil, imageExportError(rerr)
 	}
@@ -178,7 +178,20 @@ func blockingFindings(doc *coreimage.Document) []map[string]string {
 }
 
 // imageAssetPath is the normalized PNG of an image of the workspace, by content hash.
-func (s *svc) imageAssetPath(hash string) (string, error) {
+// An asset the caller may not use is as missing as one that is not there.
+func (s *svc) imageAssetPath(ctx context.Context, c Caller) func(hash string) (string, error) {
+	allowed := s.imageAssetAccess(ctx, c)
+
+	return func(hash string) (string, error) {
+		if !allowed(hash) {
+			return "", fmt.Errorf("the image %s is not available to this caller", hash)
+		}
+
+		return s.preparedImagePath(hash)
+	}
+}
+
+func (s *svc) preparedImagePath(hash string) (string, error) {
 	hexDigest, ok := strings.CutPrefix(hash, "sha256:")
 	if !ok || len(hexDigest) != 64 {
 		return "", fmt.Errorf("%q is not a content hash", hash)

@@ -176,7 +176,29 @@ func (m *memImages) ByKey(_ context.Context, id, actor, key string) (ImageOpRow,
 
 type memAssets struct {
 	AssetRepo
-	rows map[string]AssetRow
+	rows     map[string]AssetRow
+	projects map[string][]ProjectAssetRow // project id to the files it holds
+}
+
+func (m memAssets) ListProjectAssets(_ context.Context, id string, _ ...ProjectAssetState) ([]ProjectAssetRow, error) {
+	return m.projects[id], nil
+}
+
+type memProjects struct {
+	ProjectRepo
+	heads []ProjectHead
+}
+
+func (m memProjects) List(_ context.Context, q ProjectQuery) ([]ProjectHead, string, error) {
+	var out []ProjectHead
+
+	for i := range m.heads {
+		if q.OwnerUserID == "" || m.heads[i].OwnerUserID != nil && *m.heads[i].OwnerUserID == q.OwnerUserID {
+			out = append(out, m.heads[i])
+		}
+	}
+
+	return out, "", nil
 }
 
 func (m memAssets) Get(_ context.Context, hash string) (AssetRow, error) {
@@ -199,12 +221,14 @@ func (t memTx) AfterCommit(func()) {}
 
 type memStore struct {
 	Store
-	images *memImages
-	assets memAssets
+	images   *memImages
+	assets   memAssets
+	projects memProjects
 }
 
-func (m *memStore) Images() ImageRepo { return m.images }
-func (m *memStore) Assets() AssetRepo { return m.assets }
+func (m *memStore) Images() ImageRepo     { return m.images }
+func (m *memStore) Projects() ProjectRepo { return m.projects }
+func (m *memStore) Assets() AssetRepo     { return m.assets }
 func (m *memStore) Write(ctx context.Context, fn func(context.Context, Tx) error) error {
 	return fn(ctx, memTx{st: m})
 }
@@ -220,7 +244,7 @@ func newImageService(t *testing.T) (*svc, string) {
 
 	st := &memStore{
 		images: &memImages{rows: map[string]*ImageRow{}, ops: map[string][]ImageOpRow{}},
-		assets: memAssets{rows: map[string]AssetRow{imgHash: {
+		assets: memAssets{projects: map[string][]ProjectAssetRow{}, rows: map[string]AssetRow{imgHash: {
 			Hash: imgHash, Kind: "image", OriginalName: "/home/me/face.png", IngestState: IngestReady,
 			Facts: AssetFacts{Width: &w, Height: &h},
 		}}},
@@ -667,4 +691,109 @@ func TestImageDescribeStaysInsideTheBudget(t *testing.T) {
 		len(d.Layers) != 120 {
 		t.Fatalf("%v %d", err, len(d.Text))
 	}
+}
+
+func networkUser(id string) context.Context {
+	return WithCaller(context.Background(), Caller{
+		Actor: "user:" + id, OwnerUserID: id, Scopes: []string{ScopeRead, ScopeEdit, ScopeMedia, ScopeRender},
+	})
+}
+
+// holdAsset makes a project of the owner hold the prepared image.
+func holdAsset(s *svc, owner string) {
+	st := s.store.(*memStore)
+	st.projects.heads = append(st.projects.heads, ProjectHead{ID: "prj_" + owner, OwnerUserID: &owner})
+	st.assets.projects["prj_"+owner] = []ProjectAssetRow{
+		{ProjectID: "prj_" + owner, AssetHash: imgHash, Name: "face.png"},
+	}
+}
+
+// In network mode an image can only be used by a user who holds it in a project: another user could otherwise
+// put a file they never imported into a document, export it and learn its name.
+func TestImageAssetOfAnotherUserIsNotUsable(t *testing.T) {
+	s, _ := newImageService(t)
+	holdAsset(s, "alice")
+
+	alice, bob := networkUser("alice"), networkUser("bob")
+	add := ops("layer.add_image", `{"asset": "`+imgHash+`", "id": "lyr_aaaaaaaaaa"}`)
+
+	ca, err := s.ImageCreate(alice, ImageCreateRequest{Width: 100, Height: 100})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cb, err := s.ImageCreate(bob, ImageCreateRequest{Width: 100, Height: 100})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = s.ImageEdit(bob, ImageEditRequest{ImageID: cb.ImageID, BaseRevision: 1, Operations: add})
+	if se := mustCode(t, err, command.CodeNotFound); strings.Contains(se.Message+se.Hint, "face.png") {
+		t.Fatalf("the name of a file of another user is not returned: %+v", se)
+	}
+
+	if _, err := s.ImageEdit(
+		alice,
+		ImageEditRequest{ImageID: ca.ImageID, BaseRevision: 1, Operations: add},
+	); err != nil {
+		t.Fatalf("the user who holds the file may use it: %v", err)
+	}
+
+	// a document that already names the file (a template shared by an administrator, an old revision) does not
+	// export it for a user who does not hold it
+	st := s.store.(*memStore)
+	st.images.rows[cb.ImageID].Document = st.images.rows[ca.ImageID].Document
+
+	_, err = s.ImageExport(bob, ImageExportRequest{ImageID: cb.ImageID})
+	if err == nil {
+		t.Fatal("bob exported the file of alice")
+	}
+}
+
+func TestImageRefusesAProjectLimitedKeyEverywhere(t *testing.T) {
+	s, _ := newImageService(t)
+	limited := WithCaller(context.Background(), Caller{
+		Actor: "key:k", ProjectID: "prj_aaaaaaaaaa", Scopes: []string{ScopeRead, ScopeEdit},
+	})
+
+	c, _ := s.ImageCreate(asActor("local:a"), ImageCreateRequest{Width: 10, Height: 10})
+	add := ops("layer.add_fill", `{"color": "#000000"}`)
+
+	calls := map[string]func() error{
+		"create":   func() error { _, err := s.ImageCreate(limited, ImageCreateRequest{Width: 10, Height: 10}); return err },
+		"list":     func() error { _, err := s.ImageList(limited, ImageListRequest{}); return err },
+		"describe": func() error { _, err := s.ImageDescribe(limited, ImageDescribeRequest{ImageID: c.ImageID}); return err },
+		"edit": func() error {
+			_, err := s.ImageEdit(limited, ImageEditRequest{ImageID: c.ImageID, BaseRevision: 1, Operations: add})
+			return err
+		},
+		"undo":   func() error { _, err := s.ImageUndo(limited, ImageStepRequest{ImageID: c.ImageID}); return err },
+		"redo":   func() error { _, err := s.ImageRedo(limited, ImageStepRequest{ImageID: c.ImageID}); return err },
+		"export": func() error { _, err := s.ImageExport(limited, ImageExportRequest{ImageID: c.ImageID}); return err },
+	}
+
+	for name, call := range calls {
+		if err := call(); err == nil {
+			t.Errorf("%s: a key limited to one project reached an image", name)
+		} else {
+			mustCode(t, err, CodeForbidden)
+		}
+	}
+}
+
+func TestImageCreateRefusesAnIDOfTheCallerInNetworkMode(t *testing.T) {
+	s, _ := newImageService(t)
+
+	if _, err := s.ImageCreate(
+		asActor("local:a"),
+		ImageCreateRequest{Width: 10, Height: 10, ID: "img_aaaaaaaaaa"},
+	); err != nil {
+		t.Fatalf("local mode takes an id: %v", err)
+	}
+
+	_, err := s.ImageCreate(networkUser("bob"), ImageCreateRequest{Width: 10, Height: 10, ID: "img_aaaaaaaaaa"})
+	mustCode(t, err, command.CodeValidation)
+
+	_, err = s.ImageCreate(networkUser("bob"), ImageCreateRequest{Width: 10, Height: 10, ID: "img_bbbbbbbbbb"})
+	mustCode(t, err, command.CodeValidation)
 }

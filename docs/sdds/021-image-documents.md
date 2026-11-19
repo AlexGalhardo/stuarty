@@ -135,7 +135,7 @@ A template is a document with `template: true` whose text and image layers may c
 - A slot with no content in the template (an empty text, an image layer that has no asset) is **required**; a slot that already has content is optional and keeps it. A required slot with no value is `E_SLOT` with `details.reason` `missing` and `details.missing` listing every slot name that lacks one, and nothing is created.
 - An image slot keeps its box and gets the asset with the crop that covers the box (`fit` `cover`, centred); a text slot keeps its box and style and is re-measured.
 
-`ImageCreate` takes `template` (an id) and `values`. A document with a slot that still has no content is not exportable: the lint says so (section 8) and `ImageExport` refuses it with `E_LINT_BLOCKING`.
+`ImageCreate` takes `template_id` and `values`. A document with a slot that still has no content is not exportable: the lint says so (section 8) and `ImageExport` refuses it with `E_LINT_BLOCKING`.
 
 ## 8. Lint
 
@@ -165,6 +165,8 @@ then the findings of the lint, one line each, errors first. When the text would 
 ## 10. Storage
 
 An image document is stored in its own tables, `image_documents` and `image_operations`, created by one migration (SDD-005 section 5.12). The epic of projects (06) reserves the item kind `image` of a production; until it is merged an image has its own id (`img_`), and the item of a project will hold that id, so no row moves. The tables follow `projects` and `operations`: the document as canonical JSON with its digest, the revision, and an append-only log of one row per batch with its inverse, diff and skipped primitives, `closed_by` for undo and redo, and the idempotency key with its stored result. The writer is serialized by the one write transaction of the store. In network mode an image has an owner and is visible to its owner and to an administrator, as a project is (SDD-007 section 4.1).
+
+**Access.** An image belongs to no project until the production exists, so a key limited to one project reaches no image: every image operation answers `E_FORBIDDEN` for it, `ImageCreate` included. In network mode the server picks the id of a new image (a request with an `id` is `E_VALIDATION`, so the answer never says that another user has an image with that id), a user sees only the images they own, and a file may be put in an image only when a project of the caller holds it, the rule of the asset library (`AssetList`): the check is made when a layer is added or a template is filled and again when the export reads the file, and a file the caller may not use is as unknown as one that does not exist, so its name is never returned.
 
 An image layer names its file by content hash. Today a file enters the content store through the media import of any project (`MediaImport` gives its `hash`); the service checks that the hash is a ready image in the store before the layer is added, and reads its dimensions from there. Importing a file straight into an image arrives with the screen (epic 28) and the production (epic 06).
 
