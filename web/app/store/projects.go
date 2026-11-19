@@ -81,7 +81,7 @@ func (r projectRepo) List(ctx context.Context, q service.ProjectQuery) ([]servic
 		where, args = append(where, "(updated_ms, id) < (?, ?)"), append(args, ms, id)
 	}
 
-	query := "SELECT " + projectHeadColumns + " FROM projects"
+	query := "SELECT " + projectHeadColumns + " FROM timelines"
 	if len(where) > 0 {
 		query += " WHERE " + strings.Join(where, " AND ")
 	}
@@ -121,7 +121,7 @@ var ErrBadCursor = service.ErrBadCursor
 // Count implements service.ProjectRepo.
 func (r projectRepo) Count(ctx context.Context, q service.ProjectQuery) (int, error) {
 	where, args := projectFilter(q)
-	query := "SELECT count(*) FROM projects"
+	query := "SELECT count(*) FROM timelines"
 	if len(where) > 0 {
 		query += " WHERE " + strings.Join(where, " AND ")
 	}
@@ -150,14 +150,16 @@ func decodeCursor(c string) (int64, string, error) {
 }
 
 func (r projectRepo) Head(ctx context.Context, id string) (service.ProjectHead, error) {
-	h, err := scanProjectHead(r.ex.QueryRowContext(ctx, "SELECT "+projectHeadColumns+" FROM projects WHERE id = ?", id))
+	h, err := scanProjectHead(
+		r.ex.QueryRowContext(ctx, "SELECT "+projectHeadColumns+" FROM timelines WHERE id = ?", id),
+	)
 	return h, mapNoRows(err)
 }
 
 func (r projectRepo) Get(ctx context.Context, id string) (service.ProjectRow, error) {
 	var doc, sha string
 	h, err := scanProjectHead(r.ex.QueryRowContext(ctx,
-		"SELECT "+projectHeadColumns+", document, doc_sha256 FROM projects WHERE id = ?", id), &doc, &sha)
+		"SELECT "+projectHeadColumns+", document, doc_sha256 FROM timelines WHERE id = ?", id), &doc, &sha)
 	if err != nil {
 		return service.ProjectRow{}, mapNoRows(err)
 	}
@@ -168,7 +170,7 @@ func (r projectRepo) Create(ctx context.Context, row service.ProjectRow) error {
 	s := row.Summary
 	_, err := r.ex.ExecContext(
 		ctx,
-		`INSERT INTO projects
+		`INSERT INTO timelines
  (id, name, state, revision, schema_version, document, doc_sha256, width, height, fps_num, fps_den,
   duration_frames, track_count, item_count, asset_count, resync_floor, created_ms, updated_ms,
   created_by, owner_user_id, trashed_ms, trashed_by)
@@ -211,7 +213,7 @@ func stateOrActive(s service.ProjectState) string {
 
 func (r projectRepo) Commit(ctx context.Context, id string, expected int64, u service.ProjectUpdate) error {
 	s := u.Summary
-	n, err := rowsAffected(r.ex.ExecContext(ctx, `UPDATE projects SET
+	n, err := rowsAffected(r.ex.ExecContext(ctx, `UPDATE timelines SET
  name = ?, schema_version = ?, document = ?, doc_sha256 = ?,
  width = ?, height = ?, fps_num = ?, fps_den = ?, duration_frames = ?,
  track_count = ?, item_count = ?, asset_count = ?, updated_ms = ?,
@@ -237,7 +239,7 @@ func (r projectRepo) SetState(ctx context.Context, id string, st service.Project
 	if st == service.ProjectTrashed {
 		n, err = rowsAffected(r.ex.ExecContext(
 			ctx,
-			"UPDATE projects SET state = 'trashed', trashed_ms = ?, trashed_by = ?, updated_ms = ? WHERE id = ?",
+			"UPDATE timelines SET state = 'trashed', trashed_ms = ?, trashed_by = ?, updated_ms = ? WHERE id = ?",
 			atMs,
 			by,
 			atMs,
@@ -246,7 +248,7 @@ func (r projectRepo) SetState(ctx context.Context, id string, st service.Project
 	} else {
 		n, err = rowsAffected(r.ex.ExecContext(
 			ctx,
-			"UPDATE projects SET state = 'active', trashed_ms = NULL, trashed_by = NULL, updated_ms = ? WHERE id = ?",
+			"UPDATE timelines SET state = 'active', trashed_ms = NULL, trashed_by = NULL, updated_ms = ? WHERE id = ?",
 			atMs,
 			id,
 		))
@@ -268,7 +270,7 @@ func (r projectRepo) Delete(ctx context.Context, id string) error {
 	); err != nil {
 		return err
 	}
-	n, err := rowsAffected(r.ex.ExecContext(ctx, "DELETE FROM projects WHERE id = ?", id))
+	n, err := rowsAffected(r.ex.ExecContext(ctx, "DELETE FROM timelines WHERE id = ?", id))
 	if err != nil {
 		return err
 	}
