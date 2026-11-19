@@ -2873,7 +2873,7 @@ Writes the keyframes or the transition of a named animation preset on one edge o
 | `slide_left` | in or out | no keyframes: `transition_<edge> = {kind: "slide_left", duration: n}` |
 | `slide_right` | in or out | no keyframes: `transition_<edge> = {kind: "slide_right", duration: n}` |
 
-`q = round(0.7 × n)`; the middle `pop` keyframe is omitted when `n = 1`. "Up" means the item moves up the frame on both edges (`y` grows downward): `fade_up` in starts lower and rises into place, `fade_up` out rises away; `fade_down` is the opposite. `zoom_in` grows the item on both edges. `pop` out is the time mirror of `pop` in. The last keyframe of an `in` preset, `(n, b)`, carries the easing in force at frame `n` before the command (the easing of the last keyframe at or before `n`, linear when there is none); the last keyframe of an `out` preset has no easing. A keyframe whose easing is linear is stored without `easing`.
+`q = round(0.7 × n)`; the middle `pop` keyframe is omitted when `n = 1`. "Up" means the item moves up the frame on both edges (`y` grows downward): `fade_up` in starts lower and rises into place, `fade_up` out rises away; `fade_down` is the opposite. `zoom_in` grows the item on both edges. `pop` out is the time mirror of `pop` in. The last keyframe of an `in` preset, `(n, b)`, carries the easing in force at frame `n` before the command (the easing of the last keyframe at or before `n`, with its `bezier` numbers when it is a curve, linear when there is none); the last keyframe of an `out` preset has no easing. A keyframe whose easing is linear is stored without `easing`.
 
 **Postconditions.**
 
