@@ -125,6 +125,8 @@ var Scopes = map[string]string{
 	"ProjectItemRestore": ScopeEdit,
 	"BriefGet":           ScopeRead,
 	"BriefSet":           ScopeEdit,
+	"BriefingQuestions":  ScopeRead,
+	"BriefingAnswer":     ScopeEdit,
 	"ImageCreate":        ScopeEdit,
 	"ImageList":          ScopeRead,
 	"ImageDescribe":      ScopeRead,

@@ -4,6 +4,8 @@ command brand:set
 command brand:show
 command brief:set
 command brief:show
+command briefing:answer
+command briefing:questions
 command bundle:export
 command bundle:import
 command command:help
@@ -84,6 +86,7 @@ route DELETE /library/memory/{}
 route GET /assets
 route GET /audit
 route GET /brand-kit
+route GET /briefing/questions
 route GET /commands
 route GET /commands/{}
 route GET /connections
@@ -178,6 +181,7 @@ route PUT /brand-kit
 route PUT /library/prompts/{}
 route PUT /library/skills/{}
 route PUT /projects/{}/brief
+route PUT /projects/{}/briefing
 tool command_help
 tool connection
 tool edit

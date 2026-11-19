@@ -120,6 +120,14 @@ var parity = []row{
 	},
 	{method: "BriefGet", tool: "project_item", command: "brief:show", route: "GET /projects/{}/brief"},
 	{method: "BriefSet", tool: "project_item", command: "brief:set", route: "PUT /projects/{}/brief"},
+	// The guided briefing (SDD-005 section 5.12.1): project_item with action briefing.
+	{
+		method:  "BriefingQuestions",
+		tool:    "project_item",
+		command: "briefing:questions",
+		route:   "GET /briefing/questions",
+	},
+	{method: "BriefingAnswer", tool: "project_item", command: "briefing:answer", route: "PUT /projects/{}/briefing"},
 	// Connections (SDD-014 section 10): the read-only tool lists or reads one; creating, removing and
 	// testing one take a credential or reach the network, so they have no tool.
 	{method: "ConnectionList", tool: "connection", command: "connection:list", route: "GET /connections"},
