@@ -321,9 +321,12 @@ Scope is `edit` unless stated. "Time" marks arguments parsed by A.4. Optional ar
 
 | Command | Arguments | Effect |
 | --- | --- | --- |
-| `keyframe.set` | `item_id`, `property`, `at` (time, absolute timeline position inside the item), `value`, `easing?` | Adds a keyframe at that frame or replaces the one there. If the property had no keyframes and `at` is not the item's first frame, a keyframe with the property's current static value is also added at the item's first frame |
+| `keyframe.set` | `item_id`, `property`, `at` (time, absolute timeline position inside the item), `value`, `easing?`, `bezier?` | Adds a keyframe at that frame or replaces the one there. If the property had no keyframes and `at` is not the item's first frame, a keyframe with the property's current static value is also added at the item's first frame |
 | `keyframe.remove` | `item_id`, `property`, `at` (time) | Removes the keyframe at that frame. Removing the last keyframe of a property writes its value into the static field |
 | `keyframe.clear` | `item_id`, `property?` | Removes all keyframes of the property, or of every property. The value at the item's first frame becomes the static value |
+| `keyframe.set_easing` | `item_id`, `property`, `at`, one of `easing?`, `bezier?` (four numbers) and `preset?` | Changes the easing of the segment that starts at an existing keyframe: a named easing, a custom cubic Bezier or a named Bezier preset (epic 31, RF-080). See C.75. `keyframe.set` takes `bezier` too |
+| `animation.apply_preset` | `item_id`, `preset`, `edge?`, `duration?`, `direction?`, `amount?` | Writes a layer animation (fade, slide, scale, pop, push in, pull out) as ordinary keyframes at the start or the end of a visual item (epic 31, RF-082). See C.76 |
+| `animation.list_presets` | none | Describes the animation presets and the named Bezier presets, for agents. Changes nothing. See C.77 |
 
 ### B.9 Templates
 
@@ -3828,11 +3831,12 @@ Adds or replaces a keyframe of one property.
 | `property` | `"x"`, `"y"`, `"scale"`, `"rotation"`, `"opacity"`, `"volume"`, `"brightness"`, `"contrast"`, `"saturation"`, `"temperature"`, `"tint"`, `"hue"`, `"mask_x"`, `"mask_y"`, `"mask_width"`, `"mask_height"`, `"mask_feather"`, `"crop_left"`, `"crop_top"`, `"crop_right"`, `"crop_bottom"` | yes | none | `volume` for `audio` items and clips of a video (not of an image); `brightness`, `contrast`, `saturation`, `temperature`, `tint` and `hue` (added by TASK-0254 and NEW-15) for clips only; `mask_x`, `mask_y`, `mask_width`, `mask_height` and `mask_feather` (VV-120) for a visual item that has a mask (`clip.set_mask`); `crop_left`, `crop_top`, `crop_right` and `crop_bottom` (VV-120) for clips only; the others for visual items |
 | `at` | time | yes | none | absolute; from the item's `start` to `start + duration` inclusive |
 | `value` | number | yes | none | valid for the property: `scale` above 0 and at most 20, `opacity` 0 to 1, `volume` 0 to 4, a colour property the range of `clip.set_color` (-1 to 1 for `brightness`, `temperature` and `tint`, 0 to 2 for `contrast` and `saturation`, -180 to 180 for `hue`), a mask or crop property the range of its static field (`mask_x`, `mask_y` 0 to 1, `mask_width`, `mask_height` 0.001 to 1, `mask_feather` 0 to 200, a crop side 0 to 1), `x`, `y`, `rotation` finite |
-| `easing` | `"linear"`, `"ease_in"`, `"ease_out"`, `"ease_in_out"`, `"hold"` | no | `"linear"` | applies from this keyframe to the next |
+| `easing` | `"linear"`, `"ease_in"`, `"ease_out"`, `"ease_in_out"`, `"hold"`, `"bezier"` | no | `"linear"` | applies from this keyframe to the next |
+| `bezier` | array of 4 numbers | when `easing` is `"bezier"` | none | `[x1, y1, x2, y2]` as in SDD-001 §3.8: `x1`, `x2` from 0 to 1, `y1`, `y2` from -2 to 3. Given with any other easing, or `"bezier"` without it, is `E_VALIDATION` (epic 31) |
 
 **Preconditions.**
 
-1. Arguments match the schema and `at` parses (`E_VALIDATION`, `E_INVALID_TIME`).
+1. Arguments match the schema and `at` parses (`E_VALIDATION`, `E_INVALID_TIME`); `bezier` goes with `easing` `"bezier"` and with nothing else.
 2. The item exists (`E_NOT_FOUND`).
 3. The property applies to the item type (`E_TYPE_MISMATCH`); a `mask_*` property needs the item to have a mask (`E_INVALID_STATE`, hint to use `clip.set_mask`).
 4. `at` lies in the inclusive range `start` to `start + duration` (`E_INVALID_TIME`, `path` `args.at`, `details.range`). A keyframe may sit at `start + duration`, because `t` ranges from 0 to `duration`.

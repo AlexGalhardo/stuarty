@@ -287,10 +287,11 @@ Keyframes animate a property over the item's duration:
 | Properties | `x`, `y`, `scale`, `rotation`, `opacity`, and `volume` for items with audio; for clips also the colour properties (`brightness`, `contrast`, `saturation`, `temperature`, `tint`, `hue`) and the crop sides `crop_left`, `crop_top`, `crop_right`, `crop_bottom` (0 to 1); for an item that has a `mask` also `mask_x`, `mask_y` (0 to 1), `mask_width`, `mask_height` (0.001 to 1) and `mask_feather` (0 to 200, a whole number once drawn). A document with a `mask_*` key and no `mask` is `V_KEYFRAMES` |
 | `t` | frame relative to the item's `start`, 0 to `duration` |
 | `value` | a number valid for the property |
-| `easing` | `"linear"` (default), `"ease_in"`, `"ease_out"`, `"ease_in_out"`, `"hold"`; applies from this keyframe to the next |
+| `easing` | `"linear"` (default), `"ease_in"`, `"ease_out"`, `"ease_in_out"`, `"hold"` or `"bezier"` (epic 31, RF-080); applies from this keyframe to the next. A document written before `bezier` existed has none of it and opens unchanged: a missing easing is linear |
+| `bezier` | array of four numbers `[x1, y1, x2, y2]`, present exactly when `easing` is `"bezier"` (otherwise `V_KEYFRAMES`): the two inner control points of a cubic Bezier curve from (0, 0) to (1, 1), as in CSS `cubic-bezier`. `x1` and `x2` are from 0 to 1, so time never runs backwards; `y1` and `y2` are from -2 to 3, so a curve can overshoot or pull back. Numbers have at most 3 decimals. The curve is evaluated only by the core (SDD-004 §3.1); an executor receives the sampled values. The commands write the named presets of SDD-002 C.75 as their four numbers, so a curve made from a preset stays editable |
 | Ordering | strictly increasing `t` within a property; at most 100 keyframes per property |
 
-When a property has keyframes they define its value: before the first keyframe the first value holds, after the last the last value holds, and the item's static field for that property is ignored. The exact interpolation formulas are in SDD-004.
+When a property has keyframes they define its value: before the first keyframe the first value holds, after the last the last value holds, and the item's static field for that property is ignored. The exact interpolation formulas are in SDD-004. A curve that overshoots can take the interpolated value outside the range of the property (an opacity of 1.1, a crop side of -0.05): the plan keeps the sampled value inside the range of the property, so no executor sees an invalid number and the stored keyframes stay valid (SDD-004 §3.1).
 
 ### 3.9 Project fonts
 
