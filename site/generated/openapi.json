@@ -23,6 +23,48 @@
       }
     },
     "schemas": {
+      "Adjust": {
+        "properties": {
+          "brightness": {
+            "type": "integer"
+          },
+          "contrast": {
+            "type": "integer"
+          },
+          "curve": {
+            "items": {
+              "$ref": "#/components/schemas/image.CurvePoint"
+            },
+            "type": "array"
+          },
+          "exposure": {
+            "type": "integer"
+          },
+          "hue": {
+            "type": "integer"
+          },
+          "levels": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Levels"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "saturation": {
+            "type": "integer"
+          },
+          "temperature": {
+            "type": "integer"
+          },
+          "tint": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
       "ApprovalListResult": {
         "properties": {
           "next_cursor": {
@@ -1617,6 +1659,77 @@
         },
         "type": "object"
       },
+      "Filter": {
+        "properties": {
+          "amount": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "blur": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "color": {
+            "type": "string"
+          },
+          "dx": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "dy": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "kind": {
+            "type": "string"
+          },
+          "opacity": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "radius": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "seed": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "size": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "softness": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "width": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "type": "object"
+      },
       "Finding": {
         "properties": {
           "code": {
@@ -3003,7 +3116,20 @@
       },
       "Layer": {
         "properties": {
+          "adjust": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Adjust"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "asset": {
+            "type": "string"
+          },
+          "blend": {
             "type": "string"
           },
           "children": {
@@ -3025,6 +3151,12 @@
           "fill": {
             "type": "string"
           },
+          "filters": {
+            "items": {
+              "$ref": "#/components/schemas/Filter"
+            },
+            "type": "array"
+          },
           "h": {
             "type": "integer"
           },
@@ -3036,6 +3168,16 @@
           },
           "locked": {
             "type": "boolean"
+          },
+          "mask": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/image.Mask"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "name": {
             "type": "string"
@@ -3087,6 +3229,20 @@
             "type": "integer"
           },
           "y": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "Levels": {
+        "properties": {
+          "black": {
+            "type": "integer"
+          },
+          "gamma": {
+            "type": "integer"
+          },
+          "white": {
             "type": "integer"
           }
         },
@@ -3540,6 +3696,9 @@
           },
           "invert": {
             "type": "boolean"
+          },
+          "radius": {
+            "type": "integer"
           },
           "shape": {
             "type": "string"
@@ -10630,6 +10789,49 @@
         "properties": {
           "h": {
             "type": "integer"
+          },
+          "w": {
+            "type": "integer"
+          },
+          "x": {
+            "type": "integer"
+          },
+          "y": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "image.CurvePoint": {
+        "properties": {
+          "x": {
+            "type": "integer"
+          },
+          "y": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "image.Mask": {
+        "properties": {
+          "feather": {
+            "type": "integer"
+          },
+          "h": {
+            "type": "integer"
+          },
+          "invert": {
+            "type": "boolean"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "radius": {
+            "type": "integer"
+          },
+          "source": {
+            "type": "string"
           },
           "w": {
             "type": "integer"
