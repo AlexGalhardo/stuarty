@@ -52,6 +52,9 @@ func Pages(d *httpapi.Deps) func(r *router.Router, app *vukem.App) error {
 		// The home and the sections that have no page of their own yet (dashboard.go).
 		dashboardPages(r)
 
+		// Edit Image, the image editor (epic 28, image_pages.go).
+		imagePages(r)
+
 		r.Get("/projects", func(c *web.Ctx) error { return projectsPage(c, d) }).Name("projects.index")
 		r.Post("/projects", func(c *web.Ctx) error { return projectCreate(c, d) }).Name("projects.store")
 

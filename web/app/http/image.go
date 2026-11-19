@@ -3,6 +3,8 @@ package httpapi
 import (
 	"context"
 	"encoding/json"
+	"os"
+	"strconv"
 
 	"github.com/AlexGalhardo/stuarty/core/command"
 	coreimage "github.com/AlexGalhardo/stuarty/core/image"
@@ -175,4 +177,73 @@ func (h *apiHandler) registerImages() {
 		return h.imageStep(c, in, h.Service.ImageRedo)
 	})
 	register(h, "images.export", h.imageExport)
+	register(h, "images.frame", h.imagesFrame)
+	register(h, "images.history", h.imagesHistory)
+	register(h, "images.file", h.imagesFile)
+}
+
+// The three reads of the image editor screen (SDD-012 section 24.3): the picture, the log and a file that an
+// export wrote. They are HTTP only; the rules and the rendering are in the Service.
+
+type imageFrameIn struct {
+	ID    string `json:"id"              validate:"required"`
+	Width int    `json:"width,omitempty"                     doc:"Pixels, 16 to 4096; default the canvas width."`
+	Rev   int64  `json:"rev,omitempty"                       doc:"Only a cache key of the caller: the answer is always the current revision."`
+}
+
+type imageHistoryIn struct {
+	ID    string `json:"id"              validate:"required"`
+	Limit int    `json:"limit,omitempty"                     doc:"1 to 100; default 30."`
+}
+
+type imageFileIn struct {
+	ID   string `json:"id"   validate:"required"`
+	Name string `json:"name" validate:"required" doc:"The file name ImageExport returned: <revision>-<12 hex>.<png|jpg|webp>."`
+}
+
+// imagesFrame is GET /images/{id}/frame: the PNG of the current revision, never cached by a proxy.
+func (h *apiHandler) imagesFrame(c *web.Ctx, in imageFrameIn) (noIn, error) {
+	res, err := h.Service.ImageFrame(c.Context(), service.ImageFrameRequest{ImageID: in.ID, Width: in.Width})
+	if err != nil {
+		return noIn{}, err
+	}
+
+	revisionHeader(c, res.Revision)
+	c.SetHeader("X-Vukem-Image-Width", strconv.Itoa(res.Width))
+	c.SetHeader("X-Vukem-Image-Height", strconv.Itoa(res.Height))
+	c.SetHeader("Cache-Control", "private, no-cache")
+	c.SetHeader("Content-Type", res.MIME)
+
+	_, werr := c.Writer().Write(res.Image)
+
+	return noIn{}, werr
+}
+
+func (h *apiHandler) imagesHistory(c *web.Ctx, in imageHistoryIn) (service.ImageHistoryResult, error) {
+	res, err := h.Service.ImageHistory(c.Context(), service.ImageHistoryRequest{ImageID: in.ID, Limit: in.Limit})
+	if res != nil {
+		revisionHeader(c, res.Revision)
+	}
+
+	return deref(res), err
+}
+
+// imagesFile is GET /images/{id}/exports/{name}: the file as a download, with the Range support of http.ServeContent.
+func (h *apiHandler) imagesFile(c *web.Ctx, in imageFileIn) (noIn, error) {
+	f, err := h.Service.ImageFile(c.Context(), service.ImageFileRequest{ImageID: in.ID, Name: in.Name})
+	if err != nil {
+		return noIn{}, err
+	}
+
+	hd := c.Writer().Header()
+	hd.Set("Content-Type", f.ContentType)
+	hd.Set("Content-Disposition", `attachment; filename="`+f.DownloadName+`"`)
+	hd.Set("Cache-Control", "private, max-age="+strconv.Itoa(f.MaxAge)+", immutable")
+	hd.Set("ETag", f.ETag)
+
+	if err := c.File(os.DirFS(string(h.Workspace)), f.Path); err != nil {
+		return noIn{}, err
+	}
+
+	return noIn{}, nil
 }
