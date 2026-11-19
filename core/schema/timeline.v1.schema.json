@@ -688,6 +688,10 @@
           "minLength": 1,
           "type": "string"
         },
+        "timeline": {
+          "pattern": "^prj_[0-9a-hjkmnp-tv-z]{10}$",
+          "type": "string"
+        },
         "tint": {
           "maximum": 1,
           "minimum": -1,
@@ -709,7 +713,8 @@
             "audio",
             "text",
             "caption",
-            "shape"
+            "shape",
+            "composition"
           ],
           "type": "string"
         },

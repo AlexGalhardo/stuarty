@@ -323,6 +323,7 @@
       "caption.set_words",
       "caption.split",
       "clip.add",
+      "clip.add_composition",
       "clip.remove_silences",
       "clip.replace_media",
       "clip.set_blend",
