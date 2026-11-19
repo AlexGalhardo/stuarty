@@ -681,8 +681,8 @@ func TestSkillImportRefusesTooMany(t *testing.T) {
 	importErr(t, err)
 }
 
-// A header that declares a small size cannot make the read inflate past the limits.
-func TestSkillImportArchiveLimitsHoldAgainstALyingHeader(t *testing.T) {
+// SDD-007 T-47: a header that declares a small size cannot make the read inflate past the limits.
+func TestSecurity_T47_ArchiveLimitsHoldAgainstALyingHeader(t *testing.T) {
 	t.Parallel()
 
 	payload := bytes.Repeat([]byte("A"), 4<<20)
