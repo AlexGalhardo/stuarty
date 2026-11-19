@@ -226,6 +226,7 @@ type Filter struct {
 	State       string // empty means every state
 	ProjectID   string // a key limited to one project
 	OwnerUserID string // network mode, a caller who is not an administrator
+	Actor       string // the requests one actor submitted
 	Offset      int
 	Limit       int
 }
@@ -287,6 +288,8 @@ type Store interface {
 	Spent(ctx context.Context, q SpentQuery) (int64, error)
 	// Totals is the spend per day, connection and project, from fromDay (inclusive) on.
 	Totals(ctx context.Context, fromDay string) ([]Total, error)
+	// Reserved reports whether a job has a ledger entry that still counts as reserved.
+	Reserved(ctx context.Context, jobID string) (bool, error)
 }
 
 // Day is the UTC date a ledger entry belongs to.

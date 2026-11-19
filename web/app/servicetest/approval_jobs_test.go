@@ -575,14 +575,14 @@ func TestJobApproval_ScopeAndLimits(t *testing.T) {
 		t.Errorf("a missing project = %v, want E_NOT_FOUND", err)
 	}
 
-	for range service.MaxPendingApprovals {
+	for range service.MaxPendingPerSubmitter {
 		if _, err := e.submit(e.as(token), project); err != nil {
 			t.Fatal(err)
 		}
 	}
 
 	if _, err := e.submit(e.as(token), project); code(err) != "E_LIMIT_EXCEEDED" {
-		t.Errorf("the 201st waiting request = %v, want E_LIMIT_EXCEEDED", err)
+		t.Errorf("the 51st waiting request = %v, want E_LIMIT_EXCEEDED", err)
 	}
 }
 
