@@ -412,6 +412,12 @@ func TestImageFlow(t *testing.T) {
 
 	_, err = s.ImageExport(ctx, ImageExportRequest{ImageID: id, Width: -1})
 	mustCode(t, err, command.CodeValidation)
+
+	// a quality out of range is the caller's mistake with a preset as without one
+	_, err = s.ImageExport(ctx, ImageExportRequest{ImageID: id, Format: "jpeg", Preset: "square_post", Quality: 101})
+	if se := mustCode(t, err, command.CodeValidation); se.Path != "quality" {
+		t.Fatalf("%+v", se)
+	}
 }
 
 func TestImageCreationIsNotUndone(t *testing.T) {
