@@ -12,7 +12,7 @@ test.describe("preview-executor-fallback", () => {
 		request,
 		browserName,
 	}) => {
-		test.skip(noVideoDecode(browserName), NO_VIDEO_DECODE_REASON);
+		test.skip(noVideoDecode(browserName), NO_VIDEO_DECODE_REASON); // verify:env-skip the browser cannot decode the proxy
 		const lines: string[] = [];
 		page.on("console", (message) => {
 			if (message.text().startsWith("preview:")) lines.push(message.text());
@@ -43,7 +43,7 @@ test.describe("preview-executor-fallback", () => {
 		request,
 		browserName,
 	}) => {
-		test.skip(noVideoDecode(browserName), NO_VIDEO_DECODE_REASON);
+		test.skip(noVideoDecode(browserName), NO_VIDEO_DECODE_REASON); // verify:env-skip the browser cannot decode the proxy
 		await page.route("**/*.wasm", (route) => route.abort());
 		const seeded = await seedProject(request, {
 			tracks: 1,
@@ -66,7 +66,7 @@ test.describe("preview-executor-fallback", () => {
 		request,
 		browserName,
 	}) => {
-		test.skip(noVideoDecode(browserName), NO_VIDEO_DECODE_REASON);
+		test.skip(noVideoDecode(browserName), NO_VIDEO_DECODE_REASON); // verify:env-skip the browser cannot decode the proxy
 		const seeded = await seedProject(request, {
 			tracks: 1,
 			perTrack: 1,

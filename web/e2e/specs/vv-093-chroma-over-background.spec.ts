@@ -12,7 +12,7 @@ for (const executor of ["rust", "pixi"] as const) {
 		request,
 		browserName,
 	}) => {
-		test.skip(noVideoDecode(browserName), NO_VIDEO_DECODE_REASON);
+		test.skip(noVideoDecode(browserName), NO_VIDEO_DECODE_REASON); // verify:env-skip the browser cannot decode the proxy
 		const seeded = await seedProject(request, {
 			// The first track is the bottom one: the blue background, then the green clip.
 			files: [solidClip("blue"), solidClip("green")],
