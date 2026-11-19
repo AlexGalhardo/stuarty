@@ -160,6 +160,7 @@ const STATUS_NUMBERS: Record<string, number> = {
 	StatusTooManyRequests: 429,
 	StatusClientClosed: 499,
 	StatusInternalServerError: 500,
+	StatusBadGateway: 502,
 	StatusServiceUnavailable: 503,
 };
 

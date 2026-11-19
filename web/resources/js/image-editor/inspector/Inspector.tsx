@@ -22,6 +22,7 @@ import {
 	TextField,
 	ToggleField,
 } from "./fields";
+import LookFields from "./LookFields";
 import { replacePhoto } from "./replace";
 
 const WEIGHTS = [100, 200, 300, 400, 500, 600, 700, 800, 900];
@@ -304,6 +305,7 @@ function LayerFields({
 				</div>
 			</Section>
 			<AlignFields doc={doc} layers={[layer]} />
+			{!group && <LookFields doc={doc} layer={layer} />}
 			{layer.kind === "image" && <ImageFields doc={doc} layer={layer} />}
 			{layer.kind === "text" && <TextFields layer={layer} />}
 			{(layer.kind === "shape" || layer.kind === "fill") && (

@@ -151,6 +151,13 @@ func colorMatrixAt(it *timeline.Item, r int) *[12]float64 {
 	temp, tint, hue := property(it, "temperature", it.Temperature, fr), property(it, "tint", it.Tint, fr),
 		property(it, "hue", it.Hue, fr)
 
+	return ColorMatrix(b, k, s, temp, tint, hue)
+}
+
+// ColorMatrix is the matrix H×S×C×G of SDD-004 §3.5 for a brightness, a contrast, a saturation, a temperature,
+// a tint and a hue (degrees), or nil when all are neutral (0, 1, 1, 0, 0, 0). core/image uses it for the
+// adjustments of an image layer.
+func ColorMatrix(b, k, s, temp, tint, hue float64) *[12]float64 {
 	if b == 0 && k == 1 && s == 1 && temp == 0 && tint == 0 && hue == 0 {
 		return nil
 	}

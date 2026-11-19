@@ -8,21 +8,21 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { code, esc, page, table } from "./reference-md.ts";
 
-type Shortcut = { id: string; keys: string; aliases?: string; action: string };
+type Shortcut = { id: string; keys: string; classic?: string; aliases?: string; action: string; fixed?: true };
 type Keymap = { SHORTCUTS: readonly Shortcut[]; displayCombo: (combo: string, mac: boolean) => string; BINDING_IDS: readonly string[] };
 
-export type ShortcutRow = { id: string; label: string; keys: string; aliases?: string; rebindable: boolean };
+export type ShortcutRow = { id: string; label: string; keys: string; classic?: string; aliases?: string; rebindable: boolean };
 
 const GROUPS: { title: string; ids: string[] }[] = [
-	{ title: "Play and move the playhead", ids: ["play_pause", "step_frame", "step_second", "go_to_edge", "next_cut", "shuttle"] },
-	{ title: "Markers and range", ids: ["marker", "next_marker", "range_in_out", "range_select", "range_clear"] },
+	{ title: "Play and move the playhead", ids: ["play_pause", "shuttle_back", "pause", "shuttle_play", "step_back", "step_forward", "step_second_back", "step_second_forward", "go_start", "go_end", "prev_cut", "next_cut"] },
+	{ title: "Markers and range", ids: ["marker", "prev_marker", "next_marker", "range_in", "range_out", "range_select", "range_clear"] },
 	{
 		title: "Cut and arrange",
-		ids: ["tool", "split", "split_all", "trim_start", "trim_end", "slide", "roll", "slip", "select_side", "select_all", "delete", "ripple_delete", "duplicate", "copy", "cut", "paste", "rename", "toggle_enabled", "link", "extract_audio", "volume_up", "volume_down"],
+		ids: ["tool_blade", "tool_select", "split", "split_all", "trim_start", "trim_end", "slide_back", "slide_forward", "roll_back", "roll_forward", "slip_back", "slip_forward", "select_left", "select_right", "select_all", "delete", "ripple_delete", "duplicate", "copy", "cut", "paste", "rename", "toggle_enabled", "link", "extract_audio", "copy_attributes", "paste_attributes", "volume_up", "volume_down"],
 	},
 	{ title: "Add, import and export", ids: ["add_caption", "add_text", "import", "export"] },
-	{ title: "History, zoom and panels", ids: ["undo", "redo", "redo_alt", "zoom_in", "zoom_out", "zoom_fit", "zoom_wheel", "preview_zoom", "toggle_snap", "keyframe_panel", "toggle_panel"] },
-	{ title: "The editor", ids: ["palette", "find", "save", "cancel", "next_landmark", "grid_keys", "cheat_sheet"] },
+	{ title: "History, zoom and panels", ids: ["undo", "redo", "zoom_in", "zoom_out", "zoom_fit", "zoom_wheel", "scroll", "preview_fit", "preview_zoom_in", "preview_zoom_out", "toggle_snap", "toggle_magnet", "keyframe_panel", "speed_curve", "panel_library", "panel_inspector", "panel_history"] },
+	{ title: "The editor", ids: ["palette", "find", "save", "cancel", "next_landmark", "prev_landmark", "grid_keys", "cheat_sheet"] },
 ];
 
 export async function readKeymap(root: string): Promise<{ keymap: Keymap; labels: Record<string, string> }> {
@@ -37,7 +37,7 @@ export function shortcutRows(keymap: Keymap, labels: Record<string, string>): Sh
 	return keymap.SHORTCUTS.map((s) => {
 		const label = labels[s.id];
 		if (!label) throw new Error(`shortcuts: row "${s.id}" of keymap.ts has no ui.editor.shortcuts.rows.${s.id} label in en.json`);
-		return { id: s.id, label, keys: s.keys, aliases: s.aliases, rebindable: keymap.BINDING_IDS.includes(s.id) };
+		return { id: s.id, label, keys: s.keys, classic: s.classic, aliases: s.aliases, rebindable: keymap.BINDING_IDS.includes(s.id) };
 	});
 }
 
@@ -61,11 +61,12 @@ export function shortcutsPage(keymap: Keymap, labels: Record<string, string>): s
 		.filter((g) => g.rows.length > 0)
 		.map((g) => {
 			const body = table(
-				["Does", "Windows and Linux", "macOS", "Also"],
+				["Does", "Windows and Linux", "macOS", "Classic preset", "Also"],
 				g.rows.map((r) => [
 					esc(r.label) + (r.rebindable ? " (can be changed)" : ""),
 					keyCells(r.keys, false, keymap.displayCombo),
 					keyCells(r.keys, true, keymap.displayCombo),
+					r.classic ? keyCells(r.classic, false, keymap.displayCombo) : "same",
 					r.aliases ? keyCells(r.aliases, false, keymap.displayCombo) : "",
 				]),
 			);
@@ -77,6 +78,7 @@ export function shortcutsPage(keymap: Keymap, labels: Record<string, string>): s
 		"Every shortcut of the editor, generated from its keymap, with the keys for Windows, Linux and macOS.",
 		[
 			"This list is generated from the keymap of the editor, the same table the cheat sheet shows when you press `?`, so it always matches the version of the editor it was built from. `Mod` is `Ctrl` on Windows and Linux and `Cmd` on macOS; the two columns spell it out. A shortcut never fires while you type in a field, except `Mod+K`.",
+			"The Windows, Linux and macOS columns are the **Short video** preset, close to the most used short-video editor, which is the default. The **Classic** column lists the keys that differ in the preset of a traditional timeline editor; where it says \"same\" the key is the one of the first preset. You choose the preset and change any key in the shortcuts dialog (`?`).",
 			"For how to change a key and how the command palette reaches every command, see [Keyboard shortcuts](/docs/guide/keyboard-shortcuts).",
 			...sections,
 		].join("\n\n"),

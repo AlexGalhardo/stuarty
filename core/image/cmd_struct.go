@@ -396,9 +396,13 @@ func applyRemove(c *command.Context, d *Document, a *layerArgs) error {
 			WithHint("Unlock the layers inside with layer.set first.").WithPath("args.layer_id")
 	}
 
+	gone := map[string]bool{}
+	collectIDs(l, gone)
+
 	at, _ := locate(d, l.ID)
 	removeAt(at)
 	pruneAssets(d)
+	dropMasksFrom(d, gone)
 
 	c.SetEffective("layer_id", a.LayerID)
 

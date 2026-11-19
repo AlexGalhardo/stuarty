@@ -8,6 +8,7 @@ use crate::chroma::ChromaKeySpec;
 use crate::compose::{OutlineSpec, ShadowSpec, parse_colour};
 use crate::effects::{Direction, Effect, FrameInfo, Transition, TransitionKind};
 use crate::error::{Error, Reason};
+use crate::filters::FilterOp;
 use crate::grade::{CurvePoint, GradeSpec, HSL_RANGES, HslBand, Wheel};
 use crate::json::{JsonError, Value, parse};
 use crate::mask::{MaskShape, MaskSpec};
@@ -26,6 +27,10 @@ pub const MAX_ID_BYTES: usize = 64;
 pub const MAX_EFFECTS: usize = 6;
 /// The most points of one tone curve (SDD-001 section 3.5).
 pub const MAX_CURVE_POINTS: usize = 8;
+/// The most filters on one layer (SDD-013 section 3.11.3).
+pub const MAX_FILTERS: usize = 8;
+/// The entries of the tone table of a layer (SDD-013 section 3.11.1).
+pub const TONE_LEN: usize = 256;
 
 /// The frame to write.
 #[derive(Clone, Debug, PartialEq)]
@@ -53,6 +58,14 @@ pub struct LutRef {
 	pub intensity: f64,
 }
 
+/// The mask of a layer from the alpha of another layer of the plan (SDD-013 section 3.11.4).
+#[derive(Clone, Debug, PartialEq)]
+pub struct ClipSpec {
+	/// The item id of the layer that gives the alpha.
+	pub source: String,
+	pub invert: bool,
+}
+
 /// One layer of the plan, as the renderer reads it.
 #[derive(Clone, Debug, PartialEq)]
 pub struct LayerSpec {
@@ -78,6 +91,13 @@ pub struct LayerSpec {
 	pub transition: Option<Transition>,
 	pub shadow: Option<ShadowSpec>,
 	pub outline: Option<OutlineSpec>,
+	/// The tone table, before the colour matrix (SDD-013 section 3.11.1).
+	pub tone: Option<Box<[u8; TONE_LEN]>>,
+	/// The ordered filters, after the blur (SDD-013 section 3.11.3).
+	pub filters: Vec<FilterOp>,
+	pub clip: Option<ClipSpec>,
+	/// The layer is read by a clip and drawn by nobody.
+	pub stencil: bool,
 }
 
 /// A decoded render input.
@@ -382,9 +402,10 @@ fn mask(v: Option<Value>) -> Result<Option<MaskSpec>, Error> {
 	let shape = match f.string("shape")?.as_str() {
 		"rect" => MaskShape::Rect,
 		"ellipse" => MaskShape::Ellipse,
+		"rounded_rect" => MaskShape::RoundedRect,
 		other => {
 			return Err(invalid(format!(
-				"mask: shape {:?} is not rect or ellipse",
+				"mask: shape {:?} is not rect, rounded_rect or ellipse",
 				truncate(other)
 			)));
 		}
@@ -402,9 +423,109 @@ fn mask(v: Option<Value>) -> Result<Option<MaskSpec>, Error> {
 		height: f.num("height")?,
 		feather: f.num_or("feather", 0.0)?,
 		invert,
+		radius: f.num_or("radius", 0.0)?,
 	};
 	f.finish()?;
 	Ok(Some(spec))
+}
+
+fn tone(v: Option<Value>) -> Result<Option<Box<[u8; TONE_LEN]>>, Error> {
+	let items = match v {
+		None | Some(Value::Null) => return Ok(None),
+		Some(Value::Arr(items)) if items.len() == TONE_LEN => items,
+		Some(_) => return Err(invalid("layer: tone is not 256 numbers")),
+	};
+	let mut out = Vec::with_capacity(TONE_LEN);
+	for it in items {
+		let n = as_int(it, "layer", "tone")?;
+		if !(0..=255).contains(&n) {
+			return Err(invalid("layer: a tone entry is not 0 to 255"));
+		}
+		out.push(n as u8);
+	}
+	let table: Box<[u8; TONE_LEN]> = out
+		.into_boxed_slice()
+		.try_into()
+		.map_err(|_| invalid("layer: tone is not 256 numbers"))?;
+	Ok(Some(table))
+}
+
+fn clip(v: Option<Value>) -> Result<Option<ClipSpec>, Error> {
+	let Some(v) = v.filter(|v| !matches!(v, Value::Null)) else {
+		return Ok(None);
+	};
+	let mut f = Fields::of(v, "clip")?;
+	let source = id(f.string("source")?, "clip: source")?;
+	let invert = match f.take("invert") {
+		None | Some(Value::Null) => false,
+		Some(Value::Bool(b)) => b,
+		Some(_) => return Err(invalid("clip: invert is not a boolean")),
+	};
+	f.finish()?;
+	Ok(Some(ClipSpec { source, invert }))
+}
+
+fn filters(v: Option<Value>) -> Result<Vec<FilterOp>, Error> {
+	let items = match v {
+		None | Some(Value::Null) => return Ok(Vec::new()),
+		Some(Value::Arr(items)) => items,
+		Some(_) => return Err(invalid("layer: filters is not an array")),
+	};
+	if items.len() > MAX_FILTERS {
+		return Err(limit("render_filters"));
+	}
+	items.into_iter().map(filter).collect()
+}
+
+fn filter(v: Value) -> Result<FilterOp, Error> {
+	let mut f = Fields::of(v, "filter")?;
+	let kind = f.string("kind")?;
+	let op = match kind.as_str() {
+		"matrix" => match matrix(f.take("matrix"), "matrix")? {
+			Some(m) => FilterOp::Matrix(m),
+			None => return Err(invalid("filter: matrix is missing")),
+		},
+		"blur" => FilterOp::Blur {
+			sigma: f.num_or("sigma", 0.0)?,
+		},
+		"sharpen" => FilterOp::Sharpen {
+			amount: f.num_or("amount", 0.0)?,
+			radius: f.num_or("radius", 0.0)?,
+		},
+		"vignette" => FilterOp::Vignette {
+			amount: f.num_or("amount", 0.0)?,
+			softness: f.num_or("softness", 0.0)?,
+		},
+		"grain" => FilterOp::Grain {
+			amount: f.num_or("amount", 0.0)?,
+			size: f.num_or("size", 0.0)?,
+			seed: f.opt_int("seed")?.unwrap_or(0),
+		},
+		"shadow" => FilterOp::Shadow(ShadowSpec {
+			color: f.string("color")?,
+			opacity: f.num_or("opacity", 0.0)?,
+			dx: f.num_or("dx", 0.0)?,
+			dy: f.num_or("dy", 0.0)?,
+			blur: f.num_or("blur", 0.0)?,
+		}),
+		"stroke" => FilterOp::Stroke(OutlineSpec {
+			color: f.string("color")?,
+			width: f.num_or("width", 0.0)?,
+		}),
+		"outer_glow" => FilterOp::OuterGlow {
+			color: f.string("color")?,
+			radius: f.num_or("radius", 0.0)?,
+			amount: f.num_or("amount", 0.0)?,
+		},
+		other => {
+			return Err(invalid(format!(
+				"filter: kind {:?} is not a filter",
+				truncate(other)
+			)));
+		}
+	};
+	f.finish()?;
+	Ok(op)
 }
 
 fn effects(v: Option<Value>) -> Result<Vec<Effect>, Error> {
@@ -709,6 +830,10 @@ fn decode_layer(v: Value) -> Result<LayerSpec, Error> {
 		transition: transition(f.take("transition"))?,
 		shadow: shadow(f.take("shadow"))?,
 		outline: outline(f.take("outline"))?,
+		tone: tone(f.take("tone"))?,
+		filters: filters(f.take("filters"))?,
+		clip: clip(f.take("clip"))?,
+		stencil: flag(f.take("stencil"), "stencil")?,
 		item,
 	};
 	f.finish()?;
@@ -862,6 +987,13 @@ mod tests {
 			("screen", BlendMode::Screen),
 			("overlay", BlendMode::Overlay),
 			("add", BlendMode::Add),
+			("soft_light", BlendMode::SoftLight),
+			("hard_light", BlendMode::HardLight),
+			("darken", BlendMode::Darken),
+			("lighten", BlendMode::Lighten),
+			("color_dodge", BlendMode::ColorDodge),
+			("color_burn", BlendMode::ColorBurn),
+			("difference", BlendMode::Difference),
 		] {
 			let r = decode(with(&format!("\"{name}\"")).as_bytes()).unwrap();
 			assert_eq!(r.layers[0].blend, mode, "{name}");
@@ -870,7 +1002,7 @@ mod tests {
 			decode(with("null").as_bytes()).unwrap().layers[0].blend,
 			BlendMode::Normal
 		);
-		assert_eq!(reason(&with("\"darken\"")), Reason::InvalidPlan);
+		assert_eq!(reason(&with("\"dissolve\"")), Reason::InvalidPlan);
 		assert_eq!(reason(&with("3")), Reason::InvalidPlan);
 	}
 
@@ -989,6 +1121,7 @@ mod tests {
 				height: 0.6,
 				feather: 4.0,
 				invert: true,
+				radius: 0.0,
 			})
 		);
 		let r = decode(with(r#"{"shape":"rect","x":0,"y":0,"width":1,"height":1}"#).as_bytes())
@@ -1043,5 +1176,92 @@ mod tests {
 			reason(&bm.replace("\"kind\":\"text\"", "\"kind\":\"gif\"")),
 			Reason::UnsupportedLayer
 		);
+	}
+
+	#[test]
+	fn reads_the_look_of_an_image_layer() {
+		let tone: Vec<String> = (0..256).map(|v| (255 - v).to_string()).collect();
+		let layer = format!(
+			r##","tone":[{}],"stencil":true,"clip":{{"source":"itm_b","invert":true}},
+			"filters":[{{"kind":"matrix","matrix":[1,0,0,0,0,1,0,0,0,0,1,0]}},{{"kind":"blur","sigma":4}},
+			{{"kind":"sharpen","amount":1.5,"radius":2}},{{"kind":"vignette","amount":0.5,"softness":0.5}},
+			{{"kind":"grain","amount":0.3,"size":2,"seed":7}},
+			{{"kind":"shadow","color":"#000000","opacity":0.5,"dx":4,"dy":4,"blur":8}},
+			{{"kind":"stroke","color":"#FFFFFF","width":3}},
+			{{"kind":"outer_glow","color":"#FFAA00","radius":12,"amount":1}}]"##,
+			tone.join(",")
+		);
+		let input = GOOD.replace("\"blur\":0", &format!("\"blur\":0{layer}"));
+		let r = decode(input.as_bytes()).unwrap();
+		let l = &r.layers[0];
+		assert_eq!(l.tone.as_ref().map(|t| (t[0], t[255])), Some((255, 0)));
+		assert!(l.stencil);
+		assert_eq!(
+			l.clip,
+			Some(ClipSpec {
+				source: "itm_b".into(),
+				invert: true
+			})
+		);
+		assert_eq!(l.filters.len(), 8);
+		assert_eq!(l.filters[1], FilterOp::Blur { sigma: 4.0 });
+		assert_eq!(
+			l.filters[7],
+			FilterOp::OuterGlow {
+				color: "#FFAA00".into(),
+				radius: 12.0,
+				amount: 1.0
+			}
+		);
+	}
+
+	#[test]
+	fn refuses_a_bad_look() {
+		let with = |m: &str| GOOD.replace("\"blur\":0", &format!("\"blur\":0,{m}"));
+		assert_eq!(reason(&with("\"tone\":[1,2,3]")), Reason::InvalidPlan);
+		let long: Vec<String> = (0..256).map(|_| "256".to_string()).collect();
+		assert_eq!(
+			reason(&with(&format!("\"tone\":[{}]", long.join(",")))),
+			Reason::InvalidPlan
+		);
+		assert_eq!(
+			reason(&with("\"filters\":[{\"kind\":\"sparkle\"}]")),
+			Reason::InvalidPlan
+		);
+		assert_eq!(
+			reason(&with("\"filters\":[{\"kind\":\"blur\",\"radius\":3}]")),
+			Reason::InvalidPlan
+		);
+		assert_eq!(
+			reason(&with("\"filters\":[{\"kind\":\"matrix\"}]")),
+			Reason::InvalidPlan
+		);
+		let nine = ["{\"kind\":\"blur\",\"sigma\":1}"; MAX_FILTERS + 1].join(",");
+		assert_eq!(
+			reason(&with(&format!("\"filters\":[{nine}]"))),
+			Reason::LimitExceeded
+		);
+		assert_eq!(
+			reason(&with("\"clip\":{\"source\":\"\"}")),
+			Reason::InvalidPlan
+		);
+		assert_eq!(
+			reason(&with("\"clip\":{\"source\":\"a\",\"x\":1}")),
+			Reason::InvalidPlan
+		);
+		assert_eq!(reason(&with("\"stencil\":1")), Reason::InvalidPlan);
+	}
+
+	#[test]
+	fn reads_a_rounded_rectangle_mask() {
+		let m = r#""mask":{"shape":"rounded_rect","x":0,"y":0,"width":1,"height":1,"radius":12}"#;
+		let r = decode(
+			GOOD.replace("\"blur\":0", &format!("\"blur\":0,{m}"))
+				.as_bytes(),
+		)
+		.unwrap();
+		let mask = r.layers[0].mask.unwrap();
+		assert_eq!(mask.shape, MaskShape::RoundedRect);
+		assert_eq!(mask.radius, 12.0);
 	}
 }

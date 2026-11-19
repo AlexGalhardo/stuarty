@@ -9,7 +9,10 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/80",
+        // The hover darkens the primary instead of fading it: at 80% over the
+        // light surface white text fell to 3.7:1 (WCAG 1.4.3 needs 4.5:1).
+        default:
+          "bg-primary text-primary-foreground hover:bg-[color-mix(in_oklab,var(--primary),black_10%)]",
         outline:
           "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 aria-pressed:border-foreground/50 aria-pressed:bg-accent aria-pressed:text-accent-foreground",
         secondary:

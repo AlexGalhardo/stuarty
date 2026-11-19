@@ -15,8 +15,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { getDesktopBridge, subscribeDesktopBridge } from "@/lib/desktopBridge";
 import { useT } from "@/lib/i18n";
-import { IS_MAC, keyLabel } from "../commands/keymap";
-import { useBindings } from "../commands/keymapStore";
+import { IS_MAC } from "../commands/keymap";
+import { keyLabel, useKeymap } from "../commands/keymapStore";
 import {
 	MENUS,
 	type MenuDef,
@@ -61,7 +61,7 @@ export default function EditorMenu(): ReactNode {
 	const t = useT();
 	const inShell = useInDesktopShell();
 	const names = useCommandNames();
-	const bindings = useBindings();
+	const bindings = useKeymap();
 	const run = useMenuRunner();
 	const canEdit = useCanEdit();
 	const hasSelection = useHasSelection();

@@ -100,9 +100,10 @@ test.describe("timeline toolbar", () => {
 			.toBeGreaterThan(before);
 		await slider.focus();
 		await page.keyboard.press("Home");
+		// The Base UI slider is a native range input: its lower bound is `min`.
 		await expect(slider).toHaveAttribute(
 			"aria-valuenow",
-			await slider.getAttribute("aria-valuemin"),
+			(await slider.getAttribute("min")) ?? "",
 		);
 	});
 

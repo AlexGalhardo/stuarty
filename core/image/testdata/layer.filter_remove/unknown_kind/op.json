@@ -1,0 +1,7 @@
+{
+  "args": {
+    "kind": "sparkle",
+    "layer_id": "lyr_bbbbbbbbbb"
+  },
+  "op": "layer.filter_remove"
+}
