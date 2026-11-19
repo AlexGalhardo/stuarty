@@ -266,7 +266,7 @@ func (s *svc) expireDue(ctx context.Context) {
 			return s.auditApproval(ctx, tx, now, "system", "approval.expire", &row, nil)
 		})
 		if err == nil && view.ID != "" {
-			s.emit(Event{Type: EventApprovalDecided, Approval: &view, At: s.now()})
+			s.emit(Event{Type: EventApprovalDecided, Approval: &view, Owner: row.OwnerUserID, At: s.now()})
 		}
 	}
 }
@@ -438,7 +438,9 @@ func (s *svc) ApprovalDecide(ctx context.Context, req ApprovalDecideRequest) (*a
 
 		out = approval.View(&cur)
 
-		tx.AfterCommit(func() { s.emit(Event{Type: EventApprovalDecided, Approval: &out, At: s.now()}) })
+		tx.AfterCommit(
+			func() { s.emit(Event{Type: EventApprovalDecided, Approval: &out, Owner: cur.OwnerUserID, At: s.now()}) },
+		)
 
 		return nil
 	})
