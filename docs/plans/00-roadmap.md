@@ -23,8 +23,8 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 
 | Epic | Title | Size | Depends on | Status |
 | --- | --- | --- | --- | --- |
-| [04](04-secret-vault-and-connections.md) | Secret vault and connections | L | 03 | IN PROGRESS (senior-a, 2026-11-19) |
-| [05](05-approval-queue-and-cost-ceilings.md) | Approval queue, rules and cost ceilings | M | 04 | TODO |
+| [04](04-secret-vault-and-connections.md) | Secret vault and connections | L | 03 | DONE (2026-11-19, 8e43a1a2..7410dcd3 replayed onto the integration branch) |
+| [05](05-approval-queue-and-cost-ceilings.md) | Approval queue, rules and cost ceilings | M | 04 | IN PROGRESS (senior-a, 2026-11-19) |
 | [06](06-project-as-production.md) | The project as the container of a production | L | 03 | IN PROGRESS (senior-b, 2026-11-19) |
 | [07](07-dashboard-shell.md) | Dashboard: sidebar, navigation, profile, theme | M | 03 | DONE (2026-11-19, 70387363..171fb786) |
 | [08](08-asset-library.md) | Asset library with origin, rights and reuse | M | 06, 07 | TODO |
