@@ -84,6 +84,14 @@ describe("Sidebar", () => {
 		expect(html).toContain("ana@example.com");
 		expect(html).toContain("Log out");
 		expect(html).toContain('href="/settings/keys"');
+		// Collapsed, an item shows only its icon: the keys link needs one.
+		expect(html).toMatch(/href="\/settings\/keys"[^>]*><svg/);
+	});
+
+	test("the mark, the navigation, the profile and the controls are in the banner", () => {
+		const html = draw("/", null);
+		expect(html).toMatch(/^<header [^>]*data-testid="sidebar"/);
+		expect(html).toMatch(/<\/header>$/);
 	});
 
 	test("starts expanded and offers the collapse button", () => {

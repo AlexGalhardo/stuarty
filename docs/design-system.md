@@ -541,12 +541,12 @@ The frame of every page except the editor and the login (SDD-012 §23). It uses 
 
 | Part | Element | Surface | Contents | Size |
 | --- | --- | --- | --- | --- |
-| Sidebar | `nav` with `aria-label` | `--background`, right `--border` | the product mark, the eleven sections, then the profile and the controls | 16 rem expanded, 3.5 rem collapsed; collapsible; collapsed by default below 768 px |
+| Sidebar | `header` (the banner) holding a `nav` with `aria-label` for the sections | `--background`, right `--border` | the product mark, the eleven sections, then the profile and the controls | 16 rem expanded, 3.5 rem collapsed; collapsible; below 768 px a strip above the page, always collapsed, in the same order, with no collapse button |
 | Item | `a` | transparent | an icon (`size-4`, `aria-hidden`) and the label | 36 px high, `px-3`, `gap-2` |
 | Main | `main` | `--background` | the page | the remaining width, scrolls on its own |
 | Right dock | `div`, no landmark | `--background`, left `--border` once it has content | empty; reserved for the agent chat | 0 px until epic 14 |
 
-States of an item: rest `--muted-foreground` text; hover `--muted` fill and `--foreground` text; current `--muted` fill, `--foreground` text, weight 500 and `aria-current="page"` (never colour alone); focus the 2 px `--ring` outline of section 2.10, inside the item so the sidebar edge does not clip it; disabled is not used, a section that is not built opens an empty state. Collapsed: the label is visually hidden, the icon stays, a `Tooltip` shows the label on hover and focus.
+States of an item: rest `--muted-foreground` text; hover `--muted` fill and `--foreground` text; current `--muted` fill, `--foreground` text, weight 500 and `aria-current="page"` (never colour alone); focus the 2 px `--ring` outline of section 2.10, inside the item so the sidebar edge does not clip it; disabled is not used, a section that is not built opens an empty state. Collapsed: the label is visually hidden, the icon stays in an item at least 36 px wide (a target above the 24 px of WCAG 2.5.8, also in the narrow strip, where the items wrap instead of scrolling), a `Tooltip` shows the label on hover and focus.
 
 The bottom block holds, in this order: the profile (the email in network mode, "Local" in local mode, a link to Settings, Sign out in network mode), the language select, the theme toggle and the collapse button. Their contrast pairs are `muted-foreground` on `background` and on `muted`, and `foreground` on `background`, all in section 2.6 and `check:contrast`.
 

@@ -1,5 +1,6 @@
 import { Link } from "@inertiajs/react";
 import {
+	KeyRound,
 	LogOut,
 	PanelLeftClose,
 	PanelLeftOpen,
@@ -87,7 +88,9 @@ function Item({
 			href={href}
 			aria-current={current ? "page" : undefined}
 			data-testid={testId}
-			className={cn(ITEM, collapsed && "justify-center px-0")}
+			// min-w-9: an icon alone stays a 36 px target (WCAG 2.5.8) in the
+			// narrow strip, where the item is as wide as its content.
+			className={cn(ITEM, collapsed && "min-w-9 justify-center px-0")}
 		>
 			{icon}
 			<span className={cn(collapsed && "sr-only")}>{label}</span>
@@ -144,7 +147,7 @@ function Profile({
 					<Item
 						href="/settings/keys"
 						current={path.startsWith("/settings/keys")}
-						icon={<span aria-hidden="true" className="size-4 shrink-0" />}
+						icon={<KeyRound aria-hidden="true" className="size-4 shrink-0" />}
 						label={t("ui.keys.nav")}
 						collapsed={collapsed}
 					/>
@@ -189,8 +192,10 @@ export default function Sidebar({
 	const collapsed = state === "collapsed";
 	const current = activeSection(url);
 
+	// A header, so the product mark, the profile and the controls sit in a
+	// landmark (the banner) like the navigation does.
 	return (
-		<div
+		<header
 			data-testid="sidebar"
 			data-state={state}
 			className={cn(
@@ -225,9 +230,9 @@ export default function Sidebar({
 			</Link>
 			<nav
 				aria-label={t("ui.nav.label")}
-				className="min-h-0 flex-1 overflow-y-auto max-md:order-last max-md:w-full max-md:flex-none max-md:overflow-x-auto max-md:overflow-y-hidden"
+				className="min-h-0 flex-1 overflow-y-auto max-md:w-full max-md:flex-none max-md:overflow-visible"
 			>
-				<ul className="flex flex-col gap-0.5 max-md:flex-row">
+				<ul className="flex flex-col gap-0.5 max-md:flex-row max-md:flex-wrap">
 					{SECTIONS.map(({ key, path, icon: Icon }) => (
 						<li key={key}>
 							<Item
@@ -262,6 +267,9 @@ export default function Sidebar({
 							type="button"
 							variant="ghost"
 							size="icon"
+							// A narrow window is always collapsed (sidebarState.ts): the
+							// button would change nothing there, so it is not shown.
+							className="max-md:hidden"
 							onClick={toggle}
 							aria-expanded={!collapsed}
 							aria-label={collapsed ? t("ui.nav.expand") : t("ui.nav.collapse")}
@@ -279,6 +287,6 @@ export default function Sidebar({
 					</TooltipContent>
 				</Tooltip>
 			</div>
-		</div>
+		</header>
 	);
 }
