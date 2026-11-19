@@ -261,22 +261,23 @@ func (r productionRepo) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
-const itemColumns = `id, project_id, kind, title, position, state, ref, body, format, created_ms, updated_ms, created_by, trashed_ms`
+const itemColumns = `id, project_id, kind, title, position, state, ref, body, format, created_ms, updated_ms, created_by, trashed_ms, text_kind`
 
 func scanItem(sc scanner) (service.ItemRow, error) {
 	var (
 		it        service.ItemRow
 		ref, form sql.NullString
+		textKind  sql.NullString
 		trashed   sql.NullInt64
 	)
 
 	err := sc.Scan(&it.ID, &it.ProjectID, &it.Kind, &it.Title, &it.Position, &it.State, &ref, &it.Body, &form,
-		&it.CreatedMs, &it.UpdatedMs, &it.CreatedBy, &trashed)
+		&it.CreatedMs, &it.UpdatedMs, &it.CreatedBy, &trashed, &textKind)
 	if err != nil {
 		return service.ItemRow{}, err
 	}
 
-	it.Ref, it.Format, it.TrashedMs = ref.String, form.String, ptrInt64(trashed)
+	it.Ref, it.Format, it.TrashedMs, it.TextKind = ref.String, form.String, ptrInt64(trashed), textKind.String
 
 	return it, nil
 }
@@ -310,14 +311,27 @@ func (r productionRepo) Item(ctx context.Context, itemID string) (service.ItemRo
 }
 
 func (r productionRepo) CreateItem(ctx context.Context, it service.ItemRow) error {
+	if it.Kind == "text" && it.TextKind == "" {
+		it.TextKind = "copy"
+	}
+
 	_, err := r.ex.ExecContext(ctx, `INSERT INTO project_items
- (id, project_id, kind, title, position, state, ref, body, format, created_ms, updated_ms, created_by, trashed_ms)
- VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+ (id, project_id, kind, title, position, state, ref, body, format, created_ms, updated_ms, created_by, trashed_ms,
+ text_kind)
+ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		it.ID, it.ProjectID, it.Kind, it.Title, it.Position, stateOrActive(it.State), nullString(it.Ref), it.Body,
-		nullString(it.Format), it.CreatedMs, it.UpdatedMs, it.CreatedBy, it.TrashedMs)
+		nullString(it.Format), it.CreatedMs, it.UpdatedMs, it.CreatedBy, it.TrashedMs, nullString(it.TextKind))
 	if isUnique(r.ex, err) {
 		return service.ErrExists
 	}
+
+	if err != nil || it.Kind != "text" {
+		return err
+	}
+
+	// A text item never exists without a revision: its first one is the body it was made with (SDD-019 section 3).
+	_, err = r.ex.ExecContext(ctx, `INSERT INTO text_revisions (item_id, revision, body, actor, source, created_ms)
+ VALUES (?, 1, ?, ?, 'created', ?)`, it.ID, it.Body, it.CreatedBy, it.CreatedMs)
 
 	return err
 }
@@ -377,4 +391,215 @@ func (r productionRepo) ActiveTimelines(ctx context.Context, projectID string) (
 	}
 
 	return out, rows.Err()
+}
+
+const (
+	revisionColumns = `item_id, revision, actor, source, reverted_to, provider, model, cost_micros, currency, job_id,
+ created_ms`
+	defaultTextLimit = 50
+	maxTextLimit     = 100
+)
+
+func scanRevision(sc scanner, withBody bool) (service.TextRevisionRow, error) {
+	var (
+		r                                service.TextRevisionRow
+		reverted, cost                   sql.NullInt64
+		provider, model, currency, jobID sql.NullString
+		body                             string
+		dest                             []any
+	)
+
+	dest = append(dest, &r.ItemID, &r.Revision)
+	if withBody {
+		dest = append(dest, &body)
+	}
+
+	dest = append(dest, &r.Actor, &r.Source, &reverted, &provider, &model, &cost, &currency, &jobID, &r.CreatedMs)
+
+	if err := sc.Scan(dest...); err != nil {
+		return service.TextRevisionRow{}, err
+	}
+
+	r.Body, r.RevertedTo, r.CostMicros = body, ptrInt(reverted), ptrInt64(cost)
+	r.Provider, r.Model, r.Currency, r.JobID = provider.String, model.String, currency.String, jobID.String
+
+	return r, nil
+}
+
+const revisionWithBody = `item_id, revision, body, actor, source, reverted_to, provider, model, cost_micros, currency,
+ job_id, created_ms`
+
+func (r productionRepo) TextRevisions(
+	ctx context.Context, itemID string, before, limit int,
+) ([]service.TextRevisionRow, error) {
+	if limit <= 0 {
+		limit = defaultTextLimit
+	}
+
+	if before <= 0 {
+		before = int(^uint(0) >> 1)
+	}
+
+	rows, err := r.ex.QueryContext(ctx, "SELECT "+revisionColumns+
+		" FROM text_revisions WHERE item_id = ? AND revision < ? ORDER BY revision DESC LIMIT ?",
+		itemID, before, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var out []service.TextRevisionRow
+
+	for rows.Next() {
+		rev, err := scanRevision(rows, false)
+		if err != nil {
+			return nil, err
+		}
+
+		out = append(out, rev)
+	}
+
+	return out, rows.Err()
+}
+
+func (r productionRepo) TextRevision(
+	ctx context.Context,
+	itemID string,
+	revision int,
+) (service.TextRevisionRow, error) {
+	rev, err := scanRevision(r.ex.QueryRowContext(ctx, "SELECT "+revisionWithBody+
+		" FROM text_revisions WHERE item_id = ? AND revision = ?", itemID, revision), true)
+
+	return rev, mapNoRows(err)
+}
+
+func (r productionRepo) TextLatest(ctx context.Context, itemID string) (service.TextRevisionRow, error) {
+	rev, err := scanRevision(r.ex.QueryRowContext(ctx, "SELECT "+revisionWithBody+
+		" FROM text_revisions WHERE item_id = ? ORDER BY revision DESC LIMIT 1", itemID), true)
+
+	return rev, mapNoRows(err)
+}
+
+func (r productionRepo) AddTextRevision(ctx context.Context, rev service.TextRevisionRow, pruneBefore int) error {
+	_, err := r.ex.ExecContext(ctx, `INSERT INTO text_revisions
+ (item_id, revision, body, actor, source, reverted_to, provider, model, cost_micros, currency, job_id, created_ms)
+ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		rev.ItemID, rev.Revision, rev.Body, rev.Actor, rev.Source, rev.RevertedTo, nullString(rev.Provider),
+		nullString(rev.Model), rev.CostMicros, nullString(rev.Currency), nullString(rev.JobID), rev.CreatedMs)
+	if isUnique(r.ex, err) {
+		return service.ErrExists
+	}
+
+	if err != nil {
+		return err
+	}
+
+	if pruneBefore > 0 {
+		if _, err := r.ex.ExecContext(ctx, "DELETE FROM text_revisions WHERE item_id = ? AND revision < ?",
+			rev.ItemID, pruneBefore); err != nil {
+			return err
+		}
+	}
+
+	n, err := rowsAffected(r.ex.ExecContext(ctx, "UPDATE project_items SET body = ?, updated_ms = ? WHERE id = ?",
+		rev.Body, rev.CreatedMs, rev.ItemID))
+	if err != nil {
+		return err
+	}
+
+	if n == 0 {
+		return service.ErrNotFound
+	}
+
+	return nil
+}
+
+func (r productionRepo) TextItems(ctx context.Context, q service.TextQuery) ([]service.TextHead, string, error) {
+	limit := q.Limit
+	if limit <= 0 {
+		limit = defaultTextLimit
+	}
+
+	limit = min(limit, maxTextLimit)
+
+	where := []string{"i.kind = 'text'", "p.state = 'active'"}
+	args := []any{}
+
+	state := string(q.State)
+	if state == "" {
+		state = string(service.ProjectActive)
+	}
+
+	where, args = append(where, "i.state = ?"), append(args, state)
+
+	if q.ProjectID != "" {
+		where, args = append(where, "p.id = ?"), append(args, q.ProjectID)
+	}
+
+	if q.OwnerUserID != "" {
+		where, args = append(where, "p.owner_user_id = ?"), append(args, q.OwnerUserID)
+	}
+
+	if q.TextKind != "" {
+		where, args = append(where, "i.text_kind = ?"), append(args, q.TextKind)
+	}
+
+	if q.After != "" {
+		ms, id, err := decodeCursor(q.After)
+		if err != nil {
+			return nil, "", err
+		}
+
+		where, args = append(where, "(i.updated_ms, i.id) < (?, ?)"), append(args, ms, id)
+	}
+
+	cols := "i.id, i.project_id, i.kind, i.title, i.position, i.state, i.ref, i.body, i.format, i.created_ms," +
+		" i.updated_ms, i.created_by, i.trashed_ms, i.text_kind"
+
+	rows, err := r.ex.QueryContext(ctx, "SELECT "+cols+`, p.name, p.owner_user_id,
+ COALESCE(r.revision, 0), COALESCE(r.actor, ''), COALESCE(r.source, '')
+ FROM project_items i JOIN projects p ON p.id = i.project_id
+ LEFT JOIN text_revisions r ON r.item_id = i.id
+  AND r.revision = (SELECT max(x.revision) FROM text_revisions x WHERE x.item_id = i.id)
+ WHERE `+strings.Join(where, " AND ")+" ORDER BY i.updated_ms DESC, i.id DESC LIMIT ?", append(args, limit+1)...)
+	if err != nil {
+		return nil, "", err
+	}
+	defer rows.Close()
+
+	var out []service.TextHead
+
+	for rows.Next() {
+		var (
+			h               service.TextHead
+			ref, form, kind sql.NullString
+			trashed         sql.NullInt64
+			owner           sql.NullString
+		)
+
+		it := &h.Item
+		if err := rows.Scan(&it.ID, &it.ProjectID, &it.Kind, &it.Title, &it.Position, &it.State, &ref, &it.Body, &form,
+			&it.CreatedMs, &it.UpdatedMs, &it.CreatedBy, &trashed, &kind, &h.ProjectName, &owner, &h.Revision,
+			&h.RevisionBy, &h.RevisionSrc); err != nil {
+			return nil, "", err
+		}
+
+		it.Ref, it.Format, it.TrashedMs, it.TextKind = ref.String, form.String, ptrInt64(trashed), kind.String
+		h.ProjectOwner = ptrString(owner)
+		out = append(out, h)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, "", err
+	}
+
+	next := ""
+
+	if len(out) > limit {
+		out = out[:limit]
+		last := out[len(out)-1].Item
+		next = encodeCursor(last.UpdatedMs, last.ID)
+	}
+
+	return out, next, nil
 }
