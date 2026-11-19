@@ -96,6 +96,8 @@ func (v *validator) document() {
 		v.add("id", "id", "", "the document id %q is not an img_ identifier", d.ID)
 	case d.Width < 1 || d.Width > MaxCanvas || d.Height < 1 || d.Height > MaxCanvas:
 		v.add("canvas", "width", "", "the canvas is %dx%d; each side must be 1 to %d", d.Width, d.Height, MaxCanvas)
+	case d.Width*d.Height > MaxCanvasPixels:
+		v.add("canvas", "width", "", "the canvas has %d pixels; the limit is %d", d.Width*d.Height, MaxCanvasPixels)
 	case d.Background != Transparent && !ValidColour(d.Background):
 		v.add("colour", "background", "", "the background %q is not a colour or transparent", d.Background)
 	case len([]rune(d.Name)) > MaxName:
