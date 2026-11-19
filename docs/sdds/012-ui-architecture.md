@@ -2001,7 +2001,7 @@ The picture is the PNG of `ImageFrame`, drawn in an `img` the size of the canvas
 - **Selection.** A click selects the topmost visible, unlocked layer whose box holds the point (hit testing over the boxes of the read model, display only; a rotated layer is hit through the inverse rotation); `Shift` adds to the selection; a click on nothing clears it. The outline and its eight handles are drawn over the picture from the box of the read model.
 - **Gestures.** Move, scale (the handles) and rotate (the handle above the box, `Shift` in steps of 15 degrees) preview with a transient transform of the outline only, never of pixels, and on release send one `layer.transform` batch; the answer replaces the read model and the picture is the one of the new revision. A drag cancelled with `Escape` sends nothing.
 - **Snapping.** While a layer moves or scales, its edges and centre snap to the canvas edges and centre and to the edges and centres of the other visible layers within 6 screen pixels; the targets are the boxes of the read model (a child of a group with the offsets of its groups added), the guides are lines over the picture, and `Alt` held turns snapping off. What goes into the command is the snapped integer position; alignment is the core's `layer.align`, never computed here.
-- **Keyboard.** With the canvas focused, the arrow keys nudge the selection by 1 pixel, `Shift` with an arrow by 10, `Tab` moves the selection to the next layer, `Delete` removes it. The canvas announces the selection in a live region ("Layer Title, text, at 80, 440, 800 by 200").
+- **Keyboard.** With the canvas focused, the arrow keys nudge the selection by 1 pixel, `Shift` with an arrow by 10, `PageUp` and `PageDown` move the selection to the layer above or below (`Tab` leaves the canvas, as it must), `Delete` removes it, `Escape` cancels a drag. The canvas announces the selection in a live region ("Layer Title, text, at 80, 440, 800 by 200").
 
 ### 24.5 The layer panel
 
@@ -2009,7 +2009,7 @@ A `role="tree"` with one `treeitem` per layer, the top layer first, groups as ex
 
 ### 24.6 The inspector
 
-Fields for the document (name, canvas size and the resize mode, `canvas.resize`) and, for the selected layer, per kind: common (name, opacity, visible, locked, slot: `layer.set`), box and rotation (`layer.transform`), image (the asset, the crop and its reset: `layer.crop`; fit and fill the canvas: `layer.fit`), text (the text, the font, size, colour, alignment: `layer.set_text`), shape and fill (the shape, the fill, the stroke, the radius: `layer.set_shape`), and the alignment buttons (`layer.align`). A numeric field takes the units of the video inspector (section 12.2): a whole number of pixels, or a percent of the canvas written with `%`, which the field resolves to the integer it shows before it sends. A field sends its command on `Enter` or on leaving the field (section 12.3), not on every key. What the core refuses comes back as its error, shown beside the field.
+Fields for the document (name, canvas size and the resize mode, `canvas.resize`) and, for the selected layer, per kind: common (name, opacity, visible, locked, slot: `layer.set`), box and rotation (`layer.transform`), image (the asset, the crop and its reset: `layer.crop`; fit and fill the canvas: `layer.fit`), text (the text, the font, size, colour, alignment: `layer.set_text`), shape and fill (the shape, the fill, the stroke, the radius: `layer.set_shape`), the alignment buttons (`layer.align`, to the canvas or to another layer) and, for an image, "Replace the photo": one batch with the new image above the old one, `layer.fit` to cover the old box, `layer.remove` of the old layer and `layer.set` of its slot and opacity, so it is one step of the history (the catalogue has no operation that changes the file of a layer; the UI gives the new layer an id of its own, as decision 3 of Appendix A allows). A numeric field takes the units of the video inspector (section 12.2): a whole number of pixels, or a percent of the canvas written with `%`, which the field resolves to the integer it shows before it sends. A field sends its command on `Enter` or on leaving the field (section 12.3), not on every key. What the core refuses comes back as its error, shown beside the field.
 
 ### 24.7 Brand kit and templates
 
@@ -2035,6 +2035,9 @@ The history panel lists `ImageHistory`: the revision, the actor as a chip (perso
 | `+`, `-`, `0`, `1` | zoom in, zoom out, fit, 100% |
 | `Alt+arrows` in the tree | move, out of and into a group |
 | arrows on the canvas | nudge by 1 pixel, by 10 with `Shift` |
+| `PageUp`, `PageDown` on the canvas | select the layer above, below |
+| `F2`, `H`, `L` in the tree | rename, hide or show, lock or unlock |
+| `Escape` | cancel a drag, close a dialog |
 
 Letters and symbols act only when no field has the focus. Every other action is a button of the toolbar, reachable by `Tab`.
 
@@ -2054,6 +2057,8 @@ Every action has a keyboard path (section 24.10 and the toolbar of design system
 3. Changes of another actor arrive by polling the revision until an image has an event stream.
 4. Snapping and hit testing are display arithmetic over the boxes of the read model (section 1.1, screen arithmetic); the position they produce is an integer sent to `layer.transform`.
 5. An image enters a document from the workspace library; putting a file from the computer straight into an image waits for an `ImageImport` operation of the service.
+6. A command planned from a key that repeats (an arrow, `Alt` with an arrow) is given to the store as a function of the document, evaluated when its turn comes, so each press is planned against the document the one before it made.
+7. The picture is asked for again twice after a failure or a 429 (the route allows two renders at once per caller) before the canvas says it could not be drawn.
 
 ## Appendix A: Decisions of this SDD
 

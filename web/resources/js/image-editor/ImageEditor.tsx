@@ -10,7 +10,10 @@ import { API_BASE, createImageApi } from "./api/imageApi";
 import Canvas from "./canvas/Canvas";
 import ErrorBar from "./ErrorBar";
 import { ExportTool } from "./export/ExportDialog";
+import AgentNotice from "./history/AgentNotice";
+import HistoryPanel from "./history/HistoryPanel";
 import Inspector from "./inspector/Inspector";
+import { useEditorKeys } from "./keys";
 import LayerPanel from "./layers/LayerPanel";
 import { ImageEditorProvider, useImage } from "./state/context";
 import { LibraryProvider } from "./state/library";
@@ -60,6 +63,7 @@ function Shell(): ReactNode {
 	const load = useImage((s) => s.load);
 	const error = useImage((s) => s.error);
 	const open = useImage((s) => s.open);
+	const onKeys = useEditorKeys();
 
 	if (load === "failed") {
 		return (
@@ -88,6 +92,7 @@ function Shell(): ReactNode {
 		<section
 			aria-labelledby="image-title"
 			data-testid="image-editor"
+			onKeyDown={onKeys}
 			className="flex h-[calc(100dvh-3rem)] min-h-[28rem] flex-col overflow-hidden rounded-lg border"
 		>
 			<header className="flex items-center gap-2 border-b px-2 py-1">
@@ -118,6 +123,7 @@ function Shell(): ReactNode {
 				<ViewTools />
 				<ExportTool />
 			</Toolbar>
+			<AgentNotice />
 			<ErrorBar />
 			<div className="flex min-h-0 flex-1">
 				<aside
@@ -140,6 +146,7 @@ function Shell(): ReactNode {
 						{t("ui.image.inspector.title")}
 					</h2>
 					<Inspector />
+					<HistoryPanel />
 				</aside>
 			</div>
 		</section>

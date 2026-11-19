@@ -254,7 +254,20 @@
       },
       "history": {
         "undo": "Undo my last step",
-        "redo": "Redo my step"
+        "redo": "Redo my step",
+        "title": "History",
+        "empty": "No changes yet. Every change by you or an agent is listed here.",
+        "undo_of": "undid revision {revision}",
+        "redo_of": "redid revision {revision}",
+        "revision": "revision {revision}",
+        "you": "You",
+        "undone": "Undone by revision {revision}",
+        "skipped": {
+          "one": "{count} change left alone because another actor changed it since",
+          "other": "{count} changes left alone because another actor changed them since"
+        },
+        "agent_changed_prefix": "The image was changed by",
+        "agent_changed_suffix": "and the canvas shows it."
       },
       "add": {
         "text": "Add text",
