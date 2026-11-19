@@ -2450,6 +2450,12 @@
             "format": "double",
             "type": "number"
           },
+          "replaces": {
+            "items": {
+              "$ref": "#/components/schemas/RenderOffer"
+            },
+            "type": "array"
+          },
           "state": {
             "type": "string"
           }
@@ -4322,6 +4328,79 @@
         },
         "type": "object"
       },
+      "MotionReplaceResult": {
+        "properties": {
+          "actor": {
+            "type": "string"
+          },
+          "applied": {
+            "type": "boolean"
+          },
+          "asset_id": {
+            "type": "string"
+          },
+          "base_revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "created": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "description": {
+            "type": "string"
+          },
+          "diff": {
+            "items": {
+              "$ref": "#/components/schemas/Change"
+            },
+            "type": "array"
+          },
+          "dry_run": {
+            "type": "boolean"
+          },
+          "effective": {
+            "items": {
+              "$ref": "#/components/schemas/OpEffect"
+            },
+            "type": "array"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/Finding"
+            },
+            "type": "array"
+          },
+          "lint": {
+            "$ref": "#/components/schemas/LintTotals"
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "render_key": {
+            "type": "string"
+          },
+          "replaced": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "replayed": {
+            "type": "boolean"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "OpEffect": {
         "properties": {
           "created": {
@@ -4371,6 +4450,7 @@
               "caption.split",
               "clip.add",
               "clip.remove_silences",
+              "clip.replace_media",
               "clip.set_blend",
               "clip.set_blur",
               "clip.set_chroma_key",
@@ -4492,6 +4572,9 @@
           },
           "clip.remove_silences": {
             "$ref": "#/components/schemas/args.clip.remove_silences"
+          },
+          "clip.replace_media": {
+            "$ref": "#/components/schemas/args.clip.replace_media"
           },
           "clip.set_blend": {
             "$ref": "#/components/schemas/args.clip.set_blend"
@@ -5675,6 +5758,24 @@
           },
           "y": {
             "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "RenderOffer": {
+        "properties": {
+          "asset_id": {
+            "type": "string"
+          },
+          "item_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "name": {
+            "type": "string",
+            "x-untrusted": true
           }
         },
         "type": "object"
@@ -8352,6 +8453,26 @@
         },
         "required": [
           "item_id"
+        ],
+        "type": "object"
+      },
+      "args.clip.replace_media": {
+        "additionalProperties": false,
+        "properties": {
+          "asset_id": {
+            "description": "A video or image asset of the document, of the same kind as the clip's asset.",
+            "pattern": "^ast_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          },
+          "item_id": {
+            "description": "A clip.",
+            "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "item_id",
+          "asset_id"
         ],
         "type": "object"
       },
@@ -18532,6 +18653,95 @@
           }
         ],
         "summary": "Check a rendered asset against the brief: each mismatch of size, rate, length or alpha with the value expected"
+      }
+    },
+    "/api/v1/projects/{id}/motion/replace": {
+      "post": {
+        "operationId": "projects.motion.replace",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "asset_id": {
+                    "description": "The new render: an asset of the timeline, ready.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "dry_run": {
+                    "type": "boolean"
+                  },
+                  "render_key": {
+                    "description": "The key of the animation; default the render key of the origin of the new asset.",
+                    "type": "string"
+                  },
+                  "timeline_id": {
+                    "description": "The timeline of the project; required when the project has several.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "asset_id"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MotionReplaceResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Replace, in one undoable batch, every clip that reads an earlier render of an animation with a new render of it"
       }
     },
     "/api/v1/projects/{id}/otio": {

@@ -25,6 +25,27 @@ func (h *apiHandler) motionBrief(c *web.Ctx, in motionBriefIn) (service.MotionBr
 	return deref(res), err
 }
 
+type motionReplaceIn struct {
+	ID         string `json:"id"                    validate:"required"`
+	AssetID    string `json:"asset_id"              validate:"required" doc:"The new render: an asset of the timeline, ready."`
+	TimelineID string `json:"timeline_id,omitempty"                     doc:"The timeline of the project; required when the project has several."`
+	RenderKey  string `json:"render_key,omitempty"                      doc:"The key of the animation; default the render key of the origin of the new asset."`
+	DryRun     any    `json:"dry_run,omitempty"`
+}
+
+func (h *apiHandler) motionReplace(c *web.Ctx, in motionReplaceIn) (service.MotionReplaceResult, error) {
+	dryRun, err := readDryRun(c, in.DryRun)
+	if err != nil {
+		return service.MotionReplaceResult{}, err
+	}
+
+	res, err := h.Service.MotionReplace(c.Context(), service.MotionReplaceRequest{
+		ProjectID: in.ID, TimelineID: in.TimelineID, AssetID: in.AssetID, RenderKey: in.RenderKey, DryRun: dryRun,
+	})
+
+	return deref(res), err
+}
+
 type motionCheckIn struct {
 	ID         string `json:"id"                    validate:"required"`
 	AssetID    string `json:"asset_id"              validate:"required" doc:"The asset to check: an asset of the project, ready."`

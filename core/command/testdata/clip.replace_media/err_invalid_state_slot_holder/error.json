@@ -1,0 +1,7 @@
+{
+  "code": "E_INVALID_STATE",
+  "message": "Item itm_m1n2p3q4r5 is a template slot holder.",
+  "hint": "Use slot.fill to put media in a slot.",
+  "retryable": false,
+  "path": "args.item_id"
+}

@@ -21,6 +21,7 @@ import (
 type MotionService interface {
 	MotionBrief(ctx context.Context, req MotionBriefRequest) (*MotionBriefResult, error)
 	MotionCheck(ctx context.Context, req MotionCheckRequest) (*MotionCheckResult, error)
+	MotionReplace(ctx context.Context, req MotionReplaceRequest) (*MotionReplaceResult, error)
 }
 
 var _ MotionService = (*svc)(nil)
