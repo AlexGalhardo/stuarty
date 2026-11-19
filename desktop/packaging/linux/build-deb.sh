@@ -28,6 +28,8 @@ mkdir -p "$lib" "$root/usr/bin" "$root/usr/share/applications" "$root/usr/share/
 install -m 0755 "$desktop" "$lib/stuarty-desktop"
 install -m 0755 "$server" "$lib/stuarty"
 ln -s ../lib/stuarty-desktop/stuarty-desktop "$root/usr/bin/stuarty-desktop"
+# The former command, so what called vukem-video-desktop keeps working after an upgrade (ADR-0044).
+ln -s stuarty-desktop "$root/usr/bin/vukem-video-desktop"
 install -m 0644 "$here/stuarty-desktop.desktop" "$root/usr/share/applications/stuarty-desktop.desktop"
 install -m 0644 "$repo/.config/installers/assets/stuarty.png" "$root/usr/share/icons/hicolor/256x256/apps/stuarty-desktop.png"
 install -m 0644 "$repo/LICENSE.md" "$root/usr/share/doc/stuarty-desktop/copyright"

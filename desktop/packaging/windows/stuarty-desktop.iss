@@ -31,6 +31,8 @@
 #define AppName "Stuarty Desktop"
 #define AppExe "stuarty-desktop.exe"
 #define ServerExe "stuarty.exe"
+#define FormerAppExe "vukem-video-desktop.exe"
+#define FormerServerExe "vukem-video.exe"
 
 [Setup]
 ; A fixed AppId, other than the one of the server installer, lets a new version upgrade this one in place.
@@ -77,6 +79,15 @@ Source: "..\..\..\licenses\*"; DestDir: "{app}\licenses"; Flags: ignoreversion r
 Name: "{autoprograms}\{#AppName}"; Filename: "{app}\{#AppExe}"; IconFilename: "{app}\stuarty.ico"; Comment: "Open the Stuarty desktop application"
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExe}"; IconFilename: "{app}\stuarty.ico"; Tasks: desktopicon
 
+[InstallDelete]
+; An upgrade of an installed Vukem Video Desktop (same AppId, so the same folder): remove what carried the former
+; name. Only program files and shortcuts, never the workspace (SDD-009 section 10.5).
+Type: files; Name: "{app}\{#FormerAppExe}"
+Type: files; Name: "{app}\{#FormerServerExe}"
+Type: files; Name: "{app}\vukem-video.ico"
+Type: files; Name: "{autoprograms}\Vukem Video Desktop.lnk"
+Type: files; Name: "{autodesktop}\Vukem Video Desktop.lnk"
+
 [Run]
 Filename: "{app}\{#AppExe}"; Description: "Open {#AppName} now"; Flags: postinstall nowait skipifsilent
 
@@ -84,6 +95,8 @@ Filename: "{app}\{#AppExe}"; Description: "Open {#AppName} now"; Flags: postinst
 ; The server the application started may outlive it: stop both so the program can be removed. The workspace is not touched.
 Filename: "{sys}\taskkill.exe"; Parameters: "/F /IM {#AppExe}"; Flags: runhidden; RunOnceId: "StopDesktop"
 Filename: "{sys}\taskkill.exe"; Parameters: "/F /IM {#ServerExe}"; Flags: runhidden; RunOnceId: "StopServer"
+Filename: "{sys}\taskkill.exe"; Parameters: "/F /IM {#FormerAppExe}"; Flags: runhidden; RunOnceId: "StopFormerDesktop"
+Filename: "{sys}\taskkill.exe"; Parameters: "/F /IM {#FormerServerExe}"; Flags: runhidden; RunOnceId: "StopFormerServer"
 
 [Code]
 // An upgrade or a reinstall replaces the program: stop the application and its server first, or Windows
@@ -94,5 +107,8 @@ var
 begin
   Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM {#AppExe}', '', SW_HIDE, ewWaitUntilTerminated, Code);
   Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM {#ServerExe}', '', SW_HIDE, ewWaitUntilTerminated, Code);
+  // An installed Vukem Video Desktop and its server own the workspace until they stop.
+  Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM {#FormerAppExe}', '', SW_HIDE, ewWaitUntilTerminated, Code);
+  Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM {#FormerServerExe}', '', SW_HIDE, ewWaitUntilTerminated, Code);
   Result := '';
 end;
