@@ -17808,6 +17808,7 @@
     },
     "/api/v1/projects/{id}/audio-measure": {
       "get": {
+        "description": "Heavy call: shares the limit of 10 a minute per credential (E_RATE_LIMITED with Retry-After).",
         "operationId": "audio.measure",
         "parameters": [
           {
