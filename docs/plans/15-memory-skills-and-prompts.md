@@ -42,7 +42,7 @@ A creator's way of working stops living in their head: what they learned from pa
 - [x] 1. Write SDD-018 and SDD-000 names; add SDD-007 rows (a skill as prompt injection, an imported script, memory flooding by an agent, path traversal in a skill name). Verify: `task lint:md` exits 0.
 - [x] 2. Implement `core/library` with table tests, including the skill lint. Verify: `go test ./core/library/...` passes.
 - [x] 3. Implement file storage, the scan and the rebuildable index. Verify: `go test ./service/library/... -run "TestStore|TestReindex"` passes (deleting the index and reindexing gives the same results).
-- [ ] 4. Implement memory, prompts with rendering, and search. Verify: `go test ./service/library/... -run "TestMemory|TestPrompt|TestSearch"` passes.
+- [x] 4. Implement memory, prompts with rendering, and search. Verify: `go test ./service/library/... -run "TestMemory|TestPrompt|TestSearch"` passes.
 - [ ] 5. Implement skills: write, lint, import from folder and archive, review mark, export. Verify: `go test ./service/library/... -run TestSkill` passes, including archive traversal cases.
 - [ ] 6. Expose on HTTP, CLI and MCP with parity and untrusted-text marking. Verify: `go test ./web/contract/...` passes.
 - [ ] 7. Build the three sections (list, search, editor with preview, origin and review state) in both languages. Verify: `task test:web` and `web/e2e/specs/library.spec.ts` pass.

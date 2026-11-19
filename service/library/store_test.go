@@ -333,13 +333,15 @@ func TestStoreDoesNotFollowALink(t *testing.T) {
 	write(t, filepath.Join(dir, "memory", "keep.md"), "---\nname: keep\ndescription: d\n---\n")
 
 	if err := os.Symlink(outside, filepath.Join(dir, "memory", "leak.md")); err != nil {
-		t.Skipf("this system does not allow a symbolic link here: %v", err)
+		t.Skipf( // verify:env-skip creating a symbolic link needs a privilege on Windows
+			"this system does not allow a symbolic link here: %v", err)
 	}
 
 	write(t, filepath.Join(dir, "skills", "s", "SKILL.md"), "---\nname: s\ndescription: d\n---\nx\n")
 
 	if err := os.Symlink(outside, filepath.Join(dir, "skills", "s", "link.md")); err != nil {
-		t.Skipf("this system does not allow a symbolic link here: %v", err)
+		t.Skipf( // verify:env-skip creating a symbolic link needs a privilege on Windows
+			"this system does not allow a symbolic link here: %v", err)
 	}
 
 	mem := mustList(t, m, core.KindMemory)
