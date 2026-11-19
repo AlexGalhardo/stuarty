@@ -9,6 +9,7 @@ import (
 	"image/png"
 	"testing"
 
+	coreimage "github.com/AlexGalhardo/stuarty/core/image"
 	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
 )
 
@@ -137,5 +138,45 @@ func TestEncodeImageWebPThroughTheSeam(t *testing.T) {
 
 	if _, err := png.Decode(bytes.NewReader(w.got)); err != nil {
 		t.Errorf("the encoder is given a png: %v", err)
+	}
+}
+
+// The sizes an export may ask for are bounded, and a picture with no pixels is refused, before anything is
+// allocated (SDD-021 section 6).
+func TestEncodeImageRefusesBadSizes(t *testing.T) {
+	a, _ := renderTwice(t, "shapes")
+
+	for name, o := range map[string]ImageEncodeOptions{
+		"negative width":   {Format: ImagePNG, Width: -1},
+		"negative height":  {Format: ImagePNG, Height: -5},
+		"width too large":  {Format: ImagePNG, Width: coreimage.MaxExportSide + 1},
+		"height too large": {Format: ImagePNG, Height: coreimage.MaxExportSide + 1},
+		"too many pixels":  {Format: ImageJPEG, Width: coreimage.MaxExportSide, Height: coreimage.MaxExportSide},
+	} {
+		if _, err := EncodeImage(context.Background(), a, o); err == nil {
+			t.Errorf("%s: the size was accepted", name)
+		}
+	}
+
+	empty := image.NewRGBA(image.Rect(0, 0, 0, 0))
+	if _, err := EncodeImage(context.Background(), empty, ImageEncodeOptions{Format: ImagePNG, Width: 10}); err == nil {
+		t.Error("a picture with no pixels was accepted")
+	}
+
+	if _, err := EncodeImage(context.Background(), nil, ImageEncodeOptions{Format: ImagePNG}); err == nil {
+		t.Error("a missing picture was accepted")
+	}
+}
+
+func TestResampleFailureIsAnError(t *testing.T) {
+	a, _ := renderTwice(t, "shapes")
+	// the largest side the export allows, on the smallest other side: fine, and the result is the size asked
+	out, err := EncodeImage(context.Background(), a, ImageEncodeOptions{Format: ImagePNG, Width: 8192, Height: 1})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if cfg, err := png.DecodeConfig(bytes.NewReader(out)); err != nil || cfg.Width != 8192 || cfg.Height != 1 {
+		t.Fatalf("%v %+v", err, cfg)
 	}
 }
