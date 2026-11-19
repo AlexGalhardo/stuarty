@@ -70,6 +70,7 @@ type Repos interface {
 	Images() ImageRepo
 	Connections() connections.Store
 	Approvals() approval.Store
+	Library() library.Index
 }
 
 // Tx is a write transaction.

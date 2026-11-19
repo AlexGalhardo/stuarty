@@ -11,9 +11,9 @@ const jobsColumns = `id, kind, project_id, asset_hash, actor, state, progress, m
 // kinds goes (the service validates the kind). The table also gains approval_id, the request the job
 // waits on. SQLite cannot change a CHECK in place, and nothing references jobs, so the table is
 // rebuilt: copy, drop, rename and the indexes again.
-func m20261119110100JobsWaitingApproval() schema.Migration {
+func m20261119140100JobsWaitingApproval() schema.Migration {
 	return schema.Migration{
-		ID:   "20261119110100_jobs_waiting_approval",
+		ID:   "20261119140100_jobs_waiting_approval",
 		Up:   func(s *schema.Schema) error { return rebuildJobs(s, true) },
 		Down: func(s *schema.Schema) error { return rebuildJobs(s, false) },
 	}
@@ -36,7 +36,7 @@ func rebuildJobs(s *schema.Schema, approval bool) error {
 		`CREATE TABLE jobs_rebuild (
   id               TEXT    NOT NULL,
   kind             TEXT    NOT NULL ` + kind + `,
-  project_id       TEXT    REFERENCES projects (id) ON DELETE CASCADE,
+  project_id       TEXT    REFERENCES timelines (id) ON DELETE CASCADE,
   asset_hash       TEXT    REFERENCES assets (id) ON DELETE CASCADE,
   actor            TEXT    NOT NULL,
   state            TEXT    NOT NULL DEFAULT 'queued' ` + state + `,

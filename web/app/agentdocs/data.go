@@ -27,7 +27,15 @@ var Tools = []ToolRow{
 	{"template", []string{"template:list", "template:save", "template:new", "template:export", "template:import"}},
 	{"font_import", []string{"font:import"}},
 	{"connection", []string{"connection:list", "connection:show"}},
-	{"approval", []string{"approval:list", "approval:show"}},
+	{
+		"image",
+		[]string{"image:create", "image:show", "image:edit", "image:export"},
+	},
+	{
+		"project_item",
+		[]string{"item:add", "brief:set"},
+	},
+	{"library", []string{"library:search"}},
 }
 
 // ErrorRow is one error code of SDD-000 section 8 and SDD-002 section A.8, with
@@ -80,8 +88,4 @@ var Errors = []ErrorRow{
 	{"E_NOTHING_TO_REDO", false, "nothing to redo"},
 	{"E_LINT_BLOCKING", false, "fix details.findings"},
 	{"E_PAYLOAD_TOO_LARGE", false, "send a smaller batch"},
-	{"E_PRIVILEGED_SESSION", false, "only a person in the app decides: wait"},
-	{"E_APPROVAL_NOT_FOUND", false, "list with approval:list"},
-	{"E_COST_CEILING", false, "cheaper work, the next UTC day, or ask the person"},
-	{"E_APPROVAL_EXPIRED", false, "send it again if still wanted"},
 }
