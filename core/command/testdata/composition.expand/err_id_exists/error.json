@@ -1,0 +1,7 @@
+{
+  "code": "E_ID_EXISTS",
+  "message": "Item id itm_s6t7v8w9x0 of the nested timeline already exists here.",
+  "hint": "Rename the clash first.",
+  "retryable": false,
+  "path": "args.item_id"
+}
