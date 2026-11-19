@@ -62,6 +62,27 @@ func TestImageFrameDrawsTheCurrentRevision(t *testing.T) {
 	mustCode(t, err, "E_NOT_FOUND")
 }
 
+// The size the result names is the size of the PNG, also for a picture so wide that its height rounds to zero.
+func TestImageFrameNamesTheSizeOfThePicture(t *testing.T) {
+	s, _ := newImageService(t)
+	ctx := asActor("local:person")
+
+	c, err := s.ImageCreate(ctx, ImageCreateRequest{Width: 4096, Height: 16})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	f, err := s.ImageFrame(ctx, ImageFrameRequest{ImageID: c.ImageID, Width: 16})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cfg, derr := png.DecodeConfig(bytes.NewReader(f.Image))
+	if derr != nil || cfg.Width != f.Width || cfg.Height != f.Height {
+		t.Fatalf("the result says %dx%d, the picture is %+v (%v)", f.Width, f.Height, cfg, derr)
+	}
+}
+
 func TestImageHistoryNamesTheActors(t *testing.T) {
 	s, _ := newImageService(t)
 	person := asActor("local:person")

@@ -82,7 +82,8 @@ func (s *svc) ImageFrame(ctx context.Context, req ImageFrameRequest) (*ImageFram
 
 	w, h := doc.Width, doc.Height
 	if width != 0 {
-		w, h = width, (doc.Height*width+doc.Width/2)/doc.Width
+		// The encoder's resample: the height rounded half up and never below one pixel.
+		w, h = width, max((doc.Height*width+doc.Width/2)/doc.Width, 1)
 	}
 
 	return &ImageFrameResult{
