@@ -212,6 +212,19 @@ test.describe("writing", () => {
 			(v) => v.impact === "serious" || v.impact === "critical",
 		);
 		expect(violations.map((v) => v.id)).toEqual([]);
+
+		// The overview page shows the text with its kind, and its Write link opens it in the editor.
+		await page.goto(`/projects/${projectId}`);
+		const row = page.locator(`[data-item="${itemId}"]`);
+		await expect(row).toContainText(`Hook ${tag}`);
+		await expect(row).toContainText("Script");
+		await row.getByRole("link", { name: `Write Hook ${tag}` }).click();
+		await expect(page).toHaveURL(
+			new RegExp(`/write\\?project=${projectId}&text=${itemId}$`),
+		);
+		await expect(
+			page.getByTestId("text-editor").getByLabel("Text (Markdown)"),
+		).toHaveValue(body);
 	});
 
 	test("a caption: counters per network, the exact limit broken, and a conflict that keeps the text", async ({
