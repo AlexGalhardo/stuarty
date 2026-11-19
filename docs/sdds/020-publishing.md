@@ -189,7 +189,7 @@ Added to SDD-000 section 1 and to the scope matrix of SDD-007:
 | --- | --- | --- |
 | `SocialNetworkList` | read | the networks of the build: name, what each can publish, limits with source and date, the redirect path, the setup steps |
 | `SocialConnectBegin` | admin | creates the connection (or takes an existing one by `connection_id`) with the client id and secret in the vault and answers the authorization address and the state; no secret in the result |
-| `SocialConnectComplete` | admin, and a browser session | the callback: exchanges the code, stores the refresh token, reads the channel; answers the account |
+| `SocialConnectComplete` | admin, and a browser session | the sign-in redirect (the page `/social/callback` posts to it): exchanges the code, stores the refresh token, reads the channel; answers the account |
 | `SocialAccountList` | read | the connections of the social kinds with their account title and state; never a token |
 | `PublishValidate` | read | the issues of a post against the limits of its network, and `prepared` when none |
 | `PublishNow` | render | starts the job `publish.upload` of one post; answers the job in `waiting_approval` (or `queued` when a rule the person wrote covers it) |
@@ -217,9 +217,9 @@ Added to SDD-000 section 8: `E_PUBLISH` (a network refused or failed a publicati
 
 ## 13. Surfaces
 
-- HTTP: `GET /social/networks`, `POST /social/connect`, `GET /social/callback`, `GET /social/accounts`, `POST /publish/validate`, `POST /publish`, `GET /publish/{job_id}`.
-- CLI: `social:network:list`, `social:connect`, `social:account:list`, `publish:validate`, `publish:now`, `publish:status`. `social:connect` reads the client secret from standard input or `--secret-file`, never from an argument, and prints the address the person opens in the browser. The callback has no command: it is the browser's.
-- MCP: **none in this epic.** The catalogue is at its interim byte cap until epic 13 revises it. An agent prepares a publication with `job_start` (kind `publish.upload`, arguments of section 10), reads it with `job_get`, and cannot approve it. The read-only part (`SocialNetworkList`, `SocialAccountList`, `PublishValidate`, `PublishStatus`, about 600 bytes as one `publish` tool with actions) and the `outputSchema` changes of SDD-015 section 10 (`publish.upload` in the kind enum of `job_start`, `waiting_approval` in the state lists) are left to epic 13.
+- HTTP: `GET /social/networks`, `POST /social/connect`, `POST /social/complete`, `GET /social/accounts`, `POST /publish/validate`, `POST /publish`, `GET /publish/{job_id}`. The redirect address of the sign-in, `<origin>/social/callback`, is a page of the app, not an API route: it reads `state` and `code` from its address and posts them to `POST /social/complete` with the session of the browser, so the callback has the same authentication, origin and request checks as every other call.
+- CLI: `social:network:list`, `social:connect`, `social:account:list`, `publish:validate`, `publish:now`, `publish:status`. `social:connect` reads the client secret from standard input or `--secret-file`, never from an argument, and prints the address the person opens in the browser. The callback has no command: it is the browser's. The six commands are left out of the editor skill of `agent:docs`, as the library commands are, because that skill is at its size cap; the skills of publishing (epics 13 and 16) carry them.
+- MCP: **none in this epic.** The catalogue is at its interim byte cap until epic 13 revises it, and the `kind` of `job_start` is a closed list that does not name `publish.upload`, so an agent prepares a publication through the CLI (`publish:now`) or HTTP (`POST /publish`), reads it with `publish:status` and cannot approve it. For epic 13: add `publish.upload` to the kind list of `job_start` and `waiting_approval` to its state lists (the changes of SDD-015 section 10 that wait for the first kind), and a read-only part (`SocialNetworkList`, `SocialAccountList`, `PublishValidate`, `PublishStatus`, about 600 bytes as one `publish` tool with actions) to fit the new budget.
 - The UI: the setup guide, the account list and the "publish now" dialog in the Connections page. The dialog sends the post and shows what the service answers (the issues, then the job waiting for approval); it validates nothing itself.
 
 ## 14. Tests

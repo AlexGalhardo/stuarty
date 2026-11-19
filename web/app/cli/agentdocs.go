@@ -28,6 +28,11 @@ func AgentDocsInputs() agentdocs.Inputs {
 		inLibrary[s.name] = true
 	}
 
+	// The commands of publishing (SDD-020 section 13) wait for the skills of publishing for the same reason.
+	for _, s := range publishingCommands() {
+		inLibrary[s.name] = true
+	}
+
 	for i := range commands {
 		c := &commands[i]
 		if c.Person || inLibrary[c.Name] {

@@ -146,6 +146,16 @@ var parity = []row{
 	{method: "ApprovalRuleRemove", command: "approval:rule:remove", route: "DELETE /approval-rules/{}"},
 	{method: "CostSummary", command: "cost:show", route: "GET /cost"},
 	{method: "CostCeilingSet", command: "cost:ceiling", route: "PUT /cost/ceilings"},
+	// Social networks and publishing (SDD-020 section 13): no MCP tool in this release, the catalogue is at its
+	// interim cap until epic 13; an agent reaches them through the CLI and HTTP. The sign-in redirect is the
+	// browser's: it has no command.
+	{method: "SocialNetworkList", command: "social:network:list", route: "GET /social/networks"},
+	{method: "SocialConnectBegin", command: "social:connect", route: "POST /social/connect"},
+	{method: "SocialConnectComplete", route: "POST /social/complete", httpOnly: true},
+	{method: "SocialAccountList", command: "social:account:list", route: "GET /social/accounts"},
+	{method: "PublishValidate", command: "publish:validate", route: "POST /publish/validate"},
+	{method: "PublishNow", command: "publish:now", route: "POST /publish"},
+	{method: "PublishStatus", command: "publish:status", route: "GET /publish/{}"},
 	// The library (SDD-018): one MCP tool, library, serves the lists, reads, writes, searches, renders and
 	// lints. Removing a note, importing and exporting skills read and write files by path (no tool), and
 	// marking a skill as read is for a person at the browser (HTTP only).
