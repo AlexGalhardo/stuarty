@@ -102,7 +102,10 @@ test.describe("shortcuts", () => {
 		await search.fill("split");
 		await expect(dialog.locator('[data-shortcut-row="split"]')).toBeVisible();
 		await expect(dialog.locator('[data-shortcut-row="undo"]')).toHaveCount(0);
-		await search.fill("Ctrl+Z");
+		const mod = await page.evaluate(() =>
+			/Mac|iPhone|iPad/.test(navigator.userAgent) ? "Cmd" : "Ctrl",
+		);
+		await search.fill(`${mod}+Z`);
 		await expect(dialog.locator('[data-shortcut-row="undo"]')).toBeVisible();
 		await search.fill("no such shortcut anywhere");
 		await expect(dialog.getByText("No shortcut matches.")).toBeVisible();
