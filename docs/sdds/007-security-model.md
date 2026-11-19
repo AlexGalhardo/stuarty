@@ -412,7 +412,7 @@ Scopes: `read`, `edit`, `media`, `render`, `admin` (SDD-000 §4). They are indep
 | `CostCeilingSet` | `PUT /cost/ceilings` | - | - | - | - | R | A privileged browser session only (T-50); audited |
 | `SocialNetworkList` | `GET /social/networks` | R | - | - | - | - | The networks of the build and their limits; no secret (SDD-020) |
 | `SocialConnectBegin` | `POST /social/connect` | - | - | - | - | R | Creates a connection with the client id and secret of the person's own app in the vault; the result has the authorization address and no secret; refused for a project-limited key; no MCP tool; audited (T-59) |
-| `SocialConnectComplete` | `GET /social/callback` | - | - | - | - | R | A browser session only; the state is single-use, bound to the actor and expires in 10 minutes (T-59); audited |
+| `SocialConnectComplete` | `POST /social/complete` | - | - | - | - | R | A browser session only; the state is single-use, bound to the actor and expires in 10 minutes (T-59); audited |
 | `SocialAccountList` | `GET /social/accounts` | R | - | - | - | - | The account title (as network text) and state of each social connection; never a token (T-57); refused for a project-limited key |
 | `PublishValidate` | `POST /publish/validate` | R | - | - | - | - | A pure check against the limits of the network; no request leaves the machine |
 | `PublishNow` | `POST /publish` | - | - | - | R | - | A job of a kind that needs approval (SDD-015 section 5; T-48, T-59): nothing leaves the machine before a person or a rule approves; the export must belong to the project; a project-limited key only for its project |

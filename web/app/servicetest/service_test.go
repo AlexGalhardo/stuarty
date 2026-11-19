@@ -361,20 +361,32 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.CostCeilingSet(ctx, service.CostCeilingSetRequest{Currency: "USD"})
 			return err
 		},
-		"ProviderList": func() error {
-			_, err := e.svc.ProviderList(ctx, service.ProviderListRequest{})
+		"SocialNetworkList": func() error {
+			_, err := e.svc.SocialNetworkList(ctx, service.SocialNetworkListRequest{})
 			return err
 		},
-		"ProviderModels": func() error {
-			_, err := e.svc.ProviderModels(ctx, service.ProviderModelsRequest{ConnectionID: "con_0000000001"})
+		"SocialConnectBegin": func() error {
+			_, err := e.svc.SocialConnectBegin(ctx, service.SocialConnectBeginRequest{})
 			return err
 		},
-		"ProviderPriceSet": func() error {
-			_, err := e.svc.ProviderPriceSet(ctx, service.ProviderPriceSetRequest{Provider: "openai", Model: "m"})
+		"SocialConnectComplete": func() error {
+			_, err := e.svc.SocialConnectComplete(ctx, service.SocialConnectCompleteRequest{})
 			return err
 		},
-		"TextGenerate": func() error {
-			_, err := e.svc.TextGenerate(ctx, service.TextGenerateRequest{ProjectID: "prj_0000000001"})
+		"SocialAccountList": func() error {
+			_, err := e.svc.SocialAccountList(ctx, service.SocialAccountListRequest{})
+			return err
+		},
+		"PublishValidate": func() error {
+			_, err := e.svc.PublishValidate(ctx, service.PublishValidateRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"PublishNow": func() error {
+			_, err := e.svc.PublishNow(ctx, service.PublishNowRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"PublishStatus": func() error {
+			_, err := e.svc.PublishStatus(ctx, service.PublishStatusRequest{JobID: "job_0000000001"})
 			return err
 		},
 		"MemoryList": func() error {
