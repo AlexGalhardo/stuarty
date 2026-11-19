@@ -638,11 +638,12 @@ type HistoryDiffRequest struct {
 	ProjectID      string `json:"project_id"`
 	From           int64  `json:"from,omitempty"`            // a revision; or
 	FromCheckpoint string `json:"from_checkpoint,omitempty"` // the name of a checkpoint
-	To             int64  `json:"to,omitempty"`              // a revision; default the current one
+	Until          int64  `json:"until,omitempty"`           // a revision; default the current one
 }
 
 type HistoryDiffResult struct {
 	ProjectID string      `json:"project_id"`
+	Revision  int64       `json:"revision"` // the current revision of the timeline
 	From      int64       `json:"from"`
 	To        int64       `json:"to"`
 	Count     int         `json:"count"`   // changes between the two documents
@@ -2160,7 +2161,7 @@ errors: E_VALIDATION, E_INVALID_TIME, E_NOT_FOUND, E_ID_EXISTS, E_INVALID_STATE,
 ```json
 {
   "name": "history",
-  "description": "Read the change log (action=list, newest first, with actor; actor, cursor, limit only for list), or undo or redo your own latest step (action=undo or redo, one step per call). Undo skips a later change by another actor and reports it; an undo is itself a step. domain=image (image_id): undo or redo only.",
+  "description": "Read the change log (action=list, newest first, with actor; actor, cursor, limit only for list), undo or redo your own latest step (one per call), revert to a revision or checkpoint as a new step (dry_run shows it), diff two revisions, or name revisions: checkpoints, checkpoint, rename_checkpoint, remove_checkpoint. Undo skips a later change by another actor and reports it. domain=image (image_id): undo or redo only.",
   "inputSchema": {
     "type": "object",
     "properties": {
@@ -2187,7 +2188,13 @@ errors: E_VALIDATION, E_INVALID_TIME, E_NOT_FOUND, E_ID_EXISTS, E_INVALID_STATE,
         "enum": [
           "list",
           "undo",
-          "redo"
+          "redo",
+          "revert",
+          "diff",
+          "checkpoints",
+          "checkpoint",
+          "rename_checkpoint",
+          "remove_checkpoint"
         ],
         "default": "list"
       },
@@ -2202,6 +2209,26 @@ errors: E_VALIDATION, E_INVALID_TIME, E_NOT_FOUND, E_ID_EXISTS, E_INVALID_STATE,
         "minimum": 1,
         "maximum": 100,
         "default": 20
+      },
+      "revision": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "until": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "name": {
+        "type": "string"
+      },
+      "new_name": {
+        "type": "string"
+      },
+      "note": {
+        "type": "string"
+      },
+      "dry_run": {
+        "type": "boolean"
       }
     },
     "additionalProperties": false
@@ -2215,7 +2242,8 @@ errors: E_VALIDATION, E_INVALID_TIME, E_NOT_FOUND, E_ID_EXISTS, E_INVALID_STATE,
       "kind": {
         "enum": [
           "undo",
-          "redo"
+          "redo",
+          "revert"
         ]
       },
       "entries": {
@@ -2277,7 +2305,7 @@ lint (fast rules): no new findings (errors=0 warnings=0 in total)
 
 The structured result of `undo` is an `UndoResult` (§2.5: the `EditResult` members plus `kind`, `undone` and `skipped`); of `list` a `HistoryListResult`.
 
-**Revert, diff and checkpoints on this tool (epic 36).** The six operations of §2.5.1 are more `action` values of `history`, not a new tool (the budget of §4.1 leaves no room for one, and each is an intent of reading or changing the log): `revert` is `HistoryRevert`, `diff` `HistoryDiff`, `checkpoints` `CheckpointList`, `checkpoint` `CheckpointCreate`, `rename_checkpoint` `CheckpointRename` and `remove_checkpoint` `CheckpointRemove`. The members are `revision` (the revision to revert to, the revision of a checkpoint, or the start of a diff), `to` (the end of a diff, default the current revision), `name` (the checkpoint, to revert to, to start a diff from, to create, to rename or to remove), `new_name`, `note`, `base_revision` and `dry_run`. A member that an action does not use is `E_VALIDATION`, as in S-11 of §7.1. `domain=image` serves undo and redo only. `revert` with `dry_run=true` is the preview an agent reads before it goes back.
+**Revert, diff and checkpoints on this tool (epic 36).** The six operations of §2.5.1 are more `action` values of `history`, not a new tool (the budget of §4.1 leaves no room for one, and each is an intent of reading or changing the log): `revert` is `HistoryRevert`, `diff` `HistoryDiff`, `checkpoints` `CheckpointList`, `checkpoint` `CheckpointCreate`, `rename_checkpoint` `CheckpointRename` and `remove_checkpoint` `CheckpointRemove`. The members are `revision` (the revision to revert to, the revision of a checkpoint, or the start of a diff), `until` (the end of a diff, default the current revision; not `to`, which `TestNoOutboundTools` forbids), `name` (the checkpoint, to revert to, to start a diff from, to create, to rename or to remove), `new_name`, `note` and `dry_run` (`base_revision` is CLI and HTTP only, to stay within the budget: an agent goes back over the current revision, and a person who wants the conflict check of SDD-002 A.7 uses those surfaces). A member that a new action does not use is `E_VALIDATION`, as in S-11 of §7.1; `list`, `undo` and `redo` keep the leniency they had, and `dry_run` now also previews an undo or a redo. `domain=image` serves undo and redo only. `revert` with `dry_run=true` is the preview an agent reads before it goes back. **Cost.** The tool list is now 22,241 bytes (6,950 tokens) and the definition of `history` 1,675 bytes, against the limits of §4.1 (22,400, 7,000 and 1,700): there is no room left for `history`, so a later change shortens its description first.
 
 #### `media_import`
 
@@ -3467,7 +3495,7 @@ edit applies a batch of operations all or nothing, as one undo step. Call comman
 Ids (prj_, ast_, trk_, itm_, job_) are stable. Give a new track or item your own id when later operations in the same batch refer to it.
 A failed call returns code, message, hint and retryable. Retry only when retryable is true. E_REVISION_CONFLICT includes the changes since your revision: read them and re-plan.
 Lists carry next_cursor: pass it back as cursor.
-history action=undo reverts your own latest step. Nothing here deletes data for good and nothing is sent outside this machine.
+history action=undo reverts your own latest step. To undo a whole line of work, name the state first (action=checkpoint, name), and later read action=diff (revision or name) and go back with action=revert (dry_run=true first); a revert is a step undo takes back. Nothing here deletes data for good and nothing is sent outside this machine.
 A started export or import keeps running after the call returns: keep polling job_get until it finishes (wait_ms makes it wait).
 ```
 
@@ -3607,7 +3635,7 @@ Every command that reads or edits a timeline (those whose result is about one do
 | `undo` | `undo --project <id>` | none (one step per call) | none | `UndoResult` |
 | `redo` | `redo --project <id>` | none (one step per call) | none | `UndoResult` |
 | `revert` | `revert --project <id> (--revision n \| --checkpoint name) [--base n]` | `--revision` int or `--checkpoint` string (one of them), `--base` int (default the current revision) | `--dry-run` | `HistoryRevertResult` |
-| `diff` | `diff --project <id> (--from n \| --from-checkpoint name) [--to n]` | `--from` int or `--from-checkpoint` string, `--to` int (default the current revision) | none | `HistoryDiffResult` |
+| `diff` | `diff --project <id> (--from n \| --from-checkpoint name) [--until n]` | `--from` int or `--from-checkpoint` string, `--until` int (default the current revision) | none | `HistoryDiffResult` |
 | `checkpoint:create` | `checkpoint:create --project <id> --name <name> [--note t] [--revision n]` | `--name` string, `--note` string, `--revision` int (default the current one) | none | `Checkpoint` |
 | `checkpoint:list` | `checkpoint:list --project <id>` | none | none | `CheckpointListResult` |
 | `checkpoint:rename` | `checkpoint:rename --project <id> --name <name> --new-name <name> [--note t]` | `--name`, `--new-name`, `--note` strings | none | `Checkpoint` |
@@ -3874,7 +3902,7 @@ Success codes are the `Op.Status`. Error statuses are the table of SDD-000 §8; 
 | `projects.undo` | `POST /projects/{id}/undo` | none | `{dry_run?}` | 200 `UndoResult` | edit | 409 `E_NOTHING_TO_UNDO` |
 | `projects.redo` | `POST /projects/{id}/redo` | none | `{dry_run?}` | 200 `UndoResult` | edit | 409 `E_NOTHING_TO_REDO` |
 | `projects.revert` | `POST /projects/{id}/revert` | none | `{revision \| checkpoint, base_revision?, dry_run?}` | 200 `HistoryRevertResult` | edit | 404 `E_NOT_FOUND` (checkpoint); 409 `E_REVISION_CONFLICT`; 422 `E_VALIDATION`, `E_INVALID_STATE` |
-| `projects.diff` | `GET /projects/{id}/diff` | `from` or `from_checkpoint`, `to` | none | 200 `HistoryDiffResult` | read | 404 `E_NOT_FOUND`; 422 `E_VALIDATION`, `E_INVALID_STATE` |
+| `projects.diff` | `GET /projects/{id}/diff` | `from` or `from_checkpoint`, `until` | none | 200 `HistoryDiffResult` | read | 404 `E_NOT_FOUND`; 422 `E_VALIDATION`, `E_INVALID_STATE` |
 | `projects.checkpoints.list` | `GET /projects/{id}/checkpoints` | none | none | 200 `CheckpointListResult` | read | none |
 | `projects.checkpoints.create` | `POST /projects/{id}/checkpoints` | none | `{name, note?, revision?}` | 201 `Checkpoint` | edit | 409 `E_ID_EXISTS`; 422 `E_VALIDATION` |
 | `projects.checkpoints.rename` | `PATCH /projects/{id}/checkpoints/{name}` | none | `{new_name, note?}` | 200 `Checkpoint` | edit | 404 `E_NOT_FOUND`; 409 `E_ID_EXISTS` |

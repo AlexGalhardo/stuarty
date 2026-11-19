@@ -40,7 +40,7 @@ A creator lets an agent try an idea without fear: they name the current state, l
 - [x] 3. Implement `history.revert` with golden cases and a property test (revert to R then export equals the export at R). Verify: `go test ./core/command/... -run TestRevert` passes.
 - [x] 4. Implement checkpoints, the automatic one and retention. Verify: `go test ./service/... -run TestCheckpoint` passes.
 - [x] 5. Render the diff as text within the budget. Verify: `go test ./service/textview/... -run TestDiffText` passes.
-- [ ] 6. Expose on the three surfaces and regenerate documents. Verify: `go test ./web/contract/...` and `task generate:check` pass.
+- [x] 6. Expose on the three surfaces and regenerate documents. Verify: `go test ./web/contract/...` and `task generate:check` pass.
 - [ ] 7. Build the history panel in both languages, keyboard operable. Verify: `task test:web` and `web/e2e/specs/history-revert.spec.ts` pass.
 
 ## Test strategy

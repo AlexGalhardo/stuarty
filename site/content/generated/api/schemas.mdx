@@ -314,36 +314,27 @@ The types named in the tables of the operations. The arguments of each editing c
 | `kind` | `string` | no |  |
 | `object` | map of `any` | no |  |
 
-### ChatSession
+### Checkpoint
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
-| `created_at` | `string (date-time)` | no |  |
-| `end_reason` | `string` | no |  |
-| `ended_at` | `string (date-time)` or `null` | no |  |
-| `event_count` | `integer` | no |  |
-| `id` | `string` | no |  |
-| `live` | `boolean` | no |  |
-| `profile` | `string` | no |  |
+| `actor` | `string` | no |  |
+| `at` | `string (date-time)` | no |  |
+| `auto` | `boolean` | no |  |
+| `name` | `string` | no |  |
+| `note` | `string` | no |  |
+| `revision` | `integer (int64)` | no |  |
+| `untrusted_notice` | `string` | no |  |
+
+### CheckpointListResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `checkpoints` | array of [`Checkpoint`](/docs/api/schemas#checkpoint) | no |  |
 | `project_id` | `string` | no |  |
-| `state` | `string` | no |  |
-| `title` | `string` | no |  |
-| `updated_at` | `string (date-time)` | no |  |
-
-### ChatSessionListResult
-
-| Name | Type | Required | Description |
-| --- | --- | --- | --- |
-| `sessions` | array of [`ChatSession`](/docs/api/schemas#chatsession) | no |  |
-
-### ChatTranscriptResult
-
-| Name | Type | Required | Description |
-| --- | --- | --- | --- |
-| `events` | array of [`Event`](/docs/api/schemas#event) | no |  |
-| `markdown` | `string` | no |  |
-| `next_after` | `integer (int64)` or `null` | no |  |
-| `session` | [`ChatSession`](/docs/api/schemas#chatsession) | no |  |
+| `revision` | `integer (int64)` | no |  |
+| `text` | `string` | no |  |
+| `untrusted_notice` | `string` | no |  |
 
 ### ChromaKey
 
@@ -473,19 +464,14 @@ The types named in the tables of the operations. The arguments of each editing c
 | `master` | array of [`CurvePoint`](/docs/api/schemas#curvepoint) | no |  |
 | `red` | array of [`CurvePoint`](/docs/api/schemas#curvepoint) | no |  |
 
-### Description
+### DiffEntry
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
-| `endpoint` | `string` | no |  |
-| `guide` | `string` | no |  |
-| `guide_read` | `string` | no |  |
-| `hosts` | array of `string` | no |  |
-| `limits` | [`Limits`](/docs/api/schemas#limits) | no |  |
-| `name` | `string` | no |  |
-| `network` | `string` | no |  |
-| `publishes` | array of `string` | no |  |
-| `scopes` | array of `string` | no |  |
+| `change` | [`Change`](/docs/api/schemas#change) | no |  |
+| `line` | `string` | no |  |
+| `noun` | `string` | no |  |
+| `verb` | `string` | no |  |
 
 ### DoctorCheck
 
@@ -790,6 +776,19 @@ The types named in the tables of the operations. The arguments of each editing c
 | --- | --- | --- | --- |
 | `proof` | `string` | no | HMAC-SHA256 keyed by the token over the nonce (SDD-007 section 3.8). |
 
+### HistoryDiffResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `count` | `integer` | no |  |
+| `entries` | array of [`DiffEntry`](/docs/api/schemas#diffentry) | no |  |
+| `from` | `integer (int64)` | no |  |
+| `project_id` | `string` | no |  |
+| `revision` | `integer (int64)` | no |  |
+| `text` | `string` | no |  |
+| `to` | `integer (int64)` | no |  |
+| `untrusted_notice` | `string` | no |  |
+
 ### HistoryEntry
 
 | Name | Type | Required | Description |
@@ -824,6 +823,29 @@ The types named in the tables of the operations. The arguments of each editing c
 | `at` | `string (date-time)` | no |  |
 | `kind` | `string` | no |  |
 | `revision` | `integer (int64)` | no |  |
+
+### HistoryRevertResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `actor` | `string` | no |  |
+| `applied` | `boolean` | no |  |
+| `base_revision` | `integer (int64)` | no |  |
+| `created` | array of `string` | no |  |
+| `description` | `string` | no |  |
+| `diff` | array of [`Change`](/docs/api/schemas#change) | no |  |
+| `dry_run` | `boolean` | no |  |
+| `effective` | array of [`OpEffect`](/docs/api/schemas#opeffect) | no |  |
+| `findings` | array of [`Finding`](/docs/api/schemas#finding) | no |  |
+| `kind` | `string` | no |  |
+| `lint` | [`LintTotals`](/docs/api/schemas#linttotals) | no |  |
+| `project_id` | `string` | no |  |
+| `replayed` | `boolean` | no |  |
+| `revision` | `integer (int64)` | no |  |
+| `same` | `boolean` | no |  |
+| `target` | `integer (int64)` | no |  |
+| `text` | `string` | no |  |
+| `untrusted_notice` | `string` | no |  |
 
 ### HslBand
 
