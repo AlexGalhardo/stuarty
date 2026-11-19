@@ -37,8 +37,8 @@ A creator, or their agent, asks for a thumbnail background or a narration and ge
 
 ## Tasks
 
-- [ ] 1. Propose the first image provider and the first voice provider (API, pricing source, terms on commercial use of outputs); STOP for approval. Verify: the approval is in the hand-off.
-- [ ] 2. Amend SDD-016 and SDD-000 (capabilities, job kinds, errors). Verify: `task lint:md` exits 0.
+- [x] 1. Propose the first image provider and the first voice provider (API, pricing source, terms on commercial use of outputs); STOP for approval. Verify: the approval is in the hand-off.
+- [x] 2. Amend SDD-016 and SDD-000 (capabilities, job kinds, errors). Verify: `task lint:md` exits 0.
 - [ ] 3. Implement validation and estimation for both capabilities with table tests. Verify: `go test ./core/provider/...` passes.
 - [ ] 4. Implement the image adapter with contract tests from recorded responses. Verify: `go test ./service/providers/...` passes with no network.
 - [ ] 5. Implement the voice adapter and `VoiceList` the same way. Verify: `go test ./service/providers/...` passes with no network.
