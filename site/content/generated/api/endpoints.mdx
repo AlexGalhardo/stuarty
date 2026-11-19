@@ -203,6 +203,23 @@ Every operation has its own page with the parameters, the body, the responses an
 | `POST` | `/api/v1/social/connect` | [`social.connect`](/docs/api/social.connect) | Start the sign-in to a network with your own developer app; answers the address of the consent screen |
 | `GET` | `/api/v1/social/networks` | [`social.networks`](/docs/api/social.networks) | List the social networks of this build and their limits |
 
+## Agent chat
+
+| Method | Path | Operation | Summary |
+| --- | --- | --- | --- |
+| `GET` | `/api/v1/agents/profiles` | [`agents.profiles.list`](/docs/api/agents.profiles.list) | List the agents the chat may host and the suggestions |
+| `PUT` | `/api/v1/agents/profiles/{name}` | [`agents.profiles.set`](/docs/api/agents.profiles.set) | Write an agent profile, a command that will run on the machine (a person in the browser only; others get 403) |
+| `DELETE` | `/api/v1/agents/profiles/{name}` | [`agents.profiles.remove`](/docs/api/agents.profiles.remove) | Remove an agent profile (a person in the browser only; others get 403) |
+| `GET` | `/api/v1/chat/sessions/{id}` | [`chat.sessions.get`](/docs/api/chat.sessions.get) | Read one chat session |
+| `DELETE` | `/api/v1/chat/sessions/{id}` | [`chat.sessions.delete`](/docs/api/chat.sessions.delete) | Delete a session and its transcript (a person in the browser only; others get 403) |
+| `POST` | `/api/v1/chat/sessions/{id}/cancel` | [`chat.sessions.cancel`](/docs/api/chat.sessions.cancel) | Cancel the turn in progress, or end the session (a person in the browser only; others get 403) |
+| `GET` | `/api/v1/chat/sessions/{id}/events` | [`chat.sessions.events`](/docs/api/chat.sessions.events) | Stream what the agent of a session says and does |
+| `POST` | `/api/v1/chat/sessions/{id}/messages` | [`chat.sessions.send`](/docs/api/chat.sessions.send) | Send a message to the agent (a person in the browser only; others get 403) |
+| `POST` | `/api/v1/chat/sessions/{id}/permissions/{request_id}` | [`chat.sessions.answer`](/docs/api/chat.sessions.answer) | Answer a permission request of the agent (a person in the browser only; others get 403) |
+| `GET` | `/api/v1/chat/sessions/{id}/transcript` | [`chat.sessions.transcript`](/docs/api/chat.sessions.transcript) | Read the transcript of a session as events or as Markdown |
+| `GET` | `/api/v1/projects/{id}/chat/sessions` | [`chat.sessions.list`](/docs/api/chat.sessions.list) | List the chat sessions of a project |
+| `POST` | `/api/v1/projects/{id}/chat/sessions` | [`chat.sessions.start`](/docs/api/chat.sessions.start) | Start the agent of a profile on a project (a person in the browser only; others get 403) |
+
 ## System
 
 | Method | Path | Operation | Summary |

@@ -2837,6 +2837,86 @@
       ]
     },
     {
+      "name": "agent:profiles",
+      "domain": "workspace",
+      "summary": "list the agents the chat may host, with their full command, and the known agents found on this machine",
+      "usage": [
+        "stuarty agent:profiles"
+      ],
+      "example": "stuarty agent:profiles --json",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "chat:sessions",
+      "domain": "workspace",
+      "summary": "list the chat sessions of a project, newest first",
+      "usage": [
+        "stuarty chat:sessions --project <id>"
+      ],
+      "example": "stuarty chat:sessions --project prj_7k2m9x4q1b",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project"
+      ]
+    },
+    {
+      "name": "chat:session",
+      "domain": "workspace",
+      "summary": "show one chat session: its agent, its state and how many events it holds",
+      "usage": [
+        "stuarty chat:session <id>"
+      ],
+      "example": "stuarty chat:session cht_7k2m9x4q1b",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "chat:transcript",
+      "domain": "workspace",
+      "summary": "read the transcript of a chat session as events, or the whole of it as Markdown",
+      "usage": [
+        "stuarty chat:transcript <id> [--format json|markdown] [--after n] [--limit n]"
+      ],
+      "example": "stuarty chat:transcript cht_7k2m9x4q1b --format markdown",
+      "flags": [
+        {
+          "name": "format",
+          "type": "string",
+          "usage": "json (the default: events after a number) or markdown"
+        },
+        {
+          "name": "after",
+          "type": "integer",
+          "default": "0",
+          "usage": "only the events with a number above this one"
+        },
+        {
+          "name": "limit",
+          "type": "integer",
+          "default": "0",
+          "usage": "the most events in the page, at most 500 (0 is 500)"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
       "name": "memory:list",
       "domain": "memory",
       "summary": "list the memory notes",

@@ -72,6 +72,9 @@ var commandDomains = map[string]string{
 	"brand:show": command.DomainWorkspace, "brand:set": command.DomainWorkspace, "doctor": command.DomainWorkspace,
 	"audit": command.DomainWorkspace, "tools:install": command.DomainWorkspace, "version": command.DomainWorkspace,
 	"mcp": command.DomainWorkspace, "agent:docs": command.DomainWorkspace, "token:rotate": command.DomainWorkspace,
+
+	"agent:profiles": command.DomainWorkspace, "chat:sessions": command.DomainWorkspace,
+	"chat:session": command.DomainWorkspace, "chat:transcript": command.DomainWorkspace,
 }
 
 // domainOf is the domain of a command of the table, empty for a name that is not in it.
