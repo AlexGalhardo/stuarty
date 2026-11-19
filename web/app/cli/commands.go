@@ -14,7 +14,7 @@ import (
 
 // registry lists the commands in the order the short list prints them.
 func registry() []*spec {
-	return []*spec{
+	return append([]*spec{
 		projectList, projectCreate, projectShow, projectTrash, projectRestore,
 		edit, history, undo, redo, lintCmd, version, mcpCmd,
 		mediaImport, mediaInspect, mediaList, mediaTrash, mediaRestore, view, export,
@@ -26,7 +26,7 @@ func registry() []*spec {
 		briefShowCmd, briefSetCmd,
 		connectionListCmd, connectionShowCmd, connectionAddCmd, connectionRemoveCmd, connectionTestCmd,
 		imageCreate, imageList, imageShow, imageEdit, imageUndo, imageRedo, imageExport,
-	}
+	}, libraryCommands()...)
 }
 
 // CommandNames lists the commands the binary knows, and those among them that

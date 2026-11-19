@@ -181,6 +181,13 @@ func TestTablesMatchSDD005Section5(t *testing.T) {
 			"accepts TEXT 1 - 0", "secret_ref TEXT 1 - 0", "created_ms INTEGER 1 - 0", "created_by TEXT 1 - 0",
 			"last_used_ms INTEGER 0 - 0",
 		},
+		"library_entries": {
+			"key TEXT 1 - 1", "kind TEXT 1 - 0", "name TEXT 1 - 0", "description TEXT 1 - 0", "scope TEXT 1 - 0",
+			"origin TEXT 1 - 0", "reviewed INTEGER 1 - 0", "kept INTEGER 1 - 0", "actor TEXT 1 - 0", "tags TEXT 1 - 0",
+			"state TEXT 1 - 0", "error TEXT 1 - 0", "path TEXT 1 - 0", "sig TEXT 1 - 0", "lint_errors INTEGER 1 - 0",
+			"lint_warnings INTEGER 1 - 0", "has_scripts INTEGER 1 - 0", "created_ms INTEGER 1 - 0",
+			"updated_ms INTEGER 1 - 0",
+		},
 	}
 	for table, w := range want {
 		if got := columns(t, db, table); !slices.Equal(got, w) {
@@ -331,6 +338,8 @@ func TestResetDropsEveryEditorTableAndUpRunsAgain(t *testing.T) {
 		"connections",
 		"image_documents",
 		"image_operations",
+		"library_entries",
+		"library_fts",
 	}
 	for _, table := range tables {
 		if len(columns(t, db, table)) == 0 {

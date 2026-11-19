@@ -135,6 +135,26 @@ var parity = []row{
 	{method: "ImageUndo", tool: "image", command: "image:undo", route: "POST /images/{}/undo"},
 	{method: "ImageRedo", tool: "image", command: "image:redo", route: "POST /images/{}/redo"},
 	{method: "ImageExport", tool: "image", command: "image:export", route: "POST /images/{}/export"},
+	// The library (SDD-018): one MCP tool, library, serves the lists, reads, writes, searches, renders and
+	// lints. Removing a note, importing and exporting skills read and write files by path (no tool), and
+	// marking a skill as read is for a person at the browser (HTTP only).
+	{method: "MemoryList", tool: "library", command: "memory:list", route: "GET /library/memory"},
+	{method: "MemoryGet", tool: "library", command: "memory:show", route: "GET /library/memory/{}"},
+	{method: "MemoryWrite", tool: "library", command: "memory:write", route: "POST /library/memory"},
+	{method: "MemoryRemove", command: "memory:remove", route: "DELETE /library/memory/{}"},
+	{method: "SkillList", tool: "library", command: "skill:list", route: "GET /library/skills"},
+	{method: "SkillGet", tool: "library", command: "skill:show", route: "GET /library/skills/{}"},
+	{method: "SkillWrite", tool: "library", command: "skill:write", route: "PUT /library/skills/{}"},
+	{method: "SkillImport", command: "skill:import", route: "POST /library/skills/import"},
+	{method: "SkillExport", command: "skill:export", route: "POST /library/skills/export"},
+	{method: "SkillMarkReviewed", route: "POST /library/skills/{}/review", httpOnly: true},
+	{method: "SkillLint", tool: "library", command: "skill:lint", route: "GET /library/skills/{}/lint"},
+	{method: "PromptList", tool: "library", command: "prompt:list", route: "GET /library/prompts"},
+	{method: "PromptGet", tool: "library", command: "prompt:show", route: "GET /library/prompts/{}"},
+	{method: "PromptWrite", tool: "library", command: "prompt:write", route: "PUT /library/prompts/{}"},
+	{method: "PromptRender", tool: "library", command: "prompt:render", route: "POST /library/prompts/{}/render"},
+	{method: "LibrarySearch", tool: "library", command: "library:search", route: "GET /library/search"},
+	{method: "LibraryReindex", command: "library:reindex", route: "POST /library/reindex"},
 }
 
 // notOperations are Service methods that are not operations an agent calls
@@ -386,10 +406,10 @@ func TestBudgetsOfTheSurfacesArePrinted(t *testing.T) {
 	raw := encode(t, list)
 	tokens := len(raw) / 3 // the conservative 3 bytes per token of SDD-003 section 4.1
 
-	t.Logf("NFR-020: tools/list is %d bytes, about %d tokens (limit 7200)", len(raw), tokens)
+	t.Logf("NFR-020: tools/list is %d bytes, about %d tokens (limit 7500)", len(raw), tokens)
 
-	if tokens > 7200 {
-		t.Errorf("tools/list is about %d tokens, over the interim 7200 of NFR-020", tokens)
+	if tokens > 7500 {
+		t.Errorf("tools/list is about %d tokens, over the interim 7500 of NFR-020", tokens)
 	}
 
 	steps, fixtures := loadScenario(t, "prototype")

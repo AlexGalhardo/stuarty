@@ -20,6 +20,7 @@ import (
 	coreimage "github.com/AlexGalhardo/stuarty/core/image"
 	"github.com/AlexGalhardo/stuarty/engine/ingest"
 	"github.com/AlexGalhardo/stuarty/service/connections"
+	"github.com/AlexGalhardo/stuarty/service/library"
 	"github.com/AlexGalhardo/stuarty/service/textview"
 )
 
@@ -232,6 +233,9 @@ func (m *memStore) Images() ImageRepo { return m.images }
 
 // No test here reads a connection; the manager the service builds only needs a store to hold.
 func (m *memStore) Connections() connections.Store { return nil }
+
+// Nor does any test here use the library; its manager only needs an index to hold.
+func (m *memStore) Library() library.Index { return nil }
 
 func (m *memStore) Projects() ProjectRepo { return m.projects }
 func (m *memStore) Assets() AssetRepo     { return m.assets }
