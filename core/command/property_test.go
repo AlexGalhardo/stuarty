@@ -375,6 +375,11 @@ var alphaOps = map[string]func(p *docPick) string{
 			float64(p.n(101))/100,
 		)
 	},
+	// The random documents hold one video, so a swap succeeds only as the same asset (a no-op); an image for a
+	// video is the refusal the sequences should also meet.
+	"clip.replace_media": func(p *docPick) string {
+		return fmt.Sprintf(`{"item_id":%q,"asset_id":%q}`, p.clip(), p.oneOf(vidAsset, vidAsset, imgAsset))
+	},
 	"clip.set_blur": func(p *docPick) string {
 		return fmt.Sprintf(`{"item_id":%q,"radius":%d}`, p.clip(), p.n(101))
 	},

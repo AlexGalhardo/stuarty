@@ -626,8 +626,9 @@ func jobGet(ctx context.Context, svc service.Service, raw json.RawMessage) (*too
 	}
 }
 
-// view is three operations behind one tool (SDD-003 section 4.2): a frame at "at", a contact sheet, or, in mode
-// audio, the measurement of the sound (epic 34). It is the only tool that returns an image block.
+// view is four operations behind one tool (SDD-003 section 4.2): a frame at "at", a contact sheet, in mode motion the
+// brief of an external render, and in mode audio the measurement of the sound (epic 34). It is the only tool that
+// returns an image block.
 func view(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolOutput, error) {
 	in, err := decode[struct {
 		ProjectID  string   `json:"project_id"`
@@ -663,12 +664,24 @@ func view(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolO
 		return &toolOutput{value: measure, text: measure.Text}, nil
 	}
 
-	// As the CLI refuses --item outside --mode audio: a frame or a sheet is of the whole timeline.
+	// As the CLI refuses --item outside --mode audio: a frame, a sheet and a motion brief are of the timeline.
 	if in.ItemID != "" {
 		return nil, &service.Error{
 			Code: command.CodeValidation, Path: "item_id", Message: "item_id is for mode audio.",
-			Hint: "a frame or a sheet shows the whole timeline; use mode audio to measure one item",
+			Hint: "use mode audio to measure one item",
 		}
+	}
+
+	if in.Mode == "motion" {
+		if in.At != "" || len(in.Times) > 0 || in.Count != 0 || in.MaxTokens != 0 {
+			return nil, &service.Error{
+				Code: command.CodeValidation, Path: "mode",
+				Message: "at, times, count and max_tokens are not accepted in mode motion.",
+				Hint:    "use from and until for the range",
+			}
+		}
+
+		return motionTool(ctx, svc, in.ProjectID, in.TimelineID, in.From, in.Until)
 	}
 
 	var res *service.ViewResult

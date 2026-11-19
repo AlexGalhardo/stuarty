@@ -2,8 +2,16 @@ package asset
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 	"unicode/utf8"
+)
+
+// The forms of the members of a render by another tool (SDD-011 section 15.2): tokens, not free text, so they are
+// not delimited as untrusted.
+var (
+	engineForm    = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._+-]{0,63}$`)
+	renderKeyForm = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._:/-]{0,119}$`)
 )
 
 // OriginKind says where a file came from.
@@ -52,6 +60,12 @@ type Origin struct {
 	Prompt     string     `json:"prompt,omitempty"      untrusted:"true"`
 	CostMicros *int64     `json:"cost_micros,omitempty"`                  // millionths of a US dollar
 	RightsNote string     `json:"rights_note,omitempty" untrusted:"true"` // the user's own record, never a licence check
+
+	// The members of a file rendered by another tool (kind rendered_externally, SDD-011 section 15.2): the engine
+	// and its version, and the key the agent chose for this animation, which stays the same when it is rendered again.
+	Engine        string `json:"engine,omitempty"`
+	EngineVersion string `json:"engine_version,omitempty"`
+	RenderKey     string `json:"render_key,omitempty"`
 }
 
 // RuleError is a refusal with a stable reason, for E_VALIDATION (SDD-000 section 16).
@@ -76,6 +90,9 @@ func (o Origin) Normalize() Origin {
 	o.Model = strings.TrimSpace(o.Model)
 	o.Prompt = strings.TrimSpace(o.Prompt)
 	o.RightsNote = strings.TrimSpace(o.RightsNote)
+	o.Engine = strings.TrimSpace(o.Engine)
+	o.EngineVersion = strings.TrimSpace(o.EngineVersion)
+	o.RenderKey = strings.TrimSpace(o.RenderKey)
 
 	return o
 }
@@ -123,6 +140,10 @@ func (o Origin) Validate() *RuleError {
 		}
 	}
 
+	if v := o.checkRender(); v != nil {
+		return v
+	}
+
 	for _, c := range []struct {
 		member, value string
 		max           int
@@ -143,6 +164,40 @@ func (o Origin) Validate() *RuleError {
 
 	if o.CostMicros != nil && *o.CostMicros < 0 {
 		return &RuleError{Path: "origin.cost_micros", Reason: "cost_invalid", Detail: "the cost cannot be negative"}
+	}
+
+	return nil
+}
+
+// checkRender holds the members of a file rendered by another tool to their kind and their form: they belong to
+// rendered_externally only, and each is a token (SDD-011 section 14.2).
+func (o Origin) checkRender() *RuleError {
+	for _, m := range []struct {
+		member, value string
+		form          *regexp.Regexp
+	}{
+		{"engine", o.Engine, engineForm},
+		{"engine_version", o.EngineVersion, engineForm},
+		{"render_key", o.RenderKey, renderKeyForm},
+	} {
+		switch {
+		case m.value == "":
+		case o.Kind != RenderedExternally:
+			return &RuleError{
+				Path: "origin." + m.member, Reason: "origin_member_not_allowed",
+				Detail: fmt.Sprintf("%s belongs to an origin of kind rendered_externally, not %s", m.member, o.Kind),
+			}
+		case !m.form.MatchString(m.value):
+			return &RuleError{
+				Path:   "origin." + m.member,
+				Reason: "origin_member_invalid",
+				Detail: fmt.Sprintf(
+					"%s must be letters, digits and . _ - + (and : / in render_key), at most %d characters",
+					m.member,
+					map[bool]int{true: 120, false: 64}[m.member == "render_key"],
+				),
+			}
+		}
 	}
 
 	return nil

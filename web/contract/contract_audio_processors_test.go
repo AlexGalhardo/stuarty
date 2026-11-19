@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-// The audio processor commands of epic 34 (SDD-002 C.78 to C.82) give the same results, errors, texts and final
+// The audio processor commands of epic 34 (SDD-002 C.79 to C.83) give the same results, errors, texts and final
 // document through the Service, HTTP, the CLI and the MCP tools: a processor added to a clip, to an audio item and to a
 // track, changed, moved, removed, a preset applied, and the refusals of the core (a value out of its range, a marked
 // noise profile on a track).

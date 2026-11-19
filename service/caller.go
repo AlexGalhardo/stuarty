@@ -173,6 +173,10 @@ var Scopes = map[string]string{
 	"ProviderModels":   ScopeRead,
 	"ProviderPriceSet": ScopeAdmin,
 	"TextGenerate":     ScopeEdit,
+
+	"MotionBrief":   ScopeRead,
+	"MotionCheck":   ScopeRead,
+	"MotionReplace": ScopeEdit,
 }
 
 // authorize checks the caller first, as every method does: a missing caller

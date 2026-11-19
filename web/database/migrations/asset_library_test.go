@@ -171,8 +171,9 @@ func TestWorkspaceAssetsMigrationDown(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	rolled, err := m.Rollback(ctx, 1)
-	if err != nil || !slices.Equal(rolled, []string{assetLibraryID}) {
+	// The render origin of epic 33 is newer than the library: it comes off first.
+	rolled, err := m.Rollback(ctx, 2)
+	if err != nil || !slices.Equal(rolled, []string{renderOriginID, assetLibraryID}) {
 		t.Fatalf("Rollback = %v, %v", rolled, err)
 	}
 

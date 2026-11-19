@@ -29,6 +29,9 @@
 | `JobCancel` | `job_cancel` | `job:cancel` | `POST /jobs/{job_id}/cancel` | render; media is enough for the caller's own `transcribe` or `ingest` job |
 | `TemplateList`, `TemplateSave`, `TemplateInstantiate`, `TemplateExport`, `TemplateImport` | `template` | `template:list`, `template:save`, `template:new`, `template:export`, `template:import` | `GET /templates`, `POST /templates`, `POST /templates/{id}/instantiate`, `GET /templates/{id}/file`, `POST /templates/import` | read, edit |
 | `Doctor` | none | `doctor` | `GET /system` | read |
+| `MotionBrief` | `view` with `mode` `motion` | `motion:brief` | `GET /projects/{id}/motion/brief` (what an external motion render must fit; SDD-011 §15) | read |
+| `MotionCheck` | none (the tool list has no room, SDD-011 §15.5) | `motion:check` | `GET /projects/{id}/motion/check` (whether a rendered file fits the brief; SDD-011 §15.3) | read |
+| `MotionReplace` | `edit` (a batch of `clip.replace_media`) | `motion:replace` | `POST /projects/{id}/motion/replace` (every clip that reads an earlier render of the same `render_key`, in one undoable batch; SDD-011 §15.4) | edit |
 | event stream | none | `events` (prints the stream) | `GET /projects/{id}/events` | read |
 | `PlanWindow` | none | none | `GET /projects/{id}/plan` (SDD-004 §10) | read |
 | `MediaList` | `media_inspect` called without an asset | `media:list` | `GET /projects/{id}/media` (every asset of the project, including those still ingesting or failed, which are not in the document) | read |
@@ -108,7 +111,7 @@ Every operation belongs to one **domain**. The domain names are fixed here; a ne
 | Domain | What it holds | Operations today |
 | --- | --- | --- |
 | `project` | productions: projects, their items, the brief, bundles | `ProjectList`, `ProjectCreate`, `ProjectGet`, `ProjectTrash`, `ProjectRestore`, `ProjectDescribe`, `ProjectDuplicate`, `ProjectItem*`, `Brief*`, `ProjectBundle*`, the event stream |
-| `video` | the timeline document: its edit commands, history, lint, frames, jobs, templates, OpenTimelineIO | `Edit` and the commands of the timeline registry, `HistoryList`, `Undo`, `Redo`, `Lint`, `View*`, `JobStart`, `JobGet`, `JobList`, `JobCancel`, `ExportFile`, `Template*`, `SnapPoints`, `ProjectOtio*`, `Export*` (presets, the check against one, the batch) |
+| `video` | the timeline document: its edit commands, history, lint, frames, jobs, templates, OpenTimelineIO, the hand-off from a motion engine | `Edit` and the commands of the timeline registry, `HistoryList`, `Undo`, `Redo`, `Lint`, `View*`, `Motion*` (brief, check, replace; epic 33), `JobStart`, `JobGet`, `JobList`, `JobCancel`, `ExportFile`, `Template*`, `SnapPoints`, `ProjectOtio*`, `Export*` (presets, the check against one, the batch) |
 | `image` | image documents (SDD-021) | `Image*` and the commands of the image registry |
 | `writing` | written documents | none yet |
 | `asset` | files of the workspace: media, the asset library, fonts | `Media*`, `Asset*` (the library of epic 08: list, get, uses, set info, tag), `FontImport`, `FontList` |
@@ -511,5 +514,5 @@ The operations of the registry of domain `image` (`core/command` registry built 
 | --- | --- | --- |
 | `imported`, `generated`, `fetched_by_agent`, `rendered_externally` | origin kind | where an asset came from: a file the user brought, a file a provider generated, a file an agent downloaded on its own side, a file rendered by another tool |
 | `visual`, `video` | library section | the two sections over one library: Visual Assets (kinds `image`, `lut`) and Video Assets (kinds `video`, `audio`) |
-| `E_VALIDATION` `details.reason` `origin_kind_unknown`, `source_required`, `rights_note_required`, `provider_required`, `model_required`, `too_long`, `cost_invalid`, `tags_invalid`, `kind_unknown`, `section_unknown` | error detail | an origin, a tag set or a list filter the library refuses (`path` is `origin.<field>`, `tags`, `kind`, `section`, `origin` or `tag`); stable for agents |
+| `E_VALIDATION` `details.reason` `origin_kind_unknown`, `source_required`, `rights_note_required`, `provider_required`, `model_required`, `too_long`, `cost_invalid`, `tags_invalid`, `kind_unknown`, `section_unknown`, `origin_member_not_allowed`, `origin_member_invalid` | error detail | an origin, a tag set or a list filter the library refuses (`path` is `origin.<field>`, `tags`, `kind`, `section`, `origin` or `tag`); the last two refuse `engine`, `engine_version` or `render_key` on another kind than `rendered_externally`, or in a form that is not a token (SDD-011 §14.2, epic 33); stable for agents |
 | `asset_hash`, `hash` | field | the content hash `sha256:<64 hex>` of an asset, the key of the library (a bare 64 hex string is accepted and normalised) |

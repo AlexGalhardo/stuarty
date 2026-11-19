@@ -8,7 +8,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
-// The commands of the audio processor chain of an item or a track (SDD-002 C.78 to C.82, SDD-004 section 7.1).
+// The commands of the audio processor chain of an item or a track (SDD-002 C.79 to C.83, SDD-004 section 7.1).
 
 var processorErrors = []string{CodeValidation, CodeNotFound, CodeTypeMismatch}
 
@@ -35,7 +35,7 @@ func init() {
 	}, applyProcessorSet))
 	Register(Define(Spec{
 		Name:    "audio.processor_move",
-		Summary: "Move processor",
+		Summary: "Move",
 		Description: "Moves a processor to another place in the chain of an item or a track. index and to are 0-based " +
 			"places in the chain; the order changes the sound.",
 		Example: `{"item_id": "itm_m1n2p3q4r5", "index": 0, "to": 2}`,
@@ -44,7 +44,7 @@ func init() {
 	}, applyProcessorMove))
 	Register(Define(Spec{
 		Name:    "audio.processor_remove",
-		Summary: "Remove processor",
+		Summary: "Remove",
 		Description: "Removes a processor from the chain of an item or a track. index is the 0-based place in the chain; " +
 			"later processors move one place earlier.",
 		Example: `{"item_id": "itm_m1n2p3q4r5", "index": 1}`,
@@ -53,7 +53,7 @@ func init() {
 	}, applyProcessorRemove))
 	Register(Define(Spec{
 		Name:    "audio.apply_preset",
-		Summary: "Apply preset",
+		Summary: "Preset",
 		Description: "Replaces the chain of an item or a track with a preset: voice, voice_with_music, podcast or " +
 			"clean_noisy_room. The chain becomes exactly the preset; change any processor afterwards with " +
 			"audio.processor_set. voice_with_music has no noise reduction.",
