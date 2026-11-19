@@ -9,9 +9,12 @@ import { HttpTransport } from "../editor/api/http";
 import { API_BASE, createImageApi } from "./api/imageApi";
 import Canvas from "./canvas/Canvas";
 import ErrorBar from "./ErrorBar";
+import Inspector from "./inspector/Inspector";
 import LayerPanel from "./layers/LayerPanel";
 import { ImageEditorProvider, useImage } from "./state/context";
+import { LibraryProvider } from "./state/library";
 import { createImageStore } from "./state/store";
+import { AddTools } from "./toolbar/AddTools";
 import { ArrangeTools, HistoryTools } from "./toolbar/ArrangeTools";
 import { Toolbar, ViewTools } from "./toolbar/Toolbar";
 
@@ -43,7 +46,9 @@ export default function ImageEditor({
 
 	return (
 		<ImageEditorProvider store={store} api={api}>
-			<Shell />
+			<LibraryProvider>
+				<Shell />
+			</LibraryProvider>
 		</ImageEditorProvider>
 	);
 }
@@ -107,6 +112,7 @@ function Shell(): ReactNode {
 			</header>
 			<Toolbar label={t("ui.image.toolbar.label")}>
 				<HistoryTools />
+				<AddTools />
 				<ArrangeTools />
 				<ViewTools />
 			</Toolbar>
@@ -124,6 +130,15 @@ function Shell(): ReactNode {
 				<div className="min-w-0 flex-1">
 					<Canvas />
 				</div>
+				<aside
+					aria-label={t("ui.image.inspector.title")}
+					className="flex w-80 shrink-0 flex-col border-l"
+				>
+					<h2 className="border-b px-3 py-2 text-sm font-semibold">
+						{t("ui.image.inspector.title")}
+					</h2>
+					<Inspector />
+				</aside>
 			</div>
 		</section>
 	);
