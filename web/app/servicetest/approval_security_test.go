@@ -313,3 +313,59 @@ func TestSecurity_T50_FinishingWithNoReservationStillRecordsTheCost(t *testing.T
 		t.Errorf("spent today = %d, want the real cost 250000 recorded", n)
 	}
 }
+
+// SDD-007 T-50: a ceiling cannot be bypassed by a rule, by splitting the work into many small
+// requests, by approving them all, or by an agent raising the ceiling.
+func TestSecurity_T50_CostCeilingCannotBeBypassed(t *testing.T) {
+	t.Parallel()
+
+	p := &probe{estimate: usd(300_000)}
+	e := newJobEnv(t, p)
+	project := e.newProject("p")
+	e.setCeiling("", 0, 1_000_000)
+
+	// A rule that would approve everything of this kind.
+	perItem := int64(1_000_000)
+
+	if _, err := e.svc.ApprovalRuleSet(e.asPerson(), service.ApprovalRuleSetRequest{
+		Kind: testKind, Currency: "USD", PerItemMicros: &perItem,
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	// Split into requests of 300000: the rule approves three, and the fourth is over the day.
+	for i := range 3 {
+		job, err := e.submit(e.as(token), project)
+		if err != nil || job.State != service.JobSucceeded {
+			t.Fatalf("request %d = %+v, %v, want it run by the rule", i, job, err)
+		}
+	}
+
+	if _, err := e.submit(e.as(token), project); code(err) != service.CodeCostCeiling {
+		t.Fatalf("the fourth small request = %v, want E_COST_CEILING", err)
+	}
+
+	// Nor can a person's approval pass it: the request waits only while the rule is gone.
+	if n := e.spentToday(); n != 900_000 {
+		t.Fatalf("spent today = %d, want 900000", n)
+	}
+
+	// An agent cannot raise the ceiling, with the token or with a key of every scope.
+	raise := int64(99_000_000)
+
+	for name, ctx := range map[string]context.Context{"the token": e.as(token), "a key": e.asKey()} {
+		_, err := e.svc.CostCeilingSet(ctx, service.CostCeilingSetRequest{Currency: "USD", PerDayMicros: &raise})
+		if code(err) != service.CodePrivilegedSession {
+			t.Errorf("raising the ceiling with %s = %v, want E_PRIVILEGED_SESSION", name, err)
+		}
+	}
+
+	sum, err := e.svc.CostSummary(e.as(token), service.CostSummaryRequest{})
+	if err != nil || len(sum.Ceilings) != 1 || *sum.Ceilings[0].PerDay != 1_000_000 {
+		t.Fatalf("the ceiling after the attempts = %+v, %v, want it unchanged", sum, err)
+	}
+
+	if p.calls.Load() != 3 {
+		t.Errorf("the kind ran %d times, want 3", p.calls.Load())
+	}
+}
