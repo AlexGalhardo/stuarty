@@ -105,6 +105,23 @@ func TestTextListRefusesABadFilter(t *testing.T) {
 	wantCode(t, err, "E_VALIDATION", "limit")
 }
 
+// X counts after Unicode NFC (SDD-019 section 5.1): 280 decomposed e-acute are 280 characters on X, not 560.
+func TestCaptionValidateCountsXAfterNFC(t *testing.T) {
+	t.Parallel()
+
+	s := &svc{}
+	text := strings.Repeat("e\U00000301", 280)
+
+	res, err := s.CaptionValidate(readerOnly(), CaptionValidateRequest{Text: text, Network: "x"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !res.OK || res.Variants[0].Counts.Length != 280 {
+		t.Fatalf("X after NFC: %+v", res.Variants)
+	}
+}
+
 func TestCaptionValidateReportsTheExactLimitBrokenForEachNetwork(t *testing.T) {
 	t.Parallel()
 

@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"strings"
 
+	"golang.org/x/text/unicode/norm"
+
 	core "github.com/AlexGalhardo/stuarty/core/approval"
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/core/project"
@@ -763,7 +765,7 @@ func (s *svc) CaptionValidate(ctx context.Context, req CaptionValidateRequest) (
 	b.WriteString(textview.Note)
 
 	for i := range variants {
-		r := writing.ValidateCaption(variants[i].Text, variants[i].Network)
+		r := writing.ValidateCaption(variants[i].Text, variants[i].Network, norm.NFC.String)
 		res.Variants = append(
 			res.Variants,
 			CaptionVariantReport{CaptionReport: r, Words: writing.CountWords(variants[i].Text)},
