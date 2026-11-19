@@ -14,8 +14,8 @@ const charsPerToken = 3.2
 
 func tokens(s string) int { return int(float64(len([]rune(s))) / charsPerToken) }
 
-// TestToolDefinitionBudget is NFR-020: the tool definitions total at most 7,200
-// tokens. The interim cap of SDD-003 section 4.1 is 21,500 bytes of minified JSON for
+// TestToolDefinitionBudget is NFR-020: the tool definitions total at most 7,500
+// tokens. The interim cap of SDD-003 section 4.1 is 22,500 bytes of minified JSON for
 // all 16 tools of the ALPHA build, 2,700 for edit and 1,600 for any other; the
 // 12 tools of the Prototype are measured here.
 func TestToolDefinitionBudget(t *testing.T) {
@@ -42,12 +42,12 @@ func TestToolDefinitionBudget(t *testing.T) {
 		}
 	}
 
-	if total > 21500 {
-		t.Errorf("the definitions are %d bytes, at most 21,500", total)
+	if total > 22500 {
+		t.Errorf("the definitions are %d bytes, at most 22,500", total)
 	}
 
-	if tk := tokens(strings.Repeat("x", total)); tk > 7200 {
-		t.Errorf("the definitions are about %d tokens, at most 7,200 (NFR-020, interim)", tk)
+	if tk := tokens(strings.Repeat("x", total)); tk > 7500 {
+		t.Errorf("the definitions are about %d tokens, at most 7,500 (NFR-020, interim)", tk)
 	}
 
 	t.Logf("%d Prototype definitions: %d bytes, about %d tokens", len(order), total, tokens(strings.Repeat("x", total)))

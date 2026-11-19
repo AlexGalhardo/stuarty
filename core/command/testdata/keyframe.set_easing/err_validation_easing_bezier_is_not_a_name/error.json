@@ -1,0 +1,16 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.easing is \"bezier\", which is not one of the accepted values.",
+  "hint": "Use one of: linear, ease_in, ease_out, ease_in_out, hold.",
+  "retryable": false,
+  "path": "args.easing",
+  "details": {
+    "allowed": [
+      "linear",
+      "ease_in",
+      "ease_out",
+      "ease_in_out",
+      "hold"
+    ]
+  }
+}

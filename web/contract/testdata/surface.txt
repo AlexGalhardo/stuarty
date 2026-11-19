@@ -1,4 +1,10 @@
 command agent:docs
+command approval:decide
+command approval:list
+command approval:rule:list
+command approval:rule:remove
+command approval:rule:set
+command approval:show
 command audit
 command brand:set
 command brand:show
@@ -12,6 +18,8 @@ command connection:list
 command connection:remove
 command connection:show
 command connection:test
+command cost:ceiling
+command cost:show
 command doctor
 command edit
 command events
@@ -34,6 +42,8 @@ command item:trash
 command job:cancel
 command job:list
 command job:show
+command library:reindex
+command library:search
 command lint
 command mcp
 command media:import
@@ -41,6 +51,10 @@ command media:inspect
 command media:list
 command media:restore
 command media:trash
+command memory:list
+command memory:remove
+command memory:show
+command memory:write
 command otio:export
 command otio:import
 command project:create
@@ -50,7 +64,17 @@ command project:list
 command project:restore
 command project:show
 command project:trash
+command prompt:list
+command prompt:render
+command prompt:show
+command prompt:write
 command redo
+command skill:export
+command skill:import
+command skill:lint
+command skill:list
+command skill:show
+command skill:write
 command template:export
 command template:import
 command template:list
@@ -62,8 +86,14 @@ command transcribe
 command undo
 command version
 command view
+route DELETE /approval-rules/{}
 route DELETE /connections/{}
 route DELETE /keys/{}
+route DELETE /library/memory/{}
+route GET /approval-rules
+route GET /approvals
+route GET /approvals/events
+route GET /approvals/{}
 route GET /assets
 route GET /audit
 route GET /brand-kit
@@ -71,6 +101,7 @@ route GET /commands
 route GET /commands/{}
 route GET /connections
 route GET /connections/{}
+route GET /cost
 route GET /fonts
 route GET /handshake
 route GET /images
@@ -81,6 +112,14 @@ route GET /images/{}/history
 route GET /jobs/{}
 route GET /jobs/{}/file
 route GET /keys
+route GET /library/memory
+route GET /library/memory/{}
+route GET /library/prompts
+route GET /library/prompts/{}
+route GET /library/search
+route GET /library/skills
+route GET /library/skills/{}
+route GET /library/skills/{}/lint
 route GET /projects
 route GET /projects/{}
 route GET /projects/{}/bitmaps/{}
@@ -109,6 +148,8 @@ route GET /templates
 route GET /templates/{}/file
 route GET /users
 route PATCH /users/{}
+route POST /approval-rules
+route POST /approvals/{}/decide
 route POST /connections
 route POST /connections/{}/test
 route POST /fonts
@@ -119,6 +160,12 @@ route POST /images/{}/redo
 route POST /images/{}/undo
 route POST /jobs/{}/cancel
 route POST /keys
+route POST /library/memory
+route POST /library/prompts/{}/render
+route POST /library/reindex
+route POST /library/skills/export
+route POST /library/skills/import
+route POST /library/skills/{}/review
 route POST /projects
 route POST /projects/import
 route POST /projects/{}/bundle
@@ -147,6 +194,9 @@ route POST /templates/{}/instantiate
 route POST /trash/empty
 route POST /users
 route PUT /brand-kit
+route PUT /cost/ceilings
+route PUT /library/prompts/{}
+route PUT /library/skills/{}
 route PUT /projects/{}/brief
 tool command_help
 tool connection
@@ -157,6 +207,7 @@ tool image
 tool job_cancel
 tool job_get
 tool job_start
+tool library
 tool lint
 tool media_import
 tool media_inspect

@@ -1,0 +1,44 @@
+[
+  {
+    "kind": "item.updated",
+    "id": "itm_m1n2p3q4r5",
+    "changes": {
+      "keyframes": [
+        {
+          "mask_width": [
+            {
+              "easing": "linear",
+              "t": 0,
+              "value": 0.1
+            },
+            {
+              "easing": "linear",
+              "t": 60,
+              "value": 0.5
+            }
+          ]
+        },
+        {
+          "mask_width": [
+            {
+              "bezier": [
+                0.34,
+                1.56,
+                0.64,
+                1
+              ],
+              "easing": "bezier",
+              "t": 0,
+              "value": 0.1
+            },
+            {
+              "easing": "linear",
+              "t": 60,
+              "value": 0.5
+            }
+          ]
+        }
+      ]
+    }
+  }
+]

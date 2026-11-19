@@ -61,9 +61,9 @@ func TestProjectWorkspaceOfAnEarlierReleaseOpens(t *testing.T) {
 
 	if rolled, err := m.Rollback(
 		context.Background(),
-		1,
-	); err != nil || len(rolled) != 1 ||
-		rolled[0] != "20261119120000_project_items" {
+		4, // the library index (epic 15) and the approval tables (epic 05) are newer than project_items
+	); err != nil || len(rolled) != 4 ||
+		rolled[3] != "20261119120000_project_items" {
 		t.Fatalf("rollback = %v, %v", rolled, err)
 	}
 
