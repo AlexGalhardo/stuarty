@@ -844,7 +844,8 @@
         "add_video_track": "Add video track",
         "add_audio_track": "Add audio track",
         "marker": "Marker at the playhead",
-        "shortcuts": "Keyboard shortcuts"
+        "shortcuts": "Keyboard shortcuts",
+        "tour": "Take the tour"
       },
       "edit": {
         "label": "Editing",
@@ -2083,16 +2084,36 @@
         "undone": "Undone",
         "redone": "Redone"
       },
-      "tips": {
-        "title": "First steps",
-        "items": {
-          "library": "Paste the path of a media file in the library and press Import.",
-          "library_desktop": "Choose files in the library, drop them there or paste a path, then press Import.",
-          "palette": "Press Ctrl+K to search every command.",
-          "shortcuts": "Press ? to see and change the keyboard shortcuts."
-        },
-        "dismiss": "Got it",
-        "show_again": "Show tips again"
+      "tour": {
+        "step": "Step {current} of {total}",
+        "back": "Back",
+        "next": "Next",
+        "done": "Done",
+        "skip": "Skip tour",
+        "replay": "Replay the tour",
+        "steps": {
+          "library": {
+            "title": "Your media",
+            "body": "Your files live here. Paste the path of a media file and press Import, or press {import} to go to the import field."
+          },
+          "library_desktop": "Your files live here. Choose files, drop them here or paste a path, then press Import. Press {import} to start.",
+          "preview": {
+            "title": "Preview",
+            "body": "Watch your video here. Press {play} to play or pause."
+          },
+          "timeline": {
+            "title": "Timeline",
+            "body": "Arrange clips on tracks. Press {split} to split at the playhead and {undo} to undo."
+          },
+          "inspector": {
+            "title": "Inspector",
+            "body": "Select an item to change its look, sound and speed. Every change is saved as you make it."
+          },
+          "export": {
+            "title": "Export",
+            "body": "When you are happy, export your video here ({export}). Press {shortcuts} to see every shortcut and {palette} to search every command."
+          }
+        }
       },
       "repeat": {
         "title": "Repeat item",

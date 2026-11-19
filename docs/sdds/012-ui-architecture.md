@@ -604,7 +604,7 @@ Decision D-038: a person who edits in CapCut should find the same places in the 
 | Start (projects) | `/projects` | a primary "Create project" button, a grid of project cards (thumbnail, name, last edit, a menu with Rename and Delete, and Duplicate when the project API has it), the size preset chosen at creation (RF-002) | the page already lists projects; the grid and the card menu are the change. Project actions are the existing project endpoints, not timeline commands |
 | Editor | `/editor/{project_id}` | the regions of §6.1 | tab rail, inspector tabs, timeline toolbar and menu, below |
 | Export | dialog of §14 | name, size, frame rate, lint findings, progress, format, and the range of the I and O points when the server lists `start` and `end` (`args.start`, `args.end`; not with png), and the png format when the server lists it, which exports the frame at the playhead (`args.at`, frames with the unit `f`); later bitrate (the core has no such argument) | fields are added as the engine supports them; today the dialog keeps what §14 lists |
-| Shortcuts and settings | dialog of §18.2 | the cheat sheet, "Show tips again", and now the language, the theme and the version | the editor still has no settings page |
+| Shortcuts and settings | dialog of §18.2 | the cheat sheet, "Replay the tour", and now the language, the theme and the version | the editor still has no settings page |
 | Dialogs | §4.4, §9.2, §13, §14 | import, export, palette, schema form, confirmations | unchanged |
 
 #### Material panel (the library region)

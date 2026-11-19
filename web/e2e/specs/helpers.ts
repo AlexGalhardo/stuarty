@@ -46,9 +46,9 @@ export async function listProjects(
 // The editor authenticates a browser with a launch code redeemed at
 // /auth/launch, which sets an HttpOnly session cookie (SDD-007 section 3.4).
 // Every page of a spec starts logged in, the way `stuarty open` does it.
-// The first-run tips (SDD-012 section 18.5) would sit over every other spec, so
-// a page starts with them already seen; onboarding.spec.ts sets `tipsSeen` to
-// false.
+// The first-run tour (SDD-012 section 18.5) would sit over every other spec, so
+// a page starts with it already seen; first-run-tour.spec.ts sets `tipsSeen`
+// to false.
 export const test = base.extend<{ tipsSeen: boolean }>({
 	tipsSeen: [true, { option: true }],
 	page: async ({ page, request, tipsSeen, browserName }, use, testInfo) => {
@@ -71,7 +71,7 @@ export const test = base.extend<{ tipsSeen: boolean }>({
 				try {
 					localStorage.setItem("vv.shortcutsSeen", "1");
 				} catch {
-					// Storage can be blocked: the tips show.
+					// Storage can be blocked: the tour shows.
 				}
 			});
 		}
