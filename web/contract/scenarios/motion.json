@@ -1,0 +1,28 @@
+{
+  "name": "motion",
+  "actor": "contract",
+  "fixtures": {},
+  "steps": [
+    {"call": "ProjectCreate", "args": {"id": "prj_7k2m9x4q1b", "name": "Motion"}},
+    {"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "base_revision": 0, "operations": [
+      {"op": "track.add", "args": {"kind": "visual", "name": "Text", "id": "trk_f6g7h8j9k0"}},
+      {"op": "text.add", "args": {"track_id": "trk_f6g7h8j9k0", "start": "0s", "duration": "3s", "text": "Headline", "id": "itm_t1t2t3t4t5"}},
+      {"op": "keyframe.set", "args": {"item_id": "itm_t1t2t3t4t5", "property": "scale", "at": "0s", "value": 1, "easing": "bezier", "bezier": [0.34, 1.56, 0.64, 1]}},
+      {"op": "keyframe.set", "args": {"item_id": "itm_t1t2t3t4t5", "property": "scale", "at": "1s", "value": 1.4}}
+    ]}},
+    {"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "base_revision": 1, "operations": [
+      {"op": "keyframe.set_easing", "args": {"item_id": "itm_t1t2t3t4t5", "property": "scale", "at": "0s", "preset": "back"}},
+      {"op": "animation.apply_preset", "args": {"item_id": "itm_t1t2t3t4t5", "preset": "slide", "edge": "in", "direction": "up", "duration": "0.5s"}},
+      {"op": "animation.apply_preset", "args": {"item_id": "itm_t1t2t3t4t5", "preset": "fade", "edge": "out", "duration": "1s"}},
+      {"op": "animation.list_presets", "args": {}}
+    ]}},
+    {"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "base_revision": 2, "operations": [
+      {"op": "animation.apply_preset", "args": {"item_id": "itm_t1t2t3t4t5", "preset": "pop", "duration": "10s"}}
+    ]}, "expect_error": {"code": "E_INVALID_TIME"}},
+    {"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "base_revision": 2, "operations": [
+      {"op": "keyframe.set_easing", "args": {"item_id": "itm_t1t2t3t4t5", "property": "scale", "at": "0s", "bezier": [1.5, 0, 0.5, 1]}}
+    ]}, "expect_error": {"code": "E_VALIDATION"}},
+    {"call": "CommandHelp", "args": {"name": "animation.apply_preset"}},
+    {"call": "CommandHelp", "args": {"name": "keyframe.set_easing"}}
+  ]
+}

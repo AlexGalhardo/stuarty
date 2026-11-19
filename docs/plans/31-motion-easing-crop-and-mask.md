@@ -45,7 +45,7 @@ A creator makes a title slide in with a soft overshoot, reveals a photo through 
 - [x] 4. Prove what release 0.28.0 delivers for animated crop and mask, and list in the hand-off anything RF-081 still lacks. Verify: `go test ./core/plan/... -run "TestAnimatedMask|TestAnimatedCrop|TestMaskKeyframes"` and `go test ./engine/export/... -run TestAnimatedCropAndMaskFramesDiffer` pass.
 - [x] 5. Add golden cases for a mask and a crop animated with the bezier easing, and preview and export parity cases for both. Verify: `go test ./core/command/... ./engine/compositor/... ./engine/export/...` passes with the new golden frames, and the parity tests of `renderer-parity` pass.
 - [x] 6. Implement `animation.apply_preset` and `animation.list_presets` with golden cases. Verify: `go test ./core/command/... -run TestAnimationPreset` passes.
-- [ ] 7. Expose on the three surfaces and regenerate documents. Verify: `go test ./web/contract/...` and `task generate:check` pass.
+- [x] 7. Expose on the three surfaces and regenerate documents. Verify: `go test ./web/contract/...` and `task generate:check` pass.
 - [ ] 8. Build the curve editor, the crop keyframe control where it is missing and the presets menu, in both languages, keyboard operable. Verify: `task test:web`, `bun run check:thin-client` and `web/e2e/specs/motion-easing.spec.ts` pass.
 - [ ] 9. Check that a document saved by release 0.29.0 opens and exports identically. Verify: `go test ./core/timeline/... -run TestOldDocuments` passes.
 
