@@ -43,7 +43,7 @@ A creator opens Stuarty and sees where everything is: one home with a sidebar th
 - [x] 4. Move the projects list and the settings into the new layout with redirects. Verify: the existing specs `web/e2e/specs/projects*.spec.ts` and `settings*.spec.ts` pass, updated where a selector moved.
 - [x] 5. Add the way in and out of the editor. Verify: `web/e2e/specs/dashboard-navigation.spec.ts` (new) passes.
 - [x] 6. Run the accessibility checks on the dashboard. Verify: the axe spec for the dashboard (`web/e2e/specs/a11y-dashboard.spec.ts`, new) reports no violation.
-- [ ] 7. Open the shell on Windows and walk every section. Verify: screenshots of the dashboard in the browser and in the shell are attached to the hand-off.
+- [x] 7. Open the shell on Windows and walk every section. Verify: screenshots of the dashboard in the browser and in the shell are attached to the hand-off.
 
 ## Test strategy
 
