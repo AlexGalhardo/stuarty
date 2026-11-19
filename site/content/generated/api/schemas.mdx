@@ -7,6 +7,20 @@ description: "The objects the HTTP API takes and returns, from its OpenAPI docum
 
 The types named in the tables of the operations. The arguments of each editing command are on the pages of the [edit tool](/docs/mcp/tools/edit), where the `args` of an operation of a batch are described.
 
+### Adjust
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `brightness` | `integer` | no |  |
+| `contrast` | `integer` | no |  |
+| `curve` | array of [`image.CurvePoint`](/docs/api/schemas#imagecurvepoint) | no |  |
+| `exposure` | `integer` | no |  |
+| `hue` | `integer` | no |  |
+| `levels` | [`Levels`](/docs/api/schemas#levels) or `any` or `null` or `null` | no |  |
+| `saturation` | `integer` | no |  |
+| `temperature` | `integer` | no |  |
+| `tint` | `integer` | no |  |
+
 ### AgentProfileListResult
 
 | Name | Type | Required | Description |
@@ -543,6 +557,17 @@ The types named in the tables of the operations. The arguments of each editing c
 | `op_index` | `integer` or `null` | no |  |
 | `path` | `string` | no |  |
 | `retryable` | `boolean` | no |  |
+
+### errs.Issue
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `code` | `string` | no |  |
+| `key` | `string` | no |  |
+| `message` | `string` | no |  |
+| `on` | `string` | no |  |
+| `params` | map of `any` | no |  |
+| `path` | `string` | no |  |
 
 ### Event
 

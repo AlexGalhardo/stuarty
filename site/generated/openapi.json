@@ -23,6 +23,48 @@
       }
     },
     "schemas": {
+      "Adjust": {
+        "properties": {
+          "brightness": {
+            "type": "integer"
+          },
+          "contrast": {
+            "type": "integer"
+          },
+          "curve": {
+            "items": {
+              "$ref": "#/components/schemas/image.CurvePoint"
+            },
+            "type": "array"
+          },
+          "exposure": {
+            "type": "integer"
+          },
+          "hue": {
+            "type": "integer"
+          },
+          "levels": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Levels"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "saturation": {
+            "type": "integer"
+          },
+          "temperature": {
+            "type": "integer"
+          },
+          "tint": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
       "AgentProfileListResult": {
         "properties": {
           "available": {

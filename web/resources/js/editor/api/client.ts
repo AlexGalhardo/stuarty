@@ -611,6 +611,15 @@ export function createClient(
 				`/chat/sessions/${encodeURIComponent(sessionId)}`,
 				EDIT_TIMEOUT_MS,
 			),
+		listProviders: () => call("GET", "/providers", READ_TIMEOUT_MS),
+		listProviderModels: (connectionId, refresh) =>
+			call(
+				"GET",
+				`/connections/${encodeURIComponent(connectionId)}/models${refresh === true ? "?refresh=true" : ""}`,
+				EDIT_TIMEOUT_MS,
+			),
+		setProviderPrice: (request) =>
+			call("PUT", "/providers/prices", EDIT_TIMEOUT_MS, request),
 		listApprovals: (state) =>
 			call(
 				"GET",
