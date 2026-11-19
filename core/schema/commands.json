@@ -1512,6 +1512,7 @@
       "type": "object"
     },
     "description": "Replaces the asset a clip plays, a video by a video or an image by an image, and keeps its position, duration, trim, speed, transform, keyframes and effects: the animation an external engine rendered again takes the place of the one it replaces. Nothing is stretched or trimmed: a video the clip's range does not fit is refused.",
+    "domain": "video",
     "errors": [
       "E_VALIDATION",
       "E_NOT_FOUND",

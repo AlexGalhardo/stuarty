@@ -29,12 +29,18 @@ func TestAssetRenderOriginMigration(t *testing.T) {
 		}
 	}
 
+	// The rows the library migration wrote (one per owner and hash, SDD-011 DS-22) all keep an empty render origin.
+	rows := count(t, db, "SELECT count(*) FROM asset_info")
+	if rows == 0 {
+		t.Fatal("the workspace has no asset_info row to keep")
+	}
+
 	if n := count(
 		t,
 		db,
 		`SELECT count(*) FROM asset_info WHERE engine = '' AND engine_version = '' AND render_key = ''`,
-	); n != 3 {
-		t.Errorf("rows with the empty render origin = %d, want 3", n)
+	); n != rows {
+		t.Errorf("rows with the empty render origin = %d, want %d", n, rows)
 	}
 
 	m, err := newMigrator(db)
@@ -53,7 +59,7 @@ func TestAssetRenderOriginMigration(t *testing.T) {
 		}
 	}
 
-	if n := count(t, db, "SELECT count(*) FROM asset_info"); n != 3 {
-		t.Errorf("asset_info rows after the down = %d, want 3", n)
+	if n := count(t, db, "SELECT count(*) FROM asset_info"); n != rows {
+		t.Errorf("asset_info rows after the down = %d, want %d", n, rows)
 	}
 }

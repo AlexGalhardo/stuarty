@@ -105,7 +105,7 @@ type motionView struct {
 
 // beginMotion reads the project and the range the request names.
 func (s *svc) beginMotion(ctx context.Context, method string, req *MotionBriefRequest) (*motionView, error) {
-	c, err := authorize(ctx, method, req.ProjectID)
+	c, err := s.authorizeProject(ctx, method, req.ProjectID)
 	if err != nil {
 		return nil, err
 	}
