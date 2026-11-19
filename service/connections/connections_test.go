@@ -506,6 +506,48 @@ func TestTestMessageHoldsNoPartOfAnEchoedSecret(t *testing.T) {
 	}
 }
 
+// TestTestMessageHoldsNoMiddleOfAnEchoedSecret: a destination that echoes only ten bytes from the
+// middle of a long secret, in any form, has echoed it (VV-245).
+func TestTestMessageHoldsNoMiddleOfAnEchoedSecret(t *testing.T) {
+	const secret = `zq<Kp9&Xw7#Lm2>Yv5/Ab3"Cd4+Ef6=Gh8?Ij0_Nr1`
+
+	if len(secret) != 40 {
+		t.Fatalf("the fixture secret is %d bytes, want 40", len(secret))
+	}
+
+	forms := map[string]string{
+		"plain":        secret,
+		"html":         html.EscapeString(secret),
+		"url query":    url.QueryEscape(secret),
+		"url path":     url.PathEscape(secret),
+		"json":         jsonEscaped(t, secret),
+		"json slashed": strings.ReplaceAll(jsonEscaped(t, secret), "/", `\/`),
+		"base64":       base64.StdEncoding.EncodeToString([]byte(secret)),
+		"hex":          hex.EncodeToString([]byte(secret)),
+		"upper hex":    strings.ToUpper(hex.EncodeToString([]byte(secret))),
+	}
+
+	for name, f := range forms {
+		mid := len(f)/2 - 5
+		body := "echo " + f[mid:mid+10] + " cut"
+
+		t.Run(name, func(t *testing.T) {
+			srv := newServer(t, http.StatusUnauthorized, body)
+			m, st, v := newManager(t)
+			connect(t, m, st, v, srv, secret)
+
+			res, err := m.Test(context.Background(), "con_a")
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if part, bad := leaks(t, res.Message, secret, 6); bad {
+				t.Errorf("the answer holds %q of the secret: %.300q", part, res.Message)
+			}
+		})
+	}
+}
+
 func TestTestMessageKeepsABodyThatDoesNotEchoTheSecret(t *testing.T) {
 	srv := newServer(t, http.StatusOK, "all good")
 	m, st, v := newManager(t)
