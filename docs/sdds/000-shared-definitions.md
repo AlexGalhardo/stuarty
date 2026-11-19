@@ -1,9 +1,9 @@
 # SDD-000: Shared definitions
 
-- Amended (2026-11-18) for Stuarty: the product is Stuarty (ADR-0031). The names below still say `vukem-video` and `VUKEM_VIDEO_*` because the code accepts only those, and the documentation site is generated from this file; they change together with the code in the rename epic (ADR-0044). A new domain adds its names here first.
+- Amended (2026-11-18) for Stuarty: the product is Stuarty (ADR-0031, ADR-0044). The command is `stuarty`, the variables are `STUARTY_*` and the workspace folder is `~/.stuarty`; section 13 lists the former names, which are still read. A new domain adds its names here first.
 - Status: Authoritative (2026-11-14). Every SDD uses these names exactly. A name is changed here first, then everywhere.
 - Depends on: ADR-0001, ADR-0006, ADR-0008, ADR-0015 to ADR-0020
-- Last change: 2026-11-14, names added from the review of SDD-005, SDD-006 and SDD-007 (operations outside the agent surfaces, tables `document_backups`, `audit` and `api_keys`, `E_RATE_LIMITED`, workspace files, limit variables)
+- Last change: 2026-11-18, the rename to Stuarty (ADR-0044): every name that carried the product name, and section 13 with the former names. Before that, 2026-11-14: names added from the review of SDD-005, SDD-006 and SDD-007 (operations outside the agent surfaces, tables `document_backups`, `audit` and `api_keys`, `E_RATE_LIMITED`, workspace files, limit variables)
 - Purpose: one place for the names that several specifications share, so that documents written in parallel agree.
 
 ## 1. Service operations
@@ -152,7 +152,7 @@ CLI exit codes: `0` success; `2` for every code marked retryable; `1` for the re
 ## 9. Workspace layout
 
 ```text
-<workspace>/                 default ~/.vukem-video, or $VUKEM_VIDEO_HOME
+<workspace>/                 default ~/.stuarty, or $STUARTY_HOME
 ├── db.sqlite                database
 ├── lock                     empty file that carries the operating-system lock of the owner process (SDD-005 §6.2)
 ├── runtime.json             owner process: schema, pid, addr, mode, started_at, version (present only while a server runs; no secret)
@@ -176,38 +176,38 @@ Environment variables, all optional. Names are final. Ceilings that have no vari
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
-| `VUKEM_VIDEO_HOME` | `~/.vukem-video` | workspace directory |
-| `VUKEM_VIDEO_ADDR` | `127.0.0.1:7878` | bind address; a non-loopback address requires network mode |
-| `VUKEM_VIDEO_MODE` | `local` | `local` or `network` |
-| `VUKEM_VIDEO_FFMPEG`, `VUKEM_VIDEO_FFPROBE` | discovered | explicit binaries |
-| `VUKEM_VIDEO_ENCODER` | automatic | force an H.264 encoder by FFmpeg name |
-| `VUKEM_VIDEO_ALLOW_USER_X264` | `false` | allow `libx264` when the user's own FFmpeg has it |
-| `VUKEM_VIDEO_EXPORT_RENDERER` | `go` | what draws the exported frames: `go` (the compositor in Go), `rust` (the renderer of `renderer/`, a WebAssembly module under `wazero`, which draws the same bytes: SDD-013 §3.10) or `gpu` (the native GPU host `vukem-render` when the machine has a graphics adapter, `rust` otherwise: SDD-013 §4.9). Any other value stops the server at start. The default changes only when the stage C gate passes on every system |
-| `VUKEM_VIDEO_IMPORT_ROOTS` | none | in network mode, directories from which import by path is allowed |
-| `VUKEM_VIDEO_MAX_EXPORTS` | `2` | concurrent exports per workspace |
-| `VUKEM_VIDEO_MAX_IMPORT_BYTES` | `8589934592` (8 GiB) | largest file accepted by import |
-| `VUKEM_VIDEO_TRANSCRIBE_URL`, `VUKEM_VIDEO_TRANSCRIBE_KEY`, `VUKEM_VIDEO_TRANSCRIBE_MODEL` | none | OpenAI-compatible transcription API; when unset, the local provider is used |
-| `VUKEM_VIDEO_WHISPER_MODEL` | `small` | local model name: `tiny`, `base`, `small` or `large-v3-turbo` |
-| `VUKEM_VIDEO_TEST_TRANSCRIBER` | none | test only: `stub` selects a provider that answers every audio with four fixed words (`hello` 100-400 ms, `brave` 400-700, `new` 1100-1400, `world` 1400-1900, language `en`). Honoured only with `APP_ENV=test` in local mode; with any other `APP_ENV`, in network mode, or with any other value the server refuses to start. Never set in production |
-| `VUKEM_VIDEO_MAX_EXPORTS_PER_KEY` | `1` | concurrent exports running per actor (two more may wait) |
-| `VUKEM_VIDEO_MAX_INGESTS` | `2` | concurrent ingests per workspace |
-| `VUKEM_VIDEO_MAX_TRANSCRIBES` | `1` | concurrent transcriptions per workspace |
-| `VUKEM_VIDEO_MAX_TRANSCRIBES_PER_KEY` | `1` | transcriptions of one actor (key or user) that are queued or running; the same rule as `MAX_EXPORTS_PER_KEY` |
-| `VUKEM_VIDEO_MAX_IMPORT_SECONDS` | `14400` | longest source accepted by import |
-| `VUKEM_VIDEO_MAX_IMPORT_PIXELS` | `33177600` | largest source frame (7680 x 4320); no side above 8192 |
-| `VUKEM_VIDEO_MAX_TRANSCRIBE_SECONDS` | `7200` | longest audio per transcription job |
-| `VUKEM_VIDEO_MAX_EXPORT_BYTES` | `4294967296` (4 GiB) | largest exported file |
-| `VUKEM_VIDEO_MIN_FREE_BYTES` | `2147483648` (2 GiB) | writes are refused below this free space on the workspace volume |
-| `VUKEM_VIDEO_CACHE_MAX_BYTES` | `2147483648` (2 GiB) | size of the frame and bitmap caches before eviction |
-| `VUKEM_VIDEO_RATE_LIMIT_PER_MINUTE` | `300` | requests per minute per key or local token |
-| `VUKEM_VIDEO_RATE_LIMIT_SESSION_PER_MINUTE` | `1800` | requests per minute per browser session |
-| `VUKEM_VIDEO_RATE_LIMIT_HEAVY_PER_MINUTE` | `10` | calls of `JobStart`, `MediaImport`, `TemplateImport`, `ProjectBundleExport`, `ProjectBundleImport`, `FontImport` and `ProjectOtioImport` per minute per credential (SDD-007 section 4.4); one list, the same on the documentation pages and in the OpenAPI document |
-| `VUKEM_VIDEO_SANDBOX` | `none` | `bwrap` runs FFmpeg and whisper.cpp in a sandbox on Linux |
-| `VUKEM_VIDEO_INSECURE_ALLOW_ROOT` | `false` | allow network mode as root |
-| `VUKEM_VIDEO_LAUNCHER_SECRET` | none | set only by the desktop shell in the environment of the server it starts (SDD-007 §5.3); the server reads it once and removes it; never set it by hand or write it to a file |
-| `VUKEM_VIDEO_ADMIN_EMAIL`, `VUKEM_VIDEO_ADMIN_PASSWORD` | none | network mode: create the first administrator at start-up when no user exists |
-| `VUKEM_VIDEO_URL`, `VUKEM_VIDEO_KEY` | none | client side: make the CLI and the stdio MCP server talk to a remote server with an API key |
-| `VUKEM_VIDEO_PROJECT` | none | client side: the default project of CLI commands that take one |
+| `STUARTY_HOME` | `~/.stuarty` | workspace directory |
+| `STUARTY_ADDR` | `127.0.0.1:7878` | bind address; a non-loopback address requires network mode |
+| `STUARTY_MODE` | `local` | `local` or `network` |
+| `STUARTY_FFMPEG`, `STUARTY_FFPROBE` | discovered | explicit binaries |
+| `STUARTY_ENCODER` | automatic | force an H.264 encoder by FFmpeg name |
+| `STUARTY_ALLOW_USER_X264` | `false` | allow `libx264` when the user's own FFmpeg has it |
+| `STUARTY_EXPORT_RENDERER` | `go` | what draws the exported frames: `go` (the compositor in Go), `rust` (the renderer of `renderer/`, a WebAssembly module under `wazero`, which draws the same bytes: SDD-013 §3.10) or `gpu` (the native GPU host `stuarty-render` when the machine has a graphics adapter, `rust` otherwise: SDD-013 §4.9). Any other value stops the server at start. The default changes only when the stage C gate passes on every system |
+| `STUARTY_IMPORT_ROOTS` | none | in network mode, directories from which import by path is allowed |
+| `STUARTY_MAX_EXPORTS` | `2` | concurrent exports per workspace |
+| `STUARTY_MAX_IMPORT_BYTES` | `8589934592` (8 GiB) | largest file accepted by import |
+| `STUARTY_TRANSCRIBE_URL`, `STUARTY_TRANSCRIBE_KEY`, `STUARTY_TRANSCRIBE_MODEL` | none | OpenAI-compatible transcription API; when unset, the local provider is used |
+| `STUARTY_WHISPER_MODEL` | `small` | local model name: `tiny`, `base`, `small` or `large-v3-turbo` |
+| `STUARTY_TEST_TRANSCRIBER` | none | test only: `stub` selects a provider that answers every audio with four fixed words (`hello` 100-400 ms, `brave` 400-700, `new` 1100-1400, `world` 1400-1900, language `en`). Honoured only with `APP_ENV=test` in local mode; with any other `APP_ENV`, in network mode, or with any other value the server refuses to start. Never set in production |
+| `STUARTY_MAX_EXPORTS_PER_KEY` | `1` | concurrent exports running per actor (two more may wait) |
+| `STUARTY_MAX_INGESTS` | `2` | concurrent ingests per workspace |
+| `STUARTY_MAX_TRANSCRIBES` | `1` | concurrent transcriptions per workspace |
+| `STUARTY_MAX_TRANSCRIBES_PER_KEY` | `1` | transcriptions of one actor (key or user) that are queued or running; the same rule as `MAX_EXPORTS_PER_KEY` |
+| `STUARTY_MAX_IMPORT_SECONDS` | `14400` | longest source accepted by import |
+| `STUARTY_MAX_IMPORT_PIXELS` | `33177600` | largest source frame (7680 x 4320); no side above 8192 |
+| `STUARTY_MAX_TRANSCRIBE_SECONDS` | `7200` | longest audio per transcription job |
+| `STUARTY_MAX_EXPORT_BYTES` | `4294967296` (4 GiB) | largest exported file |
+| `STUARTY_MIN_FREE_BYTES` | `2147483648` (2 GiB) | writes are refused below this free space on the workspace volume |
+| `STUARTY_CACHE_MAX_BYTES` | `2147483648` (2 GiB) | size of the frame and bitmap caches before eviction |
+| `STUARTY_RATE_LIMIT_PER_MINUTE` | `300` | requests per minute per key or local token |
+| `STUARTY_RATE_LIMIT_SESSION_PER_MINUTE` | `1800` | requests per minute per browser session |
+| `STUARTY_RATE_LIMIT_HEAVY_PER_MINUTE` | `10` | calls of `JobStart`, `MediaImport`, `TemplateImport`, `ProjectBundleExport`, `ProjectBundleImport`, `FontImport` and `ProjectOtioImport` per minute per credential (SDD-007 section 4.4); one list, the same on the documentation pages and in the OpenAPI document |
+| `STUARTY_SANDBOX` | `none` | `bwrap` runs FFmpeg and whisper.cpp in a sandbox on Linux |
+| `STUARTY_INSECURE_ALLOW_ROOT` | `false` | allow network mode as root |
+| `STUARTY_LAUNCHER_SECRET` | none | set only by the desktop shell in the environment of the server it starts (SDD-007 §5.3); the server reads it once and removes it; never set it by hand or write it to a file |
+| `STUARTY_ADMIN_EMAIL`, `STUARTY_ADMIN_PASSWORD` | none | network mode: create the first administrator at start-up when no user exists |
+| `STUARTY_URL`, `STUARTY_KEY` | none | client side: make the CLI and the stdio MCP server talk to a remote server with an API key |
+| `STUARTY_PROJECT` | none | client side: the default project of CLI commands that take one |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | none | turns on OpenTelemetry (ADR-0026) |
 
 The limits and their errors are specified in SDD-007 §9. Variables read by vukem itself and used by the product (`APP_URL`, `APP_KEY`, `TLS_CERT_FILE`, `TLS_KEY_FILE`, `TRUSTED_PROXIES`, `TRUST_FORWARDED_PROTO`, `SHUTDOWN_TIMEOUT`, `DB_MAX_OPEN`) keep vukem's names.
@@ -217,13 +217,13 @@ The limits and their errors are specified in SDD-007 §9. Variables read by vuke
 | Name | Kind | Meaning | Defined in |
 | --- | --- | --- | --- |
 | `Authorization: Bearer <token>` | request header | the local token (`vvl_...`) or an API key (`vvk_...`) | SDD-007 §3.7, §4.2 |
-| `Vukem-Video-Client` | request header | the label of a bearer client in local mode (`[a-z0-9-]{1,32}`), which becomes the actor `local:<label>` | SDD-007 §3.7 |
+| `Stuarty-Client` | request header | the label of a bearer client in local mode (`[a-z0-9-]{1,32}`), which becomes the actor `local:<label>` | SDD-007 §3.7 |
 | `Idempotency-Key` | request header | the idempotency key of an edit over HTTP (8 to 64 characters of `[A-Za-z0-9._~-]`) | SDD-003 §6, SDD-005 §10 |
 | `X-Vukem-Revision` | response header | the revision a read or a byte response belongs to | SDD-003 §6 |
 | `X-Request-Id` | request and response header | the request identifier, repeated in the error envelope as `request_id` | SDD-003 §1.4 |
 | `Last-Event-ID` | request header | the last revision a stream client received (the `since` query parameter does the same) | SDD-006 §4 |
-| `vukem_video_session_<port>` | cookie | the browser session in local mode, `<port>` being the port of the Host the browser used, so two local servers on one host do not share a cookie (VV-170); in network mode over plain HTTP on localhost the name is `vukem_video_session` | SDD-007 §3.5 |
-| `__Host-vukem_video_session` | cookie | the browser session in network mode over TLS | SDD-007 §4.1 |
+| `stuarty_session_<port>` | cookie | the browser session in local mode, `<port>` being the port of the Host the browser used, so two local servers on one host do not share a cookie (VV-170); in network mode over plain HTTP on localhost the name is `stuarty_session` | SDD-007 §3.5 |
+| `__Host-stuarty_session` | cookie | the browser session in network mode over TLS | SDD-007 §4.1 |
 
 ## 12. Renderer names (SDD-013)
 
@@ -231,8 +231,133 @@ The limits and their errors are specified in SDD-007 §9. Variables read by vuke
 | --- | --- | --- | --- |
 | `RenderInputVersion` | constant | the version number of the render input the renderer reads, 1 | SDD-013 §2.1 |
 | `vr_api_version`, `vr_alloc`, `vr_free`, `vr_init`, `vr_put_texture`, `vr_put_bitmap`, `vr_put_lut`, `vr_release`, `vr_render`, `vr_error`, `vr_text_font_put`, `vr_text_run`, `vr_text_validate_font`, `vr_text_result_ptr`, `vr_text_result_len`, `vr_text_result_clear` | WebAssembly exports | the only functions the core renderer module exports, besides `memory`; the module has no import | SDD-013 §4.2 |
-| `API_VERSION` | constant | the version of that boundary (`renderer/vukem-renderer/src/lib.rs`), 3 (3 added `vr_put_lut`); a host refuses a module with another number | SDD-013 §4.2 |
+| `API_VERSION` | constant | the version of that boundary (`renderer/stuarty-renderer/src/lib.rs`), 3 (3 added `vr_put_lut`); a host refuses a module with another number | SDD-013 §4.2 |
 | `/assets/renderer-<sha256 first 12 hex>.wasm` | route | the core renderer module served to the browser, named by its digest | SDD-013 §4.1 |
 | `engine/renderhost` | Go package | the `wazero` host of the core module; the only place that knows the exports | SDD-013 §4.6 |
 | `invalid_plan`, `unsupported_version`, `unsupported_layer`, `missing_texture`, `limit_exceeded`, `out_of_memory`, `invalid_argument`, `render_trap`, `device_lost`, `unsupported_format` | renderer reasons | the closed set of reasons of a renderer failure; in an export they appear as `details.renderer_reason` of `E_EXPORT_FAILED` (`details.reason = "render_failed"`), and `limit_exceeded` as `E_LIMIT_EXCEEDED` | SDD-013 §7.1, §7.3 |
 | `render_frame_side`, `render_layers`, `render_input_bytes`, `render_texture_side`, `render_texture_bytes`, `render_bitmap_bytes` | `details.limit` values | the renderer's own limits (4096, 64, 4 MiB, 8192, 512 MiB, 128 MiB) | SDD-013 §7.2 |
+
+## 13. Former names (ADR-0044)
+
+The product was called Vukem Video until release 0.29.0. The code, the documents and the generated pages use the names above. Someone who used Vukem Video keeps their projects: the former names below are still read, and the former workspace folder is adopted at the first start.
+
+### 13.1 Variables the program reads
+
+Each variable is read under its new name first. When the new one is unset and the former one is set, the former value is used and one warning per variable is written to the standard error at each start (`stuarty: VUKEM_VIDEO_HOME is deprecated, set STUARTY_HOME`). The former names are read until release 1.0.0. One table in `service/config` holds the pairs, and a test walks it.
+
+| Former name | Name |
+| --- | --- |
+| `VUKEM_VIDEO_HOME` | `STUARTY_HOME` |
+| `VUKEM_VIDEO_ADDR` | `STUARTY_ADDR` |
+| `VUKEM_VIDEO_MODE` | `STUARTY_MODE` |
+| `VUKEM_VIDEO_FFMPEG` | `STUARTY_FFMPEG` |
+| `VUKEM_VIDEO_FFPROBE` | `STUARTY_FFPROBE` |
+| `VUKEM_VIDEO_ENCODER` | `STUARTY_ENCODER` |
+| `VUKEM_VIDEO_ALLOW_USER_X264` | `STUARTY_ALLOW_USER_X264` |
+| `VUKEM_VIDEO_EXPORT_RENDERER` | `STUARTY_EXPORT_RENDERER` |
+| `VUKEM_VIDEO_IMPORT_ROOTS` | `STUARTY_IMPORT_ROOTS` |
+| `VUKEM_VIDEO_MAX_EXPORTS` | `STUARTY_MAX_EXPORTS` |
+| `VUKEM_VIDEO_MAX_IMPORT_BYTES` | `STUARTY_MAX_IMPORT_BYTES` |
+| `VUKEM_VIDEO_TRANSCRIBE_URL` | `STUARTY_TRANSCRIBE_URL` |
+| `VUKEM_VIDEO_TRANSCRIBE_KEY` | `STUARTY_TRANSCRIBE_KEY` |
+| `VUKEM_VIDEO_TRANSCRIBE_MODEL` | `STUARTY_TRANSCRIBE_MODEL` |
+| `VUKEM_VIDEO_WHISPER_MODEL` | `STUARTY_WHISPER_MODEL` |
+| `VUKEM_VIDEO_TEST_TRANSCRIBER` | `STUARTY_TEST_TRANSCRIBER` |
+| `VUKEM_VIDEO_MAX_EXPORTS_PER_KEY` | `STUARTY_MAX_EXPORTS_PER_KEY` |
+| `VUKEM_VIDEO_MAX_INGESTS` | `STUARTY_MAX_INGESTS` |
+| `VUKEM_VIDEO_MAX_TRANSCRIBES` | `STUARTY_MAX_TRANSCRIBES` |
+| `VUKEM_VIDEO_MAX_TRANSCRIBES_PER_KEY` | `STUARTY_MAX_TRANSCRIBES_PER_KEY` |
+| `VUKEM_VIDEO_MAX_IMPORT_SECONDS` | `STUARTY_MAX_IMPORT_SECONDS` |
+| `VUKEM_VIDEO_MAX_IMPORT_PIXELS` | `STUARTY_MAX_IMPORT_PIXELS` |
+| `VUKEM_VIDEO_MAX_TRANSCRIBE_SECONDS` | `STUARTY_MAX_TRANSCRIBE_SECONDS` |
+| `VUKEM_VIDEO_MAX_EXPORT_BYTES` | `STUARTY_MAX_EXPORT_BYTES` |
+| `VUKEM_VIDEO_MIN_FREE_BYTES` | `STUARTY_MIN_FREE_BYTES` |
+| `VUKEM_VIDEO_CACHE_MAX_BYTES` | `STUARTY_CACHE_MAX_BYTES` |
+| `VUKEM_VIDEO_RATE_LIMIT_PER_MINUTE` | `STUARTY_RATE_LIMIT_PER_MINUTE` |
+| `VUKEM_VIDEO_RATE_LIMIT_SESSION_PER_MINUTE` | `STUARTY_RATE_LIMIT_SESSION_PER_MINUTE` |
+| `VUKEM_VIDEO_RATE_LIMIT_HEAVY_PER_MINUTE` | `STUARTY_RATE_LIMIT_HEAVY_PER_MINUTE` |
+| `VUKEM_VIDEO_SANDBOX` | `STUARTY_SANDBOX` |
+| `VUKEM_VIDEO_INSECURE_ALLOW_ROOT` | `STUARTY_INSECURE_ALLOW_ROOT` |
+| `VUKEM_VIDEO_LAUNCHER_SECRET` | `STUARTY_LAUNCHER_SECRET` |
+| `VUKEM_VIDEO_ADMIN_EMAIL` | `STUARTY_ADMIN_EMAIL` |
+| `VUKEM_VIDEO_ADMIN_PASSWORD` | `STUARTY_ADMIN_PASSWORD` |
+| `VUKEM_VIDEO_URL` | `STUARTY_URL` |
+| `VUKEM_VIDEO_KEY` | `STUARTY_KEY` |
+| `VUKEM_VIDEO_PROJECT` | `STUARTY_PROJECT` |
+| `VUKEM_VIDEO_NO_BROWSER` | `STUARTY_NO_BROWSER` |
+
+### 13.2 Variables of tests and tools
+
+These are read only by tests, scripts and developer tools. They are renamed with no fallback; the new name replaces the prefix `VUKEM_VIDEO_` with `STUARTY_`.
+
+| Former name | Name |
+| --- | --- |
+| `VUKEM_VIDEO_BENCH_MIN_RT` | `STUARTY_BENCH_MIN_RT` |
+| `VUKEM_VIDEO_BIN` | `STUARTY_BIN` |
+| `VUKEM_VIDEO_BUDGET_RELEASE` | `STUARTY_BUDGET_RELEASE` |
+| `VUKEM_VIDEO_CONTRACT_BIND_HELPER` | `STUARTY_CONTRACT_BIND_HELPER` |
+| `VUKEM_VIDEO_CRASH_ACTION` | `STUARTY_CRASH_ACTION` |
+| `VUKEM_VIDEO_CRASH_AT` | `STUARTY_CRASH_AT` |
+| `VUKEM_VIDEO_CRASH_BUNDLE` | `STUARTY_CRASH_BUNDLE` |
+| `VUKEM_VIDEO_CRASH_EXPORT_JOB` | `STUARTY_CRASH_EXPORT_JOB` |
+| `VUKEM_VIDEO_CRASH_PROJECT` | `STUARTY_CRASH_PROJECT` |
+| `VUKEM_VIDEO_CRASH_ROLE` | `STUARTY_CRASH_ROLE` |
+| `VUKEM_VIDEO_CRASH_TRACK` | `STUARTY_CRASH_TRACK` |
+| `VUKEM_VIDEO_DETECT_ONLY` | `STUARTY_DETECT_ONLY` |
+| `VUKEM_VIDEO_E2E_HOME` | `STUARTY_E2E_HOME` |
+| `VUKEM_VIDEO_E2E_PORT` | `STUARTY_E2E_PORT` |
+| `VUKEM_VIDEO_FIREFOX_HEADED` | `STUARTY_FIREFOX_HEADED` |
+| `VUKEM_VIDEO_FUTURE_SECRET` | `STUARTY_FUTURE_SECRET` |
+| `VUKEM_VIDEO_HARNESS` | `STUARTY_HARNESS` |
+| `VUKEM_VIDEO_KILL_ROLE` | `STUARTY_KILL_ROLE` |
+| `VUKEM_VIDEO_KILL_TRACKS` | `STUARTY_KILL_TRACKS` |
+| `VUKEM_VIDEO_LARGE_TESTS` | `STUARTY_LARGE_TESTS` |
+| `VUKEM_VIDEO_NFR` | `STUARTY_NFR` |
+| `VUKEM_VIDEO_PERF` | `STUARTY_PERF` |
+| `VUKEM_VIDEO_SOAK` | `STUARTY_SOAK` |
+| `VUKEM_VIDEO_SOAK_DURATION` | `STUARTY_SOAK_DURATION` |
+| `VUKEM_VIDEO_SOAK_HEAPDIR` | `STUARTY_SOAK_HEAPDIR` |
+| `VUKEM_VIDEO_SOAK_MINUTES` | `STUARTY_SOAK_MINUTES` |
+| `VUKEM_VIDEO_TEST_ALPHA_HASHES` | `STUARTY_TEST_ALPHA_HASHES` |
+| `VUKEM_VIDEO_TEST_ARTIFACTS_DIR` | `STUARTY_TEST_ARTIFACTS_DIR` |
+| `VUKEM_VIDEO_TEST_COMPOSE_HASHES` | `STUARTY_TEST_COMPOSE_HASHES` |
+| `VUKEM_VIDEO_TEST_FFMPEG_DIR` | `STUARTY_TEST_FFMPEG_DIR` |
+| `VUKEM_VIDEO_TEST_GOLDEN_BEFORE_DIR` | `STUARTY_TEST_GOLDEN_BEFORE_DIR` |
+| `VUKEM_VIDEO_TEST_GPU_ADAPTER` | `STUARTY_TEST_GPU_ADAPTER` |
+| `VUKEM_VIDEO_TEST_GPU_HOST` | `STUARTY_TEST_GPU_HOST` |
+| `VUKEM_VIDEO_TEST_OTHER` | `STUARTY_TEST_OTHER` |
+| `VUKEM_VIDEO_TEST_OTHER_FFMPEG_DIR` | `STUARTY_TEST_OTHER_FFMPEG_DIR` |
+| `VUKEM_VIDEO_TEST_STARTUP_ENV_HELPER` | `STUARTY_TEST_STARTUP_ENV_HELPER` |
+| `VUKEM_VIDEO_TEST_TOOLS_DIR` | `STUARTY_TEST_TOOLS_DIR` |
+| `VUKEM_VIDEO_TEST_VR_PARITY` | `STUARTY_TEST_VR_PARITY` |
+| `VUKEM_VIDEO_TOKEN` | `STUARTY_TOKEN` |
+| `VUKEM_VIDEO_TRANSCRIBE_TOKEN` | `STUARTY_TRANSCRIBE_TOKEN` |
+| `VUKEM_VIDEO_WORKSPACE_TEST_HELPER` | `STUARTY_WORKSPACE_TEST_HELPER` |
+
+### 13.3 Other names
+
+| Former name | Name | Note |
+| --- | --- | --- |
+| `vukem-video` (the executable) | `stuarty` | one executable: server, CLI, MCP server and UI assets |
+| `vukem-video-desktop` | `stuarty-desktop` | the desktop shell |
+| `vukem-render` | `stuarty-render` | the native GPU host (SDD-013 §4.9) |
+| `vukem-renderer`, `vukem-renderer-text`, `vukem-renderer-gpu` | `stuarty-renderer`, `stuarty-renderer-text`, `stuarty-renderer-gpu` | the Rust crates of `renderer/` |
+| `github.com/AlexGalhardo/vukem-video` | `github.com/AlexGalhardo/stuarty` | the Go module path |
+| `~/.vukem-video` | `~/.stuarty` | the workspace folder; adopted at the first start (SDD-005 §6.5) |
+| `vukem-video.log` | `stuarty.log` | the log file in `logs/` |
+| `Vukem-Video-Client`, `Vukem-Video-Launcher`, `Vukem-Video-Lang` | `Stuarty-Client`, `Stuarty-Launcher`, `Stuarty-Lang` | request headers (section 11) |
+| `vukem_video_session` | `stuarty_session` | the session cookie (section 11); a browser signs in again once |
+| `vukem-video-bundle`, `vukem-video-template` | `stuarty-bundle`, `stuarty-template` | the `format` of a bundle and of a template file; a file with the former value is still imported |
+| `<template id>.vukem-template.zip` | `<template id>.stuarty-template.zip` | the file name of a template download |
+| `ghcr.io/alexgalhardo/vukem-video`, `alexgalhardo/vukem-video` | `ghcr.io/alexgalhardo/stuarty`, `alexgalhardo/stuarty` | the container image |
+
+### 13.4 Names that stay
+
+These identifiers outlive the rename on purpose, because changing them would break something that already exists on a user's machine or in a published artifact.
+
+| Name | Why it stays |
+| --- | --- |
+| `vvl_`, `vvk_` (token prefixes), `.vvbundle` (bundle extension) | existing tokens, API keys and bundle files; they carry the initials, not the name |
+| `vukem-video-update-feed-v1`, `vukem-video-update-artifact-v1` (the signing labels of the update feed, SDD-009 §10.5) | an installed Vukem Video verifies the feed with these labels; a feed signed under other labels would be refused, so Stuarty could not be offered to it as its update |
+| `VUKEM_VIDEO_OPENH264_DIR` | read by the pinned own FFmpeg build `ffmpeg-9.0.2-2` (its patch, `.config/ffmpeg-build/patches/`); it changes with the next rebuild of that build, and the server sets it for the FFmpeg child process only |
+| `vukem` as the OTIO metadata namespace, `X-Vukem-*` response headers, `window.vukemDesktop` | the short name of the framework era, not the product name; a wire and file format identifier, changed only by a decision of its own |
