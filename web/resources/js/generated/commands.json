@@ -926,7 +926,7 @@
 		"internal": false,
 		"name": "audio.processor_add",
 		"scope": "edit",
-		"summary": "Add processor"
+		"summary": "Add"
 	},
 	{
 		"args_schema": {
@@ -1381,7 +1381,7 @@
 		"internal": false,
 		"name": "audio.processor_set",
 		"scope": "edit",
-		"summary": "Set processor"
+		"summary": "Set"
 	},
 	{
 		"args_schema": {
