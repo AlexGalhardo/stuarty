@@ -44,7 +44,7 @@ A creator plans the week in one calendar: which piece goes to which network and 
 - [x] 5. Wire approval and the cost of a target. Verify: `go test ./service/publish/... -run "TestApproval|TestCost"` passes.
 - [x] 6. Expose on HTTP, CLI and MCP with parity. Verify: `go test ./web/contract/...` passes.
 - [x] 7. Build the calendar, the list and the publication editor in both languages, keyboard operable. Verify: `task test:web` and `web/e2e/specs/publish-calendar.spec.ts` pass with the fake connector.
-- [ ] 8. Add the publication to the project overview and to `ProjectDescribe`. Verify: `go test ./service/... -run TestProjectDescribe` passes.
+- [x] 8. Add the publication to the project overview and to `ProjectDescribe`. Verify: `go test ./service/... -run TestProjectDescribe` passes.
 
 ## Test strategy
 
