@@ -117,8 +117,13 @@ test.describe("shortcuts", () => {
 		// wheel, the grid keys and Esc).
 		await expect(dialog.locator("[data-shortcut-key]")).toHaveCount(all - 4);
 
-		// A transport row (the player scope) takes a key the timeline uses.
+		// A transport row (the player scope) cannot take a key the timeline uses,
+		// as one press would run both; a free key is taken.
 		const play = dialog.locator('[data-shortcut-key="play_pause"]');
+		await play.click();
+		await play.press("b");
+		await expect(dialog.getByRole("alert")).toContainText("Blade tool");
+		await expect(play).toContainText("Space");
 		await play.click();
 		await play.press("y");
 		await expect(play).toContainText("Y");

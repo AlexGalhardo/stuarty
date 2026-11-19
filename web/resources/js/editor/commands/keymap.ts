@@ -507,12 +507,12 @@ export const RESERVED_KEYS: readonly string[] = [
 ];
 
 // Two scopes overlap when a key pressed in one could also fire a row of the
-// other: the same scope, or either is `global` or `text` (the latter act
-// everywhere). `timeline` and `preview` never overlap.
-export function scopesOverlap(a: Scope, b: Scope): boolean {
-	return (
-		a === b || a === "global" || b === "global" || a === "text" || b === "text"
-	);
+// other. Every handler of the editor listens at the window, the player's
+// (play, pause, shuttle) as well as the timeline's, so one press reaches all of
+// them: a key held by a row of any scope cannot be taken by another row. The
+// scope still says where a row acts (rowFor), not where its key may repeat.
+export function scopesOverlap(_a: Scope, _b: Scope): boolean {
+	return true;
 }
 
 const KEY_NAMES: Readonly<Record<string, string>> = {
