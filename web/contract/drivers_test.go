@@ -166,6 +166,8 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.ViewSheet)
 	case "MotionBrief":
 		return invoke(ctx, s, svc.MotionBrief)
+	case "MotionCheck":
+		return invoke(ctx, s, svc.MotionCheck)
 	case "Doctor":
 		return invoke(ctx, s, svc.Doctor)
 	case "FontList":
@@ -922,6 +924,12 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 		argv = append(argv, flag("until", a.Until)...)
 
 		return "motion:brief", append(argv, flag("track", a.TrackID)...), "", nil
+	case "MotionCheck":
+		argv = append(slices.Clone(proj), flag("asset", a.AssetID)...)
+		argv = append(argv, flag("from", a.From)...)
+		argv = append(argv, flag("until", a.Until)...)
+
+		return "motion:check", append(argv, flag("track", a.TrackID)...), "", nil
 	case "Doctor":
 		return "doctor", []string{"--full"}, "", nil
 	case "FontList":

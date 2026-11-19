@@ -1695,6 +1695,51 @@ Example:
 stuarty asset:tag sha256:3b4c0a1d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b --add logo,brand
 ```
 
+## `motion:brief`
+
+What a render by an external motion engine must fit: size, rate, length, safe area, brand kit, captions
+
+```text
+stuarty motion:brief --project <id> [--from t] [--until t] [--track <trk_id>]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--from` | string |  | start of the range, a time (default 0s) |
+| `--until` | string |  | end of the range, exclusive (default the end of the timeline) |
+| `--track` | string |  | the visual track the clip will go on: tells whether the render needs alpha |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`.
+
+Example:
+
+```bash
+stuarty motion:brief --project prj_7k2m9x4q1b --from 2s --until 5s --track trk_f6g7h8j9k0
+```
+
+## `motion:check`
+
+Check a rendered asset against the brief: each mismatch of size, rate, length or alpha, with the value expected
+
+```text
+stuarty motion:check --project <id> --asset <ast_id> [--from t] [--until t] [--track <trk_id>]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--asset` | string |  | the asset to check: an asset of the project, ready (required) |
+| `--from` | string |  | start of the range, a time (default 0s) |
+| `--until` | string |  | end of the range, exclusive (default the end of the timeline) |
+| `--track` | string |  | the visual track the clip will go on: tells whether the render needs alpha |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`.
+
+Example:
+
+```bash
+stuarty motion:check --project prj_7k2m9x4q1b --asset ast_3c5v8n2w6d --from 2s --until 5s --track trk_f6g7h8j9k0
+```
+
 ## `memory:list`
 
 List the memory notes

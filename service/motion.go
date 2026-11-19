@@ -15,11 +15,12 @@ import (
 	"github.com/AlexGalhardo/stuarty/service/untrusted"
 )
 
-// MotionService is the hand-off from an external motion engine (SDD-011 section 15): what a render must fit, and
-// later whether a file does and the replacement of a clip's media. The rules are in core/motion; the product runs
-// no engine.
+// MotionService is the hand-off from an external motion engine (SDD-011 section 15): what a render must fit,
+// whether a file does and the replacement of a clip's media. The rules are in core/motion; the product runs no
+// engine.
 type MotionService interface {
 	MotionBrief(ctx context.Context, req MotionBriefRequest) (*MotionBriefResult, error)
+	MotionCheck(ctx context.Context, req MotionCheckRequest) (*MotionCheckResult, error)
 }
 
 var _ MotionService = (*svc)(nil)
@@ -51,7 +52,7 @@ type MotionCaption struct {
 	ItemID string `json:"item_id"`
 	Start  int    `json:"start"`
 	End    int    `json:"end"`
-	Text   string `json:"text" untrusted:"true"`
+	Text   string `json:"text"    untrusted:"true"`
 }
 
 // MotionFrame is a reference picture of the composed timeline just outside the range.
@@ -188,7 +189,7 @@ func (s *svc) MotionBrief(ctx context.Context, req MotionBriefRequest) (*MotionB
 	fps := v.doc.Settings.FPS
 
 	res := &MotionBriefResult{
-		Envelope: Envelope{UntrustedNotice: UntrustedNotice}, ProjectID: v.row.ID, Revision: v.row.Revision,
+		UntrustedNotice: UntrustedNotice, ProjectID: v.row.ID, Revision: v.row.Revision,
 		From: timeValue(fps, int64(b.FromFrame)), Until: timeValue(fps, int64(b.UntilFrame)),
 		Width: b.Width, Height: b.Height, FrameRate: b.FrameRate, DurationFrames: b.DurationFrames,
 		Duration: timeValue(fps, int64(b.DurationFrames)), SafeArea: b.SafeArea, Margins: b.Margins,
@@ -255,7 +256,10 @@ func (s *svc) motionFrames(ctx context.Context, v *motionView, req *MotionBriefR
 		}
 
 		shot, err := s.ViewFrame(ctx, ViewFrameRequest{
-			ProjectID: req.ProjectID, At: strconv.Itoa(at.frame) + "f", MaxTokens: motionFrameBudget, Pin: v.row.Revision,
+			ProjectID: req.ProjectID,
+			At:        strconv.Itoa(at.frame) + "f",
+			MaxTokens: motionFrameBudget,
+			Pin:       v.row.Revision,
 		})
 		if err != nil {
 			return err
@@ -281,16 +285,31 @@ func motionText(r *MotionBriefResult, fps timeval.FPS, captions int) string {
 	var sb strings.Builder
 
 	sb.WriteString(textview.Note + "\n")
-	fmt.Fprintf(&sb, "motion brief for %s r%d: range %s to %s (%d frames, %s), render at %dx%d, %d/%d fps\n",
-		r.ProjectID, r.Revision, textview.Cell(fps, int64(r.From.Frame)), textview.Cell(fps, int64(r.Until.Frame)),
-		r.DurationFrames, textview.Cell(fps, int64(r.DurationFrames)), r.Width, r.Height, r.FrameRate.Num, r.FrameRate.Den)
+	fmt.Fprintf(
+		&sb,
+		"motion brief for %s r%d: range %s to %s (%d frames, %s), render at %dx%d, %d/%d fps\n",
+		r.ProjectID,
+		r.Revision,
+		textview.Cell(fps, r.From.Frame),
+		textview.Cell(fps, r.Until.Frame),
+		r.DurationFrames,
+		textview.Cell(fps, int64(r.DurationFrames)),
+		r.Width,
+		r.Height,
+		r.FrameRate.Num,
+		r.FrameRate.Den,
+	)
 	fmt.Fprintf(&sb, "safe area x=%d y=%d width=%d height=%d (margins left %d, right %d, top %d, bottom %d)\n",
 		r.SafeArea.X, r.SafeArea.Y, r.SafeArea.Width, r.SafeArea.Height,
 		r.Margins.Left, r.Margins.Right, r.Margins.Top, r.Margins.Bottom)
 
 	switch {
 	case r.Track != nil && r.NeedsAlpha:
-		fmt.Fprintf(&sb, "track %s is above another visual track: render with transparency (ProRes 4444 in a MOV, or WebM VP9 with alpha)\n", r.Track.ID)
+		fmt.Fprintf(
+			&sb,
+			"track %s is above another visual track: render with transparency (ProRes 4444 in a MOV, or WebM VP9 with alpha)\n",
+			r.Track.ID,
+		)
 	case r.Track != nil:
 		fmt.Fprintf(&sb, "track %s is the lowest visual track: an opaque render is enough\n", r.Track.ID)
 	default:
@@ -326,12 +345,28 @@ func motionText(r *MotionBriefResult, fps timeval.FPS, captions int) string {
 	fmt.Fprintf(&sb, "captions in the range: %d\n", captions)
 
 	for _, c := range r.Captions {
-		sb.WriteString(untrusted.Block(untrusted.SourceProjectText,
-			untrusted.Attrs{"item": c.ItemID, "start": strconv.Itoa(c.Start), "end": strconv.Itoa(c.End)}, c.Text, 0) + "\n")
+		sb.WriteString(untrusted.Block(
+			untrusted.SourceProjectText,
+			untrusted.Attrs{
+				"item":  c.ItemID,
+				"start": strconv.Itoa(c.Start),
+				"end":   strconv.Itoa(c.End),
+			},
+			c.Text,
+			0,
+		) + "\n")
 	}
 
 	for _, f := range r.Frames {
-		fmt.Fprintf(&sb, "reference frame %s at %s: %dx%d jpeg%s\n", f.Role, textview.Cell(fps, f.At.Frame), f.Width, f.Height, saved(f.Path))
+		fmt.Fprintf(
+			&sb,
+			"reference frame %s at %s: %dx%d jpeg%s\n",
+			f.Role,
+			textview.Cell(fps, f.At.Frame),
+			f.Width,
+			f.Height,
+			saved(f.Path),
+		)
 	}
 
 	return strings.TrimRight(sb.String(), "\n")

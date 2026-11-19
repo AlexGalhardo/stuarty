@@ -66,6 +66,8 @@ var parity = []row{
 	{method: "ViewSheet", tool: "view", command: "view", route: "GET /projects/{}/sheet"},
 	// The hand-off from an external motion engine (SDD-011 section 15): view with mode motion.
 	{method: "MotionBrief", tool: "view", command: "motion:brief", route: "GET /projects/{}/motion/brief"},
+	// The check has no tool: the tool list has no room for it (SDD-011 section 15.5).
+	{method: "MotionCheck", command: "motion:check", route: "GET /projects/{}/motion/check"},
 	{method: "TrashEmpty", route: "POST /trash/empty", httpOnly: true},
 	{method: "Doctor", command: "doctor", route: "GET /system"},
 	{method: "SnapPoints", route: "GET /projects/{}/snap-points", httpOnly: true},

@@ -3808,6 +3808,23 @@
         },
         "type": "object"
       },
+      "Mismatch": {
+        "properties": {
+          "expected": {
+            "type": "string"
+          },
+          "field": {
+            "type": "string"
+          },
+          "found": {
+            "type": "string"
+          },
+          "hint": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "Money": {
         "properties": {
           "currency": {
@@ -3930,6 +3947,55 @@
           "text": {
             "type": "string",
             "x-untrusted": true
+          }
+        },
+        "type": "object"
+      },
+      "MotionCheckResult": {
+        "properties": {
+          "asset_id": {
+            "type": "string"
+          },
+          "asset_name": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "duration_frames": {
+            "type": "integer"
+          },
+          "frame_rate": {
+            "$ref": "#/components/schemas/Rational"
+          },
+          "height": {
+            "type": "integer"
+          },
+          "mismatches": {
+            "items": {
+              "$ref": "#/components/schemas/Mismatch"
+            },
+            "type": "array"
+          },
+          "needs_alpha": {
+            "type": "boolean"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "text": {
+            "type": "string"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          },
+          "width": {
+            "type": "integer"
           }
         },
         "type": "object"
@@ -4320,6 +4386,12 @@
               "null"
             ]
           },
+          "engine": {
+            "type": "string"
+          },
+          "engine_version": {
+            "type": "string"
+          },
           "kind": {
             "type": "string"
           },
@@ -4331,6 +4403,9 @@
             "x-untrusted": true
           },
           "provider": {
+            "type": "string"
+          },
+          "render_key": {
             "type": "string"
           },
           "rights_note": {
@@ -17653,6 +17728,100 @@
           }
         ],
         "summary": "What a render by an external motion engine must fit: size, rate, length, safe area, brand kit, captions and reference frames"
+      }
+    },
+    "/api/v1/projects/{id}/motion/check": {
+      "get": {
+        "operationId": "projects.motion.check",
+        "parameters": [
+          {
+            "description": "The asset to check: an asset of the project, ready.",
+            "in": "query",
+            "name": "asset_id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "description": "The timeline of the project; required when the project has several.",
+            "in": "query",
+            "name": "timeline_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Start of the range, a time; default 0s.",
+            "in": "query",
+            "name": "from",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "End of the range, exclusive; default the end of the timeline.",
+            "in": "query",
+            "name": "until",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The visual track the clip will go on; tells whether the render needs alpha.",
+            "in": "query",
+            "name": "track_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MotionCheckResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Check a rendered asset against the brief: each mismatch of size, rate, length or alpha with the value expected"
       }
     },
     "/api/v1/projects/{id}/otio": {

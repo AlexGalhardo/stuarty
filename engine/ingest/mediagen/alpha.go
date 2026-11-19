@@ -33,6 +33,8 @@ func (a AlphaInput) Ext() string {
 		return "webm"
 	case AlphaWebP:
 		return "webp"
+	case AlphaPNG, AlphaAPNG:
+		return "png"
 	}
 
 	return "png"
@@ -83,8 +85,23 @@ func (g Gen) alphaFixture(
 		args = append(args, "-vf", yuv("yuva444p10le"),
 			"-c:v", "prores_ks", "-profile:v", "4444", "-pix_fmt", "yuva444p10le", "-f", "mov")
 	case AlphaVP9:
-		args = append(args, "-vf", fmt.Sprintf("format=yuva420p,geq=lum='lum(X,Y)':cb='cb(X,Y)':cr='cr(X,Y)':a='%s'", alpha),
-			"-c:v", "libvpx-vp9", "-pix_fmt", "yuva420p", "-auto-alt-ref", "0", "-crf", "20", "-b:v", "0", "-f", "webm")
+		args = append(
+			args,
+			"-vf",
+			fmt.Sprintf("format=yuva420p,geq=lum='lum(X,Y)':cb='cb(X,Y)':cr='cr(X,Y)':a='%s'", alpha),
+			"-c:v",
+			"libvpx-vp9",
+			"-pix_fmt",
+			"yuva420p",
+			"-auto-alt-ref",
+			"0",
+			"-crf",
+			"20",
+			"-b:v",
+			"0",
+			"-f",
+			"webm",
+		)
 	case AlphaQtrle:
 		args = append(args, "-vf", rgb("argb"), "-c:v", "qtrle", "-pix_fmt", "argb", "-f", "mov")
 	case AlphaPNG:

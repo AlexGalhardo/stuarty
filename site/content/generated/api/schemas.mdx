@@ -1217,6 +1217,15 @@ The types named in the tables of the operations. The arguments of each editing c
 | `asset` | `string` | no |  |
 | `intensity` | `number (double)` | no |  |
 
+### Margins
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `bottom` | `integer` | no |  |
+| `left` | `integer` | no |  |
+| `right` | `integer` | no |  |
+| `top` | `integer` | no |  |
+
 ### Marker
 
 | Name | Type | Required | Description |
@@ -1333,12 +1342,93 @@ The types named in the tables of the operations. The arguments of each editing c
 | `text` | `string` | no |  |
 | `untrusted_notice` | `string` | no |  |
 
+### Mismatch
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `expected` | `string` | no |  |
+| `field` | `string` | no |  |
+| `found` | `string` | no |  |
+| `hint` | `string` | no |  |
+
 ### Money
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `currency` | `string` | no |  |
 | `micros` | `integer (int64)` | no |  |
+
+### MotionBrand
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `colors` | map of `string` | no |  |
+| `fonts` | array of `string` | no |  |
+| `logo` | `string` | no |  |
+
+### MotionBriefResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `brand_kit` | [`MotionBrand`](/docs/api/schemas#motionbrand) | no |  |
+| `captions` | array of [`MotionCaption`](/docs/api/schemas#motioncaption) | no |  |
+| `duration` | [`TimeValue`](/docs/api/schemas#timevalue) | no |  |
+| `duration_frames` | `integer` | no |  |
+| `frame_rate` | [`Rational`](/docs/api/schemas#rational) | no |  |
+| `frames` | array of [`MotionFrame`](/docs/api/schemas#motionframe) | no |  |
+| `from` | [`TimeValue`](/docs/api/schemas#timevalue) | no |  |
+| `height` | `integer` | no |  |
+| `image_tokens` | `integer` | no |  |
+| `margins` | [`Margins`](/docs/api/schemas#margins) | no |  |
+| `needs_alpha` | `boolean` | no |  |
+| `project_id` | `string` | no |  |
+| `revision` | `integer (int64)` | no |  |
+| `safe_area` | [`Rect`](/docs/api/schemas#rect) | no |  |
+| `text` | `string` | no |  |
+| `track` | [`TrackInfo`](/docs/api/schemas#trackinfo) or `any` or `null` or `null` | no |  |
+| `until` | [`TimeValue`](/docs/api/schemas#timevalue) | no |  |
+| `untrusted_notice` | `string` | no |  |
+| `width` | `integer` | no |  |
+
+### MotionCaption
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `end` | `integer` | no |  |
+| `item_id` | `string` | no |  |
+| `start` | `integer` | no |  |
+| `text` | `string` | no |  |
+
+### MotionCheckResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `asset_id` | `string` | no |  |
+| `asset_name` | `string` | no |  |
+| `duration_frames` | `integer` | no |  |
+| `frame_rate` | [`Rational`](/docs/api/schemas#rational) | no |  |
+| `height` | `integer` | no |  |
+| `mismatches` | array of [`Mismatch`](/docs/api/schemas#mismatch) | no |  |
+| `needs_alpha` | `boolean` | no |  |
+| `ok` | `boolean` | no |  |
+| `project_id` | `string` | no |  |
+| `revision` | `integer (int64)` | no |  |
+| `text` | `string` | no |  |
+| `untrusted_notice` | `string` | no |  |
+| `width` | `integer` | no |  |
+
+### MotionFrame
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `at` | [`TimeValue`](/docs/api/schemas#timevalue) | no |  |
+| `height` | `integer` | no |  |
+| `image_base64` | `string` | no |  |
+| `image_tokens` | `integer` | no |  |
+| `mime` | `string` | no |  |
+| `path` | `string` | no |  |
+| `role` | `string` | no |  |
+| `width` | `integer` | no |  |
 
 ### OpEffect
 
@@ -1361,10 +1451,13 @@ The types named in the tables of the operations. The arguments of each editing c
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `cost_micros` | `integer (int64)` or `null` | no |  |
+| `engine` | `string` | no |  |
+| `engine_version` | `string` | no |  |
 | `kind` | `string` | no |  |
 | `model` | `string` | no |  |
 | `prompt` | `string` | no |  |
 | `provider` | `string` | no |  |
+| `render_key` | `string` | no |  |
 | `rights_note` | `string` | no |  |
 | `source` | `string` | no |  |
 
@@ -1669,6 +1762,15 @@ The types named in the tables of the operations. The arguments of each editing c
 | --- | --- | --- | --- |
 | `den` | `integer` | no |  |
 | `num` | `integer` | no |  |
+
+### Rect
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `height` | `integer` | no |  |
+| `width` | `integer` | no |  |
+| `x` | `integer` | no |  |
+| `y` | `integer` | no |  |
 
 ### Request
 
@@ -2051,6 +2153,14 @@ The types named in the tables of the operations. The arguments of each editing c
 | `order` | `string` | no |  |
 | `solo` | `boolean` | no |  |
 | `volume` | `number (double)` or `null` | no |  |
+
+### TrackInfo
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `id` | `string` | no |  |
+| `name` | `string` | no |  |
+| `overlay` | `boolean` | no |  |
 
 ### TranscribeResult
 

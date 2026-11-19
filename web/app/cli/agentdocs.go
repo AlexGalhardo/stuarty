@@ -34,7 +34,7 @@ func AgentDocsInputs() agentdocs.Inputs {
 	}
 
 	// And for the hand-off from an external motion engine: the skill motion-with-an-external-engine carries it.
-	for _, s := range []*spec{motionBriefCmd} {
+	for _, s := range []*spec{motionBriefCmd, motionCheckCmd} {
 		inLibrary[s.name] = true
 	}
 

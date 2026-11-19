@@ -23,6 +23,8 @@
         "projects.items.restore",
         "projects.items.trash",
         "projects.lint",
+        "projects.motion.brief",
+        "projects.motion.check",
         "projects.otio.export",
         "projects.otio.import",
         "projects.plan",
