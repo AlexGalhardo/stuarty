@@ -3,7 +3,7 @@
 - Status: Draft (2026-11-19). Written by epic 05; the code follows in the same epic.
 - Depends on: ADR-0032 (publishing and costly generation wait for a person), ADR-0018 (jobs), ADR-0020 (a privileged browser session), ADR-0033, SDD-000 (names), SDD-005 (jobs and audit), SDD-006 (events), SDD-007 (threat model, scope matrix), SDD-014 (connections)
 - Implements: PRD-002 RF-132, RF-135, RF-136; PRD-004 RF-362, RF-363, RF-364, RF-365
-- Owner area: `core/approval/`, `service/approval/`, the approval operations and the job wiring in `service/`, the controllers, commands and tool in `web/app/`, the approval queue and the rules screen in `web/resources/js/dashboard/approval/`
+- Owner area: `core/approval/`, `service/approval/`, the approval operations and the job wiring in `service/`, the controllers and commands in `web/app/`, the approval queue and the rules screen in `web/resources/js/dashboard/approval/`
 
 ## Contents
 
@@ -218,7 +218,7 @@ Rows of the table `audit` (SDD-005 section 5.9), written in the transaction of t
 
 - HTTP: `GET /approvals`, `GET /approvals/{id}`, `POST /approvals/{id}/decide`, `GET /approval-rules`, `POST /approval-rules`, `DELETE /approval-rules/{id}`, `GET /cost`, `PUT /cost/ceilings`, and the stream `GET /approvals/events`.
 - CLI: `approval:list`, `approval:show`, `approval:decide`, `approval:rule:list`, `approval:rule:set`, `approval:rule:remove`, `cost:show`, `cost:ceiling`. The four that need a person are commands so that an agent that tries gets the stable error and its hint, instead of "unknown command"; run with the local token they always fail with `E_PRIVILEGED_SESSION`.
-- MCP: one read-only tool, `approval`, that lists the pending requests or reads one with `id` (536 bytes of the 19,500 of the whole catalogue, SDD-003 section 4.1: the 18 tools total 19,440, so the next tool needs the budget revised); an agent submits through `job_start` and reads the state with `job_get` or this tool. It has no argument that decides, and any other member is refused by the input schema. Deciding, writing a rule and setting a ceiling have no tool (RF-136).
+- MCP: no tool. The 18 definitions of the catalogue use 19,320 of the 19,500 bytes of NFR-020 (SDD-003 section 4.1) and a read-only `approval` tool needs about 540, so it waits for the budget of epic 13. An agent submits through `job_start`, reads the state of its request with `job_get` (`waiting_approval`, `approval_id`) and cannot decide: no tool exists that decides, writes a rule or sets a ceiling (RF-136). The queue is read with `approval:list` and `GET /approvals`.
 - Agents: `job_start` of a registered kind answers the job in `waiting_approval` with `approval_id`; the job `text` says so. The generated skill of `agent:docs` says that the agent waits, polls `job_get` and never decides.
 - The UI page `/approvals` shows the queue (summary, destination, cost, actor, age), approves and rejects, lists the rules and the ceilings and writes them, and shows the cost summary. It is the only caller that is a privileged session, and it computes nothing: amounts are formatted, not summed (SDD-012 section 1).
 

@@ -1,0 +1,29 @@
+{
+  "code": "E_VALIDATION",
+  "details": {
+    "allowed": [
+      "align",
+      "background_color",
+      "background_padding",
+      "background_radius",
+      "color",
+      "font_family",
+      "font_weight",
+      "line_height",
+      "max_width",
+      "shadow_blur",
+      "shadow_color",
+      "shadow_dx",
+      "shadow_dy",
+      "size",
+      "stroke_color",
+      "stroke_width",
+      "uppercase"
+    ]
+  },
+  "hint": "The style keys are: align, background_color, background_padding, background_radius, color, font_family, font_weight, line_height, max_width, shadow_blur, shadow_color, shadow_dx, shadow_dy, size, stroke_color, stroke_width, uppercase.",
+  "message": "args.style.glow is not a style key.",
+  "op_index": 0,
+  "path": "args.style.glow",
+  "retryable": false
+}

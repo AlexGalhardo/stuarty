@@ -347,6 +347,8 @@ func TestResetDropsEveryEditorTableAndUpRunsAgain(t *testing.T) {
 		"brand_kits",
 		"font_owners",
 		"connections",
+		"image_documents",
+		"image_operations",
 		"approval_requests",
 		"approval_rules",
 		"cost_ceilings",
@@ -570,7 +572,7 @@ func TestJobsRebuildKeepsTheRowsOfAnExistingWorkspace(t *testing.T) {
 
 	all := All()
 	before := all[:len(all)-1] // everything but the rebuild of jobs
-	if all[len(all)-1].ID != "20261119110100_jobs_waiting_approval" {
+	if all[len(all)-1].ID != "20261119120100_jobs_waiting_approval" {
 		t.Fatalf("the last migration is %s: update this test", all[len(all)-1].ID)
 	}
 

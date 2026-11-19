@@ -1,0 +1,7 @@
+{
+  "args": {
+    "layer_id": "lyr_gggggggggg",
+    "slot": "title"
+  },
+  "op": "layer.set"
+}

@@ -29,7 +29,8 @@ func All() []schema.Migration {
 		m20261116120000ArtifactsChunksKind(),
 		m20261116130000AssetsLutKind(),
 		m20261119100000CreateConnectionsTable(),
-		m20261119110000CreateApprovalTables(),
-		m20261119110100JobsWaitingApproval(),
+		m20261119110000CreateImageDocumentsAndOperations(),
+		m20261119120000CreateApprovalTables(),
+		m20261119120100JobsWaitingApproval(),
 	}
 }

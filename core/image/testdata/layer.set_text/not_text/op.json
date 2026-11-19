@@ -1,0 +1,7 @@
+{
+  "args": {
+    "layer_id": "lyr_dddddddddd",
+    "text": "x"
+  },
+  "op": "layer.set_text"
+}

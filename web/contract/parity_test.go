@@ -100,11 +100,19 @@ var parity = []row{
 	{method: "ConnectionCreate", command: "connection:add", route: "POST /connections"},
 	{method: "ConnectionRemove", command: "connection:remove", route: "DELETE /connections/{}"},
 	{method: "ConnectionTest", command: "connection:test", route: "POST /connections/{}/test"},
-	// The approval queue (SDD-015 section 10, SDD-003 exception E-6): the read-only tool lists or reads
-	// one request; deciding, writing a rule and setting a ceiling are for a person, so they have no tool
-	// and their commands always fail for an agent.
-	{method: "ApprovalList", tool: "approval", command: "approval:list", route: "GET /approvals"},
-	{method: "ApprovalGet", tool: "approval", command: "approval:show", route: "GET /approvals/{}"},
+	// The image documents of SDD-021: one MCP tool with an action per operation.
+	{method: "ImageCreate", tool: "image", command: "image:create", route: "POST /images"},
+	{method: "ImageList", tool: "image", command: "image:list", route: "GET /images"},
+	{method: "ImageDescribe", tool: "image", command: "image:show", route: "GET /images/{}"},
+	{method: "ImageEdit", tool: "image", command: "image:edit", route: "POST /images/{}/edit"},
+	{method: "ImageUndo", tool: "image", command: "image:undo", route: "POST /images/{}/undo"},
+	{method: "ImageRedo", tool: "image", command: "image:redo", route: "POST /images/{}/redo"},
+	{method: "ImageExport", tool: "image", command: "image:export", route: "POST /images/{}/export"},
+	// The approval queue (SDD-015 section 10): no MCP tool, the budget of the tool list leaves no room
+	// for one; deciding, writing a rule and setting a ceiling are for a person, and their commands
+	// always fail for an agent.
+	{method: "ApprovalList", command: "approval:list", route: "GET /approvals"},
+	{method: "ApprovalGet", command: "approval:show", route: "GET /approvals/{}"},
 	{method: "ApprovalDecide", command: "approval:decide", route: "POST /approvals/{}/decide"},
 	{method: "ApprovalRuleList", command: "approval:rule:list", route: "GET /approval-rules"},
 	{method: "ApprovalRuleSet", command: "approval:rule:set", route: "POST /approval-rules"},

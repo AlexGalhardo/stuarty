@@ -1,6 +1,6 @@
 {
  "name": "job_get",
- "description": "Get a job's state, progress and result (job_id). wait_ms waits for a final state (succeeded, failed, cancelled) for up to that many milliseconds. A succeeded export is verified; its result has the file path. Give project_id instead of job_id to list its queued, running and recent jobs.",
+ "description": "Get a job's state, progress and result (job_id). wait_ms waits up to that many ms for a final state (succeeded, failed, cancelled). A succeeded export is verified; its result has the file path. Give project_id instead of job_id to list its queued, running and recent jobs.",
  "inputSchema": {
   "type": "object",
   "properties": {

@@ -498,6 +498,10 @@ List the editing commands, or describe one
 stuarty command:help [<name>]
 ```
 
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--domain` | string | `video` | video, or image for the commands of image documents |
+
 Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
 
 Example:
@@ -982,7 +986,7 @@ stuarty connection:test con_0123456789
 List the approval queue: what waits for a person (pending by default)
 
 ```text
-stuarty approval:list [--state s] [--project <id>] [--cursor c] [--limit n]
+stuarty approval:list
 ```
 
 | Flag | Type | Default | Meaning |
@@ -1021,7 +1025,7 @@ stuarty approval:show apr_0123456789
 Approve or reject a request (for a person in the app; the local token is refused)
 
 ```text
-stuarty approval:decide <id> --approve | --reject [--reason <text>]
+stuarty approval:decide <id> --approve|--reject
 ```
 
 | Flag | Type | Default | Meaning |
@@ -1059,7 +1063,7 @@ stuarty approval:rule:list --json
 Create or replace a rule that approves a kind of action (for a person in the app; the local token is refused)
 
 ```text
-stuarty approval:rule:set --kind <k> [--id <rul>] [--connection <con>] [--project <prj>] [--currency USD] [--per-item <micros>] [--per-day <micros>] [--disabled]
+stuarty approval:rule:set --kind <k>
 ```
 
 | Flag | Type | Default | Meaning |
@@ -1118,7 +1122,7 @@ stuarty cost:show --json
 Set or remove a cost ceiling (for a person in the app; the local token is refused)
 
 ```text
-stuarty cost:ceiling --currency USD [--project <prj>] [--per-item <micros>] [--per-day <micros>]
+stuarty cost:ceiling --currency USD
 ```
 
 | Flag | Type | Default | Meaning |
@@ -1134,6 +1138,150 @@ Example:
 
 ```bash
 stuarty cost:ceiling --currency USD --per-day 5000000
+```
+
+## `image:create`
+
+Create an image document, blank or from a template
+
+```text
+stuarty image:create --preset p
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--preset` | string |  | video_thumbnail (1280x720), square_post (1080x1080) or vertical_cover (1080x1920) |
+| `--width` | integer |  | pixels, 1 to 4096, with --height |
+| `--height` | integer |  | pixels, 1 to 4096, with --width |
+| `--name` | string |  | name of the image |
+| `--background` | string |  | a colour or transparent (default #FFFFFF) |
+| `--template` | boolean | `false` | make a template whose text and image layers may be slots |
+| `--from-template` | string |  | make the image from this template |
+| `--values` | string |  | a JSON object of slot name to \{"text": "..."\} or \{"asset": "sha256:..."\}: a file, or - for standard input |
+| `--id` | string |  | identifier for the image (omit it in network mode: the server chooses) |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty image:create --preset video_thumbnail --name "Episode 12" --background "#101820"
+```
+
+## `image:list`
+
+List the image documents and templates
+
+```text
+stuarty image:list
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--templates` | string |  | only for the templates, none for the others |
+| `--cursor` | string |  | continue a list from this cursor |
+| `--limit` | integer | `20` | items per page |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty image:list --templates only --json
+```
+
+## `image:show`
+
+Describe an image document: its layers, its findings and its revision
+
+```text
+stuarty image:show <id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty image:show img_7k2m9x4q1b
+```
+
+## `image:edit`
+
+Apply a batch of image operations (stuarty command:help --domain image lists them)
+
+```text
+stuarty image:edit <id> <op> k=v...
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--ops` | string |  | a JSON file with the batch, or - for standard input: \{"operations":[\{"op":"item.move","args":\{"item_id":"itm_m1n2p3q4r5","start":"2s"\}\}]\}, or only the array of \{op, args\}; base_revision, idempotency_key and dry_run may sit beside operations |
+| `--base` | integer |  | the revision the batch was planned against (default: the current one) |
+| `--key` | string |  | idempotency key |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--dry-run`.
+
+Example:
+
+```bash
+stuarty image:edit img_7k2m9x4q1b layer.add_text text="HOW IT WORKS" slot=title
+```
+
+## `image:undo`
+
+Undo the last step of the caller on an image
+
+```text
+stuarty image:undo <id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--dry-run`.
+
+Example:
+
+```bash
+stuarty image:undo img_7k2m9x4q1b
+```
+
+## `image:redo`
+
+Redo the last undone step of the caller on an image
+
+```text
+stuarty image:redo <id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--dry-run`.
+
+Example:
+
+```bash
+stuarty image:redo img_7k2m9x4q1b
+```
+
+## `image:export`
+
+Export an image document to a PNG, JPEG or WebP file
+
+```text
+stuarty image:export <id> [--format f]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--format` | string | `png` | png, jpeg or webp |
+| `--quality` | integer |  | 1 to 100, for jpeg and lossy webp |
+| `--preset` | string |  | resample to video_thumbnail, square_post or vertical_cover |
+| `--width` | integer |  | resample to this width (0 keeps the aspect) |
+| `--height` | integer |  | resample to this height (0 keeps the aspect) |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty image:export img_7k2m9x4q1b --format jpeg --quality 85
 ```
 
 ## `serve`

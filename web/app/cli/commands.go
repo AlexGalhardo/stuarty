@@ -25,6 +25,7 @@ func registry() []*spec {
 		connectionListCmd, connectionShowCmd, connectionAddCmd, connectionRemoveCmd, connectionTestCmd,
 		approvalListCmd, approvalShowCmd, approvalDecideCmd, approvalRuleListCmd, approvalRuleSetCmd,
 		approvalRuleRemoveCmd, costShowCmd, costCeilingCmd,
+		imageCreate, imageList, imageShow, imageEdit, imageUndo, imageRedo, imageExport,
 	}
 }
 
@@ -283,12 +284,20 @@ var commandHelp = &spec{
 	usage:      []string{"stuarty command:help [<name>]"},
 	example:    "stuarty command:help item.move",
 	positional: true,
+	flags: []flagDef{
+		{
+			Name:    "domain",
+			Kind:    kindString,
+			Default: "video",
+			Usage:   "video, or image for the commands of image documents",
+		},
+	},
 	run: func(ctx context.Context, c *call) (*output, error) {
 		if len(c.args.Positional) > 1 {
 			return nil, validation("", "command:help takes one command name, got %d.", len(c.args.Positional))
 		}
 
-		req := service.CommandHelpRequest{}
+		req := service.CommandHelpRequest{Domain: c.args.str("domain")}
 		if len(c.args.Positional) == 1 {
 			req.Name = c.args.Positional[0]
 		}

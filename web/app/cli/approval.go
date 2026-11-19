@@ -17,7 +17,7 @@ import (
 var approvalListCmd = &spec{
 	name:    "approval:list",
 	summary: "list the approval queue: what waits for a person (pending by default)",
-	usage:   []string{"stuarty approval:list [--state s] [--project <id>] [--cursor c] [--limit n]"},
+	usage:   []string{"stuarty approval:list"},
 	example: "stuarty approval:list --state all",
 	flags: append([]flagDef{
 		{Name: "state", Kind: kindString, Usage: "pending (default), approved, rejected, expired or all"},
@@ -57,9 +57,10 @@ var approvalShowCmd = &spec{
 }
 
 var approvalDecideCmd = &spec{
+	person:     true,
 	name:       "approval:decide",
 	summary:    "approve or reject a request (for a person in the app; the local token is refused)",
-	usage:      []string{"stuarty approval:decide <id> --approve | --reject [--reason <text>]"},
+	usage:      []string{"stuarty approval:decide <id> --approve|--reject"},
 	example:    "stuarty approval:decide apr_0123456789 --reject --reason \"wrong channel\"",
 	positional: true,
 	write:      true,
@@ -124,12 +125,10 @@ var approvalRuleListCmd = &spec{
 }
 
 var approvalRuleSetCmd = &spec{
+	person:  true,
 	name:    "approval:rule:set",
 	summary: "create or replace a rule that approves a kind of action (for a person in the app; the local token is refused)",
-	usage: []string{
-		"stuarty approval:rule:set --kind <k> [--id <rul>] [--connection <con>] [--project <prj>] [--currency USD] " +
-			"[--per-item <micros>] [--per-day <micros>] [--disabled]",
-	},
+	usage:   []string{"stuarty approval:rule:set --kind <k>"},
 	example: "stuarty approval:rule:set --kind publish.post --connection con_0123456789",
 	write:   true,
 	flags: []flagDef{
@@ -173,6 +172,7 @@ var approvalRuleSetCmd = &spec{
 }
 
 var approvalRuleRemoveCmd = &spec{
+	person:     true,
 	name:       "approval:rule:remove",
 	summary:    "remove a rule (for a person in the app; the local token is refused)",
 	usage:      []string{"stuarty approval:rule:remove <id>"},
@@ -210,11 +210,10 @@ var costShowCmd = &spec{
 }
 
 var costCeilingCmd = &spec{
+	person:  true,
 	name:    "cost:ceiling",
 	summary: "set or remove a cost ceiling (for a person in the app; the local token is refused)",
-	usage: []string{
-		"stuarty cost:ceiling --currency USD [--project <prj>] [--per-item <micros>] [--per-day <micros>]",
-	},
+	usage:   []string{"stuarty cost:ceiling --currency USD"},
 	example: "stuarty cost:ceiling --currency USD --per-day 5000000",
 	write:   true,
 	flags: []flagDef{

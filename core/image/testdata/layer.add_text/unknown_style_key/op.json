@@ -1,0 +1,9 @@
+{
+  "args": {
+    "style": {
+      "glow": 3
+    },
+    "text": "x"
+  },
+  "op": "layer.add_text"
+}

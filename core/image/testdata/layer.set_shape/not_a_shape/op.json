@@ -1,0 +1,7 @@
+{
+  "args": {
+    "fill": "#000000",
+    "layer_id": "lyr_cccccccccc"
+  },
+  "op": "layer.set_shape"
+}

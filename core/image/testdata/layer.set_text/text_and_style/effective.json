@@ -1,0 +1,14 @@
+{
+  "box": {
+    "h": 108,
+    "w": 1000,
+    "x": 120,
+    "y": 300
+  },
+  "layer_id": "lyr_cccccccccc",
+  "style": {
+    "color": "#00FF00",
+    "font_family": "Anton",
+    "size": 90
+  }
+}

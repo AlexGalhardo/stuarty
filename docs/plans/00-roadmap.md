@@ -51,15 +51,15 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | Epic | Title | Size | Depends on | Status |
 | --- | --- | --- | --- | --- |
 | [26](26-browser-preview-on-the-rust-renderer.md) | The browser preview on the Rust renderer | L | 03 | DONE (2026-11-19, e21f512f..9c750319; task 8, the idle-machine playback measurement, waits for an idle window) |
-| [27](27-image-document-core.md) | Image documents: core, catalogue, templates and export | L | 03 | IN PROGRESS (senior-e, 2026-11-19) |
+| [27](27-image-document-core.md) | Image documents: core, catalogue, templates and export | L | 03 | DONE (2026-11-19, 97d5c560..7758cdda replayed and merged; WebP export waits for an ffargs builder) |
 | [28](28-image-editor-ui.md) | Image editor in the UI | L | 07, 27 | TODO |
 | [29](29-image-adjustments-filters-and-masks.md) | Image adjustments, filters, masks and blend modes | L | 27 | TODO |
 | [30](30-image-operations-with-a-model.md) | Image operations with a model | S | 10, 28 | TODO |
-| [31](31-motion-easing-crop-and-mask.md) | Motion: easing curves, animated crop and mask, presets | L | 03 | TODO |
+| [31](31-motion-easing-crop-and-mask.md) | Motion: easing curves, animated crop and mask, presets | L | 03 | IN PROGRESS (senior-d, 2026-11-19) |
 | [32](32-nested-compositions.md) | Nested compositions | M | 06, 31 | TODO |
 | [33](33-external-motion-engine-hand-off.md) | Hand-off from an external motion engine | M | 08 | TODO |
 | [34](34-audio-processors-and-noise-reduction.md) | Audio processors and noise reduction | L | 03 | TODO |
-| [35](35-export-presets-batch-and-codecs.md) | Export presets, batch queue, H.265 and AV1 | M | 03 | TODO |
+| [35](35-export-presets-batch-and-codecs.md) | Export presets, batch queue, H.265 and AV1 | M | 03 | IN PROGRESS (senior-e, 2026-11-19) |
 | [36](36-revert-checkpoints-and-diff.md) | Revert to a revision, checkpoints and a diff | M | 03 | TODO |
 | [37](37-editor-ui-and-shortcuts.md) | Final editor UI, shortcuts and open fixes | L | 07 | TODO |
 

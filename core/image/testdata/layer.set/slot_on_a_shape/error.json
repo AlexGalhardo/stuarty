@@ -1,0 +1,8 @@
+{
+  "code": "E_TYPE_MISMATCH",
+  "hint": "Put the slot on a text or an image layer.",
+  "message": "Layer lyr_dddddddddd is a shape; only a text or an image layer can be a slot.",
+  "op_index": 0,
+  "path": "args.slot",
+  "retryable": false
+}

@@ -1,0 +1,16 @@
+[
+  {
+    "collection": "layers",
+    "id": "lyr_cccccccccc",
+    "set": {
+      "h": 144,
+      "style": {
+        "color": "#FFE600",
+        "font_family": "Anton",
+        "size": 120
+      },
+      "text": "HOW IT WORKS"
+    },
+    "type": "patch"
+  }
+]

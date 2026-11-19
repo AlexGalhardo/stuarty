@@ -1,0 +1,16 @@
+[
+  {
+    "changes": {
+      "name": [
+        "Bar",
+        "Headline bar"
+      ],
+      "opacity": [
+        100,
+        80
+      ]
+    },
+    "id": "lyr_dddddddddd",
+    "kind": "layer.updated"
+  }
+]

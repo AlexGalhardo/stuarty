@@ -1,0 +1,17 @@
+[
+  {
+    "collection": "layers",
+    "id": "lyr_kkkkkkkkkk",
+    "type": "remove"
+  },
+  {
+    "collection": "layers",
+    "id": "lyr_mmmmmmmmmm",
+    "type": "remove"
+  },
+  {
+    "collection": "layers",
+    "id": "lyr_nnnnnnnnnn",
+    "type": "remove"
+  }
+]

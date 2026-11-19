@@ -65,6 +65,7 @@ type Repos interface {
 	Audit() AuditRepo
 	Fonts() FontRepo
 	BrandKit() BrandKitRepo
+	Images() ImageRepo
 	Connections() connections.Store
 	Approvals() approval.Store
 }

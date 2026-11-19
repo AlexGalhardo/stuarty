@@ -103,6 +103,7 @@ func (p *projectTx) Fonts() service.FontRepo              { return p.tx.Fonts() 
 func (p *projectTx) BrandKit() service.BrandKitRepo       { return p.tx.BrandKit() }
 func (p *projectTx) Connections() connections.Store       { return p.tx.Connections() }
 func (p *projectTx) Approvals() approval.Store            { return p.tx.Approvals() }
+func (p *projectTx) Images() service.ImageRepo            { return p.tx.Images() }
 func (p *projectTx) AfterCommit(fn func())                { p.tx.AfterCommit(fn) }
 func (p *projectTx) Project() service.ProjectRow          { return p.row }
 func (p *projectTx) Executor() database.Executor          { return p.tx.Executor() }

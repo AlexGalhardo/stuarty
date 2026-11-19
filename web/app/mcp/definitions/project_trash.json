@@ -1,6 +1,6 @@
 {
  "name": "project_trash",
- "description": "Move a project to the trash, or restore it with restore=true. Nothing is deleted for good; the project and its history stay intact.",
+ "description": "Move a project to the trash, or restore it with restore=true.",
  "inputSchema": {
   "type": "object",
   "properties": {

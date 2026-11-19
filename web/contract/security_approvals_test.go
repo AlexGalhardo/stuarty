@@ -5,8 +5,6 @@ import (
 	"strings"
 	"testing"
 
-	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
-
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/web/contract/testenv"
 )
@@ -82,9 +80,9 @@ func TestSecurity_T49_AgentCannotWriteARule(t *testing.T) {
 }
 
 // noToolDecides checks that no tool of the MCP server decides, writes a rule or sets a ceiling: none
-// of the person-only operations has a tool, the one tool of the queue reads only, and a member that
-// would decide is refused by its input schema.
-func noToolDecides(t *testing.T, member string) {
+// of the operations of the queue has a tool (the budget of the tool list leaves no room for one, and
+// an agent reads the state of its own request through job_get), so there is nothing to call.
+func noToolDecides(t *testing.T, _ string) {
 	t.Helper()
 
 	d := newMCP(t).(*mcpDriver)
@@ -101,46 +99,12 @@ func noToolDecides(t *testing.T, member string) {
 	}
 
 	for _, tool := range list.Tools {
-		text := strings.ToLower(tool.Name + " " + tool.Description)
+		name := strings.ToLower(tool.Name)
 
-		if strings.Contains(tool.Name, "decide") || strings.Contains(tool.Name, "rule") ||
-			strings.Contains(tool.Name, "ceiling") {
-			t.Errorf("the tool %s sounds like a decision", tool.Name)
-		}
-
-		if tool.Name == "approval" {
-			if tool.Annotations == nil || !tool.Annotations.ReadOnlyHint {
-				t.Error("the approval tool is not read only")
-			}
-
-			if !strings.Contains(text, "cannot approve") {
-				t.Errorf("the approval tool does not tell the agent it cannot decide: %s", tool.Description)
+		for _, word := range []string{"approv", "decide", "rule", "ceiling", "cost"} {
+			if strings.Contains(name, word) {
+				t.Errorf("the tool %s is a surface of the approval queue", tool.Name)
 			}
 		}
-	}
-
-	for _, args := range []map[string]any{
-		{"id": "apr_0000000001", "decision": "approve"},
-		{"id": "apr_0000000001", "approve": true},
-		{"state": "pending", "rule": map[string]any{"kind": "publish.post"}},
-		{"member": member},
-	} {
-		res, err := d.cs.CallTool(t.Context(), &sdk.CallToolParams{Name: "approval", Arguments: args})
-		if err == nil && (res == nil || !res.IsError) {
-			t.Errorf("the approval tool accepted %v", args)
-		}
-	}
-
-	// And it reads: the queue is empty, and an unknown request is a stable error.
-	if _, _, fail := d.do(t, step{Call: "ApprovalList", Args: json.RawMessage(`{}`)}); fail != nil {
-		t.Errorf("the approval tool cannot list: %+v", fail)
-	}
-
-	if _, _, fail := d.do(
-		t,
-		step{Call: "ApprovalGet", Args: json.RawMessage(`{"id":"apr_0000000001"}`)},
-	); fail == nil ||
-		fail.Code != service.CodeApprovalNotFound {
-		t.Errorf("an unknown request through the tool: %+v", fail)
 	}
 }

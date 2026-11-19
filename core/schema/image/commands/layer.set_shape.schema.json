@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "fill": {
+      "type": "string"
+    },
+    "layer_id": {
+      "pattern": "^lyr_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+      "type": "string"
+    },
+    "radius": {
+      "maximum": 16384,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "shape": {
+      "enum": [
+        "rect",
+        "rounded_rect",
+        "ellipse"
+      ],
+      "type": "string"
+    },
+    "stroke_color": {
+      "description": "A colour; an empty string removes it.",
+      "type": "string"
+    },
+    "stroke_width": {
+      "maximum": 1000,
+      "minimum": 0,
+      "type": "integer"
+    }
+  },
+  "required": [
+    "layer_id"
+  ],
+  "type": "object"
+}
