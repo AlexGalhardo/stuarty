@@ -8,7 +8,7 @@ description: "How an agent reaches the provider domain: its MCP tools, its CLI c
 This page is generated from the registry. Print it with `stuarty agent:docs --print guide:provider`; `stuarty provider` lists the commands of the domain.
 
 
-AI providers and generation: the spend on providers and its ceilings.
+AI providers and generation: models, prices, text generation, the spend and its ceilings.
 
 ## How to reach it
 
@@ -17,6 +17,9 @@ MCP tools: `command_help`, `job_start`. Tools that take `domain=provider`: `comm
 CLI: `stuarty provider` lists the commands of the domain and `stuarty provider <verb>` runs one; the full names stay valid.
 
 - `cost:show`: show the cost ceilings and what was spent today and over the last 30 days
+- `provider:list`: list the AI providers, the connections of each and the price table
+- `provider:models`: list the models a provider offers through a connection, read from the provider now, with their price
+- `text:generate`: generate text with the provider of a connection; the job shows its estimate and waits for approval
 
 ## Operations
 

@@ -223,6 +223,7 @@ route PUT /cost/ceilings
 route PUT /library/prompts/{}
 route PUT /library/skills/{}
 route PUT /projects/{}/brief
+route PUT /projects/{}/briefing
 route PUT /providers/prices
 tool command_help
 tool connection

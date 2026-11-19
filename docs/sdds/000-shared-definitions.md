@@ -105,7 +105,7 @@ Every operation belongs to one **domain**. The domain names are fixed here; a ne
 | `writing` | written documents | none yet |
 | `asset` | files of the workspace: media, the asset library, fonts | `Media*`, `Asset*` (the library of epic 08: list, get, uses, set info, tag), `FontImport`, `FontList` |
 | `publish` | publications and their approval | `Approval*` (the queue that gates a publication and a costly generation, SDD-015) |
-| `provider` | AI providers and generation | `Cost*` (the spend on providers and its ceilings) |
+| `provider` | AI providers and generation | `Provider*` (the providers, their models and the price table, SDD-016), `TextGenerate`, `Cost*` (the spend on providers and its ceilings) |
 | `memory` | the library: notes, skills, prompts, search | `Memory*`, `Skill*`, `Prompt*`, `Library*` |
 | `workspace` | the installation: help, connections, brand kit, health, keys, audit, trash, helpers | `CommandHelp`, `Connection*`, `BrandKit*`, `Doctor`, `AuditList`, `TrashEmpty`, `Tools*`, `Key*` |
 
@@ -157,7 +157,7 @@ The event `id` of `batch.committed` is the revision. Details in SDD-006.
 
 ## 6. Jobs
 
-Kinds: `ingest`, `transcribe`, `export`, `frame`, `text.generate` (SDD-016 §6), and the kinds a feature epic registers as needing approval (SDD-015 §5). States: `queued`, `running`, `succeeded`, `failed`, `cancelled`, and `waiting_approval` (a job of a kind that needs approval, until a person or a rule approves it; it is not running and counts as active; at most 50 per submitter and 1000 in the workspace, `E_LIMIT_EXCEEDED` past either, SDD-015 §5). Asset ingest states: `pending`, `ingesting`, `ready`, `failed`.
+Kinds: `ingest`, `transcribe`, `export`, `export_batch`, `frame`, `text.generate` (SDD-016 §6), and the kinds a feature epic registers as needing approval (SDD-015 §5). States: `queued`, `running`, `succeeded`, `failed`, `cancelled`, and `waiting_approval` (a job of a kind that needs approval, until a person or a rule approves it; it is not running and counts as active; at most 50 per submitter and 1000 in the workspace, `E_LIMIT_EXCEEDED` past either, SDD-015 §5). Asset ingest states: `pending`, `ingesting`, `ready`, `failed`.
 
 ## 7. Database tables
 
