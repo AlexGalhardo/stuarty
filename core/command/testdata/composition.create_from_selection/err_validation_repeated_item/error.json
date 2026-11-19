@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.item_ids repeats itm_m1n2p3q4r5.",
+  "hint": "Name each item once.",
+  "retryable": false,
+  "path": "args.item_ids[1]"
+}

@@ -1134,6 +1134,14 @@
             "title": "Definir velocidade do clipe"
           }
         },
+        "composition": {
+          "create_from_selection": {
+            "title": "Criar uma composição a partir da seleção"
+          },
+          "expand": {
+            "title": "Expandir a composição em seus itens"
+          }
+        },
         "font": {
           "add": {
             "title": "Adicionar fonte"
