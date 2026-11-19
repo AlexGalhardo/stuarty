@@ -1,7 +1,7 @@
 # SDD-002: Command catalogue of the core
 
 - Amended (2026-11-18) for Stuarty: this is the catalogue of the video domain. Other domains get their own catalogue (ADR-0031, ADR-0038).
-- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen: all 74 commands have golden cases and pass the registry-wide gates. The binary exposes all 74 commands, 73 of them public; `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
+- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen: all 77 commands have golden cases and pass the registry-wide gates. The binary exposes all 77 commands, 76 of them public; `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
 - Depends on: SDD-001 (document), ADR-0002 (command core), ADR-0004 (time), ADR-0006 (log, concurrency, undo), ADR-0014 (JSON Schema)
 - Implements: RF-010 to RF-016, RF-020 to RF-026, RF-030 to RF-036, RF-040, RF-041, RF-050, RF-051, RF-100, RF-105, RF-107, RF-112 to RF-115, RF-119, NFR-001, NFR-025
 - Owner area: senior-a (command core and schema)
@@ -213,6 +213,20 @@ These are the decisions of the implementation (task P1-ENG-001) that Part A leav
    - `caption.add` with `text` refuses a word of more than 80 characters with `E_VALIDATION`; the error codes of `track.remove` are `E_NOT_FOUND` and `E_NOT_EMPTY` (there is no schema error to report).
    - The `order` strings, the seconds in hints and the messages in Part C are examples; the golden files hold the real ones.
 
+### A.13 Export presets and the fit check (`core/export`)
+
+The rules of exporting for a network are pure and live in `core/export`, not in a handler: the table of presets (SDD-004 section 8.2), `Check` and the codec names. No command is added to the registry and the document is never changed: a preset does not edit the timeline, it says whether the timeline as it is fits a network. `Check(preset, input)` takes the pixels, the frame rate, the duration in milliseconds and, when the file exists, its size in bytes, and returns the findings below in a fixed order (duration, frame rate, resolution, aspect ratio, size), each with `code`, `severity`, `message`, `limit` and `got`. A limit of `0` in a preset is not checked. The aspect ratio is compared as a fraction of integers, with the tolerance the preset states.
+
+| Finding code | Raised when |
+| --- | --- |
+| `X_DURATION_TOO_LONG`, `X_DURATION_TOO_SHORT` | the duration is over the maximum or under the minimum of the preset |
+| `X_FPS_TOO_HIGH`, `X_FPS_TOO_LOW` | the frame rate is over or under the preset's range |
+| `X_RESOLUTION_TOO_SMALL`, `X_RESOLUTION_TOO_LARGE` | a side, or the width, is outside the preset's range |
+| `X_ASPECT_RATIO` | the width over the height is outside the preset's range |
+| `X_SIZE_TOO_LARGE` | the file, or the estimate of it (the targets of the preset times the duration), is over the maximum |
+
+These are findings of a check, not errors of a call: they travel in the result of `ExportCheck` and, when an export is refused for them, in `details.findings` of `E_VALIDATION` with `details.reason = "preset_mismatch"`. They are listed in SDD-000 section 15.
+
 ## Part B: the catalogue
 
 Scope is `edit` unless stated. "Time" marks arguments parsed by A.4. Optional arguments are written with `?`.
@@ -321,9 +335,12 @@ Scope is `edit` unless stated. "Time" marks arguments parsed by A.4. Optional ar
 
 | Command | Arguments | Effect |
 | --- | --- | --- |
-| `keyframe.set` | `item_id`, `property`, `at` (time, absolute timeline position inside the item), `value`, `easing?` | Adds a keyframe at that frame or replaces the one there. If the property had no keyframes and `at` is not the item's first frame, a keyframe with the property's current static value is also added at the item's first frame |
+| `keyframe.set` | `item_id`, `property`, `at` (time, absolute timeline position inside the item), `value`, `easing?`, `bezier?` | Adds a keyframe at that frame or replaces the one there. If the property had no keyframes and `at` is not the item's first frame, a keyframe with the property's current static value is also added at the item's first frame |
 | `keyframe.remove` | `item_id`, `property`, `at` (time) | Removes the keyframe at that frame. Removing the last keyframe of a property writes its value into the static field |
 | `keyframe.clear` | `item_id`, `property?` | Removes all keyframes of the property, or of every property. The value at the item's first frame becomes the static value |
+| `keyframe.set_easing` | `item_id`, `property`, `at`, one of `easing?`, `bezier?` (four numbers) and `preset?` | Changes the easing of the segment that starts at an existing keyframe: a named easing, a custom cubic Bezier or a named Bezier preset (epic 31, RF-080). See C.75. `keyframe.set` takes `bezier` too |
+| `animation.apply_preset` | `item_id`, `preset`, `edge?`, `duration?`, `direction?`, `amount?` | Writes a layer animation (fade, slide, scale, pop, push in, pull out) as ordinary keyframes at the start or the end of a visual item (epic 31, RF-082). See C.76 |
+| `animation.list_presets` | none | Describes the animation presets and the named Bezier presets, for agents. Changes nothing. See C.77 |
 
 ### B.9 Templates
 
@@ -2870,7 +2887,7 @@ Writes the keyframes or the transition of a named animation preset on one edge o
 | `slide_left` | in or out | no keyframes: `transition_<edge> = {kind: "slide_left", duration: n}` |
 | `slide_right` | in or out | no keyframes: `transition_<edge> = {kind: "slide_right", duration: n}` |
 
-`q = round(0.7 × n)`; the middle `pop` keyframe is omitted when `n = 1`. "Up" means the item moves up the frame on both edges (`y` grows downward): `fade_up` in starts lower and rises into place, `fade_up` out rises away; `fade_down` is the opposite. `zoom_in` grows the item on both edges. `pop` out is the time mirror of `pop` in. The last keyframe of an `in` preset, `(n, b)`, carries the easing in force at frame `n` before the command (the easing of the last keyframe at or before `n`, linear when there is none); the last keyframe of an `out` preset has no easing. A keyframe whose easing is linear is stored without `easing`.
+`q = round(0.7 × n)`; the middle `pop` keyframe is omitted when `n = 1`. "Up" means the item moves up the frame on both edges (`y` grows downward): `fade_up` in starts lower and rises into place, `fade_up` out rises away; `fade_down` is the opposite. `zoom_in` grows the item on both edges. `pop` out is the time mirror of `pop` in. The last keyframe of an `in` preset, `(n, b)`, carries the easing in force at frame `n` before the command (the easing of the last keyframe at or before `n`, with its `bezier` numbers when it is a curve, linear when there is none); the last keyframe of an `out` preset has no easing. A keyframe whose easing is linear is stored without `easing`.
 
 **Postconditions.**
 
@@ -3828,11 +3845,12 @@ Adds or replaces a keyframe of one property.
 | `property` | `"x"`, `"y"`, `"scale"`, `"rotation"`, `"opacity"`, `"volume"`, `"brightness"`, `"contrast"`, `"saturation"`, `"temperature"`, `"tint"`, `"hue"`, `"mask_x"`, `"mask_y"`, `"mask_width"`, `"mask_height"`, `"mask_feather"`, `"crop_left"`, `"crop_top"`, `"crop_right"`, `"crop_bottom"` | yes | none | `volume` for `audio` items and clips of a video (not of an image); `brightness`, `contrast`, `saturation`, `temperature`, `tint` and `hue` (added by TASK-0254 and NEW-15) for clips only; `mask_x`, `mask_y`, `mask_width`, `mask_height` and `mask_feather` (VV-120) for a visual item that has a mask (`clip.set_mask`); `crop_left`, `crop_top`, `crop_right` and `crop_bottom` (VV-120) for clips only; the others for visual items |
 | `at` | time | yes | none | absolute; from the item's `start` to `start + duration` inclusive |
 | `value` | number | yes | none | valid for the property: `scale` above 0 and at most 20, `opacity` 0 to 1, `volume` 0 to 4, a colour property the range of `clip.set_color` (-1 to 1 for `brightness`, `temperature` and `tint`, 0 to 2 for `contrast` and `saturation`, -180 to 180 for `hue`), a mask or crop property the range of its static field (`mask_x`, `mask_y` 0 to 1, `mask_width`, `mask_height` 0.001 to 1, `mask_feather` 0 to 200, a crop side 0 to 1), `x`, `y`, `rotation` finite |
-| `easing` | `"linear"`, `"ease_in"`, `"ease_out"`, `"ease_in_out"`, `"hold"` | no | `"linear"` | applies from this keyframe to the next |
+| `easing` | `"linear"`, `"ease_in"`, `"ease_out"`, `"ease_in_out"`, `"hold"`, `"bezier"` | no | `"linear"` | applies from this keyframe to the next |
+| `bezier` | array of 4 numbers | when `easing` is `"bezier"` | none | `[x1, y1, x2, y2]` as in SDD-001 §3.8: `x1`, `x2` from 0 to 1, `y1`, `y2` from -2 to 3. Given with any other easing, or `"bezier"` without it, is `E_VALIDATION` (epic 31) |
 
 **Preconditions.**
 
-1. Arguments match the schema and `at` parses (`E_VALIDATION`, `E_INVALID_TIME`).
+1. Arguments match the schema and `at` parses (`E_VALIDATION`, `E_INVALID_TIME`); `bezier` goes with `easing` `"bezier"` and with nothing else.
 2. The item exists (`E_NOT_FOUND`).
 3. The property applies to the item type (`E_TYPE_MISMATCH`); a `mask_*` property needs the item to have a mask (`E_INVALID_STATE`, hint to use `clip.set_mask`).
 4. `at` lies in the inclusive range `start` to `start + duration` (`E_INVALID_TIME`, `path` `args.at`, `details.range`). A keyframe may sit at `start + duration`, because `t` ranges from 0 to `duration`.
@@ -3911,6 +3929,10 @@ Adds or replaces a keyframe of one property.
 - `ok_crop_bottom_on_cropped_clip`
 - `err_validation_crop_above_range`
 - `err_type_mismatch_crop_on_text`
+- `ok_bezier_easing`
+- `err_validation_bezier_without_the_easing`
+- `err_validation_bezier_easing_without_numbers`
+- `err_validation_bezier_x_above_1`
 
 ### C.43 `keyframe.remove`
 
@@ -6042,3 +6064,175 @@ The copies start at frames 90 and 180; the sequence ends at frame 270 (`effectiv
 - `err_limit_caption_words_over_document_limit`
 - `err_overlap_next_item`
 - `err_id_exists`
+
+### C.75 `keyframe.set_easing`
+
+Changes how the segment that starts at an existing keyframe moves (RF-080): a named easing, a custom cubic Bezier curve or a named Bezier preset. The value and the time of the keyframe do not change, so it is the command of the curve editor. The core is the only place that evaluates a curve (SDD-004 §3.1).
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | yes | none | |
+| `property` | the properties of `keyframe.set` | yes | none | |
+| `at` | time | yes | none | absolute position of an existing keyframe |
+| `easing` | `"linear"`, `"ease_in"`, `"ease_out"`, `"ease_in_out"`, `"hold"` | one of three | none | exactly one of `easing`, `bezier` and `preset` is given |
+| `bezier` | array of 4 numbers | one of three | none | `[x1, y1, x2, y2]`; sets `easing` to `"bezier"`. `x1`, `x2` from 0 to 1, `y1`, `y2` from -2 to 3, at most 3 decimals |
+| `preset` | `"in"`, `"out"`, `"in_out"`, `"back"`, `"overshoot"` | one of three | none | a named curve, stored as its four numbers: `in` 0.42, 0, 1, 1; `out` 0, 0, 0.58, 1; `in_out` 0.42, 0, 0.58, 1; `back` 0.36, 0, 0.66, -0.56 (pulls back, then goes); `overshoot` 0.34, 1.56, 0.64, 1 (goes past, then settles) |
+
+**Preconditions.**
+
+1. Arguments match the schema and `at` parses; exactly one of `easing`, `bezier` and `preset`; the `bezier` numbers are in range (`E_VALIDATION`, `E_INVALID_TIME`).
+2. The item exists (`E_NOT_FOUND`).
+3. The property applies to the item type (`E_TYPE_MISMATCH`).
+4. `at` lies in the inclusive range of the item (`E_INVALID_TIME`, `path` `args.at`).
+5. The property has a keyframe at `at - start` (`E_NOT_FOUND`, `details.kind` `keyframe`).
+
+**Postconditions.**
+
+1. The keyframe at `t = at - start` has the new easing. A `linear` easing is stored without the key and a non-Bezier easing without `bezier`, as everywhere in the document. Value and `t` of the keyframe and all other keyframes are unchanged.
+2. `diff` has one `item.updated` with `keyframes`. `effective` has `at` (the A.4 triple), `t`, `easing` and, for a Bezier, `bezier`.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | none or several of the three, a Bezier out of range, an unknown preset | `args.bezier[0] must be from 0 to 1, got 1.5.` | `Keep x1 and x2 from 0 to 1; y1 and y2 may go from -2 to 3.` |
+| `E_INVALID_TIME` | malformed `at`, or outside the item | as `keyframe.set` | as `keyframe.set` |
+| `E_NOT_FOUND` | unknown item, or no keyframe at `at` | `Property scale of itm_s6t7v8w9x0 has no keyframe at frame 60; keyframes are at frames 30, 90.` | `Use at "30f" (1s), or list the keyframes with project_get.` |
+| `E_TYPE_MISMATCH` | the property does not apply | as `keyframe.set` | as `keyframe.set` |
+
+**Inverse.** `patch {collection: "items", id, set: {keyframes: <old>}}`.
+
+**Idempotency.** Same result.
+
+**Example.**
+
+```json
+{"op": "keyframe.set_easing", "args": {"item_id": "itm_s6t7v8w9x0", "property": "scale", "at": "1s", "preset": "overshoot"}}
+```
+
+**Golden cases.**
+
+- `ok_custom_bezier`
+- `ok_preset_overshoot`
+- `ok_preset_back_on_crop`
+- `ok_bezier_on_mask_width`
+- `ok_named_easing_clears_the_bezier`
+- `ok_linear_is_stored_absent`
+- `ok_last_keyframe_of_the_property`
+- `ok_bezier_is_rounded_to_3_decimals`
+- `err_validation_none_of_the_three`
+- `err_validation_easing_and_preset`
+- `err_validation_bezier_x_above_1`
+- `err_validation_bezier_y_below_range`
+- `err_validation_bezier_wrong_length`
+- `err_validation_unknown_preset`
+- `err_validation_easing_bezier_is_not_a_name`
+- `err_not_found`
+- `err_not_found_no_keyframe_at`
+- `err_invalid_time_outside_the_item`
+- `err_type_mismatch_crop_on_text`
+
+### C.76 `animation.apply_preset`
+
+Applies a layer animation to a visual item (RF-082). The preset expands in the core into ordinary keyframes (SDD-001 §3.8, with a Bezier easing where the preset needs a curve), so the result is edited with the keyframe commands and nothing new reaches the plan, the export or the preview. `animation.list_presets` (C.77) describes the presets.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | yes | none | a `clip`, `text`, `caption` or `shape` item |
+| `preset` | `"fade"`, `"slide"`, `"scale"`, `"pop"`, `"push_in"`, `"pull_out"` | yes | none | table below |
+| `edge` | `"in"`, `"out"` | no | `"in"` | `in` animates the first `duration` frames of the item, `out` the last `duration` frames |
+| `duration` | time, as a length | no | `"0.5s"`; for `push_in` and `pull_out` the whole item | 1 frame up to the duration of the item |
+| `direction` | `"left"`, `"right"`, `"up"`, `"down"` | no | `"left"` | `slide` only (else `E_VALIDATION`): the side the item comes from (`in`) or leaves to (`out`) |
+| `amount` | number | no | per preset | `slide`: the distance in project pixels, 1 to 10,000, default a quarter of the width (`left`, `right`) or of the height (`up`, `down`); `scale`: the factor at the far end, 0.01 to 20, default 0.5; `push_in` and `pull_out`: the zoom factor, above 1 up to 4, default 1.2; `fade` and `pop` take none (else `E_VALIDATION`) |
+
+Let `v` be the value of the property where the animation meets the rest of the item: its static value, or its keyframed value at the inner edge of the window (the end of an `in` window, the start of an `out` window). For `push_in` and `pull_out` it is the value at the start of the window.
+
+| Preset | Property | `edge` `in` | `edge` `out` | Easing of the segment |
+| --- | --- | --- | --- | --- |
+| `fade` | `opacity` | 0 to `v` | `v` to 0 | linear |
+| `slide` | `x` for `left` and `right`, `y` for `up` and `down` | from `v` minus (`left`, `up`) or plus (`right`, `down`) the distance, to `v` | the reverse | `out` for in, `in` for out (the Bezier presets of C.75) |
+| `scale` | `scale` | `amount` × `v` to `v` | `v` to `amount` × `v` | `out` for in, `in` for out |
+| `pop` | `scale` | 0.001 to `v` | `v` to 0.001 | `overshoot` for in, `back` for out |
+| `push_in` | `scale` | `v` to `v` × `amount` | the same | `in_out` |
+| `pull_out` | `scale` | `v` to `v` ÷ `amount` | the same | `in_out` |
+
+**Preconditions.**
+
+1. Arguments match the schema; `duration` parses (`E_VALIDATION`, `E_INVALID_TIME`); `direction` and `amount` are given only where the table takes them (`E_VALIDATION`).
+2. The item exists (`E_NOT_FOUND`) and is not an `audio` item (`E_TYPE_MISMATCH`).
+3. `duration` is at most the duration of the item (`E_INVALID_TIME`, `path` `args.duration`): a preset longer than its item is refused, not cut.
+4. A value the preset would write is valid for the property (`scale` above 0 and at most 20: `E_VALIDATION`, `path` `args.amount`).
+5. The property ends with at most 100 keyframes (`E_LIMIT`).
+
+**Postconditions.** Let `D` be the duration of the item and `d` the duration of the preset.
+
+1. For `edge` `in`, the window is `t` from 0 to `d`: the keyframes of the property inside it are removed and two are written, `{0, from}` with the easing of the table and `{d, v}` (the easing of the keyframe that governed `d` before, or linear: the segment it cuts keeps its shape). Keyframes after `d` stay. For `edge` `out`, the window is `t` from `D - d` to `D`: the keyframes inside it are removed and `{D - d, start}` with the easing of the table and `{D, end}` (linear) are written; keyframes before `D - d` stay. When the property had no keyframes, `v` is its static value (R10, which is the frame centre for an unset `x` or `y`).
+2. A property the preset does not animate, and the static fields, are not changed. Applying `in` and then `out` to one item gives both ends.
+3. `diff` has one `item.updated` with `keyframes`. `effective` has `properties` (the animated property names), `edge`, `duration` (the A.4 triple) and `keyframes` (how many were written).
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | unknown preset or direction, `direction` or `amount` where it is not taken, an amount out of range | `args.amount 30 makes a scale above 20 for itm_s6t7v8w9x0.` | `Use a smaller amount.` |
+| `E_INVALID_TIME` | malformed or zero `duration`, or longer than the item | `args.duration "5s" is 150 frames; item itm_s6t7v8w9x0 lasts 90.` | `Use a duration of at most "90f".` |
+| `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
+| `E_TYPE_MISMATCH` | an audio item | `Animation presets apply to visual items; item itm_s6t7v8w9x0 is an audio item.` | `Use keyframe.set with volume for audio items.` |
+| `E_LIMIT` | would pass 100 keyframes | as `keyframe.set` | as `keyframe.set` |
+
+**Inverse.** `patch {collection: "items", id, set: {keyframes: <old>}}` or `unset: ["keyframes"]`.
+
+**Idempotency.** Same result when applied twice with the same arguments.
+
+**Example.** 30 fps; text item `itm_s6t7v8w9x0`, `start` 30, `duration` 90, no keyframes.
+
+```json
+{"op": "animation.apply_preset", "args": {"item_id": "itm_s6t7v8w9x0", "preset": "fade", "duration": "1s"}}
+```
+
+It writes the `opacity` keyframes `{"t": 0, "value": 0}` and `{"t": 30, "value": 1}`.
+
+**Golden cases.**
+
+- `ok_fade_in`
+- `ok_fade_out`
+- `ok_slide_in_from_left`
+- `ok_slide_out_to_the_bottom`
+- `ok_slide_with_distance`
+- `ok_scale_in`
+- `ok_pop_in`
+- `ok_pop_out`
+- `ok_push_in_the_whole_item`
+- `ok_pull_out_on_text`
+- `ok_in_then_out_gives_both_ends`
+- `ok_replaces_the_keyframes_inside_the_window`
+- `ok_keeps_the_keyframes_outside_the_window`
+- `ok_shape_item`
+- `err_validation_unknown_preset`
+- `err_validation_direction_on_fade`
+- `err_validation_amount_on_pop`
+- `err_validation_scale_above_20`
+- `err_invalid_time_duration_longer_than_the_item`
+- `err_invalid_time_duration_zero`
+- `err_not_found`
+- `err_type_mismatch_audio_item`
+- `err_limit_101_keyframes`
+
+### C.77 `animation.list_presets`
+
+Describes what `animation.apply_preset` and `keyframe.set_easing` accept, for an agent that has not read this document. It changes nothing: `diff` is empty and so is the inverse.
+
+**Arguments.** None.
+
+**Postconditions.** `effective` has `presets`, a list in the order of the table of C.76, each `{"id", "summary", "properties", "edges", "parameters"}` (`parameters` lists `duration` and, where taken, `direction` and `amount` with their range and default), and `bezier_presets`, an object from each preset name of C.75 to its four numbers.
+
+**Errors.** `E_VALIDATION` when an argument is given.
+
+**Golden cases.**
+
+- `ok_lists_the_presets`
+- `err_validation_takes_no_arguments`

@@ -2,8 +2,8 @@
 
 - Status: Draft (2026-11-19). Written by epic 15; the code follows in the same epic.
 - Depends on: ADR-0040 (files with an index), ADR-0031, ADR-0020 (untrusted text), ADR-0033 (no credential leaves the vault), SDD-000 (names), SDD-003 (surfaces), SDD-007 (threats T-44 to T-47, scope matrix, untrusted text)
-- Implements: PRD-004 RF-385, RF-386, RF-387, RF-388, RF-390, RF-391
-- Owner area: `core/library/`, `service/library/`, the library operations in `service/`, the controllers, commands and tool in `web/app/`, the pages Skills, Prompts and Memory
+- Implements: PRD-004 RF-385, RF-386, RF-387, RF-388, RF-390, RF-391; section 16 (the built-in skills): RF-301, RF-302, RF-389
+- Owner area: `core/library/`, `service/library/`, the library operations in `service/`, the controllers, commands and tool in `web/app/`, the pages Skills, Prompts and Memory; the built-in skills in `web/resources/skills/` (section 16)
 
 ## Contents
 
@@ -22,6 +22,7 @@
 13. Untrusted text
 14. Surfaces
 15. Tests
+16. The built-in skills
 
 ## 1. Overview
 
@@ -112,7 +113,7 @@ The body is the text, at most 32 KiB. A variable is `{{name}}` or `{{ name }}` w
 
 - `SkillWrite` always records the origin `user`; the caller cannot set `built-in` or `imported`. A skill written by a person at the browser is reviewed at once (they wrote it); one written through any other surface is not. The skill that exists is the start of the write: its front matter keys the product does not know are written back, and a request with no `metadata` (or no `files`) keeps the metadata (or the files) the skill has; an empty map (or list) removes them.
 - `SkillImport` records `imported` and the licence and source it finds or is given, and never reviews.
-- `SkillMarkReviewed` is for a person at the browser: a caller with the `edit` scope and `Caller.Browser`, which is a signed-in session of network mode or a session of the desktop application opened with the launcher secret (SDD-007 section 3.4 item 7). A local web session without the secret is refused, because an agent that holds the token can open one. The request carries the `content_hash` that `SkillGet` returned with the text the person read; when the skill changed since, the mark is refused with `E_REVISION_CONFLICT` and the person reads it again, so a text swapped while the person was reading the old one is never marked. It is refused while the lint reports an error. A built-in skill is installed by the product reviewed.
+- `SkillMarkReviewed` is for a person at the browser: a caller with the `edit` scope and `Caller.Browser`, which is a signed-in session of network mode or a session of the desktop application opened with the launcher secret (SDD-007 section 3.4 item 7). A local web session without the secret is refused, because an agent that holds the token can open one. The request carries the `content_hash` that `SkillGet` returned with the text the person read; when the skill changed since, the mark is refused with `E_REVISION_CONFLICT` and the person reads it again, so a text swapped while the person was reading the old one is never marked. It is refused while the lint reports an error. A built-in skill is installed by the product reviewed, and is `built-in` only while it is the text the product installed (section 16).
 - The default agent listing (`SkillList` without `include_unreviewed`, and every skill an agent reads through search) holds only reviewed skills. `SkillGet` of an unreviewed skill is allowed (a person must be able to read it) and its result says `reviewed: false` and carries the warning text.
 
 ### 7.1 The skill lint
@@ -222,3 +223,32 @@ The MCP tool `library` takes `action` (`search`, `list`, `get`, `write`, `render
 - Security (SDD-007 T-44 to T-47): `TestSecurity_T44_*` to `TestSecurity_T47_*`.
 - Contract: parity of every operation on HTTP, CLI and MCP, and the untrusted marking.
 - End to end: `web/e2e/specs/library.spec.ts`.
+
+## 16. The built-in skills
+
+The product ships a small set of skills written for it and tested with it (epic 16, RF-389), so an agent and a creator are led through the first complete flow: a short vertical video with captions and a thumbnail, from the briefing to the publication (ADR-0031). They are Agent Skills folders in `web/resources/skills/<name>/` (`SKILL.md`, optional `references/`), embedded in the binary with `go:embed` (package `web/resources/skills`) and handed to the service as `service.Options.BuiltInSkills`; `service/library` has no knowledge of where they come from.
+
+**The set.** `start-here` (a router: which skill for which request), `brief-a-production`, `short-vertical-video`, `captions-for-shorts`, `thumbnail`, `recall-learnings`, `production-retro`, `fetch-clip`, and the writing skills the first flow needs, adapted from the two sources the author approved (D-071): `write-a-hook`, `short-script` and `caption-per-network`, and `captions-for-shorts` carries a model of the second source. A step that depends on an operation that does not exist yet is marked in the text (`Not available yet:`) and is finished by the epic that adds the operation.
+
+**Install and update.** When the service starts it reads the embedded folders and, for each one, in this order:
+
+1. The folder `library/skills/<name>/` does not exist: it is written as the embedded text with `stuarty-origin: built-in`, sealed as reviewed (the product wrote and read it), and its content hash and the product version are recorded in `library/.built-in.json`.
+2. The folder exists and its content hash is the one recorded (the folder is as the product left it): when the embedded text now differs, the folder is rewritten the same way and the record updated; when it does not, nothing is written, so an unchanged skill keeps its file times.
+3. The folder exists and its hash is not the recorded one (a person edited it, or it was never installed by the product): it is **never overwritten**. It reads as `user`.
+
+`library/.built-in.json` is a dot file: no scan, import or export reads it, and it maps a name to `{version, hash}`. The embedded text stays in the binary, so a person who wants a built-in skill back deletes their folder and starts the product again (the record of a folder that is gone is dropped and step 1 runs). A skill that a later binary no longer ships is left as it is.
+
+**The origin is not a claim of the file.** `stuarty-origin: built-in` in a `SKILL.md` counts only while the content hash of the folder is the hash recorded in `library/.built-in.json`; otherwise the skill is listed as `user`. A folder copied in by hand, an imported one and an edited built-in therefore never read as `built-in`, whatever their front matter says; a record that is missing or damaged takes the origin away (the safe side) and the next start repairs it for the folders that are untouched.
+
+**Every skill names real operations.** A test (`go test ./web/resources/skills/...`) reads every built-in skill, extracts the names of operations, MCP tools and CLI commands the text mentions in code spans and checks them against the registry of SDD-000 (the Service operations, the MCP tools of SDD-003 section 4.1, the CLI commands and the HTTP routes), so a renamed operation breaks the build instead of the agent. Names of operations of later epics are written in a line that starts `Not available yet:` and are not checked until that epic removes the line.
+
+**Static rules for every built-in skill**, in the same test: it passes `SkillLint` with no finding of any severity; it names no credential to ask for or read; it never tells the agent to approve a publication or a cost, to publish without approval, or to bypass the approval queue (checked as imperative phrases: `approve it yourself`, `publish without`, `skip the approval`, `bypass`); and where it says to publish or to generate at a cost it names the approval queue as the way.
+
+**Adapted material (D-071).** Two sources are approved, with attribution and adaptation: `coreyhaines31/marketingskills` (MIT) and `heygen-com/hyperframes` (Apache-2.0). A skill adapted from one names it in its front matter: `license` (the licence of the source), `metadata.stuarty-source` (the repository, the path of the original and the commit read, as `owner/repo path @ <40 hex characters>`) and `metadata.stuarty-adapted-from` (the source id below). A skill that is not adapted names none of the three. The licence text of each source is in `licenses/vendored/<source id>-<SPDX id>.txt` (the notices tool has fixed groups, and adapted text is source kept in the repository, so it is the `vendored` group), listed in `.config/third-party.json` and in `THIRD_PARTY_NOTICES.md`, with `licenses/vendored/NOTICE-skills.md` listing each adapted skill, its source path and what was changed; `task notices:check` fails when the inventory and the folder differ. A test checks that every adapted skill names a source whose licence text is in `licenses/vendored/`. Nothing is copied from a source whose licence was not read at that commit.
+
+| Source id | Repository | Licence |
+| --- | --- | --- |
+| `marketingskills` | `coreyhaines31/marketingskills` | MIT |
+| `hyperframes` | `heygen-com/hyperframes` | Apache-2.0 |
+
+**Agent-side only.** `fetch-clip` tells the agent to download with its own tools on its own side and then to import the file with a source and a rights note (`MediaImport`); the product gains no downloader and opens no connection (ADR-0032). **Recall and retro.** `recall-learnings` reads memory (`LibrarySearch` with `scope`) at the start of a production and `production-retro` writes what was learned at the end with `MemoryWrite`, which an agent's note starts unkept (section 5).

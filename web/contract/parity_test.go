@@ -68,7 +68,11 @@ var parity = []row{
 	{method: "Doctor", command: "doctor", route: "GET /system"},
 	{method: "SnapPoints", route: "GET /projects/{}/snap-points", httpOnly: true},
 	{method: "FontList", command: "fonts", route: "GET /fonts"},
-	{method: "AssetList", route: "GET /assets", httpOnly: true},
+	{method: "AssetList", tool: "media_inspect", command: "asset:list", route: "GET /assets"},
+	{method: "AssetGet", tool: "media_inspect", command: "asset:show", route: "GET /assets/{}"},
+	{method: "AssetUses", command: "asset:uses", route: "GET /assets/{}/uses"},
+	{method: "AssetSetInfo", tool: "media_import", command: "asset:set", route: "PUT /assets/{}"},
+	{method: "AssetTag", tool: "media_import", command: "asset:tag", route: "POST /assets/{}/tags"},
 	{method: "AuditList", command: "audit", route: "GET /audit"},
 	{method: "ExportFile", route: "GET /jobs/{}/file", httpOnly: true},
 	// The CLI command tools:install is for the person at the terminal and has
@@ -120,6 +124,14 @@ var parity = []row{
 	},
 	{method: "BriefGet", tool: "project_item", command: "brief:show", route: "GET /projects/{}/brief"},
 	{method: "BriefSet", tool: "project_item", command: "brief:set", route: "PUT /projects/{}/brief"},
+	// The guided briefing (SDD-005 section 5.12.1): project_item with action briefing.
+	{
+		method:  "BriefingQuestions",
+		tool:    "project_item",
+		command: "briefing:questions",
+		route:   "GET /briefing/questions",
+	},
+	{method: "BriefingAnswer", tool: "project_item", command: "briefing:answer", route: "PUT /projects/{}/briefing"},
 	// Connections (SDD-014 section 10): the read-only tool lists or reads one; creating, removing and
 	// testing one take a credential or reach the network, so they have no tool.
 	{method: "ConnectionList", tool: "connection", command: "connection:list", route: "GET /connections"},
@@ -135,6 +147,16 @@ var parity = []row{
 	{method: "ImageUndo", tool: "image", command: "image:undo", route: "POST /images/{}/undo"},
 	{method: "ImageRedo", tool: "image", command: "image:redo", route: "POST /images/{}/redo"},
 	{method: "ImageExport", tool: "image", command: "image:export", route: "POST /images/{}/export"},
+	// The export presets, the check against one and the batch (SDD-004 sections 8.2 to 8.4). The MCP tools are the
+	// ones that already exist (NFR-020 leaves no room for three more): command_help with domain export, lint with a
+	// preset, and job_start with kind export_batch.
+	{method: "ExportPresetList", tool: "command_help", command: "export:presets", route: "GET /export-presets"},
+	{method: "ExportCheck", tool: "lint", command: "export:check", route: "GET /projects/{}/export-check"},
+	{method: "ExportBatch", tool: "job_start", command: "export:batch", route: "POST /projects/{}/export-batches"},
+	// The reads of the image editor screen (SDD-012 section 24.3): HTTP only, an agent has the text view.
+	{method: "ImageFrame", route: "GET /images/{}/frame", httpOnly: true},
+	{method: "ImageHistory", route: "GET /images/{}/history", httpOnly: true},
+	{method: "ImageFile", route: "GET /images/{}/exports/{}", httpOnly: true},
 	// The approval queue (SDD-015 section 10): no MCP tool, the budget of the tool list leaves no room
 	// for one; deciding, writing a rule and setting a ceiling are for a person, and their commands
 	// always fail for an agent.

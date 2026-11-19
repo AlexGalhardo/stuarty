@@ -11,12 +11,14 @@ Every operation has its own page with the parameters, the body, the responses an
 
 | Method | Path | Operation | Summary |
 | --- | --- | --- | --- |
+| `GET` | `/api/v1/briefing/questions` | [`briefing.questions`](/docs/api/briefing.questions) | The questions of the guided briefing |
 | `GET` | `/api/v1/projects` | [`projects.list`](/docs/api/projects.list) | List projects |
 | `POST` | `/api/v1/projects` | [`projects.create`](/docs/api/projects.create) | Create a project |
 | `GET` | `/api/v1/projects/{id}` | [`projects.get`](/docs/api/projects.get) | Read a project |
 | `GET` | `/api/v1/projects/{id}/bitmaps/{key}` | [`bitmaps.get`](/docs/api/bitmaps.get) | Download a rasterized text or shape |
 | `GET` | `/api/v1/projects/{id}/brief` | [`projects.brief.get`](/docs/api/projects.brief.get) | Read the brief of a project |
 | `PUT` | `/api/v1/projects/{id}/brief` | [`projects.brief.set`](/docs/api/projects.brief.set) | Write the brief of a project |
+| `PUT` | `/api/v1/projects/{id}/briefing` | [`projects.briefing.answer`](/docs/api/projects.briefing.answer) | Answer the briefing: the answers become the brief of the project |
 | `POST` | `/api/v1/projects/{id}/bundle` | [`projects.bundle.export`](/docs/api/projects.bundle.export) | Export a project as a .vvbundle |
 | `GET` | `/api/v1/projects/{id}/describe` | [`projects.describe`](/docs/api/projects.describe) | Describe a project as text: brief, items and state |
 | `POST` | `/api/v1/projects/{id}/duplicate` | [`projects.duplicate`](/docs/api/projects.duplicate) | Duplicate a project |
@@ -45,7 +47,11 @@ Every operation has its own page with the parameters, the body, the responses an
 
 | Method | Path | Operation | Summary |
 | --- | --- | --- | --- |
-| `GET` | `/api/v1/assets` | [`assets.list`](/docs/api/assets.list) | List the files of the workspace by content hash |
+| `GET` | `/api/v1/assets` | [`assets.list`](/docs/api/assets.list) | List the files of the library by content hash, with origin, tags and reuse |
+| `GET` | `/api/v1/assets/{hash}` | [`assets.get`](/docs/api/assets.get) | Read one file of the library with its origin and the projects that use it |
+| `PUT` | `/api/v1/assets/{hash}` | [`assets.set`](/docs/api/assets.set) | Set the description, the rights note and the reuse mark of a file |
+| `POST` | `/api/v1/assets/{hash}/tags` | [`assets.tag`](/docs/api/assets.tag) | Add and remove the tags of a file |
+| `GET` | `/api/v1/assets/{hash}/uses` | [`assets.uses`](/docs/api/assets.uses) | List the projects that use a file of the library |
 | `GET` | `/api/v1/projects/{id}/media` | [`media.list`](/docs/api/media.list) | List the assets of a project |
 | `POST` | `/api/v1/projects/{id}/media` | [`media.import`](/docs/api/media.import) | Import media files |
 | `GET` | `/api/v1/projects/{id}/media/{asset_id}` | [`media.inspect`](/docs/api/media.inspect) | Inspect an asset |
@@ -62,9 +68,12 @@ Every operation has its own page with the parameters, the body, the responses an
 
 | Method | Path | Operation | Summary |
 | --- | --- | --- | --- |
+| `GET` | `/api/v1/export-presets` | [`export.presets`](/docs/api/export.presets) | List the export presets of the platforms |
 | `GET` | `/api/v1/jobs/{job_id}` | [`jobs.get`](/docs/api/jobs.get) | Read a job |
 | `POST` | `/api/v1/jobs/{job_id}/cancel` | [`jobs.cancel`](/docs/api/jobs.cancel) | Cancel a job |
 | `GET` | `/api/v1/jobs/{job_id}/file` | [`jobs.file`](/docs/api/jobs.file) | Download the file of a finished export |
+| `POST` | `/api/v1/projects/{id}/export-batches` | [`export.batch`](/docs/api/export.batch) | Export a project several times, one after the other |
+| `GET` | `/api/v1/projects/{id}/export-check` | [`export.check`](/docs/api/export.check) | Check a project against an export preset |
 | `GET` | `/api/v1/projects/{id}/jobs` | [`jobs.list`](/docs/api/jobs.list) | List the jobs of a project |
 | `POST` | `/api/v1/projects/{id}/jobs` | [`jobs.start`](/docs/api/jobs.start) | Start a job |
 
@@ -147,6 +156,9 @@ Every operation has its own page with the parameters, the body, the responses an
 | `GET` | `/api/v1/images/{id}` | [`images.get`](/docs/api/images.get) | Describe an image document: layers, findings and text view |
 | `POST` | `/api/v1/images/{id}/edit` | [`images.edit`](/docs/api/images.edit) | Apply a batch of image operations |
 | `POST` | `/api/v1/images/{id}/export` | [`images.export`](/docs/api/images.export) | Export an image document to a PNG, JPEG or WebP file |
+| `GET` | `/api/v1/images/{id}/exports/{name}` | [`images.file`](/docs/api/images.file) | Download a file that an image export wrote |
+| `GET` | `/api/v1/images/{id}/frame` | [`images.frame`](/docs/api/images.frame) | Render the picture of an image document |
+| `GET` | `/api/v1/images/{id}/history` | [`images.history`](/docs/api/images.history) | List the latest batches of an image document |
 | `POST` | `/api/v1/images/{id}/redo` | [`images.redo`](/docs/api/images.redo) | Redo the latest undone step of the caller on an image |
 | `POST` | `/api/v1/images/{id}/undo` | [`images.undo`](/docs/api/images.undo) | Undo the latest step of the caller on an image |
 

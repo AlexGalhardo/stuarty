@@ -114,6 +114,16 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.MediaImport)
 	case "MediaList":
 		return invoke(ctx, s, svc.MediaList)
+	case "AssetList":
+		return invoke(ctx, s, svc.AssetList)
+	case "AssetGet":
+		return invoke(ctx, s, svc.AssetGet)
+	case "AssetUses":
+		return invoke(ctx, s, svc.AssetUses)
+	case "AssetSetInfo":
+		return invoke(ctx, s, svc.AssetSetInfo)
+	case "AssetTag":
+		return invoke(ctx, s, svc.AssetTag)
 	case "MediaInspect":
 		return invoke(ctx, s, svc.MediaInspect)
 	case "JobStart":
@@ -138,6 +148,12 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.ProjectRestore)
 	case "CommandHelp":
 		return invoke(ctx, s, svc.CommandHelp)
+	case "ExportPresetList":
+		return invoke(ctx, s, svc.ExportPresetList)
+	case "ExportCheck":
+		return invoke(ctx, s, svc.ExportCheck)
+	case "ExportBatch":
+		return invoke(ctx, s, svc.ExportBatch)
 	case "MediaTrash":
 		return invoke(ctx, s, svc.MediaTrash)
 	case "MediaRestore":
@@ -228,6 +244,10 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.BriefGet)
 	case "BriefSet":
 		return invoke(ctx, s, svc.BriefSet)
+	case "BriefingQuestions":
+		return invoke(ctx, s, svc.BriefingQuestions)
+	case "BriefingAnswer":
+		return invoke(ctx, s, svc.BriefingAnswer)
 	}
 
 	if res, ok, err := libraryCall(ctx, svc, s); ok {
@@ -403,6 +423,8 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 	}
 
 	switch s.Call {
+	case "AssetList", "AssetGet", "AssetUses", "AssetSetInfo", "AssetTag":
+		return assetToolCall(s.Call, args)
 	case "ImageCreate", "ImageList", "ImageDescribe", "ImageEdit", "ImageUndo", "ImageRedo", "ImageExport":
 		args["action"] = imageActions[s.Call]
 
@@ -440,7 +462,11 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 
 		for _, f := range files {
 			m, _ := f.(map[string]any)
-			paths = append(paths, m["path"])
+			if h, ok := m["hash"]; ok {
+				paths = append(paths, h)
+			} else {
+				paths = append(paths, m["path"])
+			}
 
 			if id, ok := m["asset_id"]; ok {
 				ids = append(ids, id)
@@ -503,6 +529,22 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 		return "project_trash", args, nil
 	case "CommandHelp":
 		return "command_help", args, nil
+	case "ExportPresetList":
+		args["domain"] = "export"
+		delete(args, "codecs")
+
+		return "command_help", args, nil
+	case "ExportCheck":
+		return "lint", args, nil
+	case "ExportBatch":
+		items := args["items"]
+
+		delete(args, "items")
+
+		args["kind"] = service.JobExportBatch
+		args["args"] = map[string]any{"items": items}
+
+		return "job_start", args, nil
 	case "JobCancel":
 		return "job_cancel", args, nil
 	case "ViewFrame":
@@ -538,6 +580,17 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 		delete(args, "dry_run")
 
 		args["action"] = "brief"
+
+		return "project_item", args, nil
+	case "BriefingQuestions":
+		args["action"] = "briefing"
+
+		return "project_item", args, nil
+	case "BriefingAnswer":
+		delete(args, "dry_run")
+		delete(args, "replace")
+
+		args["action"] = "briefing"
 
 		return "project_item", args, nil
 	}
@@ -656,7 +709,10 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 		Kind      string               `json:"kind"`
 		Files     []service.ImportFile `json:"files"`
 		WaitMS    int                  `json:"wait_ms"`
-		Args      struct {
+		Items     []struct {
+			Preset string `json:"preset"`
+		} `json:"items"`
+		Args struct {
 			AssetID  string `json:"asset_id"`
 			Language string `json:"language"`
 			Format   string `json:"format"`
@@ -679,6 +735,9 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 		Title    string `json:"title"`
 		Text     string `json:"text"`
 		Position *int   `json:"position"`
+
+		Answers map[string]string `json:"answers"`
+		Replace bool              `json:"replace"`
 	}
 
 	if len(s.Args) > 0 {
@@ -697,6 +756,10 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 	}
 
 	switch s.Call {
+	case "AssetList", "AssetGet", "AssetUses", "AssetSetInfo", "AssetTag":
+		name, argv, err = assetArgv(s.Call, s.Args)
+
+		return name, argv, "", err
 	case "ImageCreate", "ImageList", "ImageDescribe", "ImageEdit", "ImageUndo", "ImageRedo", "ImageExport":
 		return imageArgv(s)
 	case "ProjectList":
@@ -721,12 +784,20 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 		return "lint", proj, "", nil
 	case "MediaImport":
 		for _, f := range a.Files {
-			argv = append(argv, f.Path)
+			if f.Path != "" {
+				argv = append(argv, f.Path)
+			}
+		}
+
+		for _, f := range a.Files {
+			argv = append(argv, flag("hash", f.Hash)...)
 		}
 
 		for _, f := range a.Files {
 			argv = append(argv, flag("asset-id", f.AssetID)...)
 		}
+
+		argv = append(argv, importFlags(s.Args)...)
 
 		return "media:import", append(argv, proj...), "", nil
 	case "MediaList":
@@ -809,6 +880,21 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 		return "project:restore", []string{a.ProjectID}, "", nil
 	case "CommandHelp":
 		return "command:help", []string{a.Name}, "", nil
+	case "ExportPresetList":
+		return "export:presets", nil, "", nil
+	case "ExportCheck":
+		return "export:check", append(slices.Clone(proj), flag("preset", a.Preset)...), "", nil
+	case "ExportBatch":
+		argv = slices.Clone(proj)
+		for _, it := range a.Items {
+			argv = append(argv, flag("preset", it.Preset)...)
+		}
+
+		if a.WaitMS == 0 {
+			return "export:batch", append(argv, "--no-wait"), "", nil
+		}
+
+		return "export:batch", argv, "", nil
 	case "MediaTrash":
 		return "media:trash", append([]string{a.AssetID}, proj...), "", nil
 	case "MediaRestore":
@@ -921,6 +1007,20 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 		return "brief:show", proj, "", nil
 	case "BriefSet":
 		return "brief:set", append(slices.Clone(proj), "--text", "-"), a.Text, nil
+	case "BriefingQuestions":
+		return "briefing:questions", flag("project", a.ProjectID), "", nil
+	case "BriefingAnswer":
+		raw, err := json.Marshal(a.Answers)
+		if err != nil {
+			return "", nil, "", err
+		}
+
+		argv = append(slices.Clone(proj), "--answers", "-")
+		if a.Replace {
+			argv = append(argv, "--replace")
+		}
+
+		return "briefing:answer", argv, string(raw), nil
 	case "TemplateInstantiate":
 		argv = append([]string{a.TemplateID}, flag("name", a.Name)...)
 		argv = append(argv, flag("id", a.ID)...)

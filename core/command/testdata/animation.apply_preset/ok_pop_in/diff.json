@@ -1,0 +1,31 @@
+[
+  {
+    "kind": "item.updated",
+    "id": "itm_m1n2p3q4r5",
+    "changes": {
+      "keyframes": [
+        null,
+        {
+          "scale": [
+            {
+              "bezier": [
+                0.34,
+                1.56,
+                0.64,
+                1
+              ],
+              "easing": "bezier",
+              "t": 0,
+              "value": 0.001
+            },
+            {
+              "easing": "linear",
+              "t": 15,
+              "value": 1
+            }
+          ]
+        }
+      ]
+    }
+  }
+]
