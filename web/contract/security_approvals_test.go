@@ -146,7 +146,11 @@ func noToolDecides(t *testing.T, member string) {
 			t.Fatal(err)
 		}
 
-		raw, _ := json.Marshal(result)
+		raw, err := json.Marshal(result)
+		if err != nil {
+			t.Fatal(err)
+		}
+
 		if strings.Contains(string(raw), "publish.post") || strings.Contains(string(raw), "999999999999") {
 			t.Errorf("%s shows what a guessed tool wrote: %s", check.Call, raw)
 		}
