@@ -3,7 +3,7 @@ package export
 import (
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 func TestSameRateReadsTheNominalRate(t *testing.T) {

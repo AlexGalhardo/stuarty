@@ -213,7 +213,7 @@ data: {"project_id":"prj_7k2m9x4q1b","job_id":"job_4f8h2k9m3q","kind":"export","
 
 ```text
 event: job.updated
-data: {"project_id":"prj_7k2m9x4q1b","job_id":"job_4f8h2k9m3q","kind":"export","state":"succeeded","progress":1,"message":"Verified: 1080x1920, 30 fps, 30.000 s, AAC stereo, faststart","error":null,"result":{"export":{"revision":43,"path":"/home/ana/.vukem-video/exports/prj_7k2m9x4q1b/job_4f8h2k9m3q.mp4","download_url":"/api/v1/jobs/job_4f8h2k9m3q/file","bytes":18211904,"duration":{"frame":900,"seconds":30}}},"updated_at":"2026-11-14T12:20:52.310Z"}
+data: {"project_id":"prj_7k2m9x4q1b","job_id":"job_4f8h2k9m3q","kind":"export","state":"succeeded","progress":1,"message":"Verified: 1080x1920, 30 fps, 30.000 s, AAC stereo, faststart","error":null,"result":{"export":{"revision":43,"path":"/home/ana/.stuarty/exports/prj_7k2m9x4q1b/job_4f8h2k9m3q.mp4","download_url":"/api/v1/jobs/job_4f8h2k9m3q/file","bytes":18211904,"duration":{"frame":900,"seconds":30}}},"updated_at":"2026-11-14T12:20:52.310Z"}
 
 ```
 

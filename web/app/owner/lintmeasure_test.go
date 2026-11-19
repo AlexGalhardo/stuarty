@@ -7,8 +7,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/core/lint"
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/lint"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 // plain hides ForDocument, so Lint measures every item on its own.

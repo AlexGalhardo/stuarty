@@ -91,7 +91,7 @@ func (s *svc) localToken() string {
 func (s *svc) versionsText() string {
 	var b strings.Builder
 
-	fmt.Fprintf(&b, "vukem-video %s\n", s.version)
+	fmt.Fprintf(&b, "stuarty %s\n", s.version)
 
 	if r := s.media.Runner; r != nil && r.In != nil {
 		fmt.Fprintf(&b, "ffmpeg %s\nffprobe %s\nffmpeg configuration: %s\n",
@@ -103,14 +103,14 @@ func (s *svc) versionsText() string {
 	return b.String()
 }
 
-// environmentNames lists the names of the VUKEM_VIDEO_ variables that are set,
+// environmentNames lists the names of the STUARTY_ variables that are set,
 // never a value: a bundle is meant to be sent to someone else.
 func (s *svc) environmentNames() string {
 	var names []string
 
 	for _, kv := range s.environ() {
 		name, value, ok := strings.Cut(kv, "=")
-		if ok && value != "" && strings.HasPrefix(name, "VUKEM_VIDEO_") {
+		if ok && value != "" && strings.HasPrefix(name, "STUARTY_") {
 			names = append(names, name)
 		}
 	}

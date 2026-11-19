@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-const mod = "github.com/AlexGalhardo/vukem-video"
+const mod = "github.com/AlexGalhardo/stuarty"
 
 // TestRepository runs the rules over the real module. It is the check that
 // fails the build when someone breaks ADR-0001.
@@ -85,7 +85,7 @@ func TestCheckWalksFilesAndSkipsNestedModules(t *testing.T) {
 		t,
 		root,
 		"core/command/b.go",
-		"package command\n\nimport _ \"github.com/AlexGalhardo/vukem-video/core/plan\"\n",
+		"package command\n\nimport _ \"github.com/AlexGalhardo/stuarty/core/plan\"\n",
 	)
 	write(t, root, "spikes/x/go.mod", "module x\n")
 	write(t, root, "spikes/x/a.go", "package x\n\nimport _ \"github.com/AlexGalhardo/vukem\"\n")

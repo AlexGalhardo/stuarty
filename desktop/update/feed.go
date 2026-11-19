@@ -14,7 +14,9 @@ import (
 	"unicode/utf8"
 )
 
-// Domain separation labels of the two signed messages (SDD-009 section 10.5).
+// Domain separation labels of the two signed messages (SDD-009 section 10.5). They keep the name of
+// the product before the rename (ADR-0044) on purpose: an installed Vukem Video verifies the feed with
+// these exact bytes, so a feed signed under other labels would never be offered to it as its update.
 const (
 	feedLabel     = "vukem-video-update-feed-v1\n"
 	artifactLabel = "vukem-video-update-artifact-v1\n"

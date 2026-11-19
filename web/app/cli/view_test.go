@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/stuarty/service"
 )
 
 type viewFake struct {

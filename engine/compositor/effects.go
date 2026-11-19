@@ -3,8 +3,8 @@ package compositor
 import (
 	"math"
 
-	"github.com/AlexGalhardo/vukem-video/core/plan"
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/plan"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 // This file is the pixel effects of SDD-004 section 3.13 and the whip blur and dip mix of a transition

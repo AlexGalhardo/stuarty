@@ -16,8 +16,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg/ffargs"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg/ffargs"
 )
 
 // checks collects the named checks of SDD-011 5.1 that failed.

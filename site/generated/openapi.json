@@ -8104,8 +8104,8 @@
     }
   },
   "info": {
-    "description": "The HTTP API of Vukem Video. Every operation is the HTTP form of one service operation. This document needs the same Bearer token as the API.",
-    "title": "Vukem Video",
+    "description": "The HTTP API of Stuarty. Every operation is the HTTP form of one service operation. This document needs the same Bearer token as the API.",
+    "title": "Stuarty",
     "version": "1.0.0"
   },
   "openapi": "3.1.0",

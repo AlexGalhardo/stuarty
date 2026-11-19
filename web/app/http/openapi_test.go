@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/service/untrusted"
-	httpapi "github.com/AlexGalhardo/vukem-video/web/app/http"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/service/untrusted"
+	httpapi "github.com/AlexGalhardo/stuarty/web/app/http"
 )
 
 func (h *harness) openapi() map[string]any {

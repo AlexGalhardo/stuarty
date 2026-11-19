@@ -16,6 +16,7 @@ func Schema() map[string]any {
 	g := &schemaGen{defs: map[string]any{}}
 	root := g.object(reflect.TypeFor[Document]())
 	root["$schema"] = "https://json-schema.org/draft/2020-12/schema"
+	// The identifier keeps the address of the first release: the site address is a setting of the author (ADR-0044).
 	root["$id"] = "https://vukem-video.dev/schema/timeline.v1.schema.json"
 	root["title"] = "Timeline document"
 	root["x-status"] = "frozen"

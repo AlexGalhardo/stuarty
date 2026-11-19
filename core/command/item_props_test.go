@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 // Error messages of the item property commands quote identifiers and numbers, never

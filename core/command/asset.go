@@ -4,7 +4,7 @@ import (
 	"regexp"
 	"slices"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 var hashForm = regexp.MustCompile(`^sha256:[0-9a-f]{64}$`)

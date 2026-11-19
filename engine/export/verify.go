@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg/ffargs"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg/ffargs"
 )
 
 // verifyTimeout bounds each ffprobe run of the verification.

@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/service"
-	"github.com/AlexGalhardo/vukem-video/service/textview"
+	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/textview"
 )
 
 // maxServiceWait is the longest wait_ms the Service accepts.
@@ -33,10 +33,10 @@ var mediaImport = &spec{
 	name:    "media:import",
 	summary: "import media files into a project",
 	usage: []string{
-		"vukem-video media:import <path>... --project <id> [--asset-id ast_...] [--wait] [--timeout d]",
+		"stuarty media:import <path>... --project <id> [--asset-id ast_...] [--wait] [--timeout d]",
 		"formats: MP4, MOV, MKV, WebM, AVI, MP3, WAV, FLAC, OGG, PNG, JPEG, WebP, GIF and .cube; not SVG",
 	},
-	example:    "vukem-video media:import clip.mov --project prj_7k2m9x4q1b --json",
+	example:    "stuarty media:import clip.mov --project prj_7k2m9x4q1b --json",
 	project:    true,
 	positional: true,
 	globals:    []string{"wait", "timeout"},
@@ -139,7 +139,7 @@ func runMediaImport(ctx context.Context, c *call) (*output, error) {
 	switch {
 	case wait && importPending(res):
 		out.exit = ExitTransient
-		out.text += "\nstill running: run vukem-video media:list --project " + c.projectID
+		out.text += "\nstill running: run stuarty media:list --project " + c.projectID
 	case res.Failed > 0:
 		out.exit = ExitFailure
 	}
@@ -185,9 +185,9 @@ var mediaInspect = &spec{
 	name:    "media:inspect",
 	summary: "show what is known about an asset",
 	usage: []string{
-		"vukem-video media:inspect <asset id> --project <id> [--sections probe,transcript,silences,loudness]",
+		"stuarty media:inspect <asset id> --project <id> [--sections probe,transcript,silences,loudness]",
 	},
-	example:    "vukem-video media:inspect ast_3c5v8n2w6d --project prj_7k2m9x4q1b --sections probe,silences",
+	example:    "stuarty media:inspect ast_3c5v8n2w6d --project prj_7k2m9x4q1b --sections probe,silences",
 	project:    true,
 	positional: true,
 	flags: append([]flagDef{
@@ -230,8 +230,8 @@ func mediaStateCommand(
 	return &spec{
 		name:       name,
 		summary:    summary,
-		usage:      []string{"vukem-video " + name + " <asset id> --project <id>"},
-		example:    "vukem-video " + name + " ast_3c5v8n2w6d --project prj_7k2m9x4q1b",
+		usage:      []string{"stuarty " + name + " <asset id> --project <id>"},
+		example:    "stuarty " + name + " ast_3c5v8n2w6d --project prj_7k2m9x4q1b",
 		project:    true,
 		positional: true,
 		globals:    []string{"dry-run"},
@@ -266,8 +266,8 @@ var mediaRestore = mediaStateCommand("media:restore", "restore a trashed asset",
 var mediaList = &spec{
 	name:    "media:list",
 	summary: "list the assets of a project",
-	usage:   []string{"vukem-video media:list --project <id> [--cursor c] [--limit n]"},
-	example: "vukem-video media:list --project prj_7k2m9x4q1b --json",
+	usage:   []string{"stuarty media:list --project <id> [--cursor c] [--limit n]"},
+	example: "stuarty media:list --project prj_7k2m9x4q1b --json",
 	project: true,
 	flags:   pageFlags("50"),
 	run: func(ctx context.Context, c *call) (*output, error) {
@@ -284,9 +284,9 @@ var export = &spec{
 	name:    "export",
 	summary: "export a project to a file",
 	usage: []string{
-		"vukem-video export --project <id> [--start t] [--end t] [--format f] [--at t] [--wait] [--timeout d] [--out f] [--force]",
+		"stuarty export --project <id> [--start t] [--end t] [--format f] [--at t] [--wait] [--timeout d] [--out f] [--force]",
 	},
-	example: "vukem-video export --project prj_7k2m9x4q1b --json",
+	example: "stuarty export --project prj_7k2m9x4q1b --json",
 	project: true,
 	globals: []string{"wait", "timeout"},
 	write:   true,
@@ -359,7 +359,7 @@ func jobOutput(
 	case !service.JobFinal(job.State) && wait:
 		out.exit = ExitTransient
 		out.text = strings.TrimRight(stripStill(job.Text), "\n") +
-			fmt.Sprintf("\nstill running: run vukem-video job:show %s --wait", job.JobID)
+			fmt.Sprintf("\nstill running: run stuarty job:show %s --wait", job.JobID)
 	case job.State == service.JobFailed || job.State == service.JobCancelled:
 		out.exit = ExitFailure
 	}
@@ -381,8 +381,8 @@ func stripStill(text string) string {
 var jobCancel = &spec{
 	name:       "job:cancel",
 	summary:    "cancel a queued or running job",
-	usage:      []string{"vukem-video job:cancel <job id>"},
-	example:    "vukem-video job:cancel job_4h8k2m6p9t",
+	usage:      []string{"stuarty job:cancel <job id>"},
+	example:    "stuarty job:cancel job_4h8k2m6p9t",
 	positional: true,
 	write:      true,
 	run: func(ctx context.Context, c *call) (*output, error) {
@@ -402,8 +402,8 @@ var jobCancel = &spec{
 var jobShow = &spec{
 	name:       "job:show",
 	summary:    "show a job",
-	usage:      []string{"vukem-video job:show <job id> [--wait] [--timeout d]"},
-	example:    "vukem-video job:show job_4h8k2m6p9t --wait",
+	usage:      []string{"stuarty job:show <job id> [--wait] [--timeout d]"},
+	example:    "stuarty job:show job_4h8k2m6p9t --wait",
 	positional: true,
 	globals:    []string{"timeout"},
 	flags: []flagDef{
@@ -439,8 +439,8 @@ var jobShow = &spec{
 var jobList = &spec{
 	name:    "job:list",
 	summary: "list the jobs of a project",
-	usage:   []string{"vukem-video job:list --project <id> [--state s] [--cursor c] [--limit n]"},
-	example: "vukem-video job:list --project prj_7k2m9x4q1b --state active",
+	usage:   []string{"stuarty job:list --project <id> [--state s] [--cursor c] [--limit n]"},
+	example: "stuarty job:list --project prj_7k2m9x4q1b --state active",
 	project: true,
 	flags: append([]flagDef{
 		{Name: "state", Kind: kindString, Usage: "queued, running, succeeded, failed, cancelled, active or all"},

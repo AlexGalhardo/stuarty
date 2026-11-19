@@ -12,10 +12,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/core/plan"
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
-	"github.com/AlexGalhardo/vukem-video/engine/rasterize"
+	"github.com/AlexGalhardo/stuarty/core/plan"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
+	"github.com/AlexGalhardo/stuarty/engine/rasterize"
 )
 
 // The benchmarks of the ALPHA phase run on the project of NFR-009: 5 minutes at 30 fps, 200 items and

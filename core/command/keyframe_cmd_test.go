@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 // RF-024: scale 1 at frame 0 and 1.2 at frame 30 with ease_in_out is 1.1 at frame 15

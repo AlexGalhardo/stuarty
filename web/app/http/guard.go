@@ -7,10 +7,10 @@ import (
 	"net/netip"
 	"strings"
 
+	"github.com/AlexGalhardo/stuarty/service"
+
 	"github.com/AlexGalhardo/vukem/errs"
 	"github.com/AlexGalhardo/vukem/web"
-
-	"github.com/AlexGalhardo/vukem-video/service"
 )
 
 // relayHeaders reveal a tunnel or proxy: the peer is loopback while the client

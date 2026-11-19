@@ -56,7 +56,7 @@ func TestUnauthenticatedPageSaysHowToSignIn(t *testing.T) {
 	body := string(page.body)
 
 	if page.status != http.StatusUnauthorized || !strings.Contains(page.header.Get("Content-Type"), "text/html") ||
-		!strings.Contains(body, "vukem-video open") || !strings.Contains(body, "https://video.vukem.dev/docs/") {
+		!strings.Contains(body, "stuarty open") || !strings.Contains(body, "https://video.vukem.dev/docs/") {
 		t.Errorf("/projects as a browser = %d %s\n%.600s", page.status, page.header.Get("Content-Type"), body)
 	}
 
@@ -65,7 +65,7 @@ func TestUnauthenticatedPageSaysHowToSignIn(t *testing.T) {
 	}
 
 	api := h.do(req{path: "/api/v1/projects", noAuth: true})
-	if api.status != http.StatusUnauthorized || !strings.Contains(string(api.body), "vukem-video open") {
+	if api.status != http.StatusUnauthorized || !strings.Contains(string(api.body), "stuarty open") {
 		t.Errorf("/api/v1/projects = %d %s, want the hint", api.status, api.body)
 	}
 }

@@ -9,9 +9,9 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/AlexGalhardo/vukem/database"
+	"github.com/AlexGalhardo/stuarty/service"
 
-	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/vukem/database"
 )
 
 // Store is the service.Store over one workspace database.

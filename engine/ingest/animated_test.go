@@ -9,9 +9,9 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/core/plan"
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
+	"github.com/AlexGalhardo/stuarty/core/plan"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
 )
 
 func TestParseFrameDelays(t *testing.T) {

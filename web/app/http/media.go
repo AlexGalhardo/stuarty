@@ -9,10 +9,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/AlexGalhardo/vukem/web"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/service"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/vukem/web"
 )
 
 type importFileIn struct {
@@ -344,7 +344,7 @@ func (h *apiHandler) templateFile(c *web.Ctx, in templateRefIn) (noIn, error) {
 	hd.Set("Content-Type", f.ContentType)
 	hd.Set("ETag", f.ETag)
 	hd.Set("Cache-Control", "private, no-cache")
-	hd.Set("Content-Disposition", `attachment; filename="`+in.TemplateID+`.vukem-template.zip"`)
+	hd.Set("Content-Disposition", `attachment; filename="`+in.TemplateID+`.stuarty-template.zip"`)
 
 	if err := c.File(os.DirFS(string(h.Workspace)), f.Path); err != nil {
 		return noIn{}, err

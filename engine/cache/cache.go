@@ -18,7 +18,7 @@ import (
 	"time"
 )
 
-// DefaultMaxBytes is the default of VUKEM_VIDEO_CACHE_MAX_BYTES: 2 GiB, shared by frames/ and bitmaps/.
+// DefaultMaxBytes is the default of STUARTY_CACHE_MAX_BYTES: 2 GiB, shared by frames/ and bitmaps/.
 const DefaultMaxBytes int64 = 2 << 30
 
 // cacheDirs are the folders of the root that the cache owns.

@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 // musicOnClipAsset adds an audio track and an audio item of the clip's asset, so the same

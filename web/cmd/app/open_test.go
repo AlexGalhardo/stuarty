@@ -15,7 +15,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/service/workspace"
+	"github.com/AlexGalhardo/stuarty/service/workspace"
 )
 
 func upHandler() http.Handler {
@@ -51,12 +51,12 @@ type fixture struct {
 func newFixture(t *testing.T, port string, extra map[string]string) *fixture {
 	t.Helper()
 	f := &fixture{out: &bytes.Buffer{}, errOut: &bytes.Buffer{}, home: t.TempDir()}
-	vars := map[string]string{"VUKEM_VIDEO_HOME": f.home, "PORT": port, "HOST": "127.0.0.1"}
+	vars := map[string]string{"STUARTY_HOME": f.home, "PORT": port, "HOST": "127.0.0.1"}
 	maps.Copy(vars, extra)
 	f.o = &opener{
 		getenv: func(k string) string { return vars[k] }, stdout: f.out, stderr: f.errOut,
 		client:  &http.Client{Timeout: time.Second}, //nolint:forbidigo // loopback test server
-		self:    func() (string, error) { return "/path/to/vukem-video", nil },
+		self:    func() (string, error) { return "/path/to/stuarty", nil },
 		browse:  func(u string) error { f.browsed = append(f.browsed, u); return nil },
 		timeout: 3 * time.Second,
 	}
@@ -135,7 +135,7 @@ func TestOpenStartsTheServerWhenNoneRuns(t *testing.T) {
 	f.o.startSrv = func(self, host, p string, env []string, log string) (<-chan error, error) {
 		f.started++
 		f.env = env
-		if self != "/path/to/vukem-video" || host != "127.0.0.1" || p != port {
+		if self != "/path/to/stuarty" || host != "127.0.0.1" || p != port {
 			t.Errorf("start(%q, %q, %q)", self, host, p)
 		}
 		if filepath.Base(log) != "server.log" || filepath.Base(filepath.Dir(log)) != "logs" {
@@ -264,11 +264,11 @@ func TestResolveAddr(t *testing.T) {
 	}{
 		{map[string]string{}, "127.0.0.1", "7878", false},
 		{map[string]string{"PORT": "9000"}, "127.0.0.1", "9000", false},
-		{map[string]string{"VUKEM_VIDEO_ADDR": "localhost:8080"}, "localhost", "8080", false},
-		{map[string]string{"VUKEM_VIDEO_ADDR": "[::1]:8080"}, "::1", "8080", false},
-		{map[string]string{"VUKEM_VIDEO_ADDR": "0.0.0.0:7878"}, "", "", true},
+		{map[string]string{"STUARTY_ADDR": "localhost:8080"}, "localhost", "8080", false},
+		{map[string]string{"STUARTY_ADDR": "[::1]:8080"}, "::1", "8080", false},
+		{map[string]string{"STUARTY_ADDR": "0.0.0.0:7878"}, "", "", true},
 		{map[string]string{"HOST": "192.168.1.5"}, "", "", true},
-		{map[string]string{"VUKEM_VIDEO_ADDR": "no-port"}, "", "", true},
+		{map[string]string{"STUARTY_ADDR": "no-port"}, "", "", true},
 		{map[string]string{"PORT": "80/../x"}, "", "", true},
 	} {
 		h, p, err := resolveAddr(env(c.env))

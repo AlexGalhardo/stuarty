@@ -51,7 +51,7 @@ func UpdateStateDir() (string, error) {
 		return "", fmt.Errorf("update state: %w", err)
 	}
 
-	return filepath.Join(dir, "vukem-video", "update"), nil
+	return filepath.Join(dir, "stuarty", "update"), nil
 }
 
 // Target is the installed application: Path is the bundle directory (macOS) or the AppImage file

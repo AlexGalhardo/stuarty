@@ -1,7 +1,7 @@
 package export
 
 import (
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 // Format is what an export writes (SDD-004 section 8, RF-064). The zero value is MP4.

@@ -193,7 +193,7 @@ func TestOpenRemoteURLReadsNoLocalFile(t *testing.T) {
 		t.Errorf("session = %+v", s)
 	}
 	if _, err := os.Stat(home); err == nil {
-		t.Error("the workspace must not be touched when VUKEM_VIDEO_URL is set")
+		t.Error("the workspace must not be touched when STUARTY_URL is set")
 	}
 
 	o.Getenv = openEnv(home, map[string]string{EnvURL: "https://videos.example.org"})

@@ -27,7 +27,7 @@ Sets the given settings. When the size changes, the explicit x and y of every vi
 
 ## Scope and phase
 
-Scope `edit`, phase `prototype`. The scope is the one an API key needs in network mode. Run `vukem-video command:help settings.set` for the same description from the binary, or call the [`command_help`](/docs/mcp/tools/command_help) tool.
+Scope `edit`, phase `prototype`. The scope is the one an API key needs in network mode. Run `stuarty command:help settings.set` for the same description from the binary, or call the [`command_help`](/docs/mcp/tools/command_help) tool.
 
 ## Next steps
 
@@ -79,14 +79,14 @@ Scope `edit`, phase `prototype`. The scope is the one an API key needs in networ
 ```
 
 ```bash title="Terminal"
-vukem-video edit --project prj_7k2m9x4q1b --ops batch.json --json
+stuarty edit --project prj_7k2m9x4q1b --ops batch.json --json
 ```
 
 **Over HTTP**
 
 ```bash title="curl"
 curl -X POST "http://127.0.0.1:7878/api/v1/projects/prj_7k2m9x4q1b/edit" \
-  -H "Authorization: Bearer $VUKEM_VIDEO_KEY" \
+  -H "Authorization: Bearer $STUARTY_KEY" \
   -H "Content-Type: application/json" \
   -d '{
   "base_revision": 12,

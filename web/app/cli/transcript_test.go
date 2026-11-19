@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/engine/transcribe"
-	"github.com/AlexGalhardo/vukem-video/web/app/cli"
-	"github.com/AlexGalhardo/vukem-video/web/contract/testenv"
+	"github.com/AlexGalhardo/stuarty/engine/transcribe"
+	"github.com/AlexGalhardo/stuarty/web/app/cli"
+	"github.com/AlexGalhardo/stuarty/web/contract/testenv"
 )
 
 // TestInspectSectionsThroughTheCLI: media:inspect passes --sections,

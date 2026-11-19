@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/core/plan"
+	"github.com/AlexGalhardo/stuarty/core/plan"
 )
 
 // VV-216: a client that gave up while a window was planned is E_CLIENT_CLOSED, not an internal error.

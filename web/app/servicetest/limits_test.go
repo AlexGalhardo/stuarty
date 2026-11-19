@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/service"
 )
 
 // SDD-007 section 15 check 17 (T-17): below the free-space floor the writes

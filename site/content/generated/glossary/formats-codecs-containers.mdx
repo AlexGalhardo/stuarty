@@ -13,7 +13,7 @@ AAC squeezes sound into a small file and sounds good. Almost every device can pl
 
 **Example.** The sound inside most phone videos.
 
-**In Vukem Video.** MP4 exports have AAC sound. `--format aac` exports the sound only, as an `.m4a` file.
+**In Stuarty.** MP4 exports have AAC sound. `--format aac` exports the sound only, as an `.m4a` file.
 
 **See also:** [MP3](#mp3), [Opus](#opus).
 
@@ -85,7 +85,7 @@ The encoder compresses video when you export. The decoder expands it again when 
 
 **Example.** Your computer decodes the video in real time when you press play.
 
-**In Vukem Video.** An H.264 export needs an H.264 encoder. See [Encoders and presets](/docs/guide/encoders-and-presets).
+**In Stuarty.** An H.264 export needs an H.264 encoder. See [Encoders and presets](/docs/guide/encoders-and-presets).
 
 **See also:** [Codec](#codec), [Hardware encoding](#hardware-encoding).
 
@@ -97,7 +97,7 @@ An MP4 needs a small header to start playing. If it is at the end, the player wa
 
 **Example.** A video on a web page that starts at once instead of loading first.
 
-**In Vukem Video.** The export checks that an MP4 has fast start.
+**In Stuarty.** The export checks that an MP4 has fast start.
 
 **Also called:** moov atom. **See also:** [MP4](#mp4).
 
@@ -109,7 +109,7 @@ FFmpeg is the toolbox behind many video apps. It decodes and encodes formats and
 
 **Example.** A website that converts your video quickly is probably using FFmpeg.
 
-**In Vukem Video.** Vukem Video uses an LGPL build of FFmpeg as a separate process. See [FFmpeg and licences](/docs/self-hosting/ffmpeg-and-licences).
+**In Stuarty.** Stuarty uses an LGPL build of FFmpeg as a separate process. See [FFmpeg and licences](/docs/self-hosting/ffmpeg-and-licences).
 
 **See also:** [Codec](#codec), [Container](#container).
 
@@ -141,7 +141,7 @@ A GIF is a series of small pictures that loop. It has no sound and at most 256 c
 
 **Example.** A looping reaction image in a chat.
 
-**In Vukem Video.** `--format gif` exports the composed frames, with no audio.
+**In Stuarty.** `--format gif` exports the composed frames, with no audio.
 
 **See also:** [Frame rate](/docs/glossary/shooting-and-footage#frame-rate), [Color depth](/docs/glossary/color#color-depth).
 
@@ -163,7 +163,7 @@ H.264 (also called AVC) gives small files with good quality and plays on practic
 
 **Example.** Most videos you watch online are H.264.
 
-**In Vukem Video.** The MP4 export uses an H.264 encoder.
+**In Stuarty.** The MP4 export uses an H.264 encoder.
 
 **Also called:** AVC, MPEG-4 Part 10. **See also:** [H.265](#h265), [MP4](#mp4).
 
@@ -285,7 +285,7 @@ MP4 is a container that usually holds H.264 video and AAC sound. It plays on pho
 
 **Example.** The video you send on a messaging app is an MP4.
 
-**In Vukem Video.** The default export is an MP4 (H.264 and AAC), checked after it is made.
+**In Stuarty.** The default export is an MP4 (H.264 and AAC), checked after it is made.
 
 **Also called:** .mp4, MPEG-4 Part 14. **See also:** [H.264](#h264), [AAC](#aac), [Container](#container).
 
@@ -297,7 +297,7 @@ OTIO describes the timeline (clips, tracks, times) without the media. Different 
 
 **Example.** Starting an edit in one program and finishing in another.
 
-**In Vukem Video.** `otio:export` and `otio:import`. See [Exporting](/docs/guide/exporting).
+**In Stuarty.** `otio:export` and `otio:import`. See [Exporting](/docs/guide/exporting).
 
 **Also called:** OTIO. **See also:** [Timeline](/docs/glossary/editing-and-timeline#timeline).
 
@@ -319,7 +319,7 @@ The pixel format says how many numbers describe each pixel and how they are arra
 
 **Example.** yuv420p is the safest choice for videos that must play everywhere.
 
-**In Vukem Video.** MP4 exports are verified, including the pixel format. See [Exporting](/docs/guide/exporting).
+**In Stuarty.** MP4 exports are verified, including the pixel format. See [Exporting](/docs/guide/exporting).
 
 **See also:** [Chroma subsampling](/docs/glossary/color#chroma-subsampling), [RGB](/docs/glossary/color#rgb).
 
@@ -331,7 +331,7 @@ PNG compresses without losing anything and supports transparency. It is good for
 
 **Example.** A logo with a transparent background.
 
-**In Vukem Video.** `--format png` exports one frame, chosen with `--at`.
+**In Stuarty.** `--format png` exports one frame, chosen with `--at`.
 
 **See also:** [Alpha channel](/docs/glossary/effects-and-compositing#alpha-channel), [Lossy and lossless](#lossy-and-lossless).
 
@@ -353,7 +353,7 @@ A file has several streams: a video stream, one or more audio streams, maybe a s
 
 **Example.** A movie with a video stream and two audio streams, English and Spanish.
 
-**In Vukem Video.** An MP4 export is checked to have both streams and the right duration.
+**In Stuarty.** An MP4 export is checked to have both streams and the right duration.
 
 **See also:** [Container](#container).
 
@@ -375,7 +375,7 @@ WAV holds raw (PCM) sound. It sounds perfect but files are large. Editors use it
 
 **Example.** A voice recording used as the master copy.
 
-**In Vukem Video.** `--format wav` exports the audio mix as 16-bit PCM, 48 kHz, stereo.
+**In Stuarty.** `--format wav` exports the audio mix as 16-bit PCM, 48 kHz, stereo.
 
 **Also called:** PCM. **See also:** [Lossy and lossless](#lossy-and-lossless), [Sample rate](/docs/glossary/audio#sample-rate).
 

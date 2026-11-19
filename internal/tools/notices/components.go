@@ -72,7 +72,7 @@ var desktopTargets = [][2]string{{"linux", "amd64"}, {"darwin", "arm64"}, {"wind
 
 // productModule is the module of the repository; the shell requires it through a
 // replace directive, and it is not a third-party component.
-const productModule = "github.com/AlexGalhardo/vukem-video"
+const productModule = "github.com/AlexGalhardo/stuarty"
 
 var licenseName = regexp.MustCompile(`(?i)^(licen[sc]e|copying|notice)([-_.].*)?$`)
 

@@ -7,10 +7,10 @@ import (
 	"slices"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
-	"github.com/AlexGalhardo/vukem-video/engine/transcribe"
-	"github.com/AlexGalhardo/vukem-video/internal/outbound"
-	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
+	"github.com/AlexGalhardo/stuarty/engine/transcribe"
+	"github.com/AlexGalhardo/stuarty/internal/outbound"
+	"github.com/AlexGalhardo/stuarty/service"
 )
 
 // installTimeout bounds one download of the install step.
@@ -59,7 +59,7 @@ func InstallTools(workspaceDir string) (*service.Tools, error) {
 }
 
 // modelPreference is the order in which an installed model is taken when
-// VUKEM_VIDEO_WHISPER_MODEL is not set: the default first, then the smaller ones.
+// STUARTY_WHISPER_MODEL is not set: the default first, then the smaller ones.
 var modelPreference = []string{"small", "base", "tiny", "large-v3-turbo"}
 
 // whisperProvider is the whisper.cpp provider over what is installed now. It
@@ -69,7 +69,7 @@ var modelPreference = []string{"small", "base", "tiny", "large-v3-turbo"}
 // unavailable (SDD-007 section 6.8 item 6).
 type whisperProvider struct {
 	dir string
-	// model is the name VUKEM_VIDEO_WHISPER_MODEL asked for, or the default when it was not set.
+	// model is the name STUARTY_WHISPER_MODEL asked for, or the default when it was not set.
 	model string
 	// explicit is true when the variable was set: then model is used as it is, installed or not.
 	explicit bool
@@ -136,7 +136,7 @@ func (p *whisperProvider) InstalledModels() []string {
 	return out
 }
 
-// WithModel is this provider bound to one model by name, as if VUKEM_VIDEO_WHISPER_MODEL named it.
+// WithModel is this provider bound to one model by name, as if STUARTY_WHISPER_MODEL named it.
 func (p *whisperProvider) WithModel(model string) transcribe.Provider {
 	entries, _ := p.manifest.For("whisper", model, runtime.GOOS, runtime.GOARCH)
 	bound := *p

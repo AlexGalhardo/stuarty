@@ -11,9 +11,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/service"
-	"github.com/AlexGalhardo/vukem-video/web/app/cli"
-	"github.com/AlexGalhardo/vukem-video/web/app/mcp"
+	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/web/app/cli"
+	"github.com/AlexGalhardo/stuarty/web/app/mcp"
 )
 
 // row is one line of the parity table of SDD-003 section 7.1 for an operation of

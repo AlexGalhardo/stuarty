@@ -14,11 +14,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/service"
-	"github.com/AlexGalhardo/vukem-video/service/workspace"
-	"github.com/AlexGalhardo/vukem-video/web/app/store"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/workspace"
+	"github.com/AlexGalhardo/stuarty/web/app/store"
 )
 
 const (

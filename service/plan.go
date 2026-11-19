@@ -8,11 +8,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/core/plan"
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/engine/cache"
-	"github.com/AlexGalhardo/vukem-video/engine/rasterize"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/core/plan"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/engine/cache"
+	"github.com/AlexGalhardo/stuarty/engine/rasterize"
 )
 
 // PlanWindowRequest asks for the render plan of frames From up to, not

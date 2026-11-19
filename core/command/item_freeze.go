@@ -1,7 +1,7 @@
 package command
 
 import (
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 // defaultFreezeDuration is how long a freeze frame is held when the caller gives no duration.

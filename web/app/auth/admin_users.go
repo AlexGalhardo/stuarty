@@ -6,10 +6,10 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/AlexGalhardo/vukem/auth"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/service"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/vukem/auth"
 )
 
 // ErrLastAdmin refuses a change that would leave network mode without an enabled administrator.

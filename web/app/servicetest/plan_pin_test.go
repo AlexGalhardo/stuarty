@@ -4,8 +4,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/service"
 )
 
 // A plan window pinned to a revision that is not the current one is refused on

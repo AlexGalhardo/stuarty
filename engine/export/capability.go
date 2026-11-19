@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
 )
 
 // The ceilings of SDD-007 section 9.1: the document accepts no more, and the export checks again.
@@ -72,7 +72,7 @@ func (s *state) checkCapability(ctx context.Context, det *ffmpeg.EncoderDetectio
 	)
 	e := exportErr(ReasonUnsupportedSize, msg, err, "")
 	e.Hint = "Lower the project size or the frame rate, or install a build with an encoder that supports it " +
-		"(\"vukem-video doctor\" lists the encoders and why each one was or was not chosen)."
+		"(\"stuarty doctor\" lists the encoders and why each one was or was not chosen)."
 
 	return chosen, e
 }

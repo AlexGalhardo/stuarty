@@ -13,13 +13,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/engine/cache"
-	"github.com/AlexGalhardo/vukem-video/engine/compositor"
-	"github.com/AlexGalhardo/vukem-video/engine/export"
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg/ffargs"
-	"github.com/AlexGalhardo/vukem-video/engine/rasterize"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/engine/cache"
+	"github.com/AlexGalhardo/stuarty/engine/compositor"
+	"github.com/AlexGalhardo/stuarty/engine/export"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg/ffargs"
+	"github.com/AlexGalhardo/stuarty/engine/rasterize"
 )
 
 func newFrames(t *testing.T) *Frames {

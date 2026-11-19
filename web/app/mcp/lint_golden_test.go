@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/web/contract/testenv"
+	"github.com/AlexGalhardo/stuarty/web/contract/testenv"
 )
 
 // TestLintReportGolden: the lint report of a project with an overlap of sound

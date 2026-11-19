@@ -1,6 +1,6 @@
 package plan
 
-import "github.com/AlexGalhardo/vukem-video/core/timeline"
+import "github.com/AlexGalhardo/stuarty/core/timeline"
 
 // AnimImageSourceFrame is the frame of an animated image shown at frame r of its
 // item (SDD-004 §3.3): the time of the frame in milliseconds, rounded to the nearest

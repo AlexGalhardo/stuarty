@@ -4,9 +4,9 @@ import (
 	"database/sql"
 	"encoding/json"
 
-	"github.com/AlexGalhardo/vukem/database"
+	"github.com/AlexGalhardo/stuarty/service"
 
-	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/vukem/database"
 )
 
 // repos is the set of repositories over one executor: the database for reads

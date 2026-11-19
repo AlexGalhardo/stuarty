@@ -18,13 +18,13 @@ import (
 
 	"golang.org/x/text/unicode/norm"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/core/timeval"
-	"github.com/AlexGalhardo/vukem-video/engine/ingest"
-	"github.com/AlexGalhardo/vukem-video/service/pathguard"
-	"github.com/AlexGalhardo/vukem-video/service/textview"
-	"github.com/AlexGalhardo/vukem-video/service/untrusted"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeval"
+	"github.com/AlexGalhardo/stuarty/engine/ingest"
+	"github.com/AlexGalhardo/stuarty/service/pathguard"
+	"github.com/AlexGalhardo/stuarty/service/textview"
+	"github.com/AlexGalhardo/stuarty/service/untrusted"
 )
 
 const (
@@ -345,11 +345,11 @@ func (s *svc) checkImportSize(size int64) *Error {
 	if size > s.limits.MaxImportBytes {
 		have, ceiling := sizesApart(size, s.limits.MaxImportBytes)
 
-		return newError("E_LIMIT_EXCEEDED", "The file is %s; the import limit is %s (VUKEM_VIDEO_MAX_IMPORT_BYTES).",
+		return newError("E_LIMIT_EXCEEDED", "The file is %s; the import limit is %s (STUARTY_MAX_IMPORT_BYTES).",
 			have, ceiling).
-			withHint("import a smaller file; the person running the server can raise VUKEM_VIDEO_MAX_IMPORT_BYTES").
+			withHint("import a smaller file; the person running the server can raise STUARTY_MAX_IMPORT_BYTES").
 			withDetail("limit", "import_bytes").withDetail("value", size).
-			withDetail("ceiling", s.limits.MaxImportBytes).withDetail("variable", "VUKEM_VIDEO_MAX_IMPORT_BYTES")
+			withDetail("ceiling", s.limits.MaxImportBytes).withDetail("variable", "STUARTY_MAX_IMPORT_BYTES")
 	}
 
 	if s.limits.MinFreeBytes > 0 && s.workspace != "" {
@@ -358,9 +358,9 @@ func (s *svc) checkImportSize(size int64) *Error {
 		if free, err := s.media.FreeBytes(s.workspace); err == nil && free < need {
 			return newError("E_LIMIT_EXCEEDED", "The disk of the workspace has too little free space for this file.").
 				withHint("free space on the disk of the workspace; the person running the server can lower "+
-					"VUKEM_VIDEO_MIN_FREE_BYTES").
+					"STUARTY_MIN_FREE_BYTES").
 				withLimit("free_bytes", free, need).withDetail("reason", "disk_low").
-				withDetail("variable", "VUKEM_VIDEO_MIN_FREE_BYTES")
+				withDetail("variable", "STUARTY_MIN_FREE_BYTES")
 		}
 	}
 

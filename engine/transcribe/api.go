@@ -19,20 +19,20 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
-	"github.com/AlexGalhardo/vukem-video/internal/outbound"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
+	"github.com/AlexGalhardo/stuarty/internal/outbound"
 )
 
 // Variables of the OpenAI-compatible provider (SDD-000 section 10). Sending audio out is an operator
 // decision: with the URL and the key unset the provider does not exist.
 const (
-	EnvAPIURL   = "VUKEM_VIDEO_TRANSCRIBE_URL"
-	EnvAPIKey   = "VUKEM_VIDEO_TRANSCRIBE_KEY" //nolint:gosec // the name of a variable, not a credential
-	EnvAPIModel = "VUKEM_VIDEO_TRANSCRIBE_MODEL"
+	EnvAPIURL   = "STUARTY_TRANSCRIBE_URL"
+	EnvAPIKey   = "STUARTY_TRANSCRIBE_KEY"
+	EnvAPIModel = "STUARTY_TRANSCRIBE_MODEL"
 
 	// ProviderAPI is Name of the API provider.
 	ProviderAPI = "openai-compatible"
-	// DefaultAPIModel is the model when VUKEM_VIDEO_TRANSCRIBE_MODEL is unset.
+	// DefaultAPIModel is the model when STUARTY_TRANSCRIBE_MODEL is unset.
 	DefaultAPIModel = "whisper-1"
 
 	// apiFileName is the only file name that leaves the machine: never the name or the path of an asset.

@@ -10,17 +10,17 @@ import (
 	"testing"
 	"time"
 
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/workspace"
+	"github.com/AlexGalhardo/stuarty/web/app/auth"
+	httpapi "github.com/AlexGalhardo/stuarty/web/app/http"
+	"github.com/AlexGalhardo/stuarty/web/app/store"
+	"github.com/AlexGalhardo/stuarty/web/bootstrap"
+
 	vukem "github.com/AlexGalhardo/vukem"
 	"github.com/AlexGalhardo/vukem/vukemtest"
-
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/service"
-	"github.com/AlexGalhardo/vukem-video/service/workspace"
-	"github.com/AlexGalhardo/vukem-video/web/app/auth"
-	httpapi "github.com/AlexGalhardo/vukem-video/web/app/http"
-	"github.com/AlexGalhardo/vukem-video/web/app/store"
-	"github.com/AlexGalhardo/vukem-video/web/bootstrap"
 )
 
 // startOwner runs the HTTP API over a real store, as a server that owns the

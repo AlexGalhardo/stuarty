@@ -1,11 +1,11 @@
 package httpapi
 
 import (
-	"github.com/AlexGalhardo/vukem/web"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/web/app/events"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/service"
-	"github.com/AlexGalhardo/vukem-video/web/app/events"
+	"github.com/AlexGalhardo/vukem/web"
 )
 
 type eventsIn struct {

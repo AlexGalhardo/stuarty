@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
 )
 
 // The comparison tool of SDD-004 section 11 and SDD-008 section 4: exact comparison by hash, PSNR for a
@@ -20,12 +20,12 @@ import (
 
 const (
 	// envArtifacts is the folder where a failed comparison writes its images (CI uploads it).
-	envArtifacts = "VUKEM_VIDEO_TEST_ARTIFACTS_DIR"
+	envArtifacts = "STUARTY_TEST_ARTIFACTS_DIR"
 	// envBefore is a folder of the frames as they were before the change, <scene>-<frame>.png, from which a
 	// difference image is made.
-	envBefore = "VUKEM_VIDEO_TEST_GOLDEN_BEFORE_DIR"
+	envBefore = "STUARTY_TEST_GOLDEN_BEFORE_DIR"
 	// envOtherFFmpeg is the bin folder of an FFmpeg other than the pinned one.
-	envOtherFFmpeg = "VUKEM_VIDEO_TEST_OTHER_FFMPEG_DIR"
+	envOtherFFmpeg = "STUARTY_TEST_OTHER_FFMPEG_DIR"
 	// minPSNR is the tolerance for a different FFmpeg build (SDD-004 section 11), in decibels.
 	minPSNR = 50.0
 )
@@ -175,7 +175,7 @@ func TestSaveMismatchWritesTheImages(t *testing.T) {
 }
 
 // SDD-004 section 11, a different FFmpeg build: the frames composed with the FFmpeg in
-// VUKEM_VIDEO_TEST_OTHER_FFMPEG_DIR are within 50 dB PSNR of those composed with the pinned one. The result
+// STUARTY_TEST_OTHER_FFMPEG_DIR are within 50 dB PSNR of those composed with the pinned one. The result
 // is reported, not blocking (the decoders of two builds may round differently).
 func TestGoldenWithAnotherFFmpegIsWithin50dB(t *testing.T) {
 	setup(t)

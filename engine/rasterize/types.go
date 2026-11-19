@@ -3,7 +3,7 @@ package rasterize
 import (
 	"errors"
 
-	"github.com/AlexGalhardo/vukem-video/engine/bitmap"
+	"github.com/AlexGalhardo/stuarty/engine/bitmap"
 )
 
 // Bitmap is a rendered bitmap and its metrics.

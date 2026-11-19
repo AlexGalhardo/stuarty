@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeval"
+	"github.com/AlexGalhardo/stuarty/core/timeval"
 )
 
 // ProjectLine is one project of the listing.

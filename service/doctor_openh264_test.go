@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
 )
 
 func ownBuild(flags ...string) *ffmpeg.Installation {
@@ -39,7 +39,7 @@ func TestLicenseCheckNamesTheFlavourAndTheProblems(t *testing.T) {
 	}
 
 	c := licenseCheck(user, false)
-	if !strings.Contains(c.Hint, "--enable-gpl") || !strings.Contains(c.Hint, "VUKEM_VIDEO_FFMPEG") {
+	if !strings.Contains(c.Hint, "--enable-gpl") || !strings.Contains(c.Hint, "STUARTY_FFMPEG") {
 		t.Errorf("the GPL hint = %q", c.Hint)
 	}
 

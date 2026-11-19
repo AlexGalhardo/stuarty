@@ -5,8 +5,8 @@ import (
 
 	"github.com/wailsapp/wails/v3/pkg/application"
 
-	"github.com/AlexGalhardo/vukem-video/desktop/shell"
-	"github.com/AlexGalhardo/vukem-video/service/workspace"
+	"github.com/AlexGalhardo/stuarty/desktop/shell"
+	"github.com/AlexGalhardo/stuarty/service/workspace"
 )
 
 // editorItems adds the items of the group `name` of shell.EditorMenus to menu.
@@ -51,7 +51,7 @@ func buildMenu(app *application.App, win *application.WebviewWindow, ws workspac
 	file.AddSeparator()
 	file.Add(tr(shell.TextOpenWorkspace)).OnClick(func(*application.Context) {
 		if err := app.Browser.OpenFile(string(ws)); err != nil {
-			app.Dialog.Error().SetTitle("Vukem Video").SetMessage(tr(shell.TextCannotOpen) + err.Error()).Show()
+			app.Dialog.Error().SetTitle("Stuarty").SetMessage(tr(shell.TextCannotOpen) + err.Error()).Show()
 		}
 	})
 	file.AddSeparator()
@@ -81,7 +81,7 @@ func buildMenu(app *application.App, win *application.WebviewWindow, ws workspac
 	auto.SetEnabled(up.launcher.CanUpdate())
 	help.AddSeparator()
 	help.Add(tr(shell.TextAbout)).OnClick(func(*application.Context) {
-		app.Dialog.Info().SetTitle(tr(shell.TextAboutTitle)).SetMessage("Vukem Video " + version).Show()
+		app.Dialog.Info().SetTitle(tr(shell.TextAboutTitle)).SetMessage("Stuarty " + version).Show()
 	})
 	return menu
 }

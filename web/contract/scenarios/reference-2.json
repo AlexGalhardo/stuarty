@@ -38,7 +38,7 @@
 		{"call": "JobGet", "args": {"job_id": "$job:2", "wait_ms": 25000}},
 		{"call": "TemplateList", "args": {}},
 		{"call": "TemplateInstantiate", "args": {"template_id": "$template:0", "name": "Quote card", "id": "prj_6t4y2w8j1m", "fill": {
-			"quote": {"text": "Edit with an agent."}, "author": {"text": "Vukem Video"}}}},
+			"quote": {"text": "Edit with an agent."}, "author": {"text": "Stuarty"}}}},
 		{"call": "JobStart", "args": {"project_id": "prj_6t4y2w8j1m", "kind": "export", "wait_ms": 25000}, "settles": true},
 		{"call": "JobGet", "args": {"job_id": "$job:3", "wait_ms": 25000}, "settles": true},
 		{"call": "JobGet", "args": {"job_id": "$job:3", "wait_ms": 25000}, "settles": true},

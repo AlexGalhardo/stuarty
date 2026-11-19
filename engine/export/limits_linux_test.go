@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
 )
 
 // SDD-007 T-16: the limits (RLIMIT_CPU, RLIMIT_FSIZE, RLIMIT_AS for a software encoder) do not break the golden export.

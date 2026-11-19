@@ -9,7 +9,7 @@ import (
 	"sort"
 	"unicode/utf8"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 // The properties of an item that Export keeps in the vukem metadata and Import turns back

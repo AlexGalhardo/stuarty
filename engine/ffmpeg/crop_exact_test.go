@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg/ffargs"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg/ffargs"
 )
 
 // decodeGray decodes frame 0 of the file through the chain as 8-bit luma.

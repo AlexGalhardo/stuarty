@@ -15,20 +15,20 @@ import (
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/config"
+	"github.com/AlexGalhardo/stuarty/web/app/auth"
+	"github.com/AlexGalhardo/stuarty/web/app/cli"
+	httpapi "github.com/AlexGalhardo/stuarty/web/app/http"
+	"github.com/AlexGalhardo/stuarty/web/app/mcp"
+	"github.com/AlexGalhardo/stuarty/web/bootstrap"
+	"github.com/AlexGalhardo/stuarty/web/contract/testenv"
+
 	vukem "github.com/AlexGalhardo/vukem"
 	"github.com/AlexGalhardo/vukem/auth/hash"
 	"github.com/AlexGalhardo/vukem/ratelimit"
 	"github.com/AlexGalhardo/vukem/vukemtest"
-
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/service"
-	"github.com/AlexGalhardo/vukem-video/service/config"
-	"github.com/AlexGalhardo/vukem-video/web/app/auth"
-	"github.com/AlexGalhardo/vukem-video/web/app/cli"
-	httpapi "github.com/AlexGalhardo/vukem-video/web/app/http"
-	"github.com/AlexGalhardo/vukem-video/web/app/mcp"
-	"github.com/AlexGalhardo/vukem-video/web/bootstrap"
-	"github.com/AlexGalhardo/vukem-video/web/contract/testenv"
 )
 
 // network is a server in network mode over the Service of a testenv: the HTTP
@@ -209,7 +209,7 @@ var _ = cli.ExitOK
 func (n *network) cliRun(t *testing.T, secret string, args ...string) (code int, stdout, stderr string) {
 	t.Helper()
 
-	env := map[string]string{"VUKEM_VIDEO_URL": n.srv.URL, "VUKEM_VIDEO_KEY": secret}
+	env := map[string]string{"STUARTY_URL": n.srv.URL, "STUARTY_KEY": secret}
 
 	var out, errw bytes.Buffer
 
