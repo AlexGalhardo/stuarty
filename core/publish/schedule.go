@@ -260,6 +260,16 @@ func OnTime(at time.Time, lateMinutes int, now time.Time) bool {
 	return !now.After(at.Add(Grace + time.Duration(lateMinutes)*time.Minute))
 }
 
+// EffectiveLate is the late window a target is judged by: the one the person chose, or a day for a target
+// they asked to send now, since a person answers the request later than the instant it names.
+func EffectiveLate(minutes int, sendNow bool) int {
+	if sendNow {
+		return MaxLateWindowMinutes
+	}
+
+	return minutes
+}
+
 // Decide is what to do with one target at now (SDD-020 sections 17 and 19). A target that is already
 // being retried is bounded by its attempts and not by its first time; a target that was being sent
 // resumes; one whose time passed beyond its window is missed and never sent on its own (RF-406).
