@@ -44,7 +44,7 @@ An agent that connects to Stuarty finds a short list of tools that covers every 
 - [x] 5. Group the CLI by domain with aliases. Verify: `go test ./web/app/cli/...` passes and `bash scripts/smoke-e2e.sh` still exports.
 - [x] 6. Make the parity test registry-driven for every domain. Verify: `go test ./web/contract/...` passes, and removing one route in a scratch change makes it fail (described in the hand-off).
 - [x] 7. Implement the budget check and wire it into `task lint`. Verify: `go run ./internal/tools/surfacebudget` exits 0 and prints the measured numbers.
-- [ ] 8. Generate the agent documents per domain. Verify: `task generate:check` exits 0.
+- [x] 8. Generate the agent documents per domain. Verify: `task generate:check` exits 0.
 
 ## Test strategy
 

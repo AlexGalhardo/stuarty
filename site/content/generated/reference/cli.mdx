@@ -747,11 +747,12 @@ Print or write the material for agents: the skill, the AGENTS.md snippet, the MC
 ```text
 stuarty agent:docs --print skill|agents|instructions
 stuarty agent:docs --write <dir>
+stuarty agent:docs --print guide:<domain>
 ```
 
 | Flag | Type | Default | Meaning |
 | --- | --- | --- | --- |
-| `--print` | string |  | print one of skill, agents or instructions |
+| `--print` | string |  | print one of skill, agents or instructions, or guide:&lt;domain&gt; for the page of a domain |
 | `--write` | string |  | write the three files into this directory |
 
 Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.

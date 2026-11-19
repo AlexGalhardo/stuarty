@@ -1146,14 +1146,15 @@
       "summary": "print or write the material for agents: the skill, the AGENTS.md snippet, the MCP instructions",
       "usage": [
         "stuarty agent:docs --print skill|agents|instructions",
-        "stuarty agent:docs --write <dir>"
+        "stuarty agent:docs --write <dir>",
+        "stuarty agent:docs --print guide:<domain>"
       ],
       "example": "stuarty agent:docs --write ~/.claude/skills/stuarty",
       "flags": [
         {
           "name": "print",
           "type": "string",
-          "usage": "print one of skill, agents or instructions"
+          "usage": "print one of skill, agents or instructions, or guide:<domain> for the page of a domain"
         },
         {
           "name": "write",
