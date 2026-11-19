@@ -9,7 +9,6 @@ import (
 	"strings"
 	"sync/atomic"
 	"testing"
-	"time"
 
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/providers"
@@ -165,15 +164,16 @@ func TestTextGenerate_EverySurfaceStartsAJobThatCompletesAndStoresTheText(t *tes
 	}
 }
 
-// waitForJob reads the job through the surface of the driver until it is final.
+// waitForJob reads the job through the surface of the driver until it is final: each read waits on the
+// server for a final state (wait_ms), so the test never sleeps.
 func waitForJob(t *testing.T, d driver, id string) textJob {
 	t.Helper()
 
-	args := json.RawMessage(`{"job_id":"` + id + `"}`)
+	args := json.RawMessage(`{"job_id":"` + id + `","wait_ms":25000}`)
 
 	var job textJob
 
-	for range 200 {
+	for range 4 {
 		raw, _, fail := d.do(t, step{Call: "JobGet", Args: args})
 		if fail != nil {
 			t.Fatalf("%s JobGet: %+v", d.name(), fail)
@@ -187,8 +187,6 @@ func waitForJob(t *testing.T, d driver, id string) textJob {
 		if service.JobFinal(job.State) {
 			return job
 		}
-
-		time.Sleep(25 * time.Millisecond)
 	}
 
 	t.Fatalf("%s: the job %s did not finish: %+v", d.name(), id, job)
