@@ -373,6 +373,7 @@ func New(o Options) (Service, error) {
 	}
 
 	s.kinds = kinds
+	s.registerPublishKind()
 
 	if s.workspace != "" {
 		s.fonts = enginestore.NewFonts(s.workspace)
