@@ -587,6 +587,8 @@ func (s *svc) refreshProcessing(ctx context.Context, out *PublishStatusResult) {
 	out.Result, out.State = &res, string(remote.State)
 
 	if remote.State == publish.StateFailed {
-		out.Error = publishError(social.NewError(social.KindRejected, res.Network, remote.Reason, 0, nil))
+		out.Error = publishError(
+			social.NewError(social.KindRejected, res.Network, remote.Reason, 0, nil), conn.Describe().Hints,
+		)
 	}
 }
