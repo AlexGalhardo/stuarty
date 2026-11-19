@@ -1,0 +1,12 @@
+{
+  "duration": {
+    "frame": 15,
+    "requested": null,
+    "seconds": 0.5
+  },
+  "edge": "out",
+  "keyframes": 2,
+  "properties": [
+    "y"
+  ]
+}

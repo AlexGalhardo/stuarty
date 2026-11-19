@@ -93,6 +93,8 @@
         "keyframe.remove",
         "keyframe.clear",
         "keyframe.set_easing",
+        "animation.apply_preset",
+        "animation.list_presets",
         "slot.mark",
         "slot.unmark",
         "slot.fill",

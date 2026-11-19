@@ -627,6 +627,14 @@
         }
       },
       "commands": {
+        "animation": {
+          "apply_preset": {
+            "title": "Apply a motion preset"
+          },
+          "list_presets": {
+            "title": "List the motion presets"
+          }
+        },
         "asset": {
           "remove": {
             "title": "Remove media"
@@ -1481,7 +1489,8 @@
           "ease_in": "Ease in",
           "ease_out": "Ease out",
           "ease_in_out": "Ease in and out",
-          "hold": "Hold"
+          "hold": "Hold",
+          "bezier": "Custom curve"
         }
       },
       "effects": {
