@@ -23,10 +23,10 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 
 | Epic | Title | Size | Depends on | Status |
 | --- | --- | --- | --- | --- |
-| [04](04-secret-vault-and-connections.md) | Secret vault and connections | L | 03 | TODO |
+| [04](04-secret-vault-and-connections.md) | Secret vault and connections | L | 03 | IN PROGRESS (senior-a, 2026-11-19) |
 | [05](05-approval-queue-and-cost-ceilings.md) | Approval queue, rules and cost ceilings | M | 04 | TODO |
-| [06](06-project-as-production.md) | The project as the container of a production | L | 03 | TODO |
-| [07](07-dashboard-shell.md) | Dashboard: sidebar, navigation, profile, theme | M | 03 | TODO |
+| [06](06-project-as-production.md) | The project as the container of a production | L | 03 | IN PROGRESS (senior-b, 2026-11-19) |
+| [07](07-dashboard-shell.md) | Dashboard: sidebar, navigation, profile, theme | M | 03 | IN PROGRESS (senior-c, 2026-11-19) |
 | [08](08-asset-library.md) | Asset library with origin, rights and reuse | M | 06, 07 | TODO |
 | [09](09-ai-provider-layer.md) | AI provider layer with API keys, text generation and cost | L | 04, 05 | TODO |
 | [10](10-image-and-voice-generation.md) | Image and voice generation | M | 08, 09 | TODO |
@@ -50,8 +50,8 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 
 | Epic | Title | Size | Depends on | Status |
 | --- | --- | --- | --- | --- |
-| [26](26-browser-preview-on-the-rust-renderer.md) | The browser preview on the Rust renderer | L | 03 | TODO |
-| [27](27-image-document-core.md) | Image documents: core, catalogue, templates and export | L | 03 | TODO |
+| [26](26-browser-preview-on-the-rust-renderer.md) | The browser preview on the Rust renderer | L | 03 | IN PROGRESS (senior-d, 2026-11-19) |
+| [27](27-image-document-core.md) | Image documents: core, catalogue, templates and export | L | 03 | IN PROGRESS (senior-e, 2026-11-19) |
 | [28](28-image-editor-ui.md) | Image editor in the UI | L | 07, 27 | TODO |
 | [29](29-image-adjustments-filters-and-masks.md) | Image adjustments, filters, masks and blend modes | L | 27 | TODO |
 | [30](30-image-operations-with-a-model.md) | Image operations with a model | S | 10, 28 | TODO |
