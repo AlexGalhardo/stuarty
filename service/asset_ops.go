@@ -156,7 +156,7 @@ func (s *svc) AssetUses(ctx context.Context, req AssetUsesRequest) (*AssetUsesRe
 		res.Uses = []AssetUse{}
 	}
 
-	res.Text = assetDetailText(&LibraryAsset{Hash: hash, Uses: res.Uses})
+	res.Text = assetUsesText(hash, res.Uses)
 
 	if end < len(all) {
 		cur := offsetCursor("asset-uses", "", end)
