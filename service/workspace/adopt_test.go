@@ -524,6 +524,39 @@ func TestAdoptFormerWorkspaceRefusesADamagedCopy(t *testing.T) {
 	assertSameFiles(t, treeOf(t, former), "backups")
 }
 
+// TestAdoptFormerWorkspaceReportsAMarkerFailureAsAdopted: when the verified copy is in place but the note in
+// the former folder cannot be written, the copy is the workspace now, so AdoptFormer returns the adoption
+// with the error and never claims that nothing was moved.
+func TestAdoptFormerWorkspaceReportsAMarkerFailureAsAdopted(t *testing.T) {
+	home := t.TempDir()
+	former := makeFormer(t, home)
+	current := filepath.Join(home, defaultDir)
+
+	crossing := func(string, string) error { return &os.LinkError{Op: "rename", Err: errCrossDevice} }
+	// A folder where the note goes makes writing the note fail; the same folder in the copy keeps the copy
+	// identical to the original, so the verification passes.
+	block := func(staging string) error {
+		for _, root := range []string{former, staging} {
+			if err := os.Mkdir(filepath.Join(root, MovedMarker), 0o700); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	}
+
+	a, err := AdoptFormer(AdoptOptions{Former: former, Current: current, Rename: crossing, afterCopy: block})
+	if a == nil || err == nil || a.Method != AdoptedByCopy || string(a.Dir) != current {
+		t.Fatalf("AdoptFormer = %+v, %v, want the adoption by copy together with the error", a, err)
+	}
+
+	if got := treeOf(t, current); got["db.sqlite"] != formerFiles["db.sqlite"] {
+		t.Errorf("the adopted copy is not in place: %v", got)
+	}
+
+	assertSameFiles(t, treeOf(t, former))
+}
+
 // A failure of the adoption other than "in use" reaches every surface as E_INVALID_STATE with its reason, not
 // as E_INTERNAL, and the text says what is true: the former workspace was not moved or deleted.
 func TestAdoptionFailureAnswersWithItsReason(t *testing.T) {

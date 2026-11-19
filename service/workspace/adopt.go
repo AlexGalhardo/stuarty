@@ -162,28 +162,28 @@ func AdoptFormer(opts AdoptOptions) (*Adoption, error) {
 		return nil, err
 	}
 
-	method := AdoptedByRename
+	a := &Adoption{Method: AdoptedByRename, Former: opts.Former, Dir: Dir(opts.Current)}
+	if backup != "" {
+		rel, _ := filepath.Rel(opts.Former, backup)
+		a.Backup = filepath.Join(opts.Current, rel)
+	}
 
 	if err := opts.Rename(opts.Former, opts.Current); err != nil {
 		if !isCrossDevice(err) {
 			return nil, fmt.Errorf("workspace: adopt %s: %w", opts.Former, err)
 		}
 
-		method = AdoptedByCopy
+		a.Method = AdoptedByCopy
 
 		if err := copyAndVerify(opts.Former, opts.Current, opts.afterCopy); err != nil {
 			return nil, err
 		}
 
+		// The verified copy is in place and is the workspace now: a failure from here on is reported
+		// together with the adoption, never as "nothing was moved".
 		if err := writeMovedMarker(opts.Former, opts.Current, now); err != nil {
-			return nil, err
+			return a, err
 		}
-	}
-
-	a := &Adoption{Method: method, Former: opts.Former, Dir: Dir(opts.Current)}
-	if backup != "" {
-		rel, _ := filepath.Rel(opts.Former, backup)
-		a.Backup = filepath.Join(opts.Current, rel)
 	}
 
 	if err := writeRecord(a, now); err != nil {
@@ -470,12 +470,14 @@ func adoptFormer(former, current string) error {
 			return err
 		}
 
-		// The rename or the copy is done and only the record failed: the workspace is adopted.
+		// The rename or the copy is done and only the note in the former folder or the record failed:
+		// the workspace is adopted.
 		if a != nil {
 			return &Error{
 				Code: CodeInvalidState,
 				Message: fmt.Sprintf(
-					"the workspace of Vukem Video was adopted into %s but its record could not be written: %s",
+					"the workspace of Vukem Video was adopted into %s but its note or its record "+
+						"could not be written: %s",
 					a.Dir, strings.TrimPrefix(err.Error(), "workspace: "),
 				),
 				Err: err,
