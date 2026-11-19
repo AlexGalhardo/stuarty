@@ -170,6 +170,23 @@
       ]
     },
     {
+      "tag": "Agent chat",
+      "pages": [
+        "agents.profiles.list",
+        "agents.profiles.set",
+        "agents.profiles.remove",
+        "chat.sessions.get",
+        "chat.sessions.delete",
+        "chat.sessions.cancel",
+        "chat.sessions.events",
+        "chat.sessions.send",
+        "chat.sessions.answer",
+        "chat.sessions.transcript",
+        "chat.sessions.list",
+        "chat.sessions.start"
+      ]
+    },
+    {
       "tag": "System",
       "pages": [
         "handshake.get",

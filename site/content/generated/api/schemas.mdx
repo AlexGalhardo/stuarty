@@ -7,6 +7,27 @@ description: "The objects the HTTP API takes and returns, from its OpenAPI docum
 
 The types named in the tables of the operations. The arguments of each editing command are on the pages of the [edit tool](/docs/mcp/tools/edit), where the `args` of an operation of a batch are described.
 
+### AgentProfileListResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `available` | `boolean` | no |  |
+| `can_write` | `boolean` | no |  |
+| `profiles` | array of [`Profile`](/docs/api/schemas#profile) | no |  |
+| `suggestions` | array of [`AgentSuggestion`](/docs/api/schemas#agentsuggestion) | no |  |
+
+### AgentSuggestion
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `args` | array of `string` | no |  |
+| `executables` | array of `string` | no |  |
+| `found` | `boolean` | no |  |
+| `found_path` | `string` | no |  |
+| `install` | `string` | no |  |
+| `name` | `string` | no |  |
+| `title` | `string` | no |  |
+
 ### ApprovalListResult
 
 | Name | Type | Required | Description |
@@ -256,6 +277,37 @@ The types named in the tables of the operations. The arguments of each editing c
 | `kind` | `string` | no |  |
 | `object` | map of `any` | no |  |
 
+### ChatSession
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `created_at` | `string (date-time)` | no |  |
+| `end_reason` | `string` | no |  |
+| `ended_at` | `string (date-time)` or `null` | no |  |
+| `event_count` | `integer` | no |  |
+| `id` | `string` | no |  |
+| `live` | `boolean` | no |  |
+| `profile` | `string` | no |  |
+| `project_id` | `string` | no |  |
+| `state` | `string` | no |  |
+| `title` | `string` | no |  |
+| `updated_at` | `string (date-time)` | no |  |
+
+### ChatSessionListResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `sessions` | array of [`ChatSession`](/docs/api/schemas#chatsession) | no |  |
+
+### ChatTranscriptResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `events` | array of [`Event`](/docs/api/schemas#event) | no |  |
+| `markdown` | `string` | no |  |
+| `next_after` | `integer (int64)` or `null` | no |  |
+| `session` | [`ChatSession`](/docs/api/schemas#chatsession) | no |  |
+
 ### ChromaKey
 
 | Name | Type | Required | Description |
@@ -477,6 +529,19 @@ The types named in the tables of the operations. The arguments of each editing c
 | `op_index` | `integer` or `null` | no |  |
 | `path` | `string` | no |  |
 | `retryable` | `boolean` | no |  |
+
+### Event
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `append` | `boolean` | no |  |
+| `at` | `string (date-time)` | no |  |
+| `kind` | `string` | no |  |
+| `permission` | [`Permission`](/docs/api/schemas#permission) or `any` or `null` or `null` | no |  |
+| `seq` | `integer (int64)` | no |  |
+| `state` | [`StateInfo`](/docs/api/schemas#stateinfo) or `any` or `null` or `null` | no |  |
+| `text` | `string` | no |  |
+| `tool` | [`Tool`](/docs/api/schemas#tool) or `any` or `null` or `null` | no |  |
 
 ### export.Finding
 
@@ -1365,6 +1430,14 @@ The types named in the tables of the operations. The arguments of each editing c
 | `args` | map of `any` | no | The arguments of the command. |
 | `op` | `string`, one of 76 values | yes | A command name, as listed by GET /commands.. min length 1 |
 
+### Option
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `kind` | `string` | no |  |
+| `name` | `string` | no |  |
+| `option_id` | `string` | no |  |
+
 ### Origin
 
 | Name | Type | Required | Description |
@@ -1414,6 +1487,17 @@ The types named in the tables of the operations. The arguments of each editing c
 | --- | --- | --- | --- |
 | `color` | `string` | no |  |
 | `width` | `number (double)` | no |  |
+
+### Permission
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `answer` | `string` | no |  |
+| `options` | array of [`Option`](/docs/api/schemas#option) | no |  |
+| `request_id` | `string` | no |  |
+| `title` | `string` | no |  |
+| `tool_call_id` | `string` | no |  |
+| `tool_kind` | `string` | no |  |
 
 ### Poster
 
@@ -1483,6 +1567,17 @@ The types named in the tables of the operations. The arguments of each editing c
 | `pending_approvals` | `integer` | no |  |
 | `published` | `integer` | no |  |
 | `timelines` | `integer` | no |  |
+
+### Profile
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `args` | array of `string` | no |  |
+| `command` | `string` | no |  |
+| `created_at` | `string (date-time)` | no |  |
+| `created_by` | `string` | no |  |
+| `name` | `string` | no |  |
+| `updated_at` | `string (date-time)` | no |  |
 
 ### ProjectCounts
 
@@ -1924,6 +2019,13 @@ The types named in the tables of the operations. The arguments of each editing c
 | `item_frames` | `integer` | no |  |
 | `points` | array of [`SpeedPoint`](/docs/api/schemas#speedpoint) | no |  |
 
+### StateInfo
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `end_reason` | `string` | no |  |
+| `state` | `string` | no |  |
+
 ### Strip
 
 | Name | Type | Required | Description |
@@ -2006,6 +2108,16 @@ The types named in the tables of the operations. The arguments of each editing c
 | --- | --- | --- | --- |
 | `frame` | `integer (int64)` | no |  |
 | `seconds` | `number (double)` | no |  |
+
+### Tool
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `output` | `string` | no |  |
+| `status` | `string` | no |  |
+| `title` | `string` | no |  |
+| `tool_call_id` | `string` | no |  |
+| `tool_kind` | `string` | no |  |
 
 ### ToolFile
 

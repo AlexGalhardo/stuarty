@@ -1697,6 +1697,76 @@ Example:
 stuarty asset:tag sha256:3b4c0a1d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b --add logo,brand
 ```
 
+## `agent:profiles`
+
+List the agents the chat may host, with their full command, and the known agents found on this machine
+
+```text
+stuarty agent:profiles
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty agent:profiles --json
+```
+
+## `chat:sessions`
+
+List the chat sessions of a project, newest first
+
+```text
+stuarty chat:sessions --project <id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`.
+
+Example:
+
+```bash
+stuarty chat:sessions --project prj_7k2m9x4q1b
+```
+
+## `chat:session`
+
+Show one chat session: its agent, its state and how many events it holds
+
+```text
+stuarty chat:session <id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty chat:session cht_7k2m9x4q1b
+```
+
+## `chat:transcript`
+
+Read the transcript of a chat session as events, or the whole of it as Markdown
+
+```text
+stuarty chat:transcript <id> [--format json|markdown] [--after n] [--limit n]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--format` | string |  | json (the default: events after a number) or markdown |
+| `--after` | integer | `0` | only the events with a number above this one |
+| `--limit` | integer | `0` | the most events in the page, at most 500 (0 is 500) |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty chat:transcript cht_7k2m9x4q1b --format markdown
+```
+
 ## `memory:list`
 
 List the memory notes
