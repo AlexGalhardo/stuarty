@@ -1229,6 +1229,7 @@ CREATE TABLE publication_targets (
   scheduled_ms    INTEGER,                        -- the instant, UTC
   zone            TEXT    NOT NULL DEFAULT '',    -- IANA zone the person chose
   late_minutes    INTEGER NOT NULL DEFAULT 0 CHECK (late_minutes BETWEEN 0 AND 1440),
+  send_now        INTEGER NOT NULL DEFAULT 0 CHECK (send_now IN (0,1)),   -- asked to send as soon as approved
   approval_id     TEXT,
   snapshot        TEXT,                           -- JSON: the post as the person was shown it, with the digest of each file
   payload_sha256  TEXT,                           -- SHA-256 of snapshot

@@ -39,7 +39,7 @@ A creator plans the week in one calendar: which piece goes to which network and 
 
 - [x] 1. Write the publication part of SDD-020, amend SDD-005 and SDD-000. Verify: `task lint:md` exits 0.
 - [x] 2. Implement the states, `Due`, the missed-time rule and the time-zone rules with table tests. Verify: `go test ./core/publish/...` passes.
-- [ ] 3. Add the tables and the service operations. Verify: `go test ./service/publish/... -run TestPublication` passes.
+- [x] 3. Add the tables and the service operations. Verify: `go test ./service/publish/... -run TestPublication` passes.
 - [ ] 4. Implement the scheduler with leases and an injectable clock. Verify: `go test -race ./service/publish/... -run TestScheduler` passes (two schedulers, one publish; restart mid-publish; missed time).
 - [ ] 5. Wire approval and the cost of a target. Verify: `go test ./service/publish/... -run "TestApproval|TestCost"` passes.
 - [ ] 6. Expose on HTTP, CLI and MCP with parity. Verify: `go test ./web/contract/...` passes.
