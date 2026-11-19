@@ -20,7 +20,7 @@ const letter = (term: string): string => term.charAt(0).toUpperCase();
 
 function entryBlock(t: Located, byId: Map<string, Located>, registry: ReturnType<typeof sourceRegistry>): string {
 	const out = [`### ${escProse(t.term)}`, "", escProse(t.meaning), "", `**Example.** ${escProse(t.example)}`];
-	if (t.vukem) out.push("", `**In Vukem Video.** ${escProse(t.vukem)}`);
+	if (t.vukem) out.push("", `**In Stuarty.** ${escProse(t.vukem)}`);
 
 	const bits: string[] = [];
 	if (t.aka?.length) bits.push(`**Also called:** ${t.aka.map(escProse).join(", ")}.`);

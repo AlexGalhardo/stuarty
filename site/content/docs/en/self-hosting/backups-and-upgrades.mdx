@@ -11,7 +11,7 @@ description: "What to copy to back up a workspace, how an upgrade migrates it, a
 
 ## The idea
 
-Everything is in one directory, the [workspace](/docs/workspace) (`/data` in the container, `~/.vukem-video` otherwise). A complete backup is that directory. The parts that matter:
+Everything is in one directory, the [workspace](/docs/workspace) (`/data` in the container, `~/.stuarty` otherwise). A complete backup is that directory. The parts that matter:
 
 | Path | Keep? |
 | --- | --- |
@@ -27,23 +27,32 @@ On a graceful shutdown the server checkpoints the database, so `db.sqlite` is se
 ## Quick start
 
 ```bash
-docker stop vukem-video
-docker run --rm -v vukem-video:/data -v "$PWD":/backup debian:13.7-slim \
-  tar -czf /backup/vukem-video-data.tar.gz -C /data .
-docker start vukem-video
+docker stop stuarty
+docker run --rm -v stuarty:/data -v "$PWD":/backup debian:13.7-slim \
+  tar -czf /backup/stuarty-data.tar.gz -C /data .
+docker start stuarty
 ```
 
 To upgrade, pull the new tag and recreate the container with the same volume and the same `APP_KEY`:
 
 ```bash
-docker pull ghcr.io/alexgalhardo/vukem-video:X.Y.Z
-docker stop vukem-video && docker rm vukem-video
+docker pull ghcr.io/alexgalhardo/stuarty:X.Y.Z
+docker stop stuarty && docker rm stuarty
 # run the same docker run command as before, with the new tag
 ```
 
 On start the server checks the database. If migrations are pending and the workspace is not new, it first writes `backups/db-<UTC timestamp>-before-<migration>.sqlite` and keeps the five newest, then migrates. A project document written by an older version is migrated when it is opened, and the original is kept in the database. Read the [changelog](/changelog) before a minor upgrade: before `1.0.0` a minor release may change a public interface.
 
 To roll back, stop the server, restore the backup (or the `backups/db-*-before-*.sqlite` file as `db.sqlite`) and start the older tag. A workspace migrated by a newer version may not open in an older one, which is why you take the backup first. The older version then refuses to start, changes no file and says `this workspace was written by a newer version`, followed by what it found; the fix is to install a version at least as new, or to restore the backup.
+
+### Coming from Vukem Video
+
+Stuarty is the product that was called Vukem Video up to `v0.29.0`; the version numbers continue. Nothing has to be done to keep your projects.
+
+- **The workspace folder.** At its first start Stuarty looks for `~/.stuarty`. When that folder does not exist and `~/.vukem-video` does, it copies the database to `backups/adopt-<UTC timestamp>/`, renames the folder to `~/.stuarty` (or, when the two are on different volumes, copies it, checks every file and leaves a `MOVED-TO-STUARTY.txt` note in the old folder), writes `adopted.json` in the new one and prints one line that says so. The old folder is never deleted. A server or desktop application of Vukem Video that is still running stops the adoption: close it first. When both folders exist, `~/.stuarty` is used and one line names the old one.
+- **The variables.** `VUKEM_VIDEO_HOME` and every other `VUKEM_VIDEO_*` variable is still read, until `1.0.0`, when the matching `STUARTY_*` variable is not set. Each use prints one warning; set the new name to silence it. The table of pairs is in the [configuration reference](/docs/reference/configuration).
+- **The command.** `vukem-video` is now `stuarty`. A package of Vukem Video is replaced by the `stuarty` package.
+- **The container.** The image is `ghcr.io/alexgalhardo/stuarty` (and `alexgalhardo/stuarty` on Docker Hub). A Docker volume keeps the name you gave it: keep `-v vukem-video:/data` to keep your data, or copy the volume once if you prefer the new name.
 
 ### What is tested
 

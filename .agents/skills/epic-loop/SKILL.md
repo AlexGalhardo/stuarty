@@ -12,7 +12,7 @@ For the senior that received an epic. The rule is `rules/plans.md` section 3; th
 1. Work only in the worktree and on the branch the briefing names. Check both: `git rev-parse --show-toplevel` and `git branch --show-current`.
 2. Read the whole epic, `AGENTS.md`, and every document the epic links (ADRs, PRD requirements, SDDs). The briefing carries what the epic may not cite: the decisions of the author and the product issues (`VV`) the epic closes.
 3. **Check that the epic is still true.** Open the files, functions and commands it names. If one no longer matches the code, stop and report: the orchestrator refreshes the epic first. Do not adapt the plan silently.
-4. Prepare the worktree once: `bun install --frozen-lockfile` in `web/` when the epic touches `web/`; `bash scripts/build-renderer.sh check` when it touches `renderer/`. Set the test FFmpeg folder the briefing gives (`VUKEM_VIDEO_TEST_FFMPEG_DIR` until the rename epic, `STUARTY_TEST_FFMPEG_DIR` after it), or the export tests skip.
+4. Prepare the worktree once: `bun install --frozen-lockfile` in `web/` when the epic touches `web/`; `bash scripts/build-renderer.sh check` when it touches `renderer/`. Set the test FFmpeg folder the briefing gives (`STUARTY_TEST_FFMPEG_DIR`), or the export tests skip.
 5. Record the starting point: `git rev-parse HEAD`. The hand-off lists the commits after it.
 
 ## 2. One task

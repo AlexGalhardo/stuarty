@@ -49,7 +49,7 @@ export type OpenApi = {
 	components: { schemas: Record<string, Schema>; responses: Record<string, Response> };
 };
 
-/** The address of a server started with its defaults (`vukem-video serve`, VUKEM_VIDEO_ADDR unset). */
+/** The address of a server started with its defaults (`stuarty serve`, STUARTY_ADDR unset). */
 export const BASE_URL = "http://127.0.0.1:7878";
 
 const METHOD_ORDER = ["get", "post", "put", "patch", "delete"];
@@ -283,7 +283,7 @@ function problemExample(status: string, schemas: Record<string, Schema>): unknow
 					status: 401,
 					code: "E_UNAUTHORIZED",
 					message: "the request carries no credentials.",
-					hint: "send the local token as Authorization: Bearer <token>, or run `vukem-video open` to open the editor in a browser",
+					hint: "send the local token as Authorization: Bearer <token>, or run `stuarty open` to open the editor in a browser",
 					retryable: false,
 				}
 			: status === "422"

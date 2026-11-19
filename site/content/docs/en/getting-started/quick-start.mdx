@@ -1,10 +1,10 @@
 ---
 title: "Getting started"
-description: "How to install and run Vukem Video, and what you can do today while it is in the BETA phase."
+description: "How to install and run Stuarty, and what you can do today while it is in the BETA phase."
 ---
 
 <Callout type="warning" title="BETA">
-Vukem Video is in its BETA phase. You can import media, edit, caption and export from the editor, the CLI or an agent, and each release adds more. Read the [changelog](/changelog) for what the version you installed can do.
+Stuarty is in its BETA phase. You can import media, edit, caption and export from the editor, the CLI or an agent, and each release adds more. Read the [changelog](/changelog) for what the version you installed can do.
 </Callout>
 
 ## What you can do today
@@ -12,31 +12,31 @@ Vukem Video is in its BETA phase. You can import media, edit, caption and export
 - Import media, cut and arrange it on a timeline, add text and captions, and export a verified MP4.
 - Save a project as a template and start new projects from it.
 - Let an agent do the same through the MCP server or the CLI.
-- Read the planning documents in the [repository](https://github.com/AlexGalhardo/vukem-video/tree/main/docs): requirements, architecture decisions and specifications.
+- Read the planning documents in the [repository](https://github.com/AlexGalhardo/stuarty/tree/main/docs): requirements, architecture decisions and specifications.
 
 ## Install
 
-The product runs only on your machine. Each [release](https://github.com/AlexGalhardo/vukem-video/releases) attaches:
+The product runs only on your machine. Each [release](https://github.com/AlexGalhardo/stuarty/releases) attaches:
 
-- installers of the local server, which install `vukem-video` and a shortcut that starts the server and opens the editor in your browser; uninstalling removes the program and keeps your workspace:
-  - Windows 11: `vukem-video-<version>.exe`, with the dots of the version written as dashes (`vukem-video-0-28-0.exe`)
-  - Debian and Ubuntu: `vukem-video_<version>_linux_<arch>.deb`
-  - any Linux: `vukem-video-<version>.AppImage` (`vukem-video-0-28-0.AppImage`)
-  - macOS: `vukem-video_<version>_darwin_<arch>.pkg`
+- installers of the local server, which install `stuarty` and a shortcut that starts the server and opens the editor in your browser; uninstalling removes the program and keeps your workspace:
+  - Windows 11: `stuarty-<version>.exe`, with the dots of the version written as dashes (`stuarty-0-28-0.exe`)
+  - Debian and Ubuntu: `stuarty_<version>_linux_<arch>.deb`
+  - any Linux: `stuarty-<version>.AppImage` (`stuarty-0-28-0.AppImage`)
+  - macOS: `stuarty_<version>_darwin_<arch>.pkg`
 - archives for six targets and `checksums.txt`, signed with cosign.
 
-The container image of the web version is started with a command of this shape, which publishes the port on your computer only (`latest` is for trying it out; pin `X.Y.Z` for a server you keep). Put a clip in `~/clips` first (an MP4 with sound is fine): the second `-v` and `VUKEM_VIDEO_IMPORT_ROOTS` let the server import from that folder, and the name lets you run the CLI inside the container below:
+The container image of the web version is started with a command of this shape, which publishes the port on your computer only (`latest` is for trying it out; pin `X.Y.Z` for a server you keep). Put a clip in `~/clips` first (an MP4 with sound is fine): the second `-v` and `STUARTY_IMPORT_ROOTS` let the server import from that folder, and the name lets you run the CLI inside the container below:
 
 ```bash
-docker run -d --name vukem-video -p 127.0.0.1:7878:7878 -v vukem-video:/data \
-  -v "$HOME/clips:/media:ro" -e VUKEM_VIDEO_IMPORT_ROOTS=/media \
+docker run -d --name stuarty -p 127.0.0.1:7878:7878 -v stuarty:/data \
+  -v "$HOME/clips:/media:ro" -e STUARTY_IMPORT_ROOTS=/media \
   -e APP_KEY="$(openssl rand -base64 32)" \
-  -e VUKEM_VIDEO_ADMIN_EMAIL=admin@example.com \
-  -e VUKEM_VIDEO_ADMIN_PASSWORD="choose-a-long-password" \
-  ghcr.io/alexgalhardo/vukem-video:latest
+  -e STUARTY_ADMIN_EMAIL=admin@example.com \
+  -e STUARTY_ADMIN_PASSWORD="choose-a-long-password" \
+  ghcr.io/alexgalhardo/stuarty:latest
 ```
 
-The server listens on `127.0.0.1:7878` and is reachable from your computer only. Open that address in a browser and sign in with the email and password above (a container runs in network mode, so sign-in is required). Your projects and media stay in the `vukem-video` volume, so a new container with the same volume finds them again. The [installation page](/docs/installation) has the details of the image and its tags.
+The server listens on `127.0.0.1:7878` and is reachable from your computer only. Open that address in a browser and sign in with the email and password above (a container runs in network mode, so sign-in is required). Your projects and media stay in the `stuarty` volume, so a new container with the same volume finds them again. The [installation page](/docs/installation) has the details of the image and its tags.
 
 ### Your first export from the container
 
@@ -49,8 +49,8 @@ curl -fsS -c jar.txt -H "Content-Type: application/json" -H "Origin: $APP" \
 curl -fsS -b jar.txt -H "Content-Type: application/json" -H "Origin: $APP" \
   -d '{"name": "first-export", "scopes": ["read", "edit", "media", "render"]}' "$APP/api/v1/keys"
 
-export VUKEM_VIDEO_KEY="vvk_<the secret from the last command>"
-vv() { docker exec -i -e VUKEM_VIDEO_KEY vukem-video vukem-video "$@"; }
+export STUARTY_KEY="vvk_<the secret from the last command>"
+vv() { docker exec -i -e STUARTY_KEY stuarty stuarty "$@"; }
 vv project:create --name "First export" --json                   # prints project_id
 vv media:import /media/clip.mp4 --project <project id> --json    # prints asset_id
 vv edit --project <project id> --ops - <<'EOF'
@@ -60,7 +60,7 @@ EOF
 vv export --project <project id>
 ```
 
-The last command waits and prints `succeeded`; the MP4 is in `/data/exports/<project id>/<job id>.mp4` and `vv job:show <job id>` lists the checks it passed (copy it out with `docker cp`). [Run the Docker image](/docs/self-hosting/docker) has the details, and `scripts/first-export-timing.sh` in the repository runs these steps and times them. Stop the container with `docker rm -f vukem-video`; the volume keeps your projects.
+The last command waits and prints `succeeded`; the MP4 is in `/data/exports/<project id>/<job id>.mp4` and `vv job:show <job id>` lists the checks it passed (copy it out with `docker cp`). [Run the Docker image](/docs/self-hosting/docker) has the details, and `scripts/first-export-timing.sh` in the repository runs these steps and times them. Stop the container with `docker rm -f stuarty`; the volume keeps your projects.
 
 ### Windows SmartScreen and macOS Gatekeeper
 
@@ -69,20 +69,20 @@ The installers are not signed with a paid code-signing certificate, so both syst
 - **Windows.** SmartScreen shows "Windows protected your PC" for the `.exe`. Choose "More info", then "Run anyway".
 - **macOS.** Gatekeeper says the package cannot be opened because Apple cannot check it. Control-click the `.pkg` and choose Open, or allow it in System Settings, Privacy & Security.
 
-To check a download before you run it, verify `checksums.txt` with cosign and compare the SHA-256 of the file, as described in the [security policy](https://github.com/AlexGalhardo/vukem-video/blob/main/.github/SECURITY.md).
+To check a download before you run it, verify `checksums.txt` with cosign and compare the SHA-256 of the file, as described in the [security policy](https://github.com/AlexGalhardo/stuarty/blob/main/.github/SECURITY.md).
 
 ## For a person
 
-1. Start the server (`vukem-video serve`).
-2. Run `vukem-video open`. It finds the running server of the workspace, wherever it listens, and opens the editor signed in with a one-time code. The plain address answers 401 until a browser has signed in this way (in network mode, open it and sign in with your account).
+1. Start the server (`stuarty serve`).
+2. Run `stuarty open`. It finds the running server of the workspace, wherever it listens, and opens the editor signed in with a one-time code. The plain address answers 401 until a browser has signed in this way (in network mode, open it and sign in with your account).
 
 ## For an agent
 
 Pick one of three routes to the same project:
 
-1. The stdio MCP server: the command is `vukem-video mcp`.
-2. The CLI with `--json`, for example `vukem-video project:create --name "Launch teaser" --json`.
-3. The HTTP API of `vukem-video serve`, with Streamable HTTP MCP at `POST /mcp`.
+1. The stdio MCP server: the command is `stuarty mcp`.
+2. The CLI with `--json`, for example `stuarty project:create --name "Launch teaser" --json`.
+3. The HTTP API of `stuarty serve`, with Streamable HTTP MCP at `POST /mcp`.
 
 These routes share one set of operations, so an agent and a person see the same result. The [agents overview](/docs/agents/overview) shows how to connect one.
 
