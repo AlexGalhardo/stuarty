@@ -2,8 +2,11 @@ package connections
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/hex"
 	"errors"
 	"fmt"
+	"html"
 	"io"
 	"maps"
 	"net/http"
@@ -418,4 +421,72 @@ func hasField(v any, name string) bool {
 	_, ok := reflect.TypeOf(v).FieldByName(name)
 
 	return ok
+}
+
+// leaks says whether message holds any run of n bytes of any form of the secret.
+func leaks(message, secret string, n int) (string, bool) {
+	forms := []string{
+		secret, html.EscapeString(secret), url.QueryEscape(secret), url.PathEscape(secret),
+		strings.NewReplacer("<", `<`, ">", `>`, "&", `&`).Replace(secret),
+		base64.StdEncoding.EncodeToString([]byte(secret)), hex.EncodeToString([]byte(secret)),
+	}
+
+	for _, f := range forms {
+		for i := 0; i+n <= len(f); i++ {
+			if strings.Contains(message, f[i:i+n]) {
+				return f[i : i+n], true
+			}
+		}
+	}
+
+	return "", false
+}
+
+func TestTestMessageHoldsNoPartOfAnEchoedSecret(t *testing.T) {
+	const secret = "zq<Kp9&Xw7#Lm2>Yv5"
+
+	escape := strings.NewReplacer("<", `<`, ">", `>`, "&", `&`)
+	bodies := map[string]string{
+		"plain":            "hello " + secret + " bye",
+		"split by budget":  strings.Repeat("a", testMessageBudget-len(secret)/2) + secret + " tail",
+		"json escaped":     `{"echo":"` + escape.Replace(secret) + `"}`,
+		"html escaped":     "echo " + html.EscapeString(secret),
+		"url escaped":      "echo " + url.QueryEscape(secret),
+		"prefix only":      "echo " + secret[:9] + " cut",
+		"base64":           "echo " + base64.StdEncoding.EncodeToString([]byte(secret)),
+		"hex":              "echo " + hex.EncodeToString([]byte(secret)),
+		"split in the end": strings.Repeat("b", testMessageBudget-5) + secret,
+	}
+
+	for name, body := range bodies {
+		t.Run(name, func(t *testing.T) {
+			srv := newServer(t, http.StatusUnauthorized, body)
+			m, st, v := newManager(t)
+			connect(t, m, st, v, srv, secret)
+
+			res, err := m.Test(context.Background(), "con_a")
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if res.Status != http.StatusUnauthorized {
+				t.Errorf("the status was lost: %+v", res)
+			}
+
+			if part, bad := leaks(res.Message, secret, 6); bad {
+				t.Errorf("the answer holds %q of the secret: %.300q", part, res.Message)
+			}
+		})
+	}
+}
+
+func TestTestMessageKeepsABodyThatDoesNotEchoTheSecret(t *testing.T) {
+	srv := newServer(t, http.StatusOK, "all good")
+	m, st, v := newManager(t)
+	connect(t, m, st, v, srv, "zq<Kp9&Xw7#Lm2>Yv5")
+
+	res, _ := m.Test(context.Background(), "con_a")
+	if !strings.Contains(res.Message, "all good") {
+		t.Errorf("the body was dropped: %q", res.Message)
+	}
 }
