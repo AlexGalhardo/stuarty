@@ -1,0 +1,7 @@
+{
+  "args": {
+    "layer_id": "lyr_zzzzzzzzzz",
+    "mode": "cover"
+  },
+  "op": "layer.fit"
+}

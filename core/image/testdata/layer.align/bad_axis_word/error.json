@@ -1,0 +1,15 @@
+{
+  "code": "E_VALIDATION",
+  "details": {
+    "allowed": [
+      "left",
+      "center",
+      "right"
+    ]
+  },
+  "hint": "Use one of: left, center, right.",
+  "message": "args.horizontal is \"middle\", which is not one of the accepted values.",
+  "op_index": 0,
+  "path": "args.horizontal",
+  "retryable": false
+}

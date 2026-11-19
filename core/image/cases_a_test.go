@@ -176,7 +176,7 @@ func init() {
 			lid('k'),
 		),
 		gc("layer.add_text", "two_lines", `{"text": "One\nTwo", "name": "Lines"}`, lid('k')),
-		gc("layer.add_text", "empty_text", `{"text": ""}`),
+		gc("layer.add_text", "empty_slot", `{"text": "", "slot": "title_2"}`, lid('k')),
 		gc("layer.add_text", "unknown_style_key", `{"text": "x", "style": {"glow": 3}}`),
 		gc("layer.add_text", "max_width_is_not_a_key", `{"text": "x", "style": {"max_width": 300}}`),
 		gc("layer.add_text", "unknown_font", `{"text": "x", "style": {"font_family": "Comic Nope"}}`),

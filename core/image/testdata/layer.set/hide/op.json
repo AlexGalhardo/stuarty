@@ -1,0 +1,7 @@
+{
+  "args": {
+    "layer_id": "lyr_eeeeeeeeee",
+    "visible": false
+  },
+  "op": "layer.set"
+}
