@@ -252,7 +252,7 @@ Added by epic 29 (RF-333, RF-334, RF-335, ADR-0038) for the one-frame plans of i
 
 1. Exposure `e` (hundredths of a stop): `E[v] = clamp(round(v x 2^(e / 100)))`.
 2. Levels `black`, `white`, `gamma` (hundredths): `L[v] = round(255 x (clamp((v - black) / (white - black), 0, 1))^(100 / gamma))`.
-3. Curve, the points sorted by `x` with `(0, 0)` and `(255, 255)` added when `x = 0` or `x = 255` is missing: for `v` between two points, `C[v] = y0 + (((v - x0) x (y1 - y0)) x 2 + (x1 - x0)) / (2 x (x1 - x0))` with integer division rounding half up for a rising segment and half away from zero for a falling one.
+3. Curve, the points sorted by `x` with `(0, 0)` and `(255, 255)` added when `x = 0` or `x = 255` is missing: for `v` between two points `(x0, y0)` and `(x1, y1)`, `C[v] = y0 + round_half_away((v - x0) x (y1 - y0) / x1 - x0)` with the division of integers rounded to nearest, halves away from zero; `C[v] = y` at a point.
 
 `T[v] = C[L[E[v]]]`, the steps absent when neutral. The Go function is pure and its output is the golden of the case; a curve through `(x, x)` points is the identity, and a monotonic input gives a table that is monotonic when the points rise (a property test).
 

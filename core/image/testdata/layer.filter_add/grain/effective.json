@@ -1,0 +1,11 @@
+{
+  "filter": {
+    "amount": 60,
+    "kind": "grain",
+    "seed": 7,
+    "size": 3
+  },
+  "index": 0,
+  "kind": "grain",
+  "layer_id": "lyr_bbbbbbbbbb"
+}

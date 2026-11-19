@@ -1,0 +1,7 @@
+{
+  "layer_id": "lyr_bbbbbbbbbb",
+  "mask": {
+    "kind": "layer",
+    "source": "lyr_dddddddddd"
+  }
+}

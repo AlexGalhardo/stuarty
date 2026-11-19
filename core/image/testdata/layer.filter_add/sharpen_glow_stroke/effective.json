@@ -1,0 +1,11 @@
+{
+  "filter": {
+    "amount": 100,
+    "color": "#FFAA00",
+    "kind": "glow",
+    "radius": 20
+  },
+  "index": 0,
+  "kind": "glow",
+  "layer_id": "lyr_bbbbbbbbbb"
+}

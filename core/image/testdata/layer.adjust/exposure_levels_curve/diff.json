@@ -1,0 +1,29 @@
+[
+  {
+    "changes": {
+      "adjust": [
+        null,
+        {
+          "curve": [
+            {
+              "x": 64,
+              "y": 48
+            },
+            {
+              "x": 192,
+              "y": 208
+            }
+          ],
+          "exposure": 50,
+          "levels": {
+            "black": 10,
+            "gamma": 120,
+            "white": 240
+          }
+        }
+      ]
+    },
+    "id": "lyr_bbbbbbbbbb",
+    "kind": "layer.updated"
+  }
+]

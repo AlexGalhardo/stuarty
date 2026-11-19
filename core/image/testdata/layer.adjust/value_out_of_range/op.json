@@ -1,0 +1,7 @@
+{
+  "args": {
+    "brightness": 101,
+    "layer_id": "lyr_bbbbbbbbbb"
+  },
+  "op": "layer.adjust"
+}
