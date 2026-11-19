@@ -95,6 +95,8 @@
 | `ProviderList` | none | `provider:list` | `GET /providers` | read (SDD-016) |
 | `ProviderModels` | none | `provider:models` | `GET /connections/{id}/models` | read |
 | `ProviderPriceSet` | none | `provider:price` | `PUT /providers/prices` | admin, and only from a privileged browser session (SDD-016 §7) |
+| `ProviderSignInBegin`, `ProviderSignInComplete` | none | none | `POST /providers/signin`, `POST /providers/signin/complete` (the page `/auth/callback` posts to the second) | admin, and only from a privileged browser session (SDD-016 §12) |
+| `ProviderSignInList` | none | none | `GET /providers/signins` | read |
 | `TextGenerate` | `job_start` (kind `text.generate`) | `text:generate` | `POST /text/generate` | edit |
 | `ImageGenerate` | `job_start` (kind `image.generate`) | `image:generate` | `POST /image/generate` | edit (SDD-016 §6.1) |
 | `VoiceGenerate` | `job_start` (kind `voice.generate`) | `voice:generate` | `POST /voice/generate` | edit |
