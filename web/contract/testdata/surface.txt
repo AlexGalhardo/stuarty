@@ -67,6 +67,7 @@ command memory:show
 command memory:write
 command motion:brief
 command motion:check
+command motion:replace
 command otio:export
 command otio:import
 command project:create
@@ -216,6 +217,7 @@ route POST /projects/{}/jobs
 route POST /projects/{}/media
 route POST /projects/{}/media/{}/restore
 route POST /projects/{}/media/{}/trash
+route POST /projects/{}/motion/replace
 route POST /projects/{}/otio
 route POST /projects/{}/redo
 route POST /projects/{}/restore
