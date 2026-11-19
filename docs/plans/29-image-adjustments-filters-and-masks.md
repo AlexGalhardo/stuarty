@@ -39,16 +39,16 @@ A creator makes a photo pop behind a title: brighter, more contrast, a blurred b
 
 ## Tasks
 
-- [ ] 1. Specify each new operation in SDD-013 (formula, rounding, order) and the commands in SDD-021. Verify: `task lint:md` exits 0.
-- [ ] 2. Expose the existing adjustments, filters, masks and blend modes to image layers with golden cases. Verify: `go test ./core/image/... -run "TestAdjust|TestFilter|TestMask|TestBlend"` passes.
-- [ ] 3. Implement exposure, levels and the tone curve (tables built in Go) on the CPU path. Verify: `cargo test` in `renderer/` and `go test ./engine/renderhost/...` pass with new goldens.
-- [ ] 4. Implement sharpen and outer glow on the CPU path. Verify: the same commands pass with new goldens.
-- [ ] 5. Implement the six blend modes and clipping masks on the CPU path. Verify: the same commands pass with new goldens.
-- [ ] 6. Implement the GPU path for the new operations. Verify: the parity tests of `renderer-parity` pass within tolerance.
-- [ ] 7. Register the operations that apply to video clips, with one golden case each. Verify: `go test ./core/command/...` passes with the updated registry snapshot.
-- [ ] 8. Expose on the three surfaces and regenerate documents. Verify: `go test ./web/contract/...` and `task generate:check` pass.
-- [ ] 9. Add the inspector controls when epic 28 is merged; otherwise leave the note. Verify: `web/e2e/specs/image-adjustments.spec.ts` passes, or the note is in the hand-off.
-- [ ] 10. Run the Rust gate and record the NFR-061 number. Verify: `cargo fmt --check && cargo clippy -- -D warnings && cargo test && cargo deny check` exits 0; the number is in the hand-off.
+- [x] 1. Specify each new operation in SDD-013 (formula, rounding, order) and the commands in SDD-021. Verify: `task lint:md` exits 0.
+- [x] 2. Expose the existing adjustments, filters, masks and blend modes to image layers with golden cases. Verify: `go test ./core/image/... -run "TestAdjust|TestFilter|TestMask|TestBlend"` passes.
+- [x] 3. Implement exposure, levels and the tone curve (tables built in Go) on the CPU path. Verify: `cargo test` in `renderer/` and `go test ./engine/renderhost/...` pass with new goldens.
+- [x] 4. Implement sharpen and outer glow on the CPU path. Verify: the same commands pass with new goldens.
+- [x] 5. Implement the six blend modes and clipping masks on the CPU path. Verify: the same commands pass with new goldens.
+- [x] 6. Implement the GPU path for the new operations. Verify: the parity tests of `renderer-parity` pass within tolerance.
+- [x] 7. Register the operations that apply to video clips, with one golden case each. Verify: `go test ./core/command/...` passes with the updated registry snapshot.
+- [x] 8. Expose on the three surfaces and regenerate documents. Verify: `go test ./web/contract/...` and `task generate:check` pass.
+- [x] 9. Add the inspector controls when epic 28 is merged; otherwise leave the note. Verify: `web/e2e/specs/image-adjustments.spec.ts` passes, or the note is in the hand-off.
+- [x] 10. Run the Rust gate and record the NFR-061 number. Verify: `cargo fmt --check && cargo clippy -- -D warnings && cargo test && cargo deny check` exits 0; the number is in the hand-off.
 
 ## Test strategy
 

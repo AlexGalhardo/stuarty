@@ -1,0 +1,15 @@
+[
+  {
+    "collection": "layers",
+    "id": "lyr_bbbbbbbbbb",
+    "set": {
+      "filters": [
+        {
+          "kind": "blur",
+          "radius": 8
+        }
+      ]
+    },
+    "type": "patch"
+  }
+]

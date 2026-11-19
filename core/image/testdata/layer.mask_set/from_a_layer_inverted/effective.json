@@ -1,0 +1,8 @@
+{
+  "layer_id": "lyr_bbbbbbbbbb",
+  "mask": {
+    "invert": true,
+    "kind": "layer",
+    "source": "lyr_dddddddddd"
+  }
+}

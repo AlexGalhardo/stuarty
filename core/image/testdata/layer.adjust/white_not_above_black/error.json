@@ -1,0 +1,8 @@
+{
+  "code": "E_VALIDATION",
+  "hint": "Keep each adjustment inside its range, the white point above the black point and the curve x increasing.",
+  "message": "the white point 100 is not above the black point 200",
+  "op_index": 0,
+  "path": "args.levels",
+  "retryable": false
+}

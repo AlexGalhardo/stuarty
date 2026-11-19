@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "brightness": {
+      "maximum": 100,
+      "minimum": -100,
+      "type": "integer"
+    },
+    "contrast": {
+      "maximum": 100,
+      "minimum": -100,
+      "type": "integer"
+    },
+    "curve": {
+      "description": "Up to 8 points of 0 to 255, x increasing; an empty list removes the curve.",
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "x": {
+            "type": "integer"
+          },
+          "y": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "x",
+          "y"
+        ],
+        "type": "object"
+      },
+      "maxItems": 8,
+      "type": "array"
+    },
+    "exposure": {
+      "description": "Hundredths of a stop.",
+      "maximum": 300,
+      "minimum": -300,
+      "type": "integer"
+    },
+    "hue": {
+      "description": "Degrees.",
+      "maximum": 180,
+      "minimum": -180,
+      "type": "integer"
+    },
+    "layer_id": {
+      "pattern": "^lyr_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+      "type": "string"
+    },
+    "levels": {
+      "additionalProperties": false,
+      "properties": {
+        "black": {
+          "description": "0 to 254.",
+          "maximum": 254,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "gamma": {
+          "description": "Hundredths, 10 to 1000; 100 is neutral.",
+          "maximum": 1000,
+          "minimum": 10,
+          "type": "integer"
+        },
+        "white": {
+          "description": "1 to 255, above black.",
+          "maximum": 255,
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [],
+      "type": "object"
+    },
+    "reset": {
+      "description": "Remove every adjustment; no other argument.",
+      "type": "boolean"
+    },
+    "saturation": {
+      "maximum": 100,
+      "minimum": -100,
+      "type": "integer"
+    },
+    "temperature": {
+      "maximum": 100,
+      "minimum": -100,
+      "type": "integer"
+    },
+    "tint": {
+      "maximum": 100,
+      "minimum": -100,
+      "type": "integer"
+    }
+  },
+  "required": [
+    "layer_id"
+  ],
+  "type": "object"
+}
