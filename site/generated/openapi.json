@@ -18768,6 +18768,10 @@
                     "description": "The id of a succeeded export job of a still of the project: the cover.",
                     "type": "string"
                   },
+                  "timeline_id": {
+                    "description": "The timeline the job is kept on; required when the project has several.",
+                    "type": "string"
+                  },
                   "title": {
                     "description": "The title, at most 100 characters on YouTube.",
                     "type": "string"

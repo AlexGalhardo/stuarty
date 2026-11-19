@@ -12,6 +12,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/approval"
 	"github.com/AlexGalhardo/stuarty/service/social"
+	"github.com/AlexGalhardo/stuarty/service/social/fake"
 	"github.com/AlexGalhardo/stuarty/web/app/jobs"
 
 	"github.com/AlexGalhardo/vukem/queue"
@@ -36,16 +37,30 @@ type pubEnv struct {
 func newPubEnv(t *testing.T) *pubEnv {
 	t.Helper()
 
+	return newPubEnvWith(t, nil, nil, nil)
+}
+
+// newPubEnvWith is newPubEnv over a given network, connector and registry; nil takes the fake network.
+func newPubEnvWith(t *testing.T, n *fakeNet, conn *fake.Connector, reg *social.Registry) *pubEnv {
+	t.Helper()
+
 	lazy := &lazyRunner{}
 
-	e := newSocialEnvWith(t, func(o *service.Options) {
+	withQueue := func(o *service.Options) {
 		q, err := jobs.NewQueue(queue.Sync{}, lazy)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		o.Enqueue = jobs.Dispatcher{Queue: q}
-	})
+	}
+
+	var e *socialEnv
+	if n == nil {
+		e = newSocialEnvWith(t, withQueue)
+	} else {
+		e = newSocialEnvFor(t, n, conn, reg, withQueue)
+	}
 
 	r, ok := service.RunnerOf(e.svc)
 	if !ok {
@@ -416,5 +431,53 @@ func TestPublishNow_AFileThatChangedAfterApprovalIsNotSent(t *testing.T) {
 
 	if p.net.count() != before {
 		t.Errorf("the changed file was sent: %v", p.net.seen()[before:])
+	}
+}
+
+// The export of a timeline is kept under the id of the timeline; it belongs to its project, so a post of
+// the project may name it, and the export of another project's timeline is still refused.
+func TestPublishNow_AnExportOfATimelineOfTheProjectIsAccepted(t *testing.T) {
+	p := newPubEnv(t)
+
+	added, err := p.svc.ProjectItemAdd(
+		p.as(ui),
+		service.ProjectItemAddRequest{ProjectID: p.project, Kind: "timeline", Title: "Second cut"},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	timeline := added.Item.TimelineID
+
+	if added.Item.Kind != "timeline" || timeline == p.project {
+		t.Fatalf("the second timeline is %+v", added.Item)
+	}
+
+	// The export of the first timeline, a publication kept on the second: both are the project's.
+	exp := p.seedExport(p.project, "job_0000000921", ".mp4", []byte("fake mp4 bytes"))
+
+	job, err := p.pub.PublishNow(p.as(token), service.PublishNowRequest{
+		ProjectID: p.project, TimelineID: timeline, PublishArgs: p.args(exp),
+	})
+	if err != nil || job.State != service.JobWaitingApproval {
+		t.Fatalf("the export of a timeline of the project = %+v, %v", job, err)
+	}
+
+	// And one of the second timeline, named by the project.
+	second := p.seedExport(timeline, "job_0000000923", ".mp4", []byte("fake mp4 bytes"))
+
+	if _, err := p.pub.PublishNow(p.as(token), service.PublishNowRequest{
+		ProjectID: p.project, TimelineID: timeline, PublishArgs: p.args(second),
+	}); err != nil {
+		t.Fatalf("the export of the second timeline = %v", err)
+	}
+
+	other := p.newProject("other")
+	foreign := p.seedExport(other, "job_0000000922", ".mp4", []byte("fake mp4 bytes"))
+
+	if _, err := p.pub.PublishNow(p.as(token), service.PublishNowRequest{
+		ProjectID: p.project, TimelineID: timeline, PublishArgs: p.args(foreign),
+	}); !isCode(err, "E_VALIDATION") {
+		t.Errorf("the export of another project = %v, want E_VALIDATION", err)
 	}
 }
