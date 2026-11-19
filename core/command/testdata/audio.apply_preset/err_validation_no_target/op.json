@@ -1,0 +1,6 @@
+{
+  "op": "audio.apply_preset",
+  "args": {
+    "preset": "voice"
+  }
+}

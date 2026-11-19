@@ -138,7 +138,12 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 		{ kind: "gesture", action: "library.drag" },
 		palette,
 	],
+	"audio.apply_preset": [palette],
 	"audio.duck": [{ kind: "inspector", action: "inspector.duck" }, palette],
+	"audio.processor_add": [palette],
+	"audio.processor_move": [palette],
+	"audio.processor_remove": [palette],
+	"audio.processor_set": [palette],
 	"audio.mark_beats": [
 		{ kind: "inspector", action: "inspector.mark_beats" },
 		palette,

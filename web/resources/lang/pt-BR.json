@@ -943,11 +943,26 @@
           "add": {
             "title": "Adicionar áudio"
           },
+          "apply_preset": {
+            "title": "Aplicar um preset de áudio"
+          },
           "duck": {
             "title": "Baixar a música sob a fala"
           },
           "mark_beats": {
             "title": "Marcar batidas"
+          },
+          "processor_add": {
+            "title": "Adicionar um processador de áudio"
+          },
+          "processor_move": {
+            "title": "Mover um processador de áudio"
+          },
+          "processor_remove": {
+            "title": "Remover um processador de áudio"
+          },
+          "processor_set": {
+            "title": "Alterar um processador de áudio"
           }
         },
         "caption": {
@@ -1208,7 +1223,9 @@
         "L_SLOT_UNFILLED": "Espaço do modelo não preenchido",
         "L_AUDIO_CLIP": "Áudio saturado",
         "L_LOUDNESS": "Volume fora do alvo",
-        "L_DURATION_LIMIT": "Acima do limite de duração"
+        "L_DURATION_LIMIT": "Acima do limite de duração",
+        "L_AUDIO_LIMITER_NOT_LAST": "O limitador não é o último da cadeia",
+        "L_AUDIO_NOISE_REDUCTION_REPEATED": "Mais de uma redução de ruído"
       },
       "shortcuts": {
         "title": "Atalhos de teclado",

@@ -1,0 +1,7 @@
+{
+  "op": "audio.processor_add",
+  "args": {
+    "item_id": "itm_s6t7v8w9x0",
+    "kind": "limiter"
+  }
+}

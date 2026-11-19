@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.index 2 is outside the chain, which has 1 processors.",
+  "hint": "Use 0 to 1.",
+  "retryable": false,
+  "path": "args.index"
+}

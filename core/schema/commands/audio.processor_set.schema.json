@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "enabled": {
+      "description": "true switches it on, false off.",
+      "type": "boolean"
+    },
+    "index": {
+      "description": "The processor to change, 0-based.",
+      "minimum": 0,
+      "type": "integer"
+    },
+    "item_id": {
+      "description": "A clip or audio item; give this or track_id.",
+      "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+      "type": "string"
+    },
+    "params": {
+      "additionalProperties": {
+        "type": "number"
+      },
+      "description": "Values to change; the others stay.",
+      "type": "object"
+    },
+    "track_id": {
+      "description": "A track; give this or item_id.",
+      "pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+      "type": "string"
+    }
+  },
+  "required": [
+    "index"
+  ],
+  "type": "object"
+}

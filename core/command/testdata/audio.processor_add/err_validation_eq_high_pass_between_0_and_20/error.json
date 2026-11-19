@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.params.hp_hz 10 is out of range: 0 (off) or 20 to 1000 Hz.",
+  "hint": "Send hp_hz between 0 and 1000.",
+  "retryable": false,
+  "path": "args.params.hp_hz"
+}

@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "index": {
+      "description": "The processor to move, 0-based.",
+      "minimum": 0,
+      "type": "integer"
+    },
+    "item_id": {
+      "description": "A clip or audio item; give this or track_id.",
+      "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+      "type": "string"
+    },
+    "to": {
+      "description": "Its new place, 0 to the length minus one.",
+      "minimum": 0,
+      "type": "integer"
+    },
+    "track_id": {
+      "description": "A track; give this or item_id.",
+      "pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+      "type": "string"
+    }
+  },
+  "required": [
+    "index",
+    "to"
+  ],
+  "type": "object"
+}

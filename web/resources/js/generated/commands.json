@@ -314,6 +314,53 @@
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"additionalProperties": false,
 			"properties": {
+				"item_id": {
+					"description": "A clip or audio item; give this or track_id.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+					"type": "string"
+				},
+				"preset": {
+					"description": "voice, voice_with_music, podcast or clean_noisy_room.",
+					"enum": [
+						"voice",
+						"voice_with_music",
+						"podcast",
+						"clean_noisy_room"
+					],
+					"type": "string"
+				},
+				"track_id": {
+					"description": "A track; give this or item_id.",
+					"pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+					"type": "string"
+				}
+			},
+			"required": [
+				"preset"
+			],
+			"type": "object"
+		},
+		"description": "Replaces the chain of an item or a track with a preset: voice, voice_with_music, podcast or clean_noisy_room. The chain becomes exactly the preset; change any processor afterwards with audio.processor_set. voice_with_music has no noise reduction.",
+		"domain": "video",
+		"errors": [
+			"E_VALIDATION",
+			"E_NOT_FOUND",
+			"E_TYPE_MISMATCH"
+		],
+		"example": {
+			"item_id": "itm_m1n2p3q4r5",
+			"preset": "voice"
+		},
+		"internal": false,
+		"name": "audio.apply_preset",
+		"scope": "edit",
+		"summary": "Apply preset"
+	},
+	{
+		"args_schema": {
+			"$schema": "https://json-schema.org/draft/2020-12/schema",
+			"additionalProperties": false,
+			"properties": {
 				"attack": {
 					"description": "A length, may be 0; the ramp down before speech. Default \"0.2s\".",
 					"type": "string",
@@ -500,6 +547,221 @@
 		"name": "audio.mark_beats",
 		"scope": "edit",
 		"summary": "Writes markers on a music item at the beats of its audio."
+	},
+	{
+		"args_schema": {
+			"$schema": "https://json-schema.org/draft/2020-12/schema",
+			"additionalProperties": false,
+			"properties": {
+				"enabled": {
+					"description": "false adds it switched off; default true.",
+					"type": "boolean"
+				},
+				"index": {
+					"description": "Where to insert, 0 to the length of the chain; default the end.",
+					"minimum": 0,
+					"type": "integer"
+				},
+				"item_id": {
+					"description": "A clip or audio item; give this or track_id.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+					"type": "string"
+				},
+				"kind": {
+					"description": "eq, compressor, limiter, gate, deesser or noise_reduction.",
+					"enum": [
+						"eq",
+						"compressor",
+						"limiter",
+						"gate",
+						"deesser",
+						"noise_reduction"
+					],
+					"type": "string"
+				},
+				"params": {
+					"additionalProperties": {
+						"type": "number"
+					},
+					"description": "Parameter values by name; the rest keep their default.",
+					"type": "object"
+				},
+				"track_id": {
+					"description": "A track; give this or item_id.",
+					"pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+					"type": "string"
+				}
+			},
+			"required": [
+				"kind"
+			],
+			"type": "object"
+		},
+		"description": "Adds an audio processor to the chain of a clip or audio item (item_id) or of a track (track_id). kind is eq, compressor, limiter, gate, deesser or noise_reduction; params are the values that differ from the default of the kind (units and ranges in SDD-004 7.1). The chain runs in order, so index matters; a track chain runs on the sum of the track.",
+		"domain": "video",
+		"errors": [
+			"E_VALIDATION",
+			"E_NOT_FOUND",
+			"E_TYPE_MISMATCH",
+			"E_LIMIT"
+		],
+		"example": {
+			"item_id": "itm_m1n2p3q4r5",
+			"kind": "compressor",
+			"params": {
+				"ratio": 4,
+				"threshold_db": -24
+			}
+		},
+		"internal": false,
+		"name": "audio.processor_add",
+		"scope": "edit",
+		"summary": "Add processor"
+	},
+	{
+		"args_schema": {
+			"$schema": "https://json-schema.org/draft/2020-12/schema",
+			"additionalProperties": false,
+			"properties": {
+				"index": {
+					"description": "The processor to move, 0-based.",
+					"minimum": 0,
+					"type": "integer"
+				},
+				"item_id": {
+					"description": "A clip or audio item; give this or track_id.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+					"type": "string"
+				},
+				"to": {
+					"description": "Its new place, 0 to the length minus one.",
+					"minimum": 0,
+					"type": "integer"
+				},
+				"track_id": {
+					"description": "A track; give this or item_id.",
+					"pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+					"type": "string"
+				}
+			},
+			"required": [
+				"index",
+				"to"
+			],
+			"type": "object"
+		},
+		"description": "Moves a processor to another place in the chain of an item or a track. index and to are 0-based places in the chain; the order changes the sound.",
+		"domain": "video",
+		"errors": [
+			"E_VALIDATION",
+			"E_NOT_FOUND",
+			"E_TYPE_MISMATCH"
+		],
+		"example": {
+			"index": 0,
+			"item_id": "itm_m1n2p3q4r5",
+			"to": 2
+		},
+		"internal": false,
+		"name": "audio.processor_move",
+		"scope": "edit",
+		"summary": "Move processor"
+	},
+	{
+		"args_schema": {
+			"$schema": "https://json-schema.org/draft/2020-12/schema",
+			"additionalProperties": false,
+			"properties": {
+				"index": {
+					"description": "The processor to remove, 0-based.",
+					"minimum": 0,
+					"type": "integer"
+				},
+				"item_id": {
+					"description": "A clip or audio item; give this or track_id.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+					"type": "string"
+				},
+				"track_id": {
+					"description": "A track; give this or item_id.",
+					"pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+					"type": "string"
+				}
+			},
+			"required": [
+				"index"
+			],
+			"type": "object"
+		},
+		"description": "Removes a processor from the chain of an item or a track. index is the 0-based place in the chain; later processors move one place earlier.",
+		"domain": "video",
+		"errors": [
+			"E_VALIDATION",
+			"E_NOT_FOUND",
+			"E_TYPE_MISMATCH"
+		],
+		"example": {
+			"index": 1,
+			"item_id": "itm_m1n2p3q4r5"
+		},
+		"internal": false,
+		"name": "audio.processor_remove",
+		"scope": "edit",
+		"summary": "Remove processor"
+	},
+	{
+		"args_schema": {
+			"$schema": "https://json-schema.org/draft/2020-12/schema",
+			"additionalProperties": false,
+			"properties": {
+				"enabled": {
+					"description": "true switches it on, false off.",
+					"type": "boolean"
+				},
+				"index": {
+					"description": "The processor to change, 0-based.",
+					"minimum": 0,
+					"type": "integer"
+				},
+				"item_id": {
+					"description": "A clip or audio item; give this or track_id.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+					"type": "string"
+				},
+				"params": {
+					"additionalProperties": {
+						"type": "number"
+					},
+					"description": "Values to change; the others stay.",
+					"type": "object"
+				},
+				"track_id": {
+					"description": "A track; give this or item_id.",
+					"pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+					"type": "string"
+				}
+			},
+			"required": [
+				"index"
+			],
+			"type": "object"
+		},
+		"description": "Changes one processor of the chain of an item or a track. index is the 0-based place in the chain. params are merged with the current ones; enabled false keeps the processor but skips it.",
+		"domain": "video",
+		"errors": [
+			"E_VALIDATION",
+			"E_NOT_FOUND",
+			"E_TYPE_MISMATCH"
+		],
+		"example": {
+			"enabled": false,
+			"index": 0,
+			"track_id": "trk_m1n2p3q4r5"
+		},
+		"internal": false,
+		"name": "audio.processor_set",
+		"scope": "edit",
+		"summary": "Set processor"
 	},
 	{
 		"args_schema": {

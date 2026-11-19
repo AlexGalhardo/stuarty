@@ -125,6 +125,7 @@ export interface Item {
   name?: string;
   opacity?: number;
   outline?: Outline;
+  processors?: Processor[];
   radius?: number;
   reverse?: boolean;
   rotation?: number;
@@ -280,6 +281,13 @@ export interface Outline {
   color: string;
   width: number;
 }
+export interface Processor {
+  disabled?: boolean;
+  kind: "eq" | "compressor" | "limiter" | "gate" | "deesser" | "noise_reduction";
+  params?: {
+    [k: string]: number;
+  };
+}
 export interface Shadow {
   blur: number;
   color: string;
@@ -394,6 +402,7 @@ export interface Track {
   muted?: boolean;
   name?: string;
   order: string;
+  processors?: Processor[];
   solo?: boolean;
   volume?: number;
 }

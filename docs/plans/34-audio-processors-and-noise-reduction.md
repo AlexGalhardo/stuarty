@@ -38,7 +38,7 @@ A creator who recorded in their bedroom gets a voice that sounds clean and even:
 ## Tasks
 
 - [x] 1. Read `engine/audio`; amend SDD-004 (the processors, their formulas, the order, the tolerance) and SDD-001 and SDD-002 (the chain and the commands). Verify: `task lint:md` exits 0.
-- [ ] 2. Implement the chain model and the five commands with golden cases. Verify: `go test ./core/command/... ./core/timeline/...` passes with the updated registry snapshot.
+- [x] 2. Implement the chain model and the five commands with golden cases. Verify: `go test ./core/command/... ./core/timeline/...` passes with the updated registry snapshot.
 - [ ] 3. Implement the equaliser (bands, high-pass, low-pass). Verify: `go test ./engine/audio/... -run TestEqualiser` passes (frequency response within stated bounds; golden WAV).
 - [ ] 4. Implement the compressor, the gate and the de-esser; extend the limiter. Verify: `go test ./engine/audio/... -run "TestCompressor|TestGate|TestDeEsser|TestLimiter"` passes.
 - [ ] 5. Implement spectral noise reduction with a marked or estimated profile. Verify: `go test ./engine/audio/... -run TestNoiseReduction` passes (noise floor reduced by a stated amount on the fixtures; speech band preserved within bounds).

@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "enabled": {
+      "description": "false adds it switched off; default true.",
+      "type": "boolean"
+    },
+    "index": {
+      "description": "Where to insert, 0 to the length of the chain; default the end.",
+      "minimum": 0,
+      "type": "integer"
+    },
+    "item_id": {
+      "description": "A clip or audio item; give this or track_id.",
+      "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+      "type": "string"
+    },
+    "kind": {
+      "description": "eq, compressor, limiter, gate, deesser or noise_reduction.",
+      "enum": [
+        "eq",
+        "compressor",
+        "limiter",
+        "gate",
+        "deesser",
+        "noise_reduction"
+      ],
+      "type": "string"
+    },
+    "params": {
+      "additionalProperties": {
+        "type": "number"
+      },
+      "description": "Parameter values by name; the rest keep their default.",
+      "type": "object"
+    },
+    "track_id": {
+      "description": "A track; give this or item_id.",
+      "pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+      "type": "string"
+    }
+  },
+  "required": [
+    "kind"
+  ],
+  "type": "object"
+}

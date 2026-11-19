@@ -6343,6 +6343,7 @@ Changes one processor of a chain (the shared rules of C.78).
 - `err_validation_param_out_of_range`
 - `err_validation_index_out_of_range`
 - `err_not_found_item`
+- `err_type_mismatch_text_item`
 
 ### C.80 `audio.processor_move`
 
@@ -6377,6 +6378,8 @@ Moves one processor to another place in its chain: the order is the user's and c
 - `ok_move_on_track`
 - `err_validation_to_out_of_range`
 - `err_validation_index_out_of_range`
+- `err_not_found_item`
+- `err_type_mismatch_text_item`
 
 ### C.81 `audio.processor_remove`
 
@@ -6409,6 +6412,7 @@ Removes one processor from a chain (the shared rules of C.78).
 - `ok_remove_on_track`
 - `err_validation_index_out_of_range`
 - `err_not_found_item`
+- `err_type_mismatch_text_item`
 
 ### C.82 `audio.apply_preset`
 

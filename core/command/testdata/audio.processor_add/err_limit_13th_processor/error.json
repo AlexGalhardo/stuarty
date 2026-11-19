@@ -1,0 +1,6 @@
+{
+  "code": "E_LIMIT",
+  "message": "The chain already has 12 processors; the limit is 12.",
+  "hint": "Remove one with audio.processor_remove first.",
+  "retryable": false
+}

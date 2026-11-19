@@ -75,7 +75,11 @@ describe("classify", () => {
 			for (const field of fieldsOf(command.args_schema))
 				walk(field.schema, field.name, `${command.name}.${field.name}`);
 		}
-		expect(fallbacks.sort()).toEqual(["template.set_info.colors"]);
+		expect(fallbacks.sort()).toEqual([
+			"audio.processor_add.params",
+			"audio.processor_set.params",
+			"template.set_info.colors",
+		]);
 	});
 });
 

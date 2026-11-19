@@ -1,0 +1,10 @@
+{
+  "op": "audio.processor_add",
+  "args": {
+    "track_id": "trk_m1n2p3q4r5",
+    "kind": "limiter",
+    "params": {
+      "ceiling_db": -2
+    }
+  }
+}
