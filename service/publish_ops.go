@@ -460,14 +460,17 @@ func (s *svc) approvedFile(f publishFile) (string, error) {
 // made_for_kids or ai_disclosure included, starts a new session instead of resuming one made with the
 // former metadata. The thumbnail is sent after the upload, so it is not part of the key.
 func uploadKey(in *publishInput) string {
-	post := in.Args
-	post.Thumbnail = ""
+	a := in.Args
+	kids := a.MadeForKids != nil && *a.MadeForKids
 
-	raw, _ := json.Marshal(post)
+	// UploadKey prefixes every part with its length, so the tags stay apart: ["a,b"] is not ["a", "b"].
+	parts := []string{
+		a.ConnectionID, in.Output.Rel, strconv.FormatInt(in.Output.Bytes, 10), in.Output.SHA256,
+		a.Title, a.Description, a.Visibility, strconv.FormatBool(kids), strconv.FormatBool(a.AIDisclosure),
+		strconv.Itoa(len(a.Tags)),
+	}
 
-	return social.UploadKey(
-		in.Args.ConnectionID, in.Output.Rel, strconv.FormatInt(in.Output.Bytes, 10), in.Output.SHA256, string(raw),
-	)
+	return social.UploadKey(append(parts, a.Tags...)...)
 }
 
 // PublishValidate checks a post and says what a person would be asked to approve. It sends nothing.
