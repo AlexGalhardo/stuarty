@@ -138,7 +138,7 @@ type ProjectQuery struct {
 	State          ProjectState // "" means active only
 	IncludeTrashed bool         // both states; wins over State
 	OwnerUserID    string       // network mode: only this user's projects, applied in SQL
-	ProjectID      string       // a key limited to one project: only that one
+	ProjectID      string       // a key limited to one project: the timelines of that one
 	After          string       // opaque cursor from the previous page
 	Limit          int          // 1 to 200; 0 means 50
 }

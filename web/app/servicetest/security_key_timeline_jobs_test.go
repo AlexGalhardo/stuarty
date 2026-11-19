@@ -3,6 +3,8 @@ package servicetest
 import (
 	"context"
 	"fmt"
+	"slices"
+	"strings"
 	"testing"
 
 	"github.com/AlexGalhardo/stuarty/core/command"
@@ -200,5 +202,133 @@ func TestSecurity_T06_LimitedKeyReachesItsSecondTimelineByID(t *testing.T) {
 				t.Errorf("%s of the %s = %q, want the refusal of a missing id %q", name, what, got, want)
 			}
 		}
+	}
+}
+
+// VV-250 in the asset library: a key limited to project A sees the files of every timeline of A, and a file held
+// only by a timeline of B answers as a hash that does not exist.
+func TestSecurity_T06_LimitedKeyReachesTheFilesOfItsSecondTimeline(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{})
+	a, _ := m.withTrack()
+	a2 := m.exportableSecond(a)
+	b, _ := m.withTrack()
+	b2 := m.exportableSecond(b)
+
+	imp := func(timeline, name, body string) string {
+		res, err := m.svc.MediaImport(m.as(ui), service.MediaImportRequest{
+			ProjectID: timeline, Files: []service.ImportFile{{Path: m.write(name, body)}},
+		})
+		if err != nil || res.Failed != 0 {
+			t.Fatalf("import = %+v, %v", res, err)
+		}
+
+		return res.Assets[0].Hash
+	}
+
+	mine, theirs := imp(a2, "wide.mp4", clipBytes+" a2"), imp(b2, "other.mp4", clipBytes+" b2")
+
+	key := service.WithCaller(context.Background(), service.Caller{
+		Actor: "key:limited", Scopes: service.AllScopes, ProjectID: a,
+	})
+
+	list, err := m.svc.AssetList(key, service.AssetListRequest{})
+	if err != nil || !slices.Equal(assetIDs(list), []string{mine}) {
+		t.Errorf("the key's library = %v, %v; want the file of its second timeline only", assetIDs(list), err)
+	}
+
+	if got, err := m.svc.AssetGet(key, service.AssetRef{Hash: mine}); err != nil || got.Projects != 1 {
+		t.Errorf("the file of the second timeline of A = %+v, %v", got, err)
+	}
+
+	_, hidden := m.svc.AssetGet(key, service.AssetRef{Hash: theirs})
+	_, missing := m.svc.AssetGet(key, service.AssetRef{Hash: "sha256:" + strings.Repeat("0", 64)})
+
+	h, mi := serviceError(t, hidden), serviceError(t, missing)
+	if h.Code != mi.Code || h.Hint != mi.Hint ||
+		strings.ReplaceAll(
+			h.Message,
+			theirs,
+			"",
+		) != strings.ReplaceAll(
+			mi.Message,
+			"sha256:"+strings.Repeat("0", 64),
+			"",
+		) {
+		t.Errorf("a file of B must answer as a missing one: %+v / %+v", h, mi)
+	}
+}
+
+// VV-255: a key limited to project A lists and reads the approval requests of the jobs of A's second timeline
+// (a request carries the id of its timeline), and a request of a timeline of B answers as one that does not exist.
+func TestSecurity_T06_LimitedKeyReachesTheApprovalsOfItsSecondTimeline(t *testing.T) {
+	e := newJobEnv(t, &probe{estimate: usd(500_000)})
+	second := func(project string) string {
+		added, err := e.prod().ProjectItemAdd(
+			e.as(ui),
+			service.ProjectItemAddRequest{ProjectID: project, Kind: "timeline", Title: "Wide", Preset: "16:9"},
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		return added.Item.TimelineID
+	}
+
+	a, b := e.newProject("a"), e.newProject("b")
+	a2, b2 := second(a), second(b)
+
+	key := service.WithCaller(context.Background(), service.Caller{
+		Actor: "key:limited", Scopes: service.AllScopes, ProjectID: a,
+	})
+
+	mine, err := e.svc.JobStart(key, service.JobStartRequest{ProjectID: a2, Kind: testKind})
+	if err != nil || mine.ApprovalID == "" {
+		t.Fatalf("the key's job on A2 = %+v, %v", mine, err)
+	}
+
+	theirs, err := e.svc.JobStart(e.as(ui), service.JobStartRequest{ProjectID: b2, Kind: testKind})
+	if err != nil || theirs.ApprovalID == "" {
+		t.Fatalf("a job on B2 = %+v, %v", theirs, err)
+	}
+
+	ids := func(res *service.ApprovalListResult) []string {
+		var out []string
+		for i := range res.Requests {
+			out = append(out, res.Requests[i].ID)
+		}
+
+		return out
+	}
+
+	for name, req := range map[string]service.ApprovalListRequest{
+		"no project": {}, "the project": {ProjectID: a}, "the timeline": {ProjectID: a2},
+	} {
+		list, lerr := e.svc.ApprovalList(key, req)
+		if lerr != nil || !slices.Equal(ids(list), []string{mine.ApprovalID}) {
+			t.Errorf("ApprovalList %s = %v, %v; want the request of A2 only", name, ids(list), lerr)
+		}
+	}
+
+	if got, gerr := e.svc.ApprovalGet(key, service.ApprovalRef{ID: mine.ApprovalID}); gerr != nil ||
+		got.ProjectID == nil || *got.ProjectID != a2 {
+		t.Errorf("ApprovalGet of the request of A2 = %+v, %v", got, gerr)
+	}
+
+	_, hidden := e.svc.ApprovalGet(key, service.ApprovalRef{ID: theirs.ApprovalID})
+	_, missing := e.svc.ApprovalGet(key, service.ApprovalRef{ID: "apr_0000000000"})
+
+	h, mi := serviceError(t, hidden), serviceError(t, missing)
+	if h.Code != mi.Code || h.Hint != mi.Hint ||
+		strings.ReplaceAll(h.Message, theirs.ApprovalID, "") != strings.ReplaceAll(mi.Message, "apr_0000000000", "") {
+		t.Errorf("a request of B must answer as a missing one: %+v / %+v", h, mi)
+	}
+
+	if _, lerr := e.svc.ApprovalList(
+		key,
+		service.ApprovalListRequest{ProjectID: b2},
+	); code(
+		lerr,
+	) != service.CodeForbidden {
+		t.Errorf("ApprovalList of a timeline of B = %v, want E_FORBIDDEN", lerr)
 	}
 }
