@@ -173,12 +173,31 @@ func TestSecurity_T06_LimitedKeyReachesItsSecondTimelineByID(t *testing.T) {
 			_, err := m.svc.Lint(key, service.LintRequest{ProjectID: id})
 			return err
 		},
+		"MotionBrief": func(id string) error {
+			_, err := m.svc.MotionBrief(key, service.MotionBriefRequest{ProjectID: id})
+			return err
+		},
 	}
 
 	for name, call := range calls {
 		if err := call(a2); err != nil {
 			t.Errorf("%s of the second timeline of A by its id: %v", name, err)
 		}
+	}
+
+	// The replacement of epic 33 reaches the second timeline of A too: an asset A does not hold is not found there,
+	// where B's timeline is refused.
+	replace := func(id string) error {
+		_, err := m.svc.MotionReplace(key, service.MotionReplaceRequest{ProjectID: id, AssetID: "ast_0000000000"})
+		return err
+	}
+
+	if got := code(replace(a2)); got != "E_NOT_FOUND" {
+		t.Errorf("MotionReplace on the second timeline of A = %s, want E_NOT_FOUND", got)
+	}
+
+	if got := code(replace(b2)); got != service.CodeForbidden {
+		t.Errorf("MotionReplace on the timeline of B = %s, want %s", got, service.CodeForbidden)
 	}
 
 	if _, err := m.svc.Edit(key, service.EditRequest{
