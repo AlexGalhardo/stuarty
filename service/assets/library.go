@@ -8,8 +8,25 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/text/unicode/norm"
+
 	"github.com/AlexGalhardo/stuarty/core/asset"
 )
+
+// composed puts the tags a caller typed in NFC before core/asset normalizes them: core imports only the standard
+// library, so the same tag typed with a decomposed accent is composed here, for every surface.
+func composed(tags []string) []string {
+	if tags == nil {
+		return nil
+	}
+
+	out := make([]string, len(tags))
+	for i, t := range tags {
+		out[i] = norm.NFC.String(t)
+	}
+
+	return out
+}
 
 // Use is a project that uses a file, with its name.
 type Use struct {
@@ -148,6 +165,8 @@ func entryOf(h *Held, row Row) asset.Entry {
 // is an *asset.RuleError.
 func (l *Library) List(ctx context.Context, held []Held, q *Query) (Page, error) {
 	f := q.Filter
+
+	f.Tag = norm.NFC.String(f.Tag)
 	if bad := f.Validate(); bad != nil {
 		return Page{}, bad
 	}
@@ -341,7 +360,7 @@ func (l *Library) Tag(
 		row.CreatedBy = actor
 	}
 
-	tags, bad := asset.ApplyTags(row.Tags, add, remove)
+	tags, bad := asset.ApplyTags(row.Tags, composed(add), composed(remove))
 	if bad != nil {
 		return LibraryAsset{}, bad
 	}
@@ -380,7 +399,7 @@ func CheckImport(origin *asset.Origin, info *ImportInfo) (asset.Origin, ImportIn
 	var in ImportInfo
 
 	if info != nil {
-		tags, bad := asset.ApplyTags(nil, info.Tags, nil)
+		tags, bad := asset.ApplyTags(nil, composed(info.Tags), nil)
 		if bad != nil {
 			return asset.Origin{}, ImportInfo{}, bad
 		}
@@ -421,7 +440,7 @@ func RecordImport(
 	}
 
 	if len(info.Tags) > 0 {
-		tags, bad := asset.ApplyTags(row.Tags, info.Tags, nil)
+		tags, bad := asset.ApplyTags(row.Tags, composed(info.Tags), nil)
 		if bad != nil {
 			return bad
 		}

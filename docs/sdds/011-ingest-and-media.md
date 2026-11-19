@@ -1444,7 +1444,7 @@ A missing required member is `E_VALIDATION` with `path` `origin.<member>` and `d
 
 ### 14.3 Tags, reuse and uses
 
-- A tag is trimmed, NFC-normalised, lower-cased, a leading `#` removed and runs of white space turned into one `-`; it has 1 to 40 characters from letters, digits, `-` and `_`. An asset holds at most 20. A tag that is not valid after normalisation refuses the call (`tags_invalid`); a duplicate is kept once; the set is sorted.
+- A tag is trimmed, NFC-normalised, lower-cased, a leading `#` removed and runs of white space turned into one `-`; it has 1 to 40 characters from letters, digits, `-` and `_`. An asset holds at most 20. A tag that is not valid after normalisation refuses the call (`tags_invalid`); a duplicate is kept once; the set is sorted. The NFC step is done by `service/assets` before `core/asset` applies the other rules, since `core/` imports only the standard library (ADR-0001).
 - `reusable` is a mark the user or an agent sets on a file they want offered again (a logo, a reaction clip, a sound). It filters; it grants nothing: any file of the library can be used by a project, reusable or not.
 - A project uses an asset when a timeline of it holds the hash in `project_assets` in state `active` (SDD-005 §5.5.1). Reusing a file from another project is `MediaImport` with the file given by hash (`files[].hash`, no path): the service links the hash to the timeline with its own `ast_` identifier and, when the asset is `ready`, issues `asset.add`. Nothing is copied and no ingest runs for a `ready` asset. In network mode the hash must be held by a project the caller can see; otherwise the answer is the same `E_VALIDATION` as for a hash that does not exist (SDD-007 T-20).
 

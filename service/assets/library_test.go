@@ -454,3 +454,43 @@ func TestLibraryRowsBelongToTheirOwner(t *testing.T) {
 		t.Errorf("a third owner reads a record that is not hers: %+v, %v", got, err)
 	}
 }
+
+// core/asset imports only the standard library, so the library composes a tag typed with a decomposed accent
+// before core normalizes it: an import, a tag change and a filter all store and match the composed form.
+func TestLibraryComposesDecomposedTags(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	st := newStore()
+	file := held("sha256:n", "menu.png", "image", "prj_1", "prj_1")
+	decomposed := "Cafe" + string(rune(0x0301))
+
+	_, info, err := assets.CheckImport(nil, &assets.ImportInfo{Tags: []string{decomposed}})
+	if err != nil || !slices.Equal(info.Tags, []string{"café"}) {
+		t.Fatalf("CheckImport = %+v, %v", info, err)
+	}
+
+	if err := assets.RecordImport(
+		ctx, st, "", file.Hash, asset.Origin{Kind: asset.Imported},
+		assets.ImportInfo{Tags: []string{"The" + string(rune(0x0300))}}, "user:a", 1,
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	lib := &assets.Library{Store: st}
+
+	got, err := lib.Tag(ctx, &file, []string{decomposed}, nil, "user:a", 2, nil)
+	if err != nil || !slices.Equal(got.Tags, []string{"café", "thè"}) {
+		t.Fatalf("Tag = %+v, %v", got.Tags, err)
+	}
+
+	page, err := lib.List(ctx, []assets.Held{file}, &assets.Query{Filter: asset.Filter{Tag: decomposed}})
+	if err != nil || !slices.Equal(hashesOf(page), []string{file.Hash}) {
+		t.Errorf("filter by the decomposed tag = %v, %v", hashesOf(page), err)
+	}
+
+	if got, err := lib.Tag(ctx, &file, nil, []string{decomposed}, "user:a", 3, nil); err != nil ||
+		!slices.Equal(got.Tags, []string{"thè"}) {
+		t.Errorf("removing the decomposed tag = %+v, %v", got.Tags, err)
+	}
+}
