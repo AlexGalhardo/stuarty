@@ -33,13 +33,18 @@ func RenderImage(ctx context.Context, doc *coreimage.Document, cfg ImageConfig) 
 
 	fp := coreimage.Plan(doc, plan.Options{Measure: rasterize.Measure(fonts), OutputScale: 1})
 	cache := rasterize.NewCache(fonts, 0)
+	kept := make([]plan.Layer, 0, len(fp.Layers))
 
-	var (
-		textures []textureUpload
-		bitmaps  []bitmapUpload
-		kept     = make([]plan.Layer, 0, len(fp.Layers))
-	)
+	host, err := renderhost.New(ctx, renderhost.Config{})
+	if err != nil {
+		return nil, rendererError(err)
+	}
 
+	defer func() { _ = host.Close(context.WithoutCancel(ctx)) }()
+
+	// Each layer is uploaded as soon as it is drawn, so the process never holds the pixels of every layer at
+	// once: a document of many large layers is bounded by the memory of the renderer module (out_of_memory),
+	// not by the memory of the machine.
 	for i := range fp.Layers {
 		l := fp.Layers[i]
 		if opacity(&l) == 0 {
@@ -53,7 +58,9 @@ func RenderImage(ctx context.Context, doc *coreimage.Document, cfg ImageConfig) 
 				return nil, fmt.Errorf("layer %s: %w", l.ItemID, err)
 			}
 
-			textures = append(textures, textureUpload{l.ItemID, img, img.Opaque})
+			if err := host.PutTexture(ctx, l.ItemID, img.W, img.H, img.Pix, img.Opaque); err != nil {
+				return nil, rendererError(err)
+			}
 		case plan.Bitmap:
 			bm, err := cache.Get(*l.Bitmap)
 			if err != nil {
@@ -64,32 +71,15 @@ func RenderImage(ctx context.Context, doc *coreimage.Document, cfg ImageConfig) 
 				continue
 			}
 
-			bitmaps = append(bitmaps, bitmapUpload{l.Bitmap.Key(), bm})
+			if err := host.PutBitmap(ctx, l.Bitmap.Key(), bm); err != nil {
+				return nil, rendererError(err)
+			}
 		}
 
 		kept = append(kept, l)
 	}
 
 	fp.Layers = kept
-
-	host, err := renderhost.New(ctx, renderhost.Config{})
-	if err != nil {
-		return nil, rendererError(err)
-	}
-
-	defer func() { _ = host.Close(context.WithoutCancel(ctx)) }()
-
-	for _, t := range textures {
-		if err := host.PutTexture(ctx, t.item, t.img.W, t.img.H, t.img.Pix, t.opaque); err != nil {
-			return nil, rendererError(err)
-		}
-	}
-
-	for _, b := range bitmaps {
-		if err := host.PutBitmap(ctx, b.key, b.bm); err != nil {
-			return nil, rendererError(err)
-		}
-	}
 
 	dst := image.NewRGBA(image.Rect(0, 0, doc.Width, doc.Height))
 	out := renderhost.Output{Width: doc.Width, Height: doc.Height, Scale: 1}
