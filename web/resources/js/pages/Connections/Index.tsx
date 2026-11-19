@@ -17,6 +17,7 @@ import { useLocale, useT } from "@/lib/i18n";
 import { createClient } from "../../editor/api/client";
 import { HttpTransport } from "../../editor/api/http";
 import type { Connection, ConnectionTestResult } from "../../editor/api/types";
+import SocialSection from "./SocialSection";
 
 const ACCEPTS = [
 	"text",
@@ -237,6 +238,7 @@ export default function Connections(): ReactNode {
 							</ul>
 						))}
 				</section>
+				<SocialSection />
 				<section aria-labelledby="connections-new">
 					<h2 id="connections-new" className="text-lg font-semibold">
 						{t("ui.connections.new")}

@@ -93,6 +93,12 @@ func TestPages(t *testing.T) {
 		t.Errorf("/connections = %d, want the connections page", res.status)
 	}
 
+	// The redirect address of the sign-in to a social network is a page (epic 18).
+	if res := page("/social/callback"); res.status != http.StatusOK ||
+		!strings.Contains(string(res.body), `Social\/Callback`) {
+		t.Errorf("/social/callback = %d, want the callback page", res.status)
+	}
+
 	// The approval queue has its own page (epic 05).
 	if res := page("/approvals"); res.status != http.StatusOK ||
 		!strings.Contains(string(res.body), `Approvals\/Index`) {
