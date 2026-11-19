@@ -1924,9 +1924,16 @@ export interface KeyframeSetArgs {
    */
   at: string;
   /**
-   * From this keyframe to the next. Default linear.
+   * x1, y1, x2, y2 of the curve of easing bezier: x1 and x2 from 0 to 1, y1 and y2 from -2 to 3.
+   *
+   * @minItems 4
+   * @maxItems 4
    */
-  easing?: "linear" | "ease_in" | "ease_out" | "ease_in_out" | "hold";
+  bezier?: [number, number, number, number];
+  /**
+   * From this keyframe to the next. Default linear. bezier needs the bezier argument.
+   */
+  easing?: "linear" | "ease_in" | "ease_out" | "ease_in_out" | "hold" | "bezier";
   item_id: string;
   property:
     | "x"
@@ -1954,6 +1961,51 @@ export interface KeyframeSetArgs {
    * Valid for the property: scale above 0 up to 20, opacity 0 to 1, volume 0 to 4.
    */
   value: number;
+}
+
+export interface KeyframeSetEasingArgs {
+  /**
+   * Position of an existing keyframe on the project timeline.
+   */
+  at: string;
+  /**
+   * x1, y1, x2, y2 of a cubic Bezier curve: x1 and x2 from 0 to 1, y1 and y2 from -2 to 3.
+   *
+   * @minItems 4
+   * @maxItems 4
+   */
+  bezier?: [number, number, number, number];
+  /**
+   * A named easing. Exactly one of easing, bezier and preset.
+   */
+  easing?: "linear" | "ease_in" | "ease_out" | "ease_in_out" | "hold";
+  item_id: string;
+  /**
+   * A named Bezier curve, stored as its four numbers.
+   */
+  preset?: "in" | "out" | "in_out" | "back" | "overshoot";
+  property:
+    | "x"
+    | "y"
+    | "scale"
+    | "rotation"
+    | "opacity"
+    | "volume"
+    | "brightness"
+    | "contrast"
+    | "saturation"
+    | "temperature"
+    | "tint"
+    | "hue"
+    | "mask_x"
+    | "mask_y"
+    | "mask_width"
+    | "mask_height"
+    | "mask_feather"
+    | "crop_left"
+    | "crop_top"
+    | "crop_right"
+    | "crop_bottom";
 }
 
 export interface MarkerAddArgs {
@@ -2456,7 +2508,7 @@ export interface TrackUpdateArgs {
   volume?: number;
 }
 
-export type CommandName = "asset.add" | "asset.remove" | "audio.add" | "audio.duck" | "audio.mark_beats" | "caption.add" | "caption.edit_word" | "caption.from_transcript" | "caption.import_subtitles" | "caption.merge" | "caption.retime_from_clip" | "caption.set_breaks" | "caption.set_style" | "caption.set_words" | "caption.split" | "clip.add" | "clip.remove_silences" | "clip.set_blend" | "clip.set_blur" | "clip.set_chroma_key" | "clip.set_color" | "clip.set_effects" | "clip.set_filter" | "clip.set_flip" | "clip.set_framing" | "clip.set_mask" | "clip.set_outline" | "clip.set_shadow" | "clip.set_speed" | "font.add" | "font.remove" | "item.crossfade" | "item.delete" | "item.duplicate" | "item.extract_audio" | "item.freeze_frame" | "item.link" | "item.move" | "item.paste_attributes" | "item.rename" | "item.repeat" | "item.set_audio" | "item.set_enabled" | "item.set_transform" | "item.set_transition" | "item.slip" | "item.split" | "item.trim" | "item.unlink" | "keyframe.clear" | "keyframe.remove" | "keyframe.set" | "marker.add" | "marker.remove" | "marker.set" | "project.rename" | "settings.reframe" | "settings.set" | "settings.set_fps" | "shape.add" | "shape.set" | "slot.fill" | "slot.mark" | "slot.unmark" | "template.set_info" | "text.add" | "text.apply_preset" | "text.set" | "timeline.close_gap" | "track.add" | "track.move" | "track.remove" | "track.set_caption_style" | "track.update";
+export type CommandName = "asset.add" | "asset.remove" | "audio.add" | "audio.duck" | "audio.mark_beats" | "caption.add" | "caption.edit_word" | "caption.from_transcript" | "caption.import_subtitles" | "caption.merge" | "caption.retime_from_clip" | "caption.set_breaks" | "caption.set_style" | "caption.set_words" | "caption.split" | "clip.add" | "clip.remove_silences" | "clip.set_blend" | "clip.set_blur" | "clip.set_chroma_key" | "clip.set_color" | "clip.set_effects" | "clip.set_filter" | "clip.set_flip" | "clip.set_framing" | "clip.set_mask" | "clip.set_outline" | "clip.set_shadow" | "clip.set_speed" | "font.add" | "font.remove" | "item.crossfade" | "item.delete" | "item.duplicate" | "item.extract_audio" | "item.freeze_frame" | "item.link" | "item.move" | "item.paste_attributes" | "item.rename" | "item.repeat" | "item.set_audio" | "item.set_enabled" | "item.set_transform" | "item.set_transition" | "item.slip" | "item.split" | "item.trim" | "item.unlink" | "keyframe.clear" | "keyframe.remove" | "keyframe.set" | "keyframe.set_easing" | "marker.add" | "marker.remove" | "marker.set" | "project.rename" | "settings.reframe" | "settings.set" | "settings.set_fps" | "shape.add" | "shape.set" | "slot.fill" | "slot.mark" | "slot.unmark" | "template.set_info" | "text.add" | "text.apply_preset" | "text.set" | "timeline.close_gap" | "track.add" | "track.move" | "track.remove" | "track.set_caption_style" | "track.update";
 
 export interface CommandArgsMap {
 	"asset.add": AssetAddArgs;
@@ -2511,6 +2563,7 @@ export interface CommandArgsMap {
 	"keyframe.clear": KeyframeClearArgs;
 	"keyframe.remove": KeyframeRemoveArgs;
 	"keyframe.set": KeyframeSetArgs;
+	"keyframe.set_easing": KeyframeSetEasingArgs;
 	"marker.add": MarkerAddArgs;
 	"marker.remove": MarkerRemoveArgs;
 	"marker.set": MarkerSetArgs;
@@ -2590,6 +2643,7 @@ export const COMMANDS: Record<CommandName, { summary: string; scope: "edit" | "m
 	"keyframe.clear": { summary: "Removes all keyframes of one property, or of every property.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"keyframe.remove": { summary: "Removes the keyframe of a property at a frame.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"keyframe.set": { summary: "Adds or replaces a keyframe of one animated property of an item.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_LIMIT","E_INVALID_STATE"] },
+	"keyframe.set_easing": { summary: "Changes the easing of the segment that starts at a keyframe.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"marker.add": { summary: "Puts a marker on the timeline, or on one item.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_INVALID_STATE","E_LIMIT"] },
 	"marker.remove": { summary: "Removes a marker of the timeline or of an item.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND"] },
 	"marker.set": { summary: "Moves or relabels a marker of the timeline or of an item.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_INVALID_STATE"] },

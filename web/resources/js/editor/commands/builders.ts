@@ -609,6 +609,7 @@ export const KEYFRAME_EASINGS = [
 	"ease_out",
 	"ease_in_out",
 	"hold",
+	"bezier",
 ] as const;
 export type KeyframeEasing = (typeof KEYFRAME_EASINGS)[number];
 

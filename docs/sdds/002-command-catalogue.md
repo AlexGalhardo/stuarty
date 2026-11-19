@@ -1,7 +1,7 @@
 # SDD-002: Command catalogue of the core
 
 - Amended (2026-11-18) for Stuarty: this is the catalogue of the video domain. Other domains get their own catalogue (ADR-0031, ADR-0038).
-- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen: all 74 commands have golden cases and pass the registry-wide gates. The binary exposes all 74 commands, 73 of them public; `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
+- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen: all 75 commands have golden cases and pass the registry-wide gates. The binary exposes all 75 commands, 74 of them public; `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
 - Depends on: SDD-001 (document), ADR-0002 (command core), ADR-0004 (time), ADR-0006 (log, concurrency, undo), ADR-0014 (JSON Schema)
 - Implements: RF-010 to RF-016, RF-020 to RF-026, RF-030 to RF-036, RF-040, RF-041, RF-050, RF-051, RF-100, RF-105, RF-107, RF-112 to RF-115, RF-119, NFR-001, NFR-025
 - Owner area: senior-a (command core and schema)
@@ -3915,6 +3915,10 @@ Adds or replaces a keyframe of one property.
 - `ok_crop_bottom_on_cropped_clip`
 - `err_validation_crop_above_range`
 - `err_type_mismatch_crop_on_text`
+- `ok_bezier_easing`
+- `err_validation_bezier_without_the_easing`
+- `err_validation_bezier_easing_without_numbers`
+- `err_validation_bezier_x_above_1`
 
 ### C.43 `keyframe.remove`
 
@@ -6046,3 +6050,72 @@ The copies start at frames 90 and 180; the sequence ends at frame 270 (`effectiv
 - `err_limit_caption_words_over_document_limit`
 - `err_overlap_next_item`
 - `err_id_exists`
+
+### C.75 `keyframe.set_easing`
+
+Changes how the segment that starts at an existing keyframe moves (RF-080): a named easing, a custom cubic Bezier curve or a named Bezier preset. The value and the time of the keyframe do not change, so it is the command of the curve editor. The core is the only place that evaluates a curve (SDD-004 §3.1).
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | yes | none | |
+| `property` | the properties of `keyframe.set` | yes | none | |
+| `at` | time | yes | none | absolute position of an existing keyframe |
+| `easing` | `"linear"`, `"ease_in"`, `"ease_out"`, `"ease_in_out"`, `"hold"` | one of three | none | exactly one of `easing`, `bezier` and `preset` is given |
+| `bezier` | array of 4 numbers | one of three | none | `[x1, y1, x2, y2]`; sets `easing` to `"bezier"`. `x1`, `x2` from 0 to 1, `y1`, `y2` from -2 to 3, at most 3 decimals |
+| `preset` | `"in"`, `"out"`, `"in_out"`, `"back"`, `"overshoot"` | one of three | none | a named curve, stored as its four numbers: `in` 0.42, 0, 1, 1; `out` 0, 0, 0.58, 1; `in_out` 0.42, 0, 0.58, 1; `back` 0.36, 0, 0.66, -0.56 (pulls back, then goes); `overshoot` 0.34, 1.56, 0.64, 1 (goes past, then settles) |
+
+**Preconditions.**
+
+1. Arguments match the schema and `at` parses; exactly one of `easing`, `bezier` and `preset`; the `bezier` numbers are in range (`E_VALIDATION`, `E_INVALID_TIME`).
+2. The item exists (`E_NOT_FOUND`).
+3. The property applies to the item type (`E_TYPE_MISMATCH`).
+4. `at` lies in the inclusive range of the item (`E_INVALID_TIME`, `path` `args.at`).
+5. The property has a keyframe at `at - start` (`E_NOT_FOUND`, `details.kind` `keyframe`).
+
+**Postconditions.**
+
+1. The keyframe at `t = at - start` has the new easing. A `linear` easing is stored without the key and a non-Bezier easing without `bezier`, as everywhere in the document. Value and `t` of the keyframe and all other keyframes are unchanged.
+2. `diff` has one `item.updated` with `keyframes`. `effective` has `at` (the A.4 triple), `t`, `easing` and, for a Bezier, `bezier`.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | none or several of the three, a Bezier out of range, an unknown preset | `args.bezier[0] must be from 0 to 1, got 1.5.` | `Keep x1 and x2 from 0 to 1; y1 and y2 may go from -2 to 3.` |
+| `E_INVALID_TIME` | malformed `at`, or outside the item | as `keyframe.set` | as `keyframe.set` |
+| `E_NOT_FOUND` | unknown item, or no keyframe at `at` | `Property scale of itm_s6t7v8w9x0 has no keyframe at frame 60; keyframes are at frames 30, 90.` | `Use at "30f" (1s), or list the keyframes with project_get.` |
+| `E_TYPE_MISMATCH` | the property does not apply | as `keyframe.set` | as `keyframe.set` |
+
+**Inverse.** `patch {collection: "items", id, set: {keyframes: <old>}}`.
+
+**Idempotency.** Same result.
+
+**Example.**
+
+```json
+{"op": "keyframe.set_easing", "args": {"item_id": "itm_s6t7v8w9x0", "property": "scale", "at": "1s", "preset": "overshoot"}}
+```
+
+**Golden cases.**
+
+- `ok_custom_bezier`
+- `ok_preset_overshoot`
+- `ok_preset_back_on_crop`
+- `ok_bezier_on_mask_width`
+- `ok_named_easing_clears_the_bezier`
+- `ok_linear_is_stored_absent`
+- `ok_last_keyframe_of_the_property`
+- `ok_bezier_is_rounded_to_3_decimals`
+- `err_validation_none_of_the_three`
+- `err_validation_easing_and_preset`
+- `err_validation_bezier_x_above_1`
+- `err_validation_bezier_y_below_range`
+- `err_validation_bezier_wrong_length`
+- `err_validation_unknown_preset`
+- `err_validation_easing_bezier_is_not_a_name`
+- `err_not_found`
+- `err_not_found_no_keyframe_at`
+- `err_invalid_time_outside_the_item`
+- `err_type_mismatch_crop_on_text`

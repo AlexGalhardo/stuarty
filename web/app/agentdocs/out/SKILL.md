@@ -39,7 +39,7 @@ Check with `project:list`. Workspace: `~/.stuarty` or `$STUARTY_HOME`; `serve` s
 - `clip`: add, remove_silences, set_blend, set_blur, set_chroma_key, set_color, set_effects, set_filter, set_flip, set_framing, set_mask, set_outline, set_shadow, set_speed
 - `font`: add, remove
 - `item`: crossfade, delete, duplicate, extract_audio, freeze_frame, link, move, paste_attributes, rename, repeat, set_audio, set_enabled, set_transform, set_transition, slip, split, trim, unlink
-- `keyframe`: clear, remove, set
+- `keyframe`: clear, remove, set, set_easing
 - `marker`: add, remove, set
 - `project`: rename
 - `settings`: reframe, set, set_fps

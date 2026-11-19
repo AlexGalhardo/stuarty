@@ -1543,7 +1543,7 @@ trashed prj_2x5c8d1f4g; restore it with project_trash restore=true
                 "shape.add", "shape.set", "caption.add", "caption.set_words", "caption.edit_word",
                 "caption.split", "caption.merge", "caption.set_breaks", "caption.set_style",
                 "caption.from_transcript", "caption.import_subtitles", "caption.retime_from_clip", "keyframe.set", "keyframe.remove",
-                "keyframe.clear", "slot.mark", "slot.unmark", "slot.fill", "template.set_info",
+                "keyframe.clear", "keyframe.set_easing", "slot.mark", "slot.unmark", "slot.fill", "template.set_info",
                 "font.add", "font.remove"
               ]
             },
@@ -1645,7 +1645,7 @@ The result carries `isError: true` and no `structuredContent`; `content[0]` is t
 ```json
 {
   "name":"command_help",
-  "description":"Describe edit operations. Without name: one line per operation. With name (for example item.split): returns its description, args JSON Schema, an example and error codes. Read it before using an operation you have not used.",
+  "description":"Describe edit operations. Without name: one line per operation. With name (for example item.split): returns its description, args JSON Schema, an example and error codes.",
   "inputSchema":{"type":"object","properties":{"name":{"type":"string"},"domain":{"enum":["video","image"]}},"additionalProperties":false},
   "outputSchema":{
     "type":"object",
@@ -1939,7 +1939,7 @@ The `image` block follows the text block: `{"type": "image", "mimeType": "image/
 ```json
 {
   "name":"lint",
-  "description":"Check a project for problems and get them as text: code, severity, item, message, hint. Errors block export. Run it after edits, before export. Runs every rule, unlike the lint block of an edit result (lint_scope fast). Rules include gaps, missing media, text outside the safe area, audio clipping, unfilled slots.",
+  "description":"Check a project for problems and get them as text: code, severity, item, message, hint. Errors block export. Run it after edits, before export. Runs every rule, unlike the lint block of an edit result (lint_scope fast).",
   "inputSchema":{
     "type":"object",
     "properties":{

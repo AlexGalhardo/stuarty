@@ -34,7 +34,7 @@ func loadRegistry(t *testing.T) []registryEntry {
 // mediaCommands are the commands whose scope is media; every other command is edit.
 var mediaCommands = map[string]bool{"asset.add": true, "asset.remove": true, "font.add": true, "font.remove": true}
 
-// The registry snapshot has the 74 commands of SDD-002 Part C; every scope is edit or media, and
+// The registry snapshot has the 75 commands of SDD-002 Part C; every scope is edit or media, and
 // asset.add is the only internal command.
 func TestRegistrySnapshotShape(t *testing.T) {
 	t.Parallel()
@@ -54,8 +54,8 @@ func TestRegistrySnapshotShape(t *testing.T) {
 		}
 	}
 
-	if len(cmds) != 74 {
-		t.Errorf("%d commands, want 74", len(cmds))
+	if len(cmds) != 75 {
+		t.Errorf("%d commands, want 75", len(cmds))
 	}
 }
 
@@ -111,8 +111,8 @@ func TestPartCSectionsMatchTheRegistry(t *testing.T) {
 		got[c.Name] = true
 	}
 
-	if len(want) != 74 {
-		t.Fatalf("Part C has %d sections, want 74", len(want))
+	if len(want) != 75 {
+		t.Fatalf("Part C has %d sections, want 75", len(want))
 	}
 
 	if len(sections) != len(want) {

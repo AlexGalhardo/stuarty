@@ -334,6 +334,7 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 		{ kind: "inspector", action: "inspector.keyframe_value" },
 		palette,
 	],
+	"keyframe.set_easing": [palette],
 	"project.rename": [{ kind: "toolbar", action: "topbar.rename" }, palette],
 	"item.slip": [{ kind: "key", action: "timeline.slip" }, palette],
 	"settings.reframe": [
