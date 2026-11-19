@@ -74,9 +74,10 @@ func planeOpaque(pix []uint8, stride int, r image.Rectangle, start, step, alpha 
 	return true
 }
 
-// markAlphaOpaque sets Facts.AlphaOpaque and warns, from the picture the ingest made of an asset that has alpha.
-func (j *job) markAlphaOpaque(path string, layout *ThumbLayout) {
-	if !j.res.Facts.HasAlpha || !pngAlphaOpaque(path, layout) {
+// markAlphaOpaque sets Facts.AlphaOpaque and warns when an asset that has alpha comes from a file that declares it
+// and every sampled picture (opaque reads them) is opaque.
+func (j *job) markAlphaOpaque(opaque func() bool) {
+	if !j.res.Facts.HasAlpha || !declaresAlpha(j.original) || !opaque() {
 		return
 	}
 

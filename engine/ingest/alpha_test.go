@@ -141,12 +141,22 @@ func TestAlphaAnimatedGIFKeepsItsTransparentIndex(t *testing.T) {
 }
 
 // A file that claims alpha and has none is reported, not turned into a silent opaque clip: the asset keeps
-// has_alpha, the normalized artifact records alpha_opaque and the job warns (SDD-011 section 4.3.6).
+// has_alpha, the normalized artifact records alpha_opaque and the job warns (SDD-011 section 4.3.6). libwebp writes
+// no alpha flag for an opaque picture, so the opaque WebP declares none, although FFmpeg decodes a lossless WebP to
+// argb: it is not reported (TestAlphaDeclaredByTheFile covers a WebP that declares alpha).
 func TestAlphaClaimedButOpaqueIsReported(t *testing.T) {
 	for _, in := range mediagen.AlphaInputs() {
 		t.Run(string(in), func(t *testing.T) {
 			e := newEnv(t)
 			_, res := e.mustIngest(alphaFixture(t, e, in, true))
+
+			if in == mediagen.AlphaWebP {
+				if !res.Facts.HasAlpha || res.Facts.AlphaOpaque || slices.Contains(res.Warnings, WarningAlphaOpaque) {
+					t.Errorf("facts %+v, warnings %v: an opaque WebP declares no alpha", res.Facts, res.Warnings)
+				}
+
+				return
+			}
 
 			if !res.Facts.HasAlpha || !res.Facts.AlphaOpaque {
 				t.Fatalf("facts %+v: the file declares alpha and every picture is opaque", res.Facts)
