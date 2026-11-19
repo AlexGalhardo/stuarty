@@ -545,6 +545,9 @@ func describeProduction(m *BundleManifest, snaps []*bundleSnapshot, items []Item
 		}
 
 		bi := BundleItem{Kind: it.Kind, Title: it.Title, Position: len(p.Items)}
+		if it.Kind == string(project.Text) {
+			bi.TextKind = it.TextKind
+		}
 
 		switch it.Kind {
 		case string(project.Timeline):

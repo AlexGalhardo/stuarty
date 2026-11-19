@@ -174,6 +174,8 @@ func itemView(r *ItemRow, withText bool) ProjectItem {
 		it.TimelineID = r.Ref
 	case string(project.Output):
 		it.JobID = r.Ref
+	case string(project.Text):
+		it.TextKind = r.TextKind
 	}
 
 	if withText {
@@ -390,7 +392,7 @@ func (s *svc) describeText(
 
 	v := textview.ProductionView{
 		ID: head.ID, Name: head.Name, State: stateString(head.State), HasBrief: p.HasBrief, HasScript: p.HasScript,
-		Timelines: p.Timelines, Outputs: p.Outputs, Pending: p.PendingApprovals, Published: p.Published,
+		Texts: p.Texts, Timelines: p.Timelines, Outputs: p.Outputs, Pending: p.PendingApprovals, Published: p.Published,
 	}
 
 	if b := briefOf(rows); b != nil {
@@ -406,6 +408,8 @@ func (s *svc) describeText(
 			l.Detail = s.timelineDetail(ctx, r.Ref)
 		case string(project.Output):
 			l.Detail = "format=" + r.Format + " job=" + r.Ref
+		case string(project.Text):
+			l.Detail = s.textDetail(ctx, r)
 		}
 
 		v.Lines = append(v.Lines, l)
@@ -567,8 +571,10 @@ func (s *svc) planDuplicate(
 		it := s.newItem(newProject, r.Kind, r.Title, len(plan.items), c.Actor, now)
 
 		switch r.Kind {
-		case string(project.Brief), string(project.Text):
+		case string(project.Brief):
 			it.Body = r.Body
+		case string(project.Text):
+			it.Body, it.TextKind = r.Body, r.TextKind
 		case string(project.Timeline):
 			trow, terr := tx.Projects().Get(ctx, r.Ref)
 			if terr != nil {

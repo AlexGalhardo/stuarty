@@ -39,8 +39,9 @@ func TestProductionStateTable(t *testing.T) {
 		{"two timelines", []Item{{Kind: Timeline}, {Kind: Timeline}}, Production{Timelines: 2}},
 		{"brief with text", []Item{{Kind: Brief, Text: "a"}}, Production{HasBrief: true}},
 		{"brief blank", []Item{{Kind: Brief, Text: " \n\t"}}, Production{}},
-		{"script", []Item{{Kind: Text, Text: "scene one"}}, Production{HasScript: true}},
-		{"script blank", []Item{{Kind: Text}}, Production{}},
+		{"script", []Item{{Kind: Text, Text: "scene one"}}, Production{HasScript: true, Texts: 1}},
+		{"script blank", []Item{{Kind: Text}}, Production{Texts: 1}},
+		{"two texts", []Item{{Kind: Text, Text: "a"}, {Kind: Text}}, Production{HasScript: true, Texts: 2}},
 		{"outputs", []Item{{Kind: Output}, {Kind: Output}}, Production{Outputs: 2}},
 		{"trashed items count for nothing", []Item{
 			{Kind: Brief, Text: "a", Trashed: true},
@@ -116,6 +117,7 @@ func TestProductionStateEveryCombination(t *testing.T) {
 				want.HasBrief = true
 			case 1:
 				want.HasScript = true
+				want.Texts++
 			case 2:
 				want.Timelines++
 			case 3:

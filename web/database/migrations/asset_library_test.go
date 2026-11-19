@@ -163,8 +163,15 @@ func TestWorkspaceAssetsMigrationDown(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	rolled, err := m.Rollback(ctx, 1)
-	if err != nil || !slices.Equal(rolled, []string{assetLibraryID}) {
+	// A later epic may add migrations after this one: they go first, and this one is the last that is undone.
+	all := All()
+	at := slices.IndexFunc(all, func(m schema.Migration) bool { return m.ID == assetLibraryID })
+	if at < 0 {
+		t.Fatal("the asset library migration is not registered")
+	}
+
+	rolled, err := m.Rollback(ctx, len(all)-at)
+	if err != nil || len(rolled) != len(all)-at || rolled[len(rolled)-1] != assetLibraryID {
 		t.Fatalf("Rollback = %v, %v", rolled, err)
 	}
 

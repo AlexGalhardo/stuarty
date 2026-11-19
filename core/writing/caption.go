@@ -13,7 +13,7 @@ import (
 // before the first network heading.
 type Variant struct {
 	Network string `json:"network"`
-	Text    string `json:"text"    untrusted:"true"`
+	Text    string `json:"text"`
 }
 
 // ParseCaption splits the body of a caption into its variants (SDD-019 section 5): a heading of level 2 whose text

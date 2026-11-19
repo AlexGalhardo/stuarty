@@ -66,4 +66,13 @@ var Provenance = map[string]string{
 	"asset.Origin.Source":             SourceMetadata,
 	"asset.Origin.Prompt":             SourceMetadata,
 	"asset.Origin.RightsNote":         SourceMetadata,
+
+	// the texts of a production (SDD-019): their titles and bodies, the model of a generated revision, and the
+	// parts of a body that a difference or an estimate repeats
+	"service.TextItem.ProjectName": SourceProjectText,
+	"service.TextItem.Title":       SourceProjectText,
+	"service.TextRevision.Model":   SourceNetworkText,
+	"service.TextGetResult.Body":   SourceProjectText,
+	"writing.Hunk.Text":            SourceProjectText,
+	"writing.SceneEstimate.Title":  SourceProjectText,
 }

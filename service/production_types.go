@@ -17,6 +17,7 @@ type ProjectItem struct {
 	JobID      string    `json:"job_id,omitempty"`      // kind output: the export job
 	Format     string    `json:"format,omitempty"`      // kind output: the destination format
 	Text       string    `json:"text,omitempty"        untrusted:"true"`
+	TextKind   string    `json:"text_kind,omitempty"` // kind text: "script" | "copy" | "caption" (SDD-019)
 	UpdatedAt  time.Time `json:"updated_at"`
 }
 
@@ -50,13 +51,14 @@ type ProjectDuplicateRequest struct {
 // ProjectItemAddRequest adds an item to a production.
 type ProjectItemAddRequest struct {
 	ProjectID string `json:"project_id"`
-	Kind      string `json:"kind"`               // "text", "timeline" or "output"
-	Title     string `json:"title"`              // 1 to 120 characters
-	Position  *int   `json:"position,omitempty"` // default: the end
-	Text      string `json:"text,omitempty"`     // kind text
-	Preset    string `json:"preset,omitempty"`   // kind timeline
-	FPS       string `json:"fps,omitempty"`      // kind timeline
-	JobID     string `json:"job_id,omitempty"`   // kind output: a succeeded export job of this project
+	Kind      string `json:"kind"`                // "text", "timeline" or "output"
+	Title     string `json:"title"`               // 1 to 120 characters
+	Position  *int   `json:"position,omitempty"`  // default: the end
+	Text      string `json:"text,omitempty"`      // kind text
+	TextKind  string `json:"text_kind,omitempty"` // kind text: "script", "copy" (default) or "caption"
+	Preset    string `json:"preset,omitempty"`    // kind timeline
+	FPS       string `json:"fps,omitempty"`       // kind timeline
+	JobID     string `json:"job_id,omitempty"`    // kind output: a succeeded export job of this project
 	DryRun    bool   `json:"dry_run,omitempty"`
 }
 
