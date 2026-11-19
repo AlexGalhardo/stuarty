@@ -3,7 +3,7 @@
 
 use stuarty_renderer::blend::BlendMode;
 use stuarty_renderer::chroma::ChromaKeySpec;
-use stuarty_renderer::compose::{Layer, Source, premultiply};
+use stuarty_renderer::compose::{Layer, LayerExt, Source, premultiply};
 use stuarty_renderer::effects::{Direction, Effect, FrameInfo, Transition, TransitionKind};
 use stuarty_renderer::grade::{CurvePoint, GradeSpec, HslBand, Wheel};
 use stuarty_renderer::image::Image;
@@ -150,6 +150,7 @@ pub fn read_cases() -> (u64, Vec<Case>) {
 					height: r.f64(),
 					feather: f64::from(r.u32()),
 					invert: r.u8() == 1,
+					radius: 0.0,
 				}
 			});
 			let flips = r.u8();
@@ -323,6 +324,7 @@ pub fn layers_of(c: &Case) -> Vec<Layer<'_>> {
 				blur,
 				shadow: None,
 				outline: None,
+				ext: LayerExt::default(),
 			}
 		})
 		.collect()

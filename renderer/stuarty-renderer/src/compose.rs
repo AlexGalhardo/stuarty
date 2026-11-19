@@ -12,12 +12,14 @@ use crate::blur::{blur_radius, blurred};
 use crate::chroma::{ChromaKeySpec, apply_chroma_key};
 use crate::colour::apply_matrix;
 use crate::effects::{Effect, EffectGeom, FrameInfo, Transition, TransitionKind, apply_effects};
+use crate::filters::{FilterOp, apply_filters};
 use crate::grade::{Grade, GradeSpec, apply_grade};
 use crate::image::Image;
 use crate::lut::{Lut, apply_lut, lut_mix};
 use crate::mask::{MaskSpec, MaskState, clamped_q, scale};
 use crate::math::{div255, mul, round_half_away, round_half_up, sincos, u8_of};
 use crate::resize::resize;
+use crate::tone::{TONE_ENTRIES, apply_tone};
 
 /// Where a source is drawn: a `w` by `h` rectangle centred on `(cx, cy)`, turned by `rot` degrees
 /// clockwise, all in output pixels.
@@ -79,6 +81,23 @@ pub struct Layer<'a> {
 	/// The drop shadow and the contour, drawn under the picture (SDD-004 section 3.15).
 	pub shadow: Option<ShadowSpec>,
 	pub outline: Option<OutlineSpec>,
+	/// What an image layer adds (SDD-013 section 3.11).
+	pub ext: LayerExt,
+}
+
+/// The parts of a layer that only an image document sets (SDD-013 section 3.11); all absent for a
+/// video layer.
+#[derive(Clone, Debug, Default)]
+pub struct LayerExt {
+	/// The tone table, applied before the colour matrix (section 3.11.1).
+	pub tone: Option<Box<[u8; TONE_ENTRIES]>>,
+	/// The ordered filters, applied after the blur (section 3.11.3).
+	pub filters: Vec<FilterOp>,
+	/// The index, in the list of layers drawn, of the layer whose alpha limits this one, and whether
+	/// the coverage is inverted (section 3.11.4).
+	pub clip: Option<(usize, bool)>,
+	/// The layer is read by a clip and not drawn.
+	pub stencil: bool,
 }
 
 /// A drop shadow. `color` is `#RRGGBB` or `#RRGGBBAA`; lengths are project pixels.
@@ -97,6 +116,10 @@ pub struct OutlineSpec {
 	pub color: String,
 	pub width: f64,
 }
+
+/// The largest shadow offset in source pixels (a valid plan is far below it; it bounds the memory of
+/// a plan that is not, SDD-013 section 3.11.3).
+const MAX_SHADOW_OFFSET: i64 = 2048;
 
 /// The largest outline radius in source pixels, the same bound as an effect length.
 const MAX_OUTLINE_RADIUS: usize = 256;
@@ -182,9 +205,105 @@ pub fn compose(dst: &mut Target<'_>, background: [u8; 4], layers: &[Layer<'_>], 
 	for px in dst.pix[a..b].as_chunks_mut::<4>().0.iter_mut() {
 		px.copy_from_slice(&background);
 	}
-	for l in layers {
-		draw_layer(dst, l, out_scale);
+	for (i, l) in layers.iter().enumerate() {
+		if l.ext.stencil {
+			continue;
+		}
+		if l.ext.clip.is_some() {
+			if let Some(p) = prepare_clipped(layers, i, dst.width, dst.height, &dst.rows, out_scale)
+			{
+				draw(dst, &p.image, &p.placement, p.op, p.blend, None);
+			}
+		} else {
+			draw_layer(dst, l, out_scale);
+		}
 	}
+}
+
+/// The layer `i`, which has a clip, drawn into a transparent frame-sized image, multiplied by the
+/// coverage of the clip (section 3.11.4) and ready to draw as a copy at the origin with the
+/// opacity and the blend mode of the layer. The GPU path draws the same image. `None` when the
+/// layer draws nothing.
+pub fn prepare_clipped(
+	layers: &[Layer<'_>],
+	i: usize,
+	width: usize,
+	height: usize,
+	rows: &Range<usize>,
+	out_scale: f64,
+) -> Option<Prepared<'static>> {
+	let l = layers.get(i)?;
+	let (source, invert) = l.ext.clip?;
+	let op = layer_opacity(l.opacity);
+	if op == 0 || source >= layers.len() || width == 0 || height == 0 {
+		return None;
+	}
+
+	// The layer itself, with its own mask, on a transparent frame, source-over, full opacity.
+	let mut own = l.clone();
+	own.opacity = 1.0;
+	own.blend = BlendMode::Normal;
+	own.ext.clip = None;
+	let mut image = Image::new(width, height);
+	{
+		let mut t = Target {
+			pix: &mut image.pix,
+			width,
+			height,
+			rows: rows.clone(),
+		};
+		draw_layer(&mut t, &own, out_scale);
+	}
+
+	// The alpha of the source, drawn alone the same way.
+	let mut src = layers[source].clone();
+	src.opacity = 1.0;
+	src.blend = BlendMode::Normal;
+	src.ext.clip = None;
+	let mut plane = vec![0_u8; width * height * 4];
+	{
+		let mut t = Target {
+			pix: &mut plane,
+			width,
+			height,
+			rows: rows.clone(),
+		};
+		draw_layer(&mut t, &src, out_scale);
+	}
+
+	for (px, cv) in image
+		.pix
+		.as_chunks_mut::<4>()
+		.0
+		.iter_mut()
+		.zip(plane.as_chunks::<4>().0)
+	{
+		let cov = if invert {
+			255 - u32::from(cv[3])
+		} else {
+			u32::from(cv[3])
+		};
+		if cov == 255 {
+			continue;
+		}
+		for v in px.iter_mut() {
+			*v = u8_of(div255(u32::from(*v) * cov));
+		}
+	}
+
+	Some(Prepared {
+		image: Cow::Owned(image),
+		placement: Placement {
+			cx: width as f64 / 2.0,
+			cy: height as f64 / 2.0,
+			w: width as f64,
+			h: height as f64,
+			rot: 0.0,
+		},
+		op,
+		blend: l.blend,
+		mask: None,
+	})
 }
 
 /// The opacity of a layer as the 0..255 weight of the blend (SDD-013 section 3.3 step 2.1). Zero
@@ -256,6 +375,9 @@ pub fn prepare_layer<'a>(l: &Layer<'a>, out_scale: f64) -> Option<Prepared<'a>> 
 	if let Some(k) = &l.chroma_key {
 		src = Cow::Owned(apply_chroma_key(&src, k));
 	}
+	if let Some(t) = &l.ext.tone {
+		src = Cow::Owned(apply_tone(&src, t));
+	}
 	if let Some(m) = &l.color_matrix {
 		src = Cow::Owned(apply_matrix(&src, m));
 	}
@@ -287,6 +409,18 @@ pub fn prepare_layer<'a>(l: &Layer<'a>, out_scale: f64) -> Option<Prepared<'a>> 
 	if l.blur > 0.0
 		&& let Some((img, grown)) = blurred(&src, &p, mul(l.blur, out_scale))
 	{
+		src = Cow::Owned(img);
+		p = grown;
+	}
+	if !l.ext.filters.is_empty() {
+		let (img, grown) = apply_filters(
+			src.into_owned(),
+			p,
+			pre,
+			&l.ext.filters,
+			&l.frame,
+			out_scale,
+		);
 		src = Cow::Owned(img);
 		p = grown;
 	}
@@ -397,30 +531,59 @@ fn in_disc(dx: i64, dy: i64, ox: i64, oy: i64) -> bool {
 	dx2 * oy2 + dy2 * ox2 <= ox2 * oy2
 }
 
+/// The largest `dx` with the offset `(dx, dy)` inside the disc of radii `(ox, oy)`; the disc is
+/// symmetric, so the window of a row of the source is `[x - k, x + k]`.
+fn disc_half_width(dy: i64, ox: i64, oy: i64) -> i64 {
+	(0..=ox)
+		.rev()
+		.find(|&dx| in_disc(dx, dy, ox, oy))
+		.unwrap_or(0)
+}
+
+/// The alpha of `src` dilated by the disc of radii `(ox, oy)`: each pixel of the result, in the
+/// frame grown by the radii, is the largest source alpha inside the disc around it. One pass per
+/// row of the disc takes the maximum over a window of that row of the source with a monotonic
+/// queue, so the cost is the pixels times the height of the disc and not its area.
 fn dilate_alpha(src: &Image, ox: usize, oy: usize) -> Image {
 	let (w, h) = (src.w + 2 * ox, src.h + 2 * oy);
 	let mut out = Image::new(w, h);
-	let (ox, oy) = (ox as i64, oy as i64);
-	for y in 0..h {
-		for x in 0..w {
-			let (cx, cy) = (x as i64 - ox, y as i64 - oy);
-			let mut max_a = 0_u8;
-			for dy in -oy..=oy {
-				for dx in -ox..=ox {
-					if !in_disc(dx, dy, ox, oy) {
-						continue;
+	let (oxi, oyi) = (ox as i64, oy as i64);
+	let mut queue: std::collections::VecDeque<usize> = std::collections::VecDeque::new();
+	let mut row = vec![0_u8; src.w];
+
+	for dy in -oyi..=oyi {
+		let k = disc_half_width(dy, oxi, oyi);
+		for y in 0..h {
+			let sy = y as i64 - oyi + dy;
+			if sy < 0 || sy >= src.h as i64 {
+				continue;
+			}
+			for (a, px) in row
+				.iter_mut()
+				.zip(src.pix[sy as usize * src.w * 4..].as_chunks::<4>().0)
+			{
+				*a = px[3];
+			}
+			queue.clear();
+			let mut next = 0_usize; // the next source column to push
+			for x in 0..w {
+				let cx = x as i64 - oxi;
+				let hi = (cx + k).min(src.w as i64 - 1);
+				while (next as i64) <= hi {
+					while queue.back().is_some_and(|&b| row[b] <= row[next]) {
+						queue.pop_back();
 					}
-					let (sx, sy) = (cx + dx, cy + dy);
-					if sx < 0 || sy < 0 || sx >= src.w as i64 || sy >= src.h as i64 {
-						continue;
-					}
-					let a = src.pix[(sy as usize * src.w + sx as usize) * 4 + 3];
-					if a > max_a {
-						max_a = a;
-					}
+					queue.push_back(next);
+					next += 1;
+				}
+				while queue.front().is_some_and(|&f| (f as i64) < cx - k) {
+					queue.pop_front();
+				}
+				if let Some(&f) = queue.front() {
+					let o = (y * w + x) * 4 + 3;
+					out.pix[o] = out.pix[o].max(row[f]);
 				}
 			}
-			out.pix[(y * w + x) * 4 + 3] = max_a;
 		}
 	}
 	out
@@ -531,7 +694,7 @@ fn over_pixel(d: &mut [u8], r: u32, g: u32, b: u32, a: u32) {
 
 /// The shadow and the outline of SDD-004 section 3.15. `None` when they change no pixel, so the
 /// source is sampled as it was.
-fn shadowed(
+pub(crate) fn shadowed(
 	src: &Image,
 	p: &Placement,
 	shadow: Option<&ShadowSpec>,
@@ -563,8 +726,10 @@ fn shadowed(
 		let op = round_half_away(sh.opacity.clamp(0.0, 1.0) * 255.0).clamp(0, 255) as u32;
 		factor = div255(op * u32::from(sc[3]));
 		if factor != 0 {
-			dxs = src_len_signed(sh.dx, out_scale, src.w, p.w);
-			dys = src_len_signed(sh.dy, out_scale, src.h, p.h);
+			dxs = src_len_signed(sh.dx, out_scale, src.w, p.w)
+				.clamp(-MAX_SHADOW_OFFSET, MAX_SHADOW_OFFSET);
+			dys = src_len_signed(sh.dy, out_scale, src.h, p.h)
+				.clamp(-MAX_SHADOW_OFFSET, MAX_SHADOW_OFFSET);
 			rx = blur_radius(sigma / (p.w / src.w as f64));
 			ry = blur_radius(sigma / (p.h / src.h as f64));
 		}
@@ -871,4 +1036,62 @@ pub fn sample(
 /// The 8 bits of weight of a 32.32 coordinate, the 8 bits under the integer part.
 fn frac8(v: i64) -> u32 {
 	((v >> (FIX - 8)) & 0xFF) as u32
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	/// The definition of the dilation, one disc at a time.
+	fn dilate_alpha_by_definition(src: &Image, ox: usize, oy: usize) -> Image {
+		let (w, h) = (src.w + 2 * ox, src.h + 2 * oy);
+		let mut out = Image::new(w, h);
+		let (ox, oy) = (ox as i64, oy as i64);
+		for y in 0..h {
+			for x in 0..w {
+				let (cx, cy) = (x as i64 - ox, y as i64 - oy);
+				let mut max_a = 0_u8;
+				for dy in -oy..=oy {
+					for dx in -ox..=ox {
+						if !in_disc(dx, dy, ox, oy) {
+							continue;
+						}
+						let (sx, sy) = (cx + dx, cy + dy);
+						if sx < 0 || sy < 0 || sx >= src.w as i64 || sy >= src.h as i64 {
+							continue;
+						}
+						max_a = max_a.max(src.pix[(sy as usize * src.w + sx as usize) * 4 + 3]);
+					}
+				}
+				out.pix[(y * w + x) * 4 + 3] = max_a;
+			}
+		}
+		out
+	}
+
+	#[test]
+	fn the_fast_dilation_is_the_definition() {
+		let mut seed = 12345_u32;
+		let mut next = move || {
+			seed = seed.wrapping_mul(1_664_525).wrapping_add(1_013_904_223);
+			(seed >> 16) as usize
+		};
+		for _ in 0..40 {
+			let (w, h) = (1 + next() % 13, 1 + next() % 13);
+			let mut src = Image::new(w, h);
+			for px in src.pix.as_chunks_mut::<4>().0 {
+				px[3] = if next() % 4 == 0 {
+					(next() % 256) as u8
+				} else {
+					0
+				};
+			}
+			let (ox, oy) = (next() % 6, next() % 6);
+			assert_eq!(
+				dilate_alpha(&src, ox, oy),
+				dilate_alpha_by_definition(&src, ox, oy),
+				"{w}x{h} radii {ox},{oy}"
+			);
+		}
+	}
 }
