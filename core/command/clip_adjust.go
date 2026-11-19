@@ -64,6 +64,23 @@ func (c *Context) clipItem(id, what string) (timeline.Item, *Error) {
 	return it, nil
 }
 
+// clipOrCompositionItem is clipItem for the commands that apply to a composition as much as to a clip: its
+// framing (fit), effects, shadow and outline (SDD-001 section 3.5.1).
+func (c *Context) clipOrCompositionItem(id, what string) (timeline.Item, *Error) {
+	if err := idForm("args.item_id", timeline.PrefixItem, id); err != nil {
+		return timeline.Item{}, err
+	}
+	it, err := c.item(id)
+	if err != nil {
+		return it, err
+	}
+	if it.Type != timeline.ItemClip && it.Type != timeline.ItemComposition {
+		return it, Errorf(CodeTypeMismatch, "Item %s is %s item; %s applies to clips.", id, article(it.Type), what).
+			WithHint("Use item.set_transform to size other items.").WithPath("args.item_id")
+	}
+	return it, nil
+}
+
 // visualItem returns the item when it is a clip, text, caption or shape item, else the
 // E_TYPE_MISMATCH of the commands that apply to every visual item (blur, filter).
 func (c *Context) visualItem(id, what string) (timeline.Item, *Error) {
@@ -104,12 +121,16 @@ func applyClipSetFraming(c *Context, a *clipFramingArgs) error {
 	if err := atLeastOne([]string{"fit", "crop"}, a.Fit != "", a.Crop != nil); err != nil {
 		return err
 	}
-	it, err := c.clipItem(a.ItemID, "framing")
+	it, err := c.clipOrCompositionItem(a.ItemID, "framing")
 	if err != nil {
 		return err
 	}
 	if a.Fit != "" {
 		it.Fit = a.Fit
+	}
+	if a.Crop != nil && it.Type == timeline.ItemComposition {
+		return Errorf(CodeTypeMismatch, "Item %s is a composition, which cannot be cropped.", a.ItemID).
+			WithHint("Use clip.set_mask to show a part of it.").WithPath("args.crop")
 	}
 	if a.Crop != nil {
 		if err := cropAnimated(&it, a.Crop); err != nil {

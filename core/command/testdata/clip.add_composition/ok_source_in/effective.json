@@ -1,0 +1,18 @@
+{
+  "duration": {
+    "frame": 240,
+    "requested": null,
+    "seconds": 8
+  },
+  "id": "itm_m1n2p3q4r5",
+  "source_in": {
+    "frame": 60,
+    "requested": "2s",
+    "seconds": 2
+  },
+  "start": {
+    "frame": 0,
+    "requested": "0s",
+    "seconds": 0
+  }
+}

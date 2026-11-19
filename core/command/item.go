@@ -210,6 +210,12 @@ func (c *Context) slideNeighbours(it *timeline.Item, start int, hasStart, hasTra
 // sourceAsset returns the asset an item reads from when its source range matters: a
 // clip or audio item of a real video or audio asset.
 func (c *Context) sourceAsset(it *timeline.Item) (timeline.Asset, bool) {
+	if it.Type == timeline.ItemComposition {
+		// A composition reads its nested timeline in project frames, like a video asset, so a trim or a split
+		// moves source_in the same way. It has no asset facts: the length of the nested timeline belongs to
+		// another document, so no source range is checked here (SDD-002 C.78 checks it when the item is placed).
+		return timeline.Asset{Kind: timeline.AssetVideo}, true
+	}
 	if it.Type != timeline.ItemClip && it.Type != timeline.ItemAudio {
 		return timeline.Asset{}, false
 	}
@@ -338,7 +344,7 @@ func applyItemTrim(c *Context, a *itemTrimArgs) error {
 	c.SetEffectiveTime("to", to, string(a.To))
 	c.SetEffective("start", n.Start)
 	c.SetEffective("duration", n.Duration)
-	if n.Type == timeline.ItemClip || n.Type == timeline.ItemAudio {
+	if n.Type == timeline.ItemClip || n.Type == timeline.ItemAudio || n.Type == timeline.ItemComposition {
 		c.SetEffective("source_in", n.SourceIn)
 	}
 	return nil

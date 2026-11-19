@@ -199,8 +199,8 @@ func (p *planner) layerBase(it *timeline.Item, r int) (Layer, bool) {
 		return l, true
 	case timeline.ItemText, timeline.ItemCaption:
 		return p.textLayer(l, it, r, a), true
-	case timeline.ItemAudio:
-		// Audio items make no layer (SDD-004 §2).
+	case timeline.ItemAudio, timeline.ItemComposition:
+		// Audio items make no layer (SDD-004 §2); a composition is resolved by frame (SDD-004 §3.16).
 	}
 
 	return Layer{}, false

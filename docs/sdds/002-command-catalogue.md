@@ -1,7 +1,7 @@
 # SDD-002: Command catalogue of the core
 
 - Amended (2026-11-18) for Stuarty: this is the catalogue of the video domain. Other domains get their own catalogue (ADR-0031, ADR-0038).
-- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen: all 77 commands have golden cases and pass the registry-wide gates. The binary exposes all 77 commands, 76 of them public (epic 32 adds three, C.78 to C.80, with their code); `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
+- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen: all 78 commands have golden cases and pass the registry-wide gates. The binary exposes all 78 commands, 77 of them public (epic 32 adds three, C.78 to C.80); `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
 - Depends on: SDD-001 (document), ADR-0002 (command core), ADR-0004 (time), ADR-0006 (log, concurrency, undo), ADR-0014 (JSON Schema)
 - Implements: RF-010 to RF-016, RF-020 to RF-026, RF-030 to RF-036, RF-040, RF-041, RF-050, RF-051, RF-100, RF-105, RF-107, RF-112 to RF-115, RF-119, NFR-001, NFR-025
 - Owner area: senior-a (command core and schema)
@@ -43,7 +43,7 @@ func (r *Registry) Apply(doc *timeline.Document, op Operation, env Env) (Result,
 
 type Env struct {
     NewIDs    func(prefix string) string // deterministic in tests; random in production
-    Timelines Timelines                  // the other timelines of the production (epic 32); nil when the caller has none
+    Timelines timeline.Graph             // the other timelines of the production (epic 32); nil when the caller has none
 }
 
 type Result struct {
@@ -54,9 +54,9 @@ type Result struct {
     Spawned   []*timeline.Document // timelines the command made besides Doc (composition.create_from_selection); the caller stores them
 }
 
-// Timelines is what the three composition commands read of the production: pure lookups the caller answers
-// from its own store. The documents it returns are read-only.
-type Timelines interface {
+// timeline.Graph is what the three composition commands read of the production: pure lookups the caller
+// answers from its own store. The documents it returns are read-only.
+type Graph interface {
     Doc(id string) (*timeline.Document, bool) // a timeline of the production by its id
     Users(id string) []string                 // the ids of the timelines that hold a composition of id, sorted
 }
@@ -6250,3 +6250,88 @@ Describes what `animation.apply_preset` and `keyframe.set_easing` accept, for an
 
 - `ok_lists_the_presets`
 - `err_validation_takes_no_arguments`
+
+### C.78 `clip.add_composition`
+
+Places another timeline of the production on a visual track as one `composition` item (SDD-001 section 3.5.1, RF-083). Nothing is copied: the item names the timeline.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `track_id` | track id | yes | none | a visual track |
+| `timeline_id` | timeline id | yes | none | a timeline of the production, read through `Env.Timelines` (A.3) |
+| `start` | time | no | the end of the last item of the track (`"0s"` on an empty track) | absolute; omitted, the item goes to the first free position at or after the end of the track |
+| `source_in` | time | no | `"0s"` | the first frame shown of the nested timeline, in frames of this timeline |
+| `duration` | time, as a length | no | the rest of the nested timeline from `source_in`, in frames of this timeline (the nested end frame converted with the frame rates, rounded up) | at least 1 frame |
+| `fit` | `"cover"`, `"contain"`, `"none"` | no | `"cover"` | SDD-001 section 3.5.1 |
+| `id` | item id | no | generated | R6 |
+
+**Preconditions.**
+
+1. Arguments match the schema and times parse (`E_VALIDATION`, `E_INVALID_TIME`).
+2. The track exists and is visual (`E_NOT_FOUND`, `E_TYPE_MISMATCH`); the timeline is in the production (`E_NOT_FOUND`; with no `Env.Timelines` no timeline is).
+3. The timeline is not this timeline and does not hold, at any depth, a composition of this timeline (`E_INVALID_STATE`, `details.reason` `composition_cycle`, `details.path` the ids from the nested timeline to this one).
+4. The nesting stays within 4: the number of timelines above this one (through `Env.Timelines.Users`), plus one, plus the depth of the nested timeline is at most 4 (`E_LIMIT`, `details.reason` `composition_depth`, `details.depth` the depth it would have).
+5. The nested timeline is not empty (`E_INVALID_STATE`); `id` is not used (`E_ID_EXISTS`); the document has fewer than 500 items (`E_LIMIT`).
+6. `source_in` is below the converted length `L` of the nested timeline and `source_in + duration` is at most `L` (`E_OUT_OF_SOURCE`). The later edits of the nested timeline do not move this check: a composition that is longer than a shortened nested timeline shows nothing after its end and the lint says so.
+7. The item ends at or before 108,000 (`E_INVALID_TIME`) and does not overlap an item of the track (`E_OVERLAP`, R8).
+
+**Postconditions.**
+
+1. A `composition` item is added: `start`, `track`, `timeline`, `duration`, plus `source_in` above 0 and `fit` when not `"cover"`. Every other field is absent.
+2. `diff` has one `item.added`. `effective` has `id`, `start`, `source_in`, `duration` (A.4 triples; `requested` is `null` for a default).
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | bad argument | `args.fit "stretch" is not one of cover, contain, none.` | `Use cover, contain or none.` |
+| `E_INVALID_TIME` | malformed time, zero duration, item ending after 108,000 | `The item would occupy frames 108000-108099, past the limit 108000.` | `Use a start of at most "7800f" for this 300-frame item.` |
+| `E_NOT_FOUND` | unknown track, or a timeline that is not in the production | `Timeline prj_zzzzzzzzzz is not in this production.` | `Use the id of a timeline listed by project_get.` |
+| `E_TYPE_MISMATCH` | audio track | `Track trk_a1b2c3d4e5 is an audio track; a composition goes on a visual track.` | `Use a visual track.` |
+| `E_INVALID_STATE` | a cycle, or an empty nested timeline | `Timeline prj_f6g7h8j9k0 holds this timeline, so placing it here would make a loop.` | `Use a timeline that does not contain this one.` |
+| `E_LIMIT` | nesting deeper than 4, or 500 items | `Placing this timeline would nest compositions 5 deep; the limit is 4.` | `Flatten a level with composition.expand.` |
+| `E_ID_EXISTS` | `id` used | `Item id itm_m1n2p3q4r5 already exists.` | `Omit id or use an unused id.` |
+| `E_OUT_OF_SOURCE` | the range leaves the nested timeline | `The composition would show frames 0 to 449 of timeline prj_a1b2c3d4e5, which has 300 frames.` | `Use a duration of at most "300f" (10.000s), the most this timeline allows from source_in 0.` |
+| `E_OVERLAP` | overlap on the track | `Item itm_m1n2p3q4r5 would occupy frames 100-249 on track trk_f6g7h8j9k0, where item itm_c3d4e5f6g7 already is (frames 90-179).` | `Use start "180f" (6.000s), the next free position, or another track.` |
+
+**Inverse.** `remove {collection: "items", id: <new id>}`.
+
+**Idempotency.** With `id`: the second application returns `E_ID_EXISTS`. Without: the copy overlaps the first (`E_OVERLAP`).
+
+**Example.** 30 fps; empty track `trk_f6g7h8j9k0`; timeline `prj_a1b2c3d4e5` of 300 frames.
+
+```json
+{"op": "clip.add_composition", "args": {"track_id": "trk_f6g7h8j9k0", "timeline_id": "prj_a1b2c3d4e5", "start": "0s", "id": "itm_m1n2p3q4r5"}}
+```
+
+**Golden cases.**
+
+- `ok_default_duration_rest_of_nested`
+- `ok_explicit_duration`
+- `ok_source_in`
+- `ok_other_frame_rate_converts_the_length`
+- `ok_start_omitted_goes_to_the_end_of_the_track`
+- `ok_fit_contain`
+- `ok_supplied_id`
+- `ok_nested_two_levels`
+- `ok_depth_exactly_four`
+- `err_validation_bad_fit`
+- `err_invalid_time_malformed`
+- `err_invalid_time_zero_duration`
+- `err_not_found_track`
+- `err_not_found_timeline`
+- `err_not_found_no_production`
+- `err_type_mismatch_audio_track`
+- `err_invalid_state_itself`
+- `err_invalid_state_cycle_direct`
+- `err_invalid_state_cycle_indirect`
+- `err_invalid_state_empty_timeline`
+- `err_limit_depth_five`
+- `err_limit_depth_through_the_timelines_above`
+- `err_limit_500_items`
+- `err_id_exists`
+- `err_out_of_source_one_frame_too_long`
+- `err_out_of_source_source_in_at_the_end`
+- `err_overlap`

@@ -64,7 +64,7 @@ func slotKind(t timeline.ItemType) string {
 		return "text"
 	case timeline.ItemCaption:
 		return "caption"
-	case timeline.ItemShape:
+	case timeline.ItemShape, timeline.ItemComposition:
 		return ""
 	}
 	return ""

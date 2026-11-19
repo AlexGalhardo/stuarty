@@ -1,0 +1,13 @@
+{
+  "code": "E_INVALID_STATE",
+  "message": "A timeline cannot contain itself.",
+  "hint": "Use a timeline that does not contain this one.",
+  "retryable": false,
+  "path": "args.timeline_id",
+  "details": {
+    "path": [
+      "prj_7k2m9x4q1b"
+    ],
+    "reason": "composition_cycle"
+  }
+}

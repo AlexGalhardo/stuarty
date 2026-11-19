@@ -137,7 +137,7 @@ func applyClipSetEffects(c *Context, a *clipEffectsArgs) error {
 		seen[e.Kind] = true
 		effects = append(effects, e)
 	}
-	it, err := c.clipItem(a.ItemID, "effects")
+	it, err := c.clipOrCompositionItem(a.ItemID, "effects")
 	if err != nil {
 		return err
 	}
