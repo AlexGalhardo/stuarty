@@ -601,7 +601,9 @@ func TestImageTextsMarkUntrustedNames(t *testing.T) {
 	s, _ := newImageService(t)
 	ctx := asActor("local:agent")
 
-	c, err := s.ImageCreate(ctx, ImageCreateRequest{Width: 100, Height: 100, Name: "Ep <b>1‮"})
+	rlo := string(rune(0x202E)) // a bidirectional override
+
+	c, err := s.ImageCreate(ctx, ImageCreateRequest{Width: 100, Height: 100, Name: "Ep <b>1" + rlo})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -633,7 +635,7 @@ func TestImageTextsMarkUntrustedNames(t *testing.T) {
 			t.Errorf("%s: the text does not start with the note: %q", name, text)
 		}
 
-		if strings.Contains(body, "<") || strings.Contains(body, "‮") {
+		if strings.Contains(body, "<") || strings.Contains(body, rlo) {
 			t.Errorf("%s: a name is printed bare: %q", name, body)
 		}
 	}
