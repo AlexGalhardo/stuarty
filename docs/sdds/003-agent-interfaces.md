@@ -3476,7 +3476,7 @@ Every command that reads or edits a timeline (those whose result is about one do
 | `project:trash` | `project:trash <project id>` | none | none | `ProjectStateResult` |
 | `project:restore` | `project:restore <project id>` | none | none | `ProjectStateResult` |
 | `edit` | `edit --project <id> --ops <file\|-> [--base n] [--key k]` or `edit --project <id> <op> [k=v \| k:=json]...` | `--ops` string; `--base` int (§5.5); `--key` string, the idempotency key | the batch, with `--ops -` | `EditResult` |
-| `command:help` | `command:help [<name>]` | none | none | `CommandHelpResult` |
+| `command:help` | `command:help [<name>] [--domain <domain>]` | `--domain` string, a domain of SDD-000 §1.1 (none: the video commands and the list of domains, §4.8) | none | `CommandHelpResult` |
 | `history` | `history --project <id> [--by a] [--cursor c] [--limit n]` | `--by` string, only steps by this actor (the global `--actor` names the caller); `--cursor`; `--limit` int 20 | none | `HistoryListResult` |
 | `undo` | `undo --project <id>` | none (one step per call) | none | `UndoResult` |
 | `redo` | `redo --project <id>` | none (one step per call) | none | `UndoResult` |
