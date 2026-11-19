@@ -798,6 +798,114 @@ export interface ConnectionTestResult {
 	message: string;
 }
 
+// The approval queue, its rules and the cost ceilings (SDD-015). An amount is an integer in
+// millionths of the currency unit; the page formats it and adds nothing.
+export interface Money {
+	micros: number;
+	currency: string;
+}
+
+export type ApprovalState = "pending" | "approved" | "rejected" | "expired";
+
+export interface ApprovalRequest {
+	id: string;
+	actor: string;
+	kind: string;
+	// Text an agent or a job kind wrote: shown as text, never as markup.
+	summary: string;
+	connection_id: string | null;
+	project_id: string | null;
+	job_id: string | null;
+	payload_ref: string;
+	estimate: Money;
+	state: ApprovalState;
+	decided_by: string | null;
+	rule_id: string | null;
+	reason?: string;
+	created_at: string;
+	decided_at: string | null;
+	expires_at: string;
+}
+
+export interface ApprovalListResult {
+	requests: ApprovalRequest[];
+	next_cursor: string | null;
+	total: number;
+	text: string;
+}
+
+export interface ApprovalRule {
+	id: string;
+	kind: string;
+	connection_id: string | null;
+	project_id: string | null;
+	currency?: string;
+	per_item_micros: number | null;
+	per_day_micros: number | null;
+	enabled: boolean;
+	created_by: string;
+	created_at: string;
+}
+
+export interface ApprovalRuleListResult {
+	rules: ApprovalRule[];
+}
+
+export interface ApprovalRuleSetRequest {
+	id?: string;
+	kind: string;
+	connection_id?: string;
+	project_id?: string;
+	currency?: string;
+	per_item_micros?: number;
+	per_day_micros?: number;
+	enabled?: boolean;
+}
+
+export interface CostCeiling {
+	project_id: string | null;
+	currency: string;
+	per_item_micros: number | null;
+	per_day_micros: number | null;
+	updated_by: string;
+	updated_at: string;
+}
+
+export interface CostLine {
+	scope: "workspace" | "project";
+	project_id?: string;
+	currency: string;
+	micros: number;
+}
+
+export interface CostTotal {
+	day: string;
+	connection_id?: string;
+	project_id?: string;
+	currency: string;
+	micros: number;
+}
+
+export interface CostSummary {
+	ceilings: CostCeiling[];
+	today: CostLine[];
+	day: string;
+	days: CostTotal[];
+}
+
+export interface CostCeilingSetRequest {
+	project_id?: string;
+	currency: string;
+	per_item_micros?: number;
+	per_day_micros?: number;
+}
+
+// The events of GET /approvals/events: the data of each is an ApprovalRequest.
+export const APPROVAL_EVENT_NAMES = [
+	"approval.requested",
+	"approval.decided",
+] as const;
+
 // GET /users: an administrator session only (SDD-007 section 4.1 item 2). The
 // editor reads it once, to show the name of the actors `user:<id>`.
 export interface UserSummary {

@@ -9,6 +9,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "@playwright/test";
 import { CHROMIUM_ONLY, NOT_IN_MATRIX } from "./support/browsers";
+import { LAUNCHER_SECRET } from "./support/launcher";
 import { NETWORK_ADMIN, NETWORK_PORT, NETWORK_URL } from "./support/network";
 
 // The server serves resources/public/build, which is not the sources: a build
@@ -200,6 +201,8 @@ export default defineConfig({
 				// The master key of the vault (SDD-014 section 4) lives next to the workspace, never in it, so
 				// the connections spec does not write into the keychain of the machine that runs it.
 				STUARTY_MASTER_KEY_FILE: `${home}.master.key`,
+				// The desktop shell's secret, so a spec can sign in as a person (the approval queue).
+				STUARTY_LAUNCHER_SECRET: LAUNCHER_SECRET,
 				// One token drives the whole suite, faster and with more exports a minute
 				// than one person would (the limits of SDD-007 4.4 apply in local mode).
 				STUARTY_RATE_LIMIT_HEAVY_PER_MINUTE: "1000",

@@ -2,6 +2,11 @@ import { fromResponse, networkError } from "./errors";
 import { type RetryDeps, withRetry } from "./retry";
 import { type Transport, TransportError } from "./transport";
 import type {
+	ApprovalListResult,
+	ApprovalRequest,
+	ApprovalRule,
+	ApprovalRuleListResult,
+	ApprovalRuleSetRequest,
 	AssetListResult,
 	AuditListResult,
 	AuditQuery,
@@ -14,6 +19,8 @@ import type {
 	ConnectionCreateRequest,
 	ConnectionListResult,
 	ConnectionTestResult,
+	CostCeilingSetRequest,
+	CostSummary,
 	EditRequest,
 	EditResult,
 	ExportOptions,
@@ -149,6 +156,19 @@ export interface ApiClient {
 	createConnection(request: ConnectionCreateRequest): Promise<Connection>;
 	removeConnection(id: string): Promise<Connection>;
 	testConnection(id: string): Promise<ConnectionTestResult>;
+	// The approval queue (SDD-015). Deciding, the rules and the ceilings are for a person in a
+	// browser session; any other caller gets E_PRIVILEGED_SESSION.
+	listApprovals(state?: string): Promise<ApprovalListResult>;
+	decideApproval(
+		id: string,
+		decision: "approve" | "reject",
+		reason?: string,
+	): Promise<ApprovalRequest>;
+	listApprovalRules(): Promise<ApprovalRuleListResult>;
+	setApprovalRule(request: ApprovalRuleSetRequest): Promise<ApprovalRule>;
+	removeApprovalRule(id: string): Promise<ApprovalRule>;
+	getCostSummary(): Promise<CostSummary>;
+	setCostCeiling(request: CostCeilingSetRequest): Promise<CostSummary>;
 	// An administrator session; any other caller gets E_FORBIDDEN.
 	listUsers(): Promise<UserListResult>;
 	listTrashedProjects(): Promise<ProjectListResult>;
@@ -384,6 +404,33 @@ export function createClient(
 				EDIT_TIMEOUT_MS,
 				{},
 			),
+		listApprovals: (state) =>
+			call(
+				"GET",
+				`/approvals?state=${encodeURIComponent(state ?? "pending")}&limit=200`,
+				READ_TIMEOUT_MS,
+			),
+		decideApproval: (id, decision, reason) =>
+			call(
+				"POST",
+				`/approvals/${encodeURIComponent(id)}/decide`,
+				EDIT_TIMEOUT_MS,
+				reason === undefined || reason === ""
+					? { decision }
+					: { decision, reason },
+			),
+		listApprovalRules: () => call("GET", "/approval-rules", READ_TIMEOUT_MS),
+		setApprovalRule: (request) =>
+			call("POST", "/approval-rules", EDIT_TIMEOUT_MS, request),
+		removeApprovalRule: (id) =>
+			call(
+				"DELETE",
+				`/approval-rules/${encodeURIComponent(id)}`,
+				EDIT_TIMEOUT_MS,
+			),
+		getCostSummary: () => call("GET", "/cost", READ_TIMEOUT_MS),
+		setCostCeiling: (request) =>
+			call("PUT", "/cost/ceilings", EDIT_TIMEOUT_MS, request),
 		revokeKey: (keyId) =>
 			call("DELETE", `/keys/${encodeURIComponent(keyId)}`, EDIT_TIMEOUT_MS),
 		listTrashedProjects: () =>
