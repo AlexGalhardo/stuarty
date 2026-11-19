@@ -46,7 +46,7 @@ A creator can let Stuarty hold the keys to their accounts without fear: every cr
 - [x] 6. Put the outbound gate in `internal/outbound` and route every existing outbound call through it. Verify: `go test ./internal/outbound/...` passes and `bash scripts/no-egress.sh` passes with no connection configured.
 - [x] 7. Expose connections on HTTP, CLI and MCP, with parity tests. Verify: `go test ./web/contract/... -run TestParity` passes; `UPDATE_SURFACE=1` is used for the new names.
 - [x] 8. Build the Connections page (list, add, test, remove, last used) in both languages. Verify: `bun run typecheck`, `bun run check:i18n`, `task test:web` and the new spec `web/e2e/specs/connections.spec.ts` pass.
-- [ ] 9. Make the diagnostic bundle and the logs free of secrets. Verify: `go test -run TestSecurity_ ./...` passes with the new tests of the SDD-007 rows.
+- [x] 9. Make the diagnostic bundle and the logs free of secrets. Verify: `go test -run TestSecurity_ ./...` passes with the new tests of the SDD-007 rows.
 
 ## Test strategy
 

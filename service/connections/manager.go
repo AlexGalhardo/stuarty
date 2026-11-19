@@ -116,6 +116,9 @@ func (m *Manager) Kinds() []string {
 	return slices.Sorted(maps.Keys(m.connectors))
 }
 
+// Redact replaces every credential of the vault and its master key in data (SDD-014 section 9).
+func (m *Manager) Redact(data []byte) []byte { return m.vault.Redact(data) }
+
 // Vault is the vault of the manager, for doctor and the tests of the wiring.
 func (m *Manager) Vault() *vault.Vault { return m.vault }
 
@@ -227,6 +230,9 @@ func (m *Manager) Test(ctx context.Context, id string) (TestResult, error) {
 
 		return terr
 	})
+
+	// A destination can echo the credential it was sent; what the caller reads never holds it.
+	res.Message = string(m.Redact([]byte(res.Message)))
 
 	return res, err
 }
