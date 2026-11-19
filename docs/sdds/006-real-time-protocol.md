@@ -18,6 +18,7 @@
 9. Backpressure, slow consumers and event size
 10. Out of scope: presence
 11. Acceptance
+12. The image document stream
 
 ## 1. Purpose and scope
 
@@ -162,6 +163,23 @@ data: {"project_id":"prj_7k2m9x4q1b","state":"trashed","at":"2026-11-14T12:10:00
 ```
 
 On `trashed` the UI stops editing and shows the project as read only.
+
+#### 3.3.1 `nested.updated`
+
+A timeline that another timeline holds as a composition (SDD-001 §3.5.1) changed. After the commit of a batch on timeline C, the service publishes one `nested.updated` on the stream of every timeline that uses C, directly or through others, so a preview that holds the plan of a parent asks for it again without any edit of the parent (RF-083). It is published only when C has users; it is not stored in the replay buffer's gap rules any differently from `project.updated`.
+
+| Field | Meaning |
+| --- | --- |
+| `project_id` | the timeline whose stream carries the event: the user, not the one that changed |
+| `timeline_id` | the timeline that changed (C) |
+| `revision` | the revision of C after the commit |
+| `at` | when |
+
+```text
+event: nested.updated
+data: {"project_id":"prj_7k2m9x4q1b","timeline_id":"prj_a1b2c3d4e5","revision":12,"at":"2026-11-14T12:10:00.000Z"}
+
+```
 
 ### 3.4 `asset.updated`
 
@@ -658,3 +676,47 @@ The implementation of this SDD is complete when every check passes. Server tests
 21. A job emitting 1,000 progress updates in one second produces at most 5 `job.updated` events on a stream, including the final state; `succeeded` and `failed` are never dropped; a failed export's event carries its `error` and a succeeded one its `result`.
 22. Revalidation (network mode): revoking an API key closes its open stream within 60 seconds; the next connect is 401.
 23. `markdownlint` passes on this document.
+
+## 12. The image document stream
+
+`GET /api/v1/images/{id}/events`, scope `read`. It is the stream of section 2 for one image document (SDD-021, epic 48), so that an editor open on an image shows what an agent or another window committed without polling. Everything in sections 2 to 9 holds for it unless this section says otherwise: the query `since` and the header `Last-Event-ID` (the header wins), the JSON error before the stream (`E_VALIDATION`, 401, 403, 404, 429), the preamble and the visible heartbeat, the revalidation every 60 seconds, the limits of section 9.4 (counted per image), the slow consumer of section 9.1 and `resync.required`.
+
+**Access.** The caller must be able to read the image: an unknown image, or one the caller may not see in network mode, is `E_NOT_FOUND`; a key limited to one project reaches no image and gets `E_FORBIDDEN` (SDD-021 section 10). The handler asks the Service (`ImageDescribe`) before the response becomes a stream and again at every revalidation.
+
+**Topic and publishing.** One topic per image, `"image:" + imageID`. A batch that an image operation commits (`ImageEdit`, `ImageUndo`, `ImageRedo`, and `ImageImport` into an existing image) publishes `image.updated` after the commit, in revision order, as section 5.3 says. A dry run, a batch with an empty diff (a no-op, or an undo step whose primitives were all skipped) and the creation of a document (revision 1) publish nothing, so the revisions of this stream rise but are not always consecutive: a client never waits for a missing one, it compares revisions.
+
+### 12.1 `image.updated`
+
+The SSE `id` is the revision.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `image_id` | string | |
+| `revision` | integer | the revision this batch produced; equals the SSE `id` |
+| `base_revision` | integer | the revision the actor planned against |
+| `kind` | `"edit"`, `"undo"`, `"redo"` | |
+| `actor` | string | SDD-000 section 3 |
+| `at` | string | commit time |
+| `diff` | array of Change | the diff of the image batch (SDD-021 section 4); absent when `diff_truncated` is true |
+| `diff_truncated`, `changed`, `changed_more` | | as in `batch.committed` (section 9.3): a payload over 64 KiB carries at most 500 `{kind, id}` entries instead of the diff |
+
+```text
+id: 7
+event: image.updated
+data: {"image_id":"img_7k2m9x4q1b","revision":7,"base_revision":6,"kind":"edit","actor":"local:claude-code","at":"2026-11-20T12:03:10.204Z","diff":[{"kind":"layer.updated","id":"lyr_a1b2c3d4e5","changes":{"x":[10,40]}}]}
+
+```
+
+### 12.2 Replay and resync
+
+The rules of section 4.3 apply with the log of the image (`image_operations`, SDD-005 section 5.13): `L == H` sends nothing, `L < H` with `H - L <= 1000` replays the rows after `L` in order, in pages of 100 and within 16 MiB, as ordinary `image.updated` events (a client cannot tell them from live ones; a row with an empty diff is skipped as above), `H - L > 1000` or too many bytes is `resync.required` with `gap_too_large`, and `L > H` is `client_ahead`. An image has no migration or import row, so there is no `before_floor`. A live event that skips a revision is preceded by the rows between, from the log, as in section 5.4. There is no snapshot of jobs and assets: an image stream carries only the one event and `resync.required`. The `resync.required` of an image stream names the image instead of a project, `{"image_id", "revision", "reason"}`, has no `id` and ends the stream, as in section 3.6.
+
+### 12.3 What the client does
+
+The image editor opens the stream while its window is visible, with `?since=<revision it holds>`, and reopens it as section 4.6 says. On an event whose revision is above its own it asks for the document again with `GET /images/{id}` (the order of layers is decided by the core, SDD-021 section 4, so the screen applies no diff itself), outlines the layers the diff names as another actor's work, and ignores an event whose revision it already holds: its own commits arrive as a response and as an event of the same revision and are applied once (section 6.2). It polls the revision (SDD-012 section 24.3) only while the stream is not open.
+
+### 12.4 Acceptance of the image stream
+
+1. `TestImageEvents` (`web/app/http`): one `image.updated` per committed revision, none for a dry run, a no-op or the creation of a document; the replay after `Last-Event-ID` sends the missed revisions in order, once each; `since` ahead of the head is `client_ahead`; a gap of more than 1,000 revisions is `gap_too_large`; a user who does not own the image gets 404.
+2. The examples of this section are validated against the JSON Schema of the event (check 2 of section 11).
+3. A Playwright test (`image-live.spec.ts`) edits an image by the CLI while the editor is open in two windows: both show the change in under a second, and no window asks for the document on a timer while its stream is open (the only reads after the first are those that follow an event).

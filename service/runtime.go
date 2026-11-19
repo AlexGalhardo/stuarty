@@ -22,6 +22,9 @@ const (
 	QueueKindIngest = "video.ingest"
 	QueueKindExport = "video.export"
 	QueueKindFrame  = "video.frame"
+	// QueueKindExportBatch is the parent job of an export batch (SDD-004 section 8.4). It runs on the default
+	// queue: it holds no encoder, its children are exports that take their own slots.
+	QueueKindExportBatch = "video.export_batch"
 )
 
 // Enqueuer hands a job to the workers. Enqueue runs inside the write
@@ -39,6 +42,8 @@ type Ingester func(ctx context.Context, in ingest.Input) (*ingest.Result, error)
 type ExportInput struct {
 	JobID string
 	Doc   *timeline.Document
+	// Nested are the timelines the compositions of Doc use, by id, as they were when the export started.
+	Nested map[string]*timeline.Document
 	// OutPath is the final file. The exporter writes it only after the file
 	// passed its verification, and leaves nothing there otherwise.
 	OutPath    string
@@ -48,6 +53,9 @@ type ExportInput struct {
 	// MaxBytes is STUARTY_MAX_EXPORT_BYTES: the encoder stops at this size
 	// instead of filling the disk first; 0 means no ceiling.
 	MaxBytes int64
+	// Preset is the id of a platform preset and Codec the codec asked for (h264, hevc or av1); both are for
+	// mp4 (SDD-004 sections 8.2 and 8.3). Empty is none.
+	Preset, Codec string
 	// OnProgress receives the frames written and the total.
 	OnProgress func(done, total int)
 }
@@ -61,6 +69,9 @@ type ExportOutput struct {
 	VideoCodec   string
 	AudioCodec   string
 	LoudnessLUFS *float64
+	// CodecFallback is the codec the preset preferred when the video is H.264 instead, and Notes say so.
+	CodecFallback string
+	Notes         []string
 	// Width and Height are the pixels of the file when they differ from the project's
 	// (a GIF is capped); zero means the project's size.
 	Width, Height int

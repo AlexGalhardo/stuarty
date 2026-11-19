@@ -1,0 +1,8 @@
+{
+  "args": {
+    "amount": 70,
+    "kind": "sepia",
+    "layer_id": "lyr_bbbbbbbbbb"
+  },
+  "op": "layer.filter_add"
+}

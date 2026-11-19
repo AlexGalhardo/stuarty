@@ -7,7 +7,7 @@
 
 ## 1. Purpose
 
-This document defines the JSON document that represents one project: the single thing every command changes, the frame plan reads and the database stores. It is detailed enough to write `core/timeline` (Go types, validation, canonical encoding, migrations) and its generated JSON Schema without further questions.
+This document defines the JSON document that represents one timeline. Since ADR-0039 a project is a production that holds timelines (SDD-005 section 5.12), and in this document "project" still means the timeline document: its name, its `prj_` identifier and its fields do not change. The document is the single thing every command changes, the frame plan reads and the database stores. It is detailed enough to write `core/timeline` (Go types, validation, canonical encoding, migrations) and its generated JSON Schema without further questions.
 
 Out of this document: how commands change the document (SDD-002), how it becomes pixels (SDD-004), how it is stored (SDD-005).
 
@@ -94,7 +94,7 @@ An asset appears in the document only after its ingest produced the normalized m
 | Field | Type | Default | Meaning |
 | --- | --- | --- | --- |
 | `id` | track id | required | |
-| `kind` | `"visual"` or `"audio"` | required | visual tracks hold `clip`, `text`, `caption`, `shape`; audio tracks hold `audio` |
+| `kind` | `"visual"` or `"audio"` | required | visual tracks hold `clip`, `text`, `caption`, `shape`, `composition`; audio tracks hold `audio` |
 | `name` | string, up to 60 characters | `""` | |
 | `order` | string | required | fractional index, section 3.3.1 |
 | `hidden` | boolean | false | visual track not rendered |
@@ -104,6 +104,7 @@ An asset appears in the document only after its ingest produced the normalized m
 | `volume` | number, 0 to 4 | absent (1) | Added by VV-036. A factor on the volume of the items of the track |
 | `magnet` | boolean | false | Added by TASK-0254. The items of the track are kept packed from frame 0 with no gap: after every command the items are laid end to end in the order of their `start`, so deleting, moving or trimming an item closes the gap. A locked track is not repacked; the command that turns the magnet on packs the track at once. The shift moves only the items of this track (a linked item on another track does not follow) |
 | `caption_style` | CaptionStyle | none | style of the caption items on this track, section 3.7 |
+| `processors` | list of Processor, up to 12 | absent | Added by epic 34. The processor chain of the track, run on the sum of the track's items after their own chains and the track volume (SDD-004 section 7.1). See "Processor" in section 3.5 |
 
 #### 3.3.1 Track order
 
@@ -114,7 +115,7 @@ An asset appears in the document only after its ingest produced the normalized m
 | Field | Type | Default | Meaning |
 | --- | --- | --- | --- |
 | `id` | item id | required | |
-| `type` | `"clip"`, `"audio"`, `"text"`, `"caption"`, `"shape"` | required | |
+| `type` | `"clip"`, `"audio"`, `"text"`, `"caption"`, `"shape"`, `"composition"` | required | `composition` was added by epic 32 (section 3.5.1) |
 | `track` | track id | required | |
 | `start` | integer | required | first frame of the item on the timeline |
 | `duration` | integer, at least 1 | required | number of frames |
@@ -127,7 +128,7 @@ An asset appears in the document only after its ingest produced the normalized m
 
 The item occupies frames `start` to `start + duration - 1`. The end, `start + duration`, is exclusive.
 
-Visual items (`clip`, `text`, `caption`, `shape`) also have:
+Visual items (`clip`, `text`, `caption`, `shape`, `composition`) also have:
 
 | Field | Type | Default | Meaning |
 | --- | --- | --- | --- |
@@ -144,7 +145,7 @@ Visual items (`clip`, `text`, `caption`, `shape`) also have:
 | `effects` | array of Effect, up to 6, or absent | absent | Added by TASK-0278. Visual effects applied in order, each kind at most once: `{"kind", ...parameters}` with `kind` one of `motion_blur`, `glow`, `vignette`, `grain`, `rgb_split`, `shake` and exactly the parameters of that kind, every one present (the command fills the defaults in): `motion_blur` `amount` 0 to 1 and `angle` -180 to 180; `glow` `amount` 0 to 1, `radius` 1 to 100 and `threshold` 0 to 1; `vignette` `amount` and `softness` 0 to 1; `grain` `amount` 0 to 1, `size` 1 to 8 and `seed` 0 to 65535; `rgb_split` `amount` and `angle`; `shake` `amount` 0 to 1, `speed` 1 to 30 and `seed` 0 to 65535 (`size`, `speed` and `seed` are integers). An unknown kind, a repeated kind, a parameter of another kind, a missing or out-of-range parameter, or more than 6 effects is `V_SHAPE`; an `audio` item with effects is `V_SHAPE`. The pixels are in SDD-004 §3.13. Set by `clip.set_effects`, a clip only |
 | `mask` | object or absent | absent | Added by VV-015. Limits where the item is drawn: `shape` (`rect` or `ellipse`), `x`, `y`, `width`, `height` (fractions of the item's own drawn rectangle, `x` and `y` from 0 to 1, `width` and `height` from 0.001 to 1, `x + width` and `y + height` at most 1), `feather` (the soft edge in pixels, a whole number from 0 to 200) and `invert` (boolean, absent means false). Absent means no mask. The frame is the item's, not the canvas, so the mask follows the item when it moves, scales or rotates. Keyframeable since VV-120: `mask_x`, `mask_y`, `mask_width`, `mask_height` and `mask_feather` are keys of `keyframes` (section 3.8); the shape and `invert` are not |
 
-`blur`, `filter`, `filter_amount`, `chroma_key`, `blend`, `flip_x`, `flip_y`, `mask` and `effects` apply to every visual item (`clip`, `text`, `caption`, `shape`); on an `audio` item a non-default value is `V_SHAPE`. The order is: chroma key (SDD-004 §3.7), colour adjustment of section 3.5, then the filter, then blur, then the effects (SDD-004 §3.13), then opacity; the mask (SDD-004 §3.9) is applied after the blur and before the opacity, and the blend mode (SDD-004 §3.8) is how the result is then drawn over the layers below. The exact formulas and the plan fields are in SDD-004 §3.6.
+`blur`, `filter`, `filter_amount`, `chroma_key`, `blend`, `flip_x`, `flip_y`, `mask` and `effects` apply to every visual item (`clip`, `text`, `caption`, `shape`, `composition`); on an `audio` item a non-default value is `V_SHAPE`. The order is: chroma key (SDD-004 §3.7), colour adjustment of section 3.5, then the filter, then blur, then the effects (SDD-004 §3.13), then opacity; the mask (SDD-004 §3.9) is applied after the blur and before the opacity, and the blend mode (SDD-004 §3.8) is how the result is then drawn over the layers below. The exact formulas and the plan fields are in SDD-004 §3.6.
 
 ### 3.5 Clip and audio items
 
@@ -169,6 +170,7 @@ A `clip` shows a video or image asset. An `audio` item plays an audio asset, or 
 | `denoise` | number, 0 to 1 | 0 | both | Added by TASK-0233. Noise reduction strength of the item's audio; 0 is off and the commands store 0 as absent. Not keyframeable. The plan carries it (SDD-004 §7) |
 | `voice` | `"clear"`, `"warm"`, `"deep"`, `"bright"`, `"radio"` | absent | both | Added by TASK-0254. The voice preset of the item's audio; absent is no preset and the commands store `none` as absent. Not keyframeable. The plan carries it (SDD-004 §7) |
 | `fade_in`, `fade_out` | integer | 0 | both | audio fade lengths in frames; their sum is at most `duration` |
+| `processors` | list of Processor, up to 12 | absent | both | Added by epic 34. The audio processor chain of the item, in the order the user chose (SDD-004 section 7.1). Not keyframeable. Edited by `audio.processor_add`, `audio.processor_set`, `audio.processor_move`, `audio.processor_remove` and `audio.apply_preset`; an empty chain is stored as absent. See "Processor" below |
 | `fit` | `"cover"`, `"contain"`, `"none"` | `"cover"` | clip | how the asset is sized into the frame before `scale` is applied |
 | `crop` | `{"left","top","right","bottom"}` numbers 0 to 1 | all 0 | clip | fraction removed from each side of the asset; `left + right < 1`, `top + bottom < 1`. Keyframeable since VV-120: `crop_left`, `crop_top`, `crop_right` and `crop_bottom` are keys of `keyframes` (section 3.8); the planner keeps each pair of opposite sides below 1 |
 | `brightness` | number, -1 to 1 | 0 | clip | Keyframeable since TASK-0254 (NEW-15), like `contrast`, `saturation`, `temperature`, `tint` and `hue`: the property name is a key of `keyframes` and the range is that of the static value |
@@ -182,6 +184,39 @@ A `clip` shows a video or image asset. An `audio` item plays an audio asset, or 
 **Source range.** At timeline frame `t` inside the item, the asset position in project frames is `source_in + floor((t - start) * speed.num / speed.den)`. With a `speed_curve` the term `floor((t - start) * speed.num / speed.den)` is `Offset(t - start)` of SDD-004 §3.11, and the number of source frames the item reads is `ceil(duration * speed.num / speed.den)` with `speed` the mean, so the rule below is unchanged. With `reverse` the item shows the same source range backwards: the offset is `ceil(duration * speed.num / speed.den) - 1 - offset` (SDD-004 §3.12), so the range is again `source_in` to `source_in + ceil(...)`. The item must stay inside the asset: `source_in + ceil(duration * speed.num / speed.den)` is at most the asset duration in project frames. Images are exempt.
 
 **Fit.** With `cover` the cropped asset is scaled uniformly until it covers the whole frame; with `contain`, until it fits inside it; with `none` it keeps its pixel size. `scale`, `x`, `y` and `rotation` apply after that.
+
+### 3.5.1 Composition items (epic 32, RF-083)
+
+A `composition` item shows another timeline of the same project as one clip: a creator builds an intro once, as its own timeline, and places it in every video. The nested timeline is a separate document (section 1); the item only names it. Nothing is copied: changing the nested timeline changes every item that uses it.
+
+| Field | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `timeline` | timeline id (`prj_` + 10 characters) | required | the nested timeline. It must be a timeline of the same production as this document, other than this document (`V_COMPOSITION` for a self reference; the rest is checked by the command core and by the service, below) |
+| `source_in` | integer | 0 | the first frame shown of the nested timeline, in frames of this document, as for a video asset: the position is converted to the nested timeline's frame rate by the rule of SDD-004 section 3.3 |
+| `speed` | rational | `1/1` | a constant speed from 1/4 to 4 (epic 53), as for a clip (section 3.5): the item reads `ceil(duration × speed)` frames of the nested timeline, from `source_in`, by the rule of SDD-004 section 3.3 (the nested timeline plays the part of the asset), and its sound follows with the pitch kept (SDD-004 section 7). A speed outside 1/4 to 4 is `V_SPEED`. Set by `clip.set_speed`. No `speed_curve`, `reverse` or `freeze`: a curve or a reverse is refused by the command, and a stored one is `V_SHAPE` |
+| `fit` | `"cover"`, `"contain"`, `"none"` | `"cover"` | how the nested timeline's frame (its own `width` and `height`) is sized into this document's frame before `scale` applies, as for a clip (SDD-004 section 3.4); the nested frame plays the part of the asset's pixels |
+| `volume`, `audio_muted`, `fade_in`, `fade_out` | as for a clip | | the gain of the nested timeline's mixed sound (SDD-004 section 7) |
+
+A composition also takes every visual field of section 3.4 (`x`, `y`, `scale`, `rotation`, `opacity`, `blur`, `filter`, `blend`, `flip_x`, `flip_y`, `effects`, `mask`, the transitions and the keyframes of those properties, `shadow`, `outline`, `disabled`, `markers`, `link`). It has no `asset`, `crop`, colour adjustment, `lut`, `chroma_key`, `hsl`, `wheels`, `curves`, `speed_curve`, `reverse`, `freeze`, `denoise` or `voice`, and a value of those that is not the default is `V_SHAPE` like any field that does not apply to the type of an item (`freeze` is `V_COMPOSITION`). It sits on a visual track (`V_ITEM_TRACK` otherwise).
+
+**What the nested timeline contributes.** Its layers and its sound, as its own plan gives them (hidden, muted, solo and disabled apply inside it). Its own `width` and `height` are the frame that is placed; its `fps` is converted as for a video asset; its `background`, `loudness_target`, markers and template information are ignored: **its frame is transparent where it draws nothing**, so the composition lets the layers below show through. What the nested layers draw outside the nested frame is not visible. The nested timeline is as long as its last item (`end_frame`); after that the composition shows nothing and is silent, and the lint says so.
+
+**Rules checked across documents** (the command core, with the graph of the production that the caller supplies, SDD-002 A.3; the service on every commit that changes one of them):
+
+1. A timeline never contains itself, directly or at any depth: placing a composition that would close a loop is refused with `E_INVALID_STATE` and `details.reason` `composition_cycle`.
+2. The depth of nesting is at most 4: a timeline with no composition has depth 0, one that holds compositions has `1 + the largest depth of the timelines they name`, and no timeline of the production may exceed 4. A command that would make one exceed it is refused with `E_LIMIT` and `details.reason` `composition_depth`.
+3. A timeline that others use is not trashed (`E_IN_USE`, listing the timelines that use it, SDD-003 section 1.7); and one that is missing from the production makes the lint report `L_MEDIA_MISSING` for the item (and `L_SOURCE_RANGE` when it shows frames past the end of its timeline or the timeline is empty, SDD-003 section 3.6), the plan draws nothing for the item, and the export is refused with `E_LINT_BLOCKING`.
+
+A nested timeline is in the production and nowhere else: compositions shared between productions are out of scope (a template covers that case).
+**Processor** (epic 34, SDD-004 section 7.1). One entry of a `processors` list:
+
+| Field | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `kind` | `"eq"`, `"compressor"`, `"limiter"`, `"gate"`, `"deesser"`, `"noise_reduction"` | required | |
+| `disabled` | boolean | false | the processor stays in the chain and is skipped by the plan |
+| `params` | object from parameter name to number | `{}` | only the parameters that differ from their default; the names, units, ranges and defaults of each kind are the table of SDD-004 section 7.1, and a value outside its range, or an unknown name, is invalid. `eq` parameters `hp_hz` and `lp_hz` are 0 (off) or inside their range; `noise_reduction` has `profile_start_ms` below `profile_end_ms` or both 0, and a marked profile only on an item chain |
+
+A chain has at most 12 processors. The lint warns when a `limiter` is not the last enabled processor of its chain (`audio_limiter_not_last`) and when a chain has more than one enabled `noise_reduction` (`audio_noise_reduction_repeated`). A processor on a text, caption or shape item is invalid. The field is additive (`schema_version` stays 1): a document without it is read and written as before.
 
 ### 3.6 Text and shape items
 
@@ -287,10 +322,11 @@ Keyframes animate a property over the item's duration:
 | Properties | `x`, `y`, `scale`, `rotation`, `opacity`, and `volume` for items with audio; for clips also the colour properties (`brightness`, `contrast`, `saturation`, `temperature`, `tint`, `hue`) and the crop sides `crop_left`, `crop_top`, `crop_right`, `crop_bottom` (0 to 1); for an item that has a `mask` also `mask_x`, `mask_y` (0 to 1), `mask_width`, `mask_height` (0.001 to 1) and `mask_feather` (0 to 200, a whole number once drawn). A document with a `mask_*` key and no `mask` is `V_KEYFRAMES` |
 | `t` | frame relative to the item's `start`, 0 to `duration` |
 | `value` | a number valid for the property |
-| `easing` | `"linear"` (default), `"ease_in"`, `"ease_out"`, `"ease_in_out"`, `"hold"`; applies from this keyframe to the next |
+| `easing` | `"linear"` (default), `"ease_in"`, `"ease_out"`, `"ease_in_out"`, `"hold"` or `"bezier"` (epic 31, RF-080); applies from this keyframe to the next. A document written before `bezier` existed has none of it and opens unchanged: a missing easing is linear |
+| `bezier` | array of four numbers `[x1, y1, x2, y2]`, present exactly when `easing` is `"bezier"` (otherwise `V_KEYFRAMES`): the two inner control points of a cubic Bezier curve from (0, 0) to (1, 1), as in CSS `cubic-bezier`. `x1` and `x2` are from 0 to 1, so time never runs backwards; `y1` and `y2` are from -2 to 3, so a curve can overshoot or pull back. The commands round the numbers to 3 decimals. The curve is evaluated only by the core (SDD-004 §3.1); an executor receives the sampled values. The commands write the named presets of SDD-002 C.75 as their four numbers, so a curve made from a preset stays editable |
 | Ordering | strictly increasing `t` within a property; at most 100 keyframes per property |
 
-When a property has keyframes they define its value: before the first keyframe the first value holds, after the last the last value holds, and the item's static field for that property is ignored. The exact interpolation formulas are in SDD-004.
+When a property has keyframes they define its value: before the first keyframe the first value holds, after the last the last value holds, and the item's static field for that property is ignored. The exact interpolation formulas are in SDD-004. A curve that overshoots can take the interpolated value outside the range of the property (an opacity of 1.1, a crop side of -0.05): the plan keeps the sampled value inside the range of the property, so no executor sees an invalid number and the stored keyframes stay valid (SDD-004 §3.1).
 
 ### 3.9 Project fonts
 
@@ -342,7 +378,7 @@ TemplateInfo, at the top of a template document: `{"description": string, "color
 | `V_OVERLAP` | no two items on the same track occupy a common frame |
 | `V_ASSET_REF` | `asset` exists, or is the placeholder in a template, and its kind suits the item: `clip` uses video or image, `audio` uses audio or a video with audio |
 | `V_SOURCE_RANGE` | the item's source range lies inside the asset (section 3.5) |
-| `V_SPEED` | speed is between 1/4 and 4; a `speed_curve` has 2 to 8 points that meet the rules of its field and `speed` is its mean |
+| `V_SPEED` | speed is between 1/4 and 4 (for a `composition` item too); a `speed_curve` has 2 to 8 points that meet the rules of its field and `speed` is its mean |
 | `V_FADES` | `fade_in + fade_out` is at most `duration` |
 | `V_TRANSITIONS` | transition durations sum to at most `duration` |
 | `V_KEYFRAMES` | keyframe rules of section 3.8 hold |
@@ -352,6 +388,7 @@ TemplateInfo, at the top of a template document: `{"description": string, "color
 | `V_SLOT` | slot names are unique and each slot kind matches its item type |
 | `V_COLOR_REF` | every `"$name"` colour reference exists in `template.colors` |
 | `V_LIMITS` | at most 50 tracks, 500 items, 200 assets and 5,000 caption words in the document |
+| `V_COMPOSITION` | a `composition` item names a timeline other than the document itself (a missing or malformed id is `V_SHAPE` or `V_ID`) and is not a freeze frame (section 3.5.1); its speed is a constant one, checked by `V_SPEED`; a field it may not have is `V_SHAPE`, a track that is not visual `V_ITEM_TRACK` |
 
 The limits bound the cost of every operation and are well above the supported project size of NFR-009.
 
@@ -414,6 +451,7 @@ The caption track sorts first (`a0` before `a1`), so captions are drawn over the
 | `"fps": {"num": 2997, "den": 100}` | `V_SHAPE`: `den` must be 1 or 1001 |
 | words with `start` 0, `duration` 10 and `start` 5, `duration` 10 | `V_WORDS`: words overlap |
 | `"id": "clip-1"` | `V_ID` |
+| a `composition` whose `timeline` is the id of the document | `V_COMPOSITION` |
 | `"width": 1081` | `V_SHAPE`: dimensions are even |
 
 ## 6. Versioning and migration
@@ -465,11 +503,11 @@ RF-065 (ROADMAP task P3-ENG-004). `core/otio` converts between this document and
 | time between items | `Gap.1` with its `source_range` |
 | `fade` in or out | `Transition.1` of type `SMPTE_Dissolve` next to the clip: `in` writes `in_offset` 0 and `out_offset` the duration, `out` the reverse |
 | `markers` | `Marker.2` on the clip: `name` the label, `marked_range` start at `source_in + frame`, duration 0 |
-| properties OTIO has no field for | `metadata.vukem` of the `Clip.2` (VV-025): `properties`, an object with the name and value of the document for each one that differs from its default: `x`, `y`, `scale`, `rotation`, `opacity`, `volume`, `audio_muted`, `fade_in` and `fade_out` (frames), `brightness`, `contrast`, `saturation`, `fit`, `crop`, `filter`, `filter_amount`, `blur`, `chroma_key` (the object of the item), `speed` (`{num, den}`), `reverse` (true only), `freeze` (true only; an import cannot restore it, because `item.freeze_frame` splits a clip, and reports `freeze frame` as lost), `hsl`, `wheels` and `curves` (the values of the item, restored by `clip.set_color` and checked with the rules of SDD-001 §3.5 at `Parse`), `lut` (`{asset, intensity}`; the asset is not part of the file, so an import reports `lookup table` as lost), `speed_curve` (list of `{t, speed: {num, den}}`), `keyframes` (the object of the item: per property a list of `{t, value, easing}`) and `slot` (`name`, then `description`, `required` (false only), `duration_policy` (not `fit`) and `filled` (true only)). Written only when there is one |
+| properties OTIO has no field for | `metadata.vukem` of the `Clip.2` (VV-025): `properties`, an object with the name and value of the document for each one that differs from its default: `x`, `y`, `scale`, `rotation`, `opacity`, `volume`, `audio_muted`, `fade_in` and `fade_out` (frames), `brightness`, `contrast`, `saturation`, `fit`, `crop`, `filter`, `filter_amount`, `blur`, `chroma_key` (the object of the item), `speed` (`{num, den}`), `reverse` (true only), `freeze` (true only; an import cannot restore it, because `item.freeze_frame` splits a clip, and reports `freeze frame` as lost), `hsl`, `wheels` and `curves` (the values of the item, restored by `clip.set_color` and checked with the rules of SDD-001 §3.5 at `Parse`), `lut` (`{asset, intensity}`; the asset is not part of the file, so an import reports `lookup table` as lost), `speed_curve` (list of `{t, speed: {num, den}}`), `keyframes` (the object of the item: per property a list of `{t, value, easing}`, plus `bezier`, the four numbers, when the easing is `bezier` (epic 31); an import refuses the list of a property whose curve is missing or not valid, as for any bad keyframe) and `slot` (`name`, then `description`, `required` (false only), `duration_policy` (not `fit`) and `filled` (true only)). Written only when there is one |
 | `text` item | a `Gap.1` with the item's `name` and `source_range` (VV-025); `metadata.vukem` holds `text`, `style` (the style object of the item) and `properties` (`x`, `y`, `scale`, `rotation`, `opacity`, `keyframes`, `slot` as above). Other tools see a gap; `caption` and `shape` items are still only the time they take |
 | `hidden`, `muted`, `magnet` of a track | `metadata.vukem` of the `Track.1` (`hidden`, `muted`, `magnet`, true only); an import sets them back with `track.update` |
 
-The `vukem` metadata is ignored by other OTIO tools and read back by Vukem, so a file written by Vukem and imported by Vukem keeps these properties. Ids, hashes and `order` strings are not written (an import makes new ids). The markers of the document (VV-035, frames from the timeline start) are written twice: in `metadata.vukem.markers` of the timeline (`{frame, label?}`, exact) and as native `Marker.2` objects of the stack (`marked_range` start, the label as `name`), so that other tools see them; they are not in the lost list. Everything the file cannot carry is returned in `[]Lost`, which still lists the properties above because another tool will not see them (`id`, `name`, `feature`) and never dropped silently: `text`, `caption` and `shape` items (their time stays as a gap; each is also kept in the metadata of that gap), `keyframes`, `speed`, colour adjustment, filter and blur, framing (`fit`, `crop`), transform and opacity, audio settings (`volume`, `audio_muted`, fades), template slot, transitions other than `fade` (also kept in the metadata), a hidden track, a muted track, a track with `magnet`, a freeze frame, a lookup table, advanced colour (`hsl`, `wheels`, `curves`), a caption style, and a clip whose asset is the placeholder.
+The `vukem` metadata is ignored by other OTIO tools and read back by Vukem, so a file written by Vukem and imported by Vukem keeps these properties. Ids, hashes and `order` strings are not written (an import makes new ids). The markers of the document (VV-035, frames from the timeline start) are written twice: in `metadata.vukem.markers` of the timeline (`{frame, label?}`, exact) and as native `Marker.2` objects of the stack (`marked_range` start, the label as `name`), so that other tools see them; they are not in the lost list. Everything the file cannot carry is returned in `[]Lost`, which still lists the properties above because another tool will not see them (`id`, `name`, `feature`) and never dropped silently: `text`, `caption` and `shape` items (their time stays as a gap; each is also kept in the metadata of that gap), `composition` items (their time stays as a gap with no metadata: the nested timeline is another document, section 3.5.1), `keyframes`, `speed`, colour adjustment, filter and blur, framing (`fit`, `crop`), transform and opacity, audio settings (`volume`, `audio_muted`, fades), template slot, transitions other than `fade` (also kept in the metadata), a hidden track, a muted track, a track with `magnet`, a freeze frame, a lookup table, advanced colour (`hsl`, `wheels`, `curves`), a caption style, and a clip whose asset is the placeholder.
 
 **Import** (`otio.Parse(bytes)` then `Import.Operations(assets, newID)`). Import returns a batch of command operations, not a document, so it goes through `Apply` and its undo rules. `Parse` reads `Timeline.1` with a `Stack.1`; each `Track.1` of kind `Video` or `Audio` becomes `track.add` (bottom track first, each at `position: "top"`), each `Clip.2` with a `source_range` becomes `clip.add` or `audio.add` (and `item.rename` for its name), `Gap.1` advances the cursor, and a `SMPTE_Dissolve` becomes `item.set_transition` with `kind: "fade"` on the clip after it (`out_offset`) and on the clip before it (`in_offset`). Times convert to the file's frame rate, taken from the first `source_range`, which must be an integer rate or n/1001 (the caller creates the project at `Import.FPS`). Names are cut to 60 (track) and 120 (item) characters. What the batch cannot carry is listed in `Import.Lost`: nested stacks, tracks of another kind, effects, transitions of another type, clips with no usable `source_range`, and a clip whose reference has no asset in `assets`. Nesting deeper than 64 levels is an error (`ErrInvalid`).
 

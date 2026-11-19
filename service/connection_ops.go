@@ -7,6 +7,8 @@ import (
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/internal/outbound"
 	"github.com/AlexGalhardo/stuarty/service/connections"
+	"github.com/AlexGalhardo/stuarty/service/connections/oauth"
+	"github.com/AlexGalhardo/stuarty/service/providers"
 )
 
 // ConnectionListRequest has no member.
@@ -77,6 +79,10 @@ func connectionError(err error) error {
 	case errors.Is(err, outbound.ErrDestination), errors.Is(err, outbound.ErrNotPublic):
 		return newError(CodeConnectionDestination, "the request is for a destination the connection does not allow.").
 			withHint("a connection reaches only the hosts it lists, over https")
+	case errors.Is(err, connections.ErrNeedsSignIn):
+		return providerError(&providers.Error{Kind: providers.KindAuth, Code: signInProviderCode})
+	case errors.Is(err, connections.ErrSignInUnavailable):
+		return providerError(&providers.Error{Kind: providers.KindUnavailable})
 	}
 
 	if reason, hint, ok := connections.Locked(err); ok {
@@ -135,6 +141,24 @@ func (s *svc) ConnectionCreate(ctx context.Context, req ConnectionCreateRequest)
 			withPath("secret")
 	}
 
+	// The stored form of a sign-in is made by the sign-in only (SDD-014 section 13): a secret in that form,
+	// given by hand, would be a credential nobody signed in for.
+	if _, isSignIn := oauth.ParseEnvelope([]byte(req.Secret)); isSignIn {
+		return nil, newError(command.CodeValidation, "the secret is not a key: a sign-in is made in the browser.").
+			withPath("secret")
+	}
+
+	return s.insertConnection(ctx, c, spec, []byte(req.Secret))
+}
+
+// insertConnection puts the credential of a validated connection in the vault and records it, with an
+// audit row. ConnectionCreate and the sign-in of a social network (SDD-020) share it.
+func (s *svc) insertConnection(
+	ctx context.Context,
+	c Caller,
+	spec connections.Spec,
+	secret []byte,
+) (*connections.Connection, error) {
 	count, err := s.store.Connections().Count(ctx)
 	if err != nil {
 		return nil, asError(err)
@@ -149,7 +173,7 @@ func (s *svc) ConnectionCreate(ctx context.Context, req ConnectionCreateRequest)
 	id := s.newIDs("con")
 	now := s.nowMs()
 
-	if err := s.conns.PutSecret(id, []byte(req.Secret)); err != nil {
+	if err := s.conns.PutSecret(id, secret); err != nil {
 		return nil, connectionError(err)
 	}
 
@@ -187,6 +211,12 @@ func (s *svc) ConnectionRemove(ctx context.Context, req ConnectionRef) (*connect
 	row, err := s.store.Connections().Get(ctx, req.ID)
 	if err != nil {
 		return nil, connectionError(err)
+	}
+
+	// A sign-in is made and removed by a person in the browser: an agent, the CLI and the local token read
+	// that it exists and cannot take it away (SDD-014 section 13, T-75).
+	if !c.Browser && s.isSignIn(ctx, row.ID) {
+		return nil, privilegedError()
 	}
 
 	if err := s.conns.DeleteSecret(row.SecretRef); err != nil {

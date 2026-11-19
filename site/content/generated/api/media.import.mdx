@@ -33,6 +33,9 @@ Content type `application/json`.
 | --- | --- | --- | --- |
 | `dry_run` | `boolean` | no | Checks the paths and limits only: the format is probed on the real import, so a file that is refused there (SVG, for one) still answers 202. |
 | `files` | array of [`importFileIn`](/docs/api/schemas#importfilein) | yes | at least 1 items; at most 50 items |
+| `info` | [`AssetInfo`](/docs/api/schemas#assetinfo) or `any` or `null` or `null` | no | Tags, the reuse mark and a description for the files of the call. |
+| `origin` | [`Origin`](/docs/api/schemas#origin) or `any` or `null` or `null` | no | Where the files came from: kind imported (default), generated (provider and model), fetched_by_agent (source and rights_note) or rendered_externally (source). |
+| `timeline_id` | `string` | no | The timeline of the project; required when the project has several. |
 | `wait_ms` | `integer` | no | 0 to 25000: hold the call until the assets are ready. |
 
 ## Responses
@@ -129,6 +132,7 @@ curl -X POST "http://127.0.0.1:7878/api/v1/projects/PROJECT_ID/media" \
   "files": [
     {
       "asset_id": "string",
+      "hash": "string",
       "path": "string"
     }
   ]
@@ -147,6 +151,7 @@ response = requests.post(
         "files": [
             {
                 "asset_id": "string",
+                "hash": "string",
                 "path": "string",
             },
         ],
@@ -168,6 +173,7 @@ const response = await fetch("http://127.0.0.1:7878/api/v1/projects/PROJECT_ID/m
     "files": [
       {
         "asset_id": "string",
+        "hash": "string",
         "path": "string"
       }
     ]
@@ -193,6 +199,7 @@ func main() {
   "files": [
     {
       "asset_id": "string",
+      "hash": "string",
       "path": "string"
     }
   ]
@@ -234,6 +241,7 @@ curl_setopt_array($ch, [
   "files": [
     {
       "asset_id": "string",
+      "hash": "string",
       "path": "string"
     }
   ]
@@ -264,6 +272,7 @@ public class Example {
                   "files": [
                     {
                       "asset_id": "string",
+                      "hash": "string",
                       "path": "string"
                     }
                   ]
@@ -294,6 +303,7 @@ request.Content = new StringContent("""
   "files": [
     {
       "asset_id": "string",
+      "hash": "string",
       "path": "string"
     }
   ]
@@ -316,6 +326,7 @@ request.body = '{
   "files": [
     {
       "asset_id": "string",
+      "hash": "string",
       "path": "string"
     }
   ]
@@ -346,6 +357,7 @@ puts "#{response.code} #{response.body}"
       "name": "string",
       "probe": {},
       "progress": 0,
+      "replaces": [],
       "state": "string"
     }
   ],
@@ -371,6 +383,7 @@ puts "#{response.code} #{response.body}"
       "name": "string",
       "probe": {},
       "progress": 0,
+      "replaces": [],
       "state": "string"
     }
   ],

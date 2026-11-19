@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.bezier goes with the easing \"bezier\", not with \"linear\".",
+  "hint": "Set easing to \"bezier\", or leave bezier out.",
+  "retryable": false,
+  "path": "args.bezier"
+}

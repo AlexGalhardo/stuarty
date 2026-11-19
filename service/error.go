@@ -27,11 +27,21 @@ const (
 	CodeConnectionNotFound    = "E_CONNECTION_NOT_FOUND"
 	CodeConnectionDestination = "E_CONNECTION_DESTINATION"
 	CodeVaultLocked           = "E_VAULT_LOCKED"
-	codeInternalMessage       = "the operation failed because of an internal error."
-	codeInternalHint          = "Report this as a bug with the operation that was sent."
-	hintRestoreProject        = "restore the project first"
-	hintReadProjectAgain      = "read the project again with project_get and plan the batch against its current revision"
-	maxOperationsPerBatch     = 200
+	// CodePrivilegedSession, CodeApprovalNotFound, CodeCostCeiling and CodeApprovalExpired are the codes of SDD-015 section 8.
+	CodePrivilegedSession = "E_PRIVILEGED_SESSION"
+	CodeApprovalNotFound  = "E_APPROVAL_NOT_FOUND"
+	CodeCostCeiling       = "E_COST_CEILING"
+	CodeApprovalExpired   = "E_APPROVAL_EXPIRED"
+	// CodePublish is the code of SDD-020 section 11: a network refused or failed a publication.
+	CodePublish = "E_PUBLISH"
+	// CodeProvider and CodePriceUnknown are the codes of SDD-016 section 8.
+	CodeProvider          = "E_PROVIDER"
+	CodePriceUnknown      = "E_PRICE_UNKNOWN"
+	codeInternalMessage   = "the operation failed because of an internal error."
+	codeInternalHint      = "Report this as a bug with the operation that was sent."
+	hintRestoreProject    = "restore the project first"
+	hintReadProjectAgain  = "read the project again with project_get and plan the batch against its current revision"
+	maxOperationsPerBatch = 200
 )
 
 // Error is the error of every service method (SDD-003 section 2.2).
@@ -58,12 +68,14 @@ func (e *Error) HTTPStatus() int {
 		return http.StatusBadRequest
 	case CodeUnauthorized:
 		return http.StatusUnauthorized
-	case CodeForbidden, "E_PATH_NOT_ALLOWED", CodeConnectionDestination:
+	case CodeForbidden, "E_PATH_NOT_ALLOWED", CodeConnectionDestination, CodePrivilegedSession:
 		return http.StatusForbidden
-	case command.CodeNotFound, "E_FILE_NOT_FOUND", CodeConnectionNotFound:
+	case command.CodeNotFound, "E_FILE_NOT_FOUND", CodeConnectionNotFound, CodeApprovalNotFound, CodeAgentNotFound,
+		CodeChatNotFound:
 		return http.StatusNotFound
 	case command.CodeRevisionConflict, command.CodeIdempotencyMismatch, command.CodeOverlap, command.CodeInvalidState,
-		command.CodeInUse, command.CodeNotEmpty, command.CodeIDExists, "E_ASSET_NOT_READY", CodeNothingToUndo, CodeNothingToRedo:
+		command.CodeInUse, command.CodeNotEmpty, command.CodeIDExists, "E_ASSET_NOT_READY", CodeNothingToUndo, CodeNothingToRedo,
+		CodeApprovalExpired:
 		return http.StatusConflict
 	case CodeMethodNotAllowed:
 		return http.StatusMethodNotAllowed
@@ -76,13 +88,20 @@ func (e *Error) HTTPStatus() int {
 		command.CodeOutOfSource,
 		command.CodeFontUnknown,
 		command.CodeSlot,
-		CodeLintBlocking:
+		CodeLintBlocking,
+		CodeCostCeiling,
+		CodePriceUnknown:
 		return http.StatusUnprocessableEntity
+	case CodeProvider:
+		return http.StatusBadGateway
 	case CodeQueueFull, CodeRateLimited:
 		return http.StatusTooManyRequests
 	case CodeClientClosed:
 		return StatusClientClosed
-	case CodeWorkspaceLocked, "E_TRANSCRIBE_UNAVAILABLE", "E_FFMPEG_MISSING", "E_NO_ENCODER", CodeVaultLocked:
+	case CodePublish:
+		return http.StatusBadGateway
+	case CodeWorkspaceLocked, "E_TRANSCRIBE_UNAVAILABLE", "E_FFMPEG_MISSING", "E_NO_ENCODER", CodeVaultLocked,
+		CodeAgentUnavailable:
 		return http.StatusServiceUnavailable
 	}
 

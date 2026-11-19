@@ -26,6 +26,9 @@ type envSpec struct {
 	Peaks      map[string][]float64         `json:"peaks,omitempty"`
 	Loudness   map[string]float64           `json:"loudness,omitempty"`
 	Transcript map[string][]transcriptEntry `json:"transcript,omitempty"`
+	// AlphaOpaque is the alpha_opaque fact of the assets whose normalized artifact records one: true when every
+	// sampled picture of a file that declares alpha is opaque.
+	AlphaOpaque map[string]bool `json:"alpha_opaque,omitempty"`
 }
 
 type transcriptEntry struct {
@@ -78,6 +81,10 @@ func (e envSpec) env() Env {
 
 	if len(e.Peaks)+len(e.Loudness)+len(e.Transcript) > 0 {
 		out.Artifacts = fakeArtifacts{e}
+	}
+
+	if len(e.AlphaOpaque) > 0 {
+		out.AlphaOpaque = func(a string) (opaque, known bool) { opaque, known = e.AlphaOpaque[a]; return }
 	}
 
 	return out
@@ -177,6 +184,26 @@ func init() {
 
 		return d
 	}())
+}
+
+func init() {
+	chain := func(kinds ...string) *timeline.Document {
+		d := newDoc()
+		it := timeline.NewItem("itm_m", timeline.ItemAudio, trkAudio, 0, 150)
+		for _, k := range kinds {
+			it.Processors = append(it.Processors, timeline.Processor{Kind: k})
+		}
+
+		put(d, it)
+
+		return d
+	}
+
+	rc(CodeAudioLimiterNotLast, "trigger_limiter_then_gate", chain(timeline.ProcLimiter, timeline.ProcGate))
+	rc(CodeAudioLimiterNotLast, "quiet_limiter_last", chain(timeline.ProcGate, timeline.ProcLimiter))
+	rc(CodeAudioNoiseReductionRepeats, "trigger_two_noise_reductions",
+		chain(timeline.ProcNoiseReduction, timeline.ProcEQ, timeline.ProcNoiseReduction))
+	rc(CodeAudioNoiseReductionRepeats, "quiet_one_noise_reduction", chain(timeline.ProcNoiseReduction, timeline.ProcEQ))
 }
 
 func init() {
@@ -473,6 +500,22 @@ func init() {
 	rc(CodeLoudness, "trigger_6_1_lu_from_the_target", one(), loud(-20.1))
 	rc(CodeLoudness, "trigger_too_loud", one(), loud(-5.0))
 	rc(CodeLoudness, "quiet_without_loudness", one())
+
+	// A clip of a file that declares an alpha channel (epic 33, SDD-011 section 4.3.6).
+	withAlpha := func() *timeline.Document {
+		d := one()
+		a := d.Assets[astVideo]
+		a.HasAlpha = true
+		d.Assets[astVideo] = a
+
+		return d
+	}
+	opaque := func(v bool) envSpec { return envSpec{AlphaOpaque: map[string]bool{astVideo: v}} }
+
+	rc(CodeAlphaMissing, "trigger_declared_alpha_all_opaque", withAlpha(), opaque(true))
+	rc(CodeAlphaMissing, "quiet_has_transparency", withAlpha(), opaque(false))
+	rc(CodeAlphaMissing, "quiet_no_alpha_declared", one(), opaque(true))
+	rc(CodeAlphaMissing, "quiet_without_the_fact", withAlpha())
 }
 
 func (c ruleCase) dir() string { return filepath.Join("testdata", c.code, c.name) }
@@ -524,7 +567,7 @@ func TestWriteRuleGoldens(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if len(c.env.Measure)+len(c.env.Peaks)+len(c.env.Loudness)+len(c.env.Transcript) > 0 {
+		if len(c.env.Measure)+len(c.env.Peaks)+len(c.env.Loudness)+len(c.env.Transcript)+len(c.env.AlphaOpaque) > 0 {
 			writeJSON(t, filepath.Join(c.dir(), "env.json"), c.env)
 		}
 

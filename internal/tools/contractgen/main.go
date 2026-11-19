@@ -136,6 +136,7 @@ func writeRegistry(reg *command.Registry, out string) error {
 			"errors":      slices.Clone(c.Errors),
 			"scope":       c.Scope,
 			"internal":    c.Internal,
+			"domain":      c.Domain,
 		})
 	}
 	return write(filepath.Join(out, "commands.json"), list)

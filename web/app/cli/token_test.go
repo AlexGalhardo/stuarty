@@ -93,6 +93,34 @@ func TestTokenRotateRefusesWhileAnOwnerHoldsTheWorkspace(t *testing.T) {
 	}
 }
 
+// With STUARTY_URL set the rotation refuses and names the variable instead of writing a token file and the
+// workspace folders into the current directory (VV-272).
+func TestTokenRotateRefusesARemoteServer(t *testing.T) {
+	cwd := t.TempDir()
+	t.Chdir(cwd)
+
+	h := newHarness(t)
+	h.rt.Getenv = func(k string) string {
+		switch k {
+		case workspace.EnvURL:
+			return "https://stuarty.example.invalid"
+		case workspace.EnvKey:
+			return "a-key"
+		}
+
+		return ""
+	}
+
+	if code := h.run("token:rotate", "--json"); code == ExitOK ||
+		!strings.Contains(h.stdout.String(), workspace.EnvURL) {
+		t.Errorf("exit %d: %s", code, h.stdout)
+	}
+
+	if left, _ := os.ReadDir(cwd); len(left) != 0 {
+		t.Errorf("token:rotate wrote into the current directory: %v", left)
+	}
+}
+
 func TestListNamesTheCommandsTheBinaryDispatchesItself(t *testing.T) {
 	t.Parallel()
 

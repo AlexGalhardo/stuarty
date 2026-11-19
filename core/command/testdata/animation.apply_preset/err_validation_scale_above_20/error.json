@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "The preset would make a scale of 30 for itm_m1n2p3q4r5; the range is 0.001 to 20.",
+  "hint": "Use a smaller amount.",
+  "retryable": false,
+  "path": "args.amount"
+}

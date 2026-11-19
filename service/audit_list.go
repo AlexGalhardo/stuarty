@@ -43,7 +43,7 @@ type AuditListResult struct {
 // of their own user; an entry that belongs to no project is the system's and is
 // not shown there.
 func (s *svc) AuditList(ctx context.Context, req AuditListRequest) (*AuditListResult, error) {
-	c, err := authorize(ctx, "AuditList", req.ProjectID)
+	c, err := s.authorizeProject(ctx, "AuditList", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}

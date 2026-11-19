@@ -12,7 +12,7 @@ import (
 // The image operations of SDD-021 section 11: a document of layers edited with the commands of the image
 // registry, in batches that have a base revision, an idempotency key, a dry run, a log and undo.
 
-// ImageRow is an image document as stored (SDD-005 section 5.12).
+// ImageRow is an image document as stored (SDD-005 section 5.13).
 type ImageRow struct {
 	ImageHead
 	Document  json.RawMessage
@@ -46,7 +46,7 @@ type ImageUpdate struct {
 	UpdatedMs     int64
 }
 
-// ImageOpRow is one committed batch of an image, the log row of SDD-005 section 5.12.
+// ImageOpRow is one committed batch of an image, the log row of SDD-005 section 5.13.
 type ImageOpRow struct {
 	ImageID        string
 	Revision       int64
@@ -88,6 +88,8 @@ type ImageRepo interface {
 	AppendOp(ctx context.Context, op ImageOpRow) error
 	// OpsSince returns the batches after a revision, oldest first.
 	OpsSince(ctx context.Context, id string, revision int64) ([]ImageOpRow, error)
+	// OpsPage is OpsSince with a limit: the replay of the image stream reads the log in pages (SDD-006 section 12.2).
+	OpsPage(ctx context.Context, id string, revision int64, limit int) ([]ImageOpRow, error)
 	// LastOpen returns the latest batch of the actor, after the first revision, of one of the kinds, that no undo
 	// or redo has consumed; ErrNotFound when there is none.
 	LastOpen(ctx context.Context, id, actor string, kinds []OperationKind) (ImageOpRow, error)
@@ -194,6 +196,49 @@ type ImageEditResult struct {
 	Findings     []lint.Finding   `json:"findings"`
 	Lint         LintTotals       `json:"lint"`
 	Description  string           `json:"description"   untrusted:"true"`
+}
+
+// ImageImportRequest brings an image file into an image document (SDD-021 section 10.1): the file of Path or
+// the library file Hash, as a new document, or as one more layer of ImageID.
+type ImageImportRequest struct {
+	Path           string `json:"path,omitempty"`            // an absolute path on the machine of the server
+	Hash           string `json:"hash,omitempty"`            // an image already in the workspace
+	ImageID        string `json:"image_id,omitempty"`        // put the file in this document
+	Name           string `json:"name,omitempty"`            // the document, or the layer when ImageID is given
+	Width          int    `json:"width,omitempty"`           // the canvas of a new document
+	Height         int    `json:"height,omitempty"`          // the canvas of a new document
+	Preset         string `json:"preset,omitempty"`          // the canvas of a new document
+	WaitMS         int    `json:"wait_ms,omitempty"`         // how long to wait for the ingest; 0 is 10,000
+	BaseRevision   int64  `json:"base_revision,omitempty"`   // with ImageID
+	IdempotencyKey string `json:"idempotency_key,omitempty"` // with ImageID
+	DryRun         bool   `json:"dry_run,omitempty"`
+}
+
+// The states of an ImageImportResult.
+const (
+	ImageImportReady   = "ready"   // the file is an image of the workspace; the document or the layer was made
+	ImageImportPending = "pending" // the ingest of the file outlived wait_ms: nothing was made, import the Hash again
+)
+
+// ImageImportResult answers ImageImport.
+type ImageImportResult struct {
+	Envelope
+	State    string         `json:"state"`
+	ImageID  string         `json:"image_id,omitempty"`
+	Revision int64          `json:"revision,omitempty"`
+	Created  bool           `json:"created"`            // a new document
+	LayerID  string         `json:"layer_id,omitempty"` // the layer the file became
+	Hash     string         `json:"hash,omitempty"`
+	Name     string         `json:"name"               untrusted:"true"` // the name the file is known by
+	Width    int            `json:"width,omitempty"`
+	Height   int            `json:"height,omitempty"`
+	JobID    string         `json:"job_id,omitempty"` // the ingest of a pending file
+	Applied  bool           `json:"applied"`
+	DryRun   bool           `json:"dry_run"`
+	Replayed bool           `json:"replayed"`
+	Findings []lint.Finding `json:"findings"`
+	Lint     LintTotals     `json:"lint"`
+	Text     string         `json:"text"               untrusted:"true"`
 }
 
 // ImageStepRequest undoes or redoes the last step of the caller.

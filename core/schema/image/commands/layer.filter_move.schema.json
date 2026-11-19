@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "index": {
+      "maximum": 7,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "kind": {
+      "enum": [
+        "grayscale",
+        "sepia",
+        "invert",
+        "warm",
+        "cool",
+        "blur",
+        "sharpen",
+        "vignette",
+        "grain",
+        "shadow",
+        "glow",
+        "stroke"
+      ],
+      "type": "string"
+    },
+    "layer_id": {
+      "pattern": "^lyr_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+      "type": "string"
+    }
+  },
+  "required": [
+    "layer_id",
+    "kind",
+    "index"
+  ],
+  "type": "object"
+}

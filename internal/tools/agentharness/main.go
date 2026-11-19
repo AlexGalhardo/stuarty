@@ -61,6 +61,10 @@ type options struct {
 	sleep                func(time.Duration)
 	scenarioList         []scenario
 	apiKey, systemPrompt string
+	// The first-flow scenario runs against services the operator started on loopback.
+	skillsDir                                  string
+	flowBase, flowHome, flowSecret, flowSocial string
+	flowEnv                                    *flowEnv
 }
 
 func parseOptions(argv []string, getenv func(string) string, stderr io.Writer) (options, int) {
@@ -71,7 +75,17 @@ func parseOptions(argv []string, getenv func(string) string, stderr io.Writer) (
 	fs.IntVar(&o.runs, "runs", 0, "runs per scenario (required)")
 	fs.StringVar(&o.model, "model", defaultModel, "the model the agent runs on")
 	fs.StringVar(&o.endpoint, "endpoint", defaultEndpoint, "the Messages API URL (https; tests use a loopback server)")
-	fs.StringVar(&o.scenario, "scenario", "all", "prototype, template or all")
+	fs.StringVar(&o.scenario, "scenario", "all", "prototype, template, first-flow or all (all leaves first-flow out)")
+	fs.StringVar(
+		&o.skillsDir,
+		"skills",
+		"web/resources/skills",
+		"first-flow: the folder of the built-in skills given to the agent",
+	)
+	fs.StringVar(&o.flowBase, "flow-base", "", "first-flow: the address of the Stuarty server on loopback")
+	fs.StringVar(&o.flowHome, "flow-home", "", "first-flow: the workspace of that server (STUARTY_HOME)")
+	fs.StringVar(&o.flowSecret, "flow-launcher-secret", "", "first-flow: the STUARTY_LAUNCHER_SECRET of that server")
+	fs.StringVar(&o.flowSocial, "flow-social", "", "first-flow: the address of the fake social network")
 	fs.StringVar(&o.skill, "skill", "web/app/agentdocs/out/SKILL.md", "the SKILL.md given to the agent")
 	fs.StringVar(&o.bin, "bin", "stuarty", "the stuarty binary the agent drives")
 	fs.StringVar(&o.clip, "clip", "", "a short video copied to clip.mp4 for the prototype scenario")
@@ -104,6 +118,17 @@ func parseOptions(argv []string, getenv func(string) string, stderr io.Writer) (
 	var ok bool
 	if o.scenarioList, ok = findScenarios(o.scenario); !ok {
 		fmt.Fprintf(stderr, "agentharness: unknown scenario %q\n", o.scenario)
+
+		return o, 2
+	}
+
+	// The estimate is shown to the author before anything is started, so it needs none of the services.
+	if o.scenario == firstFlow.Name && !o.estimateOnly &&
+		(o.flowBase == "" || o.flowHome == "" || o.flowSecret == "" || o.flowSocial == "") {
+		fmt.Fprintln(
+			stderr,
+			"agentharness: first-flow needs --flow-base, --flow-home, --flow-launcher-secret and --flow-social",
+		)
 
 		return o, 2
 	}
@@ -159,6 +184,17 @@ func run(
 
 	o.systemPrompt = systemPrompt(string(skill))
 
+	if o.scenario == firstFlow.Name {
+		extra, err := builtinSkills(o.skillsDir)
+		if err != nil {
+			fmt.Fprintf(stderr, "agentharness: %v\n", err)
+
+			return 1
+		}
+
+		o.systemPrompt += extra
+	}
+
 	est := estimate(o, len(o.systemPrompt))
 	fmt.Fprintf(stdout, "agentharness: %d runs of %d scenario(s) on %s\n", o.runs, len(o.scenarioList), o.model)
 	fmt.Fprintf(stdout, "agentharness: estimated cost up to USD %.2f (%d input and %d output tokens at worst; "+
@@ -185,6 +221,14 @@ func run(
 
 	o.runnerFor = mk(o.bin)
 
+	if o.scenario == firstFlow.Name {
+		o.flowEnv = &flowEnv{
+			person:  newLivePerson(o.flowBase, o.flowSecret, o.flowHome),
+			network: newLiveNetwork(o.flowSocial),
+			wait:    3 * time.Minute, poll: 2 * time.Second,
+		}
+	}
+
 	return playAll(ctx, o, api, stdout, stderr)
 }
 
@@ -201,6 +245,7 @@ func playAll(ctx context.Context, o options, api Doer, stdout, stderr io.Writer)
 			sleep: func(d time.Duration) { sleepFor(o, d) },
 		},
 		model: o.model, maxTokens: o.maxTokens, maxTurns: o.maxTurns, system: o.systemPrompt,
+		flow: o.flowEnv,
 	}
 
 	summary := map[string]any{"model": o.model, "runs": o.runs}
@@ -288,6 +333,11 @@ func playOnce(ctx context.Context, a *agent, o options, sc scenario, n int) (run
 		if err := os.WriteFile(filepath.Join(work, "clip.mp4"), data, 0o600); err != nil { //nolint:gosec // see above
 			return runResult{}, fmt.Errorf("copy the clip: %w", err)
 		}
+	}
+
+	if sc.Flow {
+		// The post goes out from the server of the operator, so the run uses its workspace.
+		home = o.flowHome
 	}
 
 	return a.play(ctx, sc, n, o.runnerFor(home, work))

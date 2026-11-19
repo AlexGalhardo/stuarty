@@ -14,6 +14,9 @@ export interface ProjectSummary {
 	tracks: number;
 	items: number;
 	assets: number;
+	// The first timeline, the one the thumbnail and the editor show, and how many the production has.
+	timeline_id: string;
+	timelines: number;
 	updated_at: string;
 }
 

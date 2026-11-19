@@ -39,7 +39,7 @@ func TestToolListHasTheToolsWhoseOperationsExist(t *testing.T) {
 	want := []string{
 		"project_list", "project_create", "project_get", "project_trash", "edit", "command_help", "history",
 		"media_import", "media_inspect", "view", "lint", "job_start", "job_get", "job_cancel", "template",
-		"font_import", "connection", "image",
+		"font_import", "connection", "image", "project_item", "library",
 	}
 	if strings.Join(names, ",") != strings.Join(want, ",") {
 		t.Fatalf("tools = %v, want %v (the others wait for their Service methods: %v)", names, want, Pending)
@@ -348,14 +348,14 @@ func TestSecurity_T31_ToolDefinitionsAreStatic(t *testing.T) {
 	}
 }
 
-var idPattern = regexp.MustCompile(`^\^(prj|ast|trk|itm|job|tpl|con|img)_\[0-9a-hjkmnp-tv-z\]\{10\}\$$`)
+var idPattern = regexp.MustCompile(`^\^(prj|ast|trk|itm|job|tpl|con|img|pit|apr)_\[0-9a-hjkmnp-tv-z\]\{10\}\$$`)
 
 // TestToolSchemas: every inputSchema forbids extra members and every id
 // parameter carries the pattern of SDD-000 section 2 (SDD-003 section 4.2).
 func TestToolSchemas(t *testing.T) {
 	t.Parallel()
 
-	defs, err := loadDefinitions(command.Default())
+	defs, err := loadDefinitions()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -388,51 +388,6 @@ func TestToolSchemas(t *testing.T) {
 	raw := marshal(t, defs["project_list"].tool.OutputSchema)
 	if !strings.Contains(string(raw), `"x-untrusted":true`) {
 		t.Error("the name of a project must be marked x-untrusted in project_list")
-	}
-}
-
-func TestEditOpEnumIsTheRegistry(t *testing.T) {
-	t.Parallel()
-
-	defs, err := loadDefinitions(command.Default())
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	raw := marshal(t, defs["edit"].tool.InputSchema)
-
-	var schema struct {
-		Properties struct {
-			Operations struct {
-				Items struct {
-					Properties struct {
-						Op struct {
-							Enum []string `json:"enum"`
-						} `json:"op"`
-					} `json:"properties"`
-				} `json:"items"`
-			} `json:"operations"`
-		} `json:"properties"`
-	}
-
-	if err := json.Unmarshal(raw, &schema); err != nil {
-		t.Fatal(err)
-	}
-
-	have := map[string]bool{}
-	for _, n := range command.Default().Names() {
-		have[n] = true
-	}
-
-	enum := schema.Properties.Operations.Items.Properties.Op.Enum
-	if len(enum) == 0 {
-		t.Fatal("the op enum is empty")
-	}
-
-	for _, op := range enum {
-		if !have[op] {
-			t.Errorf("%s is in the enum but not in the registry", op)
-		}
 	}
 }
 

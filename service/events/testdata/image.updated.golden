@@ -1,0 +1,4 @@
+id: 7
+event: image.updated
+data: {"image_id":"img_7k2m9x4q1b","revision":7,"base_revision":6,"kind":"edit","actor":"local:claude-code","at":"2026-11-14T12:03:10.204Z","diff":[{"kind":"layer.updated","id":"lyr_a1b2c3d4e5","changes":{"x":[10,40]}}]}
+

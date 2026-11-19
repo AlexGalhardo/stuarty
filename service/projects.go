@@ -7,6 +7,7 @@ import (
 	"errors"
 	"regexp"
 	"strconv"
+	"strings"
 	"unicode"
 	"unicode/utf8"
 
@@ -108,7 +109,7 @@ func (s *svc) ProjectCreate(ctx context.Context, req ProjectCreateRequest) (*Pro
 	}
 
 	err = s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
-		if err := tx.Projects().Create(ctx, row); err != nil {
+		if err := s.putProduction(ctx, tx, &row); err != nil {
 			return err
 		}
 
@@ -202,7 +203,7 @@ func (s *svc) ProjectList(ctx context.Context, req ProjectListRequest) (*Project
 		return nil, err
 	}
 
-	q := ProjectQuery{
+	q := ProductionQuery{
 		After: req.Cursor, Limit: clampLimit(req.Limit, defaultProjectLimit, maxProjectLimit),
 		OwnerUserID: c.OwnerUserID, ProjectID: c.ProjectID,
 	}
@@ -219,12 +220,12 @@ func (s *svc) ProjectList(ctx context.Context, req ProjectListRequest) (*Project
 			withPath("state").withHint("use active, trashed or all")
 	}
 
-	heads, next, err := s.store.Projects().List(ctx, q)
+	heads, next, err := s.store.Productions().List(ctx, q)
 	if err != nil {
 		return nil, listError(err)
 	}
 
-	lines := func(hs []ProjectHead) []textview.ProjectLine {
+	lines := func(hs []ProductionHead) []textview.ProjectLine {
 		out := make([]textview.ProjectLine, 0, len(hs))
 
 		for i := range hs {
@@ -232,15 +233,16 @@ func (s *svc) ProjectList(ctx context.Context, req ProjectListRequest) (*Project
 			out = append(out, textview.ProjectLine{
 				ID:       h.ID,
 				Name:     h.Name,
-				Revision: h.Revision,
-				Width:    h.Summary.Width,
-				Height:   h.Summary.Height,
+				Revision: h.Timeline.Revision,
+				Width:    h.Timeline.Summary.Width,
+				Height:   h.Timeline.Summary.Height,
 				FPS: timeval.FPS{
-					Num: int64(h.Summary.FPSNum),
-					Den: int64(h.Summary.FPSDen),
+					Num: int64(h.Timeline.Summary.FPSNum),
+					Den: int64(h.Timeline.Summary.FPSDen),
 				},
-				DurationFrame: h.Summary.DurationFrames,
-				Items:         h.Summary.Items,
+				DurationFrame: h.Timeline.Summary.DurationFrames,
+				Items:         h.Timeline.Summary.Items,
+				Timelines:     h.Timelines,
 				Trashed:       h.State == ProjectTrashed,
 			})
 		}
@@ -252,12 +254,12 @@ func (s *svc) ProjectList(ctx context.Context, req ProjectListRequest) (*Project
 	// shorter one so that the store hands back the matching cursor.
 	if n := textview.FitProjectList(lines(heads)); n < len(heads) {
 		q.Limit = n
-		if heads, next, err = s.store.Projects().List(ctx, q); err != nil {
+		if heads, next, err = s.store.Productions().List(ctx, q); err != nil {
 			return nil, listError(err)
 		}
 	}
 
-	total, err := s.store.Projects().Count(ctx, ProjectQuery{
+	total, err := s.store.Productions().Count(ctx, ProductionQuery{
 		State: q.State, IncludeTrashed: q.IncludeTrashed, OwnerUserID: q.OwnerUserID, ProjectID: q.ProjectID,
 	})
 	if err != nil {
@@ -267,7 +269,7 @@ func (s *svc) ProjectList(ctx context.Context, req ProjectListRequest) (*Project
 	res := &ProjectListResult{UntrustedNotice: UntrustedNotice, Projects: []ProjectSummary{}}
 
 	for i := range heads {
-		res.Projects = append(res.Projects, headSummary(&heads[i]))
+		res.Projects = append(res.Projects, productionSummary(&heads[i]))
 	}
 
 	res.Text = textview.ProjectList(lines(heads), total, req.State)
@@ -349,7 +351,7 @@ func decodeViewCursor(s, project string, revision int64) (viewCursor, error) {
 }
 
 func (s *svc) ProjectGet(ctx context.Context, req ProjectGetRequest) (*ProjectGetResult, error) {
-	c, err := authorize(ctx, "ProjectGet", req.ProjectID)
+	c, err := s.authorizeProject(ctx, "ProjectGet", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}
@@ -369,7 +371,43 @@ func (s *svc) ProjectGet(ctx context.Context, req ProjectGetRequest) (*ProjectGe
 			withPath("cursor").withHint("leave them out")
 	}
 
-	row, err := s.store.Projects().Get(ctx, req.ProjectID)
+	repo := s.store.Productions()
+
+	head, err := s.loadProduction(ctx, repo, c, req.ProjectID)
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := repo.Items(ctx, head.ID)
+	if err != nil {
+		return nil, asError(err)
+	}
+
+	// The publications of the project are items of its overview (SDD-020 section 23).
+	rows = s.withPublications(ctx, head.ID, rows)
+
+	timelineID := req.TimelineID
+
+	if timelineID == "" {
+		// A timeline id in the place of the project id names that timeline (SDD-003 section 1.7).
+		if req.ProjectID != head.ID {
+			timelineID = req.ProjectID
+		} else if tls, terr := repo.ActiveTimelines(ctx, head.ID); terr != nil {
+			return nil, asError(terr)
+		} else if len(tls) == 1 {
+			timelineID = tls[0].TimelineID
+		}
+	} else if owner, oerr := repo.ProjectOfTimeline(ctx, timelineID); oerr != nil || owner != head.ID {
+		return nil, timelineNotFound(timelineID, oerr)
+	}
+
+	production := productionOf(rows)
+
+	if timelineID == "" {
+		return s.projectOverview(ctx, &head, rows, production, detail)
+	}
+
+	row, err := s.store.Projects().Get(ctx, timelineID)
 	if err != nil || !visible(c, row.OwnerUserID) {
 		return nil, projectNotFound(req.ProjectID, err)
 	}
@@ -388,10 +426,11 @@ func (s *svc) ProjectGet(ctx context.Context, req ProjectGetRequest) (*ProjectGe
 
 	res := &ProjectGetResult{
 		UntrustedNotice: UntrustedNotice,
-		ProjectID:       row.ID,
+		ProjectID:       head.ID,
+		TimelineID:      row.ID,
 		Name:            row.Name,
 		Revision:        row.Revision,
-		State:           stateString(row.State),
+		State:           stateString(head.State),
 		Width:           doc.Settings.Width,
 		Height:          doc.Settings.Height,
 		FPS:             fpsString(doc.Settings.FPS.Num, doc.Settings.FPS.Den),
@@ -403,6 +442,8 @@ func (s *svc) ProjectGet(ctx context.Context, req ProjectGetRequest) (*ProjectGe
 			Assets:       len(doc.Assets),
 			CaptionWords: words,
 		},
+		Items:      itemViews(rows),
+		Production: production,
 	}
 
 	if detail == "document" {
@@ -433,6 +474,47 @@ func (s *svc) ProjectGet(ctx context.Context, req ProjectGetRequest) (*ProjectGe
 	return res, nil
 }
 
+// projectOverview answers ProjectGet for a project with several timelines and no timeline_id: the head is that
+// of the first active one, the text is the description of the production, and a document is refused with the
+// choices (SDD-003 section 2.3.1).
+func (s *svc) projectOverview(
+	ctx context.Context, head *ProductionHead, rows []ItemRow, production ProductionState, detail string,
+) (*ProjectGetResult, error) {
+	if detail == "document" {
+		tls, err := s.store.Productions().ActiveTimelines(ctx, head.ID)
+		if err != nil {
+			return nil, asError(err)
+		}
+
+		ids := make([]string, len(tls))
+		for i := range tls {
+			ids[i] = tls[i].TimelineID
+		}
+
+		return nil, newError(
+			command.CodeValidation,
+			"the project has %d timelines and the request does not say which.",
+			len(ids),
+		).
+			withPath("timeline_id").
+			withHint("pass timeline_id: %s", strings.Join(ids, ", ")).
+			withDetail("timelines", ids)
+	}
+
+	t := &head.Timeline
+	fps := timeline.Rational{Num: t.Summary.FPSNum, Den: t.Summary.FPSDen}
+
+	return &ProjectGetResult{
+		UntrustedNotice: UntrustedNotice, ProjectID: head.ID, TimelineID: t.ID, Name: head.Name, Revision: t.Revision,
+		State: stateString(head.State), Width: t.Summary.Width, Height: t.Summary.Height,
+		FPS: fpsString(fps.Num, fps.Den), DurationFrames: t.Summary.DurationFrames,
+		Duration: timeValue(fps, t.Summary.DurationFrames),
+		Counts:   ProjectCounts{Tracks: t.Summary.Tracks, Items: t.Summary.Items, Assets: t.Summary.Assets},
+		Items:    itemViews(rows), Production: production,
+		Text: s.describeText(ctx, head, rows, production, 0),
+	}, nil
+}
+
 // projectNotFound is E_NOT_FOUND for a missing project and for one the caller
 // may not see, so that a project's existence is not disclosed.
 func projectNotFound(id string, err error) error {
@@ -454,7 +536,8 @@ func (s *svc) ProjectRestore(ctx context.Context, req ProjectTrashRequest) (*Pro
 
 // setProjectState trashes or restores. Both are idempotent: a project already
 // in the state is reported and left alone. Trash touches the state and the
-// time only, never the revision or the document (SDD-005 section 13.1).
+// time only, never the revision or the document (SDD-005 section 13.1); the
+// state is mirrored on the timelines of the project (section 5.12).
 func (s *svc) setProjectState(
 	ctx context.Context,
 	method string,
@@ -462,7 +545,7 @@ func (s *svc) setProjectState(
 	to ProjectState,
 	action string,
 ) (*ProjectStateResult, error) {
-	c, err := authorize(ctx, method, req.ProjectID)
+	c, err := s.authorizeProject(ctx, method, req.ProjectID)
 	if err != nil {
 		return nil, err
 	}
@@ -470,38 +553,37 @@ func (s *svc) setProjectState(
 	res := &ProjectStateResult{ProjectID: req.ProjectID, State: string(to)}
 	verb := map[ProjectState]string{ProjectTrashed: "trashed", ProjectActive: "restored"}[to]
 
-	err = s.store.WriteProject(ctx, req.ProjectID, func(ctx context.Context, tx ProjectTx) error {
-		row := tx.Project()
-		if !visible(c, row.OwnerUserID) {
-			return ErrNotFound
+	var timelines []TimelineRef
+
+	err = s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
+		head, err := s.loadProduction(ctx, tx.Productions(), c, req.ProjectID)
+		if err != nil {
+			return err
 		}
 
-		if stateString(row.State) == string(to) || req.DryRun {
-			res.Text = req.ProjectID + " " + string(to)
+		res.ProjectID = head.ID
+
+		if stateString(head.State) == string(to) || req.DryRun {
+			res.Text = head.ID + " " + string(to)
 			return nil
 		}
 
+		if timelines, err = tx.Productions().ActiveTimelines(ctx, head.ID); err != nil {
+			return err
+		}
+
 		now := s.nowMs()
-		if err := tx.Projects().SetState(ctx, req.ProjectID, to, c.Actor, now); err != nil {
+		if err := tx.Productions().SetState(ctx, head.ID, to, c.Actor, now); err != nil {
 			return err
 		}
 
-		id := req.ProjectID
-		if err := appendAudit(ctx, tx, now, c.Actor, action, id, ""); err != nil {
+		if err := appendAudit(ctx, tx, now, c.Actor, action, head.ID, ""); err != nil {
 			return err
 		}
 
-		res.Text = req.ProjectID + " " + verb
+		res.Text = head.ID + " " + verb
 
-		ev := Event{
-			Type:      "project.updated",
-			ProjectID: id,
-			Revision:  row.Revision,
-			Actor:     c.Actor,
-			State:     string(to),
-			At:        msTime(now),
-		}
-		tx.AfterCommit(func() { s.emit(ev) })
+		tx.AfterCommit(s.emitProject(&head, to, c.Actor, now))
 
 		return nil
 	})
@@ -509,12 +591,14 @@ func (s *svc) setProjectState(
 		return nil, projectNotFound(req.ProjectID, err)
 	}
 
-	switch {
-	case req.DryRun:
-	case to == ProjectTrashed:
-		s.cancelProjectJobs(ctx, req.ProjectID)
-	default:
-		s.reconcilePending(ctx, req.ProjectID)
+	for i := range timelines {
+		switch {
+		case req.DryRun:
+		case to == ProjectTrashed:
+			s.cancelProjectJobs(ctx, timelines[i].TimelineID)
+		default:
+			s.reconcilePending(ctx, timelines[i].TimelineID)
+		}
 	}
 
 	return res, nil

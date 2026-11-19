@@ -22,36 +22,109 @@ func Plan(d *Document, opts plan.Options) plan.FramePlan {
 	}
 
 	p := &planner{d: d, opts: opts, ps: plan.PixelScale(1, opts.OutputScale)}
-	p.layers(d.Layers, 0, 0, 1, &fp)
+	p.sources = clipSources(d)
+	p.layers(d.Layers, 0, 0, 1, true, &fp)
+	dropOrphanClips(&fp)
 
 	return fp
 }
 
 type planner struct {
-	d    *Document
-	opts plan.Options
-	ps   float64
+	d       *Document
+	opts    plan.Options
+	ps      float64
+	sources map[string]bool // the layers that a visible layer takes its mask from (SDD-021 section 5)
 }
 
 func round3(x float64) float64 { return math.Round(x*1000)/1000 + 0 }
 
-func (p *planner) layers(ls []Layer, dx, dy int, opacity float64, fp *plan.FramePlan) {
+func (p *planner) layers(ls []Layer, dx, dy int, opacity float64, shown bool, fp *plan.FramePlan) {
 	for i := range ls {
 		l := &ls[i]
-		if !l.Visible {
-			continue
-		}
+		vis := shown && l.Visible
 
 		op := opacity * float64(l.Opacity) / 100
 
 		if l.Kind == KindGroup {
-			p.layers(l.Children, dx+l.X, dy+l.Y, op, fp)
+			p.layers(l.Children, dx+l.X, dy+l.Y, op, vis, fp)
 
 			continue
 		}
 
-		if pl, ok := p.layer(l, dx, dy, op); ok {
-			fp.Layers = append(fp.Layers, pl)
+		// The renderer skips a layer whose opacity rounds to no weight (SDD-013 section 3.3 step 2.1), so a source
+		// with that opacity, its own or through its groups, is not drawn, like a hidden one.
+		stencil := p.sources[l.ID] && (!vis || math.Round(round3(op)*255) == 0)
+
+		switch {
+		case stencil:
+			// A hidden source still gives its shape to the layers that are masked by it: it is in the plan,
+			// drawn by nobody, with the opacity 1 that the renderer needs to keep it (SDD-013 section 3.11.4).
+			if pl, ok := p.layer(l, dx, dy, 1); ok {
+				pl.Stencil = true
+				fp.Layers = append(fp.Layers, pl)
+			}
+		case vis:
+			if pl, ok := p.layer(l, dx, dy, op); ok {
+				fp.Layers = append(fp.Layers, pl)
+			}
+		}
+	}
+}
+
+// clipSources is the set of layers that a visible layer takes its mask from.
+func clipSources(d *Document) map[string]bool {
+	out := map[string]bool{}
+
+	var visit func(ls []Layer, shown bool)
+
+	visit = func(ls []Layer, shown bool) {
+		for i := range ls {
+			l := &ls[i]
+			vis := shown && l.Visible
+
+			if l.Kind == KindGroup {
+				visit(l.Children, vis)
+
+				continue
+			}
+
+			if vis && l.Mask != nil && l.Mask.Kind == MaskLayer {
+				out[l.Mask.Source] = true
+			}
+		}
+	}
+
+	visit(d.Layers, true)
+
+	return out
+}
+
+// dropOrphanClips removes the layers whose mask source is not in the plan (an image slot with no file yet
+// draws nothing, so a layer clipped to it draws nothing either).
+func dropOrphanClips(fp *plan.FramePlan) {
+	for {
+		have := map[string]bool{}
+		for i := range fp.Layers {
+			have[fp.Layers[i].ItemID] = true
+		}
+
+		kept := fp.Layers[:0]
+		changed := false
+
+		for i := range fp.Layers {
+			if fp.Layers[i].Clip != nil && !have[fp.Layers[i].Clip.Source] {
+				changed = true
+
+				continue
+			}
+
+			kept = append(kept, fp.Layers[i])
+		}
+
+		fp.Layers = kept
+
+		if !changed {
+			return
 		}
 	}
 }
@@ -98,6 +171,8 @@ func (p *planner) layer(l *Layer, dx, dy int, opacity float64) (plan.Layer, bool
 	default:
 		return plan.Layer{}, false
 	}
+
+	p.look(l, &out)
 
 	return out, true
 }

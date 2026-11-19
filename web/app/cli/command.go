@@ -20,8 +20,10 @@ type call struct {
 	svc       service.Service
 	args      *parsed
 	projectID string
-	events    EventOpener
-	download  Downloader
+	// timelineID is --timeline, for a command that takes it.
+	timelineID string
+	events     EventOpener
+	download   Downloader
 	// inProcess is true when this process owns the workspace: the person at the
 	// terminal of the owner machine, who may install helpers and sweep the workspace.
 	inProcess bool
@@ -48,6 +50,8 @@ type spec struct {
 	projectPositional bool
 	// positional is true when positional arguments are allowed beyond the project id.
 	positional bool
+	// timeline is true when the command acts on one timeline of the project and takes --timeline (SDD-003 section 1.7).
+	timeline bool
 	// write is true for a command that writes or starts a job.
 	write bool
 	// stream is true for a command that owns standard output while it runs (mcp):
@@ -57,6 +61,9 @@ type spec struct {
 	// offline is true for a command that needs no Service: it never opens the
 	// workspace and c.svc is nil.
 	offline bool
+	// person is true for a command only a person in the app may succeed at (SDD-015 section 4): it
+	// exists so that an agent that tries gets the stable refusal, and the skill for agents leaves it out.
+	person bool
 	// pending names the task that delivers the command; the handler is a stub until then.
 	pending string
 	run     handler
@@ -84,6 +91,8 @@ func globalFlag(name string) flagDef {
 		}
 	case "key-file":
 		return flagDef{Name: "key-file", Kind: kindString, Usage: "file holding an API key for a remote server"}
+	case "timeline":
+		return flagDef{Name: "timeline", Kind: kindString, Usage: "timeline id; needed when the project has several"}
 	case "dry-run":
 		return flagDef{Name: "dry-run", Kind: kindBool, Default: "false", Usage: "validate and report, change nothing"}
 	case "wait":
@@ -107,6 +116,10 @@ func (s *spec) flagDefs() []flagDef {
 	names := slices.Clone(baseGlobals)
 	if s.project {
 		names = append(names, "project")
+	}
+
+	if s.timeline {
+		names = append(names, "timeline")
 	}
 
 	names = append(names, s.globals...)
@@ -255,6 +268,7 @@ func (rt *Runtime) prepare(s *spec, p *parsed) (*call, error) {
 	}
 
 	c.projectID = id
+	c.timelineID = p.str("timeline")
 	p.Positional = rest
 
 	if len(rest) > 0 && !s.positional {
@@ -396,6 +410,18 @@ var processCommands = []processCommand{
 		usage:   []string{"stuarty user:passwd <email>"},
 		example: "stuarty user:passwd ana@example.com",
 	},
+	{
+		name:    "workspace:backup",
+		summary: "write a consistent backup of the workspace to a folder (never with the master key); a server may keep running",
+		usage:   []string{"stuarty workspace:backup <folder>"},
+		example: "stuarty workspace:backup ~/stuarty-backup-2026-11-19",
+	},
+	{
+		name:    "workspace:restore",
+		summary: "restore a backup folder into an empty workspace, checked against its manifest and the master key at hand",
+		usage:   []string{"stuarty workspace:restore <folder> [--replace] [--without-vault]"},
+		example: "stuarty workspace:restore ~/stuarty-backup-2026-11-19",
+	},
 }
 
 func lookupProcess(name string) *processCommand {
@@ -422,13 +448,24 @@ func (p *processCommand) help() string {
 	return b.String()
 }
 
-// List prints the short command list of "stuarty" with no arguments.
+// List prints the short command list of "stuarty" with no arguments, grouped by domain: stuarty <domain> lists one.
 func List(w io.Writer) {
-	fmt.Fprintln(w, "stuarty commands:")
+	fmt.Fprintln(w, "stuarty commands, by domain (stuarty <domain> <verb> runs one of a domain):")
 
-	for _, s := range registry() {
-		fmt.Fprintf(w, "  %-16s %s\n", s.name, s.summary)
+	for _, d := range command.DomainNames() {
+		in := domainCommands(d)
+		if len(in) == 0 {
+			continue
+		}
+
+		fmt.Fprintf(w, "%s:\n", d)
+
+		for _, s := range in {
+			fmt.Fprintf(w, "  %-16s %s\n", s.name, s.summary)
+		}
 	}
+
+	fmt.Fprintln(w, "process:")
 
 	for i := range processCommands {
 		fmt.Fprintf(w, "  %-16s %s\n", processCommands[i].name, processCommands[i].summary)
@@ -453,6 +490,10 @@ func Help(args []string, stdout, stderr io.Writer) (code int, handled bool) {
 		return ExitOK, true
 	case args[0] == "--version" || args[0] == "-v":
 		fmt.Fprintln(stdout, "stuarty "+agentdocs.Version)
+
+		return ExitOK, true
+	case args[0] == "help" && len(args) == 2 && command.KnownDomain(args[1]) && lookup(args[1]) == nil:
+		listDomain(stdout, args[1])
 
 		return ExitOK, true
 	case args[0] == "help" && len(args) >= 2:

@@ -59,6 +59,12 @@ var Scopes = map[string]string{
 	"HistoryList":         ScopeRead,
 	"Undo":                ScopeEdit,
 	"Redo":                ScopeEdit,
+	"HistoryRevert":       ScopeEdit,
+	"HistoryDiff":         ScopeRead,
+	"CheckpointCreate":    ScopeEdit,
+	"CheckpointList":      ScopeRead,
+	"CheckpointRename":    ScopeEdit,
+	"CheckpointRemove":    ScopeEdit,
 	"Lint":                ScopeRead,
 	"MediaImport":         ScopeMedia,
 	"MediaInspect":        ScopeRead,
@@ -66,6 +72,10 @@ var Scopes = map[string]string{
 	"MediaTrash":          ScopeMedia,
 	"MediaRestore":        ScopeMedia,
 	"JobStart":            ScopeRender,
+	"ExportPresetList":    ScopeRead,
+	"ExportCheck":         ScopeRead,
+	"AudioMeasure":        ScopeRead,
+	"ExportBatch":         ScopeRender,
 	"ProjectBundleExport": ScopeRender,
 	"ProjectBundleImport": ScopeEdit,
 	"ProjectOtioExport":   ScopeRead,
@@ -73,6 +83,23 @@ var Scopes = map[string]string{
 	"FontImport":          ScopeMedia,
 	"BrandKitGet":         ScopeRead,
 	"BrandKitSet":         ScopeEdit,
+	"MemoryList":          ScopeRead,
+	"MemoryGet":           ScopeRead,
+	"MemoryWrite":         ScopeEdit,
+	"MemoryRemove":        ScopeEdit,
+	"SkillList":           ScopeRead,
+	"SkillGet":            ScopeRead,
+	"SkillWrite":          ScopeEdit,
+	"SkillImport":         ScopeMedia,
+	"SkillMarkReviewed":   ScopeEdit,
+	"SkillLint":           ScopeRead,
+	"SkillExport":         ScopeMedia,
+	"PromptList":          ScopeRead,
+	"PromptGet":           ScopeRead,
+	"PromptWrite":         ScopeEdit,
+	"PromptRender":        ScopeRead,
+	"LibrarySearch":       ScopeRead,
+	"LibraryReindex":      ScopeEdit,
 	"JobGet":              ScopeRead,
 	"JobList":             ScopeRead,
 	"JobCancel":           ScopeRender,
@@ -99,23 +126,115 @@ var Scopes = map[string]string{
 	"KeyList":             ScopeRead,
 	"KeyRevoke":           ScopeRead,
 
-	"ImageCreate":      ScopeEdit,
-	"ImageList":        ScopeRead,
-	"ImageDescribe":    ScopeRead,
-	"ImageEdit":        ScopeEdit,
-	"ImageUndo":        ScopeEdit,
-	"ImageRedo":        ScopeEdit,
-	"ImageExport":      ScopeEdit,
-	"ConnectionList":   ScopeRead,
-	"ConnectionGet":    ScopeRead,
-	"ConnectionCreate": ScopeAdmin,
-	"ConnectionRemove": ScopeAdmin,
-	"ConnectionTest":   ScopeAdmin,
+	// The hosted agent chat (SDD-017 section 10). The operations that act are also for a person only: that is
+	// checked before the scope.
+	"AgentProfileList":     ScopeRead,
+	"AgentProfileSet":      ScopeAdmin,
+	"AgentProfileRemove":   ScopeAdmin,
+	"ChatSessionStart":     ScopeEdit,
+	"ChatSend":             ScopeEdit,
+	"ChatCancel":           ScopeEdit,
+	"ChatAnswerPermission": ScopeEdit,
+	"ChatSessionDelete":    ScopeEdit,
+	"ChatSessionList":      ScopeRead,
+	"ChatSessionGet":       ScopeRead,
+	"ChatTranscriptGet":    ScopeRead,
+
+	"ProjectDescribe":    ScopeRead,
+	"ProjectDuplicate":   ScopeEdit,
+	"ProjectItemAdd":     ScopeEdit,
+	"ProjectItemMove":    ScopeEdit,
+	"ProjectItemRename":  ScopeEdit,
+	"ProjectItemTrash":   ScopeEdit,
+	"ProjectItemRestore": ScopeEdit,
+	"BriefGet":           ScopeRead,
+	"BriefSet":           ScopeEdit,
+	"BriefingQuestions":  ScopeRead,
+	"BriefingAnswer":     ScopeEdit,
+	"ImageCreate":        ScopeEdit,
+	"ImageList":          ScopeRead,
+	"ImageDescribe":      ScopeRead,
+	"ImageEdit":          ScopeEdit,
+	"ImageUndo":          ScopeEdit,
+	"ImageRedo":          ScopeEdit,
+	"ImageExport":        ScopeEdit,
+	"ImageImport":        ScopeEdit,
+	"ImageImportFile":    ScopeEdit,
+	"ImageFrame":         ScopeRead,
+	"ImageHistory":       ScopeRead,
+	"ImageFile":          ScopeRead,
+	"ConnectionList":     ScopeRead,
+	"ConnectionGet":      ScopeRead,
+	"ConnectionCreate":   ScopeAdmin,
+	"ConnectionRemove":   ScopeAdmin,
+	"ConnectionTest":     ScopeAdmin,
+	// ApprovalDecide is read plus Caller.Browser (SDD-015 section 4), as KeyCreate is.
+	"ApprovalList":       ScopeRead,
+	"ApprovalGet":        ScopeRead,
+	"ApprovalDecide":     ScopeRead,
+	"ApprovalRuleList":   ScopeRead,
+	"ApprovalRuleSet":    ScopeAdmin,
+	"ApprovalRuleRemove": ScopeAdmin,
+	// The social networks and publishing (SDD-020 section 9).
+	"SocialNetworkList":     ScopeRead,
+	"SocialConnectBegin":    ScopeAdmin,
+	"SocialConnectComplete": ScopeAdmin,
+	"SocialAccountList":     ScopeRead,
+	"SocialAccountSelect":   ScopeAdmin,
+	"SocialPriceSet":        ScopeAdmin,
+	"PublishValidate":       ScopeRead,
+	"PublishNow":            ScopeRender,
+	"PublishStatus":         ScopeRead,
+	// The calendar of publications (SDD-020 section 28). Scheduling, sending now and retrying only ask for
+	// approval, so they take the scope of PublishNow.
+	"PublicationCreate":   ScopeEdit,
+	"PublicationGet":      ScopeRead,
+	"PublicationList":     ScopeRead,
+	"PublicationUpdate":   ScopeEdit,
+	"PublicationSchedule": ScopeRender,
+	"PublicationSendNow":  ScopeRender,
+	"PublicationRetry":    ScopeRender,
+	"PublicationCancel":   ScopeEdit,
+	"CostSummary":         ScopeRead,
+	"CostCeilingSet":      ScopeAdmin,
+
+	"AssetGet":     ScopeRead,
+	"AssetUses":    ScopeRead,
+	"AssetSetInfo": ScopeMedia,
+	"AssetTag":     ScopeMedia,
+
+	"ProviderList":     ScopeRead,
+	"ProviderModels":   ScopeRead,
+	"ProviderPriceSet": ScopeAdmin,
+	"TextGenerate":     ScopeEdit,
+	"ImageGenerate":    ScopeEdit,
+	"VoiceGenerate":    ScopeEdit,
+	"ImageModelEdit":   ScopeEdit,
+	"VideoGenerate":    ScopeEdit,
+	"VoiceList":        ScopeRead,
+	"TextList":         ScopeRead,
+	"TextGet":          ScopeRead,
+	"TextWrite":        ScopeEdit,
+	"TextRevisions":    ScopeRead,
+	"TextRevert":       ScopeEdit,
+	"TextDraft":        ScopeEdit,
+	"CaptionValidate":  ScopeRead,
+	"ScriptEstimate":   ScopeRead,
+
+	"ProviderSignInBegin":    ScopeAdmin,
+	"ProviderSignInComplete": ScopeAdmin,
+	"ProviderSignInList":     ScopeRead,
+
+	"MotionBrief":   ScopeRead,
+	"MotionCheck":   ScopeRead,
+	"MotionReplace": ScopeEdit,
 }
 
 // authorize checks the caller first, as every method does: a missing caller
 // is E_UNAUTHORIZED, a missing scope or a key limited to another project is
-// E_FORBIDDEN. projectID is "" for operations that do not name a project.
+// E_FORBIDDEN. projectID is "" for operations that do not name a project; an
+// operation that names one calls s.authorizeProject, since the id it receives
+// may be a timeline of the key's project (SDD-003 section 1.7 rule 4).
 func authorize(ctx context.Context, method, projectID string) (Caller, error) {
 	scope, listed := Scopes[method]
 	if !listed {
@@ -149,6 +268,34 @@ func authorizeScope(ctx context.Context, scope, projectID string) (Caller, error
 	}
 
 	return c, nil
+}
+
+// authorizeProject is authorize for an operation that names a project or, in its place, a timeline (SDD-003
+// section 1.7 rule 2): a key limited to one project reaches every timeline of it (rule 4), so the id is resolved to
+// its project before it is held to the key, and before anything of that project is read. A timeline of another
+// project and an id of nothing are refused alike, with the refusal authorize gives a project outside the key.
+func (s *svc) authorizeProject(ctx context.Context, method, id string) (Caller, error) {
+	return authorize(ctx, method, s.keyProjectOf(ctx, id))
+}
+
+// authorizeProjectScope is authorizeProject for a method whose scope depends on the request.
+func (s *svc) authorizeProjectScope(ctx context.Context, scope, id string) (Caller, error) {
+	return authorizeScope(ctx, scope, s.keyProjectOf(ctx, id))
+}
+
+// keyProjectOf is the project an id stands for, as a key limited to one project is held to it: the project of a
+// timeline, or the id itself when it is no timeline (a project made before ADR-0039, or nothing). For any other
+// caller the id is returned as it is and nothing is read.
+func (s *svc) keyProjectOf(ctx context.Context, id string) string {
+	if c, ok := CallerFrom(ctx); !ok || c.ProjectID == "" || id == "" {
+		return id
+	}
+
+	if owner, err := s.store.Productions().ProjectOfTimeline(ctx, id); err == nil {
+		return owner
+	}
+
+	return id
 }
 
 // Roles of network mode (SDD-007 section 4.1).

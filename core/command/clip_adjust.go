@@ -9,7 +9,7 @@ import (
 func init() {
 	Register(Define(Spec{
 		Name:    "clip.set_framing",
-		Summary: "Sets how the asset of a clip is fitted into the frame and how much of each side is cropped.",
+		Summary: "Sets how a clip fits the frame and how much of each side is cropped.",
 		Description: "Sets fit (cover, contain or none) and merges the given crop sides with the current ones. Each side " +
 			"is a fraction of the asset from 0 to 1; left plus right and top plus bottom must stay below 1. " +
 			"A side that has keyframes (crop_left, crop_top, crop_right, crop_bottom; see keyframe.set) cannot be set here.",
@@ -20,7 +20,7 @@ func init() {
 
 	Register(Define(Spec{
 		Name:    "clip.set_color",
-		Summary: "Sets the brightness, contrast, saturation, temperature, tint, hue, lookup table, HSL bands, wheels and curves of a clip.",
+		Summary: "Sets brightness, contrast, saturation, temperature, tint, hue, LUT, HSL bands, wheels and curves of a clip.",
 		Description: "Sets the given adjustments, rounded to 3 decimals; a value equal to the default (brightness 0, " +
 			"contrast 1, saturation 1, temperature 0, tint 0, hue 0) clears the stored one. Positive temperature is " +
 			"warmer, positive tint is more magenta, hue rotates the colours in degrees. lut_asset is the id of a lut asset (a " +
@@ -58,6 +58,23 @@ func (c *Context) clipItem(id, what string) (timeline.Item, *Error) {
 		return it, err
 	}
 	if it.Type != timeline.ItemClip {
+		return it, Errorf(CodeTypeMismatch, "Item %s is %s item; %s applies to clips.", id, article(it.Type), what).
+			WithHint("Use item.set_transform to size other items.").WithPath("args.item_id")
+	}
+	return it, nil
+}
+
+// clipOrCompositionItem is clipItem for the commands that apply to a composition as much as to a clip: its
+// framing (fit), effects, shadow and outline (SDD-001 section 3.5.1).
+func (c *Context) clipOrCompositionItem(id, what string) (timeline.Item, *Error) {
+	if err := idForm("args.item_id", timeline.PrefixItem, id); err != nil {
+		return timeline.Item{}, err
+	}
+	it, err := c.item(id)
+	if err != nil {
+		return it, err
+	}
+	if it.Type != timeline.ItemClip && it.Type != timeline.ItemComposition {
 		return it, Errorf(CodeTypeMismatch, "Item %s is %s item; %s applies to clips.", id, article(it.Type), what).
 			WithHint("Use item.set_transform to size other items.").WithPath("args.item_id")
 	}
@@ -104,12 +121,16 @@ func applyClipSetFraming(c *Context, a *clipFramingArgs) error {
 	if err := atLeastOne([]string{"fit", "crop"}, a.Fit != "", a.Crop != nil); err != nil {
 		return err
 	}
-	it, err := c.clipItem(a.ItemID, "framing")
+	it, err := c.clipOrCompositionItem(a.ItemID, "framing")
 	if err != nil {
 		return err
 	}
 	if a.Fit != "" {
 		it.Fit = a.Fit
+	}
+	if a.Crop != nil && it.Type == timeline.ItemComposition {
+		return Errorf(CodeTypeMismatch, "Item %s is a composition, which cannot be cropped.", a.ItemID).
+			WithHint("Use clip.set_mask to show a part of it.").WithPath("args.crop")
 	}
 	if a.Crop != nil {
 		if err := cropAnimated(&it, a.Crop); err != nil {

@@ -440,7 +440,12 @@ func sharedProps(it *timeline.Item, props object) {
 		for name, list := range it.Keyframes {
 			out := make([]any, 0, len(list))
 			for _, k := range list {
-				out = append(out, object{"t": k.T, "value": k.Value, "easing": k.Easing})
+				key := object{"t": k.T, "value": k.Value, "easing": k.Easing}
+				if k.Bezier != nil {
+					key["bezier"] = k.Bezier
+				}
+
+				out = append(out, key)
 			}
 
 			kfs[name] = out
@@ -533,7 +538,7 @@ func gapMetadata(it *timeline.Item) object {
 		return captionMetadata(it)
 	case timeline.ItemShape:
 		return shapeMetadata(it)
-	case timeline.ItemClip, timeline.ItemAudio:
+	case timeline.ItemClip, timeline.ItemAudio, timeline.ItemComposition:
 	}
 
 	return nil
@@ -577,7 +582,7 @@ func fade(t *timeline.Transition) (int, bool) {
 // unsupported names why an item cannot be written at all, or "".
 func unsupported(it *timeline.Item) string {
 	switch it.Type {
-	case timeline.ItemText, timeline.ItemCaption, timeline.ItemShape:
+	case timeline.ItemText, timeline.ItemCaption, timeline.ItemShape, timeline.ItemComposition:
 		return string(it.Type) + " item"
 	case timeline.ItemClip, timeline.ItemAudio:
 		return ""

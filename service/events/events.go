@@ -29,9 +29,12 @@ const (
 const (
 	BatchCommitted = "batch.committed"
 	ProjectUpdated = "project.updated"
+	NestedUpdated  = "nested.updated"
 	AssetUpdated   = "asset.updated"
 	JobUpdated     = "job.updated"
 	ResyncRequired = "resync.required"
+	// ImageUpdated is the event of the stream of an image document (SDD-006 section 12).
+	ImageUpdated = "image.updated"
 )
 
 // Reasons of resync.required.
@@ -264,3 +267,14 @@ func Replayable(row *service.OperationRow) bool {
 }
 
 func itoa(n int64) string { return strconv.FormatInt(n, 10) }
+
+// NestedFrame is nested.updated: the timeline ev.TimelineID, which the timeline ev.ProjectID holds as a
+// composition, changed at revision ev.Revision (SDD-006 section 3.3.1).
+func NestedFrame(ev *service.Event) Frame {
+	return marshal(NestedUpdated, struct {
+		ProjectID  string `json:"project_id"`
+		TimelineID string `json:"timeline_id"`
+		Revision   int64  `json:"revision"`
+		At         string `json:"at"`
+	}{ev.ProjectID, ev.TimelineID, ev.Revision, Time(ev.At)})
+}

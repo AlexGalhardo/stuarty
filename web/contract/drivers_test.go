@@ -114,6 +114,16 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.MediaImport)
 	case "MediaList":
 		return invoke(ctx, s, svc.MediaList)
+	case "AssetList":
+		return invoke(ctx, s, svc.AssetList)
+	case "AssetGet":
+		return invoke(ctx, s, svc.AssetGet)
+	case "AssetUses":
+		return invoke(ctx, s, svc.AssetUses)
+	case "AssetSetInfo":
+		return invoke(ctx, s, svc.AssetSetInfo)
+	case "AssetTag":
+		return invoke(ctx, s, svc.AssetTag)
 	case "MediaInspect":
 		return invoke(ctx, s, svc.MediaInspect)
 	case "JobStart":
@@ -138,6 +148,12 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.ProjectRestore)
 	case "CommandHelp":
 		return invoke(ctx, s, svc.CommandHelp)
+	case "ExportPresetList":
+		return invoke(ctx, s, svc.ExportPresetList)
+	case "ExportCheck":
+		return invoke(ctx, s, svc.ExportCheck)
+	case "ExportBatch":
+		return invoke(ctx, s, svc.ExportBatch)
 	case "MediaTrash":
 		return invoke(ctx, s, svc.MediaTrash)
 	case "MediaRestore":
@@ -148,6 +164,14 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.ViewFrame)
 	case "ViewSheet":
 		return invoke(ctx, s, svc.ViewSheet)
+	case "AudioMeasure":
+		return invoke(ctx, s, svc.AudioMeasure)
+	case "MotionBrief":
+		return invoke(ctx, s, svc.MotionBrief)
+	case "MotionCheck":
+		return invoke(ctx, s, svc.MotionCheck)
+	case "MotionReplace":
+		return invoke(ctx, s, svc.MotionReplace)
 	case "Doctor":
 		return invoke(ctx, s, svc.Doctor)
 	case "FontList":
@@ -168,6 +192,76 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.ConnectionRemove)
 	case "ConnectionTest":
 		return invoke(ctx, s, svc.ConnectionTest)
+	case "AgentProfileList":
+		return invoke(ctx, s, svc.AgentProfileList)
+	case "ChatSessionList":
+		return invoke(ctx, s, svc.ChatSessionList)
+	case "ChatSessionGet":
+		return invoke(ctx, s, svc.ChatSessionGet)
+	case "ChatTranscriptGet":
+		return invoke(ctx, s, svc.ChatTranscriptGet)
+	case "SocialNetworkList":
+		return invoke(ctx, s, svc.SocialNetworkList)
+	case "SocialConnectBegin":
+		return invoke(ctx, s, svc.SocialConnectBegin)
+	case "SocialAccountList":
+		return invoke(ctx, s, svc.SocialAccountList)
+	case "PublishValidate":
+		return invoke(ctx, s, svc.PublishValidate)
+	case "PublishNow":
+		return invoke(ctx, s, svc.PublishNow)
+	case "PublishStatus":
+		return invoke(ctx, s, svc.PublishStatus)
+	case "PublicationCreate":
+		return invoke(ctx, s, svc.PublicationCreate)
+	case "PublicationGet":
+		return invoke(ctx, s, svc.PublicationGet)
+	case "PublicationList":
+		return invoke(ctx, s, svc.PublicationList)
+	case "PublicationUpdate":
+		return invoke(ctx, s, svc.PublicationUpdate)
+	case "PublicationSchedule":
+		return invoke(ctx, s, svc.PublicationSchedule)
+	case "PublicationSendNow":
+		return invoke(ctx, s, svc.PublicationSendNow)
+	case "PublicationRetry":
+		return invoke(ctx, s, svc.PublicationRetry)
+	case "PublicationCancel":
+		return invoke(ctx, s, svc.PublicationCancel)
+	case "ApprovalList":
+		return invoke(ctx, s, svc.ApprovalList)
+	case "ApprovalGet":
+		return invoke(ctx, s, svc.ApprovalGet)
+	case "ApprovalDecide":
+		return invoke(ctx, s, svc.ApprovalDecide)
+	case "ApprovalRuleList":
+		return invoke(ctx, s, svc.ApprovalRuleList)
+	case "ApprovalRuleSet":
+		return invoke(ctx, s, svc.ApprovalRuleSet)
+	case "ApprovalRuleRemove":
+		return invoke(ctx, s, svc.ApprovalRuleRemove)
+	case "CostSummary":
+		return invoke(ctx, s, svc.CostSummary)
+	case "CostCeilingSet":
+		return invoke(ctx, s, svc.CostCeilingSet)
+	case "ProviderList":
+		return invoke(ctx, s, svc.ProviderList)
+	case "ProviderModels":
+		return invoke(ctx, s, svc.ProviderModels)
+	case "ProviderPriceSet":
+		return invoke(ctx, s, svc.ProviderPriceSet)
+	case "TextGenerate":
+		return invoke(ctx, s, svc.TextGenerate)
+	case "ImageGenerate":
+		return invoke(ctx, s, svc.ImageGenerate)
+	case "VoiceGenerate":
+		return invoke(ctx, s, svc.VoiceGenerate)
+	case "ImageModelEdit":
+		return invoke(ctx, s, svc.ImageModelEdit)
+	case "VideoGenerate":
+		return invoke(ctx, s, svc.VideoGenerate)
+	case "VoiceList":
+		return invoke(ctx, s, svc.VoiceList)
 	case "AuditList":
 		return invoke(ctx, s, svc.AuditList)
 	case "ToolsInstall":
@@ -192,8 +286,44 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.ImageRedo)
 	case "ImageExport":
 		return invoke(ctx, s, svc.ImageExport)
+	case "ImageImport":
+		return invoke(ctx, s, svc.ImageImport)
 	case "ProjectOtioImport":
 		return invoke(ctx, s, svc.ProjectOtioImport)
+	case "ProjectDescribe":
+		return invoke(ctx, s, svc.ProjectDescribe)
+	case "ProjectDuplicate":
+		return invoke(ctx, s, svc.ProjectDuplicate)
+	case "ProjectItemAdd":
+		return invoke(ctx, s, svc.ProjectItemAdd)
+	case "ProjectItemMove":
+		return invoke(ctx, s, svc.ProjectItemMove)
+	case "ProjectItemRename":
+		return invoke(ctx, s, svc.ProjectItemRename)
+	case "ProjectItemTrash":
+		return invoke(ctx, s, svc.ProjectItemTrash)
+	case "ProjectItemRestore":
+		return invoke(ctx, s, svc.ProjectItemRestore)
+	case "BriefGet":
+		return invoke(ctx, s, svc.BriefGet)
+	case "BriefSet":
+		return invoke(ctx, s, svc.BriefSet)
+	case "BriefingQuestions":
+		return invoke(ctx, s, svc.BriefingQuestions)
+	case "BriefingAnswer":
+		return invoke(ctx, s, svc.BriefingAnswer)
+	}
+
+	if res, ok, err := historyCall(ctx, svc, s); ok {
+		return res, err
+	}
+
+	if res, ok, err := libraryCall(ctx, svc, s); ok {
+		return res, err
+	}
+
+	if res, ok, err := writingCall(ctx, svc, s); ok {
+		return res, err
 	}
 
 	return nil, fmt.Errorf("no mapping for %s", s.Call)
@@ -365,7 +495,10 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 	}
 
 	switch s.Call {
-	case "ImageCreate", "ImageList", "ImageDescribe", "ImageEdit", "ImageUndo", "ImageRedo", "ImageExport":
+	case "AssetList", "AssetGet", "AssetUses", "AssetSetInfo", "AssetTag":
+		return assetToolCall(s.Call, args)
+	case "ImageCreate", "ImageList", "ImageDescribe", "ImageEdit", "ImageUndo", "ImageRedo", "ImageExport",
+		"ImageImport":
 		args["action"] = imageActions[s.Call]
 
 		// the tool names the template to start from from_template, which is not an id member
@@ -402,7 +535,11 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 
 		for _, f := range files {
 			m, _ := f.(map[string]any)
-			paths = append(paths, m["path"])
+			if h, ok := m["hash"]; ok {
+				paths = append(paths, h)
+			} else {
+				paths = append(paths, m["path"])
+			}
 
 			if id, ok := m["asset_id"]; ok {
 				ids = append(ids, id)
@@ -421,6 +558,45 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 		return "font_import", args, nil
 	case "ConnectionList", "ConnectionGet":
 		return "connection", args, nil
+	case "ApprovalList":
+		// the queue is read with job_get (D-093): the state is the approvals member
+		if v, ok := args["state"]; ok {
+			delete(args, "state")
+
+			args["approvals"] = v
+		} else {
+			args["approvals"] = "pending"
+		}
+
+		return "job_get", args, nil
+	case "ApprovalGet":
+		args["approval_id"] = args["id"]
+
+		delete(args, "id")
+
+		return "job_get", args, nil
+	case "PublishStatus":
+		return "job_get", args, nil
+	case "PublishNow":
+		// a publication starts with job_start; the post is the arguments of the kind
+		delete(args, "dry_run")
+
+		inner := map[string]any{}
+
+		for _, k := range []string{
+			"connection_id", "export", "thumbnail", "title", "description", "tags", "visibility", "made_for_kids",
+			"ai_disclosure",
+		} {
+			if v, ok := args[k]; ok {
+				inner[k] = v
+
+				delete(args, k)
+			}
+		}
+
+		args["kind"], args["args"] = service.JobPublishUpload, inner
+
+		return "job_start", args, nil
 	case "MediaList":
 		return "media_inspect", args, nil
 	case "MediaInspect":
@@ -465,8 +641,84 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 		return "project_trash", args, nil
 	case "CommandHelp":
 		return "command_help", args, nil
+	case "ExportPresetList":
+		args["domain"] = "export"
+		delete(args, "codecs")
+
+		return "command_help", args, nil
+	case "ExportCheck":
+		return "lint", args, nil
+	case "ExportBatch":
+		items := args["items"]
+
+		delete(args, "items")
+
+		args["kind"] = service.JobExportBatch
+		args["args"] = map[string]any{"items": items}
+
+		return "job_start", args, nil
 	case "JobCancel":
 		return "job_cancel", args, nil
+	case "TextGenerate":
+		// a generation starts with job_start; the model and the prompt are its arguments
+		delete(args, "dry_run")
+
+		inner := map[string]any{}
+
+		for _, k := range []string{"connection_id", "model", "prompt", "system", "max_tokens", "temperature"} {
+			if v, ok := args[k]; ok {
+				inner[k] = v
+
+				delete(args, k)
+			}
+		}
+
+		args["kind"], args["args"] = "text.generate", inner
+
+		return "job_start", args, nil
+	case "ImageGenerate", "VoiceGenerate", "VideoGenerate":
+		// the same: the request members are the arguments of the job kind
+		delete(args, "dry_run")
+
+		inner := map[string]any{}
+
+		for _, k := range []string{
+			"connection_id", "model", "prompt", "size", "count", "text", "voice", "language", "format",
+			"seconds", "aspect", "first_frame",
+		} {
+			if v, ok := args[k]; ok {
+				inner[k] = v
+
+				delete(args, k)
+			}
+		}
+
+		args["kind"], args["args"] = "image.generate", inner
+		switch s.Call {
+		case "VoiceGenerate":
+			args["kind"] = "voice.generate"
+		case "VideoGenerate":
+			args["kind"] = "video.generate"
+		}
+
+		return "job_start", args, nil
+	case "ImageModelEdit":
+		// the same: the members of the request are the arguments of the job kind image.edit
+		delete(args, "dry_run")
+
+		inner := map[string]any{}
+
+		for _, k := range []string{"connection_id", "image_id", "operation", "model", "layer_id", "prompt", "size"} {
+			if v, ok := args[k]; ok {
+				inner[k] = v
+
+				delete(args, k)
+			}
+		}
+
+		args["kind"], args["args"] = "image.edit", inner
+
+		return "job_start", args, nil
 	case "ViewFrame":
 		args["mode"] = "frame"
 
@@ -475,6 +727,78 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 		args["mode"] = "sheet"
 
 		return "view", args, nil
+	case "AudioMeasure":
+		args["mode"] = "audio"
+
+		if v, ok := args["start"]; ok {
+			args["from"] = v
+
+			delete(args, "start")
+		}
+
+		if v, ok := args["end"]; ok {
+			args["until"] = v
+
+			delete(args, "end")
+		}
+
+		return "view", args, nil
+	case "MotionBrief":
+		delete(args, "track_id") // the tool has no track: SDD-011 section 15.5
+
+		args["mode"] = "motion"
+
+		return "view", args, nil
+	case "ProjectDescribe":
+		args["detail"] = "overview"
+
+		return "project_get", args, nil
+	case "ProjectDuplicate":
+		delete(args, "dry_run")
+
+		args["from"] = args["project_id"]
+		delete(args, "project_id")
+
+		return "project_create", args, nil
+	case "ProjectItemAdd", "ProjectItemMove", "ProjectItemRename", "ProjectItemTrash", "ProjectItemRestore":
+		delete(args, "dry_run")
+
+		args["action"] = strings.ToLower(strings.TrimPrefix(s.Call, "ProjectItem"))
+
+		return "project_item", args, nil
+	case "BriefGet":
+		args["action"] = "brief"
+
+		return "project_item", args, nil
+	case "BriefSet":
+		delete(args, "dry_run")
+
+		args["action"] = "brief"
+
+		return "project_item", args, nil
+	case "BriefingQuestions":
+		args["action"] = "briefing"
+
+		return "project_item", args, nil
+	case "BriefingAnswer":
+		delete(args, "dry_run")
+		delete(args, "replace")
+
+		args["action"] = "briefing"
+
+		return "project_item", args, nil
+	}
+
+	if tool, args, ok, err := historyTool(s); ok {
+		return tool, args, err
+	}
+
+	if tool, args, ok, err := libraryTool(s); ok {
+		return tool, args, err
+	}
+
+	if tool, args, ok, err := writingTool(s); ok {
+		return tool, args, err
 	}
 
 	return "", nil, fmt.Errorf("no tool for %s", s.Call)
@@ -550,7 +874,39 @@ func (r fixedResolver) Resolve(context.Context, cli.Target) (*cli.Connection, er
 
 // command is how a Service operation is encoded as a command line (SDD-003
 // 7.1): the name, the arguments and what goes on standard input.
+// command2argv is the command of a step with the --timeline of the calls that take one (SDD-003 section 1.7).
 func command2argv(s step) (name string, argv []string, stdin string, err error) {
+	name, argv, stdin, err = commandOf(s)
+	if err != nil {
+		return name, argv, stdin, err
+	}
+
+	var t struct {
+		TimelineID string `json:"timeline_id"`
+	}
+
+	if len(s.Args) > 0 {
+		_ = json.Unmarshal(s.Args, &t)
+	}
+
+	if t.TimelineID != "" {
+		argv = append(argv, "--timeline", t.TimelineID)
+	}
+
+	return name, argv, stdin, nil
+}
+
+func commandOf(s step) (name string, argv []string, stdin string, err error) {
+	// The writing steps first: their from is a revision number, which the time of a motion range below refuses.
+	if name, argv, stdin, ok, err := writingCommand(s); ok {
+		return name, argv, stdin, err
+	}
+
+	// First: its members are numbers where the generic decoding below reads strings (until).
+	if name, argv, ok, err := historyCommand(s); ok {
+		return name, argv, "", err
+	}
+
 	var a struct {
 		ProjectID string               `json:"project_id"`
 		AssetID   string               `json:"asset_id"`
@@ -565,7 +921,10 @@ func command2argv(s step) (name string, argv []string, stdin string, err error) 
 		Kind      string               `json:"kind"`
 		Files     []service.ImportFile `json:"files"`
 		WaitMS    int                  `json:"wait_ms"`
-		Args      struct {
+		Items     []struct {
+			Preset string `json:"preset"`
+		} `json:"items"`
+		Args struct {
 			AssetID  string `json:"asset_id"`
 			Language string `json:"language"`
 			Format   string `json:"format"`
@@ -577,12 +936,51 @@ func command2argv(s step) (name string, argv []string, stdin string, err error) 
 		Fill        json.RawMessage `json:"fill"`
 		Path        string          `json:"path"`
 		At          string          `json:"at"`
+		From        string          `json:"from"`
 		Until       string          `json:"until"`
+		TrackID     string          `json:"track_id"`
+		RenderKey   string          `json:"render_key"`
 		IncludeLog  *bool           `json:"include_log"`
 		AsNew       bool            `json:"as_new"`
 		DryRun      bool            `json:"dry_run"`
 		BrandColors []string        `json:"brand_colors"`
 		BrandFonts  []string        `json:"brand_fonts"`
+
+		// ImageModelEdit (epic 30)
+		ImageID   string `json:"image_id"`
+		Operation string `json:"operation"`
+		LayerID   string `json:"layer_id"`
+
+		ConnectionID string `json:"connection_id"`
+		Model        string `json:"model"`
+		Prompt       string `json:"prompt"`
+		System       string `json:"system"`
+		MaxTokens    int    `json:"max_tokens"`
+		Provider     string `json:"provider"`
+		Currency     string `json:"currency"`
+		InMicros     *int64 `json:"input_micros_per_mtok"`
+		OutMicros    *int64 `json:"output_micros_per_mtok"`
+		Refresh      bool   `json:"refresh"`
+		Size         string `json:"size"`
+		Count        int    `json:"count"`
+		Voice        string `json:"voice"`
+		Language     string `json:"language"`
+		Format       string `json:"format"`
+		Seconds      int    `json:"seconds"`
+		Aspect       string `json:"aspect"`
+		FirstFrame   string `json:"first_frame"`
+
+		ItemID   string `json:"item_id"`
+		Title    string `json:"title"`
+		Text     string `json:"text"`
+		TextKind string `json:"text_kind"`
+		Position *int   `json:"position"`
+
+		Answers map[string]string `json:"answers"`
+		Replace bool              `json:"replace"`
+
+		Start string `json:"start"`
+		End   string `json:"end"`
 	}
 
 	if len(s.Args) > 0 {
@@ -601,7 +999,12 @@ func command2argv(s step) (name string, argv []string, stdin string, err error) 
 	}
 
 	switch s.Call {
-	case "ImageCreate", "ImageList", "ImageDescribe", "ImageEdit", "ImageUndo", "ImageRedo", "ImageExport":
+	case "AssetList", "AssetGet", "AssetUses", "AssetSetInfo", "AssetTag":
+		name, argv, err = assetArgv(s.Call, s.Args)
+
+		return name, argv, "", err
+	case "ImageCreate", "ImageList", "ImageDescribe", "ImageEdit", "ImageUndo", "ImageRedo", "ImageExport",
+		"ImageImport":
 		return imageArgv(s)
 	case "ProjectList":
 		return "project:list", nil, "", nil
@@ -625,12 +1028,20 @@ func command2argv(s step) (name string, argv []string, stdin string, err error) 
 		return "lint", proj, "", nil
 	case "MediaImport":
 		for _, f := range a.Files {
-			argv = append(argv, f.Path)
+			if f.Path != "" {
+				argv = append(argv, f.Path)
+			}
+		}
+
+		for _, f := range a.Files {
+			argv = append(argv, flag("hash", f.Hash)...)
 		}
 
 		for _, f := range a.Files {
 			argv = append(argv, flag("asset-id", f.AssetID)...)
 		}
+
+		argv = append(argv, importFlags(s.Args)...)
 
 		return "media:import", append(argv, proj...), "", nil
 	case "MediaList":
@@ -713,6 +1124,21 @@ func command2argv(s step) (name string, argv []string, stdin string, err error) 
 		return "project:restore", []string{a.ProjectID}, "", nil
 	case "CommandHelp":
 		return "command:help", []string{a.Name}, "", nil
+	case "ExportPresetList":
+		return "export:presets", nil, "", nil
+	case "ExportCheck":
+		return "export:check", append(slices.Clone(proj), flag("preset", a.Preset)...), "", nil
+	case "ExportBatch":
+		argv = slices.Clone(proj)
+		for _, it := range a.Items {
+			argv = append(argv, flag("preset", it.Preset)...)
+		}
+
+		if a.WaitMS == 0 {
+			return "export:batch", append(argv, "--no-wait"), "", nil
+		}
+
+		return "export:batch", argv, "", nil
 	case "MediaTrash":
 		return "media:trash", append([]string{a.AssetID}, proj...), "", nil
 	case "MediaRestore":
@@ -725,6 +1151,32 @@ func command2argv(s step) (name string, argv []string, stdin string, err error) 
 		argv = append(slices.Clone(proj), "--mode", "sheet")
 
 		return "view", append(argv, flag("until", a.Until)...), "", nil
+	case "AudioMeasure":
+		argv = append(slices.Clone(proj), "--mode", "audio")
+		argv = append(argv, flag("item", a.ItemID)...)
+		argv = append(argv, flag("from", a.Start)...)
+
+		return "view", append(argv, flag("until", a.End)...), "", nil
+	case "MotionBrief":
+		argv = append(slices.Clone(proj), flag("from", a.From)...)
+		argv = append(argv, flag("until", a.Until)...)
+
+		return "motion:brief", append(argv, flag("track", a.TrackID)...), "", nil
+	case "MotionCheck":
+		argv = append(slices.Clone(proj), flag("asset", a.AssetID)...)
+		argv = append(argv, flag("from", a.From)...)
+		argv = append(argv, flag("until", a.Until)...)
+
+		return "motion:check", append(argv, flag("track", a.TrackID)...), "", nil
+	case "MotionReplace":
+		argv = append(slices.Clone(proj), flag("asset", a.AssetID)...)
+		argv = append(argv, flag("render-key", a.RenderKey)...)
+
+		if a.DryRun {
+			argv = append(argv, "--dry-run")
+		}
+
+		return "motion:replace", argv, "", nil
 	case "Doctor":
 		return "doctor", []string{"--full"}, "", nil
 	case "FontList":
@@ -753,10 +1205,233 @@ func command2argv(s step) (name string, argv []string, stdin string, err error) 
 			"--kind", c.Kind, "--label", c.Label, "--endpoint", c.Endpoint, "--accepts", strings.Join(c.Accepts, ","),
 			"--hosts", strings.Join(c.Hosts, ","),
 		}, c.Secret, nil
+	case "AgentProfileList":
+		return "agent:profiles", nil, "", nil
+	case "ChatSessionList":
+		return "chat:sessions", flag("project", a.ProjectID), "", nil
+	case "ChatSessionGet":
+		return "chat:session", []string{a.ID}, "", nil
+	case "ChatTranscriptGet":
+		return "chat:transcript", []string{a.ID}, "", nil
+	case "SocialNetworkList":
+		return "social:network:list", nil, "", nil
+	case "SocialAccountList":
+		return "social:account:list", nil, "", nil
+	case "SocialConnectBegin":
+		var r service.SocialConnectBeginRequest
+		if err := json.Unmarshal(s.Args, &r); err != nil {
+			return "", nil, "", err
+		}
+
+		return "social:connect", slices.Concat(
+			[]string{"--network", r.Network, "--redirect-uri", r.RedirectURI}, flag("client-id", r.ClientID),
+			flag("label", r.Label), flag("connection", r.ConnectionID),
+		), r.ClientSecret, nil
+	case "PublishValidate", "PublishNow":
+		var r service.PublishNowRequest
+		if err := json.Unmarshal(s.Args, &r); err != nil {
+			return "", nil, "", err
+		}
+
+		name := "publish:validate"
+		if s.Call == "PublishNow" {
+			name = "publish:now"
+		}
+
+		argv := slices.Concat(proj, flag("connection", r.ConnectionID), flag("export", r.Export),
+			flag("thumbnail", r.Thumbnail), flag("title", r.Title), flag("description", r.Description),
+			flag("tags", strings.Join(r.Tags, ",")), flag("visibility", r.Visibility))
+		if r.MadeForKids != nil {
+			argv = append(argv, "--made-for-kids", map[bool]string{true: "yes", false: "no"}[*r.MadeForKids])
+		}
+
+		return name, argv, "", nil
+	case "PublishStatus":
+		return "publish:status", []string{a.JobID}, "", nil
+	case "PublicationCreate", "PublicationGet", "PublicationList", "PublicationUpdate", "PublicationSchedule",
+		"PublicationSendNow", "PublicationRetry", "PublicationCancel":
+		return publicationCommand(s)
+	case "ApprovalList":
+		return "approval:list", slices.Concat(flag("state", a.State), flag("project", a.ProjectID)), "", nil
+	case "ApprovalGet":
+		return "approval:show", []string{a.ID}, "", nil
+	case "ApprovalDecide":
+		var d service.ApprovalDecideRequest
+		if err := json.Unmarshal(s.Args, &d); err != nil {
+			return "", nil, "", err
+		}
+
+		return "approval:decide", slices.Concat([]string{d.ID, "--" + d.Decision}, flag("reason", d.Reason)), "", nil
+	case "ApprovalRuleList":
+		return "approval:rule:list", nil, "", nil
+	case "ApprovalRuleSet":
+		var r service.ApprovalRuleSetRequest
+		if err := json.Unmarshal(s.Args, &r); err != nil {
+			return "", nil, "", err
+		}
+
+		return "approval:rule:set", slices.Concat(
+			[]string{"--kind", r.Kind}, flag("id", r.ID), flag("connection", r.ConnectionID),
+			flag("project", r.ProjectID), flag("currency", r.Currency),
+		), "", nil
+	case "ApprovalRuleRemove":
+		return "approval:rule:remove", []string{a.ID}, "", nil
+	case "CostSummary":
+		return "cost:show", nil, "", nil
+	case "CostCeilingSet":
+		var c service.CostCeilingSetRequest
+		if err := json.Unmarshal(s.Args, &c); err != nil {
+			return "", nil, "", err
+		}
+
+		return "cost:ceiling", slices.Concat([]string{"--currency", c.Currency}, flag("project", c.ProjectID)), "", nil
+	case "ProviderList":
+		return "provider:list", nil, "", nil
+	case "ProviderModels":
+		argv = []string{a.ConnectionID}
+		if a.Refresh {
+			argv = append(argv, "--refresh")
+		}
+
+		return "provider:models", argv, "", nil
+	case "ProviderPriceSet":
+		argv = slices.Concat(
+			[]string{"--provider", a.Provider, "--model", a.Model}, flag("currency", a.Currency),
+		)
+
+		if a.InMicros != nil {
+			argv = append(argv, "--price-in", strconv.FormatInt(*a.InMicros, 10))
+		}
+
+		if a.OutMicros != nil {
+			argv = append(argv, "--price-out", strconv.FormatInt(*a.OutMicros, 10))
+		}
+
+		return "provider:price", argv, "", nil
+	case "TextGenerate":
+		argv = slices.Concat(
+			proj, []string{"--connection", a.ConnectionID, "--model", a.Model, "--prompt", a.Prompt},
+			flag("system", a.System),
+		)
+
+		if a.MaxTokens > 0 {
+			argv = append(argv, "--max-tokens", strconv.Itoa(a.MaxTokens))
+		}
+
+		if a.DryRun {
+			argv = append(argv, "--dry-run")
+		}
+
+		return "text:generate", argv, "", nil
+	case "ImageGenerate":
+		argv = slices.Concat(
+			proj, []string{"--connection", a.ConnectionID, "--model", a.Model, "--prompt", a.Prompt},
+			flag("size", a.Size),
+		)
+
+		if a.Count > 0 {
+			argv = append(argv, "--count", strconv.Itoa(a.Count))
+		}
+
+		if a.DryRun {
+			argv = append(argv, "--dry-run")
+		}
+
+		return "image:generate", argv, "", nil
+	case "ImageModelEdit":
+		argv = slices.Concat(
+			proj, []string{
+				"--image", a.ImageID, "--operation", a.Operation, "--connection", a.ConnectionID, "--model", a.Model,
+			},
+			flag("layer", a.LayerID), flag("prompt", a.Prompt), flag("size", a.Size),
+		)
+
+		if a.DryRun {
+			argv = append(argv, "--dry-run")
+		}
+
+		return "image:model-edit", argv, "", nil
+	case "VideoGenerate":
+		argv = slices.Concat(
+			proj, []string{"--connection", a.ConnectionID, "--model", a.Model, "--prompt", a.Prompt},
+			flag("aspect", a.Aspect), flag("first-frame", a.FirstFrame),
+		)
+
+		if a.Seconds > 0 {
+			argv = append(argv, "--seconds", strconv.Itoa(a.Seconds))
+		}
+
+		if a.DryRun {
+			argv = append(argv, "--dry-run")
+		}
+
+		return "video:generate", argv, "", nil
+	case "VoiceGenerate":
+		argv = slices.Concat(
+			proj, []string{"--connection", a.ConnectionID, "--model", a.Model, "--voice", a.Voice, "--text", a.Text},
+			flag("language", a.Language), flag("format", a.Format),
+		)
+
+		if a.DryRun {
+			argv = append(argv, "--dry-run")
+		}
+
+		return "voice:generate", argv, "", nil
+	case "VoiceList":
+		return "voice:list", []string{a.ConnectionID}, "", nil
 	case "AuditList":
 		return "audit", flag("project", a.ProjectID), "", nil
 	case "ToolsInstall":
 		return "tools:install", append([]string{a.Name}, "--yes"), "", nil
+	case "ProjectDescribe":
+		return "project:describe", []string{a.ProjectID}, "", nil
+	case "ProjectDuplicate":
+		return "project:duplicate", append([]string{a.ProjectID}, flag("name", a.Name)...), "", nil
+	case "ProjectItemAdd":
+		argv = append(slices.Clone(proj), "--kind", a.Kind, "--title", a.Title)
+		argv = append(argv, flag("preset", a.Preset)...)
+		argv = append(argv, flag("text-kind", a.TextKind)...)
+
+		if a.Position != nil {
+			argv = append(argv, "--position", strconv.Itoa(*a.Position))
+		}
+
+		if a.Text != "" {
+			return "item:add", append(argv, "--text", "-"), a.Text, nil
+		}
+
+		return "item:add", argv, "", nil
+	case "ProjectItemMove":
+		position := 0
+		if a.Position != nil {
+			position = *a.Position
+		}
+
+		return "item:move", append([]string{a.ItemID, "--position", strconv.Itoa(position)}, proj...), "", nil
+	case "ProjectItemRename":
+		return "item:rename", append([]string{a.ItemID, "--title", a.Title}, proj...), "", nil
+	case "ProjectItemTrash":
+		return "item:trash", append([]string{a.ItemID}, proj...), "", nil
+	case "ProjectItemRestore":
+		return "item:restore", append([]string{a.ItemID}, proj...), "", nil
+	case "BriefGet":
+		return "brief:show", proj, "", nil
+	case "BriefSet":
+		return "brief:set", append(slices.Clone(proj), "--text", "-"), a.Text, nil
+	case "BriefingQuestions":
+		return "briefing:questions", flag("project", a.ProjectID), "", nil
+	case "BriefingAnswer":
+		raw, err := json.Marshal(a.Answers)
+		if err != nil {
+			return "", nil, "", err
+		}
+
+		argv = append(slices.Clone(proj), "--answers", "-")
+		if a.Replace {
+			argv = append(argv, "--replace")
+		}
+
+		return "briefing:answer", argv, string(raw), nil
 	case "TemplateInstantiate":
 		argv = append([]string{a.TemplateID}, flag("name", a.Name)...)
 		argv = append(argv, flag("id", a.ID)...)
@@ -774,6 +1449,10 @@ func command2argv(s step) (name string, argv []string, stdin string, err error) 
 		}
 
 		return "template:new", append(argv, "--fill", "-"), string(a.Fill), nil
+	}
+
+	if name, argv, stdin, ok, err := libraryCommand(s); ok {
+		return name, argv, stdin, err
 	}
 
 	return "", nil, "", fmt.Errorf("no command for %s", s.Call)
@@ -887,6 +1566,7 @@ func withoutProject(args json.RawMessage) string {
 
 	_ = json.Unmarshal(args, &m)
 	delete(m, "project_id")
+	delete(m, "timeline_id")
 
 	raw, err := json.Marshal(m)
 	if err != nil {
@@ -899,7 +1579,7 @@ func withoutProject(args json.RawMessage) string {
 // imageActions are the actions of the image tool, by the Service operation they stand for.
 var imageActions = map[string]string{
 	"ImageCreate": "create", "ImageList": "list", "ImageDescribe": "show", "ImageEdit": "edit", "ImageUndo": "undo",
-	"ImageRedo": "redo", "ImageExport": "export",
+	"ImageRedo": "redo", "ImageExport": "export", "ImageImport": "import",
 }
 
 // imageArgv encodes an image operation as the command line of the CLI (SDD-021 section 11).
@@ -971,6 +1651,22 @@ func imageArgv(s step) (name string, argv []string, stdin string, err error) {
 		}
 
 		return "image:" + strings.ToLower(strings.TrimPrefix(s.Call, "Image")), argv, "", nil
+	case "ImageImport":
+		add("path", str("path"))
+		add("hash", str("hash"))
+		add("id", str("image_id"))
+		add("name", str("name"))
+		add("preset", str("preset"))
+		add("width", num("width"))
+		add("height", num("height"))
+		add("base", num("base_revision"))
+		add("key", str("idempotency_key"))
+
+		if b, _ := a["dry_run"].(bool); b {
+			argv = append(argv, "--dry-run")
+		}
+
+		return "image:import", argv, "", nil
 	}
 
 	argv = []string{str("image_id")}

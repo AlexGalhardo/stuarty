@@ -18,6 +18,8 @@
 9. Logs and the diagnostic bundle
 10. Surfaces
 11. Tests
+12. Google sign-in on a server (epic 24)
+13. Sign-in credentials and their refresh (epic 12)
 
 ## 1. Overview
 
@@ -104,7 +106,7 @@ The providers, in the order the owner tries them (the first that is configured i
 | 3 | the operating system keychain | nothing; used on a desktop when the platform has a store | yes |
 | 4 | none | - | no |
 
-A key in the environment or a file is 32 bytes written as base64 or as 64 hex digits, with surrounding white space ignored. Setting both variables is a start-up error (SDD-007 section 4.5). The keychain item is named `stuarty`, with the account `vault:` and 16 hex digits of the SHA-256 of the absolute workspace path, so two workspaces do not share a key. This build reads the Windows Credential Manager; the other platforms have no keychain client yet and use provider 1 or 2 (the macOS Keychain and the Linux Secret Service need a client that is not chosen yet; that choice is the author's).
+A key in the environment or a file is 32 bytes written as base64 or as 64 hex digits, with surrounding white space ignored. Setting both variables is a start-up error (SDD-007 section 4.5). A value that is not such a key is not: the start goes on so `doctor` can say what is wrong, the check `vault` is `ok: false` with the hint of `bad_key` (also before the vault file exists), and every use of a credential answers `E_VAULT_LOCKED` with `details.reason` `bad_key`; the bytes of the value are in no message. The keychain item is named `stuarty`, with the account `vault:` and 16 hex digits of the SHA-256 of the absolute workspace path, so two workspaces do not share a key. This build reads the Windows Credential Manager; the other platforms have no keychain client yet and use provider 1 or 2 (the macOS Keychain and the Linux Secret Service need a client that is not chosen yet; that choice is the author's).
 
 Opening rules:
 
@@ -151,7 +153,7 @@ For every request, and for every redirect hop (none is followed; a redirect is r
 1. the registry is asked for the connection at that moment: a missing or removed connection is `ErrNoConnection` and no socket is opened;
 2. the scheme is `https`, or `http` for a loopback host;
 3. the host of the URL is in the connection's list (case-insensitive, exact), else `ErrDestination`; a URL with userinfo is refused;
-4. at dial time the resolved address is checked: a link-local or unspecified address is refused (`ErrNotPublic`), so a name that resolves to a cloud metadata address cannot be reached; loopback and private addresses are allowed because a self-hosted server (a WordPress on the same network) is a legitimate destination the user typed;
+4. at dial time the resolved address is checked: a link-local, unspecified or multicast address is refused (`ErrNotPublic`), and so are the two cloud metadata addresses that sit outside those ranges, `100.100.100.200` (Alibaba Cloud) and `fd00:ec2::254` (AWS over IPv6), by an explicit list in `internal/outbound`, so a name that resolves to a metadata address cannot be reached (the IPv4 metadata services of the other clouds, at `169.254.169.254`, and `fe80::/10` are link-local). Loopback and private addresses are allowed because a self-hosted server (a WordPress on the same network) is a legitimate destination the user typed. The shared CGNAT block `100.64.0.0/10` and the unique-local block `fc00::/7` stay allowed as a whole for the same reason: a tailnet and a home or office network live there, and refusing the blocks would refuse the user's own server. Only the named addresses are refused; a new metadata address is added to the list. The address is judged without its zone (`fd00:ec2::254%eth0` is the metadata address), an IPv4-mapped address (`::ffff:a.b.c.d`) as its IPv4 address, and an address that carries an IPv4 address as that IPv4 address, with the same rules as a plain one (link-local, unspecified, multicast, the named list): the NAT64 prefix `64:ff9b::/96` (a gateway turns it into the embedded address), 6to4 `2002::/16` (the IPv4 address is in bits 16 to 47) and the deprecated IPv4-compatible form `::/96`. The local-use NAT64 prefix `64:ff9b:1::/48` (RFC 8215) embeds the IPv4 address at a position that depends on the deployment, so the whole prefix is refused at dial, the simplest correct choice (nobody connects a destination to it). Teredo `2001::/32` and an ISATAP interface identifier (`::5efe:a.b.c.d` in any prefix) are not decoded: they are tunnels, so the IPv4 address they carry receives an IPv6 packet wrapped in UDP or IPv4, never the TCP connection, and a metadata service there is not reached (6to4 and the IPv4-compatible form are tunnels too, and are decoded anyway because no destination lives in them);
 5. the dial is shown to the `DialRecorder` with the purpose `connection`; `Used` is called once the request is allowed.
 
 No proxy is used, TLS is verified, keep-alive is off. The paths of SDD-007 section 10.1 stay as they are: the transcription provider (path 1), the helper download (2), the OpenTelemetry exporter (3) and the desktop update (6) are chosen by the operator or by a person's explicit action, each through its own constructor of `internal/outbound`, so `internal/outbound` is still the only package that builds a client. They become connections when their epics need a credential (epics 09 and 12). The loopback clients of the CLI and the stdio MCP server (path 4) are unchanged.
@@ -178,7 +180,7 @@ Added to SDD-000 section 8:
 
 ## 9. Logs and the diagnostic bundle
 
-A secret is never an argument of a log call, never a field of an error and never in a bundle. The master key and the vault file are not part of `doctor --bundle`; the bundle lists the connections by id, kind, label and hosts only (`connections.txt`). As a second line of defence, `Vault.Redact` replaces every credential of the vault and the master key, as is, as base64 and as hex, in every file of the bundle, and in the answer of `ConnectionTest`, so a destination that echoes the credential it was sent does not hand it to the caller. A secret shorter than 8 bytes is not redacted, since it would shred the text around it. `STUARTY_MASTER_KEY` is a secret variable of `doctor` (name ending in `_KEY`). The service writes no log line for a connection operation, so the log test is about what a later connector might write. `TestSecurity_T42_SecretNeverInLogsOrBundle` seeds canaries as secrets and as the master key, runs the operations, a failing test connector and the bundle, and searches the logs, the answers and the bundle for them.
+A secret is never an argument of a log call, never a field of an error and never in a bundle. The master key and the vault file are not part of `doctor --bundle`; the bundle lists the connections by id, kind, label and hosts only (`connections.txt`). As a second line of defence, `Vault.Redact` replaces every credential of the vault and the master key, as is, as base64 and as hex, in every file of the bundle and, as a last pass, in the answer of `ConnectionTest`, so a destination that echoes the credential it was sent does not hand it to the caller. The answer of `ConnectionTest` is also checked earlier and harder, because it is cut to a budget and escaped before it is shown, and a secret split by the cut or changed by the escape would no longer match: `connections.SafeMessage` looks at the raw body, before the cut and the escape (and again after the text is cleaned), for the secret of that connection as is, HTML and URL escaped, JSON escaped (with the less-than, greater-than and ampersand signs as six-character Unicode escapes, as Go writes them, or as is, and the slash as is or escaped with a backslash), as base64 (standard and URL, padded or not, taken from each of the three byte alignments of the secret, so the base64 of a part of it that starts anywhere is found) and as hex (lower and upper case), and for every window of 8 consecutive bytes of each of those forms, so an echo of only the middle of a long secret is found too. The windows of the body go into a set once and every window of the forms is looked up in it, so the cost is linear in the body (at most 4 KiB) plus the forms, even for a secret of the largest size. A window that happens to be common text (a secret that holds `https://`) drops a harmless body too: that is the safe side, and the status is still shown. If any is found, the whole body is dropped and the caller reads a fixed sentence with the status only. A secret shorter than 8 bytes is neither redacted nor looked for, since it would shred the text around it. `STUARTY_MASTER_KEY` is a secret variable of `doctor` (name ending in `_KEY`). The service writes no log line for a connection operation, so the log test is about what a later connector might write. `TestSecurity_T42_SecretNeverInLogsOrBundle` seeds canaries as secrets and as the master key, runs the operations, a failing test connector and the bundle, and searches the logs, the answers and the bundle for them.
 
 ## 10. Surfaces
 
@@ -199,3 +201,86 @@ A secret is never an argument of a log call, never a field of an error and never
 | No surface returns a secret | `TestSecurity_T43_NoSurfaceReturnsASecret` (in `web/contract`, over the Service, HTTP, MCP and the CLI) |
 
 Unit tests cover the vault round trip, a wrong key, a corrupted file, rotation, concurrent use and each provider; the gate has a fake destination server that records what it receives.
+
+## 12. Google sign-in on a server (epic 24)
+
+Network mode (SDD-007 section 4) lets a user sign in with a password. A server owner may also let their users sign in with Google, through a Google project they own (ADR-0034, D-057). This section is the connection side of that feature; the threat rows and the session rules are SDD-007 section 4.7.
+
+### 12.1 What it uses
+
+- **The connection.** Google sign-in is a connection like any other (ADR-0032). It is a connection of kind `youtube` that the owner already made for epic 18: its secret holds the `client_id` and the `client_secret` of the owner's own Google OAuth client, and its hosts are `www.googleapis.com` and `oauth2.googleapis.com`. An owner who does not publish to YouTube makes the same connection on the Connections page (the client id and the secret of the project) and never completes the YouTube sign-in. No new connection kind exists; the sign-in needs no refresh token and stores none.
+- **The flow.** `service/connections/oauth`, unchanged: `Flows.Begin` makes the single-use `state` and the PKCE verifier, `AuthorizeURL` builds the address, `Exchange` trades the code through the gated client of the connection. The flow asks for the scopes `openid` and `email`, with no `access_type=offline` and no `prompt=consent`, so no refresh token is issued.
+- **The addresses of the identity provider.** Google's: authorization `https://accounts.google.com/o/oauth2/v2/auth`, token `https://oauth2.googleapis.com/token`, keys `https://www.googleapis.com/oauth2/v3/certs`, issuer `https://accounts.google.com`. Only the browser reaches the first; the server reaches the other two, through the gate, with the hosts of the connection.
+- **Only for tests**, the variable `STUARTY_TEST_GOOGLE_URL` (SDD-000 section 10) replaces the four addresses by `<base>/authorize`, `<base>/token`, `<base>/certs` and the issuer `<base>`, where `<base>` is an `http` address on loopback; anything else is a start-up error, and so is the variable under any `APP_ENV` but `test` (SDD-007 T-67). The gate still applies: the connection must list that host.
+
+### 12.2 The ID token
+
+The token answer carries an `id_token`. The server verifies it with vukem `auth/jwt` (already a dependency; there is no OIDC library), in this order, and any failure is one error that names no claim and echoes no token:
+
+1. the algorithm is `RS256` (no other is accepted, `none` and `HS256` included) and the key `kid` is in the key set fetched through the gate with the connection, on every sign-in (nothing is cached, so a removed or switched-off connection stops it at the next request);
+2. the signature verifies;
+3. `iss` equals the issuer above; `aud` contains the `client_id` of the connection; `exp` is in the future and `iat` and `nbf` are not, with 30 seconds of leeway;
+4. `nonce` equals the nonce of this flow: `HMAC-SHA256(k, state)` with a key `k` of 32 random bytes that the process makes at start and never writes or sends, so a token obtained for another flow fails;
+5. `sub` is 1 to 255 bytes, `email` is a plain mailbox (the product check of SDD-007 section 4.1) and `email_verified` is `true`.
+
+Only `sub` and the lower-cased `email` are kept, in `user_identities`. The ID token, the access token and the authorization code are held for the length of the call and are in no response, log, file or database row.
+
+### 12.3 Stored fields
+
+| Table | Columns | Notes |
+| --- | --- | --- |
+| `user_identities` | `provider` (`google`), `subject`, `user_id` (references `users`, deleted with the user), `email`, `created_ms` | primary key `(provider, subject)`; unique `(user_id, provider)`: a user has one Google identity and a Google account links to one user. `email` is shown in Settings and is **never** used to find a user |
+| `auth_settings` | `key`, `value`, `updated_ms` | primary key `key`. Keys: `google.enabled` (`true` or `false`; absent is off), `google.connection_id`, `google.allowed_emails` (a JSON array of at most 100 lower-case addresses; empty or absent is no restriction) |
+
+The migration is `20261119160000_create_user_identities_and_auth_settings`.
+
+### 12.4 Routes
+
+All exist in network mode only; in local mode every one answers `E_NOT_FOUND`, as `POST /auth/login` does. None is a service operation, none is on MCP or the CLI (they are for a person at a browser, like the login), and none takes a bearer key.
+
+| Route | Caller | What it does |
+| --- | --- | --- |
+| `GET /auth/google` | none | `{"enabled": bool}`; with a session cookie also `linked` (`email`, `linked_ms`) or `null`. It opens no connection |
+| `POST /auth/google/start` | none | Begins a sign-in: answers `{"authorize_url"}` and sets the sign-in cookie of 12.5. `E_NOT_FOUND` while Google sign-in is off |
+| `POST /auth/google/link` | a browser session, and the `password` of that user in the body | Begins the linking of the user's own Google account; the flow is bound to that user |
+| `POST /auth/google/unlink` | a browser session, and the `password` in the body | Removes the link; the password login is untouched |
+| `GET /login/google/callback` | none (a cross-site navigation, SDD-007 section 3.6 item 4) | The page `Auth/GoogleCallback`; it holds no data and hands the `state` and the `code` to the next route |
+| `POST /auth/google/complete` | the sign-in cookie, or a browser session for a link | Finishes: verifies the token, then signs in the linked user or links the account |
+| `GET /auth/google/settings`, `PUT /auth/google/settings` | an administrator browser session | Read and set `enabled`, `connection_id` and `allowed_emails`; the answer carries the redirect address to register in the Google project |
+
+The redirect address is `APP_URL` followed by `/login/google/callback`, built by the server and never taken from a request. It is a page, so it is not under `/auth/`, whose routes answer JSON (SDD-007 section 3.6). The owner adds it, next to the one of epic 18, to the authorised redirect URIs of the Google project.
+
+### 12.5 The sign-in cookie and the `state`
+
+The `state` the browser carries is `l.` (sign-in) or `k.` (linking) followed by the `state` of the flow. The prefix chooses which actor to check and where the flow waits: sign-ins and linkings wait in two separate stores of `oauth.Flows`, because anyone may begin a sign-in and the store is capped (`oauth.MaxPending`), so a flood of sign-ins must not push out a linking a user began with their password. The flow records its purpose in `Pending.Network` (`google:login`, `google:link`), and a state shown with the other prefix is spent in both stores and refused.
+
+- **Linking** binds the flow to the actor of the browser session, `user:<id>`, which `Flows.Take` already checks.
+- **Signing in** has no session, so the flow is bound to a random cookie: `__Host-stuarty_gsi` (`stuarty_gsi` without TLS, the case of SDD-007 section 4.3 item 4; both `HttpOnly`, `SameSite=Lax`, `Path=/`, 10 minutes). The actor of the flow is `gsi:` plus the SHA-256 of its value. A callback for a `state` that another browser began, which is what a forged callback is, finds no cookie or another one, and is refused after the `state` is spent. `complete` clears the cookie whatever the result.
+
+### 12.6 Admin controls
+
+`google.enabled` off (the default) refuses every route above but the two reads, and the server then opens no connection to Google. `google.allowed_emails`, when not empty, is checked against the verified `email` at sign-in and at linking: an address not in the list is refused. Changing the settings needs an administrator browser session; a key cannot.
+
+### 12.7 Tests
+
+| What | Test |
+| --- | --- |
+| Token verification: wrong audience, expired, bad signature, wrong nonce, wrong issuer, wrong algorithm, unverified email | `TestIDToken...` (`web/app/auth`) |
+| Linking and unlinking | `TestLinkIdentity...` |
+| Sign-in with a linked identity, refusal of an unlinked one | `TestGoogleSignIn...` |
+| The admin controls | `TestGoogleSignInPolicy...` |
+| The rows of SDD-007 section 2 | `TestSecurity_T80` to `TestSecurity_T85` |
+| Link, sign out, sign in with a fake issuer; an unlinked identity refused | `web/e2e/specs/google-sign-in.spec.ts` |
+
+## 13. Sign-in credentials and their refresh (epic 12)
+
+A connection to an AI provider can be made by a sign-in in the browser (SDD-016 section 12) instead of a key. The flow is the generic authorization code flow with PKCE of `service/connections/oauth`, which the sign-in to a social network (SDD-020 section 6) and the Google sign-in (section 12) use too.
+
+- **The flow.** `ProviderSignInBegin` makes the `state` (256 random bits) and the PKCE verifier, keeps them in memory for 10 minutes (at most 20 flows, the oldest is dropped first) and answers the address of the consent screen. `ProviderSignInComplete` takes the flow by its `state`, once, whatever happens next; the caller must be a privileged browser session and, when the flow was begun in a browser, the same actor. It exchanges the code through the gated client of the connection, so the token host must be a host of the connection; a refusal of the token endpoint is turned into a fixed sentence and a short code, never its body.
+- **The stored form.** A sign-in credential is one vault entry, a JSON document with `format` `stuarty-signin`: the provider, the issued client id (when the provider issues one), the identifier of the host, the access token, the refresh token, the expiry, the scope, the account (for the card) and a `needs_sign_in` flag. It is in the vault only: no connection record, result, log, audit row, job input or file of the workspace has any of it. `ConnectionCreate` refuses a secret in that form, so only the sign-in makes one.
+- **What an adapter gets.** `Manager.With` reads the entry under the lock of the connection and, when it is a sign-in, asks the refresher (below) to renew it. The closure then receives `Credential.Secret` equal to the **access token** (or the OpenRouter key) alone, and `Credential.SignedIn` true: an adapter needs no knowledge of the stored form, and the check for an echo of the credential (section 9) compares with the token, not with the field names around it.
+- **Refresh.** An access token is renewed before it expires (60 seconds of margin) by one `refresh_token` grant through the gated client of the connection. The lock is **per connection** and is taken before the entry is read, so two concurrent uses make one refresh and the second sees the new tokens (a rotating refresh token would otherwise be spent twice). The new access token, refresh token (kept when the answer has none), expiry and scope are written together before the closure runs. A key that does not expire (OpenRouter) is never refreshed.
+- **A failed refresh.** A refusal that says the grant is no longer good (`invalid_grant` and any 4xx other than 429) sets `needs_sign_in` in the stored entry, keeps every other member, and returns `ErrNeedsSignIn`, which the service shows as `E_PROVIDER` with the code `needs_sign_in` and the hint to sign in again. Nothing is deleted: the connection, its label and the project data that used it stay, and a new sign-in of the same connection replaces the tokens. A failure that says nothing about the grant (no network, a 5xx, a 429) leaves the entry as it is and is reported as the provider being unavailable.
+- **Who may.** Beginning, completing and removing a sign-in are for a privileged browser session (`Caller.Browser`); an agent, the CLI and the local token read that the connection exists (`ConnectionList`, `ProviderSignInList`) and cannot start, complete or remove one (T-75).
+
+The rows of SDD-007 are T-75 (a stolen or replayed state), T-76 (interception of the code), T-77 (a token in a log, a result or a file) and T-78 (a refresh race).

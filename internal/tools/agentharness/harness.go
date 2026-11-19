@@ -48,6 +48,8 @@ type agent struct {
 	maxTokens int
 	maxTurns  int
 	system    string
+	// flow is the world of the first-flow scenario; nil for the others.
+	flow *flowEnv
 }
 
 // splitArgs splits a command line the way a POSIX shell does for quotes and backslashes, with no
@@ -175,6 +177,17 @@ func (a *agent) play(ctx context.Context, sc scenario, n int, run Runner) (runRe
 	}}
 	res.Messages = []message{{Role: "user", Content: []block{{Type: "text", Text: sc.Prompt}}}}
 
+	var before flowBefore
+
+	if sc.Flow {
+		var why string
+		if before, why = beforeFlow(ctx, a.flow, run); why != "" {
+			res.Reason = why
+
+			return res, nil
+		}
+	}
+
 	var apiFailure string
 
 	for res.Turns < a.maxTurns && apiFailure == "" {
@@ -228,6 +241,10 @@ func (a *agent) play(ctx context.Context, sc scenario, n int, run Runner) (runRe
 	}
 
 	res.Success, res.Reason = judge(sc, res.Commands)
+	if res.Success && sc.Flow {
+		res.Success, res.Reason = settleFlow(ctx, a.flow, run, before)
+	}
+
 	if !res.Success && res.Turns >= a.maxTurns {
 		res.Reason += " (turn limit reached)"
 	}

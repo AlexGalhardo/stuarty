@@ -211,7 +211,9 @@ Source copied into this repository.
 
 | Name | Version | Licence | Copyright | Licence text | Notes |
 | --- | --- | --- | --- | --- | --- |
+| coreyhaines31/marketingskills (adapted skill text) | 73573e94a06a39965978b3fa1f9c1eace8cebc7c | MIT | Copyright (c) 2025 Corey Haines | [marketingskills-MIT.txt](<licenses/vendored/marketingskills-MIT.txt>) | shipped in: archive, image; adapted, with attribution, into the skills write-a-hook, short-script and caption-per-network (web/resources/skills); see licenses/vendored/NOTICE-skills.md |
 | golang.org/x/image/vector (rasterizer, floating-point path) | v0.23.0 | BSD-3-Clause | Copyright 2009 The Go Authors | [x-image-vector-BSD-3-Clause.txt](<licenses/vendored/x-image-vector-BSD-3-Clause.txt>) | shipped in: archive, image; ported to Rust as renderer/stuarty-renderer-text/src/scan.rs (it was engine/raster/internal/scan) |
+| heygen-com/hyperframes (adapted skill text) | 77ea9d80cfc8b347ccca966487a8ff902ce28320 | Apache-2.0 | Copyright 2026 HeyGen, Inc. | [hyperframes-Apache-2.0.txt](<licenses/vendored/hyperframes-Apache-2.0.txt>) | shipped in: archive, image; adapted, with attribution, into the skills captions-for-shorts and motion-with-an-external-engine (web/resources/skills); see licenses/vendored/NOTICE-skills.md |
 
 ## External programs
 

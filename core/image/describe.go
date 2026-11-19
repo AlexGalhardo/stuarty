@@ -130,6 +130,8 @@ func describeLayer(l *Layer) string {
 		fmt.Fprintf(&b, " slot=%s", l.Slot)
 	}
 
+	b.WriteString(describeLook(l))
+
 	switch l.Kind {
 	case KindImage:
 		if l.Asset == "" {

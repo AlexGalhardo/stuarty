@@ -1,0 +1,49 @@
+[
+  {
+    "kind": "item.updated",
+    "id": "itm_m1n2p3q4r5",
+    "changes": {
+      "keyframes": [
+        {
+          "scale": [
+            {
+              "easing": "linear",
+              "t": 0,
+              "value": 1
+            },
+            {
+              "easing": "linear",
+              "t": 60,
+              "value": 2
+            }
+          ]
+        },
+        {
+          "scale": [
+            {
+              "easing": "linear",
+              "t": 0,
+              "value": 1
+            },
+            {
+              "bezier": [
+                0.34,
+                1.56,
+                0.64,
+                1
+              ],
+              "easing": "bezier",
+              "t": 30,
+              "value": 1.5
+            },
+            {
+              "easing": "linear",
+              "t": 60,
+              "value": 2
+            }
+          ]
+        }
+      ]
+    }
+  }
+]

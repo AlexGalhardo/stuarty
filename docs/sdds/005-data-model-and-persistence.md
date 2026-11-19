@@ -109,6 +109,7 @@ type Repos interface {
 	Templates() TemplateRepo
 	Backups() BackupRepo
 	Audit() AuditRepo // section 5.9
+	Checkpoints() CheckpointRepo // section 5.14
 }
 
 type Tx interface {
@@ -196,6 +197,30 @@ type ProjectRepo interface {
 }
 ```
 
+The repositories of this section operate on `timelines` (section 5.2); the Go names keep `Project` until the rename epic. The production has its own repository:
+
+```go
+type ProductionRepo interface {
+	List(ctx context.Context, q ProductionQuery) (items []ProductionHead, next string, err error)
+	Count(ctx context.Context, q ProductionQuery) (int, error)
+	Get(ctx context.Context, id string) (ProductionHead, error)
+	Create(ctx context.Context, h ProductionHead) error // ErrExists
+	// SetState writes the state and mirrors it on the rows of the timelines of the active timeline items.
+	SetState(ctx context.Context, id string, st ProjectState, by string, atMs int64) error
+	Touch(ctx context.Context, id string, atMs int64) error
+	Delete(ctx context.Context, id string) error // cascades the items; the caller deletes the timeline rows first; emptying only
+	Items(ctx context.Context, projectID string) ([]ItemRow, error) // by position
+	Item(ctx context.Context, itemID string) (ItemRow, error)
+	CreateItem(ctx context.Context, it ItemRow) error // ErrExists for a second active brief
+	UpdateItem(ctx context.Context, it ItemRow) error // title, body, state, times
+	SetPositions(ctx context.Context, projectID string, ids []string) error // numbers the items 0 to n-1 in this order
+	ProjectOfTimeline(ctx context.Context, timelineID string) (projectID string, err error)
+	ActiveTimelines(ctx context.Context, projectID string) ([]TimelineRef, error) // by position
+}
+```
+
+`ProductionHead` is the row of `projects` plus the summary of the first active timeline (its id, revision and `DocSummary`) that the list and the overview need, read by one join.
+
 ### 3.2 Operations
 
 ```go
@@ -254,6 +279,29 @@ type OperationRepo interface {
 	CloseOpenRedo(ctx context.Context, projectID, actor string, by int64) error
 	// CloseAllOpen closes every open row of the project (a migration or import ends all undo chains).
 	CloseAllOpen(ctx context.Context, projectID string, by int64) error
+}
+
+// CheckpointRepo is the checkpoints of a timeline (section 5.14; epic 36). Repos.Checkpoints() returns it.
+type CheckpointRow struct {
+	ProjectID string
+	Name      string
+	Note      string
+	Revision  int64
+	Actor     string
+	Auto      bool
+	AtMs      int64
+}
+
+type CheckpointRepo interface {
+	Create(ctx context.Context, row CheckpointRow) error // ErrExists on a duplicate name
+	Get(ctx context.Context, projectID, name string) (CheckpointRow, error)
+	List(ctx context.Context, projectID string) ([]CheckpointRow, error) // newest revision first, then name
+	// Rename changes the name, and the note when note is not nil, and makes the checkpoint a named one (auto 0);
+	// ErrNotFound, ErrExists on a taken name.
+	Rename(ctx context.Context, projectID, name, newName string, note *string) error
+	Remove(ctx context.Context, projectID, name string) error // ErrNotFound; no revision is touched
+	// TrimAuto removes the oldest automatic checkpoints until at most keep remain.
+	TrimAuto(ctx context.Context, projectID string, keep int) error
 }
 ```
 
@@ -360,6 +408,8 @@ type AssetRepo interface {
 	Delete(ctx context.Context, hash string) error        // cascades artifacts
 }
 ```
+
+`Repos` also has `AssetLibrary() assets.Store` (package `service/assets`, as `Connections()` has `connections.Store`; `Library()` is the index of memory, skills and prompts of SDD-018): every method takes the owner (the row carries it in `Put`): `Get(owner, hash)`, `GetMany(owner, hashes)`, `Put(row)` (the `asset_info` row, its tags and its `asset_search` row in one call, inside the caller's transaction), `Reindex(owner, hash)` (the `asset_search` row alone) and `Search(owner, match)` (the hashes of the owner whose search row matches an expression built by `core/asset`, section 5.5.1). `AssetRepo.Delete` also removes the `asset_search` rows of the hash; `AssetRepo.Upsert` no longer writes one, since a search row belongs to an owner.
 
 ### 3.5 Jobs, templates, backups
 
@@ -637,12 +687,14 @@ func All() []schema.Migration {
 
 The effective SQL of every table follows. `NOT NULL` is the default of the builder and is written explicitly. Types are SQLite's.
 
-### 5.2 `projects`
+### 5.2 `timelines`
 
-One row per project: the current document, its revision, its schema version, trash state, and columns denormalized from the document so that listing never parses JSON.
+Since ADR-0039 a project is a production (section 5.12) and the table this section describes holds its timelines. Migration `20261119120000_project_items` renamed the former `projects` table to `timelines`; its columns, its checks and every foreign key that pointed at it (`operations`, `idempotency_keys`, `project_assets`, `jobs`, `api_keys`) are unchanged, and the column `project_id` of those tables now holds a **timeline id**. The word "project" in sections 3 and 8 to 15 means the timeline document unless the text says production; an id given as `project_id` is resolved to a timeline by the rule of SDD-003 section 1.7.
+
+One row per timeline: the current document, its revision, its schema version, trash state, and columns denormalized from the document so that listing never parses JSON.
 
 ```sql
-CREATE TABLE projects (
+CREATE TABLE timelines (
   id              TEXT    NOT NULL,
   name            TEXT    NOT NULL,                 -- denormalized: document.name
   state           TEXT    NOT NULL DEFAULT 'active' CHECK (state IN ('active','trashed')),
@@ -667,12 +719,12 @@ CREATE TABLE projects (
   trashed_by      TEXT,
   PRIMARY KEY (id)
 );
-CREATE INDEX projects_state_updated_ms_index ON projects (state, updated_ms);
+CREATE INDEX timelines_state_updated_ms_index ON timelines (state, updated_ms);
 ```
 
 - **Revision.** A new project has `revision = 0` and no `operations` row. The first committed batch is revision 1. The rows of `operations` of a project are exactly revisions `1..revision`, contiguous.
 - **Denormalized columns** are written by the same statement that writes `document` (section 9, step 10) and are never written by anything else. The service computes `DocSummary` from the new document with plain traversal; invariant: for every project, the summary columns equal the summary recomputed from `document` (checked by a test and by `doctor`).
-- **Listing query:** `SELECT <head columns> FROM projects WHERE state = 'active' AND (updated_ms, id) < (?, ?) ORDER BY updated_ms DESC, id DESC LIMIT ?`; the cursor is `base64url(updated_ms ":" id)`. `IncludeTrashed` drops the `state` condition. `EXPLAIN QUERY PLAN` shows `projects_state_updated_ms_index`.
+- **Listing query:** `SELECT <head columns> FROM timelines WHERE state = 'active' AND (updated_ms, id) < (?, ?) ORDER BY updated_ms DESC, id DESC LIMIT ?`; the cursor is `base64url(updated_ms ":" id)`. `IncludeTrashed` drops the `state` condition. `EXPLAIN QUERY PLAN` shows `timelines_state_updated_ms_index`. The list of projects (section 5.12) is a different query, over `projects`.
 - **`resync_floor`** is set to the revision of a `migrate` or `import` row (sections 8 and 16) and tells SDD-006 that a client behind that revision cannot replay and must reload.
 - **Trash** touches `state`, `trashed_ms`, `trashed_by` and `updated_ms`; never `revision` or `document` (section 13).
 
@@ -801,12 +853,56 @@ State of a `project_assets` row:
 
 **Facts.** The `assets` fact columns are the denormalized probe facts used by the media library list; they are written by `SetFacts` when ingest reaches `ready`, in the same transaction as the `ingest_state` change. The authoritative copy for editing is the Asset object in the document.
 
+#### 5.5.1 The library side of an asset (`asset_info`, `asset_tags`, `asset_search`)
+
+Migration `20261119150000_asset_library`. The bytes are one row per hash; the library side is one row per owner and hash, `owner_user_id` being the user in network mode and the empty string in local mode, so two users who hold the same bytes keep their own record (SDD-011 DS-22, SDD-007 T-06). `assets` is already one row per file by hash and shared by every project, so the library is workspace-wide without moving a file (ADR-0010, ADR-0039); what the library adds is the record of where a file came from, what the user may do with it and how to find it. It lives beside `assets`, keyed by the owner and the same hash, so that the ingest never writes it and a release that does not know it still opens the workspace.
+
+```sql
+CREATE TABLE asset_info (
+  owner_user_id TEXT  NOT NULL DEFAULT '',          -- the user in network mode, '' in local mode
+  asset_hash  TEXT    NOT NULL REFERENCES assets (id) ON DELETE CASCADE,
+  origin_kind TEXT    NOT NULL DEFAULT 'imported' CHECK (origin_kind IN ('imported','generated','fetched_by_agent','rendered_externally')),
+  source      TEXT    NOT NULL DEFAULT '',          -- a path, a URL or a tool name, as plain text; untrusted
+  provider    TEXT    NOT NULL DEFAULT '',          -- generated: the provider of the connection
+  model       TEXT    NOT NULL DEFAULT '',          -- generated: the model
+  prompt      TEXT    NOT NULL DEFAULT '',          -- generated: the prompt; untrusted
+  cost_micros INTEGER CHECK (cost_micros IS NULL OR cost_micros >= 0), -- millionths of a US dollar, NULL when unknown
+  rights_note TEXT    NOT NULL DEFAULT '',          -- the user's own record of the licence or the permission; untrusted
+  description TEXT    NOT NULL DEFAULT '',          -- untrusted
+  reusable    INTEGER NOT NULL DEFAULT 0 CHECK (reusable IN (0,1)),
+  created_by  TEXT    NOT NULL,                     -- the actor of the first import
+  created_ms  INTEGER NOT NULL,
+  updated_ms  INTEGER NOT NULL,
+  PRIMARY KEY (owner_user_id, asset_hash)
+);
+CREATE INDEX asset_info_reusable_index ON asset_info (owner_user_id, asset_hash) WHERE reusable = 1;
+
+CREATE TABLE asset_tags (
+  owner_user_id TEXT NOT NULL DEFAULT '',
+  asset_hash TEXT NOT NULL REFERENCES assets (id) ON DELETE CASCADE,
+  tag        TEXT NOT NULL,                         -- normalised by core/asset (SDD-011 section 14.3)
+  PRIMARY KEY (owner_user_id, asset_hash, tag)
+);
+CREATE INDEX asset_tags_tag_index ON asset_tags (owner_user_id, tag, asset_hash);
+
+CREATE VIRTUAL TABLE asset_search USING fts5(
+  owner_user_id UNINDEXED, asset_hash UNINDEXED, name, tags, description, origin, tokenize = 'unicode61 remove_diacritics 2'
+);
+```
+
+- **A row is optional.** An asset with no `asset_info` row for the owner reads as `origin_kind = 'imported'`, no source, not reusable, no tags (the ingest never writes the library). `MediaImport` and `ProjectBundleImport` write the owner's row, and its search row, when they link the file to a project, whether or not the asset is new; the migration writes one for every owner whose projects use an asset.
+- **Origin is written once.** The row of an owner and hash keeps the origin of its first import. `rights_note`, `description`, `reusable` and the tags are the user's and change through `AssetSetInfo` and `AssetTag`. A later import of the same bytes with an origin block is validated and does not replace the origin.
+- **`asset_search`** has one row per owner and hash, written by the service in the same transaction as every change of `asset_info`, `asset_tags`, `assets.original_name` or a `project_assets.name`: `name` is the names the file is known by in the projects of that owner (the first name of the asset when no project of the owner holds it), `tags` the tags joined by spaces, `origin` the source, provider, model and prompt. A file that reaches a project with no import (an `asset.add` of a template fill, the copy of a project) gets the search row of the project's owner in the same transaction, so it is found by the name that project gives it even when that owner has no `asset_info` row. A virtual table holds no foreign key, so `Assets().Delete` (the emptying of the trash) deletes the rows of every owner too. Every query of the three tables filters by `owner_user_id`. A query is built by `core/asset` (every term quoted, a prefix match on the last) and never concatenated from the caller's text.
+- **Migration.** For every owner whose projects hold an asset (the owner of the project, the empty string when it has none) and for the empty owner of an asset no project holds: an `asset_info` row with `origin_kind = 'imported'`, `created_by` the importer of that owner's oldest `project_assets` row (`migration` when there is none) and `created_ms` of the asset, and its `asset_search` row (the names that owner's projects give it). `Down` drops the three tables. No `project_assets` row and no file changes: a clip still resolves its media by the hash.
+- **The render origin (epic 33), migration `20261119210000_asset_render_origin`.** Three columns of `asset_info`, all `TEXT NOT NULL DEFAULT ''`: `engine`, `engine_version` and `render_key`, written with the origin of kind `rendered_externally` (SDD-011 section 15.2) and empty for every other row. No index: a project holds at most 200 assets, so the earlier renders of a key are found by reading the caller's rows of the project's hashes (`GetMany` of the owner). `engine` and `engine_version` join the `origin` text of `asset_search`. `Down` drops the three columns. Existing rows keep the empty values.
+- **Uses.** The projects that use an asset are computed, never stored: the `project_assets` rows of the hash in state `active` (`pending` is an import not yet added; `trashed` is removed), each timeline mapped to its production by `project_items` (section 5.12). The same hash held by two timelines of one project is one use.
+
 ### 5.6 `jobs`
 
 ```sql
 CREATE TABLE jobs (
   id               TEXT    NOT NULL,                -- job_...
-  kind             TEXT    NOT NULL CHECK (kind IN ('ingest','transcribe','export','frame')),
+  kind             TEXT    NOT NULL CHECK (kind IN ('ingest','transcribe','export','export_batch','frame')),
   project_id       TEXT    REFERENCES projects (id) ON DELETE CASCADE,   -- NULL for ingest
   asset_hash       TEXT    REFERENCES assets (id) ON DELETE CASCADE,     -- ingest and transcribe
   actor            TEXT    NOT NULL,
@@ -830,7 +926,7 @@ CREATE INDEX jobs_kind_state_index ON jobs (kind, state);
 CREATE UNIQUE INDEX jobs_active_ingest_unique ON jobs (asset_hash) WHERE kind = 'ingest' AND state IN ('queued','running');
 ```
 
-An ingest job belongs to the content, not to a project, so that trashing or deleting the project that started it does not kill an ingest another project waits for. The partial unique index makes "one active ingest per file" a database fact. Protocol in section 14.
+An ingest job belongs to the content, not to a project, so that trashing or deleting the project that started it does not kill an ingest another project waits for. The partial unique index makes "one active ingest per file" a database fact. Protocol in section 14. An `export_batch` job is the parent of the `export` jobs of one `ExportBatch` (SDD-004 section 8.4); migration `20261119120050_jobs_export_batch_kind` rebuilds the table to add the kind, keeping every row. The later `20261119140100_jobs_waiting_approval` (SDD-015) drops the closed list of kinds and adds `approval_id` and the state `waiting_approval`; its Down gives the list back with `export_batch`, and the export_batch rebuild, when it runs out of order on a table that already has `approval_id`, leaves the table alone.
 
 ### 5.7 `templates`
 
@@ -898,7 +994,7 @@ CREATE INDEX audit_project_id_at_ms_index ON audit (project_id, at_ms);
 CREATE INDEX audit_at_ms_index ON audit (at_ms);
 ```
 
-Actions: `project.create`, `project.trash`, `project.restore`, `media.import`, `media.trash`, `media.restore`, `job.start`, `job.cancel`, `template.save`, `template.import`, `template.instantiate`, `trash.empty` (with the counts), `key.create`, `key.revoke`, `user.create`, `bundle.import`. The store interface has `Append` and a paged `List` and no update or delete; the table is never purged, including by `TrashEmpty`. The migration `create_audit_append_only_triggers` enforces it: `UPDATE` and `DELETE` on `audit` abort with `audit is append-only`. `Repos` gains `Audit() AuditRepo`:
+Actions: `project.create`, `project.trash`, `project.restore`, `media.import`, `media.trash`, `media.restore`, `job.start`, `job.cancel`, `template.save`, `template.import`, `template.instantiate`, `trash.empty` (with the counts), `key.create`, `key.revoke`, `user.create`, `bundle.import`, and for the production (section 5.12, SDD-003 §2.3.1) `project.item.add`, `project.item.move`, `project.item.rename`, `project.item.trash`, `project.item.restore`, `project.brief.set`, `project.duplicate` (written with a `project.create` for the copy). The store interface has `Append` and a paged `List` and no update or delete; the table is never purged, including by `TrashEmpty`. The migration `create_audit_append_only_triggers` enforces it: `UPDATE` and `DELETE` on `audit` abort with `audit is append-only`. `Repos` gains `Audit() AuditRepo`:
 
 ```go
 type AuditRow struct {
@@ -968,7 +1064,92 @@ CREATE TABLE font_owners (
 
 **`font_owners`** records, per stored font file, each user who imported it (`FontImport`) or brought it (a bundle or a template file that ships it). It exists in network mode only: in local mode the store is the caller's own and a stored file is enough. `font.add`, a bundle export, a bundle import that names a font it does not ship and an instantiation of a template with fonts all ask the same question, "may this caller use this hash": the caller is a recorded owner of it, or a project of the caller already uses it (SDD-007 §7.7 item 6). `Repos` gains `Fonts() FontRepo` with `Record(ctx, owner, hash, ms)` (idempotent) and `Owns(ctx, owner, hash)`, and `BrandKit() BrandKitRepo` with `Get(ctx, owner)` and `Put(ctx, row)`.
 
-### 5.12 `image_documents` and `image_operations` (SDD-021)
+### 5.12 `projects`, `project_items` (ADR-0039, RF-300)
+
+Migration `20261119120000_project_items`. A project is a production: the container of a brief, texts, timelines and output pieces. The pure rules (kinds, order, production state) are in `core/project`.
+
+```sql
+CREATE TABLE projects (
+  id            TEXT    NOT NULL,                  -- prj_ (SDD-000 section 2)
+  name          TEXT    NOT NULL,                  -- follows the name of the timeline that has the same id (below)
+  state         TEXT    NOT NULL DEFAULT 'active' CHECK (state IN ('active','trashed')),
+  created_ms    INTEGER NOT NULL,
+  updated_ms    INTEGER NOT NULL,                  -- last change of the project, of an item, or a commit of one of its timelines
+  created_by    TEXT    NOT NULL,                  -- actor
+  owner_user_id TEXT,                              -- network mode (SDD-007 4.1); NULL in local mode
+  trashed_ms    INTEGER,
+  trashed_by    TEXT,
+  PRIMARY KEY (id)
+);
+CREATE INDEX projects_state_updated_ms_index ON projects (state, updated_ms);
+CREATE TABLE project_items (
+  id         TEXT    NOT NULL,                     -- pit_
+  project_id TEXT    NOT NULL REFERENCES projects (id) ON DELETE CASCADE,
+  kind       TEXT    NOT NULL CHECK (kind IN ('brief','text','timeline','output')),
+  title      TEXT    NOT NULL,
+  position   INTEGER NOT NULL,                     -- 0 to n-1 over every item of the project, trashed ones included
+  state      TEXT    NOT NULL DEFAULT 'active' CHECK (state IN ('active','trashed')),
+  ref        TEXT,                                 -- timeline: the timelines.id; output: the id of the export job; otherwise NULL
+  body       TEXT    NOT NULL DEFAULT '',          -- brief and text: Markdown
+  format     TEXT,                                 -- output: the destination format of the file (mp4, gif, wav, aac, png)
+  text_kind  TEXT CHECK (text_kind IN ('script','copy','caption')), -- text: its kind (SDD-019); NULL for any other kind of item
+  created_ms INTEGER NOT NULL,
+  updated_ms INTEGER NOT NULL,
+  created_by TEXT    NOT NULL,
+  trashed_ms INTEGER,
+  PRIMARY KEY (id)
+);
+CREATE INDEX project_items_project_id_position_index ON project_items (project_id, position);
+CREATE UNIQUE INDEX project_items_timeline_ref_unique ON project_items (ref) WHERE kind = 'timeline';
+CREATE UNIQUE INDEX project_items_brief_unique ON project_items (project_id) WHERE kind = 'brief' AND state = 'active';
+CREATE TABLE text_revisions (                      -- SDD-019 section 3: one row per save of a text item
+  item_id     TEXT    NOT NULL REFERENCES project_items (id) ON DELETE CASCADE,
+  revision    INTEGER NOT NULL,                    -- 1, 2, 3 ...; never reused
+  body        TEXT    NOT NULL,
+  actor       TEXT    NOT NULL,
+  source      TEXT    NOT NULL CHECK (source IN ('created','write','generated','revert')),
+  reverted_to INTEGER,                             -- revert: the revision whose body it brought back
+  provider    TEXT,                                -- generated: the provider, the model, the real cost and the job
+  model       TEXT,
+  cost_micros INTEGER,
+  currency    TEXT,
+  job_id      TEXT,
+  created_ms  INTEGER NOT NULL,
+  PRIMARY KEY (item_id, revision)
+);
+```
+
+- **Kinds.** `brief`, `text`, `timeline`, `output`. `image` (epic 27) is reserved: the migration that adds it rebuilds the table with a longer check, as section 5.5 does for artifact kinds. A `publication` (epic 20) is an item of its project too, but it is kept in tables of its own (section 5.15) and the surfaces read its item from them, so it is never a row of `project_items`.
+- **A timeline item** has `ref` = the id of its row in `timelines`. The first timeline of a project has the id of the project (`timelines.id = projects.id`); a later one has a new `prj_` id (the document keeps the `prj_` prefix, SDD-001). The operation log, the revisions, the undo chain and the assets of a timeline stay keyed by the timeline id, so nothing of the timeline document or of `operations` changes. The item title is a label of the production and is independent of the document name.
+- **Name and time.** A commit of a timeline sets `projects.updated_ms`, and sets `projects.name` when the timeline has the same id as the project, in the same transaction as the commit (the store does it; the service writes no second row). The list of projects orders by `projects.updated_ms`, so a project rises in it when any of its timelines changes.
+- **Trash.** Trashing a project writes `projects.state` and mirrors it on every row of `timelines` of its active timeline items, so that the rules of section 13.1 (a trashed timeline rejects edits) stay one check on the row the commit loads. Trashing a timeline item mirrors the same on its row; the last active timeline of a project cannot be trashed (`E_INVALID_STATE`). Emptying (section 13.3) deletes the project, which cascades its items, and deletes the `timelines` rows its items referenced.
+- **Brief and texts.** `BriefSet` writes the `body` of the one active `brief` item, creating it at position 0 when the project has none; the text is at most 256 KiB (`E_LIMIT_EXCEEDED` above). A `text` item holds a script or any other Markdown, same limit. A text has a `text_kind` and a history of revisions in `text_revisions` (SDD-019): `body` always holds the body of the latest revision, creating a text item (`CreateItem`) writes its revision 1 in the same call, and the migration of epic 17 gives every existing text a revision 1 with `source` `created`. A revision is deleted with its item. The brief is cleared, never trashed. A project holds at most 256 active items and 64 active timelines (`core/project`), the most a bundle of the whole project carries (section 16.1.1), so that every project can be exported and imported again.
+- **Outputs.** An `output` item is added with the id of a succeeded export job of the same project and records its destination format; the file is read through the job, so an item never holds a path.
+- **Migration.** Backup first: `Open` copies the database with `VACUUM INTO` before a migration runs (section 7 step 3). Then, in one transaction: `ALTER TABLE projects RENAME TO timelines` (SQLite rewrites the foreign keys that name it), rename the index, create the two tables, and for every row of `timelines` insert one `projects` row with the same `id`, `name`, `state`, times, actor, owner and trash columns, and one `project_items` row (kind `timeline`, title = name, position 0, `ref` = the id, the `pit_` id with the characters of the project id, state `active`: the trash of a former project is that of the project, and its restore brings the timeline back through the mirror of the trash rule of this section). Every id a surface exposed is kept. **Down** deletes the items and productions, drops them, and renames `timelines` back to `projects`; a timeline that is not the first of its project (its id differs from its project's) is deleted with its log, which is why the backup comes first. Tests run both directions over fixtures of the workspaces of releases 0.2.0, 0.17.0 and 0.29.0.
+- **Document backups.** `document_backups.owner_kind` stays `project`; `owner_id` is a timeline id.
+
+### 5.12.1 The guided briefing and the brief schema (RF-301, RF-302)
+
+The brief is still one item with one Markdown body (section 5.12); the guided briefing is a way to fill it, and it adds no table and no column. The questions and the rules are data and pure functions of `core/project` (`briefing.go`), so a form, the CLI, the HTTP API and an agent in a chat ask and store the same thing.
+
+| Id | Heading in the brief | Answer | Required |
+| --- | --- | --- | --- |
+| `audience` | Audience | text, at most 400 characters | yes |
+| `goal` | Goal | text, at most 400 | yes |
+| `platform` | Platform | one of `youtube-shorts`, `tiktok`, `instagram-reels`, `facebook-reels`, `other` | yes |
+| `format` | Format | one of `vertical-9x16`, `square-1x1`, `horizontal-16x9` | yes |
+| `duration` | Duration (seconds) | a whole number from 1 to 180 | yes |
+| `tone` | Tone | text, at most 200 | no |
+| `references` | References | text, at most 2000 | no |
+| `must_include` | Must appear | text, at most 1000 | no |
+| `must_avoid` | Must not appear | text, at most 1000 | no |
+| `deadline` | Deadline | a date, `YYYY-MM-DD` | no |
+
+**The schema of the brief the briefing writes** is Markdown: the line `# Brief`, then for each answered question, in the order above, a blank line, `## <heading>`, a blank line and the answer. An unanswered optional question has no section. A line of an answer that starts with `#` is written with a backslash in front, so an answer never makes a heading, and is read back without it. `ParseBriefing` reads the answers back and answers `ok` only for a text of this shape (the title, only known headings, each at most once) whose answers pass `CheckAnswers` and that `BriefingMarkdown` writes again as it is (trailing line ends aside): a brief written by hand, even one that uses the same headings, is never taken for one.
+
+**`BriefingAnswer`** validates every answer (`CheckAnswers`: white space trimmed, line ends as LF, an empty answer left out, no control or text direction character, an id that is not a question refused, a required question left unanswered refused; `E_VALIDATION` with `path` `answers.<id>`), writes the Markdown with `BriefSet` (so the audit row is `project.brief.set`, the dry run and the item rules are those of `BriefSet`), and replaces the whole brief. A brief that has text and is not a guided one is not replaced unless `replace` is true (`CheckBriefingReplace`: `E_INVALID_STATE`, `path` `replace`), so a briefing never destroys text a person wrote; the check runs in the transaction of the write, so no other write of the brief lands between them, and it needs no scope beyond `edit`. **`BriefingQuestions`** returns the questions and, given a project, whether it `has_brief`, whether it is `guided` and the answers it holds, for a form to start from what is there. The text of an answer is the user's and is untrusted (SDD-007 section 8).
+
+### 5.13 `image_documents` and `image_operations` (SDD-021)
 
 Migration `20261119110000_create_image_documents_and_operations`. They follow `projects` and `operations` with the columns an image needs and no more.
 
@@ -1016,6 +1197,83 @@ CREATE UNIQUE INDEX image_operations_key_index ON image_operations (image_id, ac
 ```
 
 The log is append-only except `closed_by`, which moves from `NULL` to a revision, as in section 5.3; undo and redo follow section 12 with the rules of SDD-021 section 4. `Repos` gains `Images() ImageRepo` with `Create`, `Get`, `List`, `Commit` (a compare-and-set on the revision, `ErrStale` otherwise), `AppendOperation`, `Operation`, `LastOpen` (the actor's last step open to undo or redo), `Close`, `CloseOpenRedo` and `ByKey`. The writer is the one write transaction of `Store.Write`.
+
+### 5.14 `checkpoints` (RF-121, epic 36)
+
+A name and a note on a revision of a timeline, so that a person or an agent can say "this is the state to come back to" and go back by that name. A checkpoint is not a copy of the document: it points at a revision, whose document the log rebuilds (section 12.4).
+
+```sql
+CREATE TABLE checkpoints (
+  project_id TEXT    NOT NULL REFERENCES timelines (id) ON DELETE CASCADE, -- the id of the timeline document (section 5.12): a second timeline is not a row of `projects`
+  name       TEXT    NOT NULL CHECK (length(name) BETWEEN 1 AND 240),
+  note       TEXT    NOT NULL DEFAULT '',
+  revision   INTEGER NOT NULL CHECK (revision >= 1),
+  actor      TEXT    NOT NULL,
+  auto       INTEGER NOT NULL DEFAULT 0 CHECK (auto IN (0,1)),
+  at_ms      INTEGER NOT NULL,
+  PRIMARY KEY (project_id, name)
+);
+CREATE INDEX checkpoints_revision_index ON checkpoints (project_id, revision DESC);
+```
+
+The name is unique inside a timeline (`ErrExists` becomes `E_ID_EXISTS`), 1 to 60 characters after `untrusted.Clean` and trimming, with no `/`; the note is cut at 300 characters. A checkpoint is removed with its project (the cascade of `Delete`, section 13.3) and never otherwise except by `CheckpointRemove` and by the ceiling of the automatic ones below; it holds no foreign key to `operations`, which is append-only. `Repos` gains `Checkpoints() CheckpointRepo` (section 3.2).
+
+**Automatic checkpoint.** In the transaction of `Edit` (and of `HistoryRevert`, which commits a batch the same way), after the checks that can refuse the batch and before the commit, when the batch is not a dry run and changes the document (not a no-op), and the actor is an agent (SDD-003 §2.5.1), the service makes the checkpoint `auto <actor> <YYYY-MM-DD>` (UTC date of the service clock) at the revision the batch started from, unless that name exists in the timeline. The name is the whole "once a day per actor" rule: the first edit of the day creates it, the later ones find it. At most 30 automatic checkpoints are kept per timeline: after creating one, `TrimAuto(project, 30)` removes the oldest automatic ones. A checkpoint made by a person or an agent by name is never removed by the ceiling, and neither is an automatic one that a person or an agent renamed: the rename makes it a named one (`auto` 0).
+
+### 5.15 `publications` and `publication_targets` (SDD-020 sections 23 to 29)
+
+Migration `20261119250000_create_publications_tables`. A publication is an item of its project (ADR-0039) and is kept in tables of its own: the item the surfaces show is read from them (SDD-020 section 23), and `project_items` is not rebuilt for it. The migration `20261120100000_publication_targets_sent_as_draft` (epic 22, SDD-020 section 38) rebuilds `publication_targets` with the longer `CHECK`: the list below then holds `'sent_as_draft'` after `'published'`, a state for a file a network took as a draft to be finished in its own app. Its down turns such a row back into `published` and keeps every row and every index.
+
+```sql
+CREATE TABLE publications (
+  id            TEXT    NOT NULL,                 -- pub_...
+  project_id    TEXT    NOT NULL REFERENCES projects (id) ON DELETE CASCADE,
+  title         TEXT    NOT NULL,
+  text          TEXT    NOT NULL DEFAULT '',      -- the default caption
+  export_job    TEXT    NOT NULL,                 -- the succeeded export job of the video
+  thumbnail_job TEXT    NOT NULL DEFAULT '',
+  created_ms    INTEGER NOT NULL,
+  updated_ms    INTEGER NOT NULL,
+  created_by    TEXT    NOT NULL,                 -- actor
+  owner_user_id TEXT,                             -- network mode only
+  PRIMARY KEY (id)
+);
+CREATE INDEX publications_project_id_index ON publications (project_id, updated_ms);
+CREATE TABLE publication_targets (
+  id              TEXT    NOT NULL,               -- tgt_...
+  publication_id  TEXT    NOT NULL REFERENCES publications (id) ON DELETE CASCADE,
+  position        INTEGER NOT NULL,
+  connection_id   TEXT    NOT NULL,               -- no foreign key: removing a connection fails the send, not the plan
+  network         TEXT    NOT NULL,
+  fields          TEXT    NOT NULL,               -- JSON: title, description, tags, visibility, made_for_kids, ai_disclosure
+  state           TEXT    NOT NULL CHECK (state IN ('draft','waiting_approval','approved','scheduled','publishing',
+                                                    'published','sent_as_draft','failed','missed','cancelled')),
+  scheduled_ms    INTEGER,                        -- the instant, UTC
+  zone            TEXT    NOT NULL DEFAULT '',    -- IANA zone the person chose
+  late_minutes    INTEGER NOT NULL DEFAULT 0 CHECK (late_minutes BETWEEN 0 AND 1440),
+  send_now        INTEGER NOT NULL DEFAULT 0 CHECK (send_now IN (0,1)),   -- asked to send as soon as approved
+  approval_id     TEXT,
+  snapshot        TEXT,                           -- JSON: the post as the person was shown it, with the digest of each file
+  payload_sha256  TEXT,                           -- SHA-256 of snapshot
+  attempts        INTEGER NOT NULL DEFAULT 0,
+  next_attempt_ms INTEGER,
+  lease_owner     TEXT,
+  lease_until_ms  INTEGER,
+  remote_id       TEXT,
+  url             TEXT,
+  remote_state    TEXT,
+  error           TEXT,                           -- JSON: code, kind, message, hint, retryable
+  published_ms    INTEGER,
+  created_ms      INTEGER NOT NULL,
+  updated_ms      INTEGER NOT NULL,
+  PRIMARY KEY (id)
+);
+CREATE INDEX publication_targets_publication_id_index ON publication_targets (publication_id, position);
+CREATE INDEX publication_targets_state_scheduled_ms_index ON publication_targets (state, scheduled_ms);
+CREATE INDEX publication_targets_approval_id_index ON publication_targets (approval_id);
+```
+
+`Repos` gains `Publications() publish.Store` (the package `service/publish`): `Insert`, `Get`, `Target`, `Save` (the publication and all its targets, in the transaction that read them), `List`, `Open` (the targets the scheduler looks at), `Next`, `Claim` and `Renew` (the lease, one conditional `UPDATE` each, so that a second scheduler changes no row) and `OfProject`. The writer is the one write transaction of `Store.Write`. Down drops both tables.
 
 ## 6. Workspace ownership
 
@@ -1097,7 +1355,7 @@ vukem API to be confirmed in task: how the application learns the address the bu
 
 ### 6.4 How a command chooses in-process or HTTP
 
-Implemented in `web/app/workspace/open.go`: `func Open(ctx context.Context, o Options) (service.Service, io.Closer, error)`. `Options.Force` may be `Auto` (default), `Server` (never fall back; `E_WORKSPACE_LOCKED` when no owner) or `InProcess` (never use a server; fail with `E_WORKSPACE_LOCKED` when one exists).
+Implemented in `web/app/workspace/open.go`: `func Open(ctx context.Context, o Options) (service.Service, io.Closer, error)`. `Options.Force` may be `Auto` (default), `Server` (never fall back; `E_WORKSPACE_LOCKED` when no owner) or `InProcess` (never use a server; fail with `E_WORKSPACE_LOCKED` when one exists, and with `E_INVALID_STATE` naming `STUARTY_URL` when that variable is set, before step 1: the commands that force it, `token:rotate`, `user:create`, `user:passwd` and `workspace:restore`, write the local workspace only).
 
 ```text
 Open (Auto)                                  (the order of SDD-003 §5.2)
@@ -1125,6 +1383,7 @@ Open (Auto)                                  (the order of SDD-003 §5.2)
      deadline passed -> E_WORKSPACE_LOCKED (retryable, exit code 2)
 ```
 
+- **A slow owner is not an absent owner (VV-252).** Only the lock says whether an owner exists: a command takes the in-process path solely when `TryLock` succeeds. While the lock is held, a probe that times out or fails only means the owner is slow or starting, so the command keeps retrying (step 4) and, at the deadline, fails with `E_WORKSPACE_LOCKED`; it never opens the workspace itself and never answers from it. A test double of an owner therefore holds the lock, as a real owner does; one that does not is a workspace with no owner, and the in-process path is then correct. `TestOpenSlowOwnerHoldingTheLockIsNeverReplacedByInProcess` and `TestASlowOwnerIsNeverReplacedByLocalAccess` (`web/app/cli`) cover it.
 - `host(addr)`: an unspecified address (`0.0.0.0`, `::`) is replaced by `127.0.0.1` or `::1`.
 - `processAlive`: `os.FindProcess` then, on Unix, `Signal(0)`; on Windows `os.FindProcess` already fails when `OpenProcess` fails. A `PermissionDenied` answer counts as alive.
 - The probe is `GET /up`, which vukem registers by default (`http.go`, `r.Get("/up", ...)`), answers 200 with `{"status":"ok"}` and is outside `/api/v1`. The token is sent only after `/up` succeeds on a loopback address of a live pid and the server has proved that it knows the token (the handshake of SDD-007 §3.8), so it is never sent to a stranger that took the port of a dead owner. When `runtime.json` says `mode` is `network`, no local token exists: the command needs `STUARTY_KEY` (SDD-007 §4.6) and fails with `E_UNAUTHORIZED` and that hint when it is unset.
@@ -1320,6 +1579,10 @@ SELECT revision, kind, actor, at_ms, base_revision, target_revision, closed_by, 
 
 A row is shown as undone when it is an `edit` or `redo` with `closed_by` set.
 
+### 11.3 Retention (epic 36)
+
+The log has no retention policy: no row is ever deleted, except by the cascade of emptying the trash (section 13.3), and every row keeps its `inverse`, which is what lets any revision be rebuilt (section 12.4). The rule that goes with checkpoints is therefore a constraint on the future more than a job of today: **a revision that a checkpoint names is kept, and so is every revision after it**, because the document at the checkpoint is rebuilt by walking back from the current one through each later row. Any later policy that compacts old rows may drop only rows older than the oldest checkpoint, and must keep a rebuildable form of that revision (its `doc_sha256` row and the document). The ceiling on automatic checkpoints (section 5.14) keeps the number of pinned revisions bounded.
+
 ## 12. Undo and redo
 
 SDD-002 §A.6; ADR-0006 item 6. Undo and redo are service operations (`Undo`, `Redo`) that are themselves committed batches: they go through the same steps as section 9, with the differences below.
@@ -1414,6 +1677,19 @@ Fields beyond the common edit result of SDD-003 (`revision`, `diff`, `descriptio
 
 `undone` is `redone` for a redo. `primitive_index` counts in the order the primitives were attempted (reversed). `by_revision` and `by_actor` are present for the two `*_other_actor` reasons. `E_NOTHING_TO_UNDO` and `E_NOTHING_TO_REDO` have no `details`.
 
+### 12.4 Revert and the diff of two revisions (RF-120, RF-121)
+
+`HistoryRevert` and `HistoryDiff` (SDD-003 §2.5.1) need the document at a revision. There is no stored copy of it, so the service rebuilds it from the log:
+
+1. Read the project row and its current document (inside `WriteProject` for a revert; a plain read for a diff). The target `T` must satisfy `1 <= T <= current`; a checkpoint name is resolved to its revision first (`E_NOT_FOUND` when it does not exist).
+2. Walk the rows `T+1 .. current` through `Operations.Get`. A row of kind `migrate` or `import` among them refuses the operation with `E_INVALID_STATE` (the schema of the document changed there, so its `inverse` does not describe a step back). A walk of more than 5,000 rows is `E_LIMIT` with the hint to go back in steps through a nearer checkpoint.
+3. Give the `inverse` of each row, newest first, to `command.RebuildAt(current, inverses)` (SDD-002 A.6): the lists are applied one after the other, each in reverse order, on one working copy with no guard and no validation in between, and the result is validated once.
+4. Compare `SHA-256(timeline.Canonical(rebuilt))` with the `doc_sha256` of the row `T`. A difference is `E_INTERNAL` with the revisions in `details`: the log and the document disagree, which is a defect, never something to continue from.
+
+`HistoryRevert` then calls `command.Revert(current, rebuilt)` and commits the batch like an edit (section 9) as a row of kind `edit`, `ops` `[{"op":"history.revert","args":{"revision":T}}]`, with the `inverse` and `diff` of that call, `base_revision` the revision the caller read, and `closeOpenRedo` as any new edit of the actor. Because it is an `edit` row, the actor's `Undo` (section 12.2) applies its `inverse`, and the guard protects what other actors changed after it, as for any step. It writes nothing when the diff is empty. An idempotency key is not part of the request.
+
+The two properties the tests hold (`TestRevertProperty`, `TestRevertThroughTheService`): revert to `R` leaves a document equal in canonical bytes to the document at `R`, so an export of it equals an export at `R`; and revert followed by undo leaves the document the revert started from.
+
 ## 13. Trash
 
 ADR-0020 items 2 and 3; RF-005, RF-131.
@@ -1425,6 +1701,8 @@ ADR-0020 items 2 and 3; RF-005, RF-131.
 - **While trashed:** `ProjectGet`, `HistoryList`, `MediaInspect` and `Lint` work; `Edit`, `Undo`, `Redo`, `MediaImport`, `JobStart` and template instantiation fail with `E_INVALID_STATE` and the hint "restore the project first". `ProjectList` leaves it out unless the caller asks for trashed projects.
 - **No expiry.** Nothing purges the trash automatically (ADR-0020 consequence).
 - **Audit.** The row keeps who trashed it and when (`trashed_by`, `trashed_ms`); restore clears them. Trash is not a revision, so the history of these actions is written to the `audit` table (section 5.9) in the same transaction, which is what satisfies RF-134 for operations outside a document.
+
+**With productions (section 5.12).** `ProjectTrash` and `ProjectRestore` act on the production and mirror the state on the rows of its active timeline items inside the same transaction, a `Write` of the store and not a `WriteProject` (a commit loads the row of its timeline inside its own transaction, so it sees the state before the trash or after it, never between). `ProjectItemTrash` of a timeline does the same for that one timeline and cancels its jobs. Trashed items do not count in the production state.
 
 ### 13.2 Assets in a project
 
@@ -1448,7 +1726,7 @@ ADR-0020 items 2 and 3; RF-005, RF-131.
 ### 13.4 Store lock and orphan sweep
 
 - `storeMu sync.RWMutex` in the service: import (`MediaImport`, bundle import) holds the read lock from "copy the file into `store/` or find it already there" through the insert of its `assets` row; `TrashEmpty` holds the write lock from its transaction through the file removal. This closes the race where an import finds a file that a concurrent empty is about to delete.
-- **Orphan sweep** (start-up step 8 and `doctor`): a file under `store/` whose hash has no `assets` row and whose modification time is more than 24 hours old; a directory under `artifacts/` with no `assets` row; a directory under `exports/` or `frames/` whose project does not exist. They are removed. The 24-hour age protects a file that an import copied before its row existed. It also removes, one level deep in `exports/<project id>/`, the files named `bundle-r*.vvbundle.tmp` that a killed bundle export left (section 16.2), but only those whose modification time is older than the start of the running service: an export that runs now writes a newer file. They are counted with `incoming_files`. Nothing else in `exports/` is touched. Crash test: `TestCrashBundleExport` kills the child at `bundle_export.after_write`, then the next start's sweep removes the temp file.
+- **Orphan sweep** (start-up step 8 and `doctor`): a file under `store/` whose hash has no `assets` row and whose modification time is more than 24 hours old; a directory under `artifacts/` with no `assets` row; a directory under `exports/` or `frames/` whose project does not exist. They are removed. The 24-hour age protects a file that an import copied before its row existed. It also removes, one level deep in `exports/<project id>/`, the files named `bundle-r*.vvbundle.tmp` that a killed bundle export left (section 16.2), but only those whose modification time is older than the start of the running service: an export that runs now writes a newer file. They are counted with `incoming_files`. Nothing else in `exports/` is touched. It also removes the files of `publish/uploads/` (the addresses of upload sessions, SDD-020 §7.4) whose modification time is more than 7 days old, counted with `incoming_files` too. Crash test: `TestCrashBundleExport` kills the child at `bundle_export.after_write`, then the next start's sweep removes the temp file.
 
 ## 14. Jobs
 
@@ -1585,16 +1863,22 @@ A zip file with extension `.vvbundle`, deflate-compressed (the `media.*` and `fo
 
 A line of `operations.ndjson` is the `operations` row as JSON with the parsed columns (`ops`, `inverse`, `diff`, `skipped` embedded as JSON values, not strings), without `project_id`. Derived artifacts (proxies, thumbnails, peaks, transcripts) are not included; import regenerates them through ingest. Trashed assets, `idempotency_keys`, `jobs`, exports and caches are not included. `include_log: false` is for sharing without history (actors, edit intent).
 
+### 16.1.1 Bundles with a production (`bundle_version` 2)
+
+A bundle exports the whole project. The format of 16.1 stays and gains: `manifest.json` has `"bundle_version": 2` and a member `production`: `{"name", "items": [{"kind", "title", "position", "text_kind", "text", "format", "timeline"}]}`, the active items of the project in order; `timeline` names the timeline of an item by a key; `text_kind` (SDD-019) is on a text only, and a text without it, as in a bundle made before epic 17, is imported as a `copy` (the history of revisions does not travel: an imported text starts at revision 1). The Markdown of a brief or a text that is not empty is the entry `item.<n>.md`, `<n>` the index of the item in `items`, and `text` is `{"sha256", "bytes"}` of that entry: the texts stay out of the manifest, whose cap (1 MiB, 16.3) is far below what 256 items of 256 KiB hold. The first active timeline is `document.json` and `operations.ndjson` as before (key `main`); every other active timeline is `timeline.<key>.json` and `timeline.<key>.ndjson` with the key `t1`, `t2`... in item order, listed in the manifest member `timelines` (`key`, `id`, `name`, `schema_version`, `revision`, `document`, `operations`, the last two as in 16.1). Media and fonts are the union over every timeline, each once. Trashed items are not exported. An `output` item is exported with its format and no job (the file is not part of the bundle); an import keeps it as a record with no job. A bundle of one timeline (`ProjectBundleExport` with `timeline_id`) is exactly the format of 16.1 with `bundle_version` 1.
+
+**Import.** A bundle of version 1, as every release up to 0.29.0 wrote it, imports as a project with one timeline and no other item. A bundle of version 2 is checked before anything is written, by the checks of 16.3 applied to every document and log, and by these: at most 63 timelines after the first and 256 items; keys `t<1 to 3 digits>` and timeline ids unique and different from the project's; every timeline is named by exactly one item and every item that is not a timeline names none; at most one brief; the kinds are those of `core/project`, and titles and texts obey its rules; only a brief or a text declares a text, of 1 byte to 256 KiB, and its entry matches the declared hash and size; an entry named `timeline.*` or `item.*` that the manifest does not list is refused. With `as_new` every timeline gets a new id and no log, and a composition (SDD-001 §3.5.1) that names a timeline of the bundle is rewritten to name its new id; without it the ids are kept and any that exists is `E_ID_EXISTS`. A binary that knows only version 1 refuses a version 2 bundle with the instruction to update.
+
 ### 16.2 Export
 
 1. Take the project lock only long enough to read the row and its `operations` (a consistent snapshot at revision R); then stream the zip from the snapshot.
 2. Write to `exports/<project id>/bundle-r<R>-<job id>.vvbundle.tmp`, rename on success; the path is inside the export folder (ADR-0020 item 6). A kill between the write and the rename leaves the temp file; the sweep of 13.4 removes it at the next start.
-3. Run as a job of kind `export` with `input.format = "bundle"` (so it has progress and cancellation and counts toward the export limit); media is copied with `io.Copy` and its hash is recomputed while streaming; a mismatch with `assets.id` fails the job (`E_EXPORT_FAILED`, `details.reason = "store_corrupt"`).
+3. Run as a job of kind `export` with `input.format = "bundle"` (and `input.whole = true` for a whole project; the job is kept on the first active timeline) (so it has progress and cancellation and counts toward the export limit); media is copied with `io.Copy` and its hash is recomputed while streaming; a mismatch with `assets.id` fails the job (`E_EXPORT_FAILED`, `details.reason = "store_corrupt"`).
 4. Missing store file: `E_EXPORT_FAILED`, `details.reason = "missing_media"`, `details.hash`.
 
 ### 16.3 Import
 
-1. Open the file and call `archive.Zip(r, size, archive.Policy{MaxEntries: 1024, MaxTotalSize: 32 << 30, MaxEntrySize: STUARTY_MAX_IMPORT_BYTES, Key: identity})`. Violations are `E_LIMIT_EXCEEDED`, `E_VALIDATION` or `E_UNSUPPORTED_MEDIA` per `archive.Err*`. The service applies stricter caps by entry: `manifest.json` 1 MiB, `document.json` 64 MiB, `operations.ndjson` 2 GiB. Free disk space must exceed the declared total plus 10%.
+1. Open the file and call `archive.Zip(r, size, archive.Policy{MaxEntries: 1024, MaxTotalSize: 32 << 30, MaxEntrySize: STUARTY_MAX_IMPORT_BYTES, Key: identity})`. Violations are `E_LIMIT_EXCEEDED`, `E_VALIDATION` or `E_UNSUPPORTED_MEDIA` per `archive.Err*`. The service applies stricter caps by entry: `manifest.json` 1 MiB, `document.json` 64 MiB, `operations.ndjson` 2 GiB, `item.<n>.md` 256 KiB (section 16.1.1). Free disk space must exceed the declared total plus 10%.
 2. Read `manifest.json`. `format` must match. `bundle_version` above the supported value: `E_VALIDATION` with the instruction to upgrade. Read `document.json`, check its `sha256`.
 3. Run `timeline.Migrate` if `schema_version` is older; refuse a newer one with `E_VALIDATION` and `details.code = "V_SCHEMA_VERSION"`, the message naming both versions (the convention of template and bundle import; every load of a stored document goes through the same decode, so ProjectGet, edit, plan, view and export answer it alike, and the editor page shows that code, message and hint); `timeline.Validate`; any violation is `E_VALIDATION` listing all.
 4. Every `assets` entry of the document must have a `media.<hex>` entry or an existing store file; every `fonts` entry likewise. A file that is not shipped but is in the store is accepted only in local mode (the store is the caller's own). In network mode the store is shared, so such a file is accepted only for an asset whose hash is already linked to a project the caller can see; a font is always required in the bundle. The refusal is one generic `E_VALIDATION` without the hash, the same whether the hash is stored or not, so a user can neither link another user's media nor probe for it (SDD-007 T-20). Copy each missing file to a temporary name in `store/` while computing its SHA-256, compare with the manifest hash, rename into place (holding `storeMu` read lock, section 13.4). A `font.<hex>` entry is not copied to `store/`: it is validated and stored by `engine/store.Fonts` in `fonts/<sha256>` (SDD-007 section 7.7), before any media is copied, so a crafted font refuses the whole bundle and stores nothing.

@@ -38,8 +38,9 @@ type Options struct {
 	Session string
 	// Description is shown in serverInfo: which workspace and server the tools act on.
 	Description string
-	// Registry is the command registry of the build, which decides the operations
-	// edit offers; default command.Default().
+	// Registry is not read since the operations left the definition of edit (SDD-003
+	// section 4.8): the Service names them, through command_help. It stays so that the
+	// callers that set it still compile.
 	Registry *command.Registry
 }
 
@@ -59,15 +60,11 @@ const (
 
 // New builds the MCP server over a Service.
 func New(svc service.Service, o Options) (*sdk.Server, error) {
-	if o.Registry == nil {
-		o.Registry = command.Default()
-	}
-
 	if o.Version == "" {
 		o.Version = moduleVersion()
 	}
 
-	defs, err := loadDefinitions(o.Registry)
+	defs, err := loadDefinitions()
 	if err != nil {
 		return nil, err
 	}

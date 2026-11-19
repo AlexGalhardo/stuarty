@@ -34,7 +34,7 @@ func loadRegistry(t *testing.T) []registryEntry {
 // mediaCommands are the commands whose scope is media; every other command is edit.
 var mediaCommands = map[string]bool{"asset.add": true, "asset.remove": true, "font.add": true, "font.remove": true}
 
-// The registry snapshot has the 74 commands of SDD-002 Part C; every scope is edit or media, and
+// The registry snapshot has the commands of SDD-002 Part C; every scope is edit or media, and
 // asset.add is the only internal command.
 func TestRegistrySnapshotShape(t *testing.T) {
 	t.Parallel()
@@ -54,8 +54,8 @@ func TestRegistrySnapshotShape(t *testing.T) {
 		}
 	}
 
-	if len(cmds) != 74 {
-		t.Errorf("%d commands, want 74", len(cmds))
+	if len(cmds) != 86 {
+		t.Errorf("%d commands, want 86", len(cmds))
 	}
 }
 
@@ -111,8 +111,8 @@ func TestPartCSectionsMatchTheRegistry(t *testing.T) {
 		got[c.Name] = true
 	}
 
-	if len(want) != 74 {
-		t.Fatalf("Part C has %d sections, want 74", len(want))
+	if len(want) != 86 {
+		t.Fatalf("Part C has %d sections, want 86", len(want))
 	}
 
 	if len(sections) != len(want) {
@@ -132,6 +132,43 @@ func TestPartCSectionsMatchTheRegistry(t *testing.T) {
 	for name := range got {
 		if !want[name] {
 			t.Errorf("%s is registered but has no section in Part C", name)
+		}
+	}
+}
+
+// Every command of the snapshot names a domain of SDD-000 section 1.1: the timeline registry is video, the
+// image registry image (epic 13).
+func TestRegistrySnapshotsCarryTheDomain(t *testing.T) {
+	t.Parallel()
+
+	known := []string{"project", "video", "image", "writing", "asset", "publish", "provider", "memory", "workspace"}
+
+	for file, want := range map[string]string{"commands.json": "video", "image/commands.json": "image"} {
+		b, err := os.ReadFile(file)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		var cmds []struct {
+			Name   string `json:"name"`
+			Domain string `json:"domain"`
+		}
+		if err := json.Unmarshal(b, &cmds); err != nil {
+			t.Fatal(err)
+		}
+
+		if len(cmds) == 0 {
+			t.Errorf("%s lists no command", file)
+		}
+
+		for _, c := range cmds {
+			if !slices.Contains(known, c.Domain) {
+				t.Errorf("%s: %s has domain %q, which SDD-000 section 1.1 does not list", file, c.Name, c.Domain)
+			}
+
+			if c.Domain != want {
+				t.Errorf("%s: %s has domain %q, want %q", file, c.Name, c.Domain, want)
+			}
 		}
 	}
 }

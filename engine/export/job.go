@@ -6,11 +6,14 @@ import (
 	"fmt"
 	"image"
 	"io"
+	"maps"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 
+	exportcore "github.com/AlexGalhardo/stuarty/core/export"
 	"github.com/AlexGalhardo/stuarty/core/lint"
 	"github.com/AlexGalhardo/stuarty/core/plan"
 	"github.com/AlexGalhardo/stuarty/core/timeline"
@@ -30,6 +33,10 @@ type Job struct {
 	// Caps is ffmpeg's capability list, for the encoder detection.
 	Caps *ffmpeg.Capabilities
 	Doc  *timeline.Document
+	// Nested are the other timelines of the project that the composition items of Doc use, directly or through
+	// each other, by id (SDD-004 section 3.16); nil for a document with no composition. The pictures and the
+	// sound of those items are made from them, and their assets are read like the assets of Doc.
+	Nested map[string]*timeline.Document
 	// JobID names the run directory under <workspace>/tmp.
 	JobID string
 	// ArtifactsDir is <workspace>/artifacts, where the normalized media of the assets is.
@@ -44,6 +51,15 @@ type Job struct {
 	OutPath string
 	// Format is what the export writes; the zero value is FormatMP4.
 	Format Format
+	// Codec is the video codec of an mp4 export; the zero value is the first choice of the preset that the
+	// machine offers, else H.264. A codec that is named and cannot be had is E_NO_ENCODER (SDD-004 section 8.3).
+	Codec exportcore.Codec
+	// Preset is the platform preset of the export (SDD-004 section 8.2): its bit rates and codecs are used and
+	// its limits are checked on the file that was written. Nil is no preset.
+	Preset *exportcore.Preset
+	// CodecPlan is the decision of PlanCodec when the caller has already made it (the service does, so that it
+	// can pick the runner of the encoder); nil means Run decides.
+	CodecPlan *CodecPlan
 	// MaxBytes is STUARTY_MAX_EXPORT_BYTES: a larger file ends the job with reason "size_limit".
 	// Zero is no limit.
 	MaxBytes int64
@@ -80,7 +96,13 @@ type Result struct {
 	DurationMS int64
 	Frames     int
 	Encoder    string
-	Loudness   Loudness
+	// Codec is the video codec written ("h264", "hevc" or "av1"); empty for a format with no video codec.
+	Codec exportcore.Codec
+	// CodecWanted is the codec the preset preferred when the export fell back to another; empty otherwise.
+	CodecWanted exportcore.Codec
+	// Notes say in words what a person should know about the result, such as that fall back.
+	Notes    []string
+	Loudness Loudness
 	// Width and Height are the pixels of the file when they differ from the project's (a GIF is
 	// capped at 480 pixels wide); zero means the project's size.
 	Width, Height int
@@ -114,7 +136,7 @@ func newState(ctx context.Context, job *Job, dir *ffmpeg.RunDir, frames int) *st
 	secs := time.Duration(float64(frames) * float64(fps.Den) / float64(fps.Num) * float64(time.Second))
 	return &state{
 		job: job, ctx: ctx, dir: dir, frames: frames, fonts: fonts, scale: 1,
-		opts:      plan.Options{Measure: rasterize.Measure(fonts)},
+		opts:      plan.Options{Measure: rasterize.Measure(fonts), Nested: job.nestedDoc},
 		deadline:  exportDeadline(secs),
 		inputDirs: assetDirs(job),
 	}
@@ -138,15 +160,25 @@ func (s *state) newRenderer(bands int) *renderer {
 	fs := newFrameSource(s, infos)
 	cache := rasterize.NewCache(s.fonts, 0)
 	rd := &renderer{
-		s:    s,
-		fs:   fs,
-		comp: &compositor.Compositor{Media: fs.media, Bitmaps: cache.Get, LUTs: fs.lut, Bands: bands},
+		s:  s,
+		fs: fs,
+		comp: &compositor.Compositor{
+			Media: fs.media, Bitmaps: cache.Get, LUTs: fs.lut, Bands: bands, Scoped: s.scoped,
+		},
 	}
 	if s.job.PixelRenderer == PixelRendererRust || s.job.PixelRenderer == PixelRendererGPU {
 		rd.rust = newRustRenderer(s, fs, cache.Get, bands)
 	}
 
 	return rd
+}
+
+// scoped sets the output scale the frame source sizes its pixels by to that of the nested frame of a group, and
+// returns what puts the scale of the frame back (compositor.Compositor.Scoped).
+func (s *state) scoped(scale float64) func() {
+	old := s.scale
+	s.scale = scale
+	return func() { s.scale = old }
 }
 
 // render composes frame t into dst, then stops the decoders of the clips that are no longer drawn.
@@ -212,11 +244,34 @@ func run(ctx context.Context, job *Job) (*Result, error) {
 	format := job.Format.normal()
 	doc := job.Doc
 
-	// 1. Check.
+	if !job.Codec.Valid() {
+		return nil, exportErr(
+			ReasonBadFormat,
+			"The codec is not one of h264, hevc and av1.",
+			errors.New("unknown codec"),
+			"",
+		)
+	}
+
+	if (job.Codec != "" || job.Preset != nil) && format != FormatMP4 {
+		return nil, exportErr(
+			ReasonBadFormat,
+			"A codec or a preset is for an mp4 export.",
+			errCodecWithFormat,
+			"",
+		)
+	}
+
+	// 1. Check, the timelines that compositions use as much as the one that is exported.
+	if err := job.checkNested(); err != nil {
+		return nil, exportErr(ReasonRender, "The timelines of the project do not agree on their media.", err, "")
+	}
 	var blocking []lint.Finding
-	for _, f := range lint.Lint(doc, job.Lint, lint.Full) {
-		if lint.Blocking(f.Code) {
-			blocking = append(blocking, f)
+	for _, d := range job.documents() {
+		for _, f := range lint.Lint(d, job.Lint, lint.Full) {
+			if lint.Blocking(f.Code) {
+				blocking = append(blocking, f)
+			}
 		}
 	}
 	if len(blocking) > 0 {
@@ -263,15 +318,18 @@ func run(ctx context.Context, job *Job) (*Result, error) {
 		return nil, exportErr(ReasonPublish, "The exported file could not be moved into place.", err, "")
 	}
 	return &Result{
-		Path:       out,
-		Size:       ver.Size,
-		DurationMS: ver.DurationMS,
-		Frames:     frames,
-		Format:     format,
-		Encoder:    b.encoder,
-		Loudness:   b.loud,
-		Width:      ver.Width,
-		Height:     ver.Height,
+		Path:        out,
+		Size:        ver.Size,
+		DurationMS:  ver.DurationMS,
+		Frames:      frames,
+		Format:      format,
+		Encoder:     b.encoder,
+		Codec:       b.codec,
+		CodecWanted: b.codecWanted,
+		Notes:       b.notes,
+		Loudness:    b.loud,
+		Width:       ver.Width,
+		Height:      ver.Height,
 	}, nil
 }
 
@@ -305,17 +363,62 @@ func endFrame(doc *timeline.Document) int {
 	return end
 }
 
+// nestedDoc is the plan.Nested of the job: a timeline that a composition of Doc uses.
+func (j *Job) nestedDoc(id string) (*timeline.Document, bool) {
+	d, ok := j.Nested[id]
+	return d, ok && d != nil
+}
+
+// documents are Doc and the nested timelines, Doc first and the others by id.
+func (j *Job) documents() []*timeline.Document {
+	docs := []*timeline.Document{j.Doc}
+	for _, id := range slices.Sorted(maps.Keys(j.Nested)) {
+		if d := j.Nested[id]; d != nil {
+			docs = append(docs, d)
+		}
+	}
+	return docs
+}
+
+// checkNested refuses a job in which one asset id names two different files: a plan layer names its asset by id
+// alone, and the assets of the nested timelines are read together with those of Doc (SDD-004 section 3.16).
+func (j *Job) checkNested() error {
+	have := map[string]string{}
+	for _, d := range j.documents() {
+		for id := range d.Assets {
+			hash := d.Assets[id].Hash
+			if prev, ok := have[id]; ok && prev != hash {
+				return fmt.Errorf("the asset %s is two different files in two timelines of the project", id)
+			}
+			have[id] = hash
+		}
+	}
+	return nil
+}
+
+// asset is an asset of Doc or of a nested timeline.
+func (s *state) asset(id string) (timeline.Asset, bool) {
+	for _, d := range s.job.documents() {
+		if a, ok := d.Assets[id]; ok {
+			return a, true
+		}
+	}
+	return timeline.Asset{}, false
+}
+
 // assetDirs are the artifact folders of the assets, where the children may read the normalized media.
 func assetDirs(job *Job) []string {
 	seen := map[string]bool{}
 	var dirs []string
-	for id := range job.Doc.Assets {
-		hash, ok := strings.CutPrefix(job.Doc.Assets[id].Hash, "sha256:")
-		if !ok || seen[hash] {
-			continue
+	for _, d := range job.documents() {
+		for id := range d.Assets {
+			hash, ok := strings.CutPrefix(d.Assets[id].Hash, "sha256:")
+			if !ok || seen[hash] {
+				continue
+			}
+			seen[hash] = true
+			dirs = append(dirs, filepath.Join(job.ArtifactsDir, hash))
 		}
-		seen[hash] = true
-		dirs = append(dirs, filepath.Join(job.ArtifactsDir, hash))
 	}
 	return dirs
 }
@@ -364,10 +467,13 @@ func copyFile(src, dst string) (err error) {
 
 // built is a verified partial file and what the build learned on the way.
 type built struct {
-	partial string
-	encoder string
-	loud    Loudness
-	ver     Verified
+	partial     string
+	encoder     string
+	codec       exportcore.Codec
+	codecWanted exportcore.Codec
+	notes       []string
+	loud        Loudness
+	ver         Verified
 }
 
 // build makes and verifies the partial file of the format (steps 2 to 7 of SDD-004 section 8).
@@ -389,8 +495,13 @@ func (s *state) build(ctx context.Context, f Format) (built, error) {
 func (s *state) buildMP4(ctx context.Context) (built, error) {
 	job := s.job
 
-	// 2. Encoder.
-	det, err := job.Runner.DetectEncoder(ctx, job.Caps, job.Encoder)
+	// 2. Codec and encoder.
+	cp, err := s.codecPlan(ctx)
+	if err != nil {
+		return built{}, err
+	}
+
+	det, err := job.Runner.DetectCodec(ctx, job.Caps, string(cp.Codec), job.Encoder)
 	if err != nil {
 		return built{}, err
 	}
@@ -419,7 +530,7 @@ func (s *state) buildMP4(ctx context.Context) (built, error) {
 		return built{}, err
 	}
 
-	if err := s.encode(ctx, cand, mix, partial, rd); err != nil {
+	if err := s.encode(ctx, cand, cp.Codec, mix, partial, rd); err != nil {
 		return built{}, err
 	}
 
@@ -432,12 +543,25 @@ func (s *state) buildMP4(ctx context.Context) (built, error) {
 	}
 
 	// 7. Verification.
-	ver, err := s.verify(ctx, partial, s.frames)
+	ver, err := s.verify(ctx, partial, s.frames, cp.Codec)
 	if err != nil {
 		_ = os.Remove(partial)
 
 		return built{}, err
 	}
 
-	return built{partial: partial, encoder: cand.Name, loud: loud, ver: ver}, nil
+	return built{
+		partial: partial, encoder: cand.Name, codec: cp.Codec, codecWanted: cp.Wanted, notes: cp.Notes,
+		loud: loud, ver: ver,
+	}, nil
+}
+
+// codecPlan is the codec of the export: the plan the caller made, or the one PlanCodec makes now.
+func (s *state) codecPlan(ctx context.Context) (CodecPlan, error) {
+	job := s.job
+	if job.CodecPlan != nil {
+		return *job.CodecPlan, nil
+	}
+
+	return PlanCodec(ctx, job.Runner, job.Caps, job.Encoder, job.Codec, job.Preset)
 }

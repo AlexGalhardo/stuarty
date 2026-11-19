@@ -10,7 +10,7 @@ import (
 func init() {
 	Register(Define(Spec{
 		Name:    "clip.set_effects",
-		Summary: "Sets the visual effects of a clip: motion blur, glow, vignette, grain, RGB split and shake.",
+		Summary: "Sets the effects of a clip: motion blur, glow, vignette, grain, RGB split and shake.",
 		Description: "Replaces the whole list of effects, applied in order; an empty list removes them. Each kind appears at " +
 			"most once and takes only its own parameters (omitted ones get the defaults): motion_blur amount 0.5 and " +
 			"angle 0; glow amount 0.5, radius 12 and threshold 0.6; vignette amount 0.5 and softness 0.5; grain amount " +
@@ -137,7 +137,7 @@ func applyClipSetEffects(c *Context, a *clipEffectsArgs) error {
 		seen[e.Kind] = true
 		effects = append(effects, e)
 	}
-	it, err := c.clipItem(a.ItemID, "effects")
+	it, err := c.clipOrCompositionItem(a.ItemID, "effects")
 	if err != nil {
 		return err
 	}
