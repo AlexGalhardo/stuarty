@@ -30,6 +30,6 @@ func All() []schema.Migration {
 		m20261116130000AssetsLutKind(),
 		m20261119100000CreateConnectionsTable(),
 		m20261119110000CreateImageDocumentsAndOperations(),
-		m20261119140000JobsExportBatchKind(),
+		m20261119120050JobsExportBatchKind(),
 	}
 }
