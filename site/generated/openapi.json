@@ -190,6 +190,16 @@
           "origin": {
             "$ref": "#/components/schemas/Origin"
           },
+          "poster": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Poster"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "projects": {
             "type": "integer"
           },
@@ -3078,6 +3088,16 @@
           "origin": {
             "$ref": "#/components/schemas/Origin"
           },
+          "poster": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Poster"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "projects": {
             "type": "integer"
           },
@@ -4230,6 +4250,17 @@
           "width": {
             "format": "double",
             "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "Poster": {
+        "properties": {
+          "asset_id": {
+            "type": "string"
+          },
+          "timeline_id": {
+            "type": "string"
           }
         },
         "type": "object"
