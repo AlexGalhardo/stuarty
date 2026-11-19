@@ -163,8 +163,11 @@ func TestWorkspaceAssetsMigrationDown(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	rolled, err := m.Rollback(ctx, 1)
-	if err != nil || !slices.Equal(rolled, []string{assetLibraryID}) {
+	// The migrations added after this one are rolled back first; the last one rolled back is this one.
+	newer := len(All()) - 1 - slices.IndexFunc(All(), func(m schema.Migration) bool { return m.ID == assetLibraryID })
+
+	rolled, err := m.Rollback(ctx, newer+1)
+	if err != nil || len(rolled) != newer+1 || rolled[len(rolled)-1] != assetLibraryID {
 		t.Fatalf("Rollback = %v, %v", rolled, err)
 	}
 

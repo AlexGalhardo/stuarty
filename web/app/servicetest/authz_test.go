@@ -37,6 +37,14 @@ func projectCalls(m *mediaEnv, project, job string) map[string]func(ctx context.
 			_, err := m.svc.HistoryList(ctx, service.HistoryListRequest{ProjectID: project})
 			return err
 		},
+		"CheckpointList": func(ctx context.Context) error {
+			_, err := m.svc.CheckpointList(ctx, service.CheckpointListRequest{ProjectID: project})
+			return err
+		},
+		"CheckpointCreate": func(ctx context.Context) error {
+			_, err := m.svc.CheckpointCreate(ctx, service.CheckpointCreateRequest{ProjectID: project, Name: "n"})
+			return err
+		},
 		"Undo": func(ctx context.Context) error {
 			_, err := m.svc.Undo(ctx, service.UndoRequest{ProjectID: project})
 			return err
