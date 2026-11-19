@@ -57,15 +57,33 @@ func TestSecurity_T43_NoSurfaceReturnsASecret(t *testing.T) {
 				{Call: "ConnectionGet", Args: json.RawMessage(`{"id":"con_0000000000"}`)},
 			}
 
-			// The MCP tool only reads: testing is for a person (SDD-014 section 10).
+			// The MCP tool only reads: creating, testing and removing are for a person (SDD-014 section
+			// 10). On the other surfaces the answers of a create, refused and accepted, and of a removal
+			// must not carry the secret either: a validation error never echoes the request.
 			if name != "mcp" {
+				create := func(endpoint string) json.RawMessage {
+					raw, err := json.Marshal(service.ConnectionCreateRequest{
+						Kind: "test", Label: "Echo", Endpoint: endpoint, Accepts: []string{"text"}, Secret: connectionCanary,
+					})
+					if err != nil {
+						t.Fatal(err)
+					}
+
+					return raw
+				}
+
 				steps = append(
 					steps,
 					step{Call: "ConnectionTest", Args: json.RawMessage(`{"id":"` + created.ID + `"}`)},
+					step{Call: "ConnectionCreate", Args: create("http://example.com/plain")},
+					step{Call: "ConnectionCreate", Args: create(echo.URL)},
+					step{Call: "ConnectionRemove", Args: json.RawMessage(`{"id":"` + created.ID + `"}`)},
 				)
 			}
 
 			var seen strings.Builder
+
+			creates := 0
 
 			for _, s := range steps {
 				result, text, fail := d.do(t, s)
@@ -76,6 +94,21 @@ func TestSecurity_T43_NoSurfaceReturnsASecret(t *testing.T) {
 				if fail != nil {
 					raw, _ := json.Marshal(fail)
 					seen.Write(raw)
+				}
+
+				// The first create is refused (plain http to a public host), the second accepted, and
+				// the removal goes through: each answer above was a real one.
+				switch {
+				case s.Call == "ConnectionCreate" && creates == 0:
+					creates++
+
+					if fail == nil || fail.Code != "E_VALIDATION" {
+						t.Errorf("a create with a plain http endpoint: %+v, want E_VALIDATION", fail)
+					}
+				case s.Call == "ConnectionCreate", s.Call == "ConnectionRemove":
+					if fail != nil {
+						t.Errorf("%s: %+v", s.Call, fail)
+					}
 				}
 			}
 
