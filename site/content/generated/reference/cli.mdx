@@ -1157,62 +1157,35 @@ Example:
 stuarty connection:test con_0123456789
 ```
 
-## `image:create`
+## `approval:list`
 
-Create an image document, blank or from a template
+List the approval queue: what waits for a person (pending by default)
 
 ```text
-stuarty image:create --preset p
+stuarty approval:list [--state s] [--project <id>] [--cursor c] [--limit n]
 ```
 
 | Flag | Type | Default | Meaning |
 | --- | --- | --- | --- |
-| `--preset` | string |  | video_thumbnail (1280x720), square_post (1080x1080) or vertical_cover (1080x1920) |
-| `--width` | integer |  | pixels, 1 to 4096, with --height |
-| `--height` | integer |  | pixels, 1 to 4096, with --width |
-| `--name` | string |  | name of the image |
-| `--background` | string |  | a colour or transparent (default #FFFFFF) |
-| `--template` | boolean | `false` | make a template whose text and image layers may be slots |
-| `--from-template` | string |  | make the image from this template |
-| `--values` | string |  | a JSON object of slot name to \{"text": "..."\} or \{"asset": "sha256:..."\}: a file, or - for standard input |
-| `--id` | string |  | identifier for the image (omit it in network mode: the server chooses) |
-
-Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
-
-Example:
-
-```bash
-stuarty image:create --preset video_thumbnail --name "Episode 12" --background "#101820"
-```
-
-## `image:list`
-
-List the image documents and templates
-
-```text
-stuarty image:list
-```
-
-| Flag | Type | Default | Meaning |
-| --- | --- | --- | --- |
-| `--templates` | string |  | only for the templates, none for the others |
+| `--state` | string |  | pending (default), approved, rejected, expired or all |
+| `--project` | string |  | only the requests of one project |
 | `--cursor` | string |  | continue a list from this cursor |
-| `--limit` | integer | `20` | items per page |
+| `--limit` | integer | `50` | items per page |
 
 Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
 
 Example:
 
 ```bash
-stuarty image:list --templates only --json
+stuarty approval:list --state all
 ```
 
-## `image:show`
+## `approval:show`
 
-Describe an image document: its layers, its findings and its revision
+Show one approval request: what will be sent, where, the cost and its state
 
 ```text
-stuarty image:show <id>
+stuarty approval:show <id>
 ```
 
 Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
@@ -1220,403 +1193,127 @@ Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
 Example:
 
 ```bash
-stuarty image:show img_7k2m9x4q1b
+stuarty approval:show apr_0123456789
 ```
 
-## `image:edit`
+## `approval:decide`
 
-Apply a batch of image operations (stuarty command:help --domain image lists them)
+Approve or reject a request (for a person in the app; the local token is refused)
 
 ```text
-stuarty image:edit <id> <op> k=v...
+stuarty approval:decide <id> --approve | --reject [--reason <text>]
 ```
 
 | Flag | Type | Default | Meaning |
 | --- | --- | --- | --- |
-| `--ops` | string |  | a JSON file with the batch, or - for standard input: \{"operations":[\{"op":"item.move","args":\{"item_id":"itm_m1n2p3q4r5","start":"2s"\}\}]\}, or only the array of \{op, args\}; base_revision, idempotency_key and dry_run may sit beside operations |
-| `--base` | integer |  | the revision the batch was planned against (default: the current one) |
-| `--key` | string |  | idempotency key |
+| `--approve` | boolean |  | approve the request |
+| `--reject` | boolean |  | reject the request |
+| `--reason` | string |  | why a request is rejected |
 
-Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--dry-run`.
-
-Example:
-
-```bash
-stuarty image:edit img_7k2m9x4q1b layer.add_text text="HOW IT WORKS" slot=title
-```
-
-## `image:undo`
-
-Undo the last step of the caller on an image
-
-```text
-stuarty image:undo <id>
-```
-
-Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--dry-run`.
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
 
 Example:
 
 ```bash
-stuarty image:undo img_7k2m9x4q1b
+stuarty approval:decide apr_0123456789 --reject --reason "wrong channel"
 ```
 
-## `image:redo`
+## `approval:rule:list`
 
-Redo the last undone step of the caller on an image
+List the rules that approve without asking
 
 ```text
-stuarty image:redo <id>
+stuarty approval:rule:list
 ```
 
-Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--dry-run`.
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
 
 Example:
 
 ```bash
-stuarty image:redo img_7k2m9x4q1b
+stuarty approval:rule:list --json
 ```
 
-## `image:export`
+## `approval:rule:set`
 
-Export an image document to a PNG, JPEG or WebP file
+Create or replace a rule that approves a kind of action (for a person in the app; the local token is refused)
 
 ```text
-stuarty image:export <id> [--format f]
+stuarty approval:rule:set --kind <k> [--id <rul>] [--connection <con>] [--project <prj>] [--currency USD] [--per-item <micros>] [--per-day <micros>] [--disabled]
 ```
 
 | Flag | Type | Default | Meaning |
 | --- | --- | --- | --- |
-| `--format` | string | `png` | png, jpeg or webp |
-| `--quality` | integer |  | 1 to 100, for jpeg and lossy webp |
-| `--preset` | string |  | resample to video_thumbnail, square_post or vertical_cover |
-| `--width` | integer |  | resample to this width (0 keeps the aspect) |
-| `--height` | integer |  | resample to this height (0 keeps the aspect) |
+| `--id` | string |  | the rule to replace; leave out to create one |
+| `--kind` | string |  | the kind of action the rule covers (required) |
+| `--connection` | string |  | only this destination |
+| `--project` | string |  | only this project |
+| `--currency` | string |  | three upper-case letters, needed with a limit |
+| `--per-item` | string |  | the most one action may cost, in millionths of the currency unit |
+| `--per-day` | string |  | the most the rule may approve in a UTC day, in millionths |
+| `--disabled` | boolean |  | keep the rule but stop it |
 
 Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
 
 Example:
 
 ```bash
-stuarty image:export img_7k2m9x4q1b --format jpeg --quality 85
+stuarty approval:rule:set --kind publish.post --connection con_0123456789
 ```
 
-## `memory:list`
+## `approval:rule:remove`
 
-List the memory notes
+Remove a rule (for a person in the app; the local token is refused)
 
 ```text
-stuarty memory:list [--scope workspace|<project id>] [--tag t]... [--all]
+stuarty approval:rule:remove <id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty approval:rule:remove rul_0123456789
+```
+
+## `cost:show`
+
+Show the cost ceilings and what was spent today and over the last 30 days
+
+```text
+stuarty cost:show
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty cost:show --json
+```
+
+## `cost:ceiling`
+
+Set or remove a cost ceiling (for a person in the app; the local token is refused)
+
+```text
+stuarty cost:ceiling --currency USD [--project <prj>] [--per-item <micros>] [--per-day <micros>]
 ```
 
 | Flag | Type | Default | Meaning |
 | --- | --- | --- | --- |
-| `--scope` | string |  | workspace or a project id |
-| `--tag` | string, repeatable |  | a tag; repeat it for several |
-| `--all` | boolean | `false` | also what is not reviewed (skills) or not kept (notes): an agent is not offered those |
+| `--currency` | string |  | three upper-case letters (required) |
+| `--project` | string |  | the project the ceiling is for; leave out for the whole workspace |
+| `--per-item` | string |  | the most one action may cost, in millionths of the currency unit |
+| `--per-day` | string |  | the most that may be spent in a UTC day, in millionths; with neither limit the ceiling is removed |
 
 Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
 
 Example:
 
 ```bash
-stuarty memory:list --tag hooks --json
-```
-
-## `memory:show`
-
-Show a memory note
-
-```text
-stuarty memory:show <name>
-```
-
-Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
-
-Example:
-
-```bash
-stuarty memory:show viewers-skip-intros
-```
-
-## `memory:write`
-
-Write a memory note: one fact, with what was learned
-
-```text
-stuarty memory:write [<name>] --description <one line> [--body <text>|--body-file <file|->] [--scope s] [--tag t]...
-a note written here is pending until a person keeps it in the Memory section
-```
-
-| Flag | Type | Default | Meaning |
-| --- | --- | --- | --- |
-| `--description` | string |  | the fact, in one line (required) |
-| `--scope` | string |  | workspace (default) or a project id |
-| `--tag` | string, repeatable |  | a tag; repeat it for several |
-| `--body` | string |  | the text of the entry |
-| `--body-file` | string |  | read the text from a file, or - for standard input |
-
-Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
-
-Example:
-
-```bash
-stuarty memory:write --description "Viewers skip long intros" --body "Cut the intro to two seconds."
-```
-
-## `memory:remove`
-
-Delete a memory note (a note a person kept stays)
-
-```text
-stuarty memory:remove <name>
-```
-
-Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
-
-Example:
-
-```bash
-stuarty memory:remove old-note
-```
-
-## `skill:list`
-
-List the skills that are reviewed
-
-```text
-stuarty skill:list [--origin built-in|user|imported] [--all]
-```
-
-| Flag | Type | Default | Meaning |
-| --- | --- | --- | --- |
-| `--origin` | string |  | built-in, user or imported |
-| `--all` | boolean | `false` | also what is not reviewed (skills) or not kept (notes): an agent is not offered those |
-
-Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
-
-Example:
-
-```bash
-stuarty skill:list --all --json
-```
-
-## `skill:show`
-
-Show a skill: its text, its files and the findings of the lint
-
-```text
-stuarty skill:show <name>
-```
-
-Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
-
-Example:
-
-```bash
-stuarty skill:show hook-writer
-```
-
-## `skill:write`
-
-Write a skill; it stays unreviewed until a person reads it in the Skills section
-
-```text
-stuarty skill:write <name> --description <text> [--body <text>|--body-file <file|->] [--license l]
-                    [--file <path in the skill>=<local file>]...
-```
-
-| Flag | Type | Default | Meaning |
-| --- | --- | --- | --- |
-| `--description` | string |  | what the skill does and when to use it (required) |
-| `--license` | string |  | the licence of the text |
-| `--file` | string, repeatable |  | another file of the folder: &lt;path in the skill&gt;=&lt;local file&gt; |
-| `--body` | string |  | the text of the entry |
-| `--body-file` | string |  | read the text from a file, or - for standard input |
-
-Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
-
-Example:
-
-```bash
-stuarty skill:write hook-writer --description "Write the first three seconds." --body-file hook.md
-```
-
-## `skill:import`
-
-Import a skill from a folder or an archive (.zip, .tar.gz) you already have; it starts unreviewed
-
-```text
-stuarty skill:import <folder|archive> [--source <text>] [--replace]
-```
-
-| Flag | Type | Default | Meaning |
-| --- | --- | --- | --- |
-| `--source` | string |  | where it came from; the name of the folder or file if omitted |
-| `--replace` | boolean | `false` | replace a skill of the same name |
-
-Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
-
-Example:
-
-```bash
-stuarty skill:import ./downloads/hook-writer.zip --source "a friend"
-```
-
-## `skill:lint`
-
-Run the lint on a skill
-
-```text
-stuarty skill:lint <name>
-```
-
-Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
-
-Example:
-
-```bash
-stuarty skill:lint hook-writer --json
-```
-
-## `skill:export`
-
-Write skills as folders in the Agent Skills layout, to install them in your own agent
-
-```text
-stuarty skill:export [<name>...]
-with no name, every reviewed skill; the folders are written under exports/library/ of the workspace
-```
-
-Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
-
-Example:
-
-```bash
-stuarty skill:export hook-writer
-```
-
-## `prompt:list`
-
-List the prompts
-
-```text
-stuarty prompt:list [--tag t]...
-```
-
-| Flag | Type | Default | Meaning |
-| --- | --- | --- | --- |
-| `--tag` | string, repeatable |  | a tag; repeat it for several |
-
-Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
-
-Example:
-
-```bash
-stuarty prompt:list --json
-```
-
-## `prompt:show`
-
-Show a prompt and its variables
-
-```text
-stuarty prompt:show <name>
-```
-
-Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
-
-Example:
-
-```bash
-stuarty prompt:show video-intro
-```
-
-## `prompt:write`
-
-Write a prompt: a reusable text with \{\{variables\}\}
-
-```text
-stuarty prompt:write <name> --description <text> [--body <text>|--body-file <file|->] [--default <variable>=<value>]... [--tag t]...
-```
-
-| Flag | Type | Default | Meaning |
-| --- | --- | --- | --- |
-| `--description` | string |  | what the prompt is for (required) |
-| `--default` | string, repeatable |  | a default value: &lt;variable&gt;=&lt;value&gt; |
-| `--tag` | string, repeatable |  | a tag; repeat it for several |
-| `--body` | string |  | the text of the entry |
-| `--body-file` | string |  | read the text from a file, or - for standard input |
-
-Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
-
-Example:
-
-```bash
-stuarty prompt:write video-intro --description "An intro" --body "Write an intro about {{topic}}."
-```
-
-## `prompt:render`
-
-Replace the variables of a prompt and print the text; nothing is sent anywhere
-
-```text
-stuarty prompt:render <name> [--value <variable>=<value>]...
-```
-
-| Flag | Type | Default | Meaning |
-| --- | --- | --- | --- |
-| `--value` | string, repeatable |  | a value: &lt;variable&gt;=&lt;value&gt; |
-
-Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
-
-Example:
-
-```bash
-stuarty prompt:render video-intro --value topic=cats
-```
-
-## `library:search`
-
-Search memory, skills and prompts with one query
-
-```text
-stuarty library:search <word>... [--kind memory|skill|prompt]... [--scope s] [--tag t]... [--origin o] [--all]
-                       [--limit n] [--budget characters]
-```
-
-| Flag | Type | Default | Meaning |
-| --- | --- | --- | --- |
-| `--kind` | string, repeatable |  | memory, skill or prompt; repeat it for several |
-| `--scope` | string |  | memory: workspace or a project id |
-| `--tag` | string, repeatable |  | a tag; repeat it for several |
-| `--origin` | string |  | skills: built-in, user or imported |
-| `--all` | boolean | `false` | also what is not reviewed (skills) or not kept (notes): an agent is not offered those |
-| `--limit` | integer | `20` | results, at most 50 |
-| `--budget` | integer | `4000` | characters of the answer, at most 16000 |
-
-Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
-
-Example:
-
-```bash
-stuarty library:search intro --kind prompt --json
-```
-
-## `library:reindex`
-
-Rebuild the index of the library from its files
-
-```text
-stuarty library:reindex
-```
-
-Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
-
-Example:
-
-```bash
-stuarty library:reindex
+stuarty cost:ceiling --currency USD --per-day 5000000
 ```
 
 ## `serve`

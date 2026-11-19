@@ -23,6 +23,43 @@
       }
     },
     "schemas": {
+      "ApprovalListResult": {
+        "properties": {
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "requests": {
+            "items": {
+              "$ref": "#/components/schemas/Request"
+            },
+            "type": "array"
+          },
+          "text": {
+            "type": "string"
+          },
+          "total": {
+            "type": "integer"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ApprovalRuleListResult": {
+        "properties": {
+          "rules": {
+            "items": {
+              "$ref": "#/components/schemas/RuleView"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
       "Asset": {
         "properties": {
           "frame_count": {
@@ -390,6 +427,41 @@
         },
         "type": "object"
       },
+      "CeilingView": {
+        "properties": {
+          "currency": {
+            "type": "string"
+          },
+          "per_day_micros": {
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "per_item_micros": {
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "project_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updated_by": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "Change": {
         "properties": {
           "changes": {
@@ -590,6 +662,50 @@
           },
           "status": {
             "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "CostLine": {
+        "properties": {
+          "currency": {
+            "type": "string"
+          },
+          "micros": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "scope": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "CostSummaryResult": {
+        "properties": {
+          "ceilings": {
+            "items": {
+              "$ref": "#/components/schemas/CeilingView"
+            },
+            "type": "array"
+          },
+          "day": {
+            "type": "string"
+          },
+          "days": {
+            "items": {
+              "$ref": "#/components/schemas/Total"
+            },
+            "type": "array"
+          },
+          "today": {
+            "items": {
+              "$ref": "#/components/schemas/CostLine"
+            },
+            "type": "array"
           }
         },
         "type": "object"
@@ -2072,6 +2188,9 @@
           "actor": {
             "type": "string"
           },
+          "approval_id": {
+            "type": "string"
+          },
           "created_at": {
             "format": "date-time",
             "type": "string"
@@ -3050,34 +3169,14 @@
         },
         "type": "object"
       },
-      "MemoryGetResult": {
+      "Money": {
         "properties": {
-          "body": {
-            "type": "string",
-            "x-untrusted": true
-          },
-          "entry": {
-            "$ref": "#/components/schemas/LibraryEntry"
-          },
-          "text": {
+          "currency": {
             "type": "string"
           },
-          "untrusted_notice": {
-            "type": "string"
-          }
-        },
-        "type": "object"
-      },
-      "MemoryWriteResult": {
-        "properties": {
-          "entry": {
-            "$ref": "#/components/schemas/LibraryEntry"
-          },
-          "text": {
-            "type": "string"
-          },
-          "untrusted_notice": {
-            "type": "string"
+          "micros": {
+            "format": "int64",
+            "type": "integer"
           }
         },
         "type": "object"
@@ -4155,6 +4254,132 @@
         },
         "type": "object"
       },
+      "Request": {
+        "properties": {
+          "actor": {
+            "type": "string"
+          },
+          "connection_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "decided_at": {
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "decided_by": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "estimate": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "job_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "kind": {
+            "type": "string"
+          },
+          "payload_ref": {
+            "type": "string"
+          },
+          "project_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "rule_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "state": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string",
+            "x-untrusted": true
+          }
+        },
+        "type": "object"
+      },
+      "RuleView": {
+        "properties": {
+          "connection_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "created_by": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "per_day_micros": {
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "per_item_micros": {
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "project_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "type": "object"
+      },
       "Settings": {
         "properties": {
           "background": {
@@ -4874,6 +5099,27 @@
           "total_bytes": {
             "format": "int64",
             "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "Total": {
+        "properties": {
+          "connection_id": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "day": {
+            "type": "string"
+          },
+          "micros": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "project_id": {
+            "type": "string"
           }
         },
         "type": "object"
@@ -9342,6 +9588,428 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/approval-rules": {
+      "get": {
+        "operationId": "approval-rules.list",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalRuleListResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the rules that approve without asking"
+      },
+      "post": {
+        "operationId": "approval-rules.set",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "connection_id": {
+                    "description": "Only this destination; leave out for any.",
+                    "type": "string"
+                  },
+                  "currency": {
+                    "description": "Three upper-case letters; needed with a limit.",
+                    "type": "string"
+                  },
+                  "enabled": {
+                    "description": "false keeps the rule and stops it; the default is true.",
+                    "type": [
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "id": {
+                    "description": "The rule to replace; leave out to create one.",
+                    "type": "string"
+                  },
+                  "kind": {
+                    "description": "The kind of action the rule covers, for example publish.post.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "per_day_micros": {
+                    "description": "The most the rule may approve in one UTC day, in millionths of the currency unit.",
+                    "format": "int64",
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
+                  },
+                  "per_item_micros": {
+                    "description": "The most one action may cost for the rule to approve it, in millionths of the currency unit. A rule with no limit never approves a costly action.",
+                    "format": "int64",
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
+                  },
+                  "project_id": {
+                    "description": "Only this project; leave out for any.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RuleView"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create or replace a rule (a person in the browser only; the local token and keys get 403)"
+      }
+    },
+    "/api/v1/approval-rules/{id}": {
+      "delete": {
+        "operationId": "approval-rules.remove",
+        "parameters": [
+          {
+            "description": "An approval request id, apr_ and 10 characters; or a rule id, rul_ and 10 characters.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RuleView"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove a rule (a person in the browser only; the local token and keys get 403)"
+      }
+    },
+    "/api/v1/approvals": {
+      "get": {
+        "operationId": "approvals.list",
+        "parameters": [
+          {
+            "description": "pending (the default), approved, rejected, expired or all.",
+            "in": "query",
+            "name": "state",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Only the requests of one project.",
+            "in": "query",
+            "name": "project_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The next_cursor of the previous page.",
+            "in": "query",
+            "name": "cursor",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The page size; the default depends on the operation.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalListResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the approval queue (pending requests by default)"
+      }
+    },
+    "/api/v1/approvals/events": {
+      "get": {
+        "operationId": "approvals.events",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Stream the events of the approval queue"
+      }
+    },
+    "/api/v1/approvals/{id}": {
+      "get": {
+        "operationId": "approvals.get",
+        "parameters": [
+          {
+            "description": "An approval request id, apr_ and 10 characters; or a rule id, rul_ and 10 characters.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Request"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Read one approval request"
+      }
+    },
+    "/api/v1/approvals/{id}/decide": {
+      "post": {
+        "operationId": "approvals.decide",
+        "parameters": [
+          {
+            "description": "An approval request id, apr_ and 10 characters.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "decision": {
+                    "description": "approve or reject.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "reason": {
+                    "description": "Why a request is rejected, at most 500 characters of plain text.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "decision"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Request"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Approve or reject a request (a person in the browser only; the local token and keys get 403)"
+      }
+    },
     "/api/v1/assets": {
       "get": {
         "operationId": "assets.list",
@@ -9973,6 +10641,119 @@
           }
         ],
         "summary": "Make one request through a connection"
+      }
+    },
+    "/api/v1/cost": {
+      "get": {
+        "operationId": "cost.get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CostSummaryResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Read the cost ceilings and what was spent"
+      }
+    },
+    "/api/v1/cost/ceilings": {
+      "put": {
+        "operationId": "cost.ceilings.set",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "currency": {
+                    "description": "Three upper-case letters, for example USD.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "per_day_micros": {
+                    "description": "The most that may be spent in one UTC day, in millionths of the currency unit. With neither limit, the ceiling is removed.",
+                    "format": "int64",
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
+                  },
+                  "per_item_micros": {
+                    "description": "The most one action may cost, in millionths of the currency unit.",
+                    "format": "int64",
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
+                  },
+                  "project_id": {
+                    "description": "The project the ceiling is for; leave out for the whole workspace.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "currency"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CostSummaryResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Set or remove a cost ceiling (a person in the browser only; the local token and keys get 403)"
       }
     },
     "/api/v1/fonts": {
