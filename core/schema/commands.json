@@ -74,7 +74,7 @@
     "internal": false,
     "name": "animation.apply_preset",
     "scope": "edit",
-    "summary": "Animates the start or the end of a visual item with a preset: fade, slide, scale, pop, push in or pull out."
+    "summary": "Animates the start or end of a visual item with a preset: fade, slide, scale, pop, push in or pull out."
   },
   {
     "args_schema": {
@@ -2369,7 +2369,7 @@
     "internal": false,
     "name": "clip.remove_silences",
     "scope": "edit",
-    "summary": "Cuts the silent stretches out of a clip or an audio item, leaving one item per stretch of speech."
+    "summary": "Cuts the silences out of a clip or audio item, one item per stretch of speech."
   },
   {
     "args_schema": {
@@ -2878,7 +2878,7 @@
     "internal": false,
     "name": "clip.set_color",
     "scope": "edit",
-    "summary": "Sets the brightness, contrast, saturation, temperature, tint, hue, lookup table, HSL bands, wheels and curves of a clip."
+    "summary": "Sets brightness, contrast, saturation, temperature, tint, hue, LUT, HSL bands, wheels and curves of a clip."
   },
   {
     "args_schema": {
@@ -2992,7 +2992,7 @@
     "internal": false,
     "name": "clip.set_effects",
     "scope": "edit",
-    "summary": "Sets the visual effects of a clip: motion blur, glow, vignette, grain, RGB split and shake."
+    "summary": "Sets the effects of a clip: motion blur, glow, vignette, grain, RGB split and shake."
   },
   {
     "args_schema": {
@@ -3157,7 +3157,7 @@
     "internal": false,
     "name": "clip.set_framing",
     "scope": "edit",
-    "summary": "Sets how the asset of a clip is fitted into the frame and how much of each side is cropped."
+    "summary": "Sets how a clip fits the frame and how much of each side is cropped."
   },
   {
     "args_schema": {
@@ -4217,7 +4217,7 @@
     "internal": false,
     "name": "item.set_audio",
     "scope": "edit",
-    "summary": "Sets the volume, the fades, the mute flag, the noise reduction or the voice of a clip or audio item."
+    "summary": "Sets the volume, fades, mute, noise reduction or voice of a clip or audio item."
   },
   {
     "args_schema": {
