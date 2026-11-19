@@ -13,7 +13,15 @@ func TestExportBatchTakesEveryPreset(t *testing.T) {
 	t.Parallel()
 
 	p, err := parseArgs(exportBatch.flags, []string{
-		"--preset", "tiktok", "--preset=facebook-reels", "--preset", "youtube-shorts", "--codec", "hevc", "--end", "10s",
+		"--preset",
+		"tiktok",
+		"--preset=facebook-reels",
+		"--preset",
+		"youtube-shorts",
+		"--codec",
+		"hevc",
+		"--end",
+		"10s",
 	})
 	if err != nil {
 		t.Fatal(err)

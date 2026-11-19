@@ -29,7 +29,9 @@ func migratedBefore(t *testing.T) (*database.DB, *schema.Migrator) {
 
 	qopts := queue.DatabaseOptions{Table: "queue_jobs", FailedTable: "queue_failed_jobs"}
 	all := slices.Concat(queue.Migrations(qopts), All())
-	before := slices.DeleteFunc(slices.Clone(all), func(m schema.Migration) bool { return m.ID >= exportBatchMigrationID })
+	before := slices.DeleteFunc(slices.Clone(all), func(m schema.Migration) bool {
+		return m.ID >= exportBatchMigrationID
+	})
 
 	m, err := schema.NewMigrator(db, before)
 	if err != nil {
@@ -61,11 +63,14 @@ func execAll(t *testing.T, db *database.DB, qs ...string) {
 func jobRows(t *testing.T, db *database.DB) []string {
 	t.Helper()
 
-	rows, err := db.QueryContext(context.Background(), `SELECT id || '|' || kind || '|' || coalesce(project_id, '-') || '|' ||
+	rows, err := db.QueryContext(
+		context.Background(),
+		`SELECT id || '|' || kind || '|' || coalesce(project_id, '-') || '|' ||
  coalesce(asset_hash, '-') || '|' || actor || '|' || state || '|' || progress || '|' || message || '|' || input || '|' ||
  coalesce(result, '-') || '|' || coalesce(error, '-') || '|' || cancel_requested || '|' || attempts || '|' ||
  created_ms || '|' || updated_ms || '|' || coalesce(started_ms, '-') || '|' || coalesce(finished_ms, '-')
- FROM jobs ORDER BY id`)
+ FROM jobs ORDER BY id`,
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -96,7 +101,9 @@ func TestJobsExportBatchKindKeepsEveryJob(t *testing.T) {
 	db, rest := migratedBefore(t)
 	ctx := context.Background()
 
-	execAll(t, db,
+	execAll(
+		t,
+		db,
 		`INSERT INTO projects (id, name, schema_version, document, doc_sha256, width, height, fps_num, fps_den, created_ms, updated_ms, created_by)
  VALUES ('prj_a', 'a', 1, '{}', 'x', 1, 1, 30, 1, 1, 1, 'local:ui')`,
 		`INSERT INTO assets (id, kind, size_bytes, original_name, created_ms, updated_ms) VALUES ('sha256:a', 'video', 1, 'a.mp4', 1, 1)`,
@@ -145,7 +152,9 @@ func TestJobsExportBatchKindKeepsEveryJob(t *testing.T) {
 
 	execAll(t, db, `DELETE FROM projects WHERE id = 'prj_a'`)
 
-	if err := db.QueryRowContext(ctx, `SELECT count(*) FROM jobs WHERE project_id IS NOT NULL`).Scan(&n); err != nil || n != 0 {
+	if err := db.QueryRowContext(ctx, `SELECT count(*) FROM jobs WHERE project_id IS NOT NULL`).
+		Scan(&n); err != nil ||
+		n != 0 {
 		t.Errorf("jobs of the deleted project = %d, %v; want 0 (the cascade)", n, err)
 	}
 
@@ -161,7 +170,9 @@ func TestJobsExportBatchKindFollowsTheRenamedTimelines(t *testing.T) {
 	db, rest := migratedBefore(t)
 	ctx := context.Background()
 
-	execAll(t, db,
+	execAll(
+		t,
+		db,
 		`ALTER TABLE projects RENAME TO timelines`,
 		`CREATE TABLE projects (id TEXT NOT NULL PRIMARY KEY)`,
 		`INSERT INTO timelines (id, name, schema_version, document, doc_sha256, width, height, fps_num, fps_den, created_ms, updated_ms, created_by)
@@ -175,11 +186,14 @@ func TestJobsExportBatchKindFollowsTheRenamedTimelines(t *testing.T) {
 
 	var parent string
 	if err := db.QueryRowContext(ctx, `SELECT "table" FROM pragma_foreign_key_list('jobs') WHERE "from" = 'project_id'`).
-		Scan(&parent); err != nil || parent != "timelines" {
+		Scan(&parent); err != nil ||
+		parent != "timelines" {
 		t.Fatalf("project_id references %q, %v; want timelines", parent, err)
 	}
 
-	execAll(t, db,
+	execAll(
+		t,
+		db,
 		`INSERT INTO jobs (id, kind, project_id, actor, input, created_ms, updated_ms) VALUES ('job_2', 'export_batch', 'prj_b', 'a', '{}', 2, 2)`,
 		`DELETE FROM timelines WHERE id = 'prj_b'`,
 	)
