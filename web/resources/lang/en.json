@@ -336,6 +336,30 @@
         "pick_color": "Pick {label}",
         "none": "none"
       },
+      "export": {
+        "open": "Export image",
+        "title": "Export image",
+        "hint": "Draws the current revision and saves a file in your workspace.",
+        "format": "Format",
+        "size": "Size",
+        "original": "Original ({w} x {h})",
+        "quality": "Quality",
+        "findings": "Problems found",
+        "no_findings": "No problems found. The image is ready to export.",
+        "error": "Error",
+        "warning": "Warning",
+        "go_to_layer": "Go to layer",
+        "blocked": {
+          "one": "{count} error stops the export. Fix it first.",
+          "other": "{count} errors stop the export. Fix them first."
+        },
+        "done": "Exported {w} x {h}, {bytes} bytes.",
+        "digest": "SHA-256 digest {hash}",
+        "download": "Download the file",
+        "close": "Close",
+        "run": "Export",
+        "exporting": "Exporting…"
+      },
       "toolbar": {
         "label": "Image tools"
       },
