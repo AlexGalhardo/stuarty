@@ -8,47 +8,47 @@
 
 ## 1. Service operations
 
-`service.Service` is the single application boundary (ADR-0008). Each operation maps to exactly one MCP tool, one CLI command and one HTTP endpoint. Details of arguments and results are in SDD-003. Phase: `P` Prototype, `A` ALPHA, `B` BETA.
+`service.Service` is the single application boundary (ADR-0008). Each operation maps to exactly one MCP tool, one CLI command and one HTTP endpoint. Details of arguments and results are in SDD-003.
 
-| Service operation | MCP tool | CLI command | HTTP (under `/api/v1`) | Scope | Phase |
-| --- | --- | --- | --- | --- | --- |
-| `ProjectList` | `project_list` | `project:list` | `GET /projects` | read | P |
-| `ProjectCreate` | `project_create` | `project:create` | `POST /projects` | edit | P |
-| `ProjectGet` | `project_get` | `project:show` | `GET /projects/{id}` | read | P |
-| `ProjectTrash`, `ProjectRestore` | `project_trash` | `project:trash`, `project:restore` | `POST /projects/{id}/trash`, `POST /projects/{id}/restore` | edit | A |
-| `Edit` | `edit` | `edit` | `POST /projects/{id}/edit` | edit (or media, per command) | P |
-| `CommandHelp` | `command_help` | `command:help` | `GET /commands`, `GET /commands/{name}` | read | P |
-| `HistoryList`, `Undo`, `Redo` | `history` | `history`, `undo`, `redo` | `GET /projects/{id}/history`, `POST /projects/{id}/undo`, `POST /projects/{id}/redo` | read, edit | P |
-| `MediaImport` | `media_import` | `media:import` | `POST /projects/{id}/media` | media | P |
-| `MediaInspect` | `media_inspect` | `media:inspect` | `GET /projects/{id}/media/{asset_id}` | read | P |
-| `MediaTrash`, `MediaRestore` | none (CLI and HTTP only) | `media:trash`, `media:restore` | `POST /projects/{id}/media/{asset_id}/trash`, `.../restore` | media | A |
-| `ViewFrame`, `ViewSheet` | `view` | `view` | `GET /projects/{id}/frame`, `GET /projects/{id}/sheet` | read | P |
-| `Lint` | `lint` | `lint` | `GET /projects/{id}/lint` | read | P |
-| `JobStart` | `job_start` | `export`, `transcribe` | `POST /projects/{id}/jobs` | render (export), media (transcribe) | P (kind `export`, formats `mp4`; `gif`, `wav` and `aac` in B), A (kind `transcribe`) |
-| `JobGet` | `job_get` | `job:show` | `GET /jobs/{job_id}` | read | P |
-| `JobCancel` | `job_cancel` | `job:cancel` | `POST /jobs/{job_id}/cancel` | render; media is enough for the caller's own `transcribe` or `ingest` job | A |
-| `TemplateList`, `TemplateSave`, `TemplateInstantiate`, `TemplateExport`, `TemplateImport` | `template` | `template:list`, `template:save`, `template:new`, `template:export`, `template:import` | `GET /templates`, `POST /templates`, `POST /templates/{id}/instantiate`, `GET /templates/{id}/file`, `POST /templates/import` | read, edit | A |
-| `Doctor` | none | `doctor` | `GET /system` | read | A |
-| event stream | none | `events` (prints the stream) | `GET /projects/{id}/events` | read | P |
-| `PlanWindow` | none | none | `GET /projects/{id}/plan` (SDD-004 §10) | read | P |
-| `MediaList` | `media_inspect` called without an asset | `media:list` | `GET /projects/{id}/media` (every asset of the project, including those still ingesting or failed, which are not in the document) | read | P |
-| `JobList` | `job_get` called with a project and no job | `job:list` | `GET /projects/{id}/jobs` | read | P |
-| `SnapPoints` | none | none | `GET /projects/{id}/snap-points` (SDD-012 §7.8) | read | A |
-| `AssetList` | none | none | `GET /assets` (the ready files of the workspace by content hash, `kind` image, video or audio; the picker of a brand logo) | read | A |
-| `FontList` | none | `fonts` | `GET /fonts` (families and weights available, and the imported font files with their hash) | read | A |
-| `OpenFile` | none | none (the job result gives the path to local callers; with a remote server the CLI downloads the file) | `GET /jobs/{job_id}/file` and the byte-serving routes listed below | read | P |
-| `AuditList` | none | `audit` | `GET /audit` | admin | A |
-| `TrashEmpty` | none | none | `POST /trash/empty` | admin, and only from a browser session (local mode) or an `admin` key (network mode); the local token is refused (SDD-007 §5.3) | A |
-| `KeyCreate`, `KeyList`, `KeyRevoke` | none | none | `POST /keys`, `GET /keys`, `DELETE /keys/{key_id}` | a logged-in browser session; a key cannot call them (network mode only) | A |
-| `UserList`, `UserCreate`, `UserUpdate` | none | none | `GET /users`, `POST /users`, `PATCH /users/{user_id}` | `admin`, and only from a logged-in browser session in network mode; a key cannot call them, whatever its scopes (in local mode the routes answer 404 `E_NOT_FOUND`). `UserUpdate` changes `role` and `disabled` in one statement and ends the user's sessions; the last enabled administrator cannot be demoted or disabled (`E_INVALID_STATE`); an unknown user is `E_NOT_FOUND`; a bad or used email, a bad role or a short password is `E_VALIDATION`. They are not methods of `service.Service`: they live in the auth side of network mode (`web/app/auth`) | B |
-| `ProjectBundleExport`, `ProjectBundleImport` | none | `bundle:export`, `bundle:import` | `POST /projects/{id}/bundle`, `POST /projects/import` | read and render; edit and media | B |
-| `FontImport` | none | `font:import` | `POST /fonts` | media | B |
-| `BrandKitGet`, `BrandKitSet` | none | `brand:show`, `brand:set` | `GET /brand-kit`, `PUT /brand-kit` | read, edit | B |
-| `ProjectOtioExport`, `ProjectOtioImport` | none | `otio:export`, `otio:import` | `GET /projects/{id}/otio`, `POST /projects/{id}/otio` | read; edit (the batch is applied through `Edit`, so each operation needs its own scope too) | B |
+| Service operation | MCP tool | CLI command | HTTP (under `/api/v1`) | Scope |
+| --- | --- | --- | --- | --- |
+| `ProjectList` | `project_list` | `project:list` | `GET /projects` | read |
+| `ProjectCreate` | `project_create` | `project:create` | `POST /projects` | edit |
+| `ProjectGet` | `project_get` | `project:show` | `GET /projects/{id}` | read |
+| `ProjectTrash`, `ProjectRestore` | `project_trash` | `project:trash`, `project:restore` | `POST /projects/{id}/trash`, `POST /projects/{id}/restore` | edit |
+| `Edit` | `edit` | `edit` | `POST /projects/{id}/edit` | edit (or media, per command) |
+| `CommandHelp` | `command_help` | `command:help` | `GET /commands`, `GET /commands/{name}` | read |
+| `HistoryList`, `Undo`, `Redo` | `history` | `history`, `undo`, `redo` | `GET /projects/{id}/history`, `POST /projects/{id}/undo`, `POST /projects/{id}/redo` | read, edit |
+| `MediaImport` | `media_import` | `media:import` | `POST /projects/{id}/media` | media |
+| `MediaInspect` | `media_inspect` | `media:inspect` | `GET /projects/{id}/media/{asset_id}` | read |
+| `MediaTrash`, `MediaRestore` | none (CLI and HTTP only) | `media:trash`, `media:restore` | `POST /projects/{id}/media/{asset_id}/trash`, `.../restore` | media |
+| `ViewFrame`, `ViewSheet` | `view` | `view` | `GET /projects/{id}/frame`, `GET /projects/{id}/sheet` | read |
+| `Lint` | `lint` | `lint` | `GET /projects/{id}/lint` | read |
+| `JobStart` | `job_start` | `export`, `transcribe` | `POST /projects/{id}/jobs` | render (export), media (transcribe) |
+| `JobGet` | `job_get` | `job:show` | `GET /jobs/{job_id}` | read |
+| `JobCancel` | `job_cancel` | `job:cancel` | `POST /jobs/{job_id}/cancel` | render; media is enough for the caller's own `transcribe` or `ingest` job |
+| `TemplateList`, `TemplateSave`, `TemplateInstantiate`, `TemplateExport`, `TemplateImport` | `template` | `template:list`, `template:save`, `template:new`, `template:export`, `template:import` | `GET /templates`, `POST /templates`, `POST /templates/{id}/instantiate`, `GET /templates/{id}/file`, `POST /templates/import` | read, edit |
+| `Doctor` | none | `doctor` | `GET /system` | read |
+| event stream | none | `events` (prints the stream) | `GET /projects/{id}/events` | read |
+| `PlanWindow` | none | none | `GET /projects/{id}/plan` (SDD-004 §10) | read |
+| `MediaList` | `media_inspect` called without an asset | `media:list` | `GET /projects/{id}/media` (every asset of the project, including those still ingesting or failed, which are not in the document) | read |
+| `JobList` | `job_get` called with a project and no job | `job:list` | `GET /projects/{id}/jobs` | read |
+| `SnapPoints` | none | none | `GET /projects/{id}/snap-points` (SDD-012 §7.8) | read |
+| `AssetList` | none | none | `GET /assets` (the ready files of the workspace by content hash, `kind` image, video or audio; the picker of a brand logo) | read |
+| `FontList` | none | `fonts` | `GET /fonts` (families and weights available, and the imported font files with their hash) | read |
+| `OpenFile` | none | none (the job result gives the path to local callers; with a remote server the CLI downloads the file) | `GET /jobs/{job_id}/file` and the byte-serving routes listed below | read |
+| `AuditList` | none | `audit` | `GET /audit` | admin |
+| `TrashEmpty` | none | none | `POST /trash/empty` | admin, and only from a browser session (local mode) or an `admin` key (network mode); the local token is refused (SDD-007 §5.3) |
+| `KeyCreate`, `KeyList`, `KeyRevoke` | none | none | `POST /keys`, `GET /keys`, `DELETE /keys/{key_id}` | a logged-in browser session; a key cannot call them (network mode only) |
+| `UserList`, `UserCreate`, `UserUpdate` | none | none | `GET /users`, `POST /users`, `PATCH /users/{user_id}` | `admin`, and only from a logged-in browser session in network mode; a key cannot call them, whatever its scopes (in local mode the routes answer 404 `E_NOT_FOUND`). `UserUpdate` changes `role` and `disabled` in one statement and ends the user's sessions; the last enabled administrator cannot be demoted or disabled (`E_INVALID_STATE`); an unknown user is `E_NOT_FOUND`; a bad or used email, a bad role or a short password is `E_VALIDATION`. They are not methods of `service.Service`: they live in the auth side of network mode (`web/app/auth`) |
+| `ProjectBundleExport`, `ProjectBundleImport` | none | `bundle:export`, `bundle:import` | `POST /projects/{id}/bundle`, `POST /projects/import` | read and render; edit and media |
+| `FontImport` | none | `font:import` | `POST /fonts` | media |
+| `BrandKitGet`, `BrandKitSet` | none | `brand:show`, `brand:set` | `GET /brand-kit`, `PUT /brand-kit` | read, edit |
+| `ProjectOtioExport`, `ProjectOtioImport` | none | `otio:export`, `otio:import` | `GET /projects/{id}/otio`, `POST /projects/{id}/otio` | read; edit (the batch is applied through `Edit`, so each operation needs its own scope too) |
 
-Routes that are not service operations: `POST /mcp` (the MCP server over Streamable HTTP, SDD-003 §4.3; `GET` and `DELETE` on the path are not routes and answer 405 `E_METHOD_NOT_ALLOWED`, because the server is stateless; every tool call behind it is a service operation with the scope of its tool), `GET /api/v1/handshake` (the server proves it knows the local token, SDD-007 §3.8), `GET /auth/launch` and `POST /api/v1/system/launch` (browser session from a one-time code, SDD-007 §3.4), `POST /auth/login` and `POST /auth/logout` (network mode: the browser session of a user, SDD-007 §4.1; in local mode they answer 404 `E_NOT_FOUND`), `GET /up` (vukem health probe), `GET /openapi.json` and `GET /api/docs` (the OpenAPI document and its viewer), `POST /api/v1/system/tools/install` and `GET /api/v1/system/tools` (phase A: the explicit install of a helper such as whisper.cpp from the editor, and its state with the progress of a running install; the same step as the CLI command `tools:install`; the install is allowed only to a browser session in local mode or an `admin` key in network mode, never to the local token and never on an agent surface, SDD-007 §6.8; the `GET` only reads and takes the `read` scope, so an agent can tell whether a helper is installed before it asks for a transcript), and the byte-serving routes that the editor uses, all `read`, all under the project so that access is checked against it, all with HTTP Range and long-lived caching because their content never changes: `GET /projects/{id}/media/{asset_id}/proxy`, `.../thumbnail`, `.../strip`, `.../peaks`, `.../lut` (the parsed table of a lookup table asset, SDD-004 §3.6), and `GET /projects/{id}/bitmaps/{key}` (rasterized text and shapes by content key). What each returns is in SDD-011 and SDD-004.
+Routes that are not service operations: `POST /mcp` (the MCP server over Streamable HTTP, SDD-003 §4.3; `GET` and `DELETE` on the path are not routes and answer 405 `E_METHOD_NOT_ALLOWED`, because the server is stateless; every tool call behind it is a service operation with the scope of its tool), `GET /api/v1/handshake` (the server proves it knows the local token, SDD-007 §3.8), `GET /auth/launch` and `POST /api/v1/system/launch` (browser session from a one-time code, SDD-007 §3.4), `POST /auth/login` and `POST /auth/logout` (network mode: the browser session of a user, SDD-007 §4.1; in local mode they answer 404 `E_NOT_FOUND`), `GET /up` (vukem health probe), `GET /openapi.json` and `GET /api/docs` (the OpenAPI document and its viewer), `POST /api/v1/system/tools/install` and `GET /api/v1/system/tools` (the explicit install of a helper such as whisper.cpp from the editor, and its state with the progress of a running install; the same step as the CLI command `tools:install`; the install is allowed only to a browser session in local mode or an `admin` key in network mode, never to the local token and never on an agent surface, SDD-007 §6.8; the `GET` only reads and takes the `read` scope, so an agent can tell whether a helper is installed before it asks for a transcript), and the byte-serving routes that the editor uses, all `read`, all under the project so that access is checked against it, all with HTTP Range and long-lived caching because their content never changes: `GET /projects/{id}/media/{asset_id}/proxy`, `.../thumbnail`, `.../strip`, `.../peaks`, `.../lut` (the parsed table of a lookup table asset, SDD-004 §3.6), and `GET /projects/{id}/bitmaps/{key}` (rasterized text and shapes by content key). What each returns is in SDD-011 and SDD-004.
 
-A build lists only the tools whose operations exist in its phase: 12 in the Prototype (`project_trash`, `job_cancel` and `template` arrive in ALPHA). The complete MCP catalogue is 16 tools: `project_list`, `project_create`, `project_get`, `project_trash`, `edit`, `command_help`, `history`, `media_import`, `media_inspect`, `view`, `lint`, `job_start`, `job_get`, `job_cancel`, `template`, `font_import`.
+The MCP catalogue is 16 tools: `project_list`, `project_create`, `project_get`, `project_trash`, `edit`, `command_help`, `history`, `media_import`, `media_inspect`, `view`, `lint`, `job_start`, `job_get`, `job_cancel`, `template`, `font_import`.
 
 Other CLI commands that are not service operations: `serve` (start the owner process), `mcp` (stdio MCP server), `open` (open the UI of a running server with a fresh launch code), `token:rotate`, `user:create` and `user:passwd` (network mode; they need the workspace lock, so no server may be running), `tools:install` (download a helper such as whisper.cpp after stating its size), `agent:docs` (print or write the generated material for agents, SDD-003 §8), plus vukem's built-in commands.
 
@@ -108,8 +108,8 @@ Kinds: `ingest`, `transcribe`, `export`, `frame`. States: `queued`, `running`, `
 | `api_keys` | network mode: maps a `key_` identifier to its vukem token, owner and optional project | SDD-005, SDD-007 |
 | `queue_jobs`, `queue_failed_jobs` | vukem's queue | vukem |
 | `users` | network mode: email, argon2id password hash, role (`admin` or `member`), session version | SDD-007 |
-| `brand_kits` | the brand kit: logo, named colours and fonts, one row per owner (BETA) | SDD-005 §5.11 |
-| `font_owners` | which user imported or brought each stored font file, network mode (BETA) | SDD-005 §5.11, SDD-007 §7.7 |
+| `brand_kits` | the brand kit: logo, named colours and fonts, one row per owner  | SDD-005 §5.11 |
+| `font_owners` | which user imported or brought each stored font file, network mode  | SDD-005 §5.11, SDD-007 §7.7 |
 | vukem's own tables for sessions (`sessions`) and tokens (`access_tokens`) | network mode | vukem |
 
 A document with a `template` member is a template draft, or an instance when `template.instance` is true (SDD-001 section 3.10). `TemplateInstantiate` writes the flag; lint reads it (`L_SLOT_UNFILLED`, SDD-003).
@@ -163,7 +163,7 @@ CLI exit codes: `0` success; `2` for every code marked retryable; `1` for the re
 ├── exports/                 exported files: exports/<project id>/<job id>.mp4 (`.gif`, `.wav` or `.m4a` for the other formats of SDD-004 §8.1)
 ├── frames/                  cache of rendered frames: frames/<project id>/<revision>/<frame>-<width>.jpg
 ├── bitmaps/                 cache of rasterized text and shapes, by content hash
-├── fonts/                   user fonts, by hash (BETA)
+├── fonts/                   user fonts, by hash 
 ├── tools/                   installed helpers (whisper.cpp, models); tools/.download/ holds downloads in progress
 ├── tmp/                     one directory per running child process: tmp/<job id>/ (SDD-007 §6.4)
 ├── backups/                 copies of db.sqlite made before a migration (SDD-005 §7)

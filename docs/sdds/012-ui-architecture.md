@@ -1,6 +1,6 @@
 # SDD-012: Editor UI architecture
 
-- Amended (2026-11-18) for Stuarty: there is one UI, the web UI, and the desktop is the Wails shell; the Gio window is removed (ADR-0041, which supersedes ADR-0030; section 21). This document specifies the video editor; the dashboard, the image editor and the other sections of PRD-004 are specified by the epics that build them and follow the same thin-client rules. The phase names of this document no longer schedule any work (ADR-0045).
+- Amended (2026-11-18) for Stuarty: there is one UI, the web UI, and the desktop is the Wails shell; the Gio window is removed (ADR-0041, which supersedes ADR-0030; section 21). This document specifies the video editor; the dashboard, the image editor and the other sections of PRD-004 are specified by the epics that build them and follow the same thin-client rules.
 - Status: Accepted (2026-11-14). Drafted by a delegated engineer, reviewed and corrected by the architect; aligned with SDD-006 (stream, reconciliation, conflicts) and SDD-007 (session, content security policy). Amended the same day to agree with `docs/design-system.md` (tokens, focus, motion, components, desktop window; Appendix A items 19 to 23).
 - Depends on: SDD-000 (names), SDD-001 (document), SDD-002 Parts A and B (commands, batch, errors), SDD-004 §4.1, §9, §10, §11 (safe area, frames, preview executor, tolerance), SDD-003 (service result shapes) and SDD-006 (event payloads): every shape this document takes from them is marked "mirrors SDD-003" or "mirrors SDD-006" and the generated types win on any difference. ADR-0003, ADR-0007, ADR-0013, ADR-0014, ADR-0017, ADR-0019, ADR-0023; author decisions D-013, D-023, D-024
 - Implements: RF-060, RF-061, RF-070, RF-071, RF-072, RF-073, RF-074 (design only), RF-075, RF-118, RF-119; NFR-001, NFR-002, NFR-003, NFR-004, NFR-008, NFR-011
@@ -17,7 +17,7 @@
 7. [Timeline component](#7-timeline-component)
 8. [Interactions and the commands they send](#8-interactions-and-the-commands-they-send)
 9. [Command coverage](#9-command-coverage)
-10. [Prototype scope](#10-prototype-scope)
+10. [The first editor](#10-the-first-editor)
 11. [Preview component](#11-preview-component)
 12. [Inspector](#12-inspector)
 13. [Media library](#13-media-library)
@@ -34,7 +34,7 @@
 - [Appendix A: Decisions of this SDD](#appendix-a-decisions-of-this-sdd)
 - [Appendix B: Contract needs beyond SDD-000](#appendix-b-contract-needs-beyond-sdd-000)
 
-Conventions of this document. "The core" is the Go process behind `/api/v1`. "The read model" is the project document at a revision, held in the browser. "A request" is what a gesture asks for; "a result" is what the timeline becomes. Phase letters follow SDD-000: `P` Prototype, `A` ALPHA, `B` BETA. A paragraph headed **Decision of this SDD** fills a gap or resolves an ambiguity in another document and is listed again in Appendix A.
+Conventions of this document. "The core" is the Go process behind `/api/v1`. "The read model" is the project document at a revision, held in the browser. "A request" is what a gesture asks for; "a result" is what the timeline becomes. A paragraph headed **Decision of this SDD** fills a gap or resolves an ambiguity in another document and is listed again in Appendix A.
 
 ## 1. Principles as testable rules
 
@@ -93,14 +93,14 @@ The script has its own unit tests (a fixture per rule that must fail and one tha
 
 ### 2.1 Which pages are Inertia
 
-| Route | Page component | Purpose | Mode | Phase |
-| --- | --- | --- | --- | --- |
-| `GET /` | redirect to `/projects` | | both | P |
-| `GET /projects` | `pages/Projects/Index.tsx` | list projects (`ProjectList`), create (`ProjectCreate`: name and size preset, RF-002), open, in ALPHA trash and restore; the template entries (below the list): the templates with "New from template" (`TemplateList`, `TemplateInstantiate`; the project name, then the editor opens on the new project), "Export file" (a download of `GET /templates/{id}/file`) and the import of a template file by its absolute path on the machine of the service (`TemplateImport`; the operation takes a path, never bytes, SDD-007 §7.6). The page calls the HTTP API with the browser session, like the settings page | both | P |
-| `GET /settings` | `pages/Settings/Index.tsx` | language, theme, default time unit, version and workspace path (`Doctor`, `GET /system`) | both | A |
-| `GET /settings/keys` | `pages/Settings/Keys.tsx` | create and revoke API keys with scopes (SDD-007) | network only; 404 in local mode | A |
-| `GET /login` | `pages/Auth/Login.tsx` | login (vukem sessions); the form posts JSON to `POST /auth/login` and the logout button to `POST /auth/logout` (SDD-007 §4.1 item 5 names those routes, so there is no `POST /logout` page route); the page gets the prop `next`, already a safe path of this server (default `/projects`); the only page that needs no session; 404 in local mode | network only | A |
-| any error | `pages/Error.tsx` | error page of Inertia visits | both | P |
+| Route | Page component | Purpose | Mode |
+| --- | --- | --- | --- |
+| `GET /` | redirect to `/projects` | | both |
+| `GET /projects` | `pages/Projects/Index.tsx` | list projects (`ProjectList`), create (`ProjectCreate`: name and size preset, RF-002), open, trash and restore; the template entries (below the list): the templates with "New from template" (`TemplateList`, `TemplateInstantiate`; the project name, then the editor opens on the new project), "Export file" (a download of `GET /templates/{id}/file`) and the import of a template file by its absolute path on the machine of the service (`TemplateImport`; the operation takes a path, never bytes, SDD-007 §7.6). The page calls the HTTP API with the browser session, like the settings page | both |
+| `GET /settings` | `pages/Settings/Index.tsx` | language, theme, default time unit, version and workspace path (`Doctor`, `GET /system`) | both |
+| `GET /settings/keys` | `pages/Settings/Keys.tsx` | create and revoke API keys with scopes (SDD-007) | network only; 404 in local mode |
+| `GET /login` | `pages/Auth/Login.tsx` | login (vukem sessions); the form posts JSON to `POST /auth/login` and the logout button to `POST /auth/logout` (SDD-007 §4.1 item 5 names those routes, so there is no `POST /logout` page route); the page gets the prop `next`, already a safe path of this server (default `/projects`); the only page that needs no session; 404 in local mode | network only |
+| any error | `pages/Error.tsx` | error page of Inertia visits | both |
 
 In network mode a browser that opens any other page with no session gets `303` to `/login?next=<path and query>` (a call of the API still gets 401); this is not counted as a failed authentication.
 
@@ -120,7 +120,7 @@ Why a hand-written route and not an Inertia page that mounts the editor:
 Handler behaviour:
 
 1. Validate `project_id` against `prj_[0-9a-hjkmnp-tv-z]{10}`. Invalid: 404 error page.
-2. Call `ProjectGet` through the service for existence and trash state. Unknown: 404. Trashed: the editor opens read-only with a banner (ALPHA); in the Prototype a trashed project is 404.
+2. Call `ProjectGet` through the service for existence and trash state. Unknown: 404. Trashed: the editor opens read-only with a banner.
 3. Render the view with these values, written into the page as `<script type="application/json" id="vv-bootstrap" nonce="{{cspNonce}}">`:
 
 ```ts
@@ -132,16 +132,15 @@ interface EditorBootstrap {
   locales: string[];              // app.I18n.Locales()
   messages: Record<string, string | Record<string, string>>; // app.I18n.Messages(locale, "ui.editor.", "ui.common.", "ui.theme.", "ui.nav.")
   user: { id: string; name: string } | null; // network mode only
-  phase: "prototype" | "alpha" | "beta";     // the build's feature gate, §10
   version: string;                // binary version, shown in settings and in bug reports
 }
 ```
 
 4. `Bundle.Messages(locale, prefixes...)` (`vukem/i18n/i18n.go` line 360) is the same function `inertia.I18n` uses, so the catalogs in `resources/lang/` serve both kinds of page.
 
-**Deep links and reloads.** The URL is `/editor/prj_7k2m9x4q1b` with optional query `?t=<time string>` (initial playhead, for example `?t=12.5s`) and `?item=itm_...` (initial selection and scroll into view), both ALPHA. The browser URL is replaced (history `replaceState`) when the user selects an item or the playhead rests for 1 s, so a copied URL reopens the same place. Because all state of the project lives in the core, a reload, a pasted link or a new tab re-runs the same boot sequence (§5.6) and arrives at the same place. A link from the project list is an ordinary `<a href>` (full page load, because the editor is another document), and the "back to projects" control in the top bar is an ordinary `<a href="/projects">`.
+**Deep links and reloads.** The URL is `/editor/prj_7k2m9x4q1b` with optional query `?t=<time string>` (initial playhead, for example `?t=12.5s`) and `?item=itm_...` (initial selection and scroll into view). The browser URL is replaced (history `replaceState`) when the user selects an item or the playhead rests for 1 s, so a copied URL reopens the same place. Because all state of the project lives in the core, a reload, a pasted link or a new tab re-runs the same boot sequence (§5.6) and arrives at the same place. A link from the project list is an ordinary `<a href>` (full page load, because the editor is another document), and the "back to projects" control in the top bar is an ordinary `<a href="/projects">`.
 
-**Content Security Policy.** The default policy (`default-src 'self'`, `img-src 'self' data:`, `connect-src 'self'`) is kept, with one addition: `worker-src 'self'` (SDD-007 §8.5.5). Consequences the editor must respect: bitmaps and frames are fetched with `fetch` and turned into `ImageBitmap` (`createImageBitmap`), not shown through `blob:` URLs; the paused frame is an `<img src>` to a same-origin URL; `<video src>` and `<audio src>` are same-origin; PixiJS is imported as `pixi.js/unsafe-eval` before the renderer is created, so no `eval` or `new Function` is needed (the name refers to the library's shader-sync code path, which is CSP-safe in that build); the module workers of the preview are created from same-origin scripts (`worker-src 'self'`), with no `blob:` or inline workers. The Playwright test `csp-clean` fails on any `securitypolicyviolation` event during the Prototype scenario.
+**Content Security Policy.** The default policy (`default-src 'self'`, `img-src 'self' data:`, `connect-src 'self'`) is kept, with one addition: `worker-src 'self'` (SDD-007 §8.5.5). Consequences the editor must respect: bitmaps and frames are fetched with `fetch` and turned into `ImageBitmap` (`createImageBitmap`), not shown through `blob:` URLs; the paused frame is an `<img src>` to a same-origin URL; `<video src>` and `<audio src>` are same-origin; PixiJS is imported as `pixi.js/unsafe-eval` before the renderer is created, so no `eval` or `new Function` is needed (the name refers to the library's shader-sync code path, which is CSP-safe in that build); the module workers of the preview are created from same-origin scripts (`worker-src 'self'`), with no `blob:` or inline workers. The Playwright test `csp-clean` fails on any `securitypolicyviolation` event during the first scenario.
 
 ### 2.3 Entry points
 
@@ -175,7 +174,7 @@ resources/js/
 ├── generated/                 COMMITTED, produced by CI (ADR-0014); never edited by hand
 │   ├── timeline.ts            types of the document (from core/schema/timeline.v1.schema.json)
 │   ├── commands.ts            CommandName union, CommandArgsMap, Operation (from core/schema/commands)
-│   ├── commands.json          snapshot of the registry: name, summary, args_schema, example, errors, scope, phase, internal
+│   ├── commands.json          snapshot of the registry: name, summary, args_schema, example, errors, scope, internal
 │   ├── events.ts              ProjectEvent union (from the event schema)
 │   ├── api.ts                 paths and bodies of /api/v1 (from the OpenAPI document)
 │   ├── errors.ts              ErrorCode union and the table of codes with retryable flag
@@ -254,7 +253,7 @@ export type ErrorCode = "E_VALIDATION" | "E_OVERLAP" | /* every code of SDD-000 
 export const ERROR_TABLE: Record<ErrorCode, { retryable: boolean; http: number }>;
 ```
 
-`task codegen` regenerates them (`go run ./internal/tools/contractgen`, then `bun run codegen:ts`); CI fails if the working tree changes afterwards (ADR-0014 item 2). `generated/commands.ts` also exports `COMMANDS`, a table of summary, scope, phase, internal flag and error codes per command, and `generated/limits.ts` exports `LIMITS`.
+`task codegen` regenerates them (`go run ./internal/tools/contractgen`, then `bun run codegen:ts`); CI fails if the working tree changes afterwards (ADR-0014 item 2). `generated/commands.ts` also exports `COMMANDS`, a table of summary, scope, internal flag and error codes per command, and `generated/limits.ts` exports `LIMITS`.
 
 **Open: the types of the HTTP endpoints are written by hand.** This section asks for `generated/api.ts` from the OpenAPI document with `openapi-typescript`. The pinned 7.13.0 uses the JavaScript API of TypeScript 5 (`ts.factory`), and the repository builds with TypeScript 7.0.2, which does not have it: the import fails at load. A second TypeScript version only for this script was refused (no new dependency), so the response types of the endpoints are interfaces in `editor/api/types.ts`, copied from `site/generated/openapi.json`. The step comes back when `openapi-typescript` supports TypeScript 7 or the project changes the generator.
 
@@ -262,31 +261,31 @@ export const ERROR_TABLE: Record<ErrorCode, { retryable: boolean; http: number }
 
 One typed function per endpoint of SDD-000 §1 that the UI uses, in `editor/api/client.ts`. Rows marked "gap" are not in SDD-000 and are specified in Appendix B.
 
-| Function | Request | Result | Phase |
-| --- | --- | --- | --- |
-| `getProject(id)` | `GET /projects/{id}?detail=document` | `{ project_id, name, revision, state, counts, document }` (SDD-003 §2.3: the head always, plus `document` with `detail=document`) | P |
-| `listProjects()`, `createProject(body)` | `GET /projects`, `POST /projects` | used by Inertia controllers server side, not by the editor | P |
-| `edit(id, req)` | `POST /projects/{id}/edit` | `EditResponse` (§4.3) | P |
-| `getCommands()`, `getCommand(name)` | `GET /commands`, `GET /commands/{name}` | registry entries (palette, §9.2) | A |
-| `getHistory(id, page)` | `GET /projects/{id}/history` | steps (§15) | A |
-| `undo(id)`, `redo(id)` | `POST /projects/{id}/undo`, `.../redo` | `EditResponse` plus `skipped` | P |
-| `importMedia(id, paths)` | `POST /projects/{id}/media` | `{ assets[] }`, one entry per path in order, each with `asset_id`, `job_id` and `name`, or an `error` (SDD-003 §2.6) | P |
-| `listMedia(id)` | `GET /projects/{id}/media` (gap) | `MediaEntry[]` | P |
-| `inspectMedia(id, asset)` | `GET /projects/{id}/media/{asset_id}` | text and facts | A |
-| `trashMedia`, `restoreMedia` | `POST .../trash`, `.../restore` | | A |
-| `getPlan(id, from, until, rev, width?)` | `GET /projects/{id}/plan?from=&until=&rev=&width=` (SDD-004 §10; `width` is the pixel width the preview draws at, so bitmaps come at that scale) | `PlanWindow` | P |
-| `frameUrl(id, at, width, rev)` | `GET /projects/{id}/frame?at=<time string>&width=<px>&rev=<n>` (mirrors SDD-003) | JPEG, used as `<img src>` | P |
-| `getLint(id)` | `GET /projects/{id}/lint` | findings | P |
-| `getSnapPoints(id, rev, words)` | `GET /projects/{id}/snap-points?rev=&words=` (gap) | `SnapPoints` (§7.8) | A |
-| `startJob(id, body)` | `POST /projects/{id}/jobs` | `{ job_id }` | P |
-| `getJob(job)` | `GET /jobs/{job_id}` | `Job` | P |
-| `listJobs(id)` | `GET /projects/{id}/jobs?state=queued,running` (gap) | `Job[]`, for rehydration after reload | P |
-| `cancelJob(job)` | `POST /jobs/{job_id}/cancel` | | A |
-| `getFonts()` | `GET /fonts` (gap) | `{ family, weights[], bundled }[]` | A |
-| `getSystem()` | `GET /system` | version, workspace, encoder | A |
-| `openEvents(id)` | `GET /projects/{id}/events` | `EventSource`, §5.5 | P |
-| `getTools()` | `GET /system/tools` | installed tools and, for a running install, `done_bytes` and `total_bytes`; polled every second while an install runs (§12.5) | A |
-| `installTool(body)` | `POST /system/tools/install` with `{ name, model? }` | 202; allowed only to a browser session in local mode or an `admin` key in network mode (SDD-007 §6.8 item 1) | A |
+| Function | Request | Result |
+| --- | --- | --- |
+| `getProject(id)` | `GET /projects/{id}?detail=document` | `{ project_id, name, revision, state, counts, document }` (SDD-003 §2.3: the head always, plus `document` with `detail=document`) |
+| `listProjects()`, `createProject(body)` | `GET /projects`, `POST /projects` | used by Inertia controllers server side, not by the editor |
+| `edit(id, req)` | `POST /projects/{id}/edit` | `EditResponse` (§4.3) |
+| `getCommands()`, `getCommand(name)` | `GET /commands`, `GET /commands/{name}` | registry entries (palette, §9.2) |
+| `getHistory(id, page)` | `GET /projects/{id}/history` | steps (§15) |
+| `undo(id)`, `redo(id)` | `POST /projects/{id}/undo`, `.../redo` | `EditResponse` plus `skipped` |
+| `importMedia(id, paths)` | `POST /projects/{id}/media` | `{ assets[] }`, one entry per path in order, each with `asset_id`, `job_id` and `name`, or an `error` (SDD-003 §2.6) |
+| `listMedia(id)` | `GET /projects/{id}/media` (gap) | `MediaEntry[]` |
+| `inspectMedia(id, asset)` | `GET /projects/{id}/media/{asset_id}` | text and facts |
+| `trashMedia`, `restoreMedia` | `POST .../trash`, `.../restore` | |
+| `getPlan(id, from, until, rev, width?)` | `GET /projects/{id}/plan?from=&until=&rev=&width=` (SDD-004 §10; `width` is the pixel width the preview draws at, so bitmaps come at that scale) | `PlanWindow` |
+| `frameUrl(id, at, width, rev)` | `GET /projects/{id}/frame?at=<time string>&width=<px>&rev=<n>` (mirrors SDD-003) | JPEG, used as `<img src>` |
+| `getLint(id)` | `GET /projects/{id}/lint` | findings |
+| `getSnapPoints(id, rev, words)` | `GET /projects/{id}/snap-points?rev=&words=` (gap) | `SnapPoints` (§7.8) |
+| `startJob(id, body)` | `POST /projects/{id}/jobs` | `{ job_id }` |
+| `getJob(job)` | `GET /jobs/{job_id}` | `Job` |
+| `listJobs(id)` | `GET /projects/{id}/jobs?state=queued,running` (gap) | `Job[]`, for rehydration after reload |
+| `cancelJob(job)` | `POST /jobs/{job_id}/cancel` | |
+| `getFonts()` | `GET /fonts` (gap) | `{ family, weights[], bundled }[]` |
+| `getSystem()` | `GET /system` | version, workspace, encoder |
+| `openEvents(id)` | `GET /projects/{id}/events` | `EventSource`, §5.5 |
+| `getTools()` | `GET /system/tools` | installed tools and, for a running install, `done_bytes` and `total_bytes`; polled every second while an install runs (§12.5) |
+| `installTool(body)` | `POST /system/tools/install` with `{ name, model? }` | 202; allowed only to a browser session in local mode or an `admin` key in network mode (SDD-007 §6.8 item 1) |
 
 Binary URL builders (no function call, only strings, in `api/urls.ts`): `proxyUrl(project, asset)` = `/api/v1/projects/{id}/media/{asset_id}/proxy`, `thumbnailUrl(project, asset, width)` (`width` 160, 320 or 640), `stripUrl` and `peaksUrl` on the same prefix (`/thumbnail`, `/strip`, `/peaks`), `bitmapUrl(project, key)` = `/api/v1/projects/{id}/bitmaps/{key}`, `exportFileUrl(job)` = `/api/v1/jobs/{job_id}/file` (SDD-000 §1). All are served with HTTP Range and content-hash caching (ADR-0017 item 8).
 
@@ -449,7 +448,7 @@ Safety net: in dev and test builds `sync.ts` fetches `getProject` after every ap
 
 ### 5.5 The event stream
 
-One `EventSource` per open project, in `editor/api/events.ts`, opened as `new EventSource("/api/v1/projects/" + id + "/events?since=" + revision)` after the document was loaded (same origin, session cookie, no credential in the URL; SDD-006 §2 and §6.1). From ALPHA one tab per project may own the stream and relay to the others (Web Locks and `BroadcastChannel`, SDD-006 §4.6); the relay is optional, and where `navigator.locks` or `BroadcastChannel` is missing each tab keeps its own stream (the fallback, and the whole behaviour in the Prototype). The module owns the connection and reports to `sync.ts`:
+One `EventSource` per open project, in `editor/api/events.ts`, opened as `new EventSource("/api/v1/projects/" + id + "/events?since=" + revision)` after the document was loaded (same origin, session cookie, no credential in the URL; SDD-006 §2 and §6.1). One tab per project may own the stream and relay to the others (Web Locks and `BroadcastChannel`, SDD-006 §4.6); the relay is optional, and where `navigator.locks` or `BroadcastChannel` is missing each tab keeps its own stream (the fallback). The module owns the connection and reports to `sync.ts`:
 
 ```ts
 export type ConnectionState = "connecting" | "live" | "reconnecting" | "offline";
@@ -507,10 +506,10 @@ The response to an edit and the event of the same revision both reach the UI (AD
 
 1. The read model is updated as above, so the timeline and the preview change at once (live view).
 2. `activityStore` records `{ actor, revision, at, summary }` and sets `active[actor] = now`. The summary is built from the diff kinds and counts, localized: for example "claude-code changed 3 items and added 1 track".
-3. The **activity indicator** in the top bar (§6.2) shows a dot and the actor's name while any `active[actor]` is younger than 3 s: "claude-code is editing". After 3 s it settles to "Last edit by claude-code, 12 s ago", updated every 10 s, and clears after 5 min. Clicking opens a popover with the 20 latest entries (actor, relative time, summary) in the History tab (§15). Prototype has the indicator and the popover. **Several actors at once (D-030).** The indicator stays one badge: it names the actor of the latest remote batch and counts the other actors whose `active[actor]` is also younger than 3 s ("claude-code and 1 other are editing"; plural through `params.count`). The popover then starts with one row per active actor, each with its last action (the summary of its latest entry) and relative time, followed by the latest entries.
-4. Items named in the diff get a 2 px highlight outline in `--agent` for 1.5 s (a CSS class removed by a timer; in BETA the outline eases in over 200 ms with `.ed-highlight`, §17 item 5, and in Prototype and ALPHA it is static, D-013). The colour is the agent attribution colour, not `--ed-selection`, so a remote edit is not mistaken for a selection (`docs/design-system.md` §2.4). With `prefers-reduced-motion` the outline appears at once, with no ease-in.
+3. The **activity indicator** in the top bar (§6.2) shows a dot and the actor's name while any `active[actor]` is younger than 3 s: "claude-code is editing". After 3 s it settles to "Last edit by claude-code, 12 s ago", updated every 10 s, and clears after 5 min. Clicking opens a popover with the 20 latest entries (actor, relative time, summary) in the History tab (§15). **Several actors at once (D-030).** The indicator stays one badge: it names the actor of the latest remote batch and counts the other actors whose `active[actor]` is also younger than 3 s ("claude-code and 1 other are editing"; plural through `params.count`). The popover then starts with one row per active actor, each with its last action (the summary of its latest entry) and relative time, followed by the latest entries.
+4. Items named in the diff get a 2 px highlight outline in `--agent` for 1.5 s (a CSS class removed by a timer; the outline eases in over 200 ms with `.ed-highlight`, §17 item 5). The colour is the agent attribution colour, not `--ed-selection`, so a remote edit is not mistaken for a selection (`docs/design-system.md` §2.4). With `prefers-reduced-motion` the outline appears at once, with no ease-in.
 5. A live-region announcement "claude-code changed 3 items" is made at most once every 2 s (§18).
-6. An actor string is shown as its label: `local:claude-code` becomes `claude-code`, `key:key_ab12cd34ef` becomes `key ab12`, `user:12` shows the name of that user in network mode (BETA) and stays `user:12` when the name is not known. Before the first render the editor of a network workspace asks `GET /users` once (an administrator session only, SDD-007 section 4.1, waiting at most 2 s, any failure ignored) and keeps the `email` of each user by `user_id`; the own name comes with the bootstrap (`user.name`) and wins. A member session is refused, so it sees `user:<id>` for the other users: there is no endpoint that names a collaborator to a member, and one would be a decision for SDD-007. The activity indicator, the history chips and the notices all read the label through `actorLabel`.
+6. An actor string is shown as its label: `local:claude-code` becomes `claude-code`, `key:key_ab12cd34ef` becomes `key ab12`, `user:12` shows the name of that user in network mode  and stays `user:12` when the name is not known. Before the first render the editor of a network workspace asks `GET /users` once (an administrator session only, SDD-007 section 4.1, waiting at most 2 s, any failure ignored) and keeps the `email` of each user by `user_id`; the own name comes with the bootstrap (`user.name`) and wins. A member session is refused, so it sees `user:<id>` for the other users: there is no endpoint that names a collaborator to a member, and one would be a decision for SDD-007. The activity indicator, the history chips and the notices all read the label through `actorLabel`.
 7. If a remote edit removes or changes an item a gesture is currently dragging, the gesture is cancelled and a toast says who changed it.
 8. Two tabs of the same browser share the actor `local:ui`; a batch from the other tab is treated as "you" (no indicator) and shares undo history. This is documented, not solved.
 
@@ -554,24 +553,24 @@ flowchart LR
   PV --- TL
 ```
 
-The timeline toolbar is the one place of the zoom controls (`-`, `+`, `Fit`; the slider is ALPHA). In the Prototype it holds Split, Trim start, Trim end, Add caption, and the zoom buttons; Delete, Snap and the slider are ALPHA. The 9:16 sizes below assume this layout.
+The timeline toolbar is the one place of the zoom controls (`-`, `+`, `Fit`, and the slider). The 9:16 sizes below assume this layout.
 
 CSS grid of the shell: rows `48px 1fr var(--timeline-h)`, columns `var(--library-w) 1fr var(--inspector-w)`; the timeline spans all three columns; the top bar spans all columns. Splitters are focusable separators (`role="separator"`, `aria-orientation`, arrow keys resize by 16 px) implemented with Pointer Events in `ui/Splitter.tsx`. Sizes persist through `prefs.ts`.
 
 ### 6.2 Top bar
 
-| Control | Behaviour | Phase |
-| --- | --- | --- |
-| Back to projects | `<a href="/projects">` | P |
-| Project name | text; inline edit sends `project.rename` on Enter or blur | name shown P, edit A |
-| Revision and sync state | "rev 42", connection state (`live`, `reconnecting`, `offline`, `resyncing`) as text and icon; tones `live` muted, `reconnecting` `--warning`, `offline` `--destructive`, `resyncing` `--info` (`docs/design-system.md` §4.3.3) | P |
-| Undo, Redo | `Undo` and `Redo` service operations, act for the current actor (§15) | P |
-| Activity indicator | §5.8 | P |
-| Command palette button | §9.2 | A |
-| Theme toggle | the existing `ThemeToggle` | P |
-| Language | `LocaleSelect` | A |
-| Jobs chip | running ingest or export count with progress, opens the export dialog | P |
-| Export | opens the export dialog (§14) | P |
+| Control | Behaviour |
+| --- | --- |
+| Back to projects | `<a href="/projects">` |
+| Project name | text; inline edit sends `project.rename` on Enter or blur |
+| Revision and sync state | "rev 42", connection state (`live`, `reconnecting`, `offline`, `resyncing`) as text and icon; tones `live` muted, `reconnecting` `--warning`, `offline` `--destructive`, `resyncing` `--info` (`docs/design-system.md` §4.3.3) |
+| Undo, Redo | `Undo` and `Redo` service operations, act for the current actor (§15) |
+| Activity indicator | §5.8 |
+| Command palette button | §9.2 |
+| Theme toggle | the existing `ThemeToggle` |
+| Language | `LocaleSelect` |
+| Jobs chip | running ingest or export count with progress, opens the export dialog |
+| Export | opens the export dialog (§14) |
 
 ### 6.3 Responsive behaviour
 
@@ -616,7 +615,7 @@ The library region keeps its width (§6.3) and gets a vertical tab rail of 40 px
 | Transitions | the transition kinds served by the core, grouped as the core groups them | `item.set_transition`, `item.crossfade` | exists (few kinds; more with the card NEW-16) |
 | Filters | the filter names served by the core, with an amount slider | `clip.set_filter` | exists |
 | Templates | the slots of the project and the template info | `slot.fill`, `slot.mark`, `template.set_info` | exists |
-| History | the history panel of §15 | `undo`, `redo` and the history endpoints | exists (ALPHA) |
+| History | the history panel of §15 | `undo`, `redo` and the history endpoints | exists |
 
 A card in Effects, Transitions or Filters applies to the selection with one command; with nothing selected it is disabled, with the reason in `aria-describedby`. A thumbnail of an effect is drawn by the same `ViewFrame` request as the player and is optional; without it the card shows the name. `Alt+1` still toggles the whole region (§18.2).
 
@@ -641,7 +640,7 @@ The project panel, the track panel and the template sections have no tab strip. 
 
 #### Timeline toolbar and track headers
 
-The toolbar of §6.1 (40 px) holds, left to right: the tools "Select" and "Blade" (`surface.tool`), Undo and Redo, Split, Trim start, Trim end, Delete, Add caption, Freeze frame, Snap, the Magnet button (it acts on the track of `magnetTrackId`: the selected track, else the track of the selected or focused item, else the first visual track), the audio-video link when it exists, and at the right the zoom controls with the slider (the slider is ALPHA, §6.1). Icons are those of `docs/design-system.md` §5.1. A text button collapses to its icon when the toolbar is narrow (design system §4.3.1). The track header (176 px) keeps name, hide or mute, drag handle and menu.
+The toolbar of §6.1 (40 px) holds, left to right: the tools "Select" and "Blade" (`surface.tool`), Undo and Redo, Split, Trim start, Trim end, Delete, Add caption, Freeze frame, Snap, the Magnet button (it acts on the track of `magnetTrackId`: the selected track, else the track of the selected or focused item, else the first visual track), the audio-video link when it exists, and at the right the zoom controls with the slider (§6.1). Icons are those of `docs/design-system.md` §5.1. A text button collapses to its icon when the toolbar is narrow (design system §4.3.1). The track header (176 px) keeps name, hide or mute, drag handle and menu.
 
 #### Menu
 
@@ -794,17 +793,17 @@ A `<canvas>` redrawn on scroll, zoom and resize inside `requestAnimationFrame`. 
 
 Every item is a `div.tl-item` with a type class (`tl-clip`, `tl-audio`, `tl-text`, `tl-caption`, `tl-shape`), a label (item `name`, else asset name, else text, else the localized type name), and these parts:
 
-| Type | Content | Source of artifacts | Phase |
-| --- | --- | --- | --- |
-| `clip` | label; thumbnail strip as the background; badges: speed when not 1 (`1.5x`), transition-in and transition-out marks at the edges, keyframe diamonds when `keyframes` exists, slot icon when `slot` exists | strip image of the asset (`stripUrl`), tile geometry from `listMedia` (`strip: { tile_w, tile_h, columns, count, interval_ms }`); tile choice is decoration (§1.3) | blocks with label P, thumbnails and badges A |
-| `audio` | label; waveform drawn on a `<canvas>` for the visible part only; volume text when not 1; fade-in and fade-out ramps drawn from `fade_in` and `fade_out` | `peaksUrl(asset)`: the binary peaks file of SDD-011 §4.6, read as an `ArrayBuffer`; fetched once per asset and cached | A |
-| `text` | the first line of `text` | none | block and label P |
-| `caption` | one segment per word when the item is wider than 120 px and `ppf >= 0.5`, else one block with the word count; the selected word is outlined | `words[i].start` and `.duration` relative to the item, turned into segments by `captionWordSegments(item, ppf)` of `units.ts` (rule R5); `CaptionItem` does no arithmetic of its own | block P, words A |
-| `shape` | fill colour swatch and shape icon | none | A |
+| Type | Content | Source of artifacts |
+| --- | --- | --- |
+| `clip` | label; thumbnail strip as the background; badges: speed when not 1 (`1.5x`), transition-in and transition-out marks at the edges, keyframe diamonds when `keyframes` exists, slot icon when `slot` exists | strip image of the asset (`stripUrl`), tile geometry from `listMedia` (`strip: { tile_w, tile_h, columns, count, interval_ms }`); tile choice is decoration (§1.3) |
+| `audio` | label; waveform drawn on a `<canvas>` for the visible part only; volume text when not 1; fade-in and fade-out ramps drawn from `fade_in` and `fade_out` | `peaksUrl(asset)`: the binary peaks file of SDD-011 §4.6, read as an `ArrayBuffer`; fetched once per asset and cached |
+| `text` | the first line of `text` | none |
+| `caption` | one segment per word when the item is wider than 120 px and `ppf >= 0.5`, else one block with the word count; the selected word is outlined | `words[i].start` and `.duration` relative to the item, turned into segments by `captionWordSegments(item, ppf)` of `units.ts` (rule R5); `CaptionItem` does no arithmetic of its own |
+| `shape` | fill colour swatch and shape icon | none |
 
 The label and the caption words are rendered with `UntrustedText` (§1.2, untrusted text). Colours come from tokens (§17). A selected item has a 2 px selection ring (token `--ed-selection`). A locked or hidden track dims its row. An item whose asset is missing (`ast_placeholder` or unknown) shows a warning icon.
 
-Track header: name (inline rename sends `track.update`), a hide toggle (visual tracks) or a mute toggle (any track), a drag handle for reordering, a menu (add track above or below, remove, caption style). Row height: 64 px for visual tracks with thumbnails, 48 px for audio, 40 px for tracks of only text and captions. In BETA a splitter (`role="separator"`, `ui/Splitter.tsx`) at the bottom edge of each header resizes the rows of that kind of track (visual or audio) between 32 and 160 px: drag, Up and Down by 4 px (16 with Shift), Home and End for the bounds, Enter or a double click for the default. The two heights are kept in `vv.layout` as `{"rows": {"visual": px, "audio": px}}` through `state/prefs.ts`; a stored value outside the bounds reads as the default. Items fill the row less 4 px above and below, so they follow the height. The heights are screen state and never reach the core.
+Track header: name (inline rename sends `track.update`), a hide toggle (visual tracks) or a mute toggle (any track), a drag handle for reordering, a menu (add track above or below, remove, caption style). Row height: 64 px for visual tracks with thumbnails, 48 px for audio, 40 px for tracks of only text and captions. A splitter (`role="separator"`, `ui/Splitter.tsx`) at the bottom edge of each header resizes the rows of that kind of track (visual or audio) between 32 and 160 px: drag, Up and Down by 4 px (16 with Shift), Home and End for the bounds, Enter or a double click for the default. The two heights are kept in `vv.layout` as `{"rows": {"visual": px, "audio": px}}` through `state/prefs.ts`; a stored value outside the bounds reads as the default. Items fill the row less 4 px above and below, so they follow the height. The heights are screen state and never reach the core.
 
 ### 7.5 Playhead
 
@@ -820,7 +819,7 @@ Snap targets, in order of precedence when equally close: the playhead, frame 0, 
 
 ### 7.8 Snap points from the core
 
-**Decision of this SDD.** SDD-000 has no endpoint for snap points although ADR-0007 requires one ("one more read endpoint"). The UI needs `GET /api/v1/projects/{id}/snap-points?rev=<revision>&words=<0 or 1>` (service operation `SnapPoints`, scope `read`, phase A, specified in Appendix B). It is fetched at the start of the first move or trim gesture after a revision change and cached by revision; the request is therefore at most one per revision and gesture. A negative `rev` is `400 E_VALIDATION` (`path: "revision"`), not a conflict (VV-166).
+**Decision of this SDD.** SDD-000 has no endpoint for snap points although ADR-0007 requires one ("one more read endpoint"). The UI needs `GET /api/v1/projects/{id}/snap-points?rev=<revision>&words=<0 or 1>` (service operation `SnapPoints`, scope `read`, specified in Appendix B). It is fetched at the start of the first move or trim gesture after a revision change and cached by revision; the request is therefore at most one per revision and gesture. A negative `rev` is `400 E_VALIDATION` (`path: "revision"`), not a conflict (VV-166).
 
 ```ts
 export interface SnapPoints {
@@ -859,12 +858,12 @@ The grid has one tab stop (roving `tabindex`: 0 on the focused cell, -1 on the o
 | `F2` | rename (A) |
 | `Esc` | cancel a gesture, else clear selection |
 
-Global keys are in §18.2. The grid keys above exist from ALPHA. Where a key appears here and in §18.2, focus decides:
+Global keys are in §18.2. Where a key appears here and in §18.2, focus decides:
 
-| Key | Focus on a timeline grid cell (ALPHA) | Focus elsewhere, or any focus in the Prototype |
+| Key | Focus on a timeline grid cell | Focus elsewhere |
 | --- | --- | --- |
 | `Space` | toggles play (always) | toggles play (outside editable fields) |
-| `Left`, `Right` | previous or next item on the track | step one frame (the Prototype grid does not capture the arrow keys) |
+| `Left`, `Right` | previous or next item on the track | step one frame (the grid captures the arrow keys only on a cell) |
 | `Home`, `End` | first or last item of the track | go to the start or the end of the project |
 | `Enter` | selects the item | none |
 
@@ -886,40 +885,40 @@ A gesture that touches several items (a multi-selection move) sends one batch co
 
 ### 8.2 Gestures and commands
 
-Entries marked P exist in the Prototype (§10); every other entry is A unless marked B. "Ghost" is the ephemeral preview of §8.1.
+"Ghost" is the ephemeral preview of §8.1.
 
-| Gesture | Command or batch sent | Ephemeral preview | Phase |
-| --- | --- | --- | --- |
-| Click "Add to timeline" on an asset card | `clip.add {track_id, asset_id}` (`start` omitted: the core places the item at the end of the last item of the track, so a second add never overlaps) on the first visual track by `order`; if the project has no visual track the batch is `[track.add {kind: "visual", id}, clip.add {track_id: id, ...}]`; audio-only assets use `audio.add` on an audio track, creating one the same way | none | P (visual), A (audio) |
-| Drag an asset card onto a track at a time | `clip.add` or `audio.add` with `track_id` of the row under the pointer and `start` from the pointer frame | ghost of the item with the asset's duration (from `listMedia`) | A |
-| Drag item body horizontally | `item.move {item_id, start}` (only `start`) | ghost at the snapped frame | A |
-| Drag item body to another track | `item.move {item_id, track_id, start?}` | ghost on the target row | A |
-| Drag a multi-selection | one `item.move` per selected item, same delta | ghosts for all | A |
-| Drag start handle | `item.trim {item_id, edge: "start", to}` | ghost with the new edge, clamped to `limits.trim_start_min` | A |
-| Drag end handle | `item.trim {item_id, edge: "end", to}` | ghost clamped to `limits.trim_end_max` | A |
-| `[` or `]`, or the "Trim start/end to playhead" buttons | `item.trim {item_id, edge, to: "<playhead>f"}` | none | P |
-| Split at playhead (`S`, toolbar button, context menu) | one `item.split {item_id, at: "<playhead>f"}` per selected item whose range contains the playhead strictly (request shaping, §8.3), in one batch; with none left, a local message and nothing sent | none | P |
-| `Delete` | `item.delete {item_ids}` | none | A |
-| `Shift+Delete`, context menu "Ripple delete" | `item.delete {item_ids, ripple: "track"}`; menu "Ripple delete all tracks": `ripple: "all"` | none | A |
-| `Ctrl+D` | `item.duplicate {item_id, start: "<item end>f"}` with the same track (the end frame is read from the item) | none | A |
-| Right-click an empty gap, "Close gap" | `timeline.close_gap {track_id, at: "<frame under pointer>f"}` | none | A |
-| Toolbar "Add text" (`T`) | `text.add {track_id, start: "<playhead>f", duration: "3s", text: t("ui.editor.defaults.text")}` on the first visual track (created as above if none) | none | A |
-| Toolbar "Add caption" (`C`) | dialog with text, start (playhead), duration; sends `caption.add {track_id, start, text, duration}` on the first visual track named by the user or created, `track.add` first when none | none | P |
-| Double-click text on the canvas or in the timeline | inline editor; commit sends `text.set {item_id, text}` | the editor overlay | A |
-| Double-click a caption word | inline editor; commit sends `caption.edit_word {item_id, index, text}` (empty text removes the word) | the editor overlay | A |
-| Drag a boundary between two caption words | `caption.set_words {item_id, words}` with the two neighbouring words' `start` and `duration` strings adjusted, the others copied from the read model | ghost boundary | A |
-| Context menu "Split caption here" on a word | `caption.split {item_id, before_word}` | none | A |
-| Select two captions on one track, "Merge" | `caption.merge {item_ids}` | none | A |
-| Drag corner handle on the canvas | `item.set_transform {item_id, scale}`; with keyframes on `scale`: `keyframe.set {item_id, property: "scale", at: "<playhead>f", value}` | outline box only; the compositor is not touched (T6) | A |
-| Drag body on the canvas | `item.set_transform {item_id, x, y}` (or two `keyframe.set` for animated properties) | outline box | A |
-| Drag rotate handle | `item.set_transform {item_id, rotation}` | outline box | A |
-| `~`, or the item menu "Link items" with two or more unlinked items selected | `item.link {item_ids}` (the core generates the group id) | none | B |
-| `~`, or the item menu "Unlink items", with any selected item linked | `item.unlink {item_ids}` of the linked ones | none | B |
-| `Mod+Shift+S`, or the item menu "Extract audio", on a clip of a video asset | `item.extract_audio {item_id, track_id}` to the first audio track that has no items; when there is none the batch is `[track.add {kind: "audio", id}, item.extract_audio]`. Several clips go to the same track in one batch | none | B |
-| Crossfade (menu with two selected items) | `item.crossfade {from_item_id, to_item_id, duration}` where `from` is the item with the smaller `start`; for two neighbours on one track the same batch carries `track_id`, an empty visual track of the project, or a `track.add` (client id) when none is empty | none | A |
-| Track header actions | `track.add`, `track.update`, `track.move {track_id, above or below}`, `track.remove {track_id}` (confirm; `with_items: true` after `E_NOT_EMPTY`) | reorder ghost row | A |
-| Rename project in the top bar | `project.rename {name}` | none | A |
-| Scrub on the ruler, `Left` or `Right` (one frame), `Shift` (one second), Space | no command; moves the playhead (UI state) | the playhead itself | P |
+| Gesture | Command or batch sent | Ephemeral preview |
+| --- | --- | --- |
+| Click "Add to timeline" on an asset card | `clip.add {track_id, asset_id}` (`start` omitted: the core places the item at the end of the last item of the track, so a second add never overlaps) on the first visual track by `order`; if the project has no visual track the batch is `[track.add {kind: "visual", id}, clip.add {track_id: id, ...}]`; audio-only assets use `audio.add` on an audio track, creating one the same way | none |
+| Drag an asset card onto a track at a time | `clip.add` or `audio.add` with `track_id` of the row under the pointer and `start` from the pointer frame | ghost of the item with the asset's duration (from `listMedia`) |
+| Drag item body horizontally | `item.move {item_id, start}` (only `start`) | ghost at the snapped frame |
+| Drag item body to another track | `item.move {item_id, track_id, start?}` | ghost on the target row |
+| Drag a multi-selection | one `item.move` per selected item, same delta | ghosts for all |
+| Drag start handle | `item.trim {item_id, edge: "start", to}` | ghost with the new edge, clamped to `limits.trim_start_min` |
+| Drag end handle | `item.trim {item_id, edge: "end", to}` | ghost clamped to `limits.trim_end_max` |
+| `[` or `]`, or the "Trim start/end to playhead" buttons | `item.trim {item_id, edge, to: "<playhead>f"}` | none |
+| Split at playhead (`S`, toolbar button, context menu) | one `item.split {item_id, at: "<playhead>f"}` per selected item whose range contains the playhead strictly (request shaping, §8.3), in one batch; with none left, a local message and nothing sent | none |
+| `Delete` | `item.delete {item_ids}` | none |
+| `Shift+Delete`, context menu "Ripple delete" | `item.delete {item_ids, ripple: "track"}`; menu "Ripple delete all tracks": `ripple: "all"` | none |
+| `Ctrl+D` | `item.duplicate {item_id, start: "<item end>f"}` with the same track (the end frame is read from the item) | none |
+| Right-click an empty gap, "Close gap" | `timeline.close_gap {track_id, at: "<frame under pointer>f"}` | none |
+| Toolbar "Add text" (`T`) | `text.add {track_id, start: "<playhead>f", duration: "3s", text: t("ui.editor.defaults.text")}` on the first visual track (created as above if none) | none |
+| Toolbar "Add caption" (`C`) | dialog with text, start (playhead), duration; sends `caption.add {track_id, start, text, duration}` on the first visual track named by the user or created, `track.add` first when none | none |
+| Double-click text on the canvas or in the timeline | inline editor; commit sends `text.set {item_id, text}` | the editor overlay |
+| Double-click a caption word | inline editor; commit sends `caption.edit_word {item_id, index, text}` (empty text removes the word) | the editor overlay |
+| Drag a boundary between two caption words | `caption.set_words {item_id, words}` with the two neighbouring words' `start` and `duration` strings adjusted, the others copied from the read model | ghost boundary |
+| Context menu "Split caption here" on a word | `caption.split {item_id, before_word}` | none |
+| Select two captions on one track, "Merge" | `caption.merge {item_ids}` | none |
+| Drag corner handle on the canvas | `item.set_transform {item_id, scale}`; with keyframes on `scale`: `keyframe.set {item_id, property: "scale", at: "<playhead>f", value}` | outline box only; the compositor is not touched (T6) |
+| Drag body on the canvas | `item.set_transform {item_id, x, y}` (or two `keyframe.set` for animated properties) | outline box |
+| Drag rotate handle | `item.set_transform {item_id, rotation}` | outline box |
+| `~`, or the item menu "Link items" with two or more unlinked items selected | `item.link {item_ids}` (the core generates the group id) | none |
+| `~`, or the item menu "Unlink items", with any selected item linked | `item.unlink {item_ids}` of the linked ones | none |
+| `Mod+Shift+S`, or the item menu "Extract audio", on a clip of a video asset | `item.extract_audio {item_id, track_id}` to the first audio track that has no items; when there is none the batch is `[track.add {kind: "audio", id}, item.extract_audio]`. Several clips go to the same track in one batch | none |
+| Crossfade (menu with two selected items) | `item.crossfade {from_item_id, to_item_id, duration}` where `from` is the item with the smaller `start`; for two neighbours on one track the same batch carries `track_id`, an empty visual track of the project, or a `track.add` (client id) when none is empty | none |
+| Track header actions | `track.add`, `track.update`, `track.move {track_id, above or below}`, `track.remove {track_id}` (confirm; `with_items: true` after `E_NOT_EMPTY`) | reorder ghost row |
+| Rename project in the top bar | `project.rename {name}` | none |
+| Scrub on the ruler, `Left` or `Right` (one frame), `Shift` (one second), Space | no command; moves the playhead (UI state) | the playhead itself |
 
 ### 8.3 Gating
 
@@ -941,72 +940,72 @@ A control may be disabled or a request narrowed using only: whether a selection 
 
 ### 9.1 The table
 
-Phase of the entry point is the phase in which that entry point is built. Every command is also reachable through the command palette (§9.2) from the first ALPHA task, which is why the "Palette" entry is the same `A` for all rows and is not repeated. `asset.add` is `internal` (SDD-002 B.2): it is issued by the import flow, exempt from the entry-point requirement and listed for completeness. The catalogue in SDD-002 Part B has 48 commands.
+Every command is also reachable through the command palette (§9.2), which is why the "Palette" entry is the same for all rows and is not repeated. `asset.add` is `internal` (SDD-002 B.2): it is issued by the import flow, exempt from the entry-point requirement and listed for completeness. The catalogue in SDD-002 Part B has 48 commands.
 
-| Command | Entry points besides the palette | Phase |
-| --- | --- | --- |
-| `project.rename` | top bar name field | A |
-| `settings.set` | project panel of the inspector (width, height, background, loudness target) | A |
-| `settings.reframe` | project panel of the inspector, the "Change aspect" select (16:9, 9:16, 1:1, 4:5): `settings.reframe {aspect}`; the core rescales text, shapes and fit none clips | A |
-| `settings.set_fps` | project panel, with a confirmation dialog that lists `effective.adjusted` afterwards | A |
-| `asset.add` | internal: import flow (`MediaImport`) | P |
-| `asset.remove` | library card menu "Remove from project"; `E_IN_USE` dialog | A |
-| `track.add` | implicit in "Add to timeline" and "Add caption" when no track exists; later: "Add track" menu in the timeline toolbar and track header menu | P (implicit), A (explicit) |
-| `item.slip` | `Alt+,` and `Alt+.` (slip) | A |
-| `track.update` | track header (rename, hide, mute) and track panel | A |
-| `track.move` | track header drag handle; menu "Move up", "Move down" | A |
-| `track.remove` | track header menu with confirmation | A |
-| `track.set_caption_style` | track panel of the inspector, caption style section, "Replace" toggle | A |
-| `item.move` | drag, keyboard nudge, `Mod+Alt+Left` and `Mod+Alt+Right` (slide), inspector Start field | A |
-| `item.trim` | `[` and `]` keys and toolbar buttons (P); handles, inspector End field, `Mod+Alt+Shift+Left` and `Mod+Alt+Shift+Right` (roll) (A) | P, A |
-| `item.split` | `S`, toolbar button, context menu | P |
-| `item.delete` | `Delete`, toolbar, context menu, ripple variants | A |
-| `item.duplicate` | `Ctrl+D`, context menu | A |
-| `item.rename` | `F2`, inspector Name field | A |
-| `item.set_transform` | canvas handles, inspector Transform section | A |
-| `item.set_transition` | inspector Transitions section (kind and duration for in and out) | A |
-| `item.set_audio` | inspector Audio section (volume, fades, mute) | A |
-| `item.crossfade` | context menu with two items selected | A |
-| `timeline.close_gap` | gap context menu | A |
-| `clip.add` | "Add to timeline" button on a card (P); drag from the library (A) | P, A |
-| `audio.add` | "Add to timeline" on an audio card; drag from the library | A |
-| `clip.set_framing` | inspector Framing section (fit, crop) | A |
-| `clip.set_speed` | inspector Speed section with the ripple toggle, the Reverse toggle and the speed curve | A, B |
-| `clip.set_effects` | inspector Effects section | B |
-| `item.link`, `item.unlink` | `~` and the item menu "Link items" and "Unlink items"; a linked item shows a link badge | B |
-| `item.extract_audio` | `Mod+Shift+S` and the item menu "Extract audio" | B |
-| `clip.set_color` | inspector Color section (brightness, contrast, saturation, temperature, tint, hue, and the lookup table picker with its intensity, and the HSL, wheels and curves groups) | A |
-| `clip.set_flip` | inspector Flip section | B |
-| `item.set_enabled` | `V`, item menu "Turn off" and "Turn on", the On switch of the Name section | B |
-| `clip.set_blend` | inspector Blend section | A |
-| `clip.set_mask` | inspector Mask section | A |
-| `clip.set_shadow` | inspector Shadow section of a clip (VV-122) | B |
-| `clip.set_outline` | inspector Outline section of a clip (VV-122) | B |
-| `clip.remove_silences` | inspector button "Remove silences" with minimum silence and padding fields | A |
-| `text.add` | toolbar "Add text" (`T`) | A |
-| `text.set` | inspector Text section, inline canvas editor | A |
-| `text.apply_preset` | inspector Animation section | A |
-| `shape.add` | toolbar "Add shape" menu | A |
-| `shape.set` | inspector Shape section | A |
-| `caption.add` | toolbar "Add caption" dialog | P |
-| `caption.set_words` | inspector word table (bulk edit), word boundary drag | A |
-| `caption.edit_word` | double-click a word, inspector word table | A |
-| `caption.split` | word context menu | A |
-| `caption.merge` | menu with two captions selected | A |
-| `caption.set_breaks` | inspector word table (line break toggle per word) | A |
-| `caption.set_style` | inspector Caption style section ("Use track style" sends `style: null`) | A |
-| `caption.from_transcript` | inspector button "Auto captions" on a clip (§12.4) | A |
-| `caption.import_subtitles` | inspector "Import subtitles" file picker in the track panel of a visual track and in the caption panel (§12.1), and the palette | B |
-| `caption.retime_from_clip` | button "Re-sync captions" in the inspector of a clip with linked captions, and in the lint finding for out-of-sync captions | A |
-| `keyframe.set` | inspector Keyframes section (diamond button at the playhead), canvas handles on animated properties | A |
-| `keyframe.remove` | inspector Keyframes section, `Delete` on a selected keyframe | A |
-| `keyframe.clear` | inspector Keyframes section, "Clear" per property and for all | A |
-| `slot.mark` | inspector Template section, toggle "Template slot" with name, description, required, duration policy | A |
-| `slot.unmark` | same toggle off | A |
-| `slot.fill` | "Template slots" panel: one row per slot with an asset picker or text field and a "Fill" button | A |
-| `template.set_info` | project panel, Template section (description, colour names) | A |
+| Command | Entry points besides the palette |
+| --- | --- |
+| `project.rename` | top bar name field |
+| `settings.set` | project panel of the inspector (width, height, background, loudness target) |
+| `settings.reframe` | project panel of the inspector, the "Change aspect" select (16:9, 9:16, 1:1, 4:5): `settings.reframe {aspect}`; the core rescales text, shapes and fit none clips |
+| `settings.set_fps` | project panel, with a confirmation dialog that lists `effective.adjusted` afterwards |
+| `asset.add` | internal: import flow (`MediaImport`) |
+| `asset.remove` | library card menu "Remove from project"; `E_IN_USE` dialog |
+| `track.add` | implicit in "Add to timeline" and "Add caption" when no track exists; later: "Add track" menu in the timeline toolbar and track header menu |
+| `item.slip` | `Alt+,` and `Alt+.` (slip) |
+| `track.update` | track header (rename, hide, mute) and track panel |
+| `track.move` | track header drag handle; menu "Move up", "Move down" |
+| `track.remove` | track header menu with confirmation |
+| `track.set_caption_style` | track panel of the inspector, caption style section, "Replace" toggle |
+| `item.move` | drag, keyboard nudge, `Mod+Alt+Left` and `Mod+Alt+Right` (slide), inspector Start field |
+| `item.trim` | `[` and `]` keys and toolbar buttons (P); handles, inspector End field, `Mod+Alt+Shift+Left` and `Mod+Alt+Shift+Right` (roll) (A) |
+| `item.split` | `S`, toolbar button, context menu |
+| `item.delete` | `Delete`, toolbar, context menu, ripple variants |
+| `item.duplicate` | `Ctrl+D`, context menu |
+| `item.rename` | `F2`, inspector Name field |
+| `item.set_transform` | canvas handles, inspector Transform section |
+| `item.set_transition` | inspector Transitions section (kind and duration for in and out) |
+| `item.set_audio` | inspector Audio section (volume, fades, mute) |
+| `item.crossfade` | context menu with two items selected |
+| `timeline.close_gap` | gap context menu |
+| `clip.add` | "Add to timeline" button on a card (P); drag from the library (A) |
+| `audio.add` | "Add to timeline" on an audio card; drag from the library |
+| `clip.set_framing` | inspector Framing section (fit, crop) |
+| `clip.set_speed` | inspector Speed section with the ripple toggle, the Reverse toggle and the speed curve |
+| `clip.set_effects` | inspector Effects section |
+| `item.link`, `item.unlink` | `~` and the item menu "Link items" and "Unlink items"; a linked item shows a link badge |
+| `item.extract_audio` | `Mod+Shift+S` and the item menu "Extract audio" |
+| `clip.set_color` | inspector Color section (brightness, contrast, saturation, temperature, tint, hue, and the lookup table picker with its intensity, and the HSL, wheels and curves groups) |
+| `clip.set_flip` | inspector Flip section |
+| `item.set_enabled` | `V`, item menu "Turn off" and "Turn on", the On switch of the Name section |
+| `clip.set_blend` | inspector Blend section |
+| `clip.set_mask` | inspector Mask section |
+| `clip.set_shadow` | inspector Shadow section of a clip (VV-122) |
+| `clip.set_outline` | inspector Outline section of a clip (VV-122) |
+| `clip.remove_silences` | inspector button "Remove silences" with minimum silence and padding fields |
+| `text.add` | toolbar "Add text" (`T`) |
+| `text.set` | inspector Text section, inline canvas editor |
+| `text.apply_preset` | inspector Animation section |
+| `shape.add` | toolbar "Add shape" menu |
+| `shape.set` | inspector Shape section |
+| `caption.add` | toolbar "Add caption" dialog |
+| `caption.set_words` | inspector word table (bulk edit), word boundary drag |
+| `caption.edit_word` | double-click a word, inspector word table |
+| `caption.split` | word context menu |
+| `caption.merge` | menu with two captions selected |
+| `caption.set_breaks` | inspector word table (line break toggle per word) |
+| `caption.set_style` | inspector Caption style section ("Use track style" sends `style: null`) |
+| `caption.from_transcript` | inspector button "Auto captions" on a clip (§12.4) |
+| `caption.import_subtitles` | inspector "Import subtitles" file picker in the track panel of a visual track and in the caption panel (§12.1), and the palette |
+| `caption.retime_from_clip` | button "Re-sync captions" in the inspector of a clip with linked captions, and in the lint finding for out-of-sync captions |
+| `keyframe.set` | inspector Keyframes section (diamond button at the playhead), canvas handles on animated properties |
+| `keyframe.remove` | inspector Keyframes section, `Delete` on a selected keyframe |
+| `keyframe.clear` | inspector Keyframes section, "Clear" per property and for all |
+| `slot.mark` | inspector Template section, toggle "Template slot" with name, description, required, duration policy |
+| `slot.unmark` | same toggle off |
+| `slot.fill` | "Template slots" panel: one row per slot with an asset picker or text field and a "Fill" button |
+| `template.set_info` | project panel, Template section (description, colour names) |
 
-Build order inside ALPHA, so coverage grows in a useful order: (1) command palette, schema form and the coverage test; inspector shell; history panel; i18n of pt-BR; (2) drag move and trim, snap points, library drag; (3) transform handles, text and caption editing, keyframes, transitions, presets; (4) track and settings dialogs, templates, shapes, speed, silence, color; (5) accessibility pass and performance pass (§18, §19).
+Build order, so coverage grows in a useful order: (1) command palette, schema form and the coverage test; inspector shell; history panel; i18n of pt-BR; (2) drag move and trim, snap points, library drag; (3) transform handles, text and caption editing, keyframes, transitions, presets; (4) track and settings dialogs, templates, shapes, speed, silence, color; (5) accessibility pass and performance pass (§18, §19).
 
 ### 9.2 The command palette
 
@@ -1027,7 +1026,7 @@ Build order inside ALPHA, so coverage grows in a useful order: (1) command palet
 | `oneOf`, `anyOf` | radio group choosing the variant, then its fields |
 | anything the generator cannot render | a JSON textarea for that sub-value (never blocks the command) |
 
-Required fields are marked; the registry `example` pre-fills the form with a "Fill example" button. Below the form the dialog offers "Preview" (sends the batch with `dry_run: true` and shows `diff` and `text`) and "Run" (sends it for real with `base_revision` and a new idempotency key). Errors from the core appear in the dialog with `path` mapped onto the field. A palette-run command goes through exactly the same `edit()` as a gesture. Commands with `internal: true` are hidden. In the Prototype the palette does not exist; it is the first ALPHA task.
+Required fields are marked; the registry `example` pre-fills the form with a "Fill example" button. Below the form the dialog offers "Preview" (sends the batch with `dry_run: true` and shows `diff` and `text`) and "Run" (sends it for real with `base_revision` and a new idempotency key). Errors from the core appear in the dialog with `path` mapped onto the field. A palette-run command goes through exactly the same `edit()` as a gesture. Commands with `internal: true` are hidden.
 
 The palette can run a batch of several operations: "Add to batch" keeps the form open for the next command and "Run batch" sends them as one revision (RF-105 for people).
 
@@ -1039,25 +1038,24 @@ The palette can run a batch of several operations: "Add to batch" keeps the form
 export interface EntryPoint {
   kind: "gesture" | "inspector" | "menu" | "toolbar" | "key" | "palette";
   action: string;          // id in the action registry of commands/actions.ts
-  phase: "P" | "A" | "B";
 }
 export const COVERAGE: Record<Exclude<CommandName, InternalCommand>, EntryPoint[]>;
 ```
 
 The Vitest test `command-coverage.test.ts` loads `generated/commands.json` (a snapshot of the registry committed by CI, ADR-0014) and fails when:
 
-1. A command that is not `internal` has no key in `COVERAGE`, or its list is empty. **This is the test of D-013 and ADR-0007 item 5: a new command in the catalogue breaks the UI build until an entry point is declared.** (The palette entry is declared by one line per command and is real, because the palette is generated from the registry; a command may therefore always satisfy the test with `{ kind: "palette", action: "palette.run", phase: "A" }`, and the table of §9.1 states which commands must have more.)
+1. A command that is not `internal` has no key in `COVERAGE`, or its list is empty. **This is the test of D-013 and ADR-0007 item 5: a new command in the catalogue breaks the UI build until an entry point is declared.** (The palette entry is declared by one line per command and is real, because the palette is generated from the registry; a command may therefore always satisfy the test with `{ kind: "palette", action: "palette.run" }`, and the table of §9.1 states which commands must have more.)
 2. An `EntryPoint.action` does not exist in the action registry, or exists but its builder in `commands/builders.ts` does not produce an `Operation` whose `op` equals the command name (tested by running every builder with a fixture and checking the emitted `op`).
-3. For the current build phase (`vv.phase` of the bootstrap), a command whose catalogue `phase` is at or before the build phase lacks an entry point whose phase is at or before it. In the Prototype build the rule applies to the commands marked `P` in §9.1; from the first ALPHA task it applies to every command and every command must have the `palette` entry.
+3. A command lacks an entry point, or lacks the `palette` entry. The rule applies to every non-internal command.
 4. `COVERAGE` has a key for a name that is not in the registry (stale entry).
 
-The Playwright test `command-palette-coverage` (§20) is the run-time half: for every non-internal command it opens the palette, checks that the form renders with a control for every property of `args_schema` and no JSON-textarea fallback for a property of a Prototype or ALPHA command, then sends the registry `example` as a dry run against the fixture project and expects either `applied: false` or an error code from the command's `errors` list, never `E_UNKNOWN_COMMAND` and never `E_VALIDATION`.
+The Playwright test `command-palette-coverage` (§20) is the run-time half: for every non-internal command it opens the palette, checks that the form renders with a control for every property of `args_schema` and no JSON-textarea fallback for a property of any command, then sends the registry `example` as a dry run against the fixture project and expects either `applied: false` or an error code from the command's `errors` list, never `E_UNKNOWN_COMMAND` and never `E_VALIDATION`.
 
-## 10. Prototype scope
+## 10. The first editor
 
-D-023: the Prototype UI shows the timeline and the preview updating live while an agent edits, plays the video, and lets a person do the same four things the agent does in the reference scenario.
+D-023: the first UI shows the timeline and the preview updating live while an agent edits, plays the video, and lets a person do the same four things the agent does in the reference scenario.
 
-### 10.1 What the Prototype UI contains
+### 10.1 What the first UI contains
 
 | Area | Contents |
 | --- | --- |
@@ -1066,24 +1064,22 @@ D-023: the Prototype UI shows the timeline and the preview updating live while a
 | Live view | the timeline shows every track and item as labelled blocks (name, type colour) on a ruler with a playhead; the preview shows the composed picture; both update at once when any actor commits a batch (RF-072, RF-118); remote edits are attributed in the indicator and the changed items are outlined for 1.5 s |
 | Play, pause, seek | Play and Pause button and `Space`; seek by clicking or dragging the ruler; frame step with `Left` and `Right`, one second with `Shift`; `Home` and `End`; timecode display; picture and sound; truth on pause (RF-060, RF-061) |
 | Zoom | zoom buttons, `Ctrl+wheel`, fit; keys `+`, `-` and `Shift+Z`; horizontal and vertical scroll |
-| Keyboard | exactly the keys marked `P` in §18.2: `Space`, `Left` and `Right`, `Shift+Left` and `Shift+Right`, `Home` and `End`, `S`, `[` and `]`, `Mod+Z`, `Mod+Shift+Z` and `Ctrl+Y`, `+`, `-` and `Shift+Z`, `C`, `Esc`, `Tab` and `Shift+Tab` |
+| Keyboard | the keys of §18.2 that the first UI had: `Space`, `Left` and `Right`, `Shift+Left` and `Shift+Right`, `Home` and `End`, `S`, `[` and `]`, `Mod+Z`, `Mod+Shift+Z` and `Ctrl+Y`, `+`, `-` and `Shift+Z`, `C`, `Esc`, `Tab` and `Shift+Tab` |
 | Operation 1: import a file by path | the library has a path text field and an Import button; ingest progress from `asset.updated` events; asset cards with thumbnail, duration and state; failed cards show code and hint (§13) |
 | Placing the imported file | a button "Add to timeline" on a `ready` card (`clip.add` after the last item of the track, creating a visual track if there is none). This is not a fifth manual operation: it is the minimum that lets the reference scenario start (Decision of this SDD) |
 | Operation 2: split or trim | click an item to select it; `S` or the Split button splits it at the playhead (`item.split`); `[` and `]` or the Trim buttons trim its start or end to the playhead (`item.trim`). No handles, no drag |
 | Operation 3: add a caption | the Add caption button opens a dialog (text, start defaulting to the playhead, duration defaulting to 3 s) and sends `caption.add`, creating a visual track if needed |
 | Operation 4: export with progress | the Export dialog: lint findings, Start, progress bar from `job.updated` events, result with path and download link, failure with code and hint (§14) |
-| Theme and i18n | dark by default with the light toggle; every string through `t()`, English catalog only (the Portuguese catalog is ALPHA) |
+| Theme and i18n | dark by default with the light toggle; every string through `t()`, English catalog first; the Portuguese catalog follows |
 | Debug | `?debug=1` test hooks (§20.4) |
 
-### 10.2 What is explicitly not in the Prototype
+### 10.2 No build gate
 
-Dragging or resizing items; drag from the library to the timeline; snapping and the snap-points endpoint; the inspector and every field in it; transform handles and any canvas editing; multi-selection, marquee, copy, paste, duplicate, delete, ripple; text items, shapes, keyframes, transitions, speed, color, silence removal, templates; caption editing beyond adding; track operations (the track header shows name only); project settings and rename; the command palette and the schema form; the history panel; thumbnails strips and waveforms in the timeline; the safe-area guide; the keyboard map beyond the keys listed in §10.1; cancel of an export (`JobCancel` is A); the Portuguese catalog and the language switcher; the settings, API-keys and login pages; deep link parameters `?t` and `?item`; virtualization; the accessibility audit (semantic elements and labels are still used, §18). The coverage test runs in the Prototype but only for the commands marked `P` in §9.1.
-
-In the ALPHA build the gate of this list is lifted by one function: every control that exists only from a later phase asks `isPhaseAtLeast("alpha")` of `boot/phase.ts`, which reads the `phase` of the bootstrap. Nothing else compares the phase string, and `coverage.test.ts` runs the full rule of section 9.3 for the ALPHA build (47 keys, one `palette` entry each).
+There is no build gate: every control the editor has is shown, and the bootstrap carries no phase. The coverage test runs the full rule of section 9.3 for every command (every non-internal command has an entry point and a `palette` entry).
 
 ### 10.3 Decisions about the boundary
 
-**Decision of this SDD.** Undo and Redo buttons are in the Prototype although D-023 lists four operations. Manual split and trim without undo makes the Prototype unusable, the service operations are `P` in SDD-000, and a button costs nothing. They act for the current actor (`local:ui`).
+**Decision of this SDD.** Undo and Redo buttons are in the first UI although D-023 lists four operations. Manual split and trim without undo makes it unusable, and a button costs nothing. They act for the current actor (`local:ui`).
 
 ## 11. Preview component
 
@@ -1118,7 +1114,7 @@ export interface PreviewExecutor {
 2. It fills the canvas with the plan's `background`, then draws each layer as a sprite at the plan's `cx`, `cy`, `w`, `h`, `rotation`, `opacity` and `color_matrix`, in plan order, using the layer's `crop` as the source region of the sprite, and nothing else (T6). Bitmaps are fetched by key (`bitmapUrl`) with `fetch` and `createImageBitmap`, cached in a map of at most 64 entries by LRU. Constants given as arrays are indexed by `frame - first`.
 3. Video layers use pooled `<video>` elements on the proxy (`videoPool.ts`, key: asset id) for an asset the decode worker of item 8 does not decode (the fallback), and for every asset when the setting forces `<video>`. During playback the element plays with `playbackRate` equal to the slope of `source_seconds` over the next 8 frames of the layer (clamped to 0.25 to 4, `preservesPitch` true, so a speed curve is followed as it ramps) and its `currentTime` is corrected when it drifts by more than 2 frames from `source_seconds` (SDD-004 §10 item 2). A reversed item (SDD-004 §3.12) has a falling `source_seconds`, which a media element cannot play: the element is paused and seeks to `source_seconds` at every frame (`videoDrive` in `mediaSync.ts`), so reverse plays as a series of seeks, at the speed the browser seeks. When paused or scrubbing it seeks (`fastSeek` when present, else `currentTime`).
 4. Audio goes through one `AudioContext`. The plan's `audio` entries (SDD-004 §10) are played by audio elements on the proxy, one `GainNode` each, with `playbackRate` taken from `audio[].speed`; for an entry with `speed_curve` the rate is the speed of the ramp at the middle of the frame and the target `currentTime` is `source_seconds` plus the source frames the ramp has read since the first frame of the entry, which the executor computes from the points with the formula of SDD-004 §3.11 in floating point (`audioDrive`, `curveOffset` in `mediaSync.ts`; the plan carries the points for that purpose). An entry with `reverse` is left silent in the preview: a media element does not play backwards, and decoding the range to reverse it is the export mixer's job (SDD-004 §3.12). The export plays it. Each element, video or audio, feeds a `MediaElementAudioSourceNode` and a `GainNode` whose gain is the plan's `gain` (so gains above 1, up to 4, work; `HTMLMediaElement.volume` cannot exceed 1). `play()` resumes the context from the click that started it (autoplay policy). The master clock is the audio clock: `frame = startFrame + floor((ctx.currentTime - t0) * fps.num / fps.den)` (SDD-004 §10 item 4). The clock runs on a silent context when no layer has audio. When the context does not run within 500 ms of the resume (a browser with no audio output device leaves `resume()` pending, as Firefox does on a headless Linux machine), the clock is `performance.now()` for that playback and the preview plays without sound.
-5. **Cap on decoding video elements.** `MAX_VIDEO_LAYERS = 4` (initial value from SDD-004 §10 item 5). The executor ranks the media layers of the current window by plan order, topmost first, gives the first four a decoding element and draws the others, and every image, as the asset's thumbnail still (`thumbnailUrl`, width 640, never upscaled). That still uses the frame's crop (`crop`, or the entry of `crops`) as the sprite's source region, scaled from source pixels onto the poster, the same region a decoded frame uses. Elements of assets that left the window are paused and released after 5 s (`src` removed and `load()` called, to free the decoder). The number is confirmed by the Prototype scenario `video-layers-budget` (§19.1, §20.1: fixtures with 4, 6 and 8 simultaneous video layers; `getVideoPlaybackQuality().droppedVideoFrames` over 10 s, limit 2%, and tab memory, on the reference machine); if 4 shows more than 2% dropped frames or breaks NFR-008, it is lowered and recorded here.
+5. **Cap on decoding video elements.** `MAX_VIDEO_LAYERS = 4` (initial value from SDD-004 §10 item 5). The executor ranks the media layers of the current window by plan order, topmost first, gives the first four a decoding element and draws the others, and every image, as the asset's thumbnail still (`thumbnailUrl`, width 640, never upscaled). That still uses the frame's crop (`crop`, or the entry of `crops`) as the sprite's source region, scaled from source pixels onto the poster, the same region a decoded frame uses. Elements of assets that left the window are paused and released after 5 s (`src` removed and `load()` called, to free the decoder). The number is confirmed by the scenario `video-layers-budget` (§19.1, §20.1: fixtures with 4, 6 and 8 simultaneous video layers; `getVideoPlaybackQuality().droppedVideoFrames` over 10 s, limit 2%, and tab memory, on the reference machine); if 4 shows more than 2% dropped frames or breaks NFR-008, it is lowered and recorded here.
 6. If WebGL2 is unavailable the executor reports `unsupported`; the preview then shows only paused frames (truth on pause), disables Play, and a banner says why.
 7. **Assets with alpha.** An asset whose `has_alpha` is true has a WebM proxy (VP9 `yuva420p`, `alpha_mode` tag) at the same `proxyUrl`, PNG thumbnails and strips, and no chunk index (SDD-011 §4.3.5). The preview takes no other path for it: the pooled `<video>` element decodes the proxy and the browser keeps the alpha, which the sprite draws premultiplied, by the plan's blend mode, over the layers below it, so a transparent pixel of the overlay shows the lower layer. The decode worker of item 8 asks for the chunk index of every video asset and treats the 404 the `chunks` route answers for such an asset as the fallback, so the asset is drawn by `<video>`, and it does not assume a JPEG thumbnail: an `<img>` reads the type the core sends. The Playwright scenario `alpha-overlay` (§20.1) pins it.
 8. **WebCodecs decode (ADR-0029 item 5, SDD-013 §5.3, §6).** Where the browser has `VideoDecoder` and `Worker`, the video layers of the window are decoded by one module worker (`preview/decode/decodeWorker.ts`, created by `createWorker.ts` from a same-origin script: no `blob:` URL, no inline worker, covered by `script-src 'self'` and `worker-src 'self'`). For each asset the worker fetches the chunk index (`GET .../media/{asset}/chunks`, `chunkIndex.ts` checks every invariant of SDD-013 §6.1 by hand), asks `VideoDecoder.isConfigSupported` with the index's `codec`, `coded_width` and `coded_height` (VP9 in the MP4 proxy, `vp09.…`; no `description` is needed), and decodes `EncodedVideoChunk`s cut from `Range` requests on `proxyUrl` with `offsets` and `sizes` (`decodeCore.ts`). The sample is the one whose `timestamps_us` is the largest not above the plan's `source_seconds` plus half a sample (`sampleAt`), so a paused or scrubbed frame is frame exact. A seek decodes from the previous key frame to the target, one `Range` request for the whole run, closing the frames before the target (at most a GOP less one); a target at most 4 samples after the last queued one with no key frame between goes on forward without a reset; a decoder that keeps its last output until a flush is flushed after 250 ms and wants a key frame next. During playback the worker keeps at most 4 decoded frames ahead of the one shown and no more than 8 chunks in the decoder (`decodeQueueSize`); a reversed item is a seek per frame. The worker sends each frame to the main thread by transfer; the main thread (`client.ts`) keeps a cache of at most 12 frames keyed by asset and source frame (the window of source times in which that sample is the one shown), one request in flight per asset and only the latest time asked for, draws the last frame it has (`complete` stays false, so `data-drawn` is not set) until the exact one arrives, and uploads the `VideoFrame` as the source of the layer's PixiJS texture (`ImageSource`). A frame evicted from the cache is closed only after the render that follows (`FrameCache.sweep`), so a texture never reads a closed frame (the black texture of P2-QA-003). The number of open frames is the cache plus what the worker holds and is bounded; `stats.openFrames` and `stats.peakOpenFrames` report it, and the canvas carries `data-open-frames`, `data-peak-frames`, `data-fallback-assets` and `data-frame-us` (the timestamp of the last frame drawn exactly) for the specs. An asset is decoded by `<video>` instead (item 3) when the chunk index answers 404 (an old proxy, an alpha asset: item 7), is invalid or has an unknown version, when `isConfigSupported` answers false, when the decoder or a `Range` request fails, or when the setting forces it; it is a per-asset decision that lasts until the page is reloaded and is counted in `stats.fallbackAssets`, never a toast. The query parameter `?decoder=video` forces `<video>` for every asset and `?decoder=webcodecs` is the default spelled out, so a spec runs the same scenario on both paths. Frames are not byte-equal to the export's: the browser converts YUV to RGB, and the preview stays in the tolerance class of §20.3. The worker is the one place besides `editor/api` that calls `fetch` (R6) and `createWorker.ts` the one that calls `new Worker` (R1); neither reads or writes project data.
@@ -1129,23 +1125,23 @@ export interface PreviewExecutor {
 
 ### 11.4 Fit and size
 
-The canvas has the project's intrinsic size `width × height` (CSS `aspect-ratio`), scaled by `scale = min(availableWidth / width, availableHeight / height)` where the available box is the preview region minus 16 px padding (in each dimension), observed with `ResizeObserver`. Its backing store is `width * scale * devicePixelRatio` wide rounded to the nearest even number (`ViewFrame` accepts only an even width, SDD-004 §9), and `round(width * H / W)` high, the height `ViewFrame` derives from that width, so the canvas and the exact frame have the same pixels; the long edge is capped at 1080 px for the pixel buffer (preview resolution), give or take the one pixel that rounding adds. The overlay `<img>` and the overlays below share the same box, so a point in project pixels maps to the screen by `x_screen = left + x * scale`. `Fit` is the default; in BETA the user can also choose 50% or 100% of the buffer size (`previewSize` of `uiStore`, not persisted). 100% is the project scaled so that its long edge is `min(long edge, 1080)` CSS pixels, that is the size of the pixel buffer at a device pixel ratio of 1; 50% is half of that (`sizedScale` of `fit.ts`). The region is then a scroll container (`overflow: auto`) and the canvas box is centred in it with `margin: auto`, so a box larger than the region scrolls instead of being clipped. The three choices are a group of toggle buttons (`aria-pressed`) in the transport row.
+The canvas has the project's intrinsic size `width × height` (CSS `aspect-ratio`), scaled by `scale = min(availableWidth / width, availableHeight / height)` where the available box is the preview region minus 16 px padding (in each dimension), observed with `ResizeObserver`. Its backing store is `width * scale * devicePixelRatio` wide rounded to the nearest even number (`ViewFrame` accepts only an even width, SDD-004 §9), and `round(width * H / W)` high, the height `ViewFrame` derives from that width, so the canvas and the exact frame have the same pixels; the long edge is capped at 1080 px for the pixel buffer (preview resolution), give or take the one pixel that rounding adds. The overlay `<img>` and the overlays below share the same box, so a point in project pixels maps to the screen by `x_screen = left + x * scale`. `Fit` is the default; the user can also choose 50% or 100% of the buffer size (`previewSize` of `uiStore`, not persisted). 100% is the project scaled so that its long edge is `min(long edge, 1080)` CSS pixels, that is the size of the pixel buffer at a device pixel ratio of 1; 50% is half of that (`sizedScale` of `fit.ts`). The region is then a scroll container (`overflow: auto`) and the canvas box is centred in it with `margin: auto`, so a box larger than the region scrolls instead of being clipped. The three choices are a group of toggle buttons (`aria-pressed`) in the transport row.
 
 ### 11.5 Playback controls
 
-A transport row under the canvas: go to start, step back one frame, Play and Pause, step forward, go to end, timecode `current / total` (`Timecode` component writing text from the clock, §19), loop is not in scope. Timecodes are set in the UI font (Geist) with `font-variant-numeric: tabular-nums`, not in a monospace face: no monospace UI font is bundled, and a system monospace stack would differ between platforms and between browser and webview (`docs/design-system.md` §2.7). The six families of D-022 are rendering fonts of the core (ADR-0012) and are never loaded by the browser. A unit test of `Timecode` checks that the digits `0` and `1` have the same advance width in the bundled Geist file; if they do not, the fallback is `@fontsource-variable/geist-mono` at an exact version, approved in advance by the author for that case only (D-030). The total is the project's end, read from `selectEndFrame()`, which is the `end_frame` of the last plan window (SDD-004 §10), not derived in the browser. `Space` toggles play (§18.2 gives the precedence by focus). Seeking while playing keeps playing from the new frame. Playback stops at `end_frame`. In BETA the transport row also holds a mute toggle (`aria-pressed`), a volume slider (native range input, 0 to 1 in steps of 0.05, labelled "Preview volume"; moving it while muted unmutes) and, where §21.1 allows it, a full screen toggle that requests fullscreen on the whole preview block (canvas and transport row, over the preview surround; `Esc` leaves it natively). Volume and mute are `previewVolume` and `previewMuted` of `uiStore`: screen state, not persisted, never sent to the core and not part of an export. The executor applies them through `setVolume(volume, muted)` to one master `GainNode` (`preview/audioGraph.ts`) that every element gain feeds before the destination, so the per-item gain of the plan is unchanged.
+A transport row under the canvas: go to start, step back one frame, Play and Pause, step forward, go to end, timecode `current / total` (`Timecode` component writing text from the clock, §19), loop is not in scope. Timecodes are set in the UI font (Geist) with `font-variant-numeric: tabular-nums`, not in a monospace face: no monospace UI font is bundled, and a system monospace stack would differ between platforms and between browser and webview (`docs/design-system.md` §2.7). The six families of D-022 are rendering fonts of the core (ADR-0012) and are never loaded by the browser. A unit test of `Timecode` checks that the digits `0` and `1` have the same advance width in the bundled Geist file; if they do not, the fallback is `@fontsource-variable/geist-mono` at an exact version, approved in advance by the author for that case only (D-030). The total is the project's end, read from `selectEndFrame()`, which is the `end_frame` of the last plan window (SDD-004 §10), not derived in the browser. `Space` toggles play (§18.2 gives the precedence by focus). Seeking while playing keeps playing from the new frame. Playback stops at `end_frame`. The transport row also holds a mute toggle (`aria-pressed`), a volume slider (native range input, 0 to 1 in steps of 0.05, labelled "Preview volume"; moving it while muted unmutes) and, where §21.1 allows it, a full screen toggle that requests fullscreen on the whole preview block (canvas and transport row, over the preview surround; `Esc` leaves it natively). Volume and mute are `previewVolume` and `previewMuted` of `uiStore`: screen state, not persisted, never sent to the core and not part of an export. The executor applies them through `setVolume(volume, muted)` to one master `GainNode` (`preview/audioGraph.ts`) that every element gain feeds before the destination, so the per-item gain of the plan is unchanged.
 
 ### 11.6 Overlays
 
 All overlays are DOM elements in `preview/overlays/`, positioned over the canvas box, `pointer-events` only where interactive:
 
-| Overlay | Source of geometry | Phase |
-| --- | --- | --- |
-| Safe-area guide | the `safe_area: [x, y, w, h]` field of the plan window, in project pixels (the core computes it with `SafeArea(width, height)` of SDD-004 §4.1; the UI never re-implements the percentages). Drawn as a dashed rectangle and a dimmed band outside it; toggled by the "Safe area" button, off by default | A (RF-036) |
-| Selection box | the plan layer of the selected item at the playhead frame, `getLayerGeometry(frame)`: `cx`, `cy`, `w`, `h`, `rotation`, `scale`, `opacity` (indexed by `frame - first` when an array). When the playhead is outside the item no box is drawn | A |
-| Transform handles | four corner handles (uniform scale), one rotation handle above the box, drag on the body to move; the gestures of §8.2. The box, the handles and any focus ring over the preview use `--ed-handle` (§17), because the surround is dark in both themes. The box moves under the pointer as the ephemeral preview; the picture does not | A |
-| Hit test | a click on the canvas selects the topmost layer (last in plan order) whose rotated rectangle contains the point; clicks that hit nothing clear the selection | A |
-| Inline text editor | a `<textarea>` over the item's box for `text.set` | A |
+| Overlay | Source of geometry |
+| --- | --- |
+| Safe-area guide | the `safe_area: [x, y, w, h]` field of the plan window, in project pixels (the core computes it with `SafeArea(width, height)` of SDD-004 §4.1; the UI never re-implements the percentages). Drawn as a dashed rectangle and a dimmed band outside it; toggled by the "Safe area" button, off by default |
+| Selection box | the plan layer of the selected item at the playhead frame, `getLayerGeometry(frame)`: `cx`, `cy`, `w`, `h`, `rotation`, `scale`, `opacity` (indexed by `frame - first` when an array). When the playhead is outside the item no box is drawn |
+| Transform handles | four corner handles (uniform scale), one rotation handle above the box, drag on the body to move; the gestures of §8.2. The box, the handles and any focus ring over the preview use `--ed-handle` (§17), because the surround is dark in both themes. The box moves under the pointer as the ephemeral preview; the picture does not |
+| Hit test | a click on the canvas selects the topmost layer (last in plan order) whose rotated rectangle contains the point; clicks that hit nothing clear the selection |
+| Inline text editor | a `<textarea>` over the item's box for `text.set` |
 
 Handles are not part of the exported picture and are drawn only in the editor. Text and caption items are never drawn by the browser: their appearance comes from the plan's bitmaps.
 
@@ -1173,7 +1169,7 @@ The Playwright spec `effects-preview` (§20.1) pins the picture on a solid clip:
 
 ### 12.1 What it shows
 
-The inspector panel shows one panel by selection: nothing selected, the project panel; a track selected, the track panel; one item, the panel for its type; several items, only the fields they share (Name is hidden, Timing hidden, Transform and Audio shown with "mixed" placeholders and sent to all selected items in one batch). Every field is bound to one command; the third column names the property in the argument list of SDD-002 Part B. Phase A for the whole inspector.
+The inspector panel shows one panel by selection: nothing selected, the project panel; a track selected, the track panel; one item, the panel for its type; several items, only the fields they share (Name is hidden, Timing hidden, Transform and Audio shown with "mixed" placeholders and sent to all selected items in one batch). Every field is bound to one command; the third column names the property in the argument list of SDD-002 Part B.
 
 | Section | Fields | Command | Applies to |
 | --- | --- | --- | --- |
@@ -1206,7 +1202,7 @@ The inspector panel shows one panel by selection: nothing selected, the project 
 | Track panel | name, hidden, muted, magnet, caption style (partial and "Replace"); on a visual track a closed "Import subtitles" section with a button that opens a file picker for `.srt` and `.vtt` (the caption panel has the same section for the track of the caption): the browser reads the text of the file and sends it, with `format` from the extension, in one `caption.import_subtitles {track_id, text, format?}`; the core parses it, creates one caption per cue and judges the cues, and its refusal (`E_VALIDATION` for a bad file, `E_OVERLAP`, `E_INVALID_STATE`, ...) shows under the button as received; the page parses no time line and builds no caption | `track.update`, `track.set_caption_style`, `caption.import_subtitles` | track |
 | Project panel | name, size preset (9:16, 1:1, 16:9, 4:5), width, height, background, loudness target, frame rate, template info (description and the named colours, added and removed one at a time) | `project.rename`, `settings.set`, `settings.set_fps`, `template.set_info` | nothing selected |
 
-Fonts come from `getFonts()` (Appendix B); the select shows bundled families first, as names in the UI font: the browser never loads the rendering fonts, and the MVP shows no rendered samples (D-030). Colours use `ColorField` (hex text input plus the native colour input for the RGB part and a slider for alpha, sending `#RRGGBB` or `#RRGGBBAA`).
+Fonts come from `getFonts()` (Appendix B); the select shows bundled families first, as names in the UI font: the browser never loads the rendering fonts, and no rendered samples are shown (D-030). Colours use `ColorField` (hex text input plus the native colour input for the RGB part and a slider for alpha, sending `#RRGGBB` or `#RRGGBBAA`).
 
 ### 12.2 Time inputs
 
@@ -1251,7 +1247,7 @@ When `startJob {kind: "transcribe"}` answers `E_TRANSCRIBE_UNAVAILABLE`, the UI 
 1. In local mode with a browser session, or in network mode with an `admin` key, the dialog offers the button "Install". It calls `installTool({ name, model? })` (`POST /api/v1/system/tools/install`, answer 202), with `name` taken from `details.tool`. For `whisper` the dialog shows a select of the model (`tiny`, `base`, `small`, `large-v3-turbo`, the list of the CLI help, since the service does not expose one over HTTP), default `small` or `details.model` when it is one of them, with the hint that the chosen model becomes the transcription default of the workspace; `model` is the chosen one. The download size is shown only while the chosen model is the one the service announced. The route is allowed only to a browser session in local mode or an `admin` key in network mode (SDD-007 §6.8 item 1), like emptying the trash.
 2. While an install runs the dialog polls `getTools()` (`GET /api/v1/system/tools`) every second and shows a determinate progress bar from `done_bytes` and `total_bytes`. When the install is no longer running and has not failed the dialog says so and the user presses Generate again; the UI does not restart the transcription by itself.
 3. With any other caller, or when the answer of `installTool` is `E_FORBIDDEN`, the dialog shows only the command `details.install_command` and no button.
-4. A failed install shows the code, message and hint of the core and "Copy details". Phase A, with the auto captions flow.
+4. A failed install shows the code, message and hint of the core and "Copy details". It comes with the auto captions flow.
 
 ## 13. Media library
 
@@ -1260,7 +1256,7 @@ When `startJob {kind: "transcribe"}` answers `E_TRANSCRIBE_UNAVAILABLE`, the UI 
 The library has a single-line path input and an Import button (`Enter` submits). The input accepts a path as the user pastes it: surrounding double quotes (Windows "Copy as path") are stripped and leading and trailing spaces trimmed; nothing else is interpreted. Pasting several lines imports each line in order (one `importMedia` request each). The browser cannot learn the path of a dropped or chosen file, so:
 
 1. **Plain browser (local mode).** Drag and drop onto the library is accepted only to show a message: "A browser page cannot see the path of a file. Paste the path into the field." The picker `<input type="file">` is not used.
-2. **Desktop shell (BETA).** The shell exposes `window.vukemDesktop?.pickFiles(): Promise<string[]>` and delivers dropped paths through `window.vukemDesktop?.onDropPaths(cb)`. The library feature-detects them; when present it shows a "Choose files" button and accepts drops, and passes the returned absolute paths to the same `importMedia` function. The interface is the only coupling to the shell (§21). Its two other optional members (D-030) are `onMenuAction(cb: (action: string) => void): Unsubscribe`, through which the native menu calls an action id of the action registry (`commands/actions.ts`), and `setTheme(theme: "dark" | "light"): void`, which the UI calls at boot and on every theme toggle so the shell's title bar follows the page. All three are feature-detected. In the shell (`desktop/shell/bridge.go`) `pickFiles` opens the native file dialog and resolves with the chosen absolute paths (an empty list when the dialog is cancelled); `onDropPaths` receives the paths of files dropped anywhere on the window, and the browser message of item 1 is not shown. The page and the shell talk by one JSON message each way through the webview; the shell answers only a message from the main frame of its own server origin, and the only operations it knows are `pickFiles`, `pickTemplate` (a native dialog for one template file, which fills the template path field of the projects page; the button "Choose file" appears only when the member exists) and `showInFolder(path)`. The export dialog shows a "Show in folder" button next to the path of a finished export when `showInFolder` is present; the shell opens the file manager (Explorer or Finder with the file selected, the folder on Linux) only for an absolute path to an existing regular file and rejects the promise otherwise. The page code of the bridge lives in `lib/desktopBridge.ts`, because the library, the export dialog and the first-run tips all use it and feature folders may not import each other. The shell defines the object after the page loads and announces it with a `vukem-desktop-ready` event on `window`, so the library subscribes to that event instead of reading the object once. With the object, the empty-library text also mentions the button and drops ("No media yet. Choose files, drop them here or paste a path above.").
+2. **Desktop shell .** The shell exposes `window.vukemDesktop?.pickFiles(): Promise<string[]>` and delivers dropped paths through `window.vukemDesktop?.onDropPaths(cb)`. The library feature-detects them; when present it shows a "Choose files" button and accepts drops, and passes the returned absolute paths to the same `importMedia` function. The interface is the only coupling to the shell (§21). Its two other optional members (D-030) are `onMenuAction(cb: (action: string) => void): Unsubscribe`, through which the native menu calls an action id of the action registry (`commands/actions.ts`), and `setTheme(theme: "dark" | "light"): void`, which the UI calls at boot and on every theme toggle so the shell's title bar follows the page. All three are feature-detected. In the shell (`desktop/shell/bridge.go`) `pickFiles` opens the native file dialog and resolves with the chosen absolute paths (an empty list when the dialog is cancelled); `onDropPaths` receives the paths of files dropped anywhere on the window, and the browser message of item 1 is not shown. The page and the shell talk by one JSON message each way through the webview; the shell answers only a message from the main frame of its own server origin, and the only operations it knows are `pickFiles`, `pickTemplate` (a native dialog for one template file, which fills the template path field of the projects page; the button "Choose file" appears only when the member exists) and `showInFolder(path)`. The export dialog shows a "Show in folder" button next to the path of a finished export when `showInFolder` is present; the shell opens the file manager (Explorer or Finder with the file selected, the folder on Linux) only for an absolute path to an existing regular file and rejects the promise otherwise. The page code of the bridge lives in `lib/desktopBridge.ts`, because the library, the export dialog and the first-run tips all use it and feature folders may not import each other. The shell defines the object after the page loads and announces it with a `vukem-desktop-ready` event on `window`, so the library subscribes to that event instead of reading the object once. With the object, the empty-library text also mentions the button and drops ("No media yet. Choose files, drop them here or paste a path above.").
 3. **Network mode.** `STUARTY_IMPORT_ROOTS` bounds the paths; an `E_PATH_NOT_ALLOWED` answer carries the configured roots in its hint only for an administrator (a member sees the generic hint), and the library shows the hint with the error. Uploads are out of scope (PRD-001 §7).
 
 ### 13.2 Cards and progress
@@ -1304,11 +1300,11 @@ stateDiagram-v2
   Failed --> Checking: Try again
 ```
 
-1. **Open.** The dialog calls `getLint` and lists the findings grouped as errors, warnings and notes (RF-108 text with the rule name, the item id and the message). Each finding with an item id is a link that closes the dialog and selects the item. Errors disable Start and explain that export would answer `E_LINT_BLOCKING`; the dialog "Re-check" button runs lint again. Warnings do not block. (Lint is the Prototype's first rule set; the full set is ALPHA.)
+1. **Open.** The dialog calls `getLint` and lists the findings grouped as errors, warnings and notes (RF-108 text with the rule name, the item id and the message). Each finding with an item id is a link that closes the dialog and selects the item. Errors disable Start and explain that export would answer `E_LINT_BLOCKING`; the dialog "Re-check" button runs lint again. Warnings do not block.
 2. **Start.** `startJob(id, { kind: "export" })` returns `job_id`; the dialog goes to Running. If the answer is `E_LINT_BLOCKING` (the document changed since the check) the findings from `details.findings` replace the list. `E_QUEUE_FULL` shows the running jobs from `details.running` and a Try again button. `E_FFMPEG_MISSING` and `E_NO_ENCODER` show their hint and no retry.
 3. **Progress.** From `job.updated` events with the matching `job_id` (`state`, `progress` 0 to 1, `message`): a determinate progress bar with the percentage and the message. If no event for the job arrived for 5 s, the dialog polls `getJob` every 2 s until an event arrives. A progress bar is `role="progressbar"`; updates are announced at most every 10% (§18).
-4. **Cancel (A).** A Cancel button calls `cancelJob`; the state `cancelled` shows "Export cancelled" (`E_CANCELLED` is a state, not an error toast). In the Prototype there is no Cancel button and the dialog can be closed while the job continues (the jobs chip keeps showing it).
-5. **Success.** Shows the file path as the core reports it (copyable), the size and duration, and a Download link to `exportFileUrl(job_id)` (`GET /jobs/{job_id}/file`, with `Content-Disposition: attachment`, Range supported; the route is Prototype, SDD-000 §1, so the link is in the Prototype too). The copyable path stays for local mode, where the file is already on the user's disk. The verification checks of the core are listed when present. A note says the export is of revision `N` and a warning appears if the read model is newer.
+4. **Cancel.** A Cancel button calls `cancelJob`; the state `cancelled` shows "Export cancelled" (`E_CANCELLED` is a state, not an error toast). The dialog can also be closed while the job continues (the jobs chip keeps showing it).
+5. **Success.** Shows the file path as the core reports it (copyable), the size and duration, and a Download link to `exportFileUrl(job_id)` (`GET /jobs/{job_id}/file`, with `Content-Disposition: attachment`, Range supported; SDD-000 §1). The copyable path stays for local mode, where the file is already on the user's disk. The verification checks of the core are listed when present. A note says the export is of revision `N` and a warning appears if the read model is newer.
 6. **Failure.** Shows the headline for the code (`E_EXPORT_FAILED`, `E_VERIFY_FAILED` with `details.checks` as a list of failed checks, `E_NO_ENCODER`, and so on), then the core's message and hint, and "Copy details".
 7. **Reload during an export.** Boot calls `listJobs` and rehydrates running jobs into `jobsStore`; the jobs chip shows them and the dialog reopens at the Running state when the user clicks it.
 
@@ -1335,7 +1331,7 @@ export interface HistoryStep {           // mirrors SDD-003
 
 Each row shows the revision, the actor chip (`you`, `claude-code`, ...), the relative time (`Intl.RelativeTimeFormat`), the first line of `description` and, expanded, the whole text, rendered with `UntrustedText` (§1.2). Steps of other actors are not dimmed but carry their actor chip; undone steps are struck through. A row prepended from a `batch.committed` event is provisional and shows only `revision`, `actor`, `at`, `kind` and `description`, the fields of the event. `undone`, `undoable_by_me` and `redoable_by_me` come only from a refetch of the first page (`getHistory`) after each event, debounced by 250 ms; the refetched page replaces the provisional rows. The panel also refetches the page when the event is a gap.
 
-The top-bar Undo and Redo buttons (and `Ctrl+Z`, `Ctrl+Shift+Z`, `Ctrl+Y`) call `undo(id)` and `redo(id)`, which the core applies to the current actor's own latest step (ADR-0006). The buttons are enabled while the history list says `undoable_by_me` or `redoable_by_me` exists for some step; in the Prototype, where there is no history panel, they are always enabled and `E_NOTHING_TO_UNDO` and `E_NOTHING_TO_REDO` disable them until the next batch by this actor. The response lists the primitives the core skipped because another actor changed the same fields (SDD-002 A.6); the UI shows a toast "Undo applied, 2 changes were left alone because claude-code changed them" using `skipped`. Undo and redo are batches in the log: they arrive as events like any batch.
+The top-bar Undo and Redo buttons (and `Ctrl+Z`, `Ctrl+Shift+Z`, `Ctrl+Y`) call `undo(id)` and `redo(id)`, which the core applies to the current actor's own latest step (ADR-0006). The buttons are enabled while the history list says `undoable_by_me` or `redoable_by_me` exists for some step; when the history list is not loaded they are enabled and `E_NOTHING_TO_UNDO` and `E_NOTHING_TO_REDO` disable them until the next batch by this actor. The response lists the primitives the core skipped because another actor changed the same fields (SDD-002 A.6); the UI shows a toast "Undo applied, 2 changes were left alone because claude-code changed them" using `skipped`. Undo and redo are batches in the log: they arrive as events like any batch.
 
 ## 16. Internationalization
 
@@ -1363,8 +1359,8 @@ The mechanism is kept: server catalogs, `{name}` placeholders, plural objects, `
 | I2 | For every key, the set of `{placeholder}` names is the same in both locales, and plural objects have the same categories where the locale needs them |
 | I3 | No hard-coded user-facing string: in every source of `web/resources/js` (editor, components, layouts and pages; generated code and tests excepted) a TypeScript AST scan fails on JSX text containing a letter that is not inside `t(...)`, and on string literals assigned to `aria-label`, `aria-description`, `title`, `placeholder`, `alt`, `label` that are not a call to `t`. Allowed: symbols and numbers, file names, CSS classes, test ids, the values listed in T9, and the format examples in `TECHNICAL_LITERALS` of `check-i18n.ts` (`sha256:…`, `prj_...`). A key used by a shared component (`components/ui`) lives under a prefix served to both the editor and the Inertia pages (`ui.nav.`, `ui.common.`, `ui.theme.`, `ui.editor.`), because `routes/pages.go` ships only those to the editor |
 | I4 | Every literal key passed to `t("...")` in `editor/**` exists in `en.json`, and every `ui.editor` key of `en.json` is used somewhere in `resources/js`; a template key such as `` `ui.editor.errors.${code}` `` uses every key under its prefix |
-| I5 | Every `ErrorCode` of `generated/errors.ts` has `ui.editor.errors.<CODE>`; every non-internal `CommandName` has `ui.editor.commands.<name>.title`; every lint rule name listed in `lint-rules.json` has `ui.editor.lint.<rule>`. The rule names are read from that file only, never from `Doctor`; `lint-rules.json` is generated by ROADMAP task P2-ENG-022 in ALPHA, and in the Prototype the list is the generated TypeScript constant of the first rules |
-| I6 | All rules run, I1 and I2 against `pt-BR.json` included (in the Prototype only I3 to I5 ran against `en.json`); each rule has a failing and a passing fixture under `web/scripts/i18n-fixtures`, and the check fails when one is missing |
+| I5 | Every `ErrorCode` of `generated/errors.ts` has `ui.editor.errors.<CODE>`; every non-internal `CommandName` has `ui.editor.commands.<name>.title`; every lint rule name listed in `lint-rules.json` has `ui.editor.lint.<rule>`. The rule names are read from that file only, never from `Doctor`; `lint-rules.json` is generated by ROADMAP task P2-ENG-022 |
+| I6 | All rules run, I1 and I2 against `pt-BR.json` included ; each rule has a failing and a passing fixture under `web/scripts/i18n-fixtures`, and the check fails when one is missing |
 
 Dates and numbers use `Intl` with the active locale; timecodes are not localized. Core text shown as received (T9) is English in both locales; the headline and labels around it are localized.
 
@@ -1397,12 +1393,12 @@ D-024: dark by default, light on a toggle.
 | `--ed-handle` | `oklch(0.85 0.12 230)` | `oklch(0.85 0.12 230)` | selection box, transform handles and focus rings drawn over the preview surround (§11.6) |
 
 4. **Surround.** The preview region uses `--ed-preview-surround` only (not `--ed-bg`) and is never white in the light theme: the canvas surround stays at `oklch(0.2 0 0)` in both themes so the picture is judged against a neutral dark surround (D-024 reason). It is the one token that is the same in both themes. The `main` element that holds it carries the `dark` class and `text-foreground`, so the transport row text and icons resolve to the dark tokens in both themes (the light `--muted-foreground` on the surround is 3.01:1).
-5. **Motion.** D-013 deferred interface animation to BETA polish, and BETA allows it in two forms only (`docs/design-system.md` §2.13): `.ed-motion` (a 150 ms fade of colour, border, shadow, opacity and outline colour on timeline items, rows, track headers and the row splitter; never position or size) and `.ed-highlight` (a 200 ms ease-in of the remote-edit and conflict outlines). There is still no rotating spinner, and the 1.5 s highlights are still class toggles with a timer. Editor components take no other `transition`, `animate-` or `duration-` class (unit test `web/scripts/motion.test.ts`). The transitions and `tw-animate-css` animations the shared primitives already carry (button press, select, sheet, tooltip, sidebar, 100 to 200 ms) stay, and `app.css` turns them off under `prefers-reduced-motion: reduce` with one global rule (transition duration and delay of 0 s, animation duration of 0.01 ms, one iteration; an animation of exactly 0 s would not fire `animationend` in every engine, and popup presence waits for it). The motion tokens and that rule are in `docs/design-system.md` §2.13.
+5. **Motion.** D-013 deferred interface animation, and the editor allows it in two forms only (`docs/design-system.md` §2.13): `.ed-motion` (a 150 ms fade of colour, border, shadow, opacity and outline colour on timeline items, rows, track headers and the row splitter; never position or size) and `.ed-highlight` (a 200 ms ease-in of the remote-edit and conflict outlines). There is still no rotating spinner, and the 1.5 s highlights are still class toggles with a timer. Editor components take no other `transition`, `animate-` or `duration-` class (unit test `web/scripts/motion.test.ts`). The transitions and `tw-animate-css` animations the shared primitives already carry (button press, select, sheet, tooltip, sidebar, 100 to 200 ms) stay, and `app.css` turns them off under `prefers-reduced-motion: reduce` with one global rule (transition duration and delay of 0 s, animation duration of 0.01 ms, one iteration; an animation of exactly 0 s would not fire `animationend` in every engine, and popup presence waits for it). The motion tokens and that rule are in `docs/design-system.md` §2.13.
 6. **Tests.** Both themes are exercised: every Playwright scenario tagged `@themes` runs twice, and the axe job and the contrast script cover both (§18.4).
 
 ## 18. Accessibility
 
-RF-075 (BETA in the PRD): this SDD builds the keyboard operation and automated checks into ALPHA, so the cost is not retrofitted; full WCAG 2.2 AA conformance sign-off stays a BETA task. In the Prototype, native elements, names and visible focus are used from the start but nothing is audited.
+RF-075: this SDD builds the keyboard operation and automated checks in, so the cost is not retrofitted; full WCAG 2.2 AA conformance sign-off is a separate task. Native elements, names and visible focus are used from the start.
 
 ### 18.1 Names, roles, focus
 
@@ -1417,7 +1413,7 @@ RF-075 (BETA in the PRD): this SDD builds the keyboard operation and automated c
 
 ### 18.2 Keyboard map outside the canvas
 
-`Mod` is `Ctrl` on Windows and Linux and `Cmd` on macOS. Shortcuts are ignored while focus is in an editable field (text input, text area, select, a field with `contenteditable`), with two exceptions: `Mod+K` (the palette) and `Mod+Enter` where a form uses it to commit. Project undo, redo and select-all (`Mod+Z`, `Mod+Shift+Z`, `Ctrl+Y`, `Mod+A`) act only outside an editable field, so the native undo and select-all of the input work there. The precedence by focus between this map and the grid keys is in §7.10. Defined in `commands/keymap.ts`; every shortcut calls an action of the action registry, so the map and the coverage table agree. Shortcut customization and the cheat sheet dialog (`?`) are BETA (RF-074):
+`Mod` is `Ctrl` on Windows and Linux and `Cmd` on macOS. Shortcuts are ignored while focus is in an editable field (text input, text area, select, a field with `contenteditable`), with two exceptions: `Mod+K` (the palette) and `Mod+Enter` where a form uses it to commit. Project undo, redo and select-all (`Mod+Z`, `Mod+Shift+Z`, `Ctrl+Y`, `Mod+A`) act only outside an editable field, so the native undo and select-all of the input work there. The precedence by focus between this map and the grid keys is in §7.10. Defined in `commands/keymap.ts`; every shortcut calls an action of the action registry, so the map and the coverage table agree. Shortcut customization and the cheat sheet dialog (`?`) are specified by RF-074:
 
 1. The table is `SHORTCUTS` in `commands/keymap.ts`, one row per shortcut with an `id`, its default keys and its action. The cheat sheet (dialog opened by `?` outside an editable field, or by the keyboard button of the top bar) is generated from that table and shows the current key of each row, never a second list.
 2. Rebindable rows are the editing shortcuts: `split` (`Mod+B`), `trim_start` (`Q`), `trim_end` (`W`), `add_caption` (C), `add_text` (T), `toggle_snap` (N), `zoom_in` (`Mod+=`), `zoom_out` (`Mod+-`) and `zoom_fit` (Shift+Z). The others (transport, undo and redo, delete, palette, panels, landmarks, grid keys) are fixed. The default keys follow the CapCut-compatible keymap of §18.7.
@@ -1426,31 +1422,31 @@ RF-075 (BETA in the PRD): this SDD builds the keyboard operation and automated c
 5. The handlers read the current key when a key is pressed, so a rebinding takes effect at once and a reload keeps it. The old key then does nothing.
 6. The "Show tips again" action of the first-run tips (§18.5) is in the footer of the same dialog; the editor has no separate settings page.
 
-| Key | Action | Phase |
-| --- | --- | --- |
-| `Space` | play or pause | P |
-| `Left`, `Right` | step one frame (when focus is not in a field; from ALPHA also not on a grid cell, §7.10) | P |
-| `Shift+Left`, `Shift+Right` | step one second | P |
-| `Home`, `End` | go to start or end (on a grid cell from ALPHA: first or last item, §7.10) | P |
-| `Mod+B` | split at playhead (§18.7) | P |
-| `Q`, `W` | trim start or end to playhead, that is delete what is left or right of it (§18.7) | P |
-| `Mod+Z`, `Mod+Shift+Z`, `Ctrl+Y` | undo, redo | P |
-| `Mod+=`, `Mod+-`, `Shift+Z` (`+` and `-` stay as aliases) | zoom in, out, fit | P |
-| `Delete`, `Backspace`, `Shift+Delete` | delete, ripple delete | A |
-| `Mod+D` | duplicate | A |
-| `C` | add caption | P |
-| `T` | add text | A |
-| `F2` | rename | A |
-| `V` | turn the selected items off or on | B |
-| `N` | toggle snapping | A |
-| `Mod+K` | command palette | A |
-| `Alt+1`, `Alt+2`, `Alt+3` | toggle library, inspector, history panels | A |
-| `Mod+A` in the timeline | select all items | A |
-| `Esc` | cancel gesture, close dialog or palette, clear selection | P |
-| `Tab`, `Shift+Tab` | move through regions in the order top bar, library, preview, timeline, inspector | P |
-| `F6` | jump to the next region (landmark) | A |
-| `?` | open the cheat sheet | B |
-| Timeline grid keys | §7.10 | A |
+| Key | Action |
+| --- | --- |
+| `Space` | play or pause |
+| `Left`, `Right` | step one frame (when focus is not in a field or on a grid cell, §7.10) |
+| `Shift+Left`, `Shift+Right` | step one second |
+| `Home`, `End` | go to start or end (on a grid cell: first or last item, §7.10) |
+| `Mod+B` | split at playhead (§18.7) |
+| `Q`, `W` | trim start or end to playhead, that is delete what is left or right of it (§18.7) |
+| `Mod+Z`, `Mod+Shift+Z`, `Ctrl+Y` | undo, redo |
+| `Mod+=`, `Mod+-`, `Shift+Z` (`+` and `-` stay as aliases) | zoom in, out, fit |
+| `Delete`, `Backspace`, `Shift+Delete` | delete, ripple delete |
+| `Mod+D` | duplicate |
+| `C` | add caption |
+| `T` | add text |
+| `F2` | rename |
+| `V` | turn the selected items off or on |
+| `N` | toggle snapping |
+| `Mod+K` | command palette |
+| `Alt+1`, `Alt+2`, `Alt+3` | toggle library, inspector, history panels |
+| `Mod+A` in the timeline | select all items |
+| `Esc` | cancel gesture, close dialog or palette, clear selection |
+| `Tab`, `Shift+Tab` | move through regions in the order top bar, library, preview, timeline, inspector |
+| `F6` | jump to the next region (landmark) |
+| `?` | open the cheat sheet |
+| Timeline grid keys | §7.10 |
 
 Regions are landmarks: `header` (top bar), `aside` with `aria-label` for library and inspector, `main` for the preview and timeline.
 
@@ -1469,7 +1465,7 @@ Text against its background at least 4.5:1, large text and interface components 
 1. **axe-core through `@axe-core/playwright`**, in the Playwright job. The test `a11y-axe-both-themes` opens the editor in each state (empty project, project with items, an item selected for each type, library with an error card, export dialog in each state, palette, history) in the dark and light themes, runs axe with the tags `wcag2a`, `wcag2aa`, `wcag21aa`, `wcag22aa`, and fails on any violation of impact `serious` or `critical`; `moderate` violations are reported and must be fixed or listed with a reason in `e2e/a11y-allow.json`.
 2. **Contrast script** `web/scripts/check-contrast.ts` (`bun run check:contrast`): reads the tokens of `app.css` for `:root` and `.dark`, converts OKLCH to sRGB with a small local function (no new dependency), computes WCAG contrast for every pair of §18.3 and fails below the thresholds. It runs in CI and is the authority that adjusts the initial values of §17.
 3. **Keyboard-only test** `keyboard-only-edit`: performs split, trim, nudge, delete, undo and an export using only the keyboard.
-4. A manual pass with a screen reader (NVDA on Windows, VoiceOver on macOS) is part of the BETA sign-off, not of CI.
+4. A manual pass with a screen reader (NVDA on Windows, VoiceOver on macOS) is part of the sign-off, not of CI.
 5. **WCAG 2.2 measurements** `wcag22.spec.ts`, with page-side helpers in `e2e/support/wcag.ts`: the criteria that axe does not decide (§18.6). The last test of the spec runs each helper on a page built to break its criterion, so a helper that stops detecting fails CI.
 
 ### 18.6 Conformance of the criteria of WCAG 2.2 that axe cannot decide
@@ -1621,7 +1617,7 @@ All measurements use `performance.mark` and `performance.measure` with the prefi
 
 | Requirement | Measure | How | Budget |
 | --- | --- | --- | --- |
-| NFR-001 command round trip, local, p95 on 200 items | `vv:edit` (from `edit()` call to response parsed) | test `perf-edit-200` (Prototype): a 200-item, 2,000-word fixture, 200 sequential `item.trim` operations sent through `window.__vv.dispatch(ops)` of the end-to-end build (§20.4), which calls the same `edit()` queue the UI uses; p95 of the measure. The UI's own part, from response received to the store patched and React committed (`vv:edit-apply`), is budgeted separately | 50 ms p95 for `vv:edit`; 8 ms p95 for `vv:edit-apply` |
+| NFR-001 command round trip, local, p95 on 200 items | `vv:edit` (from `edit()` call to response parsed) | test `perf-edit-200`: a 200-item, 2,000-word fixture, 200 sequential `item.trim` operations sent through `window.__vv.dispatch(ops)` of the end-to-end build (§20.4), which calls the same `edit()` queue the UI uses; p95 of the measure. The UI's own part, from response received to the store patched and React committed (`vv:edit-apply`), is budgeted separately | 50 ms p95 for `vv:edit`; 8 ms p95 for `vv:edit-apply` |
 | NFR-002 remote change reaches an open UI | `vv:remote` (from `performance.timeOrigin`-based timestamp passed by the test's HTTP client at the moment it sent the request, to the moment the DOM shows the change) | test `two-actor-live-update`: a second HTTP client (actor `local:claude-code`) sends 20 edits; the page reports, through the `?debug=1` hook, the `performance.now()` of each `applyRevisionDiff` commit; the test compares with the client's send time on the same clock (Playwright `Date.now()` and `performance.timeOrigin` are aligned) | 200 ms p95 |
 | NFR-003 proxy frame within 100 ms of a seek | `vv:scrub` (seek call to the `seeked` event of the first video element and the canvas draw) | test `scrub-latency`: 30 seeks across a proxy with a short GOP | 100 ms p95 |
 | NFR-004 exact frame within 500 ms of pause | `vv:truth` (`vv:pause` to `vv:truth-shown`) | test `play-pause-truth`: 20 pauses at random frames, with a cold and a warm cache | 500 ms p95 (cold) |
@@ -1629,7 +1625,7 @@ All measurements use `performance.mark` and `performance.measure` with the prefi
 | NFR-011 preview against export | SSIM and displacement | the test `preview-vs-export` of §20.3 | SSIM at least 0.97 on luma, 1 px |
 | `MAX_VIDEO_LAYERS` (§11.2 item 5) | `getVideoPlaybackQuality().droppedVideoFrames` and tab memory | scenario `video-layers-budget`: fixtures with 4, 6 and 8 simultaneous video layers, each played for 10 s | at most 2% dropped frames at the chosen `MAX_VIDEO_LAYERS`; tab memory within NFR-008 |
 
-**Measured on 2026-11-14** (the Prototype end-to-end specs, headless Chromium with software WebGL, Windows, FFmpeg n9.0.2 LGPL; the numbers move with the machine, rerun `bun run e2e`):
+**Measured on 2026-11-14** (the first end-to-end specs, headless Chromium with software WebGL, Windows, FFmpeg n9.0.2 LGPL; the numbers move with the machine, rerun `bun run e2e`):
 
 | Budget | Result |
 | --- | --- |
@@ -1637,7 +1633,7 @@ All measurements use `performance.mark` and `performance.measure` with the prefi
 | Edit round trip, Split on the 200-item project, click to the new item in the DOM (`command-round-trip`) | p50 14.9 ms, p95 25.0 ms, one `/edit` request per gesture (25 gestures, 25 requests; budget 50 ms at p95) |
 | NFR-003 seek to a decoded proxy frame (`scrub-latency`) | p50 53 ms, p95 65 ms over 20 seeks (budget 100 ms) |
 | NFR-004 pause to exact frame (`play-pause-truth`, 20 pauses, `vv:truth`, which includes the 150 ms delay) | Warm (the frame was rendered once before): p50 151 ms, p95 153 ms, gated at 500 ms. Cold (first pause at a frame): p50 154 to 159 ms, p95 395, 409 and 524 ms over three runs. **Cold ViewFrame render, profiled (P3 NFR-004 task)**: a cold frame is one FFmpeg process start (61 to 82 ms on this machine with nothing else to do, 150 ms and more with the CPU taken by other builds) plus the decode of up to 14 frames from the last keyframe; the tail of 395 to 1,678 ms is the start of the process and the decode under load, not a step of the engine. A frame of two clips now starts both decoders before the first is read (`engine/export` `prestart`), which halves the cold time of a picture in picture; see SDD-004 section 12 for the numbers |
-| NFR-011 preview against `ViewFrame` (`preview-vs-export`, three Prototype cases: cover, contain, one caption; frame 30; `ViewFrame` requested at the width of the canvas and compared at the size of the canvas, 463 x 823) | SSIM (luma) 0.977 cover, 0.984 contain, 0.974 caption, at least 0.97. Red and blue marker centroids at most 0.62 px apart (gate 1 px). With the canvas at exactly 360 x 640 the SSIM is 0.991 to 0.994. Compared after downscaling both images to a thumbnail the same frame scores 0.96: that loss is the resampling, not the preview |
+| NFR-011 preview against `ViewFrame` (`preview-vs-export`, three cases: cover, contain, one caption; frame 30; `ViewFrame` requested at the width of the canvas and compared at the size of the canvas, 463 x 823) | SSIM (luma) 0.977 cover, 0.984 contain, 0.974 caption, at least 0.97. Red and blue marker centroids at most 0.62 px apart (gate 1 px). With the canvas at exactly 360 x 640 the SSIM is 0.991 to 0.994. Compared after downscaling both images to a thumbnail the same frame scores 0.96: that loss is the resampling, not the preview |
 | `MAX_VIDEO_LAYERS` (`video-layers-budget`), dropped frames over 10 s | 4 layers: 0 of 1200 (0%); 6 layers (4 decoding plus 2 stills): 125 of 1603 (7.8%); 8 layers: 79 of 1249 (6.3%); JS heap 11 to 13 MB. The 4 decoding elements are within budget, so `MAX_VIDEO_LAYERS = 4` stands; the layers beyond the cap cost frames on software WebGL, to be rechecked on the reference machine with a GPU |
 | `MAX_VIDEO_LAYERS` again (P2-QA-003, `video-layers.spec.ts`, perf project, Windows 11 on the reference machine, 10 s each) | 4 layers: 0 of 1200 frames dropped (0%); 6 layers: 0 of 1242 (0%); 8 layers: 0 of 1498 (0%); in every run 4 video elements existed (the cap holds); JS heap 15 to 20 MB; the renderer process of the tab 682 to 705 MB, under the 1 GB of NFR-008. `MAX_VIDEO_LAYERS = 4` is kept |
 | NFR-011 preview against `ViewFrame`, every golden case of `engine/export/testdata/golden` (P2-QA-003, `preview-vs-export.spec.ts`; each case loaded as a 180 x 320 project, every listed frame, canvas 463 x 823, `ViewFrame` at the same width, SSIM on the luma and the offset of the whole picture by the Lucas-Kanade method, marker or shape centroids where the case has them) | 27 of 31 cases meet the gate (worst SSIM per case 0.9701 to 0.9928, largest offset 0.96 px). Four miss it and are expected failures in the spec with the cause: `crop` (offset 5.2 px, one source pixel: the export crops an odd x of a 4:2:0 source through FFmpeg `crop`, which aligns it to an even one; the preview samples the exact rectangle), `text-style` (SSIM 0.958, background box 2.5 px) and `caption-highlight` (SSIM 0.958, 2.2 px): the preview asks the plan for its buffer width, but the plan rounds PixelScale up to a quarter (2.75 where the output scale is 2.57), so the bitmap is resampled by 0.935 in the preview while the export lays the text out at the output scale; `filter-sepia` (SSIM 0.9698 at frame 0, 0.0002 under the gate). The spec also exposed two preview defects fixed with it: the first resize arrived before the renderer finished its init and was dropped (any project that is not 1080 x 1920 drew a sixth of the canvas), and the colour matrix of 12 numbers was read as 20 (a black layer), with no filter matrix or blur drawn |
@@ -1667,43 +1663,43 @@ If a measurement misses its budget, the owner fixes the code or reports the meas
 
 They live in `web/e2e/specs/`, use the existing Playwright setup (`web/e2e/playwright.config.ts`, a Go test server per project) with the Stuarty server started on fixture workspaces, and use the real core: no mocks of the API. Fixtures: tiny media files in `web/e2e/fixtures/` (a 5 s 1080×1920 clip with audio, a short music file, an image), a 200-item 2,000-word project, a 5 minute project, a golden-case project per `engine/export/testdata/golden/`.
 
-| # | Name | Scenario | Phase |
-| --- | --- | --- | --- |
-| 1 | `prototype-reference` | the Prototype scenario: create a project, import the fixture by path, see progress and the card, add it to the timeline, play, pause and see the truth frame, split at the playhead, trim an end, add a caption, open Export, see lint findings, export, see progress to success, check the file exists and passes `ffprobe` through the API result; the UI shows no console error and no CSP violation | P |
-| 2 | `two-actor-live-update` | an HTTP client as `local:claude-code` edits while the page is open; the timeline and preview change within 200 ms p95, the activity indicator names the actor, changed items are outlined, the revision number advances; the page's own undo does not undo the other actor's step | P |
-| 3 | `deep-link-reload` | open `/editor/{id}`, reload, open it in a second tab, open with `?t=12.5s&item=...`; same document, playhead and selection; unknown id gives 404 | P (without query), A (query) |
-| 4 | `event-gap-resync` | a test proxy between the browser and the server drops chosen events of the stream (and kills the stream mid-session), so the client misses revisions or receives `resync.required`; the UI detects the gap or `resync.required`, refetches, ends at the same document, with no duplicated item | P |
-| 5 | `play-pause-truth` | play 3 s, pause, the exact frame overlay appears within 500 ms and equals `ViewFrame` bytes; any seek or revision removes it | P |
-| 6 | `scrub-latency` | drag the ruler across the clip; each proxy frame within 100 ms p95 | P |
-| 7 | `import-errors` | in local mode, import a missing path and a text file; each card or message shows the code headline, the core message and the hint, in both locales from ALPHA | P |
-| 8 | `export-lint-blocking` | a project with a blocking lint error: findings are listed and Start is disabled; a forced `JobStart` answers `E_LINT_BLOCKING` and the dialog shows `details.findings` | P |
-| 9 | `export-failure` | the server runs with a failing encoder (`STUARTY_ENCODER` set to an unusable name): the dialog shows `E_NO_ENCODER` or `E_EXPORT_FAILED` with hint | P |
-| 10 | `thin-client-no-optimistic` | delay the server's edit answer by 1 s; after releasing a split or a drag the store revision and the stored item fields stay unchanged while the ghost is visible, and change after the answer | P (split), A (drag) |
-| 11 | `undo-redo-per-actor` | UI and agent interleave edits; UI undo reverts only the UI's last batch and reports skipped primitives when the agent touched the same fields | P |
-| 12 | `theme-default-dark-and-toggle` | first visit is dark regardless of the system preference; toggle persists across reload (the contrast script is ALPHA, §22.2 item 10) | P |
-| 13 | `csp-clean` | the whole Prototype scenario produces no `securitypolicyviolation` | P |
-| 14 | `overlap-snapback` | drag an item onto another: ghost removed, item back in place, conflicting item outlined, "move to next free position" works | A |
-| 15 | `conflict-revision` | an agent edit lands between pointer down and release of the same item: the core answers `E_REVISION_CONFLICT`; the UI sends nothing more and shows the action "Apply again"; only the click sends, with the current `base_revision` and a new idempotency key (SDD-006 §7.3) | A |
-| 16 | `inspector-debounce` | typing `1.5` then `s` then Enter in a time field sends exactly one command; `Esc` sends none; a slider drag sends one on release; arrow-key bursts send one | A |
-| 17 | `keyboard-only-edit` | split, trim, nudge, delete, undo and export with the keyboard alone | A |
-| 18 | `command-palette-coverage` | §9.3 run-time half | A |
-| 19 | `caption-word-edit` | edit a word by double-click, split and merge captions, retime a boundary, auto captions through a fake transcription provider | A |
-| 20 | `transform-handles` | drag, scale and rotate on the canvas send `item.set_transform` or `keyframe.set` for animated properties; the picture changes only after the plan window arrives | A |
-| 21 | `i18n-switch` | switch to pt-BR: no English UI string remains except core text; layout holds; switch back | A |
-| 22 | `a11y-axe-both-themes` | §18.4 | A |
-| 23 | `snap-points` | moving an item near another snaps to its edge, near the playhead snaps to it, `Alt` suspends snapping; the request is made once per revision | A |
-| 24 | `timeline-200-items-perf` | scroll, zoom and drag on the 200-item project; no long task above 50 ms | A |
-| 25 | `history-panel` | steps from UI and agent with actors, live prepend, undo and redo for the current actor | A |
-| 26 | `network-mode-pages` | login, API keys page create and revoke, local-mode 404 of `/settings/keys`; in network mode, import of a path outside the roots shows `E_PATH_NOT_ALLOWED` with the roots | A |
-| 27 | `preview-vs-export` | §20.3 | P (cases of the Prototype), A (all golden cases) |
-| 28 | `soak-5min` | nightly memory job of §19.1 | A |
-| 29 | `perf-edit-200` | the 200-item, 2,000-word fixture; 200 sequential `item.trim` operations sent through `window.__vv.dispatch(ops)` (§20.4); p95 of `vv:edit` at most 50 ms and of `vv:edit-apply` at most 8 ms (NFR-001, §19.1) | P |
-| 30 | `video-layers-budget` | fixtures with 4, 6 and 8 simultaneous video layers played for 10 s each; `getVideoPlaybackQuality().droppedVideoFrames` at most 2% at the chosen `MAX_VIDEO_LAYERS`, and tab memory recorded (§11.2 item 5, §19.1) | P |
-| 31 | `alpha-overlay` | a clip whose right half is opaque red and left half transparent (WebM VP9 `yuva420p`) over an opaque green clip: the preview canvas at frame 0 is green under the transparent half and red under the opaque half; no response of the page is an error | A |
-| 32 | `effects-preview` | a solid clip with each effect or transition of §11.7: the vignette darkens the edges of the layer, the grain changes pixels of a flat colour, a motion blur and a whip blur spread past the edge of a shrunken layer, a dip starts from its colour and ends on the clip, a wipe reveals one side first, a zoom and a whip settle on the clip; no shader error in the console | B |
-| 33 | `effects-inspector` | the Effects section sends the whole list as one `clip.set_effects` for each add, edit and remove, and shows the range of a value out of range without sending; the Transitions section shows the colour of a dip and the direction of a whip or a wipe and sends them with that kind only | B |
-| 34 | `speed-curve` | the Reverse toggle sends `clip.set_speed {reverse}`; the curve is a draft until Apply sends one `clip.set_speed {curve}`; Remove curve sends the stored mean; a curve the core refuses shows its message | B |
-| 35 | `link-extract-audio` | `~` and the item menu link and unlink the selected items and the link mark follows; "Extract audio" and `Mod+Shift+S` send `track.add` and `item.extract_audio` and the clip is muted | B |
+| # | Name | Scenario |
+| --- | --- | --- |
+| 1 | `prototype-reference` | the first scenario: create a project, import the fixture by path, see progress and the card, add it to the timeline, play, pause and see the truth frame, split at the playhead, trim an end, add a caption, open Export, see lint findings, export, see progress to success, check the file exists and passes `ffprobe` through the API result; the UI shows no console error and no CSP violation |
+| 2 | `two-actor-live-update` | an HTTP client as `local:claude-code` edits while the page is open; the timeline and preview change within 200 ms p95, the activity indicator names the actor, changed items are outlined, the revision number advances; the page's own undo does not undo the other actor's step |
+| 3 | `deep-link-reload` | open `/editor/{id}`, reload, open it in a second tab, open with `?t=12.5s&item=...`; same document, playhead and selection; unknown id gives 404 |
+| 4 | `event-gap-resync` | a test proxy between the browser and the server drops chosen events of the stream (and kills the stream mid-session), so the client misses revisions or receives `resync.required`; the UI detects the gap or `resync.required`, refetches, ends at the same document, with no duplicated item |
+| 5 | `play-pause-truth` | play 3 s, pause, the exact frame overlay appears within 500 ms and equals `ViewFrame` bytes; any seek or revision removes it |
+| 6 | `scrub-latency` | drag the ruler across the clip; each proxy frame within 100 ms p95 |
+| 7 | `import-errors` | in local mode, import a missing path and a text file; each card or message shows the code headline, the core message and the hint, in both locales |
+| 8 | `export-lint-blocking` | a project with a blocking lint error: findings are listed and Start is disabled; a forced `JobStart` answers `E_LINT_BLOCKING` and the dialog shows `details.findings` |
+| 9 | `export-failure` | the server runs with a failing encoder (`STUARTY_ENCODER` set to an unusable name): the dialog shows `E_NO_ENCODER` or `E_EXPORT_FAILED` with hint |
+| 10 | `thin-client-no-optimistic` | delay the server's edit answer by 1 s; after releasing a split or a drag the store revision and the stored item fields stay unchanged while the ghost is visible, and change after the answer |
+| 11 | `undo-redo-per-actor` | UI and agent interleave edits; UI undo reverts only the UI's last batch and reports skipped primitives when the agent touched the same fields |
+| 12 | `theme-default-dark-and-toggle` | first visit is dark regardless of the system preference; toggle persists across reload (the contrast script, §22.2 item 10) |
+| 13 | `csp-clean` | the whole first scenario produces no `securitypolicyviolation` |
+| 14 | `overlap-snapback` | drag an item onto another: ghost removed, item back in place, conflicting item outlined, "move to next free position" works |
+| 15 | `conflict-revision` | an agent edit lands between pointer down and release of the same item: the core answers `E_REVISION_CONFLICT`; the UI sends nothing more and shows the action "Apply again"; only the click sends, with the current `base_revision` and a new idempotency key (SDD-006 §7.3) |
+| 16 | `inspector-debounce` | typing `1.5` then `s` then Enter in a time field sends exactly one command; `Esc` sends none; a slider drag sends one on release; arrow-key bursts send one |
+| 17 | `keyboard-only-edit` | split, trim, nudge, delete, undo and export with the keyboard alone |
+| 18 | `command-palette-coverage` | §9.3 run-time half |
+| 19 | `caption-word-edit` | edit a word by double-click, split and merge captions, retime a boundary, auto captions through a fake transcription provider |
+| 20 | `transform-handles` | drag, scale and rotate on the canvas send `item.set_transform` or `keyframe.set` for animated properties; the picture changes only after the plan window arrives |
+| 21 | `i18n-switch` | switch to pt-BR: no English UI string remains except core text; layout holds; switch back |
+| 22 | `a11y-axe-both-themes` | §18.4 |
+| 23 | `snap-points` | moving an item near another snaps to its edge, near the playhead snaps to it, `Alt` suspends snapping; the request is made once per revision |
+| 24 | `timeline-200-items-perf` | scroll, zoom and drag on the 200-item project; no long task above 50 ms |
+| 25 | `history-panel` | steps from UI and agent with actors, live prepend, undo and redo for the current actor |
+| 26 | `network-mode-pages` | login, API keys page create and revoke, local-mode 404 of `/settings/keys`; in network mode, import of a path outside the roots shows `E_PATH_NOT_ALLOWED` with the roots |
+| 27 | `preview-vs-export` | §20.3 |
+| 28 | `soak-5min` | nightly memory job of §19.1 |
+| 29 | `perf-edit-200` | the 200-item, 2,000-word fixture; 200 sequential `item.trim` operations sent through `window.__vv.dispatch(ops)` (§20.4); p95 of `vv:edit` at most 50 ms and of `vv:edit-apply` at most 8 ms (NFR-001, §19.1) |
+| 30 | `video-layers-budget` | fixtures with 4, 6 and 8 simultaneous video layers played for 10 s each; `getVideoPlaybackQuality().droppedVideoFrames` at most 2% at the chosen `MAX_VIDEO_LAYERS`, and tab memory recorded (§11.2 item 5, §19.1) |
+| 31 | `alpha-overlay` | a clip whose right half is opaque red and left half transparent (WebM VP9 `yuva420p`) over an opaque green clip: the preview canvas at frame 0 is green under the transparent half and red under the opaque half; no response of the page is an error |
+| 32 | `effects-preview` | a solid clip with each effect or transition of §11.7: the vignette darkens the edges of the layer, the grain changes pixels of a flat colour, a motion blur and a whip blur spread past the edge of a shrunken layer, a dip starts from its colour and ends on the clip, a wipe reveals one side first, a zoom and a whip settle on the clip; no shader error in the console |
+| 33 | `effects-inspector` | the Effects section sends the whole list as one `clip.set_effects` for each add, edit and remove, and shows the range of a value out of range without sending; the Transitions section shows the colour of a dip and the direction of a whip or a wipe and sends them with that kind only |
+| 34 | `speed-curve` | the Reverse toggle sends `clip.set_speed {reverse}`; the curve is a draft until Apply sends one `clip.set_speed {curve}`; Remove curve sends the stored mean; a curve the core refuses shows its message |
+| 35 | `link-extract-audio` | `~` and the item menu link and unlink the selected items and the link mark follows; "Extract audio" and `Mod+Shift+S` send `track.add` and `item.extract_audio` and the clip is muted |
 
 **Browser matrix** (`web/e2e/playwright.config.ts`, `web/e2e/support/browsers.ts`). Three projects run the specs: `chromium`, `firefox` and `webkit` (ADR-0023 item 5). Firefox and WebKit skip a test whose title carries `@chromium-only`; each use has its reason in a comment (an engine limit, never a defect to hide). The specs in `NOT_IN_MATRIX` run in no project of the matrix: `perf`, `video-layers`, `export-failure` and the two `desktop-detect` specs, because they are load-sensitive budgets or need their own server (the performance specs run alone, with `STUARTY_PERF=1`; the detection page has its own `desktop-detect-webkit` project).
 
@@ -1736,7 +1732,7 @@ Only code that has logic is unit tested, next to the code:
 
 ### 20.3 Preview against export (SDD-004 §11)
 
-The Playwright test `preview-vs-export`: for each golden case of `engine/export/testdata/golden/<case>/` (loaded into a workspace as a project), open the editor with `?debug=1`, call `__vv.preview.drawFrameWithoutOverlay(frame)` for each listed frame (it seeks, waits for the draw and disables the truth overlay), capture the canvas pixels with `canvas.toBlob` through the hook, fetch `ViewFrame` at the same width, and compare: luma SSIM at least 0.97 (computed in the test runner in Node, not in the app) and, for the displacement check, the golden scenes use solid-colour marker layers: the test computes the centroid of each marker colour in the browser canvas capture and in the `ViewFrame` image of the core and compares them, at most 1 pixel apart at the preview size. The Prototype runs the cases for a single clip with cover fit, contain fit and one caption; ALPHA runs every golden case of SDD-004 §11.
+The Playwright test `preview-vs-export`: for each golden case of `engine/export/testdata/golden/<case>/` (loaded into a workspace as a project), open the editor with `?debug=1`, call `__vv.preview.drawFrameWithoutOverlay(frame)` for each listed frame (it seeks, waits for the draw and disables the truth overlay), capture the canvas pixels with `canvas.toBlob` through the hook, fetch `ViewFrame` at the same width, and compare: luma SSIM at least 0.97 (computed in the test runner in Node, not in the app) and, for the displacement check, the golden scenes use solid-colour marker layers: the test computes the centroid of each marker colour in the browser canvas capture and in the `ViewFrame` image of the core and compares them, at most 1 pixel apart at the preview size. The test runs the cases for a single clip with cover fit, contain fit and one caption, and then every golden case of SDD-004 §11.
 
 ### 20.4 Test hooks
 
@@ -1768,7 +1764,7 @@ Minimum features, all required, none optional unless marked:
 | Graphics | WebGL2 canvas, `createImageBitmap` from a `Blob`, `img.decode()` |
 | Audio | `AudioContext` with `createMediaElementSource` and `GainNode` gain up to 4 |
 | Optional integration | `window.vukemDesktop` (§13.1), feature-detected, absent in a plain browser |
-| Optional preview full screen | `Element.requestFullscreen`, `document.fullscreenEnabled`, `fullscreenchange` (BETA, §11.5): the control shows only when `document.fullscreenEnabled` is true and the method exists; a webview without it has no button and loses nothing else |
+| Optional preview full screen | `Element.requestFullscreen`, `document.fullscreenEnabled`, `fullscreenchange` (§11.5): the control shows only when `document.fullscreenEnabled` is true and the method exists; a webview without it has no button and loses nothing else |
 | Optional multi-tab | `navigator.locks` and `BroadcastChannel` for the stream relay of §5.5; when either is missing each tab keeps its own stream |
 
 Not used, so a webview need not have them: File System Access API, OPFS, WebCodecs, WebGPU, `SharedArrayBuffer` and cross-origin isolation, Service Workers, Web Workers (including Pixi workers), WebSocket, `blob:` URLs for media or images, `eval` and `new Function`, `Notification`, `navigator.clipboard` beyond a feature-detected "copy" with a fallback text selection, `showOpenFilePicker`, the fullscreen of the application window (the desktop shell offers View, Toggle full screen, F11, as a native menu item and not as a `window.vukemDesktop` member; the preview control below is the DOM Fullscreen API on one element and never goes through the bridge, because `editor/preview` may not import `editor/library`, SDD-012 section 1.4 rule R8), Web Share, WebRTC. The UI sets no cookies of its own except through the server.
@@ -1802,9 +1798,9 @@ ADR-0023 item 1 says `desktop/` holds only this page and its results. Specificat
 | `fast-seek` | no | `typeof HTMLMediaElement.prototype.fastSeek` | reported only |
 | `csp` | yes | the server sends the default vukem CSP; the page (`index.html` with `detect.js` and `detect.css` as `'self'`) runs under it and reports any `securitypolicyviolation` | none |
 
-The overall verdict is `pass` when every required test passes. The webview is accepted for BETA only on a `pass` verdict from WKWebView on macOS and WebKitGTK 6.0 on Linux (ADR-0023 item 5); WebView2 on Windows is Chromium and is run for the record. Measured playback numbers go into the results file and are compared with the budgets of §19 by a person.
+The overall verdict is `pass` when every required test passes. The webview is accepted only on a `pass` verdict from WKWebView on macOS and WebKitGTK 6.0 on Linux (ADR-0023 item 5); WebView2 on Windows is Chromium and is run for the record. Measured playback numbers go into the results file and are compared with the budgets of §19 by a person.
 
-### 21.3 The desktop window (BETA)
+### 21.3 The desktop window
 
 The shell loads this UI with the same `app.css`, tokens, bundled fonts and components; it adds no stylesheet of its own (ADR-0023 item 2, `docs/design-system.md` §8).
 
@@ -1827,28 +1823,27 @@ The shell loads this UI with the same `app.css`, tokens, bundled fonts and compo
 
 ## 22. Acceptance
 
-### 22.1 Prototype
+### 22.1 First checks
 
 1. `bun run typecheck`, `bun run lint`, `bun run check:thin-client`, `bun run check:i18n` (rules I3 to I5 against `en.json`), `bun run test` (Vitest) and the generated-files check all pass.
 2. The route `/editor/{project_id}` is served by the hand-written route with the second Vite entry; the Inertia pages `/projects` and `/` work; `/editor/{unknown}` answers 404; reloading the editor URL restores the same document.
 3. The Playwright scenarios 1 to 13, 29 and 30 of §20.1 pass against a real server, in the dark theme, and 12 also in light.
 4. Scenario 1 (`prototype-reference`) completes the four manual operations of D-023 using only the UI, and the exported file passes the core's verification.
 5. While another actor edits (scenario 2) the timeline and preview update without reload, the revision advances, the activity indicator names the actor, and NFR-002 holds (200 ms p95 over 20 edits).
-6. NFR-001 holds in the browser (scenario 29 `perf-edit-200`: 200 sequential `item.trim` operations through the `window.__vv.dispatch` hook of the end-to-end build, `vv:edit` p95 at most 50 ms on the 200-item fixture) and NFR-003 and NFR-004 hold (100 ms and 500 ms p95) for the Prototype fixtures.
+6. NFR-001 holds in the browser (scenario 29 `perf-edit-200`: 200 sequential `item.trim` operations through the `window.__vv.dispatch` hook of the end-to-end build, `vv:edit` p95 at most 50 ms on the 200-item fixture) and NFR-003 and NFR-004 hold (100 ms and 500 ms p95) for the first fixtures.
 7. Truth on pause: after pause and after seek the overlay equals the core's `ViewFrame` and is removed by any playhead or revision change.
-8. `preview-vs-export` passes for the three Prototype cases (SSIM at least 0.97, 1 px; in ALPHA for every golden case, with the four expected failures recorded in §19.1) and the number `MAX_VIDEO_LAYERS` is confirmed or corrected by scenario 30 (`video-layers-budget`) and recorded in §11.2.
+8. `preview-vs-export` passes for the three first cases (SSIM at least 0.97, 1 px; and for every golden case, with the four expected failures recorded in §19.1) and the number `MAX_VIDEO_LAYERS` is confirmed or corrected by scenario 30 (`video-layers-budget`) and recorded in §11.2.
 9. No `securitypolicyviolation` and no unhandled console error in scenario 1; the page loads no `blob:` URL.
 10. The read model is never written outside `sync.ts` (rule R4), the edit queue sends one request at a time, and scenario 10 shows no optimistic change.
 11. Every error code of `ERROR_TABLE` has an entry in the policy table and an English headline key (test `errors.ts`).
-12. `COVERAGE` lists an entry point for each command marked `P` in §9.1 and the coverage test passes in the Prototype mode.
-13. Nothing in the list of §10.2 is present in the Prototype build (the build's `phase: "prototype"` gate hides those controls).
+12. `COVERAGE` lists an entry point for each command and the coverage test passes.
 14. A running export is rehydrated after a reload (the jobs chip and the dialog at the Running state, §14.1 item 7), and the Download link of the export file works (§14.1 item 5).
 
-### 22.2 ALPHA
+### 22.2 Later checks
 
 1. All checks of 22.1 pass with the Portuguese catalog included: `check:i18n` runs rules I1 to I6, and the keys of every error code and every command exist in both locales.
-2. The command palette lists every non-internal command from the live registry, builds a form for every `args_schema` without the JSON fallback for any property of any ALPHA command, and the coverage test passes with the full phase rule (§9.3 item 3). Adding a command to the catalogue without a `COVERAGE` entry fails the UI build.
-3. Every command of §9.1 has the entry point named for phase A and the Playwright scenarios 3, 14 to 26 and 27 (all golden cases) pass.
+2. The command palette lists every non-internal command from the live registry, builds a form for every `args_schema` without the JSON fallback for any property of any command, and the coverage test passes with the full rule (§9.3 item 3). Adding a command to the catalogue without a `COVERAGE` entry fails the UI build.
+3. Every command of §9.1 has its entry point and the Playwright scenarios 3, 14 to 26 and 27 (all golden cases) pass.
 4. Drag, trim, move to another track, multi-selection move, snap to the playhead, to item edges and to caption words work and each gesture sends exactly one batch (scenarios 10, 14, 15, 23).
 5. `E_OVERLAP`, `E_OUT_OF_SOURCE` and `E_REVISION_CONFLICT` behave as the table of §8.4, including that a conflicted batch is never resent without the user choosing Apply again (RF-119).
 6. The inspector binds every field of §12.1 to its command; a time field never sends a bare number; one committed change sends one command (scenario 16).
@@ -1859,9 +1854,9 @@ The shell loads this UI with the same `app.css`, tokens, bundled fonts and compo
 11. Zero axe violations of impact serious or critical in both themes; the keyboard-only scenario passes; the live region announces results.
 12. `perf-edit-200` and `timeline-200-items-perf` meet §19.1 and §19.2 item 9, and the nightly `soak-5min` stays under 1 GB with a 300 MB JS heap on the reference machine.
 13. `VIRTUALIZE_ABOVE`, `MAX_VIDEO_LAYERS`, `SNAP_PX` and the cache sizes in this document equal the values in code, or the document has been corrected to the measured values.
-14. The detection page of §21.2 exists, reports a `pass` verdict in Chromium, and `desktop/detect` runs in Chromium, WKWebView and WebKitGTK 6.0 with the results files committed (the verdict for the system webviews informs BETA, it does not block ALPHA).
+14. The detection page of §21.2 exists, reports a `pass` verdict in Chromium, and `desktop/detect` runs in Chromium, WKWebView and WebKitGTK 6.0 with the results files committed (the verdict for the system webviews informs the desktop shell, it does not block the editor).
 
-### 22.3 ALPHA acceptance status (2026-11-15, P2-QA-004)
+### 22.3 Acceptance status (2026-11-15, P2-QA-004)
 
 Run: headless Chromium on Windows 11, `bun run build:e2e`, `playwright test --project=chromium --workers=2` with `STUARTY_MIN_FREE_BYTES=1`: 194 passed, 6 failed, 1 skipped (7.9 min). Every failure was rerun alone. The projects `perf`, `failing-encoder` and `desktop-detect` are run apart from `chromium` (see `playwright.config.ts`).
 
@@ -1878,7 +1873,7 @@ The `perf` project (budgets of the reference machine, §19.1) ran while other ag
 | --- | --- | --- | --- |
 | 1 | 22.1 checks with the Portuguese catalog | met | `check:i18n` (rules I1 to I6, both locales), `typecheck`, `lint`, `check:thin-client`, `test`; `project-settings` (`/settings` in pt-BR, the language select) |
 | 2 | Palette lists every command, forms without JSON fallback, coverage | not met: `font.add` | `command-palette-coverage` lists all commands; the form test fails on the dry run of `font.add` (`E_NOT_FOUND` not in its `Errors`, owner core) |
-| 3 | Phase A entry points; scenarios 3, 14 to 26, 27 | not met | 3 `deep-link-reload`, 14 to 17, 19, 20, 22 to 26 pass (20 after this fix); 18 fails on item 2; 21 `i18n-switch` passes (pt-BR from an Inertia page and from the editor: no English string left on projects, settings, brand kit, the editor with a clip selected and the export dialog; playhead, selection and the `lang` cookie survive; back to English; the spec found the dialog close button still in English and the catalogs now carry `ui.editor.dialog.close`); 27 fails for four golden cases (above) |
+| 3 | Entry points of every command; scenarios 3, 14 to 26, 27 | not met | 3 `deep-link-reload`, 14 to 17, 19, 20, 22 to 26 pass (20 after this fix); 18 fails on item 2; 21 `i18n-switch` passes (pt-BR from an Inertia page and from the editor: no English string left on projects, settings, brand kit, the editor with a clip selected and the export dialog; playhead, selection and the `lang` cookie survive; back to English; the spec found the dialog close button still in English and the catalogs now carry `ui.editor.dialog.close`); 27 fails for four golden cases (above) |
 | 4 | Drag, trim, move, multi-select, snaps, one batch per gesture | met | `overlap-snapback`, `trim-handles`, `library-drag`, `snap-points`, `editor-ops`, `timeline-selection`, `thin-client-no-optimistic` |
 | 5 | `E_OVERLAP`, `E_OUT_OF_SOURCE`, `E_REVISION_CONFLICT` per §8.4, no resend | met | `overlap-snapback`, `trim-handles` (past the end of the source), `conflict-revision` (Apply again) |
 | 6 | Inspector binds every field; one change, one command | met | `inspector-debounce`, `clip-sections`, `text-edit`, `keyframes`, `shapes` |
@@ -1889,7 +1884,7 @@ The `perf` project (budgets of the reference machine, §19.1) ran while other ag
 | 11 | Zero serious or critical axe violations; keyboard-only; live region | met | `a11y-axe-both-themes` (both themes), `keyboard-only-edit`, `wcag22` |
 | 12 | `perf-edit-200` and `timeline-200-items-perf` budgets; nightly `soak-5min` | not verified | the budgets are those of the reference machine and the run was loaded (see above); `soak-5min` is the nightly Go job and was not run |
 | 13 | Constants equal the code | met | `VIRTUALIZE_ABOVE` 150 (`virtualize.ts`), `MAX_VIDEO_LAYERS` 4 (`mediaSync.ts`), `SNAP_PX` 8 (`snapping.ts`), plan windows of `WINDOW_FRAMES` 300 with `PREFETCH_FRAMES` 60 and `MAX_WINDOWS` 8 (`planWindows.ts`), bitmap cache 64 (`BITMAP_CACHE` in `PixiExecutor.ts`); checked against the code again on 2026-11-15 (P4-UI-001), none changed |
-| 14 | Detection page, `pass` in Chromium; WKWebView and WebKitGTK results | partly met | `desktop-detect` passes in Chromium; the system webview results are P3-DSK-001 and do not block ALPHA |
+| 14 | Detection page, `pass` in Chromium; WKWebView and WebKitGTK results | partly met | `desktop-detect` passes in Chromium; the system webview results are P3-DSK-001 and do not block the editor |
 
 ### 22.4 Browser matrix status (2026-11-16, TASK-0060, TASK-0203)
 
@@ -1918,8 +1913,8 @@ The failures under load are the 429 of the heavy limit and the 120 s export wait
 | 5 | The UI uses a snap-points endpoint with trim limits supplied by the core | 7.8 |
 | 6 | Three kinds of browser arithmetic are allowed (screen, request, decoration); results never | 1.1 |
 | 7 | The safe area is taken from a `safe_area` field of the plan window; the percentages are not implemented in TypeScript | 11.6 |
-| 8 | Undo and Redo buttons and a minimal "Add to timeline" button are in the Prototype | 10 |
-| 9 | Keyboard operation and automated accessibility checks are built in ALPHA although RF-075 is BETA in the PRD | 18 |
+| 8 | Undo and Redo buttons and a minimal "Add to timeline" button are in the first UI | 10 |
+| 9 | Keyboard operation and automated accessibility checks are built in although RF-075 is a later requirement | 18 |
 | 10 | Dark is the default regardless of the system preference; this changes `app.html` and `app.tsx` | 17 |
 | 11 | `useT` becomes context based so shared components work in Inertia and editor pages | 16.3 |
 | 12 | Staleness is detected with the visible heartbeat of SDD-006 §3.1 (40 s without an event), also checked on `visibilitychange` and `online` | 5.5 |
@@ -1942,14 +1937,14 @@ Each item is something the UI needed that SDD-000 did not list when this documen
 
 | # | Need | Proposed contract | Used in |
 | --- | --- | --- | --- |
-| B1 | `SnapPoints` operation | `GET /api/v1/projects/{id}/snap-points?rev=<n>&words=<0 or 1>`, scope `read`, phase A; response of §7.8; cached by revision; MCP not needed | 7.8 |
-| B2 | `MediaList` operation | `GET /api/v1/projects/{id}/media`, scope `read`, phase P; returns `MediaEntry[]` of §13.2 including assets still ingesting or failed (they are not in the document, SDD-001 §3.2), with `duration_frames` and `duration_seconds` | 13 |
-| B3 | `JobList` operation | `GET /api/v1/projects/{id}/jobs?state=<list>`, scope `read`, phase P; lets a reloaded UI find a running export | 14 |
+| B1 | `SnapPoints` operation | `GET /api/v1/projects/{id}/snap-points?rev=<n>&words=<0 or 1>`, scope `read`; response of §7.8; cached by revision; MCP not needed | 7.8 |
+| B2 | `MediaList` operation | `GET /api/v1/projects/{id}/media`, scope `read`; returns `MediaEntry[]` of §13.2 including assets still ingesting or failed (they are not in the document, SDD-001 §3.2), with `duration_frames` and `duration_seconds` | 13 |
+| B3 | `JobList` operation | `GET /api/v1/projects/{id}/jobs?state=<list>`, scope `read`; lets a reloaded UI find a running export | 14 |
 | B4 | Plan endpoint in SDD-000 | `GET /projects/{id}/plan?from=&until=&rev=` (defined in SDD-004 §10) is missing from the table of SDD-000 §1; add it | 11 |
 | B5 | `safe_area` in the plan window | top-level `"safe_area": [x, y, w, h]` in project pixels, computed by `SafeArea` (SDD-004 §4.1, §10) | 11.6 |
-| B6 | Binary endpoints | `GET /api/v1/projects/{id}/media/{asset_id}/thumbnail` (`width` 160, 320 or 640), `.../strip` (one sprite image; its layout `tile_w`, `tile_h`, `columns`, `count`, `interval_ms` comes in the media entry, SDD-011 §6.5, SDD-003 §2.6), `.../peaks` (the binary file of SDD-011 §4.6, read as an `ArrayBuffer`, not JSON), `.../proxy`, `GET /api/v1/projects/{id}/bitmaps/{key}` (SDD-000 §1), and `GET /api/v1/jobs/{job_id}/file` (export download, Range, Prototype); all content-hash cached (ADR-0017 item 8) | 4.2 |
+| B6 | Binary endpoints | `GET /api/v1/projects/{id}/media/{asset_id}/thumbnail` (`width` 160, 320 or 640), `.../strip` (one sprite image; its layout `tile_w`, `tile_h`, `columns`, `count`, `interval_ms` comes in the media entry, SDD-011 §6.5, SDD-003 §2.6), `.../peaks` (the binary file of SDD-011 §4.6, read as an `ArrayBuffer`, not JSON), `.../proxy`, `GET /api/v1/projects/{id}/bitmaps/{key}` (SDD-000 §1), and `GET /api/v1/jobs/{job_id}/file` (export download, Range); all content-hash cached (ADR-0017 item 8) | 4.2 |
 | B7 | `Fonts` operation | `GET /api/v1/fonts`: `[{family, weights[], bundled}]` for the font selects | 12 |
 | B8 | Edit and event shapes | SDD-003 and SDD-006 must give `EditResponse` (§4.3) with `diff` in the same shape as the event, `batch.committed` with the full `diff`, history step fields (§15), `getProject` with `revision`, `trashed`, and `frame` query parameters `at` (time string with unit), `width`, `rev` | 4, 5, 15 |
 | B9 | (Resolved.) | SDD-006 §3.1 sends a visible heartbeat event every 15 s | 5.5 |
-| B11 | (Resolved.) Tool install routes | `GET /api/v1/system/tools` and `POST /api/v1/system/tools/install` `{name, model?}` (202), in SDD-000 §1 and SDD-007 §6.8 item 1; no job; phase A | 4.2, 12.5 |
+| B11 | (Resolved.) Tool install routes | `GET /api/v1/system/tools` and `POST /api/v1/system/tools/install` `{name, model?}` (202), in SDD-000 §1 and SDD-007 §6.8 item 1; no job | 4.2, 12.5 |
 | B10 | `lint-rules.json` and `commands.json` snapshots | committed by the generator of ADR-0014 next to the schemas, so the i18n and coverage checks have a catalogue to read | 9.3, 16.4 |

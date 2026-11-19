@@ -1,7 +1,7 @@
 # SDD-002: Command catalogue of the core
 
-- Amended (2026-11-18) for Stuarty: this is the catalogue of the video domain. The phase labels of this document (`P`, `A`, `B`, "phase A", "frozen for ALPHA") no longer schedule any work (ADR-0045); they stay because the command registry carries a phase field and tests compare it with this file, and they are removed together with that field by an epic. Other domains get their own catalogue (ADR-0031, ADR-0038).
-- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen for ALPHA: all 48 commands have golden cases and pass the registry-wide gates (P2-ENG-018). BETA adds `clip.set_filter` and `clip.set_blur` (C.49, C.50; P3-ENG-001), `audio.duck` and `audio.mark_beats` (C.51, C.52; P3-ENG-002), `font.add` and `font.remove` (C.53, C.54; P3-ENG-005), 54 in the BETA build; after BETA `clip.set_chroma_key` (C.55, VV-015) and the marker commands `marker.add`, `marker.set` and `marker.remove` (C.56 to C.58, VV-035) make 58; `item.slip` and `settings.reframe` (C.59, C.60, VV-036 and VV-038) make 60; `clip.set_blend` (C.61, VV-015) makes 61; `clip.set_mask` (C.62, VV-015) makes 62; `clip.set_flip` (C.63, TASK-0233) makes 63; `item.set_enabled` (C.64, TASK-0233) makes 64; `item.link`, `item.unlink` and `item.extract_audio` (C.65 to C.67, TASK-0277) make 67; `clip.set_effects` (C.68, TASK-0278) makes 68; `item.paste_attributes` (C.69, TASK-0254) makes 69; `item.freeze_frame` (C.70, TASK-0254) makes 70; `caption.import_subtitles` (C.71, TASK-0254) makes 71. `clip.set_shadow` and `clip.set_outline` (C.72, C.73, VV-122) make 73; `item.repeat` (C.74, VV-123) makes 74. The binary exposes the BETA build (`command.Build` is `Beta`, switched on 2026-11-15): 74 commands, 73 public, of which 16 are Prototype, 32 ALPHA and 26 BETA; `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
+- Amended (2026-11-18) for Stuarty: this is the catalogue of the video domain. Other domains get their own catalogue (ADR-0031, ADR-0038).
+- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen: all 74 commands have golden cases and pass the registry-wide gates. The binary exposes all 74 commands, 73 of them public; `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
 - Depends on: SDD-001 (document), ADR-0002 (command core), ADR-0004 (time), ADR-0006 (log, concurrency, undo), ADR-0014 (JSON Schema)
 - Implements: RF-010 to RF-016, RF-020 to RF-026, RF-030 to RF-036, RF-040, RF-041, RF-050, RF-051, RF-100, RF-105, RF-107, RF-112 to RF-115, RF-119, NFR-001, NFR-025
 - Owner area: senior-a (command core and schema)
@@ -30,7 +30,6 @@
 | `example` | a valid `args` value |
 | `errors` | the error codes the command can return |
 | `scope` | `edit` or `media` (ADR-0019) |
-| `phase` | `prototype`, `alpha` or `beta`; a command is registered only in builds of its phase or later |
 | `internal` | true when only the service may issue it (see A.9) |
 | `apply` | the function of A.3 |
 
@@ -179,7 +178,7 @@ Three commands depend on data the core cannot compute because it needs media: si
 
 `resolved` is internal: the service refuses a caller that sends it on these commands with `E_VALIDATION` (`path` `operations[i].args.resolved`), so a caller cannot inject silences, words or beats that the analysis did not produce (VV-206). Golden tests that run without media call the core directly with `resolved`.
 
-**OpenTimelineIO import (BETA, RF-065).** `core/otio` import adds no command and no operation: it returns a batch of existing operations (`track.add`, `clip.add`, `audio.add`, `item.rename`, `item.set_transition`) that the caller applies like any other batch, so conflicts, limits and undo behave as everywhere else. The file is never opened by the core (SDD-001 section 9).
+**OpenTimelineIO import (RF-065).** `core/otio` import adds no command and no operation: it returns a batch of existing operations (`track.add`, `clip.add`, `audio.add`, `item.rename`, `item.set_transition`) that the caller applies like any other batch, so conflicts, limits and undo behave as everywhere else. The file is never opened by the core (SDD-001 section 9).
 
 ### A.10 Determinism and limits
 
@@ -187,7 +186,7 @@ Three commands depend on data the core cannot compute because it needs media: si
 2. Arithmetic on time is integer. Arithmetic on space uses `float64` with results rounded to 3 decimal places before they are stored, so documents are stable across platforms.
 3. A batch has at most 200 operations and its JSON is at most 512 KiB; beyond that the service returns `E_PAYLOAD_TOO_LARGE`.
 
-4. An argument has the phase of its command. There are no per-argument phases: a command that exists in a phase accepts all of its arguments in that phase. One documented exception concerns a value, not an argument: in a Prototype build `CaptionStyle.highlight` accepts only `"none"`, and any other value is `E_VALIDATION` with the hint that word highlight arrives in ALPHA (`track.set_caption_style` is the command concerned; `caption.add` takes no style).
+4. A command accepts all of its arguments and all of the values its schema lists, wherever it is registered.
 
 ### A.11 Tests required for every command
 
@@ -198,13 +197,13 @@ For each command, `core/command/testdata/<command>/` holds golden cases, each a 
 These are the decisions of the implementation (task P1-ENG-001) that Part A leaves open.
 
 1. **Errors** live in `core/command` (`Error`, the `Code*` constants, `CheckError`). `core/timeval` and `core/timeline` keep their own error types; a command reads a time through `Context.ParseTime`, which turns the `timeval` error into `E_INVALID_TIME` with the path of the argument. `CheckError` fails on an unknown code, a missing message or hint (`E_INTERNAL` needs no hint), a wrong `retryable` flag, and on a message or hint that holds a file path, a stack trace or SQL; the golden runner applies it to every `error.json`.
-2. **The schema of `args` is a Go struct.** A command is built with `Define[A](Spec, apply)`. Tags on `A`: `json:"name"` (required) or `json:"name,omitempty"` (optional), `enum:"a,b"`, `min:"1" max:"200"` (a number, or the length of a string or an array), `desc:"..."`, and `schema:"name"` for a field of type `any` (or a map of `any`) that the apply function checks itself: the named schema in `core/command/schema_named.go` describes exactly what that check accepts, so no property of a public command lacks a JSON type. A schema that also accepts `null` (a merge that removes a key) has `type` `[T, "null"]`. Every argument of the time type has `x-vv-kind: "time"` in its schema, derived from the type and not from the name (SDD-012 �9.2). `Apply` rejects an unknown key, a missing required key, a wrong type, a fractional integer and a value outside its constraints, with `E_VALIDATION` and the path (`args.item_ids[2]`). `Registry.Schema(name)` returns the JSON Schema of the struct (`additionalProperties: false`), and `Registry.Help(name)` the help text. `Registry.Register` refuses a command without a schema (the arguments must be a struct), an example that its own schema rejects, an error list, a description, a scope or a phase; a command of a later phase than the build is checked and left out. `Registry.Lookup` is `Get`.
+2. **The schema of `args` is a Go struct.** A command is built with `Define[A](Spec, apply)`. Tags on `A`: `json:"name"` (required) or `json:"name,omitempty"` (optional), `enum:"a,b"`, `min:"1" max:"200"` (a number, or the length of a string or an array), `desc:"..."`, and `schema:"name"` for a field of type `any` (or a map of `any`) that the apply function checks itself: the named schema in `core/command/schema_named.go` describes exactly what that check accepts, so no property of a public command lacks a JSON type. A schema that also accepts `null` (a merge that removes a key) has `type` `[T, "null"]`. Every argument of the time type has `x-vv-kind: "time"` in its schema, derived from the type and not from the name (SDD-012 �9.2). `Apply` rejects an unknown key, a missing required key, a wrong type, a fractional integer and a value outside its constraints, with `E_VALIDATION` and the path (`args.item_ids[2]`). `Registry.Schema(name)` returns the JSON Schema of the struct (`additionalProperties: false`), and `Registry.Help(name)` the help text. `Registry.Register` refuses a command without a schema (the arguments must be a struct), an example that its own schema rejects, an error list, a description or a scope. `Registry.Lookup` is `Get`.
 3. **`Context`.** The function of a command receives a `*Context` whose `Doc` is a private copy it may edit freely; `Context.NewID(prefix, supplied)` is rule 4 of A.3, `ParseTime`, `SetEffective` and `SetEffectiveTime` write `effective`. A panic, or an error that is not an `*Error`, becomes `E_INTERNAL` without its text. `Registry.Debug` makes `Apply` validate its result (rule 3).
 4. **Batches.** `Registry.ApplyBatch(doc, ops, env)` folds `Apply`; its `Diff` and `Inverse` are those of the net change from the first document to the last. A batch of no operation is `E_VALIDATION`.
 5. **Diff.** `Change{Kind, ID, Changes, Object}` is computed by comparing the canonical forms of the two documents, so a field equal to its default is absent and reads as `null` in `changes`. The order is: `project.updated`, `settings.updated`, then assets, tracks, items and fonts, each by identifier. A font whose files changed is `font.removed` followed by `font.added`.
 6. **Primitives.** The JSON form is `{"type": "patch", "collection": "items", "id": "itm_...", "set": {...}, "unset": [...]}`, `{"type": "put", "collection", "id", "object"}` and `{"type": "remove", "collection", "id"}`. For `settings` and `project` the `id` is the project identifier, for `fonts` the family; only `patch` applies to those two. The inverse of an operation or batch is computed from the two canonical documents: `remove` for what was added, `put` for what was removed, `patch` with the old values (and `unset` for a field that was absent) for what changed. Undo applies the list in reverse order. `ApplyPrimitives` returns a `Skipped` entry per primitive (or per group of fields of a patch) it did not apply, with the reasons of SDD-005 §12.2 plus `invalid_primitive` for a primitive that is malformed. A violation that names no object touched by a remaining primitive (for example a frame rate that breaks a source range) drops all the remaining primitives.
 7. **Conflicts.** `Conflicts` returns `{collection, id, kind}`; the service adds the revision and the actor from the batch that contained the change. An identifier counts as referenced when it appears as a string anywhere in `args`, which includes the `id` of a new object.
-8. **The Prototype commands** (task P1-ENG-002) follow Part C with these differences, each listed here so that Part C and the golden files agree:
+8. **The first commands** (task P1-ENG-002) follow Part C with these differences, each listed here so that Part C and the golden files agree:
    - A JSON number for a time argument is `E_INVALID_TIME` with the three accepted forms in the hint (A.4), not `E_VALIDATION`.
    - `item.split` and `item.trim` advance or move `source_in` only for a clip or audio item whose asset is a video or an audio file; an image clip keeps its `source_in` (R9 exempts images, and `clip.add` refuses a `source_in` on an image).
    - `asset.add` refuses a `sample_count` on an asset with no audio (the rule says it is required exactly when the asset has audio).
@@ -216,124 +215,124 @@ These are the decisions of the implementation (task P1-ENG-001) that Part A leav
 
 ## Part B: the catalogue
 
-Scope is `edit` unless stated. Phase: `P` Prototype, `A` ALPHA. "Time" marks arguments parsed by A.4. Optional arguments are written with `?`.
+Scope is `edit` unless stated. "Time" marks arguments parsed by A.4. Optional arguments are written with `?`.
 
 ### B.1 Project and settings
 
-| Command | Phase | Arguments | Effect |
-| --- | --- | --- | --- |
-| `project.rename` | P | `name` | Sets the project name |
-| `settings.set` | P | `width?`, `height?`, `background?`, `loudness_target?` | Sets the given settings. When the size changes, every visual item's `x` and `y` are scaled by the ratio of new to old size on each axis; `scale` is untouched; items with default position stay centred |
-| `settings.reframe` | B | `aspect?` (`"16:9"`, `"9:16"`, `"1:1"`, `"4:5"`) or `width` and `height` | Re-targets the project to another aspect: sets the size like `settings.set`, and also scales text, shape and fit `none` clips by the smaller axis ratio so they keep their share of the frame; see C.60 |
-| `settings.set_fps` | A | `fps` (`"30"`, `"30000/1001"` or a rational object) | Rescales every time quantity `q` to `round(q × new / old)`, then restores invariants: a duration that became 0 becomes 1; an overlap created by rounding is removed by shortening the earlier item. `effective.adjusted` lists every item changed by a fix-up |
+| Command | Arguments | Effect |
+| --- | --- | --- |
+| `project.rename` | `name` | Sets the project name |
+| `settings.set` | `width?`, `height?`, `background?`, `loudness_target?` | Sets the given settings. When the size changes, every visual item's `x` and `y` are scaled by the ratio of new to old size on each axis; `scale` is untouched; items with default position stay centred |
+| `settings.reframe` | `aspect?` (`"16:9"`, `"9:16"`, `"1:1"`, `"4:5"`) or `width` and `height` | Re-targets the project to another aspect: sets the size like `settings.set`, and also scales text, shape and fit `none` clips by the smaller axis ratio so they keep their share of the frame; see C.60 |
+| `settings.set_fps` | `fps` (`"30"`, `"30000/1001"` or a rational object) | Rescales every time quantity `q` to `round(q × new / old)`, then restores invariants: a duration that became 0 becomes 1; an overlap created by rounding is removed by shortening the earlier item. `effective.adjusted` lists every item changed by a fix-up |
 
 ### B.2 Assets
 
-| Command | Phase | Scope | Arguments | Effect |
-| --- | --- | --- | --- | --- |
-| `asset.add` | P | media, internal | `asset` (an Asset object of SDD-001 §3.2) | Adds the asset. Adding an asset whose `hash` is already present returns the existing identifier in `effective.asset_id` and changes nothing |
-| `asset.remove` | A | media | `asset_id` | Removes the asset from the project. Fails with `E_IN_USE` if an item uses it |
+| Command | Scope | Arguments | Effect |
+| --- | --- | --- | --- |
+| `asset.add` | media, internal | `asset` (an Asset object of SDD-001 §3.2) | Adds the asset. Adding an asset whose `hash` is already present returns the existing identifier in `effective.asset_id` and changes nothing |
+| `asset.remove` | media | `asset_id` | Removes the asset from the project. Fails with `E_IN_USE` if an item uses it |
 
 ### B.3 Tracks
 
-| Command | Phase | Arguments | Effect |
-| --- | --- | --- | --- |
-| `track.add` | P | `kind`, `name?`, `id?`, and one of `position?` (`"top"` default, `"bottom"`), `above?` (track id), `below?` (track id) | Adds a track at that place in the order |
-| `track.update` | P | `track_id`, `name?`, `hidden?`, `muted?`, `locked?`, `solo?`, `volume?` | Sets the given fields; `locked` refuses edits of the items of the track (A.3 rule 5), `solo` plays only soloed tracks, `volume` (0 to 4) is a factor on the volume of its items |
-| `track.move` | P | `track_id` and one of `position`, `above`, `below` | Changes the track's place in the order |
-| `track.remove` | P | `track_id`, `with_items?` (default false) | Removes the track. With items on it, fails with `E_NOT_EMPTY` unless `with_items` is true, in which case its items are removed too |
-| `track.set_caption_style` | P | `track_id`, `style` (partial CaptionStyle), `replace?` (default false) | Merges `style` into the track's caption style, or replaces it |
+| Command | Arguments | Effect |
+| --- | --- | --- |
+| `track.add` | `kind`, `name?`, `id?`, and one of `position?` (`"top"` default, `"bottom"`), `above?` (track id), `below?` (track id) | Adds a track at that place in the order |
+| `track.update` | `track_id`, `name?`, `hidden?`, `muted?`, `locked?`, `solo?`, `volume?` | Sets the given fields; `locked` refuses edits of the items of the track (A.3 rule 5), `solo` plays only soloed tracks, `volume` (0 to 4) is a factor on the volume of its items |
+| `track.move` | `track_id` and one of `position`, `above`, `below` | Changes the track's place in the order |
+| `track.remove` | `track_id`, `with_items?` (default false) | Removes the track. With items on it, fails with `E_NOT_EMPTY` unless `with_items` is true, in which case its items are removed too |
+| `track.set_caption_style` | `track_id`, `style` (partial CaptionStyle), `replace?` (default false) | Merges `style` into the track's caption style, or replaces it |
 
 ### B.4 Items of any type
 
-| Command | Phase | Arguments | Effect |
-| --- | --- | --- | --- |
-| `item.move` | P | `item_id`, `start?` (time), `track_id?`, `slide?` (default false) | Moves the item in time, to another track of the same kind, or both. At least one is required. With `slide` the touching neighbours are trimmed to keep touching it (C.11) |
-| `item.trim` | P | `item_id`, `edge` (`"start"` or `"end"`), `to` (time), `ripple?` (`"none"` default, `"track"`), `roll?` (default false) | Moves that edge to `to`. With ripple `"track"` the later items of the track shift by the change in length; with `roll` the touching edge of the neighbour moves to `to` too. Rules in B.10 and C.12 |
-| `item.slip` | B | `item_id`, `source_in` (time) | Shows another part of the source: sets `source_in` of a clip or audio item without moving or resizing it; see C.59 |
-| `item.split` | P | `item_id`, `at` (time), `new_id?` | Splits the item into two at `at`. Rules in B.10 |
-| `item.delete` | P | `item_ids` (1 to 200), `ripple?` (`"none"` default, `"track"`, `"all"`) | Removes the items. With `ripple: "track"` every later item on each affected track moves earlier by the length freed on that track; with `"all"` every later item on every track moves by the length freed, which requires the deleted items to cover one contiguous range |
-| `item.duplicate` | A | `item_id`, `start?` (time), `track_id?`, `new_id?` | Copies the item to the given place. A slot marking is not copied |
-| `item.rename` | A | `item_id`, `name` | Sets the label |
-| `item.set_transform` | A | `item_id`, `x?`, `y?`, `scale?`, `rotation?`, `opacity?` | Sets the given fields on a visual item. A property that has keyframes cannot be set this way: `E_INVALID_STATE` with the hint to use `keyframe.set` or `keyframe.clear` |
-| `item.set_transition` | A | `item_id`, `edge` (`"in"`, `"out"`), `kind` (a transition kind or `null` to remove), `duration?` (time, as a length; default `"0.5s"`) | Sets or removes the transition on a visual item |
-| `item.set_audio` | A | `item_id`, `volume?`, `fade_in?` (time, as a length), `fade_out?`, `audio_muted?`, `denoise?`, `voice?` | Sets audio properties on a `clip` or `audio` item; after BETA also the noise reduction strength (TASK-0233) and the voice preset (TASK-0254) |
-| `item.crossfade` | A | `from_item_id`, `to_item_id`, `duration` (time, as a length), `track_id?` | Helper for RF-023. Requires two visual items on different tracks where `from` starts before `to` and the two overlap in time by at least `duration`. Sets `transition_out: fade` on `from` and `transition_in: fade` on `to`, both of that duration, and the matching audio fades. For two neighbours that touch on one track, `track_id` (another visual track) moves `to` there and makes it start `duration` earlier, from the source it has before the cut (C.20, VV-042) |
-| `timeline.close_gap` | A | `track_id`, `at` (time), `ripple?` (`"track"` default, `"all"`) | Finds the empty range on the track that contains frame `at` and moves later items earlier by its length. Fails with `E_INVALID_STATE` when `at` is inside an item or after the last item |
+| Command | Arguments | Effect |
+| --- | --- | --- |
+| `item.move` | `item_id`, `start?` (time), `track_id?`, `slide?` (default false) | Moves the item in time, to another track of the same kind, or both. At least one is required. With `slide` the touching neighbours are trimmed to keep touching it (C.11) |
+| `item.trim` | `item_id`, `edge` (`"start"` or `"end"`), `to` (time), `ripple?` (`"none"` default, `"track"`), `roll?` (default false) | Moves that edge to `to`. With ripple `"track"` the later items of the track shift by the change in length; with `roll` the touching edge of the neighbour moves to `to` too. Rules in B.10 and C.12 |
+| `item.slip` | `item_id`, `source_in` (time) | Shows another part of the source: sets `source_in` of a clip or audio item without moving or resizing it; see C.59 |
+| `item.split` | `item_id`, `at` (time), `new_id?` | Splits the item into two at `at`. Rules in B.10 |
+| `item.delete` | `item_ids` (1 to 200), `ripple?` (`"none"` default, `"track"`, `"all"`) | Removes the items. With `ripple: "track"` every later item on each affected track moves earlier by the length freed on that track; with `"all"` every later item on every track moves by the length freed, which requires the deleted items to cover one contiguous range |
+| `item.duplicate` | `item_id`, `start?` (time), `track_id?`, `new_id?` | Copies the item to the given place. A slot marking is not copied |
+| `item.rename` | `item_id`, `name` | Sets the label |
+| `item.set_transform` | `item_id`, `x?`, `y?`, `scale?`, `rotation?`, `opacity?` | Sets the given fields on a visual item. A property that has keyframes cannot be set this way: `E_INVALID_STATE` with the hint to use `keyframe.set` or `keyframe.clear` |
+| `item.set_transition` | `item_id`, `edge` (`"in"`, `"out"`), `kind` (a transition kind or `null` to remove), `duration?` (time, as a length; default `"0.5s"`) | Sets or removes the transition on a visual item |
+| `item.set_audio` | `item_id`, `volume?`, `fade_in?` (time, as a length), `fade_out?`, `audio_muted?`, `denoise?`, `voice?` | Sets audio properties on a `clip` or `audio` item; also the noise reduction strength (TASK-0233) and the voice preset (TASK-0254) |
+| `item.crossfade` | `from_item_id`, `to_item_id`, `duration` (time, as a length), `track_id?` | Helper for RF-023. Requires two visual items on different tracks where `from` starts before `to` and the two overlap in time by at least `duration`. Sets `transition_out: fade` on `from` and `transition_in: fade` on `to`, both of that duration, and the matching audio fades. For two neighbours that touch on one track, `track_id` (another visual track) moves `to` there and makes it start `duration` earlier, from the source it has before the cut (C.20, VV-042) |
+| `timeline.close_gap` | `track_id`, `at` (time), `ripple?` (`"track"` default, `"all"`) | Finds the empty range on the track that contains frame `at` and moves later items earlier by its length. Fails with `E_INVALID_STATE` when `at` is inside an item or after the last item |
 
 ### B.5 Clips and audio
 
-| Command | Phase | Arguments | Effect |
-| --- | --- | --- | --- |
-| `clip.add` | P | `track_id`, `asset_id`, `start?` (time; default the end of the last item of the track), `source_in?` (time, offset into the asset; default 0), `duration?` (time, as a length; default: the rest of the asset from `source_in`, or `"5s"` for an image), `fit?`, `id?` | Places a video or image asset on a visual track |
-| `audio.add` | A | `track_id`, `asset_id`, `start?` (default the end of the last item of the track), `source_in?`, `duration?`, `id?` | Places an audio asset, or the audio of a video asset, on an audio track |
-| `clip.set_framing` | A | `item_id`, `fit?`, `crop?` | Sets fit and crop |
-| `clip.set_speed` | A | `item_id`, `speed` (`"1.5x"`, `"0.5x"` or a rational object) or `curve` (2 to 8 `{t, speed}` points), `ripple?` (`"none"` default, `"track"`) | Changes speed keeping the same source range: the new duration is `ceil(duration × old / new)`, reduced by the rounding excess if that would read past the end of the asset. Keyframe times and transition and fade lengths are scaled by the same ratio and rounded. With `ripple: "track"`, later items on the track shift by the change in length; otherwise a resulting overlap is `E_OVERLAP`. Captions linked to the clip are not changed; the lint reports them as out of sync until `caption.retime_from_clip` runs |
-| `clip.set_color` | A | `item_id`, `brightness?`, `contrast?`, `saturation?`, `temperature?`, `tint?`, `hue?` | Sets colour adjustment; after BETA also white balance and hue rotation (TASK-0233). See C.26 |
-| `clip.set_filter` | B | `item_id`, `filter?`, `amount?` | BETA (RF-027). Sets the colour filter of a clip and how much of it is mixed in |
-| `clip.set_blur` | B | `item_id`, `radius` | BETA (RF-027). Sets the blur radius of a clip in pixels; 0 removes it |
-| `item.repeat` | B | `item_id`, `copies?` or `until?` (exactly one), `ripple?` (`none` default, `track`), `link?`, `new_ids?` | Repeats an item back to back after its end, a number of times or until a time, such as a looping background (VV-123). See C.74 |
-| `clip.set_shadow` | B | `item_id`, `shadow` (`{color?, opacity?, dx?, dy?, blur?}` or null) | Gives a clip a drop shadow that follows its visible shape (VV-122); null removes it. See C.72 |
-| `clip.set_outline` | B | `item_id`, `outline` (`{color?, width?}` or null) | Gives a clip an outline that follows its visible shape (VV-122); null removes it. See C.73 |
-| `clip.set_chroma_key` | B | `item_id`, `color` (`#RRGGBB` or null), `similarity?`, `smoothness?`, `spill?` | Keys out one colour of a clip (a green screen); null removes the key. See C.55 |
-| `clip.set_blend` | B | `item_id`, `mode` (`normal`, `multiply`, `screen`, `overlay`, `add`) | Sets how a visual item is mixed with what is below it. See C.61 |
-| `clip.set_mask` | B | `item_id`, `mask` (`{shape, x, y, width, height, feather?, invert?}` or null) | Limits where a visual item is drawn to a rectangle or an ellipse in the item's own frame; null removes it. See C.62 |
-| `clip.set_flip` | B | `item_id`, `horizontal?`, `vertical?` (booleans) | Mirrors a visual item left to right and or top to bottom; a side not given keeps its value. See C.63 |
-| `item.set_enabled` | B | `item_id`, `enabled` (boolean) | Turns any item off or on without removing it: a disabled item stays on the timeline and is ignored by preview, export and audio. See C.64 |
-| `clip.set_effects` | B | `item_id`, `effects` (up to 6 `{kind, ...}`) | Sets the visual effects of a clip: motion blur, glow, vignette, grain, RGB split and shake, each with its parameters. See C.68 |
-| `item.paste_attributes` | B | `from_item_id`, `item_ids`, `attributes` | Copies attribute groups (color, filter, blur, framing, transform, blend, mask, flip, chroma_key, effects, audio) from one item to 1 to 20 others. See C.69 |
-| `item.freeze_frame` | B | `item_id`, `at`, `duration?`, `freeze_id?`, `new_id?` | Splits a clip at a frame and inserts between the parts a still of the source frame shown there, held for `duration` (default 3s); the later items of the track move later. See C.70 |
-| `caption.import_subtitles` | B | `track_id`, `text`, `format?`, `start?`, `new_ids?` | Creates one caption per cue of an SRT or WebVTT text on a visual track (the file is read by the caller). See C.71 |
-| `item.link` | B | `item_ids` (2 to 20), `id?` | Puts items in one link group: `item.move`, `item.trim` and `item.split` on one of them apply to all of them. See C.65 |
-| `item.unlink` | B | `item_ids` | Takes items out of their link group; a group left with one item is dissolved. See C.66 |
-| `item.extract_audio` | B | `item_id`, `track_id`, `id?` | Creates a linked audio item from the audio of a video clip and mutes the clip. See C.67 |
-| `clip.remove_silences` | A | `item_id`, `min_silence?` (length, default `"0.4s"`), `padding?` (length kept on each side of speech, default `"0.1s"`), `threshold_db?` (-30, -35, -40 or -45, default -35), `ripple?` (`"track"` default, `"none"`), `new_ids?` | Replaces the clip, or an audio item, by one item per non-silent stretch of its source range (A.9). With ripple the pieces are placed back to back from the original start and later items on the track move earlier; without, each piece keeps its original position. The first piece keeps the item's identifier, its `transition_in` and `fade_in`; the last keeps `transition_out` and `fade_out`. `effective.removed` is the total length removed. With no silence found the document is unchanged |
-| `audio.duck` | B | `item_id`, `speech_item_ids` (1 to 20 items), `gain_db?` (-40 to -1, default -12), `attack?` (length, default `"0.2s"`), `release?` (length, default `"0.5s"`) | BETA (RF-043). Lowers a music item while speech sounds, as generated `volume` keyframes; the speech comes through `resolved` (A.9). `keyframe.clear` on `volume` undoes it |
-| `marker.add` | B | `item_id?`, `at`, `label?` | Puts a marker at a frame of the timeline, or of an item with `item_id` (TASK-0254); see C.56 |
-| `marker.set` | B | `item_id?`, `at`, `to?`, `label?` | Moves or relabels the marker at a frame, of the timeline or of an item; see C.57 |
-| `marker.remove` | B | `item_id?`, `at` or `all` | Removes the marker at a frame, or every marker, of the timeline or of an item; see C.58 |
-| `audio.mark_beats` | B | `item_id`, `every?` (1 to 64, default 1), `label?`, `replace?` (default true), `bpm?` (20 to 400), `offset?` | BETA (RF-044). Writes markers on a music item at the beats of the visible part of its audio; the beats come through `resolved` (A.9), or from the manual tempo `bpm` and `offset` when the analysis finds no pulse (VV-153) |
+| Command | Arguments | Effect |
+| --- | --- | --- |
+| `clip.add` | `track_id`, `asset_id`, `start?` (time; default the end of the last item of the track), `source_in?` (time, offset into the asset; default 0), `duration?` (time, as a length; default: the rest of the asset from `source_in`, or `"5s"` for an image), `fit?`, `id?` | Places a video or image asset on a visual track |
+| `audio.add` | `track_id`, `asset_id`, `start?` (default the end of the last item of the track), `source_in?`, `duration?`, `id?` | Places an audio asset, or the audio of a video asset, on an audio track |
+| `clip.set_framing` | `item_id`, `fit?`, `crop?` | Sets fit and crop |
+| `clip.set_speed` | `item_id`, `speed` (`"1.5x"`, `"0.5x"` or a rational object) or `curve` (2 to 8 `{t, speed}` points), `ripple?` (`"none"` default, `"track"`) | Changes speed keeping the same source range: the new duration is `ceil(duration × old / new)`, reduced by the rounding excess if that would read past the end of the asset. Keyframe times and transition and fade lengths are scaled by the same ratio and rounded. With `ripple: "track"`, later items on the track shift by the change in length; otherwise a resulting overlap is `E_OVERLAP`. Captions linked to the clip are not changed; the lint reports them as out of sync until `caption.retime_from_clip` runs |
+| `clip.set_color` | `item_id`, `brightness?`, `contrast?`, `saturation?`, `temperature?`, `tint?`, `hue?` | Sets colour adjustment; also white balance and hue rotation (TASK-0233). See C.26 |
+| `clip.set_filter` | `item_id`, `filter?`, `amount?` | Sets the colour filter of a clip and how much of it is mixed in |
+| `clip.set_blur` | `item_id`, `radius` | Sets the blur radius of a clip in pixels; 0 removes it |
+| `item.repeat` | `item_id`, `copies?` or `until?` (exactly one), `ripple?` (`none` default, `track`), `link?`, `new_ids?` | Repeats an item back to back after its end, a number of times or until a time, such as a looping background (VV-123). See C.74 |
+| `clip.set_shadow` | `item_id`, `shadow` (`{color?, opacity?, dx?, dy?, blur?}` or null) | Gives a clip a drop shadow that follows its visible shape (VV-122); null removes it. See C.72 |
+| `clip.set_outline` | `item_id`, `outline` (`{color?, width?}` or null) | Gives a clip an outline that follows its visible shape (VV-122); null removes it. See C.73 |
+| `clip.set_chroma_key` | `item_id`, `color` (`#RRGGBB` or null), `similarity?`, `smoothness?`, `spill?` | Keys out one colour of a clip (a green screen); null removes the key. See C.55 |
+| `clip.set_blend` | `item_id`, `mode` (`normal`, `multiply`, `screen`, `overlay`, `add`) | Sets how a visual item is mixed with what is below it. See C.61 |
+| `clip.set_mask` | `item_id`, `mask` (`{shape, x, y, width, height, feather?, invert?}` or null) | Limits where a visual item is drawn to a rectangle or an ellipse in the item's own frame; null removes it. See C.62 |
+| `clip.set_flip` | `item_id`, `horizontal?`, `vertical?` (booleans) | Mirrors a visual item left to right and or top to bottom; a side not given keeps its value. See C.63 |
+| `item.set_enabled` | `item_id`, `enabled` (boolean) | Turns any item off or on without removing it: a disabled item stays on the timeline and is ignored by preview, export and audio. See C.64 |
+| `clip.set_effects` | `item_id`, `effects` (up to 6 `{kind, ...}`) | Sets the visual effects of a clip: motion blur, glow, vignette, grain, RGB split and shake, each with its parameters. See C.68 |
+| `item.paste_attributes` | `from_item_id`, `item_ids`, `attributes` | Copies attribute groups (color, filter, blur, framing, transform, blend, mask, flip, chroma_key, effects, audio) from one item to 1 to 20 others. See C.69 |
+| `item.freeze_frame` | `item_id`, `at`, `duration?`, `freeze_id?`, `new_id?` | Splits a clip at a frame and inserts between the parts a still of the source frame shown there, held for `duration` (default 3s); the later items of the track move later. See C.70 |
+| `caption.import_subtitles` | `track_id`, `text`, `format?`, `start?`, `new_ids?` | Creates one caption per cue of an SRT or WebVTT text on a visual track (the file is read by the caller). See C.71 |
+| `item.link` | `item_ids` (2 to 20), `id?` | Puts items in one link group: `item.move`, `item.trim` and `item.split` on one of them apply to all of them. See C.65 |
+| `item.unlink` | `item_ids` | Takes items out of their link group; a group left with one item is dissolved. See C.66 |
+| `item.extract_audio` | `item_id`, `track_id`, `id?` | Creates a linked audio item from the audio of a video clip and mutes the clip. See C.67 |
+| `clip.remove_silences` | `item_id`, `min_silence?` (length, default `"0.4s"`), `padding?` (length kept on each side of speech, default `"0.1s"`), `threshold_db?` (-30, -35, -40 or -45, default -35), `ripple?` (`"track"` default, `"none"`), `new_ids?` | Replaces the clip, or an audio item, by one item per non-silent stretch of its source range (A.9). With ripple the pieces are placed back to back from the original start and later items on the track move earlier; without, each piece keeps its original position. The first piece keeps the item's identifier, its `transition_in` and `fade_in`; the last keeps `transition_out` and `fade_out`. `effective.removed` is the total length removed. With no silence found the document is unchanged |
+| `audio.duck` | `item_id`, `speech_item_ids` (1 to 20 items), `gain_db?` (-40 to -1, default -12), `attack?` (length, default `"0.2s"`), `release?` (length, default `"0.5s"`) | Lowers a music item while speech sounds, as generated `volume` keyframes; the speech comes through `resolved` (A.9). `keyframe.clear` on `volume` undoes it |
+| `marker.add` | `item_id?`, `at`, `label?` | Puts a marker at a frame of the timeline, or of an item with `item_id` (TASK-0254); see C.56 |
+| `marker.set` | `item_id?`, `at`, `to?`, `label?` | Moves or relabels the marker at a frame, of the timeline or of an item; see C.57 |
+| `marker.remove` | `item_id?`, `at` or `all` | Removes the marker at a frame, or every marker, of the timeline or of an item; see C.58 |
+| `audio.mark_beats` | `item_id`, `every?` (1 to 64, default 1), `label?`, `replace?` (default true), `bpm?` (20 to 400), `offset?` | Writes markers on a music item at the beats of the visible part of its audio; the beats come through `resolved` (A.9), or from the manual tempo `bpm` and `offset` when the analysis finds no pulse (VV-153) |
 
 ### B.6 Text and shapes
 
-| Command | Phase | Arguments | Effect |
-| --- | --- | --- | --- |
-| `text.add` | P | `track_id?`, `start`, `duration` (length), `text`, `style?` (partial TextStyle), `x?`, `y?`, `id?` | Adds a text item |
-| `text.set` | P | `item_id`, `text?`, `style?` (partial, merged), `reset_style?` (default false) | Changes content or style |
-| `text.apply_preset` | A | `item_id`, `preset` (`"fade_up"`, `"fade_down"`, `"pop"`, `"zoom_in"`, `"slide_left"`, `"slide_right"`), `edge` (`"in"`, `"out"`), `duration?` (length, default `"0.4s"`) | Writes the keyframes or transition that implement the preset on that edge, replacing keyframes of the same properties inside that edge's range. Works on any visual item. The definitions are in Part C |
-| `shape.add` | A | `track_id?`, `start`, `duration`, `shape`, `width`, `height`, `fill?`, `stroke_color?`, `stroke_width?`, `radius?`, `x?`, `y?`, `id?` | Adds a shape item |
-| `shape.set` | A | `item_id`, and any of the shape fields | Changes a shape |
+| Command | Arguments | Effect |
+| --- | --- | --- |
+| `text.add` | `track_id?`, `start`, `duration` (length), `text`, `style?` (partial TextStyle), `x?`, `y?`, `id?` | Adds a text item |
+| `text.set` | `item_id`, `text?`, `style?` (partial, merged), `reset_style?` (default false) | Changes content or style |
+| `text.apply_preset` | `item_id`, `preset` (`"fade_up"`, `"fade_down"`, `"pop"`, `"zoom_in"`, `"slide_left"`, `"slide_right"`), `edge` (`"in"`, `"out"`), `duration?` (length, default `"0.4s"`) | Writes the keyframes or transition that implement the preset on that edge, replacing keyframes of the same properties inside that edge's range. Works on any visual item. The definitions are in Part C |
+| `shape.add` | `track_id?`, `start`, `duration`, `shape`, `width`, `height`, `fill?`, `stroke_color?`, `stroke_width?`, `radius?`, `x?`, `y?`, `id?` | Adds a shape item |
+| `shape.set` | `item_id`, and any of the shape fields | Changes a shape |
 
 ### B.7 Captions
 
-| Command | Phase | Arguments | Effect |
-| --- | --- | --- | --- |
-| `caption.add` | P | `track_id?`, `start`, and either `words` (array of `{text, start, duration}` with times relative to the caption as lengths) or `text` with `duration` (length); `linked_item?`, `x?`, `y?`, `id?` | Adds a caption item. `x` and `y` (pixels, the centre of the item) are used when the track's caption style position is `custom`. With `text`, it is split on whitespace and the words share the duration in proportion to their character counts, each word getting at least one frame |
-| `caption.set_words` | A | `item_id`, `words` or `text` | Replaces the words; the item's duration becomes the end of the last word unless `duration?` is given |
-| `caption.edit_word` | A | `item_id`, `index`, `text` | Changes one word's text. An empty `text` removes the word; removing the only word of a caption is `E_INVALID_STATE` |
-| `caption.split` | A | `item_id`, `before_word` (index, 1 or more), `new_id?` | Splits a caption into two at a word boundary |
-| `caption.merge` | A | `item_ids` (exactly 2, on the same track, with no other item between them) | Joins two captions; the result keeps the first identifier and spans both |
-| `caption.set_breaks` | A | `item_id`, `breaks` (array of word indexes) | Sets forced line breaks |
-| `caption.set_style` | A | `item_id`, `style` (partial CaptionStyle, or `null` to clear the override) | Sets the per-item style override |
-| `caption.from_transcript` | A | `clip_item_id`, `track_id`, `max_words?` (default 5), `max_chars?` (default 28), `max_gap?` (length, default `"0.6s"`), `replace?` (default true), `new_ids?` | Creates caption items on the track for the speech in the clip's visible source range (A.9). A new caption starts when adding the next word would exceed `max_words` or `max_chars`, or when the gap to the next word exceeds `max_gap`. Each caption gets `linked_item`. With `replace`, existing captions linked to that clip on that track are removed first. Word times are mapped from the asset through the clip's `source_in`, `speed` and `start` |
-| `caption.retime_from_clip` | A | `clip_item_id` | Recomputes every caption linked to the clip from the transcript and the clip's current position, in-point and speed, keeping each caption's edited texts where the word count is unchanged |
+| Command | Arguments | Effect |
+| --- | --- | --- |
+| `caption.add` | `track_id?`, `start`, and either `words` (array of `{text, start, duration}` with times relative to the caption as lengths) or `text` with `duration` (length); `linked_item?`, `x?`, `y?`, `id?` | Adds a caption item. `x` and `y` (pixels, the centre of the item) are used when the track's caption style position is `custom`. With `text`, it is split on whitespace and the words share the duration in proportion to their character counts, each word getting at least one frame |
+| `caption.set_words` | `item_id`, `words` or `text` | Replaces the words; the item's duration becomes the end of the last word unless `duration?` is given |
+| `caption.edit_word` | `item_id`, `index`, `text` | Changes one word's text. An empty `text` removes the word; removing the only word of a caption is `E_INVALID_STATE` |
+| `caption.split` | `item_id`, `before_word` (index, 1 or more), `new_id?` | Splits a caption into two at a word boundary |
+| `caption.merge` | `item_ids` (exactly 2, on the same track, with no other item between them) | Joins two captions; the result keeps the first identifier and spans both |
+| `caption.set_breaks` | `item_id`, `breaks` (array of word indexes) | Sets forced line breaks |
+| `caption.set_style` | `item_id`, `style` (partial CaptionStyle, or `null` to clear the override) | Sets the per-item style override |
+| `caption.from_transcript` | `clip_item_id`, `track_id`, `max_words?` (default 5), `max_chars?` (default 28), `max_gap?` (length, default `"0.6s"`), `replace?` (default true), `new_ids?` | Creates caption items on the track for the speech in the clip's visible source range (A.9). A new caption starts when adding the next word would exceed `max_words` or `max_chars`, or when the gap to the next word exceeds `max_gap`. Each caption gets `linked_item`. With `replace`, existing captions linked to that clip on that track are removed first. Word times are mapped from the asset through the clip's `source_in`, `speed` and `start` |
+| `caption.retime_from_clip` | `clip_item_id` | Recomputes every caption linked to the clip from the transcript and the clip's current position, in-point and speed, keeping each caption's edited texts where the word count is unchanged |
 
 ### B.8 Keyframes
 
-| Command | Phase | Arguments | Effect |
-| --- | --- | --- | --- |
-| `keyframe.set` | A | `item_id`, `property`, `at` (time, absolute timeline position inside the item), `value`, `easing?` | Adds a keyframe at that frame or replaces the one there. If the property had no keyframes and `at` is not the item's first frame, a keyframe with the property's current static value is also added at the item's first frame |
-| `keyframe.remove` | A | `item_id`, `property`, `at` (time) | Removes the keyframe at that frame. Removing the last keyframe of a property writes its value into the static field |
-| `keyframe.clear` | A | `item_id`, `property?` | Removes all keyframes of the property, or of every property. The value at the item's first frame becomes the static value |
+| Command | Arguments | Effect |
+| --- | --- | --- |
+| `keyframe.set` | `item_id`, `property`, `at` (time, absolute timeline position inside the item), `value`, `easing?` | Adds a keyframe at that frame or replaces the one there. If the property had no keyframes and `at` is not the item's first frame, a keyframe with the property's current static value is also added at the item's first frame |
+| `keyframe.remove` | `item_id`, `property`, `at` (time) | Removes the keyframe at that frame. Removing the last keyframe of a property writes its value into the static field |
+| `keyframe.clear` | `item_id`, `property?` | Removes all keyframes of the property, or of every property. The value at the item's first frame becomes the static value |
 
 ### B.9 Templates
 
-| Command | Phase | Arguments | Effect |
-| --- | --- | --- | --- |
-| `slot.mark` | A | `item_id`, `name`, `description?`, `required?`, `duration_policy?` | Marks an item as a slot; the slot kind follows from the item type |
-| `slot.unmark` | A | `item_id` | Removes the marking |
-| `slot.fill` | A | `name`, and one of `asset_id` with `source_in?`, `text`, `words` | Fills a slot. For media with `duration_policy: "fit"` the item keeps its duration and the asset must be at least that long from `source_in` (`E_OUT_OF_SOURCE`); with `"stretch_timeline"` the item takes the asset's remaining duration and later items on every track shift by the change |
-| `template.set_info` | A | `description?`, `colors?` (map of name to colour; a `null` value removes the name) | Sets template information. Removing a colour that a style refers to is `E_IN_USE` |
+| Command | Arguments | Effect |
+| --- | --- | --- |
+| `slot.mark` | `item_id`, `name`, `description?`, `required?`, `duration_policy?` | Marks an item as a slot; the slot kind follows from the item type |
+| `slot.unmark` | `item_id` | Removes the marking |
+| `slot.fill` | `name`, and one of `asset_id` with `source_in?`, `text`, `words` | Fills a slot. For media with `duration_policy: "fit"` the item keeps its duration and the asset must be at least that long from `source_in` (`E_OUT_OF_SOURCE`); with `"stretch_timeline"` the item takes the asset's remaining duration and later items on every track shift by the change |
+| `template.set_info` | `description?`, `colors?` (map of name to colour; a `null` value removes the name) | Sets template information. Removing a colour that a style refers to is `E_IN_USE` |
 
 ### B.10 Rules shared by trim and split
 
@@ -359,7 +358,7 @@ These rules are the part of the catalogue most likely to be implemented wrongly;
 - Text and shape items are simply divided.
 - Markers (M3): a marker before `T` stays on the left part; the others go to the right part with `frame` counted from its start.
 
-**Markers (BETA, SDD-001 section 3.4).** Markers follow the picture as keyframes do and never make a command fail:
+**Markers (SDD-001 section 3.4).** Markers follow the picture as keyframes do and never make a command fail:
 
 - M1, trim of the start by `d`: each `frame` becomes `frame - d`; a marker that falls before frame 0 is removed.
 - M2, trim of the end, or any cut of the item to a new `duration`: markers at or after the new duration are removed.
@@ -367,14 +366,14 @@ These rules are the part of the catalogue most likely to be implemented wrongly;
 - M4, `clip.set_speed` and `settings.set_fps`: each `frame` is scaled by the same ratio as the keyframe times and rounded; a marker that lands at or after the duration, or on the frame of the marker before it, is removed (the first of two stays). The rescale is not listed in `effective.adjusted`.
 - `clip.remove_silences` applies M1 and M2 to each piece, so a marker stays with the piece that holds its frame.
 
-### B.11 Project fonts (BETA)
+### B.11 Project fonts
 
-Scope is `media` (SDD-007 section 5.4), phase `B`. A font is first stored by content hash in the workspace `fonts/` directory by the font import of the service (SDD-007 section 7.7); these commands only name it in the document.
+Scope is `media` (SDD-007 section 5.4). A font is first stored by content hash in the workspace `fonts/` directory by the font import of the service (SDD-007 section 7.7); these commands only name it in the document.
 
-| Command | Phase | Arguments | Effect |
-| --- | --- | --- | --- |
-| `font.add` | B | `family`, `files` (1 to 9 of `{weight, hash}`) | BETA (RF-053). Adds a user family to the `fonts` map, or weights to a family that exists (a weight that exists gets the new file). The family is not a bundled one. Diff: `font.added`, or `font.removed` then `font.added` when a family changes |
-| `font.remove` | B | `family` | BETA (RF-053). Removes a user family. A family that a text or caption style or a track caption style uses is `E_IN_USE` with `details.used_by`. The files stay in the workspace |
+| Command | Arguments | Effect |
+| --- | --- | --- |
+| `font.add` | `family`, `files` (1 to 9 of `{weight, hash}`) | Adds a user family to the `fonts` map, or weights to a family that exists (a weight that exists gets the new file). The family is not a bundled one. Diff: `font.added`, or `font.removed` then `font.added` when a family changes |
+| `font.remove` | `family` | Removes a user family. A family that a text or caption style or a track caption style uses is `E_IN_USE` with `details.used_by`. The files stay in the workspace |
 
 A style that names a family added earlier in the same batch validates, because operations apply in order (A.12 rule 4); the reverse order is `E_FONT_UNKNOWN`. Where `E_FONT_UNKNOWN` is raised and the project has user fonts, the message lists the bundled families and the project fonts separately.
 
@@ -441,7 +440,7 @@ Part C makes choices that Parts A and B leave open or do not state. Each one is 
 | 15 | `caption.retime_from_clip` | Transcript words go to the linked captions in `start` order by word count. A caption whose word count is unchanged keeps its edited texts; otherwise it takes the transcript texts and is listed in `effective.text_reset`. A caption that receives no word is removed and listed in `effective.removed`; the removal is in the diff and is undone by undo | Keeps the behaviour of Part B and makes the other cases explicit |
 | 16 | This table | Every extension of Part C beyond Parts A and B is listed here | Nothing is hidden in a section |
 | 17 | R12, `settings.set_fps`, `item.trim`, `caption.set_words` | A keyframe written by R12 is at `t` equal to the new duration. This is allowed because `t` ranges from 0 to `duration` | One rule for every cut at the back |
-| 18 | All commands with arguments | An argument has the phase of its command. `item.delete` with `ripple` is phase P like the command | Per-argument phases would make the registry ambiguous |
+| 18 | All commands with arguments | An argument belongs to its command: all values of `item.delete` with `ripple` are accepted wherever the command is registered | The registry stays unambiguous |
 | 19 | `caption.add` | With `text`, every word gets at least 1 frame and the rest is shared in proportion to character counts by largest remainder, lower index first on ties | A deterministic split with no zero-length word |
 | 20 | `item.set_transition` | A `duration` together with `kind: null` is `E_VALIDATION` | Removing a transition has no length |
 | 21 | `clip.add` | `source_in` on an image is `E_VALIDATION`. A default duration that would end after 108,000 is clamped to `108000 - start`; only an explicit duration is an error | An image has no source position; a default should not fail |
@@ -459,10 +458,10 @@ Part C makes choices that Parts A and B leave open or do not state. Each one is 
 | 33 | `settings.set` | `scale` and text `size` are untouched when the frame size changes | Part B states it; the rule is repeated for the golden cases |
 | 34 | R2 | A no-op succeeds with an empty diff and an empty inverse and still counts as a revision | Retries are safe |
 | 35 | R4 | The diff `id` of `settings.updated` and `project.updated` is the project id | These objects have no id of their own |
-| 36 | `track.set_caption_style` (A.10) | In a Prototype build `CaptionStyle.highlight` accepts only `"none"`; any other value is `E_VALIDATION` with the hint that word highlight arrives in ALPHA. `caption.add` takes no style, so the rule has one place. This is a rule on a value, not a per-argument phase | Word timing is data, so `words` are accepted in the Prototype, but the highlight is not drawn before ALPHA (RF-032) |
-| 37 | `caption.add` | `x` and `y` are optional and are used when the position of the caption style is `custom`; they are stored on the item. `item.set_transform` stays in ALPHA | A custom position is reachable in the Prototype without the ALPHA command |
+| 36 | `track.set_caption_style` (A.10) | `CaptionStyle.highlight` accepts `"none"` and `"word"`. `caption.add` takes no style, so the rule has one place | Word timing is data, so `words` are accepted, and the highlight is drawn when the style asks for it (RF-032) |
+| 37 | `caption.add` | `x` and `y` are optional and are used when the position of the caption style is `custom`; they are stored on the item. `item.set_transform` is a separate command | A custom position is reachable without that command |
 
-### C.1 `project.rename` (phase P)
+### C.1 `project.rename`
 
 Sets the project name.
 
@@ -511,7 +510,7 @@ Sets the project name.
 - `err_validation_empty_name`
 - `err_validation_121_chars`
 
-### C.2 `settings.set` (phase P)
+### C.2 `settings.set`
 
 Sets frame size, background colour or loudness target, rescaling the position of visual items when the size changes.
 
@@ -585,7 +584,7 @@ Width 1080 and height 1920 are the defaults, so they are absent before the chang
 - `err_validation_unknown_color_reference`
 - `err_validation_background_unknown_keyword`
 
-### C.3 `settings.set_fps` (phase A)
+### C.3 `settings.set_fps`
 
 Changes the project frame rate, rescaling every time quantity and repairing the invariants that rounding can break.
 
@@ -674,7 +673,7 @@ As built, `field` is the name of the changed field (`start`, `duration`, `source
 - `err_invalid_time_item_passes_108000`
 - `ok_markers_rescaled`
 
-### C.4 `asset.add` (phase P, scope media, internal)
+### C.4 `asset.add`
 
 Adds an asset that the import flow has already ingested, or reports the existing asset with the same hash.
 
@@ -735,7 +734,7 @@ Adds an asset that the import flow has already ingested, or reports the existing
 - `err_limit_200_assets`
 - `ok_lut`
 
-### C.5 `asset.remove` (phase A, scope media)
+### C.5 `asset.remove`
 
 Removes an asset from the project when no item uses it.
 
@@ -789,7 +788,7 @@ Removes an asset from the project when no item uses it.
 - `err_in_use_several_items_sorted`
 - `err_in_use_by_a_lut`
 
-### C.6 `track.add` (phase P)
+### C.6 `track.add`
 
 Adds an empty track at a place in the track order.
 
@@ -859,7 +858,7 @@ Adds an empty track at a place in the track order.
 - `err_id_exists`
 - `err_limit_50_tracks`
 
-### C.7 `track.update` (phase P)
+### C.7 `track.update`
 
 Sets the name, the hidden, muted, locked, solo or magnet flag, or the volume of a track.
 
@@ -938,7 +937,7 @@ At least one of `name`, `hidden`, `muted`, `locked`, `solo`, `magnet`, `volume` 
 - `err_not_found`
 - `err_type_mismatch_hidden_on_audio`
 
-### C.8 `track.move` (phase P)
+### C.8 `track.move`
 
 Changes the place of a track in the track order.
 
@@ -1001,7 +1000,7 @@ Changes the place of a track in the track order.
 - `err_not_found_reference`
 - `err_invalid_state_relative_to_itself`
 
-### C.9 `track.remove` (phase P)
+### C.9 `track.remove`
 
 Removes a track, and its items when `with_items` is true.
 
@@ -1056,7 +1055,7 @@ Removes a track, and its items when `with_items` is true.
 - `err_not_found`
 - `err_not_empty`
 
-### C.10 `track.set_caption_style` (phase P)
+### C.10 `track.set_caption_style`
 
 Merges a partial caption style into a track's caption style, or replaces it.
 
@@ -1087,7 +1086,6 @@ Merges a partial caption style into a track's caption style, or replaces it.
 | Code | When | Example message | Example hint |
 | --- | --- | --- | --- |
 | `E_VALIDATION` | unknown key, value out of range, bad colour, unknown `$name` | `args.style.size must be between 8 and 1000, got 4.` | `Use size 64.` |
-| `E_VALIDATION` | in a Prototype build, `style.highlight` other than `"none"` (decision 36) | `args.style.highlight must be "none" in this build, got "word".` | `Word highlight arrives in ALPHA; use "none".` |
 | `E_NOT_FOUND` | unknown track | `Track trk_zzzzzzzzzz does not exist.` | `Use the id of a track listed by project_get.` |
 | `E_TYPE_MISMATCH` | audio track | `Track trk_m1n2p3q4r5 is an audio track and cannot hold captions.` | `Use a visual track.` |
 | `E_FONT_UNKNOWN` | family or weight not available | `Font "Comic" is not available; available families: Inter, Roboto.` | `Use font_family "Inter".` |
@@ -1118,14 +1116,13 @@ Merges a partial caption style into a track's caption style, or replaces it.
 - `ok_same_style_noop`
 - `err_validation_unknown_key`
 - `err_validation_size_below_8`
-- `err_validation_highlight_word_in_prototype`
 - `err_validation_unknown_color_reference`
 - `err_not_found_track`
 - `err_type_mismatch_audio_track`
 - `err_font_unknown_family`
 - `err_font_unknown_weight`
 
-### C.11 `item.move` (phase P)
+### C.11 `item.move`
 
 Moves an item in time, to another track of the same kind, or both.
 
@@ -1222,7 +1219,7 @@ At least one of `start` and `track_id` is required.
 - `ok_magnet_repacks_after_a_move_to_the_front`
 - `ok_a_track_without_magnet_is_not_packed`
 
-### C.12 `item.trim` (phase P)
+### C.12 `item.trim`
 
 Moves the start edge or the end edge of an item to a timeline position, keeping the source, keyframes and words consistent.
 
@@ -1357,7 +1354,7 @@ The same clip trimmed at the end with `{"edge": "end", "to": "150f"}` (and, for 
 - `ok_freeze_frame_start_keeps_the_held_frame`
 - `ok_freeze_frame_end_grows_past_the_clip_length`
 
-### C.13 `item.split` (phase P)
+### C.13 `item.split`
 
 Splits an item into two items at a timeline frame.
 
@@ -1476,7 +1473,7 @@ The cut value is the linear value at relative frame 37: `1 + (0.4 - 1) × 37/60 
 - `err_invalid_state_linked_peer_on_a_locked_track`
 - `ok_freeze_frame_parts_hold_the_same_frame`
 
-### C.14 `item.delete` (phase P)
+### C.14 `item.delete`
 
 Removes items, and optionally closes the freed space on the same track or on all tracks.
 
@@ -1485,7 +1482,7 @@ Removes items, and optionally closes the freed space on the same track or on all
 | Name | Type | Required | Default | Rule |
 | --- | --- | --- | --- | --- |
 | `item_ids` | array of item ids | yes | none | 1 to 200 entries, no duplicates |
-| `ripple` | `"none"`, `"track"`, `"all"` | no | `"none"` | the argument has the phase of the command (P); all three values are accepted wherever the command is registered |
+| `ripple` | `"none"`, `"track"`, `"all"` | no | `"none"` | all three values are accepted |
 
 **Preconditions.**
 
@@ -1550,7 +1547,7 @@ Removes items, and optionally closes the freed space on the same track or on all
 - `err_overlap_ripple_all_straddling_item`
 - `ok_magnet_closes_the_gap_of_the_deleted_item`
 
-### C.15 `item.duplicate` (phase A)
+### C.15 `item.duplicate`
 
 Copies an item to another position, optionally on another track.
 
@@ -1624,7 +1621,7 @@ Copies an item to another position, optionally on another track.
 - `err_overlap_with_source`
 - `err_overlap_with_other_item`
 
-### C.16 `item.rename` (phase A)
+### C.16 `item.rename`
 
 Sets the label of an item.
 
@@ -1675,7 +1672,7 @@ Sets the label of an item.
 - `err_validation_121_chars`
 - `err_not_found`
 
-### C.17 `item.set_transform` (phase A)
+### C.17 `item.set_transform`
 
 Sets position, scale, rotation or opacity of a visual item.
 
@@ -1745,7 +1742,7 @@ At least one of `x`, `y`, `scale`, `rotation`, `opacity` is required.
 - `err_type_mismatch_audio_item`
 - `err_invalid_state_property_has_keyframes`
 
-### C.18 `item.set_transition` (phase A)
+### C.18 `item.set_transition`
 
 Sets or removes the transition on one edge of a visual item.
 
@@ -1755,7 +1752,7 @@ Sets or removes the transition on one edge of a visual item.
 | --- | --- | --- | --- | --- |
 | `item_id` | item id | yes | none | a visual item |
 | `edge` | `"in"` or `"out"` | yes | none | |
-| `kind` | `"fade"`, `"slide_left"`, `"slide_right"`, `"slide_up"`, `"slide_down"`, `"zoom"`, `"whip"`, `"dip"`, `"wipe"`, `"spin"`, `"shrink"`, `"grow"` or `null` | yes | none | `null` removes the transition. The last four were added after BETA (TASK-0278, formulas in SDD-004 section 3.2) |
+| `kind` | `"fade"`, `"slide_left"`, `"slide_right"`, `"slide_up"`, `"slide_down"`, `"zoom"`, `"whip"`, `"dip"`, `"wipe"`, `"spin"`, `"shrink"`, `"grow"` or `null` | yes | none | `null` removes the transition. The last four were added by TASK-0278 (formulas in SDD-004 section 3.2) |
 | `color` | `#RRGGBB` | no | `"#000000"` | `dip` only; on another kind `E_VALIDATION`. Black is stored as absent |
 | `direction` | `"left"`, `"right"`, `"up"`, `"down"` | no | `"left"` | `whip` and `wipe` only; on another kind `E_VALIDATION`. `left` is stored as absent |
 | `duration` | time, as a length | no | `"0.5s"` | at least 1 frame; rejected with `kind: null` (`E_VALIDATION`). The default applies whenever it is omitted, even when a transition already exists |
@@ -1832,7 +1829,7 @@ A transition needs something visible beneath it (VV-154): the previous clip must
 - `err_validation_direction_with_fade`
 - `err_validation_direction_unknown`
 
-### C.19 `item.set_audio` (phase A)
+### C.19 `item.set_audio`
 
 Sets volume, fades or the mute flag of a clip or audio item.
 
@@ -1845,8 +1842,8 @@ Sets volume, fades or the mute flag of a clip or audio item.
 | `fade_in` | time, as a length (may be 0) | no | unchanged | `"0s"` removes the fade |
 | `fade_out` | time, as a length (may be 0) | no | unchanged | |
 | `audio_muted` | boolean | no | unchanged | `clip` items only |
-| `denoise` | number | no | unchanged | 0 to 1; added after BETA (TASK-0233); 0 removes the field |
-| `voice` | string | no | unchanged | `none`, `clear`, `warm`, `deep`, `bright` or `radio`; added after BETA (TASK-0254); `none` removes the field |
+| `denoise` | number | no | unchanged | 0 to 1; added by TASK-0233; 0 removes the field |
+| `voice` | string | no | unchanged | `none`, `clear`, `warm`, `deep`, `bright` or `radio`; added by TASK-0254; `none` removes the field |
 
 At least one of the six is required.
 
@@ -1924,7 +1921,7 @@ At least one of the six is required.
 - `err_invalid_state_volume_has_keyframes`
 - `err_invalid_state_fades_exceed_duration`
 
-### C.20 `item.crossfade` (phase A)
+### C.20 `item.crossfade`
 
 Sets a matching fade-out and fade-in on two overlapping visual items of different tracks.
 
@@ -2015,7 +2012,7 @@ Sets a matching fade-out and fade-in on two overlapping visual items of differen
 - `err_not_found_target_track`
 - `err_validation_track_id_with_items_on_two_tracks`
 
-### C.21 `timeline.close_gap` (phase A)
+### C.21 `timeline.close_gap`
 
 Closes the empty range that contains a given frame on a track.
 
@@ -2085,9 +2082,9 @@ Closes the empty range that contains a given frame on a track.
 - `err_invalid_state_item_touching_no_gap`
 - `err_overlap_ripple_all_other_track`
 
-### C.22 `clip.add` (phase P)
+### C.22 `clip.add`
 
-Places a video or image asset on a visual track. An animated image (BETA, RF-028) is an image asset with `frame_delays` (SDD-001 section 3.2): it follows every image rule of this section, so the default duration is `"5s"`, `source_in` must be omitted and the animation loops for as long as the item lasts (SDD-004 section 3.3); there is no hold mode and the command has no argument for it. A **sticker** is not a type: it is an image or animated image placed with this command on a visual track above the picture (a smaller `order`), usually with `item.set_transform` to size and place it; the alpha channel of the image is kept by the compositor.
+Places a video or image asset on a visual track. An animated image (RF-028) is an image asset with `frame_delays` (SDD-001 section 3.2): it follows every image rule of this section, so the default duration is `"5s"`, `source_in` must be omitted and the animation loops for as long as the item lasts (SDD-004 section 3.3); there is no hold mode and the command has no argument for it. A **sticker** is not a type: it is an image or animated image placed with this command on a visual track above the picture (a smaller `order`), usually with `item.set_transform` to size and place it; the alpha channel of the image is kept by the compositor.
 
 **Arguments**
 
@@ -2185,7 +2182,7 @@ Places a video or image asset on a visual track. An animated image (BETA, RF-028
 - `err_overlap`
 - `err_type_mismatch_lut_asset`
 
-### C.23 `audio.add` (phase A)
+### C.23 `audio.add`
 
 Places an audio asset, or the audio of a video asset, on an audio track.
 
@@ -2263,7 +2260,7 @@ Places an audio asset, or the audio of a video asset, on an audio track.
 - `err_overlap`
 - `err_type_mismatch_lut_asset`
 
-### C.24 `clip.set_framing` (phase A)
+### C.24 `clip.set_framing`
 
 Sets how a clip's asset is fitted into the frame and how much of each side is cropped.
 
@@ -2330,7 +2327,7 @@ At least one of `fit` and `crop` is required.
 - `err_invalid_state_crop_side_has_keyframes`
 - `ok_other_crop_side_is_free`
 
-### C.25 `clip.set_speed` (phase A)
+### C.25 `clip.set_speed`
 
 Changes the speed of a clip or audio item, constant or along a curve (TASK-0275), while keeping the same source range.
 
@@ -2468,7 +2465,7 @@ Changes the speed of a clip or audio item, constant or along a curve (TASK-0275)
 - `err_out_of_source_reverse_speed_no_frame_fits`
 - `err_type_mismatch_freeze_frame`
 
-### C.26 `clip.set_color` (phase A)
+### C.26 `clip.set_color`
 
 Sets the colour adjustments of a clip, the lookup table (LUT) that grades it and its advanced colour: HSL bands, wheels and curves (SDD-004 §3.14).
 
@@ -2480,14 +2477,14 @@ Sets the colour adjustments of a clip, the lookup table (LUT) that grades it and
 | `brightness` | number | no | unchanged | -1 to 1 |
 | `contrast` | number | no | unchanged | 0 to 2 |
 | `saturation` | number | no | unchanged | 0 to 2 |
-| `temperature` | number | no | unchanged | -1 to 1; added after BETA (TASK-0233); positive is warmer, negative cooler |
-| `tint` | number | no | unchanged | -1 to 1; added after BETA; positive is more magenta, negative greener |
-| `hue` | number | no | unchanged | -180 to 180 degrees; added after BETA; rotates the colours about the grey axis |
-| `lut_asset` | asset id | no | unchanged | added after BETA (TASK-0254); a `lut` asset of the project; with no current table the intensity is 1, and giving another asset than the current one resets it to 1 |
+| `temperature` | number | no | unchanged | -1 to 1; added by TASK-0233; positive is warmer, negative cooler |
+| `tint` | number | no | unchanged | -1 to 1; positive is more magenta, negative greener |
+| `hue` | number | no | unchanged | -180 to 180 degrees; rotates the colours about the grey axis |
+| `lut_asset` | asset id | no | unchanged | added by TASK-0254; a `lut` asset of the project; with no current table the intensity is 1, and giving another asset than the current one resets it to 1 |
 | `lut_intensity` | number | no | unchanged (1 for a new table) | 0 to 1, rounded to 3 decimals; 0 removes the table; given alone it needs a clip that already has a table |
-| `hsl` | list | no | unchanged | added after BETA (TASK-0254, NEW-09b); up to 8 `{range, hue?, saturation?, lightness?}` with `range` one of `red`, `orange`, `yellow`, `green`, `cyan`, `blue`, `purple`, `magenta` (once each) and the three values -1 to 1 (default 0; `hue` is a shift of up to 30 degrees each way). A given range replaces the stored band of that range; a band with all three at 0 removes it |
-| `wheels` | object | no | unchanged | added after BETA; `shadows`, `midtones`, `highlights`, each `{hue?, amount?, luma?}` with `hue` 0 to 360 degrees (0 red, 120 green, 240 blue), `amount` 0 to 1 and `luma` -1 to 1 (default 0). A given wheel replaces the stored one; `amount` 0 and `luma` 0 removes it |
-| `curves` | object | no | unchanged | added after BETA; `master`, `red`, `green`, `blue`, each a list of 2 to 8 `{x, y}` (0 to 1, rounded to 3 decimals) with `x` strictly increasing. A given channel replaces the stored curve; `[]` or the line (0,0)-(1,1) removes it |
+| `hsl` | list | no | unchanged | added by TASK-0254 and NEW-09b; up to 8 `{range, hue?, saturation?, lightness?}` with `range` one of `red`, `orange`, `yellow`, `green`, `cyan`, `blue`, `purple`, `magenta` (once each) and the three values -1 to 1 (default 0; `hue` is a shift of up to 30 degrees each way). A given range replaces the stored band of that range; a band with all three at 0 removes it |
+| `wheels` | object | no | unchanged | `shadows`, `midtones`, `highlights`, each `{hue?, amount?, luma?}` with `hue` 0 to 360 degrees (0 red, 120 green, 240 blue), `amount` 0 to 1 and `luma` -1 to 1 (default 0). A given wheel replaces the stored one; `amount` 0 and `luma` 0 removes it |
+| `curves` | object | no | unchanged | `master`, `red`, `green`, `blue`, each a list of 2 to 8 `{x, y}` (0 to 1, rounded to 3 decimals) with `x` strictly increasing. A given channel replaces the stored curve; `[]` or the line (0,0)-(1,1) removes it |
 
 At least one of the eleven is required.
 
@@ -2577,7 +2574,7 @@ At least one of the eleven is required.
 - `err_not_found`
 - `err_type_mismatch_audio_item`
 
-### C.27 `clip.remove_silences` (phase A)
+### C.27 `clip.remove_silences`
 
 Replaces a clip by one clip per non-silent stretch of its source range.
 
@@ -2682,7 +2679,7 @@ Pieces: `[60,103)` 43 frames, `[157,203)` 46 frames, `[212,343)` 131 frames. Rem
 - `err_invalid_state_all_silence`
 - `err_limit_over_500_items`
 
-### C.28 `text.add` (phase P)
+### C.28 `text.add`
 
 Adds a text item to a visual track.
 
@@ -2767,7 +2764,7 @@ Adds a text item to a visual track.
 - `err_font_unknown_family_lists_project_fonts`
 - `err_font_unknown_weight_of_a_project_font`
 
-### C.29 `text.set` (phase P)
+### C.29 `text.set`
 
 Changes the content or the style of a text item.
 
@@ -2836,7 +2833,7 @@ At least one of `text`, `style`, `reset_style: true` is required.
 - `err_font_unknown_family`
 - `err_font_unknown_weight`
 
-### C.30 `text.apply_preset` (phase A)
+### C.30 `text.apply_preset`
 
 Writes the keyframes or the transition of a named animation preset on one edge of a visual item.
 
@@ -2944,7 +2941,7 @@ Writes the keyframes or the transition of a named animation preset on one edge o
 - `err_invalid_state_slide_transitions_do_not_fit`
 - `err_limit_101_keyframes`
 
-### C.31 `shape.add` (phase A)
+### C.31 `shape.add`
 
 Adds a shape item to a visual track.
 
@@ -3023,7 +3020,7 @@ Adds a shape item to a visual track.
 - `err_limit_500_items`
 - `err_overlap`
 
-### C.32 `shape.set` (phase A)
+### C.32 `shape.set`
 
 Changes fields of a shape item.
 
@@ -3088,7 +3085,7 @@ At least one of the shape fields is required. Position and transform are changed
 - `err_not_found`
 - `err_type_mismatch_clip_item`
 
-### C.33 `caption.add` (phase P)
+### C.33 `caption.add`
 
 Adds a caption item with timed words.
 
@@ -3179,7 +3176,7 @@ Adds a caption item with timed words.
 - `err_limit_500_items`
 - `err_overlap`
 
-### C.34 `caption.set_words` (phase A)
+### C.34 `caption.set_words`
 
 Replaces the words of a caption.
 
@@ -3257,7 +3254,7 @@ Replaces the words of a caption.
 - `err_limit_5000_words`
 - `err_overlap_longer_caption`
 
-### C.35 `caption.edit_word` (phase A)
+### C.35 `caption.edit_word`
 
 Changes the text of one word, or removes the word.
 
@@ -3326,7 +3323,7 @@ Changes the text of one word, or removes the word.
 - `err_type_mismatch_checked_before_index`
 - `err_invalid_state_remove_only_word`
 
-### C.36 `caption.split` (phase A)
+### C.36 `caption.split`
 
 Splits a caption into two at a word boundary.
 
@@ -3401,7 +3398,7 @@ Splits a caption into two at a word boundary.
 - `err_id_exists`
 - `err_limit_500_items`
 
-### C.37 `caption.merge` (phase A)
+### C.37 `caption.merge`
 
 Joins two captions of one track into one that spans both.
 
@@ -3474,7 +3471,7 @@ Joins two captions of one track into one that spans both.
 - `err_invalid_state_keyframes_present`
 - `err_limit_61_words`
 
-### C.38 `caption.set_breaks` (phase A)
+### C.38 `caption.set_breaks`
 
 Sets the forced line breaks of a caption.
 
@@ -3531,7 +3528,7 @@ Sets the forced line breaks of a caption.
 - `err_not_found`
 - `err_type_mismatch_text_item`
 
-### C.39 `caption.set_style` (phase A)
+### C.39 `caption.set_style`
 
 Sets, changes or clears the style override of one caption.
 
@@ -3595,7 +3592,7 @@ Sets, changes or clears the style override of one caption.
 - `err_type_mismatch_text_item`
 - `err_font_unknown_family`
 
-### C.40 `caption.from_transcript` (phase A)
+### C.40 `caption.from_transcript`
 
 Creates caption items for the speech in a clip's visible source range, from a transcript resolved by the service.
 
@@ -3719,7 +3716,7 @@ Grouping: "Hello everyone, welcome to" is 26 characters; adding "the" would make
 - `err_limit_500_items`
 - `err_overlap_replace_false`
 
-### C.41 `caption.retime_from_clip` (phase A)
+### C.41 `caption.retime_from_clip`
 
 Recomputes the timing of every caption linked to a clip from the transcript and the clip's current position, in-point and speed.
 
@@ -3819,7 +3816,7 @@ The captions have 4, 2 and 1 words; `W` has 7 words, so each caption takes its o
 - `err_invalid_state_transition_no_longer_fits`
 - `err_overlap_with_other_item`
 
-### C.42 `keyframe.set` (phase A)
+### C.42 `keyframe.set`
 
 Adds or replaces a keyframe of one property.
 
@@ -3828,7 +3825,7 @@ Adds or replaces a keyframe of one property.
 | Name | Type | Required | Default | Rule |
 | --- | --- | --- | --- | --- |
 | `item_id` | item id | yes | none | |
-| `property` | `"x"`, `"y"`, `"scale"`, `"rotation"`, `"opacity"`, `"volume"`, `"brightness"`, `"contrast"`, `"saturation"`, `"temperature"`, `"tint"`, `"hue"`, `"mask_x"`, `"mask_y"`, `"mask_width"`, `"mask_height"`, `"mask_feather"`, `"crop_left"`, `"crop_top"`, `"crop_right"`, `"crop_bottom"` | yes | none | `volume` for `audio` items and clips of a video (not of an image); `brightness`, `contrast`, `saturation`, `temperature`, `tint` and `hue` (added after BETA, TASK-0254, NEW-15) for clips only; `mask_x`, `mask_y`, `mask_width`, `mask_height` and `mask_feather` (VV-120) for a visual item that has a mask (`clip.set_mask`); `crop_left`, `crop_top`, `crop_right` and `crop_bottom` (VV-120) for clips only; the others for visual items |
+| `property` | `"x"`, `"y"`, `"scale"`, `"rotation"`, `"opacity"`, `"volume"`, `"brightness"`, `"contrast"`, `"saturation"`, `"temperature"`, `"tint"`, `"hue"`, `"mask_x"`, `"mask_y"`, `"mask_width"`, `"mask_height"`, `"mask_feather"`, `"crop_left"`, `"crop_top"`, `"crop_right"`, `"crop_bottom"` | yes | none | `volume` for `audio` items and clips of a video (not of an image); `brightness`, `contrast`, `saturation`, `temperature`, `tint` and `hue` (added by TASK-0254 and NEW-15) for clips only; `mask_x`, `mask_y`, `mask_width`, `mask_height` and `mask_feather` (VV-120) for a visual item that has a mask (`clip.set_mask`); `crop_left`, `crop_top`, `crop_right` and `crop_bottom` (VV-120) for clips only; the others for visual items |
 | `at` | time | yes | none | absolute; from the item's `start` to `start + duration` inclusive |
 | `value` | number | yes | none | valid for the property: `scale` above 0 and at most 20, `opacity` 0 to 1, `volume` 0 to 4, a colour property the range of `clip.set_color` (-1 to 1 for `brightness`, `temperature` and `tint`, 0 to 2 for `contrast` and `saturation`, -180 to 180 for `hue`), a mask or crop property the range of its static field (`mask_x`, `mask_y` 0 to 1, `mask_width`, `mask_height` 0.001 to 1, `mask_feather` 0 to 200, a crop side 0 to 1), `x`, `y`, `rotation` finite |
 | `easing` | `"linear"`, `"ease_in"`, `"ease_out"`, `"ease_in_out"`, `"hold"` | no | `"linear"` | applies from this keyframe to the next |
@@ -3915,7 +3912,7 @@ Adds or replaces a keyframe of one property.
 - `err_validation_crop_above_range`
 - `err_type_mismatch_crop_on_text`
 
-### C.43 `keyframe.remove` (phase A)
+### C.43 `keyframe.remove`
 
 Removes the keyframe of a property at a frame.
 
@@ -3983,7 +3980,7 @@ Removes the keyframe of a property at a frame.
 - `err_type_mismatch_volume_on_text`
 - `ok_mask_last_keyframe_writes_static`
 
-### C.44 `keyframe.clear` (phase A)
+### C.44 `keyframe.clear`
 
 Removes all keyframes of one property, or of every property, keeping the value at the item's first frame.
 
@@ -4042,7 +4039,7 @@ Removes all keyframes of one property, or of every property, keeping the value a
 - `ok_colour_property_returns_to_static`
 - `ok_crop_returns_to_static`
 
-### C.45 `slot.mark` (phase A)
+### C.45 `slot.mark`
 
 Marks an item as a template slot; the slot kind follows from the item type.
 
@@ -4112,7 +4109,7 @@ Marks an item as a template slot; the slot kind follows from the item type.
 - `err_slot_name_used_by_other_item`
 - `err_invalid_state_item_already_has_other_slot`
 
-### C.46 `slot.unmark` (phase A)
+### C.46 `slot.unmark`
 
 Removes the slot marking of an item.
 
@@ -4164,7 +4161,7 @@ Removes the slot marking of an item.
 - `err_slot_item_is_not_a_slot`
 - `err_invalid_state_unfilled_media_slot_with_placeholder`
 
-### C.47 `slot.fill` (phase A)
+### C.47 `slot.fill`
 
 Fills a template slot with media, text or caption words.
 
@@ -4269,7 +4266,7 @@ With `duration_policy` `fit` instead, an asset of 100 frames and the same `sourc
 - `err_limit_5000_caption_words`
 - `err_invalid_state_fades_no_longer_fit`
 
-### C.48 `template.set_info` (phase A)
+### C.48 `template.set_info`
 
 Sets the template description and its named colours.
 
@@ -4335,7 +4332,7 @@ At least one of `description` and `colors` is required.
 - `err_in_use_track_caption_style`
 - `err_in_use_settings_background`
 
-### C.49 `clip.set_filter` (phase B)
+### C.49 `clip.set_filter`
 
 Sets the colour filter of a visual item (RF-027, SDD-001 §3.4; text, caption and shape items since VV-025, the filter applies to every visual item). The filters are a fixed list implemented in Go by the compositor (SDD-004 §3.6); there is no way to name another one.
 
@@ -4403,7 +4400,7 @@ At least one of `filter` and `amount` is required.
 - `err_not_found`
 - `err_type_mismatch_audio_item`
 
-### C.50 `clip.set_blur` (phase B)
+### C.50 `clip.set_blur`
 
 Sets the blur of a visual item (RF-027, SDD-001 §3.4; text, caption and shape items since VV-025).
 
@@ -4463,7 +4460,7 @@ Sets the blur of a visual item (RF-027, SDD-001 §3.4; text, caption and shape i
 - `err_not_found`
 - `err_type_mismatch_audio_item`
 
-### C.51 `audio.duck` (phase B)
+### C.51 `audio.duck`
 
 Lowers a music item while speech sounds (RF-043). The result is ordinary `volume` keyframes (SDD-001 section 3.8), so nothing about the item needs a new field and `keyframe.clear` on `volume` undoes the ducking. The speech comes from the speech map of the speech items' assets, supplied by the service in `resolved` (A.9); the command never starts a job.
 
@@ -4548,7 +4545,7 @@ The volume keyframes are `(0, 1)`, `(54, 1)`, `(60, 0.251)`, `(120, 0.251)`, `(1
 
 Also tested outside the golden directories: `TestDuckThenClearRestoresTheDocument` (ducking and then `keyframe.clear` on `volume` gives the original document byte for byte) and `TestDuckGainAtFrames` (`timeline.ValueAt` at 0 s, 3 s and 6 s).
 
-### C.52 `audio.mark_beats` (phase B)
+### C.52 `audio.mark_beats`
 
 Writes markers on a music item at the beats of its audio (RF-044), so that cuts and transitions can be aligned to them. The beats come from the beat grid of the asset, supplied by the service in `resolved` (A.9).
 
@@ -4626,7 +4623,7 @@ Markers at item frames 0, 30, 60 and 90.
 - `err_invalid_state_no_beat_in_the_visible_part`
 - `err_limit_over_200_markers`
 
-### C.53 `font.add` (phase B, scope media)
+### C.53 `font.add`
 
 Names a font that is already stored by hash in the workspace as a family of the project (RF-053), so that styles can use it (SDD-001 section 3.9). The core never reads or stores a file: it checks the form of the arguments and edits the `fonts` map. The service refuses, before applying, a `hash` that the workspace font store does not hold (`E_NOT_FOUND`, hint to import the font first).
 
@@ -4685,7 +4682,7 @@ Names a font that is already stored by hash in the workspace as a family of the 
 
 Also tested outside the golden directories: `TestFontAddThenStyleInOneBatch` (a `text.add` whose style names a family added earlier in the same batch validates; the reverse order is `E_FONT_UNKNOWN`).
 
-### C.54 `font.remove` (phase B, scope media)
+### C.54 `font.remove`
 
 Removes a user family from the `fonts` map. The files stay in the workspace store (nothing in the core deletes a file).
 
@@ -4734,7 +4731,7 @@ Removes a user family from the `fonts` map. The files stay in the workspace stor
 - `err_in_use_track_caption_style`
 - `err_in_use_lists_every_user`
 
-### C.55 `clip.set_chroma_key` (phase B)
+### C.55 `clip.set_chroma_key`
 
 Sets the chroma key of a clip (VV-015, SDD-001 §3.4): the colour that becomes transparent, for a green screen or a clip on a plain background. The compositor draws it (SDD-004 §3.7).
 
@@ -4800,7 +4797,7 @@ Sets the chroma key of a clip (VV-015, SDD-001 §3.4): the colour that becomes t
 - `err_not_found`
 - `err_type_mismatch_audio_item`
 
-### C.56 `marker.add` (phase B)
+### C.56 `marker.add`
 
 Puts a marker on the timeline (VV-035, SDD-001 §3.1): a labelled frame the person or the agent keeps, for example to find a place again or to cut on it. Without `item_id` it is a marker of the document, in frames of the timeline. With `item_id` (TASK-0254) it is a marker of that item (SDD-001 §3.4, the kind `audio.mark_beats` writes): `at` is still a position of the timeline and must fall inside the item, the marker is stored relative to the item's first frame and moves, trims and splits with it (M1 to M4), and a marker written this way survives an OTIO round trip.
 
@@ -4863,7 +4860,7 @@ Puts a marker on the timeline (VV-035, SDD-001 §3.1): a labelled frame the pers
 - `err_validation_item_id_form`
 - `err_limit_over_200_markers_on_an_item`
 
-### C.57 `marker.set` (phase B)
+### C.57 `marker.set`
 
 Moves or relabels the marker at a frame of the timeline, or of an item with `item_id` (then `at` and `to` are positions of the timeline inside the item, as in C.56).
 
@@ -4925,7 +4922,7 @@ At least one of `to` and `label` is required.
 - `err_invalid_state_item_target_taken`
 - `err_validation_item_target_outside`
 
-### C.58 `marker.remove` (phase B)
+### C.58 `marker.remove`
 
 Removes the marker at a frame of the timeline, or every marker; with `item_id` (TASK-0254) the markers of that item, the beat markers of `audio.mark_beats` included.
 
@@ -4980,7 +4977,7 @@ Removes the marker at a frame of the timeline, or every marker; with `item_id` (
 - `ok_item_remove_all_leaves_the_timeline_markers`
 - `err_not_found_item_marker_there`
 
-### C.59 `item.slip` (phase B)
+### C.59 `item.slip`
 
 Shows another part of the source in a clip or audio item without moving or resizing it (the slip edit, VV-036).
 
@@ -5042,7 +5039,7 @@ Shows another part of the source in a clip or audio item without moving or resiz
 - `err_type_mismatch_text_item`
 - `err_out_of_source_past_the_asset`
 
-### C.60 `settings.reframe` (phase B)
+### C.60 `settings.reframe`
 
 Re-targets the project to another aspect ratio, from one preset or a size, and refits the items to the new frame (VV-038).
 
@@ -5102,7 +5099,7 @@ Give `aspect`, or `width` and `height` together.
 - `err_validation_unknown_aspect`
 - `err_validation_scale_would_pass_20`
 
-### C.61 `clip.set_blend` (phase B)
+### C.61 `clip.set_blend`
 
 Sets the blend mode of a visual item (VV-015, SDD-001 §3.4): how its pixels are mixed with what is below. The compositors draw it (SDD-004 §3.8).
 
@@ -5162,7 +5159,7 @@ Sets the blend mode of a visual item (VV-015, SDD-001 §3.4): how its pixels are
 - `err_not_found`
 - `err_type_mismatch_audio_item`
 
-### C.62 `clip.set_mask` (phase B)
+### C.62 `clip.set_mask`
 
 Sets or removes the mask of a visual item (VV-015, SDD-001 §3.4): the rectangle or ellipse, in the item's own frame, that limits where the item is drawn. The coverage formula is in SDD-004 §3.9.
 
@@ -5236,7 +5233,7 @@ The fractions are rounded to 3 decimals. `x + width` and `y + height` must be at
 - `ok_replace_clears_mask_keyframes`
 - `ok_null_clears_mask_keyframes`
 
-### C.63 `clip.set_flip` (phase B)
+### C.63 `clip.set_flip`
 
 Mirrors a visual item (TASK-0233, SDD-001 §3.4): `horizontal` flips it left to right, `vertical` top to bottom. The geometry is in SDD-004 §3.10.
 
@@ -5295,7 +5292,7 @@ Mirrors a visual item (TASK-0233, SDD-001 §3.4): `horizontal` flips it left to 
 - `err_not_found`
 - `err_type_mismatch_audio_item`
 
-### C.64 `item.set_enabled` (phase B)
+### C.64 `item.set_enabled`
 
 Turns an item off or on (TASK-0233, SDD-001 §3.4): a disabled item keeps its place, its settings and its markers, and is not planned (SDD-004 §3).
 
@@ -5348,7 +5345,7 @@ Turns an item off or on (TASK-0233, SDD-001 §3.4): a disabled item keeps its pl
 - `err_validation_no_enabled`
 - `err_not_found`
 
-### C.65 `item.link` (phase B)
+### C.65 `item.link`
 
 Puts items in one link group (TASK-0277, SDD-001 section 3.5): `item.move`, `item.trim` and `item.split` on one of them apply to all of them.
 
@@ -5414,7 +5411,7 @@ Puts items in one link group (TASK-0277, SDD-001 section 3.5): `item.move`, `ite
 - `err_invalid_state_already_linked`
 - `err_id_exists_link_in_use`
 
-### C.66 `item.unlink` (phase B)
+### C.66 `item.unlink`
 
 Takes items out of their link group (TASK-0277).
 
@@ -5471,7 +5468,7 @@ Takes items out of their link group (TASK-0277).
 - `err_not_found_item`
 - `err_invalid_state_not_linked`
 
-### C.67 `item.extract_audio` (phase B)
+### C.67 `item.extract_audio`
 
 Creates an audio item from the audio of a video clip, linked to it, and mutes the clip (TASK-0277).
 
@@ -5539,7 +5536,7 @@ Creates an audio item from the audio of a video clip, linked to it, and mutes th
 - `err_id_exists`
 - `err_limit_500_items`
 
-### C.68 `clip.set_effects` (phase B)
+### C.68 `clip.set_effects`
 
 Sets the visual effects of a clip (TASK-0278, SDD-001 section 3.4, pixels in SDD-004 section 3.13). One list command instead of an add, a set and a remove per effect: the whole list is the argument, so an agent states the result it wants, the inverse is one patch, and the tool list stays one entry smaller.
 
@@ -5614,7 +5611,7 @@ The parameters, with range and default: `motion_blur` `amount` 0 to 1 (0.5), `an
 - `err_not_found`
 - `err_type_mismatch_text_item`
 
-### C.69 `item.paste_attributes` (phase B)
+### C.69 `item.paste_attributes`
 
 Copies the look of one item to others (TASK-0254): the "paste attributes" of an editor, so an agent or a person grades one clip and applies the same grade, filter or transform to the rest in one operation and one undo step.
 
@@ -5704,7 +5701,7 @@ Keyframes, fades, speed, transitions and the position, size and source of the it
 - `err_invalid_state_target_transform_has_keyframes`
 - `err_invalid_state_target_volume_has_keyframes`
 
-### C.70 `item.freeze_frame` (phase B)
+### C.70 `item.freeze_frame`
 
 Holds one frame of a clip (TASK-0254): the "freeze frame" of an editor. The clip is split at the frame and a still of the source frame shown there is put between the two parts, for as long as asked, in one operation and one undo step.
 
@@ -5782,7 +5779,7 @@ Holds one frame of a clip (TASK-0254): the "freeze frame" of an editor. The clip
 - `err_id_exists`
 - `err_limit_500_items`
 
-### C.71 `caption.import_subtitles` (phase B)
+### C.71 `caption.import_subtitles`
 
 Creates one caption item for each cue of an SRT or WebVTT text (TASK-0254, NEW-32a). The command is pure: the caller or the service reads the file and sends its text, and the parser is `core/subtitle`. Writing the captions of a document back as SRT or WebVTT is `subtitle.Format` over the cues a caller builds from the captions (the service does the file); the core has no command for it, because it changes nothing.
 
@@ -5850,7 +5847,7 @@ Creates one caption item for each cue of an SRT or WebVTT text (TASK-0254, NEW-3
 - `err_invalid_state_cue_shorter_than_its_words`
 - `err_limit_500_items`
 
-### C.72 `clip.set_shadow` (phase B)
+### C.72 `clip.set_shadow`
 
 Sets or removes the drop shadow of a clip (VV-122, SDD-001 §3.5): the silhouette of its picture, moved, blurred and tinted, drawn below it. The pixels are in SDD-004 §3.15.
 
@@ -5911,7 +5908,7 @@ Sets or removes the drop shadow of a clip (VV-122, SDD-001 §3.5): the silhouett
 - `err_not_found`
 - `err_type_mismatch_text_item`
 
-### C.73 `clip.set_outline` (phase B)
+### C.73 `clip.set_outline`
 
 Sets or removes the outline of a clip (VV-122, SDD-001 §3.5): a contour around the visible shape of its picture. The pixels are in SDD-004 §3.15.
 
@@ -5969,7 +5966,7 @@ Sets or removes the outline of a clip (VV-122, SDD-001 §3.5): a contour around 
 - `err_not_found`
 - `err_type_mismatch_text_item`
 
-### C.74 `item.repeat` (phase B)
+### C.74 `item.repeat`
 
 Repeats an item back to back after its end (VV-123): a looping background, a sticker that plays again. Each copy is made like `item.duplicate`, at the end of the one before.
 
