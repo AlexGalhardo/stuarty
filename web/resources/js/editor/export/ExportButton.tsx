@@ -54,6 +54,7 @@ export default function ExportButton(): ReactNode {
 			<Button
 				type="button"
 				size="sm"
+				data-tour="export"
 				disabled={!ready}
 				onClick={() => setOpen(true)}
 			>

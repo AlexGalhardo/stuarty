@@ -22,7 +22,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { useT } from "@/lib/i18n";
 import { useRuntime } from "../state/EditorContext";
-import { showTipsAgain } from "../state/tipsStore";
+import { startTour } from "../state/tourStore";
 import {
 	aliasKeys,
 	comboFromEvent,
@@ -313,11 +313,11 @@ export function ShortcutsDialog({
 						type="button"
 						variant="outline"
 						onClick={() => {
-							showTipsAgain();
+							startTour();
 							onOpenChange(false);
 						}}
 					>
-						{t("ui.editor.tips.show_again")}
+						{t("ui.editor.tour.replay")}
 					</Button>
 				</DialogFooter>
 			</DialogContent>
