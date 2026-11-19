@@ -11,9 +11,9 @@ import "github.com/AlexGalhardo/vukem/schema"
 // Down undoes it: a timeline that is not the first of its project (its id is not its project's) is deleted
 // with its log, and the briefs, texts and outputs are lost. The database copy that Open takes before a
 // migration (SDD-005 section 7 step 3) is what makes that acceptable.
-func m20261119100000ProjectItems() schema.Migration {
+func m20261119120000ProjectItems() schema.Migration {
 	return schema.Migration{
-		ID: "20261119100000_project_items",
+		ID: "20261119120000_project_items",
 		Up: func(s *schema.Schema) error {
 			for _, q := range projectItemsUp {
 				if err := s.Raw(q); err != nil {

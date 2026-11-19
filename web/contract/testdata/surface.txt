@@ -19,6 +19,13 @@ command export
 command font:import
 command fonts
 command history
+command image:create
+command image:edit
+command image:export
+command image:list
+command image:redo
+command image:show
+command image:undo
 command item:add
 command item:move
 command item:rename

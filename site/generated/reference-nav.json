@@ -172,6 +172,8 @@
       "job_cancel",
       "template",
       "font_import",
+      "connection",
+      "image",
       "project_item"
     ],
     "operations": [

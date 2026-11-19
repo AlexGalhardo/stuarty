@@ -663,7 +663,7 @@ The effective SQL of every table follows. `NOT NULL` is the default of the build
 
 ### 5.2 `timelines`
 
-Since ADR-0039 a project is a production (section 5.12) and the table this section describes holds its timelines. Migration `20261119100000_project_items` renamed the former `projects` table to `timelines`; its columns, its checks and every foreign key that pointed at it (`operations`, `idempotency_keys`, `project_assets`, `jobs`, `api_keys`) are unchanged, and the column `project_id` of those tables now holds a **timeline id**. The word "project" in sections 3 and 8 to 15 means the timeline document unless the text says production; an id given as `project_id` is resolved to a timeline by the rule of SDD-003 section 1.7.
+Since ADR-0039 a project is a production (section 5.12) and the table this section describes holds its timelines. Migration `20261119120000_project_items` renamed the former `projects` table to `timelines`; its columns, its checks and every foreign key that pointed at it (`operations`, `idempotency_keys`, `project_assets`, `jobs`, `api_keys`) are unchanged, and the column `project_id` of those tables now holds a **timeline id**. The word "project" in sections 3 and 8 to 15 means the timeline document unless the text says production; an id given as `project_id` is resolved to a timeline by the rule of SDD-003 section 1.7.
 
 One row per timeline: the current document, its revision, its schema version, trash state, and columns denormalized from the document so that listing never parses JSON.
 
@@ -996,7 +996,7 @@ CREATE TABLE font_owners (
 
 ### 5.12 `projects`, `project_items` (ADR-0039, RF-300)
 
-Migration `20261119100000_project_items`. A project is a production: the container of a brief, texts, timelines and output pieces. The pure rules (kinds, order, production state) are in `core/project`.
+Migration `20261119120000_project_items`. A project is a production: the container of a brief, texts, timelines and output pieces. The pure rules (kinds, order, production state) are in `core/project`.
 
 ```sql
 CREATE TABLE projects (

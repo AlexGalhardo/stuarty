@@ -55,8 +55,6 @@ Lint rules (`!` blocks export):
 
 Exit codes: 0 success; 1 a failure a retry will not fix; 2 retryable or a `--wait` timeout. `undo` reverts your last step.
 
-`retry` marks exit 2.
-
 {{range .Errors}}- `{{.Code}}` {{.HTTP}}{{if eq .Exit 2}} retry{{end}}: {{.Fix}}
 {{end}}
 ## Recipes

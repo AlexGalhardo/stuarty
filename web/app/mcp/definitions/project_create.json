@@ -1,6 +1,6 @@
 {
  "name": "project_create",
- "description": "Create an empty project (add tracks with edit); returns its id and revision 0. preset is the frame size: 9:16 is 1080x1920 (default), 1:1, 16:9, 4:5. With from (a project id) it copies that project.",
+ "description": "Create an empty project (no tracks; add them with edit). Returns the project id and revision 0. preset is the frame size: 9:16 is 1080x1920 (default), 1:1, 16:9, 4:5. With from (a project id) it copies that project.",
  "inputSchema": {
   "type": "object",
   "properties": {

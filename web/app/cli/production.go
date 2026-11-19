@@ -14,7 +14,7 @@ import (
 var projectDescribeCmd = &spec{
 	name:              "project:describe",
 	summary:           "describe a project as text: brief, items and state",
-	usage:             []string{"stuarty project:describe <project id>"},
+	usage:             []string{"stuarty project:describe <id>"},
 	example:           "stuarty project:describe prj_7k2m9x4q1b",
 	project:           true,
 	projectPositional: true,
@@ -36,7 +36,7 @@ var projectDescribeCmd = &spec{
 var projectDuplicateCmd = &spec{
 	name:              "project:duplicate",
 	summary:           "copy a project: its brief, texts and timelines",
-	usage:             []string{"stuarty project:duplicate <project id> [--name n]"},
+	usage:             []string{"stuarty project:duplicate <id> [--name n]"},
 	example:           `stuarty project:duplicate prj_7k2m9x4q1b --name "Teaser, second cut"`,
 	project:           true,
 	projectPositional: true,
@@ -142,7 +142,7 @@ func itemCommand(
 	return &spec{
 		name:       name,
 		summary:    summary,
-		usage:      []string{"stuarty " + name + " <item id> --project <id>" + extraUsage},
+		usage:      []string{"stuarty " + name + " <item> --project <id>" + extraUsage},
 		example:    "stuarty " + name + " pit_3c5v8n2w6d --project prj_7k2m9x4q1b" + extraUsage,
 		project:    true,
 		positional: true,
