@@ -223,6 +223,51 @@ func TestMaskFromALayerBecomesAClipAndItsSourceStaysInThePlan(t *testing.T) {
 	}
 }
 
+// A source whose opacity rounds to none through its group is not drawn, like a hidden one, and still gives
+// its shape: the renderer drops a layer of no opacity, so it must be a stencil (SDD-021 section 5).
+func TestMaskSourceInATransparentGroupIsAStencil(t *testing.T) {
+	d := baseDoc()
+	d.Layers[1].Mask = &Mask{Kind: MaskLayer, Source: lid('f')}
+
+	res := mustApply(t, d, op("layer.set", `{"layer_id": "`+lid('e')+`", "opacity": 0}`))
+	fp := Plan(res.Doc, plan.Options{})
+
+	src := planLayer(t, fp, lid('f'))
+	if !src.Stencil || src.Opacity != 1 {
+		t.Fatalf("the source in a group of opacity 0 is %+v", src)
+	}
+
+	if planLayer(t, fp, lid('b')).Clip == nil {
+		t.Fatal("the clip went with the source")
+	}
+
+	// A group of 1 per cent and a source of 1 per cent: 0.01 per cent, which the plan rounds to 0.
+	nested := baseDoc()
+	nested.Layers[1].Mask = &Mask{Kind: MaskLayer, Source: lid('f')}
+	nested.Layers[4].Opacity = 1
+	nested.Layers[4].Children[0].Opacity = 1
+
+	if src := planLayer(t, Plan(nested, plan.Options{}), lid('f')); !src.Stencil {
+		t.Fatalf("a source of 0.01 per cent is %+v", src)
+	}
+
+	// Two groups of 4 per cent give 0.16 per cent, which the renderer still draws.
+	faint := baseDoc()
+	faint.Layers[1].Mask = &Mask{Kind: MaskLayer, Source: lid('f')}
+	faint.Layers[4].Opacity = 4
+	faint.Layers[4].Children[0].Opacity = 4
+
+	if src := planLayer(t, Plan(faint, plan.Options{}), lid('f')); src.Stencil || src.Opacity != 0.002 {
+		t.Fatalf("a source of 0.16 per cent is %+v", src)
+	}
+
+	// A source that is drawn keeps its opacity.
+	res = mustApply(t, d, op("layer.set", `{"layer_id": "`+lid('e')+`", "opacity": 50}`))
+	if src := planLayer(t, Plan(res.Doc, plan.Options{}), lid('f')); src.Stencil || src.Opacity != 0.5 {
+		t.Fatalf("the drawn source is %+v", src)
+	}
+}
+
 func TestMaskSourceRemovedClearsTheMaskAndUndoRestoresIt(t *testing.T) {
 	d := withLayerMask()
 	res := mustApply(t, d, op("layer.remove", `{"layer_id": "`+lid('d')+`"}`))
