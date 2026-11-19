@@ -46,7 +46,7 @@ A creator's way of working stops living in their head: what they learned from pa
 - [x] 5. Implement skills: write, lint, import from folder and archive, review mark, export. Verify: `go test ./service/library/... -run TestSkill` passes, including archive traversal cases.
 - [x] 6. Expose on HTTP, CLI and MCP with parity and untrusted-text marking. Verify: `go test ./web/contract/...` passes.
 - [x] 7. Build the three sections (list, search, editor with preview, origin and review state) in both languages. Verify: `task test:web` and `web/e2e/specs/library.spec.ts` pass.
-- [ ] 8. Security tests of the new rows. Verify: `go test -run TestSecurity_ ./...` and `go run ./internal/tools/threatcheck` exit 0.
+- [x] 8. Security tests of the new rows. Verify: `go test -run TestSecurity_ ./...` and `go run ./internal/tools/threatcheck` exit 0.
 
 ## Test strategy
 
