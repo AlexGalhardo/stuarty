@@ -4,9 +4,9 @@ import "github.com/AlexGalhardo/vukem/schema"
 
 // The image documents and their log of batches (SDD-005 section 5.12, SDD-021). They follow projects and
 // operations with the columns an image needs and no more; owner_user_id is NULL in local mode.
-func m20261119100000CreateImageDocumentsAndOperations() schema.Migration {
+func m20261119110000CreateImageDocumentsAndOperations() schema.Migration {
 	return schema.Migration{
-		ID: "20261119100000_create_image_documents_and_operations",
+		ID: "20261119110000_create_image_documents_and_operations",
 		Up: func(s *schema.Schema) error {
 			stmts := []string{
 				`CREATE TABLE image_documents (
