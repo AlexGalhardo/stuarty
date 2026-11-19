@@ -2393,13 +2393,21 @@
       },
       "Keyframe": {
         "properties": {
+          "bezier": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "type": "array"
+          },
           "easing": {
             "enum": [
               "linear",
               "ease_in",
               "ease_out",
               "ease_in_out",
-              "hold"
+              "hold",
+              "bezier"
             ],
             "type": "string"
           },
@@ -3295,6 +3303,7 @@
               "keyframe.clear",
               "keyframe.remove",
               "keyframe.set",
+              "keyframe.set_easing",
               "marker.add",
               "marker.remove",
               "marker.set",
@@ -3479,6 +3488,9 @@
           },
           "keyframe.set": {
             "$ref": "#/components/schemas/args.keyframe.set"
+          },
+          "keyframe.set_easing": {
+            "$ref": "#/components/schemas/args.keyframe.set_easing"
           },
           "marker.add": {
             "$ref": "#/components/schemas/args.marker.add"
@@ -8344,14 +8356,24 @@
             "type": "string",
             "x-vv-kind": "time"
           },
+          "bezier": {
+            "description": "x1, y1, x2, y2 of the curve of easing bezier: x1 and x2 from 0 to 1, y1 and y2 from -2 to 3.",
+            "items": {
+              "type": "number"
+            },
+            "maxItems": 4,
+            "minItems": 4,
+            "type": "array"
+          },
           "easing": {
-            "description": "From this keyframe to the next. Default linear.",
+            "description": "From this keyframe to the next. Default linear. bezier needs the bezier argument.",
             "enum": [
               "linear",
               "ease_in",
               "ease_out",
               "ease_in_out",
-              "hold"
+              "hold",
+              "bezier"
             ],
             "type": "string"
           },
@@ -8395,6 +8417,83 @@
           "property",
           "at",
           "value"
+        ],
+        "type": "object"
+      },
+      "args.keyframe.set_easing": {
+        "additionalProperties": false,
+        "properties": {
+          "at": {
+            "description": "Position of an existing keyframe on the project timeline.",
+            "type": "string",
+            "x-vv-kind": "time"
+          },
+          "bezier": {
+            "description": "x1, y1, x2, y2 of a cubic Bezier curve: x1 and x2 from 0 to 1, y1 and y2 from -2 to 3.",
+            "items": {
+              "type": "number"
+            },
+            "maxItems": 4,
+            "minItems": 4,
+            "type": "array"
+          },
+          "easing": {
+            "description": "A named easing. Exactly one of easing, bezier and preset.",
+            "enum": [
+              "linear",
+              "ease_in",
+              "ease_out",
+              "ease_in_out",
+              "hold"
+            ],
+            "type": "string"
+          },
+          "item_id": {
+            "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          },
+          "preset": {
+            "description": "A named Bezier curve, stored as its four numbers.",
+            "enum": [
+              "in",
+              "out",
+              "in_out",
+              "back",
+              "overshoot"
+            ],
+            "type": "string"
+          },
+          "property": {
+            "enum": [
+              "x",
+              "y",
+              "scale",
+              "rotation",
+              "opacity",
+              "volume",
+              "brightness",
+              "contrast",
+              "saturation",
+              "temperature",
+              "tint",
+              "hue",
+              "mask_x",
+              "mask_y",
+              "mask_width",
+              "mask_height",
+              "mask_feather",
+              "crop_left",
+              "crop_top",
+              "crop_right",
+              "crop_bottom"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "item_id",
+          "property",
+          "at"
         ],
         "type": "object"
       },

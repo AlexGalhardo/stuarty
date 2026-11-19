@@ -1731,105 +1731,33 @@ trashed prj_2x5c8d1f4g; restore it with project_trash restore=true
 
 ```json
 {
-  "name": "edit",
-  "description": "Change a project. Atomic batch, one undo step. base_revision: last revision read. Times need a unit. See command_help. dry_run: check only. idempotency_key: safe retries.",
-  "inputSchema": {
-    "type": "object",
-    "properties": {
-      "project_id": {
-        "type": "string",
-        "pattern": "^prj_[0-9a-hjkmnp-tv-z]{10}$"
-      },
-      "timeline_id": {
-        "type": "string",
-        "pattern": "^prj_[0-9a-hjkmnp-tv-z]{10}$"
-      },
-      "base_revision": {
-        "type": "integer",
-        "minimum": 0
-      },
-      "operations": {
-        "type": "array",
-        "minItems": 1,
-        "maxItems": 200,
-        "items": {
-          "type": "object",
-          "properties": {
-            "op": {
-              "enum": [
-                "project.rename",
-                "settings.set",
-                "settings.set_fps",
-                "settings.reframe",
-                "asset.remove",
-                "track.add",
-                "track.update",
-                "track.move",
-                "track.remove",
-                "track.set_caption_style",
-                "item.move",
-                "item.trim",
-                "item.slip",
-                "item.split",
-                "item.delete",
-                "item.duplicate",
-                "item.repeat",
-                "item.rename",
-                "item.set_transform",
-                "item.set_transition",
-                "item.set_audio",
-                "item.crossfade",
-                "timeline.close_gap",
-                "clip.add",
-                "audio.add",
-                "audio.duck",
-                "audio.mark_beats",
-                "clip.set_framing",
-                "clip.set_speed",
-                "clip.set_color",
-                "clip.set_blur",
-                "clip.set_chroma_key",
-                "clip.set_blend",
-                "clip.set_mask",
-                "clip.set_shadow",
-                "clip.set_outline",
-                "clip.set_flip",
-                "clip.set_effects",
-                "item.set_enabled",
-                "item.link",
-                "item.unlink",
-                "item.extract_audio",
-                "item.paste_attributes",
-                "item.freeze_frame",
-                "marker.add",
-                "marker.set",
-                "marker.remove",
-                "clip.set_filter",
-                "clip.remove_silences",
-                "text.add",
-                "text.set",
-                "text.apply_preset",
-                "shape.add",
-                "shape.set",
-                "caption.add",
-                "caption.set_words",
-                "caption.edit_word",
-                "caption.split",
-                "caption.merge",
-                "caption.set_breaks",
-                "caption.set_style",
-                "caption.from_transcript",
-                "caption.import_subtitles",
-                "caption.retime_from_clip",
-                "keyframe.set",
-                "keyframe.remove",
-                "keyframe.clear",
-                "slot.mark",
-                "slot.unmark",
-                "slot.fill",
-                "template.set_info",
-                "font.add",
-                "font.remove"
+  "name":"edit",
+  "description":"Change a project. Atomic batch, one undo step. base_revision: last revision read. Times need a unit. See command_help. dry_run: check only. idempotency_key: safe retries.",
+  "inputSchema":{
+    "type":"object",
+    "properties":{
+      "project_id":{"type":"string","pattern":"^prj_[0-9a-hjkmnp-tv-z]{10}$"},
+      "base_revision":{"type":"integer","minimum":0},
+      "operations":{
+        "type":"array",
+        "minItems":1,
+        "maxItems":200,
+        "items":{
+          "type":"object",
+          "properties":{
+            "op":{
+              "enum":[
+                "project.rename", "settings.set", "settings.set_fps", "settings.reframe", "asset.remove", "track.add",
+                "track.update", "track.move", "track.remove", "track.set_caption_style", "item.move",
+                "item.trim", "item.slip", "item.split", "item.delete", "item.duplicate", "item.repeat", "item.rename",
+                "item.set_transform", "item.set_transition", "item.set_audio", "item.crossfade",
+                "timeline.close_gap", "clip.add", "audio.add", "audio.duck", "audio.mark_beats", "clip.set_framing",
+                "clip.set_speed", "clip.set_color", "clip.set_blur", "clip.set_chroma_key", "clip.set_blend", "clip.set_mask", "clip.set_shadow", "clip.set_outline", "clip.set_flip", "clip.set_effects", "item.set_enabled", "item.link", "item.unlink", "item.extract_audio", "item.paste_attributes", "item.freeze_frame", "marker.add", "marker.set", "marker.remove", "clip.set_filter", "clip.remove_silences", "text.add", "text.set", "text.apply_preset",
+                "shape.add", "shape.set", "caption.add", "caption.set_words", "caption.edit_word",
+                "caption.split", "caption.merge", "caption.set_breaks", "caption.set_style",
+                "caption.from_transcript", "caption.import_subtitles", "caption.retime_from_clip", "keyframe.set", "keyframe.remove",
+                "keyframe.clear", "keyframe.set_easing", "slot.mark", "slot.unmark", "slot.fill", "template.set_info",
+                "font.add", "font.remove"
               ]
             },
             "args": {
@@ -1977,7 +1905,7 @@ The result carries `isError: true` and no `structuredContent`; `content[0]` is t
 ```json
 {
   "name":"command_help",
-  "description":"Describe edit operations. Without name: one line per operation. With name (for example item.split): returns its description, args JSON Schema, an example and error codes. Read it before using an operation you have not used.",
+  "description":"Describe edit operations. Without name: one line per operation. With name (for example item.split): returns its description, args JSON Schema, an example and error codes.",
   "inputSchema":{"type":"object","properties":{"name":{"type":"string"},"domain":{"enum":["video","image"]}},"additionalProperties":false},
   "outputSchema":{
     "type":"object",
@@ -2509,35 +2437,15 @@ The `image` block follows the text block: `{"type": "image", "mimeType": "image/
 
 ```json
 {
-  "name": "lint",
-  "description": "Check a project for problems and get them as text: code, severity, item, message, hint. Errors block export. Run it after edits, before export. Runs every rule, unlike the lint block of an edit result (lint_scope fast). Rules include gaps, missing media, text outside the safe area, audio clipping, unfilled slots.",
-  "inputSchema": {
-    "type": "object",
-    "properties": {
-      "project_id": {
-        "type": "string",
-        "pattern": "^prj_[0-9a-hjkmnp-tv-z]{10}$"
-      },
-      "timeline_id": {
-        "type": "string",
-        "pattern": "^prj_[0-9a-hjkmnp-tv-z]{10}$"
-      },
-      "severity": {
-        "enum": [
-          "error",
-          "warning"
-        ],
-        "default": "warning"
-      },
-      "cursor": {
-        "type": "string"
-      },
-      "limit": {
-        "type": "integer",
-        "minimum": 1,
-        "maximum": 100,
-        "default": 25
-      }
+  "name":"lint",
+  "description":"Check a project for problems and get them as text: code, severity, item, message, hint. Errors block export. Run it after edits, before export. Runs every rule, unlike the lint block of an edit result (lint_scope fast).",
+  "inputSchema":{
+    "type":"object",
+    "properties":{
+      "project_id":{"type":"string","pattern":"^prj_[0-9a-hjkmnp-tv-z]{10}$"},
+      "severity":{"enum":["error","warning"],"default":"warning"},
+      "cursor":{"type":"string"},
+      "limit":{"type":"integer","minimum":1,"maximum":100,"default":25}
     },
     "required": [
       "project_id"
