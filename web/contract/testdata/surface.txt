@@ -78,6 +78,9 @@ command prompt:list
 command prompt:render
 command prompt:show
 command prompt:write
+command provider:list
+command provider:models
+command provider:price
 command publish:now
 command publish:status
 command publish:validate
@@ -165,6 +168,7 @@ route GET /projects/{}/otio
 route GET /projects/{}/plan
 route GET /projects/{}/sheet
 route GET /projects/{}/snap-points
+route GET /providers
 route GET /publish/{}
 route GET /social/accounts
 route GET /social/networks

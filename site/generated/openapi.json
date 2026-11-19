@@ -3032,6 +3032,16 @@
               }
             ]
           },
+          "text": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TextResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "transcribe": {
             "anyOf": [
               {
@@ -5259,6 +5269,93 @@
         },
         "type": "object"
       },
+      "ProviderListResult": {
+        "properties": {
+          "prices": {
+            "items": {
+              "$ref": "#/components/schemas/PriceEntry"
+            },
+            "type": "array"
+          },
+          "providers": {
+            "items": {
+              "$ref": "#/components/schemas/ProviderView"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "ProviderModelsResult": {
+        "properties": {
+          "cached": {
+            "type": "boolean"
+          },
+          "connection_id": {
+            "type": "string"
+          },
+          "fetched_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "models": {
+            "items": {
+              "$ref": "#/components/schemas/ModelView"
+            },
+            "type": "array"
+          },
+          "provider": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ProviderPricesResult": {
+        "properties": {
+          "prices": {
+            "items": {
+              "$ref": "#/components/schemas/PriceEntry"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "ProviderView": {
+        "properties": {
+          "capabilities": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "connections": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "credential_kinds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "default_endpoint": {
+            "type": "string"
+          },
+          "docs_url": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "PublishResult": {
         "properties": {
           "connection_id": {
@@ -5980,6 +6077,20 @@
             "type": "array"
           },
           "redirect_path": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "Source": {
+        "properties": {
+          "read": {
+            "type": "string"
+          },
+          "says": {
+            "type": "string"
+          },
+          "url": {
             "type": "string"
           }
         },
@@ -10872,6 +10983,49 @@
             "type": "object"
           },
           "path": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "export.Finding": {
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "got": {
+            "type": "string"
+          },
+          "limit": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "exportBatchItemIn": {
+        "properties": {
+          "codec": {
+            "description": "h264, hevc or av1, for mp4; empty is the choice of the preset.",
+            "type": "string"
+          },
+          "end": {
+            "type": "string"
+          },
+          "format": {
+            "description": "mp4 (default), gif, wav or aac.",
+            "type": "string"
+          },
+          "preset": {
+            "description": "A preset id; it needs the format mp4.",
+            "type": "string"
+          },
+          "start": {
             "type": "string"
           }
         },
@@ -18714,6 +18868,125 @@
           }
         ],
         "summary": "Undo the caller's latest step"
+      }
+    },
+    "/api/v1/providers": {
+      "get": {
+        "operationId": "providers.list",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderListResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the AI providers, the connections of each and the price table"
+      }
+    },
+    "/api/v1/providers/prices": {
+      "put": {
+        "operationId": "providers.prices.set",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "currency": {
+                    "description": "Three letters, for example USD; needed to set a price.",
+                    "type": "string"
+                  },
+                  "input_micros_per_mtok": {
+                    "description": "The price of a million input tokens, in millionths of the currency unit. Leave both prices out to remove the entry.",
+                    "format": "int64",
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
+                  },
+                  "model": {
+                    "description": "The model id, as provider:models lists it.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "output_micros_per_mtok": {
+                    "description": "The price of a million output tokens, in millionths of the currency unit.",
+                    "format": "int64",
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
+                  },
+                  "provider": {
+                    "description": "The id of the provider, for example openai.",
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "provider",
+                  "model"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderPricesResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Set or remove the price of a model (a person in the browser only; the local token and keys get 403)"
       }
     },
     "/api/v1/publish": {
