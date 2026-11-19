@@ -321,7 +321,7 @@ func TestValidFilePath(t *testing.T) {
 
 	for _, p := range []string{
 		"", "/a", "../a", "a/../b", "a//b", "./a", `a\b`, "C:/a", "a:b", "a/", "con", "references/nul.txt", "a.", "a ",
-		"a\x00b", "a\u202Eb", "a?b", "a*b", strings.Repeat("a", 201),
+		"a\x00b", "a\u202Eb", "café.md", "a?b", "a*b", strings.Repeat("a", 201),
 	} {
 		if err := library.ValidFilePath(p); err == nil {
 			t.Errorf("%q: want an error", p)

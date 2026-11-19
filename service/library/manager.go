@@ -19,9 +19,10 @@ import (
 // Manager owns the files of the library of one workspace and keeps the index in
 // step with them.
 type Manager struct {
-	files files
-	idx   Index
-	now   func() time.Time
+	files     files
+	idx       Index
+	now       func() time.Time
+	exportDir string
 
 	mu sync.Mutex
 }
@@ -33,7 +34,7 @@ func New(dir string, idx Index, now func() time.Time) *Manager {
 		now = time.Now
 	}
 
-	return &Manager{files: files{dir: dir}, idx: idx, now: now}
+	return &Manager{files: files{dir: dir}, idx: idx, now: now, exportDir: exportDirOf(dir)}
 }
 
 // Stats says what a scan or a rebuild found.
