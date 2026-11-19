@@ -52,6 +52,23 @@ var metadataAddrs = map[netip.Addr]bool{
 	netip.MustParseAddr("fd00:ec2::254"):   true,
 }
 
+// nat64 is the well-known NAT64 prefix (RFC 6052): on an IPv6-only network a gateway turns
+// 64:ff9b::a.b.c.d into a.b.c.d, so the embedded address is the one judged.
+var nat64 = netip.MustParsePrefix("64:ff9b::/96")
+
+// refusedAtDial says whether the gate refuses an address it is about to dial. The zone is dropped
+// first: fd00:ec2::254%eth0 is still the metadata address.
+func refusedAtDial(addr netip.Addr) bool {
+	ip := addr.Unmap().WithZone("")
+	if nat64.Contains(ip) {
+		b := ip.As16()
+		ip = netip.AddrFrom4([4]byte(b[12:]))
+	}
+
+	return ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() || ip.IsUnspecified() ||
+		ip.IsMulticast() || metadataAddrs[ip]
+}
+
 // Connection is the client of a destination the user connected. Every request
 // and every redirect is checked against the registry at that moment: the
 // connection must exist, the scheme must be https (http for a loopback host
@@ -70,9 +87,7 @@ func Connection(reg Registry, id string, timeout time.Duration, test *TestOption
 				return ErrNotPublic
 			}
 
-			ip := ap.Addr().Unmap()
-			if ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() || ip.IsUnspecified() ||
-				ip.IsMulticast() || metadataAddrs[ip] {
+			if refusedAtDial(ap.Addr()) {
 				return ErrNotPublic
 			}
 
