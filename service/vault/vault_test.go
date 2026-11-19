@@ -6,6 +6,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -424,5 +425,36 @@ func TestRedactReplacesSecretsAndTheMasterKey(t *testing.T) {
 	locked := Open(v.Path(), NewMemoryProvider(nil))
 	if out := string(locked.Redact([]byte(text))); out != text {
 		t.Errorf("a locked vault changed the text: %s", out)
+	}
+}
+
+// SDD-007 T-38 and SDD-014 sections 3 and 4: the vault file and a key file the product generated are
+// readable by their owner only, after the first write and after a rewrite.
+func TestFilesAreReadableByTheOwnerOnly(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("verify:env-skip Windows has no Unix permission bits; the user profile protects the files")
+	}
+
+	t.Parallel()
+
+	dir := t.TempDir()
+	keyFile := filepath.Join(dir, "master.key")
+	v := Open(filepath.Join(dir, "vault.json"), FileProvider{Path: keyFile})
+
+	for _, secret := range []string{"first-secret", "second-secret"} {
+		if err := v.Put("con_a", []byte(secret)); err != nil {
+			t.Fatal(err)
+		}
+
+		for _, path := range []string{v.Path(), keyFile} {
+			info, err := os.Stat(path)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if perm := info.Mode().Perm(); perm&0o077 != 0 {
+				t.Errorf("%s has mode %v, want no access for group and others", filepath.Base(path), perm)
+			}
+		}
 	}
 }
