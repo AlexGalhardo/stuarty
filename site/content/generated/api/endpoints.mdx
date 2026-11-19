@@ -216,6 +216,15 @@ Every operation has its own page with the parameters, the body, the responses an
 
 | Method | Path | Operation | Summary |
 | --- | --- | --- | --- |
+| `GET` | `/api/v1/publications` | [`publications.list`](/docs/api/publications.list) | List the publications of the calendar, by project, state, network or time range |
+| `POST` | `/api/v1/publications` | [`publications.create`](/docs/api/publications.create) | Plan a publication: a video for one or more accounts, each with its time; every target starts as a draft |
+| `GET` | `/api/v1/publications/{id}` | [`publications.get`](/docs/api/publications.get) | Read one publication with its targets |
+| `PUT` | `/api/v1/publications/{id}` | [`publications.update`](/docs/api/publications.update) | Change a publication or its targets; a post that waited for approval goes back to waiting for it |
+| `POST` | `/api/v1/publications/{id}/cancel` | [`publications.cancel`](/docs/api/publications.cancel) | Cancel a target, or every target that has not gone out |
+| `POST` | `/api/v1/publications/{id}/retry` | [`publications.retry`](/docs/api/publications.retry) | Ask for approval to send a failed target again |
+| `POST` | `/api/v1/publications/{id}/schedule` | [`publications.schedule`](/docs/api/publications.schedule) | Give a target its time and ask for approval; it is sent only after a person approves it |
+| `POST` | `/api/v1/publications/{id}/send-now` | [`publications.send-now`](/docs/api/publications.send-now) | Ask for approval to send a target as soon as it is approved |
+| `GET` | `/api/v1/publications/events` | [`publications.events`](/docs/api/publications.events) | Stream the changes of the publications of the calendar |
 | `POST` | `/api/v1/publish` | [`publish.now`](/docs/api/publish.now) | Prepare the publication of an exported video; it waits for a person to approve it |
 | `GET` | `/api/v1/publish/{job_id}` | [`publish.status`](/docs/api/publish.status) | Read the state of a publication |
 | `POST` | `/api/v1/publish/validate` | [`publish.validate`](/docs/api/publish.validate) | Check a post against the limits of its network; sends nothing |
