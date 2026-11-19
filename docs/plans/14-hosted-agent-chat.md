@@ -44,7 +44,7 @@ A creator talks to their own coding agent inside Stuarty, in a panel that is alw
 - [x] 5. Issue the project-scoped token and pass the MCP address to the agent. Verify: `go test ./service/agenthost/... -run TestScopedToken` passes (a call to another project is refused).
 - [x] 6. Store transcripts and expose the service operations and the SSE stream. Verify: `go test ./service/... -run TestChat` and `go test ./web/contract/...` pass.
 - [x] 7. Build the panel: messages, tool calls, permission prompts, cancel, new session, profile picker; both languages; keyboard and screen reader labels. Verify: `task test:web` and `web/e2e/specs/agent-chat.spec.ts` pass with the fake agent.
-- [ ] 8. Security tests of the new rows. Verify: `go test -run TestSecurity_ ./...` and `go run ./internal/tools/threatcheck` exit 0.
+- [x] 8. Security tests of the new rows. Verify: `go test -run TestSecurity_ ./...` and `go run ./internal/tools/threatcheck` exit 0.
 - [ ] 9. Manual run with one real agent installed on the author's machine, or marked as not verified. Verify: the transcript or the note is in the hand-off.
 
 ## Test strategy
