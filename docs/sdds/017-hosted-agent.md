@@ -145,7 +145,7 @@ Everything the agent does reaches the panel as **events** over Server-Sent Event
 | `permission` | for `permission_request` and `permission_answer`: `request_id`, `options`, `answer` |
 | `state` | for `state`: the session state and `end_reason` |
 
-The SSE frame's `id` is `seq`, so a client that reconnects with `Last-Event-ID` is sent what it missed: the stream first replays the stored events after that number, then follows the live ones, subscribing **before** it reads the store so no event falls between. Chunks of one message are one event whose text grows: the live stream sends each chunk with `append` true, the store keeps the whole text. A heartbeat keeps the connection alive; an unauthorized caller is ended at the next revalidation. At most 8 chat streams per credential.
+The SSE frame's `id` is `seq`, so a client that reconnects with `Last-Event-ID` is sent what it missed: the stream first replays the stored events from that number (the event the id names is sent again, whole, because a message that was still growing when the connection dropped is one event), then follows the live ones; the snapshot and the subscription are taken together so no event falls between. Chunks of one message are one event whose text grows: the live stream sends each chunk with `append` true, the store keeps the whole text. A heartbeat keeps the connection alive; an unauthorized caller is ended at the next revalidation. At most 8 chat streams per credential.
 
 Agent text is never interpreted by Stuarty: no HTML, no Markdown rendering, no link made clickable from it. The panel shows a URL as text in full, with the host visible (T-71).
 
@@ -216,7 +216,7 @@ The agent runs **where the server runs**: it is a child of the server process, w
 ## 13. Tests
 
 - `core/chat`: table tests of the state machine, the profile rules, the option picker, the clipping of text, the Markdown renderer (a text full of backticks, headings and HTML stays inside its fence).
-- `service/agenthost`: the protocol client against a **fake agent** (`service/agenthost/fakeagent`, a program the tests build): `TestProtocol_*`; the process supervisor: `TestProcess_*` (start, cancel, time limits, a hanging agent, a flooding agent, an exiting agent, shutdown that leaves no child); the token: `TestScopedToken_*` (a call for another project is refused; the token dies with the session).
+- `service/agenthost`: the protocol client against a **fake agent** (`service/agenthost/fakeagent`, a program the tests build): `TestProtocol*`; the process supervisor: `TestProcess*` (start, cancel, time limits, a hanging agent, a flooding agent, an exiting agent, shutdown that leaves no child); the token: `TestScopedToken*` (a call for another project is refused; the token dies with the session).
 - `service`: `TestChat_*` over a real store: the operations, the person rule, the project rule, the transcript, the Markdown export, the operation log with the agent as the actor and its undo.
 - Security, one test per row of SDD-007 that this SDD adds: `TestSecurity_T70_*` to `TestSecurity_T74_*`.
 - End to end: `web/e2e/specs/agent-chat.spec.ts` with the fake agent as the profile: open the panel from any section, start a session, see the messages arrive, answer a permission request, see the edit on the timeline, cancel, export the transcript.
