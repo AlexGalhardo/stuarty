@@ -60,9 +60,11 @@ type Held struct {
 	Holdings   []asset.Holding
 }
 
-// Library is the operations over the held files.
+// Library is the operations over the held files of one owner: the user in network mode, the empty string in
+// local mode.
 type Library struct {
 	Store Store
+	Owner string
 }
 
 // InfoPatch is what AssetSetInfo changes; a nil member is left alone.
@@ -96,8 +98,8 @@ func stamp(ms int64) string {
 }
 
 // absent is the row of a file with no library row: an imported file, not reusable, with no tags.
-func absent(h *Held) Row {
-	return Row{Hash: h.Hash, Origin: asset.Origin{Kind: asset.Imported}, CreatedMs: h.CreatedMs}
+func absent(owner string, h *Held) Row {
+	return Row{Owner: owner, Hash: h.Hash, Origin: asset.Origin{Kind: asset.Imported}, CreatedMs: h.CreatedMs}
 }
 
 func base(h *Held, row Row) LibraryAsset {
@@ -160,7 +162,7 @@ func (l *Library) List(ctx context.Context, held []Held, q *Query) (Page, error)
 
 		var err error
 
-		if matched, err = l.Store.Search(ctx, match); err != nil {
+		if matched, err = l.Store.Search(ctx, l.Owner, match); err != nil {
 			return Page{}, err
 		}
 	}
@@ -184,7 +186,7 @@ func (l *Library) List(ctx context.Context, held []Held, q *Query) (Page, error)
 		hashes[i] = h.Hash
 	}
 
-	rows, err := l.Store.GetMany(ctx, hashes)
+	rows, err := l.Store.GetMany(ctx, l.Owner, hashes)
 	if err != nil {
 		return Page{}, err
 	}
@@ -194,7 +196,7 @@ func (l *Library) List(ctx context.Context, held []Held, q *Query) (Page, error)
 			return row
 		}
 
-		return absent(h)
+		return absent(l.Owner, h)
 	}
 
 	kept := candidates[:0]
@@ -253,13 +255,13 @@ func UsesOf(h *Held, names map[string]string) []Use {
 }
 
 func (l *Library) row(ctx context.Context, h *Held) (Row, error) {
-	row, err := l.Store.Get(ctx, h.Hash)
+	row, err := l.Store.Get(ctx, l.Owner, h.Hash)
 
 	switch {
 	case err == nil:
 		return row, nil
 	case errors.Is(err, ErrNotFound):
-		return absent(h), nil
+		return absent(l.Owner, h), nil
 	}
 
 	return Row{}, err
@@ -394,7 +396,7 @@ func CheckImport(origin *asset.Origin, info *ImportInfo) (asset.Origin, ImportIn
 	return o, in, nil
 }
 
-// RecordImport writes the library side of a file that an import linked to a project, inside the import's
+// RecordImport writes the library side, for the owner, of a file that an import linked to a project, inside the import's
 // transaction (st is bound to it). A file the library has no row for gets one with the origin of the import,
 // the record of its first import; a file it already knows keeps its origin. The tags of the import are added to
 // the tags of the file, and the reuse mark and the description, when given, are set. The search row is
@@ -402,18 +404,18 @@ func CheckImport(origin *asset.Origin, info *ImportInfo) (asset.Origin, ImportIn
 func RecordImport(
 	ctx context.Context,
 	st Store,
-	hash string,
+	owner, hash string,
 	origin asset.Origin,
 	info ImportInfo,
 	actor string,
 	now int64,
 ) error {
-	row, err := st.Get(ctx, hash)
+	row, err := st.Get(ctx, owner, hash)
 
 	switch {
 	case err == nil:
 	case errors.Is(err, ErrNotFound):
-		row = Row{Hash: hash, Origin: origin, CreatedBy: actor, CreatedMs: now}
+		row = Row{Owner: owner, Hash: hash, Origin: origin, CreatedBy: actor, CreatedMs: now}
 	default:
 		return err
 	}
