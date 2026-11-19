@@ -47,7 +47,7 @@
 | `ProjectOtioExport`, `ProjectOtioImport` | none | `otio:export`, `otio:import` | `GET /projects/{id}/otio`, `POST /projects/{id}/otio` | read; edit (the batch is applied through `Edit`, so each operation needs its own scope too) |
 | `ImageCreate` | `image` (`action` create) | `image:create` | `POST /images` | edit |
 | `ImageList` | `image` (`action` list) | `image:list` | `GET /images` | read |
-| `ImageDescribe` | `image` (`action` describe) | `image:show` | `GET /images/{id}` | read |
+| `ImageDescribe` | `image` (`action` show) | `image:show` | `GET /images/{id}` | read |
 | `ImageEdit` | `image` (`action` edit) | `image:edit` | `POST /images/{id}/edit` | edit |
 | `ImageUndo`, `ImageRedo` | `image` (`action` undo, redo) | `image:undo`, `image:redo` | `POST /images/{id}/undo`, `POST /images/{id}/redo` | edit |
 | `ImageExport` | `image` (`action` export) | `image:export` | `POST /images/{id}/export` | edit |
@@ -398,4 +398,4 @@ The operations of the registry of domain `image` (`core/command` registry built 
 | `L_IMAGE_EMPTY_SLOT`, `L_IMAGE_TEXT_OUTSIDE`, `L_IMAGE_TEXT_SMALL`, `L_IMAGE_LOW_CONTRAST`, `L_IMAGE_UPSCALED` | lint code | the rules of SDD-021 section 8; the first blocks an export |
 | `png`, `jpeg`, `webp` | image export format | the formats of `ImageExport` |
 | `E_SLOT` `details.reason` `unknown_slot`, `wrong_kind`, `invalid_value`, `missing` | error detail | a template filled badly (SDD-021 section 7) |
-| `E_EXPORT_FAILED` `details.reason` `webp_unavailable` | error detail | no `libwebp` in the FFmpeg |
+| `E_EXPORT_FAILED` `details.reason` `webp_unavailable` | error detail | no WebP encoder is wired (SDD-021 §6) |
