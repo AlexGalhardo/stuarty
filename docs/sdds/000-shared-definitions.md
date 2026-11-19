@@ -51,85 +51,16 @@
 | `FontImport` | none | `font:import` | `POST /fonts` | media |
 | `BrandKitGet`, `BrandKitSet` | none | `brand:show`, `brand:set` | `GET /brand-kit`, `PUT /brand-kit` | read, edit |
 | `ProjectOtioExport`, `ProjectOtioImport` | none | `otio:export`, `otio:import` | `GET /projects/{id}/otio`, `POST /projects/{id}/otio` | read; edit (the batch is applied through `Edit`, so each operation needs its own scope too) |
-| `ProjectDescribe` | `project_get` called with `detail` `overview` | `project:describe` | `GET /projects/{id}/describe` (the production as text: brief, items, state; SDD-003 §2.3) | read |
-| `ProjectDuplicate` | `project_create` called with `from` | `project:duplicate` | `POST /projects/{id}/duplicate` (a copy of the production; its timelines get new ids, SDD-003 §2.3) | edit |
-| `ProjectItemAdd`, `ProjectItemMove`, `ProjectItemRename`, `ProjectItemTrash`, `ProjectItemRestore` | `project_item` (argument `action`) | `item:add`, `item:move`, `item:rename`, `item:trash`, `item:restore` | `POST /projects/{id}/items`, `POST /projects/{id}/items/{item_id}/move`, `.../rename`, `.../trash`, `.../restore` | edit |
-| `BriefGet`, `BriefSet` | `project_item` (`action` `brief`; given `text`, it sets) | `brief:show`, `brief:set` | `GET /projects/{id}/brief`, `PUT /projects/{id}/brief` | read, edit |
-| `BriefingQuestions`, `BriefingAnswer` | `project_item` (`action` `briefing`; given `answers`, it answers) | `briefing:questions`, `briefing:answer` | `GET /briefing/questions`, `PUT /projects/{id}/briefing` | read, edit (SDD-005 §5.12.1) |
-| `ConnectionList`, `ConnectionGet` | `connection` (list, or one by id) | `connection:list`, `connection:show` | `GET /connections`, `GET /connections/{id}` | read |
-| `ConnectionCreate`, `ConnectionRemove`, `ConnectionTest` | none | `connection:add`, `connection:remove`, `connection:test` | `POST /connections`, `DELETE /connections/{id}`, `POST /connections/{id}/test` | admin (SDD-014) |
-| `ImageCreate` | `image` (`action` create) | `image:create` | `POST /images` | edit |
-| `ImageList` | `image` (`action` list) | `image:list` | `GET /images` | read |
-| `ImageDescribe` | `image` (`action` show) | `image:show` | `GET /images/{id}` | read |
-| `ImageEdit` | `image` (`action` edit) | `image:edit` | `POST /images/{id}/edit` | edit |
-| `ImageUndo`, `ImageRedo` | `image` (`action` undo, redo) | `image:undo`, `image:redo` | `POST /images/{id}/undo`, `POST /images/{id}/redo` | edit |
-| `ImageExport` | `image` (`action` export) | `image:export` | `POST /images/{id}/export` | edit |
-| `ImageImport` | `image` (`action` import) | `image:import` | `POST /images/import` (an image file from a path or a library hash becomes a new image document, or one more layer of the document `image_id`; SDD-021 §10) | edit |
-| `ImageImportFile` | none | none | `POST /images/import/file` (a file chosen in the browser, as the bytes of the request, becomes a new image document or a layer; SDD-021 §10.2; HTTP only because the bytes are the request) | edit |
-| `ExportPresetList` | `command_help` (`domain` export) | `export:presets` | `GET /export-presets` | read |
-| `ExportCheck` | `lint` (with `preset`) | `export:check` | `GET /projects/{id}/export-check` | read |
-| `AudioMeasure` | `view` (`mode` audio) | `view --mode audio` | `GET /projects/{id}/audio-measure` | read |
-| `ExportBatch` | `job_start` (`kind` export_batch) | `export:batch` | `POST /projects/{id}/export-batches` | render |
-| `ImageFrame` | none | none | `GET /images/{id}/frame` (SDD-012 §24.3) | read |
-| `ImageHistory` | none | none | `GET /images/{id}/history` (SDD-012 §24.3) | read |
-| `ImageFile` | none | none | `GET /images/{id}/exports/{name}` (SDD-012 §24.3) | read |
-| image document stream | none | none | `GET /images/{id}/events` (SDD-006 §12; the event `image.updated`) | read |
-| `ApprovalList`, `ApprovalGet` | `job_get` (`approvals`, `approval_id`) | `approval:list`, `approval:show` | `GET /approvals`, `GET /approvals/{id}` | read (SDD-015) |
-| `ApprovalDecide` | none | `approval:decide` | `POST /approvals/{id}/decide` | read, and only from a privileged browser session; the local token and keys get `E_PRIVILEGED_SESSION` (SDD-015 §4) |
-| `ApprovalRuleList` | none | `approval:rule:list` | `GET /approval-rules` | read |
-| `ApprovalRuleSet`, `ApprovalRuleRemove` | none | `approval:rule:set`, `approval:rule:remove` | `POST /approval-rules`, `DELETE /approval-rules/{id}` | admin, and only from a privileged browser session |
-| `CostSummary` | none | `cost:show` | `GET /cost` | read |
-| `CostCeilingSet` | none | `cost:ceiling` | `PUT /cost/ceilings` | admin, and only from a privileged browser session |
-| approval queue stream | none | none | `GET /approvals/events` (SDD-015 §7) | read |
-| `SocialNetworkList` | none | `social:network:list` | `GET /social/networks` | read (SDD-020) |
-| `SocialConnectBegin` | none | `social:connect` | `POST /social/connect` | admin |
-| `SocialConnectComplete` | none | none | `POST /social/complete` (the page `/social/callback` posts to it) | admin, and only from a browser session |
-| `SocialAccountList` | none | `social:account:list` | `GET /social/accounts` | read |
-| `SocialAccountSelect` | none | none | `POST /social/select` | admin, and only from a browser session (SDD-020 §17) |
-| `SocialPriceSet` | none | none | `POST /social/price` | admin, and only from a browser session (SDD-020 §39) |
-| `PublishValidate` | none | `publish:validate` | `POST /publish/validate` | read |
-| `PublishNow` | `job_start` with kind `publish.upload` (SDD-020 §13) | `publish:now` | `POST /publish` | render; the job waits for approval |
-| `PublishStatus` | `job_get` (`job_id`) | `publish:status` | `GET /publish/{job_id}` | read |
-| `PublicationCreate` | none (SDD-020 §29) | `publication:create` | `POST /publications` | edit (SDD-020) |
-| `PublicationGet`, `PublicationList` | none | `publication:show`, `publication:list` | `GET /publications/{id}`, `GET /publications` | read |
-| `PublicationUpdate` | none | `publication:update` | `PUT /publications/{id}` | edit |
-| `PublicationSchedule`, `PublicationSendNow`, `PublicationRetry` | none | `publication:schedule`, `publication:send-now`, `publication:retry` | `POST /publications/{id}/schedule`, `POST /publications/{id}/send-now`, `POST /publications/{id}/retry` | render; the target waits for approval |
-| `PublicationCancel` | none | `publication:cancel` | `POST /publications/{id}/cancel` | edit |
-| publication stream | none | none | `GET /publications/events` (SDD-020 §29) | read |
-| `ProviderList` | none | `provider:list` | `GET /providers` | read (SDD-016) |
-| `ProviderModels` | none | `provider:models` | `GET /connections/{id}/models` | read |
-| `ProviderPriceSet` | none | `provider:price` | `PUT /providers/prices` | admin, and only from a privileged browser session (SDD-016 §7) |
-| `ProviderSignInBegin`, `ProviderSignInComplete` | none | none | `POST /providers/signin`, `POST /providers/signin/complete` (the page `/auth/callback` posts to the second) | admin, and only from a privileged browser session (SDD-016 §12) |
-| `ProviderSignInList` | none | none | `GET /providers/sign-ins` | read |
-| `TextGenerate` | `job_start` (kind `text.generate`) | `text:generate` | `POST /text/generate` | edit |
-| `ImageGenerate` | `job_start` (kind `image.generate`) | `image:generate` | `POST /image/generate` | edit (SDD-016 §6.1) |
-| `VoiceGenerate` | `job_start` (kind `voice.generate`) | `voice:generate` | `POST /voice/generate` | edit |
-| `ImageModelEdit` | `job_start` (kind `image.edit`) | `image:model-edit` | `POST /images/{id}/model-edit` | edit (SDD-016 §6.5: remove the background of a layer, or generate an image into the document, with a provider) |
-| `VoiceList` | none | `voice:list` | `GET /connections/{id}/voices` | read |
-| `VideoGenerate` | `job_start` (kind `video.generate`) | `video:generate` | `POST /video/generate` | edit (SDD-016 §6.4); the job always waits for a person unless a rule lifts it |
-| `MemoryList`, `MemoryGet`, `MemoryWrite` | `library` (kind `memory`; actions `list`, `get`, `write`) | `memory:list`, `memory:show`, `memory:write` | `GET /library/memory`, `GET /library/memory/{name}`, `POST /library/memory`, `DELETE /library/memory/{name}` | read, edit (SDD-018) |
-| `MemoryRemove` | none (an agent tool removes nothing) | `memory:remove` | `DELETE /library/memory/{name}` | edit |
-| `SkillList`, `SkillGet`, `SkillWrite`, `SkillLint` | `library` (kind `skill`; actions `list`, `get`, `write`, `lint`) | `skill:list`, `skill:show`, `skill:write`, `skill:lint` | `GET /library/skills`, `GET /library/skills/{name}`, `PUT /library/skills/{name}`, `GET /library/skills/{name}/lint` | read, edit |
+| `MemoryList`, `MemoryGet`, `MemoryWrite`, `MemoryRemove` | `library` (kind `memory`; actions `list`, `get`, `write`, `remove`) | `memory:list`, `memory:show`, `memory:write`, `memory:remove` | `GET /library/memory`, `GET /library/memory/{name}`, `PUT /library/memory/{name}`, `DELETE /library/memory/{name}` | read, edit (SDD-018) |
+| `SkillList`, `SkillGet`, `SkillWrite`, `SkillLint` | `library` (kind `skill`) | `skill:list`, `skill:show`, `skill:write`, `skill:lint` | `GET /library/skills`, `GET /library/skills/{name}`, `PUT /library/skills/{name}`, `GET /library/skills/{name}/lint` | read, edit |
 | `SkillImport`, `SkillExport` | none | `skill:import`, `skill:export` | `POST /library/skills/import`, `POST /library/skills/export` | media |
 | `SkillMarkReviewed` | none | none | `POST /library/skills/{name}/review` | edit, and only from a browser session (SDD-018 section 7) |
-| `PromptList`, `PromptGet`, `PromptWrite`, `PromptRender` | `library` (kind `prompt`; actions `list`, `get`, `write`, `render`) | `prompt:list`, `prompt:show`, `prompt:write`, `prompt:render` | `GET /library/prompts`, `GET /library/prompts/{name}`, `PUT /library/prompts/{name}`, `POST /library/prompts/{name}/render` | read, edit |
+| `PromptList`, `PromptGet`, `PromptWrite`, `PromptRender` | `library` (kind `prompt`) | `prompt:list`, `prompt:show`, `prompt:write`, `prompt:render` | `GET /library/prompts`, `GET /library/prompts/{name}`, `PUT /library/prompts/{name}`, `POST /library/prompts/{name}/render` | read, edit |
 | `LibrarySearch`, `LibraryReindex` | `library` (action `search`), none | `library:search`, `library:reindex` | `GET /library/search`, `POST /library/reindex` | read, edit |
-| `TextList`, `TextGet` | `project_item` (`action` `text`; with `item_id` it reads one) | `text:list`, `text:show` | `GET /texts`, `GET /projects/{id}/texts/{item}` | read (SDD-019) |
-| `TextWrite` | `project_item` (`action` `text`, with `text` or `text_kind`) | `text:write` | `POST /projects/{id}/texts`, `PUT /projects/{id}/texts/{item}` | edit |
-| `TextRevisions` | `project_item` (`action` `revisions`) | `text:revisions` | `GET /projects/{id}/texts/{item}/revisions` | read |
-| `TextRevert` | `project_item` (`action` `revert`) | `text:revert` | `POST /projects/{id}/texts/{item}/revert` | edit |
-| `TextDraft` | `job_start` (kind `text.draft`) | `text:draft` | `POST /projects/{id}/texts/{item}/draft` | edit |
-| `CaptionValidate` | `project_item` (`action` `check`, with `network`) | `caption:validate` | `POST /captions/validate` | read |
-| `ScriptEstimate` | `project_item` (`action` `check`, with `wpm`) | `script:estimate` | `POST /scripts/estimate` | read |
-| `AgentProfileList` | none (an agent has no use for the command line of another) | `agent:profiles` | `GET /agents/profiles` | read (SDD-017 §3) |
-| `AgentProfileSet`, `AgentProfileRemove` | none | none | `PUT /agents/profiles/{name}`, `DELETE /agents/profiles/{name}` | admin, and only from a privileged browser session; every other caller gets `E_PRIVILEGED_SESSION` (SDD-017 §3, §10) |
-| `ChatSessionStart`, `ChatSend`, `ChatCancel`, `ChatAnswerPermission`, `ChatSessionDelete` | none | none | `POST /projects/{id}/chat/sessions`, `POST /chat/sessions/{id}/messages`, `POST /chat/sessions/{id}/cancel`, `POST /chat/sessions/{id}/permissions/{request_id}`, `DELETE /chat/sessions/{id}` | edit, and only from a privileged browser session; the hosted agent's own token is refused (SDD-017 §10) |
-| `ChatSessionList`, `ChatSessionGet`, `ChatTranscriptGet` | none | `chat:sessions`, `chat:session`, `chat:transcript` | `GET /projects/{id}/chat/sessions`, `GET /chat/sessions/{id}`, `GET /chat/sessions/{id}/transcript` | read (SDD-017 §9) |
-| chat session stream | none | none | `GET /chat/sessions/{id}/events` (SDD-017 §8) | read |
 
 Routes that are not service operations: `POST /mcp` (the MCP server over Streamable HTTP, SDD-003 §4.3; `GET` and `DELETE` on the path are not routes and answer 405 `E_METHOD_NOT_ALLOWED`, because the server is stateless; every tool call behind it is a service operation with the scope of its tool), `GET /api/v1/handshake` (the server proves it knows the local token, SDD-007 §3.8), `GET /auth/launch` and `POST /api/v1/system/launch` (browser session from a one-time code, SDD-007 §3.4), `POST /api/v1/system/scheduler` (the desktop shell reads, pauses and resumes the publication scheduler and counts the targets that wait, SDD-020 §27; `admin` bearer, and the launcher secret to pause or resume; local mode only, in network mode it answers 404 `E_NOT_FOUND`), `POST /auth/login` and `POST /auth/logout` (network mode: the browser session of a user, SDD-007 §4.1; in local mode they answer 404 `E_NOT_FOUND`), the optional Google sign-in of network mode (`GET /auth/google`, `POST /auth/google/start`, `/link`, `/unlink` and `/complete`, `GET /login/google/callback`, `GET` and `PUT /auth/google/settings`; SDD-007 §4.7 and SDD-014 §12.4; in local mode they answer 404 `E_NOT_FOUND`), `GET /up` (vukem health probe), `GET /openapi.json` and `GET /api/docs` (the OpenAPI document and its viewer), `POST /api/v1/system/tools/install` and `GET /api/v1/system/tools` (the explicit install of a helper such as whisper.cpp from the editor, and its state with the progress of a running install; the same step as the CLI command `tools:install`; the install is allowed only to a browser session in local mode or an `admin` key in network mode, never to the local token and never on an agent surface, SDD-007 §6.8; the `GET` only reads and takes the `read` scope, so an agent can tell whether a helper is installed before it asks for a transcript), and the byte-serving routes that the editor uses, all `read`, all under the project so that access is checked against it, all with HTTP Range and long-lived caching because their content never changes: `GET /projects/{id}/media/{asset_id}/proxy`, `.../thumbnail`, `.../strip`, `.../peaks`, `.../lut` (the parsed table of a lookup table asset, SDD-004 §3.6), `GET /projects/{id}/bitmaps/{key}` (rasterized text and shapes by content key), and `GET /projects/{id}/audio-previews/{key}` (the processed sound of an item by content key, SDD-004 §7.1; it answers 202 while the file is rendered). What each returns is in SDD-011 and SDD-004.
 
-The MCP catalogue is 20 tools: `project_list`, `project_create`, `project_get`, `project_trash`, `edit`, `command_help`, `history`, `media_import`, `media_inspect`, `view`, `lint`, `job_start`, `job_get`, `job_cancel`, `template`, `font_import`, `connection` (read only: the destinations the user connected, SDD-014), `image` (the image documents of SDD-021, one tool with an `action`), `project_item` (the items, the brief and the texts of a production, SDD-003 section 2.3 and SDD-019), `library` (memory, skills and prompts: search, list, get, write, render and lint; SDD-018).
+The MCP catalogue is 17 tools: `project_list`, `project_create`, `project_get`, `project_trash`, `edit`, `command_help`, `history`, `media_import`, `media_inspect`, `view`, `lint`, `job_start`, `job_get`, `job_cancel`, `template`, `font_import`, `library` (memory, skills and prompts: search, list, get, write, remove, render and lint; SDD-018).
 
 **Projects and timelines (ADR-0039).** A project is a production; its timelines are items of it. Every operation above that edits or reads a timeline document (`Edit`, `HistoryList`, `Undo`, `Redo`, `HistoryRevert`, `HistoryDiff`, `Checkpoint*`, `Lint`, `MediaImport`, `MediaInspect`, `MediaList`, `MediaTrash`, `MediaRestore`, `ViewFrame`, `ViewSheet`, `JobStart`, `JobList`, `PlanWindow`, `SnapPoints`, `ProjectOtioExport`, `ProjectOtioImport`, `ProjectBundleExport`, `ExportCheck`, `ExportBatch`, and `ProjectGet` with a detail) accepts an optional `timeline_id` next to `project_id`; the rule is SDD-003 §1.7.
 
@@ -231,15 +162,7 @@ Kinds: `ingest`, `transcribe`, `export`, `export_batch`, `frame`, `text.generate
 | `users` | network mode: email, argon2id password hash, role (`admin` or `member`), session version | SDD-007 |
 | `brand_kits` | the brand kit: logo, named colours and fonts, one row per owner  | SDD-005 §5.11 |
 | `font_owners` | which user imported or brought each stored font file, network mode  | SDD-005 §5.11, SDD-007 §7.7 |
-| `user_identities`, `auth_settings` | network mode: the Google identity a user linked (provider, subject, e-mail), and the owner's settings of the optional Google sign-in (on or off, the connection, the allowed e-mails) | SDD-007 §4.7, SDD-014 §12 |
-| `connections` | the destinations the user connected: kind, label, hosts, what each may receive, last use and the id of its secret in the vault; no secret | SDD-014 |
-| `image_documents`, `image_operations` | image documents, and their append-only log of batches | SDD-005 §5.12, SDD-021 |
-| `approval_requests`, `approval_rules`, `cost_ceilings`, `cost_ledger` | the approval queue, the rules that approve without asking, the cost ceilings and the record of every estimate and real cost; no secret | SDD-015 |
-| `publications`, `publication_targets` | the calendar: what is published, to which account, at what time, in which state, with its lease and its result; no secret | SDD-005 §5.15, SDD-020 §23 |
-| `image_documents`, `image_operations` | image documents, and their append-only log of batches | SDD-005 §5.13, SDD-021 |
 | `library_entries`, `library_fts` | the index of memory, skills and prompts for search and lists; rebuilt from the files, holds no content that the files lack | SDD-018 §9 |
-| `asset_info`, `asset_tags`, `asset_search` | the library side of an asset by hash: origin, rights note, description, the reuse mark, the tags and the full-text index over them | SDD-005 §5.5.1, SDD-011 §14 |
-| `agent_profiles`, `chat_sessions`, `chat_events` | the agents the user may host (a name, an executable and its arguments), and the transcripts of the chat sessions per project; no credential, no environment | SDD-017 §3, §9 |
 | vukem's own tables for sessions (`sessions`) and tokens (`access_tokens`) | network mode | vukem |
 
 A document with a `template` member is a template draft, or an instance when `template.instance` is true (SDD-001 section 3.10). `TemplateInstantiate` writes the flag; lint reads it (`L_SLOT_UNFILLED`, SDD-003).
@@ -301,10 +224,7 @@ CLI exit codes: `0` success; `2` for every code marked retryable; `1` for the re
 ├── lock                     empty file that carries the operating-system lock of the owner process (SDD-005 §6.2)
 ├── runtime.json             owner process: schema, pid, addr, mode, started_at, version (present only while a server runs; no secret)
 ├── token                    local token, file mode 0600 (local mode only)
-├── vault.json               encrypted credentials of the connections, file mode 0600; created with the first credential (SDD-014 §3)
-├── publish/                 uploads/<key>.json: the address of an upload session of a publication in progress, file mode 0600, no token (SDD-020 §7.4)
-├── providers/               prices.json: the price table the person edits for the models whose provider publishes no price, file mode 0600 (SDD-016 §4.3); host-id: the random identifier of this host that Sign in with ChatGPT sends, made at the first start, not a secret (SDD-016 §12.1)
-├── library/                 memory/, prompts/ and skills/<name>/SKILL.md: the files of the library, the truth of the index; .review-key seals the review marks (SDD-018 §2, §7)
+├── library/                 memory/, prompts/ and skills/<name>/SKILL.md: the files of the library, the truth of the index (SDD-018 §2)
 ├── store/                   content-addressed originals: store/<first 2 hex>/<sha256>; store/.incoming/ holds copies in progress
 ├── artifacts/               derived files: artifacts/<asset sha256>/<kind>-<profile version>[-<variant>].<ext> (SDD-011 §6.1)
 ├── exports/                 exported files: exports/<project id>/<job id>.mp4 (`.gif`, `.wav` or `.m4a` for the other formats of SDD-004 §8.1)

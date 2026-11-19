@@ -2,8 +2,8 @@
 
 - Status: Draft (2026-11-19). Written by epic 15; the code follows in the same epic.
 - Depends on: ADR-0040 (files with an index), ADR-0031, ADR-0020 (untrusted text), ADR-0033 (no credential leaves the vault), SDD-000 (names), SDD-003 (surfaces), SDD-007 (threats T-44 to T-47, scope matrix, untrusted text)
-- Implements: PRD-004 RF-385, RF-386, RF-387, RF-388, RF-390, RF-391; section 16 (the built-in skills): RF-301, RF-302, RF-389
-- Owner area: `core/library/`, `service/library/`, the library operations in `service/`, the controllers, commands and tool in `web/app/`, the pages Skills, Prompts and Memory; the built-in skills in `web/resources/skills/` (section 16)
+- Implements: PRD-004 RF-385, RF-386, RF-387, RF-388, RF-390, RF-391
+- Owner area: `core/library/`, `service/library/`, the library operations in `service/`, the controllers, commands and tool in `web/app/`, the pages Skills, Prompts and Memory
 
 ## Contents
 
@@ -22,7 +22,6 @@
 13. Untrusted text
 14. Surfaces
 15. Tests
-16. The built-in skills
 
 ## 1. Overview
 
@@ -40,7 +39,6 @@ The rules (names, front matter, variables, the lint, limits) are in `core/librar
 
 ```text
 <workspace>/library/
-├── .review-key                     the key that seals the review marks (section 7); made at the first review
 ├── memory/<name>.md                one fact per file
 ├── prompts/<name>.md               one prompt per file
 └── skills/<name>/                  the Agent Skills layout
@@ -75,7 +73,7 @@ One fact per file, `library/memory/<name>.md`.
 | --- | --- |
 | `name` | the file name, required |
 | `description` | one line: the fact, required, at most 200 characters |
-| `scope` | `workspace`, or a project id (`prj_...`), default `workspace`; for a key limited to a project the default is that project, the only scope it may write |
+| `scope` | `workspace`, or a project id (`prj_...`), default `workspace` |
 | `tags` | a list of at most 10 tags, each a name |
 | `actor` | who wrote it (SDD-000 section 3); set by the service from the caller, never from the request |
 | `kept` | `true` when a person kept it; a note written by an agent starts `false` |
@@ -94,7 +92,7 @@ One prompt per file, `library/prompts/<name>.md`.
 | `name` | the file name, required |
 | `description` | one line, required, at most 200 characters |
 | `tags` | at most 10 |
-| `defaults` | a map from variable to its default value; a `PromptWrite` with no `defaults` keeps those of the prompt, and an empty map removes them |
+| `defaults` | a map from variable to its default value |
 | `created`, `updated`, `actor` | as in section 5 |
 
 The body is the text, at most 32 KiB. A variable is `{{name}}` or `{{ name }}` with a name `[a-z][a-z0-9_]{0,39}`. `PromptRender` takes values and returns the text with each variable replaced once: a value is **never** scanned for variables again, so a value cannot inject another one. A variable with no value and no default is `E_VALIDATION` naming the variable (`details.missing`); a value for a variable the text does not use is also refused (`details.unknown`), so a typo does not pass silently; a value is at most 8 KiB. `{{` that does not form a valid variable is left as it is. The rendered text is the result and goes to the caller; rendering sends it nowhere.
@@ -107,13 +105,13 @@ The body is the text, at most 32 KiB. A variable is `{{name}}` or `{{ name }}` w
 | --- | --- |
 | `stuarty-origin` | `built-in` (shipped with the product), `user` (written here) or `imported` (RF-387) |
 | `stuarty-source` | free text: where it came from (a repository, a folder, an author) |
-| `stuarty-reviewed` | `hmac-sha256:<hex>`: the content hash a person read, sealed with the review key of the library, or absent |
+| `stuarty-reviewed` | `sha256:<hex>` of the content a person read, or absent |
 
-**Reviewed** is not a flag a file can claim: a skill is reviewed only when `stuarty-reviewed` equals the HMAC-SHA256, under the review key, of the content hash computed now. The content hash is `sha256:` and the SHA-256 of the canonical front matter without `stuarty-reviewed`, the body and every other file of the folder (path, length and bytes, in path order). Any edit, from any tool, takes the review away. The review key is 32 random bytes in `library/.review-key` (hex, file mode 0600), made at the first review of the workspace; a dot file is never scanned, imported or exported. A plain hash would not be enough, because anyone can compute it: a skill folder copied into the workspace by hand, or shipped by a repository with the hash of its own content, would pass as read. With the key, a skill file placed in the workspace by hand is unreviewed until a person reviews it, whatever it says. A key that is missing or not valid is replaced at the next review, which takes every earlier review away: the safe side. Copying the whole `library/` folder, key included, to another machine keeps the reviews.
+**Reviewed** is not a flag a file can claim: a skill is reviewed only when `stuarty-reviewed` equals the content hash computed now. The content hash is the SHA-256 of the canonical front matter without `stuarty-reviewed`, the body and every other file of the folder (path, length and bytes, in path order). Any edit, from any tool, takes the review away. A skill file placed in the workspace by hand is therefore unreviewed until a person reviews it, whatever it says.
 
-- `SkillWrite` always records the origin `user`; the caller cannot set `built-in` or `imported`. A skill written by a person at the browser is reviewed at once (they wrote it); one written through any other surface is not. The skill that exists is the start of the write: its front matter keys the product does not know are written back, and a request with no `metadata` (or no `files`) keeps the metadata (or the files) the skill has; an empty map (or list) removes them.
+- `SkillWrite` always records the origin `user`; the caller cannot set `built-in` or `imported`. A skill written by a person at the browser is reviewed at once (they wrote it); one written through any other surface is not.
 - `SkillImport` records `imported` and the licence and source it finds or is given, and never reviews.
-- `SkillMarkReviewed` is for a person at the browser: a caller with the `edit` scope and `Caller.Browser`, which is a signed-in session of network mode or a session of the desktop application opened with the launcher secret (SDD-007 section 3.4 item 7). A local web session without the secret is refused, because an agent that holds the token can open one. The request carries the `content_hash` that `SkillGet` returned with the text the person read; when the skill changed since, the mark is refused with `E_REVISION_CONFLICT` and the person reads it again, so a text swapped while the person was reading the old one is never marked. It is refused while the lint reports an error. A built-in skill is installed by the product reviewed, and is `built-in` only while it is the text the product installed (section 16).
+- `SkillMarkReviewed` is for a person at the browser (a caller with the `edit` scope that proved it with the session cookie, as in SDD-007 section 5.3). It is refused while the lint reports an error. A built-in skill is installed by the product with its hash.
 - The default agent listing (`SkillList` without `include_unreviewed`, and every skill an agent reads through search) holds only reviewed skills. `SkillGet` of an unreviewed skill is allowed (a person must be able to read it) and its result says `reviewed: false` and carries the warning text.
 
 ### 7.1 The skill lint
@@ -146,9 +144,9 @@ The body is the text, at most 32 KiB. A variable is `{{name}}` or `{{ name }}` w
 
 The skill is read in memory and checked before anything is written:
 
-1. The folder or the archive holds exactly one skill: `SKILL.md` at its root, or one top-level directory that holds it. Any entry outside that one directory is refused. The folder the Finder adds (`__MACOSX/`) and `.DS_Store` files are ignored; a path used both as a file and as a folder is refused.
-2. The name of an entry, and of a file written to a skill folder, is printable ASCII (so no two names fold together and none hides a character). An entry is refused when its name is absolute, has an empty, `.` or `..` component, a backslash, a colon (a drive letter), a character that is not printable ASCII, a character Windows refuses in a name, a Windows device name, or when two names collide after case folding; when it is a symbolic link, a hard link, a device or encrypted; or when it is nested archive content that needs another read. A refusal names the entry and writes nothing.
-3. Limits: at most 100 files, 512 KiB per file, 2 MiB in total, counted on the bytes actually read (a header that lies cannot exceed them), an archive file of at most 8 MiB. A file over the limit is refused by name, from a folder as from an archive, never left out of the skill.
+1. The folder or the archive holds exactly one skill: `SKILL.md` at its root, or one top-level directory that holds it. Any entry outside that one directory is refused.
+2. An archive entry is refused when its name is absolute, has a `..` component, a backslash, a drive letter, a control or direction character, a Windows device name, or when two names collide after case folding and NFC; when it is a symbolic link, a hard link, a device or encrypted; or when it is nested archive content that needs another read. A refusal names the entry and writes nothing.
+3. Limits: at most 100 files, 512 KiB per file, 2 MiB in total, counted on the bytes actually read (a header that lies cannot exceed them), an archive file of at most 8 MiB.
 4. The lint runs. A structural error (no `SKILL.md`, a front matter that does not parse, an invalid name) refuses the import; the other findings are stored with the skill and shown. A name that is already taken is `E_ID_EXISTS` unless `replace` is true, and `replace` of a kept user skill needs a person at the browser.
 5. The folder is written under a temporary name and renamed into place, so a failed import leaves nothing. The origin is `imported`, the source is the text given or the path's base name, the licence is the one the front matter names; `stuarty-reviewed` is removed whatever the file said.
 
@@ -158,11 +156,11 @@ Files are copied as bytes; none is executed, opened by another program or given 
 
 ## 9. The index and the scan
 
-The index is two tables (migration `20261119130000_create_library_index`): `library_entries` and the full-text table `library_fts`. It is rebuilt from the files: `LibraryReindex` empties it and reads every file; a **scan** compares the files with the rows (`sig`) and re-reads what differs, adds what is new and drops what is gone. The scan runs on the first read after the process starts and at the start of every list, get and search (a few hundred files cost a few directory reads), so a file edited outside the product is found at the next call (RF-391). A file that does not parse is indexed as `invalid` with its error, never skipped silently, and shown in the list with the reason. A request that reads a file reads the file, never the index.
+The index is two tables (migration `create_library_index`): `library_entries` and the full-text table `library_fts`. It is rebuilt from the files: `LibraryReindex` empties it and reads every file; a **scan** compares the files with the rows (path, size, modification time) and re-reads what differs, adds what is new and drops what is gone. The scan runs on the first read after the process starts and at the start of every list, get and search (a few hundred files cost a few directory reads), so a file edited outside the product is found at the next call (RF-391). A file that does not parse is indexed as `invalid` with its error, never skipped silently, and shown in the list with the reason. A request that reads a file reads the file, never the index.
 
 | Table | Columns |
 | --- | --- |
-| `library_entries` | `key` (primary key, `<kind>/<name>`), `kind`, `name`, `description`, `scope`, `origin`, `reviewed` (0 or 1, computed at the scan from the content hash), `kept` (0 or 1), `actor`, `tags` (JSON array), `state` (`ok` or `invalid`), `error`, `path` (relative to `library/`), `sig` (file count, bytes and latest modification time of the file or folder, what the scan compares), `lint_errors`, `lint_warnings`, `has_scripts` (skills), `created_ms`, `updated_ms` |
+| `library_entries` | `key` (primary key, `<kind>/<name>`), `kind`, `name`, `description`, `scope`, `origin`, `reviewed` (0 or 1, computed at the scan from the content hash), `kept` (0 or 1), `actor`, `tags` (JSON array), `state` (`ok` or `invalid`), `error`, `path` (relative to `library/`), `size`, `mtime_ns`, `created_ms`, `updated_ms` |
 | `library_fts` | FTS5 over `key` (not indexed), `name`, `description`, `tags`, `body`; the tokenizer is `unicode61` with `remove_diacritics 2` |
 
 ## 10. Search
@@ -178,13 +176,13 @@ The answer fits a budget: `budget` characters (default 4000, at most 16000, abou
 | `MemoryList`, `MemoryGet`, `SkillList`, `SkillGet`, `PromptList`, `PromptGet`, `LibrarySearch`, `SkillLint`, `PromptRender` | read | lists and searches leave out unreviewed skills and pending notes unless `include_unreviewed` is true (HTTP and CLI take it; the MCP tool has no such argument, and its calls are made with `agent_view`, which also refuses `SkillGet` of an unreviewed skill with `E_FORBIDDEN` and the hint to ask the person to review it) |
 | `MemoryWrite`, `MemoryRemove`, `SkillWrite`, `PromptWrite`, `LibraryReindex` | edit | the rules of sections 5 to 7 |
 | `SkillImport`, `SkillExport` | media | reads or writes files by path rules; no MCP tool |
-| `SkillMarkReviewed` | edit | a person at the browser only (the session cookie), with the `content_hash` of the text read; no MCP tool and no CLI command |
+| `SkillMarkReviewed` | edit | a person at the browser only (the session cookie); no MCP tool and no CLI command |
 
-In network mode the library belongs to the workspace and is shared by its users. A key limited to one project may read and write only memory whose scope is that project or `workspace` (read only). `MemoryRemove` deletes the file; a caller that is not a person at the browser cannot remove a kept note (`E_FORBIDDEN`). Every write, import, export, review and removal appends an audit row (`library.memory.write`, `library.skill.import`, and so on) with the actor.
+A key limited to one project may read and write only memory whose scope is that project or `workspace` (read only). `MemoryRemove` deletes the file; a caller that is not a person at the browser cannot remove a kept note (`E_FORBIDDEN`). Every write, import, export, review and removal appends an audit row (`library.memory.write`, `library.skill.import`, and so on) with the actor.
 
 ## 12. Errors, limits and files
 
-No new error code: `E_VALIDATION` (a name, a field, a variable, an archive entry; `details.findings` for the lint), `E_NOT_FOUND`, `E_ID_EXISTS` (a taken name), `E_FORBIDDEN`, `E_REVISION_CONFLICT` (a review of a skill that changed since it was read), `E_LIMIT_EXCEEDED`, `E_PAYLOAD_TOO_LARGE`, `E_PATH_NOT_ALLOWED` and `E_FILE_NOT_FOUND` (import paths).
+No new error code: `E_VALIDATION` (a name, a field, a variable, an archive entry; `details.findings` for the lint), `E_NOT_FOUND`, `E_ID_EXISTS` (a taken name), `E_FORBIDDEN`, `E_LIMIT_EXCEEDED`, `E_PAYLOAD_TOO_LARGE`, `E_PATH_NOT_ALLOWED` and `E_FILE_NOT_FOUND` (import paths).
 
 | Limit | Value |
 | --- | --- |
@@ -199,22 +197,19 @@ Files: `library/` in the workspace (SDD-000 section 9), `exports/library/` for e
 
 ## 13. Untrusted text
 
-The pages edit the text of an entry, so the service returns it to a session of the UI (a person at the browser, or a session of local mode opened without the launcher secret, actor `local:ui`) exactly as the file has it (the page escapes it when it draws it): a page that got the cleaned text would write it back over the file on its next save. Every other caller gets the text cleaned. Every text of the library that reaches an agent is untrusted: a description, a body, a snippet, a tag, a source and a rendered prompt. The fields are tagged `untrusted:"true"` and listed in the provenance table of SDD-007 section 8.1 with the source `library_text`. In the text part of a result the library text is a block `<untrusted_media_text source="library_text" ...>` with its `kind` and `name`; in structured content it is a plain string cleaned and with `<` escaped (`untrusted.Value`). The names, kinds, flags and counts are the product's own and are not. The paths of the files of a skill are not the product's (an archive names them): in the text of `SkillGet` and `SkillLint` the file list and the findings are blocks of their own (`field` `files` and `findings`). A skill's `SKILL.md` is shown whole to a person who asks for it: the warning for an unreviewed skill is a sentence of the product outside the block.
+Every text of the library that reaches an agent is untrusted: a description, a body, a snippet, a tag, a source and a rendered prompt. The fields are tagged `untrusted:"true"` and listed in the provenance table of SDD-007 section 8.1 with the source `library_text`. In the text part of a result the library text is a block `<untrusted_media_text source="library_text" ...>` with its `kind` and `name`; in structured content it is a plain string cleaned and with `<` escaped (`untrusted.Value`). The names, kinds, flags and counts are the product's own and are not. A skill's `SKILL.md` is shown whole to a person who asks for it: the warning for an unreviewed skill is a sentence of the product outside the block.
 
 ## 14. Surfaces
 
 | Operation | MCP | CLI | HTTP (under `/api/v1`) |
 | --- | --- | --- | --- |
-| `MemoryList`, `MemoryGet`, `MemoryWrite` | `library` (kind `memory`) | `memory:list`, `memory:show`, `memory:write` | `GET /library/memory`, `GET /library/memory/{name}`, `POST /library/memory`, `DELETE /library/memory/{name}` |
-| `MemoryRemove` | none: no MCP tool removes anything | `memory:remove` | `DELETE /library/memory/{name}` |
+| `MemoryList`, `MemoryGet`, `MemoryWrite`, `MemoryRemove` | `library` (kind `memory`) | `memory:list`, `memory:show`, `memory:write`, `memory:remove` | `GET /library/memory`, `GET /library/memory/{name}`, `PUT /library/memory/{name}`, `DELETE /library/memory/{name}` |
 | `SkillList`, `SkillGet`, `SkillWrite`, `SkillLint` | `library` (kind `skill`) | `skill:list`, `skill:show`, `skill:write`, `skill:lint` | `GET /library/skills`, `GET /library/skills/{name}`, `PUT /library/skills/{name}`, `GET /library/skills/{name}/lint` |
 | `SkillImport`, `SkillExport`, `SkillMarkReviewed` | none | `skill:import`, `skill:export`, none | `POST /library/skills/import`, `POST /library/skills/export`, `POST /library/skills/{name}/review` |
 | `PromptList`, `PromptGet`, `PromptWrite`, `PromptRender` | `library` (kind `prompt`) | `prompt:list`, `prompt:show`, `prompt:write`, `prompt:render` | `GET /library/prompts`, `GET /library/prompts/{name}`, `PUT /library/prompts/{name}`, `POST /library/prompts/{name}/render` |
 | `LibrarySearch`, `LibraryReindex` | `library` (action `search`) and none | `library:search`, `library:reindex` | `GET /library/search`, `POST /library/reindex` |
 
-`MemoryWrite` is a `POST` that creates the note or, when `name` names one, replaces it; the name may be left out and is then made from the description. Skills and prompts are written with `PUT` on their name. The lists and the search take their filters as query parameters (`tags` and `kinds` as comma separated words, `include_unreviewed` and `agent_view` as booleans). `agent_view` is set by every call of the MCP tool and can only narrow what a call sees: it leaves out what is not reviewed or kept whatever `include_unreviewed` says, and `SkillGet` and `MemoryGet` refuse an entry that is not.
-
-The MCP tool `library` takes `action` (`search`, `list`, `get`, `write`, `render`, `lint`) and `kind`; its definition is in SDD-003 section 4.2. The pages are `/memory`, `/skills` and `/prompts` of the dashboard (SDD-012 section 23): a list with a search box and the filters, an editor with a preview, and for a skill the origin, licence, source, the lint findings and the review state with the button for a person to mark it read. The pages compute nothing: the lint, the rendering and the review are the answers of the service.
+The MCP tool `library` takes `action` (`search`, `list`, `get`, `write`, `remove`, `render`, `lint`) and `kind`; its definition is in SDD-003 section 4.2. The pages are `/memory`, `/skills` and `/prompts` of the dashboard (SDD-012 section 23): a list with a search box and the filters, an editor with a preview, and for a skill the origin, licence, source, the lint findings and the review state with the button for a person to mark it read. The pages compute nothing: the lint, the rendering and the review are the answers of the service.
 
 ## 15. Tests
 
@@ -223,34 +218,3 @@ The MCP tool `library` takes `action` (`search`, `list`, `get`, `write`, `render
 - Security (SDD-007 T-44 to T-47): `TestSecurity_T44_*` to `TestSecurity_T47_*`.
 - Contract: parity of every operation on HTTP, CLI and MCP, and the untrusted marking.
 - End to end: `web/e2e/specs/library.spec.ts`.
-
-## 16. The built-in skills
-
-The product ships a small set of skills written for it and tested with it (epic 16, RF-389), so an agent and a creator are led through the first complete flow: a short vertical video with captions and a thumbnail, from the briefing to the publication (ADR-0031). They are Agent Skills folders in `web/resources/skills/<name>/` (`SKILL.md`, optional `references/`), embedded in the binary with `go:embed` (package `web/resources/skills`) and handed to the service as `service.Options.BuiltInSkills`; `service/library` has no knowledge of where they come from.
-
-**The set.** `start-here` (a router: which skill for which request), `brief-a-production`, `short-vertical-video`, `captions-for-shorts`, `thumbnail`, `recall-learnings`, `production-retro`, `fetch-clip`, and the writing skills the first flow needs, adapted from the two sources the author approved (D-071): `write-a-hook`, `short-script` and `caption-per-network`, and `captions-for-shorts` carries a model of the second source. A step that depends on an operation that does not exist yet is marked in the text (`Not available yet:`) and is finished by the epic that adds the operation.
-
-**`motion-with-an-external-engine` (epic 33, RF-084).** A skill for an animation the editor cannot make (SDD-011 section 15): get the brief (`view` with `mode` `motion`, or `motion:brief`), render on the agent's own side with an engine the user installed (HyperFrames is the one it names, adapted from its `hyperframes-cli` skill: lint, check and look at the snapshots before rendering, confirm the duration of the file after), import the file with origin `rendered_externally`, a `render_key` and the engine and its version, check it against the brief (`motion:check` in the CLI, or `media_inspect` compared with the brief over MCP), then place it with `clip.add` or, when the key already exists, replace the clips with `clip.replace_media` in one `edit` call. The skill says that Stuarty never runs, installs or downloads the engine, and names the version of the engine its steps were written against; an engine whose command line differs is the agent's to read (`--help`). Its source and licence are named in its front matter and its notice is in `licenses/vendored/NOTICE-skills.md`, like the other adapted skills. It is within the 12,400 characters of an agent `SKILL.md`.
-
-**Install and update.** When the service starts it reads the embedded folders and, for each one, in this order:
-
-1. The folder `library/skills/<name>/` does not exist: it is written as the embedded text with `stuarty-origin: built-in`, sealed as reviewed (the product wrote and read it), and its content hash and the product version are recorded in `library/.built-in.json`.
-2. The folder exists and its content hash is the one recorded (the folder is as the product left it): when the embedded text now differs, the folder is rewritten the same way and the record updated; when it does not, nothing is written, so an unchanged skill keeps its file times.
-3. The folder exists and its hash is not the recorded one (a person edited it, or it was never installed by the product): it is **never overwritten**. It reads as `user`.
-
-`library/.built-in.json` is a dot file: no scan, import or export reads it, and it maps a name to `{version, hash}`. The embedded text stays in the binary, so a person who wants a built-in skill back deletes their folder and starts the product again (the record of a folder that is gone is dropped and step 1 runs). A skill that a later binary no longer ships is left as it is.
-
-**The origin is not a claim of the file.** `stuarty-origin: built-in` in a `SKILL.md` counts only while the content hash of the folder is the hash recorded in `library/.built-in.json`; otherwise the skill is listed as `user`. A folder copied in by hand, an imported one and an edited built-in therefore never read as `built-in`, whatever their front matter says; a record that is missing or damaged takes the origin away (the safe side) and the next start repairs it for the folders that are untouched.
-
-**Every skill names real operations.** A test (`go test ./web/resources/skills/...`) reads every built-in skill, extracts the names of operations, MCP tools and CLI commands the text mentions in code spans and checks them against the registry of SDD-000 (the Service operations, the MCP tools of SDD-003 section 4.1, the CLI commands and the HTTP routes), so a renamed operation breaks the build instead of the agent. Names of operations of later epics are written in a line that starts `Not available yet:` and are not checked until that epic removes the line.
-
-**Static rules for every built-in skill**, in the same test: it passes `SkillLint` with no finding of any severity; it names no credential to ask for or read; it never tells the agent to approve a publication or a cost, to publish without approval, or to bypass the approval queue (checked as imperative phrases: `approve it yourself`, `publish without`, `skip the approval`, `bypass`); and where it says to publish or to generate at a cost it names the approval queue as the way.
-
-**Adapted material (D-071).** Two sources are approved, with attribution and adaptation: `coreyhaines31/marketingskills` (MIT) and `heygen-com/hyperframes` (Apache-2.0). A skill adapted from one names it in its front matter: `license` (the licence of the source), `metadata.stuarty-source` (the repository, the path of the original and the commit read, as `owner/repo path @ <40 hex characters>`) and `metadata.stuarty-adapted-from` (the source id below). A skill that is not adapted names none of the three. The licence text of each source is in `licenses/vendored/<source id>-<SPDX id>.txt` (the notices tool has fixed groups, and adapted text is source kept in the repository, so it is the `vendored` group), listed in `.config/third-party.json` and in `THIRD_PARTY_NOTICES.md`, with `licenses/vendored/NOTICE-skills.md` listing each adapted skill, its source path and what was changed; `task notices:check` fails when the inventory and the folder differ. A test checks that every adapted skill names a source whose licence text is in `licenses/vendored/`. Nothing is copied from a source whose licence was not read at that commit.
-
-| Source id | Repository | Licence |
-| --- | --- | --- |
-| `marketingskills` | `coreyhaines31/marketingskills` | MIT |
-| `hyperframes` | `heygen-com/hyperframes` | Apache-2.0 |
-
-**Agent-side only.** `fetch-clip` tells the agent to download with its own tools on its own side and then to import the file with a source and a rights note (`MediaImport`); the product gains no downloader and opens no connection (ADR-0032). **Recall and retro.** `recall-learnings` reads memory (`LibrarySearch` with `scope`) at the start of a production and `production-retro` writes what was learned at the end with `MemoryWrite`, which an agent's note starts unkept (section 5).
