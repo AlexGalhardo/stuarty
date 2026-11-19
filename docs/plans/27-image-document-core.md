@@ -47,7 +47,7 @@ A creator's agent makes a thumbnail the same way it edits a video: by sending co
 - [x] 5. Produce the one-frame plan and render it through the Go host. Verify: `go test ./engine/export/... -run TestImageRender` passes against golden PNG files.
 - [x] 6. Implement export formats and presets, and the determinism test. Verify: `go test ./engine/export/... -run TestImageExportDeterministic` passes (two runs, identical bytes).
 - [x] 7. Implement templates and the lint. Verify: `go test ./core/image/... -run "TestTemplate|TestLint"` passes.
-- [ ] 8. Add storage and the service operations with the text view. Verify: `go test ./service/... -run TestImage` passes.
+- [x] 8. Add storage and the service operations with the text view. Verify: `go test ./service/... -run TestImage` passes.
 - [ ] 9. Expose on HTTP, CLI and MCP in the `image` domain with parity. Verify: `go test ./web/contract/...` passes and `task generate:check` exits 0.
 - [ ] 10. Write the reference scenario of an image (a thumbnail from a template, by CLI and by MCP). Verify: `bash scripts/smoke-e2e.sh` (extended) exits 0.
 
