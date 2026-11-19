@@ -216,10 +216,11 @@ var publishNowCmd = &spec{
 	},
 	example: "stuarty publish:now --project prj_7k2m9x4q1b --connection con_0123456789 --export job_0123456789 " +
 		"--title \"My short\" --made-for-kids no --visibility private",
-	project: true,
-	write:   true,
-	globals: []string{"dry-run"},
-	flags:   publishFlags(),
+	project:  true,
+	timeline: true,
+	write:    true,
+	globals:  []string{"dry-run"},
+	flags:    publishFlags(),
 	run: func(ctx context.Context, c *call) (*output, error) {
 		args, err := publishArgs(c)
 		if err != nil {
@@ -227,7 +228,7 @@ var publishNowCmd = &spec{
 		}
 
 		res, err := c.svc.PublishNow(ctx, service.PublishNowRequest{
-			ProjectID: c.projectID, PublishArgs: args, DryRun: c.args.boolean("dry-run"),
+			ProjectID: c.projectID, TimelineID: c.timelineID, PublishArgs: args, DryRun: c.args.boolean("dry-run"),
 		})
 		if err != nil {
 			return nil, err
