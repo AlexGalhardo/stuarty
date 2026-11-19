@@ -2,6 +2,11 @@ import { fromResponse, networkError } from "./errors";
 import { type RetryDeps, withRetry } from "./retry";
 import { type Transport, TransportError } from "./transport";
 import type {
+	ApprovalListResult,
+	ApprovalRequest,
+	ApprovalRule,
+	ApprovalRuleListResult,
+	ApprovalRuleSetRequest,
 	AssetInfoBody,
 	AssetListResult,
 	AssetQuery,

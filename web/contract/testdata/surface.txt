@@ -1,4 +1,10 @@
 command agent:docs
+command approval:decide
+command approval:list
+command approval:rule:list
+command approval:rule:remove
+command approval:rule:set
+command approval:show
 command asset:list
 command asset:set
 command asset:show
@@ -157,6 +163,8 @@ route GET /templates
 route GET /templates/{}/file
 route GET /users
 route PATCH /users/{}
+route POST /approval-rules
+route POST /approvals/{}/decide
 route POST /assets/{}/tags
 route POST /connections
 route POST /connections/{}/test

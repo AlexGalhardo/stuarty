@@ -73,6 +73,13 @@ func Pages(d *httpapi.Deps) func(r *router.Router, app *vukem.App) error {
 			return inertia.Render(c, "Connections/Index", inertia.Props{})
 		}).Name("connections.index")
 
+		// The approval queue, the rules and the cost ceilings (epic 05, SDD-015): the page reads and
+		// changes them through /api/v1/approvals, /approval-rules and /cost, and follows the queue on
+		// /api/v1/approvals/events.
+		r.Get("/approvals", func(c *web.Ctx) error {
+			return inertia.Render(c, "Approvals/Index", inertia.Props{})
+		}).Name("approvals.index")
+
 		// The asset library (epic 08, SDD-011 section 14.6): two sections over one library; the pages read and
 		// change it through /api/v1/assets.
 		r.Get("/visual-assets", func(c *web.Ctx) error {

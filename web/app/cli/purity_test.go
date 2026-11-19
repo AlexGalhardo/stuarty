@@ -329,3 +329,82 @@ func (s stub) AssetSetInfo(context.Context, service.AssetSetInfoRequest) (*servi
 func (s stub) AssetTag(context.Context, service.AssetTagRequest) (*service.AssetResult, error) {
 	return reply[service.AssetResult](s.err)
 }
+
+func (s stub) BriefingQuestions(
+	context.Context,
+	service.BriefingQuestionsRequest,
+) (*service.BriefingQuestionsResult, error) {
+	return reply[service.BriefingQuestionsResult](s.err)
+}
+
+func (s stub) BriefingAnswer(context.Context, service.BriefingAnswerRequest) (*service.BriefResult, error) {
+	return reply[service.BriefResult](s.err)
+}
+
+func (s stub) MemoryList(context.Context, service.MemoryListRequest) (*service.LibraryListResult, error) {
+	return reply[service.LibraryListResult](s.err)
+}
+
+func (s stub) MemoryGet(context.Context, service.LibraryRef) (*service.MemoryGetResult, error) {
+	return reply[service.MemoryGetResult](s.err)
+}
+
+func (s stub) MemoryWrite(context.Context, service.MemoryWriteRequest) (*service.MemoryWriteResult, error) {
+	return reply[service.MemoryWriteResult](s.err)
+}
+
+func (s stub) MemoryRemove(context.Context, service.LibraryRef) (*service.LibraryRemoveResult, error) {
+	return reply[service.LibraryRemoveResult](s.err)
+}
+
+func (s stub) SkillList(context.Context, service.SkillListRequest) (*service.LibraryListResult, error) {
+	return reply[service.LibraryListResult](s.err)
+}
+
+func (s stub) SkillGet(context.Context, service.LibraryRef) (*service.SkillGetResult, error) {
+	return reply[service.SkillGetResult](s.err)
+}
+
+func (s stub) SkillWrite(context.Context, service.SkillWriteRequest) (*service.SkillWriteResult, error) {
+	return reply[service.SkillWriteResult](s.err)
+}
+
+func (s stub) SkillImport(context.Context, service.SkillImportRequest) (*service.SkillImportResult, error) {
+	return reply[service.SkillImportResult](s.err)
+}
+
+func (s stub) SkillMarkReviewed(context.Context, service.SkillReviewRequest) (*service.SkillReviewResult, error) {
+	return reply[service.SkillReviewResult](s.err)
+}
+
+func (s stub) SkillLint(context.Context, service.LibraryRef) (*service.SkillLintResult, error) {
+	return reply[service.SkillLintResult](s.err)
+}
+
+func (s stub) SkillExport(context.Context, service.SkillExportRequest) (*service.SkillExportResult, error) {
+	return reply[service.SkillExportResult](s.err)
+}
+
+func (s stub) PromptList(context.Context, service.PromptListRequest) (*service.LibraryListResult, error) {
+	return reply[service.LibraryListResult](s.err)
+}
+
+func (s stub) PromptGet(context.Context, service.LibraryRef) (*service.PromptGetResult, error) {
+	return reply[service.PromptGetResult](s.err)
+}
+
+func (s stub) PromptWrite(context.Context, service.PromptWriteRequest) (*service.PromptWriteResult, error) {
+	return reply[service.PromptWriteResult](s.err)
+}
+
+func (s stub) PromptRender(context.Context, service.PromptRenderRequest) (*service.PromptRenderResult, error) {
+	return reply[service.PromptRenderResult](s.err)
+}
+
+func (s stub) LibrarySearch(context.Context, service.LibrarySearchRequest) (*service.LibrarySearchResult, error) {
+	return reply[service.LibrarySearchResult](s.err)
+}
+
+func (s stub) LibraryReindex(context.Context, service.LibraryReindexRequest) (*service.LibraryReindexResult, error) {
+	return reply[service.LibraryReindexResult](s.err)
+}
