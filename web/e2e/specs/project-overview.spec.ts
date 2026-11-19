@@ -80,6 +80,33 @@ test.describe("project overview", () => {
 		expect(copies).toHaveLength(1);
 	});
 
+	test("the card opens the first active timeline when the first one is in the trash", async ({
+		page,
+		request,
+	}) => {
+		const call = await caller(request);
+		const created = await call("POST", "/projects", {
+			name: `Moved ${Date.now()}`,
+		});
+		const id = created.project_id as string;
+		const added = (await call("POST", `/projects/${id}/items`, {
+			kind: "timeline",
+			title: "Second",
+		})) as { item: { timeline_id: string } };
+		const described = (await call("GET", `/projects/${id}/describe`)) as {
+			items: { id: string; timeline_id?: string }[];
+		};
+		const first = described.items.find((i) => i.timeline_id === id);
+		await call("POST", `/projects/${id}/items/${first?.id}/trash`, {});
+
+		await page.goto("/projects");
+		const card = page.locator(`[data-project-card='${id}']`);
+		await expect(card.locator('a[href^="/editor/"]')).toHaveAttribute(
+			"href",
+			`/editor/${added.item.timeline_id}`,
+		);
+	});
+
 	for (const theme of ["light", "dark"] as const) {
 		test(`axe finds nothing on the overview in ${theme}`, async ({
 			page,
