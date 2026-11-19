@@ -1,0 +1,8 @@
+{
+  "code": "E_VALIDATION",
+  "hint": "Name another layer as the source.",
+  "message": "A layer cannot be the source of its own mask.",
+  "op_index": 0,
+  "path": "args.source",
+  "retryable": false
+}

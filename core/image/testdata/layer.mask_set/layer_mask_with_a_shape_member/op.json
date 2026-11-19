@@ -1,0 +1,9 @@
+{
+  "args": {
+    "feather": 3,
+    "kind": "layer",
+    "layer_id": "lyr_bbbbbbbbbb",
+    "source": "lyr_dddddddddd"
+  },
+  "op": "layer.mask_set"
+}

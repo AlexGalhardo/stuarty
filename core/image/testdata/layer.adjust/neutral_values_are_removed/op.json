@@ -1,0 +1,13 @@
+{
+  "args": {
+    "brightness": 0,
+    "contrast": 0,
+    "layer_id": "lyr_bbbbbbbbbb",
+    "levels": {
+      "black": 0,
+      "gamma": 100,
+      "white": 255
+    }
+  },
+  "op": "layer.adjust"
+}
