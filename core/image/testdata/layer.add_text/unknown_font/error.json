@@ -1,0 +1,18 @@
+{
+  "code": "E_FONT_UNKNOWN",
+  "details": {
+    "available": [
+      "Anton",
+      "Bebas Neue",
+      "Inter",
+      "JetBrains Mono",
+      "Montserrat",
+      "Playfair Display"
+    ]
+  },
+  "hint": "Use font_family \"Inter\".",
+  "message": "Font \"Comic Nope\" is not available; available families: Anton, Bebas Neue, Inter, JetBrains Mono, Montserrat, Playfair Display.",
+  "op_index": 0,
+  "path": "args.style.font_family",
+  "retryable": false
+}

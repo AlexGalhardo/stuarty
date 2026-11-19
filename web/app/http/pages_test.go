@@ -77,12 +77,20 @@ func TestPages(t *testing.T) {
 		t.Errorf("/ = %d, want the dashboard home", home.status)
 	}
 
-	for _, key := range []string{"edit-video", "write", "publish", "connections"} {
+	for _, key := range []string{"edit-video", "write", "publish"} {
 		res := page("/" + key)
 		if res.status != http.StatusOK || !strings.Contains(string(res.body), `Dashboard\/Section`) ||
 			!strings.Contains(string(res.body), `"section":"`+key+`"`) {
 			t.Errorf("/%s = %d, want its empty state", key, res.status)
 		}
+	}
+
+	// The Connections section has its own page (epic 04).
+	if res := page(
+		"/connections",
+	); res.status != http.StatusOK ||
+		!strings.Contains(string(res.body), `Connections\/Index`) {
+		t.Errorf("/connections = %d, want the connections page", res.status)
 	}
 
 	if res := h.do(req{path: "/projects", noAuth: true}); res.status != http.StatusUnauthorized {
@@ -140,7 +148,7 @@ func TestEditorPageShowsWhyAProjectCannotOpen(t *testing.T) {
 
 	_, err := h.store.DB().ExecContext(
 		context.Background(),
-		"UPDATE projects SET document = replace(document, ?, ?) WHERE id = ?",
+		"UPDATE timelines SET document = replace(document, ?, ?) WHERE id = ?",
 		fmt.Sprintf(`"schema_version":%d`, timeline.CurrentSchemaVersion),
 		fmt.Sprintf(`"schema_version":%d`, timeline.CurrentSchemaVersion+1),
 		id,

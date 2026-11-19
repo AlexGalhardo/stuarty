@@ -108,6 +108,42 @@ var Endpoints = []Endpoint{
 		Service: "ProjectOtioImport", Status: 200, Summary: "Import an OpenTimelineIO file into a project",
 	},
 	{
+		ID: "projects.describe", Method: http.MethodGet, Path: "/projects/{id}/describe", Scope: service.ScopeRead,
+		Service: "ProjectDescribe", Status: 200, Summary: "Describe a project as text: brief, items and state",
+	},
+	{
+		ID: "projects.duplicate", Method: http.MethodPost, Path: "/projects/{id}/duplicate", Scope: service.ScopeEdit,
+		Service: "ProjectDuplicate", Status: 201, Summary: "Duplicate a project",
+	},
+	{
+		ID: "projects.items.add", Method: http.MethodPost, Path: "/projects/{id}/items", Scope: service.ScopeEdit,
+		Service: "ProjectItemAdd", Status: 201, Summary: "Add an item (text, timeline or output) to a project",
+	},
+	{
+		ID: "projects.items.move", Method: http.MethodPost, Path: "/projects/{id}/items/{item_id}/move",
+		Scope: service.ScopeEdit, Service: "ProjectItemMove", Status: 200, Summary: "Move an item of a project",
+	},
+	{
+		ID: "projects.items.rename", Method: http.MethodPost, Path: "/projects/{id}/items/{item_id}/rename",
+		Scope: service.ScopeEdit, Service: "ProjectItemRename", Status: 200, Summary: "Rename an item of a project",
+	},
+	{
+		ID: "projects.items.trash", Method: http.MethodPost, Path: "/projects/{id}/items/{item_id}/trash",
+		Scope: service.ScopeEdit, Service: "ProjectItemTrash", Status: 200, Summary: "Move an item to the trash",
+	},
+	{
+		ID: "projects.items.restore", Method: http.MethodPost, Path: "/projects/{id}/items/{item_id}/restore",
+		Scope: service.ScopeEdit, Service: "ProjectItemRestore", Status: 200, Summary: "Restore an item from the trash",
+	},
+	{
+		ID: "projects.brief.get", Method: http.MethodGet, Path: "/projects/{id}/brief", Scope: service.ScopeRead,
+		Service: "BriefGet", Status: 200, Summary: "Read the brief of a project",
+	},
+	{
+		ID: "projects.brief.set", Method: http.MethodPut, Path: "/projects/{id}/brief", Scope: service.ScopeEdit,
+		Service: "BriefSet", Status: 200, Summary: "Write the brief of a project",
+	},
+	{
 		ID: "projects.trash", Method: http.MethodPost, Path: "/projects/{id}/trash", Scope: service.ScopeEdit,
 		Service: "ProjectTrash", Status: 200, Summary: "Move a project to the trash",
 	},
@@ -268,6 +304,26 @@ var Endpoints = []Endpoint{
 	{
 		ID: "brand.set", Method: http.MethodPut, Path: "/brand-kit", Scope: service.ScopeEdit,
 		Service: "BrandKitSet", Status: 200, Summary: "Replace the brand kit",
+	},
+	{
+		ID: "connections.list", Method: http.MethodGet, Path: "/connections", Scope: service.ScopeRead,
+		Service: "ConnectionList", Status: 200, Summary: "List the destinations the user connected (never a secret)",
+	},
+	{
+		ID: "connections.get", Method: http.MethodGet, Path: "/connections/{id}", Scope: service.ScopeRead,
+		Service: "ConnectionGet", Status: 200, Summary: "Read one connection (never a secret)",
+	},
+	{
+		ID: "connections.create", Method: http.MethodPost, Path: "/connections", Scope: service.ScopeAdmin,
+		Service: "ConnectionCreate", Status: 201, Summary: "Connect a destination; the secret goes into the vault",
+	},
+	{
+		ID: "connections.remove", Method: http.MethodDelete, Path: "/connections/{id}", Scope: service.ScopeAdmin,
+		Service: "ConnectionRemove", Status: 200, Summary: "Remove a connection and its credential",
+	},
+	{
+		ID: "connections.test", Method: http.MethodPost, Path: "/connections/{id}/test", Scope: service.ScopeAdmin,
+		Service: "ConnectionTest", Status: 200, Summary: "Make one request through a connection",
 	},
 	{
 		ID: "library.memory.list", Method: http.MethodGet, Path: "/library/memory", Scope: service.ScopeRead,
@@ -503,6 +559,35 @@ var Endpoints = []Endpoint{
 	{
 		ID: "auth.logout", Method: http.MethodPost, Path: "/auth/logout", Root: true, Status: 200,
 		Summary: "End the browser session (network mode)",
+	},
+	// The image documents of SDD-021.
+	{
+		ID: "images.create", Method: http.MethodPost, Path: "/images", Scope: service.ScopeEdit,
+		Service: "ImageCreate", Status: 200, Summary: "Create an image document, blank or from a template",
+	},
+	{
+		ID: "images.list", Method: http.MethodGet, Path: "/images", Scope: service.ScopeRead,
+		Service: "ImageList", Status: 200, Summary: "List the image documents and templates",
+	},
+	{
+		ID: "images.get", Method: http.MethodGet, Path: "/images/{id}", Scope: service.ScopeRead,
+		Service: "ImageDescribe", Status: 200, Summary: "Describe an image document: layers, findings and text view",
+	},
+	{
+		ID: "images.edit", Method: http.MethodPost, Path: "/images/{id}/edit", Scope: service.ScopeEdit,
+		Service: "ImageEdit", Status: 200, Summary: "Apply a batch of image operations",
+	},
+	{
+		ID: "images.undo", Method: http.MethodPost, Path: "/images/{id}/undo", Scope: service.ScopeEdit,
+		Service: "ImageUndo", Status: 200, Summary: "Undo the latest step of the caller on an image",
+	},
+	{
+		ID: "images.redo", Method: http.MethodPost, Path: "/images/{id}/redo", Scope: service.ScopeEdit,
+		Service: "ImageRedo", Status: 200, Summary: "Redo the latest undone step of the caller on an image",
+	},
+	{
+		ID: "images.export", Method: http.MethodPost, Path: "/images/{id}/export", Scope: service.ScopeEdit,
+		Service: "ImageExport", Status: 200, Summary: "Export an image document to a PNG, JPEG or WebP file",
 	},
 }
 

@@ -7,8 +7,13 @@ import type {
 	AuditQuery,
 	BrandKit,
 	BrandKitBody,
+	BriefResult,
 	BundleImportResult,
 	CommandHelpResult,
+	Connection,
+	ConnectionCreateRequest,
+	ConnectionListResult,
+	ConnectionTestResult,
 	EditRequest,
 	EditResult,
 	ExportOptions,
@@ -34,6 +39,8 @@ import type {
 	PlanWindowHead,
 	ProjectCreateResult,
 	ProjectGetResult,
+	ProjectItemAddRequest,
+	ProjectItemResult,
 	ProjectListResult,
 	ProjectStateResult,
 	SessionResult,
@@ -138,10 +145,41 @@ export interface ApiClient {
 	createKey(request: KeyCreateRequest): Promise<KeyCreateResult>;
 	listKeys(): Promise<KeyListResult>;
 	revokeKey(keyId: string): Promise<KeyRevokeResult>;
+	listConnections(): Promise<ConnectionListResult>;
+	createConnection(request: ConnectionCreateRequest): Promise<Connection>;
+	removeConnection(id: string): Promise<Connection>;
+	testConnection(id: string): Promise<ConnectionTestResult>;
 	// An administrator session; any other caller gets E_FORBIDDEN.
 	listUsers(): Promise<UserListResult>;
 	listTrashedProjects(): Promise<ProjectListResult>;
 	createProject(name: string, preset: string): Promise<ProjectCreateResult>;
+	duplicateProject(
+		projectId: string,
+		name?: string,
+	): Promise<ProjectCreateResult>;
+	addProjectItem(
+		projectId: string,
+		request: ProjectItemAddRequest,
+	): Promise<ProjectItemResult>;
+	moveProjectItem(
+		projectId: string,
+		itemId: string,
+		position: number,
+	): Promise<ProjectItemResult>;
+	renameProjectItem(
+		projectId: string,
+		itemId: string,
+		title: string,
+	): Promise<ProjectItemResult>;
+	trashProjectItem(
+		projectId: string,
+		itemId: string,
+	): Promise<ProjectItemResult>;
+	restoreProjectItem(
+		projectId: string,
+		itemId: string,
+	): Promise<ProjectItemResult>;
+	setBrief(projectId: string, text: string): Promise<BriefResult>;
 	trashProject(projectId: string): Promise<ProjectStateResult>;
 	restoreProject(projectId: string): Promise<ProjectStateResult>;
 	// The two routes of network mode live at the root, not under /api/v1: a client
@@ -334,12 +372,63 @@ export function createClient(
 		createKey: (request) => call("POST", "/keys", EDIT_TIMEOUT_MS, request),
 		listKeys: () => call("GET", "/keys", READ_TIMEOUT_MS),
 		listUsers: () => call("GET", "/users", READ_TIMEOUT_MS),
+		listConnections: () => call("GET", "/connections", READ_TIMEOUT_MS),
+		createConnection: (request) =>
+			call("POST", "/connections", EDIT_TIMEOUT_MS, request),
+		removeConnection: (id) =>
+			call("DELETE", `/connections/${encodeURIComponent(id)}`, EDIT_TIMEOUT_MS),
+		testConnection: (id) =>
+			call(
+				"POST",
+				`/connections/${encodeURIComponent(id)}/test`,
+				EDIT_TIMEOUT_MS,
+				{},
+			),
 		revokeKey: (keyId) =>
 			call("DELETE", `/keys/${encodeURIComponent(keyId)}`, EDIT_TIMEOUT_MS),
 		listTrashedProjects: () =>
 			call("GET", "/projects?state=trashed", READ_TIMEOUT_MS),
 		createProject: (name, preset) =>
 			call("POST", "/projects", EDIT_TIMEOUT_MS, { name, preset }),
+		duplicateProject: (id, name) =>
+			call(
+				"POST",
+				`${project(id)}/duplicate`,
+				EDIT_TIMEOUT_MS,
+				name === undefined ? {} : { name },
+			),
+		addProjectItem: (id, request) =>
+			call("POST", `${project(id)}/items`, EDIT_TIMEOUT_MS, request),
+		moveProjectItem: (id, itemId, position) =>
+			call(
+				"POST",
+				`${project(id)}/items/${encodeURIComponent(itemId)}/move`,
+				EDIT_TIMEOUT_MS,
+				{ position },
+			),
+		renameProjectItem: (id, itemId, title) =>
+			call(
+				"POST",
+				`${project(id)}/items/${encodeURIComponent(itemId)}/rename`,
+				EDIT_TIMEOUT_MS,
+				{ title },
+			),
+		trashProjectItem: (id, itemId) =>
+			call(
+				"POST",
+				`${project(id)}/items/${encodeURIComponent(itemId)}/trash`,
+				EDIT_TIMEOUT_MS,
+				{},
+			),
+		restoreProjectItem: (id, itemId) =>
+			call(
+				"POST",
+				`${project(id)}/items/${encodeURIComponent(itemId)}/restore`,
+				EDIT_TIMEOUT_MS,
+				{},
+			),
+		setBrief: (id, text) =>
+			call("PUT", `${project(id)}/brief`, EDIT_TIMEOUT_MS, { text }),
 		trashProject: (id) =>
 			call("POST", `${project(id)}/trash`, EDIT_TIMEOUT_MS, {}),
 		restoreProject: (id) =>

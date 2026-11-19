@@ -161,15 +161,17 @@ func stateString(s ProjectState) string {
 	return string(s)
 }
 
-func headSummary(h *ProjectHead) ProjectSummary {
-	fps := timeline.Rational{Num: h.Summary.FPSNum, Den: h.Summary.FPSDen}
+// productionSummary is the item of the list of projects: the project, with the numbers of its first timeline.
+func productionSummary(h *ProductionHead) ProjectSummary {
+	t := &h.Timeline
+	fps := timeline.Rational{Num: t.Summary.FPSNum, Den: t.Summary.FPSDen}
 
 	return ProjectSummary{
-		ID: h.ID, ProjectID: h.ID, Name: h.Name, Revision: h.Revision, State: stateString(h.State),
-		Width: h.Summary.Width, Height: h.Summary.Height, FPS: fpsString(fps.Num, fps.Den),
-		Duration: timeValue(fps, h.Summary.DurationFrames),
-		Tracks:   h.Summary.Tracks, Items: h.Summary.Items, Assets: h.Summary.Assets,
-		UpdatedAt: msTime(h.UpdatedMs),
+		ID: h.ID, ProjectID: h.ID, Name: h.Name, Revision: t.Revision, State: stateString(h.State),
+		Width: t.Summary.Width, Height: t.Summary.Height, FPS: fpsString(fps.Num, fps.Den),
+		Duration: timeValue(fps, t.Summary.DurationFrames),
+		Tracks:   t.Summary.Tracks, Items: t.Summary.Items, Assets: t.Summary.Assets,
+		TimelineID: t.ID, Timelines: h.Timelines, UpdatedAt: msTime(h.UpdatedMs),
 	}
 }
 

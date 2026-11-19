@@ -79,6 +79,9 @@ func mustJSON(t *testing.T, v any) string {
 	return string(raw)
 }
 
+// timelineMember finds the timeline ids a result names, in order: a scenario reads the first as "$timeline:0".
+var timelineMember = regexp.MustCompile(`"timeline_id":\s*"(prj_[0-9a-hjkmnp-tv-z]{10})"`)
+
 var jobID = regexp.MustCompile(`job_[0-9a-hjkmnp-tv-z]{10}`)
 
 // mcpSession is the session id the MCP server appends to the actor label of a client (VV-026,
@@ -222,13 +225,17 @@ func run(t *testing.T, d driver, steps []step, fixtures map[string]string) []out
 	// bundles are the paths of the bundles the exports wrote, read back as "$bundle:0"; imported are the
 	// ids the server gave to imported projects, read back as "$project:0" and masked in the results,
 	// because the server chooses them.
-	var jobs, templates, bundles, imported []string
+	var jobs, templates, bundles, imported, timelines []string
 
 	for i, s := range steps {
 		s = withFixtures(t, d, s, fixtures)
 
 		for n, id := range jobs {
 			s.Args = json.RawMessage(strings.ReplaceAll(string(s.Args), `"$job:`+strconv.Itoa(n)+`"`, `"`+id+`"`))
+		}
+
+		for n, id := range timelines {
+			s.Args = json.RawMessage(strings.ReplaceAll(string(s.Args), `"$timeline:`+strconv.Itoa(n)+`"`, `"`+id+`"`))
 		}
 
 		for n, id := range templates {
@@ -273,6 +280,12 @@ func run(t *testing.T, d driver, steps []step, fixtures map[string]string) []out
 				}
 			}
 
+			for _, m := range timelineMember.FindAllStringSubmatch(string(raw), -1) {
+				if !slices.Contains(timelines, m[1]) {
+					timelines = append(timelines, m[1])
+				}
+			}
+
 			for _, id := range templateID.FindAllString(string(raw), -1) {
 				if !slices.Contains(templates, id) {
 					templates = append(templates, id)
@@ -314,7 +327,10 @@ func finalDocument(t *testing.T, d driver, project string) []byte {
 	return raw
 }
 
-var renderedByAdapter = map[string]bool{"Edit": true, "Undo": true, "Redo": true}
+var renderedByAdapter = map[string]bool{
+	"Edit": true, "Undo": true, "Redo": true, "ImageEdit": true, "ImageUndo": true, "ImageRedo": true,
+	"ImageExport": true, "BriefGet": true, "BriefSet": true,
+}
 
 func TestScenarioIsTheSameThroughEverySurface(t *testing.T) {
 	docs := sameThroughEverySurface(t, "prototype", "prj_7k2m9x4q1b")
@@ -849,4 +865,11 @@ func importedDocument(t *testing.T, d driver, original string) []byte {
 	}
 
 	return bytes.ReplaceAll(finalDocument(t, d, ids[0]), []byte(ids[0]), []byte(original))
+}
+
+// TestProductionScenarioIsTheSameThroughEverySurface (epic 06): a project gets a brief, a text and a second
+// timeline; a command without timeline_id is refused with the choices; each timeline is edited by its id; the
+// project is described, reordered and copied. The results are the same on the four surfaces.
+func TestProductionScenarioIsTheSameThroughEverySurface(t *testing.T) {
+	sameThroughEverySurface(t, "production")
 }

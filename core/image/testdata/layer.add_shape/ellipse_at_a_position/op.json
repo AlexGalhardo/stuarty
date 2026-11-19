@@ -1,0 +1,10 @@
+{
+  "args": {
+    "h": 100,
+    "shape": "ellipse",
+    "w": 100,
+    "x": -20,
+    "y": 10
+  },
+  "op": "layer.add_shape"
+}

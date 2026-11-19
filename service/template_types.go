@@ -40,6 +40,7 @@ type TemplateListResult struct {
 // TemplateSaveRequest makes a template from a project.
 type TemplateSaveRequest struct {
 	ProjectID   string `json:"project_id"`
+	TimelineID  string `json:"timeline_id,omitempty"` // SDD-003 section 1.7
 	Name        string `json:"name"`
 	Description string `json:"description,omitempty"`
 	DryRun      bool   `json:"dry_run,omitempty"`

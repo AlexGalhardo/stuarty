@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "horizontal": {
+      "enum": [
+        "left",
+        "center",
+        "right"
+      ],
+      "type": "string"
+    },
+    "layer_ids": {
+      "items": {
+        "pattern": "^lyr_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+        "type": "string"
+      },
+      "maxItems": 100,
+      "minItems": 1,
+      "type": "array"
+    },
+    "to": {
+      "description": "canvas, or a layer id.",
+      "type": "string"
+    },
+    "vertical": {
+      "enum": [
+        "top",
+        "middle",
+        "bottom"
+      ],
+      "type": "string"
+    }
+  },
+  "required": [
+    "layer_ids",
+    "to"
+  ],
+  "type": "object"
+}

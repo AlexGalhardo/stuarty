@@ -764,6 +764,40 @@ export interface KeyListResult {
 
 export type KeyRevokeResult = ApiKey;
 
+// /connections (SDD-014): the destinations the user connected. A result never carries a
+// credential, only secret_set.
+export interface Connection {
+	id: string;
+	kind: string;
+	label: string;
+	endpoint: string;
+	hosts: string[];
+	accepts: string[];
+	created_at: string;
+	last_used_at: string | null;
+	secret_set: boolean;
+}
+
+export interface ConnectionListResult {
+	connections: Connection[];
+}
+
+export interface ConnectionCreateRequest {
+	kind: string;
+	label: string;
+	endpoint: string;
+	hosts?: string[];
+	accepts: string[];
+	secret: string;
+}
+
+export interface ConnectionTestResult {
+	id: string;
+	ok: boolean;
+	status: number;
+	message: string;
+}
+
 // GET /users: an administrator session only (SDD-007 section 4.1 item 2). The
 // editor reads it once, to show the name of the actors `user:<id>`.
 export interface UserSummary {
@@ -845,6 +879,41 @@ export interface ProjectListResult {
 export interface ProjectCreateResult {
 	project_id: string;
 	name: string;
+	text: string;
+}
+
+// An item of a project as a production (SDD-005 section 16.1): the commands and the answers are the service's.
+export type ProjectItemKind = "brief" | "text" | "timeline" | "output";
+
+export interface ProjectItem {
+	id: string;
+	kind: ProjectItemKind;
+	title: string;
+	position: number;
+	state: "active" | "trashed";
+	timeline_id?: string;
+	job_id?: string;
+	format?: string;
+	text?: string;
+	updated_at: string;
+}
+
+export interface ProjectItemResult {
+	project_id: string;
+	item: ProjectItem;
+	text: string;
+}
+
+export interface ProjectItemAddRequest {
+	kind: "text" | "timeline";
+	title: string;
+	text?: string;
+	preset?: string;
+}
+
+export interface BriefResult {
+	project_id: string;
+	item_id?: string;
 	text: string;
 }
 
