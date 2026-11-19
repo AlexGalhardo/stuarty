@@ -15,8 +15,8 @@ import (
 // The keys are the paths the sidebar links to in resources/js/dashboard/sections.ts;
 // TestDashboardSectionsMatchTheSidebar compares the two lists.
 var dashboardSections = []string{
-	"edit-video", "edit-image", "write",
-	"publish", "skills", "prompts", "memory",
+	"edit-video", "write",
+	"publish",
 }
 
 // dashboardPages installs the home and one empty-state route for each section

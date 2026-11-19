@@ -84,7 +84,7 @@ var assetListCmd = &spec{
 	name:    "asset:list",
 	summary: "list the files of the library, with origin, tags and reuse",
 	usage: []string{
-		"stuarty asset:list [--tag t] [--text w]",
+		"stuarty asset:list",
 	},
 	example: "stuarty asset:list --tag logo --reusable --json",
 	flags: append([]flagDef{
@@ -171,7 +171,7 @@ var assetSetCmd = &spec{
 	name:    "asset:set",
 	summary: "set the description, the rights note and the reuse mark of a file of the library",
 	usage: []string{
-		"stuarty asset:set <hash> [--reusable]",
+		"stuarty asset:set <hash>",
 	},
 	example:    "stuarty asset:set sha256:3b4c0a1d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b --reusable",
 	positional: true,
@@ -224,7 +224,7 @@ var assetSetCmd = &spec{
 var assetTagCmd = &spec{
 	name:       "asset:tag",
 	summary:    "add and remove the tags of a file of the library",
-	usage:      []string{"stuarty asset:tag <hash> --add t"},
+	usage:      []string{"stuarty asset:tag <hash>"},
 	example:    "stuarty asset:tag sha256:3b4c0a1d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b --add logo,brand",
 	positional: true,
 	write:      true,

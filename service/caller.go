@@ -145,6 +145,15 @@ var Scopes = map[string]string{
 	"ConnectionCreate":   ScopeAdmin,
 	"ConnectionRemove":   ScopeAdmin,
 	"ConnectionTest":     ScopeAdmin,
+	// ApprovalDecide is read plus Caller.Browser (SDD-015 section 4), as KeyCreate is.
+	"ApprovalList":       ScopeRead,
+	"ApprovalGet":        ScopeRead,
+	"ApprovalDecide":     ScopeRead,
+	"ApprovalRuleList":   ScopeRead,
+	"ApprovalRuleSet":    ScopeAdmin,
+	"ApprovalRuleRemove": ScopeAdmin,
+	"CostSummary":        ScopeRead,
+	"CostCeilingSet":     ScopeAdmin,
 
 	"AssetGet":     ScopeRead,
 	"AssetUses":    ScopeRead,
