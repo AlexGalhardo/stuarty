@@ -22,6 +22,9 @@ const PAGES = [
 const TAGS = ["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"];
 
 test.describe("a11y-dashboard", () => {
+	// Twelve pages, each scanned by axe: Firefox needs more than the 30 s default.
+	test.describe.configure({ timeout: 120_000 });
+
 	for (const lang of ["en", "pt-BR"] as const) {
 		for (const theme of ["light", "dark"] as const) {
 			test(`axe finds nothing on the dashboard in ${theme} in ${lang}`, async ({
