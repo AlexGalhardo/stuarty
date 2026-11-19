@@ -71,6 +71,8 @@ type mediaCfg struct {
 	log *slog.Logger
 	// jobWait is how long TrashEmpty waits for a job to stop; zero is the default.
 	jobWait time.Duration
+	// with changes the options of the service before it is built, after the helper set its own.
+	with func(e *env, o *service.Options)
 }
 
 // mediaEnv is an env whose service has the media and job machinery, with a
@@ -169,6 +171,10 @@ func newMediaEnv(tb testing.TB, cfg mediaCfg) *mediaEnv {
 			o.Exporter = exporter.New(exporter.Config{Runner: runner, Workspace: m.ws})
 		}
 		o.Limits = cfg.limits
+
+		if cfg.with != nil {
+			cfg.with(e, o)
+		}
 
 		if cfg.noQueue {
 			return

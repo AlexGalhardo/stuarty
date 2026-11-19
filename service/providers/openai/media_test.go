@@ -4,8 +4,11 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/AlexGalhardo/stuarty/core/provider"
 	"github.com/AlexGalhardo/stuarty/internal/outbound"
@@ -379,4 +382,43 @@ func TestTheCapabilityHintOfTheCatalogue(t *testing.T) {
 			t.Errorf("missing %v", want)
 		}
 	})
+}
+
+// The client of a connection gives up after its timeout; that is a failure of its own, not an unreadable answer.
+func TestARequestThatTimesOutIsATimeout(t *testing.T) {
+	t.Parallel()
+
+	release := make(chan struct{})
+	srv := httptest.NewServer(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
+		select {
+		case <-r.Context().Done():
+		case <-release:
+		}
+	}))
+
+	t.Cleanup(func() {
+		close(release)
+		srv.Close()
+	})
+
+	h := connectionstest.New(t, openai.ID, srv.URL+"/v1", secret)
+
+	err := h.Manager.WithTimeout(context.Background(), connectionstest.ID, 100*time.Millisecond,
+		func(c connections.Credential) error {
+			_, gerr := openai.New().GenerateImages(context.Background(), c, imageReq, maxFile)
+
+			if pe, ok := providers.AsError(gerr); !ok || pe.Kind != providers.KindTimeout {
+				t.Errorf("got %v", gerr)
+			}
+
+			_, verr := openai.New().GenerateVoice(context.Background(), c, speechReq, maxFile)
+			if pe, ok := providers.AsError(verr); !ok || pe.Kind != providers.KindTimeout {
+				t.Errorf("speech: got %v", verr)
+			}
+
+			return nil
+		})
+	if err != nil {
+		t.Fatal(err)
+	}
 }

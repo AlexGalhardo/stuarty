@@ -43,3 +43,18 @@ func (c *Client) ProviderPriceSet(
 func (c *Client) TextGenerate(ctx context.Context, req service.TextGenerateRequest) (*service.Job, error) {
 	return jobText(post[service.Job](ctx, c, "/text/generate", req))
 }
+
+// ImageGenerate implements service.Service.
+func (c *Client) ImageGenerate(ctx context.Context, req service.ImageGenerateRequest) (*service.Job, error) {
+	return jobText(post[service.Job](ctx, c, "/image/generate", req))
+}
+
+// VoiceGenerate implements service.Service.
+func (c *Client) VoiceGenerate(ctx context.Context, req service.VoiceGenerateRequest) (*service.Job, error) {
+	return jobText(post[service.Job](ctx, c, "/voice/generate", req))
+}
+
+// VoiceList implements service.Service.
+func (c *Client) VoiceList(ctx context.Context, req service.VoiceListRequest) (*service.VoiceListResult, error) {
+	return get[service.VoiceListResult](ctx, c, "/connections/"+url.PathEscape(req.ConnectionID)+"/voices", nil)
+}
