@@ -765,6 +765,9 @@
           },
           "set": {
             "title": "Definir quadro-chave"
+          },
+          "set_easing": {
+            "title": "Definir a curva do quadro-chave"
           }
         },
         "project": {

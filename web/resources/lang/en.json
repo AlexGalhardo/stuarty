@@ -765,6 +765,9 @@
           },
           "set": {
             "title": "Set keyframe"
+          },
+          "set_easing": {
+            "title": "Set keyframe easing"
           }
         },
         "project": {
