@@ -34,9 +34,10 @@ A script for a short is a list of timed beats, not an essay. Each beat says what
    - Footage needed: ... Sound: ...
    ```
 
-5. Read it aloud at the pace of speech, about two and a half words a second. Cut until it fits the duration with room to breathe, and until every sentence earns its place. One idea for each beat.
-6. Keep it with the project: `item:add --project <project id> --kind text --title "Script" --text <file|->`. In MCP: `project_item` with `action` `add`, `kind` `text`, a `title` and the `text`.
-7. Show the person the script and wait for their yes before the cut.
+5. Write it so that the core can read it: a heading line (`## Hook`) starts a scene, a paragraph that starts with `VO:` is what is said, one that starts with `ON SCREEN:` is the text on the screen, and any other paragraph is a note for the editor.
+6. Keep it with the project as a script: `text:write --project <project id> --title "Script" --kind script --text <file|->`. In MCP: `project_item` with `action` `text`, a `title`, `text_kind` `script` and the `text`. To change it later, write on top of the revision you read: `text:write <item id> --project <project id> --text <file|-> --base <revision>` (in MCP, `revision` is the one you read). Every save is a revision, and `text:revert` goes back to one.
+7. Ask the core how long it takes: `script:estimate <item id> --project <project id> --wpm 150`. In MCP: `project_item` with `action` `check`, the `item_id` and `wpm`. Cut until the time fits the duration of the brief with room to breathe, and until every sentence earns its place. One idea for each beat.
+8. Show the person the script and wait for their yes before the cut.
 
 ## Rules
 
