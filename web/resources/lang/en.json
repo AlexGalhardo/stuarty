@@ -1491,6 +1491,24 @@
           "ease_in_out": "Ease in and out",
           "hold": "Hold",
           "bezier": "Custom curve"
+        },
+        "curve": "Curve",
+        "curve_edit": "Edit the curve of the {property} keyframe at {time}",
+        "curve_close": "Close the curve editor of the {property} keyframe at {time}",
+        "curve_plot": "Curve of the {property} keyframe",
+        "curve_hint": "Drag the two handles, move one with the arrow keys (Shift for a larger step) or type the four numbers.",
+        "curve_handle": "Control point {n} of the curve",
+        "curve_handle_value": "x {x}, y {y}",
+        "curve_preset": "Named curve",
+        "curve_preset_of": "Named curve for the {property} keyframe",
+        "curve_preset_none": "Pick one...",
+        "curve_number": "{name} of the {property} curve",
+        "curve_preset_name": {
+          "in": "Ease in",
+          "out": "Ease out",
+          "in_out": "Ease in and out",
+          "back": "Back (pulls back first)",
+          "overshoot": "Overshoot (goes past, then settles)"
         }
       },
       "effects": {
@@ -1565,6 +1583,33 @@
           "zoom_in": "Zoom in",
           "slide_left": "Slide left",
           "slide_right": "Slide right"
+        }
+      },
+      "motion": {
+        "title": "Motion presets",
+        "preset": "Preset",
+        "direction": "Direction",
+        "duration_default": "0.5s",
+        "amount_default": "Default",
+        "preset_name": {
+          "fade": "Fade",
+          "slide": "Slide",
+          "scale": "Scale",
+          "pop": "Pop",
+          "push_in": "Push in",
+          "pull_out": "Pull out"
+        },
+        "direction_name": {
+          "left": "From the left",
+          "right": "From the right",
+          "up": "From the top",
+          "down": "From the bottom"
+        },
+        "amount_of": {
+          "slide": "Distance (px)",
+          "scale": "Start scale",
+          "push_in": "Zoom factor",
+          "pull_out": "Zoom factor"
         }
       },
       "template": {
