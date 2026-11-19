@@ -894,6 +894,55 @@ func TestVoiceList_NamesTheVoicesTheDocumentationListsAndCostsNothing(t *testing
 	}
 }
 
+// T-06: a key limited to one project generates into that project only, and cannot read the voices of a
+// connection, which names no project (SDD-016 section 7, SDD-007 section 6).
+func TestGenerate_AProjectLimitedKeyReachesOnlyItsProject(t *testing.T) {
+	t.Parallel()
+
+	g := newGenEnv(t, mediaCfg{})
+	g.setPrice(imageModel, "image", 40_000)
+	g.setPrice(voiceModel, "mchar", 15_000_000)
+
+	other := g.newProject("other")
+	limited := service.WithCaller(context.Background(), service.Caller{
+		Actor: "key:limited", Scopes: service.AllScopes, ProjectID: g.prj,
+	})
+
+	if _, err := g.svc.ImageGenerate(limited, service.ImageGenerateRequest{
+		ProjectID: other, ConnectionID: g.conn, ImageRequest: imageRequest(1, "p"),
+	}); code(err) != service.CodeForbidden {
+		t.Errorf("an image into another project = %v, want E_FORBIDDEN", err)
+	}
+
+	if _, err := g.svc.VoiceGenerate(limited, service.VoiceGenerateRequest{
+		ProjectID: other, ConnectionID: g.conn, VoiceRequest: voiceRequest("Hello", ""),
+	}); code(err) != service.CodeForbidden {
+		t.Errorf("a speech into another project = %v, want E_FORBIDDEN", err)
+	}
+
+	if _, err := g.svc.VoiceList(limited, service.VoiceListRequest{ConnectionID: g.conn}); code(err) !=
+		service.CodeForbidden {
+		t.Errorf("the voices with a project-limited key = %v, want E_FORBIDDEN", err)
+	}
+
+	if list, err := g.svc.ApprovalList(g.as(token), service.ApprovalListRequest{State: "all"}); err != nil ||
+		list.Total != 0 {
+		t.Errorf("a refused generation left requests: %+v, %v", list, err)
+	}
+
+	// Its own project: the job is created and waits for a person, like any other.
+	job, err := g.svc.ImageGenerate(limited, service.ImageGenerateRequest{
+		ProjectID: g.prj, ConnectionID: g.conn, ImageRequest: imageRequest(1, "p"),
+	})
+	if err != nil || job.State != service.JobWaitingApproval {
+		t.Fatalf("an image into its own project = %+v, %v", job, err)
+	}
+
+	if g.providerCalls() != 0 {
+		t.Error("the provider was called")
+	}
+}
+
 // Acceptance criterion 5 of epic 10: a generated narration is an asset like any other: it goes on a timeline and
 // the project exports, on the pinned FFmpeg, with the narration in it.
 func TestGeneratedVoiceOnTimeline(t *testing.T) {
