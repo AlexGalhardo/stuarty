@@ -499,3 +499,86 @@ func TestOpenExportedAcceptsOnlyTheFolderOfTheFilesTheServerWrote(t *testing.T) 
 		t.Errorf("network mode: %v, want E_PATH_NOT_ALLOWED", err)
 	}
 }
+
+// OpenImportPath opens a skill source: a file, or a folder as an os.Root. The rules of a file hold for a
+// folder, and a folder the server itself exported can be imported again.
+func TestOpenImportPathAcceptsAFileOrAFolderUnderTheRules(t *testing.T) {
+	ws := t.TempDir()
+	outside := t.TempDir()
+
+	for _, p := range []string{
+		filepath.Join(outside, "pack", "SKILL.md"), filepath.Join(ws, "exports", "library", "s", "SKILL.md"),
+		filepath.Join(ws, "library", "skills", "s", "SKILL.md"), filepath.Join(outside, "a.zip"),
+	} {
+		if err := os.MkdirAll(filepath.Dir(p), 0o700); err != nil {
+			t.Fatal(err)
+		}
+
+		if err := os.WriteFile(p, []byte("x"), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	g, err := New(Config{Workspace: ws})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	f, r, err := g.OpenImportPath(filepath.Join(outside, "pack"))
+	if err != nil || f != nil || r == nil {
+		t.Fatalf("a folder: %v %v %v", f, r, err)
+	}
+
+	if _, err := r.Stat("SKILL.md"); err != nil {
+		t.Fatalf("the root is the folder: %v", err)
+	}
+
+	_ = r.Close()
+
+	f, r, err = g.OpenImportPath(filepath.Join(outside, "a.zip"))
+	if err != nil || f == nil || r != nil {
+		t.Fatalf("a file: %v %v %v", f, r, err)
+	}
+
+	_ = f.Close()
+
+	// what the server exported is accepted, the rest of the workspace is not
+	if _, r, err = g.OpenImportPath(filepath.Join(ws, "exports", "library", "s")); err != nil {
+		t.Fatalf("an exported folder: %v", err)
+	} else {
+		_ = r.Close()
+	}
+
+	if _, _, err = g.OpenImportPath(filepath.Join(ws, "library", "skills", "s")); code(err) != CodePathNotAllowed {
+		t.Errorf("a folder of the workspace: %v, want E_PATH_NOT_ALLOWED", err)
+	}
+
+	if _, _, err = g.OpenImportPath(filepath.Join(outside, "missing")); code(err) != CodeFileNotFound {
+		t.Errorf("a missing path: %v, want E_FILE_NOT_FOUND", err)
+	}
+
+	if _, _, err = g.OpenImportPath("http://example.com/pack"); code(err) != CodePathNotAllowed {
+		t.Errorf("a URL: %v, want E_PATH_NOT_ALLOWED", err)
+	}
+
+	// network mode: only under a root, and the folder of the workspace stays refused
+	net, err := New(Config{Workspace: ws, Network: true, Roots: []string{outside}})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, r, err = net.OpenImportPath(filepath.Join(outside, "pack")); err != nil {
+		t.Fatalf("a folder under a root: %v", err)
+	} else {
+		_ = r.Close()
+	}
+
+	if _, _, err = net.OpenImportPath(filepath.Join(ws, "exports", "library", "s")); code(err) != CodePathNotAllowed {
+		t.Errorf("network mode, the exports folder: %v, want E_PATH_NOT_ALLOWED", err)
+	}
+
+	other := t.TempDir()
+	if _, _, err = net.OpenImportPath(other); code(err) != CodePathNotAllowed {
+		t.Errorf("network mode, outside the roots: %v, want E_PATH_NOT_ALLOWED", err)
+	}
+}

@@ -214,6 +214,10 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.BriefSet)
 	}
 
+	if res, ok, err := libraryCall(ctx, svc, s); ok {
+		return res, err
+	}
+
 	return nil, fmt.Errorf("no mapping for %s", s.Call)
 }
 
@@ -520,6 +524,10 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 		args["action"] = "brief"
 
 		return "project_item", args, nil
+	}
+
+	if tool, args, ok, err := libraryTool(s); ok {
+		return tool, args, err
 	}
 
 	return "", nil, fmt.Errorf("no tool for %s", s.Call)
@@ -880,6 +888,10 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 		}
 
 		return "template:new", append(argv, "--fill", "-"), string(a.Fill), nil
+	}
+
+	if name, argv, stdin, ok, err := libraryCommand(s); ok {
+		return name, argv, stdin, err
 	}
 
 	return "", nil, "", fmt.Errorf("no command for %s", s.Call)

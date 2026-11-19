@@ -178,7 +178,7 @@ The answer fits a budget: `budget` characters (default 4000, at most 16000, abou
 | `SkillImport`, `SkillExport` | media | reads or writes files by path rules; no MCP tool |
 | `SkillMarkReviewed` | edit | a person at the browser only (the session cookie); no MCP tool and no CLI command |
 
-A key limited to one project may read and write only memory whose scope is that project or `workspace` (read only). `MemoryRemove` deletes the file; a caller that is not a person at the browser cannot remove a kept note (`E_FORBIDDEN`). Every write, import, export, review and removal appends an audit row (`library.memory.write`, `library.skill.import`, and so on) with the actor.
+In network mode the library belongs to the workspace and is shared by its users. A key limited to one project may read and write only memory whose scope is that project or `workspace` (read only). `MemoryRemove` deletes the file; a caller that is not a person at the browser cannot remove a kept note (`E_FORBIDDEN`). Every write, import, export, review and removal appends an audit row (`library.memory.write`, `library.skill.import`, and so on) with the actor.
 
 ## 12. Errors, limits and files
 
@@ -197,19 +197,22 @@ Files: `library/` in the workspace (SDD-000 section 9), `exports/library/` for e
 
 ## 13. Untrusted text
 
-Every text of the library that reaches an agent is untrusted: a description, a body, a snippet, a tag, a source and a rendered prompt. The fields are tagged `untrusted:"true"` and listed in the provenance table of SDD-007 section 8.1 with the source `library_text`. In the text part of a result the library text is a block `<untrusted_media_text source="library_text" ...>` with its `kind` and `name`; in structured content it is a plain string cleaned and with `<` escaped (`untrusted.Value`). The names, kinds, flags and counts are the product's own and are not. A skill's `SKILL.md` is shown whole to a person who asks for it: the warning for an unreviewed skill is a sentence of the product outside the block.
+A person at the browser edits the text of an entry, so the service returns it to that caller exactly as the file has it (the page escapes it when it draws it). Every other caller gets the text cleaned. Every text of the library that reaches an agent is untrusted: a description, a body, a snippet, a tag, a source and a rendered prompt. The fields are tagged `untrusted:"true"` and listed in the provenance table of SDD-007 section 8.1 with the source `library_text`. In the text part of a result the library text is a block `<untrusted_media_text source="library_text" ...>` with its `kind` and `name`; in structured content it is a plain string cleaned and with `<` escaped (`untrusted.Value`). The names, kinds, flags and counts are the product's own and are not. A skill's `SKILL.md` is shown whole to a person who asks for it: the warning for an unreviewed skill is a sentence of the product outside the block.
 
 ## 14. Surfaces
 
 | Operation | MCP | CLI | HTTP (under `/api/v1`) |
 | --- | --- | --- | --- |
-| `MemoryList`, `MemoryGet`, `MemoryWrite`, `MemoryRemove` | `library` (kind `memory`) | `memory:list`, `memory:show`, `memory:write`, `memory:remove` | `GET /library/memory`, `GET /library/memory/{name}`, `PUT /library/memory/{name}`, `DELETE /library/memory/{name}` |
+| `MemoryList`, `MemoryGet`, `MemoryWrite` | `library` (kind `memory`) | `memory:list`, `memory:show`, `memory:write` | `GET /library/memory`, `GET /library/memory/{name}`, `POST /library/memory`, `DELETE /library/memory/{name}` |
+| `MemoryRemove` | none: no MCP tool removes anything | `memory:remove` | `DELETE /library/memory/{name}` |
 | `SkillList`, `SkillGet`, `SkillWrite`, `SkillLint` | `library` (kind `skill`) | `skill:list`, `skill:show`, `skill:write`, `skill:lint` | `GET /library/skills`, `GET /library/skills/{name}`, `PUT /library/skills/{name}`, `GET /library/skills/{name}/lint` |
 | `SkillImport`, `SkillExport`, `SkillMarkReviewed` | none | `skill:import`, `skill:export`, none | `POST /library/skills/import`, `POST /library/skills/export`, `POST /library/skills/{name}/review` |
 | `PromptList`, `PromptGet`, `PromptWrite`, `PromptRender` | `library` (kind `prompt`) | `prompt:list`, `prompt:show`, `prompt:write`, `prompt:render` | `GET /library/prompts`, `GET /library/prompts/{name}`, `PUT /library/prompts/{name}`, `POST /library/prompts/{name}/render` |
 | `LibrarySearch`, `LibraryReindex` | `library` (action `search`) and none | `library:search`, `library:reindex` | `GET /library/search`, `POST /library/reindex` |
 
-The MCP tool `library` takes `action` (`search`, `list`, `get`, `write`, `remove`, `render`, `lint`) and `kind`; its definition is in SDD-003 section 4.2. The pages are `/memory`, `/skills` and `/prompts` of the dashboard (SDD-012 section 23): a list with a search box and the filters, an editor with a preview, and for a skill the origin, licence, source, the lint findings and the review state with the button for a person to mark it read. The pages compute nothing: the lint, the rendering and the review are the answers of the service.
+`MemoryWrite` is a `POST` that creates the note or, when `name` names one, replaces it; the name may be left out and is then made from the description. Skills and prompts are written with `PUT` on their name. The lists and the search take their filters as query parameters (`tags` and `kinds` as comma separated words, `include_unreviewed` and `agent_view` as booleans). `agent_view` is set by every call of the MCP tool and can only narrow what a call sees: it leaves out what is not reviewed or kept whatever `include_unreviewed` says, and `SkillGet` and `MemoryGet` refuse an entry that is not.
+
+The MCP tool `library` takes `action` (`search`, `list`, `get`, `write`, `render`, `lint`) and `kind`; its definition is in SDD-003 section 4.2. The pages are `/memory`, `/skills` and `/prompts` of the dashboard (SDD-012 section 23): a list with a search box and the filters, an editor with a preview, and for a skill the origin, licence, source, the lint findings and the review state with the button for a person to mark it read. The pages compute nothing: the lint, the rendering and the review are the answers of the service.
 
 ## 15. Tests
 

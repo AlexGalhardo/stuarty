@@ -84,7 +84,7 @@ func TestToolsListIsByteEqualAcrossCalls(t *testing.T) {
 		t.Error("two tools/list calls differ")
 	}
 
-	if len(first.Tools) != 19 {
-		t.Errorf("tools/list has %d tools, want the 19 of SDD-000 section 1", len(first.Tools))
+	if len(first.Tools) != 17 {
+		t.Errorf("tools/list has %d tools, want the 17 of SDD-000 section 1", len(first.Tools))
 	}
 }

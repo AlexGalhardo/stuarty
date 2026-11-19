@@ -808,6 +808,98 @@ The types named in the tables of the operations. The arguments of each editing c
 | `projects` | `integer` | no |  |
 | `width` | `integer` | no |  |
 
+### LibraryEntry
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `actor` | `string` | no |  |
+| `description` | `string` | no |  |
+| `error` | `string` | no |  |
+| `has_scripts` | `boolean` | no |  |
+| `kept` | `boolean` | no |  |
+| `kind` | `string` | no |  |
+| `lint_errors` | `integer` | no |  |
+| `lint_warnings` | `integer` | no |  |
+| `name` | `string` | no |  |
+| `origin` | `string` | no |  |
+| `reviewed` | `boolean` | no |  |
+| `scope` | `string` | no |  |
+| `state` | `string` | no |  |
+| `tags` | array of `string` | no |  |
+| `updated_at` | `string (date-time)` | no |  |
+| `warning` | `string` | no |  |
+
+### LibraryFinding
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `code` | `string` | no |  |
+| `line` | `integer` | no |  |
+| `message` | `string` | no |  |
+| `path` | `string` | no |  |
+| `severity` | `string` | no |  |
+
+### LibraryHit
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `actor` | `string` | no |  |
+| `description` | `string` | no |  |
+| `error` | `string` | no |  |
+| `has_scripts` | `boolean` | no |  |
+| `kept` | `boolean` | no |  |
+| `kind` | `string` | no |  |
+| `lint_errors` | `integer` | no |  |
+| `lint_warnings` | `integer` | no |  |
+| `name` | `string` | no |  |
+| `origin` | `string` | no |  |
+| `reviewed` | `boolean` | no |  |
+| `scope` | `string` | no |  |
+| `snippet` | `string` | no |  |
+| `state` | `string` | no |  |
+| `tags` | array of `string` | no |  |
+| `updated_at` | `string (date-time)` | no |  |
+| `warning` | `string` | no |  |
+
+### LibraryListResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `entries` | array of [`LibraryEntry`](/docs/api/schemas#libraryentry) | no |  |
+| `kind` | `string` | no |  |
+| `text` | `string` | no |  |
+| `untrusted_notice` | `string` | no |  |
+
+### LibraryReindexResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `ignored` | array of `string` | no |  |
+| `invalid` | `integer` | no |  |
+| `memory` | `integer` | no |  |
+| `prompts` | `integer` | no |  |
+| `skills` | `integer` | no |  |
+| `text` | `string` | no |  |
+| `untrusted_notice` | `string` | no |  |
+
+### LibraryRemoveResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `kind` | `string` | no |  |
+| `name` | `string` | no |  |
+| `text` | `string` | no |  |
+
+### LibrarySearchResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `hits` | array of [`LibraryHit`](/docs/api/schemas#libraryhit) | no |  |
+| `text` | `string` | no |  |
+| `total` | `integer` | no |  |
+| `truncated` | `boolean` | no |  |
+| `untrusted_notice` | `string` | no |  |
+
 ### LintResult
 
 | Name | Type | Required | Description |
@@ -948,6 +1040,23 @@ The types named in the tables of the operations. The arguments of each editing c
 | `asset_id` | `string` | no |  |
 | `state` | `string` | no |  |
 | `text` | `string` | no |  |
+
+### MemoryGetResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `body` | `string` | no |  |
+| `entry` | [`LibraryEntry`](/docs/api/schemas#libraryentry) | no |  |
+| `text` | `string` | no |  |
+| `untrusted_notice` | `string` | no |  |
+
+### MemoryWriteResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `entry` | [`LibraryEntry`](/docs/api/schemas#libraryentry) | no |  |
+| `text` | `string` | no |  |
+| `untrusted_notice` | `string` | no |  |
 
 ### OpEffect
 
@@ -1217,6 +1326,35 @@ The types named in the tables of the operations. The arguments of each editing c
 | `updated_at` | `string (date-time)` | no |  |
 | `width` | `integer` | no |  |
 
+### PromptGetResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `body` | `string` | no |  |
+| `defaults` | map of `string` | no |  |
+| `entry` | [`LibraryEntry`](/docs/api/schemas#libraryentry) | no |  |
+| `text` | `string` | no |  |
+| `untrusted_notice` | `string` | no |  |
+| `variables` | array of `string` | no |  |
+
+### PromptRenderResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `name` | `string` | no |  |
+| `rendered` | `string` | no |  |
+| `text` | `string` | no |  |
+| `untrusted_notice` | `string` | no |  |
+
+### PromptWriteResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `entry` | [`LibraryEntry`](/docs/api/schemas#libraryentry) | no |  |
+| `text` | `string` | no |  |
+| `untrusted_notice` | `string` | no |  |
+| `variables` | array of `string` | no |  |
+
 ### Range
 
 | Name | Type | Required | Description |
@@ -1261,17 +1399,82 @@ The types named in the tables of the operations. The arguments of each editing c
 | `dy` | `number (double)` | no |  |
 | `opacity` | `number (double)` | no |  |
 
-### Skipped
+### SkillExportResult
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
-| `by_actor` | `string` | no |  |
-| `by_revision` | `integer (int64)` or `null` | no |  |
-| `details` | map of `any` | no |  |
-| `fields` | array of `string` | no |  |
-| `primitive` | [`Primitive`](/docs/api/schemas#primitive) | no |  |
-| `primitive_index` | `integer` | no |  |
-| `reason` | `string` | no |  |
+| `names` | array of `string` | no |  |
+| `path` | `string` | no |  |
+| `text` | `string` | no |  |
+
+### SkillFileInput
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `path` | `string` | no |  |
+| `text` | `string` | no |  |
+
+### SkillFileView
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `binary` | `boolean` | no |  |
+| `bytes` | `integer` | no |  |
+| `path` | `string` | no |  |
+| `script` | `boolean` | no |  |
+| `text` | `string` | no |  |
+
+### SkillGetResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `allowed_tools` | `string` | no |  |
+| `body` | `string` | no |  |
+| `compatibility` | `string` | no |  |
+| `entry` | [`LibraryEntry`](/docs/api/schemas#libraryentry) | no |  |
+| `files` | array of [`SkillFileView`](/docs/api/schemas#skillfileview) | no |  |
+| `findings` | array of [`LibraryFinding`](/docs/api/schemas#libraryfinding) | no |  |
+| `license` | `string` | no |  |
+| `source` | `string` | no |  |
+| `text` | `string` | no |  |
+| `untrusted_notice` | `string` | no |  |
+
+### SkillImportResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `entry` | [`LibraryEntry`](/docs/api/schemas#libraryentry) | no |  |
+| `files` | `integer` | no |  |
+| `findings` | array of [`LibraryFinding`](/docs/api/schemas#libraryfinding) | no |  |
+| `text` | `string` | no |  |
+| `untrusted_notice` | `string` | no |  |
+
+### SkillLintResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `errors` | `integer` | no |  |
+| `findings` | array of [`LibraryFinding`](/docs/api/schemas#libraryfinding) | no |  |
+| `name` | `string` | no |  |
+| `text` | `string` | no |  |
+| `warnings` | `integer` | no |  |
+
+### SkillReviewResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `entry` | [`LibraryEntry`](/docs/api/schemas#libraryentry) | no |  |
+| `text` | `string` | no |  |
+| `untrusted_notice` | `string` | no |  |
+
+### SkillWriteResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `entry` | [`LibraryEntry`](/docs/api/schemas#libraryentry) | no |  |
+| `findings` | array of [`LibraryFinding`](/docs/api/schemas#libraryfinding) | no |  |
+| `text` | `string` | no |  |
+| `untrusted_notice` | `string` | no |  |
 
 ### SkippedOp
 
