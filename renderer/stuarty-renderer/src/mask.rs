@@ -22,6 +22,8 @@ const POS_LIMIT: i64 = 1 << 40;
 pub enum MaskShape {
 	Rect,
 	Ellipse,
+	/// A rectangle with rounded corners (SDD-013 section 3.11.3).
+	RoundedRect,
 }
 
 /// The mask of a layer as the plan carries it: fractions of the layer's rectangle and a feather in
@@ -35,6 +37,8 @@ pub struct MaskSpec {
 	pub height: f64,
 	pub feather: f64,
 	pub invert: bool,
+	/// The corner radius of `RoundedRect`, in project pixels.
+	pub radius: f64,
 }
 
 /// The mask in floating point for the GPU path (SDD-013 section 3.8): the shape in pixels of the
@@ -43,6 +47,9 @@ pub struct MaskSpec {
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct MaskGeometry {
 	pub ellipse: bool,
+	/// A rounded rectangle with the corner radius `radius`, in pixels.
+	pub rounded: bool,
+	pub radius: f64,
 	pub invert: bool,
 	/// Left, top and the two half-extents of the shape, in pixels from the corner of the rectangle.
 	pub left: f64,
@@ -68,6 +75,8 @@ pub struct MaskState {
 	shapeless: bool,
 	wipe: Option<WipeState>,
 	ellipse: bool,
+	rounded: bool,
+	rq: i64,
 	invert: bool,
 	l: i64,
 	t: i64,
@@ -143,6 +152,7 @@ impl MaskState {
 			height: 1.0,
 			feather: 0.0,
 			invert: false,
+			radius: 0.0,
 		};
 		let shapeless = spec.is_none();
 		let spec = spec.unwrap_or(&default);
@@ -156,6 +166,7 @@ impl MaskState {
 		let ha = ((wm * wq + 1000) / 2000).max(1);
 		let hb = ((hm * hq + 1000) / 2000).max(1);
 		let fq = clamped(mul(mul(spec.feather, out_scale), 256.0), LIMIT);
+		let rq = clamped(mul(mul(spec.radius, out_scale), 256.0), LIMIT).min(ha.min(hb));
 		let wipe = wipe.map(|w| {
 			let size = match w.direction {
 				Direction::Up | Direction::Down => hq,
@@ -179,6 +190,12 @@ impl MaskState {
 			shapeless,
 			wipe,
 			ellipse: spec.shape == MaskShape::Ellipse,
+			rounded: spec.shape == MaskShape::RoundedRect,
+			rq: if spec.shape == MaskShape::RoundedRect {
+				rq
+			} else {
+				0
+			},
 			invert: spec.invert,
 			l,
 			t,
@@ -223,6 +240,8 @@ impl MaskState {
 		};
 		MaskGeometry {
 			ellipse: self.ellipse,
+			rounded: self.rounded,
+			radius: px(self.rq),
 			invert: self.invert,
 			left: px(self.l),
 			top: px(self.t),
@@ -296,6 +315,19 @@ impl MaskState {
 			let qy = (((ly - (self.t + self.hb)).abs() << 16) / self.hb).min(1 << 22);
 			let r = isqrt((qx * qx + qy * qy) as u64) as i64;
 			((65536 - r) * self.ha.min(self.hb)) >> 16
+		} else if self.rounded {
+			// The corner circle of radius `rq` inside the rectangle: `d` is `rq` less the distance
+			// from the inner rectangle, or `rq` less the larger offset inside it (section 3.11.3).
+			let qx = (lx - (self.l + self.ha)).abs() - (self.ha - self.rq);
+			let qy = (ly - (self.t + self.hb)).abs() - (self.hb - self.rq);
+			if qx > 0 || qy > 0 {
+				// A pixel this far outside is not covered whatever the exact distance; the clamp keeps
+				// the squares inside an i64.
+				let (ox, oy) = (qx.clamp(0, 1 << 30), qy.clamp(0, 1 << 30));
+				self.rq - isqrt((ox * ox + oy * oy) as u64) as i64
+			} else {
+				self.rq - qx.max(qy)
+			}
 		} else {
 			(lx - self.l)
 				.min(self.r - lx)
@@ -358,6 +390,7 @@ mod tests {
 			height: 1.0,
 			feather: 0.0,
 			invert: false,
+			radius: 0.0,
 		}
 	}
 
