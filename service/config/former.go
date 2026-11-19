@@ -72,8 +72,9 @@ func ApplyFormerVariables(env Environ, warn io.Writer) ([]FormerVariable, error)
 		if env.Get(p.Current) != "" {
 			_, _ = fmt.Fprintf(
 				warn,
-				"stuarty: %s is ignored because %s is set; remove %s\n",
+				"stuarty: %s is ignored because %s is set; set the value you want under %s and remove %s\n",
 				p.Former,
+				p.Current,
 				p.Current,
 				p.Former,
 			)
