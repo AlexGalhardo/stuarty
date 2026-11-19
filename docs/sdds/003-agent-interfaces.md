@@ -1954,37 +1954,29 @@ The result carries `isError: true` and no `structuredContent`; `content[0]` is t
 
 ```json
 {
-  "name":"command_help",
-  "description":"Describe edit operations. Without name: one line each. With name (e.g. item.split): description, args schema, example, error codes. Read it before using an unfamiliar operation. domain=export: presets and codecs.",
-  "inputSchema":{
-    "type":"object",
-    "properties":{
-      "name":{
-        "type":"string"
+  "name": "command_help",
+  "description": "Discover operations. No arguments: the video operations, one line each, then every domain. domain=<name>: the operations of that domain. name (for example item.split): description, args JSON Schema, example and error codes; read it before using an operation you have not used.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string"
       },
-      "domain":{
-        "enum":[
+      "domain": {
+        "enum": [
+          "project",
           "video",
           "image",
-          "export"
+          "writing",
+          "asset",
+          "publish",
+          "provider",
+          "memory",
+          "workspace"
         ]
       }
     },
-    "additionalProperties":false
-  },
-  "outputSchema":{
-    "type":"object",
-    "properties":{
-      "commands":{
-        "type":"array",
-        "items":{
-          "type":"object"
-        }
-      },
-      "command":{
-        "type":"object"
-      }
-    }
+    "additionalProperties": false
   },
   "outputSchema": {
     "type": "object",
@@ -1997,6 +1989,12 @@ The result carries `isError: true` and no `structuredContent`; `content[0]` is t
       },
       "command": {
         "type": "object"
+      },
+      "domains": {
+        "type": "array",
+        "items": {
+          "type": "object"
+        }
       }
     }
   },
