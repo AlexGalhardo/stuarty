@@ -38,16 +38,22 @@ const Transparent = "transparent"
 
 // Limits (SDD-021 section 12).
 const (
-	MaxCanvas      = 4096
-	MaxLayers      = 500
-	MaxDepth       = 8
-	MaxGroupLayers = 100
-	MaxAssets      = 64
-	MaxText        = 2000
-	MaxName        = 120
-	MaxSlots       = 25
-	MaxCoord       = 16384
-	MaxBoxSide     = 16384
+	MaxCanvas       = 4096
+	MaxCanvasPixels = MaxCanvas * MaxCanvas
+	MaxLayers       = 500
+	MaxDepth        = 8
+	MaxGroupLayers  = 100
+	MaxAssets       = 64
+	MaxText         = 2000
+	MaxName         = 120
+	MaxSlots        = 25
+	MaxCoord        = 16384
+	MaxBoxSide      = 16384
+
+	// MaxExportSide and MaxExportPixels bound the size of an exported file: a side, and the pixels of the whole
+	// picture (the ceiling of an import, SDD-000 section 10).
+	MaxExportSide   = 8192
+	MaxExportPixels = 33177600
 )
 
 // Document is an image: a canvas and the layers on it, bottom first.
