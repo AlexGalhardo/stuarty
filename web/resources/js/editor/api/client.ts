@@ -62,9 +62,17 @@ import type {
 	ProviderModelsResult,
 	ProviderPriceSetRequest,
 	ProviderPricesResult,
+	PublishRequest,
+	PublishValidateResult,
 	SessionResult,
 	SnapPointsQuery,
 	SnapPointsResult,
+	SocialAccount,
+	SocialAccountListResult,
+	SocialCompleteRequest,
+	SocialConnectRequest,
+	SocialConnectResult,
+	SocialNetworkListResult,
 	SystemQuery,
 	SystemResult,
 	TemplateInstantiateRequest,
@@ -193,6 +201,14 @@ export interface ApiClient {
 	listKeys(): Promise<KeyListResult>;
 	revokeKey(keyId: string): Promise<KeyRevokeResult>;
 	listConnections(): Promise<ConnectionListResult>;
+	// The social networks and publishing (SDD-020): a publication waits for a person to approve it.
+	listSocialNetworks(): Promise<SocialNetworkListResult>;
+	connectSocial(request: SocialConnectRequest): Promise<SocialConnectResult>;
+	completeSocial(request: SocialCompleteRequest): Promise<SocialAccount>;
+	listSocialAccounts(): Promise<SocialAccountListResult>;
+	validatePublish(request: PublishRequest): Promise<PublishValidateResult>;
+	publishNow(request: PublishRequest): Promise<Job>;
+	listActiveProjects(): Promise<ProjectListResult>;
 	createConnection(request: ConnectionCreateRequest): Promise<Connection>;
 	removeConnection(id: string): Promise<Connection>;
 	testConnection(id: string): Promise<ConnectionTestResult>;
@@ -509,6 +525,16 @@ export function createClient(
 		listKeys: () => call("GET", "/keys", READ_TIMEOUT_MS),
 		listUsers: () => call("GET", "/users", READ_TIMEOUT_MS),
 		listConnections: () => call("GET", "/connections", READ_TIMEOUT_MS),
+		listSocialNetworks: () => call("GET", "/social/networks", READ_TIMEOUT_MS),
+		connectSocial: (request) =>
+			call("POST", "/social/connect", EDIT_TIMEOUT_MS, request),
+		completeSocial: (request) =>
+			call("POST", "/social/complete", EDIT_TIMEOUT_MS, request),
+		listSocialAccounts: () => call("GET", "/social/accounts", READ_TIMEOUT_MS),
+		validatePublish: (request) =>
+			call("POST", "/publish/validate", EDIT_TIMEOUT_MS, request),
+		publishNow: (request) => call("POST", "/publish", EDIT_TIMEOUT_MS, request),
+		listActiveProjects: () => call("GET", "/projects", READ_TIMEOUT_MS),
 		createConnection: (request) =>
 			call("POST", "/connections", EDIT_TIMEOUT_MS, request),
 		removeConnection: (id) =>

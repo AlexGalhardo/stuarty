@@ -180,6 +180,18 @@
       ]
     },
     {
+      "tag": "Publishing",
+      "pages": [
+        "publish.now",
+        "publish.status",
+        "publish.validate",
+        "social.accounts",
+        "social.complete",
+        "social.connect",
+        "social.networks"
+      ]
+    },
+    {
       "tag": "System",
       "pages": [
         "handshake.get",

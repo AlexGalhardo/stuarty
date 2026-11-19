@@ -421,6 +421,20 @@ The types named in the tables of the operations. The arguments of each editing c
 | `master` | array of [`CurvePoint`](/docs/api/schemas#curvepoint) | no |  |
 | `red` | array of [`CurvePoint`](/docs/api/schemas#curvepoint) | no |  |
 
+### Description
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `endpoint` | `string` | no |  |
+| `guide` | `string` | no |  |
+| `guide_read` | `string` | no |  |
+| `hosts` | array of `string` | no |  |
+| `limits` | [`Limits`](/docs/api/schemas#limits) | no |  |
+| `name` | `string` | no |  |
+| `network` | `string` | no |  |
+| `publishes` | array of `string` | no |  |
+| `scopes` | array of `string` | no |  |
+
 ### DoctorCheck
 
 | Name | Type | Required | Description |
@@ -514,6 +528,17 @@ The types named in the tables of the operations. The arguments of each editing c
 | `op_index` | `integer` or `null` | no |  |
 | `path` | `string` | no |  |
 | `retryable` | `boolean` | no |  |
+
+### errs.Issue
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `code` | `string` | no |  |
+| `key` | `string` | no |  |
+| `message` | `string` | no |  |
+| `on` | `string` | no |  |
+| `params` | map of `any` | no |  |
+| `path` | `string` | no |  |
 
 ### export.Finding
 
@@ -962,10 +987,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `code` | `string` | no |  |
-| `key` | `string` | no |  |
 | `message` | `string` | no |  |
-| `on` | `string` | no |  |
-| `params` | map of `any` | no |  |
 | `path` | `string` | no |  |
 
 ### Item
@@ -1076,6 +1098,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | --- | --- | --- | --- |
 | `batch` | [`BatchResult`](/docs/api/schemas#batchresult) or `any` or `null` or `null` | no |  |
 | `export` | [`ExportResult`](/docs/api/schemas#exportresult) or `any` or `null` or `null` | no |  |
+| `publish` | [`PublishResult`](/docs/api/schemas#publishresult) or `any` or `null` or `null` | no |  |
 | `text` | [`TextResult`](/docs/api/schemas#textresult) or `any` or `null` or `null` | no |  |
 | `transcribe` | [`TranscribeResult`](/docs/api/schemas#transcriberesult) or `any` or `null` or `null` | no |  |
 
@@ -1273,6 +1296,23 @@ The types named in the tables of the operations. The arguments of each editing c
 | `total` | `integer` | no |  |
 | `truncated` | `boolean` | no |  |
 | `untrusted_notice` | `string` | no |  |
+
+### Limits
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `description_max_bytes` | `integer` | no |  |
+| `file_max_bytes` | `integer (int64)` | no |  |
+| `forbidden` | `string` | no |  |
+| `formats` | array of `string` | no |  |
+| `needs_kids_declaration` | `boolean` | no |  |
+| `read` | `string` | no |  |
+| `source` | `string` | no |  |
+| `tags_max_chars` | `integer` | no |  |
+| `thumbnail_formats` | array of `string` | no |  |
+| `thumbnail_max_bytes` | `integer (int64)` | no |  |
+| `title_max` | `integer` | no |  |
+| `visibilities` | array of `string` | no |  |
 
 ### LintResult
 
@@ -1583,7 +1623,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `errors` | map of array of `string` | no |  |
 | `hint` | `string` | no | What to do next. |
 | `instance` | `string` | no |  |
-| `issues` | array of [`Issue`](/docs/api/schemas#issue) | no |  |
+| `issues` | array of [`errs.Issue`](/docs/api/schemas#errsissue) | no |  |
 | `message` | `string` | no | What went wrong, in one or two sentences. |
 | `op_index` | `integer` | no | The operation of the batch that failed. |
 | `path` | `string` | no | The member or argument at fault. |
@@ -1828,6 +1868,35 @@ The types named in the tables of the operations. The arguments of each editing c
 | `id` | `string` | no |  |
 | `name` | `string` | no |  |
 
+### PublishResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `connection_id` | `string` | no |  |
+| `network` | `string` | no |  |
+| `remote_id` | `string` | no |  |
+| `state` | `string` | no |  |
+| `thumbnail_error` | `string` | no |  |
+| `url` | `string` | no |  |
+
+### PublishStatusResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `error` | [`Error`](/docs/api/schemas#error) or `any` or `null` or `null` | no |  |
+| `job_id` | `string` | no |  |
+| `result` | [`PublishResult`](/docs/api/schemas#publishresult) or `any` or `null` or `null` | no |  |
+| `state` | `string` | no |  |
+
+### PublishValidateResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `issues` | array of [`Issue`](/docs/api/schemas#issue) | no |  |
+| `network` | `string` | no |  |
+| `state` | `string` | no |  |
+| `summary` | `string` | no |  |
+
 ### Range
 
 | Name | Type | Required | Description |
@@ -2063,6 +2132,37 @@ The types named in the tables of the operations. The arguments of each editing c
 | `limits` | map of [`SnapLimit`](/docs/api/schemas#snaplimit) | no |  |
 | `points` | array of [`SnapPoint`](/docs/api/schemas#snappoint) | no |  |
 | `revision` | `integer (int64)` | no |  |
+
+### SocialAccount
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `account_id` | `string` | no |  |
+| `account_title` | `string` | no |  |
+| `connection_id` | `string` | no |  |
+| `label` | `string` | no |  |
+| `network` | `string` | no |  |
+| `state` | `string` | no |  |
+
+### SocialAccountListResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `accounts` | array of [`SocialAccount`](/docs/api/schemas#socialaccount) | no |  |
+
+### SocialConnectBeginResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `authorize_url` | `string` | no |  |
+| `connection_id` | `string` | no |  |
+
+### SocialNetworkListResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `networks` | array of [`Description`](/docs/api/schemas#description) | no |  |
+| `redirect_path` | `string` | no |  |
 
 ### Source
 
