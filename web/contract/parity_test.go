@@ -168,6 +168,12 @@ var parity = []row{
 	{method: "ApprovalRuleRemove", command: "approval:rule:remove", route: "DELETE /approval-rules/{}"},
 	{method: "CostSummary", command: "cost:show", route: "GET /cost"},
 	{method: "CostCeilingSet", command: "cost:ceiling", route: "PUT /cost/ceilings"},
+	// The AI providers (SDD-016 section 10): a generation starts with job_start (kind text.generate), the
+	// byte budget of the tool list leaves no room for a tool of its own. Setting a price is for a person.
+	{method: "ProviderList", command: "provider:list", route: "GET /providers"},
+	{method: "ProviderModels", command: "provider:models", route: "GET /connections/{}/models"},
+	{method: "ProviderPriceSet", command: "provider:price", route: "PUT /providers/prices"},
+	{method: "TextGenerate", tool: "job_start", command: "text:generate", route: "POST /text/generate"},
 	// The library (SDD-018): one MCP tool, library, serves the lists, reads, writes, searches, renders and
 	// lints. Removing a note, importing and exporting skills read and write files by path (no tool), and
 	// marking a skill as read is for a person at the browser (HTTP only).

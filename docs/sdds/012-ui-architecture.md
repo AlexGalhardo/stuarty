@@ -604,7 +604,7 @@ Decision D-038: a person who edits in CapCut should find the same places in the 
 | Start (projects) | `/projects` | a primary "Create project" button, a grid of project cards (thumbnail, name, last edit, a menu with Rename and Delete, and Duplicate when the project API has it), the size preset chosen at creation (RF-002) | the page already lists projects; the grid and the card menu are the change. Project actions are the existing project endpoints, not timeline commands |
 | Editor | `/editor/{project_id}` | the regions of §6.1 | tab rail, inspector tabs, timeline toolbar and menu, below |
 | Export | dialog of §14 | name, size, frame rate, lint findings, progress, format, and the range of the I and O points when the server lists `start` and `end` (`args.start`, `args.end`; not with png), and the png format when the server lists it, which exports the frame at the playhead (`args.at`, frames with the unit `f`); later bitrate (the core has no such argument) | fields are added as the engine supports them; today the dialog keeps what §14 lists |
-| Shortcuts and settings | dialog of §18.2 | the cheat sheet, "Show tips again", and now the language, the theme and the version | the editor still has no settings page |
+| Shortcuts and settings | dialog of §18.2 | the cheat sheet, "Replay the tour", and now the language, the theme and the version | the editor still has no settings page |
 | Dialogs | §4.4, §9.2, §13, §14 | import, export, palette, schema form, confirmations | unchanged |
 
 #### Material panel (the library region)
@@ -664,7 +664,7 @@ Both call the same actions, the shell through `onMenuAction`. An item is drawn o
 | Clip | Split, Trim start, Trim end, Speed, Rename and, when they exist, Reverse, Freeze frame, Group, Disable | `splitAtPlayhead`, `trimToPlayhead`, `surface.open_inspector_tab("speed")`, `renameItem` |
 | Timeline | Add track, Snap, Add caption, Add text, Add shape and, when they exist, the magnet and the markers | `addTrack`, `surface.toggle_snap`, `addCaption`, `addText`, `addShape` |
 | View | Library, Inspector and History panels, Zoom in, out and fit, Full screen preview, Theme, Language | `surface.toggle_panel`, `surface.zoom`, `surface.preview_fullscreen` |
-| Help | Keyboard shortcuts, Documentation, About (the version) | `surface.cheat_sheet`, `surface.about` |
+| Help | Keyboard shortcuts, Take the tour, Documentation, About (the version) | `surface.cheat_sheet`, `surface.tour`, `surface.about` |
 
 The context menu of a clip repeats the Clip menu and adds Copy, Cut, Paste, Duplicate, Delete and Ripple delete (§8).
 
@@ -741,7 +741,7 @@ What to avoid, and how the editor stands:
 - **Confusing translation.** The strings go through the catalogues (§16) and the terms of the glossary; the new ones use "Redefinir" for reset and "Salvo automaticamente".
 - **Ctrl+Y does not redo.** Here Ctrl+Y and Mod+Shift+Z both redo (§18.2).
 - **Separate windows for the editor and the export.** The export is a dialog inside the page (§14).
-- **Interruptions.** The first-run tips can be dismissed and shown again; the shortcuts dialog closes with Esc.
+- **Interruptions.** The first-run tour can be skipped and replayed; the shortcuts dialog closes with Esc.
 - **Panels that only say "Loading" with no network.** The product is offline by default and every panel has local content.
 - **Icon-only buttons with a delayed tooltip.** The edit tools keep a visible label; the icon-only buttons (zoom, track toggles) have an `aria-label` and now a tooltip with the key.
 
@@ -1440,12 +1440,12 @@ RF-075: this SDD builds the keyboard operation and automated checks in, so the c
 
 `Mod` is `Ctrl` on Windows and Linux and `Cmd` on macOS. Shortcuts are ignored while focus is in an editable field (text input, text area, select, a field with `contenteditable`), with two exceptions: `Mod+K` (the palette) and `Mod+Enter` where a form uses it to commit. Project undo, redo and select-all (`Mod+Z`, `Mod+Shift+Z`, `Ctrl+Y`, `Mod+A`) act only outside an editable field, so the native undo and select-all of the input work there. The precedence by focus between this map and the grid keys is in §7.10. Defined in `commands/keymap.ts`; every shortcut calls an action of the action registry, so the map and the coverage table agree. Shortcut customization and the cheat sheet dialog (`?`) are specified by RF-074:
 
-1. The table is `SHORTCUTS` in `commands/keymap.ts`, one row per shortcut with an `id`, its default keys and its action. The cheat sheet (dialog opened by `?` outside an editable field, or by the keyboard button of the top bar) is generated from that table and shows the current key of each row, never a second list.
-2. Rebindable rows are the editing shortcuts: `split` (`Mod+B`), `trim_start` (`Q`), `trim_end` (`W`), `add_caption` (C), `add_text` (T), `toggle_snap` (N), `zoom_in` (`Mod+=`), `zoom_out` (`Mod+-`) and `zoom_fit` (Shift+Z). The others (transport, undo and redo, delete, palette, panels, landmarks, grid keys) are fixed. The default keys follow the CapCut-compatible keymap of §18.7.
-3. A rebinding is refused, with the name of the row in conflict, when the key is already another row's key (fixed or rebindable) or is `Tab`, `Shift+Tab` or `Enter`. There is no swap. `Esc` leaves the capture.
-4. Only the overrides are stored, as a JSON object from row id to key, in `localStorage` under `vv.keymap` through `state/prefs.ts` (rule R7; it is a UI preference, not project data, so T1 holds). A blocked storage keeps the choice for the page. "Reset to defaults" removes the key.
+1. The table is `SHORTCUTS` in `commands/keymap.ts` (the registry, §18.9): one row per action with an `id`, its scope, its keys in each preset and its action. The cheat sheet (dialog opened by `?` outside an editable field, or by the keyboard button of the top bar), the tooltips and every handler read that table and the current bindings; there is no second list and no handler names a key.
+2. Every row that has keys is rebindable, in the cheat sheet, in both presets (§18.9). The rows without a key of their own (the wheel, the grid keys of §7.10, `Esc`) are listed and fixed.
+3. A rebinding is refused, with the name of the row in conflict, when the key is already used by another row (of any scope, §18.9 item 2) or is on the reserved list of §18.9 (`Tab`, `Shift+Tab`, `Enter` and the browser-reserved keys of §18.7). There is no swap. `Esc` leaves the capture.
+4. The choice is stored as `{preset, overrides}` (the overrides are a JSON object from row id to key), in `localStorage` under `vv.keymap` through `state/prefs.ts` (rule R7; it is a UI preference, not project data, so T1 holds). A blocked storage keeps the choice for the page. The workspace has no per-user settings operation yet, so the preference follows the browser; `prefs.ts` is the one seam to move it when it has (QUESTIONS, epic 37). "Reset to defaults" removes the overrides and keeps the preset.
 5. The handlers read the current key when a key is pressed, so a rebinding takes effect at once and a reload keeps it. The old key then does nothing.
-6. The "Show tips again" action of the first-run tips (§18.5) is in the footer of the same dialog; the editor has no separate settings page.
+6. The "Replay the tour" action of the first-run tour (§18.5) is in the footer of the same dialog and in the Help menu; the editor has no separate settings page.
 
 | Key | Action |
 | --- | --- |
@@ -1475,11 +1475,11 @@ RF-075: this SDD builds the keyboard operation and automated checks in, so the c
 
 Regions are landmarks: `header` (top bar), `aside` with `aria-label` for library and inspector, `main` for the preview and timeline.
 
-### 18.5 First-run tips and empty states
+### 18.5 First-run tour and empty states
 
-1. The first-run tips are a short list under the toolbar (`layout/FirstRunTips.tsx`): paste a path to import, `Ctrl+K` for the palette, `?` for the shortcuts. They show when the browser has no `vv.shortcutsSeen` and are closed with "Got it". Showing them writes the key (`1`, through `state/prefs.ts`, rule R7), so a reload does not show them again whether or not they were closed. A blocked storage shows them on every load.
-2. "Show tips again" is a button in the footer of the cheat sheet (§18.2 item 6); it shows the tips at once and closes the dialog. The editor has no settings page.
-3. Empty states use `ui/EmptyState.tsx` (icon, title, one sentence, as in `docs/design-system.md` §4.3.15) in the library, the timeline and the History tab; the sentence names the next action. All text comes from `t()`.
+1. The first-run tour is a short guided walk through the editor (`layout/tour/`), five steps in this order: library, preview, timeline, inspector, export. Each step outlines its region and shows a card (`role="dialog"`, not modal, named by the step title) with a sentence, "Back", "Next" (on the last step "Done") and "Skip tour". `Esc` skips. The card moves focus to its "Next" button when a step opens and gives it back to the element that had it when the tour ends, so the tour never traps the keyboard. The sentences name the keys that are current (`?` for the shortcuts, `Mod+K` for the palette, `Mod+I` to import), read from the registry.
+2. The tour shows when the browser has no `vv.shortcutsSeen` (the same key the former tips used, so no new key enters rule R7). Showing it writes the key (`1`, through `state/prefs.ts`), so a reload does not show it again whether it was finished or skipped. A blocked storage shows it on every load. "Replay the tour" (Help menu, and the footer of the cheat sheet) starts it at once whatever was remembered.
+3. Empty states use `ui/EmptyState.tsx` (icon, title, one sentence, as in `docs/design-system.md` §4.3.15) in the library, the timeline and the History tab; the sentence names the next action. All text comes from `t()`. While the project is still loading (`status` is `loading`), the library and the timeline draw skeletons with `aria-busy="true"` and no empty state, which is shown once the project has answered (`loading-states.spec.ts`).
 
 ### 18.3 Contrast
 
@@ -1633,6 +1633,18 @@ VV-052. `Mod+F` opens a find bar in the editor, on the web and in the desktop wi
 - **Keys.** Typing changes the list and moves nothing. `Enter` goes to the next match and `Shift+Enter` to the previous one, wrapping at the ends; the first `Enter` goes to the first match and the first `Shift+Enter` to the last. Going to a match selects its item, selects the word for a caption word and puts the playhead at the start of the match (of the item, or of the word), and scrolls the item into view. `Esc` closes the bar and clears the query. Every other key typed in the bar stops there, so `Delete` or a letter never edits the timeline.
 - **Accessibility.** The bar is a `search` landmark named "Find in the project"; its field is a `searchbox` with a label; the count ("3 of 12", "No match") is a `status` region; each match is a button in a list, the current one has `aria-current`. Opening remembers the element that had focus and `Esc` gives focus back to it (to the timeline when it is gone).
 - **Strings** are `ui.editor.find.*` and the row `ui.editor.shortcuts.rows.find`, in English and pt-BR.
+
+### 18.9 Shortcut registry, presets and remapping
+
+Epic 37. RF-074.
+
+1. **One registry.** `SHORTCUTS` in `commands/keymap.ts` is the only place that writes a key. A row is `{id, scope, keys, classic?, aliases?, action, fixed?}`: `keys` are the keys of the `short` preset (the default map of §18.7, written as a list of keys that do the same), `classic` those of the `classic` preset when they differ, `aliases` keys that also work and are not listed as a row, `action` the action of the registry (`commands/actions.ts`) or a `surface.*` id. Every row with keys has keys in both presets. The site generator and the cheat sheet read this table; the site page lists both presets.
+2. **Scopes.** `global` (everywhere in the editor outside an editable field and an open dialog), `timeline` (the timeline and the playhead slider), `preview` (the player: play, pause, shuttle) and `text` (also acts inside an editable field: the palette and the find bar). A handler asks `rowFor(event, scopes)` (`commands/keymapStore.ts`) and gets a row id or null; it then calls the row's action. The checks "not in a field", "not in a dialog" are shared (`commands/keyTarget.ts`), not repeated per handler. The scope says where a row acts, not where its key may repeat: every handler listens at the window, so one press reaches the player and the timeline alike, and two rows conflict whenever they have the same key in the same preset, whatever their scopes (a timeline row on `K` would also pause the player).
+3. **Presets.** `short`, a map close to the most used short-video editor (§18.7, the default), and `classic`, the map of a traditional timeline editor: select tool `V`, blade tool `C`, split `S`, split every track `Shift+S`, turn the item off or on `Shift+E`, add caption `Shift+C`, add text `Shift+T`, zoom in `=`, zoom out `-`, zoom to fit `\`; every other row has the key of `short`. The preset is chosen in the cheat sheet. A person's overrides apply on top of the preset and survive a change of preset only where they do not conflict with it (a conflicting override is dropped with a notice).
+4. **Remapping.** Each row of the cheat sheet has a button that captures the next key press (§18.2 item 3). Validation (`keymapStore.findConflict`): a key of another row, or a reserved key, is refused with the row's name. The reserved list is `Tab`, `Shift+Tab`, `Enter`, the browser-reserved keys of §18.7 and `Esc`; a default key is never on it (unit test). An override replaces the row's whole key list (its aliases too).
+5. **Search.** The cheat sheet has a search field (`role="searchbox"`, labelled) that filters the rows by action name and by key text as the person types; the empty result says so. Opening the dialog focuses the search field.
+6. **Actions are commands.** A shortcut calls the same action a button calls. No handler computes an edit (§1); the unit test `commands/noHardCodedKeys.test.ts` (part of `task test:web`) fails when a file of `web/resources/js/editor/` compares a key event against a letter, digit, function-key or symbol literal outside `commands/keymap.ts` (a widget key such as an arrow inside a slider, `Enter` or `Esc` is allowed; a line that must keep a literal says why on a comment `shortcut-ok:`).
+7. **Physical keys.** A combo with `Alt` is read from `event.code` (the letter, digit or punctuation key), because `Option` produces another character on a Mac; this is how `Alt+,` and `Alt+.` (slip) and `Alt+Shift+Z` are read.
 
 ## 19. Performance budgets
 
@@ -1940,7 +1952,7 @@ Implements RF-310, RF-311 and RF-312 (PRD-004), author decision D-075 and epic 0
 | `GET /edit-image` and `/edit-image/{image_id}` | `pages/EditImage/Index.tsx`, `pages/EditImage/Show.tsx` | the image editor (epic 28, section 24) |
 | `GET /edit-video`, `/write`, `/publish`, `/skills`, `/prompts`, `/memory` | `pages/Dashboard/Section.tsx` | an honest empty state, until the epic of the section replaces the route's page |
 | `GET /visual-assets`, `/video-assets` | `pages/VisualAssets/Index.tsx`, `pages/VideoAssets/Index.tsx` | the two sections of the asset library (epic 08, SDD-011 §14.6): filters, a grid of posters, a detail panel with the origin, the rights note, the tags and the projects that use the file, and "use in a project" (no copy); both are `assetlibrary/AssetLibrary.tsx` with a section |
-| `GET /connections` | `pages/Dashboard/Section.tsx` | an empty state until epic 04 puts the Connections page there |
+| `GET /connections` | `pages/Connections/Index.tsx` | the connections (epic 04, SDD-014) and, under them, one card per AI provider (epic 09, SDD-016, `pages/Connections/ProviderCards.tsx`): connect with a key, test it, read the models with their price and where it comes from, set a price, and the spend of the day of each connection. The names of the models and the labels are untrusted text; amounts are formatted and never summed |
 | `GET /approvals` | `pages/Approvals/Index.tsx` | the approval queue, the rules and the cost ceilings (epic 05, SDD-015), built from `dashboard/approval/`; not a section of the sidebar: it is linked from the Connections page, and the Publish section (epic 20) will link it too. The queue follows `GET /api/v1/approvals/events` and shows what the service answers (the summary and the actor as untrusted text, the amounts formatted and never summed) |
 | `GET /settings`, `/settings/*` | the existing pages | reached from the profile block, not a section |
 

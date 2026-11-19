@@ -53,6 +53,12 @@ func AgentDocsInputs() agentdocs.Inputs {
 		inLibrary[s.name] = true
 	}
 
+	// The commands of the AI provider layer (SDD-016 section 10) are in the guide of the provider domain, not in the
+	// editor skill, which has no room for them. An agent starts a generation with job_start (kind text.generate).
+	for _, s := range providerCommands() {
+		inLibrary[s.name] = true
+	}
+
 	for i := range commands {
 		c := &commands[i]
 		if c.Person {

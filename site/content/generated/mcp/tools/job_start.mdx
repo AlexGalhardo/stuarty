@@ -10,7 +10,7 @@ wide: true
 
 <RefMain>
 
-Start long work. export renders a workspace file: args \{start?, end?, format?, at? (the png frame), preset?, codec?\}. export_batch runs args.items (export args) in turn. transcribe: args \{asset_id, language?, model?\}. Poll job_get.
+Start long work. export renders a workspace file: args \{start?, end?, format?, at? (the png frame), preset?, codec?\}. export_batch runs args.items (export args) in turn. transcribe: args \{asset_id, language?, model?\}. text.generate: args \{connection_id, model, prompt\}; a person approves. Poll job_get.
 
 ## Behaviour
 
@@ -29,7 +29,7 @@ These are the annotations of the tool definition, the hints a client uses to dec
 | --- | --- | --- | --- |
 | `project_id` | `string` | yes | pattern `^prj_[0-9a-hjkmnp-tv-z]{10}$` |
 | `timeline_id` | `string` | no | pattern `^prj_[0-9a-hjkmnp-tv-z]{10}$` |
-| `kind` | `export`, `export_batch`, `transcribe` | yes |  |
+| `kind` | `export`, `export_batch`, `transcribe`, `text.generate` | yes |  |
 | `args` | `object` | no |  |
 | `args.start` | `string` | no |  |
 | `args.end` | `string` | no |  |

@@ -61,6 +61,10 @@ import type {
 	ProjectItemResult,
 	ProjectListResult,
 	ProjectStateResult,
+	ProviderListResult,
+	ProviderModelsResult,
+	ProviderPriceSetRequest,
+	ProviderPricesResult,
 	SessionResult,
 	SnapPointsQuery,
 	SnapPointsResult,
@@ -190,6 +194,16 @@ export interface ApiClient {
 	createConnection(request: ConnectionCreateRequest): Promise<Connection>;
 	removeConnection(id: string): Promise<Connection>;
 	testConnection(id: string): Promise<ConnectionTestResult>;
+	// The AI providers (SDD-016). Setting a price is for a person in a browser session; any other
+	// caller gets E_PRIVILEGED_SESSION.
+	listProviders(): Promise<ProviderListResult>;
+	listProviderModels(
+		connectionId: string,
+		refresh?: boolean,
+	): Promise<ProviderModelsResult>;
+	setProviderPrice(
+		request: ProviderPriceSetRequest,
+	): Promise<ProviderPricesResult>;
 	// The approval queue (SDD-015). Deciding, the rules and the ceilings are for a person in a
 	// browser session; any other caller gets E_PRIVILEGED_SESSION.
 	listApprovals(state?: string): Promise<ApprovalListResult>;
@@ -571,6 +585,15 @@ export function createClient(
 				`/chat/sessions/${encodeURIComponent(sessionId)}`,
 				EDIT_TIMEOUT_MS,
 			),
+		listProviders: () => call("GET", "/providers", READ_TIMEOUT_MS),
+		listProviderModels: (connectionId, refresh) =>
+			call(
+				"GET",
+				`/connections/${encodeURIComponent(connectionId)}/models${refresh === true ? "?refresh=true" : ""}`,
+				EDIT_TIMEOUT_MS,
+			),
+		setProviderPrice: (request) =>
+			call("PUT", "/providers/prices", EDIT_TIMEOUT_MS, request),
 		listApprovals: (state) =>
 			call(
 				"GET",

@@ -116,6 +116,11 @@ export const navigation: NavCategory[] = [
 	},
 	{
 		dir: "guide",
+		title: "AI providers",
+		pages: ["ai-providers"],
+	},
+	{
+		dir: "guide",
 		title: "The editor",
 		pages: ["keyboard-shortcuts", "keyboard-shortcuts-list", "coming-from-capcut", "settings", "accessibility", "desktop"],
 	},

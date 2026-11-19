@@ -1,6 +1,7 @@
 package approval
 
 import (
+	"math"
 	"strings"
 	"testing"
 )
@@ -185,6 +186,29 @@ func TestDecide(t *testing.T) {
 			ceilings: []Ceiling{{Currency: "USD", PerDay: new(int64(1_000_000))}},
 			spent:    Spent{Workspace: 500_000},
 			want:     NeedsPerson,
+		},
+		{
+			// A cost saturates at the largest int64 (core/provider TextCost); adding the estimate to it must
+			// not wrap to a negative day that passes every limit.
+			name: "a day spent at the largest amount still refuses", action: gen,
+			ceilings: []Ceiling{{Currency: "USD", PerDay: new(int64(1_000_000))}},
+			spent:    Spent{Workspace: math.MaxInt64},
+			want:     Refused, reason: ReasonPerDay, scope: ScopeWorkspace, limit: 1_000_000,
+		},
+		{
+			name: "a rule whose day is at the largest amount does not approve", action: gen,
+			rules: []Rule{
+				{
+					ID:       "rul_1",
+					Kind:     "generate.image",
+					Currency: "USD",
+					PerItem:  new(int64(500_000)),
+					PerDay:   new(int64(1_000_000)),
+					Enabled:  true,
+				},
+			},
+			spent: Spent{ByRule: map[string]int64{"rul_1": math.MaxInt64}},
+			want:  NeedsPerson,
 		},
 		{
 			name: "the project limit per day refuses", action: gen,

@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "feather": {
+      "description": "Pixels of soft edge.",
+      "maximum": 200,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "h": {
+      "description": "Thousandths of the box, 1 to 1000.",
+      "maximum": 1000,
+      "minimum": 1,
+      "type": "integer"
+    },
+    "invert": {
+      "type": "boolean"
+    },
+    "kind": {
+      "enum": [
+        "rect",
+        "rounded_rect",
+        "ellipse",
+        "layer"
+      ],
+      "type": "string"
+    },
+    "layer_id": {
+      "pattern": "^lyr_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+      "type": "string"
+    },
+    "radius": {
+      "description": "rounded_rect only, pixels.",
+      "maximum": 16384,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "source": {
+      "description": "kind layer only: the id of another layer.",
+      "pattern": "^lyr_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+      "type": "string"
+    },
+    "w": {
+      "description": "Thousandths of the box, 1 to 1000.",
+      "maximum": 1000,
+      "minimum": 1,
+      "type": "integer"
+    },
+    "x": {
+      "description": "Thousandths of the box, 0 to 999.",
+      "maximum": 1000,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "y": {
+      "description": "Thousandths of the box, 0 to 999.",
+      "maximum": 1000,
+      "minimum": 0,
+      "type": "integer"
+    }
+  },
+  "required": [
+    "layer_id",
+    "kind"
+  ],
+  "type": "object"
+}

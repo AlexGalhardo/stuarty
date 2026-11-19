@@ -197,6 +197,12 @@ func (m *Manager) Used(ctx context.Context, id string, at time.Time) {
 // connection, builds the gated client and calls fn. The secret does not
 // outlive the call and is never returned.
 func (m *Manager) With(ctx context.Context, id string, fn func(Credential) error) error {
+	return m.WithTimeout(ctx, id, m.timeout, fn)
+}
+
+// WithTimeout is With for a request that may take longer than the default, such as the generation of a
+// text (SDD-016 section 6): the client of the closure gives up after timeout.
+func (m *Manager) WithTimeout(ctx context.Context, id string, timeout time.Duration, fn func(Credential) error) error {
 	r, err := m.store.Get(ctx, id)
 	if err != nil {
 		return err
@@ -214,7 +220,7 @@ func (m *Manager) With(ctx context.Context, id string, fn func(Credential) error
 	defer clear(secret)
 
 	return fn(Credential{
-		Connection: View(r, true), Secret: secret, Client: outbound.Connection(m, r.ID, m.timeout, m.trust),
+		Connection: View(r, true), Secret: secret, Client: outbound.Connection(m, r.ID, timeout, m.trust),
 	})
 }
 
