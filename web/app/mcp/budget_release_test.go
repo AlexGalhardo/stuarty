@@ -8,8 +8,6 @@ import (
 	"os"
 	"testing"
 	"time"
-
-	"github.com/AlexGalhardo/stuarty/core/command"
 )
 
 // TestToolListVendorTokens is the release measure of NFR-020: `tools/list` has at
@@ -31,7 +29,7 @@ func TestToolListVendorTokens(t *testing.T) {
 		t.Fatal("ANTHROPIC_API_KEY and ANTHROPIC_MODEL are required")
 	}
 
-	defs, err := loadDefinitions(command.Default())
+	defs, err := loadDefinitions()
 	if err != nil {
 		t.Fatal(err)
 	}
