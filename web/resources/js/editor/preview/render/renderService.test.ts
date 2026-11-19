@@ -7,6 +7,7 @@ import type {
 	RenderInput,
 	ToRenderWorker,
 } from "./protocol";
+import { type CoreExports, instantiateCore } from "./renderCore";
 import {
 	isOpaque,
 	type Pixels,
@@ -56,7 +57,10 @@ interface Rig {
 	send(message: ToRenderWorker<Source>): Promise<void>;
 }
 
-function rig(wasm: Uint8Array = moduleBytes): Rig {
+function rig(
+	wasm: Uint8Array = moduleBytes,
+	instantiate?: (bytes: ArrayBuffer) => Promise<CoreExports>,
+): Rig {
 	const posted: FromRenderWorker<string>[] = [];
 	const service = new RenderService<Source, string>(
 		{
@@ -73,6 +77,7 @@ function rig(wasm: Uint8Array = moduleBytes): Rig {
 			}),
 			toBitmap: async (rgba, width, height) =>
 				JSON.stringify({ width, height, pixels: [...rgba] }),
+			instantiate,
 		},
 		{ post: (message) => void posted.push(message) },
 	);
@@ -244,6 +249,53 @@ describe("the render worker logic", () => {
 		expect(r.service.openSources).toBe(0);
 		expect(sources.every((s) => s.closed === 1)).toBe(true);
 		expect(r.posted.filter((m) => m.type === "frame")).toHaveLength(500);
+	});
+
+	it("discards an instance that trapped and draws again on a new one (SDD-013 4.5)", async () => {
+		let instances = 0;
+		let trapNext = false;
+		const r = rig(moduleBytes, async (bytes) => {
+			instances++;
+			const real = await instantiateCore(bytes);
+			return {
+				...real,
+				memory: real.memory,
+				vr_render: (...args: Parameters<CoreExports["vr_render"]>) => {
+					if (trapNext) {
+						trapNext = false;
+						throw new WebAssembly.RuntimeError("unreachable");
+					}
+					return real.vr_render(...args);
+				},
+			};
+		});
+		await r.send(init);
+		await r.send({
+			type: "texture",
+			id: "itm_a",
+			frame: solid(1, 1, [9, 8, 7, 255]),
+		});
+		trapNext = true;
+		await r.send({ type: "render", seq: 1, input: input([layer("itm_a")]) });
+		expect(r.posted.at(-1)).toMatchObject({
+			type: "error",
+			seq: 1,
+			reason: "render_trap",
+		});
+		expect(instances).toBe(2);
+		// The new instance holds nothing of the old one: the page uploads again.
+		await r.send({ type: "render", seq: 2, input: input([layer("itm_a")]) });
+		expect(r.posted.at(-1)).toMatchObject({
+			reason: "missing_texture",
+			detail: "itm_a",
+		});
+		await r.send({
+			type: "texture",
+			id: "itm_a",
+			frame: solid(1, 1, [9, 8, 7, 255]),
+		});
+		await r.send({ type: "render", seq: 3, input: input([layer("itm_a")]) });
+		expect(pixels(r.posted.at(-1)).slice(0, 4)).toEqual([9, 8, 7, 255]);
 	});
 
 	it("an upload before init is an error, and a disposed worker closes late sources", async () => {

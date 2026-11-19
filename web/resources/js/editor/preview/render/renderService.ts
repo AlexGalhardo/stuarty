@@ -2,6 +2,7 @@ import type {
 	FromRenderWorker,
 	PixelSource,
 	Rect,
+	RenderBudgets,
 	RenderInput,
 	RenderReason,
 	ToRenderWorker,
@@ -33,7 +34,11 @@ export interface ServiceDeps<S extends PixelSource, B> {
 		width: number,
 		height: number,
 	): Promise<B>;
+	// Compiles and instantiates the checked bytes; instantiateCore when absent.
+	instantiate?(bytes: ArrayBuffer): Promise<CoreExports>;
 }
+
+type Budgets = RenderBudgets | undefined;
 
 export interface ServiceHost<B> {
 	post(message: FromRenderWorker<B>, transfer: Transferable[]): void;
@@ -50,6 +55,8 @@ function outputSize(input: RenderInput): { width: number; height: number } {
 // on the error paths too (rule 3).
 export class RenderService<S extends PixelSource, B> {
 	private core: RenderCore | null = null;
+	// The checked module and its budgets, to start a new instance after a trap.
+	private loaded: { bytes: ArrayBuffer; budgets: Budgets } | null = null;
 	private open = 0;
 	private chain: Promise<void> = Promise.resolve();
 	private disposed = false;
@@ -84,6 +91,9 @@ export class RenderService<S extends PixelSource, B> {
 							"render_trap",
 							err instanceof Error ? err.message : String(err),
 						);
+			// After a trap the instance is discarded and a new one created; what it
+			// held is gone and the main thread uploads again (SDD-013 section 4.5).
+			if (error.reason === "render_trap") await this.restart();
 			this.fail(
 				message.type === "render" ? message.seq : undefined,
 				error.reason,
@@ -152,10 +162,9 @@ export class RenderService<S extends PixelSource, B> {
 		if (digest !== message.digest) {
 			throw new RenderError("module_digest", digest);
 		}
-		const exports: CoreExports = await instantiateCore(bytes);
-		const core = new RenderCore(exports);
-		core.init(message.budgets?.textureBytes, message.budgets?.bitmapBytes);
+		const core = await this.start(bytes, message.budgets);
 		this.core = core;
+		this.loaded = { bytes, budgets: message.budgets };
 		this.host.post(
 			{
 				type: "ready",
@@ -165,6 +174,30 @@ export class RenderService<S extends PixelSource, B> {
 			},
 			[],
 		);
+	}
+
+	private async start(
+		bytes: ArrayBuffer,
+		budgets: Budgets,
+	): Promise<RenderCore> {
+		const instantiate = this.deps.instantiate ?? instantiateCore;
+		const exports: CoreExports = await instantiate(bytes);
+		const core = new RenderCore(exports);
+		core.init(budgets?.textureBytes, budgets?.bitmapBytes);
+		return core;
+	}
+
+	// A new instance in place of one that trapped. If that fails too, the worker
+	// holds no module and refuses what follows as not initialised.
+	private async restart(): Promise<void> {
+		const loaded = this.loaded;
+		this.core = null;
+		if (loaded === null || this.disposed) return;
+		try {
+			this.core = await this.start(loaded.bytes, loaded.budgets);
+		} catch {
+			this.core = null;
+		}
 	}
 
 	private closeSource(source: S): void {
