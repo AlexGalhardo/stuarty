@@ -132,4 +132,51 @@ test.describe("history-revert", () => {
 		)) as { document: { items: Record<string, { name?: string }> } };
 		expect(doc.document.items[itemId]?.name).not.toBe("Changed");
 	});
+
+	test("a change by an agent after the preview is a conflict, never reverted unseen", async ({
+		page,
+		request,
+	}) => {
+		const seeded = await seedProject(request, { tracks: 1, perTrack: 1 });
+		const itemId = seeded.itemIds[0] as string;
+		const agent = await caller(request, "claude-code");
+		const rename = async (name: string): Promise<void> => {
+			const head = (await agent("GET", `/projects/${seeded.id}`)) as {
+				revision: number;
+			};
+			await agent("POST", `/projects/${seeded.id}/edit`, {
+				base_revision: head.revision,
+				operations: [{ op: "item.rename", args: { item_id: itemId, name } }],
+			});
+		};
+		const itemName = async (): Promise<string | undefined> => {
+			const doc = (await agent(
+				"GET",
+				`/projects/${seeded.id}?detail=document`,
+			)) as { document: { items: Record<string, { name?: string }> } };
+			return doc.document.items[itemId]?.name;
+		};
+		await rename("Changed");
+
+		await page.goto(`/editor/${seeded.id}`);
+		await expect(page.locator("[data-item-id]")).toHaveCount(1);
+		await page.keyboard.press("Alt+3");
+		const history = page.getByRole("region", { name: "History", exact: true });
+		const rows = history.locator("[data-revision]");
+		await expect(rows.nth(1)).toBeVisible();
+		const newest = Number(await rows.first().getAttribute("data-revision"));
+
+		await history
+			.getByRole("button", { name: `Revert to r${newest - 1}` })
+			.click();
+		const dialog = page.getByRole("alertdialog");
+		await expect(dialog.getByTestId("revert-preview")).toContainText("name");
+
+		// The agent renames the item again while the person reads the preview.
+		await rename("Agent late");
+		await dialog.getByRole("button", { name: "Revert", exact: true }).click();
+		await expect(dialog.getByRole("alert")).toBeVisible();
+		await expect(dialog).toBeVisible();
+		expect(await itemName()).toBe("Agent late");
+	});
 });
