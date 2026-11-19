@@ -40,13 +40,56 @@ The types named in the tables of the operations. The arguments of each editing c
 | `sample_count` | `integer` | no |  |
 | `width` | `integer` | no |  |
 
+### AssetInfo
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `description` | `string` | no |  |
+| `reusable` | `boolean` or `null` | no |  |
+| `tags` | array of `string` | no |  |
+
 ### AssetListResult
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `assets` | array of [`LibraryAsset`](/docs/api/schemas#libraryasset) | no |  |
+| `next_cursor` | `string` or `null` | no |  |
+| `text` | `string` | no |  |
+| `total` | `integer` | no |  |
+| `untrusted_notice` | `string` | no |  |
+
+### AssetResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `bytes` | `integer (int64)` | no |  |
+| `created_at` | `string` | no |  |
+| `created_by` | `string` | no |  |
+| `description` | `string` | no |  |
+| `duration_ms` | `integer (int64)` | no |  |
+| `hash` | `string` | no |  |
+| `height` | `integer` | no |  |
+| `kind` | `string` | no |  |
+| `name` | `string` | no |  |
+| `origin` | [`Origin`](/docs/api/schemas#origin) | no |  |
+| `poster` | [`Poster`](/docs/api/schemas#poster) or `any` or `null` or `null` | no |  |
+| `projects` | `integer` | no |  |
+| `reusable` | `boolean` | no |  |
+| `tags` | array of `string` | no |  |
 | `text` | `string` | no |  |
 | `untrusted_notice` | `string` | no |  |
+| `uses` | array of [`Use`](/docs/api/schemas#use) | no |  |
+| `width` | `integer` | no |  |
+
+### AssetUsesResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `hash` | `string` | no |  |
+| `next_cursor` | `string` or `null` | no |  |
+| `text` | `string` | no |  |
+| `untrusted_notice` | `string` | no |  |
+| `uses` | array of [`Use`](/docs/api/schemas#use) | no |  |
 
 ### AuditEntry
 
@@ -258,6 +301,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | --- | --- | --- | --- |
 | `command` | [`CommandDetail`](/docs/api/schemas#commanddetail) or `any` or `null` or `null` | no |  |
 | `commands` | array of [`CommandSummary`](/docs/api/schemas#commandsummary) | no |  |
+| `domains` | array of [`DomainSummary`](/docs/api/schemas#domainsummary) | no |  |
 | `text` | `string` | no |  |
 
 ### CommandSummary
@@ -380,6 +424,14 @@ The types named in the tables of the operations. The arguments of each editing c
 | `settings` | [`Settings`](/docs/api/schemas#settings) | no |  |
 | `template` | [`TemplateInfo`](/docs/api/schemas#templateinfo) or `any` or `null` or `null` | no |  |
 | `tracks` | map of [`Track`](/docs/api/schemas#track) | no |  |
+
+### DomainSummary
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `name` | `string` | no |  |
+| `operations` | `integer` | no |  |
+| `summary` | `string` | no |  |
 
 ### EditResult
 
@@ -816,7 +868,8 @@ The types named in the tables of the operations. The arguments of each editing c
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `asset_id` | `string` | no | An id of your own; ignored for a duplicate.. pattern `^ast_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
-| `path` | `string` | yes | An absolute path on the machine that runs the server.. min length 1 |
+| `hash` | `string` | no | sha256: and 64 hex digits of a file the library holds, in place of a path: the project uses it with no copy. |
+| `path` | `string` | no | An absolute path on the machine that runs the server; or a hash. |
 
 ### InstalledTool
 
@@ -918,6 +971,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `approval_id` | `string` | no |  |
 | `created_at` | `string (date-time)` | no |  |
 | `error` | [`Error`](/docs/api/schemas#error) or `any` or `null` or `null` | no |  |
+| `estimate` | [`Money`](/docs/api/schemas#money) or `any` or `null` or `null` | no |  |
 | `finished_at` | `string (date-time)` or `null` | no |  |
 | `job_id` | `string` | no |  |
 | `kind` | `string` | no |  |
@@ -946,6 +1000,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | --- | --- | --- | --- |
 | `batch` | [`BatchResult`](/docs/api/schemas#batchresult) or `any` or `null` or `null` | no |  |
 | `export` | [`ExportResult`](/docs/api/schemas#exportresult) or `any` or `null` or `null` | no |  |
+| `text` | [`TextResult`](/docs/api/schemas#textresult) or `any` or `null` or `null` | no |  |
 | `transcribe` | [`TranscribeResult`](/docs/api/schemas#transcriberesult) or `any` or `null` or `null` | no |  |
 
 ### Key
@@ -1023,11 +1078,20 @@ The types named in the tables of the operations. The arguments of each editing c
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `bytes` | `integer (int64)` | no |  |
+| `created_at` | `string` | no |  |
+| `created_by` | `string` | no |  |
+| `description` | `string` | no |  |
+| `duration_ms` | `integer (int64)` | no |  |
 | `hash` | `string` | no |  |
 | `height` | `integer` | no |  |
 | `kind` | `string` | no |  |
 | `name` | `string` | no |  |
+| `origin` | [`Origin`](/docs/api/schemas#origin) | no |  |
+| `poster` | [`Poster`](/docs/api/schemas#poster) or `any` or `null` or `null` | no |  |
 | `projects` | `integer` | no |  |
+| `reusable` | `boolean` | no |  |
+| `tags` | array of `string` | no |  |
+| `uses` | array of [`Use`](/docs/api/schemas#use) | no |  |
 | `width` | `integer` | no |  |
 
 ### LibraryEntry
@@ -1280,6 +1344,17 @@ The types named in the tables of the operations. The arguments of each editing c
 | `text` | `string` | no |  |
 | `untrusted_notice` | `string` | no |  |
 
+### ModelView
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `context_tokens` | `integer` | no |  |
+| `id` | `string` | no |  |
+| `name` | `string` | no |  |
+| `output_tokens` | `integer` | no |  |
+| `price` | [`Price`](/docs/api/schemas#price) or `any` or `null` or `null` | no |  |
+| `price_source` | `string` | no |  |
+
 ### Money
 
 | Name | Type | Required | Description |
@@ -1302,6 +1377,18 @@ The types named in the tables of the operations. The arguments of each editing c
 | --- | --- | --- | --- |
 | `args` | map of `any` | no | The arguments of the command. |
 | `op` | `string`, one of 76 values | yes | A command name, as listed by GET /commands.. min length 1 |
+
+### Origin
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `cost_micros` | `integer (int64)` or `null` | no |  |
+| `kind` | `string` | no |  |
+| `model` | `string` | no |  |
+| `prompt` | `string` | no |  |
+| `provider` | `string` | no |  |
+| `rights_note` | `string` | no |  |
+| `source` | `string` | no |  |
 
 ### OtioLost
 
@@ -1340,6 +1427,31 @@ The types named in the tables of the operations. The arguments of each editing c
 | --- | --- | --- | --- |
 | `color` | `string` | no |  |
 | `width` | `number (double)` | no |  |
+
+### Poster
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `asset_id` | `string` | no |  |
+| `timeline_id` | `string` | no |  |
+
+### Price
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `currency` | `string` | no |  |
+| `input_micros_per_mtok` | `integer (int64)` | no |  |
+| `output_micros_per_mtok` | `integer (int64)` | no |  |
+
+### PriceEntry
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `currency` | `string` | no |  |
+| `input_micros_per_mtok` | `integer (int64)` | no |  |
+| `model` | `string` | no |  |
+| `output_micros_per_mtok` | `integer (int64)` | no |  |
+| `provider` | `string` | no |  |
 
 ### Primitive
 
@@ -1583,6 +1695,41 @@ The types named in the tables of the operations. The arguments of each editing c
 | `text` | `string` | no |  |
 | `untrusted_notice` | `string` | no |  |
 | `variables` | array of `string` | no |  |
+
+### ProviderListResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `prices` | array of [`PriceEntry`](/docs/api/schemas#priceentry) | no |  |
+| `providers` | array of [`ProviderView`](/docs/api/schemas#providerview) | no |  |
+
+### ProviderModelsResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `cached` | `boolean` | no |  |
+| `connection_id` | `string` | no |  |
+| `fetched_at` | `string (date-time)` | no |  |
+| `models` | array of [`ModelView`](/docs/api/schemas#modelview) | no |  |
+| `provider` | `string` | no |  |
+
+### ProviderPricesResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `prices` | array of [`PriceEntry`](/docs/api/schemas#priceentry) | no |  |
+
+### ProviderView
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `capabilities` | array of `string` | no |  |
+| `connections` | array of `string` | no |  |
+| `credential_kinds` | array of `string` | no |  |
+| `default_endpoint` | `string` | no |  |
+| `docs_url` | `string` | no |  |
+| `id` | `string` | no |  |
+| `name` | `string` | no |  |
 
 ### Range
 
@@ -1912,6 +2059,18 @@ The types named in the tables of the operations. The arguments of each editing c
 | `template_id` | `string` | no |  |
 | `width` | `integer` | no |  |
 
+### TextResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `cost` | [`Money`](/docs/api/schemas#money) | no |  |
+| `finish_reason` | `string` | no |  |
+| `input_tokens` | `integer` | no |  |
+| `model` | `string` | no |  |
+| `output_tokens` | `integer` | no |  |
+| `provider` | `string` | no |  |
+| `text` | `string` | no |  |
+
 ### TimeRange
 
 | Name | Type | Required | Description |
@@ -2055,6 +2214,15 @@ The types named in the tables of the operations. The arguments of each editing c
 | `metadata` | map of `string` | no |  |
 | `name` | `string` | no |  |
 | `transcript` | array of [`TranscriptLine`](/docs/api/schemas#transcriptline) | no |  |
+
+### Use
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `asset_id` | `string` | no |  |
+| `name` | `string` | no |  |
+| `project_id` | `string` | no |  |
+| `timelines` | array of `string` | no |  |
 
 ### userListOut
 

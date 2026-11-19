@@ -1938,8 +1938,9 @@ Implements RF-310, RF-311 and RF-312 (PRD-004), author decision D-075 and epic 0
 | `GET /` | `pages/Dashboard/Home.tsx` | the home: a short welcome and one card for each section, with what it will hold |
 | `GET /projects` | `pages/Projects/Index.tsx` | Projects (epic 06 owns the content) |
 | `GET /edit-image` and `/edit-image/{image_id}` | `pages/EditImage/Index.tsx`, `pages/EditImage/Show.tsx` | the image editor (epic 28, section 24) |
-| `GET /edit-video`, `/write`, `/visual-assets`, `/video-assets`, `/publish`, `/skills`, `/prompts`, `/memory` | `pages/Dashboard/Section.tsx` | an honest empty state, until the epic of the section replaces the route's page |
-| `GET /connections` | `pages/Dashboard/Section.tsx` | an empty state until epic 04 puts the Connections page there |
+| `GET /edit-video`, `/write`, `/publish`, `/skills`, `/prompts`, `/memory` | `pages/Dashboard/Section.tsx` | an honest empty state, until the epic of the section replaces the route's page |
+| `GET /visual-assets`, `/video-assets` | `pages/VisualAssets/Index.tsx`, `pages/VideoAssets/Index.tsx` | the two sections of the asset library (epic 08, SDD-011 §14.6): filters, a grid of posters, a detail panel with the origin, the rights note, the tags and the projects that use the file, and "use in a project" (no copy); both are `assetlibrary/AssetLibrary.tsx` with a section |
+| `GET /connections` | `pages/Connections/Index.tsx` | the connections (epic 04, SDD-014) and, under them, one card per AI provider (epic 09, SDD-016, `pages/Connections/ProviderCards.tsx`): connect with a key, test it, read the models with their price and where it comes from, set a price, and the spend of the day of each connection. The names of the models and the labels are untrusted text; amounts are formatted and never summed |
 | `GET /approvals` | `pages/Approvals/Index.tsx` | the approval queue, the rules and the cost ceilings (epic 05, SDD-015), built from `dashboard/approval/`; not a section of the sidebar: it is linked from the Connections page, and the Publish section (epic 20) will link it too. The queue follows `GET /api/v1/approvals/events` and shows what the service answers (the summary and the actor as untrusted text, the amounts formatted and never summed) |
 | `GET /settings`, `/settings/*` | the existing pages | reached from the profile block, not a section |
 

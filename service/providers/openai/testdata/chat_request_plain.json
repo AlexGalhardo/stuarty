@@ -1,0 +1,10 @@
+{
+  "model": "gpt-4o",
+  "messages": [
+    {
+      "role": "user",
+      "content": "Caption a video about sourdough."
+    }
+  ],
+  "max_completion_tokens": 1024
+}

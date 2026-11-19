@@ -650,6 +650,8 @@
         "E_FORBIDDEN": "Não permitido",
         "E_PRIVILEGED_SESSION": "Só você, no aplicativo, pode fazer isso",
         "E_COST_CEILING": "Acima de um teto de custo",
+        "E_PROVIDER": "O provedor de IA recusou ou falhou",
+        "E_PRICE_UNKNOWN": "Sem preço para esse modelo",
         "E_APPROVAL_NOT_FOUND": "Pedido ou regra não encontrado",
         "E_ASSET_NOT_READY": "A mídia ainda está sendo preparada",
         "E_NOTHING_TO_UNDO": "Nada para desfazer",
@@ -2045,6 +2047,38 @@
       "test_ok": "O destino respondeu {status}.",
       "test_failed": "O destino não respondeu bem (status {status})."
     },
+    "providers": {
+      "title": "Provedores de IA",
+      "intro": "Conecte os serviços de IA que você já paga, com a sua própria chave. O preço aparece antes de qualquer coisa rodar, e o trabalho que custa dinheiro espera por você na página de Aprovações.",
+      "docs": "Onde achar a chave",
+      "none": "Ainda não conectado.",
+      "connect_title": "Conectar {provider} com uma chave de API",
+      "connect_name": "Nome desta conexão",
+      "connect_address": "Endereço base da API",
+      "connect_key": "Chave de API",
+      "connect_hint": "Guardada criptografada neste computador. Nunca é mostrada de novo e nenhum agente consegue lê-la.",
+      "connect_submit": "Guardar a chave",
+      "check": "Verificar a chave",
+      "models": "Mostrar os modelos",
+      "models_refresh": "Ler os modelos de novo",
+      "models_empty": "O provedor não lista nenhum modelo.",
+      "fetched": "Lido do provedor em {date}",
+      "limits": "Até {context} tokens, {output} deles na resposta",
+      "price": "Por milhão de tokens: {input} de entrada, {output} de saída ({source})",
+      "price_none": "Ainda sem preço: nada pode ser gerado com este modelo até você definir um.",
+      "source": {
+        "user": "preço seu",
+        "catalogue": "publicado pelo provedor",
+        "none": "nenhum"
+      },
+      "set_price": "Definir o preço",
+      "price_currency": "Moeda",
+      "price_input": "Entrada, por milhão de tokens",
+      "price_output": "Saída, por milhão de tokens",
+      "price_save": "Guardar o preço",
+      "spend": "Gasto hoje: {amount}",
+      "spend_none": "Nada gasto hoje."
+    },
     "approvals": {
       "title": "Aprovações",
       "intro": "Publicações e gerações que custam dinheiro esperam aqui por você. Um agente pode prepará-las; só você pode dizer sim, ou escrever uma regra que diz sim por você.",
@@ -2136,6 +2170,65 @@
       "font_remove": "Remover a família de fontes {name}",
       "save": "Salvar kit de marca",
       "saved": "Kit de marca salvo."
+    },
+    "assets": {
+      "intro": {
+        "visual": "As imagens e tabelas de cor do seu espaço de trabalho, com a origem de cada uma e onde é usada.",
+        "video": "Os vídeos e áudios do seu espaço de trabalho, com a origem de cada um e onde é usado."
+      },
+      "filter": {
+        "text": "Buscar",
+        "tag": "Etiqueta",
+        "origin": "Origem",
+        "any_origin": "Qualquer origem",
+        "reusable": "Só reutilizáveis",
+        "apply": "Aplicar",
+        "clear": "Limpar"
+      },
+      "origin": {
+        "imported": "Importado",
+        "generated": "Gerado",
+        "fetched_by_agent": "Baixado por um agente",
+        "rendered_externally": "Renderizado fora"
+      },
+      "kind": {
+        "image": "Imagem",
+        "video": "Vídeo",
+        "audio": "Áudio",
+        "lut": "Tabela de cor"
+      },
+      "reusable_badge": "Reutilizável",
+      "count": "{count} arquivos",
+      "empty": {
+        "visual": "Nenhuma imagem ainda. Importe um arquivo em um projeto e ele aparece aqui.",
+        "video": "Nenhum vídeo ou áudio ainda. Importe um arquivo em um projeto e ele aparece aqui."
+      },
+      "empty_filtered": "Nenhum arquivo corresponde a esses filtros.",
+      "more": "Carregar mais",
+      "detail": {
+        "title": "Detalhes",
+        "close": "Fechar",
+        "origin": "Origem",
+        "facts": "Arquivo",
+        "provider": "Provedor {provider}, modelo {model}",
+        "cost": "Custo: {amount} USD",
+        "created": "adicionado em {date}",
+        "description": "Descrição",
+        "rights": "Nota de direitos",
+        "rights_notice": "Esta nota é o seu próprio registro da licença ou da permissão. O produto não a confere com nenhuma licença.",
+        "reusable": "Oferecer este arquivo de novo (reutilizável)",
+        "save": "Salvar",
+        "saved": "Salvo.",
+        "tags": "Etiquetas",
+        "tag_add_label": "Nova etiqueta",
+        "tag_add": "Adicionar etiqueta",
+        "tag_remove": "Remover a etiqueta {tag}",
+        "uses": "Usado por",
+        "no_uses": "Nenhum projeto usa este arquivo.",
+        "use_in": "Usar em um projeto",
+        "use": "Usar",
+        "used": "Adicionado ao projeto. Nenhuma cópia foi feita."
+      }
     },
     "library": {
       "intro": {

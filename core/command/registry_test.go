@@ -69,7 +69,7 @@ func TestRegisterRejectsIncompleteCommands(t *testing.T) {
 		},
 	}
 	for name, c := range cases {
-		r := NewRegistry()
+		r := NewRegistry(DomainVideo)
 		err := r.Register(c.cmd)
 		if err == nil || !strings.Contains(err.Error(), c.want) {
 			t.Errorf("%s: got %v, want %q", name, err, c.want)
@@ -86,7 +86,7 @@ func withSpec(c Command, f func(*Spec)) Command {
 }
 
 func TestRegistryDuplicates(t *testing.T) {
-	r := NewRegistry()
+	r := NewRegistry(DomainVideo)
 	cmds := testCommands()
 	for i := range cmds {
 		if err := r.Register(cmds[i]); err != nil {
@@ -110,7 +110,7 @@ func TestMustRegisterPanicsOnIncomplete(t *testing.T) {
 			t.Error("no panic")
 		}
 	}()
-	NewRegistry().MustRegister(Command{})
+	NewRegistry(DomainVideo).MustRegister(Command{})
 }
 
 func TestRegisterOnDefaultPanicsOnIncomplete(t *testing.T) {
@@ -180,6 +180,7 @@ func TestListNamesSchemaHelp(t *testing.T) {
 type snapshotEntry struct {
 	Name     string `json:"name"`
 	Internal bool   `json:"internal"`
+	Domain   string `json:"domain"`
 }
 
 // TestRegistryMatchesSnapshot compares the registry, which the init function of every
@@ -213,6 +214,8 @@ func TestRegistryMatchesSnapshot(t *testing.T) {
 			t.Errorf("%s is registered but absent from commands.json (run go run ./internal/tools/contractgen)", c.Name)
 		case e.Internal != c.Internal:
 			t.Errorf("%s: the snapshot says internal %v, the registry %v", c.Name, e.Internal, c.Internal)
+		case e.Domain != c.Domain:
+			t.Errorf("%s: the snapshot says domain %q, the registry %q", c.Name, e.Domain, c.Domain)
 		}
 
 		delete(want, c.Name)
