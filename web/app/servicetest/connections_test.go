@@ -14,10 +14,92 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/AlexGalhardo/stuarty/internal/outbound"
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/connections"
 	"github.com/AlexGalhardo/stuarty/service/vault"
 )
+
+// strayConnector is a connector that sends the credential to a host its connection does not list, as
+// a defective connector or a URL taken from a response would.
+type strayConnector struct{ target string }
+
+func (s strayConnector) Test(ctx context.Context, c connections.Credential) (connections.TestResult, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, s.target, http.NoBody)
+	if err != nil {
+		return connections.TestResult{}, err
+	}
+
+	req.Header.Set("Authorization", "Bearer "+string(c.Secret))
+
+	res, err := c.Client.Do(req)
+	if err != nil {
+		return connections.TestResult{}, err
+	}
+
+	_ = res.Body.Close()
+
+	return connections.TestResult{OK: true, Status: res.StatusCode}, nil
+}
+
+// Acceptance criterion 2 of epic 04 (SDD-014 sections 6 and 7): a request through a connection to a
+// host outside its list fails with the stable code E_CONNECTION_DESTINATION (HTTP 403) and reaches
+// no network: no dial is attempted and the other host receives nothing.
+func TestConnectionToAnotherHostIsADestinationError(t *testing.T) {
+	listed := newDestination(t)
+	other := newDestination(t)
+
+	var mu sync.Mutex
+
+	dials := 0
+	restore := outbound.SetDialRecorder(func(outbound.Purpose, string) error {
+		mu.Lock()
+		dials++
+		mu.Unlock()
+
+		return nil
+	})
+	t.Cleanup(restore)
+
+	e := newEnvWith(t, func(e *env, o *service.Options) {
+		o.Workspace = string(e.dir)
+		m := connections.NewManager(connections.Options{
+			Store: o.Store.Connections(), Now: e.clock.now,
+			Vault: vault.Open(filepath.Join(string(e.dir), "vault.json"), vault.NewMemoryProvider(nil)),
+		})
+		// The other server listens on the same address under another name, so only the host rule
+		// can refuse it.
+		m.Register("stray", strayConnector{target: strings.Replace(other.srv.URL, "127.0.0.1", "localhost", 1)})
+		o.Connections = m
+	})
+
+	req := connectionRequest(listed.srv.URL, "tok-STRAY-CANARY")
+	req.Kind = "stray"
+
+	created, err := e.svc.ConnectionCreate(e.as(ui), req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = e.svc.ConnectionTest(e.as(ui), service.ConnectionRef{ID: created.ID})
+
+	var se *service.Error
+	if !errors.As(err, &se) || se.Code != service.CodeConnectionDestination || se.HTTPStatus() != http.StatusForbidden {
+		t.Fatalf("a request to another host: %v, want E_CONNECTION_DESTINATION and 403", err)
+	}
+
+	if strings.Contains(se.Error(), "tok-STRAY-CANARY") {
+		t.Error("the error carries the credential")
+	}
+
+	mu.Lock()
+	defer mu.Unlock()
+
+	if dials != 0 || other.hits() != 0 || listed.hits() != 0 {
+		t.Errorf("a refused request reached the network: %d dial(s), other %d, listed %d", dials, other.hits(),
+			listed.hits())
+	}
+}
 
 // destination is a fake server that records the Authorization header it receives.
 type destination struct {
