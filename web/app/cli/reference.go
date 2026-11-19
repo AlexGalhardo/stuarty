@@ -64,7 +64,14 @@ func Reference() ReferenceDoc {
 	}
 
 	for _, s := range registry() {
-		c := CommandDoc{Name: s.name, Summary: s.summary, Usage: s.usage, Example: s.example, Pending: s.pending}
+		c := CommandDoc{
+			Name:    s.name,
+			Summary: s.summary,
+			Usage:   s.usage,
+			Example: s.example,
+			Pending: s.pending,
+			Person:  s.person,
+		}
 
 		c.Globals = append(c.Globals, baseGlobals...)
 		if s.project {
