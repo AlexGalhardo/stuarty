@@ -47,15 +47,15 @@ Batches: `--ops <file|->` reads a JSON array; `edit --project <id> item.move ite
 
 `project:show` lists tracks top to bottom, then items timed as `2s/60f`. In a diff `+`, `~`, `-` are added, changed, removed.
 
-Lint rules (`!` blocks export): code, severity, what to do.
+Lint rules (`!` blocks export):
 
 {{range .Rules}}- `{{.Code}}`{{if eq .Blocks "yes"}} !{{end}} {{.Severity}}: {{.Fix}}
 {{end}}
 ## Errors and recovery
 
-Exit codes: 0 success; 1 a failure a retry will not fix; 2 retryable or a `--wait` timeout. `E_REVISION_CONFLICT` has the changes since your revision in `details.diff`: re-plan, resend. `undo` reverts your last step.
+Exit codes: 0 success; 1 a failure a retry will not fix; 2 retryable or a `--wait` timeout. `undo` reverts your last step.
 
-Code, HTTP status, usual fix; `retry` marks exit 2.
+`retry` marks exit 2.
 
 {{range .Errors}}- `{{.Code}}` {{.HTTP}}{{if eq .Exit 2}} retry{{end}}: {{.Fix}}
 {{end}}

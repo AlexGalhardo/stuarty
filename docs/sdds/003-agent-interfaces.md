@@ -1281,7 +1281,7 @@ A frame is one JPEG (quality 80, 4:2:0). A sheet is one JPEG:
 | Implementation | the official Go SDK `github.com/modelcontextprotocol/go-sdk` v1.8.0 (it implements revision `2026-07-28` and still serves older revisions: `mcp/shared.go` lines 50 to 91, 555 to 580) |
 | Server identity | `name` `stuarty`, `version` the binary version |
 | Capabilities | `tools` only. No resources, prompts, completions, logging, sampling, roots or elicitation (ADR-0015 item 10) |
-| `tools/list` | the 17 tools below, always in the order of the table, never paged, with `ttlMs` 3,600,000 and `cacheScope` `public` (the SDK type `Cacheable`, `mcp/protocol.go` lines 1148 to 1166; the list changes only when the binary is upgraded). |
+| `tools/list` | the 18 tools below, always in the order of the table, never paged, with `ttlMs` 3,600,000 and `cacheScope` `public` (the SDK type `Cacheable`, `mcp/protocol.go` lines 1148 to 1166; the list changes only when the binary is upgraded). |
 | Tool registration | each tool is registered with the SDK's raw `(*Server).AddTool` (`mcp/server.go` line 315) with `inputSchema` and `outputSchema` taken from the registry generator, **not** with the generic `mcp.AddTool[In, Out]`, which infers schemas from Go types and would not produce the `edit` schema of §4.4. The adapter validates `arguments` against `inputSchema` with the validator of ADR-0014 and converts a failure into `E_VALIDATION` with the `path` of the first invalid value (a failure of the `operations[].op` enum is `E_UNKNOWN_COMMAND`, §2.4 rule 5). The message names the path and the constraint, never the value (§1.2 rule 9) |
 | Call result | `CallToolResult` (`Content`, `StructuredContent`, `IsError`) built as §1.3 and §1.4 say |
 | Cost | the minified `tools/list` result is at most **19,500 bytes**: at the conservative 3 bytes per token of JSON this is 6,500 tokens, the NFR-020 limit (raised from 6,000 tokens, 18,000 bytes, by D-040; before that from 17,500 bytes when `font_import` became the 16th tool, VV-024; at the 3.2 characters per token of check 2 it is 5,625 tokens). The definitions of this section measure about 19,490 bytes in total with `image` (the 17th tool, whose minified definition is about 1,080 bytes), just under the cap, so a new parameter must shorten a description. `edit` is 2,534 bytes (limit 2,700 since VV-122 added `clip.set_shadow` and `clip.set_outline`, raised from 2,500; each new operation name costs about 25 bytes) and the largest other tool is `view` at 1,518 (limit 1,600); `media_inspect` is 1,428 and `template` 1,315. No single tool is larger than 2,700 bytes (`edit`) or 1,600 bytes (the others). **Verified by** `TestToolDefinitionBudget` and, once per release, a count with the model vendor's token counting endpoint (if it exceeds 6,500 tokens the descriptions are shortened; no field is removed) |
@@ -1307,6 +1307,7 @@ Tool and Service mapping, scope and annotations (annotations are hints and clien
 | `job_cancel` | `JobCancel` | render, or media for the caller's own `transcribe` or `ingest` job | false | false | true | false |
 | `template` | `TemplateList`, `TemplateSave`, `TemplateInstantiate`, `TemplateExport`, `TemplateImport` | read (list, export), edit (the others) | false | false | false | false |
 | `font_import` | `FontImport` | media | false | false | true | false |
+| `connection` | `ConnectionList` (without `id`), `ConnectionGet` (with `id`) | read | true | n/a | true | false |
 | `image` | `ImageCreate`, `ImageList`, `ImageDescribe`, `ImageEdit`, `ImageUndo`, `ImageRedo`, `ImageExport` (SDD-021) | read (list, show), edit (the others) | false | false | false | false |
 
 `destructiveHint` is `false` on every tool: every write is undoable and recorded per actor, and nothing is removed for good (ADR-0020 items 2 and 3). A client that prompts on destructive tools therefore never prompts for this server, which is what unattended use needs (D-011). `openWorldHint` is `false` on every tool: no tool reaches an address chosen by the caller (RF-130). `TestNoOutboundTools` asserts both hints for every registered tool and that `web/app/mcp` imports no HTTP client.
@@ -1371,7 +1372,7 @@ prj_2x5c8d1f4g "Coffee ad" r17 1080x1920 30fps 21.5s/645f items=48
 ```json
 {
   "name":"project_create",
-  "description":"Create an empty project (no tracks yet; add them with edit). Returns the project id and revision 0. preset is the frame size: 9:16 is 1080x1920 (default), 1:1, 16:9, 4:5.",
+  "description":"Create an empty project (no tracks; add them with edit). Returns the project id and revision 0. preset is the frame size: 9:16 is 1080x1920 (default), 1:1, 16:9, 4:5.",
   "inputSchema":{
     "type":"object",
     "properties":{
@@ -1425,7 +1426,7 @@ created prj_7k2m9x4q1b "Launch teaser" r0 1080x1920 30fps; add tracks with edit 
 ```json
 {
   "name":"project_get",
-  "description":"Read a project as text: revision, settings, tracks listed top to bottom (the top track is drawn over the others), then items per track with times in seconds and frames. Use it first, and to get the revision for edit. detail=concise is one line per item; full adds every non-default field; document is the whole document as JSON, not paged. Long projects return next_cursor.",
+  "description":"Read a project as text: revision, settings, tracks top to bottom (the top one is drawn over the others), then items per track with times in seconds and frames. Use it first, and to get the revision for edit. detail=concise is one line per item; full adds every non-default field; document is the whole JSON, not paged. Long projects return next_cursor.",
   "inputSchema":{
     "type":"object",
     "properties":{
@@ -1867,7 +1868,7 @@ Example (the text of §3.8; `structuredContent` has `asset_id`, `kind`, `availab
 ```json
 {
   "name":"view",
-  "description":"See the result. mode=frame returns one image of the timeline at time at; mode=sheet returns a grid of frames with the time printed in each cell (count evenly spaced between from and until, or explicit times). Rendered by the export path: what you see is what export produces. Costs image tokens: read project_get and lint first. frame needs at; sheet takes times, or from, to and count (not both).",
+  "description":"See the result. mode=frame returns one image of the timeline at time at; mode=sheet returns a grid of frames, each with its time printed (count evenly spaced between from and until, or explicit times). Costs image tokens: read project_get and lint first. frame needs at; sheet takes times, or from, to and count (not both).",
   "inputSchema":{
     "type":"object",
     "properties":{
@@ -2050,7 +2051,7 @@ job_4h8k2m6p9t export succeeded 100% file=/home/ana/.stuarty/exports/prj_7k2m9x4
 ```json
 {
   "name":"job_get",
-  "description":"Get a job's state, progress and result (job_id). wait_ms waits for a final state (succeeded, failed, cancelled) for up to that many milliseconds. A succeeded export is verified; its result has the file path. Give project_id instead of job_id to list its queued, running and recent jobs.",
+  "description":"Get a job's state, progress and result (job_id). wait_ms waits up to that many ms for a final state (succeeded, failed, cancelled). A succeeded export is verified; its result has the file path. Give project_id instead of job_id to list its queued, running and recent jobs.",
   "inputSchema":{
     "type":"object",
     "properties":{
@@ -2106,7 +2107,7 @@ Called with `project_id` and no `job_id`, the call is `JobList` (§2.8): `state`
 ```json
 {
   "name":"job_cancel",
-  "description":"Cancel a queued or running job. A job already in a final state is returned unchanged. A cancelled export leaves no file.",
+  "description":"Cancel a queued or running job. A finished job is returned unchanged. A cancelled export leaves no file.",
   "inputSchema":{
     "type":"object",
     "properties":{"job_id":{"type":"string","pattern":"^job_[0-9a-hjkmnp-tv-z]{10}$"}},
@@ -2206,6 +2207,32 @@ The result is a `TemplateInstantiateResult` (§2.9): `project_id`, `revision`, `
 ```
 
 The `outputSchema` and the `title` are minimal, to stay under the budget of §4.1; the result is a `FontImportResult` (`hash`, `bytes`, `deduplicated`) in `structuredContent`; the hash goes into `files[].hash` of a `font.add` edit. The same bytes twice store one file. The tool is the MCP form of `font:import` and `POST /fonts` (VV-024).
+
+#### `connection`
+
+```json
+{
+  "name":"connection",
+  "description":"List the destinations the user connected (id, kind, label, hosts, what each accepts, last use), or read one with id. Never returns a credential. Adding, removing and testing a connection is for a person.",
+  "inputSchema":{
+    "type":"object",
+    "properties":{
+      "id":{"type":"string","pattern":"^con_[0-9a-hjkmnp-tv-z]{10}$"}
+    },
+    "additionalProperties":false
+  },
+  "outputSchema":{"type":"object"},
+  "annotations":{
+    "title":"Connections",
+    "readOnlyHint":true,
+    "destructiveHint":false,
+    "idempotentHint":true,
+    "openWorldHint":false
+  }
+}
+```
+
+The only tool of the connections domain (ADR-0043 item 3: an intent no other tool expresses, the question "where may this product send data?"; about 560 bytes, 175 tokens). It reads the registry and nothing else: it has no argument that names a destination, and creating, removing and testing a connection take a credential or reach the network, so they have a CLI command and a route and no tool (SDD-014 section 10). The result is a `ConnectionListResult` or a `Connection` in `structuredContent`; the label is delimited as untrusted text in the text part (SDD-007 section 8). It never carries a secret, only `secret_set`.
 
 #### `image`
 
@@ -3084,7 +3111,7 @@ The implementation of this SDD is complete when every check below passes. "Test"
 | # | Check | How verified |
 | --- | --- | --- |
 | 1 | Every `service.Service` method has an MCP tool, CLI command and HTTP route, or is in the exceptions of §7.1; the §7.1 table equals the one derived from the code | `TestParityTableCoversTheService`, `TestDriversCoverService`, `TestEveryOperationIsReachableOnEverySurface` (`web/contract`) |
-| 2 | `tools/list` holds exactly the 17 tools of SDD-000 §1 in the order of §4.1, byte-equal across two calls, at most 19,500 bytes minified, `edit` at most 2,700 bytes and every other tool at most 1,600 (NFR-020) | `TestToolDefinitionBudget`; release checklist: token count with the vendor endpoint at most 6,500 |
+| 2 | `tools/list` holds exactly the 18 tools of SDD-000 §1 in the order of §4.1, byte-equal across two calls, at most 19,500 bytes minified, `edit` at most 2,700 bytes and every other tool at most 1,600 (NFR-020) | `TestToolDefinitionBudget`; release checklist: token count with the vendor endpoint at most 6,500 |
 | 3 | Every `inputSchema` and `outputSchema` is valid JSON Schema 2020-12; every `inputSchema` has `additionalProperties: false`; the `edit` operation enum equals the public command names of the build; the annotations equal the table of §4.1; every output path that holds text from media or other actors carries `"x-untrusted": true` and a result with such a value has `untrusted_notice` | `TestToolSchemas` |
 | 4 | The first 512 characters of `instructions` (after the generated header line is stripped) are those of §4.6, the whole is at most 2,100 bytes, it names the tools by their exact names and does not mention locks | `TestInstructionsHead` |
 | 5 | The MCP server is stateless: no `Mcp-Session-Id` is sent or read, `GET /mcp` and `DELETE /mcp` answer 405, two interleaved clients do not influence each other; revisions `2026-07-28` and `2025-11-25` both work over stdio and HTTP | `TestHTTPIsStateless` (`web/app/mcp`), `TestMCPOverStdioThroughTheBinary` (`web/cmd/app`); no single test runs both revisions with the SDK client |

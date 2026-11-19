@@ -91,6 +91,16 @@
       ]
     },
     {
+      "tag": "Connections",
+      "pages": [
+        "connections.list",
+        "connections.create",
+        "connections.get",
+        "connections.remove",
+        "connections.test"
+      ]
+    },
+    {
       "tag": "Images",
       "pages": [
         "images.list",
@@ -153,6 +163,7 @@
       "job_cancel",
       "template",
       "font_import",
+      "connection",
       "image"
     ],
     "operations": [

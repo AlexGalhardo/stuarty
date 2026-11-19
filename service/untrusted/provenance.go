@@ -26,11 +26,13 @@ var Provenance = map[string]string{
 	"service.ProjectOtioExportResult.FileName": SourceProjectText,
 
 	// image documents (SDD-021): names, texts and the descriptions built from them
-	"service.ImageCreateResult.Text":      SourceProjectText,
-	"service.ImageListResult.Text":        SourceProjectText,
-	"service.ImageSummary.Name":           SourceProjectText,
-	"service.ImageDescribeResult.Name":    SourceProjectText,
-	"service.ImageDescribeResult.Layers":  SourceProjectText,
-	"service.ImageDescribeResult.Text":    SourceProjectText,
-	"service.ImageEditResult.Description": SourceProjectText,
+	"service.ImageCreateResult.Text":       SourceProjectText,
+	"service.ImageListResult.Text":         SourceProjectText,
+	"service.ImageSummary.Name":            SourceProjectText,
+	"service.ImageDescribeResult.Name":     SourceProjectText,
+	"service.ImageDescribeResult.Layers":   SourceProjectText,
+	"service.ImageDescribeResult.Text":     SourceProjectText,
+	"service.ImageEditResult.Description":  SourceProjectText,
+	"connections.Connection.Label":         SourceProjectText,
+	"service.ConnectionTestResult.Message": SourceNetworkText,
 }

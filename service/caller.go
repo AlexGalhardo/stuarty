@@ -99,13 +99,18 @@ var Scopes = map[string]string{
 	"KeyList":             ScopeRead,
 	"KeyRevoke":           ScopeRead,
 
-	"ImageCreate":   ScopeEdit,
-	"ImageList":     ScopeRead,
-	"ImageDescribe": ScopeRead,
-	"ImageEdit":     ScopeEdit,
-	"ImageUndo":     ScopeEdit,
-	"ImageRedo":     ScopeEdit,
-	"ImageExport":   ScopeEdit,
+	"ImageCreate":      ScopeEdit,
+	"ImageList":        ScopeRead,
+	"ImageDescribe":    ScopeRead,
+	"ImageEdit":        ScopeEdit,
+	"ImageUndo":        ScopeEdit,
+	"ImageRedo":        ScopeEdit,
+	"ImageExport":      ScopeEdit,
+	"ConnectionList":   ScopeRead,
+	"ConnectionGet":    ScopeRead,
+	"ConnectionCreate": ScopeAdmin,
+	"ConnectionRemove": ScopeAdmin,
+	"ConnectionTest":   ScopeAdmin,
 }
 
 // authorize checks the caller first, as every method does: a missing caller
