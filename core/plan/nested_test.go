@@ -140,7 +140,15 @@ func TestNestedFlatteningEqualsInlining(t *testing.T) {
 
 	for i := range gotW.Layers {
 		g, w := gotW.Layers[i], wantW.Layers[i]
-		g.Item = strings.TrimPrefix(g.Item, compID+"/")
+		trimmed := strings.TrimPrefix(g.Item, compID+"/")
+		nestedLayer := trimmed != g.Item
+		g.Item = trimmed
+
+		if nestedLayer && g.Timeline != tlChild || !nestedLayer && g.Timeline != "" {
+			t.Errorf("window layer %d is owned by %q, want the nested timeline %q", i, g.Timeline, tlChild)
+		}
+
+		g.Timeline = ""
 
 		if !reflect.DeepEqual(g, w) {
 			t.Errorf("window layer %d: got %+v, want %+v", i, g, w)
