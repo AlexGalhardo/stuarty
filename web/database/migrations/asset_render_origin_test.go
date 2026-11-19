@@ -5,16 +5,9 @@ import (
 	"slices"
 	"strings"
 	"testing"
-
-	"github.com/AlexGalhardo/vukem/schema"
 )
 
 const renderOriginID = "20261119210000_asset_render_origin"
-
-// newerThan is how many migrations of All come after the one with this id.
-func newerThan(id string) int {
-	return len(All()) - 1 - slices.IndexFunc(All(), func(m schema.Migration) bool { return m.ID == id })
-}
 
 // hasColumn reads the lines of columns(): a column is a line that starts with its name and its text type.
 func hasColumn(lines []string, name string) bool {
@@ -55,11 +48,10 @@ func TestAssetRenderOriginMigration(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// The migrations added after this one are rolled back first; the last one rolled back is this one.
-	newer := newerThan(renderOriginID)
-	if rolled, err := m.Rollback(ctx, newer+1); err != nil || len(rolled) != newer+1 ||
-		rolled[len(rolled)-1] != renderOriginID {
-		t.Fatalf("Rollback = %v, %v", rolled, err)
+	// The migrations that came after this one (the chat tables of epic 14, the checkpoints of epic 36) come off first.
+	want := downTo(renderOriginID)
+	if rolled, err := m.Rollback(ctx, len(want)); err != nil || !slices.Equal(rolled, want) {
+		t.Fatalf("Rollback = %v, %v; want %v", rolled, err, want)
 	}
 
 	got = columns(t, db, "asset_info")
