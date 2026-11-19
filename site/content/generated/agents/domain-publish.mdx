@@ -14,7 +14,11 @@ Publications and the approval queue that gates them and costly generations.
 
 MCP tools: `command_help`. Tools that take `domain=publish`: `command_help`.
 
-CLI: no command yet.
+CLI: `stuarty publish` lists the commands of the domain and `stuarty publish <verb>` runs one; the full names stay valid.
+
+- `approval:list`: list the approval queue: what waits for a person (pending by default)
+- `approval:show`: show one approval request: what will be sent, where, the cost and its state
+- `approval:rule:list`: list the rules that approve without asking
 
 ## Operations
 

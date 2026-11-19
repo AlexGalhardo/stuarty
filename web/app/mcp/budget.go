@@ -14,6 +14,6 @@ const (
 	// MaxToolBytes is the largest definition of any one tool. Measured about 1,600 bytes (`media_inspect`, `edit`).
 	MaxToolBytes = 1_700
 	// MaxDiscoveryChars is the text of the first discovery call, command_help with no argument: the operations of
-	// the video domain and one line per domain, 2,200 tokens. Measured about 6,900 characters.
-	MaxDiscoveryChars = 7_040
+	// the video domain and one line per domain, 2,340 tokens. Measured about 7,200 characters; it grows by about 90 for every operation added to the video domain.
+	MaxDiscoveryChars = 7_500
 )
