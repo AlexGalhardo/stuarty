@@ -86,39 +86,6 @@ export type LintCode = ${lintRules.map((r) => JSON.stringify(r.code)).join(" | "
 		`export const LINT_RULES: LintRule[] = ${JSON.stringify(lintRules, null, "	")};
 `,
 );
-// audioProcessors.ts: the audio processors of the core (SDD-004 section 7.1): the kinds, their parameters with unit,
-// range and default, and the presets.
-const audioProcessors = await readJSON("audio-processors.json");
-await writeFile(
-	join(outDir, "audioProcessors.ts"),
-	`${banner}
-export type ProcessorKind = ${audioProcessors.kinds.map((k) => JSON.stringify(k.kind)).join(" | ")};
-
-export type AudioPresetId = ${audioProcessors.presets.map((p) => JSON.stringify(p)).join(" | ")};
-
-` +
-		`export interface ProcessorParam {
-	name: string;
-	unit: string;
-	min: number;
-	max: number;
-	default: number;
-	off_zero?: boolean;
-	min_on?: number;
-}
-
-export interface ProcessorSpec {
-	kind: ProcessorKind;
-	params: ProcessorParam[];
-}
-
-` +
-		`export const MAX_PROCESSORS = ${audioProcessors.max_processors};
-export const MIN_PROFILE_MS = ${audioProcessors.min_profile_ms};
-export const AUDIO_PRESETS: AudioPresetId[] = ${JSON.stringify(audioProcessors.presets)};
-export const AUDIO_PROCESSORS: ProcessorSpec[] = ${JSON.stringify(audioProcessors.kinds, null, "	")};
-`,
-);
 const limits = await readJSON("limits.json");
 await writeFile(
 	join(outDir, "limits.ts"),

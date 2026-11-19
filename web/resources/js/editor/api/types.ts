@@ -1314,6 +1314,33 @@ export interface ExportFinding {
 	got: string;
 }
 
+// GET /projects/{id}/audio-measure: the sound of an item or a range, before and after its audio processors
+// (SDD-004 section 7.1). A level is null when the audio has none (silence, or under 0.4 s).
+export interface AudioLevels {
+	integrated_lufs: number | null;
+	true_peak_dbtp: number | null;
+	noise_floor_dbfs: number;
+	speech_to_noise_db: number | null;
+}
+
+export interface AudioMeasureResult {
+	project_id: string;
+	revision: number;
+	item_id?: string;
+	start_frame: number;
+	end_frame: number;
+	seconds: number;
+	before: AudioLevels;
+	after: AudioLevels;
+	text: string;
+}
+
+export interface AudioMeasureQuery {
+	itemId?: string;
+	start?: string;
+	end?: string;
+}
+
 // GET /projects/{id}/export-check: what does not fit a preset, with the exact limit.
 export interface ExportCheckResult {
 	project_id: string;
