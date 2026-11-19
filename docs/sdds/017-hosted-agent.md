@@ -112,6 +112,7 @@ A message sent while the state is not `idle` is `E_INVALID_STATE` with `details.
 - Its actor is `local:chat-<10 characters of the session id>` in local mode and `key:<session id>` in network mode, so an edit shows in the operation log with the agent as the actor (RF-381), and undo and redo are scoped to it.
 - Its owner is the person who started the session (network mode: `OwnerUserID`), so the visibility rules of users hold.
 - It dies when the session ends, when the server stops, or after 8 hours.
+- If the agent writes the token in a message, a tool call or a permission request, the transcript and the stream show `[token]` in its place: the recorder replaces the secret of the session in everything the agent wrote, so a transcript never holds one.
 - It is accepted by `POST /mcp` and by the other HTTP routes for the project it is bound to, behind the same guard (peer, Host, Origin) as any credential. It is **refused for the operations of a person** (section 10) whatever its scopes.
 
 The approval queue applies as to any agent: a publication or a costly generation the agent starts waits for a person in the Approvals page, never in the chat (section 7). The session token is not a way around ADR-0032.
@@ -179,13 +180,14 @@ All are in the domain `workspace`. A "person" is `Caller.Browser` (a browser ses
 | `ChatCancel` | `POST /chat/sessions/{id}/cancel` | `edit` and a person; `end` true also ends the session |
 | `ChatAnswerPermission` | `POST /chat/sessions/{id}/permissions/{request_id}` | `edit` and a person |
 | `ChatSessionList` | `GET /projects/{id}/chat/sessions` | `read`; project check |
+| `ChatSessionGet` | `GET /chat/sessions/{id}` | `read`; the project check of the session's project |
 | `ChatTranscriptGet` | `GET /chat/sessions/{id}/transcript` | `read`; the project check of the session's project |
 | `ChatSessionDelete` | `DELETE /chat/sessions/{id}` | `edit` and a person |
 | the event stream | `GET /chat/sessions/{id}/events` | `read`; the project check |
 
 - A caller that is not a person gets `E_PRIVILEGED_SESSION` before the scope is checked, so an agent learns one thing (as in SDD-015 section 4). The session token of section 6 is such a caller: a hosted agent cannot start, steer, cancel, answer or delete a chat, nor write a profile.
 - A project-limited caller sees only the sessions of its project; a session of another project is `E_CHAT_NOT_FOUND`, the same answer as for an id that does not exist. In network mode a user sees only the sessions of projects they may see.
-- **CLI**: the reads only, `agent:profiles`, `chat:sessions` and `chat:transcript` (with `--format markdown`). **MCP**: no tool. A hosted agent has no use for the chat of another agent, and a tool that reads a transcript would hand one agent's text to another as instructions (SDD-007 T-44's reasoning); the person reads transcripts in the panel and through the CLI. The writes have no CLI command: they are for a person.
+- **CLI**: the reads only, `agent:profiles`, `chat:sessions`, `chat:session` and `chat:transcript` (with `--format markdown`). **MCP**: no tool. A hosted agent has no use for the chat of another agent, and a tool that reads a transcript would hand one agent's text to another as instructions (SDD-007 T-44's reasoning); the person reads transcripts in the panel and through the CLI. The writes have no CLI command: they are for a person.
 - With the audit: starting, ending and deleting a session and writing or removing a profile are recorded in `audit` with the actor, the profile name and, for a profile, the full command. A transcript text is never copied into the audit.
 
 ## 11. Errors and limits
