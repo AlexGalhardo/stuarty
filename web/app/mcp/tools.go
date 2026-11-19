@@ -226,6 +226,10 @@ func commandHelp(ctx context.Context, svc service.Service, raw json.RawMessage) 
 		return nil, err
 	}
 
+	if in.Domain == "export" {
+		return exportHelp(ctx, svc, in.Name)
+	}
+
 	res, err := svc.CommandHelp(ctx, service.CommandHelpRequest{Name: in.Name, Domain: in.Domain})
 	if err != nil {
 		return nil, err
@@ -285,19 +289,26 @@ func history(ctx context.Context, svc service.Service, raw json.RawMessage) (*to
 
 func lintTool(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolOutput, error) {
 	in, err := decode[struct {
-		ProjectID  string `json:"project_id"`
-		TimelineID string `json:"timeline_id"`
-		Severity   string `json:"severity"`
+		ProjectID string `json:"project_id"`
+		Severity  string `json:"severity"`
+		Preset    string `json:"preset"`
 		pageArgs
 	}](raw)
 	if err != nil {
 		return nil, err
 	}
 
-	res, err := svc.Lint(
-		ctx,
-		service.LintRequest{ProjectID: in.ProjectID, TimelineID: in.TimelineID, Severity: in.Severity, Page: in.page()},
-	)
+	// With a preset the lint is the fit check of SDD-004 section 8.2 (ExportCheck).
+	if in.Preset != "" {
+		chk, cerr := svc.ExportCheck(ctx, service.ExportCheckRequest{ProjectID: in.ProjectID, Preset: in.Preset})
+		if cerr != nil {
+			return nil, cerr
+		}
+
+		return &toolOutput{value: chk, text: chk.Text}, nil
+	}
+
+	res, err := svc.Lint(ctx, service.LintRequest{ProjectID: in.ProjectID, Severity: in.Severity, Page: in.page()})
 	if err != nil {
 		return nil, err
 	}
@@ -406,9 +417,52 @@ func jobStart(ctx context.Context, svc service.Service, raw json.RawMessage) (*t
 		return nil, err
 	}
 
+	if in.Kind == service.JobExportBatch {
+		return exportBatch(ctx, svc, in.ProjectID, in.Args, in.WaitMS)
+	}
+
 	res, err := svc.JobStart(ctx, service.JobStartRequest{
 		ProjectID: in.ProjectID, TimelineID: in.TimelineID, Kind: in.Kind, Args: in.Args, WaitMS: in.WaitMS,
 	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &toolOutput{value: res, text: res.Text}, nil
+}
+
+// exportBatch is job_start with kind export_batch: args.items are the exports (SDD-004 section 8.4).
+func exportBatch(
+	ctx context.Context, svc service.Service, projectID string, args json.RawMessage, waitMS int,
+) (*toolOutput, error) {
+	in, err := decode[struct {
+		Items []service.ExportBatchItem `json:"items"`
+	}](args)
+	if err != nil {
+		return nil, &service.Error{
+			Code: command.CodeValidation, Path: "args",
+			Message: "args must be {items: [{preset, format, codec, start, end}]}.",
+		}
+	}
+
+	res, err := svc.ExportBatch(ctx, service.ExportBatchRequest{ProjectID: projectID, Items: in.Items, WaitMS: waitMS})
+	if err != nil {
+		return nil, err
+	}
+
+	return &toolOutput{value: res, text: res.Text}, nil
+}
+
+// exportHelp is command_help with domain export: the presets and the codecs of this machine.
+func exportHelp(ctx context.Context, svc service.Service, name string) (*toolOutput, error) {
+	if name != "" {
+		return nil, &service.Error{
+			Code: command.CodeValidation, Path: "name",
+			Message: "domain export lists the presets and takes no name.",
+		}
+	}
+
+	res, err := svc.ExportPresetList(ctx, service.ExportPresetListRequest{Codecs: true})
 	if err != nil {
 		return nil, err
 	}

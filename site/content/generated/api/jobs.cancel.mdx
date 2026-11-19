@@ -289,17 +289,27 @@ puts "#{response.code} #{response.body}"
   "progress": 0,
   "project_id": "string",
   "result": {
+    "batch": {
+      "cancelled": 0,
+      "failed": 0,
+      "items": [],
+      "succeeded": 0,
+      "total": 0
+    },
     "export": {
       "audio_codec": "string",
       "bytes": 0,
       "checks": [],
+      "codec_fallback": "string",
       "download_url": "string",
       "duration": {},
       "format": "string",
       "fps": "string",
       "height": 0,
       "loudness_lufs": 0,
+      "notes": [],
       "path": "string",
+      "preset": "string",
       "revision": 0,
       "sha256": "string",
       "video_codec": "string",

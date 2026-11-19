@@ -1,6 +1,6 @@
 {
  "name": "lint",
- "description": "Check a project for problems and get them as text: code, severity, item, message, hint. Errors block export. Run it after edits, before export. Runs every rule, unlike the lint block of an edit result (lint_scope fast).",
+ "description": "Check a project for problems: code, severity, item, message, hint. Errors block export; run after edits, before export. Runs every rule. preset (see command_help domain=export) checks the fit to that export preset instead.",
  "inputSchema": {
   "type": "object",
   "properties": {
@@ -27,6 +27,9 @@
     "minimum": 1,
     "maximum": 100,
     "default": 25
+   },
+   "preset": {
+    "type": "string"
    }
   },
   "required": [

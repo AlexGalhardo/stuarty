@@ -24,6 +24,9 @@ command doctor
 command edit
 command events
 command export
+command export:batch
+command export:check
+command export:presets
 command font:import
 command fonts
 command history
@@ -101,7 +104,7 @@ route GET /commands
 route GET /commands/{}
 route GET /connections
 route GET /connections/{}
-route GET /cost
+route GET /export-presets
 route GET /fonts
 route GET /handshake
 route GET /images
@@ -126,6 +129,7 @@ route GET /projects/{}/bitmaps/{}
 route GET /projects/{}/brief
 route GET /projects/{}/describe
 route GET /projects/{}/events
+route GET /projects/{}/export-check
 route GET /projects/{}/frame
 route GET /projects/{}/history
 route GET /projects/{}/jobs
@@ -171,11 +175,7 @@ route POST /projects/import
 route POST /projects/{}/bundle
 route POST /projects/{}/duplicate
 route POST /projects/{}/edit
-route POST /projects/{}/items
-route POST /projects/{}/items/{}/move
-route POST /projects/{}/items/{}/rename
-route POST /projects/{}/items/{}/restore
-route POST /projects/{}/items/{}/trash
+route POST /projects/{}/export-batches
 route POST /projects/{}/jobs
 route POST /projects/{}/media
 route POST /projects/{}/media/{}/restore

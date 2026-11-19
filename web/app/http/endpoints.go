@@ -222,6 +222,23 @@ var Endpoints = []Endpoint{
 		AlsoScope: service.ScopeMedia, Service: "JobCancel", Status: 200, Summary: "Cancel a job",
 	},
 	{
+		ID: "export.presets", Method: http.MethodGet, Path: "/export-presets", Scope: service.ScopeRead,
+		Service: "ExportPresetList", Status: 200, Summary: "List the export presets of the platforms",
+	},
+	{
+		ID: "export.check", Method: http.MethodGet, Path: "/projects/{id}/export-check", Scope: service.ScopeRead,
+		Service: "ExportCheck", Status: 200, Summary: "Check a project against an export preset",
+	},
+	{
+		ID:      "export.batch",
+		Method:  http.MethodPost,
+		Path:    "/projects/{id}/export-batches",
+		Scope:   service.ScopeRender,
+		Service: "ExportBatch",
+		Status:  202,
+		Summary: "Export a project several times, one after the other",
+	},
+	{
 		ID: "templates.list", Method: http.MethodGet, Path: "/templates", Scope: service.ScopeRead,
 		Service: "TemplateList", Status: 200, Summary: "List the templates",
 	},
