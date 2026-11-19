@@ -48,22 +48,18 @@ func (e *env) addConnection(id string) {
 func (e *env) addRequest() approval.Row {
 	e.t.Helper()
 
-	return e.addRequestFor("publish.post", "", "", "", 0)
+	return e.addRequestFor("", "")
 }
 
 // addRequestFor is addRequest for a user (network mode) and a project.
-func (e *env) addRequestFor(kind, connection, user, project string, micros int64) approval.Row {
+func (e *env) addRequestFor(user, project string) approval.Row {
 	e.t.Helper()
 
 	now := e.clock.now().UnixMilli()
 	row := approval.Row{
-		ID: e.newID("apr"), Actor: token, OwnerUserID: user, Kind: kind, Summary: "Post the launch video",
-		ConnectionID: connection, ProjectID: project, PayloadRef: "draft:1", Estimate: core.Money{Micros: micros},
+		ID: e.newID("apr"), Actor: token, OwnerUserID: user, Kind: "publish.post", Summary: "Post the launch video",
+		ConnectionID: "", ProjectID: project, PayloadRef: "draft:1", Estimate: core.Money{},
 		State: approval.StatePending, CreatedMs: now, ExpiresMs: now + approval.ExpireAfter.Milliseconds(),
-	}
-
-	if micros > 0 {
-		row.Estimate.Currency = "USD"
 	}
 
 	if err := e.store.Approvals().InsertRequest(context.Background(), &row); err != nil {
@@ -312,8 +308,8 @@ func TestApprovalVisibilityInNetworkMode(t *testing.T) {
 
 	e := newEnv(t)
 	proj := e.newProject("p")
-	mine := e.addRequestFor("publish.post", "", owner, proj, 0)
-	other := e.addRequestFor("publish.post", "", "usr_0000000002", "", 0)
+	mine := e.addRequestFor(owner, proj)
+	other := e.addRequestFor("usr_0000000002", "")
 
 	user := func(scopes ...string) context.Context {
 		return service.WithCaller(context.Background(), service.Caller{

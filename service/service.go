@@ -186,8 +186,10 @@ type Event struct {
 	Message  string
 	Error    *Error
 	Result   *JobResult
-	// Approval is the request of approval.requested and approval.decided (SDD-015 section 7).
+	// Approval is the request of approval.requested and approval.decided (SDD-015 section 7), and
+	// Owner the user it belongs to in network mode, so that a member's stream carries their own only.
 	Approval *approval.Request
+	Owner    string
 }
 
 // Options configure New. Store is required.
