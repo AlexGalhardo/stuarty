@@ -138,17 +138,19 @@ Every operation has its own page with the parameters, the body, the responses an
 | `DELETE` | `/api/v1/connections/{id}` | [`connections.remove`](/docs/api/connections.remove) | Remove a connection and its credential |
 | `POST` | `/api/v1/connections/{id}/test` | [`connections.test`](/docs/api/connections.test) | Make one request through a connection |
 
-## Images
+## Approvals
 
 | Method | Path | Operation | Summary |
 | --- | --- | --- | --- |
-| `GET` | `/api/v1/images` | [`images.list`](/docs/api/images.list) | List the image documents and templates |
-| `POST` | `/api/v1/images` | [`images.create`](/docs/api/images.create) | Create an image document, blank or from a template |
-| `GET` | `/api/v1/images/{id}` | [`images.get`](/docs/api/images.get) | Describe an image document: layers, findings and text view |
-| `POST` | `/api/v1/images/{id}/edit` | [`images.edit`](/docs/api/images.edit) | Apply a batch of image operations |
-| `POST` | `/api/v1/images/{id}/export` | [`images.export`](/docs/api/images.export) | Export an image document to a PNG, JPEG or WebP file |
-| `POST` | `/api/v1/images/{id}/redo` | [`images.redo`](/docs/api/images.redo) | Redo the latest undone step of the caller on an image |
-| `POST` | `/api/v1/images/{id}/undo` | [`images.undo`](/docs/api/images.undo) | Undo the latest step of the caller on an image |
+| `GET` | `/api/v1/approval-rules` | [`approval-rules.list`](/docs/api/approval-rules.list) | List the rules that approve without asking |
+| `POST` | `/api/v1/approval-rules` | [`approval-rules.set`](/docs/api/approval-rules.set) | Create or replace a rule (a person in the browser only; the local token and keys get 403) |
+| `DELETE` | `/api/v1/approval-rules/{id}` | [`approval-rules.remove`](/docs/api/approval-rules.remove) | Remove a rule (a person in the browser only; the local token and keys get 403) |
+| `GET` | `/api/v1/approvals` | [`approvals.list`](/docs/api/approvals.list) | List the approval queue (pending requests by default) |
+| `GET` | `/api/v1/approvals/{id}` | [`approvals.get`](/docs/api/approvals.get) | Read one approval request |
+| `POST` | `/api/v1/approvals/{id}/decide` | [`approvals.decide`](/docs/api/approvals.decide) | Approve or reject a request (a person in the browser only; the local token and keys get 403) |
+| `GET` | `/api/v1/approvals/events` | [`approvals.events`](/docs/api/approvals.events) | Stream the events of the approval queue |
+| `GET` | `/api/v1/cost` | [`cost.get`](/docs/api/cost.get) | Read the cost ceilings and what was spent |
+| `PUT` | `/api/v1/cost/ceilings` | [`cost.ceilings.set`](/docs/api/cost.ceilings.set) | Set or remove a cost ceiling (a person in the browser only; the local token and keys get 403) |
 
 ## System
 

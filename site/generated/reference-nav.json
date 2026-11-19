@@ -132,15 +132,17 @@
       ]
     },
     {
-      "tag": "Images",
+      "tag": "Approvals",
       "pages": [
-        "images.list",
-        "images.create",
-        "images.get",
-        "images.edit",
-        "images.export",
-        "images.redo",
-        "images.undo"
+        "approval-rules.list",
+        "approval-rules.set",
+        "approval-rules.remove",
+        "approvals.list",
+        "approvals.get",
+        "approvals.decide",
+        "approvals.events",
+        "cost.get",
+        "cost.ceilings.set"
       ]
     },
     {
@@ -195,9 +197,7 @@
       "template",
       "font_import",
       "connection",
-      "image",
-      "project_item",
-      "library"
+      "approval"
     ],
     "operations": [
       "asset.remove",

@@ -1,4 +1,10 @@
 command agent:docs
+command approval:decide
+command approval:list
+command approval:rule:list
+command approval:rule:remove
+command approval:rule:set
+command approval:show
 command audit
 command brand:set
 command brand:show
@@ -12,6 +18,8 @@ command connection:list
 command connection:remove
 command connection:show
 command connection:test
+command cost:ceiling
+command cost:show
 command doctor
 command edit
 command events
@@ -78,9 +86,13 @@ command transcribe
 command undo
 command version
 command view
+route DELETE /approval-rules/{}
 route DELETE /connections/{}
 route DELETE /keys/{}
-route DELETE /library/memory/{}
+route GET /approval-rules
+route GET /approvals
+route GET /approvals/events
+route GET /approvals/{}
 route GET /assets
 route GET /audit
 route GET /brand-kit
@@ -88,6 +100,7 @@ route GET /commands
 route GET /commands/{}
 route GET /connections
 route GET /connections/{}
+route GET /cost
 route GET /fonts
 route GET /handshake
 route GET /images
@@ -131,6 +144,8 @@ route GET /templates
 route GET /templates/{}/file
 route GET /users
 route PATCH /users/{}
+route POST /approval-rules
+route POST /approvals/{}/decide
 route POST /connections
 route POST /connections/{}/test
 route POST /fonts
@@ -175,9 +190,8 @@ route POST /templates/{}/instantiate
 route POST /trash/empty
 route POST /users
 route PUT /brand-kit
-route PUT /library/prompts/{}
-route PUT /library/skills/{}
-route PUT /projects/{}/brief
+route PUT /cost/ceilings
+tool approval
 tool command_help
 tool connection
 tool edit

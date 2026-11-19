@@ -40,7 +40,7 @@ An agent can prepare a post or an expensive generation, and nothing is sent or s
 - [x] 3. Add the tables and the service operations, with the privileged-session check. Verify: `go test ./service/approval/...` passes, including a test where a local-token caller is refused.
 - [x] 4. Wire jobs: the `waiting_approval` state, start on approval, reject on cancel. Verify: `go test ./service/... ./web/app/servicetest/... -run TestJobApproval` passes (the lifecycle tests need the SQLite store, which `service/` may not import, so they live in `web/app/servicetest`).
 - [x] 5. Implement the cost ledger and the ceilings. Verify: `go test ./service/approval/... ./web/app/servicetest/... -run TestCeiling` passes (per item, per day, per project).
-- [ ] 6. Expose on HTTP, CLI and MCP (read and submit for agents; decide only for a privileged session) with parity tests. Verify: `go test ./web/contract/...` passes.
+- [x] 6. Expose on HTTP, CLI and MCP (read and submit for agents; decide only for a privileged session) with parity tests. Verify: `go test ./web/contract/...` passes.
 - [ ] 7. Build the approval queue component and the rules screen in both languages. Verify: `task test:web` and `web/e2e/specs/approval.spec.ts` pass.
 - [ ] 8. Add the security tests of the new rows. Verify: `go test -run TestSecurity_ ./...` and `go run ./internal/tools/threatcheck` exit 0.
 

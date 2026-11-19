@@ -1551,79 +1551,22 @@
       ]
     },
     {
-      "name": "image:create",
-      "summary": "create an image document, blank or from a template",
+      "name": "approval:list",
+      "summary": "list the approval queue: what waits for a person (pending by default)",
       "usage": [
-        "stuarty image:create --preset p"
+        "stuarty approval:list [--state s] [--project <id>] [--cursor c] [--limit n]"
       ],
-      "example": "stuarty image:create --preset video_thumbnail --name \"Episode 12\" --background \"#101820\"",
+      "example": "stuarty approval:list --state all",
       "flags": [
         {
-          "name": "preset",
+          "name": "state",
           "type": "string",
-          "usage": "video_thumbnail (1280x720), square_post (1080x1080) or vertical_cover (1080x1920)"
+          "usage": "pending (default), approved, rejected, expired or all"
         },
         {
-          "name": "width",
-          "type": "integer",
-          "usage": "pixels, 1 to 4096, with --height"
-        },
-        {
-          "name": "height",
-          "type": "integer",
-          "usage": "pixels, 1 to 4096, with --width"
-        },
-        {
-          "name": "name",
+          "name": "project",
           "type": "string",
-          "usage": "name of the image"
-        },
-        {
-          "name": "background",
-          "type": "string",
-          "usage": "a colour or transparent (default #FFFFFF)"
-        },
-        {
-          "name": "template",
-          "type": "boolean",
-          "default": "false",
-          "usage": "make a template whose text and image layers may be slots"
-        },
-        {
-          "name": "from-template",
-          "type": "string",
-          "usage": "make the image from this template"
-        },
-        {
-          "name": "values",
-          "type": "string",
-          "usage": "a JSON object of slot name to {\"text\": \"...\"} or {\"asset\": \"sha256:...\"}: a file, or - for standard input"
-        },
-        {
-          "name": "id",
-          "type": "string",
-          "usage": "identifier for the image (omit it in network mode: the server chooses)"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "image:list",
-      "summary": "list the image documents and templates",
-      "usage": [
-        "stuarty image:list"
-      ],
-      "example": "stuarty image:list --templates only --json",
-      "flags": [
-        {
-          "name": "templates",
-          "type": "string",
-          "usage": "only for the templates, none for the others"
+          "usage": "only the requests of one project"
         },
         {
           "name": "cursor",
@@ -1633,7 +1576,7 @@
         {
           "name": "limit",
           "type": "integer",
-          "default": "20",
+          "default": "50",
           "usage": "items per page"
         }
       ],
@@ -1645,12 +1588,12 @@
       ]
     },
     {
-      "name": "image:show",
-      "summary": "describe an image document: its layers, its findings and its revision",
+      "name": "approval:show",
+      "summary": "show one approval request: what will be sent, where, the cost and its state",
       "usage": [
-        "stuarty image:show <id>"
+        "stuarty approval:show <id>"
       ],
-      "example": "stuarty image:show img_7k2m9x4q1b",
+      "example": "stuarty approval:show apr_0123456789",
       "globals": [
         "json",
         "workspace",
@@ -1659,231 +1602,27 @@
       ]
     },
     {
-      "name": "image:edit",
-      "summary": "apply a batch of image operations (stuarty command:help --domain image lists them)",
+      "name": "approval:decide",
+      "summary": "approve or reject a request (for a person in the app; the local token is refused)",
       "usage": [
-        "stuarty image:edit <id> <op> k=v..."
+        "stuarty approval:decide <id> --approve | --reject [--reason <text>]"
       ],
-      "example": "stuarty image:edit img_7k2m9x4q1b layer.add_text text=\"HOW IT WORKS\" slot=title",
+      "example": "stuarty approval:decide apr_0123456789 --reject --reason \"wrong channel\"",
       "flags": [
         {
-          "name": "ops",
-          "type": "string",
-          "usage": "a JSON file with the batch, or - for standard input: {\"operations\":[{\"op\":\"item.move\",\"args\":{\"item_id\":\"itm_m1n2p3q4r5\",\"start\":\"2s\"}}]}, or only the array of {op, args}; base_revision, idempotency_key and dry_run may sit beside operations"
-        },
-        {
-          "name": "base",
-          "type": "integer",
-          "usage": "the revision the batch was planned against (default: the current one)"
-        },
-        {
-          "name": "key",
-          "type": "string",
-          "usage": "idempotency key"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file",
-        "dry-run"
-      ]
-    },
-    {
-      "name": "image:undo",
-      "summary": "undo the last step of the caller on an image",
-      "usage": [
-        "stuarty image:undo <id>"
-      ],
-      "example": "stuarty image:undo img_7k2m9x4q1b",
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file",
-        "dry-run"
-      ]
-    },
-    {
-      "name": "image:redo",
-      "summary": "redo the last undone step of the caller on an image",
-      "usage": [
-        "stuarty image:redo <id>"
-      ],
-      "example": "stuarty image:redo img_7k2m9x4q1b",
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file",
-        "dry-run"
-      ]
-    },
-    {
-      "name": "image:export",
-      "summary": "export an image document to a PNG, JPEG or WebP file",
-      "usage": [
-        "stuarty image:export <id> [--format f]"
-      ],
-      "example": "stuarty image:export img_7k2m9x4q1b --format jpeg --quality 85",
-      "flags": [
-        {
-          "name": "format",
-          "type": "string",
-          "default": "png",
-          "usage": "png, jpeg or webp"
-        },
-        {
-          "name": "quality",
-          "type": "integer",
-          "usage": "1 to 100, for jpeg and lossy webp"
-        },
-        {
-          "name": "preset",
-          "type": "string",
-          "usage": "resample to video_thumbnail, square_post or vertical_cover"
-        },
-        {
-          "name": "width",
-          "type": "integer",
-          "usage": "resample to this width (0 keeps the aspect)"
-        },
-        {
-          "name": "height",
-          "type": "integer",
-          "usage": "resample to this height (0 keeps the aspect)"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "memory:list",
-      "summary": "list the memory notes",
-      "usage": [
-        "stuarty memory:list [--scope workspace|<project id>] [--tag t]... [--all]"
-      ],
-      "example": "stuarty memory:list --tag hooks --json",
-      "flags": [
-        {
-          "name": "scope",
-          "type": "string",
-          "usage": "workspace or a project id"
-        },
-        {
-          "name": "tag",
-          "type": "string",
-          "usage": "a tag; repeat it for several",
-          "repeat": true
-        },
-        {
-          "name": "all",
+          "name": "approve",
           "type": "boolean",
-          "default": "false",
-          "usage": "also what is not reviewed (skills) or not kept (notes): an agent is not offered those"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "memory:show",
-      "summary": "show a memory note",
-      "usage": [
-        "stuarty memory:show <name>"
-      ],
-      "example": "stuarty memory:show viewers-skip-intros",
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "memory:write",
-      "summary": "write a memory note: one fact, with what was learned",
-      "usage": [
-        "stuarty memory:write [<name>] --description <one line> [--body <text>|--body-file <file|->] [--scope s] [--tag t]...",
-        "a note written here is pending until a person keeps it in the Memory section"
-      ],
-      "example": "stuarty memory:write --description \"Viewers skip long intros\" --body \"Cut the intro to two seconds.\"",
-      "flags": [
-        {
-          "name": "description",
-          "type": "string",
-          "usage": "the fact, in one line (required)"
+          "usage": "approve the request"
         },
         {
-          "name": "scope",
-          "type": "string",
-          "usage": "workspace (default) or a project id"
-        },
-        {
-          "name": "tag",
-          "type": "string",
-          "usage": "a tag; repeat it for several",
-          "repeat": true
-        },
-        {
-          "name": "body",
-          "type": "string",
-          "usage": "the text of the entry"
-        },
-        {
-          "name": "body-file",
-          "type": "string",
-          "usage": "read the text from a file, or - for standard input"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "memory:remove",
-      "summary": "delete a memory note (a note a person kept stays)",
-      "usage": [
-        "stuarty memory:remove <name>"
-      ],
-      "example": "stuarty memory:remove old-note",
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "skill:list",
-      "summary": "list the skills that are reviewed",
-      "usage": [
-        "stuarty skill:list [--origin built-in|user|imported] [--all]"
-      ],
-      "example": "stuarty skill:list --all --json",
-      "flags": [
-        {
-          "name": "origin",
-          "type": "string",
-          "usage": "built-in, user or imported"
-        },
-        {
-          "name": "all",
+          "name": "reject",
           "type": "boolean",
-          "default": "false",
-          "usage": "also what is not reviewed (skills) or not kept (notes): an agent is not offered those"
+          "usage": "reject the request"
+        },
+        {
+          "name": "reason",
+          "type": "string",
+          "usage": "why a request is rejected"
         }
       ],
       "globals": [
@@ -1894,12 +1633,12 @@
       ]
     },
     {
-      "name": "skill:show",
-      "summary": "show a skill: its text, its files and the findings of the lint",
+      "name": "approval:rule:list",
+      "summary": "list the rules that approve without asking",
       "usage": [
-        "stuarty skill:show <name>"
+        "stuarty approval:rule:list"
       ],
-      "example": "stuarty skill:show hook-writer",
+      "example": "stuarty approval:rule:list --json",
       "globals": [
         "json",
         "workspace",
@@ -1908,253 +1647,52 @@
       ]
     },
     {
-      "name": "skill:write",
-      "summary": "write a skill; it stays unreviewed until a person reads it in the Skills section",
+      "name": "approval:rule:set",
+      "summary": "create or replace a rule that approves a kind of action (for a person in the app; the local token is refused)",
       "usage": [
-        "stuarty skill:write <name> --description <text> [--body <text>|--body-file <file|->] [--license l]",
-        "                    [--file <path in the skill>=<local file>]..."
+        "stuarty approval:rule:set --kind <k> [--id <rul>] [--connection <con>] [--project <prj>] [--currency USD] [--per-item <micros>] [--per-day <micros>] [--disabled]"
       ],
-      "example": "stuarty skill:write hook-writer --description \"Write the first three seconds.\" --body-file hook.md",
+      "example": "stuarty approval:rule:set --kind publish.post --connection con_0123456789",
       "flags": [
         {
-          "name": "description",
+          "name": "id",
           "type": "string",
-          "usage": "what the skill does and when to use it (required)"
+          "usage": "the rule to replace; leave out to create one"
         },
-        {
-          "name": "license",
-          "type": "string",
-          "usage": "the licence of the text"
-        },
-        {
-          "name": "file",
-          "type": "string",
-          "usage": "another file of the folder: <path in the skill>=<local file>",
-          "repeat": true
-        },
-        {
-          "name": "body",
-          "type": "string",
-          "usage": "the text of the entry"
-        },
-        {
-          "name": "body-file",
-          "type": "string",
-          "usage": "read the text from a file, or - for standard input"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "skill:import",
-      "summary": "import a skill from a folder or an archive (.zip, .tar.gz) you already have; it starts unreviewed",
-      "usage": [
-        "stuarty skill:import <folder|archive> [--source <text>] [--replace]"
-      ],
-      "example": "stuarty skill:import ./downloads/hook-writer.zip --source \"a friend\"",
-      "flags": [
-        {
-          "name": "source",
-          "type": "string",
-          "usage": "where it came from; the name of the folder or file if omitted"
-        },
-        {
-          "name": "replace",
-          "type": "boolean",
-          "default": "false",
-          "usage": "replace a skill of the same name"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "skill:lint",
-      "summary": "run the lint on a skill",
-      "usage": [
-        "stuarty skill:lint <name>"
-      ],
-      "example": "stuarty skill:lint hook-writer --json",
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "skill:export",
-      "summary": "write skills as folders in the Agent Skills layout, to install them in your own agent",
-      "usage": [
-        "stuarty skill:export [<name>...]",
-        "with no name, every reviewed skill; the folders are written under exports/library/ of the workspace"
-      ],
-      "example": "stuarty skill:export hook-writer",
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "prompt:list",
-      "summary": "list the prompts",
-      "usage": [
-        "stuarty prompt:list [--tag t]..."
-      ],
-      "example": "stuarty prompt:list --json",
-      "flags": [
-        {
-          "name": "tag",
-          "type": "string",
-          "usage": "a tag; repeat it for several",
-          "repeat": true
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "prompt:show",
-      "summary": "show a prompt and its variables",
-      "usage": [
-        "stuarty prompt:show <name>"
-      ],
-      "example": "stuarty prompt:show video-intro",
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "prompt:write",
-      "summary": "write a prompt: a reusable text with {{variables}}",
-      "usage": [
-        "stuarty prompt:write <name> --description <text> [--body <text>|--body-file <file|->] [--default <variable>=<value>]... [--tag t]..."
-      ],
-      "example": "stuarty prompt:write video-intro --description \"An intro\" --body \"Write an intro about {{topic}}.\"",
-      "flags": [
-        {
-          "name": "description",
-          "type": "string",
-          "usage": "what the prompt is for (required)"
-        },
-        {
-          "name": "default",
-          "type": "string",
-          "usage": "a default value: <variable>=<value>",
-          "repeat": true
-        },
-        {
-          "name": "tag",
-          "type": "string",
-          "usage": "a tag; repeat it for several",
-          "repeat": true
-        },
-        {
-          "name": "body",
-          "type": "string",
-          "usage": "the text of the entry"
-        },
-        {
-          "name": "body-file",
-          "type": "string",
-          "usage": "read the text from a file, or - for standard input"
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "prompt:render",
-      "summary": "replace the variables of a prompt and print the text; nothing is sent anywhere",
-      "usage": [
-        "stuarty prompt:render <name> [--value <variable>=<value>]..."
-      ],
-      "example": "stuarty prompt:render video-intro --value topic=cats",
-      "flags": [
-        {
-          "name": "value",
-          "type": "string",
-          "usage": "a value: <variable>=<value>",
-          "repeat": true
-        }
-      ],
-      "globals": [
-        "json",
-        "workspace",
-        "actor",
-        "key-file"
-      ]
-    },
-    {
-      "name": "library:search",
-      "summary": "search memory, skills and prompts with one query",
-      "usage": [
-        "stuarty library:search <word>... [--kind memory|skill|prompt]... [--scope s] [--tag t]... [--origin o] [--all]",
-        "                       [--limit n] [--budget characters]"
-      ],
-      "example": "stuarty library:search intro --kind prompt --json",
-      "flags": [
         {
           "name": "kind",
           "type": "string",
-          "usage": "memory, skill or prompt; repeat it for several",
-          "repeat": true
+          "usage": "the kind of action the rule covers (required)"
         },
         {
-          "name": "scope",
+          "name": "connection",
           "type": "string",
-          "usage": "memory: workspace or a project id"
+          "usage": "only this destination"
         },
         {
-          "name": "tag",
+          "name": "project",
           "type": "string",
-          "usage": "a tag; repeat it for several",
-          "repeat": true
+          "usage": "only this project"
         },
         {
-          "name": "origin",
+          "name": "currency",
           "type": "string",
-          "usage": "skills: built-in, user or imported"
+          "usage": "three upper-case letters, needed with a limit"
         },
         {
-          "name": "all",
+          "name": "per-item",
+          "type": "string",
+          "usage": "the most one action may cost, in millionths of the currency unit"
+        },
+        {
+          "name": "per-day",
+          "type": "string",
+          "usage": "the most the rule may approve in a UTC day, in millionths"
+        },
+        {
+          "name": "disabled",
           "type": "boolean",
-          "default": "false",
-          "usage": "also what is not reviewed (skills) or not kept (notes): an agent is not offered those"
-        },
-        {
-          "name": "limit",
-          "type": "integer",
-          "default": "20",
-          "usage": "results, at most 50"
-        },
-        {
-          "name": "budget",
-          "type": "integer",
-          "default": "4000",
-          "usage": "characters of the answer, at most 16000"
+          "usage": "keep the rule but stop it"
         }
       ],
       "globals": [
@@ -2165,12 +1703,62 @@
       ]
     },
     {
-      "name": "library:reindex",
-      "summary": "rebuild the index of the library from its files",
+      "name": "approval:rule:remove",
+      "summary": "remove a rule (for a person in the app; the local token is refused)",
       "usage": [
-        "stuarty library:reindex"
+        "stuarty approval:rule:remove <id>"
       ],
-      "example": "stuarty library:reindex",
+      "example": "stuarty approval:rule:remove rul_0123456789",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "cost:show",
+      "summary": "show the cost ceilings and what was spent today and over the last 30 days",
+      "usage": [
+        "stuarty cost:show"
+      ],
+      "example": "stuarty cost:show --json",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "cost:ceiling",
+      "summary": "set or remove a cost ceiling (for a person in the app; the local token is refused)",
+      "usage": [
+        "stuarty cost:ceiling --currency USD [--project <prj>] [--per-item <micros>] [--per-day <micros>]"
+      ],
+      "example": "stuarty cost:ceiling --currency USD --per-day 5000000",
+      "flags": [
+        {
+          "name": "currency",
+          "type": "string",
+          "usage": "three upper-case letters (required)"
+        },
+        {
+          "name": "project",
+          "type": "string",
+          "usage": "the project the ceiling is for; leave out for the whole workspace"
+        },
+        {
+          "name": "per-item",
+          "type": "string",
+          "usage": "the most one action may cost, in millionths of the currency unit"
+        },
+        {
+          "name": "per-day",
+          "type": "string",
+          "usage": "the most that may be spent in a UTC day, in millionths; with neither limit the ceiling is removed"
+        }
+      ],
       "globals": [
         "json",
         "workspace",
