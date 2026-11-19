@@ -102,6 +102,11 @@ type Service interface {
 	// AssetList lists the files the projects hold, by content hash, for the picker of a brand logo (VV-117).
 	AssetList(ctx context.Context, req AssetListRequest) (*AssetListResult, error)
 	ExportFile(ctx context.Context, req ExportFileRequest) (*File, error)
+	// ExportPresetList, ExportCheck and ExportBatch are the export presets, the check against one and the batch of
+	// exports of SDD-004 sections 8.2 to 8.4 (RF-087 to RF-089).
+	ExportPresetList(ctx context.Context, req ExportPresetListRequest) (*ExportPresetListResult, error)
+	ExportCheck(ctx context.Context, req ExportCheckRequest) (*ExportCheckResult, error)
+	ExportBatch(ctx context.Context, req ExportBatchRequest) (*Job, error)
 	AuditList(ctx context.Context, req AuditListRequest) (*AuditListResult, error)
 
 	// Doctor is the diagnostic report (SDD-003 section 2, SDD-011 section 8.6).
@@ -143,6 +148,10 @@ type Service interface {
 	ImageUndo(ctx context.Context, req ImageStepRequest) (*ImageStepResult, error)
 	ImageRedo(ctx context.Context, req ImageStepRequest) (*ImageStepResult, error)
 	ImageExport(ctx context.Context, req ImageExportRequest) (*ImageExportResult, error)
+	// ImageFrame, ImageHistory and ImageFile are the reads of the image editor screen (SDD-012 section 24.3); HTTP only.
+	ImageFrame(ctx context.Context, req ImageFrameRequest) (*ImageFrameResult, error)
+	ImageHistory(ctx context.Context, req ImageHistoryRequest) (*ImageHistoryResult, error)
+	ImageFile(ctx context.Context, req ImageFileRequest) (*File, error)
 	// ConnectionList and ConnectionGet read the destinations the user connected; ConnectionCreate,
 	// ConnectionRemove and ConnectionTest are for an administrator. No result carries a credential
 	// (SDD-014 section 5).

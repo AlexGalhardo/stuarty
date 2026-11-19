@@ -56,9 +56,12 @@
     {
       "tag": "Jobs",
       "pages": [
+        "export.presets",
         "jobs.get",
         "jobs.cancel",
         "jobs.file",
+        "export.batch",
+        "export.check",
         "jobs.list",
         "jobs.start"
       ]
@@ -141,6 +144,9 @@
         "images.get",
         "images.edit",
         "images.export",
+        "images.file",
+        "images.frame",
+        "images.history",
         "images.redo",
         "images.undo"
       ]

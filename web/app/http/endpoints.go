@@ -231,6 +231,23 @@ var Endpoints = []Endpoint{
 		AlsoScope: service.ScopeMedia, Service: "JobCancel", Status: 200, Summary: "Cancel a job",
 	},
 	{
+		ID: "export.presets", Method: http.MethodGet, Path: "/export-presets", Scope: service.ScopeRead,
+		Service: "ExportPresetList", Status: 200, Summary: "List the export presets of the platforms",
+	},
+	{
+		ID: "export.check", Method: http.MethodGet, Path: "/projects/{id}/export-check", Scope: service.ScopeRead,
+		Service: "ExportCheck", Status: 200, Summary: "Check a project against an export preset",
+	},
+	{
+		ID:      "export.batch",
+		Method:  http.MethodPost,
+		Path:    "/projects/{id}/export-batches",
+		Scope:   service.ScopeRender,
+		Service: "ExportBatch",
+		Status:  202,
+		Summary: "Export a project several times, one after the other",
+	},
+	{
 		ID: "templates.list", Method: http.MethodGet, Path: "/templates", Scope: service.ScopeRead,
 		Service: "TemplateList", Status: 200, Summary: "List the templates",
 	},
@@ -637,6 +654,20 @@ var Endpoints = []Endpoint{
 	{
 		ID: "images.export", Method: http.MethodPost, Path: "/images/{id}/export", Scope: service.ScopeEdit,
 		Service: "ImageExport", Status: 200, Summary: "Export an image document to a PNG, JPEG or WebP file",
+	},
+	// The reads of the image editor screen (SDD-012 section 24.3).
+	{
+		ID: "images.frame", Method: http.MethodGet, Path: "/images/{id}/frame", Scope: service.ScopeRead,
+		Service: "ImageFrame", Uncounted: true, MaxInFlight: 2, Status: 200,
+		Summary: "Render the picture of an image document",
+	},
+	{
+		ID: "images.history", Method: http.MethodGet, Path: "/images/{id}/history", Scope: service.ScopeRead,
+		Service: "ImageHistory", Status: 200, Summary: "List the latest batches of an image document",
+	},
+	{
+		ID: "images.file", Method: http.MethodGet, Path: "/images/{id}/exports/{name}", Scope: service.ScopeRead,
+		Service: "ImageFile", Status: 200, Summary: "Download a file that an image export wrote",
 	},
 }
 

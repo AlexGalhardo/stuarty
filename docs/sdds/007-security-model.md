@@ -380,6 +380,9 @@ Scopes: `read`, `edit`, `media`, `render`, `admin` (SDD-000 §4). They are indep
 | `Lint` | `GET /projects/{id}/lint` | R | - | - | - | - | |
 | `JobStart` (export) | `POST /projects/{id}/jobs` | - | - | - | R | - | Limits of section 9 |
 | `JobStart` (transcribe) | `POST /projects/{id}/jobs` | - | - | R | - | - | Refused with `E_TRANSCRIBE_UNAVAILABLE` when no provider is installed (6.8) |
+| `ExportPresetList` | `GET /export-presets` | R | - | - | - | - | `codecs=true` runs the encoder test encodes once (cached on the runner); no project is read |
+| `ExportCheck` | `GET /projects/{id}/export-check` | R | - | - | - | - | Project and ownership check; reads the timeline, encodes nothing |
+| `ExportBatch` | `POST /projects/{id}/export-batches` | - | - | - | R | - | One parent job; its children pass through the export ceilings of section 9; at most 3 batches per caller and 8 in all (`E_QUEUE_FULL`) |
 | `ProjectBundleExport` | `POST /projects/{id}/bundle` | - | - | - | R | - | Project and ownership check; runs as an export job |
 | `ProjectBundleImport` | `POST /projects/import` | - | R | R | - | - | Archive rules of 7.6 and SDD-005 §16.3; network mode cannot link media or fonts the caller does not already reach (T-20, T-21) |
 | `ProjectOtioExport` | `GET /projects/{id}/otio` | R | - | - | - | - | Project and ownership check; writes nothing, returns text |
@@ -423,6 +426,9 @@ Scopes: `read`, `edit`, `media`, `render`, `admin` (SDD-000 §4). They are indep
 | `ImageUndo` | `POST /images/{id}/undo` | - | R | - | - | - | In network mode an image is visible to its owner and to an administrator, `E_NOT_FOUND` otherwise (SDD-021) |
 | `ImageRedo` | `POST /images/{id}/redo` | - | R | - | - | - | In network mode an image is visible to its owner and to an administrator, `E_NOT_FOUND` otherwise (SDD-021) |
 | `ImageExport` | `POST /images/{id}/export` | - | R | - | - | - | In network mode an image is visible to its owner and to an administrator, `E_NOT_FOUND` otherwise (SDD-021); writes one file under `exports/images` of the workspace |
+| `ImageFrame` | `GET /images/{id}/frame` | R | - | - | - | - | Renders the picture of a document the caller may see (`E_NOT_FOUND` otherwise); writes nothing; refused for a project-limited key; at most two at once per caller (SDD-012 §24.3) |
+| `ImageHistory` | `GET /images/{id}/history` | R | - | - | - | - | Same visibility as `ImageDescribe`; reads the log of the document |
+| `ImageFile` | `GET /images/{id}/exports/{name}` | R | - | - | - | - | Same visibility as `ImageDescribe`; `name` must have the shape `ImageExport` gives (a revision, twelve hex characters of the digest and `.png`, `.jpg` or `.webp`) and the path is built from the document id, never from the request, so nothing outside `exports/images/<id>/` is served |
 | `Doctor` | `GET /system` | R | - | - | - | - | Server paths and environment details only for local mode or `admin`; others get versions and capability facts without paths |
 | `AuditList` | `GET /audit` | - | - | - | - | R | Never lists secrets |
 | Byte-serving routes and bitmaps (`OpenFile`, `ExportFile`) | `GET /projects/{id}/media/{asset_id}/proxy`, `/chunks`, `/thumbnail`, `/strip`, `/peaks`, `/lut` (the table is parsed by `engine/lut` with the limits of SDD-004 §3.6 and sent as binary, so the browser never parses an untrusted `.cube`), `GET /projects/{id}/bitmaps/{key}`, `GET /jobs/{job_id}/file` | R | - | - | - | - | Project check through the path (the job's project for the export file); fixed `Content-Type`; not counted by the per-credential limiter (4.4) |

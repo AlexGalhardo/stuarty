@@ -333,9 +333,10 @@ func TestProjectItemsMigrationDown(t *testing.T) {
  VALUES ('pit_000000000a', 'prj_0000000001', 'text', 'Script', 2, 'scene', 1, 1, 'local:cli')`,
 			)
 
-			// The library index (epic 15) and the approval tables (epic 05) are newer than project_items: they go down first.
-			rolled, err := m.Rollback(ctx, 4)
-			if err != nil || len(rolled) != 4 || rolled[3] != "20261119120000_project_items" {
+			// The export_batch kind (epic 35), the library index (epic 15) and the approval tables (epic 05) are newer
+			// than project_items: they go down first.
+			rolled, err := m.Rollback(ctx, 5)
+			if err != nil || len(rolled) != 5 || rolled[4] != "20261119120000_project_items" {
 				t.Fatalf("Rollback = %v, %v", rolled, err)
 			}
 
