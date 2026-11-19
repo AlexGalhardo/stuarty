@@ -466,7 +466,7 @@ stuarty export:batch --project <id> --items '<json array of {preset, format, cod
 
 | Flag | Type | Default | Meaning |
 | --- | --- | --- | --- |
-| `--preset` | string |  | a preset id; give the flag once for each export |
+| `--preset` | string, repeatable |  | a preset id; give the flag once for each export |
 | `--items` | string |  | the exports as a JSON array of \{preset, format, codec, start, end\}, instead of --preset |
 | `--format` | string |  | the format of every --preset export that is not mp4 (default mp4) |
 | `--codec` | string |  | h264, hevc or av1 for every --preset export (default: the choice of the preset) |
