@@ -86,12 +86,7 @@ func fitFactor(fit string, st, ns timeline.Settings) float64 {
 // own changes the picture and the nested frame lands on the parent's frame pixel for pixel (SDD-004 §3.16). It
 // reads the stored item, never a frame, so all the layers of one item are flat or all are grouped.
 func flattenable(it *timeline.Item, parent, nested *timeline.Settings) bool {
-	return nested.Width == parent.Width && nested.Height == parent.Height &&
-		it.Opacity == 1 && it.Scale == 1 && it.Rotation == 0 && it.X == nil && it.Y == nil &&
-		len(it.Keyframes) == 0 && it.TransitionIn == nil && it.TransitionOut == nil &&
-		it.Mask == nil && len(it.Effects) == 0 && it.Shadow == nil && it.Outline == nil &&
-		it.Blur == 0 && (it.Filter == "" || it.Filter == "none") && (it.Blend == "" || it.Blend == "normal") &&
-		!it.FlipX && !it.FlipY
+	return nested.Width == parent.Width && nested.Height == parent.Height && timeline.CompositionFeature(it) == ""
 }
 
 // frameAt is the frame of the nested timeline that frame r of the item shows, by the rule of SDD-004 §3.3 with

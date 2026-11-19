@@ -1,0 +1,6 @@
+{
+  "op": "composition.expand",
+  "args": {
+    "item_id": "x"
+  }
+}

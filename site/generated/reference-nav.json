@@ -338,6 +338,8 @@
       "clip.set_outline",
       "clip.set_shadow",
       "clip.set_speed",
+      "composition.create_from_selection",
+      "composition.expand",
       "font.add",
       "font.remove",
       "item.crossfade",
