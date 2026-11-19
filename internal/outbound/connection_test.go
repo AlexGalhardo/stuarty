@@ -288,7 +288,12 @@ func TestConnectionRefusesNamedCloudMetadataAddressesAtDial(t *testing.T) {
 
 			defer restore()
 
-			_, _, err := get(Connection(reg, "con_a", 2*time.Second, nil), "https://["+host+"]/latest/meta-data/")
+			authority := host
+			if strings.Contains(host, ":") {
+				authority = "[" + host + "]"
+			}
+
+			_, _, err := get(Connection(reg, "con_a", 2*time.Second, nil), "https://"+authority+"/latest/meta-data/")
 			if !errors.Is(err, ErrNotPublic) {
 				t.Fatalf("%v, want ErrNotPublic", err)
 			}
