@@ -56,7 +56,9 @@ var metadataAddrs = map[netip.Addr]bool{
 // embedded address is the one judged (SDD-014 section 6): the well-known NAT64 prefix (RFC 6052,
 // 64:ff9b::a.b.c.d), 6to4 (RFC 3056, 2002:aabb:ccdd::, the IPv4 in bits 16 to 47) and the deprecated
 // IPv4-compatible form (::a.b.c.d). The local-use NAT64 prefix (RFC 8215) embeds the IPv4 at a
-// position that depends on the deployment, so the whole prefix is refused.
+// position that depends on the deployment, so the whole prefix is refused. Teredo (2001::/32) and an
+// ISATAP interface identifier (::5efe:a.b.c.d) are not decoded: they are tunnels, and the IPv4 address
+// they carry receives an encapsulated packet, never the connection, so no service there is reached.
 var (
 	nat64      = netip.MustParsePrefix("64:ff9b::/96")
 	nat64Local = netip.MustParsePrefix("64:ff9b:1::/48")
