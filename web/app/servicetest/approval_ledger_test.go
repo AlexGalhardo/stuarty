@@ -9,6 +9,32 @@ import (
 	"github.com/AlexGalhardo/stuarty/service"
 )
 
+// SDD-015 sections 3 and 5: a summary a person could misread (a bidirectional override, a zero-width
+// character, a tag character) is refused at the submission as the caller's error, and writes nothing.
+func TestJobApproval_SummaryThatCouldLookLikeSomethingElseIsRefused(t *testing.T) {
+	t.Parallel()
+
+	for name, summary := range map[string]string{
+		"a bidirectional override": "Post to ‮TXT.exe",
+		"a zero-width space":       "Pay​ 1 USD",
+		"a tag character":          "Post \U000E0041",
+		"a C1 control":             "Post \u0085 now",
+	} {
+		p := &probe{estimate: usd(1), summary: summary}
+		e := newJobEnv(t, p)
+		project := e.newProject("p")
+
+		_, err := e.submit(e.as(token), project)
+
+		var se *service.Error
+		if !errors.As(err, &se) || se.Code != "E_VALIDATION" || se.Path != "args" || se.Hint == "" {
+			t.Errorf("%s: %v, want E_VALIDATION on args with a hint", name, err)
+		}
+
+		e.nothingWritten(project, p)
+	}
+}
+
 // SDD-007 T-50: the check of the ceiling and the reservation are one transaction, so people approving
 // at the same moment, or a rule approving submissions that arrive together, never pass the ceiling.
 func TestSecurity_T50_ConcurrentApprovalsNeverPassTheCeiling(t *testing.T) {

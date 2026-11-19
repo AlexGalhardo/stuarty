@@ -27,14 +27,21 @@ type probe struct {
 	// cost is what Run reports as spent; nil reports nothing.
 	cost *core.Money
 	fail error
+	// summary replaces the summary Prepare gives when it is set.
+	summary string
 }
 
 func (p *probe) kind() service.ApprovableKind {
 	return service.ApprovableKind{
 		Name: testKind,
 		Prepare: func(_ context.Context, _ service.JobStartRequest) (service.Prepared, error) {
+			summary := "Generate an image for the intro"
+			if p.summary != "" {
+				summary = p.summary
+			}
+
 			return service.Prepared{
-				Summary: "Generate an image for the intro", ConnectionID: p.conn, Estimate: p.estimate,
+				Summary: summary, ConnectionID: p.conn, Estimate: p.estimate,
 				Input: json.RawMessage(`{"prompt":"a cat"}`),
 			}, nil
 		},
