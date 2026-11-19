@@ -6,12 +6,40 @@ import (
 	"net/netip"
 	"net/url"
 	"strings"
+	"time"
 
+	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/config"
+	"github.com/AlexGalhardo/stuarty/service/connections"
+	"github.com/AlexGalhardo/stuarty/service/providers"
 	"github.com/AlexGalhardo/stuarty/service/social"
 	"github.com/AlexGalhardo/stuarty/service/social/fake"
 	"github.com/AlexGalhardo/stuarty/service/social/youtube"
 )
+
+// reach is everything the service reaches out through: the connections over the vault, the AI providers
+// over them, and the social network connectors.
+type reach struct {
+	conns   *connections.Manager
+	provs   *providers.Registry
+	socials *social.Registry
+}
+
+// outbound builds the destinations of the service (the connections and the AI providers) and the registry
+// of the social networks.
+func (o *Owner) outbound(getenv func(string) string, st service.Store, now func() time.Time) (reach, error) {
+	conns, provs, err := o.destinations(getenv, st, now)
+	if err != nil {
+		return reach{}, err
+	}
+
+	socials, err := socialRegistry(getenv, o.mode)
+	if err != nil {
+		return reach{}, err
+	}
+
+	return reach{conns: conns, provs: provs, socials: socials}, nil
+}
 
 // EnvTestSocialURL names a fake social network of the end-to-end suite: the address of a server on
 // loopback that plays the network (SDD-020 section 12). It is for tests only.
