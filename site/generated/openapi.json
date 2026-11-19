@@ -501,6 +501,12 @@
             },
             "type": "array"
           },
+          "domains": {
+            "items": {
+              "$ref": "#/components/schemas/DomainSummary"
+            },
+            "type": "array"
+          },
           "text": {
             "type": "string"
           }
@@ -779,6 +785,20 @@
               "$ref": "#/components/schemas/Track"
             },
             "type": "object"
+          }
+        },
+        "type": "object"
+      },
+      "DomainSummary": {
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "operations": {
+            "type": "integer"
+          },
+          "summary": {
+            "type": "string"
           }
         },
         "type": "object"
@@ -9568,7 +9588,7 @@
         "operationId": "commands.list",
         "parameters": [
           {
-            "description": "video (default) or image.",
+            "description": "A domain of the product, video by default.",
             "in": "query",
             "name": "domain",
             "schema": {
@@ -9616,7 +9636,7 @@
         "operationId": "commands.get",
         "parameters": [
           {
-            "description": "video (default) or image.",
+            "description": "A domain of the product, video by default.",
             "in": "query",
             "name": "domain",
             "schema": {
