@@ -922,8 +922,8 @@ type Range struct {
 ```go
 type JobStartRequest struct {
 	ProjectID  string          `json:"project_id"`
-	Kind       string          `json:"kind"` // "export" | "transcribe" | "text.generate" (ingest and frame jobs are internal)
-	Args       json.RawMessage `json:"args,omitempty"` // one object, validated by Kind: ExportArgs, TranscribeArgs or the arguments of text.generate (SDD-016 section 6); an unknown member is E_VALIDATION with path args.<name>
+	Kind       string          `json:"kind"` // "export" | "transcribe" | "text.generate" | "image.generate" | "voice.generate" (ingest and frame jobs are internal)
+	Args       json.RawMessage `json:"args,omitempty"` // one object, validated by Kind: ExportArgs, TranscribeArgs or the arguments of text.generate, image.generate and voice.generate (SDD-016 sections 6 and 6.1); an unknown member is E_VALIDATION with path args.<name>
 	WaitMS     int             `json:"wait_ms,omitempty"` // default 0; 0 to 25000
 	DryRun     bool            `json:"dry_run,omitempty"` // runs the lint gate and limits, queues nothing
 }
@@ -965,10 +965,10 @@ type Job struct {
 	ProjectID  *string    `json:"project_id"` // null for an ingest job: it belongs to the file, which projects may share
 	State      string     `json:"state"` // queued | waiting_approval | running | succeeded | failed | cancelled; waiting_approval: a kind that needs approval waits for a person or a rule (SDD-015 §5)
 	ApprovalID string     `json:"approval_id,omitempty"` // the approval request of a job of a kind that needs approval (SDD-015 §5)
-	Estimate   *Money     `json:"estimate,omitempty"` // text.generate: the cost estimated before it runs, on the job from the moment it exists (SDD-016 §6)
+	Estimate   *Money     `json:"estimate,omitempty"` // text.generate, image.generate and voice.generate: the cost estimated before it runs, on the job from the moment it exists (SDD-016 §6, §6.1)
 	Progress   float64    `json:"progress"` // 0 to 1
 	Message    string     `json:"message,omitempty"`
-	Result     *JobResult `json:"result,omitempty"` // export, transcribe and text.generate only; an ingest job has no result member (its outcome is the asset state, MediaList)
+	Result     *JobResult `json:"result,omitempty"` // export, transcribe, text.generate, image.generate and voice.generate only; an ingest job has no result member (its outcome is the asset state, MediaList)
 	Error      *Error     `json:"error,omitempty"` // set when State is "failed" and when it is "cancelled" (E_CANCELLED); E_INGEST_FAILED, E_EXPORT_FAILED, E_VERIFY_FAILED, E_TRANSCRIBE_FAILED and E_CANCELLED travel here with HTTP status 200
 	Lint       *LintTotals `json:"lint,omitempty"` // export: totals at the pinned revision (warnings only: errors refuse the start)
 	Warnings   []string    `json:"warnings,omitempty"` // export: notes about an accepted start, not a reason to refuse it; a GIF whose typical size is over 25 MB says its estimated size (VV-056)
@@ -982,6 +982,7 @@ type JobResult struct { // exactly one member is set
 	Export     *ExportResult     `json:"export,omitempty"`
 	Transcribe *TranscribeResult `json:"transcribe,omitempty"`
 	Text       *TextResult       `json:"text,omitempty"` // text.generate: the text (untrusted), the model, the tokens and the real cost (SDD-016 section 6)
+	Generated  *GeneratedResult  `json:"generated,omitempty"` // image.generate and voice.generate: the assets stored (asset id, hash, kind, bytes, state, the revised prompt as untrusted text), requested and delivered, notes, the real cost (SDD-016 section 6.1)
 }
 type ExportResult struct {
 	Revision    int64        `json:"revision"`
@@ -2778,7 +2779,7 @@ Example (the text of §3.6): `{"name": "lint", "arguments": {"project_id": "prj_
 ```json
 {
   "name": "job_start",
-  "description": "Start long work. export renders a workspace file: args {start?, end?, format?, at? (the png frame), preset?, codec?}. export_batch runs args.items (export args) in turn. transcribe: args {asset_id, language?, model?}. text.generate: args {connection_id, model, prompt}; a person approves. Poll job_get.",
+  "description": "Start long work. export renders a workspace file: args {start?, end?, format?, at? (the png frame), preset?, codec?}. export_batch runs args.items (export args) in turn. transcribe: args {asset_id, language?, model?}. text.generate: args {connection_id, model, prompt}; image.generate: {connection_id, model, prompt, size?, count?}; voice.generate: {connection_id, model, text, voice, format?}; a person approves. Poll job_get.",
   "inputSchema": {
     "type": "object",
     "properties": {
@@ -2795,7 +2796,9 @@ Example (the text of §3.6): `{"name": "lint", "arguments": {"project_id": "prj_
           "export",
           "export_batch",
           "transcribe",
-          "text.generate"
+          "text.generate",
+          "image.generate",
+          "voice.generate"
         ]
       },
       "args": {
@@ -3537,7 +3540,7 @@ The tool list stays short while the product grows because a new domain adds **op
 
 `command_help` also takes the topic `export` (epic 35), which is not a domain: it answers with the export presets and codecs of this machine (`ExportPresetList`, a video operation), and takes no `name`. `export_batch` of `job_start` and the `preset` of `lint` are reached the same way, through the tools that already exist.
 
-A tool gets `domain` in the epic that registers the first non-video operation behind it, never earlier: every argument costs bytes of every `tools/list` (NFR-020). `lint`, `view`, `job_get` and `job_cancel` wait for such an operation. `job_start` belongs to the `provider` domain too, with no `domain` argument: its `kind` already names the operation, and `text.generate` (epic 09, SDD-016) is a generation of that domain. The `image` tool of §4.2 stays (the surface is frozen, §9.1); `edit` with `domain` `image` reaches the same `ImageEdit`, so an agent that learned one tool for timelines learns the same call for images.
+A tool gets `domain` in the epic that registers the first non-video operation behind it, never earlier: every argument costs bytes of every `tools/list` (NFR-020). `lint`, `view`, `job_get` and `job_cancel` wait for such an operation. `job_start` belongs to the `provider` domain too, with no `domain` argument: its `kind` already names the operation, and `text.generate` (epic 09, SDD-016) is a generation of that domain, as are `image.generate` and `voice.generate` (epic 10). The `image` tool of §4.2 stays (the surface is frozen, §9.1); `edit` with `domain` `image` reaches the same `ImageEdit`, so an agent that learned one tool for timelines learns the same call for images.
 
 **No new tool.** The catalogue is still the 20 tools of §4.1: no existing intent fits a new tool better than a `domain` on an existing one, so none is added. A later epic adds a tool only when no intent fits, and writes the reason in this section.
 

@@ -358,7 +358,7 @@ func (s *svc) runImage(ctx context.Context, run JobRun) (JobOutcome, error) {
 		out.Items = append(out.Items, item)
 	}
 
-	return finishGenerated(out, &spent)
+	return s.finishGenerated(ctx, run.ProjectID, out, &spent)
 }
 
 // runVoice is runImage for one speech.
@@ -402,7 +402,7 @@ func (s *svc) runVoice(ctx context.Context, run JobRun) (JobOutcome, error) {
 	if !provider.CheckAudio(res.File.Data, req.Format) {
 		out.Notes = append(out.Notes, fmt.Sprintf("the audio is not a %s file and was not kept", req.Format))
 
-		return finishGenerated(out, &spent)
+		return s.finishGenerated(ctx, run.ProjectID, out, &spent)
 	}
 
 	name := fmt.Sprintf("voice-%s-1.%s", shortJob(run.ID), provider.AudioExt(req.Format))
@@ -414,23 +414,28 @@ func (s *svc) runVoice(ctx context.Context, run JobRun) (JobOutcome, error) {
 	if serr != nil {
 		out.Notes = append(out.Notes, "the audio was not stored: "+serr.Message)
 
-		return finishGenerated(out, &spent)
+		return s.finishGenerated(ctx, run.ProjectID, out, &spent)
 	}
 
 	out.Items = append(out.Items, item)
 
-	return finishGenerated(out, &spent)
+	return s.finishGenerated(ctx, run.ProjectID, out, &spent)
 }
 
 // finishGenerated makes the outcome of a generation. A batch that stored nothing fails, with the cost of what the
-// provider delivered still recorded.
-func finishGenerated(out *GeneratedResult, spent *core.Money) (JobOutcome, error) {
+// provider delivered still recorded. Otherwise it waits, up to ingestWait, for the ingest of the files, so that the
+// job ends with assets a project can use (the ingest runs on its own queue and does not need this worker).
+func (s *svc) finishGenerated(
+	ctx context.Context, projectID string, out *GeneratedResult, spent *core.Money,
+) (JobOutcome, error) {
 	if len(out.Items) == 0 {
 		return JobOutcome{Cost: spent}, newError(CodeProvider, "the provider answered, but no file could be kept.").
 			withDetail("kind", providers.KindUnreadable).
 			withDetail("notes", out.Notes).
 			withHint("%s", providerHint(&providers.Error{Kind: providers.KindUnreadable}))
 	}
+
+	s.awaitIngest(ctx, projectID, out)
 
 	raw, merr := json.Marshal(JobResult{Generated: out})
 	if merr != nil {
@@ -482,6 +487,48 @@ func (s *svc) storeGenerated(
 	}
 
 	return item, nil
+}
+
+// ingestWait is how long a generation job waits for the ingest of its files: an image or a narration probes in a
+// moment, and a file that takes longer is reported as it is, still ingesting.
+const ingestWait = 60 * time.Second
+
+// awaitIngest waits for the ingest of the files of a generation and writes the state the files reached into the
+// items; a file the ingest refused is said in a note, since it is stored and paid for.
+func (s *svc) awaitIngest(ctx context.Context, projectID string, out *GeneratedResult) {
+	row, err := s.store.Projects().Get(ctx, projectID)
+	if err != nil {
+		return
+	}
+
+	files := make([]ImportedAsset, len(out.Items))
+	for i := range out.Items {
+		files[i] = ImportedAsset{AssetID: out.Items[i].AssetID}
+	}
+
+	s.waitAssets(ctx, &row, files, ingestWait)
+
+	for i := range out.Items {
+		it := &out.Items[i]
+
+		ar, gerr := s.store.Assets().Get(ctx, it.Hash)
+		if gerr != nil {
+			continue
+		}
+
+		it.State = string(ar.IngestState)
+
+		if ar.Kind != "" {
+			it.Kind = ar.Kind
+		}
+
+		if ar.IngestState == IngestFailed {
+			out.Notes = append(
+				out.Notes,
+				it.AssetID+" was stored and its ingest failed: it cannot be used in a project",
+			)
+		}
+	}
 }
 
 func providerGone(id string) error {
