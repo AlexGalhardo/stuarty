@@ -63,6 +63,14 @@ func (g Gen) AlphaOpaque(
 	return g.alphaFixture(ctx, in, name, w, h, fps, secs, frames, "255")
 }
 
+// AlphaLater is AlphaEdge with a first frame that is opaque everywhere and a transparent left half on every later
+// frame: an animation that a sample of its first picture alone would call opaque.
+func (g Gen) AlphaLater(
+	ctx context.Context, in AlphaInput, name string, w, h, fps int, secs float64, frames int,
+) (string, error) {
+	return g.alphaFixture(ctx, in, name, w, h, fps, secs, frames, "if(eq(N,0),255,if(lt(X,W/2),0,255))")
+}
+
 func (g Gen) alphaFixture(
 	ctx context.Context, in AlphaInput, name string, w, h, fps int, secs float64, frames int, alpha string,
 ) (string, error) {
