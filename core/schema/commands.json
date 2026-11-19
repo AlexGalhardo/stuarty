@@ -4,6 +4,100 @@
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "additionalProperties": false,
       "properties": {
+        "amount": {
+          "description": "slide: distance in pixels; scale: factor at the far end; push_in and pull_out: zoom factor. Per preset default.",
+          "type": "number"
+        },
+        "direction": {
+          "description": "slide only: the side it comes from or leaves to. Default left.",
+          "enum": [
+            "left",
+            "right",
+            "up",
+            "down"
+          ],
+          "type": "string"
+        },
+        "duration": {
+          "description": "A length, at most the item's duration. Default 0.5s; the whole item for push_in and pull_out.",
+          "type": "string",
+          "x-vv-kind": "time"
+        },
+        "edge": {
+          "description": "in animates the start of the item, out its end. Default in.",
+          "enum": [
+            "in",
+            "out"
+          ],
+          "type": "string"
+        },
+        "item_id": {
+          "description": "A clip, text, caption or shape item.",
+          "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+          "type": "string"
+        },
+        "preset": {
+          "description": "The animation.",
+          "enum": [
+            "fade",
+            "slide",
+            "scale",
+            "pop",
+            "push_in",
+            "pull_out"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "item_id",
+        "preset"
+      ],
+      "type": "object"
+    },
+    "description": "Writes ordinary keyframes (with a Bezier easing where the preset needs a curve) on the first duration frames (edge in) or the last ones (edge out) of a clip, text, caption or shape item; edit them afterwards with keyframe.set and keyframe.set_easing. Keyframes of the same properties inside that window are replaced, the rest are kept. duration is at most the item's duration, default 0.5s (the whole item for push_in and pull_out). direction is for slide; amount is the slide distance in pixels, the scale factor of scale, or the zoom factor of push_in and pull_out. animation.list_presets describes them.",
+    "errors": [
+      "E_VALIDATION",
+      "E_INVALID_TIME",
+      "E_NOT_FOUND",
+      "E_TYPE_MISMATCH",
+      "E_LIMIT"
+    ],
+    "example": {
+      "direction": "left",
+      "duration": "0.5s",
+      "edge": "in",
+      "item_id": "itm_s6t7v8w9x0",
+      "preset": "slide"
+    },
+    "internal": false,
+    "name": "animation.apply_preset",
+    "scope": "edit",
+    "summary": "Animates the start or the end of a visual item with a preset: fade, slide, scale, pop, push in or pull out."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {},
+      "required": [],
+      "type": "object"
+    },
+    "description": "Changes nothing. The result lists, for each preset of animation.apply_preset, what it animates and the range and default of its parameters, and the four numbers of each named curve of keyframe.set_easing.",
+    "errors": [
+      "E_VALIDATION"
+    ],
+    "example": {},
+    "internal": false,
+    "name": "animation.list_presets",
+    "scope": "edit",
+    "summary": "Describes the animation presets and the named Bezier curves."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
         "asset": {
           "additionalProperties": false,
           "description": "An Asset object of SDD-001 section 3.2.",
@@ -3655,14 +3749,24 @@
           "type": "string",
           "x-vv-kind": "time"
         },
+        "bezier": {
+          "description": "x1, y1, x2, y2 of the curve of easing bezier: x1 and x2 from 0 to 1, y1 and y2 from -2 to 3.",
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 4,
+          "minItems": 4,
+          "type": "array"
+        },
         "easing": {
-          "description": "From this keyframe to the next. Default linear.",
+          "description": "From this keyframe to the next. Default linear. bezier needs the bezier argument.",
           "enum": [
             "linear",
             "ease_in",
             "ease_out",
             "ease_in_out",
-            "hold"
+            "hold",
+            "bezier"
           ],
           "type": "string"
         },
@@ -3729,6 +3833,103 @@
     "name": "keyframe.set",
     "scope": "edit",
     "summary": "Adds or replaces a keyframe of one animated property of an item."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "at": {
+          "description": "Position of an existing keyframe on the project timeline.",
+          "type": "string",
+          "x-vv-kind": "time"
+        },
+        "bezier": {
+          "description": "x1, y1, x2, y2 of a cubic Bezier curve: x1 and x2 from 0 to 1, y1 and y2 from -2 to 3.",
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 4,
+          "minItems": 4,
+          "type": "array"
+        },
+        "easing": {
+          "description": "A named easing. Exactly one of easing, bezier and preset.",
+          "enum": [
+            "linear",
+            "ease_in",
+            "ease_out",
+            "ease_in_out",
+            "hold"
+          ],
+          "type": "string"
+        },
+        "item_id": {
+          "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+          "type": "string"
+        },
+        "preset": {
+          "description": "A named Bezier curve, stored as its four numbers.",
+          "enum": [
+            "in",
+            "out",
+            "in_out",
+            "back",
+            "overshoot"
+          ],
+          "type": "string"
+        },
+        "property": {
+          "enum": [
+            "x",
+            "y",
+            "scale",
+            "rotation",
+            "opacity",
+            "volume",
+            "brightness",
+            "contrast",
+            "saturation",
+            "temperature",
+            "tint",
+            "hue",
+            "mask_x",
+            "mask_y",
+            "mask_width",
+            "mask_height",
+            "mask_feather",
+            "crop_left",
+            "crop_top",
+            "crop_right",
+            "crop_bottom"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "item_id",
+        "property",
+        "at"
+      ],
+      "type": "object"
+    },
+    "description": "Gives the keyframe at the absolute position a named easing (easing), a custom cubic Bezier curve (bezier: x1, y1, x2, y2; x1 and x2 from 0 to 1, y1 and y2 from -2 to 3) or a named Bezier preset (preset: in, out, in_out, back, overshoot, stored as its four numbers). Exactly one of the three. The value and the time of the keyframe do not change. Works for every animatable property, crop and mask included.",
+    "errors": [
+      "E_VALIDATION",
+      "E_INVALID_TIME",
+      "E_NOT_FOUND",
+      "E_TYPE_MISMATCH"
+    ],
+    "example": {
+      "at": "1s",
+      "item_id": "itm_s6t7v8w9x0",
+      "preset": "overshoot",
+      "property": "scale"
+    },
+    "internal": false,
+    "name": "keyframe.set_easing",
+    "scope": "edit",
+    "summary": "Changes the easing of the segment that starts at a keyframe."
   },
   {
     "args_schema": {

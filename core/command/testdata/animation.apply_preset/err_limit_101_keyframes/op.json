@@ -1,0 +1,9 @@
+{
+  "op": "animation.apply_preset",
+  "args": {
+    "item_id": "itm_m1n2p3q4r5",
+    "preset": "scale",
+    "edge": "out",
+    "duration": "15f"
+  }
+}

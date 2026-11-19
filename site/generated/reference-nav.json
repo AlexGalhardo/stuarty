@@ -214,6 +214,8 @@
       "library"
     ],
     "operations": [
+      "animation.apply_preset",
+      "animation.list_presets",
       "asset.remove",
       "audio.add",
       "audio.duck",
@@ -265,6 +267,7 @@
       "keyframe.clear",
       "keyframe.remove",
       "keyframe.set",
+      "keyframe.set_easing",
       "marker.add",
       "marker.remove",
       "marker.set",

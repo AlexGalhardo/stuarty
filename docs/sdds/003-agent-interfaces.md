@@ -1824,6 +1824,9 @@ trashed prj_2x5c8d1f4g; restore it with project_trash restore=true
                 "keyframe.set",
                 "keyframe.remove",
                 "keyframe.clear",
+                "keyframe.set_easing",
+                "animation.apply_preset",
+                "animation.list_presets",
                 "slot.mark",
                 "slot.unmark",
                 "slot.fill",
@@ -2510,7 +2513,7 @@ The `image` block follows the text block: `{"type": "image", "mimeType": "image/
 ```json
 {
   "name": "lint",
-  "description": "Check a project for problems and get them as text: code, severity, item, message, hint. Errors block export. Run it after edits, before export. Runs every rule, unlike the lint block of an edit result (lint_scope fast). Rules include gaps, missing media, text outside the safe area, audio clipping, unfilled slots.",
+  "description": "Check a project for problems and get them as text: code, severity, item, message, hint. Errors block export. Run it after edits, before export. Runs every rule, unlike the lint block of an edit result (lint_scope fast).",
   "inputSchema": {
     "type": "object",
     "properties": {
