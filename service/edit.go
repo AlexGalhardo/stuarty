@@ -48,7 +48,7 @@ func EditInternal(ctx context.Context, s Service, req EditRequest) (*EditResult,
 }
 
 func (s *svc) edit(ctx context.Context, req EditRequest, allowInternal bool) (*EditResult, error) {
-	c, err := authorize(ctx, "Edit", req.ProjectID)
+	c, err := s.authorizeProject(ctx, "Edit", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}
