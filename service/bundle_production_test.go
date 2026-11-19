@@ -13,7 +13,7 @@ func v2Manifest() *BundleManifest {
 		Production: &BundleProduction{Items: []BundleItem{
 			{Kind: "timeline", Title: "Main", Timeline: "main"},
 			{Kind: "timeline", Title: "Wide", Position: 1, Timeline: "t1"},
-			{Kind: "brief", Title: "Brief", Position: 2, Body: "text"},
+			{Kind: "brief", Title: "Brief", Position: 2, Text: &BundleDocument{SHA256: sha, Bytes: 4}},
 			{Kind: "output", Title: "Final", Position: 3, Format: "mp4"},
 		}},
 		Timelines: []BundleTimeline{{
@@ -56,8 +56,13 @@ func TestBundleProductionManifestRules(t *testing.T) {
 		"a reserved kind":                  func(m *BundleManifest) { m.Production.Items[3].Kind = "publication" },
 		"an unknown kind":                  func(m *BundleManifest) { m.Production.Items[3].Kind = "video" },
 		"a title with a control character": func(m *BundleManifest) { m.Production.Items[2].Title = "a\x00" },
-		"a text over the limit":            func(m *BundleManifest) { m.Production.Items[2].Body = strings.Repeat("a", 256<<10+1) },
-		"a long format":                    func(m *BundleManifest) { m.Production.Items[3].Format = strings.Repeat("a", 17) },
+		"a text over the limit":            func(m *BundleManifest) { m.Production.Items[2].Text.Bytes = 256<<10 + 1 },
+		"an empty text entry":              func(m *BundleManifest) { m.Production.Items[2].Text.Bytes = 0 },
+		"a bad text hash":                  func(m *BundleManifest) { m.Production.Items[2].Text.SHA256 = "zz" },
+		"a text on an output": func(m *BundleManifest) {
+			m.Production.Items[3].Text = &BundleDocument{SHA256: strings.Repeat("a", 64), Bytes: 1}
+		},
+		"a long format": func(m *BundleManifest) { m.Production.Items[3].Format = strings.Repeat("a", 17) },
 		"too many items": func(m *BundleManifest) {
 			for range bundleItemsMax {
 				m.Production.Items = append(m.Production.Items, BundleItem{Kind: "text", Title: "t"})
