@@ -71,7 +71,7 @@ Every requirement below applies to each domain of Stuarty (ADR-0031), not only t
 
 | ID | Requirement |
 | --- | --- |
-| NFR-020 | The MCP tool definitions total at most 6,500 tokens. The limit is revised once, by the epic that adds the first new domain (ADR-0043), and stays checked by a test |
+| NFR-020 | The MCP tool definitions total at most 6,500 tokens. The limit is revised once, by the epic that adds the first new domain (ADR-0043), and stays checked by a test. Interim: epic 06 raised it to 7,200 tokens (21,500 bytes of `tools/list`) when `project_item` became the 19th tool; epic 13 revises it for good (author decision pending) |
 | NFR-021 | The concise timeline view is returned in pages of at most 4,000 tokens; a project of 100 items fits in one page and a project of 200 items in two |
 | NFR-022 | A single frame returned to an agent costs at most 800 image tokens by default; a contact sheet at most 1,600 |
 | NFR-023 | A frame is returned within 1 s and a contact sheet within 2 s (median) |
