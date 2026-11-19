@@ -23,6 +23,7 @@ var commandDomains = map[string]string{
 	"item:move": command.DomainProject, "item:rename": command.DomainProject,
 	"item:trash": command.DomainProject, "item:restore": command.DomainProject,
 	"brief:show": command.DomainProject, "brief:set": command.DomainProject,
+	"briefing:questions": command.DomainProject, "briefing:answer": command.DomainProject,
 	"bundle:export": command.DomainProject, "bundle:import": command.DomainProject,
 	"events": command.DomainProject,
 
@@ -32,7 +33,8 @@ var commandDomains = map[string]string{
 	"job:cancel": command.DomainVideo, "job:list": command.DomainVideo, "template:list": command.DomainVideo,
 	"template:save": command.DomainVideo, "template:new": command.DomainVideo,
 	"template:export": command.DomainVideo, "template:import": command.DomainVideo,
-	"otio:export": command.DomainVideo, "otio:import": command.DomainVideo,
+	"otio:export": command.DomainVideo, "otio:import": command.DomainVideo, "export:presets": command.DomainVideo,
+	"export:check": command.DomainVideo, "export:batch": command.DomainVideo,
 
 	"image:create": command.DomainImage, "image:list": command.DomainImage, "image:show": command.DomainImage,
 	"image:edit": command.DomainImage, "image:undo": command.DomainImage, "image:redo": command.DomainImage,
@@ -40,7 +42,8 @@ var commandDomains = map[string]string{
 
 	"media:import": command.DomainAsset, "media:inspect": command.DomainAsset, "media:list": command.DomainAsset,
 	"media:trash": command.DomainAsset, "media:restore": command.DomainAsset, "font:import": command.DomainAsset,
-	"fonts": command.DomainAsset,
+	"fonts": command.DomainAsset, "asset:list": command.DomainAsset, "asset:show": command.DomainAsset,
+	"asset:uses": command.DomainAsset, "asset:set": command.DomainAsset, "asset:tag": command.DomainAsset,
 
 	"memory:list": command.DomainMemory, "memory:show": command.DomainMemory, "memory:write": command.DomainMemory,
 	"memory:remove": command.DomainMemory, "skill:list": command.DomainMemory, "skill:show": command.DomainMemory,
@@ -48,6 +51,11 @@ var commandDomains = map[string]string{
 	"skill:lint": command.DomainMemory, "prompt:list": command.DomainMemory, "prompt:show": command.DomainMemory,
 	"prompt:write": command.DomainMemory, "prompt:render": command.DomainMemory,
 	"library:search": command.DomainMemory, "library:reindex": command.DomainMemory,
+
+	"approval:list": command.DomainPublish, "approval:show": command.DomainPublish,
+	"approval:decide": command.DomainPublish, "approval:rule:list": command.DomainPublish,
+	"approval:rule:set": command.DomainPublish, "approval:rule:remove": command.DomainPublish,
+	"cost:show": command.DomainProvider, "cost:ceiling": command.DomainProvider,
 
 	"command:help": command.DomainWorkspace, "connection:list": command.DomainWorkspace,
 	"connection:show": command.DomainWorkspace, "connection:add": command.DomainWorkspace,
@@ -84,7 +92,7 @@ func domainCommands(domain string) []*spec {
 }
 
 // resolveGrouped turns the words after a domain into the command they name, and what is left of the arguments.
-// It tries, in this order: the two words joined by a colon (`memory skill list` is `skill:list`), the first word
+// It tries, in this order: the words joined by colons (`memory skill list` is `skill:list`), the first word
 // as a whole name (`video edit` is `edit`), and the first word as the verb of exactly one command of the domain
 // (`image edit` is `image:edit`). A verb that several commands of the domain share is ambiguous and names them.
 func resolveGrouped(domain string, words []string) (name string, rest []string, err *service.Error) {
@@ -101,8 +109,15 @@ func resolveGrouped(domain string, words []string) (name string, rest []string, 
 		return slices.ContainsFunc(in, func(s *spec) bool { return s.name == candidate })
 	}
 
-	if len(tail) > 0 && !strings.HasPrefix(tail[0], "-") && has(first+":"+tail[0]) {
-		return first + ":" + tail[0], tail[1:], nil
+	// The longest run of words that joins by colons into a command of the domain: `approval rule list`.
+	for n := min(len(words), 3); n >= 2; n-- {
+		if slices.ContainsFunc(words[:n], func(w string) bool { return strings.HasPrefix(w, "-") }) {
+			continue
+		}
+
+		if joined := strings.Join(words[:n], ":"); has(joined) {
+			return joined, words[n:], nil
+		}
 	}
 
 	if has(first) {

@@ -12,6 +12,7 @@ var OperationDomains = map[string]string{
 	"ProjectItemAdd": command.DomainProject, "ProjectItemMove": command.DomainProject,
 	"ProjectItemRename": command.DomainProject, "ProjectItemTrash": command.DomainProject,
 	"ProjectItemRestore": command.DomainProject, "BriefGet": command.DomainProject, "BriefSet": command.DomainProject,
+	"BriefingQuestions": command.DomainProject, "BriefingAnswer": command.DomainProject,
 	"ProjectBundleExport": command.DomainProject, "ProjectBundleImport": command.DomainProject,
 
 	"Edit": command.DomainVideo, "HistoryList": command.DomainVideo, "Undo": command.DomainVideo,
@@ -22,14 +23,18 @@ var OperationDomains = map[string]string{
 	"TemplateInstantiate": command.DomainVideo, "TemplateExport": command.DomainVideo,
 	"TemplateImport": command.DomainVideo, "SnapPoints": command.DomainVideo, "PlanWindow": command.DomainVideo,
 	"OpenFile": command.DomainVideo, "ProjectOtioExport": command.DomainVideo, "ProjectOtioImport": command.DomainVideo,
+	"ExportPresetList": command.DomainVideo, "ExportCheck": command.DomainVideo, "ExportBatch": command.DomainVideo,
 
 	"ImageCreate": command.DomainImage, "ImageList": command.DomainImage, "ImageDescribe": command.DomainImage,
 	"ImageEdit": command.DomainImage, "ImageUndo": command.DomainImage, "ImageRedo": command.DomainImage,
-	"ImageExport": command.DomainImage,
+	"ImageExport": command.DomainImage, "ImageFrame": command.DomainImage, "ImageHistory": command.DomainImage,
+	"ImageFile": command.DomainImage,
 
 	"MediaImport": command.DomainAsset, "MediaInspect": command.DomainAsset, "MediaList": command.DomainAsset,
 	"MediaTrash": command.DomainAsset, "MediaRestore": command.DomainAsset, "AssetList": command.DomainAsset,
 	"FontImport": command.DomainAsset, "FontList": command.DomainAsset,
+	"AssetGet": command.DomainAsset, "AssetUses": command.DomainAsset, "AssetSetInfo": command.DomainAsset,
+	"AssetTag": command.DomainAsset,
 
 	"MemoryList": command.DomainMemory, "MemoryGet": command.DomainMemory, "MemoryWrite": command.DomainMemory,
 	"MemoryRemove": command.DomainMemory, "SkillList": command.DomainMemory, "SkillGet": command.DomainMemory,
@@ -37,6 +42,13 @@ var OperationDomains = map[string]string{
 	"SkillMarkReviewed": command.DomainMemory, "SkillLint": command.DomainMemory, "PromptList": command.DomainMemory,
 	"PromptGet": command.DomainMemory, "PromptWrite": command.DomainMemory, "PromptRender": command.DomainMemory,
 	"LibrarySearch": command.DomainMemory, "LibraryReindex": command.DomainMemory,
+
+	// The approval queue is the gate of a publication and of a costly generation (ADR-0032); the cost summary and
+	// its ceilings are the spend on providers.
+	"ApprovalList": command.DomainPublish, "ApprovalGet": command.DomainPublish,
+	"ApprovalDecide": command.DomainPublish, "ApprovalRuleList": command.DomainPublish,
+	"ApprovalRuleSet": command.DomainPublish, "ApprovalRuleRemove": command.DomainPublish,
+	"CostSummary": command.DomainProvider, "CostCeilingSet": command.DomainProvider,
 
 	"CommandHelp": command.DomainWorkspace, "ConnectionList": command.DomainWorkspace,
 	"ConnectionGet": command.DomainWorkspace, "ConnectionCreate": command.DomainWorkspace,

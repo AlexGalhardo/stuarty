@@ -695,6 +695,7 @@
     },
     {
       "name": "export:presets",
+      "domain": "video",
       "summary": "list the export presets of the platforms",
       "usage": [
         "stuarty export:presets [--codecs]"
@@ -717,6 +718,7 @@
     },
     {
       "name": "export:check",
+      "domain": "video",
       "summary": "check that a project fits an export preset, before any encoding",
       "usage": [
         "stuarty export:check --project <id> --preset <id> [--start t] [--end t] [--codec c]"
@@ -754,6 +756,7 @@
     },
     {
       "name": "export:batch",
+      "domain": "video",
       "summary": "export a project several times, one after the other, as one job",
       "usage": [
         "stuarty export:batch --project <id> --preset <id>... [--codec c] [--start t] [--end t] [--wait]",
@@ -1682,6 +1685,7 @@
     },
     {
       "name": "briefing:questions",
+      "domain": "project",
       "summary": "list the questions of the guided briefing; with --project, also what its brief already answers",
       "usage": [
         "stuarty briefing:questions [--project <id>]"
@@ -1703,6 +1707,7 @@
     },
     {
       "name": "briefing:answer",
+      "domain": "project",
       "summary": "answer the guided briefing: the answers become the brief of a project",
       "usage": [
         "stuarty briefing:answer --project <id> --answer <question>=<text> [--answer ...] [--replace]",
@@ -1846,6 +1851,7 @@
     },
     {
       "name": "approval:list",
+      "domain": "publish",
       "summary": "list the approval queue: what waits for a person (pending by default)",
       "usage": [
         "stuarty approval:list"
@@ -1883,6 +1889,7 @@
     },
     {
       "name": "approval:show",
+      "domain": "publish",
       "summary": "show one approval request: what will be sent, where, the cost and its state",
       "usage": [
         "stuarty approval:show <id>"
@@ -1897,6 +1904,7 @@
     },
     {
       "name": "approval:decide",
+      "domain": "publish",
       "summary": "approve or reject a request (for a person in the app; the local token is refused)",
       "usage": [
         "stuarty approval:decide <id> --approve|--reject"
@@ -1928,6 +1936,7 @@
     },
     {
       "name": "approval:rule:list",
+      "domain": "publish",
       "summary": "list the rules that approve without asking",
       "usage": [
         "stuarty approval:rule:list"
@@ -1942,6 +1951,7 @@
     },
     {
       "name": "approval:rule:set",
+      "domain": "publish",
       "summary": "create or replace a rule that approves a kind of action (for a person in the app; the local token is refused)",
       "usage": [
         "stuarty approval:rule:set --kind <k>"
@@ -1998,6 +2008,7 @@
     },
     {
       "name": "approval:rule:remove",
+      "domain": "publish",
       "summary": "remove a rule (for a person in the app; the local token is refused)",
       "usage": [
         "stuarty approval:rule:remove <id>"
@@ -2012,6 +2023,7 @@
     },
     {
       "name": "cost:show",
+      "domain": "provider",
       "summary": "show the cost ceilings and what was spent today and over the last 30 days",
       "usage": [
         "stuarty cost:show"
@@ -2026,6 +2038,7 @@
     },
     {
       "name": "cost:ceiling",
+      "domain": "provider",
       "summary": "set or remove a cost ceiling (for a person in the app; the local token is refused)",
       "usage": [
         "stuarty cost:ceiling --currency USD"
@@ -2281,6 +2294,7 @@
     },
     {
       "name": "asset:list",
+      "domain": "asset",
       "summary": "list the files of the library, with origin, tags and reuse",
       "usage": [
         "stuarty asset:list"
@@ -2343,6 +2357,7 @@
     },
     {
       "name": "asset:show",
+      "domain": "asset",
       "summary": "show a file of the library: its origin, its tags and the projects that use it",
       "usage": [
         "stuarty asset:show <hash>"
@@ -2357,6 +2372,7 @@
     },
     {
       "name": "asset:uses",
+      "domain": "asset",
       "summary": "list the projects that use a file of the library",
       "usage": [
         "stuarty asset:uses <hash>"
@@ -2384,6 +2400,7 @@
     },
     {
       "name": "asset:set",
+      "domain": "asset",
       "summary": "set the description, the rights note and the reuse mark of a file of the library",
       "usage": [
         "stuarty asset:set <hash>"
@@ -2415,6 +2432,7 @@
     },
     {
       "name": "asset:tag",
+      "domain": "asset",
       "summary": "add and remove the tags of a file of the library",
       "usage": [
         "stuarty asset:tag <hash>"

@@ -26,6 +26,8 @@ CLI: `stuarty project` lists the commands of the domain and `stuarty project <ve
 - `item:restore`: restore an item from the trash of its project
 - `brief:show`: show the brief of a project
 - `brief:set`: write the brief of a project from a Markdown file
+- `briefing:questions`: list the questions of the guided briefing; with --project, also what its brief already answers
+- `briefing:answer`: answer the guided briefing: the answers become the brief of a project
 
 ## Operations
 

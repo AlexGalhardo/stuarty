@@ -96,12 +96,12 @@ Every operation belongs to one **domain**. The domain names are fixed here; a ne
 | Domain | What it holds | Operations today |
 | --- | --- | --- |
 | `project` | productions: projects, their items, the brief, bundles | `ProjectList`, `ProjectCreate`, `ProjectGet`, `ProjectTrash`, `ProjectRestore`, `ProjectDescribe`, `ProjectDuplicate`, `ProjectItem*`, `Brief*`, `ProjectBundle*`, the event stream |
-| `video` | the timeline document: its edit commands, history, lint, frames, jobs, templates, OpenTimelineIO | `Edit` and the commands of the timeline registry, `HistoryList`, `Undo`, `Redo`, `Lint`, `View*`, `JobStart`, `JobGet`, `JobList`, `JobCancel`, `ExportFile`, `Template*`, `SnapPoints`, `ProjectOtio*` |
+| `video` | the timeline document: its edit commands, history, lint, frames, jobs, templates, OpenTimelineIO | `Edit` and the commands of the timeline registry, `HistoryList`, `Undo`, `Redo`, `Lint`, `View*`, `JobStart`, `JobGet`, `JobList`, `JobCancel`, `ExportFile`, `Template*`, `SnapPoints`, `ProjectOtio*`, `Export*` (presets, the check against one, the batch) |
 | `image` | image documents (SDD-021) | `Image*` and the commands of the image registry |
 | `writing` | written documents | none yet |
-| `asset` | files of the workspace: media, fonts | `Media*`, `AssetList`, `FontImport`, `FontList` |
-| `publish` | publications and their approval | none yet |
-| `provider` | AI providers and generation | none yet |
+| `asset` | files of the workspace: media, the asset library, fonts | `Media*`, `Asset*` (the library of epic 08: list, get, uses, set info, tag), `FontImport`, `FontList` |
+| `publish` | publications and their approval | `Approval*` (the queue that gates a publication and a costly generation, SDD-015) |
+| `provider` | AI providers and generation | `Cost*` (the spend on providers and its ceilings) |
 | `memory` | the library: notes, skills, prompts, search | `Memory*`, `Skill*`, `Prompt*`, `Library*` |
 | `workspace` | the installation: help, connections, brand kit, health, keys, audit, trash, helpers | `CommandHelp`, `Connection*`, `BrandKit*`, `Doctor`, `AuditList`, `TrashEmpty`, `Tools*`, `Key*` |
 

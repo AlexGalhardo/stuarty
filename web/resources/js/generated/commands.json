@@ -56,6 +56,7 @@
 			"type": "object"
 		},
 		"description": "Writes ordinary keyframes (with a Bezier easing where the preset needs a curve) on the first duration frames (edge in) or the last ones (edge out) of a clip, text, caption or shape item; edit them afterwards with keyframe.set and keyframe.set_easing. Keyframes of the same properties inside that window are replaced, the rest are kept. duration is at most the item's duration, default 0.5s (the whole item for push_in and pull_out). direction is for slide; amount is the slide distance in pixels, the scale factor of scale, or the zoom factor of push_in and pull_out. animation.list_presets describes them.",
+		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_INVALID_TIME",
@@ -84,6 +85,7 @@
 			"type": "object"
 		},
 		"description": "Changes nothing. The result lists, for each preset of animation.apply_preset, what it animates and the range and default of its parameters, and the four numbers of each named curve of keyframe.set_easing.",
+		"domain": "video",
 		"errors": [
 			"E_VALIDATION"
 		],
@@ -3966,6 +3968,7 @@
 			"type": "object"
 		},
 		"description": "Gives the keyframe at the absolute position a named easing (easing), a custom cubic Bezier curve (bezier: x1, y1, x2, y2; x1 and x2 from 0 to 1, y1 and y2 from -2 to 3) or a named Bezier preset (preset: in, out, in_out, back, overshoot, stored as its four numbers). Exactly one of the three. The value and the time of the keyframe do not change. Works for every animatable property, crop and mask included.",
+		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
 			"E_INVALID_TIME",
