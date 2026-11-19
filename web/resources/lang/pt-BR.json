@@ -2125,6 +2125,52 @@
       "test_ok": "O destino respondeu {status}.",
       "test_failed": "O destino não respondeu bem (status {status})."
     },
+    "generate": {
+      "open": {
+        "visual": "Gerar uma imagem",
+        "video": "Gerar uma locução"
+      },
+      "title": {
+        "image": "Gerar uma imagem",
+        "voice": "Gerar uma locução"
+      },
+      "intro": {
+        "image": "O preço aparece antes de qualquer pedido ao provedor. A imagem vai para a biblioteca, com o modelo e o prompt de onde veio.",
+        "voice": "O preço aparece antes de qualquer pedido ao provedor. A narração vai para a biblioteca, com o modelo e o texto de onde veio."
+      },
+      "no_provider": {
+        "image": "Nenhum provedor conectado faz imagens ainda.",
+        "voice": "Nenhum provedor conectado faz voz ainda."
+      },
+      "open_connections": "Conecte um na página Conexões",
+      "project": "Projeto",
+      "connection": "Conexão",
+      "model": "Modelo",
+      "no_price": "sem preço ainda",
+      "voice": "Voz",
+      "prompt": {
+        "image": "O que desenhar",
+        "voice": "O que ler em voz alta"
+      },
+      "size": "Tamanho",
+      "count": "Quantas",
+      "format": "Formato",
+      "language": "Idioma",
+      "disclosure": "Avise que esta voz é gerada por IA a quem a ouvir: o provedor pede isso.",
+      "estimate": "Mostrar a estimativa",
+      "estimated": "Custo estimado: {amount}",
+      "submit": "Gerar",
+      "state": {
+        "queued": "Esperando para começar.",
+        "waiting_approval": "Esperando a sua aprovação.",
+        "running": "Gerando.",
+        "succeeded": "Pronto.",
+        "failed": "Não deu certo.",
+        "cancelled": "Cancelado."
+      },
+      "open_approvals": "Abrir a página Aprovações",
+      "done": "{delivered} de {requested} feitas, custou {amount}."
+    },
     "providers": {
       "title": "Provedores de IA",
       "intro": "Conecte os serviços de IA que você já paga, com a sua própria chave. O preço aparece antes de qualquer coisa rodar, e o trabalho que custa dinheiro espera por você na página de Aprovações.",
@@ -2144,6 +2190,14 @@
       "limits": "Até {context} tokens, {output} deles na resposta",
       "price": "Por milhão de tokens: {input} de entrada, {output} de saída ({source})",
       "price_none": "Ainda sem preço: nada pode ser gerado com este modelo até você definir um.",
+      "price_unit": {
+        "image": "Por imagem: {amount} ({source})",
+        "mchar": "Por milhão de caracteres: {amount} ({source})"
+      },
+      "price_per": {
+        "image": "Preço de uma imagem",
+        "mchar": "Preço de um milhão de caracteres"
+      },
       "source": {
         "user": "preço seu",
         "catalogue": "publicado pelo provedor",

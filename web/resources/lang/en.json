@@ -2125,6 +2125,52 @@
       "test_ok": "The destination answered {status}.",
       "test_failed": "The destination did not answer well (status {status})."
     },
+    "generate": {
+      "open": {
+        "visual": "Generate an image",
+        "video": "Generate a voice-over"
+      },
+      "title": {
+        "image": "Generate an image",
+        "voice": "Generate a voice-over"
+      },
+      "intro": {
+        "image": "The price is shown before anything is asked of the provider. The image lands in the library, with the model and the prompt it came from.",
+        "voice": "The price is shown before anything is asked of the provider. The narration lands in the library, with the model and the text it came from."
+      },
+      "no_provider": {
+        "image": "No connected provider makes images yet.",
+        "voice": "No connected provider makes speech yet."
+      },
+      "open_connections": "Connect one on the Connections page",
+      "project": "Project",
+      "connection": "Connection",
+      "model": "Model",
+      "no_price": "no price yet",
+      "voice": "Voice",
+      "prompt": {
+        "image": "What to draw",
+        "voice": "What to read out"
+      },
+      "size": "Size",
+      "count": "How many",
+      "format": "Format",
+      "language": "Language",
+      "disclosure": "Say that this voice is AI-generated to the people who hear it: the provider asks for it.",
+      "estimate": "Show the estimate",
+      "estimated": "Estimated cost: {amount}",
+      "submit": "Generate",
+      "state": {
+        "queued": "Waiting to start.",
+        "waiting_approval": "Waiting for your approval.",
+        "running": "Generating.",
+        "succeeded": "Done.",
+        "failed": "It did not work.",
+        "cancelled": "Cancelled."
+      },
+      "open_approvals": "Open the Approvals page",
+      "done": "{delivered} of {requested} made, it cost {amount}."
+    },
     "providers": {
       "title": "AI providers",
       "intro": "Connect the AI services you already pay for, with your own key. The price is shown before anything runs, and costly work waits for you on the Approvals page.",
@@ -2144,6 +2190,14 @@
       "limits": "Up to {context} tokens, {output} of them in the answer",
       "price": "Per million tokens: {input} in, {output} out ({source})",
       "price_none": "No price yet: nothing can be generated with this model until you set one.",
+      "price_unit": {
+        "image": "Per image: {amount} ({source})",
+        "mchar": "Per million characters: {amount} ({source})"
+      },
+      "price_per": {
+        "image": "Price of one image",
+        "mchar": "Price of a million characters"
+      },
       "source": {
         "user": "your price",
         "catalogue": "published by the provider",
