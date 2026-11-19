@@ -91,6 +91,7 @@ func (d Dir) Path(elem ...string) string {
 const (
 	CodeWorkspaceLocked = "E_WORKSPACE_LOCKED"
 	CodeUnauthorized    = "E_UNAUTHORIZED"
+	CodeInvalidState    = "E_INVALID_STATE"
 )
 
 // Error carries an SDD-000 error code so adapters can map it to an exit code

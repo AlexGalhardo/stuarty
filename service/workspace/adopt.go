@@ -465,7 +465,34 @@ func writeRecord(a *Adoption, now time.Time) error {
 func adoptFormer(former, current string) error {
 	a, err := AdoptFormer(AdoptOptions{Former: former, Current: current})
 	if err != nil {
-		return fmt.Errorf("workspace: %w; the workspace is untouched, or set %s to choose another folder", err, EnvHome)
+		// Already an *Error (the former workspace is in use: E_WORKSPACE_LOCKED): keep its code.
+		if _, ok := errors.AsType[*Error](err); ok {
+			return err
+		}
+
+		// The rename or the copy is done and only the record failed: the workspace is adopted.
+		if a != nil {
+			return &Error{
+				Code: CodeInvalidState,
+				Message: fmt.Sprintf(
+					"the workspace of Vukem Video was adopted into %s but its record could not be written: %s",
+					a.Dir, strings.TrimPrefix(err.Error(), "workspace: "),
+				),
+				Err: err,
+			}
+		}
+
+		// Any other failure answers E_INVALID_STATE with its reason, so that every surface shows it.
+		return &Error{
+			Code: CodeInvalidState,
+			Message: fmt.Sprintf(
+				"the workspace of Vukem Video cannot be adopted: %s. Nothing of it was moved or deleted; "+
+					"at most a backup of its database was written inside it. Fix the cause and start again, "+
+					"or set %s to choose another folder",
+				strings.TrimPrefix(err.Error(), "workspace: "), EnvHome,
+			),
+			Err: err,
+		}
 	}
 
 	if a != nil {
