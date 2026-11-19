@@ -162,7 +162,8 @@ Kinds: `ingest`, `transcribe`, `export`, `export_batch`, `frame`, and the kinds 
 | `image_documents`, `image_operations` | image documents, and their append-only log of batches | SDD-005 §5.12, SDD-021 |
 | `approval_requests`, `approval_rules`, `cost_ceilings`, `cost_ledger` | the approval queue, the rules that approve without asking, the cost ceilings and the record of every estimate and real cost; no secret | SDD-015 |
 | `image_documents`, `image_operations` | image documents, and their append-only log of batches | SDD-005 §5.13, SDD-021 |
-| `asset_info`, `asset_tags`, `asset_search` | the library side of an asset by hash: origin, rights note, description, the reuse mark, the tags and the full-text index over them | SDD-005 §5.5, SDD-011 §14 |
+| `library_entries`, `library_fts` | the index of memory, skills and prompts for search and lists; rebuilt from the files, holds no content that the files lack | SDD-018 §9 |
+| `asset_info`, `asset_tags`, `asset_search` | the library side of an asset by hash: origin, rights note, description, the reuse mark, the tags and the full-text index over them | SDD-005 §5.5.1, SDD-011 §14 |
 | vukem's own tables for sessions (`sessions`) and tokens (`access_tokens`) | network mode | vukem |
 
 A document with a `template` member is a template draft, or an instance when `template.instance` is true (SDD-001 section 3.10). `TemplateInstantiate` writes the flag; lint reads it (`L_SLOT_UNFILLED`, SDD-003).
@@ -449,7 +450,20 @@ The operations of the registry of domain `image` (`core/command` registry built 
 | `E_SLOT` `details.reason` `unknown_slot`, `wrong_kind`, `invalid_value`, `missing` | error detail | a template filled badly (SDD-021 section 7) |
 | `E_EXPORT_FAILED` `details.reason` `webp_unavailable` | error detail | no WebP encoder is wired (SDD-021 §6) |
 
-## 15. Asset library (SDD-011 §14)
+## 15. Export presets, codecs and batches (SDD-004 sections 8.2 to 8.4)
+
+| Name | Kind | Meaning |
+| --- | --- | --- |
+| `youtube-shorts`, `instagram-reels`, `facebook-reels`, `tiktok`, `x-video` | export preset id | the five presets of RF-087, in this order in `ExportPresetList` |
+| `h264`, `hevc`, `av1` | export codec | the codecs of an export; `h264` is the default |
+| `X_DURATION_TOO_LONG`, `X_DURATION_TOO_SHORT`, `X_FPS_TOO_HIGH`, `X_FPS_TOO_LOW`, `X_RESOLUTION_TOO_SMALL`, `X_RESOLUTION_TOO_LARGE`, `X_ASPECT_RATIO`, `X_SIZE_TOO_LARGE` | export check finding | what `ExportCheck` reports (SDD-002 A.13) |
+| `export_batch` | job kind | the parent job of `ExportBatch`; its children are `export` jobs (SDD-004 section 8.4) |
+| `E_VALIDATION` `details.reason` `preset_mismatch` | error detail | an export with a preset was refused because the project does not fit it; `details.findings` |
+| `E_NO_ENCODER` `details.reason` `codec_unavailable` | error detail | the codec asked for has no allowed encoder that passes the test encode on this machine |
+| `preset_<finding>` | verification check | a check of the finished file against its preset, named after the finding (`preset_duration_too_long`) |
+| `video_codec`, `codec_fallback`, `preset`, `notes` | export result member | the codec written (`video_codec`, as before), the codec wanted when the export fell back to `h264`, the preset id, and the notes that say so |
+
+## 16. Asset library (SDD-011 §14)
 
 | Name | Kind | Meaning |
 | --- | --- | --- |

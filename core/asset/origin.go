@@ -9,7 +9,7 @@ import (
 // OriginKind says where a file came from.
 type OriginKind string
 
-// The origin kinds (SDD-000 section 15).
+// The origin kinds (SDD-000 section 16).
 const (
 	Imported           OriginKind = "imported"
 	Generated          OriginKind = "generated"
@@ -54,7 +54,7 @@ type Origin struct {
 	RightsNote string     `json:"rights_note,omitempty" untrusted:"true"` // the user's own record, never a licence check
 }
 
-// RuleError is a refusal with a stable reason, for E_VALIDATION (SDD-000 section 15).
+// RuleError is a refusal with a stable reason, for E_VALIDATION (SDD-000 section 16).
 type RuleError struct {
 	Path   string // origin.<member>, tags, description
 	Reason string // origin_kind_unknown, source_required, rights_note_required, ... too_long, cost_invalid, tags_invalid
