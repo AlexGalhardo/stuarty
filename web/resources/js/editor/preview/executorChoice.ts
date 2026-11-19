@@ -6,11 +6,10 @@
 export type ExecutorKind = "rust" | "pixi";
 export type ExecutorSetting = ExecutorKind | "auto";
 
-// The query parameter and the stored value that force an executor. The query
-// wins, so a link reproduces a report; `auto` (or no value) lets detection
-// and DEFAULT_EXECUTOR decide.
+// The query parameter and the stored value (`stuarty.preview.executor`, read by
+// state/prefs.ts) that force an executor. The query wins, so a link reproduces
+// a report; `auto` (or no value) lets detection and DEFAULT_EXECUTOR decide.
 export const EXECUTOR_PARAM = "executor";
-export const EXECUTOR_STORAGE_KEY = "stuarty.preview.executor";
 
 // What the executor chosen without a setting is when the browser can run the
 // worker. PixiJS stays the default until the measurements of epic 26 task 8
@@ -82,12 +81,4 @@ export function chooseExecutor(
 		};
 	}
 	return { kind: "rust", reason: null };
-}
-
-export function storedSetting(): string | null {
-	try {
-		return window.localStorage.getItem(EXECUTOR_STORAGE_KEY);
-	} catch {
-		return null;
-	}
 }
