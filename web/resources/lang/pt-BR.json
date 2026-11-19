@@ -254,7 +254,20 @@
       },
       "history": {
         "undo": "Desfazer meu último passo",
-        "redo": "Refazer meu passo"
+        "redo": "Refazer meu passo",
+        "title": "Histórico",
+        "empty": "Nenhuma mudança ainda. Toda mudança sua ou de um agente aparece aqui.",
+        "undo_of": "desfez a revisão {revision}",
+        "redo_of": "refez a revisão {revision}",
+        "revision": "revisão {revision}",
+        "you": "Você",
+        "undone": "Desfeito pela revisão {revision}",
+        "skipped": {
+          "one": "{count} mudança deixada como estava porque outro autor a alterou depois",
+          "other": "{count} mudanças deixadas como estavam porque outro autor as alterou depois"
+        },
+        "agent_changed_prefix": "A imagem foi alterada por",
+        "agent_changed_suffix": "e a tela já mostra a mudança."
       },
       "add": {
         "text": "Adicionar texto",

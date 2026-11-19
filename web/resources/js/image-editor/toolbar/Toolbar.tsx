@@ -1,7 +1,6 @@
 import { Maximize, Minus, Plus, ScanSearch } from "lucide-react";
 import { type KeyboardEvent, type ReactNode, useEffect, useRef } from "react";
 
-import { Separator } from "@/components/ui/separator";
 import { useT } from "@/lib/i18n";
 import { ZOOM_STEP } from "../canvas/viewport";
 import { useImage, useImageStore } from "../state/context";
@@ -98,7 +97,7 @@ export function ToolGroup({ children }: { children: ReactNode }): ReactNode {
 	return (
 		<>
 			<div className="flex items-center gap-0.5">{children}</div>
-			<Separator orientation="vertical" className="mx-1 h-5" />
+			<span aria-hidden="true" className="mx-1 h-5 w-px bg-border" />
 		</>
 	);
 }
