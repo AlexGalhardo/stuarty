@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -273,4 +274,50 @@ func hostAndPort(raw string) (host, port string, err error) {
 	}
 
 	return u.Hostname(), u.Port(), nil
+}
+
+// TestConnectionRefusesNamedCloudMetadataAddressesAtDial: the metadata services that sit in ranges
+// the gate allows on purpose (the CGNAT block and the unique-local block) are refused by address.
+func TestConnectionRefusesNamedCloudMetadataAddressesAtDial(t *testing.T) {
+	for _, host := range []string{"100.100.100.200", "fd00:ec2::254", "::ffff:100.100.100.200"} {
+		t.Run(host, func(t *testing.T) {
+			reg := &fakeRegistry{dests: map[string]Destination{"con_a": {ID: "con_a", Hosts: []string{host}}}}
+
+			dials := 0
+			restore := SetDialRecorder(func(Purpose, string) error { dials++; return nil })
+
+			defer restore()
+
+			_, _, err := get(Connection(reg, "con_a", 2*time.Second, nil), "https://["+host+"]/latest/meta-data/")
+			if !errors.Is(err, ErrNotPublic) {
+				t.Fatalf("%v, want ErrNotPublic", err)
+			}
+
+			if dials != 0 {
+				t.Errorf("the recorder saw %d dials of a refused address", dials)
+			}
+		})
+	}
+}
+
+// TestConnectionStillAllowsCGNATAndUniqueLocalNeighbours: only the named addresses are refused.
+func TestConnectionStillAllowsCGNATAndUniqueLocalNeighbours(t *testing.T) {
+	for _, host := range []string{"100.100.100.201", "fd00:ec2::255", "10.0.0.1"} {
+		reg := &fakeRegistry{dests: map[string]Destination{"con_a": {ID: "con_a", Hosts: []string{host}}}}
+		stop := errors.New("stop")
+		restore := SetDialRecorder(func(Purpose, string) error { return stop })
+
+		authority := host
+		if strings.Contains(host, ":") {
+			authority = "[" + host + "]"
+		}
+
+		_, _, err := get(Connection(reg, "con_a", 2*time.Second, nil), "https://"+authority+"/")
+
+		restore()
+
+		if !errors.Is(err, stop) {
+			t.Errorf("%s: %v, want the gate to let the dial reach the recorder", host, err)
+		}
+	}
 }
