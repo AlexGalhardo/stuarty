@@ -17,7 +17,7 @@ const duckOp = `{"item_id": "` + itemB + `", "speech_item_ids": ["` + itemA + `"
 
 func applyBeta(t *testing.T, doc *timeline.Document, name, args string) *timeline.Document {
 	t.Helper()
-	res, err := BetaBuild().Apply(doc, Operation{Op: name, Args: json.RawMessage(args)}, Env{})
+	res, err := FullRegistry().Apply(doc, Operation{Op: name, Args: json.RawMessage(args)}, Env{})
 	if err != nil {
 		t.Fatalf("%s: %v", name, err)
 	}

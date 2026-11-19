@@ -73,10 +73,6 @@ func goldenHashes(t *testing.T, root string, into map[string]string) {
 			dir := filepath.Join(root, cmd.Name, c.Name())
 			reg := fullRegistry()
 
-			if strings.HasSuffix(c.Name(), "_in_prototype") {
-				reg = prototypeBuild()
-			}
-
 			before, err := os.ReadFile(filepath.Join(dir, "before.json"))
 			if err != nil {
 				t.Fatal(err)
