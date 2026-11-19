@@ -194,6 +194,10 @@ type Service interface {
 	ProjectItemRestore(ctx context.Context, req ProjectItemTrashRequest) (*ProjectItemResult, error)
 	BriefGet(ctx context.Context, req BriefGetRequest) (*BriefResult, error)
 	BriefSet(ctx context.Context, req BriefSetRequest) (*BriefResult, error)
+
+	// The guided briefing (SDD-005 §5.12.1).
+	BriefingQuestions(ctx context.Context, req BriefingQuestionsRequest) (*BriefingQuestionsResult, error)
+	BriefingAnswer(ctx context.Context, req BriefingAnswerRequest) (*BriefResult, error)
 }
 ```
 
@@ -425,12 +429,47 @@ type BriefResult struct {
 	Text      string    `json:"text" untrusted:"true"`
 	UpdatedAt *time.Time `json:"updated_at,omitempty"` // absent when the project has no brief
 }
+
+// The guided briefing (SDD-005 §5.12.1).
+type BriefingQuestionsRequest struct {
+	ProjectID string `json:"project_id,omitempty"` // with a project, the result also holds what its brief answers
+}
+type BriefingQuestion struct {
+	ID       string   `json:"id"`
+	Heading  string   `json:"heading"`
+	Text     string   `json:"text"`
+	Kind     string   `json:"kind"` // text, choice, seconds or date
+	Required bool     `json:"required"`
+	Options  []string `json:"options,omitempty"`
+	MaxChars int      `json:"max_chars,omitempty"`
+	Min      int      `json:"min,omitempty"` // a seconds question: the least and the most
+	Max      int      `json:"max,omitempty"`
+}
+type BriefingAnswer struct {
+	ID    string `json:"id"`
+	Value string `json:"value" untrusted:"true"`
+}
+type BriefingQuestionsResult struct {
+	Envelope
+	ProjectID string             `json:"project_id,omitempty"`
+	Questions []BriefingQuestion `json:"questions"`
+	HasBrief  bool               `json:"has_brief"`
+	Guided    bool               `json:"guided"` // the brief was written by the briefing; Answers holds its answers
+	Answers   []BriefingAnswer   `json:"answers,omitempty"`
+	Text      string             `json:"text"`
+}
+type BriefingAnswerRequest struct {
+	ProjectID string            `json:"project_id"`
+	Answers   map[string]string `json:"answers"` // question id to answer; they replace the brief
+	Replace   bool              `json:"replace,omitempty"` // allow replacing a brief written by hand
+	DryRun    bool              `json:"dry_run,omitempty"`
+}
 ```
 
 - **`ProjectDescribe`** is the text view of a production for an agent that has never seen it, inside the token budget of §3.10 (`max_tokens`, default 1,500): the name and state, one line of production state, the brief (cut at the budget with the note `brief cut; read it with brief`), then every item as `<id> <kind> "<title>" [trashed]` and, for a timeline, its id, size, duration and revision. The text of a `text` item is never inlined.
 - **`ProjectItemAdd`** of a `timeline` creates the document as `ProjectCreate` does and returns its `timeline_id` in `item.timeline_id`. A project has at most one active `brief` item (`BriefSet` creates and updates it); `ProjectItemAdd` of kind `brief` is `E_VALIDATION` with the hint "use brief:set". `ProjectItemMove` moves the item to the index `position` of the whole list and renumbers the others. `ProjectItemRename` changes the item title only (the timeline document is not touched). `ProjectItemTrash` of the last active timeline is `E_INVALID_STATE`; of a timeline it also rejects edits to it until restored (§2.3). All five are idempotent where the state already holds, and refuse a trashed project with `E_INVALID_STATE`. A brief is not deleted: `BriefSet` with an empty text clears it, and `ProjectItemTrash` of the brief is `E_INVALID_STATE`. A project holds at most 256 active items and 64 active timelines, what a bundle of the whole project may carry (SDD-005 §16.1.1): `ProjectItemAdd`, `ProjectItemRestore` and the `BriefSet` that creates the brief answer `E_LIMIT_EXCEEDED` beyond them.
 - **`ProjectDuplicate`** copies the brief, the texts and every active timeline (each with a new `prj_` id, its document at revision 0 and no log, as an import with `as_new`, SDD-005 §16.3) and the use of the same assets; outputs are not copied (a file belongs to the job that made it). The copy is a new project, owned by the caller.
-- Scopes: `ProjectDescribe` and `BriefGet` read; the others edit. Every operation takes `project_id` of the production and checks ownership as `ProjectGet` does.
+- Scopes: `ProjectDescribe`, `BriefGet` and `BriefingQuestions` read; the others edit. Every operation takes `project_id` of the production and checks ownership as `ProjectGet` does.
 - Audit actions (SDD-005 §5.9): `project.item.add`, `project.item.move`, `project.item.rename`, `project.item.trash`, `project.item.restore`, `project.brief.set`, `project.duplicate`.
 
 ### 2.4 Edit
@@ -1437,7 +1476,7 @@ Tool and Service mapping, scope and annotations (annotations are hints and clien
 | `font_import` | `FontImport` | media | false | false | true | false |
 | `connection` | `ConnectionList` (without `id`), `ConnectionGet` (with `id`) | read | true | n/a | true | false |
 | `image` | `ImageCreate`, `ImageList`, `ImageDescribe`, `ImageEdit`, `ImageUndo`, `ImageRedo`, `ImageExport` (SDD-021) | read (list, show), edit (the others) | false | false | false | false |
-| `project_item` | `ProjectItemAdd`, `ProjectItemMove`, `ProjectItemRename`, `ProjectItemTrash`, `ProjectItemRestore`, `BriefGet`, `BriefSet` (argument `action`) | edit (read for `brief` without `text`) | false | false | false | false |
+| `project_item` | `ProjectItemAdd`, `ProjectItemMove`, `ProjectItemRename`, `ProjectItemTrash`, `ProjectItemRestore`, `BriefGet`, `BriefSet`, `BriefingQuestions`, `BriefingAnswer` (argument `action`) | edit (read for `brief` without `text` and for `briefing` without `answers`) | false | false | false | false |
 | `library` | `LibrarySearch`, `MemoryList`, `SkillList`, `PromptList`, `MemoryGet`, `SkillGet`, `PromptGet`, `MemoryWrite`, `SkillWrite`, `PromptWrite`, `PromptRender`, `SkillLint` | read (search, list, get, render, lint), edit (write) | false | false | false | false |
 
 `destructiveHint` is `false` on every tool: every write is undoable and recorded per actor, and nothing is removed for good (ADR-0020 items 2 and 3). A client that prompts on destructive tools therefore never prompts for this server, which is what unattended use needs (D-011). `openWorldHint` is `false` on every tool: no tool reaches an address chosen by the caller (RF-130). `TestNoOutboundTools` asserts both hints for every registered tool and that `web/app/mcp` imports no HTTP client.
@@ -3136,7 +3175,7 @@ The `image` tool is the image documents of SDD-021 behind one tool, as `template
 ```json
 {
   "name": "project_item",
-  "description": "Items of a project. add makes a timeline (a second edit; pass its id as timeline_id to edit, view and the rest), a text (Markdown) or an output (job_id of an export); move, rename, trash, restore take item_id; brief reads the brief, or writes it with text (empty clears).",
+  "description": "Project items. add: timeline (its id is timeline_id), text or output (export job_id); move, rename, trash, restore: item_id; brief: read, or write text (empty clears); briefing: questions, or answers {id: text} to write the brief.",
   "inputSchema": {
     "type": "object",
     "properties": {
@@ -3147,7 +3186,8 @@ The `image` tool is the image documents of SDD-021 behind one tool, as `template
           "rename",
           "trash",
           "restore",
-          "brief"
+          "brief",
+          "briefing"
         ]
       },
       "project_id": {
@@ -3173,6 +3213,9 @@ The `image` tool is the image documents of SDD-021 behind one tool, as `template
       },
       "text": {
         "type": "string"
+      },
+      "answers": {
+        "type": "object"
       },
       "preset": {
         "type": "string"
@@ -3212,7 +3255,7 @@ The `image` tool is the image documents of SDD-021 behind one tool, as `template
 }
 ```
 
-`action` `add` with `kind` `timeline` makes a second timeline; its id is `item.timeline_id` and goes in the `timeline_id` argument of `edit`, `history`, `view`, `lint`, `job_start`, `media_import`, `media_inspect`, `project_get` and `template` (§1.7). `action` `brief` is `BriefGet` without `text` and `BriefSet` with it (an empty text clears the brief). `project_get` with `detail` `overview` is `ProjectDescribe` (§2.3.1); `project_create` with `from` is `ProjectDuplicate`.
+`action` `add` with `kind` `timeline` makes a second timeline; its id is `item.timeline_id` and goes in the `timeline_id` argument of `edit`, `history`, `view`, `lint`, `job_start`, `media_import`, `media_inspect`, `project_get` and `template` (§1.7). `action` `brief` is `BriefGet` without `text` and `BriefSet` with it (an empty text clears the brief). `action` `briefing` is `BriefingQuestions` without `answers` and `BriefingAnswer` with it (SDD-005 §5.12.1); a brief written by hand is not replaced through the tool (the person clears it first with `brief` and an empty `text`). `project_get` with `detail` `overview` is `ProjectDescribe` (§2.3.1); `project_create` with `from` is `ProjectDuplicate`.
 
 #### `library`
 
@@ -3500,6 +3543,8 @@ Every command that reads or edits a timeline (those whose result is about one do
 | `item:restore` | `item:restore <item id> --project <id>` | none | none | `ProjectItemResult` |
 | `brief:show` | `brief:show --project <id>` | none | none | `BriefResult` |
 | `brief:set` | `brief:set --project <id> --text <file\|->` | `--text` required: the Markdown, from a file or standard input | the text with `--text -` | `BriefResult` |
+| `briefing:questions` | `briefing:questions [--project <id>]` | `--project` string, optional: also the answers its brief holds | none | `BriefingQuestionsResult` |
+| `briefing:answer` | `briefing:answer --project <id> (--answer <id>=<text>)... [--answers <file\|->] [--replace] [--dry-run]` | `--answer` string, repeatable; `--answers` string, a JSON object of question id to answer; `--replace` bool false, replaces a brief written by hand | the JSON with `--answers -` | `BriefResult` |
 | `agent:docs` | `agent:docs [--print skill\|agents\|instructions] [--write <dir>]` | `--print` string `skill`; `--write` string | none | `{"files": [...]}` with `--write`; the text itself with `--print` |
 
 Notes on the table:
@@ -3762,6 +3807,8 @@ Success codes are the `Op.Status`. Error statuses are the table of SDD-000 §8; 
 | `projects.items.restore` | `POST /projects/{id}/items/{item_id}/restore` | `dry_run` | none | 200 `ProjectItemResult` | edit | none |
 | `projects.brief.get` | `GET /projects/{id}/brief` | none | none | 200 `BriefResult` | read | none |
 | `projects.brief.set` | `PUT /projects/{id}/brief` | none | `{text, dry_run?}` | 200 `BriefResult` | edit | 413 `E_LIMIT_EXCEEDED` |
+| `briefing.questions` | `GET /briefing/questions` | `project_id` (optional) | none | 200 `BriefingQuestionsResult` | read | 404 `E_NOT_FOUND` for an unknown project |
+| `projects.briefing.answer` | `PUT /projects/{id}/briefing` | `dry_run` | `{answers, replace?, dry_run?}` | 200 `BriefResult` | edit | 422 `E_VALIDATION` (`path` `answers.<id>`); 409 `E_INVALID_STATE` for a brief written by hand without `replace` |
 | `fonts.import` | `POST /fonts` | none | `{path}`, an absolute path to a TrueType or OpenType file on the machine of the server (SDD-007 §7.7) | 201 `FontImportResult` `{hash, bytes, deduplicated}` | media | 403 `E_PATH_NOT_ALLOWED`; 404 `E_FILE_NOT_FOUND`; 422 `E_VALIDATION` (a refused font) |
 | `brand.get`, `brand.set` | `GET /brand-kit`, `PUT /brand-kit` | none | `{logo?, colors?, fonts?}` for set (replaces the kit, SDD-005 §5.11; at least one member, an empty one clears the kit) | 200 `BrandKit` | read; edit | 422 `E_VALIDATION`; 404 `E_NOT_FOUND` |
 | `users.list`, `users.create`, `users.update` | `GET /users`, `POST /users`, `PATCH /users/{user_id}` | none | `{email, password, role?}` for create; `{role?, disabled?}` for update | 200 `{users: [UserView]}`, 201 `UserView`, 200 `UserView` | an administrator's browser session; a key cannot call them (network mode only, SDD-007 §4.1) | 403 `E_FORBIDDEN`; 404 `E_NOT_FOUND`; 409 `E_INVALID_STATE` (last administrator) |
@@ -3985,6 +4032,8 @@ Every `Service` operation has an encoding on each surface. The table is the proo
 | `ProjectItemRestore` | `project_item` (`action` `restore`) | `item:restore` | `POST /projects/{id}/items/{item_id}/restore` |
 | `BriefGet` | `project_item` (`action` `brief`, without `text`) | `brief:show` | `GET /projects/{id}/brief` |
 | `BriefSet` | `project_item` (`action` `brief`, with `text`) | `brief:set` | `PUT /projects/{id}/brief` |
+| `BriefingQuestions` | `project_item` (`action` `briefing`, without `answers`) | `briefing:questions` | `GET /briefing/questions` |
+| `BriefingAnswer` | `project_item` (`action` `briefing`, with `answers`) | `briefing:answer` | `PUT /projects/{id}/briefing` |
 | `ImageCreate` | `image` (`action` create) | `image:create` | `POST /images` |
 | `ImageList` | `image` (`action` list) | `image:list` | `GET /images` |
 | `ImageDescribe` | `image` (`action` show) | `image:show` | `GET /images/{id}` |
