@@ -765,3 +765,55 @@ func TestAssetLibraryFindsAFileCopiedToAnotherOwner(t *testing.T) {
 		t.Errorf("after the template fill, the search for its file = %v", got)
 	}
 }
+
+// Reusing a file by hash in network mode names the new use as the caller's own projects name the file, never by
+// the name of the first import, which may be another user's (VV-254: the names are per owner).
+func TestAssetLibraryReuseByHashKeepsTheCallersName(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{})
+	as := func(user string) context.Context {
+		return service.WithCaller(context.Background(), service.Caller{
+			Actor: "user:" + user, Scopes: service.AllScopes, OwnerUserID: user,
+		})
+	}
+	mk := func(c context.Context, name string) string {
+		res, err := m.svc.ProjectCreate(c, service.ProjectCreateRequest{Name: name})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		return res.ProjectID
+	}
+	alice, bob := as("alice"), as("bob")
+
+	first, err := m.svc.MediaImport(alice, service.MediaImportRequest{
+		ProjectID: mk(alice, "a"), Files: []service.ImportFile{{Path: m.write("merger-secret-plan.mp4", clipBytes)}},
+	})
+	if err != nil || first.Failed != 0 {
+		t.Fatalf("alice's import = %+v, %v", first, err)
+	}
+
+	if _, err := m.svc.MediaImport(bob, service.MediaImportRequest{
+		ProjectID: mk(bob, "b"), Files: []service.ImportFile{{Path: m.write("holiday.mp4", clipBytes)}},
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	second := mk(bob, "b2")
+
+	reused, err := m.svc.MediaImport(bob, service.MediaImportRequest{
+		ProjectID: second, Files: []service.ImportFile{{Hash: first.Assets[0].Hash}},
+	})
+	if err != nil || reused.Failed != 0 || reused.Assets[0].Name != "holiday.mp4" {
+		t.Fatalf("bob's reuse = %+v, %v", reused, err)
+	}
+
+	list, err := m.svc.MediaList(bob, service.MediaListRequest{ProjectID: second})
+	if err != nil || len(list.Assets) != 1 || strings.Contains(list.Text, "secret") {
+		t.Errorf("bob's media = %+v, %v", list, err)
+	}
+
+	if found, _ := m.svc.AssetList(bob, service.AssetListRequest{Text: "secret"}); found == nil ||
+		len(found.Assets) != 0 {
+		t.Errorf("bob finds the file by alice's name: %+v", found)
+	}
+}
