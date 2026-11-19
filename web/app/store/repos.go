@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/approval"
 	"github.com/AlexGalhardo/stuarty/service/connections"
 	"github.com/AlexGalhardo/stuarty/service/library"
 
@@ -27,8 +28,7 @@ func (r repos) Audit() service.AuditRepo             { return auditRepo(r) }
 func (r repos) Fonts() service.FontRepo              { return fontRepo(r) }
 func (r repos) BrandKit() service.BrandKitRepo       { return brandKitRepo(r) }
 func (r repos) Connections() connections.Store       { return connectionRepo(r) }
-func (r repos) Images() service.ImageRepo            { return imageRepo(r) }
-func (r repos) Library() library.Index               { return libraryRepo(r) }
+func (r repos) Approvals() approval.Store            { return approvalRepo(r) }
 
 // nullJSON stores an empty raw message as NULL.
 func nullJSON(m json.RawMessage) any {

@@ -149,7 +149,7 @@ func TestTablesMatchSDD005Section5(t *testing.T) {
 			"actor TEXT 1 - 0", "state TEXT 1 'queued' 0", "progress REAL 1 0 0", "message TEXT 1 '' 0",
 			"input TEXT 1 - 0", "result TEXT 0 - 0", "error TEXT 0 - 0", "cancel_requested INTEGER 1 0 0",
 			"attempts INTEGER 1 0 0", "created_ms INTEGER 1 - 0", "updated_ms INTEGER 1 - 0",
-			"started_ms INTEGER 0 - 0", "finished_ms INTEGER 0 - 0",
+			"started_ms INTEGER 0 - 0", "finished_ms INTEGER 0 - 0", "approval_id TEXT 0 - 0",
 		},
 		"templates": {
 			"id TEXT 1 - 1", "name TEXT 1 - 0", "description TEXT 1 '' 0", "schema_version INTEGER 1 - 0",
@@ -181,12 +181,40 @@ func TestTablesMatchSDD005Section5(t *testing.T) {
 			"accepts TEXT 1 - 0", "secret_ref TEXT 1 - 0", "created_ms INTEGER 1 - 0", "created_by TEXT 1 - 0",
 			"last_used_ms INTEGER 0 - 0",
 		},
-		"library_entries": {
-			"key TEXT 1 - 1", "kind TEXT 1 - 0", "name TEXT 1 - 0", "description TEXT 1 - 0", "scope TEXT 1 - 0",
-			"origin TEXT 1 - 0", "reviewed INTEGER 1 - 0", "kept INTEGER 1 - 0", "actor TEXT 1 - 0", "tags TEXT 1 - 0",
-			"state TEXT 1 - 0", "error TEXT 1 - 0", "path TEXT 1 - 0", "sig TEXT 1 - 0", "lint_errors INTEGER 1 - 0",
-			"lint_warnings INTEGER 1 - 0", "has_scripts INTEGER 1 - 0", "created_ms INTEGER 1 - 0",
-			"updated_ms INTEGER 1 - 0",
+		"approval_requests": {
+			"id TEXT 1 - 1",
+			"actor TEXT 1 - 0",
+			"owner_user_id TEXT 0 - 0",
+			"kind TEXT 1 - 0",
+			"summary TEXT 1 - 0",
+			"connection_id TEXT 0 - 0",
+			"project_id TEXT 0 - 0",
+			"job_id TEXT 0 - 0",
+			"payload_ref TEXT 1 '' 0",
+			"estimate_micros INTEGER 1 0 0",
+			"currency TEXT 1 '' 0",
+			"state TEXT 1 'pending' 0",
+			"decided_by TEXT 0 - 0",
+			"rule_id TEXT 0 - 0",
+			"reason TEXT 1 '' 0",
+			"created_ms INTEGER 1 - 0",
+			"decided_ms INTEGER 0 - 0",
+			"expires_ms INTEGER 1 - 0",
+		},
+		"approval_rules": {
+			"id TEXT 1 - 1", "kind TEXT 1 - 0", "connection_id TEXT 0 - 0", "project_id TEXT 0 - 0",
+			"currency TEXT 1 '' 0", "per_item_micros INTEGER 0 - 0", "per_day_micros INTEGER 0 - 0",
+			"enabled INTEGER 1 1 0", "created_by TEXT 1 - 0", "created_ms INTEGER 1 - 0",
+		},
+		"cost_ceilings": {
+			"project_id TEXT 1 '' 1", "currency TEXT 1 - 2", "per_item_micros INTEGER 0 - 0",
+			"per_day_micros INTEGER 0 - 0", "updated_by TEXT 1 - 0", "updated_ms INTEGER 1 - 0",
+		},
+		"cost_ledger": {
+			"id TEXT 1 - 1", "request_id TEXT 1 - 0", "job_id TEXT 1 - 0", "connection_id TEXT 1 '' 0",
+			"project_id TEXT 1 '' 0", "kind TEXT 1 - 0", "currency TEXT 1 - 0", "estimate_micros INTEGER 1 - 0",
+			"actual_micros INTEGER 0 - 0", "state TEXT 1 'reserved' 0", "day TEXT 1 - 0", "created_ms INTEGER 1 - 0",
+			"settled_ms INTEGER 0 - 0",
 		},
 	}
 	for table, w := range want {
@@ -336,10 +364,10 @@ func TestResetDropsEveryEditorTableAndUpRunsAgain(t *testing.T) {
 		"brand_kits",
 		"font_owners",
 		"connections",
-		"image_documents",
-		"image_operations",
-		"library_entries",
-		"library_fts",
+		"approval_requests",
+		"approval_rules",
+		"cost_ceilings",
+		"cost_ledger",
 	}
 	for _, table := range tables {
 		if len(columns(t, db, table)) == 0 {
@@ -504,5 +532,45 @@ func TestAssetsAcceptLutKind(t *testing.T) {
 	var n int
 	if err := db.QueryRowContext(ctx, "SELECT count(*) FROM artifacts").Scan(&n); err != nil || n != 0 {
 		t.Errorf("artifacts after the cascade = %d, %v", n, err)
+	}
+}
+
+// SDD-015 section 5: a job of a registered kind may wait for approval, and the indexes of the table
+// survive its rebuild.
+func TestJobsAcceptWaitingApprovalAndRegisteredKinds(t *testing.T) {
+	db := openMigrated(t)
+	ctx := context.Background()
+
+	exec := func(q string) error {
+		_, err := db.ExecContext(ctx, q)
+		return err
+	}
+
+	if err := exec(
+		`INSERT INTO projects (id, name, schema_version, document, doc_sha256, width, height, fps_num, fps_den, created_ms, updated_ms, created_by)
+ VALUES ('prj_a', 'a', 1, '{}', 'x', 1, 1, 30, 1, 1, 1, 'local:ui')`,
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := exec(
+		`INSERT INTO jobs (id, kind, project_id, actor, state, input, approval_id, created_ms, updated_ms) VALUES ('job_a', 'publish.post', 'prj_a', 'a', 'waiting_approval', '{}', 'apr_a', 1, 1)`,
+	); err != nil {
+		t.Errorf("a waiting job of a registered kind was refused: %v", err)
+	}
+
+	for name, q := range map[string]string{
+		"an unknown state":  `INSERT INTO jobs (id, kind, project_id, actor, state, input, created_ms, updated_ms) VALUES ('job_b', 'x', 'prj_a', 'a', 'paused', '{}', 1, 1)`,
+		"a job of no owner": `INSERT INTO jobs (id, kind, actor, input, created_ms, updated_ms) VALUES ('job_c', 'publish.post', 'a', '{}', 1, 1)`,
+	} {
+		if err := exec(q); err == nil {
+			t.Errorf("%s was accepted", name)
+		}
+	}
+
+	var n int
+	if err := db.QueryRowContext(ctx, `SELECT count(*) FROM sqlite_master WHERE name IN
+ ('jobs_project_id_created_ms_index','jobs_kind_state_index','jobs_active_ingest_unique')`).Scan(&n); err != nil || n != 3 {
+		t.Errorf("indexes of jobs after the rebuild = %d, %v; want 3", n, err)
 	}
 }
