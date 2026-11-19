@@ -19,6 +19,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/core/command"
 	coreimage "github.com/AlexGalhardo/stuarty/core/image"
 	"github.com/AlexGalhardo/stuarty/engine/ingest"
+	"github.com/AlexGalhardo/stuarty/service/connections"
 	"github.com/AlexGalhardo/stuarty/service/textview"
 )
 
@@ -227,7 +228,11 @@ type memStore struct {
 	projects memProjects
 }
 
-func (m *memStore) Images() ImageRepo     { return m.images }
+func (m *memStore) Images() ImageRepo { return m.images }
+
+// No test here reads a connection; the manager the service builds only needs a store to hold.
+func (m *memStore) Connections() connections.Store { return nil }
+
 func (m *memStore) Projects() ProjectRepo { return m.projects }
 func (m *memStore) Assets() AssetRepo     { return m.assets }
 func (m *memStore) Write(ctx context.Context, fn func(context.Context, Tx) error) error {
