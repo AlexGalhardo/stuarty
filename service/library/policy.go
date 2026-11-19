@@ -41,8 +41,14 @@ func (m *Manager) SaveMemory(ctx context.Context, c Caller, in MemoryInput) (cor
 		return core.Memory{}, Entry{}, fmt.Errorf("%w: only a person keeps a note", ErrForbidden)
 	}
 
+	// A key limited to a project writes only into its project, so a note with no scope goes there: the MCP tool
+	// has no scope argument, and the workspace default would refuse every note of such a key.
 	scope := in.Scope
-	if scope == "" {
+
+	switch {
+	case scope == "" && c.ProjectID != "":
+		scope = c.ProjectID
+	case scope == "":
 		scope = "workspace"
 	}
 
