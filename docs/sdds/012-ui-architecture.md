@@ -1359,6 +1359,14 @@ Each row shows the revision, the actor chip (`you`, `claude-code`, ...), the rel
 
 The top-bar Undo and Redo buttons (and `Ctrl+Z`, `Ctrl+Shift+Z`, `Ctrl+Y`) call `undo(id)` and `redo(id)`, which the core applies to the current actor's own latest step (ADR-0006). The buttons are enabled while the history list says `undoable_by_me` or `redoable_by_me` exists for some step; when the history list is not loaded they are enabled and `E_NOTHING_TO_UNDO` and `E_NOTHING_TO_REDO` disable them until the next batch by this actor. The response lists the primitives the core skipped because another actor changed the same fields (SDD-002 A.6); the UI shows a toast "Undo applied, 2 changes were left alone because claude-code changed them" using `skipped`. Undo and redo are batches in the log: they arrive as events like any batch.
 
+**Going back, the diff and checkpoints (RF-120, RF-121, epic 36).** The panel has three additions, in `web/resources/js/editor/history/`, and the UI computes none of what they show (rule 2 of `AGENTS.md`):
+
+- **Checkpoints** (`CheckpointsSection`). A list of the named states, newest revision first, read with `getCheckpoints(id)` and read again whenever the newest step of the history changes. A text field ("Name this state") and a button make a checkpoint at the current revision (`createCheckpoint`); each checkpoint has "Revert to here" and a remove button (`removeCheckpoint`, which removes no revision). The automatic checkpoint that the service makes before an agent's first edit of the day carries an "Automatic" badge. The name and the note are untrusted text (§1.2).
+- **Compare.** Every listed step has a checkbox "Compare r<n>"; ticking two shows the diff between them (`DiffView`, `getHistoryDiff(id, {from, until})`, from the older step to the newer). The lines are the `line` of each entry of the core's diff, in the order the core gave (most significant first), shown as received; the view counts and classifies nothing. A third tick replaces the oldest.
+- **Revert to here** (`RevertDialog`). Every step but the newest has the button, and so has each checkpoint. It opens a confirmation dialog (an alert dialog: focus is trapped, Escape cancels) that first sends `revertTo(id, {revision | checkpoint, dry_run: true})` and shows the lines of what would change; "Revert" sends the same request without `dry_run`. When the core says the document already equals the target (`same`) the dialog says so and "Revert" is disabled. The result is a new step by the person, so it arrives as a `batch.committed` event, and the top-bar Undo takes it back (the history row reads "Reverted to r<n>.").
+
+Every control is a button, a checkbox or a text field, so the panel is operable from the keyboard with no shortcut of its own; the strings are in `ui.editor.history.*` in `en` and `pt-BR`. `web/e2e/specs/history-revert.spec.ts` covers the flow.
+
 ## 16. Internationalization
 
 RF-073: English and Brazilian Portuguese.

@@ -601,6 +601,53 @@ export interface HistoryQuery {
 	limit?: number;
 }
 
+// Revert, the diff of two revisions and checkpoints (SDD-003 section 2.5.1). The
+// core classifies and words every change: `line` is shown as it comes.
+export interface Checkpoint {
+	name: string;
+	note: string;
+	revision: number;
+	actor: string;
+	at: string;
+	auto: boolean;
+}
+
+export interface CheckpointListResult {
+	project_id: string;
+	revision: number;
+	checkpoints: Checkpoint[];
+	text: string;
+}
+
+export interface DiffEntry {
+	verb: "added" | "removed" | "moved" | "trimmed" | "changed";
+	noun: string;
+	line: string;
+}
+
+export interface HistoryDiffResult {
+	project_id: string;
+	revision: number;
+	from: number;
+	to: number;
+	count: number;
+	entries: DiffEntry[];
+	text: string;
+}
+
+export interface HistoryRevertResult extends Omit<EditResult, "kind"> {
+	kind: "revert";
+	target: number;
+	same: boolean;
+	text: string;
+}
+
+export interface RevertRequest {
+	revision?: number;
+	checkpoint?: string;
+	dry_run?: boolean;
+}
+
 // GET /projects/{id}/media/{asset_id}: the facts and the text of one asset.
 export interface MediaInspectResult {
 	asset_id: string;
