@@ -57,6 +57,12 @@ func TestRules(t *testing.T) {
 		{"root file imports vukem", "main.go", VukemModule + "/config", "only web/"},
 		{"web imports vukem", "web/bootstrap/a.go", VukemModule, ""},
 		{"web imports engine", "web/app/a.go", mod + "/engine/store", ""},
+		{"connections import the vault", "service/connections/a.go", mod + "/service/vault", ""},
+		{"the owner imports the vault", "web/app/owner/a.go", mod + "/service/vault", ""},
+		{"a test imports the vault", "web/app/servicetest/a_test.go", mod + "/service/vault", ""},
+		{"the service imports the vault", "service/a.go", mod + "/service/vault", "only by service/connections"},
+		{"a controller imports the vault", "web/app/http/a.go", mod + "/service/vault", "only by service/connections"},
+		{"the engine imports the vault", "engine/ffmpeg/a.go", mod + "/service/vault", "only by service/connections"},
 	}
 
 	for _, tc := range tests {
@@ -138,5 +144,48 @@ func moduleRoot(t *testing.T) string {
 		}
 
 		dir = parent
+	}
+}
+
+// TestOutboundRepository fails the build when a package other than internal/outbound opens a
+// connection to a host (SDD-014 section 6, the risk "an outbound path that skips the gate").
+func TestOutboundRepository(t *testing.T) {
+	got, err := CheckOutbound(moduleRoot(t))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, v := range got {
+		t.Error(v)
+	}
+}
+
+func TestOutboundRule(t *testing.T) {
+	t.Parallel()
+
+	root := t.TempDir()
+	write(t, root, "service/leak/a.go", "package leak\n\nimport \"net/http\"\n\nfunc f() { _, _ = http.Get(\"https://example.com\") }\n")
+	write(t, root, "service/leak/b.go", "package leak\n\nimport h \"net/http\"\n\nvar c = &h.Client{}\n")
+	write(t, root, "service/leak/c.go", "package leak\n\nimport \"net\"\n\nfunc g() { _, _ = net.Dial(\"tcp\", \"example.com:80\") }\n")
+	write(t, root, "service/leak/ok.go", "package leak\n\nimport \"net/http\"\n\n// A loopback probe.\nvar c = &http.Client{} //nolint:forbidigo // loopback only: the probe\n")
+	write(t, root, "service/leak/above.go", "package leak\n\nimport \"net/http\"\n\n//nolint:forbidigo // loopback only: the probe\nvar c = &http.Client{}\n")
+	write(t, root, "service/leak/unmarked.go", "package leak\n\nimport \"net/http\"\n\nvar c = &http.Client{} //nolint:forbidigo // because\n")
+	write(t, root, "service/leak/a_test.go", "package leak\n\nimport \"net/http\"\n\nvar c = &http.Client{}\n")
+	write(t, root, "internal/outbound/o.go", "package outbound\n\nimport \"net/http\"\n\nvar c = &http.Client{}\n")
+	write(t, root, "service/leak/server.go", "package leak\n\nimport \"net/http\"\n\nvar _ = http.StatusOK\nvar _ http.Handler\n")
+
+	got, err := CheckOutbound(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var files []string
+	for _, v := range got {
+		files = append(files, v.File)
+	}
+
+	want := "service/leak/a.go service/leak/b.go service/leak/c.go service/leak/unmarked.go"
+	if strings.Join(files, " ") != want {
+		t.Fatalf("violations in %v, want %s", files, want)
 	}
 }
