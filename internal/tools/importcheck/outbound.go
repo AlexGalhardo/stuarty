@@ -20,16 +20,22 @@ import (
 //
 // Test files are not product code and are not scanned.
 
-// outboundSelectors are the names that open a connection, by package.
+// outboundSelectors are the names that open a connection, by package. A DNS lookup is a packet to the
+// resolver of the machine, so the lookups are here too (SDD-007 section 10.1 says which paths resolve).
 var outboundSelectors = map[string]map[string]bool{
 	"net": {
 		"Dial": true, "DialTimeout": true, "DialTCP": true, "DialUDP": true, "DialIP": true, "DialUnix": true,
-		"Dialer": true,
+		"Dialer":     true,
+		"LookupHost": true, "LookupIP": true, "LookupAddr": true, "LookupCNAME": true, "LookupMX": true,
+		"LookupNS": true, "LookupSRV": true, "LookupTXT": true, "LookupPort": true, "Resolver": true,
+		"DefaultResolver": true, "ResolveTCPAddr": true, "ResolveUDPAddr": true, "ResolveIPAddr": true,
 	},
 	"net/http": {
 		"Get": true, "Post": true, "PostForm": true, "Head": true, "DefaultClient": true,
 		"DefaultTransport": true, "Client": true, "Transport": true,
 	},
+	"crypto/tls": {"Dial": true, "DialWithDialer": true, "Dialer": true},
+	"net/smtp":   {"Dial": true, "SendMail": true},
 }
 
 // outboundHome is where those names may be used without a marker.
