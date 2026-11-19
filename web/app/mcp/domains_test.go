@@ -1,6 +1,7 @@
 package mcp
 
 import (
+	"slices"
 	"strings"
 	"testing"
 
@@ -152,6 +153,36 @@ func TestEditAndHistoryRouteByDomain(t *testing.T) {
 		if !res.IsError || !strings.Contains(text, "error "+tc.code+":") ||
 			!strings.Contains(text, `"path":"`+tc.path+`"`) {
 			t.Errorf("%s: %q", name, text)
+		}
+	}
+}
+
+// Every tool of the list belongs to a domain, and the domains it routes are among them.
+func TestEveryToolHasItsDomains(t *testing.T) {
+	t.Parallel()
+
+	for _, name := range order {
+		domains := ToolDomains(name)
+		if len(domains) == 0 {
+			t.Errorf("%s belongs to no domain: add it to toolDomains", name)
+		}
+
+		for _, d := range domains {
+			if !command.KnownDomain(d) {
+				t.Errorf("%s: %q is not a domain", name, d)
+			}
+		}
+
+		for _, d := range served[name] {
+			if !slices.Contains(domains, d) {
+				t.Errorf("%s routes the domain %s and does not list it in toolDomains", name, d)
+			}
+		}
+	}
+
+	for name := range toolDomains {
+		if !slices.Contains(order, name) {
+			t.Errorf("toolDomains names %s, which is no tool", name)
 		}
 	}
 }

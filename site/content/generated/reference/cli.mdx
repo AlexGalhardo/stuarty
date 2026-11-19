@@ -576,15 +576,16 @@ stuarty events --project prj_7k2m9x4q1b --since 4 --count 3
 
 ## `command:help`
 
-List the editing commands, or describe one
+List the editing commands and the domains, or describe one command
 
 ```text
 stuarty command:help [<name>]
+stuarty command:help --domain <domain>
 ```
 
 | Flag | Type | Default | Meaning |
 | --- | --- | --- | --- |
-| `--domain` | string | `video` | video, or image for the commands of image documents |
+| `--domain` | string |  | a domain of the product: its commands (without it, the video commands and the list of domains) |
 
 Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
 

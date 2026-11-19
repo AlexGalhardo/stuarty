@@ -913,17 +913,17 @@
     {
       "name": "command:help",
       "domain": "workspace",
-      "summary": "list the editing commands, or describe one",
+      "summary": "list the editing commands and the domains, or describe one command",
       "usage": [
-        "stuarty command:help [<name>]"
+        "stuarty command:help [<name>]",
+        "stuarty command:help --domain <domain>"
       ],
       "example": "stuarty command:help item.move",
       "flags": [
         {
           "name": "domain",
           "type": "string",
-          "default": "video",
-          "usage": "video, or image for the commands of image documents"
+          "usage": "a domain of the product: its commands (without it, the video commands and the list of domains)"
         }
       ],
       "globals": [
