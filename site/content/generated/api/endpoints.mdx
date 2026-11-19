@@ -147,6 +147,9 @@ Every operation has its own page with the parameters, the body, the responses an
 | `GET` | `/api/v1/images/{id}` | [`images.get`](/docs/api/images.get) | Describe an image document: layers, findings and text view |
 | `POST` | `/api/v1/images/{id}/edit` | [`images.edit`](/docs/api/images.edit) | Apply a batch of image operations |
 | `POST` | `/api/v1/images/{id}/export` | [`images.export`](/docs/api/images.export) | Export an image document to a PNG, JPEG or WebP file |
+| `GET` | `/api/v1/images/{id}/exports/{name}` | [`images.file`](/docs/api/images.file) | Download a file that an image export wrote |
+| `GET` | `/api/v1/images/{id}/frame` | [`images.frame`](/docs/api/images.frame) | Render the picture of an image document |
+| `GET` | `/api/v1/images/{id}/history` | [`images.history`](/docs/api/images.history) | List the latest batches of an image document |
 | `POST` | `/api/v1/images/{id}/redo` | [`images.redo`](/docs/api/images.redo) | Redo the latest undone step of the caller on an image |
 | `POST` | `/api/v1/images/{id}/undo` | [`images.undo`](/docs/api/images.undo) | Undo the latest step of the caller on an image |
 
