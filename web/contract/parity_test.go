@@ -93,6 +93,26 @@ var parity = []row{
 	// OpenTimelineIO moves a timeline as a file: no MCP tool (SDD-003 section 7.1, exception E-3).
 	{method: "ProjectOtioExport", command: "otio:export", route: "GET /projects/{}/otio"},
 	{method: "ProjectOtioImport", command: "otio:import", route: "POST /projects/{}/otio"},
+	// The library (SDD-018): one MCP tool, library, serves the lists, reads, writes, searches, renders and
+	// lints. Removing a note, importing and exporting skills read and write files by path (no tool), and
+	// marking a skill as read is for a person at the browser (HTTP only).
+	{method: "MemoryList", tool: "library", command: "memory:list", route: "GET /library/memory"},
+	{method: "MemoryGet", tool: "library", command: "memory:show", route: "GET /library/memory/{}"},
+	{method: "MemoryWrite", tool: "library", command: "memory:write", route: "POST /library/memory"},
+	{method: "MemoryRemove", command: "memory:remove", route: "DELETE /library/memory/{}"},
+	{method: "SkillList", tool: "library", command: "skill:list", route: "GET /library/skills"},
+	{method: "SkillGet", tool: "library", command: "skill:show", route: "GET /library/skills/{}"},
+	{method: "SkillWrite", tool: "library", command: "skill:write", route: "PUT /library/skills/{}"},
+	{method: "SkillImport", command: "skill:import", route: "POST /library/skills/import"},
+	{method: "SkillExport", command: "skill:export", route: "POST /library/skills/export"},
+	{method: "SkillMarkReviewed", route: "POST /library/skills/{}/review", httpOnly: true},
+	{method: "SkillLint", tool: "library", command: "skill:lint", route: "GET /library/skills/{}/lint"},
+	{method: "PromptList", tool: "library", command: "prompt:list", route: "GET /library/prompts"},
+	{method: "PromptGet", tool: "library", command: "prompt:show", route: "GET /library/prompts/{}"},
+	{method: "PromptWrite", tool: "library", command: "prompt:write", route: "PUT /library/prompts/{}"},
+	{method: "PromptRender", tool: "library", command: "prompt:render", route: "POST /library/prompts/{}/render"},
+	{method: "LibrarySearch", tool: "library", command: "library:search", route: "GET /library/search"},
+	{method: "LibraryReindex", command: "library:reindex", route: "POST /library/reindex"},
 }
 
 // notOperations are Service methods that are not operations an agent calls

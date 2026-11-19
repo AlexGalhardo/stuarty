@@ -206,5 +206,12 @@ func (m *Manager) writeSkillFiles(ctx context.Context, name string, all []core.F
 		return err
 	}
 
+	// The time of the last write is the time of the library clock, so that the skill says when the product
+	// wrote it the way a note does; a file edited by hand keeps the real time of that edit.
+	now := m.now()
+	if err := root.Chtimes(entryPath(core.KindSkill, name)+"/"+core.SkillFile, now, now); err != nil {
+		return err
+	}
+
 	return m.putRow(ctx, root, core.KindSkill, name)
 }

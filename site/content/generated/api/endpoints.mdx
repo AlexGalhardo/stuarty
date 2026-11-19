@@ -97,6 +97,28 @@ Every operation has its own page with the parameters, the body, the responses an
 | `GET` | `/api/v1/brand-kit` | [`brand.get`](/docs/api/brand.get) | Read the brand kit |
 | `PUT` | `/api/v1/brand-kit` | [`brand.set`](/docs/api/brand.set) | Replace the brand kit |
 
+## Library
+
+| Method | Path | Operation | Summary |
+| --- | --- | --- | --- |
+| `GET` | `/api/v1/library/memory` | [`library.memory.list`](/docs/api/library.memory.list) | List the memory notes |
+| `POST` | `/api/v1/library/memory` | [`library.memory.write`](/docs/api/library.memory.write) | Create or replace a memory note |
+| `GET` | `/api/v1/library/memory/{name}` | [`library.memory.get`](/docs/api/library.memory.get) | Read a memory note |
+| `DELETE` | `/api/v1/library/memory/{name}` | [`library.memory.remove`](/docs/api/library.memory.remove) | Remove a memory note |
+| `GET` | `/api/v1/library/prompts` | [`library.prompts.list`](/docs/api/library.prompts.list) | List the prompts |
+| `GET` | `/api/v1/library/prompts/{name}` | [`library.prompts.get`](/docs/api/library.prompts.get) | Read a prompt |
+| `PUT` | `/api/v1/library/prompts/{name}` | [`library.prompts.write`](/docs/api/library.prompts.write) | Create or replace a prompt |
+| `POST` | `/api/v1/library/prompts/{name}/render` | [`library.prompts.render`](/docs/api/library.prompts.render) | Replace the variables of a prompt |
+| `POST` | `/api/v1/library/reindex` | [`library.reindex`](/docs/api/library.reindex) | Rebuild the index of the library from its files |
+| `GET` | `/api/v1/library/search` | [`library.search`](/docs/api/library.search) | Search memory, skills and prompts |
+| `GET` | `/api/v1/library/skills` | [`library.skills.list`](/docs/api/library.skills.list) | List the skills |
+| `GET` | `/api/v1/library/skills/{name}` | [`library.skills.get`](/docs/api/library.skills.get) | Read a skill |
+| `PUT` | `/api/v1/library/skills/{name}` | [`library.skills.write`](/docs/api/library.skills.write) | Create or replace a skill |
+| `GET` | `/api/v1/library/skills/{name}/lint` | [`library.skills.lint`](/docs/api/library.skills.lint) | Run the lint on a skill |
+| `POST` | `/api/v1/library/skills/{name}/review` | [`library.skills.review`](/docs/api/library.skills.review) | Mark a skill as read (a browser session only) |
+| `POST` | `/api/v1/library/skills/export` | [`library.skills.export`](/docs/api/library.skills.export) | Export skills as folders in the Agent Skills layout |
+| `POST` | `/api/v1/library/skills/import` | [`library.skills.import`](/docs/api/library.skills.import) | Import a skill from a folder or an archive; it starts unreviewed |
+
 ## System
 
 | Method | Path | Operation | Summary |
