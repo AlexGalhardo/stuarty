@@ -171,6 +171,10 @@ func (noProvider) Name() string          { return "none" }
 func (noProvider) Load() ([]byte, error) { return nil, ErrKeyNotFound }
 func (noProvider) Save([]byte) error     { return ErrReadOnly }
 
+// NoProvider is the provider of a build or a test with nowhere to keep a key: a vault
+// that needs a new key says so (ErrNoKeyProvider), and a vault with no entry works.
+func NoProvider() KeyProvider { return noProvider{} }
+
 // Config says where the master key may come from.
 type Config struct {
 	Env       string   // STUARTY_MASTER_KEY
