@@ -7,10 +7,12 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
 	"testing"
 
 	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/core/project"
 	"github.com/AlexGalhardo/stuarty/service"
 )
 
@@ -374,6 +376,20 @@ func TestBundleProductionIsChecked(t *testing.T) {
 
 			return e
 		},
+		"a text entry that is not listed": func(e []testEntry) []testEntry {
+			return append(e, testEntry{name: "item.200.md", body: []byte("riding along")})
+		},
+		"a changed text": func(e []testEntry) []testEntry {
+			i := entryIndex(e, textEntryOf(t, e, "brief"))
+			e[i].body = append(bytes.Clone(e[i].body), '!')
+
+			return e
+		},
+		"a missing text": func(e []testEntry) []testEntry {
+			name := textEntryOf(t, e, "text")
+
+			return slices.DeleteFunc(e, func(x testEntry) bool { return x.name == name })
+		},
 	}
 
 	dst := newMediaEnv(t, mediaCfg{})
@@ -397,5 +413,109 @@ func TestBundleProductionIsChecked(t *testing.T) {
 	// And the unmodified bundle still imports.
 	if _, err := dst.importBundle(good, false); err != nil {
 		t.Fatal(err)
+	}
+}
+
+// textEntryOf is the name of the entry that holds the text of the first item of the kind in the manifest.
+func textEntryOf(t *testing.T, entries []testEntry, kind string) string {
+	t.Helper()
+
+	var man service.BundleManifest
+	if err := json.Unmarshal(entries[entryIndex(entries, "manifest.json")].body, &man); err != nil {
+		t.Fatal(err)
+	}
+
+	for i, it := range man.Production.Items {
+		if it.Kind == kind && it.Text != nil {
+			return "item." + strconv.Itoa(i) + ".md"
+		}
+	}
+
+	t.Fatalf("no %s with a text in the manifest", kind)
+
+	return ""
+}
+
+// The texts of a project travel in entries of their own, not in the manifest, whose size is capped: a project
+// with a brief and texts near their limit exports into a bundle that imports again with every text whole.
+func TestBundleLongTextsRoundTrip(t *testing.T) {
+	src := newMediaEnv(t, mediaCfg{})
+	projectID, _ := src.bundleProject()
+	ctx := src.as(ui)
+
+	// Text that compresses as prose does, so the entries stay under the ratio check of an import.
+	long := func(seed int) string {
+		var b strings.Builder
+
+		x := uint32(seed*2654435761 + 1)
+		for b.Len() < project.MaxText-64 {
+			x ^= x << 13
+			x ^= x >> 17
+			x ^= x << 5
+			b.WriteByte(byte('a' + x%26))
+
+			if x%7 == 0 {
+				b.WriteByte(' ')
+			}
+		}
+
+		return b.String()
+	}
+
+	want := map[string]string{}
+
+	if _, err := src.prod().BriefSet(ctx, service.BriefSetRequest{ProjectID: projectID, Text: long(0)}); err != nil {
+		t.Fatal(err)
+	}
+
+	want["brief"] = long(0)
+
+	for i := 1; i <= 4; i++ {
+		title := "Script " + strconv.Itoa(i)
+		if _, err := src.prod().ProjectItemAdd(ctx, service.ProjectItemAddRequest{
+			ProjectID: projectID, Kind: "text", Title: title, Text: long(i),
+		}); err != nil {
+			t.Fatal(err)
+		}
+
+		want[title] = long(i)
+	}
+
+	path := src.exportBundleRequest(service.ProjectBundleExportRequest{ProjectID: projectID})
+
+	_, files := readZip(t, path)
+	if n := len(files["manifest.json"]); n > 64<<10 {
+		t.Errorf("the manifest holds %d bytes; the texts are in it", n)
+	}
+
+	dst := newMediaEnv(t, mediaCfg{})
+	if _, err := dst.importBundle(path, false); err != nil {
+		t.Fatalf("import: %v", err)
+	}
+
+	rows, err := dst.store.Productions().Items(context.Background(), projectID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	got := map[string]string{}
+
+	for _, r := range rows {
+		switch r.Kind {
+		case "brief":
+			got["brief"] = r.Body
+		case "text":
+			got[r.Title] = r.Body
+		}
+	}
+
+	if len(got) != len(want) {
+		t.Fatalf("imported %d texts, want %d", len(got), len(want))
+	}
+
+	for k, w := range want {
+		if got[k] != w {
+			t.Errorf("the text of %s differs: %d bytes, want %d", k, len(got[k]), len(w))
+		}
 	}
 }
