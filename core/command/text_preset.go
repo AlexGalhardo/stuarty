@@ -119,7 +119,7 @@ func (c *Context) presetBase(it *timeline.Item, prop string, at int) float64 {
 	case "opacity":
 		static = it.Opacity
 	}
-	return timeline.ValueAt(it.Keyframes[prop], at, static)
+	return timeline.ValueAtProp(prop, it.Keyframes[prop], at, static)
 }
 
 // easingAt is the easing in force at frame t: that of the last keyframe at or before

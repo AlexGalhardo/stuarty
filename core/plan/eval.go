@@ -24,7 +24,12 @@ func keyframeValue(kfs []timeline.Keyframe, r float64) float64 {
 // static value.
 func property(it *timeline.Item, name string, static, r float64) float64 {
 	if kfs := it.Keyframes[name]; len(kfs) > 0 {
-		return keyframeValue(kfs, r)
+		v := keyframeValue(kfs, r)
+		if lo, hi, ok := timeline.KeyframeRange(name); ok {
+			v = min(max(v, lo), hi)
+		}
+
+		return v
 	}
 
 	return static
