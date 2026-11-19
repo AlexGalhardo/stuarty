@@ -1,26 +1,26 @@
 ; Inno Setup script of the Windows installer of the desktop application (SDD-009 sections 10.4 and 10.5,
 ; P3-REL-003, D-033).
 ;
-; Build:  ISCC.exe /DAppVersion=0.15.0 /DFileVersion=0-15-0 /DDesktopBinary=<vukem-video-desktop.exe>
-;                  /DServerBinary=<vukem-video.exe> /DOutputDir=<dir> vukem-video-desktop.iss
+; Build:  ISCC.exe /DAppVersion=0.15.0 /DFileVersion=0-15-0 /DDesktopBinary=<stuarty-desktop.exe>
+;                  /DServerBinary=<stuarty.exe> /DOutputDir=<dir> stuarty-desktop.iss
 ; FileVersion is AppVersion with dots replaced by dashes, so the download is
-; vukem-video-desktop-0-15-0.exe.
+; stuarty-desktop-0-15-0.exe.
 ;
 ; The installer is per user by default, with no administrator prompt and no paid signing (D-033): Windows
 ; SmartScreen shows "Windows protected your PC" until the user chooses "More info" then "Run anyway". The
-; desktop application and the server it starts (it looks for vukem-video.exe in its own folder) go to
-; %LOCALAPPDATA%\Programs\Vukem Video Desktop. A Start menu shortcut runs the desktop application.
-; Uninstall removes the program and the shortcuts and keeps the workspace (%USERPROFILE%\.vukem-video, or
-; VUKEM_VIDEO_HOME): the user's projects and media are never deleted by an uninstall.
+; desktop application and the server it starts (it looks for stuarty.exe in its own folder) go to
+; %LOCALAPPDATA%\Programs\Stuarty Desktop. A Start menu shortcut runs the desktop application.
+; Uninstall removes the program and the shortcuts and keeps the workspace (%USERPROFILE%\.stuarty, or
+; STUARTY_HOME): the user's projects and media are never deleted by an uninstall.
 
 #ifndef AppVersion
   #define AppVersion "0.0.0"
 #endif
 #ifndef DesktopBinary
-  #error DesktopBinary is required: the path of vukem-video-desktop.exe
+  #error DesktopBinary is required: the path of stuarty-desktop.exe
 #endif
 #ifndef ServerBinary
-  #error ServerBinary is required: the path of vukem-video.exe
+  #error ServerBinary is required: the path of stuarty.exe
 #endif
 #ifndef OutputDir
   #define OutputDir "."
@@ -28,18 +28,18 @@
 #ifndef FileVersion
   #define FileVersion "0-0-0"
 #endif
-#define AppName "Vukem Video Desktop"
-#define AppExe "vukem-video-desktop.exe"
-#define ServerExe "vukem-video.exe"
+#define AppName "Stuarty Desktop"
+#define AppExe "stuarty-desktop.exe"
+#define ServerExe "stuarty.exe"
 
 [Setup]
 ; A fixed AppId, other than the one of the server installer, lets a new version upgrade this one in place.
 AppId={{B4E0A6D2-5F1C-4C37-8A9B-2D7E3F61C0A9}
 AppName={#AppName}
 AppVersion={#AppVersion}
-AppPublisher=Vukem Video
-AppPublisherURL=https://github.com/AlexGalhardo/vukem-video
-AppSupportURL=https://github.com/AlexGalhardo/vukem-video/issues
+AppPublisher=Stuarty
+AppPublisherURL=https://github.com/AlexGalhardo/stuarty
+AppSupportURL=https://github.com/AlexGalhardo/stuarty/issues
 DefaultDirName={autopf}\{#AppName}
 DefaultGroupName={#AppName}
 DisableProgramGroupPage=yes
@@ -48,11 +48,11 @@ PrivilegesRequiredOverridesAllowed=dialog
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 LicenseFile=..\..\..\LICENSE.md
-SetupIconFile=..\..\..\.config\installers\assets\vukem-video.ico
-UninstallDisplayIcon={app}\vukem-video.ico
+SetupIconFile=..\..\..\.config\installers\assets\stuarty.ico
+UninstallDisplayIcon={app}\stuarty.ico
 UninstallDisplayName={#AppName}
 OutputDir={#OutputDir}
-OutputBaseFilename=vukem-video-desktop-{#FileVersion}
+OutputBaseFilename=stuarty-desktop-{#FileVersion}
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
@@ -68,14 +68,14 @@ Name: "desktopicon"; Description: "Create a desktop shortcut"; GroupDescription:
 [Files]
 Source: "{#DesktopBinary}"; DestDir: "{app}"; DestName: "{#AppExe}"; Flags: ignoreversion
 Source: "{#ServerBinary}"; DestDir: "{app}"; DestName: "{#ServerExe}"; Flags: ignoreversion
-Source: "..\..\..\.config\installers\assets\vukem-video.ico"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\..\..\.config\installers\assets\stuarty.ico"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\..\LICENSE.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\..\THIRD_PARTY_NOTICES.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\..\licenses\*"; DestDir: "{app}\licenses"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{autoprograms}\{#AppName}"; Filename: "{app}\{#AppExe}"; IconFilename: "{app}\vukem-video.ico"; Comment: "Open the Vukem Video desktop application"
-Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExe}"; IconFilename: "{app}\vukem-video.ico"; Tasks: desktopicon
+Name: "{autoprograms}\{#AppName}"; Filename: "{app}\{#AppExe}"; IconFilename: "{app}\stuarty.ico"; Comment: "Open the Stuarty desktop application"
+Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExe}"; IconFilename: "{app}\stuarty.ico"; Tasks: desktopicon
 
 [Run]
 Filename: "{app}\{#AppExe}"; Description: "Open {#AppName} now"; Flags: postinstall nowait skipifsilent

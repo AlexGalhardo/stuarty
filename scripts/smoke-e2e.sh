@@ -3,13 +3,13 @@
 #
 #   bash scripts/smoke-e2e.sh
 #
-# It builds the binary, starts `vukem-video serve` with a private workspace on a loopback port, and drives
+# It builds the binary, starts `stuarty serve` with a private workspace on a loopback port, and drives
 # it through the CLI: create a project, import a generated clip, add tracks, the clip and a title, lint,
 # export with --wait, and check the MP4 with ffprobe (duration, size, a video and an audio stream). The
 # server is stopped by its pid and the work folder removed at the end. Prints SMOKE_OK or exits non-zero.
 #
-# Needs ffmpeg and ffprobe on PATH or in VUKEM_VIDEO_TEST_FFMPEG_DIR, and go (unless VUKEM_VIDEO_BIN is set).
-#   VUKEM_VIDEO_BIN  the binary to test (default: built from this checkout)
+# Needs ffmpeg and ffprobe on PATH or in STUARTY_TEST_FFMPEG_DIR, and go (unless STUARTY_BIN is set).
+#   STUARTY_BIN  the binary to test (default: built from this checkout)
 #   SMOKE_PORT       loopback port (default: a random one in 20000 to 39999)
 #   SMOKE_KEEP       set to 1 to keep the work folder
 set -euo pipefail
@@ -18,8 +18,8 @@ die() { echo "smoke-e2e: error: $*" >&2; exit 1; }
 log() { echo "smoke-e2e: $*" >&2; }
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-if [ -n "${VUKEM_VIDEO_TEST_FFMPEG_DIR:-}" ]; then
-	ffdir="$VUKEM_VIDEO_TEST_FFMPEG_DIR"
+if [ -n "${STUARTY_TEST_FFMPEG_DIR:-}" ]; then
+	ffdir="$STUARTY_TEST_FFMPEG_DIR"
 	# A Windows path (C:/...) has a colon, the PATH separator of Git Bash: convert it first.
 	if command -v cygpath >/dev/null 2>&1; then ffdir="$(cygpath -u "$ffdir")"; fi
 	export PATH="$ffdir:$PATH"
@@ -44,12 +44,12 @@ cleanup() {
 }
 trap cleanup EXIT
 
-case "$(uname -s)" in MINGW* | MSYS* | CYGWIN*) exe=vukem-video.exe ;; *) exe=vukem-video ;; esac
+case "$(uname -s)" in MINGW* | MSYS* | CYGWIN*) exe=stuarty.exe ;; *) exe=stuarty ;; esac
 mkdir -p "$work/bin" "$work/cwd" "$work/home"
-if [ -n "${VUKEM_VIDEO_BIN:-}" ]; then
-	cp "$VUKEM_VIDEO_BIN" "$work/bin/$exe"
+if [ -n "${STUARTY_BIN:-}" ]; then
+	cp "$STUARTY_BIN" "$work/bin/$exe"
 else
-	command -v go >/dev/null 2>&1 || die "go is required to build the binary (or set VUKEM_VIDEO_BIN)"
+	command -v go >/dev/null 2>&1 || die "go is required to build the binary (or set STUARTY_BIN)"
 	log "building the binary"
 	(cd "$root" && go build -o "$work/bin/$exe" ./web/cmd/app)
 fi
@@ -57,10 +57,10 @@ chmod +x "$work/bin/$exe"
 export PATH="$work/bin:$PATH"
 
 # A private home: the run never touches the workspace of the person who runs it.
-unset VUKEM_VIDEO_URL APP_KEY APP_ENV
-export VUKEM_VIDEO_HOME="$work/home"
+unset STUARTY_URL APP_KEY APP_ENV
+export STUARTY_HOME="$work/home"
 port="${SMOKE_PORT:-$((20000 + RANDOM % 20000))}"
-VUKEM_VIDEO_ADDR="127.0.0.1:$port" "$work/bin/$exe" serve >"$work/serve.log" 2>&1 &
+STUARTY_ADDR="127.0.0.1:$port" "$work/bin/$exe" serve >"$work/serve.log" 2>&1 &
 server_pid=$!
 # Waiting for the server to announce itself is a readiness poll with a deadline, not a sleep in a test.
 for _ in $(seq 1 120); do
@@ -90,16 +90,16 @@ step() {
 }
 
 prj=prj_5m0k3t1e2s
-step project vukem-video project:create --name "Smoke" --id "$prj"
-step import vukem-video media:import clip.mp4 --project "$prj" --asset-id ast_5m0k3c7a2p
-step edit vukem-video edit --project "$prj" --ops - <<'JSON'
+step project stuarty project:create --name "Smoke" --id "$prj"
+step import stuarty media:import clip.mp4 --project "$prj" --asset-id ast_5m0k3c7a2p
+step edit stuarty edit --project "$prj" --ops - <<'JSON'
 [{"op":"track.add","args":{"kind":"visual","name":"Video","id":"trk_5m0k3v1d2e"}},
  {"op":"track.add","args":{"kind":"visual","name":"Titles","id":"trk_5m0k3t1t2r"}},
  {"op":"clip.add","args":{"track_id":"trk_5m0k3v1d2e","asset_id":"ast_5m0k3c7a2p","start":"0s","id":"itm_5m0k3c1v2p"}},
  {"op":"text.add","args":{"track_id":"trk_5m0k3t1t2r","start":"0s","duration":"2s","text":"Smoke","id":"itm_5m0k3t1x2t"}}]
 JSON
-step lint vukem-video lint --project "$prj"
-step export vukem-video export --project "$prj" --wait --out "$work/cwd/out.mp4"
+step lint stuarty lint --project "$prj"
+step export stuarty export --project "$prj" --wait --out "$work/cwd/out.mp4"
 
 [ -s out.mp4 ] || die "the export wrote no file"
 probe="$(ffprobe -v error -show_entries format=duration:stream=codec_type,width,height -of default=nw=1 out.mp4)"

@@ -9,7 +9,7 @@
 # Needs docker, curl, openssl and a port 7878 free on 127.0.0.1 (PORT overrides).
 set -euo pipefail
 
-image="ghcr.io/alexgalhardo/vukem-video:latest"
+image="ghcr.io/alexgalhardo/stuarty:latest"
 pull=1
 for arg in "$@"; do
 	case "$arg" in
@@ -61,10 +61,10 @@ fi
 app_key="$(openssl rand -base64 32)"
 docker run -d --name "$name" -p "127.0.0.1:$port:7878" \
 	-v "$data:/data" -v "$media:/media" \
-	-e VUKEM_VIDEO_IMPORT_ROOTS=/media \
+	-e STUARTY_IMPORT_ROOTS=/media \
 	-e APP_KEY="$app_key" \
-	-e VUKEM_VIDEO_ADMIN_EMAIL=admin@example.com \
-	-e VUKEM_VIDEO_ADMIN_PASSWORD="choose-a-long-password" \
+	-e STUARTY_ADMIN_EMAIL=admin@example.com \
+	-e STUARTY_ADMIN_PASSWORD="choose-a-long-password" \
 	"$image" >/dev/null
 for _ in $(seq 1 120); do
 	curl -fsS "$app/up" >/dev/null 2>&1 && break
@@ -87,7 +87,7 @@ docker exec -u 0 "$name" sh -c 'ffmpeg -hide_banner -loglevel error \
 	-c:v libopenh264 -pix_fmt yuv420p -c:a aac -shortest /media/clip.mp4 && chmod 644 /media/clip.mp4'
 mark "make a clip in the import folder (stands in for the user's file)"
 
-vv() { docker exec -i -e VUKEM_VIDEO_KEY="$secret" "$name" vukem-video "$@"; }
+vv() { docker exec -i -e STUARTY_KEY="$secret" "$name" stuarty "$@"; }
 field() { sed -n "s/.*\"$1\":\"\([^\"]*\)\".*/\1/p" | head -n 1; }
 
 project="$(vv project:create --name "First export" --json | field project_id)"

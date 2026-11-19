@@ -1,10 +1,10 @@
 [Desktop Entry]
 Type=Application
-Name=Vukem Video
+Name=Stuarty
 GenericName=Video editor
-Comment=Start the local server and open Vukem Video in your browser
-Exec=vukem-video open
-Icon=vukem-video
+Comment=Start the local server and open Stuarty in your browser
+Exec=stuarty open
+Icon=stuarty
 Terminal=false
 Categories=AudioVideo;Video;AudioVideoEditing;
 Keywords=video;editor;captions;
