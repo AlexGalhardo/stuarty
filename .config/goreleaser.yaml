@@ -73,6 +73,10 @@ nfpms:
     replaces: [vukem-video]
     conflicts: [vukem-video]
     contents:
+      # The former command runs stuarty, so what called vukem-video (an agent MCP config) keeps working.
+      - src: stuarty
+        dst: /usr/bin/vukem-video
+        type: symlink
       - src: .config/installers/linux/stuarty.desktop
         dst: /usr/share/applications/stuarty.desktop
         file_info:
