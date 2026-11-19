@@ -147,14 +147,17 @@ Every operation has its own page with the parameters, the body, the responses an
 | `DELETE` | `/api/v1/connections/{id}` | [`connections.remove`](/docs/api/connections.remove) | Remove a connection and its credential |
 | `GET` | `/api/v1/connections/{id}/models` | [`providers.models`](/docs/api/providers.models) | Read the current models of a provider through its connection |
 | `POST` | `/api/v1/connections/{id}/test` | [`connections.test`](/docs/api/connections.test) | Make one request through a connection |
+| `GET` | `/api/v1/connections/{id}/voices` | [`voice.list`](/docs/api/voice.list) | List the voices of the provider of a connection |
 
 ## AI providers
 
 | Method | Path | Operation | Summary |
 | --- | --- | --- | --- |
+| `POST` | `/api/v1/image/generate` | [`image.generate`](/docs/api/image.generate) | Start an image generation with the provider of a connection; the job waits for approval, shows its estimate and stores the images as assets with their origin |
 | `GET` | `/api/v1/providers` | [`providers.list`](/docs/api/providers.list) | List the AI providers, the connections of each and the price table |
 | `PUT` | `/api/v1/providers/prices` | [`providers.prices.set`](/docs/api/providers.prices.set) | Set or remove the price of a model (a person in the browser only; the local token and keys get 403) |
 | `POST` | `/api/v1/text/generate` | [`text.generate`](/docs/api/text.generate) | Start a text generation with the provider of a connection; the job waits for approval and shows its estimate |
+| `POST` | `/api/v1/voice/generate` | [`voice.generate`](/docs/api/voice.generate) | Start a speech generation with the provider of a connection; the job waits for approval, shows its estimate and stores the audio as an asset with its origin |
 
 ## Images
 

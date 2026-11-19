@@ -174,6 +174,11 @@ var parity = []row{
 	{method: "ProviderModels", command: "provider:models", route: "GET /connections/{}/models"},
 	{method: "ProviderPriceSet", command: "provider:price", route: "PUT /providers/prices"},
 	{method: "TextGenerate", tool: "job_start", command: "text:generate", route: "POST /text/generate"},
+	// Image and voice generation (SDD-016 section 6.1, epic 10): job_start again, with the kinds image.generate
+	// and voice.generate; the voices of a connection are read with the CLI or HTTP, as its models are.
+	{method: "ImageGenerate", tool: "job_start", command: "image:generate", route: "POST /image/generate"},
+	{method: "VoiceGenerate", tool: "job_start", command: "voice:generate", route: "POST /voice/generate"},
+	{method: "VoiceList", command: "voice:list", route: "GET /connections/{}/voices"},
 	// The library (SDD-018): one MCP tool, library, serves the lists, reads, writes, searches, renders and
 	// lints. Removing a note, importing and exporting skills read and write files by path (no tool), and
 	// marking a skill as read is for a person at the browser (HTTP only).

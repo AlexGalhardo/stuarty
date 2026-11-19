@@ -2143,7 +2143,17 @@
         {
           "name": "price-out",
           "type": "string",
-          "usage": "the price of a million output tokens; leave both prices out to remove the entry"
+          "usage": "the price of a million output tokens; leave all prices out to remove the entry"
+        },
+        {
+          "name": "unit",
+          "type": "string",
+          "usage": "image for the price of one image, mchar for the price of a million characters of speech; leave out for tokens"
+        },
+        {
+          "name": "unit-micros",
+          "type": "string",
+          "usage": "with --unit: the price of one image or of a million characters, in millionths of the currency unit"
         }
       ],
       "globals": [
@@ -2205,6 +2215,124 @@
         "key-file",
         "project",
         "dry-run"
+      ]
+    },
+    {
+      "name": "image:generate",
+      "domain": "provider",
+      "summary": "generate images with the provider of a connection; the job shows its estimate, waits for approval and stores the images as assets",
+      "usage": [
+        "stuarty image:generate --project <id> --connection <id> --model <id> [--prompt <text> | --prompt-file <file>] [--size <width>x<height>] [--count <n>] [--dry-run]"
+      ],
+      "example": "stuarty image:generate --project prj_7k2m9x4q1b --connection con_0123456789 --model a-model --prompt \"A red fox\" --count 2",
+      "flags": [
+        {
+          "name": "connection",
+          "type": "string",
+          "usage": "the connection to the provider (required)"
+        },
+        {
+          "name": "model",
+          "type": "string",
+          "usage": "the model id, as provider:models lists it (required)"
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "usage": "what to draw; without it and without --prompt-file the prompt is read from standard input"
+        },
+        {
+          "name": "prompt-file",
+          "type": "string",
+          "usage": "a file that holds the prompt"
+        },
+        {
+          "name": "size",
+          "type": "string",
+          "usage": "width and height in pixels joined by x (default 1024x1024)"
+        },
+        {
+          "name": "count",
+          "type": "integer",
+          "usage": "how many images, 1 to 10 (default 1); the estimate counts all of them"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project",
+        "dry-run"
+      ]
+    },
+    {
+      "name": "voice:generate",
+      "domain": "provider",
+      "summary": "generate speech with the provider of a connection; the job shows its estimate, waits for approval and stores the audio as an asset",
+      "usage": [
+        "stuarty voice:generate --project <id> --connection <id> --model <id> --voice <id> [--text <text> | --text-file <file>] [--language <tag>] [--format mp3|wav|flac|opus|aac] [--dry-run]"
+      ],
+      "example": "stuarty voice:generate --project prj_7k2m9x4q1b --connection con_0123456789 --model a-model --voice alloy --text \"Welcome\"",
+      "flags": [
+        {
+          "name": "connection",
+          "type": "string",
+          "usage": "the connection to the provider (required)"
+        },
+        {
+          "name": "model",
+          "type": "string",
+          "usage": "the model id, as provider:models lists it (required)"
+        },
+        {
+          "name": "voice",
+          "type": "string",
+          "usage": "the voice id, as voice:list names it (required)"
+        },
+        {
+          "name": "text",
+          "type": "string",
+          "usage": "what to read out; without it and without --text-file the text is read from standard input"
+        },
+        {
+          "name": "text-file",
+          "type": "string",
+          "usage": "a file that holds the text"
+        },
+        {
+          "name": "language",
+          "type": "string",
+          "usage": "a language tag such as pt-BR"
+        },
+        {
+          "name": "format",
+          "type": "string",
+          "usage": "mp3 (default), wav, flac, opus or aac"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project",
+        "dry-run"
+      ]
+    },
+    {
+      "name": "voice:list",
+      "domain": "provider",
+      "summary": "list the voices of the provider of a connection",
+      "usage": [
+        "stuarty voice:list <connection id>"
+      ],
+      "example": "stuarty voice:list con_0123456789",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
       ]
     },
     {

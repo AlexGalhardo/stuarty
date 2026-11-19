@@ -405,6 +405,9 @@ Scopes: `read`, `edit`, `media`, `render`, `admin` (SDD-000 §4). They are indep
 | `ProviderModels` | `GET /connections/{id}/models` | R | - | - | - | - | One request through the gate to the provider of the connection; the names of the models are cleaned and the ids checked against a pattern (SDD-016 section 3); refused for a project-limited key |
 | `ProviderPriceSet` | `PUT /providers/prices` | - | - | - | - | R | A privileged browser session only (T-54); audited |
 | `TextGenerate` | `POST /text/generate` | - | R | - | - | - | A job of a kind that needs approval (SDD-015 section 5); the estimate is checked against the ceilings (T-54); the result is untrusted text (T-53) |
+| `ImageGenerate` | `POST /image/generate` | - | R | - | - | - | As `TextGenerate`; a result URL is fetched only through the gated client (a host the connection does not list is refused, `E_CONNECTION_DESTINATION`), and a file is checked by signature and size before it becomes an asset (SDD-016 section 5.3) |
+| `VoiceGenerate` | `POST /voice/generate` | - | R | - | - | - | As `ImageGenerate` |
+| `VoiceList` | `GET /connections/{id}/voices` | R | - | - | - | - | The names of the voices are cleaned like the names of models and checked for the key; refused for a project-limited key |
 | `ApprovalRuleList` | `GET /approval-rules` | R | - | - | - | - | Refused for a project-limited key |
 | `ApprovalRuleSet` | `POST /approval-rules` | - | - | - | - | R | A privileged browser session only (T-49); at most 100 rules; audited |
 | `ApprovalRuleRemove` | `DELETE /approval-rules/{id}` | - | - | - | - | R | A privileged browser session only (T-49); audited |
@@ -740,7 +743,7 @@ Any string that the product did not generate is untrusted, whatever its origin: 
 | Library entry: `origin.source`, `origin.prompt`, `origin.rights_note`, `description`, the names of the projects that use a file | the actor that imported or described the file, including an agent that fetched it on its own side | `AssetList`, `AssetGet`, `AssetUses`, `media_inspect` without a project, the library of the UI (SDD-011 §14) |
 | Template and slot `description`, template colour names | a template author or an agent | `template`, the timeline view, lint |
 | OpenTimelineIO result text: `lost[].name` and `lost[].feature` (clip and track names, project names on export), `unresolved_media[].ref` and `.reason`, `matched_media[].ref` (the `target_url` as written), `file_name` (reduced to letters, digits, dash and underscore) | an imported `.otio` file; any actor on export | `project_otio_export` and `project_otio_import` results and the `details` of their refusal |
-| Generated text: the `text` of a `text.generate` job and the display names of the models a provider lists (SDD-016) | a model of a provider, through the connection of the user | `job_get`, `JobGet` text views, `provider:models` |
+| Generated text: the `text` of a `text.generate` job, the display names of the models and of the voices a provider lists, and the revised prompt of an image (SDD-016) | a model of a provider, through the connection of the user | `job_get`, `JobGet` text views, `provider:models`, `voice:list`, the library entry of a generated asset |
 | Library text: descriptions, bodies and snippets of notes, prompts and skills, tags, the source of a skill, a rendered prompt (SDD-018) | the user, another agent, a downloaded skill | `library`, the library lists and searches, `skill:show`, `prompt:render` |
 | Error messages that would quote any of the above | | |
 

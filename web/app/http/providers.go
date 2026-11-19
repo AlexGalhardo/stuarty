@@ -62,3 +62,54 @@ func (h *apiHandler) textGenerate(c *web.Ctx, in textGenerateIn) (service.Job, e
 
 	return deref(res), err
 }
+
+type imageGenerateIn struct {
+	ProjectID    string `json:"project_id"        validate:"required" doc:"The project the images belong to, prj_ and 10 characters."`
+	ConnectionID string `json:"connection_id"     validate:"required" doc:"The connection to the provider that makes the images."`
+	Model        string `json:"model"             validate:"required" doc:"The model id, as provider:models lists it."`
+	Prompt       string `json:"prompt"            validate:"required" doc:"What to draw, 1 to 4000 characters."`
+	Size         string `json:"size,omitempty"                        doc:"Width and height in pixels joined by x; the default is 1024x1024. The model may make only some sizes."`
+	Count        int    `json:"count,omitempty"                       doc:"How many images, 1 to 10; the default is 1. A model may make fewer at a time. The estimate counts all of them."`
+	WaitMS       int    `json:"wait_ms,omitempty"                     doc:"Wait up to this many milliseconds for the job to finish."`
+	DryRun       bool   `json:"dry_run,omitempty"                     doc:"true answers the job it would create, with its estimate, and writes and sends nothing."`
+}
+
+type voiceGenerateIn struct {
+	ProjectID    string `json:"project_id"         validate:"required" doc:"The project the speech belongs to, prj_ and 10 characters."`
+	ConnectionID string `json:"connection_id"      validate:"required" doc:"The connection to the provider that reads the text out."`
+	Model        string `json:"model"              validate:"required" doc:"The model id, as provider:models lists it."`
+	Text         string `json:"text"               validate:"required" doc:"What to read out, 1 to 4096 characters (the provider may take fewer)."`
+	Voice        string `json:"voice"              validate:"required" doc:"The voice id, as voice:list names it."`
+	Language     string `json:"language,omitempty"                     doc:"A language tag such as pt-BR; a provider that detects the language from the text ignores it."`
+	Format       string `json:"format,omitempty"                       doc:"mp3 (the default), wav, flac, opus or aac."`
+	WaitMS       int    `json:"wait_ms,omitempty"                      doc:"Wait up to this many milliseconds for the job to finish."`
+	DryRun       bool   `json:"dry_run,omitempty"                      doc:"true answers the job it would create, with its estimate, and writes and sends nothing."`
+}
+
+type voiceListIn struct {
+	ID string `json:"id" validate:"required" doc:"The id of a connection to an AI provider, con_ and 10 characters."`
+}
+
+func (h *apiHandler) imageGenerate(c *web.Ctx, in imageGenerateIn) (service.Job, error) {
+	res, err := h.Service.ImageGenerate(c.Context(), service.ImageGenerateRequest{
+		ProjectID: in.ProjectID, ConnectionID: in.ConnectionID, WaitMS: in.WaitMS, DryRun: in.DryRun,
+		Model: in.Model, Prompt: in.Prompt, Size: in.Size, Count: in.Count,
+	})
+
+	return deref(res), err
+}
+
+func (h *apiHandler) voiceGenerate(c *web.Ctx, in voiceGenerateIn) (service.Job, error) {
+	res, err := h.Service.VoiceGenerate(c.Context(), service.VoiceGenerateRequest{
+		ProjectID: in.ProjectID, ConnectionID: in.ConnectionID, WaitMS: in.WaitMS, DryRun: in.DryRun,
+		Model: in.Model, Text: in.Text, Voice: in.Voice, Language: in.Language, Format: in.Format,
+	})
+
+	return deref(res), err
+}
+
+func (h *apiHandler) voiceList(c *web.Ctx, in voiceListIn) (service.VoiceListResult, error) {
+	res, err := h.Service.VoiceList(c.Context(), service.VoiceListRequest{ConnectionID: in.ID})
+
+	return deref(res), err
+}

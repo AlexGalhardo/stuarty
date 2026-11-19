@@ -450,6 +450,28 @@ var Endpoints = []Endpoint{
 		Summary: "Start a text generation with the provider of a connection; the job waits for approval and shows its estimate",
 	},
 	{
+		ID:      "image.generate",
+		Method:  http.MethodPost,
+		Path:    "/image/generate",
+		Scope:   service.ScopeEdit,
+		Service: "ImageGenerate",
+		Status:  202,
+		Summary: "Start an image generation with the provider of a connection; the job waits for approval, shows its estimate and stores the images as assets with their origin",
+	},
+	{
+		ID:      "voice.generate",
+		Method:  http.MethodPost,
+		Path:    "/voice/generate",
+		Scope:   service.ScopeEdit,
+		Service: "VoiceGenerate",
+		Status:  202,
+		Summary: "Start a speech generation with the provider of a connection; the job waits for approval, shows its estimate and stores the audio as an asset with its origin",
+	},
+	{
+		ID: "voice.list", Method: http.MethodGet, Path: "/connections/{id}/voices", Scope: service.ScopeRead,
+		Service: "VoiceList", Status: 200, Summary: "List the voices of the provider of a connection",
+	},
+	{
 		ID: "library.memory.list", Method: http.MethodGet, Path: "/library/memory", Scope: service.ScopeRead,
 		Service: "MemoryList", Status: 200, Summary: "List the memory notes",
 	},

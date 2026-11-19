@@ -1820,6 +1820,63 @@
         },
         "type": "object"
       },
+      "GeneratedItem": {
+        "properties": {
+          "asset_id": {
+            "type": "string"
+          },
+          "bytes": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "hash": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "revised_prompt": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "state": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "GeneratedResult": {
+        "properties": {
+          "cost": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "delivered": {
+            "type": "integer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/GeneratedItem"
+            },
+            "type": "array"
+          },
+          "model": {
+            "type": "string"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "requested": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
       "GradeSpec": {
         "properties": {
           "curves": {
@@ -2991,6 +3048,16 @@
               }
             ]
           },
+          "generated": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GeneratedResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "text": {
             "anyOf": [
               {
@@ -3992,6 +4059,9 @@
       },
       "ModelView": {
         "properties": {
+          "capability": {
+            "type": "string"
+          },
           "context_tokens": {
             "type": "integer"
           },
@@ -4507,6 +4577,13 @@
           "output_micros_per_mtok": {
             "format": "int64",
             "type": "integer"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "unit_micros": {
+            "format": "int64",
+            "type": "integer"
           }
         },
         "type": "object"
@@ -4529,6 +4606,13 @@
           },
           "provider": {
             "type": "string"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "unit_micros": {
+            "format": "int64",
+            "type": "integer"
           }
         },
         "type": "object"
@@ -6524,6 +6608,41 @@
           },
           "ok": {
             "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "VoiceListResult": {
+        "properties": {
+          "connection_id": {
+            "type": "string"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "voices": {
+            "items": {
+              "$ref": "#/components/schemas/VoiceView"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "VoiceView": {
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "source": {
+            "type": "string"
           }
         },
         "type": "object"
@@ -12427,6 +12546,59 @@
         "summary": "Make one request through a connection"
       }
     },
+    "/api/v1/connections/{id}/voices": {
+      "get": {
+        "operationId": "voice.list",
+        "parameters": [
+          {
+            "description": "The id of a connection to an AI provider, con_ and 10 characters.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VoiceListResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the voices of the provider of a connection"
+      }
+    },
     "/api/v1/cost": {
       "get": {
         "operationId": "cost.get",
@@ -12735,6 +12907,104 @@
           }
         ],
         "summary": "Prove that the server knows the local token"
+      }
+    },
+    "/api/v1/image/generate": {
+      "post": {
+        "operationId": "image.generate",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "connection_id": {
+                    "description": "The connection to the provider that makes the images.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "count": {
+                    "description": "How many images, 1 to 10; the default is 1. A model may make fewer at a time. The estimate counts all of them.",
+                    "type": "integer"
+                  },
+                  "dry_run": {
+                    "description": "true answers the job it would create, with its estimate, and writes and sends nothing.",
+                    "type": "boolean"
+                  },
+                  "model": {
+                    "description": "The model id, as provider:models lists it.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "project_id": {
+                    "description": "The project the images belong to, prj_ and 10 characters.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "prompt": {
+                    "description": "What to draw, 1 to 4000 characters.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "size": {
+                    "description": "Width and height in pixels joined by x; the default is 1024x1024. The model may make only some sizes.",
+                    "type": "string"
+                  },
+                  "wait_ms": {
+                    "description": "Wait up to this many milliseconds for the job to finish.",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "project_id",
+                  "connection_id",
+                  "model",
+                  "prompt"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            },
+            "description": "Accepted"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Start an image generation with the provider of a connection; the job waits for approval, shows its estimate and stores the images as assets with their origin"
       }
     },
     "/api/v1/images": {
@@ -18687,6 +18957,18 @@
                     "description": "The id of the provider, for example openai.",
                     "minLength": 1,
                     "type": "string"
+                  },
+                  "unit": {
+                    "description": "Empty for a price of tokens, image for the price of one image, mchar for the price of a million characters of speech.",
+                    "type": "string"
+                  },
+                  "unit_micros": {
+                    "description": "With a unit of image or mchar: the price of one image or of a million characters, in millionths of the currency unit; the token prices stay out.",
+                    "format": "int64",
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
                   }
                 },
                 "required": [
@@ -19719,6 +20001,110 @@
           }
         ],
         "summary": "Change the role of a user or disable or enable them (an administrator session only; network mode)"
+      }
+    },
+    "/api/v1/voice/generate": {
+      "post": {
+        "operationId": "voice.generate",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "connection_id": {
+                    "description": "The connection to the provider that reads the text out.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "dry_run": {
+                    "description": "true answers the job it would create, with its estimate, and writes and sends nothing.",
+                    "type": "boolean"
+                  },
+                  "format": {
+                    "description": "mp3 (the default), wav, flac, opus or aac.",
+                    "type": "string"
+                  },
+                  "language": {
+                    "description": "A language tag such as pt-BR; a provider that detects the language from the text ignores it.",
+                    "type": "string"
+                  },
+                  "model": {
+                    "description": "The model id, as provider:models lists it.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "project_id": {
+                    "description": "The project the speech belongs to, prj_ and 10 characters.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "text": {
+                    "description": "What to read out, 1 to 4096 characters (the provider may take fewer).",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "voice": {
+                    "description": "The voice id, as voice:list names it.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "wait_ms": {
+                    "description": "Wait up to this many milliseconds for the job to finish.",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "project_id",
+                  "connection_id",
+                  "model",
+                  "text",
+                  "voice"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            },
+            "description": "Accepted"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Start a speech generation with the provider of a connection; the job waits for approval, shows its estimate and stores the audio as an asset with its origin"
       }
     }
   }

@@ -58,6 +58,8 @@ var commandDomains = map[string]string{
 	"cost:show": command.DomainProvider, "cost:ceiling": command.DomainProvider,
 	"provider:list": command.DomainProvider, "provider:models": command.DomainProvider,
 	"provider:price": command.DomainProvider, "text:generate": command.DomainProvider,
+	"image:generate": command.DomainProvider, "voice:generate": command.DomainProvider,
+	"voice:list": command.DomainProvider,
 
 	"command:help": command.DomainWorkspace, "connection:list": command.DomainWorkspace,
 	"connection:show": command.DomainWorkspace, "connection:add": command.DomainWorkspace,
