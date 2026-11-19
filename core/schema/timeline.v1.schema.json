@@ -756,6 +756,12 @@
     },
     "Keyframe": {
       "properties": {
+        "bezier": {
+          "items": {
+            "type": "number"
+          },
+          "type": "array"
+        },
         "easing": {
           "default": "linear",
           "enum": [
@@ -763,7 +769,8 @@
             "ease_in",
             "ease_out",
             "ease_in_out",
-            "hold"
+            "hold",
+            "bezier"
           ],
           "type": "string"
         },
