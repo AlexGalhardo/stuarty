@@ -399,7 +399,7 @@ Who: only the orchestrator (the main session), and only after the author confirm
 
 The sequence is the vukem sequence (`docs/tooling.md:112-131`, `docs/maintenance.md:21-29`) with the changes of section 8. There are two pushes, as in vukem: the release branch (instead of `main`, because the ruleset forbids direct pushes) and the tag.
 
-1. **Confirm.** The author says yes to the version `vX.Y.Z`. The orchestrator states the task group being closed, the previous tag and the phase.
+1. **Confirm.** The author says yes to the version `vX.Y.Z`. The orchestrator states the task group being closed and the previous tag.
 2. **Preconditions** (the tool checks 2a to 2d and refuses otherwise):
    - 2a. `git fetch origin --tags`; the local `release/vX.Y.Z` equals `origin/release/vX.Y.Z` and contains `origin/main` (D-031: the release branch carries every commit of the release, so `prepare` runs on its pushed tip, not on `main`).
    - 2b. The tree is clean: `git status --porcelain --untracked-files=no` prints nothing.
@@ -2325,7 +2325,7 @@ Stop conditions, in one place: any difference in step 3; any `D` or `M` in the w
 
 ## 19. Implementation tasks owned by this SDD
 
-These identifiers are the ones the ROADMAP must use; the ROADMAP author assigns phase and order. All are `senior-d` unless noted.
+These identifiers are the ones the ROADMAP must use; the ROADMAP author assigns the order. All are `senior-d` unless noted.
 
 | Id | Task | Records or produces |
 | --- | --- | --- |

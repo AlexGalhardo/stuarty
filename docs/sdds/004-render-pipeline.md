@@ -23,7 +23,7 @@
 
 ## 1. Overview
 
-> Phase 5 (ADR-0029) replaces the executors of sections 6 and 10 by one renderer in Rust. [SDD-013](013-renderer.md) is its contract: the plan as the renderer reads it (§2 there is this section's `FramePlan` as JSON), the pixel contract (restating section 6 as exact arithmetic), the module and its hosts, and the errors. Until the stages of ADR-0029 pass their gates, this SDD stays the specification of the pixels.
+> ADR-0029 replaces the executors of sections 6 and 10 by one renderer in Rust. [SDD-013](013-renderer.md) is its contract: the plan as the renderer reads it (§2 there is this section's `FramePlan` as JSON), the pixel contract (restating section 6 as exact arithmetic), the module and its hosts, and the errors. Until the stages of ADR-0029 pass their gates, this SDD stays the specification of the pixels.
 
 ```mermaid
 flowchart TB
