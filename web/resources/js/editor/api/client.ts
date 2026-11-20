@@ -83,6 +83,7 @@ import type {
 	SocialConnectRequest,
 	SocialConnectResult,
 	SocialNetworkListResult,
+	SocialSelectRequest,
 	SystemQuery,
 	SystemResult,
 	TemplateInstantiateRequest,
@@ -234,6 +235,7 @@ export interface ApiClient {
 	connectSocial(request: SocialConnectRequest): Promise<SocialConnectResult>;
 	completeSocial(request: SocialCompleteRequest): Promise<SocialAccount>;
 	listSocialAccounts(): Promise<SocialAccountListResult>;
+	selectSocialAccount(request: SocialSelectRequest): Promise<SocialAccount>;
 	validatePublish(request: PublishRequest): Promise<PublishValidateResult>;
 	publishNow(request: PublishRequest): Promise<Job>;
 	listActiveProjects(): Promise<ProjectListResult>;
@@ -600,6 +602,8 @@ export function createClient(
 		completeSocial: (request) =>
 			call("POST", "/social/complete", EDIT_TIMEOUT_MS, request),
 		listSocialAccounts: () => call("GET", "/social/accounts", READ_TIMEOUT_MS),
+		selectSocialAccount: (request) =>
+			call("POST", "/social/select", EDIT_TIMEOUT_MS, request),
 		validatePublish: (request) =>
 			call("POST", "/publish/validate", EDIT_TIMEOUT_MS, request),
 		publishNow: (request) => call("POST", "/publish", EDIT_TIMEOUT_MS, request),

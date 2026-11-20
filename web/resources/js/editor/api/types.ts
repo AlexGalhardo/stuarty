@@ -1543,6 +1543,10 @@ export interface SocialLimits {
 	tags_max_chars: number;
 	file_max_bytes: number;
 	formats: string[];
+	// What the network takes besides the video; the dialog asks only for these (SDD-020 section 18).
+	thumbnail_formats?: string[];
+	visibilities?: string[];
+	needs_kids_declaration?: boolean;
 	source: string;
 	read: string;
 }
@@ -1552,6 +1556,8 @@ export interface SocialNetwork {
 	name: string;
 	publishes: string[];
 	limits: SocialLimits;
+	// The network takes a flag that says the video has synthetic content.
+	ai_disclosure?: boolean;
 	endpoint: string;
 	hosts: string[];
 	scopes: string[];
@@ -1590,7 +1596,19 @@ export interface SocialAccount {
 	label: string;
 	account_id?: string;
 	account_title?: string;
-	state: "ready" | "needs_sign_in";
+	// needs_account: the sign-in reached several accounts and a person has not chosen one (SDD-020 section 17).
+	state: "ready" | "needs_sign_in" | "needs_account";
+	choices?: SocialChoice[];
+}
+
+export interface SocialChoice {
+	id: string;
+	title: string;
+}
+
+export interface SocialSelectRequest {
+	connection_id: string;
+	account_id: string;
 }
 
 export interface SocialAccountListResult {
