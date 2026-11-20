@@ -79,7 +79,7 @@ export function Header({ groups, variant = "docs" }: { groups: NavGroup[]; varia
 		<Providers>
 			<header className={HEADER_CLASS[variant]} data-variant={variant}>
 				{/* Same container as app/docs/layout.tsx; the left column matches the sidebar width. */}
-				<div className="mx-auto flex h-full max-w-[90rem] items-center gap-2 px-4 sm:gap-3 sm:px-6 lg:grid lg:grid-cols-[16rem_1fr_auto] lg:gap-0">
+				<div className="site-container flex h-full items-center gap-2 sm:gap-3 lg:grid lg:grid-cols-[16rem_1fr_auto] lg:gap-0">
 					<div className="flex items-center gap-2 sm:gap-3">
 						<MobileNav groups={groups} />
 						<Logo size={variant === "landing" ? "lg" : "md"} />
