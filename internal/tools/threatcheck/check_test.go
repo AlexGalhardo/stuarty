@@ -124,9 +124,10 @@ func TestTheRealModelParses(t *testing.T) {
 	// browser into an image, epic 48; T-67 is the test address variables (D-093); T-68, T-69 and T-79 are the
 	// X and TikTok threats of epic 22; T-70 to T-74 are the hosted agent threats of epic 14; T-75 to T-78 are
 	// the AI provider sign-in threats of epic 12; T-80 to T-85 are the Google sign-in threats of epic 24; T-90
-	// and T-91 are the processed-sound threats of epic 51; T-96 to T-98 are the image edit threats of epic 30.
-	if len(threats) != 90 {
-		t.Errorf("the model has %d threats, want 90 (T-68, T-69 and T-79, X and TikTok)", len(threats))
+	// and T-91 are the processed-sound threats of epic 51; T-92 to T-94 are the lookup table threats of an
+	// image, epic 49; T-96 to T-98 are the image edit threats of epic 30.
+	if len(threats) != 93 {
+		t.Errorf("the model has %d threats, want 93 (T-92 to T-94, the image table threats)", len(threats))
 	}
 }
 

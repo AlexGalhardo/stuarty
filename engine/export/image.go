@@ -17,6 +17,9 @@ import (
 type ImageConfig struct {
 	// AssetPath gives the path of the normalized PNG of an image asset, by content hash.
 	AssetPath func(hash string) (string, error)
+	// LUTPath gives the path of the normalized .cube file of a lookup-table asset (SDD-021 section 3.1), by
+	// content hash. It is needed only by a document with a layer that has a table.
+	LUTPath func(hash string) (string, error)
 	// Fonts is the font set of the text layers; the bundled fonts when nil.
 	Fonts *rasterize.FontSet
 }
@@ -34,6 +37,7 @@ func RenderImage(ctx context.Context, doc *coreimage.Document, cfg ImageConfig) 
 	fp := coreimage.Plan(doc, plan.Options{Measure: rasterize.Measure(fonts), OutputScale: 1})
 	cache := rasterize.NewCache(fonts, 0)
 	kept := make([]plan.Layer, 0, len(fp.Layers))
+	tables := map[string]bool{}
 
 	host, err := renderhost.New(ctx, renderhost.Config{})
 	if err != nil {
@@ -77,6 +81,11 @@ func RenderImage(ctx context.Context, doc *coreimage.Document, cfg ImageConfig) 
 		case plan.Group:
 			// An image document has layers of its own kinds; a group is the plan of nested timelines (SDD-004 §3.16).
 			return nil, fmt.Errorf("layer %s: %w: an image has no group", l.ItemID, compositor.ErrSource)
+		}
+
+		// A table is in the module before the layer that names it is drawn: a layer is never drawn without it.
+		if err := putImageLUT(ctx, host, &l, tables, cfg); err != nil {
+			return nil, err
 		}
 
 		kept = append(kept, l)

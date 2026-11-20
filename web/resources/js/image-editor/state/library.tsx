@@ -8,7 +8,7 @@ import {
 
 import { type Library, loadLibrary } from "../api/library";
 
-const EMPTY: Library = { images: [], brand: null, fonts: [] };
+const EMPTY: Library = { images: [], luts: [], brand: null, fonts: [] };
 
 const Context = createContext<Library>(EMPTY);
 
