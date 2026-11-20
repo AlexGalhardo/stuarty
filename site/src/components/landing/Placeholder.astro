@@ -1,0 +1,18 @@
+---
+// A clip that is not recorded yet (design-system section 11.11): the aspect of the real asset, the brand gradient,
+// a play glyph and the name of the clip that replaces it.
+interface Props {
+	label: string;
+	aspect?: string;
+	class?: string;
+}
+
+const { label, aspect = "16 / 9", class: className } = Astro.props;
+---
+
+<figure class:list={["placeholder m-0", className]} style={`aspect-ratio: ${aspect}`} role="img" aria-label={`Clip placeholder: ${label}`}>
+	<span aria-hidden="true" class="relative z-10 grid size-14 place-items-center rounded-full bg-white/15 ring-1 ring-white/30 backdrop-blur-sm">
+		<svg viewBox="0 0 24 24" class="ml-0.5 size-6" fill="currentColor"><path d="M8 5.5v13l11-6.5z"></path></svg>
+	</span>
+	<figcaption aria-hidden="true" class="absolute bottom-3 left-4 z-10 font-mono text-xs text-white/90">{label}</figcaption>
+</figure>
