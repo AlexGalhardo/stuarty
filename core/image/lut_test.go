@@ -126,6 +126,32 @@ func TestAdjustLUTChangesAndKeepsTheOtherKeys(t *testing.T) {
 	}
 }
 
+// A document at the ceiling of files can swap the table of a layer for another one: the ceiling is judged on the
+// files the document is left with, as layer.replace_source does, and a new table is still refused.
+func TestAdjustLUTSwapAtTheCeilingOfFiles(t *testing.T) {
+	photo := lid('b')
+	d := fillAssets(withLUT())
+
+	if vs := Validate(d); len(vs) > 0 {
+		t.Fatalf("the fixture is not a valid document: %v", vs)
+	}
+
+	got, err := adjustLUT(t, d, photo, `"lut": {"asset": "`+hashCube2+`"}`)
+	if err != nil {
+		t.Fatalf("swapping the only table at %d files was refused: %v", MaxAssets, err)
+	}
+
+	if _, ok := got.Assets[hashCube]; ok || len(got.Assets) != MaxAssets {
+		t.Errorf("the first table leaves assets and the count stays %d: %d", MaxAssets, len(got.Assets))
+	}
+
+	// a second layer with a table of its own is one file more
+	_, err = adjustLUT(t, got, lid('a'), `"lut": {"asset": "`+hashCube+`"}`)
+	if err == nil || err.Code != command.CodeLimit {
+		t.Fatalf("a new table past the ceiling is E_LIMIT: %v", err)
+	}
+}
+
 func TestAdjustLUTRefusals(t *testing.T) {
 	photo, group, locked := lid('b'), lid('e'), lid('h')
 
