@@ -4,7 +4,7 @@ description: "Plan which piece goes to which account and when, approve each post
 ---
 
 <Callout type="warning" title="New">
-This page covers the calendar, the approval of a scheduled post and the scheduler, tested against a fake network and not against a real account. YouTube is the first network; the others come in later versions. The scheduler runs while Stuarty runs: keeping it alive with the window closed is a later version.
+This page covers the calendar, the approval of a scheduled post and the scheduler, tested against a fake network and not against a real account. A post can go to YouTube, to an Instagram professional account or to a Facebook Page; other networks come in later versions. The scheduler runs while Stuarty runs: keeping it alive with the window closed is a later version.
 </Callout>
 
 ## You will learn
@@ -75,4 +75,5 @@ stuarty publication:show pub_0123456789
 
 - No post is sent before a person, or a rule the person wrote, approved it.
 - A file that changed after the approval is not sent: Stuarty checks it against the digest it recorded.
+- A post goes only to the account you approved: if the connection signs in as another account, or you choose another Page, before the time comes, the post fails and you schedule it again.
 - Every request goes through the connection of the account, with its own credential, and the credential is never shown.
