@@ -6,6 +6,11 @@
 # line of stdout. Everything else goes to stderr. When GITHUB_PATH is set (GitHub
 # Actions) the bin folder is appended to it.
 #
+# An installed folder is never deleted in place, because a running FFmpeg may hold it open
+# (VV-227): a folder whose .archive-sha256 holds the pinned digest is reused without a download,
+# and any other is replaced by unpacking beside it and swapping by rename. A swap that fails
+# leaves the installed folder as it was. scripts/install-ffmpeg-test.sh proves it offline.
+#
 # FFMPEG_SOURCE (environment, else the value of the pin file) is btbn (the BtbN asset) or own
 # (the release asset of ffmpeg-build.yml, D-017, FFMPEG_OWN_* of the pin file). macOS has no
 # BtbN build: with btbn, Homebrew ffmpeg is installed FOR TESTS ONLY and is never distributed
@@ -106,20 +111,6 @@ mkdir -p "$dl_dir"
 archive="$dl_dir/$asset"
 url="$base_url/$release_tag/$asset"
 
-if [ -f "$archive" ] && [ "$(sha256_of "$archive")" = "$expected" ]; then
-	log "install-ffmpeg: reusing the verified download $archive"
-else
-	log "install-ffmpeg: downloading $url"
-	curl --fail --silent --show-error --location --retry 3 --output "$archive" "$url" \
-		|| die "download failed: $url"
-	actual="$(sha256_of "$archive")"
-	if [ "$actual" != "$expected" ]; then
-		rm -f "$archive"
-		die "SHA-256 mismatch for $asset: expected $expected, got $actual. The download was deleted and nothing was unpacked."
-	fi
-	log "install-ffmpeg: SHA-256 verified ($expected)"
-fi
-
 root_name="${asset%.tar.xz}"
 root_name="${root_name%.zip}"
 exe=""
@@ -153,6 +144,18 @@ if [ -f "$out_dir/$marker" ] && [ "$(cat "$out_dir/$marker")" = "$expected" ] \
 	&& [ -f "$out_dir/$root_name/LICENSE.txt" ]; then
 	reuse=1
 	log "install-ffmpeg: reusing the installed folder $out_dir (archive digest matches)"
+elif [ -f "$archive" ] && [ "$(sha256_of "$archive")" = "$expected" ]; then
+	log "install-ffmpeg: reusing the verified download $archive"
+else
+	log "install-ffmpeg: downloading $url"
+	curl --fail --silent --show-error --location --retry 3 --output "$archive" "$url" \
+		|| die "download failed: $url"
+	actual="$(sha256_of "$archive")"
+	if [ "$actual" != "$expected" ]; then
+		rm -f "$archive"
+		die "SHA-256 mismatch for $asset: expected $expected, got $actual. The download was deleted and nothing was unpacked."
+	fi
+	log "install-ffmpeg: SHA-256 verified ($expected)"
 fi
 
 if [ "$reuse" = 0 ]; then
@@ -163,7 +166,7 @@ if [ "$reuse" = 0 ]; then
 	mkdir -p "$stage"
 	trap 'rm -rf "$stage"' EXIT
 	case "$asset" in
-	*.tar.xz) tar -xJf "$archive" -C "$stage" ;;
+	*.tar.xz) tar -xJf "$archive" -C "$stage" || die "could not unpack $archive" ;;
 	*.zip)
 		# Git Bash tar is GNU tar and cannot read zip.
 		powershell.exe -NoProfile -NonInteractive -Command \
@@ -180,8 +183,10 @@ if [ "$reuse" = 0 ]; then
 		mv "$out_dir" "$old" || die "cannot replace $out_dir (is FFmpeg running from it?); it was left untouched"
 	fi
 	if ! mv "$stage" "$out_dir"; then
-		[ -z "$old" ] || mv "$old" "$out_dir"
-		die "could not move the new install into $out_dir"
+		if [ -n "$old" ]; then
+			mv "$old" "$out_dir" || die "could not move the new install into $out_dir, nor the old one back from $old"
+		fi
+		die "could not move the new install into $out_dir; the installed folder was left as it was"
 	fi
 	[ -z "$old" ] || rm -rf "$old" 2>/dev/null || log "install-ffmpeg: could not remove the old folder $old; delete it by hand"
 fi
