@@ -1,0 +1,7 @@
+{
+  "args": {
+    "asset": "face.png",
+    "layer_id": "lyr_bbbbbbbbbb"
+  },
+  "op": "layer.replace_source"
+}
