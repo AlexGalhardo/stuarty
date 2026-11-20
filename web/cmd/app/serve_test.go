@@ -54,16 +54,16 @@ func (b *lockedBuffer) String() string {
 func startServe(t *testing.T, bin, home string) *serveProc {
 	t.Helper()
 
-	return startServeEnv(t, bin, home, "HOST=127.0.0.1", "PORT="+freePort(t))
+	return startServeEnv(t, bin, home)
 }
 
 // startServeEnv is startServe with its own environment on top of the defaults.
 func startServeEnv(t *testing.T, bin, home string, env ...string) *serveProc {
 	t.Helper()
 
-	cmd := exec.CommandContext(t.Context(), bin, "serve")
-	cmd.Env = append(append(os.Environ(), "STUARTY_HOME="+home, "STUARTY_URL=", "APP_KEY=", "APP_ENV=",
-		"STUARTY_MIN_FREE_BYTES=1"), env...)
+	cmd := stuartyCmd(t.Context(), t, bin, addrEnv(t), append([]string{
+		"STUARTY_HOME=" + home, "STUARTY_URL=", "APP_KEY=", "APP_ENV=", "STUARTY_MIN_FREE_BYTES=1",
+	}, env...), "serve")
 
 	p := &serveProc{cmd: cmd, out: &lockedBuffer{}, done: make(chan struct{})}
 	cmd.Stdout, cmd.Stderr = p.out, p.out
@@ -199,8 +199,7 @@ func serveOnce(t *testing.T, bin, home string) (stderr string, code int) {
 	ctx, cancel := context.WithTimeout(t.Context(), time.Minute)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, bin, "serve")
-	cmd.Env = append(os.Environ(), "STUARTY_HOME="+home, "STUARTY_URL=", "PORT="+freePort(t))
+	cmd := stuartyCmd(ctx, t, bin, addrEnv(t), []string{"STUARTY_HOME=" + home, "STUARTY_URL="}, "serve")
 
 	var errOut bytes.Buffer
 
@@ -228,7 +227,7 @@ func TestServeRefusesAnUnsafeConfiguration(t *testing.T) {
 	}{
 		{"unknown mode", []string{"STUARTY_MODE=lan"}, "STUARTY_MODE"},
 		{"non-loopback address in local mode", []string{"STUARTY_ADDR=0.0.0.0:0"}, "STUARTY_ADDR"},
-		{"network mode without APP_URL", []string{"STUARTY_MODE=network", "APP_URL=", "PORT=0"}, "APP_URL"},
+		{"network mode without APP_URL", []string{"STUARTY_MODE=network", "APP_URL="}, "APP_URL"},
 		{"network mode with a short key", []string{
 			"STUARTY_MODE=network", "APP_URL=http://localhost:7878", "APP_KEY=short",
 		}, "APP_KEY"},
@@ -239,9 +238,8 @@ func TestServeRefusesAnUnsafeConfiguration(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			home := filepath.Join(t.TempDir(), "ws")
 
-			cmd := exec.CommandContext(t.Context(), bin, "serve")
-			cmd.Env = append(os.Environ(), "STUARTY_HOME="+home, "STUARTY_URL=", "APP_ENV=", "APP_KEY=")
-			cmd.Env = append(cmd.Env, c.env...)
+			cmd := stuartyCmd(t.Context(), t, bin, addrEnv(t),
+				append([]string{"STUARTY_HOME=" + home, "STUARTY_URL=", "APP_ENV=", "APP_KEY="}, c.env...), "serve")
 
 			var out bytes.Buffer
 
