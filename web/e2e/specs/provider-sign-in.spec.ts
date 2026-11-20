@@ -9,6 +9,7 @@ import {
 import { join } from "node:path";
 import type { APIRequestContext, Page } from "@playwright/test";
 import { LAUNCHER_SECRET } from "../support/launcher";
+import { SIGNIN_PORT } from "../support/network";
 import { caller, expect, home, test } from "./helpers";
 
 // ADR-0036, D-059, epic 12 (SDD-016 section 12): a creator connects an AI provider with a sign-in in the
@@ -17,7 +18,7 @@ import { caller, expect, home, test } from "./helpers";
 // issues the tokens and answers the model list, so no real account is involved.
 test.describe.configure({ mode: "serial" });
 
-const FAKE_PORT = Number(process.env.STUARTY_E2E_PORT ?? 3101) + 4;
+const FAKE_PORT = SIGNIN_PORT;
 const ISSUED_CLIENT = "oaiapp_e2e0123456789";
 const ACCESS_TOKEN = "e2e-access-token-CANARY-0123456789";
 const REFRESH_TOKEN = "e2e-refresh-token-CANARY-0123456789";
