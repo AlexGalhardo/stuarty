@@ -12,10 +12,11 @@ func briefingTool(
 	ctx context.Context,
 	svc service.Service,
 	projectID string,
+	kind string,
 	answers map[string]string,
 ) (*toolOutput, error) {
 	if answers == nil {
-		res, err := svc.BriefingQuestions(ctx, service.BriefingQuestionsRequest{ProjectID: projectID})
+		res, err := svc.BriefingQuestions(ctx, service.BriefingQuestionsRequest{ProjectID: projectID, Kind: kind})
 		if err != nil {
 			return nil, err
 		}
@@ -23,7 +24,7 @@ func briefingTool(
 		return &toolOutput{value: res, text: res.Text}, nil
 	}
 
-	res, err := svc.BriefingAnswer(ctx, service.BriefingAnswerRequest{ProjectID: projectID, Answers: answers})
+	res, err := svc.BriefingAnswer(ctx, service.BriefingAnswerRequest{ProjectID: projectID, Kind: kind, Answers: answers})
 	if err != nil {
 		return nil, err
 	}

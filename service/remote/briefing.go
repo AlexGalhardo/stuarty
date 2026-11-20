@@ -15,6 +15,7 @@ func (c *Client) BriefingQuestions(
 ) (*service.BriefingQuestionsResult, error) {
 	q := url.Values{}
 	setIf(q, "project_id", req.ProjectID)
+	setIf(q, "kind", req.Kind)
 
 	return get[service.BriefingQuestionsResult](ctx, c, "/briefing/questions", q)
 }
@@ -22,10 +23,11 @@ func (c *Client) BriefingQuestions(
 // BriefingAnswer implements service.Service.
 func (c *Client) BriefingAnswer(ctx context.Context, req service.BriefingAnswerRequest) (*service.BriefResult, error) {
 	body := struct {
+		Kind    string            `json:"kind,omitempty"`
 		Answers map[string]string `json:"answers"`
 		Replace bool              `json:"replace,omitempty"`
 		DryRun  bool              `json:"dry_run,omitempty"`
-	}{req.Answers, req.Replace, req.DryRun}
+	}{req.Kind, req.Answers, req.Replace, req.DryRun}
 
 	out := new(service.BriefResult)
 	if err := c.do(ctx, http.MethodPut, projectPath(req.ProjectID, "/briefing"), nil, body, out); err != nil {

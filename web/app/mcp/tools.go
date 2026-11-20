@@ -902,7 +902,7 @@ func projectItem(ctx context.Context, svc service.Service, raw json.RawMessage) 
 	}
 
 	if in.Action == "briefing" {
-		return briefingTool(ctx, svc, in.ProjectID, in.Answers)
+		return briefingTool(ctx, svc, in.ProjectID, in.Kind, in.Answers)
 	}
 
 	var res *service.ProjectItemResult

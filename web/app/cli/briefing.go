@@ -14,11 +14,14 @@ import (
 var briefingQuestionsCmd = &spec{
 	name:    "briefing:questions",
 	summary: "list the questions of the guided briefing; with --project, also what its brief already answers",
-	usage:   []string{"stuarty briefing:questions [--project <id>]"},
+	usage:   []string{"stuarty briefing:questions [--project <id>] [--kind short|commercial|long]"},
 	example: "stuarty briefing:questions --project prj_7k2m9x4q1b",
-	flags:   []flagDef{{Name: "project", Kind: kindString, Usage: "a project: also the answers its brief holds"}},
+	flags: []flagDef{
+		{Name: "project", Kind: kindString, Usage: "a project: also the answers its brief holds"},
+		{Name: "kind", Kind: kindString, Usage: "the kind of production: short (the default), commercial or long"},
+	},
 	run: func(ctx context.Context, c *call) (*output, error) {
-		res, err := c.svc.BriefingQuestions(ctx, service.BriefingQuestionsRequest{ProjectID: c.args.str("project")})
+		res, err := c.svc.BriefingQuestions(ctx, service.BriefingQuestionsRequest{ProjectID: c.args.str("project"), Kind: c.args.str("kind")})
 		if err != nil {
 			return nil, err
 		}
@@ -31,8 +34,8 @@ var briefingAnswerCmd = &spec{
 	name:    "briefing:answer",
 	summary: "answer the guided briefing: the answers become the brief of a project",
 	usage: []string{
-		"stuarty briefing:answer --project <id> --answer <question>=<text> [--answer ...] [--replace]",
-		"stuarty briefing:answer --project <id> --answers <file|-> [--replace]",
+		"stuarty briefing:answer --project <id> [--kind short|commercial|long] --answer <question>=<text> [--answer ...] [--replace]",
+		"stuarty briefing:answer --project <id> [--kind short|commercial|long] --answers <file|-> [--replace]",
 	},
 	example: "stuarty briefing:answer --project prj_7k2m9x4q1b --answer audience=\"indie developers\" --answer goal=\"get sign-ups\" --answer platform=youtube-shorts --answer format=vertical-9x16 --answer duration=30",
 	project: true,
@@ -50,6 +53,7 @@ var briefingAnswerCmd = &spec{
 			Kind:  kindString,
 			Usage: "a JSON object of question id to answer: a file, or - for standard input",
 		},
+		{Name: "kind", Kind: kindString, Usage: "the kind of production: short (the default), commercial or long"},
 		{Name: "replace", Kind: kindBool, Default: "false", Usage: "replace a brief that was written by hand"},
 	},
 	run: func(ctx context.Context, c *call) (*output, error) {
@@ -76,7 +80,7 @@ var briefingAnswerCmd = &spec{
 		}
 
 		res, err := c.svc.BriefingAnswer(ctx, service.BriefingAnswerRequest{
-			ProjectID: c.projectID, Answers: answers, Replace: c.args.boolean("replace"),
+			ProjectID: c.projectID, Kind: c.args.str("kind"), Answers: answers, Replace: c.args.boolean("replace"),
 			DryRun: c.args.boolean("dry-run"),
 		})
 		if err != nil {

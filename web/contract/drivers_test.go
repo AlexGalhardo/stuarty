@@ -1419,7 +1419,7 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 	case "BriefSet":
 		return "brief:set", append(slices.Clone(proj), "--text", "-"), a.Text, nil
 	case "BriefingQuestions":
-		return "briefing:questions", flag("project", a.ProjectID), "", nil
+		return "briefing:questions", append(flag("project", a.ProjectID), flag("kind", a.Kind)...), "", nil
 	case "BriefingAnswer":
 		raw, err := json.Marshal(a.Answers)
 		if err != nil {
@@ -1427,6 +1427,8 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 		}
 
 		argv = append(slices.Clone(proj), "--answers", "-")
+		argv = append(argv, flag("kind", a.Kind)...)
+
 		if a.Replace {
 			argv = append(argv, "--replace")
 		}
