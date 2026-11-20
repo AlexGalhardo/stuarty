@@ -150,7 +150,7 @@ func (s *svc) ConnectionCreate(ctx context.Context, req ConnectionCreateRequest)
 	}
 
 	// The settings of a blog destination are checked before they are kept: the folder, the signing secret, the
-	// address rule of a webhook that is not local (SDD-020 sections 42 and 46, T-92).
+	// address rule of a webhook that is not local (SDD-020 sections 42 and 46, T-86).
 	if d, ok := s.blog.Get(spec.Kind); ok {
 		if verr := d.ValidateConfig([]byte(req.Secret), spec.Endpoint); verr != nil {
 			path := "secret"
