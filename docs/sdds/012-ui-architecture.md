@@ -2049,7 +2049,7 @@ The brand kit (RF-342) is read from `GET /api/v1/brand-kit`: its colours are swa
 
 ### 24.8 Export
 
-The dialog asks for the format (PNG, JPEG, WebP), the preset size or "original", and the quality for JPEG. Before it sends `ImageExport` it shows the findings of the read model (SDD-021 section 8), each with a link that selects its layer, and a finding that blocks disables the button with the reason (the core still refuses it with `E_LINT_BLOCKING`). WebP shows the service's answer while it is `webp_unavailable`. A finished export offers the file for download through `ImageFile`, with its size, digest and pixel size; the bytes are those the CLI export of the same revision writes.
+The dialog asks for the format (PNG, JPEG, WebP), the preset size or "original", and the quality for JPEG and for lossy WebP (WebP has a "lossless" box, on by default, that sends no quality). Before it sends `ImageExport` it shows the findings of the read model (SDD-021 section 8), each with a link that selects its layer, and a finding that blocks disables the button with the reason (the core still refuses it with `E_LINT_BLOCKING`). A WebP export on a machine with no `libwebp` shows the service's answer, `webp_unavailable`. A finished export offers the file for download through `ImageFile`, with its size, digest and pixel size; the bytes are those the CLI export of the same revision writes.
 
 ### 24.9 History and the other actors
 
