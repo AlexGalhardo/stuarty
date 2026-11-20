@@ -117,7 +117,7 @@ Every operation belongs to one **domain**. The domain names are fixed here; a ne
 | Domain | What it holds | Operations today |
 | --- | --- | --- |
 | `project` | productions: projects, their items, the brief, bundles | `ProjectList`, `ProjectCreate`, `ProjectGet`, `ProjectTrash`, `ProjectRestore`, `ProjectDescribe`, `ProjectDuplicate`, `ProjectItem*`, `Brief*`, `ProjectBundle*`, the event stream |
-| `video` | the timeline document: its edit commands, history, lint, frames, jobs, templates, OpenTimelineIO | `Edit` and the commands of the timeline registry, `HistoryList`, `Undo`, `Redo`, `HistoryRevert`, `HistoryDiff`, `Checkpoint*`, `Lint`, `View*`, `JobStart`, `JobGet`, `JobList`, `JobCancel`, `ExportFile`, `Template*`, `SnapPoints`, `ProjectOtio*`, `Export*` (presets, the check against one, the batch) |
+| `video` | the timeline document: its edit commands, history, lint, frames, jobs, templates, OpenTimelineIO, the hand-off from a motion engine | `Edit` and the commands of the timeline registry, `HistoryList`, `Undo`, `Redo`, `HistoryRevert`, `HistoryDiff`, `Checkpoint*`, `Lint`, `View*`, `Motion*` (brief, check, replace; epic 33), `JobStart`, `JobGet`, `JobList`, `JobCancel`, `ExportFile`, `Template*`, `SnapPoints`, `ProjectOtio*`, `Export*` (presets, the check against one, the batch) |
 | `image` | image documents (SDD-021) | `Image*` and the commands of the image registry |
 | `writing` | written documents | none yet |
 | `asset` | files of the workspace: media, the asset library, fonts | `Media*`, `Asset*` (the library of epic 08: list, get, uses, set info, tag), `FontImport`, `FontList` |
