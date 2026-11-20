@@ -48,8 +48,10 @@ type PublicationListRequest struct {
 	Network   string `json:"network,omitempty"`
 	From      string `json:"from,omitempty"`
 	To        string `json:"to,omitempty"`
-	Limit     int    `json:"limit,omitempty"`
-	Offset    int    `json:"offset,omitempty"`
+	// Zone is the IANA zone a date or a local time of From and To is read in; empty is UTC.
+	Zone   string `json:"zone,omitempty"`
+	Limit  int    `json:"limit,omitempty"`
+	Offset int    `json:"offset,omitempty"`
 }
 
 // PublicationListResult is a page of publications.
@@ -207,9 +209,12 @@ func (s *svc) PublicationList(ctx context.Context, req PublicationListRequest) (
 			continue
 		}
 
-		v, perr := time.Parse(time.RFC3339, t.raw)
+		v, perr := corepub.ParseBound(t.raw, req.Zone)
 		if perr != nil {
-			return nil, validationAt(t.path, "must be a time such as 2026-11-01T00:00:00Z.")
+			return nil, validationAt(
+				t.path,
+				"must be a date such as 2026-11-01, or a time such as 2026-11-01T00:00:00Z.",
+			)
 		}
 
 		*t.dst = &v
@@ -324,8 +329,11 @@ func (c svcClock) After(d time.Duration) <-chan time.Time { return time.After(d)
 // pubEnv is the service as the calendar sees it.
 type pubEnv struct{ s *svc }
 
-func (e pubEnv) Store() pub.Store           { return e.s.store.Publications() }
-func (e pubEnv) Now() time.Time             { return e.s.now() }
+func (e pubEnv) Store() pub.Store { return e.s.store.Publications() }
+
+// Now is the instant in the form the store keeps it, UTC to the millisecond, so that what a create answers is what
+// every later read answers (VV-285).
+func (e pubEnv) Now() time.Time             { return e.s.now().UTC().Truncate(time.Millisecond) }
 func (e pubEnv) NewID(prefix string) string { return e.s.newIDs(prefix) }
 
 func (e pubEnv) Actor(ctx context.Context) pub.Actor {

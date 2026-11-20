@@ -341,3 +341,30 @@ func TestItemStatus(t *testing.T) {
 		}
 	}
 }
+
+// VV-286: a date with no time is the start of that day in the zone.
+func TestParseBound(t *testing.T) {
+	t.Parallel()
+
+	for _, c := range []struct{ raw, zone, want string }{
+		{"2026-11-20", "", "2026-11-20T00:00:00Z"},
+		{"2026-11-20", "America/Sao_Paulo", "2026-11-20T03:00:00Z"},
+		{"2026-11-20T09:00", "America/Sao_Paulo", "2026-11-20T12:00:00Z"},
+		{"2026-11-20T09:00:00-03:00", "", "2026-11-20T12:00:00Z"},
+	} {
+		got, err := ParseBound(c.raw, c.zone)
+		if err != nil || !got.Equal(at(t, c.want)) {
+			t.Errorf("ParseBound(%q, %q) = %s, %v; want %s", c.raw, c.zone, got, err, c.want)
+		}
+	}
+
+	for _, bad := range []string{"tomorrow", "2026-13-40", "20-11-2026"} {
+		if _, err := ParseBound(bad, ""); err == nil {
+			t.Errorf("ParseBound(%q) was accepted", bad)
+		}
+	}
+
+	if _, err := ParseBound("2026-11-20", "Mars/Base"); err == nil {
+		t.Error("a bad zone was accepted")
+	}
+}
