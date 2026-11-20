@@ -36,6 +36,8 @@ func TestRules(t *testing.T) {
 		{"core stdlib", "core/timeval/a.go", "math/big", ""},
 		{"core own package", "core/command/a.go", mod + "/core/timeline", ""},
 		{"core pure library", "core/command/a.go", "github.com/santhosh-tekuri/jsonschema/v6", ""},
+		{"core unicode norm", "core/writing/a.go", "golang.org/x/text/unicode/norm", ""},
+		{"core other x/text", "core/writing/a.go", "golang.org/x/text/language", "core/ imports only"},
 		{"core third party", "core/command/a.go", "github.com/google/uuid", "core/ imports only"},
 		{"command imports plan", "core/command/a.go", mod + "/core/plan", "never imports core/plan"},
 		{"command test imports plan", "core/command/a_test.go", mod + "/core/plan", "never imports core/plan"},
