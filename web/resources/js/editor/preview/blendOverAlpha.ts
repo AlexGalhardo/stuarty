@@ -9,8 +9,14 @@ import { OVER_ALPHA_MODES, type OverAlphaMode, overAlphaName } from "./blend";
 // partly covered one. So when the project background is clear, these four modes are drawn by a filter
 // that reads the backdrop and evaluates that form in floating point, on the premultiplied values the
 // filter receives. Where the backdrop is opaque (`da == 255`) the filter takes the closed forms of SDD-004
-// section 3.8, as the export does. The GPU works in floats, so a pixel can differ from the export by a
+// section 3.8, as the export does; `overlay` uses its filter on an opaque canvas too, since the one of
+// `pixi.js/advanced-blend-modes` reads the premultiplied source as the straight one. The GPU works in floats, so a pixel can differ from the export by a
 // rounding step, inside the tolerance of ADR-0003.
+//
+// PixiJS draws the result of a filter over the backdrop with its `normal` blend (`ONE, ONE_MINUS_SRC_ALPHA`),
+// which adds `back x (1 - out.a)`. So the shader returns what that sum turns into the general form: the
+// colour `c x (1 - da) + a x da x B` with the alpha `a` (the blend adds the `d x (1 - a)` and the
+// `da x (1 - a)` terms), nothing where `a == 0`, and the closed form with alpha 1 over an opaque backdrop.
 
 // The backdrop counts as opaque from 254.5 / 255.
 const OPAQUE = "0.998";
@@ -76,23 +82,22 @@ export function glShader(mode: OverAlphaMode): {
 	const forms = FORMS[mode].gl;
 	return {
 		functions: `
-			vec3 blendOverAlpha(vec4 front, vec4 back)
+			vec4 blendOverAlpha(vec4 front, vec4 back)
 			{
 				float a = front.a;
 				float da = back.a;
 				vec3 c = front.rgb;
 				vec3 d = back.rgb;
-				if (a <= 0.0) return d;
-				if (da >= ${OPAQUE}) return min(${forms.opaque}, vec3(1.0));
+				if (a <= 0.0) return vec4(0.0);
+				if (da >= ${OPAQUE}) return vec4(min(${forms.opaque}, vec3(1.0)), 1.0);
 				vec3 s = min(c / a, vec3(1.0));
 				vec3 b = da > 0.0 ? min(d / da, vec3(1.0)) : vec3(0.0);
 				vec3 blended = ${forms.general};
-				return min(c * (1.0 - da) + d * (1.0 - a) + a * da * blended, vec3(1.0));
+				return vec4(c * (1.0 - da) + a * da * blended, a);
 			}
 		`,
 		main: `
-			float outAlpha = back.a >= ${OPAQUE} ? 1.0 : min(blendedAlpha, 1.0);
-			finalColor = vec4(blendOverAlpha(front, back), outAlpha) * uBlend;
+			finalColor = blendOverAlpha(front, back) * uBlend;
 		`,
 	};
 }
@@ -104,24 +109,23 @@ export function gpuShader(mode: OverAlphaMode): {
 	const forms = FORMS[mode].gpu;
 	return {
 		functions: `
-			fn blendOverAlpha(front: vec4<f32>, back: vec4<f32>) -> vec3<f32>
+			fn blendOverAlpha(front: vec4<f32>, back: vec4<f32>) -> vec4<f32>
 			{
 				let a = front.a;
 				let da = back.a;
 				let c = front.rgb;
 				let d = back.rgb;
-				if (a <= 0.0) { return d; }
-				if (da >= ${OPAQUE}) { return min(${forms.opaque}, vec3<f32>(1.0)); }
+				if (a <= 0.0) { return vec4<f32>(0.0); }
+				if (da >= ${OPAQUE}) { return vec4<f32>(min(${forms.opaque}, vec3<f32>(1.0)), 1.0); }
 				let s = min(c / a, vec3<f32>(1.0));
 				var b = vec3<f32>(0.0);
 				if (da > 0.0) { b = min(d / da, vec3<f32>(1.0)); }
 				let blended = ${forms.general};
-				return min(c * (1.0 - da) + d * (1.0 - a) + a * da * blended, vec3<f32>(1.0));
+				return vec4<f32>(c * (1.0 - da) + a * da * blended, a);
 			}
 		`,
 		main: `
-			let outAlpha = select(min(blendedAlpha, 1.0), 1.0, back.a >= ${OPAQUE});
-			out = vec4<f32>(blendOverAlpha(front, back), outAlpha) * blendUniforms.uBlend;
+			out = blendOverAlpha(front, back) * blendUniforms.uBlend;
 		`,
 	};
 }
