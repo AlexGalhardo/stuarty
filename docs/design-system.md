@@ -150,8 +150,9 @@ Method: OKLCH to linear sRGB (Björn Ottosson's matrices), gamut clamp, sRGB enc
 | `muted-foreground` on `ed-timeline` | 4.5 | 6.17 | 6.69 |
 | `primary-foreground` on `primary` | 4.5 | 5.35 | 11.21 |
 | `secondary-foreground` on `secondary` | 4.5 | 13.79 | 14.12 |
-| `destructive` on `background` | 4.5 | 6.08 | 7.58 |
-| `destructive` on its tint (`/10` light, `/20` dark) | 4.5 | 5.07 | 5.51 |
+| `destructive` on `background` | 4.5 | 6.08 | 8.26 |
+| `destructive` on its tint (`/10` light, `/20` dark) | 4.5 | 5.07 | 5.85 |
+| `destructive` on its tint over `popover` (the destructive button of a dialog or a menu; it set the dark `--destructive` to `oklch(0.790 0.170 16.4)`, 4.34:1 at `0.750`) | 4.5 | 5.56 | 4.59 |
 | `success` on `background` | 4.5 | 5.59 | 8.29 |
 | `warning` on `background` | 4.5 | 6.37 | 8.80 |
 | `info` on `background` | 4.5 | 4.86 | 10.44 |

@@ -101,7 +101,7 @@ export default function Frame({
 			{failed && (
 				<div
 					role="alert"
-					className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-2 bg-destructive px-2 py-1 text-xs text-white"
+					className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-2 bg-destructive px-2 py-1 text-xs text-white dark:text-background"
 				>
 					<span>{t("ui.image.canvas.failed")}</span>
 					<button
