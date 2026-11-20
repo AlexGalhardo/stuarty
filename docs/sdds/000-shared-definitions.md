@@ -521,7 +521,7 @@ The operations of the registry of domain `image` (`core/command` registry built 
 | `L_IMAGE_EMPTY_SLOT`, `L_IMAGE_TEXT_OUTSIDE`, `L_IMAGE_TEXT_SMALL`, `L_IMAGE_LOW_CONTRAST`, `L_IMAGE_UPSCALED` | lint code | the rules of SDD-021 section 8; the first blocks an export |
 | `png`, `jpeg`, `webp` | image export format | the formats of `ImageExport` |
 | `E_SLOT` `details.reason` `unknown_slot`, `wrong_kind`, `invalid_value`, `missing` | error detail | a template filled badly (SDD-021 section 7) |
-| `E_EXPORT_FAILED` `details.reason` `webp_unavailable` | error detail | no WebP encoder is wired (SDD-021 §6) |
+| `E_EXPORT_FAILED` `details.reason` `webp_unavailable` | error detail | the FFmpeg in use has no `libwebp` encoder, or there is no FFmpeg (SDD-021 §6) |
 
 ## 15. Export presets, codecs and batches (SDD-004 sections 8.2 to 8.4)
 
