@@ -53,6 +53,7 @@ function fromEntry(entry: HistoryEntry): HistoryRow {
 		actor: entry.actor,
 		at: entry.at,
 		kind: entry.kind,
+		description: entry.description,
 		ops: entry.ops,
 		changes: entry.changes,
 		undone: entry.undone_by !== null && entry.undone_by !== undefined,
