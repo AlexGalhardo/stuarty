@@ -617,6 +617,12 @@ func (s *svc) planDuplicate(
 
 	newProject := s.newIDs(timeline.PrefixProject)
 
+	// The copies are written once every timeline has its new id, so that a composition of the copy names the
+	// copy of its timeline and not the timeline of the original (SDD-001 §3.5.1).
+	var docs []*timeline.Document
+
+	renamed := map[string]string{}
+
 	for i := range rows {
 		r := &rows[i]
 		if r.State != ProjectActive {
@@ -642,18 +648,18 @@ func (s *svc) planDuplicate(
 			}
 
 			id := newProject
-			if len(plan.timelines) > 0 {
+			if len(docs) > 0 {
 				id = s.newIDs(timeline.PrefixProject)
 			} else {
 				it.Title = name
 			}
 
 			doc.ID = id
-			if len(plan.timelines) == 0 {
+			if len(docs) == 0 {
 				doc.Name = name
 			}
 
-			plan.timelines = append(plan.timelines, s.timelineRow(doc, c, owner, now))
+			docs, renamed[r.Ref] = append(docs, doc), id
 
 			it.Ref = id
 
@@ -672,6 +678,11 @@ func (s *svc) planDuplicate(
 		}
 
 		plan.items = append(plan.items, it)
+	}
+
+	for _, doc := range docs {
+		timeline.RenameCompositions(doc, renamed)
+		plan.timelines = append(plan.timelines, s.timelineRow(doc, c, owner, now))
 	}
 
 	if len(plan.timelines) == 0 {
