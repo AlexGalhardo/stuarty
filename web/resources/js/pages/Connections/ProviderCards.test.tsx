@@ -33,6 +33,7 @@ const messages = {
 	"ui.providers.price_unit.image": "Per image: {amount} ({source})",
 	"ui.providers.price_unit.mchar":
 		"Per million characters: {amount} ({source})",
+	"ui.providers.price_unit.second": "Per second of video: {amount} ({source})",
 	"ui.providers.source.user": "your price",
 	"ui.providers.source.catalogue": "published by the provider",
 	"ui.providers.source.none": "none",
@@ -266,6 +267,28 @@ describe("a model row", () => {
 			</ul>,
 		);
 		expect(wrongUnit).toContain("No price yet.");
+	});
+
+	test("prices a video model per second (epic 11)", () => {
+		const html = wrap(
+			<ul>
+				<ModelRow
+					model={model({
+						capability: "video",
+						price: {
+							currency: "USD",
+							input_micros_per_mtok: 0,
+							output_micros_per_mtok: 0,
+							unit: "second",
+							unit_micros: 400_000,
+						},
+						price_source: "user",
+					})}
+					onPrice={() => Promise.resolve()}
+				/>
+			</ul>,
+		);
+		expect(html).toContain("Per second of video: $0.40");
 	});
 });
 
