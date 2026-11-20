@@ -35,8 +35,9 @@ const (
 	// The backoff of the polling: the first wait, doubled up to the largest (a provider may say its own).
 	videoPollFirst = 2 * time.Second
 	videoPollMax   = 30 * time.Second
-	// videoPollFloor and videoPollCeiling bound the wait a provider asks for.
-	videoPollFloor   = 10 * time.Millisecond
+	// videoPollFloor and videoPollCeiling bound the wait a provider asks for: a provider that asks for no wait
+	// is polled once a second at most, never in a tight loop for the 30 minutes of a run.
+	videoPollFloor   = time.Second
 	videoPollCeiling = 60 * time.Second
 	// videoPollFailures is how many polls in a row may fail for a reason that may pass before the job fails.
 	videoPollFailures = 5
@@ -440,12 +441,9 @@ func (s *svc) waitVideo(
 			}
 		}
 
-		next := wait
-		if st.PollAfter > 0 {
-			next = min(max(st.PollAfter, videoPollFloor), videoPollCeiling)
-		} else {
-			wait = min(wait*2, videoPollMax)
-		}
+		var next time.Duration
+
+		next, wait = nextPoll(st.PollAfter, wait)
 
 		select {
 		case <-ctx.Done():
@@ -453,6 +451,16 @@ func (s *svc) waitVideo(
 		case <-time.After(next):
 		}
 	}
+}
+
+// nextPoll is the wait before the next poll and the backoff after it: the wait the provider asked for, kept between
+// videoPollFloor and videoPollCeiling, or else the backoff, which doubles up to videoPollMax.
+func nextPoll(asked, backoff time.Duration) (next, after time.Duration) {
+	if asked > 0 {
+		return min(max(asked, videoPollFloor), videoPollCeiling), backoff
+	}
+
+	return backoff, min(backoff*2, videoPollMax)
 }
 
 // pollMayPass says whether a failed poll may be tried again: a rate limit, an unavailable provider or a request
