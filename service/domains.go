@@ -15,6 +15,10 @@ var OperationDomains = map[string]string{
 	"BriefingQuestions": command.DomainProject, "BriefingAnswer": command.DomainProject,
 	"ProjectBundleExport": command.DomainProject, "ProjectBundleImport": command.DomainProject,
 
+	"TextList": command.DomainWriting, "TextGet": command.DomainWriting, "TextWrite": command.DomainWriting,
+	"TextRevisions": command.DomainWriting, "TextRevert": command.DomainWriting, "TextDraft": command.DomainWriting,
+	"CaptionValidate": command.DomainWriting, "ScriptEstimate": command.DomainWriting,
+
 	"Edit": command.DomainVideo, "HistoryList": command.DomainVideo, "Undo": command.DomainVideo,
 	"HistoryRevert": command.DomainVideo, "HistoryDiff": command.DomainVideo,
 	"CheckpointCreate": command.DomainVideo, "CheckpointList": command.DomainVideo,

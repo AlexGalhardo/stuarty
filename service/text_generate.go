@@ -46,6 +46,9 @@ type TextResult struct {
 	InputTokens  int        `json:"input_tokens"`
 	OutputTokens int        `json:"output_tokens"`
 	Cost         core.Money `json:"cost"`
+	// ItemID and Revision are set by a text.draft job: the text and the revision the draft was written as.
+	ItemID   string `json:"item_id,omitempty"`
+	Revision int    `json:"revision,omitempty"`
 }
 
 // textInput is the input column of a text.generate job: what was asked, and the price the person saw,

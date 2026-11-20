@@ -268,6 +268,25 @@ The types named in the tables of the operations. The arguments of each editing c
 | `untrusted_notice` | `string` | no |  |
 | `updated_at` | `string (date-time)` or `null` | no |  |
 
+### CaptionCounts
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `hashtags` | `integer` | no |  |
+| `length` | `integer` | no |  |
+| `links` | `integer` | no |  |
+| `mentions` | `integer` | no |  |
+
+### CaptionProblem
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `actual` | `integer` | no |  |
+| `code` | `string` | no |  |
+| `limit` | `integer` | no |  |
+| `message` | `string` | no |  |
+| `unit` | `string` | no |  |
+
 ### CaptionStyle
 
 | Name | Type | Required | Description |
@@ -293,6 +312,30 @@ The types named in the tables of the operations. The arguments of each editing c
 | `stroke_color` | `string` or `null` | no |  |
 | `stroke_width` | `number (double)` or `null` | no |  |
 | `uppercase` | `boolean` or `null` | no |  |
+
+### CaptionValidateResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `ok` | `boolean` | no |  |
+| `project_id` | `string` | no |  |
+| `text` | `string` | no |  |
+| `untrusted_notice` | `string` | no |  |
+| `variants` | array of [`CaptionVariantReport`](/docs/api/schemas#captionvariantreport) | no |  |
+
+### CaptionVariantReport
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `counts` | [`CaptionCounts`](/docs/api/schemas#captioncounts) | no |  |
+| `links_clickable` | `boolean` | no |  |
+| `max_length` | `integer` | no |  |
+| `name` | `string` | no |  |
+| `network` | `string` | no |  |
+| `ok` | `boolean` | no |  |
+| `problems` | array of [`CaptionProblem`](/docs/api/schemas#captionproblem) | no |  |
+| `unit` | `string` | no |  |
+| `words` | `integer` | no |  |
 
 ### CeilingView
 
@@ -1954,6 +1997,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `outputs` | `integer` | no |  |
 | `pending_approvals` | `integer` | no |  |
 | `published` | `integer` | no |  |
+| `texts` | `integer` | no |  |
 | `timelines` | `integer` | no |  |
 
 ### Profile
@@ -2041,6 +2085,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `position` | `integer` | no |  |
 | `state` | `string` | no |  |
 | `text` | `string` | no |  |
+| `text_kind` | `string` | no |  |
 | `timeline_id` | `string` | no |  |
 | `title` | `string` | no |  |
 | `updated_at` | `string (date-time)` | no |  |
@@ -2301,6 +2346,29 @@ The types named in the tables of the operations. The arguments of each editing c
 | `per_day_micros` | `integer (int64)` or `null` | no |  |
 | `per_item_micros` | `integer (int64)` or `null` | no |  |
 | `project_id` | `string` or `null` | no |  |
+
+### SceneEstimate
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `duration_ms` | `integer (int64)` | no |  |
+| `on_screen_words` | `integer` | no |  |
+| `title` | `string` | no |  |
+| `words` | `integer` | no |  |
+
+### ScriptEstimateResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `duration_ms` | `integer (int64)` | no |  |
+| `on_screen_words` | `integer` | no |  |
+| `plain` | `boolean` | no |  |
+| `project_id` | `string` | no |  |
+| `scenes` | array of [`SceneEstimate`](/docs/api/schemas#sceneestimate) | no |  |
+| `text` | `string` | no |  |
+| `untrusted_notice` | `string` | no |  |
+| `words` | `integer` | no |  |
+| `words_per_minute` | `integer` | no |  |
 
 ### Settings
 
@@ -2626,6 +2694,56 @@ The types named in the tables of the operations. The arguments of each editing c
 | `template_id` | `string` | no |  |
 | `width` | `integer` | no |  |
 
+### TextDiff
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `coarse` | `boolean` | no |  |
+| `hunks` | array of [`TextHunk`](/docs/api/schemas#texthunk) | no |  |
+
+### TextGetResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `body` | `string` | no |  |
+| `item` | [`TextItem`](/docs/api/schemas#textitem) | no |  |
+| `project_id` | `string` | no |  |
+| `revision` | [`TextRevision`](/docs/api/schemas#textrevision) | no |  |
+| `text` | `string` | no |  |
+| `untrusted_notice` | `string` | no |  |
+
+### TextHunk
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `op` | `string` | no |  |
+| `text` | `string` | no |  |
+
+### TextItem
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `id` | `string` | no |  |
+| `project_id` | `string` | no |  |
+| `project_name` | `string` | no |  |
+| `revision` | `integer` | no |  |
+| `state` | `string` | no |  |
+| `text_kind` | `string` | no |  |
+| `title` | `string` | no |  |
+| `updated_at` | `string (date-time)` | no |  |
+| `updated_by` | `string` | no |  |
+| `words` | `integer` | no |  |
+
+### TextListResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `next_cursor` | `string` | no |  |
+| `project_id` | `string` | no |  |
+| `text` | `string` | no |  |
+| `texts` | array of [`TextItem`](/docs/api/schemas#textitem) | no |  |
+| `untrusted_notice` | `string` | no |  |
+
 ### TextResult
 
 | Name | Type | Required | Description |
@@ -2633,10 +2751,52 @@ The types named in the tables of the operations. The arguments of each editing c
 | `cost` | [`Money`](/docs/api/schemas#money) | no |  |
 | `finish_reason` | `string` | no |  |
 | `input_tokens` | `integer` | no |  |
+| `item_id` | `string` | no |  |
 | `model` | `string` | no |  |
 | `output_tokens` | `integer` | no |  |
 | `provider` | `string` | no |  |
+| `revision` | `integer` | no |  |
 | `text` | `string` | no |  |
+
+### TextRevision
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `actor` | `string` | no |  |
+| `cost` | [`Money`](/docs/api/schemas#money) or `any` or `null` or `null` | no |  |
+| `created_at` | `string (date-time)` | no |  |
+| `job_id` | `string` | no |  |
+| `model` | `string` | no |  |
+| `provider` | `string` | no |  |
+| `reverted_to` | `integer` or `null` | no |  |
+| `revision` | `integer` | no |  |
+| `source` | `string` | no |  |
+
+### TextRevisionsResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `diff` | [`TextDiff`](/docs/api/schemas#textdiff) or `any` or `null` or `null` | no |  |
+| `diff_from` | `integer` | no |  |
+| `diff_to` | `integer` | no |  |
+| `item_id` | `string` | no |  |
+| `next_before` | `integer` | no |  |
+| `project_id` | `string` | no |  |
+| `revisions` | array of [`TextRevision`](/docs/api/schemas#textrevision) | no |  |
+| `text` | `string` | no |  |
+| `untrusted_notice` | `string` | no |  |
+
+### TextWriteResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `changed` | `boolean` | no |  |
+| `created` | `boolean` | no |  |
+| `item` | [`TextItem`](/docs/api/schemas#textitem) | no |  |
+| `project_id` | `string` | no |  |
+| `revision` | [`TextRevision`](/docs/api/schemas#textrevision) | no |  |
+| `text` | `string` | no |  |
+| `untrusted_notice` | `string` | no |  |
 
 ### TimeRange
 

@@ -141,6 +141,20 @@
       ]
     },
     {
+      "tag": "Writing",
+      "pages": [
+        "captions.validate",
+        "texts.create",
+        "texts.get",
+        "texts.write",
+        "texts.draft",
+        "texts.revert",
+        "texts.revisions",
+        "scripts.estimate",
+        "texts.list"
+      ]
+    },
+    {
       "tag": "Connections",
       "pages": [
         "connections.list",

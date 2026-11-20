@@ -249,6 +249,8 @@ A file a provider returns is checked before it becomes an asset, by `provider.Ch
 
 ## 6. The job `text.generate`
 
+Epic 17 registers a second kind of the same shape, `text.draft` (SDD-019 section 6): it is `text.generate` with a prompt that `core/writing` builds from the brief, the current text and an instruction, and with a text to put the answer in as a new revision. It has the estimate, the summary, the ceilings, the approval and the ledger described here, and its result is the result of this section with `item_id` and `revision`.
+
 `text.generate` is registered in `service.Options.JobKinds` by the service when a provider registry is configured (SDD-015 section 5). Its scope is `edit` (it writes text into a project). Its arguments (`JobStartRequest.Args`, and the body of `TextGenerate`):
 
 | Argument | Rule |

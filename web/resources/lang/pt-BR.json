@@ -185,6 +185,7 @@
         "item_title": "Título",
         "item_text": "Texto",
         "rename_title": "Renomear item",
+        "write": "Escrever",
         "move_up": "Mover para cima",
         "move_down": "Mover para baixo",
         "kind": {
@@ -2733,6 +2734,128 @@
         "use_in": "Usar em um projeto",
         "use": "Usar",
         "used": "Adicionado ao projeto. Nenhuma cópia foi feita."
+      }
+    },
+    "write": {
+      "title": "Escrever",
+      "intro": "Roteiros, textos e legendas das suas produções, escritos por você ou com um modelo. Cada salvamento é uma revisão à qual você pode voltar.",
+      "filter": {
+        "project": "Projeto",
+        "kind": "Tipo",
+        "all_projects": "Todos os projetos",
+        "all_kinds": "Todos os tipos"
+      },
+      "kind": {
+        "script": "Roteiro",
+        "copy": "Texto",
+        "caption": "Legenda"
+      },
+      "new": "Novo texto",
+      "new_form": {
+        "title": "Novo texto",
+        "project": "Projeto",
+        "name": "Título",
+        "kind": "Tipo",
+        "create": "Criar",
+        "cancel": "Cancelar",
+        "no_projects": "Crie um projeto primeiro."
+      },
+      "list": {
+        "label": "Textos",
+        "loading": "Carregando.",
+        "failed": "Não foi possível carregar os textos.",
+        "empty": "Nenhum texto ainda.",
+        "row": "Revisão {revision}, {words} palavras",
+        "more": "Mais",
+        "in_project": "em {project}"
+      },
+      "pick": "Escolha um texto ou crie um novo.",
+      "editor": {
+        "title": "Título",
+        "body": "Texto (Markdown)",
+        "tab_edit": "Escrever",
+        "tab_preview": "Pré-visualização",
+        "preview_label": "Pré-visualização do texto",
+        "preview_empty": "Ainda não há nada para mostrar.",
+        "save": "Salvar",
+        "saving": "Salvando.",
+        "saved": "Salvo como revisão {revision}.",
+        "unchanged": "Nada mudou: continua na revisão {revision}.",
+        "unsaved": "Alterações não salvas",
+        "loading": "Carregando o texto.",
+        "conflict": "Alguém salvou a revisão {revision} depois que você abriu este texto. Suas alterações continuam aqui.",
+        "reload": "Ler a revisão mais recente"
+      },
+      "script": {
+        "heading": "Duração",
+        "pace": "Palavras por minuto",
+        "result": "Cerca de {duration} lido em voz alta a {pace} palavras por minuto.",
+        "words": "{words} palavras faladas, {screen} na tela.",
+        "scenes": "Cenas",
+        "scene_line": "{title}: {words} palavras, {duration}",
+        "untitled": "Antes do primeiro título",
+        "plain": "Nenhuma linha VO: foi encontrada, então todo parágrafo conta como narração.",
+        "empty": "Escreva a narração para ver quanto tempo ela leva."
+      },
+      "caption": {
+        "heading": "Redes",
+        "common": "Texto comum",
+        "count": "{length} de {max} {unit}",
+        "count_free": "{length} {unit}, sem limite publicado",
+        "hashtags": "{count} hashtags",
+        "mentions": "{count} menções",
+        "links": "{count} links",
+        "links_dead": "Os links não são clicáveis nesta rede.",
+        "ok": "Dentro dos limites",
+        "hint": "Comece a parte de uma rede com uma linha como ## instagram. As redes são youtube, instagram, facebook, x e tiktok.",
+        "empty": "Escreva a legenda para ver os contadores.",
+        "unit": {
+          "bytes": "bytes UTF-8",
+          "characters": "caracteres",
+          "utf16_units": "unidades UTF-16",
+          "weighted": "caracteres ponderados"
+        }
+      },
+      "revisions": {
+        "heading": "Revisões",
+        "loading": "Carregando as revisões.",
+        "source": {
+          "created": "criada",
+          "write": "salva",
+          "generated": "rascunhada por um modelo",
+          "revert": "voltou"
+        },
+        "line": "Revisão {revision}, {source} por {actor}",
+        "reverted_to": "de volta à revisão {revision}",
+        "model_line": "{provider}, {model}, custo {cost}",
+        "read": "Ler",
+        "compare": "Comparar com a anterior",
+        "back": "Voltar para esta revisão",
+        "went_back": "Voltou para a revisão {from}: agora é a revisão {revision}.",
+        "diff_heading": "Mudanças da revisão {from} para a {to}",
+        "diff_added": "Adicionado",
+        "diff_removed": "Removido",
+        "diff_none": "Nenhum parágrafo mudou.",
+        "diff_coarse": "Os textos são longos demais para comparar parágrafo a parágrafo; um aparece inteiro contra o outro inteiro."
+      },
+      "draft": {
+        "heading": "Rascunho com um modelo",
+        "intro": "Um modelo escreve um rascunho como uma nova revisão. Você vê o custo estimado antes, e o rascunho espera a sua aprovação.",
+        "connection": "Conexão",
+        "model": "Modelo",
+        "instruction": "O que escrever",
+        "network": "Rede",
+        "whole": "A legenda inteira",
+        "estimate": "Estimar o custo",
+        "start": "Pedir o rascunho",
+        "estimated": "Custo estimado: {cost}.",
+        "waiting": "Esperando a sua aprovação.",
+        "open_approvals": "Abrir a fila de aprovações",
+        "running": "O modelo está escrevendo.",
+        "done": "O rascunho é a revisão {revision}. Custou {cost}.",
+        "failed": "O rascunho falhou.",
+        "no_connection": "Conecte primeiro um provedor de IA que escreva texto.",
+        "open_connections": "Abrir Conexões"
       }
     },
     "library": {
