@@ -809,6 +809,29 @@ The types named in the tables of the operations. The arguments of each editing c
 | `fonts` | array of [`FontFamily`](/docs/api/schemas#fontfamily) | no |  |
 | `imported` | array of [`ImportedFont`](/docs/api/schemas#importedfont) | no |  |
 
+### GeneratedItem
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `asset_id` | `string` | no |  |
+| `bytes` | `integer (int64)` | no |  |
+| `hash` | `string` | no |  |
+| `kind` | `string` | no |  |
+| `revised_prompt` | `string` | no |  |
+| `state` | `string` | no |  |
+
+### GeneratedResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `cost` | [`Money`](/docs/api/schemas#money) | no |  |
+| `delivered` | `integer` | no |  |
+| `items` | array of [`GeneratedItem`](/docs/api/schemas#generateditem) | no |  |
+| `model` | `string` | no |  |
+| `notes` | array of `string` | no |  |
+| `provider` | `string` | no |  |
+| `requested` | `integer` | no |  |
+
 ### GradeSpec
 
 | Name | Type | Required | Description |
@@ -1233,6 +1256,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | --- | --- | --- | --- |
 | `batch` | [`BatchResult`](/docs/api/schemas#batchresult) or `any` or `null` or `null` | no |  |
 | `export` | [`ExportResult`](/docs/api/schemas#exportresult) or `any` or `null` or `null` | no |  |
+| `generated` | [`GeneratedResult`](/docs/api/schemas#generatedresult) or `any` or `null` or `null` | no |  |
 | `publish` | [`PublishResult`](/docs/api/schemas#publishresult) or `any` or `null` or `null` | no |  |
 | `text` | [`TextResult`](/docs/api/schemas#textresult) or `any` or `null` or `null` | no |  |
 | `transcribe` | [`TranscribeResult`](/docs/api/schemas#transcriberesult) or `any` or `null` or `null` | no |  |
@@ -1636,6 +1660,7 @@ The types named in the tables of the operations. The arguments of each editing c
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
+| `capability` | `string` | no |  |
 | `context_tokens` | `integer` | no |  |
 | `id` | `string` | no |  |
 | `name` | `string` | no |  |
@@ -1846,6 +1871,8 @@ The types named in the tables of the operations. The arguments of each editing c
 | `currency` | `string` | no |  |
 | `input_micros_per_mtok` | `integer (int64)` | no |  |
 | `output_micros_per_mtok` | `integer (int64)` | no |  |
+| `unit` | `string` | no |  |
+| `unit_micros` | `integer (int64)` | no |  |
 
 ### PriceEntry
 
@@ -1856,6 +1883,8 @@ The types named in the tables of the operations. The arguments of each editing c
 | `model` | `string` | no |  |
 | `output_micros_per_mtok` | `integer (int64)` | no |  |
 | `provider` | `string` | no |  |
+| `unit` | `string` | no |  |
+| `unit_micros` | `integer (int64)` | no |  |
 
 ### Primitive
 
@@ -2781,6 +2810,23 @@ The types named in the tables of the operations. The arguments of each editing c
 | `detail` | `string` | no |  |
 | `name` | `string` | no |  |
 | `ok` | `boolean` | no |  |
+
+### VoiceListResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `connection_id` | `string` | no |  |
+| `provider` | `string` | no |  |
+| `voices` | array of [`VoiceView`](/docs/api/schemas#voiceview) | no |  |
+
+### VoiceView
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `id` | `string` | no |  |
+| `language` | `string` | no |  |
+| `name` | `string` | no |  |
+| `source` | `string` | no |  |
 
 ### Wheel
 
