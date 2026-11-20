@@ -42,7 +42,7 @@ Not in progress together with 51 (both change `engine/audio` and SDD-004 section
 
 ## Tasks
 
-- [ ] 1. Decide and specify the audio rule of a sped-up bus (pitch kept or not) and the child frame mapping, in SDD-004 sections 3.3, 3.11 and 7; amend SDD-002 (section B.5 and C.25), SDD-001 (section 3.5) and SDD-012 (the Speed section). Verify: `task lint:md` exits 0. **STOP** if the decision is not given.
+- [x] 1. Decide and specify the audio rule of a sped-up bus (pitch kept or not) and the child frame mapping, in SDD-004 sections 3.3, 3.11 and 7; amend SDD-002 (section B.5 and C.25), SDD-001 (section 3.5) and SDD-012 (the Speed section). Verify: `task lint:md` exits 0. **STOP** if the decision is not given.
 - [ ] 2. The command: accept a constant speed on a composition clip; refuse a curve and a reverse with stable errors; golden cases. Verify: `go test ./core/command/... -run TestCompositionSpeed` passes.
 - [ ] 3. The plan: the child frame mapping, with golden plans. Verify: `go test ./core/plan/... -run TestCompositionSpeed` passes.
 - [ ] 4. Audio: the nested bus under the rule of task 1, with a golden WAV. Verify: `go test ./engine/audio/... -run TestCompositionSpeedMix` passes.
