@@ -89,7 +89,8 @@ var jobID = regexp.MustCompile(`job_[0-9a-hjkmnp-tv-z]{10}`)
 var mcpSession = regexp.MustCompile(`(local:contract)-[0-9a-hjkmnp-tv-z]{6}\b`)
 
 // templateID is the identifier a saved template is given: the Service makes it,
-// so a scenario reads it back as "$template:0", the first one a result named.
+// so a scenario reads it back as "$template:0", the first one a result named, or, robustly, by the
+// template name as "$template:name=Quote card" (the built-in templates come first and may grow).
 var templateID = regexp.MustCompile(`tpl_[0-9a-hjkmnp-tv-z]{10}`)
 
 // itemID is the identifier of a project item (SDD-000 section 2), read back as "$item:n".
@@ -230,6 +231,9 @@ func run(t *testing.T, d driver, steps []step, fixtures map[string]string) []out
 	// because the server chooses them.
 	var jobs, templates, bundles, imported, timelines, items []string
 
+	// templateByName maps the name of each template a result named to its id.
+	templateByName := map[string]string{}
+
 	for i, s := range steps {
 		s = withFixtures(t, d, s, fixtures)
 
@@ -243,6 +247,10 @@ func run(t *testing.T, d driver, steps []step, fixtures map[string]string) []out
 
 		for n, id := range templates {
 			s.Args = json.RawMessage(strings.ReplaceAll(string(s.Args), `"$template:`+strconv.Itoa(n)+`"`, `"`+id+`"`))
+		}
+
+		for name, id := range templateByName {
+			s.Args = json.RawMessage(strings.ReplaceAll(string(s.Args), `"$template:name=`+name+`"`, `"`+id+`"`))
 		}
 
 		for n, id := range items {
@@ -299,6 +307,8 @@ func run(t *testing.T, d driver, steps []step, fixtures map[string]string) []out
 				}
 			}
 
+			learnTemplateNames(raw, templateByName)
+
 			// The text items a result named, in order: a scenario of the writing domain reads the first as "$item:0".
 			for _, id := range itemID.FindAllString(string(raw), -1) {
 				if !slices.Contains(items, id) {
@@ -321,6 +331,39 @@ func run(t *testing.T, d driver, steps []step, fixtures map[string]string) []out
 	}
 
 	return out
+}
+
+// learnTemplateNames records, for every object of a result that has a "template_id" and a name, the
+// id under the name, so a scenario can pick a template by name instead of by position.
+func learnTemplateNames(raw json.RawMessage, into map[string]string) {
+	var v any
+	if json.Unmarshal(raw, &v) != nil {
+		return
+	}
+
+	var walk func(any)
+
+	walk = func(x any) {
+		switch x := x.(type) {
+		case map[string]any:
+			id, _ := x["template_id"].(string)
+			name, _ := x["name"].(string)
+
+			if templateID.MatchString(id) && name != "" {
+				into[name] = id
+			}
+
+			for _, e := range x {
+				walk(e)
+			}
+		case []any:
+			for _, e := range x {
+				walk(e)
+			}
+		}
+	}
+
+	walk(v)
 }
 
 // finalDocument is the canonical bytes of the document of the project, read

@@ -37,7 +37,7 @@
 		{"call": "JobGet", "args": {"job_id": "$job:2", "wait_ms": 25000}, "settles": true},
 		{"call": "JobGet", "args": {"job_id": "$job:2", "wait_ms": 25000}},
 		{"call": "TemplateList", "args": {}},
-		{"call": "TemplateInstantiate", "args": {"template_id": "$template:0", "name": "Quote card", "id": "prj_6t4y2w8j1m", "fill": {
+		{"call": "TemplateInstantiate", "args": {"template_id": "$template:name=Quote card", "name": "Quote card", "id": "prj_6t4y2w8j1m", "fill": {
 			"quote": {"text": "Edit with an agent."}, "author": {"text": "Stuarty"}}}},
 		{"call": "JobStart", "args": {"project_id": "prj_6t4y2w8j1m", "kind": "export", "wait_ms": 25000}, "settles": true},
 		{"call": "JobGet", "args": {"job_id": "$job:3", "wait_ms": 25000}, "settles": true},
@@ -47,7 +47,7 @@
 		{"call": "JobGet", "args": {"job_id": "$job:3", "wait_ms": 25000}, "settles": true},
 		{"call": "JobGet", "args": {"job_id": "$job:3", "wait_ms": 25000}, "settles": true},
 		{"call": "JobGet", "args": {"job_id": "$job:3", "wait_ms": 25000}},
-		{"call": "TemplateInstantiate", "args": {"template_id": "$template:1", "name": "Product teaser", "id": "prj_3d5f7h9k2n", "fill": {
+		{"call": "TemplateInstantiate", "args": {"template_id": "$template:name=Product teaser", "name": "Product teaser", "id": "prj_3d5f7h9k2n", "fill": {
 			"shot_1": {"asset_id": "ast_3c5v8n2w6d"}, "music": {"asset_id": "ast_3c5v8n2w6d"}, "shot_2": {"asset_id": "ast_3c5v8n2w6d", "source_in": "5s"},
 			"headline": {"text": "Meet the new editor"}, "call_to_action": {"text": "Try it today"}}}},
 		{"call": "JobStart", "args": {"project_id": "prj_3d5f7h9k2n", "kind": "export", "wait_ms": 25000}, "settles": true},
@@ -58,7 +58,7 @@
 		{"call": "JobGet", "args": {"job_id": "$job:4", "wait_ms": 25000}, "settles": true},
 		{"call": "JobGet", "args": {"job_id": "$job:4", "wait_ms": 25000}, "settles": true},
 		{"call": "JobGet", "args": {"job_id": "$job:4", "wait_ms": 25000}},
-		{"call": "TemplateInstantiate", "args": {"template_id": "$template:2", "name": "Vertical cut", "id": "prj_8c4v6x2z5b", "fill": {
+		{"call": "TemplateInstantiate", "args": {"template_id": "$template:name=Vertical cut with captions", "name": "Vertical cut", "id": "prj_8c4v6x2z5b", "fill": {
 			"clip": {"asset_id": "ast_3c5v8n2w6d"},
 			"subtitles": {"words": [{"text": "Hello", "start": "0.1s", "duration": "0.3s"}, {"text": "brave", "start": "0.4s", "duration": "0.3s"}, {"text": "new", "start": "1.1s", "duration": "0.3s"}, {"text": "world", "start": "1.4s", "duration": "0.5s"}]}}}},
 		{"call": "JobStart", "args": {"project_id": "prj_8c4v6x2z5b", "kind": "export", "wait_ms": 25000}, "settles": true},

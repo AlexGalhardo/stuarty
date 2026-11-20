@@ -10,7 +10,7 @@
 			{"op": "slot.mark", "args": {"item_id": "itm_t1t2t3t4t5", "name": "headline", "description": "The headline"}}]}},
 		{"call": "TemplateSave", "args": {"project_id": "prj_7k2m9x4q1b", "name": "Spring sale", "description": "A sale teaser"}},
 		{"call": "TemplateList", "args": {}},
-		{"call": "TemplateInstantiate", "args": {"template_id": "$template:0", "name": "Spring sale", "id": "prj_6t4y2w8j1m"}},
+		{"call": "TemplateInstantiate", "args": {"template_id": "$template:name=Spring sale", "name": "Spring sale", "id": "prj_6t4y2w8j1m"}},
 		{"call": "JobStart", "args": {"project_id": "prj_6t4y2w8j1m", "kind": "export", "wait_ms": 20000}, "expect_error": {"code": "E_LINT_BLOCKING"}},
 		{"call": "Edit", "args": {"project_id": "prj_6t4y2w8j1m", "base_revision": 0, "operations": [
 			{"op": "slot.fill", "args": {"name": "headline", "text": "Spring sale"}}]}},
