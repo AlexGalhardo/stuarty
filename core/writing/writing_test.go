@@ -6,10 +6,6 @@ import (
 	"testing"
 )
 
-// composeAcute stands for the NFC of the service in the tests of core/ (which may not import the Unicode tables):
-// it composes e and a combining acute accent, the one decomposed pair these tests write.
-func composeAcute(s string) string { return strings.ReplaceAll(s, "e\U00000301", "\U000000E9") }
-
 func codes(r CaptionReport) []string {
 	out := make([]string, len(r.Problems))
 	for i := range r.Problems {
@@ -46,7 +42,7 @@ func TestCaptionLengthLimitsAtTheirBoundary(t *testing.T) {
 			}
 
 			for _, delta := range []int{-1, 0, 1} {
-				r := ValidateCaption(strings.Repeat(tc.unitStr, tc.limit+delta), tc.network, composeAcute)
+				r := ValidateCaption(strings.Repeat(tc.unitStr, tc.limit+delta), tc.network)
 				over := slices.Contains(codes(r), ProblemTooLong)
 
 				if over != (delta > 0) {
@@ -81,7 +77,7 @@ func TestCaptionUnitsDiffer(t *testing.T) {
 
 	want := map[string]int{"youtube": 4, "instagram": 1, "facebook": 1, "tiktok": 2, "x": 2}
 	for network, length := range want {
-		if got := ValidateCaption(e, network, composeAcute).Counts.Length; got != length {
+		if got := ValidateCaption(e, network).Counts.Length; got != length {
 			t.Errorf("%s counts the emoji as %d, want %d", network, got, length)
 		}
 	}
@@ -118,17 +114,17 @@ func TestCaptionWeightedCountOfX(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		if got := ValidateCaption(tc.text, "x", composeAcute).Counts.Length; got != tc.want {
+		if got := ValidateCaption(tc.text, "x").Counts.Length; got != tc.want {
 			t.Errorf("%s: %q weighs %d, want %d", tc.name, tc.text, got, tc.want)
 		}
 	}
 
-	// The count is made on what the normalizer returns, and only X counts after NFC.
-	if got := ValidateCaption("e\U00000301", "x", nil).Counts.Length; got != 2 {
-		t.Errorf("without a normalizer the decomposed pair weighs %d, want 2", got)
+	// Only X counts after NFC: 280 decomposed e-acute are 280 on X, and Instagram counts the code points as written.
+	if got := ValidateCaption(strings.Repeat("e\U00000301", 280), "x"); !got.OK || got.Counts.Length != 280 {
+		t.Errorf("X after NFC: %+v", got)
 	}
 
-	if got := ValidateCaption("e\U00000301", "instagram", composeAcute).Counts.Length; got != 2 {
+	if got := ValidateCaption("e\U00000301", "instagram").Counts.Length; got != 2 {
 		t.Errorf("instagram counts the code points as written: %d, want 2", got)
 	}
 }
@@ -164,7 +160,7 @@ func TestCaptionHashtagsAndMentionsAtTheirBoundary(t *testing.T) {
 		{"instagram", mentions, 20, ProblemTooManyMen},
 	} {
 		for _, delta := range []int{-1, 0, 1} {
-			r := ValidateCaption(tc.text(tc.limit+delta), tc.network, composeAcute)
+			r := ValidateCaption(tc.text(tc.limit+delta), tc.network)
 			if got := slices.Contains(codes(r), tc.code); got != (delta > 0) {
 				t.Errorf("%s with %d: %s=%v, want %v", tc.network, tc.limit+delta, tc.code, got, delta > 0)
 			}
@@ -173,7 +169,7 @@ func TestCaptionHashtagsAndMentionsAtTheirBoundary(t *testing.T) {
 
 	// A network that publishes no limit reports none, however many there are.
 	for _, network := range []string{"x", "tiktok", "facebook"} {
-		r := ValidateCaption(tags(300)+mentions(300), network, composeAcute)
+		r := ValidateCaption(tags(300)+mentions(300), network)
 		if slices.ContainsFunc(codes(r), func(c string) bool {
 			return c == ProblemTooManyTags || c == ProblemTooManyMen
 		}) {
@@ -204,7 +200,7 @@ func TestCaptionCounts(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		c := ValidateCaption(tc.text, "instagram", composeAcute).Counts
+		c := ValidateCaption(tc.text, "instagram").Counts
 		if c.Hashtags != tc.hashtags || c.Mentions != tc.mentions || c.Links != tc.links {
 			t.Errorf("%s: %q counted %+v, want hashtags %d mentions %d links %d", tc.name, tc.text, c,
 				tc.hashtags, tc.mentions, tc.links)
@@ -215,7 +211,7 @@ func TestCaptionCounts(t *testing.T) {
 func TestCaptionForbiddenEmptyAndUnknown(t *testing.T) {
 	t.Parallel()
 
-	r := ValidateCaption("a <b> c", "youtube", composeAcute)
+	r := ValidateCaption("a <b> c", "youtube")
 	if !slices.Equal(codes(r), []string{ProblemForbidden}) || r.Problems[0].Actual != 2 {
 		t.Fatalf("youtube refuses < and >: %+v", r.Problems)
 	}
@@ -224,25 +220,24 @@ func TestCaptionForbiddenEmptyAndUnknown(t *testing.T) {
 		t.Fatalf("the sentence does not name the characters: %q", r.Problems[0].Message)
 	}
 
-	if r := ValidateCaption("a <b> c", "instagram", composeAcute); !r.OK {
+	if r := ValidateCaption("a <b> c", "instagram"); !r.OK {
 		t.Fatalf("instagram does not refuse them: %+v", r.Problems)
 	}
 
 	if r := ValidateCaption(
 		" \n\t"+string(rune(0x200b))+" ",
 		"instagram",
-		composeAcute,
 	); !slices.Equal(codes(r), []string{ProblemEmpty}) ||
 		r.OK {
 		t.Fatalf("a blank variant: %+v", r)
 	}
 
-	if r := ValidateCaption("hi", "myspace", composeAcute); !slices.Equal(codes(r), []string{ProblemUnknownNet}) ||
+	if r := ValidateCaption("hi", "myspace"); !slices.Equal(codes(r), []string{ProblemUnknownNet}) ||
 		r.OK {
 		t.Fatalf("an unknown network: %+v", r)
 	}
 
-	if r := ValidateCaption("hi", "", composeAcute); !r.OK || r.MaxLength != 0 || r.Counts.Length != 2 {
+	if r := ValidateCaption("hi", ""); !r.OK || r.MaxLength != 0 || r.Counts.Length != 2 {
 		t.Fatalf("the common variant is counted and has no limit: %+v", r)
 	}
 }
