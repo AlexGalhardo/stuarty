@@ -38,7 +38,7 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | [16](16-curated-skills-and-briefing.md) | Curated skills and the guided briefing | M | 06, 15 | DONE (2026-11-19, `6a134407`..`6771dee1`, merge `7aff38e0`) |
 | [17](17-writing.md) | Writing: scripts, copy and captions | M | 06, 09 | IN PROGRESS (senior-e, 2026-11-19) |
 | [18](18-social-connectors-and-youtube.md) | Social connectors and YouTube | L | 04, 05 | DONE (2026-11-20, `4cfc130a`..`375f681d`, merge `f4c35c228`; task 10 real upload waits for the author) |
-| [19](19-instagram-and-facebook.md) | Instagram and Facebook | L | 18 | IN PROGRESS (senior-c, 2026-11-20) |
+| [19](19-instagram-and-facebook.md) | Instagram and Facebook | L | 18 | DONE (2026-11-20, `c86c2f10b`..`8428bc2d3`, merge `ada3c608f`; task 9, a real post with the author's Meta app, not verified) |
 | [20](20-publishing-calendar-and-scheduler.md) | Publishing: calendar, approval and scheduler | L | 06, 07, 18 | IN PROGRESS (senior-b, 2026-11-20) |
 | [21](21-desktop-background-service.md) | Desktop background service for scheduled posts | M | 20 | TODO |
 | [22](22-x-and-tiktok-drafts.md) | X and TikTok drafts | M | 20 | TODO |
