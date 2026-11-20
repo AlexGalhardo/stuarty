@@ -24760,7 +24760,7 @@
             }
           },
           {
-            "description": "Only publications with a target at or after this time (RFC 3339).",
+            "description": "Only publications with a target at or after this time (RFC 3339) or date.",
             "in": "query",
             "name": "from",
             "schema": {
@@ -24768,9 +24768,17 @@
             }
           },
           {
-            "description": "Only publications with a target before this time (RFC 3339).",
+            "description": "Only publications with a target before this time (RFC 3339) or date.",
             "in": "query",
             "name": "to",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The zone a date or local time of from and to is read in; empty is UTC.",
+            "in": "query",
+            "name": "zone",
             "schema": {
               "type": "string"
             }
