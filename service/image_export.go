@@ -59,7 +59,7 @@ func (s *svc) ImageExport(ctx context.Context, req ImageExportRequest) (*ImageEx
 			withHint("fix them with image:edit, then export again").withDetail("findings", blocking)
 	}
 
-	pix, rerr := export.RenderImage(ctx, doc, export.ImageConfig{AssetPath: s.imageAssetPath(ctx, c)})
+	pix, rerr := export.RenderImage(ctx, doc, s.imageRenderConfig(ctx, c))
 	if rerr != nil {
 		return nil, imageExportError(rerr)
 	}
@@ -185,7 +185,32 @@ func (s *svc) imageAssetPath(ctx context.Context, c Caller) func(hash string) (s
 	}
 }
 
+// imageLUTPath is the normalized .cube file of a lookup table of the workspace, by content hash (SDD-021 section
+// 3.1). The same access rule as an image applies: a table the caller may not use is as missing as one that is not
+// there.
+func (s *svc) imageLUTPath(ctx context.Context, c Caller) func(hash string) (string, error) {
+	allowed := s.imageAssetAccess(ctx, c)
+
+	return func(hash string) (string, error) {
+		if _, _, ok := allowed(hash); !ok {
+			return "", fmt.Errorf("the lookup table %s is not available to this caller", hash)
+		}
+
+		return s.preparedArtifactPath(hash, "cube", "lookup table")
+	}
+}
+
+// imageRenderConfig is what the render of an image needs from the workspace for this caller.
+func (s *svc) imageRenderConfig(ctx context.Context, c Caller) export.ImageConfig {
+	return export.ImageConfig{AssetPath: s.imageAssetPath(ctx, c), LUTPath: s.imageLUTPath(ctx, c)}
+}
+
 func (s *svc) preparedImagePath(hash string) (string, error) {
+	return s.preparedArtifactPath(hash, "png", "image")
+}
+
+// preparedArtifactPath is the normalized artifact of a file of the workspace with the extension, if it exists.
+func (s *svc) preparedArtifactPath(hash, ext, what string) (string, error) {
 	hexDigest, ok := strings.CutPrefix(hash, "sha256:")
 	if !ok || len(hexDigest) != 64 {
 		return "", fmt.Errorf("%q is not a content hash", hash)
@@ -195,11 +220,11 @@ func (s *svc) preparedImagePath(hash string) (string, error) {
 		s.workspace,
 		"artifacts",
 		hexDigest,
-		ingest.ArtifactName("normalized", ingest.ProfileNormalized, "", "png"),
+		ingest.ArtifactName("normalized", ingest.ProfileNormalized, "", ext),
 	)
 	if _, err := os.Stat(p); err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			return "", fmt.Errorf("the prepared image %s is missing; import it again", hash)
+			return "", fmt.Errorf("the prepared %s %s is missing; import it again", what, hash)
 		}
 
 		return "", err
