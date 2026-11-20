@@ -1,3 +1,5 @@
+import type { Checkpoint, DiffEntry } from "../../editor/api/types";
+
 // The shapes of the image operations of SDD-021 as the HTTP API answers them. They mirror the Go types of
 // `service` (image_types.go, image_view.go) and `core/image` (document.go); the server wins on any difference.
 
@@ -297,4 +299,41 @@ export interface ImageHistoryResult {
 	image_id: string;
 	revision: number;
 	entries: ImageHistoryEntry[];
+}
+
+// The revert, the diff and the named versions of an image (SDD-003 section 2.5.1, SDD-021 section 4): the shapes
+// of the timeline's, with the id of the image.
+export interface ImageCheckpointListResult {
+	image_id: string;
+	revision: number;
+	checkpoints: Checkpoint[];
+	text: string;
+}
+
+export interface ImageDiffResult {
+	image_id: string;
+	revision: number;
+	from: number;
+	to: number;
+	count: number;
+	entries: DiffEntry[];
+	text: string;
+}
+
+export interface ImageRevertRequest {
+	revision?: number;
+	checkpoint?: string;
+	// The revision the caller read; a change by another actor since then to a layer the revert changes is
+	// E_REVISION_CONFLICT (SDD-002 A.7).
+	base_revision?: number;
+	dry_run?: boolean;
+}
+
+export interface ImageRevertResult
+	extends Omit<ImageEditResult, "kind" | "step"> {
+	kind: "revert";
+	target: number;
+	same: boolean;
+	dry_run: boolean;
+	text: string;
 }

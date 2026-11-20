@@ -76,6 +76,9 @@ export interface ImageActions {
 	): Promise<ImageEditResult | null>;
 	undo(): Promise<void>;
 	redo(): Promise<void>;
+	// Reads the document and the history again, after a step this window did not send through `send`: a revert
+	// (the dialog sends it and the answer of the server is the only thing it knows).
+	reload(): Promise<void>;
 	// Puts a file in this image as one more layer (SDD-021 section 10.1); resolves with the result, or null when
 	// it failed (the failure is in `error`).
 	importFile(source: ImportSource): Promise<ImageImportResult | null>;
@@ -337,6 +340,17 @@ export function createImageStore(api: ImageApi, imageId: string): ImageStore {
 			},
 			async redo() {
 				await step("redo");
+			},
+
+			reload() {
+				return enqueue(async () => {
+					try {
+						replace(await api.describe(imageId));
+						await get().refreshHistory();
+					} catch {
+						// The next event or poll catches up.
+					}
+				});
 			},
 
 			async poll() {
