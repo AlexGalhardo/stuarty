@@ -172,11 +172,11 @@ func TestImageLUT(t *testing.T) {
 	})
 }
 
-// TestSecurity_T67_HostileLookupTableIsRefusedByTheExport: a .cube file that is hostile (a size past the limit, a
+// TestSecurity_T92_HostileLookupTableIsRefusedByTheExport: a .cube file that is hostile (a size past the limit, a
 // value that is not a finite number, a line of a megabyte, another keyword, a 1D table, a file past 16 MiB) is
 // refused by the export through engine/lut, whatever the ingest did, never draws the layer without its table, and
 // its content is not echoed in the error.
-func TestSecurity_T67_HostileLookupTableIsRefusedByTheExport(t *testing.T) {
+func TestSecurity_T92_HostileLookupTableIsRefusedByTheExport(t *testing.T) {
 	hash, path := lutFile(t, lutFixture("teal"))
 	base := lookBase()
 	d := withLUT(t, base, hash, firstLayerOfKind(base, coreimage.KindImage), ``)
