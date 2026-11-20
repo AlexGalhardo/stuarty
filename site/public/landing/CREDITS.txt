@@ -1,0 +1,6 @@
+Screenshots of Stuarty, captured headless from a demo workspace on 2026-11-20.
+
+Media shown inside the screenshots:
+- Big Buck Bunny, (c) Blender Foundation, peach.blender.org, CC BY 3.0 (the video editor frames).
+- "Mountain glacier" photo, CC0, from Wikimedia Commons via the project's test assets (the image editor).
+- Waveforms of "Sinfonia 3" by Kevin MacLeod (CC BY 3.0) and a LibriVox reading of John Adams (CC0).
