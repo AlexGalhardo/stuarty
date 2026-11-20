@@ -7,6 +7,58 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.33.0] - 2026-11-20
+
+### Added
+
+- **core:** Add the pure rules of the AI provider layer ([ed6ffb0](https://github.com/AlexGalhardo/stuarty/commit/ed6ffb08fa99b33487eef759f0d8efed2ac2d72d))
+- **service:** Add the provider registry, catalogue and price table ([b8a0241](https://github.com/AlexGalhardo/stuarty/commit/b8a0241bb4dc210b059d0510b4aa7094622f0e5c))
+- **service:** Add the OpenAI and Anthropic text adapters ([7fb8dd6](https://github.com/AlexGalhardo/stuarty/commit/7fb8dd6b633a870a9d21d41164e1f8c088db274a))
+- **service:** Add the text.generate job with estimate, ledger and ceiling ([0a06cdc](https://github.com/AlexGalhardo/stuarty/commit/0a06cdc69d7eda4db83d8d003c8f101e1d5234b5))
+- **api:** Expose the AI providers on HTTP, the CLI and MCP ([ea0302e](https://github.com/AlexGalhardo/stuarty/commit/ea0302e6d447c78f9450799e43de67ad2b46ce2a))
+- **ui:** Add the AI provider cards to the Connections page ([bea141c](https://github.com/AlexGalhardo/stuarty/commit/bea141c576607e1e84500ba843719da3fe1108ec))
+- **core:** Add the pure rules of the asset library ([0aea240](https://github.com/AlexGalhardo/stuarty/commit/0aea2409d0818ed7bb14145b501520b07d3e8ca5))
+- **web:** Add the asset library tables and the migration of existing workspaces ([f6c4fe9](https://github.com/AlexGalhardo/stuarty/commit/f6c4fe94dae8aa19403814a01d9b41b9fc2f4320))
+- **service:** Add the asset library operations, origin on import and reuse by hash ([c12cef2](https://github.com/AlexGalhardo/stuarty/commit/c12cef21354dadbb2f93e993fefbab6e87a363fd))
+- **api:** Expose the asset library on HTTP, the CLI and the media tools ([511ad3f](https://github.com/AlexGalhardo/stuarty/commit/511ad3fec19a5960f4b62f9e26cc6a89eced6706))
+- **ui:** Add the Visual Assets and Video Assets sections of the asset library ([1879755](https://github.com/AlexGalhardo/stuarty/commit/18797554864dc191a84cfee307cd515877f0caed))
+- **service:** Ask the briefing and store its answers as the brief ([6eaeb63](https://github.com/AlexGalhardo/stuarty/commit/6eaeb639f6ce6bd9eaf0eb1b8ecaed167a1fb945))
+- **ui:** Ask the guided briefing on the overview of a project ([355b49e](https://github.com/AlexGalhardo/stuarty/commit/355b49e674ba68eedaaad03e7b5d4814d821a76e))
+- **library:** Install the built-in skills and keep a person's edit ([b9e6753](https://github.com/AlexGalhardo/stuarty/commit/b9e67532653acad0e86d05dc108efdb440378877))
+- **library:** Write the router, briefing, recall, retro and fetch-clip skills ([f7d7078](https://github.com/AlexGalhardo/stuarty/commit/f7d7078979bafc4319b5891aac2dc5fe65b25b96))
+- **library:** Write the short vertical video, captions and thumbnail skills ([63a42ad](https://github.com/AlexGalhardo/stuarty/commit/63a42ada7b9c8955b26532b4c65f2ae61a1db162))
+- **library:** Adapt the writing skills with attribution and keep the licences ([b90d41d](https://github.com/AlexGalhardo/stuarty/commit/b90d41d4b0676941a21e24adf5e2fc2126771dc0))
+- **command:** Give every registry a domain and every operation one ([9fcb44a](https://github.com/AlexGalhardo/stuarty/commit/9fcb44a6d1bb50c7c20fcd6945be9182caea8e97))
+- **mcp:** Route edit and history by domain and drop the operation enum ([7ab60e4](https://github.com/AlexGalhardo/stuarty/commit/7ab60e4e1794cabcc79216438a93525764e115c2))
+- **mcp:** Add the discovery call by domain to command_help ([e9c1386](https://github.com/AlexGalhardo/stuarty/commit/e9c1386cb325259c6ba96d8e6f55995f1f10c082))
+- **cli:** Group the commands by domain and keep the former names as aliases ([9ff15b1](https://github.com/AlexGalhardo/stuarty/commit/9ff15b174bfdb7dd618a99661959d0ada1f4b728))
+- **command:** Check the agent surface budget and wire it into lint ([7a20538](https://github.com/AlexGalhardo/stuarty/commit/7a205386c9f18223196348eb30f70b66938ba252))
+- **cli:** Generate one agent guide page per domain ([89d4b7f](https://github.com/AlexGalhardo/stuarty/commit/89d4b7f0ac873e787bb5af13787b78d591a32e4e))
+- **image:** Add adjustments, filters, masks and blend modes to image layers ([913b380](https://github.com/AlexGalhardo/stuarty/commit/913b380149ef13f9dcd3604bb66c221524a3fa27))
+- **renderer:** Draw image adjustments, filters, masks and blend modes ([45cb601](https://github.com/AlexGalhardo/stuarty/commit/45cb6017e964fd87d60632537581c7e0a27e79c4))
+- **contract:** Reach the image looks through the HTTP API, the CLI and MCP ([7d13f55](https://github.com/AlexGalhardo/stuarty/commit/7d13f55f285c60777358fcca95af76bf50f83dab))
+- **ui:** Add the adjustment, filter, mask and blend controls to the image inspector ([a9cb07b](https://github.com/AlexGalhardo/stuarty/commit/a9cb07bbce285ed86067ba7fc9dae5f00dedcad1))
+
+### Fixed
+
+- **mcp:** Fit tools/list in its budget with the asset library ([c859da1](https://github.com/AlexGalhardo/stuarty/commit/c859da1da29489c35cd82d949527995fa58bed0a))
+- **service:** Stop the text of asset uses printing an empty entry line ([d54eacf](https://github.com/AlexGalhardo/stuarty/commit/d54eacfb98b2f0c6a965a0b9ed6a3cadd8238800))
+- **service:** Keep a brief written by hand with the briefing headings ([4dcbc3a](https://github.com/AlexGalhardo/stuarty/commit/4dcbc3a634d64ed0ed0dcaf1adb28978549658f6))
+- **library:** Correct the commands and arguments the built-in skills give ([05d3981](https://github.com/AlexGalhardo/stuarty/commit/05d3981fd634aa387785ba6852388e98932d0d39))
+- **service:** Name every argument of text.generate when connection_id is missing ([d4e8fcc](https://github.com/AlexGalhardo/stuarty/commit/d4e8fccf173f0eff5d3e918d89547e64fa2c8168))
+- **service:** Refuse a price table with two prices for one model ([e46a656](https://github.com/AlexGalhardo/stuarty/commit/e46a65662dc5594ff988db115b89d0860ae39261))
+- **command:** Stop telling agents the publish and provider domains have no operations ([e47f77f](https://github.com/AlexGalhardo/stuarty/commit/e47f77f81488db61820d7152f3b99209c00afd7d))
+- **cli:** Hold the workspace lock in the fake owner of the client-mode tests ([92c839e](https://github.com/AlexGalhardo/stuarty/commit/92c839ee783827b19fd1bb2df678dd6983df2406))
+- **mcp:** Count job_start in the provider domain it starts text.generate for ([1760ec2](https://github.com/AlexGalhardo/stuarty/commit/1760ec27c41d4d66e88262030c1817b58a6abfbe))
+- **image:** Keep a mask source whose opacity rounds to none as a stencil ([19a7233](https://github.com/AlexGalhardo/stuarty/commit/19a7233a2665bf1727f83c3ab0f6089f6c7bef7b))
+- **image:** Name the first shape member in the error of a layer mask every time ([688a943](https://github.com/AlexGalhardo/stuarty/commit/688a9432740d1b5de3b70a6928b691df15f61c3c))
+- **ui:** Plan each mask field against the document of its turn ([01af55e](https://github.com/AlexGalhardo/stuarty/commit/01af55e0fb9a2e8082c055c4e3c36763ea66c848))
+
+### Security
+
+- **security:** Drop a model, an answer or a code that echoes the key ([4d91537](https://github.com/AlexGalhardo/stuarty/commit/4d91537f5c2d2ce290f6bac69b26a95741144a48))
+- **security:** Keep the model of an answer only when it is a model id ([d6754a7](https://github.com/AlexGalhardo/stuarty/commit/d6754a7056b74e724ed1e23367d281f9a737234e))
+- **security:** Keep a saturated day of spending from wrapping past a ceiling ([bc76955](https://github.com/AlexGalhardo/stuarty/commit/bc769552ce4b7f263e3760b434c14166cd7cbedb))
 ## [0.32.0] - 2026-11-20
 
 ### Added
@@ -1538,7 +1590,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.32.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.33.0...HEAD
+[0.33.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.32.0...v0.33.0
 [0.32.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.31.0...v0.32.0
 [0.31.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.30.0...v0.31.0
 [0.30.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.29.0...v0.30.0
