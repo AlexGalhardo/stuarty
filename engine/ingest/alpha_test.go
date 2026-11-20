@@ -142,7 +142,13 @@ func TestAlphaImagePostersKeepTheAlpha(t *testing.T) {
 				r, _, _, right := straight(img, 0.88, 0.5)
 
 				if left > 24 || right < 255-24 || r < 255-24 {
-					t.Errorf("poster %s: alpha left %d (want transparent), right %d (want opaque), red %d", variant, left, right, r)
+					t.Errorf(
+						"poster %s: alpha left %d (want transparent), right %d (want opaque), red %d",
+						variant,
+						left,
+						right,
+						r,
+					)
 				}
 			}
 		})

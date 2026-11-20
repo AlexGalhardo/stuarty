@@ -664,7 +664,8 @@ func TestAudioPreviewNestedItem(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if whole.src.Samples != 90*1600 || len(whole.src.Chain) != 1 || whole.src.Gain != nil || whole.doc.Assets[asset].Hash == "" {
+	if whole.src.Samples != 90*1600 || len(whole.src.Chain) != 1 || whole.src.Gain != nil ||
+		whole.doc.Assets[asset].Hash == "" {
 		t.Errorf("whole = %+v, want the 90 frames with the chain, no envelope and the asset in its document", whole)
 	}
 
@@ -678,7 +679,9 @@ func TestAudioPreviewNestedItem(t *testing.T) {
 	}
 
 	// File frame 10 is child frame 10: the source is read from there, for the window of the file.
-	if !win.window || win.first != 10 || win.src.SourceStart != 10*1600 || win.src.Samples != int64(win.last-win.first+1)*1600 || win.key == whole.key {
+	if !win.window || win.first != 10 || win.src.SourceStart != 10*1600 ||
+		win.src.Samples != int64(win.last-win.first+1)*1600 ||
+		win.key == whole.key {
 		t.Errorf("window = %+v, want a window of its own from the source frame 10", win)
 	}
 }

@@ -213,7 +213,14 @@ func (k *knownPreview) target(key, from string) (*previewTarget, error) {
 		return nil, newError(command.CodeNotFound, "there is no processed sound with that key.")
 	}
 
-	return &previewTarget{src: src, key: plan.PreviewKey(owner, &src), first: n, last: to - 1, window: true, doc: owner}, nil
+	return &previewTarget{
+		src:    src,
+		key:    plan.PreviewKey(owner, &src),
+		first:  n,
+		last:   to - 1,
+		window: true,
+		doc:    owner,
+	}, nil
 }
 
 // source is the source of the file over the timeline frames [from, to) and the document that holds its asset: the
@@ -358,7 +365,7 @@ func (s *svc) renderPreview(
 ) {
 	lane <- struct{}{}
 
-	err := s.renderPreviewFile(renderer, store, known, &t)
+	err := s.renderPreviewFile(renderer, store, &t)
 
 	<-lane
 
@@ -401,7 +408,6 @@ func (s *svc) renderPreview(
 func (s *svc) renderPreviewFile(
 	renderer AudioPreviewRenderer,
 	store *cache.Store,
-	known *knownPreview,
 	t *previewTarget,
 ) error {
 	name := cache.AudioPreviewKey(t.key)
