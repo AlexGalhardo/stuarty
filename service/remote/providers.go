@@ -54,6 +54,27 @@ func (c *Client) VoiceGenerate(ctx context.Context, req service.VoiceGenerateReq
 	return jobText(post[service.Job](ctx, c, "/voice/generate", req))
 }
 
+// modelEditBody is the body of POST /images/{id}/model-edit: the image is in the path.
+type modelEditBody struct {
+	ProjectID    string `json:"project_id"`
+	ConnectionID string `json:"connection_id"`
+	Operation    string `json:"operation"`
+	Model        string `json:"model"`
+	LayerID      string `json:"layer_id,omitempty"`
+	Prompt       string `json:"prompt,omitempty"`
+	Size         string `json:"size,omitempty"`
+	WaitMS       int    `json:"wait_ms,omitempty"`
+	DryRun       bool   `json:"dry_run,omitempty"`
+}
+
+// ImageModelEdit implements service.Service.
+func (c *Client) ImageModelEdit(ctx context.Context, req service.ImageModelEditRequest) (*service.Job, error) {
+	return jobText(post[service.Job](ctx, c, imagePath(req.ImageID, "/model-edit"), modelEditBody{
+		ProjectID: req.ProjectID, ConnectionID: req.ConnectionID, Operation: req.Operation, Model: req.Model,
+		LayerID: req.LayerID, Prompt: req.Prompt, Size: req.Size, WaitMS: req.WaitMS, DryRun: req.DryRun,
+	}))
+}
+
 // VoiceList implements service.Service.
 func (c *Client) VoiceList(ctx context.Context, req service.VoiceListRequest) (*service.VoiceListResult, error) {
 	return get[service.VoiceListResult](ctx, c, "/connections/"+url.PathEscape(req.ConnectionID)+"/voices", nil)

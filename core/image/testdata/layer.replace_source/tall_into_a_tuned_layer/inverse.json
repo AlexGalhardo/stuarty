@@ -1,0 +1,34 @@
+[
+  {
+    "collection": "layers",
+    "id": "lyr_bbbbbbbbbb",
+    "set": {
+      "asset": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "crop": {
+        "h": 450,
+        "w": 800,
+        "x": 0,
+        "y": 0
+      },
+      "w": 640,
+      "x": 100
+    },
+    "type": "patch"
+  },
+  {
+    "collection": "assets",
+    "id": "sha256:3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c",
+    "type": "remove"
+  },
+  {
+    "collection": "assets",
+    "id": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "object": {
+      "hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "height": 900,
+      "name": "face.png",
+      "width": 1600
+    },
+    "type": "put"
+  }
+]
