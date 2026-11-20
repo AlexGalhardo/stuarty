@@ -21,6 +21,7 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -144,7 +145,8 @@ func (n *network) mux() http.Handler {
 	// The consent screen sends the browser straight back with a code.
 	mux.HandleFunc("GET /authorize", func(w http.ResponseWriter, r *http.Request) {
 		target, err := url.Parse(r.URL.Query().Get("redirect_uri"))
-		if err != nil || target.Host == "" {
+		host := strings.ToLower(target.Hostname())
+		if err != nil || target.Scheme != "http" || (host != "localhost" && host != "127.0.0.1" && host != "::1") {
 			http.Error(w, "bad redirect_uri", http.StatusBadRequest)
 
 			return
@@ -204,8 +206,36 @@ func (n *network) upload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	info, err := os.Stat(in.Path)
-	if err != nil || info.IsDir() || info.Size() == 0 || !strings.HasSuffix(strings.ToLower(in.Path), ".mp4") {
+	if strings.TrimSpace(in.Path) == "" {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "no video file at " + in.Path})
+
+		return
+	}
+
+	cleanPath := filepath.Clean(in.Path)
+	absPath, err := filepath.Abs(cleanPath)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "no video file at " + in.Path})
+
+		return
+	}
+
+	baseDir, err := filepath.Abs(".")
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+
+		return
+	}
+
+	rel, err := filepath.Rel(baseDir, absPath)
+	if err != nil || strings.HasPrefix(rel, "..") || filepath.IsAbs(rel) {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "no video file at " + in.Path})
+
+		return
+	}
+
+	info, err := os.Stat(absPath)
+	if err != nil || info.IsDir() || info.Size() == 0 || !strings.HasSuffix(strings.ToLower(absPath), ".mp4") {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "no video file at " + in.Path})
 
 		return
@@ -216,7 +246,7 @@ func (n *network) upload(w http.ResponseWriter, r *http.Request) {
 
 	id := fmt.Sprintf("ff%d", len(n.uploads)+1)
 	u := upload{
-		ID: id, Title: in.Title, Path: in.Path, Bytes: info.Size(), Visibility: in.Visibility,
+		ID: id, Title: in.Title, Path: absPath, Bytes: info.Size(), Visibility: in.Visibility,
 		URL: "https://fake.example/watch/" + id,
 	}
 	n.uploads = append(n.uploads, u)
