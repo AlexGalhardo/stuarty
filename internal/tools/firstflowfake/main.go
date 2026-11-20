@@ -50,6 +50,9 @@ type network struct {
 	mu      sync.Mutex
 	uploads []upload
 	base    string
+	// mediaRoot is the only folder an upload may name: the fake stats the path a client sends,
+	// so it must not answer for files outside the run's own folder.
+	mediaRoot string
 }
 
 func main() {
@@ -62,7 +65,13 @@ func main() {
 func run() error {
 	providerAddr := flag.String("provider-addr", "127.0.0.1:0", "address of the fake AI provider, on loopback")
 	socialAddr := flag.String("social-addr", "127.0.0.1:0", "address of the fake social network, on loopback")
+	mediaRoot := flag.String("media-root", os.TempDir(), "the folder every uploaded file must be inside")
 	flag.Parse()
+
+	root, err := filepath.Abs(*mediaRoot)
+	if err != nil {
+		return err
+	}
 
 	provider, err := listenLoopback(*providerAddr)
 	if err != nil {
@@ -74,7 +83,7 @@ func run() error {
 		return err
 	}
 
-	fake := &network{base: "http://" + social.Addr().String()}
+	fake := &network{base: "http://" + social.Addr().String(), mediaRoot: root}
 
 	go serve(provider, providerMux())
 	go serve(social, fake.mux())
@@ -145,8 +154,7 @@ func (n *network) mux() http.Handler {
 	// The consent screen sends the browser straight back with a code.
 	mux.HandleFunc("GET /authorize", func(w http.ResponseWriter, r *http.Request) {
 		target, err := url.Parse(r.URL.Query().Get("redirect_uri"))
-		host := strings.ToLower(target.Hostname())
-		if err != nil || target.Scheme != "http" || (host != "localhost" && host != "127.0.0.1" && host != "::1") {
+		if err != nil || target.Scheme != "http" || !loopbackHost(target.Hostname()) {
 			http.Error(w, "bad redirect_uri", http.StatusBadRequest)
 
 			return
@@ -212,24 +220,20 @@ func (n *network) upload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cleanPath := filepath.Clean(in.Path)
-	absPath, err := filepath.Abs(cleanPath)
-	if err != nil {
+	absPath, err := filepath.Abs(in.Path)
+	if err != nil || n.mediaRoot == "" {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "no video file at " + in.Path})
 
 		return
 	}
 
-	baseDir, err := filepath.Abs(".")
-	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
-
-		return
-	}
-
-	rel, err := filepath.Rel(baseDir, absPath)
-	if err != nil || strings.HasPrefix(rel, "..") || filepath.IsAbs(rel) {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "no video file at " + in.Path})
+	rel, err := filepath.Rel(n.mediaRoot, absPath)
+	if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) || filepath.IsAbs(rel) {
+		writeJSON(
+			w,
+			http.StatusBadRequest,
+			map[string]string{"error": "the file is outside the media root: " + in.Path},
+		)
 
 		return
 	}
@@ -252,4 +256,13 @@ func (n *network) upload(w http.ResponseWriter, r *http.Request) {
 	n.uploads = append(n.uploads, u)
 
 	writeJSON(w, http.StatusOK, map[string]string{"id": id, "url": u.URL, "state": "published"})
+}
+
+func loopbackHost(host string) bool {
+	switch strings.ToLower(host) {
+	case "localhost", "127.0.0.1", "::1":
+		return true
+	}
+
+	return false
 }

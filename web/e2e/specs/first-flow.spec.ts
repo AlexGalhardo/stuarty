@@ -60,13 +60,18 @@ function build(out: string, pkg: string): void {
 	});
 }
 
-function startFake(bin: string): Promise<{
+function startFake(
+	bin: string,
+	mediaRoot: string,
+): Promise<{
 	process: ChildProcess;
 	providerUrl: string;
 	socialUrl: string;
 }> {
 	return new Promise((resolve, reject) => {
-		const child = spawn(bin, [], { stdio: ["ignore", "pipe", "inherit"] });
+		const child = spawn(bin, ["-media-root", mediaRoot], {
+			stdio: ["ignore", "pipe", "inherit"],
+		});
 		let seen = "";
 		child.once("error", reject);
 		child.once("exit", (code) =>
@@ -107,7 +112,7 @@ async function start(): Promise<Running> {
 		join(dir, "bin", `firstflowfake${exe}`),
 		"./internal/tools/firstflowfake",
 	);
-	const fake = await startFake(join(dir, "bin", `firstflowfake${exe}`));
+	const fake = await startFake(join(dir, "bin", `firstflowfake${exe}`), dir);
 	const logFd = openSync(join(dir, "server.log"), "a");
 	const server = spawn(join(dir, "bin", `stuarty${exe}`), ["serve"], {
 		cwd: REPO,
