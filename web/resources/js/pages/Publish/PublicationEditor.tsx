@@ -33,9 +33,9 @@ import type {
 } from "../../editor/api/types";
 import { type TextItem, writingClient } from "../Write/client";
 import type { PublishApi } from "./api";
-import { exportLabel } from "./exportLabel";
 import { useBackgroundAsk } from "./BackgroundAsk";
 import { browserZone } from "./calendar";
+import { exportLabel } from "./exportLabel";
 import { TargetResult } from "./ListView";
 import { actionsOf } from "./publicationState";
 import { TargetStateBadge } from "./TargetStateBadge";
@@ -386,7 +386,7 @@ export function PublicationEditor({
 	// The core named the kids question as the wrong field: it is marked, and the focus goes to it.
 	const kidsMissing = failureIsAbout(failure, "made_for_kids");
 	useEffect(() => {
-		if (kidsMissing) {
+		if (kidsMissing && failure !== null) {
 			document
 				.querySelector<HTMLInputElement>("[data-kids-missing] input")
 				?.focus();

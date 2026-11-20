@@ -237,6 +237,12 @@ export default function BrandKitPage(): ReactNode {
 							<h2 id="brand-colors" className="text-lg font-semibold">
 								{t("ui.brand.colors")}
 							</h2>
+							<p
+								id="brand-color-name-hint"
+								className="text-sm text-muted-foreground"
+							>
+								{t("ui.brand.color_name_hint")}
+							</p>
 							<ul className="flex flex-col gap-2">
 								{colors.map((row, index) => (
 									<li
@@ -249,6 +255,8 @@ export default function BrandKitPage(): ReactNode {
 												index: index + 1,
 											})}
 											value={row.name}
+											placeholder={t("ui.brand.color_name_placeholder")}
+											aria-describedby="brand-color-name-hint"
 											maxLength={NAME_MAX}
 											autoComplete="off"
 											spellCheck={false}

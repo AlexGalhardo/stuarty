@@ -92,7 +92,7 @@ export function PublishDialog({
 	// The core named the kids question as the wrong field: it is marked, and the focus goes to it.
 	const kidsMissing = failureIsAbout(failure, "made_for_kids") && kids === "";
 	useEffect(() => {
-		if (kidsMissing) {
+		if (kidsMissing && failure !== null) {
 			document
 				.querySelector<HTMLInputElement>("[data-kids-missing] input")
 				?.focus();
