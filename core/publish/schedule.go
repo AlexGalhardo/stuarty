@@ -244,7 +244,8 @@ func ParseSlot(at, zone, defaultZone string) (Slot, error) {
 	}
 
 	if t, perr := time.Parse(time.RFC3339, at); perr == nil {
-		return Slot{At: t.UTC(), Zone: zone}, nil
+		// The store keeps milliseconds: a finer instant would be answered once and read back as another.
+		return Slot{At: t.UTC().Truncate(time.Millisecond), Zone: zone}, nil
 	}
 
 	inst, adj, err := LocalInstant(at, loc)
