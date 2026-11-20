@@ -149,6 +149,19 @@ const browserTimers: PoolTimers = {
 	clearTimeout: (handle) => clearTimeout(handle as number),
 };
 
+// Whether a layer of `nodes`, or of a group among them, is drawn by a filter that reads the pixels drawn
+// so far. The layers of a group are drawn on its transparent surface, so `clear` holds for them.
+function nodesReadBackdrop(
+	nodes: readonly DrawNode[],
+	clear: boolean,
+): boolean {
+	return nodes.some(
+		(node) =>
+			readsBackdrop(node.layer.blend, clear) ||
+			(node.kind === "group" && nodesReadBackdrop(node.children, true)),
+	);
+}
+
 // PixiJS v8 on a WebGPU or WebGL2 canvas drawing exactly what a plan window
 // says: the background, then each layer at its centre, size, rotation, opacity
 // and colour matrix, with its shadow and outline, in plan order, and nothing
@@ -745,11 +758,58 @@ export class PixiExecutor implements PreviewExecutor {
 			surface.width = width;
 			surface.height = height;
 		}
-		this.videos.idle(usedVideos);
-		this.syncAudio(plan, frame, mode.playing);
-		this.setBackdrop(
-			app,
-			layers.some((layer) => readsBackdrop(layer.blend, this.clearsToAlpha)),
+		surface.container.scale.set(k);
+		const outer = this.scene;
+		const outerClear = this.clearsToAlpha;
+		this.scene = {
+			scale: k,
+			width: node.layer.group.width,
+			height: node.layer.group.height,
+		};
+		// The surface of a group starts transparent, so a blend inside it reads a backdrop that is not
+		// opaque whatever the project background (VV-268).
+		this.clearsToAlpha = true;
+		let drawn: number;
+		try {
+			drawn = this.drawLevel(
+				surface.container,
+				node.children,
+				frame,
+				decoding,
+				usedVideos,
+				used,
+				mode,
+				info,
+			);
+		} finally {
+			this.scene = outer;
+			this.clearsToAlpha = outerClear;
+		}
+		if (drawn === 0) {
+			// Nothing of it is drawn: the entry and the texture are dropped at the
+			// end of the frame, as for a layer that left.
+			return null;
+		}
+		used.add(node.id);
+		app.renderer.render({
+			container: surface.container,
+			target: surface.target,
+			clear: true,
+			clearColor: [0, 0, 0, 0],
+		});
+		this.noteApproximateGroup();
+		return surface.target;
+	}
+
+	// The diagnostic line of this executor (SDD-013 section 4.7.1): a group is
+	// drawn, but not as the renderer of the export draws it.
+	private noteApproximateGroup(): void {
+		if (this.canvas?.getAttribute("data-groups") === "approximate") return;
+		this.canvas?.setAttribute("data-groups", "approximate");
+		if (this.groupsNoted) return;
+		this.groupsNoted = true;
+		console.info(
+			"preview: a composition drawn as one unit is drawn approximately by the PixiJS executor; the renderer executor draws it as the export does",
 		);
 		app.render();
 		// A frame evicted from the decode cache is closed only after the render
