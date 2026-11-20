@@ -30,9 +30,9 @@ const ReasonWebPUnavailable = "webp_unavailable"
 // DefaultJPEGQuality is the quality of a JPEG when none is asked.
 const DefaultJPEGQuality = 90
 
-// WebPEncoder encodes a picture as WebP. It is a seam: the encoder is FFmpeg with libwebp, started through the
-// argument grammar of engine/ffmpeg, which has no builder for it yet (see the question of epic 27); until one
-// is given the WebP export answers E_EXPORT_FAILED with reason webp_unavailable.
+// WebPEncoder encodes a picture as WebP. It is a seam: the encoder is [FFmpegWebP], FFmpeg with libwebp started
+// through the argument grammar of engine/ffmpeg; with none given the WebP export answers E_EXPORT_FAILED with
+// reason webp_unavailable.
 type WebPEncoder interface {
 	EncodeWebP(ctx context.Context, png []byte, quality int) ([]byte, error)
 }
