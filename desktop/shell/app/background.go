@@ -149,6 +149,11 @@ func (b *background) quit() {
 	b.app.Quit()
 }
 
+// shuttingDown runs when the application shuts down for any reason, before the framework closes the
+// windows: a quit that did not come through quit (an update installer, the system) must close the window
+// and never hide it behind a tray (SDD-012 section 21.3 item 7: every quit quits).
+func (b *background) shuttingDown() { b.quitting.Store(true) }
+
 func (b *background) ensureTray() {
 	// The framework is never called with the lock held: a call to the main thread that waits for it while the
 	// main thread waits for the lock would never end. The tray is made only from the main thread.
