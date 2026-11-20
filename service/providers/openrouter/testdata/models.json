@@ -1,0 +1,39 @@
+{
+  "data": [
+    {
+      "id": "anthropic/claude-example",
+      "name": "Anthropic: Claude Example",
+      "context_length": 200000,
+      "top_provider": { "context_length": 200000, "max_completion_tokens": 8192, "is_moderated": true },
+      "pricing": { "prompt": "0.000003", "completion": "0.000015", "request": "0", "image": "0" }
+    },
+    {
+      "id": "vendor/free-model:free",
+      "name": "Vendor: A free model",
+      "context_length": 32768,
+      "top_provider": { "context_length": 32768, "max_completion_tokens": null, "is_moderated": false },
+      "pricing": { "prompt": "0", "completion": "0" }
+    },
+    {
+      "id": "openrouter/auto",
+      "name": "Auto Router",
+      "context_length": 2000000,
+      "top_provider": { "context_length": null, "max_completion_tokens": null, "is_moderated": false },
+      "pricing": { "prompt": "-1", "completion": "-1" }
+    },
+    {
+      "id": "vendor/odd-price",
+      "name": "A price that is not a number",
+      "context_length": 4096,
+      "top_provider": { "max_completion_tokens": 1024 },
+      "pricing": { "prompt": "1e-6", "completion": "0.000002" }
+    },
+    {
+      "id": "vendor/tiny",
+      "name": "",
+      "context_length": 4096,
+      "top_provider": { "max_completion_tokens": 1024 },
+      "pricing": { "prompt": "0.0000000011", "completion": "0.0000025" }
+    }
+  ]
+}
