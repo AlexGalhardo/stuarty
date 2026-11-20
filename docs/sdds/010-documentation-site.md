@@ -43,7 +43,7 @@ ADR-0024 item 1: the site starts from the **current** vukem `site/`, not from th
 | `site/src/pages/{404,changelog,index,robots.txt,search-index.json,sitemap.xml,llms.txt,llms-full.txt}` and `site/src/pages/docs/[...slug].{astro,md.ts}` | Pages and endpoints (changed for locales) |
 | `site/src/layouts/Base.astro`, `site/src/prerender.tsx` | The page layout every `.astro` page imports and the React prerender entry; without them the copied site does not build |
 | `site/src/assets/` | present on vukem main after `v0.43.0` (the animated gopher `svg` of the landing page, commit `0d9fb139`); not in the `v0.43.0` tree. Copied only if the copied landing page imports it, and then replaced by the product mark (the `SITE-COPY` report records which) |
-| `site/public/logo.svg`, `site/public/icon.svg`, `site/public/.nojekyll` | The logo and icon (replaced by the product ones) and the marker that stops GitHub Pages from running Jekyll |
+| `site/public/logo.png`, `site/public/icon.png`, `site/public/.nojekyll` | The logo (256 px) and the favicon (64 px), scaled from the official icon `.config/installers/assets/stuarty-icon.png` by `internal/tools/installericon`, and the marker that stops GitHub Pages from running Jekyll |
 | `site/.gitignore` | Ignores `node_modules`, `out/` and local env files; checked against the real vukem file so the copied site builds from a clean clone |
 | `site/package-lock.json` | Created by `npm install` in `SITE-COPY`; never copied from vukem |
 | `scripts/refresh-last-updated.sh` (repository root) | The pre-push hook script (SDD-009 section 15.1) |

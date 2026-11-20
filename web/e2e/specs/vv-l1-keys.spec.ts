@@ -158,7 +158,7 @@ test.describe("palette Escape, documented keys and the attributes menu", () => {
 		});
 		await page.goto("/projects");
 		await page.waitForLoadState("networkidle");
-		expect((await request.get("/icon.svg")).status()).toBe(200);
+		expect((await request.get("/icon.png")).status()).toBe(200);
 		expect(failed).toEqual([]);
 	});
 
