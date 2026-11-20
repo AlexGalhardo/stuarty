@@ -78,6 +78,7 @@
   "docs/en/self-hosting/desktop-updates.mdx": "2026-11-18T22:50:48-03:00",
   "docs/en/self-hosting/docker.mdx": "2026-11-19T05:58:47-03:00",
   "docs/en/self-hosting/ffmpeg-and-licences.mdx": "2026-11-18T22:50:48-03:00",
+  "docs/en/self-hosting/google-sign-in.mdx": "2026-11-19T20:47:38-03:00",
   "docs/en/self-hosting/network-mode.mdx": "2026-11-18T22:50:48-03:00",
   "docs/en/self-hosting/observability.mdx": "2026-11-18T22:50:48-03:00",
   "docs/en/self-hosting/privacy.mdx": "2026-11-18T22:50:48-03:00",
@@ -365,7 +366,7 @@
   "generated/mcp/tools/template.mdx": "2026-11-19T06:47:59-03:00",
   "generated/mcp/tools/view.mdx": "2026-11-19T15:12:56-03:00",
   "generated/reference/cli.mdx": "2026-11-19T17:25:26-03:00",
-  "generated/reference/configuration.mdx": "2026-11-19T19:28:32-03:00",
+  "generated/reference/configuration.mdx": "2026-11-19T19:42:52-03:00",
   "generated/reference/error-codes.mdx": "2026-11-19T17:25:26-03:00",
   "generated/reference/glossary.mdx": "2026-11-16T11:48:35-03:00",
   "generated/reference/timeline-schema.mdx": "2026-11-19T16:46:34-03:00"
