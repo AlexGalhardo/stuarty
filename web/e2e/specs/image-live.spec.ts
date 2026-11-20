@@ -60,6 +60,32 @@ test.describe("image live", () => {
 		return seen;
 	}
 
+	// Counts, in the page, the event streams that opened: the listener is added before the one of the screen, so
+	// once the count moved the screen knows its stream is open too.
+	function countOpenStreams(): void {
+		const Native = window.EventSource;
+		const record = window as unknown as { openStreams: number };
+		record.openStreams = 0;
+		window.EventSource = class extends Native {
+			constructor(url: string | URL, init?: EventSourceInit) {
+				super(url, init);
+				this.addEventListener("open", () => {
+					record.openStreams++;
+				});
+			}
+		};
+	}
+
+	const openStreams = (target: Page): Promise<number> =>
+		target.evaluate(
+			() => (window as unknown as { openStreams?: number }).openStreams ?? 0,
+		);
+
+	// A round trip to each page, so the requests a moved clock made have been reported to the test.
+	async function settle(...pages: Page[]): Promise<void> {
+		for (const target of pages) await target.evaluate(() => 0);
+	}
+
 	test("an edit by the CLI appears in a second window within a second, with no polling while the stream is up", async ({
 		page,
 		request,
@@ -68,6 +94,10 @@ test.describe("image live", () => {
 		await editImage(call, id, [
 			{ op: "layer.add_fill", args: { color: "#203040", name: "Back" } },
 		]);
+		// The clock of the pages is the test's, so the intervals of the poll are moved, not waited for.
+		const clock = page.context().clock;
+		await clock.install();
+		await page.context().addInitScript(countOpenStreams);
 		const second = await page.context().newPage();
 		const first = watch(page, id);
 		const other = watch(second, id);
@@ -77,13 +107,16 @@ test.describe("image live", () => {
 		]);
 		await expect(row(page, "Back")).toBeVisible();
 		await expect(row(second, "Back")).toBeVisible();
-		await expect.poll(() => first.streams).toBeGreaterThan(0);
-		await expect.poll(() => other.streams).toBeGreaterThan(0);
+		await expect.poll(() => openStreams(page)).toBeGreaterThan(0);
+		await expect.poll(() => openStreams(second)).toBeGreaterThan(0);
+		expect(first.streams).toBeGreaterThan(0);
+		expect(other.streams).toBeGreaterThan(0);
 
 		// A window that is up and has its stream does not ask for the document on a timer: two intervals of the
 		// poll (2 seconds each) pass and the reads stay where they were.
 		const readsBefore = first.reads + other.reads;
-		await page.waitForTimeout(4500);
+		await clock.runFor(4500);
+		await settle(page, second);
 		expect(first.reads + other.reads).toBe(readsBefore);
 
 		cli("image:edit", id, "layer.add_fill", "color=#112233", "name=Circle");
@@ -97,7 +130,8 @@ test.describe("image live", () => {
 			"local:cli",
 		);
 		expect(first.reads + other.reads).toBe(readsBefore + 2);
-		await page.waitForTimeout(4500);
+		await clock.runFor(4500);
+		await settle(page, second);
 		expect(first.reads + other.reads).toBe(readsBefore + 2);
 		expect((await imageState(call, id)).layers.map((l) => l.name)).toContain(
 			"Circle",
