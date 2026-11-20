@@ -103,11 +103,13 @@ Export got slower between 0.24.0 and this build. The cause is being traced, and 
 
 ## 4. The first complete flow on a small model (epic 38, NFR-066)
 
-The scenario `first-flow` of `internal/tools/agentharness` gives a small model only the brief ("make a short vertical video for YouTube Shorts from this footage about baking a first sourdough loaf, and schedule it") and the built-in skills in `web/resources/skills/`. It measures completion, tool calls, errors recovered and tokens. A run is a success only when the harness finds what the flow must leave behind: a published target that carries an approval, an export whose checks all passed, and the same file at the fake network, with nothing sent before the harness, playing the person, approved. The harness approves; the agent cannot.
+The scenario `first-flow` of `internal/tools/agentharness` gives a small model only the brief ("make a short vertical video for YouTube Shorts from this footage about baking a first sourdough loaf, and schedule it for fifteen minutes from now") and the built-in skills in `web/resources/skills/`. It measures completion, tool calls, errors recovered and tokens. A run is a success only when the harness finds what the flow must leave behind: a published target that carries an approval, an export whose checks all passed, and the same file at the fake network, with nothing sent before the harness, playing the person, approved. The harness approves; the agent cannot. The time of the post is far enough ahead to be still on time when the agent stops and the harness approves, and the harness waits for it.
+
+The runs of a series share one server and one workspace, so each run is judged only by what it added: the publications that were not there when it started and the uploads the network received since. A run whose services do not answer fails before its first turn, at no cost.
 
 The scripted run of the same flow is `bash scripts/first-flow.sh` (CLI and MCP calls, no model) and the UI run is `web/e2e/specs/first-flow.spec.ts`. Both are regression tests of the whole product and cost nothing.
 
-**Cost.** A run with a model calls a paid API with the author's key, so the estimate is shown first and the author approves the budget. `agentharness --scenario first-flow --runs 5 --estimate` prints it without calling the API; it is the worst case (every attempt uses every turn, every turn re-sends the whole context and writes the most tokens).
+**Cost.** A run with a model calls a paid API with the author's key, so the estimate is shown first and the author approves the budget. `STUARTY_HARNESS=1 go run ./internal/tools/agentharness --scenario first-flow --runs 5 --max-turns 60 --model <small model> --price-in <price> --price-out <price> --estimate` prints it without calling the API and without the services or a key; it is the worst case (every attempt uses every turn, every turn re-sends the whole context and writes the most tokens).
 
 **How to run it.** The services behind Stuarty are the fakes of `internal/tools/firstflowfake`, started by hand on loopback:
 
