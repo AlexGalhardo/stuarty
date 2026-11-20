@@ -3547,9 +3547,9 @@
       "domain": "publish",
       "summary": "list the publications of the calendar, by project, state, network or time range",
       "usage": [
-        "stuarty publication:list [--project <id>] [--state <state>] [--from <time>] [--to <time>]"
+        "stuarty publication:list [--project <id>] [--state <state>] [--from <time>] [--until <time>]"
       ],
-      "example": "stuarty publication:list --from 2026-11-16T00:00:00Z --to 2026-11-23T00:00:00Z --json",
+      "example": "stuarty publication:list --from 2026-11-16T00:00:00Z --until 2026-11-23T00:00:00Z --json",
       "flags": [
         {
           "name": "project",
@@ -3572,7 +3572,7 @@
           "usage": "only those with a target at or after this time (RFC 3339)"
         },
         {
-          "name": "to",
+          "name": "until",
           "type": "string",
           "usage": "only those with a target before this time (RFC 3339)"
         },
