@@ -105,10 +105,13 @@ type ImageHistoryEntry struct {
 	At       time.Time `json:"at"`
 	Ops      []string  `json:"ops"`
 	Changes  int       `json:"changes"`
-	UndoOf   *int64    `json:"undo_of,omitempty"`   // the revision an undo or a redo acted on
-	UndoneBy *int64    `json:"undone_by,omitempty"` // the revision that undid this batch
-	Skipped  int       `json:"skipped,omitempty"`   // the primitives an undo or a redo left alone
-	Mine     bool      `json:"mine"`                // made by the caller
+	// What the step did, in English words, from the summaries of the image commands (SDD-021 section 4); never layer
+	// text. The panel shows it as received.
+	Description string `json:"description"`
+	UndoOf      *int64 `json:"undo_of,omitempty"`   // the revision an undo or a redo acted on
+	UndoneBy    *int64 `json:"undone_by,omitempty"` // the revision that undid this batch
+	Skipped     int    `json:"skipped,omitempty"`   // the primitives an undo or a redo left alone
+	Mine        bool   `json:"mine"`                // made by the caller
 }
 
 // ImageHistoryResult lists the latest batches, newest first.
@@ -150,10 +153,11 @@ func (s *svc) ImageHistory(ctx context.Context, req ImageHistoryRequest) (*Image
 		return nil, asError(oerr)
 	}
 
+	reg := coreimage.Registry()
 	entries := make([]ImageHistoryEntry, 0, len(rows))
 
 	for i := len(rows) - 1; i >= 0; i-- {
-		entries = append(entries, imageHistoryEntry(&rows[i], c.Actor))
+		entries = append(entries, imageHistoryEntry(reg, &rows[i], c.Actor))
 	}
 
 	return &ImageHistoryResult{
@@ -161,7 +165,7 @@ func (s *svc) ImageHistory(ctx context.Context, req ImageHistoryRequest) (*Image
 	}, nil
 }
 
-func imageHistoryEntry(row *ImageOpRow, me string) ImageHistoryEntry {
+func imageHistoryEntry(reg *command.Registry, row *ImageOpRow, me string) ImageHistoryEntry {
 	e := ImageHistoryEntry{
 		Revision: row.Revision, Kind: string(row.Kind), Actor: row.Actor, At: msTime(row.AtMs),
 		Ops: opNames(row.Ops), Changes: len(decodeDiff(row.Diff)), Mine: row.Actor == me,
@@ -171,6 +175,8 @@ func imageHistoryEntry(row *ImageOpRow, me string) ImageHistoryEntry {
 	if e.Ops == nil {
 		e.Ops = []string{}
 	}
+
+	e.Description = describeStep(reg, row.Kind, row.TargetRevision, row.Ops, e.Ops)
 
 	if row.Kind == OpUndo || row.Kind == OpRedo {
 		e.UndoOf = row.TargetRevision

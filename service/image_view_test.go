@@ -192,3 +192,55 @@ func TestImageReadsRefuseAProjectLimitedKey(t *testing.T) {
 	_, err = s.ImageFile(limited, ImageFileRequest{ImageID: c.ImageID, Name: "1-000000000000.png"})
 	mustCode(t, err, CodeForbidden)
 }
+
+// VV-279: a row of the history says in words what the step did, with the summaries of the core, as the history of a
+// timeline does.
+func TestImageHistoryDescribesEachStep(t *testing.T) {
+	s, _ := newImageService(t)
+	person := asActor("local:person")
+
+	c, err := s.ImageCreate(person, ImageCreateRequest{Width: 100, Height: 100})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := s.ImageEdit(person, ImageEditRequest{
+		ImageID: c.ImageID, BaseRevision: 1,
+		Operations: ops(
+			"layer.add_fill", `{"color": "#000000"}`,
+			"layer.add_shape", `{"shape": "ellipse", "w": 10, "h": 10}`,
+		),
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := s.ImageUndo(person, ImageStepRequest{ImageID: c.ImageID}); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := s.ImageRedo(person, ImageStepRequest{ImageID: c.ImageID}); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := s.ImageRevert(person, ImageRevertRequest{ImageID: c.ImageID, Revision: 1}); err != nil {
+		t.Fatal(err)
+	}
+
+	h, err := s.ImageHistory(person, ImageHistoryRequest{ImageID: c.ImageID})
+	if err != nil || len(h.Entries) != 5 {
+		t.Fatalf("%v %+v", err, h)
+	}
+
+	want := []string{
+		"Reverted to r1.",
+		"Redid r3.",
+		"Undid r2.",
+		"Adds a solid colour over the whole canvas. Adds a rectangle, a rounded rectangle or an ellipse.",
+	}
+
+	for i, w := range want {
+		if got := h.Entries[i].Description; got != w {
+			t.Errorf("entry %d description = %q, want %q", i, got, w)
+		}
+	}
+}
