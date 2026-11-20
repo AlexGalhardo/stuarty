@@ -69,10 +69,21 @@ func TestCompositionValidate(t *testing.T) {
 		},
 		{"no timeline", func(d *Document) { editItem(d, "itm_c000000000", func(i *Item) { i.Timeline = "" }) }, VShape},
 		{"timeline form", func(d *Document) { editItem(d, "itm_c000000000", func(i *Item) { i.Timeline = "x" }) }, VID},
+		{"speed", func(d *Document) { editItem(d, "itm_c000000000", func(i *Item) { i.Speed = Rational{2, 1} }) }, ""},
 		{
-			"speed",
-			func(d *Document) { editItem(d, "itm_c000000000", func(i *Item) { i.Speed = Rational{2, 1} }) },
-			VComposition,
+			"speed too fast",
+			func(d *Document) { editItem(d, "itm_c000000000", func(i *Item) { i.Speed = Rational{5, 1} }) },
+			VSpeed,
+		},
+		{
+			"speed too slow",
+			func(d *Document) { editItem(d, "itm_c000000000", func(i *Item) { i.Speed = Rational{1, 5} }) },
+			VSpeed,
+		},
+		{
+			"speed zero",
+			func(d *Document) { editItem(d, "itm_c000000000", func(i *Item) { i.Speed = Rational{0, 1} }) },
+			VShape,
 		},
 		{
 			"asset",

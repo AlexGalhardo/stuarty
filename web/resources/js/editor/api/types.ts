@@ -427,6 +427,9 @@ export interface PlanSpeedRamp {
 	points: { t: number; speed: { num: number; den: number } }[];
 	item_frames: number;
 	first_frame: number;
+	// The speed of the composition the source sits in (SDD-004 section 7); the
+	// plan of the window leaves a ramp that has one out, so it is not read here.
+	time_scale?: { num: number; den: number };
 }
 
 // GET /projects/{id}/plan (SDD-004 section 10).
