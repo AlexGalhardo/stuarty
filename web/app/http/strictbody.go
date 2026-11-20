@@ -30,7 +30,8 @@ func strictBody[In any](skip func() bool) func(http.Handler) http.Handler {
 
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if t.Kind() != reflect.Struct || t.NumField() == 0 || skip() || r.Body == nil || r.Body == http.NoBody || !isJSONBody(r) {
+			if t.Kind() != reflect.Struct || t.NumField() == 0 || skip() || r.Body == nil || r.Body == http.NoBody ||
+				!isJSONBody(r) {
 				next.ServeHTTP(w, r)
 				return
 			}
