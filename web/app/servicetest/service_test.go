@@ -509,6 +509,10 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.VoiceGenerate(ctx, service.VoiceGenerateRequest{ProjectID: "prj_0000000001"})
 			return err
 		},
+		"VideoGenerate": func() error {
+			_, err := e.svc.VideoGenerate(ctx, service.VideoGenerateRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
 		"VoiceList": func() error {
 			_, err := e.svc.VoiceList(ctx, service.VoiceListRequest{ConnectionID: "con_0000000001"})
 			return err
