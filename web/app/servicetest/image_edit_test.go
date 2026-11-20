@@ -608,10 +608,9 @@ func TestImageEdit_APictureTheProviderCannotTakeIsRefusedFirst(t *testing.T) {
 		`","id":"lyr_0000000098","x":0,"y":0,"w":320,"h":240,"name":"Gif"}`))
 
 	_, err := e.svc.ImageModelEdit(e.as(token), service.ImageModelEditRequest{
-		ProjectID: e.prj, ImageModelArgs: service.ImageModelArgs{
-			ConnectionID: e.imageConn, ImageID: e.image, Operation: provider.OperationRemoveBackground,
-			Model: imageModel, LayerID: "lyr_0000000098",
-		},
+		ProjectID:    e.prj,
+		ConnectionID: e.imageConn, ImageID: e.image, Operation: provider.OperationRemoveBackground,
+		Model: imageModel, LayerID: "lyr_0000000098",
 	})
 	if se, ok := svcErr(err); !ok || se.Code != "E_VALIDATION" || se.Path != "args.layer_id" ||
 		!strings.Contains(se.Message, "not a PNG, a JPEG or a WebP") {
