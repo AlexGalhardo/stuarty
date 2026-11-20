@@ -47,7 +47,7 @@ Not in progress together with 48 and 50: all three change `core/image` and SDD-0
 - [x] 2. Implement the key in `core/image` with its validation and a golden case for each refusal. Verify: `go test ./core/image/... -run TestAdjustLUT` passes; then `task codegen` and `task generate:check` exit 0.
 - [x] 3. Plan and export: the plan field, the upload to the module, the draw. Verify: `go test ./engine/export/... -run TestImageLUT` passes against its golden PNG files.
 - [x] 4. Service: resolve the asset by its hash and check its kind for the document. Verify: `go test ./service/... -run TestImageLUT` passes.
-- [ ] 5. Parity with the video: the same table gives the same bytes on an image layer and on a clip. Verify: `go test ./engine/export/... -run TestImageLUTMatchesVideoLUT` passes.
+- [x] 5. Parity with the video: the same table gives the same bytes on an image layer and on a clip. Verify: `go test ./engine/export/... -run TestImageLUTMatchesVideoLUT` passes.
 - [ ] 6. Inspector control and both languages. Verify: `bun run check:i18n` and `task test:web` pass, and `web/e2e/specs/image-lut.spec.ts` (new, `bun run e2e`) passes.
 - [ ] 7. Confirm the module: the Rust gate and the pinned digest. Verify: `cargo fmt --check && cargo clippy -- -D warnings && cargo test && cargo deny check` in `renderer/` exit 0, and `bash scripts/build-renderer.sh` reproduces the pinned digest.
 
