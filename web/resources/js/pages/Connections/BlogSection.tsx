@@ -185,6 +185,7 @@ export default function BlogSection({
 						<Label htmlFor="blog-kind">{t("ui.connections.blog.kind")}</Label>
 						<select
 							id="blog-kind"
+							aria-describedby="blog-about"
 							className={SELECT}
 							value={form.kind}
 							onChange={(event) => set("kind", event.target.value as BlogKind)}
@@ -208,7 +209,11 @@ export default function BlogSection({
 						/>
 					</div>
 				</div>
-				<p className="text-xs text-muted-foreground" data-testid="blog-about">
+				<p
+					id="blog-about"
+					className="text-xs text-muted-foreground"
+					data-testid="blog-about"
+				>
 					{t(`ui.connections.blog.about.${form.kind}`)}
 				</p>
 				{form.kind === "blog_files" && (
@@ -220,10 +225,14 @@ export default function BlogSection({
 							<Input
 								id="blog-folder"
 								autoComplete="off"
+								aria-describedby="blog-folder-hint"
 								value={form.folder}
 								onChange={(event) => set("folder", event.target.value)}
 							/>
-							<p className="text-xs text-muted-foreground">
+							<p
+								id="blog-folder-hint"
+								className="text-xs text-muted-foreground"
+							>
 								{t("ui.connections.blog.folder_hint")}
 							</p>
 						</div>
@@ -258,10 +267,14 @@ export default function BlogSection({
 									id="blog-front-matter"
 									rows={6}
 									className="font-mono"
+									aria-describedby="blog-front-matter-hint"
 									value={form.frontMatter}
 									onChange={(event) => set("frontMatter", event.target.value)}
 								/>
-								<p className="text-xs text-muted-foreground">
+								<p
+									id="blog-front-matter-hint"
+									className="text-xs text-muted-foreground"
+								>
 									{t("ui.connections.blog.front_matter_hint")}
 								</p>
 							</div>
@@ -309,6 +322,7 @@ export default function BlogSection({
 									id="blog-app-password"
 									type="password"
 									autoComplete="off"
+									aria-describedby="blog-wordpress-hint"
 									value={form.applicationPassword}
 									onChange={(event) =>
 										set("applicationPassword", event.target.value)
@@ -316,7 +330,10 @@ export default function BlogSection({
 								/>
 							</div>
 						</div>
-						<p className="text-xs text-muted-foreground">
+						<p
+							id="blog-wordpress-hint"
+							className="text-xs text-muted-foreground"
+						>
 							{t("ui.connections.blog.wordpress_hint")}
 						</p>
 					</>
@@ -343,6 +360,7 @@ export default function BlogSection({
 									id="blog-signing"
 									type="password"
 									autoComplete="off"
+									aria-describedby="blog-signing-hint"
 									value={form.signingSecret}
 									onChange={(event) => set("signingSecret", event.target.value)}
 								/>
@@ -360,7 +378,7 @@ export default function BlogSection({
 								/>
 							</div>
 						</div>
-						<p className="text-xs text-muted-foreground">
+						<p id="blog-signing-hint" className="text-xs text-muted-foreground">
 							{t("ui.connections.blog.signing_hint")}
 						</p>
 					</>
