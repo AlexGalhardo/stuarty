@@ -58,7 +58,11 @@ pending_commits() {
 	git rev-list --reverse --topo-order --no-merges "$ref" --not HEAD origin/main \
 		$(git for-each-ref --format='%(refname)' refs/remotes/origin/release/) |
 		while read -r c; do
-			[ "$(git cherry HEAD "$c" "$c^" 2>/dev/null | cut -c1)" = "-" ] || echo "$c"
+			# Already on the line by patch, or picked before (-x records it; a commit whose conflict
+			# was resolved has another patch id, so only the record finds it).
+			[ "$(git cherry HEAD "$c" "$c^" 2>/dev/null | cut -c1)" = "-" ] && continue
+			[ -n "$(git log -1 --format=%H --fixed-strings --grep="cherry picked from commit $c" HEAD)" ] && continue
+			echo "$c"
 		done
 }
 
