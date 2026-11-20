@@ -15,7 +15,13 @@ import { Label } from "@/components/ui/label";
 import { useT } from "@/lib/i18n";
 import { fileUrl } from "../api/imageApi";
 import type { Finding, ImageExportResult } from "../api/types";
-import { useImage, useImageApi, useImageStore } from "../state/context";
+import {
+	findLayer,
+	useImage,
+	useImageApi,
+	useImageStore,
+} from "../state/context";
+import { withLayerName } from "./findingText";
 import ToolButton from "../toolbar/ToolButton";
 import { ToolGroup } from "../toolbar/Toolbar";
 
@@ -206,7 +212,15 @@ function ExportDialog({ onClose }: { onClose(): void }): ReactNode {
 										</strong>
 										{": "}
 										<span lang="en">
-											<UntrustedText>{finding.message}</UntrustedText>
+											<UntrustedText>
+												{withLayerName(
+													finding.message,
+													finding.item,
+													finding.item === undefined
+														? undefined
+														: findLayer(doc.layers, finding.item)?.name,
+												)}
+											</UntrustedText>
 										</span>
 									</span>
 									{finding.item !== undefined && (

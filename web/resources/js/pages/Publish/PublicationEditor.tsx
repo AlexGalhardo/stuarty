@@ -28,6 +28,7 @@ import type {
 } from "../../editor/api/types";
 import { type TextItem, writingClient } from "../Write/client";
 import type { PublishApi } from "./api";
+import { exportLabel } from "./exportLabel";
 import { useBackgroundAsk } from "./BackgroundAsk";
 import { browserZone } from "./calendar";
 import { TargetResult } from "./ListView";
@@ -495,11 +496,13 @@ export function PublicationEditor({
 								>
 									<option value="">{t("ui.social.choose")}</option>
 									{video !== "" && !videos.some((j) => j.job_id === video) && (
-										<option value={video}>{video}</option>
+										<option value={video}>
+											{t("ui.social.chosen_export")}
+										</option>
 									)}
 									{videos.map((job) => (
 										<option key={job.job_id} value={job.job_id}>
-											{job.job_id} · {formatDateTime(job.created_at, locale)}
+											{exportLabel(job, formatDateTime(job.created_at, locale))}
 										</option>
 									))}
 								</select>
@@ -516,11 +519,13 @@ export function PublicationEditor({
 								>
 									<option value="">{t("ui.social.no_thumbnail")}</option>
 									{still !== "" && !stills.some((j) => j.job_id === still) && (
-										<option value={still}>{still}</option>
+										<option value={still}>
+											{t("ui.social.chosen_thumbnail")}
+										</option>
 									)}
 									{stills.map((job) => (
 										<option key={job.job_id} value={job.job_id}>
-											{job.job_id} · {formatDateTime(job.created_at, locale)}
+											{exportLabel(job, formatDateTime(job.created_at, locale))}
 										</option>
 									))}
 								</select>

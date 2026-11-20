@@ -19,9 +19,11 @@ function api() {
 // the form to set a ceiling. The page adds nothing: every figure is the service's.
 export default function CostPanel({
 	summary,
+	projects = {},
 	onChanged,
 }: {
 	summary: CostSummary | null;
+	projects?: Readonly<Record<string, string>>;
 	onChanged(): void;
 }): ReactNode {
 	const t = useT();
@@ -85,7 +87,9 @@ export default function CostPanel({
 									>
 										{line.scope === "workspace"
 											? t("ui.approvals.scope_workspace")
-											: (line.project_id ?? "")}
+											: (projects[line.project_id ?? ""] ??
+												line.project_id ??
+												"")}
 										{": "}
 										{formatMoney(
 											{ micros: line.micros, currency: line.currency },
@@ -106,7 +110,9 @@ export default function CostPanel({
 							<ul className="mt-2 text-sm" data-testid="cost-ceilings">
 								{summary.ceilings.map((c) => (
 									<li key={`${c.project_id ?? ""}-${c.currency}`}>
-										{c.project_id ?? t("ui.approvals.scope_workspace")}
+										{c.project_id === null
+											? t("ui.approvals.scope_workspace")
+											: (projects[c.project_id] ?? c.project_id)}
 										{": "}
 										{t("ui.approvals.rules.limits", {
 											item:

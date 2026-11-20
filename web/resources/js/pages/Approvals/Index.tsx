@@ -22,6 +22,7 @@ export default function Approvals(): ReactNode {
 	const t = useT();
 	const queue = useApprovalQueue();
 	const [destinations, setDestinations] = useState<Record<string, string>>({});
+	const [projects, setProjects] = useState<Record<string, string>>({});
 	const [rules, setRules] = useState<ApprovalRule[]>([]);
 	const [cost, setCost] = useState<CostSummary | null>(null);
 	const [failure, setFailure] = useState<Failure | null>(null);
@@ -53,6 +54,14 @@ export default function Approvals(): ReactNode {
 				),
 			)
 			.catch((error: unknown) => setFailure(failureOf(error)));
+		api()
+			.listProjects()
+			.then((res) =>
+				setProjects(
+					Object.fromEntries(res.projects.map((p) => [p.id, p.name])),
+				),
+			)
+			.catch((error: unknown) => setFailure(failureOf(error)));
 	}, [loadRules, loadCost]);
 
 	return (
@@ -78,9 +87,14 @@ export default function Approvals(): ReactNode {
 				<RulesPanel
 					rules={rules}
 					destinations={destinations}
+					projects={projects}
 					onChanged={() => void loadRules()}
 				/>
-				<CostPanel summary={cost} onChanged={() => void loadCost()} />
+				<CostPanel
+					summary={cost}
+					projects={projects}
+					onChanged={() => void loadCost()}
+				/>
 			</div>
 		</>
 	);

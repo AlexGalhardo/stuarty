@@ -213,12 +213,17 @@ func TestPublicationScheduleAsksAndWaits(t *testing.T) {
 
 	a := r.env.asks[0]
 	for _, want := range []string{
-		`Publish "My video"`, "Fake network", `"My channel"`, "con_1", "visible to: private",
+		`Publish "My video"`, "Fake network", `"My channel"`, "visible to: private",
 		"2026-11-21 09:00 America/Sao_Paulo", "2026-11-21T12:00:00Z", "video.mp4", "1234 bytes", `text: "Watch it"`,
 	} {
 		if !strings.Contains(a.Summary, want) {
 			t.Errorf("the summary lacks %q: %s", want, a.Summary)
 		}
+	}
+
+	// VV-325: a person reads the account, not the id of the connection.
+	if strings.Contains(a.Summary, "con_") {
+		t.Errorf("the summary names a connection id: %s", a.Summary)
 	}
 
 	if len(a.Summary) > 500 {

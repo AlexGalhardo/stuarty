@@ -36,11 +36,13 @@ function limit(
 export function RuleRow({
 	rule,
 	destination,
+	projectName,
 	onRemove,
 	onToggle,
 }: {
 	rule: ApprovalRule;
 	destination: string | null;
+	projectName?: string | null;
 	onRemove(): void;
 	onToggle(): void;
 }): ReactNode {
@@ -69,7 +71,10 @@ export function RuleRow({
 							destination ??
 							rule.connection_id ??
 							t("ui.approvals.rules.any_destination"),
-						project: rule.project_id ?? t("ui.approvals.rules.any_project"),
+						project:
+							projectName ??
+							rule.project_id ??
+							t("ui.approvals.rules.any_project"),
 					})}
 				</p>
 				<p className="text-xs text-muted-foreground">
@@ -108,10 +113,12 @@ export function RuleRow({
 export default function RulesPanel({
 	rules,
 	destinations,
+	projects = {},
 	onChanged,
 }: {
 	rules: readonly ApprovalRule[];
 	destinations: Readonly<Record<string, string>>;
+	projects?: Readonly<Record<string, string>>;
 	onChanged(): void;
 }): ReactNode {
 	const t = useT();
@@ -189,6 +196,11 @@ export default function RulesPanel({
 						<RuleRow
 							key={rule.id}
 							rule={rule}
+							projectName={
+								rule.project_id === null
+									? null
+									: (projects[rule.project_id] ?? null)
+							}
 							destination={
 								rule.connection_id === null
 									? null

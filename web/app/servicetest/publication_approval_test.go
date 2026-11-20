@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -292,5 +293,33 @@ func TestApprovalThatExpiresReturnsTheTargetToADraft(t *testing.T) {
 
 	if c.state(p, id) != corepub.TargetWaitingApproval {
 		t.Errorf("state = %s", c.state(p, id))
+	}
+}
+
+// VV-325: what a person reads in the approval queue names the account, never the id of the connection.
+func TestApprovalSummaryOfAPostHasNoConnectionID(t *testing.T) {
+	c := newCalendar(t)
+
+	p, err := c.svc.PublicationCreate(c.as(agent), service.PublicationCreateRequest{
+		ProjectID: c.project, Title: "Plan", Export: c.exp, Targets: []pub.TargetInput{c.target(c.at(time.Hour))},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	got, err := c.svc.PublicationSchedule(c.as(agent), service.PublicationScheduleRequest{
+		ID: p.ID, TargetID: p.Targets[0].ID,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req, err := c.svc.ApprovalGet(c.as(token), service.ApprovalRef{ID: got.Target(p.Targets[0].ID).ApprovalID})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if strings.Contains(req.Summary, "con_") || !strings.Contains(req.Summary, "Fake channel") {
+		t.Errorf("the summary = %q, want the account and no connection id", req.Summary)
 	}
 }

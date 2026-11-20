@@ -637,14 +637,13 @@ func (m *Manager) summary(res *Resolved, p *Publication, t *Target) string {
 
 	slot := core.Slot{At: *t.ScheduledAt, Zone: t.Zone}
 	sum := fmt.Sprintf(
-		"Publish %q to %s, account %q (%s), visible to: %s; at %s %s (%s); file %s, %d bytes",
+		"Publish %q to %s, account %q, visible to: %s; at %s %s (%s); file %s, %d bytes",
 		clean(
 			f.Title,
 			summaryTitleRunes,
 		),
 		res.NetworkName,
 		clean(res.Account, summaryAccountRunes),
-		t.ConnectionID,
 		vis,
 		slot.Local(),
 		t.Zone,

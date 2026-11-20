@@ -2585,6 +2585,8 @@
       "video": "Exported video",
       "thumbnail": "Thumbnail (an exported still)",
       "no_thumbnail": "No thumbnail",
+      "chosen_export": "The export already chosen",
+      "chosen_thumbnail": "The thumbnail already chosen",
       "thumbnail_image": "Or the export of an image (its id is shown when you export it)",
       "post_title": "Title",
       "description": "Description",

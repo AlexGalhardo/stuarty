@@ -2585,6 +2585,8 @@
       "video": "Vídeo exportado",
       "thumbnail": "Miniatura (um quadro exportado)",
       "no_thumbnail": "Sem miniatura",
+      "chosen_export": "A exportação já escolhida",
+      "chosen_thumbnail": "A miniatura já escolhida",
       "thumbnail_image": "Ou a exportação de uma imagem (o id aparece quando você a exporta)",
       "post_title": "Título",
       "description": "Descrição",

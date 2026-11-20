@@ -31,6 +31,18 @@ const model = (
 });
 
 describe("the choices of the Generate dialog", () => {
+	test("names a connection as the person named it and never by its id", () => {
+		const providers = [
+			provider("openai", ["image"], ["con_o1", "con_o2", "con_o3"]),
+		];
+		const labels = choicesOf(providers, "image", {
+			con_o1: "openai",
+			con_o2: "Work key",
+		}).map((c) => c.label);
+		expect(labels).toEqual(["openai 1", "openai (Work key)", "openai 2"]);
+		for (const label of labels) expect(label).not.toContain("con_");
+	});
+
 	test("offers the connections of the providers that have the capability", () => {
 		const providers = [
 			provider("anthropic", ["text"], ["con_a"]),
