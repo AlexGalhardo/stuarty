@@ -12,7 +12,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/stuarty/core/provider"
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/connections/oauth"
 	"github.com/AlexGalhardo/stuarty/service/connections/oauth/oauthtest"
@@ -663,7 +662,7 @@ func TestSignInChatGPTConnectionGeneratesNoImageAndNoVoice(t *testing.T) {
 	se := newSignInEnv(t)
 	done := se.signIn("openai", "")
 
-	for unit, model := range map[string]string{"image": "gpt-image-1", "mchar": "gpt-4o-mini-tts"} {
+	for unit, model := range map[string]string{"image": imageModel, "mchar": voiceModel} {
 		micros := int64(40_000)
 		if _, err := se.svc.ProviderPriceSet(se.asPerson(), service.ProviderPriceSetRequest{
 			Provider: "openai", Model: model, Currency: "USD", Unit: unit, UnitMicros: &micros,
@@ -673,12 +672,10 @@ func TestSignInChatGPTConnectionGeneratesNoImageAndNoVoice(t *testing.T) {
 	}
 
 	_, ierr := se.svc.ImageGenerate(se.as(token), service.ImageGenerateRequest{
-		ProjectID: se.prj, ConnectionID: done.ConnectionID,
-		ImageRequest: provider.ImageRequest{Model: "gpt-image-1", Prompt: "a loaf", Count: 1, Size: "1024x1024"},
+		ProjectID: se.prj, ConnectionID: done.ConnectionID, ImageRequest: imageRequest(1, "a loaf"),
 	})
 	_, verr := se.svc.VoiceGenerate(se.as(token), service.VoiceGenerateRequest{
-		ProjectID: se.prj, ConnectionID: done.ConnectionID,
-		VoiceRequest: provider.VoiceRequest{Model: "gpt-4o-mini-tts", Text: "Hello.", Voice: "alloy", Format: "mp3"},
+		ProjectID: se.prj, ConnectionID: done.ConnectionID, VoiceRequest: voiceRequest("Hello.", "mp3"),
 	})
 
 	for name, err := range map[string]error{"an image": ierr, "a voice": verr} {
