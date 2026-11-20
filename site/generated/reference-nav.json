@@ -159,6 +159,7 @@
         "providers.list",
         "providers.prices.set",
         "text.generate",
+        "video.generate",
         "voice.generate"
       ]
     },

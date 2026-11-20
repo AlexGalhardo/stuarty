@@ -440,6 +440,7 @@ Scopes: `read`, `edit`, `media`, `render`, `admin` (SDD-000 §4). They are indep
 | `TextGenerate` | `POST /text/generate` | - | R | - | - | - | A job of a kind that needs approval (SDD-015 section 5); the estimate is checked against the ceilings (T-54); the result is untrusted text (T-53) |
 | `ImageGenerate` | `POST /image/generate` | - | R | - | - | - | As `TextGenerate`; a result URL is fetched only through the gated client (a host the connection does not list is refused, `E_CONNECTION_DESTINATION`), and a file is checked by signature and size before it becomes an asset (SDD-016 section 5.3) |
 | `VoiceGenerate` | `POST /voice/generate` | - | R | - | - | - | As `ImageGenerate` |
+| `VideoGenerate` | `POST /video/generate` | - | R | - | - | - | As `ImageGenerate`; the task id of the provider is checked by `provider.ValidTaskID` and for an echo of the key before it is stored, and a first frame is read from the project's own assets only (SDD-016 section 6.4) |
 | `VoiceList` | `GET /connections/{id}/voices` | R | - | - | - | - | The names of the voices are cleaned like the names of models and checked for the key; refused for a project-limited key |
 | `ApprovalRuleList` | `GET /approval-rules` | R | - | - | - | - | Refused for a project-limited key |
 | `ApprovalRuleSet` | `POST /approval-rules` | - | - | - | - | R | A privileged browser session only (T-49); at most 100 rules; audited |

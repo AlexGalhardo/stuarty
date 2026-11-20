@@ -240,6 +240,8 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.ImageGenerate)
 	case "VoiceGenerate":
 		return invoke(ctx, s, svc.VoiceGenerate)
+	case "VideoGenerate":
+		return invoke(ctx, s, svc.VideoGenerate)
 	case "VoiceList":
 		return invoke(ctx, s, svc.VoiceList)
 	case "AuditList":
@@ -610,7 +612,7 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 		args["kind"], args["args"] = "text.generate", inner
 
 		return "job_start", args, nil
-	case "ImageGenerate", "VoiceGenerate":
+	case "ImageGenerate", "VoiceGenerate", "VideoGenerate":
 		// the same: the request members are the arguments of the job kind
 		delete(args, "dry_run")
 
@@ -618,6 +620,7 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 
 		for _, k := range []string{
 			"connection_id", "model", "prompt", "size", "count", "text", "voice", "language", "format",
+			"seconds", "aspect", "first_frame",
 		} {
 			if v, ok := args[k]; ok {
 				inner[k] = v
@@ -627,8 +630,11 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 		}
 
 		args["kind"], args["args"] = "image.generate", inner
-		if s.Call == "VoiceGenerate" {
+		switch s.Call {
+		case "VoiceGenerate":
 			args["kind"] = "voice.generate"
+		case "VideoGenerate":
+			args["kind"] = "video.generate"
 		}
 
 		return "job_start", args, nil
@@ -865,6 +871,9 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 		Voice        string `json:"voice"`
 		Language     string `json:"language"`
 		Format       string `json:"format"`
+		Seconds      int    `json:"seconds"`
+		Aspect       string `json:"aspect"`
+		FirstFrame   string `json:"first_frame"`
 
 		ItemID   string `json:"item_id"`
 		Title    string `json:"title"`
@@ -1229,6 +1238,21 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 		}
 
 		return "image:generate", argv, "", nil
+	case "VideoGenerate":
+		argv = slices.Concat(
+			proj, []string{"--connection", a.ConnectionID, "--model", a.Model, "--prompt", a.Prompt},
+			flag("aspect", a.Aspect), flag("first-frame", a.FirstFrame),
+		)
+
+		if a.Seconds > 0 {
+			argv = append(argv, "--seconds", strconv.Itoa(a.Seconds))
+		}
+
+		if a.DryRun {
+			argv = append(argv, "--dry-run")
+		}
+
+		return "video:generate", argv, "", nil
 	case "VoiceGenerate":
 		argv = slices.Concat(
 			proj, []string{"--connection", a.ConnectionID, "--model", a.Model, "--voice", a.Voice, "--text", a.Text},

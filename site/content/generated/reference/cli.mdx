@@ -1624,8 +1624,8 @@ stuarty provider:price --provider <id> --model <id> --currency USD --price-in <m
 | `--currency` | string |  | three letters, such as USD; needed to set a price |
 | `--price-in` | string |  | the price of a million input tokens, in millionths of the currency unit |
 | `--price-out` | string |  | the price of a million output tokens; leave all prices out to remove the entry |
-| `--unit` | string |  | image for the price of one image, mchar for the price of a million characters of speech; leave out for tokens |
-| `--unit-micros` | string |  | with --unit: the price of one image or of a million characters, in millionths of the currency unit |
+| `--unit` | string |  | image for the price of one image, mchar for the price of a million characters of speech, second for one second of video; leave out for tokens |
+| `--unit-micros` | string |  | with --unit: the price of one image, of a million characters or of one second, in millionths of the currency unit |
 
 Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
 
@@ -1710,6 +1710,32 @@ Example:
 
 ```bash
 stuarty voice:generate --project prj_7k2m9x4q1b --connection con_0123456789 --model a-model --voice alloy --text "Welcome"
+```
+
+## `video:generate`
+
+Generate a video clip with the provider of a connection; the job shows its estimate, always waits for a person unless a rule covers it, and stores the clip as an asset
+
+```text
+stuarty video:generate --project <id> --connection <id> --model <id> [--prompt <text> | --prompt-file <file>] [--seconds <n>] [--aspect 16:9|9:16|1:1|4:3|3:4] [--first-frame <asset id>] [--dry-run]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--connection` | string |  | the connection to the provider (required) |
+| `--model` | string |  | the model id, as provider:models lists it (required) |
+| `--prompt` | string |  | what the clip shows; without it and without --prompt-file the prompt is read from standard input |
+| `--prompt-file` | string |  | a file that holds the prompt |
+| `--seconds` | integer |  | the length of the clip, 1 to 60 (default 5); the model may make fewer lengths |
+| `--aspect` | string |  | 16:9 (default), 9:16, 1:1, 4:3 or 3:4 |
+| `--first-frame` | string |  | the id of an image asset of the project the clip starts from |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--dry-run`.
+
+Example:
+
+```bash
+stuarty video:generate --project prj_7k2m9x4q1b --connection con_0123456789 --model a-model --prompt "A red fox" --seconds 6 --aspect 9:16
 ```
 
 ## `voice:list`

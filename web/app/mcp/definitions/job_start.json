@@ -1,6 +1,6 @@
 {
  "name": "job_start",
- "description": "Start long work; args by kind. export renders a workspace file: {start?, end?, format?, at? (the png frame), preset?, codec?}; export_batch: items (export args) in turn; transcribe: {asset_id, language?, model?}; text.generate: {connection_id, model, prompt}; image.generate: {connection_id, model, prompt, size?, count?}; voice.generate: {connection_id, model, text, voice, format?}; a person approves. Poll job_get.",
+ "description": "Start long work; args by kind. export renders a workspace file: {start?, end?, format?, at? (the png frame), preset?, codec?}; export_batch: items (export args) in turn; transcribe: {asset_id, language?, model?}; text.generate: {connection_id, model, prompt}; image.generate: {connection_id, model, prompt, size?, count?}; voice.generate: {connection_id, model, text, voice, format?}; video.generate: {connection_id, model, prompt, seconds?, aspect?, first_frame?}; a person approves. Poll job_get.",
  "inputSchema": {
   "type": "object",
   "properties": {
@@ -19,7 +19,8 @@
      "transcribe",
      "text.generate",
      "image.generate",
-     "voice.generate"
+     "voice.generate",
+     "video.generate"
     ]
    },
    "args": {

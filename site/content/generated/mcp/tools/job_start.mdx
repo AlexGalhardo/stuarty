@@ -10,7 +10,7 @@ wide: true
 
 <RefMain>
 
-Start long work; args by kind. export renders a workspace file: \{start?, end?, format?, at? (the png frame), preset?, codec?\}; export_batch: items (export args) in turn; transcribe: \{asset_id, language?, model?\}; text.generate: \{connection_id, model, prompt\}; image.generate: \{connection_id, model, prompt, size?, count?\}; voice.generate: \{connection_id, model, text, voice, format?\}; a person approves. Poll job_get.
+Start long work; args by kind. export renders a workspace file: \{start?, end?, format?, at? (the png frame), preset?, codec?\}; export_batch: items (export args) in turn; transcribe: \{asset_id, language?, model?\}; text.generate: \{connection_id, model, prompt\}; image.generate: \{connection_id, model, prompt, size?, count?\}; voice.generate: \{connection_id, model, text, voice, format?\}; video.generate: \{connection_id, model, prompt, seconds?, aspect?, first_frame?\}; a person approves. Poll job_get.
 
 ## Behaviour
 
@@ -29,7 +29,7 @@ These are the annotations of the tool definition, the hints a client uses to dec
 | --- | --- | --- | --- |
 | `project_id` | `string` | yes | pattern `^prj_[0-9a-hjkmnp-tv-z]{10}$` |
 | `timeline_id` | `string` | no | pattern `^prj_[0-9a-hjkmnp-tv-z]{10}$` |
-| `kind` | `export`, `export_batch`, `transcribe`, `text.generate`, `image.generate`, `voice.generate` | yes |  |
+| `kind` | `string`, one of 7 values | yes |  |
 | `args` | `object` | no |  |
 | `args.start` | `string` | no |  |
 | `args.end` | `string` | no |  |

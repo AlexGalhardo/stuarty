@@ -573,6 +573,15 @@ var Endpoints = []Endpoint{
 		Summary: "Start a speech generation with the provider of a connection; the job waits for approval, shows its estimate and stores the audio as an asset with its origin",
 	},
 	{
+		ID:      "video.generate",
+		Method:  http.MethodPost,
+		Path:    "/video/generate",
+		Scope:   service.ScopeEdit,
+		Service: "VideoGenerate",
+		Status:  202,
+		Summary: "Start a video generation with the provider of a connection; the job waits for a person unless a rule the user wrote covers it, shows its estimate and stores the clip as an asset with its origin",
+	},
+	{
 		ID: "voice.list", Method: http.MethodGet, Path: "/connections/{id}/voices", Scope: service.ScopeRead,
 		Service: "VoiceList", Status: 200, Summary: "List the voices of the provider of a connection",
 	},
