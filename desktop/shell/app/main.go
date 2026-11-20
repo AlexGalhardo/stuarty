@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/wailsapp/wails/v3/pkg/application"
@@ -76,11 +77,22 @@ func run() error {
 	ws, wsErr := workspace.Resolve(os.Getenv)
 	settingsDir, _ := service.Dir()
 	settings := service.Load(settingsDir)
+	// A second launch of the same workspace focuses the first and exits before it starts a second server
+	// (SDD-012 section 21.3 item 7); the lease of SDD-020 section 27 stays the protection against two senders.
+	var bgp atomic.Pointer[background]
 	app := application.New(application.Options{
 		Name:              "Stuarty",
 		Description:       "Stuarty desktop",
 		RawMessageHandler: br.handle,
-		Mac:               application.MacOptions{ApplicationShouldTerminateAfterLastWindowClosed: true},
+		SingleInstance: &application.SingleInstanceOptions{
+			UniqueID: shell.InstanceID(string(ws)),
+			OnSecondInstanceLaunch: func(d application.SecondInstanceData) {
+				if bg := bgp.Load(); bg != nil && shell.DecideSecondLaunch(d.Args) == shell.SecondFocus {
+					bg.showWindow()
+				}
+			},
+		},
+		Mac: application.MacOptions{ApplicationShouldTerminateAfterLastWindowClosed: true},
 		Windows: application.WindowsOptions{
 			WebviewUserDataPath:   shell.WebviewDataPath(webviewenv.Getenv, string(ws)),
 			AdditionalBrowserArgs: shell.WebviewArgs(webviewenv.Getenv),
@@ -120,6 +132,7 @@ func run() error {
 	})
 	bg := newBackground(app, srv, settingsDir, settings)
 	bg.install(win)
+	bgp.Store(bg)
 	guardNavigation(win, srv.Port, home)
 	br.app = app
 	br.port.Store(int64(srv.Port))
