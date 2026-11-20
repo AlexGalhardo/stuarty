@@ -5,6 +5,7 @@ import type {
 	RenderBudgets,
 	RenderInput,
 	RenderReason,
+	RenderSurface,
 	ToRenderWorker,
 } from "./protocol";
 import {
@@ -135,7 +136,7 @@ export class RenderService<S extends PixelSource, B> {
 				for (const id of message.ids) this.need().release(id);
 				return;
 			case "render":
-				await this.render(message.seq, message.input);
+				await this.render(message.seq, message.input, message.surfaces);
 				return;
 			case "dispose":
 				this.disposed = true;
@@ -254,13 +255,36 @@ export class RenderService<S extends PixelSource, B> {
 		}
 	}
 
-	private async render(seq: number, input: RenderInput): Promise<void> {
+	private async render(
+		seq: number,
+		input: RenderInput,
+		surfaces: readonly RenderSurface[] = [],
+	): Promise<void> {
+		// The module never draws a group (SDD-013 section 3.12): the surfaces of
+		// the groups of the frame are drawn first, with the module itself, and
+		// stored as the textures the frame draws them as. The pixels are what the
+		// module drew (premultiplied, clear where nothing is), and the texture is
+		// not opaque, as the Go host stores it.
+		for (const surface of surfaces) this.surface(surface);
 		const { width, height } = outputSize(input);
 		const rgba = this.need().render(JSON.stringify(input), width, height);
 		const bitmap = await this.deps.toBitmap(rgba, width, height);
 		this.host.post({ type: "frame", seq, bitmap, open: this.open }, [
 			bitmap as unknown as Transferable,
 		]);
+	}
+
+	private surface(surface: RenderSurface): void {
+		const core = this.need();
+		const { width, height } = outputSize(surface.input);
+		const rgba = core.render(JSON.stringify(surface.input), width, height);
+		core.putTexture(
+			surface.id,
+			width,
+			height,
+			new Uint8Array(rgba.buffer),
+			false,
+		);
 	}
 
 	private fail(
