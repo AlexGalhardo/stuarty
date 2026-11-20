@@ -54,9 +54,7 @@ func (c *Connector) accessToken(ctx context.Context, cred connections.Credential
 	if tok.RefreshToken != "" && tok.RefreshToken != presented {
 		c.rot.Remember(cred.Connection.ID, s.RefreshToken, tok.RefreshToken)
 
-		s.RefreshToken = tok.RefreshToken
-
-		if kerr := keep(cred, &s); kerr != nil {
+		if kerr := keep(cred, s.RefreshToken, presented, tok.RefreshToken); kerr != nil {
 			return "", kerr
 		}
 	}
@@ -64,21 +62,30 @@ func (c *Connector) accessToken(ctx context.Context, cred connections.Credential
 	return tok.AccessToken, nil
 }
 
-// keep writes the secret with the new refresh token over the one in the vault.
-func keep(cred connections.Credential, s *secret) error {
+// keep writes the new refresh token into the secret the vault holds now, under the lock of the connection:
+// only the token changes, so a price a person edited meanwhile is kept. A secret whose token is neither the
+// one this send read nor the one it presented was written by a new sign-in, which is newer and is kept.
+func keep(cred connections.Credential, read, presented, next string) error {
 	if cred.Rotate == nil {
 		return nil
 	}
 
-	raw, err := s.marshal()
+	err := cred.Rotate(func(current []byte) ([]byte, error) {
+		s, perr := parseSecret(current)
+		if perr != nil {
+			return nil, perr
+		}
+
+		if s.RefreshToken != read && s.RefreshToken != presented {
+			return nil, nil
+		}
+
+		s.RefreshToken = next
+
+		return s.marshal()
+	})
 	if err != nil {
-		return err
-	}
-
-	defer clear(raw)
-
-	if rerr := cred.Rotate(raw); rerr != nil {
-		return social.NewError(social.KindUnavailable, publish.NetworkX, "vault_write_failed", 0, rerr)
+		return social.NewError(social.KindUnavailable, publish.NetworkX, "vault_write_failed", 0, err)
 	}
 
 	return nil
