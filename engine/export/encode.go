@@ -208,9 +208,12 @@ func (s *state) encode(
 		writeErr <- werr
 	}()
 
-	// finish ends the writer, tells the encoder the input is over and waits for it.
-	finish := func(ok bool) (encoderResult, error) {
-		if !ok {
+	// finish ends the writer, tells the encoder the input is over and waits for it. A false stop leaves the
+	// encoder running until it ends by itself: it is the case of an encoder that has stopped reading
+	// because it is already ending, and cancelling it here would replace the cause of its end (the size
+	// watchdog, a deadline) with "context canceled" (VV-244). Its own deadline still bounds the wait.
+	finish := func(stop bool) (encoderResult, error) {
+		if stop {
 			cancel() // a stuck encoder would never read what the writer is blocked on
 		}
 		close(full)
@@ -223,8 +226,8 @@ func (s *state) encode(
 		return r, werr
 	}
 
-	fail := func(cause error) error {
-		r, werr := finish(false)
+	fail := func(cause error, stop bool) error {
+		r, werr := finish(stop)
 		if cerr := ctx.Err(); cerr != nil {
 			return cerr
 		}
@@ -240,14 +243,14 @@ func (s *state) encode(
 		select {
 		case buf = <-free:
 		case <-broken:
-			return fail(nil)
+			return fail(nil, false)
 		case <-ctx.Done():
-			return fail(nil)
+			return fail(nil, true)
 		}
 
 		if err := rd.render(buf, t); err != nil {
 			free <- buf
-			return fail(wrapRun(err, ReasonRender, "A frame of the project could not be composed.", ""))
+			return fail(wrapRun(err, ReasonRender, "A frame of the project could not be composed.", ""), true)
 		}
 		full <- buf
 
@@ -257,7 +260,7 @@ func (s *state) encode(
 		}
 	}
 
-	r, werr := finish(true)
+	r, werr := finish(false)
 	if ctx.Err() != nil {
 		return ctx.Err()
 	}
