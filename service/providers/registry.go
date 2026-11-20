@@ -224,7 +224,7 @@ func (r *Registry) Models(ctx context.Context, connectionID string, refresh bool
 		models, merr = p.Models(ctx, cred)
 		models = withoutEchoes(cred, models)
 
-		return merr
+		return SignInAware(merr, cred)
 	})
 	if err != nil {
 		return nil, err

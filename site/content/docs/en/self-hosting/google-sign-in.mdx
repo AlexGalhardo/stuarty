@@ -21,7 +21,7 @@ On a server in [network mode](/docs/self-hosting/network-mode) people sign in wi
 
 ## Set it up
 
-1. In the [Google Cloud console](https://console.cloud.google.com/apis/credentials) create an OAuth client of type "Web application" in a project you own (the same one you made for YouTube works). Google lets a project whose owner is its only user skip verification; a project in "Testing" status limits the users to those you list there.
+1. In the Google Cloud console (`console.cloud.google.com`, APIs & Services, Credentials) create an OAuth client of type "Web application" in a project you own (the same one you made for YouTube works). Google lets a project whose owner is its only user skip verification; a project in "Testing" status limits the users to those you list there.
 2. Add this as an **authorised redirect URI**: your `APP_URL` followed by `/login/google/callback`, for example `https://video.example.com/login/google/callback`. Settings, "Google sign-in", shows the exact address. If you also publish to YouTube, keep the redirect address of that guide as well.
 3. The scopes are `openid` and `email`. Nothing else is asked.
 4. In Stuarty, open **Connections** and add the YouTube connection with the client id and the client secret of the project. You do not need to complete the YouTube sign-in. The secret goes into the encrypted vault.

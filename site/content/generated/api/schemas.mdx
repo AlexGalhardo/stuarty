@@ -551,6 +551,8 @@ The types named in the tables of the operations. The arguments of each editing c
 | `limits` | [`Limits`](/docs/api/schemas#limits) | no |  |
 | `name` | `string` | no |  |
 | `network` | `string` | no |  |
+| `post_cost_currency` | `string` | no |  |
+| `post_cost_micros` | `integer (int64)` | no |  |
 | `publishes` | array of `string` | no |  |
 | `scopes` | array of `string` | no |  |
 
@@ -784,6 +786,17 @@ The types named in the tables of the operations. The arguments of each editing c
 | `sha256` | `string` | no |  |
 | `video_codec` | `string` | no |  |
 | `width` | `integer` | no |  |
+
+### Fields
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `ai_disclosure` | `boolean` | no |  |
+| `description` | `string` | no |  |
+| `made_for_kids` | `boolean` or `null` | no |  |
+| `tags` | array of `string` | no |  |
+| `title` | `string` | no |  |
+| `visibility` | `string` | no |  |
 
 ### FileResult
 
@@ -1259,11 +1272,12 @@ The types named in the tables of the operations. The arguments of each editing c
 | `style` | [`CaptionStyle`](/docs/api/schemas#captionstyle) or `any` or `null` or `null` | no |  |
 | `temperature` | `number (double)` | no |  |
 | `text` | `string` | no |  |
+| `timeline` | `string` | no |  |
 | `tint` | `number (double)` | no |  |
 | `track` | `string` | no |  |
 | `transition_in` | [`Transition`](/docs/api/schemas#transition) or `any` or `null` or `null` | no |  |
 | `transition_out` | [`Transition`](/docs/api/schemas#transition) or `any` or `null` or `null` | no |  |
-| `type` | `clip`, `audio`, `text`, `caption`, `shape` | no |  |
+| `type` | `clip`, `audio`, `text`, `caption`, `shape`, `composition` | no |  |
 | `voice` | `clear`, `warm`, `deep`, `bright`, `radio` | no |  |
 | `volume` | `number (double)` | no |  |
 | `wheels` | [`Wheels`](/docs/api/schemas#wheels) or `any` or `null` or `null` | no |  |
@@ -1836,7 +1850,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `args` | map of `any` | no | The arguments of the command. |
-| `op` | `string`, one of 82 values | yes | A command name, as listed by GET /commands.. min length 1 |
+| `op` | `string`, one of 85 values | yes | A command name, as listed by GET /commands.. min length 1 |
 
 ### Option
 
@@ -2094,6 +2108,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `kind` | `string` | no |  |
 | `position` | `integer` | no |  |
 | `state` | `string` | no |  |
+| `status` | `string` | no |  |
 | `text` | `string` | no |  |
 | `text_kind` | `string` | no |  |
 | `timeline_id` | `string` | no |  |
@@ -2226,6 +2241,29 @@ The types named in the tables of the operations. The arguments of each editing c
 | --- | --- | --- | --- |
 | `prices` | array of [`PriceEntry`](/docs/api/schemas#priceentry) | no |  |
 
+### ProviderSignIn
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `account` | `string` | no |  |
+| `connection_id` | `string` | no |  |
+| `label` | `string` | no |  |
+| `provider` | `string` | no |  |
+| `state` | `string` | no |  |
+
+### ProviderSignInBeginResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `authorize_url` | `string` | no |  |
+| `connection_id` | `string` | no |  |
+
+### ProviderSignInListResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `sign_ins` | array of [`ProviderSignIn`](/docs/api/schemas#providersignin) | no |  |
+
 ### ProviderView
 
 | Name | Type | Required | Description |
@@ -2237,6 +2275,28 @@ The types named in the tables of the operations. The arguments of each editing c
 | `docs_url` | `string` | no |  |
 | `id` | `string` | no |  |
 | `name` | `string` | no |  |
+
+### Publication
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `created_at` | `string (date-time)` | no |  |
+| `export` | `string` | no |  |
+| `id` | `string` | no |  |
+| `notes` | array of `string` | no |  |
+| `project_id` | `string` | no |  |
+| `targets` | array of [`Target`](/docs/api/schemas#target) | no |  |
+| `text` | `string` | no |  |
+| `thumbnail` | `string` | no |  |
+| `title` | `string` | no |  |
+| `updated_at` | `string (date-time)` | no |  |
+
+### PublicationListResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `publications` | array of [`Publication`](/docs/api/schemas#publication) | no |  |
+| `total` | `integer` | no |  |
 
 ### PublishResult
 
@@ -2631,6 +2691,53 @@ The types named in the tables of the operations. The arguments of each editing c
 | `frame_dirs` | `integer` | no |  |
 | `incoming_files` | `integer` | no |  |
 | `store_files` | `integer` | no |  |
+
+### Target
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `approval_id` | `string` | no |  |
+| `attempts` | `integer` | no |  |
+| `connection_id` | `string` | no |  |
+| `error` | [`TargetError`](/docs/api/schemas#targeterror) or `any` or `null` or `null` | no |  |
+| `fields` | [`Fields`](/docs/api/schemas#fields) | no |  |
+| `id` | `string` | no |  |
+| `late_window_minutes` | `integer` | no |  |
+| `local_time` | `string` | no |  |
+| `network` | `string` | no |  |
+| `next_attempt_at` | `string (date-time)` or `null` | no |  |
+| `publication_id` | `string` | no |  |
+| `published_at` | `string (date-time)` or `null` | no |  |
+| `remote_id` | `string` | no |  |
+| `remote_state` | `string` | no |  |
+| `scheduled_at` | `string (date-time)` or `null` | no |  |
+| `send_now` | `boolean` | no |  |
+| `state` | `string` | no |  |
+| `updated_at` | `string (date-time)` | no |  |
+| `url` | `string` | no |  |
+| `zone` | `string` | no |  |
+
+### TargetError
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `code` | `string` | no |  |
+| `hint` | `string` | no |  |
+| `kind` | `string` | no |  |
+| `message` | `string` | no |  |
+| `retryable` | `boolean` | no |  |
+
+### TargetInput
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `at` | `string` | no |  |
+| `connection_id` | `string` | no |  |
+| `fields` | [`Fields`](/docs/api/schemas#fields) | no |  |
+| `id` | `string` | no |  |
+| `late_window_minutes` | `integer` or `null` | no |  |
+| `remove` | `boolean` | no |  |
+| `zone` | `string` | no |  |
 
 ### TemplateInfo
 
@@ -3028,6 +3135,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `source_seconds` | `number (double)` | no |  |
 | `speed` | `number (double)` | no |  |
 | `speed_curve` | [`SpeedRamp`](/docs/api/schemas#speedramp) or `any` or `null` or `null` | no |  |
+| `timeline` | `string` | no |  |
 | `voice` | `string` | no |  |
 
 ### WindowBitmaps
@@ -3036,6 +3144,14 @@ The types named in the tables of the operations. The arguments of each editing c
 | --- | --- | --- | --- |
 | `index` | array of `integer` | no |  |
 | `keys` | array of `string` | no |  |
+
+### WindowGroup
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `height` | `integer` | no |  |
+| `layers` | array of [`WindowLayer`](/docs/api/schemas#windowlayer) | no |  |
+| `width` | `integer` | no |  |
 
 ### WindowLayer
 
@@ -3059,6 +3175,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `flip_x` | `boolean` | no |  |
 | `flip_y` | `boolean` | no |  |
 | `grade` | [`GradeSpec`](/docs/api/schemas#gradespec) or `any` or `null` or `null` | no |  |
+| `group` | [`WindowGroup`](/docs/api/schemas#windowgroup) or `any` or `null` or `null` | no |  |
 | `h` | `any` | no |  |
 | `item` | `string` | no |  |
 | `kind` | `string` | no |  |
@@ -3074,6 +3191,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `shadow` | [`ShadowSpec`](/docs/api/schemas#shadowspec) or `any` or `null` or `null` | no |  |
 | `source_frames` | array of `integer` | no |  |
 | `source_seconds` | array of `number (double)` | no |  |
+| `timeline` | `string` | no |  |
 | `transition` | array of [`TransitionSpec`](/docs/api/schemas#transitionspec) or `any` or `null` or `null` | no |  |
 | `w` | `any` | no |  |
 

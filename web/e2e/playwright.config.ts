@@ -15,6 +15,7 @@ import {
 	NETWORK_ADMIN,
 	NETWORK_PORT,
 	NETWORK_URL,
+	SIGNIN_PORT,
 } from "./support/network";
 
 // The server serves resources/public/build, which is not the sources: a build
@@ -208,6 +209,8 @@ export default defineConfig({
 				STUARTY_MASTER_KEY_FILE: `${home}.master.key`,
 				// A fake social network of the youtube-connect spec, on loopback (SDD-020 section 12).
 				STUARTY_TEST_SOCIAL_URL: `http://127.0.0.1:${port + 3}`,
+				// A fake authorization server of the provider-sign-in spec, on loopback (SDD-016 section 12.5).
+				STUARTY_TEST_SIGNIN_URL: `http://127.0.0.1:${SIGNIN_PORT}`,
 				// The desktop shell's secret, so a spec can sign in as a person (the approval queue).
 				STUARTY_LAUNCHER_SECRET: LAUNCHER_SECRET,
 				// One token drives the whole suite, faster and with more exports a minute

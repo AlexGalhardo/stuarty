@@ -528,6 +528,53 @@ var Endpoints = []Endpoint{
 		Service: "PublishStatus", Status: 200, Summary: "Read the state of a publication",
 	},
 	{
+		ID:      "publications.create",
+		Method:  http.MethodPost,
+		Path:    "/publications",
+		Scope:   service.ScopeEdit,
+		Service: "PublicationCreate",
+		Status:  200,
+		Summary: "Plan a publication: a video for one or more accounts, each with its time; every target starts as a draft",
+	},
+	{
+		ID: "publications.list", Method: http.MethodGet, Path: "/publications", Scope: service.ScopeRead,
+		Service: "PublicationList", Status: 200,
+		Summary: "List the publications of the calendar, by project, state, network or time range",
+	},
+	{
+		ID: "publications.events", Method: http.MethodGet, Path: "/publications/events", Scope: service.ScopeRead,
+		Uncounted: true, Status: 200, Summary: "Stream the changes of the publications of the calendar",
+	},
+	{
+		ID: "publications.get", Method: http.MethodGet, Path: "/publications/{id}", Scope: service.ScopeRead,
+		Service: "PublicationGet", Status: 200, Summary: "Read one publication with its targets",
+	},
+	{
+		ID: "publications.update", Method: http.MethodPut, Path: "/publications/{id}", Scope: service.ScopeEdit,
+		Service: "PublicationUpdate", Status: 200,
+		Summary: "Change a publication or its targets; a post that waited for approval goes back to waiting for it",
+	},
+	{
+		ID: "publications.schedule", Method: http.MethodPost, Path: "/publications/{id}/schedule",
+		Scope: service.ScopeRender, Service: "PublicationSchedule", Status: 200,
+		Summary: "Give a target its time and ask for approval; it is sent only after a person approves it",
+	},
+	{
+		ID: "publications.send-now", Method: http.MethodPost, Path: "/publications/{id}/send-now",
+		Scope: service.ScopeRender, Service: "PublicationSendNow", Status: 200,
+		Summary: "Ask for approval to send a target as soon as it is approved",
+	},
+	{
+		ID: "publications.retry", Method: http.MethodPost, Path: "/publications/{id}/retry",
+		Scope: service.ScopeRender, Service: "PublicationRetry", Status: 200,
+		Summary: "Ask for approval to send a failed target again",
+	},
+	{
+		ID: "publications.cancel", Method: http.MethodPost, Path: "/publications/{id}/cancel",
+		Scope: service.ScopeEdit, Service: "PublicationCancel", Status: 200,
+		Summary: "Cancel a target, or every target that has not gone out",
+	},
+	{
 		ID:      "providers.list",
 		Method:  http.MethodGet,
 		Path:    "/providers",
@@ -544,6 +591,28 @@ var Endpoints = []Endpoint{
 		ID: "providers.prices.set", Method: http.MethodPut, Path: "/providers/prices", Scope: service.ScopeAdmin,
 		Service: "ProviderPriceSet", Status: 200,
 		Summary: "Set or remove the price of a model (a person in the browser only; the local token and keys get 403)",
+	},
+	{
+		ID:      "providers.signin.begin",
+		Method:  http.MethodPost,
+		Path:    "/providers/signin",
+		Scope:   service.ScopeAdmin,
+		Service: "ProviderSignInBegin",
+		Status:  200,
+		Summary: "Start the sign-in to an AI provider; answers the address of the consent screen (a person in the browser only)",
+	},
+	{
+		ID:      "providers.signin.complete",
+		Method:  http.MethodPost,
+		Path:    "/providers/signin/complete",
+		Scope:   service.ScopeAdmin,
+		Service: "ProviderSignInComplete",
+		Status:  200,
+		Summary: "Finish the sign-in with what the provider sent to the redirect address (a person in the browser only)",
+	},
+	{
+		ID: "providers.sign-ins", Method: http.MethodGet, Path: "/providers/sign-ins", Scope: service.ScopeRead,
+		Service: "ProviderSignInList", Status: 200, Summary: "List the connections made by a sign-in and their state",
 	},
 	{
 		ID:      "text.generate",

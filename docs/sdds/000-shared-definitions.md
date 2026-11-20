@@ -86,9 +86,17 @@
 | `PublishValidate` | none | `publish:validate` | `POST /publish/validate` | read |
 | `PublishNow` | none yet (later `job_start` with kind `publish.upload`, SDD-020 §13) | `publish:now` | `POST /publish` | render; the job waits for approval |
 | `PublishStatus` | none | `publish:status` | `GET /publish/{job_id}` | read |
+| `PublicationCreate` | none (SDD-020 §29) | `publication:create` | `POST /publications` | edit (SDD-020) |
+| `PublicationGet`, `PublicationList` | none | `publication:show`, `publication:list` | `GET /publications/{id}`, `GET /publications` | read |
+| `PublicationUpdate` | none | `publication:update` | `PUT /publications/{id}` | edit |
+| `PublicationSchedule`, `PublicationSendNow`, `PublicationRetry` | none | `publication:schedule`, `publication:send-now`, `publication:retry` | `POST /publications/{id}/schedule`, `POST /publications/{id}/send-now`, `POST /publications/{id}/retry` | render; the target waits for approval |
+| `PublicationCancel` | none | `publication:cancel` | `POST /publications/{id}/cancel` | edit |
+| publication stream | none | none | `GET /publications/events` (SDD-020 §29) | read |
 | `ProviderList` | none | `provider:list` | `GET /providers` | read (SDD-016) |
 | `ProviderModels` | none | `provider:models` | `GET /connections/{id}/models` | read |
 | `ProviderPriceSet` | none | `provider:price` | `PUT /providers/prices` | admin, and only from a privileged browser session (SDD-016 §7) |
+| `ProviderSignInBegin`, `ProviderSignInComplete` | none | none | `POST /providers/signin`, `POST /providers/signin/complete` (the page `/auth/callback` posts to the second) | admin, and only from a privileged browser session (SDD-016 §12) |
+| `ProviderSignInList` | none | none | `GET /providers/sign-ins` | read |
 | `TextGenerate` | `job_start` (kind `text.generate`) | `text:generate` | `POST /text/generate` | edit |
 | `ImageGenerate` | `job_start` (kind `image.generate`) | `image:generate` | `POST /image/generate` | edit (SDD-016 §6.1) |
 | `VoiceGenerate` | `job_start` (kind `voice.generate`) | `voice:generate` | `POST /voice/generate` | edit |
@@ -120,7 +128,7 @@ The MCP catalogue is 20 tools: `project_list`, `project_create`, `project_get`, 
 
 **Projects and timelines (ADR-0039).** A project is a production; its timelines are items of it. Every operation above that edits or reads a timeline document (`Edit`, `HistoryList`, `Undo`, `Redo`, `HistoryRevert`, `HistoryDiff`, `Checkpoint*`, `Lint`, `MediaImport`, `MediaInspect`, `MediaList`, `MediaTrash`, `MediaRestore`, `ViewFrame`, `ViewSheet`, `JobStart`, `JobList`, `PlanWindow`, `SnapPoints`, `ProjectOtioExport`, `ProjectOtioImport`, `ProjectBundleExport`, `ExportCheck`, `ExportBatch`, and `ProjectGet` with a detail) accepts an optional `timeline_id` next to `project_id`; the rule is SDD-003 §1.7.
 
-Other CLI commands that are not service operations: `serve` (start the owner process), `mcp` (stdio MCP server), `open` (open the UI of a running server with a fresh launch code), `token:rotate`, `user:create` and `user:passwd` (network mode; they need the workspace lock, so no server may be running), `tools:install` (download a helper such as whisper.cpp after stating its size), `agent:docs` (print or write the generated material for agents, SDD-003 §8), plus vukem's built-in commands.
+Other CLI commands that are not service operations: `serve` (start the owner process), `mcp` (stdio MCP server), `open` (open the UI of a running server with a fresh launch code), `token:rotate`, `user:create` and `user:passwd` (network mode; they need the workspace lock, so no server may be running), `workspace:backup` (a consistent copy of the data of the workspace to a folder, with a checksum manifest and never the master key; no lock, a server may run) and `workspace:restore` (that folder into an empty workspace, under the lock; SDD-009 §21.4), `tools:install` (download a helper such as whisper.cpp after stating its size), `agent:docs` (print or write the generated material for agents, SDD-003 §8), plus vukem's built-in commands.
 
 ### 1.1 Domains (ADR-0043, epic 13)
 
@@ -133,7 +141,7 @@ Every operation belongs to one **domain**. The domain names are fixed here; a ne
 | `image` | image documents (SDD-021) | `Image*` and the commands of the image registry |
 | `writing` | written documents: scripts, copy and captions, with their revisions (SDD-019) | `Text*`, `CaptionValidate`, `ScriptEstimate` |
 | `asset` | files of the workspace: media, the asset library, fonts | `Media*`, `Asset*` (the library of epic 08: list, get, uses, set info, tag), `FontImport`, `FontList` |
-| `publish` | publications and their approval | `Approval*` (the queue that gates a publication and a costly generation, SDD-015), `Social*` (the networks and the accounts a publication goes to), `Publish*` (validate, publish now, status; SDD-020) |
+| `publish` | publications and their approval | `Approval*` (the queue that gates a publication and a costly generation, SDD-015), `Social*` (the networks and the accounts a publication goes to), `Publish*` (validate, publish now, status; SDD-020), `Publication*` (the calendar: create, list, edit, schedule, send now, retry, cancel; SDD-020 §23 to §31) |
 | `provider` | AI providers and generation | `Provider*` (the providers, their models and the price table, SDD-016), `TextGenerate`, `ImageGenerate`, `VoiceGenerate`, `VoiceList`, `ImageModelEdit`, `Cost*` (the spend on providers and its ceilings) |
 | `memory` | the library: notes, skills, prompts, search | `Memory*`, `Skill*`, `Prompt*`, `Library*` |
 | `workspace` | the installation: help, connections, brand kit, health, keys, audit, trash, helpers, the hosted agent chat | `CommandHelp`, `Connection*`, `BrandKit*`, `Doctor`, `AuditList`, `TrashEmpty`, `Tools*`, `Key*`, `AgentProfile*`, `Chat*` (SDD-017) |
@@ -159,6 +167,8 @@ Rules: a command (an operation of a registry in `core/command`) takes its domain
 | `apr_` | approval request (SDD-015) | SDD-015 |
 | `rul_` | approval rule (SDD-015) | SDD-015 |
 | `led_` | cost ledger entry (SDD-015) | SDD-015 |
+| `pub_` | publication (SDD-020 §23) | SDD-020 |
+| `tgt_` | target of a publication: one account, one time (SDD-020 §23) | SDD-020 |
 | `cht_` | hosted agent chat session (SDD-017) | SDD-017 |
 | `cpr_` | permission request of a hosted agent (SDD-017 §7) | SDD-017 |
 
@@ -178,11 +188,12 @@ An actor string is one of `user:<id>`, `key:<key id>`, `local:<label>`. `<label>
 | --- | --- | --- |
 | `batch.committed` | a batch was committed | `revision`, `actor`, `diff`, `at` |
 | `project.updated` | project metadata outside the document changed (trash, restore) | `project_id`, `state` |
+| `nested.updated` | a timeline that this one uses as a composition, directly or through others, committed a batch (SDD-006 §3.3.1) | `project_id`, `timeline_id`, `revision`, `at` |
 | `asset.updated` | an asset's ingest state or progress changed | `asset_id`, `state`, `progress` |
 | `job.updated` | a job's state or progress changed | `job_id`, `kind`, `state`, `progress`, `message` |
 | `resync.required` | the client is too far behind to replay | `revision` |
 
-Two events are not on a project stream but on the approval queue stream `GET /approvals/events` (SDD-015 §7): `approval.requested` (a request was made, or is pending when the stream opens) and `approval.decided` (a request was approved, rejected or expired); both carry the request.
+Two events are not on a project stream but on the approval queue stream `GET /approvals/events` (SDD-015 §7): `approval.requested` (a request was made, or is pending when the stream opens) and `approval.decided` (a request was approved, rejected or expired); both carry the request. A third, `publication.updated`, is on the stream `GET /publications/events` (SDD-020 §29) and carries the publication with its targets.
 
 The event `id` of `batch.committed` is the revision. Details in SDD-006.
 
@@ -217,6 +228,7 @@ Kinds: `ingest`, `transcribe`, `export`, `export_batch`, `frame`, `text.generate
 | `connections` | the destinations the user connected: kind, label, hosts, what each may receive, last use and the id of its secret in the vault; no secret | SDD-014 |
 | `image_documents`, `image_operations` | image documents, and their append-only log of batches | SDD-005 §5.12, SDD-021 |
 | `approval_requests`, `approval_rules`, `cost_ceilings`, `cost_ledger` | the approval queue, the rules that approve without asking, the cost ceilings and the record of every estimate and real cost; no secret | SDD-015 |
+| `publications`, `publication_targets` | the calendar: what is published, to which account, at what time, in which state, with its lease and its result; no secret | SDD-005 §5.15, SDD-020 §23 |
 | `image_documents`, `image_operations` | image documents, and their append-only log of batches | SDD-005 §5.13, SDD-021 |
 | `library_entries`, `library_fts` | the index of memory, skills and prompts for search and lists; rebuilt from the files, holds no content that the files lack | SDD-018 §9 |
 | `asset_info`, `asset_tags`, `asset_search` | the library side of an asset by hash: origin, rights note, description, the reuse mark, the tags and the full-text index over them | SDD-005 §5.5.1, SDD-011 §14 |
@@ -284,7 +296,7 @@ CLI exit codes: `0` success; `2` for every code marked retryable; `1` for the re
 ├── token                    local token, file mode 0600 (local mode only)
 ├── vault.json               encrypted credentials of the connections, file mode 0600; created with the first credential (SDD-014 §3)
 ├── publish/                 uploads/<key>.json: the address of an upload session of a publication in progress, file mode 0600, no token (SDD-020 §7.4)
-├── providers/               prices.json: the price table the person edits for the models whose provider publishes no price, file mode 0600 (SDD-016 §4.3)
+├── providers/               prices.json: the price table the person edits for the models whose provider publishes no price, file mode 0600 (SDD-016 §4.3); host-id: the random identifier of this host that Sign in with ChatGPT sends, made at the first start, not a secret (SDD-016 §12.1)
 ├── library/                 memory/, prompts/ and skills/<name>/SKILL.md: the files of the library, the truth of the index; .review-key seals the review marks (SDD-018 §2, §7)
 ├── store/                   content-addressed originals: store/<first 2 hex>/<sha256>; store/.incoming/ holds copies in progress
 ├── artifacts/               derived files: artifacts/<asset sha256>/<kind>-<profile version>[-<variant>].<ext> (SDD-011 §6.1)
@@ -322,6 +334,7 @@ Environment variables, all optional. Names are final. Ceilings that have no vari
 | `STUARTY_TEST_TRANSCRIBER` | none | test only: `stub` selects a provider that answers every audio with four fixed words (`hello` 100-400 ms, `brave` 400-700, `new` 1100-1400, `world` 1400-1900, language `en`). Honoured only with `APP_ENV=test` in local mode; with any other `APP_ENV`, in network mode, or with any other value the server refuses to start. Never set in production |
 | `STUARTY_TEST_SOCIAL_URL` | none | test only: the address (`http://127.0.0.1:<port>`) of a server on loopback that plays a social network; the build then also offers the network `fake`, which speaks only to that address (SDD-020 §12). Honoured in local mode only; any other address, scheme or mode and the server refuses to start. Never set in production |
 | `STUARTY_TEST_GOOGLE_URL` | none | test only: the address (`http://127.0.0.1:<port>`) of a server on loopback that plays Google for the optional Google sign-in; the authorization, token and key addresses and the issuer then are that address with `/authorize`, `/token`, `/certs` and the bare address (SDD-014 §12.1). Honoured in both modes, but the connection chosen for the sign-in must list that host or the gate refuses it; any other address or scheme and the server refuses to start. Never set in production |
+| `STUARTY_TEST_SIGNIN_URL` | none | test only: the address (`http://127.0.0.1:<port>`) of a server on loopback that plays the sign-in to an AI provider; Sign in with ChatGPT and OpenRouter then authorize, exchange and call the API at that address (SDD-016 §12.5). Honoured in local mode only; any other address, scheme or mode and the server refuses to start. Never set in production |
 | `STUARTY_MAX_EXPORTS_PER_KEY` | `1` | concurrent exports running per actor (two more may wait) |
 | `STUARTY_MAX_INGESTS` | `2` | concurrent ingests per workspace |
 | `STUARTY_MAX_TRANSCRIBES` | `1` | concurrent transcriptions per workspace |
@@ -344,7 +357,7 @@ Environment variables, all optional. Names are final. Ceilings that have no vari
 | `STUARTY_PROJECT` | none | client side: the default project of CLI commands that take one |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | none | turns on OpenTelemetry (ADR-0026) |
 
-The limits and their errors are specified in SDD-007 §9. Variables read by vukem itself and used by the product (`APP_URL`, `APP_KEY`, `TLS_CERT_FILE`, `TLS_KEY_FILE`, `TRUSTED_PROXIES`, `TRUST_FORWARDED_PROTO`, `SHUTDOWN_TIMEOUT`, `DB_MAX_OPEN`) keep vukem's names.
+The limits and their errors are specified in SDD-007 §9. Variables read by vukem itself and used by the product (`APP_URL`, `APP_KEY`, `TLS_CERT_FILE`, `TLS_KEY_FILE`, `TRUSTED_PROXIES`, `TRUST_FORWARDED_PROTO`, `SHUTDOWN_TIMEOUT`, `DB_MAX_OPEN`) keep vukem's names. The variables of `deploy/.env` (`STUARTY_DOMAIN`, `STUARTY_VERSION`, `STUARTY_ACME_EMAIL`, `STUARTY_TLS_DIRECTIVE`, `STUARTY_SUBNET`, `STUARTY_CADDY_IP`, `STUARTY_MAX_BODY`) and the timeouts of the scripts of `deploy/` (`STUARTY_HEALTH_TIMEOUT`, `STUARTY_HTTPS_TIMEOUT`) are read by the compose file and the scripts, never by the binary (SDD-009 §21); `STUARTY_ADMIN_EMAIL` and `STUARTY_ADMIN_PASSWORD` are the two of the table above.
 
 ## 11. Headers and cookies
 

@@ -387,7 +387,7 @@ func (s *svc) setItemState(
 	var tlID string
 
 	head, change, err := s.changeProduction(ctx, c, action, req.ProjectID, req.DryRun,
-		func(_ context.Context, _ Tx, _ *ProductionHead, rows []ItemRow) (*productionChange, error) {
+		func(ctx context.Context, tx Tx, _ *ProductionHead, rows []ItemRow) (*productionChange, error) {
 			it := findItem(rows, req.ItemID)
 			if it == nil {
 				return nil, itemNotFound(req.ItemID)
@@ -396,6 +396,12 @@ func (s *svc) setItemState(
 			ch := &productionChange{rows: rows, itemID: req.ItemID}
 			if it.State == to {
 				return ch, nil
+			}
+
+			if it.Kind == string(project.Timeline) {
+				if nerr := s.checkTimelineState(ctx, tx, it.Ref, to); nerr != nil {
+					return nil, nerr
+				}
 			}
 
 			check := project.CheckTrash(coreItems(rows), it.ID)

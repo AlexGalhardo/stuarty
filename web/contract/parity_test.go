@@ -197,6 +197,16 @@ var parity = []row{
 	{method: "PublishValidate", command: "publish:validate", route: "POST /publish/validate"},
 	{method: "PublishNow", command: "publish:now", route: "POST /publish"},
 	{method: "PublishStatus", command: "publish:status", route: "GET /publish/{}"},
+	// The calendar of publications (SDD-020 section 29): no MCP tool (author decision D-094); an agent plans
+	// through the CLI and HTTP, and approval stays with a person.
+	{method: "PublicationCreate", command: "publication:create", route: "POST /publications"},
+	{method: "PublicationGet", command: "publication:show", route: "GET /publications/{}"},
+	{method: "PublicationList", command: "publication:list", route: "GET /publications"},
+	{method: "PublicationUpdate", command: "publication:update", route: "PUT /publications/{}"},
+	{method: "PublicationSchedule", command: "publication:schedule", route: "POST /publications/{}/schedule"},
+	{method: "PublicationSendNow", command: "publication:send-now", route: "POST /publications/{}/send-now"},
+	{method: "PublicationRetry", command: "publication:retry", route: "POST /publications/{}/retry"},
+	{method: "PublicationCancel", command: "publication:cancel", route: "POST /publications/{}/cancel"},
 	// The AI providers (SDD-016 section 10): a generation starts with job_start (kind text.generate), the
 	// byte budget of the tool list leaves no room for a tool of its own. Setting a price is for a person.
 	{method: "ProviderList", command: "provider:list", route: "GET /providers"},
@@ -226,6 +236,10 @@ var parity = []row{
 	// the kind image.edit.
 	{method: "ImageModelEdit", tool: "job_start", command: "image:model-edit", route: "POST /images/{}/model-edit"},
 	{method: "VoiceList", command: "voice:list", route: "GET /connections/{}/voices"},
+	// The sign-in to an AI provider (SDD-016 section 12) is made by a person in the browser: no tool, no command.
+	{method: "ProviderSignInBegin", route: "POST /providers/signin", httpOnly: true},
+	{method: "ProviderSignInComplete", route: "POST /providers/signin/complete", httpOnly: true},
+	{method: "ProviderSignInList", route: "GET /providers/sign-ins", httpOnly: true},
 	// The library (SDD-018): one MCP tool, library, serves the lists, reads, writes, searches, renders and
 	// lints. Removing a note, importing and exporting skills read and write files by path (no tool), and
 	// marking a skill as read is for a person at the browser (HTTP only).

@@ -13,12 +13,15 @@ import (
 	"github.com/AlexGalhardo/stuarty/service/providers"
 	"github.com/AlexGalhardo/stuarty/service/providers/anthropic"
 	"github.com/AlexGalhardo/stuarty/service/providers/openai"
+	"github.com/AlexGalhardo/stuarty/service/providers/openrouter"
 	"github.com/AlexGalhardo/stuarty/service/providers/providertest"
 )
 
 // adapters is the one list of the adapters of a build: a provider is added with one line here, the
 // same line the owner has (web/app/owner).
-func adapters() []providers.Provider { return []providers.Provider{openai.New(), anthropic.New()} }
+func adapters() []providers.Provider {
+	return []providers.Provider{openai.New(), anthropic.New(), openrouter.New()}
+}
 
 func TestBothAdaptersServeThroughTheRegistry(t *testing.T) {
 	t.Parallel()
@@ -45,7 +48,7 @@ func TestBothAdaptersServeThroughTheRegistry(t *testing.T) {
 		ids = append(ids, d.ID)
 	}
 
-	if !slices.Equal(ids, []string{"anthropic", "openai"}) {
+	if !slices.Equal(ids, []string{"anthropic", "openai", "openrouter"}) {
 		t.Fatalf("got %v", ids)
 	}
 
@@ -123,4 +126,5 @@ func TestAddingAProviderNeedsOnePackageAndOneLine(t *testing.T) {
 
 	var _ providers.TextGenerator = openai.New()
 	var _ providers.TextGenerator = anthropic.New()
+	var _ providers.TextGenerator = openrouter.New()
 }

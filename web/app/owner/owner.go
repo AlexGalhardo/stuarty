@@ -303,7 +303,8 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 
 	o.Service, err = service.New(service.Options{
 		Keys: o.keyStore(), Connections: out.conns, Providers: out.provs, Social: out.socials, HeavyPerMinute: heavy,
-		Agents: o.Agents, WebP: o.webp,
+		SignIns: out.signInSet,
+		Agents:  o.Agents, WebP: o.webp,
 		Heavy: middleware.ServiceLimiter{L: ratelimit.NewMemory(heavy, time.Minute)},
 		Store: st, Registry: command.Default(), Now: cfg.Now, Workspace: string(o.Dir), Media: media,
 		Exporter: exp, Enqueue: jobs.Dispatcher{Queue: o.Queue}, Limits: limits, Publish: publish, Version: o.version,
@@ -514,8 +515,21 @@ func (o *Owner) Announce(addr string) error {
 
 // Work runs the queue workers until ctx ends. Jobs still running when the
 // timeout passes are interrupted; the service requeues them (SDD-005 section
-// 14.5), so none is lost to a shutdown.
+// 14.5), so none is lost to a shutdown. The publication scheduler runs beside them for as long as the server
+// does (SDD-020 section 27); keeping it alive with the window closed is the desktop service of epic 21.
 func (o *Owner) Work(ctx context.Context) error {
+	if sched, ok := service.SchedulerOf(o.Service); ok {
+		done := make(chan struct{})
+
+		go func() {
+			defer close(done)
+
+			_ = sched.Run(ctx)
+		}()
+
+		defer func() { <-done }()
+	}
+
 	err := o.Queue.Work(ctx, queue.WorkOptions{
 		Queues:      jobs.Queues,
 		Concurrency: o.limits.MaxIngests + o.limits.MaxExports + 2,
