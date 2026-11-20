@@ -41,7 +41,7 @@ A creator writes a blog post in Stuarty, with its images, and sends it where the
 - [x] 3. Implement the files destination with templates. Verify: `go test ./service/publish/destinations/... -run TestFiles` passes (round trip of a post with two images).
 - [x] 4. Implement the WordPress destination with contract fixtures. Verify: `go test ./service/publish/destinations/... -run TestWordPress` passes with no network (create, update, media, auth failure).
 - [x] 5. Implement the webhook destination with signing, retries and the address rules. Verify: `go test ./service/publish/destinations/... -run TestWebhook` passes.
-- [ ] 6. Implement the read API and its token scope. Verify: `go test ./web/app/... -run TestPostsAPI` passes (only published posts; the token is refused elsewhere).
+- [x] 6. Implement the read API and its token scope. Verify: `go test ./web/app/... -run TestPostsAPI` passes (only published posts; the token is refused elsewhere).
 - [ ] 7. Expose post operations on HTTP, CLI and MCP with parity. Verify: `go test ./web/contract/...` passes.
 - [ ] 8. Build the post editor with preview and the destination forms, in both languages. Verify: `task test:web` and `web/e2e/specs/blog.spec.ts` pass.
 - [ ] 9. Security tests of the new rows. Verify: `go test -run TestSecurity_ ./...` and `go run ./internal/tools/threatcheck` exit 0.

@@ -82,14 +82,14 @@ func PublicHost(host string) error {
 	host = strings.TrimSuffix(strings.ToLower(host), ".")
 
 	if host == "localhost" || strings.HasSuffix(host, ".localhost") {
-		return errors.New(
+		return &EndpointError{
 			"the address is this machine: use a connection of the kind blog_webhook_local to deliver to it",
-		)
+		}
 	}
 
 	if ip, err := netip.ParseAddr(host); err == nil && outbound.NotPublicAddr(ip) {
-		return errors.New("the address is on this machine or a private network: use a connection of the kind " +
-			"blog_webhook_local to deliver to it")
+		return &EndpointError{"the address is on this machine or a private network: use a connection of the kind " +
+			"blog_webhook_local to deliver to it"}
 	}
 
 	return nil
@@ -126,7 +126,7 @@ func (w *webhook) ValidateConfig(secret []byte, endpoint string) error {
 
 	u, err := url.Parse(endpoint)
 	if err != nil || u.Hostname() == "" {
-		return errors.New("the endpoint is the URL that receives the post")
+		return &EndpointError{"the endpoint is the URL that receives the post"}
 	}
 
 	if !w.local {

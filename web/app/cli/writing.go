@@ -15,8 +15,30 @@ import (
 func writingCommands() []*spec {
 	return []*spec{
 		textListCmd, textShowCmd, textWriteCmd, textRevisionsCmd, textRevertCmd, textDraftCmd,
-		captionValidateCmd, scriptEstimateCmd,
+		captionValidateCmd, scriptEstimateCmd, postCheckCmd,
 	}
+}
+
+var postCheckCmd = &spec{
+	name:       "post:check",
+	summary:    "check a blog post (SDD-019 section 13): its front matter, its images and its sanitised HTML",
+	usage:      []string{"stuarty post:check <item> --project <id>"},
+	example:    "stuarty post:check pit_3c5v8n2w6d --project prj_7k2m9x4q1b",
+	positional: true,
+	flags:      []flagDef{optionalProjectFlag},
+	run: func(ctx context.Context, c *call) (*output, error) {
+		item, err := onePositional(c, "post:check", true)
+		if err != nil {
+			return nil, err
+		}
+
+		res, err := c.svc.PostCheck(ctx, service.PostCheckRequest{ProjectID: projectOf(c), ItemID: item})
+		if err != nil {
+			return nil, err
+		}
+
+		return &output{value: res, text: res.Text}, nil
+	},
 }
 
 // onePositional is the item id a writing command takes, or an error when there are several.

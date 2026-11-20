@@ -102,6 +102,21 @@ var Provenance = map[string]string{
 	"writing.TextHunk.Text":        SourceProjectText,
 	"writing.SceneEstimate.Title":  SourceProjectText,
 
+	// the blog (SDD-019 section 13, SDD-020 section 47): the text of a post is the creator's own, and what a
+	// published post carries is served back as data
+	"writing.PostMeta.Title":                    SourceProjectText,
+	"writing.PostMeta.Summary":                  SourceProjectText,
+	"writing.PostMeta.Tags":                     SourceProjectText,
+	"writing.PostMeta.Canonical":                SourceProjectText,
+	"service.PostCheckResult.HTML":              SourceProjectText,
+	"service.PostCheckResult.Markdown":          SourceProjectText,
+	"service.PublishedPostSummary.Title":        SourceProjectText,
+	"service.PublishedPostSummary.Summary":      SourceProjectText,
+	"service.PublishedPostSummary.Tags":         SourceProjectText,
+	"service.PublishedPostSummary.CanonicalURL": SourceProjectText,
+	"service.PublishedPostResult.Markdown":      SourceProjectText,
+	"service.PublishedPostResult.HTML":          SourceProjectText,
+
 	// the hand-off from an external motion engine (SDD-011 section 15): the words of the captions in the range
 	"service.MotionCaption.Text":          SourceProjectText,
 	"service.MotionCheckResult.AssetName": SourceAssetName,

@@ -98,13 +98,15 @@ func (t *Target) Candidate() core.Candidate {
 
 // Publication is what is published: shared by its targets (SDD-020 section 23).
 type Publication struct {
-	ID        string   `json:"id"`
-	ProjectID string   `json:"project_id"`
-	Title     string   `json:"title"               untrusted:"true"`
-	Text      string   `json:"text,omitempty"      untrusted:"true"`
-	Export    string   `json:"export"`
-	Thumbnail string   `json:"thumbnail,omitempty"`
-	Targets   []Target `json:"targets"`
+	ID        string `json:"id"`
+	ProjectID string `json:"project_id"`
+	Title     string `json:"title"               untrusted:"true"`
+	Text      string `json:"text,omitempty"      untrusted:"true"`
+	Export    string `json:"export"`
+	Thumbnail string `json:"thumbnail,omitempty"`
+	// Post is the id of the text item of a blog post, instead of an export (SDD-020 section 43).
+	Post    string   `json:"post,omitempty"`
+	Targets []Target `json:"targets"`
 	// Notes say what the service did to a time it was given, for example that the local time did not exist.
 	Notes     []string  `json:"notes,omitempty"`
 	CreatedAt time.Time `json:"created_at"`

@@ -121,6 +121,15 @@ func checkAction(ctx context.Context, svc service.Service, in *itemArgs) (*toolO
 			return nil, err
 		}
 
+		if got.Item.TextKind == string(writing.KindPost) {
+			res, perr := svc.PostCheck(ctx, service.PostCheckRequest{ProjectID: in.ProjectID, ItemID: in.ItemID})
+			if perr != nil {
+				return nil, perr
+			}
+
+			return &toolOutput{value: res, text: res.Text}, nil
+		}
+
 		caption = got.Item.TextKind == string(writing.KindCaption)
 	}
 
