@@ -85,7 +85,7 @@ test.describe("preview-export-parity", () => {
 			page,
 			request,
 		}) => {
-			test.skip(needsImageFixtures(name), "fixtures only the Go suite makes"); // verify:env-skip an alpha PNG or a GIF with delays
+			test.skip(needsImageFixtures(name), "fixtures only the Go suite makes"); // verify:env-skip a GIF with delays
 			const loaded = await loadCase(request, name, true);
 			await openCase(page, loaded.id, "?executor=rust");
 			await expect(canvasOf(page)).toHaveAttribute("data-executor", "rust");
