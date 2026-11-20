@@ -40,5 +40,7 @@ export interface SharedProps {
 	errors: Record<string, string>;
 	// Present in network mode; `user` is null before the login.
 	auth?: { user: User | null };
+	// What the server says of the session: whether it is a person's (VV-319).
+	session?: { privileged: boolean; mode: "local" | "network" };
 	[key: string]: unknown;
 }

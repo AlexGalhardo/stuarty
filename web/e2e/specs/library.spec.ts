@@ -88,11 +88,14 @@ test.describe("library", () => {
 		await expect(pane).toContainText("references/patterns.md");
 
 		// The server of this suite runs with no launcher secret, so this session is not a privileged one (SDD-007
-		// section 3.4 item 7): the service refuses the mark, says why, and the skill stays unreviewed. The mark
-		// itself is tested through the service with a privileged caller (servicetest).
-		await pane.getByRole("button", { name: "Mark as read" }).click();
-		await expect(pane.getByRole("alert")).toContainText(
-			"only a person at the browser",
+		// section 3.4 item 7, VV-319): the button is disabled and says why and where to do it, instead of being
+		// refused after the click. The mark itself is tested through the service with a privileged caller
+		// (servicetest), and the buttons of a privileged session by the approval spec.
+		await expect(
+			pane.getByRole("button", { name: "Mark as read" }),
+		).toBeDisabled();
+		await expect(pane).toContainText(
+			"Only a person in the Stuarty desktop app can do this",
 		);
 		await expect(row).toContainText("Not reviewed");
 

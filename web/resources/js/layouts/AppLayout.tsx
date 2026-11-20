@@ -6,6 +6,7 @@ import ReleaseMark from "@/components/ReleaseMark";
 import ThemeToggle from "@/components/ThemeToggle";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { type I18nProps, I18nProvider } from "@/lib/i18n";
+import { SessionProvider } from "@/lib/session";
 import type { SharedProps } from "@/types";
 import DashboardLayout from "./DashboardLayout";
 
@@ -14,6 +15,7 @@ import DashboardLayout from "./DashboardLayout";
 // (SDD-012 section 16.3).
 export default function AppLayout({ children }: { children: ReactNode }) {
 	const { messages = {}, locale = "en", locales } = usePage<I18nProps>().props;
+	const { session } = usePage<SharedProps>().props;
 	// The page prop is the language of the rendering; <html lang> follows it after
 	// an Inertia visit or reload, which never replaces the root template (VV-169).
 	useEffect(() => {
@@ -21,7 +23,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 	}, [locale]);
 	return (
 		<I18nProvider messages={messages} locale={locale} locales={locales}>
-			<Shell>{children}</Shell>
+			<SessionProvider session={session}>
+				<Shell>{children}</Shell>
+			</SessionProvider>
 		</I18nProvider>
 	);
 }

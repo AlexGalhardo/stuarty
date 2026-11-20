@@ -2,6 +2,7 @@ import { renderToString } from "react-dom/server";
 import { describe, expect, test } from "vitest";
 
 import { I18nProvider } from "@/lib/i18n";
+import { type SessionInfo, SessionProvider } from "@/lib/session";
 import type { ApprovalRequest } from "../../editor/api/types";
 import ApprovalQueue from "./ApprovalQueue";
 
@@ -22,6 +23,8 @@ const messages = {
 	"ui.approvals.reason": "Reason",
 	"ui.approvals.approve": "Approve",
 	"ui.approvals.reject": "Reject",
+	"ui.session.person_only.local": "Approve it in the Stuarty desktop app.",
+	"ui.session.person_only.network": "Sign in with your password.",
 };
 
 const request = (extra: Partial<ApprovalRequest> = {}): ApprovalRequest => ({
@@ -43,16 +46,24 @@ const request = (extra: Partial<ApprovalRequest> = {}): ApprovalRequest => ({
 	...extra,
 });
 
-function markup(requests: ApprovalRequest[], live = true): string {
+const person: SessionInfo = { privileged: true, mode: "local" };
+
+function markup(
+	requests: ApprovalRequest[],
+	live = true,
+	session: SessionInfo = person,
+): string {
 	return renderToString(
 		<I18nProvider messages={messages} locale="en" locales={["en"]}>
-			<ApprovalQueue
-				requests={requests}
-				destinations={{ con_1: "My blog" }}
-				busyId={null}
-				live={live}
-				onDecide={() => undefined}
-			/>
+			<SessionProvider session={session}>
+				<ApprovalQueue
+					requests={requests}
+					destinations={{ con_1: "My blog" }}
+					busyId={null}
+					live={live}
+					onDecide={() => undefined}
+				/>
+			</SessionProvider>
 		</I18nProvider>,
 	);
 }
@@ -88,5 +99,45 @@ describe("the approval queue shows what will go out, where, what it costs and wh
 		const html = markup([request({ summary: PAYLOAD, actor: PAYLOAD })]);
 		expect(html).not.toContain(PAYLOAD);
 		expect(html).toContain("&lt;img src=x onerror=window.__pwned=1&gt;");
+	});
+});
+
+// VV-319: a session that is not a person's (stuarty open) sees the controls disabled, with the reason and where
+// to do it; a person's session sees them enabled and no note.
+// The attribute, not the Tailwind variants (`disabled:opacity-50`) in the class.
+const DISABLED = /\sdisabled(=|\s|>)/;
+
+describe("the answers of a person are offered only to a session that may give them", () => {
+	const buttons = (html: string): string[] =>
+		html.match(/<button[^>]*>/g)?.filter((b) => !b.includes("sr-only")) ?? [];
+
+	test("an unprivileged session: Approve and Reject are disabled and the reason is shown", () => {
+		const html = markup([request()], true, {
+			privileged: false,
+			mode: "local",
+		});
+		const found = buttons(html);
+		expect(found).toHaveLength(2);
+		for (const button of found) {
+			expect(button).toMatch(DISABLED);
+			expect(button).toContain('aria-describedby="approvals-person-only"');
+		}
+		expect(html).toContain('id="approvals-person-only"');
+		expect(html).toContain("Approve it in the Stuarty desktop app.");
+	});
+
+	test("in network mode the reason says to sign in with the password", () => {
+		const html = markup([request()], true, {
+			privileged: false,
+			mode: "network",
+		});
+		expect(html).toContain("Sign in with your password.");
+	});
+
+	test("a privileged session: the buttons are enabled and there is no note", () => {
+		const html = markup([request()]);
+		for (const button of buttons(html)) expect(button).not.toMatch(DISABLED);
+		expect(html).not.toContain("approvals-person-only");
+		expect(html).not.toContain("desktop app");
 	});
 });

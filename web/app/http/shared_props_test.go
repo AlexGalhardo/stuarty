@@ -65,6 +65,10 @@ func TestNetworkPagesShareTheUserAndTheAppName(t *testing.T) {
 		t.Errorf("auth.user = %v", props["auth"])
 	}
 
+	if sess, _ := props["session"].(map[string]any); sess["privileged"] != true || sess["mode"] != "network" {
+		t.Errorf("session = %v, want privileged in network mode", props["session"])
+	}
+
 	login := h.send(t, http.MethodGet, "/login", "", "", map[string]string{"Accept": "text/html"})
 
 	props = inertiaProps(t, login)
@@ -87,5 +91,26 @@ func TestLocalPagesShareTheAppNameAndNoUser(t *testing.T) {
 	props := inertiaProps(t, netResp{status: res.status, body: res.body})
 	if props["appName"] != "Stuarty" || props["auth"] != nil {
 		t.Errorf("local props: appName %v, auth %v", props["appName"], props["auth"])
+	}
+}
+
+// VV-319: every page says whether the session is a person's (the desktop app, a signed-in browser) or not
+// (stuarty open), so the controls that need a person are drawn disabled with the reason.
+func TestPagesShareWhetherTheSessionIsAPerson(t *testing.T) {
+	h := pagesHarness(t)
+
+	for name, secret := range map[string]string{"stuarty open": "", "the desktop app": launcherSecret} {
+		res := h.do(req{
+			path: "/projects", noAuth: true,
+			headers: map[string]string{"Cookie": h.sessionWith(t, secret), "Accept": "text/html"},
+		})
+		if res.status != http.StatusOK {
+			t.Fatalf("%s: /projects = %d %s", name, res.status, res.body)
+		}
+
+		got, _ := inertiaProps(t, netResp{status: res.status, body: res.body})["session"].(map[string]any)
+		if want := secret != ""; got["privileged"] != want || got["mode"] != "local" {
+			t.Errorf("%s: session = %v, want privileged %v in local mode", name, got, want)
+		}
 	}
 }

@@ -134,6 +134,9 @@ test.describe("approval queue", () => {
 			await expect(row.getByTestId("approval-cost")).toHaveText("$2.50");
 			await expect(row.getByTestId("approval-actor")).toHaveText("key:key_e2e");
 
+			// A person's session (the desktop app) is offered the answers: enabled, and no note (VV-319).
+			await expect(row.getByRole("button", { name: "Approve" })).toBeEnabled();
+			await expect(page.locator("#approvals-person-only")).toHaveCount(0);
 			await row.getByRole("button", { name: "Approve" }).click();
 			await expect(row).toHaveCount(0);
 

@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatDateTime } from "@/lib/format";
 import { useLocale, useT } from "@/lib/i18n";
+import { PersonOnlyNote, useSession } from "@/lib/session";
 import type { ApprovalRequest } from "../../editor/api/types";
 import { formatMoney } from "./money";
 
@@ -26,6 +27,7 @@ export function ApprovalRow({
 }): ReactNode {
 	const t = useT();
 	const locale = useLocale();
+	const { privileged } = useSession();
 	const [reason, setReason] = useState("");
 	const free = request.estimate.micros === 0;
 	return (
@@ -80,7 +82,8 @@ export function ApprovalRow({
 				</div>
 				<Button
 					type="button"
-					disabled={busy}
+					disabled={busy || !privileged}
+					aria-describedby={privileged ? undefined : "approvals-person-only"}
 					onClick={() => onDecide("approve", "")}
 				>
 					{t("ui.approvals.approve")}
@@ -92,7 +95,8 @@ export function ApprovalRow({
 				<Button
 					type="button"
 					variant="outline"
-					disabled={busy}
+					disabled={busy || !privileged}
+					aria-describedby={privileged ? undefined : "approvals-person-only"}
 					onClick={() => onDecide("reject", reason)}
 				>
 					{t("ui.approvals.reject")}
@@ -177,6 +181,11 @@ export default function ApprovalQueue({
 					{live ? t("ui.approvals.live") : t("ui.approvals.offline")}
 				</p>
 			</div>
+			{requests.length > 0 && (
+				<div className="mt-2">
+					<PersonOnlyNote id="approvals-person-only" />
+				</div>
+			)}
 			{requests.length === 0 ? (
 				<p
 					className="mt-4 text-sm text-muted-foreground"

@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useT } from "@/lib/i18n";
+import { PersonOnlyNote, useSession } from "@/lib/session";
 import type {
 	LibraryClient,
 	LibraryEntry,
@@ -29,6 +30,7 @@ export default function SkillPane({
 	onChanged: (name: string | null) => void;
 }): ReactNode {
 	const t = useT();
+	const { privileged } = useSession();
 	const [entry, setEntry] = useState<LibraryEntry | null>(null);
 	const [newName, setNewName] = useState("");
 	const [description, setDescription] = useState("");
@@ -179,11 +181,15 @@ export default function SkillPane({
 							<div>
 								<Button
 									type="button"
-									disabled={busy || (entry.lint_errors ?? 0) > 0}
+									disabled={busy || !privileged || (entry.lint_errors ?? 0) > 0}
+									aria-describedby={
+										privileged ? undefined : "review-person-only"
+									}
 									onClick={() => void review()}
 								>
 									{t("ui.library.skill.mark_reviewed")}
 								</Button>
+								<PersonOnlyNote id="review-person-only" />
 							</div>
 						</div>
 					)}
