@@ -84,14 +84,15 @@ Each step has the path in the editor and the command that does the same. An agen
    stuarty image:export img_3c5v8n2w6d --format png
    ```
 
+   The export is a job: its id (`job_id`, also shown in the export dialog of **Edit Image**) is what the publication takes as its thumbnail in step 9.
+
 7. **Export with the platform preset.** In the editor, choose **Export**, pick **YouTube Shorts** and start it. The export is checked against the limits of the preset when it ends. With the command line:
 
    ```bash
    stuarty export --project prj_5k2m9x4q1b --preset youtube-shorts --wait
-   stuarty export --project prj_5k2m9x4q1b --format png --at 1s --wait
    ```
 
-   The first command makes the video, the second a still of it, which the publication takes as its cover.
+   A still of the video (`export --format png --at 1s --wait`) can be the cover instead of the image of step 6.
 
 8. **Connect your account.** Create a developer app on the network (the page of each network walks through it: [YouTube](/docs/publish/youtube), [Instagram](/docs/publish/instagram), [Facebook](/docs/publish/facebook), [X](/docs/publish/x), [TikTok](/docs/publish/tiktok)). In **Connections**, choose **Connect**, pick the network, paste the client id and the client secret, and sign in on the network's own page. With the command line the secret comes from the standard input:
 
@@ -102,14 +103,14 @@ Each step has the path in the editor and the command that does the same. An agen
 
    The command prints an address. Open it, accept the permissions, and the network sends you back to Stuarty, which finishes the connection. Stuarty asked for the permissions of the page [of that network](/docs/reference/network-limits) and no others.
 
-9. **Create the publication and schedule it.** In **Publish**, choose **New publication**: pick the video export and the still, the account and the time, then choose **Schedule and ask for approval**. The check against the limits of the network runs before anything is asked of you, and names the limit when a post breaks one. With the command line:
+9. **Create the publication and schedule it.** In **Publish**, choose **New publication**: pick the video export, paste the export job of the cover of step 6 in **Or the export of an image** (or pick a still), the account and the time, then choose **Schedule and ask for approval**. The check against the limits of the network runs before anything is asked of you, and names the limit when a post breaks one. With the command line:
 
    ```console
-   stuarty publish:validate --connection <connection id> --export <export job id> --thumbnail <still job id> \
+   stuarty publish:validate --connection <connection id> --export <export job id> --thumbnail <image export job id> \
      --title "Sourdough short" --visibility public --made-for-kids no
    stuarty publication:create --project prj_5k2m9x4q1b --title "Sourdough short" \
      --text "From starter to slice in four seconds #sourdough" --export <export job id> \
-     --thumbnail <still job id> --connection <connection id> --at 2026-12-01T18:00:00Z \
+     --thumbnail <image export job id> --connection <connection id> --at 2026-12-01T18:00:00Z \
      --made-for-kids no --visibility public
    stuarty publication:schedule <publication id>
    ```
