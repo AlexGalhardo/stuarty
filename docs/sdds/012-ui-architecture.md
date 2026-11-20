@@ -2014,7 +2014,7 @@ Under `web/resources/js/image-editor/`, one folder per area. `check:thin-client`
 
 | Folder | Holds |
 | --- | --- |
-| `api/` | the only place that calls the network (rule R6): a client over the `Transport` of `editor/api/http.ts`, the types of the answers, the polling of the revision |
+| `api/` | the only place that calls the network (rule R6): a client over the `Transport` of `editor/api/http.ts`, the types of the answers, the event stream of the image and the polling of the revision (the fallback) |
 | `state/` | one `zustand` store: the read model (the last `ImageDescribeResult`), the selection, the viewport, the history and the status; a command goes out through `api/` and the answer replaces the read model |
 | `canvas/` | the frame, the viewport maths (zoom, pan, fit: display only), the selection overlay, the handles, the guides, the snapping to the boxes of the read model and the keyboard nudges |
 | `layers/` | the layer panel, a tree |
@@ -2032,7 +2032,9 @@ Besides the seven operations of SDD-021 section 11, the screen reads the asset l
 | `ImageHistory` | `GET /api/v1/images/{id}/history?limit=<n>` | the latest batches, newest first: revision, kind (`edit`, `undo`, `redo`), actor, time, whether it applied, and the names of its operations |
 | `ImageFile` | `GET /api/v1/images/{id}/exports/{name}` | the bytes of a file that `ImageExport` wrote for that document, for the browser to download |
 
-**Decision of this SDD.** The video editor learns of a change of another actor from the event stream of the project. An image has no event stream yet, so the screen polls the revision (`GET /images/{id}` every 2 seconds while the window is visible, and at once when it becomes visible) and replaces its read model when the revision moved. The polling is one function in `api/`; an event stream for images replaces it without touching the rest.
+**Decision of this SDD (amended by epic 48).** The video editor learns of a change of another actor from the event stream of the project, and the image editor does the same from the stream of its image, `GET /api/v1/images/{id}/events` (SDD-006 section 12). The screen opens it while the window is visible, with `since` the revision it holds, through the `Transport` of `editor/api/http.ts` and the reconnection rules of SDD-006 section 4.6. An `image.updated` event whose revision is above the one on screen makes the screen ask for the document again (`GET /images/{id}`, one call: the order of the layers is the core's, so the screen applies no diff) and outline the layers the event names; an event at or below the revision on screen is ignored, so the screen's own commits, which arrive as a response and as an event of the same revision, are applied once. Polling the revision (every 2 seconds while the window is visible, and at once when it becomes visible) stays as the fallback and runs only while the stream is not open. Both are functions in `api/`.
+
+The screen reads the image library (`GET /api/v1/assets?kind=image`) to put a file already in the workspace in an image, and imports a file from the computer with `ImageImport` (SDD-021 section 10): the image list offers "Import image" (a new document) and the editor offers "Put a file in this image" (`image_id`). The browser has no path on the disk of the server, so a file chosen in the browser goes through `POST /api/v1/images/upload` (SDD-021 section 10.1), and the screen shows the reason of a refusal (a file over the limit, a file that is not an image) as it shows any error of the Service.
 
 ### 24.4 The canvas
 
@@ -2062,7 +2064,7 @@ The dialog asks for the format (PNG, JPEG, WebP), the preset size or "original",
 
 ### 24.9 History and the other actors
 
-The history panel lists `ImageHistory`: the revision, the actor as a chip (person or agent, with a text label, never colour alone), the time and the operations. Undo and Redo send `ImageUndo` and `ImageRedo`, which act on the caller's own last step (SDD-021 section 4): the person's step is undone and an agent's later step stays; a primitive the core skipped because another actor changed the object since is shown with its reason. When the polling finds a new revision, the layers it changed are outlined with `--agent` (a static class, as in section 5.8) and the live region says that the image changed.
+The history panel lists `ImageHistory`: the revision, the actor as a chip (person or agent, with a text label, never colour alone), the time and the operations. Undo and Redo send `ImageUndo` and `ImageRedo`, which act on the caller's own last step (SDD-021 section 4): the person's step is undone and an agent's later step stays; a primitive the core skipped because another actor changed the object since is shown with its reason. When the stream (or, while it is down, the polling) brings a new revision, the layers it changed are outlined with `--agent` (a static class, as in section 5.8) and the live region says that the image changed.
 
 ### 24.10 Keyboard map
 
@@ -2088,16 +2090,16 @@ Every action has a keyboard path (section 24.10 and the toolbar of design system
 
 ### 24.12 Tests
 
-- Vitest: the viewport maths (zoom about a point, fit), hit testing, the snapping targets and tolerance, the store (an answer replaces the read model, a polled revision replaces it), the tree rows.
-- Playwright (`web/e2e/specs/`): `image-transform`, `image-layers`, `image-inspector`, `image-template-brand`, `image-export` (the file equals the CLI export), `a11y-image-editor` (axe in both languages and both themes, and a keyboard-only session), and a mixed session where an agent command arrives while the person edits.
+- Vitest: the viewport maths (zoom about a point, fit), hit testing, the snapping targets and tolerance, the store (an answer replaces the read model, a polled revision or an event of a newer revision replaces it, an event of a revision on screen is ignored), the tree rows.
+- Playwright (`web/e2e/specs/`): `image-transform`, `image-layers`, `image-inspector`, `image-template-brand`, `image-export` (the file equals the CLI export), `a11y-image-editor` (axe in both languages and both themes, and a keyboard-only session), a mixed session where an agent command arrives while the person edits, `image-live` (two windows on one image: an edit by the CLI appears in both within a second, with no polling while the stream is open) and `image-import` (a file chosen in the browser becomes a new document, and another is put in an open one).
 
 ### 24.13 Decisions of this section
 
 1. The picture is the renderer's PNG of the current revision, drawn by the server (`ImageFrame`); the browser worker is a later switch of one file.
 2. Three HTTP-only operations (`ImageFrame`, `ImageHistory`, `ImageFile`) are added because the screen cannot compute a frame, a history or a download path.
-3. Changes of another actor arrive by polling the revision until an image has an event stream.
+3. Changes of another actor arrive by the event stream of the image (SDD-006 section 12, epic 48); polling the revision is only the fallback while the stream is not open.
 4. Snapping and hit testing are display arithmetic over the boxes of the read model (section 1.1, screen arithmetic); the position they produce is an integer sent to `layer.transform`.
-5. An image enters a document from the workspace library; putting a file from the computer straight into an image waits for an `ImageImport` operation of the service.
+5. An image enters a document from the workspace library, or from a file of the computer through `ImageImport` (a path on the server) and `POST /images/upload` (a file chosen in the browser), epic 48; the screen decides nothing about the file.
 6. A command planned from a key that repeats (an arrow, `Alt` with an arrow) is given to the store as a function of the document, evaluated when its turn comes, so each press is planned against the document the one before it made.
 7. The picture is asked for again twice after a failure or a 429 (the route allows two renders at once per caller) before the canvas says it could not be drawn.
 
