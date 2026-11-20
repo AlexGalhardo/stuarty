@@ -5,7 +5,7 @@ Publications and the approval queue that gates them and costly generations.
 
 ## How to reach it
 
-MCP tools: `command_help`. Tools that take `domain=publish`: `command_help`.
+MCP tools: `command_help`, `job_start`, `job_get`. Tools that take `domain=publish`: `command_help`.
 
 CLI: `stuarty publish` lists the commands of the domain and `stuarty publish <verb>` runs one; the full names stay valid.
 

@@ -559,12 +559,23 @@ func jobGet(ctx context.Context, svc service.Service, raw json.RawMessage) (*too
 		TimelineID string `json:"timeline_id"`
 		State      string `json:"state"`
 		WaitMS     int    `json:"wait_ms"`
+		ApprovalID string `json:"approval_id"`
+		Approvals  string `json:"approvals"`
 	}](raw)
 	if err != nil {
 		return nil, err
 	}
 
 	switch {
+	case in.ApprovalID != "" || in.Approvals != "":
+		if in.JobID != "" || (in.ApprovalID != "" && in.Approvals != "") {
+			return nil, &service.Error{
+				Code: command.CodeValidation, Path: "approval_id",
+				Message: "give one of job_id, approval_id or approvals.",
+			}
+		}
+
+		return approvalRead(ctx, svc, in.ApprovalID, in.Approvals, in.ProjectID)
 	case in.JobID != "":
 		res, gerr := svc.JobGet(ctx, service.JobGetRequest{JobID: in.JobID, WaitMS: in.WaitMS})
 		if gerr != nil {

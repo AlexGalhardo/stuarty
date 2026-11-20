@@ -10,7 +10,7 @@ wide: true
 
 <RefMain>
 
-A job's state, progress, result (job_id). wait_ms: wait up to that many ms for succeeded, failed or cancelled. A succeeded export is verified; its result has the file path. project_id instead of job_id lists its queued, running and recent jobs.
+A job's state, progress, result (job_id). wait_ms: wait up to that many ms for succeeded, failed or cancelled. A succeeded export is verified; its result has the file path. project_id instead of job_id lists its queued, running and recent jobs. approval_id reads a request (job.approval_id), approvals (state) lists them; read only, a person decides.
 
 ## Behaviour
 
@@ -29,6 +29,8 @@ These are the annotations of the tool definition, the hints a client uses to dec
 | --- | --- | --- | --- |
 | `job_id` | `string` | no | pattern `^job_[0-9a-hjkmnp-tv-z]{10}$` |
 | `project_id` | `string` | no | pattern `^prj_[0-9a-hjkmnp-tv-z]{10}$` |
+| `approval_id` | `string` | no | pattern `^apr_[0-9a-hjkmnp-tv-z]{10}$` |
+| `approvals` | `pending`, `approved`, `rejected`, `expired`, `all` | no |  |
 | `state` | `string`, one of 7 values | no |  |
 | `wait_ms` | `integer` | no | min 0; max 25000; default `0` |
 
