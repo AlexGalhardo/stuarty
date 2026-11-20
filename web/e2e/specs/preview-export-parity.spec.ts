@@ -155,7 +155,7 @@ test.describe("preview-export-parity", () => {
 					loaded.id,
 					frame,
 					"preview-export-parity",
-					loaded.id,
+					true,
 				);
 			});
 		});
