@@ -11,7 +11,8 @@
 #                                           commits unless --force)
 #
 # Run it in the main checkout, on the open release branch. It never force-pushes, never pushes
-# main and never pushes a tag (tags wait for CI, ADR-0048 item 5).
+# main and never pushes a tag: the GitHub release of each cut carries its notes, created with
+# the release workflow paused (ADR-0048 item 5).
 set -euo pipefail
 
 MIN=${RELEASE_TRAIN_MIN:-88}
@@ -143,6 +144,7 @@ cut_release() {
 	gh pr merge "$pr" --rebase --admin
 	until git fetch -q origin main && [ "$(git rev-parse 'origin/main^{tree}')" = "$(git rev-parse 'HEAD^{tree}')" ]; do sleep 5; done
 	echo "released v$v: #$pr merged into main ($(git rev-parse --short origin/main))"
+	publish_notes "$v"
 
 	# The next release starts at main; its pull request opens with its first commit (GitHub opens
 	# none for a branch equal to its base, and an empty commit breaks a rebase-merge).
@@ -151,6 +153,20 @@ cut_release() {
 	git push -q -u origin "release/v$next"
 	echo "next release: release/v$next (its pull request opens with the first integrated commit)"
 	rm -f "$body"
+}
+
+# Publishes the GitHub release vX.Y.Z with its changelog section as notes, on the release commit
+# of main. The release workflow is paused meanwhile, so the tag builds and publishes nothing
+# while CI is off (ADR-0048 item 5).
+publish_notes() {
+	local v=$1 notes
+	notes=$(mktemp)
+	git show origin/main:CHANGELOG.md | awk -v v="$v" 'index($0, "## [" v "]") == 1 { on = 1; next } on && /^## \[/ { exit } on' >"$notes"
+	gh workflow disable release
+	gh release create "v$v" --target "$(git rev-parse origin/main)" --title "v$v" --notes-file "$notes" >/dev/null || echo "release-train: the GitHub release v$v was not created" >&2
+	gh workflow enable release
+	rm -f "$notes"
+	echo "published the GitHub release v$v"
 }
 
 # Opens the pull request of the release branch when it has commits and none is open.
