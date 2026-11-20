@@ -7,6 +7,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.35.0] - 2026-11-20
+
+### Added
+
+- **ingest:** Report a file that declares alpha and has none ([f113973](https://github.com/AlexGalhardo/stuarty/commit/f11397365d77bd0dad7d20ad31eb97ac7a33e521))
+- **library:** Add the skill for an animation rendered by an external engine ([185a759](https://github.com/AlexGalhardo/stuarty/commit/185a75997b3e4e3d4a6da637852aa6566a6e49be))
+- **core:** Add the pure rules of the hosted agent chat ([d8a05e8](https://github.com/AlexGalhardo/stuarty/commit/d8a05e87067355052518b282da7a9516031f3e2d))
+- **ffmpeg:** Add a libwebp still builder to the argument grammar ([cb82a10](https://github.com/AlexGalhardo/stuarty/commit/cb82a10cc97f5e6ea1ee27d5c934e395246e51df))
+- **service:** Supervise the hosted agent process, its sessions and its transcript events ([b23c6d1](https://github.com/AlexGalhardo/stuarty/commit/b23c6d14bcd736cffb468d65e1ca06d21549f297))
+- **export:** Encode image documents to WebP with FFmpeg ([af13921](https://github.com/AlexGalhardo/stuarty/commit/af13921992f582379a7eb7c6b554849212d27de7))
+- **web:** Add the agent chat panel to the dashboard ([cd85c28](https://github.com/AlexGalhardo/stuarty/commit/cd85c28adc435cfc75669900792dfd8a68c919b1))
+- **command:** Add the audio processor chain and its five commands ([7ad4817](https://github.com/AlexGalhardo/stuarty/commit/7ad48170b94f767a2a06b324977f7c6d59f4865c))
+- **export:** Run the processor chains in the mixer and measure the audio ([3a2731a](https://github.com/AlexGalhardo/stuarty/commit/3a2731a9b914191392a1b74fe31d3c0f6c225c0c))
+- **ui:** Build the audio processor inspector for clips, audio items and tracks ([66b2103](https://github.com/AlexGalhardo/stuarty/commit/66b2103597ff3aa844e3d24d8dac88626c694b05))
+- **core:** Add the target states, due times and zones ([d5a6764](https://github.com/AlexGalhardo/stuarty/commit/d5a6764977dd4dda912d7f4bd145c74d5bb55c05))
+- **service:** Add the publication tables and operations ([6dc42cd](https://github.com/AlexGalhardo/stuarty/commit/6dc42cd169dff38b34a0254fc4da14dd52018b6d))
+- **service:** Add the publication scheduler with leases ([b4f0c54](https://github.com/AlexGalhardo/stuarty/commit/b4f0c545549df95851ee8d6f43c9106739660391))
+- **web:** Expose publications on HTTP, CLI and the event stream ([7da8752](https://github.com/AlexGalhardo/stuarty/commit/7da8752edf394f54440e57847e97ad1b10aae7f8))
+- **command:** Diff two documents with classified, ranked changes ([4db17c5](https://github.com/AlexGalhardo/stuarty/commit/4db17c59787347344a1b192efefb698f1b23bbff))
+- **service:** Checkpoints on revisions and the automatic one before an agent's first edit ([dbd4c65](https://github.com/AlexGalhardo/stuarty/commit/dbd4c65e97876d06d03a1a307c5ded9ff43434b2))
+- **ui:** Revert to here, compare two steps and checkpoints in the history panel ([fcc9556](https://github.com/AlexGalhardo/stuarty/commit/fcc955652ec45bd80230752f3697ed6674739cfd))
+
+### Fixed
+
+- **service:** Send only the approved file and key the session on the whole post ([2fe2c27](https://github.com/AlexGalhardo/stuarty/commit/2fe2c27ab216c5783f2461dfca74c22e7e98bc86))
+- **web:** Draw the social sign-in page without the session cookie ([2dafb4a](https://github.com/AlexGalhardo/stuarty/commit/2dafb4a2df8a4d6da7e055f71e38cd5694f41dad))
+- **service:** Build the upload key without an unchecked marshal ([d1a6d1d](https://github.com/AlexGalhardo/stuarty/commit/d1a6d1d0f1f530ccb338ca4880679a8308f29599))
+- **web:** Name the new clip command in the catalogue and the coverage table ([7bdd848](https://github.com/AlexGalhardo/stuarty/commit/7bdd848b44edb52b24501040fa6cc4a595cf2b20))
+- **ingest:** Report missing alpha only for a file that declares it ([95a41cb](https://github.com/AlexGalhardo/stuarty/commit/95a41cbb3bb83684953e2de6228784bd8cc632bc))
+- **service:** Close token leaks, start races and request floods of the hosted agent ([d2d8a7a](https://github.com/AlexGalhardo/stuarty/commit/d2d8a7a97a6e3623064d251bd21bdd603c323ca4))
+- **ffmpeg:** Report WebP option refusals under FF-15 ([868637f](https://github.com/AlexGalhardo/stuarty/commit/868637f00652d2a54881b1ca977d9b03c1db5866))
+- **service:** Report the real size of an image resized on one side ([4c10911](https://github.com/AlexGalhardo/stuarty/commit/4c109118a07a6ba1602d02b66e76bb921b8a3f95))
+- **mcp:** Refuse item_id in the image modes of view ([9c20113](https://github.com/AlexGalhardo/stuarty/commit/9c2011364fed687516ec382c9b3bc133bd985262))
+- **service:** Count the sound measure as a heavy call ([5e734a1](https://github.com/AlexGalhardo/stuarty/commit/5e734a1782f8d0da23fa9706b589884d959869d6))
+- **command:** Shorten six command summaries to fit the discovery budget ([455afa0](https://github.com/AlexGalhardo/stuarty/commit/455afa0980cbe8e5f773fd7ca943b6b384fe24fa))
+- **web:** Rename the publication list range flag and cover the stream ([0c35c62](https://github.com/AlexGalhardo/stuarty/commit/0c35c62532daaa0f78dfd5829d58878fc4b4d107))
+- **service:** Key checkpoints by the timelines table so a second timeline can have them ([6418299](https://github.com/AlexGalhardo/stuarty/commit/64182994d75fae8453984ae78b3bfd3518d470f9))
+
+### Security
+
+- **security:** Cover the publishing threats T-56 to T-59 ([a039d04](https://github.com/AlexGalhardo/stuarty/commit/a039d04a31b64f6d245a63a513d9b850a8ea9057))
+- **security:** Reach the second timeline of a limited key in the motion hand-off ([627393e](https://github.com/AlexGalhardo/stuarty/commit/627393ef03aff3390189b3ce617013c5ed060c63))
 ## [0.34.0] - 2026-11-20
 
 ### Added
@@ -1597,7 +1639,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.34.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.35.0...HEAD
+[0.35.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.34.0...v0.35.0
 [0.34.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.33.0...v0.34.0
 [0.33.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.32.0...v0.33.0
 [0.32.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.31.0...v0.32.0
