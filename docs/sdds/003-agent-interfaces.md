@@ -2779,7 +2779,7 @@ Example (the text of §3.6): `{"name": "lint", "arguments": {"project_id": "prj_
 ```json
 {
   "name": "job_start",
-  "description": "Start long work; args by kind. export renders a workspace file: {start?, end?, format?, at? (the png frame), preset?, codec?}; export_batch: items (export args) in turn; transcribe: {asset_id, language?, model?}; the kinds below also take connection_id, model: text.generate: {prompt}; image.generate: {prompt, size?, count?}; voice.generate: {text, voice, format?}; image.edit: {image_id, operation, layer_id?, prompt?}; text.draft: {item_id, instruction}; video.generate: {prompt, seconds?, aspect?, first_frame?}; a person approves. Poll job_get.",
+  "description": "Start long work; args by kind. export: {start?, end?, format?, at? (png frame), preset?, codec?}; export_batch: items (export args); transcribe: {asset_id, language?, model?}; generations and text.draft also take connection_id, model: text.generate: {prompt}; image.generate: {prompt, size?, count?}; voice.generate: {text, voice, format?}; text.draft: {item_id, instruction}; video.generate: {prompt, seconds?, aspect?, first_frame?}; publish.upload: {connection_id, export (job_id), title, made_for_kids, thumbnail?, description?, tags?, visibility?, ai_disclosure?}; a person approves. Poll job_get.",
   "inputSchema": {
     "type": "object",
     "properties": {
@@ -2800,8 +2800,8 @@ Example (the text of §3.6): `{"name": "lint", "arguments": {"project_id": "prj_
           "image.generate",
           "voice.generate",
           "text.draft",
-          "image.edit",
-          "video.generate"
+          "video.generate",
+          "publish.upload"
         ]
       },
       "args": {
@@ -2918,12 +2918,14 @@ job_4h8k2m6p9t export succeeded 100% file=/home/ana/.stuarty/exports/prj_7k2m9x4
 ```json
 {
   "name":"job_get",
-  "description":"A job's state, progress, result (job_id). wait_ms: wait up to that many ms for succeeded, failed or cancelled. A succeeded export is verified; its result has the file path. project_id instead of job_id lists its queued, running and recent jobs.",
+  "description":"A job's state, progress, result (job_id). wait_ms: wait up to that many ms for succeeded, failed or cancelled. A succeeded export is verified; its result has the file path. project_id instead of job_id lists its queued, running and recent jobs. approval_id reads a request (job.approval_id), approvals (state) lists them; read only, a person decides.",
   "inputSchema":{
     "type":"object",
     "properties":{
       "job_id":{"type":"string","pattern":"^job_[0-9a-hjkmnp-tv-z]{10}$"},
       "project_id":{"type":"string","pattern":"^prj_[0-9a-hjkmnp-tv-z]{10}$"},
+      "approval_id":{"type":"string","pattern":"^apr_[0-9a-hjkmnp-tv-z]{10}$"},
+      "approvals":{"enum":["pending","approved","rejected","expired","all"]},
       "state":{"enum":["queued","running","succeeded","failed","cancelled","active","all"]},
       "wait_ms":{"type":"integer","minimum":0,"maximum":25000,"default":0}
     },
@@ -4238,8 +4240,8 @@ Every `Service` operation has an encoding on each surface. The table is the proo
 | `ConnectionCreate` | none (exception E-5: it carries a credential) | `connection:add` | `POST /connections` |
 | `ConnectionRemove` | none (exception E-5) | `connection:remove` | `DELETE /connections/{id}` |
 | `ConnectionTest` | none (exception E-5: it reaches the network) | `connection:test` | `POST /connections/{id}/test` |
-| `ApprovalList` | none (E-6: no tool) | `approval:list` | `GET /approvals` |
-| `ApprovalGet` | none (E-6: no tool) | `approval:show` | `GET /approvals/{id}` |
+| `ApprovalList` | `job_get` (`approvals`, optional `project_id`) | `approval:list` | `GET /approvals` |
+| `ApprovalGet` | `job_get` (`approval_id`) | `approval:show` | `GET /approvals/{id}` |
 | `ApprovalDecide` | none (exception E-6: a person decides) | `approval:decide` | `POST /approvals/{id}/decide` |
 | `ApprovalRuleList` | none | `approval:rule:list` | `GET /approval-rules` |
 | `ApprovalRuleSet` | none (exception E-6) | `approval:rule:set` | `POST /approval-rules` |
@@ -4285,7 +4287,7 @@ Every `Service` operation has an encoding on each surface. The table is the proo
 - **E-3.** `ImageFrame`, `ImageHistory` and `ImageFile` (the reads of the image editor screen, SDD-012 §24.3) are in the same case. `PlanWindow`, `SnapPoints`, `FontList`, `AuditList`, `ProjectBundleExport`, `ProjectBundleImport`, `ProjectOtioExport` and `ProjectOtioImport` serve the UI, the administrator or a file workflow, not an agent editing a project: HTTP, and the CLI command where the table names one, but no MCP tool (SDD-000 §1). An agent that needs the `format` of an export uses the `format` member of `job_start` `args`.
 - **E-4.** `TrashEmpty`, `KeyCreate`, `KeyList` and `KeyRevoke` are HTTP only, with the callers SDD-007 §5.3 allows. `TrashEmpty` is not an MCP tool and not a CLI command (RF-131, ADR-0020 item 2): no agent surface can reach the one operation that deletes data for good.
 - **E-5.** `ConnectionCreate`, `ConnectionRemove` and `ConnectionTest` have a CLI command and a route and no MCP tool: creating takes a credential, which an agent must not handle (RF-137), and testing makes a request to a destination. The tool `connection` lists and reads only (SDD-014 section 10, ADR-0043 item 3).
-- **E-6.** `ApprovalDecide`, `ApprovalRuleSet`, `ApprovalRuleRemove` and `CostCeilingSet` have a CLI command and a route and no MCP tool: a person decides (RF-136, ADR-0032 item 4). The commands exist so that an agent that tries gets `E_PRIVILEGED_SESSION` and its hint; with the local token or a key they always fail, on HTTP, in the CLI and in process, and no tool exists to call. `ApprovalList`, `ApprovalGet`, `ApprovalRuleList` and `CostSummary` are read operations with a command and a route and no tool, because the 18 definitions already use 19,320 of the 19,500 bytes of NFR-020 and a tool of the queue needs about 540: an agent learns the state of its own request from `job_get` (`waiting_approval`, `approval_id`) and reads the queue with `approval:list` or `GET /approvals` (SDD-015 section 10). Epic 09 registered the first kind that needs approval, `text.generate` (SDD-016): it is in the `kind` enum of `job_start`, and the `state` of the `outputSchema` of `job_start` and `job_get` is a plain string (the five-value enum did not list `waiting_approval`, and a list that grows with every state costs bytes of the budget of NFR-020; the states are in SDD-000 section 6).
+- **E-6.** `ApprovalDecide`, `ApprovalRuleSet`, `ApprovalRuleRemove` and `CostCeilingSet` have a CLI command and a route and no MCP tool: a person decides (RF-136, ADR-0032 item 4). The commands exist so that an agent that tries gets `E_PRIVILEGED_SESSION` and its hint; with the local token or a key they always fail, on HTTP, in the CLI and in process, and no tool exists to call. `ApprovalRuleList` and `CostSummary` are read operations with a command and a route and no tool. The queue itself is read through `job_get` (author decision D-093, which brought the read back without a 21st tool, the cap of 20 being full): `approval_id` reads one request (a job in `waiting_approval` carries it) and `approvals` (`pending`, `approved`, `rejected`, `expired`, `all`) lists them, with an optional `project_id`; the service scopes both to the caller's projects, and the summary of a request is untrusted text. `job_get` has no argument that decides: any member other than the ones in its schema is refused, and the decision stays with a person in the browser (SDD-015 section 10). Epic 09 registered the first kind that needs approval, `text.generate` (SDD-016): it is in the `kind` enum of `job_start`, and the `state` of the `outputSchema` of `job_start` and `job_get` is a plain string (the five-value enum did not list `waiting_approval`, and a list that grows with every state costs bytes of the budget of NFR-020; the states are in SDD-000 section 6).
 - **E-7.** The hosted agent chat (SDD-017) has no MCP tool: a hosted agent has no use for the chat of another agent, and a tool that reads a transcript would hand one agent's text to another as instructions. `AgentProfileList`, `ChatSessionList`, `ChatSessionGet` and `ChatTranscriptGet` are reads with a route and a CLI command (`agent:profiles`, `chat:sessions`, `chat:session`, `chat:transcript`). `AgentProfileSet`, `AgentProfileRemove` and the five operations that drive a session are HTTP only, for a person in a browser session (SDD-007 §5.2): they have no CLI command because the person who drives a chat is in the panel, and a command would only exist to answer `E_PRIVILEGED_SESSION`. The event stream `GET /chat/sessions/{id}/events` is not a service operation (SDD-017 §8).
 
 The CLI commands of SDD-000 §1 that are not service operations (`serve`, `mcp`, `open`, `token:rotate`, `user:create`, `user:passwd`, `tools:install`, `agent:docs`) are in §5.4 and have no row here. `MediaList` and `JobList` close the gap SDD-012 §13.2 and Appendix B (B2, B3) left: they are the operations behind the library list and the job list of the UI.
@@ -4466,7 +4468,7 @@ Numbers measured on the reference machine (AMD Ryzen 7 5700X3D, Windows 11, FFmp
 
 | Budget | Measured | Limit |
 | --- | --- | --- |
-| `tools/list` as a client receives it, 20 tools | 21,830 bytes, about 6,821 tokens by the 3.2 characters per token estimate; first discovery call 7,201 characters (`surfacebudget`, epic 13) | at most 23,400 bytes, 8,500 characters (check 2) |
+| `tools/list` as a client receives it, 20 tools | 23,247 bytes, about 7,264 tokens by the 3.2 characters per token estimate; largest definition `job_start` 1,697 bytes; first discovery call 7,915 characters (`surfacebudget`, D-093) | at most 23,400 bytes, 8,500 characters (check 2) |
 | `tools/list` by the vendor token count | not measured: needs `ANTHROPIC_API_KEY` (`TestToolListVendorTokens`, release only) | at most 7,300 tokens |
 | Concise view of the reference project | 1 page, 11,785 characters | at most 2 pages, cap 12,800 characters (check 7) |
 | Frame and sheet image tokens | `TestViewImageSizeTable` passes for the four presets | frame at most 800, sheet at most 1,500 (check 8) |
