@@ -1032,6 +1032,16 @@ The types named in the tables of the operations. The arguments of each editing c
 | `layer_id` | `string` | no |  |
 | `revision` | `integer (int64)` | no |  |
 
+### ImageCheckpointListResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `checkpoints` | array of [`Checkpoint`](/docs/api/schemas#checkpoint) | no |  |
+| `image_id` | `string` | no |  |
+| `revision` | `integer (int64)` | no |  |
+| `text` | `string` | no |  |
+| `untrusted_notice` | `string` | no |  |
+
 ### ImageCreateResult
 
 | Name | Type | Required | Description |
@@ -1059,6 +1069,19 @@ The types named in the tables of the operations. The arguments of each editing c
 | `text` | `string` | no |  |
 | `untrusted_notice` | `string` | no |  |
 | `width` | `integer` | no |  |
+
+### ImageDiffResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `count` | `integer` | no |  |
+| `entries` | array of [`DiffEntry`](/docs/api/schemas#diffentry) | no |  |
+| `from` | `integer (int64)` | no |  |
+| `image_id` | `string` | no |  |
+| `revision` | `integer (int64)` | no |  |
+| `text` | `string` | no |  |
+| `to` | `integer (int64)` | no |  |
+| `untrusted_notice` | `string` | no |  |
 
 ### ImageEditResult
 
@@ -1153,6 +1176,29 @@ The types named in the tables of the operations. The arguments of each editing c
 | --- | --- | --- | --- |
 | `args` | map of `any` | no | The arguments of the command. |
 | `op` | `string` | yes | A command name, as listed by GET /commands?domain=image.. min length 1 |
+
+### ImageRevertResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `actor` | `string` | no |  |
+| `applied` | `boolean` | no |  |
+| `base_revision` | `integer (int64)` | no |  |
+| `created` | array of `string` | no |  |
+| `description` | `string` | no |  |
+| `diff` | array of [`Change`](/docs/api/schemas#change) | no |  |
+| `dry_run` | `boolean` | no |  |
+| `effective` | array of [`OpEffect`](/docs/api/schemas#opeffect) | no |  |
+| `findings` | array of [`Finding`](/docs/api/schemas#finding) | no |  |
+| `image_id` | `string` | no |  |
+| `kind` | `string` | no |  |
+| `lint` | [`LintTotals`](/docs/api/schemas#linttotals) | no |  |
+| `replayed` | `boolean` | no |  |
+| `revision` | `integer (int64)` | no |  |
+| `same` | `boolean` | no |  |
+| `target` | `integer (int64)` | no |  |
+| `text` | `string` | no |  |
+| `untrusted_notice` | `string` | no |  |
 
 ### ImageStepResult
 

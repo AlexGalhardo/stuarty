@@ -196,6 +196,11 @@ Every operation has its own page with the parameters, the body, the responses an
 | `GET` | `/api/v1/images` | [`images.list`](/docs/api/images.list) | List the image documents and templates |
 | `POST` | `/api/v1/images` | [`images.create`](/docs/api/images.create) | Create an image document, blank or from a template |
 | `GET` | `/api/v1/images/{id}` | [`images.get`](/docs/api/images.get) | Describe an image document: layers, findings and text view |
+| `GET` | `/api/v1/images/{id}/checkpoints` | [`images.checkpoints.list`](/docs/api/images.checkpoints.list) | List the checkpoints of an image |
+| `POST` | `/api/v1/images/{id}/checkpoints` | [`images.checkpoints.create`](/docs/api/images.checkpoints.create) | Name a revision of an image |
+| `PATCH` | `/api/v1/images/{id}/checkpoints/{name}` | [`images.checkpoints.rename`](/docs/api/images.checkpoints.rename) | Rename a checkpoint of an image |
+| `DELETE` | `/api/v1/images/{id}/checkpoints/{name}` | [`images.checkpoints.remove`](/docs/api/images.checkpoints.remove) | Remove a checkpoint of an image, never a revision |
+| `GET` | `/api/v1/images/{id}/diff` | [`images.diff`](/docs/api/images.diff) | List what changed between two revisions of an image |
 | `POST` | `/api/v1/images/{id}/edit` | [`images.edit`](/docs/api/images.edit) | Apply a batch of image operations |
 | `GET` | `/api/v1/images/{id}/events` | [`images.events`](/docs/api/images.events) | Stream the events of an image document |
 | `POST` | `/api/v1/images/{id}/export` | [`images.export`](/docs/api/images.export) | Export an image document to a PNG, JPEG or WebP file |
@@ -204,6 +209,7 @@ Every operation has its own page with the parameters, the body, the responses an
 | `GET` | `/api/v1/images/{id}/history` | [`images.history`](/docs/api/images.history) | List the latest batches of an image document |
 | `POST` | `/api/v1/images/{id}/model-edit` | [`images.model_edit`](/docs/api/images.model_edit) | Remove the background of a layer, or generate an image into the document, with the provider of a connection; the job says that the picture is sent, waits for approval, shows its estimate and puts the result in the document as one undoable step |
 | `POST` | `/api/v1/images/{id}/redo` | [`images.redo`](/docs/api/images.redo) | Redo the latest undone step of the caller on an image |
+| `POST` | `/api/v1/images/{id}/revert` | [`images.revert`](/docs/api/images.revert) | Go back to an earlier revision of an image as a new step |
 | `POST` | `/api/v1/images/{id}/undo` | [`images.undo`](/docs/api/images.undo) | Undo the latest step of the caller on an image |
 | `POST` | `/api/v1/images/import` | [`images.import`](/docs/api/images.import) | Import an image file into a new image document, or as a layer of one |
 | `POST` | `/api/v1/images/import/file` | [`images.import_file`](/docs/api/images.import_file) | Import an image file sent as the body of the request into a new image document, or as a layer of one |

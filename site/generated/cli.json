@@ -2934,6 +2934,172 @@
       ]
     },
     {
+      "name": "image:revert",
+      "domain": "image",
+      "summary": "go back to the document of an earlier revision of an image, as a new step that image:undo takes back",
+      "usage": [
+        "stuarty image:revert <id> (--revision n | --checkpoint name) [--base n] [--dry-run]"
+      ],
+      "example": "stuarty image:revert img_7k2m9x4q1b --checkpoint \"before the agent\" --dry-run",
+      "flags": [
+        {
+          "name": "revision",
+          "type": "integer",
+          "usage": "the revision to go back to"
+        },
+        {
+          "name": "checkpoint",
+          "type": "string",
+          "usage": "the name of a checkpoint to go back to"
+        },
+        {
+          "name": "base",
+          "type": "integer",
+          "usage": "the revision you read (default the current one); an older one conflicts with other actors' changes"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "dry-run"
+      ]
+    },
+    {
+      "name": "image:diff",
+      "domain": "image",
+      "summary": "list what changed between two revisions of an image, most significant first",
+      "usage": [
+        "stuarty image:diff <id> (--from n | --from-checkpoint name) [--until n]"
+      ],
+      "example": "stuarty image:diff img_7k2m9x4q1b --from 12",
+      "flags": [
+        {
+          "name": "from",
+          "type": "integer",
+          "usage": "the revision the diff starts from"
+        },
+        {
+          "name": "from-checkpoint",
+          "type": "string",
+          "usage": "the name of a checkpoint the diff starts from"
+        },
+        {
+          "name": "until",
+          "type": "integer",
+          "usage": "the revision the diff ends at (default the current one)"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "image:checkpoint:create",
+      "domain": "image",
+      "summary": "name a revision of an image so that it can be gone back to",
+      "usage": [
+        "stuarty image:checkpoint:create <id> --name <name> [--note t] [--revision n]"
+      ],
+      "example": "stuarty image:checkpoint:create img_7k2m9x4q1b --name \"before the agent\"",
+      "flags": [
+        {
+          "name": "name",
+          "type": "string",
+          "usage": "1 to 60 characters, no slash"
+        },
+        {
+          "name": "note",
+          "type": "string",
+          "usage": "up to 300 characters"
+        },
+        {
+          "name": "revision",
+          "type": "integer",
+          "usage": "the revision to name (default the current one)"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "image:checkpoint:list",
+      "domain": "image",
+      "summary": "list the checkpoints of an image, newest revision first",
+      "usage": [
+        "stuarty image:checkpoint:list <id>"
+      ],
+      "example": "stuarty image:checkpoint:list img_7k2m9x4q1b --json",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "image:checkpoint:rename",
+      "domain": "image",
+      "summary": "rename a checkpoint of an image, and change its note",
+      "usage": [
+        "stuarty image:checkpoint:rename <id> --name <name> --new-name <name> [--note t]"
+      ],
+      "example": "stuarty image:checkpoint:rename img_7k2m9x4q1b --name draft --new-name \"first cut\"",
+      "flags": [
+        {
+          "name": "name",
+          "type": "string",
+          "usage": "the checkpoint to rename"
+        },
+        {
+          "name": "new-name",
+          "type": "string",
+          "usage": "the new name"
+        },
+        {
+          "name": "note",
+          "type": "string",
+          "usage": "replaces the note when given"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "image:checkpoint:remove",
+      "domain": "image",
+      "summary": "remove a checkpoint of an image; no revision is removed",
+      "usage": [
+        "stuarty image:checkpoint:remove <id> --name <name>"
+      ],
+      "example": "stuarty image:checkpoint:remove img_7k2m9x4q1b --name draft",
+      "flags": [
+        {
+          "name": "name",
+          "type": "string",
+          "usage": "the checkpoint to remove"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
       "name": "asset:list",
       "domain": "asset",
       "summary": "list the files of the library, with origin, tags and reuse",
