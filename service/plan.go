@@ -202,10 +202,14 @@ func (s *svc) PlanWindow(ctx context.Context, req PlanWindowRequest) (*PlanWindo
 		return nil, derr
 	}
 
+	nested, _ := s.nestedFor(ctx, s.store, doc)
+	// The texts of the nested timelines are measured and drawn with their own user fonts (SDD-004 §3.16); the
+	// document differs from doc in its fonts only, which the planner does not read.
+	doc = withNestedFonts(doc, nested)
 	fonts := s.fontSet(doc)
 	opts := plan.Options{Measure: rasterize.Measure(fonts)}
 
-	if nested, _ := s.nestedFor(ctx, s.store, doc); nested != nil {
+	if nested != nil {
 		opts.Nested = nestedLookup(nested)
 	}
 
