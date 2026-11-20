@@ -240,7 +240,7 @@ var publishNowCmd = &spec{
 
 var publishStatusCmd = &spec{
 	name:       "publish:status",
-	summary:    "show the state of a publication: waiting_approval, uploading, processing, published or failed",
+	summary:    "show the state of a publication: waiting_approval, uploading, processing, published, sent_as_draft or failed",
 	usage:      []string{"stuarty publish:status <job id>"},
 	example:    "stuarty publish:status job_0123456789",
 	positional: true,

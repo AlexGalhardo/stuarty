@@ -2,6 +2,7 @@ package publish
 
 import (
 	"errors"
+	"fmt"
 	"regexp"
 	"strings"
 
@@ -71,4 +72,17 @@ func HasLink(text string) bool {
 	}
 
 	return bareDomain.MatchString(strings.ToLower(text))
+}
+
+// FormatMicros writes an amount in millionths of a currency as a decimal with at least two digits after the
+// point, and as many more as it needs: 15000 is "0.015" and 200000 is "0.20".
+func FormatMicros(micros int64) string {
+	whole, frac := micros/1_000_000, micros%1_000_000
+	digits := strings.TrimRight(fmt.Sprintf("%06d", frac), "0")
+
+	for len(digits) < 2 {
+		digits += "0"
+	}
+
+	return fmt.Sprintf("%d.%s", whole, digits)
 }

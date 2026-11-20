@@ -80,7 +80,8 @@ type PublishResult struct {
 	ConnectionID string `json:"connection_id"`
 	RemoteID     string `json:"remote_id"     untrusted:"true"`
 	URL          string `json:"url"           untrusted:"true"`
-	// State is processing or published.
+	// State is processing, published, or sent_as_draft for a file the network took as a draft to be finished in
+	// its own app (SDD-020 section 38).
 	State string `json:"state"`
 	// ThumbnailError is the kind of the error of the thumbnail when the video went up and the thumbnail did
 	// not (quota, auth...).
@@ -90,7 +91,7 @@ type PublishResult struct {
 // PublishStatusResult is the state of a publication (SDD-020 section 4).
 type PublishStatusResult struct {
 	JobID string `json:"job_id"`
-	// State is waiting_approval, uploading, processing, published or failed.
+	// State is waiting_approval, uploading, processing, published, sent_as_draft or failed.
 	State  string         `json:"state"`
 	Result *PublishResult `json:"result,omitempty"`
 	Error  *Error         `json:"error,omitempty"`
@@ -188,6 +189,47 @@ type publishTarget struct {
 	generated bool
 	// needsAccount is true when the sign-in reached several accounts and none is chosen (section 17).
 	needsAccount bool
+	// price is the price a post to the network is estimated at: the one a person set on the connection or the
+	// one the network's page gave; nil for a network that charges one fixed cost or none (SDD-020 section 35).
+	price *publish.Price
+}
+
+// cost is what sending the post costs, by the price of the connection and the text of the post.
+func (t *publishTarget) cost() social.Cost {
+	p := t.input.post()
+
+	return social.CostFor(t.desc, t.price, &p)
+}
+
+// costNote says what the post costs, in words for the person who approves: the amount, and for a network that
+// prices a post with a link apart, which price was applied and the date of the price (SDD-020 section 35).
+func (t *publishTarget) costNote() string {
+	c := t.cost()
+	if c.Micros <= 0 {
+		return ""
+	}
+
+	note := publish.FormatMicros(c.Micros) + " " + c.Currency
+	if c.Date == "" {
+		return note
+	}
+
+	kind := "a post"
+	if c.Link {
+		kind = "a post with a link"
+	}
+
+	return note + " (" + kind + ", price of " + c.Date + ")"
+}
+
+// draftNote is what a person reads about a network that takes the file as a draft: what is not sent, and that
+// they finish it in the app of the network.
+func (t *publishTarget) draftNote() string {
+	if !t.desc.Draft {
+		return ""
+	}
+
+	return "a draft in the " + t.desc.Name + " app: the title, text and tags are not sent, you finish it there"
 }
 
 // resolvePublish reads the connection and the files of a post and validates it. It makes no request.
@@ -217,6 +259,10 @@ func (s *svc) resolvePublish(ctx context.Context, c Caller, projectID string, a 
 
 	if werr := s.conns.With(ctx, row.ID, func(cred connections.Credential) error {
 		t.account, t.signedIn = conn.SignedIn(cred.Secret)
+
+		if pr, ok := social.EffectivePrice(conn, cred.Secret); ok {
+			t.price = &pr
+		}
 
 		if ch, ok := conn.(social.Chooser); ok && !t.signedIn {
 			t.needsAccount = len(ch.Choices(cred.Secret)) > 0
@@ -439,9 +485,19 @@ func publishSummary(t *publishTarget) string {
 		vis = publish.Private
 	}
 
-	return fmt.Sprintf("Publish %q to %s, channel %q (%s), visible to: %s; file %s, %d bytes; AI disclosure: %s",
+	sum := fmt.Sprintf("Publish %q to %s, channel %q (%s), visible to: %s; file %s, %d bytes; AI disclosure: %s",
 		clean(a.Title, 100), t.desc.Name, clean(t.account.Title, 80), t.connRow.ID, vis,
 		filepath.Base(t.input.Output.Rel), t.input.Output.Bytes, disclosureText(t))
+
+	if note := t.costNote(); note != "" {
+		sum += "; cost: " + note
+	}
+
+	if note := t.draftNote(); note != "" {
+		sum += "; " + note
+	}
+
+	return sum
 }
 
 // disclosureText says whether the post carries the AI disclosure flag and why, for the person who approves.
@@ -484,8 +540,13 @@ func (s *svc) preparePublish(ctx context.Context, req JobStartRequest) (Prepared
 		return Prepared{}, merr
 	}
 
+	// The price of the post is the estimate of the request: the approval shows it, the ceilings apply to it
+	// and approving reserves it (SDD-020 section 35); a network that charges nothing has none.
+	cost := t.cost()
+
 	return Prepared{
-		Summary: publishSummary(t), ConnectionID: t.connRow.ID, Estimate: approval.Money{}, Input: raw,
+		Summary: publishSummary(t), ConnectionID: t.connRow.ID,
+		Estimate: approval.Money{Micros: cost.Micros, Currency: cost.Currency}, Input: raw,
 	}, nil
 }
 
