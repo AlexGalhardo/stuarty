@@ -26,11 +26,11 @@ func init() {
 }
 
 type captionImportArgs struct {
-	TrackID string   `json:"track_id"          desc:"A visual track that receives the captions."                 pattern:"^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
-	Text    string   `json:"text"              desc:"The SRT or WebVTT text."                                                                                           maxlen:"2000000"`
-	Format  string   `json:"format,omitempty"  desc:"srt or vtt; default: vtt when the text starts with WEBVTT."                                                                         enum:"srt,vtt"`
+	TrackID string   `json:"track_id"          desc:"A visual track that receives the captions."                                          pattern:"^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	Text    string   `json:"text"              desc:"The SRT or WebVTT text itself, not a file path: read the file and pass its content."                                                        maxlen:"2000000"`
+	Format  string   `json:"format,omitempty"  desc:"srt or vtt; default: vtt when the text starts with WEBVTT."                                                                                                  enum:"srt,vtt"`
 	Start   Time     `json:"start,omitempty"   desc:"A length added to every cue; default 0."`
-	NewIDs  []string `json:"new_ids,omitempty" desc:"Ids for the created captions, in cue order."                pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	NewIDs  []string `json:"new_ids,omitempty" desc:"Ids for the created captions, in cue order."                                         pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
 }
 
 // msToFrames rounds a time in milliseconds to the nearest frame of the project.
