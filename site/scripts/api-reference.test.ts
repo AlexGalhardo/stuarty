@@ -1,3 +1,4 @@
+// Runs under `node --test`, not `bun test`: the "valid modules" check needs `node --check`, which Bun has no equivalent of.
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";

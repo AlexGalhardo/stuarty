@@ -2,8 +2,8 @@
 // content/last-updated.json that is at least as new as the page's last
 // commit. A shallow "changed files only" check let pages such as
 // docs/deployment/releases-and-stability.mdx ship with the line hidden.
-// Run from site/ with full history: `npm run check:last-updated`.
-// Node strips the types (no build step).
+// Run from site/ with full history: `bun run check:last-updated`.
+// Bun runs the TypeScript directly (no build step).
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
@@ -84,7 +84,7 @@ function main(): number {
 	);
 	for (const p of problems) console.error(p);
 	if (problems.length > 0) {
-		console.error("Run `npm run last-updated` in site/ and commit content/last-updated.json.");
+		console.error("Run `bun run last-updated` in site/ and commit content/last-updated.json.");
 		return 1;
 	}
 	console.log(`last-updated.json: ${files.length} doc pages checked`);

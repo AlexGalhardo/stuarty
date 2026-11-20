@@ -2,7 +2,7 @@
 // (SDD-010 section 8): the command registry (core/schema/commands.json), the error registry
 // (core/schema/errors.json and SDD-000 section 8), the timeline schema, the CLI declarations of the
 // binary (go run ./internal/tools/clidoc -> generated/cli.json) and the configuration table of SDD-000
-// section 10. The shortcuts page (content/generated/guide/) is read from the editor keymap (shortcuts-reference.ts). Run from site/: `npm run reference`. `npm run reference:check` fails on any difference.
+// section 10. The shortcuts page (content/generated/guide/) is read from the editor keymap (shortcuts-reference.ts). Run from site/: `bun run reference`. `bun run reference:check` fails on any difference.
 // The API reference (content/generated/api/) comes from site/generated/openapi.json, which `UPDATE_OPENAPI=1 go test
 // ./web/contract/ -run OpenAPI` writes from the running API. The MCP reference (content/generated/mcp/) comes from
 // web/app/mcp/definitions/ and from the command registry. Both write generated/reference-nav.json, the order of

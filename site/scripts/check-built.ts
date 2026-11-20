@@ -1,4 +1,4 @@
-// Checks the built site in out/ (run `npm run build` first, then `npm run check:built`):
+// Checks the built site in out/ (run `bun run build` first, then `bun run check:built`):
 //   1. only static files: no server entry, no adapter output (D-015);
 //   2. no external script, font, stylesheet, image or analytics: nothing the page loads comes from another
 //      origin, and no other host appears in the built files except the inert ones listed below (D-015, D-016);
@@ -6,7 +6,7 @@
 //   4. every docs page has a clean Markdown twin and llms.txt lists them, and what it lists exists;
 //   5. the search index answers the queries of SDD-010 section 14 check 8: `trim` finds the editing tools page
 //      and `keyframes` the keyframes page.
-// Node strips the types (no build step).
+// Bun runs the TypeScript directly (no build step).
 import fs from "node:fs";
 import path from "node:path";
 import type { NetworkDoc } from "./network-reference.ts";
@@ -231,7 +231,7 @@ export function searchProblems(read: (rel: string) => string, expectations = SEA
 
 function main(): number {
 	if (!fs.existsSync(outDir)) {
-		console.error("out/ does not exist: run `npm run build` first");
+		console.error("out/ does not exist: run `bun run build` first");
 		return 1;
 	}
 	const siteUrl = new URL(process.env.SITE_URL || "https://stuarty.com");

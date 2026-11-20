@@ -1,7 +1,7 @@
 // The FFmpeg page states the version and the release tag recorded in .config/ffmpeg.env
 // and links the source URL of the same file (P2-DOC-004). Run from site/:
-//   npm run check:ffmpeg-pin
-// Node strips the types (no build step).
+//   bun run check:ffmpeg-pin
+// Bun runs the TypeScript directly (no build step).
 import fs from "node:fs";
 import path from "node:path";
 

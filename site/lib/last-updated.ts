@@ -6,7 +6,7 @@ const CONTENT_ROOT = path.join(process.cwd(), "content");
 
 /**
  * Last commit date of each content file. Git history wins when the build
- * has it; content/last-updated.json (refreshed with `npm run last-updated`)
+ * has it; content/last-updated.json (refreshed with `bun run last-updated`)
  * covers builds without .git or with a shallow clone that stops before the
  * file's last change. See README.md, "Last updated".
  */

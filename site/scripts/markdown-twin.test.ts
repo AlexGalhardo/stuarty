@@ -5,12 +5,12 @@ import { test } from "node:test";
 import { navigation } from "../content/navigation.ts";
 import { mdxToMarkdown } from "../lib/text.ts";
 
-// The twins are build output, so this runs after `npm run build` and skips
+// The twins are build output, so this runs after `bun run build` and skips
 // on a fresh checkout (the CI order is test, then build).
 const docsOut = path.join(import.meta.dirname, "..", "out", "docs");
 const built = fs.existsSync(path.join(docsOut, "introduction.md"));
 
-test("every page of the current version has a Markdown twin", { skip: !built && "run npm run build first" }, () => {
+test("every page of the current version has a Markdown twin", { skip: !built && "run bun run build first" }, () => {
 	for (const cat of navigation) {
 		for (const page of cat.pages) {
 			const rel = path.join(cat.prefix ?? cat.dir, page === "" ? "" : page);
@@ -20,7 +20,7 @@ test("every page of the current version has a Markdown twin", { skip: !built && 
 	}
 });
 
-test("a twin is plain Markdown", { skip: !built && "run npm run build first" }, () => {
+test("a twin is plain Markdown", { skip: !built && "run bun run build first" }, () => {
 	const text = fs.readFileSync(path.join(docsOut, "introduction.md"), "utf8");
 
 	assert.ok(text.startsWith("# Introduction\n"), text.slice(0, 60));
