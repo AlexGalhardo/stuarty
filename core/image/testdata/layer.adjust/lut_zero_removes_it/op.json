@@ -1,0 +1,9 @@
+{
+  "args": {
+    "layer_id": "lyr_bbbbbbbbbb",
+    "lut": {
+      "intensity": 0
+    }
+  },
+  "op": "layer.adjust"
+}

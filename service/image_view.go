@@ -65,7 +65,7 @@ func (s *svc) ImageFrame(ctx context.Context, req ImageFrameRequest) (*ImageFram
 		return nil, lerr
 	}
 
-	pix, rerr := export.RenderImage(ctx, doc, export.ImageConfig{AssetPath: s.imageAssetPath(ctx, c)})
+	pix, rerr := export.RenderImage(ctx, doc, s.imageRenderConfig(ctx, c))
 	if rerr != nil {
 		return nil, imageExportError(rerr)
 	}

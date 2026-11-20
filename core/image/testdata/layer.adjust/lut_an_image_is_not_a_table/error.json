@@ -1,0 +1,12 @@
+{
+  "code": "E_TYPE_MISMATCH",
+  "details": {
+    "id": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "kind": "asset"
+  },
+  "hint": "Use the hash of a .cube file that was imported with media:import.",
+  "message": "The file sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is not a colour lookup table.",
+  "op_index": 0,
+  "path": "args.lut.asset",
+  "retryable": false
+}

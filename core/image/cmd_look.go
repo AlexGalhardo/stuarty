@@ -11,16 +11,18 @@ func init() {
 	register(
 		command.DefineIn(command.Spec{
 			Name:    "layer.adjust",
-			Summary: "Sets the brightness, contrast, saturation, temperature, tint, hue, exposure, levels or tone curve of a layer.",
+			Summary: "Sets the brightness, contrast, saturation, temperature, tint, hue, exposure, levels, tone curve or colour lookup table of a layer.",
 			Description: "Each key given replaces that adjustment and the others stay; a value equal to its neutral one removes it. " +
 				"brightness, contrast, saturation, temperature and tint are -100 to 100, hue -180 to 180 degrees, exposure " +
 				"-300 to 300 hundredths of a stop. levels takes black (0 to 254), white (1 to 255, above black) and gamma " +
 				"(10 to 1000 hundredths, 100 is neutral); the keys left out keep their value. curve is up to 8 points " +
-				"{x, y} of 0 to 255 with x increasing, and an empty list removes it. reset true removes every adjustment. " +
-				"Not valid for a group.",
+				"{x, y} of 0 to 255 with x increasing, and an empty list removes it. lut is a .cube table of the workspace: " +
+				"asset (the hash of a lut file) and intensity (1 to 100 per cent; 0 removes it); the one left out keeps its value. " +
+				"reset true removes every adjustment. Not valid for a group.",
 			Example: `{"layer_id": "lyr_a1b2c3d4e5", "brightness": 10, "contrast": 20, "levels": {"gamma": 120}}`,
 			Errors: []string{
 				command.CodeValidation, command.CodeNotFound, command.CodeTypeMismatch, command.CodeInvalidState,
+				command.CodeLimit,
 			},
 			Scope: command.ScopeEdit,
 		}, applyAdjust),
@@ -140,6 +142,11 @@ type levelsArgs struct {
 	Gamma *int `json:"gamma,omitempty" desc:"Hundredths, 10 to 1000; 100 is neutral." min:"10" max:"1000"`
 }
 
+type lutArgs struct {
+	Asset     string `json:"asset,omitempty"     desc:"The content hash of a lut file of the workspace."      pattern:"^sha256:[0-9a-f]{64}$"`
+	Intensity *int   `json:"intensity,omitempty" desc:"Per cent, 1 to 100; 0 removes the table. Default 100."                                 min:"0" max:"100"`
+}
+
 type adjustArgs struct {
 	LayerID     string        `json:"layer_id"              pattern:"^lyr_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
 	Brightness  *int          `json:"brightness,omitempty"                                                         min:"-100" max:"100"`
@@ -151,12 +158,13 @@ type adjustArgs struct {
 	Exposure    *int          `json:"exposure,omitempty"                                                           min:"-300" max:"300" desc:"Hundredths of a stop."`
 	Levels      *levelsArgs   `json:"levels,omitempty"`
 	Curve       *[]CurvePoint `json:"curve,omitempty"                                                                         max:"8"   desc:"Up to 8 points of 0 to 255, x increasing; an empty list removes the curve."`
+	LUT         *lutArgs      `json:"lut,omitempty"`
 	Reset       bool          `json:"reset,omitempty"                                                                                   desc:"Remove every adjustment; no other argument."`
 }
 
 func applyAdjust(c *command.Context, d *Document, a *adjustArgs) error {
 	given := a.Brightness != nil || a.Contrast != nil || a.Saturation != nil || a.Temperature != nil ||
-		a.Tint != nil || a.Hue != nil || a.Exposure != nil || a.Levels != nil || a.Curve != nil
+		a.Tint != nil || a.Hue != nil || a.Exposure != nil || a.Levels != nil || a.Curve != nil || a.LUT != nil
 
 	if a.Reset && given {
 		return invalid("args.reset", "Give reset, or the adjustments, not both.").
@@ -174,6 +182,7 @@ func applyAdjust(c *command.Context, d *Document, a *adjustArgs) error {
 			"exposure",
 			"levels",
 			"curve",
+			"lut",
 			"reset",
 		}, given); err != nil {
 			return err
@@ -224,6 +233,16 @@ func applyAdjust(c *command.Context, d *Document, a *adjustArgs) error {
 		next.Curve = slices.Clone(*a.Curve)
 	}
 
+	var table *AssetRef
+
+	if a.LUT != nil {
+		var lerr *command.Error
+
+		if next.LUT, table, lerr = setLUT(envOf(c), next.LUT, a.LUT); lerr != nil {
+			return lerr
+		}
+	}
+
 	if verr := violations(func(add func(path, format string, a ...any)) {
 		validateAdjust(&next, "args", add)
 	}); verr != nil {
@@ -232,13 +251,105 @@ func applyAdjust(c *command.Context, d *Document, a *adjustArgs) error {
 		)
 	}
 
+	if table != nil {
+		if d.Assets == nil {
+			d.Assets = map[string]AssetRef{}
+		}
+
+		d.Assets[table.Hash] = *table
+	}
+
 	l.Adjust = &next
 	normalizeAdjust(l)
+
+	// The table a layer had leaves assets when no other layer uses it; the ceiling is judged after that, on the
+	// files the document is left with (as layer.replace_source does), and a refusal changes nothing because the
+	// batch is applied to a private copy.
+	pruneAssets(d)
+
+	if table != nil {
+		if err := limit("files", len(d.Assets)-1, MaxAssets); err != nil {
+			return err
+		}
+
+		if err := limit("lookup tables", lutCount(d)-1, MaxLUTs); err != nil {
+			return err
+		}
+	}
 
 	c.SetEffective("layer_id", l.ID)
 	c.SetEffective("adjust", adjustOrEmpty(l))
 
 	return nil
+}
+
+// setLUT is the lookup table a layer has after layer.adjust gave in: the keys left out keep their value, an
+// intensity of 0 removes the table, and a table named for the first time is resolved through the environment (the
+// core reads no file). It also returns the entry of assets for a table that was named.
+func setLUT(env *Env, have *LUTRef, in *lutArgs) (*LUTRef, *AssetRef, *command.Error) {
+	if in.Asset == "" && in.Intensity == nil {
+		return nil, nil, invalid("args.lut", "Give the asset or the intensity of the lookup table.").
+			WithHint(`Send {"asset": "sha256:...", "intensity": 100}, or {"intensity": 0} to remove it.`)
+	}
+
+	if in.Intensity != nil && *in.Intensity == 0 {
+		return nil, nil, nil
+	}
+
+	next := LUTRef{Intensity: MaxLUTIntensity}
+	if have != nil {
+		next = *have
+	}
+
+	if in.Intensity != nil {
+		next.Intensity = *in.Intensity
+	}
+
+	if in.Asset == "" {
+		if have == nil {
+			return nil, nil, invalid("args.lut.asset", "The layer has no lookup table to change the intensity of.").
+				WithHint("Name the table: the hash of a lut file of the workspace.")
+		}
+
+		return &next, nil, nil
+	}
+
+	if !hashPattern.MatchString(in.Asset) {
+		return nil, nil, invalid("args.lut.asset", "args.lut.asset %q is not a content hash.", in.Asset).
+			WithHint("A content hash is sha256: and 64 lower case hexadecimal digits.")
+	}
+
+	next.Asset = in.Asset
+
+	if env.Asset == nil {
+		return nil, nil, lutNotFound(in.Asset)
+	}
+
+	info, ok := env.Asset(in.Asset)
+
+	switch {
+	case !ok:
+		return nil, nil, lutNotFound(in.Asset)
+	case info.Kind != AssetLUT:
+		return nil, nil, command.Errorf(command.CodeTypeMismatch, "The file %s is not a colour lookup table.", in.Asset).
+			WithHint("Use the hash of a .cube file that was imported with media:import.").
+			WithDetail("kind", "asset").
+			WithDetail("id", in.Asset).
+			WithPath("args.lut.asset")
+	}
+
+	name := info.Name
+	if name == "" {
+		name = "Lookup table"
+	}
+
+	return &next, &AssetRef{Hash: in.Asset, Name: name, Kind: AssetLUT}, nil
+}
+
+func lutNotFound(hash string) *command.Error {
+	return command.Errorf(command.CodeNotFound, "The file %s is not a ready lookup table of the workspace.", hash).
+		WithHint("Import the .cube file with media:import and use the hash it returns.").
+		WithDetail("kind", "asset").WithDetail("id", hash).WithPath("args.lut.asset")
 }
 
 func adjustOrEmpty(l *Layer) map[string]any {
