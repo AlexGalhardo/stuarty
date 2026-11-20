@@ -609,6 +609,19 @@ export interface JobListResult {
 	text: string;
 }
 
+// GET /projects/{id}/describe (SDD-003): the items of a production; the editor reads the timelines of it, to name
+// the timeline a composition uses (SDD-001 section 3.5.1).
+export interface ProjectDescribeResult {
+	project_id: string;
+	items: {
+		id: string;
+		kind: string;
+		title: string;
+		timeline_id?: string;
+		state: string;
+	}[];
+}
+
 export interface LintResult {
 	project_id: string;
 	revision: number;

@@ -45,7 +45,7 @@ A creator builds an intro once, as its own small timeline, and drops it into eve
 - [x] 6. Mix nested audio. Verify: `go test ./engine/audio/... -run TestNestedMix` passes.
 - [x] 7. Implement `composition.create_from_selection` and `composition.expand` with golden cases. Verify: `go test ./core/command/... -run TestComposition` passes.
 - [x] 8. Key caches by child revision and emit the invalidation event. Verify: `go test ./service/... -run TestNestedInvalidation` passes.
-- [ ] 9. Expose on the three surfaces; build the UI in both languages. Verify: `go test ./web/contract/...`, `task generate:check`, `task test:web` and `web/e2e/specs/nested-composition.spec.ts` pass.
+- [x] 9. Expose on the three surfaces; build the UI in both languages. Verify: `go test ./web/contract/...`, `task generate:check`, `task test:web` and `web/e2e/specs/nested-composition.spec.ts` pass.
 
 ## Test strategy
 

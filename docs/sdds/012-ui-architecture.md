@@ -808,6 +808,7 @@ Every item is a `div.tl-item` with a type class (`tl-clip`, `tl-audio`, `tl-text
 | `text` | the first line of `text` | none |
 | `caption` | one segment per word when the item is wider than 120 px and `ppf >= 0.5`, else one block with the word count; the selected word is outlined | `words[i].start` and `.duration` relative to the item, turned into segments by `captionWordSegments(item, ppf)` of `units.ts` (rule R5); `CaptionItem` does no arithmetic of its own |
 | `shape` | fill colour swatch and shape icon | none |
+| `composition` | a small picture of the first frame of the timeline it uses and that timeline's name (the item `name` wins); a dashed outline; "Timeline not found" when the production no longer lists it | the frame endpoint of the nested timeline, asked for without `rev` so it answers with the current frame; the names come from `describe` (read again when the page gets the focus) |
 
 The label and the caption words are rendered with `UntrustedText` (§1.2, untrusted text). Colours come from tokens (§17). A selected item has a 2 px selection ring (token `--ed-selection`). A locked or hidden track dims its row. An item whose asset is missing (`ast_placeholder` or unknown) shows a warning icon.
 
@@ -909,6 +910,9 @@ A gesture that touches several items (a multi-selection move) sends one batch co
 | `Delete` | `item.delete {item_ids}` | none |
 | `Shift+Delete`, context menu "Ripple delete" | `item.delete {item_ids, ripple: "track"}`; menu "Ripple delete all tracks": `ripple: "all"` | none |
 | `Ctrl+D` | `item.duplicate {item_id, start: "<item end>f"}` with the same track (the end frame is read from the item) | none |
+| Context menu "Create composition from selection" | `composition.create_from_selection {item_ids}`: the selected items move into a new timeline of the project and one composition takes their place, in one batch | none |
+| Context menu "Expand composition" on a composition | `composition.expand {item_id}` (the core refuses when the composition has an effect or a trim of its own) | none |
+| Double click on a composition, context menu "Open composition" | none: the editor opens the nested timeline at `/editor/<timeline id>?from=<this timeline id>`; the top bar then shows a link "Back to <name>" to `from` (only an id of the form `prj_` and 10 characters is linked) | none |
 | Right-click an empty gap, "Close gap" | `timeline.close_gap {track_id, at: "<frame under pointer>f"}` | none |
 | Toolbar "Add text" (`T`) | `text.add {track_id, start: "<playhead>f", duration: "3s", text: t("ui.editor.defaults.text")}` on the first visual track (created as above if none) | none |
 | Toolbar "Add caption" (`C`) | dialog with text, start (playhead), duration; sends `caption.add {track_id, start, text, duration}` on the first visual track named by the user or created, `track.add` first when none | none |
