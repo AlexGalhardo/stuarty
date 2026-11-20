@@ -619,7 +619,12 @@ func (j *job) verifyImage(plan ImagePlan, proxyName string) error {
 	}
 	c.eq("proxy_size", fmt.Sprintf("%dx%d", plan.PW, plan.PH), fmt.Sprintf("%dx%d", pw, ph))
 	for _, pwid := range PosterWidths {
-		w, _ := size("w"+itoa(pwid)+".jpg", jpgCfg)
+		// The poster of an image with alpha is a PNG, like its proxy (SDD-011 4.5).
+		poster, dec := "w"+itoa(pwid)+".jpg", jpgCfg
+		if plan.Alpha {
+			poster, dec = "w"+itoa(pwid)+".png", pngCfg
+		}
+		w, _ := size(poster, dec)
 		c.eq(
 			"thumbnails",
 			"poster w"+itoa(pwid)+" width "+itoa(min(pwid, plan.PW)),

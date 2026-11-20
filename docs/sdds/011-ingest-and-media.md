@@ -622,7 +622,7 @@ The file is deterministic for a given proxy, is an artifact of kind `chunks` and
 
 ### 4.5 Thumbnails
 
-Artifacts `thumbnails-1.jpg` (`.png` for a source with alpha, 4.3.5; the same for the posters below; the sprite sheet, served by the `strip` route; videos only) and the posters `thumbnails-1-w160.jpg`, `thumbnails-1-w320.jpg`, `thumbnails-1-w640.jpg` (one small picture of the asset at three widths, served by the `thumbnail` route; videos and images), four `thumbnails` rows told apart by `variant` (empty for the sheet, `w160`, `w320`, `w640` for the posters; 6.1). The widths are the closed set SDD-003 §6.5 allows for the `thumbnail` route (160, 320, 640).
+Artifacts `thumbnails-1.jpg` (`.png` for a source with alpha, 4.3.5; the same for the posters below, also for an image with alpha; the sprite sheet, served by the `strip` route; videos only) and the posters `thumbnails-1-w160.jpg`, `thumbnails-1-w320.jpg`, `thumbnails-1-w640.jpg` (one small picture of the asset at three widths, served by the `thumbnail` route; videos and images), four `thumbnails` rows told apart by `variant` (empty for the sheet, `w160`, `w320`, `w640` for the posters; 6.1). The widths are the closed set SDD-003 §6.5 allows for the `thumbnail` route (160, 320, 640).
 
 There is no descriptor file. The layout lives in the `meta` column of the sheet's row and is returned as `strip` inside the media entry of `MediaList` and `MediaInspect` (SDD-003 §2.6: `strip` with `tile_w`, `tile_h`, `columns`, `count`, `interval_ms`), so the client never fetches a JSON file to place a tile.
 
@@ -649,7 +649,7 @@ ffmpeg -y -nostdin -hide_banner -v error -nostats -protocol_whitelist file,pipe 
   -map "[z]" -frames:v 1 -c:v mjpeg -q:v 4 -fflags +bitexact -flags +bitexact -f image2 -update 1 <work>/w640.jpg
 ```
 
-For an image asset `-ss <t>` is omitted and the input is `proxy.jpg` or `proxy.png` (an alpha channel is dropped). The posters are artifacts like any other: they are renamed into `artifacts/<sha>/` and registered, so the `thumbnail` route (6.5) reads a stored file; there is no decode of the original, and no file is created at request time. An audio asset has no poster.
+For an image asset `-ss <t>` is omitted and the input is `proxy.jpg` or `proxy.png`; an image with alpha gets PNG posters (`format=rgba`, `-c:v png`) that keep it, because the preview draws a still from its poster and a poster without alpha shows the transparent area as a black box (VV-242), and verification expects the posters to decode as PNG. An image with alpha ingested before this change keeps its JPEG posters, and its preview the black box: an import of the same file finds the asset ready and runs no ingest (2.3), and `ProfileThumbnails` stayed 1, so no profile upgrade (6.3) makes new posters. Only once the file has left the store (its last reference trashed and the trash emptied, 6.4 item 4) does an import write PNG posters. The posters are artifacts like any other: they are renamed into `artifacts/<sha>/` and registered, so the `thumbnail` route (6.5) reads a stored file; there is no decode of the original, and no file is created at request time. An audio asset has no poster.
 
 ### 4.6 Peaks
 

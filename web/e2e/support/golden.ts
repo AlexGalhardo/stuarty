@@ -34,6 +34,10 @@ export const MAX_MEAN_COLOUR_DIFF = 4;
 // The nested projects of epic 52 (a composition drawn as a group, see
 // support/nested.ts): compared by SSIM and mean colour.
 export const GROUP_CASE = /^nested-/;
+// The cases on a transparent canvas: the export's JPEG cannot hold an alpha, so
+// it holds the frame over black (premultiplied colour). The canvas is compared
+// the same way, and the mean colour tells an alpha that is wrong (VV-278).
+export const TRANSPARENT_CASE = /transparent/;
 // Below this much edge per pixel (see globalShift) the offset of the whole
 // picture is noise and the markers give the displacement instead.
 export const MIN_TEXTURE = 0.05;
@@ -143,10 +147,44 @@ export function markedGradient(spec: Fixture): string {
 
 // The generated media of a case, with the arguments of engine/ingest/mediagen
 // (a test pattern and a tone), made once per run.
+// A sticker: a disc with a soft edge in four straight colours, transparent
+// around it (the corners are fully transparent). A preview that draws the
+// transparent area black, or that stacks the alpha, shows over the clip below.
+export function stickerPng(size: number): Buffer {
+	const data = new Uint8Array(size * size * 4);
+	const centre = (size - 1) / 2;
+	const radius = size * 0.42;
+	const colours: [number, number, number][] = [
+		[225, 29, 72],
+		[37, 99, 235],
+		[34, 197, 94],
+		[250, 204, 21],
+	];
+	for (let y = 0; y < size; y++) {
+		for (let x = 0; x < size; x++) {
+			const edge = radius - Math.hypot(x - centre, y - centre);
+			const alpha = Math.max(0, Math.min(1, edge / 4 + 0.5));
+			const [r, g, b] = colours[
+				(y < centre ? 0 : 2) + (x < centre ? 0 : 1)
+			] ?? [0, 0, 0];
+			const i = (y * size + x) * 4;
+			data[i] = r;
+			data[i + 1] = g;
+			data[i + 2] = b;
+			data[i + 3] = Math.round(alpha * 255);
+		}
+	}
+	return encodePng({ width: size, height: size, data });
+}
+
 export function fixtureClip(spec: Fixture): string {
 	const dir = join(tmpdir(), "stuarty-e2e-golden-markers");
 	mkdirSync(dir, { recursive: true });
 	const out = join(dir, spec.name);
+	if (spec.sticker) {
+		writeFileSync(out, stickerPng(spec.width));
+		return out;
+	}
 	if (spec.lut !== undefined) {
 		writeFileSync(out, lutFixture(spec.lut));
 		return out;
@@ -446,14 +484,14 @@ export function buildOperations(
 	return ops;
 }
 
-// The sticker cases need an alpha PNG and a GIF with a delay per frame, which
-// the Go suite writes itself (engine/export golden_alpha_test.go); this spec
-// makes only the marked-gradient clips.
+// The animated GIF needs a delay per frame, which only the Go suite writes
+// (engine/export golden_alpha_test.go); the alpha PNG of the sticker cases is
+// made here (stickerPng).
 export function needsImageFixtures(name: string): boolean {
 	const fixtures = JSON.parse(
 		readFileSync(join(GOLDEN, name, "fixtures.json"), "utf8"),
 	) as Record<string, Fixture>;
-	return Object.values(fixtures).some((f) => f.sticker || f.delays_cs);
+	return Object.values(fixtures).some((f) => f.delays_cs);
 }
 
 // The text of a generated lookup table, the same as lutFixture in
@@ -570,6 +608,20 @@ export async function loadCase(
 		.sort((a, b) => a - b);
 	expect(have, `${name}: item durations of the loaded project`).toEqual(want);
 	return { id, frames: listed };
+}
+
+// The canvas over black, as the export's JPEG holds the frame: colour times alpha.
+// A straight RGB hides the alpha (a fully transparent pixel keeps its colour).
+export function premultiplied(p: Pixels): Pixels {
+	const data = new Uint8Array(p.data.length);
+	for (let i = 0; i < p.data.length; i += 4) {
+		const a = p.data[i + 3] ?? 0;
+		for (let c = 0; c < 3; c++) {
+			data[i + c] = Math.round(((p.data[i + c] ?? 0) * a) / 255);
+		}
+		data[i + 3] = 255;
+	}
+	return { width: p.width, height: p.height, data };
 }
 
 export interface Capture {
@@ -810,12 +862,10 @@ export async function compareFrame(
 	label: string,
 	ownTimeline = false,
 ): Promise<void> {
-	const {
-		canvas,
-		frame: exported,
-		canvasPng,
-		frameJpeg,
-	} = await capture(page, id, frame, ownTimeline);
+	const shot = await capture(page, id, frame, ownTimeline);
+	const { frame: exported, canvasPng, frameJpeg } = shot;
+	// Over black, like the export: an alpha that is wrong shows as a colour.
+	const canvas = premultiplied(shot.canvas);
 	const ssim = lumaSsim(canvas, exported);
 	if (ssim < MIN_SSIM) {
 		const videos = await page.evaluate(() =>
@@ -909,7 +959,11 @@ export async function compareFrame(
 	);
 	// SSIM on luma cannot see a missing lookup table or a wrong grade (the
 	// luma barely moves), so the colour cases also compare the mean colour.
-	if (COLOUR_CASE.test(name) || GROUP_CASE.test(name)) {
+	if (
+		COLOUR_CASE.test(name) ||
+		GROUP_CASE.test(name) ||
+		TRANSPARENT_CASE.test(name)
+	) {
 		for (let c = 0; c < 3; c++) {
 			expect
 				.soft(

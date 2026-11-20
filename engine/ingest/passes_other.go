@@ -174,7 +174,7 @@ func (j *job) image(ctx context.Context) error {
 	j.add(workFile{kind: "proxy", profile: ProfileProxy, ext: proxyExt, name: proxyName})
 	if err := j.timed(
 		StepMux,
-		func() error { return j.posters(ctx, 0, false, proxyName, false, deadline) },
+		func() error { return j.posters(ctx, 0, false, proxyName, plan.Alpha, deadline) },
 	); err != nil {
 		return err
 	}
