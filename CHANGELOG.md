@@ -7,6 +7,58 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.35.0] - 2026-11-20
+
+### Added
+
+- **command:** Diff two documents with classified, ranked changes ([4db17c5](https://github.com/AlexGalhardo/stuarty/commit/4db17c59787347344a1b192efefb698f1b23bbff))
+- **command:** Revert a document to an earlier revision as a batch ([902a271](https://github.com/AlexGalhardo/stuarty/commit/902a2719b5be987bc29f3b35fe0bc197484492ef))
+- **service:** Checkpoints on revisions and the automatic one before an agent's first edit ([dbd4c65](https://github.com/AlexGalhardo/stuarty/commit/dbd4c65e97876d06d03a1a307c5ded9ff43434b2))
+- **service:** Revert a timeline to a revision and diff two revisions as text within the budget ([2c67c84](https://github.com/AlexGalhardo/stuarty/commit/2c67c84d9d39a63933aef44871780bb5ad98e8dc))
+- **api:** Revert, diff and checkpoints on the CLI, HTTP and MCP surfaces ([e4d67c4](https://github.com/AlexGalhardo/stuarty/commit/e4d67c4e74da011cb53460ebbd5b74bd1440b5f6))
+- **ui:** Revert to here, compare two steps and checkpoints in the history panel ([fcc9556](https://github.com/AlexGalhardo/stuarty/commit/fcc955652ec45bd80230752f3697ed6674739cfd))
+- **command:** Add the audio processor chain and its five commands ([7ad4817](https://github.com/AlexGalhardo/stuarty/commit/7ad48170b94f767a2a06b324977f7c6d59f4865c))
+- **engine:** Add the equaliser, dynamics, de-esser and spectral noise reduction ([3680977](https://github.com/AlexGalhardo/stuarty/commit/3680977f920e76f1e19d793bcad401f7fa4e3b21))
+- **export:** Run the processor chains in the mixer and measure the audio ([3a2731a](https://github.com/AlexGalhardo/stuarty/commit/3a2731a9b914191392a1b74fe31d3c0f6c225c0c))
+- **service:** Measure the audio before and after its processors on the three surfaces ([0dcafec](https://github.com/AlexGalhardo/stuarty/commit/0dcafec74f2d37f52b829fd3c335606a092e059d))
+- **ui:** Build the audio processor inspector for clips, audio items and tracks ([66b2103](https://github.com/AlexGalhardo/stuarty/commit/66b2103597ff3aa844e3d24d8dac88626c694b05))
+- **service:** Add the Meta sign-in, the account picker and the Graph client ([bb0f93e](https://github.com/AlexGalhardo/stuarty/commit/bb0f93e39b233ce70d20e6b57bd78b6afd7ba6b4))
+- **core:** Add the Reel limits, the caption and the media facts to publish ([0b549b9](https://github.com/AlexGalhardo/stuarty/commit/0b549b943552c1669a35a633dbc7e904a278f0c4))
+- **service:** Publish a Reel to Instagram in two steps at Meta ([8fb0930](https://github.com/AlexGalhardo/stuarty/commit/8fb09305a1824c236521da39e14ee7a6a516fbcf))
+- **service:** Publish a Reel to a Facebook Page in three steps ([05f50ce](https://github.com/AlexGalhardo/stuarty/commit/05f50cef17c3420dfc3cc0e28159c468b4bcbdb1))
+- **service:** Set the AI disclosure from generated assets and say so ([0e32f11](https://github.com/AlexGalhardo/stuarty/commit/0e32f118b316423f2c776c0a0a40d7ac97a0fb6c))
+- **web:** Add the Meta setup guide, the account picker and its security tests ([24bda18](https://github.com/AlexGalhardo/stuarty/commit/24bda18f50b9f50464d076c0a6f195af38e7ad06))
+- **core:** Validate and estimate image and voice generation ([b6ad228](https://github.com/AlexGalhardo/stuarty/commit/b6ad2287476f68de45b94d1b85aa7e0fc53dcf8e))
+- **service:** Add image and speech generation to the OpenAI adapter ([c50a848](https://github.com/AlexGalhardo/stuarty/commit/c50a848e35040346d568a213b86c55ec32627e4d))
+- **service:** Add the image and voice generation jobs with estimate, ledger and assets ([2472604](https://github.com/AlexGalhardo/stuarty/commit/247260468a887699e442ecf3d5a3e4cb0b1328c6))
+- **api:** Expose image and voice generation on HTTP, the CLI and MCP ([f877fa8](https://github.com/AlexGalhardo/stuarty/commit/f877fa83d6f35dfbd199881bfc16e5f29ab47f0d))
+- **ui:** Add the Generate dialog to the visual and video asset sections ([7a442a2](https://github.com/AlexGalhardo/stuarty/commit/7a442a2f36650bdce1ccc68b1cc41a4f8983e7d1))
+- **auth:** Verify the Google ID token ([852bdc6](https://github.com/AlexGalhardo/stuarty/commit/852bdc6b9e8774fc6aba68871f5f23997837cbea))
+- **auth:** Link a Google account from settings ([cdd059b](https://github.com/AlexGalhardo/stuarty/commit/cdd059bab3ef8ada1ae3940f1319bf3eb07d3ec3))
+- **auth:** Sign in with a linked Google account ([4a57edc](https://github.com/AlexGalhardo/stuarty/commit/4a57edcec241818a03bc0ec32c04dda593d9b202))
+- **ui:** Add the Google sign-in pages and the guide ([85c71a0](https://github.com/AlexGalhardo/stuarty/commit/85c71a063809cb8431750334034f1c8e712bbf96))
+
+### Fixed
+
+- **service:** Key checkpoints by the timelines table so a second timeline can have them ([6418299](https://github.com/AlexGalhardo/stuarty/commit/64182994d75fae8453984ae78b3bfd3518d470f9))
+- **service:** Let a project-limited key reach the history of every timeline of its project ([dbe909a](https://github.com/AlexGalhardo/stuarty/commit/dbe909a8ea29d88387e454eaa4fdf46ca4e72d0b))
+- **mcp:** Refuse the revert and checkpoint members on the history of an image ([26c2e3f](https://github.com/AlexGalhardo/stuarty/commit/26c2e3f5052b0052381900ef0dae3221e92e9cbf))
+- **store:** Make a renamed automatic checkpoint a named one the ceiling keeps ([61c10e7](https://github.com/AlexGalhardo/stuarty/commit/61c10e75d6100410478846d5b172398322bbfe7d))
+- **ui:** Hold the revert of the history panel to the revision of its preview ([5841926](https://github.com/AlexGalhardo/stuarty/commit/5841926498ed2f8127cf9395bdb8685218d1f377))
+- **repo:** Fit epic 34 in the discovery budget and prove its commands on every surface ([d5a6764](https://github.com/AlexGalhardo/stuarty/commit/d5a6764977dd4dda912d7f4bd145c74d5bb55c05))
+- **engine:** Measure a marked noise profile as it is decoded ([6dc42cd](https://github.com/AlexGalhardo/stuarty/commit/6dc42cd169dff38b34a0254fc4da14dd52018b6d))
+- **mcp:** Refuse item_id in the image modes of view ([9c20113](https://github.com/AlexGalhardo/stuarty/commit/9c2011364fed687516ec382c9b3bc133bd985262))
+- **service:** Count the sound measure as a heavy call ([5e734a1](https://github.com/AlexGalhardo/stuarty/commit/5e734a1782f8d0da23fa9706b589884d959869d6))
+- **command:** Shorten six command summaries to fit the discovery budget ([455afa0](https://github.com/AlexGalhardo/stuarty/commit/455afa0980cbe8e5f773fd7ca943b6b384fe24fa))
+- **service:** Take the error hints from the connector of the network ([468164f](https://github.com/AlexGalhardo/stuarty/commit/468164f1753f3b464e08667b36abe4f759d744c1))
+- **service:** Send a post only to the account that was approved ([923e25a](https://github.com/AlexGalhardo/stuarty/commit/923e25af987efa683519b3e388661c33ac568c7e))
+- **service:** Fetch only the images that were asked for ([c7a9480](https://github.com/AlexGalhardo/stuarty/commit/c7a948069aab1b797f3fdf64ba35251113d4c9c4))
+- **mcp:** Shorten what job_start says about the generations ([e178821](https://github.com/AlexGalhardo/stuarty/commit/e17882139916101c17a1b2e9dbec1c831706ba6f))
+- **auth:** Keep Google linkings apart from anonymous sign-ins ([712cfb0](https://github.com/AlexGalhardo/stuarty/commit/712cfb0106416e07f6f7d7d59fb3e33da528dc68))
+
+### Security
+
+- **security:** Cover the Google sign-in threat rows ([a1aa962](https://github.com/AlexGalhardo/stuarty/commit/a1aa962c6769b85fc07630bbe2f240ce64a980a5))
 ## [0.34.0] - 2026-11-20
 
 ### Added
@@ -1652,7 +1704,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.34.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.35.0...HEAD
+[0.35.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.34.0...v0.35.0
 [0.34.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.33.0...v0.34.0
 [0.33.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.32.0...v0.33.0
 [0.32.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.31.0...v0.32.0
