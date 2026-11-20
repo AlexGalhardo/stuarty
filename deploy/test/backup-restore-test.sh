@@ -54,6 +54,11 @@ out="$WORK/backups"
 (cd "$A/repo" && bash deploy/backup.sh --out "$out") >"$WORK/backup.log" 2>&1 || { cat "$WORK/backup.log" >&2; fail "backup.sh failed"; }
 tarfile="$(ls "$out"/stuarty-backup-*.tar)"
 assert "the archive and its checksum exist" test -s "$tarfile" -a -s "$tarfile.sha256"
+if on_windows; then
+	echo "skip file modes: this file system has no Unix modes"
+else
+	[ "$(mode_of "$tarfile")" = 600 ] && [ "$(mode_of "$tarfile.sha256")" = 600 ] && pass "the archive is readable by its owner only (0600)" || fail "the archive is $(mode_of "$tarfile")"
+fi
 assert "the checksum of the archive verifies" bash -c "cd '$out' && sha256sum -c '$(basename "$tarfile").sha256'"
 assert "the archive holds the manifest and the database" bash -c "tar -tf '$tarfile' | grep -q '/manifest.json$' && tar -tf '$tarfile' | grep -q '/db.sqlite$' && tar -tf '$tarfile' | grep -q '/vault.json$'"
 assert "the archive leaves out the exports" bash -c "! tar -tf '$tarfile' | grep -q 'exports/'"
@@ -71,6 +76,7 @@ B="$WORK/b"
 export STUB_DATA="$B/data" STUB_KEY_FILE="$B/repo/deploy/secrets/master_key"
 (cd "$B/repo" && bash deploy/restore.sh "$tarfile") >"$WORK/restore.log" 2>&1 || { cat "$WORK/restore.log" >&2; fail "restore.sh failed"; }
 pass "restore.sh restored into the empty host"
+assert "the restore built the missing image of the new host first" grep -q ' build stuarty' "$STUB_STATE/calls.log"
 assert "the original is identical" cmp "$DATA_A/store/ab/abcdef0123" "$B/data/store/ab/abcdef0123"
 assert "the library file is identical" cmp "$DATA_A/library/memory/note.md" "$B/data/library/memory/note.md"
 assert "the exports were not restored" test ! -e "$B/data/exports/p/j.mp4"
@@ -110,6 +116,12 @@ printf 'x' >>"$WORK/damaged.tar"
 if (cd "$D/repo" && bash deploy/restore.sh "$WORK/damaged.tar") >"$WORK/restore-d.log" 2>&1; then fail "a damaged archive was restored"; fi
 grep -q 'checksum' "$WORK/restore-d.log" && pass "a damaged archive is refused by its checksum" || { cat "$WORK/restore-d.log" >&2; fail "no checksum message"; }
 assert "nothing was written on that host" test ! -s "$D/data/db.sqlite"
+# A .sha256 whose line names another, intact file does not vouch for this one.
+cp "$tarfile" "$WORK/intact.tar"
+(cd "$WORK" && sha256sum intact.tar >"$WORK/damaged.tar.sha256")
+if (cd "$D/repo" && bash deploy/restore.sh "$WORK/damaged.tar") >"$WORK/restore-d2.log" 2>&1; then fail "a damaged archive passed with the checksum of another file"; fi
+grep -q 'checksum' "$WORK/restore-d2.log" && pass "the .sha256 is checked against this file, not the name it lists" || { cat "$WORK/restore-d2.log" >&2; fail "no checksum message"; }
+assert "nothing was written on that host either" test ! -s "$D/data/db.sqlite"
 
 # 5. A workspace that already has data is refused; --replace keeps it aside.
 export STUB_DATA="$B/data" STUB_KEY_FILE="$B/repo/deploy/secrets/master_key"

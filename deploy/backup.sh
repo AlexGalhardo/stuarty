@@ -9,6 +9,9 @@
 # hold the master key (deploy/secrets/master_key): keep a copy of that where you keep your other
 # secrets. Without it a restored vault cannot be opened and you connect the accounts again.
 set -euo pipefail
+# The archive holds the database (accounts, password hashes, every project) and the sealed vault:
+# only the owner of this host account reads it, whatever the umask of the shell.
+umask 077
 
 # shellcheck source=deploy/lib.sh
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"

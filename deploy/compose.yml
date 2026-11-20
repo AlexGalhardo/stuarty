@@ -16,6 +16,9 @@ services:
   stuarty:
     # Built on this host from the tagged source and tagged with its version: never `latest`.
     image: stuarty:${STUARTY_VERSION:-devel}
+    # Never looked for in a registry: a missing image is built from this checkout (by default
+    # Compose first tries to pull an image that has a build section).
+    pull_policy: never
     build:
       context: ..
       dockerfile: .config/docker/stuarty.Dockerfile
@@ -65,7 +68,7 @@ services:
       STUARTY_DOMAIN: ${STUARTY_DOMAIN:-stuarty.invalid}
       STUARTY_ACME_EMAIL: ${STUARTY_ACME_EMAIL:-admin@stuarty.invalid}
       STUARTY_TLS_DIRECTIVE: ${STUARTY_TLS_DIRECTIVE:-}
-      STUARTY_MAX_BODY: ${STUARTY_MAX_BODY:-8GB}
+      STUARTY_MAX_BODY: ${STUARTY_MAX_BODY:-8GiB}
     ports:
       - "80:80"
       - "443:443"
