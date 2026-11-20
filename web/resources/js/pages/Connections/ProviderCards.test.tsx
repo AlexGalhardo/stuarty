@@ -223,3 +223,118 @@ describe("a model row", () => {
 		expect(priced).not.toContain("No price yet.");
 	});
 });
+
+// Epic 12 (SDD-016 section 12): a provider that can be signed in to has the button, and a connection made
+// by a sign-in shows its state, which the service computed. The account is text the provider wrote.
+describe("the sign-in of a provider", () => {
+	const signInMessages = {
+		...messages,
+		"ui.providers.signin_title": "Or sign in, with no key to copy",
+		"ui.providers.signin.openai": "Sign in with ChatGPT",
+		"ui.providers.signin.generic": "Sign in to {provider}",
+		"ui.providers.signin_hint.openai": "Uses your ChatGPT plan.",
+		"ui.providers.signin_hint.generic": "You sign in on the provider's page.",
+		"ui.providers.signin_ready": "Signed in",
+		"ui.providers.signin_needs": "Needs sign-in",
+		"ui.providers.signin_needs_help": "Nothing was deleted: sign in again.",
+		"ui.providers.signin_again": "Sign in again",
+	};
+	const withSignIn: ProviderView = {
+		...provider,
+		credential_kinds: ["api_key", "oauth"],
+	};
+	const render = (node: React.ReactNode): string =>
+		renderToString(
+			<I18nProvider messages={signInMessages} locale="en" locales={["en"]}>
+				{node}
+			</I18nProvider>,
+		);
+
+	test("the button is there only for a provider with the sign-in credential kind", () => {
+		const base = {
+			connections: [],
+			cost: null,
+			onChanged: () => undefined,
+		};
+		expect(
+			render(<ProviderCards providers={[provider]} {...base} />),
+		).not.toContain("Sign in with ChatGPT");
+		const html = render(<ProviderCards providers={[withSignIn]} {...base} />);
+		expect(html).toContain("Sign in with ChatGPT");
+		expect(html).toContain('data-provider-signin="openai"');
+		expect(html).toContain("Uses your ChatGPT plan.");
+	});
+
+	test("a provider with no text of its own gets the generic sign-in text", () => {
+		const html = render(
+			<ProviderCards
+				providers={[{ ...withSignIn, id: "other", name: "Other" }]}
+				connections={[]}
+				cost={null}
+				onChanged={() => undefined}
+			/>,
+		);
+		expect(html).toContain("Sign in to Other");
+	});
+
+	test("a ready connection shows who it is for, as text, and one that needs a sign-in says so", () => {
+		const ready = render(
+			<ProviderCards
+				providers={[withSignIn]}
+				connections={[connection]}
+				signIns={[
+					{
+						connection_id: "con_1",
+						provider: "openai",
+						label: "ChatGPT",
+						account: PAYLOAD,
+						state: "ready",
+					},
+				]}
+				cost={null}
+				onChanged={() => undefined}
+			/>,
+		);
+		expect(ready).toContain('data-signin-state="ready"');
+		expect(ready).toContain("Signed in");
+		expect(ready).toContain("&lt;img src=x onerror=window.__pwned=1&gt;");
+		expect(ready).not.toContain("<img");
+		expect(ready).not.toContain('role="alert"');
+
+		const needs = render(
+			<ProviderCards
+				providers={[withSignIn]}
+				connections={[connection]}
+				signIns={[
+					{
+						connection_id: "con_1",
+						provider: "openai",
+						label: "ChatGPT",
+						state: "needs_sign_in",
+					},
+				]}
+				cost={null}
+				onChanged={() => undefined}
+			/>,
+		);
+		expect(needs).toContain('data-signin-state="needs_sign_in"');
+		expect(needs).toContain("Needs sign-in");
+		expect(needs).toContain("Nothing was deleted: sign in again.");
+		expect(needs).toContain('role="alert"');
+		expect(needs).toContain("Sign in again");
+	});
+
+	test("a connection with a key has no sign-in state and no sign-in again", () => {
+		const html = render(
+			<ProviderCards
+				providers={[withSignIn]}
+				connections={[connection]}
+				signIns={[]}
+				cost={null}
+				onChanged={() => undefined}
+			/>,
+		);
+		expect(html).not.toContain("data-signin-state");
+		expect(html).not.toContain("Sign in again");
+	});
+});

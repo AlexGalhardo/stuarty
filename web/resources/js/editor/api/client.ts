@@ -65,6 +65,11 @@ import type {
 	ProviderModelsResult,
 	ProviderPriceSetRequest,
 	ProviderPricesResult,
+	ProviderSignIn,
+	ProviderSignInCompleteRequest,
+	ProviderSignInListResult,
+	ProviderSignInRequest,
+	ProviderSignInResult,
 	PublishRequest,
 	PublishValidateResult,
 	SessionResult,
@@ -220,6 +225,15 @@ export interface ApiClient {
 	setProviderPrice(
 		request: ProviderPriceSetRequest,
 	): Promise<ProviderPricesResult>;
+	// The sign-in to an AI provider (SDD-016 section 12): beginning and completing one are for a person in a
+	// browser session; the list is for anyone who may read connections.
+	beginProviderSignIn(
+		request: ProviderSignInRequest,
+	): Promise<ProviderSignInResult>;
+	completeProviderSignIn(
+		request: ProviderSignInCompleteRequest,
+	): Promise<ProviderSignIn>;
+	listProviderSignIns(): Promise<ProviderSignInListResult>;
 	// The approval queue (SDD-015). Deciding, the rules and the ceilings are for a person in a
 	// browser session; any other caller gets E_PRIVILEGED_SESSION.
 	listApprovals(state?: string): Promise<ApprovalListResult>;
@@ -620,6 +634,12 @@ export function createClient(
 			),
 		setProviderPrice: (request) =>
 			call("PUT", "/providers/prices", EDIT_TIMEOUT_MS, request),
+		beginProviderSignIn: (request) =>
+			call("POST", "/providers/signin", EDIT_TIMEOUT_MS, request),
+		completeProviderSignIn: (request) =>
+			call("POST", "/providers/signin/complete", EDIT_TIMEOUT_MS, request),
+		listProviderSignIns: () =>
+			call("GET", "/providers/sign-ins", READ_TIMEOUT_MS),
 		listApprovals: (state) =>
 			call(
 				"GET",

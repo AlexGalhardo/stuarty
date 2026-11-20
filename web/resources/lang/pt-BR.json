@@ -2280,7 +2280,28 @@
       "price_output": "Saída, por milhão de tokens",
       "price_save": "Guardar o preço",
       "spend": "Gasto hoje: {amount}",
-      "spend_none": "Nada gasto hoje."
+      "spend_none": "Nada gasto hoje.",
+      "signin_title": "Ou entre com a sua conta, sem copiar chave",
+      "signin": {
+        "openai": "Entrar com o ChatGPT",
+        "openrouter": "Entrar com o OpenRouter",
+        "generic": "Entrar em {provider}"
+      },
+      "signin_hint": {
+        "openai": "Usa o seu plano do ChatGPT, dentro dos limites do plano. Para entrar, abra o Stuarty em http://127.0.0.1 no computador onde ele roda.",
+        "openrouter": "O OpenRouter entrega ao Stuarty uma chave da sua conta. Ela fica no cofre desta máquina e gasta os seus créditos do OpenRouter.",
+        "generic": "Você entra na página do provedor. O acesso fica no cofre desta máquina."
+      },
+      "signin_account": "Conectado como {account}",
+      "signin_ready": "Conectado",
+      "signin_needs": "Precisa entrar de novo",
+      "signin_needs_help": "O provedor não aceita mais esta conexão. Nada foi apagado: entre de novo para voltar a usá-la.",
+      "signin_again": "Entrar de novo",
+      "callback_title": "Entrada em um provedor de IA",
+      "callback_working": "Concluindo a entrada...",
+      "callback_done": "Conectado:",
+      "callback_failed": "A entrada não foi concluída.",
+      "back": "Voltar às conexões"
     },
     "approvals": {
       "title": "Aprovações",

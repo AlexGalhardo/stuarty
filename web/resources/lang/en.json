@@ -2280,7 +2280,28 @@
       "price_output": "Output, per million tokens",
       "price_save": "Save the price",
       "spend": "Spent today: {amount}",
-      "spend_none": "Nothing spent today."
+      "spend_none": "Nothing spent today.",
+      "signin_title": "Or sign in, with no key to copy",
+      "signin": {
+        "openai": "Sign in with ChatGPT",
+        "openrouter": "Sign in with OpenRouter",
+        "generic": "Sign in to {provider}"
+      },
+      "signin_hint": {
+        "openai": "Uses your ChatGPT plan, within the limits of the plan. To sign in, open Stuarty at http://127.0.0.1 on the computer where it runs.",
+        "openrouter": "OpenRouter gives Stuarty a key of your account. It stays in the vault of this machine and spends your OpenRouter credits.",
+        "generic": "You sign in on the provider's page. The access stays in the vault of this machine."
+      },
+      "signin_account": "Signed in as {account}",
+      "signin_ready": "Signed in",
+      "signin_needs": "Needs sign-in",
+      "signin_needs_help": "The provider no longer accepts this sign-in. Nothing was deleted: sign in again to use it.",
+      "signin_again": "Sign in again",
+      "callback_title": "Sign-in to an AI provider",
+      "callback_working": "Finishing the sign-in...",
+      "callback_done": "Signed in:",
+      "callback_failed": "The sign-in did not finish.",
+      "back": "Back to the connections"
     },
     "approvals": {
       "title": "Approvals",
