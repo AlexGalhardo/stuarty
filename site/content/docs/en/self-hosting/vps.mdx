@@ -20,7 +20,7 @@ The image is built on your server from the source of the release you checked out
 What the package connects to:
 
 - Caddy asks a certificate authority for the certificate of your domain, and renews it. This is the one outbound connection the package itself needs.
-- Building the image downloads the base images, the Go and JavaScript packages and the pinned FFmpeg. It happens when you install and when you update, on the server.
+- Building the image downloads the base images, the Go and JavaScript packages and the pinned FFmpeg. It happens when you install, when you update and when you restore on a new server, on the server. The Stuarty image itself is never looked for in a registry.
 - `update.sh` asks the git remote you cloned from for new tags.
 - Stuarty itself opens no outbound connection until you connect an account or a provider.
 
@@ -56,7 +56,7 @@ Read the [changelog](/changelog) first. A workspace migrated by a newer version 
 bash deploy/backup.sh
 ```
 
-It writes `deploy/backups/stuarty-backup-<time>.tar` and its `.sha256`. The server keeps running: the database is copied through the online backup of SQLite, never as a raw file of a database that is being written. The backup holds the database, your original files, the library (memory, prompts and skills), your fonts, the provider prices and the vault. It leaves out what is rebuilt or is not data: exports, proxies and frames, logs, helpers and the working folders.
+It writes `deploy/backups/stuarty-backup-<time>.tar` and its `.sha256`, readable only by your user (mode 0600). The server keeps running: the database is copied through the online backup of SQLite, never as a raw file of a database that is being written. The backup holds the database, your original files, the library (memory, prompts and skills), your fonts, the provider prices and the vault. It leaves out what is rebuilt or is not data: exports, proxies and frames, logs, helpers and the working folders.
 
 The command underneath is `stuarty workspace:backup <folder>`. You can run it on any workspace, with a server running or not:
 
