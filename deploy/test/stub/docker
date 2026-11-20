@@ -93,6 +93,14 @@ case "${1:-}" in
 						echo "migrated to $v" >>"$STUB_DATA/db.sqlite"
 					fi
 				done
+				# Caddy depends on `condition: service_healthy`, so the real `up -d` waits for the health of
+				# stuarty and fails when it turns unhealthy, leaving the unhealthy container running.
+				for f in ${STUB_FAIL_VERSIONS:-}; do
+					if [ "$f" = "$v" ]; then
+						echo "dependency failed to start: container stuarty-stuarty-1 is unhealthy" >&2
+						exit 1
+					fi
+				done
 				exit 0
 				;;
 			down | stop)
