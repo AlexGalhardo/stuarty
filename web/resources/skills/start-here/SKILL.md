@@ -14,6 +14,8 @@ Stuarty is where a person creates, edits and manages a production. This skill sa
 | "make a video", "a short", "a reel", with no brief yet | `brief-a-production`, then `short-vertical-video` |
 | to define the idea, the audience, the length or the platform | `brief-a-production` |
 | the whole path from the idea to a finished short | `short-vertical-video` |
+| a product commercial, an ad, a promo of 15 or 30 seconds | `product-commercial` |
+| the lines of a commercial | `commercial-copy` |
 | an opening line, a hook | `write-a-hook` |
 | the words of the video, a script | `short-script` |
 | captions on the video, subtitles, karaoke words | `captions-for-shorts` |
