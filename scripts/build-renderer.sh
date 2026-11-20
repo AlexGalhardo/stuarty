@@ -64,6 +64,18 @@ native_build() {
 	cargo build --locked --release -p stuarty-renderer --manifest-path "$manifest"
 }
 
+# --remap-path-prefix rewrites the start of a source path but not the separators after it, so a Windows
+# build keeps "/cargo\registry\src\..." and "stuarty-renderer-text\src\..." in the panic locations where a
+# Linux build has slashes (VV-276). The slashes replace the backslashes in place, one byte for one byte, so
+# no offset of the module moves; only strings that end in .rs and start with a remapped prefix or with a
+# crate of this workspace are touched.
+normalize_paths() {
+	command -v perl >/dev/null 2>&1 || die "perl is not installed (it makes the source paths of the module the same on every system)"
+	perl -e 'binmode STDIN; binmode STDOUT; local $/; $_ = <STDIN>; s{((?:/cargo|/rustup|/build|stuarty-renderer(?:-text|-gpu)?)[\\/][ -~]{1,300}?\.rs)}{(my $p = $1) =~ tr{\\}{/}; $p}ge; print' \
+		<"$1" >"$1.normalized"
+	mv "$1.normalized" "$1"
+}
+
 wasm_build() {
 	# 16,384 pages of 64 KiB: the memory limit of SDD-013 section 4.1, also set in wazero.
 	RUSTFLAGS="$remap -C link-arg=--max-memory=1073741824" \
@@ -72,6 +84,7 @@ wasm_build() {
 	rm -rf "$dist"
 	mkdir -p "$dist"
 	cp "$CARGO_TARGET_DIR/wasm32-unknown-unknown/release/stuarty_renderer.wasm" "$dist/stuarty_renderer.wasm"
+	normalize_paths "$dist/stuarty_renderer.wasm"
 	sha256 "$dist/stuarty_renderer.wasm" >"$dist/stuarty_renderer.wasm.sha256"
 	printf 'build-renderer: stuarty_renderer.wasm sha256 %s\n' "$(cat "$dist/stuarty_renderer.wasm.sha256")"
 }
