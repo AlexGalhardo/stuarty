@@ -193,6 +193,7 @@ var parity = []row{
 	{method: "SocialConnectBegin", command: "social:connect", route: "POST /social/connect"},
 	{method: "SocialConnectComplete", route: "POST /social/complete", httpOnly: true},
 	{method: "SocialAccountList", command: "social:account:list", route: "GET /social/accounts"},
+	{method: "SocialAccountSelect", route: "POST /social/select", httpOnly: true},
 	{method: "PublishValidate", command: "publish:validate", route: "POST /publish/validate"},
 	{method: "PublishNow", command: "publish:now", route: "POST /publish"},
 	{method: "PublishStatus", command: "publish:status", route: "GET /publish/{}"},
@@ -217,6 +218,11 @@ var parity = []row{
 	{method: "TextDraft", tool: "job_start", command: "text:draft", route: "POST /projects/{}/texts/{}/draft"},
 	{method: "CaptionValidate", tool: "project_item", command: "caption:validate", route: "POST /captions/validate"},
 	{method: "ScriptEstimate", tool: "project_item", command: "script:estimate", route: "POST /scripts/estimate"},
+	// Image and voice generation (SDD-016 section 6.1, epic 10): job_start again, with the kinds image.generate
+	// and voice.generate; the voices of a connection are read with the CLI or HTTP, as its models are.
+	{method: "ImageGenerate", tool: "job_start", command: "image:generate", route: "POST /image/generate"},
+	{method: "VoiceGenerate", tool: "job_start", command: "voice:generate", route: "POST /voice/generate"},
+	{method: "VoiceList", command: "voice:list", route: "GET /connections/{}/voices"},
 	// The library (SDD-018): one MCP tool, library, serves the lists, reads, writes, searches, renders and
 	// lints. Removing a note, importing and exporting skills read and write files by path (no tool), and
 	// marking a skill as read is for a person at the browser (HTTP only).

@@ -505,6 +505,11 @@ var Endpoints = []Endpoint{
 		Service: "SocialAccountList", Status: 200, Summary: "List the connected social accounts and their state",
 	},
 	{
+		ID: "social.select", Method: http.MethodPost, Path: "/social/select", Scope: service.ScopeAdmin,
+		Service: "SocialAccountSelect", Status: 200,
+		Summary: "Choose the Page or Instagram account a sign-in reached (a person in the browser only)",
+	},
+	{
 		ID:      "publish.validate",
 		Method:  http.MethodPost,
 		Path:    "/publish/validate",
@@ -588,6 +593,28 @@ var Endpoints = []Endpoint{
 	{
 		ID: "scripts.estimate", Method: http.MethodPost, Path: "/scripts/estimate", Scope: service.ScopeRead,
 		Service: "ScriptEstimate", Status: 200, Summary: "Estimate how long a script takes when read aloud",
+	},
+	{
+		ID:      "image.generate",
+		Method:  http.MethodPost,
+		Path:    "/image/generate",
+		Scope:   service.ScopeEdit,
+		Service: "ImageGenerate",
+		Status:  202,
+		Summary: "Start an image generation with the provider of a connection; the job waits for approval, shows its estimate and stores the images as assets with their origin",
+	},
+	{
+		ID:      "voice.generate",
+		Method:  http.MethodPost,
+		Path:    "/voice/generate",
+		Scope:   service.ScopeEdit,
+		Service: "VoiceGenerate",
+		Status:  202,
+		Summary: "Start a speech generation with the provider of a connection; the job waits for approval, shows its estimate and stores the audio as an asset with its origin",
+	},
+	{
+		ID: "voice.list", Method: http.MethodGet, Path: "/connections/{id}/voices", Scope: service.ScopeRead,
+		Service: "VoiceList", Status: 200, Summary: "List the voices of the provider of a connection",
 	},
 	{
 		ID: "library.memory.list", Method: http.MethodGet, Path: "/library/memory", Scope: service.ScopeRead,
@@ -823,6 +850,42 @@ var Endpoints = []Endpoint{
 	{
 		ID: "auth.logout", Method: http.MethodPost, Path: "/auth/logout", Root: true, Status: 200,
 		Summary: "End the browser session (network mode)",
+	},
+	// The optional Google sign-in of network mode (SDD-007 section 4.7, SDD-014 section 12).
+	{
+		ID: "google.status", Method: http.MethodGet, Path: "/auth/google", Root: true, Status: 200,
+		Summary: "Whether Google sign-in is on, and the Google account the session has linked (network mode)",
+	},
+	{
+		ID: "google.start", Method: http.MethodPost, Path: "/auth/google/start", Root: true, Status: 200,
+		Summary: "Begin a sign-in with Google (network mode)",
+	},
+	{
+		ID: "google.complete", Method: http.MethodPost, Path: "/auth/google/complete", Root: true, Status: 200,
+		Summary: "Finish a sign-in with Google or the linking of a Google account (network mode)",
+	},
+	{
+		ID:      "google.link",
+		Method:  http.MethodPost,
+		Path:    "/auth/google/link",
+		Root:    true,
+		Scope:   service.ScopeRead,
+		Status:  200,
+		Summary: "Begin linking your Google account, with your password (a logged-in session only; network mode)",
+	},
+	{
+		ID: "google.unlink", Method: http.MethodPost, Path: "/auth/google/unlink", Root: true, Scope: service.ScopeRead,
+		Status: 200, Summary: "Unlink your Google account, with your password (a logged-in session only; network mode)",
+	},
+	{
+		ID: "google.settings.get", Method: http.MethodGet, Path: "/auth/google/settings", Root: true,
+		Scope: service.ScopeAdmin, Status: 200,
+		Summary: "Read the Google sign-in settings (an administrator session only; network mode)",
+	},
+	{
+		ID: "google.settings.put", Method: http.MethodPut, Path: "/auth/google/settings", Root: true,
+		Scope: service.ScopeAdmin, Status: 200,
+		Summary: "Turn Google sign-in on or off and set who may use it (an administrator session only; network mode)",
 	},
 	// The image documents of SDD-021.
 	{

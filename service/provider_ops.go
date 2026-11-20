@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"strings"
 	"time"
 
 	"github.com/AlexGalhardo/stuarty/core/command"
@@ -42,6 +43,8 @@ type ModelView struct {
 	Price *provider.Price `json:"price"`
 	// PriceSource is user, catalogue or none (provider.Source*).
 	PriceSource string `json:"price_source"`
+	// Capability is the hint of the adapter: text, image, voice or empty (SDD-016 section 2.2).
+	Capability string `json:"capability,omitempty"`
 }
 
 // ProviderModelsResult is the catalogue of a connection, read from its provider.
@@ -62,6 +65,10 @@ type ProviderPriceSetRequest struct {
 	Currency            string `json:"currency,omitempty"`
 	InputMicrosPerMTok  *int64 `json:"input_micros_per_mtok,omitempty"`
 	OutputMicrosPerMTok *int64 `json:"output_micros_per_mtok,omitempty"`
+	// Unit is empty for a price of tokens, image for the price of one image and mchar for the price of a million
+	// characters of speech (SDD-016 section 4.5); the last two set UnitMicros and leave the token amounts out.
+	Unit       string `json:"unit,omitempty"`
+	UnitMicros *int64 `json:"unit_micros,omitempty"`
 }
 
 // ProviderPricesResult is the price table after a change.
@@ -154,6 +161,7 @@ func (s *svc) ProviderModels(ctx context.Context, req ProviderModelsRequest) (*P
 		price, source := provider.ResolvePrice(user, m.Price)
 		v := ModelView{
 			ID: m.ID, Name: m.Name, ContextTokens: m.ContextTokens, OutputTokens: m.OutputTokens, PriceSource: source,
+			Capability: m.Capability,
 		}
 
 		if source != provider.SourceNone {
@@ -179,16 +187,17 @@ func (s *svc) ProviderPriceSet(ctx context.Context, req ProviderPriceSetRequest)
 			withPath("provider").withHint("list the providers with provider:list")
 	}
 
-	remove := req.InputMicrosPerMTok == nil && req.OutputMicrosPerMTok == nil
-	if !remove && (req.InputMicrosPerMTok == nil || req.OutputMicrosPerMTok == nil) {
-		return nil, newError(command.CodeValidation, "give both amounts, or none to remove the price.").
-			withPath("input_micros_per_mtok").
-			withHint("a price with only one side would estimate the other at zero")
-	}
+	remove := req.InputMicrosPerMTok == nil && req.OutputMicrosPerMTok == nil && req.UnitMicros == nil
 
 	entry := provider.PriceEntry{Provider: req.Provider, Model: req.Model}
+
 	if !remove {
-		entry.Currency, entry.InputMicrosPerMTok, entry.OutputMicrosPerMTok = req.Currency, *req.InputMicrosPerMTok, *req.OutputMicrosPerMTok
+		price, perr := priceOfRequest(&req)
+		if perr != nil {
+			return nil, perr
+		}
+
+		entry.Price = price
 	}
 
 	var prices []provider.PriceEntry
@@ -214,7 +223,7 @@ func (s *svc) ProviderPriceSet(ctx context.Context, req ProviderPriceSetRequest)
 
 		raw, merr := json.Marshal(map[string]any{
 			"model": req.Model, "currency": entry.Currency, "input_micros_per_mtok": req.InputMicrosPerMTok,
-			"output_micros_per_mtok": req.OutputMicrosPerMTok,
+			"output_micros_per_mtok": req.OutputMicrosPerMTok, "unit": entry.Unit, "unit_micros": req.UnitMicros,
 		})
 		if merr != nil {
 			return merr
@@ -245,4 +254,40 @@ func (s *svc) TextGenerate(ctx context.Context, req TextGenerateRequest) (*Job, 
 		ProjectID: req.ProjectID, Kind: JobTextGenerate, Args: args, WaitMS: req.WaitMS,
 		DryRun: req.DryRun,
 	})
+}
+
+// priceOfRequest is the price a ProviderPriceSet request gives, with the members its unit needs: both token
+// amounts for a price of tokens, UnitMicros alone for a price per image or per million characters
+// (SDD-016 section 4.5). NormalizeEntry checks the amounts.
+func priceOfRequest(req *ProviderPriceSetRequest) (provider.Price, error) {
+	p := provider.Price{Currency: req.Currency, Unit: strings.ToLower(strings.TrimSpace(req.Unit))}
+
+	switch p.Unit {
+	case provider.UnitTokens:
+		if req.InputMicrosPerMTok == nil || req.OutputMicrosPerMTok == nil || req.UnitMicros != nil {
+			return p, newError(command.CodeValidation, "give both amounts, or none to remove the price.").
+				withPath("input_micros_per_mtok").
+				withHint("a price with only one side would estimate the other at zero; a price per image or per " +
+					"million characters names its unit and gives unit_micros only")
+		}
+
+		p.InputMicrosPerMTok, p.OutputMicrosPerMTok = *req.InputMicrosPerMTok, *req.OutputMicrosPerMTok
+	case provider.UnitImage, provider.UnitMChar:
+		if req.UnitMicros == nil || req.InputMicrosPerMTok != nil || req.OutputMicrosPerMTok != nil {
+			return p, newError(command.CodeValidation, "a price per %s gives unit_micros and no token amount.", p.Unit).
+				withPath("unit_micros")
+		}
+
+		p.UnitMicros = *req.UnitMicros
+	default:
+		return p, newError(
+			command.CodeValidation,
+			"the unit must be empty, %s or %s.",
+			provider.UnitImage,
+			provider.UnitMChar,
+		).
+			withPath("unit")
+	}
+
+	return p, nil
 }

@@ -60,14 +60,20 @@ export default function SocialCallback(): ReactNode {
 						{t("ui.social.callback_working")}
 					</p>
 				)}
-				{phase === "done" && account !== null && (
-					<p role="status" className="text-sm" data-signed-in="">
-						{t("ui.social.callback_done")}{" "}
-						<UntrustedText>
-							{account.account_title ?? account.label}
-						</UntrustedText>
-					</p>
-				)}
+				{phase === "done" &&
+					account !== null &&
+					(account.state === "needs_account" ? (
+						<p role="status" className="text-sm" data-needs-account="">
+							{t("ui.social.callback_choose")}
+						</p>
+					) : (
+						<p role="status" className="text-sm" data-signed-in="">
+							{t("ui.social.callback_done")}{" "}
+							<UntrustedText>
+								{account.account_title ?? account.label}
+							</UntrustedText>
+						</p>
+					))}
 				{phase === "failed" && (
 					<>
 						<p className="text-sm">{t("ui.social.callback_failed")}</p>
