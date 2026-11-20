@@ -312,6 +312,15 @@ func run(t *testing.T, d driver, steps []step, fixtures map[string]string) []out
 			}
 		}
 
+		// An import answers when its jobs end or when its wait_ms ends, whichever comes first, and on a
+		// loaded machine the wait may end first: the next step would then read a project that has not
+		// received the assets yet (VV-277). The step waits for the event of each job instead of a deadline,
+		// and when it had to, what it returned says how far the work was, not what the surface does, so it
+		// is not compared.
+		if s.Call == "MediaImport" && waitForImportJobs(t, d, raw) {
+			o.result, o.text = "", ""
+		}
+
 		if s.Settles {
 			o.result, o.text = "", ""
 		}
@@ -976,4 +985,56 @@ func TestBriefingScenarioIsTheSameThroughEverySurface(t *testing.T) {
 // by workspace, are not compared).
 func TestMotionHandoffScenarioIsTheSameThroughEverySurface(t *testing.T) {
 	sameThroughEverySurface(t, "motion-handoff", "prj_7k2m9x4q1b")
+}
+
+// waitForImportJobs waits until every job named by the result of MediaImport is final. It says whether
+// any of them had not ended when the import returned.
+func waitForImportJobs(t *testing.T, d driver, raw json.RawMessage) bool {
+	t.Helper()
+
+	var res struct {
+		Assets []struct {
+			JobID string `json:"job_id"`
+			State string `json:"state"`
+		} `json:"assets"`
+	}
+
+	if err := json.Unmarshal(raw, &res); err != nil {
+		return false
+	}
+
+	waited := false
+
+	for _, a := range res.Assets {
+		if a.JobID == "" {
+			continue
+		}
+
+		if a.State != string(service.IngestReady) && a.State != string(service.IngestFailed) {
+			waited = true
+		}
+
+		args := json.RawMessage(`{"job_id":"` + a.JobID + `","wait_ms":25000}`)
+
+		for {
+			rawJob, _, fail := d.do(t, step{Call: "JobGet", Args: args})
+			if fail != nil {
+				t.Fatalf("%s JobGet %s: %s", d.name(), a.JobID, errorLine(fail))
+			}
+
+			var job struct {
+				State string `json:"state"`
+			}
+
+			if err := json.Unmarshal(rawJob, &job); err != nil {
+				t.Fatal(err)
+			}
+
+			if service.JobFinal(job.State) {
+				break
+			}
+		}
+	}
+
+	return waited
 }
