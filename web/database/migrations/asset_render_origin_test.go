@@ -48,7 +48,7 @@ func TestAssetRenderOriginMigration(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// The migrations that came after this one (the chat tables of epic 14) come off first.
+	// The migrations that came after this one (the chat tables of epic 14, the checkpoints of epic 36) come off first.
 	want := downTo(renderOriginID)
 	if rolled, err := m.Rollback(ctx, len(want)); err != nil || !slices.Equal(rolled, want) {
 		t.Fatalf("Rollback = %v, %v; want %v", rolled, err, want)

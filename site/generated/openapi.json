@@ -925,6 +925,85 @@
         },
         "type": "object"
       },
+      "ChatSession": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "end_reason": {
+            "type": "string"
+          },
+          "ended_at": {
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "event_count": {
+            "type": "integer"
+          },
+          "id": {
+            "type": "string"
+          },
+          "live": {
+            "type": "boolean"
+          },
+          "profile": {
+            "type": "string"
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ChatSessionListResult": {
+        "properties": {
+          "sessions": {
+            "items": {
+              "$ref": "#/components/schemas/ChatSession"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "ChatTranscriptResult": {
+        "properties": {
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/Event"
+            },
+            "type": "array"
+          },
+          "markdown": {
+            "type": "string"
+          },
+          "next_after": {
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "session": {
+            "$ref": "#/components/schemas/ChatSession"
+          }
+        },
+        "type": "object"
+      },
       "Checkpoint": {
         "properties": {
           "actor": {
@@ -1283,6 +1362,47 @@
           "red": {
             "items": {
               "$ref": "#/components/schemas/CurvePoint"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "Description": {
+        "properties": {
+          "endpoint": {
+            "type": "string"
+          },
+          "guide": {
+            "type": "string"
+          },
+          "guide_read": {
+            "type": "string"
+          },
+          "hosts": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "limits": {
+            "$ref": "#/components/schemas/Limits"
+          },
+          "name": {
+            "type": "string"
+          },
+          "network": {
+            "type": "string"
+          },
+          "publishes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "scopes": {
+            "items": {
+              "type": "string"
             },
             "type": "array"
           }
@@ -18293,6 +18413,136 @@
           }
         ],
         "summary": "Export a project as a .vvbundle"
+      }
+    },
+    "/api/v1/projects/{id}/chat/sessions": {
+      "get": {
+        "operationId": "chat.sessions.list",
+        "parameters": [
+          {
+            "description": "The project id, prj_ and 10 characters.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatSessionListResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the chat sessions of a project"
+      },
+      "post": {
+        "operationId": "chat.sessions.start",
+        "parameters": [
+          {
+            "description": "The project id, prj_ and 10 characters.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "profile": {
+                    "description": "The name of the agent profile to start.",
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "profile"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatSession"
+                }
+              }
+            },
+            "description": "Created"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Start the agent of a profile on a project (a person in the browser only; others get 403)"
       }
     },
     "/api/v1/projects/{id}/checkpoints": {

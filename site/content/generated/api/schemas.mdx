@@ -314,6 +314,37 @@ The types named in the tables of the operations. The arguments of each editing c
 | `kind` | `string` | no |  |
 | `object` | map of `any` | no |  |
 
+### ChatSession
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `created_at` | `string (date-time)` | no |  |
+| `end_reason` | `string` | no |  |
+| `ended_at` | `string (date-time)` or `null` | no |  |
+| `event_count` | `integer` | no |  |
+| `id` | `string` | no |  |
+| `live` | `boolean` | no |  |
+| `profile` | `string` | no |  |
+| `project_id` | `string` | no |  |
+| `state` | `string` | no |  |
+| `title` | `string` | no |  |
+| `updated_at` | `string (date-time)` | no |  |
+
+### ChatSessionListResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `sessions` | array of [`ChatSession`](/docs/api/schemas#chatsession) | no |  |
+
+### ChatTranscriptResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `events` | array of [`Event`](/docs/api/schemas#event) | no |  |
+| `markdown` | `string` | no |  |
+| `next_after` | `integer (int64)` or `null` | no |  |
+| `session` | [`ChatSession`](/docs/api/schemas#chatsession) | no |  |
+
 ### Checkpoint
 
 | Name | Type | Required | Description |
@@ -463,6 +494,20 @@ The types named in the tables of the operations. The arguments of each editing c
 | `green` | array of [`CurvePoint`](/docs/api/schemas#curvepoint) | no |  |
 | `master` | array of [`CurvePoint`](/docs/api/schemas#curvepoint) | no |  |
 | `red` | array of [`CurvePoint`](/docs/api/schemas#curvepoint) | no |  |
+
+### Description
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `endpoint` | `string` | no |  |
+| `guide` | `string` | no |  |
+| `guide_read` | `string` | no |  |
+| `hosts` | array of `string` | no |  |
+| `limits` | [`Limits`](/docs/api/schemas#limits) | no |  |
+| `name` | `string` | no |  |
+| `network` | `string` | no |  |
+| `publishes` | array of `string` | no |  |
+| `scopes` | array of `string` | no |  |
 
 ### DiffEntry
 

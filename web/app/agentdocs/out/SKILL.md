@@ -8,9 +8,7 @@ metadata:
 
 # stuarty
 
-Edit video by commands: CLI `stuarty` or MCP server (`stuarty mcp`). Output is text; `--json` is JSON.
-
-Workspace: `~/.stuarty` or `$STUARTY_HOME`.
+Edit video by commands: CLI `stuarty` or MCP (`stuarty mcp`). Output is text; `--json` is JSON.
 
 ## The loop
 
@@ -131,7 +129,7 @@ Prefix: `stuarty`.
 - `asset:set <hash>`
 - `asset:tag <hash>`
 
-`--ops <file|->` reads a JSON array; `edit --project <id> item.move item_id=itm_x start=2s` is one operation (`k=v` string, `k:=json` JSON). `--dry-run` saves nothing; `--key <k>` makes retries safe; `--out f` copies the file out (`--force` replaces). Revert, diff, checkpoints: `agent:docs --print guide:video|skill|agents|instructions`.
+`--ops <file|->` reads a JSON array; `edit --project <id> item.move item_id=itm_x start=2s` is one operation (`k=v` string, `k:=json` JSON). `--dry-run` saves nothing; `--key <k>` makes retries safe; `--out f` copies the file out. Back: `agent:docs --print guide:video|skill|agents|instructions`
 
 ## Reading results
 
