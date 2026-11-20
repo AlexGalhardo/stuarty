@@ -5,8 +5,6 @@ import (
 	"context"
 	"net"
 	"net/http"
-	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -27,8 +25,7 @@ func TestStdioOwnerIsReachedByTheCLIAndOpen(t *testing.T) {
 	bin := buildBinary(t)
 	home := filepath.Join(t.TempDir(), "ws")
 
-	cmd := exec.CommandContext(t.Context(), bin, "mcp")
-	cmd.Env = append(os.Environ(), mcpTestEnv(t, home)...)
+	cmd := stuartyCmd(t.Context(), t, bin, nil, mcpTestEnv(t, home), "mcp")
 
 	client := sdk.NewClient(&sdk.Implementation{Name: "Claude Code", Version: "1"}, nil)
 
@@ -176,8 +173,7 @@ func TestMCPAnswersTheRequestsReadBeforeStdinCloses(t *testing.T) {
 	ctx, cancel := context.WithTimeout(t.Context(), time.Minute)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, bin, "mcp")
-	cmd.Env = append(os.Environ(), mcpTestEnv(t, home)...)
+	cmd := stuartyCmd(ctx, t, bin, nil, mcpTestEnv(t, home), "mcp")
 	cmd.Stdin = strings.NewReader(reqs)
 
 	var stdout, stderr bytes.Buffer

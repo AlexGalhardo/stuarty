@@ -1,8 +1,6 @@
 package main
 
 import (
-	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -12,13 +10,11 @@ import (
 func TestRouteListShowsTheOwnerAPI(t *testing.T) {
 	bin := buildBinary(t)
 
-	cmd := exec.CommandContext(t.Context(), bin, "route:list")
-	cmd.Env = append(
-		os.Environ(),
-		"STUARTY_HOME="+filepath.Join(t.TempDir(), "ws"),
+	cmd := stuartyCmd(t.Context(), t, bin, addrEnv(t), []string{
+		"STUARTY_HOME=" + filepath.Join(t.TempDir(), "ws"),
 		"APP_ENV=development",
 		"APP_KEY=",
-	)
+	}, "route:list")
 
 	out, err := cmd.Output()
 	if err != nil {
