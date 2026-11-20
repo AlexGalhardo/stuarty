@@ -4,6 +4,8 @@ import { NotFoundView } from "@/components/not-found-view";
 import { ui } from "@/lib/ui-text";
 ---
 
-<Base title={ui.notFoundTitle} description={ui.notFoundBody} noindex>
+<!-- Every missing page goes to the landing page (author's decision, 2026-11-20); the
+     not-found view stays as the fallback for a browser that ignores both redirects. -->
+<Base title={ui.notFoundTitle} description={ui.notFoundBody} noindex redirectTo="/">
 	<NotFoundView />
 </Base>
