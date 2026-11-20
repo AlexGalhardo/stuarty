@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
@@ -205,7 +206,7 @@ func TestImageLUTExportFailsWithoutTheTable(t *testing.T) {
 }
 
 // In network mode a table can only be used by a user who holds it, as an image can only be used by one who holds it.
-func TestImageLUTOfAnotherUserIsNotUsable(t *testing.T) {
+func TestSecurity_T68_LookupTableOfAnotherUserIsNotUsable(t *testing.T) {
 	s, ws := newImageService(t)
 	holdLUT(t, s, ws, lutHash, invertCube)
 	holdAsset(s, "alice")
@@ -261,4 +262,63 @@ func TestImageLUTOfAnotherUserIsNotUsable(t *testing.T) {
 	if _, err := s.ImageExport(bob, ImageExportRequest{ImageID: cb.ImageID}); err == nil {
 		t.Fatal("bob exported with the table of alice")
 	}
+}
+
+// TestSecurity_T69_LookupTableIsNamedByHashNeverByPath: a table is named by a content hash only. A path, or a hash
+// with a separator, is refused when the key is set and again when the path of the artifact is built, and the name
+// of the file (a label) never reaches the path.
+func TestSecurity_T69_LookupTableIsNamedByHashNeverByPath(t *testing.T) {
+	s, ws := newImageService(t)
+	holdLUT(t, s, ws, lutHash, invertCube)
+
+	ctx := asActor("local:agent")
+	id := photoImage(t, s, ctx)
+
+	for _, name := range []string{
+		"../../etc/passwd", `C:\x.cube`, "sha256:../../../x", "sha256:" + strings.Repeat("9", 63) + "/",
+		"sha256:" + strings.Repeat("9", 65), lutHash + "/..", "",
+	} {
+		_, err := s.ImageEdit(ctx, ImageEditRequest{ImageID: id, BaseRevision: 2, Operations: ops(
+			"layer.adjust", `{"layer_id": "lyr_aaaaaaaaaa", "lut": {"asset": `+strconvQuote(name)+`}}`,
+		)})
+		if err == nil {
+			t.Errorf("%q was accepted as the name of a table", name)
+		}
+	}
+
+	path := s.imageLUTPath(ctx, Caller{Actor: "local:agent"})
+	for _, name := range []string{"../../etc/passwd", "sha256:../x", "sha256:" + strings.Repeat("9", 65)} {
+		if p, err := path(name); err == nil {
+			t.Errorf("the path of %q was built: %s", name, p)
+		}
+	}
+
+	// the file is named by a path of its own: only its base name is a label, and the artifact is found by hash
+	st := s.store.(*memStore)
+	row := st.assets.rows[lutHash]
+	row.OriginalName = "../../evil.cube"
+	st.assets.rows[lutHash] = row
+
+	if _, err := s.ImageEdit(ctx, ImageEditRequest{ImageID: id, BaseRevision: 2, Operations: ops(
+		"layer.adjust", `{"layer_id": "lyr_aaaaaaaaaa", "lut": {"asset": "`+lutHash+`"}}`,
+	)}); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := s.ImageExport(ctx, ImageExportRequest{ImageID: id}); err != nil {
+		t.Fatalf("a label that is a path stopped a valid table: %v", err)
+	}
+
+	if strings.Contains(string(st.images.rows[id].Document), "..") {
+		t.Errorf("the stored document keeps the path of the label: %s", st.images.rows[id].Document)
+	}
+}
+
+func strconvQuote(s string) string {
+	b, err := json.Marshal(s)
+	if err != nil {
+		panic(err)
+	}
+
+	return string(b)
 }
