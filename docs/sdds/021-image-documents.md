@@ -295,6 +295,25 @@ An export renders in the request, on the caller thread, bounded by the canvas (4
 
 `engine/export` `TestImageReferenceDocument` builds the reference document of NFR-061 (4,000 by 4,000 pixels, 30 layers of 1,200 by 900 pixels or more, ten photos, ten rounded rectangles and ten ellipses, rotated) and renders it twice through the WebAssembly module under `wazero`, with a look on every layer (adjustments with a curve, sharpen, a shadow with a soft light blend, a glow with a rounded mask): `STUARTY_NFR061=1 go test ./engine/export -run TestImageReferenceDocument -v` (`STUARTY_NFR061_PLAIN=1` leaves the looks out). It asserts that the two exports are the same bytes and prints the times; it runs only when one of the two variables is set, because the two exports take more than two minutes and would push the package past the ten minutes of `go test` (the determinism of a look export is held on every run by `TestImageLookRenderIsTheGoldenFileAndDeterministic`). Measured on the author's Windows machine **with other agents running** (so not a reference number): composed in about 51 s and exported (with the PNG) in about 75 s with the looks, 7 to 8 s and 10 to 11 s without them. A native release build of the CPU path draws one 1,200 by 900 layer with one filter in 16 to 143 ms (tone 7 ms over the plain draw, sharpen 66, shadow 87, glow 87, stroke 132, soft light 36, rounded mask 16), so the module under `wazero` is the cost, not the arithmetic. The budget of NFR-061 (2 s) is therefore **not met by the CPU path through `wazero`** and is to be measured on the idle reference machine with the GPU host (SDD-013 section 4.9) for the export and the browser GPU path for the preview; this paragraph records the CPU number so the gap is known.
 
+### 13.2 Profile of the reference document before epic 54
+
+Measured on the author's Windows machine with other agents running (so for the shares, not for the absolute numbers; the idle numbers are in `docs/perf/`). `BenchmarkImageReference`: composed 34.5 s, exported 49.1 s. One cold export of the reference document, stage by stage:
+
+| Stage | Time | Share of the export |
+| --- | --- | --- |
+| Plan, rasterizing 20 shapes, decoding and scaling 10 photos, uploading them | about 2.4 s | 5% |
+| `vr_render` in the module (the composition: draw, blend, blur, sharpen, shadow, glow, mask) | 30.5 s | 62% |
+| PNG encode at `png.BestCompression` (64 MB of pixels, 3 MB of file) | 13.5 s | 27% |
+| Module instantiation and the rest | under 1 s | 2% |
+
+Inside the composition, three findings, each measured by running the module with one change at a time (a function listener of `wazero` for the shares):
+
+- **The cancellation check costs a factor of three.** The host created for an image render was the cancellable one, which makes `wazero` test the context at every loop back edge; the same render on the uncancellable instance takes 11 s instead of 31 s (an empty 4,000 by 4,000 frame: 27 ms instead of 400 ms). The comment of `renderhost.Config.Uncancellable` already said "about five times faster".
+- **The looks are 90% of the composition.** The same 30 layers with no look compose in 3.4 s; the looks add 27 s (sharpen with its adjustments on the ten photos 13 s, the shadow and soft light 7 s, the glow and the mask 8 s). A photo that is rotated is not scaled down before it is uploaded, so its sharpen blurs the 2,000 by 2,000 source.
+- **Inside the module** the time is in `sample` and `mix_pixel` (about 45%: the bilinear draw of 41 million covered pixels), in the two box-blur passes (about 25%) and in the mask coverage (about 4%). Nothing in it is a CPU fallback or a repeated decode: each asset is decoded once and uploaded once.
+
+The PNG encoder at its slowest level is the second cost and has nothing to do with the module.
+
 ## 14. Decisions of this SDD
 
 1. **A separate registry, shared code.** The image operations are registered in their own registry so that the video registry, its tests and its surfaces do not change; the decoder, the schema generator and the types are shared.
