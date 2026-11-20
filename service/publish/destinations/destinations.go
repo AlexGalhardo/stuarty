@@ -207,7 +207,7 @@ type Registry struct {
 func NewRegistry(cfg Config) *Registry {
 	r := &Registry{byKind: map[string]Destination{}}
 
-	for _, d := range []Destination{newFiles(cfg)} {
+	for _, d := range []Destination{newFiles(cfg), newWordPress(cfg)} {
 		k := d.Describe().Kind
 		r.byKind[k] = d
 		r.order = append(r.order, k)
