@@ -1085,7 +1085,7 @@ The official icon is the clapperboard with eyes (`.config/installers/assets/stua
 | Lilac | `#8078FB` | `oklch(0.645 0.189 282.5)` | the clapper bar; the brand in the dark theme and the accent of gradients |
 | White | `#FDFDFD` | `oklch(0.994 0 0)` | the eyes; text on the indigo brand |
 
-The logo lockup (the icon and the word "Stuarty") replaces the separate mark and name in the navbar, the README and the title of the dashboard when it is delivered; until then, the icon and the name set in Geist 600 with `tracking-tight` stand together.
+The logo lockup (the icon and the word "Stuarty", chosen by the author on 2026-11-20: `.config/brand/logo/stuarty-logo-3.png`, with the three other candidates kept beside it) is the mark of the navbar of the documentation and the landing, the top of the README and the title of the dashboard (web and desktop). It ships as two transparent PNGs, `logo-wordmark-light.png` (indigo word, for light backgrounds) and `logo-wordmark-dark.png` (white word, for dark backgrounds), in `site/public/` and `web/resources/public/`, swapped with the `dark` variant; the collapsed sidebar shows the icon alone. The product name stays in the page as text for screen readers.
 
 ### 11.2 The brand scale
 

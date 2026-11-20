@@ -9,13 +9,21 @@ export function LogoMark({ className = "size-6" }: { className?: string }) {
 
 export function Logo() {
 	return (
-		<Link
-			href="/"
-			className="flex items-center gap-2 rounded-md font-semibold tracking-tight text-fg"
-			aria-label={t.logoLabel}
-		>
-			<LogoMark />
-			<span className="text-[0.9375rem]">Stuarty</span>
+		<Link href="/" className="flex items-center rounded-md" aria-label={t.logoLabel}>
+			<img
+				src={withBase("/logo-wordmark-light.png")}
+				alt=""
+				width={112}
+				height={24}
+				className="h-6 w-auto dark:hidden"
+			/>
+			<img
+				src={withBase("/logo-wordmark-dark.png")}
+				alt=""
+				width={112}
+				height={24}
+				className="hidden h-6 w-auto dark:block"
+			/>
 		</Link>
 	);
 }

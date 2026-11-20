@@ -1,7 +1,10 @@
 <div align="center">
 
 <a href="https://github.com/AlexGalhardo/stuarty" target="_blank" rel="noopener noreferrer">
-  <img src="site/public/logo.png" alt="Stuarty" width="96" height="96">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="site/public/logo-wordmark-dark.png">
+    <img src="site/public/logo-wordmark-light.png" alt="Stuarty" height="72">
+  </picture>
 </a>
 
 <br/>
@@ -10,7 +13,7 @@
 <a href="go.mod"><img src="https://img.shields.io/badge/go-1.27.4-00ADD8?logo=go&logoColor=white" alt="Go 1.27.4"></a>
 <a href="LICENSE.md"><img src="https://img.shields.io/github/license/AlexGalhardo/stuarty" alt="License"></a>
 
-### Stuarty: create, edit, manage and publish your content in one place
+## Create, edit, manage and publish your content in one place
 
 <br/>
 
