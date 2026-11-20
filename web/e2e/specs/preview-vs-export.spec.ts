@@ -126,7 +126,7 @@ test.describe("preview-vs-export", () => {
 		}) => {
 			test.skip(
 				needsImageFixtures(name),
-				"the fixtures are an alpha PNG or a GIF with delays that only the Go suite generates",
+				"the fixture is a GIF with delays that only the Go suite generates",
 			);
 			test.fail(name in KNOWN_DIVERGENCES, KNOWN_DIVERGENCES[name]);
 			const loaded = await loadCase(request, name);
