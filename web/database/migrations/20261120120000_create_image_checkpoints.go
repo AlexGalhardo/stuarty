@@ -6,9 +6,9 @@ import "github.com/AlexGalhardo/vukem/schema"
 // the append-only log `image_operations`, made by a person or an agent, or by the service before an agent's first edit
 // of the day. They are the table of section 5.14 for an image, with the same rules; a checkpoint holds no copy of the
 // document and no foreign key to the log, only to its image, which removes it with its own row.
-func m20261120110000CreateImageCheckpoints() schema.Migration {
+func m20261120120000CreateImageCheckpoints() schema.Migration {
 	return schema.Migration{
-		ID: "20261120110000_create_image_checkpoints",
+		ID: "20261120120000_create_image_checkpoints",
 		Up: func(s *schema.Schema) error {
 			stmts := []string{
 				`CREATE TABLE image_checkpoints (
