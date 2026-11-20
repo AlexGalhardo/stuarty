@@ -7,6 +7,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.34.0] - 2026-11-20
+
+### Added
+
+- **service:** Add the provider registry, catalogue and price table ([b8a0241](https://github.com/AlexGalhardo/stuarty/commit/b8a0241bb4dc210b059d0510b4aa7094622f0e5c))
+- **service:** Add the text.generate job with estimate, ledger and ceiling ([0a06cdc](https://github.com/AlexGalhardo/stuarty/commit/0a06cdc69d7eda4db83d8d003c8f101e1d5234b5))
+- **api:** Expose the AI providers on HTTP, the CLI and MCP ([ea0302e](https://github.com/AlexGalhardo/stuarty/commit/ea0302e6d447c78f9450799e43de67ad2b46ce2a))
+- **auth:** Verify the Google ID token ([81b66ca](https://github.com/AlexGalhardo/stuarty/commit/81b66ca3193fac36dd6c41afb7c8ab500e93a766))
+- **auth:** Link a Google account from settings ([913b380](https://github.com/AlexGalhardo/stuarty/commit/913b380149ef13f9dcd3604bb66c221524a3fa27))
+- **renderer:** Draw image adjustments, filters, masks and blend modes ([45cb601](https://github.com/AlexGalhardo/stuarty/commit/45cb6017e964fd87d60632537581c7e0a27e79c4))
+- **auth:** Sign in with a linked Google account ([73fc78a](https://github.com/AlexGalhardo/stuarty/commit/73fc78a1d6a11547581d6eae4902b3d751edf023))
+- **contract:** Reach the image looks through the HTTP API, the CLI and MCP ([7d13f55](https://github.com/AlexGalhardo/stuarty/commit/7d13f55f285c60777358fcca95af76bf50f83dab))
+- **ui:** Add the adjustment, filter, mask and blend controls to the image inspector ([a9cb07b](https://github.com/AlexGalhardo/stuarty/commit/a9cb07bbce285ed86067ba7fc9dae5f00dedcad1))
+- **ui:** Add the Google sign-in pages and the guide ([19a7233](https://github.com/AlexGalhardo/stuarty/commit/19a7233a2665bf1727f83c3ab0f6089f6c7bef7b))
+- **ui:** One shortcut registry with two presets, remapping and a searchable dialog ([773a769](https://github.com/AlexGalhardo/stuarty/commit/773a76932a625eb76f53c9a3dd8edaf354b7901a))
+- **ui:** Add the first-run tour, skippable and replayable from the Help menu ([c1e85a1](https://github.com/AlexGalhardo/stuarty/commit/c1e85a1c0c38e461696fd0e7db717b6e8f03b06d))
+- **core:** Add the pure rules of writing: kinds, scripts, captions, limits and diff ([15006f4](https://github.com/AlexGalhardo/stuarty/commit/15006f4cbf3d04fa1b375f4178eac095514ca8d1))
+- **service:** Draft a text with a model as a new revision under approval ([4cfc130](https://github.com/AlexGalhardo/stuarty/commit/4cfc130ae546b6c9f2a62515fc01b1da9a57864f))
+- **core:** Add the pure rules of a publication ([f6ce317](https://github.com/AlexGalhardo/stuarty/commit/f6ce317e835916042f4fa8b8e9fdfae8a29a2b57))
+- **service:** Sign in to a social network with the user's own app ([d33da1a](https://github.com/AlexGalhardo/stuarty/commit/d33da1a283668cbe51241b62518c10b3ffc4d37b))
+- **service:** Add the publish.upload job that waits for approval ([60c7b94](https://github.com/AlexGalhardo/stuarty/commit/60c7b94f2d5812506125bb59a46d181117d36ae1))
+- **web:** Add the social setup guide and the publish dialog ([989cea7](https://github.com/AlexGalhardo/stuarty/commit/989cea727a3881bb306f8d6c2cd0e031a6ba5138))
+
+### Fixed
+
+- **service:** Fetch only the images that were asked for ([bea141c](https://github.com/AlexGalhardo/stuarty/commit/bea141c576607e1e84500ba843719da3fe1108ec))
+- **mcp:** Shorten what job_start says about the generations ([4c306b6](https://github.com/AlexGalhardo/stuarty/commit/4c306b679b1a01a4da74220b583bb9610cb9e920))
+- **service:** Refuse a price table with two prices for one model ([e46a656](https://github.com/AlexGalhardo/stuarty/commit/e46a65662dc5594ff988db115b89d0860ae39261))
+- **mcp:** Count job_start in the provider domain it starts text.generate for ([1760ec2](https://github.com/AlexGalhardo/stuarty/commit/1760ec27c41d4d66e88262030c1817b58a6abfbe))
+- **image:** Name the first shape member in the error of a layer mask every time ([688a943](https://github.com/AlexGalhardo/stuarty/commit/688a9432740d1b5de3b70a6928b691df15f61c3c))
+- **ui:** Select a tab when an arrow key focuses it ([ef896a6](https://github.com/AlexGalhardo/stuarty/commit/ef896a60e9c4c90bcb597ea21e020e8bf3a13709))
+- **e2e:** Follow the Base UI dialog and the icon-only toolbar in wcag22 ([4d27165](https://github.com/AlexGalhardo/stuarty/commit/4d27165861a02191cedab64ff5a4ba3f605c9ddc))
+- **ui:** Put the label of the track chooser in a menu group ([bbf278c](https://github.com/AlexGalhardo/stuarty/commit/bbf278c8d415e0ed6492b3917881a8869f0e8213))
+- **ui:** Show skeletons, not empty sentences, while the project loads ([caac7c8](https://github.com/AlexGalhardo/stuarty/commit/caac7c8f10db859b62c6afadf14ada24cf6a3826))
+- **e2e:** Follow the Base UI redesign in four editor specs ([54003b1](https://github.com/AlexGalhardo/stuarty/commit/54003b16864209282b73211d70c34a4c40097225))
+- **e2e:** Search the shortcuts dialog with the modifier the platform shows ([7855b9a](https://github.com/AlexGalhardo/stuarty/commit/7855b9a70e9456b384f94921bb434f97cbac24f6))
+- **e2e:** Load an empty project in loading-states ([4b4b6bb](https://github.com/AlexGalhardo/stuarty/commit/4b4b6bb13db705970f1b9346f5b816646c6ae3f1))
+- **ui:** Refuse a key a player row and a timeline row would share ([5731306](https://github.com/AlexGalhardo/stuarty/commit/5731306bdccd2e3f0642b19169ba3774b474ebe3))
+- **ui:** Name the shortcut button by its prompt while it waits for a key ([3979c92](https://github.com/AlexGalhardo/stuarty/commit/3979c92ef6c7438b6baa081775741fb6131c25a3))
+- **ui:** Keep the contrast of a hovered primary button in the light theme ([2715dcc](https://github.com/AlexGalhardo/stuarty/commit/2715dcc04e8ab060d3736c7b4e2bd797710a4228))
+- **library:** Index a file for the owner of a copy or a template fill ([bd545a5](https://github.com/AlexGalhardo/stuarty/commit/bd545a55196f969a0db5644c0d50c2713ca471ce))
+- **service:** Resolve the timeline to its project before holding a limited key to it (VV-250) ([276fe5f](https://github.com/AlexGalhardo/stuarty/commit/276fe5fddd4444dbe0fb90baea636fa5c56fe988))
+- **service:** Let a project key reach texts through a timeline of its project ([9b2013b](https://github.com/AlexGalhardo/stuarty/commit/9b2013b1f66aedadebf6bdfaa1bdd2102c49bcb7))
+
+### Security
+
+- **security:** Drop a model, an answer or a code that echoes the key ([4d91537](https://github.com/AlexGalhardo/stuarty/commit/4d91537f5c2d2ce290f6bac69b26a95741144a48))
+- **security:** Keep the model of an answer only when it is a model id ([d6754a7](https://github.com/AlexGalhardo/stuarty/commit/d6754a7056b74e724ed1e23367d281f9a737234e))
+- **security:** Keep a saturated day of spending from wrapping past a ceiling ([bc76955](https://github.com/AlexGalhardo/stuarty/commit/bc769552ce4b7f263e3760b434c14166cd7cbedb))
+- **security:** Cover the Google sign-in threat rows ([ba84323](https://github.com/AlexGalhardo/stuarty/commit/ba843234587aa0033e0b06db45fedc3472af6257))
+- **security:** Key the asset library side by owner and hash ([1adc215](https://github.com/AlexGalhardo/stuarty/commit/1adc215b1f093a667b6cbc3b7dc3c8b2f764229c))
+- **security:** Count the threats of epics 19 and 24 ([b377357](https://github.com/AlexGalhardo/stuarty/commit/b377357cf9c2e225baac7cb4e1c3f149fd3476fa))
+- **security:** Reach every timeline of a key project in library and approvals ([d34b77c](https://github.com/AlexGalhardo/stuarty/commit/d34b77cb912a84195ccaaec9a65f8fa6411a5d2b))
 ## [0.33.0] - 2026-11-20
 
 ### Added
@@ -1544,7 +1597,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.33.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.34.0...HEAD
+[0.34.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.33.0...v0.34.0
 [0.33.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.32.0...v0.33.0
 [0.32.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.31.0...v0.32.0
 [0.31.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.30.0...v0.31.0
