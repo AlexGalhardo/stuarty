@@ -202,17 +202,22 @@ async function signInAsPerson(page: Page): Promise<void> {
 }
 
 // Leave the workspace as it was found: the connections spec expects it to hold none. A sign-in is removed by a
-// person, so the page (which holds the session) does it; the local token would get E_PRIVILEGED_SESSION.
+// person, so the page (which holds the session) does it; the local token would get E_PRIVILEGED_SESSION. Only
+// the connections this spec made are removed, by the name the sign-in gives (ChatGPT, OpenRouter), because
+// another spec may have a connection of the same kind at the same time.
 async function removeConnections(
 	page: Page,
 	request: APIRequestContext,
 	kind: string,
+	label: string,
 ): Promise<void> {
 	const api = await caller(request);
 	const list = (await api("GET", "/connections")) as {
-		connections: { id: string; kind: string }[];
+		connections: { id: string; kind: string; label: string }[];
 	};
-	for (const connection of list.connections.filter((c) => c.kind === kind)) {
+	for (const connection of list.connections.filter(
+		(c) => c.kind === kind && c.label === label,
+	)) {
 		const status = await page.evaluate(async (id) => {
 			const response = await fetch(`/api/v1/connections/${id}`, {
 				method: "DELETE",
@@ -254,7 +259,10 @@ test.describe("provider sign-in @chromium-only", () => {
 			expect(page.url()).not.toContain("state=");
 			await page.getByRole("link", { name: "Back to the connections" }).click();
 
-			const connection = page.locator("[data-provider-connection]").first();
+			const connection = page
+				.locator('[data-provider="openai"] [data-provider-connection]')
+				.filter({ has: page.locator("[data-signin-state]") })
+				.first();
 			await expect(connection.locator("[data-signin-state]")).toContainText(
 				"Signed in",
 			);
@@ -301,7 +309,7 @@ test.describe("provider sign-in @chromium-only", () => {
 			expect(stale).toBe(400);
 			expect(fake.received.length).toBe(before);
 		} finally {
-			await removeConnections(page, request, "openai");
+			await removeConnections(page, request, "openai", "ChatGPT");
 			await fake.close();
 		}
 	});
@@ -323,6 +331,7 @@ test.describe("provider sign-in @chromium-only", () => {
 
 			const connection = page
 				.locator('[data-provider="openrouter"] [data-provider-connection]')
+				.filter({ has: page.locator("[data-signin-state]") })
 				.first();
 			await expect(connection.locator("[data-signin-state]")).toContainText(
 				"Signed in",
@@ -342,7 +351,7 @@ test.describe("provider sign-in @chromium-only", () => {
 			);
 			expect(fake.received).toContain("POST /api/v1/auth/keys");
 		} finally {
-			await removeConnections(page, request, "openrouter");
+			await removeConnections(page, request, "openrouter", "OpenRouter");
 			await fake.close();
 		}
 	});
