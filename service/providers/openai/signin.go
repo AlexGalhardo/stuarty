@@ -51,6 +51,9 @@ type SignInConfig struct {
 	HostID string
 	// Now is the clock; default time.Now.
 	Now func() time.Time
+	// Network is a server in network mode, shared by several people: the sign-in is refused there, even at
+	// 127.0.0.1 through a tunnel, and the person connects OpenAI with an API key (SDD-016 section 12.3).
+	Network bool
 }
 
 // SignIn is the sign-in with ChatGPT: an OpenID Connect authorization code flow with PKCE for a public
@@ -103,7 +106,11 @@ func hostOf(raw string) string {
 
 // ValidateRedirect implements oauth.SignIn: exactly http://127.0.0.1:<port>/auth/callback, the only form
 // the provider documents (only the port may change, and localhost is not accepted).
-func (*SignIn) ValidateRedirect(raw string) error {
+func (s *SignIn) ValidateRedirect(raw string) error {
+	if s.cfg.Network {
+		return oauth.ErrLocalOnly
+	}
+
 	u, err := url.Parse(raw)
 	if err != nil || u.User != nil || u.RawQuery != "" || u.Fragment != "" || u.Path != oauth.CallbackPath {
 		return errors.New("must be http://127.0.0.1:<port>" + oauth.CallbackPath)

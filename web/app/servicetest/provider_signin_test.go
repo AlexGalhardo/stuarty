@@ -33,6 +33,14 @@ type signInEnv struct {
 func newSignInEnv(t *testing.T) *signInEnv {
 	t.Helper()
 
+	return newSignInEnvIn(t, false)
+}
+
+// newSignInEnvIn is newSignInEnv for a server in network mode (network true), where the build refuses Sign
+// in with ChatGPT (SDD-016 section 12.3).
+func newSignInEnvIn(t *testing.T, network bool) *signInEnv {
+	t.Helper()
+
 	fake := oauthtest.New(t)
 	fake.Strict = true
 
@@ -45,6 +53,7 @@ func newSignInEnv(t *testing.T) *signInEnv {
 			openai.NewSignIn(openai.SignInConfig{
 				AuthURL: fake.URL() + "/api/accounts/authorize", TokenURL: fake.URL() + "/api/accounts/oauth/token",
 				Endpoint: fake.URL() + "/v1", HostID: "urn:uuid:11111111-2222-4333-8444-555555555555",
+				Network: network,
 			}),
 			openrouter.NewSignIn(openrouter.SignInConfig{
 				AuthURL:  fake.URL() + "/auth",
@@ -606,5 +615,29 @@ func TestSignInOtherCases(t *testing.T) {
 	// A connection that does not exist.
 	if _, err := se.begin(person, "openai", "con_0000000000"); !isCode(err, service.CodeConnectionNotFound) {
 		t.Errorf("an unknown connection = %v, want E_CONNECTION_NOT_FOUND", err)
+	}
+}
+
+// D-094, SDD-016 section 12.3: a server in network mode refuses Sign in with ChatGPT with the hint to use an
+// API key, even when the browser is at 127.0.0.1, and makes no connection; OpenRouter still signs in.
+func TestSignInWithChatGPTIsRefusedOnANetworkServer(t *testing.T) {
+	t.Parallel()
+
+	se := newSignInEnvIn(t, true)
+	before := se.connectionCount()
+
+	_, err := se.begin(se.asPerson(), "openai", "")
+
+	se2, ok := errors.AsType[*service.Error](err)
+	if !ok || se2.Code != "E_VALIDATION" || se2.Path != "provider" || !strings.Contains(se2.Hint, "API key") {
+		t.Fatalf("Sign in with ChatGPT on a network server = %v, want E_VALIDATION at provider with a hint", err)
+	}
+
+	if se.connectionCount() != before || se.fake.Exchanges() != 0 {
+		t.Fatalf("a refused sign-in made a connection or reached the provider")
+	}
+
+	if done := se.signIn("openrouter", ""); done.State != service.SignInReady {
+		t.Fatalf("OpenRouter on a network server: %+v", done)
 	}
 }
