@@ -13,6 +13,7 @@ import path from "node:path";
 import { apiPages, type OpenApi } from "./api-reference.ts";
 import { topicPages } from "./glossary-pages.ts";
 import { mcpPages } from "./mcp-reference.ts";
+import { networkPage, networksOverview, readNetworks, readSetup } from "./network-reference.ts";
 import { readKeymap, shortcutsPage } from "./shortcuts-reference.ts";
 import { code, esc, page, sentence, table } from "./reference-md.ts";
 
@@ -26,6 +27,7 @@ const glossaryDir = path.join(siteDir, "content", "generated", "glossary");
 const apiDir = path.join(siteDir, "content", "generated", "api");
 const mcpDir = path.join(siteDir, "content", "generated", "mcp");
 const guideDir = path.join(siteDir, "content", "generated", "guide");
+const publishDir = path.join(siteDir, "content", "generated", "publish");
 
 type Json = Record<string, unknown>;
 
@@ -361,6 +363,9 @@ async function main() {
 	fs.mkdirSync(path.join(siteDir, "generated"), { recursive: true });
 	fs.writeFileSync(path.join(siteDir, "generated", "cli.json"), cliJson);
 
+	const networksJson = execFileSync("go", ["run", "./internal/tools/clidoc", "-networks"], { cwd: root, encoding: "utf8", maxBuffer: 1 << 26 });
+	fs.writeFileSync(path.join(siteDir, "generated", "networks.json"), networksJson);
+
 	const written = new Set<string>();
 	const commands = readJson<Command[]>("core/schema/commands.json")
 		.filter((c) => !c.internal)
@@ -371,6 +376,9 @@ async function main() {
 	write("error-codes.mdx", errorCodes(), written);
 	write("configuration.mdx", configuration(), written);
 	write("glossary.mdx", glossary(), written);
+	const networks = readNetworks(siteDir);
+	write("network-limits.mdx", networksOverview(networks), written);
+	for (const n of networks) write(`${n.network}.mdx`, networkPage(n, readSetup(siteDir, n.network)), written, publishDir);
 	write("skill.mdx", skillPage(), written, agentsDir);
 	for (const p of domainPages()) write(p.file, p.text, written, agentsDir);
 
@@ -391,7 +399,7 @@ async function main() {
 		fs.existsSync(dir)
 			? fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(path.join(dir, e.name)) : [path.join(dir, e.name)]))
 			: [];
-	for (const dir of [outDir, agentsDir, glossaryDir, apiDir, mcpDir, guideDir]) for (const file of walk(dir)) if (!written.has(path.resolve(file))) fs.rmSync(file);
+	for (const dir of [outDir, agentsDir, glossaryDir, apiDir, mcpDir, guideDir, publishDir]) for (const file of walk(dir)) if (!written.has(path.resolve(file))) fs.rmSync(file);
 
 	console.log(`reference: ${written.size} pages`);
 }
