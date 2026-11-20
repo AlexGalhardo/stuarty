@@ -19,7 +19,7 @@ const signInTimeout = 30 * time.Second
 const (
 	SignInReady        = "ready"
 	SignInNeedsSignIn  = "needs_sign_in"
-	signInProviderCode = "needs_sign_in"
+	signInProviderCode = providers.CodeNeedsSignIn
 )
 
 // ProviderSignInBeginRequest starts the sign-in of an AI provider in the browser (SDD-016 section 12).
