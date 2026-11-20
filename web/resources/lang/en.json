@@ -3279,7 +3279,7 @@
       "memory": {
         "description": "The fact, in one line",
         "keep": "Keep this note",
-        "pending_hint": "An agent wrote this note. Agents are not offered it until you keep it."
+        "pending_hint": "This note was not written by a person in the app (an agent wrote it, or it came from a window that is not a person's session). Agents are not offered it until you keep it."
       },
       "prompt": {
         "variables_hint": "Write {{variable}} where a value goes.",
