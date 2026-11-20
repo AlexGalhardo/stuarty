@@ -9,9 +9,13 @@
 
 <br/>
 
+<a href="https://github.com/AlexGalhardo/stuarty/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/AlexGalhardo/stuarty/ci.yml?branch=main&label=tests" alt="Tests"></a>
+<a href="https://app.codecov.io/gh/AlexGalhardo/stuarty"><img src="https://img.shields.io/codecov/c/github/AlexGalhardo/stuarty?logo=codecov&label=codecov" alt="Codecov"></a>
+<a href="https://github.com/AlexGalhardo/stuarty/actions/workflows/release.yml"><img src="https://img.shields.io/github/actions/workflow/status/AlexGalhardo/stuarty/release.yml?label=ci%2Fcd" alt="CI/CD"></a>
 <a href="https://github.com/AlexGalhardo/stuarty/releases"><img src="https://img.shields.io/github/v/release/AlexGalhardo/stuarty?include_prereleases&label=version" alt="Version"></a>
 <a href="go.mod"><img src="https://img.shields.io/badge/go-1.27.4-00ADD8?logo=go&logoColor=white" alt="Go 1.27.4"></a>
 <a href="LICENSE.md"><img src="https://img.shields.io/github/license/AlexGalhardo/stuarty" alt="License"></a>
+<a href="https://scorecard.dev/viewer/?uri=github.com/AlexGalhardo/stuarty"><img src="https://img.shields.io/ossf-scorecard/github.com/AlexGalhardo/stuarty?label=openssf%20scorecard" alt="OpenSSF Scorecard"></a>
 
 ## Create, edit, manage and publish your audiovisual and text content in one place
 
