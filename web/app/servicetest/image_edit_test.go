@@ -22,7 +22,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/service"
 )
 
-// Epic 30 (SDD-016 section 6.4): the job image.edit removes the background of a layer, or generates an image
+// Epic 30 (SDD-016 section 6.5): the job image.edit removes the background of a layer, or generates an image
 // into a document, with the provider of a connection. The provider is the fake server of generate_test.go, which
 // answers POST /images/edits as editMode says.
 

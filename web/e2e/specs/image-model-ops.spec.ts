@@ -18,7 +18,7 @@ import {
 	test,
 } from "./image-support";
 
-// Epic 30 (SDD-016 section 6.4, SDD-012 section 24.14): in the image editor a creator removes the background of a
+// Epic 30 (SDD-016 section 6.5, SDD-012 section 24.14): in the image editor a creator removes the background of a
 // layer, and generates a new layer from a prompt, with the connected provider: the plain words that say the picture
 // is sent, the estimate first, approval, and a result that is an ordinary layer one Undo takes back. The provider
 // is a server of this spec on loopback that records what it receives; no real provider is called and nothing is

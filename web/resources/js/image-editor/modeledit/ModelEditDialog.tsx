@@ -33,7 +33,7 @@ import {
 import { useImage, useImageStore } from "../state/context";
 import { choicesOf, modelJobStore, orderedModels } from "./state";
 
-// The dialog of "Remove background" and "Generate" (SDD-016 section 6.4, SDD-012 section 24.14): the project that
+// The dialog of "Remove background" and "Generate" (SDD-016 section 6.5, SDD-012 section 24.14): the project that
 // holds the file, the connection, the model, the prompt of a generation, the plain words that say what is sent
 // and to which provider, the estimate the service made (a dry run) before anything is submitted, and then the job,
 // which the strip under the toolbar follows. It computes nothing: the estimate, the limits, the waiting for a

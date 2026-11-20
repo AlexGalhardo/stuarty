@@ -234,7 +234,7 @@ var parity = []row{
 	// and voice.generate; the voices of a connection are read with the CLI or HTTP, as its models are.
 	{method: "ImageGenerate", tool: "job_start", command: "image:generate", route: "POST /image/generate"},
 	{method: "VoiceGenerate", tool: "job_start", command: "voice:generate", route: "POST /voice/generate"},
-	// Removing a background and generating into an image document (SDD-016 section 6.4, epic 30): job_start with
+	// Removing a background and generating into an image document (SDD-016 section 6.5, epic 30): job_start with
 	// the kind image.edit.
 	{method: "ImageModelEdit", tool: "job_start", command: "image:model-edit", route: "POST /images/{}/model-edit"},
 	{method: "VoiceList", command: "voice:list", route: "GET /connections/{}/voices"},

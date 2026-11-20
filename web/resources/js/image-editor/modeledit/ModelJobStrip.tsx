@@ -13,7 +13,7 @@ import { isFinal, modelJobStore, settledFor, useModelJob } from "./state";
 
 const POLL_MS = 1500;
 
-// The strip under the toolbar that follows the job of an operation with a model (SDD-016 section 6.4): what it is
+// The strip under the toolbar that follows the job of an operation with a model (SDD-016 section 6.5): what it is
 // doing to which layer, how far it is, that it waits for a person, and, when it is done, what it did to the
 // document. It reads the job and says it; when the job succeeds and changed the document, it reloads the
 // document and selects the layer the result is in. The job is the service's: nothing is computed here.
