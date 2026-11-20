@@ -1,9 +1,9 @@
 # SDD-018: Memory, skills and prompts
 
-- Status: Draft (2026-11-19). Written by epic 15; the code follows in the same epic.
+- Status: Draft (2026-11-20). Written by epic 15; the code follows in the same epic. Section 17 (the recipes) was added by epic 39.
 - Depends on: ADR-0040 (files with an index), ADR-0031, ADR-0020 (untrusted text), ADR-0033 (no credential leaves the vault), SDD-000 (names), SDD-003 (surfaces), SDD-007 (threats T-44 to T-47, scope matrix, untrusted text)
 - Implements: PRD-004 RF-385, RF-386, RF-387, RF-388, RF-390, RF-391; section 16 (the built-in skills): RF-301, RF-302, RF-389
-- Owner area: `core/library/`, `service/library/`, the library operations in `service/`, the controllers, commands and tool in `web/app/`, the pages Skills, Prompts and Memory; the built-in skills in `web/resources/skills/` (section 16)
+- Owner area: `core/library/`, `service/library/`, the library operations in `service/`, the controllers, commands and tool in `web/app/`, the pages Skills, Prompts and Memory; the built-in skills in `web/resources/skills/` (section 16), the recipe templates in `web/resources/templates/` and the briefing question sets per kind in `core/project/` (section 17)
 
 ## Contents
 
@@ -23,6 +23,7 @@
 14. Surfaces
 15. Tests
 16. The built-in skills
+17. Recipes: a product commercial and a long talking video
 
 ## 1. Overview
 
@@ -254,3 +255,48 @@ The product ships a small set of skills written for it and tested with it (epic 
 | `hyperframes` | `heygen-com/hyperframes` | Apache-2.0 |
 
 **Agent-side only.** `fetch-clip` tells the agent to download with its own tools on its own side and then to import the file with a source and a rights note (`MediaImport`); the product gains no downloader and opens no connection (ADR-0032). **Recall and retro.** `recall-learnings` reads memory (`LibrarySearch` with `scope`) at the start of a production and `production-retro` writes what was learned at the end with `MemoryWrite`, which an agent's note starts unkept (section 5).
+
+## 17. Recipes: a product commercial and a long talking video
+
+Epic 39 (ADR-0040, ADR-0031, ADR-0042, RF-389) adds two more kinds of production after the short vertical video. **A recipe is a skill plus templates plus briefing questions, and nothing else**: it names operations that exist, a gap becomes a product issue and the skill says what the person does by hand, and it adds no command, no table and no tool.
+
+**The production kind.** `core/project` names three kinds of production, `short`, `commercial` and `long` (`ProductionKind`), and the questions of the briefing are data per kind: `BriefingQuestionsFor(kind)`, `CheckAnswersFor`, `BriefingMarkdownFor` and `ParseBriefingFor`. `short` is the set of section 5.12.1 of SDD-005 (`BriefingQuestions` and the other functions without a kind are its names, unchanged). A brief that one kind wrote is not read as the brief of another: its headings are not the headings of the other set, so `ParseBriefingFor` says it was not written by that briefing, and a brief written by hand is never replaced by accident (SDD-005 section 5.12.1). The kind is not stored: the questions that a brief answers say which kind it is. The service operations `BriefingQuestions` and `BriefingAnswer` serve the set of `short` only; for another kind the skill asks the questions of its set and writes the brief with `brief:set` (or `project_item` with `action` `brief`), in the schema of section 5.12.1 (`# Brief`, then `## <heading>` and the answer for each answered question, in the order of the set). Serving the other sets through the briefing operations is a product issue, not part of this epic.
+
+| Question id (heading) | `commercial` | `long` |
+| --- | --- | --- |
+| `product` (Product), `problem` (Problem), `offer` (Offer), `call_to_action` (Call to action) | required text | no |
+| `topic` (Topic), `speakers` (Speakers), `goal` (Goal) | no | required text |
+| `audience`, `platform`, `format` | required (the platforms and the formats of the kind) | required |
+| `duration` (Duration (seconds)) | required, 5 to 90 | required, 120 to 14,400 |
+| `cut_style` (Cut style: `tight`, `natural`, `relaxed`) | no | required choice |
+| `other_formats`, `product_shots`, `proof` | optional text | no |
+| `chapters`, `keep`, `short_from_it` (`yes` or `no`) | no | optional |
+| `tone`, `references`, `must_include`, `must_avoid`, `deadline` | optional | optional |
+
+The test is `go test ./core/project/... -run TestBriefingKinds`: every set is well formed (unique ids and headings, bounds, choices with options), a brief written by a kind reads back as it was written and only for that kind, the required answers and the bounds of the duration are enforced per kind, and an unknown kind is `E_VALIDATION` with `path` `kind`.
+
+**The skills** (`web/resources/skills/`, the rules of section 16 apply to each):
+
+- `product-commercial`: the whole path of a commercial of 15 or 30 seconds, in the order hook, problem, product shots, offer, call to action; one brief, one timeline made from a template, and a version per aspect ratio with `settings.reframe` and an export of each (9:16, 1:1, 16:9). Motion that the editor cannot make goes through `motion-with-an-external-engine`.
+- `commercial-copy`: the words of a commercial, adapted from the marketing set (source `marketingskills`, the hook and short-form video references of its ad creative skill): the hook has three parts that do different work (what is seen, what is said, what is read), the seconds after it must continue its promise, and every claim traces to the brief, so a number, a review or a guarantee that the brief does not hold is never written.
+- `long-talking-video`: the edit of a long video of a person speaking: the dead air and the false starts out (`clip.remove_silences`, `item.split` and `item.delete` on what the person marks as a retake), the chapters as markers (`marker.add`) and as the chapter list that goes in the description, the captions from the transcript, cut-away images over the talking head, and a short extracted from the long one in a duplicate of the project (`project:duplicate`) reframed to 9:16.
+- `chapter-titles`: the titles of the chapters and the text of the chapter list, written from the transcript; a title says what the viewer gets, not the order of the talk.
+
+`start-here` routes the two kinds of request to them, and a request for a short stays with `short-vertical-video`.
+
+**The templates** are documents without media, built from commands by the generator test of their folder (never written by hand), embedded in the binary by the package `web/resources/templates` and installed into the workspace as built-in, like the starter templates of ADR-0022 item 8 (`service.SeedBuiltInTemplates`): each has a fixed identifier, a workspace that holds it is left as it is, and one that a migration or a person changed is never overwritten. The timeline templates are in the library of templates (`template:list`), the image templates in the library of images with `template` true (`image:list --templates only`). In network mode only the timeline templates are installed: an image belongs to one user (SDD-021), so a shared image template is a product issue.
+
+| Template | Kind | What it holds |
+| --- | --- | --- |
+| `commercial-15s` | timeline, 9:16 | the five beats in 15 seconds: hook, problem, product, offer, call to action; the words are text slots, the shots and the music media slots |
+| `commercial-30s` | timeline, 9:16 | the same five beats in 30 seconds, with two product shots and a proof card |
+| `long-video-opening` | timeline, 16:9 | a cold open, the title card, a lower third with the name of the speaker, music under the opening; the talking head follows it |
+| `commercial-cover-vertical`, `commercial-cover-landscape`, `long-video-thumbnail` | image | the matching covers: a picture slot, a title text slot and the colours of the brand |
+
+The colours of a template are named (`brand`, `ink`, `accent`), so that `template:new --brand-color <name>` takes the colour of the brand kit (SDD-005 section 5.11). **Golden exports.** Every template has a golden file in its folder: for a timeline template, the SHA-256 of the pixels of some frames of its instance filled with fixture images (the way of the golden frames of `engine/export`), and for an image template the PNG its instance renders. `go test ./web/resources/templates/...` fails when a change in the core, the renderer or the template changes a pixel; `-update` rewrites the files and every rewrite is a reviewed change.
+
+**Each recipe is proven like the pilot** (SDD-008): `scripts/recipe-commercial.sh` and `scripts/recipe-long-video.sh`, with no network and the fake AI provider on loopback of the first flow, each in its own workspace and port, end in files that are checked with `ffprobe`: the commercial in three aspect ratios made from one brief, the long video with its chapters, its captions and the short extracted from it. Both are part of `verify.sh --full`.
+
+**Adapted material** follows section 16: `commercial-copy` names `marketingskills` in `license`, `metadata.stuarty-source` and `metadata.stuarty-adapted-from`, and `licenses/vendored/NOTICE-skills.md` lists it with what was changed. `product-commercial`, `long-talking-video` and `chapter-titles` are written for Stuarty and name no source.
+
+**Known gaps, kept as product issues.** A marker is a place on the timeline: the exported file carries no chapter list, so the chapters travel as the text of the description. The briefing operations serve the `short` set only. The image templates are not shared in network mode. The transcript of a long video is the work of the transcription helper; the scripted run uses the stub of the first flow.

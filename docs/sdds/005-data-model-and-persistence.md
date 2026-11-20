@@ -1130,7 +1130,7 @@ CREATE TABLE text_revisions (                      -- SDD-019 section 3: one row
 
 ### 5.12.1 The guided briefing and the brief schema (RF-301, RF-302)
 
-The brief is still one item with one Markdown body (section 5.12); the guided briefing is a way to fill it, and it adds no table and no column. The questions and the rules are data and pure functions of `core/project` (`briefing.go`), so a form, the CLI, the HTTP API and an agent in a chat ask and store the same thing.
+The brief is still one item with one Markdown body (section 5.12); the guided briefing is a way to fill it, and it adds no table and no column. The questions and the rules are data and pure functions of `core/project` (`briefing.go`), so a form, the CLI, the HTTP API and an agent in a chat ask and store the same thing. The table below is the set of a short video; the commercial and the long video have their own sets (SDD-018 section 17).
 
 | Id | Heading in the brief | Answer | Required |
 | --- | --- | --- | --- |
