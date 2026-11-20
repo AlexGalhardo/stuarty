@@ -15,7 +15,7 @@ var wantSkills = []string{
 	"start-here", "brief-a-production", "short-vertical-video", "captions-for-shorts", "thumbnail",
 	"recall-learnings", "production-retro", "fetch-clip", "write-a-hook", "short-script", "caption-per-network",
 	"motion-with-an-external-engine",
-	"product-commercial", "commercial-copy",
+	"product-commercial", "commercial-copy", "long-talking-video", "chapter-titles",
 }
 
 func TestTheSetIsComplete(t *testing.T) {
