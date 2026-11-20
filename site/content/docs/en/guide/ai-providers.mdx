@@ -50,6 +50,22 @@ stuarty voice:list con_0123456789
 stuarty voice:generate --project prj_7k2m9x4q1b --connection con_0123456789 --model a-voice-model --voice alloy --text "Welcome to the channel." --format wav
 ```
 
+### Remove a background or generate inside an image
+
+In the image editor, **Remove background** and **Generate** in the toolbar use the same kind of connection and the same prices (per image). OpenAI has no operation named "remove background": Stuarty asks its image edit endpoint to keep the subject and make the rest transparent, and the model decides how well it does.
+
+- **The picture leaves your computer.** Remove background sends the picture of the layer to the provider you choose, and the dialog and the approval request say so and name the provider. Generate sends only the prompt. Nothing is sent before you see the estimate and approve it; a connection that does not accept pictures cannot be chosen for a removal.
+- **The result is an ordinary layer.** The layer keeps its place, name and effects and gets the new file; if the new picture has other proportions it is fitted inside the old box, never stretched. A generated picture is a new layer that covers the canvas or the layer you picked. One **Undo** takes either back, and the original file is never changed.
+- **A cut-out with no transparency is not applied.** If the provider answers a picture that has no transparent pixel, the layer is left alone; the file is kept in your library with its origin and you pay for it, because the provider billed the request.
+- **A conflict is not an overwrite.** If someone else changed the layer while you were deciding, the result stays in the library and the job says so.
+
+```bash
+stuarty image:model-edit --project prj_7k2m9x4q1b --image img_7k2m9x4q1b --operation remove_background --connection con_0123456789 --model an-image-model --layer lyr_7k2m9x4q1b --dry-run
+stuarty image:model-edit --project prj_7k2m9x4q1b --image img_7k2m9x4q1b --operation generate --connection con_0123456789 --model an-image-model --prompt "A snowy forest, soft light"
+```
+
+A connection for a removal must accept `image`, so connect it with `--accepts text,image`.
+
 ## Video
 
 A short clip is made the same way, with one difference: **it always waits for you**, whatever the estimate is, because a video costs far more than an image. Only a rule you wrote on the Approvals page can lift that wait, and a cost ceiling still refuses what is above it.

@@ -884,6 +884,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | --- | --- | --- | --- |
 | `cost` | [`Money`](/docs/api/schemas#money) | no |  |
 | `delivered` | `integer` | no |  |
+| `image` | [`ImageApplied`](/docs/api/schemas#imageapplied) or `any` or `null` or `null` | no |  |
 | `items` | array of [`GeneratedItem`](/docs/api/schemas#generateditem) | no |  |
 | `model` | `string` | no |  |
 | `notes` | array of `string` | no |  |
@@ -1020,6 +1021,15 @@ The types named in the tables of the operations. The arguments of each editing c
 | --- | --- | --- | --- |
 | `asset` | `string` | no |  |
 | `text` | `string` or `null` | no |  |
+
+### ImageApplied
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `applied` | `boolean` | no |  |
+| `image_id` | `string` | no |  |
+| `layer_id` | `string` | no |  |
+| `revision` | `integer (int64)` | no |  |
 
 ### ImageCreateResult
 

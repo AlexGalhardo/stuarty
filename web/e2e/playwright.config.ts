@@ -207,6 +207,8 @@ export default defineConfig({
 				// The master key of the vault (SDD-014 section 4) lives next to the workspace, never in it, so
 				// the connections spec does not write into the keychain of the machine that runs it.
 				STUARTY_MASTER_KEY_FILE: `${home}.master.key`,
+				// The test addresses below are honoured only with APP_ENV=test (SDD-007 T-67).
+				APP_ENV: "test",
 				// A fake social network of the youtube-connect spec, on loopback (SDD-020 section 12).
 				STUARTY_TEST_SOCIAL_URL: `http://127.0.0.1:${port + 3}`,
 				// A fake authorization server of the provider-sign-in spec, on loopback (SDD-016 section 12.5).
@@ -258,6 +260,8 @@ export default defineConfig({
 				STUARTY_INSECURE_ALLOW_ROOT: "true",
 				// The vault key of the connection of the Google sign-in spec, next to the workspace and never in it.
 				STUARTY_MASTER_KEY_FILE: `${networkHome}.master.key`,
+				// The test address below is honoured only with APP_ENV=test (SDD-007 T-67).
+				APP_ENV: "test",
 				// The fake Google of the google-sign-in spec, on loopback (SDD-014 section 12.1).
 				STUARTY_TEST_GOOGLE_URL: `http://127.0.0.1:${GOOGLE_PORT}`,
 				...ffmpegEnv(),

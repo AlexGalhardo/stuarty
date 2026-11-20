@@ -136,6 +136,178 @@ test.describe("preview-vs-export", () => {
 			});
 		});
 	}
+
+	// The blend modes (VV-268): the cases above are sent without their blend, so these are loaded with
+	// all their edits, over an opaque canvas and over a transparent one. PixiJS blends `multiply` as
+	// `src x dst + dst x (1 - sa)`, which is black where nothing is drawn yet, and the export draws the
+	// general form of SDD-013 section 3.11.2, which is the source itself there.
+	for (const name of goldenCases().filter((n) => /^blend-/.test(n))) {
+		test(`golden ${name} with its blend: SSIM of at least ${MIN_SSIM} on luma and no layer displaced by more than ${MAX_DISPLACEMENT} px`, async ({
+			page,
+			request,
+		}) => {
+			const loaded = await loadCase(request, name, true);
+			await openCase(page, loaded.id);
+			await stepThrough(page, loaded.frames, async (frame) => {
+				await compareFrame(page, name, loaded.id, frame, "preview-vs-export");
+			});
+		});
+	}
+
+	// The golden cases blend over a backdrop that is opaque or empty, and the SSIM of the luma does not see
+	// the alpha. Here a layer at opacity 0.5 is blended over another at opacity 0.5, so the backdrop has
+	// `0 < da < 255`, and three points are read as premultiplied colours (what the export's JPEG holds, the
+	// frame over black): the overlap, a corner of the ellipse's box where the blended layer has `a == 0`, and
+	// a point outside it. The frame is drawn three times, so a canvas that keeps the pixels of the frame
+	// before under a clear one is seen too (VV-268 review). In the grouped case the two layers are moved into
+	// a composition drawn as one unit (a blend of its own, SDD-013 section 3.12) on an opaque canvas: the
+	// group's surface starts transparent, so the blend inside it reads a backdrop that is not opaque.
+	const halfAlpha: [string, string, boolean][] = [
+		["multiply", "transparent", false],
+		["screen", "transparent", false],
+		["overlay", "transparent", false],
+		["add", "transparent", false],
+		["overlay", "#204060", false],
+		["multiply", "#204060", true],
+	];
+	for (const [mode, background, grouped] of halfAlpha) {
+		test(`${mode} at opacity 0.5 over a layer at opacity 0.5 on a ${background} canvas${grouped ? ", in a group," : ""} matches the export at three points`, async ({
+			page,
+			request,
+		}) => {
+			const call = await caller(request);
+			const created = await call("POST", "/projects", {
+				name: `Blend ${mode} over half alpha`,
+			});
+			const id = created.project_id as string;
+			const { revision } = (await call("GET", `/projects/${id}`)) as {
+				revision: number;
+			};
+			await call("POST", `/projects/${id}/edit`, {
+				base_revision: revision,
+				operations: [
+					{
+						op: "settings.set",
+						args: { width: 180, height: 320, background },
+					},
+					{
+						op: "track.add",
+						args: { kind: "visual", name: "Under", id: "trk_k000000001" },
+					},
+					{
+						op: "track.add",
+						args: { kind: "visual", name: "Over", id: "trk_k000000002" },
+					},
+					{
+						op: "shape.add",
+						args: {
+							track_id: "trk_k000000001",
+							start: "0f",
+							duration: "30f",
+							shape: "rect",
+							width: 180,
+							height: 320,
+							fill: "#C08040",
+							x: 90,
+							y: 160,
+							id: "itm_h000000001",
+						},
+					},
+					{
+						op: "shape.add",
+						args: {
+							track_id: "trk_k000000002",
+							start: "0f",
+							duration: "30f",
+							shape: "ellipse",
+							width: 120,
+							height: 200,
+							fill: "#80C0FF",
+							x: 90,
+							y: 160,
+							id: "itm_h000000002",
+						},
+					},
+					{
+						op: "item.set_transform",
+						args: { item_id: "itm_h000000001", opacity: 0.5 },
+					},
+					{
+						op: "item.set_transform",
+						args: { item_id: "itm_h000000002", opacity: 0.5 },
+					},
+					{ op: "clip.set_blend", args: { item_id: "itm_h000000002", mode } },
+				],
+			});
+			if (grouped) {
+				const before = (await call("GET", `/projects/${id}`)) as {
+					revision: number;
+				};
+				await call("POST", `/projects/${id}/edit`, {
+					base_revision: before.revision,
+					operations: [
+						{
+							op: "composition.create_from_selection",
+							args: { item_ids: ["itm_h000000001", "itm_h000000002"] },
+						},
+					],
+				});
+				const doc = (await call(
+					"GET",
+					`/projects/${id}?detail=document&timeline_id=${id}`,
+				)) as {
+					revision: number;
+					document: { items: Record<string, { type: string }> };
+				};
+				const composition = Object.entries(doc.document.items).find(
+					([, item]) => item.type === "composition",
+				)?.[0];
+				expect(composition, "the composition of the two layers").toBeDefined();
+				// A blend of its own makes the composition a group (SDD-004 section 3.16).
+				await call("POST", `/projects/${id}/edit`, {
+					timeline_id: id,
+					base_revision: doc.revision,
+					operations: [
+						{
+							op: "clip.set_blend",
+							args: { item_id: composition, mode: "screen" },
+						},
+					],
+				});
+			}
+			await openCase(page, id);
+			if (grouped) {
+				await expect(
+					page.getByRole("main", { name: "Preview" }).locator("canvas"),
+				).toHaveAttribute("data-groups", "approximate");
+			}
+			// Project points: the centre, a corner of the ellipse's box (outside the ellipse), the top.
+			const points: [string, number, number][] = [
+				["overlap", 90, 160],
+				["corner", 36, 66],
+				["outside", 90, 20],
+			];
+			await stepThrough(page, [0, 1, 2], async (frame) => {
+				const shot = await capture(page, id, frame, grouped);
+				const { width, height } = shot.canvas;
+				for (const [where, px, py] of points) {
+					const x = Math.round((px * width) / 180);
+					const y = Math.round((py * height) / 320);
+					const i = (y * width + x) * 4;
+					const c = shot.canvas.data;
+					const a = c[i + 3] ?? 0;
+					for (let k = 0; k < 3; k++) {
+						const premultiplied = Math.round(((c[i + k] ?? 0) * a) / 255);
+						const exported = shot.frame.data[i + k] ?? 0;
+						expect(
+							Math.abs(premultiplied - exported),
+							`${mode} on ${background}, frame ${frame}, ${where}, channel ${k}: canvas ${premultiplied} (alpha ${a}), export ${exported}`,
+						).toBeLessThanOrEqual(4);
+					}
+				}
+			});
+		});
+	}
 });
 
 // The three Prototype cases of SDD-012 section 20.3 on a clip with markers: cover

@@ -333,6 +333,59 @@
         "image_hint": "Escolha uma imagem do seu espaço de trabalho.",
         "image_none": "Ainda não há imagens no espaço de trabalho. Importe uma em um projeto primeiro."
       },
+      "model": {
+        "remove": "Remover o fundo",
+        "remove_needs_layer": "Remover o fundo (selecione antes uma camada de imagem)",
+        "generate": "Gerar imagem",
+        "title": {
+          "remove_background": "Remover o fundo",
+          "generate": "Gerar uma imagem dentro desta"
+        },
+        "intro": {
+          "remove_background": "O fundo da camada é removido pelo modelo de um provedor que você conectou. O resultado é a mesma camada com a imagem nova, e um Desfazer traz o original de volta.",
+          "generate": "Uma camada nova é feita a partir do seu texto pelo modelo de um provedor que você conectou. Um Desfazer a tira. O preço aparece antes de qualquer pedido ao provedor."
+        },
+        "sent": {
+          "remove_background": "A imagem da camada {layer} será enviada para {provider}. Nada é enviado até você aprovar o custo.",
+          "generate": "Somente o texto que você escrever abaixo será enviado para {provider}. Nada é enviado até você aprovar o custo."
+        },
+        "no_provider": {
+          "remove_background": "Nenhum provedor conectado remove fundos ainda. A conexão precisa aceitar imagens.",
+          "generate": "Nenhum provedor conectado gera imagens ainda."
+        },
+        "open_connections": "Conecte um na página Conexões",
+        "project": "Projeto",
+        "project_hint": "O projeto que guarda o arquivo novo e o custo. A imagem em si não pertence a nenhum projeto.",
+        "no_project": "Crie um projeto antes: ele guarda o arquivo novo e o custo.",
+        "connection": "Conexão",
+        "model": "Modelo",
+        "no_price": "sem preço ainda",
+        "prompt": "O que desenhar",
+        "cover_layer": "Cobrir a camada",
+        "estimate": "Mostrar a estimativa",
+        "estimated": "Custo estimado: {amount}",
+        "submit": "Começar",
+        "working": {
+          "remove_background": "Removendo o fundo de",
+          "generate": "Gerando uma imagem"
+        },
+        "layer_working": "em andamento",
+        "state": {
+          "queued": "Esperando para começar.",
+          "waiting_approval": "Esperando a sua aprovação.",
+          "running": "Trabalhando.",
+          "succeeded": "Pronto.",
+          "failed": "Não deu certo.",
+          "cancelled": "Cancelado."
+        },
+        "progress": "{percent}% concluído",
+        "open_approvals": "Abrir a página Aprovações",
+        "done": {
+          "applied": "A camada está na imagem e custou {amount}.",
+          "kept": "A imagem não foi alterada. O arquivo está na sua biblioteca e custou {amount}."
+        },
+        "dismiss": "Fechar esta mensagem"
+      },
       "import": {
         "open_new": "Importar imagem",
         "open_layer": "Colocar um arquivo nesta imagem",
