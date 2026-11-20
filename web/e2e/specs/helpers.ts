@@ -256,6 +256,51 @@ export function markerClip(width: number, height: number): string {
 	return out;
 }
 
+// A 1 s 320x180 clip made from an ffmpeg video source, once per run, under a name of its own.
+function sourceClip(name: string, source: string): string {
+	const dir = join(tmpdir(), "stuarty-e2e-media");
+	mkdirSync(dir, { recursive: true });
+	const out = join(dir, name);
+	if (!existsSync(out)) {
+		execFileSync(
+			ffmpegExe(),
+			[
+				"-y",
+				"-f",
+				"lavfi",
+				"-i",
+				source,
+				"-c:v",
+				"libopenh264",
+				"-b:v",
+				"2M",
+				"-pix_fmt",
+				"yuv420p",
+				out,
+			],
+			{ stdio: "ignore" },
+		);
+	}
+	return out;
+}
+
+// greenScreenClip is a green screen (#66DD09, the colour of VV-093) with a red box at its centre: the
+// subject of a chroma key.
+export function greenScreenClip(): string {
+	return sourceClip(
+		"green-screen-box-v1.mp4",
+		"color=c=0x66DD09:s=320x180:r=30:d=1,drawbox=x=110:y=50:w=100:h=80:color=0xE02020:t=fill",
+	);
+}
+
+// backdropClip is a plain mid blue clip: what must show behind a keyed subject (neither black nor white).
+export function backdropClip(): string {
+	return sourceClip(
+		"backdrop-blue-v1.mp4",
+		"color=c=0x2060C0:s=320x180:r=30:d=1",
+	);
+}
+
 // alphaClip makes a 1 s 160x90 WebM (VP9 yuva420p) whose left half is fully
 // transparent and whose right half is opaque red: the source of the alpha path
 // of the preview (VV-013).
