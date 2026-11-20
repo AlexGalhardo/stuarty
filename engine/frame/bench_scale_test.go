@@ -11,6 +11,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/core/timeline"
 	"github.com/AlexGalhardo/stuarty/engine/ingest"
 	"github.com/AlexGalhardo/stuarty/engine/rasterize"
+	"github.com/AlexGalhardo/stuarty/internal/perfgate"
 )
 
 // The ViewFrame and ViewSheet benchmarks of the ALPHA phase (P2-RND-014) run on the project of NFR-009:
@@ -190,12 +191,14 @@ func BenchmarkViewSheet9Scale(b *testing.B) {
 	}
 }
 
-// The gates of SDD-004 section 13 item 6 on the project of NFR-009: a cold frame within 500 ms at the UI
-// width at the 95th percentile (NFR-004) and within 2 s at the agent width (NFR-023), and the image token
-// estimate of an agent frame at most 800 and of a sheet at most 1,600 (NFR-022).
-func TestScaleProjectViewGates(t *testing.T) {
+// The timing gates of SDD-004 section 13 item 6 on the project of NFR-009: a cold frame within 500 ms at
+// the UI width at the 95th percentile (NFR-004) and within 2 s at the agent width (NFR-023). They are
+// absolute time budgets: they run only on the idle machine with STUARTY_PERF=1 (SDD-008 section 10).
+func TestScaleProjectViewTimeBudgets(t *testing.T) {
+	perfgate.Require(t)
+
 	if raceEnabled || testing.CoverMode() != "" {
-		t.Skip("the race detector and coverage instrumentation slow every step")
+		t.Skip("the race detector and coverage instrumentation slow every step") // verify:env-skip instrumentation changes the cost of every step
 	}
 
 	doc := scaleDoc(t)
@@ -204,23 +207,24 @@ func TestScaleProjectViewGates(t *testing.T) {
 	agent := percentile(coldAt(t, doc, 20, DefaultAgentWidth), 0.95)
 	t.Logf("cold frame on the scale project: p95 %s at 540, %s at 384", ui, agent)
 
-	// The tokens below do not depend on the load; the two timings are not judged on a busy machine.
-	timed := true
-
-	if ui > 500*time.Millisecond || agent > 2*time.Second {
-		if med, busy := machineBusy(t); busy {
-			timed = false
-
-			t.Logf("timing gates not judged: starting FFmpeg takes %s, over %s", med, busyStartLimit)
-		}
-	}
-
-	if timed && ui > 500*time.Millisecond {
+	if ui > 500*time.Millisecond {
 		t.Errorf("UI width p95 %s, want at most 500 ms (NFR-004)", ui)
 	}
 
-	if timed && agent > 2*time.Second {
+	if agent > 2*time.Second {
 		t.Errorf("agent width p95 %s, want at most 2 s (NFR-023)", agent)
+	}
+}
+
+// The image token estimate of an agent frame is at most 800 and of a sheet at most 1,600 (NFR-022), and
+// the scale project yields a frame at both widths. None of it depends on the load.
+func TestScaleProjectViewGates(t *testing.T) {
+	doc := scaleDoc(t)
+
+	for _, width := range []int{DefaultUIWidth, DefaultAgentWidth} {
+		if d := coldAt(t, doc, 3, width); len(d) != 3 {
+			t.Fatalf("%d frames at width %d, want 3", len(d), width)
+		}
 	}
 
 	st := doc.Settings
