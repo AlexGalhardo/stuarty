@@ -7,6 +7,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.37.0] - 2026-11-20
+
+### Added
+
+- **service:** The sign-in flow, its stored form and its refresh ([3ab2522](https://github.com/AlexGalhardo/stuarty/commit/3ab25227e40dd78fd163a5c4afb8423f873a357f))
+- **service:** Add the OpenRouter adapter and its sign-in ([649b380](https://github.com/AlexGalhardo/stuarty/commit/649b3800a3a64c3d153b9e76871dc23c110379a3))
+- **service:** Sign in with ChatGPT for the OpenAI adapter ([339af82](https://github.com/AlexGalhardo/stuarty/commit/339af82332cc51371c8b8478a5f9caf1ac5cfee5))
+- **service:** Begin, finish and list a provider sign-in ([8bfb934](https://github.com/AlexGalhardo/stuarty/commit/8bfb934ef4b222ae1f67b3d19a12d382eb400998))
+- **ui:** Sign-in buttons and states on the provider cards ([d1ac9c9](https://github.com/AlexGalhardo/stuarty/commit/d1ac9c9df0eb4d444d5d061a98ca993abedcca80))
+- **docker:** Add the compose stack and Caddyfile for a VPS ([39a8357](https://github.com/AlexGalhardo/stuarty/commit/39a83573dc4ecdc8e563ce4382362f75795fa814))
+- **docker:** Add install.sh and its test for the VPS package ([37d1634](https://github.com/AlexGalhardo/stuarty/commit/37d16341fb82c89d331ceecf5d30d23731c0b599))
+- **workspace:** Add workspace backup and restore with scripts ([9a255da](https://github.com/AlexGalhardo/stuarty/commit/9a255da206619424ab7baa9c25cfe228d4e4c080))
+- **docker:** Add update.sh with a health check and rollback ([1488a6d](https://github.com/AlexGalhardo/stuarty/commit/1488a6d3a55cfb26e1cf4d8476151a6308aef293))
+- **service:** Import an image file as a document or a layer ([8e13464](https://github.com/AlexGalhardo/stuarty/commit/8e134643d4728fd2ffafb0356dac017d155de219))
+- **http:** Stream image events and take a file to import ([fab6c80](https://github.com/AlexGalhardo/stuarty/commit/fab6c80b050416df0de4dd344db4b1909cc48df1))
+- **mcp:** Import an image from MCP, the CLI and HTTP ([679b457](https://github.com/AlexGalhardo/stuarty/commit/679b457783fc41bc758b02345de5c4426be912bc))
+- **web:** Update the image editor from the event stream ([dfd3c67](https://github.com/AlexGalhardo/stuarty/commit/dfd3c67c913dc1452a0e2fa54bee507c04caf952))
+- **core:** Validate and estimate a video generation ([e252799](https://github.com/AlexGalhardo/stuarty/commit/e2527995933f39783bff9925f1c9435d058a956b))
+- **service:** Declare the video generator of a provider ([31c518a](https://github.com/AlexGalhardo/stuarty/commit/31c518a2136c6fba813be74804df881843546bf5))
+- **service:** Run video generation as a resumable job ([71dc3de](https://github.com/AlexGalhardo/stuarty/commit/71dc3decf2065a2881972c1baa758cbc3416029c))
+- **api:** Expose video generation on HTTP, the CLI and MCP ([d7e572b](https://github.com/AlexGalhardo/stuarty/commit/d7e572b252b9518e344f6b31faf1476d6c8f3e33))
+- **ui:** Add the video clip tab to the Generate dialog ([03b9584](https://github.com/AlexGalhardo/stuarty/commit/03b95843f30cabc3c9185f3a090fd9e40f191660))
+
+### Fixed
+
+- **service:** Refuse sign in with chatgpt on a network server ([617471a](https://github.com/AlexGalhardo/stuarty/commit/617471a6fc2680dc0019d94bc55fd64a0d3e4af8))
+- **service:** Keep a chatgpt sign-in to text generation ([a7042c0](https://github.com/AlexGalhardo/stuarty/commit/a7042c003967a8958ee5e40db8f174399ce8f61f))
+- **ui:** Clear the sign-in address before the exchange ([94b1f1f](https://github.com/AlexGalhardo/stuarty/commit/94b1f1f39479d6d75f2bc4454c740648d6bd3678))
+- **service:** Ask for a new sign-in when a token is revoked ([49b2055](https://github.com/AlexGalhardo/stuarty/commit/49b205567a7f123b47f82dff810457050af5f3f3))
+- **ci:** Read verify checks from base on Git Bash, skip go.mod-only ([c7bff9d](https://github.com/AlexGalhardo/stuarty/commit/c7bff9d4e1a82c873081fae93c144ee4fd34529d))
+- **ci:** Stop verify when a base check cannot be read ([bc5b923](https://github.com/AlexGalhardo/stuarty/commit/bc5b923ee08e23f052864416f82bc16e2fb4e350))
+- **ci:** Build each changed go module on go.mod-only changes ([4249f2a](https://github.com/AlexGalhardo/stuarty/commit/4249f2a43c9e4997fedc1d52d4757298a0bdc316))
+- **cli:** Refuse a workspace restore when STUARTY_URL is set ([aafaefd](https://github.com/AlexGalhardo/stuarty/commit/aafaefd2e6d34fe6841e07192201f15e8fe8bca6))
+- **workspace:** Refuse a backup folder that holds a link ([3ba123e](https://github.com/AlexGalhardo/stuarty/commit/3ba123e8be97feae4a50eaef8d1c76236b53e31a))
+- **docker:** Roll back when compose up fails on an unhealthy start ([4bad8bc](https://github.com/AlexGalhardo/stuarty/commit/4bad8bc55fd9b82a80753c741efb0abf9b381b67))
+- **docker:** Never pull the image and keep backups private ([79d8bbe](https://github.com/AlexGalhardo/stuarty/commit/79d8bbe976dbdc8b57197662488839aa098406ea))
+- **docker:** Check the whole value of the install input ([adfdab4](https://github.com/AlexGalhardo/stuarty/commit/adfdab427a3c6af3998aed79e71d703628715602))
+- **web:** Keep the layer import open while the file is pending ([00665e8](https://github.com/AlexGalhardo/stuarty/commit/00665e88d69fa4c3711dff7802c17c5982bd3448))
+- **service:** Abandon the video task of a requeued job on cancel ([e9e73c6](https://github.com/AlexGalhardo/stuarty/commit/e9e73c63d87a718bf546d377f156b7b50960c2c7))
+- **service:** Poll a video task at most once a second ([0b19220](https://github.com/AlexGalhardo/stuarty/commit/0b19220152d1629edbcdfd881eecd90a538351fd))
+- **ui:** Say no provider makes video instead of a dead link ([d89a50c](https://github.com/AlexGalhardo/stuarty/commit/d89a50c0a479670dca17999f87b95eef10c45ba3))
+- **service:** Refuse a first frame over 20 MB before approval ([6a9096f](https://github.com/AlexGalhardo/stuarty/commit/6a9096f814a4ae24d674017849cf3af0e37064bf))
+- **service:** Name the capability in the sign-in refusal hint ([0d81c8d](https://github.com/AlexGalhardo/stuarty/commit/0d81c8d7ceed50cee433c081134ad60fb72813d0))
+
+### Security
+
+- **security:** The sign-in threats T-75 to T-78 ([9d767b0](https://github.com/AlexGalhardo/stuarty/commit/9d767b08829c36e6ed087007bf972e031d9bb435))
+- **security:** Count the sign-in threats of epic 12 ([bbb69fa](https://github.com/AlexGalhardo/stuarty/commit/bbb69fa85b412d7d301916af64cf8a0a830d5e37))
+- **security:** Renumber the image upload threats to t-62..t-66 ([7975f08](https://github.com/AlexGalhardo/stuarty/commit/7975f08726df19c23908bd1951775178e1eb4132))
 ## [0.36.0] - 2026-11-20
 
 ### Added
@@ -1762,7 +1811,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.36.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.37.0...HEAD
+[0.37.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.36.0...v0.37.0
 [0.36.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.35.0...v0.36.0
 [0.35.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.34.0...v0.35.0
 [0.34.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.33.0...v0.34.0
