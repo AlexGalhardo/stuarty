@@ -597,3 +597,22 @@ func TestScriptEstimateOfAStoredScript(t *testing.T) {
 		t.Fatalf("%d %d %d", slow, def, fast)
 	}
 }
+
+// VV-324: the list and the panel of a post say the same number of words, the ones of the body.
+func TestPostWordsAreTheSameInTheListAndInThePanel(t *testing.T) {
+	t.Parallel()
+
+	e := newEnv(t)
+	prj := e.newProject("Bread")
+	body := "---\ntitle: Bread at home\nslug: bread-at-home\nsummary: A short one\ntags: [bread, home]\n---\nOne two three four.\n\nFive six.\n"
+	item := e.newText(prj, "Bread at home", "post", body)
+
+	check, err := e.svc.PostCheck(e.as(ui), service.PostCheckRequest{ProjectID: prj, ItemID: item.ID})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if item.Words != 6 || check.Words != item.Words {
+		t.Errorf("list says %d words, panel says %d, want 6 in both", item.Words, check.Words)
+	}
+}

@@ -50,6 +50,8 @@ Storage: `project_items.text_kind` (`script`, `copy` or `caption`; null for any 
 
 `ProjectDescribe` lists every text with its kind, its words and its revision (`text_kind=script words=212 rev=4`), and the production state counts the texts (`texts`). The bundle of a project carries the body and the text kind of each text; the history of revisions does not travel, and an imported text starts at revision 1.
 
+The words of a text are counted by `writing.TextWords(kind, body)`: for a post only the body counts, not the front matter (title, slug, tags and the rest are metadata), so the list, the description of a project and the panel of the post (`PostCheck`) say the same number (VV-324).
+
 ## 3. Revisions
 
 `text_revisions` has one row per save:

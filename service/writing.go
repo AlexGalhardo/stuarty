@@ -40,7 +40,7 @@ func revisionNotFound(itemID string, n int) *Error {
 func textItemView(r *ItemRow, revision int, by string) TextItem {
 	return TextItem{
 		ID: r.ID, ProjectID: r.ProjectID, Title: r.Title, TextKind: r.TextKind, State: stateString(r.State),
-		Words: writing.CountWords(r.Body), Revision: revision, UpdatedBy: by, UpdatedAt: msTime(r.UpdatedMs),
+		Words: writing.TextWords(r.TextKind, r.Body), Revision: revision, UpdatedBy: by, UpdatedAt: msTime(r.UpdatedMs),
 	}
 }
 
@@ -245,7 +245,7 @@ func (s *svc) TextGet(ctx context.Context, req TextGetRequest) (*TextGetResult, 
 		rev.Revision,
 		latest.Revision,
 		rev.Actor,
-		writing.CountWords(rev.Body),
+		writing.TextWords(it.TextKind, rev.Body),
 	) +
 		untrusted.Block(
 			untrusted.SourceProjectText,
@@ -879,7 +879,7 @@ func durationText(ms int64) string {
 
 // textDetail is the part of a text line of the description of a project: its kind, its words and its revision.
 func (s *svc) textDetail(ctx context.Context, r *ItemRow) string {
-	detail := "text_kind=" + r.TextKind + " words=" + strconv.Itoa(writing.CountWords(r.Body))
+	detail := "text_kind=" + r.TextKind + " words=" + strconv.Itoa(writing.TextWords(r.TextKind, r.Body))
 
 	if revs, err := s.store.Productions().TextRevisions(ctx, r.ID, 0, 1); err == nil && len(revs) > 0 {
 		detail += " rev=" + strconv.Itoa(revs[0].Revision)
