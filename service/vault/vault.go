@@ -26,6 +26,8 @@ import (
 	"path/filepath"
 	"regexp"
 	"sync"
+
+	"github.com/AlexGalhardo/stuarty/service/crashpoint"
 )
 
 const (
@@ -474,11 +476,15 @@ func (v *Vault) write(f *file) error {
 		return err
 	}
 
+	crashpoint.Hit("vault.before_rename")
+
 	if err := os.Rename(name, v.path); err != nil {
 		_ = os.Remove(name)
 
 		return err
 	}
+
+	crashpoint.Hit("vault.after_rename")
 
 	return nil
 }
