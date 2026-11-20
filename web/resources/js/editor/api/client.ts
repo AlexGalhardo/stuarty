@@ -44,6 +44,7 @@ import type {
 	HistoryDiffResult,
 	HistoryListResult,
 	HistoryQuery,
+	HistoryRevertResult,
 	ImageGenerateRequest,
 	InstallToolRequest,
 	InstallToolResult,

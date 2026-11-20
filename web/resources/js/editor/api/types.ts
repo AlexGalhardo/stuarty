@@ -527,6 +527,7 @@ export interface Job {
 		batch?: BatchResult;
 		transcribe?: { asset_id: string; language: string; words: number };
 		generated?: GeneratedResult;
+		publish?: PublishResult;
 	};
 	error?: ApiErrorBody;
 	lint?: { errors: number; warnings: number };

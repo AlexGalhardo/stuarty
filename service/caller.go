@@ -197,6 +197,10 @@ var Scopes = map[string]string{
 	"ImageGenerate":    ScopeEdit,
 	"VoiceGenerate":    ScopeEdit,
 	"VoiceList":        ScopeRead,
+
+	"MotionBrief":   ScopeRead,
+	"MotionCheck":   ScopeRead,
+	"MotionReplace": ScopeEdit,
 }
 
 // authorize checks the caller first, as every method does: a missing caller
