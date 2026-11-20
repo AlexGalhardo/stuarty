@@ -1,4 +1,5 @@
 import { randomBytes } from "node:crypto";
+import AxeBuilder from "@axe-core/playwright";
 import { seedApprovals, signInAsPerson } from "../support/approvals";
 import {
 	countPointerEvents,
@@ -12,6 +13,13 @@ import { expect, seedProject, test } from "./helpers";
 // Epic 41 task 3 (SDD-012 section 18.10, items K, O and N): the pages of the dashboard, their dialogs, the
 // calendar, the approval queue and the chat panel are used with the keyboard alone. Each test counts the
 // pointer events of the page and asserts there were none.
+const TAGS = ["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"];
+const axeFindings = async (
+	page: import("@playwright/test").Page,
+): Promise<string[]> =>
+	(await new AxeBuilder({ page }).withTags(TAGS).analyze()).violations.map(
+		(v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(" | ")}`,
+	);
 const activeId = (page: import("@playwright/test").Page) =>
 	page.evaluate(() => document.activeElement?.id ?? "");
 
@@ -66,6 +74,10 @@ test.describe("a11y-keyboard-dashboard", () => {
 		await page.keyboard.press("Enter");
 		const panel = page.getByTestId("chat-panel");
 		await expect(panel).toBeVisible();
+		await expect(panel.getByText("Loading…")).toHaveCount(0, {
+			timeout: 30_000,
+		});
+		expect(await axeFindings(page), "axe with the chat panel open").toEqual([]);
 		await expect
 			.poll(() =>
 				page.evaluate(
@@ -120,6 +132,7 @@ test.describe("a11y-keyboard-dashboard", () => {
 		await expect(row).toBeVisible();
 		await expect(other).toBeVisible();
 
+		expect(await axeFindings(page), "axe on the approval queue").toEqual([]);
 		const approve = row.getByRole("button", { name: /^Approve/ });
 		await tabTo(page, approve);
 		await page.keyboard.press("Enter");
@@ -160,6 +173,7 @@ test.describe("a11y-keyboard-dashboard", () => {
 		await tabTo(page, page.getByRole("button", { name: "Next" }));
 		await page.keyboard.press("Enter");
 		await expect(firstDay).not.toHaveAttribute("data-day", before ?? "");
+		expect(await axeFindings(page), "axe on the week view").toEqual([]);
 		const tree = await page.locator("main").ariaSnapshot();
 		expect(unnamedControls(tree)).toEqual([]);
 		expect(await pointerEvents(page)).toBe(0);
