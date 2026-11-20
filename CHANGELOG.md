@@ -7,6 +7,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.38.0] - 2026-11-20
+
+### Added
+
+- **service:** Pause the scheduler and count what waits ([d9310cf](https://github.com/AlexGalhardo/stuarty/commit/d9310cfda0796617f72eb5ae30fac2c28813fd64))
+- **desktop:** Hide to the tray and quit with a warning ([dacd9da](https://github.com/AlexGalhardo/stuarty/commit/dacd9da8fe1b1fa2ab64b97782ffc4390aa48566))
+- **desktop:** Focus the running instance on a second launch ([45d0bb0](https://github.com/AlexGalhardo/stuarty/commit/45d0bb01823c5a46131871031cbead3ef9f4b9ba))
+- **desktop:** Start at sign-in with its removal ([e32a506](https://github.com/AlexGalhardo/stuarty/commit/e32a50634ea5a9342d72c1a834fc675020cc4a63))
+- **web:** Ask once and set the background mode in both languages ([2fdadd5](https://github.com/AlexGalhardo/stuarty/commit/2fdadd52aff599223150728b8b1586a83cf4fe88))
+- **desktop:** Remove the start at sign-in on uninstall ([e2e5b94](https://github.com/AlexGalhardo/stuarty/commit/e2e5b94f814ce778df6346137d5a29ec40fdeb58))
+- **export:** Render one item before the envelope and key it ([b5c8960](https://github.com/AlexGalhardo/stuarty/commit/b5c89602c67c6216985ccbc43ab6518a2b7e82ff))
+- **service:** Cache the processed audio of an item by key ([d9047d2](https://github.com/AlexGalhardo/stuarty/commit/d9047d2141c328da29d0cabb1af021527ed10492))
+- **http:** Serve the processed audio of an item by key ([4218e8c](https://github.com/AlexGalhardo/stuarty/commit/4218e8c081313769d148e30b70033a6359d88718))
+- **preview:** Play the processed audio of an item on the timeline ([d7bb58c](https://github.com/AlexGalhardo/stuarty/commit/d7bb58cdc362b9fe1e653294084e92ac92d4a67a))
+- **preview:** Expand a plan group into render surfaces ([e0e7ac2](https://github.com/AlexGalhardo/stuarty/commit/e0e7ac296fef9ec40f2d10a8ba241650a84831da))
+- **preview:** Draw group surfaces in the render worker ([7317e75](https://github.com/AlexGalhardo/stuarty/commit/7317e7511393a9ea141bdacca2059534ae0560ef))
+- **preview:** Play composition groups live in the renderer ([96d0670](https://github.com/AlexGalhardo/stuarty/commit/96d06707e0017c6a72c41c541c50012f4144957d))
+- **preview:** Draw composition groups in the PixiJS fallback ([8437bd1](https://github.com/AlexGalhardo/stuarty/commit/8437bd1d444239bcfb2872b9417ec6334e3f1242))
+- **service:** Add the image_edit capability to the openai adapter ([b952837](https://github.com/AlexGalhardo/stuarty/commit/b952837c56f97c29070d992253e570b36764f651))
+- **image:** Add layer.replace_source and the image.edit job ([878ba75](https://github.com/AlexGalhardo/stuarty/commit/878ba75802298b6ebe8be617775c443346dd32d0))
+- **api:** Expose image.edit on HTTP, the CLI and job_start ([9f82beb](https://github.com/AlexGalhardo/stuarty/commit/9f82beb8c961fd7ce6b205b3c680a92144328e10))
+- **ui:** Add remove background and generate to the image editor ([17653ee](https://github.com/AlexGalhardo/stuarty/commit/17653ee966571afd5d7afba3ed8d42ce007a9470))
+- **core:** Add x and tiktok limits, the price of a post and sent_as_draft ([d2bb895](https://github.com/AlexGalhardo/stuarty/commit/d2bb89510b2f2fde313f5b3287c1330a08b09432))
+- **service:** Add the x connector with a price and a kept refresh token ([9f9b7e6](https://github.com/AlexGalhardo/stuarty/commit/9f9b7e691a191e7b472d9bb747bc4337f1422ed6))
+- **service:** Add tiktok drafts, sent_as_draft and the price of a post ([e71f28a](https://github.com/AlexGalhardo/stuarty/commit/e71f28a23a234be9952009550896d796e0d19714))
+- **web:** Show the price and the draft state, with the two guides ([91a18f0](https://github.com/AlexGalhardo/stuarty/commit/91a18f0a46cb2f24eee3285e888a3bb5a0f5a02f))
+
+### Fixed
+
+- **desktop:** Quit on every shutdown instead of hiding ([ab96223](https://github.com/AlexGalhardo/stuarty/commit/ab96223355d0b39170fa305263a82dc186e4fdff))
+- **api:** Refuse the scheduler route in network mode ([38dc447](https://github.com/AlexGalhardo/stuarty/commit/38dc447d9d52a37554355cb62ace1da0a3f1cdec))
+- **preview:** Name a processed window by a frame of its file ([c75a238](https://github.com/AlexGalhardo/stuarty/commit/c75a2387851fd43797ad44a3553225d891ee10cd))
+- **service:** Refuse a processed sound larger than the cache ([f70185c](https://github.com/AlexGalhardo/stuarty/commit/f70185c6e0910de4dc13d731693e633df6eb3926))
+- **plan:** Put the frame rate in the processed sound key ([cb1ca65](https://github.com/AlexGalhardo/stuarty/commit/cb1ca65a5c3e870bba41591f4a11503ccbba6d05))
+- **service:** Forget processed sound failures that expired ([391eea9](https://github.com/AlexGalhardo/stuarty/commit/391eea9c55aff9aee9755f1bb4d47bb24d64bfdb))
+- **preview:** Cut a nested picture with the size of its source ([29bc154](https://github.com/AlexGalhardo/stuarty/commit/29bc154672923fbfc3a9e8b95bc868eb27c182b8))
+- **owner:** Honour test address variables only under APP_ENV=test ([80b2abc](https://github.com/AlexGalhardo/stuarty/commit/80b2abcce69c5abba9a22f07037c2e6b7f25ba58))
+- **owner:** Refuse the test addresses before the workspace ([b9fc911](https://github.com/AlexGalhardo/stuarty/commit/b9fc911342badccf99af7fb024fc3d7c3b373e93))
+- **ui:** Clear social and google callback addresses early ([cccda05](https://github.com/AlexGalhardo/stuarty/commit/cccda0553dbdd00db4c714679103f3c49686514e))
+- **preview:** Blend over a clear canvas like the export ([45f2d1a](https://github.com/AlexGalhardo/stuarty/commit/45f2d1acfd95565122e5fbb9575075fb8274225d))
+- **preview:** Blend once over a half-covered clear canvas ([b545153](https://github.com/AlexGalhardo/stuarty/commit/b5451532853447406067724bd3dc6eca70626f09))
+- **preview:** Blend inside a group over its clear surface ([6c799de](https://github.com/AlexGalhardo/stuarty/commit/6c799def8015e6a05e7d7bc6f47271085f2287f4))
+- **service:** Refuse a sign-in connection for image.edit ([86f7ea0](https://github.com/AlexGalhardo/stuarty/commit/86f7ea02862b47dac77767549270f82162dc4737))
+- **ui:** Settle a model job only on the image it edited ([48ddfc6](https://github.com/AlexGalhardo/stuarty/commit/48ddfc6f4d5a145ccace08453d8abfe3dec1e061))
+- **service:** Refuse a layer picture the provider cannot take ([c4741c6](https://github.com/AlexGalhardo/stuarty/commit/c4741c678764e436049cb1f1b307761c794deb76))
+- **ui:** Say when a model edit has no project to keep it ([00aec52](https://github.com/AlexGalhardo/stuarty/commit/00aec523bd3a2c55d168fbbe2210ef012ed3344f))
+- **service:** Rotate a refresh token by a locked read and write ([5b9d327](https://github.com/AlexGalhardo/stuarty/commit/5b9d3279fb0b9acba99b00491c27aa1da3a1ec3c))
+- **service:** Never post to x again after a send stopped mid-post ([d597a98](https://github.com/AlexGalhardo/stuarty/commit/d597a987bbde1fcc5c8dd817dcfb606b10ae4db8))
 ## [0.37.0] - 2026-11-20
 
 ### Added
@@ -1811,7 +1859,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.37.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.38.0...HEAD
+[0.38.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.37.0...v0.38.0
 [0.37.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.36.0...v0.37.0
 [0.36.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.35.0...v0.36.0
 [0.35.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.34.0...v0.35.0
