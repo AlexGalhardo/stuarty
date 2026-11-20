@@ -1,0 +1,99 @@
+# Stuarty on one host: the application and Caddy (SDD-009 section 21).
+# Run it through deploy/install.sh; the variables come from deploy/.env.
+#
+#   docker compose -f deploy/compose.yml config
+#
+# The `.invalid` and `devel` defaults only let `docker compose config` run
+# without a .env; install.sh always writes the real values and the other
+# scripts refuse to run without them.
+#
+# Only Caddy publishes ports (80 and 443). The application listens on the
+# internal network, as a non-root user, with a read-only root file system.
+
+name: stuarty
+
+services:
+  stuarty:
+    # Built on this host from the tagged source and tagged with its version: never `latest`.
+    image: stuarty:${STUARTY_VERSION:-devel}
+    build:
+      context: ..
+      dockerfile: .config/docker/stuarty.Dockerfile
+      args:
+        VERSION: ${STUARTY_VERSION:-devel}
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      STUARTY_MODE: network
+      APP_URL: https://${STUARTY_DOMAIN:-stuarty.invalid}
+      APP_KEY: "@file:/run/secrets/app_key"
+      STUARTY_MASTER_KEY_FILE: /run/secrets/master_key
+      STUARTY_ADMIN_EMAIL: ${STUARTY_ADMIN_EMAIL:-admin@stuarty.invalid}
+      STUARTY_ADMIN_PASSWORD: "@file:/run/secrets/admin_password"
+      TRUSTED_PROXIES: ${STUARTY_CADDY_IP:-172.31.88.2}
+      TRUST_FORWARDED_PROTO: "true"
+    secrets:
+      - app_key
+      - master_key
+      - admin_password
+    volumes:
+      - stuarty-data:/data
+    expose:
+      - "7878"
+    networks:
+      stuarty-net: {}
+
+  caddy:
+    image: caddy:2.11.9-alpine@sha256:003a97808e781aa9f7e75cc2f43d34d461099031faf5e20faefb9f61126836f0
+    restart: unless-stopped
+    depends_on:
+      stuarty:
+        condition: service_healthy
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      STUARTY_DOMAIN: ${STUARTY_DOMAIN:-stuarty.invalid}
+      STUARTY_ACME_EMAIL: ${STUARTY_ACME_EMAIL:-admin@stuarty.invalid}
+      STUARTY_TLS_DIRECTIVE: ${STUARTY_TLS_DIRECTIVE:-}
+      STUARTY_MAX_BODY: ${STUARTY_MAX_BODY:-8GB}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    networks:
+      stuarty-net:
+        ipv4_address: ${STUARTY_CADDY_IP:-172.31.88.2}
+
+networks:
+  stuarty-net:
+    ipam:
+      config:
+        - subnet: ${STUARTY_SUBNET:-172.31.88.0/24}
+
+volumes:
+  stuarty-data: {}
+  caddy-data: {}
+  caddy-config: {}
+
+# Files under deploy/secrets/, made by install.sh and never overwritten. The
+# master key is not in a backup: keep a copy of it with your other secrets.
+secrets:
+  app_key:
+    file: ./secrets/app_key
+  master_key:
+    file: ./secrets/master_key
+  admin_password:
+    file: ./secrets/admin_password
