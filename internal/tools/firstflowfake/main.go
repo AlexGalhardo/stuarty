@@ -145,7 +145,8 @@ func (n *network) mux() http.Handler {
 	// The consent screen sends the browser straight back with a code.
 	mux.HandleFunc("GET /authorize", func(w http.ResponseWriter, r *http.Request) {
 		target, err := url.Parse(r.URL.Query().Get("redirect_uri"))
-		if err != nil || target.Host == "" {
+		host := strings.ToLower(target.Hostname())
+		if err != nil || target.Scheme != "http" || (host != "localhost" && host != "127.0.0.1" && host != "::1") {
 			http.Error(w, "bad redirect_uri", http.StatusBadRequest)
 
 			return
