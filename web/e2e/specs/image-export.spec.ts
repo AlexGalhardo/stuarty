@@ -73,6 +73,20 @@ test.describe("image export", () => {
 		await expect(done).toBeVisible();
 		await expect(done).toContainText("1280 x 720");
 
+		// The export is a job a publication takes as its thumbnail (D-111): the dialog names it, and it reads as a
+		// succeeded image.export job of no project.
+		const named = await page.getByTestId("image-export-job").textContent();
+		const jobId = /job_[0-9a-z]+/.exec(named ?? "")?.[0] ?? "";
+		expect(jobId).not.toBe("");
+		const job = (await call("GET", `/jobs/${jobId}`)) as {
+			kind: string;
+			state: string;
+			project_id?: string | null;
+		};
+		expect(job.kind).toBe("image.export");
+		expect(job.state).toBe("succeeded");
+		expect(job.project_id ?? null).toBeNull();
+
 		const download = page.waitForEvent("download");
 		await page.getByTestId("image-export-download").click();
 		const file = await download;
