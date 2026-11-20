@@ -3,6 +3,7 @@ package export
 import (
 	"bytes"
 	"context"
+	"errors"
 	"image"
 	"image/color"
 	"image/png"
@@ -11,6 +12,8 @@ import (
 	"testing"
 
 	coreimage "github.com/AlexGalhardo/stuarty/core/image"
+	"github.com/AlexGalhardo/stuarty/core/plan"
+	"github.com/AlexGalhardo/stuarty/engine/renderhost"
 )
 
 const testHash = "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
@@ -227,5 +230,43 @@ func TestImageRenderMissingFile(t *testing.T) {
 	_, err := RenderImage(context.Background(), imageDoc("image_and_group"), ImageConfig{})
 	if err == nil {
 		t.Fatal("an image layer with no file to read must fail")
+	}
+}
+
+func TestRenderImageStopsWhenTheContextIsCancelled(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	if _, err := RenderImage(ctx, imageDoc("shapes"), ImageConfig{}); !errors.Is(err, context.Canceled) {
+		t.Fatalf("a cancelled context must stop the render before it draws, got %v", err)
+	}
+}
+
+// TestRenderDetachedGivesUpWaitingAndClosesTheInstanceLater: the draw runs on an instance that cannot be
+// interrupted, so the caller is released at once and the instance is closed when the draw is over.
+func TestRenderDetachedGivesUpWaitingAndClosesTheInstanceLater(t *testing.T) {
+	host, err := renderhost.New(context.Background(), renderhost.Config{Uncancellable: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	// A frame of 4,096 by 4,096 pixels takes tens of milliseconds to fill and to copy out, far longer than the
+	// select that sees the cancelled context.
+	const side = 4096
+
+	in := renderhost.RenderInput{
+		Output: renderhost.Output{Width: side, Height: side, Scale: 1},
+		Plan:   plan.FramePlan{Width: side, Height: side, Background: "#000000"},
+	}
+
+	abandoned := false
+
+	err = renderDetached(ctx, host, in, image.NewRGBA(image.Rect(0, 0, side, side)), &abandoned)
+	if !errors.Is(err, context.Canceled) || !abandoned {
+		t.Fatalf("err = %v, abandoned = %v: the caller must get the context error and leave the instance",
+			err, abandoned)
 	}
 }

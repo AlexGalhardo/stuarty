@@ -179,11 +179,11 @@ The plan is the same on every machine: it holds numbers rounded to three decimal
 
 ## 6. Export
 
-`engine/export` renders the plan with the Rust renderer through its Go host on the CPU path (`engine/renderhost`, the bit-exact one; ADR-0003, ADR-0029): it rasterizes each bitmap (`engine/rasterize`), decodes each image layer from the normalized PNG of its asset (the same artifact a video clip uses), uploads them as the video export does and takes the pixels. `ImageExport` then encodes them:
+`engine/export` renders the plan with the Rust renderer through its Go host on the CPU path (`engine/renderhost`, the bit-exact one; ADR-0003, ADR-0029): it rasterizes each bitmap (`engine/rasterize`), decodes each image layer from the normalized PNG of its asset (the same artifact a video clip uses), uploads them as the video export does and takes the pixels. The render runs on the instance that does not test the context at every loop back edge (about three times faster, section 13.2); it checks the context between the layers, and when the context ends during the draw it gives up waiting at once and closes the instance when the draw, bounded by the limits of section 12, returns. `ImageExport` then encodes them:
 
 | Format | Encoder | Notes |
 | --- | --- | --- |
-| `png` | Go standard library `image/png`, best compression | Straight alpha; deterministic |
+| `png` | Go standard library `image/png`, `BestSpeed` (NFR-061) | Straight alpha; lossless; deterministic. The fastest level is specified: a 4,000 by 4,000 picture encodes in under a second where the best level took fourteen, at about a third more bytes |
 | `jpeg` | Go standard library `image/jpeg`, `quality` 1 to 100 (default 90) | Flattened on white; 4:2:0 |
 | `webp` | `FFmpegWebP` of `engine/export` (`service.Options.WebP`): FFmpeg with `libwebp`, a separate process (ADR-0003), through the builder `ffargs.WebPStill`; lossless (default) or `quality` 1 to 100 | Straight alpha kept; deterministic on one machine. The PNG of the picture goes to a run directory and the `.webp` comes back from it; a `.webp` past `STUARTY_MAX_EXPORT_BYTES` is refused with `size_limit` before it is read, and the run directory is removed on every path. A build with no `libwebp`, or no FFmpeg, fails with `E_EXPORT_FAILED`, `details.reason` `webp_unavailable`, and PNG and JPEG still work |
 

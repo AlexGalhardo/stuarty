@@ -20,8 +20,8 @@ import (
 // The reference document of NFR-061 (PRD-004): 4,000 by 4,000 pixels and 30 layers. This test builds it with
 // looks on a third of the layers, renders it twice and reports the times. The budget (a preview within 100 ms
 // after an edit, an export within 2 s on the reference machine) is a number that only means something on an
-// idle machine, so the test asserts the determinism and prints the times; run it by hand with
-// STUARTY_NFR061=1 go test ./engine/export -run TestImageReferenceDocument -v, every other program stopped.
+// idle machine, so the test asserts the determinism and prints the times; the benchmark measures them (run it
+// with every other program stopped). STUARTY_NFR061_PLAIN=1 leaves the looks out.
 
 const referenceSide = 4000
 
@@ -129,12 +129,10 @@ func referenceDocument(tb testing.TB) *coreimage.Document {
 }
 
 func TestImageReferenceDocument(t *testing.T) {
-	// The two exports take more than two minutes through wazero: in the default run they pushed the package past
-	// the ten minutes of go test, so the measurement is asked for. The determinism of a look export is also held
-	// by TestImageLookRenderIsTheGoldenFileAndDeterministic on every run.
-	timed := os.Getenv("STUARTY_NFR061") != "" || os.Getenv("STUARTY_NFR061_PLAIN") != ""
-	if !timed {
-		t.Skip("set STUARTY_NFR061=1 to measure") // verify:env-skip opt-in: two 4000x4000 exports
+	// Two exports of 4,000 by 4,000 pixels take about half a minute: the short run leaves them out, the plain run
+	// of the package asserts the determinism of the reference export, and the times are printed for the record.
+	if testing.Short() {
+		t.Skip("two exports of the reference document") // verify:env-skip short mode: about half a minute
 	}
 
 	d := referenceDocument(t)
