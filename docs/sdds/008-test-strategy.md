@@ -184,7 +184,7 @@ Epic 42 settles the numbers and the hard cases before the product is tested by h
 ### 13.1 Performance budgets
 
 - `go run ./internal/tools/perfreport -write -absolute -gated` measures every row of section 7 that a benchmark can measure, on the reference projects (video: `project-200`; image: the reference document of NFR-061, a 4,000 by 4,000 pixel document with 30 layers), and fails when a limit is missed. The table is `docs/perf/<date>-<goos>.md`.
-- The absolute budgets that live in tests (section 10) are listed in `Gates` of the tool; `-gated` runs them one package at a time with `STUARTY_PERF=1` and writes their result into the same table. A budget that is skipped or missing counts as failed, so the gate cannot pass without having measured. Today they are `TestViewFrameColdP95` and `TestScaleProjectViewTimeBudgets` (NFR-004), `TestEventsSlowReaderDoesNotSlowCommits` (NFR-002) and `TestTransitionEmptyLintTimeBudget`.
+- The absolute budgets that live in tests (section 10) are listed in `Gates` of the tool; `-gated` runs them one package at a time with `STUARTY_PERF=1` and writes their result into the same table. A budget that is skipped or missing counts as failed, so the gate cannot pass without having measured. `-gated -only <NFR>` measures one requirement again, also one whose budgets live only in tests. Today they are `TestViewFrameColdP95` and `TestScaleProjectViewTimeBudgets` (NFR-004), `TestEventsSlowReaderDoesNotSlowCommits` (NFR-002) and `TestTransitionEmptyLintTimeBudget`.
 - A budget that fails is fixed, or, when the requirement was wrong, taken to the author with the measurement; the requirement is never edited silently.
 
 ### 13.2 Fuzzing

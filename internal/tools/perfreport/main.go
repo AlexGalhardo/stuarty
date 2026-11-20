@@ -17,6 +17,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"strings"
 	"time"
@@ -75,7 +76,7 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer, runner Ru
 			specs = append(specs, Specs[i])
 		}
 	}
-	if len(specs) == 0 {
+	if len(specs) == 0 && (!*gated || !hasGate(*only)) {
 		fmt.Fprintf(stderr, "perfreport: no requirement %q\n", *only)
 		return 2
 	}
@@ -84,6 +85,9 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer, runner Ru
 	if err != nil {
 		fmt.Fprintf(stderr, "perfreport: %v\n", err)
 		return 1
+	}
+	if env.GOOS == "" { // only budgets in tests ran: the platform is this one
+		env = Env{GOOS: runtime.GOOS, GOARCH: runtime.GOARCH}
 	}
 	rep := Report{Date: now().Format("2006-01-02"), Env: env, Rows: Rows(specs, res)}
 	md, err := rep.Markdown()
