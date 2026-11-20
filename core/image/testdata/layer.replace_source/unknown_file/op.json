@@ -1,0 +1,7 @@
+{
+  "args": {
+    "asset": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+    "layer_id": "lyr_bbbbbbbbbb"
+  },
+  "op": "layer.replace_source"
+}
