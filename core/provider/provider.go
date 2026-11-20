@@ -21,8 +21,12 @@ const (
 	CapabilityVideo = "video"
 )
 
-// CredentialAPIKey is the one credential kind of epic 09 (ADR-0036 item 2).
-const CredentialAPIKey = "api_key"
+// The credential kinds of a provider (ADR-0036 item 2): a key the person pastes, or a sign-in in the
+// browser (epic 12, SDD-016 section 12) whose tokens the vault keeps.
+const (
+	CredentialAPIKey = "api_key"
+	CredentialOAuth  = "oauth"
+)
 
 // Limits of SDD-016 sections 3 to 5.
 const (
