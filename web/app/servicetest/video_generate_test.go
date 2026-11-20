@@ -172,14 +172,14 @@ func newVideoEnv(tb testing.TB) *videoEnv {
 	return newVideoEnvWith(tb, false)
 }
 
-// newVideoEnvWith is newVideoEnv; real runs the ingest of engine/ingest and the export on the pinned FFmpeg, and
-// skips the test without it.
-func newVideoEnvWith(tb testing.TB, real bool) *videoEnv {
+// newVideoEnvWith is newVideoEnv; pinned runs the ingest of engine/ingest and the export on the pinned FFmpeg,
+// and skips the test without it.
+func newVideoEnvWith(tb testing.TB, pinned bool) *videoEnv {
 	tb.Helper()
 
 	v := &videoEnv{maker: newClipMaker()}
 
-	cfg := mediaCfg{realIngest: real, realExport: real}
+	cfg := mediaCfg{realIngest: pinned, realExport: pinned}
 	cfg.ingest = func(_ context.Context, in ingest.Input) (*ingest.Result, error) {
 		res, err := fakeResult(v.ws, in)
 		if err != nil {
@@ -862,7 +862,7 @@ func TestVideoGenerate_AFirstFrameTooLargeIsRefusedBeforeApproval(t *testing.T) 
 
 	v := newVideoEnv(t)
 
-	big := append(pngOf(3), bytes.Repeat([]byte{0}, 20<<20)...)
+	big := append(pngOf(3), make([]byte, 20<<20)...)
 	sum := sha256.Sum256(big)
 	v.images.Store(hex.EncodeToString(sum[:]), true)
 
