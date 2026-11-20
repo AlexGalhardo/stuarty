@@ -176,6 +176,7 @@
         "providers.signin.begin",
         "providers.signin.complete",
         "text.generate",
+        "video.generate",
         "voice.generate"
       ]
     },

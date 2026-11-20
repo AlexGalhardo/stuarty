@@ -108,6 +108,59 @@ var voiceGenerateCmd = &spec{
 	},
 }
 
+var videoGenerateCmd = &spec{
+	name:    "video:generate",
+	summary: "generate a video clip with the provider of a connection; the job shows its estimate, always waits for a person unless a rule covers it, and stores the clip as an asset",
+	usage: []string{
+		"stuarty video:generate --project <id> --connection <id> --model <id> [--prompt <text> | --prompt-file <file>]" +
+			" [--seconds <n>] [--aspect 16:9|9:16|1:1|4:3|3:4] [--first-frame <asset id>] [--dry-run]",
+	},
+	example: "stuarty video:generate --project prj_7k2m9x4q1b --connection con_0123456789 --model a-model --prompt \"A red fox\" --seconds 6 --aspect 9:16",
+	project: true,
+	globals: []string{"dry-run"},
+	write:   true,
+	flags: []flagDef{
+		{Name: "connection", Kind: kindString, Usage: "the connection to the provider (required)"},
+		{Name: "model", Kind: kindString, Usage: "the model id, as provider:models lists it (required)"},
+		{
+			Name:  "prompt",
+			Kind:  kindString,
+			Usage: "what the clip shows; without it and without --prompt-file the prompt is read from standard input",
+		},
+		{Name: "prompt-file", Kind: kindString, Usage: "a file that holds the prompt"},
+		{
+			Name:  "seconds",
+			Kind:  kindInt,
+			Usage: "the length of the clip, 1 to 60 (default 5); the model may make fewer lengths",
+		},
+		{Name: "aspect", Kind: kindString, Usage: "16:9 (default), 9:16, 1:1, 4:3 or 3:4"},
+		{Name: "first-frame", Kind: kindString, Usage: "the id of an image asset of the project the clip starts from"},
+	},
+	run: func(ctx context.Context, c *call) (*output, error) {
+		for _, f := range []string{"connection", "model"} {
+			if !c.args.has(f) {
+				return nil, validation(f, "--%s is required.", f)
+			}
+		}
+
+		prompt, err := c.readInput("prompt", "prompt-file", provider.MaxVideoPrompt)
+		if err != nil {
+			return nil, err
+		}
+
+		job, err := c.svc.VideoGenerate(ctx, service.VideoGenerateRequest{
+			ProjectID: c.projectID, ConnectionID: c.args.str("connection"), DryRun: c.args.boolean("dry-run"),
+			Model: c.args.str("model"), Prompt: prompt, Seconds: c.args.integer("seconds"),
+			Aspect: c.args.str("aspect"), FirstFrame: c.args.str("first-frame"),
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		return &output{value: job, text: job.Text}, nil
+	},
+}
+
 var voiceListCmd = &spec{
 	name:       "voice:list",
 	summary:    "list the voices of the provider of a connection",
