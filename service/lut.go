@@ -50,9 +50,9 @@ func sniffCube(head []byte) bool {
 }
 
 // checkCube reads a whole .cube file with engine/lut.Parse, the only parser of a table: the export reads the
-// same bytes with the same limits (16 MiB, lines of 512 bytes, a domain of 0 to 1, 2 to 65 points on a side), so
-// a file that passes here is one the export can read (VV-287). The error is the reason, with no content of the
-// file.
+// same bytes with the same limits (lut.MaxBytes, the parser's longest line, a domain of 0 to 1, lut.MinSize to
+// lut.MaxSize points on a side), so a file that passes here is one the export can read (VV-287). The error is the
+// reason, with no content of the file.
 func checkCube(r io.Reader) (size int, err error) {
 	t, err := lut.Parse(r)
 	if err != nil {
