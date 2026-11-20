@@ -26,7 +26,7 @@ A commercial is read, heard and seen at once, in fifteen or thirty seconds. This
 - Hook: five words or fewer on the screen. A fact, a number or a person from the brief.
 - Problem: one line, in the audience's own words.
 - Product: what it is or what it does, one line, no adjective that cannot be shown.
-- Proof (30 seconds): one proof the brief holds: a number, a review that was given, a demonstration. If the brief holds none, leave the beat out and say so.
+- Proof (30 seconds): one proof the brief holds: a number, a review that was given, a demonstration. If the brief holds none, ask the person for one; with none, the commercial is the 15 second one, because the proof card of the 30 second template must be filled before it exports.
 - Offer: the price, the discount or the deadline exactly as the brief says it.
 - Call to action: one verb and what it leads to, three words or fewer.
 
