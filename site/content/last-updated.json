@@ -204,6 +204,7 @@
   "generated/api/projects.checkpoints.rename.mdx": "2026-11-19T17:24:48-03:00",
   "generated/api/projects.create.mdx": "2026-11-18T22:33:57-03:00",
   "generated/api/projects.describe.mdx": "2026-11-19T18:50:59-03:00",
+  "generated/api/projects.diff.mdx": "2026-11-19T17:24:48-03:00",
   "generated/api/projects.duplicate.mdx": "2026-11-19T05:43:49-03:00",
   "generated/api/projects.edit.mdx": "2026-11-19T05:43:49-03:00",
   "generated/api/projects.frame.mdx": "2026-11-19T05:43:49-03:00",
