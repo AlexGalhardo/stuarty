@@ -141,9 +141,8 @@ type WindowAudio struct {
 	Gain          Series     `json:"gain"`
 	Denoise       float64    `json:"denoise,omitempty"`
 	Voice         string     `json:"voice,omitempty"`
-	// Timeline is the timeline whose assets table names Asset when the source comes from a composition; empty for
-	// the timeline of the plan (SDD-004 section 3.16).
-	Timeline string `json:"timeline,omitempty"`
+	// Processed names the file of the item's processed sound, when it has a chain or a denoise (SDD-004 section 7.1).
+	Processed *ProcessedAudio `json:"processed,omitempty"`
 }
 
 // Window returns the plans of frames [from, to) in the compact form of
@@ -482,6 +481,8 @@ func windowAudio(doc *timeline.Document, from, to int) []WindowAudio {
 			Denoise: round3(it.Denoise),
 			Voice:   it.Voice,
 		}
+
+		wa.Processed = processedOf(doc, it)
 
 		pos := int64(it.SourceIn)
 		if it.Speed.Den > 0 {
