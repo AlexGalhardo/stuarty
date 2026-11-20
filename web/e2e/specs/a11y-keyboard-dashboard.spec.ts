@@ -30,6 +30,8 @@ test.describe("a11y-keyboard-dashboard", () => {
 	}) => {
 		await countPointerEvents(page);
 		await page.goto("/projects");
+		// The page is drawn by script: a Tab pressed before it is drawn finds nothing to focus.
+		await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 		const skip = page.getByRole("link", { name: "Skip to the main content" });
 		if (browserName === "webkit") {
 			await tabToLink(page, skip, browserName);
