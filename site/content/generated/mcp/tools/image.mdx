@@ -10,7 +10,7 @@ wide: true
 
 <RefMain>
 
-Images. action=create (preset or width+height; or from_template+values), list, show, edit (operations: command_help domain=image), undo, redo, export.
+Images. action=create (preset or width+height; or from_template+values), list, show, edit (operations: command_help domain=image), undo, redo, export, import (path or hash of an image file; image_id adds a layer).
 
 ## Behaviour
 
@@ -27,7 +27,7 @@ These are the annotations of the tool definition, the hints a client uses to dec
 
 | Argument | Type | Required | Notes |
 | --- | --- | --- | --- |
-| `action` | `string`, one of 7 values | yes |  |
+| `action` | `string`, one of 8 values | yes |  |
 | `image_id` | `string` | no | pattern `^img_[0-9a-hjkmnp-tv-z]{10}$` |
 | `base_revision` | `integer` | no |  |
 | `operations` | array of `object` | no |  |
@@ -43,6 +43,8 @@ These are the annotations of the tool definition, the hints a client uses to dec
 | `values` | `object` | no |  |
 | `format` | `string` | no |  |
 | `from_template` | `string` | no |  |
+| `path` | `string` | no |  |
+| `hash` | `string` | no |  |
 
 ## Output
 

@@ -2619,6 +2619,75 @@
       ]
     },
     {
+      "name": "image:import",
+      "domain": "image",
+      "summary": "bring an image file into a new image document, or into an existing one as a layer",
+      "usage": [
+        "stuarty image:import --path <file>",
+        "stuarty image:import --hash <sha256:...> [--id <image>] [--name n] [--preset p | --width w --height h]"
+      ],
+      "example": "stuarty image:import --path /home/ana/photos/face.jpg --preset video_thumbnail",
+      "flags": [
+        {
+          "name": "path",
+          "type": "string",
+          "usage": "an absolute path to an image file on the machine of the server"
+        },
+        {
+          "name": "hash",
+          "type": "string",
+          "usage": "an image already in the workspace (asset:list shows its hash)"
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "usage": "put the file in this image as a layer (default: a new image)"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "usage": "the name of the new image, or of the layer with --id"
+        },
+        {
+          "name": "preset",
+          "type": "string",
+          "usage": "the canvas of a new image: video_thumbnail, square_post or vertical_cover"
+        },
+        {
+          "name": "width",
+          "type": "integer",
+          "usage": "the canvas of a new image, with --height (default: the size of the file, up to 4096)"
+        },
+        {
+          "name": "height",
+          "type": "integer",
+          "usage": "the canvas of a new image, with --width"
+        },
+        {
+          "name": "wait-ms",
+          "type": "integer",
+          "usage": "how long to wait for the file to be ingested, 0 to 25000 (default 10000)"
+        },
+        {
+          "name": "base",
+          "type": "integer",
+          "usage": "with --id: the revision the layer was planned against (default: the current one)"
+        },
+        {
+          "name": "key",
+          "type": "string",
+          "usage": "with --id: idempotency key"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "dry-run"
+      ]
+    },
+    {
       "name": "asset:list",
       "domain": "asset",
       "summary": "list the files of the library, with origin, tags and reuse",

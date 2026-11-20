@@ -3175,7 +3175,7 @@ The only tool of the connections domain (ADR-0043 item 3: an intent no other too
 ```json
 {
   "name": "image",
-  "description": "Images. action=create (preset or width+height; or from_template+values), list, show, edit (operations: command_help domain=image), undo, redo, export.",
+  "description": "Images. action=create (preset or width+height; or from_template+values), list, show, edit (operations: command_help domain=image), undo, redo, export, import (path or hash of an image file; image_id adds a layer).",
   "inputSchema": {
     "type": "object",
     "properties": {
@@ -3187,7 +3187,8 @@ The only tool of the connections domain (ADR-0043 item 3: an intent no other too
           "edit",
           "undo",
           "redo",
-          "export"
+          "export",
+          "import"
         ]
       },
       "image_id": {
@@ -3239,6 +3240,12 @@ The only tool of the connections domain (ADR-0043 item 3: an intent no other too
         "type": "string"
       },
       "from_template": {
+        "type": "string"
+      },
+      "path": {
+        "type": "string"
+      },
+      "hash": {
         "type": "string"
       }
     },
@@ -3949,7 +3956,8 @@ Success codes are the `Op.Status`. Error statuses are the table of SDD-000 §8; 
 | `assets.get`, `assets.uses` | `GET /assets/{hash}`, `GET /assets/{hash}/uses` | `cursor`, `limit` (uses) | none | 200 `AssetResult`, 200 `AssetUsesResult` | read | 400 `E_VALIDATION` for a bad hash; 404 `E_NOT_FOUND` |
 | `assets.set`, `assets.tag` | `PUT /assets/{hash}`, `POST /assets/{hash}/tags` | none | `{description?, rights_note?, reusable?}`, `{add?, remove?}` | 200 `AssetResult` | media | 400 `E_VALIDATION` with `details.reason` (SDD-011 §14.2) |
 | `audit.list` | `GET /audit` | `cursor`, `limit` | none | 200 `AuditListResult` (the audit record of RF-134: actions outside a document batch, with their actor, SDD-005 §5.9) | admin | none |
-| `images.import` | `POST /images/import` | none | `{path or hash, image_id?, name?, width?, height?, preset?, wait_ms?, base_revision?, idempotency_key?, dry_run?}`, `path` an absolute path to an image file on the machine of the server, read with the path rules of `MediaImport` (§2.6), `hash` an image already in the workspace | 200 `ImageImportResult` (the id and revision of the document, the layer, the asset hash and `state` `ready`; `state` `pending` and no document when the ingest of the file outlived `wait_ms`, with the `hash` to import again) | edit | 403 `E_PATH_NOT_ALLOWED`; 404 `E_FILE_NOT_FOUND`; 413 `E_LIMIT_EXCEEDED` (`import_bytes`, `import_pixels`, or a source over 4,096 pixels a side with no `width`, `height` or `preset`); 415 `E_UNSUPPORTED_MEDIA` (not an image); a refused import creates no document (SDD-021 §10) |
+| `images.import` | `POST /images/import` | none | `{path or hash, image_id?, name?, width?, height?, preset?, wait_ms?, base_revision?, idempotency_key?, dry_run?}`, `path` an absolute path to an image file on the machine of the server, read with the path rules of `MediaImport` (§2.6), `hash` an image already in the workspace | 200 `ImageImportResult` (the id and revision of the document, the layer, the asset hash and `state` `ready`; `state` `pending` and no document when the ingest of the file outlived `wait_ms`, with the `hash` to import again) | edit | 403 `E_PATH_NOT_ALLOWED`; 404 `E_FILE_NOT_FOUND`; 422 `E_LIMIT_EXCEEDED` (`import_bytes`, `import_pixels`); 422 `E_LIMIT` (`details.limit` `canvas`: a source over 4,096 pixels a side with no `width`, `height` or `preset`); 422 `E_UNSUPPORTED_MEDIA` (not an image); 400 `E_VALIDATION` (`path` or `hash` wrong, an unknown `hash`); a refused import creates no document (SDD-021 §10.1) |
+| `images.import_file` | `POST /images/import/file` | `file_name`, `image_id`, `name`, `width`, `height`, `preset`, `wait_ms`, `base_revision`, `idempotency_key`, `dry_run` | the bytes of an image file, at most 64 MiB (or `STUARTY_MAX_IMPORT_BYTES` when smaller); the content type is ignored and the screen sends `application/json` so that a cookie session passes SDD-007 §3.6 step 6 | 200 `ImageImportResult`, as `images.import` | edit | 422 `E_LIMIT_EXCEEDED` (a declared or a streamed size over the limit); 422 `E_UNSUPPORTED_MEDIA`; as `images.import` (SDD-021 §10.2) |
 | `images.events` | `GET /images/{id}/events` | `since` (a revision, SDD-006 §2); header `Last-Event-ID` | none | 200 `text/event-stream` with `image.updated` (SDD-006 §12) | read | 400 `E_VALIDATION` for a non-integer or negative `since`; 404 `E_NOT_FOUND` |
 | `events.stream` | `GET /projects/{id}/events` | `since` (a revision, SDD-006 §2); header `Last-Event-ID` | none | 200 `text/event-stream` (SDD-006) | read | 400 `E_VALIDATION` for a non-integer or negative `since` |
 | `trash.empty` | `POST /trash/empty` | none | `{project_id?, older_than_days?}` (SDD-005 §13.3) | 200 `TrashEmptyResult` | admin, and only from a browser session (local mode) or an `admin` key (network mode); the local token is refused | 403 `E_FORBIDDEN` |

@@ -65,6 +65,7 @@
 | `ImageUndo`, `ImageRedo` | `image` (`action` undo, redo) | `image:undo`, `image:redo` | `POST /images/{id}/undo`, `POST /images/{id}/redo` | edit |
 | `ImageExport` | `image` (`action` export) | `image:export` | `POST /images/{id}/export` | edit |
 | `ImageImport` | `image` (`action` import) | `image:import` | `POST /images/import` (an image file from a path or a library hash becomes a new image document, or one more layer of the document `image_id`; SDD-021 §10) | edit |
+| `ImageImportFile` | none | none | `POST /images/import/file` (a file chosen in the browser, as the bytes of the request, becomes a new image document or a layer; SDD-021 §10.2; HTTP only because the bytes are the request) | edit |
 | `ExportPresetList` | `command_help` (`domain` export) | `export:presets` | `GET /export-presets` | read |
 | `ExportCheck` | `lint` (with `preset`) | `export:check` | `GET /projects/{id}/export-check` | read |
 | `AudioMeasure` | `view` (`mode` audio) | `view --mode audio` | `GET /projects/{id}/audio-measure` | read |

@@ -320,6 +320,14 @@ func FakeMediaTags(seconds int64, width, height int, tags map[string]string) str
 
 const fakeMediaMarker = "fake-media"
 
+// FakeImage is the content of a test file that the fake ingest probes as a still image of the given size, so an
+// image import (epic 48) has a file that is an image.
+func FakeImage(width, height int) string {
+	return fmt.Sprintf("%s width=%d height=%d\n", fakeImageMarker, width, height)
+}
+
+const fakeImageMarker = "fake-image"
+
 // fakeTags reads the tag lines of a FakeMediaTags file; a line that does not
 // parse is ignored.
 func fakeTags(content string) map[string]ingest.Tag {
@@ -359,7 +367,19 @@ func (e *Env) fakeIngest(_ context.Context, in ingest.Input) (*ingest.Result, er
 	var tags map[string]ingest.Tag
 
 	if path, err := enginestore.New(string(e.Dir)).Path(in.Hash); err == nil {
-		if head, rerr := readHead(path, 64<<10); rerr == nil && strings.HasPrefix(head, fakeMediaMarker) {
+		head, rerr := readHead(path, 64<<10)
+
+		switch {
+		case rerr == nil && strings.HasPrefix(head, fakeImageMarker):
+			var w, h int
+
+			_, _ = fmt.Sscanf(head, fakeImageMarker+" width=%d height=%d", &w, &h)
+
+			return &ingest.Result{
+				Kind: ingest.KindImage, Summary: &ingest.Summary{Version: 1, Kind: ingest.KindImage},
+				TimingsMS: map[string]int64{"probe": 1}, Facts: ingest.Facts{Width: w, Height: h},
+			}, nil
+		case rerr == nil && strings.HasPrefix(head, fakeMediaMarker):
 			_, _ = fmt.Sscanf(head, fakeMediaMarker+" seconds=%d width=%d height=%d", &seconds, &width, &height)
 			tags = fakeTags(head)
 		}

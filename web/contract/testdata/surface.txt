@@ -49,6 +49,7 @@ command history
 command image:create
 command image:edit
 command image:export
+command image:import
 command image:list
 command image:redo
 command image:show
@@ -151,6 +152,7 @@ route GET /fonts
 route GET /handshake
 route GET /images
 route GET /images/{}
+route GET /images/{}/events
 route GET /images/{}/exports/{}
 route GET /images/{}/frame
 route GET /images/{}/history
@@ -215,6 +217,8 @@ route POST /connections
 route POST /connections/{}/test
 route POST /fonts
 route POST /images
+route POST /images/import
+route POST /images/import/file
 route POST /images/{}/edit
 route POST /images/{}/export
 route POST /images/{}/redo

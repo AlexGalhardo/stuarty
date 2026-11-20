@@ -1,6 +1,6 @@
 {
  "name": "image",
- "description": "Images. action=create (preset or width+height; or from_template+values), list, show, edit (operations: command_help domain=image), undo, redo, export.",
+ "description": "Images. action=create (preset or width+height; or from_template+values), list, show, edit (operations: command_help domain=image), undo, redo, export, import (path or hash of an image file; image_id adds a layer).",
  "inputSchema": {
   "type": "object",
   "properties": {
@@ -12,7 +12,8 @@
      "edit",
      "undo",
      "redo",
-     "export"
+     "export",
+     "import"
     ]
    },
    "image_id": {
@@ -64,6 +65,12 @@
     "type": "string"
    },
    "from_template": {
+    "type": "string"
+   },
+   "path": {
+    "type": "string"
+   },
+   "hash": {
     "type": "string"
    }
   },
