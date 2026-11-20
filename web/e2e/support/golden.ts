@@ -34,6 +34,10 @@ export const MAX_MEAN_COLOUR_DIFF = 4;
 // The nested projects of epic 52 (a composition drawn as a group, see
 // support/nested.ts): compared by SSIM and mean colour.
 export const GROUP_CASE = /^nested-/;
+// The cases on a transparent canvas: the export's JPEG cannot hold an alpha, so
+// it holds the frame over black (premultiplied colour). The canvas is compared
+// the same way, and the mean colour tells an alpha that is wrong (VV-278).
+export const TRANSPARENT_CASE = /transparent/;
 // Below this much edge per pixel (see globalShift) the offset of the whole
 // picture is noise and the markers give the displacement instead.
 export const MIN_TEXTURE = 0.05;
@@ -572,6 +576,20 @@ export async function loadCase(
 	return { id, frames: listed };
 }
 
+// The canvas over black, as the export's JPEG holds the frame: colour times alpha.
+// A straight RGB hides the alpha (a fully transparent pixel keeps its colour).
+export function premultiplied(p: Pixels): Pixels {
+	const data = new Uint8Array(p.data.length);
+	for (let i = 0; i < p.data.length; i += 4) {
+		const a = p.data[i + 3] ?? 0;
+		for (let c = 0; c < 3; c++) {
+			data[i + c] = Math.round(((p.data[i + c] ?? 0) * a) / 255);
+		}
+		data[i + 3] = 255;
+	}
+	return { width: p.width, height: p.height, data };
+}
+
 export interface Capture {
 	canvas: Pixels;
 	frame: Pixels;
@@ -810,12 +828,10 @@ export async function compareFrame(
 	label: string,
 	ownTimeline = false,
 ): Promise<void> {
-	const {
-		canvas,
-		frame: exported,
-		canvasPng,
-		frameJpeg,
-	} = await capture(page, id, frame, ownTimeline);
+	const shot = await capture(page, id, frame, ownTimeline);
+	const { frame: exported, canvasPng, frameJpeg } = shot;
+	// Over black, like the export: an alpha that is wrong shows as a colour.
+	const canvas = premultiplied(shot.canvas);
 	const ssim = lumaSsim(canvas, exported);
 	if (ssim < MIN_SSIM) {
 		const videos = await page.evaluate(() =>
@@ -909,7 +925,11 @@ export async function compareFrame(
 	);
 	// SSIM on luma cannot see a missing lookup table or a wrong grade (the
 	// luma barely moves), so the colour cases also compare the mean colour.
-	if (COLOUR_CASE.test(name) || GROUP_CASE.test(name)) {
+	if (
+		COLOUR_CASE.test(name) ||
+		GROUP_CASE.test(name) ||
+		TRANSPARENT_CASE.test(name)
+	) {
 		for (let c = 0; c < 3; c++) {
 			expect
 				.soft(
