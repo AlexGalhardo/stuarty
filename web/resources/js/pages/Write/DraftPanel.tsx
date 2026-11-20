@@ -177,7 +177,7 @@ export default function DraftPanel({
 			{connections !== null && connections.length > 0 && (
 				<form className="flex flex-col gap-3" onSubmit={submit}>
 					<div className="grid gap-3 sm:grid-cols-2">
-						<div className="flex flex-col gap-1">
+						<div className="flex min-w-0 max-w-full flex-col gap-1">
 							<Label htmlFor="draft-connection">
 								{t("ui.write.draft.connection")}
 							</Label>
@@ -185,7 +185,7 @@ export default function DraftPanel({
 								id="draft-connection"
 								value={connection}
 								onChange={(event) => setConnection(event.target.value)}
-								className="h-8 rounded-lg border border-input bg-background px-2 text-sm"
+								className="h-8 max-w-full rounded-lg border border-input bg-background px-2 text-sm"
 							>
 								{connections.map((c) => (
 									<option key={c.id} value={c.id}>
@@ -194,14 +194,14 @@ export default function DraftPanel({
 								))}
 							</select>
 						</div>
-						<div className="flex flex-col gap-1">
+						<div className="flex min-w-0 max-w-full flex-col gap-1">
 							<Label htmlFor="draft-model">{t("ui.write.draft.model")}</Label>
 							<select
 								id="draft-model"
 								value={model}
 								disabled={models === null}
 								onChange={(event) => setModel(event.target.value)}
-								className="h-8 rounded-lg border border-input bg-background px-2 text-sm"
+								className="h-8 max-w-full rounded-lg border border-input bg-background px-2 text-sm"
 							>
 								{(models ?? []).map((m) => (
 									<option key={m.id} value={m.id}>
@@ -212,7 +212,7 @@ export default function DraftPanel({
 						</div>
 					</div>
 					{item.text_kind === "caption" && (
-						<div className="flex flex-col gap-1">
+						<div className="flex min-w-0 max-w-full flex-col gap-1">
 							<Label htmlFor="draft-network">
 								{t("ui.write.draft.network")}
 							</Label>
@@ -231,7 +231,7 @@ export default function DraftPanel({
 							</select>
 						</div>
 					)}
-					<div className="flex flex-col gap-1">
+					<div className="flex min-w-0 max-w-full flex-col gap-1">
 						<Label htmlFor="draft-instruction">
 							{t("ui.write.draft.instruction")}
 						</Label>
