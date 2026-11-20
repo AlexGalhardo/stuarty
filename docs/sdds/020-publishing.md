@@ -236,7 +236,7 @@ Added to SDD-000 section 8: `E_PUBLISH` (a network refused or failed a publicati
 
 - No new table: the job, the approval request and the audit rows are the records. A migration is added only if a later epic needs a table (the calendar of epic 20 does).
 - The folder `publish/uploads/` of the workspace (section 7.4), added to SDD-000 section 9. The sweeper of SDD-005 section 13.4 removes upload files older than 7 days.
-- One variable, for tests only: `STUARTY_TEST_SOCIAL_URL`, the address of a server on loopback that plays a network. The build then registers the connector `fake` (`service/social/fake`) next to YouTube, and the end-to-end spec `youtube-connect.spec.ts` uses it, because a real Google account and a real consent screen are never used by a test. It is refused in network mode and for any address that is not `http` on loopback (`web/app/owner/social.go`).
+- One variable, for tests only: `STUARTY_TEST_SOCIAL_URL`, the address of a server on loopback that plays a network. The build then registers the connector `fake` (`service/social/fake`) next to YouTube, and the end-to-end spec `youtube-connect.spec.ts` uses it, because a real Google account and a real consent screen are never used by a test. It is honoured only with `APP_ENV=test` (SDD-007 T-67), and refused in network mode and for any address that is not `http` on loopback (`web/app/owner/social.go`).
 
 ## 13. Surfaces
 
