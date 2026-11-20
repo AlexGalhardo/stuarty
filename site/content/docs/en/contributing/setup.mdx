@@ -22,8 +22,8 @@ Install these tools:
 | Go, the version in `go.mod` | the core, the engine, the service and the program |
 | Task | the commands below |
 | golangci-lint | `task lint` for Go |
-| Bun | `web/` (the project uses Bun there, not npm) |
-| Node.js 24 and npm | `site/` (the documentation site keeps npm) |
+| Bun 1.4.5 | `web/` and `site/` (the project uses Bun, not npm) |
+| Node.js 24 | one test of `site/` (`scripts/api-reference.test.ts`), whose syntax check needs `node --check` |
 | FFmpeg 9 | the tests that encode; the container image carries a pinned one |
 
 Then, from the root of the clone:
@@ -47,10 +47,10 @@ To run the program from the clone, build the front end with `bun install` and `b
 
 ## Common mistakes
 
-- Running `npm install` in `web/`, or `bun` in `site/`. Each folder has one package manager and one lockfile.
+- Running `npm install` in `web/` or in `site/`. Both folders use Bun and have one lockfile, `bun.lock`.
 - Skipping `task codegen` after changing a registry or schema: the `Generated files` check fails with a diff. Run it and commit the result.
 - Changing `go.mod`, `web/package.json` or a lockfile without `task notices`: `task notices:check` fails until the notices are regenerated.
-- Building the site with a Node.js version other than the one the pipeline uses (24): a different major can change the output of the build checks.
+- Building the site with a Bun version other than the one the pipeline uses (1.4.5): a different version can change the output of the build checks.
 
 ## Next steps
 

@@ -23,7 +23,7 @@ The changelog and the release notes are generated from the commits and have five
 2. **Gate on the branch.** The required checks are green on the tip of `release/vX.Y.Z`, no issue labelled `ci-failure` is open, and the local gate `task release:preflight` passes.
 3. **Refresh the pull request body** with the commits: `task release:pr-body -- vX.Y.Z`. It lists the five sections with a linked hash per entry.
 4. **Prepare the changelog**: `task release:prepare -- vX.Y.Z` on the release branch writes the section of `CHANGELOG.md` from the commits and commits `chore(release): vX.Y.Z`.
-5. **Refresh the dates** of the documentation: `npm run last-updated` in `site/`, so every page shows its real date.
+5. **Refresh the dates** of the documentation: `bun run last-updated` in `site/`, so every page shows its real date.
 6. **Merge** the pull request with rebase-merge once the checks are green.
 7. **Tag.** On `main`, fast-forwarded to the merged head, `task release:tag -- vX.Y.Z` checks that the head is the release commit, creates the annotated tag and pushes it: one tag per push.
 8. **Publish.** The tag starts `release.yml`. It creates the GitHub release with the changelog section as the body (an empty body fails), builds the six archives with their SBOMs, signs `checksums.txt` with cosign, attests the build provenance, and publishes the image to GHCR and Docker Hub with the tags `X.Y.Z`, `X.Y` and `latest`, signing and attesting its digests.
