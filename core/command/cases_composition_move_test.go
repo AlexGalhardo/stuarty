@@ -7,7 +7,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
-// Golden cases of composition.create_from_selection and composition.expand (SDD-002 C.79, C.80).
+// Golden cases of composition.create_from_selection and composition.expand (SDD-002 C.85, C.86).
 
 const (
 	tlNew  = "prj_n1n1n1n1n1"

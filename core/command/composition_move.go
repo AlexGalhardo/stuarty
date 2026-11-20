@@ -9,7 +9,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
-// composition.create_from_selection and composition.expand (SDD-002 C.79, C.80): the two directions between a
+// composition.create_from_selection and composition.expand (SDD-002 C.85, C.86): the two directions between a
 // part of a timeline and a timeline of its own that the first one uses as a clip.
 
 func init() {
@@ -54,7 +54,7 @@ type selection struct {
 	track      string // the top-most visual track of the selection
 }
 
-// selected reads and checks the items named by the arguments (preconditions 1 and 3 of C.79).
+// selected reads and checks the items named by the arguments (preconditions 1 and 3 of C.85).
 func (c *Context) selected(a *compositionCreateArgs) (*selection, *Error) {
 	seen := map[string]bool{}
 	sel := &selection{start: timeline.MaxFrames}
@@ -102,7 +102,7 @@ func (c *Context) topVisualTrack() string {
 	return best
 }
 
-// moveToTimeline builds the document of the new timeline from the selected items (postcondition 1 of C.79) and
+// moveToTimeline builds the document of the new timeline from the selected items (postcondition 1 of C.85) and
 // takes the items out of this one.
 func (c *Context) moveToTimeline(sel *selection, tid, name string) *timeline.Document {
 	inner := &timeline.Document{
@@ -243,7 +243,7 @@ func applyCompositionCreate(c *Context, a *compositionCreateArgs) error {
 	return nil
 }
 
-// overlapsUnselected is the E_OVERLAP of precondition 3 of C.79: an item that stays, on the track of the
+// overlapsUnselected is the E_OVERLAP of precondition 3 of C.85: an item that stays, on the track of the
 // composition, inside the range the composition covers.
 func (c *Context) overlapsUnselected(sel *selection, track string) *Error {
 	moved := map[string]bool{}
@@ -370,7 +370,7 @@ func (c *Context) expandable(it *timeline.Item, nested *timeline.Document) *Erro
 }
 
 // mergeNestedAssets adds the assets and fonts the items of the nested timeline use to this document
-// (postcondition 1 of C.80). An asset id that is here with another file is a conflict.
+// (postcondition 1 of C.86). An asset id that is here with another file is a conflict.
 func (c *Context) mergeNestedAssets(nested *timeline.Document) *Error {
 	for _, id := range slices.Sorted(maps.Keys(nested.Items)) {
 		it := nested.Items[id]
@@ -408,7 +408,7 @@ func (c *Context) mergeNestedAssets(nested *timeline.Document) *Error {
 }
 
 // expandTracks adds the tracks of the nested timeline with new ids: the visual ones directly above the track of
-// the composition, in their order, the audio ones after the last track (postcondition 1 of C.80). It returns the
+// the composition, in their order, the audio ones after the last track (postcondition 1 of C.86). It returns the
 // map from the nested track id to the new one, and the new ids.
 func (c *Context) expandTracks(nested *timeline.Document, under timeline.Track) (map[string]string, []string, *Error) {
 	used := map[string]bool{}

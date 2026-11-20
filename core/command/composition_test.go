@@ -30,7 +30,7 @@ func batch(t *testing.T, doc *timeline.Document, env Env, ops ...Operation) Batc
 	return res
 }
 
-// SDD-002 C.79: create then undo gives back the original items, byte for byte (epic 32 criterion 5).
+// SDD-002 C.85: create then undo gives back the original items, byte for byte (epic 32 criterion 5).
 func TestCompositionCreateThenUndoRestoresTheItems(t *testing.T) {
 	t.Parallel()
 

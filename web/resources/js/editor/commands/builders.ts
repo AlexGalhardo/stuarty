@@ -2080,7 +2080,7 @@ export function fontRemoveOperations(family: string): Operations {
 
 // The menu entry "Create composition from selection": the items move into a new
 // timeline of the project and one composition takes their place, in one batch
-// (SDD-002 C.79).
+// (SDD-002 C.85).
 export function createCompositionOperations(
 	itemIds: readonly string[],
 ): Operations {
@@ -2093,7 +2093,7 @@ export function createCompositionOperations(
 }
 
 // The menu entry "Expand composition": the inverse of the one above for a
-// composition that only places its timeline (SDD-002 C.80).
+// composition that only places its timeline (SDD-002 C.86).
 export function expandCompositionOperations(itemId: string): Operations {
 	return [{ op: "composition.expand", args: { item_id: itemId } }];
 }
