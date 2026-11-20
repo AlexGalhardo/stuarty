@@ -12,5 +12,12 @@
     "height": 180,
     "fps": 30,
     "seconds": 3
+  },
+  "ast_a000000003": {
+    "name": "gold-landscape.mp4",
+    "width": 320,
+    "height": 180,
+    "fps": 30,
+    "seconds": 3
   }
 }
