@@ -8,6 +8,9 @@ type scenario struct {
 	Required []string
 	// NeedsClip is true when the task imports a video file the harness supplies as clip.mp4.
 	NeedsClip bool
+	// Flow marks the first complete flow: after the agent stops, the run is settled by a person
+	// (the harness) and judged by what the fake network received (flow.go). It is not in "all".
+	Flow bool
 }
 
 // scenarios are the two of PRD-002 success metrics 1 and 2 (SDD-003 section 9, check 29). The
@@ -32,9 +35,25 @@ var scenarios = []scenario{
 	},
 }
 
+// firstFlow is the scenario of epic 38 (NFR-066): the brief and nothing else.
+var firstFlow = scenario{
+	Name:   "first-flow",
+	Prompt: firstFlowPrompt,
+	Required: []string{
+		"project:create", "media:import", "edit", "transcribe", "image:create", "export",
+		"publication:create", "publication:schedule",
+	},
+	NeedsClip: true,
+	Flow:      true,
+}
+
 func findScenarios(name string) ([]scenario, bool) {
 	if name == "all" {
 		return scenarios, true
+	}
+
+	if name == firstFlow.Name {
+		return []scenario{firstFlow}, true
 	}
 
 	for _, s := range scenarios {
