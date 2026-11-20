@@ -26,6 +26,7 @@ cp "$REPO_DIR"/deploy/{compose.yml,Caddyfile,.env.example,lib.sh,install.sh,upda
 
 g() { git -C "$REPO" -c user.name=test -c user.email=test@example.com -c commit.gpgsign=false -c tag.gpgsign=false "$@"; }
 g init -q
+g config core.autocrlf false
 g add deploy
 g commit -q -m "release 0.30.0"
 g tag v0.30.0
