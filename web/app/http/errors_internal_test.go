@@ -1,11 +1,14 @@
 package httpapi
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/AlexGalhardo/stuarty/service"
@@ -64,5 +67,49 @@ func TestClientGoneIsMappedTo499(t *testing.T) {
 				t.Errorf("status = %d, want %d", got, tc.want)
 			}
 		})
+	}
+}
+
+// VV-216: the mapper is installed where vukem renders the errors of a handler,
+// so a raw context error of a request the client closed is answered and logged
+// as 499, below the error level, and a service error keeps its own status.
+func TestInstalledErrorsAnswerAClosedRequestWith499(t *testing.T) {
+	t.Parallel()
+
+	var logged bytes.Buffer
+
+	s := &web.Services{Log: slog.New(slog.NewTextHandler(&logged, &slog.HandlerOptions{Level: slog.LevelDebug}))}
+	installErrors(s)
+
+	gone, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	cases := []struct {
+		name string
+		err  error
+		want int
+	}{
+		{"raw context error", fmt.Errorf("read plan: %w", context.Canceled), service.StatusClientClosed},
+		{
+			"service error wins",
+			&service.Error{Code: service.CodeRateLimited, Message: "slow down"},
+			http.StatusTooManyRequests,
+		},
+	}
+
+	for _, tc := range cases {
+		rec := httptest.NewRecorder()
+		r := httptest.NewRequest(http.MethodGet, "/api/v1/x", http.NoBody).WithContext(gone)
+		r.Header.Set("Accept", "application/json")
+
+		web.DefaultErrorHandler(web.NewCtx(rec, r, s), tc.err)
+
+		if rec.Code != tc.want {
+			t.Errorf("%s: status = %d, want %d", tc.name, rec.Code, tc.want)
+		}
+	}
+
+	if strings.Contains(logged.String(), "level=ERROR") {
+		t.Errorf("a closed request was logged at error level:\n%s", logged.String())
 	}
 }
