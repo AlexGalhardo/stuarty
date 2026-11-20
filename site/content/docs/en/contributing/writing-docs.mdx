@@ -22,12 +22,12 @@ A feature is not finished until its page exists. Pages are MDX files in `site/co
 5. Run the checks from `site/`:
 
 ```bash
-npm run check:mdx
-npm run build
-npm run check:built
-npm run lint
-npm run check:command-mentions
-npm run last-updated
+bun run check:mdx
+bun run build
+bun run check:built
+bun run lint
+bun run check:command-mentions
+bun run last-updated
 ```
 
 ## The rules of a page
@@ -41,8 +41,8 @@ npm run last-updated
 
 ## Common mistakes
 
-- Editing a page under `site/content/generated/`: it is overwritten by `npm run reference`, and `reference:check` fails on a difference. Change the Go registry, the schema or `site/scripts/generate-reference.ts`, then regenerate.
-- Forgetting `npm run last-updated`: the "Last updated" check fails when a page is newer than its recorded date.
+- Editing a page under `site/content/generated/`: it is overwritten by `bun run reference`, and `reference:check` fails on a difference. Change the Go registry, the schema or `site/scripts/generate-reference.ts`, then regenerate.
+- Forgetting `bun run last-updated`: the "Last updated" check fails when a page is newer than its recorded date.
 - Describing a feature from memory. Check the page against the code and the specification, and say what you could not verify.
 
 ## Next steps

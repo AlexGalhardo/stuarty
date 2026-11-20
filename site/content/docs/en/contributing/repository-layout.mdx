@@ -35,7 +35,7 @@ There is one repository and one Go module. The folders follow one rule: editing 
 1. Find the rule. A new editing operation is a command in `core/command/`, described in the command catalogue (`docs/sdds/002-command-catalogue.md`); its name comes from the shared definitions.
 2. Reach it from the adapters. The MCP tool, the CLI command and the HTTP route call the same service method; they add no rule.
 3. Show it in the editor in `web/resources/`, which only draws and sends commands.
-4. Regenerate what derives from it with `task codegen`, and the site reference with `npm run reference` in `site/`.
+4. Regenerate what derives from it with `task codegen`, and the site reference with `bun run reference` in `site/`.
 
 ## Common mistakes
 
