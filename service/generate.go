@@ -496,15 +496,16 @@ func (s *svc) storeGenerated(
 }
 
 // viewGeneration puts on the job the estimate of a generation (it is there from the moment the job exists) and,
-// once it ended, its result: the text of text.generate or the files of image.generate and voice.generate.
+// once it ended, its result: the text of text.generate and text.draft (SDD-019 section 6) or the files of
+// image.generate and voice.generate.
 func viewGeneration(j *Job, r *JobRow) {
 	switch r.Kind {
-	case JobTextGenerate, JobImageGenerate, JobVoiceGenerate:
+	case JobTextGenerate, JobTextDraft, JobImageGenerate, JobVoiceGenerate:
 	default:
 		return
 	}
 
-	// The input of the three kinds names its estimate the same way.
+	// The input of the four kinds names its estimate the same way.
 	var in struct {
 		Estimate core.Money `json:"estimate"`
 	}

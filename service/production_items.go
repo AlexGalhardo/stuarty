@@ -9,6 +9,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/core/project"
 	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/writing"
 )
 
 // productionChange is what the plan of an item operation decides: the items as they will be, the item the
@@ -111,10 +112,19 @@ func (s *svc) checkItemAdd(req *ProjectItemAddRequest) (*timeline.Document, erro
 		}
 	}
 
+	if req.TextKind != "" && kind != project.Text {
+		return nil, newError(command.CodeValidation, "text_kind is for an item of kind text.").
+			withPath("text_kind").withHint("leave text_kind out, or add a text")
+	}
+
 	switch kind {
 	case project.Text:
 		if v := project.CheckText(req.Text); v != nil {
 			return nil, violation(v)
+		}
+
+		if _, v := writing.CheckKind(req.TextKind); v != nil {
+			return nil, writingViolation(v)
 		}
 	case project.Timeline:
 		doc, verr := s.newDocument(ProjectCreateRequest{Name: req.Title, Preset: req.Preset, FPS: req.FPS})
@@ -159,6 +169,11 @@ func (s *svc) ProjectItemAdd(ctx context.Context, req ProjectItemAddRequest) (*P
 			switch project.Kind(req.Kind) {
 			case project.Text:
 				it.Body = req.Text
+				it.TextKind = req.TextKind
+
+				if it.TextKind == "" {
+					it.TextKind = string(writing.DefaultKind)
+				}
 			case project.Timeline:
 				it.Ref = doc.ID
 			case project.Output:
