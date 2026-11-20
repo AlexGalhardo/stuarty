@@ -89,6 +89,12 @@ func (s *svc) HistoryRevert(ctx context.Context, req HistoryRevertRequest) (*His
 			return nil
 		}
 
+		// A revert can bring back a composition that now closes a loop or nests too deep (SDD-004 §3.16).
+		graph := newProductionGraph(ctx, tx, row.ID)
+		if nerr := checkNesting(graph, out.Doc); nerr != nil {
+			return nerr
+		}
+
 		if req.DryRun {
 			res.Revision, res.Applied, res.DryRun = row.Revision+1, false, true
 			res.Text = revertText(res)
@@ -118,11 +124,7 @@ func (s *svc) HistoryRevert(ctx context.Context, req HistoryRevertRequest) (*His
 			Type: "batch.committed", ProjectID: row.ID, Revision: rev, Kind: string(OpEdit), Actor: c.Actor,
 			Description: cutRunes(res.Description, eventDescription), At: s.now().UTC(),
 		}
-		tx.AfterCommit(func() {
-			crashpoint.Hit("commit.after_commit")
-			s.emit(ev)
-			crashpoint.Hit("commit.after_publish")
-		})
+		s.publishAfterCommit(tx, graph, &ev)
 
 		return nil
 	})
