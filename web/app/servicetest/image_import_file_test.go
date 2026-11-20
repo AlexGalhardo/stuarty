@@ -127,7 +127,7 @@ func TestImageImportFileRefusals(t *testing.T) {
 
 // A file the caller sends over the cap of a request is refused while it streams, with a message that names the
 // cap and the way out, whatever the import limit of the server is, and nothing of it is kept.
-func TestSecurity_T92_FileOverTheCapIsRefusedWhileItStreams(t *testing.T) {
+func TestSecurity_T62_FileOverTheCapIsRefusedWhileItStreams(t *testing.T) {
 	m := newMediaEnv(t, mediaCfg{ingest: pictureIngest(8, 8)})
 
 	res, err := m.svc.ImageImportFile(m.as(ui), service.ImageImportFileRequest{
@@ -202,10 +202,10 @@ func grayPNG(w, h int, whole bool) []byte {
 	return png.Bytes()
 }
 
-// TestSecurity_T93_UploadedPixelBombIsRefusedBeforeItIsDecoded: a picture over the pixel ceiling, whole or cut
+// TestSecurity_T63_UploadedPixelBombIsRefusedBeforeItIsDecoded: a picture over the pixel ceiling, whole or cut
 // short after a header that declares 60,000 by 60,000 pixels, is refused with the dimensions the probe read, and
 // no document exists. The probe and the conversion run in a child process under the limits of SDD-007 section 6.5.
-func TestSecurity_T93_UploadedPixelBombIsRefusedBeforeItIsDecoded(t *testing.T) {
+func TestSecurity_T63_UploadedPixelBombIsRefusedBeforeItIsDecoded(t *testing.T) {
 	// skip-env: pinned-ffmpeg
 	m := newMediaEnv(t, mediaCfg{realExport: true, ingest: ingest.Run})
 
@@ -241,10 +241,10 @@ func TestSecurity_T93_UploadedPixelBombIsRefusedBeforeItIsDecoded(t *testing.T) 
 	}
 }
 
-// TestSecurity_T96_UploadedMarkupIsNeverAnImage: a file that is HTML, SVG or a script, whatever its name and its
+// TestSecurity_T66_UploadedMarkupIsNeverAnImage: a file that is HTML, SVG or a script, whatever its name and its
 // declared type, is refused by the ingest as not media; the kind of a file is decided by the ingest and never by
 // the name, and only the normalized artifacts of an image are ever served.
-func TestSecurity_T96_UploadedMarkupIsNeverAnImage(t *testing.T) {
+func TestSecurity_T66_UploadedMarkupIsNeverAnImage(t *testing.T) {
 	m := newMediaEnv(t, mediaCfg{realIngest: true})
 
 	for name, content := range map[string]string{
