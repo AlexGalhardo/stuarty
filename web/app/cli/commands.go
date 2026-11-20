@@ -31,6 +31,8 @@ func registry() []*spec {
 		providerListCmd, providerModelsCmd, providerPriceCmd, textGenerateCmd,
 		imageCreate, imageList, imageShow, imageEdit, imageUndo, imageRedo, imageExport,
 		assetListCmd, assetShowCmd, assetUsesCmd, assetSetCmd, assetTagCmd,
+		motionBriefCmd, motionCheckCmd, motionReplaceCmd,
+		agentProfilesCmd, chatSessionsCmd, chatSessionCmd, chatTranscriptCmd,
 	}, append(libraryCommands(), publishingCommands()...)...)
 }
 

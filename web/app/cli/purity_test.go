@@ -118,6 +118,10 @@ func (s stub) ExportCheck(context.Context, service.ExportCheckRequest) (*service
 	return reply[service.ExportCheckResult](s.err)
 }
 
+func (s stub) AudioMeasure(context.Context, service.AudioMeasureRequest) (*service.AudioMeasureResult, error) {
+	return reply[service.AudioMeasureResult](s.err)
+}
+
 func (s stub) ExportPresetList(
 	context.Context,
 	service.ExportPresetListRequest,
@@ -339,6 +343,18 @@ func (s stub) BriefingQuestions(
 
 func (s stub) BriefingAnswer(context.Context, service.BriefingAnswerRequest) (*service.BriefResult, error) {
 	return reply[service.BriefResult](s.err)
+}
+
+func (s stub) MotionBrief(context.Context, service.MotionBriefRequest) (*service.MotionBriefResult, error) {
+	return reply[service.MotionBriefResult](s.err)
+}
+
+func (s stub) MotionCheck(context.Context, service.MotionCheckRequest) (*service.MotionCheckResult, error) {
+	return reply[service.MotionCheckResult](s.err)
+}
+
+func (s stub) MotionReplace(context.Context, service.MotionReplaceRequest) (*service.MotionReplaceResult, error) {
+	return reply[service.MotionReplaceResult](s.err)
 }
 
 func (s stub) MemoryList(context.Context, service.MemoryListRequest) (*service.LibraryListResult, error) {

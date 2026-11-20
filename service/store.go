@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 
+	"github.com/AlexGalhardo/stuarty/service/agenthost"
 	"github.com/AlexGalhardo/stuarty/service/approval"
 	"github.com/AlexGalhardo/stuarty/service/assets"
 	"github.com/AlexGalhardo/stuarty/service/connections"
@@ -75,6 +76,7 @@ type Repos interface {
 	Library() library.Index
 	AssetLibrary() assets.Store
 	Publications() publish.Store
+	Chat() agenthost.Store
 }
 
 // Tx is a write transaction.

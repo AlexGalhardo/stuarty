@@ -65,6 +65,61 @@
         },
         "type": "object"
       },
+      "AgentProfileListResult": {
+        "properties": {
+          "available": {
+            "type": "boolean"
+          },
+          "can_write": {
+            "type": "boolean"
+          },
+          "profiles": {
+            "items": {
+              "$ref": "#/components/schemas/Profile"
+            },
+            "type": "array"
+          },
+          "suggestions": {
+            "items": {
+              "$ref": "#/components/schemas/AgentSuggestion"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "AgentSuggestion": {
+        "properties": {
+          "args": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "executables": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "found": {
+            "type": "boolean"
+          },
+          "found_path": {
+            "type": "string"
+          },
+          "install": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "ApprovalListResult": {
         "properties": {
           "next_cursor": {
@@ -294,6 +349,72 @@
               "$ref": "#/components/schemas/Use"
             },
             "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "AudioLevels": {
+        "properties": {
+          "integrated_lufs": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "noise_floor_dbfs": {
+            "format": "double",
+            "type": "number"
+          },
+          "speech_to_noise_db": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "true_peak_dbtp": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        },
+        "type": "object"
+      },
+      "AudioMeasureResult": {
+        "properties": {
+          "after": {
+            "$ref": "#/components/schemas/AudioLevels"
+          },
+          "before": {
+            "$ref": "#/components/schemas/AudioLevels"
+          },
+          "end_frame": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "item_id": {
+            "type": "string"
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "seconds": {
+            "format": "double",
+            "type": "number"
+          },
+          "start_frame": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "text": {
+            "type": "string"
           }
         },
         "type": "object"
@@ -800,6 +921,85 @@
           "object": {
             "additionalProperties": {},
             "type": "object"
+          }
+        },
+        "type": "object"
+      },
+      "ChatSession": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "end_reason": {
+            "type": "string"
+          },
+          "ended_at": {
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "event_count": {
+            "type": "integer"
+          },
+          "id": {
+            "type": "string"
+          },
+          "live": {
+            "type": "boolean"
+          },
+          "profile": {
+            "type": "string"
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ChatSessionListResult": {
+        "properties": {
+          "sessions": {
+            "items": {
+              "$ref": "#/components/schemas/ChatSession"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "ChatTranscriptResult": {
+        "properties": {
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/Event"
+            },
+            "type": "array"
+          },
+          "markdown": {
+            "type": "string"
+          },
+          "next_after": {
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "session": {
+            "$ref": "#/components/schemas/ChatSession"
           }
         },
         "type": "object"
@@ -1460,6 +1660,58 @@
           },
           "retryable": {
             "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "Event": {
+        "properties": {
+          "append": {
+            "type": "boolean"
+          },
+          "at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "permission": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Permission"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "seq": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "state": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StateInfo"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "text": {
+            "type": "string"
+          },
+          "tool": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Tool"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object"
@@ -2489,6 +2741,12 @@
             "format": "double",
             "type": "number"
           },
+          "replaces": {
+            "items": {
+              "$ref": "#/components/schemas/RenderOffer"
+            },
+            "type": "array"
+          },
           "state": {
             "type": "string"
           }
@@ -2741,6 +2999,12 @@
                 "type": "null"
               }
             ]
+          },
+          "processors": {
+            "items": {
+              "$ref": "#/components/schemas/Processor"
+            },
+            "type": "array"
           },
           "radius": {
             "format": "double",
@@ -3772,6 +4036,23 @@
         },
         "type": "object"
       },
+      "Margins": {
+        "properties": {
+          "bottom": {
+            "type": "integer"
+          },
+          "left": {
+            "type": "integer"
+          },
+          "right": {
+            "type": "integer"
+          },
+          "top": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
       "Marker": {
         "properties": {
           "frame": {
@@ -4122,6 +4403,23 @@
         },
         "type": "object"
       },
+      "Mismatch": {
+        "properties": {
+          "expected": {
+            "type": "string"
+          },
+          "field": {
+            "type": "string"
+          },
+          "found": {
+            "type": "string"
+          },
+          "hint": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "ModelView": {
         "properties": {
           "context_tokens": {
@@ -4165,6 +4463,272 @@
         },
         "type": "object"
       },
+      "MotionBrand": {
+        "properties": {
+          "colors": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "fonts": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "logo": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "MotionBriefResult": {
+        "properties": {
+          "brand_kit": {
+            "$ref": "#/components/schemas/MotionBrand"
+          },
+          "captions": {
+            "items": {
+              "$ref": "#/components/schemas/MotionCaption"
+            },
+            "type": "array"
+          },
+          "duration": {
+            "$ref": "#/components/schemas/TimeValue"
+          },
+          "duration_frames": {
+            "type": "integer"
+          },
+          "frame_rate": {
+            "$ref": "#/components/schemas/Rational"
+          },
+          "frames": {
+            "items": {
+              "$ref": "#/components/schemas/MotionFrame"
+            },
+            "type": "array"
+          },
+          "from": {
+            "$ref": "#/components/schemas/TimeValue"
+          },
+          "height": {
+            "type": "integer"
+          },
+          "image_tokens": {
+            "type": "integer"
+          },
+          "margins": {
+            "$ref": "#/components/schemas/Margins"
+          },
+          "needs_alpha": {
+            "type": "boolean"
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "safe_area": {
+            "$ref": "#/components/schemas/Rect"
+          },
+          "text": {
+            "type": "string"
+          },
+          "track": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TrackInfo"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "until": {
+            "$ref": "#/components/schemas/TimeValue"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          },
+          "width": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "MotionCaption": {
+        "properties": {
+          "end": {
+            "type": "integer"
+          },
+          "item_id": {
+            "type": "string"
+          },
+          "start": {
+            "type": "integer"
+          },
+          "text": {
+            "type": "string",
+            "x-untrusted": true
+          }
+        },
+        "type": "object"
+      },
+      "MotionCheckResult": {
+        "properties": {
+          "asset_id": {
+            "type": "string"
+          },
+          "asset_name": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "duration_frames": {
+            "type": "integer"
+          },
+          "frame_rate": {
+            "$ref": "#/components/schemas/Rational"
+          },
+          "height": {
+            "type": "integer"
+          },
+          "mismatches": {
+            "items": {
+              "$ref": "#/components/schemas/Mismatch"
+            },
+            "type": "array"
+          },
+          "needs_alpha": {
+            "type": "boolean"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "text": {
+            "type": "string"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          },
+          "width": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "MotionFrame": {
+        "properties": {
+          "at": {
+            "$ref": "#/components/schemas/TimeValue"
+          },
+          "height": {
+            "type": "integer"
+          },
+          "image_base64": {
+            "contentEncoding": "base64",
+            "type": "string"
+          },
+          "image_tokens": {
+            "type": "integer"
+          },
+          "mime": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "width": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "MotionReplaceResult": {
+        "properties": {
+          "actor": {
+            "type": "string"
+          },
+          "applied": {
+            "type": "boolean"
+          },
+          "asset_id": {
+            "type": "string"
+          },
+          "base_revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "created": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "description": {
+            "type": "string"
+          },
+          "diff": {
+            "items": {
+              "$ref": "#/components/schemas/Change"
+            },
+            "type": "array"
+          },
+          "dry_run": {
+            "type": "boolean"
+          },
+          "effective": {
+            "items": {
+              "$ref": "#/components/schemas/OpEffect"
+            },
+            "type": "array"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/Finding"
+            },
+            "type": "array"
+          },
+          "lint": {
+            "$ref": "#/components/schemas/LintTotals"
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "render_key": {
+            "type": "string"
+          },
+          "replaced": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "replayed": {
+            "type": "boolean"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "OpEffect": {
         "properties": {
           "created": {
@@ -4200,8 +4764,13 @@
               "animation.list_presets",
               "asset.remove",
               "audio.add",
+              "audio.apply_preset",
               "audio.duck",
               "audio.mark_beats",
+              "audio.processor_add",
+              "audio.processor_move",
+              "audio.processor_remove",
+              "audio.processor_set",
               "caption.add",
               "caption.edit_word",
               "caption.from_transcript",
@@ -4214,6 +4783,7 @@
               "caption.split",
               "clip.add",
               "clip.remove_silences",
+              "clip.replace_media",
               "clip.set_blend",
               "clip.set_blur",
               "clip.set_chroma_key",
@@ -4294,11 +4864,26 @@
           "audio.add": {
             "$ref": "#/components/schemas/args.audio.add"
           },
+          "audio.apply_preset": {
+            "$ref": "#/components/schemas/args.audio.apply_preset"
+          },
           "audio.duck": {
             "$ref": "#/components/schemas/args.audio.duck"
           },
           "audio.mark_beats": {
             "$ref": "#/components/schemas/args.audio.mark_beats"
+          },
+          "audio.processor_add": {
+            "$ref": "#/components/schemas/args.audio.processor_add"
+          },
+          "audio.processor_move": {
+            "$ref": "#/components/schemas/args.audio.processor_move"
+          },
+          "audio.processor_remove": {
+            "$ref": "#/components/schemas/args.audio.processor_remove"
+          },
+          "audio.processor_set": {
+            "$ref": "#/components/schemas/args.audio.processor_set"
           },
           "caption.add": {
             "$ref": "#/components/schemas/args.caption.add"
@@ -4335,6 +4920,9 @@
           },
           "clip.remove_silences": {
             "$ref": "#/components/schemas/args.clip.remove_silences"
+          },
+          "clip.replace_media": {
+            "$ref": "#/components/schemas/args.clip.replace_media"
           },
           "clip.set_blend": {
             "$ref": "#/components/schemas/args.clip.set_blend"
@@ -4512,6 +5100,20 @@
           }
         }
       },
+      "Option": {
+        "properties": {
+          "kind": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "option_id": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "Origin": {
         "properties": {
           "cost_micros": {
@@ -4520,6 +5122,12 @@
               "integer",
               "null"
             ]
+          },
+          "engine": {
+            "type": "string"
+          },
+          "engine_version": {
+            "type": "string"
           },
           "kind": {
             "type": "string"
@@ -4532,6 +5140,9 @@
             "x-untrusted": true
           },
           "provider": {
+            "type": "string"
+          },
+          "render_key": {
             "type": "string"
           },
           "rights_note": {
@@ -4612,6 +5223,32 @@
           "width": {
             "format": "double",
             "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "Permission": {
+        "properties": {
+          "answer": {
+            "type": "string"
+          },
+          "options": {
+            "items": {
+              "$ref": "#/components/schemas/Option"
+            },
+            "type": "array"
+          },
+          "request_id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "tool_call_id": {
+            "type": "string"
+          },
+          "tool_kind": {
+            "type": "string"
           }
         },
         "type": "object"
@@ -4818,6 +5455,32 @@
         },
         "type": "object"
       },
+      "Processor": {
+        "properties": {
+          "disabled": {
+            "type": "boolean"
+          },
+          "kind": {
+            "enum": [
+              "eq",
+              "compressor",
+              "limiter",
+              "gate",
+              "deesser",
+              "noise_reduction"
+            ],
+            "type": "string"
+          },
+          "params": {
+            "additionalProperties": {
+              "format": "double",
+              "type": "number"
+            },
+            "type": "object"
+          }
+        },
+        "type": "object"
+      },
       "Production": {
         "properties": {
           "has_brief": {
@@ -4837,6 +5500,34 @@
           },
           "timelines": {
             "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "Profile": {
+        "properties": {
+          "args": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "command": {
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "created_by": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string"
           }
         },
         "type": "object"
@@ -5558,6 +6249,41 @@
         },
         "type": "object"
       },
+      "Rect": {
+        "properties": {
+          "height": {
+            "type": "integer"
+          },
+          "width": {
+            "type": "integer"
+          },
+          "x": {
+            "type": "integer"
+          },
+          "y": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "RenderOffer": {
+        "properties": {
+          "asset_id": {
+            "type": "string"
+          },
+          "item_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "name": {
+            "type": "string",
+            "x-untrusted": true
+          }
+        },
+        "type": "object"
+      },
       "Request": {
         "properties": {
           "actor": {
@@ -6226,6 +6952,17 @@
         },
         "type": "object"
       },
+      "StateInfo": {
+        "properties": {
+          "end_reason": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "Strip": {
         "properties": {
           "columns": {
@@ -6574,6 +7311,26 @@
         },
         "type": "object"
       },
+      "Tool": {
+        "properties": {
+          "output": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "tool_call_id": {
+            "type": "string"
+          },
+          "tool_kind": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "ToolFile": {
         "properties": {
           "bytes": {
@@ -6706,6 +7463,12 @@
           "order": {
             "type": "string"
           },
+          "processors": {
+            "items": {
+              "$ref": "#/components/schemas/Processor"
+            },
+            "type": "array"
+          },
           "solo": {
             "type": "boolean"
           },
@@ -6715,6 +7478,20 @@
               "number",
               "null"
             ]
+          }
+        },
+        "type": "object"
+      },
+      "TrackInfo": {
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "overlay": {
+            "type": "boolean"
           }
         },
         "type": "object"
@@ -7504,6 +8281,35 @@
         ],
         "type": "object"
       },
+      "args.audio.apply_preset": {
+        "additionalProperties": false,
+        "properties": {
+          "item_id": {
+            "description": "A clip or audio item; give this or track_id.",
+            "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          },
+          "preset": {
+            "description": "voice, voice_with_music, podcast or clean_noisy_room.",
+            "enum": [
+              "voice",
+              "voice_with_music",
+              "podcast",
+              "clean_noisy_room"
+            ],
+            "type": "string"
+          },
+          "track_id": {
+            "description": "A track; give this or item_id.",
+            "pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "preset"
+        ],
+        "type": "object"
+      },
       "args.audio.duck": {
         "additionalProperties": false,
         "properties": {
@@ -7648,6 +8454,762 @@
         },
         "required": [
           "item_id"
+        ],
+        "type": "object"
+      },
+      "args.audio.processor_add": {
+        "additionalProperties": false,
+        "properties": {
+          "enabled": {
+            "description": "false adds it switched off; default true.",
+            "type": "boolean"
+          },
+          "index": {
+            "description": "Where to insert, 0 to the length of the chain; default the end.",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "item_id": {
+            "description": "A clip or audio item; give this or track_id.",
+            "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          },
+          "kind": {
+            "description": "eq, compressor, limiter, gate, deesser or noise_reduction.",
+            "enum": [
+              "eq",
+              "compressor",
+              "limiter",
+              "gate",
+              "deesser",
+              "noise_reduction"
+            ],
+            "type": "string"
+          },
+          "params": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "description": "Parameter values by name; the rest keep their default.",
+            "type": "object",
+            "x-vv-max-processors": 12,
+            "x-vv-processors": [
+              {
+                "kind": "eq",
+                "params": [
+                  {
+                    "default": 0,
+                    "max": 1000,
+                    "min": 0,
+                    "min_on": 20,
+                    "name": "hp_hz",
+                    "off_zero": true,
+                    "unit": "Hz"
+                  },
+                  {
+                    "default": 0,
+                    "max": 20000,
+                    "min": 0,
+                    "min_on": 1000,
+                    "name": "lp_hz",
+                    "off_zero": true,
+                    "unit": "Hz"
+                  },
+                  {
+                    "default": 100,
+                    "max": 20000,
+                    "min": 20,
+                    "name": "b1_hz",
+                    "unit": "Hz"
+                  },
+                  {
+                    "default": 0,
+                    "max": 24,
+                    "min": -24,
+                    "name": "b1_gain_db",
+                    "unit": "dB"
+                  },
+                  {
+                    "default": 1,
+                    "max": 18,
+                    "min": 0.1,
+                    "name": "b1_q",
+                    "unit": "Q"
+                  },
+                  {
+                    "default": 250,
+                    "max": 20000,
+                    "min": 20,
+                    "name": "b2_hz",
+                    "unit": "Hz"
+                  },
+                  {
+                    "default": 0,
+                    "max": 24,
+                    "min": -24,
+                    "name": "b2_gain_db",
+                    "unit": "dB"
+                  },
+                  {
+                    "default": 1,
+                    "max": 18,
+                    "min": 0.1,
+                    "name": "b2_q",
+                    "unit": "Q"
+                  },
+                  {
+                    "default": 1000,
+                    "max": 20000,
+                    "min": 20,
+                    "name": "b3_hz",
+                    "unit": "Hz"
+                  },
+                  {
+                    "default": 0,
+                    "max": 24,
+                    "min": -24,
+                    "name": "b3_gain_db",
+                    "unit": "dB"
+                  },
+                  {
+                    "default": 1,
+                    "max": 18,
+                    "min": 0.1,
+                    "name": "b3_q",
+                    "unit": "Q"
+                  },
+                  {
+                    "default": 3000,
+                    "max": 20000,
+                    "min": 20,
+                    "name": "b4_hz",
+                    "unit": "Hz"
+                  },
+                  {
+                    "default": 0,
+                    "max": 24,
+                    "min": -24,
+                    "name": "b4_gain_db",
+                    "unit": "dB"
+                  },
+                  {
+                    "default": 1,
+                    "max": 18,
+                    "min": 0.1,
+                    "name": "b4_q",
+                    "unit": "Q"
+                  },
+                  {
+                    "default": 6000,
+                    "max": 20000,
+                    "min": 20,
+                    "name": "b5_hz",
+                    "unit": "Hz"
+                  },
+                  {
+                    "default": 0,
+                    "max": 24,
+                    "min": -24,
+                    "name": "b5_gain_db",
+                    "unit": "dB"
+                  },
+                  {
+                    "default": 1,
+                    "max": 18,
+                    "min": 0.1,
+                    "name": "b5_q",
+                    "unit": "Q"
+                  },
+                  {
+                    "default": 10000,
+                    "max": 20000,
+                    "min": 20,
+                    "name": "b6_hz",
+                    "unit": "Hz"
+                  },
+                  {
+                    "default": 0,
+                    "max": 24,
+                    "min": -24,
+                    "name": "b6_gain_db",
+                    "unit": "dB"
+                  },
+                  {
+                    "default": 1,
+                    "max": 18,
+                    "min": 0.1,
+                    "name": "b6_q",
+                    "unit": "Q"
+                  }
+                ]
+              },
+              {
+                "kind": "compressor",
+                "params": [
+                  {
+                    "default": -18,
+                    "max": 0,
+                    "min": -60,
+                    "name": "threshold_db",
+                    "unit": "dBFS"
+                  },
+                  {
+                    "default": 3,
+                    "max": 20,
+                    "min": 1,
+                    "name": "ratio",
+                    "unit": "ratio"
+                  },
+                  {
+                    "default": 10,
+                    "max": 200,
+                    "min": 0.1,
+                    "name": "attack_ms",
+                    "unit": "ms"
+                  },
+                  {
+                    "default": 100,
+                    "max": 2000,
+                    "min": 5,
+                    "name": "release_ms",
+                    "unit": "ms"
+                  },
+                  {
+                    "default": 6,
+                    "max": 24,
+                    "min": 0,
+                    "name": "knee_db",
+                    "unit": "dB"
+                  },
+                  {
+                    "default": 0,
+                    "max": 24,
+                    "min": -12,
+                    "name": "makeup_db",
+                    "unit": "dB"
+                  }
+                ]
+              },
+              {
+                "kind": "limiter",
+                "params": [
+                  {
+                    "default": -1,
+                    "max": 0,
+                    "min": -20,
+                    "name": "ceiling_db",
+                    "unit": "dBFS"
+                  },
+                  {
+                    "default": 50,
+                    "max": 1000,
+                    "min": 1,
+                    "name": "release_ms",
+                    "unit": "ms"
+                  }
+                ]
+              },
+              {
+                "kind": "gate",
+                "params": [
+                  {
+                    "default": -50,
+                    "max": 0,
+                    "min": -80,
+                    "name": "threshold_db",
+                    "unit": "dBFS"
+                  },
+                  {
+                    "default": -40,
+                    "max": 0,
+                    "min": -80,
+                    "name": "range_db",
+                    "unit": "dB"
+                  },
+                  {
+                    "default": 2,
+                    "max": 100,
+                    "min": 0.1,
+                    "name": "attack_ms",
+                    "unit": "ms"
+                  },
+                  {
+                    "default": 50,
+                    "max": 1000,
+                    "min": 0,
+                    "name": "hold_ms",
+                    "unit": "ms"
+                  },
+                  {
+                    "default": 150,
+                    "max": 2000,
+                    "min": 5,
+                    "name": "release_ms",
+                    "unit": "ms"
+                  }
+                ]
+              },
+              {
+                "kind": "deesser",
+                "params": [
+                  {
+                    "default": 6500,
+                    "max": 12000,
+                    "min": 2000,
+                    "name": "frequency_hz",
+                    "unit": "Hz"
+                  },
+                  {
+                    "default": -30,
+                    "max": 0,
+                    "min": -60,
+                    "name": "threshold_db",
+                    "unit": "dBFS"
+                  },
+                  {
+                    "default": 4,
+                    "max": 20,
+                    "min": 1,
+                    "name": "ratio",
+                    "unit": "ratio"
+                  }
+                ]
+              },
+              {
+                "kind": "noise_reduction",
+                "params": [
+                  {
+                    "default": 0.5,
+                    "max": 1,
+                    "min": 0,
+                    "name": "strength",
+                    "unit": "fraction"
+                  },
+                  {
+                    "default": 0,
+                    "max": 3600000,
+                    "min": 0,
+                    "name": "profile_start_ms",
+                    "unit": "ms"
+                  },
+                  {
+                    "default": 0,
+                    "max": 3600000,
+                    "min": 0,
+                    "name": "profile_end_ms",
+                    "unit": "ms"
+                  }
+                ]
+              }
+            ]
+          },
+          "track_id": {
+            "description": "A track; give this or item_id.",
+            "pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "type": "object"
+      },
+      "args.audio.processor_move": {
+        "additionalProperties": false,
+        "properties": {
+          "index": {
+            "description": "The processor to move, 0-based.",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "item_id": {
+            "description": "A clip or audio item; give this or track_id.",
+            "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          },
+          "to": {
+            "description": "Its new place, 0 to the length minus one.",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "track_id": {
+            "description": "A track; give this or item_id.",
+            "pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "index",
+          "to"
+        ],
+        "type": "object"
+      },
+      "args.audio.processor_remove": {
+        "additionalProperties": false,
+        "properties": {
+          "index": {
+            "description": "The processor to remove, 0-based.",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "item_id": {
+            "description": "A clip or audio item; give this or track_id.",
+            "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          },
+          "track_id": {
+            "description": "A track; give this or item_id.",
+            "pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "index"
+        ],
+        "type": "object"
+      },
+      "args.audio.processor_set": {
+        "additionalProperties": false,
+        "properties": {
+          "enabled": {
+            "description": "true switches it on, false off.",
+            "type": "boolean"
+          },
+          "index": {
+            "description": "The processor to change, 0-based.",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "item_id": {
+            "description": "A clip or audio item; give this or track_id.",
+            "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          },
+          "params": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "description": "Values to change; the others stay.",
+            "type": "object",
+            "x-vv-max-processors": 12,
+            "x-vv-processors": [
+              {
+                "kind": "eq",
+                "params": [
+                  {
+                    "default": 0,
+                    "max": 1000,
+                    "min": 0,
+                    "min_on": 20,
+                    "name": "hp_hz",
+                    "off_zero": true,
+                    "unit": "Hz"
+                  },
+                  {
+                    "default": 0,
+                    "max": 20000,
+                    "min": 0,
+                    "min_on": 1000,
+                    "name": "lp_hz",
+                    "off_zero": true,
+                    "unit": "Hz"
+                  },
+                  {
+                    "default": 100,
+                    "max": 20000,
+                    "min": 20,
+                    "name": "b1_hz",
+                    "unit": "Hz"
+                  },
+                  {
+                    "default": 0,
+                    "max": 24,
+                    "min": -24,
+                    "name": "b1_gain_db",
+                    "unit": "dB"
+                  },
+                  {
+                    "default": 1,
+                    "max": 18,
+                    "min": 0.1,
+                    "name": "b1_q",
+                    "unit": "Q"
+                  },
+                  {
+                    "default": 250,
+                    "max": 20000,
+                    "min": 20,
+                    "name": "b2_hz",
+                    "unit": "Hz"
+                  },
+                  {
+                    "default": 0,
+                    "max": 24,
+                    "min": -24,
+                    "name": "b2_gain_db",
+                    "unit": "dB"
+                  },
+                  {
+                    "default": 1,
+                    "max": 18,
+                    "min": 0.1,
+                    "name": "b2_q",
+                    "unit": "Q"
+                  },
+                  {
+                    "default": 1000,
+                    "max": 20000,
+                    "min": 20,
+                    "name": "b3_hz",
+                    "unit": "Hz"
+                  },
+                  {
+                    "default": 0,
+                    "max": 24,
+                    "min": -24,
+                    "name": "b3_gain_db",
+                    "unit": "dB"
+                  },
+                  {
+                    "default": 1,
+                    "max": 18,
+                    "min": 0.1,
+                    "name": "b3_q",
+                    "unit": "Q"
+                  },
+                  {
+                    "default": 3000,
+                    "max": 20000,
+                    "min": 20,
+                    "name": "b4_hz",
+                    "unit": "Hz"
+                  },
+                  {
+                    "default": 0,
+                    "max": 24,
+                    "min": -24,
+                    "name": "b4_gain_db",
+                    "unit": "dB"
+                  },
+                  {
+                    "default": 1,
+                    "max": 18,
+                    "min": 0.1,
+                    "name": "b4_q",
+                    "unit": "Q"
+                  },
+                  {
+                    "default": 6000,
+                    "max": 20000,
+                    "min": 20,
+                    "name": "b5_hz",
+                    "unit": "Hz"
+                  },
+                  {
+                    "default": 0,
+                    "max": 24,
+                    "min": -24,
+                    "name": "b5_gain_db",
+                    "unit": "dB"
+                  },
+                  {
+                    "default": 1,
+                    "max": 18,
+                    "min": 0.1,
+                    "name": "b5_q",
+                    "unit": "Q"
+                  },
+                  {
+                    "default": 10000,
+                    "max": 20000,
+                    "min": 20,
+                    "name": "b6_hz",
+                    "unit": "Hz"
+                  },
+                  {
+                    "default": 0,
+                    "max": 24,
+                    "min": -24,
+                    "name": "b6_gain_db",
+                    "unit": "dB"
+                  },
+                  {
+                    "default": 1,
+                    "max": 18,
+                    "min": 0.1,
+                    "name": "b6_q",
+                    "unit": "Q"
+                  }
+                ]
+              },
+              {
+                "kind": "compressor",
+                "params": [
+                  {
+                    "default": -18,
+                    "max": 0,
+                    "min": -60,
+                    "name": "threshold_db",
+                    "unit": "dBFS"
+                  },
+                  {
+                    "default": 3,
+                    "max": 20,
+                    "min": 1,
+                    "name": "ratio",
+                    "unit": "ratio"
+                  },
+                  {
+                    "default": 10,
+                    "max": 200,
+                    "min": 0.1,
+                    "name": "attack_ms",
+                    "unit": "ms"
+                  },
+                  {
+                    "default": 100,
+                    "max": 2000,
+                    "min": 5,
+                    "name": "release_ms",
+                    "unit": "ms"
+                  },
+                  {
+                    "default": 6,
+                    "max": 24,
+                    "min": 0,
+                    "name": "knee_db",
+                    "unit": "dB"
+                  },
+                  {
+                    "default": 0,
+                    "max": 24,
+                    "min": -12,
+                    "name": "makeup_db",
+                    "unit": "dB"
+                  }
+                ]
+              },
+              {
+                "kind": "limiter",
+                "params": [
+                  {
+                    "default": -1,
+                    "max": 0,
+                    "min": -20,
+                    "name": "ceiling_db",
+                    "unit": "dBFS"
+                  },
+                  {
+                    "default": 50,
+                    "max": 1000,
+                    "min": 1,
+                    "name": "release_ms",
+                    "unit": "ms"
+                  }
+                ]
+              },
+              {
+                "kind": "gate",
+                "params": [
+                  {
+                    "default": -50,
+                    "max": 0,
+                    "min": -80,
+                    "name": "threshold_db",
+                    "unit": "dBFS"
+                  },
+                  {
+                    "default": -40,
+                    "max": 0,
+                    "min": -80,
+                    "name": "range_db",
+                    "unit": "dB"
+                  },
+                  {
+                    "default": 2,
+                    "max": 100,
+                    "min": 0.1,
+                    "name": "attack_ms",
+                    "unit": "ms"
+                  },
+                  {
+                    "default": 50,
+                    "max": 1000,
+                    "min": 0,
+                    "name": "hold_ms",
+                    "unit": "ms"
+                  },
+                  {
+                    "default": 150,
+                    "max": 2000,
+                    "min": 5,
+                    "name": "release_ms",
+                    "unit": "ms"
+                  }
+                ]
+              },
+              {
+                "kind": "deesser",
+                "params": [
+                  {
+                    "default": 6500,
+                    "max": 12000,
+                    "min": 2000,
+                    "name": "frequency_hz",
+                    "unit": "Hz"
+                  },
+                  {
+                    "default": -30,
+                    "max": 0,
+                    "min": -60,
+                    "name": "threshold_db",
+                    "unit": "dBFS"
+                  },
+                  {
+                    "default": 4,
+                    "max": 20,
+                    "min": 1,
+                    "name": "ratio",
+                    "unit": "ratio"
+                  }
+                ]
+              },
+              {
+                "kind": "noise_reduction",
+                "params": [
+                  {
+                    "default": 0.5,
+                    "max": 1,
+                    "min": 0,
+                    "name": "strength",
+                    "unit": "fraction"
+                  },
+                  {
+                    "default": 0,
+                    "max": 3600000,
+                    "min": 0,
+                    "name": "profile_start_ms",
+                    "unit": "ms"
+                  },
+                  {
+                    "default": 0,
+                    "max": 3600000,
+                    "min": 0,
+                    "name": "profile_end_ms",
+                    "unit": "ms"
+                  }
+                ]
+              }
+            ]
+          },
+          "track_id": {
+            "description": "A track; give this or item_id.",
+            "pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "index"
         ],
         "type": "object"
       },
@@ -8353,6 +9915,26 @@
         },
         "required": [
           "item_id"
+        ],
+        "type": "object"
+      },
+      "args.clip.replace_media": {
+        "additionalProperties": false,
+        "properties": {
+          "asset_id": {
+            "description": "A video or image asset of the document, of the same kind as the clip's asset.",
+            "pattern": "^ast_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          },
+          "item_id": {
+            "description": "A clip.",
+            "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "item_id",
+          "asset_id"
         ],
         "type": "object"
       },
@@ -11408,6 +12990,168 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/agents/profiles": {
+      "get": {
+        "operationId": "agents.profiles.list",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentProfileListResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the agents the chat may host and the suggestions"
+      }
+    },
+    "/api/v1/agents/profiles/{name}": {
+      "delete": {
+        "operationId": "agents.profiles.remove",
+        "parameters": [
+          {
+            "description": "The profile name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Profile"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove an agent profile (a person in the browser only; others get 403)"
+      },
+      "put": {
+        "operationId": "agents.profiles.set",
+        "parameters": [
+          {
+            "description": "The profile name: 1 to 32 characters from a-z, 0-9 and -.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "args": {
+                    "description": "The arguments, one string each; no shell is involved.",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "command": {
+                    "description": "The program: an absolute path, or a name that is on the search path of the server. It is resolved when the profile is written.",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Profile"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Write an agent profile, a command that will run on the machine (a person in the browser only; others get 403)"
+      }
+    },
     "/api/v1/approval-rules": {
       "get": {
         "operationId": "approval-rules.list",
@@ -12444,6 +14188,483 @@
           }
         ],
         "summary": "The questions of the guided briefing"
+      }
+    },
+    "/api/v1/chat/sessions/{id}": {
+      "delete": {
+        "operationId": "chat.sessions.delete",
+        "parameters": [
+          {
+            "description": "A chat session id, cht_ and 10 characters.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatSession"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a session and its transcript (a person in the browser only; others get 403)"
+      },
+      "get": {
+        "operationId": "chat.sessions.get",
+        "parameters": [
+          {
+            "description": "A chat session id, cht_ and 10 characters.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatSession"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Read one chat session"
+      }
+    },
+    "/api/v1/chat/sessions/{id}/cancel": {
+      "post": {
+        "operationId": "chat.sessions.cancel",
+        "parameters": [
+          {
+            "description": "A chat session id, cht_ and 10 characters.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "end": {
+                    "description": "true also ends the session and stops the agent.",
+                    "type": "boolean"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatSession"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cancel the turn in progress, or end the session (a person in the browser only; others get 403)"
+      }
+    },
+    "/api/v1/chat/sessions/{id}/events": {
+      "get": {
+        "operationId": "chat.sessions.events",
+        "parameters": [
+          {
+            "description": "The number of the last event the client holds; Last-Event-ID wins.",
+            "in": "query",
+            "name": "after",
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "A chat session id, cht_ and 10 characters.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Stream what the agent of a session says and does"
+      }
+    },
+    "/api/v1/chat/sessions/{id}/messages": {
+      "post": {
+        "operationId": "chat.sessions.send",
+        "parameters": [
+          {
+            "description": "A chat session id, cht_ and 10 characters.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "text": {
+                    "description": "The message to the agent, at most 20000 characters of plain text.",
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "text"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatSession"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Send a message to the agent (a person in the browser only; others get 403)"
+      }
+    },
+    "/api/v1/chat/sessions/{id}/permissions/{request_id}": {
+      "post": {
+        "operationId": "chat.sessions.answer",
+        "parameters": [
+          {
+            "description": "A chat session id, cht_ and 10 characters.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "description": "A permission request id, cpr_ and 10 characters.",
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "answer": {
+                    "description": "allow (once), reject (once) or cancel. A standing choice is never offered.",
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "answer"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatSession"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Answer a permission request of the agent (a person in the browser only; others get 403)"
+      }
+    },
+    "/api/v1/chat/sessions/{id}/transcript": {
+      "get": {
+        "operationId": "chat.sessions.transcript",
+        "parameters": [
+          {
+            "description": "json (the default: events after a number) or markdown (the whole transcript).",
+            "in": "query",
+            "name": "format",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Only the events with a number above this one (json).",
+            "in": "query",
+            "name": "after",
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The most events in the page (json), at most 500.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "A chat session id, cht_ and 10 characters.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatTranscriptResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Read the transcript of a session as events or as Markdown"
       }
     },
     "/api/v1/commands": {
@@ -15822,6 +18043,91 @@
         "summary": "Read a project"
       }
     },
+    "/api/v1/projects/{id}/audio-measure": {
+      "get": {
+        "description": "Heavy call: shares the limit of 10 a minute per credential (E_RATE_LIMITED with Retry-After).",
+        "operationId": "audio.measure",
+        "parameters": [
+          {
+            "description": "The timeline of the project; required when the project has several.",
+            "in": "query",
+            "name": "timeline_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Measure this clip or audio item alone, with the chain of its track; its own range is the default range.",
+            "in": "query",
+            "name": "item_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The start of the range; empty is the start of the item, or of the timeline.",
+            "in": "query",
+            "name": "start",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The end of the range; empty is the end of the item, or of the timeline.",
+            "in": "query",
+            "name": "end",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AudioMeasureResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Measure the sound with and without the audio processors"
+      }
+    },
     "/api/v1/projects/{id}/bitmaps/{key}": {
       "get": {
         "operationId": "bitmaps.get",
@@ -16166,6 +18472,136 @@
           }
         ],
         "summary": "Export a project as a .vvbundle"
+      }
+    },
+    "/api/v1/projects/{id}/chat/sessions": {
+      "get": {
+        "operationId": "chat.sessions.list",
+        "parameters": [
+          {
+            "description": "The project id, prj_ and 10 characters.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatSessionListResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the chat sessions of a project"
+      },
+      "post": {
+        "operationId": "chat.sessions.start",
+        "parameters": [
+          {
+            "description": "The project id, prj_ and 10 characters.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "profile": {
+                    "description": "The name of the agent profile to start.",
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "profile"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatSession"
+                }
+              }
+            },
+            "description": "Created"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Start the agent of a profile on a project (a person in the browser only; others get 403)"
       }
     },
     "/api/v1/projects/{id}/describe": {
@@ -18355,6 +20791,273 @@
           }
         ],
         "summary": "Move an asset to the trash"
+      }
+    },
+    "/api/v1/projects/{id}/motion/brief": {
+      "get": {
+        "operationId": "projects.motion.brief",
+        "parameters": [
+          {
+            "description": "The timeline of the project; required when the project has several.",
+            "in": "query",
+            "name": "timeline_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Start of the range, a time; default 0s.",
+            "in": "query",
+            "name": "from",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "End of the range, exclusive; default the end of the timeline.",
+            "in": "query",
+            "name": "until",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The visual track the clip will go on; tells whether the render needs alpha.",
+            "in": "query",
+            "name": "track_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MotionBriefResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "What a render by an external motion engine must fit: size, rate, length, safe area, brand kit, captions and reference frames"
+      }
+    },
+    "/api/v1/projects/{id}/motion/check": {
+      "get": {
+        "operationId": "projects.motion.check",
+        "parameters": [
+          {
+            "description": "The asset to check: an asset of the project, ready.",
+            "in": "query",
+            "name": "asset_id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "description": "The timeline of the project; required when the project has several.",
+            "in": "query",
+            "name": "timeline_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Start of the range, a time; default 0s.",
+            "in": "query",
+            "name": "from",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "End of the range, exclusive; default the end of the timeline.",
+            "in": "query",
+            "name": "until",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The visual track the clip will go on; tells whether the render needs alpha.",
+            "in": "query",
+            "name": "track_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MotionCheckResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Check a rendered asset against the brief: each mismatch of size, rate, length or alpha with the value expected"
+      }
+    },
+    "/api/v1/projects/{id}/motion/replace": {
+      "post": {
+        "operationId": "projects.motion.replace",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "asset_id": {
+                    "description": "The new render: an asset of the timeline, ready.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "dry_run": {
+                    "type": "boolean"
+                  },
+                  "render_key": {
+                    "description": "The key of the animation; default the render key of the origin of the new asset.",
+                    "type": "string"
+                  },
+                  "timeline_id": {
+                    "description": "The timeline of the project; required when the project has several.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "asset_id"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MotionReplaceResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Replace, in one undoable batch, every clip that reads an earlier render of an animation with a new render of it"
       }
     },
     "/api/v1/projects/{id}/otio": {

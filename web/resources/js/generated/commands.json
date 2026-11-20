@@ -74,7 +74,7 @@
 		"internal": false,
 		"name": "animation.apply_preset",
 		"scope": "edit",
-		"summary": "Animates the start or the end of a visual item with a preset: fade, slide, scale, pop, push in or pull out."
+		"summary": "Animates the start or end of a visual item with a preset: fade, slide, scale, pop, push in or pull out."
 	},
 	{
 		"args_schema": {
@@ -314,6 +314,53 @@
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"additionalProperties": false,
 			"properties": {
+				"item_id": {
+					"description": "A clip or audio item; give this or track_id.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+					"type": "string"
+				},
+				"preset": {
+					"description": "voice, voice_with_music, podcast or clean_noisy_room.",
+					"enum": [
+						"voice",
+						"voice_with_music",
+						"podcast",
+						"clean_noisy_room"
+					],
+					"type": "string"
+				},
+				"track_id": {
+					"description": "A track; give this or item_id.",
+					"pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+					"type": "string"
+				}
+			},
+			"required": [
+				"preset"
+			],
+			"type": "object"
+		},
+		"description": "Replaces the chain of an item or a track with a preset: voice, voice_with_music, podcast or clean_noisy_room. The chain becomes exactly the preset; change any processor afterwards with audio.processor_set. voice_with_music has no noise reduction.",
+		"domain": "video",
+		"errors": [
+			"E_VALIDATION",
+			"E_NOT_FOUND",
+			"E_TYPE_MISMATCH"
+		],
+		"example": {
+			"item_id": "itm_m1n2p3q4r5",
+			"preset": "voice"
+		},
+		"internal": false,
+		"name": "audio.apply_preset",
+		"scope": "edit",
+		"summary": "Preset"
+	},
+	{
+		"args_schema": {
+			"$schema": "https://json-schema.org/draft/2020-12/schema",
+			"additionalProperties": false,
+			"properties": {
 				"attack": {
 					"description": "A length, may be 0; the ramp down before speech. Default \"0.2s\".",
 					"type": "string",
@@ -500,6 +547,841 @@
 		"name": "audio.mark_beats",
 		"scope": "edit",
 		"summary": "Writes markers on a music item at the beats of its audio."
+	},
+	{
+		"args_schema": {
+			"$schema": "https://json-schema.org/draft/2020-12/schema",
+			"additionalProperties": false,
+			"properties": {
+				"enabled": {
+					"description": "false adds it switched off; default true.",
+					"type": "boolean"
+				},
+				"index": {
+					"description": "Where to insert, 0 to the length of the chain; default the end.",
+					"minimum": 0,
+					"type": "integer"
+				},
+				"item_id": {
+					"description": "A clip or audio item; give this or track_id.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+					"type": "string"
+				},
+				"kind": {
+					"description": "eq, compressor, limiter, gate, deesser or noise_reduction.",
+					"enum": [
+						"eq",
+						"compressor",
+						"limiter",
+						"gate",
+						"deesser",
+						"noise_reduction"
+					],
+					"type": "string"
+				},
+				"params": {
+					"additionalProperties": {
+						"type": "number"
+					},
+					"description": "Parameter values by name; the rest keep their default.",
+					"type": "object",
+					"x-vv-max-processors": 12,
+					"x-vv-processors": [
+						{
+							"kind": "eq",
+							"params": [
+								{
+									"default": 0,
+									"max": 1000,
+									"min": 0,
+									"min_on": 20,
+									"name": "hp_hz",
+									"off_zero": true,
+									"unit": "Hz"
+								},
+								{
+									"default": 0,
+									"max": 20000,
+									"min": 0,
+									"min_on": 1000,
+									"name": "lp_hz",
+									"off_zero": true,
+									"unit": "Hz"
+								},
+								{
+									"default": 100,
+									"max": 20000,
+									"min": 20,
+									"name": "b1_hz",
+									"unit": "Hz"
+								},
+								{
+									"default": 0,
+									"max": 24,
+									"min": -24,
+									"name": "b1_gain_db",
+									"unit": "dB"
+								},
+								{
+									"default": 1,
+									"max": 18,
+									"min": 0.1,
+									"name": "b1_q",
+									"unit": "Q"
+								},
+								{
+									"default": 250,
+									"max": 20000,
+									"min": 20,
+									"name": "b2_hz",
+									"unit": "Hz"
+								},
+								{
+									"default": 0,
+									"max": 24,
+									"min": -24,
+									"name": "b2_gain_db",
+									"unit": "dB"
+								},
+								{
+									"default": 1,
+									"max": 18,
+									"min": 0.1,
+									"name": "b2_q",
+									"unit": "Q"
+								},
+								{
+									"default": 1000,
+									"max": 20000,
+									"min": 20,
+									"name": "b3_hz",
+									"unit": "Hz"
+								},
+								{
+									"default": 0,
+									"max": 24,
+									"min": -24,
+									"name": "b3_gain_db",
+									"unit": "dB"
+								},
+								{
+									"default": 1,
+									"max": 18,
+									"min": 0.1,
+									"name": "b3_q",
+									"unit": "Q"
+								},
+								{
+									"default": 3000,
+									"max": 20000,
+									"min": 20,
+									"name": "b4_hz",
+									"unit": "Hz"
+								},
+								{
+									"default": 0,
+									"max": 24,
+									"min": -24,
+									"name": "b4_gain_db",
+									"unit": "dB"
+								},
+								{
+									"default": 1,
+									"max": 18,
+									"min": 0.1,
+									"name": "b4_q",
+									"unit": "Q"
+								},
+								{
+									"default": 6000,
+									"max": 20000,
+									"min": 20,
+									"name": "b5_hz",
+									"unit": "Hz"
+								},
+								{
+									"default": 0,
+									"max": 24,
+									"min": -24,
+									"name": "b5_gain_db",
+									"unit": "dB"
+								},
+								{
+									"default": 1,
+									"max": 18,
+									"min": 0.1,
+									"name": "b5_q",
+									"unit": "Q"
+								},
+								{
+									"default": 10000,
+									"max": 20000,
+									"min": 20,
+									"name": "b6_hz",
+									"unit": "Hz"
+								},
+								{
+									"default": 0,
+									"max": 24,
+									"min": -24,
+									"name": "b6_gain_db",
+									"unit": "dB"
+								},
+								{
+									"default": 1,
+									"max": 18,
+									"min": 0.1,
+									"name": "b6_q",
+									"unit": "Q"
+								}
+							]
+						},
+						{
+							"kind": "compressor",
+							"params": [
+								{
+									"default": -18,
+									"max": 0,
+									"min": -60,
+									"name": "threshold_db",
+									"unit": "dBFS"
+								},
+								{
+									"default": 3,
+									"max": 20,
+									"min": 1,
+									"name": "ratio",
+									"unit": "ratio"
+								},
+								{
+									"default": 10,
+									"max": 200,
+									"min": 0.1,
+									"name": "attack_ms",
+									"unit": "ms"
+								},
+								{
+									"default": 100,
+									"max": 2000,
+									"min": 5,
+									"name": "release_ms",
+									"unit": "ms"
+								},
+								{
+									"default": 6,
+									"max": 24,
+									"min": 0,
+									"name": "knee_db",
+									"unit": "dB"
+								},
+								{
+									"default": 0,
+									"max": 24,
+									"min": -12,
+									"name": "makeup_db",
+									"unit": "dB"
+								}
+							]
+						},
+						{
+							"kind": "limiter",
+							"params": [
+								{
+									"default": -1,
+									"max": 0,
+									"min": -20,
+									"name": "ceiling_db",
+									"unit": "dBFS"
+								},
+								{
+									"default": 50,
+									"max": 1000,
+									"min": 1,
+									"name": "release_ms",
+									"unit": "ms"
+								}
+							]
+						},
+						{
+							"kind": "gate",
+							"params": [
+								{
+									"default": -50,
+									"max": 0,
+									"min": -80,
+									"name": "threshold_db",
+									"unit": "dBFS"
+								},
+								{
+									"default": -40,
+									"max": 0,
+									"min": -80,
+									"name": "range_db",
+									"unit": "dB"
+								},
+								{
+									"default": 2,
+									"max": 100,
+									"min": 0.1,
+									"name": "attack_ms",
+									"unit": "ms"
+								},
+								{
+									"default": 50,
+									"max": 1000,
+									"min": 0,
+									"name": "hold_ms",
+									"unit": "ms"
+								},
+								{
+									"default": 150,
+									"max": 2000,
+									"min": 5,
+									"name": "release_ms",
+									"unit": "ms"
+								}
+							]
+						},
+						{
+							"kind": "deesser",
+							"params": [
+								{
+									"default": 6500,
+									"max": 12000,
+									"min": 2000,
+									"name": "frequency_hz",
+									"unit": "Hz"
+								},
+								{
+									"default": -30,
+									"max": 0,
+									"min": -60,
+									"name": "threshold_db",
+									"unit": "dBFS"
+								},
+								{
+									"default": 4,
+									"max": 20,
+									"min": 1,
+									"name": "ratio",
+									"unit": "ratio"
+								}
+							]
+						},
+						{
+							"kind": "noise_reduction",
+							"params": [
+								{
+									"default": 0.5,
+									"max": 1,
+									"min": 0,
+									"name": "strength",
+									"unit": "fraction"
+								},
+								{
+									"default": 0,
+									"max": 3600000,
+									"min": 0,
+									"name": "profile_start_ms",
+									"unit": "ms"
+								},
+								{
+									"default": 0,
+									"max": 3600000,
+									"min": 0,
+									"name": "profile_end_ms",
+									"unit": "ms"
+								}
+							]
+						}
+					]
+				},
+				"track_id": {
+					"description": "A track; give this or item_id.",
+					"pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+					"type": "string"
+				}
+			},
+			"required": [
+				"kind"
+			],
+			"type": "object"
+		},
+		"description": "Adds an audio processor to the chain of a clip or audio item (item_id) or of a track (track_id). kind is eq, compressor, limiter, gate, deesser or noise_reduction; params are the values that differ from the default of the kind (units and ranges in SDD-004 7.1). The chain runs in order, so index matters; a track chain runs on the sum of the track.",
+		"domain": "video",
+		"errors": [
+			"E_VALIDATION",
+			"E_NOT_FOUND",
+			"E_TYPE_MISMATCH",
+			"E_LIMIT"
+		],
+		"example": {
+			"item_id": "itm_m1n2p3q4r5",
+			"kind": "compressor",
+			"params": {
+				"ratio": 4,
+				"threshold_db": -24
+			}
+		},
+		"internal": false,
+		"name": "audio.processor_add",
+		"scope": "edit",
+		"summary": "Add"
+	},
+	{
+		"args_schema": {
+			"$schema": "https://json-schema.org/draft/2020-12/schema",
+			"additionalProperties": false,
+			"properties": {
+				"index": {
+					"description": "The processor to move, 0-based.",
+					"minimum": 0,
+					"type": "integer"
+				},
+				"item_id": {
+					"description": "A clip or audio item; give this or track_id.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+					"type": "string"
+				},
+				"to": {
+					"description": "Its new place, 0 to the length minus one.",
+					"minimum": 0,
+					"type": "integer"
+				},
+				"track_id": {
+					"description": "A track; give this or item_id.",
+					"pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+					"type": "string"
+				}
+			},
+			"required": [
+				"index",
+				"to"
+			],
+			"type": "object"
+		},
+		"description": "Moves a processor to another place in the chain of an item or a track. index and to are 0-based places in the chain; the order changes the sound.",
+		"domain": "video",
+		"errors": [
+			"E_VALIDATION",
+			"E_NOT_FOUND",
+			"E_TYPE_MISMATCH"
+		],
+		"example": {
+			"index": 0,
+			"item_id": "itm_m1n2p3q4r5",
+			"to": 2
+		},
+		"internal": false,
+		"name": "audio.processor_move",
+		"scope": "edit",
+		"summary": "Move"
+	},
+	{
+		"args_schema": {
+			"$schema": "https://json-schema.org/draft/2020-12/schema",
+			"additionalProperties": false,
+			"properties": {
+				"index": {
+					"description": "The processor to remove, 0-based.",
+					"minimum": 0,
+					"type": "integer"
+				},
+				"item_id": {
+					"description": "A clip or audio item; give this or track_id.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+					"type": "string"
+				},
+				"track_id": {
+					"description": "A track; give this or item_id.",
+					"pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+					"type": "string"
+				}
+			},
+			"required": [
+				"index"
+			],
+			"type": "object"
+		},
+		"description": "Removes a processor from the chain of an item or a track. index is the 0-based place in the chain; later processors move one place earlier.",
+		"domain": "video",
+		"errors": [
+			"E_VALIDATION",
+			"E_NOT_FOUND",
+			"E_TYPE_MISMATCH"
+		],
+		"example": {
+			"index": 1,
+			"item_id": "itm_m1n2p3q4r5"
+		},
+		"internal": false,
+		"name": "audio.processor_remove",
+		"scope": "edit",
+		"summary": "Remove"
+	},
+	{
+		"args_schema": {
+			"$schema": "https://json-schema.org/draft/2020-12/schema",
+			"additionalProperties": false,
+			"properties": {
+				"enabled": {
+					"description": "true switches it on, false off.",
+					"type": "boolean"
+				},
+				"index": {
+					"description": "The processor to change, 0-based.",
+					"minimum": 0,
+					"type": "integer"
+				},
+				"item_id": {
+					"description": "A clip or audio item; give this or track_id.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+					"type": "string"
+				},
+				"params": {
+					"additionalProperties": {
+						"type": "number"
+					},
+					"description": "Values to change; the others stay.",
+					"type": "object",
+					"x-vv-max-processors": 12,
+					"x-vv-processors": [
+						{
+							"kind": "eq",
+							"params": [
+								{
+									"default": 0,
+									"max": 1000,
+									"min": 0,
+									"min_on": 20,
+									"name": "hp_hz",
+									"off_zero": true,
+									"unit": "Hz"
+								},
+								{
+									"default": 0,
+									"max": 20000,
+									"min": 0,
+									"min_on": 1000,
+									"name": "lp_hz",
+									"off_zero": true,
+									"unit": "Hz"
+								},
+								{
+									"default": 100,
+									"max": 20000,
+									"min": 20,
+									"name": "b1_hz",
+									"unit": "Hz"
+								},
+								{
+									"default": 0,
+									"max": 24,
+									"min": -24,
+									"name": "b1_gain_db",
+									"unit": "dB"
+								},
+								{
+									"default": 1,
+									"max": 18,
+									"min": 0.1,
+									"name": "b1_q",
+									"unit": "Q"
+								},
+								{
+									"default": 250,
+									"max": 20000,
+									"min": 20,
+									"name": "b2_hz",
+									"unit": "Hz"
+								},
+								{
+									"default": 0,
+									"max": 24,
+									"min": -24,
+									"name": "b2_gain_db",
+									"unit": "dB"
+								},
+								{
+									"default": 1,
+									"max": 18,
+									"min": 0.1,
+									"name": "b2_q",
+									"unit": "Q"
+								},
+								{
+									"default": 1000,
+									"max": 20000,
+									"min": 20,
+									"name": "b3_hz",
+									"unit": "Hz"
+								},
+								{
+									"default": 0,
+									"max": 24,
+									"min": -24,
+									"name": "b3_gain_db",
+									"unit": "dB"
+								},
+								{
+									"default": 1,
+									"max": 18,
+									"min": 0.1,
+									"name": "b3_q",
+									"unit": "Q"
+								},
+								{
+									"default": 3000,
+									"max": 20000,
+									"min": 20,
+									"name": "b4_hz",
+									"unit": "Hz"
+								},
+								{
+									"default": 0,
+									"max": 24,
+									"min": -24,
+									"name": "b4_gain_db",
+									"unit": "dB"
+								},
+								{
+									"default": 1,
+									"max": 18,
+									"min": 0.1,
+									"name": "b4_q",
+									"unit": "Q"
+								},
+								{
+									"default": 6000,
+									"max": 20000,
+									"min": 20,
+									"name": "b5_hz",
+									"unit": "Hz"
+								},
+								{
+									"default": 0,
+									"max": 24,
+									"min": -24,
+									"name": "b5_gain_db",
+									"unit": "dB"
+								},
+								{
+									"default": 1,
+									"max": 18,
+									"min": 0.1,
+									"name": "b5_q",
+									"unit": "Q"
+								},
+								{
+									"default": 10000,
+									"max": 20000,
+									"min": 20,
+									"name": "b6_hz",
+									"unit": "Hz"
+								},
+								{
+									"default": 0,
+									"max": 24,
+									"min": -24,
+									"name": "b6_gain_db",
+									"unit": "dB"
+								},
+								{
+									"default": 1,
+									"max": 18,
+									"min": 0.1,
+									"name": "b6_q",
+									"unit": "Q"
+								}
+							]
+						},
+						{
+							"kind": "compressor",
+							"params": [
+								{
+									"default": -18,
+									"max": 0,
+									"min": -60,
+									"name": "threshold_db",
+									"unit": "dBFS"
+								},
+								{
+									"default": 3,
+									"max": 20,
+									"min": 1,
+									"name": "ratio",
+									"unit": "ratio"
+								},
+								{
+									"default": 10,
+									"max": 200,
+									"min": 0.1,
+									"name": "attack_ms",
+									"unit": "ms"
+								},
+								{
+									"default": 100,
+									"max": 2000,
+									"min": 5,
+									"name": "release_ms",
+									"unit": "ms"
+								},
+								{
+									"default": 6,
+									"max": 24,
+									"min": 0,
+									"name": "knee_db",
+									"unit": "dB"
+								},
+								{
+									"default": 0,
+									"max": 24,
+									"min": -12,
+									"name": "makeup_db",
+									"unit": "dB"
+								}
+							]
+						},
+						{
+							"kind": "limiter",
+							"params": [
+								{
+									"default": -1,
+									"max": 0,
+									"min": -20,
+									"name": "ceiling_db",
+									"unit": "dBFS"
+								},
+								{
+									"default": 50,
+									"max": 1000,
+									"min": 1,
+									"name": "release_ms",
+									"unit": "ms"
+								}
+							]
+						},
+						{
+							"kind": "gate",
+							"params": [
+								{
+									"default": -50,
+									"max": 0,
+									"min": -80,
+									"name": "threshold_db",
+									"unit": "dBFS"
+								},
+								{
+									"default": -40,
+									"max": 0,
+									"min": -80,
+									"name": "range_db",
+									"unit": "dB"
+								},
+								{
+									"default": 2,
+									"max": 100,
+									"min": 0.1,
+									"name": "attack_ms",
+									"unit": "ms"
+								},
+								{
+									"default": 50,
+									"max": 1000,
+									"min": 0,
+									"name": "hold_ms",
+									"unit": "ms"
+								},
+								{
+									"default": 150,
+									"max": 2000,
+									"min": 5,
+									"name": "release_ms",
+									"unit": "ms"
+								}
+							]
+						},
+						{
+							"kind": "deesser",
+							"params": [
+								{
+									"default": 6500,
+									"max": 12000,
+									"min": 2000,
+									"name": "frequency_hz",
+									"unit": "Hz"
+								},
+								{
+									"default": -30,
+									"max": 0,
+									"min": -60,
+									"name": "threshold_db",
+									"unit": "dBFS"
+								},
+								{
+									"default": 4,
+									"max": 20,
+									"min": 1,
+									"name": "ratio",
+									"unit": "ratio"
+								}
+							]
+						},
+						{
+							"kind": "noise_reduction",
+							"params": [
+								{
+									"default": 0.5,
+									"max": 1,
+									"min": 0,
+									"name": "strength",
+									"unit": "fraction"
+								},
+								{
+									"default": 0,
+									"max": 3600000,
+									"min": 0,
+									"name": "profile_start_ms",
+									"unit": "ms"
+								},
+								{
+									"default": 0,
+									"max": 3600000,
+									"min": 0,
+									"name": "profile_end_ms",
+									"unit": "ms"
+								}
+							]
+						}
+					]
+				},
+				"track_id": {
+					"description": "A track; give this or item_id.",
+					"pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+					"type": "string"
+				}
+			},
+			"required": [
+				"index"
+			],
+			"type": "object"
+		},
+		"description": "Changes one processor of the chain of an item or a track. index is the 0-based place in the chain. params are merged with the current ones; enabled false keeps the processor but skips it.",
+		"domain": "video",
+		"errors": [
+			"E_VALIDATION",
+			"E_NOT_FOUND",
+			"E_TYPE_MISMATCH"
+		],
+		"example": {
+			"enabled": false,
+			"index": 0,
+			"track_id": "trk_m1n2p3q4r5"
+		},
+		"internal": false,
+		"name": "audio.processor_set",
+		"scope": "edit",
+		"summary": "Set"
 	},
 	{
 		"args_schema": {
@@ -1487,7 +2369,47 @@
 		"internal": false,
 		"name": "clip.remove_silences",
 		"scope": "edit",
-		"summary": "Cuts the silent stretches out of a clip or an audio item, leaving one item per stretch of speech."
+		"summary": "Cuts the silences out of a clip or audio item, one item per stretch of speech."
+	},
+	{
+		"args_schema": {
+			"$schema": "https://json-schema.org/draft/2020-12/schema",
+			"additionalProperties": false,
+			"properties": {
+				"asset_id": {
+					"description": "A video or image asset of the document, of the same kind as the clip's asset.",
+					"pattern": "^ast_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+					"type": "string"
+				},
+				"item_id": {
+					"description": "A clip.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+					"type": "string"
+				}
+			},
+			"required": [
+				"item_id",
+				"asset_id"
+			],
+			"type": "object"
+		},
+		"description": "Replaces the asset a clip plays, a video by a video or an image by an image, and keeps its position, duration, trim, speed, transform, keyframes and effects: the animation an external engine rendered again takes the place of the one it replaces. Nothing is stretched or trimmed: a video the clip's range does not fit is refused.",
+		"domain": "video",
+		"errors": [
+			"E_VALIDATION",
+			"E_NOT_FOUND",
+			"E_TYPE_MISMATCH",
+			"E_INVALID_STATE",
+			"E_OUT_OF_SOURCE"
+		],
+		"example": {
+			"asset_id": "ast_k8m2n4p6q9",
+			"item_id": "itm_m1n2p3q4r5"
+		},
+		"internal": false,
+		"name": "clip.replace_media",
+		"scope": "edit",
+		"summary": "Swaps the asset of a clip for another of the same kind and keeps everything else."
 	},
 	{
 		"args_schema": {
@@ -1956,7 +2878,7 @@
 		"internal": false,
 		"name": "clip.set_color",
 		"scope": "edit",
-		"summary": "Sets the brightness, contrast, saturation, temperature, tint, hue, lookup table, HSL bands, wheels and curves of a clip."
+		"summary": "Sets brightness, contrast, saturation, temperature, tint, hue, LUT, HSL bands, wheels and curves of a clip."
 	},
 	{
 		"args_schema": {
@@ -2070,7 +2992,7 @@
 		"internal": false,
 		"name": "clip.set_effects",
 		"scope": "edit",
-		"summary": "Sets the visual effects of a clip: motion blur, glow, vignette, grain, RGB split and shake."
+		"summary": "Sets the effects of a clip: motion blur, glow, vignette, grain, RGB split and shake."
 	},
 	{
 		"args_schema": {
@@ -2235,7 +3157,7 @@
 		"internal": false,
 		"name": "clip.set_framing",
 		"scope": "edit",
-		"summary": "Sets how the asset of a clip is fitted into the frame and how much of each side is cropped."
+		"summary": "Sets how a clip fits the frame and how much of each side is cropped."
 	},
 	{
 		"args_schema": {
@@ -3295,7 +4217,7 @@
 		"internal": false,
 		"name": "item.set_audio",
 		"scope": "edit",
-		"summary": "Sets the volume, the fades, the mute flag, the noise reduction or the voice of a clip or audio item."
+		"summary": "Sets the volume, fades, mute, noise reduction or voice of a clip or audio item."
 	},
 	{
 		"args_schema": {

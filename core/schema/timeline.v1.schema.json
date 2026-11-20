@@ -601,6 +601,12 @@
         "outline": {
           "$ref": "#/$defs/Outline"
         },
+        "processors": {
+          "items": {
+            "$ref": "#/$defs/Processor"
+          },
+          "type": "array"
+        },
         "radius": {
           "minimum": 0,
           "type": "number"
@@ -888,6 +894,34 @@
       ],
       "type": "object"
     },
+    "Processor": {
+      "properties": {
+        "disabled": {
+          "type": "boolean"
+        },
+        "kind": {
+          "enum": [
+            "eq",
+            "compressor",
+            "limiter",
+            "gate",
+            "deesser",
+            "noise_reduction"
+          ],
+          "type": "string"
+        },
+        "params": {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "type": "object"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "type": "object"
+    },
     "ProjectFont": {
       "properties": {
         "files": {
@@ -1125,6 +1159,12 @@
         "order": {
           "pattern": "^[0-9a-z]+$",
           "type": "string"
+        },
+        "processors": {
+          "items": {
+            "$ref": "#/$defs/Processor"
+          },
+          "type": "array"
         },
         "solo": {
           "type": "boolean"

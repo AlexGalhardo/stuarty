@@ -210,7 +210,7 @@
     "files": [
       "licenses/vendored/hyperframes-Apache-2.0.txt"
     ],
-    "note": "adapted, with attribution, into the skill captions-for-shorts (web/resources/skills); see licenses/vendored/NOTICE-skills.md",
+    "note": "adapted, with attribution, into the skills captions-for-shorts and motion-with-an-external-engine (web/resources/skills); see licenses/vendored/NOTICE-skills.md",
     "shipped_in": [
       "archive",
       "image"

@@ -129,6 +129,11 @@ func TestRateLimitCoversTheHeavyOperations(t *testing.T) {
 			_, err := s.FontImport(ctx, FontImportRequest{Path: "/x.ttf"})
 			return err
 		},
+		// Epic 34: a read that decodes and mixes up to 600 s of sound.
+		"AudioMeasure": func() error {
+			_, err := s.AudioMeasure(ctx, AudioMeasureRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
 		"ProjectOtioImport": func() error {
 			_, err := s.ProjectOtioImport(ctx, ProjectOtioImportRequest{ProjectID: "prj_0000000001", Path: "/x.otio"})
 			return err

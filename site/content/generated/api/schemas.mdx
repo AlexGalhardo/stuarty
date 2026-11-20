@@ -21,6 +21,27 @@ The types named in the tables of the operations. The arguments of each editing c
 | `temperature` | `integer` | no |  |
 | `tint` | `integer` | no |  |
 
+### AgentProfileListResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `available` | `boolean` | no |  |
+| `can_write` | `boolean` | no |  |
+| `profiles` | array of [`Profile`](/docs/api/schemas#profile) | no |  |
+| `suggestions` | array of [`AgentSuggestion`](/docs/api/schemas#agentsuggestion) | no |  |
+
+### AgentSuggestion
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `args` | array of `string` | no |  |
+| `executables` | array of `string` | no |  |
+| `found` | `boolean` | no |  |
+| `found_path` | `string` | no |  |
+| `install` | `string` | no |  |
+| `name` | `string` | no |  |
+| `title` | `string` | no |  |
+
 ### ApprovalListResult
 
 | Name | Type | Required | Description |
@@ -104,6 +125,29 @@ The types named in the tables of the operations. The arguments of each editing c
 | `text` | `string` | no |  |
 | `untrusted_notice` | `string` | no |  |
 | `uses` | array of [`Use`](/docs/api/schemas#use) | no |  |
+
+### AudioLevels
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `integrated_lufs` | `number (double)` or `null` | no |  |
+| `noise_floor_dbfs` | `number (double)` | no |  |
+| `speech_to_noise_db` | `number (double)` or `null` | no |  |
+| `true_peak_dbtp` | `number (double)` or `null` | no |  |
+
+### AudioMeasureResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `after` | [`AudioLevels`](/docs/api/schemas#audiolevels) | no |  |
+| `before` | [`AudioLevels`](/docs/api/schemas#audiolevels) | no |  |
+| `end_frame` | `integer (int64)` | no |  |
+| `item_id` | `string` | no |  |
+| `project_id` | `string` | no |  |
+| `revision` | `integer (int64)` | no |  |
+| `seconds` | `number (double)` | no |  |
+| `start_frame` | `integer (int64)` | no |  |
+| `text` | `string` | no |  |
 
 ### AuditEntry
 
@@ -269,6 +313,37 @@ The types named in the tables of the operations. The arguments of each editing c
 | `id` | `string` | no |  |
 | `kind` | `string` | no |  |
 | `object` | map of `any` | no |  |
+
+### ChatSession
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `created_at` | `string (date-time)` | no |  |
+| `end_reason` | `string` | no |  |
+| `ended_at` | `string (date-time)` or `null` | no |  |
+| `event_count` | `integer` | no |  |
+| `id` | `string` | no |  |
+| `live` | `boolean` | no |  |
+| `profile` | `string` | no |  |
+| `project_id` | `string` | no |  |
+| `state` | `string` | no |  |
+| `title` | `string` | no |  |
+| `updated_at` | `string (date-time)` | no |  |
+
+### ChatSessionListResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `sessions` | array of [`ChatSession`](/docs/api/schemas#chatsession) | no |  |
+
+### ChatTranscriptResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `events` | array of [`Event`](/docs/api/schemas#event) | no |  |
+| `markdown` | `string` | no |  |
+| `next_after` | `integer (int64)` or `null` | no |  |
+| `session` | [`ChatSession`](/docs/api/schemas#chatsession) | no |  |
 
 ### ChromaKey
 
@@ -518,6 +593,19 @@ The types named in the tables of the operations. The arguments of each editing c
 | `on` | `string` | no |  |
 | `params` | map of `any` | no |  |
 | `path` | `string` | no |  |
+
+### Event
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `append` | `boolean` | no |  |
+| `at` | `string (date-time)` | no |  |
+| `kind` | `string` | no |  |
+| `permission` | [`Permission`](/docs/api/schemas#permission) or `any` or `null` or `null` | no |  |
+| `seq` | `integer (int64)` | no |  |
+| `state` | [`StateInfo`](/docs/api/schemas#stateinfo) or `any` or `null` or `null` | no |  |
+| `text` | `string` | no |  |
+| `tool` | [`Tool`](/docs/api/schemas#tool) or `any` or `null` or `null` | no |  |
 
 ### export.Finding
 
@@ -944,6 +1032,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `name` | `string` | no |  |
 | `probe` | [`ProbeSummary`](/docs/api/schemas#probesummary) or `any` or `null` or `null` | no |  |
 | `progress` | `number (double)` | no |  |
+| `replaces` | array of [`RenderOffer`](/docs/api/schemas#renderoffer) | no |  |
 | `state` | `string` | no |  |
 
 ### ImportedFont
@@ -1020,6 +1109,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `name` | `string` | no |  |
 | `opacity` | `number (double)` | no |  |
 | `outline` | [`Outline`](/docs/api/schemas#outline) or `any` or `null` or `null` | no |  |
+| `processors` | array of [`Processor`](/docs/api/schemas#processor) | no |  |
 | `radius` | `number (double)` | no |  |
 | `reverse` | `boolean` | no |  |
 | `rotation` | `number (double)` | no |  |
@@ -1345,6 +1435,15 @@ The types named in the tables of the operations. The arguments of each editing c
 | `asset` | `string` | no |  |
 | `intensity` | `number (double)` | no |  |
 
+### Margins
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `bottom` | `integer` | no |  |
+| `left` | `integer` | no |  |
+| `right` | `integer` | no |  |
+| `top` | `integer` | no |  |
+
 ### Marker
 
 | Name | Type | Required | Description |
@@ -1462,6 +1561,15 @@ The types named in the tables of the operations. The arguments of each editing c
 | `text` | `string` | no |  |
 | `untrusted_notice` | `string` | no |  |
 
+### Mismatch
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `expected` | `string` | no |  |
+| `field` | `string` | no |  |
+| `found` | `string` | no |  |
+| `hint` | `string` | no |  |
+
 ### ModelView
 
 | Name | Type | Required | Description |
@@ -1480,6 +1588,100 @@ The types named in the tables of the operations. The arguments of each editing c
 | `currency` | `string` | no |  |
 | `micros` | `integer (int64)` | no |  |
 
+### MotionBrand
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `colors` | map of `string` | no |  |
+| `fonts` | array of `string` | no |  |
+| `logo` | `string` | no |  |
+
+### MotionBriefResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `brand_kit` | [`MotionBrand`](/docs/api/schemas#motionbrand) | no |  |
+| `captions` | array of [`MotionCaption`](/docs/api/schemas#motioncaption) | no |  |
+| `duration` | [`TimeValue`](/docs/api/schemas#timevalue) | no |  |
+| `duration_frames` | `integer` | no |  |
+| `frame_rate` | [`Rational`](/docs/api/schemas#rational) | no |  |
+| `frames` | array of [`MotionFrame`](/docs/api/schemas#motionframe) | no |  |
+| `from` | [`TimeValue`](/docs/api/schemas#timevalue) | no |  |
+| `height` | `integer` | no |  |
+| `image_tokens` | `integer` | no |  |
+| `margins` | [`Margins`](/docs/api/schemas#margins) | no |  |
+| `needs_alpha` | `boolean` | no |  |
+| `project_id` | `string` | no |  |
+| `revision` | `integer (int64)` | no |  |
+| `safe_area` | [`Rect`](/docs/api/schemas#rect) | no |  |
+| `text` | `string` | no |  |
+| `track` | [`TrackInfo`](/docs/api/schemas#trackinfo) or `any` or `null` or `null` | no |  |
+| `until` | [`TimeValue`](/docs/api/schemas#timevalue) | no |  |
+| `untrusted_notice` | `string` | no |  |
+| `width` | `integer` | no |  |
+
+### MotionCaption
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `end` | `integer` | no |  |
+| `item_id` | `string` | no |  |
+| `start` | `integer` | no |  |
+| `text` | `string` | no |  |
+
+### MotionCheckResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `asset_id` | `string` | no |  |
+| `asset_name` | `string` | no |  |
+| `duration_frames` | `integer` | no |  |
+| `frame_rate` | [`Rational`](/docs/api/schemas#rational) | no |  |
+| `height` | `integer` | no |  |
+| `mismatches` | array of [`Mismatch`](/docs/api/schemas#mismatch) | no |  |
+| `needs_alpha` | `boolean` | no |  |
+| `ok` | `boolean` | no |  |
+| `project_id` | `string` | no |  |
+| `revision` | `integer (int64)` | no |  |
+| `text` | `string` | no |  |
+| `untrusted_notice` | `string` | no |  |
+| `width` | `integer` | no |  |
+
+### MotionFrame
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `at` | [`TimeValue`](/docs/api/schemas#timevalue) | no |  |
+| `height` | `integer` | no |  |
+| `image_base64` | `string` | no |  |
+| `image_tokens` | `integer` | no |  |
+| `mime` | `string` | no |  |
+| `path` | `string` | no |  |
+| `role` | `string` | no |  |
+| `width` | `integer` | no |  |
+
+### MotionReplaceResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `actor` | `string` | no |  |
+| `applied` | `boolean` | no |  |
+| `asset_id` | `string` | no |  |
+| `base_revision` | `integer (int64)` | no |  |
+| `created` | array of `string` | no |  |
+| `description` | `string` | no |  |
+| `diff` | array of [`Change`](/docs/api/schemas#change) | no |  |
+| `dry_run` | `boolean` | no |  |
+| `effective` | array of [`OpEffect`](/docs/api/schemas#opeffect) | no |  |
+| `findings` | array of [`Finding`](/docs/api/schemas#finding) | no |  |
+| `lint` | [`LintTotals`](/docs/api/schemas#linttotals) | no |  |
+| `project_id` | `string` | no |  |
+| `render_key` | `string` | no |  |
+| `replaced` | array of `string` | no |  |
+| `replayed` | `boolean` | no |  |
+| `revision` | `integer (int64)` | no |  |
+| `untrusted_notice` | `string` | no |  |
+
 ### OpEffect
 
 | Name | Type | Required | Description |
@@ -1494,17 +1696,28 @@ The types named in the tables of the operations. The arguments of each editing c
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `args` | map of `any` | no | The arguments of the command. |
-| `op` | `string`, one of 76 values | yes | A command name, as listed by GET /commands.. min length 1 |
+| `op` | `string`, one of 82 values | yes | A command name, as listed by GET /commands.. min length 1 |
+
+### Option
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `kind` | `string` | no |  |
+| `name` | `string` | no |  |
+| `option_id` | `string` | no |  |
 
 ### Origin
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `cost_micros` | `integer (int64)` or `null` | no |  |
+| `engine` | `string` | no |  |
+| `engine_version` | `string` | no |  |
 | `kind` | `string` | no |  |
 | `model` | `string` | no |  |
 | `prompt` | `string` | no |  |
 | `provider` | `string` | no |  |
+| `render_key` | `string` | no |  |
 | `rights_note` | `string` | no |  |
 | `source` | `string` | no |  |
 
@@ -1545,6 +1758,17 @@ The types named in the tables of the operations. The arguments of each editing c
 | --- | --- | --- | --- |
 | `color` | `string` | no |  |
 | `width` | `number (double)` | no |  |
+
+### Permission
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `answer` | `string` | no |  |
+| `options` | array of [`Option`](/docs/api/schemas#option) | no |  |
+| `request_id` | `string` | no |  |
+| `title` | `string` | no |  |
+| `tool_call_id` | `string` | no |  |
+| `tool_kind` | `string` | no |  |
 
 ### Poster
 
@@ -1622,6 +1846,14 @@ The types named in the tables of the operations. The arguments of each editing c
 | `title` | `string` | no |  |
 | `type` | `string` | no |  |
 
+### Processor
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `disabled` | `boolean` | no |  |
+| `kind` | `eq`, `compressor`, `limiter`, `gate`, `deesser`, `noise_reduction` | no |  |
+| `params` | map of `number (double)` | no |  |
+
 ### Production
 
 | Name | Type | Required | Description |
@@ -1632,6 +1864,17 @@ The types named in the tables of the operations. The arguments of each editing c
 | `pending_approvals` | `integer` | no |  |
 | `published` | `integer` | no |  |
 | `timelines` | `integer` | no |  |
+
+### Profile
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `args` | array of `string` | no |  |
+| `command` | `string` | no |  |
+| `created_at` | `string (date-time)` | no |  |
+| `created_by` | `string` | no |  |
+| `name` | `string` | no |  |
+| `updated_at` | `string (date-time)` | no |  |
 
 ### ProjectCounts
 
@@ -1915,6 +2158,23 @@ The types named in the tables of the operations. The arguments of each editing c
 | `den` | `integer` | no |  |
 | `num` | `integer` | no |  |
 
+### Rect
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `height` | `integer` | no |  |
+| `width` | `integer` | no |  |
+| `x` | `integer` | no |  |
+| `y` | `integer` | no |  |
+
+### RenderOffer
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `asset_id` | `string` | no |  |
+| `item_ids` | array of `string` | no |  |
+| `name` | `string` | no |  |
+
 ### Request
 
 | Name | Type | Required | Description |
@@ -2191,6 +2451,13 @@ The types named in the tables of the operations. The arguments of each editing c
 | `item_frames` | `integer` | no |  |
 | `points` | array of [`SpeedPoint`](/docs/api/schemas#speedpoint) | no |  |
 
+### StateInfo
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `end_reason` | `string` | no |  |
+| `state` | `string` | no |  |
+
 ### Strip
 
 | Name | Type | Required | Description |
@@ -2333,6 +2600,16 @@ The types named in the tables of the operations. The arguments of each editing c
 | `frame` | `integer (int64)` | no |  |
 | `seconds` | `number (double)` | no |  |
 
+### Tool
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `output` | `string` | no |  |
+| `status` | `string` | no |  |
+| `title` | `string` | no |  |
+| `tool_call_id` | `string` | no |  |
+| `tool_kind` | `string` | no |  |
+
 ### ToolFile
 
 | Name | Type | Required | Description |
@@ -2384,8 +2661,17 @@ The types named in the tables of the operations. The arguments of each editing c
 | `muted` | `boolean` | no |  |
 | `name` | `string` | no |  |
 | `order` | `string` | no |  |
+| `processors` | array of [`Processor`](/docs/api/schemas#processor) | no |  |
 | `solo` | `boolean` | no |  |
 | `volume` | `number (double)` or `null` | no |  |
+
+### TrackInfo
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `id` | `string` | no |  |
+| `name` | `string` | no |  |
+| `overlay` | `boolean` | no |  |
 
 ### TranscribeResult
 

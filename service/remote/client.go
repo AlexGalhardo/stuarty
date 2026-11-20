@@ -436,6 +436,20 @@ func (c *Client) ExportCheck(
 	return get[service.ExportCheckResult](ctx, c, projectPath(req.ProjectID, "/export-check"), q)
 }
 
+// AudioMeasure implements service.Service.
+func (c *Client) AudioMeasure(
+	ctx context.Context,
+	req service.AudioMeasureRequest,
+) (*service.AudioMeasureResult, error) {
+	ctx = withTimeline(ctx, req.TimelineID)
+	q := url.Values{}
+	setIf(q, "item_id", req.ItemID)
+	setIf(q, "start", req.Start)
+	setIf(q, "end", req.End)
+
+	return get[service.AudioMeasureResult](ctx, c, projectPath(req.ProjectID, "/audio-measure"), q)
+}
+
 // ExportBatch implements service.Service.
 func (c *Client) ExportBatch(ctx context.Context, req service.ExportBatchRequest) (*service.Job, error) {
 	ctx = withTimeline(ctx, req.TimelineID)

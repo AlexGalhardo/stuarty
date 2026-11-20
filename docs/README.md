@@ -116,6 +116,7 @@ Which epic delivers each requirement is in the traceability table of `plans/00-r
 | 020 | publishing: the connector frame, the sign-in with the user's own app and the YouTube connector | ADR-0032, ADR-0035 |
 | 021 | image documents: the document, the catalogue of layer operations, the plan, export, templates, lint, storage | ADR-0038 |
 | 018 | memory, skills and prompts: the files, front matter, review, the skill lint, import and export, the index and search | ADR-0040 |
+| 017 | the hosted agent chat: the protocol, profiles, the process, sessions, permission requests, streaming, transcripts | ADR-0037, ADR-0036 |
 
 ## Rules for changing these documents
 
