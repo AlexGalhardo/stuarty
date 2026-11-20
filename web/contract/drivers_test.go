@@ -256,8 +256,8 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.ImageGenerate)
 	case "VoiceGenerate":
 		return invoke(ctx, s, svc.VoiceGenerate)
-	case "VideoGenerate":
-		return invoke(ctx, s, svc.VideoGenerate)
+	case "ImageModelEdit":
+		return invoke(ctx, s, svc.ImageModelEdit)
 	case "VoiceList":
 		return invoke(ctx, s, svc.VoiceList)
 	case "AuditList":
@@ -661,6 +661,23 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 		}
 
 		return "job_start", args, nil
+	case "ImageModelEdit":
+		// the same: the members of the request are the arguments of the job kind image.edit
+		delete(args, "dry_run")
+
+		inner := map[string]any{}
+
+		for _, k := range []string{"connection_id", "image_id", "operation", "model", "layer_id", "prompt", "size"} {
+			if v, ok := args[k]; ok {
+				inner[k] = v
+
+				delete(args, k)
+			}
+		}
+
+		args["kind"], args["args"] = "image.edit", inner
+
+		return "job_start", args, nil
 	case "ViewFrame":
 		args["mode"] = "frame"
 
@@ -887,6 +904,11 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 		DryRun      bool            `json:"dry_run"`
 		BrandColors []string        `json:"brand_colors"`
 		BrandFonts  []string        `json:"brand_fonts"`
+
+		// ImageModelEdit (epic 30)
+		ImageID   string `json:"image_id"`
+		Operation string `json:"operation"`
+		LayerID   string `json:"layer_id"`
 
 		ConnectionID string `json:"connection_id"`
 		Model        string `json:"model"`
@@ -1275,21 +1297,19 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 		}
 
 		return "image:generate", argv, "", nil
-	case "VideoGenerate":
+	case "ImageModelEdit":
 		argv = slices.Concat(
-			proj, []string{"--connection", a.ConnectionID, "--model", a.Model, "--prompt", a.Prompt},
-			flag("aspect", a.Aspect), flag("first-frame", a.FirstFrame),
+			proj, []string{
+				"--image", a.ImageID, "--operation", a.Operation, "--connection", a.ConnectionID, "--model", a.Model,
+			},
+			flag("layer", a.LayerID), flag("prompt", a.Prompt), flag("size", a.Size),
 		)
-
-		if a.Seconds > 0 {
-			argv = append(argv, "--seconds", strconv.Itoa(a.Seconds))
-		}
 
 		if a.DryRun {
 			argv = append(argv, "--dry-run")
 		}
 
-		return "video:generate", argv, "", nil
+		return "image:model-edit", argv, "", nil
 	case "VoiceGenerate":
 		argv = slices.Concat(
 			proj, []string{"--connection", a.ConnectionID, "--model", a.Model, "--voice", a.Voice, "--text", a.Text},
