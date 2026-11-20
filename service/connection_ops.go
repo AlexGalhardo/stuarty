@@ -7,6 +7,8 @@ import (
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/internal/outbound"
 	"github.com/AlexGalhardo/stuarty/service/connections"
+	"github.com/AlexGalhardo/stuarty/service/connections/oauth"
+	"github.com/AlexGalhardo/stuarty/service/providers"
 )
 
 // ConnectionListRequest has no member.
@@ -77,6 +79,10 @@ func connectionError(err error) error {
 	case errors.Is(err, outbound.ErrDestination), errors.Is(err, outbound.ErrNotPublic):
 		return newError(CodeConnectionDestination, "the request is for a destination the connection does not allow.").
 			withHint("a connection reaches only the hosts it lists, over https")
+	case errors.Is(err, connections.ErrNeedsSignIn):
+		return providerError(&providers.Error{Kind: providers.KindAuth, Code: signInProviderCode})
+	case errors.Is(err, connections.ErrSignInUnavailable):
+		return providerError(&providers.Error{Kind: providers.KindUnavailable})
 	}
 
 	if reason, hint, ok := connections.Locked(err); ok {
@@ -132,6 +138,13 @@ func (s *svc) ConnectionCreate(ctx context.Context, req ConnectionCreateRequest)
 
 	if n := len(req.Secret); n == 0 || n > connections.MaxSecret {
 		return nil, newError(command.CodeValidation, "the secret must be 1 to %d bytes.", connections.MaxSecret).
+			withPath("secret")
+	}
+
+	// The stored form of a sign-in is made by the sign-in only (SDD-014 section 12): a secret in that form,
+	// given by hand, would be a credential nobody signed in for.
+	if _, isSignIn := oauth.ParseEnvelope([]byte(req.Secret)); isSignIn {
+		return nil, newError(command.CodeValidation, "the secret is not a key: a sign-in is made in the browser.").
 			withPath("secret")
 	}
 
@@ -198,6 +211,12 @@ func (s *svc) ConnectionRemove(ctx context.Context, req ConnectionRef) (*connect
 	row, err := s.store.Connections().Get(ctx, req.ID)
 	if err != nil {
 		return nil, connectionError(err)
+	}
+
+	// A sign-in is made and removed by a person in the browser: an agent, the CLI and the local token read
+	// that it exists and cannot take it away (SDD-014 section 12, T-75).
+	if !c.Browser && s.isSignIn(ctx, row.ID) {
+		return nil, privilegedError()
 	}
 
 	if err := s.conns.DeleteSecret(row.SecretRef); err != nil {

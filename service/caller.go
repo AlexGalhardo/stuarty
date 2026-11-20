@@ -216,6 +216,10 @@ var Scopes = map[string]string{
 	"CaptionValidate":  ScopeRead,
 	"ScriptEstimate":   ScopeRead,
 
+	"ProviderSignInBegin":    ScopeAdmin,
+	"ProviderSignInComplete": ScopeAdmin,
+	"ProviderSignInList":     ScopeRead,
+
 	"MotionBrief":   ScopeRead,
 	"MotionCheck":   ScopeRead,
 	"MotionReplace": ScopeEdit,
