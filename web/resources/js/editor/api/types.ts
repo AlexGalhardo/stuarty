@@ -382,6 +382,24 @@ export interface PlanBitmapLayer extends PlanLayerBase {
 
 export type PlanLayer = PlanMediaLayer | PlanBitmapLayer;
 
+// A composition drawn as one unit (SDD-004 section 3.16, SDD-013 section 3.12):
+// the placement and look of a media layer of a picture of `group.width` by
+// `group.height`, whose `crop` is the whole nested frame, and the layers of
+// that frame, bottom first, with the series of the frames of the window.
+export interface PlanGroupLayer extends PlanLayerBase {
+	kind: "group";
+	crop: [number, number, number, number];
+	group: {
+		width: number;
+		height: number;
+		layers: (PlanLayer | PlanGroupLayer)[];
+	};
+}
+
+// What a window's `layers` holds: the layers an executor draws itself and the
+// groups it draws through a surface of their own.
+export type PlanWindowLayer = PlanLayer | PlanGroupLayer;
+
 export interface PlanAudio {
 	// As on a layer: the timeline that holds `asset` when the sound comes from a composition.
 	timeline?: string;
@@ -420,7 +438,7 @@ export interface PlanWindow extends PlanWindowHead {
 	// #000000 and uncovered pixels stay clear (SDD-001).
 	transparent?: boolean;
 	safe_area: [number, number, number, number];
-	layers: PlanLayer[];
+	layers: PlanWindowLayer[];
 	audio: PlanAudio[];
 }
 
