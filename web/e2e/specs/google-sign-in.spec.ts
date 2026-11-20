@@ -121,18 +121,16 @@ async function adminSession(
 	newContext: (o: { baseURL: string }) => Promise<APIRequestContext>,
 ): Promise<APIRequestContext> {
 	const context = await newContext({ baseURL: NETWORK_URL });
-	// Five attempts a minute for one email: wait the seconds the answer names.
-	for (let attempt = 0; ; attempt++) {
+	// Five attempts a minute for one email, shared with the other specs that log the administrator in: only
+	// a refusal is polled every five seconds for at most a minute and a half.
+	await expect(async () => {
 		const login = await context.post("/auth/login", {
 			data: NETWORK_ADMIN,
 			headers: origin,
 		});
-		if (login.ok()) return context;
-		if (login.status() !== 429 || attempt === 12) {
-			throw new Error(`admin login: ${login.status()}`);
-		}
-		await new Promise((resolve) => setTimeout(resolve, 5_000));
-	}
+		expect(login.status(), "admin login").toBe(200);
+	}).toPass({ intervals: [5_000], timeout: 90_000 });
+	return context;
 }
 
 const PASSWORD = "e2e-member-password-1";
@@ -143,6 +141,7 @@ test.describe("google-sign-in", () => {
 	test.use({ baseURL: NETWORK_URL });
 
 	test.beforeAll(async ({ playwright }) => {
+		test.setTimeout(150_000);
 		google = await startGoogle();
 		const admin = await adminSession((o) => playwright.request.newContext(o));
 
