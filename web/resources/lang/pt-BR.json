@@ -356,6 +356,7 @@
         "open_connections": "Conecte um na página Conexões",
         "project": "Projeto",
         "project_hint": "O projeto que guarda o arquivo novo e o custo. A imagem em si não pertence a nenhum projeto.",
+        "no_project": "Crie um projeto antes: ele guarda o arquivo novo e o custo.",
         "connection": "Conexão",
         "model": "Modelo",
         "no_price": "sem preço ainda",
