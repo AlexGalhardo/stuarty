@@ -31,7 +31,7 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | [09](09-ai-provider-layer.md) | AI provider layer with API keys, text generation and cost | L | 04, 05 | DONE (2026-11-19, `96540531`..`7b5f1caa`, merge `5a97458e`; task 2 provider choice and task 8 real call wait for the author) |
 | [10](10-image-and-voice-generation.md) | Image and voice generation | M | 08, 09 | DONE (2026-11-20, `18d2e82b4`..`a94e2d963`, merge `3402308e1`; a real call with the author's OpenAI key not verified) |
 | [11](11-video-generation.md) | Video generation | M | 10 | IN PROGRESS (senior-e, 2026-11-20) |
-| [12](12-ai-oauth-connections.md) | Sign in with ChatGPT and OpenRouter | M | 09 | IN PROGRESS (senior-d, 2026-11-20) |
+| [12](12-ai-oauth-connections.md) | Sign in with ChatGPT and OpenRouter | M | 09 | DONE (2026-11-20, `6cdb3a8e6`..`b39b72b65` replayed, merge `42a953ae9`; a real sign-in with the author's accounts not verified) |
 | [13](13-mcp-domains-and-agent-docs.md) | MCP tools by domain and generated agent documentation | M | 06 | DONE (2026-11-19, `773674ed`..`e9e671d4`, merge `c3be54a0`) |
 | [14](14-hosted-agent-chat.md) | The user's agent hosted in the chat panel | L | 07, 13 | DONE (2026-11-20, `23d31581`..`26a80add0` replayed, merge `365dcd1bd`; run with a real installed agent not verified) |
 | [15](15-memory-skills-and-prompts.md) | Memory, skills and prompts | L | 07 | DONE (2026-11-19, 65d33593..d2e8660f) |
@@ -44,7 +44,7 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | [22](22-x-and-tiktok-drafts.md) | X and TikTok drafts | M | 20 | IN PROGRESS (senior-d, 2026-11-20) |
 | [23](23-blog-and-its-destinations.md) | Blog posts and their four destinations | L | 17, 20 | TODO |
 | [24](24-google-account-and-server-login.md) | Optional Google account and login on a server | M | 04, 18 | DONE (2026-11-20, `46c44b677`..`cde96fa60`, merge `105a2cf8a`; a real Google login and `scripts/no-egress.sh`, which needs Linux, not verified) |
-| [25](25-vps-package.md) | VPS package: Caddy, install, update and backup | M | 24 | IN PROGRESS (senior-c, 2026-11-20) |
+| [25](25-vps-package.md) | VPS package: Caddy, install, update and backup | M | 24 | DONE (2026-11-20, `7da749ed7`..`6293c2d78`, merge `2722becab`; a real VPS, the built image and `caddy validate` not verified) |
 
 ### 1.3 Editor track (two seniors)
 
