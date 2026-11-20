@@ -619,6 +619,41 @@ func TestSignInOtherCases(t *testing.T) {
 	}
 }
 
+// SDD-016 section 12.4: when the person takes the access back on the account of the provider, a token or a key
+// that has not expired is refused; the error asks for a new sign-in, not for a key, and deletes nothing.
+func TestSignInRevokedAtTheProviderAsksForANewSignIn(t *testing.T) {
+	t.Parallel()
+
+	se := newSignInEnv(t)
+	person := se.asPerson()
+	chat := se.signIn("openai", "")
+	router := se.signIn("openrouter", "")
+
+	se.fake.RevokeAll()
+
+	for name, id := range map[string]string{"ChatGPT": chat.ConnectionID, "OpenRouter": router.ConnectionID} {
+		_, err := se.svc.ProviderModels(person, service.ProviderModelsRequest{ConnectionID: id, Refresh: true})
+
+		se2, ok := errors.AsType[*service.Error](err)
+		if !ok || se2.Code != "E_PROVIDER" || se2.Details["code"] != "needs_sign_in" ||
+			strings.Contains(se2.Hint, "connection:add") {
+			t.Errorf("%s revoked at the provider = %v (hint %q), want needs_sign_in", name, err, hintOf(err))
+		}
+	}
+
+	if se.connectionCount() != 3 {
+		t.Errorf("a revoked sign-in removed a connection: %d left, want 3", se.connectionCount())
+	}
+}
+
+func hintOf(err error) string {
+	if se, ok := errors.AsType[*service.Error](err); ok {
+		return se.Hint
+	}
+
+	return ""
+}
+
 // SDD-016 section 12.2: a sign-in grants text only. An image or a voice asked of a ChatGPT connection is
 // refused before a job or an approval exists, even when a person has set a price for the model, and the
 // token of the plan never reaches the image or the speech endpoint.
