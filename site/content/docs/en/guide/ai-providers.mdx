@@ -4,7 +4,7 @@ description: "Connect an AI service with your own API key, see what a text, an i
 ---
 
 <Callout type="warning" title="New">
-This page covers text generation with an API key for OpenAI and Anthropic, and signing in with ChatGPT or OpenRouter instead of pasting a key. It has been tested against recorded answers of the APIs and a fake authorization server, not against a real account: a real sign-in has not been checked yet. Images, voice and video, and your own local agent come in later versions.
+This page covers text, image and voice generation with an API key for OpenAI, text generation for Anthropic, and signing in with ChatGPT or OpenRouter instead of pasting a key. It has been tested against recorded answers of the APIs and a fake authorization server, not against a real account: a real sign-in has not been checked yet. Video and your own local agent come in later versions.
 </Callout>
 
 ## You will learn
@@ -78,7 +78,7 @@ stuarty text:generate --project prj_7k2m9x4q1b --connection con_0123456789 --mod
 
 Two providers can be connected with a sign-in in the browser. Open **Connections**, find the provider and choose the sign-in button.
 
-- **Sign in with ChatGPT** uses your ChatGPT plan, within the limits of the plan, through the sign-in OpenAI documents for open source and local applications. Stuarty asks OpenAI for access in your name, you accept on the page of OpenAI, and the plan is used for text. OpenAI accepts the sign-in only at `http://127.0.0.1:<port>/auth/callback`, so open Stuarty at `127.0.0.1` on the computer where it runs (the desktop app and a local server do). A server on another machine cannot do this sign-in: use an API key there. A plan has no price per token, so its models show a price of zero and no ceiling stops them.
+- **Sign in with ChatGPT** uses your ChatGPT plan, within the limits of the plan, through the sign-in OpenAI documents for open source and local applications. Stuarty asks OpenAI for access in your name, you accept on the page of OpenAI, and the plan is used for text. OpenAI accepts the sign-in only at `http://127.0.0.1:<port>/auth/callback`, so open Stuarty at `127.0.0.1` on the computer where it runs (the desktop app and a local server do). A server on another machine, or any server in network mode, refuses this sign-in: use an API key there. The plan is for text only, so a ChatGPT sign-in cannot make an image or a voice-over; connect OpenAI with an API key for those. A plan has no price per token, so its models show a price of zero and no ceiling stops them.
 - **Sign in with OpenRouter** makes a key of your OpenRouter account, which Stuarty keeps like any pasted key. It spends your OpenRouter credits, and the models show the price OpenRouter publishes.
 
 Either way the tokens or the key go straight into the vault of this machine: no page, command, tool or log shows them, and an agent cannot start, finish or remove a sign-in, only a person in the app can. The access of ChatGPT is renewed by itself before it expires. If the provider stops accepting it, the card says **Needs sign-in**, nothing is deleted, and **Sign in again** brings it back. There is no sign-in with a Claude subscription: Anthropic is reached with an API key only.
