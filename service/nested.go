@@ -196,6 +196,29 @@ func checkNesting(g *productionGraph, doc *timeline.Document) *Error {
 		withDetail("limit", timeline.MaxCompositionDepth)
 }
 
+// checkTimelineState holds the trash and the restore of a timeline to the rules of compositions (SDD-001 §3.5.1):
+// a timeline that another active timeline uses is not trashed (E_IN_USE with the users), and one that comes back
+// keeps the nesting rules.
+func (s *svc) checkTimelineState(ctx context.Context, tx Tx, timelineID string, to ProjectState) error {
+	switch to {
+	case ProjectTrashed:
+		if users := s.compositionUsers(ctx, tx, timelineID); len(users) > 0 {
+			return newError(
+				command.CodeInUse,
+				"the timeline is used as a composition by %d other timeline(s).",
+				len(users),
+			).
+				withPath("item_id").
+				withHint("remove those compositions or expand them with composition.expand, then trash it").
+				withDetail("used_by", users)
+		}
+	case ProjectActive:
+		return s.checkRestoredNesting(ctx, tx, timelineID)
+	}
+
+	return nil
+}
+
 // checkRestoredNesting is checkNesting for a timeline that comes back from the trash: while it was there, the
 // timelines it holds may have grown deeper, and a composition left naming it is in use again (SDD-001 §3.5.1).
 func (s *svc) checkRestoredNesting(ctx context.Context, tx Tx, timelineID string) error {
