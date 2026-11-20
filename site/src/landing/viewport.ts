@@ -1,29 +1,19 @@
-// The viewport landing (brainstorming section 5.1): six takes, one at a time, on a large screen. Input: wheel,
-// touch swipe, arrows, Page Up/Down, Space, Home/End, the named rail and the URL hash. Focus moves to the heading of
-// the take that comes in. Under reduced motion the takes crossfade and the 3D stays on its first frame. Without
-// takes mode (a small screen) the page is a normal scroll with reveals.
+// The landing page (brainstorming section 5.1): takes, one at a time, on a large screen. Input: wheel, touch swipe,
+// arrows, Page Up/Down, Space, Home/End and the URL hash. In the timeline take the same input moves the playhead
+// first and changes take only at its ends. Focus moves to the heading of the take that comes in. Under reduced motion
+// the takes crossfade, the playhead jumps and the background stays on its first frame. Without takes mode (a small
+// screen) the page is a normal scroll with reveals and the timeline is a plain list.
 import { afterPaint, reducedMotion } from "./boot";
 import { gsap, letters, revealOnScroll, typeLines } from "./motion";
-import type { MascotPose, Stage } from "./stage";
+import type { Stage } from "./stage";
 import { enhanceTabs } from "./tabs";
-
-// Where the mascot stands in each take: in the empty band above the content, never over the text.
-const POSES: Omit<MascotPose, "opacity">[] = [
-	{ x: 0.52, y: 0.02, scale: 0.95, turn: -0.45 },
-	{ x: 0.62, y: 0.74, scale: 0.22, turn: -0.5 },
-	{ x: 0.72, y: 0.72, scale: 0.22, turn: -0.6 },
-	{ x: -0.52, y: 0.72, scale: 0.22, turn: 0.5 },
-	{ x: 0.74, y: 0.7, scale: 0.24, turn: -0.55 },
-	{ x: 0, y: 0.6, scale: 0.28, turn: 0 },
-];
+import { mountTimeline } from "./timeline";
 
 export function start(): void {
 	const root = document.querySelector<HTMLElement>("main[data-page='viewport']");
 	if (!root) return;
 	const reduced = reducedMotion();
 	const takes = [...root.querySelectorAll<HTMLElement>("[data-take]")];
-	const links = [...root.querySelectorAll<HTMLAnchorElement>("[data-take-link]")];
-	const progress = root.querySelector<HTMLElement>("[data-rail-progress]");
 	const hint = root.querySelector<HTMLElement>("[data-hint]");
 	const typed = new WeakSet<Element>();
 	const typePanel = (panel: Element): void => {
@@ -41,15 +31,8 @@ export function start(): void {
 		void import("./stage").then(({ createStage }) => {
 			const canvas = document.getElementById("viewport-stage") as HTMLCanvasElement | null;
 			if (!canvas) return;
-			stage = createStage(canvas);
-			if (!stage) return;
-			Object.assign(stage.pose, takesOn() ? POSES[current] : { x: 0.62, y: 0.82, scale: 0.3, turn: -0.4 }, { opacity: 1 });
-			if (!takesOn() && !reduced) {
-				// The plain scroll: the mascot greets the reader in the first take and fades when it scrolls away.
-				gsap.to(stage.pose, { opacity: 0, ease: "none", immediateRender: false, scrollTrigger: { trigger: takes[1], start: "top 90%", end: "top 40%", scrub: true } });
-			}
-			if (reduced) stage.renderOnce();
-			else gsap.from(stage.pose, { scale: 0, turn: -2, duration: 1.4, ease: "back.out(1.4)", onComplete: () => stage?.blink() });
+			// The background only: this page has no mascot.
+			stage = createStage(canvas, { showMascot: false });
 		});
 	});
 
@@ -73,13 +56,27 @@ export function start(): void {
 		return;
 	}
 
-	const setRail = (i: number): void => {
-		links.forEach((a, k) => {
-			if (k === i) a.setAttribute("aria-current", "step");
-			else a.removeAttribute("aria-current");
-		});
-		if (progress) progress.style.transform = `scaleY(${(i + 1) / takes.length})`;
+	// The timeline take: one progress value from 0 to 1, eased towards its target.
+	const timelineTake = takes.findIndex((t) => t.id === "timeline");
+	const render = mountTimeline(root, { reduced, stage: () => stage, mascot: false });
+	const playhead = { p: 0 };
+	let target = 0;
+	const seek = (p: number): void => {
+		target = Math.max(0, Math.min(1, p));
+		if (!render) return;
+		// Reaching an end holds the take a moment, so the same wheel gesture does not also change take.
+		if (target === 0 || target === 1) {
+			locked = true;
+			setTimeout(() => (locked = false), 700);
+		}
+		if (reduced) {
+			playhead.p = target;
+			render(target);
+		} else {
+			gsap.to(playhead, { p: target, duration: 0.7, ease: "power3.out", overwrite: true, onUpdate: () => render(playhead.p) });
+		}
 	};
+	render?.(0);
 
 	const splits = new Map<HTMLElement, gsap.core.Timeline>();
 	const show = (i: number, opts: { focus: boolean; instant?: boolean }): void => {
@@ -93,9 +90,6 @@ export function start(): void {
 			if (!on) t.setAttribute("aria-hidden", "true");
 			else t.removeAttribute("aria-hidden");
 		}
-		setRail(i);
-		// The still mascot of the WebGL fallback belongs to the first take.
-		document.querySelector("[data-stage-still]")?.toggleAttribute("hidden", i !== 0);
 		history.replaceState(null, "", `#${next.id}`);
 		if (hint) hint.style.opacity = i === 0 ? "1" : "0";
 		// Focus after two frames: the take has just become visible, and the global reduced-motion rule gives
@@ -144,17 +138,9 @@ export function start(): void {
 			const panel = next.querySelector("[data-drive] [role='tabpanel']:not([hidden])");
 			if (panel) setTimeout(() => typePanel(panel), reduced ? 0 : 700);
 		}
-		if (stage) {
-			const pose = { ...POSES[i], opacity: 1 };
-			if (reduced) {
-				Object.assign(stage.pose, pose);
-				stage.renderOnce();
-			} else {
-				stage.clap();
-				stage.stir(0.8);
-				stage.setMood(i / (takes.length - 1));
-				gsap.to(stage.pose, { ...pose, duration: 1.1, ease: "power3.inOut" });
-			}
+		if (stage && !reduced) {
+			stage.stir(0.8);
+			stage.setMood(i / (takes.length - 1));
 		}
 	};
 
@@ -165,6 +151,19 @@ export function start(): void {
 		locked = true;
 		show(target, { focus });
 		setTimeout(() => (locked = false), reduced ? 250 : 900);
+	};
+
+	// One step down or up: inside the timeline take it moves the playhead (`amount` of the run), at its ends it
+	// changes take. Leaving the timeline downwards keeps it at its end, so coming back up resumes from there.
+	const step = (dir: number, amount: number, focus: boolean): void => {
+		if (current === timelineTake && render && !locked) {
+			const edge = dir > 0 ? target >= 1 : target <= 0;
+			if (!edge) {
+				seek(target + dir * amount);
+				return;
+			}
+		}
+		go(current + dir, focus);
 	};
 
 	// The first take from the hash, if any.
@@ -183,8 +182,17 @@ export function start(): void {
 			acc += e.deltaY;
 			clearTimeout(wheelTimer);
 			wheelTimer = window.setTimeout(() => (acc = 0), 160);
+			if (current === timelineTake && render) {
+				// The timeline follows the wheel continuously, then the next wheel gesture leaves the take.
+				const edge = acc > 0 ? target >= 1 : target <= 0;
+				if (!edge) {
+					seek(target + acc / 2400);
+					acc = 0;
+					return;
+				}
+			}
 			if (Math.abs(acc) > 60) {
-				go(current + Math.sign(acc), false);
+				step(Math.sign(acc), 0, false);
 				acc = 0;
 			}
 		},
@@ -199,7 +207,7 @@ export function start(): void {
 		(e) => {
 			if (touchY === null) return;
 			const dy = touchY - (e.changedTouches[0]?.clientY ?? touchY);
-			if (Math.abs(dy) > 50) go(current + Math.sign(dy), false);
+			if (Math.abs(dy) > 50) step(Math.sign(dy), Math.abs(dy) / 600, false);
 			touchY = null;
 		},
 		{ passive: true },
@@ -211,15 +219,16 @@ export function start(): void {
 		if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey) return;
 		if (t?.closest("input, textarea, select, [role='tablist'], [role='dialog'], [contenteditable='true']")) return;
 		const space = e.key === " " && !t?.closest("a, button");
-		if (e.key === "ArrowDown" || e.key === "PageDown" || (space && !e.shiftKey)) go(current + 1, true);
-		else if (e.key === "ArrowUp" || e.key === "PageUp" || (space && e.shiftKey)) go(current - 1, true);
+		// One clip of the timeline per key press (six clips).
+		if (e.key === "ArrowDown" || e.key === "PageDown" || (space && !e.shiftKey)) step(1, 1 / 6, true);
+		else if (e.key === "ArrowUp" || e.key === "PageUp" || (space && e.shiftKey)) step(-1, 1 / 6, true);
 		else if (e.key === "Home") go(0, true);
 		else if (e.key === "End") go(takes.length - 1, true);
 		else return;
 		e.preventDefault();
 	});
 
-	// The rail and every in-page link to a take.
+	// Every in-page link to a take.
 	root.addEventListener("click", (e) => {
 		const a = (e.target as Element | null)?.closest<HTMLAnchorElement>("a[href^='#']");
 		if (!a) return;
@@ -234,8 +243,8 @@ export function start(): void {
 		if (i >= 0) go(i, true);
 	});
 
-	// Tab moves between the real focusable elements of the active take; a focus that lands in another take (the
-	// rail is outside the takes) brings that take in.
+	// Tab moves between the real focusable elements of the active take; a focus that lands in another take brings that
+	// take in.
 	root.addEventListener("focusin", (e) => {
 		const take = (e.target as Element | null)?.closest<HTMLElement>("[data-take]");
 		if (!take) return;
