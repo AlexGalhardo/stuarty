@@ -1119,6 +1119,38 @@ export interface ProviderPricesResult {
 	prices: PriceEntry[];
 }
 
+// The sign-in to an AI provider in the browser (SDD-016 section 12). A result never carries a token.
+export interface ProviderSignInRequest {
+	provider: string;
+	label?: string;
+	connection_id?: string;
+	redirect_uri: string;
+}
+
+export interface ProviderSignInResult {
+	connection_id: string;
+	authorize_url: string;
+}
+
+export interface ProviderSignInCompleteRequest {
+	state: string;
+	code?: string;
+	error?: string;
+	client_id?: string;
+}
+
+export interface ProviderSignIn {
+	connection_id: string;
+	provider: string;
+	label: string;
+	account?: string;
+	state: "ready" | "needs_sign_in";
+}
+
+export interface ProviderSignInListResult {
+	sign_ins: ProviderSignIn[];
+}
+
 // The approval queue, its rules and the cost ceilings (SDD-015). An amount is an integer in
 // millionths of the currency unit; the page formats it and adds nothing.
 export interface Money {

@@ -214,7 +214,11 @@ test.describe("AI providers", () => {
 		const list = (await agent("GET", "/providers")) as {
 			providers: { id: string }[];
 		};
-		expect(list.providers.map((p) => p.id)).toEqual(["anthropic", "openai"]);
+		expect(list.providers.map((p) => p.id)).toEqual([
+			"anthropic",
+			"openai",
+			"openrouter",
+		]);
 
 		let status = 0;
 		try {

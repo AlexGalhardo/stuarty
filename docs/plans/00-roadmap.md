@@ -31,7 +31,7 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | [09](09-ai-provider-layer.md) | AI provider layer with API keys, text generation and cost | L | 04, 05 | DONE (2026-11-19, `96540531`..`7b5f1caa`, merge `5a97458e`; task 2 provider choice and task 8 real call wait for the author) |
 | [10](10-image-and-voice-generation.md) | Image and voice generation | M | 08, 09 | DONE (2026-11-20, `18d2e82b4`..`a94e2d963`, merge `3402308e1`; a real call with the author's OpenAI key not verified) |
 | [11](11-video-generation.md) | Video generation | M | 10 | IN PROGRESS (senior-e, 2026-11-20) |
-| [12](12-ai-oauth-connections.md) | Sign in with ChatGPT and OpenRouter | M | 09 | IN PROGRESS (senior-d, 2026-11-20) |
+| [12](12-ai-oauth-connections.md) | Sign in with ChatGPT and OpenRouter | M | 09 | DONE (2026-11-20, `6cdb3a8e6`..`b39b72b65` replayed, merge `42a953ae9`; a real sign-in with the author's accounts not verified) |
 | [13](13-mcp-domains-and-agent-docs.md) | MCP tools by domain and generated agent documentation | M | 06 | DONE (2026-11-19, `773674ed`..`e9e671d4`, merge `c3be54a0`) |
 | [14](14-hosted-agent-chat.md) | The user's agent hosted in the chat panel | L | 07, 13 | DONE (2026-11-20, `23d31581`..`26a80add0` replayed, merge `365dcd1bd`; run with a real installed agent not verified) |
 | [15](15-memory-skills-and-prompts.md) | Memory, skills and prompts | L | 07 | DONE (2026-11-19, 65d33593..d2e8660f) |
@@ -44,7 +44,7 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | [22](22-x-and-tiktok-drafts.md) | X and TikTok drafts | M | 20 | IN PROGRESS (senior-d, 2026-11-20) |
 | [23](23-blog-and-its-destinations.md) | Blog posts and their four destinations | L | 17, 20 | TODO |
 | [24](24-google-account-and-server-login.md) | Optional Google account and login on a server | M | 04, 18 | DONE (2026-11-20, `46c44b677`..`cde96fa60`, merge `105a2cf8a`; a real Google login and `scripts/no-egress.sh`, which needs Linux, not verified) |
-| [25](25-vps-package.md) | VPS package: Caddy, install, update and backup | M | 24 | IN PROGRESS (senior-c, 2026-11-20) |
+| [25](25-vps-package.md) | VPS package: Caddy, install, update and backup | M | 24 | DONE (2026-11-20, `7da749ed7`..`6293c2d78`, merge `2722becab`; a real VPS, the built image and `caddy validate` not verified) |
 
 ### 1.3 Editor track (two seniors)
 
@@ -54,7 +54,7 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | [27](27-image-document-core.md) | Image documents: core, catalogue, templates and export | L | 03 | DONE (2026-11-19, 97d5c560..7758cdda replayed and merged; WebP export waits for an ffargs builder) |
 | [28](28-image-editor-ui.md) | Image editor in the UI | L | 07, 27 | DONE (2026-11-19, `95ed640f`..`28a3e533`, merge `fac66975`) |
 | [29](29-image-adjustments-filters-and-masks.md) | Image adjustments, filters, masks and blend modes | L | 27 | DONE (2026-11-19, `5d7680de`..`525c359b`, merge `1ee6a61d`; image LUT waits for the author) |
-| [30](30-image-operations-with-a-model.md) | Image operations with a model | S | 10, 28 | IN PROGRESS (senior-e, 2026-11-20) |
+| [30](30-image-operations-with-a-model.md) | Image operations with a model | S | 10, 28 | IN PROGRESS (senior-e, 2026-11-20; in review) |
 | [31](31-motion-easing-crop-and-mask.md) | Motion: easing curves, animated crop and mask, presets | L | 03 | DONE (2026-11-19, `e914c99b`..`a88f8e63`, merge `4c2c5c85`) |
 | [32](32-nested-compositions.md) | Nested compositions | M | 06, 31 | DONE (2026-11-20, `07fe073da`..`8264cd564`, merge `320ce36d2`; the live group in the browser moved to epic 52 and constant speed to epic 53 by D-094) |
 | [33](33-external-motion-engine-hand-off.md) | Hand-off from an external motion engine | M | 08 | DONE (2026-11-20, `4f4022cc`..`bb19aa733` replayed, merge `3d693ba1d`; real HyperFrames round and no-egress on Linux not verified) |
@@ -66,8 +66,8 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | [49](49-image-lut.md) | Image lookup tables (.cube) | S | 29 | TODO |
 | [50](50-image-revert-checkpoints-and-diff.md) | Revert to a revision, checkpoints and a diff for image documents | M | 36, 29 | TODO |
 | [51](51-processed-audio-preview-on-the-timeline.md) | Processed audio preview on the timeline | M | 34 | IN PROGRESS (senior-b, 2026-11-20) |
-| [52](52-live-composition-groups-in-the-browser.md) | Live composition groups in the browser preview | M | 32, 26 | TODO |
-| [53](53-constant-speed-for-compositions.md) | Constant speed for compositions | M | 32 | TODO |
+| [52](52-live-composition-groups-in-the-browser.md) | Live composition groups in the browser preview | M | 32, 26 | IN PROGRESS (senior-a, 2026-11-20) |
+| [53](53-constant-speed-for-compositions.md) | Constant speed for compositions | M | 32 | IN PROGRESS (senior-e, 2026-11-20) |
 
 ### 1.4 Closing (after the tracks)
 

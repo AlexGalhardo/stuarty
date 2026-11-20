@@ -95,6 +95,8 @@
 | `ProviderList` | none | `provider:list` | `GET /providers` | read (SDD-016) |
 | `ProviderModels` | none | `provider:models` | `GET /connections/{id}/models` | read |
 | `ProviderPriceSet` | none | `provider:price` | `PUT /providers/prices` | admin, and only from a privileged browser session (SDD-016 §7) |
+| `ProviderSignInBegin`, `ProviderSignInComplete` | none | none | `POST /providers/signin`, `POST /providers/signin/complete` (the page `/auth/callback` posts to the second) | admin, and only from a privileged browser session (SDD-016 §12) |
+| `ProviderSignInList` | none | none | `GET /providers/sign-ins` | read |
 | `TextGenerate` | `job_start` (kind `text.generate`) | `text:generate` | `POST /text/generate` | edit |
 | `ImageGenerate` | `job_start` (kind `image.generate`) | `image:generate` | `POST /image/generate` | edit (SDD-016 §6.1) |
 | `VoiceGenerate` | `job_start` (kind `voice.generate`) | `voice:generate` | `POST /voice/generate` | edit |
@@ -125,7 +127,7 @@ The MCP catalogue is 20 tools: `project_list`, `project_create`, `project_get`, 
 
 **Projects and timelines (ADR-0039).** A project is a production; its timelines are items of it. Every operation above that edits or reads a timeline document (`Edit`, `HistoryList`, `Undo`, `Redo`, `HistoryRevert`, `HistoryDiff`, `Checkpoint*`, `Lint`, `MediaImport`, `MediaInspect`, `MediaList`, `MediaTrash`, `MediaRestore`, `ViewFrame`, `ViewSheet`, `JobStart`, `JobList`, `PlanWindow`, `SnapPoints`, `ProjectOtioExport`, `ProjectOtioImport`, `ProjectBundleExport`, `ExportCheck`, `ExportBatch`, and `ProjectGet` with a detail) accepts an optional `timeline_id` next to `project_id`; the rule is SDD-003 §1.7.
 
-Other CLI commands that are not service operations: `serve` (start the owner process), `mcp` (stdio MCP server), `open` (open the UI of a running server with a fresh launch code), `token:rotate`, `user:create` and `user:passwd` (network mode; they need the workspace lock, so no server may be running), `tools:install` (download a helper such as whisper.cpp after stating its size), `agent:docs` (print or write the generated material for agents, SDD-003 §8), plus vukem's built-in commands.
+Other CLI commands that are not service operations: `serve` (start the owner process), `mcp` (stdio MCP server), `open` (open the UI of a running server with a fresh launch code), `token:rotate`, `user:create` and `user:passwd` (network mode; they need the workspace lock, so no server may be running), `workspace:backup` (a consistent copy of the data of the workspace to a folder, with a checksum manifest and never the master key; no lock, a server may run) and `workspace:restore` (that folder into an empty workspace, under the lock; SDD-009 §21.4), `tools:install` (download a helper such as whisper.cpp after stating its size), `agent:docs` (print or write the generated material for agents, SDD-003 §8), plus vukem's built-in commands.
 
 ### 1.1 Domains (ADR-0043, epic 13)
 
@@ -293,7 +295,7 @@ CLI exit codes: `0` success; `2` for every code marked retryable; `1` for the re
 ├── token                    local token, file mode 0600 (local mode only)
 ├── vault.json               encrypted credentials of the connections, file mode 0600; created with the first credential (SDD-014 §3)
 ├── publish/                 uploads/<key>.json: the address of an upload session of a publication in progress, file mode 0600, no token (SDD-020 §7.4)
-├── providers/               prices.json: the price table the person edits for the models whose provider publishes no price, file mode 0600 (SDD-016 §4.3)
+├── providers/               prices.json: the price table the person edits for the models whose provider publishes no price, file mode 0600 (SDD-016 §4.3); host-id: the random identifier of this host that Sign in with ChatGPT sends, made at the first start, not a secret (SDD-016 §12.1)
 ├── library/                 memory/, prompts/ and skills/<name>/SKILL.md: the files of the library, the truth of the index; .review-key seals the review marks (SDD-018 §2, §7)
 ├── store/                   content-addressed originals: store/<first 2 hex>/<sha256>; store/.incoming/ holds copies in progress
 ├── artifacts/               derived files: artifacts/<asset sha256>/<kind>-<profile version>[-<variant>].<ext> (SDD-011 §6.1)
@@ -331,6 +333,7 @@ Environment variables, all optional. Names are final. Ceilings that have no vari
 | `STUARTY_TEST_TRANSCRIBER` | none | test only: `stub` selects a provider that answers every audio with four fixed words (`hello` 100-400 ms, `brave` 400-700, `new` 1100-1400, `world` 1400-1900, language `en`). Honoured only with `APP_ENV=test` in local mode; with any other `APP_ENV`, in network mode, or with any other value the server refuses to start. Never set in production |
 | `STUARTY_TEST_SOCIAL_URL` | none | test only: the address (`http://127.0.0.1:<port>`) of a server on loopback that plays a social network; the build then also offers the network `fake`, which speaks only to that address (SDD-020 §12). Honoured in local mode only; any other address, scheme or mode and the server refuses to start. Never set in production |
 | `STUARTY_TEST_GOOGLE_URL` | none | test only: the address (`http://127.0.0.1:<port>`) of a server on loopback that plays Google for the optional Google sign-in; the authorization, token and key addresses and the issuer then are that address with `/authorize`, `/token`, `/certs` and the bare address (SDD-014 §12.1). Honoured in both modes, but the connection chosen for the sign-in must list that host or the gate refuses it; any other address or scheme and the server refuses to start. Never set in production |
+| `STUARTY_TEST_SIGNIN_URL` | none | test only: the address (`http://127.0.0.1:<port>`) of a server on loopback that plays the sign-in to an AI provider; Sign in with ChatGPT and OpenRouter then authorize, exchange and call the API at that address (SDD-016 §12.5). Honoured in local mode only; any other address, scheme or mode and the server refuses to start. Never set in production |
 | `STUARTY_MAX_EXPORTS_PER_KEY` | `1` | concurrent exports running per actor (two more may wait) |
 | `STUARTY_MAX_INGESTS` | `2` | concurrent ingests per workspace |
 | `STUARTY_MAX_TRANSCRIBES` | `1` | concurrent transcriptions per workspace |
@@ -353,7 +356,7 @@ Environment variables, all optional. Names are final. Ceilings that have no vari
 | `STUARTY_PROJECT` | none | client side: the default project of CLI commands that take one |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | none | turns on OpenTelemetry (ADR-0026) |
 
-The limits and their errors are specified in SDD-007 §9. Variables read by vukem itself and used by the product (`APP_URL`, `APP_KEY`, `TLS_CERT_FILE`, `TLS_KEY_FILE`, `TRUSTED_PROXIES`, `TRUST_FORWARDED_PROTO`, `SHUTDOWN_TIMEOUT`, `DB_MAX_OPEN`) keep vukem's names.
+The limits and their errors are specified in SDD-007 §9. Variables read by vukem itself and used by the product (`APP_URL`, `APP_KEY`, `TLS_CERT_FILE`, `TLS_KEY_FILE`, `TRUSTED_PROXIES`, `TRUST_FORWARDED_PROTO`, `SHUTDOWN_TIMEOUT`, `DB_MAX_OPEN`) keep vukem's names. The variables of `deploy/.env` (`STUARTY_DOMAIN`, `STUARTY_VERSION`, `STUARTY_ACME_EMAIL`, `STUARTY_TLS_DIRECTIVE`, `STUARTY_SUBNET`, `STUARTY_CADDY_IP`, `STUARTY_MAX_BODY`) and the timeouts of the scripts of `deploy/` (`STUARTY_HEALTH_TIMEOUT`, `STUARTY_HTTPS_TIMEOUT`) are read by the compose file and the scripts, never by the binary (SDD-009 §21); `STUARTY_ADMIN_EMAIL` and `STUARTY_ADMIN_PASSWORD` are the two of the table above.
 
 ## 11. Headers and cookies
 

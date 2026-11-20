@@ -202,6 +202,22 @@ func (e *Error) Error() string {
 // AsError returns the *Error in err's chain.
 func AsError(err error) (*Error, bool) { return errors.AsType[*Error](err) }
 
+// CodeNeedsSignIn is the code of an auth failure of a connection made by a sign-in (SDD-016 section 12.4):
+// the person signs in again from the Connections page; a new key would not help.
+const CodeNeedsSignIn = "needs_sign_in"
+
+// SignInAware says, of an auth failure through a connection made by a sign-in (the provider refused a token
+// or a key that was revoked before it expired), that the person must sign in again, instead of asking for a
+// key. Any other error is returned as it is.
+func SignInAware(err error, c connections.Credential) error {
+	pe, ok := AsError(err)
+	if !ok || !c.SignedIn || pe.Kind != KindAuth {
+		return err
+	}
+
+	return &Error{Kind: KindAuth, Status: pe.Status, Code: CodeNeedsSignIn}
+}
+
 var codeRe = regexp.MustCompile(`^[a-z0-9_.-]{1,64}$`)
 
 // SafeCode returns s when it is a short error code of the safe pattern, else empty: a code the provider

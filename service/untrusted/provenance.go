@@ -79,6 +79,11 @@ var Provenance = map[string]string{
 	"publish.Target.RemoteID":    SourceNetworkText,
 	"publish.Target.URL":         SourceNetworkText,
 
+	// the sign-in to an AI provider (SDD-016 section 12): the name a person gave the connection, and who the
+	// provider says the account is
+	"service.ProviderSignIn.Label":   SourceProjectText,
+	"service.ProviderSignIn.Account": SourceNetworkText,
+
 	// the asset library (SDD-011 section 14): the text a person or an agent wrote about a file
 	"assets.LibraryAsset.Description": SourceMetadata,
 	"assets.Use.Name":                 SourceProjectText,

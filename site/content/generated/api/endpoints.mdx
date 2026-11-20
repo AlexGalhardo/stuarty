@@ -180,6 +180,9 @@ Every operation has its own page with the parameters, the body, the responses an
 | `POST` | `/api/v1/image/generate` | [`image.generate`](/docs/api/image.generate) | Start an image generation with the provider of a connection; the job waits for approval, shows its estimate and stores the images as assets with their origin |
 | `GET` | `/api/v1/providers` | [`providers.list`](/docs/api/providers.list) | List the AI providers, the connections of each and the price table |
 | `PUT` | `/api/v1/providers/prices` | [`providers.prices.set`](/docs/api/providers.prices.set) | Set or remove the price of a model (a person in the browser only; the local token and keys get 403) |
+| `GET` | `/api/v1/providers/sign-ins` | [`providers.sign-ins`](/docs/api/providers.sign-ins) | List the connections made by a sign-in and their state |
+| `POST` | `/api/v1/providers/signin` | [`providers.signin.begin`](/docs/api/providers.signin.begin) | Start the sign-in to an AI provider; answers the address of the consent screen (a person in the browser only) |
+| `POST` | `/api/v1/providers/signin/complete` | [`providers.signin.complete`](/docs/api/providers.signin.complete) | Finish the sign-in with what the provider sent to the redirect address (a person in the browser only) |
 | `POST` | `/api/v1/text/generate` | [`text.generate`](/docs/api/text.generate) | Start a text generation with the provider of a connection; the job waits for approval and shows its estimate |
 | `POST` | `/api/v1/voice/generate` | [`voice.generate`](/docs/api/voice.generate) | Start a speech generation with the provider of a connection; the job waits for approval, shows its estimate and stores the audio as an asset with its origin |
 
