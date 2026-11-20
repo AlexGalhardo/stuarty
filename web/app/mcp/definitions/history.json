@@ -1,6 +1,6 @@
 {
  "name": "history",
- "description": "Read the change log (action=list, newest first, with actor; actor, cursor, limit only for list), undo or redo your own latest step (one per call), revert to a revision or checkpoint as a new step (dry_run shows it), diff two revisions, or name revisions: checkpoints, checkpoint, rename_checkpoint, remove_checkpoint. Undo skips a later change by another actor and reports it. domain=image (image_id): undo or redo only.",
+ "description": "Change log (action=list, newest first, with actor; actor, cursor, limit: list only); undo/redo your own latest step (one per call); revert to a revision or checkpoint as a new step (dry_run previews); diff two revisions; checkpoints, checkpoint, rename_checkpoint, remove_checkpoint name revisions. Undo skips (and reports) others' later changes. domain=image (image_id): undo, redo only.",
  "inputSchema": {
   "type": "object",
   "properties": {
