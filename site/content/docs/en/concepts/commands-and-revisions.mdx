@@ -25,6 +25,7 @@ The history is never rewritten, so going back is one more revision.
 - **Checkpoints** name a revision ("before the intro"): in the History tab, with `stuarty checkpoint:create`, or with `history` `action=checkpoint`. Removing a checkpoint never removes a revision. Before an agent's first edit of the day the service makes one by itself, so there is always a point to come back to.
 - **The diff** says in words what changed between two revisions, most significant first: `stuarty diff --project <id> --from 12`, or `history` `action=diff`. It is computed from the two documents, so it is right after undo and redo too.
 - **Revert** takes the project back to the document at a revision or a checkpoint, as a new revision of whoever asked: `stuarty revert --project <id> --checkpoint "before the intro" --dry-run` shows what it would change and writes nothing. Without `--dry-run` it is a step like any other, and `undo` takes it back. A revert goes over what other actors did since, on purpose; with an older `--base` it answers `E_REVISION_CONFLICT` instead when they changed an object it would change.
+- **Images** have the same three, with the same rules: in the history panel of the image editor (name a version, read the changes since a revision, "revert to here" with the dry run as the confirmation), with `stuarty image:checkpoint:create`, `stuarty image:diff` and `stuarty image:revert` and the id of the image as the first argument, or with `history` `domain=image` and its `image_id`.
 
 ## Common mistakes
 
