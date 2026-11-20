@@ -1602,7 +1602,7 @@ Tool and Service mapping, scope and annotations (annotations are hints and clien
 | `template` | `TemplateList`, `TemplateSave`, `TemplateInstantiate`, `TemplateExport`, `TemplateImport` | read (list, export), edit (the others) | false | false | false | false |
 | `font_import` | `FontImport` | media | false | false | true | false |
 | `connection` | `ConnectionList` (without `id`), `ConnectionGet` (with `id`) | read | true | n/a | true | false |
-| `image` | `ImageCreate`, `ImageList`, `ImageDescribe`, `ImageEdit`, `ImageUndo`, `ImageRedo`, `ImageExport` (SDD-021) | read (list, show), edit (the others) | false | false | false | false |
+| `image` | `ImageCreate`, `ImageList`, `ImageDescribe`, `ImageEdit`, `ImageUndo`, `ImageRedo`, `ImageExport`, `ImageImport` (SDD-021) | read (list, show), edit (the others) | false | false | false | false |
 | `project_item` | `ProjectItemAdd`, `ProjectItemMove`, `ProjectItemRename`, `ProjectItemTrash`, `ProjectItemRestore`, `BriefGet`, `BriefSet`, `BriefingQuestions`, `BriefingAnswer` (argument `action`) | edit (read for `brief` without `text` and for `briefing` without `answers`) | false | false | false | false |
 | `library` | `LibrarySearch`, `MemoryList`, `SkillList`, `PromptList`, `MemoryGet`, `SkillGet`, `PromptGet`, `MemoryWrite`, `SkillWrite`, `PromptWrite`, `PromptRender`, `SkillLint` | read (search, list, get, render, lint), edit (write) | false | false | false | false |
 
@@ -3268,6 +3268,8 @@ The only tool of the connections domain (ADR-0043 item 3: an intent no other too
 
 The `image` tool is the image documents of SDD-021 behind one tool, as `template` is the templates: `action` picks the Service operation (`create` is `ImageCreate`, `list` `ImageList`, `show` `ImageDescribe`, `edit` `ImageEdit`, `undo` and `redo` `ImageUndo` and `ImageRedo`, `export` `ImageExport`) and a member the action does not use is refused. `operations` of `edit` are the operations of the image registry, which `command_help` serves with `domain` `image` (the video `edit` enum does not list them). The definition is as small as the budget of §4.1 allows, so some members are CLI and HTTP only: the background, the id, the quality, the paging and the template filter of the list, and the output schema names only `text`. The template to start from is `from_template` (an image id, not an `_id` member, to save the pattern). An agent sets a background with `layer.add_fill`.
 
+`import` is `ImageImport` (epic 48): `path` (an absolute path on the machine of the server, read with the path rules of `MediaImport`, §2.6) or `hash` (an image already in the workspace, as `media_import` accepts) makes a new image document, sized as the file when both sides are at most 4,096 pixels, otherwise by `width` and `height` or a `preset`; with `image_id` the file is one more layer of that document (`base_revision`, `idempotency_key` and `dry_run` as in `edit`). It is one more action and two members (`path`, `hash`) of the same tool, not a tool of its own, and the wait for the ingest (`wait_ms`) is CLI and HTTP only, so the budget of §4.1 is held. The result is `ImageImportResult`.
+
 #### `project_item`
 
 ```json
@@ -3947,6 +3949,8 @@ Success codes are the `Op.Status`. Error statuses are the table of SDD-000 §8; 
 | `assets.get`, `assets.uses` | `GET /assets/{hash}`, `GET /assets/{hash}/uses` | `cursor`, `limit` (uses) | none | 200 `AssetResult`, 200 `AssetUsesResult` | read | 400 `E_VALIDATION` for a bad hash; 404 `E_NOT_FOUND` |
 | `assets.set`, `assets.tag` | `PUT /assets/{hash}`, `POST /assets/{hash}/tags` | none | `{description?, rights_note?, reusable?}`, `{add?, remove?}` | 200 `AssetResult` | media | 400 `E_VALIDATION` with `details.reason` (SDD-011 §14.2) |
 | `audit.list` | `GET /audit` | `cursor`, `limit` | none | 200 `AuditListResult` (the audit record of RF-134: actions outside a document batch, with their actor, SDD-005 §5.9) | admin | none |
+| `images.import` | `POST /images/import` | none | `{path or hash, image_id?, name?, width?, height?, preset?, wait_ms?, base_revision?, idempotency_key?, dry_run?}`, `path` an absolute path to an image file on the machine of the server, read with the path rules of `MediaImport` (§2.6), `hash` an image already in the workspace | 200 `ImageImportResult` (the id and revision of the document, the layer, the asset hash and `state` `ready`; `state` `pending` and no document when the ingest of the file outlived `wait_ms`, with the `hash` to import again) | edit | 403 `E_PATH_NOT_ALLOWED`; 404 `E_FILE_NOT_FOUND`; 413 `E_LIMIT_EXCEEDED` (`import_bytes`, `import_pixels`, or a source over 4,096 pixels a side with no `width`, `height` or `preset`); 415 `E_UNSUPPORTED_MEDIA` (not an image); a refused import creates no document (SDD-021 §10) |
+| `images.events` | `GET /images/{id}/events` | `since` (a revision, SDD-006 §2); header `Last-Event-ID` | none | 200 `text/event-stream` with `image.updated` (SDD-006 §12) | read | 400 `E_VALIDATION` for a non-integer or negative `since`; 404 `E_NOT_FOUND` |
 | `events.stream` | `GET /projects/{id}/events` | `since` (a revision, SDD-006 §2); header `Last-Event-ID` | none | 200 `text/event-stream` (SDD-006) | read | 400 `E_VALIDATION` for a non-integer or negative `since` |
 | `trash.empty` | `POST /trash/empty` | none | `{project_id?, older_than_days?}` (SDD-005 §13.3) | 200 `TrashEmptyResult` | admin, and only from a browser session (local mode) or an `admin` key (network mode); the local token is refused | 403 `E_FORBIDDEN` |
 | `keys.create`, `keys.list`, `keys.revoke` | `POST /keys`, `GET /keys`, `DELETE /keys/{key_id}` | none | `KeyCreateRequest` for create | 201 `KeyCreateResult`, 200 `KeyListResult`, 200 `KeyRevokeResult` | a logged-in browser session; a key cannot call them (network mode only, SDD-007 §5.3) | 403 `E_FORBIDDEN` |
@@ -4205,6 +4209,7 @@ Every `Service` operation has an encoding on each surface. The table is the proo
 | `ImageEdit` | `image` (`action` edit) | `image:edit` | `POST /images/{id}/edit` |
 | `ImageUndo`, `ImageRedo` | `image` (`action` undo, redo) | `image:undo`, `image:redo` | `POST /images/{id}/undo`, `POST /images/{id}/redo` |
 | `ImageExport` | `image` (`action` export) | `image:export` | `POST /images/{id}/export` |
+| `ImageImport` | `image` (`action` import) | `image:import` | `POST /images/import` |
 | `AgentProfileList` | none (exception E-7) | `agent:profiles` | `GET /agents/profiles` |
 | `AgentProfileSet`, `AgentProfileRemove` | none (exception E-7) | none | `PUT /agents/profiles/{name}`, `DELETE /agents/profiles/{name}` |
 | `ChatSessionStart`, `ChatSend`, `ChatCancel`, `ChatAnswerPermission`, `ChatSessionDelete` | none (exception E-7) | none | `POST /projects/{id}/chat/sessions`, `POST /chat/sessions/{id}/messages`, `POST /chat/sessions/{id}/cancel`, `POST /chat/sessions/{id}/permissions/{request_id}`, `DELETE /chat/sessions/{id}` |
