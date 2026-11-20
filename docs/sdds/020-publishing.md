@@ -1,6 +1,6 @@
 # SDD-020: Publishing: the connector frame, YouTube, Instagram and Facebook
 
-- Status: Draft (2026-11-19). Written by epic 18 (sections 1 to 14: the connector frame and YouTube); the code follows in the same epic. Part 2 (sections 15 to 22, Instagram and Facebook) was written by epic 19 on 2026-11-19. Part 3 (sections 23 to 31: the publication, the calendar, the approval of a scheduled post and the scheduler) was written by epic 20. Epics 22, 44 and 45 add their own parts below.
+- Status: Draft (2026-11-19). Written by epic 18 (sections 1 to 14: the connector frame and YouTube); the code follows in the same epic. Part 2 (sections 15 to 22, Instagram and Facebook) was written by epic 19 on 2026-11-19. Part 3 (sections 23 to 31: the publication, the calendar, the approval of a scheduled post and the scheduler) was written by epic 20. Part 4 (sections 32 to 40: X and TikTok) was written by epic 22 on 2026-11-20. Epics 44 and 45 add their own parts below.
 - Depends on: ADR-0032 (publishing waits for a person), ADR-0033 (the vault), ADR-0035 (the user's own developer apps), ADR-0039 (a publication belongs to a project), ADR-0046 (the publishing scheduler), SDD-000 (names), SDD-003 (agent interfaces), SDD-005 (tables), SDD-007 (threat model), SDD-014 (connections), SDD-015 (approval and cost)
 - Implements: PRD-004 RF-400, RF-401 (YouTube, Instagram, Facebook), RF-402 to RF-406, RF-407 (AI disclosure), RF-408, NFR-063, NFR-064
 - Owner area: `core/publish/`, `service/publish/`, `service/social/`, `service/social/youtube/`, `service/social/meta/`, `service/social/instagram/`, `service/social/facebook/`, `service/connections/oauth/`, the publishing operations in `service/`, the controllers, commands and the callback route in `web/app/`, the setup guide and the publish dialog of the Connections page, the Publish pages in `web/resources/js/pages/Publish/`
@@ -45,6 +45,18 @@ Part 3, the calendar and the scheduler (epic 20):
 30. The calendar and the editor
 31. Tests of the publication
 
+Part 4, X and TikTok (epic 22):
+
+32. What the official pages said (read on 2026-11-20)
+33. The cases offered and the cases not offered
+34. Signing in, and a refresh token that changes
+35. The limits, as data, and the price of a post
+36. Publishing to X: the steps and the errors
+37. Publishing to TikTok: the steps and the errors
+38. A draft is not a publication: `sent_as_draft`
+39. AI disclosure, the guides and the surfaces
+40. Tests of part 4
+
 ## 1. Overview
 
 A creator connects their YouTube channel once, with a developer project of their own, and a finished video goes from Stuarty to the channel only after a person approved it. The frame is built for every network that follows: one interface, one package per network, and nothing outside that package knows the network's API (NFR-063).
@@ -56,7 +68,7 @@ Four rules carry the design:
 3. **A publication waits for a person.** `publish.upload` is a job kind that needs approval (SDD-015 section 5). Before the approval no request leaves the machine; no operation, surface or rule of an agent skips it (T-48, T-59).
 4. **What the network answers is untrusted text.** A title, a description, an error message or a channel name that comes from the network, or from an agent, is delimited and cleaned before a surface shows it (SDD-007 section 8, T-58).
 
-The Instagram and Facebook connectors (epic 19), the calendar and the scheduler (epic 20), X and TikTok (epic 22), Reddit (epic 44) and metrics (epic 45) are not in this document yet.
+The Instagram and Facebook connectors (epic 19), the calendar and the scheduler (epic 20), and X and TikTok (epic 22) are the later parts of this document; Reddit (epic 44) and metrics (epic 45) are not in it yet.
 
 ## 2. What the official pages said (read on 2026-11-19)
 
@@ -416,16 +428,17 @@ waiting_approval -> approved | scheduled | missed | draft | cancelled     (appro
 waiting_approval -> waiting_approval                              (rescheduled or edited: a new request replaces the old one)
 approved         -> publishing | missed | waiting_approval | cancelled
 scheduled        -> publishing | missed | waiting_approval | cancelled
-publishing       -> published | failed | scheduled                (a transient error goes back to scheduled with a later attempt)
+publishing       -> published | sent_as_draft | failed | scheduled   (a transient error goes back to scheduled with a later attempt)
 failed           -> waiting_approval | cancelled
 missed           -> waiting_approval | cancelled
-published, cancelled: final
+published, sent_as_draft, cancelled: final
 ```
 
 - `draft`: the person is still planning. Nothing was asked, nothing is reserved.
 - `waiting_approval`: the target has a time and an approval request is pending. A rejected or an expired request returns the target to `draft` with an `error` that says why.
 - `approved`: a person (or a rule the person wrote) said yes and the time has come; the scheduler takes it. `scheduled`: said yes, and the time is in the future. Approving a request moves a target to `scheduled` when its time is after the moment of the decision and to `approved` otherwise; a time that is already past its late window (section 25) goes to `missed`.
 - `publishing`: a scheduler holds the lease of the target and the connector is sending. `published`: the network accepted it; `url` and `remote_id` are set.
+- `sent_as_draft` (epic 22, section 38): the network took the file as a draft in the person's own app and the person finishes and publishes it there. It is final, it is not `published`, and the calendar shows it distinctly.
 - `failed`: the connector refused, or a transient error used its attempts, or the send was interrupted too many times; the `error` is actionable and the person can retry (section 28).
 - `missed`: the time passed with nothing running, or the approval came too late (section 25). It waits for a person.
 - Editing a target that is `waiting_approval`, `approved` or `scheduled` returns it to `waiting_approval` with a new request: what a person approved is exactly what is sent, and an edit makes it another post. A target that is `publishing` or `published` is not edited.
@@ -498,3 +511,170 @@ The page `/publish` of the app (`web/resources/js/pages/Publish/`): a month view
 | The approval request of a target, a rule that approves, a ceiling, the cost; a scheduled post sends only to the account that was approved | `go test ./service/publish/... -run TestApproval` and `-run TestCost`; `TestPublication*` in `web/app/servicetest` |
 | The surfaces agree | `go test ./web/contract/...` |
 | The calendar, the list and the editor, in both languages, by keyboard, with the fake connector | `web/e2e/specs/publish-calendar.spec.ts` |
+
+## Part 4: X and TikTok (epic 22)
+
+A creator who also posts on X and on TikTok handles both from the calendar, within what those two networks really allow: X as a paid post whose price they see before they approve it, TikTok as a draft sent to their own TikTok app, to be finished and published there. The frame of sections 5 to 13 and the publication of sections 23 to 31 are unchanged: two packages (`service/social/x`, `service/social/tiktok`) and two registration lines in `web/app/owner/social.go`. The additions to the frame are small and named in section 34 (an optional interface for a sign-in that is not the generic one, and a way to keep a refresh token that changes), in section 35 (a price in the description of a network) and in section 38 (one state).
+
+## 32. What the official pages said (read on 2026-11-20)
+
+Read again before the code, as the research note of 2026-11-18 asked. The pages of X are on `docs.x.com` (the former `developer.x.com` answered `402` to an automated reader). A value the pages did not state is marked and is never guessed; section 40 lists them as what only the author's own app can verify.
+
+**X**
+
+| Fact | Value | Official page |
+| --- | --- | --- |
+| Model | "pay-per-usage pricing with no subscriptions": credits are deducted per request; no free tier is listed (a promotion of credits for a new paying user is); "Prices are subject to change", with no effective date on the page | `docs.x.com/x-api/getting-started/pricing` |
+| Price of a post | `Post: Create` $0.015 per request; `Post: Create (with URL)` $0.200 per request; `Post: Create (summoned)` $0.010; `User: Read` $0.010 per resource returned; `Media Metadata` $0.005. No separate price for a media upload is listed. The page does not say how a post "with a URL" is detected. When the balance is used up "API requests will be blocked until you add credits"; the status code and the body of that refusal are not stated | the same |
+| Create a post | `POST https://api.x.com/2/tweets`; OAuth 2.0 user token with `tweet.write` (the page lists `users.read` and `tweet.read` too); JSON body with `text` ("required unless media is provided", "at most 280 characters unless the account has X Premium") and `media.media_ids` (1 to 20); `made_with_ai` ("Disclose that the tweet contains AI-generated media"), `paid_partnership`, `nullcast`, `reply_settings`, `poll`, `reply`, `quote_tweet_id` (Enterprise) and others, which Stuarty does not send; `201` with `data.id` and `data.text` | `docs.x.com/x-api/posts/create-or-edit-post` |
+| A post that fails | `Error` (`code`, `message`) or `Problem` (`type`, `title`, `detail`, `status`); the page shows a `403` "This user is not allowed to post a video longer than 20 minutes." and no `429` example | the same |
+| Media of a post | up to 4 photos, 1 animated GIF, or 1 video per post; "upload limits and Post-create limits are enforced separately, so a successfully finalized `media_id` can still be rejected by `POST /2/tweets`" | the same; `.../media/quickstart/best-practices` |
+| Chunked upload | `POST /2/media/upload/initialize` with JSON `media_category` (`tweet_video`), `media_type` (`video/mp4`) and `total_bytes` (at most 17,179,869,184), answer `data.id`, `data.media_key`, `data.expires_after_secs`; `POST /2/media/upload/{id}/append` as `multipart/form-data` with `segment_index` (0 to 9,999) and `media`, a segment of at most 8 MB, 5 MB advised; `POST /2/media/upload/{id}/finalize`, whose answer has `processing_info` (`state` `pending`, `in_progress`, `succeeded` or `failed`; `check_after_secs`; `progress_percent`) when the media is not ready; `GET /2/media/upload?command=STATUS&media_id=<id>` until `succeeded`. All need the scope `media.write`. The page warns against sending `command=INIT`, `APPEND` or `FINALIZE` to `POST /2/media/upload`: that is the older protocol | `.../media/initialize-media-upload`, `.../append-media-upload`, `.../finalize-media-upload`, `.../get-media-upload-status`, `.../media/quickstart/media-upload-chunked` |
+| Video | default account: 0.5 seconds to 20 minutes, 8 GB; X Premium or verified: 125 minutes, 16 GB. Required: at most 60 fps; width and height between 32 and 1,280 by 1,024 (the same page recommends 720 x 1,280, which breaks that limit, so Stuarty does not enforce it); aspect ratio 1:3 to 3:1; pixel aspect ratio 1:1; YUV 4:2:0; AAC Low Complexity, mono or stereo; no open GOP, progressive. Recommended: H.264 High, 30 or 60 fps, 5,000 kbit/s | `.../media/quickstart/best-practices` |
+| Counting the text | 280 weighted characters; a URL is 23 whatever its length; an emoji and a CJK character are 2 | `docs.x.com/fundamentals/counting-characters` |
+| Rate limits | `POST /2/tweets`: 100 requests per 15 minutes per user and 10,000 per 24 hours per app; `POST /2/media/upload`: 500 per 15 minutes per user and 50,000 per 24 hours per app; headers `x-rate-limit-limit`, `x-rate-limit-remaining`, `x-rate-limit-reset` (a Unix time); a `429` with the code 88 | `docs.x.com/x-api/fundamentals/rate-limits` |
+| Sign-in | OAuth 2.0 authorization code with PKCE; address `https://x.com/i/oauth2/authorize` with `response_type=code`, `client_id`, `redirect_uri`, `state` (up to 500 characters), `code_challenge`, `code_challenge_method` (`S256` or `plain`); token `POST https://api.x.com/2/oauth2/token`; a callback is matched exactly and the page does not say whether `localhost` is allowed; scopes include `tweet.read tweet.write users.read media.write offline.access`; with `offline.access` a refresh token is issued; an access token lasts two hours; a confidential client (a web app) authenticates with an "Authorization Header" and a public client puts the client id in the body | `docs.x.com/resources/fundamentals/authentication/oauth-2-0/authorization-code` |
+| Who is the account | `GET https://api.x.com/2/users/me` with `tweet.read` and `users.read`; `data.id`, `data.name`, `data.username`. It is a `User: Read`, so it costs $0.010 | `docs.x.com/x-api/users/get-my-user` |
+
+**TikTok**
+
+| Fact | Value | Official page |
+| --- | --- | --- |
+| The path | `POST https://open.tiktokapis.com/v2/post/publish/inbox/video/init/`, scope `video.upload`: "Your app must be approved for the `video.upload` scope" and the person must authorize it. The content is "a draft for the user to review"; the person "must click on inbox notifications to continue the editing flow in TikTok". The body has `source_info` only: no title, no caption, no privacy, no AI flag. At most 6 requests a minute per access token | `developers.tiktok.com/doc/content-posting-api-reference-upload-video`, `.../content-posting-api-get-started-upload-content` |
+| Where the file comes from | `source` `FILE_UPLOAD` (with `video_size`, `chunk_size`, `total_chunk_count`) or `PULL_FROM_URL` (a URL under a domain or prefix verified in the portal, https, no redirect, fetched by TikTok). Stuarty uses `FILE_UPLOAD` and never `PULL_FROM_URL` (section 33) | the same; `.../content-posting-api-media-transfer-guide` |
+| The upload | the answer has `data.publish_id` and `data.upload_url` (on `open-upload.tiktokapis.com`, valid for one hour); the file is sent in order by `PUT` to that address with `Content-Type` (`video/mp4`), `Content-Length` and `Content-Range: bytes first-last/total`; a chunk is 5 MB to 64 MB, the last up to 128 MB, 1 to 1,000 chunks, a file under 5 MB in one; `206` for a chunk and `201` for the last; `400`, `403` (the address expired), `404`, `416`, `5xx` | the media transfer guide |
+| The file | MP4 (recommended), WebM, MOV; H.264 (recommended), H.265, VP8, VP9; 23 to 60 fps; 360 to 4,096 pixels on each side; up to 10 minutes through this endpoint; up to 4 GB | the media transfer guide |
+| Errors of the first step | `400 invalid_param`; `403 spam_risk_too_many_pending_share` ("at most 5 pending shares in any 24-hour period"); `403 spam_risk_user_banned_from_posting`; `403 url_ownership_unverified`; `401 access_token_invalid`; `401 scope_not_authorized`; `429 rate_limit_exceeded`; `5xx` | the upload reference |
+| The state | `POST /v2/post/publish/status/fetch/` with `publish_id`, scope `video.upload` or `video.publish`, 30 requests a minute; `data.status`: `PROCESSING_UPLOAD`, `PROCESSING_DOWNLOAD`, `SEND_TO_USER_INBOX` ("a draft notification was sent to the creator's inbox"), `PUBLISH_COMPLETE` ("for uploads, the creator finished posting from the inbox"), `FAILED`; `fail_reason`: `file_format_check_failed`, `duration_check_failed`, `frame_rate_check_failed`, `picture_size_check_failed`, `internal`, `auth_removed`, `spam_risk_too_many_posts`, `spam_risk_user_banned_from_posting`, `spam_risk_text`, `spam_risk`, `publish_cancelled`; `uploaded_bytes`; errors `400 invalid_publish_id`, `401`, `429`, `5xx` | `.../content-posting-api-reference-get-video-status` |
+| Unaudited clients | the guidelines page, which describes the Direct Post API, says an unaudited client posts only with `SELF_ONLY` viewership, for at most 5 users in 24 hours, whose accounts are private; that an audit is needed to lift it; that the audit excludes "a utility tool to help upload contents to the account(s) you or your team manages". The pages read for the upload (draft) flow state none of these restrictions, and do not say the audit applies to it | `developers.tiktok.com/doc/content-sharing-guidelines` |
+| Sign-in | the desktop kit: `https://www.tiktok.com/v2/auth/authorize/` with `client_key`, `response_type=code`, `scope` (comma separated), `redirect_uri`, `state`, `code_challenge`, `code_challenge_method=S256`, where the challenge is the **hex** encoding of the SHA-256 of the verifier (43 to 128 characters); "only `localhost` or loopback IP `127.0.0.1` are allowed host names" in a redirect, with a port, registered in the app; the web kit says a redirect "must be absolute and begin with `https`" and does not mention PKCE; token `POST https://open.tiktokapis.com/v2/oauth/token/` as a form with `client_key`, `client_secret`, `code`, `grant_type`, `redirect_uri` and, for a desktop app, `code_verifier`; the answer has `access_token` (2 hours), `refresh_token` (180 days), `refresh_expires_in`, `open_id`, `scope`, `token_type`; "a refresh request will return a different `refresh_token` from the one you sent", so the newest is always the one to keep; an error is `{"error", "error_description", "log_id"}` | `.../login-kit-desktop`, `.../login-kit-web`, `.../oauth-get-a-user-access-token`, `.../oauth-refresh-a-user-access-token`, `.../oauth-user-access-token-management` |
+| Who is the account | `GET https://open.tiktokapis.com/v2/user/info/?fields=open_id,display_name` with `user.info.basic`; the page notes "a migration plan related to this API" | `.../tiktok-api-v2-get-user-info` |
+
+**The two STOP conditions of the epic are not true.** X still offers a paid post with a chunked video upload to an app of the person's own, and the price is public. TikTok still offers the upload to the inbox as a draft with a file sent from the machine, with no public address. Neither needs a public address, a central Stuarty service or an unofficial way (section 33).
+
+## 33. The cases offered and the cases not offered
+
+| Case | Offered | Why |
+| --- | --- | --- |
+| A video with its text as an X post | yes | the chunked upload and the post of section 32; the person sees the price before approving |
+| An X post with an image, a thread, a poll, a reply, a quote, a clip, a thumbnail | no | out of scope of epic 22 (a post with text and one video). A post with a thumbnail is refused with `not_allowed` on `thumbnail` |
+| X text longer than 280 weighted characters | no | refused by `PublishValidate` with the exact count and the limit (section 35); an account with X Premium may write more, but Stuarty cannot know it and takes the limit every account has |
+| A video as a TikTok draft in the inbox, sent from the file on the machine | yes | `FILE_UPLOAD` of section 32. The final state is `sent_as_draft` (section 38) |
+| A public post on TikTok, a direct post, a post with a caption, a privacy level, a cover or an AI flag | never | the draft endpoint takes none of them, and a direct post through an unaudited app is private for a handful of users and is audited only for a tool meant for a wide public. Epic 22 gives no way around the audit. The visibility the draft allows is `private`, which is also the default: nothing about it is public until the person finishes it in TikTok |
+| `PULL_FROM_URL` on TikTok | never | it needs a domain the person verified and a public address of the file: Stuarty never serves the media of the person to a third party (ADR-0032, as in section 16). A test asserts that no request carries `PULL_FROM_URL` or `video_url` |
+| A photo post on TikTok | no | out of scope |
+
+TikTok takes the file and nothing else, so the title of a target to TikTok is only the name the post has in Stuarty: its text, description and tags are **not sent**, and the approval says so in words ("TikTok takes no caption through this API; write it in the TikTok app").
+
+## 34. Signing in, and a refresh token that changes
+
+Both networks use the person's own developer app (ADR-0035): the connection of the kind `x` and the kind `tiktok`, each with the client id and secret in the vault (`client_key` for TikTok, which the form calls the client id), and the sign-in of section 6. Neither makes a call before the person consents.
+
+**X.** Address `https://x.com/i/oauth2/authorize`; scopes `tweet.read tweet.write users.read media.write offline.access`; the token address `https://api.x.com/2/oauth2/token`. The client authenticates with the HTTP `Authorization: Basic` header (the page says "Authorization Header" for a confidential client), and the form carries `client_id`, never `client_secret`. The connection's hosts are `api.x.com` and `x.com`. After the exchange the connector reads who the account is with `GET /2/users/me` once, which is a `User: Read` and costs $0.010: the guide says so. No later call reads the account: `Account` answers from the secret, and the test of the connection only asks for an access token, which is not billed.
+
+**TikTok.** The generic address builder cannot make TikTok's: the parameter is `client_key`, the scopes are separated by commas and the challenge is hex. The frame gains the optional interface `social.Authorizer` (`AuthorizeURL(clientID, redirectURI, state, challenge string) string`); the service uses it when a connector has it, and the generic builder otherwise, so the connectors of sections 7 to 22 are as before. The connector is given the challenge of the generic flow (the SHA-256 of the verifier, base64url) and turns it into hex, so the flow keeps no second verifier. The exchange sends `client_key`, `client_secret`, `code`, `grant_type`, `redirect_uri` and `code_verifier` as a form; the connector reads `open_id` of the answer and then the name with `GET /v2/user/info/` (`user.info.basic`; a failed read leaves the `open_id` as the title). The connection's hosts are `open.tiktokapis.com` and `open-upload.tiktokapis.com`, since the upload address comes from the network and the gate refuses any other host. The redirect is the loopback one of section 6 and carries a port, which the desktop kit requires and registers.
+
+**A refresh token that changes.** A refresh token of TikTok is replaced at every refresh (section 32) and X's may be (the pages read do not say). A connector that kept the one in its secret would sign in once and then fail. `connections.Credential` gains `Rotate(secret []byte) error`, set by `Manager.With`, which writes the new secret into the vault under the same reference as the old one; the secret never leaves the closure. A connector that is given a new refresh token calls `Rotate` with the whole new secret before it uses the access token. Two sends at once to one account would each refresh: `social.Rotation` serialises the refreshes of one connection in the process and keeps the token the process learned last, so the second one does not present a token the first already replaced. A refresh that the network refuses is `auth`, and the connection shows `needs_sign_in` as before.
+
+## 35. The limits, as data, and the price of a post
+
+`core/publish.Limits` gains `CaptionNetwork` (the id of the network in the table of limits of SDD-019, `x`, whose weighted count and link weight decide the length of the text) and `NoCaption` (the network takes no text with the file: TikTok). The text of an X post is `publish.Caption`, as in section 18; `Validate` measures it with `core/writing.ValidateCaption(text, "x")` and the issue states the count and the limit (`the caption (...) has 290 characters; the network allows 280`). The video is checked with the preset `x-video` or `tiktok` of `core/export`, whose limits were read on the pages of section 32; the codecs are `h264` and `aac` for X and `h264` and `hevc` for TikTok.
+
+| | X | TikTok (draft) |
+| --- | --- | --- |
+| Container, codecs | `mp4`; H.264; AAC | `mp4`; H.264, HEVC |
+| Duration | 0.5 s to 20 min | up to 10 min |
+| Frame rate | up to 60 | 23 to 60 |
+| Picture | aspect ratio 1:3 to 3:1 (the 1,280 x 1,024 limit is not enforced) | 360 to 4,096 on each side |
+| File | at most 8 GB | at most 4 GB |
+| Text | 280 weighted characters, a link 23 | not sent |
+| Visibility | `public` (the person must say it, as for Meta) | `private`, the only value, which is the default |
+| Thumbnail | none | none |
+| AI flag | `made_with_ai` | none |
+| Rate | 100 posts per 15 minutes per user | 5 pending shares per 24 hours (`DailyPosts`) |
+
+**The price is data, with its source and its date** (RF-408). `core/publish.Price` has the currency, the price of a post and the price of a post that holds a link, in millionths of the currency, the page and the date it was read; `social.Description.Price` carries it. For X it is USD, 15,000 and 200,000 (that is $0.015 and $0.200), read on 2026-11-20. `Price.For(text)` is pure: it answers the higher price when the text holds a link, which is a `http://` or `https://` address or a bare domain such as `example.com`. The page does not say how X detects a link, so the rule is the one that cannot understate the price, and the approval says which price it applied ("a post with a link"). A network with no price keeps `PostCostMicros` as before, and `Description.CostOf(post)` is the one function the service asks, for the calendar and for `PublishNow` alike.
+
+The price is the **estimate of the approval request** (section 26), so the approval shows it, the ceilings of SDD-015 apply to it when the request is made and again when it is approved, approving reserves it in the ledger keyed by the target, and `published` settles it at the estimate. A target that ends `failed`, `missed` or `cancelled` releases it. A job of `PublishNow` carries the same estimate, so it is reserved at approval and settled when the job succeeds. The ledger therefore records the price after the post went out, which is acceptance criterion 1.
+
+**When X changes its prices** the person edits them (section 39). Until they do, the date of the prices is shown beside the price in the approval and in the guide, so a price that is a month old is seen to be.
+
+## 36. Publishing to X: the steps and the errors
+
+1. Ask for an access token (`grant_type=refresh_token`, section 34).
+2. `POST /2/media/upload/initialize` with `{"media_type":"video/mp4","total_bytes":<n>,"media_category":"tweet_video"}`; keep `data.id`.
+3. `POST /2/media/upload/{id}/append` for each segment of 4 MiB, in order, as `multipart/form-data` with `segment_index` and `media`; a segment that fails with a transient error is sent again, up to `Resumes` times with a pause.
+4. `POST /2/media/upload/{id}/finalize`; while `processing_info` says `pending` or `in_progress`, `GET /2/media/upload?command=STATUS&media_id=<id>` after `check_after_secs`, at most `Polls` times. `failed` is `rejected`; more waiting than `Polls` is `unavailable` with the reason `still_processing`.
+5. The session file of section 7.4 now keeps the media id with `Uploaded` true, so a post that fails after this step, or a restart, does not upload the video again. The pages do not offer a way to ask how many segments arrived, so an upload interrupted before this step starts again from `initialize`; the media that was left expires by itself (`expires_after_secs`).
+6. `POST /2/tweets` with `{"text": <caption>, "media": {"media_ids": [<id>]}, "made_with_ai": true}` (the last member only when the flag is set). The answer `201` has `data.id`. The URL is `https://x.com/i/status/<id>`, built from the id by the connector.
+
+The post is **paid and cannot be undone**, so step 6 is not repeated on a doubt. A transport failure or a `5xx` of that one request leaves it unknown whether X posted: the error is `rejected` with the reason `outcome_unknown`, which the scheduler does not retry (only `unavailable` is), and its hint says to look at the account's timeline before publishing again. The failures of steps 2 to 5 cost nothing and are `unavailable` or `invalid` as usual.
+
+| X says | `E_PUBLISH` `details.kind` and reason |
+| --- | --- |
+| `401`; the token refused at the refresh (`invalid_grant`, `invalid_client`) | `auth`: `token_invalid`, or the OAuth code |
+| `403` with a detail about a duplicate | `rejected`: `duplicate` |
+| `403` with a detail about a video longer than the account may post | `invalid`: `duration` |
+| any other `403` | `not_eligible`: `forbidden` (the app lacks a scope or the account may not post this) |
+| `402` | `quota`: `credits_exhausted` (the status of the refusal for no credits is not stated; `402` is the guess, and the reason names the cause) |
+| `429` | `quota`: `rate_limit`, with `retry_after` from `x-rate-limit-reset` |
+| `400`, `404` of a media | `invalid`: `invalid_request`, `media_expired` |
+| `processing_info.state` `failed` | `rejected`: `processing_failed` |
+| `5xx`, no answer, in steps 1 to 5 | `unavailable` |
+| the same in step 6 | `rejected`: `outcome_unknown` (above) |
+
+The reason is a code of this table that passed the reason pattern, never the text of X (T-58). The text of a `403` is read only to choose a row and is never copied. The hints are written by the connector in `Description.Hints`.
+
+## 37. Publishing to TikTok: the steps and the errors
+
+1. Ask for an access token (section 34).
+2. With a session of this upload (the `publish_id` of a file that was sent and is only being processed), go to step 6. Otherwise `POST /v2/post/publish/inbox/video/init/` with `{"source_info":{"source":"FILE_UPLOAD","video_size":<n>,"chunk_size":<c>,"total_chunk_count":<k>}}`: the chunk is 10,000,000 bytes, the last takes what is left (so it is at most 19,999,999 bytes, under 128 MB), and a file smaller than the chunk is one chunk. Keep `publish_id` and `upload_url`. **The upload address is never written to the session file**: it holds an upload token, so a restart makes a new request and the file is sent again, which leaves one draft, since nothing reaches the inbox before the last chunk.
+3. `PUT` each chunk in order to `upload_url`, with `Content-Type: video/mp4`, `Content-Length` and `Content-Range`. A chunk that fails with a transient error is sent again, up to `Resumes` times with a pause; a `416` or an expired address (`403`) starts again from step 2, once.
+4. After the last `PUT`, whether its answer `201` arrived or was lost, the session file keeps the `publish_id` with `Uploaded` true: the file is at TikTok, and what is left is to read its state. A second publish of the same post then reads the state and does not send the file again.
+5. The address of the upload is on `open-upload.tiktokapis.com`, a host of the connection; the gate refuses any other.
+6. `POST /v2/post/publish/status/fetch/` every `PollEvery`, at most `Polls` times: `SEND_TO_USER_INBOX` and `PUBLISH_COMPLETE` end the upload as `sent_as_draft` with the `publish_id` as the remote id and no URL (a draft has none); `FAILED` is mapped below; more waiting than `Polls` is `unavailable` with the reason `still_processing`, retryable, and the session is kept.
+
+| TikTok says | Kind and reason |
+| --- | --- |
+| `401 access_token_invalid`, `401 scope_not_authorized`, `invalid_grant` at the refresh, `auth_removed` | `auth`: `token_invalid`, `scope_missing`, the OAuth code, `auth_removed` |
+| `403 spam_risk_too_many_pending_share`, `spam_risk_too_many_posts`, `429 rate_limit_exceeded` | `quota`: `pending_share_limit`, `posting_limit`, `rate_limit` |
+| `403 spam_risk_user_banned_from_posting`, `spam_risk`, `spam_risk_text` | `not_eligible`: `banned`, `spam_risk` |
+| `400 invalid_param`, `invalid_publish_id`, `url_ownership_unverified`, `file_format_check_failed`, `duration_check_failed`, `frame_rate_check_failed`, `picture_size_check_failed` | `invalid`: `invalid_param`, `invalid_publish_id`, `url_ownership`, `unsupported_format`, `duration`, `frame_rate`, `resolution` |
+| `publish_cancelled` | `rejected`: `publish_cancelled` |
+| `internal`, `5xx`, no answer | `unavailable` |
+
+## 38. A draft is not a publication: `sent_as_draft`
+
+`core/publish.TargetSentAsDraft` is a state of a target, added to the machine of section 24: `publishing -> sent_as_draft`, final. `Published.State` of a connector may be `publish.StateSentAsDraft`, and the scheduler moves the target to `sent_as_draft` instead of `published` for it. Everywhere a person reads the state, the draft is told apart from a publication:
+
+- the calendar, the list and the editor show it with its own colour and the words "sent as a draft: finish it in the TikTok app", never "published" and never the green of a publication;
+- the item of the project is `published` only when every target that is not cancelled is `published`: a draft is not (`core/publish.ItemStatus`);
+- the approval says "sent as a draft to the TikTok app of the account; the title, text and tags are not sent; you finish and publish it there" before the person approves, and the guide says the same;
+- the remote id is the `publish_id` and there is no URL;
+- the job of `PublishNow` ends `succeeded` with the result state `sent_as_draft`; `PublishStatus` reads TikTok once more for it.
+
+The migration `publication_targets_sent_as_draft` rebuilds `publication_targets` with the longer `CHECK` (SDD-005 section 5.15), as the earlier epics rebuilt their tables.
+
+## 39. AI disclosure, the guides and the surfaces
+
+**AI disclosure (RF-407).** X has the flag: `made_with_ai` of the post, set when the service sets `ai_disclosure` (section 20). TikTok has none in the draft endpoint, so `Description.AIDisclosure` is false and the summary ends with `AI disclosure: wanted, but TikTok takes no such flag`; the person marks the video in the TikTok app when they finish it, and the guide says so.
+
+**The guides.** Written per network from the `Description` as in section 21, in English and Portuguese. X: create a project and an app in the developer console; set the app's type to a web app (a confidential client); add `<origin>/social/callback` as a callback address; copy the client id and secret; buy credits (the API is pay per use, and the price of a post is $0.015 and of a post with a link $0.200 on the date read); sign in and accept the permissions; the sign-in reads the account once, for $0.010. It states what section 32 found, that the price changes and can be edited, and what it did not find. TikTok: create an app in TikTok for Developers; add Login Kit and the Content Posting API; ask for the scope `video.upload`; register `http://127.0.0.1:<port>/social/callback` as the redirect (the port of this server); add yourself as a target user while the app is not approved; copy the client key and secret; sign in. It says plainly, before the sign-in and again in the approval: **what Stuarty sends is a draft**, with no caption, that the creator finishes in the TikTok app after tapping the notification, that no public post is made through an app that is not audited, that the audit is meant for a product for a wide public and not for a tool to post to your own accounts, and what would change after an audit (a direct post, which this epic does not offer).
+
+**Editing the prices.** The price of X is data that the person can correct when X changes it, from the Connections page: `SocialPriceSet` (admin, a browser session, audited as `social.price`, `POST /social/price`) takes the connection, the price of a post and the price of a post with a link, and writes them with the date it was edited into the secret document of the connection, where only the connector reads them. `SocialAccountList` shows them. No command and no MCP tool, as `SocialAccountSelect`. A price that is not a whole positive number of millionths, or is above 100 USD, is `E_VALIDATION`; the edit changes the estimate of an approval made after it, never one already made (the snapshot of a request keeps the price the person was shown).
+
+**Operations and surfaces.** `SocialPriceSet` is added to SDD-000 section 1 and to the scope matrix of SDD-007. The publication operations of section 28 are unchanged: a target to `x` or `tiktok` is a target like any other. No variable is added: with `STUARTY_TEST_SOCIAL_URL` set (section 12), the connectors `x` and `tiktok` of the build send everything, sign-in, upload and post, to that loopback server, so `x-tiktok.spec.ts` runs a whole flow with no real account. No MCP tool is added (author decision D-094).
+
+## 40. Tests of part 4
+
+| What | Test |
+| --- | --- |
+| The limits at their boundaries, the weighted count, the price with and without a link, the state `sent_as_draft` | `go test ./core/publish/...` |
+| The X adapter from recorded request and response pairs: sign-in, chunked upload, polling, the post, every error, no request on a refused validation, no repeat of the post on a doubt, no token anywhere | `go test ./service/social/x/...` |
+| The TikTok adapter the same: the hex challenge, the chunks and their ranges, the states, every error, no `PULL_FROM_URL`, no upload address on disk | `go test ./service/social/tiktok/...` |
+| A refresh token that changes is kept, two sends at once refresh once | `go test ./service/social/... ./service/connections/...` |
+| The cost in the approval and the ledger, a draft in the calendar | `TestPublication*` in `web/app/servicetest`, `go test ./service/publish/...` |
+| Nothing leaves before approval, now, scheduled or retried; the token and the upload address in no answer; the price an approval was shown is the one settled | `TestSecurity_T62_*` to `TestSecurity_T64_*` |
+| The guides, the price, the draft state and the editor, in both languages | `web/e2e/specs/x-tiktok.spec.ts`, `task test:web` |
+
+**Not verified by the product's tests, only by the author's own app** (task 6 of the epic): that X accepts `client_id` with the Basic header and no `client_secret` in the body; whether its refresh token changes; whether `localhost` can be registered as a callback; the status and the body of the refusal for no credits; the text of a duplicate refusal; that `https://x.com/i/status/<id>` opens the post; how X decides that a post has a link and so charges $0.200; the answer of `append`; whether the 1,280 x 1,024 limit is enforced for a portrait video; that TikTok approves the scope `video.upload` for an app that is the person's own, and whether the audit applies to the draft flow; that a desktop-kit redirect is allowed for an app of the Content Posting API; the answer of the final chunk; that the draft reaches the inbox of the account.
