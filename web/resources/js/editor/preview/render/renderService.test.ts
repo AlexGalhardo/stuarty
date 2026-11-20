@@ -336,6 +336,35 @@ describe("the render worker logic", () => {
 		expect(blue).toBeGreaterThan(130);
 	});
 
+	it("holds a surface of 4096 by 4096 pixels within the default budget, frame after frame", async () => {
+		const r = rig();
+		await r.send(init);
+		await r.send({
+			type: "texture",
+			id: "~m",
+			frame: solid(4, 4, [10, 200, 30, 255]),
+		});
+		// The largest surface (SDD-013 section 3.12 step 1) is 64 MiB. It is drawn
+		// again for every frame under the same id: the module replaces it, so five
+		// frames stay under the 256 MiB of textures of the default budget, which four
+		// surfaces kept side by side would pass.
+		const surface = clearInput(
+			[layer("~m", { cx: 2048, cy: 2048, w: 4096, h: 4096 })],
+			4096,
+			4096,
+		);
+		for (let seq = 1; seq <= 5; seq++) {
+			await r.send({
+				type: "render",
+				seq,
+				input: input([layer("~g")]),
+				surfaces: [{ id: "~g", input: surface }],
+			});
+			expect(r.posted.at(-1)).toMatchObject({ type: "frame", seq });
+			expect(pixels(r.posted.at(-1)).slice(0, 4)).toEqual([10, 200, 30, 255]);
+		}
+	}, 120_000);
+
 	it("answers missing_texture when a surface lacks the texture of its layer", async () => {
 		const r = rig();
 		await r.send(init);
