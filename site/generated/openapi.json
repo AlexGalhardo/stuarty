@@ -2887,6 +2887,68 @@
         },
         "type": "object"
       },
+      "ImageImportResult": {
+        "properties": {
+          "applied": {
+            "type": "boolean"
+          },
+          "created": {
+            "type": "boolean"
+          },
+          "dry_run": {
+            "type": "boolean"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/Finding"
+            },
+            "type": "array"
+          },
+          "hash": {
+            "type": "string"
+          },
+          "height": {
+            "type": "integer"
+          },
+          "image_id": {
+            "type": "string"
+          },
+          "job_id": {
+            "type": "string"
+          },
+          "layer_id": {
+            "type": "string"
+          },
+          "lint": {
+            "$ref": "#/components/schemas/LintTotals"
+          },
+          "name": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "replayed": {
+            "type": "boolean"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "state": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "untrusted_notice": {
+            "type": "string"
+          },
+          "width": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
       "ImageListResult": {
         "properties": {
           "images": {
@@ -16756,6 +16818,141 @@
         "summary": "Create an image document, blank or from a template"
       }
     },
+    "/api/v1/images/import": {
+      "post": {
+        "operationId": "images.import",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "base_revision": {
+                    "description": "With image_id: the revision the layer was planned against.",
+                    "format": "int64",
+                    "type": "integer"
+                  },
+                  "dry_run": {
+                    "type": "boolean"
+                  },
+                  "hash": {
+                    "description": "sha256: and 64 hex characters: an image already in the workspace, instead of path.",
+                    "type": "string"
+                  },
+                  "height": {
+                    "description": "The canvas of a new document, with width.",
+                    "type": "integer"
+                  },
+                  "idempotency_key": {
+                    "description": "With image_id: 8 to 64 characters; the Idempotency-Key header is the same.",
+                    "type": "string"
+                  },
+                  "image_id": {
+                    "description": "Put the file in this document as one more layer; without it a new document is made.",
+                    "type": "string"
+                  },
+                  "name": {
+                    "description": "The name of the new document, or of the layer when image_id is given; default the name of the file.",
+                    "type": "string"
+                  },
+                  "path": {
+                    "description": "An absolute path to an image file on the machine of the server, read with the rules of media:import.",
+                    "type": "string"
+                  },
+                  "preset": {
+                    "description": "The canvas of a new document: video_thumbnail, square_post or vertical_cover.",
+                    "type": "string"
+                  },
+                  "wait_ms": {
+                    "description": "How long to wait for the ingest of the file, 0 to 25000; default 10000.",
+                    "type": "integer"
+                  },
+                  "width": {
+                    "description": "The canvas of a new document, with height; default the size of the file when it fits 4096.",
+                    "type": "integer"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageImportResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Import an image file into a new image document, or as a layer of one"
+      }
+    },
+    "/api/v1/images/import/file": {
+      "post": {
+        "operationId": "images.import_file",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageImportResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Import an image file sent as the body of the request into a new image document, or as a layer of one"
+      }
+    },
     "/api/v1/images/{id}": {
       "get": {
         "operationId": "images.get",
@@ -16900,6 +17097,56 @@
           }
         ],
         "summary": "Apply a batch of image operations"
+      }
+    },
+    "/api/v1/images/{id}/events": {
+      "get": {
+        "operationId": "images.events",
+        "parameters": [
+          {
+            "description": "The revision the client holds; Last-Event-ID wins.",
+            "in": "query",
+            "name": "since",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Stream the events of an image document"
       }
     },
     "/api/v1/images/{id}/export": {

@@ -46,12 +46,12 @@ A creator drags a photo from their computer into a new thumbnail in one step, an
 ## Tasks
 
 - [x] 1. Amend SDD-000 (the operation `ImageImport`, the route, the event `image.updated` in a stream of an image), SDD-003 (section 4.2, action `import`; section 6.3, the routes; section 7.1, the table), SDD-006 (a section for the image stream), SDD-012 (sections 24.3 and 24.13) and SDD-021 (sections 10 and 11). Verify: `task lint:md` exits 0.
-- [ ] 2. Check whether `project_items` already holds an image (SDD-005 section 5.12 says the kind is reserved), then implement `ImageImport` in `service/` with the atomic creation and the path rules, and a table test for each refusal. Verify: `go test ./service/... -run TestImageImport` passes.
-- [ ] 3. Publish `image.updated` after every committed image batch, and serve `GET /images/{id}/events` with replay. Verify: `go test ./web/app/http/... -run TestImageEvents` passes, including the replay after `Last-Event-ID`.
-- [ ] 4. Expose on MCP, CLI and HTTP. Verify: `go test ./web/contract/...` passes; `go run ./internal/tools/surfacebudget` exits 0; `task generate:check` exits 0.
+- [x] 2. Check whether `project_items` already holds an image (SDD-005 section 5.12 says the kind is reserved), then implement `ImageImport` in `service/` with the atomic creation and the path rules, and a table test for each refusal. Verify: `go test ./service/... -run TestImageImport` passes.
+- [x] 3. Publish `image.updated` after every committed image batch, and serve `GET /images/{id}/events` with replay. Verify: `go test ./web/app/http/... -run TestImageEvents` passes, including the replay after `Last-Event-ID`.
+- [x] 4. Expose on MCP, CLI and HTTP. Verify: `go test ./web/contract/...` passes; `go run ./internal/tools/surfacebudget` exits 0; `task generate:check` exits 0.
 - [ ] 5. Replace the polling by the stream in the editor; add the import actions in both languages. Verify: `bun run typecheck`, `bun run check:thin-client`, `bun run check:i18n` and `task test:web` pass.
 - [ ] 6. End to end: two windows on one image, an edit by the CLI appears in the second window without a reload; a file is imported from the screen. Verify: `web/e2e/specs/image-live.spec.ts` (new) and `web/e2e/specs/image-import.spec.ts` (new) pass with `bun run e2e`, and `web/e2e/specs/a11y-image-editor.spec.ts` still passes.
-- [ ] 7. The browser upload route, only when the author has decided it (see the risks). Verify: `go test ./web/app/http/... -run TestImageUpload` passes, including a file over the limit refused with `E_LIMIT`.
+- [x] 7. The browser upload route, only when the author has decided it (see the risks). Verify: `go test ./web/app/http/... -run TestImageUpload` passes, including a file over the limit refused with `E_LIMIT`.
 
 ## Test strategy
 

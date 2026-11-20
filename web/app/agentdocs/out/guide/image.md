@@ -16,6 +16,7 @@ CLI: `stuarty image` lists the commands of the domain and `stuarty image <verb>`
 - `image:undo`: undo the last step of the caller on an image
 - `image:redo`: redo the last undone step of the caller on an image
 - `image:export`: export an image document to a PNG, JPEG or WebP file
+- `image:import`: bring an image file into a new image document, or into an existing one as a layer
 
 ## Operations
 
