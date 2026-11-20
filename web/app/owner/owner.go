@@ -352,7 +352,7 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 	}
 
 	// The library of a new workspace holds the starter templates; later starts add nothing.
-	if _, serr := service.SeedStarterTemplates(ctx, st, o.now().UnixMilli()); serr != nil {
+	if serr := o.seedTemplates(ctx, st); serr != nil {
 		return serr
 	}
 
