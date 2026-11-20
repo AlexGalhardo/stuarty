@@ -42,7 +42,7 @@ type removeSilencesArgs struct {
 	ThresholdDB *int              `json:"threshold_db,omitempty" desc:"Noise level of silence: -30, -35 (default), -40 or -45."`
 	Ripple      string            `json:"ripple,omitempty"       desc:"track (default) or none."                                                                                                                     enum:"track,none"`
 	NewIDs      []string          `json:"new_ids,omitempty"      desc:"Ids for the second, third, ... pieces, in order."                                      pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
-	Resolved    *ResolvedSilences `json:"resolved,omitempty"     desc:"Filled by the service from the silence analysis of the asset; never sent by a caller."`
+	Resolved    *ResolvedSilences `json:"resolved,omitempty"     desc:"Filled by the service from the silence analysis of the asset; never sent by a caller."                                                                          internal:"true"`
 }
 
 // validateNewIDs checks the form and the uniqueness of a new_ids argument (R6, row 14

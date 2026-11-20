@@ -193,7 +193,9 @@ Three commands depend on data the core cannot compute because it needs media: si
 | `audio.mark_beats {...}` | `resolved.beats`: the beats of the music asset as strictly increasing asset frames, taken from the beat grid of the asset (SDD-011); at most 108,000. Not used when `bpm` is given |
 | `asset.add` | issued only by the import flow, with the facts measured on the verified normalized media, never copied from the probe (SDD-011 §4.9) (`internal: true`) |
 
-`resolved` is internal: the service refuses a caller that sends it on these commands with `E_VALIDATION` (`path` `operations[i].args.resolved`), so a caller cannot inject silences, words or beats that the analysis did not produce (VV-206). Golden tests that run without media call the core directly with `resolved`.
+`resolved` is internal: the service refuses a caller that sends it on these commands with `E_VALIDATION` (`path` `operations[i].args.resolved`), so a caller cannot inject silences, words or beats that the analysis did not produce (VV-206), and the published schemas of these commands leave it out (the field carries the struct tag `internal:"true"`). Golden tests that run without media call the core directly with `resolved`.
+
+An operation that names an item created by an earlier operation of the same batch (`item_id`, `clip_item_id` or an entry of `speech_item_ids`) is resolved against the document after those earlier operations, so `clip.add` then `caption.from_transcript`, or `audio.add` then `audio.duck`, works in one batch (VV-084, VV-199).
 
 **OpenTimelineIO import (RF-065).** `core/otio` import adds no command and no operation: it returns a batch of existing operations (`track.add`, `clip.add`, `audio.add`, `item.rename`, `item.set_transition`) that the caller applies like any other batch, so conflicts, limits and undo behave as everywhere else. The file is never opened by the core (SDD-001 section 9).
 
@@ -4549,7 +4551,7 @@ Lowers a music item while speech sounds (RF-043). The result is ordinary `volume
 
 | Code | When | Example message | Example hint |
 | --- | --- | --- | --- |
-| `E_VALIDATION` | `resolved` missing or with a missing, repeated or unknown entry or bad ranges, `gain_db` out of range, a speech item that is the music or repeated | `args.resolved is missing: the speech of the items is not known.` | `The service fills it from the speech analysis; run the analysis of the speech assets first, then retry.` |
+| `E_VALIDATION` | `resolved` missing or with a missing, repeated or unknown entry or bad ranges, `gain_db` out of range, a speech item that is the music or repeated | `args.resolved is missing: the speech of the items is not known.` | `The service fills it from the speech map made at import (no transcript is needed): call media_inspect on the speech assets, wait for the job (job_get) of one still analysing, and retry.` |
 | `E_INVALID_TIME` | `attack` or `release` is not a time | `args.attack "later" is not a time.` | `Use "2s" or "60f".` |
 | `E_NOT_FOUND` | the music or a speech item does not exist | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
 | `E_TYPE_MISMATCH` | the music is not an audio item, or an item has no asset with audio | `Item itm_m1n2p3q4r5 is a clip item, not an audio item; only music can be ducked.` | `Choose an audio item.` |
@@ -5836,14 +5838,14 @@ Holds one frame of a clip (TASK-0254): the "freeze frame" of an editor. The clip
 
 ### C.71 `caption.import_subtitles`
 
-Creates one caption item for each cue of an SRT or WebVTT text (TASK-0254, NEW-32a). The command is pure: the caller or the service reads the file and sends its text, and the parser is `core/subtitle`. Writing the captions of a document back as SRT or WebVTT is `subtitle.Format` over the cues a caller builds from the captions (the service does the file); the core has no command for it, because it changes nothing.
+Creates one caption item for each cue of an SRT or WebVTT text (TASK-0254, NEW-32a). The command is pure: the caller reads the file and sends its text (no surface takes a path: the editor reads the file in the browser, an agent reads it and passes the content), and the parser is `core/subtitle`. Writing the captions of a document back as SRT or WebVTT is `subtitle.Format` over the cues a caller builds from the captions (the service does the file); the core has no command for it, because it changes nothing.
 
 **Arguments**
 
 | Name | Type | Required | Default | Rule |
 | --- | --- | --- | --- | --- |
 | `track_id` | track id | yes | none | a visual track |
-| `text` | string | yes | none | the SRT or WebVTT text, at most 2,000,000 characters and 5,000 cues |
+| `text` | string | yes | none | the SRT or WebVTT text itself, never a file path (the caller reads the file), at most 2,000,000 characters and 5,000 cues |
 | `format` | `"srt"`, `"vtt"` | no | `vtt` when the text starts with `WEBVTT`, else `srt` | |
 | `start` | length | no | `0` | added to every cue |
 | `new_ids` | list of item ids | no | generated | ids of the captions, in cue order |
@@ -5866,7 +5868,7 @@ Creates one caption item for each cue of an SRT or WebVTT text (TASK-0254, NEW-3
 
 | Code | When | Example message | Example hint |
 | --- | --- | --- | --- |
-| `E_VALIDATION` | a bad id, a text that is not valid SRT or WebVTT, or no cue with text | `args.text is not valid srt: cue 1: "00:00:01" is not a time (hh:mm:ss,mmm).` | `Send SubRip or WebVTT text with a time line (00:00:01,000 --> 00:00:02,500) for each cue.` |
+| `E_VALIDATION` | a bad id, a text that is not valid SRT or WebVTT, or no cue with text | `args.text is not valid srt: cue 1: "00:00:01" is not a time (hh:mm:ss,mmm).` | `Send the content of the SubRip or WebVTT file, not its path, with a time line (00:00:01,000 --> 00:00:02,500) for each cue.` |
 | `E_INVALID_TIME` | a cue ends past frame 108,000 | `The item would occupy frames 108000-108044, past the limit 108000.` | `Use a start of at most "107955f" for this 45-frame item.` |
 | `E_NOT_FOUND` | unknown track | `Track trk_zzzzzzzzzz does not exist.` | `Use the id of a track listed by project_get.` |
 | `E_TYPE_MISMATCH` | an audio track | `Track trk_m1n2p3q4r5 is an audio track; captions need a visual track.` | `Use a visual track.` |
@@ -5892,6 +5894,7 @@ Creates one caption item for each cue of an SRT or WebVTT text (TASK-0254, NEW-3
 - `ok_format_given`
 - `ok_start_moves_every_cue`
 - `err_validation_bad_time_line`
+- `err_validation_text_is_a_path`
 - `err_validation_no_cue_with_text`
 - `err_validation_bad_new_id`
 - `err_not_found_track`
