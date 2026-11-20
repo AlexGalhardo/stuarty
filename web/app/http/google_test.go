@@ -281,7 +281,7 @@ func TestLinkIdentityOverHTTP(t *testing.T) {
 	}
 }
 
-func TestLinkIdentityIsForASessionWithThePassword(t *testing.T) {
+func TestSecurity_T85_LinkNeedsSessionAndPassword(t *testing.T) {
 	s := newGoogleSite(t, googleSiteOptions{})
 	s.enable(t)
 	s.user(t, "ana@example.com", service.RoleAdmin)
