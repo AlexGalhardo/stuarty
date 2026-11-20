@@ -50,6 +50,12 @@ export const shots = {
 		width: 1600,
 		height: 1000,
 	},
+	dashboardLight: {
+		src: "/landing/dashboard-light",
+		alt: "The Stuarty home in the light theme: the sections a user can open, from projects and the editors to publishing and connections.",
+		width: 1600,
+		height: 780,
+	},
 	dashboard: {
 		src: "/landing/dashboard",
 		alt: "The Stuarty home: projects, the video and image editors, writing, visual and video assets, publishing, skills, prompts, memory and connections.",
@@ -234,6 +240,7 @@ export const credits = "Footage: Big Buck Bunny, (c) Blender Foundation, CC BY 3
 /** The six takes of the viewport version (brainstorming section 5.1). */
 export const takes = [
 	{ id: "studio", name: "One place" },
+	{ id: "timeline", name: "The timeline" },
 	{ id: "video", name: "Edit video" },
 	{ id: "images", name: "Images and writing" },
 	{ id: "publish", name: "Publish" },

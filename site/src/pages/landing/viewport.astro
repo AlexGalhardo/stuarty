@@ -1,7 +1,7 @@
 ---
-// Candidate landing page A, "The studio in six takes" (brainstorming section 5.1): a full-screen experience with no
-// scrollbar on a large screen. Each wheel step, swipe, arrow or Page Down moves to the next take and the mascot snaps
-// its clapper on the cut. On a small screen, with no script, the page is a normal scroll of the same six sections.
+// The landing page, "The studio in takes" (brainstorming section 5.1, chosen by the author): a full-screen experience
+// with no scrollbar on a large screen. Each wheel step, swipe, arrow or Page Down moves to the next take; in the
+// timeline take they move the playhead first. On a small screen, with no script, the page is a normal scroll.
 import "@/src/landing/landing.css";
 import Base from "../../layouts/Base.astro";
 import { landing } from "@/lib/landing";
@@ -12,6 +12,7 @@ import LandingActions from "../../components/landing/LandingActions.astro";
 import Shot from "../../components/landing/Shot.astro";
 import SplitTitle from "../../components/landing/SplitTitle.astro";
 import StageCanvas from "../../components/landing/StageCanvas.astro";
+import TimelineEditor from "../../components/landing/TimelineEditor.astro";
 import { credits, hero, shots, takes, trust } from "@/lib/landing-pages";
 import { withBase } from "@/lib/site";
 
@@ -23,7 +24,7 @@ const number = (id: string) => String(takes.findIndex((t) => t.id === id) + 1).p
 	<script is:inline>
 		(function () {
 			var big = matchMedia("(min-width: 64rem) and (min-height: 45rem)").matches;
-			if (big) document.documentElement.classList.add("takes-on");
+			if (big) document.documentElement.classList.add("takes-on", "timeline-on");
 			if (!matchMedia("(prefers-reduced-motion: reduce)").matches) document.documentElement.classList.add("motion-ok");
 		})();
 	</script>
@@ -31,42 +32,43 @@ const number = (id: string) => String(takes.findIndex((t) => t.id === id) + 1).p
 		<a href={withBase("/docs/introduction/")} class="sr-only focus:not-sr-only focus:fixed focus:top-[calc(var(--header-h)+0.75rem)] focus:left-4 focus:z-50 focus:rounded-lg focus:bg-bg focus:px-4 focus:py-2 focus:text-sm focus:font-medium">Skip to the docs</a>
 
 		<div class="pointer-events-none fixed inset-0 -z-10">
-			<StageCanvas id="viewport-stage" still="left: 72%; top: 32%; width: min(24vw, 18rem);" />
+			<StageCanvas id="viewport-stage" mascot={false} />
 		</div>
 
-		<nav aria-label="Takes" class="take-rail" data-rail>
-			<ol>
-				{takes.map((t, i) => (
-					<li>
-						<a href={`#${t.id}`} data-take-link={t.id} aria-current={i === 0 ? "step" : undefined}>
-							<span class="take-rail-num" aria-hidden="true">{String(i + 1).padStart(2, "0")}</span>
-							<span class="take-rail-name">{t.name}</span>
-						</a>
-					</li>
-				))}
-			</ol>
-			<div class="take-rail-progress" aria-hidden="true"><span data-rail-progress></span></div>
-		</nav>
 
 		<p class="take-hint" aria-hidden="true" data-hint>Scroll, swipe or press <kbd>&darr;</kbd></p>
 
 		<!-- Take 1: one place -->
 		<section id="studio" class="take" aria-labelledby="studio-title" data-take>
-			<div class="site-container grid items-center gap-10 lg:grid-cols-12 lg:pr-20">
-				<div class="lg:col-span-7">
-					<p class="eyebrow" data-hero-item>Take {number("studio")} &middot; {hero.eyebrow}</p>
-					<SplitTitle text={hero.title} id="studio-title" tabindex="-1" class="display-hero mt-5 text-fg" />
-					<p class="lead mt-6 max-w-xl" data-hero-item>{hero.lead}</p>
-					<div class="mt-9" data-hero-item>
-						<LandingActions idPrefix="hero" />
+			<div class="site-container">
+				<div class="grid items-center gap-10 lg:grid-cols-12">
+					<div class="lg:col-span-6">
+						<p class="eyebrow" data-hero-item>{hero.eyebrow}</p>
+						<SplitTitle text={hero.title} id="studio-title" tabindex="-1" class="display-hero mt-5 text-fg" />
+						<p class="lead mt-6 max-w-xl" data-hero-item>{hero.lead}</p>
 					</div>
+					<div class="lg:col-span-6" data-hero-frame>
+						<figure class="showcase theme-swap m-0" aria-label="The Stuarty home, in the light and the dark theme">
+							<Shot shot={shots.dashboardLight} eager sizes="(min-width: 64rem) 34rem, 100vw" class="shot-light" />
+							<Shot shot={shots.dashboard} sizes="(min-width: 64rem) 34rem, 100vw" class="shot-dark" />
+						</figure>
+					</div>
+				</div>
+				<div class="mt-10 lg:mt-12" data-hero-item>
+					<LandingActions idPrefix="hero" align="center" />
 				</div>
 			</div>
 		</section>
 
-		<!-- Take 2: edit video -->
+		<!-- Take 2: the timeline (the scroll, the wheel or the arrows move the playhead) -->
+		<section id="timeline" class="take take-timeline" aria-labelledby="timeline-title" data-take data-editor>
+			<h2 id="timeline-title" tabindex="-1" class="site-container eyebrow pt-5">Take {number("timeline")} &middot; The studio, clip by clip</h2>
+			<TimelineEditor headingLevel="h3" />
+		</section>
+
+		<!-- Take 3: edit video -->
 		<section id="video" class="take" aria-labelledby="video-title" data-take>
-			<div class="site-container grid items-center gap-10 lg:grid-cols-12 lg:pr-20">
+			<div class="site-container grid items-center gap-10 lg:grid-cols-12">
 				<div class="lg:col-span-4">
 					<p class="eyebrow" data-in>Take {number("video")} &middot; Edit video</p>
 					<h2 id="video-title" tabindex="-1" class="display-title mt-4 text-fg" data-in>A real editor, in your browser.</h2>
@@ -87,7 +89,7 @@ const number = (id: string) => String(takes.findIndex((t) => t.id === id) + 1).p
 
 		<!-- Take 3: images and writing -->
 		<section id="images" class="take" aria-labelledby="images-title" data-take>
-			<div class="site-container grid items-center gap-10 lg:grid-cols-12 lg:pr-20">
+			<div class="site-container grid items-center gap-10 lg:grid-cols-12">
 				<div class="relative lg:col-span-7 lg:order-1 [perspective:1800px]">
 					<div class="showcase relative z-10 lg:w-[88%]" data-in-3d>
 						<Shot shot={shots.imageEditor} sizes="(min-width: 64rem) 40rem, 100vw" />
@@ -106,7 +108,7 @@ const number = (id: string) => String(takes.findIndex((t) => t.id === id) + 1).p
 
 		<!-- Take 4: publish with a person in the loop -->
 		<section id="publish" class="take" aria-labelledby="publish-title" data-take>
-			<div class="site-container grid items-center gap-10 lg:grid-cols-12 lg:pr-20">
+			<div class="site-container grid items-center gap-10 lg:grid-cols-12">
 				<div class="lg:col-span-5">
 					<p class="eyebrow" data-in>Take {number("publish")} &middot; Publish</p>
 					<h2 id="publish-title" tabindex="-1" class="display-title mt-4 text-fg" data-in>Nothing goes out until you say so.</h2>
@@ -131,7 +133,7 @@ const number = (id: string) => String(takes.findIndex((t) => t.id === id) + 1).p
 
 		<!-- Take 5: agents drive it too -->
 		<section id="agents" class="take" aria-labelledby="agents-title" data-take>
-			<div class="site-container lg:pr-20">
+			<div class="site-container">
 				<p class="eyebrow" data-in>Take {number("agents")} &middot; Agents</p>
 				<h2 id="agents-title" tabindex="-1" class="display-title mt-4 max-w-3xl text-fg" data-in>Agents drive it too.</h2>
 				<p class="lead mt-4 max-w-2xl" data-in>The editor, the CLI, the HTTP API and MCP are thin doors to one command core, tested for parity.</p>
@@ -143,7 +145,7 @@ const number = (id: string) => String(takes.findIndex((t) => t.id === id) + 1).p
 
 		<!-- Take 6: open source, on your machine -->
 		<section id="yours" class="take" aria-labelledby="yours-title" data-take>
-			<div class="site-container text-center lg:pr-20">
+			<div class="site-container text-center">
 				<p class="eyebrow" data-in>Take {number("yours")} &middot; {trust.eyebrow}</p>
 				<h2 id="yours-title" tabindex="-1" class="display-title mx-auto mt-4 max-w-3xl text-fg" data-in>{trust.title}</h2>
 				<ul class="mx-auto mt-8 flex max-w-4xl flex-wrap justify-center gap-2" data-in>
@@ -162,11 +164,6 @@ const number = (id: string) => String(takes.findIndex((t) => t.id === id) + 1).p
 </Base>
 
 <style is:global>
-	/* This version compares a container 20% narrower than the rest of the site (the navbar and the content). */
-	html:has(main[data-page="viewport"]) {
-		--site-container: calc(90rem * 0.8);
-	}
-
 	/* Takes mode: one take fills the viewport, the others wait off stage (no scrollbar). */
 	html.takes-on,
 	html.takes-on body {
@@ -196,85 +193,65 @@ const number = (id: string) => String(takes.findIndex((t) => t.id === id) + 1).p
 		min-height: 100svh;
 		padding-block: calc(var(--header-h) + 3rem) 4rem;
 	}
-	html:not(.takes-on) .take-rail,
 	html:not(.takes-on) .take-hint,
 	html:not(.takes-on) .take-credits {
 		display: none;
 	}
 
-	.take-rail {
-		position: fixed;
-		right: 1.5rem;
-		top: 50%;
-		z-index: 30;
-		transform: translateY(-50%);
-		display: flex;
-		gap: 0.75rem;
-	}
-	.take-rail ol {
+	/* The timeline take fills the screen under the header: its title, then the editor. */
+	html.takes-on .take-timeline {
 		display: flex;
 		flex-direction: column;
-		gap: 0.25rem;
-		margin: 0;
-		padding: 0;
-		list-style: none;
+		align-items: stretch;
 	}
-	.take-rail a {
+	html.takes-on .take-timeline .editor-frame {
+		flex: 1 1 auto;
+		min-height: 0;
+		height: auto;
+		padding-top: 0;
+	}
+	html:not(.takes-on) .take-timeline {
+		display: block;
+	}
+
+	/* The home of the product in both themes, crossfading every 3 seconds; one still image under reduced motion. */
+	.theme-swap {
 		position: relative;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		min-width: 2.75rem;
-		min-height: 2.75rem;
-		font-size: 0.75rem;
-		font-weight: 500;
-		color: var(--muted);
-		border-radius: 8px;
-		transition: color var(--duration-hover);
 	}
-	.take-rail a:hover {
-		color: var(--fg);
-	}
-	.take-rail a[aria-current] {
-		color: var(--brand-text);
-	}
-	.take-rail-num {
-		font-family: var(--font-mono);
-		font-size: 0.6875rem;
-	}
-	.take-rail-name {
-		position: absolute;
-		right: 100%;
-		white-space: nowrap;
-		padding: 0.25rem 0.5rem;
-		border-radius: 6px;
-		background: color-mix(in oklab, var(--bg) 70%, transparent);
-		opacity: 0;
-		transform: translateX(6px);
-		transition:
-			opacity var(--duration-hover),
-			transform var(--duration-hover);
-	}
-	.take-rail:hover .take-rail-name,
-	.take-rail:focus-within .take-rail-name,
-	.take-rail a[aria-current] .take-rail-name {
-		opacity: 1;
-		transform: none;
-	}
-	.take-rail-progress {
-		position: relative;
-		width: 2px;
-		border-radius: 2px;
-		background: color-mix(in oklab, var(--fg) 14%, transparent);
-	}
-	.take-rail-progress span {
+	.theme-swap .shot-dark {
 		position: absolute;
 		inset: 0;
-		background: var(--brand-text);
-		transform-origin: top;
-		transform: scaleY(calc(1 / 6));
-		transition: transform var(--duration-scene) var(--ease-out-expo);
+		animation: theme-swap 6s ease-in-out infinite;
 	}
+	@keyframes theme-swap {
+		0%,
+		40% {
+			opacity: 0;
+		}
+		50%,
+		90% {
+			opacity: 1;
+		}
+		100% {
+			opacity: 0;
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.theme-swap .shot-dark {
+			animation: none !important;
+			opacity: 0;
+		}
+		.dark .theme-swap .shot-dark {
+			opacity: 1;
+		}
+	}
+
+	/* A take heading takes the focus only to move the reading position; it is not a control, so no ring. */
+	html.takes-on .take h1[tabindex="-1"]:focus-visible,
+	html.takes-on .take h2[tabindex="-1"]:focus-visible {
+		outline: none;
+	}
+
 	.take-hint {
 		position: fixed;
 		bottom: 1.5rem;
@@ -321,10 +298,6 @@ const number = (id: string) => String(takes.findIndex((t) => t.id === id) + 1).p
 		html.takes-on .take,
 		html.takes-on .take * {
 			transition: none !important;
-		}
-		.take-rail-progress span,
-		.take-rail-name {
-			transition: none;
 		}
 	}
 </style>
