@@ -65,15 +65,24 @@ function GitHubIcon({ className }: { className?: string }) {
 	);
 }
 
-export function Header({ groups }: { groups: NavGroup[] }) {
+/** The landing pages use the same header, translucent over their scene (design-system section 11.11). */
+export type HeaderVariant = "docs" | "landing";
+
+const HEADER_CLASS: Record<HeaderVariant, string> = {
+	docs: "sticky top-0 z-40 h-(--header-h) border-b border-border bg-bg/80 backdrop-blur-md supports-[backdrop-filter]:bg-bg/70",
+	landing:
+		"fixed inset-x-0 top-0 z-40 h-(--header-h) border-b border-fg/10 bg-bg/70 backdrop-blur-xl supports-[backdrop-filter]:bg-bg/55",
+};
+
+export function Header({ groups, variant = "docs" }: { groups: NavGroup[]; variant?: HeaderVariant }) {
 	return (
 		<Providers>
-			<header className="sticky top-0 z-40 h-(--header-h) border-b border-border bg-bg/80 backdrop-blur-md supports-[backdrop-filter]:bg-bg/70">
+			<header className={HEADER_CLASS[variant]} data-variant={variant}>
 				{/* Same container as app/docs/layout.tsx; the left column matches the sidebar width. */}
 				<div className="mx-auto flex h-full max-w-[90rem] items-center gap-2 px-4 sm:gap-3 sm:px-6 lg:grid lg:grid-cols-[16rem_1fr_auto] lg:gap-0">
 					<div className="flex items-center gap-2 sm:gap-3">
 						<MobileNav groups={groups} />
-						<Logo />
+						<Logo size={variant === "landing" ? "lg" : "md"} />
 					</div>
 					<div className="flex flex-1 justify-end sm:justify-center">
 						<SearchLauncher />
