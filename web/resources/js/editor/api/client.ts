@@ -222,7 +222,9 @@ export interface ApiClient {
 	): Promise<SnapPointsResult>;
 	getFonts(): Promise<FontListResult>;
 	// The ready files of the workspace by content hash (VV-117); `kind` keeps one kind.
-	listAssets(kind?: "image" | "video" | "audio"): Promise<AssetListResult>;
+	listAssets(
+		kind?: "image" | "video" | "audio" | "lut",
+	): Promise<AssetListResult>;
 	// The asset library with its filters (SDD-011 section 14.4), and one entry with the projects that use it.
 	queryAssets(query: AssetQuery): Promise<AssetListResult>;
 	getAsset(hash: string): Promise<AssetResult>;
