@@ -23,6 +23,8 @@ interface Props {
 	twin?: string;
 	/** The sidebar the mobile drawer shows. */
 	section?: NavSection;
+	/** Sends the visitor to this path at once (meta refresh, and a script that keeps it out of the history). */
+	redirectTo?: string;
 }
 
 const {
@@ -33,6 +35,7 @@ const {
 	noindex = false,
 	twin,
 	section = "docs",
+	redirectTo,
 } = Astro.props;
 const t = ui;
 const fullTitle = title.includes(site.name) ? title : `${title} — ${site.name}`;
@@ -47,6 +50,8 @@ const groups = getNavGroups(section);
 		<title>{fullTitle}</title>
 		<meta name="description" content={description} />
 		<meta name="application-name" content={site.name} />
+		{redirectTo ? <meta http-equiv="refresh" content={`0; url=${withBase(redirectTo)}`} /> : null}
+		{redirectTo ? <script is:inline define:vars={{ to: withBase(redirectTo) }}>location.replace(to);</script> : null}
 		<link rel="icon" href={withBase("/icon.png")} type="image/png" />
 		<link rel="apple-touch-icon" href={withBase("/logo.png")} />
 		{noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={new URL(canonical ? withBase(withTrailingSlash(canonical)) : Astro.url.pathname, site.origin).href} />}
