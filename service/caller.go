@@ -187,6 +187,10 @@ var Scopes = map[string]string{
 	"ProviderPriceSet": ScopeAdmin,
 	"TextGenerate":     ScopeEdit,
 
+	"ProviderSignInBegin":    ScopeAdmin,
+	"ProviderSignInComplete": ScopeAdmin,
+	"ProviderSignInList":     ScopeRead,
+
 	"MotionBrief":   ScopeRead,
 	"MotionCheck":   ScopeRead,
 	"MotionReplace": ScopeEdit,

@@ -5894,6 +5894,50 @@
         },
         "type": "object"
       },
+      "ProviderSignIn": {
+        "properties": {
+          "account": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "connection_id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "provider": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ProviderSignInBeginResult": {
+        "properties": {
+          "authorize_url": {
+            "type": "string"
+          },
+          "connection_id": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ProviderSignInListResult": {
+        "properties": {
+          "sign_ins": {
+            "items": {
+              "$ref": "#/components/schemas/ProviderSignIn"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
       "ProviderView": {
         "properties": {
           "capabilities": {
@@ -20696,6 +20740,195 @@
           }
         ],
         "summary": "Set or remove the price of a model (a person in the browser only; the local token and keys get 403)"
+      }
+    },
+    "/api/v1/providers/sign-ins": {
+      "get": {
+        "operationId": "providers.sign-ins",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderSignInListResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the connections made by a sign-in and their state"
+      }
+    },
+    "/api/v1/providers/signin": {
+      "post": {
+        "operationId": "providers.signin.begin",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "connection_id": {
+                    "description": "Sign in again an existing connection made by a sign-in, instead of making one.",
+                    "type": "string"
+                  },
+                  "label": {
+                    "description": "A name for a new connection, 1 to 60 characters; the default name of the provider when left out.",
+                    "type": "string"
+                  },
+                  "provider": {
+                    "description": "The provider to sign in to: openai (Sign in with ChatGPT) or openrouter.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "redirect_uri": {
+                    "description": "The address of this app followed by /auth/callback, at the address you opened the app with. OpenAI accepts only http://127.0.0.1:<port>/auth/callback.",
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "provider",
+                  "redirect_uri"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderSignInBeginResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Start the sign-in to an AI provider; answers the address of the consent screen (a person in the browser only)"
+      }
+    },
+    "/api/v1/providers/signin/complete": {
+      "post": {
+        "operationId": "providers.signin.complete",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "client_id": {
+                    "description": "The client id the provider issued at the first sign-in (OpenAI sends it in the redirect).",
+                    "type": "string"
+                  },
+                  "code": {
+                    "description": "The authorization code the provider sent back.",
+                    "type": "string"
+                  },
+                  "error": {
+                    "description": "The error the provider sent back instead of a code, for example access_denied.",
+                    "type": "string"
+                  },
+                  "state": {
+                    "description": "The state the provider sent back to the redirect address.",
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "state"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderSignIn"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Finish the sign-in with what the provider sent to the redirect address (a person in the browser only)"
       }
     },
     "/api/v1/publish": {

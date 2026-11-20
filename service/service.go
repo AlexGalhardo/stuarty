@@ -99,6 +99,10 @@ type Service interface {
 	ProviderModels(ctx context.Context, req ProviderModelsRequest) (*ProviderModelsResult, error)
 	ProviderPriceSet(ctx context.Context, req ProviderPriceSetRequest) (*ProviderPricesResult, error)
 	TextGenerate(ctx context.Context, req TextGenerateRequest) (*Job, error)
+	// The sign-in to an AI provider in the browser (SDD-016 section 12): only a person begins and completes one.
+	ProviderSignInBegin(ctx context.Context, req ProviderSignInBeginRequest) (*ProviderSignInBeginResult, error)
+	ProviderSignInComplete(ctx context.Context, req ProviderSignInCompleteRequest) (*ProviderSignIn, error)
+	ProviderSignInList(ctx context.Context, req ProviderSignInListRequest) (*ProviderSignInListResult, error)
 
 	JobGet(ctx context.Context, req JobGetRequest) (*Job, error)
 	JobList(ctx context.Context, req JobListRequest) (*JobListResult, error)
@@ -282,6 +286,9 @@ type Options struct {
 	// Providers is the registry of the AI providers, with their adapters registered (SDD-016); without one
 	// the service has a registry with no provider, so no generation can start.
 	Providers *providers.Registry
+	// SignIns are the sign-ins to an AI provider of this build (SDD-016 section 12); without any the
+	// sign-in operations answer that none is built in, and no credential is ever renewed.
+	SignIns *oauth.SignIns
 	// JobKinds are the job kinds that need approval, registered by the epics of publishing and
 	// generation (SDD-015 section 5). The product registers none of its own; tests register one.
 	JobKinds []ApprovableKind
@@ -322,6 +329,8 @@ type svc struct {
 	kinds       map[string]*ApprovableKind
 	social      *social.Registry
 	flows       *oauth.Flows
+	signInSet   *oauth.SignIns
+	signFlows   *oauth.Flows
 	providers   *providers.Registry
 	lib         *library.Manager // the files of memory, skills and prompts; nil without a workspace
 	heavy       RateLimiter
@@ -379,6 +388,7 @@ func New(o Options) (Service, error) {
 		keys:        o.Keys,
 		conns:       o.Connections,
 		social:      o.Social,
+		signInSet:   o.SignIns,
 		heavy:       o.Heavy,
 		heavyLimitN: o.HeavyPerMinute,
 		log:         o.Log,
@@ -444,6 +454,12 @@ func New(o Options) (Service, error) {
 	}
 
 	s.flows = oauth.NewFlows(s.now)
+	s.signFlows = oauth.NewFlows(s.now)
+
+	// A sign-in credential is renewed by the manager before a closure gets it (SDD-014 section 12).
+	if s.signInSet != nil {
+		s.conns.SetRefresher(oauth.NewRefresher(s.signInSet, s.now))
+	}
 
 	if s.jobWait <= 0 {
 		s.jobWait = jobWait

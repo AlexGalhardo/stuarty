@@ -188,7 +188,7 @@ func (h *apiHandler) authenticate(next http.Handler) http.Handler {
 			// with no caller: it holds no data, calls no operation, and hands the state and the code to
 			// POST /api/v1/social/complete, a same-origin call that does carry the cookie and is
 			// authenticated as every other one (SDD-007 section 3.7, SDD-020 section 6).
-			if r.Method == http.MethodGet && r.URL.Path == SignInCallbackPath {
+			if r.Method == http.MethodGet && isSignInCallbackPath(r.URL.Path) {
 				next.ServeHTTP(w, r)
 
 				return

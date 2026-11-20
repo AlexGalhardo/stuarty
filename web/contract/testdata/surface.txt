@@ -185,6 +185,7 @@ route GET /projects/{}/plan
 route GET /projects/{}/sheet
 route GET /projects/{}/snap-points
 route GET /providers
+route GET /providers/sign-ins
 route GET /publish/{}
 route GET /social/accounts
 route GET /social/networks
@@ -238,6 +239,8 @@ route POST /projects/{}/redo
 route POST /projects/{}/restore
 route POST /projects/{}/trash
 route POST /projects/{}/undo
+route POST /providers/signin
+route POST /providers/signin/complete
 route POST /publish
 route POST /publish/validate
 route POST /social/complete

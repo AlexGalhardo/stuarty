@@ -508,6 +508,28 @@ var Endpoints = []Endpoint{
 		Summary: "Set or remove the price of a model (a person in the browser only; the local token and keys get 403)",
 	},
 	{
+		ID:      "providers.signin.begin",
+		Method:  http.MethodPost,
+		Path:    "/providers/signin",
+		Scope:   service.ScopeAdmin,
+		Service: "ProviderSignInBegin",
+		Status:  200,
+		Summary: "Start the sign-in to an AI provider; answers the address of the consent screen (a person in the browser only)",
+	},
+	{
+		ID:      "providers.signin.complete",
+		Method:  http.MethodPost,
+		Path:    "/providers/signin/complete",
+		Scope:   service.ScopeAdmin,
+		Service: "ProviderSignInComplete",
+		Status:  200,
+		Summary: "Finish the sign-in with what the provider sent to the redirect address (a person in the browser only)",
+	},
+	{
+		ID: "providers.sign-ins", Method: http.MethodGet, Path: "/providers/sign-ins", Scope: service.ScopeRead,
+		Service: "ProviderSignInList", Status: 200, Summary: "List the connections made by a sign-in and their state",
+	},
+	{
 		ID:      "text.generate",
 		Method:  http.MethodPost,
 		Path:    "/text/generate",

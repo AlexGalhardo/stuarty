@@ -256,6 +256,8 @@ func TestSecurity_T05_EveryOperationHasScope(t *testing.T) {
 		"GET /approvals",
 		// The redirect address of the sign-in to a social network (epic 18): a page that posts to /api/v1/social/complete.
 		"GET /social/callback",
+		// The redirect address of the sign-in to an AI provider (epic 12): a page that posts to /api/v1/providers/signin/complete.
+		"GET /auth/callback",
 	}
 
 	for _, r := range h.vapp.Router.Routes() {

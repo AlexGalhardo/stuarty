@@ -87,7 +87,7 @@
 | `ProviderModels` | none | `provider:models` | `GET /connections/{id}/models` | read |
 | `ProviderPriceSet` | none | `provider:price` | `PUT /providers/prices` | admin, and only from a privileged browser session (SDD-016 §7) |
 | `ProviderSignInBegin`, `ProviderSignInComplete` | none | none | `POST /providers/signin`, `POST /providers/signin/complete` (the page `/auth/callback` posts to the second) | admin, and only from a privileged browser session (SDD-016 §12) |
-| `ProviderSignInList` | none | none | `GET /providers/signins` | read |
+| `ProviderSignInList` | none | none | `GET /providers/sign-ins` | read |
 | `TextGenerate` | `job_start` (kind `text.generate`) | `text:generate` | `POST /text/generate` | edit |
 | `MemoryList`, `MemoryGet`, `MemoryWrite` | `library` (kind `memory`; actions `list`, `get`, `write`) | `memory:list`, `memory:show`, `memory:write` | `GET /library/memory`, `GET /library/memory/{name}`, `POST /library/memory`, `DELETE /library/memory/{name}` | read, edit (SDD-018) |
 | `MemoryRemove` | none (an agent tool removes nothing) | `memory:remove` | `DELETE /library/memory/{name}` | edit |
