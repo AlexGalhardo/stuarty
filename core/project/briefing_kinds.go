@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-// ProductionKind is the kind of production a brief is for (SDD-018 section 16, epic 39). It selects the set of
+// ProductionKind is the kind of production a brief is for (SDD-018 section 17, epic 39). It selects the set of
 // questions the briefing asks: the questions are data, one set per kind, so the form, the CLI, the HTTP API and an
 // agent in a chat ask the ones that fit what is being made.
 type ProductionKind string
@@ -65,13 +65,13 @@ var commercialQuestions = []Question{
 		Options: []string{"vertical-9x16", "square-1x1", "horizontal-16x9"},
 	},
 	{
+		ID: "duration", Heading: "Duration (seconds)", Text: "How long, in seconds (15 and 30 are the usual)?",
+		Kind: AnswerSeconds, Required: true, Min: MinCommercialSeconds, Max: MaxCommercialSeconds,
+	},
+	{
 		ID: "other_formats", Heading: "Other formats",
 		Text: "Which other aspect ratios (9:16, 1:1, 16:9) must the same commercial come in?",
 		Kind: AnswerText, MaxChars: 200,
-	},
-	{
-		ID: "duration", Heading: "Duration (seconds)", Text: "How long, in seconds (15 and 30 are the usual)?",
-		Kind: AnswerSeconds, Required: true, Min: MinCommercialSeconds, Max: MaxCommercialSeconds,
 	},
 	{
 		ID: "product_shots", Heading: "Product shots",

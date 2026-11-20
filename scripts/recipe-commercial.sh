@@ -53,7 +53,7 @@ youtube-shorts
 
 vertical-9x16
 
-## Duration
+## Duration (seconds)
 
 15
 EOF
