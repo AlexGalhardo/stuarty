@@ -15,7 +15,9 @@ import { caller, expect, home, test, testClip } from "./helpers";
 test.describe.configure({ mode: "serial", timeout: 240_000 });
 
 const KEY = "AIza-e2e-CANARY-6c20e1";
-const MODEL = "gemini-omni-1.2-flash";
+// The price table is one per workspace, shared by the browsers of a run and by the next run, so each run lists a
+// model of its own in the family the adapter knows (gemini-omni*), as the other generation specs do.
+const OMNI = "gemini-omni-1.2-flash";
 
 interface FakeGemini {
 	url: string;
@@ -25,7 +27,7 @@ interface FakeGemini {
 	close(): Promise<void>;
 }
 
-async function fakeGemini(clip: Buffer): Promise<FakeGemini> {
+async function fakeGemini(clip: Buffer, model: string): Promise<FakeGemini> {
 	const fake: FakeGemini = {
 		url: "",
 		keys: [],
@@ -48,7 +50,7 @@ async function fakeGemini(clip: Buffer): Promise<FakeGemini> {
 					JSON.stringify({
 						models: [
 							{
-								name: `models/${MODEL}`,
+								name: `models/${model}`,
 								displayName: "Gemini Omni 1.2 Flash",
 								inputTokenLimit: 131072,
 								outputTokenLimit: 65536,
@@ -159,7 +161,8 @@ test.describe("Generate a video clip", () => {
 		browserName,
 	}) => {
 		const tag = `${browserName}-${randomBytes(3).toString("hex")}`;
-		const fake = await fakeGemini(await readFile(testClip(0)));
+		const modelId = `${OMNI}-${tag}`;
+		const fake = await fakeGemini(await readFile(testClip(0)), modelId);
 		const label = `Google video ${tag}`;
 		const projectName = `Clips ${tag}`;
 		try {
@@ -186,7 +189,7 @@ test.describe("Generate a video clip", () => {
 				.locator("[data-provider-connection]")
 				.filter({ hasText: label });
 			await connection.getByRole("button", { name: "Show the models" }).click();
-			const model = connection.locator(`[data-model-id="${MODEL}"]`);
+			const model = connection.locator(`[data-model-id="${modelId}"]`);
 			await expect(model).toContainText("No price yet");
 			await model.getByRole("button", { name: "Set the price" }).click();
 			await model.getByLabel("Price of one second of video").fill("0.07");
@@ -199,7 +202,7 @@ test.describe("Generate a video clip", () => {
 			const dialog = page.getByRole("dialog");
 			await dialog.getByLabel("Project").selectOption({ label: projectName });
 			await dialog.getByLabel("Connection").selectOption(connectionId);
-			await expect(dialog.getByLabel("Model")).toHaveValue(MODEL);
+			await expect(dialog.getByLabel("Model")).toHaveValue(modelId);
 			await dialog
 				.getByLabel("What the clip shows")
 				.fill("A paper boat crossing a puddle at dawn");
@@ -238,7 +241,7 @@ test.describe("Generate a video clip", () => {
 			// Exactly one submission, with the key in the header, the model and the options asked for.
 			expect(fake.submissions).toHaveLength(1);
 			expect(fake.submissions[0]).toMatchObject({
-				model: MODEL,
+				model: modelId,
 				background: true,
 				response_format: {
 					type: "video",
