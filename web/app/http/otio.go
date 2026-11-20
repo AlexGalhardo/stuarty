@@ -21,7 +21,9 @@ type otioImportIn struct {
 }
 
 func (h *apiHandler) projectOtioExport(c *web.Ctx, in otioExportIn) (service.ProjectOtioExportResult, error) {
-	res, err := h.Service.ProjectOtioExport(c.Context(), service.ProjectOtioExportRequest{ProjectID: in.ID})
+	res, err := h.Service.ProjectOtioExport(
+		c.Context(), service.ProjectOtioExportRequest{ProjectID: in.ID, TimelineID: in.TimelineID},
+	)
 	if res != nil {
 		revisionHeader(c, res.Revision)
 	}
