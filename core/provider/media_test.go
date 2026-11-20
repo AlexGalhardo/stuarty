@@ -203,7 +203,7 @@ func TestNormalizePriceUnits(t *testing.T) {
 		{"image negative", Price{Currency: "USD", Unit: UnitImage, UnitMicros: -1}, "unit_micros"},
 		{"image too large", Price{Currency: "USD", Unit: UnitImage, UnitMicros: MaxPriceMicros + 1}, "unit_micros"},
 		{"tokens with unit micros", Price{Currency: "USD", UnitMicros: 5}, "unit_micros"},
-		{"unknown unit", Price{Currency: "USD", Unit: "second"}, "unit"},
+		{"unknown unit", Price{Currency: "USD", Unit: "minute"}, "unit"},
 	}
 
 	for _, tc := range cases {
