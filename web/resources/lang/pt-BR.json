@@ -3064,6 +3064,7 @@
         "uses": "Usado por",
         "no_uses": "Nenhum projeto usa este arquivo.",
         "use_in": "Usar em um projeto",
+        "use_timeline": "Em qual linha do tempo",
         "use": "Usar",
         "used": "Adicionado ao projeto. Nenhuma cópia foi feita."
       }

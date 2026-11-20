@@ -94,6 +94,21 @@ describe("ALPHA reads and media state", () => {
 		});
 	});
 
+	test("useAsset names the timeline only when one is given (VV-321)", async () => {
+		const { transport, requests } = fake(ok({ assets: [] }));
+		const client = createClient(transport);
+		await client.useAsset("prj_a", "sha256:x");
+		await client.useAsset("prj_a", "sha256:x", "prj_b");
+		expect(requests.map((r) => [r.method, r.path, r.body])).toEqual([
+			["POST", "/projects/prj_a/media", { files: [{ hash: "sha256:x" }] }],
+			[
+				"POST",
+				"/projects/prj_a/media",
+				{ files: [{ hash: "sha256:x" }], timeline_id: "prj_b" },
+			],
+		]);
+	});
+
 	test("cancelJob is a POST with a 30 s timeout", async () => {
 		const { transport, requests } = fake(
 			ok({ job_id: "job_a", state: "cancelled" }),
