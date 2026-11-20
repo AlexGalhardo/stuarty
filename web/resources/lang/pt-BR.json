@@ -2598,6 +2598,7 @@
       "kids": "Este vídeo é feito para crianças?",
       "kids_yes": "Sim",
       "kids_no": "Não",
+      "kids_required": "Responda a esta pergunta para continuar.",
       "synthetic": "Tem conteúdo realista alterado ou sintético",
       "check": "Verificar",
       "send": "Enviar para aprovação",

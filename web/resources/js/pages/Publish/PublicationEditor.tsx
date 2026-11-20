@@ -1,7 +1,12 @@
 import { Link } from "@inertiajs/react";
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 
-import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import {
+	type Failure,
+	FailureNote,
+	failureIsAbout,
+	failureOf,
+} from "@/components/Failure";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import {
@@ -378,6 +383,15 @@ export function PublicationEditor({
 
 	const videos = exportsOf(jobs, null);
 	const stills = exportsOf(jobs, STILLS);
+	// The core named the kids question as the wrong field: it is marked, and the focus goes to it.
+	const kidsMissing = failureIsAbout(failure, "made_for_kids");
+	useEffect(() => {
+		if (kidsMissing) {
+			document
+				.querySelector<HTMLInputElement>("[data-kids-missing] input")
+				?.focus();
+		}
+	}, [kidsMissing, failure]);
 	const canSave =
 		title.trim() !== "" &&
 		(isPost ? post !== "" : video !== "") &&
@@ -717,7 +731,21 @@ export function PublicationEditor({
 											/>
 										</div>
 										<div className="flex flex-wrap items-center gap-4 text-sm">
-											<fieldset className="flex items-center gap-3">
+											<fieldset
+												className={`flex items-center gap-3 ${
+													kidsMissing && d.kids === ""
+														? "rounded-lg border border-destructive p-2"
+														: ""
+												}`}
+												data-kids-missing={
+													kidsMissing && d.kids === "" ? "" : undefined
+												}
+												aria-describedby={
+													kidsMissing && d.kids === ""
+														? "publication-failure"
+														: undefined
+												}
+											>
 												<legend className="sr-only">
 													{t("ui.social.kids")}
 												</legend>
@@ -737,6 +765,11 @@ export function PublicationEditor({
 														{t(`ui.social.kids_${answer}`)}
 													</label>
 												))}
+												{kidsMissing && d.kids === "" && (
+													<span className="text-destructive">
+														{t("ui.social.kids_required")}
+													</span>
+												)}
 											</fieldset>
 											<label className="flex items-center gap-2">
 												<input
@@ -857,7 +890,7 @@ export function PublicationEditor({
 							<UntrustedText>{note}</UntrustedText>
 						</p>
 					))}
-					<FailureNote failure={failure} />
+					<FailureNote failure={failure} id="publication-failure" />
 					<div className="flex flex-wrap gap-2">
 						<Button type="submit" disabled={busy || !canSave}>
 							{t("ui.publish.editor.save")}

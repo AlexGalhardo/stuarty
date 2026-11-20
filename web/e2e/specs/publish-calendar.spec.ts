@@ -316,6 +316,60 @@ test.describe("publishing calendar @chromium-only", () => {
 		}
 	});
 
+	// VV-325, VV-326: the exports are named by what they are, and a question the core says is unanswered is
+	// marked where it is and takes the focus, instead of being an error below the fold.
+	test("the kids question is marked when it is the missing field, and an export has a name", async ({
+		page,
+		request,
+	}) => {
+		test.setTimeout(240_000);
+		const network = await fakeNetwork();
+		try {
+			await signInAsPerson(page);
+			await connectAccount(page);
+
+			const api = await caller(request);
+			const made = (await api("POST", "/projects", {
+				name: "Kids e2e",
+				preset: "9:16",
+			})) as { project_id: string };
+			const job = seedExport(made.project_id);
+
+			await page.goto("/publish");
+			await page.getByTestId("publish-new").click();
+			const dialog = page.getByTestId("publication-editor");
+			await dialog.getByLabel("Project").selectOption(made.project_id);
+			const video = dialog.getByLabel("Exported video");
+			await expect(video.locator("option").nth(1)).toContainText("mp4");
+			await expect(video.locator("option").nth(1)).not.toContainText(job);
+			await video.selectOption({ index: 1 });
+			await dialog.getByLabel("Title", { exact: true }).fill("Kids post");
+			await dialog.getByLabel("Caption").fill("A caption");
+			await dialog.getByRole("button", { name: "Add an account" }).click();
+			const panel = dialog.getByTestId("target-panel");
+			await panel.getByLabel("Account", { exact: true }).selectOption({
+				index: 1,
+			});
+			const at = new Date(Date.now() + 3_600_000);
+			await panel.getByLabel("Date and time").fill(localField(at));
+			await dialog.getByRole("button", { name: "Save", exact: true }).click();
+			await expect(panel.getByTestId("target-state")).toHaveText("Draft");
+
+			await panel.getByTestId("target-schedule").click();
+			await expect(dialog.getByRole("alert")).toContainText("made for kids");
+			await expect(dialog.locator("[data-kids-missing]")).toHaveCount(1);
+			await expect(dialog.locator("[data-kids-missing]")).toContainText(
+				"Answer this question",
+			);
+			await expect(
+				dialog.locator("[data-kids-missing] input").first(),
+			).toBeFocused();
+			expect(network.uploads()).toBe(0);
+		} finally {
+			await cleanUp(request, network);
+		}
+	});
+
 	// D-111, VV-280: the export of an image, a cover made from a template for instance, is the thumbnail of a post.
 	// The person pastes the job the image editor named; the service checks it, so an unknown one is refused.
 	test("the export of an image is the thumbnail of a publication", async ({
