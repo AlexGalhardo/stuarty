@@ -63,7 +63,7 @@ func publicationCommand(s step) (name string, argv []string, stdin string, err e
 		}
 
 		argv = slices.Concat(optFlag("project", r.ProjectID), optFlag("state", r.State), optFlag("network", r.Network),
-			optFlag("from", r.From), optFlag("until", r.To))
+			optFlag("from", r.From), optFlag("until", r.To), optFlag("zone", r.Zone))
 		if r.Limit > 0 {
 			argv = append(argv, "--limit", strconv.Itoa(r.Limit))
 		}
@@ -330,6 +330,17 @@ func TestPublicationOperationsAreTheSameOnEverySurface(t *testing.T) {
 			run(mk("PublicationSchedule", service.PublicationScheduleRequest{
 				ID: made.ID, TargetID: second, At: "2026-12-03T10:00", Zone: "Europe/Lisbon",
 			}))
+			// A range of whole days in a zone (VV-286): 2026-12-02 in Pago Pago (UTC-11) ends at 2026-12-03T11:00Z
+			// and holds the target of 10:00Z, which the same day in UTC does not.
+			run(mk("PublicationList", service.PublicationListRequest{
+				ProjectID: project.ProjectID, From: "2026-12-02", To: "2026-12-03", Zone: "Pacific/Pago_Pago",
+			}))
+
+			var day service.PublicationListResult
+			if err := json.Unmarshal(results[len(results)-1], &day); err != nil || len(day.Publications) != 1 {
+				t.Fatalf("%s: the day in the zone = %s, %v", d.name(), results[len(results)-1], err)
+			}
+
 			run(mk("PublicationSendNow", service.PublicationSendNowRequest{ID: made.ID, TargetID: second}))
 			run(mk("PublicationCancel", service.PublicationCancelRequest{ID: made.ID, TargetID: second}))
 			run(mk("PublicationGet", service.PublicationGetRequest{ID: made.ID}))
