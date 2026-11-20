@@ -551,6 +551,87 @@ func (f *failingPost) Do(req *http.Request) (*http.Response, error) {
 	return f.next.Do(req)
 }
 
+// stoppedPost stops the send (the app quits, the lease is lost) while the request that creates the post is out.
+type stoppedPost struct {
+	next connections.Doer
+	stop context.CancelFunc
+}
+
+func (s *stoppedPost) Do(req *http.Request) (*http.Response, error) {
+	if req.URL.Path == "/2/tweets" {
+		s.stop()
+
+		return nil, context.Canceled
+	}
+
+	return s.next.Do(req)
+}
+
+// A send stopped while its post was out may have posted. The scheduler resumes such a send with the same
+// upload: it must not post again, and it says so; the retry a person asks for afterwards posts with the media
+// that was uploaded.
+func TestAPostStoppedWhileItWasOutIsNotPostedAgainWhenResumed(t *testing.T) {
+	t.Parallel()
+
+	srv := server(
+		t,
+		"token refresh unchanged", "init", "append", "finalize ready",
+		"token refresh unchanged", "status succeeded", "tweet",
+	)
+	c, _ := connector(srv)
+	up := newUpload(t)
+	ctx, stop := context.WithCancel(context.Background())
+	cr := cred(srv, nil)
+	cr.Client = &stoppedPost{next: srv.Client, stop: stop}
+
+	if _, err := c.Publish(ctx, cr, up); err == nil {
+		t.Fatal("a stopped send succeeded")
+	}
+
+	if sess, have, _ := up.Sessions.Load(up.Key); !have || sess.URI != postingMarker {
+		t.Fatalf("the session after a stopped post = %+v, %v: the post being out is not recorded", sess, have)
+	}
+
+	before := len(srv.Calls())
+
+	// The resumed send: no request at all, and a doubt the scheduler does not retry.
+	_, err := c.Publish(context.Background(), cred(srv, nil), up)
+	if se := asKind(t, err, social.KindRejected, ReasonOutcomeUnknown); se.Retryable() {
+		t.Fatal("a doubt about a paid post must not be retried by itself")
+	}
+
+	if len(srv.Calls()) != before {
+		t.Fatalf("the resumed send made requests: %v", srv.Calls()[before:])
+	}
+
+	// The person looked at the timeline and retries: the post goes, with the media already at X.
+	got, err := c.Publish(context.Background(), cred(srv, nil), up)
+	if err != nil || got.RemoteID == "" {
+		t.Fatalf("the retry = %+v, %v", got, err)
+	}
+
+	want := []string{"POST /2/oauth2/token", "GET /2/media/upload", "POST /2/tweets"}
+	if calls := srv.Calls()[before:]; !slices.Equal(calls, want) {
+		t.Fatalf("the retry made %v: the video must not go up twice", calls)
+	}
+}
+
+// A post whose error reaches the person drops the mark: the retry they ask for is theirs to decide.
+func TestAPostThatFailedKeepsOnlyTheMedia(t *testing.T) {
+	t.Parallel()
+
+	srv := server(t, "token refresh unchanged", "init", "append", "finalize ready", "tweet unavailable")
+	c, _ := connector(srv)
+	up := newUpload(t)
+
+	_, err := c.Publish(context.Background(), cred(srv, nil), up)
+	asKind(t, err, social.KindRejected, ReasonOutcomeUnknown)
+
+	if sess, have, _ := up.Sessions.Load(up.Key); !have || sess.URI != mediaMarker || !sess.Uploaded {
+		t.Fatalf("the session after a failed post = %+v, %v", sess, have)
+	}
+}
+
 func TestWhenItIsNotKnownWhetherXPostedItIsNotPostedAgain(t *testing.T) {
 	t.Parallel()
 
