@@ -855,6 +855,34 @@ func TestVideoGenerate_AFirstFrameOfAnotherProjectIsRefused(t *testing.T) {
 	}
 }
 
+// An image too large to be sent as a first frame is refused when the job is asked for, not after a person
+// approved it.
+func TestVideoGenerate_AFirstFrameTooLargeIsRefusedBeforeApproval(t *testing.T) {
+	t.Parallel()
+
+	v := newVideoEnv(t)
+
+	big := append(pngOf(3), bytes.Repeat([]byte{0}, 20<<20)...)
+	sum := sha256.Sum256(big)
+	v.images.Store(hex.EncodeToString(sum[:]), true)
+
+	frame := v.importOne(v.prj, v.write("big.png", string(big))).Assets[0]
+	v.ingested(frame.JobID)
+
+	r := v.req(5, "the fox wakes")
+	r.FirstFrame = frame.AssetID
+
+	_, err := v.svc.VideoGenerate(v.as(token), r)
+	if se, ok := svcErr(err); !ok || se.Code != "E_VALIDATION" || se.Path != "args.first_frame" {
+		t.Fatalf("a first frame over 20 MB = %v, want E_VALIDATION on args.first_frame", err)
+	}
+
+	if list, lerr := v.svc.ApprovalList(v.as(token), service.ApprovalListRequest{State: "all"}); lerr != nil ||
+		list.Total != 0 {
+		t.Errorf("a refused generation left requests: %+v, %v", list, lerr)
+	}
+}
+
 // Acceptance criterion 2 of epic 11 with a real file: the clip the provider returns goes through the probe of the
 // ingest on the pinned FFmpeg, ends as a ready video asset, goes on a timeline, and the project exports with it.
 func TestVideoGenerate_AGeneratedClipIsPlayableOnATimeline(t *testing.T) {
