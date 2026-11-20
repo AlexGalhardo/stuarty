@@ -53,6 +53,16 @@
               }
             ]
           },
+          "lut": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LUTRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "saturation": {
             "type": "integer"
           },
@@ -3869,6 +3879,17 @@
           "value": {
             "format": "double",
             "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "LUTRef": {
+        "properties": {
+          "asset": {
+            "type": "string"
+          },
+          "intensity": {
+            "type": "integer"
           }
         },
         "type": "object"
