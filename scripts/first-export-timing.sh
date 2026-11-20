@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Times the path from docker run to the first verified export (ALPHA exit
-# criterion 7, NFR-040): bash scripts/first-export-timing.sh [IMAGE] [--no-pull]
+# Times the path from docker run to the first verified export (NFR-040):
+#   bash scripts/first-export-timing.sh [IMAGE] [--no-pull]
 # It follows docs/self-hosting/docker ("Your first export from the container"):
 # a fresh container and a fresh volume, an API key made with the first
 # administrator, the CLI inside the container, one clip, one export whose checks
@@ -11,7 +11,8 @@
 #   bash scripts/first-export-timing.sh --binary PATH_TO_STUARTY
 #
 # measures the same path for the binary install instead (epic 40 task 9): a clean workspace in a temporary
-# folder, `stuarty serve` in local mode on a loopback port (PORT, never 7878 or 7979), the same project,
+# folder, `stuarty serve` in local mode on a loopback port (PORT, default a random one in 20000 to 39999,
+# never 7878 or 7979: those belong to the Stuarty of the person who runs it), the same project,
 # import, edit and export, and the same verification. It needs no Docker and no network. ffmpeg and ffprobe
 # come from STUARTY_TEST_FFMPEG_DIR or from PATH. The time is only a fair measure on an idle machine.
 set -euo pipefail
@@ -33,7 +34,11 @@ done
 
 # Git Bash on Windows rewrites /media into a host path in docker arguments.
 export MSYS_NO_PATHCONV=1
-port="${PORT:-7878}"
+if [ -n "$binary" ]; then
+	port="${PORT:-$((20000 + RANDOM % 20000))}"
+else
+	port="${PORT:-7878}"
+fi
 suffix="$$"
 name="vv-first-export-$suffix"
 data="vv-first-export-data-$suffix"
@@ -97,7 +102,8 @@ if [ -n "$binary" ]; then
 	done
 	curl -fsS "$app/up" >/dev/null 2>&1 || fail "the server did not answer /up in 60 seconds"
 	mark "start the server on a clean workspace until /up answers"
-	ffmpeg -hide_banner -loglevel error -f lavfi -i testsrc2=size=1080x1920:rate=30:duration=3 		-f lavfi -i sine=frequency=440:duration=3 -c:v mpeg4 -c:a aac -shortest "$(native "$work/clip.mp4")"
+	ffmpeg -hide_banner -loglevel error -f lavfi -i testsrc2=size=1080x1920:rate=30:duration=3 \
+		-f lavfi -i sine=frequency=440:duration=3 -c:v mpeg4 -c:a aac -shortest "$(native "$work/clip.mp4")"
 	mark "make a clip (stands in for the user's file)"
 	vv() { STUARTY_ADDR="127.0.0.1:$port" "$binary" "$@"; }
 	clip="$(native "$work/clip.mp4")"
