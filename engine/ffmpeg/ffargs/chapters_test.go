@@ -6,12 +6,13 @@ import (
 	"testing"
 )
 
-func chaptersCmd(meta Input, chapters int) Cmd {
+// chaptersCmd is an audio export whose chapters come from meta, its input 1.
+func chaptersCmd(meta Input) Cmd {
 	return Cmd{
 		Inputs: []Input{FileInput(run("mix.wav")), meta},
 		Outputs: []Output{{
 			Format: "mp4", Path: run("out.mp4"), Maps: []string{"0:a:0"}, NoVideo: true,
-			Chapters: chapters, Opts: Bitexact(),
+			Chapters: 1, Opts: Bitexact(),
 		}},
 	}
 }
@@ -19,7 +20,7 @@ func chaptersCmd(meta Input, chapters int) Cmd {
 func TestMetadataInputArgv(t *testing.T) {
 	pol := testPolicy()
 
-	a, err := chaptersCmd(MetadataInput(run("chapters.ffmeta")), 1).Argv(pol)
+	a, err := chaptersCmd(MetadataInput(run("chapters.ffmeta"))).Argv(pol)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -38,7 +39,7 @@ func TestMetadataInputArgv(t *testing.T) {
 func TestChaptersRefusals(t *testing.T) {
 	pol := testPolicy()
 
-	good, err := chaptersCmd(MetadataInput(run("chapters.ffmeta")), 1).Argv(pol)
+	good, err := chaptersCmd(MetadataInput(run("chapters.ffmeta"))).Argv(pol)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -52,8 +53,19 @@ func TestChaptersRefusals(t *testing.T) {
 	}
 
 	// An ffmetadata file outside the run directory is refused (FF-03).
-	if a, err := chaptersCmd(MetadataInput(root()+"/elsewhere/c.ffmeta"), 1).Argv(pol); err == nil {
+	if a, err := chaptersCmd(MetadataInput(root() + "/elsewhere/c.ffmeta")).Argv(pol); err == nil {
 		t.Errorf("accepted a metadata file outside the run directory: %v", a)
+	}
+
+	// Nor is one in the store or in an artifact directory, where another input may come from: the bytes
+	// there are a user's file, never the chapters the engine wrote (FF-08, T-89).
+	for _, p := range []string{
+		root() + "/store/ab/" + digest,
+		root() + "/artifacts/" + digest + "/chapters.ffmeta",
+	} {
+		if a, err := chaptersCmd(MetadataInput(p)).Argv(pol); err == nil {
+			t.Errorf("accepted a metadata file outside the run directory: %v", a)
+		}
 	}
 
 	// -map_chapters 1 with no ffmetadata input at all (FF-08).
