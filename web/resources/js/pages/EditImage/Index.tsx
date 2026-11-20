@@ -16,6 +16,9 @@ import { useT } from "@/lib/i18n";
 import { HttpTransport } from "../../editor/api/http";
 import { API_BASE, createImageApi } from "../../image-editor/api/imageApi";
 import type { ImageSummary } from "../../image-editor/api/types";
+import ImportDialog, {
+	type ImportValues,
+} from "../../image-editor/import/ImportDialog";
 import NewFromTemplate from "../../image-editor/templates/NewFromTemplate";
 
 // The sizes a new image starts from: the names of the presets of SDD-021 section 6, and a size of your own.
@@ -41,6 +44,10 @@ export default function Index(): ReactNode {
 	const [asTemplate, setAsTemplate] = useState(false);
 	const [busy, setBusy] = useState(false);
 	const [failure, setFailure] = useState<Failure | null>(null);
+	// "Import image": a file of the computer becomes a new document (SDD-021 section 10).
+	const [importing, setImporting] = useState(false);
+	const [importBusy, setImportBusy] = useState(false);
+	const [importFailure, setImportFailure] = useState<Failure | null>(null);
 
 	useEffect(() => {
 		let live = true;
@@ -56,6 +63,31 @@ export default function Index(): ReactNode {
 			live = false;
 		};
 	}, [api]);
+
+	async function importImage(values: ImportValues): Promise<void> {
+		setImportBusy(true);
+		setImportFailure(null);
+		try {
+			const options = {
+				...(values.name === undefined ? {} : { name: values.name }),
+				...(values.preset === undefined ? {} : { preset: values.preset }),
+			};
+			const result =
+				values.file === undefined
+					? await api.importImage({ ...options, path: values.path })
+					: await api.importFile(values.file, options);
+			if (result.state === "pending" || result.image_id === undefined) {
+				// The file is still being read by the server: nothing was made, and the person may try again.
+				setImportFailure({ code: "E_ASSET_NOT_READY", message: result.text });
+				setImportBusy(false);
+				return;
+			}
+			window.location.assign(`/edit-image/${result.image_id}`);
+		} catch (error) {
+			setImportFailure(failureOf(error));
+			setImportBusy(false);
+		}
+	}
 
 	async function create(event: FormEvent<HTMLFormElement>): Promise<void> {
 		event.preventDefault();
@@ -166,8 +198,27 @@ export default function Index(): ReactNode {
 						<Button type="submit" disabled={busy}>
 							{t("ui.image.index.create")}
 						</Button>
+						<Button
+							type="button"
+							variant="outline"
+							onClick={() => {
+								setImportFailure(null);
+								setImporting(true);
+							}}
+							data-testid="image-import-open"
+						>
+							{t("ui.image.import.open_new")}
+						</Button>
 					</form>
 					<FailureNote failure={failure} />
+					<ImportDialog
+						open={importing}
+						onOpenChange={setImporting}
+						mode="new"
+						busy={importBusy}
+						failure={importFailure}
+						onImport={(values) => void importImage(values)}
+					/>
 				</section>
 
 				<NewFromTemplate api={api} />

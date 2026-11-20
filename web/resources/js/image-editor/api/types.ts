@@ -179,6 +179,59 @@ export interface ImageCreateResult {
 	height: number;
 }
 
+// POST /images/import (SDD-021 section 10.1): a file of the server (`path`) or of the workspace (`hash`) becomes
+// a new document, or one more layer of `image_id`.
+export interface ImageImportRequest {
+	path?: string;
+	hash?: string;
+	image_id?: string;
+	name?: string;
+	preset?: string;
+	width?: number;
+	height?: number;
+	wait_ms?: number;
+	base_revision?: number;
+}
+
+export interface ImageImportResult {
+	state: "ready" | "pending";
+	image_id?: string;
+	revision?: number;
+	created: boolean;
+	layer_id?: string;
+	hash?: string;
+	name: string;
+	width?: number;
+	height?: number;
+	job_id?: string;
+	applied: boolean;
+	text: string;
+}
+
+// The events of GET /images/{id}/events (SDD-006 section 12). The diff is the one of the batch, or, past 64 KiB,
+// only the objects that changed.
+export interface ImageUpdatedEvent {
+	name: "image.updated";
+	image_id: string;
+	revision: number;
+	base_revision: number;
+	kind: "edit" | "undo" | "redo";
+	actor: string;
+	at: string;
+	diff?: { kind: string; id: string }[];
+	diff_truncated?: boolean;
+	changed?: { kind: string; id: string }[];
+}
+
+export interface ImageResyncEvent {
+	name: "resync.required";
+	image_id: string;
+	revision: number;
+	reason: "gap_too_large" | "client_ahead";
+}
+
+export type ImageStreamEvent = ImageUpdatedEvent | ImageResyncEvent;
+
 export interface ImageOperation {
 	op: string;
 	args?: { [key: string]: unknown };
