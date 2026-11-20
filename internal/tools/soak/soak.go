@@ -99,7 +99,7 @@ func (r Report) Check(b Bounds) []string {
 	return bad
 }
 
-// Markdown is the report as a table over time, for docs/perf.
+// Markdown is the report as a table over time, for docs/quality (SDD-008 section 13.4).
 func (r Report) Markdown(bad []string) string {
 	var b strings.Builder
 
