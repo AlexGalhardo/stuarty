@@ -8,6 +8,8 @@ import type {
 	ImageExportOptions,
 	ImageExportResult,
 	ImageHistoryResult,
+	ImageImportRequest,
+	ImageImportResult,
 	ImageListResult,
 	ImageOperation,
 } from "./types";
@@ -16,6 +18,8 @@ import type {
 const READ_TIMEOUT_MS = 10_000;
 const EDIT_TIMEOUT_MS = 30_000;
 const EXPORT_TIMEOUT_MS = 60_000;
+// An import waits for the ingest of the file, up to 25 seconds on the server (SDD-021 section 10.1).
+const IMPORT_TIMEOUT_MS = 40_000;
 
 export const API_BASE = "/api/v1";
 
@@ -37,6 +41,15 @@ export interface ImageApi {
 		options: ImageExportOptions,
 	): Promise<ImageExportResult>;
 	history(id: string, limit?: number): Promise<ImageHistoryResult>;
+	importImage(request: ImageImportRequest): Promise<ImageImportResult>;
+	// A file chosen in the browser, sent as the body of POST /images/import/file (SDD-021 section 10.2); `file.name`
+	// is the label it travels under, and the members of the request are the query.
+	importFile(
+		file: File,
+		request: Omit<ImageImportRequest, "path" | "hash">,
+	): Promise<ImageImportResult>;
+	// The HTTP status of GET /images/{id}, or 0 when the network failed: the probe of the event stream.
+	probe(id: string): Promise<number>;
 }
 
 export function createImageApi(transport: Transport): ImageApi {
@@ -46,6 +59,7 @@ export function createImageApi(transport: Transport): ImageApi {
 		timeoutMs: number,
 		body?: unknown,
 		signal?: AbortSignal,
+		file?: Blob,
 	): Promise<T> {
 		let response: Awaited<ReturnType<Transport["send"]>>;
 		try {
@@ -53,6 +67,7 @@ export function createImageApi(transport: Transport): ImageApi {
 				method,
 				path,
 				body,
+				file,
 				timeoutMs,
 				signal,
 			});
@@ -93,6 +108,34 @@ export function createImageApi(transport: Transport): ImageApi {
 				`${image(id)}/history${limit === undefined ? "" : `?limit=${limit}`}`,
 				READ_TIMEOUT_MS,
 			),
+		importImage: (request) =>
+			call("POST", "/images/import", IMPORT_TIMEOUT_MS, request),
+		importFile: (file, request) => {
+			const query = new URLSearchParams({ file_name: file.name });
+			for (const [key, value] of Object.entries(request)) {
+				if (value !== undefined && value !== "") query.set(key, String(value));
+			}
+			return call(
+				"POST",
+				`/images/import/file?${query.toString()}`,
+				IMPORT_TIMEOUT_MS,
+				undefined,
+				undefined,
+				file,
+			);
+		},
+		async probe(id) {
+			try {
+				const response = await transport.send({
+					method: "GET",
+					path: image(id),
+					timeoutMs: READ_TIMEOUT_MS,
+				});
+				return response.status;
+			} catch {
+				return 0;
+			}
+		},
 	};
 }
 
