@@ -9,10 +9,12 @@ import (
 	"time"
 
 	corepub "github.com/AlexGalhardo/stuarty/core/publish"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/approval"
 	pub "github.com/AlexGalhardo/stuarty/service/publish"
 	"github.com/AlexGalhardo/stuarty/service/social"
+	"github.com/AlexGalhardo/stuarty/web/app/store"
 )
 
 // uploads is how many posts the fake network was sent.
@@ -241,11 +243,22 @@ func TestSchedulerPublishesEachTargetAtItsTimeOnceAfterApproval(t *testing.T) {
 	}
 }
 
-// Acceptance criterion 2: two servers on the same workspace publish a target exactly once.
+// Acceptance criterion 2: two servers on the same workspace publish a target exactly once. The second server
+// opens the database of the workspace on its own, as a second process does, so the two claims race on the
+// file and not inside one connection pool.
 func TestSchedulerTwoServersOnTheSameWorkspacePublishOnce(t *testing.T) {
 	var saved service.Options
 
 	e := newSocialEnvWith(t, func(o *service.Options) { saved = *o })
+
+	own, err := store.Open(context.Background(), e.dir, store.Options{SchemaVersion: timeline.CurrentSchemaVersion})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Cleanup(func() { _ = own.Close() })
+
+	saved.Store = own
 
 	second, err := service.New(saved)
 	if err != nil {
