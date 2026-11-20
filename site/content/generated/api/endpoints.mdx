@@ -15,12 +15,18 @@ Every operation has its own page with the parameters, the body, the responses an
 | `GET` | `/api/v1/projects` | [`projects.list`](/docs/api/projects.list) | List projects |
 | `POST` | `/api/v1/projects` | [`projects.create`](/docs/api/projects.create) | Create a project |
 | `GET` | `/api/v1/projects/{id}` | [`projects.get`](/docs/api/projects.get) | Read a project |
+| `GET` | `/api/v1/projects/{id}/audio-measure` | [`audio.measure`](/docs/api/audio.measure) | Measure the sound with and without the audio processors |
 | `GET` | `/api/v1/projects/{id}/bitmaps/{key}` | [`bitmaps.get`](/docs/api/bitmaps.get) | Download a rasterized text or shape |
 | `GET` | `/api/v1/projects/{id}/brief` | [`projects.brief.get`](/docs/api/projects.brief.get) | Read the brief of a project |
 | `PUT` | `/api/v1/projects/{id}/brief` | [`projects.brief.set`](/docs/api/projects.brief.set) | Write the brief of a project |
 | `PUT` | `/api/v1/projects/{id}/briefing` | [`projects.briefing.answer`](/docs/api/projects.briefing.answer) | Answer the briefing: the answers become the brief of the project |
 | `POST` | `/api/v1/projects/{id}/bundle` | [`projects.bundle.export`](/docs/api/projects.bundle.export) | Export a project as a .vvbundle |
+| `GET` | `/api/v1/projects/{id}/checkpoints` | [`projects.checkpoints.list`](/docs/api/projects.checkpoints.list) | List the checkpoints of a project |
+| `POST` | `/api/v1/projects/{id}/checkpoints` | [`projects.checkpoints.create`](/docs/api/projects.checkpoints.create) | Name a revision |
+| `PATCH` | `/api/v1/projects/{id}/checkpoints/{name}` | [`projects.checkpoints.rename`](/docs/api/projects.checkpoints.rename) | Rename a checkpoint |
+| `DELETE` | `/api/v1/projects/{id}/checkpoints/{name}` | [`projects.checkpoints.remove`](/docs/api/projects.checkpoints.remove) | Remove a checkpoint, never a revision |
 | `GET` | `/api/v1/projects/{id}/describe` | [`projects.describe`](/docs/api/projects.describe) | Describe a project as text: brief, items and state |
+| `GET` | `/api/v1/projects/{id}/diff` | [`projects.diff`](/docs/api/projects.diff) | List what changed between two revisions |
 | `POST` | `/api/v1/projects/{id}/duplicate` | [`projects.duplicate`](/docs/api/projects.duplicate) | Duplicate a project |
 | `POST` | `/api/v1/projects/{id}/edit` | [`projects.edit`](/docs/api/projects.edit) | Apply a batch of operations (lint_scope fast) |
 | `GET` | `/api/v1/projects/{id}/frame` | [`projects.frame`](/docs/api/projects.frame) | Render one frame |
@@ -39,6 +45,7 @@ Every operation has its own page with the parameters, the body, the responses an
 | `GET` | `/api/v1/projects/{id}/plan` | [`projects.plan`](/docs/api/projects.plan) | Read the render plan of a window |
 | `POST` | `/api/v1/projects/{id}/redo` | [`projects.redo`](/docs/api/projects.redo) | Redo the caller's latest undone step |
 | `POST` | `/api/v1/projects/{id}/restore` | [`projects.restore`](/docs/api/projects.restore) | Restore a project from the trash |
+| `POST` | `/api/v1/projects/{id}/revert` | [`projects.revert`](/docs/api/projects.revert) | Go back to an earlier revision as a new step |
 | `GET` | `/api/v1/projects/{id}/sheet` | [`projects.sheet`](/docs/api/projects.sheet) | Render a contact sheet |
 | `GET` | `/api/v1/projects/{id}/snap-points` | [`projects.snap_points`](/docs/api/projects.snap_points) | Read the snap points and trim limits |
 | `POST` | `/api/v1/projects/{id}/trash` | [`projects.trash`](/docs/api/projects.trash) | Move a project to the trash |

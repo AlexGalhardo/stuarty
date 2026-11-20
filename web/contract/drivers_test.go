@@ -164,6 +164,8 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.ViewFrame)
 	case "ViewSheet":
 		return invoke(ctx, s, svc.ViewSheet)
+	case "AudioMeasure":
+		return invoke(ctx, s, svc.AudioMeasure)
 	case "MotionBrief":
 		return invoke(ctx, s, svc.MotionBrief)
 	case "MotionCheck":
@@ -282,6 +284,10 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.BriefingQuestions)
 	case "BriefingAnswer":
 		return invoke(ctx, s, svc.BriefingAnswer)
+	}
+
+	if res, ok, err := historyCall(ctx, svc, s); ok {
+		return res, err
 	}
 
 	if res, ok, err := libraryCall(ctx, svc, s); ok {
@@ -606,6 +612,22 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 		args["mode"] = "sheet"
 
 		return "view", args, nil
+	case "AudioMeasure":
+		args["mode"] = "audio"
+
+		if v, ok := args["start"]; ok {
+			args["from"] = v
+
+			delete(args, "start")
+		}
+
+		if v, ok := args["end"]; ok {
+			args["until"] = v
+
+			delete(args, "end")
+		}
+
+		return "view", args, nil
 	case "MotionBrief":
 		delete(args, "track_id") // the tool has no track: SDD-011 section 15.5
 
@@ -650,6 +672,10 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 		args["action"] = "briefing"
 
 		return "project_item", args, nil
+	}
+
+	if tool, args, ok, err := historyTool(s); ok {
+		return tool, args, err
 	}
 
 	if tool, args, ok, err := libraryTool(s); ok {
@@ -752,6 +778,11 @@ func command2argv(s step) (name string, argv []string, stdin string, err error) 
 }
 
 func commandOf(s step) (name string, argv []string, stdin string, err error) {
+	// First: its members are numbers where the generic decoding below reads strings (until).
+	if name, argv, ok, err := historyCommand(s); ok {
+		return name, argv, "", err
+	}
+
 	var a struct {
 		ProjectID string               `json:"project_id"`
 		AssetID   string               `json:"asset_id"`
@@ -809,6 +840,9 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 
 		Answers map[string]string `json:"answers"`
 		Replace bool              `json:"replace"`
+
+		Start string `json:"start"`
+		End   string `json:"end"`
 	}
 
 	if len(s.Args) > 0 {
@@ -978,6 +1012,12 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 		argv = append(slices.Clone(proj), "--mode", "sheet")
 
 		return "view", append(argv, flag("until", a.Until)...), "", nil
+	case "AudioMeasure":
+		argv = append(slices.Clone(proj), "--mode", "audio")
+		argv = append(argv, flag("item", a.ItemID)...)
+		argv = append(argv, flag("from", a.Start)...)
+
+		return "view", append(argv, flag("until", a.End)...), "", nil
 	case "MotionBrief":
 		argv = append(slices.Clone(proj), flag("from", a.From)...)
 		argv = append(argv, flag("until", a.Until)...)

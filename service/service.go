@@ -54,6 +54,12 @@ type Service interface {
 	HistoryList(ctx context.Context, req HistoryListRequest) (*HistoryListResult, error)
 	Undo(ctx context.Context, req UndoRequest) (*UndoResult, error)
 	Redo(ctx context.Context, req UndoRequest) (*UndoResult, error)
+	HistoryRevert(ctx context.Context, req HistoryRevertRequest) (*HistoryRevertResult, error)
+	HistoryDiff(ctx context.Context, req HistoryDiffRequest) (*HistoryDiffResult, error)
+	CheckpointCreate(ctx context.Context, req CheckpointCreateRequest) (*Checkpoint, error)
+	CheckpointList(ctx context.Context, req CheckpointListRequest) (*CheckpointListResult, error)
+	CheckpointRename(ctx context.Context, req CheckpointRenameRequest) (*Checkpoint, error)
+	CheckpointRemove(ctx context.Context, req CheckpointRemoveRequest) (*Checkpoint, error)
 
 	Lint(ctx context.Context, req LintRequest) (*LintResult, error)
 
@@ -126,6 +132,9 @@ type Service interface {
 	ExportPresetList(ctx context.Context, req ExportPresetListRequest) (*ExportPresetListResult, error)
 	ExportCheck(ctx context.Context, req ExportCheckRequest) (*ExportCheckResult, error)
 	ExportBatch(ctx context.Context, req ExportBatchRequest) (*Job, error)
+	// AudioMeasure is the loudness, true peak and noise floor of a range or an item with and without its audio
+	// processors (SDD-004 section 7.1, epic 34).
+	AudioMeasure(ctx context.Context, req AudioMeasureRequest) (*AudioMeasureResult, error)
 	AuditList(ctx context.Context, req AuditListRequest) (*AuditListResult, error)
 
 	// Doctor is the diagnostic report (SDD-003 section 2, SDD-011 section 8.6).

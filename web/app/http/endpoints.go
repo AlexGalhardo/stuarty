@@ -190,6 +190,35 @@ var Endpoints = []Endpoint{
 		Service: "Redo", Status: 200, Summary: "Redo the caller's latest undone step",
 	},
 	{
+		ID: "projects.revert", Method: http.MethodPost, Path: "/projects/{id}/revert", Scope: service.ScopeEdit,
+		Service: "HistoryRevert", Status: 200, Summary: "Go back to an earlier revision as a new step",
+	},
+	{
+		ID: "projects.diff", Method: http.MethodGet, Path: "/projects/{id}/diff", Scope: service.ScopeRead,
+		Service: "HistoryDiff", Status: 200, Summary: "List what changed between two revisions",
+	},
+	{
+		ID: "projects.checkpoints.list", Method: http.MethodGet, Path: "/projects/{id}/checkpoints",
+		Scope: service.ScopeRead, Service: "CheckpointList", Status: 200, Summary: "List the checkpoints of a project",
+	},
+	{
+		ID: "projects.checkpoints.create", Method: http.MethodPost, Path: "/projects/{id}/checkpoints",
+		Scope: service.ScopeEdit, Service: "CheckpointCreate", Status: 201, Summary: "Name a revision",
+	},
+	{
+		ID: "projects.checkpoints.rename", Method: http.MethodPatch, Path: "/projects/{id}/checkpoints/{name}",
+		Scope: service.ScopeEdit, Service: "CheckpointRename", Status: 200, Summary: "Rename a checkpoint",
+	},
+	{
+		ID:      "projects.checkpoints.remove",
+		Method:  http.MethodDelete,
+		Path:    "/projects/{id}/checkpoints/{name}",
+		Scope:   service.ScopeEdit,
+		Service: "CheckpointRemove",
+		Status:  200,
+		Summary: "Remove a checkpoint, never a revision",
+	},
+	{
 		ID: "projects.lint", Method: http.MethodGet, Path: "/projects/{id}/lint", Scope: service.ScopeRead,
 		Service: "Lint", Status: 200, Summary: "Lint a project with every rule",
 	},
@@ -237,6 +266,10 @@ var Endpoints = []Endpoint{
 	{
 		ID: "export.check", Method: http.MethodGet, Path: "/projects/{id}/export-check", Scope: service.ScopeRead,
 		Service: "ExportCheck", Status: 200, Summary: "Check a project against an export preset",
+	},
+	{
+		ID: "audio.measure", Method: http.MethodGet, Path: "/projects/{id}/audio-measure", Scope: service.ScopeRead,
+		Service: "AudioMeasure", Status: 200, Summary: "Measure the sound with and without the audio processors",
 	},
 	{
 		ID:      "export.batch",

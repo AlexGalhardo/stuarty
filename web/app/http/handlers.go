@@ -276,6 +276,7 @@ func (h *apiHandler) registerAll() {
 	register(h, "projects.redo", func(c *web.Ctx, in stepIn) (service.UndoResult, error) {
 		return h.step(c, in, h.Service.Redo)
 	})
+	h.registerHistoryOps()
 	register(h, "projects.lint", func(c *web.Ctx, in lintIn) (service.LintResult, error) {
 		res, err := h.Service.Lint(
 			c.Context(),
@@ -345,6 +346,7 @@ func (h *apiHandler) registerAll() {
 	register(h, "jobs.cancel", h.jobCancel)
 	register(h, "export.presets", h.exportPresetList)
 	register(h, "export.check", h.exportCheck)
+	register(h, "audio.measure", h.audioMeasure)
 	register(h, "export.batch", h.exportBatch)
 	register(h, "templates.list", h.templateList)
 	register(h, "templates.save", h.templateSave)

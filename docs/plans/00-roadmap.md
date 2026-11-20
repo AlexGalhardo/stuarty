@@ -31,7 +31,7 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | [09](09-ai-provider-layer.md) | AI provider layer with API keys, text generation and cost | L | 04, 05 | DONE (2026-11-19, `96540531`..`7b5f1caa`, merge `5a97458e`; task 2 provider choice and task 8 real call wait for the author) |
 | [10](10-image-and-voice-generation.md) | Image and voice generation | M | 08, 09 | IN PROGRESS (senior-d, 2026-11-20) |
 | [11](11-video-generation.md) | Video generation | M | 10 | TODO |
-| [12](12-ai-oauth-connections.md) | Sign in with ChatGPT and OpenRouter | M | 09 | TODO |
+| [12](12-ai-oauth-connections.md) | Sign in with ChatGPT and OpenRouter | M | 09 | IN PROGRESS (senior-d, 2026-11-20) |
 | [13](13-mcp-domains-and-agent-docs.md) | MCP tools by domain and generated agent documentation | M | 06 | DONE (2026-11-19, `773674ed`..`e9e671d4`, merge `c3be54a0`) |
 | [14](14-hosted-agent-chat.md) | The user's agent hosted in the chat panel | L | 07, 13 | DONE (2026-11-20, `23d31581`..`26a80add0` replayed, merge `365dcd1bd`; run with a real installed agent not verified) |
 | [15](15-memory-skills-and-prompts.md) | Memory, skills and prompts | L | 07 | DONE (2026-11-19, 65d33593..d2e8660f) |
@@ -58,10 +58,16 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | [31](31-motion-easing-crop-and-mask.md) | Motion: easing curves, animated crop and mask, presets | L | 03 | DONE (2026-11-19, `e914c99b`..`a88f8e63`, merge `4c2c5c85`) |
 | [32](32-nested-compositions.md) | Nested compositions | M | 06, 31 | IN PROGRESS (senior-a, 2026-11-20) |
 | [33](33-external-motion-engine-hand-off.md) | Hand-off from an external motion engine | M | 08 | DONE (2026-11-20, `4f4022cc`..`bb19aa733` replayed, merge `3d693ba1d`; real HyperFrames round and no-egress on Linux not verified) |
-| [34](34-audio-processors-and-noise-reduction.md) | Audio processors and noise reduction | L | 03 | IN PROGRESS (senior-c, 2026-11-19) |
+| [34](34-audio-processors-and-noise-reduction.md) | Audio processors and noise reduction | L | 03 | DONE (2026-11-20, merge of `epic/34` at `2e6efc574`; neural model and timeline playback of processed audio wait for the author) |
 | [35](35-export-presets-batch-and-codecs.md) | Export presets, batch queue, H.265 and AV1 | M | 03 | DONE (2026-11-19, `c1bb77fa`..`c718fdb2`, merge `1063ec42`) |
-| [36](36-revert-checkpoints-and-diff.md) | Revert to a revision, checkpoints and a diff | M | 03 | IN PROGRESS (senior-b, 2026-11-19) |
+| [36](36-revert-checkpoints-and-diff.md) | Revert to a revision, checkpoints and a diff | M | 03 | DONE (2026-11-20, `c42f2f5ad`..`90c6df86c`, merge `8d12df6d4`; image documents left for a later epic) |
 | [37](37-editor-ui-and-shortcuts.md) | Final editor UI, shortcuts and open fixes | L | 07 | DONE (2026-11-19, `7921c340`..`2715dcc0`, merge `46691bb3`; criterion 4 not met on this Windows machine: WebKit/Firefox limits and VV-238, VV-253, VV-260 to VV-264) |
+| [48](48-image-import-and-image-events.md) | Image import and the image event stream | M | 27, 28 | TODO |
+| [49](49-image-lut.md) | Image lookup tables (.cube) | S | 29 | TODO |
+| [50](50-image-revert-checkpoints-and-diff.md) | Revert to a revision, checkpoints and a diff for image documents | M | 36, 29 | TODO |
+| [51](51-processed-audio-preview-on-the-timeline.md) | Processed audio preview on the timeline | M | 34 | TODO |
+| [52](52-live-composition-groups-in-the-browser.md) | Live composition groups in the browser preview | M | 32, 26 | TODO |
+| [53](53-constant-speed-for-compositions.md) | Constant speed for compositions | M | 32 | TODO |
 
 ### 1.4 Closing (after the tracks)
 

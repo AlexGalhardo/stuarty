@@ -13,6 +13,8 @@ import type {
 	AssetListResult,
 	AssetQuery,
 	AssetResult,
+	AudioMeasureQuery,
+	AudioMeasureResult,
 	AuditListResult,
 	AuditQuery,
 	BrandKit,
@@ -22,6 +24,8 @@ import type {
 	ChatSession,
 	ChatSessionListResult,
 	ChatTranscriptResult,
+	Checkpoint,
+	CheckpointListResult,
 	CommandHelpResult,
 	Connection,
 	ConnectionCreateRequest,
@@ -37,8 +41,10 @@ import type {
 	ExportPresetListResult,
 	FontImportResult,
 	FontListResult,
+	HistoryDiffResult,
 	HistoryListResult,
 	HistoryQuery,
+	HistoryRevertResult,
 	InstallToolRequest,
 	InstallToolResult,
 	Job,
@@ -72,6 +78,7 @@ import type {
 	ProviderSignInResult,
 	PublishRequest,
 	PublishValidateResult,
+	RevertRequest,
 	SessionResult,
 	SnapPointsQuery,
 	SnapPointsResult,
@@ -100,6 +107,8 @@ const CHAT_START_TIMEOUT_MS = 45_000;
 // A bundle call may hold for up to 25 s (wait_ms) before the job is returned.
 const BUNDLE_WAIT_MS = 20_000;
 const BUNDLE_TIMEOUT_MS = 60_000;
+// The sound of up to 600 s is decoded and mixed twice.
+const MEASURE_TIMEOUT_MS = 120_000;
 
 const defaultDeps: RetryDeps = {
 	sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
@@ -138,6 +147,11 @@ export interface ApiClient {
 		projectId: string,
 		items: readonly ExportBatchItem[],
 	): Promise<Job>;
+	// The level of the sound before and after the audio processors (SDD-004 section 7.1).
+	measureAudio(
+		projectId: string,
+		query?: AudioMeasureQuery,
+	): Promise<AudioMeasureResult>;
 	getJob(jobId: string): Promise<Job>;
 	cancelJob(jobId: string): Promise<Job>;
 	listJobs(projectId: string): Promise<JobListResult>;
@@ -161,6 +175,22 @@ export interface ApiClient {
 		projectId: string,
 		query?: HistoryQuery,
 	): Promise<HistoryListResult>;
+	// Revert, the diff of two revisions and checkpoints (epic 36). The core words
+	// every change; a revert with `dry_run` returns the diff it would make.
+	getCheckpoints(projectId: string): Promise<CheckpointListResult>;
+	createCheckpoint(
+		projectId: string,
+		body: { name: string; note?: string; revision?: number },
+	): Promise<Checkpoint>;
+	removeCheckpoint(projectId: string, name: string): Promise<Checkpoint>;
+	getHistoryDiff(
+		projectId: string,
+		range: { from: number; until?: number },
+	): Promise<HistoryDiffResult>;
+	revertTo(
+		projectId: string,
+		request: RevertRequest,
+	): Promise<HistoryRevertResult>;
 	inspectMedia(
 		projectId: string,
 		assetId: string,
@@ -418,6 +448,18 @@ export function createClient(
 				READ_TIMEOUT_MS,
 			);
 		},
+		measureAudio: (id, q = {}) => {
+			const params = new URLSearchParams();
+			if (q.itemId !== undefined) params.set("item_id", q.itemId);
+			if (q.start !== undefined) params.set("start", q.start);
+			if (q.end !== undefined) params.set("end", q.end);
+			const suffix = params.size === 0 ? "" : `?${params.toString()}`;
+			return call(
+				"GET",
+				`${project(id)}/audio-measure${suffix}`,
+				MEASURE_TIMEOUT_MS,
+			);
+		},
 		startExportBatch: (id, items) =>
 			call("POST", `${project(id)}/export-batches`, READ_TIMEOUT_MS, {
 				items: items.map((item) =>
@@ -461,6 +503,24 @@ export function createClient(
 				`${project(id)}/history${query({ actor: q.actor, cursor: q.cursor, limit: q.limit })}`,
 				READ_TIMEOUT_MS,
 			),
+		getCheckpoints: (id) =>
+			call("GET", `${project(id)}/checkpoints`, READ_TIMEOUT_MS),
+		createCheckpoint: (id, body) =>
+			call("POST", `${project(id)}/checkpoints`, EDIT_TIMEOUT_MS, body),
+		removeCheckpoint: (id, name) =>
+			call(
+				"DELETE",
+				`${project(id)}/checkpoints/${encodeURIComponent(name)}`,
+				EDIT_TIMEOUT_MS,
+			),
+		getHistoryDiff: (id, range) =>
+			call(
+				"GET",
+				`${project(id)}/diff${query({ from: range.from, until: range.until })}`,
+				READ_TIMEOUT_MS,
+			),
+		revertTo: (id, request) =>
+			call("POST", `${project(id)}/revert`, EDIT_TIMEOUT_MS, request),
 		inspectMedia: (id, asset, q = {}) =>
 			call(
 				"GET",

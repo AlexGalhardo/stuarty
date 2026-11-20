@@ -92,6 +92,8 @@ For `settings.updated` and `project.updated` the `id` is the project identifier.
 
 `core/command.DescribeDiff(doc, diff)` renders the diff as text, one line per change, with times in seconds and frames, for agents and for the history view. Its exact format is in SDD-003.
 
+**Diff of two documents (RF-121, epic 36).** `core/command.Diff(a, b)` returns the changes that turn document `a` into document `b`, in the form above (the form of a fetched document, whole objects for `added` and `removed`, `[before, after]` for a changed field), in the order of a batch diff. It is computed from the two documents and never from the log, so it is the same after any sequence of edits, undos and redos that led to them. `core/command.DiffEntries(a, b)` classifies each change and sorts them most significant first: a track added or removed, then an item added or removed, then `settings.updated` and `project.updated`, then an item **trimmed** (`duration` or `source_in` changed), then an item **moved** (`start` or `track` changed, and neither of those two), then any other change of an item or a track, then assets and fonts; ties by kind and identifier. An entry has the change, its `verb` (`added`, `removed`, `moved`, `trimmed`, `changed`), its `noun` (`track`, the type of an item: `clip`, `audio`, `text`, `caption` or `shape`, then `asset`, `font`, `settings`, `project`) and the `DescribeDiff` line of the change. Equal documents give no entry.
+
 ### A.6 Undo
 
 The inverse of an operation is not another catalogue command. It is a list of three **primitives** computed from the before-state of the objects the operation touched:
@@ -108,6 +110,8 @@ Undo and redo are service operations (SDD-003). The rule from ADR-0006 that they
 
 The primitives of one undo are applied together to a working copy, with no validation between them, and the result is validated once at the end. Intermediate states may therefore break an invariant (two items overlapping while a ripple is being reversed); only the final document must be valid. Their order matters in one way only: an object must exist before it is patched and must not exist before it is put. If the final document is invalid, the primitives that touch an object named in a violation are dropped and the application starts again from the document before the undo; this ends because each round drops at least one primitive (SDD-005 §12.2).
 
+**Revert (RF-120, epic 36).** `history.revert` is a service operation, not a catalogue command, because it needs a document the batch itself cannot carry: the document at an earlier revision. The service rebuilds that document (SDD-005 §12.4) and the core computes the change: `core/command.Revert(current, target)` returns a `BatchResult` whose `Doc` is `target`, whose `Diff` is `Diff(current, target)` and whose `Inverse` is the primitives that turn `target` back into `current`. Reverting is therefore an ordinary batch: it is one revision with an inverse, so it is undone by `Undo` of the actor who asked and redone by `Redo`; it is validated as any batch (the target was a valid document); and it changes the locked tracks like undo does (it is not an edit of an item, it restores a state). The document equals the target in canonical bytes, which `TestRevertProperty` checks over a random sequence of edits for every earlier revision. `core/command.RebuildAt(current, inverses)` is the other half: it applies the stored inverses of the revisions after the target, newest first and each in reverse order, all together on a working copy with no guard, and returns the document at the target, or an error when any primitive is skipped (the log does not fit the document). The service compares its hash with the `doc_sha256` of the target row before it trusts it.
+
 ### A.7 Concurrency and idempotency
 
 A batch request carries `base_revision`. The service decides:
@@ -123,6 +127,8 @@ A batch whose `base_revision` is more than 1,000 revisions behind is rejected wi
 A batch may carry an `idempotency_key` (8 to 64 characters from `[A-Za-z0-9._~-]`). The service stores the result of a committed batch under `(project, actor, key)` for 24 hours. A second request with the same key returns the stored result with `"replayed": true` and changes nothing; if the second request's operations differ from the first's, the answer is `E_IDEMPOTENCY_MISMATCH`.
 
 `dry_run: true` runs steps 1 and 2 and returns the result that would be committed, with `"applied": false`, without writing.
+
+A revert (A.6) carries `base_revision` too, the revision the caller read when it chose the target; absent, it is the current revision. When it is older, a revert conflicts when another actor's change in between added, updated or removed an object that the revert changes (the objects of `Diff(current, target)`, and the project or the settings when those differ). The error is the same `E_REVISION_CONFLICT` with the text diff, so a person reads what the other actor did before going back over it.
 
 ### A.8 Errors
 
@@ -303,6 +309,11 @@ Scope is `edit` unless stated. "Time" marks arguments parsed by A.4. Optional ar
 | `item.extract_audio` | `item_id`, `track_id`, `id?` | Creates a linked audio item from the audio of a video clip and mutes the clip. See C.67 |
 | `clip.remove_silences` | `item_id`, `min_silence?` (length, default `"0.4s"`), `padding?` (length kept on each side of speech, default `"0.1s"`), `threshold_db?` (-30, -35, -40 or -45, default -35), `ripple?` (`"track"` default, `"none"`), `new_ids?` | Replaces the clip, or an audio item, by one item per non-silent stretch of its source range (A.9). With ripple the pieces are placed back to back from the original start and later items on the track move earlier; without, each piece keeps its original position. The first piece keeps the item's identifier, its `transition_in` and `fade_in`; the last keeps `transition_out` and `fade_out`. `effective.removed` is the total length removed. With no silence found the document is unchanged |
 | `audio.duck` | `item_id`, `speech_item_ids` (1 to 20 items), `gain_db?` (-40 to -1, default -12), `attack?` (length, default `"0.2s"`), `release?` (length, default `"0.5s"`) | Lowers a music item while speech sounds, as generated `volume` keyframes; the speech comes through `resolved` (A.9). `keyframe.clear` on `volume` undoes it |
+| `audio.processor_add` | `item_id` or `track_id`, `kind`, `params?`, `index?`, `enabled?` | Adds an audio processor (equaliser, compressor, limiter, gate, de-esser, noise reduction) to the chain of an item or a track. See C.79 |
+| `audio.processor_set` | `item_id` or `track_id`, `index`, `params?`, `enabled?` | Changes the parameters or the switch of one processor of a chain. See C.80 |
+| `audio.processor_move` | `item_id` or `track_id`, `index`, `to` | Moves a processor to another place of its chain. See C.81 |
+| `audio.processor_remove` | `item_id` or `track_id`, `index` | Removes a processor from a chain. See C.82 |
+| `audio.apply_preset` | `item_id` or `track_id`, `preset` | Replaces a chain with a preset: voice, voice with music, podcast or clean up a noisy room. See C.83 |
 | `marker.add` | `item_id?`, `at`, `label?` | Puts a marker at a frame of the timeline, or of an item with `item_id` (TASK-0254); see C.56 |
 | `marker.set` | `item_id?`, `at`, `to?`, `label?` | Moves or relabels the marker at a frame, of the timeline or of an item; see C.57 |
 | `marker.remove` | `item_id?`, `at` or `all` | Removes the marker at a frame, or every marker, of the timeline or of an item; see C.58 |
@@ -6306,3 +6317,219 @@ Swaps the asset of a clip for another asset of the same kind and changes nothing
 - `err_type_mismatch_audio_asset`
 - `err_invalid_state_slot_holder`
 - `err_out_of_source_new_video_too_short`
+
+### C.79 `audio.processor_add`
+
+Adds an audio processor (epic 34, SDD-004 section 7.1) to the `processors` chain of an item or of a track (SDD-001 section 3.5). The five commands C.79 to C.83 share the rules below.
+
+**Shared rules.** The target is exactly one of `item_id` (a `clip` or `audio` item) or `track_id`; both or neither is `E_VALIDATION`. An unknown item or track is `E_NOT_FOUND`; a `text`, `caption` or `shape` item is `E_TYPE_MISMATCH`. `index` and `to` are 0-based positions in the chain; one outside it is `E_VALIDATION` with the length of the chain in the hint. `params` is an object from the names of the kind (SDD-004 section 7.1) to numbers: an unknown name, or a number outside its range, is `E_VALIDATION` naming the parameter, its unit and its range. The stored `params` of a processor hold only the values that differ from the default, so a value equal to its default is removed and an empty object is not written; an emptied chain removes the `processors` field. The commands do not run on a locked track's items (`E_INVALID_STATE`, as every item command) but a track chain can be edited on a locked track. The inverse is the usual `patch` of the item or track.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | one of the two | none | a `clip` or `audio` item |
+| `track_id` | track id | one of the two | none | any track |
+| `kind` | string | yes | none | `eq`, `compressor`, `limiter`, `gate`, `deesser` or `noise_reduction` |
+| `params` | object | no | `{}` | parameters of the kind, SDD-004 section 7.1 |
+| `index` | integer | no | the end | where to insert; 0 to the length of the chain |
+| `enabled` | boolean | no | true | false adds it switched off |
+
+**Preconditions.** The shared rules; the chain has fewer than 12 processors (`E_LIMIT`); `profile_start_ms` and `profile_end_ms` are both 0 or the first is at least 1,024 samples (22 ms) below the second, and only on an item (`E_VALIDATION`).
+
+**Postconditions.** The processor is in the chain at `index`; the processors from there on move one place later. `diff` has one `item.updated` or `track.updated` (`processors`). `effective` has `index`, `kind` and `params` (the complete parameters with their defaults).
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | no or two targets, unknown kind or parameter, a value out of range, `index` out of the chain, a bad noise profile | `args.params.threshold_db 5 is out of range: -60 to 0 dB.` | `Send a threshold between -60 and 0.` |
+| `E_NOT_FOUND` | the item or the track does not exist | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
+| `E_TYPE_MISMATCH` | the item is a text, caption or shape item | `Item itm_s6t7v8w9x0 is a text item and has no audio.` | `Use an audio item or a clip.` |
+| `E_LIMIT` | the chain already has 12 processors | `The chain of itm_m1n2p3q4r5 already has 12 processors.` | `Remove one first.` |
+
+**Inverse.** `patch` of `processors` (set the old list, or unset when there was none). **Idempotency.** Not idempotent: a second call adds a second processor.
+
+**Example.**
+
+```json
+{"op": "audio.processor_add", "args": {"item_id": "itm_m1n2p3q4r5", "kind": "compressor", "params": {"threshold_db": -24, "ratio": 4}}}
+```
+
+**Golden cases.**
+
+- `ok_add_compressor_to_clip`
+- `ok_add_eq_with_params_to_audio_item`
+- `ok_add_to_track`
+- `ok_add_at_index`
+- `ok_add_disabled`
+- `ok_default_values_are_not_stored`
+- `ok_add_noise_reduction_marked_profile`
+- `err_validation_no_target`
+- `err_validation_both_targets`
+- `err_validation_unknown_kind`
+- `err_validation_unknown_param`
+- `err_validation_param_out_of_range`
+- `err_validation_eq_high_pass_between_0_and_20`
+- `err_validation_profile_on_track`
+- `err_validation_profile_range_inverted`
+- `err_validation_index_out_of_range`
+- `err_not_found_item`
+- `err_not_found_track`
+- `err_type_mismatch_text_item`
+- `err_limit_13th_processor`
+
+### C.80 `audio.processor_set`
+
+Changes one processor of a chain (the shared rules of C.79).
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | one of the two | none | a `clip` or `audio` item |
+| `track_id` | track id | one of the two | none | any track |
+| `index` | integer | yes | none | the processor, 0-based |
+| `params` | object | no | none | the values to change; the others stay. A value equal to the default is removed from the stored `params` |
+| `enabled` | boolean | no | none | true or false switches it on or off |
+
+**Preconditions.** The shared rules; at least one of `params` and `enabled` is given (`E_VALIDATION`); `index` names a processor.
+
+**Postconditions.** The `params` are merged and checked as a whole (so a marked noise profile stays consistent). `diff` has one `item.updated` or `track.updated`, none when nothing changed. `effective` has `index`, `kind`, `params` (complete) and `enabled`.
+
+**Errors.** As C.79 without `E_LIMIT`.
+
+**Inverse.** `patch` of `processors`. **Idempotency.** Same result.
+
+**Example.**
+
+```json
+{"op": "audio.processor_set", "args": {"track_id": "trk_m1n2p3q4r5", "index": 0, "enabled": false}}
+```
+
+**Golden cases.**
+
+- `ok_set_param`
+- `ok_set_disabled`
+- `ok_set_back_to_default_drops_the_param`
+- `ok_set_on_track`
+- `ok_set_same_value_noop`
+- `err_validation_nothing_to_change`
+- `err_validation_param_not_of_the_kind`
+- `err_validation_param_out_of_range`
+- `err_validation_index_out_of_range`
+- `err_not_found_item`
+- `err_type_mismatch_text_item`
+
+### C.81 `audio.processor_move`
+
+Moves one processor to another place in its chain: the order is the user's and changes the sound (the shared rules of C.79).
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | one of the two | none | a `clip` or `audio` item |
+| `track_id` | track id | one of the two | none | any track |
+| `index` | integer | yes | none | the processor to move |
+| `to` | integer | yes | none | its new place, 0 to the length minus 1 |
+
+**Postconditions.** The processor is at `to`; the ones between the two places shift by one. Moving to the same place changes nothing. `effective` has `index`, `to` and `kind`.
+
+**Errors.** `E_VALIDATION` (no or two targets, `index` or `to` out of the chain), `E_NOT_FOUND`, `E_TYPE_MISMATCH`, as C.79.
+
+**Inverse.** `patch` of `processors`. **Idempotency.** Same result.
+
+**Example.**
+
+```json
+{"op": "audio.processor_move", "args": {"item_id": "itm_m1n2p3q4r5", "index": 0, "to": 2}}
+```
+
+**Golden cases.**
+
+- `ok_move_first_to_last`
+- `ok_move_last_to_first`
+- `ok_move_to_the_same_place_noop`
+- `ok_move_on_track`
+- `err_validation_to_out_of_range`
+- `err_validation_index_out_of_range`
+- `err_not_found_item`
+- `err_type_mismatch_text_item`
+
+### C.82 `audio.processor_remove`
+
+Removes one processor from a chain (the shared rules of C.79).
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | one of the two | none | a `clip` or `audio` item |
+| `track_id` | track id | one of the two | none | any track |
+| `index` | integer | yes | none | the processor to remove |
+
+**Postconditions.** The later processors move one place earlier; an emptied chain removes the `processors` field. `effective` has `index`, `kind` and `remaining`.
+
+**Errors.** `E_VALIDATION` (no or two targets, `index` out of the chain), `E_NOT_FOUND`, `E_TYPE_MISMATCH`, as C.79.
+
+**Inverse.** `patch` of `processors`. **Idempotency.** Not idempotent: the processor that followed takes the index.
+
+**Example.**
+
+```json
+{"op": "audio.processor_remove", "args": {"item_id": "itm_m1n2p3q4r5", "index": 1}}
+```
+
+**Golden cases.**
+
+- `ok_remove_middle`
+- `ok_remove_last_leaves_no_field`
+- `ok_remove_on_track`
+- `err_validation_index_out_of_range`
+- `err_not_found_item`
+- `err_type_mismatch_text_item`
+
+### C.83 `audio.apply_preset`
+
+Replaces the chain of an item or a track with a preset (epic 34; the shared rules of C.79). The presets are `voice` ("voice"), `voice_with_music`, `podcast` and `clean_noisy_room` ("clean up a noisy room"); each is a fixed chain of the processors of SDD-004 section 7.1 with the values of the table below, and the user can then change any of them with `audio.processor_set`.
+
+| Preset | Chain, in order |
+| --- | --- |
+| `voice` | `noise_reduction` strength 0.5; `eq` high-pass 80 Hz, band 2 250 Hz -2 dB, band 4 3000 Hz +2 dB; `deesser` defaults; `compressor` threshold -20 dB, ratio 3, makeup 3 dB; `limiter` ceiling -1 dB |
+| `voice_with_music` | `eq` high-pass 100 Hz, band 2 250 Hz -2 dB, band 4 3500 Hz +2.5 dB; `deesser` defaults; `compressor` threshold -22 dB, ratio 2.5, makeup 2 dB; `limiter` ceiling -1 dB |
+| `podcast` | `noise_reduction` strength 0.4; `gate` threshold -55 dB, range -20 dB; `eq` high-pass 70 Hz, band 2 200 Hz -2 dB, band 4 4000 Hz +2 dB; `deesser` defaults; `compressor` threshold -22 dB, ratio 3.5, makeup 4 dB; `limiter` ceiling -1 dB |
+| `clean_noisy_room` | `noise_reduction` strength 0.8; `gate` threshold -45 dB, range -15 dB; `eq` high-pass 100 Hz, band 2 300 Hz -3 dB, band 4 3000 Hz +2 dB; `deesser` defaults; `compressor` threshold -20 dB, ratio 3, makeup 3 dB; `limiter` ceiling -1 dB |
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | one of the two | none | a `clip` or `audio` item |
+| `track_id` | track id | one of the two | none | any track |
+| `preset` | string | yes | none | one of the four ids |
+
+**Postconditions.** The chain is exactly the preset (what was there is replaced). `effective` has `preset` and `processors` (their count). Applying the preset that is already the chain changes nothing.
+
+**Errors.** `E_VALIDATION` (no or two targets, unknown preset), `E_NOT_FOUND`, `E_TYPE_MISMATCH`, as C.79.
+
+**Inverse.** `patch` of `processors`. **Idempotency.** Same result.
+
+**Example.**
+
+```json
+{"op": "audio.apply_preset", "args": {"item_id": "itm_m1n2p3q4r5", "preset": "voice"}}
+```
+
+**Golden cases.**
+
+- `ok_voice_on_clip`
+- `ok_voice_with_music_on_track`
+- `ok_podcast_on_audio_item`
+- `ok_clean_noisy_room`
+- `ok_replaces_the_chain`
+- `ok_same_preset_noop`
+- `err_validation_unknown_preset`
+- `err_validation_no_target`
+- `err_type_mismatch_text_item`
+- `err_not_found_track`

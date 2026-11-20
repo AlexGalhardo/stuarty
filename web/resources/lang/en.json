@@ -1028,11 +1028,26 @@
           "add": {
             "title": "Add audio"
           },
+          "apply_preset": {
+            "title": "Apply an audio preset"
+          },
           "duck": {
             "title": "Duck music under speech"
           },
           "mark_beats": {
             "title": "Mark beats"
+          },
+          "processor_add": {
+            "title": "Add an audio processor"
+          },
+          "processor_move": {
+            "title": "Move an audio processor"
+          },
+          "processor_remove": {
+            "title": "Remove an audio processor"
+          },
+          "processor_set": {
+            "title": "Change an audio processor"
           }
         },
         "caption": {
@@ -1297,7 +1312,9 @@
         "L_AUDIO_CLIP": "Audio clipping",
         "L_LOUDNESS": "Loudness off target",
         "L_DURATION_LIMIT": "Over the duration limit",
-        "L_ALPHA_MISSING": "Transparency declared but missing"
+        "L_ALPHA_MISSING": "Transparency declared but missing",
+        "L_AUDIO_LIMITER_NOT_LAST": "Limiter is not last in the chain",
+        "L_AUDIO_NOISE_REDUCTION_REPEATED": "More than one noise reduction"
       },
       "shortcuts": {
         "title": "Keyboard shortcuts",
@@ -1509,6 +1526,69 @@
           "other": "{count} markers"
         },
         "beats_apply": "Mark beats"
+      },
+      "processors": {
+        "title": "Audio processors",
+        "empty": "No processors yet. Add one or apply a preset.",
+        "preset_label": "Preset",
+        "preset_apply": "Apply preset",
+        "presets": {
+          "voice": "Voice",
+          "voice_with_music": "Voice with music",
+          "podcast": "Podcast",
+          "clean_noisy_room": "Clean up a noisy room"
+        },
+        "add_kind": "Processor",
+        "add": "Add processor",
+        "kind": {
+          "eq": "Equaliser",
+          "compressor": "Compressor",
+          "limiter": "Limiter",
+          "gate": "Noise gate",
+          "deesser": "De-esser",
+          "noise_reduction": "Noise reduction"
+        },
+        "enabled": "On",
+        "move_up": "Move up",
+        "move_down": "Move down",
+        "remove": "Remove",
+        "params": "Parameters",
+        "param": {
+          "hp_hz": "High-pass frequency (0 is off)",
+          "lp_hz": "Low-pass frequency (0 is off)",
+          "threshold_db": "Threshold",
+          "ratio": "Ratio",
+          "attack_ms": "Attack",
+          "release_ms": "Release",
+          "knee_db": "Knee",
+          "makeup_db": "Make-up gain",
+          "ceiling_db": "Ceiling",
+          "range_db": "Range",
+          "hold_ms": "Hold",
+          "frequency_hz": "Frequency",
+          "strength": "Strength",
+          "profile_start_ms": "Noise profile starts (0 is automatic)",
+          "profile_end_ms": "Noise profile ends"
+        },
+        "band": {
+          "hz": "Band {n} frequency",
+          "gain_db": "Band {n} gain",
+          "q": "Band {n} width (Q)"
+        },
+        "measure": "Measure the sound",
+        "measuring": "Measuring...",
+        "measure_failed": "The sound could not be measured.",
+        "before": "Before",
+        "after": "After",
+        "loudness": "Loudness",
+        "true_peak": "True peak",
+        "noise_floor": "Noise floor",
+        "speech_to_noise": "Speech to noise",
+        "no_level": "none",
+        "listen": "Listen to the processed sound",
+        "rendering": "Rendering the sound...",
+        "listen_failed": "The sound could not be rendered.",
+        "player": "Processed sound"
       },
       "markers": {
         "title": {
@@ -1777,7 +1857,29 @@
           "one": "{count} change",
           "other": "{count} changes",
           "zero": "No changes"
-        }
+        },
+        "compare": "Compare r{revision}",
+        "revert_here": "Revert to here",
+        "revert_row": "Revert to r{revision}",
+        "diff_title": "Changes between r{from} and r{to}",
+        "diff_hint": "Tick two steps to see in words what changed between them.",
+        "diff_empty": "The two states are the same.",
+        "diff_failed": "The changes could not be read.",
+        "checkpoints_title": "Checkpoints",
+        "checkpoints_empty": "No checkpoints yet. Name a state to come back to it.",
+        "checkpoint_label": "Name this state",
+        "checkpoint_add": "Add checkpoint",
+        "checkpoint_auto": "Automatic",
+        "checkpoint_remove": "Remove {name}",
+        "checkpoint_revert": "Revert to {name}",
+        "revert_title": "Go back to r{revision}?",
+        "revert_title_named": "Go back to {name}?",
+        "revert_body": "This adds a new step that takes the project back. The steps in between stay in the history, and you can undo it.",
+        "revert_changes": "What would change",
+        "revert_same": "The project already looks like this. Nothing would change.",
+        "revert_cancel": "Cancel",
+        "revert_confirm": "Revert",
+        "revert_loading": "Reading what would change"
       },
       "shape": {
         "title": "Shape",

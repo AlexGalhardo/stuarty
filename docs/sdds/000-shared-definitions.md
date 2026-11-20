@@ -19,6 +19,7 @@
 | `Edit` | `edit` | `edit` | `POST /projects/{id}/edit` | edit (or media, per command) |
 | `CommandHelp` | `command_help` | `command:help` | `GET /commands`, `GET /commands/{name}` | read |
 | `HistoryList`, `Undo`, `Redo` | `history` | `history`, `undo`, `redo` | `GET /projects/{id}/history`, `POST /projects/{id}/undo`, `POST /projects/{id}/redo` | read, edit |
+| `HistoryRevert`, `HistoryDiff`, `CheckpointCreate`, `CheckpointList`, `CheckpointRename`, `CheckpointRemove` | `history` (`action` `revert`, `diff`, `checkpoint`, `checkpoints`, `rename_checkpoint`, `remove_checkpoint`) | `revert`, `diff`, `checkpoint:create`, `checkpoint:list`, `checkpoint:rename`, `checkpoint:remove` | `POST /projects/{id}/revert`, `GET /projects/{id}/diff`, `/projects/{id}/checkpoints` (`GET`, `POST`) and `/projects/{id}/checkpoints/{name}` (`PATCH`, `DELETE`) | read, edit |
 | `MediaImport` | `media_import` | `media:import` | `POST /projects/{id}/media` | media |
 | `MediaInspect` | `media_inspect` | `media:inspect` | `GET /projects/{id}/media/{asset_id}` | read |
 | `MediaTrash`, `MediaRestore` | none (CLI and HTTP only) | `media:trash`, `media:restore` | `POST /projects/{id}/media/{asset_id}/trash`, `.../restore` | media |
@@ -65,6 +66,7 @@
 | `ImageExport` | `image` (`action` export) | `image:export` | `POST /images/{id}/export` | edit |
 | `ExportPresetList` | `command_help` (`domain` export) | `export:presets` | `GET /export-presets` | read |
 | `ExportCheck` | `lint` (with `preset`) | `export:check` | `GET /projects/{id}/export-check` | read |
+| `AudioMeasure` | `view` (`mode` audio) | `view --mode audio` | `GET /projects/{id}/audio-measure` | read |
 | `ExportBatch` | `job_start` (`kind` export_batch) | `export:batch` | `POST /projects/{id}/export-batches` | render |
 | `ImageFrame` | none | none | `GET /images/{id}/frame` (SDD-012 §24.3) | read |
 | `ImageHistory` | none | none | `GET /images/{id}/history` (SDD-012 §24.3) | read |
@@ -106,7 +108,7 @@ Routes that are not service operations: `POST /mcp` (the MCP server over Streama
 
 The MCP catalogue is 20 tools: `project_list`, `project_create`, `project_get`, `project_trash`, `edit`, `command_help`, `history`, `media_import`, `media_inspect`, `view`, `lint`, `job_start`, `job_get`, `job_cancel`, `template`, `font_import`, `connection` (read only: the destinations the user connected, SDD-014), `image` (the image documents of SDD-021, one tool with an `action`), `project_item` (the items and the brief of a production, SDD-003 section 2.3), `library` (memory, skills and prompts: search, list, get, write, render and lint; SDD-018).
 
-**Projects and timelines (ADR-0039).** A project is a production; its timelines are items of it. Every operation above that edits or reads a timeline document (`Edit`, `HistoryList`, `Undo`, `Redo`, `Lint`, `MediaImport`, `MediaInspect`, `MediaList`, `MediaTrash`, `MediaRestore`, `ViewFrame`, `ViewSheet`, `JobStart`, `JobList`, `PlanWindow`, `SnapPoints`, `ProjectOtioExport`, `ProjectOtioImport`, `ProjectBundleExport`, `ExportCheck`, `ExportBatch`, and `ProjectGet` with a detail) accepts an optional `timeline_id` next to `project_id`; the rule is SDD-003 §1.7.
+**Projects and timelines (ADR-0039).** A project is a production; its timelines are items of it. Every operation above that edits or reads a timeline document (`Edit`, `HistoryList`, `Undo`, `Redo`, `HistoryRevert`, `HistoryDiff`, `Checkpoint*`, `Lint`, `MediaImport`, `MediaInspect`, `MediaList`, `MediaTrash`, `MediaRestore`, `ViewFrame`, `ViewSheet`, `JobStart`, `JobList`, `PlanWindow`, `SnapPoints`, `ProjectOtioExport`, `ProjectOtioImport`, `ProjectBundleExport`, `ExportCheck`, `ExportBatch`, and `ProjectGet` with a detail) accepts an optional `timeline_id` next to `project_id`; the rule is SDD-003 §1.7.
 
 Other CLI commands that are not service operations: `serve` (start the owner process), `mcp` (stdio MCP server), `open` (open the UI of a running server with a fresh launch code), `token:rotate`, `user:create` and `user:passwd` (network mode; they need the workspace lock, so no server may be running), `tools:install` (download a helper such as whisper.cpp after stating its size), `agent:docs` (print or write the generated material for agents, SDD-003 §8), plus vukem's built-in commands.
 
@@ -117,7 +119,7 @@ Every operation belongs to one **domain**. The domain names are fixed here; a ne
 | Domain | What it holds | Operations today |
 | --- | --- | --- |
 | `project` | productions: projects, their items, the brief, bundles | `ProjectList`, `ProjectCreate`, `ProjectGet`, `ProjectTrash`, `ProjectRestore`, `ProjectDescribe`, `ProjectDuplicate`, `ProjectItem*`, `Brief*`, `ProjectBundle*`, the event stream |
-| `video` | the timeline document: its edit commands, history, lint, frames, jobs, templates, OpenTimelineIO, the hand-off from a motion engine | `Edit` and the commands of the timeline registry, `HistoryList`, `Undo`, `Redo`, `Lint`, `View*`, `Motion*` (brief, check, replace; epic 33), `JobStart`, `JobGet`, `JobList`, `JobCancel`, `ExportFile`, `Template*`, `SnapPoints`, `ProjectOtio*`, `Export*` (presets, the check against one, the batch) |
+| `video` | the timeline document: its edit commands, history, lint, frames, jobs, templates, OpenTimelineIO, the hand-off from a motion engine | `Edit` and the commands of the timeline registry, `HistoryList`, `Undo`, `Redo`, `HistoryRevert`, `HistoryDiff`, `Checkpoint*`, `Lint`, `View*`, `Motion*` (brief, check, replace; epic 33), `JobStart`, `JobGet`, `JobList`, `JobCancel`, `ExportFile`, `Template*`, `SnapPoints`, `ProjectOtio*`, `Export*` (presets, the check against one, the batch) |
 | `image` | image documents (SDD-021) | `Image*` and the commands of the image registry |
 | `writing` | written documents | none yet |
 | `asset` | files of the workspace: media, the asset library, fonts | `Media*`, `Asset*` (the library of epic 08: list, get, uses, set info, tag), `FontImport`, `FontList` |
@@ -184,6 +186,7 @@ Kinds: `ingest`, `transcribe`, `export`, `export_batch`, `frame`, `text.generate
 | --- | --- | --- |
 | `projects` | one row per project (a production): name, trash state, owner | SDD-005 §5.12 |
 | `project_items` | the items of a project: brief, text, timeline, output; their order and trash state | SDD-005 §5.12 |
+| `checkpoints` | the names and notes a person or an agent put on a revision of a timeline, and the automatic ones before an agent's first edit of the day | SDD-005 §5.14 |
 | `timelines` | one row per timeline document: current document, revision, schema version, trash state (the former `projects` table, renamed) | SDD-005 §5.2 |
 | `operations` | the append-only log, one row per committed batch of a timeline (its `project_id` column holds the timeline id) | SDD-005 |
 | `idempotency_keys` | stored batch results by key | SDD-005 |
@@ -318,7 +321,7 @@ Environment variables, all optional. Names are final. Ceilings that have no vari
 | `STUARTY_CACHE_MAX_BYTES` | `2147483648` (2 GiB) | size of the frame and bitmap caches before eviction |
 | `STUARTY_RATE_LIMIT_PER_MINUTE` | `300` | requests per minute per key or local token |
 | `STUARTY_RATE_LIMIT_SESSION_PER_MINUTE` | `1800` | requests per minute per browser session |
-| `STUARTY_RATE_LIMIT_HEAVY_PER_MINUTE` | `10` | calls of `JobStart`, `MediaImport`, `TemplateImport`, `ProjectBundleExport`, `ProjectBundleImport`, `FontImport` and `ProjectOtioImport` per minute per credential (SDD-007 section 4.4); one list, the same on the documentation pages and in the OpenAPI document |
+| `STUARTY_RATE_LIMIT_HEAVY_PER_MINUTE` | `10` | calls of `JobStart`, `MediaImport`, `TemplateImport`, `ProjectBundleExport`, `ProjectBundleImport`, `FontImport`, `ProjectOtioImport` and `AudioMeasure` per minute per credential (SDD-007 section 4.4); one list, the same on the documentation pages and in the OpenAPI document |
 | `STUARTY_SANDBOX` | `none` | `bwrap` runs FFmpeg and whisper.cpp in a sandbox on Linux |
 | `STUARTY_INSECURE_ALLOW_ROOT` | `false` | allow network mode as root |
 | `STUARTY_LAUNCHER_SECRET` | none | set only by the desktop shell in the environment of the server it starts (SDD-007 §5.3); the server reads it once and removes it; never set it by hand or write it to a file |

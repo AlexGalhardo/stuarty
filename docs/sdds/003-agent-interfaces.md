@@ -139,6 +139,12 @@ type Service interface {
 	HistoryList(ctx context.Context, req HistoryListRequest) (*HistoryListResult, error)
 	Undo(ctx context.Context, req UndoRequest) (*UndoResult, error)
 	Redo(ctx context.Context, req UndoRequest) (*UndoResult, error)
+	HistoryRevert(ctx context.Context, req HistoryRevertRequest) (*HistoryRevertResult, error)   // §2.5.1
+	HistoryDiff(ctx context.Context, req HistoryDiffRequest) (*HistoryDiffResult, error)
+	CheckpointCreate(ctx context.Context, req CheckpointCreateRequest) (*Checkpoint, error)
+	CheckpointList(ctx context.Context, req CheckpointListRequest) (*CheckpointListResult, error)
+	CheckpointRename(ctx context.Context, req CheckpointRenameRequest) (*Checkpoint, error)
+	CheckpointRemove(ctx context.Context, req CheckpointRemoveRequest) (*Checkpoint, error)
 
 	MediaImport(ctx context.Context, req MediaImportRequest) (*MediaImportResult, error)
 	MediaInspect(ctx context.Context, req MediaInspectRequest) (*MediaInspectResult, error)
@@ -605,6 +611,90 @@ type SkippedOp struct {
 ```
 
 `Undo` and `Redo` return an `*UndoResult` (the undo is a batch with its own revision and diff). `Revision` is the new revision, `BaseRevision` the revision before the call, so the undo of r4 on a project at r4 is r5 with base r4. `Effective` has no entry for them. `Applied` is false in a dry run (`UndoRequest.DryRun`) and when nothing was applied. With no step to undo the error is `E_NOTHING_TO_UNDO` (`E_NOTHING_TO_REDO`), without `details` (SDD-005 §12.3). There is no multi-step form: one call undoes one step, so an agent that wants three undoes calls three times and reads the skipped list of each.
+
+#### 2.5.1 Revert, the diff and checkpoints (RF-120, RF-121, epic 36)
+
+Six operations of the `video` domain, named `history.revert`, `history.diff` and `history.checkpoint_create`, `history.checkpoint_list`, `history.checkpoint_rename` and `history.checkpoint_remove`; the Service methods are `HistoryRevert`, `HistoryDiff`, `CheckpointCreate`, `CheckpointList`, `CheckpointRename` and `CheckpointRemove`. All accept `timeline_id` (§1.7). A revision is named by its number or by the name of a checkpoint, never both.
+
+```go
+type HistoryRevertRequest struct {
+	ProjectID    string `json:"project_id"`
+	Revision     int64  `json:"revision,omitempty"`      // the revision to go back to; or
+	Checkpoint   string `json:"checkpoint,omitempty"`    // the name of a checkpoint
+	BaseRevision int64  `json:"base_revision,omitempty"` // the revision the caller read; default the current one (SDD-002 A.7)
+	DryRun       bool   `json:"dry_run,omitempty"`
+}
+
+// HistoryRevertResult is an EditResult (the diff is the change the revert makes) plus these.
+type HistoryRevertResult struct {
+	EditResult
+	Kind   string `json:"kind"`   // "revert"
+	Target int64  `json:"target"` // the revision the document was taken back to
+	Same   bool   `json:"same"`   // the document already equals that revision: nothing was written
+	Text   string `json:"text"`
+}
+
+type HistoryDiffRequest struct {
+	ProjectID      string `json:"project_id"`
+	From           int64  `json:"from,omitempty"`            // a revision; or
+	FromCheckpoint string `json:"from_checkpoint,omitempty"` // the name of a checkpoint
+	Until          int64  `json:"until,omitempty"`           // a revision; default the current one
+}
+
+type HistoryDiffResult struct {
+	ProjectID string      `json:"project_id"`
+	Revision  int64       `json:"revision"` // the current revision of the timeline
+	From      int64       `json:"from"`
+	To        int64       `json:"to"`
+	Count     int         `json:"count"`   // changes between the two documents
+	Entries   []DiffEntry `json:"entries"` // most significant first (SDD-002 A.5)
+	Text      string      `json:"text"`    // §3.8
+}
+type DiffEntry struct {
+	Verb   string         `json:"verb"` // added | removed | moved | trimmed | changed
+	Noun   string         `json:"noun"` // track | clip | audio | text | caption | shape | asset | font | settings | project
+	Change command.Change `json:"change"`
+	Line   string         `json:"line"` // DescribeDiff of the change
+}
+
+type Checkpoint struct {
+	Name     string    `json:"name"`     // 1 to 60 characters, unique in the timeline, no "/" and no control character
+	Note     string    `json:"note"`     // up to 300 characters, may be empty
+	Revision int64     `json:"revision"` // the revision it marks
+	Actor    string    `json:"actor"`
+	At       time.Time `json:"at"`
+	Auto     bool      `json:"auto"` // made by the service before an agent's first edit of the day
+}
+type CheckpointCreateRequest struct {
+	ProjectID string `json:"project_id"`
+	Name      string `json:"name"`
+	Note      string `json:"note,omitempty"`
+	Revision  int64  `json:"revision,omitempty"` // default the current revision
+}
+type CheckpointListRequest struct{ ProjectID string `json:"project_id"` }
+type CheckpointRenameRequest struct {
+	ProjectID string `json:"project_id"`
+	Name      string `json:"name"`
+	NewName   string `json:"new_name"`
+	Note      *string `json:"note,omitempty"` // replaces the note when present
+}
+type CheckpointRemoveRequest struct {
+	ProjectID string `json:"project_id"`
+	Name      string `json:"name"`
+}
+type CheckpointListResult struct {
+	ProjectID   string       `json:"project_id"`
+	Revision    int64        `json:"revision"`
+	Checkpoints []Checkpoint `json:"checkpoints"` // newest revision first
+	Text        string       `json:"text"`
+}
+// CheckpointCreate and CheckpointRename return a Checkpoint; CheckpointRemove returns the removed one.
+```
+
+- **`HistoryRevert`** takes the project back to the document it had at a revision, as one **new** revision made by the caller: the log is never rewritten (SDD-005 §12.4). It is an `EditResult` with `kind` `revert`, so a result has the diff, the findings and `applied`. The revision it makes is undone by `Undo` of the same actor, which is the way back from a revert. A revert to the current revision, or to one whose document is the current one, writes nothing: `applied` false, `same` true and the text says so. `dry_run` returns the diff it would make and writes nothing, which is what the UI shows before the person confirms. A revision that does not exist, or is ahead, is `E_VALIDATION` (`path` `revision`); one before a `migrate` or an `import` of the log, whose document the log cannot rebuild, is `E_INVALID_STATE` with the hint to revert to a later revision; a checkpoint that does not exist is `E_NOT_FOUND` (`details.checkpoint`). A trashed project is `E_INVALID_STATE`, as for `Undo`.
+- **`HistoryDiff`** returns the difference between two revisions: the structured `entries` and the text of §3.8. It reads only; a revision that cannot be rebuilt is the same errors as above.
+- **Checkpoints** are a name and a note on a revision. The creator, a person or an agent, names the moment ("before the cut of the intro"); removing a checkpoint never removes a revision; renaming changes the name (and the note when given) and makes an automatic checkpoint a named one, which the ceiling below never removes. A name already used in the timeline is `E_ID_EXISTS` (`path` `name`); an unknown one `E_NOT_FOUND`. `Auto` checkpoints are made by the Service itself, the first time in a day (UTC) that an agent edits a timeline, named `auto <actor> <YYYY-MM-DD>` and pointing at the revision the edit started from; there are at most 30 per timeline and the oldest automatic one is removed when a new one would be the 31st. An agent is any actor that is not `local:ui`, `local:cli` or `user:<id>` (the actors of SDD-000 §3).
+- **Scopes.** `HistoryDiff` and `CheckpointList` need `read`; the others need `edit`.
 
 ### 2.6 Media
 
@@ -1291,6 +1381,8 @@ warning L_SAFE_AREA itm_s6t7v8w9x0 0.4s/12f-2s/60f
 | `L_LOUDNESS` | warning | full | the estimated integrated loudness of the mix (from the assets' loudness artifacts) differs from `settings.loudness_target` by more than 6 LU, so the export normalization would need a large gain. The message states the gain | adjust volumes or accept the normalization |
 | `L_DURATION_LIMIT` | warning | doc | a portrait or square timeline is longer than 180 s (the YouTube Shorts limit, not checked in a landscape project; research note `features-20-80` §5) | trim the timeline or accept it |
 | `L_ALPHA_MISSING` | warning | full | a clip reads an asset that has an alpha channel (`has_alpha`) whose pictures are all opaque in what the ingest sampled (the `alpha_opaque` fact of its normalized artifact, SDD-011 §4.3.6): the file declares transparency and has none, so the animation covers what is below it. Reported once per clip | render it with alpha |
+| `L_AUDIO_LIMITER_NOT_LAST` | warning | doc | an enabled `limiter` of a processor chain (SDD-001 section 3.5) of an item or a track is followed by another enabled processor, which can lift the peaks again | move it last with audio.processor_move |
+| `L_AUDIO_NOISE_REDUCTION_REPEATED` | warning | doc | a processor chain has more than one enabled `noise_reduction` (the second one only adds artefacts) | remove one |
 
 Blocking set, stated once: `L_EMPTY_TIMELINE`, `L_MEDIA_MISSING`, `L_MEDIA_UNREADY`, `L_SOURCE_RANGE`, `L_ODD_DIMENSIONS`, `L_SLOT_UNFILLED`. Everything else is a warning. A template draft (a document with a `template` member whose `instance` is not true) is exempt from `L_SLOT_UNFILLED`; an instance (`template.instance: true`, written by `TemplateInstantiate`) is not, so export of an instance with open required slots is `E_LINT_BLOCKING`. Any document with a `template` member is exempt from `L_MEDIA_MISSING` for the placeholder, which `L_SLOT_UNFILLED` covers.
 
@@ -1320,6 +1412,34 @@ r1 2026-11-14T10:22:40Z local:cli ops=1 asset.add
 ```
 
 The cap is 6,400 characters, the default limit 20.
+
+#### 3.7.1 The diff and checkpoint texts (epic 36)
+
+The diff of two revisions, most significant change first (SDD-002 A.5), one line per change:
+
+```text
+diff <prj id> r<from> -> r<to> (<n> changes)
+removed item itm_k3m9x2p4q1 video was 4s/120f 2s/60f on trk_v1a2b3c4d5 asset ast_7k2m9x4q1b
+trimmed item itm_b4n6p8r0t2: duration 3s/90f -> 2s/60f
+moved item itm_c5d6e7f8g9: start 10s/300f -> 12s/360f
+changed item itm_h1j2k3m4n5: opacity 1 -> 0.5
+added item itm_p2q3r4s5t6 caption on trk_c1d2e3f4g5 12s/360f 2s/60f "Welcome"
+... and <k> more changes: read the diff of a narrower range, or the history
+```
+
+The first line says how many changes there are. The text is cut at **6,400 characters** (2,000 tokens) at a line boundary, never in the middle of a line; when it is cut, the last line is `... and <k> more changes ...` with the exact count of the lines left out, so an agent knows that the list is partial. The lines are `DescribeDiff` lines (§3.4) whose leading mark is replaced by the verb; the structured `entries` carry every change whatever the text shows. Two equal revisions give `diff <prj id> r<from> -> r<to> (no changes)`. The text of a revert is the edit text of §3.5 with the state `reverted` and the target at the end of the first line (`reverted r9 (base r8) by <actor>: changes=<n>, to r5`), or `reverted nothing: the document already equals r5` when `same`.
+
+The checkpoint list:
+
+```text
+<note line, §3.1 rule 5>
+checkpoints <prj id> rev <revision> (showing <a> of <b>)
+r<rev> "<name>" <actor> <UTC time to the second>[ auto][ - "<note>"]
+...
+... and <k> more checkpoints
+```
+
+with one line per checkpoint, newest revision first, cut at 6,400 characters with the count of what was left out. A name and a note are free text that a person or an agent wrote, so the text writes each as a quoted value (`textview.Quote`, §3.1 rule 5) after the note line, the structured result carries the `untrusted_notice`, and both are cleaned of control and bidirectional characters when they are stored. The diff text starts with the same note line, since the names in its lines are quoted values.
 
 ### 3.8 The media inspection text
 
@@ -1401,6 +1521,7 @@ The unit is the character: tokens are estimated as characters divided by 3.2 eve
 | full timeline view | 25,600 | 8,000 | all items | 500 | item |
 | project list | 6,400 | 2,000 | 20 | 100 | project |
 | history list | 6,400 | 2,000 | 20 | 100 | step |
+| history diff, checkpoint list | 6,400 | 2,000 | all that fit | none | line, truncated with a count |
 | lint report | 9,600 | 3,000 | 25 | 100 | finding |
 | media inspection, whole text | 12,800 | 4,000 | one transcript page of 6,000 characters, at most 20 lines | 200 | transcript line |
 | media list | 12,800 | 4,000 | 50 | 200 | asset |
@@ -1457,7 +1578,7 @@ A frame is one JPEG (quality 80, 4:2:0). A sheet is one JPEG:
 | `tools/list` | the 20 tools below, always in the order of the table, never paged, with `ttlMs` 3,600,000 and `cacheScope` `public` (the SDK type `Cacheable`, `mcp/protocol.go` lines 1148 to 1166; the list changes only when the binary is upgraded). |
 | Tool registration | each tool is registered with the SDK's raw `(*Server).AddTool` (`mcp/server.go` line 315) with `inputSchema` and `outputSchema` taken from the registry generator, **not** with the generic `mcp.AddTool[In, Out]`, which infers schemas from Go types and would not produce the `edit` schema of §4.4. The adapter validates `arguments` against `inputSchema` with the validator of ADR-0014 and converts a failure into `E_VALIDATION` with the `path` of the first invalid value (an operation name the Service does not know is `E_UNKNOWN_COMMAND`, §2.4 rule 5). The message names the path and the constraint, never the value (§1.2 rule 9) |
 | Call result | `CallToolResult` (`Content`, `StructuredContent`, `IsError`) built as §1.3 and §1.4 say |
-| Cost | NFR-020 as revised once by epic 13 (D-069), measured by `go run ./internal/tools/surfacebudget` (which `task lint` runs) and held by `TestToolDefinitionBudget`: the minified `tools/list` result is at most **22,400 bytes** (7,000 tokens at the 3.2 characters per token of §3.10), no single tool definition is larger than **1,700 bytes**, there are at most **20 tools**, the text of the first discovery call (`command_help` with no argument, §4.8) is at most **7,500 characters** (2,340 tokens), and the description of a domain is at most 160 characters. Measured when the limits were set: the list a client receives 21,830 bytes (6,821 tokens), the largest definitions `edit` (1,589 bytes) and `media_inspect` (1,567), the discovery call 7,201 characters (2,250 tokens: about 90 more for every operation a later epic adds to the video domain, which is why its limit leaves room for a few). The shape of §4.8 is what made the figure: the operation names left the definition of `edit` (about 950 bytes, and 25 more for every command a later epic registers), which paid for the `domain` and `image_id` arguments of `edit` and `history`, the `domains` of `command_help` and the cost sentence of `project_get`. The history of the figure (6,000 tokens by D-040, then raised for `font_import`, `project_item` and `library`, each time as an interim measure) ends here: **the budget is not raised again for a new domain**. A new domain adds operations and no tool, and its only cost is its description line in the discovery call; a tool is added only when no existing intent fits, with the reason written in §4.8, and the budget is then measured again by the epic that adds it. `project_get` with `detail` `document` is outside the per-call caps of §3.10 (D-088): the document is unbounded, and the description of the tool says what it costs. **Verified by** `surfacebudget`, `TestToolDefinitionBudget` and, once per release, a count with the model vendor's token counting endpoint (`TestToolListVendorTokens`: if it exceeds 7,000 tokens the descriptions are shortened; no field is removed) |
+| Cost | NFR-020 as set by epic 13 (D-069) and raised by the author (D-094, when epics 10 and 17 met the ceiling at 22,400 bytes and 7,500 characters), measured by `go run ./internal/tools/surfacebudget` (which `task lint` runs) and held by `TestToolDefinitionBudget`: the minified `tools/list` result is at most **23,400 bytes** (about 7,300 tokens at the 3.2 characters per token of §3.10), no single tool definition is larger than **1,700 bytes**, there are at most **20 tools**, the text of the first discovery call (`command_help` with no argument, §4.8) is at most **8,500 characters** (about 2,650 tokens), and the description of a domain is at most 160 characters. Measured when the limits were set: the list a client receives 21,830 bytes (6,821 tokens), the largest definitions `edit` (1,589 bytes) and `media_inspect` (1,567), the discovery call 7,201 characters (2,250 tokens: about 90 more for every operation a later epic adds to the video domain, which is why its limit leaves room for a few). The shape of §4.8 is what made the figure: the operation names left the definition of `edit` (about 950 bytes, and 25 more for every command a later epic registers), which paid for the `domain` and `image_id` arguments of `edit` and `history`, the `domains` of `command_help` and the cost sentence of `project_get`. The history of the figure (6,000 tokens by D-040, then raised for `font_import`, `project_item` and `library`, each time as an interim measure) continued with D-094: **only the author raises the budget**, never an epic. A new domain adds operations and no tool, and its only cost is its description line in the discovery call; a tool is added only when no existing intent fits, with the reason written in §4.8, and the budget is then measured again by the epic that adds it. `project_get` with `detail` `document` is outside the per-call caps of §3.10 (D-088): the document is unbounded, and the description of the tool says what it costs. **Verified by** `surfacebudget`, `TestToolDefinitionBudget` and, once per release, a count with the model vendor's token counting endpoint (`TestToolListVendorTokens`: if it exceeds 7,300 tokens the descriptions are shortened; no field is removed) |
 | Order | deterministic (MCP `2026-07-28` Tools: "SHOULD return tools in a deterministic order"), so prompt caches hit |
 
 Tool and Service mapping, scope and annotations (annotations are hints and clients treat them as untrusted; they are never a security control, ADR-0020):
@@ -1470,10 +1591,10 @@ Tool and Service mapping, scope and annotations (annotations are hints and clien
 | `project_trash` | `ProjectTrash`, `ProjectRestore` | edit | false | false | true | false |
 | `edit` | `Edit` | edit (media for `asset.remove`) | false | false | false | false |
 | `command_help` | `CommandHelp` | read | true | n/a | true | false |
-| `history` | `HistoryList`, `Undo`, `Redo` | read (list), edit (undo, redo) | false | false | false | false |
+| `history` | `HistoryList`, `Undo`, `Redo`, `HistoryRevert`, `HistoryDiff`, `Checkpoint*` | read (list, diff, checkpoints), edit (the others) | false | false | false | false |
 | `media_import` | `MediaImport` | media | false | false | true | false |
 | `media_inspect` | `MediaInspect` (with `asset_id`), `MediaList` (without) | read | true | n/a | true | false |
-| `view` | `ViewFrame`, `ViewSheet` | read | true | n/a | true | false |
+| `view` | `ViewFrame`, `ViewSheet`, `AudioMeasure` (`mode` audio) | read | true | n/a | true | false |
 | `lint` | `Lint`, `ExportCheck` (with `preset`) | read | true | n/a | true | false |
 | `job_start` | `JobStart`, `ExportBatch` (`kind` `export_batch`) | render (export, export_batch), media (transcribe) | false | false | false | false |
 | `job_get` | `JobGet` (with `job_id`), `JobList` (with `project_id` and no `job_id`) | read | true | n/a | true | false |
@@ -2040,7 +2161,7 @@ errors: E_VALIDATION, E_INVALID_TIME, E_NOT_FOUND, E_ID_EXISTS, E_INVALID_STATE,
 ```json
 {
   "name": "history",
-  "description": "Read the change log (action=list, newest first, with actor; actor, cursor, limit only for list), or undo or redo your own latest step (action=undo or redo, one step per call). Undo skips a later change by another actor and reports it; an undo is itself a step. domain=image (image_id): undo or redo only.",
+  "description": "Read the change log (action=list, newest first, with actor; actor, cursor, limit only for list), undo or redo your own latest step (one per call), revert to a revision or checkpoint as a new step (dry_run shows it), diff two revisions, or name revisions: checkpoints, checkpoint, rename_checkpoint, remove_checkpoint. Undo skips a later change by another actor and reports it. domain=image (image_id): undo or redo only.",
   "inputSchema": {
     "type": "object",
     "properties": {
@@ -2067,7 +2188,13 @@ errors: E_VALIDATION, E_INVALID_TIME, E_NOT_FOUND, E_ID_EXISTS, E_INVALID_STATE,
         "enum": [
           "list",
           "undo",
-          "redo"
+          "redo",
+          "revert",
+          "diff",
+          "checkpoints",
+          "checkpoint",
+          "rename_checkpoint",
+          "remove_checkpoint"
         ],
         "default": "list"
       },
@@ -2082,6 +2209,26 @@ errors: E_VALIDATION, E_INVALID_TIME, E_NOT_FOUND, E_ID_EXISTS, E_INVALID_STATE,
         "minimum": 1,
         "maximum": 100,
         "default": 20
+      },
+      "revision": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "until": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "name": {
+        "type": "string"
+      },
+      "new_name": {
+        "type": "string"
+      },
+      "note": {
+        "type": "string"
+      },
+      "dry_run": {
+        "type": "boolean"
       }
     },
     "additionalProperties": false
@@ -2095,7 +2242,8 @@ errors: E_VALIDATION, E_INVALID_TIME, E_NOT_FOUND, E_ID_EXISTS, E_INVALID_STATE,
       "kind": {
         "enum": [
           "undo",
-          "redo"
+          "redo",
+          "revert"
         ]
       },
       "entries": {
@@ -2156,6 +2304,8 @@ lint (fast rules): no new findings (errors=0 warnings=0 in total)
 ```
 
 The structured result of `undo` is an `UndoResult` (§2.5: the `EditResult` members plus `kind`, `undone` and `skipped`); of `list` a `HistoryListResult`.
+
+**Revert, diff and checkpoints on this tool (epic 36).** The six operations of §2.5.1 are more `action` values of `history`, not a new tool (the budget of §4.1 leaves no room for one, and each is an intent of reading or changing the log): `revert` is `HistoryRevert`, `diff` `HistoryDiff`, `checkpoints` `CheckpointList`, `checkpoint` `CheckpointCreate`, `rename_checkpoint` `CheckpointRename` and `remove_checkpoint` `CheckpointRemove`. The members are `revision` (the revision to revert to, the revision of a checkpoint, or the start of a diff), `until` (the end of a diff, default the current revision; not `to`, which `TestNoOutboundTools` forbids), `name` (the checkpoint, to revert to, to start a diff from, to create, to rename or to remove), `new_name`, `note` and `dry_run` (`base_revision` is CLI and HTTP only, to stay within the budget: an agent goes back over the current revision, and a person who wants the conflict check of SDD-002 A.7 uses those surfaces). A member that a new action does not use is `E_VALIDATION`, as in S-11 of §7.1; `list`, `undo` and `redo` keep the leniency they had, and `dry_run` now also previews an undo or a redo. `domain=image` serves undo and redo only and refuses these six members with `E_VALIDATION` (an image undo has no dry run, so an ignored `dry_run` would undo for real). `revert` with `dry_run=true` is the preview an agent reads before it goes back. **Cost.** With the tools of the integration branch the tool list is 22,396 bytes (6,998 tokens) and the definition of `history` 1,678 bytes (`go run ./internal/tools/surfacebudget`), against the limits of §4.1 (22,400, 7,000 and 1,700): there is no room left for `history`, so a later change shortens its description first. The skill (§8) points at revert, the diff and checkpoints with one short sentence (`Back: agent:docs --print guide:video|...`), which leaves it at 12,400 of its 12,400 characters.
 
 #### `media_import`
 
@@ -2398,7 +2548,7 @@ Example (the text of §3.8; `structuredContent` has `asset_id`, `kind`, `availab
 ```json
 {
   "name": "view",
-  "description": "See the result. mode=frame: one image at time at; sheet: a grid of frames with their times (count frames from..until, or times); motion: what an external render of from..until must fit (size, rate, safe area, brand kit, captions, frames). Images cost tokens: read project_get and lint first.",
+  "description": "See the result. mode=frame: one image at time at; sheet: a grid of frames with their times (count frames from..until, or times); motion: what an external render of from..until must fit (size, rate, safe area, brand kit, captions, frames); audio: loudness, true peak and noise floor before and after the audio processors, of item_id or from..until. Images cost tokens: read project_get and lint first.",
   "inputSchema": {
     "type": "object",
     "properties": {
@@ -2414,9 +2564,14 @@ Example (the text of §3.8; `structuredContent` has `asset_id`, `kind`, `availab
         "enum": [
           "frame",
           "sheet",
-          "motion"
+          "motion",
+          "audio"
         ],
         "default": "frame"
+      },
+      "item_id": {
+        "type": "string",
+        "pattern": "^itm_[0-9a-hjkmnp-tv-z]{10}$"
       },
       "at": {
         "type": "string",
@@ -2479,14 +2634,11 @@ Example (the text of §3.8; `structuredContent` has `asset_id`, `kind`, `availab
       }
     },
     "required": [
-      "revision",
-      "width",
-      "height",
-      "image_tokens"
+      "revision"
     ]
   },
   "annotations": {
-    "title": "View frame or sheet",
+    "title": "View frame, sheet or sound",
     "readOnlyHint": true,
     "destructiveHint": false,
     "idempotentHint": true,
@@ -2499,7 +2651,7 @@ Example (the text of §3.8; `structuredContent` has `asset_id`, `kind`, `availab
 
 | Parameter | Meaning |
 | --- | --- |
-| `mode` | `frame` (default): one image at `at` (required; `E_VALIDATION` with `path: "at"` when missing). `sheet`: a grid; `at` is not accepted |
+| `mode` | `frame` (default): one image at `at` (required; `E_VALIDATION` with `path: "at"` when missing). `sheet`: a grid; `at` is not accepted. `audio` (epic 34): `AudioMeasure` of `item_id`, or of `from` to `until`, with no image; `at`, `times`, `count` and `max_tokens` are `E_VALIDATION`, and so is `item_id` in any other mode |
 | `at` | time of the frame; a time beyond the timeline is `E_INVALID_TIME` |
 | `times` | sheet: 2 to 16 explicit times; exclusive with `from`, `until`, `count` (`E_VALIDATION` with the `path` of the second member) |
 | `from`, `until`, `count` | sheet: `count` (default 9) frames evenly spaced from `from` (default `0s`) to `until` (default the last frame), both ends included |
@@ -3343,7 +3495,7 @@ edit applies a batch of operations all or nothing, as one undo step. Call comman
 Ids (prj_, ast_, trk_, itm_, job_) are stable. Give a new track or item your own id when later operations in the same batch refer to it.
 A failed call returns code, message, hint and retryable. Retry only when retryable is true. E_REVISION_CONFLICT includes the changes since your revision: read them and re-plan.
 Lists carry next_cursor: pass it back as cursor.
-history action=undo reverts your own latest step. Nothing here deletes data for good and nothing is sent outside this machine.
+history action=undo reverts your own latest step. To undo a whole line of work, name the state first (action=checkpoint, name), and later read action=diff (revision or name) and go back with action=revert (dry_run=true first); a revert is a step undo takes back. Nothing here deletes data for good and nothing is sent outside this machine.
 A started export or import keeps running after the call returns: keep polling job_get until it finishes (wait_ms makes it wait).
 ```
 
@@ -3482,12 +3634,18 @@ Every command that reads or edits a timeline (those whose result is about one do
 | `history` | `history --project <id> [--by a] [--cursor c] [--limit n]` | `--by` string, only steps by this actor (the global `--actor` names the caller); `--cursor`; `--limit` int 20 | none | `HistoryListResult` |
 | `undo` | `undo --project <id>` | none (one step per call) | none | `UndoResult` |
 | `redo` | `redo --project <id>` | none (one step per call) | none | `UndoResult` |
+| `revert` | `revert --project <id> (--revision n \| --checkpoint name) [--base n]` | `--revision` int or `--checkpoint` string (one of them), `--base` int (default the current revision) | `--dry-run` | `HistoryRevertResult` |
+| `diff` | `diff --project <id> (--from n \| --from-checkpoint name) [--until n]` | `--from` int or `--from-checkpoint` string, `--until` int (default the current revision) | none | `HistoryDiffResult` |
+| `checkpoint:create` | `checkpoint:create --project <id> --name <name> [--note t] [--revision n]` | `--name` string, `--note` string, `--revision` int (default the current one) | none | `Checkpoint` |
+| `checkpoint:list` | `checkpoint:list --project <id>` | none | none | `CheckpointListResult` |
+| `checkpoint:rename` | `checkpoint:rename --project <id> --name <name> --new-name <name> [--note t]` | `--name`, `--new-name`, `--note` strings | none | `Checkpoint` |
+| `checkpoint:remove` | `checkpoint:remove --project <id> --name <name>` | `--name` string | none | `Checkpoint` (the one removed) |
 | `media:import` | `media:import <path>... --project <id> [--asset-id ast_...]` | `--asset-id` string, repeatable, in the order of the paths, as many as paths; `--wait`, `--timeout` as above. Exit 1 when at least one file failed (§5.1) | none | `MediaImportResult` |
 | `media:inspect` | `media:inspect <asset id> --project <id> [--sections probe,transcript,silences,loudness] [--min-silence 0.4s] [--cursor c] [--limit n]` | `--sections` comma list `probe`; `--min-silence` string `0.4s`; `--cursor`; `--limit` int 20, transcript lines | none | `MediaInspectResult` |
 | `media:list` | `media:list --project <id> [--cursor c] [--limit n]` | `--cursor`; `--limit` int 50 | none | `MediaListResult` |
 | `media:trash` | `media:trash <asset id> --project <id>` | none | none | `MediaStateResult` |
 | `media:restore` | `media:restore <asset id> --project <id>` | none | none | `MediaStateResult` |
-| `view` | `view --project <id> [--mode frame\|sheet] [--at t] [--times t1,t2,...] [--from t --until t --count n] [--cols n] [--max-tokens n] [--width px]` | `--mode` string `frame`; `--at`; `--times`; `--from`; `--until`; `--count` int 9; `--cols` int; `--max-tokens` int 800 (sheet 1,500); `--width` int | none | `ViewResult` without `image_base64` (the image is the file in `path`; with a remote server the CLI downloads the image from the byte-serving route to a temporary file on the client and prints that path) |
+| `view` | `view --project <id> [--mode frame\|sheet\|audio] [--at t] [--times t1,t2,...] [--from t --until t --count n] [--cols n] [--max-tokens n] [--width px] [--item id]` | `--mode` string `frame`; `--at`; `--times`; `--from`; `--until`; `--count` int 9; `--cols` int; `--max-tokens` int 800 (sheet 1,500); `--width` int; `--item` string, mode audio only | none | `ViewResult` without `image_base64` (the image is the file in `path`; with a remote server the CLI downloads the image from the byte-serving route to a temporary file on the client and prints that path); with `--mode audio`, `AudioMeasureResult` (the sound of the item or the range before and after its audio processors: `--item` one clip or audio item, `--from` and `--until` the range, the item's own or the whole timeline by default) |
 | `lint` | `lint --project <id> [--severity error\|warning] [--cursor c] [--limit n] [--strict]` | `--severity` string `warning`; `--cursor`; `--limit` int 25; `--strict` bool false | none | `LintResult` |
 | `export:presets` | `export:presets [--codecs]` | `--codecs` bool false: also tell which codecs this machine writes | none | `ExportPresetListResult` |
 | `export:check` | `export:check --project <id> --preset <id> [--start t] [--end t] [--codec c]` | `--preset` string, required; `--start`; `--end`; `--codec` | none | `ExportCheckResult`; exit 1 when the project does not fit |
@@ -3743,6 +3901,12 @@ Success codes are the `Op.Status`. Error statuses are the table of SDD-000 §8; 
 | `projects.history` | `GET /projects/{id}/history` | `actor`, `cursor`, `limit` | none | 200 `HistoryListResult` | read | none |
 | `projects.undo` | `POST /projects/{id}/undo` | none | `{dry_run?}` | 200 `UndoResult` | edit | 409 `E_NOTHING_TO_UNDO` |
 | `projects.redo` | `POST /projects/{id}/redo` | none | `{dry_run?}` | 200 `UndoResult` | edit | 409 `E_NOTHING_TO_REDO` |
+| `projects.revert` | `POST /projects/{id}/revert` | none | `{revision \| checkpoint, base_revision?, dry_run?}` | 200 `HistoryRevertResult` | edit | 404 `E_NOT_FOUND` (checkpoint); 409 `E_REVISION_CONFLICT`; 422 `E_VALIDATION`, `E_INVALID_STATE` |
+| `projects.diff` | `GET /projects/{id}/diff` | `from` or `from_checkpoint`, `until` | none | 200 `HistoryDiffResult` | read | 404 `E_NOT_FOUND`; 422 `E_VALIDATION`, `E_INVALID_STATE` |
+| `projects.checkpoints.list` | `GET /projects/{id}/checkpoints` | none | none | 200 `CheckpointListResult` | read | none |
+| `projects.checkpoints.create` | `POST /projects/{id}/checkpoints` | none | `{name, note?, revision?}` | 201 `Checkpoint` | edit | 409 `E_ID_EXISTS`; 422 `E_VALIDATION` |
+| `projects.checkpoints.rename` | `PATCH /projects/{id}/checkpoints/{name}` | none | `{new_name, note?}` | 200 `Checkpoint` | edit | 404 `E_NOT_FOUND`; 409 `E_ID_EXISTS` |
+| `projects.checkpoints.remove` | `DELETE /projects/{id}/checkpoints/{name}` | none | none | 200 `Checkpoint` | edit | 404 `E_NOT_FOUND` |
 | `media.import` | `POST /projects/{id}/media` | none | `{files, wait_ms?, dry_run?}` (1 to 50 files) | 202 `MediaImportResult` when every file was accepted; 200 when at least one was refused (per-file errors in `assets[].error`) | media | a single refused file, or an invalid request, is the call's error: 403 `E_PATH_NOT_ALLOWED` (a relative path too); 404 `E_FILE_NOT_FOUND`; 413; 422 `E_UNSUPPORTED_MEDIA`, `E_LIMIT_EXCEEDED` |
 | `media.list` | `GET /projects/{id}/media` | `cursor`, `limit` | none | 200 `MediaListResult` (every asset, including pending and failed) | read | none |
 | `media.inspect` | `GET /projects/{id}/media/{asset_id}` | `sections`, `min_silence`, `cursor`, `limit` | none | 200 `MediaInspectResult` | read | 409 `E_ASSET_NOT_READY` |
@@ -3759,6 +3923,7 @@ Success codes are the `Op.Status`. Error statuses are the table of SDD-000 §8; 
 | `jobs.start` | `POST /projects/{id}/jobs` | none | `{kind, args?, wait_ms?, dry_run?}` | 202 `Job` | render (export), media (transcribe) | 422 `E_LINT_BLOCKING`; 429 `E_QUEUE_FULL`; 503 `E_TRANSCRIBE_UNAVAILABLE`, `E_FFMPEG_MISSING`, `E_NO_ENCODER` |
 | `export.presets` | `GET /export-presets` | `codecs` | none | 200 `ExportPresetListResult` | read | none |
 | `export.check` | `GET /projects/{id}/export-check` | `preset` (required), `start`, `end`, `codec` | none | 200 `ExportCheckResult` | read | 400 `E_VALIDATION` for an unknown preset or codec |
+| `audio.measure` | `GET /projects/{id}/audio-measure` | `item_id`, `start`, `end`, `timeline_id` | none | 200 `AudioMeasureResult` | read | 404 `E_NOT_FOUND` for an unknown item; 422 `E_TYPE_MISMATCH` for an item with no audio and `E_LIMIT` for a range over 600 s |
 | `export.batch` | `POST /projects/{id}/export-batches` | none | `{items, wait_ms?}` | 202 `Job` (200 when final) | render | 400 `E_VALIDATION` with `items[i]` paths; 429 `E_QUEUE_FULL` |
 | `jobs.list` | `GET /projects/{id}/jobs` | `state`, `cursor`, `limit` | none | 200 `JobListResult` | read | 400 `E_VALIDATION` for an unknown `state` |
 | `jobs.get` | `GET /jobs/{job_id}` | `wait_ms` | none | 200 `Job` (an ingest job has a null `project_id`; allowed to a caller who can read a project that uses the asset, §2.8) | read | none |
@@ -3956,6 +4121,12 @@ Every `Service` operation has an encoding on each surface. The table is the proo
 | `HistoryList` | `history` (`action` `list`) | `history` | `GET /projects/{id}/history` |
 | `Undo` | `history` (`action` `undo`) | `undo` | `POST /projects/{id}/undo` |
 | `Redo` | `history` (`action` `redo`) | `redo` | `POST /projects/{id}/redo` |
+| `HistoryRevert` | `history` (`action` `revert`) | `revert` | `POST /projects/{id}/revert` |
+| `HistoryDiff` | `history` (`action` `diff`) | `diff` | `GET /projects/{id}/diff` |
+| `CheckpointList` | `history` (`action` `checkpoints`) | `checkpoint:list` | `GET /projects/{id}/checkpoints` |
+| `CheckpointCreate` | `history` (`action` `checkpoint`) | `checkpoint:create` | `POST /projects/{id}/checkpoints` |
+| `CheckpointRename` | `history` (`action` `rename_checkpoint`) | `checkpoint:rename` | `PATCH /projects/{id}/checkpoints/{name}` |
+| `CheckpointRemove` | `history` (`action` `remove_checkpoint`) | `checkpoint:remove` | `DELETE /projects/{id}/checkpoints/{name}` |
 | `MediaImport` | `media_import` | `media:import` | `POST /projects/{id}/media` |
 | `MediaInspect` | `media_inspect` (with `asset_id`) | `media:inspect` | `GET /projects/{id}/media/{asset_id}` |
 | `MediaList` | `media_inspect` (without `asset_id`) | `media:list` | `GET /projects/{id}/media` |
@@ -3968,6 +4139,7 @@ Every `Service` operation has an encoding on each surface. The table is the proo
 | `JobStart` (`transcribe`) | `job_start` (`kind` `transcribe`) | `transcribe` | `POST /projects/{id}/jobs` |
 | `ExportPresetList` | `command_help` (`domain` `export`: the presets and the codecs of this machine) | `export:presets [--codecs]` | `GET /export-presets` |
 | `ExportCheck` | `lint` (with `preset`, and `start` and `end` for a range: the fit check instead of the lint) | `export:check --project <id> --preset <id> [--start t] [--end t] [--codec c]` | `GET /projects/{id}/export-check` |
+| `AudioMeasure` | `view` (`mode` `audio`, with `item_id`, and `from` and `until` for a range: the measurement of the sound, no image; `item_id` in mode frame or sheet is `E_VALIDATION`, as `--item` is in the CLI) | `view --project <id> --mode audio [--item id] [--from t] [--until t]` | `GET /projects/{id}/audio-measure` |
 | `ExportBatch` | `job_start` (`kind` `export_batch`) | `export:batch --project <id> --preset <id> [--preset <id> ...] \| --items <json>` | `POST /projects/{id}/export-batches` |
 | `JobGet` | `job_get` (with `job_id`) | `job:show` | `GET /jobs/{job_id}` |
 | `JobList` | `job_get` (with `project_id`, no `job_id`) | `job:list` | `GET /projects/{id}/jobs` |
@@ -4188,7 +4360,7 @@ The implementation of this SDD is complete when every check below passes. "Test"
 | # | Check | How verified |
 | --- | --- | --- |
 | 1 | Every `service.Service` method has an MCP tool, CLI command and HTTP route, or is in the exceptions of §7.1; the §7.1 table equals the one derived from the code | `TestParityTableCoversTheService`, `TestDriversCoverService`, `TestEveryOperationIsReachableOnEverySurface` (`web/contract`) |
-| 2 | `tools/list` holds exactly the 20 tools of SDD-000 §1 in the order of §4.1, byte-equal across two calls, at most 22,400 bytes minified, no tool larger than 1,700 bytes, the first discovery call at most 7,500 characters and every domain description at most 160 characters (NFR-020, revised once by epic 13) | `go run ./internal/tools/surfacebudget` (run by `task lint`), `TestToolDefinitionBudget`; release checklist: token count with the vendor endpoint at most 7,000 |
+| 2 | `tools/list` holds exactly the 20 tools of SDD-000 §1 in the order of §4.1, byte-equal across two calls, at most 23,400 bytes minified, no tool larger than 1,700 bytes, the first discovery call at most 8,500 characters and every domain description at most 160 characters (NFR-020, D-069 and D-094) | `go run ./internal/tools/surfacebudget` (run by `task lint`), `TestToolDefinitionBudget`; release checklist: token count with the vendor endpoint at most 7,300 |
 | 3 | Every `inputSchema` and `outputSchema` is valid JSON Schema 2020-12; every `inputSchema` has `additionalProperties: false`; the `edit` definition lists no operation name (§4.8); the annotations equal the table of §4.1; every output path that holds text from media or other actors carries `"x-untrusted": true` and a result with such a value has `untrusted_notice` | `TestToolSchemas` |
 | 4 | The first 512 characters of `instructions` (after the generated header line is stripped) are those of §4.6, the whole is at most 2,100 bytes, it names the tools by their exact names and does not mention locks | `TestInstructionsHead` |
 | 5 | The MCP server is stateless: no `Mcp-Session-Id` is sent or read, `GET /mcp` and `DELETE /mcp` answer 405, two interleaved clients do not influence each other; revisions `2026-07-28` and `2025-11-25` both work over stdio and HTTP | `TestHTTPIsStateless` (`web/app/mcp`), `TestMCPOverStdioThroughTheBinary` (`web/cmd/app`); no single test runs both revisions with the SDK client |
@@ -4226,8 +4398,8 @@ Numbers measured on the reference machine (AMD Ryzen 7 5700X3D, Windows 11, FFmp
 
 | Budget | Measured | Limit |
 | --- | --- | --- |
-| `tools/list` as a client receives it, 20 tools | 21,830 bytes, about 6,821 tokens by the 3.2 characters per token estimate; first discovery call 7,201 characters (`surfacebudget`, epic 13) | at most 22,400 bytes, 7,500 characters (check 2) |
-| `tools/list` by the vendor token count | not measured: needs `ANTHROPIC_API_KEY` (`TestToolListVendorTokens`, release only) | at most 7,000 tokens |
+| `tools/list` as a client receives it, 20 tools | 21,830 bytes, about 6,821 tokens by the 3.2 characters per token estimate; first discovery call 7,201 characters (`surfacebudget`, epic 13) | at most 23,400 bytes, 8,500 characters (check 2) |
+| `tools/list` by the vendor token count | not measured: needs `ANTHROPIC_API_KEY` (`TestToolListVendorTokens`, release only) | at most 7,300 tokens |
 | Concise view of the reference project | 1 page, 11,785 characters | at most 2 pages, cap 12,800 characters (check 7) |
 | Frame and sheet image tokens | `TestViewImageSizeTable` passes for the four presets | frame at most 800, sheet at most 1,500 (check 8) |
 | 9-cell sheet, median | 149 ms (`BenchmarkViewSheet9`) | under 2 s (check 9) |

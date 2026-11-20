@@ -601,6 +601,56 @@ export interface HistoryQuery {
 	limit?: number;
 }
 
+// Revert, the diff of two revisions and checkpoints (SDD-003 section 2.5.1). The
+// core classifies and words every change: `line` is shown as it comes.
+export interface Checkpoint {
+	name: string;
+	note: string;
+	revision: number;
+	actor: string;
+	at: string;
+	auto: boolean;
+}
+
+export interface CheckpointListResult {
+	project_id: string;
+	revision: number;
+	checkpoints: Checkpoint[];
+	text: string;
+}
+
+export interface DiffEntry {
+	verb: "added" | "removed" | "moved" | "trimmed" | "changed";
+	noun: string;
+	line: string;
+}
+
+export interface HistoryDiffResult {
+	project_id: string;
+	revision: number;
+	from: number;
+	to: number;
+	count: number;
+	entries: DiffEntry[];
+	text: string;
+}
+
+export interface HistoryRevertResult extends Omit<EditResult, "kind"> {
+	kind: "revert";
+	target: number;
+	same: boolean;
+	text: string;
+}
+
+export interface RevertRequest {
+	revision?: number;
+	checkpoint?: string;
+	// The revision the caller read; a change by another actor since then to what
+	// the revert changes is E_REVISION_CONFLICT (SDD-002 A.7).
+	base_revision?: number;
+	dry_run?: boolean;
+}
+
 // GET /projects/{id}/media/{asset_id}: the facts and the text of one asset.
 export interface MediaInspectResult {
 	asset_id: string;
@@ -1344,6 +1394,33 @@ export interface ExportFinding {
 	message: string;
 	limit: string;
 	got: string;
+}
+
+// GET /projects/{id}/audio-measure: the sound of an item or a range, before and after its audio processors
+// (SDD-004 section 7.1). A level is null when the audio has none (silence, or under 0.4 s).
+export interface AudioLevels {
+	integrated_lufs: number | null;
+	true_peak_dbtp: number | null;
+	noise_floor_dbfs: number;
+	speech_to_noise_db: number | null;
+}
+
+export interface AudioMeasureResult {
+	project_id: string;
+	revision: number;
+	item_id?: string;
+	start_frame: number;
+	end_frame: number;
+	seconds: number;
+	before: AudioLevels;
+	after: AudioLevels;
+	text: string;
+}
+
+export interface AudioMeasureQuery {
+	itemId?: string;
+	start?: string;
+	end?: string;
 }
 
 // GET /projects/{id}/export-check: what does not fit a preset, with the exact limit.
