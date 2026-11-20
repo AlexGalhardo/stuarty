@@ -71,6 +71,44 @@ function ffmpegEnv(): Record<string, string> {
 // The WebKit run of the detection page needs only the detection server.
 const detectOnly = process.env.STUARTY_DETECT_ONLY === "1";
 
+// The detection server (desktop/detect) listens on 7979 when nothing says
+// otherwise (CI, the desktop-detect workflow). With STUARTY_E2E_PORT set, a run
+// owns a block of ports and the detection server takes one of them (above the
+// sign-in server), so a local run never touches 7979.
+const detectPort = Number(
+	process.env.STUARTY_E2E_DETECT_PORT ??
+		(process.env.STUARTY_E2E_PORT ? port + 6 : 7979),
+);
+const detectUrl = `http://127.0.0.1:${detectPort}`;
+
+// A server starts only when a project that uses it runs. The projects chosen
+// with --project (both `--project=x` and `--project x`) tell which; with none
+// chosen every server starts, as in the CI runs that pass the list themselves.
+function chosenProjects(): string[] {
+	const chosen: string[] = [];
+	const argv = process.argv;
+	for (let i = 0; i < argv.length; i++) {
+		const arg = argv[i];
+		if (arg === "--project" || arg === "-p") {
+			if (argv[i + 1]) chosen.push(argv[i + 1]);
+		} else if (arg.startsWith("--project=")) {
+			chosen.push(arg.slice("--project=".length));
+		}
+	}
+	return chosen;
+}
+const chosen = chosenProjects();
+const runs = (name: string): boolean =>
+	chosen.length === 0 || chosen.includes(name);
+const needsFailingEncoder = runs("failing-encoder");
+const needsDetect = runs("desktop-detect") || runs("desktop-detect-webkit");
+// Every other project (the browsers, perf, soak) uses the app and the network servers.
+const needsApp =
+	chosen.length === 0 ||
+	chosen.some(
+		(name) => !name.startsWith("desktop-detect") && name !== "failing-encoder",
+	);
+
 const home = process.env.STUARTY_E2E_HOME ?? join(tmpdir(), "stuarty-e2e-home");
 
 // A second server whose encoder cannot work, for scenario 9 (export-failure).
@@ -174,7 +212,7 @@ export default defineConfig({
 		{
 			name: "desktop-detect",
 			testMatch: /desktop-detect\.spec\.ts/,
-			use: { browserName: "chromium", baseURL: "http://127.0.0.1:7979" },
+			use: { browserName: "chromium", baseURL: detectUrl },
 		},
 		// The same page in WebKit, for the desktop shell choice (ADR-0023). It runs
 		// only with STUARTY_DETECT_ONLY=1 (workflow desktop-detect.yml).
@@ -185,7 +223,7 @@ export default defineConfig({
 						testMatch: /desktop-detect-webkit\.spec\.ts/,
 						use: {
 							browserName: "webkit" as const,
-							baseURL: "http://127.0.0.1:7979",
+							baseURL: detectUrl,
 						},
 					},
 				]
@@ -268,13 +306,17 @@ export default defineConfig({
 			},
 		},
 		{
-			command: `go run ./desktop/detect -results ${join(tmpdir(), "stuarty-e2e-detect-results")}`,
+			command: `go run ./desktop/detect -addr 127.0.0.1:${detectPort} -results ${join(tmpdir(), "stuarty-e2e-detect-results")}`,
 			cwd: "../..",
-			url: "http://127.0.0.1:7979/",
+			url: `${detectUrl}/`,
 			reuseExistingServer: !process.env.CI,
 			timeout: 180_000,
 		},
-	].filter(
-		(server) => !detectOnly || server.command.includes("desktop/detect"),
-	),
+	].filter((server) => {
+		if (detectOnly) return server.command.includes("desktop/detect");
+		if (server.url === `${detectUrl}/`) return needsDetect;
+		if (server.url === `http://127.0.0.1:${failPort}/up`)
+			return needsFailingEncoder;
+		return needsApp;
+	}),
 });

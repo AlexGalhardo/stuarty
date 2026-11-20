@@ -6,8 +6,11 @@ import { expect, test } from "@playwright/test";
 test.describe("desktop-detect", () => {
 	test("the verdict is pass, with no CSP violation, no external request and no blob: URL", async ({
 		page,
-	}) => {
+	}, testInfo) => {
 		test.setTimeout(120_000);
+		// The detection server's port is the one of the project (7979, or the
+		// one derived from STUARTY_E2E_PORT), never a literal here.
+		const origin = new URL(testInfo.project.use.baseURL ?? "").origin;
 		const requests: string[] = [];
 		page.on("request", (r) => requests.push(r.url()));
 		const violations: string[] = [];
@@ -56,9 +59,7 @@ test.describe("desktop-detect", () => {
 
 		expect(violations).toEqual([]);
 		expect(requests.filter((u) => u.startsWith("blob:"))).toEqual([]);
-		expect(
-			requests.filter((u) => !u.startsWith("http://127.0.0.1:7979/")),
-		).toEqual([]);
+		expect(requests.filter((u) => !u.startsWith(`${origin}/`))).toEqual([]);
 
 		// Send the results: the server writes the file.
 		await page.getByRole("button", { name: "Send results" }).click();
