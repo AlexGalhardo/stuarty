@@ -1,10 +1,15 @@
 package owner
 
 import (
+	"context"
 	"errors"
+	"io/fs"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
+	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/config"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
 )
@@ -67,5 +72,47 @@ func TestSecurity_T67_TestAddressesAreHonouredOnlyUnderTheTestEnvironment(t *tes
 		if err := p.run(env(nil)); err != nil {
 			t.Errorf("%s with the variable unset: %v", label, err)
 		}
+	}
+
+	openRefusesBeforeTheWorkspace(t, addr)
+}
+
+// openRefusesBeforeTheWorkspace is the start itself: each variable outside APP_ENV=test stops Open in local
+// mode before the workspace folder exists, the Google one too although local mode never reads it, and the
+// message names the variable and not its value.
+func openRefusesBeforeTheWorkspace(t *testing.T, addr string) {
+	t.Helper()
+
+	ctx := service.WithCaller(context.Background(), service.Caller{Actor: "local:cli", Scopes: service.AllScopes})
+
+	for _, v := range testAddresses {
+		ws := filepath.Join(t.TempDir(), "ws")
+		vars := map[string]string{workspace.EnvHome: ws, v.name: addr}
+
+		o, err := Open(ctx, Config{Getenv: env(vars), Inline: true})
+		if o != nil {
+			_ = o.Close()
+		}
+
+		if !errors.Is(err, v.refusal) || !strings.Contains(err.Error(), v.name) || strings.Contains(err.Error(), addr) {
+			t.Errorf("Open with %s and no APP_ENV: %v, want the refusal naming the variable only", v.name, err)
+		}
+
+		if _, serr := os.Stat(ws); !errors.Is(serr, fs.ErrNotExist) {
+			t.Errorf("Open refused %s after it made the workspace: %v", v.name, serr)
+		}
+	}
+
+	vars := map[string]string{
+		workspace.EnvHome: filepath.Join(t.TempDir(), "ws"), EnvTestGoogleURL: addr, envAppEnv: appEnvTesting,
+	}
+
+	o, err := Open(ctx, Config{Getenv: env(vars), Inline: true})
+	if err != nil {
+		t.Fatalf("Open with %s under APP_ENV=test: %v", EnvTestGoogleURL, err)
+	}
+
+	if err := o.Close(); err != nil {
+		t.Fatal(err)
 	}
 }
