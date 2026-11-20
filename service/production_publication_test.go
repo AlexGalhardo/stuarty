@@ -25,6 +25,11 @@ func (f fakeItems) Items(context.Context, string) ([]ItemRow, error) {
 	return append([]ItemRow(nil), f.items...), nil
 }
 
+// TextRevisions is what the description reads of a text (epic 17): this production keeps none.
+func (f fakeItems) TextRevisions(context.Context, string, int, int) ([]TextRevisionRow, error) {
+	return nil, nil
+}
+
 // fakePublications answers the one question the overview asks of the calendar.
 type fakePublications struct {
 	pub.Store
