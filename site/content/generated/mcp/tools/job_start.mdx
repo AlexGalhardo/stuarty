@@ -10,7 +10,7 @@ wide: true
 
 <RefMain>
 
-Start long work; args by kind. export: \{start?, end?, format?, at? (png frame), preset?, codec?\}; export_batch: items (export args); transcribe: \{asset_id, language?, model?\}; generations and text.draft also take connection_id, model: text.generate: \{prompt\}; image.generate: \{prompt, size?, count?\}; voice.generate: \{text, voice, format?\}; text.draft: \{item_id, instruction\}; video.generate: \{prompt, seconds?, aspect?, first_frame?\}; publish.upload: \{connection_id, export (job_id), title, made_for_kids, thumbnail?, description?, tags?, visibility?, ai_disclosure?\}; a person approves. Poll job_get.
+Start long work; args by kind. export: args properties (at: png frame); export_batch: items (export args); transcribe \{asset_id, language?, model?\}; publish.upload \{connection_id, export (job_id), title, made_for_kids, thumbnail?, description?, tags?, visibility?, ai_disclosure?\}; with connection_id, model: text.generate \{prompt\}; image.generate \{prompt, size?, count?\}; voice.generate \{text, voice, format?\}; image.edit \{image_id, operation, layer_id?, prompt?\}; text.draft \{item_id, instruction\}; video.generate \{prompt, seconds?, aspect?, first_frame?\}. A person approves; poll job_get.
 
 ## Behaviour
 
@@ -29,7 +29,7 @@ These are the annotations of the tool definition, the hints a client uses to dec
 | --- | --- | --- | --- |
 | `project_id` | `string` | yes | pattern `^prj_[0-9a-hjkmnp-tv-z]{10}$` |
 | `timeline_id` | `string` | no | pattern `^prj_[0-9a-hjkmnp-tv-z]{10}$` |
-| `kind` | `string`, one of 9 values | yes |  |
+| `kind` | `string`, one of 10 values | yes |  |
 | `args` | `object` | no |  |
 | `args.start` | `string` | no |  |
 | `args.end` | `string` | no |  |
