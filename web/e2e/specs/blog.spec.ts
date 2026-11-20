@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { existsSync } from "node:fs";
-import { mkdtemp, readFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Page } from "@playwright/test";
@@ -14,6 +14,15 @@ import { caller, expect, home, test } from "./helpers";
 test.describe.configure({ mode: "serial" });
 
 const PAYLOAD = "<img src=x onerror=window.__pwned=1>";
+
+// The folders the files destination wrote into, removed when the specs end, whatever their result.
+const folders: string[] = [];
+
+test.afterAll(async () => {
+	await Promise.all(
+		folders.map((folder) => rm(folder, { recursive: true, force: true })),
+	);
+});
 
 async function signInAsPerson(page: Page): Promise<void> {
 	const launch = await page.request.post("/api/v1/system/launch", {
@@ -59,6 +68,7 @@ test.describe("blog @chromium-only", () => {
 		const made = await api("POST", "/projects", { name: `Blog ${tag}` });
 		const projectId = made.project_id as string;
 		const folder = await mkdtemp(join(tmpdir(), "stuarty-blog-"));
+		folders.push(folder);
 
 		await signInAsPerson(page);
 
@@ -138,6 +148,13 @@ test.describe("blog @chromium-only", () => {
 		// The folder is a setting kept in the vault: no page and no result shows it again.
 		const listed = JSON.stringify(await api("GET", "/connections"));
 		expect(listed).not.toContain(folder.replaceAll("\\", "\\\\"));
+		// A workspace a run reused holds the destinations of the earlier runs: this one is picked by its name.
+		const destination = (
+			JSON.parse(listed) as {
+				connections: { id: string; label: string }[];
+			}
+		).connections.find((c) => c.label === `Site ${tag}`)?.id;
+		expect(destination).toBeTruthy();
 
 		// 3. The publication: a post to that destination, published, a minute from now.
 		await page.goto("/publish");
@@ -153,9 +170,9 @@ test.describe("blog @chromium-only", () => {
 			.fill(`How I cut a video ${tag}`);
 		await dialog.getByRole("button", { name: "Add an account" }).click();
 		const target = dialog.getByTestId("target-panel");
-		await target.getByLabel("Account", { exact: true }).selectOption({
-			index: 1,
-		});
+		await target
+			.getByLabel("Account", { exact: true })
+			.selectOption(destination ?? "");
 		await target.getByLabel("Status at the destination").selectOption("public");
 		const at = new Date(Date.now() + 30_000);
 		at.setSeconds(0, 0);
@@ -212,7 +229,9 @@ test.describe("blog @chromium-only", () => {
 		expect(written).toContain(PAYLOAD);
 
 		await page.goto("/publish");
-		await expect(page.getByTestId("target-chip")).toContainText("Published", {
+		await expect(
+			page.locator(`[data-target-id="${pub?.targets[0]?.id ?? ""}"]`),
+		).toContainText("Published", {
 			timeout: 30_000,
 		});
 	});
