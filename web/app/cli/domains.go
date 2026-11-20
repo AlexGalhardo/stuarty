@@ -72,6 +72,7 @@ var commandDomains = map[string]string{
 	"provider:price": command.DomainProvider, "text:generate": command.DomainProvider,
 	"image:generate": command.DomainProvider, "voice:generate": command.DomainProvider,
 	"voice:list": command.DomainProvider, "video:generate": command.DomainProvider,
+	"image:model-edit": command.DomainProvider,
 
 	"text:list": command.DomainWriting, "text:show": command.DomainWriting, "text:write": command.DomainWriting,
 	"text:revisions": command.DomainWriting, "text:revert": command.DomainWriting, "text:draft": command.DomainWriting,

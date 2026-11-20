@@ -172,6 +172,18 @@ describe("the list shows the result of a target", () => {
 		expect(html).toContain("Publish again tomorrow.");
 	});
 
+	test("a draft is told apart from a publication and says it is finished in the app of the network", () => {
+		const draft = list(
+			publication([target({ state: "sent_as_draft", network: "tiktok" })]),
+		);
+		expect(draft).toContain('data-state="sent_as_draft"');
+		expect(draft).toContain("State sent_as_draft");
+		expect(draft).toContain("ui.publish.draft_note");
+		expect(draft).not.toContain("State published");
+		const published = list(publication([target({ state: "published" })]));
+		expect(published).not.toContain("ui.publish.draft_note");
+	});
+
 	test("an empty calendar says so", () => {
 		const html = wrap(<ListView publications={[]} onOpen={() => undefined} />);
 		expect(html).toContain("Nothing is planned.");
@@ -182,7 +194,12 @@ describe("what a state offers", () => {
 	const offers = (state: TargetState) => actionsOf(state);
 
 	test("a target that went out or is going out offers nothing", () => {
-		for (const state of ["publishing", "published", "cancelled"] as const) {
+		for (const state of [
+			"publishing",
+			"published",
+			"sent_as_draft",
+			"cancelled",
+		] as const) {
 			expect(Object.values(offers(state)).every((v) => !v)).toBe(true);
 		}
 	});

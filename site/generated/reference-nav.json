@@ -8,6 +8,7 @@
         "projects.create",
         "projects.get",
         "audio.measure",
+        "audio_previews.get",
         "bitmaps.get",
         "projects.brief.get",
         "projects.brief.set",
@@ -192,6 +193,7 @@
         "images.file",
         "images.frame",
         "images.history",
+        "images.model_edit",
         "images.redo",
         "images.undo",
         "images.import",
@@ -231,6 +233,7 @@
         "social.complete",
         "social.connect",
         "social.networks",
+        "social.price",
         "social.select"
       ]
     },
@@ -257,6 +260,7 @@
         "handshake.get",
         "system.get",
         "system.launch",
+        "system.scheduler",
         "system.tools",
         "system.tools.install"
       ]

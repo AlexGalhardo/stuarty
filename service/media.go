@@ -1351,6 +1351,10 @@ func (s *svc) OpenFile(ctx context.Context, ref FileRef) (*File, error) {
 		return s.openBitmap(row.ID, ref.ID)
 	}
 
+	if ref.Kind == "audio_preview" {
+		return s.openAudioPreview(row.ID, ref.ID, ref.Variant)
+	}
+
 	pa, err := s.store.Assets().GetProjectAsset(ctx, row.ID, ref.ID)
 	if err != nil {
 		return nil, newError(command.CodeNotFound, "the project has no asset %s.", ref.ID)

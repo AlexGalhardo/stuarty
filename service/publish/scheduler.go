@@ -7,6 +7,7 @@ import (
 	"errors"
 	"log/slog"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	core "github.com/AlexGalhardo/stuarty/core/publish"
@@ -63,6 +64,9 @@ type Scheduler struct {
 
 	mu      sync.Mutex
 	sending map[string]struct{}
+
+	// paused is the person's "pause publishing" (the tray of the desktop shell, SDD-020 section 27).
+	paused atomic.Bool
 }
 
 // NewScheduler makes a scheduler over a manager and registers its wake-up with the manager.
@@ -115,6 +119,31 @@ func (s *Scheduler) Wake() {
 	}
 }
 
+// SetPaused stops (true) or resumes (false) the starting of sends. A paused pass still marks what is past
+// its window as missed, so nothing goes out late on resume, and a send that already started finishes. The
+// state lives in memory: a new process is a resumed one.
+func (s *Scheduler) SetPaused(paused bool) {
+	s.paused.Store(paused)
+
+	if !paused {
+		s.Wake()
+	}
+}
+
+// Paused says whether publishing is paused.
+func (s *Scheduler) Paused() bool { return s.paused.Load() }
+
+// Waiting is the number of targets that still have to go out or are going out: approved, scheduled and
+// publishing ones of active projects.
+func (s *Scheduler) Waiting(ctx context.Context) (int, error) {
+	open, err := s.m.Open(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	return len(open), nil
+}
+
 // Wait returns when every send this scheduler started has ended.
 func (s *Scheduler) Wait() { s.wg.Wait() }
 
@@ -148,6 +177,10 @@ func (s *Scheduler) Tick(ctx context.Context) (int, error) {
 	}
 
 	started := 0
+
+	if s.paused.Load() {
+		return started, nil
+	}
 
 	for _, c := range core.Due(cands, now) {
 		t := byID[c.ID]
@@ -321,6 +354,11 @@ func (s *Scheduler) heartbeat(ctx context.Context, cancel context.CancelFunc, id
 
 // Next is how long the loop may sleep: until the next time something is due, at most Poll.
 func (s *Scheduler) Next(ctx context.Context) (time.Duration, error) {
+	// Paused, nothing is due to be started: the loop wakes at the poll, or when the pause is lifted.
+	if s.paused.Load() {
+		return s.poll, nil
+	}
+
 	open, err := s.m.Open(ctx)
 	if err != nil {
 		return 0, err

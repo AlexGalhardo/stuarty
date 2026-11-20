@@ -106,6 +106,52 @@ function wrap(node: React.ReactNode): string {
 	);
 }
 
+describe("the price of a post", () => {
+	const priced = account({
+		network: "x",
+		price: {
+			currency: "USD",
+			post_micros: 15_000,
+			link_micros: 200_000,
+			source: "https://docs.x.com/x-api/getting-started/pricing",
+			read: "2026-11-20",
+		},
+	});
+
+	test("an account of a network that charges shows the price with its date and a form to correct it", () => {
+		const html = wrap(
+			<ul>
+				<AccountRow
+					account={priced}
+					networkName="X"
+					onSignInAgain={() => undefined}
+					onPublish={() => undefined}
+					onPrice={() => undefined}
+				/>
+			</ul>,
+		);
+		expect(html).toContain("ui.social.price_now");
+		expect(html).toContain('value="0.015"');
+		expect(html).toContain('value="0.2"');
+		expect(html).toContain("data-price-editor");
+	});
+
+	test("an account of a network that charges nothing has no price form", () => {
+		const html = wrap(
+			<ul>
+				<AccountRow
+					account={account()}
+					networkName="YouTube"
+					onSignInAgain={() => undefined}
+					onPublish={() => undefined}
+					onPrice={() => undefined}
+				/>
+			</ul>,
+		);
+		expect(html).not.toContain("data-price-editor");
+	});
+});
+
 describe("the accounts of the social networks", () => {
 	test("a label and a channel name from the network are text, never markup", () => {
 		const html = wrap(

@@ -382,6 +382,24 @@ export interface PlanBitmapLayer extends PlanLayerBase {
 
 export type PlanLayer = PlanMediaLayer | PlanBitmapLayer;
 
+// A composition drawn as one unit (SDD-004 section 3.16, SDD-013 section 3.12):
+// the placement and look of a media layer of a picture of `group.width` by
+// `group.height`, whose `crop` is the whole nested frame, and the layers of
+// that frame, bottom first, with the series of the frames of the window.
+export interface PlanGroupLayer extends PlanLayerBase {
+	kind: "group";
+	crop: [number, number, number, number];
+	group: {
+		width: number;
+		height: number;
+		layers: (PlanLayer | PlanGroupLayer)[];
+	};
+}
+
+// What a window's `layers` holds: the layers an executor draws itself and the
+// groups it draws through a surface of their own.
+export type PlanWindowLayer = PlanLayer | PlanGroupLayer;
+
 export interface PlanAudio {
 	// As on a layer: the timeline that holds `asset` when the sound comes from a composition.
 	timeline?: string;
@@ -397,6 +415,9 @@ export interface PlanAudio {
 	// The item reads its source backwards (SDD-004 section 3.12).
 	reverse?: boolean;
 	gain: PerFrame;
+	// The file of the item's processed sound (SDD-004 section 7.1): its key, the
+	// timeline frame of its first sample and its length in frames.
+	processed?: { key: string; start: number; frames: number };
 }
 
 // The ramp of a speed curve as the plan carries it: the points (`t` a fraction
@@ -417,7 +438,7 @@ export interface PlanWindow extends PlanWindowHead {
 	// #000000 and uncovered pixels stay clear (SDD-001).
 	transparent?: boolean;
 	safe_area: [number, number, number, number];
-	layers: PlanLayer[];
+	layers: PlanWindowLayer[];
 	audio: PlanAudio[];
 }
 
@@ -576,6 +597,13 @@ export interface GeneratedResult {
 	delivered: number;
 	notes?: string[];
 	cost: Money;
+	// What an image.edit job did to the document (SDD-016 section 6.5).
+	image?: {
+		image_id: string;
+		layer_id?: string;
+		revision?: number;
+		applied: boolean;
+	};
 }
 
 // The bodies of POST /image/generate and POST /voice/generate.
@@ -1743,11 +1771,32 @@ export interface SocialNetwork {
 	limits: SocialLimits;
 	// The network takes a flag that says the video has synthetic content.
 	ai_disclosure?: boolean;
+	// What a post costs on a network that charges for one (X), as the service has it.
+	price?: SocialPrice;
+	// The network takes the file as a draft to be finished in its own app (TikTok): it ends sent_as_draft.
+	draft?: boolean;
 	endpoint: string;
 	hosts: string[];
 	scopes: string[];
 	guide: string;
 	guide_read: string;
+}
+
+// Amounts in millionths of the currency, with the page they were read from, the date, and the date a person
+// edited them (SDD-020 section 35).
+export interface SocialPrice {
+	currency: string;
+	post_micros: number;
+	link_micros: number;
+	source: string;
+	read: string;
+	edited?: string;
+}
+
+export interface SocialPriceRequest {
+	connection_id: string;
+	post_micros: number;
+	link_micros: number;
 }
 
 export interface SocialNetworkListResult {
@@ -1784,6 +1833,7 @@ export interface SocialAccount {
 	// needs_account: the sign-in reached several accounts and a person has not chosen one (SDD-020 section 17).
 	state: "ready" | "needs_sign_in" | "needs_account";
 	choices?: SocialChoice[];
+	price?: SocialPrice;
 }
 
 export interface SocialChoice {
