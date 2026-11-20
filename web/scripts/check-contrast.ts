@@ -173,8 +173,10 @@ const pairs: Pair[] = [
 	plain("muted-foreground", T, 4.5, 6.17, 6.69),
 	plain("primary-foreground", "primary", 4.5, 5.35, 11.21),
 	plain("secondary-foreground", "secondary", 4.5, 13.79, 14.12),
-	plain("destructive", "background", 4.5, 6.08, 7.58),
-	tint("destructive", "background", 4.5, 5.07, 5.51, "destructive on its tint"),
+	plain("destructive", "background", 4.5, 6.08, 8.26),
+	tint("destructive", "background", 4.5, 5.07, 5.85, "destructive on its tint"),
+	// The destructive button of a dialog or a menu sits on the popover, lighter than the background in dark.
+	tint("destructive", "popover", 4.5, 5.56, 4.59, "destructive on its tint over popover"),
 	plain("success", "background", 4.5, 5.59, 8.29),
 	plain("warning", "background", 4.5, 6.37, 8.8),
 	plain("info", "background", 4.5, 4.86, 10.44),

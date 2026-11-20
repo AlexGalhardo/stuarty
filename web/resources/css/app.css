@@ -249,7 +249,8 @@
 	--muted-foreground: oklch(0.686 0.026 267.8);
 	--accent: oklch(0.268 0.016 264.3);
 	--accent-foreground: oklch(0.975 0.006 255.5);
-	--destructive: oklch(0.750 0.170 16.4);
+	/* 0.790, not 0.750: the destructive button of a dialog is its 20% tint over the popover (4.34:1 at 0.750). */
+	--destructive: oklch(0.790 0.170 16.4);
 	--border: oklch(0.324 0.023 264.2);
 	--input: oklch(0.686 0.026 267.8);
 	--ring: oklch(0.797 0.134 211.5);
