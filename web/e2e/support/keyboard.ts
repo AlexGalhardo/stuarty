@@ -41,9 +41,13 @@ const NAMED_ROLES =
 
 // The lines of an accessibility-tree snapshot (Locator.ariaSnapshot) whose role
 // needs a name and has none. A snapshot prints a name as `- button "Save"`; a
-// control without one prints as `- button` or `- button [disabled]`.
+// control without one prints as `- button`, `- button [disabled]` or, with a
+// value, `- textbox: text`, at any depth of the tree. String.raw keeps the
+// backslashes: in a plain template literal `\s` is the letter s.
 export function unnamedControls(snapshot: string): string[] {
-	const bare = new RegExp(`^s*- (${NAMED_ROLES})(s*[[^]]*])*s*:?$`);
+	const bare = new RegExp(
+		String.raw`^\s*- (${NAMED_ROLES})(\s*\[[^\]]*\])*\s*(:.*)?$`,
+	);
 	return snapshot
 		.split("\n")
 		.filter((line) => bare.test(line))
