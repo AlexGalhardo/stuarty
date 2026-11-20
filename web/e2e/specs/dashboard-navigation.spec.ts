@@ -85,6 +85,7 @@ test.describe("dashboard-navigation", () => {
 		for (const theme of ["light", "dark"] as const) {
 			test(`every section opens in ${theme} in ${lang} with no console error`, async ({
 				page,
+				browserName,
 			}) => {
 				await settle(page);
 				const problems: string[] = [];
@@ -95,10 +96,29 @@ test.describe("dashboard-navigation", () => {
 					// heavy limit answers 429. That is the content of the projects page
 					// (epic 06), not of the dashboard: only that URL is let through.
 					const url = message.location().url;
+					// WebKit reports a violation of style-src-attr every time a native
+					// <select> is created (its own user-agent shadow tree, not our markup;
+					// Chromium and Firefox stay silent). The console text does not name the
+					// directive, so WebKit's console line is dropped and the violations are
+					// read from the page instead: only style-src-attr is let through, so a
+					// <style> or a script without the nonce still fails (VV-263).
+					if (
+						browserName === "webkit" &&
+						message.text().startsWith("Refused to apply a stylesheet")
+					) {
+						return;
+					}
 					if (/\/api\/v1\/projects\/prj_\w+\/frame\?/.test(url)) return;
 					problems.push(`${message.text()} ${url}`);
 				});
 				page.on("pageerror", (error) => problems.push(error.message));
+				await page.addInitScript(() => {
+					const seen: string[] = [];
+					(window as unknown as { cspSeen: string[] }).cspSeen = seen;
+					document.addEventListener("securitypolicyviolation", (event) => {
+						seen.push(`${event.effectiveDirective} ${event.blockedURI}`);
+					});
+				});
 				await page.addInitScript(
 					([l, th]) => {
 						localStorage.setItem("vv.lang", l);
@@ -131,6 +151,14 @@ test.describe("dashboard-navigation", () => {
 							page.getByRole("heading", { name: LABELS[lang][i], level: 1 }),
 						).toBeVisible();
 					}
+				}
+				const violations = await page.evaluate(
+					() => (window as unknown as { cspSeen: string[] }).cspSeen,
+				);
+				if (browserName === "webkit") {
+					problems.push(
+						...violations.filter((v) => !v.startsWith("style-src-attr ")),
+					);
 				}
 				expect(problems).toEqual([]);
 			});
