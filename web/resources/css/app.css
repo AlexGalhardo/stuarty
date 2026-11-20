@@ -331,6 +331,27 @@
 	outline-offset: 2px;
 }
 
+/* The main region takes the focus by script (skip link, change of page): it is a target, not a control, so it
+   draws no ring (WCAG 2.4.7 asks for one on what a person operates). */
+main[tabindex="-1"]:focus-visible {
+	outline: none;
+}
+
+/*
+ * Target size (WCAG 2.5.8, design-system.md section 7.8): a native checkbox or
+ * radio is at least 24 by 24 CSS px in every engine (the default is 13 to 16 px
+ * and the engines differ). Inputs hidden behind a custom control are left out.
+ */
+:where(input[type="checkbox"], input[type="radio"]):not(
+		.sr-only,
+		[hidden],
+		[aria-hidden="true"],
+		[tabindex="-1"]
+	) {
+	min-width: 24px;
+	min-height: 24px;
+}
+
 /* Interface motion (section 2.13, BETA): state changes of the editor fade in
    150 ms; a highlight outline eases in over 200 ms. Position and size never
    transition, so a drag, a zoom or a resize is never lagging behind the

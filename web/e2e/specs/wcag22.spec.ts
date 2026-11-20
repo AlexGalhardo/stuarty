@@ -167,6 +167,9 @@ for (const theme of ["dark", "light"] as const) {
 			await expect(page.locator("[role=dialog][data-open]")).toBeVisible();
 			await scan("export dialog");
 			await page.keyboard.press("Escape");
+			// The export dialog leaves with a zoom-out animation: measured while it
+			// is still on screen, its controls are scaled below their real size.
+			await expect(page.getByRole("dialog")).toHaveCount(0);
 			await page.keyboard.press("Control+k");
 			await expect(page.locator("[role=dialog][data-open]")).toBeVisible();
 			await scan("palette");

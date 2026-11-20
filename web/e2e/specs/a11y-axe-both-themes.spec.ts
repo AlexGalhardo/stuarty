@@ -3,6 +3,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
+import { NETWORK_ADMIN, NETWORK_URL } from "../support/network";
 import {
 	audioClip,
 	caller,
@@ -11,6 +12,7 @@ import {
 	test,
 	testClip,
 } from "./helpers";
+import { newImage } from "./image-support";
 
 // P2-UI-031 (SDD-012 sections 17 and 18.4 item 1): axe over the editor in every
 // state, in both themes. A `serious` or `critical` violation fails the test; a
@@ -267,6 +269,11 @@ for (const lang of ["en", "pt-BR"] as const) {
 
 				await page.getByRole("button", { name: names.exportOpen }).click();
 				await expect(page.getByRole("dialog")).toBeVisible();
+				// The start button is disabled while the checks run and fades to its
+				// enabled colours when they end: scan after, not during the fade.
+				await expect(
+					page.getByRole("button", { name: names.start }),
+				).toBeEnabled();
 				await scan(page, "export dialog, idle", found);
 				await page.getByRole("button", { name: names.start }).click();
 				const dialog = page.getByRole("dialog");
@@ -281,3 +288,92 @@ for (const lang of ["en", "pt-BR"] as const) {
 		});
 	}
 }
+
+// Epic 41 task 2 (NFR-065): axe on every route of the local server and of the
+// network server, in both themes and both languages. The editors are scanned
+// by the specs above and by a11y-image-editor; their entry pages are here.
+const ROUTES = [
+	"/",
+	"/projects",
+	"/projects/:project",
+	"/edit-video",
+	"/edit-image",
+	"/edit-image/:image",
+	"/write",
+	"/visual-assets",
+	"/video-assets",
+	"/publish",
+	"/approvals",
+	"/skills",
+	"/prompts",
+	"/memory",
+	"/connections",
+	"/settings",
+	"/settings/brand-kit",
+] as const;
+
+for (const lang of ["en", "pt-BR"] as const) {
+	for (const theme of ["dark", "light"] as const) {
+		test.describe(`a11y-axe-every-route ${theme} ${lang}`, () => {
+			test.use({ colorScheme: theme === "dark" ? "light" : "dark" });
+			test.describe.configure({ timeout: 240_000 });
+
+			test(`no route has a violation in ${theme} in ${lang}`, async ({
+				page,
+				request,
+			}) => {
+				await page.addInitScript(
+					([th, l]) => {
+						localStorage.setItem("theme", th);
+						localStorage.setItem("vv.lang", l);
+					},
+					[theme, lang],
+				);
+				const project = await seedProject(request, { tracks: 1, perTrack: 0 });
+				const image = await newImage(request, { name: "A11y routes" });
+				const found: Finding[] = [];
+				for (const route of ROUTES) {
+					const path = route
+						.replace(":project", project.id)
+						.replace(":image", image.id);
+					await page.goto(path);
+					await expect(
+						page.getByRole("heading", { level: 1 }).first(),
+					).toBeVisible();
+					await scan(page, path, found);
+				}
+				expect(found, "axe violations").toEqual([]);
+			});
+		});
+	}
+}
+
+test.describe("a11y-axe-network-pages", () => {
+	test.describe.configure({ timeout: 240_000 });
+	for (const theme of ["dark", "light"] as const) {
+		test(`the sign-in and key pages have no violation in ${theme}`, async ({
+			page,
+		}) => {
+			await page.addInitScript(
+				(th) => localStorage.setItem("theme", th),
+				theme,
+			);
+			const found: Finding[] = [];
+			await page.goto(`${NETWORK_URL}/login`);
+			await expect(page.getByLabel("Email")).toBeVisible();
+			await scan(page, "/login", found);
+			// One sign-in per test: the server allows five a minute for one email.
+			await page.getByLabel("Email").fill(NETWORK_ADMIN.email);
+			await page.getByLabel("Password").fill(NETWORK_ADMIN.password);
+			await page.getByRole("button", { name: /^Log in$/ }).click();
+			for (const path of ["/settings/keys", "/settings/google"]) {
+				await page.goto(`${NETWORK_URL}${path}`);
+				await expect(
+					page.getByRole("heading", { level: 1 }).first(),
+				).toBeVisible();
+				await scan(page, path, found);
+			}
+			expect(found, "axe violations").toEqual([]);
+		});
+	}
+});

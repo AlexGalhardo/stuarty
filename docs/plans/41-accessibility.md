@@ -37,7 +37,7 @@ A creator who uses only the keyboard, or a screen reader, or needs more contrast
 ## Tasks
 
 - [ ] 1. Write the checklist and the keyboard models into SDD-012 and the design system. Verify: `task lint:md` exits 0.
-- [ ] 2. Run axe on every route in both themes and fix the findings. Verify: `web/e2e/specs/a11y-axe-both-themes.spec.ts` (extended to every route) passes.
+- [x] 2. Run axe on every route in both themes and fix the findings. Verify: `web/e2e/specs/a11y-axe-both-themes.spec.ts` (extended to every route) passes.
 - [ ] 3. Fix keyboard access, focus order and focus return on the dashboard pages, dialogs, calendar, approval queue and chat panel. Verify: `web/e2e/specs/a11y-keyboard-dashboard.spec.ts` (new) passes.
 - [ ] 4. Implement the timeline keyboard model, announcements and list view. Verify: `web/e2e/specs/a11y-keyboard-timeline.spec.ts` (new) passes.
 - [ ] 5. Implement the image editor keyboard model, announcements and layer tree semantics. Verify: `web/e2e/specs/a11y-keyboard-image-editor.spec.ts` (new) passes.
