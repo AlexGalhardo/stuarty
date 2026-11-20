@@ -101,9 +101,12 @@ var ffmpegOptions = map[string]optSpec{
 	"-s":                  {class: classInput, value: kSize},
 
 	// both
-	"-ss":      {class: classEither, value: kNumber},
-	"-t":       {class: classEither, value: kNumber},
-	"-f":       {class: classEither, value: enum(append([]string{"lavfi", "rawvideo", "s16le", "ffmetadata"}, outputFormats...)...)},
+	"-ss": {class: classEither, value: kNumber},
+	"-t":  {class: classEither, value: kNumber},
+	"-f": {
+		class: classEither,
+		value: enum(append([]string{"lavfi", "rawvideo", "s16le", "ffmetadata"}, outputFormats...)...),
+	},
 	"-pix_fmt": {class: classEither, value: kPixFmt},
 	"-ar":      {class: classEither, value: intRange(8000, 192000)},
 	"-ac":      {class: classEither, value: intRange(1, 8)},
