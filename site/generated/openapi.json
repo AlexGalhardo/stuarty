@@ -1370,6 +1370,9 @@
       },
       "Description": {
         "properties": {
+          "ai_disclosure": {
+            "type": "boolean"
+          },
           "endpoint": {
             "type": "string"
           },
@@ -1378,6 +1381,12 @@
           },
           "guide_read": {
             "type": "string"
+          },
+          "hints": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
           },
           "hosts": {
             "items": {
@@ -4035,6 +4044,18 @@
       },
       "Limits": {
         "properties": {
+          "audio_codecs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "caption_max": {
+            "type": "integer"
+          },
+          "daily_posts": {
+            "type": "integer"
+          },
           "description_max_bytes": {
             "type": "integer"
           },
@@ -4051,8 +4072,14 @@
             },
             "type": "array"
           },
+          "hashtags_max": {
+            "type": "integer"
+          },
           "needs_kids_declaration": {
             "type": "boolean"
+          },
+          "preset": {
+            "type": "string"
           },
           "read": {
             "type": "string"
@@ -4075,6 +4102,12 @@
           },
           "title_max": {
             "type": "integer"
+          },
+          "video_codecs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "visibilities": {
             "items": {
@@ -6950,6 +6983,12 @@
             "type": "string",
             "x-untrusted": true
           },
+          "choices": {
+            "items": {
+              "$ref": "#/components/schemas/SocialChoice"
+            },
+            "type": "array"
+          },
           "connection_id": {
             "type": "string"
           },
@@ -6973,6 +7012,18 @@
               "$ref": "#/components/schemas/SocialAccount"
             },
             "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "SocialChoice": {
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string",
+            "x-untrusted": true
           }
         },
         "type": "object"
@@ -23012,6 +23063,76 @@
           }
         ],
         "summary": "List the social networks of this build and their limits"
+      }
+    },
+    "/api/v1/social/select": {
+      "post": {
+        "operationId": "social.select",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "account_id": {
+                    "description": "The id of one of the choices the connection lists after the sign-in.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "connection_id": {
+                    "description": "The connection whose account is chosen.",
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "connection_id",
+                  "account_id"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SocialAccount"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Choose the Page or Instagram account a sign-in reached (a person in the browser only)"
       }
     },
     "/api/v1/system": {
