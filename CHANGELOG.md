@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.41.0] - 2026-11-20
+
+### Fixed
+
+- **site:** Run the binary timing on a free port by default ([138ce10](https://github.com/AlexGalhardo/stuarty/commit/138ce10ab61a9584dd88fa8a50ff15731903ca4e))
+- **site:** Keep the former name out of the sidebar title of the migration page ([bd24020](https://github.com/AlexGalhardo/stuarty/commit/bd24020aa1ae0021cc6162d3b37919db062512bd))
 ## [0.40.0] - 2026-11-20
 
 ### Added
@@ -1967,7 +1973,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.40.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.41.0...HEAD
+[0.41.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.40.0...v0.41.0
 [0.40.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.39.0...v0.40.0
 [0.39.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.38.0...v0.39.0
 [0.38.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.37.0...v0.38.0
