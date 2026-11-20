@@ -10,6 +10,7 @@ import {
 	openCase,
 	stepThrough,
 } from "../support/golden";
+import { nestedProject, pictureGroupProject } from "../support/nested";
 import {
 	centroid,
 	chromaCentroid,
@@ -71,6 +72,50 @@ test.describe("preview-vs-export", () => {
 	test.describe.configure({ timeout: 300_000 });
 	test.beforeEach(({ browserName }) => {
 		test.skip(noVideoDecode(browserName), NO_VIDEO_DECODE_REASON);
+	});
+
+	// Epic 52: the PixiJS executor draws a composition group on a render texture,
+	// which is an approximation of the export's group (SDD-013 section 4.7.1): the
+	// same gate of SSIM and mean colour; the displacement of these smooth clips is
+	// not measured (GROUP_CASE in support/golden.ts).
+	for (const levels of [1, 2] as const) {
+		test(`nested ${levels === 1 ? "one level" : "two levels"}: the group is close to the export's`, async ({
+			page,
+			request,
+		}) => {
+			const project = await nestedProject(request, { levels });
+			await openCase(page, project.id);
+			await stepThrough(page, project.frames, async (frame) => {
+				await compareFrame(
+					page,
+					`nested-${levels}`,
+					project.id,
+					frame,
+					"preview-vs-export",
+					true,
+				);
+			});
+		});
+	}
+
+	// The PixiJS executor cuts the poster of a picture of a nested timeline with
+	// the size of the picture too (preview/sourceSizes.ts).
+	test("group of a wide picture of another timeline: close to the export's", async ({
+		page,
+		request,
+	}) => {
+		const project = await pictureGroupProject(request);
+		await openCase(page, project.id);
+		await stepThrough(page, project.frames, async (frame) => {
+			await compareFrame(
+				page,
+				"group-picture",
+				project.id,
+				frame,
+				"preview-vs-export",
+				true,
+			);
+		});
 	});
 
 	// A frame that fails is reported by case and frame.

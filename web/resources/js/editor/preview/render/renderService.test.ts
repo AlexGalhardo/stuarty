@@ -128,6 +128,22 @@ const layer = (
 	...extra,
 });
 
+// The render input of the nested frame of a group (SDD-013 section 3.12).
+function clearInput(layers: unknown[], width = 4, height = 4): RenderInput {
+	return {
+		version: 1,
+		output: { width, height, scale: 1 },
+		plan: {
+			frame: 0,
+			width,
+			height,
+			background: "#000000",
+			transparent: true,
+			layers,
+		},
+	};
+}
+
 function pixels(frame: FromRenderWorker<string> | undefined): number[] {
 	if (frame?.type !== "frame") {
 		throw new Error(`not a frame: ${JSON.stringify(frame)}`);
@@ -203,6 +219,167 @@ describe("the render worker logic", () => {
 		});
 		await r.send({ type: "render", seq: 2, input: input([layer("itm_b")]) });
 		expect(pixels(r.posted.at(-1)).slice(0, 4)).toEqual([0, 255, 0, 255]);
+	});
+
+	it("draws the surfaces of a frame first, and the group as one unit (SDD-013 3.12)", async () => {
+		const r = rig();
+		await r.send(init);
+		await r.send({
+			type: "texture",
+			id: "~red",
+			frame: solid(4, 4, [255, 0, 0, 255]),
+		});
+		await r.send({
+			type: "texture",
+			id: "~green",
+			frame: solid(4, 4, [0, 255, 0, 255]),
+		});
+		// The group holds red under green, both opaque, and is drawn at 50 %: the
+		// red under the green must not show through it.
+		const nested = input([layer("~red"), layer("~green")]);
+		await r.send({
+			type: "render",
+			seq: 1,
+			input: input([layer("~g", { opacity: 0.5 })]),
+			surfaces: [{ id: "~g", input: nested }],
+		});
+		expect(pixels(r.posted.at(-1)).slice(0, 4)).toEqual([0, 128, 0, 255]);
+		// The layers drawn one by one at the same opacity are another picture.
+		await r.send({
+			type: "render",
+			seq: 2,
+			input: input([
+				layer("~red", { opacity: 0.5 }),
+				layer("~green", { opacity: 0.5 }),
+			]),
+		});
+		expect(pixels(r.posted.at(-1)).slice(0, 4)).not.toEqual([0, 128, 0, 255]);
+	});
+
+	it("keeps a surface clear where nothing is drawn and draws it over the frame", async () => {
+		const r = rig();
+		await r.send(init);
+		await r.send({
+			type: "texture",
+			id: "~blue",
+			frame: solid(2, 2, [0, 0, 255, 255]),
+		});
+		const nested: RenderInput = {
+			version: 1,
+			output: { width: 4, height: 4, scale: 1 },
+			plan: {
+				frame: 0,
+				width: 4,
+				height: 4,
+				background: "#000000",
+				transparent: true,
+				layers: [layer("~blue", { cx: 1, cy: 1, w: 2, h: 2 })],
+			},
+		};
+		await r.send({
+			type: "render",
+			seq: 1,
+			input: {
+				...input([layer("~g")]),
+				plan: {
+					frame: 0,
+					width: 4,
+					height: 4,
+					background: "#ff0000",
+					layers: [layer("~g")],
+				},
+			},
+			surfaces: [{ id: "~g", input: nested }],
+		});
+		const out = pixels(r.posted.at(-1));
+		// The corner the nested layer does not cover shows the frame, not the
+		// background of the nested timeline.
+		expect(out.slice(0, 4)).toEqual([0, 0, 255, 255]);
+		expect(out.slice(-4)).toEqual([255, 0, 0, 255]);
+	});
+
+	it("draws a group inside a group: the inner surface comes first", async () => {
+		const r = rig();
+		await r.send(init);
+		await r.send({
+			type: "texture",
+			id: "~m",
+			frame: solid(4, 4, [10, 200, 30, 255]),
+		});
+		await r.send({
+			type: "render",
+			seq: 1,
+			input: {
+				...input([layer("~outer")]),
+				plan: {
+					frame: 0,
+					width: 4,
+					height: 4,
+					background: "#ffffff",
+					layers: [layer("~outer")],
+				},
+			},
+			surfaces: [
+				{ id: "~inner", input: clearInput([layer("~m")]) },
+				{
+					id: "~outer",
+					input: clearInput([layer("~inner", { opacity: 0.5 })]),
+				},
+			],
+		});
+		// Half of the green over the white of the frame: the surfaces are clear
+		// where nothing is drawn, so the white shows through the half.
+		const [red, green, blue, alpha] = pixels(r.posted.at(-1)).slice(0, 4);
+		expect(alpha).toBe(255);
+		expect(red).toBeGreaterThan(120);
+		expect(green).toBeGreaterThan(200);
+		expect(blue).toBeGreaterThan(130);
+	});
+
+	it("holds a surface of 4096 by 4096 pixels within the default budget, frame after frame", async () => {
+		const r = rig();
+		await r.send(init);
+		await r.send({
+			type: "texture",
+			id: "~m",
+			frame: solid(4, 4, [10, 200, 30, 255]),
+		});
+		// The largest surface (SDD-013 section 3.12 step 1) is 64 MiB. It is drawn
+		// again for every frame under the same id: the module replaces it, so five
+		// frames stay under the 256 MiB of textures of the default budget, which four
+		// surfaces kept side by side would pass.
+		const surface = clearInput(
+			[layer("~m", { cx: 2048, cy: 2048, w: 4096, h: 4096 })],
+			4096,
+			4096,
+		);
+		for (let seq = 1; seq <= 5; seq++) {
+			await r.send({
+				type: "render",
+				seq,
+				input: input([layer("~g")]),
+				surfaces: [{ id: "~g", input: surface }],
+			});
+			expect(r.posted.at(-1)).toMatchObject({ type: "frame", seq });
+			expect(pixels(r.posted.at(-1)).slice(0, 4)).toEqual([10, 200, 30, 255]);
+		}
+	}, 120_000);
+
+	it("answers missing_texture when a surface lacks the texture of its layer", async () => {
+		const r = rig();
+		await r.send(init);
+		await r.send({
+			type: "render",
+			seq: 4,
+			input: input([layer("~g")]),
+			surfaces: [{ id: "~g", input: input([layer("~gone")]) }],
+		});
+		expect(r.posted.at(-1)).toMatchObject({
+			type: "error",
+			seq: 4,
+			reason: "missing_texture",
+			detail: "~gone",
+		});
 	});
 
 	it("refuses a layer with an unknown field as invalid_plan", async () => {

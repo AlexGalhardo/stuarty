@@ -21,6 +21,7 @@ import { createClient } from "../../editor/api/client";
 import { HttpTransport } from "../../editor/api/http";
 import type { Job, SocialAccount, SocialNetwork } from "../../editor/api/types";
 import type { PublishApi } from "./api";
+import { useBackgroundAsk } from "./BackgroundAsk";
 import { browserZone } from "./calendar";
 import { TargetResult } from "./ListView";
 import { actionsOf } from "./publicationState";
@@ -225,6 +226,7 @@ export function PublicationEditor({
 	const [notes, setNotes] = useState<string[]>([]);
 	const [failure, setFailure] = useState<Failure | null>(null);
 	const [busy, setBusy] = useState(false);
+	const backgroundAsk = useBackgroundAsk();
 	const ready = accounts.filter((a) => a.state === "ready");
 	const isNew = current === null;
 
@@ -257,13 +259,15 @@ export function PublicationEditor({
 		onChanged();
 	}
 
-	async function run(action: () => Promise<Publication>): Promise<void> {
+	async function run(action: () => Promise<Publication>): Promise<boolean> {
 		setBusy(true);
 		setFailure(null);
 		try {
 			adopt(await action());
+			return true;
 		} catch (error) {
 			setFailure(failureOf(error));
+			return false;
 		} finally {
 			setBusy(false);
 		}
@@ -645,6 +649,8 @@ export function PublicationEditor({
 														zone: d.zone,
 														late_window_minutes: Number(d.late) || 0,
 													}),
+												).then((scheduled) =>
+													scheduled ? backgroundAsk.ask() : undefined,
 												)
 											}
 											onSendNow={() =>
@@ -707,6 +713,7 @@ export function PublicationEditor({
 						</Button>
 					</div>
 				</form>
+				{backgroundAsk.dialog}
 			</DialogContent>
 		</Dialog>
 	);

@@ -682,6 +682,15 @@ var Endpoints = []Endpoint{
 		Summary: "Start a speech generation with the provider of a connection; the job waits for approval, shows its estimate and stores the audio as an asset with its origin",
 	},
 	{
+		ID:      "video.generate",
+		Method:  http.MethodPost,
+		Path:    "/video/generate",
+		Scope:   service.ScopeEdit,
+		Service: "VideoGenerate",
+		Status:  202,
+		Summary: "Start a video generation with the provider of a connection; the job waits for a person unless a rule the user wrote covers it, shows its estimate and stores the clip as an asset with its origin",
+	},
+	{
 		ID: "voice.list", Method: http.MethodGet, Path: "/connections/{id}/voices", Scope: service.ScopeRead,
 		Service: "VoiceList", Status: 200, Summary: "List the voices of the provider of a connection",
 	},
@@ -849,6 +858,11 @@ var Endpoints = []Endpoint{
 		ID: "bitmaps.get", Method: http.MethodGet, Path: "/projects/{id}/bitmaps/{key}", Scope: service.ScopeRead,
 		Uncounted: true, Status: 200, Summary: "Download a rasterized text or shape",
 	},
+	{
+		ID: "audio_previews.get", Method: http.MethodGet, Path: "/projects/{id}/audio-previews/{key}",
+		Scope: service.ScopeRead, Uncounted: true, Status: 200,
+		Summary: "Download the processed sound of an item, or start rendering it",
+	},
 
 	{
 		ID: "handshake.get", Method: http.MethodGet, Path: "/handshake", Status: 200,
@@ -857,6 +871,11 @@ var Endpoints = []Endpoint{
 	{
 		ID: "system.launch", Method: http.MethodPost, Path: "/system/launch", Scope: service.ScopeAdmin, Status: 200,
 		Summary: "Issue a one-time browser launch code",
+	},
+	{
+		ID: "system.scheduler", Method: http.MethodPost, Path: "/system/scheduler", Scope: service.ScopeAdmin,
+		Status:  200,
+		Summary: "Read, pause or resume the publication scheduler (pause and resume only for the desktop shell)",
 	},
 
 	{

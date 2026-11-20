@@ -16,6 +16,7 @@ Every operation has its own page with the parameters, the body, the responses an
 | `POST` | `/api/v1/projects` | [`projects.create`](/docs/api/projects.create) | Create a project |
 | `GET` | `/api/v1/projects/{id}` | [`projects.get`](/docs/api/projects.get) | Read a project |
 | `GET` | `/api/v1/projects/{id}/audio-measure` | [`audio.measure`](/docs/api/audio.measure) | Measure the sound with and without the audio processors |
+| `GET` | `/api/v1/projects/{id}/audio-previews/{key}` | [`audio_previews.get`](/docs/api/audio_previews.get) | Download the processed sound of an item, or start rendering it |
 | `GET` | `/api/v1/projects/{id}/bitmaps/{key}` | [`bitmaps.get`](/docs/api/bitmaps.get) | Download a rasterized text or shape |
 | `GET` | `/api/v1/projects/{id}/brief` | [`projects.brief.get`](/docs/api/projects.brief.get) | Read the brief of a project |
 | `PUT` | `/api/v1/projects/{id}/brief` | [`projects.brief.set`](/docs/api/projects.brief.set) | Write the brief of a project |
@@ -184,6 +185,7 @@ Every operation has its own page with the parameters, the body, the responses an
 | `POST` | `/api/v1/providers/signin` | [`providers.signin.begin`](/docs/api/providers.signin.begin) | Start the sign-in to an AI provider; answers the address of the consent screen (a person in the browser only) |
 | `POST` | `/api/v1/providers/signin/complete` | [`providers.signin.complete`](/docs/api/providers.signin.complete) | Finish the sign-in with what the provider sent to the redirect address (a person in the browser only) |
 | `POST` | `/api/v1/text/generate` | [`text.generate`](/docs/api/text.generate) | Start a text generation with the provider of a connection; the job waits for approval and shows its estimate |
+| `POST` | `/api/v1/video/generate` | [`video.generate`](/docs/api/video.generate) | Start a video generation with the provider of a connection; the job waits for a person unless a rule the user wrote covers it, shows its estimate and stores the clip as an asset with its origin |
 | `POST` | `/api/v1/voice/generate` | [`voice.generate`](/docs/api/voice.generate) | Start a speech generation with the provider of a connection; the job waits for approval, shows its estimate and stores the audio as an asset with its origin |
 
 ## Images
@@ -264,6 +266,7 @@ Every operation has its own page with the parameters, the body, the responses an
 | `GET` | `/api/v1/handshake` | [`handshake.get`](/docs/api/handshake.get) | Prove that the server knows the local token |
 | `GET` | `/api/v1/system` | [`system.get`](/docs/api/system.get) | Read the diagnostic report |
 | `POST` | `/api/v1/system/launch` | [`system.launch`](/docs/api/system.launch) | Issue a one-time browser launch code |
+| `POST` | `/api/v1/system/scheduler` | [`system.scheduler`](/docs/api/system.scheduler) | Read, pause or resume the publication scheduler (pause and resume only for the desktop shell) |
 | `GET` | `/api/v1/system/tools` | [`system.tools`](/docs/api/system.tools) | List the installed helpers and the install progress |
 | `POST` | `/api/v1/system/tools/install` | [`system.tools.install`](/docs/api/system.tools.install) | Install the transcription helper (a browser session or an admin key only; the local token gets 403) |
 

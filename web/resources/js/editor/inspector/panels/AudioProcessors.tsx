@@ -23,8 +23,10 @@ import {
 import { displayEnd, displayStart, fpsOf } from "../../commands/units";
 import { useActions, useCanEdit } from "../../commands/useActions";
 import { useCommandsExposed } from "../../commands/useExposedCommands";
+import { useStore } from "../../state/createStore";
 import { useDocumentState, useRuntime } from "../../state/EditorContext";
 import { readTimeDisplay } from "../../state/prefs";
+import { processedAudioStates } from "../../state/processedAudioStore";
 import NumberField from "../fields/NumberField";
 import SelectField from "../fields/SelectField";
 import ToggleField from "../fields/ToggleField";
@@ -373,6 +375,40 @@ function Listen({ target }: { target: ProcessorTarget }): ReactNode {
 	);
 }
 
+// What the timeline plays for this item (SDD-004 section 7.1): its processed sound once the file is ready, the
+// unprocessed sound while it is being made. A track's chain is run by the export only.
+function PlaybackState({
+	target,
+	hasChain,
+}: {
+	target: ProcessorTarget;
+	hasChain: boolean;
+}): ReactNode {
+	const t = useT();
+	const states = useStore(processedAudioStates, (s) => s.items);
+	if (!hasChain) return null;
+	if (!("itemId" in target)) {
+		return (
+			<p className="text-xs text-muted-foreground" data-track-chain-preview="">
+				{t("ui.editor.processors.track_not_previewed")}
+			</p>
+		);
+	}
+	const state = states[target.itemId];
+	if (state === undefined) return null;
+	return (
+		<p
+			role="status"
+			className="text-xs text-muted-foreground"
+			data-processed-state={state}
+		>
+			{state === "processing"
+				? t("ui.editor.processors.preview_processing")
+				: t("ui.editor.processors.preview_ready")}
+		</p>
+	);
+}
+
 // The Audio processors section of a clip, an audio item or a track (SDD-004 section 7.1): the chain in the user's
 // order with the controls of each processor, the presets, the meters before and after, and a way to listen.
 export default function AudioProcessors({
@@ -462,6 +498,7 @@ export default function AudioProcessors({
 				>
 					{t("ui.editor.processors.add")}
 				</Button>
+				<PlaybackState target={target} hasChain={list.length > 0} />
 				<Meters target={target} />
 				<Listen target={target} />
 			</div>

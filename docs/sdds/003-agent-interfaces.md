@@ -922,8 +922,8 @@ type Range struct {
 ```go
 type JobStartRequest struct {
 	ProjectID  string          `json:"project_id"`
-	Kind       string          `json:"kind"` // "export" | "transcribe" | "text.generate" | "image.generate" | "voice.generate" (ingest and frame jobs are internal)
-	Args       json.RawMessage `json:"args,omitempty"` // one object, validated by Kind: ExportArgs, TranscribeArgs or the arguments of text.generate, image.generate and voice.generate (SDD-016 sections 6 and 6.1); an unknown member is E_VALIDATION with path args.<name>
+	Kind       string          `json:"kind"` // "export" | "transcribe" | "text.generate" | "image.generate" | "voice.generate" | "video.generate" (ingest and frame jobs are internal)
+	Args       json.RawMessage `json:"args,omitempty"` // one object, validated by Kind: ExportArgs, TranscribeArgs or the arguments of text.generate, image.generate, voice.generate and video.generate (SDD-016 sections 6, 6.1 and 6.4); an unknown member is E_VALIDATION with path args.<name>
 	WaitMS     int             `json:"wait_ms,omitempty"` // default 0; 0 to 25000
 	DryRun     bool            `json:"dry_run,omitempty"` // runs the lint gate and limits, queues nothing
 }
@@ -965,10 +965,10 @@ type Job struct {
 	ProjectID  *string    `json:"project_id"` // null for an ingest job: it belongs to the file, which projects may share
 	State      string     `json:"state"` // queued | waiting_approval | running | succeeded | failed | cancelled; waiting_approval: a kind that needs approval waits for a person or a rule (SDD-015 §5)
 	ApprovalID string     `json:"approval_id,omitempty"` // the approval request of a job of a kind that needs approval (SDD-015 §5)
-	Estimate   *Money     `json:"estimate,omitempty"` // text.generate, image.generate and voice.generate: the cost estimated before it runs, on the job from the moment it exists (SDD-016 §6, §6.1)
+	Estimate   *Money     `json:"estimate,omitempty"` // text.generate, image.generate, voice.generate and video.generate: the cost estimated before it runs, on the job from the moment it exists (SDD-016 §6, §6.1)
 	Progress   float64    `json:"progress"` // 0 to 1
 	Message    string     `json:"message,omitempty"`
-	Result     *JobResult `json:"result,omitempty"` // export, transcribe, text.generate, image.generate and voice.generate only; an ingest job has no result member (its outcome is the asset state, MediaList)
+	Result     *JobResult `json:"result,omitempty"` // export, transcribe, text.generate, image.generate, voice.generate and video.generate only; an ingest job has no result member (its outcome is the asset state, MediaList)
 	Error      *Error     `json:"error,omitempty"` // set when State is "failed" and when it is "cancelled" (E_CANCELLED); E_INGEST_FAILED, E_EXPORT_FAILED, E_VERIFY_FAILED, E_TRANSCRIBE_FAILED and E_CANCELLED travel here with HTTP status 200
 	Lint       *LintTotals `json:"lint,omitempty"` // export: totals at the pinned revision (warnings only: errors refuse the start)
 	Warnings   []string    `json:"warnings,omitempty"` // export: notes about an accepted start, not a reason to refuse it; a GIF whose typical size is over 25 MB says its estimated size (VV-056)
@@ -982,7 +982,7 @@ type JobResult struct { // exactly one member is set
 	Export     *ExportResult     `json:"export,omitempty"`
 	Transcribe *TranscribeResult `json:"transcribe,omitempty"`
 	Text       *TextResult       `json:"text,omitempty"` // text.generate: the text (untrusted), the model, the tokens and the real cost (SDD-016 section 6)
-	Generated  *GeneratedResult  `json:"generated,omitempty"` // image.generate and voice.generate: the assets stored (asset id, hash, kind, bytes, state, the revised prompt as untrusted text), requested and delivered, notes, the real cost (SDD-016 section 6.1)
+	Generated  *GeneratedResult  `json:"generated,omitempty"` // image.generate, voice.generate and video.generate: the assets stored (asset id, hash, kind, bytes, state, the revised prompt as untrusted text), requested and delivered, notes, the real cost (SDD-016 section 6.1)
 }
 type ExportResult struct {
 	Revision    int64        `json:"revision"`
@@ -2779,7 +2779,7 @@ Example (the text of §3.6): `{"name": "lint", "arguments": {"project_id": "prj_
 ```json
 {
   "name": "job_start",
-  "description": "Start long work; args by kind. export renders a workspace file: {start?, end?, format?, at? (the png frame), preset?, codec?}; export_batch: items (export args) in turn; transcribe: {asset_id, language?, model?}; text.generate: {connection_id, model, prompt}; image.generate: {connection_id, model, prompt, size?, count?}; voice.generate: {connection_id, model, text, voice, format?}; text.draft: {item_id, connection_id, model, instruction}; a person approves. Poll job_get.",
+  "description": "Start long work; args by kind. export renders a workspace file: {start?, end?, format?, at? (the png frame), preset?, codec?}; export_batch: items (export args) in turn; transcribe: {asset_id, language?, model?}; text.generate: {connection_id, model, prompt}; image.generate: {connection_id, model, prompt, size?, count?}; voice.generate: {connection_id, model, text, voice, format?}; text.draft: {item_id, connection_id, model, instruction}; video.generate: {connection_id, model, prompt, seconds?, aspect?, first_frame?}; a person approves. Poll job_get.",
   "inputSchema": {
     "type": "object",
     "properties": {
@@ -2799,7 +2799,8 @@ Example (the text of §3.6): `{"name": "lint", "arguments": {"project_id": "prj_
           "text.generate",
           "image.generate",
           "voice.generate",
-          "text.draft"
+          "text.draft",
+          "video.generate"
         ]
       },
       "args": {
@@ -3991,6 +3992,7 @@ Success codes are the `Op.Status`. Error statuses are the table of SDD-000 §8; 
 | `media.lut` | `GET /projects/{id}/media/{asset_id}/lut` | none | none | 200 `application/octet-stream` (the parsed table, SDD-004 §3.6) | read | 409 `E_ASSET_NOT_READY`; 404 `E_NOT_FOUND` for an asset that is not a `lut` |
 | `media.chunks` | `GET /projects/{id}/media/{asset_id}/chunks` | none | none | 200 `application/json` (the chunk index of SDD-011 §4.4.1) | read | 409 `E_ASSET_NOT_READY`; 404 `E_NOT_FOUND` for an asset that has no video proxy, or whose proxy was written before the index existed (import the file again) |
 | `bitmaps.get` | `GET /projects/{id}/bitmaps/{key}` | none | none | 200 `image/png` (rasterized text or shape, by content key) | read | none |
+| `audio_previews.get` | `GET /projects/{id}/audio-previews/{key}` | `from` (a frame of the file, counted from its first: the 2 seconds from it are rendered first) | none | 200 or 206 `audio/wav` (the processed sound of an item before its envelope, SDD-004 §7.1); 202 `{"state":"processing"}` with `Retry-After: 1` while it is rendered | read | 404 `E_NOT_FOUND` for a key the project's plan did not hand out; 400 `E_VALIDATION` for a `from` outside the file; 422 `E_LIMIT` for a file larger than the cache cap, which is never rendered (its windows are); 429 `E_QUEUE_FULL` when too many renders wait |
 | `templates.list` | `GET /templates` | `cursor`, `limit` | none | 200 `TemplateListResult` | read | none |
 | `templates.save` | `POST /templates` | none | `TemplateSaveRequest` | 201 `TemplateResult` | edit | none |
 | `templates.instantiate` | `POST /templates/{id}/instantiate` | none | `{name, fill?, id?, dry_run?}` | 201 `TemplateInstantiateResult` | edit | 422 `E_SLOT` |
@@ -4042,7 +4044,7 @@ Success codes are the `Op.Status`. Error statuses are the table of SDD-000 §8; 
 
 ### 6.5 Binary endpoints
 
-The ten byte-serving routes (`frame`, `sheet`, the export file, `proxy`, `chunks`, `thumbnail`, `strip`, `peaks`, `lut`, `bitmaps`; the template file of §6.3 is served the same way) are served from `OpenFile` (§2.9), all with scope `read` and checked against the project, and written with vukem's `c.File` (`web/response.go` lines 289 to 343), which uses `http.ServeContent`: `Range` requests answer 206, an unsatisfiable range 416, `If-Range` and `If-None-Match` work, and `Accept-Ranges: bytes` is sent. The handler sets `ETag` before the call (stdlib `ServeContent` honours an existing `ETag` header) and `X-Vukem-Revision` where relevant. `OpenFile` returns paths inside the workspace; the filesystem passed to `c.File` is `os.DirFS(<workspace>)`, so a path cannot leave it.
+The eleven byte-serving routes (`frame`, `sheet`, the export file, `proxy`, `chunks`, `thumbnail`, `strip`, `peaks`, `lut`, `bitmaps`, `audio-previews`; the template file of §6.3 is served the same way) are served from `OpenFile` (§2.9), all with scope `read` and checked against the project, and written with vukem's `c.File` (`web/response.go` lines 289 to 343), which uses `http.ServeContent`: `Range` requests answer 206, an unsatisfiable range 416, `If-Range` and `If-None-Match` work, and `Accept-Ranges: bytes` is sent. The handler sets `ETag` before the call (stdlib `ServeContent` honours an existing `ETag` header) and `X-Vukem-Revision` where relevant. `OpenFile` returns paths inside the workspace; the filesystem passed to `c.File` is `os.DirFS(<workspace>)`, so a path cannot leave it.
 
 | Endpoint | Content type | `ETag` | `Cache-Control` | Notes |
 | --- | --- | --- | --- | --- |
@@ -4056,6 +4058,7 @@ The ten byte-serving routes (`frame`, `sheet`, the export file, `proxy`, `chunks
 | `GET /projects/{id}/media/{asset_id}/peaks` | `application/octet-stream` | `"peaks-<asset hash first 16>-<profile version>"` | `private, max-age=86400, immutable` | the peaks file of SDD-011, read whole by the browser; `Range` works |
 | `GET /projects/{id}/media/{asset_id}/lut` | `application/octet-stream` | `"lut-<asset hash first 16>"` | `private, max-age=86400, immutable` | the table of a `lut` asset parsed by `engine/lut` and sent as binary for the preview (SDD-004 §3.6), so the browser parses no text; `OpenFile` builds the body, `Range` and `If-None-Match` work |
 | `GET /projects/{id}/bitmaps/{key}` | `image/png` | `"bmp-<key>"` | `private, max-age=31536000, immutable` (the key is the content hash) | rasterized text or shape (SDD-004); the project in the path is the access check, and the key must come from a plan window of that project (else 404) |
+| `GET /projects/{id}/audio-previews/{key}` | `audio/wav` | `"ap-<file key>"` (the key of the window file for a `from`) | `private, max-age=31536000, immutable` (the key is the content hash) | the processed sound of an item (SDD-004 §7.1, epic 51); the project in the path is the access check, and the key must come from a plan window of that project (else 404). The one route that can answer before the bytes exist: 202 `{"state":"processing"}` with `Retry-After: 1` and no `ETag` (not cached) while the render runs, and 500 `E_INTERNAL` when it failed. With `from`, a window of 2 seconds is rendered first and the header `X-Stuarty-Window: <first>-<last>` says which frames of the file it covers; `Range` works on both |
 
 A frame or sheet is written to the cache (`frames/<project id>/<revision>/`) by the first request and served from it afterwards. In network mode a cached file is served only to a caller allowed to read that project.
 

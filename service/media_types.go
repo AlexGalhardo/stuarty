@@ -210,10 +210,10 @@ type MediaInspectResult struct {
 
 // FileRef names a stored file for download (SDD-003 section 2.9).
 type FileRef struct {
-	Kind      string `json:"kind"` // "proxy", "chunks", "thumbnail", "strip", "peaks" or "bitmap"
+	Kind      string `json:"kind"` // "proxy", "chunks", "thumbnail", "strip", "peaks", "bitmap" or "audio_preview"
 	ProjectID string `json:"project_id,omitempty"`
-	ID        string `json:"id"`                // the asset id
-	Variant   string `json:"variant,omitempty"` // thumbnail width: 160, 320 or 640
+	ID        string `json:"id"`                // the asset id; the key of a bitmap or of a processed sound
+	Variant   string `json:"variant,omitempty"` // thumbnail width: 160, 320 or 640; the first frame of a processed window
 }
 
 // File is a stored file, resolved to a path inside the workspace.
@@ -227,4 +227,8 @@ type File struct {
 	Immutable    bool
 	MaxAge       int    // seconds of the Cache-Control header
 	Body         []byte // the bytes to send when the file is built from the artifact (kind lut); Path is then not read
+	// Header is added to the answer of a file that is served (the frames a processed window covers).
+	Header map[string]string
+	// Pending says the file does not exist yet and is being made: the answer is 202, not a file (kind audio_preview).
+	Pending bool
 }

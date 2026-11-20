@@ -136,6 +136,7 @@ command tools:install
 command transcribe
 command undo
 command version
+command video:generate
 command view
 command voice:generate
 command voice:list
@@ -190,6 +191,7 @@ route GET /library/skills/{}/lint
 route GET /projects
 route GET /projects/{}
 route GET /projects/{}/audio-measure
+route GET /projects/{}/audio-previews/{}
 route GET /projects/{}/bitmaps/{}
 route GET /projects/{}/brief
 route GET /projects/{}/chat/sessions
@@ -301,6 +303,7 @@ route POST /social/complete
 route POST /social/connect
 route POST /social/select
 route POST /system/launch
+route POST /system/scheduler
 route POST /system/tools/install
 route POST /templates
 route POST /templates/import
@@ -309,6 +312,7 @@ route POST /templates/{}/instantiate
 route POST /text/generate
 route POST /trash/empty
 route POST /users
+route POST /video/generate
 route POST /voice/generate
 route PUT /agents/profiles/{}
 route PUT /assets/{}
