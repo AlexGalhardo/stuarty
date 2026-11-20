@@ -13,7 +13,7 @@ import (
 )
 
 // SDD-007 T-100: a picture leaves the machine only after the person agreed, and only to the connection chosen.
-func TestSecurity_T100_NoPictureLeavesBeforeApproval(t *testing.T) {
+func TestSecurity_T96_NoPictureLeavesBeforeApproval(t *testing.T) {
 	t.Parallel()
 
 	e := newEditEnv(t)
@@ -82,7 +82,7 @@ func TestSecurity_T100_NoPictureLeavesBeforeApproval(t *testing.T) {
 }
 
 // SDD-007 T-101: what the provider answers is checked before it becomes a layer, and never carries the key.
-func TestSecurity_T101_ResultIsCheckedBeforeItBecomesALayer(t *testing.T) {
+func TestSecurity_T97_ResultIsCheckedBeforeItBecomesALayer(t *testing.T) {
 	t.Parallel()
 
 	t.Run("a file that is not an image", func(t *testing.T) {
@@ -172,7 +172,7 @@ func TestSecurity_T101_ResultIsCheckedBeforeItBecomesALayer(t *testing.T) {
 }
 
 // SDD-007 T-102: a job edits only an image its caller could edit, as that caller.
-func TestSecurity_T102_JobCannotEditAnImageItsCallerCannot(t *testing.T) {
+func TestSecurity_T98_JobCannotEditAnImageItsCallerCannot(t *testing.T) {
 	t.Parallel()
 
 	e := newEditEnv(t)
