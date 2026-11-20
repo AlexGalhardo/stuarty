@@ -131,7 +131,7 @@ const trustIcons = [
 		<!-- Inside the studio: real screens drifting with the scroll -->
 		<section aria-labelledby="inside-title" class="relative py-16 lg:py-24">
 			<h2 id="inside-title" class="sr-only">Inside the studio</h2>
-			<ul class="flex w-max gap-6 pl-[max(1rem,calc((100vw-90rem)/2+1.5rem))]" data-drift>
+			<ul class="flex w-max gap-6 pl-[max(1rem,calc((100vw-var(--site-container))/2+1.5rem))]" data-drift>
 				{[shots.imageEditor, shots.agentChat, shots.videoEditorLight, shots.writing].map((s) => (
 					<li class="w-[min(80vw,40rem)] shrink-0 overflow-hidden rounded-2xl border border-fg/10 shadow-xl">
 						<Shot shot={s} sizes="(min-width: 48rem) 40rem, 80vw" />

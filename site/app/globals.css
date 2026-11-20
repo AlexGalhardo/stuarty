@@ -57,7 +57,7 @@
   --duration-hover: 150ms;
   --header-h: 3.5rem;
   /* The width of .site-container: change this one line to narrow or widen the whole site. */
-  --site-container: 90rem;
+  --site-container: calc(90rem * 0.8);
   color-scheme: light;
 }
 
