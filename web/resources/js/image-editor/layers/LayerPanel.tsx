@@ -26,6 +26,7 @@ import UntrustedText from "@/components/UntrustedText";
 import { cn } from "@/lib/cn";
 import { useT } from "@/lib/i18n";
 import type { LayerKind } from "../api/types";
+import { isFinal, useModelJob } from "../modeledit/state";
 import { useImage, useImageStore } from "../state/context";
 import {
 	type Drop,
@@ -54,6 +55,10 @@ export default function LayerPanel(): ReactNode {
 	const store = useImageStore();
 	const doc = useImage((s) => s.doc);
 	const selection = useImage((s) => s.selection);
+	// The layer an operation with a model is working on (SDD-016 section 6.5), while its job has not ended.
+	const working = useModelJob((s) =>
+		s.tracked !== null && !isFinal(s.tracked.job) ? s.tracked.layerId : null,
+	);
 	const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
 	const [focusId, setFocusId] = useState<string | null>(null);
 	const [renaming, setRenaming] = useState<string | null>(null);
@@ -299,6 +304,7 @@ export default function LayerPanel(): ReactNode {
 						const state = [
 							layer.visible ? null : t("ui.image.layers.hidden"),
 							layer.locked ? t("ui.image.layers.locked") : null,
+							working === layer.id ? t("ui.image.model.layer_working") : null,
 						]
 							.filter(Boolean)
 							.join(", ");

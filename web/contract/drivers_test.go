@@ -256,6 +256,8 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.ImageGenerate)
 	case "VoiceGenerate":
 		return invoke(ctx, s, svc.VoiceGenerate)
+	case "ImageModelEdit":
+		return invoke(ctx, s, svc.ImageModelEdit)
 	case "VideoGenerate":
 		return invoke(ctx, s, svc.VideoGenerate)
 	case "VoiceList":
@@ -556,6 +558,45 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 		return "font_import", args, nil
 	case "ConnectionList", "ConnectionGet":
 		return "connection", args, nil
+	case "ApprovalList":
+		// the queue is read with job_get (D-093): the state is the approvals member
+		if v, ok := args["state"]; ok {
+			delete(args, "state")
+
+			args["approvals"] = v
+		} else {
+			args["approvals"] = "pending"
+		}
+
+		return "job_get", args, nil
+	case "ApprovalGet":
+		args["approval_id"] = args["id"]
+
+		delete(args, "id")
+
+		return "job_get", args, nil
+	case "PublishStatus":
+		return "job_get", args, nil
+	case "PublishNow":
+		// a publication starts with job_start; the post is the arguments of the kind
+		delete(args, "dry_run")
+
+		inner := map[string]any{}
+
+		for _, k := range []string{
+			"connection_id", "export", "thumbnail", "title", "description", "tags", "visibility", "made_for_kids",
+			"ai_disclosure",
+		} {
+			if v, ok := args[k]; ok {
+				inner[k] = v
+
+				delete(args, k)
+			}
+		}
+
+		args["kind"], args["args"] = service.JobPublishUpload, inner
+
+		return "job_start", args, nil
 	case "MediaList":
 		return "media_inspect", args, nil
 	case "MediaInspect":
@@ -659,6 +700,23 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 		case "VideoGenerate":
 			args["kind"] = "video.generate"
 		}
+
+		return "job_start", args, nil
+	case "ImageModelEdit":
+		// the same: the members of the request are the arguments of the job kind image.edit
+		delete(args, "dry_run")
+
+		inner := map[string]any{}
+
+		for _, k := range []string{"connection_id", "image_id", "operation", "model", "layer_id", "prompt", "size"} {
+			if v, ok := args[k]; ok {
+				inner[k] = v
+
+				delete(args, k)
+			}
+		}
+
+		args["kind"], args["args"] = "image.edit", inner
 
 		return "job_start", args, nil
 	case "ViewFrame":
@@ -887,6 +945,11 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 		DryRun      bool            `json:"dry_run"`
 		BrandColors []string        `json:"brand_colors"`
 		BrandFonts  []string        `json:"brand_fonts"`
+
+		// ImageModelEdit (epic 30)
+		ImageID   string `json:"image_id"`
+		Operation string `json:"operation"`
+		LayerID   string `json:"layer_id"`
 
 		ConnectionID string `json:"connection_id"`
 		Model        string `json:"model"`
@@ -1275,6 +1338,19 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 		}
 
 		return "image:generate", argv, "", nil
+	case "ImageModelEdit":
+		argv = slices.Concat(
+			proj, []string{
+				"--image", a.ImageID, "--operation", a.Operation, "--connection", a.ConnectionID, "--model", a.Model,
+			},
+			flag("layer", a.LayerID), flag("prompt", a.Prompt), flag("size", a.Size),
+		)
+
+		if a.DryRun {
+			argv = append(argv, "--dry-run")
+		}
+
+		return "image:model-edit", argv, "", nil
 	case "VideoGenerate":
 		argv = slices.Concat(
 			proj, []string{"--connection", a.ConnectionID, "--model", a.Model, "--prompt", a.Prompt},

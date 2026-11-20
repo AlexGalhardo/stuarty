@@ -333,6 +333,59 @@
         "image_hint": "Choose an image of your workspace.",
         "image_none": "There are no images in the workspace yet. Import one into a project first."
       },
+      "model": {
+        "remove": "Remove background",
+        "remove_needs_layer": "Remove background (select an image layer first)",
+        "generate": "Generate image",
+        "title": {
+          "remove_background": "Remove the background",
+          "generate": "Generate an image into this one"
+        },
+        "intro": {
+          "remove_background": "The background of the layer is removed by the model of a provider you connected. The result is the same layer with its new picture, and one Undo brings the original back.",
+          "generate": "A new layer is made from your prompt by the model of a provider you connected. One Undo takes it away. The price is shown before anything is asked of the provider."
+        },
+        "sent": {
+          "remove_background": "The picture of the layer {layer} will be sent to {provider}. Nothing is sent until you approve the cost.",
+          "generate": "Only the text you write below will be sent to {provider}. Nothing is sent until you approve the cost."
+        },
+        "no_provider": {
+          "remove_background": "No connected provider removes backgrounds yet. The connection must accept pictures.",
+          "generate": "No connected provider makes images yet."
+        },
+        "open_connections": "Connect one on the Connections page",
+        "project": "Project",
+        "project_hint": "The project that keeps the new file and its cost. The image itself belongs to no project.",
+        "no_project": "Make a project first: it keeps the new file and its cost.",
+        "connection": "Connection",
+        "model": "Model",
+        "no_price": "no price yet",
+        "prompt": "What to draw",
+        "cover_layer": "Cover the layer",
+        "estimate": "Show the estimate",
+        "estimated": "Estimated cost: {amount}",
+        "submit": "Start",
+        "working": {
+          "remove_background": "Removing the background of",
+          "generate": "Generating an image"
+        },
+        "layer_working": "working on it",
+        "state": {
+          "queued": "Waiting to start.",
+          "waiting_approval": "Waiting for your approval.",
+          "running": "Working.",
+          "succeeded": "Done.",
+          "failed": "It did not work.",
+          "cancelled": "Cancelled."
+        },
+        "progress": "{percent}% done",
+        "open_approvals": "Open the Approvals page",
+        "done": {
+          "applied": "The layer is in the image and it cost {amount}.",
+          "kept": "The image was not changed. The file is in your library and it cost {amount}."
+        },
+        "dismiss": "Close this message"
+      },
       "import": {
         "open_new": "Import image",
         "open_layer": "Put a file in this image",
@@ -2402,6 +2455,11 @@
     "social": {
       "title": "Social networks",
       "intro": "Connect your own channel with your own developer project. Nothing is published until you approve it in Approvals.",
+      "price_title": "Price of a post",
+      "price_now": "A post costs {post}, and {link} when its text has a link (price of {date}). The approval shows the price of each post before you say yes.",
+      "price_post": "A post ({currency})",
+      "price_link": "A post with a link ({currency})",
+      "price_save": "Save the prices",
       "connect": "Set up {name}",
       "close": "Close",
       "guide_title": "Connect {name} with your own developer project",
@@ -2473,6 +2531,28 @@
           "paste": "Paste the app id and the app secret into the form below. Stuarty asks for these permissions: {scopes}. After you sign in you choose which Page this connection publishes to."
         },
         "research": "What Meta said on {read}: an app used only for a business you own or manage needs no App Review at Standard Access. The file goes from your computer to Meta with the resumable upload, so no public address of your video is needed, and none is created. A Page Reel is 3 to 90 seconds, 9:16, at least 540 by 960, 24 to 60 frames a second; an app may publish 30 in a moving 24 hours. Meta states no largest file and no longest description, so Stuarty applies 1 GiB and 2,200 characters. Only Reels are offered: a longer or wider video is refused with the limit it breaks. There is no cover image field and no private mode, so every post goes out as public."
+      },
+      "x": {
+        "step": {
+          "project": "In the X developer console create a project and an app in your own account. It is yours; Stuarty never sees it.",
+          "api": "The X API is pay per use: add credits to your developer account. A post costs $0.015, and $0.200 when its text has a link, on the date read below; Stuarty shows the price of each post before you approve it, and counts it against your cost ceilings.",
+          "consent": "In the app's user authentication settings turn on OAuth 2.0, choose the type \"Web App\" (a confidential client) and give the permissions to read and write.",
+          "client": "Copy the Client ID and the Client Secret of OAuth 2.0 (not the API key).",
+          "redirect": "Add exactly this address as a callback URL: {redirect}",
+          "paste": "Paste the client id and the client secret into the form below. Stuarty asks for these permissions: {scopes}. Signing in reads your account once, which X bills as $0.010."
+        },
+        "research": "What X said on {read}: a post is paid per request, $0.015, or $0.200 for a post with a URL, and the prices change, so you can correct them here when they do. A post may hold up to 280 weighted characters (a link counts 23) and one video of up to 20 minutes and 8 GB. The video goes up from your computer in chunks, so no public address of it is needed. If an answer is lost after a post was sent, Stuarty does not send it again by itself, because a post costs money each time: look at your timeline first. Not verified without your app: whether X changes the refresh token at each use, and whether a localhost callback is accepted."
+      },
+      "tiktok": {
+        "step": {
+          "project": "At developers.tiktok.com create an app in your own account. It is yours; Stuarty never sees it.",
+          "api": "Add the products \"Login Kit\" and \"Content Posting API\" to the app, and ask for the scope video.upload. Add your own TikTok account as a target user while the app is not approved.",
+          "consent": "What Stuarty sends is a draft: the video goes to the inbox of your TikTok app. You open the notification there, write the caption, choose who can watch and publish it yourself.",
+          "client": "Copy the Client Key and the Client Secret of the app.",
+          "redirect": "Register exactly this address as a redirect URI of Login Kit for desktop (TikTok needs the port in it): {redirect}",
+          "paste": "Paste the client key and the client secret into the form below. Stuarty asks for these permissions: {scopes}."
+        },
+        "research": "What TikTok said on {read}: the upload to the inbox leaves a draft for you to review and publish in the TikTok app; it takes the file and nothing else, so the title, the text and the tags you write here are not sent and there is no AI label to set (set it in TikTok). An app that has not been audited cannot post publicly and the audit is meant for a product for a wide public, not for a tool that posts to your own accounts, so Stuarty offers no public post and no way around that. The file goes up from your computer in chunks, so no public address of it is needed. TikTok keeps at most 5 drafts waiting in 24 hours through the API. Not verified without your app: whether TikTok approves the scope video.upload for an app of your own."
       },
       "youtube": {
         "step": {
@@ -2601,10 +2681,14 @@
         "scheduled": "Scheduled",
         "publishing": "Publishing",
         "published": "Published",
+        "sent_as_draft": "Sent as a draft",
         "failed": "Failed",
         "missed": "Missed",
         "cancelled": "Cancelled"
       },
+      "draft_note": "Sent as a draft, not published: open the notification in the app of the network, write the caption and publish it there.",
+      "draft_warning": "{name} takes only the video as a draft: this title, text and tags are not sent, and you finish and publish it in the {name} app.",
+      "price": "A post costs {post}, and {link} when the text has a link (price of {date}). The approval shows the price of this post before you say yes.",
       "editor": {
         "new": "New publication",
         "edit": "Publication",

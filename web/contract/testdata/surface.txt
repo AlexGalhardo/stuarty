@@ -53,6 +53,7 @@ command image:export
 command image:generate
 command image:import
 command image:list
+command image:model-edit
 command image:redo
 command image:show
 command image:undo
@@ -252,6 +253,7 @@ route POST /images/import
 route POST /images/import/file
 route POST /images/{}/edit
 route POST /images/{}/export
+route POST /images/{}/model-edit
 route POST /images/{}/redo
 route POST /images/{}/undo
 route POST /jobs/{}/cancel
@@ -301,6 +303,7 @@ route POST /publish/validate
 route POST /scripts/estimate
 route POST /social/complete
 route POST /social/connect
+route POST /social/price
 route POST /social/select
 route POST /system/launch
 route POST /system/scheduler

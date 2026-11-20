@@ -24,6 +24,8 @@ const CLIENT_SECRET = "GOCSPX-e2e-client-secret-CANARY";
 
 interface FakeNetwork {
 	received: string[];
+	// holdToken makes the next token exchange wait until the returned function is called.
+	holdToken(): () => void;
 	close(): Promise<void>;
 }
 
@@ -42,6 +44,7 @@ function readBody(request: IncomingMessage): Promise<string> {
 async function fakeNetwork(): Promise<FakeNetwork> {
 	const received: string[] = [];
 	let uploads = 0;
+	let gate: Promise<void> | null = null;
 	const server: Server = createServer(
 		(request: IncomingMessage, response: ServerResponse) => {
 			void (async () => {
@@ -59,6 +62,11 @@ async function fakeNetwork(): Promise<FakeNetwork> {
 					response.writeHead(302, { Location: target.toString() });
 					response.end();
 				} else if (url.pathname === "/token") {
+					if (gate !== null) {
+						const waiting = gate;
+						gate = null;
+						await waiting;
+					}
 					const form = new URLSearchParams(body);
 					if (form.get("client_secret") !== CLIENT_SECRET) {
 						response.writeHead(400);
@@ -93,6 +101,13 @@ async function fakeNetwork(): Promise<FakeNetwork> {
 	await listenWhenFree(server);
 	return {
 		received,
+		holdToken: () => {
+			let release = () => {};
+			gate = new Promise<void>((resolve) => {
+				release = resolve;
+			});
+			return release;
+		},
 		close: () => new Promise((resolve) => server.close(() => resolve())),
 	};
 }
@@ -259,6 +274,48 @@ test.describe("youtube connect and publish @chromium-only", () => {
 			expect(exportJob).toMatch(/^job_/);
 		} finally {
 			// Leave the workspace as it was found: the connections spec expects it to hold none.
+			const api = await caller(request);
+			const list = (await api("GET", "/connections")) as {
+				connections: { id: string; kind: string }[];
+			};
+			for (const connection of list.connections.filter(
+				(c) => c.kind === "fake",
+			)) {
+				await api("DELETE", `/connections/${connection.id}`);
+			}
+			await network.close();
+		}
+	});
+
+	test("the state and the code leave the address before the exchange ends", async ({
+		page,
+		request,
+	}) => {
+		const network = await fakeNetwork();
+		const release = network.holdToken();
+		try {
+			await signInAsPerson(page);
+			await page.goto("/connections");
+			await page.getByRole("button", { name: "Set up Fake network" }).click();
+			await page.getByLabel("Client id").fill("e2e-client-id");
+			await page.getByLabel("Client secret").fill(CLIENT_SECRET);
+			await page.getByRole("button", { name: "Save and sign in" }).click();
+
+			// The fake holds the token answer: the page is still working, and its address (and the
+			// history entry of Inertia) no longer holds the state or the code (SDD-007 T-76).
+			await expect
+				.poll(() => network.received.includes("POST /token"))
+				.toBe(true);
+			await expect(page.getByRole("status")).toContainText("Finishing");
+			expect(new URL(page.url()).search).toBe("");
+			expect(
+				await page.evaluate(() => JSON.stringify(window.history.state)),
+			).not.toContain("code=");
+			release();
+			await expect(page.locator("[data-signed-in]")).toBeVisible();
+			expect(new URL(page.url()).search).toBe("");
+		} finally {
+			release();
 			const api = await caller(request);
 			const list = (await api("GET", "/connections")) as {
 				connections: { id: string; kind: string }[];

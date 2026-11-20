@@ -1,4 +1,4 @@
-import { Head, Link } from "@inertiajs/react";
+import { Head, Link, router } from "@inertiajs/react";
 import { type ReactNode, useEffect, useState } from "react";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
@@ -24,6 +24,14 @@ export default function GoogleCallback(): ReactNode {
 		const query = new URLSearchParams(window.location.search);
 		const code = query.get("code") ?? undefined;
 		const error = query.get("error") ?? undefined;
+		// The state and the code leave the address before the exchange starts, not after it ends (SDD-007
+		// T-76). Inertia keeps the address of the page in its own history entry and writes it after the first
+		// render, so the address is replaced through Inertia, which also drops the code from that entry.
+		router.replace({
+			url: window.location.pathname,
+			preserveState: true,
+			preserveScroll: true,
+		});
 		createClient(new HttpTransport(""))
 			.googleComplete({
 				state: query.get("state") ?? "",
@@ -31,12 +39,6 @@ export default function GoogleCallback(): ReactNode {
 				...(error === undefined ? {} : { error }),
 			})
 			.then((result) => {
-				// The address held a state and a code, both spent now.
-				window.history.replaceState(
-					window.history.state,
-					"",
-					window.location.pathname,
-				);
 				const next = window.sessionStorage.getItem(GOOGLE_NEXT_KEY);
 				window.sessionStorage.removeItem(GOOGLE_NEXT_KEY);
 				setPhase("done");
@@ -46,11 +48,6 @@ export default function GoogleCallback(): ReactNode {
 				);
 			})
 			.catch((e) => {
-				window.history.replaceState(
-					window.history.state,
-					"",
-					window.location.pathname,
-				);
 				setFailure(failureOf(e));
 				setPhase("failed");
 			});

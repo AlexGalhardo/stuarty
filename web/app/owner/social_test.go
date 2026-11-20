@@ -10,7 +10,7 @@ import (
 
 func env(vars map[string]string) func(string) string { return func(k string) string { return vars[k] } }
 
-func TestSocialRegistryHasTheThreeNetworksAtTheirOwnHostsByDefault(t *testing.T) {
+func TestSocialRegistryHasTheNetworksAtTheirOwnHostsByDefault(t *testing.T) {
 	t.Parallel()
 
 	reg, err := socialRegistry(env(nil), config.ModeLocal)
@@ -18,14 +18,19 @@ func TestSocialRegistryHasTheThreeNetworksAtTheirOwnHostsByDefault(t *testing.T)
 		t.Fatal(err)
 	}
 
-	if got := reg.Networks(); !slices.Equal(got, []string{"facebook", "instagram", "youtube"}) {
-		t.Errorf("networks = %v, want facebook, instagram and youtube", got)
+	if got := reg.Networks(); !slices.Equal(got, []string{"facebook", "instagram", "tiktok", "x", "youtube"}) {
+		t.Errorf("networks = %v, want facebook, instagram, tiktok, x and youtube", got)
 	}
 
-	for _, n := range []string{"facebook", "instagram"} {
+	for n, want := range map[string][]string{
+		"facebook":  {"graph.facebook.com", "rupload.facebook.com"},
+		"instagram": {"graph.facebook.com", "rupload.facebook.com"},
+		"x":         {"api.x.com"},
+		"tiktok":    {"open.tiktokapis.com", "open-upload.tiktokapis.com"},
+	} {
 		c, _ := reg.Get(n)
-		if got := c.Describe().Hosts; !slices.Equal(got, []string{"graph.facebook.com", "rupload.facebook.com"}) {
-			t.Errorf("%s reaches %v", n, got)
+		if got := c.Describe().Hosts; !slices.Equal(got, want) {
+			t.Errorf("%s reaches %v, want %v", n, got, want)
 		}
 	}
 }
@@ -33,17 +38,19 @@ func TestSocialRegistryHasTheThreeNetworksAtTheirOwnHostsByDefault(t *testing.T)
 func TestSocialRegistryTakesTheFakeNetworkOnlyOnLoopbackInLocalMode(t *testing.T) {
 	t.Parallel()
 
-	reg, err := socialRegistry(env(map[string]string{EnvTestSocialURL: "http://127.0.0.1:3104"}), config.ModeLocal)
+	vars := map[string]string{EnvTestSocialURL: "http://127.0.0.1:3104", "APP_ENV": "test"}
+	reg, err := socialRegistry(env(vars), config.ModeLocal)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if got := reg.Networks(); !slices.Equal(got, []string{"facebook", "fake", "instagram", "youtube"}) {
-		t.Errorf("networks = %v, want the fake network besides the three", got)
+	if got := reg.Networks(); !slices.Equal(got, []string{"facebook", "fake", "instagram", "tiktok", "x", "youtube"}) {
+		t.Errorf("networks = %v, want the fake network besides the five", got)
 	}
 
-	// The Meta networks speak to the loopback server alone, never to Meta, while the suite runs.
-	for _, n := range []string{"facebook", "instagram"} {
+	// The networks that have a fake server speak to the loopback server alone, never to the network, while the
+	// suite runs.
+	for _, n := range []string{"facebook", "instagram", "x", "tiktok"} {
 		c, _ := reg.Get(n)
 		if got := c.Describe().Hosts; !slices.Equal(got, []string{"127.0.0.1"}) {
 			t.Errorf("%s reaches %v under the test address", n, got)
@@ -60,7 +67,7 @@ func TestSocialRegistryTakesTheFakeNetworkOnlyOnLoopbackInLocalMode(t *testing.T
 		"a name that resolves": {"http://localtest.me:3104", config.ModeLocal},
 	} {
 		if _, err := socialRegistry(
-			env(map[string]string{EnvTestSocialURL: tc.url}),
+			env(map[string]string{EnvTestSocialURL: tc.url, "APP_ENV": "test"}),
 			tc.mode,
 		); !errors.Is(
 			err,

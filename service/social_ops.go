@@ -1,12 +1,14 @@
 package service
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"net/url"
 	"strings"
 
 	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/core/publish"
 	"github.com/AlexGalhardo/stuarty/service/connections"
 	"github.com/AlexGalhardo/stuarty/service/connections/oauth"
 	"github.com/AlexGalhardo/stuarty/service/social"
@@ -76,6 +78,19 @@ type SocialAccount struct {
 	State string `json:"state"`
 	// Choices are the accounts a person chooses from when State is needs_account; never a token.
 	Choices []SocialChoice `json:"choices,omitempty"`
+	// Price is what a post to the network costs, for a network that charges for one (X): the amounts the
+	// connection is estimated at, with the page they were read from and the date they were read or edited.
+	Price *publish.Price `json:"price,omitempty"`
+}
+
+// SocialPriceSetRequest corrects the price of a post on a network that charges for one, when the network
+// changes it (SDD-020 section 39).
+type SocialPriceSetRequest struct {
+	ConnectionID string `json:"connection_id"`
+	// PostMicros is the price of a post and LinkMicros the price of a post with a link, in millionths of the
+	// currency of the network.
+	PostMicros int64 `json:"post_micros"`
+	LinkMicros int64 `json:"link_micros"`
 }
 
 // SocialChoice is an account a sign-in reached.
@@ -240,6 +255,14 @@ func (s *svc) SocialConnectBegin(
 		ConnectionID: connID, Network: desc.Network, RedirectURI: req.RedirectURI, Actor: c.Actor, Browser: c.Browser,
 	})
 
+	// A network whose consent address is not the generic one (TikTok's, SDD-020 section 34) builds its own.
+	if a, ok := conn.(social.Authorizer); ok {
+		return &SocialConnectBeginResult{
+			ConnectionID: connID,
+			AuthorizeURL: a.AuthorizeURL(clientID, req.RedirectURI, state, challenge),
+		}, nil
+	}
+
 	auth := conn.AuthConfig()
 
 	return &SocialConnectBeginResult{
@@ -332,6 +355,10 @@ func (s *svc) SocialConnectComplete(ctx context.Context, req SocialConnectComple
 // signs in as, needs_account with the choices when the sign-in reached several and none is chosen, and
 // needs_sign_in otherwise. It reads no token out.
 func describeAccount(conn social.Connector, secret []byte, out *SocialAccount) {
+	if pr, ok := social.EffectivePrice(conn, secret); ok {
+		out.Price = &pr
+	}
+
 	if a, ok := conn.SignedIn(secret); ok {
 		out.AccountID, out.AccountTitle, out.State, out.Choices = a.ID, a.Title, AccountReady, nil
 
@@ -413,6 +440,92 @@ func (s *svc) SocialAccountSelect(ctx context.Context, req SocialAccountSelectRe
 
 	if aerr := s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
 		return appendAudit(ctx, tx, now, c.Actor, "social.select", "", row.ID)
+	}); aerr != nil {
+		return nil, asError(aerr)
+	}
+
+	out := SocialAccount{ConnectionID: row.ID, Network: row.Kind, Label: row.Label}
+	describeAccount(conn, newSecret, &out)
+
+	return &out, nil
+}
+
+// SocialPriceSet corrects the price of a post on a network that charges for one (X), when the network changes
+// it (SDD-020 section 39). It is for a person in the browser: what a post costs is what the approval shows and
+// the ceilings count, so an agent does not change it (T-69). The amounts are kept with the date of the edit in
+// the secret document of the connection, and change the estimate of a request made after them, never one
+// already made.
+func (s *svc) SocialPriceSet(ctx context.Context, req SocialPriceSetRequest) (*SocialAccount, error) {
+	c, err := s.connectionCaller(ctx, "SocialPriceSet")
+	if err != nil {
+		return nil, err
+	}
+
+	if !c.Browser {
+		return nil, privilegedError()
+	}
+
+	reg, err := s.socialRegistry()
+	if err != nil {
+		return nil, err
+	}
+
+	row, gerr := s.conns.Get(ctx, req.ConnectionID)
+	if gerr != nil {
+		return nil, connectionError(gerr)
+	}
+
+	conn, cerr := reg.Get(row.Kind)
+	if cerr != nil {
+		return nil, validationAt("connection_id", "the connection is not one of a social network.")
+	}
+
+	priced, ok := conn.(social.Priced)
+	if !ok {
+		return nil, validationAt("connection_id", "the network of the connection has no price to edit.")
+	}
+
+	price := publish.Price{
+		PostMicros: req.PostMicros, LinkMicros: req.LinkMicros, Edited: s.now().UTC().Format("2006-01-02"),
+	}
+	if verr := price.Valid(); verr != nil {
+		return nil, validationAt("post_micros", "a price is a whole number of millionths, above 0 and at most %d.",
+			publish.MaxPriceMicros).withHint("for $0.015 write 15000, and for $0.20 write 200000")
+	}
+
+	var (
+		newSecret []byte
+		refused   error
+	)
+
+	// The read and the write are one step under the lock of the connection: a refresh token that a send is
+	// writing meanwhile is neither lost under the price nor writes the former price back (SDD-020 section 34).
+	werr := s.conns.UpdateSecret(ctx, row.ID, func(current []byte) ([]byte, error) {
+		next, serr := priced.SetPrice(current, price)
+		if serr != nil {
+			refused = serr
+
+			return nil, serr
+		}
+
+		newSecret = bytes.Clone(next)
+
+		return next, nil
+	})
+	if refused != nil {
+		return nil, validationAt("connection_id", "the connection holds no client of your app: sign in first.")
+	}
+
+	if werr != nil {
+		return nil, connectionError(werr)
+	}
+
+	defer clear(newSecret)
+
+	now := s.nowMs()
+
+	if aerr := s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
+		return appendAudit(ctx, tx, now, c.Actor, "social.price", "", row.ID)
 	}); aerr != nil {
 		return nil, asError(aerr)
 	}

@@ -333,6 +333,59 @@
         "image_hint": "Escolha uma imagem do seu espaço de trabalho.",
         "image_none": "Ainda não há imagens no espaço de trabalho. Importe uma em um projeto primeiro."
       },
+      "model": {
+        "remove": "Remover o fundo",
+        "remove_needs_layer": "Remover o fundo (selecione antes uma camada de imagem)",
+        "generate": "Gerar imagem",
+        "title": {
+          "remove_background": "Remover o fundo",
+          "generate": "Gerar uma imagem dentro desta"
+        },
+        "intro": {
+          "remove_background": "O fundo da camada é removido pelo modelo de um provedor que você conectou. O resultado é a mesma camada com a imagem nova, e um Desfazer traz o original de volta.",
+          "generate": "Uma camada nova é feita a partir do seu texto pelo modelo de um provedor que você conectou. Um Desfazer a tira. O preço aparece antes de qualquer pedido ao provedor."
+        },
+        "sent": {
+          "remove_background": "A imagem da camada {layer} será enviada para {provider}. Nada é enviado até você aprovar o custo.",
+          "generate": "Somente o texto que você escrever abaixo será enviado para {provider}. Nada é enviado até você aprovar o custo."
+        },
+        "no_provider": {
+          "remove_background": "Nenhum provedor conectado remove fundos ainda. A conexão precisa aceitar imagens.",
+          "generate": "Nenhum provedor conectado gera imagens ainda."
+        },
+        "open_connections": "Conecte um na página Conexões",
+        "project": "Projeto",
+        "project_hint": "O projeto que guarda o arquivo novo e o custo. A imagem em si não pertence a nenhum projeto.",
+        "no_project": "Crie um projeto antes: ele guarda o arquivo novo e o custo.",
+        "connection": "Conexão",
+        "model": "Modelo",
+        "no_price": "sem preço ainda",
+        "prompt": "O que desenhar",
+        "cover_layer": "Cobrir a camada",
+        "estimate": "Mostrar a estimativa",
+        "estimated": "Custo estimado: {amount}",
+        "submit": "Começar",
+        "working": {
+          "remove_background": "Removendo o fundo de",
+          "generate": "Gerando uma imagem"
+        },
+        "layer_working": "em andamento",
+        "state": {
+          "queued": "Esperando para começar.",
+          "waiting_approval": "Esperando a sua aprovação.",
+          "running": "Trabalhando.",
+          "succeeded": "Pronto.",
+          "failed": "Não deu certo.",
+          "cancelled": "Cancelado."
+        },
+        "progress": "{percent}% concluído",
+        "open_approvals": "Abrir a página Aprovações",
+        "done": {
+          "applied": "A camada está na imagem e custou {amount}.",
+          "kept": "A imagem não foi alterada. O arquivo está na sua biblioteca e custou {amount}."
+        },
+        "dismiss": "Fechar esta mensagem"
+      },
       "import": {
         "open_new": "Importar imagem",
         "open_layer": "Colocar um arquivo nesta imagem",
@@ -2402,6 +2455,11 @@
     "social": {
       "title": "Redes sociais",
       "intro": "Conecte o seu próprio canal com o seu próprio projeto de desenvolvedor. Nada é publicado até você aprovar em Aprovações.",
+      "price_title": "Preço de um post",
+      "price_now": "Um post custa {post}, e {link} quando o texto tem um link (preço de {date}). A aprovação mostra o preço de cada post antes de você dizer sim.",
+      "price_post": "Um post ({currency})",
+      "price_link": "Um post com link ({currency})",
+      "price_save": "Salvar os preços",
       "connect": "Configurar {name}",
       "close": "Fechar",
       "guide_title": "Conectar {name} com o seu próprio projeto de desenvolvedor",
@@ -2473,6 +2531,28 @@
           "paste": "Cole o id e o segredo do app no formulário abaixo. O Stuarty pede estas permissões: {scopes}. Depois do login, você escolhe em qual Página esta conexão publica."
         },
         "research": "O que a Meta disse em {read}: um app usado só para um negócio que você possui ou administra não precisa de App Review no Acesso Padrão. O arquivo vai do seu computador para a Meta pelo envio retomável, então nenhum endereço público do seu vídeo é preciso, e nenhum é criado. Um Reel de Página tem de 3 a 90 segundos, 9:16, ao menos 540 por 960, de 24 a 60 quadros por segundo; um app pode publicar 30 em 24 horas corridas. A Meta não informa um arquivo máximo nem uma descrição máxima, então o Stuarty aplica 1 GiB e 2.200 caracteres. Só Reels são oferecidos: um vídeo mais longo ou mais largo é recusado com o limite que ele quebra. Não há campo de capa nem modo privado, então toda publicação sai como pública."
+      },
+      "x": {
+        "step": {
+          "project": "No console de desenvolvedor do X crie um projeto e um app na sua própria conta. É seu; o Stuarty nunca o vê.",
+          "api": "A API do X é paga por uso: adicione créditos à sua conta de desenvolvedor. Um post custa US$ 0,015, e US$ 0,200 quando o texto tem um link, na data lida abaixo; o Stuarty mostra o preço de cada post antes de você aprovar e o conta nos seus tetos de custo.",
+          "consent": "Nas configurações de autenticação do app ative o OAuth 2.0, escolha o tipo \"Web App\" (um cliente confidencial) e dê as permissões de leitura e escrita.",
+          "client": "Copie o Client ID e o Client Secret do OAuth 2.0 (não a chave de API).",
+          "redirect": "Adicione exatamente este endereço como URL de callback: {redirect}",
+          "paste": "Cole o client id e o client secret no formulário abaixo. O Stuarty pede estas permissões: {scopes}. Entrar lê a sua conta uma vez, e o X cobra US$ 0,010 por isso."
+        },
+        "research": "O que o X disse em {read}: um post é cobrado por requisição, US$ 0,015, ou US$ 0,200 para um post com URL, e os preços mudam, então você pode corrigi-los aqui quando mudarem. Um post tem até 280 caracteres ponderados (um link conta 23) e um vídeo de até 20 minutos e 8 GB. O vídeo sobe do seu computador em partes, então nenhum endereço público dele é preciso. Se uma resposta se perder depois de um post enviado, o Stuarty não o envia de novo sozinho, porque cada post custa dinheiro: olhe a sua linha do tempo antes. Não verificado sem o seu app: se o X troca o refresh token a cada uso, e se um callback localhost é aceito."
+      },
+      "tiktok": {
+        "step": {
+          "project": "Em developers.tiktok.com crie um app na sua própria conta. É seu; o Stuarty nunca o vê.",
+          "api": "Adicione os produtos \"Login Kit\" e \"Content Posting API\" ao app, e peça o escopo video.upload. Adicione a sua própria conta do TikTok como usuário de teste enquanto o app não for aprovado.",
+          "consent": "O que o Stuarty envia é um rascunho: o vídeo vai para a caixa de entrada do seu app do TikTok. Você abre a notificação por lá, escreve a legenda, escolhe quem pode assistir e publica você mesmo.",
+          "client": "Copie a Client Key e o Client Secret do app.",
+          "redirect": "Registre exatamente este endereço como URI de redirecionamento do Login Kit para desktop (o TikTok exige a porta nele): {redirect}",
+          "paste": "Cole a client key e o client secret no formulário abaixo. O Stuarty pede estas permissões: {scopes}."
+        },
+        "research": "O que o TikTok disse em {read}: o envio para a caixa de entrada deixa um rascunho para você revisar e publicar no app do TikTok; leva o arquivo e mais nada, então o título, o texto e as tags que você escreve aqui não são enviados e não há rótulo de IA a marcar (marque no TikTok). Um app que não foi auditado não pode postar publicamente e a auditoria é para um produto de público amplo, não para uma ferramenta que posta nas suas próprias contas, então o Stuarty não oferece post público nem jeito de contornar isso. O arquivo sobe do seu computador em partes, então nenhum endereço público dele é preciso. O TikTok guarda no máximo 5 rascunhos esperando em 24 horas pela API. Não verificado sem o seu app: se o TikTok aprova o escopo video.upload para um app seu."
       },
       "youtube": {
         "step": {
@@ -2601,10 +2681,14 @@
         "scheduled": "Agendado",
         "publishing": "Publicando",
         "published": "Publicado",
+        "sent_as_draft": "Enviado como rascunho",
         "failed": "Falhou",
         "missed": "Perdido",
         "cancelled": "Cancelado"
       },
+      "draft_note": "Enviado como rascunho, não publicado: abra a notificação no app da rede, escreva a legenda e publique por lá.",
+      "draft_warning": "O {name} recebe só o vídeo como rascunho: este título, texto e tags não são enviados, e você termina e publica no app do {name}.",
+      "price": "Um post custa {post}, e {link} quando o texto tem um link (preço de {date}). A aprovação mostra o preço deste post antes de você dizer sim.",
       "editor": {
         "new": "Nova publicação",
         "edit": "Publicação",
