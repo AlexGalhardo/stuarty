@@ -79,6 +79,7 @@ export function tagOf(route: string): Tag {
 		text: "AI providers",
 		image: "AI providers",
 		voice: "AI providers",
+		video: "AI providers",
 		images: "Images",
 		approvals: "Approvals",
 		"approval-rules": "Approvals",
