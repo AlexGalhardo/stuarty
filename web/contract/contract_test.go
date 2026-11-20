@@ -888,6 +888,13 @@ func TestProductionScenarioIsTheSameThroughEverySurface(t *testing.T) {
 	sameThroughEverySurface(t, "production")
 }
 
+// TestCompositionSpeedScenarioIsTheSameThroughEverySurface (epic 53): a composition is placed and takes a
+// constant speed through clip.set_speed, and a curve and a reverse on it are refused with E_VALIDATION, the same
+// on the four surfaces.
+func TestCompositionSpeedScenarioIsTheSameThroughEverySurface(t *testing.T) {
+	sameThroughEverySurface(t, "composition-speed")
+}
+
 // TestBriefingScenarioIsTheSameThroughEverySurface (epic 16): the questions are asked, the answers become the
 // brief, the questions read them back, a bad answer and a brief written by hand are refused the same way, and
 // replace overrides. The results are the same on the four surfaces.
