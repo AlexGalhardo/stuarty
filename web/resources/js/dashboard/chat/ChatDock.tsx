@@ -28,6 +28,7 @@ export default function ChatDock(): ReactNode {
 	const [managing, setManaging] = useState(false);
 	const toggle = useRef<HTMLButtonElement | null>(null);
 	const composer = useRef<HTMLTextAreaElement | null>(null);
+	const heading = useRef<HTMLHeadingElement | null>(null);
 	const closed = useRef(false);
 	const inUrl = PROJECT_IN_URL.exec(page.url)?.[0] ?? null;
 	const chat = useChat(open, inUrl);
@@ -35,7 +36,11 @@ export default function ChatDock(): ReactNode {
 	const connected = (chat.profiles?.profiles.length ?? 0) > 0;
 	const showSetup = ready && (!connected || managing);
 
-	// the composer takes the focus when the panel opens, and the button gets it back on close
+	// The panel takes the focus when it opens (the button that had it is gone), the composer takes it when
+	// the conversation is ready, and the button gets it back on close
+	useEffect(() => {
+		if (open) heading.current?.focus();
+	}, [open]);
 	useEffect(() => {
 		if (open && connected && !managing) composer.current?.focus();
 		if (!open && closed.current) {
@@ -79,7 +84,9 @@ export default function ChatDock(): ReactNode {
 			className="flex h-dvh w-full flex-col gap-3 border-s bg-background p-3 max-md:fixed max-md:inset-0 max-md:z-50 md:sticky md:top-0 md:w-96"
 		>
 			<header className="flex items-center justify-between gap-2">
-				<h2 className="text-base font-semibold">{t("ui.chat.title")}</h2>
+				<h2 ref={heading} tabIndex={-1} className="text-base font-semibold">
+					{t("ui.chat.title")}
+				</h2>
 				<div className="flex items-center gap-1">
 					{ready && connected && (
 						<Button
