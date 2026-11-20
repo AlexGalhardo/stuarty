@@ -323,9 +323,8 @@ func e2eServerBinary(ctx context.Context, t *testing.T, bun, webRoot string) str
 	work := t.TempDir()
 	built := filepath.Join(work, "build")
 
-	vite := exec.CommandContext(ctx, bun, "run", "build:e2e")
+	vite := exec.CommandContext(ctx, bun, "run", "build:e2e", "--outDir", built)
 	vite.Dir = webRoot
-	vite.Env = append(os.Environ(), "STUARTY_BUILD_OUT_DIR="+built)
 
 	if out, err := vite.CombinedOutput(); err != nil {
 		t.Fatalf("vite build --mode e2e: %v\n%s", err, out)
