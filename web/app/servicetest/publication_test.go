@@ -1,7 +1,9 @@
 package servicetest
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"strings"
 	"sync"
@@ -696,5 +698,84 @@ func TestPublicationIsAnItemOfItsProject(t *testing.T) {
 
 	if !found || overview.Production.Published != 1 {
 		t.Errorf("the overview of the project lacks the publication: %+v", overview.Items)
+	}
+}
+
+// VV-285: the answer of a create has the format of every later read: UTC, milliseconds.
+func TestPublicationCreateAnswersInTheFormatOfTheReads(t *testing.T) {
+	c := newCalendar(t)
+
+	c.clock.mu.Lock()
+	c.clock.t = time.Date(2026, 11, 20, 4, 58, 39, 141749300, time.FixedZone("BRT", -3*3600))
+	c.clock.mu.Unlock()
+
+	created := c.create(c.target(c.at(24 * time.Hour)))
+	read := c.get(created)
+
+	for _, f := range []struct {
+		name      string
+		got, want time.Time
+	}{{"created_at", created.CreatedAt, read.CreatedAt}, {"updated_at", created.UpdatedAt, read.UpdatedAt}} {
+		if f.got.Location() != time.UTC || f.got.Nanosecond()%1_000_000 != 0 || !f.got.Equal(f.want) {
+			t.Errorf(
+				"%s of the create = %s, the read says %s",
+				f.name,
+				f.got.Format(time.RFC3339Nano),
+				f.want.Format(time.RFC3339Nano),
+			)
+		}
+	}
+
+	a, aerr := json.Marshal(created.CreatedAt)
+	b, berr := json.Marshal(read.CreatedAt)
+
+	if aerr != nil || berr != nil {
+		t.Fatal(aerr, berr)
+	}
+
+	if !bytes.Equal(a, b) {
+		t.Errorf("created_at is %s on create and %s on read", a, b)
+	}
+}
+
+// VV-286: a range end may be a date, the start of that day in the zone asked.
+func TestPublicationListAcceptsDatesInAZone(t *testing.T) {
+	c := newCalendar(t)
+	// 2026-11-15 02:00 UTC is still 2026-11-14 in Sao Paulo (23:00).
+	a := c.create(c.target("2026-11-15T02:00"))
+
+	ids := func(from, to, zone string) []string {
+		list, err := c.svc.PublicationList(c.as(token), service.PublicationListRequest{
+			ProjectID: c.project, From: from, To: to, Zone: zone,
+		})
+		if err != nil {
+			t.Fatalf("list %s..%s %s: %v", from, to, zone, err)
+		}
+
+		var out []string
+		for _, p := range list.Publications {
+			out = append(out, p.ID)
+		}
+
+		return out
+	}
+
+	if got := ids("2026-11-15", "2026-11-16", ""); len(got) != 1 || got[0] != a.ID {
+		t.Errorf("the UTC day of 15 = %v", got)
+	}
+
+	if got := ids("2026-11-15", "2026-11-16", "America/Sao_Paulo"); len(got) != 0 {
+		t.Errorf("the Sao Paulo day of 15 holds the post of the 14th: %v", got)
+	}
+
+	if got := ids("2026-11-14", "2026-11-15", "America/Sao_Paulo"); len(got) != 1 {
+		t.Errorf("the Sao Paulo day of 14 = %v", got)
+	}
+
+	if _, err := c.svc.PublicationList(
+		c.as(token),
+		service.PublicationListRequest{From: "2026-11-15", Zone: "Mars/Base"},
+	); err == nil {
+		t.Error("a bad zone was accepted")
 	}
 }

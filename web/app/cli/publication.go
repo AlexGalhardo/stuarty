@@ -204,7 +204,9 @@ var publicationCreateCmd = &spec{
 var publicationListCmd = &spec{
 	name:    "publication:list",
 	summary: "list the publications of the calendar, by project, state, network or time range",
-	usage:   []string{"stuarty publication:list [--project <id>] [--state <state>] [--from <time>] [--until <time>]"},
+	usage: []string{
+		"stuarty publication:list [--project <id>] [--state <state>] [--from <time>] [--until <time>] [--zone <zone>]",
+	},
 	example: "stuarty publication:list --from 2026-11-16T00:00:00Z --until 2026-11-23T00:00:00Z --json",
 	flags: []flagDef{
 		{Name: "project", Kind: kindString, Usage: "only the publications of this project"},
@@ -214,8 +216,13 @@ var publicationListCmd = &spec{
 			Usage: "only those with a target in this state, for example waiting_approval or failed",
 		},
 		{Name: "network", Kind: kindString, Usage: "only those with a target on this network"},
-		{Name: "from", Kind: kindString, Usage: "only those with a target at or after this time (RFC 3339)"},
-		{Name: "until", Kind: kindString, Usage: "only those with a target before this time (RFC 3339)"},
+		{Name: "from", Kind: kindString, Usage: "only those with a target at or after this time (RFC 3339) or date"},
+		{Name: "until", Kind: kindString, Usage: "only those with a target before this time (RFC 3339) or date"},
+		{
+			Name:  "zone",
+			Kind:  kindString,
+			Usage: "the zone a date or local time of --from and --until is read in (default UTC)",
+		},
 		{Name: "limit", Kind: kindInt, Usage: "the page size, 1 to 500 (default 100)"},
 		{Name: "offset", Kind: kindInt, Usage: "how many to skip"},
 	},
@@ -224,12 +231,11 @@ var publicationListCmd = &spec{
 			ProjectID: c.args.str("project"),
 			State:     c.args.str("state"),
 			Network:   c.args.str("network"),
-			From: c.args.str(
-				"from",
-			),
-			To:     c.args.str("until"),
-			Limit:  c.args.integer("limit"),
-			Offset: c.args.integer("offset"),
+			From:      c.args.str("from"),
+			To:        c.args.str("until"),
+			Zone:      c.args.str("zone"),
+			Limit:     c.args.integer("limit"),
+			Offset:    c.args.integer("offset"),
 		})
 		if err != nil {
 			return nil, err
