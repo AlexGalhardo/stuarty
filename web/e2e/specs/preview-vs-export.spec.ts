@@ -322,79 +322,86 @@ test.describe("preview-vs-export", () => {
 // preview showed black where the key cut the green out, and the export the clip behind. The canvas is
 // read as premultiplied colour (what the export's frame over black holds), at the subject, at the keyed
 // green and at the corner, in both executors, at frame 0 (the first frame is where a video that has not
-// decoded yet leaves nothing behind the layer) and later.
-for (const executor of ["pixi", "rust"] as const) {
-	test(`chroma key over another clip: the preview (${executor}) shows the clip behind the keyed green like the export`, async ({
-		page,
-		request,
-	}) => {
-		const seeded = await seedProject(request, {
-			name: `Chroma over a clip ${executor}`,
-			tracks: 2,
-			perTrack: 1,
-			clipDuration: "1s",
-			files: [backdropClip(), greenScreenClip()],
-		});
-		const call = await caller(request);
-		const head = (await call("GET", `/projects/${seeded.id}`)) as {
-			revision: number;
-		};
-		await call("POST", `/projects/${seeded.id}/edit`, {
-			base_revision: head.revision,
-			operations: [
-				{ op: "settings.set", args: { width: 320, height: 180 } },
-				{
-					op: "clip.set_chroma_key",
-					args: {
-						item_id: seeded.itemIds[1],
-						color: "#66DD09",
-						similarity: 0.3,
-						smoothness: 0.1,
-						spill: 0.5,
-					},
-				},
-			],
-		});
-		await openCase(
-			page,
-			seeded.id,
-			executor === "rust" ? "?executor=rust" : "",
-		);
-		await expect(
-			page.getByRole("main", { name: "Preview" }).locator("canvas"),
-		).toHaveAttribute("data-executor", executor === "rust" ? "rust" : /.+/);
-		// Project points: the subject (red), the keyed green (blue behind), a corner (blue behind).
-		const points: [string, number, number, [number, number, number]][] = [
-			["subject", 160, 90, [0xe0, 0x20, 0x20]],
-			["keyed green", 40, 90, [0x20, 0x60, 0xc0]],
-			["corner", 10, 10, [0x20, 0x60, 0xc0]],
-		];
-		await stepThrough(page, [0, 15], async (frame) => {
-			const shot = await capture(page, seeded.id, frame);
-			const { width, height } = shot.canvas;
-			for (const [where, px, py, expected] of points) {
-				const x = Math.round((px * width) / 320);
-				const y = Math.round((py * height) / 180);
-				const i = (y * width + x) * 4;
-				const a = shot.canvas.data[i + 3] ?? 0;
-				for (let k = 0; k < 3; k++) {
-					const premultiplied = Math.round(
-						((shot.canvas.data[i + k] ?? 0) * a) / 255,
-					);
-					const exported = shot.frame.data[i + k] ?? 0;
-					expect(
-						Math.abs(premultiplied - exported),
-						`${executor}, frame ${frame}, ${where}, channel ${k}: canvas ${premultiplied} (alpha ${a}), export ${exported}`,
-					).toBeLessThanOrEqual(12);
-					expect(
-						Math.abs(exported - (expected[k] ?? 0)),
-						`${executor}, frame ${frame}, ${where}, channel ${k}: the export is ${exported}, the clip should give about ${expected[k]}`,
-					).toBeLessThanOrEqual(40);
-				}
-			}
-		});
+// decoded yet leaves nothing behind the layer) and later. Like the golden cases, it waits for real
+// exports, so it has their timeout and their skip where the browser decodes no video.
+test.describe("chroma key over another clip", () => {
+	test.describe.configure({ timeout: 300_000 });
+	test.beforeEach(({ browserName }) => {
+		test.skip(noVideoDecode(browserName), NO_VIDEO_DECODE_REASON);
 	});
-}
+	for (const executor of ["pixi", "rust"] as const) {
+		test(`chroma key over another clip: the preview (${executor}) shows the clip behind the keyed green like the export`, async ({
+			page,
+			request,
+		}) => {
+			const seeded = await seedProject(request, {
+				name: `Chroma over a clip ${executor}`,
+				tracks: 2,
+				perTrack: 1,
+				clipDuration: "1s",
+				files: [backdropClip(), greenScreenClip()],
+			});
+			const call = await caller(request);
+			const head = (await call("GET", `/projects/${seeded.id}`)) as {
+				revision: number;
+			};
+			await call("POST", `/projects/${seeded.id}/edit`, {
+				base_revision: head.revision,
+				operations: [
+					{ op: "settings.set", args: { width: 320, height: 180 } },
+					{
+						op: "clip.set_chroma_key",
+						args: {
+							item_id: seeded.itemIds[1],
+							color: "#66DD09",
+							similarity: 0.3,
+							smoothness: 0.1,
+							spill: 0.5,
+						},
+					},
+				],
+			});
+			await openCase(
+				page,
+				seeded.id,
+				executor === "rust" ? "?executor=rust" : "",
+			);
+			await expect(
+				page.getByRole("main", { name: "Preview" }).locator("canvas"),
+			).toHaveAttribute("data-executor", executor === "rust" ? "rust" : /.+/);
+			// Project points: the subject (red), the keyed green (blue behind), a corner (blue behind).
+			const points: [string, number, number, [number, number, number]][] = [
+				["subject", 160, 90, [0xe0, 0x20, 0x20]],
+				["keyed green", 40, 90, [0x20, 0x60, 0xc0]],
+				["corner", 10, 10, [0x20, 0x60, 0xc0]],
+			];
+			await stepThrough(page, [0, 15], async (frame) => {
+				const shot = await capture(page, seeded.id, frame);
+				const { width, height } = shot.canvas;
+				for (const [where, px, py, expected] of points) {
+					const x = Math.round((px * width) / 320);
+					const y = Math.round((py * height) / 180);
+					const i = (y * width + x) * 4;
+					const a = shot.canvas.data[i + 3] ?? 0;
+					for (let k = 0; k < 3; k++) {
+						const premultiplied = Math.round(
+							((shot.canvas.data[i + k] ?? 0) * a) / 255,
+						);
+						const exported = shot.frame.data[i + k] ?? 0;
+						expect(
+							Math.abs(premultiplied - exported),
+							`${executor}, frame ${frame}, ${where}, channel ${k}: canvas ${premultiplied} (alpha ${a}), export ${exported}`,
+						).toBeLessThanOrEqual(12);
+						expect(
+							Math.abs(exported - (expected[k] ?? 0)),
+							`${executor}, frame ${frame}, ${where}, channel ${k}: the export is ${exported}, the clip should give about ${expected[k]}`,
+						).toBeLessThanOrEqual(40);
+					}
+				}
+			});
+		});
+	}
+});
 
 // The three Prototype cases of SDD-012 section 20.3 on a clip with markers: cover
 // fit, contain fit and one caption. Red and blue boxes in the clip give the
