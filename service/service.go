@@ -105,6 +105,9 @@ type Service interface {
 	ProviderModels(ctx context.Context, req ProviderModelsRequest) (*ProviderModelsResult, error)
 	ProviderPriceSet(ctx context.Context, req ProviderPriceSetRequest) (*ProviderPricesResult, error)
 	TextGenerate(ctx context.Context, req TextGenerateRequest) (*Job, error)
+	ImageGenerate(ctx context.Context, req ImageGenerateRequest) (*Job, error)
+	VoiceGenerate(ctx context.Context, req VoiceGenerateRequest) (*Job, error)
+	VoiceList(ctx context.Context, req VoiceListRequest) (*VoiceListResult, error)
 
 	JobGet(ctx context.Context, req JobGetRequest) (*Job, error)
 	JobList(ctx context.Context, req JobListRequest) (*JobListResult, error)
@@ -203,6 +206,7 @@ type Service interface {
 	SocialConnectBegin(ctx context.Context, req SocialConnectBeginRequest) (*SocialConnectBeginResult, error)
 	SocialConnectComplete(ctx context.Context, req SocialConnectCompleteRequest) (*SocialAccount, error)
 	SocialAccountList(ctx context.Context, req SocialAccountListRequest) (*SocialAccountListResult, error)
+	SocialAccountSelect(ctx context.Context, req SocialAccountSelectRequest) (*SocialAccount, error)
 	PublishValidate(ctx context.Context, req PublishValidateRequest) (*PublishValidateResult, error)
 	PublishNow(ctx context.Context, req PublishNowRequest) (*Job, error)
 	PublishStatus(ctx context.Context, req PublishStatusRequest) (*PublishStatusResult, error)
@@ -399,7 +403,8 @@ func New(o Options) (Service, error) {
 
 	s.providers = o.Providers
 
-	kinds, err := registerKinds(append(slices.Clone(o.JobKinds), s.textGenerateKind()))
+	kinds, err := registerKinds(append(slices.Clone(o.JobKinds),
+		s.textGenerateKind(), s.imageGenerateKind(), s.voiceGenerateKind()))
 	if err != nil {
 		return nil, err
 	}

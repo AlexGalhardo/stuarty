@@ -1,5 +1,5 @@
-// Package openai is the adapter of OpenAI for text: the Chat Completions API with an API key
-// (SDD-016 section 2.1). It uses the standard library through the gated client of a connection and no
+// Package openai is the adapter of OpenAI for text (the Chat Completions API), images and speech, with an API
+// key (SDD-016 sections 2.1 and 2.2). It uses the standard library through the gated client of a connection and no
 // vendor SDK. The same wire is spoken by many servers, so the connection may name another base URL.
 package openai
 
@@ -30,7 +30,7 @@ func New() *Adapter { return &Adapter{} }
 func (*Adapter) Descriptor() providers.Descriptor {
 	return providers.Descriptor{
 		ID: ID, Name: "OpenAI",
-		Capabilities:    []string{provider.CapabilityText},
+		Capabilities:    []string{provider.CapabilityText, provider.CapabilityImage, provider.CapabilityVoice},
 		CredentialKinds: []string{provider.CredentialAPIKey},
 		DefaultEndpoint: "https://api.openai.com/v1",
 		DocsURL:         "https://platform.openai.com/api-keys",
@@ -62,7 +62,7 @@ func (*Adapter) Models(ctx context.Context, c connections.Credential) ([]provide
 
 	out := make([]providers.Model, 0, len(ans.Data))
 	for _, m := range ans.Data {
-		out = append(out, providers.Model{ID: m.ID, Name: m.ID})
+		out = append(out, providers.Model{ID: m.ID, Name: m.ID, Capability: capabilityOf(m.ID)})
 	}
 
 	return out, nil

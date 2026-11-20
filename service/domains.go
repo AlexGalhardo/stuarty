@@ -58,12 +58,15 @@ var OperationDomains = map[string]string{
 	// The social networks a publication goes to, and the publication itself (SDD-020 section 9).
 	"SocialNetworkList": command.DomainPublish, "SocialConnectBegin": command.DomainPublish,
 	"SocialConnectComplete": command.DomainPublish, "SocialAccountList": command.DomainPublish,
-	"PublishValidate": command.DomainPublish, "PublishNow": command.DomainPublish,
+	"SocialAccountSelect": command.DomainPublish,
+	"PublishValidate":     command.DomainPublish, "PublishNow": command.DomainPublish,
 	"PublishStatus": command.DomainPublish,
 
 	"CostSummary": command.DomainProvider, "CostCeilingSet": command.DomainProvider,
 	"ProviderList": command.DomainProvider, "ProviderModels": command.DomainProvider,
 	"ProviderPriceSet": command.DomainProvider, "TextGenerate": command.DomainProvider,
+	"ImageGenerate": command.DomainProvider, "VoiceGenerate": command.DomainProvider,
+	"VoiceList": command.DomainProvider,
 
 	"CommandHelp": command.DomainWorkspace, "ConnectionList": command.DomainWorkspace,
 	"ConnectionGet": command.DomainWorkspace, "ConnectionCreate": command.DomainWorkspace,
