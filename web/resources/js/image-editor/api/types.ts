@@ -289,6 +289,8 @@ export interface ImageHistoryEntry {
 	at: string;
 	ops: string[];
 	changes: number;
+	// What the step did, in words, from the core (SDD-021 section 4).
+	description?: string;
 	undo_of?: number;
 	undone_by?: number;
 	skipped?: number;
