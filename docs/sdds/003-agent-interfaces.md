@@ -2779,7 +2779,7 @@ Example (the text of §3.6): `{"name": "lint", "arguments": {"project_id": "prj_
 ```json
 {
   "name": "job_start",
-  "description": "Start long work; args by kind. export: {start?, end?, format?, at? (png frame), preset?, codec?}; export_batch: items (export args); transcribe: {asset_id, language?, model?}; generations and text.draft also take connection_id, model: text.generate: {prompt}; image.generate: {prompt, size?, count?}; voice.generate: {text, voice, format?}; text.draft: {item_id, instruction}; video.generate: {prompt, seconds?, aspect?, first_frame?}; publish.upload: {connection_id, export (job_id), title, made_for_kids, thumbnail?, description?, tags?, visibility?, ai_disclosure?}; a person approves. Poll job_get.",
+  "description": "Start long work; args by kind. export: args properties (at: png frame); export_batch: items (export args); transcribe {asset_id, language?, model?}; publish.upload {connection_id, export (job_id), title, made_for_kids, thumbnail?, description?, tags?, visibility?, ai_disclosure?}; with connection_id, model: text.generate {prompt}; image.generate {prompt, size?, count?}; voice.generate {text, voice, format?}; image.edit {image_id, operation, layer_id?, prompt?}; text.draft {item_id, instruction}; video.generate {prompt, seconds?, aspect?, first_frame?}. A person approves; poll job_get.",
   "inputSchema": {
     "type": "object",
     "properties": {
@@ -2800,6 +2800,7 @@ Example (the text of §3.6): `{"name": "lint", "arguments": {"project_id": "prj_
           "image.generate",
           "voice.generate",
           "text.draft",
+          "image.edit",
           "video.generate",
           "publish.upload"
         ]
@@ -4468,7 +4469,7 @@ Numbers measured on the reference machine (AMD Ryzen 7 5700X3D, Windows 11, FFmp
 
 | Budget | Measured | Limit |
 | --- | --- | --- |
-| `tools/list` as a client receives it, 20 tools | 23,247 bytes, about 7,264 tokens by the 3.2 characters per token estimate; largest definition `job_start` 1,697 bytes; first discovery call 7,915 characters (`surfacebudget`, D-093) | at most 23,400 bytes, 8,500 characters (check 2) |
+| `tools/list` as a client receives it, 20 tools | 23,249 bytes, about 7,265 tokens by the 3.2 characters per token estimate; largest definition `job_start` 1,699 bytes, with `image.edit` (epic 30) and `publish.upload` (D-093), the arguments of `export` being the `args` properties of its schema; first discovery call 7,915 characters (`surfacebudget`, D-093) | at most 23,400 bytes, 8,500 characters (check 2) |
 | `tools/list` by the vendor token count | not measured: needs `ANTHROPIC_API_KEY` (`TestToolListVendorTokens`, release only) | at most 7,300 tokens |
 | Concise view of the reference project | 1 page, 11,785 characters | at most 2 pages, cap 12,800 characters (check 7) |
 | Frame and sheet image tokens | `TestViewImageSizeTable` passes for the four presets | frame at most 800, sheet at most 1,500 (check 8) |
