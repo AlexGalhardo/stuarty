@@ -141,7 +141,7 @@ func (s *svc) ConnectionCreate(ctx context.Context, req ConnectionCreateRequest)
 			withPath("secret")
 	}
 
-	// The stored form of a sign-in is made by the sign-in only (SDD-014 section 12): a secret in that form,
+	// The stored form of a sign-in is made by the sign-in only (SDD-014 section 13): a secret in that form,
 	// given by hand, would be a credential nobody signed in for.
 	if _, isSignIn := oauth.ParseEnvelope([]byte(req.Secret)); isSignIn {
 		return nil, newError(command.CodeValidation, "the secret is not a key: a sign-in is made in the browser.").
@@ -214,7 +214,7 @@ func (s *svc) ConnectionRemove(ctx context.Context, req ConnectionRef) (*connect
 	}
 
 	// A sign-in is made and removed by a person in the browser: an agent, the CLI and the local token read
-	// that it exists and cannot take it away (SDD-014 section 12, T-75).
+	// that it exists and cannot take it away (SDD-014 section 13, T-75).
 	if !c.Browser && s.isSignIn(ctx, row.ID) {
 		return nil, privilegedError()
 	}

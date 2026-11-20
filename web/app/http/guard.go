@@ -220,7 +220,7 @@ func signInRedirect(r *http.Request) bool {
 		r.Header.Get("Sec-Fetch-Mode") == "navigate" && r.Header.Get("Sec-Fetch-Dest") == "document"
 }
 
-// googleRedirect is signInRedirect for the second and last cross-site page, which exists in network mode
+// googleRedirect is signInRedirect for the last cross-site page, which exists in network mode
 // only: where Google sends the browser back after "Sign in with Google" (SDD-007 section 3.6 item 4 and
 // 4.7, T-82). Same shape, no wider: a GET navigation that loads a document, to that one path.
 func googleRedirect(r *http.Request) bool {
