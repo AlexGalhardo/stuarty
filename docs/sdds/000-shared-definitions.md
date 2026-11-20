@@ -74,7 +74,7 @@
 | `ImageHistory` | none | none | `GET /images/{id}/history` (SDD-012 §24.3) | read |
 | `ImageFile` | none | none | `GET /images/{id}/exports/{name}` (SDD-012 §24.3) | read |
 | image document stream | none | none | `GET /images/{id}/events` (SDD-006 §12; the event `image.updated`) | read |
-| `ApprovalList`, `ApprovalGet` | none | `approval:list`, `approval:show` | `GET /approvals`, `GET /approvals/{id}` | read (SDD-015) |
+| `ApprovalList`, `ApprovalGet` | `job_get` (`approvals`, `approval_id`) | `approval:list`, `approval:show` | `GET /approvals`, `GET /approvals/{id}` | read (SDD-015) |
 | `ApprovalDecide` | none | `approval:decide` | `POST /approvals/{id}/decide` | read, and only from a privileged browser session; the local token and keys get `E_PRIVILEGED_SESSION` (SDD-015 §4) |
 | `ApprovalRuleList` | none | `approval:rule:list` | `GET /approval-rules` | read |
 | `ApprovalRuleSet`, `ApprovalRuleRemove` | none | `approval:rule:set`, `approval:rule:remove` | `POST /approval-rules`, `DELETE /approval-rules/{id}` | admin, and only from a privileged browser session |
@@ -87,8 +87,8 @@
 | `SocialAccountList` | none | `social:account:list` | `GET /social/accounts` | read |
 | `SocialAccountSelect` | none | none | `POST /social/select` | admin, and only from a browser session (SDD-020 §17) |
 | `PublishValidate` | none | `publish:validate` | `POST /publish/validate` | read |
-| `PublishNow` | none yet (later `job_start` with kind `publish.upload`, SDD-020 §13) | `publish:now` | `POST /publish` | render; the job waits for approval |
-| `PublishStatus` | none | `publish:status` | `GET /publish/{job_id}` | read |
+| `PublishNow` | `job_start` with kind `publish.upload` (SDD-020 §13) | `publish:now` | `POST /publish` | render; the job waits for approval |
+| `PublishStatus` | `job_get` (`job_id`) | `publish:status` | `GET /publish/{job_id}` | read |
 | `PublicationCreate` | none (SDD-020 §29) | `publication:create` | `POST /publications` | edit (SDD-020) |
 | `PublicationGet`, `PublicationList` | none | `publication:show`, `publication:list` | `GET /publications/{id}`, `GET /publications` | read |
 | `PublicationUpdate` | none | `publication:update` | `PUT /publications/{id}` | edit |
