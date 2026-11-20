@@ -65,7 +65,8 @@ async function flush(): Promise<void> {
 	for (let i = 0; i < 10; i++) await Promise.resolve();
 }
 
-const WINDOW = `/api/v1/projects/prj_1/audio-previews/${KEY}?from=60`;
+// The playhead at frame 60 of an item that starts at 30 is frame 30 of its file.
+const WINDOW = `/api/v1/projects/prj_1/audio-previews/${KEY}?from=30`;
 const FULL = `/api/v1/projects/prj_1/audio-previews/${KEY}`;
 
 describe("ProcessedAudio", () => {
@@ -88,7 +89,7 @@ describe("ProcessedAudio", () => {
 	test("a ready window is played inside its frames, then the whole file once it is ready", async () => {
 		const t = setup((url) =>
 			url === WINDOW
-				? { kind: "ready", window: [60, 119] }
+				? { kind: "ready", window: [30, 89] }
 				: url === FULL
 					? { kind: "ready", window: null }
 					: { kind: "processing" },
@@ -108,7 +109,7 @@ describe("ProcessedAudio", () => {
 	test("a 202 is asked again after the poll interval", async () => {
 		let n = 0;
 		const t = setup(() =>
-			++n < 3 ? { kind: "processing" } : { kind: "ready", window: [60, 119] },
+			++n < 3 ? { kind: "processing" } : { kind: "ready", window: [30, 89] },
 		);
 		const entry = audio({ key: KEY, start: 30, frames: 150 });
 		t.processed.resolve(entry, 60);
@@ -140,7 +141,7 @@ describe("ProcessedAudio", () => {
 	});
 
 	test("a changed parameter is a new key and asks for a new file", async () => {
-		const t = setup(() => ({ kind: "ready", window: [60, 119] }));
+		const t = setup(() => ({ kind: "ready", window: [30, 89] }));
 		t.processed.resolve(audio({ key: KEY, start: 30, frames: 150 }), 60);
 		await flush();
 		const other = "b".repeat(64);
@@ -148,6 +149,26 @@ describe("ProcessedAudio", () => {
 			t.processed.resolve(audio({ key: other, start: 30, frames: 150 }), 60),
 		).toBeNull();
 		expect(t.asked.some((u) => u.includes(other))).toBe(true);
+	});
+
+	test("two items with one key at different frames share a window of the file", async () => {
+		const t = setup((url) =>
+			url === WINDOW
+				? { kind: "ready", window: [30, 89] }
+				: { kind: "processing" },
+		);
+		const a = audio({ key: KEY, start: 30, frames: 150 });
+		const b = {
+			...audio({ key: KEY, start: 200, frames: 150 }),
+			item: "itm_b",
+		};
+		t.processed.resolve(a, 60);
+		await flush();
+		// Frame 235 is frame 35 of B's file: inside the window that A asked for,
+		// played from B's own start.
+		expect(t.processed.resolve(b, 235)).toEqual({ url: WINDOW, zero: 230 });
+		// Frame 200 is frame 0 of B's file, before the window: the proxy plays.
+		expect(t.processed.resolve(b, 200)).toBeNull();
 	});
 });
 
