@@ -42,8 +42,7 @@ func (s *svc) imageEnv(ctx context.Context, tx Repos, c Caller, ids func(string)
 			}
 
 			row, err := tx.Assets().Get(ctx, hash)
-			if err != nil || row.Kind != "image" || row.IngestState != IngestReady ||
-				row.Facts.Width == nil || row.Facts.Height == nil {
+			if err != nil || row.IngestState != IngestReady {
 				return coreimage.AssetInfo{}, false
 			}
 
@@ -54,13 +53,41 @@ func (s *svc) imageEnv(ctx context.Context, tx Repos, c Caller, ids func(string)
 				name = scopedName
 			}
 
-			if name == "" {
-				name = "Image"
+			switch row.Kind {
+			case "image":
+				if row.Facts.Width == nil || row.Facts.Height == nil {
+					return coreimage.AssetInfo{}, false
+				}
+
+				if name == "" {
+					name = "Image"
+				}
+
+				return coreimage.AssetInfo{
+					Name: filepath.Base(
+						name,
+					),
+					Kind:   coreimage.AssetImage,
+					Width:  *row.Facts.Width,
+					Height: *row.Facts.Height,
+				}, true
+			case "lut":
+				// A lookup table of the workspace (SDD-021 section 3.1): a ready file has no size, and the core
+				// tells it from an image by its kind.
+				if name == "" {
+					name = "Lookup table"
+				}
+
+				return coreimage.AssetInfo{Name: filepath.Base(name), Kind: coreimage.AssetLUT}, true
 			}
 
-			return coreimage.AssetInfo{
-				Name: filepath.Base(name), Width: *row.Facts.Width, Height: *row.Facts.Height,
-			}, true
+			// A ready video or audio file is no image: the core refuses it by its kind (a table asked for is
+			// E_TYPE_MISMATCH) and never reads a size from it.
+			if name == "" {
+				name = "File"
+			}
+
+			return coreimage.AssetInfo{Name: filepath.Base(name), Kind: row.Kind}, true
 		},
 		Measure: rasterize.Measure(rasterize.Bundled()),
 	}

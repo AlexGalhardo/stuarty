@@ -70,13 +70,25 @@ type Document struct {
 	Layers        []Layer             `json:"layers"`
 }
 
-// AssetRef is an image the document uses, by content hash: what the core needs of it without reading a file.
+// The kinds of file a document lists in assets. An entry without a kind is an image, so a document written
+// before epic 49 keeps its meaning.
+const (
+	AssetImage = "image"
+	AssetLUT   = "lut"
+)
+
+// AssetRef is a file the document uses, by content hash: what the core needs of it without reading it. An
+// image has the size of its source; a lookup table (kind lut, SDD-021 section 3.1) has none.
 type AssetRef struct {
 	Hash   string `json:"hash"`
 	Name   string `json:"name"`
-	Width  int    `json:"width"`
-	Height int    `json:"height"`
+	Kind   string `json:"kind,omitempty"`
+	Width  int    `json:"width,omitempty"`
+	Height int    `json:"height,omitempty"`
 }
+
+// isLUT reports whether the entry is a lookup table.
+func (a AssetRef) isLUT() bool { return a.Kind == AssetLUT }
 
 // Crop is a rectangle of the source of an image layer, in source pixels.
 type Crop struct {
