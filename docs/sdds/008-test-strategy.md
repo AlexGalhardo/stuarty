@@ -151,6 +151,8 @@ Every released schema version keeps a set of documents under `core/timeline/test
 
 - Tests never sleep to wait for something: they wait on an event, a file, a row, or use an injected clock (`app.Now()` in Go, fake timers in the browser).
 - A test that fails without a code change is a bug with priority: it is fixed or quarantined within the same day by its owner, with an issue; a quarantined test does not count as coverage and blocks the next release until it is back.
+- **Absolute time budgets run only on an idle machine.** A test whose assertion is a number of milliseconds on the wall clock (a p95, a cold start, a slow-reader latency) is a measurement, not a functional check: under the parallel suite or with other programs running it measures the machine. Such a test is split in two. The functional assertion (the result is right, the work was done, the cost does not grow with the input measured as a count of operations or as a ratio with a wide margin) runs always. The absolute budget runs only when `STUARTY_PERF=1` is set, through the helper `perfgate.Require(t)` (package `internal/perfgate`), which skips the test with the reason otherwise. The measurement is not lost: section 13.1 makes the idle run with `STUARTY_PERF=1` a mandatory step of the gate, by the orchestrator, with every agent stopped.
+- A test that races a timer against a real process (a watchdog, an encoder that dies, a slow reader) waits on the event it asserts (a channel, a file, a state change) and never on a deadline that load can overrun. When the code under test reads the clock, the test injects it.
 - Retries are allowed only in Playwright, at most one, and a test that passed on retry is listed in the job summary.
 - Port numbers come from the operating system (port 0); workspaces are temporary directories; no test touches `~/.stuarty`.
 - Coverage floors (SDD-009 §13.2): 90% for each package of `core/`, 80% elsewhere, enforced by `covergate`. Coverage is a floor, not a goal: the golden cases and the scenarios are what prove behaviour.
@@ -173,3 +175,33 @@ Every released schema version keeps a set of documents under `core/timeline/test
 5. `perfreport` writes its table and the pipeline fails on a regression of more than 20% (shown once with a deliberately slowed function).
 6. No media file larger than 100 KB is tracked (`git ls-files` checked by a script in CI).
 7. The pull-request pipeline finishes in under 20 minutes with all of the above.
+
+## 13. Quality campaigns
+
+Epic 42 settles the numbers and the hard cases before the product is tested by hand. Each campaign is a repeatable command with a pass rule; the measuring ones are run by the orchestrator with every agent stopped and the machine idle (`AGENTS.md` section 9), and the report records what else was running.
+
+### 13.1 Performance budgets
+
+- `go run ./internal/tools/perfreport -write -absolute` measures every row of section 7 that a benchmark can measure, on the reference projects (video: `project-200`; image: the reference document of NFR-061, a 2,000 by 2,000 pixel document with 20 layers), and fails when a limit is missed. The table is `docs/perf/<date>-<goos>.md`.
+- The absolute budgets that live in tests (section 10) run with `STUARTY_PERF=1 go test -count=1 -p 1 ./engine/frame ./web/app/http ./core/lint` on the idle machine. The gate is the two commands together: with only the first, a budget that moved into a test would go unmeasured.
+- A budget that fails is fixed, or, when the requirement was wrong, taken to the author with the measurement; the requirement is never edited silently.
+
+### 13.2 Fuzzing
+
+Every parser of untrusted input and the command core of both document kinds has a `Fuzz*` target. A target runs for a fixed budget (30 s on a pull request, 10 minutes in the long run) with `go test -run '^$' -fuzz '^<Target>$' -fuzztime <budget> <package>`. Pass rule: no panic, no hang, the invariants hold (a batch is valid or rejected whole; undo returns the previous document byte for byte; a parser returns an error or a value that validates). A crash is minimised by the fuzzer into `testdata/fuzz/<Target>/` and stays there as a regression case that `go test` runs on every pull request. `scripts/fuzz.sh` runs the whole list with the budget as its argument.
+
+### 13.3 Crash recovery
+
+`internal/tools/crashharness` runs a real `stuarty` server as a child process, kills it with a hard kill at a named kill point, starts it again on the same workspace and asserts the recovery. The kill points are mid-batch, mid-export, mid-migration, mid-upload to the fake connector, mid-publish by the scheduler and mid-vault write. Pass rule: the database opens and `PRAGMA integrity_check` is `ok`; the document is the revision before or the revision after the batch, never between; a publication is sent at most once; the vault opens and holds every secret that was acknowledged; every job of the killed process is resumed or ends `failed` with a stable code, none stays `running`. Kill points inside a process are named by `service/crashpoint`; the harness arms one through the environment variable `STUARTY_CRASH_AT=<name>`, with the `crashtest` build tag of the child.
+
+### 13.4 Soak
+
+`go run ./internal/tools/soak -duration 4h -report <file>` drives the server in process with a seeded script of edits (video and image), generation with the fake provider, scheduling and publication to the fake connector, and samples every 30 s the heap in use, the goroutines, the open file handles and the size of the database and its WAL. Pass rule: after a warm-up of 10 minutes, the heap in use at the end is within 25% of the heap at the end of the warm-up, goroutines within 10 of the warm-up value, handles within 10, the database grows at most linearly with the number of commits (no more than 2 KB per commit on average), and no job is `running` or `queued` at the end after the queue drains. `-duration 2m` is the smoke that runs in `task test`.
+
+### 13.5 Security acceptance
+
+Every row of SDD-007 has a passing `TestSecurity_` test (`threatcheck`); `scripts/no-egress.sh` passes with no connection configured; a specialist session with only SDD-007 and the code reviews the outbound paths, the vault, the approval queue, the hosted agent and the sign-in flows, and writes `docs/security-review-stuarty.md` with each finding and its fix. Pass rule: no open finding of high severity.
+
+### 13.6 Agent surface
+
+`go run ./internal/tools/surfacebudget` and `go test ./web/contract/...` are run again on the final surface; the budgets of NFR-020 and NFR-021 hold or carry the author's decision.

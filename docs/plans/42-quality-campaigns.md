@@ -39,7 +39,7 @@ Every epic above it in the roadmap that is not blocked.
 
 ## Tasks
 
-- [ ] 1. Amend SDD-008 with the campaigns, their harnesses and their pass rules. Verify: `task lint:md` exits 0.
+- [x] 1. Amend SDD-008 with the campaigns, their harnesses and their pass rules. Verify: `task lint:md` exits 0.
 - [ ] 2. Extend `perfreport` to the image document and the new sections; prepare the reference projects. Verify: `go test ./internal/tools/perfreport/...` passes.
 - [ ] 3. Orchestrator, machine idle: measure every budget. Verify: the report with each NFR, its number and pass or fail is committed under `docs/`.
 - [ ] 4. Fix or escalate each failed budget. Verify: a second idle measurement, in the same report.
