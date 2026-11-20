@@ -183,7 +183,7 @@ func TestThreatIDsHaveTwoOrThreeDigits(t *testing.T) {
 		}
 	}
 
-	for _, id := range []string{"T-1", "T-1000"} {
+	for _, id := range []string{"T-1", "T-1000", "T-050", "T-099"} {
 		if _, err := parseThreats(row(id)); err == nil {
 			t.Errorf("%s was accepted", id)
 		}
@@ -214,7 +214,9 @@ func TestThreeDigitSecurityTestNames(t *testing.T) {
 	put("service/service.go", "package service\n\ntype Service interface {\n}\n")
 	put(
 		"x/x_test.go",
-		"package x\n\nfunc TestSecurity_T100_One(t *testing.T) {}\nfunc TestSecurity_T100_Wrong(t *testing.T) {}\n",
+		"package x\n\nfunc TestSecurity_T100_One(t *testing.T) {}\nfunc TestSecurity_T100_Wrong(t *testing.T) {}\n"+
+			"func TestSecurity_T1000_Four(t *testing.T) {}\nfunc TestSecurity_T050_Padded(t *testing.T) {}\n"+
+			"func TestSecurity_T7_One(t *testing.T) {}\nfunc TestSecurity_ActorCannotImpersonate(t *testing.T) {}\n",
 	)
 
 	problems, err := check(root, "docs/sdds/007-security-model.md")
@@ -225,6 +227,18 @@ func TestThreeDigitSecurityTestNames(t *testing.T) {
 	got := strings.Join(problems, "\n")
 	if !strings.Contains(got, "TestSecurity_T100_Wrong is named by the row T-101") {
 		t.Errorf("a three-digit test under the wrong row is not reported:\n%s", got)
+	}
+
+	// A security test whose id is not a threat id would escape the check altogether (D-102).
+	for _, name := range []string{"TestSecurity_T1000_Four", "TestSecurity_T050_Padded", "TestSecurity_T7_One"} {
+		if !strings.Contains(got, name+" has no valid threat id") {
+			t.Errorf("the misnamed %s is not reported:\n%s", name, got)
+		}
+	}
+
+	// A security test with no threat id at all is a test of a rule, not of a threat row, and stays allowed.
+	if strings.Contains(got, "TestSecurity_ActorCannotImpersonate") {
+		t.Errorf("a security test with no threat id is reported:\n%s", got)
 	}
 
 	if strings.Contains(got, "TestSecurity_T100_One") {
