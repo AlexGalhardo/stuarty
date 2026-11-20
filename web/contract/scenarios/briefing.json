@@ -14,6 +14,11 @@
 		{"call": "BriefingQuestions", "args": {"project_id": "prj_7k2m9x4q1b"}},
 		{"call": "BriefSet", "args": {"project_id": "prj_7k2m9x4q1b", "text": ""}},
 		{"call": "BriefingAnswer", "args": {"project_id": "prj_7k2m9x4q1b", "answers": {"audience": "makers", "goal": "sell", "platform": "tiktok", "format": "vertical-9x16", "duration": "20"}}},
+		{"call": "ProjectCreate", "args": {"id": "prj_8m3n0y5r2c", "name": "Launch ad"}},
+		{"call": "BriefingQuestions", "args": {"project_id": "prj_8m3n0y5r2c", "kind": "commercial"}},
+		{"call": "BriefingAnswer", "args": {"project_id": "prj_8m3n0y5r2c", "answers": {"product": "a pen"}}, "expect_error": {"code": "E_VALIDATION"}},
+		{"call": "BriefingAnswer", "args": {"project_id": "prj_8m3n0y5r2c", "kind": "commercial", "answers": {"product": "a pen", "audience": "writers", "problem": "smudges", "offer": "10% off", "call_to_action": "buy now", "platform": "tiktok", "format": "vertical-9x16", "duration": "30"}}},
+		{"call": "BriefingQuestions", "args": {"project_id": "prj_8m3n0y5r2c", "kind": "commercial"}},
 		{"call": "ProjectDescribe", "args": {"project_id": "prj_7k2m9x4q1b"}}
 	]
 }
