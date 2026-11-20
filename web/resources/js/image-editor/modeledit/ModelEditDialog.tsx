@@ -266,6 +266,11 @@ export function ModelEditDialog({
 							<p className="text-xs text-muted-foreground">
 								{t("ui.image.model.project_hint")}
 							</p>
+							{projects !== null && projects.length === 0 && (
+								<p className="text-sm" data-testid="model-edit-no-project">
+									{t("ui.image.model.no_project")}
+								</p>
+							)}
 						</div>
 						<div className="flex flex-col gap-1">
 							<Label htmlFor="model-edit-connection">
