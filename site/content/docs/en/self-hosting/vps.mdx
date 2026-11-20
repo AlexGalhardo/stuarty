@@ -33,10 +33,10 @@ Pick the tag of a release and install it:
 ```console
 git clone --branch vX.Y.Z https://github.com/AlexGalhardo/stuarty.git
 cd stuarty
-bash deploy/install.sh --domain stuarty.example.com --email you@example.com
+bash deploy/install.sh --domain video.example.com --email you@example.com
 ```
 
-The script checks Docker, creates the keys, writes `deploy/.env` (mode 0600), builds the image, starts the stack, waits until it is healthy and until `https://stuarty.example.com/up` answers, and prints the address, the e-mail and the first password. The first build takes several minutes. Sign in, and change the password.
+The script checks Docker, creates the keys, writes `deploy/.env` (mode 0600), builds the image, starts the stack, waits until it is healthy and until `https://video.example.com/up` answers, and prints the address, the e-mail and the first password. The first build takes several minutes. Sign in, and change the password.
 
 Run it again whenever you like: it changes no file, keeps every key and prints where the password is, not the password.
 
@@ -76,7 +76,7 @@ ls my-backup/manifest.json my-backup/SHA256SUMS
 
 ```console
 mkdir -p deploy/secrets && cp /safe/place/master_key deploy/secrets/master_key
-bash deploy/install.sh --domain stuarty.example.com --email you@example.com --no-start
+bash deploy/install.sh --domain video.example.com --email you@example.com --no-start
 bash deploy/restore.sh stuarty-backup-20261119T120000Z.tar
 bash deploy/install.sh
 ```
