@@ -25,7 +25,7 @@ const RefreshMargin = 60 * time.Second
 // defaultLifetime is the life given to an access token whose answer did not say.
 const defaultLifetime = time.Hour
 
-// Envelope is the stored form of a sign-in credential: one vault entry (SDD-014 section 12). It is never
+// Envelope is the stored form of a sign-in credential: one vault entry (SDD-014 section 13). It is never
 // returned by an operation and never written outside the vault.
 type Envelope struct {
 	Format   string `json:"format"`

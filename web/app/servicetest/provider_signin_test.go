@@ -19,7 +19,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/service/providers/openrouter"
 )
 
-// Epic 12 (SDD-016 section 12, SDD-014 section 12): the sign-in to an AI provider, over the real service, the
+// Epic 12 (SDD-016 section 12, SDD-014 section 13): the sign-in to an AI provider, over the real service, the
 // connection manager and the vault, with a fake authorization server on loopback.
 
 const signInRedirect = "http://127.0.0.1:7878/auth/callback"

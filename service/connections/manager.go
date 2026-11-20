@@ -38,12 +38,12 @@ type Credential struct {
 	Connection Connection
 	Secret     []byte
 	Client     Doer
-	// SignedIn is true when the connection was made by a sign-in in the browser (SDD-014 section 12):
+	// SignedIn is true when the connection was made by a sign-in in the browser (SDD-014 section 13):
 	// Secret is then the access token, or the key the provider issued, and nothing else.
 	SignedIn bool
 }
 
-// Errors of a sign-in credential (SDD-014 section 12).
+// Errors of a sign-in credential (SDD-014 section 13).
 var (
 	// ErrNeedsSignIn is a connection whose sign-in is no longer good: the person must sign in again.
 	ErrNeedsSignIn = errors.New("connections: the sign-in of the connection must be done again")
@@ -63,7 +63,7 @@ type Prepared struct {
 }
 
 // Refresher turns the stored secret of a sign-in into what a closure needs, renewing it when it is
-// about to expire (SDD-014 section 12). It runs under the lock of the connection, with the gated
+// about to expire (SDD-014 section 13). It runs under the lock of the connection, with the gated
 // client of that connection. A secret that is not a sign-in is none of its business: it returns the
 // zero Prepared and no error. When it returns an error, a non-nil Store is still written (a refused
 // grant is remembered), and the error ends the call.
@@ -268,7 +268,7 @@ func (m *Manager) WithTimeout(ctx context.Context, id string, timeout time.Durat
 	return m.use(ctx, id, timeout, true, fn)
 }
 
-// WithStored is WithTimeout for the sign-in itself (SDD-014 section 12): it hands the closure the secret
+// WithStored is WithTimeout for the sign-in itself (SDD-014 section 13): it hands the closure the secret
 // as it is stored, with no renewal, so that a sign-in that is not finished, or that needs to be done
 // again, can still exchange its code through the gated client of its connection. Nothing else uses it.
 func (m *Manager) WithStored(ctx context.Context, id string, timeout time.Duration, fn func(Credential) error) error {
@@ -310,7 +310,7 @@ func (m *Manager) readSecret(r Row) ([]byte, error) {
 
 // secretFor reads the secret of a connection and, for a sign-in, renews it and takes out the token. The
 // lock of the connection is held from before the read to after the write, so a concurrent use sees the
-// renewed tokens instead of spending a rotating refresh token twice (SDD-014 section 12).
+// renewed tokens instead of spending a rotating refresh token twice (SDD-014 section 13).
 func (m *Manager) secretFor(ctx context.Context, r Row, client Doer, renew bool) ([]byte, bool, error) {
 	m.mu.RLock()
 	ref := m.refresher

@@ -9,7 +9,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/service"
 )
 
-// The threat rows T-75 to T-78 of SDD-007 (epic 12, SDD-014 section 12, SDD-016 section 12).
+// The threat rows T-75 to T-78 of SDD-007 (epic 12, SDD-014 section 13, SDD-016 section 12).
 
 // T-75: a state is single-use, bound to the session that began it and refused when foreign or late, and a
 // sign-in is begun, completed and removed by a person in the browser only.
