@@ -1,6 +1,7 @@
 package export
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"image"
@@ -113,6 +114,79 @@ func TestFFmpegWebPResizes(t *testing.T) {
 
 	if b := decodeWebP(t, webp).Bounds(); b.Dx() != 160 || b.Dy() != 90 {
 		t.Errorf("the size is %v", b)
+	}
+}
+
+// TestFFmpegWebPIsDeterministic is NFR-062 for WebP: the same picture gives the same bytes, lossless and lossy.
+func TestFFmpegWebPIsDeterministic(t *testing.T) {
+	setup(t)
+
+	a, b := renderTwice(t, "transparent")
+
+	for _, q := range []int{0, 75} {
+		o := ImageEncodeOptions{Format: ImageWebP, Quality: q, WebP: FFmpegWebP{Runner: shared.runner}}
+
+		one, err := EncodeImage(context.Background(), a, o)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		two, err := EncodeImage(context.Background(), b, o)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if !bytes.Equal(one, two) {
+			t.Errorf("quality %d: two WebP exports differ", q)
+		}
+	}
+}
+
+// TestFFmpegWebPLimitAndCleanup checks that a WebP past STUARTY_MAX_EXPORT_BYTES is refused before it is read
+// back, and that the run directory is removed after a success and after a failure.
+func TestFFmpegWebPLimitAndCleanup(t *testing.T) {
+	setup(t)
+
+	r, err := ffmpeg.NewRunner(shared.runner.In, t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	a, _ := renderTwice(t, "shapes")
+
+	raw, err := EncodeImage(context.Background(), a, ImageEncodeOptions{Format: ImagePNG})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	leftovers := func() []string {
+		entries, _ := os.ReadDir(filepath.Join(r.Workspace, "tmp"))
+
+		names := make([]string, 0, len(entries))
+		for _, e := range entries {
+			names = append(names, e.Name())
+		}
+
+		return names
+	}
+
+	if _, err := (FFmpegWebP{Runner: r}).EncodeWebP(context.Background(), raw, 0); err != nil {
+		t.Fatal(err)
+	}
+
+	if l := leftovers(); len(l) != 0 {
+		t.Errorf("a successful encode left %v", l)
+	}
+
+	_, err = FFmpegWebP{Runner: r, MaxBytes: 64}.EncodeWebP(context.Background(), raw, 0)
+
+	var fe *ffmpeg.Error
+	if !errors.As(err, &fe) || fe.Code != CodeExportFailed || fe.Details["reason"] != ReasonSizeLimit {
+		t.Fatalf("a WebP past the limit is size_limit: %v", err)
+	}
+
+	if l := leftovers(); len(l) != 0 {
+		t.Errorf("a refused encode left %v", l)
 	}
 }
 

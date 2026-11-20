@@ -79,8 +79,14 @@ func (e FFmpegWebP) EncodeWebP(ctx context.Context, png []byte, quality int) ([]
 	}
 
 	fi, err := os.Stat(out)
-	if err != nil || fi.Size() == 0 || fi.Size() > maxWebPBytes {
+	if err != nil || fi.Size() == 0 {
 		return nil, exportErr(ReasonEncoder, "FFmpeg wrote no WebP file.", errors.New("no output"), res.Stderr)
+	}
+
+	// The watchdog polls, so a file can finish past the limit between two polls: it is measured again here,
+	// before it is read into memory.
+	if limit := e.readLimit(); fi.Size() > limit {
+		return nil, sizeLimitError(fi.Size(), limit)
 	}
 
 	b, err := os.ReadFile(out)
@@ -97,6 +103,15 @@ func missingWebPEncoder(stderr string) bool {
 
 	return strings.Contains(s, "unknown encoder") || strings.Contains(s, "encoder 'libwebp' not found") ||
 		strings.Contains(s, "codec not found")
+}
+
+// readLimit is the largest WebP read back: STUARTY_MAX_EXPORT_BYTES when it is set and lower than maxWebPBytes.
+func (e FFmpegWebP) readLimit() int64 {
+	if e.MaxBytes > 0 && e.MaxBytes < maxWebPBytes {
+		return e.MaxBytes
+	}
+
+	return maxWebPBytes
 }
 
 func webpUnavailable(cause error) *ffmpeg.Error {
