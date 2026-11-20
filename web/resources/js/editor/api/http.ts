@@ -11,6 +11,7 @@ import {
 	CHAT_EVENT_NAMES,
 	EVENT_NAMES,
 	IMAGE_EVENT_NAMES,
+	PUBLICATION_EVENT_NAMES,
 } from "./types";
 
 // The only place that calls fetch and EventSource (rule T7). Same origin, the
