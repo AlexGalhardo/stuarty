@@ -819,6 +819,11 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 		return name, argv, stdin, err
 	}
 
+	// First: its members are numbers where the generic decoding below reads strings (until).
+	if name, argv, ok, err := historyCommand(s); ok {
+		return name, argv, "", err
+	}
+
 	var a struct {
 		ProjectID string               `json:"project_id"`
 		AssetID   string               `json:"asset_id"`

@@ -21,6 +21,13 @@ command briefing:questions
 command bundle:export
 command bundle:import
 command caption:validate
+command chat:session
+command chat:sessions
+command chat:transcript
+command checkpoint:create
+command checkpoint:list
+command checkpoint:remove
+command checkpoint:rename
 command command:help
 command connection:add
 command connection:list
@@ -92,6 +99,7 @@ command publish:now
 command publish:status
 command publish:validate
 command redo
+command revert
 command script:estimate
 command skill:export
 command skill:import
@@ -216,6 +224,9 @@ route POST /approval-rules
 route POST /approvals/{}/decide
 route POST /assets/{}/tags
 route POST /captions/validate
+route POST /chat/sessions/{}/cancel
+route POST /chat/sessions/{}/messages
+route POST /chat/sessions/{}/permissions/{}
 route POST /connections
 route POST /connections/{}/test
 route POST /fonts
@@ -254,12 +265,18 @@ route POST /projects/{}/motion/replace
 route POST /projects/{}/otio
 route POST /projects/{}/redo
 route POST /projects/{}/restore
+route POST /projects/{}/revert
 route POST /projects/{}/texts
 route POST /projects/{}/texts/{}/draft
 route POST /projects/{}/texts/{}/revert
 route POST /projects/{}/trash
 route POST /projects/{}/undo
+route POST /publish
+route POST /publish/validate
 route POST /scripts/estimate
+route POST /social/complete
+route POST /social/connect
+route POST /social/select
 route POST /system/launch
 route POST /system/tools/install
 route POST /templates
