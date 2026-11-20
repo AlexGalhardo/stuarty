@@ -32,7 +32,10 @@ var domains = []DomainInfo{
 		"The timeline: edit operations, history, lint, frames and sheets, export and transcribe jobs, templates.",
 	},
 	{DomainImage, "Image documents: layers, text, shapes, templates with slots, export to PNG, JPEG or WebP."},
-	{DomainWriting, "Scripts, copy, captions and revisions."},
+	{
+		DomainWriting,
+		"Scripts, copy and captions of a production: revisions, network limits, duration estimate, drafts by a model.",
+	},
 	{
 		DomainAsset,
 		"Files of the workspace: media import and inspection, the asset library (origin, tags, reuse), fonts.",
