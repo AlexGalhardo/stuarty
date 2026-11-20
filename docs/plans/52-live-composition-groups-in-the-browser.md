@@ -48,7 +48,7 @@ Not in progress together with 51 (both change `web/resources/js/editor/preview/`
 - [x] 4. Playback draws the group with no `ViewFrame` request. Verify: `web/e2e/specs/preview-nested-live.spec.ts` (new, `bun run e2e`) passes, including the assertion that no `/frame` request is made during playback.
 - [x] 5. Parity of a two-level nested project with the export. Verify: `web/e2e/specs/preview-export-parity.spec.ts` passes with the nested project.
 - [x] 6. The PixiJS fallback draws the group with the diagnostic line, or the preview says it cannot. Verify: `web/e2e/specs/preview-rust-playback.spec.ts` passes with the PixiJS executor forced.
-- [ ] 7. Typecheck and thin client. Verify: `bun run typecheck` and `bun run check:thin-client` pass.
+- [x] 7. Typecheck and thin client. Verify: `bun run typecheck` and `bun run check:thin-client` pass.
 
 ## Test strategy
 
