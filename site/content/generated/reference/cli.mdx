@@ -2688,7 +2688,7 @@ stuarty publication:create --project prj_7k2m9x4q1b --title "Week one" --export 
 List the publications of the calendar, by project, state, network or time range
 
 ```text
-stuarty publication:list [--project <id>] [--state <state>] [--from <time>] [--until <time>]
+stuarty publication:list [--project <id>] [--state <state>] [--from <time>] [--until <time>] [--zone <zone>]
 ```
 
 | Flag | Type | Default | Meaning |
@@ -2696,8 +2696,9 @@ stuarty publication:list [--project <id>] [--state <state>] [--from <time>] [--u
 | `--project` | string |  | only the publications of this project |
 | `--state` | string |  | only those with a target in this state, for example waiting_approval or failed |
 | `--network` | string |  | only those with a target on this network |
-| `--from` | string |  | only those with a target at or after this time (RFC 3339) |
-| `--until` | string |  | only those with a target before this time (RFC 3339) |
+| `--from` | string |  | only those with a target at or after this time (RFC 3339) or date |
+| `--until` | string |  | only those with a target before this time (RFC 3339) or date |
+| `--zone` | string |  | the zone a date or local time of --from and --until is read in (default UTC) |
 | `--limit` | integer |  | the page size, 1 to 500 (default 100) |
 | `--offset` | integer |  | how many to skip |
 
