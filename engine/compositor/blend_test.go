@@ -1,6 +1,7 @@
 package compositor
 
 import (
+	"bytes"
 	"image"
 	"math"
 	"testing"
@@ -156,7 +157,7 @@ func TestBlendOverATransparentDestination(t *testing.T) {
 	for _, mode := range []blendMode{blendMultiply, blendScreen, blendOverlay, blendAdd} {
 		d := []byte{9, 9, 9, 0}
 		mixPixel(d, 40, 80, 120, 200, mode)
-		if want := []byte{40, 80, 120, 200}; string(d) != string(want) {
+		if want := []byte{40, 80, 120, 200}; !bytes.Equal(d, want) {
 			t.Errorf("mode %d over alpha 0: got %v, want %v", mode, d, want)
 		}
 
