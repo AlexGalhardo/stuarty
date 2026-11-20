@@ -211,7 +211,7 @@ An image document has a stream of its own, `GET /images/{id}/events` (SDD-006 §
 
 ## 6. Jobs
 
-Kinds: `ingest`, `transcribe`, `export`, `export_batch`, `frame`, `text.generate` (SDD-016 §6), `image.generate` and `voice.generate` (SDD-016 §6.1), `text.draft` (SDD-019 §6), `video.generate` (SDD-016 §6.4; the job stores the task id of the provider and resumes it after a restart), `image.edit` (SDD-016 §6.5), and the kinds a feature epic registers as needing approval (SDD-015 §5). States: `queued`, `running`, `succeeded`, `failed`, `cancelled`, and `waiting_approval` (a job of a kind that needs approval, until a person or a rule approves it; it is not running and counts as active; at most 50 per submitter and 1000 in the workspace, `E_LIMIT_EXCEEDED` past either, SDD-015 §5). Asset ingest states: `pending`, `ingesting`, `ready`, `failed`.
+Kinds: `ingest`, `transcribe`, `export`, `export_batch`, `frame`, `text.generate` (SDD-016 §6), `image.generate` and `voice.generate` (SDD-016 §6.1), `text.draft` (SDD-019 §6), `video.generate` (SDD-016 §6.4; the job stores the task id of the provider and resumes it after a restart), `image.edit` (SDD-016 §6.5), `image.export` (SDD-021 §6: the record of an `ImageExport`, always `succeeded`, with no project; a publication takes it as its thumbnail), and the kinds a feature epic registers as needing approval (SDD-015 §5). States: `queued`, `running`, `succeeded`, `failed`, `cancelled`, and `waiting_approval` (a job of a kind that needs approval, until a person or a rule approves it; it is not running and counts as active; at most 50 per submitter and 1000 in the workspace, `E_LIMIT_EXCEEDED` past either, SDD-015 §5). Asset ingest states: `pending`, `ingesting`, `ready`, `failed`.
 
 ## 7. Database tables
 

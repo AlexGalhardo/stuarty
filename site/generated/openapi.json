@@ -2912,6 +2912,9 @@
           "image_id": {
             "type": "string"
           },
+          "job_id": {
+            "type": "string"
+          },
           "path": {
             "type": "string"
           },
@@ -3921,6 +3924,16 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/GeneratedResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "image": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ImageExportResult"
               },
               {
                 "type": "null"

@@ -232,6 +232,7 @@ func (t memTx) Images() ImageRepo                { return t.st.images }
 func (t memTx) ImageCheckpoints() CheckpointRepo { return t.st.checkpoints }
 func (t memTx) Assets() AssetRepo                { return t.st.assets }
 func (t memTx) AfterCommit(func())               {}
+func (t memTx) Jobs() JobRepo                    { return t.st.Jobs() }
 
 // memLibrary is the library side of the files, by owner and hash: the rows an import writes.
 type memLibrary struct {
@@ -248,15 +249,16 @@ func (m memLibrary) Get(_ context.Context, owner, hash string) (assetlib.Row, er
 	return r, nil
 }
 
-// noJobs holds no job: the image tests never queue an ingest.
-type noJobs struct{ JobRepo }
+// imageJobs is memJobs with the ingest lookup the image tests need: none is ever active.
+type imageJobs struct{ memJobs }
 
-func (noJobs) ActiveIngestForHash(context.Context, string) (JobRow, error) {
+func (*imageJobs) ActiveIngestForHash(context.Context, string) (JobRow, error) {
 	return JobRow{}, ErrNotFound
 }
 
 type memStore struct {
 	Store
+	jobs        *imageJobs
 	images      *memImages
 	checkpoints *memCheckpoints
 	assets      memAssets
@@ -270,7 +272,14 @@ func (m *memStore) ImageCheckpoints() CheckpointRepo { return m.checkpoints }
 
 func (m *memStore) AssetLibrary() assetlib.Store { return m.library }
 
-func (m *memStore) Jobs() JobRepo { return noJobs{} }
+// Jobs holds the jobs the service wrote (an image export records one) and, for the ingest, none.
+func (m *memStore) Jobs() JobRepo {
+	if m.jobs == nil {
+		m.jobs = &imageJobs{memJobs{rows: map[string]*JobRow{}}}
+	}
+
+	return m.jobs
+}
 
 // No test here reads a connection; the manager the service builds only needs a store to hold.
 func (m *memStore) Connections() connections.Store { return nil }

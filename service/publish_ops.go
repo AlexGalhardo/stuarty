@@ -343,6 +343,10 @@ func (s *svc) publishFile(ctx context.Context, c Caller, projectID, path, jobID 
 	}
 
 	row, err := s.store.Jobs().Get(ctx, jobID)
+	if err == nil && row.Kind == JobImageExport && path == "thumbnail" {
+		return s.publishImageFile(ctx, c, path, &row)
+	}
+
 	if err != nil || !s.canSee(ctx, c, &row) || row.ProjectID == nil || !s.inProject(ctx, *row.ProjectID, projectID) {
 		return nil, validationAt(path, "that export is not a job of this project.")
 	}
@@ -390,6 +394,43 @@ func (s *svc) publishFile(ctx context.Context, c Caller, projectID, path, jobID 
 	}
 
 	return out, nil
+}
+
+// publishImageFile is the file of an image.export job taken as the thumbnail of a publication (D-111). An image
+// belongs to no project, so the job is checked against the person who may see the image, not against the project of
+// the publication; the path is rebuilt from what the job recorded and checked to lie in the exports folder, and the
+// digest and the size are the ones the export recorded.
+func (s *svc) publishImageFile(ctx context.Context, c Caller, path string, row *JobRow) (*publishFile, error) {
+	if !s.canSeeImageJob(ctx, c, row) {
+		return nil, validationAt(path, "that export is not a job this caller may use.")
+	}
+
+	img, _ := imageJobOf(row)
+
+	if row.State != JobSucceeded {
+		return nil, validationAt(path, "that job is not a succeeded export.").withHint("wait for the export to succeed")
+	}
+
+	ext, ok := imageExtensions[img.Format]
+	if !ok || len(img.SHA256) < 12 || strings.ContainsAny(img.ImageID, "/\\") {
+		return nil, internalError()
+	}
+
+	rel := filepath.ToSlash(filepath.Join(
+		"exports", "images", img.ImageID, fmt.Sprintf("%d-%s.%s", img.Revision, img.SHA256[:12], ext),
+	))
+	full := filepath.Join(s.workspace, filepath.FromSlash(rel))
+
+	st, err := os.Stat(full)
+	if err != nil || !st.Mode().IsRegular() {
+		return nil, validationAt(path, "the file of that export is gone.").withHint("export it again")
+	}
+
+	if img.Bytes > 0 && img.Bytes != st.Size() {
+		return nil, validationAt(path, "the file of that export changed after it was made.").withHint("export it again")
+	}
+
+	return &publishFile{Rel: rel, Bytes: st.Size(), Format: ext, SHA256: img.SHA256}, nil
 }
 
 // exportMedia is what the export measured on the video it wrote, in the terms of core/publish; nil for an

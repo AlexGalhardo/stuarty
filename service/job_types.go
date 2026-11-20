@@ -14,6 +14,8 @@ const (
 	// JobExportBatch is the parent of an ExportBatch; its children are export jobs (SDD-004 section 8.4).
 	JobExportBatch = "export_batch"
 	JobFrame       = "frame"
+	// JobImageExport records an ImageExport: an image belongs to no project, so the job has none (D-111).
+	JobImageExport = "image.export"
 )
 
 // Job states.
@@ -129,6 +131,8 @@ type JobResult struct {
 	Text  *TextResult  `json:"text,omitempty"`
 	// Generated is the files an image.generate or voice.generate job stored as assets (SDD-016 section 6.1).
 	Generated *GeneratedResult `json:"generated,omitempty"`
+	// Image is the file an image.export job wrote (SDD-021 section 6).
+	Image *ImageExportResult `json:"image,omitempty"`
 }
 
 // Job is the job object of SDD-003 section 2.8.

@@ -267,7 +267,10 @@ type ImageExportRequest struct {
 
 // ImageExportResult describes the file written.
 type ImageExportResult struct {
-	ImageID  string `json:"image_id"`
+	ImageID string `json:"image_id"`
+	// JobID is the export job of kind image.export that records the file; a publication takes it as its
+	// thumbnail (SDD-020 section 4).
+	JobID    string `json:"job_id,omitempty"`
 	Revision int64  `json:"revision"`
 	Format   string `json:"format"`
 	Path     string `json:"path"`

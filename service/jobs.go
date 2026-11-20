@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"path/filepath"
 	"slices"
 	"strings"
 	"time"
@@ -447,6 +448,10 @@ func limitedElsewhere() *Error {
 // the project; an ingest job follows any project that holds its file (SDD-003
 // section 2.8 rule 7).
 func (s *svc) canSee(ctx context.Context, c Caller, j *JobRow) bool {
+	if j.Kind == JobImageExport {
+		return s.canSeeImageJob(ctx, c, j)
+	}
+
 	if j.ProjectID != nil {
 		if !s.covers(ctx, c, *j.ProjectID) {
 			return false
@@ -910,6 +915,29 @@ func (s *svc) cancelProjectJobs(ctx context.Context, projectID string) {
 	}
 }
 
+// imageExportView is the result of an image.export job for the caller: the file by its absolute path for a local
+// caller and with no path in network mode, as an export is.
+func (s *svc) imageExportView(c Caller, r *JobRow) *JobResult {
+	if r.Kind != JobImageExport || len(r.Result) == 0 {
+		return nil
+	}
+
+	var res JobResult
+	if json.Unmarshal(r.Result, &res) != nil || res.Image == nil {
+		return nil
+	}
+
+	res.Image.JobID = r.ID
+
+	if c.OwnerUserID != "" {
+		res.Image.Path = ""
+	} else {
+		res.Image.Path = filepath.Join(s.workspace, filepath.FromSlash(res.Image.Path))
+	}
+
+	return &res
+}
+
 // jobView is the Job object of a row. The path of an export is for local
 // callers only.
 func (s *svc) jobView(c Caller, r JobRow, waited bool) *Job {
@@ -959,6 +987,10 @@ func (s *svc) jobView(c Caller, r JobRow, waited bool) *Job {
 
 			j.Result = &res
 		}
+	}
+
+	if res := s.imageExportView(c, &r); res != nil {
+		j.Result = res
 	}
 
 	if r.Kind == JobPublishUpload && len(r.Result) > 0 {
