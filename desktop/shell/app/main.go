@@ -133,6 +133,7 @@ func run() error {
 	bg := newBackground(app, srv, settingsDir, settings)
 	bg.install(win)
 	bgp.Store(bg)
+	br.bg.Store(bg)
 	guardNavigation(win, srv.Port, home)
 	br.app = app
 	br.port.Store(int64(srv.Port))

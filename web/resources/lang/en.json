@@ -239,6 +239,21 @@
         "forbidden": "This session cannot install files. Run the command below in a terminal.",
         "command": "Install command",
         "copy_command": "Copy the command"
+      },
+      "background": {
+        "title": "Background",
+        "intro": "A scheduled post goes out at its time only while Stuarty is running. With this on, closing the window while a post is scheduled keeps Stuarty running behind an icon in the system tray, so the post still goes out.",
+        "keep_running": "Keep running in the background",
+        "start_at_sign_in": "Start when I sign in",
+        "start_at_sign_in_hint": "Starts Stuarty hidden, only for you, with no administrator rights. Turning this off, or uninstalling Stuarty, removes it.",
+        "limit_computer": "A post goes out only if the computer is on and you are signed in. Stuarty does not wake the computer.",
+        "limit_missed": "A post whose time passed while Stuarty was not running is not sent on its own. It waits for your decision.",
+        "limit_quit": "Quit in the tray icon stops publishing. Pause publishing is in the same menu.",
+        "failed": "The setting could not be changed.",
+        "ask_title": "Keep Stuarty running so scheduled posts go out?",
+        "ask_yes": "Keep running in the background",
+        "ask_no": "Not now",
+        "ask_later": "You can change this in Settings, Background."
       }
     },
     "image": {

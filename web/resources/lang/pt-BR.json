@@ -239,6 +239,21 @@
         "forbidden": "Esta sessão não pode instalar arquivos. Rode o comando abaixo em um terminal.",
         "command": "Comando de instalação",
         "copy_command": "Copiar o comando"
+      },
+      "background": {
+        "title": "Segundo plano",
+        "intro": "Uma publicação agendada só sai na hora se o Stuarty estiver rodando. Com isto ligado, fechar a janela com uma publicação agendada mantém o Stuarty rodando atrás de um ícone na bandeja do sistema, e a publicação sai do mesmo jeito.",
+        "keep_running": "Continuar rodando em segundo plano",
+        "start_at_sign_in": "Iniciar quando eu entrar no computador",
+        "start_at_sign_in_hint": "Inicia o Stuarty escondido, só para você, sem direitos de administrador. Desligar isto, ou desinstalar o Stuarty, remove o registro.",
+        "limit_computer": "Uma publicação só sai se o computador estiver ligado e você estiver conectado. O Stuarty não acorda o computador.",
+        "limit_missed": "Uma publicação cuja hora passou enquanto o Stuarty não estava rodando não é enviada sozinha. Ela espera a sua decisão.",
+        "limit_quit": "Sair no ícone da bandeja para de publicar. Pausar as publicações fica no mesmo menu.",
+        "failed": "Não foi possível mudar a configuração.",
+        "ask_title": "Manter o Stuarty rodando para as publicações agendadas saírem?",
+        "ask_yes": "Continuar rodando em segundo plano",
+        "ask_no": "Agora não",
+        "ask_later": "Você pode mudar isto em Configurações, Segundo plano."
       }
     },
     "image": {
