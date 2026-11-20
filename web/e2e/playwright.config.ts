@@ -84,38 +84,53 @@ const detectOnly = process.env.STUARTY_DETECT_ONLY === "1";
 // otherwise (CI, the desktop-detect workflow). With STUARTY_E2E_PORT set, a run
 // owns a block of ports and the detection server takes one of them (above the
 // sign-in server), so a local run never touches 7979.
-const detectPort = Number(
-	process.env.STUARTY_E2E_DETECT_PORT ??
-		(process.env.STUARTY_E2E_PORT ? port + 6 : 7979),
-);
+const detectPort = process.env.STUARTY_E2E_PORT ? port + 6 : 7979;
 const detectUrl = `http://127.0.0.1:${detectPort}`;
 
 // A server starts only when a project that uses it runs. The projects chosen
-// with --project (both `--project=x` and `--project x`) tell which; with none
-// chosen every server starts, as in the CI runs that pass the list themselves.
-function chosenProjects(): string[] {
-	const chosen: string[] = [];
+// with --project tell which, read as Playwright reads them: `--project=x`, or
+// `--project x y` (the option takes every value up to the next option), with no
+// regard to case and with `*` as a wildcard. With none chosen every server
+// starts, as in the CI runs that pass the list themselves.
+function chosenProjects(): RegExp[] {
+	const names: string[] = [];
 	const argv = process.argv;
 	for (let i = 0; i < argv.length; i++) {
 		const arg = argv[i];
-		if (arg === "--project" || arg === "-p") {
-			if (argv[i + 1]) chosen.push(argv[i + 1]);
-		} else if (arg.startsWith("--project=")) {
-			chosen.push(arg.slice("--project=".length));
+		if (arg.startsWith("--project=")) {
+			names.push(arg.slice("--project=".length));
+		} else if (arg === "--project") {
+			while (i + 1 < argv.length && !argv[i + 1].startsWith("-")) {
+				names.push(argv[++i]);
+			}
 		}
 	}
-	return chosen;
+	const literal = (part: string): string =>
+		part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+	return names.map(
+		(name) => new RegExp(`^${name.split("*").map(literal).join(".*")}$`, "i"),
+	);
 }
 const chosen = chosenProjects();
 const runs = (name: string): boolean =>
-	chosen.length === 0 || chosen.includes(name);
+	chosen.length === 0 || chosen.some((pattern) => pattern.test(name));
 const needsFailingEncoder = runs("failing-encoder");
 const needsDetect = runs("desktop-detect") || runs("desktop-detect-webkit");
-// Every other project (the browsers, perf, soak) uses the app and the network servers.
+// Every other project (the browsers, perf, soak, and any added later) uses the
+// app and the network servers: a chosen pattern needs them unless it names only
+// the failing-encoder or detection projects.
+const ownServer = [
+	"failing-encoder",
+	"desktop-detect",
+	"desktop-detect-webkit",
+];
 const needsApp =
 	chosen.length === 0 ||
 	chosen.some(
-		(name) => !name.startsWith("desktop-detect") && name !== "failing-encoder",
+		(pattern) =>
+			["chromium", "firefox", "webkit", "perf", "soak"].some((name) =>
+				pattern.test(name),
+			) || !ownServer.some((name) => pattern.test(name)),
 	);
 
 const home = process.env.STUARTY_E2E_HOME ?? join(tmpdir(), "stuarty-e2e-home");
