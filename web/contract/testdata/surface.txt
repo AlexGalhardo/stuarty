@@ -20,6 +20,9 @@ command briefing:answer
 command briefing:questions
 command bundle:export
 command bundle:import
+command chat:session
+command chat:sessions
+command chat:transcript
 command checkpoint:create
 command checkpoint:list
 command checkpoint:remove
@@ -123,6 +126,7 @@ route DELETE /connections/{}
 route DELETE /keys/{}
 route DELETE /library/memory/{}
 route DELETE /projects/{}/checkpoints/{}
+route GET /agents/profiles
 route GET /approval-rules
 route GET /approvals
 route GET /approvals/events
@@ -166,6 +170,7 @@ route GET /projects/{}
 route GET /projects/{}/audio-measure
 route GET /projects/{}/bitmaps/{}
 route GET /projects/{}/brief
+route GET /projects/{}/chat/sessions
 route GET /projects/{}/checkpoints
 route GET /projects/{}/describe
 route GET /projects/{}/diff
@@ -225,6 +230,7 @@ route POST /library/skills/{}/review
 route POST /projects
 route POST /projects/import
 route POST /projects/{}/bundle
+route POST /projects/{}/chat/sessions
 route POST /projects/{}/checkpoints
 route POST /projects/{}/duplicate
 route POST /projects/{}/edit
