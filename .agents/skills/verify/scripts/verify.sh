@@ -35,8 +35,14 @@ git fetch -q origin main 2>/dev/null || echo "verify: could not fetch origin/mai
 if [ -z "${VERIFY_FROM_BASE:-}" ]; then
 	# Git Bash on Windows rewrites an argument shaped like <rev>:.<path> (MSYS path conversion), so the
 	# <rev>:<path> arguments below turn conversion off for the git call alone (VV-229). The variable is
-	# ignored elsewhere.
-	base_has() { MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' git cat-file -e "$base:$1" 2>/dev/null; }
+	# ignored elsewhere. Whether a file is on the base is asked with ls-tree, whose arguments are never
+	# converted, so a check that is there but cannot be read stops the run instead of being replaced by the
+	# working copy.
+	base_has() {
+		local out
+		out="$(git ls-tree --name-only "$base" -- "$1")" || { echo "verify: could not list $1 on $base" >&2; exit 2; }
+		[ -n "$out" ]
+	}
 	base_show() { MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' git show "$base:$1"; }
 	# A base that does not resolve is an error, never a reason to run the working copy.
 	if ! git rev-parse --verify -q "$base^{commit}" >/dev/null; then
@@ -44,7 +50,7 @@ if [ -z "${VERIFY_FROM_BASE:-}" ]; then
 		exit 2
 	fi
 	if base_has .agents/skills/verify/scripts/verify.sh; then
-		checks="$(mktemp -d)"
+		checks="$(mktemp -d)" || exit 2
 		for f in .agents/skills/verify/scripts/verify.sh .agents/skills/verify/scripts/check-flaky-patterns.sh \
 			.agents/skills/ci-preflight/scripts/check-commits.sh scripts/gate.sh scripts/smoke-e2e.sh; do
 			mkdir -p "$checks/$(dirname "$f")"
