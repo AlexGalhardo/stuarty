@@ -84,6 +84,8 @@ func TestImportingAnInvalidCubeFileFails(t *testing.T) {
 		"empty domain":     cubeFile(2, "DOMAIN_MIN 1 1 1\nDOMAIN_MAX 0 0 0\n", 8),
 		"unknown keyword":  "LUT_3D_SIZE 2\nWHATEVER 1\n",
 		"a very long line": "TITLE x\n# " + strings.Repeat("x", 5000) + "\nLUT_3D_SIZE 2\n",
+		// A whole table with one comment past the 512 bytes of a line (VV-293): refused, as the export refuses it.
+		"a line over 512 bytes": cubeFile(2, "# "+strings.Repeat("x", 600)+"\n", 8),
 	}
 
 	for name, body := range cases {
