@@ -42,6 +42,15 @@ test.describe("nested composition", () => {
 			timeline: string;
 		};
 		await expect(page.locator(`[data-item-id="${made.id}"]`)).toBeVisible();
+		// The item shows a small picture of the nested timeline.
+		const picture = page.locator(`[data-item-id="${made.id}"] img`);
+		await expect
+			.poll(() =>
+				picture.evaluate((img: HTMLImageElement) =>
+					img.complete ? img.naturalWidth : 0,
+				),
+			)
+			.toBeGreaterThan(0);
 
 		const planOf = async (): Promise<{ revision: number; layers: number }> => {
 			const plan = (await call(
