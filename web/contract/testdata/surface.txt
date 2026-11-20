@@ -47,7 +47,12 @@ command export:presets
 command font:import
 command fonts
 command history
+command image:checkpoint:create
+command image:checkpoint:list
+command image:checkpoint:remove
+command image:checkpoint:rename
 command image:create
+command image:diff
 command image:edit
 command image:export
 command image:generate
@@ -55,6 +60,7 @@ command image:import
 command image:list
 command image:model-edit
 command image:redo
+command image:revert
 command image:show
 command image:undo
 command item:add
@@ -145,6 +151,7 @@ route DELETE /agents/profiles/{}
 route DELETE /approval-rules/{}
 route DELETE /chat/sessions/{}
 route DELETE /connections/{}
+route DELETE /images/{}/checkpoints/{}
 route DELETE /keys/{}
 route DELETE /library/memory/{}
 route DELETE /projects/{}/checkpoints/{}
@@ -174,6 +181,8 @@ route GET /fonts
 route GET /handshake
 route GET /images
 route GET /images/{}
+route GET /images/{}/checkpoints
+route GET /images/{}/diff
 route GET /images/{}/events
 route GET /images/{}/exports/{}
 route GET /images/{}/frame
@@ -235,6 +244,7 @@ route GET /templates
 route GET /templates/{}/file
 route GET /texts
 route GET /users
+route PATCH /images/{}/checkpoints/{}
 route PATCH /projects/{}/checkpoints/{}
 route PATCH /users/{}
 route POST /approval-rules
@@ -251,10 +261,12 @@ route POST /image/generate
 route POST /images
 route POST /images/import
 route POST /images/import/file
+route POST /images/{}/checkpoints
 route POST /images/{}/edit
 route POST /images/{}/export
 route POST /images/{}/model-edit
 route POST /images/{}/redo
+route POST /images/{}/revert
 route POST /images/{}/undo
 route POST /jobs/{}/cancel
 route POST /keys

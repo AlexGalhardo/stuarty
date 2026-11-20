@@ -1015,6 +1015,33 @@ var Endpoints = []Endpoint{
 		Service: "ImageRedo", Status: 200, Summary: "Redo the latest undone step of the caller on an image",
 	},
 	{
+		ID: "images.revert", Method: http.MethodPost, Path: "/images/{id}/revert", Scope: service.ScopeEdit,
+		Service: "ImageRevert", Status: 200, Summary: "Go back to an earlier revision of an image as a new step",
+	},
+	{
+		ID: "images.diff", Method: http.MethodGet, Path: "/images/{id}/diff", Scope: service.ScopeRead,
+		Service: "ImageDiff", Status: 200, Summary: "List what changed between two revisions of an image",
+	},
+	{
+		ID: "images.checkpoints.list", Method: http.MethodGet, Path: "/images/{id}/checkpoints",
+		Scope: service.ScopeRead, Service: "ImageCheckpointList", Status: 200,
+		Summary: "List the checkpoints of an image",
+	},
+	{
+		ID: "images.checkpoints.create", Method: http.MethodPost, Path: "/images/{id}/checkpoints",
+		Scope: service.ScopeEdit, Service: "ImageCheckpointCreate", Status: 201, Summary: "Name a revision of an image",
+	},
+	{
+		ID: "images.checkpoints.rename", Method: http.MethodPatch, Path: "/images/{id}/checkpoints/{name}",
+		Scope: service.ScopeEdit, Service: "ImageCheckpointRename", Status: 200,
+		Summary: "Rename a checkpoint of an image",
+	},
+	{
+		ID: "images.checkpoints.remove", Method: http.MethodDelete, Path: "/images/{id}/checkpoints/{name}",
+		Scope: service.ScopeEdit, Service: "ImageCheckpointRemove", Status: 200,
+		Summary: "Remove a checkpoint of an image, never a revision",
+	},
+	{
 		ID: "images.export", Method: http.MethodPost, Path: "/images/{id}/export", Scope: service.ScopeEdit,
 		Service: "ImageExport", Status: 200, Summary: "Export an image document to a PNG, JPEG or WebP file",
 	},

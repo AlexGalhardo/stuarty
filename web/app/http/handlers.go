@@ -284,6 +284,7 @@ func (h *apiHandler) registerAll() {
 		return h.step(c, in, h.Service.Redo)
 	})
 	h.registerHistoryOps()
+	h.registerImageHistoryOps()
 	register(h, "projects.lint", func(c *web.Ctx, in lintIn) (service.LintResult, error) {
 		res, err := h.Service.Lint(
 			c.Context(),

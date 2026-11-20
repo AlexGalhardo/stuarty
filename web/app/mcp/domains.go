@@ -80,47 +80,125 @@ func checkMembers(tool, domain string, raw json.RawMessage, required, refused []
 	return nil
 }
 
-// imageHistory is the history tool in the image domain: an image has undo and redo and no change log yet, so
-// the list is refused with the actions that exist.
-func imageHistory(
-	ctx context.Context, svc service.Service, raw json.RawMessage, action, imageID string,
-) (*toolOutput, error) {
-	// The members of revert, diff and checkpoints are of timelines only; an image undo has no dry run, so a
-	// dry_run that were ignored here would undo for real.
-	refused := []string{
-		"project_id", "timeline_id", "actor", "cursor", "limit", "revision", "until", "name", "new_name", "note",
-		"dry_run",
+// historyMemberNames are the members of the history tool that an action takes or refuses besides the domain and
+// the action: the image domain refuses the ones its action does not use.
+var historyMemberNames = []string{
+	"project_id", "timeline_id", "actor", "cursor", "limit", "revision", "until", "name", "new_name", "note", "dry_run",
+}
+
+// imageHistory is the history tool in the image domain: undo and redo, and since epic 50 revert, the diff and the
+// checkpoints, which are those of a timeline for an image document (SDD-003 section 2.5.1). An image has no change
+// log to list on this tool (the list is HTTP and the editor, SDD-000 section 1). A member that the action does not
+// use is refused; an image undo has no dry run, so a dry_run that were ignored there would undo for real.
+func imageHistory(ctx context.Context, svc service.Service, raw json.RawMessage, in *historyArgs) (*toolOutput, error) {
+	uses, known := historyMembers[in.Action]
+	if !known || in.Action == "list" {
+		return nil, &service.Error{
+			Code:    command.CodeValidation,
+			Path:    "action",
+			Message: "an image has no change log to list on this tool.",
+			Hint:    "use undo, redo, revert, diff, checkpoints, checkpoint, rename_checkpoint or remove_checkpoint with domain image",
+		}
 	}
+
+	var refused []string
+
+	for _, name := range historyMemberNames {
+		if !slices.Contains(uses, name) || in.Action == "undo" && name == "dry_run" ||
+			in.Action == "redo" && name == "dry_run" {
+			refused = append(refused, name)
+		}
+	}
+
 	if err := checkMembers("history", command.DomainImage, raw, []string{"image_id"}, refused); err != nil {
 		return nil, err
 	}
 
-	if action != "undo" && action != "redo" {
-		return nil, &service.Error{
-			Code: command.CodeValidation, Path: "action",
-			Message: "an image has no change log to list yet.",
-			Hint:    "use action undo or redo with domain image",
+	switch in.Action {
+	case "undo", "redo":
+		req := service.ImageStepRequest{ImageID: in.ImageID}
+
+		var (
+			res *service.ImageStepResult
+			err error
+		)
+
+		if in.Action == "undo" {
+			res, err = svc.ImageUndo(ctx, req)
+		} else {
+			res, err = svc.ImageRedo(ctx, req)
 		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		return &toolOutput{value: res, text: service.ImageStepText(res)}, nil
+	case "revert":
+		res, err := svc.ImageRevert(ctx, service.ImageRevertRequest{
+			ImageID: in.ImageID, Revision: in.Revision, Checkpoint: in.Name, DryRun: in.DryRun,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		return &toolOutput{value: res, text: res.Text}, nil
+	case "diff":
+		res, err := svc.ImageDiff(ctx, service.ImageDiffRequest{
+			ImageID: in.ImageID, From: in.Revision, FromCheckpoint: in.Name, Until: in.Until,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		return &toolOutput{value: res, text: res.Text}, nil
 	}
 
-	req := service.ImageStepRequest{ImageID: imageID}
+	return imageCheckpointAction(ctx, svc, in)
+}
 
+func imageCheckpointAction(ctx context.Context, svc service.Service, in *historyArgs) (*toolOutput, error) {
 	var (
-		res *service.ImageStepResult
-		err error
+		cp    *service.Checkpoint
+		err   error
+		state string
 	)
 
-	if action == "undo" {
-		res, err = svc.ImageUndo(ctx, req)
-	} else {
-		res, err = svc.ImageRedo(ctx, req)
+	switch in.Action {
+	case "checkpoints":
+		res, lerr := svc.ImageCheckpointList(ctx, service.ImageCheckpointListRequest{ImageID: in.ImageID})
+		if lerr != nil {
+			return nil, lerr
+		}
+
+		return &toolOutput{value: res, text: res.Text}, nil
+	case "checkpoint":
+		state = "created"
+		cp, err = svc.ImageCheckpointCreate(ctx, service.ImageCheckpointCreateRequest{
+			ImageID: in.ImageID, Name: in.Name, Note: in.Note, Revision: in.Revision,
+		})
+	case "rename_checkpoint":
+		state = "renamed"
+		req := service.ImageCheckpointRenameRequest{ImageID: in.ImageID, Name: in.Name, NewName: in.NewName}
+
+		if in.Note != "" {
+			req.Note = &in.Note
+		}
+
+		cp, err = svc.ImageCheckpointRename(ctx, req)
+	default:
+		state = "removed"
+		cp, err = svc.ImageCheckpointRemove(
+			ctx,
+			service.ImageCheckpointRemoveRequest{ImageID: in.ImageID, Name: in.Name},
+		)
 	}
 
 	if err != nil {
 		return nil, err
 	}
 
-	return &toolOutput{value: res, text: service.ImageStepText(res)}, nil
+	return &toolOutput{value: cp, text: service.CheckpointText(state, cp)}, nil
 }
 
 // toolDomains is the domains each tool belongs to: what the parity test of web/contract compares with the domain
