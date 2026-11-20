@@ -2,7 +2,7 @@
 // first paint, when the browser is idle. Under reduced motion every scroll-linked effect is off and the page is a
 // plain document with the stage frozen on its first frame.
 import { afterPaint, reducedMotion } from "./boot";
-import { drawPaths, gsap, hideStillAfter, letters, revealOnScroll, rise, ScrollTrigger, typeLines } from "./motion";
+import { drawPaths, gsap, hideStillAfter, letters, revealOnScroll, ScrollTrigger, typeLines } from "./motion";
 import type { Stage } from "./stage";
 import { enhanceTabs } from "./tabs";
 
@@ -10,22 +10,12 @@ export function start(): void {
 	const reduced = reducedMotion();
 	const root = document.querySelector<HTMLElement>("main[data-page='classic']");
 	if (!root) return;
-	document.documentElement.classList.add("motion-live");
 
 	const tilt = root.querySelector<HTMLElement>("[data-tilt]");
 	// The tilt is set by GSAP from here on (its inline CSS is for the page without script).
 	if (tilt && !reduced) {
 		tilt.style.transform = "";
 		gsap.set(tilt, { rotateY: -14, rotateX: 6, transformPerspective: 1600 });
-	}
-
-	// Hero: the title letter by letter, then the lead and the actions.
-	const title = root.querySelector("[data-split]");
-	if (!reduced && title) {
-		const tl = gsap.timeline();
-		tl.add(letters(title).play(), 0);
-		tl.add(rise(root.querySelectorAll("[data-hero-item]")), 0.35);
-		tl.from("[data-tilt]", { autoAlpha: 0, y: 60, rotateY: -30, duration: 1.4, ease: "expo.out" }, 0.2);
 	}
 
 	// Tilted product window follows the pointer a little.

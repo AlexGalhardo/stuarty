@@ -3,7 +3,7 @@
 // the take that comes in. Under reduced motion the takes crossfade and the 3D stays on its first frame. Without
 // takes mode (a small screen) the page is a normal scroll with reveals.
 import { afterPaint, reducedMotion } from "./boot";
-import { gsap, letters, revealOnScroll, rise, typeLines } from "./motion";
+import { gsap, letters, revealOnScroll, typeLines } from "./motion";
 import type { MascotPose, Stage } from "./stage";
 import { enhanceTabs } from "./tabs";
 
@@ -20,7 +20,6 @@ const POSES: Omit<MascotPose, "opacity">[] = [
 export function start(): void {
 	const root = document.querySelector<HTMLElement>("main[data-page='viewport']");
 	if (!root) return;
-	document.documentElement.classList.add("motion-live");
 	const reduced = reducedMotion();
 	const takes = [...root.querySelectorAll<HTMLElement>("[data-take]")];
 	const links = [...root.querySelectorAll<HTMLAnchorElement>("[data-take-link]")];
@@ -37,14 +36,6 @@ export function start(): void {
 
 	let stage: Stage | null = null;
 	const takesOn = (): boolean => document.documentElement.classList.contains("takes-on");
-
-	// The hero letters run in both modes.
-	const heroTitle = takes[0]?.querySelector("[data-split]");
-	if (heroTitle && !reduced) {
-		const tl = gsap.timeline();
-		tl.add(letters(heroTitle).play(), 0.1);
-		tl.add(rise(takes[0].querySelectorAll("[data-hero-item]")), 0.45);
-	}
 
 	afterPaint(() => {
 		void import("./stage").then(({ createStage }) => {
@@ -90,6 +81,7 @@ export function start(): void {
 		if (progress) progress.style.transform = `scaleY(${(i + 1) / takes.length})`;
 	};
 
+	const splits = new Map<HTMLElement, gsap.core.Timeline>();
 	const show = (i: number, opts: { focus: boolean; instant?: boolean }): void => {
 		const prev = takes[current];
 		const next = takes[i];
@@ -113,7 +105,8 @@ export function start(): void {
 			requestAnimationFrame(() => requestAnimationFrame(() => heading?.focus({ preventScroll: true })));
 		}
 
-		const items = next.querySelectorAll<HTMLElement>("[data-in]");
+		const heading = next.querySelector<HTMLElement>("h2[data-in]");
+		const items = [...next.querySelectorAll<HTMLElement>("[data-in]")].filter((el) => el !== heading);
 		const frames = next.querySelectorAll<HTMLElement>("[data-in-3d]");
 		if (opts.instant || reduced) {
 			// Opacity only on the takes: hiding the incoming take, even for a frame, would blur the focused heading.
@@ -128,6 +121,17 @@ export function start(): void {
 				tl.fromTo(prev, { opacity: 1, visibility: "visible" }, { opacity: 0, y: -30, duration: 0.35, ease: "power2.in", clearProps: "opacity,visibility,transform" }, 0);
 			}
 			tl.fromTo(next, { opacity: 0 }, { opacity: 1, duration: 0.01, clearProps: "opacity" }, 0.25);
+			if (heading) {
+				// Split once per heading; later visits replay the same letters.
+				let split = splits.get(heading);
+				if (!split) {
+					split = letters(heading);
+					splits.set(heading, split);
+				}
+				const run = split;
+				run.pause(0);
+				gsap.delayedCall(0.28, () => void run.restart());
+			}
 			if (items.length > 0) tl.fromTo(items, { opacity: 0, y: 36 }, { opacity: 1, y: 0, duration: 0.9, ease: "expo.out", stagger: 0.07 }, 0.3);
 			if (frames.length > 0) tl.fromTo(
 				frames,

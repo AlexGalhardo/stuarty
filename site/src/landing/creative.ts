@@ -3,7 +3,7 @@
 // agent cursor, the MCP log, the collapse at the end) is drawn from that one number, so scrolling back plays it in
 // reverse. Timeline mode is off on small screens and under reduced motion: the clips are a plain list.
 import { afterPaint, reducedMotion } from "./boot";
-import { gsap, hideStillAfter, letters, revealOnScroll, rise, ScrollTrigger, typeLines } from "./motion";
+import { gsap, hideStillAfter, revealOnScroll, ScrollTrigger, typeLines } from "./motion";
 import type { Stage } from "./stage";
 import { enhanceTabs } from "./tabs";
 
@@ -20,16 +20,8 @@ function timecode(progress: number): string {
 export function start(): void {
 	const root = document.querySelector<HTMLElement>("main[data-page='creative']");
 	if (!root) return;
-	document.documentElement.classList.add("motion-live");
 	const reduced = reducedMotion();
 	const timelineOn = document.documentElement.classList.contains("timeline-on");
-
-	const title = root.querySelector("[data-split]");
-	if (title && !reduced) {
-		const tl = gsap.timeline();
-		tl.add(letters(title).play(), 0.1);
-		tl.add(rise(root.querySelectorAll("[data-hero-item]")), 0.45);
-	}
 
 	revealOnScroll(root);
 	const typed = new WeakSet<Element>();
