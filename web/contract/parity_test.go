@@ -237,6 +237,10 @@ var parity = []row{
 	{method: "VoiceList", command: "voice:list", route: "GET /connections/{}/voices"},
 	// Video generation (SDD-016 section 6.4, epic 11): job_start with the kind video.generate.
 	{method: "VideoGenerate", tool: "job_start", command: "video:generate", route: "POST /video/generate"},
+	// The sign-in to an AI provider (SDD-016 section 12) is made by a person in the browser: no tool, no command.
+	{method: "ProviderSignInBegin", route: "POST /providers/signin", httpOnly: true},
+	{method: "ProviderSignInComplete", route: "POST /providers/signin/complete", httpOnly: true},
+	{method: "ProviderSignInList", route: "GET /providers/sign-ins", httpOnly: true},
 	// The library (SDD-018): one MCP tool, library, serves the lists, reads, writes, searches, renders and
 	// lints. Removing a note, importing and exporting skills read and write files by path (no tool), and
 	// marking a skill as read is for a person at the browser (HTTP only).
