@@ -1505,7 +1505,7 @@ stuarty approval:rule:set --kind <k>
 | Flag | Type | Default | Meaning |
 | --- | --- | --- | --- |
 | `--id` | string |  | the rule to replace; leave out to create one |
-| `--kind` | string |  | the kind of action the rule covers (required) |
+| `--kind` | string |  | the kind of action: publish.upload, publish.scheduled, text.generate, ... (required) |
 | `--connection` | string |  | only this destination |
 | `--project` | string |  | only this project |
 | `--currency` | string |  | three upper-case letters, needed with a limit |
@@ -1518,7 +1518,7 @@ Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
 Example:
 
 ```bash
-stuarty approval:rule:set --kind publish.post --connection con_0123456789
+stuarty approval:rule:set --kind publish.upload --connection con_0123456789
 ```
 
 ## `approval:rule:remove`

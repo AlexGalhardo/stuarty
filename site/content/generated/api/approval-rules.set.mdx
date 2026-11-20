@@ -27,7 +27,7 @@ Content type `application/json`.
 | `currency` | `string` | no | Three upper-case letters; needed with a limit. |
 | `enabled` | `boolean` or `null` | no | false keeps the rule and stops it; the default is true. |
 | `id` | `string` | no | The rule to replace; leave out to create one. |
-| `kind` | `string` | yes | The kind of action the rule covers, for example publish.post.. min length 1 |
+| `kind` | `string` | yes | The kind of action the rule covers, for example publish.upload (publish now) or publish.scheduled.. min length 1 |
 | `per_day_micros` | `integer (int64)` or `null` | no | The most the rule may approve in one UTC day, in millionths of the currency unit. |
 | `per_item_micros` | `integer (int64)` or `null` | no | The most one action may cost for the rule to approve it, in millionths of the currency unit. A rule with no limit never approves a costly action. |
 | `project_id` | `string` | no | Only this project; leave out for any. |

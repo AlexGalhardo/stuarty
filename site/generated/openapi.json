@@ -3787,6 +3787,9 @@
             "format": "date-time",
             "type": "string"
           },
+          "dry_run": {
+            "type": "boolean"
+          },
           "error": {
             "anyOf": [
               {
@@ -14591,7 +14594,7 @@
                     "type": "string"
                   },
                   "kind": {
-                    "description": "The kind of action the rule covers, for example publish.post.",
+                    "description": "The kind of action the rule covers, for example publish.upload (publish now) or publish.scheduled.",
                     "minLength": 1,
                     "type": "string"
                   },
