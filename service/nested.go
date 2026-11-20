@@ -196,6 +196,26 @@ func checkNesting(g *productionGraph, doc *timeline.Document) *Error {
 		withDetail("limit", timeline.MaxCompositionDepth)
 }
 
+// checkRestoredNesting is checkNesting for a timeline that comes back from the trash: while it was there, the
+// timelines it holds may have grown deeper, and a composition left naming it is in use again (SDD-001 §3.5.1).
+func (s *svc) checkRestoredNesting(ctx context.Context, tx Tx, timelineID string) error {
+	row, err := tx.Projects().Get(ctx, timelineID)
+	if err != nil {
+		return asError(err)
+	}
+
+	doc, err := decodeRow(&row)
+	if err != nil {
+		return err
+	}
+
+	if nerr := checkNesting(newProductionGraph(ctx, tx, timelineID), doc); nerr != nil {
+		return nerr.withPath("item_id")
+	}
+
+	return nil
+}
+
 // storeSpawned writes the timelines a command made (Result.Spawned) in the transaction of the commit: the row of
 // the document, the timeline item of the production and its place in the order.
 func (s *svc) storeSpawned(ctx context.Context, tx ProjectTx, actor string, spawned []*timeline.Document) error {

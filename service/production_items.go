@@ -411,6 +411,12 @@ func (s *svc) setItemState(
 				}
 			}
 
+			if to == ProjectActive && it.Kind == string(project.Timeline) {
+				if nerr := s.checkRestoredNesting(ctx, tx, it.Ref); nerr != nil {
+					return nil, nerr
+				}
+			}
+
 			check := project.CheckTrash(coreItems(rows), it.ID)
 			if to == ProjectActive {
 				check = project.CheckRoom(coreItems(rows), project.Kind(it.Kind))
