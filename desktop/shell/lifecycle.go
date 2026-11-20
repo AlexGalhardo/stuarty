@@ -20,8 +20,8 @@ const (
 type BackgroundState struct {
 	// KeepRunning is the setting "keep running in the background".
 	KeepRunning bool
-	// Scheduled is the number of targets in the state scheduled or approved; Known is false when the
-	// server could not be asked and no earlier answer exists.
+	// Scheduled is the number of targets in the state scheduled, approved or publishing; Known is false
+	// when the server could not be asked and no earlier answer exists.
 	Scheduled int
 	Known     bool
 	// Paused says the person paused publishing: nothing would go out, so there is nothing to wait for.
