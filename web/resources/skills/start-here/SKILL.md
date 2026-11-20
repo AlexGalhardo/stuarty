@@ -43,4 +43,4 @@ Stuarty is where a person creates, edits and manages a production. This skill sa
 - If a step needs an account or a login, tell the person and stop: that is theirs to give.
 - Name only operations that exist. When unsure of a name, `stuarty --help` lists the commands and `command:help` the edit operations and their arguments.
 
-Not available yet: preparing a publication for the approval queue is added by the publishing epics; until then the person publishes by hand.
+A post is planned with `publication:create` and scheduled with `publication:schedule`, which puts it in the approval queue (the end of `short-vertical-video` has the steps). A person approves it in the app; you cannot.

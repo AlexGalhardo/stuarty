@@ -53,9 +53,9 @@ The whole path from the brief to the file, in the order that wastes the least wo
 ## 8. After the export
 
 1. `caption-per-network` for the text of each network.
-2. `production-retro` for what was learned.
-
-Not available yet: preparing the publication for the approval queue and attaching the thumbnail to it are added by the publishing epics. Until then, hand the person the exported file, the cover and the texts, and let them publish.
+2. Plan the post. `social:account:list` shows the connected accounts; with none, tell the person to connect one in Connections and stop, an account is theirs to give. Then `publication:create --project <project id> --title "<title>" --text "<caption>" --export <export job id> --connection <connection id> --at 2026-11-21T09:00 --zone <zone> --made-for-kids yes|no`. The export job id is the `job_id` of the export; the CLI has these commands and MCP has no tool for them. Nothing is sent and nothing is asked yet.
+3. `publication:schedule <publication id>` gives the target its time and puts it in the approval queue. A person approves it in the app, you cannot, and nothing goes out before that. Read where it stands with `publication:show <publication id>`: waiting for approval, scheduled, then published with its address. `publication:list` is the calendar. Do not schedule it again while it waits.
+4. `production-retro` for what was learned.
 
 ## Rules
 
