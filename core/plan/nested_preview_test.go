@@ -24,8 +24,9 @@ func processedChild(chain ...timeline.Processor) *timeline.Document {
 func nestedAudioOf(t *testing.T, parent *timeline.Document, opts Options, from, to int) WindowAudio {
 	t.Helper()
 
-	for _, a := range WindowWith(parent, from, to, opts).Audio {
-		if a.Item == compID+"/itm_s1" {
+	audio := WindowWith(parent, from, to, opts).Audio
+	for i := range audio {
+		if a := audio[i]; a.Item == compID+"/itm_s1" {
 			return a
 		}
 	}
@@ -59,7 +60,14 @@ func TestNestedWindowAudioNamesTheProcessedFile(t *testing.T) {
 	moved := parentDoc()
 	put(moved, composition(compID, trkPar, tlChild, 100, 60))
 
-	if other := nestedAudioOf(t, moved, opts, 0, 200).Processed; other == nil || other.Key != got.Key || other.Start != 100 {
+	if other := nestedAudioOf(
+		t,
+		moved,
+		opts,
+		0,
+		200,
+	).Processed; other == nil || other.Key != got.Key ||
+		other.Start != 100 {
 		t.Errorf("moved composition: %+v, want the key %s from frame 100", other, got.Key)
 	}
 
@@ -77,7 +85,14 @@ func TestNestedWindowAudioNamesTheProcessedFile(t *testing.T) {
 	louder := hp
 	louder.Params = map[string]float64{"hp_hz": 91}
 
-	if other := nestedAudioOf(t, parent, production{tlChild: processedChild(louder)}.opts(), 0, 120).Processed; other == nil || other.Key == got.Key {
+	if other := nestedAudioOf(
+		t,
+		parent,
+		production{tlChild: processedChild(louder)}.opts(),
+		0,
+		120,
+	).Processed; other == nil ||
+		other.Key == got.Key {
 		t.Errorf("a changed parameter kept the key: %+v", other)
 	}
 
