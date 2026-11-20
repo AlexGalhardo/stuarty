@@ -18,6 +18,7 @@ import { useStore } from "../../state/createStore";
 import { useDocumentState, useRuntime } from "../../state/EditorContext";
 import { selectOrderedTrackIds } from "../../state/selectors";
 import { errorHeadline } from "../../ui/errorHeadline";
+import { trackLabel } from "../../ui/trackLabel";
 import Section from "../Section";
 import InstallDialog from "./InstallDialog";
 import {
@@ -213,7 +214,11 @@ export default function AutoCaptions({
 						if (candidate?.kind !== "visual") return [];
 						return [
 							<option key={id} value={id}>
-								{candidate.name ?? id}
+								{candidate.name === undefined || candidate.name === ""
+									? trackLabel(id, orderedIds, (other) =>
+											tracks[other]?.kind === "audio" ? "audio" : "visual",
+										)
+									: candidate.name}
 							</option>,
 						];
 					})}

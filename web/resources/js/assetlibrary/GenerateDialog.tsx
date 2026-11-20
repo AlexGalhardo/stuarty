@@ -65,16 +65,34 @@ interface Choice {
 	label: string;
 }
 
-// The connections of the providers that have the capability.
-export function choicesOf(providers: ProviderView[], kind: Kind): Choice[] {
+// The connections of the providers that have the capability, named as the person named them: the provider, and
+// the name of the connection when it says more; two that read the same are told apart by their order, never by
+// an id (VV-325).
+export function choicesOf(
+	providers: ProviderView[],
+	kind: Kind,
+	names: Readonly<Record<string, string>> = {},
+): Choice[] {
 	const out: Choice[] = [];
 	for (const provider of providers) {
 		if (!provider.capabilities.includes(kind)) continue;
 		for (const id of provider.connections) {
-			out.push({ connectionId: id, label: `${provider.name} (${id})` });
+			const given = names[id];
+			const label =
+				given === undefined || given === "" || given === provider.name
+					? provider.name
+					: `${provider.name} (${given})`;
+			out.push({ connectionId: id, label });
 		}
 	}
-	return out;
+	const seen = new Map<string, number>();
+	return out.map((choice) => {
+		const same = out.filter((other) => other.label === choice.label).length;
+		if (same === 1) return choice;
+		const n = (seen.get(choice.label) ?? 0) + 1;
+		seen.set(choice.label, n);
+		return { ...choice, label: `${choice.label} ${n}` };
+	});
 }
 
 // Whether a provider of the product has the capability at all, connected or not: with none (no provider makes
@@ -108,6 +126,7 @@ export function GenerateDialog({
 	const [providers, setProviders] = useState<ProviderView[] | null>(null);
 	const [project, setProject] = useState("");
 	const [connection, setConnection] = useState("");
+	const [names, setNames] = useState<Record<string, string>>({});
 	const [models, setModels] = useState<ModelView[]>([]);
 	const [model, setModel] = useState("");
 	const [voices, setVoices] = useState<VoiceView[]>([]);
@@ -134,11 +153,15 @@ export function GenerateDialog({
 		setFailure(null);
 		void (async () => {
 			try {
-				const [list, provs] = await Promise.all([
+				const [list, provs, conns] = await Promise.all([
 					api().listProjects(),
 					api().listProviders(),
+					api().listConnections(),
 				]);
 				if (!alive) return;
+				setNames(
+					Object.fromEntries(conns.connections.map((c) => [c.id, c.label])),
+				);
 				setProjects(list.projects.filter((p) => p.state === "active"));
 				setProviders(provs.providers);
 			} catch (error) {
@@ -150,7 +173,7 @@ export function GenerateDialog({
 		};
 	}, [open]);
 
-	const choices = providers === null ? [] : choicesOf(providers, kind);
+	const choices = providers === null ? [] : choicesOf(providers, kind, names);
 
 	useEffect(() => {
 		if (project === "" && projects !== null && projects[0] !== undefined) {

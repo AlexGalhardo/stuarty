@@ -533,8 +533,8 @@ func publishSummary(t *publishTarget) string {
 		vis = publish.Private
 	}
 
-	sum := fmt.Sprintf("Publish %q to %s, channel %q (%s), visible to: %s; file %s, %d bytes; AI disclosure: %s",
-		clean(a.Title, 100), t.desc.Name, clean(t.account.Title, 80), t.connRow.ID, vis,
+	sum := fmt.Sprintf("Publish %q to %s, channel %q, visible to: %s; file %s, %d bytes; AI disclosure: %s",
+		clean(a.Title, 100), t.desc.Name, clean(t.account.Title, 80), vis,
 		filepath.Base(t.input.Output.Rel), t.input.Output.Bytes, disclosureText(t))
 
 	if note := t.costNote(); note != "" {
