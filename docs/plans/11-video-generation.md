@@ -7,12 +7,12 @@ A creator asks for a few seconds of generated footage, from a prompt or from one
 ## Context and related decisions
 
 - ADR-0036, ADR-0032 (a costly generation waits for a person), ADR-0010.
-- Author decisions D-061 (video generation from the first epics), D-052. PRD-004 RF-361 (video), RF-362, RF-363.
+- Author decisions D-061 (video generation from the first epics), D-052, D-105 (the provider), D-114 (the model). PRD-004 RF-361 (video), RF-362, RF-363.
 
 ## Scope
 
 - Modules: `core/provider/` (the `video` capability), `service/providers/<name>/` (one adapter), the job kind `video.generate`, `web/app/` (controllers, CLI, MCP), the "Generate" dialog of epic 10 (a video tab), SDD-016, SDD-000.
-- One provider, chosen in task 1 and approved by the author (D-105): Google through the Gemini API, one adapter `service/providers/google/`.
+- One provider, chosen in task 1 and approved by the author (D-105, D-114): Google through the Gemini API, model `gemini-omni-1.2-flash`, one adapter `service/providers/google/`.
 
 ## Out of scope
 
@@ -34,7 +34,7 @@ A creator asks for a few seconds of generated footage, from a prompt or from one
 
 ## Tasks
 
-- [x] 1. Propose the provider (API, pricing source, terms, limits); STOP for approval. Verify: the approval is in the hand-off. Decided by the author (D-105): Google through the Gemini API with the user's own API key; SDD-016 section 2.3 has the API, the pricing source, the terms and the limits, and says that the model is `gemini-omni-1.2-flash` because Google shut down the Veo 3.1 preview models on 2026-10-22.
+- [x] 1. Propose the provider (API, pricing source, terms, limits); STOP for approval. Verify: the approval is in the hand-off. Decided by the author (D-105, with the model of D-114): Google through the Gemini API with the user's own API key; SDD-016 section 2.3 has the API, the pricing source, the terms and the limits, and says that the model is `gemini-omni-1.2-flash` because Google shut down the Veo 3.1 preview models on 2026-10-22.
 - [x] 2. Amend SDD-016 and SDD-000. Verify: `task lint:md` exits 0.
 - [x] 3. Implement validation and estimation with table tests. Verify: `go test ./core/provider/...` passes.
 - [x] 4. Implement the adapter with contract tests from recorded responses (submit, pending, done, failed, refused). Verify: `go test ./service/providers/...` passes with no network.
