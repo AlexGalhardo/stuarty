@@ -13,6 +13,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
+	"github.com/AlexGalhardo/stuarty/core/approval"
 	core "github.com/AlexGalhardo/stuarty/core/publish"
 	"github.com/AlexGalhardo/stuarty/service/untrusted"
 )
@@ -30,6 +31,9 @@ const (
 	summaryAccountRunes = 60
 	summaryTextRunes    = 100
 	summaryFileRunes    = 60
+	// summaryDisclosureRunes holds the longest disclosure the service writes, "wanted, but <network> takes
+	// no such flag".
+	summaryDisclosureRunes = 80
 )
 
 // Actor is who calls: it is recorded on what it creates.
@@ -106,6 +110,9 @@ type Resolved struct {
 	// CostMicros and Currency are what the network charges for one post; zero for none.
 	CostMicros int64
 	Currency   string
+	// Disclosure says whether the post carries the AI disclosure flag and why, for the person who approves
+	// (SDD-020 section 20); empty when the service says nothing of it.
+	Disclosure string
 }
 
 // Sent is the result of a send.
@@ -595,7 +602,8 @@ func (m *Manager) ask(ctx context.Context, tx Tx, p *Publication, id, reason str
 }
 
 // summary is what a person reads before approving, at most 500 characters: where, as whom, what, who may
-// watch, the start of the text, the file and the time with its zone and its UTC time.
+// watch, the file, the time with its zone and its UTC time, whether the AI disclosure flag is set, and the
+// start of the text in what is left.
 func (m *Manager) summary(res *Resolved, p *Publication, t *Target) string {
 	clean := func(s string, n int) string {
 		kept, _ := untrusted.Cut(untrusted.Clean(strings.ReplaceAll(s, "\n", " ")), n)
@@ -628,7 +636,16 @@ func (m *Manager) summary(res *Resolved, p *Publication, t *Target) string {
 		res.FileBytes,
 	)
 
-	if text := clean(f.Description, summaryTextRunes); text != "" {
+	if res.Disclosure != "" {
+		sum += "; AI disclosure: " + clean(res.Disclosure, summaryDisclosureRunes)
+	}
+
+	// The text gives way: the summary of a request is at most approval.MaxSummary characters, and a long
+	// zone, title and account leave less room for it.
+	const textFrame = len(`; text: ""`)
+
+	room := min(summaryTextRunes, approval.MaxSummary-utf8.RuneCountInString(sum)-textFrame)
+	if text := clean(f.Description, room); room > 0 && text != "" {
 		sum += fmt.Sprintf("; text: %q", text)
 	}
 
