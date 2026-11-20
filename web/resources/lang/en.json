@@ -317,6 +317,26 @@
         "image_hint": "Choose an image of your workspace.",
         "image_none": "There are no images in the workspace yet. Import one into a project first."
       },
+      "import": {
+        "open_new": "Import image",
+        "open_layer": "Put a file in this image",
+        "title_new": "Import an image",
+        "title_layer": "Put a file in this image",
+        "description_new": "Make a new image from a photo or a picture you have.",
+        "description_layer": "Add a photo or a picture as one more layer of this image.",
+        "file": "Choose a file",
+        "file_help": "A picture of up to 64 MB. For a larger one, give its path on the server.",
+        "path": "Or the path of a file on the server",
+        "path_placeholder": "/home/ana/pictures/photo.jpg",
+        "name": "Name",
+        "name_placeholder": "The name of the file",
+        "size": "Size of the new image",
+        "size_file": "The size of the file",
+        "submit": "Import",
+        "working": "Importing…",
+        "cancel": "Cancel",
+        "need_source": "Choose a file or give a path."
+      },
       "brand": {
         "place_logo": "Place logo",
         "logo_name": "Logo",

@@ -5,8 +5,10 @@ import { type ReactNode, useEffect, useMemo } from "react";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
+import { browserTimers } from "../editor/api/events";
 import { HttpTransport } from "../editor/api/http";
 import { API_BASE, createImageApi } from "./api/imageApi";
+import { createImageEventStream } from "./api/imageEvents";
 import Canvas from "./canvas/Canvas";
 import ErrorBar from "./ErrorBar";
 import { ExportTool } from "./export/ExportDialog";
@@ -22,7 +24,8 @@ import { AddTools } from "./toolbar/AddTools";
 import { ArrangeTools, HistoryTools } from "./toolbar/ArrangeTools";
 import { Toolbar, ViewTools } from "./toolbar/Toolbar";
 
-// How often the screen asks whether another actor changed the document (SDD-012 section 24.3).
+// How often the screen asks whether another actor changed the document while the event stream is not open
+// (SDD-012 section 24.3).
 export const POLL_MS = 2000;
 
 // The image editor of one document (SDD-012 section 24): a toolbar, the canvas and, on the sides, the layer
@@ -32,21 +35,77 @@ export default function ImageEditor({
 }: {
 	imageId: string;
 }): ReactNode {
-	const api = useMemo(() => createImageApi(new HttpTransport(API_BASE)), []);
+	const transport = useMemo(() => new HttpTransport(API_BASE), []);
+	const api = useMemo(() => createImageApi(transport), [transport]);
 	const store = useMemo(() => createImageStore(api, imageId), [api, imageId]);
 
+	// The stream of the image (SDD-006 section 12) tells this window what another actor or window committed. It is
+	// open while the window is visible; while it is not open the revision is polled (SDD-012 section 24.3).
 	useEffect(() => {
-		void store.getState().open();
+		const revision = (): number => store.getState().doc?.revision ?? 0;
+		const visible = (): boolean => document.visibilityState === "visible";
+		const stream = createImageEventStream({
+			transport,
+			imageId,
+			getRevision: revision,
+			probe: () => api.probe(imageId),
+			timers: browserTimers,
+		});
+		let live = false;
+		let disposed = false;
+
+		// Opens the stream once the document is on screen, with the revision it holds.
+		const start = (): void => {
+			if (disposed || !visible() || store.getState().doc === null) return;
+			stream.open(revision());
+		};
+		const reload = (): void => {
+			void store.getState().open().then(start);
+		};
+
+		const offState = stream.onState((state) => {
+			live = state === "live";
+		});
+		const offEvent = stream.onEvent((event) => {
+			if (event.name === "resync.required") {
+				// The server cannot replay: the stream ended there, so load the image again and open a new one.
+				stream.close();
+				reload();
+				return;
+			}
+			void store.getState().receive(event);
+		});
+		const offRecover = stream.onRecover(reload);
+
 		const poll = (): void => {
-			if (document.visibilityState === "visible") void store.getState().poll();
+			if (visible() && !live) void store.getState().poll();
 		};
+		const onVisibility = (): void => {
+			if (visible()) {
+				start();
+				poll();
+			} else {
+				stream.close();
+				live = false;
+			}
+		};
+		const onOnline = (): void => stream.checkStale();
+
+		reload();
 		const timer = window.setInterval(poll, POLL_MS);
-		document.addEventListener("visibilitychange", poll);
+		document.addEventListener("visibilitychange", onVisibility);
+		window.addEventListener("online", onOnline);
 		return () => {
+			disposed = true;
 			window.clearInterval(timer);
-			document.removeEventListener("visibilitychange", poll);
+			document.removeEventListener("visibilitychange", onVisibility);
+			window.removeEventListener("online", onOnline);
+			offState();
+			offEvent();
+			offRecover();
+			stream.close();
 		};
-	}, [store]);
+	}, [store, transport, api, imageId]);
 
 	return (
 		<ImageEditorProvider store={store} api={api}>

@@ -178,6 +178,9 @@ export const EVENT_NAMES = [
 	"resync.required",
 ] as const;
 
+// The event of GET /images/{id}/events (SDD-006 section 12); `resync.required` is the one above.
+export const IMAGE_EVENT_NAMES = ["image.updated"] as const;
+
 // The part of PlanWindow (SDD-004 section 10) the timeline needs: the end of
 // the project as the core computed it.
 export interface PlanWindowHead {
