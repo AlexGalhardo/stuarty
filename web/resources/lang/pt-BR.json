@@ -318,6 +318,26 @@
         "image_hint": "Escolha uma imagem do seu espaço de trabalho.",
         "image_none": "Ainda não há imagens no espaço de trabalho. Importe uma em um projeto primeiro."
       },
+      "import": {
+        "open_new": "Importar imagem",
+        "open_layer": "Colocar um arquivo nesta imagem",
+        "title_new": "Importar uma imagem",
+        "title_layer": "Colocar um arquivo nesta imagem",
+        "description_new": "Crie uma imagem nova a partir de uma foto ou de uma figura que você tem.",
+        "description_layer": "Acrescente uma foto ou uma figura como mais uma camada desta imagem.",
+        "file": "Escolher um arquivo",
+        "file_help": "Uma figura de até 64 MB. Para uma maior, informe o caminho dela no servidor.",
+        "path": "Ou o caminho de um arquivo no servidor",
+        "path_placeholder": "/home/ana/imagens/foto.jpg",
+        "name": "Nome",
+        "name_placeholder": "O nome do arquivo",
+        "size": "Tamanho da imagem nova",
+        "size_file": "O tamanho do arquivo",
+        "submit": "Importar",
+        "working": "Importando…",
+        "cancel": "Cancelar",
+        "need_source": "Escolha um arquivo ou informe um caminho."
+      },
       "brand": {
         "place_logo": "Colocar logotipo",
         "logo_name": "Logotipo",

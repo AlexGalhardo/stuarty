@@ -1,5 +1,6 @@
 import {
 	Circle,
+	FileUp,
 	ImagePlus,
 	PaintBucket,
 	Square,
@@ -17,6 +18,7 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { useT } from "@/lib/i18n";
+import ImportDialog from "../import/ImportDialog";
 import { useImage } from "../state/context";
 import { useLibrary } from "../state/library";
 import ToolButton from "./ToolButton";
@@ -29,8 +31,11 @@ export function AddTools(): ReactNode {
 	const doc = useImage((s) => s.doc);
 	const busy = useImage((s) => s.busy);
 	const send = useImage((s) => s.send);
+	const importFile = useImage((s) => s.importFile);
+	const error = useImage((s) => s.error);
 	const library = useLibrary();
 	const [picking, setPicking] = useState(false);
+	const [importing, setImporting] = useState(false);
 	const off = doc === null || busy;
 	const logo = library.brand?.logo;
 	const created = (r: { created: string[] }): string[] => r.created.slice(0, 1);
@@ -111,6 +116,33 @@ export function AddTools(): ReactNode {
 				disabled={off}
 				onClick={() => setPicking(true)}
 				testId="image-add-image"
+			/>
+			<ToolButton
+				icon={FileUp}
+				label={t("ui.image.import.open_layer")}
+				disabled={off}
+				onClick={() => setImporting(true)}
+				testId="image-import-open"
+			/>
+			<ImportDialog
+				open={importing}
+				onOpenChange={setImporting}
+				mode="layer"
+				busy={busy}
+				failure={
+					error === null
+						? null
+						: { code: error.code, message: error.message, hint: error.hint }
+				}
+				onImport={(values) => {
+					const source =
+						values.file === undefined
+							? { path: values.path ?? "", name: values.name }
+							: { file: values.file, name: values.name };
+					void importFile(source).then((result) => {
+						if (result !== null) setImporting(false);
+					});
+				}}
 			/>
 			<ToolButton
 				icon={Stamp}

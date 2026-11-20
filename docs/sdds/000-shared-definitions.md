@@ -64,6 +64,8 @@
 | `ImageEdit` | `image` (`action` edit) | `image:edit` | `POST /images/{id}/edit` | edit |
 | `ImageUndo`, `ImageRedo` | `image` (`action` undo, redo) | `image:undo`, `image:redo` | `POST /images/{id}/undo`, `POST /images/{id}/redo` | edit |
 | `ImageExport` | `image` (`action` export) | `image:export` | `POST /images/{id}/export` | edit |
+| `ImageImport` | `image` (`action` import) | `image:import` | `POST /images/import` (an image file from a path or a library hash becomes a new image document, or one more layer of the document `image_id`; SDD-021 §10) | edit |
+| `ImageImportFile` | none | none | `POST /images/import/file` (a file chosen in the browser, as the bytes of the request, becomes a new image document or a layer; SDD-021 §10.2; HTTP only because the bytes are the request) | edit |
 | `ExportPresetList` | `command_help` (`domain` export) | `export:presets` | `GET /export-presets` | read |
 | `ExportCheck` | `lint` (with `preset`) | `export:check` | `GET /projects/{id}/export-check` | read |
 | `AudioMeasure` | `view` (`mode` audio) | `view --mode audio` | `GET /projects/{id}/audio-measure` | read |
@@ -71,6 +73,7 @@
 | `ImageFrame` | none | none | `GET /images/{id}/frame` (SDD-012 §24.3) | read |
 | `ImageHistory` | none | none | `GET /images/{id}/history` (SDD-012 §24.3) | read |
 | `ImageFile` | none | none | `GET /images/{id}/exports/{name}` (SDD-012 §24.3) | read |
+| image document stream | none | none | `GET /images/{id}/events` (SDD-006 §12; the event `image.updated`) | read |
 | `ApprovalList`, `ApprovalGet` | none | `approval:list`, `approval:show` | `GET /approvals`, `GET /approvals/{id}` | read (SDD-015) |
 | `ApprovalDecide` | none | `approval:decide` | `POST /approvals/{id}/decide` | read, and only from a privileged browser session; the local token and keys get `E_PRIVILEGED_SESSION` (SDD-015 §4) |
 | `ApprovalRuleList` | none | `approval:rule:list` | `GET /approval-rules` | read |
@@ -195,6 +198,8 @@ An actor string is one of `user:<id>`, `key:<key id>`, `local:<label>`. `<label>
 Two events are not on a project stream but on the approval queue stream `GET /approvals/events` (SDD-015 §7): `approval.requested` (a request was made, or is pending when the stream opens) and `approval.decided` (a request was approved, rejected or expired); both carry the request. A third, `publication.updated`, is on the stream `GET /publications/events` (SDD-020 §29) and carries the publication with its targets.
 
 The event `id` of `batch.committed` is the revision. Details in SDD-006.
+
+An image document has a stream of its own, `GET /images/{id}/events` (SDD-006 §12), with one event name besides `resync.required`: `image.updated` (a batch of the image was committed), with the revision as its `id` and `image_id`, `revision`, `base_revision`, `kind`, `actor`, `diff` and `at` in its payload. It follows the rules of `batch.committed`, on the topic `image:<id>`.
 
 ## 6. Jobs
 

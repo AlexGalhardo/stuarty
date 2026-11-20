@@ -6,7 +6,9 @@ import type {
 	ImageDocument,
 	ImageEditResult,
 	ImageHistoryEntry,
+	ImageImportResult,
 	ImageOperation,
+	ImageStreamEvent,
 	Layer,
 } from "../api/types";
 import {
@@ -58,6 +60,12 @@ export type Operations =
 	| readonly ImageOperation[]
 	| ((doc: ImageDocument) => readonly ImageOperation[]);
 
+// What a person gives to put a file in this image: the path of a file on the machine of the server, or a file
+// chosen in the browser (SDD-021 section 10). The server decides everything about the file.
+export type ImportSource =
+	| { path: string; name?: string }
+	| { file: File; name?: string };
+
 export interface ImageActions {
 	open(): Promise<void>;
 	// Sends one batch against the revision on screen; resolves with the result, or null when it failed (the
@@ -68,7 +76,14 @@ export interface ImageActions {
 	): Promise<ImageEditResult | null>;
 	undo(): Promise<void>;
 	redo(): Promise<void>;
+	// Puts a file in this image as one more layer (SDD-021 section 10.1); resolves with the result, or null when
+	// it failed (the failure is in `error`).
+	importFile(source: ImportSource): Promise<ImageImportResult | null>;
+	// The polling of the revision: the fallback while the event stream is not open.
 	poll(): Promise<void>;
+	// An event of the stream of this image (SDD-006 section 12): a revision above the one on screen is fetched, one
+	// at or below it (this window's own commit, which the response already applied) is ignored.
+	receive(event: ImageStreamEvent): Promise<void>;
 	refreshHistory(): Promise<void>;
 	select(ids: readonly string[]): void;
 	setView(view: Partial<Viewport>): void;
@@ -137,6 +152,11 @@ export function createImageStore(api: ImageApi, imageId: string): ImageStore {
 		return next;
 	};
 
+	// The newest revision an event of the stream named, and whether a catch-up is running or asked for again.
+	let seenRevision = 0;
+	let catching = false;
+	let again = false;
+
 	return createStore<ImageState & ImageActions>()((set, get) => {
 		const keepSelection = (doc: ImageDocument): readonly string[] => {
 			const ids = new Set(layerIds(doc.layers));
@@ -150,6 +170,47 @@ export function createImageStore(api: ImageApi, imageId: string): ImageStore {
 			set({ doc, load: "ready", selection: keepSelection(doc), ...extra });
 		};
 
+		// Asks for the document again when it is behind what the server holds, and outlines the layers another
+		// actor changed. The reader of an event, and the poll while the stream is down, both come here; calls that
+		// arrive while one runs are folded into one more round.
+		const catchUp = async (): Promise<void> => {
+			if (catching) {
+				again = true;
+				return;
+			}
+			catching = true;
+			try {
+				do {
+					again = false;
+					if (get().doc === null || get().busy) break;
+					try {
+						const fresh = await api.describe(imageId);
+						const now = get().doc;
+						if (now === null || get().busy || fresh.revision <= now.revision)
+							continue;
+						const changed = changedLayers(now.layers, fresh.layers);
+						replace(fresh, { changedByOthers: changed });
+						const held = now.revision;
+						await get().refreshHistory();
+						const other = get().history.find(
+							(entry) => entry.revision > held && !entry.mine,
+						);
+						if (other) set({ notice: { kind: "agent", actor: other.actor } });
+					} catch {
+						// A catch-up that fails is tried again by the next event or tick; a command shows its own errors.
+					}
+				} while (again);
+			} finally {
+				catching = false;
+			}
+		};
+
+		// After a command of this window: an event of another actor that arrived while it ran was left for now.
+		const settle = (): void => {
+			const doc = get().doc;
+			if (doc !== null && seenRevision > doc.revision) void catchUp();
+		};
+
 		const step = (kind: "undo" | "redo"): Promise<void> =>
 			enqueue(async () => {
 				if (get().doc === null) return;
@@ -160,6 +221,8 @@ export function createImageStore(api: ImageApi, imageId: string): ImageStore {
 					await get().refreshHistory();
 				} catch (error) {
 					set({ busy: false, error: asApiError(error) });
+				} finally {
+					settle();
 				}
 			});
 
@@ -209,10 +272,62 @@ export function createImageStore(api: ImageApi, imageId: string): ImageStore {
 							try {
 								replace(await api.describe(imageId));
 							} catch {
-								// The next poll catches up.
+								// The next event or poll catches up.
 							}
 						}
 						return null;
+					} finally {
+						settle();
+					}
+				});
+			},
+
+			importFile(source) {
+				return enqueue(async () => {
+					const doc = get().doc;
+					if (doc === null) return null;
+					set({ busy: true, error: null });
+					try {
+						const target = {
+							image_id: imageId,
+							base_revision: doc.revision,
+							...(source.name === undefined ? {} : { name: source.name }),
+						};
+						const result =
+							"path" in source
+								? await api.importImage({ ...target, path: source.path })
+								: await api.importFile(source.file, target);
+						if (result.state === "pending") {
+							// The server is still reading the file: no layer was made. Saying so keeps the dialog
+							// open, and the person tries again once the file is ready.
+							set({
+								busy: false,
+								error: new ApiError(0, {
+									code: "E_ASSET_NOT_READY",
+									message: result.text,
+									retryable: true,
+								}),
+							});
+							return null;
+						}
+						replace(await api.describe(imageId), { busy: false });
+						if (result.layer_id !== undefined)
+							set({ selection: [result.layer_id] });
+						await get().refreshHistory();
+						return result;
+					} catch (error) {
+						const failure = asApiError(error);
+						set({ busy: false, error: failure });
+						if (failure.code === "E_REVISION_CONFLICT") {
+							try {
+								replace(await api.describe(imageId));
+							} catch {
+								// The next event or poll catches up.
+							}
+						}
+						return null;
+					} finally {
+						settle();
 					}
 				});
 			},
@@ -225,24 +340,17 @@ export function createImageStore(api: ImageApi, imageId: string): ImageStore {
 			},
 
 			async poll() {
-				const before = get().doc;
-				if (before === null || get().busy) return;
-				try {
-					const fresh = await api.describe(imageId);
-					const now = get().doc;
-					if (now === null || get().busy || fresh.revision <= now.revision)
-						return;
-					const changed = changedLayers(now.layers, fresh.layers);
-					replace(fresh, { changedByOthers: changed });
-					const seen = now.revision;
-					await get().refreshHistory();
-					const other = get().history.find(
-						(entry) => entry.revision > seen && !entry.mine,
-					);
-					if (other) set({ notice: { kind: "agent", actor: other.actor } });
-				} catch {
-					// A poll that fails is tried again at the next tick; a command shows its own errors.
-				}
+				await catchUp();
+			},
+
+			async receive(event) {
+				if (event.name !== "image.updated") return;
+				seenRevision = Math.max(seenRevision, event.revision);
+				const doc = get().doc;
+				if (doc === null || event.revision <= doc.revision) return;
+				// While a command of this window runs, its own answer may be this very revision: settle() looks again.
+				if (get().busy) return;
+				await catchUp();
 			},
 
 			async refreshHistory() {
