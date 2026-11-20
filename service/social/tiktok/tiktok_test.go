@@ -68,14 +68,31 @@ func cred(srv *socialtest.Server, rotated *[][]byte) connections.Credential {
 	}
 
 	if rotated != nil {
-		c.Rotate = func(s []byte) error {
-			*rotated = append(*rotated, bytes.Clone(s))
-
-			return nil
-		}
+		c.Rotate = vault([]byte(signedIn), func(s []byte) { *rotated = append(*rotated, bytes.Clone(s)) })
 	}
 
 	return c
+}
+
+// vault is a Rotate over a vault that holds held: it gives the update the secret held now and records what is
+// written.
+func vault(held []byte, wrote func([]byte)) func(func([]byte) ([]byte, error)) error {
+	var mu sync.Mutex
+
+	return func(update func([]byte) ([]byte, error)) error {
+		mu.Lock()
+		defer mu.Unlock()
+
+		next, err := update(bytes.Clone(held))
+		if err != nil || next == nil {
+			return err
+		}
+
+		held = bytes.Clone(next)
+		wrote(next)
+
+		return nil
+	}
 }
 
 func newUpload(t *testing.T) social.Upload {
@@ -718,7 +735,7 @@ func TestWhenTheNewTokenCannotBeKeptTheSendStops(t *testing.T) {
 	srv := server(t, "token refresh")
 	c, _ := connector(srv)
 	cr := cred(srv, nil)
-	cr.Rotate = func([]byte) error { return errors.New("the vault is locked") }
+	cr.Rotate = func(func([]byte) ([]byte, error)) error { return errors.New("the vault is locked") }
 
 	_, err := c.Publish(context.Background(), cr, newUpload(t))
 	asKind(t, err, social.KindUnavailable, "vault_write_failed")
@@ -734,11 +751,17 @@ func TestTwoSendsAtOnceRefreshOneAfterTheOther(t *testing.T) {
 	srv := server(t, "token refresh", "token refresh third")
 	c, _ := connector(srv)
 
-	var wg sync.WaitGroup
+	var (
+		wg   sync.WaitGroup
+		last []byte
+	)
+
+	// One vault for both sends: the second writes over what the first wrote.
+	shared := vault([]byte(signedIn), func(s []byte) { last = bytes.Clone(s) })
 
 	for range 2 {
 		cr := cred(srv, nil)
-		cr.Rotate = func([]byte) error { return nil }
+		cr.Rotate = shared
 
 		wg.Go(func() {
 			if _, err := c.accessToken(context.Background(), cr); err != nil {
@@ -752,6 +775,34 @@ func TestTwoSendsAtOnceRefreshOneAfterTheOther(t *testing.T) {
 	presented := []string{srv.Seen()[0].Form.Get("refresh_token"), srv.Seen()[1].Form.Get("refresh_token")}
 	if presented[0] != refreshOne || presented[1] != refreshTwo {
 		t.Fatalf("the refresh tokens presented = %v, want the second to present the token the first got", presented)
+	}
+
+	// The vault ends with the newest token: a lost write would strand the sign-in, since TikTok refuses a
+	// refresh token it already replaced.
+	var s secret
+	if json.Unmarshal(last, &s) != nil || s.RefreshToken != "REFRESH-TOKEN-three-canary" {
+		t.Fatalf("the vault ends with %s", last)
+	}
+}
+
+// A sign-in done again while a send was refreshing is newer than the token of that send, and is kept.
+func TestANewRefreshTokenDoesNotOverwriteANewSignIn(t *testing.T) {
+	t.Parallel()
+
+	srv := server(t, "token refresh")
+	c, _ := connector(srv)
+	cr := cred(srv, nil)
+	again := strings.Replace(signedIn, refreshOne, "REFRESH-TOKEN-of-a-new-sign-in", 1)
+	wrote := 0
+
+	cr.Rotate = vault([]byte(again), func([]byte) { wrote++ })
+
+	if _, err := c.accessToken(context.Background(), cr); err != nil {
+		t.Fatal(err)
+	}
+
+	if wrote != 0 {
+		t.Fatalf("the token of the earlier sign-in was written over the new one %d times", wrote)
 	}
 }
 

@@ -1,6 +1,7 @@
 package service
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"net/url"
@@ -451,7 +452,7 @@ func (s *svc) SocialAccountSelect(ctx context.Context, req SocialAccountSelectRe
 
 // SocialPriceSet corrects the price of a post on a network that charges for one (X), when the network changes
 // it (SDD-020 section 39). It is for a person in the browser: what a post costs is what the approval shows and
-// the ceilings count, so an agent does not change it (T-64). The amounts are kept with the date of the edit in
+// the ceilings count, so an agent does not change it (T-69). The amounts are kept with the date of the edit in
 // the secret document of the connection, and change the estimate of a request made after them, never one
 // already made.
 func (s *svc) SocialPriceSet(ctx context.Context, req SocialPriceSetRequest) (*SocialAccount, error) {
@@ -497,10 +498,19 @@ func (s *svc) SocialPriceSet(ctx context.Context, req SocialPriceSetRequest) (*S
 		refused   error
 	)
 
-	werr := s.conns.With(ctx, row.ID, func(cred connections.Credential) error {
-		newSecret, refused = priced.SetPrice(cred.Secret, price)
+	// The read and the write are one step under the lock of the connection: a refresh token that a send is
+	// writing meanwhile is neither lost under the price nor writes the former price back (SDD-020 section 34).
+	werr := s.conns.UpdateSecret(ctx, row.ID, func(current []byte) ([]byte, error) {
+		next, serr := priced.SetPrice(current, price)
+		if serr != nil {
+			refused = serr
 
-		return nil
+			return nil, nil
+		}
+
+		newSecret = bytes.Clone(next)
+
+		return next, nil
 	})
 	if werr != nil {
 		return nil, connectionError(werr)
@@ -511,10 +521,6 @@ func (s *svc) SocialPriceSet(ctx context.Context, req SocialPriceSetRequest) (*S
 	}
 
 	defer clear(newSecret)
-
-	if perr := s.conns.PutSecret(row.ID, newSecret); perr != nil {
-		return nil, connectionError(perr)
-	}
 
 	now := s.nowMs()
 
