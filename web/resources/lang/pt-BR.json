@@ -972,7 +972,7 @@
         "expand_composition": "Expandir composição",
         "freeze_frame": "Congelar quadro",
         "copy_attributes": "Copiar atributos",
-        "paste_attributes": "Colar atributos",
+        "paste_attributes": "Colar atributos (sem espelhamento)",
         "enable": "Ativar",
         "disable": "Desativar",
         "repeat": "Repetir…"
@@ -1501,7 +1501,7 @@
           "extract_audio": "Extrair o áudio dos clipes selecionados",
           "toggle_magnet": "Ativar ou desativar o ímã da faixa",
           "copy_attributes": "Copiar o visual do item selecionado",
-          "paste_attributes": "Colar o visual copiado nos itens selecionados",
+          "paste_attributes": "Colar o visual copiado, exceto o espelhamento, nos itens selecionados",
           "toggle_snap": "Ativar ou desativar o encaixe",
           "keyframe_panel": "Mostrar ou ocultar os keyframes do item selecionado",
           "speed_curve": "Abrir a curva de velocidade do clipe selecionado",
