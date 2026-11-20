@@ -208,6 +208,10 @@ func (c *Context) stackingOf(id string) string {
 			layer = total
 		}
 	}
+	if total == 1 {
+		return "layer 1 of 1 visual track: no other visual track covers it or lies under it."
+	}
+
 	return fmt.Sprintf(
 		"layer %d of %d visual tracks, counting from the top; a track with a lower number covers the ones with a higher number.",
 		layer,
