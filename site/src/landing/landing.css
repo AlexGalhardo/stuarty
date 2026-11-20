@@ -32,6 +32,16 @@ main[data-expressive] {
   text-wrap: balance;
 }
 
+/* The longer title of the home page: sized so its longest word ("audiovisual") fits the hero column from 320 px
+   to a wide desktop. */
+.display-home {
+  font-size: clamp(2rem, 1.1rem + 2.8vw, 3.5rem);
+  line-height: 1.05;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
 .display-title {
   font-size: clamp(2rem, 4.2vw, 3.5rem);
   line-height: 1.08;

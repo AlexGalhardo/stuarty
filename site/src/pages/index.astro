@@ -44,7 +44,7 @@ const number = (id: string) => String(takes.findIndex((t) => t.id === id) + 1).p
 				<div class="grid items-center gap-10 lg:grid-cols-12">
 					<div class="lg:col-span-6">
 						<p class="eyebrow" data-hero-item>{hero.eyebrow}</p>
-						<SplitTitle text={hero.title} id="studio-title" tabindex="-1" class="display-hero mt-5 text-fg" />
+						<SplitTitle text={hero.homeTitle} id="studio-title" tabindex="-1" class="display-home mt-5 text-fg" />
 						<p class="lead mt-6 max-w-xl" data-hero-item>{hero.lead}</p>
 					</div>
 					<div class="lg:col-span-6" data-hero-frame>
