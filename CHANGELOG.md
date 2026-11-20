@@ -7,6 +7,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.36.0] - 2026-11-20
+
+### Added
+
+- **service:** Add the Meta sign-in, the account picker and the Graph client ([bb0f93e](https://github.com/AlexGalhardo/stuarty/commit/bb0f93e39b233ce70d20e6b57bd78b6afd7ba6b4))
+- **core:** Add the Reel limits, the caption and the media facts to publish ([0b549b9](https://github.com/AlexGalhardo/stuarty/commit/0b549b943552c1669a35a633dbc7e904a278f0c4))
+- **service:** Publish a Reel to Instagram in two steps at Meta ([8fb0930](https://github.com/AlexGalhardo/stuarty/commit/8fb09305a1824c236521da39e14ee7a6a516fbcf))
+- **service:** Set the AI disclosure from generated assets and say so ([0e32f11](https://github.com/AlexGalhardo/stuarty/commit/0e32f118b316423f2c776c0a0a40d7ac97a0fb6c))
+- **web:** Add the Meta setup guide, the account picker and its security tests ([24bda18](https://github.com/AlexGalhardo/stuarty/commit/24bda18f50b9f50464d076c0a6f195af38e7ad06))
+- **command:** Add the composition item and clip.add_composition with its nesting rules ([007111a](https://github.com/AlexGalhardo/stuarty/commit/007111aac96b804afb7ff4778e291f0c568b6cf2))
+- **plan:** Resolve nested compositions into flat layers or one group layer ([923e25a](https://github.com/AlexGalhardo/stuarty/commit/923e25af987efa683519b3e388661c33ac568c7e))
+- **engine:** Draw the group layer on the Go compositor and the Rust renderer host ([ada3c60](https://github.com/AlexGalhardo/stuarty/commit/ada3c608f7b0065471a975c3d0ad5b49677986e0))
+- **command:** Add composition.create_from_selection and composition.expand ([e59b9ca](https://github.com/AlexGalhardo/stuarty/commit/e59b9ca69bcc5dff9ab27b2ca177ad819c66ed2c))
+- **plan:** Mix the sound of a nested timeline as the sound of the composition ([18d2e82](https://github.com/AlexGalhardo/stuarty/commit/18d2e82b4abf1552fa9f6c3f0bc3073ed6868daa))
+- **core:** Validate and estimate image and voice generation ([b6ad228](https://github.com/AlexGalhardo/stuarty/commit/b6ad2287476f68de45b94d1b85aa7e0fc53dcf8e))
+- **service:** Add image and speech generation to the OpenAI adapter ([c50a848](https://github.com/AlexGalhardo/stuarty/commit/c50a848e35040346d568a213b86c55ec32627e4d))
+- **service:** Add the image and voice generation jobs with estimate, ledger and assets ([2472604](https://github.com/AlexGalhardo/stuarty/commit/247260468a887699e442ecf3d5a3e4cb0b1328c6))
+- **plan:** Name the timeline that owns the asset of a nested layer ([f877fa8](https://github.com/AlexGalhardo/stuarty/commit/f877fa83d6f35dfbd199881bfc16e5f29ab47f0d))
+- **auth:** Verify the Google ID token ([852bdc6](https://github.com/AlexGalhardo/stuarty/commit/852bdc6b9e8774fc6aba68871f5f23997837cbea))
+- **auth:** Sign in with a linked Google account ([4a57edc](https://github.com/AlexGalhardo/stuarty/commit/4a57edcec241818a03bc0ec32c04dda593d9b202))
+- **core:** Add the pure rules of writing: kinds, scripts, captions, limits and diff ([9c10568](https://github.com/AlexGalhardo/stuarty/commit/9c10568a10121d770f33e4bdbb52f3cf0634b74b))
+- **service:** Store texts with revisions and add the writing operations ([f1f3af8](https://github.com/AlexGalhardo/stuarty/commit/f1f3af84579a0854727720defc69a58ba5784fb6))
+- **service:** Draft a text with a model as a new revision under approval ([da269c1](https://github.com/AlexGalhardo/stuarty/commit/da269c183dbb0cb145270801f59764cf9fa4d5f4))
+- **api:** Expose the writing domain on HTTP, the CLI and MCP ([2a44eec](https://github.com/AlexGalhardo/stuarty/commit/2a44eec5b4ca34e9d30c8a974be89564cba7b0b4))
+
+### Fixed
+
+- **service:** Say the AI flag in a scheduled post approval ([dbe909a](https://github.com/AlexGalhardo/stuarty/commit/dbe909a8ea29d88387e454eaa4fdf46ca4e72d0b))
+- **mcp:** Refuse the revert and checkpoint members on the history of an image ([26c2e3f](https://github.com/AlexGalhardo/stuarty/commit/26c2e3f5052b0052381900ef0dae3221e92e9cbf))
+- **ui:** Hold the revert of the history panel to the revision of its preview ([5841926](https://github.com/AlexGalhardo/stuarty/commit/5841926498ed2f8127cf9395bdb8685218d1f377))
+- **service:** Take the error hints from the connector of the network ([468164f](https://github.com/AlexGalhardo/stuarty/commit/468164f1753f3b464e08667b36abe4f759d744c1))
+- **service:** Fetch only the images that were asked for ([c7a9480](https://github.com/AlexGalhardo/stuarty/commit/c7a948069aab1b797f3fdf64ba35251113d4c9c4))
+- **mcp:** Shorten what job_start says about the generations ([e178821](https://github.com/AlexGalhardo/stuarty/commit/e17882139916101c17a1b2e9dbec1c831706ba6f))
+- **service:** Give a spawned timeline the rows of its assets ([cdd059b](https://github.com/AlexGalhardo/stuarty/commit/cdd059bab3ef8ada1ae3940f1319bf3eb07d3ec3))
+- **ui:** Ask for the plan again when a nested timeline changes ([85c71a0](https://github.com/AlexGalhardo/stuarty/commit/85c71a063809cb8431750334034f1c8e712bbf96))
+- **service:** Draw nested texts with their own user fonts ([83942b4](https://github.com/AlexGalhardo/stuarty/commit/83942b4488499c1c4f0d3f3bcdf0212d35867423))
+- **auth:** Keep Google linkings apart from anonymous sign-ins ([712cfb0](https://github.com/AlexGalhardo/stuarty/commit/712cfb0106416e07f6f7d7d59fb3e33da528dc68))
+- **ui:** Show the picture of a composition from the API ([94eaea2](https://github.com/AlexGalhardo/stuarty/commit/94eaea2ff723e5ecb171c7fddbbef2f0570a9aed))
+- **command:** Refuse to expand a composition that is not drawn ([105a2cf](https://github.com/AlexGalhardo/stuarty/commit/105a2cf8a48f2928d163ef34e74efcfce94d50d0))
+- **engine:** Blend over a transparent frame as the renderer does ([35897d9](https://github.com/AlexGalhardo/stuarty/commit/35897d9fb9e08bfb8bb4fc1732aba915c907b035))
+- **ci:** Read verify checks from base on Git Bash, skip go.mod-only ([47dc32b](https://github.com/AlexGalhardo/stuarty/commit/47dc32bbbba0957cbea5a5578628e0dc5e30bc32))
+- **service:** Let a project key reach texts through a timeline of its project ([a550b38](https://github.com/AlexGalhardo/stuarty/commit/a550b384cc4f401222bee2ada5c9cdb41b6bc2c3))
+- **api:** Carry text_kind when a text item is added on every surface ([753b367](https://github.com/AlexGalhardo/stuarty/commit/753b367824096cd99473a1b96f28f05e3dc08ccf))
+- **core:** Take the NFC of X from the caller so core/writing imports no x/text ([2936b45](https://github.com/AlexGalhardo/stuarty/commit/2936b45c5e5b3ae66fc5a202d030a2c2987dffee))
+
+### Security
+
+- **security:** Cover the Google sign-in threat rows ([a1aa962](https://github.com/AlexGalhardo/stuarty/commit/a1aa962c6769b85fc07630bbe2f240ce64a980a5))
+- **security:** Count the threats of epics 19 and 24 ([18ecb9c](https://github.com/AlexGalhardo/stuarty/commit/18ecb9c2ab2943d5d3a08eac65e9a251f3d2f8a4))
 ## [0.35.0] - 2026-11-20
 
 ### Added
@@ -1639,7 +1688,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.35.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.36.0...HEAD
+[0.36.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.35.0...v0.36.0
 [0.35.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.34.0...v0.35.0
 [0.34.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.33.0...v0.34.0
 [0.33.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.32.0...v0.33.0
