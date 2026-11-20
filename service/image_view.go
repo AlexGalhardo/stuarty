@@ -60,7 +60,7 @@ func (s *svc) ImageFrame(ctx context.Context, req ImageFrameRequest) (*ImageFram
 		).withPath("width")
 	}
 
-	row, doc, lerr := s.loadImage(ctx, s.store.Images(), c, req.ImageID)
+	row, doc, lerr := s.loadImageRead(ctx, s.store.Images(), c, req.ImageID)
 	if lerr != nil {
 		return nil, lerr
 	}
@@ -139,7 +139,7 @@ func (s *svc) ImageHistory(ctx context.Context, req ImageHistoryRequest) (*Image
 		limit = defaultImageHistory
 	}
 
-	row, _, lerr := s.loadImage(ctx, s.store.Images(), c, req.ImageID)
+	row, _, lerr := s.loadImageRead(ctx, s.store.Images(), c, req.ImageID)
 	if lerr != nil {
 		return nil, lerr
 	}
@@ -204,7 +204,7 @@ func (s *svc) ImageFile(ctx context.Context, req ImageFileRequest) (*File, error
 		return nil, err
 	}
 
-	row, _, lerr := s.loadImage(ctx, s.store.Images(), c, req.ImageID)
+	row, _, lerr := s.loadImageRead(ctx, s.store.Images(), c, req.ImageID)
 	if lerr != nil {
 		return nil, lerr
 	}

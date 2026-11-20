@@ -18,9 +18,9 @@ import (
 	"github.com/AlexGalhardo/stuarty/web/resources/templates"
 )
 
-// SDD-018 section 17: in network mode an image belongs to one user (SDD-021), so the recipes install their
-// timeline templates and no image template; in local mode they install both.
-func TestNetworkModeInstallsNoRecipeImageTemplate(t *testing.T) {
+// SDD-018 section 17 and VV-291: the recipes install their timeline templates and their image templates in
+// every mode; in network mode the image templates have no owner (service.SharedImageTemplate).
+func TestEveryModeInstallsTheRecipeImageTemplates(t *testing.T) {
 	t.Parallel()
 
 	timelines, err := templates.Timelines()
@@ -59,13 +59,15 @@ func TestNetworkModeInstallsNoRecipeImageTemplate(t *testing.T) {
 			}
 
 			for _, want := range images {
-				_, gerr := st.Images().Get(ctx, want.ID)
+				row, gerr := st.Images().Get(ctx, want.ID)
+				if gerr != nil {
+					t.Errorf("%s mode: no image template %s: %v", name, want.Name, gerr)
 
-				switch {
-				case network == nil && gerr != nil:
-					t.Errorf("local mode: no image template %s: %v", want.Name, gerr)
-				case network != nil && !errors.Is(gerr, service.ErrNotFound):
-					t.Errorf("network mode installed the image template %s (%v)", want.Name, gerr)
+					continue
+				}
+
+				if !service.SharedImageTemplate(row.ImageHead) {
+					t.Errorf("%s mode: the image template %s is not shared: %+v", name, want.Name, row.ImageHead)
 				}
 			}
 		})
