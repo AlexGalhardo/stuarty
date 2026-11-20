@@ -161,7 +161,7 @@ done
 cli_names="$(grep -oE '"name": "[a-z:-]+"' "$root/site/generated/cli.json" | cut -d'"' -f4)"
 for page in "${pages[@]}"; do
 	name="$(basename "$page" .mdx)"
-	awk '{ sub(/$/, "") } /^[ ]*```console[ ]*$/ { inb = 1; next } inb && /^[ ]*```[ ]*$/ { inb = 0; next } inb { print }' "$page" |
+	awk '{ sub(/\r$/, "") } /^[ ]*```console[ ]*$/ { inb = 1; next } inb && /^[ ]*```[ ]*$/ { inb = 0; next } inb { print }' "$page" |
 		{ grep -oE '(^|[|;] *)[ ]*stuarty [a-z][a-z:-]*' || true; } | sed -E 's/.*stuarty //' | sort -u |
 		while read -r cmd; do
 			echo "$cli_names" | grep -qx "$cmd" || die "$name: a console block runs stuarty $cmd, which is not a command of the CLI"
