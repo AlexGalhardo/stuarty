@@ -111,6 +111,12 @@ func requestedAccept(r *http.Request) string {
 
 // jsonPath tells the routes whose errors are always problem+json.
 func jsonPath(p string) bool {
+	// The sign-in page of an AI provider lives under /auth/ because the provider documents that address, but it
+	// is a page: its errors are the ones of a page.
+	if p == ProviderSignInCallbackPath {
+		return false
+	}
+
 	return strings.HasPrefix(p, BasePath+"/") || strings.HasPrefix(p, "/auth/") || p == "/openapi.json"
 }
 
@@ -194,13 +200,23 @@ func hostAllowed(r *http.Request) bool {
 // a cross-site navigation by nature.
 const SignInCallbackPath = "/social/callback"
 
+// ProviderSignInCallbackPath is the same page for the sign-in to an AI provider (SDD-016 section 12): the
+// provider sends the browser there with a state and a code. It is exactly one more path with exactly the
+// same conditions, never a prefix or a pattern (SDD-007 section 3.6 item 4, T-75, T-76).
+const ProviderSignInCallbackPath = "/auth/callback"
+
+// isSignInCallbackPath says whether path is one of the two pages a provider or a network sends the browser to.
+func isSignInCallbackPath(path string) bool {
+	return path == SignInCallbackPath || path == ProviderSignInCallbackPath
+}
+
 // signInRedirect says whether r is the top-level navigation of the browser coming back from a consent
 // screen: a GET of the sign-in page, as a navigation that loads a document. The page holds no data and
 // changes nothing; it hands the state and the code to POST /api/v1/social/complete, which is a
 // same-origin request with every check of this guard, and the state is single-use and bound to the
 // session that began it (SDD-007 section 3.6 item 4, T-59).
 func signInRedirect(r *http.Request) bool {
-	return r.Method == http.MethodGet && r.URL.Path == SignInCallbackPath &&
+	return r.Method == http.MethodGet && isSignInCallbackPath(r.URL.Path) &&
 		r.Header.Get("Sec-Fetch-Mode") == "navigate" && r.Header.Get("Sec-Fetch-Dest") == "document"
 }
 

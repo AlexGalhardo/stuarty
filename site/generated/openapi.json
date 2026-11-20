@@ -6466,6 +6466,50 @@
         },
         "type": "object"
       },
+      "ProviderSignIn": {
+        "properties": {
+          "account": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "connection_id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "provider": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ProviderSignInBeginResult": {
+        "properties": {
+          "authorize_url": {
+            "type": "string"
+          },
+          "connection_id": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ProviderSignInListResult": {
+        "properties": {
+          "sign_ins": {
+            "items": {
+              "$ref": "#/components/schemas/ProviderSignIn"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
       "ProviderView": {
         "properties": {
           "capabilities": {
@@ -24089,80 +24133,19 @@
         "summary": "Set or remove the price of a model (a person in the browser only; the local token and keys get 403)"
       }
     },
-    "/api/v1/publications": {
+    "/api/v1/providers/sign-ins": {
       "get": {
-        "operationId": "publications.list",
-        "parameters": [
-          {
-            "description": "Only the publications of one project.",
-            "in": "query",
-            "name": "project_id",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "description": "Only publications with a target in this state: draft, waiting_approval, approved, scheduled, publishing, published, failed, missed or cancelled.",
-            "in": "query",
-            "name": "state",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "description": "Only publications with a target on this network.",
-            "in": "query",
-            "name": "network",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "description": "Only publications with a target at or after this time (RFC 3339).",
-            "in": "query",
-            "name": "from",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "description": "Only publications with a target before this time (RFC 3339).",
-            "in": "query",
-            "name": "to",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "description": "The page size, 1 to 500; the default is 100.",
-            "in": "query",
-            "name": "limit",
-            "schema": {
-              "type": "integer"
-            }
-          },
-          {
-            "description": "How many publications to skip.",
-            "in": "query",
-            "name": "offset",
-            "schema": {
-              "type": "integer"
-            }
-          }
-        ],
+        "operationId": "providers.sign-ins",
         "responses": {
           "200": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PublicationListResult"
+                  "$ref": "#/components/schemas/ProviderSignInListResult"
                 }
               }
             },
             "description": "OK"
-          },
-          "400": {
-            "$ref": "#/components/responses/ValidationError"
           },
           "401": {
             "$ref": "#/components/responses/Problem"
@@ -24182,50 +24165,39 @@
             "bearer": []
           }
         ],
-        "summary": "List the publications of the calendar, by project, state, network or time range"
-      },
+        "summary": "List the connections made by a sign-in and their state"
+      }
+    },
+    "/api/v1/providers/signin": {
       "post": {
-        "operationId": "publications.create",
+        "operationId": "providers.signin.begin",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
                 "properties": {
-                  "export": {
-                    "description": "The id of a succeeded export job of the project: the video.",
+                  "connection_id": {
+                    "description": "Sign in again an existing connection made by a sign-in, instead of making one.",
+                    "type": "string"
+                  },
+                  "label": {
+                    "description": "A name for a new connection, 1 to 60 characters; the default name of the provider when left out.",
+                    "type": "string"
+                  },
+                  "provider": {
+                    "description": "The provider to sign in to: openai (Sign in with ChatGPT) or openrouter.",
                     "minLength": 1,
                     "type": "string"
                   },
-                  "project_id": {
-                    "description": "The project the publication belongs to.",
-                    "minLength": 1,
-                    "type": "string"
-                  },
-                  "targets": {
-                    "description": "One entry per account the post goes to: connection_id, fields (title, description, tags, visibility, made_for_kids, ai_disclosure), at (a time such as 2026-11-20T09:00 read in zone, or an instant with an offset), zone (an IANA name such as America/Sao_Paulo), late_window_minutes.",
-                    "items": {
-                      "$ref": "#/components/schemas/TargetInput"
-                    },
-                    "type": "array"
-                  },
-                  "text": {
-                    "description": "The caption the targets use unless they have their own description.",
-                    "type": "string"
-                  },
-                  "thumbnail": {
-                    "description": "The id of a succeeded export job of a still of the project: the cover.",
-                    "type": "string"
-                  },
-                  "title": {
-                    "description": "The title the targets use unless they have their own, 1 to 200 characters.",
+                  "redirect_uri": {
+                    "description": "The address of this app followed by /auth/callback, at the address you opened the app with. OpenAI accepts only http://127.0.0.1:<port>/auth/callback.",
                     "minLength": 1,
                     "type": "string"
                   }
                 },
                 "required": [
-                  "project_id",
-                  "title",
-                  "export"
+                  "provider",
+                  "redirect_uri"
                 ],
                 "type": "object"
               }
@@ -24238,7 +24210,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Publication"
+                  "$ref": "#/components/schemas/ProviderSignInBeginResult"
                 }
               }
             },
@@ -24271,375 +24243,38 @@
             "bearer": []
           }
         ],
-        "summary": "Plan a publication: a video for one or more accounts, each with its time; every target starts as a draft"
+        "summary": "Start the sign-in to an AI provider; answers the address of the consent screen (a person in the browser only)"
       }
     },
-    "/api/v1/publications/events": {
-      "get": {
-        "operationId": "publications.events",
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "401": {
-            "$ref": "#/components/responses/Problem"
-          },
-          "403": {
-            "$ref": "#/components/responses/Problem"
-          },
-          "default": {
-            "$ref": "#/components/responses/Problem"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Stream the changes of the publications of the calendar"
-      }
-    },
-    "/api/v1/publications/{id}": {
-      "get": {
-        "operationId": "publications.get",
-        "parameters": [
-          {
-            "description": "A publication id, pub_ and 10 characters.",
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "minLength": 1,
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Publication"
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "400": {
-            "$ref": "#/components/responses/ValidationError"
-          },
-          "401": {
-            "$ref": "#/components/responses/Problem"
-          },
-          "403": {
-            "$ref": "#/components/responses/Problem"
-          },
-          "404": {
-            "$ref": "#/components/responses/Problem"
-          },
-          "429": {
-            "$ref": "#/components/responses/Problem"
-          },
-          "default": {
-            "$ref": "#/components/responses/Problem"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Read one publication with its targets"
-      },
-      "put": {
-        "operationId": "publications.update",
-        "parameters": [
-          {
-            "description": "A publication id, pub_ and 10 characters.",
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "minLength": 1,
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "properties": {
-                  "export": {
-                    "description": "The new video; leave out to keep it.",
-                    "type": [
-                      "string",
-                      "null"
-                    ]
-                  },
-                  "targets": {
-                    "description": "Targets to change (with their id), add (without one) or remove (remove: true). A target that was waiting for approval, approved or scheduled and whose post changed goes back to waiting for approval.",
-                    "items": {
-                      "$ref": "#/components/schemas/TargetInput"
-                    },
-                    "type": "array"
-                  },
-                  "text": {
-                    "description": "The new caption; leave out to keep it.",
-                    "type": [
-                      "string",
-                      "null"
-                    ]
-                  },
-                  "thumbnail": {
-                    "description": "The new cover; an empty text removes it.",
-                    "type": [
-                      "string",
-                      "null"
-                    ]
-                  },
-                  "title": {
-                    "description": "The new title; leave out to keep it.",
-                    "type": [
-                      "string",
-                      "null"
-                    ]
-                  }
-                },
-                "type": "object"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Publication"
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "400": {
-            "$ref": "#/components/responses/ValidationError"
-          },
-          "401": {
-            "$ref": "#/components/responses/Problem"
-          },
-          "403": {
-            "$ref": "#/components/responses/Problem"
-          },
-          "404": {
-            "$ref": "#/components/responses/Problem"
-          },
-          "429": {
-            "$ref": "#/components/responses/Problem"
-          },
-          "default": {
-            "$ref": "#/components/responses/Problem"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Change a publication or its targets; a post that waited for approval goes back to waiting for it"
-      }
-    },
-    "/api/v1/publications/{id}/cancel": {
+    "/api/v1/providers/signin/complete": {
       "post": {
-        "operationId": "publications.cancel",
-        "parameters": [
-          {
-            "description": "A publication id, pub_ and 10 characters.",
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "minLength": 1,
-              "type": "string"
-            }
-          }
-        ],
+        "operationId": "providers.signin.complete",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
                 "properties": {
-                  "target_id": {
-                    "description": "The target, tgt_ and 10 characters.",
-                    "type": "string"
-                  }
-                },
-                "type": "object"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Publication"
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "400": {
-            "$ref": "#/components/responses/ValidationError"
-          },
-          "401": {
-            "$ref": "#/components/responses/Problem"
-          },
-          "403": {
-            "$ref": "#/components/responses/Problem"
-          },
-          "404": {
-            "$ref": "#/components/responses/Problem"
-          },
-          "409": {
-            "$ref": "#/components/responses/Problem"
-          },
-          "422": {
-            "$ref": "#/components/responses/Problem"
-          },
-          "429": {
-            "$ref": "#/components/responses/Problem"
-          },
-          "default": {
-            "$ref": "#/components/responses/Problem"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Cancel a target, or every target that has not gone out"
-      }
-    },
-    "/api/v1/publications/{id}/retry": {
-      "post": {
-        "operationId": "publications.retry",
-        "parameters": [
-          {
-            "description": "A publication id, pub_ and 10 characters.",
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "minLength": 1,
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "properties": {
-                  "target_id": {
-                    "description": "The target, tgt_ and 10 characters.",
-                    "type": "string"
-                  }
-                },
-                "type": "object"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Publication"
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "400": {
-            "$ref": "#/components/responses/ValidationError"
-          },
-          "401": {
-            "$ref": "#/components/responses/Problem"
-          },
-          "403": {
-            "$ref": "#/components/responses/Problem"
-          },
-          "404": {
-            "$ref": "#/components/responses/Problem"
-          },
-          "409": {
-            "$ref": "#/components/responses/Problem"
-          },
-          "422": {
-            "$ref": "#/components/responses/Problem"
-          },
-          "429": {
-            "$ref": "#/components/responses/Problem"
-          },
-          "default": {
-            "$ref": "#/components/responses/Problem"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Ask for approval to send a failed target again"
-      }
-    },
-    "/api/v1/publications/{id}/schedule": {
-      "post": {
-        "operationId": "publications.schedule",
-        "parameters": [
-          {
-            "description": "A publication id, pub_ and 10 characters.",
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "minLength": 1,
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "properties": {
-                  "at": {
-                    "description": "The time: a date and time such as 2026-11-20T09:00 read in zone, or an instant with an offset or Z. Leave out to keep the time the target has.",
+                  "client_id": {
+                    "description": "The client id the provider issued at the first sign-in (OpenAI sends it in the redirect).",
                     "type": "string"
                   },
-                  "late_window_minutes": {
-                    "description": "0 to 1440: how late after its time the post may still be sent without asking again. The default is 0: a post whose time passed is never sent on its own.",
-                    "type": [
-                      "integer",
-                      "null"
-                    ]
-                  },
-                  "target_id": {
-                    "description": "The target; leave out to schedule every draft target that has a time.",
+                  "code": {
+                    "description": "The authorization code the provider sent back.",
                     "type": "string"
                   },
-                  "zone": {
-                    "description": "The IANA zone the time is read in, for example America/Sao_Paulo; the default is UTC.",
+                  "error": {
+                    "description": "The error the provider sent back instead of a code, for example access_denied.",
+                    "type": "string"
+                  },
+                  "state": {
+                    "description": "The state the provider sent back to the redirect address.",
+                    "minLength": 1,
                     "type": "string"
                   }
                 },
+                "required": [
+                  "state"
+                ],
                 "type": "object"
               }
             }
@@ -24651,7 +24286,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Publication"
+                  "$ref": "#/components/schemas/ProviderSignIn"
                 }
               }
             },
@@ -24664,9 +24299,6 @@
             "$ref": "#/components/responses/Problem"
           },
           "403": {
-            "$ref": "#/components/responses/Problem"
-          },
-          "404": {
             "$ref": "#/components/responses/Problem"
           },
           "409": {
@@ -24687,82 +24319,7 @@
             "bearer": []
           }
         ],
-        "summary": "Give a target its time and ask for approval; it is sent only after a person approves it"
-      }
-    },
-    "/api/v1/publications/{id}/send-now": {
-      "post": {
-        "operationId": "publications.send-now",
-        "parameters": [
-          {
-            "description": "A publication id, pub_ and 10 characters.",
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "minLength": 1,
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "properties": {
-                  "target_id": {
-                    "description": "The target, tgt_ and 10 characters.",
-                    "type": "string"
-                  }
-                },
-                "type": "object"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Publication"
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "400": {
-            "$ref": "#/components/responses/ValidationError"
-          },
-          "401": {
-            "$ref": "#/components/responses/Problem"
-          },
-          "403": {
-            "$ref": "#/components/responses/Problem"
-          },
-          "404": {
-            "$ref": "#/components/responses/Problem"
-          },
-          "409": {
-            "$ref": "#/components/responses/Problem"
-          },
-          "422": {
-            "$ref": "#/components/responses/Problem"
-          },
-          "429": {
-            "$ref": "#/components/responses/Problem"
-          },
-          "default": {
-            "$ref": "#/components/responses/Problem"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Ask for approval to send a target as soon as it is approved"
+        "summary": "Finish the sign-in with what the provider sent to the redirect address (a person in the browser only)"
       }
     },
     "/api/v1/publish": {

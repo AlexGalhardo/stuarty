@@ -477,6 +477,18 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.ProviderPriceSet(ctx, service.ProviderPriceSetRequest{Provider: "openai", Model: "m"})
 			return err
 		},
+		"ProviderSignInBegin": func() error {
+			_, err := e.svc.ProviderSignInBegin(ctx, service.ProviderSignInBeginRequest{Provider: "openai"})
+			return err
+		},
+		"ProviderSignInComplete": func() error {
+			_, err := e.svc.ProviderSignInComplete(ctx, service.ProviderSignInCompleteRequest{State: "s"})
+			return err
+		},
+		"ProviderSignInList": func() error {
+			_, err := e.svc.ProviderSignInList(ctx, service.ProviderSignInListRequest{})
+			return err
+		},
 		"TextGenerate": func() error {
 			_, err := e.svc.TextGenerate(ctx, service.TextGenerateRequest{ProjectID: "prj_0000000001"})
 			return err

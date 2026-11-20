@@ -2231,6 +2231,29 @@ The types named in the tables of the operations. The arguments of each editing c
 | --- | --- | --- | --- |
 | `prices` | array of [`PriceEntry`](/docs/api/schemas#priceentry) | no |  |
 
+### ProviderSignIn
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `account` | `string` | no |  |
+| `connection_id` | `string` | no |  |
+| `label` | `string` | no |  |
+| `provider` | `string` | no |  |
+| `state` | `string` | no |  |
+
+### ProviderSignInBeginResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `authorize_url` | `string` | no |  |
+| `connection_id` | `string` | no |  |
+
+### ProviderSignInListResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `sign_ins` | array of [`ProviderSignIn`](/docs/api/schemas#providersignin) | no |  |
+
 ### ProviderView
 
 | Name | Type | Required | Description |

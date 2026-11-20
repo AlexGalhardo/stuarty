@@ -302,10 +302,11 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 	}
 
 	o.Service, err = service.New(service.Options{
-		Keys: o.keyStore(), Connections: out.conns, Providers: out.provs, Social: out.socials, HeavyPerMinute: heavy,
-		Agents: o.Agents, WebP: o.webp,
-		Heavy: middleware.ServiceLimiter{L: ratelimit.NewMemory(heavy, time.Minute)},
-		Store: st, Registry: command.Default(), Now: cfg.Now, Workspace: string(o.Dir), Media: media,
+		Keys: o.keyStore(), Connections: out.conns, Providers: out.provs, Social: out.socials, SignIns: out.signInSet,
+		HeavyPerMinute: heavy,
+		Agents:         o.Agents,
+		Heavy:          middleware.ServiceLimiter{L: ratelimit.NewMemory(heavy, time.Minute)},
+		Store:          st, Registry: command.Default(), Now: cfg.Now, Workspace: string(o.Dir), Media: media,
 		Exporter: exp, Enqueue: jobs.Dispatcher{Queue: o.Queue}, Limits: limits, Publish: publish, Version: o.version,
 		BuiltInSkills: skills.FS(), Transcriber: transcriber, Tools: tools, Log: cfg.Log,
 		Lint: lint.Env{Measurer: lintMeasurer{workspace: string(o.Dir)}},
