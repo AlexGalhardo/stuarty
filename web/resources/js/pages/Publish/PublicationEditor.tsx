@@ -19,7 +19,13 @@ import { useLocale, useT } from "@/lib/i18n";
 import type { ProjectSummary } from "@/types";
 import { createClient } from "../../editor/api/client";
 import { HttpTransport } from "../../editor/api/http";
-import type { Job, SocialAccount, SocialNetwork } from "../../editor/api/types";
+import type {
+	Connection,
+	Job,
+	SocialAccount,
+	SocialNetwork,
+} from "../../editor/api/types";
+import { type TextItem, writingClient } from "../Write/client";
 import type { PublishApi } from "./api";
 import { useBackgroundAsk } from "./BackgroundAsk";
 import { browserZone } from "./calendar";
@@ -29,6 +35,8 @@ import { TargetStateBadge } from "./TargetStateBadge";
 import type { Publication, Target, TargetInput, TargetState } from "./types";
 
 const VISIBILITIES = ["private", "unlisted", "public"] as const;
+// A post is a draft (private) or published (public) at its destination.
+const POST_VISIBILITIES = ["private", "public"] as const;
 const STILLS = ["png", "jpg", "jpeg"];
 const SELECT = "h-8 rounded-lg border border-input bg-transparent px-2 text-sm";
 
@@ -187,6 +195,7 @@ export function PublicationEditor({
 	projects,
 	accounts,
 	networks,
+	blogs = [],
 	api,
 	onClose,
 	onChanged,
@@ -196,6 +205,8 @@ export function PublicationEditor({
 	projects: readonly ProjectSummary[];
 	accounts: readonly SocialAccount[];
 	networks: readonly SocialNetwork[];
+	// The connections of the blog destinations: where a post goes (SDD-020 part 5).
+	blogs?: readonly Connection[];
 	api: PublishApi;
 	onClose(): void;
 	onChanged(): void;
@@ -217,6 +228,10 @@ export function PublicationEditor({
 	const [text, setText] = useState(publication?.text ?? "");
 	const [video, setVideo] = useState(publication?.export ?? "");
 	const [still, setStill] = useState(publication?.thumbnail ?? "");
+	// A publication is a video or a blog post (SDD-020 section 43): a post goes only to the blog destinations.
+	const [isPost, setIsPost] = useState((publication?.post ?? "") !== "");
+	const [post, setPost] = useState(publication?.post ?? "");
+	const [posts, setPosts] = useState<TextItem[]>([]);
 	const [drafts, setDrafts] = useState<Draft[]>(
 		publication?.targets.map(draftOf) ?? [],
 	);
@@ -246,11 +261,29 @@ export function PublicationEditor({
 		};
 	}, [project]);
 
+	useEffect(() => {
+		if (project === "") return;
+		let active = true;
+		writingClient(new HttpTransport("/api/v1"))
+			.list({ project_id: project, text_kind: "post" })
+			.then((res) => {
+				if (active) setPosts(res.texts);
+			})
+			.catch((error: unknown) => {
+				if (active) setFailure(failureOf(error));
+			});
+		return () => {
+			active = false;
+		};
+	}, [project]);
+
 	function adopt(next: Publication): void {
 		setCurrent(next);
 		setTitle(next.title);
 		setText(next.text ?? "");
 		setVideo(next.export);
+		setPost(next.post ?? "");
+		setIsPost((next.post ?? "") !== "");
 		setStill(next.thumbnail ?? "");
 		const fresh = next.targets.map(draftOf);
 		setDrafts(fresh);
@@ -297,15 +330,18 @@ export function PublicationEditor({
 						project_id: project,
 						title,
 						...(text === "" ? {} : { text }),
-						export: video,
-						...(still === "" ? {} : { thumbnail: still }),
+						...(isPost
+							? { post }
+							: {
+									export: video,
+									...(still === "" ? {} : { thumbnail: still }),
+								}),
 						targets,
 					})
 				: api.update(current.id, {
 						title,
 						text,
-						export: video,
-						thumbnail: still,
+						...(isPost ? { post } : { export: video, thumbnail: still }),
 						targets: [...targets, ...removed],
 					});
 		});
@@ -314,7 +350,17 @@ export function PublicationEditor({
 	const videos = exportsOf(jobs, null);
 	const stills = exportsOf(jobs, STILLS);
 	const canSave =
-		title.trim() !== "" && video !== "" && (current !== null || project !== "");
+		title.trim() !== "" &&
+		(isPost ? post !== "" : video !== "") &&
+		(current !== null || project !== "");
+	// Where a target can go: the signed-in accounts of the networks for a video, the blog destinations for a post.
+	const destinations: { id: string; label: string; network: string }[] = isPost
+		? blogs.map((b) => ({ id: b.id, label: b.label, network: b.kind }))
+		: ready.map((a) => ({
+				id: a.connection_id,
+				label: a.label,
+				network: a.network,
+			}));
 
 	return (
 		<Dialog open onOpenChange={(open) => !open && onClose()}>
@@ -347,7 +393,9 @@ export function PublicationEditor({
 									setProject(event.target.value);
 									setVideo("");
 									setStill("");
+									setPost("");
 									setJobs([]);
+									setPosts([]);
 								}}
 							>
 								<option value="">{t("ui.social.choose")}</option>
@@ -369,43 +417,87 @@ export function PublicationEditor({
 							/>
 						</div>
 						<div className="flex flex-col gap-2">
-							<Label htmlFor="pub-video">{t("ui.social.video")}</Label>
+							<Label htmlFor="pub-content">
+								{t("ui.publish.editor.content")}
+							</Label>
 							<select
-								id="pub-video"
+								id="pub-content"
 								className={SELECT}
-								value={video}
-								onChange={(event) => setVideo(event.target.value)}
+								disabled={!isNew}
+								value={isPost ? "post" : "video"}
+								onChange={(event) => setIsPost(event.target.value === "post")}
 							>
-								<option value="">{t("ui.social.choose")}</option>
-								{video !== "" && !videos.some((j) => j.job_id === video) && (
-									<option value={video}>{video}</option>
-								)}
-								{videos.map((job) => (
-									<option key={job.job_id} value={job.job_id}>
-										{job.job_id} · {formatDateTime(job.created_at, locale)}
-									</option>
-								))}
+								<option value="video">
+									{t("ui.publish.editor.content_video")}
+								</option>
+								<option value="post">
+									{t("ui.publish.editor.content_post")}
+								</option>
 							</select>
 						</div>
-						<div className="flex flex-col gap-2">
-							<Label htmlFor="pub-still">{t("ui.social.thumbnail")}</Label>
-							<select
-								id="pub-still"
-								className={SELECT}
-								value={still}
-								onChange={(event) => setStill(event.target.value)}
-							>
-								<option value="">{t("ui.social.no_thumbnail")}</option>
-								{still !== "" && !stills.some((j) => j.job_id === still) && (
-									<option value={still}>{still}</option>
-								)}
-								{stills.map((job) => (
-									<option key={job.job_id} value={job.job_id}>
-										{job.job_id} · {formatDateTime(job.created_at, locale)}
-									</option>
-								))}
-							</select>
-						</div>
+						{isPost && (
+							<div className="flex flex-col gap-2">
+								<Label htmlFor="pub-post">{t("ui.publish.editor.post")}</Label>
+								<select
+									id="pub-post"
+									className={SELECT}
+									value={post}
+									onChange={(event) => setPost(event.target.value)}
+								>
+									<option value="">{t("ui.social.choose")}</option>
+									{post !== "" && !posts.some((p) => p.id === post) && (
+										<option value={post}>{post}</option>
+									)}
+									{posts.map((p) => (
+										<option key={p.id} value={p.id}>
+											{p.title}
+										</option>
+									))}
+								</select>
+							</div>
+						)}
+						{!isPost && (
+							<div className="flex flex-col gap-2">
+								<Label htmlFor="pub-video">{t("ui.social.video")}</Label>
+								<select
+									id="pub-video"
+									className={SELECT}
+									value={video}
+									onChange={(event) => setVideo(event.target.value)}
+								>
+									<option value="">{t("ui.social.choose")}</option>
+									{video !== "" && !videos.some((j) => j.job_id === video) && (
+										<option value={video}>{video}</option>
+									)}
+									{videos.map((job) => (
+										<option key={job.job_id} value={job.job_id}>
+											{job.job_id} · {formatDateTime(job.created_at, locale)}
+										</option>
+									))}
+								</select>
+							</div>
+						)}
+						{!isPost && (
+							<div className="flex flex-col gap-2">
+								<Label htmlFor="pub-still">{t("ui.social.thumbnail")}</Label>
+								<select
+									id="pub-still"
+									className={SELECT}
+									value={still}
+									onChange={(event) => setStill(event.target.value)}
+								>
+									<option value="">{t("ui.social.no_thumbnail")}</option>
+									{still !== "" && !stills.some((j) => j.job_id === still) && (
+										<option value={still}>{still}</option>
+									)}
+									{stills.map((job) => (
+										<option key={job.job_id} value={job.job_id}>
+											{job.job_id} · {formatDateTime(job.created_at, locale)}
+										</option>
+									))}
+								</select>
+							</div>
+						)}
 					</div>
 					<div className="flex flex-col gap-2">
 						<Label htmlFor="pub-text">{t("ui.publish.editor.caption")}</Label>
@@ -461,8 +553,8 @@ export function PublicationEditor({
 											}
 										>
 											<option value="">{t("ui.social.choose")}</option>
-											{ready.map((a) => (
-												<option key={a.connection_id} value={a.connection_id}>
+											{destinations.map((a) => (
+												<option key={a.id} value={a.id}>
 													{a.label} ({a.network})
 												</option>
 											))}
@@ -470,7 +562,9 @@ export function PublicationEditor({
 									</div>
 									<div className="flex flex-col gap-1">
 										<Label htmlFor={`${d.key}-visibility`}>
-											{t("ui.social.visibility")}
+											{isPost
+												? t("ui.publish.editor.post_status")
+												: t("ui.social.visibility")}
 										</Label>
 										<select
 											id={`${d.key}-visibility`}
@@ -480,11 +574,17 @@ export function PublicationEditor({
 												patch(d.key, { visibility: event.target.value })
 											}
 										>
-											{VISIBILITIES.map((v) => (
-												<option key={v} value={v}>
-													{t(`ui.social.visibility_${v}`)}
-												</option>
-											))}
+											{isPost
+												? POST_VISIBILITIES.map((v) => (
+														<option key={v} value={v}>
+															{t(`ui.publish.editor.post_visibility_${v}`)}
+														</option>
+													))
+												: VISIBILITIES.map((v) => (
+														<option key={v} value={v}>
+															{t(`ui.social.visibility_${v}`)}
+														</option>
+													))}
 										</select>
 									</div>
 									<div className="flex flex-col gap-1">
@@ -532,79 +632,92 @@ export function PublicationEditor({
 											{t("ui.publish.editor.late_help")}
 										</p>
 									</div>
-									<div className="flex flex-col gap-1">
-										<Label htmlFor={`${d.key}-title`}>
-											{t("ui.publish.editor.target_title")}
-										</Label>
-										<Input
-											id={`${d.key}-title`}
-											autoComplete="off"
-											value={d.title}
-											onChange={(event) =>
-												patch(d.key, { title: event.target.value })
-											}
-										/>
-									</div>
+									{!isPost && (
+										<div className="flex flex-col gap-1">
+											<Label htmlFor={`${d.key}-title`}>
+												{t("ui.publish.editor.target_title")}
+											</Label>
+											<Input
+												id={`${d.key}-title`}
+												autoComplete="off"
+												value={d.title}
+												onChange={(event) =>
+													patch(d.key, { title: event.target.value })
+												}
+											/>
+										</div>
+									)}
 								</div>
-								<div className="flex flex-col gap-1">
-									<Label htmlFor={`${d.key}-description`}>
-										{t("ui.publish.editor.target_description")}
-									</Label>
-									<Textarea
-										id={`${d.key}-description`}
-										value={d.description}
-										onChange={(event) =>
-											patch(d.key, { description: event.target.value })
-										}
-									/>
-								</div>
-								<div className="flex flex-col gap-1">
-									<Label htmlFor={`${d.key}-tags`}>{t("ui.social.tags")}</Label>
-									<Input
-										id={`${d.key}-tags`}
-										autoComplete="off"
-										value={d.tags}
-										onChange={(event) =>
-											patch(d.key, { tags: event.target.value })
-										}
-									/>
-								</div>
-								<div className="flex flex-wrap items-center gap-4 text-sm">
-									<fieldset className="flex items-center gap-3">
-										<legend className="sr-only">{t("ui.social.kids")}</legend>
-										<span aria-hidden="true">{t("ui.social.kids")}</span>
-										{(["yes", "no"] as const).map((answer) => (
-											<label key={answer} className="flex items-center gap-1">
+								{!isPost && (
+									<>
+										<div className="flex flex-col gap-1">
+											<Label htmlFor={`${d.key}-description`}>
+												{t("ui.publish.editor.target_description")}
+											</Label>
+											<Textarea
+												id={`${d.key}-description`}
+												value={d.description}
+												onChange={(event) =>
+													patch(d.key, { description: event.target.value })
+												}
+											/>
+										</div>
+										<div className="flex flex-col gap-1">
+											<Label htmlFor={`${d.key}-tags`}>
+												{t("ui.social.tags")}
+											</Label>
+											<Input
+												id={`${d.key}-tags`}
+												autoComplete="off"
+												value={d.tags}
+												onChange={(event) =>
+													patch(d.key, { tags: event.target.value })
+												}
+											/>
+										</div>
+										<div className="flex flex-wrap items-center gap-4 text-sm">
+											<fieldset className="flex items-center gap-3">
+												<legend className="sr-only">
+													{t("ui.social.kids")}
+												</legend>
+												<span aria-hidden="true">{t("ui.social.kids")}</span>
+												{(["yes", "no"] as const).map((answer) => (
+													<label
+														key={answer}
+														className="flex items-center gap-1"
+													>
+														<input
+															type="radio"
+															name={`${d.key}-kids`}
+															className="accent-primary"
+															checked={d.kids === answer}
+															onChange={() => patch(d.key, { kids: answer })}
+														/>
+														{t(`ui.social.kids_${answer}`)}
+													</label>
+												))}
+											</fieldset>
+											<label className="flex items-center gap-2">
 												<input
-													type="radio"
-													name={`${d.key}-kids`}
+													type="checkbox"
 													className="accent-primary"
-													checked={d.kids === answer}
-													onChange={() => patch(d.key, { kids: answer })}
+													checked={d.ai}
+													onChange={(event) =>
+														patch(d.key, { ai: event.target.checked })
+													}
 												/>
-												{t(`ui.social.kids_${answer}`)}
+												{t("ui.social.synthetic")}
 											</label>
-										))}
-									</fieldset>
-									<label className="flex items-center gap-2">
-										<input
-											type="checkbox"
-											className="accent-primary"
-											checked={d.ai}
-											onChange={(event) =>
-												patch(d.key, { ai: event.target.checked })
-											}
+										</div>
+										<Preview
+											network={network}
+											title={d.title || title}
+											description={d.description || text}
+											tags={d.tags}
+											visibility={d.visibility}
 										/>
-										{t("ui.social.synthetic")}
-									</label>
-								</div>
-								<Preview
-									network={network}
-									title={d.title || title}
-									description={d.description || text}
-									tags={d.tags}
-									visibility={d.visibility}
-								/>
+									</>
+								)}
 								{target !== undefined && (
 									<div className="flex flex-col gap-2 text-sm">
 										<TargetResult target={target} />
@@ -686,7 +799,7 @@ export function PublicationEditor({
 							onClick={() =>
 								setDrafts((was) => [
 									...was,
-									blankDraft(ready[0]?.connection_id ?? "", zone),
+									blankDraft(destinations[0]?.id ?? "", zone),
 								])
 							}
 						>
