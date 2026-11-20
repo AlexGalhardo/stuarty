@@ -927,6 +927,28 @@ In Windows high-contrast mode (`forced-colors: active`) the system replaces colo
 
 At least 24 by 24 CSS px for every target (WCAG 2.5.8); the design default is 32 px (`h-8`). Timeline handles: 8 px visual, 24 px hit area; preview handles: 8 px visual, 24 px hit area. Adjacent small targets keep at least 24 px between centres.
 
+### 7.9 Accessibility of each component
+
+Epic 41. What each shared component owes beyond sections 7.1 to 7.8; the checklist per section is SDD-012 §18.10 and the specs that decide it are `a11y-*` and `wcag22` in `web/e2e/specs/`.
+
+| Component | Name and role | Keyboard | Target and motion | Notes |
+| --- | --- | --- | --- | --- |
+| Button, link button | the visible text, or `aria-label` for an icon; a link that looks like a button has `role="link"` (`Button asChild` with an `<a href>`) | `Enter`, and `Space` for a button | 24 px at least, 32 px by default | a disabled button is out of the target size check; the label is never colour alone |
+| Input, textarea, native select | a `<label>` (visible) or `aria-label`; the error and the hint through `aria-describedby`; `aria-invalid` when refused | native; a select takes the typeahead and the arrows | 32 px high | native selects stay (D-099): they are named, keyboard operable and read by every screen reader; a Base UI select is used only where a custom list is needed (the palette) |
+| Checkbox and radio | native `<input>` or the Base UI checkbox, with a visible label | `Space` | a 24 px target: the native inputs by the rule of `app.css`, the Base UI checkbox draws its 16 px box inside a 24 px target | a checkbox inside a label is also a target; the label text is not colour alone |
+| Switch, toggle, toggle group | `role="switch"` or `aria-pressed`, with the name of what it turns | `Space`, arrows in a group | 24 px | the state is in the accessible state, and the look adds an icon or text |
+| Dialog, alert dialog | `role="dialog"` or `alertdialog`, named by its title, described by its description | the focus goes in, `Tab` stays inside, `Esc` closes, the focus returns to the opener | the open and close animation is at most 100 ms and is removed with reduced motion | after a menu item opens a dialog, the focus returns to the button of the menu |
+| Menu, context menu | `menu`, `menuitem`, `menuitemcheckbox` with names | arrows, `Enter`, `Esc`; the menu button has `aria-haspopup` | 24 px rows | a context menu has a keyboard twin (the `Menu` key or the actions button) |
+| Tabs | `tablist` named, `tab` with `aria-selected`, `tabpanel` named by its tab | one tab stop, arrows move between tabs | | the selected tab keeps its place across selections |
+| Tooltip | describes, never the only name | opens on focus and on hover, `Esc` closes | | holds the key of the action from the registry |
+| Progress | `role="progressbar"` with a name and `aria-valuenow`; the text beside it is hidden from a reader (`aria-hidden`) and a second text, in steps of 10%, is read in the polite region | | no spinner turns | `export/ProgressText.tsx` |
+| Badge | text, never a colour alone; it grows with the text spacing (`min-h-5`) | | | a state badge adds an icon or a word |
+| Status, alert | `role="status"` for a result, `role="alert"` for an error that stops the person; an error note has an `id` that its fields name in `aria-describedby` | | | `components/Failure.tsx` |
+| Sidebar | a `nav` named "Main navigation"; the current page has `aria-current="page"`; the collapse button has `aria-expanded` | `Tab` through the links | 36 px rows | the skip link of the layout is before it |
+| Skip link and main region | the first focusable element of a dashboard page, "Skip to the main content", goes to `main#main` (`tabindex="-1"`, no ring: it is not a control) | `Enter` | | a change of page moves the focus to `main` |
+| Chat dock | the button has `aria-expanded` and `aria-controls`; the panel is an `aside` named "Chat" | the panel takes the focus when it opens, `Esc` closes it and the button gets the focus back | | the conversation is a log read in the polite region |
+| Timeline list view | a `table` with `th scope`; the name of a row is a button | `Tab` | | SDD-012 §18.10 |
+
 ## 8. Web and desktop
 
 ### 8.1 The rule

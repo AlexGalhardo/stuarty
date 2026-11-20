@@ -1664,6 +1664,89 @@ Epic 37. RF-074.
 6. **Actions are commands.** A shortcut calls the same action a button calls. No handler computes an edit (§1); the unit test `commands/noHardCodedKeys.test.ts` (part of `task test:web`) fails when a file of `web/resources/js/editor/` compares a key event against a letter, digit, function-key or symbol literal outside `commands/keymap.ts` (a widget key such as an arrow inside a slider, `Enter` or `Esc` is allowed; a line that must keep a literal says why on a comment `shortcut-ok:`).
 7. **Physical keys.** A combo with `Alt` is read from `event.code` (the letter, digit or punctuation key), because `Option` produces another character on a Mac; this is how `Alt+,` and `Alt+.` (slip) and `Alt+Shift+Z` are read.
 
+### 18.10 Accessibility of every section
+
+Epic 41. RF-075 and NFR-065. The checks of §18.4 and §18.6 cover the editor and a few pages; this section says what every section owes, with the keyboard models of the two custom widgets, and is the checklist the specs and a reviewer use.
+
+#### The items
+
+Each item is a rule of WCAG 2.2 level AA (the criterion in brackets) and the evidence that decides it.
+
+| Id | Item | Evidence |
+| --- | --- | --- |
+| K | Every action is reachable with the keyboard alone, and no control traps it (2.1.1, 2.1.2) | `a11y-keyboard-dashboard`, `a11y-keyboard-timeline`, `a11y-keyboard-image-editor`, `a11y-first-flow-keyboard` |
+| F | Focus is visible, 2 px, 3:1, and never hidden behind other content (2.4.7, 2.4.11) | `wcag22`, `bun run check:contrast` |
+| O | The focus order follows the reading order; a dialog takes the focus in and gives it back to its opener; a page change moves the focus to the main region (2.4.3, 3.2.1) | `a11y-keyboard-dashboard` |
+| N | Every control has a name, a role and its state in the accessibility tree (4.1.2, 1.3.1) | axe on every route (`a11y-axe-both-themes`, `a11y-dashboard`), `unnamedControls` over the tree snapshots of the editors, the calendar and the queue |
+| L | A live region announces what changes without a focus move: job progress, an edit by an agent, the selection, a result (4.1.3) | `a11y-live-regions`, `a11y-keyboard-timeline` |
+| E | An error is text, names the field, and is tied to it with `aria-describedby` and `aria-invalid` (3.3.1, 3.3.3) | `a11y-live-regions` |
+| T | A pointer target is at least 24 by 24 CSS px or spaced (2.5.8); `app.css` gives a native checkbox or radio that size | `wcag22`, `a11y-reflow-motion` on every page |
+| C | Text 4.5:1, large text and components 3:1, in both themes (1.4.3, 1.4.11) | `bun run check:contrast`, axe |
+| R | The page reflows at 320 CSS px with no horizontal scroll, except the editors, whose two-dimensional layout is an exception (1.4.10) | `a11y-reflow-motion` |
+| S | The text survives the spacing of 1.4.12 | `a11y-reflow-motion`, `wcag22` |
+| M | With `prefers-reduced-motion: reduce` no animation or transition runs longer than the design system allows (design system §2.13) | `a11y-reflow-motion` |
+| X | Nothing is told by colour alone: a state has text or an icon (1.4.1) | axe `color-contrast` and `link-in-text-block`, review of the page |
+| G | The page has `lang` and a part in another language has its own (3.1.1, 3.1.2) | `html-lang.spec.ts` |
+
+#### The state of each section
+
+| Section | K | F | O | N | L | E | T | C | R | S | M | X | G |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Dashboard, home and sidebar | met | met | met | met | met | n/a | met | met | met | met | met | met | met |
+| Projects, briefing and project page | met | met | met | met | met | met | met | met | met | met | met | met | met |
+| Video editor | met | met | met | met | met | met | met | met | exception | met | met | met | met |
+| Image editor | met | met | met | met | met | met | met | met | exception | met | met | met | met |
+| Write | partial | met | met | met | met | partial | met | met | met | met | met | met | met |
+| Publish and the calendar | met | met | met | met | met | partial | met | met | met | met | met | met | met |
+| Approval queue | met | met | met | met | met | n/a | met | met | met | met | met | met | met |
+| Connections | met | met | met | met | met | met | met | met | met | met | met | met | met |
+| Chat panel | met | met | met | met | met | met | met | met | partial | met | met | met | met |
+| Settings, skills, prompts and memory | partial | met | met | met | met | partial | met | met | met | met | met | met | met |
+| Sign-in and key pages (network mode) | partial | met | met | met | n/a | met | met | met | met | met | met | met | met |
+
+`met`: decided by the evidence of the item above, on the chromium, firefox and webkit runs of the specs where the spec is not tagged for one engine. `exception`: the editors are two-dimensional layouts (WCAG 1.4.10). `partial`: the gap is named below. `n/a`: the section has no such thing (no form in the queue, no live content on the sign-in page).
+
+The partial cells, and what closes each:
+
+- **K for Write, the pages of skills, prompts and memory, the settings and the key pages.** They use native controls and the shared components, which the tree and target size specs check, but no spec walks them with the keyboard alone; the first flow spec goes through the project, editor, image, export, connections, publish and approval pages. A keyboard spec per page is the next step.
+- **E for Write, the publication editor and the settings.** Their errors are alerts next to the form, and the fields are not marked `aria-invalid` and described by them; the sign-in and the account setup forms are (`a11y-live-regions`, `FailureNote id`). The same change applies to the others.
+- **R for the chat panel.** It is a full-screen sheet below 768 px, which `a11y-reflow-motion` does not open.
+
+The sections not yet in the product when the epic ran are not in the table: the blog (epic 23), the recipes (epic 39), and the revert, checkpoints and diff of the image editor (epic 50). Each adds its row when it merges and runs the specs above on its page.
+
+#### Keyboard model of the timeline
+
+The timeline is a `grid` (§7.1). It has one tab stop; inside it the keys of §7.10 apply, and this is the whole model:
+
+1. **Select.** `Left`, `Right`, `Up`, `Down`, `Home`, `End` move the focus between items; `Enter` selects the focused item; `Shift+Left` and `Shift+Right` extend the selection; `Esc` clears it.
+2. **Move and nudge.** `Alt+Left` and `Alt+Right` move the selected items by one frame (`Shift+Alt`, one second); `Alt+Up` and `Alt+Down` move them to another track.
+3. **Trim.** `[` and `]` trim the start or the end of the selected item to the playhead; the playhead moves with its slider (`Left` and `Right` a frame, `PageUp` and `PageDown` a second).
+4. **Reorder.** Tracks reorder from the track menu; items have no order apart from their time.
+5. **Text alternative of the selection.** Whenever the selection changes, the polite region of §18.1 item 5 says what is selected: for one item "Selected IMG_0421, Clip, 00:00.000 to 00:05.000, track Video 1"; for several "3 items selected"; for none "Selection cleared". The times use the display the person chose (§12.2). The sentence is built from the read model by `timeline/useSelectionAnnouncement.ts`, which computes nothing.
+6. **List view.** The button "List" of the timeline toolbar opens a dialog with the items of the project as a `table`: one row per item, in track order and then by start, with the columns name, type, track, start, end, duration and state ("Selected", "Turned off"). The name of a row is a button that selects the item, the same command as a click on the block, and closes the dialog; the focus goes back to the button that opened it. The table is the text view of the canvas for a reader that cannot use the grid, and it holds the same data (`timeline/TimelineTable.tsx`).
+
+#### Keyboard model of the image canvas and of the layers
+
+The model is §24.10: arrows nudge the selection by one pixel (ten with `Shift`), `PageUp` and `PageDown` select the layer above or below, `Delete` removes, `Esc` cancels a drag. The layers are the tree of §24.4, which is the list view of the canvas: each layer is a `treeitem` with its level, set size and position, its kind, its visibility and its lock; `Alt+arrows` reorder and nest, `F2` renames. The selection is announced in the polite region of the canvas as "Layer Title, text, at 80, 440, 800 by 200". The handles are not tab stops: their action is the fields of the inspector and the arrow keys.
+
+#### Live regions
+
+1. The polite region of §18.1 item 5 announces the selection, results, remote edits (at most one every 2 s) and the progress of a job in steps of 10%.
+2. On the dashboard pages a region with `role="status"` announces the result of an approval, a publication or a connection; an error that stops the person uses `role="alert"`.
+3. An edit made by an agent while a person works is announced as "the actor is editing" (`ui.editor.activity.announce`).
+
+#### Errors tied to fields
+
+A field that the service refused has `aria-invalid="true"` and `aria-describedby` pointing at the text of the error, which sits next to the field. The text is the message of the core, shown as text (`UntrustedText` when it holds user input).
+
+#### Navigation
+
+A page of the dashboard has a skip link as its first focusable element ("Skip to the main content"), a `main` landmark with `id="main"`, and, after an Inertia navigation, moves the focus to that landmark, so a reader that does not reload the page is told the page changed (WCAG 2.4.1, 2.4.3).
+
+#### Screen reader pass
+
+An agent cannot listen to a screen reader. The evidence of the agent is the tree assertions above. The pass with NVDA on Windows is done by the author with the script `docs/accessibility-screen-reader-script.md`, and the outcome is recorded in that file as verified or not verified.
+
 ## 19. Performance budgets
 
 ### 19.1 How each requirement is measured in the browser
