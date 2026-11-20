@@ -163,9 +163,47 @@ type VoiceGenerator interface {
 	) (VoiceResult, error)
 }
 
-// VideoGenerator is the seam of epic 11: declared with no method and no adapter, so that the epic adds the
-// methods and the adapters and nothing else.
-type VideoGenerator interface{ Provider }
+// VideoFrame is the first frame of a clip: the bytes of an image asset, already checked.
+type VideoFrame struct {
+	Data   []byte
+	Format string // "png", "jpeg" or "webp"
+}
+
+// The states of a video task of a provider (SDD-016 section 6.4).
+const (
+	VideoPending = "pending"
+	VideoDone    = "done"
+	VideoFailed  = "failed"
+)
+
+// VideoStatus is what a provider says of a task.
+type VideoStatus struct {
+	// State is VideoPending, VideoDone or VideoFailed.
+	State string
+	// Progress is 0 to 1 when the provider says one, else 0.
+	Progress float64
+	// Err explains a failed task: a *Error, such as a refusal of the prompt.
+	Err error
+}
+
+// VideoGenerator is a provider that makes clips (SDD-016 section 2). Generation is asynchronous at every provider:
+// Submit starts it, Poll reads it, Fetch downloads the clip.
+type VideoGenerator interface {
+	Provider
+	// VideoLimits are what the provider documents for a model. It needs no network.
+	VideoLimits(model string) provider.VideoLimits
+	// Submit starts one generation and returns the task id of the provider (provider.ValidTaskID). It is the
+	// only call that spends; the caller stores the id before it polls. frame is the first frame, or nil.
+	Submit(
+		ctx context.Context, c connections.Credential, req provider.VideoRequest, frame *VideoFrame,
+	) (taskID string, err error)
+	// Poll reads the state of a task. It costs nothing and may be repeated.
+	Poll(ctx context.Context, c connections.Credential, taskID string) (VideoStatus, error)
+	// Fetch downloads the clip of a done task through the gated client. The file is no larger than maxBytes.
+	Fetch(ctx context.Context, c connections.Credential, taskID string, maxBytes int64) (GeneratedFile, error)
+	// Cancel asks the provider to stop a task and says whether it confirmed that nothing will be charged.
+	Cancel(ctx context.Context, c connections.Credential, taskID string) (confirmed bool, err error)
+}
 
 // The kinds of a provider failure (SDD-016 section 8).
 const (
