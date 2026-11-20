@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.42.0] - 2026-11-20
+
+### Added
+
+- **image:** Add a lookup table to the adjustments of a layer ([f56cc57](https://github.com/AlexGalhardo/stuarty/commit/f56cc573356331d2783fe1e48d55e7b64ddb115c))
+- **ui:** Use the official icon everywhere ([8bb86d8](https://github.com/AlexGalhardo/stuarty/commit/8bb86d8ecea84a93b5d3ac024274db7ed82c1d44))
+
+### Fixed
+
+- **contract:** Record the OpenAPI document without the internal resolved field ([d5249dc](https://github.com/AlexGalhardo/stuarty/commit/d5249dc3471a6f82b006182ad04f34f2ec64b72e))
+- **site:** Run the binary timing on a free port by default ([138ce10](https://github.com/AlexGalhardo/stuarty/commit/138ce10ab61a9584dd88fa8a50ff15731903ca4e))
+- **site:** Keep the former name out of the sidebar title of the migration page ([bd24020](https://github.com/AlexGalhardo/stuarty/commit/bd24020aa1ae0021cc6162d3b37919db062512bd))
+- **service:** Check the digits of a hash before they become a folder ([d62b533](https://github.com/AlexGalhardo/stuarty/commit/d62b5332c9f4e0ee4fb65b0e421fd378e8fd32ca))
+- **tools:** Scope the first flow fake uploads to a media root ([eb6bd2c](https://github.com/AlexGalhardo/stuarty/commit/eb6bd2cacde816858cce9956b5d1efe1b21923d8))
 ## [0.41.0] - 2026-11-20
 
 ### Added
@@ -1919,7 +1933,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.41.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.42.0...HEAD
+[0.42.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.41.0...v0.42.0
 [0.41.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.40.0...v0.41.0
 [0.40.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.39.0...v0.40.0
 [0.39.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.38.0...v0.39.0
