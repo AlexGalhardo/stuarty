@@ -2877,7 +2877,7 @@
       "account": "Your Google account",
       "linked": "Linked Google account:",
       "not_linked": "No Google account is linked. Link yours to sign in with it; your password keeps working.",
-      "unlink_note": "Unlinking does not change your password or end your sessions.",
+      "unlink_note": "Unlinking does not change your password. It signs you out of every other browser; this one stays signed in.",
       "password": "Your password",
       "link": "Link my Google account",
       "unlink": "Unlink",

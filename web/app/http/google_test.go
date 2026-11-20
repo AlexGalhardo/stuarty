@@ -281,6 +281,50 @@ func TestLinkIdentityOverHTTP(t *testing.T) {
 	}
 }
 
+// D-104: unlinking the Google account ends every other session of the user and keeps the current one;
+// another user's session is not touched.
+func TestUnlinkEndsTheOtherSessionsAndKeepsTheCurrentOne(t *testing.T) {
+	s := newGoogleSite(t, googleSiteOptions{})
+	s.enable(t)
+	s.user(t, "ana@example.com", service.RoleMember)
+	s.user(t, "bia@example.com", service.RoleMember)
+
+	current := s.session(t, "ana@example.com")
+	other := s.session(t, "ana@example.com")
+	bia := s.session(t, "bia@example.com")
+
+	res := s.send(t, http.MethodPost, "/auth/google/link", `{"password":"`+goodPass+`"}`, current, nil)
+	a := authorizeOf(t, res)
+
+	res = s.complete(t, s.back(a, "sub-ana", "ana@gmail.test"), cookies(cookieName, current))
+	if res.status != http.StatusOK {
+		t.Fatalf("complete = %d %s", res.status, res.body)
+	}
+
+	for name, cookie := range map[string]string{"current": current, "other": other, "bia": bia} {
+		if res := s.send(t, http.MethodGet, "/projects", "", cookie, nil); res.status != http.StatusOK {
+			t.Fatalf("before unlinking, the %s session = %d %s", name, res.status, res.body)
+		}
+	}
+
+	res = s.send(t, http.MethodPost, "/auth/google/unlink", `{"password":"`+goodPass+`"}`, current, nil)
+	if res.status != http.StatusOK {
+		t.Fatalf("unlink = %d %s", res.status, res.body)
+	}
+
+	if res := s.send(t, http.MethodGet, "/projects", "", other, nil); res.status != http.StatusUnauthorized {
+		t.Errorf("the other session of the user after unlinking = %d %s, want 401", res.status, res.body)
+	}
+
+	if res := s.send(t, http.MethodGet, "/projects", "", current, nil); res.status != http.StatusOK {
+		t.Errorf("the current session after unlinking = %d %s, want 200", res.status, res.body)
+	}
+
+	if res := s.send(t, http.MethodGet, "/projects", "", bia, nil); res.status != http.StatusOK {
+		t.Errorf("another user's session after unlinking = %d %s, want 200", res.status, res.body)
+	}
+}
+
 func TestSecurity_T85_LinkNeedsSessionAndPassword(t *testing.T) {
 	s := newGoogleSite(t, googleSiteOptions{})
 	s.enable(t)

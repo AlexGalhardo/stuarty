@@ -124,6 +124,13 @@ func (n *Network) SessionUser(c *web.Ctx) (User, bool, error) {
 	}
 }
 
+// RevokeOtherSessions ends every browser session of the user except keepID, the
+// session of the request (SDD-007 section 4.7 item 1: unlinking the Google
+// account). API keys are not touched.
+func (n *Network) RevokeOtherSessions(ctx context.Context, userID, keepID string) error {
+	return n.store.RevokeOthers(ctx, n.Guard.SessionUserID(userID), keepID)
+}
+
 // ChangePassword stores a new password and ends everything that the old one
 // opened: every browser session and every API key of the user (SDD-007 section
 // 4.1 item 4).
