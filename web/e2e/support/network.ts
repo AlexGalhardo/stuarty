@@ -5,6 +5,9 @@ export const NETWORK_PORT = Number(process.env.STUARTY_E2E_PORT ?? 3101) + 2;
 export const NETWORK_URL = `http://127.0.0.1:${NETWORK_PORT}`;
 // The fake Google of the Google sign-in spec: one above the fake social network of the local server.
 export const GOOGLE_PORT = Number(process.env.STUARTY_E2E_PORT ?? 3101) + 4;
+// The fake authorization server of the provider-sign-in spec, which the local server is told about: one
+// above the fake Google, since the two specs may run at once in two workers.
+export const SIGNIN_PORT = Number(process.env.STUARTY_E2E_PORT ?? 3101) + 5;
 export const NETWORK_ADMIN = {
 	email: "admin@example.test",
 	password: "e2e-network-password-1",
