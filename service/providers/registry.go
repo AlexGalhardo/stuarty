@@ -68,6 +68,8 @@ func (r *Registry) Register(p Provider) error {
 		return fmt.Errorf("providers: %s says it makes speech and does not implement VoiceGenerator", d.ID)
 	case slices.Contains(d.Capabilities, provider.CapabilityImageEdit) && !isImageEditor(p):
 		return fmt.Errorf("providers: %s says it edits images and does not implement ImageEditor", d.ID)
+	case slices.Contains(d.Capabilities, provider.CapabilityVideo) && !isVideoGenerator(p):
+		return fmt.Errorf("providers: %s says it makes video and does not implement VideoGenerator", d.ID)
 	}
 
 	r.mu.Lock()

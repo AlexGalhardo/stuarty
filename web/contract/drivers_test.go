@@ -258,6 +258,8 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.VoiceGenerate)
 	case "ImageModelEdit":
 		return invoke(ctx, s, svc.ImageModelEdit)
+	case "VideoGenerate":
+		return invoke(ctx, s, svc.VideoGenerate)
 	case "VoiceList":
 		return invoke(ctx, s, svc.VoiceList)
 	case "AuditList":
@@ -1310,6 +1312,21 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 		}
 
 		return "image:model-edit", argv, "", nil
+	case "VideoGenerate":
+		argv = slices.Concat(
+			proj, []string{"--connection", a.ConnectionID, "--model", a.Model, "--prompt", a.Prompt},
+			flag("aspect", a.Aspect), flag("first-frame", a.FirstFrame),
+		)
+
+		if a.Seconds > 0 {
+			argv = append(argv, "--seconds", strconv.Itoa(a.Seconds))
+		}
+
+		if a.DryRun {
+			argv = append(argv, "--dry-run")
+		}
+
+		return "video:generate", argv, "", nil
 	case "VoiceGenerate":
 		argv = slices.Concat(
 			proj, []string{"--connection", a.ConnectionID, "--model", a.Model, "--voice", a.Voice, "--text", a.Text},

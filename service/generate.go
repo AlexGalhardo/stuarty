@@ -517,7 +517,7 @@ func (s *svc) storeGenerated(
 // image.generate, voice.generate and video.generate.
 func viewGeneration(j *Job, r *JobRow) {
 	switch r.Kind {
-	case JobTextGenerate, JobTextDraft, JobImageGenerate, JobVoiceGenerate, JobImageEdit:
+	case JobTextGenerate, JobTextDraft, JobImageGenerate, JobVoiceGenerate, JobVideoGenerate, JobImageEdit:
 	default:
 		return
 	}

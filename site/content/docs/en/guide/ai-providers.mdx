@@ -66,6 +66,25 @@ stuarty image:model-edit --project prj_7k2m9x4q1b --image img_7k2m9x4q1b --opera
 
 A connection for a removal must accept `image`, so connect it with `--accepts text,image`.
 
+## Video
+
+A short clip is made the same way, with one difference: **it always waits for you**, whatever the estimate is, because a video costs far more than an image. Only a rule you wrote on the Approvals page can lift that wait, and a cost ceiling still refuses what is above it.
+
+The provider for video is not chosen yet: OpenAI shut down its video API (Sora 2) in September 2026 and Anthropic has none. Until one is approved and connected, the video clip dialog says that no provider Stuarty works with makes video yet, with nothing to connect, and `video:generate` answers that the connection has no video capability.
+
+- **The clip is generated in the background.** Stuarty sends the request once, keeps the task number of the provider with the job, and asks for the result every few seconds. If you restart the app or the server meanwhile, the job picks the same task up and does not send the request again, so you are not charged twice. The only moment a crash could cause a second charge is the instant between the provider's answer and the write of that number to disk.
+- **Cancel** asks the provider to stop. If it confirms, the job costs nothing; if it does not, the job is recorded at its estimate, because the provider may have charged for the work already done.
+- **A first frame** can be an image of the project: the clip starts from it. The image is sent to the provider only after you approve.
+- **The clip lands in your library** as a file with its origin (the provider, the model, the prompt, the cost and who asked), is probed and gets a proxy and a thumbnail like any import, and goes on a timeline like any file.
+- **Say it is AI.** A generated clip may need to be disclosed as AI-generated where you publish it; the usage policy of the provider says how.
+
+A price per second of video is set with `--unit second --unit-micros <millionths of the currency per second>`.
+
+```bash
+stuarty provider:price --provider a-provider --model a-video-model --currency USD --unit second --unit-micros 400000
+stuarty video:generate --project prj_7k2m9x4q1b --connection con_0123456789 --model a-video-model --prompt "A red fox in the snow" --seconds 6 --aspect 9:16 --dry-run
+```
+
 ## Quick start
 
 <Tabs>

@@ -691,6 +691,15 @@ var Endpoints = []Endpoint{
 		Summary: "Remove the background of a layer, or generate an image into the document, with the provider of a connection; the job says that the picture is sent, waits for approval, shows its estimate and puts the result in the document as one undoable step",
 	},
 	{
+		ID:      "video.generate",
+		Method:  http.MethodPost,
+		Path:    "/video/generate",
+		Scope:   service.ScopeEdit,
+		Service: "VideoGenerate",
+		Status:  202,
+		Summary: "Start a video generation with the provider of a connection; the job waits for a person unless a rule the user wrote covers it, shows its estimate and stores the clip as an asset with its origin",
+	},
+	{
 		ID: "voice.list", Method: http.MethodGet, Path: "/connections/{id}/voices", Scope: service.ScopeRead,
 		Service: "VoiceList", Status: 200, Summary: "List the voices of the provider of a connection",
 	},

@@ -115,6 +115,10 @@ type Service interface {
 	// ImageModelEdit removes the background of a layer, or generates an image into a document, with a provider
 	// (SDD-016 section 6.5); a job of a kind that needs approval.
 	ImageModelEdit(ctx context.Context, req ImageModelEditRequest) (*Job, error)
+	// The sign-in to an AI provider in the browser (SDD-016 section 12): only a person begins and completes one.
+	ProviderSignInBegin(ctx context.Context, req ProviderSignInBeginRequest) (*ProviderSignInBeginResult, error)
+	ProviderSignInComplete(ctx context.Context, req ProviderSignInCompleteRequest) (*ProviderSignIn, error)
+	ProviderSignInList(ctx context.Context, req ProviderSignInListRequest) (*ProviderSignInListResult, error)
 
 	JobGet(ctx context.Context, req JobGetRequest) (*Job, error)
 	JobList(ctx context.Context, req JobListRequest) (*JobListResult, error)
