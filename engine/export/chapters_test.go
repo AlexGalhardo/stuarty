@@ -4,7 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"math"
 	"path/filepath"
+	"slices"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -101,6 +104,44 @@ func TestExportWritesLabelledMarkersAsChapters(t *testing.T) {
 	}
 }
 
+// A first marker after the start of the file, the way VV-290 was reported (`marker.add at=10s`), and a
+// label that ends with a backslash, in the MP4 and in the M4A: the export succeeds, an untitled chapter
+// covers the time before the first marker, and each labelled chapter starts at its marker.
+func TestExportChaptersAfterTheFirstFrame(t *testing.T) {
+	for _, f := range []Format{FormatMP4, FormatAAC} {
+		doc := loadDir(t, formatDir("audio"))
+		doc.Markers = []timeline.Marker{
+			{Frame: 13, Label: `C:\`},
+			{Frame: 33, Label: "Verse"},
+			{Frame: 60, Label: "Outro"},
+		}
+
+		name := "chapters-late-" + string(f)
+		job := newJob(t, doc, name, name+map[Format]string{FormatMP4: ".mp4", FormatAAC: ".m4a"}[f])
+		job.Format = f
+		job.Start, job.End = 5, 75
+
+		res := runExport(t, job)
+
+		want := []struct {
+			start float64
+			title string
+		}{{0, ""}, {267, "C:"}, {933, "Verse"}, {1833, "Outro"}}
+
+		got := fileChapters(t, res.Path)
+		if len(got) != len(want) {
+			t.Fatalf("%s: chapters %+v, want %d", f, got, len(want))
+		}
+
+		for i, w := range want {
+			start, _ := strconv.ParseFloat(got[i].Start, 64)
+			if got[i].Tags.Title != w.title || math.Abs(start*1000-w.start) > 1.5 {
+				t.Errorf("%s: chapter %d is %+v, want %q at %v ms", f, i+1, got[i], w.title, w.start)
+			}
+		}
+	}
+}
+
 // A project with no labelled marker writes no chapter, and the file is the one it was.
 func TestExportWithNoMarkersHasNoChapters(t *testing.T) {
 	doc := loadScene(t, "clip-caption")
@@ -132,8 +173,8 @@ func TestExportRangeChapters(t *testing.T) {
 	}
 }
 
-// The audio export in an MP4 container carries them too; a WAV and a GIF have no chapters and the export
-// still succeeds (SDD-004 section 8.1).
+// The audio export in an MP4 container carries them too; a WAV has no chapters and the export still
+// succeeds (SDD-004 section 8.1).
 func TestAudioExportChapters(t *testing.T) {
 	doc := loadDir(t, formatDir("audio"))
 	doc.Markers = []timeline.Marker{{Frame: 0, Label: "Verse"}, {Frame: 15, Label: "Chorus"}}
@@ -152,4 +193,121 @@ func TestAudioExportChapters(t *testing.T) {
 	wav.Format = FormatWAV
 
 	runExport(t, wav)
+}
+
+// A marker label is the only text of a user that reaches FFmpeg, inside the ffmetadata file of the
+// chapters. A label that tries to end its line (LF, CR, NUL, a Unicode separator, a final backslash)
+// to add a chapter, a key or a global tag stays one title of its own chapter, and nothing of it reaches
+// the global or the stream metadata of the file (SDD-007 T-102, FF-08).
+func TestSecurity_T102_MarkerLabelCannotInjectIntoTheChapterFile(t *testing.T) {
+	lineSep, paraSep := string(rune(0x2028)), string(rune(0x2029))
+
+	doc := loadScene(t, "two-clips-cut")
+	end := endFrame(doc)
+	doc.Markers = []timeline.Marker{
+		{Frame: 0, Label: "Intro\n[CHAPTER]\nTIMEBASE=1/1000\nSTART=0\nEND=1\ntitle=evil"},
+		{Frame: end / 4, Label: "B\r[CHAPTER]\rSTART=1\x00[CHAPTER]\x00START=2\x00END=3\x00title=evil"},
+		{Frame: end / 2, Label: "C" + lineSep + "encoder=evil" + paraSep + ";FFMETADATA1 #x \\"},
+		{Frame: 3 * end / 4, Label: "D"},
+	}
+
+	job := newJob(t, doc, "chapters-t89", "chapters-t89.mp4")
+
+	res := runExport(t, job)
+
+	want := []string{
+		"Intro [CHAPTER] TIMEBASE=1/1000 START=0 END=1 title=evil",
+		"B [CHAPTER] START=1 [CHAPTER] START=2 END=3 title=evil",
+		"C encoder=evil ;FFMETADATA1 #x",
+		"D",
+	}
+
+	got := fileChapters(t, res.Path)
+	if len(got) != len(want) {
+		t.Fatalf("chapters %+v, want %d", got, len(want))
+	}
+
+	for i, w := range want {
+		if got[i].Tags.Title != w {
+			t.Errorf("chapter %d: title %q, want %q", i+1, got[i].Tags.Title, w)
+		}
+	}
+
+	dir, err := shared.runner.NewRunDir("chapters-t89-probe")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Cleanup(func() { _ = dir.Remove() })
+
+	argv, err := ffargs.ProbeJSON(shared.runner.Policy(dir, filepath.Dir(res.Path)), res.Path)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	raw, _, err := shared.runner.RunFFprobe(context.Background(), dir, argv, verifyTimeout, filepath.Dir(res.Path))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var pf struct {
+		Format struct {
+			Tags map[string]string `json:"tags"`
+		} `json:"format"`
+		Streams []struct {
+			Tags map[string]string `json:"tags"`
+		} `json:"streams"`
+	}
+	if err := json.Unmarshal(raw, &pf); err != nil {
+		t.Fatal(err)
+	}
+
+	tags := []map[string]string{pf.Format.Tags}
+	for _, st := range pf.Streams {
+		tags = append(tags, st.Tags)
+	}
+
+	// The stream encoder tag ("Lavc libopenh264") is FFmpeg's own, with or without chapters.
+	for _, m := range tags {
+		for k, v := range m {
+			if k == "title" || strings.Contains(v, "evil") || strings.Contains(v, "Intro") {
+				t.Errorf("a label reached the metadata of the file: %s=%q", k, v)
+			}
+		}
+	}
+}
+
+// The chapter track is the muxer's choice: an MP4 with chapters may have it or not (verifyChapters proves
+// the chapters), never two data streams; an MP4 with no chapters has no data stream at all.
+func TestStreamsCheckAllowsTheChapterTrack(t *testing.T) {
+	media := []probedStream{{CodecType: "video"}, {CodecType: "audio"}}
+	data := probedStream{CodecType: "data"}
+
+	labelled := &state{job: &Job{Doc: &timeline.Document{
+		Settings: timeline.Settings{FPS: timeline.Rational{Num: 30, Den: 1}},
+		Markers:  []timeline.Marker{{Frame: 0, Label: "Intro"}},
+	}}, frames: 30}
+	plain := &state{job: &Job{Doc: &timeline.Document{
+		Settings: timeline.Settings{FPS: timeline.Rational{Num: 30, Den: 1}},
+	}}, frames: 30}
+
+	cases := []struct {
+		name    string
+		s       *state
+		streams []probedStream
+		bad     bool
+	}{
+		{"chapters with the track", labelled, append(slices.Clone(media), data), false},
+		{"chapters without the track", labelled, media, false},
+		{"chapters with two data streams", labelled, append(slices.Clone(media), data, data), true},
+		{"no chapters", plain, media, false},
+		{"no chapters and a data stream", plain, append(slices.Clone(media), data), true},
+		{"a subtitle stream", labelled, append(slices.Clone(media), probedStream{CodecType: "subtitle"}), true},
+	}
+
+	for _, c := range cases {
+		if _, bad := c.s.streamsCheck(c.streams, 2); bad != c.bad {
+			t.Errorf("%s: bad = %v, want %v", c.name, bad, c.bad)
+		}
+	}
 }
