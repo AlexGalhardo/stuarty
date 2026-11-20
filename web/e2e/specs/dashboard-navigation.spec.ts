@@ -85,11 +85,25 @@ test.describe("dashboard-navigation", () => {
 		for (const theme of ["light", "dark"] as const) {
 			test(`every section opens in ${theme} in ${lang} with no console error`, async ({
 				page,
+				browserName,
 			}) => {
 				await settle(page);
 				const problems: string[] = [];
 				page.on("console", (message) => {
 					if (message.type() !== "error") return;
+					// WebKit reports a violation of style-src-attr every time a native
+					// <select> is created (its own user-agent shadow tree, not our markup;
+					// Chromium and Firefox stay silent), and its console line does not name
+					// the directive, so that line is dropped here. The violations themselves
+					// are checked by the page fixture of helpers.ts, across navigations, with
+					// only style-src-attr let through in WebKit (cspViolations): a <style> or
+					// a script without the nonce still fails (VV-263).
+					if (
+						browserName === "webkit" &&
+						message.text().startsWith("Refused to apply a stylesheet")
+					) {
+						return;
+					}
 					problems.push(`${message.text()} ${message.location().url}`);
 				});
 				page.on("pageerror", (error) => problems.push(error.message));
