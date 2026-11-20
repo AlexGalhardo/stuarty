@@ -37,7 +37,7 @@ After the short video works end to end, a creator's agent also knows how to make
 ## Tasks
 
 - [x] 1. Amend SDD-018 (the two recipes, the production kind) and write the briefing question sets. Verify: `task lint:md` exits 0 and `go test ./core/project/... -run TestBriefingKinds` passes.
-- [ ] 2. Build the commercial templates and their thumbnail templates with golden exports. Verify: `go test ./web/resources/templates/...` passes.
+- [x] 2. Build the commercial templates and their thumbnail templates with golden exports. Verify: `go test ./web/resources/templates/...` passes.
 - [ ] 3. Write `product-commercial` and its copy skills. Verify: `go test ./web/resources/skills/...` passes (lint, registry check, attribution).
 - [ ] 4. Write the scripted commercial run. Verify: `bash scripts/recipe-commercial.sh` (new) exits 0 with three exported aspect ratios.
 - [ ] 5. Build the long-video opening template; write `long-talking-video`. Verify: the same two test commands pass.

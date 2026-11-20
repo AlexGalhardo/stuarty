@@ -1,0 +1,240 @@
+{
+  "assets": {
+    "ast_0000000001": {
+      "frame_count": 210,
+      "frame_rate": {
+        "den": 1,
+        "num": 30
+      },
+      "has_audio": true,
+      "hash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb0",
+      "height": 640,
+      "id": "ast_0000000001",
+      "kind": "video",
+      "name": "shot-1.mp4",
+      "width": 360
+    },
+    "ast_0000000063": {
+      "has_audio": true,
+      "hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa9",
+      "id": "ast_0000000063",
+      "kind": "audio",
+      "name": "music.wav",
+      "sample_count": 1764000
+    }
+  },
+  "id": "prj_0000000002",
+  "items": {
+    "itm_0000000001": {
+      "asset": "ast_0000000001",
+      "duration": 180,
+      "id": "itm_0000000001",
+      "slot": {
+        "description": "The best sentence of the talk, six seconds, before any title.",
+        "filled": true,
+        "kind": "media",
+        "name": "cold_open"
+      },
+      "start": 0,
+      "track": "trk_0000000001",
+      "type": "clip"
+    },
+    "itm_0000000002": {
+      "duration": 120,
+      "fill": "$brand",
+      "height": 1080,
+      "id": "itm_0000000002",
+      "shape": "rect",
+      "start": 180,
+      "track": "trk_0000000002",
+      "type": "shape",
+      "width": 1920
+    },
+    "itm_0000000003": {
+      "asset": "ast_0000000063",
+      "duration": 300,
+      "id": "itm_0000000003",
+      "slot": {
+        "description": "The music under the opening.",
+        "filled": true,
+        "kind": "media",
+        "name": "music",
+        "required": false
+      },
+      "start": 0,
+      "track": "trk_0000000004",
+      "type": "audio"
+    },
+    "itm_0000000004": {
+      "duration": 102,
+      "id": "itm_0000000004",
+      "keyframes": {
+        "opacity": [
+          {
+            "easing": "ease_out",
+            "t": 0,
+            "value": 0
+          },
+          {
+            "t": 12,
+            "value": 1
+          }
+        ],
+        "y": [
+          {
+            "easing": "ease_out",
+            "t": 0,
+            "value": 534
+          },
+          {
+            "t": 12,
+            "value": 480
+          }
+        ]
+      },
+      "slot": {
+        "description": "The title of the video.",
+        "filled": true,
+        "kind": "text",
+        "name": "title"
+      },
+      "start": 189,
+      "style": {
+        "align": "center",
+        "color": "$ink",
+        "font_family": "Montserrat",
+        "font_weight": 800,
+        "line_height": 1.1,
+        "max_width": 1500,
+        "size": 110
+      },
+      "text": "Bake a first sourdough",
+      "track": "trk_0000000003",
+      "type": "text",
+      "y": 480
+    },
+    "itm_0000000005": {
+      "duration": 81,
+      "id": "itm_0000000005",
+      "slot": {
+        "description": "Who it is for, or the promise.",
+        "filled": true,
+        "kind": "text",
+        "name": "subtitle",
+        "required": false
+      },
+      "start": 210,
+      "style": {
+        "align": "center",
+        "color": "$accent",
+        "font_family": "Inter",
+        "font_weight": 500,
+        "max_width": 1400,
+        "size": 52
+      },
+      "text": "For home bakers",
+      "track": "trk_0000000005",
+      "type": "text",
+      "y": 700
+    },
+    "itm_0000000006": {
+      "duration": 120,
+      "id": "itm_0000000006",
+      "keyframes": {
+        "opacity": [
+          {
+            "easing": "ease_out",
+            "t": 0,
+            "value": 0
+          },
+          {
+            "t": 12,
+            "value": 1
+          }
+        ],
+        "y": [
+          {
+            "easing": "ease_out",
+            "t": 0,
+            "value": 954
+          },
+          {
+            "t": 12,
+            "value": 900
+          }
+        ]
+      },
+      "slot": {
+        "description": "The name and the role of the speaker.",
+        "filled": true,
+        "kind": "text",
+        "name": "speaker"
+      },
+      "start": 315,
+      "style": {
+        "align": "left",
+        "background_color": "$brand",
+        "background_padding": 22,
+        "background_radius": 12,
+        "color": "$ink",
+        "font_family": "Inter",
+        "font_weight": 700,
+        "max_width": 900,
+        "size": 48
+      },
+      "text": "Ana Souza, head baker",
+      "track": "trk_0000000003",
+      "type": "text",
+      "x": 520,
+      "y": 900
+    }
+  },
+  "name": "Golden long-video-opening",
+  "schema_version": 1,
+  "settings": {
+    "background": "#101820",
+    "height": 1080,
+    "width": 1920
+  },
+  "template": {
+    "colors": {
+      "accent": "#FFD166",
+      "brand": "#2D5BFF",
+      "ink": "#FFFFFF"
+    },
+    "description": "The opening of a long talking video: a cold open of the best sentence, a title card and a lower third with the name of the speaker. Put the talking head after the title card.",
+    "instance": true
+  },
+  "tracks": {
+    "trk_0000000001": {
+      "id": "trk_0000000001",
+      "kind": "visual",
+      "name": "Footage",
+      "order": "i"
+    },
+    "trk_0000000002": {
+      "id": "trk_0000000002",
+      "kind": "visual",
+      "name": "Cards",
+      "order": "9"
+    },
+    "trk_0000000003": {
+      "id": "trk_0000000003",
+      "kind": "visual",
+      "name": "Text",
+      "order": "4"
+    },
+    "trk_0000000004": {
+      "id": "trk_0000000004",
+      "kind": "audio",
+      "name": "Music",
+      "order": "1"
+    },
+    "trk_0000000005": {
+      "id": "trk_0000000005",
+      "kind": "visual",
+      "name": "Subtitle",
+      "order": "2"
+    }
+  }
+}
