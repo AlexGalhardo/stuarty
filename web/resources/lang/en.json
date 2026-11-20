@@ -972,7 +972,7 @@
         "expand_composition": "Expand composition",
         "freeze_frame": "Freeze frame",
         "copy_attributes": "Copy attributes",
-        "paste_attributes": "Paste attributes",
+        "paste_attributes": "Paste attributes (without mirroring)",
         "enable": "Turn on",
         "disable": "Turn off",
         "repeat": "Repeat…"
@@ -1501,7 +1501,7 @@
           "extract_audio": "Extract the audio of the selected clips",
           "toggle_magnet": "Turn the magnet of the track on or off",
           "copy_attributes": "Copy the look of the selected item",
-          "paste_attributes": "Paste the copied look onto the selected items",
+          "paste_attributes": "Paste the copied look, except mirroring, onto the selected items",
           "toggle_snap": "Toggle snapping",
           "keyframe_panel": "Show or hide the keyframes of the selected item",
           "speed_curve": "Open the speed curve of the selected clip",

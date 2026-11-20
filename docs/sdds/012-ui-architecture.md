@@ -1561,7 +1561,7 @@ Decision D-038: the default keymap is the one a person coming from CapCut alread
 | Slide, roll, slip the selected item by one frame | `Mod+Alt+Left, Right`, `Mod+Alt+Shift+Left, Right`, `Alt+,`, `Alt+.` | `slideItems`, `rollItems`, `slipItems` (`item.move` with `slide`, `item.trim` with `roll`, `item.slip`) | exists |
 | Duplicate | `Mod+D` | `duplicateSelection` (`item.duplicate`) | exists |
 | Copy, cut, paste items | `Mod+C`, `Mod+X`, `Mod+V` | `surface.clipboard` (paste puts the held items at the playhead, keeping the distances between them: a copy is `item.duplicate` with `start`, a cut one is `item.move`, so cut leaves the items in place until they are pasted and never needs a command to bring back a deleted item) | UI |
-| Copy, paste attributes | `Mod+Shift+C`, `Mod+Shift+V` | `copyAttributes` (remembers the first selected item), `pasteAttributes` (`item.paste_attributes` with every group except `flip`, which would reset a mirrored target (VV-184), onto the other selected items; the core skips the groups a target lacks); also the item menu | exists (N-8, TASK-0254) |
+| Copy, paste attributes | `Mod+Shift+C`, `Mod+Shift+V` | `copyAttributes` (remembers the first selected item), `pasteAttributes` (`item.paste_attributes` with every group except `flip`, which would reset a mirrored target (VV-184), onto the other selected items; the core skips the groups a target lacks); also the item menu. The menu label and the shortcut list say that mirroring is not pasted (VV-221) | exists (N-8, TASK-0254) |
 | Undo, redo | `Mod+Z`, `Mod+Shift+Z`, `Ctrl+Y` | `undo`, `redo` | exists |
 | Select all | `Mod+A` | `surface.select_all` | exists |
 | Enable or disable the item | `V` | `toggleEnabled` (`item.set_enabled`) | exists (N-1, TASK-0273) |
