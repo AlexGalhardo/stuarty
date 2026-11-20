@@ -4549,7 +4549,7 @@ Lowers a music item while speech sounds (RF-043). The result is ordinary `volume
 
 | Code | When | Example message | Example hint |
 | --- | --- | --- | --- |
-| `E_VALIDATION` | `resolved` missing or with a missing, repeated or unknown entry or bad ranges, `gain_db` out of range, a speech item that is the music or repeated | `args.resolved is missing: the speech of the items is not known.` | `The service fills it from the speech analysis; run the analysis of the speech assets first, then retry.` |
+| `E_VALIDATION` | `resolved` missing or with a missing, repeated or unknown entry or bad ranges, `gain_db` out of range, a speech item that is the music or repeated | `args.resolved is missing: the speech of the items is not known.` | `The service fills it from the speech map made at import (no transcript is needed): call media_inspect on the speech assets, wait for the job of one still analysing, and send audio.duck in a later call than the one that adds the speech items.` |
 | `E_INVALID_TIME` | `attack` or `release` is not a time | `args.attack "later" is not a time.` | `Use "2s" or "60f".` |
 | `E_NOT_FOUND` | the music or a speech item does not exist | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
 | `E_TYPE_MISMATCH` | the music is not an audio item, or an item has no asset with audio | `Item itm_m1n2p3q4r5 is a clip item, not an audio item; only music can be ducked.` | `Choose an audio item.` |
@@ -5843,7 +5843,7 @@ Creates one caption item for each cue of an SRT or WebVTT text (TASK-0254, NEW-3
 | Name | Type | Required | Default | Rule |
 | --- | --- | --- | --- | --- |
 | `track_id` | track id | yes | none | a visual track |
-| `text` | string | yes | none | the SRT or WebVTT text, at most 2,000,000 characters and 5,000 cues |
+| `text` | string | yes | none | the SRT or WebVTT text itself, never a file path (the caller reads the file), at most 2,000,000 characters and 5,000 cues |
 | `format` | `"srt"`, `"vtt"` | no | `vtt` when the text starts with `WEBVTT`, else `srt` | |
 | `start` | length | no | `0` | added to every cue |
 | `new_ids` | list of item ids | no | generated | ids of the captions, in cue order |
