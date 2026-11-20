@@ -148,8 +148,16 @@ func TestDiscoveryByName(t *testing.T) {
 
 	imageOp := publicNames(coreimage.Registry())[0]
 
-	if res := call(t, cs, "command_help", map[string]any{"name": imageOp}); !res.IsError {
+	// With no domain, a name that only one other domain has is found there and says so (SDD-003 §4.3, VV-283);
+	// asked in the video domain, it is not.
+	if res := call(t, cs, "command_help", map[string]any{"name": imageOp, "domain": "video"}); !res.IsError {
 		t.Errorf("the image operation %s was found in the video domain", imageOp)
+	}
+
+	if noDomain := textOf(t, ok(t, call(t, cs, "command_help", map[string]any{"name": imageOp}))); !strings.HasPrefix(
+		noDomain, "Domain: image.",
+	) {
+		t.Errorf("%s with no domain does not name the image domain: %q", imageOp, noDomain)
 	}
 
 	img := ok(t, call(t, cs, "command_help", map[string]any{"name": imageOp, "domain": "image"}))

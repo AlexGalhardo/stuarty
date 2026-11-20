@@ -43,5 +43,7 @@ func All() []schema.Migration {
 		m20261119240000TextRevisions(),
 		m20261119250000CreatePublicationsTables(),
 		m20261120100000PublicationTargetsSentAsDraft(),
+		m20261120110000TextKindPost(),
+		m20261120110100CreateBlogTables(),
 	}
 }

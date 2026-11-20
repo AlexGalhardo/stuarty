@@ -1,0 +1,92 @@
+---
+title: "Recipe: a long talking video"
+description: "Edit a talk, an interview or a lesson: an opening from a template, the pauses cut out, captions, chapters, a cover, and a short taken from the long video."
+---
+
+## You will learn
+
+- how to cut the dead air of a long recording and the retakes you mark;
+- how to caption the result and place chapters;
+- how to make the cover from a template;
+- how to take a 9:16 short out of the edited video.
+
+## What you need
+
+A video file of a person speaking, `talk.mp4`. Transcription runs on your computer with a model you install once (see [Transcription](/docs/guide/transcription)). If you work with an agent, ask it to edit the talk: the built-in skills `long-talking-video` and `chapter-titles` lead it through these steps and ask you the questions of the brief. This page is the same recipe, done by hand.
+
+## The brief
+
+A long video has its own questions: the topic, the audience, the goal, the speakers, the platform, the format, the duration of the edited video (120 to 14,400 seconds) and the cut style (`tight`, `natural` or `relaxed`). Optional: the chapters you expect, what must stay even if it is a repeat or a pause, whether to extract a short, the tone, references and a deadline. Write them as a Markdown file that starts with `# Brief`, one `## <question>` heading for each answer, and store it:
+
+```bash
+stuarty project:create --name "A year of videos" --preset 16:9
+stuarty brief:set --project prj_7k2m9x4q1b --text brief.md
+```
+
+## The opening
+
+Import the talk and transcribe it. The transcript is what the captions and the chapters read.
+
+```bash
+stuarty media:import talk.mp4 --project prj_7k2m9x4q1b --wait
+stuarty transcribe --project prj_7k2m9x4q1b --asset ast_4h6j8k2m3n --language en --wait
+stuarty media:inspect ast_4h6j8k2m3n --project prj_7k2m9x4q1b --sections transcript,silences
+```
+
+The built-in template **Long video opening** has a cold open (the best sentence of the talk, about six seconds), a title card and a lower third with the name of the speaker. Its slots are `cold_open`, `title`, `subtitle` (optional), `speaker` and `music` (optional).
+
+```bash
+stuarty template:new tpl_r3c1p30003 --name "A year of videos, edit" --fill fill.json
+```
+
+## The main cut
+
+Put the talk after the opening, on the `Footage` track (`project:show --detail full` lists the tracks), then take the silences out. The pieces close up, so everything after them moves earlier.
+
+```bash
+stuarty edit --project prj_5d8f2k9m3q clip.add track_id=trk_0000000001 asset_id=ast_4h6j8k2m3n start=10s source_in=0s duration=290s
+stuarty edit --project prj_5d8f2k9m3q clip.remove_silences item_id=itm_9k2m4p6r8t
+```
+
+The cut style sets how much goes: add `min_silence=0.3s` for a tight cut or `min_silence=0.8s` for a relaxed one. A retake is not silence. Find it in the transcript, cut it with `item.split`, and remove the piece with `item.delete` and `ripple=track`. Never cut what the brief says to keep.
+
+## Captions and chapters
+
+Make the captions after the cut, so the words that were removed are not captioned:
+
+```bash
+stuarty edit --project prj_5d8f2k9m3q track.add kind=visual name=Captions
+stuarty edit --project prj_5d8f2k9m3q caption.from_transcript clip_item_id=itm_9k2m4p6r8t track_id=trk_3c5v8n2w6d
+```
+
+A chapter begins where a topic changes, lasts at least 30 seconds, and the first one is at the start. Place a marker for each one and keep the list for the description as a text of the project, with the first line at `00:00`:
+
+```bash
+stuarty edit --project prj_5d8f2k9m3q marker.add at=70s label="Why a year and not a month"
+stuarty item:add --project prj_5d8f2k9m3q --kind text --title "Chapters" --text chapters.txt
+```
+
+The markers show on the timeline. The exported file does not carry them as chapters yet, so paste the list into the description of the video.
+
+## Check, cover and export
+
+```bash
+stuarty lint --project prj_5d8f2k9m3q
+stuarty export --project prj_5d8f2k9m3q --wait
+```
+
+The cover starts from the image template **Long video thumbnail** (`stuarty image:list --templates only`): a picture slot, a title and a subtitle. The skill `thumbnail` has the steps.
+
+## A short from the long video
+
+Copy the project, so the long video stays as it is. In the copy, cut at the end and at the start of the part you want (30 to 60 seconds that stand alone) with `item.split`, delete what is outside it with `item.delete` (`ripple=all` for the part before it, so the part moves to the start), refit it and export:
+
+```bash
+stuarty project:duplicate prj_5d8f2k9m3q --name "A year of videos, short"
+stuarty edit --project prj_2n4p6r8t1v settings.reframe aspect=9:16
+stuarty export --project prj_2n4p6r8t1v --wait
+```
+
+A talking head cropped from a wide frame can lose the face: look at it with `view` and adjust with `clip.set_framing`. Make the captions again for the short, bigger and on one line.
+
+The whole recipe is run end to end, with a five-minute fixture and no network, by `bash scripts/recipe-long-video.sh`.

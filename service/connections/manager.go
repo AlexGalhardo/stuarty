@@ -281,6 +281,27 @@ func (m *Manager) WithStored(ctx context.Context, id string, timeout time.Durati
 	return m.use(ctx, id, timeout, false, fn)
 }
 
+// WithPublic is With for a destination that must be on the public internet (the webhook of a blog, SDD-020
+// section 46): the client refuses, at dial time, an address that is loopback, private, link-local, shared,
+// unspecified or multicast. It is for a secret that is not a sign-in: nothing is renewed.
+func (m *Manager) WithPublic(ctx context.Context, id string, fn func(Credential) error) error {
+	r, err := m.store.Get(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	secret, err := m.readSecret(r)
+	if err != nil {
+		return err
+	}
+
+	defer clear(secret)
+
+	client := outbound.ConnectionPublic(m, r.ID, m.timeout, m.trust)
+
+	return fn(Credential{Connection: View(r, true), Secret: secret, Client: client})
+}
+
 func (m *Manager) use(
 	ctx context.Context,
 	id string,

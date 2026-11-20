@@ -19,10 +19,15 @@ type threat struct {
 }
 
 var (
-	rowID    = regexp.MustCompile(`^T-\d\d$`)
+	// A threat id has two digits up to T-99 and three from T-100 (D-102): a padded T-050 would be a second
+	// name for T-50.
+	rowID    = regexp.MustCompile(`^T-(?:\d\d|[1-9]\d\d)$`)
 	spanCode = regexp.MustCompile("`([^`]+)`")
-	testFunc = regexp.MustCompile(`(?m)^func (TestSecurity_T\d\d_\w+|Fuzz\w+)\(`)
-	secTest  = regexp.MustCompile(`^TestSecurity_T(\d\d)_`)
+	// testFunc collects every security test, so that one that carries a threat id of the wrong form
+	// (TestSecurity_T7_, T050 or T1000) is reported instead of escaping the check.
+	testFunc = regexp.MustCompile(`(?m)^func (TestSecurity_\w+|Fuzz\w+)\(`)
+	idLike   = regexp.MustCompile(`^TestSecurity_T\d+_`)
+	secTest  = regexp.MustCompile(`^TestSecurity_T(\d\d|[1-9]\d\d)_`)
 	method   = regexp.MustCompile(`^\t([A-Z]\w*)\(ctx context\.Context`)
 )
 
@@ -188,7 +193,11 @@ func check(root, sddPath string) ([]string, error) {
 	// A security test no row names has no threat behind it; it is a defect of the
 	// table or of the name.
 	for name := range have {
-		if secTest.MatchString(name) && !named[name] {
+		switch {
+		case !idLike.MatchString(name):
+		case !secTest.MatchString(name):
+			problems = append(problems, name+" has no valid threat id: name it TestSecurity_TNN_ or TestSecurity_TNNN_")
+		case !named[name]:
 			problems = append(problems, name+" is named by no threat row")
 		}
 	}

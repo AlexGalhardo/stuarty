@@ -14,8 +14,9 @@ type publicationCreateIn struct {
 	ProjectID string            `json:"project_id"          validate:"required" doc:"The project the publication belongs to."`
 	Title     string            `json:"title"               validate:"required" doc:"The title the targets use unless they have their own, 1 to 200 characters."`
 	Text      string            `json:"text,omitempty"                          doc:"The caption the targets use unless they have their own description."`
-	Export    string            `json:"export"              validate:"required" doc:"The id of a succeeded export job of the project: the video."`
+	Export    string            `json:"export,omitempty"                        doc:"The id of a succeeded export job of the project: the video. Give this or post."`
 	Thumbnail string            `json:"thumbnail,omitempty"                     doc:"The id of a succeeded export job of a still of the project: the cover."`
+	Post      string            `json:"post,omitempty"                          doc:"The id of a text of the kind post of the project: a blog post, which goes to the blog destinations. Give this or export."`
 	Targets   []pub.TargetInput `json:"targets,omitempty"                       doc:"One entry per account the post goes to: connection_id, fields (title, description, tags, visibility, made_for_kids, ai_disclosure), at (a time such as 2026-11-20T09:00 read in zone, or an instant with an offset), zone (an IANA name such as America/Sao_Paulo), late_window_minutes."`
 }
 
@@ -23,8 +24,9 @@ type publicationListIn struct {
 	ProjectID string `json:"project_id,omitempty" doc:"Only the publications of one project."`
 	State     string `json:"state,omitempty"      doc:"Only publications with a target in this state: draft, waiting_approval, approved, scheduled, publishing, published, sent_as_draft, failed, missed or cancelled."`
 	Network   string `json:"network,omitempty"    doc:"Only publications with a target on this network."`
-	From      string `json:"from,omitempty"       doc:"Only publications with a target at or after this time (RFC 3339)."`
-	To        string `json:"to,omitempty"         doc:"Only publications with a target before this time (RFC 3339)."`
+	From      string `json:"from,omitempty"       doc:"Only publications with a target at or after this time (RFC 3339) or date."`
+	To        string `json:"to,omitempty"         doc:"Only publications with a target before this time (RFC 3339) or date."`
+	Zone      string `json:"zone,omitempty"       doc:"The zone a date or local time of from and to is read in; empty is UTC."`
 	Limit     int    `json:"limit,omitempty"      doc:"The page size, 1 to 500; the default is 100."`
 	Offset    int    `json:"offset,omitempty"     doc:"How many publications to skip."`
 }
@@ -39,6 +41,7 @@ type publicationUpdateIn struct {
 	Text      *string           `json:"text,omitempty"                          doc:"The new caption; leave out to keep it."`
 	Export    *string           `json:"export,omitempty"                        doc:"The new video; leave out to keep it."`
 	Thumbnail *string           `json:"thumbnail,omitempty"                     doc:"The new cover; an empty text removes it."`
+	Post      *string           `json:"post,omitempty"                          doc:"The new post; leave out to keep it."`
 	Targets   []pub.TargetInput `json:"targets,omitempty"                       doc:"Targets to change (with their id), add (without one) or remove (remove: true). A target that was waiting for approval, approved or scheduled and whose post changed goes back to waiting for approval."`
 }
 

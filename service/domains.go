@@ -18,6 +18,10 @@ var OperationDomains = map[string]string{
 	"TextList": command.DomainWriting, "TextGet": command.DomainWriting, "TextWrite": command.DomainWriting,
 	"TextRevisions": command.DomainWriting, "TextRevert": command.DomainWriting, "TextDraft": command.DomainWriting,
 	"CaptionValidate": command.DomainWriting, "ScriptEstimate": command.DomainWriting,
+	"PostCheck": command.DomainWriting,
+
+	"PublishedPostList": command.DomainPublish, "PublishedPostGet": command.DomainPublish,
+	"PublishedPostMedia": command.DomainPublish,
 
 	"Edit": command.DomainVideo, "HistoryList": command.DomainVideo, "Undo": command.DomainVideo,
 	"HistoryRevert": command.DomainVideo, "HistoryDiff": command.DomainVideo,

@@ -94,7 +94,7 @@ var itemAddCmd = &spec{
 		{Name: "title", Kind: kindString, Usage: "1 to 120 characters (required)"},
 		{Name: "position", Kind: kindInt, Usage: "where in the order of the items, from 0 (default: the end)"},
 		{Name: "text", Kind: kindString, Usage: "a text item: a file with its Markdown, or - for standard input"},
-		{Name: "text-kind", Kind: kindString, Usage: "a text item: script, copy (default) or caption"},
+		{Name: "text-kind", Kind: kindString, Usage: "a text item: script, copy (default), caption or post"},
 		{Name: "preset", Kind: kindString, Usage: "a timeline: 9:16 (default), 1:1, 16:9 or 4:5"},
 		{Name: "fps", Kind: kindString, Usage: "a timeline: 30 (default), or n/1001"},
 		{Name: "job", Kind: kindString, Usage: "an output: a succeeded export job of this project"},

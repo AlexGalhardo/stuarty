@@ -87,6 +87,7 @@ export function tagOf(route: string): Tag {
 		social: "Publishing",
 		publish: "Publishing",
 		publications: "Publishing",
+		posts: "Publishing",
 		library: "Library",
 		texts: "Writing",
 		captions: "Writing",

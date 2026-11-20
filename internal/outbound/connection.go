@@ -108,6 +108,44 @@ func refusedAtDial(addr netip.Addr) bool {
 // and private addresses are allowed: a self-hosted server on the same network
 // is a destination the user typed.
 func Connection(reg Registry, id string, timeout time.Duration, test *TestOptions) *http.Client {
+	return connectionClient(reg, id, timeout, test, false)
+}
+
+// ConnectionPublic is Connection for a destination that must be on the public internet, such as the webhook of a
+// blog (SDD-020 section 46): at dial time an address that is loopback, private, link-local, shared (RFC 6598),
+// unspecified or multicast is refused as well, so a name that resolved to a public address when it was checked and
+// to an internal one when it is dialled still reaches nothing inside.
+func ConnectionPublic(reg Registry, id string, timeout time.Duration, test *TestOptions) *http.Client {
+	return connectionClient(reg, id, timeout, test, true)
+}
+
+var sharedSpace = netip.MustParsePrefix("100.64.0.0/10")
+
+// NotPublicAddr says whether an address is one a public destination may never resolve to: loopback, private
+// (RFC 1918 and the unique-local fc00::/7), link-local, shared, unspecified, multicast, or an IPv6 form that carries
+// such an IPv4 address.
+func NotPublicAddr(addr netip.Addr) bool {
+	ip := addr.Unmap().WithZone("")
+	if internalAddr(ip) {
+		return true
+	}
+
+	if ip.Is6() {
+		if v4, ok := embeddedIPv4(ip); ok {
+			return internalAddr(v4)
+		}
+	}
+
+	return false
+}
+
+func internalAddr(ip netip.Addr) bool {
+	return refusedAtDial(ip) || ip.IsLoopback() || ip.IsPrivate() || sharedSpace.Contains(ip)
+}
+
+func connectionClient(
+	reg Registry, id string, timeout time.Duration, test *TestOptions, publicOnly bool,
+) *http.Client {
 	dialer := &net.Dialer{
 		Timeout: timeout,
 		Control: func(_, address string, _ syscall.RawConn) error {
@@ -116,7 +154,7 @@ func Connection(reg Registry, id string, timeout time.Duration, test *TestOption
 				return ErrNotPublic
 			}
 
-			if refusedAtDial(ap.Addr()) {
+			if refusedAtDial(ap.Addr()) || publicOnly && NotPublicAddr(ap.Addr()) {
 				return ErrNotPublic
 			}
 

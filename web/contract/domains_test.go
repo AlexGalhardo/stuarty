@@ -23,6 +23,13 @@ import (
 func listOverEverySurface(t *testing.T, domain string) map[string]service.CommandHelpResult {
 	t.Helper()
 
+	return helpOverEverySurface(t, domain, "")
+}
+
+// helpOverEverySurface asks command help for one domain and, when name is set, for one command, the four ways.
+func helpOverEverySurface(t *testing.T, domain, name string) map[string]service.CommandHelpResult {
+	t.Helper()
+
 	direct, ok := newDirect(t), true
 	m, ok2 := newMCP(t).(*mcpDriver)
 	h, ok3 := newHTTP(t).(*httpDriver)
@@ -34,7 +41,7 @@ func listOverEverySurface(t *testing.T, domain string) map[string]service.Comman
 
 	out := map[string]service.CommandHelpResult{}
 
-	res, err := direct.service().CommandHelp(callerCtx(), service.CommandHelpRequest{Domain: domain})
+	res, err := direct.service().CommandHelp(callerCtx(), service.CommandHelpRequest{Name: name, Domain: domain})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -46,14 +53,22 @@ func listOverEverySurface(t *testing.T, domain string) map[string]service.Comman
 		args["domain"] = domain
 	}
 
+	if name != "" {
+		args["name"] = name
+	}
+
 	call, err := m.cs.CallTool(t.Context(), &sdk.CallToolParams{Name: "command_help", Arguments: args})
 	if err != nil || call.IsError {
-		t.Fatalf("mcp command_help %q: %v %+v", domain, err, call)
+		t.Fatalf("mcp command_help %q %q: %v %+v", domain, name, err, call)
 	}
 
 	out["mcp"] = roundTrip(t, call.StructuredContent)
 
 	path := "/api/v1/commands"
+	if name != "" {
+		path += "/" + name
+	}
+
 	if domain != "" {
 		path += "?domain=" + domain
 	}
@@ -87,6 +102,10 @@ func listOverEverySurface(t *testing.T, domain string) map[string]service.Comman
 	cliArgs := []string{"--json"}
 	if domain != "" {
 		cliArgs = append(cliArgs, "--domain", domain)
+	}
+
+	if name != "" {
+		cliArgs = append(cliArgs, name)
 	}
 
 	out["cli"] = cliHelp(t, c, cliArgs)
@@ -148,6 +167,29 @@ func TestDiscoveryByDomainIsTheSameOnEverySurface(t *testing.T) {
 					domain, surface, canonical(t, shape(res)), want,
 				)
 			}
+		}
+	}
+}
+
+// TestCommandHelpFindsAnImageOperationWithNoDomain: an image operation asked by name with no domain is the same
+// command on every surface, and its text names its domain (VV-283, SDD-003 section 4.3).
+func TestCommandHelpFindsAnImageOperationWithNoDomain(t *testing.T) {
+	got := helpOverEverySurface(t, "", "layer.add_text")
+
+	for surface, res := range got {
+		if res.Command == nil || res.Command.Name != "layer.add_text" || res.Command.ArgsSchema == nil {
+			t.Errorf("%s: the help of layer.add_text with no domain = %+v", surface, res)
+		}
+
+		if surface != "mcp" && !strings.HasPrefix(res.Text, "Domain: image.") {
+			t.Errorf("%s: the text does not name the domain: %q", surface, res.Text)
+		}
+	}
+
+	want := canonical(t, got["direct"].Command)
+	for surface, res := range got {
+		if canonical(t, res.Command) != want {
+			t.Errorf("%s differs from the Service\n got: %s\nwant: %s", surface, canonical(t, res.Command), want)
 		}
 	}
 }

@@ -4,7 +4,7 @@ import { describe, expect, test, vi } from "vitest";
 import { I18nProvider } from "@/lib/i18n";
 import { ApiError } from "../../editor/api/errors";
 import type { ApiKey } from "../../editor/api/types";
-import { KeyRow, reportOrLogin } from "./Keys";
+import SettingsKeys, { KeyRow, reportOrLogin } from "./Keys";
 
 vi.mock("@inertiajs/react", () => ({ Head: () => null }));
 
@@ -49,6 +49,22 @@ describe("keys page renders the key name as text", () => {
 		const html = markup(apiKey);
 		expect(html).toContain("&lt;img src=x onerror=window.__pwned=1&gt;");
 		expect(html).not.toContain("<img");
+	});
+});
+
+// SDD-020 section 47: the key of the read API of the blog is made on this page, from a privileged session, and the
+// scope is offered with the five others.
+describe("the scopes a new key may hold", () => {
+	test("the form offers posts:read", () => {
+		const html = renderToString(
+			<I18nProvider messages={messages} locale="en" locales={["en"]}>
+				<SettingsKeys />
+			</I18nProvider>,
+		);
+		for (const scope of ["read", "edit", "media", "render", "admin"]) {
+			expect(html).toContain(`>${scope}</label>`);
+		}
+		expect(html).toContain(">posts:read</label>");
 	});
 });
 

@@ -1,27 +1,17 @@
 package service
 
 import (
-	"bufio"
 	"bytes"
 	"errors"
-	"fmt"
 	"io"
-	"math"
 	"slices"
-	"strconv"
 	"strings"
+
+	"github.com/AlexGalhardo/stuarty/engine/lut"
 )
 
-// The limits of a .cube file. The size cap is the 65-point table that the format's tools write at most
-// (274,625 lines of three numbers) with room for long numbers; a longer line is not a table. The file is
-// untrusted: nothing here allocates from a number it read, so the work is bounded by the bytes.
-const (
-	cubeMaxBytes    = 32 << 20
-	cubeMaxLine     = 4096
-	cubeMinSize     = 2
-	cubeMaxSize     = 65
-	cubeSniffWindow = 4096
-)
+// cubeSniffWindow is how much of the start of a file is read to tell a .cube table from other media.
+const cubeSniffWindow = 4096
 
 var cubeKeywords = []string{
 	"TITLE", "DOMAIN_MIN", "DOMAIN_MAX", "LUT_1D_SIZE", "LUT_3D_SIZE", "LUT_1D_INPUT_RANGE", "LUT_3D_INPUT_RANGE",
@@ -59,196 +49,15 @@ func sniffCube(head []byte) bool {
 	return false
 }
 
-// cubeReader holds what checkCube has seen so far.
-type cubeReader struct {
-	size, rows           int
-	sawData              bool
-	domainMin, domainMax [3]float64
-}
-
-// checkCube reads a whole .cube file and refuses what is not a valid 3D table: a 1D table, a size outside
-// 2 to 65, a domain that is empty, a line that is not three finite numbers, a count of lines that is not
-// size cubed, a header after the data, or a file past cubeMaxBytes.
+// checkCube reads a whole .cube file with engine/lut.Parse, the only parser of a table: the export reads the
+// same bytes with the same limits (lut.MaxBytes, the parser's longest line, a domain of 0 to 1, lut.MinSize to
+// lut.MaxSize points on a side), so a file that passes here is one the export can read (VV-287). The error is the
+// reason, with no content of the file.
 func checkCube(r io.Reader) (size int, err error) {
-	lr := &io.LimitedReader{R: r, N: cubeMaxBytes + 1}
-	sc := bufio.NewScanner(lr)
-	sc.Buffer(make([]byte, 0, 1024), cubeMaxLine)
-
-	cr := cubeReader{domainMax: [3]float64{1, 1, 1}}
-
-	for first := true; sc.Scan(); first = false {
-		line := sc.Text()
-		if first {
-			line = strings.TrimPrefix(line, "ï»¿")
-		}
-
-		if err := cr.line(strings.TrimSpace(line)); err != nil {
-			return 0, err
-		}
+	t, err := lut.Parse(r)
+	if err != nil {
+		return 0, errors.New(strings.TrimPrefix(err.Error(), lut.ErrInvalid.Error()+": "))
 	}
 
-	if err := sc.Err(); err != nil {
-		if errors.Is(err, bufio.ErrTooLong) {
-			return 0, fmt.Errorf("a line is longer than %d bytes", cubeMaxLine)
-		}
-
-		return 0, err
-	}
-
-	switch {
-	case lr.N <= 0:
-		return 0, fmt.Errorf("the file is larger than %d MiB", cubeMaxBytes>>20)
-	case cr.size == 0:
-		return 0, errors.New("LUT_3D_SIZE is missing")
-	case cr.rows != cr.size*cr.size*cr.size:
-		return 0, fmt.Errorf(
-			"LUT_3D_SIZE %d needs %d lines of data, the file has %d",
-			cr.size,
-			cr.size*cr.size*cr.size,
-			cr.rows,
-		)
-	}
-
-	for i := range cr.domainMin {
-		if cr.domainMin[i] >= cr.domainMax[i] {
-			return 0, errors.New("DOMAIN_MIN must be below DOMAIN_MAX")
-		}
-	}
-
-	return cr.size, nil
-}
-
-// line takes one trimmed line of the file.
-func (c *cubeReader) line(line string) error {
-	if line == "" || strings.HasPrefix(line, "#") {
-		return nil
-	}
-
-	fields := strings.Fields(line)
-	keyword := fields[0]
-
-	if cubeIsNumber(keyword) {
-		return c.data(fields)
-	}
-
-	if c.sawData {
-		return errors.New("a header line after the data")
-	}
-
-	switch keyword {
-	case "TITLE":
-	case "LUT_1D_SIZE", "LUT_1D_INPUT_RANGE":
-		return errors.New("a 1D table is not supported; use a 3D table (LUT_3D_SIZE)")
-	case "LUT_3D_SIZE":
-		n, err := strconv.Atoi(strings.TrimSpace(strings.TrimPrefix(line, keyword)))
-		if err != nil || c.size != 0 || n < cubeMinSize || n > cubeMaxSize {
-			return fmt.Errorf("LUT_3D_SIZE must appear once, as a whole number from %d to %d", cubeMinSize, cubeMaxSize)
-		}
-
-		c.size = n
-	case "DOMAIN_MIN", "DOMAIN_MAX":
-		v, ok := cubeTriple(fields[1:])
-		if !ok {
-			return fmt.Errorf("%s must be three finite numbers", keyword)
-		}
-
-		if keyword == "DOMAIN_MIN" {
-			c.domainMin = v
-		} else {
-			c.domainMax = v
-		}
-	case "LUT_3D_INPUT_RANGE":
-		if _, ok := cubePair(fields[1:]); !ok {
-			return errors.New("LUT_3D_INPUT_RANGE must be two finite numbers")
-		}
-	default:
-		return fmt.Errorf("%q is not a line of a .cube file", cubeTruncate(keyword, 24))
-	}
-
-	return nil
-}
-
-// data takes one line of the table.
-func (c *cubeReader) data(fields []string) error {
-	c.sawData = true
-
-	switch {
-	case c.size == 0:
-		return errors.New("the data starts before LUT_3D_SIZE")
-	case len(fields) != 3:
-		return errors.New("a data line must be three numbers")
-	}
-
-	if _, ok := cubeTriple(fields); !ok {
-		return errors.New("a data line holds a value that is not a finite number")
-	}
-
-	c.rows++
-	if c.rows > c.size*c.size*c.size {
-		return errors.New("the table has more lines than LUT_3D_SIZE cubed")
-	}
-
-	return nil
-}
-
-func cubeIsNumber(s string) bool {
-	if s == "" {
-		return false
-	}
-
-	c := s[0]
-
-	return c == '-' || c == '+' || c == '.' || c >= '0' && c <= '9'
-}
-
-func cubeFinite(s string) (float64, bool) {
-	v, err := strconv.ParseFloat(s, 64)
-
-	return v, err == nil && !math.IsNaN(v) && !math.IsInf(v, 0)
-}
-
-func cubeTriple(f []string) ([3]float64, bool) {
-	var out [3]float64
-
-	if len(f) != 3 {
-		return out, false
-	}
-
-	for i, s := range f {
-		v, ok := cubeFinite(s)
-		if !ok {
-			return out, false
-		}
-
-		out[i] = v
-	}
-
-	return out, true
-}
-
-func cubePair(f []string) ([2]float64, bool) {
-	var out [2]float64
-
-	if len(f) != 2 {
-		return out, false
-	}
-
-	for i, s := range f {
-		v, ok := cubeFinite(s)
-		if !ok {
-			return out, false
-		}
-
-		out[i] = v
-	}
-
-	return out, true
-}
-
-func cubeTruncate(s string, n int) string {
-	if len(s) <= n {
-		return s
-	}
-
-	return s[:n]
+	return t.Size, nil
 }

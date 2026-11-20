@@ -117,6 +117,10 @@ func formatGuide(kind Kind, network string) string {
 		return b.String()
 	case KindCopy:
 		return "Format: free text in Markdown, as written for the reader."
+	case KindPost:
+		return "Format: a blog post. Start with a front matter between two lines that are only ---, with the lines " +
+			"title:, summary:, tags: (separated by commas) and language:, then the body in Markdown. Use only " +
+			"headings, paragraphs, lists, emphasis, code and links: no HTML and no image."
 	}
 
 	return ""
