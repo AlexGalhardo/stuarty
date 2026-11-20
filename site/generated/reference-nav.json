@@ -172,6 +172,9 @@
         "image.generate",
         "providers.list",
         "providers.prices.set",
+        "providers.sign-ins",
+        "providers.signin.begin",
+        "providers.signin.complete",
         "text.generate",
         "voice.generate"
       ]

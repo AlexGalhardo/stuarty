@@ -38,6 +38,37 @@ type Credential struct {
 	Connection Connection
 	Secret     []byte
 	Client     Doer
+	// SignedIn is true when the connection was made by a sign-in in the browser (SDD-014 section 13):
+	// Secret is then the access token, or the key the provider issued, and nothing else.
+	SignedIn bool
+}
+
+// Errors of a sign-in credential (SDD-014 section 13).
+var (
+	// ErrNeedsSignIn is a connection whose sign-in is no longer good: the person must sign in again.
+	ErrNeedsSignIn = errors.New("connections: the sign-in of the connection must be done again")
+	// ErrSignInUnavailable is a sign-in that could not be renewed now, for a reason that says nothing
+	// about the grant (no network, a server error): it is kept as it is and may work later.
+	ErrSignInUnavailable = errors.New("connections: the sign-in could not be renewed now")
+)
+
+// Prepared is what a Refresher decided about a stored secret.
+type Prepared struct {
+	// Store is the new stored secret, written to the vault before use; nil leaves it as it is.
+	Store []byte
+	// Use is the secret the closure receives; nil means the stored secret is used as it is.
+	Use []byte
+	// SignedIn says that the secret is the credential of a sign-in.
+	SignedIn bool
+}
+
+// Refresher turns the stored secret of a sign-in into what a closure needs, renewing it when it is
+// about to expire (SDD-014 section 13). It runs under the lock of the connection, with the gated
+// client of that connection. A secret that is not a sign-in is none of its business: it returns the
+// zero Prepared and no error. When it returns an error, a non-nil Store is still written (a refused
+// grant is remembered), and the error ends the call.
+type Refresher interface {
+	Prepare(ctx context.Context, c Credential) (Prepared, error)
 }
 
 // TestResult is the outcome of a test request.
@@ -80,6 +111,11 @@ type Manager struct {
 
 	mu         sync.RWMutex
 	connectors map[string]Connector
+	refresher  Refresher
+
+	// locks holds one lock per connection for the renewal of a sign-in.
+	lockMu sync.Mutex
+	locks  map[string]*sync.Mutex
 }
 
 // NewManager returns a manager with the test connector registered.
@@ -106,6 +142,32 @@ func (m *Manager) Register(kind string, c Connector) {
 	defer m.mu.Unlock()
 
 	m.connectors[kind] = c
+}
+
+// SetRefresher installs the refresher of the sign-in credentials; a manager without one hands every
+// secret to a closure as it is stored.
+func (m *Manager) SetRefresher(r Refresher) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	m.refresher = r
+}
+
+func (m *Manager) lockOf(id string) *sync.Mutex {
+	m.lockMu.Lock()
+	defer m.lockMu.Unlock()
+
+	if m.locks == nil {
+		m.locks = map[string]*sync.Mutex{}
+	}
+
+	l, ok := m.locks[id]
+	if !ok {
+		l = &sync.Mutex{}
+		m.locks[id] = l
+	}
+
+	return l
 }
 
 // Kinds lists the kinds a connection may have, sorted.
@@ -203,25 +265,96 @@ func (m *Manager) With(ctx context.Context, id string, fn func(Credential) error
 // WithTimeout is With for a request that may take longer than the default, such as the generation of a
 // text (SDD-016 section 6): the client of the closure gives up after timeout.
 func (m *Manager) WithTimeout(ctx context.Context, id string, timeout time.Duration, fn func(Credential) error) error {
+	return m.use(ctx, id, timeout, true, fn)
+}
+
+// WithStored is WithTimeout for the sign-in itself (SDD-014 section 13): it hands the closure the secret
+// as it is stored, with no renewal, so that a sign-in that is not finished, or that needs to be done
+// again, can still exchange its code through the gated client of its connection. Nothing else uses it.
+func (m *Manager) WithStored(ctx context.Context, id string, timeout time.Duration, fn func(Credential) error) error {
+	return m.use(ctx, id, timeout, false, fn)
+}
+
+func (m *Manager) use(
+	ctx context.Context,
+	id string,
+	timeout time.Duration,
+	renew bool,
+	fn func(Credential) error,
+) error {
 	r, err := m.store.Get(ctx, id)
 	if err != nil {
 		return err
 	}
 
-	secret, err := m.vault.Get(r.SecretRef)
-	if errors.Is(err, vault.ErrNotFound) {
-		return ErrNoSecret
-	}
+	client := outbound.Connection(m, r.ID, timeout, m.trust)
 
+	secret, signedIn, err := m.secretFor(ctx, r, client, renew)
 	if err != nil {
 		return err
 	}
 
 	defer clear(secret)
 
-	return fn(Credential{
-		Connection: View(r, true), Secret: secret, Client: outbound.Connection(m, r.ID, timeout, m.trust),
-	})
+	return fn(Credential{Connection: View(r, true), Secret: secret, Client: client, SignedIn: signedIn})
+}
+
+func (m *Manager) readSecret(r Row) ([]byte, error) {
+	secret, err := m.vault.Get(r.SecretRef)
+	if errors.Is(err, vault.ErrNotFound) {
+		return nil, ErrNoSecret
+	}
+
+	return secret, err
+}
+
+// secretFor reads the secret of a connection and, for a sign-in, renews it and takes out the token. The
+// lock of the connection is held from before the read to after the write, so a concurrent use sees the
+// renewed tokens instead of spending a rotating refresh token twice (SDD-014 section 13).
+func (m *Manager) secretFor(ctx context.Context, r Row, client Doer, renew bool) ([]byte, bool, error) {
+	m.mu.RLock()
+	ref := m.refresher
+	m.mu.RUnlock()
+
+	if !renew || ref == nil {
+		secret, err := m.readSecret(r)
+
+		return secret, false, err
+	}
+
+	l := m.lockOf(r.ID)
+	l.Lock()
+	defer l.Unlock()
+
+	stored, err := m.readSecret(r)
+	if err != nil {
+		return nil, false, err
+	}
+
+	prep, perr := ref.Prepare(ctx, Credential{Connection: View(r, true), Secret: stored, Client: client})
+
+	if prep.Store != nil {
+		if werr := m.vault.Put(r.SecretRef, prep.Store); werr != nil && perr == nil {
+			perr = werr
+		}
+
+		clear(prep.Store)
+	}
+
+	if perr != nil {
+		clear(stored)
+		clear(prep.Use)
+
+		return nil, false, perr
+	}
+
+	if prep.Use == nil {
+		return stored, false, nil
+	}
+
+	clear(stored)
+
+	return prep.Use, prep.SignedIn, nil
 }
 
 // Test makes the test request of the kind of the connection.

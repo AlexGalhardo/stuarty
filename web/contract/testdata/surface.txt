@@ -217,6 +217,7 @@ route GET /projects/{}/snap-points
 route GET /projects/{}/texts/{}
 route GET /projects/{}/texts/{}/revisions
 route GET /providers
+route GET /providers/sign-ins
 route GET /publications
 route GET /publications/events
 route GET /publications/{}
@@ -282,6 +283,8 @@ route POST /projects/{}/texts/{}/draft
 route POST /projects/{}/texts/{}/revert
 route POST /projects/{}/trash
 route POST /projects/{}/undo
+route POST /providers/signin
+route POST /providers/signin/complete
 route POST /publications
 route POST /publications/{}/cancel
 route POST /publications/{}/retry
