@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"net"
 	"net/http"
 	"os"
@@ -27,8 +28,7 @@ func TestStdioOwnerIsReachedByTheCLIAndOpen(t *testing.T) {
 	home := filepath.Join(t.TempDir(), "ws")
 
 	cmd := exec.CommandContext(t.Context(), bin, "mcp")
-	cmd.Env = append(os.Environ(), "STUARTY_HOME="+home, "STUARTY_URL=", "APP_KEY=", "APP_ENV=",
-		"HOST=127.0.0.1", "PORT="+freePort(t), "STUARTY_MIN_FREE_BYTES=1")
+	cmd.Env = append(os.Environ(), mcpTestEnv(t, home)...)
 
 	client := sdk.NewClient(&sdk.Implementation{Name: "Claude Code", Version: "1"}, nil)
 
@@ -149,6 +149,19 @@ func TestFreePortIfBusyMovesOnlyWhenTheDefaultIsTakenAndUnset(t *testing.T) {
 	}
 }
 
+// mcpTestEnv is the environment of a `stuarty mcp` process under test: its own
+// workspace and its own address. The address goes in STUARTY_ADDR, not in HOST
+// and PORT: with STUARTY_ADDR unset the owner probes the default port 7878
+// (freePortIfBusy), which may belong to a server the person is running.
+func mcpTestEnv(t *testing.T, home string) []string {
+	t.Helper()
+
+	return []string{
+		"STUARTY_HOME=" + home, "STUARTY_URL=", "APP_KEY=", "APP_ENV=",
+		"STUARTY_ADDR=127.0.0.1:" + freePort(t), "HOST=", "PORT=", "STUARTY_MIN_FREE_BYTES=1",
+	}
+}
+
 // VV-205: a client that writes its requests and closes the pipe at once (a script, a one-line test)
 // still gets every response before the process exits, through the real binary.
 func TestMCPAnswersTheRequestsReadBeforeStdinCloses(t *testing.T) {
@@ -159,9 +172,12 @@ func TestMCPAnswersTheRequestsReadBeforeStdinCloses(t *testing.T) {
 		`{"jsonrpc":"2.0","method":"notifications/initialized"}` + "\n" +
 		`{"jsonrpc":"2.0","id":2,"method":"tools/list"}` + "\n"
 
-	cmd := exec.CommandContext(t.Context(), bin, "mcp")
-	cmd.Env = append(os.Environ(), "STUARTY_HOME="+home, "STUARTY_URL=", "APP_KEY=", "APP_ENV=",
-		"HOST=127.0.0.1", "PORT="+freePort(t), "STUARTY_MIN_FREE_BYTES=1")
+	// A process that never drains fails the test instead of hanging the package.
+	ctx, cancel := context.WithTimeout(t.Context(), time.Minute)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, bin, "mcp")
+	cmd.Env = append(os.Environ(), mcpTestEnv(t, home)...)
 	cmd.Stdin = strings.NewReader(reqs)
 
 	var stdout, stderr bytes.Buffer
