@@ -73,6 +73,17 @@ func GateRows(g *Gate, out string) []GateRow {
 	return rows
 }
 
+// hasGate says whether a budget in tests belongs to the requirement.
+func hasGate(nfr string) bool {
+	for i := range Gates {
+		if Gates[i].NFR == nfr {
+			return true
+		}
+	}
+
+	return false
+}
+
 // runGates runs every gate of the requirement (every gate when only is empty). A test that fails to
 // compile or run still yields rows: the budget was not judged.
 func runGates(ctx context.Context, only string) []GateRow {
