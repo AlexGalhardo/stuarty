@@ -73,7 +73,7 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 
 | Epic | Title | Size | Depends on | Status |
 | --- | --- | --- | --- | --- |
-| [38](38-first-complete-flow-pilot.md) | Pilot of the first complete flow | M | 16, 19, 20, 28, 35 | TODO |
+| [38](38-first-complete-flow-pilot.md) | Pilot of the first complete flow | M | 16, 19, 20, 28, 35 | IN PROGRESS (senior-b, 2026-11-20) |
 | [39](39-recipes-for-commercials-and-long-videos.md) | Recipes for commercials and long videos | M | 33, 38 | TODO |
 | [40](40-documentation-site.md) | Documentation site for Stuarty | L | 02, and each section it documents | TODO |
 | [41](41-accessibility.md) | Accessibility of every section | M | 07, 28, 37 | TODO |
