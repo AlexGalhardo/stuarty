@@ -348,7 +348,7 @@ func TestSecurity_T31_ToolDefinitionsAreStatic(t *testing.T) {
 	}
 }
 
-var idPattern = regexp.MustCompile(`^\^(prj|ast|trk|itm|job|tpl|con|img|pit)_\[0-9a-hjkmnp-tv-z\]\{10\}\$$`)
+var idPattern = regexp.MustCompile(`^\^(prj|ast|trk|itm|job|tpl|con|img|pit|apr)_\[0-9a-hjkmnp-tv-z\]\{10\}\$$`)
 
 // TestToolSchemas: every inputSchema forbids extra members and every id
 // parameter carries the pattern of SDD-000 section 2 (SDD-003 section 4.2).

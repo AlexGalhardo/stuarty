@@ -204,6 +204,28 @@ func TestOpenRemoteURLReadsNoLocalFile(t *testing.T) {
 	}
 }
 
+// InProcess writes the local workspace only: with STUARTY_URL set it refuses and names the variable, with
+// or without a key, and touches no folder, instead of answering with a remote session that has no folder
+// (VV-272: user:create, user:passwd, token:rotate and workspace:restore wrote into the current directory).
+func TestOpenInProcessRefusesARemoteURL(t *testing.T) {
+	t.Parallel()
+	home := t.TempDir() + "/never-created"
+	for _, key := range []string{"k", ""} {
+		o := Options{
+			Force:  InProcess,
+			Getenv: openEnv(home, map[string]string{EnvURL: "https://videos.example.org", EnvKey: key}),
+		}
+		s, err := Open(context.Background(), o)
+		var we *Error
+		if !errors.As(err, &we) || we.Code != CodeInvalidState || !strings.Contains(we.Message, EnvURL) {
+			t.Errorf("key %q: session %+v, err = %v, want %s naming %s", key, s, err, CodeInvalidState, EnvURL)
+		}
+	}
+	if _, err := os.Stat(home); err == nil {
+		t.Error("the workspace must not be touched when STUARTY_URL is set")
+	}
+}
+
 // SDD-005 section 18 check 23: a CLI started while the owner is still
 // starting waits and then connects.
 func TestOpenWaitsForOwnerStarting(t *testing.T) {
