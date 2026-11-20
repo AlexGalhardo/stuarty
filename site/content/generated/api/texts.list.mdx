@@ -22,7 +22,7 @@ Send the secret in the header `Authorization: Bearer <secret>`: the local token 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `project_id` | `string` | no | Only the texts of this project; omit it for every project the caller may see. |
-| `text_kind` | `string` | no | script, copy or caption; omit it for every kind. |
+| `text_kind` | `string` | no | script, copy, caption or post; omit it for every kind. |
 | `state` | `string` | no | active (default) or trashed. |
 | `cursor` | `string` | no | The next_cursor of the previous page. |
 | `limit` | `integer` | no | The page size; the default depends on the operation. |

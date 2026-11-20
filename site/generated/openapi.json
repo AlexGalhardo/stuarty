@@ -21667,7 +21667,7 @@
                     "type": "string"
                   },
                   "text_kind": {
-                    "description": "A text item: script, copy (default) or caption.",
+                    "description": "A text item: script, copy (default), caption or post.",
                     "type": "string"
                   },
                   "title": {
@@ -24157,7 +24157,7 @@
                     "type": "string"
                   },
                   "text_kind": {
-                    "description": "script, copy (default) or caption.",
+                    "description": "script, copy (default), caption or post.",
                     "type": "string"
                   },
                   "title": {
@@ -27443,7 +27443,7 @@
             }
           },
           {
-            "description": "script, copy or caption; omit it for every kind.",
+            "description": "script, copy, caption or post; omit it for every kind.",
             "in": "query",
             "name": "text_kind",
             "schema": {

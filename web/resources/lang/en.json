@@ -3020,7 +3020,7 @@
     },
     "write": {
       "title": "Write",
-      "intro": "Scripts, copy and captions of your productions, written by you or with a model. Every save is a revision you can go back to.",
+      "intro": "Scripts, copy, captions and blog posts of your productions, written by you or with a model. Every save is a revision you can go back to.",
       "filter": {
         "project": "Project",
         "kind": "Kind",
