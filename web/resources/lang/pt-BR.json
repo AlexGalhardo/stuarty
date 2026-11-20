@@ -3009,6 +3009,8 @@
       "logo_hint": "Escolha uma imagem acima, ou cole o hash de uma imagem já importada em um projeto deste espaço de trabalho.",
       "colors": "Cores",
       "color_name": "Nome da cor {index}",
+      "color_name_hint": "Os nomes usam letras minúsculas, dígitos e sublinhados e começam com uma letra, por exemplo vermelho_marca.",
+      "color_name_placeholder": "vermelho_marca",
       "color_value": "Valor da cor {index}",
       "color_remove": "Remover a cor {name}",
       "color_add": "Adicionar cor",
@@ -3274,6 +3276,11 @@
         "scope": "Escopo",
         "tags": "Tags, separadas por vírgulas",
         "license": "Licença"
+      },
+      "scope": {
+        "workspace": "Espaço de trabalho (todos os projetos)",
+        "other": "Outro projeto",
+        "hint": "Uma nota vale para todo o espaço de trabalho ou para um projeto."
       },
       "action": {
         "save": "Salvar",

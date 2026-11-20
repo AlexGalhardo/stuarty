@@ -3009,6 +3009,8 @@
       "logo_hint": "Choose an image above, or paste the hash of an image already imported into a project of this workspace.",
       "colors": "Colours",
       "color_name": "Name of colour {index}",
+      "color_name_hint": "Names use lower case letters, digits and underscores, and start with a letter, for example brand_red.",
+      "color_name_placeholder": "brand_red",
       "color_value": "Value of colour {index}",
       "color_remove": "Remove colour {name}",
       "color_add": "Add colour",
@@ -3274,6 +3276,11 @@
         "scope": "Scope",
         "tags": "Tags, separated by commas",
         "license": "Licence"
+      },
+      "scope": {
+        "workspace": "Workspace (every project)",
+        "other": "Another project",
+        "hint": "A note is for the whole workspace or for one project."
       },
       "action": {
         "save": "Save",

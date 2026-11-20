@@ -9,11 +9,20 @@ import { Textarea } from "@/components/ui/textarea";
 import { useT } from "@/lib/i18n";
 import { PersonOnlyNote, useSession } from "@/lib/session";
 import { useUnsavedGuard } from "@/lib/unsaved";
+import { createClient } from "../../editor/api/client";
+import { HttpTransport } from "../../editor/api/http";
 import type { LibraryClient, LibraryEntry } from "./client";
 import { EntryBadges, FileText } from "./parts";
 
 // One memory note: one fact in one file (SDD-018 section 5). A person who saves a note keeps it; the
 // notes an agent wrote are pending until a person keeps them.
+// The workspace is the choice with no value: a note with no scope is the workspace's.
+function scopeOf(entry: LibraryEntry): string {
+	return entry.scope === undefined || entry.scope === "workspace"
+		? ""
+		: entry.scope;
+}
+
 export default function MemoryPane({
 	client,
 	name,
@@ -29,6 +38,24 @@ export default function MemoryPane({
 	const [newName, setNewName] = useState("");
 	const [description, setDescription] = useState("");
 	const [scope, setScope] = useState("");
+	// The projects a note can be scoped to: a note is for the whole workspace or for one project (SDD-018 section 5).
+	const [projects, setProjects] = useState<
+		readonly { id: string; name: string }[]
+	>([]);
+	useEffect(() => {
+		let live = true;
+		createClient(new HttpTransport("/api/v1"))
+			.listProjects()
+			.then((res) => {
+				if (live) setProjects(res.projects.filter((p) => p.state === "active"));
+			})
+			.catch(() => {
+				// The choice then offers the workspace only; the service still checks the scope.
+			});
+		return () => {
+			live = false;
+		};
+	}, []);
 	const [tags, setTags] = useState("");
 	const [body, setBody] = useState("");
 	const [failure, setFailure] = useState<Failure | null>(null);
@@ -63,14 +90,14 @@ export default function MemoryPane({
 				if (!live) return;
 				setEntry(result.entry);
 				setDescription(result.entry.description);
-				setScope(result.entry.scope ?? "");
+				setScope(scopeOf(result.entry));
 				setTags((result.entry.tags ?? []).join(", "));
 				setBody(result.body);
 				setBaseline(
 					JSON.stringify([
 						"",
 						result.entry.description,
-						result.entry.scope ?? "",
+						scopeOf(result.entry),
 						(result.entry.tags ?? []).join(", "),
 						result.body,
 					]),
@@ -192,11 +219,29 @@ export default function MemoryPane({
 								<Label htmlFor="memory-scope">
 									{t("ui.library.field.scope")}
 								</Label>
-								<Input
+								<select
 									id="memory-scope"
 									value={scope}
+									aria-describedby="memory-scope-hint"
 									onChange={(e) => setScope(e.target.value)}
-								/>
+									className="h-8 max-w-full rounded-lg border border-input bg-background px-2 text-sm"
+								>
+									<option value="">{t("ui.library.scope.workspace")}</option>
+									{scope !== "" && !projects.some((p) => p.id === scope) && (
+										<option value={scope}>{t("ui.library.scope.other")}</option>
+									)}
+									{projects.map((p) => (
+										<option key={p.id} value={p.id}>
+											{p.name}
+										</option>
+									))}
+								</select>
+								<p
+									id="memory-scope-hint"
+									className="text-xs text-muted-foreground"
+								>
+									{t("ui.library.scope.hint")}
+								</p>
 							</div>
 							<div className="flex flex-col gap-1">
 								<Label htmlFor="memory-tags">
