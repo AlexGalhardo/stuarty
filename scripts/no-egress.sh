@@ -23,7 +23,7 @@
 # Linux only. The desktop binary has no headless mode, so it is not covered here (SDD-007 section 14).
 # The helper download itself (`tools:install`) is the one outbound path the product has (SDD-007 section
 # 6.8: HTTPS to the hosts of the embedded manifest), so it is not run here: the check is that it stops at its
-# question and that `--yes` from a session that is not a person is refused, both without a connection.
+# question and that `--yes` with an unknown helper is refused, both without a connection.
 # Needs: go (or STUARTY_BIN), ffmpeg on PATH, strace. Environment:
 #   STUARTY_BIN   the binary to test (default: built from this checkout)
 #   NOEGRESS_PORT     loopback port of the server (default a random one in 20000 to 39999)
@@ -180,10 +180,11 @@ log "CLI session: the helper install stops at its question and connects to nothi
 vv cli-tools-install tools:install whisper </dev/null
 grep -q "nothing was downloaded" "$work/cli-tools-install.out" || { cat "$work/cli-tools-install.out" >&2; die "tools:install did not stop at the question"; }
 
-# With --yes a session that is not a person at the editor is refused before any download (E_FORBIDDEN,
-# SDD-007 section 6.8): the helper download itself is the one allowed outbound path (HTTPS to the hosts of
-# the embedded manifest) and is not run here, so the trace stays free of non-loopback addresses.
-vv_refused cli-tools-install-yes tools:install whisper --yes </dev/null
+# With --yes the CLI is the person at the terminal and downloads (SDD-007 section 6.8, VV-077), which is
+# the one allowed outbound path (HTTPS to the hosts of the embedded manifest) and is not run here. What is
+# checked is that --yes with a helper that does not exist is refused by the manifest lookup before any
+# download, so the trace stays free of non-loopback addresses.
+vv_refused cli-tools-install-yes tools:install no-such-helper --yes </dev/null
 
 log "CLI session: no connection configured, so nothing can leave"
 vv cli-connection-list connection:list --json
