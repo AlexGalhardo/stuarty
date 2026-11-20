@@ -10,7 +10,34 @@ import type { PlanBlend } from "../api/types";
 // export by a rounding step; `blendChannel` is the integer reference of the
 // spec (the Go compositor, byte for byte) that the tests hold the formulas to.
 
-export function pixiBlendMode(blend: PlanBlend | undefined): BLEND_MODES {
+export type OverAlphaMode = Extract<
+	PlanBlend,
+	"multiply" | "screen" | "overlay" | "add"
+>;
+
+export const OVER_ALPHA_MODES: readonly OverAlphaMode[] = [
+	"multiply",
+	"screen",
+	"overlay",
+	"add",
+];
+
+// The name under which blendOverAlpha.ts registers the filter that draws `mode` over a canvas that is
+// not opaque (VV-268).
+export function overAlphaName(mode: OverAlphaMode): string {
+	return `${mode}-over-alpha`;
+}
+
+// `clear` is true when the project background is not opaque: the four modes of the export are then
+// drawn by the general form of SDD-013 section 3.11.2, which the fixed-function blend of PixiJS is not.
+// The name is not one of the BLEND_MODES of PixiJS, which takes any registered one.
+export function pixiBlendMode(
+	blend: PlanBlend | undefined,
+	clear = false,
+): BLEND_MODES {
+	if (clear && (OVER_ALPHA_MODES as readonly string[]).includes(blend ?? "")) {
+		return overAlphaName(blend as OverAlphaMode) as BLEND_MODES;
+	}
 	return blend ?? "normal";
 }
 
