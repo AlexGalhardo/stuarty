@@ -170,6 +170,10 @@ func init() {
 		rc(CodeOccluded, "quiet_upper_blends_"+blend, occlusion(func(up *timeline.Item) { up.Blend = blend }))
 	}
 
+	rc(CodeOccluded, "quiet_upper_has_a_chroma_key", occlusion(func(up *timeline.Item) {
+		up.ChromaKey = &timeline.ChromaKey{Color: "#00FF00", Similarity: 0.3, Smoothness: 0.1}
+	}))
+	rc(CodeOccluded, "quiet_upper_is_blurred", occlusion(func(up *timeline.Item) { up.Blur = 8 }))
 	rc(CodeOccluded, "quiet_upper_does_not_contain_the_range", occlusion(func(up *timeline.Item) { up.Duration = 60 }))
 	rc(CodeOccluded, "quiet_upper_has_a_transition", occlusion(func(up *timeline.Item) {
 		up.TransitionIn = &timeline.Transition{Kind: "fade", Duration: 10}
