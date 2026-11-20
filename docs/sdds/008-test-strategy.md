@@ -126,7 +126,7 @@ The **reference runner** is the GitHub-hosted `ubuntu-latest` runner; absolute l
 | NFR-023 frame and contact sheet for an agent | frame under 1 s, contact sheet under 2 s, median | `BenchmarkViewFrame`, `BenchmarkViewSheet9` (SDD-003) | senior-b |
 | NFR-024 CLI read with a server | median under 300 ms | `BenchmarkCLIReadViaServer` (SDD-003) | senior-d |
 | NFR-025 same document through every door | byte-equal | contract tests (section 6) | senior-d |
-| NFR-061 image document | 4,000 by 4,000 pixels with 30 layers: composed in 100 ms, exported in 2 s | `BenchmarkImageReference` (`compose_ms`, `s_export`; the browser half is the Playwright spec of the image editor) | senior-b |
+| NFR-061 image document | 4,000 by 4,000 pixels with 30 layers: composed in 100 ms, exported in 2 s | `BenchmarkImageReference` (`compose_ms`: the picture after an edit of the top layer, over the cache of SDD-021 section 6.1; `s_export`: a cold export with no cache and the PNG; the browser half is the Playwright spec of the image editor) | senior-b |
 | NFR-040 first export in 10 minutes | 10 minutes | the getting-started page timed by the author (SDD-010 acceptance 19) | senior-d |
 | NFR-041 archive size | 60 MB without FFmpeg | the release job | senior-d |
 | NFR-042 pull-request pipeline | 20 minutes | measured on a real pull request and recorded in the ROADMAP task | senior-d |
