@@ -299,4 +299,4 @@ The colours of a timeline template are named (`brand`, `ink`, `accent`), so that
 
 **Adapted material** follows section 16: `commercial-copy` names `marketingskills` in `license`, `metadata.stuarty-source` and `metadata.stuarty-adapted-from`, and `licenses/vendored/NOTICE-skills.md` lists it with what was changed. `product-commercial`, `long-talking-video` and `chapter-titles` are written for Stuarty and name no source.
 
-**Known gaps, kept as product issues.** A marker is a place on the timeline: the exported file carries no chapter list, so the chapters travel as the text of the description. The transcript of a long video is the work of the transcription helper; the scripted run uses the stub of the first flow.
+**Known gaps, kept as product issues.** The labelled markers leave the MP4 export as its chapters (SDD-004 section 8.1, VV-290), but a platform reads chapters from the description, so they travel as its text too. The transcript of a long video is the work of the transcription helper; the scripted run uses the stub of the first flow.
