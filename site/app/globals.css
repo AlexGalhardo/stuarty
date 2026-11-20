@@ -17,8 +17,14 @@
   --color-accent: var(--accent);
   --color-accent-soft: var(--accent-soft);
   --color-code-bg: var(--code-bg);
-  /* The mark's violet; the same in light and dark themes. */
-  --color-brand: #7c5cff;
+  /* Brand tokens of design-system section 11.3: indigo in the light theme, lilac in the dark one. */
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-brand-accent: var(--brand-accent);
+  --color-brand-subtle: var(--brand-subtle);
+  --color-brand-text: var(--brand-text);
+  --ease-out-expo: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-mono-face), ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
@@ -35,6 +41,14 @@
   --accent: #5b3fd6;
   --accent-soft: #f3f0ff;
   --code-bg: #fbfbfb;
+  --brand: oklch(0.442 0.222 272.9);
+  --brand-foreground: oklch(0.994 0 0);
+  --brand-accent: oklch(0.645 0.189 282.5);
+  --brand-subtle: oklch(0.97 0.025 280);
+  --brand-text: oklch(0.442 0.222 272.9);
+  --duration-scene: 700ms;
+  --duration-reveal: 500ms;
+  --duration-hover: 150ms;
   --header-h: 3.5rem;
   color-scheme: light;
 }
@@ -51,6 +65,11 @@
   --accent: #a594ff;
   --accent-soft: #15112b;
   --code-bg: #0a0a0a;
+  --brand: oklch(0.645 0.189 282.5);
+  --brand-foreground: oklch(0.145 0 0);
+  --brand-accent: oklch(0.72 0.17 282);
+  --brand-subtle: oklch(0.29 0.13 272 / 40%);
+  --brand-text: oklch(0.8 0.13 281);
   color-scheme: dark;
 }
 
