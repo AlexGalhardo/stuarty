@@ -93,6 +93,22 @@ function ItemRow({
 			<span className="min-w-0 flex-1 truncate font-medium">
 				<UntrustedText>{item.title}</UntrustedText>
 			</span>
+			{item.kind === "text" && item.text_kind !== undefined && (
+				<Badge variant="outline">{t(`ui.write.kind.${item.text_kind}`)}</Badge>
+			)}
+			{item.kind === "text" && (
+				<Button asChild variant="outline" size="sm">
+					<a
+						href={`/write?project=${encodeURIComponent(projectId)}&text=${encodeURIComponent(item.id)}`}
+					>
+						{t("ui.projects.overview.write")}
+						<span className="sr-only">
+							{" "}
+							<UntrustedText>{item.title}</UntrustedText>
+						</span>
+					</a>
+				</Button>
+			)}
 			{item.kind === "timeline" && item.timeline_id !== undefined && (
 				<Button asChild variant="outline" size="sm">
 					<a href={`/editor/${item.timeline_id}`}>

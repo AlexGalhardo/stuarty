@@ -302,6 +302,10 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return res, err
 	}
 
+	if res, ok, err := writingCall(ctx, svc, s); ok {
+		return res, err
+	}
+
 	return nil, fmt.Errorf("no mapping for %s", s.Call)
 }
 
@@ -716,6 +720,10 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 		return tool, args, err
 	}
 
+	if tool, args, ok, err := writingTool(s); ok {
+		return tool, args, err
+	}
+
 	return "", nil, fmt.Errorf("no tool for %s", s.Call)
 }
 
@@ -812,6 +820,11 @@ func command2argv(s step) (name string, argv []string, stdin string, err error) 
 }
 
 func commandOf(s step) (name string, argv []string, stdin string, err error) {
+	// The writing steps first: their from is a revision number, which the time of a motion range below refuses.
+	if name, argv, stdin, ok, err := writingCommand(s); ok {
+		return name, argv, stdin, err
+	}
+
 	// First: its members are numbers where the generic decoding below reads strings (until).
 	if name, argv, ok, err := historyCommand(s); ok {
 		return name, argv, "", err
@@ -878,6 +891,7 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 		ItemID   string `json:"item_id"`
 		Title    string `json:"title"`
 		Text     string `json:"text"`
+		TextKind string `json:"text_kind"`
 		Position *int   `json:"position"`
 
 		Answers map[string]string `json:"answers"`
@@ -1277,6 +1291,7 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 	case "ProjectItemAdd":
 		argv = append(slices.Clone(proj), "--kind", a.Kind, "--title", a.Title)
 		argv = append(argv, flag("preset", a.Preset)...)
+		argv = append(argv, flag("text-kind", a.TextKind)...)
 
 		if a.Position != nil {
 			argv = append(argv, "--position", strconv.Itoa(*a.Position))

@@ -1152,7 +1152,7 @@ Add a text, a timeline or an output to a project
 
 ```text
 stuarty item:add --project <id> --kind text|timeline|output --title <t>
-stuarty item:add --project <id> --kind text --title <t> --text <file|->
+stuarty item:add --project <id> --kind text --title <t> --text <file|-> [--text-kind script|copy|caption]
 stuarty item:add --project <id> --kind output --title <t> --job <export job id>
 ```
 
@@ -1162,6 +1162,7 @@ stuarty item:add --project <id> --kind output --title <t> --job <export job id>
 | `--title` | string |  | 1 to 120 characters (required) |
 | `--position` | integer |  | where in the order of the items, from 0 (default: the end) |
 | `--text` | string |  | a text item: a file with its Markdown, or - for standard input |
+| `--text-kind` | string |  | a text item: script, copy (default) or caption |
 | `--preset` | string |  | a timeline: 9:16 (default), 1:1, 16:9 or 4:5 |
 | `--fps` | string |  | a timeline: 30 (default), or n/1001 |
 | `--job` | string |  | an output: a succeeded export job of this project |
@@ -2588,6 +2589,190 @@ Example:
 
 ```bash
 stuarty publish:status job_0123456789
+```
+
+## `text:list`
+
+List the scripts, copy and captions of a project, or of every project
+
+```text
+stuarty text:list [--project <id>] [--kind script|copy|caption] [--state active|trashed]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--project` | string |  | only the texts of this project |
+| `--kind` | string |  | script, copy or caption |
+| `--state` | string |  | active (default) or trashed |
+| `--cursor` | string |  | continue a list from this cursor |
+| `--limit` | integer | `50` | items per page |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty text:list --kind caption --json
+```
+
+## `text:show`
+
+Show a text, or one of its revisions
+
+```text
+stuarty text:show <item> --project <id> [--revision n]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--revision` | integer |  | a revision number from 1; default the latest |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`.
+
+Example:
+
+```bash
+stuarty text:show pit_3c5v8n2w6d --project prj_7k2m9x4q1b
+```
+
+## `text:write`
+
+Make a text, or save a new revision of one, from a Markdown file
+
+```text
+stuarty text:write --project <id> --title <t> [--kind script|copy|caption] --text <file|->
+stuarty text:write <item> --project <id> --text <file|-> [--title <t>] [--base <revision>]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--text` | string |  | the Markdown: a file, or - for standard input (required) |
+| `--title` | string |  | the title: needed to make a text, a new title when saving one |
+| `--kind` | string |  | making a text: script, copy (default) or caption |
+| `--base` | integer |  | the revision you read: a newer one is refused |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--dry-run`.
+
+Example:
+
+```bash
+stuarty text:write --project prj_7k2m9x4q1b --title Hook --kind script --text hook.md
+```
+
+## `text:revisions`
+
+List the revisions of a text, and compare two by paragraph
+
+```text
+stuarty text:revisions <item> --project <id> [--from n [--until n]]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--before` | integer |  | start under this revision (the next_before of the last page) |
+| `--limit` | integer |  | revisions per page, 1 to 100 (default 50) |
+| `--from` | integer |  | compare this revision with --until |
+| `--until` | integer |  | the revision to compare with (default the latest) |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`.
+
+Example:
+
+```bash
+stuarty text:revisions pit_3c5v8n2w6d --project prj_7k2m9x4q1b --from 1
+```
+
+## `text:revert`
+
+Bring an older revision of a text back as a new revision
+
+```text
+stuarty text:revert <item> --project <id> --revision n
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--revision` | integer |  | the revision whose text comes back (required) |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--dry-run`.
+
+Example:
+
+```bash
+stuarty text:revert pit_3c5v8n2w6d --project prj_7k2m9x4q1b --revision 2
+```
+
+## `text:draft`
+
+Ask a model for a draft of a text; the job shows its estimate and waits for approval
+
+```text
+stuarty text:draft <item> --project <id> --connection <id> --model <id> --instruction <text> [--network <n>] [--max-tokens <n>] [--temperature <t>] [--dry-run]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--connection` | string |  | the connection to the provider (required) |
+| `--model` | string |  | the model id, as provider:models lists it (required) |
+| `--instruction` | string |  | what to write, 1 to 4000 characters (required) |
+| `--network` | string |  | a caption: draft the variant of this network only |
+| `--max-tokens` | integer |  | the most tokens the model may write; the estimate counts all of them |
+| `--temperature` | string |  | 0 to 2 |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--dry-run`.
+
+Example:
+
+```bash
+stuarty text:draft pit_3c5v8n2w6d --project prj_7k2m9x4q1b --connection con_0123456789 --model a-model --instruction "A hook in 20 seconds"
+```
+
+## `caption:validate`
+
+Measure a caption against the limits of each network
+
+```text
+stuarty caption:validate <item> --project <id> [--network <n>]
+stuarty caption:validate --body <file|->
+stuarty caption:validate --text <file|-> --network <n>
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--project` | string |  | the project of the text (default $STUARTY_PROJECT) |
+| `--body` | string |  | a whole caption, saved or not: a file, or - for standard input |
+| `--text` | string |  | one variant: a file, or - for standard input (needs --network) |
+| `--network` | string |  | youtube, instagram, facebook, x or tiktok |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty caption:validate pit_3c5v8n2w6d --project prj_7k2m9x4q1b
+```
+
+## `script:estimate`
+
+Estimate how long a script takes when read aloud
+
+```text
+stuarty script:estimate <item> --project <id> [--wpm n]
+stuarty script:estimate --text <file|-> [--wpm n]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--project` | string |  | the project of the text (default $STUARTY_PROJECT) |
+| `--text` | string |  | a script that is not saved: a file, or - for standard input |
+| `--wpm` | integer |  | words per minute, 60 to 300 (default 150) |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty script:estimate pit_3c5v8n2w6d --project prj_7k2m9x4q1b --wpm 130
 ```
 
 ## `serve`
