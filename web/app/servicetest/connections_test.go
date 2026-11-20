@@ -572,3 +572,54 @@ func bytes32(b byte) []byte {
 
 	return out
 }
+
+// VV-269: a key file that holds no valid key is a failed vault check with the hint of the error, not an
+// internal failure of the whole report; the bytes of the file are not in it.
+func TestDoctorReportsAMasterKeyFileThatIsNotAKey(t *testing.T) {
+	master := bytes32(0x3D)
+	e := newConnEnv(t, vault.NewMemoryProvider(master))
+	ctx := service.WithCaller(context.Background(), operator())
+
+	dst := newDestination(t)
+	if _, err := e.svc.ConnectionCreate(e.as(ui), connectionRequest(dst.srv.URL, "tok-DOCTOR-CANARY")); err != nil {
+		t.Fatal(err)
+	}
+
+	keyFile := filepath.Join(t.TempDir(), "wrong.key")
+	if err := os.WriteFile(keyFile, []byte("no-such-key-CANARY\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	bad := newEnvWith(t, func(_ *env, o *service.Options) {
+		o.Workspace = string(e.dir)
+		o.Connections = connections.NewManager(connections.Options{
+			Store: o.Store.Connections(), Vault: vault.Open(e.vaultPath, vault.FileProvider{Path: keyFile}),
+		})
+	})
+
+	res, err := bad.svc.Doctor(ctx, service.DoctorRequest{Full: true})
+	if err != nil {
+		t.Fatalf("doctor failed instead of reporting: %v", err)
+	}
+
+	raw, err := json.Marshal(res)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if strings.Contains(string(raw), "no-such-key-CANARY") {
+		t.Error("the doctor report holds the bytes of the key file")
+	}
+
+	for _, c := range res.Checks {
+		if c.Name == "vault" {
+			if c.OK || !strings.Contains(c.Hint, "32 bytes") {
+				t.Errorf("vault check: %+v", c)
+			}
+
+			return
+		}
+	}
+
+	t.Fatal("no vault check in the doctor report")
+}

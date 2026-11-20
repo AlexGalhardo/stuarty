@@ -1222,7 +1222,7 @@ The name is unique inside a timeline (`ErrExists` becomes `E_ID_EXISTS`), 1 to 6
 
 ### 5.15 `publications` and `publication_targets` (SDD-020 sections 23 to 29)
 
-Migration `20261119250000_create_publications_tables`. A publication is an item of its project (ADR-0039) and is kept in tables of its own: the item the surfaces show is read from them (SDD-020 section 23), and `project_items` is not rebuilt for it.
+Migration `20261119250000_create_publications_tables`. A publication is an item of its project (ADR-0039) and is kept in tables of its own: the item the surfaces show is read from them (SDD-020 section 23), and `project_items` is not rebuilt for it. The migration `20261120100000_publication_targets_sent_as_draft` (epic 22, SDD-020 section 38) rebuilds `publication_targets` with the longer `CHECK`: the list below then holds `'sent_as_draft'` after `'published'`, a state for a file a network took as a draft to be finished in its own app. Its down turns such a row back into `published` and keeps every row and every index.
 
 ```sql
 CREATE TABLE publications (
@@ -1247,7 +1247,7 @@ CREATE TABLE publication_targets (
   network         TEXT    NOT NULL,
   fields          TEXT    NOT NULL,               -- JSON: title, description, tags, visibility, made_for_kids, ai_disclosure
   state           TEXT    NOT NULL CHECK (state IN ('draft','waiting_approval','approved','scheduled','publishing',
-                                                    'published','failed','missed','cancelled')),
+                                                    'published','sent_as_draft','failed','missed','cancelled')),
   scheduled_ms    INTEGER,                        -- the instant, UTC
   zone            TEXT    NOT NULL DEFAULT '',    -- IANA zone the person chose
   late_minutes    INTEGER NOT NULL DEFAULT 0 CHECK (late_minutes BETWEEN 0 AND 1440),
@@ -1394,7 +1394,7 @@ vukem API to be confirmed in task: how the application learns the address the bu
 
 ### 6.4 How a command chooses in-process or HTTP
 
-Implemented in `web/app/workspace/open.go`: `func Open(ctx context.Context, o Options) (service.Service, io.Closer, error)`. `Options.Force` may be `Auto` (default), `Server` (never fall back; `E_WORKSPACE_LOCKED` when no owner) or `InProcess` (never use a server; fail with `E_WORKSPACE_LOCKED` when one exists).
+Implemented in `web/app/workspace/open.go`: `func Open(ctx context.Context, o Options) (service.Service, io.Closer, error)`. `Options.Force` may be `Auto` (default), `Server` (never fall back; `E_WORKSPACE_LOCKED` when no owner) or `InProcess` (never use a server; fail with `E_WORKSPACE_LOCKED` when one exists, and with `E_INVALID_STATE` naming `STUARTY_URL` when that variable is set, before step 1: the commands that force it, `token:rotate`, `user:create`, `user:passwd` and `workspace:restore`, write the local workspace only).
 
 ```text
 Open (Auto)                                  (the order of SDD-003 §5.2)

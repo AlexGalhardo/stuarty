@@ -58,6 +58,26 @@ func TestCompositionLint(t *testing.T) {
 		t.Errorf("a composition longer than its timeline: %+v", got)
 	}
 
+	// At 2x a composition of 30 frames reads 60 frames of the timeline (epic 53): it fits; of 31 it does not.
+	fast := func(dur int, speed timeline.Rational) timeline.Item {
+		it := compositionOf(child.ID, dur)
+		it.Speed = speed
+
+		return it
+	}
+
+	if got := has(Lint(host(fast(30, timeline.Rational{Num: 2, Den: 1})), env, Full), CodeSourceRange); len(got) != 0 {
+		t.Errorf("a composition at 2x that fits its timeline: %+v", got)
+	}
+
+	if got := has(Lint(host(fast(31, timeline.Rational{Num: 2, Den: 1})), env, Full), CodeSourceRange); len(got) != 1 {
+		t.Errorf("a composition at 2x that reads past its timeline: %+v", got)
+	}
+
+	if got := has(Lint(host(fast(90, timeline.Rational{Num: 1, Den: 2})), env, Full), CodeSourceRange); len(got) != 0 {
+		t.Errorf("a composition at 0.5x that fits its timeline: %+v", got)
+	}
+
 	if got := has(Lint(host(compositionOf(empty.ID, 30)), env, Full), CodeSourceRange); len(got) != 1 {
 		t.Errorf("an empty timeline: %+v", got)
 	}

@@ -17,6 +17,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `exposure` | `integer` | no |  |
 | `hue` | `integer` | no |  |
 | `levels` | [`Levels`](/docs/api/schemas#levels) or `any` or `null` or `null` | no |  |
+| `lut` | [`LUTRef`](/docs/api/schemas#lutref) or `any` or `null` or `null` | no |  |
 | `saturation` | `integer` | no |  |
 | `temperature` | `integer` | no |  |
 | `tint` | `integer` | no |  |
@@ -543,6 +544,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `ai_disclosure` | `boolean` | no |  |
+| `draft` | `boolean` | no |  |
 | `endpoint` | `string` | no |  |
 | `guide` | `string` | no |  |
 | `guide_read` | `string` | no |  |
@@ -553,6 +555,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `network` | `string` | no |  |
 | `post_cost_currency` | `string` | no |  |
 | `post_cost_micros` | `integer (int64)` | no |  |
+| `price` | [`Price`](/docs/api/schemas#price) or `any` or `null` or `null` | no |  |
 | `publishes` | array of `string` | no |  |
 | `scopes` | array of `string` | no |  |
 
@@ -882,6 +885,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | --- | --- | --- | --- |
 | `cost` | [`Money`](/docs/api/schemas#money) | no |  |
 | `delivered` | `integer` | no |  |
+| `image` | [`ImageApplied`](/docs/api/schemas#imageapplied) or `any` or `null` or `null` | no |  |
 | `items` | array of [`GeneratedItem`](/docs/api/schemas#generateditem) | no |  |
 | `model` | `string` | no |  |
 | `notes` | array of `string` | no |  |
@@ -1018,6 +1022,15 @@ The types named in the tables of the operations. The arguments of each editing c
 | --- | --- | --- | --- |
 | `asset` | `string` | no |  |
 | `text` | `string` or `null` | no |  |
+
+### ImageApplied
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `applied` | `boolean` | no |  |
+| `image_id` | `string` | no |  |
+| `layer_id` | `string` | no |  |
+| `revision` | `integer (int64)` | no |  |
 
 ### ImageCreateResult
 
@@ -1541,6 +1554,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | --- | --- | --- | --- |
 | `audio_codecs` | array of `string` | no |  |
 | `caption_max` | `integer` | no |  |
+| `caption_network` | `string` | no |  |
 | `daily_posts` | `integer` | no |  |
 | `description_max_bytes` | `integer` | no |  |
 | `file_max_bytes` | `integer (int64)` | no |  |
@@ -1548,6 +1562,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `formats` | array of `string` | no |  |
 | `hashtags_max` | `integer` | no |  |
 | `needs_kids_declaration` | `boolean` | no |  |
+| `no_caption` | `boolean` | no |  |
 | `preset` | `string` | no |  |
 | `read` | `string` | no |  |
 | `source` | `string` | no |  |
@@ -1592,6 +1607,13 @@ The types named in the tables of the operations. The arguments of each editing c
 | --- | --- | --- | --- |
 | `asset` | `string` | no |  |
 | `intensity` | `number (double)` | no |  |
+
+### LUTRef
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `asset` | `string` | no |  |
+| `intensity` | `integer` | no |  |
 
 ### LutSpec
 
@@ -1744,7 +1766,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `id` | `string` | no |  |
 | `name` | `string` | no |  |
 | `output_tokens` | `integer` | no |  |
-| `price` | [`Price`](/docs/api/schemas#price) or `any` or `null` or `null` | no |  |
+| `price` | [`provider.Price`](/docs/api/schemas#providerprice) or `any` or `null` or `null` | no |  |
 | `price_source` | `string` | no |  |
 
 ### Money
@@ -1996,10 +2018,11 @@ The types named in the tables of the operations. The arguments of each editing c
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `currency` | `string` | no |  |
-| `input_micros_per_mtok` | `integer (int64)` | no |  |
-| `output_micros_per_mtok` | `integer (int64)` | no |  |
-| `unit` | `string` | no |  |
-| `unit_micros` | `integer (int64)` | no |  |
+| `edited` | `string` | no |  |
+| `link_micros` | `integer (int64)` | no |  |
+| `post_micros` | `integer (int64)` | no |  |
+| `read` | `string` | no |  |
+| `source` | `string` | no |  |
 
 ### PriceEntry
 
@@ -2285,6 +2308,16 @@ The types named in the tables of the operations. The arguments of each editing c
 | `text` | `string` | no |  |
 | `untrusted_notice` | `string` | no |  |
 | `variables` | array of `string` | no |  |
+
+### provider.Price
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `currency` | `string` | no |  |
+| `input_micros_per_mtok` | `integer (int64)` | no |  |
+| `output_micros_per_mtok` | `integer (int64)` | no |  |
+| `unit` | `string` | no |  |
+| `unit_micros` | `integer (int64)` | no |  |
 
 ### ProviderListResult
 
@@ -2740,6 +2773,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `connection_id` | `string` | no |  |
 | `label` | `string` | no |  |
 | `network` | `string` | no |  |
+| `price` | [`Price`](/docs/api/schemas#price) or `any` or `null` or `null` | no |  |
 | `state` | `string` | no |  |
 
 ### SocialAccountListResult
@@ -2791,6 +2825,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `first_frame` | `integer` | no |  |
 | `item_frames` | `integer` | no |  |
 | `points` | array of [`SpeedPoint`](/docs/api/schemas#speedpoint) | no |  |
+| `time_scale` | [`Rational`](/docs/api/schemas#rational) or `any` or `null` or `null` | no |  |
 
 ### StateInfo
 

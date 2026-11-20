@@ -4,6 +4,7 @@ import {
 	FileText,
 	Hourglass,
 	Send,
+	Smartphone,
 	XCircle,
 } from "lucide-react";
 import type { ReactNode } from "react";
@@ -19,6 +20,7 @@ const ICONS = {
 	scheduled: Clock,
 	publishing: Send,
 	published: CheckCircle2,
+	sent_as_draft: Smartphone,
 	failed: XCircle,
 	missed: XCircle,
 	cancelled: XCircle,
@@ -31,6 +33,8 @@ const VARIANTS = {
 	scheduled: "default",
 	publishing: "secondary",
 	published: "default",
+	// Not the colour of a publication: the post is still to be finished in the app of the network.
+	sent_as_draft: "secondary",
 	failed: "destructive",
 	missed: "destructive",
 	cancelled: "outline",

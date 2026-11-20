@@ -178,11 +178,11 @@ var parity = []row{
 	{method: "ImageFrame", route: "GET /images/{}/frame", httpOnly: true},
 	{method: "ImageHistory", route: "GET /images/{}/history", httpOnly: true},
 	{method: "ImageFile", route: "GET /images/{}/exports/{}", httpOnly: true},
-	// The approval queue (SDD-015 section 10): no MCP tool, the budget of the tool list leaves no room
-	// for one; deciding, writing a rule and setting a ceiling are for a person, and their commands
-	// always fail for an agent.
-	{method: "ApprovalList", command: "approval:list", route: "GET /approvals"},
-	{method: "ApprovalGet", command: "approval:show", route: "GET /approvals/{}"},
+	// The approval queue (SDD-015 section 10): no MCP tool of its own, the read is job_get (approvals,
+	// approval_id; D-093); deciding, writing a rule and setting a ceiling are for a person, have no tool,
+	// and their commands always fail for an agent.
+	{method: "ApprovalList", tool: "job_get", command: "approval:list", route: "GET /approvals"},
+	{method: "ApprovalGet", tool: "job_get", command: "approval:show", route: "GET /approvals/{}"},
 	{method: "ApprovalDecide", command: "approval:decide", route: "POST /approvals/{}/decide"},
 	{method: "ApprovalRuleList", command: "approval:rule:list", route: "GET /approval-rules"},
 	{method: "ApprovalRuleSet", command: "approval:rule:set", route: "POST /approval-rules"},
@@ -196,9 +196,10 @@ var parity = []row{
 	{method: "SocialConnectComplete", route: "POST /social/complete", httpOnly: true},
 	{method: "SocialAccountList", command: "social:account:list", route: "GET /social/accounts"},
 	{method: "SocialAccountSelect", route: "POST /social/select", httpOnly: true},
+	{method: "SocialPriceSet", route: "POST /social/price", httpOnly: true},
 	{method: "PublishValidate", command: "publish:validate", route: "POST /publish/validate"},
-	{method: "PublishNow", command: "publish:now", route: "POST /publish"},
-	{method: "PublishStatus", command: "publish:status", route: "GET /publish/{}"},
+	{method: "PublishNow", tool: "job_start", command: "publish:now", route: "POST /publish"},
+	{method: "PublishStatus", tool: "job_get", command: "publish:status", route: "GET /publish/{}"},
 	// The calendar of publications (SDD-020 section 29): no MCP tool (author decision D-094); an agent plans
 	// through the CLI and HTTP, and approval stays with a person.
 	{method: "PublicationCreate", command: "publication:create", route: "POST /publications"},
@@ -241,6 +242,9 @@ var parity = []row{
 	// and voice.generate; the voices of a connection are read with the CLI or HTTP, as its models are.
 	{method: "ImageGenerate", tool: "job_start", command: "image:generate", route: "POST /image/generate"},
 	{method: "VoiceGenerate", tool: "job_start", command: "voice:generate", route: "POST /voice/generate"},
+	// Removing a background and generating into an image document (SDD-016 section 6.5, epic 30): job_start with
+	// the kind image.edit.
+	{method: "ImageModelEdit", tool: "job_start", command: "image:model-edit", route: "POST /images/{}/model-edit"},
 	{method: "VoiceList", command: "voice:list", route: "GET /connections/{}/voices"},
 	// Video generation (SDD-016 section 6.4, epic 11): job_start with the kind video.generate.
 	{method: "VideoGenerate", tool: "job_start", command: "video:generate", route: "POST /video/generate"},

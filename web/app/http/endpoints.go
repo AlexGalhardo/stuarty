@@ -510,6 +510,11 @@ var Endpoints = []Endpoint{
 		Summary: "Choose the Page or Instagram account a sign-in reached (a person in the browser only)",
 	},
 	{
+		ID: "social.price", Method: http.MethodPost, Path: "/social/price", Scope: service.ScopeAdmin,
+		Service: "SocialPriceSet", Status: 200,
+		Summary: "Correct the price of a post on a network that charges for one (a person in the browser only)",
+	},
+	{
 		ID:      "publish.validate",
 		Method:  http.MethodPost,
 		Path:    "/publish/validate",
@@ -696,6 +701,15 @@ var Endpoints = []Endpoint{
 		Service: "VoiceGenerate",
 		Status:  202,
 		Summary: "Start a speech generation with the provider of a connection; the job waits for approval, shows its estimate and stores the audio as an asset with its origin",
+	},
+	{
+		ID:      "images.model_edit",
+		Method:  http.MethodPost,
+		Path:    "/images/{id}/model-edit",
+		Scope:   service.ScopeEdit,
+		Service: "ImageModelEdit",
+		Status:  202,
+		Summary: "Remove the background of a layer, or generate an image into the document, with the provider of a connection; the job says that the picture is sent, waits for approval, shows its estimate and puts the result in the document as one undoable step",
 	},
 	{
 		ID:      "video.generate",

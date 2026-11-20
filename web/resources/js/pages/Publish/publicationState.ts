@@ -101,6 +101,7 @@ export function actionsOf(state: TargetState): TargetActions {
 			};
 		case "publishing":
 		case "published":
+		case "sent_as_draft":
 		case "cancelled":
 			return NONE;
 	}

@@ -26,6 +26,8 @@ func init() {
 	imp("ok_format_given", `, "format": "srt"`, "1\n00:00:00,000 --> 00:00:01,000\nOne\n", plain, ids[0])
 	imp("ok_start_moves_every_cue", `, "start": "2s"`, srt, plain, ids...)
 	imp("err_validation_bad_time_line", "", "1\n00:00:01 --> 00:00:02,000\nx\n", plain, ids[0])
+	// VV-204: an agent that sends the path of the file learns that the content goes in text.
+	imp("err_validation_text_is_a_path", "", `C:\Users\me\Videos\talk.srt`, plain, ids[0])
 	imp("err_validation_no_cue_with_text", "", "1\n00:00:01,000 --> 00:00:02,000\n\n", plain, ids[0])
 	gc("caption.import_subtitles", "err_validation_bad_new_id", plain,
 		op("caption.import_subtitles", arg(`, "new_ids": ["bad-id"]`, srt)))

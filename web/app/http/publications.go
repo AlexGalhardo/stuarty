@@ -22,7 +22,7 @@ type publicationCreateIn struct {
 
 type publicationListIn struct {
 	ProjectID string `json:"project_id,omitempty" doc:"Only the publications of one project."`
-	State     string `json:"state,omitempty"      doc:"Only publications with a target in this state: draft, waiting_approval, approved, scheduled, publishing, published, failed, missed or cancelled."`
+	State     string `json:"state,omitempty"      doc:"Only publications with a target in this state: draft, waiting_approval, approved, scheduled, publishing, published, sent_as_draft, failed, missed or cancelled."`
 	Network   string `json:"network,omitempty"    doc:"Only publications with a target on this network."`
 	From      string `json:"from,omitempty"       doc:"Only publications with a target at or after this time (RFC 3339)."`
 	To        string `json:"to,omitempty"         doc:"Only publications with a target before this time (RFC 3339)."`

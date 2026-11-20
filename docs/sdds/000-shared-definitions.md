@@ -74,7 +74,7 @@
 | `ImageHistory` | none | none | `GET /images/{id}/history` (SDD-012 §24.3) | read |
 | `ImageFile` | none | none | `GET /images/{id}/exports/{name}` (SDD-012 §24.3) | read |
 | image document stream | none | none | `GET /images/{id}/events` (SDD-006 §12; the event `image.updated`) | read |
-| `ApprovalList`, `ApprovalGet` | none | `approval:list`, `approval:show` | `GET /approvals`, `GET /approvals/{id}` | read (SDD-015) |
+| `ApprovalList`, `ApprovalGet` | `job_get` (`approvals`, `approval_id`) | `approval:list`, `approval:show` | `GET /approvals`, `GET /approvals/{id}` | read (SDD-015) |
 | `ApprovalDecide` | none | `approval:decide` | `POST /approvals/{id}/decide` | read, and only from a privileged browser session; the local token and keys get `E_PRIVILEGED_SESSION` (SDD-015 §4) |
 | `ApprovalRuleList` | none | `approval:rule:list` | `GET /approval-rules` | read |
 | `ApprovalRuleSet`, `ApprovalRuleRemove` | none | `approval:rule:set`, `approval:rule:remove` | `POST /approval-rules`, `DELETE /approval-rules/{id}` | admin, and only from a privileged browser session |
@@ -86,9 +86,10 @@
 | `SocialConnectComplete` | none | none | `POST /social/complete` (the page `/social/callback` posts to it) | admin, and only from a browser session |
 | `SocialAccountList` | none | `social:account:list` | `GET /social/accounts` | read |
 | `SocialAccountSelect` | none | none | `POST /social/select` | admin, and only from a browser session (SDD-020 §17) |
+| `SocialPriceSet` | none | none | `POST /social/price` | admin, and only from a browser session (SDD-020 §39) |
 | `PublishValidate` | none | `publish:validate` | `POST /publish/validate` | read |
-| `PublishNow` | none yet (later `job_start` with kind `publish.upload`, SDD-020 §13) | `publish:now` | `POST /publish` | render; the job waits for approval |
-| `PublishStatus` | none | `publish:status` | `GET /publish/{job_id}` | read |
+| `PublishNow` | `job_start` with kind `publish.upload` (SDD-020 §13) | `publish:now` | `POST /publish` | render; the job waits for approval |
+| `PublishStatus` | `job_get` (`job_id`) | `publish:status` | `GET /publish/{job_id}` | read |
 | `PublicationCreate` | none (SDD-020 §29) | `publication:create` | `POST /publications` | edit (SDD-020) |
 | `PublicationGet`, `PublicationList` | none | `publication:show`, `publication:list` | `GET /publications/{id}`, `GET /publications` | read |
 | `PublicationUpdate` | none | `publication:update` | `PUT /publications/{id}` | edit |
@@ -103,6 +104,7 @@
 | `TextGenerate` | `job_start` (kind `text.generate`) | `text:generate` | `POST /text/generate` | edit |
 | `ImageGenerate` | `job_start` (kind `image.generate`) | `image:generate` | `POST /image/generate` | edit (SDD-016 §6.1) |
 | `VoiceGenerate` | `job_start` (kind `voice.generate`) | `voice:generate` | `POST /voice/generate` | edit |
+| `ImageModelEdit` | `job_start` (kind `image.edit`) | `image:model-edit` | `POST /images/{id}/model-edit` | edit (SDD-016 §6.5: remove the background of a layer, or generate an image into the document, with a provider) |
 | `VoiceList` | none | `voice:list` | `GET /connections/{id}/voices` | read |
 | `VideoGenerate` | `job_start` (kind `video.generate`) | `video:generate` | `POST /video/generate` | edit (SDD-016 §6.4); the job always waits for a person unless a rule lifts it |
 | `MemoryList`, `MemoryGet`, `MemoryWrite` | `library` (kind `memory`; actions `list`, `get`, `write`) | `memory:list`, `memory:show`, `memory:write` | `GET /library/memory`, `GET /library/memory/{name}`, `POST /library/memory`, `DELETE /library/memory/{name}` | read, edit (SDD-018) |
@@ -147,7 +149,7 @@ Every operation belongs to one **domain**. The domain names are fixed here; a ne
 | `writing` | written documents: scripts, copy and captions, with their revisions (SDD-019) | `Text*`, `CaptionValidate`, `ScriptEstimate` |
 | `asset` | files of the workspace: media, the asset library, fonts | `Media*`, `Asset*` (the library of epic 08: list, get, uses, set info, tag), `FontImport`, `FontList` |
 | `publish` | publications and their approval | `Approval*` (the queue that gates a publication and a costly generation, SDD-015), `Social*` (the networks and the accounts a publication goes to), `Publish*` (validate, publish now, status; SDD-020), `Publication*` (the calendar: create, list, edit, schedule, send now, retry, cancel; SDD-020 §23 to §31) |
-| `provider` | AI providers and generation | `Provider*` (the providers, their models and the price table, SDD-016), `TextGenerate`, `ImageGenerate`, `VoiceGenerate`, `VoiceList`, `VideoGenerate`, `Cost*` (the spend on providers and its ceilings) |
+| `provider` | AI providers and generation | `Provider*` (the providers, their models and the price table, SDD-016), `TextGenerate`, `ImageGenerate`, `VoiceGenerate`, `VoiceList`, `VideoGenerate`, `ImageModelEdit`, `Cost*` (the spend on providers and its ceilings) |
 | `memory` | the library: notes, skills, prompts, search | `Memory*`, `Skill*`, `Prompt*`, `Library*` |
 | `workspace` | the installation: help, connections, brand kit, health, keys, audit, trash, helpers, the hosted agent chat | `CommandHelp`, `Connection*`, `BrandKit*`, `Doctor`, `AuditList`, `TrashEmpty`, `Tools*`, `Key*`, `AgentProfile*`, `Chat*` (SDD-017) |
 
@@ -208,7 +210,7 @@ An image document has a stream of its own, `GET /images/{id}/events` (SDD-006 §
 
 ## 6. Jobs
 
-Kinds: `ingest`, `transcribe`, `export`, `export_batch`, `frame`, `text.generate` (SDD-016 §6), `image.generate` and `voice.generate` (SDD-016 §6.1), `text.draft` (SDD-019 §6), `video.generate` (SDD-016 §6.4; the job stores the task id of the provider and resumes it after a restart), and the kinds a feature epic registers as needing approval (SDD-015 §5). States: `queued`, `running`, `succeeded`, `failed`, `cancelled`, and `waiting_approval` (a job of a kind that needs approval, until a person or a rule approves it; it is not running and counts as active; at most 50 per submitter and 1000 in the workspace, `E_LIMIT_EXCEEDED` past either, SDD-015 §5). Asset ingest states: `pending`, `ingesting`, `ready`, `failed`.
+Kinds: `ingest`, `transcribe`, `export`, `export_batch`, `frame`, `text.generate` (SDD-016 §6), `image.generate` and `voice.generate` (SDD-016 §6.1), `text.draft` (SDD-019 §6), `video.generate` (SDD-016 §6.4; the job stores the task id of the provider and resumes it after a restart), `image.edit` (SDD-016 §6.5), and the kinds a feature epic registers as needing approval (SDD-015 §5). States: `queued`, `running`, `succeeded`, `failed`, `cancelled`, and `waiting_approval` (a job of a kind that needs approval, until a person or a rule approves it; it is not running and counts as active; at most 50 per submitter and 1000 in the workspace, `E_LIMIT_EXCEEDED` past either, SDD-015 §5). Asset ingest states: `pending`, `ingesting`, `ready`, `failed`.
 
 ## 7. Database tables
 
@@ -260,7 +262,7 @@ The core's codes are in SDD-002 §A.8. The service adds:
 | `E_FILE_NOT_FOUND` | the path does not exist or cannot be read | no |
 | `E_UNSUPPORTED_MEDIA` | the file is not media FFmpeg can decode, or has no usable stream | no |
 | `E_INGEST_FAILED` | ingest failed; `details.reason` | no |
-| `E_ASSET_NOT_READY` | the asset is still ingesting | yes |
+| `E_ASSET_NOT_READY` | the asset is still ingesting; `details` has `asset_id`, `state` and `progress` (0 to 1) when an edit names it | yes |
 | `E_FFMPEG_MISSING` | no usable FFmpeg was found | no |
 | `E_NO_ENCODER` | no encoder works on this machine for the codec the export needs (H.264, or the `details.codec` that was asked for: `hevc` or `av1`, SDD-004 section 8.3); `details.reason` `codec_unavailable` and `details.candidates` | no |
 | `E_EXPORT_FAILED` | the export process failed; `details.reason` | no |
@@ -343,9 +345,9 @@ Environment variables, all optional. Names are final. Ceilings that have no vari
 | `STUARTY_TRANSCRIBE_URL`, `STUARTY_TRANSCRIBE_KEY`, `STUARTY_TRANSCRIBE_MODEL` | none | OpenAI-compatible transcription API; when unset, the local provider is used |
 | `STUARTY_WHISPER_MODEL` | `small` | local model name: `tiny`, `base`, `small` or `large-v3-turbo` |
 | `STUARTY_TEST_TRANSCRIBER` | none | test only: `stub` selects a provider that answers every audio with four fixed words (`hello` 100-400 ms, `brave` 400-700, `new` 1100-1400, `world` 1400-1900, language `en`). Honoured only with `APP_ENV=test` in local mode; with any other `APP_ENV`, in network mode, or with any other value the server refuses to start. Never set in production |
-| `STUARTY_TEST_SOCIAL_URL` | none | test only: the address (`http://127.0.0.1:<port>`) of a server on loopback that plays a social network; the build then also offers the network `fake`, which speaks only to that address (SDD-020 §12). Honoured in local mode only; any other address, scheme or mode and the server refuses to start. Never set in production |
-| `STUARTY_TEST_GOOGLE_URL` | none | test only: the address (`http://127.0.0.1:<port>`) of a server on loopback that plays Google for the optional Google sign-in; the authorization, token and key addresses and the issuer then are that address with `/authorize`, `/token`, `/certs` and the bare address (SDD-014 §12.1). Honoured in both modes, but the connection chosen for the sign-in must list that host or the gate refuses it; any other address or scheme and the server refuses to start. Never set in production |
-| `STUARTY_TEST_SIGNIN_URL` | none | test only: the address (`http://127.0.0.1:<port>`) of a server on loopback that plays the sign-in to an AI provider; Sign in with ChatGPT and OpenRouter then authorize, exchange and call the API at that address (SDD-016 §12.5). Honoured in local mode only; any other address, scheme or mode and the server refuses to start. Never set in production |
+| `STUARTY_TEST_SOCIAL_URL` | none | test only: the address (`http://127.0.0.1:<port>`) of a server on loopback that plays a social network; the build then also offers the network `fake`, which speaks only to that address (SDD-020 §12). Honoured in local mode only; any other address, scheme or mode and the server refuses to start. Honoured only with `APP_ENV=test`; with any other `APP_ENV` the server refuses to start and names the variable (SDD-007 T-67). Never set in production |
+| `STUARTY_TEST_GOOGLE_URL` | none | test only: the address (`http://127.0.0.1:<port>`) of a server on loopback that plays Google for the optional Google sign-in; the authorization, token and key addresses and the issuer then are that address with `/authorize`, `/token`, `/certs` and the bare address (SDD-014 §12.1). Honoured in both modes, but the connection chosen for the sign-in must list that host or the gate refuses it; any other address or scheme and the server refuses to start. Honoured only with `APP_ENV=test`; with any other `APP_ENV` the server refuses to start and names the variable (SDD-007 T-67). Never set in production |
+| `STUARTY_TEST_SIGNIN_URL` | none | test only: the address (`http://127.0.0.1:<port>`) of a server on loopback that plays the sign-in to an AI provider; Sign in with ChatGPT and OpenRouter then authorize, exchange and call the API at that address (SDD-016 §12.5). Honoured in local mode only; any other address, scheme or mode and the server refuses to start. Honoured only with `APP_ENV=test`; with any other `APP_ENV` the server refuses to start and names the variable (SDD-007 T-67). Never set in production |
 | `STUARTY_MAX_EXPORTS_PER_KEY` | `1` | concurrent exports running per actor (two more may wait) |
 | `STUARTY_MAX_INGESTS` | `2` | concurrent ingests per workspace |
 | `STUARTY_MAX_TRANSCRIBES` | `1` | concurrent transcriptions per workspace |
@@ -534,6 +536,8 @@ The operations of the registry of domain `image` (`core/command` registry built 
 | `layer.add_image`, `layer.add_text`, `layer.add_shape`, `layer.add_fill` | operation | add a layer of that kind |
 | `layer.group`, `layer.ungroup`, `layer.move` | operation | structure: group, ungroup, change order and parent |
 | `layer.transform`, `layer.set`, `layer.crop`, `layer.duplicate`, `layer.remove` | operation | geometry, common properties, crop of an image layer, copy, removal |
+| `layer.replace_source` | operation | give an image layer another file and keep the layer (SDD-021 section 3.2) |
+| `image_edit` | provider capability | a provider that edits a picture it is sent (SDD-016 section 2.4), with the operation `remove_background` of the job `image.edit`; the other operation of that job, `generate`, uses the capability `image` |
 | `layer.set_text`, `layer.set_shape` | operation | change the content or style of a text layer, the look of a shape |
 | `layer.align`, `layer.fit` | operation | align to the canvas or to a layer, fit (cover, contain) |
 | `layer.adjust`, `layer.blend` | operation | the adjustments of a layer (brightness, contrast, saturation, temperature, tint, hue, exposure, levels, tone curve) and its blend mode (SDD-021 section 3, epic 29) |

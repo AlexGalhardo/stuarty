@@ -117,27 +117,6 @@ export interface AudioDuckArgs {
    */
   release?: string;
   /**
-   * Filled by the service from the speech of the items; never sent by a caller.
-   */
-  resolved?: {
-    /**
-     * One entry per speech item, in any order.
-     */
-    speech: {
-      /**
-       * One of the speech items.
-       */
-      item_id: string;
-      /**
-       * Sorted, non-overlapping ranges of speech in asset frames, half-open.
-       */
-      ranges: {
-        end: number;
-        start: number;
-      }[];
-    }[];
-  };
-  /**
    * Clips or audio items that carry the speech.
    *
    * @minItems 1
@@ -302,15 +281,6 @@ export interface AudioMarkBeatsArgs {
    * true (default) replaces the item's markers; false keeps them and adds the beats.
    */
   replace?: boolean;
-  /**
-   * Filled by the service from the beat grid of the asset; never sent by a caller.
-   */
-  resolved?: {
-    /**
-     * Strictly increasing beat positions in asset frames, from 0.
-     */
-    beats: number[];
-  };
 }
 
 export interface AudioProcessorAddArgs {
@@ -482,19 +452,6 @@ export interface CaptionFromTranscriptArgs {
    */
   replace?: boolean;
   /**
-   * Filled by the service from the transcript of the asset; never sent by a caller.
-   */
-  resolved?: {
-    /**
-     * Words in order, not overlapping, in asset frames, half-open.
-     */
-    words: {
-      end: number;
-      start: number;
-      text: string;
-    }[];
-  };
-  /**
    * A visual track that receives the captions.
    */
   track_id: string;
@@ -514,7 +471,7 @@ export interface CaptionImportSubtitlesArgs {
    */
   start?: string;
   /**
-   * The SRT or WebVTT text.
+   * The SRT or WebVTT text itself, not a file path: read the file and pass its content.
    */
   text: string;
   /**
@@ -535,19 +492,6 @@ export interface CaptionRetimeFromClipArgs {
    * A clip of a video asset with audio, or an audio item.
    */
   clip_item_id: string;
-  /**
-   * Filled by the service from the transcript of the asset; never sent by a caller.
-   */
-  resolved?: {
-    /**
-     * Words in order, not overlapping, in asset frames, half-open.
-     */
-    words: {
-      end: number;
-      start: number;
-      text: string;
-    }[];
-  };
 }
 
 export interface CaptionSetBreaksArgs {
@@ -727,18 +671,6 @@ export interface ClipRemoveSilencesArgs {
    * A length, may be 0; speech kept around each cut. Default "0.1s".
    */
   padding?: string;
-  /**
-   * Filled by the service from the silence analysis of the asset; never sent by a caller.
-   */
-  resolved?: {
-    /**
-     * Sorted, non-overlapping ranges in asset frames, half-open.
-     */
-    silences: {
-      end: number;
-      start: number;
-    }[];
-  };
   /**
    * track (default) or none.
    */
@@ -1188,7 +1120,7 @@ export interface ClipSetSpeedArgs {
     t: number;
   }[];
   /**
-   * A clip of a video asset, or an audio item.
+   * A clip of a video asset, an audio item, or a composition item.
    */
   item_id: string;
   /**

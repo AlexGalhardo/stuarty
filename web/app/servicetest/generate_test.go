@@ -51,6 +51,10 @@ type fakeMedia struct {
 	revised string
 
 	images, speeches, files atomic.Int32
+
+	// edits counts the requests of POST /images/edits and editMode says how they are answered (image_edit_test.go).
+	edits    atomic.Int32
+	editMode string
 }
 
 func newFakeMedia(tb testing.TB) *fakeMedia {
@@ -94,6 +98,9 @@ func (f *fakeMedia) serve(w http.ResponseWriter, r *http.Request) {
 	case r.URL.Path == "/v1/images/generations":
 		f.images.Add(1)
 		f.answerImages(w, body.Bytes(), mode, foreign, revised)
+	case r.URL.Path == "/v1/images/edits":
+		f.edits.Add(1)
+		f.answerEdit(w, body.Bytes())
 	case strings.HasPrefix(r.URL.Path, "/files/"):
 		f.files.Add(1)
 

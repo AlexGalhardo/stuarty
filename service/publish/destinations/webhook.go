@@ -77,7 +77,7 @@ func parseWebhookConfig(secret []byte) (webhookConfig, error) {
 
 // PublicHost refuses a host that is not on the public internet: localhost, and an IP address that is loopback,
 // private, link-local, shared, unspecified or multicast. A name is judged again, at dial time, by the client of the
-// connection (SDD-020 section 46, T-92).
+// connection (SDD-020 section 46, T-86).
 func PublicHost(host string) error {
 	host = strings.TrimSuffix(strings.ToLower(host), ".")
 
@@ -179,7 +179,7 @@ func Sign(secret, timestamp, delivery string, body []byte) string {
 }
 
 // Verify is what a receiver does: it checks the signature in constant time over the exact body, and refuses a
-// timestamp further than ReplayWindow from now, so a captured delivery cannot be replayed later (T-93).
+// timestamp further than ReplayWindow from now, so a captured delivery cannot be replayed later (T-87).
 func Verify(secret, timestamp, delivery, signature string, body []byte, now time.Time) error {
 	secs, err := strconv.ParseInt(timestamp, 10, 64)
 	if err != nil {

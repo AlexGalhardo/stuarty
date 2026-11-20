@@ -47,6 +47,17 @@ func nestedWindowAudio(doc *timeline.Document, from, to int, opts Options) []Win
 		}
 
 		speed := float64(s.Speed.Num) / float64(max(s.Speed.Den, 1))
+
+		// The executor of the browser does not know the time scale of a curve (SDD-004 §7): it plays the entry at
+		// its mean rate, and the export is the reference.
+		if s.Curve != nil && s.Curve.TimeScale != nil {
+			s = &AudioSource{
+				ItemID: s.ItemID, AssetID: s.AssetID, StartSample: s.StartSample, SourceStart: s.SourceStart,
+				Samples: s.Samples, Speed: s.Speed, Reverse: s.Reverse, Gain: s.Gain, Denoise: s.Denoise,
+				Voice: s.Voice, Timeline: s.Timeline,
+			}
+		}
+
 		wa := WindowAudio{
 			Item: s.ItemID, Asset: s.AssetID, First: first, Last: last, Speed: round3(speed), Curve: s.Curve,
 			Reverse: s.Reverse, Denoise: s.Denoise, Voice: s.Voice, Timeline: s.Timeline,
@@ -86,14 +97,86 @@ func compositionSources(doc *timeline.Document) []*timeline.Item {
 	return out
 }
 
-// ceilFrames converts a position of n frames at rate from to frames at rate to, rounded up.
-func ceilFrames(n int64, from, to timeline.Rational) int64 {
-	num, den := n*int64(to.Num)*int64(from.Den), int64(to.Den)*int64(from.Num)
+// ceilFrames converts a position of n/d frames at rate from to frames at rate to, rounded up.
+func ceilFrames(n, d int64, from, to timeline.Rational) int64 {
+	num, den := n*int64(to.Num)*int64(from.Den), d*int64(to.Den)*int64(from.Num)
 	if den <= 0 {
 		return 0
 	}
 
-	return (num + den - 1) / den
+	return -floorDiv(-num, den)
+}
+
+// floorDiv is the quotient of a by b (positive) rounded towards minus infinity, which Go's division is not for a
+// negative a.
+func floorDiv(a, b int64) int64 {
+	q := a / b
+	if a%b != 0 && a < 0 {
+		q--
+	}
+
+	return q
+}
+
+// itemSpeed is the speed n/d of a composition item as numbers that can divide: 1/1 for a value no valid item has.
+func itemSpeed(it *timeline.Item) (n, d int64) {
+	if it.Speed.Num < 1 || it.Speed.Den < 1 {
+		return 1, 1
+	}
+
+	return int64(it.Speed.Num), int64(it.Speed.Den)
+}
+
+// mulSpeed is the product of two rationals in lowest terms; a zero denominator counts as 1.
+func mulSpeed(a, b timeline.Rational) timeline.Rational {
+	n, d := int64(a.Num)*int64(b.Num), int64(max(a.Den, 1))*int64(max(b.Den, 1))
+
+	g := n
+	for x := d; x != 0; {
+		g, x = x, g%x
+	}
+
+	if g < 1 {
+		g = 1
+	}
+
+	return timeline.Rational{Num: int(n / g), Den: int(d / g)}
+}
+
+// scaleEnvelope moves the points of a gain envelope from the time of a nested timeline to the output time of a
+// composition at the speed n/d: sample x becomes floor(x × d / n), so the points keep their order.
+func scaleEnvelope(pts []GainPoint, n, d int64) []GainPoint {
+	out := make([]GainPoint, len(pts))
+	for i, p := range pts {
+		out[i] = GainPoint{Sample: floorDiv(p.Sample*d, n), Gain: p.Gain}
+	}
+
+	return out
+}
+
+// atSpeed puts a nested source on the output of a composition item that plays at speed: the time map t sends a
+// sample of the nested timeline to the output, so the source starts and ends where the map says, its gain points
+// move with it, and its speed is its own times the speed of the item. The decoder keeps the pitch (SDD-004 §7,
+// "A composition at a speed").
+func (s *AudioSource) atSpeed(speed timeline.Rational, t func(int64) int64) {
+	n, d := int64(speed.Num), int64(speed.Den)
+	start := t(s.StartSample)
+	s.Samples = t(s.StartSample+s.Samples) - start
+	s.StartSample = start
+	s.Gain = scaleEnvelope(s.Gain, n, d)
+	s.Speed = mulSpeed(s.Speed, speed)
+
+	if s.Curve != nil {
+		ramp := *s.Curve
+		scale := speed
+
+		if ramp.TimeScale != nil {
+			scale = mulSpeed(*ramp.TimeScale, speed)
+		}
+
+		ramp.TimeScale = &scale
+		s.Curve = &ramp
+	}
 }
 
 func compositionAudio(
@@ -119,8 +202,10 @@ func compositionAudio(
 		}
 
 		nfps := nested.Settings.FPS
-		p0, p1 := int64(it.SourceIn+cs-it.Start), int64(it.SourceIn+ce-it.Start)
-		f0, f1 := ceilFrames(p0, pfps, nfps), min(ceilFrames(p1, pfps, nfps), int64(endFrame(nested)))
+		// The nested position of item frame r is source_in + r × n/d, in frames of this document (SDD-004 §3.3).
+		n, d := itemSpeed(it)
+		p0, p1 := int64(it.SourceIn)*d+int64(cs-it.Start)*n, int64(it.SourceIn)*d+int64(ce-it.Start)*n
+		f0, f1 := ceilFrames(p0, d, pfps, nfps), min(ceilFrames(p1, d, pfps, nfps), int64(endFrame(nested)))
 
 		if f1 <= f0 {
 			continue
@@ -130,9 +215,10 @@ func compositionAudio(
 		inner := append(Audio(nested, int(f0), int(f1)), compositionAudio(nested, int(f0), int(f1), opts, next)...)
 		bus := compositionGain(doc, it, cs, ce)
 
-		// Nested sample ns is the parent's sample start + ns - the nested sample of source_in.
-		shift := frameSample(pfps, it.Start) - frameSample(pfps, it.SourceIn)
+		// Nested sample ns is the parent's sample start + (ns - the nested sample of source_in) × d / n.
+		at, in := frameSample(pfps, it.Start), frameSample(pfps, it.SourceIn)
 		lo, hi := frameSample(pfps, cs), frameSample(pfps, ce)
+		t := func(ns int64) int64 { return at + floorDiv((ns-in)*d, n) }
 
 		for i := range inner {
 			s := &inner[i]
@@ -141,7 +227,12 @@ func compositionAudio(
 			if s.Timeline == "" {
 				s.Timeline = nested.ID
 			}
-			s.StartSample += shift
+
+			if n == d {
+				s.StartSample += at - in
+			} else {
+				s.atSpeed(timeline.Rational{Num: int(n), Den: int(d)}, t)
+			}
 
 			if !s.trim(lo, hi) {
 				continue

@@ -645,6 +645,24 @@
           "required": [],
           "type": "object"
         },
+        "lut": {
+          "additionalProperties": false,
+          "properties": {
+            "asset": {
+              "description": "The content hash of a lut file of the workspace.",
+              "pattern": "^sha256:[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "intensity": {
+              "description": "Per cent, 1 to 100; 0 removes the table. Default 100.",
+              "maximum": 100,
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          "required": [],
+          "type": "object"
+        },
         "reset": {
           "description": "Remove every adjustment; no other argument.",
           "type": "boolean"
@@ -670,13 +688,14 @@
       ],
       "type": "object"
     },
-    "description": "Each key given replaces that adjustment and the others stay; a value equal to its neutral one removes it. brightness, contrast, saturation, temperature and tint are -100 to 100, hue -180 to 180 degrees, exposure -300 to 300 hundredths of a stop. levels takes black (0 to 254), white (1 to 255, above black) and gamma (10 to 1000 hundredths, 100 is neutral); the keys left out keep their value. curve is up to 8 points {x, y} of 0 to 255 with x increasing, and an empty list removes it. reset true removes every adjustment. Not valid for a group.",
+    "description": "Each key given replaces that adjustment and the others stay; a value equal to its neutral one removes it. brightness, contrast, saturation, temperature and tint are -100 to 100, hue -180 to 180 degrees, exposure -300 to 300 hundredths of a stop. levels takes black (0 to 254), white (1 to 255, above black) and gamma (10 to 1000 hundredths, 100 is neutral); the keys left out keep their value. curve is up to 8 points {x, y} of 0 to 255 with x increasing, and an empty list removes it. lut is a .cube table of the workspace: asset (the hash of a lut file) and intensity (1 to 100 per cent; 0 removes it); the one left out keeps its value. reset true removes every adjustment. Not valid for a group.",
     "domain": "image",
     "errors": [
       "E_VALIDATION",
       "E_NOT_FOUND",
       "E_TYPE_MISMATCH",
-      "E_INVALID_STATE"
+      "E_INVALID_STATE",
+      "E_LIMIT"
     ],
     "example": {
       "brightness": 10,
@@ -689,7 +708,7 @@
     "internal": false,
     "name": "layer.adjust",
     "scope": "edit",
-    "summary": "Sets the brightness, contrast, saturation, temperature, tint, hue, exposure, levels or tone curve of a layer."
+    "summary": "Sets the brightness, contrast, saturation, temperature, tint, hue, exposure, levels, tone curve or colour lookup table of a layer."
   },
   {
     "args_schema": {
@@ -1547,6 +1566,46 @@
     "name": "layer.remove",
     "scope": "edit",
     "summary": "Removes a layer and everything inside it."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "asset": {
+          "description": "The sha256 content hash of the new image in the workspace.",
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "layer_id": {
+          "description": "The image layer.",
+          "pattern": "^lyr_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "layer_id",
+        "asset"
+      ],
+      "type": "object"
+    },
+    "description": "asset is the content hash of an image file already imported. The layer keeps its id, name, slot, visibility, opacity, rotation, adjustments, filters, mask and blend. When the new file has the size of the old one the box and the crop stay as they were; otherwise the crop is removed and the box stays when the new file has its proportions, and is the largest box with the proportions of the new file that fits inside it, centred, when it has others. effective names layer_id, box and asset.",
+    "domain": "image",
+    "errors": [
+      "E_VALIDATION",
+      "E_NOT_FOUND",
+      "E_TYPE_MISMATCH",
+      "E_INVALID_STATE",
+      "E_LIMIT"
+    ],
+    "example": {
+      "asset": "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+      "layer_id": "lyr_a1b2c3d4e5"
+    },
+    "internal": false,
+    "name": "layer.replace_source",
+    "scope": "edit",
+    "summary": "Gives an image layer another file and keeps the layer."
   },
   {
     "args_schema": {

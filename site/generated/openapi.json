@@ -53,6 +53,16 @@
               }
             ]
           },
+          "lut": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LUTRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "saturation": {
             "type": "integer"
           },
@@ -1468,6 +1478,9 @@
           "ai_disclosure": {
             "type": "boolean"
           },
+          "draft": {
+            "type": "boolean"
+          },
           "endpoint": {
             "type": "string"
           },
@@ -1504,6 +1517,16 @@
           "post_cost_micros": {
             "format": "int64",
             "type": "integer"
+          },
+          "price": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Price"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "publishes": {
             "items": {
@@ -2358,6 +2381,16 @@
           "delivered": {
             "type": "integer"
           },
+          "image": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ImageApplied"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "items": {
             "items": {
               "$ref": "#/components/schemas/GeneratedItem"
@@ -2645,6 +2678,24 @@
           "saturation": {
             "format": "double",
             "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "ImageApplied": {
+        "properties": {
+          "applied": {
+            "type": "boolean"
+          },
+          "image_id": {
+            "type": "string"
+          },
+          "layer_id": {
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
           }
         },
         "type": "object"
@@ -3873,6 +3924,17 @@
         },
         "type": "object"
       },
+      "LUTRef": {
+        "properties": {
+          "asset": {
+            "type": "string"
+          },
+          "intensity": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
       "Layer": {
         "properties": {
           "adjust": {
@@ -4316,6 +4378,9 @@
           "caption_max": {
             "type": "integer"
           },
+          "caption_network": {
+            "type": "string"
+          },
           "daily_posts": {
             "type": "integer"
           },
@@ -4339,6 +4404,9 @@
             "type": "integer"
           },
           "needs_kids_declaration": {
+            "type": "boolean"
+          },
+          "no_caption": {
             "type": "boolean"
           },
           "preset": {
@@ -4880,7 +4948,7 @@
           "price": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/Price"
+                "$ref": "#/components/schemas/provider.Price"
               },
               {
                 "type": "null"
@@ -5843,20 +5911,22 @@
           "currency": {
             "type": "string"
           },
-          "input_micros_per_mtok": {
-            "format": "int64",
-            "type": "integer"
-          },
-          "output_micros_per_mtok": {
-            "format": "int64",
-            "type": "integer"
-          },
-          "unit": {
+          "edited": {
             "type": "string"
           },
-          "unit_micros": {
+          "link_micros": {
             "format": "int64",
             "type": "integer"
+          },
+          "post_micros": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "read": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
           }
         },
         "type": "object"
@@ -7719,6 +7789,16 @@
           "network": {
             "type": "string"
           },
+          "price": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Price"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "state": {
             "type": "string"
           }
@@ -7812,6 +7892,16 @@
               "$ref": "#/components/schemas/SpeedPoint"
             },
             "type": "array"
+          },
+          "time_scale": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Rational"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object"
@@ -9505,55 +9595,6 @@
             "type": "string",
             "x-vv-kind": "time"
           },
-          "resolved": {
-            "additionalProperties": false,
-            "description": "Filled by the service from the speech of the items; never sent by a caller.",
-            "properties": {
-              "speech": {
-                "description": "One entry per speech item, in any order.",
-                "items": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "item_id": {
-                      "description": "One of the speech items.",
-                      "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
-                      "type": "string"
-                    },
-                    "ranges": {
-                      "description": "Sorted, non-overlapping ranges of speech in asset frames, half-open.",
-                      "items": {
-                        "additionalProperties": false,
-                        "properties": {
-                          "end": {
-                            "type": "integer"
-                          },
-                          "start": {
-                            "type": "integer"
-                          }
-                        },
-                        "required": [
-                          "start",
-                          "end"
-                        ],
-                        "type": "object"
-                      },
-                      "type": "array"
-                    }
-                  },
-                  "required": [
-                    "item_id",
-                    "ranges"
-                  ],
-                  "type": "object"
-                },
-                "type": "array"
-              }
-            },
-            "required": [
-              "speech"
-            ],
-            "type": "object"
-          },
           "speech_item_ids": {
             "description": "Clips or audio items that carry the speech.",
             "items": {
@@ -9604,23 +9645,6 @@
           "replace": {
             "description": "true (default) replaces the item's markers; false keeps them and adds the beats.",
             "type": "boolean"
-          },
-          "resolved": {
-            "additionalProperties": false,
-            "description": "Filled by the service from the beat grid of the asset; never sent by a caller.",
-            "properties": {
-              "beats": {
-                "description": "Strictly increasing beat positions in asset frames, from 0.",
-                "items": {
-                  "type": "integer"
-                },
-                "type": "array"
-              }
-            },
-            "required": [
-              "beats"
-            ],
-            "type": "object"
           }
         },
         "required": [
@@ -10518,40 +10542,6 @@
             "description": "Remove the captions linked to this clip on this track first. Default true.",
             "type": "boolean"
           },
-          "resolved": {
-            "additionalProperties": false,
-            "description": "Filled by the service from the transcript of the asset; never sent by a caller.",
-            "properties": {
-              "words": {
-                "description": "Words in order, not overlapping, in asset frames, half-open.",
-                "items": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "end": {
-                      "type": "integer"
-                    },
-                    "start": {
-                      "type": "integer"
-                    },
-                    "text": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "text",
-                    "start",
-                    "end"
-                  ],
-                  "type": "object"
-                },
-                "type": "array"
-              }
-            },
-            "required": [
-              "words"
-            ],
-            "type": "object"
-          },
           "track_id": {
             "description": "A visual track that receives the captions.",
             "pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
@@ -10589,7 +10579,7 @@
             "x-vv-kind": "time"
           },
           "text": {
-            "description": "The SRT or WebVTT text.",
+            "description": "The SRT or WebVTT text itself, not a file path: read the file and pass its content.",
             "type": "string"
           },
           "track_id": {
@@ -10628,40 +10618,6 @@
             "description": "A clip of a video asset with audio, or an audio item.",
             "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
             "type": "string"
-          },
-          "resolved": {
-            "additionalProperties": false,
-            "description": "Filled by the service from the transcript of the asset; never sent by a caller.",
-            "properties": {
-              "words": {
-                "description": "Words in order, not overlapping, in asset frames, half-open.",
-                "items": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "end": {
-                      "type": "integer"
-                    },
-                    "start": {
-                      "type": "integer"
-                    },
-                    "text": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "text",
-                    "start",
-                    "end"
-                  ],
-                  "type": "object"
-                },
-                "type": "array"
-              }
-            },
-            "required": [
-              "words"
-            ],
-            "type": "object"
           }
         },
         "required": [
@@ -11087,36 +11043,6 @@
             "description": "A length, may be 0; speech kept around each cut. Default \"0.1s\".",
             "type": "string",
             "x-vv-kind": "time"
-          },
-          "resolved": {
-            "additionalProperties": false,
-            "description": "Filled by the service from the silence analysis of the asset; never sent by a caller.",
-            "properties": {
-              "silences": {
-                "description": "Sorted, non-overlapping ranges in asset frames, half-open.",
-                "items": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "end": {
-                      "type": "integer"
-                    },
-                    "start": {
-                      "type": "integer"
-                    }
-                  },
-                  "required": [
-                    "start",
-                    "end"
-                  ],
-                  "type": "object"
-                },
-                "type": "array"
-              }
-            },
-            "required": [
-              "silences"
-            ],
-            "type": "object"
           },
           "ripple": {
             "description": "track (default) or none.",
@@ -11959,7 +11885,7 @@
             "type": "array"
           },
           "item_id": {
-            "description": "A clip of a video asset, or an audio item.",
+            "description": "A clip of a video asset, an audio item, or a composition item.",
             "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
             "type": "string"
           },
@@ -14227,6 +14153,29 @@
           "url": {
             "description": "The address that exchanges the code for a browser session.",
             "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "provider.Price": {
+        "properties": {
+          "currency": {
+            "type": "string"
+          },
+          "input_micros_per_mtok": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "output_micros_per_mtok": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "unit_micros": {
+            "format": "int64",
+            "type": "integer"
           }
         },
         "type": "object"
@@ -17710,6 +17659,123 @@
           }
         ],
         "summary": "List the latest batches of an image document"
+      }
+    },
+    "/api/v1/images/{id}/model-edit": {
+      "post": {
+        "operationId": "images.model_edit",
+        "parameters": [
+          {
+            "description": "The image document, img_ and 10 characters.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "connection_id": {
+                    "description": "The connection to the provider: with the image_edit capability and accepting image for remove_background, with the image capability and accepting text for generate.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "dry_run": {
+                    "description": "true answers the job it would create, with its estimate, and writes and sends nothing.",
+                    "type": "boolean"
+                  },
+                  "layer_id": {
+                    "description": "remove_background: the image layer, required. generate: a layer whose box the new picture must cover; without it, the canvas.",
+                    "type": "string"
+                  },
+                  "model": {
+                    "description": "The model id, as provider:models lists it.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "operation": {
+                    "description": "remove_background (the picture of the layer is sent to the provider) or generate (only the prompt is sent).",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "project_id": {
+                    "description": "The project that holds the generated file and its cost, prj_ and 10 characters.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "prompt": {
+                    "description": "generate only: what to draw, 1 to 4000 characters.",
+                    "type": "string"
+                  },
+                  "size": {
+                    "description": "generate only: width and height in pixels joined by x; the default is the size nearest to the box to cover.",
+                    "type": "string"
+                  },
+                  "wait_ms": {
+                    "description": "Wait up to this many milliseconds for the job to finish.",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "project_id",
+                  "connection_id",
+                  "operation",
+                  "model"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            },
+            "description": "Accepted"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove the background of a layer, or generate an image into the document, with the provider of a connection; the job says that the picture is sent, waits for approval, shows its estimate and puts the result in the document as one undoable step"
       }
     },
     "/api/v1/images/{id}/redo": {
@@ -25162,7 +25228,7 @@
             }
           },
           {
-            "description": "Only publications with a target in this state: draft, waiting_approval, approved, scheduled, publishing, published, failed, missed or cancelled.",
+            "description": "Only publications with a target in this state: draft, waiting_approval, approved, scheduled, publishing, published, sent_as_draft, failed, missed or cancelled.",
             "in": "query",
             "name": "state",
             "schema": {
@@ -26416,6 +26482,84 @@
           }
         ],
         "summary": "List the social networks of this build and their limits"
+      }
+    },
+    "/api/v1/social/price": {
+      "post": {
+        "operationId": "social.price",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "connection_id": {
+                    "description": "The connection of the network whose price is corrected.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "link_micros": {
+                    "description": "The price of a post with a link, in millionths of the currency: 200000 is $0.20.",
+                    "exclusiveMinimum": 0,
+                    "format": "int64",
+                    "type": "integer"
+                  },
+                  "post_micros": {
+                    "description": "The price of a post, in millionths of the currency: 15000 is $0.015.",
+                    "exclusiveMinimum": 0,
+                    "format": "int64",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "connection_id",
+                  "post_micros",
+                  "link_micros"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SocialAccount"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Correct the price of a post on a network that charges for one (a person in the browser only)"
       }
     },
     "/api/v1/social/select": {

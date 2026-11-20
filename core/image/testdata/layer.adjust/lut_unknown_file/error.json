@@ -1,0 +1,12 @@
+{
+  "code": "E_NOT_FOUND",
+  "details": {
+    "id": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "kind": "asset"
+  },
+  "hint": "Import the .cube file with media:import and use the hash it returns.",
+  "message": "The file sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee is not a ready lookup table of the workspace.",
+  "op_index": 0,
+  "path": "args.lut.asset",
+  "retryable": false
+}

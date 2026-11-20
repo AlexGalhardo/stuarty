@@ -8,6 +8,7 @@ export const TARGET_STATES = [
 	"scheduled",
 	"publishing",
 	"published",
+	"sent_as_draft",
 	"failed",
 	"missed",
 	"cancelled",

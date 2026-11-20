@@ -10,9 +10,9 @@ A cover has one job: make a person who scrolls stop and read it in a second. One
 ## Steps
 
 1. Read the brief and the script: `brief:show --project <project id>`. The cover repeats the promise of the video, not its whole content.
-2. Choose the size by where it is used: `vertical_cover` (1080 by 1920) for a short on a vertical feed, `video_thumbnail` (1280 by 720) for a horizontal video, `square_post` (1080 by 1080) for a feed post. `image:create --preset vertical_cover --name "<name>"`. In MCP: the `image` tool with `action` `create` and the `preset`.
-3. Choose the picture. A frame of the video: look with `view --project <project id> --mode sheet --count 9`; the best frame has a face or one clear object, and the subject is not near the edges. Write that frame to a file with `export --project <project id> --format png --at <time> --wait`, then bring it in with `media:import <path> --project <project id> --wait`; the import gives the asset to use below. The person's own photo works the same way.
-4. Build the image with `image:edit <image id> <operation> k=v...`. The operations are listed by `command:help --domain image`. In MCP: `image` with `action` `edit` and `operations`. The usual order:
+2. Choose the size by where it is used: `vertical_cover` (1080 by 1920) for a short on a vertical feed, `video_thumbnail` (1280 by 720) for a horizontal video, `square_post` (1080 by 1080) for a feed post. `image:create --preset vertical_cover --name "<name>"`. In MCP: the `image` tool with `action` `create` and the `preset`. When the workspace has a cover template (`image:list --templates only`), start from it instead: `image:create --from-template <template id> --name "<name>" --values -` with `{"<slot>":{"text":"<title>"}}` on standard input, then go to step 5.
+3. Choose the picture. A frame of the video: look with `view --project <project id> --mode sheet --count 9`; the best frame has a face or one clear object, and the subject is not near the edges. Write that frame to a file outside the workspace with `export --project <project id> --format png --at <time> --out <absolute path>.png` (the import refuses a file inside the workspace with `E_PATH_NOT_ALLOWED`), then bring it in with `media:import <absolute path>.png --project <project id> --wait`; the import gives the `hash` to use below as the `asset`. The person's own photo works the same way.
+4. Build the image with `image:edit <image id> <operation> k=v...`. The operations are listed by `command:help --domain image`, and one is described by `command:help --domain image <operation>` (without the domain its name is not found). In MCP: `image` with `action` `edit` and `operations`. The usual order:
    1. `layer.add_image` with the `asset` of the picture, fitted with `fit` cover.
    2. `layer.add_shape` for a band or a box that gives the text contrast.
    3. `layer.add_text` for the title: three to five words, a `style` with a bold font, a large size and a light colour on a dark shape, or the other way round.
@@ -28,4 +28,4 @@ A cover has one job: make a person who scrolls stop and read it in a second. One
 - Do not use a picture the person has no right to use. `fetch-clip` records the source of a clip.
 - Do not put a claim on the cover that the video does not keep.
 
-Not available yet: attaching the cover to a publication in the approval queue is added by the publishing epics; until then hand the person the file.
+A publication (it waits in the approval queue for a person) takes as its cover the id of a still export of the video: `export --project <project id> --format png --at <time> --wait` and its `job_id` goes in `publication:create --thumbnail`. A cover made as an image document cannot be attached yet: hand the person its file.

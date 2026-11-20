@@ -22,7 +22,7 @@ Send the secret in the header `Authorization: Bearer <secret>`: the local token 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `project_id` | `string` | no | Only the publications of one project. |
-| `state` | `string` | no | Only publications with a target in this state: draft, waiting_approval, approved, scheduled, publishing, published, failed, missed or cancelled. |
+| `state` | `string` | no | Only publications with a target in this state: draft, waiting_approval, approved, scheduled, publishing, published, sent_as_draft, failed, missed or cancelled. |
 | `network` | `string` | no | Only publications with a target on this network. |
 | `from` | `string` | no | Only publications with a target at or after this time (RFC 3339). |
 | `to` | `string` | no | Only publications with a target before this time (RFC 3339). |

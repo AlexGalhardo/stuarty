@@ -1,6 +1,12 @@
 import { Link } from "@inertiajs/react";
 import { Film, MoreVertical } from "lucide-react";
-import { type FormEvent, type ReactNode, useState } from "react";
+import {
+	type FormEvent,
+	type ReactNode,
+	useEffect,
+	useRef,
+	useState,
+} from "react";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
 import UntrustedText from "@/components/UntrustedText";
@@ -32,6 +38,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatDateTime } from "@/lib/format";
 import { useT } from "@/lib/i18n";
+import { createSlotQueue, type Release, whileNear } from "@/lib/slotQueue";
 import type { ProjectSummary } from "@/types";
 import { createClient } from "../../editor/api/client";
 import { HttpTransport } from "../../editor/api/http";
@@ -41,30 +48,78 @@ import { BundleExport } from "./Bundles";
 const NAME_MAX = 120;
 const THUMBNAIL_WIDTH = 270;
 
+// The frame endpoint refuses a credential with more than two frames in flight
+// (429, SDD-007 section 4.4), so every card draws its picture through this
+// queue, and only while it is near the viewport.
+const thumbnails = createSlotQueue(2);
+
 // The picture of a card: the frame at the start, as the player draws it. A
 // project with nothing on its timeline has no picture, and a frame that cannot
 // be read leaves the placeholder.
 function Thumbnail({ project }: { project: ProjectSummary }): ReactNode {
 	const [failed, setFailed] = useState(false);
-	const drawn = project.items > 0 && !failed;
+	const [src, setSrc] = useState<string | null>(null);
+	const box = useRef<HTMLDivElement>(null);
+	const release = useRef<Release | null>(null);
+	const wanted = project.items > 0 && !failed;
+	const url = frameUrl(
+		project.timeline_id,
+		0,
+		THUMBNAIL_WIDTH,
+		project.revision,
+	);
+
+	useEffect(() => {
+		release.current = null;
+		setSrc(null);
+		const element = box.current;
+		if (!wanted || !element) return;
+
+		const ticket = whileNear(thumbnails, (done) => {
+			release.current = done;
+			setSrc(url);
+		});
+		// The last record of a batch is the current state of the element.
+		const observer = new IntersectionObserver(
+			(entries) => {
+				const last = entries.at(-1);
+				if (last) ticket.near(last.isIntersecting);
+			},
+			{ rootMargin: "200px" },
+		);
+		observer.observe(element);
+
+		return () => {
+			observer.disconnect();
+			ticket.stop();
+			release.current = null;
+		};
+	}, [wanted, url]);
+
+	const settle = (): void => {
+		release.current?.();
+		release.current = null;
+	};
+
 	return (
 		<div
+			ref={box}
 			aria-hidden="true"
 			className="flex h-36 items-center justify-center bg-muted text-muted-foreground"
 		>
-			{drawn ? (
-				<img
-					src={frameUrl(
-						project.timeline_id,
-						0,
-						THUMBNAIL_WIDTH,
-						project.revision,
-					)}
-					alt=""
-					loading="lazy"
-					className="max-h-full max-w-full object-contain"
-					onError={() => setFailed(true)}
-				/>
+			{wanted ? (
+				src && (
+					<img
+						src={src}
+						alt=""
+						className="max-h-full max-w-full object-contain"
+						onLoad={settle}
+						onError={() => {
+							settle();
+							setFailed(true);
+						}}
+					/>
+				)
 			) : (
 				<Film aria-hidden="true" className="size-8" />
 			)}

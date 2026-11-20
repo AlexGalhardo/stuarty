@@ -127,20 +127,32 @@ func imageHistory(
 // of the Service operations the tool serves. A tool that routes by the domain argument (served) lists those
 // domains too; command_help is the discovery of every domain.
 var toolDomains = map[string][]string{
-	"project_list": {command.DomainProject}, "project_create": {command.DomainProject},
-	"project_get": {command.DomainProject}, "project_trash": {command.DomainProject},
+	"project_list":   {command.DomainProject},
+	"project_create": {command.DomainProject},
+	"project_get":    {command.DomainProject},
+	"project_trash":  {command.DomainProject},
 	// project_item also serves the texts of a production (text, revisions, revert, check; SDD-019).
 	"project_item": {command.DomainProject, command.DomainWriting},
-	"edit":         {command.DomainVideo, command.DomainImage}, "history": {command.DomainVideo, command.DomainImage},
-	"view": {command.DomainVideo}, "lint": {command.DomainVideo},
+	"edit":         {command.DomainVideo, command.DomainImage},
+	"history":      {command.DomainVideo, command.DomainImage},
+	"view":         {command.DomainVideo},
+	"lint":         {command.DomainVideo},
 	// job_start also starts text.generate, image.generate, voice.generate and video.generate, the generations of
 	// the provider domain (SDD-016 sections 10, 6.1 and 6.4), and text.draft, the draft of a text of the writing domain (SDD-019
-	// section 6).
-	"job_start": {command.DomainVideo, command.DomainProvider, command.DomainWriting},
-	"job_get":   {command.DomainVideo}, "job_cancel": {command.DomainVideo}, "template": {command.DomainVideo},
-	"media_import": {command.DomainAsset}, "media_inspect": {command.DomainAsset}, "font_import": {command.DomainAsset},
-	"image":   {command.DomainImage},
-	"library": {command.DomainMemory},
+	// section 6), and publish.upload, a publication of the publish domain (SDD-020 section 13). job_get also
+	// reads the approval queue and the state of a publication (SDD-015 section 10).
+	"job_start": {command.DomainVideo, command.DomainProvider, command.DomainWriting, command.DomainPublish},
+	"job_get": {
+		command.DomainVideo,
+		command.DomainPublish,
+	},
+	"job_cancel":    {command.DomainVideo},
+	"template":      {command.DomainVideo},
+	"media_import":  {command.DomainAsset},
+	"media_inspect": {command.DomainAsset},
+	"font_import":   {command.DomainAsset},
+	"image":         {command.DomainImage},
+	"library":       {command.DomainMemory},
 	// command_help answers for every domain; it is itself an operation of the workspace domain.
 	"command_help": command.DomainNames(),
 	"connection":   {command.DomainWorkspace},

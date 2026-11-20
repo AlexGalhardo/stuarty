@@ -34,6 +34,10 @@ const (
 	// summaryDisclosureRunes holds the longest disclosure the service writes, "wanted, but <network> takes
 	// no such flag".
 	summaryDisclosureRunes = 80
+	// summaryCostRunes holds the longest cost the service writes, "0.20 USD (a post with a link, price of
+	// 2026-11-20)", and summaryNetworkRunes the name of a network.
+	summaryCostRunes    = 60
+	summaryNetworkRunes = 20
 )
 
 // Actor is who calls: it is recorded on what it creates.
@@ -109,9 +113,13 @@ type Resolved struct {
 	// Snapshot is the post as the person will be shown it, with the digest of each file (Strict only).
 	Snapshot json.RawMessage
 	Issues   []core.Issue
-	// CostMicros and Currency are what the network charges for one post; zero for none.
+	// CostMicros and Currency are what the network charges for one post; zero for none. CostNote says it in
+	// words for the person who approves, with the price applied and its date (SDD-020 section 35).
 	CostMicros int64
 	Currency   string
+	CostNote   string
+	// Draft is true when the network takes the file as a draft to be finished in its own app (SDD-020 section 38).
+	Draft bool
 	// Disclosure says whether the post carries the AI disclosure flag and why, for the person who approves
 	// (SDD-020 section 20); empty when the service says nothing of it.
 	Disclosure string
@@ -649,6 +657,15 @@ func (m *Manager) summary(res *Resolved, p *Publication, t *Target) string {
 		sum += "; AI disclosure: " + clean(res.Disclosure, summaryDisclosureRunes)
 	}
 
+	if res.CostNote != "" {
+		sum += "; cost: " + clean(res.CostNote, summaryCostRunes)
+	}
+
+	if res.Draft {
+		sum += "; a draft in the " + clean(res.NetworkName, summaryNetworkRunes) +
+			" app: the title, text and tags are not sent, you finish it there"
+	}
+
 	// The text gives way: the summary of a request is at most approval.MaxSummary characters, and a long
 	// zone, title and account leave less room for it.
 	const textFrame = len(`; text: ""`)
@@ -818,6 +835,10 @@ func (m *Manager) cancel(ctx context.Context, tx Tx, p *Publication, id string, 
 		return state("the post to %s was published; cancel it on the network.", t.Network)
 	}
 
+	if t.State == core.TargetSentAsDraft {
+		return state("the post to %s was sent as a draft; delete it in the app of the network.", t.Network)
+	}
+
 	if t.State == core.TargetCancelled {
 		return nil
 	}
@@ -892,7 +913,7 @@ func (m *Manager) Update(ctx context.Context, in UpdateInput) (*Publication, err
 			for i := range p.Targets {
 				if st := p.Targets[i].State; st == core.TargetPublishing {
 					return state("a post is being sent: change the publication when it ends.")
-				} else if st != core.TargetPublished && st != core.TargetCancelled {
+				} else if st != core.TargetPublished && st != core.TargetSentAsDraft && st != core.TargetCancelled {
 					changed[p.Targets[i].ID] = true
 				}
 			}
@@ -1016,7 +1037,8 @@ func (m *Manager) patchTarget(
 		return invalid(path+".id", "is not a target of this publication.")
 	}
 
-	if t.State == core.TargetPublishing || t.State == core.TargetPublished || t.State == core.TargetCancelled {
+	if t.State == core.TargetPublishing || t.State == core.TargetPublished || t.State == core.TargetSentAsDraft ||
+		t.State == core.TargetCancelled {
 		return state("the post to %s is %s and cannot change.", t.Network, t.State)
 	}
 
@@ -1256,6 +1278,12 @@ func (m *Manager) Finish(ctx context.Context, owner, targetID string, sent *Sent
 
 		if serr == nil {
 			t.State, t.Error, t.NextAttemptAt = core.TargetPublished, nil, nil
+			// A file the network took as a draft is not published: the person finishes it in the app of the
+			// network (SDD-020 section 38).
+			if sent.RemoteState == string(core.StateSentAsDraft) {
+				t.State = core.TargetSentAsDraft
+			}
+
 			t.RemoteID, t.URL, t.RemoteState = sent.RemoteID, sent.URL, sent.RemoteState
 			published := now
 			t.PublishedAt = &published

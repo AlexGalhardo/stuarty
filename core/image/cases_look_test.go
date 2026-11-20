@@ -11,6 +11,55 @@ func withAdjust() *Document {
 	return d
 }
 
+// withLUT has the photo graded by a table at 80 per cent, with a brightness next to it.
+func withLUT() *Document {
+	d := baseDoc()
+	d.Layers[1].Adjust = &Adjust{Brightness: 10, LUT: &LUTRef{Asset: hashCube, Intensity: 80}}
+	d.Assets[hashCube] = AssetRef{Hash: hashCube, Name: "warm.cube", Kind: AssetLUT}
+
+	return d
+}
+
+// withFullAssets holds the 64 files a document may list: the photo and 63 images, each shown by a layer of its own
+// (a file no layer uses would leave the table with the batch, and would not hold the ceiling).
+func withFullAssets() *Document {
+	return fillAssets(baseDoc())
+}
+
+// fillAssets adds image layers, each with a file of its own, until the document lists the 64 files it may.
+func fillAssets(d *Document) *Document {
+	for i := 0; len(d.Assets) < MaxAssets; i++ {
+		h := fmt.Sprintf("sha256:%064x", i+1)
+		d.Assets[h] = AssetRef{Hash: h, Name: "x.png", Width: 1, Height: 1}
+		d.Layers = append(d.Layers, Layer{
+			ID: fmt.Sprintf("lyr_%010d", i), Kind: KindImage, Name: "x", Visible: true, Opacity: 100, W: 1, H: 1,
+			Asset: h,
+		})
+	}
+
+	ReorderAll(d)
+
+	return d
+}
+
+// withFullTables has the 32 lookup tables a document may hold, each graded on a copy of the photo of its own.
+func withFullTables() *Document {
+	d := baseDoc()
+
+	for i := range MaxLUTs {
+		h := fmt.Sprintf("sha256:%064x", i+1)
+		d.Assets[h] = AssetRef{Hash: h, Name: "x.cube", Kind: AssetLUT}
+		d.Layers = append(d.Layers, Layer{
+			ID: fmt.Sprintf("lyr_%010d", i), Kind: KindImage, Name: "x", Visible: true, Opacity: 100, W: 1, H: 1,
+			Asset: hashFace, Adjust: &Adjust{LUT: &LUTRef{Asset: h, Intensity: MaxLUTIntensity}},
+		})
+	}
+
+	ReorderAll(d)
+
+	return d
+}
+
 func withFilters() *Document {
 	d := baseDoc()
 	f1, f2, f3 := NewFilter(FilterBlur), NewFilter(FilterShadow), NewFilter(FilterVignette)
@@ -95,6 +144,44 @@ func init() {
 		gc("layer.adjust", "missing", arg(none, `"hue": 3`)),
 		gc("layer.adjust", "group", arg(group, `"hue": 3`)),
 		gc("layer.adjust", "locked", arg(locked, `"hue": 3`)),
+		gc("layer.adjust", "lut_full_intensity", arg(photo, fmt.Sprintf(`"lut": {"asset": %q}`, hashCube))),
+		gc("layer.adjust", "lut_half", arg(photo, fmt.Sprintf(`"lut": {"asset": %q, "intensity": 50}`, hashCube))),
+		gc(
+			"layer.adjust",
+			"lut_next_to_the_colour_keys",
+			arg(photo, fmt.Sprintf(`"saturation": 20, "lut": {"asset": %q}`, hashCube)),
+		),
+		gc("layer.adjust", "lut_intensity_only", arg(photo, `"lut": {"intensity": 30}`)).on(withLUT),
+		gc(
+			"layer.adjust",
+			"lut_another_table_keeps_the_intensity",
+			arg(photo, fmt.Sprintf(`"lut": {"asset": %q}`, hashCube2)),
+		).on(withLUT),
+		gc("layer.adjust", "lut_zero_removes_it", arg(photo, `"lut": {"intensity": 0}`)).on(withLUT),
+		gc("layer.adjust", "reset_removes_the_lut_and_its_asset", arg(photo, `"reset": true`)).on(withLUT),
+		gc("layer.adjust", "lut_an_image_is_not_a_table", arg(photo, fmt.Sprintf(`"lut": {"asset": %q}`, hashFace))),
+		gc("layer.adjust", "lut_unknown_file", arg(photo, fmt.Sprintf(`"lut": {"asset": %q}`, hashNone))),
+		gc("layer.adjust", "lut_not_a_hash", arg(photo, `"lut": {"asset": "sha256:abc"}`)),
+		gc(
+			"layer.adjust",
+			"lut_intensity_out_of_range",
+			arg(photo, fmt.Sprintf(`"lut": {"asset": %q, "intensity": 101}`, hashCube)),
+		),
+		gc("layer.adjust", "lut_intensity_without_a_table", arg(photo, `"lut": {"intensity": 40}`)),
+		gc("layer.adjust", "lut_with_nothing", arg(photo, `"lut": {}`)),
+		gc("layer.adjust", "lut_with_reset", arg(photo, fmt.Sprintf(`"reset": true, "lut": {"asset": %q}`, hashCube))),
+		gc("layer.adjust", "lut_on_a_group", arg(group, fmt.Sprintf(`"lut": {"asset": %q}`, hashCube))),
+		gc("layer.adjust", "lut_on_a_locked_layer", arg(locked, fmt.Sprintf(`"lut": {"asset": %q}`, hashCube))),
+		gc(
+			"layer.adjust",
+			"lut_past_the_limit_of_files",
+			arg(photo, fmt.Sprintf(`"lut": {"asset": %q}`, hashCube)),
+		).on(withFullAssets),
+		gc(
+			"layer.adjust",
+			"lut_past_the_limit_of_tables",
+			arg(photo, fmt.Sprintf(`"lut": {"asset": %q}`, hashCube)),
+		).on(withFullTables),
 		gc("layer.filter_add", "blur_defaults", arg(photo, `"kind": "blur"`)),
 		gc(
 			"layer.filter_add",
