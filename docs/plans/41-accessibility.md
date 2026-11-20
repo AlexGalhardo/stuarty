@@ -44,7 +44,7 @@ A creator who uses only the keyboard, or a screen reader, or needs more contrast
 - [x] 6. Add live regions for jobs and for agent edits; tie errors to fields. Verify: tree snapshot specs pass.
 - [x] 7. Check reflow, text spacing, target size and reduced motion. Verify: `web/e2e/specs/a11y-reflow-motion.spec.ts` (new) and `bun run check:contrast` pass.
 - [x] 8. Write the keyboard-only first flow. Verify: `web/e2e/specs/a11y-first-flow-keyboard.spec.ts` (new) passes.
-- [x] 9. Write the screen reader script for the author and record the outcome. Verify: the script is in `docs/` next to SDD-012's checklist, and the hand-off says verified or not verified.
+- [x] 9. Write the screen reader script for the author and record the outcome. Verify: the script is in `docs/` next to SDD-012's checklist, and the hand-off says verified or not verified. Outcome: **not verified**, waiting for the author's pass (the outcome table of `docs/accessibility-screen-reader-script.md`).
 
 ## Test strategy
 
